@@ -24,7 +24,6 @@ Options
 
 ::
 
-  -c, --cmds string      YML file with list of commands to run on Naples
   -h, --help             help for tech-support
   -b, --tarball string   Name of tarball to create (without .tar.gz)
 
@@ -35,9 +34,8 @@ Options inherited from parent commands
 
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
-  -z, --log                debug output
   -t, --tabular            display in tabular format (default true)
-  -v, --version            version
+  -v, --version            display version of penctl
   -y, --yaml               display in yaml format
 
 SEE ALSO

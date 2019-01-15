@@ -23,8 +23,9 @@ penctl update mode [flags]
   -d, --dns-servers stringSlice   List of DNS servers
   -h, --help                      help for mode
   -n, --hostname string           Host name
+  -o, --management-mode string    host or network managed (default "network")
   -m, --mgmt-ip string            Management IP in CIDR format
-  -o, --operational-mode string   host or network managed (default "network")
+  -k, --network-mode string       oob or inband (default "oob")
   -p, --primary-mac string        Primary mac
 ```
 
@@ -33,9 +34,8 @@ penctl update mode [flags]
 ```
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
-  -z, --log                debug output
   -t, --tabular            display in tabular format (default true)
-  -v, --version            version
+  -v, --version            display version of penctl
   -y, --yaml               display in yaml format
 ```
 

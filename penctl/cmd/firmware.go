@@ -66,7 +66,6 @@ var setFirmwareCmd = &cobra.Command{
 }
 
 var uploadFile string
-var altfw bool
 
 func init() {
 	showCmd.AddCommand(showFirmwareCmd)
@@ -79,7 +78,6 @@ func init() {
 	sysCmd.AddCommand(setFirmwareCmd)
 
 	setFirmwareCmd.Flags().StringVarP(&uploadFile, "file", "f", "", "Firmware file location/name")
-	setFirmwareCmd.Flags().BoolVarP(&altfw, "altfw", "a", false, "Select alternate firmware")
 	setFirmwareCmd.MarkFlagRequired("file")
 }
 
@@ -276,28 +274,24 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		fmt.Println(string(resp))
 	}
 
-	fmt.Printf("Package %s installed\n", uploadFile)
-
-	if cmd.Flags().Changed("altfw") {
-		v = &nmd.NaplesCmdExecute{
-			Executable: "/nic/tools/fwupdate",
-			Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
-		}
-
-		resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		if len(resp) > 3 {
-			s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
-			fmt.Printf("%s", s)
-		}
-		if verbose {
-			fmt.Println(string(resp))
-		}
-		fmt.Println("Startup image set to altfw")
+	v = &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/fwupdate",
+		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
 	}
 
+	resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Printf("%s", s)
+	}
+	if verbose {
+		fmt.Println(string(resp))
+	}
+
+	fmt.Printf("Package %s installed\n", uploadFile)
 	return nil
 }

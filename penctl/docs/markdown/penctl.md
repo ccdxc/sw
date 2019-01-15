@@ -21,13 +21,13 @@ penctl [flags]
   -h, --help               help for penctl
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
-  -z, --log                debug output
   -t, --tabular            display in tabular format (default true)
-  -v, --version            version
+  -v, --version            display version of penctl
   -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO
+* [penctl create](penctl_create.md)	 - Create Object
 * [penctl delete](penctl_delete.md)	 - Delete Object
 * [penctl list](penctl_list.md)	 - List Objects
 * [penctl show](penctl_show.md)	 - Show Object and Information

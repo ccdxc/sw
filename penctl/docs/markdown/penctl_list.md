@@ -22,13 +22,12 @@ List Objects
 ```
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
-  -z, --log                debug output
   -t, --tabular            display in tabular format (default true)
-  -v, --version            version
+  -v, --version            display version of penctl
   -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
-* [penctl list cores](penctl_list_cores.md)	 - Show cores from Naples
+* [penctl list core-dumps](penctl_list_core-dumps.md)	 - Show core dumps from Naples
 

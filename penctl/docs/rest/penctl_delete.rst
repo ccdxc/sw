@@ -29,14 +29,14 @@ Options inherited from parent commands
 
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
-  -z, --log                debug output
   -t, --tabular            display in tabular format (default true)
-  -v, --version            version
+  -v, --version            display version of penctl
   -y, --yaml               display in yaml format
 
 SEE ALSO
 ~~~~~~~~
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
-* `penctl delete core <penctl_delete_core.rst>`_ 	 - Delete a core from Naples
+* `penctl delete core-dump <penctl_delete_core-dump.rst>`_ 	 - Delete a core dump from Naples
+* `penctl delete qos-class <penctl_delete_qos-class.rst>`_ 	 - qos-class object
 

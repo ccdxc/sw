@@ -29,9 +29,8 @@ Options inherited from parent commands
 
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
-  -z, --log                debug output
   -t, --tabular            display in tabular format (default true)
-  -v, --version            version
+  -v, --version            display version of penctl
   -y, --yaml               display in yaml format
 
 SEE ALSO
@@ -39,5 +38,7 @@ SEE ALSO
 
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
 * `penctl update mode <penctl_update_mode.rst>`_ 	 - Set Naples to Managed mode
+* `penctl update port <penctl_update_port.rst>`_ 	 - update port object
+* `penctl update qos-class <penctl_update_qos-class.rst>`_ 	 - qos-class object
 * `penctl update startup-firmware <penctl_update_startup-firmware.rst>`_ 	 - Set startup firmware on Naples
 

@@ -22,13 +22,13 @@ Delete Object
 ```
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
-  -z, --log                debug output
   -t, --tabular            display in tabular format (default true)
-  -v, --version            version
+  -v, --version            display version of penctl
   -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
-* [penctl delete core](penctl_delete_core.md)	 - Delete a core from Naples
+* [penctl delete core-dump](penctl_delete_core-dump.md)	 - Delete a core dump from Naples
+* [penctl delete qos-class](penctl_delete_qos-class.md)	 - qos-class object
 
