@@ -97,25 +97,26 @@ chksum_setup(struct service_info *svc_info,
 	}
 	svc_info->si_desc = chksum_desc;
 
-	sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
-	if (!sgl) {
-		err = ENOMEM;
-		OSAL_LOG_ERROR("cannot obtain chksum sgl from pool! err: %d",
-					err);
-		goto out;
-	}
-	svc_info->si_pb_sgl = sgl;
-
-	if ((svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) &&
-		(svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK)) {
-		bof_sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
-		if (!bof_sgl) {
+	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
+		sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
+		if (!sgl) {
 			err = ENOMEM;
-			OSAL_LOG_ERROR("cannot obtain pb/bof chksum sgl from pool! err: %d",
-					err);
+			OSAL_LOG_ERROR("cannot obtain chksum sgl from pool! err: %d",
+						err);
 			goto out;
 		}
-		svc_info->si_pb_bof_sgl = bof_sgl;
+		svc_info->si_pb_sgl = sgl;
+
+		if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
+			bof_sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
+			if (!bof_sgl) {
+				err = ENOMEM;
+				OSAL_LOG_ERROR("cannot obtain pb/bof chksum sgl from pool! err: %d",
+						err);
+				goto out;
+			}
+			svc_info->si_pb_bof_sgl = bof_sgl;
+		}
 	}
 
 	err = cpdc_setup_status_desc(svc_info, per_block);
