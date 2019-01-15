@@ -79,14 +79,6 @@
             "cache": "p4plus-all"
         },
         {
-            "name": "nmdr-tx",
-            "size": "2048K"
-        },
-        {
-            "name": "nmdr-rx",
-            "size": "2048K"
-        },
-        {
             "name": "ipsec-nmdr-tx",
             "size": "128K"
         },
@@ -108,22 +100,6 @@
         },
         {
             "name": "nmdr-rx-gc",
-            "size": "128K"
-        },
-        {
-            "name": "nmpr-small-tx",
-            "size": "2048K"
-        },
-        {
-            "name": "nmpr-small-rx",
-            "size": "2048K" 
-        },
-        {
-            "name": "nmpr-big-tx",
-            "size": "128K"
-        },
-        {
-            "name": "nmpr-big-rx",
             "size": "128K"
         },
         {
@@ -199,14 +175,6 @@
             "size": "512K"
         },
         {
-            "name": "descriptor-tx",
-            "size": "2048K"
-        },
-        {
-            "name": "descriptor-rx",
-            "size": "2048K"
-        },
-        {
             "name": "ipsec-descriptor-tx",
             "size": "2048K"
         },
@@ -224,19 +192,19 @@
         },
         {
             "name": "page-small-tx",
-            "size": "32768K"
+            "size": "24576K"
         },
         {
             "name": "page-small-rx",
-            "size": "32768K"
+            "size": "24576K"
         },
         {
             "name": "page-big-tx",
-            "size": "147456K"
+            "size": "81920K"
         },
         {
             "name": "page-big-rx",
-            "size": "147456K"
+            "size": "81920K"
         },
         {
             "_comment": "4K Entry Ring",

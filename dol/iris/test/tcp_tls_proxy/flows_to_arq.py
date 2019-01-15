@@ -81,8 +81,6 @@ def TestCaseStepVerify(tc, step):
     # 1. Fetch current values from Platform
     rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
     rnmdpr_big_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
     arqid = 'CPU%04d_ARQ' % cpu_id
     arq_cur = tc.infra_data.ConfigStore.objects.db[arqid]
     arq_cur.GetMeta()
@@ -108,11 +106,6 @@ def TestCaseStepVerify(tc, step):
     if rnmdpr_big.ringentries[rnmdpr_big.pi].handle != descr_addr:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr_big.ringentries[rnmdpr_big.pi].handle, descr_addr))
         return False
-
-    # 6. Verify page
-    #if rnmpr.ringentries[rnmpr.pi].handle != arq_cur.swdre_list[arq[cpu_id].pi].Addr1:
-    #    print("Page handle not as expected in arq_cur.swdre_list 0x%x 0x%x" %(rnmpr.ringentries[rnmpr.pi].handle, arq_cur.swdre_list[arq[cpu_id].pi].Addr1))
-    #    return False
 
     # update all queues for the next step
     rnmdpr_big.GetMeta()

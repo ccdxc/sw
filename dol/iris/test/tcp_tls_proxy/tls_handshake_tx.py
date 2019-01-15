@@ -41,14 +41,10 @@ def TestCaseSetup(tc):
     tcb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.GetMeta()
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.GetMeta()
+    rnmdpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr.GetMeta()
+    tnmdpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
+    tnmdpr.GetMeta()
     arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
 
     sesqid = "TCPCB%04d_SESQ" % id
@@ -69,10 +65,8 @@ def TestCaseSetup(tc):
     tcpcb.GetObjValPd()
 
     tc.pvtdata.Add(tlscb)
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
-    tc.pvtdata.Add(tnmdr)
-    tc.pvtdata.Add(tnmpr)
+    tc.pvtdata.Add(rnmdpr)
+    tc.pvtdata.Add(tnmdpr)
     tc.pvtdata.Add(tcpcb)
     tc.pvtdata.Add(sesq)
     tc.pvtdata.Add(arq)
@@ -86,12 +80,12 @@ def TestCaseVerify(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.pvtdata.db[tlscbid]
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
-    print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
-    print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("pre-sync: tnmdpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdpr_alloc, tlscb_cur.enc_requests))
+    print("pre-sync: rnmdpr_free %d enc_completions %d" % (tlscb_cur.rnmdpr_free, tlscb_cur.enc_completions))
     print("pre-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
     tlscb_cur.GetObjValPd()
-    print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
-    print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("post-sync: tnmdpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdpr_alloc, tlscb_cur.enc_requests))
+    print("post-sync: rnmdpr_free %d enc_completions %d" % (tlscb_cur.rnmdpr_free, tlscb_cur.enc_completions))
     print("post-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
 
 
@@ -111,19 +105,13 @@ def TestCaseVerify(tc):
 
 
     # 3. Fetch current values from Platform
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDR"]
-    rnmdr_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
-    rnmdr = tc.pvtdata.db["RNMDR"]
-    rnmpr = tc.pvtdata.db["RNMPR"]
+    rnmdpr_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_cur.GetMeta()
+    rnmdpr = tc.pvtdata.db["RNMDPR_BIG"]
 
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDR"]
-    tnmdr_cur.GetMeta()
-    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    tnmpr_cur.GetMeta()
-    tnmdr = tc.pvtdata.db["TNMDR"]
-    tnmpr = tc.pvtdata.db["TNMPR"]
+    tnmdpr_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
+    tnmdpr_cur.GetMeta()
+    tnmdpr = tc.pvtdata.db["TNMDPR_BIG"]
     arq = tc.pvtdata.db["CPU0000_ARQ"]
 
     arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]

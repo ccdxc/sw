@@ -47,10 +47,10 @@ def TestCaseSetup(tc):
     tlscb.SetObjValPd()
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
-    rnmdr.GetMeta()
-    rnmdr.GetRingEntries([rnmdr.pi, rnmdr.pi + 1])
-    rnmdr.GetRingEntryAOL([rnmdr.pi, rnmdr.pi + 1])
+    rnmdpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
+    rnmdpr.GetMeta()
+    rnmdpr.GetRingEntries([rnmdpr.pi, rnmdpr.pi + 1])
+    rnmdpr.GetRingEntryAOL([rnmdpr.pi, rnmdpr.pi + 1])
     serqid = "TLSCB%04d_SERQ" % id
     serq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[serqid])
     serq.GetMeta()
@@ -60,7 +60,7 @@ def TestCaseSetup(tc):
     tcpcb.GetObjValPd()
 
     tc.pvtdata.Add(tlscb)
-    tc.pvtdata.Add(rnmdr)
+    tc.pvtdata.Add(rnmdpr)
     tc.pvtdata.Add(tcpcb)
     tc.pvtdata.Add(serq)
     return
@@ -107,9 +107,9 @@ def TestCaseVerify(tc):
         return False
 
     # 3. Fetch current values from Platform
-    rnmdr = tc.pvtdata.db["RNMDPR_BIG"]
-    rnmdr_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
-    rnmdr_cur.GetMeta()
+    rnmdpr = tc.pvtdata.db["RNMDPR_BIG"]
+    rnmdpr_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
+    rnmdpr_cur.GetMeta()
     serqid = "TLSCB%04d_SERQ" % id
     serq = tc.pvtdata.db[serqid]
     serq_cur = tc.infra_data.ConfigStore.objects.db[serqid]
@@ -118,21 +118,21 @@ def TestCaseVerify(tc):
     serq_cur.GetRingEntryAOL([tlscb.serq_pi])
 
     # 4. Verify PI for RNMDPR_BIG got incremented by 1
-    if (rnmdr_cur.pi != rnmdr.pi+num_pkts):
-        print("RNMDPR_BIG pi check failed old %d new %d" % (rnmdr.pi, rnmdr_cur.pi))
+    if (rnmdpr_cur.pi != rnmdpr.pi+num_pkts):
+        print("RNMDPR_BIG pi check failed old %d new %d" % (rnmdpr.pi, rnmdpr_cur.pi))
         return False
 
     # 5. Verify descriptor
-    if not ooo and rnmdr.ringentries[rnmdr.pi].handle != serq_cur.ringentries[tlscb.serq_pi].handle and \
-            rnmdr.ringentries[rnmdr.pi+1].handle != serq_cur.ringentries[tlscb.serq_pi].handle:
+    if not ooo and rnmdpr.ringentries[rnmdpr.pi].handle != serq_cur.ringentries[tlscb.serq_pi].handle and \
+            rnmdpr.ringentries[rnmdpr.pi+1].handle != serq_cur.ringentries[tlscb.serq_pi].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % \
-                (rnmdr.ringentries[rnmdr.pi].handle, serq_cur.ringentries[tlscb.serq_pi].handle))
+                (rnmdpr.ringentries[rnmdpr.pi].handle, serq_cur.ringentries[tlscb.serq_pi].handle))
         return False
 
-    if not ooo and rnmdr.swdre_list[rnmdr.pi].DescAddr != serq_cur.swdre_list[tlscb.serq_pi].DescAddr and \
-            rnmdr.swdre_list[rnmdr.pi+1].DescAddr != serq_cur.swdre_list[tlscb.serq_pi].DescAddr:
+    if not ooo and rnmdpr.swdre_list[rnmdpr.pi].DescAddr != serq_cur.swdre_list[tlscb.serq_pi].DescAddr and \
+            rnmdpr.swdre_list[rnmdpr.pi+1].DescAddr != serq_cur.swdre_list[tlscb.serq_pi].DescAddr:
         print("Descriptor handle not as expected in swdre_list 0x%x 0x%x" % \
-                (rnmdr.swdre_list[rnmdr.pi].DescAddr, serq_cur.swdre_list[tlscb.serq_pi].DescAddr))
+                (rnmdpr.swdre_list[rnmdpr.pi].DescAddr, serq_cur.swdre_list[tlscb.serq_pi].DescAddr))
         return False
 
     # Print stats

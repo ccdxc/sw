@@ -74,8 +74,6 @@ def TestCaseVerify(tc):
     # 1. Fetch current values from Platform
     rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
     rnmdpr_big_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
     arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
     arq_cur.GetMeta()
     arq_cur.GetRingEntries([arq.pi])
@@ -85,9 +83,9 @@ def TestCaseVerify(tc):
     print("arq cur pi 0x%x" % (arq_cur.pi))
     # 2. Verify descriptor
     if rnmdpr_big.ringentries[rnmdpr_big.pi].handle != arq_cur.ringentries[arq.pi].handle:
-    #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[0].handle:
+    #if rnmdpr.ringentries[rnmdpr.pi].handle != arq_cur.ringentries[0].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr_big.ringentries[rnmdpr_big.pi].handle, arq_cur.ringentries[arq.pi].handle))
-        #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
+        #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr.ringentries[rnmdpr.pi].handle, arq_cur.ringentries[arq.pi].handle))
         return False
 
     if ((rnmdpr_big.ringentries[rnmdpr_big.pi].handle is not None) and (arq_cur.ringentries[arq.pi].handle is not None)):

@@ -23,7 +23,6 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-ack-slow.s \
     $(SRC_DIR)/tcp-rdesc-alloc.s \
     $(SRC_DIR)/tcp-read-rnmdr-alloc-idx.s \
-    $(SRC_DIR)/tcp-read-rnmpr-alloc-idx.s \
     $(SRC_DIR)/tcp-read-tx2rx-shared.s \
     $(SRC_DIR)/tcp-read-tx2rx-shared-ext.s \
     $(SRC_DIR)/tcp-rpage-alloc.s \

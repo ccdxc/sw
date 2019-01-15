@@ -4,7 +4,7 @@ feature:
     id          : app_redir
     package     : test.app_redir
     module      : app_redir
-    enable      : True
+    enable      : False
     ignore      : False
     rtl         : False
 

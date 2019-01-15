@@ -119,8 +119,8 @@ header_type to_stage_7_phv_t {
 
 header_type stats_phv_t {
     fields {
-        rnmdr_free                      : 8;
-        rnmpr_free                      : 8;
+        rnmdpr_free                     : 8;
+        pad                             : 8;
         enc_completions                 : 8;
         dec_completions                 : 8;
         debug_stage0_3_thread           : 16;
@@ -138,8 +138,7 @@ header_type s2s_t2_phv_t {
     modify_field(s2s_t2_scratch.idesc, s2s_t2.idesc);
 
 #define GENERATE_STATS_K                                                            \
-    modify_field(stats_scratch.rnmdr_free, stats.rnmdr_free);                       \
-    modify_field(stats_scratch.rnmpr_free, stats.rnmpr_free);                       \
+    modify_field(stats_scratch.rnmdpr_free, stats.rnmdpr_free);                     \
     modify_field(stats_scratch.enc_completions, stats.enc_completions);             \
     modify_field(stats_scratch.dec_completions, stats.dec_completions);             \
     modify_field(stats_scratch.debug_stage0_3_thread, stats.debug_stage0_3_thread); \

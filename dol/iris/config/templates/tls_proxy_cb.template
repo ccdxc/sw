@@ -17,10 +17,8 @@ bsq_pi                      : 0
 bsq_ci                      : 0
 crypto_obj                  : None
 debug_dol                   : 0
-tnmdr_alloc                 : 0
-tnmpr_alloc                 : 0
-rnmdr_free                  : 0
-rnmpr_free                  : 0
+tnmdpr_alloc                 : 0
+rnmdpr_free                  : 0
 enc_requests                : 0
 enc_completions             : 0
 enc_failures                : 0

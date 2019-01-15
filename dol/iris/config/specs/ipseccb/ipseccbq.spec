@@ -5,7 +5,7 @@ meta:
 entries:
     - entry:
         name        : IPSECCBQ
-        haltype     : 11
+        haltype     : 5
         type        : DESCR_AOL_VIA_REF
         count       : 16
         size        : 4096

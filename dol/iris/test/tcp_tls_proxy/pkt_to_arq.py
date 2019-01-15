@@ -44,8 +44,6 @@ def TestCaseVerify(tc):
     # 1. Fetch current values from Platform
     rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
     rnmdpr_big_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
     arq_cur = tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"]
     arq_cur.GetMeta()
     arq_cur.GetRingEntries([arq.pi])
@@ -62,15 +60,10 @@ def TestCaseVerify(tc):
         return False
 
     # 4. Verify descriptor
-    #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[arq.pi].handle:
+    #if rnmdpr.ringentries[rnmdpr.pi].handle != arq_cur.ringentries[arq.pi].handle:
     if rnmdpr_big.ringentries[rnmdpr_big.pi].handle != arq_cur.ringentries[arq.pi].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr_big.ringentries[rnmdpr_big.pi].handle, arq_cur.ringentries[arq.pi].handle))
         return False
-
-    # 6. Verify page
-    #if rnmpr.ringentries[rnmpr.pi].handle != arq_cur.swdre_list[arq.pi].Addr1:
-    #    print("Page handle not as expected in arq_cur.swdre_list 0x%x 0x%x" %(rnmpr.ringentries[rnmpr.pi].handle, arq_cur.swdre_list[arq.pi].Addr1))
-    #    return False
 
     return True
 

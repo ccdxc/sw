@@ -29,7 +29,6 @@ tls_dec_tpage_alloc_process:
 	
 	    phvwrpair   p.to_s5_opage, d.opage[31:0], \
 	                p.to_s6_opage, d.opage[31:0]
-            phvwri      p.to_s7_tnmpr_alloc, 1
 	    nop.e
 	    nop
 

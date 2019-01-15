@@ -278,8 +278,7 @@ header_type barco_shadow_params_d_t {
 
 header_type tls_stage_pre_crypto_stats_d_t {
     fields {
-        tnmdr_alloc                     : 16;
-        tnmpr_alloc                     : 16;
+        tnmdpr_alloc                    : 16;
         enc_requests                    : 16;
         dec_requests                    : 16;
 	mac_requests                    : 16;
@@ -290,12 +289,11 @@ header_type tls_stage_pre_crypto_stats_d_t {
     }
 }
 #define STG_PRE_CRYPTO_STATS_ACTION_PARAMS                                                          \
-tnmdr_alloc,tnmpr_alloc, enc_requests, dec_requests, mac_requests, debug_stage0_3_thread, debug_stage4_7_thread, pad
+tnmdpr_alloc, enc_requests, dec_requests, mac_requests, debug_stage0_3_thread, debug_stage4_7_thread, pad
 #
 
 #define GENERATE_STG_PRE_CRYPTO_STATS_D                                                             \
-    modify_field(tls_pre_crypto_stats_d.tnmdr_alloc, tnmdr_alloc);                                  \
-    modify_field(tls_pre_crypto_stats_d.tnmpr_alloc, tnmpr_alloc);                                  \
+    modify_field(tls_pre_crypto_stats_d.tnmdpr_alloc, tnmdpr_alloc);                                \
     modify_field(tls_pre_crypto_stats_d.enc_requests, enc_requests);                                \
     modify_field(tls_pre_crypto_stats_d.dec_requests, dec_requests);                                \
     modify_field(tls_pre_crypto_stats_d.mac_requests, mac_requests);                                \
@@ -306,10 +304,8 @@ tnmdr_alloc,tnmpr_alloc, enc_requests, dec_requests, mac_requests, debug_stage0_
 
 header_type tls_stage_post_crypto_stats_d_t {
     fields {
-        tnmdr_alloc                     : 16;
-        tnmpr_alloc                     : 16;
-        rnmdr_free                      : 16;
-        rnmpr_free                      : 16;
+        tnmdpr_alloc                    : 16;
+        rnmdpr_free                     : 16;
         enc_requests                    : 16;
         enc_completions                 : 16;
         dec_completions                 : 16;
@@ -322,14 +318,12 @@ header_type tls_stage_post_crypto_stats_d_t {
 }
 
 #define STG_POST_CRYPTO_STATS_ACTION_PARAMS                                                             \
-tnmdr_alloc, tnmpr_alloc, rnmdr_free,rnmpr_free, enc_requests, enc_completions, dec_completions, mac_completions, debug_stage0_3_thread, debug_stage4_7_thread, pad
+tnmdpr_alloc, rnmdpr_free, enc_requests, enc_completions, dec_completions, mac_completions, debug_stage0_3_thread, debug_stage4_7_thread, pad
 #
 
 #define GENERATE_STG_POST_CRYPTO_STATS_D                                                                \
-    modify_field(tls_post_crypto_stats_d.tnmdr_alloc, tnmdr_alloc);                                     \
-    modify_field(tls_post_crypto_stats_d.tnmpr_alloc, tnmpr_alloc);                                     \
-    modify_field(tls_post_crypto_stats_d.rnmdr_free, rnmdr_free);                                       \
-    modify_field(tls_post_crypto_stats_d.rnmpr_free, rnmpr_free);                                       \
+    modify_field(tls_post_crypto_stats_d.tnmdpr_alloc, tnmdpr_alloc);                                   \
+    modify_field(tls_post_crypto_stats_d.rnmdpr_free, rnmdpr_free);                                     \
     modify_field(tls_post_crypto_stats_d.enc_requests, enc_requests);                                   \
     modify_field(tls_post_crypto_stats_d.enc_completions, enc_completions);                             \
     modify_field(tls_post_crypto_stats_d.dec_completions, dec_completions);                             \

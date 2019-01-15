@@ -43,10 +43,8 @@ typedef struct tlscb_s {
     uint16_t              bsq_ci;
     uint32_t              crypto_key_idx;
     uint32_t              debug_dol;
-    uint64_t              tnmdr_alloc;
-    uint64_t              tnmpr_alloc;
-    uint64_t              rnmdr_free;
-    uint64_t              rnmpr_free;
+    uint64_t              tnmdpr_alloc;
+    uint64_t              rnmdpr_free;
     uint64_t              enc_requests;
     uint64_t              enc_completions;
     uint64_t              enc_failures;

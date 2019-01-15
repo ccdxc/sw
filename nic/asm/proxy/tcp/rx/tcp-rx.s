@@ -18,7 +18,6 @@ struct s2_t0_tcp_rx_d d;
 %%
     .param          tcp_ack_start
     .param          tcp_rx_read_rnmdr_start
-    .param          tcp_rx_read_rnmpr_start
 #ifdef L7_PROXY_SUPPORT
     .param          tcp_rx_l7_read_rnmdr_start
 #endif

@@ -217,8 +217,6 @@ def TestCaseVerify(tc):
     rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
     rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
     rnmdpr_big_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
 
     tnmdpr_big = tc.pvtdata.db["TNMDPR_BIG"]
     tnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]

@@ -5,6 +5,6 @@ meta:
 entries:
     - entry:
         name        : PROXYCCBQ
-        haltype     : 19
+        haltype     : 13
         type        : DESCR_AOL_VIA_REF
         count       : 16

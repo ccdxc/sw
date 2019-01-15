@@ -118,8 +118,7 @@ p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
         HAL_TRACE_ERR("Failed to create tx: s6_t0_pre_crypto_stats_entry for TLS CB");
         return HAL_RET_HW_FAIL;
     }
-    tlscb_pd->tlscb->tnmdr_alloc = ntohs(data.u.tls_pre_crypto_stats6_d.tnmdr_alloc);
-    tlscb_pd->tlscb->tnmpr_alloc = ntohs(data.u.tls_pre_crypto_stats6_d.tnmpr_alloc);
+    tlscb_pd->tlscb->tnmdpr_alloc = ntohs(data.u.tls_pre_crypto_stats6_d.tnmdpr_alloc);
     tlscb_pd->tlscb->enc_requests = ntohs(data.u.tls_pre_crypto_stats6_d.enc_requests);
     tlscb_pd->tlscb->dec_requests = ntohs(data.u.tls_pre_crypto_stats6_d.dec_requests);
     tlscb_pd->tlscb->mac_requests = ntohs(data.u.tls_pre_crypto_stats6_d.mac_requests);
@@ -127,8 +126,7 @@ p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
       (ntohs(data.u.tls_pre_crypto_stats6_d.debug_stage4_7_thread) << 16) |
       ntohs(data.u.tls_pre_crypto_stats6_d.debug_stage0_3_thread);
     HAL_TRACE_DEBUG("hwid : {:#x}", hwid);
-    HAL_TRACE_DEBUG("Received tnmdr alloc: 0x{:x}", tlscb_pd->tlscb->tnmdr_alloc);
-    HAL_TRACE_DEBUG("Received tnmpr alloc: 0x{:x}", tlscb_pd->tlscb->tnmpr_alloc);
+    HAL_TRACE_DEBUG("Received tnmdpr alloc: 0x{:x}", tlscb_pd->tlscb->tnmdpr_alloc);
     HAL_TRACE_DEBUG("Received enc requests: 0x{:x}", tlscb_pd->tlscb->enc_requests);
     HAL_TRACE_DEBUG("Received dec requests: 0x{:x}", tlscb_pd->tlscb->dec_requests);
     HAL_TRACE_DEBUG("Received mac requests: 0x{:x}", tlscb_pd->tlscb->mac_requests);

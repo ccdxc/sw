@@ -153,15 +153,15 @@ def TestCaseVerify(tc):
         num_flow_miss_pkts = int(tc.module.args.num_flow_miss_pkts)
 
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
-    print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % 
-          (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
-    print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" %
-          (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("pre-sync: tnmdpr_alloc %d enc_requests %d" % 
+          (tlscb_cur.tnmdpr_alloc, tlscb_cur.enc_requests))
+    print("pre-sync: rnmdpr_free %d enc_completions %d" %
+          (tlscb_cur.rnmdpr_free, tlscb_cur.enc_completions))
     tlscb_cur.GetObjValPd()
-    print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" %
-          (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
-    print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" %
-          (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("post-sync: tnmdpr_alloc %d enc_requests %d" %
+          (tlscb_cur.tnmdpr_alloc, tlscb_cur.enc_requests))
+    print("post-sync: rnmdpr_free %d enc_completions %d" %
+          (tlscb_cur.rnmdpr_free, tlscb_cur.enc_completions))
 
     if ((tlscb_cur.enc_requests - tlscb.enc_requests) != (tlscb_cur.enc_completions - tlscb.enc_completions)):
         print("enc requests not equal to completions %d %d %d %d" %

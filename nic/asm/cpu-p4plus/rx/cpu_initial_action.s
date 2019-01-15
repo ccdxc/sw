@@ -9,7 +9,6 @@ struct common_p4plus_stage0_app_header_table_offset_64_d d;
 
 %%
     .param          cpu_rx_read_desc_pindex_start
-    .param          cpu_rx_read_page_pindex_start
     .param          cpu_rx_read_arqrx_pindex_start
     .align
 cpu_rx_read_shared_stage0_start:

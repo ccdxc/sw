@@ -20,7 +20,7 @@ struct tx_table_s2_t2_tls_read_tnmpr_d d ;
 %%
 	
         .param          tls_mac_tpage_alloc_process
-        .param          TNMPR_TABLE_BASE
+        .param          TNMDPR_BIG_TABLE_BASE
 	    .align
 
 tls_mac_alloc_tnmpr_process:
@@ -28,7 +28,7 @@ tls_mac_alloc_tnmpr_process:
         CAPRI_CLEAR_TABLE2_VALID
 
 table_read_TNMDR_PAGE:
-	addi		r3, r0, TNMPR_TABLE_BASE
+	addi		r3, r0, TNMDPR_BIG_TABLE_BASE
 	CAPRI_NEXT_TABLE_READ_INDEX(2, d.{tnmpr_pidx}.wx, TABLE_LOCK_EN,
                                     tls_mac_tpage_alloc_process,
 	                            r3, TNMPR_TABLE_ENTRY_SIZE_SHFT,

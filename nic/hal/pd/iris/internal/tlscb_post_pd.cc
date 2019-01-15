@@ -33,12 +33,10 @@ p4pd_get_tls_tx_s5_t0_post_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
      * For the stats that could be updated in the pre-crypto stage, we'll add the counters
      * (valid for multiple pass pipelines like AES-CBC-HMAC-SHA2 software chaining).
      */
-    tlscb_pd->tlscb->tnmdr_alloc += ntohs(data.u.tls_post_crypto_stats5_d.tnmdr_alloc);
-    tlscb_pd->tlscb->tnmpr_alloc += ntohs(data.u.tls_post_crypto_stats5_d.tnmpr_alloc);
+    tlscb_pd->tlscb->tnmdpr_alloc += ntohs(data.u.tls_post_crypto_stats5_d.tnmdpr_alloc);
     tlscb_pd->tlscb->enc_requests += ntohs(data.u.tls_post_crypto_stats5_d.enc_requests);
 
-    tlscb_pd->tlscb->rnmdr_free = ntohs(data.u.tls_post_crypto_stats5_d.rnmdr_free);
-    tlscb_pd->tlscb->rnmpr_free = ntohs(data.u.tls_post_crypto_stats5_d.rnmpr_free);
+    tlscb_pd->tlscb->rnmdpr_free = ntohs(data.u.tls_post_crypto_stats5_d.rnmdpr_free);
     tlscb_pd->tlscb->enc_completions = ntohs(data.u.tls_post_crypto_stats5_d.enc_completions);
     tlscb_pd->tlscb->dec_completions = ntohs(data.u.tls_post_crypto_stats5_d.dec_completions);
     tlscb_pd->tlscb->mac_completions = ntohs(data.u.tls_post_crypto_stats5_d.mac_completions);
@@ -46,12 +44,10 @@ p4pd_get_tls_tx_s5_t0_post_crypto_stats_entry(pd_tlscb_t* tlscb_pd)
       (ntohs(data.u.tls_post_crypto_stats5_d.debug_stage4_7_thread) << 16) |
       ntohs(data.u.tls_post_crypto_stats5_d.debug_stage0_3_thread);
     HAL_TRACE_DEBUG("hwid : 0x{:x}", hwid);
-    HAL_TRACE_DEBUG("Received tnmdr alloc: 0x{:x}", tlscb_pd->tlscb->tnmdr_alloc);
-    HAL_TRACE_DEBUG("Received tnmpr alloc: 0x{:x}", tlscb_pd->tlscb->tnmpr_alloc);
+    HAL_TRACE_DEBUG("Received tnmdpr alloc: 0x{:x}", tlscb_pd->tlscb->tnmdpr_alloc);
     HAL_TRACE_DEBUG("Received enc requests: 0x{:x}", tlscb_pd->tlscb->enc_requests);
 
-    HAL_TRACE_DEBUG("Received rnmdr free: 0x{:x}", tlscb_pd->tlscb->rnmdr_free);
-    HAL_TRACE_DEBUG("Received rnmpr free: 0x{:x}", tlscb_pd->tlscb->rnmpr_free);
+    HAL_TRACE_DEBUG("Received rnmdpr free: 0x{:x}", tlscb_pd->tlscb->rnmdpr_free);
     HAL_TRACE_DEBUG("Received enc completions: 0x{:x}", tlscb_pd->tlscb->enc_completions);
     HAL_TRACE_DEBUG("Received dec completions: 0x{:x}", tlscb_pd->tlscb->dec_completions);
     HAL_TRACE_DEBUG("Received mac completions: 0x{:x}", tlscb_pd->tlscb->mac_completions);

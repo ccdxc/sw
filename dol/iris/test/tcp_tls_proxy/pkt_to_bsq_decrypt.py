@@ -214,7 +214,7 @@ def TestCaseVerify(tc):
                                 (brq_cur.ring_entries[brq_cur.pi-1].barco_status))
 
     # 3. Verify page
-    #if rnmpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
+    #if rnmdpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
     #    print("Page handle not as expected in brq_cur.swdre_list")
         #return False
 

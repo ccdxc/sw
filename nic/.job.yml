@@ -363,12 +363,12 @@ targets:
   # area:
   # sub-area:
   # feature:
-  dol/e2e/l7:
-    commands: ["make", "jobd/dol/e2e/l7"]
-    owners: ["email:piraman@pensando.io"]
-    area:
-    sub-area:
-    feature:
+  #dol/e2e/l7:
+  #  commands: ["make", "jobd/dol/e2e/l7"]
+  #  owners: ["email:piraman@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
 
   # ====================== Agent Tests ===========================
   agent:

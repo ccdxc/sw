@@ -20,12 +20,10 @@ struct tx_table_s5_t0_tls_post_crypto_stats5_d d	;
     .align
 tls_mac_post_crypto_stats_process:
     CAPRI_CLEAR_TABLE0_VALID
-    CAPRI_OPERAND_DEBUG(k.to_s5_tnmdr_alloc)
-    CAPRI_OPERAND_DEBUG(k.to_s5_tnmpr_alloc)
+    CAPRI_OPERAND_DEBUG(k.to_s5_tnmdpr_alloc)
     CAPRI_OPERAND_DEBUG(k.to_s5_mac_completions)
     CAPRI_OPERAND_DEBUG(k.to_s5_enc_requests)
-    CAPRI_COUNTER16_INC(tnmdr_alloc, TLS_PRE_CRYPTO_STAT_TNMDR_ALLOC_OFFSET, k.to_s5_tnmdr_alloc)
-    CAPRI_COUNTER16_INC(tnmpr_alloc, TLS_PRE_CRYPTO_STAT_TNMPR_ALLOC_OFFSET, k.to_s5_tnmpr_alloc)
+    CAPRI_COUNTER16_INC(tnmdpr_alloc, TLS_PRE_CRYPTO_STAT_TNMDR_ALLOC_OFFSET, k.to_s5_tnmdpr_alloc)
     CAPRI_COUNTER16_INC(mac_completions, TLS_POST_CRYPTO_STAT_MAC_COMPLETIONS_OFFSET, k.to_s5_mac_completions)
     CAPRI_COUNTER16_INC(enc_requests, TLS_PRE_CRYPTO_STAT_ENC_REQUESTS_OFFSET, k.to_s5_enc_requests)
     tblwr    d.debug_stage0_3_thread, k.to_s5_debug_stage0_3_thread

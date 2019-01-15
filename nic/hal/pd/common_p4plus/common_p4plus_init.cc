@@ -12,7 +12,7 @@
 namespace hal {
 namespace pd {
 
-#define P4PLUS_SYMBOLS_MAX  141
+#define P4PLUS_SYMBOLS_MAX  105
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -38,12 +38,6 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_RX);
     symbols[i].params[1].name = TCP_PROXY_STATS;
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_STATS);
-    i++;
-
-    symbols[i].name = "tcp-read-rnmpr-alloc-idx.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_RX);
     i++;
 
     symbols[i].name = "tcp-read-sesq-ci.bin";
@@ -72,12 +66,6 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_GLOBAL_STATS);
     i++;
 
-    symbols[i].name = "tls-enc-read-tnmpr-alloc-idx.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = TNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_TX);
-    i++;
-
     symbols[i].name = "tls-enc-queue-brq.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = BRQ_BASE;
@@ -88,18 +76,6 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].num_params = 1;
     symbols[i].params[0].name = BRQ_BASE;
     symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_GCM1);
-    i++;
-
-    symbols[i].name = "tls-enc-read-rnmdr-free-idx.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_TX);
-    i++;
-
-    symbols[i].name = "tls-enc-read-rnmpr-free-idx.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_TX);
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table.bin";
@@ -248,13 +224,13 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore.bin";
     symbols[i].num_params = 5;
     symbols[i].params[0].name = IPSEC_RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_NMDR_RX);
     symbols[i].params[1].name = IPSEC_TNMDR_TABLE_BASE;
-    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMDR_TX);
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_NMDR_TX);
     symbols[i].params[2].name = IPSEC_RNMPR_TABLE_BASE;
-    symbols[i].params[2].val = get_mem_addr(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[i].params[2].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_NMPR_RX);
     symbols[i].params[3].name = IPSEC_TNMPR_TABLE_BASE;
-    symbols[i].params[3].val = get_mem_addr(CAPRI_HBM_REG_NMPR_SMALL_TX);
+    symbols[i].params[3].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_NMPR_TX);
     symbols[i].params[4].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
     symbols[i].params[4].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
     i++;
@@ -305,12 +281,6 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_RX);
     i++;
 
-    symbols[i].name = "cpu_read_page_pindex.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_RX);
-    i++;
-
     symbols[i].name = "cpu_tx_read_asq_descr.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = CPU_TX_DOT1Q_HDR_OFFSET;
@@ -326,30 +296,12 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_GLOBAL_STATS);
     i++;
 
-    symbols[i].name = "tls-dec-read-tnmpr-alloc-idx.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = TNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_TX);
-    i++;
-
     symbols[i].name = "esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = IPSEC_CB_BASE;
     symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSECCB);
     symbols[i].params[1].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N;
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
-    i++;
-
-    symbols[i].name = "tls-dec-read-rnmdr-free-idx.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_TX);
-    i++;
-
-    symbols[i].name = "tls-dec-read-rnmpr-free-idx.bin";
-    symbols[i].num_params = 1;
-    symbols[i].params[0].name = RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_TX);
     i++;
 
     symbols[i].name = "tls-dec-bld-barco-req.bin";
@@ -413,9 +365,9 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].name = "gc_tx_inc_descr_free_pair_pi.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX); // To be fixed
     symbols[i].params[1].name = TNMDPR_BIG_TABLE_BASE;
-    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMDR_TX);
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_TX); // To be fixed
     i++;
 
     /*
@@ -519,81 +471,81 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].name = "rawr_desc_sem_post_update.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "rawr_desc_free.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "rawr_ppage_sem_post_update.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "rawr_mpage_sem_post_update.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "rawr_mpage_free.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     symbols[i].params[1].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "rawc_desc_free.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "rawc_page0_free.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     symbols[i].params[1].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "proxyr_mpage_sem_pindex_post_update.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "proxyr_desc_free.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "proxyr_mpage_free.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     symbols[i].params[1].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "proxyc_desc_free.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = RNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "proxyc_page0_free.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_RX);
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     symbols[i].params[1].name = RNMPR_SMALL_TABLE_BASE;
-    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMPR_SMALL_RX);
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX);
     i++;
 
     symbols[i].name = "tls-dec-aesgcm-newseg-queue-barco.bin";
@@ -604,20 +556,20 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
 
     symbols[i].name = "tls-dec-aesgcm-newseg-read-tnmdr-odesc-alloc-idx.bin";
     symbols[i].num_params = 1;
-    symbols[i].params[0].name = TNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_TX);
+    symbols[i].params[0].name = TNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_TX);
     i++;
 
     symbols[i].name = "tls-dec-aesgcm-newseg-read-tnmpr-opage-alloc-idx.bin";
     symbols[i].num_params = 1;
-    symbols[i].params[0].name = TNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_TX);
+    symbols[i].params[0].name = TNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_TX);
     i++;
 
     symbols[i].name = "tls-dec-aesgcm-newseg-read-tnmdr-idesc-alloc-idx.bin";
     symbols[i].num_params = 1;
-    symbols[i].params[0].name = TNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_TX);
+    symbols[i].params[0].name = TNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_TX);
     i++;
 
     symbols[i].name = "req_tx_dcqcn_enforce_process.bin";
@@ -667,14 +619,14 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
 
     symbols[i].name = "tls-mac-read-tnmdr-alloc-idx.bin";
     symbols[i].num_params = 1;
-    symbols[i].params[0].name = TNMDR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDR_TX);
+    symbols[i].params[0].name = TNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_TX);
     i++;
 
     symbols[i].name = "tls-mac-read-tnmpr-alloc-idx.bin";
     symbols[i].num_params = 1;
-    symbols[i].params[0].name = TNMPR_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMPR_BIG_TX);
+    symbols[i].params[0].name = TNMDPR_BIG_TABLE_BASE;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_TX);
     i++;
 
     symbols[i].name = "cpu_write_arq.bin";

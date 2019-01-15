@@ -7,11 +7,11 @@ type :
 entries :
     - entry:
         name        : IPSEC_TNMDR
-        haltype     : 26
+        haltype     : 20
         type        : DESCR_AOL_VIA_REF
         count       : 1024 
     - entry:
         name        : IPSEC_RNMDR
-        haltype     : 27 
+        haltype     : 21 
         type        : DESCR_AOL_VIA_REF
         count       : 1024 

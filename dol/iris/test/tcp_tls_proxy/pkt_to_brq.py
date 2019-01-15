@@ -49,8 +49,8 @@ def TestCaseSetup(tc):
     rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
     rnmdpr_big.GetMeta()
     rnmdpr_big.GetRingEntries([rnmdpr_big.pi])
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
-    tnmdr.GetMeta()
+    tnmdpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
+    tnmdpr.GetMeta()
 
     brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_GCM"])
     brq.GetMeta()
@@ -88,7 +88,7 @@ def TestCaseSetup(tc):
 
     tc.pvtdata.Add(tlscb)
     tc.pvtdata.Add(rnmdpr_big)
-    tc.pvtdata.Add(tnmdr)
+    tc.pvtdata.Add(tnmdpr)
     tc.pvtdata.Add(tcpcb)
     tc.pvtdata.Add(brq)
     return
@@ -139,11 +139,9 @@ def TestCaseVerify(tc):
     rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
     rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
     rnmdpr_big_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
-    tnmdr = tc.pvtdata.db["TNMDPR_BIG"]
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
-    tnmdr_cur.GetMeta()
+    tnmdpr = tc.pvtdata.db["TNMDPR_BIG"]
+    tnmdpr_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
+    tnmdpr_cur.GetMeta()
 
     # 5. Verify PI for RNMDPR_BIG got incremented by 1
     if (rnmdpr_big_cur.pi != rnmdpr_big.pi+1):

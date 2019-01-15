@@ -70,8 +70,7 @@ def process(topospec):
     if proxy == True or app_redir == True:
         # Global descriptors and page rings
         ProxyServiceHelper.main()
-        SwDscrRingHelper.main("NMDR")
-        SwDscrRingHelper.main("NMPR")
+        SwDscrRingHelper.main("NMDPR")
         SwDscrRingHelper.main("IPSEC_NMDR")
         SwDscrRingHelper.main("IPSEC_NMPR")
         BRQHelper.main()

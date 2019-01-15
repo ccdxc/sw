@@ -79,12 +79,12 @@ def TestCaseVerify(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.pvtdata.db[tlscbid]
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
-    print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
-    print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("pre-sync: tnmdpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdpr_alloc, tlscb_cur.enc_requests))
+    print("pre-sync: rnmdpr_free %d enc_completions %d" % (tlscb_cur.rnmdpr_free, tlscb_cur.enc_completions))
     print("pre-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
     tlscb_cur.GetObjValPd()
-    print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
-    print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("post-sync: tnmdpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdpr_alloc, tlscb_cur.enc_requests))
+    print("post-sync: rnmdpr_free %d enc_completions %d" % (tlscb_cur.rnmdpr_free, tlscb_cur.enc_completions))
     print("post-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
 
 
@@ -106,14 +106,10 @@ def TestCaseVerify(tc):
     # 3. Fetch current values from Platform
     rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
     rnmdpr_big_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
     rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
 
     tnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
     tnmdpr_big_cur.GetMeta()
-    tnmpr_cur = tc.infra_data.ConfigStore.objects.db["TNMPR"]
-    tnmpr_cur.GetMeta()
     tnmdpr_big = tc.pvtdata.db["TNMDPR_BIG"]
     arq = tc.pvtdata.db["CPU0000_ARQ"]
 
@@ -123,9 +119,9 @@ def TestCaseVerify(tc):
 
     # 2. Verify descriptor
     if rnmdpr_big.ringentries[rnmdpr_big.pi].handle != arq_cur.ringentries[arq.pi].handle:
-    #if rnmdr.ringentries[rnmdr.pi].handle != arq_cur.ringentries[0].handle:
+    #if rnmdpr.ringentries[rnmdpr.pi].handle != arq_cur.ringentries[0].handle:
         print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr_big.ringentries[rnmdpr_big.pi].handle, arq_cur.ringentries[0].handle))
-        #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdr.ringentries[rnmdr.pi].handle, arq_cur.ringentries[arq.pi].handle))
+        #print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr.ringentries[rnmdpr.pi].handle, arq_cur.ringentries[arq.pi].handle))
         return False
 
     return True

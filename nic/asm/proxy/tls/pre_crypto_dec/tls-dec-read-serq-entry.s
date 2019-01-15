@@ -19,7 +19,6 @@ struct tx_table_s1_t0_k k;
     .param          tls_dec_rx_serq_process
     .param          tls_dec_alloc_tnmdr_process
     .param          tls_dec_alloc_tnmpr_process
-    .param          tls_dec_serq_consume_process
 
 
 tls_dec_read_serq_entry_process:

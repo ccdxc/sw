@@ -90,9 +90,6 @@ def TestCaseVerify(tc):
     rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
     rnmdpr_big_cur.GetMeta()
 
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
-
     tnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
     #tnmdpr_big_cur.GetMeta()
 
@@ -110,7 +107,7 @@ def TestCaseVerify(tc):
     print("Old RNMDPR_BIG PI: %d, New RNMDPR_BIG PI: %d" % (rnmdpr_big.pi, rnmdpr_big_cur.pi))
 
     # Verify page
-    #if rnmpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
+    #if rnmdpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
     #    print("Page handle not as expected in brq_cur.swdre_list")
         #return False
 

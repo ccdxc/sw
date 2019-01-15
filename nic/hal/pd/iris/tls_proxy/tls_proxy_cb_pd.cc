@@ -116,8 +116,7 @@ p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tls_proxy_cb_t* tls_proxy_cb_pd)
         HAL_TRACE_ERR("Failed to create tx: s6_t0_pre_crypto_stats_entry for TLS CB");
         return HAL_RET_HW_FAIL;
     }
-    tls_proxy_cb_pd->tls_proxy_cb->tnmdr_alloc = ntohs(data.u.tls_pre_crypto_stats6_d.tnmdr_alloc);
-    tls_proxy_cb_pd->tls_proxy_cb->tnmpr_alloc = ntohs(data.u.tls_pre_crypto_stats6_d.tnmpr_alloc);
+    tls_proxy_cb_pd->tls_proxy_cb->tnmdpr_alloc = ntohs(data.u.tls_pre_crypto_stats6_d.tnmdpr_alloc);
     tls_proxy_cb_pd->tls_proxy_cb->enc_requests = ntohs(data.u.tls_pre_crypto_stats6_d.enc_requests);
     tls_proxy_cb_pd->tls_proxy_cb->dec_requests = ntohs(data.u.tls_pre_crypto_stats6_d.dec_requests);
     tls_proxy_cb_pd->tls_proxy_cb->mac_requests = ntohs(data.u.tls_pre_crypto_stats6_d.mac_requests);
@@ -125,8 +124,7 @@ p4pd_get_tls_tx_s6_t0_pre_crypto_stats_entry(pd_tls_proxy_cb_t* tls_proxy_cb_pd)
       (ntohs(data.u.tls_pre_crypto_stats6_d.debug_stage4_7_thread) << 16) |
       ntohs(data.u.tls_pre_crypto_stats6_d.debug_stage0_3_thread);
     HAL_TRACE_DEBUG("hwid : {:#x}", hwid);
-    HAL_TRACE_DEBUG("Received tnmdr alloc: 0x{:x}", tls_proxy_cb_pd->tls_proxy_cb->tnmdr_alloc);
-    HAL_TRACE_DEBUG("Received tnmpr alloc: 0x{:x}", tls_proxy_cb_pd->tls_proxy_cb->tnmpr_alloc);
+    HAL_TRACE_DEBUG("Received tnmdpr alloc: 0x{:x}", tls_proxy_cb_pd->tls_proxy_cb->tnmdpr_alloc);
     HAL_TRACE_DEBUG("Received enc requests: 0x{:x}", tls_proxy_cb_pd->tls_proxy_cb->enc_requests);
     HAL_TRACE_DEBUG("Received dec requests: 0x{:x}", tls_proxy_cb_pd->tls_proxy_cb->dec_requests);
     HAL_TRACE_DEBUG("Received mac requests: 0x{:x}", tls_proxy_cb_pd->tls_proxy_cb->mac_requests);

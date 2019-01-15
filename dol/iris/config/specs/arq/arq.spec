@@ -7,6 +7,6 @@ type :
 entries :
     - entry:
         name        : ARQ
-        haltype     : 12
+        haltype     : 6
         type        : DESCR_AOL_VIA_REF
         count       : 16

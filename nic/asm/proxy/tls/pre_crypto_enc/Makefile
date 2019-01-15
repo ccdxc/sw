@@ -22,7 +22,6 @@ SRC_FILES := \
     $(SRC_DIR)/tls-enc-read-serq-entry.s \
     $(SRC_DIR)/tls-enc-rx-serq.s \
     $(SRC_DIR)/tls-enc-read-tnmdr-alloc-idx.s \
-    $(SRC_DIR)/tls-enc-read-tnmpr-alloc-idx.s \
     $(SRC_DIR)/tls-enc-read-pkt-descr.s \
     $(SRC_DIR)/tls-enc-serq-consume.s \
     $(SRC_DIR)/tls-enc-tdesc-alloc.s \

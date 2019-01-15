@@ -176,8 +176,7 @@ header_type to_stage_5_phv_t {
 
 header_type to_stage_6_phv_t {
     fields {
-        tnmdr_alloc                     : 8;
-        tnmpr_alloc                     : 8;
+        tnmdpr_alloc                    : 16;
         enc_requests                    : 8;
         dec_requests                    : 8;
         debug_stage0_3_thread           : 16;
@@ -527,8 +526,7 @@ action tls_pre_crypto_stats6(STG_PRE_CRYPTO_STATS_ACTION_PARAMS) {
 
 
     /* To Stage 6 fields */
-    modify_field(to_s6_scratch.tnmdr_alloc, to_s6.tnmdr_alloc);
-    modify_field(to_s6_scratch.tnmpr_alloc, to_s6.tnmpr_alloc);
+    modify_field(to_s6_scratch.tnmdpr_alloc, to_s6.tnmdpr_alloc);
     modify_field(to_s6_scratch.enc_requests, to_s6.enc_requests);
     modify_field(to_s6_scratch.dec_requests, to_s6.dec_requests);
     modify_field(to_s6_scratch.debug_stage0_3_thread, to_s6.debug_stage0_3_thread);

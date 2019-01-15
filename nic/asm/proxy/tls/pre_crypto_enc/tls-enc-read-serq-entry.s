@@ -24,7 +24,6 @@ struct tx_table_s1_t0_k k	    ;
 %%
         .param          tls_enc_rx_serq_process
         .param          tls_enc_alloc_tnmdr_process
-        .param          tls_enc_alloc_tnmpr_process
         .param          tls_enc_pkt_descriptor_process
         
 tls_enc_read_serq_entry_process:

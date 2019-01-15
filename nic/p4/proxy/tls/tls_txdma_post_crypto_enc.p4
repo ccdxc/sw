@@ -117,8 +117,7 @@ header_type to_stage_7_phv_t {
     fields {
         odesc                           : HBM_ADDRESS_WIDTH;
         other_fid                       : 16;
-        rnmdr_free                      : 8;
-        rnmpr_free                      : 8;
+        rnmdpr_free                     : 16;
         enc_completions                 : 8;
         debug_stage0_3_thread           : 16;
         debug_stage4_7_thread           : 16;
@@ -128,8 +127,7 @@ header_type to_stage_7_phv_t {
 #define GENERATE_TO_S7_K                                                                                \
     modify_field(to_s7_scratch.odesc, to_s7.odesc);                                                     \
     modify_field(to_s7_scratch.other_fid, to_s7.other_fid);                                             \
-    modify_field(to_s7_scratch.rnmdr_free, to_s7.rnmdr_free);                                           \
-    modify_field(to_s7_scratch.rnmpr_free, to_s7.rnmpr_free);                                           \
+    modify_field(to_s7_scratch.rnmdpr_free, to_s7.rnmdpr_free);                                         \
     modify_field(to_s7_scratch.enc_completions, to_s7.enc_completions);                                 \
     modify_field(to_s7_scratch.debug_stage0_3_thread, to_s7.debug_stage0_3_thread);                     \
     modify_field(to_s7_scratch.debug_stage4_7_thread, to_s7.debug_stage4_7_thread);

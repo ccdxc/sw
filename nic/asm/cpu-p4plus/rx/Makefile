@@ -20,7 +20,6 @@ CAPSIM_BIN = ../../../asic/capri/model/capsim-gen/bin/capsim
 SRC_FILES := \
     $(SRC_DIR)/cpu_initial_action.s \
     $(SRC_DIR)/cpu_read_desc_pindex.s \
-    $(SRC_DIR)/cpu_read_page_pindex.s \
     $(SRC_DIR)/cpu_read_arqrx_pindex.s \
     $(SRC_DIR)/cpu_desc_alloc.s \
     $(SRC_DIR)/cpu_page_alloc.s \

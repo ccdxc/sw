@@ -131,8 +131,8 @@ def TestCaseSetup(tc):
     tnmdpr.GetMeta()
     tnmdpr.GetRingEntries([tnmdpr.pi])
 
-    print("snapshot1: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
-    print("snapshot1: rnmdr_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
+    print("snapshot1: tnmdpr_alloc %d enc_requests %d" % (tlscb.tnmdpr_alloc, tlscb.enc_requests))
+    print("snapshot1: rnmdpr_free %d enc_completions %d" % (tlscb.rnmdpr_free, tlscb.enc_completions))
 
     if tc.module.args.cipher_suite == "CCM":
         brq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["BRQ_ENCRYPT_CCM"])
@@ -197,8 +197,8 @@ def TestCaseVerify(tc):
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
     other_tlscb = tc.pvtdata.db[other_tlscbid]
     other_tlscb_cur = tc.infra_data.ConfigStore.objects.db[other_tlscbid]
-    print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d mac_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests, tlscb_cur.mac_requests))
-    print("pre-sync: rnmdr_free %d rnmpr_free %d enc_completions %d mac_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions, tlscb_cur.mac_completions))
+    print("pre-sync: tnmdpr_alloc %d enc_requests %d mac_requests %d" % (tlscb_cur.tnmdpr_alloc, tlscb_cur.enc_requests, tlscb_cur.mac_requests))
+    print("pre-sync: rnmdpr_free %d enc_completions %d mac_completions %d" % (tlscb_cur.rnmdpr_free, tlscb_cur.enc_completions, tlscb_cur.mac_completions))
     print("pre-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
 
 
@@ -206,20 +206,20 @@ def TestCaseVerify(tc):
     other_tlscb_cur.GetObjValPd()
 
 
-    print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d mac_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests, tlscb_cur.mac_requests))
-    print("post-sync: rnmdr_free %d rnmpr_free %d enc_completions %d mac_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions, tlscb_cur.mac_completions))
+    print("post-sync: tnmdpr_alloc %d enc_requests %d mac_requests %d" % (tlscb_cur.tnmdpr_alloc, tlscb_cur.enc_requests, tlscb_cur.mac_requests))
+    print("post-sync: rnmdpr_free %d enc_completions %d mac_completions %d" % (tlscb_cur.rnmdpr_free, tlscb_cur.enc_completions, tlscb_cur.mac_completions))
     print("post-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
 
-    print("snapshot3: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d mac_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests, tlscb.mac_requests))
-    print("snapshot3: rnmdr_free %d rnmpr_free %d enc_completions %d mac_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions, tlscb.mac_completions))
+    print("snapshot3: tnmdpr_alloc %d enc_requests %d mac_requests %d" % (tlscb.tnmdpr_alloc, tlscb.enc_requests, tlscb.mac_requests))
+    print("snapshot3: rnmdpr_free %d enc_completions %d mac_completions %d" % (tlscb.rnmdpr_free, tlscb.enc_completions, tlscb.mac_completions))
 
     # 0. Verify the counters
     #if ((tlscb_cur.tnmdpr_alloc - tlscb.tnmdpr_alloc) != (tlscb_cur.rnmdpr_free - tlscb.rnmdpr_free)):
         #print("tnmdpr alloc increment not same as rnmdpr free increment")
         #return False
 
-    #if ((tlscb_cur.tnmpr_alloc - tlscb.tnmpr_alloc) != (tlscb_cur.rnmpr_free - tlscb.rnmpr_free)):
-        #print("tnmpr alloc increment not same as rnmpr free increment")
+    #if ((tlscb_cur.tnmdpr_alloc - tlscb.tnmdpr_alloc) != (tlscb_cur.rnmdpr_free - tlscb.rnmdpr_free)):
+        #print("tnmdpr alloc increment not same as rnmdpr free increment")
         #return False
 
 
@@ -391,7 +391,7 @@ def TestCaseVerify(tc):
                                 (brq_cur.ring_entries[brq_cur.pi-1].barco_status))
 
     # 16. Verify page
-    #if rnmpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
+    #if rnmdpr.ringentries[0].handle != brq_cur.swdre_list[0].Addr1:
     #    print("Page handle not as expected in brq_cur.swdre_list")
         #return False
 

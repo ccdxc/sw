@@ -101,8 +101,7 @@ header_type to_stage_4_phv_t {
 
 header_type to_stage_5_phv_t {
     fields {
-        tnmdr_alloc                     : 8;
-        tnmpr_alloc                     : 8;
+        tnmdpr_alloc                    : 16;
         mac_completions                 : 8;
         enc_requests                    : 8;
         debug_stage0_3_thread           : 16;
@@ -372,8 +371,7 @@ action tls_post_crypto_stats5(STG_POST_CRYPTO_STATS_ACTION_PARAMS) {
 
 
     /* To Stage 5 fields */
-    modify_field(to_s5_scratch.tnmdr_alloc, to_s5.tnmdr_alloc);
-    modify_field(to_s5_scratch.tnmpr_alloc, to_s5.tnmpr_alloc);
+    modify_field(to_s5_scratch.tnmdpr_alloc, to_s5.tnmdpr_alloc);
     modify_field(to_s5_scratch.mac_completions, to_s5.mac_completions);
     modify_field(to_s5_scratch.enc_requests, to_s5.enc_requests);
     modify_field(to_s5_scratch.debug_stage0_3_thread, to_s5.debug_stage0_3_thread);

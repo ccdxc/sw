@@ -61,13 +61,11 @@ class TlsCbObject(base.ConfigObjectBase):
             self.serq_ci = resp_spec.spec.serq_ci
             self.bsq_pi = resp_spec.spec.bsq_pi
             self.bsq_ci = resp_spec.spec.bsq_ci
-            self.tnmdr_alloc = resp_spec.spec.tnmdr_alloc
-            self.tnmpr_alloc = resp_spec.spec.tnmpr_alloc
+            self.tnmdpr_alloc = resp_spec.spec.tnmdpr_alloc
             self.enc_requests = resp_spec.spec.enc_requests
             self.dec_requests = resp_spec.spec.dec_requests
             self.mac_requests = resp_spec.spec.mac_requests
-            self.rnmdr_free = resp_spec.spec.rnmdr_free
-            self.rnmpr_free = resp_spec.spec.rnmpr_free
+            self.rnmdpr_free = resp_spec.spec.rnmdpr_free
             self.enc_completions = resp_spec.spec.enc_completions
             self.dec_completions = resp_spec.spec.dec_completions
             self.mac_completions = resp_spec.spec.mac_completions

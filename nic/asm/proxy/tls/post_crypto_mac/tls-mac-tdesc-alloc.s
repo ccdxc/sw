@@ -33,7 +33,7 @@ tls_mac_tdesc_alloc_process:
         CAPRI_CLEAR_TABLE1_VALID
 
         phvwr	    p.to_s4_odesc, d.odesc
-        phvwri      p.to_s5_tnmdr_alloc, 1
+        phvwri      p.to_s5_tnmdpr_alloc, 1
 
 	CAPRI_BARCO_DRBG_RANDOM0_GENERATE(r1, r2)
 

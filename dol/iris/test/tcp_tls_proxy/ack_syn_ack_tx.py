@@ -55,14 +55,6 @@ def TestCaseSetup(tc):
 
 
     # 2. Clone objects that are needed for verification
-    rnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDR"])
-    rnmdr.GetMeta()
-    rnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMPR"])
-    rnmpr.GetMeta()
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDR"])
-    tnmdr.GetMeta()
-    tnmpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMPR"])
-    tnmpr.GetMeta()
     arq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU0000_ARQ"])
     arq.Configure()
 
@@ -76,10 +68,6 @@ def TestCaseSetup(tc):
     tcpcb = copy.deepcopy(tcb)
 
     tc.pvtdata.Add(tlscb)
-    tc.pvtdata.Add(rnmdr)
-    tc.pvtdata.Add(rnmpr)
-    tc.pvtdata.Add(tnmdr)
-    tc.pvtdata.Add(tnmpr)
     tc.pvtdata.Add(tcpcb)
     tc.pvtdata.Add(sesq)
     tc.pvtdata.Add(arq)

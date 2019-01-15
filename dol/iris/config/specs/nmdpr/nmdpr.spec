@@ -1,37 +1,27 @@
-# TX and RX NMDR definitions
+# TX and RX NMDPR definitions
 meta:
-    id: NMDR
+    id: NMDPR
 
 type : 
 
 entries :
     - entry:
-        name        : TNMDR
-        haltype     : 2
-        type        : DESCR_AOL_VIA_REF
-        count       : 1024 
-    - entry:
-        name        : RNMDR
-        haltype     : 3
-        type        : DESCR_AOL_VIA_REF
-        count       : 1024 
-    - entry:
         name        : TNMDPR_SMALL
-        haltype     : 34
+        haltype     : 28
         type        : DESCR_AOL_VIA_REF
         count       : 1024
     - entry:
         name        : RNMDPR_SMALL
-        haltype     : 35
+        haltype     : 29
         type        : DESCR_AOL_VIA_REF
         count       : 1024
     - entry:
         name        : TNMDPR_BIG
-        haltype     : 36
+        haltype     : 30
         type        : DESCR_AOL_VIA_REF
         count       : 1024
     - entry:
         name        : RNMDPR_BIG
-        haltype     : 37
+        haltype     : 31
         type        : DESCR_AOL_VIA_REF
         count       : 1024

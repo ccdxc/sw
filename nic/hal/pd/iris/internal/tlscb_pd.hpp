@@ -38,7 +38,7 @@ typedef enum tlscb_hwid_order_ {
 typedef uint64_t    tlscb_hw_id_t;
 // Atomic stats for TLS TX pre crypto in TLS CB
 typedef struct __attribute__((__packed__)) __tls_tx_pre_crypto_stats1_t {
-    uint64_t tnmdr_alloc;
+    uint64_t tnmdpr_alloc;
     uint64_t enc_requests;
     uint64_t mac_requests;
     uint64_t stats3;
@@ -50,7 +50,6 @@ typedef struct __attribute__((__packed__)) __tls_tx_pre_crypto_stats1_t {
 
 // Atomic stats for TLS TX pre crypto in TLS CB
 typedef struct __attribute__((__packed__)) __tls_tx_pre_crypto_stats2_t {
-    uint64_t tnmpr_alloc;
     uint64_t dec_requests;
     uint64_t mac_requests;
     uint64_t stats3;
@@ -62,7 +61,7 @@ typedef struct __attribute__((__packed__)) __tls_tx_pre_crypto_stats2_t {
 
 // Atomic stats for TLS TX post crypto in TLS CB
 typedef struct __attribute__((__packed__)) __tls_tx_post_crypto_stats1_t {
-    uint64_t rnmdr_free;
+    uint64_t rnmdpr_free;
     uint64_t enc_completions;
     uint64_t enc_failures;
     uint64_t mac_completions;
@@ -74,7 +73,6 @@ typedef struct __attribute__((__packed__)) __tls_tx_post_crypto_stats1_t {
 
 // Atomic stats for TLS TX post crypto in TLS CB
 typedef struct __attribute__((__packed__)) __tls_tx_post_crypto_stats2_t {
-    uint64_t rnmpr_free;
     uint64_t dec_completions;
     uint64_t dec_failures;
     uint64_t mac_completions;

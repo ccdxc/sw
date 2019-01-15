@@ -5,7 +5,7 @@ meta:
 entries:
     - entry:
         name        : BSQ
-        haltype     : 8
+        haltype     : 2
         type        : DESCR_AOL_VIA_REF
         count       : 16
         size        : 4096

@@ -5,6 +5,6 @@ meta:
 entries:
     - entry:
         name        : SESQ
-        haltype     : 10
+        haltype     : 4
         type        : DESCR_AOL_VIA_REF
         count       : 16

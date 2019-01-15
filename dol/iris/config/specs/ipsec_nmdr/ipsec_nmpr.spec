@@ -5,11 +5,11 @@ meta:
 entries:
     - entry:
         name        : IPSEC_TNMPR
-        haltype     : 28 
+        haltype     : 22
         type        : PAGE_VIA_REF 
         count       : 1024 
     - entry:
         name        : IPSEC_RNMPR
-        haltype     : 29 
+        haltype     : 23 
         type        : PAGE_VIA_REF
         count       : 1024 

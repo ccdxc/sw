@@ -41,8 +41,8 @@ def TestCaseSetup(tc):
     rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
     rnmdpr_big.GetMeta()
     rnmdpr_big.GetRingEntries([rnmdpr_big.pi])
-    tnmdr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
-    tnmdr.GetMeta()
+    tnmdpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
+    tnmdpr.GetMeta()
     sesqid = "TCPCB%04d_SESQ" % id
     sesq = copy.deepcopy(tc.infra_data.ConfigStore.objects.db[sesqid])
     sesq.GetMeta()
@@ -61,7 +61,7 @@ def TestCaseSetup(tc):
 
     tc.pvtdata.Add(tlscb)
     tc.pvtdata.Add(rnmdpr_big)
-    tc.pvtdata.Add(tnmdr)
+    tc.pvtdata.Add(tnmdpr)
     tc.pvtdata.Add(tcpcb)
     tc.pvtdata.Add(sesq)
     return
@@ -74,27 +74,22 @@ def TestCaseVerify(tc):
     tlscbid = "TlsCb%04d" % id
     tlscb = tc.pvtdata.db[tlscbid]
     tlscb_cur = tc.infra_data.ConfigStore.objects.db[tlscbid]
-    print("pre-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
-    print("pre-sync: rnmdpr_big_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("pre-sync: tnmdpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdpr_alloc, tlscb_cur.enc_requests))
+    print("pre-sync: rnmdpr_big_free %d enc_completions %d" % (tlscb_cur.rnmdpr_free, tlscb_cur.enc_completions))
     print("pre-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
     tlscb_cur.GetObjValPd()
-    print("post-sync: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdr_alloc, tlscb_cur.tnmpr_alloc, tlscb_cur.enc_requests))
-    print("post-sync: rnmdpr_big_free %d rnmpr_free %d enc_completions %d" % (tlscb_cur.rnmdr_free, tlscb_cur.rnmpr_free, tlscb_cur.enc_completions))
+    print("post-sync: tnmdpr_alloc %d enc_requests %d" % (tlscb_cur.tnmdpr_alloc, tlscb_cur.enc_requests))
+    print("post-sync: rnmdpr_big_free %d enc_completions %d" % (tlscb_cur.rnmdpr_free, tlscb_cur.enc_completions))
     print("post-sync: pre_debug_stage0_7_thread 0x%x post_debug_stage0_7_thread 0x%x" % (tlscb_cur.pre_debug_stage0_7_thread, tlscb_cur.post_debug_stage0_7_thread))
 
-    print("snapshot: tnmdr_alloc %d tnmpr_alloc %d enc_requests %d" % (tlscb.tnmdr_alloc, tlscb.tnmpr_alloc, tlscb.enc_requests))
-    print("snapshot: rnmdpr_big_free %d rnmpr_free %d enc_completions %d" % (tlscb.rnmdr_free, tlscb.rnmpr_free, tlscb.enc_completions))
+    print("snapshot: tnmdpr_alloc %d enc_requests %d" % (tlscb.tnmdpr_alloc, tlscb.enc_requests))
+    print("snapshot: rnmdpr_big_free %d enc_completions %d" % (tlscb.rnmdpr_free, tlscb.enc_completions))
 
 
     # 0. Verify the counters
-    #if ((tlscb_cur.tnmdr_alloc - tlscb.tnmdr_alloc) != (tlscb_cur.rnmdpr_big_free - tlscb.rnmdpr_big_free)):
-        #print("tnmdr alloc increment not same as rnmdpr_big free increment")
+    #if ((tlscb_cur.tnmdpr_alloc - tlscb.tnmdpr_alloc) != (tlscb_cur.rnmdpr_free - tlscb.rnmdpr_free)):
+        #print("tnmdpr alloc increment not same as rnmdpr_big free increment")
         #return False
-
-    #if ((tlscb_cur.tnmpr_alloc - tlscb.tnmpr_alloc) != (tlscb_cur.rnmpr_free - tlscb.rnmpr_free)):
-        #print("tnmpr alloc increment not same as rnmpr free increment")
-        #return False
-
 
     if ((tlscb_cur.enc_requests - tlscb.enc_requests) != (tlscb_cur.enc_completions - tlscb.enc_completions)):
         print("enc requests not equal to completions %d %d %d %d" % (tlscb_cur.enc_requests, tlscb.enc_requests, tlscb_cur.enc_completions, tlscb.enc_completions))
@@ -126,13 +121,11 @@ def TestCaseVerify(tc):
     # 3. Fetch current values from Platform
     rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
     rnmdpr_big_cur.GetMeta()
-    rnmpr_cur = tc.infra_data.ConfigStore.objects.db["RNMPR"]
-    rnmpr_cur.GetMeta()
     rnmdpr_big = tc.pvtdata.db["RNMDPR_BIG"]
 
-    tnmdr_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
-    tnmdr_cur.GetMeta()
-    tnmdr = tc.pvtdata.db["TNMDPR_BIG"]
+    tnmdpr_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
+    tnmdpr_cur.GetMeta()
+    tnmdpr = tc.pvtdata.db["TNMDPR_BIG"]
 
     # 4. Verify PI for RNMDPR_BIG got incremented by 1
     if (rnmdpr_big_cur.pi != rnmdpr_big.pi+1):
