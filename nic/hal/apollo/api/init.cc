@@ -8,6 +8,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
+#include "nic/sdk/linkmgr/linkmgr.hpp"
 #include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/include/api/oci_init.hpp"
 #include "nic/hal/apollo/framework/impl_base.hpp"
@@ -100,6 +101,27 @@ asic_config_init (asic_cfg_t *asic_cfg)
     asic_asm_config_init(asic_cfg);
 }
 
+static sdk_ret_t
+linkmgr_init (catalog *catalog, const char *cfg_path)
+{
+    linkmgr_cfg_t    cfg;
+
+    memset(&cfg, 0, sizeof(cfg));
+    cfg.platform_type = platform_type_t::PLATFORM_TYPE_SIM;
+    cfg.catalog = catalog;
+    cfg.cfg_path = cfg_path;
+    cfg.port_event_cb = NULL;
+    cfg.xcvr_event_cb = NULL;
+    cfg.port_log_fn = NULL;
+
+    /**< initialize the linkmgr */
+    sdk::linkmgr::linkmgr_init(&cfg);
+    /**< start the linkmgr control thread */
+    sdk::linkmgr::linkmgr_start();
+
+    return SDK_RET_OK;
+}
+
 }    // namespace api
 
 /**
@@ -107,10 +129,6 @@ asic_config_init (asic_cfg_t *asic_cfg)
  * @param[in]    params init time parameters
  * @return #SDK_RET_OK on success, failure status code on error
  */
-// TODO:
-// 1. linkmgr_init()
-// 2. periodic_thread_init()
-// 3. etc.
 sdk_ret_t
 oci_init (oci_init_params_t *params)
 {
@@ -150,6 +168,12 @@ oci_init (oci_init_params_t *params)
     api::asic_config_init(&asic_cfg);
     SDK_ASSERT(impl_base::init(&asic_cfg) == SDK_RET_OK);
     impl::g_oci_impl_state.init();
+
+    /**< spin all necessary threads in the system */
+    core::thread_spawn(&api::g_oci_state);
+
+    /**< trigger linkmgr initialization */
+    api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
     return SDK_RET_OK;
 }
 

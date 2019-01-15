@@ -18,6 +18,8 @@ thread*  thread::t_curr_thread_      = NULL;
 uint64_t thread::control_cores_mask_ = 0;
 uint64_t thread::data_cores_free_    = 0;
 uint64_t thread::data_cores_mask_    = 0;
+bool     thread::super_user_ =
+             (getenv("USER") && !strcmp(getenv("USER"), "root")) ? true : false;
 
 //------------------------------------------------------------------------------
 // thread instance initialization

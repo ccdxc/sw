@@ -25,7 +25,7 @@ void cap_mx_apb_write(int chip_id, int inst_id, int addr, int data) {
  cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
     mx_csr.dhs_apb.entry[addr].data(data);
     mx_csr.dhs_apb.entry[addr].write();
-    mx_csr.dhs_apb.entry[addr].show();
+    // mx_csr.dhs_apb.entry[addr].show();
 }
 
 int
@@ -73,7 +73,7 @@ void cap_mx_set_cfg_mac_tdm(int chip_id, int inst_id, int slot0, int slot1, int 
       mx_csr.cfg_mac_tdm.slot3(0);
    }
    mx_csr.cfg_mac_tdm.write();
-   mx_csr.cfg_mac_tdm.show();
+   // mx_csr.cfg_mac_tdm.show();
 }
 
 void cap_mx_stats_reset(int chip_id, int inst_id, int ch, int value) {
@@ -367,7 +367,7 @@ void cap_mx_set_pause(int chip_id , int inst_id, int ch0_pri_vec, int ch1_pri_ve
    mx_csr.cfg_mac_xoff.ff_tx3fcxoff_i(txfcxoff_enable[cap_mx_port_to_ch_mapping(chip_id, inst_id, 3)]);
    mx_csr.cfg_mac_xoff.ff_tx3pfcxoff_i(txpfcxoff_enable[cap_mx_port_to_ch_mapping(chip_id, inst_id, 3)]);
    mx_csr.cfg_mac_xoff.write();
-   mx_csr.cfg_mac_xoff.show();
+   // mx_csr.cfg_mac_xoff.show();
 }
 
 int cap_mx_check_tx_idle(int chip_id, int inst_id, int port) {
@@ -414,7 +414,8 @@ void cap_mx_wait_mac_sync(int chip_id, int mx_inst, int ch) {
 }
 
 int cap_mx_check_ch_sync(int chip_id, int inst_id, int ch) {
- cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+ //cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+ CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
  int data = cap_mx_apb_read(chip_id, inst_id, 0x9);
  return ((data >> ch) & 0x1);
 }
@@ -784,7 +785,8 @@ void cap_mx_mac_stat(int chip_id, int inst_id, int ch, int short_report,
 }
 
 void cap_mx_eos_cnt(int chip_id, int inst_id) {
- cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+ //cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+   CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
    cap_mx_mac_stat(chip_id,inst_id, 0, 1, NULL);  // channel 0
    cap_mx_mac_stat(chip_id,inst_id, 1, 1, NULL);  // channel 1
    cap_mx_mac_stat(chip_id,inst_id, 2, 1, NULL);  // channel 2
@@ -1121,7 +1123,8 @@ void cap_mx_set_an_link_timer(int chip_id, int inst_id, int ch, int value) {
 }
 
 int cap_mx_get_fec_cor_blK_cnt(int chip_id, int inst_id, int ch) {
- cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+ //cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+ CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
  int addr = (ch == 1) ? 0x30ca : (ch == 2) ? 0x31ca : (ch == 3) ? 0x32ca : 0x10ca;
  int data = cap_mx_apb_read(chip_id, inst_id, addr);
  PLOG_MSG("cap_mx_get_fec_cor_blK_cnt :: mx" << inst_id << " channel " << ch << ": corrected blocks counter low:" << data << endl);
@@ -1230,7 +1233,8 @@ int cap_mx_rx_frame_too_long_cnt(int chip_id, int inst_id, int ch) {
 
 
 void cap_mx_set_rx_padding(int chip_id, int inst_id, int ch, bool enable) {
- cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+ //cap_mx_csr_t & mx_csr = CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
+ CAP_BLK_REG_MODEL_ACCESS(cap_mx_csr_t, chip_id, inst_id);
  int addr = 0x207 + ch;
  int rdata = cap_mx_apb_read(chip_id, inst_id, addr);
  if(enable) {

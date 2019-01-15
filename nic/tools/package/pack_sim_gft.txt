@@ -55,7 +55,7 @@ nic/build/x86_64/gft/lib/libsdkasicpd.so                        /nic/lib/
 nic/build/x86_64/gft/lib/libhal_lib.so                          /nic/lib/
 nic/build/x86_64/gft/lib/liblinkmgr_libsrc.so                   /nic/lib/
 nic/build/x86_64/gft/lib/libsdklinkmgr.so                       /nic/lib/
-nic/build/x86_64/gft/lib/liblinkmgrcsr.so                       /nic/lib/
+nic/build/x86_64/gft/lib/libsdklinkmgrcsr.so                    /nic/lib/
 nic/build/x86_64/gft/lib/liblinkmgrdelphi.so                    /nic/lib/
 nic/build/x86_64/gft/lib/libprotobuf.so.14                      /nic/lib/
 nic/build/x86_64/gft/lib/libssl.so.1.1                          /nic/lib/

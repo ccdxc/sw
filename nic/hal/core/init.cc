@@ -178,39 +178,6 @@ hal_thread_add (sdk::lib::thread *hal_thread)
 }
 
 //------------------------------------------------------------------------------
-// return appropriate scheduling policy for a thread, given its role
-//------------------------------------------------------------------------------
-int
-hal_thread_sched_policy (sdk::lib::thread_role_t thread_role)
-{
-    if (gl_super_user == false) {
-        return SCHED_OTHER;
-    } else if (thread_role == sdk::lib::THREAD_ROLE_DATA) {
-        return SCHED_FIFO;
-    }
-    //return SCHED_RR;
-    return SCHED_OTHER;
-}
-
-//------------------------------------------------------------------------------
-// compute the thread's scheduling policy & priority, given its role
-// TODO: should we just use SCHED_OTHER for all control threads and return
-//       default priority ? asic-rw can bump it up a bit after calling this API
-//------------------------------------------------------------------------------
-int
-hal_thread_priority (sdk::lib::thread_role_t role)
-{
-    int    prio, sched_policy;
-
-    sched_policy = hal_thread_sched_policy(role);
-    prio = sched_get_priority_max(sched_policy);
-    if (sched_policy == SCHED_FIFO) {
-        prio = 50;    // TODO: hack !!
-    }
-    return prio;
-}
-
-//------------------------------------------------------------------------------
 // wrapper API to create HAL threads
 //------------------------------------------------------------------------------
 sdk::lib::thread *
@@ -272,10 +239,10 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
 
     // switch to real-time scheduling
     sched_param.sched_priority =
-        hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL);
+        sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL);
     rv =
         sched_setscheduler(0,
-            hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             &sched_param);
     if (rv != 0) {
         HAL_TRACE_ERR("sched_setscheduler failure, err : {}", rv);
@@ -290,7 +257,7 @@ hal_main_thread_init (hal_cfg_t *hal_cfg)
                           0x0,    // use all control cores
                           sdk::lib::thread::dummy_entry_func,
                           sched_param.sched_priority,
-                          hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
+                          sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                           NULL);
     hal_thread->set_data(hal_thread);
     hal_thread->set_pthread_id(pthread_self());
@@ -325,8 +292,8 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                 hal_thread_create(static_cast<const char *>(thread_name),
                                   tid, sdk::lib::THREAD_ROLE_DATA,
                                   cores_mask, fte_pkt_loop_start,
-                                  hal_thread_priority(sdk::lib::THREAD_ROLE_DATA),
-                                  hal_thread_sched_policy(sdk::lib::THREAD_ROLE_DATA),
+                                  sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_DATA),
+                                  sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_DATA),
                                   hal_cfg);
             HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                                     "FTE thread {} creation failed", tid);
@@ -341,8 +308,8 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                           sdk::lib::THREAD_ROLE_CONTROL,
                           0x0,    // use all control cores
                           periodic_thread_start,
-                          hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL),
-                          hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
+                          sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                          sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                           NULL);
     HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                             "HAL periodic thread create failure");

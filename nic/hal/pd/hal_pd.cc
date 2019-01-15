@@ -626,13 +626,13 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     HAL_TRACE_DEBUG("Starting asic-rw thread ...");
     hal_thread =
         hal_thread_create(std::string("asicrw").c_str(),
-                          HAL_THREAD_ID_ASIC_RW,
-                          sdk::lib::THREAD_ROLE_CONTROL,
-                          0x0,    // use all control cores
-                          sdk::asic::asicrw_start,
-                          hal_thread_priority(sdk::lib::THREAD_ROLE_CONTROL),
-                          hal_thread_sched_policy(sdk::lib::THREAD_ROLE_CONTROL),
-                          hal_cfg);
+            HAL_THREAD_ID_ASIC_RW,
+            sdk::lib::THREAD_ROLE_CONTROL,
+            0x0,    // use all control cores
+            sdk::asic::asicrw_start,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            hal_cfg);
     HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                             "asicrw thread creation failure");
     hal_thread->start(hal_thread);

@@ -126,9 +126,8 @@ xcvr_send_notification (int port) {
             xcvr_event_info.pid = xcvr_pid_t::XCVR_PID_UNKNOWN;
             break;
         }
+        g_xcvr_notify_cb(&xcvr_event_info);
     }
-
-    g_xcvr_notify_cb(&xcvr_event_info);
 
     return SDK_RET_OK;
 }
