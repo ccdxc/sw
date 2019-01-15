@@ -10,7 +10,6 @@
 #include <map>
 #include <unordered_map>
 #include "nic/include/accel_ring.h"
-#include "gen/proto/types.pb.h"
 #include "nic/hal/plugins/cfg/accel/accel_rgroup.hpp"
 
 namespace hal {

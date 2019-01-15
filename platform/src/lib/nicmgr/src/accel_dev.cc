@@ -367,11 +367,18 @@ Accel_PF::DelphiDeviceInit(void)
              * Some of the fields below will be updated when driver
              * issues _DevcmdSeqQueueInit().
              */
+#if 0
+            /*
+             * Disabled for the time being to reduce FW init time.
+             * Reinstate in the future when a thread is available to
+             * manage these AccelSeqQueueInfo updates.
+             */
             auto qinfo = make_shared<delphi::objects::AccelSeqQueueInfo>();
             qinfo->mutable_key()->set_lifid(std::to_string(hal_lif_info_.hw_lif_id));
             qinfo->mutable_key()->set_qid(std::to_string(qid));
             qinfo->set_qstateaddr(addr);
             delphi_qinfo_vec.push_back(std::move(qinfo));
+#endif
             seq_queue_info_publish(qid, STORAGE_SEQ_QGROUP_CPDC, 0);
         }
     }
@@ -896,12 +903,6 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
 
     WRITE_MEM(qstate_addr, (uint8_t *)&qstate, sizeof(qstate), 0);
     invalidate_txdma_cacheline(qstate_addr);
-
-    NIC_LOG_DEBUG("lif-{}: qid {} qgroup {} core_id {} wring_base {:#x} "
-                 "wring_size {} entry_size {}",
-                 hal_lif_info_.hw_lif_id,
-                 qid, cmd->qgroup, cmd->core_id, qstate.wring_base,
-                 cmd->wring_size, cmd->entry_size);
 
     seq_queue_info_publish(qid, cmd->qgroup, cmd->core_id);
     return (DEVCMD_SUCCESS);
