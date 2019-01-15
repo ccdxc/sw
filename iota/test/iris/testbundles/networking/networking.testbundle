@@ -2,7 +2,7 @@ meta:
     name    : networking
     os      : [ linux, freebsd, esx ]
     nics    : [ pensando, mellanox, intel, broadcom ]
-    targetcount : 35
+    #targetcount : 35
 
 testcases:
     -   name    : Port_Flap
