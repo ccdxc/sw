@@ -52,6 +52,8 @@ enum cmd_opcode {
         CMD_OPCODE_Q_DISABLE                    = 10,
 
         CMD_OPCODE_NOTIFYQ_INIT                 = 11,
+        CMD_OPCODE_LIF_RESET                    = 12,
+        CMD_OPCODE_SET_NETDEV_INFO              = 13,
 
         CMD_OPCODE_STATION_MAC_ADDR_GET         = 15,
         CMD_OPCODE_MTU_SET                      = 16,
@@ -60,6 +62,8 @@ enum cmd_opcode {
         CMD_OPCODE_RX_FILTER_DEL                = 19,
         CMD_OPCODE_STATS_DUMP_START             = 20,
         CMD_OPCODE_STATS_DUMP_STOP              = 21,
+#define CMD_OPCODE_LIF_STATS_START      CMD_OPCODE_STATS_DUMP_START
+#define CMD_OPCODE_LIF_STATS_STOP       CMD_OPCODE_STATS_DUMP_STOP
         CMD_OPCODE_RSS_HASH_SET                 = 22,
         CMD_OPCODE_RSS_INDIR_SET                = 23,
 
@@ -90,6 +94,7 @@ enum status_code {
         IONIC_RC_ENOSPC         = 15,   /* No space left or alloc failure */
         IONIC_RC_ERANGE         = 16,   /* Parameter out of range */
         IONIC_RC_BAD_ADDR       = 17,   /* Descriptor contains a bad ptr */
+        IONIC_RC_DEV_CMD        = 18,   /* Device cmd attempted on AdminQ */
 
         IONIC_RC_ERDMA          = 30,   /* Generic RDMA error */
 };
@@ -1006,6 +1011,37 @@ struct notify_block {
 };
 
 /**
+ * struct lif_reset_cmd - LIF reset command
+ * @opcode:    opcode = 12
+ * @index:     LIF index
+ */
+struct lif_reset_cmd {
+        u16 opcode;
+        u16 rsvd;
+        u32 index:24;
+        u32 rsvd2:8;
+        u32 rsvd3[14];
+};
+
+typedef struct admin_comp lif_reset_comp;
+
+/**
+ * struct set_netdev_info_cmd - Tell the NIC of the LIF's netdev and PCI names
+ * @opcode:     opcode = 13
+ * @nd_name:    The netdev name string, 0 terminated
+ * @dev_name:   The bus info, e.g. PCI slot-device-function, 0 terminated
+ */
+#define IONIC_IFNAMSIZ  16
+struct set_netdev_info_cmd {
+        u16 opcode;
+        char nd_name[IONIC_IFNAMSIZ];
+        char dev_name[IONIC_IFNAMSIZ];
+        u16 rsvd[15];
+};
+
+typedef struct admin_comp set_netdev_info_comp;
+
+/**
  * struct station_mac_addr_get_cmd - Get LIF's station MAC address
  *                                   command
  * @opcode:     opcode = 15
@@ -1603,12 +1639,14 @@ union adminq_cmd {
         struct features_cmd features;
         struct q_enable_cmd q_enable;
         struct q_disable_cmd q_disable;
+        struct set_netdev_info_cmd netdev_info;
         struct station_mac_addr_get_cmd station_mac_addr_get;
         struct mtu_set_cmd mtu_set;
         struct rx_mode_set_cmd rx_mode_set;
         struct rx_filter_add_cmd rx_filter_add;
         struct rx_filter_del_cmd rx_filter_del;
         struct stats_dump_cmd stats_dump;
+        struct stats_dump_cmd lif_stats;
         struct rss_hash_set_cmd rss_hash_set;
         struct rss_indir_set_cmd rss_indir_set;
         struct debug_q_dump_cmd debug_q_dump;
@@ -1626,6 +1664,7 @@ union adminq_comp {
         struct station_mac_addr_get_comp station_mac_addr_get;
         struct rx_filter_add_comp rx_filter_add;
         struct stats_dump_comp stats_dump;
+        struct stats_dump_comp lif_stats;
         struct debug_q_dump_comp debug_q_dump;
 };
 
