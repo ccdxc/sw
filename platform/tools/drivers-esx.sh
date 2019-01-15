@@ -25,7 +25,7 @@ TOP=$(readlink -f "$(dirname "$0")/../..")
 : ${VIB:="$TOP/platform/drivers/esxi/vib/"}
 
 # Products generated
-: ${GEN_DIR:="$TOP/platform/gen/drivers-esx"}
+: ${GEN_DIR:="$TOP/platform/gen/drivers-esx-eth"}
 #This has to be updated once ESX version is built
 : ${DRIVERS_SRC:="$TOP/platform/drivers/"}
 : ${ESXI_VIB_SRC:="$TOP/platform/drivers/esxi/"}

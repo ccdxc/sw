@@ -11,9 +11,11 @@ RDMA="$TOP/platform/src/third-party/rdma"
 
 # Products generated
 : ${GEN_DIR:="$TOP/platform/gen/drivers-freebsd"}
+: ${GEN_ETH_DIR:="$TOP/platform/gen/drivers-freebsd-eth"}
 : ${COMMON_GEN_DIR:="$GEN_DIR/sys/dev/ionic/ionic_eth/"}
 : ${SONIC_GEN_DIR:="$GEN_DIR/storage/"}
 : ${GEN_PKG:=${GEN_DIR}.tar.xz}
+: ${GEN_ETH_PKG:=${GEN_ETH_DIR}.tar.xz}
 
 # Package will identify version of sources
 report_version() {
@@ -105,3 +107,9 @@ rsync -r --delete --delete-excluded \
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."
 tar -cJ --exclude=.git -f "$GEN_PKG" "$(basename "$GEN_DIR")"
+#TODO: Freebsd ETH driver should just have ethernet sources
+mkdir -p "$GEN_ETH_DIR"
+cp -r $GEN_DIR/* "$GEN_ETH_DIR" 
+cd "$GEN_ETH_DIR/.."
+tar -cJ --exclude=.git -f "$GEN_ETH_PKG" "$(basename "$GEN_ETH_DIR")"
+

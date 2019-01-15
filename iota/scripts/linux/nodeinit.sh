@@ -14,7 +14,7 @@ mkdir /pensando
 chown vm:vm /pensando
 
 if [ -n "$cleanup" ]; then
-    driver_dir="/naples/drivers-linux"
+    driver_dir="/naples/drivers-linux-eth"
     if [ ! -d "$driver_dir" ]; then
         echo "Cleanup Failed. No driver dir: $driver_dir"
         exit 0
@@ -28,8 +28,8 @@ if [ -n "$cleanup" ]; then
     echo "Unloaded ionic driver."
 else
     cd /naples/
-    tar xf drivers-linux.tar.xz
-    cd drivers-linux
+    tar xf drivers-linux-eth.tar.xz
+    cd drivers-linux-eth
     ./setup_apt.sh
     ./build.sh
     insmod drivers/eth/ionic/ionic.ko

@@ -161,8 +161,8 @@ class _Testbed:
                     cmd.extend(["--esx-script", ESX_CTRL_VM_BRINGUP_SCRIPT])
                     cmd.extend(["--host-username", instance.EsxUsername])
                     cmd.extend(["--host-password", instance.EsxPassword])
-                cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
-                cmd.extend(["--gold-drivers-pkg", "%s/platform/hosttools/x86_64/%s/goldfw/drivers-%s.tar.xz" % (GlobalOptions.topdir, instance.NodeOs, instance.NodeOs)])
+                cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
+                cmd.extend(["--gold-drivers-pkg", "%s/platform/hosttools/x86_64/%s/goldfw/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs, instance.NodeOs)])
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
                 if self.__fw_upgrade_done or GlobalOptions.only_reboot:

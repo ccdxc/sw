@@ -14,7 +14,7 @@ mkdir /pensando
 chown vm:vm /pensando
 
 if [ -n "$cleanup" ]; then
-    driver_dir="/naples/drivers-freebsd"
+    driver_dir="/naples/drivers-freebsd-eth"
     if [ ! -d "$driver_dir" ]; then
         echo "Cleanup Failed. No driver dir: $driver_dir"
         exit 0
@@ -28,8 +28,8 @@ if [ -n "$cleanup" ]; then
     echo "Unloaded ionic driver."
 else
     cd /naples
-    tar xf drivers-freebsd.tar.xz
-    cd drivers-freebsd
+    tar xf drivers-freebsd-eth.tar.xz
+    cd drivers-freebsd-eth
     env OS_DIR=/usr/src ./build.sh
     kldload sys/modules/ionic/ionic.ko
     sleep 2

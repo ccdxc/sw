@@ -12,8 +12,8 @@ __ionic_modules = [
     "ionic"
 ]
 
-__linux_directory = "drivers-linux"
-__freebsd_directory = "drivers-freebsd"
+__linux_directory = "drivers-linux-eth"
+__freebsd_directory = "drivers-freebsd-eth"
 
 def RemoveIonicDriverCommands(os_type = OS_TYPE_LINUX):
     cmds = []
