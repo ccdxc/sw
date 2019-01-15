@@ -22,7 +22,7 @@ namespace impl {
 /**
  * @brief    constructor
  */
-tep_impl_state::tep_impl_state() {
+tep_impl_state::tep_impl_state(oci_state *state) {
     p4pd_table_properties_t    tinfo;
 
     tep_idxr_ = indexer::factory(OCI_MAX_TEP);

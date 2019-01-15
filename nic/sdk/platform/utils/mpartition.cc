@@ -16,34 +16,35 @@ mpartition *mpartition::instance_ = nullptr;
 sdk_ret_t
 mpartition::region_init(shmmgr *mmgr)
 {
+    char nlist[][64] = MEM_REGION_NAME_LIST;
+    long slist[] = MEM_REGION_SIZE_LIST;
+    long eslist[] =  MEM_REGION_ELEMENT_SIZE_LIST;
+    long olist[] = MEM_REGION_START_OFFSET_LIST;
+    cache_pipe_t clist[] = MEM_REGION_CACHE_PIPE_LIST;
+    int  rlist[] = MEM_REGION_RESET_LIST;
 
     base_addr_ = MEM_REGION_BASE_ADDR;
     mmgr_ = mmgr;
-
-    char nlist[][64] = MEM_REGION_NAME_LIST;
-    long slist[] = MEM_REGION_SIZE_LIST;
-    long olist[] = MEM_REGION_START_OFFSET_LIST;
-    cache_pipe_t  clist[] = MEM_REGION_CACHE_PIPE_LIST;
-    int  rlist[] = MEM_REGION_RESET_LIST;
-
-    regions_ = (mpartition_region_t *)
-        SDK_CALLOC(SDK_MEM_ALLOC_ID_PLATFORM_MEMORY, MEM_REGION_COUNT * sizeof(mpartition_region_t));
+    regions_ =
+        (mpartition_region_t *)SDK_CALLOC(SDK_MEM_ALLOC_ID_PLATFORM_MEMORY,
+                                          MEM_REGION_COUNT *
+                                          sizeof(mpartition_region_t));
     if (!regions_) {
         return SDK_RET_OOM;
     }
-
     num_regions_ = MEM_REGION_COUNT;
     mpartition_region_t *reg = regions_;
-    for(int idx = 0; idx < MEM_REGION_COUNT; idx++) {
+    for (int idx = 0; idx < MEM_REGION_COUNT; idx++) {
         std::strcpy(reg->mem_reg_name, nlist[idx]);
         reg->size =  slist[idx];
+        reg->elem_size = eslist[idx];
         reg->start_offset =  olist[idx];
         reg->cache_pipe =  clist[idx];
         reg->reset =  rlist[idx];
 
-        SDK_TRACE_DEBUG("region : %s, size : %dkb, reset : %d, "
-                        "start : 0x%" PRIx64 ", end : 0x%" PRIx64 "",
-                        reg->mem_reg_name, reg->size, reg->reset,
+        SDK_TRACE_DEBUG("region : %s, size : %u, element size : %u, "
+                        "reset : %u, start : 0x%" PRIx64 ", end : 0x%"
+                        PRIx64 "", reg->mem_reg_name, reg->size, reg->reset,
                         addr(reg->start_offset),
                         addr(reg->start_offset + reg->size));
         reg++;
@@ -114,34 +115,41 @@ mpartition::destroy(mpartition *mpartition)
 }
 
 mem_addr_t
-mpartition::start_offset (const char *reg_name)
+mpartition::start_offset(const char *name)
 {
-    mpartition_region_t *reg = region(reg_name);
+    mpartition_region_t *reg = region(name);
     return reg ? reg->start_offset : INVALID_MEM_ADDRESS;
 }
 
 mem_addr_t
-mpartition::start_addr (const char *reg_name)
+mpartition::start_addr(const char *name)
 {
-    mem_addr_t start_offset = this->start_offset(reg_name);
+    mem_addr_t start_offset = this->start_offset(name);
     return start_offset != INVALID_MEM_ADDRESS ? addr(start_offset) : INVALID_MEM_ADDRESS;
 }
 
 uint32_t
-mpartition::size (const char *reg_name)
+mpartition::size(const char *name)
 {
-    mpartition_region_t *reg = region(reg_name);
+    mpartition_region_t *reg = region(name);
     return reg ? reg->size : 0;
 }
 
+uint32_t
+mpartition::element_size(const char *name)
+{
+    mpartition_region_t *reg = region(name);
+    return reg ? reg->elem_size : 0;
+}
+
 mpartition_region_t *
-mpartition::region (const char *reg_name)
+mpartition::region(const char *name)
 {
     mpartition_region_t      *reg;
 
     for (int i = 0; i < num_regions_; i++) {
         reg = &regions_[i];
-        if (!std::strcmp(reg->mem_reg_name, reg_name)) {
+        if (!std::strcmp(reg->mem_reg_name, name)) {
             return reg;
         }
     }
@@ -149,20 +157,12 @@ mpartition::region (const char *reg_name)
 }
 
 mpartition_region_t *
-mpartition::region_by_address (uint64_t addr)
+mpartition::region_by_address(uint64_t addr)
 {
     mpartition_region_t      *reg;
 
     for (int i = 0; i < num_regions_; i++) {
         reg = &regions_[i];
-
-        /*
-        SDK_TRACE_DEBUG("Region: {}, Size_KB: {}, Start:{:#x} End:{:#x}, addr: {:#x}",
-                        reg->mem_reg_name, reg->size,
-                        offset(reg->start_offset),
-                        offset(reg->start_offset + reg->size * 1024), addr);
-        */
-
         if ((addr >= this->addr(reg->start_offset)) &&
             (addr < this->addr(reg->start_offset + (reg->size)))) {
             return reg;

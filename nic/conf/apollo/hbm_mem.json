@@ -85,8 +85,10 @@
             "cache": "p4plus-rxdma"
         },
         {
-            "name": "lpm",
-            "size": "18K",
+            "name": "lpm_v4",
+            "_comment": "(1024+1) * (64 + 16 * 64 + 16 * 16 * 64)",
+            "size": "17908800B",
+            "element_size": "17472B",
             "cache": "p4plus-txdma"
         },
         {

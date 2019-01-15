@@ -4,6 +4,7 @@ import json
 import sys
 import os
 import re
+import pdb
 
 # Input file name
 fname_in = sys.argv[1]
@@ -57,7 +58,26 @@ try:
     fd = open(fname_out, "w+")
 except:
     print "File open failed : " + fname_out
-    exit(-1) 
+    exit(-1)
+
+def size_str_to_bytes(size_str):
+    if "G" in size_str:
+        mf = 1024 * 1024 * 1024
+    elif "M" in size_str:
+        mf = 1024 * 1024
+    elif "K" in size_str:
+        mf = 1024
+    elif "B" in size_str:
+        mf = 1
+    else:
+        return -1
+
+    value = size_str[:-1]
+    if value.isdecimal():
+        mv = long(size_str[:-1])
+    else:
+        return -1
+    return mf * mv
 
 def parse_file():
 
@@ -79,27 +99,22 @@ def parse_file():
             mf = long(1)
             mv = long(0)
             mem_type = e['size']
-            if "G" in mem_type:
-                mf = 1024 * 1024 * 1024
-            elif "M" in mem_type:
-                mf = 1024 * 1024
-            elif "K" in mem_type:
-                mf = 1024
-            elif "B" in mem_type:
-                mf = 1
-            else:
+            s = size_str_to_bytes(mem_type)
+            if s == -1:
+                print('Invalid size specified for region %s', n)
                 exit(-1)
-            value = mem_type[:-1]
-            if value.isdecimal():
-                mv = long(mem_type[:-1])
-      
-            s = mf * mv 
+            if e.get('element_size') is None:
+                es = -1
+            else:
+                es = size_str_to_bytes(e['element_size'])
+
             # Derive the basename for the macros 
             nbase = name + (re.sub("[ -]", "_", n)).upper() + "_"
 
             # Update name and size
             print >> fd, "#define %-60s \"%s\"" %(nbase + "NAME", n)
             print >> fd, "#define %-60s %ld" %(nbase + "SIZE", s)
+            print >> fd, "#define %-60s %ld" %(nbase + "ELEMENT_SIZE", es)
 
             # Update start offset
             print >> fd, "#define %-60s 0x%lxUL" %(nbase + "START_OFFSET", off);
@@ -127,6 +142,7 @@ def parse_file():
             nlist = nlist + "\n    " + nbase + "NAME, \\"
             olist = olist + "\n    " + nbase + "START_OFFSET, \\"
             slist = slist + "\n    " + nbase + "SIZE, \\"
+            eslist = slist + "\n    " + nbase + "ELEMENT_SIZE, \\"
             clist = clist + "\n    " + nbase + "CACHE_PIPE, \\"
             rlist = rlist + "\n    " + nbase + "RESET, \\"
 
@@ -141,6 +157,7 @@ def parse_file():
     # Dump the list of value for name , size etc
     print >> fd, "#define %s {   \\%s }" %(name + "NAME_LIST", nlist[:-3])
     print >> fd, "\n#define %s {   \\%s }" %(name + "SIZE_LIST", slist[:-3])
+    print >> fd, "\n#define %s {   \\%s }" %(name + "ELEMENT_SIZE_LIST", eslist[:-3])
     print >> fd, "\n#define %s {   \\%s }" %(name + "START_OFFSET_LIST", olist[:-3])
     print >> fd, "\n#define %s {   \\%s }" %(name + "CACHE_PIPE_LIST", clist[:-3])
     print >> fd, "\n#define %s {   \\%s }" %(name + "RESET_LIST", rlist[:-3])

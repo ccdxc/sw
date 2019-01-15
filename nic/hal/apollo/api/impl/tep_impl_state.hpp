@@ -8,8 +8,9 @@
 #if !defined (__TEP_IMPL_STATE_HPP__)
 #define __TEP_IMPL_STATEHPP__
 
-#include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/hal/apollo/framework/api_base.hpp"
+#include "nic/hal/apollo/core/oci_state.hpp"
 
 namespace impl {
 
@@ -27,14 +28,10 @@ class tep_impl;
  */
 class tep_impl_state : public obj_base {
 public:
-    /**
-     * @brief    constructor
-     */
-    tep_impl_state();
+    /**< @brief    constructor */
+    tep_impl_state(oci_state *state);
 
-    /**
-     * @brief    destructor
-     */
+    /**< @brief    destructor */
     ~tep_impl_state();
 
 private:

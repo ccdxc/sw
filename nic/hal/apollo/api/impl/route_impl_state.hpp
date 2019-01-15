@@ -8,9 +8,10 @@
 #if !defined (__ROUTE_IMPL_STATE_HPP__)
 #define __ROUTE_IMPL_STATEHPP__
 
-#include "nic/hal/apollo/framework/api_base.hpp"
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
+#include "nic/hal/apollo/framework/api_base.hpp"
+#include "nic/hal/apollo/core/oci_state.hpp"
 
 namespace impl {
 
@@ -28,15 +29,17 @@ class route_table_impl;
  */
 class route_table_impl_state : public obj_base {
 public:
-    /**
-     * @brief    constructor
-     */
-    route_table_impl_state();
+    /**< @brief    constructor */
+    route_table_impl_state(oci_state *state);
 
-    /**
-     * @brief    destructor
-     */
+    /**< @brief    destructor */
     ~route_table_impl_state();
+
+    /**< @brief    return LPM region's base/start address in memory */
+    mem_addr_t lpm_region_addr(void) const { return lpm_region_addr_; }
+
+    /**< @brief    return per LPM table's size */
+    mem_addr_t lpm_table_size(void) const { return lpm_table_size_; }
 
 private:
     indexer *route_table_idxr(void) { return route_table_idxr_; }
@@ -44,7 +47,9 @@ private:
 
 private:
     /**< datapath tables for route table */
-    indexer      *route_table_idxr_;    /**< indexer to allocate lpm mem block */
+    indexer       *route_table_idxr_;    /**< indexer to allocate lpm mem block */
+    mem_addr_t    lpm_region_addr_;      /**< base address for the LPM region */
+    uint32_t      lpm_table_size_;       /**< size of each LPM table */
 };
 
 /** * @} */    // end of OCI_ROUTE_TABLE_IMPL_STATE

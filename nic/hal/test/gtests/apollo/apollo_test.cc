@@ -40,7 +40,7 @@ using namespace sdk::platform::capri;
 #define JLIFQSTATE      "lif2qstate_map"
 #define JPKTBUFFER      "rxdma_to_txdma_buf"
 #define JSLACLBASE      "slacl"
-#define JLPMBASE        "lpm"
+#define JLPMV4BASE      "lpm_v4"
 #define JFLOWSTATSBASE  "flow_stats"
 
 typedef struct __attribute__((__packed__)) lif_qstate_  {
@@ -426,7 +426,7 @@ vnic_tx_init() {
            sizeof(local_vnic_info->slacl_addr_1));
     memcpy(local_vnic_info->slacl_addr_2, &slacl_hbm_addr,
            sizeof(local_vnic_info->slacl_addr_2));
-    lpm_hbm_addr = get_mem_addr(JLPMBASE);
+    lpm_hbm_addr = get_mem_addr(JLPMV4BASE);
     memcpy(local_vnic_info->lpm_addr_1, &lpm_hbm_addr,
            sizeof(local_vnic_info->lpm_addr_1));
     memcpy(local_vnic_info->lpm_addr_2, &lpm_hbm_addr,
@@ -658,7 +658,7 @@ trie_mem_init(void) {
     uint64_t data[8];
 
     memset(data, 0xFF, sizeof(data));
-    uint64_t lpm_hbm_addr = get_mem_addr(JLPMBASE);
+    uint64_t lpm_hbm_addr = get_mem_addr(JLPMV4BASE);
     for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i += sizeof(data)) {
         sdk::asic::asic_mem_write(lpm_hbm_addr+i, (uint8_t*)data, sizeof(data));
     }
@@ -672,7 +672,7 @@ trie_mem_init(void) {
 static void
 route_init (void) {
     uint64_t data;
-    uint64_t lpm_base_addr = get_mem_addr(JLPMBASE);
+    uint64_t lpm_base_addr = get_mem_addr(JLPMV4BASE);
     uint16_t offset = 64 + (16 * 64);
 
     data = 0xFFFF;
