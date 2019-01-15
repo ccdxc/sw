@@ -233,9 +233,6 @@ static void ionic_umem_add(struct sysctl_ctx_list *ctx,
 			   struct ib_umem *umem)
 {
 	struct sysctl_oid *oidp;
-	struct scatterlist *sg;
-	char cname[20];
-	int sg_i;
 
 	oidp = ionic_node(ctx, parent, "umem", "User Memory");
 	if (!oidp)
@@ -247,19 +244,6 @@ static void ionic_umem_add(struct sysctl_ctx_list *ctx,
 	ionic_ulong(ctx, parent, &umem->address, "address", "Address");
 	ionic_int(ctx, parent, &umem->page_size, "page_size", "Page Size");
 	ionic_int(ctx, parent, &umem->nmap, "nmap", "Num Mappings");
-
-	oidp = ionic_node(ctx, parent, "map_dma", "User Memory DMA");
-	if (!oidp)
-		return;
-
-	parent = SYSCTL_CHILDREN(oidp);
-
-	/* dma addrs of sgs, not of each page (may be coalesced) */
-	for_each_sg(umem->sg_head.sgl, sg, umem->nmap, sg_i) {
-		snprintf(cname, sizeof(cname), "%d", sg_i);
-		ionic_ulong(ctx, parent, &sg_dma_address(sg),
-			    cname, "Map DMA Addres");
-	}
 }
 
 static void ionic_tbl_res_add(struct sysctl_ctx_list *ctx,
