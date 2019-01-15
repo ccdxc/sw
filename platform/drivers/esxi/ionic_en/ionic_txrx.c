@@ -354,13 +354,14 @@ void ionic_rx_refill(struct queue *q)
 
                 desc = cur->desc;
 
-                ionic_rx_pkt_free(q, cur->cb_arg, desc->len, desc->addr);
                 pkt = ionic_rx_pkt_alloc(q, len, &dma_addr);
                 if (VMK_UNLIKELY(!pkt)) {
                         ionic_warn("Queue index: %d, ionic_rx_pkt_alloc()"
                                    "failed", q->index);
                         break;
                 }
+
+                ionic_rx_pkt_free(q, cur->cb_arg, desc->len, desc->addr);
 
                 cur->cb_arg = pkt;
                 desc->addr = dma_addr;
