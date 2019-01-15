@@ -114,8 +114,16 @@ enum DeviceType
 };
 
 /**
- * Device Spec structures
+ * OPROM
  */
+typedef enum OpromType_s {
+    OPROM_UNKNOWN,
+    OPROM_LEGACY,
+    OPROM_UEFI,
+    OPROM_UNIFIED
+} OpromType;
+
+const char *oprom_type_to_str(OpromType_s);
 
 /**
  * ETH Device type
@@ -152,6 +160,7 @@ struct eth_devspec {
     uint64_t mac_addr;
     // DEV
     bool     host_dev;
+    OpromType oprom;
     uint8_t  pcie_port;
     // RDMA
     bool     enable_rdma;
@@ -260,7 +269,5 @@ private:
     uint16_t resp_tail;
     ForwardingMode fwd_mode;
 };
-void devicemanager_init(void);
-
 
 #endif /* __DEV_HPP__ */

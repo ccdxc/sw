@@ -62,6 +62,8 @@ mac_to_int(std::string const& s)
         );
 }
 
+#define CASE(type) case type: return #type
+
 EthDevType
 eth_dev_type_str_to_type(std::string const& s)
 {
@@ -78,6 +80,45 @@ eth_dev_type_str_to_type(std::string const& s)
     } else {
         NIC_LOG_ERR("Unknown ETH dev type: {}", s);
         return ETH_UNKNOWN;
+    }
+}
+
+const char
+*eth_dev_type_to_str(EthDevType type) {
+    switch(type) {
+        CASE(ETH_UNKNOWN);
+        CASE(ETH_HOST);
+        CASE(ETH_HOST_MGMT);
+        CASE(ETH_MNIC_OOB_MGMT);
+        CASE(ETH_MNIC_INTERNAL_MGMT);
+        CASE(ETH_MNIC_INBAND_MGMT);
+        default: return "Unknown";
+    }
+}
+
+OpromType
+oprom_type_str_to_type(std::string const& s)
+{
+    if (s == "legacy") {
+        return OPROM_LEGACY;
+    } else if (s == "uefi") {
+        return OPROM_UEFI;
+    } else if (s == "unified") {
+        return OPROM_UNIFIED;
+    } else {
+        NIC_LOG_ERR("Unknown OPROM type: {}", s);
+        return OPROM_UNKNOWN;
+    }
+}
+
+const char *oprom_type_to_str(OpromType type)
+{
+    switch(type) {
+        CASE(OPROM_UNKNOWN);
+        CASE(OPROM_LEGACY);
+        CASE(OPROM_UEFI);
+        CASE(OPROM_UNIFIED);
+        default: return "unknown";
     }
 }
 
@@ -419,6 +460,10 @@ DeviceManager::LoadConfig(string path)
             }
 
             eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
+            if (val.get_optional<string>("pcie.oprom")) {
+                eth_spec->oprom = oprom_type_str_to_type(val.get<string>("pcie.oprom"));
+            }
+
             eth_spec->host_dev = true;
             if (val.get_optional<string>("type")) {
                 eth_spec->eth_type = eth_dev_type_str_to_type(val.get<string>("type"));
@@ -721,16 +766,4 @@ DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
     root.push_back(std::make_pair("lifs", lifs));
     pt::write_json(qstate_info_file, root);
     return 0;
-}
-
-const char *eth_dev_type_to_str(EthDevType type) {
-    switch(type) {
-        case ETH_UNKNOWN: return "ETH_UNKNOWN";
-        case ETH_HOST: return "ETH_HOST";
-        case ETH_HOST_MGMT: return "ETH_HOST_MGMT";
-        case ETH_MNIC_OOB_MGMT: return "ETH_MNIC_OOB_MGMT";
-        case ETH_MNIC_INTERNAL_MGMT: return "ETH_MNIC_INTERNAL_MGMT";
-        case ETH_MNIC_INBAND_MGMT: return "ETH_MNIC_INBAND_MGMT";
-        default: return "Unknown";
-    }
 }

@@ -77,7 +77,8 @@
             "mac_addr" : "00:02:00:00:01:03",
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0
+                "num_vfs" : 0,
+                "oprom": "uefi"
             },
             "network" : {
                 "uplink" : 128
@@ -107,7 +108,8 @@
             "intr_count" : 64,
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0
+                "num_vfs" : 0,
+                "oprom": "uefi"
             },
             "network" : {
                 "uplink" : 129

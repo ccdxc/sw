@@ -77,7 +77,8 @@
             "qos_group" : "DEFAULT",
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0
+                "num_vfs" : 0,
+                "oprom": "uefi"
             },
             "network" : {
                 "uplink" : 128
@@ -107,7 +108,8 @@
             "intr_count" : 64,
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0
+                "num_vfs" : 0,
+                "oprom": "uefi"
             },
             "network" : {
                 "uplink" : 129
@@ -121,7 +123,7 @@
                 "pid_count" : 256,
                 "pte_count" : 1048576,
                 "key_count" : 262144,
-                "ah_count"  : 8192,
+                "ah_count" : 8192,
                 "barmap_size" : 1
             }
         },

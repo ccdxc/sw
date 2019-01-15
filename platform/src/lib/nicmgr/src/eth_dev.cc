@@ -24,6 +24,7 @@
 #include "gen/proto/common/nicmgr_status_msgs.pb.h"
 #include "gen/proto/common/nicmgr_status_msgs.delphi.hpp"
 
+#include "platform/src/lib/misc/include/misc.h"
 #include "platform/src/lib/intrutils/include/intrutils.h"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/hal_api/include/print.hpp"
@@ -49,7 +50,6 @@ using nicmgr_status_msgs::EthDeviceHostDownStatusMsg;
 using nicmgr_status_msgs::EthDeviceHostUpStatusMsg;
 
 extern class pciemgr *pciemgr;
-
 
 static uint8_t *
 memrev (uint8_t *block, size_t elnum)
@@ -373,9 +373,94 @@ Eth::CreateLocalDevice()
 }
 
 bool
+Eth::LoadOprom()
+{
+    std::string rom_file_path;
+    uint64_t rom_file_size, rom_bar_size;
+
+    // FIXME: Get the filepaths from catalog
+#ifdef __aarch64__
+    rom_file_path = "/platform/oprom/";
+#else
+    rom_file_path = "/sw/platform/gen/";
+#endif
+    switch (spec->oprom) {
+        case OPROM_LEGACY:
+            rom_file_path += "ionic.rom";
+            break;
+        case OPROM_UEFI:
+            rom_file_path += "ionic.efirom";
+            break;
+        case OPROM_UNIFIED:
+            NIC_LOG_ERR("Not implemented!");
+            return true;
+        case OPROM_UNKNOWN:
+            NIC_LOG_DEBUG("{}: No oprom configured", spec->name);
+            return true;
+    };
+
+    // FIXME: The same ROM bar can be shared by all ethernet devices. We
+    // can make this a static method and call it once.
+    NIC_LOG_DEBUG("{}: Opening oprom {}", spec->name, rom_file_path);
+    FILE *rom_file = fopen(rom_file_path.c_str(), "rb");
+    if (rom_file == NULL) {
+        NIC_LOG_ERR("{}: Failed to open oprom : {}", spec->name, strerror(errno));
+        return false;
+    }
+
+    // Get file size
+    fseek(rom_file, 0L, SEEK_END);
+    rom_file_size = ftell(rom_file);
+    rewind(rom_file);
+
+    // FIXME: Create a new memory region and allocator for OPROMs.
+    rom_mem_size = roundup_power2(rom_file_size);
+    rom_bar_size = roundup_power2(rom_file_size);
+    rom_mem_addr = roundup(pd->nicmgr_mem_alloc(2*rom_bar_size), rom_bar_size);
+    NIC_LOG_INFO("{}: rom_mem_addr {:#x} rom_mem_size {}"
+                " rom_file_size {} rom_bar_size {}",
+                spec->name, rom_mem_addr, rom_mem_size,
+                rom_file_size, rom_bar_size);
+    // Must be naturally aligned
+    if ((rom_mem_addr % rom_bar_size) != 0) {
+        NIC_LOG_ERR("{}: rom_mem_addr is not naturally aligned", spec->name);
+        fclose(rom_file);
+        return false;
+    }
+
+    NIC_LOG_INFO("{}: Writing oprom", spec->name);
+    uint64_t rom_addr = rom_mem_addr;
+    uint8_t buf[4096] = {0};
+    uint32_t bytes_read = 0;
+    while (!feof(rom_file)) {
+        bytes_read = fread(buf, sizeof(buf[0]), sizeof(buf), rom_file);
+        WRITE_MEM(rom_addr, buf, bytes_read, 0);
+        rom_addr += bytes_read;
+    }
+    // zero-out rest of the bar
+    MEM_SET(rom_addr, 0, rom_mem_size - rom_file_size, 0);
+    NIC_LOG_INFO("{}: Finished writing oprom", spec->name);
+
+    fclose(rom_file);
+
+    return true;
+}
+
+bool
 Eth::CreateHostDevice()
 {
     pciehdevice_resources_t pci_resources = {0};
+
+    if (!LoadOprom()) {
+        NIC_LOG_ERR("{}: Failed to load oprom", spec->name);
+        rom_mem_addr = 0;
+        rom_mem_size = 0;
+        // FIXME: error out after oproms are pacakged in the image
+        // return false;
+    } else {
+        rom_mem_addr = 0;
+        rom_mem_size = 0;
+    }
 
     pci_resources.lif_valid = 1;
     pci_resources.lif = lif_base;
@@ -387,6 +472,8 @@ Eth::CreateHostDevice()
     pci_resources.devcmddbpa = devcmddb_mem_addr;
     pci_resources.cmbpa = cmb_mem_addr;
     pci_resources.cmbsz = cmb_mem_size;
+    pci_resources.rompa = rom_mem_addr;
+    pci_resources.romsz = rom_mem_size;
 
     // Create PCI device
     if (spec->eth_type == ETH_HOST) {

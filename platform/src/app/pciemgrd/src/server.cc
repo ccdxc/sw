@@ -350,7 +350,7 @@ server_loop(void)
 #endif
 
     pciemgrs_open(NULL, pciemgr_msg_cb);
-    evutil_timer_start(&timer, server_poll, NULL, 0.1, 0.1);
+    evutil_timer_start(&timer, server_poll, NULL, 0.01, 0.01);
     pciesys_loginfo("pciemgrd ready\n");
     evutil_run();
     pciemgrs_close();

@@ -200,6 +200,9 @@ private:
     // CMB
     uint64_t cmb_mem_addr;
     uint32_t cmb_mem_size;
+    // ROM
+    uint64_t rom_mem_addr;
+    uint32_t rom_mem_size;
     // Stats
     uint64_t stats_mem_addr;
     uint64_t host_stats_mem_addr;
@@ -234,6 +237,8 @@ private:
     // Device Constructors
     bool CreateHostDevice();
     bool CreateLocalDevice();
+    //
+    bool LoadOprom();
 
     /* Command Handlers */
     static void DevcmdPoll(void *obj);
