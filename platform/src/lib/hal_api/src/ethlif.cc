@@ -11,6 +11,7 @@
 #include "ethlif.hpp"
 #include "print.hpp"
 #include "utils.hpp"
+#include "platform/src/lib/nicmgr/include/nicmgr_utils.hpp"
 
 using namespace std;
 
@@ -19,6 +20,7 @@ const char qstate_1024[1024] = { 0 };
 
 sdk::lib::indexer *EthLif::filter_allocator = sdk::lib::indexer::factory(EthLif::max_filters_per_lif, false, true);
 EthLif *EthLif::internal_mgmt_ethlif = NULL;
+sdk::lib::indexer *EthLif::allocator = sdk::lib::indexer::factory(EthLif::max_lifs, false, true);
 
 EthLifMap EthLif::ethlif_db;
 
@@ -77,7 +79,7 @@ EthLif::Factory(hal_lif_info_t *info)
         if (eth_lif->GetUplink()->GetNumLifs() == 1) {
 
             NIC_LOG_INFO("First lif id: {}, hw_id: {} on uplink {}",
-                         eth_lif->GetLif()->GetId(),
+                         eth_lif->GetId(),
                          eth_lif->GetHwLifId(),
                          eth_lif->GetUplink()->GetId());
 
@@ -108,57 +110,6 @@ EthLif::Factory(hal_lif_info_t *info)
             eth_lif->CreateMacVlanFilter(0, 0);
         }
     }
-
-#if 0
-    // Create Enic for every Lif in Classic Mode
-    if (eth_lif->IsClassicForwarding()) {
-        if (eth_lif->IsInternalManagement()) {
-            // For Internal Mgmt mnic, create vrf and native l2seg.
-            if (eth_lif->IsInternalManagementMnic()) {
-                // Create Internal Mgmt Vrf
-                vrf = HalVrf::Factory(types::VRF_TYPE_MANAGEMENT);
-                eth_lif->SetVrf(vrf);
-                // Create native l2seg to hal
-                native_l2seg = HalL2Segment::Factory(eth_lif->GetVrf(),
-                                                     NATIVE_VLAN_ID);
-                eth_lif->SetNativeL2Seg(native_l2seg);
-            }
-        } else {
-            if (eth_lif->GetUplink()->GetNumLifs() == 1) {
-
-                NIC_LOG_DEBUG("First lif id: {}, hw_id: {} on uplink {}",
-                             eth_lif->GetLif()->GetId(),
-                             eth_lif->GetHwLifId(),
-                             eth_lif->GetUplink()->GetId());
-
-                // Create native l2seg to hal
-                native_l2seg = HalL2Segment::Factory(eth_lif->GetUplink()->GetVrf(),
-                                                     NATIVE_VLAN_ID);
-
-                // Update uplink structure with native l2seg
-                eth_lif->GetUplink()->SetNativeL2Seg(native_l2seg);
-
-                // Update native_l2seg on uplink to hal
-                eth_lif->GetUplink()->UpdateHalWithNativeL2seg(native_l2seg->GetId());
-
-                // Update l2seg's mbrifs on uplink
-                native_l2seg->AddUplink(eth_lif->GetUplink());
-            }
-        }
-
-        // Create Enic
-        eth_lif->SetEnic(Enic::Factory(eth_lif));
-
-        // Add Vlan filter on ethlif
-        eth_lif->AddVlan(NATIVE_VLAN_ID);
-
-    } else {
-        // If its promiscuos. send (Lif, *, *) filter to HAL
-        if (info->receive_promiscuous) {
-            eth_lif->CreateMacVlanFilter(0, 0);
-        }
-    }
-#endif
 
 end:
     return eth_lif;
@@ -224,7 +175,7 @@ EthLif::Destroy(EthLif *eth_lif)
 
                 if (eth_lif->GetUplink()->GetNumLifs() == 0) {
                     NIC_LOG_DEBUG("Last lif id: {}, hw_id: {} on uplink {}",
-                                 eth_lif->GetLif()->GetId(),
+                                 eth_lif->GetId(),
                                  eth_lif->GetHwLifId(),
                                  eth_lif->GetUplink()->GetId());
 
@@ -255,7 +206,8 @@ EthLif::EthLif(hal_lif_info_t *info)
 
     vrf_ = NULL;
 
-    lif_ = Lif::Factory(this);
+    // lif_ = Lif::Factory(this);
+    TriggerHalCreate();
 }
 
 EthLif::~EthLif()
@@ -266,52 +218,9 @@ EthLif::~EthLif()
     mac_vlan_filter_table.clear();
 
     // Delete Lif
-    Lif::Destroy(lif_);
+    // Lif::Destroy(lif_);
+    TriggerHalDelete();
 }
-
-#if 0
-hal_irisc_ret_t
-EthLif::remove_mac_filters()
-{
-    mac_t mac;
-    // Remove mac filters
-    for (auto it = mac_table_.begin(); it != mac_table_.end();) {
-        mac = *it;
-        it++;
-        DelMac(mac);
-    }
-    return HAL_IRISC_RET_SUCCESS;
-}
-
-hal_irisc_ret_t
-EthLif::remove_vlan_filters()
-{
-    vlan_t vlan;
-    // Remove vlan filters
-    for (auto it = vlan_table_.begin(); it != vlan_table_.end();) {
-        vlan = *it;
-        it++;
-        DelVlan(vlan);
-    }
-
-    return HAL_IRISC_RET_SUCCESS;
-}
-
-hal_irisc_ret_t
-EthLif::remove_mac_vlan_filters()
-{
-    mac_t mac;
-    vlan_t vlan;
-    // Remove (mac,vlan) filters
-    for (auto it = mac_vlan_table_.begin(); it != mac_vlan_table_.end(); it++) {
-        mac = std::get<0>(*it);
-        vlan = std::get<1>(*it);
-        it++;
-        DelMacVlan(mac,vlan);
-    }
-    return HAL_IRISC_RET_SUCCESS;
-}
-#endif
 
 /**
  * @re_add: Mac is already added without any registration. So re-adding.
@@ -613,8 +522,8 @@ EthLif::UpdateReceivePromiscuous(bool receive_promiscuous)
     }
 
     NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
-                    lif_->GetId(), info_.receive_promiscuous,
-                    receive_promiscuous);
+                  GetId(), info_.receive_promiscuous,
+                  receive_promiscuous);
 
     info_.receive_promiscuous = receive_promiscuous;
 
@@ -628,7 +537,7 @@ EthLif::UpdateReceivePromiscuous(bool receive_promiscuous)
     }
 
     // Update Lif to Hal
-    lif_->TriggerHalUpdate();
+    TriggerHalUpdate();
 end:
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -644,13 +553,13 @@ EthLif::UpdateReceiveBroadcast(bool receive_broadcast)
     }
 
     NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
-                    lif_->GetId(), info_.receive_broadcast,
+                    GetId(), info_.receive_broadcast,
                     receive_broadcast);
 
     info_.receive_broadcast = receive_broadcast;
 
     // Update Lif to Hal
-    lif_->TriggerHalUpdate();
+    TriggerHalUpdate();
 end:
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -666,8 +575,8 @@ EthLif::UpdateReceiveAllMulticast(bool receive_all_multicast)
     }
 
     NIC_LOG_DEBUG("Lif: {}. ALL_MC flag change {} -> {}",
-                    lif_->GetId(), info_.receive_all_multicast,
-                    receive_all_multicast);
+                  GetId(), info_.receive_all_multicast,
+                  receive_all_multicast);
 
     /*
      * False -> True
@@ -688,7 +597,7 @@ EthLif::UpdateReceiveAllMulticast(bool receive_all_multicast)
 
 
     // Update Lif to Hal
-    lif_->TriggerHalUpdate();
+    TriggerHalUpdate();
 end:
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -704,13 +613,13 @@ EthLif::UpdateVlanStripEn(bool vlan_strip_en)
     }
 
     NIC_LOG_DEBUG("Lif: {}. Vlan strip change {} -> {}",
-                    lif_->GetId(), info_.vlan_strip_en,
+                    GetId(), info_.vlan_strip_en,
                     vlan_strip_en);
 
     info_.vlan_strip_en = vlan_strip_en;
 
     // Update Lif to Hal
-    lif_->TriggerHalUpdate();
+    TriggerHalUpdate();
 end:
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -726,13 +635,13 @@ EthLif::UpdateVlanInsertEn(bool vlan_insert_en)
     }
 
     NIC_LOG_DEBUG("Lif: {}. Prom. flag change {} -> {}",
-                    lif_->GetId(), info_.vlan_insert_en,
-                    vlan_insert_en);
+                  GetId(), info_.vlan_insert_en,
+                  vlan_insert_en);
 
     info_.vlan_insert_en = vlan_insert_en;
 
     // Update Lif to Hal
-    lif_->TriggerHalUpdate();
+    TriggerHalUpdate();
 end:
     return HAL_IRISC_RET_SUCCESS;
 }
@@ -896,11 +805,181 @@ EthLif::RemoveMacVlanFilters()
     NIC_LOG_DEBUG("# of Mac-Vlan Filters: {}", mac_vlan_table_.size());
 }
 
-
-Lif *
-EthLif::GetLif()
+void
+EthLif::TriggerHalCreate()
 {
-    return lif_;
+    grpc::ClientContext        context;
+    grpc::Status               status;
+
+    intf::LifSpec              *req;
+    intf::LifResponse          rsp;
+    intf::LifRequestMsg        req_msg;
+    intf::LifResponseMsg       rsp_msg;
+    intf::LifQStateMapEntry    *lif_qstate_map_ent;
+    hal_lif_info_t             *lif_info = GetLifInfo();
+
+    if (lif_info->id == 0) {
+        // Nicmgr has to always pass the id and hw_lif_id
+        NIC_ASSERT(0);
+        if (allocator->alloc(&id_) != sdk::lib::indexer::SUCCESS) {
+            NIC_LOG_ERR("Failed to create Lif for hw_lif_id: {}. Index Exhaustion",
+                          lif_info->hw_lif_id);
+            return;
+        }
+    } else {
+        id_ = lif_info->id;
+    }
+
+    // Set default number of max filters if nothing is passed
+    if (!lif_info->max_vlan_filters) {
+        lif_info->max_vlan_filters = LIF_DEFAULT_MAX_VLAN_FILTERS;
+    }
+
+    if (!lif_info->max_mac_filters) {
+        lif_info->max_mac_filters = LIF_DEFAULT_MAX_MAC_FILTERS;
+    }
+
+    if (!lif_info->max_mac_vlan_filters) {
+        lif_info->max_mac_vlan_filters = LIF_DEFAULT_MAX_MAC_VLAN_FILTERS;
+    }
+
+    NIC_LOG_DEBUG("Creating Lif: {}, prom: {}, oob: {}, int_mgmt_mnic: {}, host_mgmt_mnic: {}, rdma_en: {}",
+                 lif_info->name,
+                 lif_info->receive_promiscuous,
+                 IsOOBMnic(),
+                 IsInternalManagementMnic(),
+                 IsHostManagement(),
+                 lif_info->enable_rdma);
+
+    PopulateRequest(req_msg, &req);
+
+    // Populate qstate map
+    for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
+        auto & qinfo = lif_info->queue_info[i];
+        NIC_LOG_DEBUG("Processing queue type: {}, size: {}", i, qinfo.size);
+        if (qinfo.size < 1) continue;
+
+        NIC_LOG_DEBUG("Queue type_num: {}, entries: {}, purpose: {}, prog: {}, label: {}",
+                      qinfo.type_num,
+                      qinfo.entries, qinfo.purpose, qinfo.prog, qinfo.label);
+
+        lif_qstate_map_ent = req->add_lif_qstate_map();
+        lif_qstate_map_ent->set_type_num(qinfo.type_num);
+        lif_qstate_map_ent->set_size(qinfo.size);
+        lif_qstate_map_ent->set_entries(qinfo.entries);
+        lif_qstate_map_ent->set_purpose(qinfo.purpose);
+    }
+
+    if (!hal) {
+        NIC_LOG_ERR("FATAL: HAL is not UP yet.");
+        NIC_ASSERT(0);
+    }
+
+    status = hal->lif_create(req_msg, rsp_msg);
+    if (status.ok()) {
+        rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_LOG_DEBUG("Created Lif id: {} hw_lif_id: {}",
+                          id_, lif_info->hw_lif_id);
+        } else {
+            NIC_LOG_ERR("Failed to create Lif for hw_lif_id: {}. err: {}",
+                        lif_info->hw_lif_id, rsp.api_status());
+        }
+    } else {
+        NIC_LOG_ERR("Failed to create Lif for hw_lif_id: {}. err: {}:{}",
+                     lif_info->hw_lif_id, status.error_code(), status.error_message());
+    }
+
+    // Store spec
+    spec.CopyFrom(*req);
+}
+
+void
+EthLif::TriggerHalUpdate()
+{
+    grpc::ClientContext        context;
+    grpc::Status               status;
+
+    intf::LifSpec              *req;
+    intf::LifResponse          rsp;
+    intf::LifRequestMsg        req_msg;
+    intf::LifResponseMsg       rsp_msg;
+    hal_lif_info_t             *lif_info = GetLifInfo();
+
+    PopulateRequest(req_msg, &req);
+
+    status = hal->lif_update(req_msg, rsp_msg);
+    if (status.ok()) {
+        rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_LOG_DEBUG("Updated Lif id: {} hw_lif_id: {}",
+                            id_, lif_info->hw_lif_id);
+        } else {
+            NIC_LOG_ERR("Failed to update Lif for id: {}. err: {}",
+                          id_, rsp.api_status());
+        }
+    } else {
+        NIC_LOG_ERR("Failed to update Lif for id: {}. err: {}:{}",
+                      id_, status.error_code(), status.error_message());
+    }
+
+    // Store spec
+    spec.CopyFrom(*req);
+}
+
+void
+EthLif::TriggerHalDelete()
+{
+    grpc::ClientContext           context;
+    grpc::Status                  status;
+
+    intf::LifDeleteRequest        *req;
+    intf::LifDeleteResponse       rsp;
+    intf::LifDeleteRequestMsg     req_msg;
+    intf::LifDeleteResponseMsg    rsp_msg;
+
+    req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_lif_id(id_);
+    status = hal->lif_delete(req_msg, rsp_msg);
+    if (status.ok()) {
+        rsp = rsp_msg.response(0);
+        if (rsp.api_status() == types::API_STATUS_OK) {
+            NIC_LOG_DEBUG("Deleted Lif id: {} hw_lif_id: {}",
+                            id_, GetLifInfo()->hw_lif_id);
+        } else {
+            NIC_LOG_ERR("Failed to delete Lif for id: {}. err: {}",
+                          id_, rsp.api_status());
+        }
+    } else {
+        NIC_LOG_ERR("Failed to delete Lif for id: {}. err: {}:{}",
+                      id_, status.error_code(), status.error_message());
+    }
+}
+
+void
+EthLif::PopulateRequest(intf::LifRequestMsg &req_msg, intf::LifSpec **req_ptr)
+{
+    hal_lif_info_t             *lif_info = GetLifInfo();
+    intf::LifSpec              *req;
+
+    req = req_msg.add_request();
+    req->mutable_key_or_handle()->set_lif_id(id_);
+    req->set_name(lif_info->name);
+    req->set_type(lif_info->type);
+    req->set_hw_lif_id(lif_info->hw_lif_id);
+    req->mutable_pinned_uplink_if_key_handle()->
+        set_interface_id(lif_info->pinned_uplink ? lif_info->pinned_uplink->GetId() : 0);
+    req->mutable_packet_filter()->set_receive_broadcast(lif_info->receive_broadcast);
+    req->mutable_packet_filter()->set_receive_all_multicast(lif_info->receive_all_multicast);
+    req->mutable_packet_filter()->set_receive_promiscuous(lif_info->receive_promiscuous);
+    req->set_vlan_strip_en(lif_info->vlan_strip_en);
+    req->set_vlan_insert_en(lif_info->vlan_insert_en);
+    req->set_is_management(IsOOBMnic() ||
+                           IsInternalManagement());
+    req->set_admin_status(::intf::IF_STATUS_UP);
+    req->set_enable_rdma(lif_info->enable_rdma);
+
+    *req_ptr = req;
 }
 
 Uplink *
@@ -922,9 +1001,15 @@ EthLif::SetEnic(Enic *enic)
 }
 
 uint32_t
+EthLif::GetId()
+{
+    return id_;
+}
+
+uint32_t
 EthLif::GetHwLifId()
 {
-    return GetLif()->GetHwLifId();
+    return info_.hw_lif_id;
 }
 
 bool

@@ -48,7 +48,7 @@ MacVlanFilter::MacVlanFilter(
 
     NIC_LOG_DEBUG("Mac-Vlan entity creation. Type: {}, lif: {}, mac: {}, vlan: {}. ",
                     _type,
-                    eth_lif->GetLif()->GetId(),
+                    eth_lif->GetId(),
                     macaddr2str(mac), vlan);
 
     if (eth_lif->IsClassicForwarding()) {
@@ -73,7 +73,7 @@ MacVlanFilter::MacVlanFilter(
     } else {
         // Create Filter to HAL
         req = req_msg.add_request();
-        req->mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(eth_lif->GetLif()->GetId());
+        req->mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(eth_lif->GetId());
         req->mutable_key_or_handle()->mutable_filter_key()->set_mac_address(mac);
         req->mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(vlan);
 
@@ -129,7 +129,7 @@ MacVlanFilter::~MacVlanFilter()
     HalEndpoint                             *ep;
 
     NIC_LOG_DEBUG("Mac-Vlan entity deletion. lif: {}, mac: {}, vlan: {}. ",
-                    eth_lif->GetLif()->GetId(),
+                    eth_lif->GetId(),
                     macaddr2str(_mac), _vlan);
 
     if (eth_lif->IsClassicForwarding()) {
@@ -152,7 +152,7 @@ MacVlanFilter::~MacVlanFilter()
         // Create Filter to HAL
         req = req_msg.add_request();
         req->mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->
-            set_lif_id(eth_lif->GetLif()->GetId());
+            set_lif_id(eth_lif->GetId());
         req->mutable_key_or_handle()->mutable_filter_key()->set_mac_address(_mac);
         req->mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(_vlan);
         req->mutable_key_or_handle()->mutable_filter_key()->set_type(_type);
