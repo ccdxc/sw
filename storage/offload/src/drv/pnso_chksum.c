@@ -104,17 +104,18 @@ chksum_setup(struct service_info *svc_info,
 					err);
 		goto out;
 	}
-	svc_info->si_p4_sgl = sgl;
+	svc_info->si_pb_sgl = sgl;
 
-	if (svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) {
+	if ((svc_info->si_flags & CHAIN_SFLAG_BYPASS_ONFAIL) &&
+		(svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK)) {
 		bof_sgl = cpdc_get_sgl(svc_info->si_pcr, per_block);
 		if (!bof_sgl) {
 			err = ENOMEM;
-			OSAL_LOG_ERROR("cannot obtain bypass-chksum sgl from pool! err: %d",
+			OSAL_LOG_ERROR("cannot obtain pb/bof chksum sgl from pool! err: %d",
 					err);
 			goto out;
 		}
-		svc_info->si_p4_bof_sgl = bof_sgl;
+		svc_info->si_pb_bof_sgl = bof_sgl;
 	}
 
 	err = cpdc_setup_status_desc(svc_info, per_block);
@@ -228,7 +229,7 @@ chksum_sub_chain_from_cpdc(struct service_info *svc_info,
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;
 	sgl = (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) ?
-		svc_info->si_p4_sgl : svc_info->si_src_sgl.sgl;
+		svc_info->si_pb_sgl : svc_info->si_src_sgl.sgl;
 
 	err = seq_setup_chksum_chain_params(cpdc_chain, svc_info, chksum_desc,
 			sgl, svc_info->si_num_tags);
@@ -486,10 +487,10 @@ chksum_teardown(struct service_info *svc_info)
 	cpdc_teardown_rmem_status_desc(svc_info);
 	cpdc_teardown_status_desc(svc_info);
 
-	sgl = (struct cpdc_sgl *) svc_info->si_p4_sgl;
+	sgl = (struct cpdc_sgl *) svc_info->si_pb_sgl;
 	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
-	sgl = (struct cpdc_sgl *) svc_info->si_p4_bof_sgl;
+	sgl = (struct cpdc_sgl *) svc_info->si_pb_bof_sgl;
 	cpdc_put_sgl(svc_info->si_pcr, per_block, sgl);
 
 	chksum_desc = (struct cpdc_desc *) svc_info->si_desc;

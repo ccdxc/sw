@@ -689,7 +689,7 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 		num_tags = cpdc_fill_per_block_desc(svc_info, algo_type,
 				svc_info->si_block_size,
 				svc_info->si_src_blist.len,
-				&svc_info->si_src_blist, svc_info->si_p4_sgl,
+				&svc_info->si_src_blist, svc_info->si_pb_sgl,
 				svc_info->si_desc,
 				fill_desc_fn);
 		if (num_tags == 0) {
@@ -712,7 +712,7 @@ cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 					svc_info->si_block_size,
 					svc_info->si_bof_blist.len,
 					&svc_info->si_bof_blist,
-					svc_info->si_p4_bof_sgl,
+					svc_info->si_pb_bof_sgl,
 					bof_desc,
 					fill_desc_fn);
 			if (num_tags == 0) {

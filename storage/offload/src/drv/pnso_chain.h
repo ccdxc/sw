@@ -255,8 +255,8 @@ struct service_info {
 		struct crypto_chain_params si_crypto_chain;
 	};
 
-	struct cpdc_sgl	*si_p4_sgl;	/* for per-block hash/checksum */
-	struct cpdc_sgl	*si_p4_bof_sgl;	/* for bypass onfail hash/chksum */
+	struct cpdc_sgl	*si_pb_sgl;	/* for per-block hash/checksum */
+	struct cpdc_sgl	*si_pb_bof_sgl;	/* for per-block bof hash/chksum */
 
 	struct sequencer_info si_seq_info;
 	struct service_batch_info si_batch_info;

@@ -72,10 +72,10 @@ pprint_service_info(const struct service_info *svc_info)
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_dst_aol",
 			(uint64_t) svc_info->si_dst_aol.aol);
 
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_p4_sgl",
-			(uint64_t) svc_info->si_p4_sgl);
-	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_p4_bof_sgl",
-			(uint64_t) svc_info->si_p4_bof_sgl);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "si_pb_sgl",
+			(uint64_t) svc_info->si_pb_sgl);
+	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== si_pb_bof_sgl",
+			(uint64_t) svc_info->si_pb_bof_sgl);
 
 	OSAL_LOG_DEBUG("%30s: %d", "=== sbi_num_entries",
 			svc_info->si_batch_info.sbi_num_entries);
