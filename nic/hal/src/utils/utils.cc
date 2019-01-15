@@ -16,6 +16,30 @@ using types::ApiStatus;
 namespace hal {
 
 //----------------------------------------------------------------------------
+// convert IP address spec in proto to ipv4_addr used in HAL
+//----------------------------------------------------------------------------
+hal_ret_t
+ip_addr_spec_to_ipv4_addr (ipv4_addr_t *out_ipaddr,
+                           const types::IPAddress& in_ipaddr)
+{
+    *out_ipaddr = in_ipaddr.v4_addr();
+    return HAL_RET_OK;
+}
+
+//----------------------------------------------------------------------------
+// convert HAL IPv4 address to spec
+//----------------------------------------------------------------------------
+hal_ret_t
+ipv4_addr_to_spec (types::IPAddress *ip_addr_spec,
+                   const ipv4_addr_t *ipv4_addr)
+{
+    ip_addr_spec->set_ip_af(types::IP_AF_INET);
+    ip_addr_spec->set_v4_addr(*ipv4_addr);
+
+    return HAL_RET_OK;
+}
+
+//----------------------------------------------------------------------------
 // convert IP address spec in proto to ip_addr used in HAL
 //----------------------------------------------------------------------------
 hal_ret_t
