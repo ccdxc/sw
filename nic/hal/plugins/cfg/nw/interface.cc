@@ -3453,6 +3453,44 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
             goto end;
         }
     }
+    /* Validations for MPLSoUDP encap. Check if all addresses are v4 */
+    if (hal_if->encap_type ==
+         TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
+        if ((!if_tunnel_info.prop_mpls_info().substrate_ip().v4_addr()) ||
+            (!if_tunnel_info.prop_mpls_info().tunnel_dest_ip().v4_addr())) {
+            HAL_TRACE_ERR("Substrate IP or Tun dest IP is not v4 type");
+            ret = HAL_RET_IF_INFO_INVALID;
+            goto end;
+        }
+        int n = if_tunnel_info.prop_mpls_info().overlay_ip_size();
+        for (int i = 0; i < n; i++) {
+            if (if_tunnel_info.prop_mpls_info().overlay_ip(i).v4_addr()) {
+                HAL_TRACE_ERR("Overlay IP is not v4 type");
+                ret = HAL_RET_IF_INFO_INVALID;
+                goto end;
+            }
+        }
+        if (if_tunnel_info.prop_mpls_info().mpls_if_size() != n) {
+            HAL_TRACE_ERR("Num overlay_ip and mpls_if size mismatch!");
+            ret = HAL_RET_IF_INFO_INVALID;
+            goto end;
+        }
+        hal_if->num_overlay_ip = hal_if->num_mpls_if = n;
+        /* Validate the source gw address */
+        auto addr = if_tunnel_info.prop_mpls_info().source_gw();
+        if (!addr.has_prefix()) {
+            HAL_TRACE_ERR("ONLY Ipv4 prefix supported for MplsoUDP source gw");
+            ret = HAL_RET_IF_INFO_INVALID;
+            goto end;
+        }
+        auto prefix = addr.prefix();
+        if (!prefix.has_ipv4_subnet()) {
+            HAL_TRACE_ERR("ONLY Ipv4 prefix supported for MplsoUDP source gw");
+            ret = HAL_RET_IF_INFO_INVALID;
+            goto end;
+        }
+    }
+
     /* Populate the interface structures */
     if (hal_if->encap_type ==
             TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
@@ -3470,33 +3508,27 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
         hal_if->gre_ttl = if_tunnel_info.gre_info().ttl();
     } else if (hal_if->encap_type ==
                TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
-        ip_addr_spec_to_ip_addr(&hal_if->substrate_ip,
+        ip_addr_spec_to_ipv4_addr(&hal_if->substrate_ip,
                                 if_tunnel_info.prop_mpls_info().substrate_ip());
-        int n = if_tunnel_info.prop_mpls_info().overlay_ip_size();
-        if (if_tunnel_info.prop_mpls_info().mpls_if_size() != n) {
-            ret = HAL_RET_IF_INFO_INVALID;
-            HAL_TRACE_ERR("Num overlay_ip and mpls_if size mismatch!");
-            goto end;
-        }
-        hal_if->num_overlay_ip = hal_if->num_mpls_if = n;
-        for (int i = 0; i < n; i++) {
+        ip_addr_spec_to_ipv4_addr(&hal_if->tun_dst_ip,
+                                if_tunnel_info.prop_mpls_info().tunnel_dest_ip());
+        /* Already validated that num_overlay_ip == num_mpls_if */
+        for (int i = 0; i < hal_if->num_overlay_ip; i++) {
             populate_mpls_tag_info(if_tunnel_info.prop_mpls_info().mpls_if(i),
                                    &hal_if->mpls_if[i]);
-            ip_addr_spec_to_ip_addr(&hal_if->overlay_ip[i],
+            ip_addr_spec_to_ipv4_addr(&hal_if->overlay_ip[i],
                                     if_tunnel_info.prop_mpls_info().overlay_ip(i));
         }
         populate_mpls_tag_info(if_tunnel_info.prop_mpls_info().mpls_tag(),
                                &hal_if->mpls_tag);
+        /* TODO: Check if any validations required for bandwidth ?? */
         hal_if->ingress_bw = if_tunnel_info.prop_mpls_info().ingress_bw();
         hal_if->egress_bw = if_tunnel_info.prop_mpls_info().egress_bw();
-        addr_list_elem_t    *addr_range;
-        addr_range = addr_list_elem_address_spec_handle(
-                                if_tunnel_info.prop_mpls_info().source_gw(),
-                                &hal_if->source_gw);
-        if (!addr_range) {
-            addr_list_cleanup(&hal_if->source_gw);
-            return HAL_RET_OOM;
-        }
+
+        auto addr = if_tunnel_info.prop_mpls_info().source_gw();
+        auto prefix = addr.prefix();
+        hal_if->source_gw.len = prefix.ipv4_subnet().prefix_len();
+        hal_if->source_gw.v4_addr = prefix.ipv4_subnet().address().v4_addr();
     } else {
         ret = HAL_RET_IF_INFO_INVALID;
         HAL_TRACE_ERR("Unsupported encap type : {}", hal_if->encap_type);

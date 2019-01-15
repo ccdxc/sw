@@ -151,15 +151,16 @@ typedef struct if_s {
                 } __PACK__;
                 /* Proprietary MPLSoUDP tunnel */
                 struct {
-                    ip_addr_t        substrate_ip;    // Substrate/tunnel outer dest. ip-address (incoming)
-                    ip_addr_t        overlay_ip[2];   // Overlay/inner dest. ip-address (incoming)
-                    mpls_tag_t       mpls_if[2];      // MPLS tag information (incoming)
-                    ip_addr_t        tun_dst_ip;      // Tunnel/outer dest. ip-address (outgoing)
-                    mpls_tag_t       mpls_tag;        // MPLS tag information (outgoing)
-                    uint32_t         ingress_bw;      // Ingress BW (in KBytes/sec)
-                    uint32_t         egress_bw;       // Egress BW (in KBytes/sec)
-                    uint8_t          num_overlay_ip;
-                    uint8_t          num_mpls_if;
+                    ipv4_addr_t     substrate_ip;    // Substrate/tunnel outer dest. ip-address (incoming)
+                    ipv4_addr_t     overlay_ip[2];   // Overlay/inner dest. ip-address (incoming)
+                    mpls_tag_t      mpls_if[2];      // MPLS tag information (incoming)
+                    ipv4_addr_t     tun_dst_ip;      // Tunnel/outer dest. ip-address (outgoing)
+                    mpls_tag_t      mpls_tag;        // MPLS tag information (outgoing)
+                    ipv4_prefix_t   source_gw;       // Source gateway ipv4 prefix for MPLSoUDP
+                    uint32_t        ingress_bw;      // Ingress BW (in KBytes/sec)
+                    uint32_t        egress_bw;       // Egress BW (in KBytes/sec)
+                    uint8_t         num_overlay_ip;
+                    uint8_t         num_mpls_if;
                 } __PACK__;
                 /* Add structs for other tunnel types */
             } __PACK__;
@@ -197,8 +198,6 @@ typedef struct if_s {
     // dllist_ctxt_t       session_list_head;  // session from this
 
     dllist_ctxt_t       mc_entry_list_head;    // mc_entries that have this if in its OIF list
-
-    dllist_ctxt_t       source_gw;             // Source gateway ip-address for MPLSoUDP
 
     // PD Uplink/Enic ... Interpret based on type ... Careful!!
     void                *pd_if;
