@@ -281,7 +281,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
 
     // spawn data core threads and pin them to their cores
     if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
-        for (i = 0; i < hal_cfg->num_data_threads; i++) {
+        for (i = 0; i < hal_cfg->num_data_cores; i++) {
             // pin each data thread to a specific core
             cores_mask = 1 << (ffsl(data_cores_mask) - 1);
             tid = HAL_THREAD_ID_FTE_MIN + i;
@@ -326,13 +326,13 @@ hal_parse_cores_cfg (ptree &pt, hal_cfg_t *hal_cfg)
     str = pt.get<std::string>("sw.control_cores_mask");
     hal_cfg->control_cores_mask = std::stoul(str, nullptr, 16);
     sdk::lib::thread::control_cores_mask_set(hal_cfg->control_cores_mask);
-    hal_cfg->num_control_threads =
+    hal_cfg->num_control_cores =
                     sdk::lib::count_bits_set(hal_cfg->control_cores_mask);
 
     str = pt.get<std::string>("sw.data_cores_mask");
     hal_cfg->data_cores_mask = std::stoul(str, nullptr, 16);
     sdk::lib::thread::data_cores_mask_set(hal_cfg->data_cores_mask);
-    hal_cfg->num_data_threads =
+    hal_cfg->num_data_cores =
                     sdk::lib::count_bits_set(hal_cfg->data_cores_mask);
 
     return HAL_RET_OK;

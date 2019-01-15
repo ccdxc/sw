@@ -2164,7 +2164,7 @@ hal_ret_t
 session_init (hal_cfg_t *hal_cfg)
 {
 
-    g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_threads);
+    g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_cores);
 
     // wait until the periodic thread is ready
     while (!sdk::lib::periodic_thread_is_running()) {
@@ -2572,7 +2572,7 @@ system_fte_txrx_stats_get(SystemResponse *rsp)
     HAL_TRACE_DEBUG("Gathering fte txrx stats ");
     pmd_stats = rsp->mutable_stats()->mutable_pmd_stats();
 
-    for (uint32_t threads = 0; threads < hal::g_hal_cfg.num_data_threads; threads++) {
+    for (uint32_t threads = 0; threads < hal::g_hal_cfg.num_data_cores; threads++) {
         txrx_stats = fte::fte_txrx_stats_get(threads, false);
         FTEInfo *fte_info = pmd_stats->add_fte_info();
         QGlobalInfo *global_info = fte_info->mutable_glbal();
@@ -2626,7 +2626,7 @@ system_fte_stats_get(SystemResponse *rsp)
 
     HAL_TRACE_DEBUG("Gathering fte stats ");
     fte_global_stats = rsp->mutable_stats()->mutable_fte_stats();
-    for (uint32_t i = 0; i < hal::g_hal_cfg.num_data_threads; i++) {
+    for (uint32_t i = 0; i < hal::g_hal_cfg.num_data_cores; i++) {
         per_fte_stats = fte::fte_stats_get(i);
         fte_stats = fte_global_stats->add_fte_stats_info();
 

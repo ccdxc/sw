@@ -123,7 +123,7 @@ hal_init (hal_cfg_t *hal_cfg)
         (hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&
         (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
         // start fte threads
-        for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
+        for (uint32_t i = 0; i < hal_cfg->num_data_cores; i++) {
             tid = HAL_THREAD_ID_FTE_MIN + i;
             g_hal_threads[tid]->start(g_hal_threads[tid]);
         }

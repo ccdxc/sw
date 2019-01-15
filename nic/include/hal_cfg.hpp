@@ -65,8 +65,8 @@ typedef struct hal_cfg_s {
     sdk::lib::catalog        *catalog;
     mpartition               *mempartition;
     std::string              default_config_dir;        // TODO: remove this !!
-    uint16_t                 num_control_threads;
-    uint16_t                 num_data_threads;
+    uint16_t                 num_control_cores;
+    uint16_t                 num_data_cores;
     uint64_t                 control_cores_mask;
     uint64_t                 data_cores_mask;
     bool                     shm_mode;

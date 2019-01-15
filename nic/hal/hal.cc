@@ -264,9 +264,9 @@ hal_init (hal_cfg_t *hal_cfg)
         (hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&
         (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
         // set the number of instances as read from config
-        ipc_logger::set_ipc_instances(hal_cfg->num_data_threads);
+        ipc_logger::set_ipc_instances(hal_cfg->num_data_cores);
         // start fte threads
-        for (uint32_t i = 0; i < hal_cfg->num_data_threads; i++) {
+        for (uint32_t i = 0; i < hal_cfg->num_data_cores; i++) {
             // init IPC logger infra for FTE
             if (!i && hal_cfg->shm_mode &&
                 ipc_logger::init(std::shared_ptr<logger>(utils::hal_logger())) != HAL_RET_OK) {
