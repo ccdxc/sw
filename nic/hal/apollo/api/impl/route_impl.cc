@@ -6,11 +6,15 @@
  * @brief   datapath implementation of route table
  */
 
+#include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
 #include "nic/hal/apollo/framework/api_engine.hpp"
 #include "nic/hal/apollo/api/route.hpp"
 #include "nic/hal/apollo/api/impl/route_impl.hpp"
 #include "nic/hal/apollo/api/impl/oci_impl_state.hpp"
+#include "nic/hal/apollo/api/tep.hpp"
+#include "nic/hal/apollo/api/impl/tep_impl.hpp"
+#include "nic/hal/apollo/lpm/lpm.hpp"
 
 namespace impl {
 
@@ -90,7 +94,43 @@ route_table_impl::release_resources(api_base *api_obj) {
  */
 sdk_ret_t
 route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
+    sdk_ret_t            ret;
+    oci_route_table_t    *route_table_info;
+    route_table_t        *rtable;
+    oci_tep_key_t        tep_key;
+    api::tep_entry       *tep;
+
+    route_table_info = &obj_ctxt->api_params->route_table_info;
+    SDK_ASSERT_RETURN((route_table_info->route_list.num_rules > 0),
+                      sdk::SDK_RET_INVALID_ARG);
+
+    /**< allocate memory for the library to build route table */
+    rtable =
+        (route_table_t *)
+            SDK_MALLOC(OCI_MEM_ALLOC_ROUTE_TABLE,
+                       sizeof(route_table_t) +
+                           (route_table_info->route_list.num_rules *
+                            sizeof(route_t)));
+    SDK_ASSERT_RETURN((rtable != NULL), sdk::SDK_RET_OOM);
+
+    rtable->af = route_table_info->af;
+    rtable->num_routes = route_table_info->route_list.num_rules;
+    for (uint32_t i = 0; i < rtable->num_routes; i++) {
+        rtable->routes[i].prefix =
+            route_table_info->route_list.rules[i].key.prefix;
+        tep_key.ip_addr =
+            route_table_info->route_list.rules[i].nh_ip.addr.v4_addr;
+        tep = tep_db()->tep_find(&tep_key);
+        SDK_ASSERT(tep != NULL);
+        rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
+    }
+    ret = lpm_tree_create(rtable, lpm_root_addr_,
+                          route_table_impl_db()->lpm_table_size());
+    if (ret != SDK_RET_OK) {
+        OCI_TRACE_ERR("Failed to build LPM route table, err : %u", ret);
+    }
+    SDK_FREE(OCI_MEM_ALLOC_ROUTE_TABLE, rtable);
+    return ret;
 }
 
 /**
