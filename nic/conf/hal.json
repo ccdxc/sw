@@ -2,7 +2,6 @@
   "mode" : "sim",
   "asic" :
   {
-    "name" : "capri",
     "loader_info_file" : "capri_loader.conf"
   },
   "sw" : {

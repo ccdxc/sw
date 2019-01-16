@@ -53,7 +53,6 @@ typedef enum hal_feature_set_s {
 typedef struct hal_cfg_s {
     void                     *server_builder;    // grpc server builder
     platform_type_t          platform;
-    char                     asic_name[HAL_MAX_NAME_STR];
     std::string              grpc_port;
     std::string              loader_info_file;
     char                     feature_set[HAL_MAX_NAME_STR];

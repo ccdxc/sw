@@ -34,7 +34,7 @@ namespace api {
 static void
 asic_global_config_init (asic_cfg_t *asic_cfg)
 {
-    asic_cfg->asic_type = sdk::asic::SDK_ASIC_TYPE_CAPRI;
+    asic_cfg->asic_type = sdk::types::asic_type_t::SDK_ASIC_TYPE_CAPRI;
     asic_cfg->cfg_path = g_oci_state.cfg_path();
     asic_cfg->catalog =  g_oci_state.catalogue();
     asic_cfg->mempartition = g_oci_state.mempartition();

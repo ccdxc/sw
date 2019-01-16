@@ -95,6 +95,11 @@ enum class platform_type_t {
     PLATFORM_TYPE_RTL = 6,
 };
 
+enum class asic_type_t {
+    SDK_ASIC_TYPE_NONE,
+    SDK_ASIC_TYPE_CAPRI,
+};
+
 enum class port_admin_state_t {
     PORT_ADMIN_STATE_NONE    = 0,
     PORT_ADMIN_STATE_UP      = 1,
@@ -203,6 +208,7 @@ using sdk::types::xcvr_event_info_t;
 using sdk::types::port_an_args_t;
 using sdk::types::port_link_sm_t;
 using sdk::types::port_loopback_mode_t;
+using sdk::types::asic_type_t;
 
 #endif    // __SDK_TYPES_HPP__
 

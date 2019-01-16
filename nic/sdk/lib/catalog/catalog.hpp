@@ -86,7 +86,7 @@ typedef struct catalog_asic_port_s {
 } catalog_asic_port_t;
 
 typedef struct catalog_asic_s {
-    std::string  name;
+    sdk::types::asic_type_t type;
     uint32_t     max_ports;
     catalog_asic_port_t ports[MAX_ASIC_PORTS];
 } catalog_asic_t;

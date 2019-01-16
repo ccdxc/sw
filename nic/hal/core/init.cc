@@ -389,8 +389,6 @@ hal_parse_cfg (const char *cfgfile, hal_cfg_t *hal_cfg)
             hal_cfg->platform = platform_type_t::PLATFORM_TYPE_MOCK;
         }
 
-        sparam = pt.get<std::string>("asic.name");
-        strncpy(hal_cfg->asic_name, sparam.c_str(), HAL_MAX_NAME_STR);
         hal_cfg->loader_info_file =
                 pt.get<std::string>("asic.loader_info_file");
 

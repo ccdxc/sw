@@ -95,7 +95,7 @@ public:
      *
      * @param[in] name Name of memory partition region
      *
-     * @return #Memory mpartition region size in kilobytes
+     * @return #Memory mpartition region size in bytes
      */
     uint32_t size(const char *name);
 
