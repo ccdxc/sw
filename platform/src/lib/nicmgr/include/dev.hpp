@@ -140,8 +140,8 @@ struct eth_devspec {
     // FWD
     EthDevType  eth_type;
     std::string name;
-    uint32_t    uplink_id;
-    Uplink      *uplink;
+    uint32_t    uplink_port_num;
+    // Uplink      *uplink;
     // RES
     uint32_t lif_count;
     uint32_t rxq_count;
@@ -234,7 +234,7 @@ private:
 
     boost::property_tree::ptree spec;
     std::map<uint64_t, Device*> devices; // lif -> device
-    std::map<uint64_t, Uplink*> uplinks; // uplink_id -> Uplink
+    // std::map<uint64_t, Uplink*> uplinks; // uplink_id -> Uplink
 
     // Service Lif Info
     hal_lif_info_t hal_lif_info_;

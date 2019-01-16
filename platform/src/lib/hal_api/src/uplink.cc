@@ -13,22 +13,23 @@ using namespace std;
 std::map<uint64_t, Uplink*> Uplink::uplink_db;
 
 Uplink *
-Uplink::Factory(uplink_id_t id, bool is_oob)
+Uplink::Factory(uplink_id_t id, uint32_t port_num, bool is_oob)
 {
     api_trace("Uplink Create");
 
-    if (uplink_db.find(id) != uplink_db.end()) {
-        NIC_LOG_WARN("Duplicate Create of Uplink with id: {}",
-                       id);
+    if (uplink_db.find(port_num) != uplink_db.end()) {
+        NIC_LOG_WARN("Duplicate Create of Uplink with port: {}",
+                     port_num);
         return NULL;
     }
 
-    NIC_LOG_DEBUG("Id: {}, is_oob: {}", id, is_oob);
+    NIC_LOG_DEBUG("Id: {}, port: {}, is_oob: {}",
+                  id, port_num, is_oob);
 
-    Uplink *uplink = new Uplink(id, is_oob);
+    Uplink *uplink = new Uplink(id, port_num, is_oob);
 
     // Store in DB for disruptive restart
-    uplink_db[uplink->GetId()] = uplink;
+    uplink_db[uplink->GetPortNum()] = uplink;
 
     return uplink;
 }
@@ -52,20 +53,32 @@ Uplink::Destroy(Uplink *uplink)
 #endif
 
     // Remove from DB
-    uplink_db.erase(uplink->GetId());
+    uplink_db.erase(uplink->GetPortNum());
 
     if (uplink) {
         uplink->~Uplink();
     }
 }
 
-Uplink::Uplink(uplink_id_t id, bool is_oob)
+Uplink::Uplink(uplink_id_t id, uint32_t port_num, bool is_oob)
 {
     NIC_LOG_DEBUG("Uplink Create: {}", id);
     id_       = id;
+    port_num_ = port_num;
     is_oob_   = is_oob;
     num_lifs_ = 0;
-    port_num_ = -1;
+}
+
+Uplink *
+Uplink::GetUplink(uint32_t port_num)
+{
+    if (uplink_db.find(port_num) == uplink_db.end()) {
+        NIC_LOG_WARN("No Uplink with port: {}",
+                     port_num);
+        return NULL;
+    }
+
+    return uplink_db[port_num];
 }
 
 void
@@ -86,6 +99,17 @@ Uplink::CreateVrf()
                               this);
     }
 #endif
+}
+
+void
+Uplink::CreateVrfs()
+{
+    Uplink *uplink = NULL;
+    for (auto it = uplink_db.cbegin(); it != uplink_db.cend(); it++) {
+        uplink = (Uplink *)(it->second);
+        NIC_LOG_DEBUG("Creating VRF for uplink: {}", uplink->GetId());
+        uplink->CreateVrf();
+    }
 }
 
 int

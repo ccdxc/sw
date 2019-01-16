@@ -279,7 +279,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     hal_lif_info_.hw_lif_id = lif_base;
     hal_lif_info_.name = spec->name;
     hal_lif_info_.type = types::LIF_TYPE_NONE;
-    hal_lif_info_.pinned_uplink = 0;
+    hal_lif_info_.pinned_uplink_port_num = 0;
     hal_lif_info_.enable_rdma = false;
     hal_lif_info_.pushed_to_hal = false;
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));

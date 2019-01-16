@@ -99,12 +99,15 @@ invalidate_txdma_cacheline(uint64_t addr)
 
 void DeviceManager::CreateUplinkVRFs()
 {
+    Uplink::CreateVrfs();
+#if 0
     Uplink *uplink = NULL;
     for (auto it = uplinks.cbegin(); it != uplinks.cend(); it++) {
         uplink = (Uplink *)(it->second);
         NIC_LOG_DEBUG("Creating VRF for uplink: {}", uplink->GetId());
         uplink->CreateVrf();
     }
+#endif
 }
 
 void
@@ -287,7 +290,7 @@ DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mo
     hal_lif_info_.id = hw_lif_id;
     hal_lif_info_.name = "admin";
     hal_lif_info_.hw_lif_id = hw_lif_id;
-    hal_lif_info_.pinned_uplink = NULL;
+    hal_lif_info_.pinned_uplink_port_num = 0;
     hal_lif_info_.enable_rdma = false;
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
     NIC_LOG_DEBUG("nicmgr lif id:{}, hw_lif_id: {}", hal_lif_info_.id, hal_lif_info_.hw_lif_id);
@@ -323,9 +326,13 @@ DeviceManager::LoadConfig(string path)
                 NIC_LOG_DEBUG("Creating uplink: {}, oob: {}",
                              val.get<uint64_t>("id"),
                              val.get<bool>("oob", false));
-                Uplink *up1 = Uplink::Factory(val.get<uint64_t>("id"), val.get<bool>("oob", false));
+                Uplink::Factory(val.get<uint64_t>("id"),
+                                val.get<uint64_t>("port"),
+                                val.get<bool>("oob", false));
+#if 0
                 up1->SetPortNum(val.get<uint64_t>("port"));
                 uplinks[val.get<uint64_t>("id")] = up1;
+#endif
             }
         }
     }
@@ -350,11 +357,13 @@ DeviceManager::LoadConfig(string path)
             eth_spec->mac_addr = sys_mac_base++;
 
             if (val.get_optional<string>("network")) {
-                eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
+                eth_spec->uplink_port_num = val.get<uint64_t>("network.uplink");
+#if 0
                 eth_spec->uplink = uplinks[eth_spec->uplink_id];
                 if (eth_spec->uplink == NULL) {
                     NIC_LOG_ERR("Unable to find uplink for id: {}", eth_spec->uplink_id);
                 }
+#endif
             }
 
             eth_spec->host_dev = false;
@@ -369,7 +378,7 @@ DeviceManager::LoadConfig(string path)
                          " pinned_uplink: {}, intr_count: {}, qos_group {}",
                          eth_spec->name,
                          eth_dev_type_to_str(eth_spec->eth_type),
-                         eth_spec->uplink_id,
+                         eth_spec->uplink_port_num,
                          eth_spec->intr_count,
                          eth_spec->qos_group);
             AddDevice(ETH, (void *)eth_spec);
@@ -411,11 +420,13 @@ DeviceManager::LoadConfig(string path)
             }
 
             if (val.get_optional<string>("network")) {
-                eth_spec->uplink_id = val.get<uint64_t>("network.uplink");
+                eth_spec->uplink_port_num = val.get<uint64_t>("network.uplink");
+#if 0
                 eth_spec->uplink = uplinks[eth_spec->uplink_id];
                 if (eth_spec->uplink == NULL) {
                     NIC_LOG_ERR("Unable to find uplink for id: {}", eth_spec->uplink_id);
                 }
+#endif
             }
 
             eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
@@ -431,7 +442,7 @@ DeviceManager::LoadConfig(string path)
                          "pinned_uplink: {}, qos_group {}",
                          eth_spec->name,
                          eth_dev_type_to_str(eth_spec->eth_type),
-                         eth_spec->uplink_id,
+                         eth_spec->uplink_port_num,
                          eth_spec->qos_group);
             AddDevice(ETH, (void *)eth_spec);
         }

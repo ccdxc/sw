@@ -968,7 +968,8 @@ EthLif::PopulateRequest(intf::LifRequestMsg &req_msg, intf::LifSpec **req_ptr)
     req->set_type(lif_info->type);
     req->set_hw_lif_id(lif_info->hw_lif_id);
     req->mutable_pinned_uplink_if_key_handle()->
-        set_interface_id(lif_info->pinned_uplink ? lif_info->pinned_uplink->GetId() : 0);
+        set_interface_id(GetUplink() ? GetUplink()->GetId() : 0);
+        // set_interface_id(lif_info->pinned_uplink ? lif_info->pinned_uplink->GetId() : 0);
     req->mutable_packet_filter()->set_receive_broadcast(lif_info->receive_broadcast);
     req->mutable_packet_filter()->set_receive_all_multicast(lif_info->receive_all_multicast);
     req->mutable_packet_filter()->set_receive_promiscuous(lif_info->receive_promiscuous);
@@ -985,7 +986,8 @@ EthLif::PopulateRequest(intf::LifRequestMsg &req_msg, intf::LifSpec **req_ptr)
 Uplink *
 EthLif::GetUplink()
 {
-    return info_.pinned_uplink;
+    // return info_.pinned_uplink;
+    return Uplink::GetUplink(info_.pinned_uplink_port_num);
 }
 
 Enic *
