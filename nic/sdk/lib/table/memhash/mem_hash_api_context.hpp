@@ -1,10 +1,11 @@
 //-----------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #ifndef __MEM_HASH_TYPES_HPP__
 #define __MEM_HASH_TYPES_HPP__
 
 #include "include/sdk/base.hpp"
+#include "include/sdk/table.hpp"
 #include "lib/p4/p4_api.hpp"
 
 #include "mem_hash.hpp"
@@ -15,6 +16,24 @@ using sdk::table::mem_hash_properties_t;
 namespace sdk {
 namespace table {
 namespace memhash {
+
+typedef union mem_hash_handle_ {
+    struct {
+        uint32_t is_hint:1;
+        uint32_t index:28;
+        uint32_t hint:24;
+        uint32_t spare:11;
+    };
+    uint64_t value;
+} __attribute__((__packed__)) mem_hash_handle_t;
+
+#define MEM_HASH_HANDLE_SET_HINT(_ctx, _hint) { \
+        ((mem_hash_handle_t *)((_ctx)->handle))->hint = (_hint); \
+        ((mem_hash_handle_t *)((_ctx)->handle))->is_hint = true; \
+}
+#define MEM_HASH_HANDLE_SET_INDEX(_ctx, _index) {\
+        ((mem_hash_handle_t *)((_ctx)->handle))->index = (_index); \
+}
 
 #define HINT_SLOT_IS_INVALID(_slot) \
         ((_slot) == mem_hash_api_context::hint_slot::HINT_SLOT_INVALID)
@@ -116,10 +135,12 @@ public:
     // and so on...
     mem_hash_api_context *pctx;
 
+    // Handle to the entry
+    uint64_t *handle;
 
 public:
     static mem_hash_api_context* factory(mem_hash_api_context *pctx);
-    static mem_hash_api_context* factory(mem_hash_api_params_t *params,
+    static mem_hash_api_context* factory(sdk_table_api_params_t *params,
                                          mem_hash_properties_t *props);
     static void destroy(mem_hash_api_context* ctx);
     char* sw_data2str();

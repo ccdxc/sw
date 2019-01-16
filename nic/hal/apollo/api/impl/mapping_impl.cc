@@ -19,8 +19,9 @@
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+#include "nic/sdk/include/sdk/table.hpp"
 
-using sdk::table::mem_hash_api_params_t;
+using sdk::table::sdk_table_api_params_t;
 
 namespace impl {
 
@@ -150,7 +151,7 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
     vnic_impl                   *vnic_impl_obj;
     local_ip_mapping_swkey_t    local_ip_mapping_key = { 0 };
     local_ip_mapping_appdata_t  local_ip_mapping_data = { 0 };
-    mem_hash_api_params_t       api_params = { 0 };
+    sdk_table_api_params_t       api_params = { 0 };
 
     vnic_impl_obj =
         (vnic_impl *)vnic_db()->vnic_find(&mapping_info->vnic)->impl();
@@ -215,7 +216,7 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
     sdk_ret_t                         ret;
     remote_vnic_mapping_rx_swkey_t remote_vnic_mapping_rx_key = { 0 };
     remote_vnic_mapping_rx_appdata_t remote_vnic_mapping_rx_data = { 0 };
-    mem_hash_api_params_t api_params = { 0 };
+    sdk_table_api_params_t api_params = { 0 };
 
     remote_vnic_mapping_rx_key.vnic_metadata_src_slot_id =
         mapping_info->slot;
@@ -249,7 +250,7 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
     remote_vnic_mapping_tx_swkey_t remote_vnic_mapping_tx_key = { 0 };
     remote_vnic_mapping_tx_appdata_t remote_vnic_mapping_tx_data = { 0 };
     tep_impl *tep_impl_obj;
-    mem_hash_api_params_t api_params = { 0 };
+    sdk_table_api_params_t api_params = { 0 };
 
     tep_impl_obj =
         (tep_impl *)tep_db()->tep_find(&mapping_info->tep)->impl();

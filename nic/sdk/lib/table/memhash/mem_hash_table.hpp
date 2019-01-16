@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #ifndef __MEM_HASH_TABLE_HPP__
 #define __MEM_HASH_TABLE_HPP__
@@ -18,6 +18,7 @@ namespace memhash {
 using sdk::lib::indexer;
 using sdk::table::memhash::mem_hash_table_bucket;
 using sdk::table::mem_hash;
+using sdk::table::mem_hash_properties_t;
 
 class mem_hash_hint_table;
 class mem_hash_main_table;
@@ -56,7 +57,7 @@ private:
 private:
     sdk_ret_t   alloc_(mem_hash_api_context *ctx);
     sdk_ret_t   dealloc_(mem_hash_api_context *ctx);
-    sdk_ret_t   init_(uint32_t id, uint32_t size);
+    sdk_ret_t   init_(mem_hash_properties_t *props);
     sdk_ret_t   initctx_(mem_hash_api_context *ctx);
     sdk_ret_t   insert_(mem_hash_api_context *ctx);
     sdk_ret_t   remove_(mem_hash_api_context *ctx);
@@ -67,7 +68,7 @@ private:
                       mem_hash_api_context **retctx);
 
 public:
-    static mem_hash_hint_table* factory(uint32_t id, uint32_t size);
+    static mem_hash_hint_table* factory(mem_hash_properties_t *props);
     mem_hash_hint_table() {
     }
 
@@ -85,8 +86,7 @@ private:
     uint32_t num_hash_bits_;
 
 private:
-    sdk_ret_t   init_(uint32_t id, uint32_t size,
-                      void *hint_table);
+    sdk_ret_t   init_(mem_hash_properties_t *props);
     sdk_ret_t   initctx_(mem_hash_api_context *ctx);
     sdk_ret_t   insert_(mem_hash_api_context *ctx);
     sdk_ret_t   remove_(mem_hash_api_context *ctx);
@@ -95,8 +95,7 @@ private:
                       mem_hash_api_context **retctx);
 
 public:
-    static mem_hash_main_table* factory(uint32_t id, uint32_t size,
-                                        void *hint_table);
+    static mem_hash_main_table* factory(mem_hash_properties_t *props);
 
     mem_hash_main_table() {
     }

@@ -1,7 +1,8 @@
 //-----------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #include "include/sdk/base.hpp"
+#include "include/sdk/table.hpp"
 #include "lib/p4/p4_api.hpp"
 #include "lib/utils/crc_fast.hpp"
 
@@ -11,6 +12,7 @@
 #include "mem_hash_table_bucket.hpp"
 #include "mem_hash_utils.hpp"
 
+using sdk::table::sdk_table_api_params_t;
 using sdk::table::mem_hash;
 using sdk::table::memhash::mem_hash_api_context;
 using sdk::table::memhash::mem_hash_main_table;
@@ -94,15 +96,8 @@ mem_hash::init_(mem_hash_factory_params_t *params) {
     props_->hint_table_size = ctinfo.tabledepth;
     SDK_ASSERT(props_->hint_table_size);
 
-    hint_table_ = mem_hash_hint_table::factory(props_->hint_table_id,
-                                               props_->hint_table_size);
-    SDK_ASSERT_RETURN(hint_table_, SDK_RET_OOM);
-
-    main_table_ = mem_hash_main_table::factory(props_->main_table_id,
-                                               props_->main_table_size,
-                                               hint_table_);
+    main_table_ = mem_hash_main_table::factory(props_);
     SDK_ASSERT_RETURN(main_table_, SDK_RET_OOM);
-
 
     SDK_TRACE_DEBUG("Creating mem_hash:%s table.", props_->name.c_str());
     SDK_TRACE_DEBUG("- main_table_id:%d main_table_size:%d ",
@@ -125,7 +120,6 @@ mem_hash::destroy(mem_hash *table) {
     MEM_HASH_TRACE_API_BEGIN("DestroyTable");
     SDK_TRACE_DEBUG("Destroying mem_hash table %p", table);
     mem_hash_main_table::destroy_(static_cast<mem_hash_main_table*>(table->main_table_));
-    mem_hash_hint_table::destroy_(static_cast<mem_hash_hint_table*>(table->hint_table_));
 
     SDK_TRACE_DEBUG("Number of API contexts = %d", mem_hash_api_context::count());
     SDK_ASSERT(mem_hash_api_context::count() == 0);
@@ -136,12 +130,17 @@ mem_hash::destroy(mem_hash *table) {
 // mem_hash Insert entry with hash value
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash::genhash_(mem_hash_api_params_t *params) {
+mem_hash::genhash_(sdk_table_api_params_t *params) {
     uint32_t hw_key_len = 0;
     uint32_t hw_data_len = 0;
     p4pd_error_t p4pdret = P4PD_SUCCESS;
     uint8_t hw_key[MEM_HASH_MAX_HW_KEY_LEN];
     uint32_t hash_32b = 0;
+
+    if (params->hash_valid) {
+        // If hash_valid is set in the params, skip computing it.
+        return SDK_RET_OK;
+    }
 
     p4pd_hwentry_query(props_->main_table_id, &hw_key_len,
                        NULL, &hw_data_len);
@@ -162,13 +161,8 @@ mem_hash::genhash_(mem_hash_api_params_t *params) {
                     mem_hash_utils_rawstr(hw_key, hw_key_len));
     hash_32b = crc32gen_->compute_crc(hw_key, hw_key_len,
                                       props_->hash_poly);
-    if (params->hash_valid) {
-        // If hash_valid is set in the params, make sure it is correct.
-        SDK_ASSERT(params->hash_32b == hash_32b);
-    } else {
-        params->hash_32b = hash_32b;
-        params->hash_valid = true;
-    }
+    params->hash_32b = hash_32b;
+    params->hash_valid = true;
 
     return SDK_RET_OK;
 }
@@ -177,7 +171,7 @@ mem_hash::genhash_(mem_hash_api_params_t *params) {
 // mem_hash Insert entry with hash value
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash::insert(mem_hash_api_params_t *params) {
+mem_hash::insert(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
 
@@ -214,7 +208,7 @@ insert_return:
 }
 
 sdk_ret_t
-mem_hash::update(mem_hash_api_params_t *params) {
+mem_hash::update(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
 
@@ -254,7 +248,7 @@ update_return:
 }
 
 sdk_ret_t
-mem_hash::remove(mem_hash_api_params_t *params) {
+mem_hash::remove(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
 
@@ -285,29 +279,15 @@ mem_hash::remove(mem_hash_api_params_t *params) {
         goto remove_return;
     }
 
-    SDK_ASSERT(mctx->match_type);
-
-    if (mctx->is_exact_match()) {
-        // This means there was an exact match in the main table and
-        // it was removed. Check and defragment the hints if required.
-        if (mctx->is_hint_valid()) {
-            ret = static_cast<mem_hash_hint_table*>(hint_table_)->defragment_(mctx);
-            if (ret != SDK_RET_OK) {
-                SDK_TRACE_DEBUG("defragment_ failed, ret:%d", ret);
-            }
-        }
-    } else {
-        // We have a hint match, traverse the hints to remove the entry.
-        ret = static_cast<mem_hash_hint_table*>(hint_table_)->remove_(mctx);
-        if (ret != SDK_RET_OK) {
-            SDK_TRACE_DEBUG("remove_ failed, ret:%d", ret);
-        }
-    }
-
     mem_hash_api_context::destroy(mctx);
 
 remove_return:
     api_stats_.remove(ret);
     MEM_HASH_TRACE_API_END(props_->name.c_str());
     return ret;
+}
+
+sdk_ret_t
+mem_hash::getstats(sdk_table_api_stats_t *stats) {
+    return api_stats_.get(stats);
 }

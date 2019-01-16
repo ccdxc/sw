@@ -1,9 +1,10 @@
 //-----------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #include <string.h>
 
 #include "include/sdk/base.hpp"
+#include "include/sdk/table.hpp"
 #include "lib/p4/p4_api.hpp"
 
 #include "mem_hash_api_context.hpp"
@@ -110,12 +111,15 @@ mem_hash_api_context::factory(mem_hash_api_context *pctx) {
     ctx->key2str = pctx->key2str;
     ctx->appdata2str = pctx->appdata2str;
 
+    // Use the handle from the parent context.
+    ctx->handle = pctx->handle;
+
     ctx->pctx = pctx;
     return ctx;
 }
 
 mem_hash_api_context*
-mem_hash_api_context::factory(mem_hash_api_params_t *params,
+mem_hash_api_context::factory(sdk_table_api_params_t *params,
                               mem_hash_properties_t *props) {
     uint32_t appdata_len = 0;
 
@@ -140,6 +144,9 @@ mem_hash_api_context::factory(mem_hash_api_params_t *params,
     ctx->level = 0;
     ctx->key2str = props->key2str;
     ctx->appdata2str = props->appdata2str;
+
+    // Use the handle from the params.
+    ctx->handle = &params->handle;
     return ctx;
 }
 

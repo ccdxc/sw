@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #include "include/sdk/base.hpp"
 
@@ -7,6 +7,7 @@
 #include "mem_hash_api_context.hpp"
 #include "mem_hash_table_bucket.hpp"
 
+using sdk::table::mem_hash_properties_t;
 using sdk::table::memhash::mem_hash_base_table;
 using sdk::table::memhash::mem_hash_hint_table;
 using sdk::table::memhash::mem_hash_api_context;
@@ -17,7 +18,7 @@ using sdk::table::memhash::mem_hash_table_bucket;
 // Factory method to instantiate the mem_hash_main_table class
 //---------------------------------------------------------------------------
 mem_hash_hint_table *
-mem_hash_hint_table::factory(uint32_t id, uint32_t size) {
+mem_hash_hint_table::factory(mem_hash_properties_t *props) {
     void *mem = NULL;
     mem_hash_hint_table *table = NULL;
     sdk_ret_t ret = SDK_RET_OK;
@@ -30,7 +31,7 @@ mem_hash_hint_table::factory(uint32_t id, uint32_t size) {
 
     table = new (mem) mem_hash_hint_table();
 
-    ret = table->init_(id, size);
+    ret = table->init_(props);
     if (ret != SDK_RET_OK) {
         table->~mem_hash_hint_table();
         SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_HINT_TABLE, mem);
@@ -43,10 +44,11 @@ mem_hash_hint_table::factory(uint32_t id, uint32_t size) {
 // mem_hash_hint_table init()
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash_hint_table::init_(uint32_t id, uint32_t size) {
+mem_hash_hint_table::init_(mem_hash_properties_t *props) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    ret = mem_hash_base_table::init_(id, size);
+    ret = mem_hash_base_table::init_(props->hint_table_id,
+                                     props->hint_table_size);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -177,6 +179,7 @@ mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
 
     // Write to hardware
     if (ret == SDK_RET_OK) {
+        MEM_HASH_HANDLE_SET_HINT(hctx, hctx->table_index);
         ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->write_(hctx);
     }
 
