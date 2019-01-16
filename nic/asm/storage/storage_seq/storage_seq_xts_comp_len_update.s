@@ -23,6 +23,11 @@ struct phv_ p;
 #define r_num_blks                  r7  // number of blocks
 
 /*
+ * Registers reuse, pre calculations
+ */
+#define r_rl_len                    r_blk_boundary  // rate limit length for SEQ_RATE_LIMIT_...()
+ 
+/*
  * Registers reuse, post calculations
  */
 #define r_last_sgl_p                r_comp_desc_p   // pointer to last SGL descriptor
@@ -47,12 +52,11 @@ storage_seq_xts_comp_len_update:
                 65536 - SIZE_IN_BYTES(sizeof(struct seq_comp_hdr_t)), d.data_len
     add         r_data_len, r_data_len, SIZE_IN_BYTES(sizeof(struct seq_comp_hdr_t))
 
-    // For PDMA, transfer length either comes from the supplied descriptor
-    // (as stored in seq_kivec5xts_data_len by seq_xts_status_desc1_handler),
-    // or from here. If the latter, we'll override seq_kivec5xts_data_len.
-    seq         c2, SEQ_KIVEC5XTS_SGL_PDMA_LEN_FROM_DESC, 0
-    phvwr.c2    p.seq_kivec5xts_data_len, r_data_len
-    
+    // We're assuming that descriptors submission will follow in a later stage;
+    // otherwise there would be no reason to have requested a length update.
+    SEQ_RATE_LIMIT_DATA_LEN_LOAD(r_data_len)
+    SEQ_RATE_LIMIT_SET(SEQ_KIVEC5XTS_RL_UNITS_SCALE, c3)
+
     // Preliminary calculations:
     // r_num_blks = (r_data_len + r_blk_boundary - 1) / r_blk_boundary)
     // r_last_blk_no = r_num_blks - 1

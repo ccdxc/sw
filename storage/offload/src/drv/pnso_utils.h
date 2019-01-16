@@ -97,6 +97,16 @@ svc_poll_expiry_check(const struct service_info *svc_info,
 		      uint64_t start_ts,
 		      uint64_t per_svc_timeout);
 
+pnso_error_t
+svc_batch_seq_desc_setup(struct service_info *svc_info,
+			 void *seq_desc,
+			 uint32_t desc_size);
+pnso_error_t
+svc_seq_desc_setup(struct service_info *svc_info,
+		   void *seq_desc,
+		   uint32_t desc_size,
+		   uint32_t num_tags);
+
 pnso_error_t putil_get_interm_buf_list(struct service_info *svc_info);
 
 void putil_put_interm_buf_list(struct service_info *svc_info);

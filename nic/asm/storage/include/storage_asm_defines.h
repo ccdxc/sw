@@ -283,6 +283,8 @@
     k.seq_kivec5_hdr_version_wr_en
 #define SEQ_KIVEC5_CP_HDR_UPDATE_EN             \
     k.seq_kivec5_cp_hdr_update_en
+#define SEQ_KIVEC5_RL_UNITS_SHIFT               \
+    k.seq_kivec5_rl_units_scale
 
 #define SEQ_KIVEC5XTS_SRC_QADDR                 \
     k.{seq_kivec5xts_src_qaddr_sbit0_ebit7...seq_kivec5xts_src_qaddr_sbit32_ebit33}
@@ -314,6 +316,8 @@
     k.seq_kivec5xts_sgl_pdma_len_from_desc
 #define SEQ_KIVEC5XTS_DESC_VEC_PUSH_EN          \
     k.seq_kivec5xts_desc_vec_push_en
+#define SEQ_KIVEC5XTS_RL_UNITS_SHIFT            \
+    k.seq_kivec5xts_rl_units_scale
     
 #define SEQ_KIVEC6_AOL_SRC_VEC_ADDR             \
     k.seq_kivec6_aol_src_vec_addr
@@ -1627,6 +1631,32 @@ _inner_label1:;                                                         \
    add  r_src_qaddr, _src_qaddr, SEQ_QSTATE_METRICS2_OFFSET;            \
    LOAD_TABLE3_FOR_ADDR_PC_IMM_e(r_src_qaddr,                           \
         STORAGE_DEFAULT_TBL_LOAD_SIZE, storage_seq_metrics2_commit)     \
+
+/*
+ * Set HW Tx rate limiter, with scale factor given in _rl_units_scale.
+ * Always program a non-zero rate after scaling.
+ */
+#define SEQ_RATE_LIMIT_DATA_LEN_LOAD(_data_len)                         \
+    add     r_rl_len, _data_len, r0;                                    \
+
+#define SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(_cf, _data_len)                  \
+    add._cf  r_rl_len, _data_len, r0;                                   \
+
+#define SEQ_RATE_LIMIT_DATA_LEN_ADD(_data_len)                          \
+    add     r_rl_len, r_rl_len, _data_len;                              \
+
+#define SEQ_RATE_LIMIT_DATA_LEN_ADD_c(_cf, _data_len)                   \
+    add._cf     r_rl_len, r_rl_len, _data_len;                          \
+
+#define SEQ_RATE_LIMIT_SET(_rl_units_scale, _cf)                        \
+    srl     r_rl_len, r_rl_len, _rl_units_scale;                        \
+    sne     _cf, r_rl_len, r0;                                          \
+    phvwr._cf  p.p4_intr_packet_len, r_rl_len;                          \
+    phvwr.!_cf p.p4_intr_packet_len, 1;                                 \
+
+#define SEQ_RATE_LIMIT_LOAD_SET(_data_len, _rl_units_scale, _cf)        \
+    SEQ_RATE_LIMIT_DATA_LEN_LOAD(_data_len)                             \
+    SEQ_RATE_LIMIT_SET(_cf, _rl_units_scale)                            \
 
 /*
  * Compression SGL PDMA transfer length error

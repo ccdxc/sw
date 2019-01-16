@@ -17,6 +17,7 @@ struct phv_ p;
  * Registers usage
  */
 #define r_num_descs                     r1  // number of Barco descriptors
+#define r_rl_len                        r3  // rate limit length for SEQ_RATE_LIMIT_...()
 
 %%
    .param storage_seq_barco_ring_pndx_pre_read0
@@ -36,6 +37,9 @@ storage_seq_barco_entry_handler:
    cmov         r_num_descs, c1, d.barco_batch_size, 1
    phvwrpair	p.seq_kivec4_barco_ring_size, d.barco_ring_size[4:0], \
                 p.seq_kivec4_barco_num_descs, r_num_descs
+   
+   // Set number of bytes for rate limiting
+   SEQ_RATE_LIMIT_LOAD_SET(d.barco_data_len, d.rl_units_scale, c3)
    
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
                             d.barco_pndx_addr[33:0], dma_p2m_19)

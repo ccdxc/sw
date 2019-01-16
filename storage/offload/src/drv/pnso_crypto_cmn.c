@@ -344,39 +344,6 @@ crypto_desc_status_convert(uint64_t status)
 	return err;
 }
 
-pnso_error_t
-crypto_setup_batch_desc(struct service_info *svc_info, struct crypto_desc *desc)
-{
-	struct service_batch_info *svc_batch_info;
-	uint32_t batch_size, remaining;
-
-	svc_batch_info = &svc_info->si_batch_info;
-	OSAL_ASSERT(svc_batch_info->sbi_num_entries);
-
-	if (svc_batch_info->sbi_desc_idx != 0) {
-		OSAL_LOG_DEBUG("sequencer setup not needed!");
-		return PNSO_OK;
-	}
-
-	remaining = svc_batch_info->sbi_num_entries -
-		(svc_batch_info->sbi_bulk_desc_idx * MAX_PAGE_ENTRIES);
-	batch_size = (remaining / MAX_PAGE_ENTRIES) ? MAX_PAGE_ENTRIES :
-		remaining;
-
-	/* indicate batch processing only for 1st entry in the batch */
-	svc_info->si_seq_info.sqi_batch_mode = true;
-	svc_info->si_seq_info.sqi_batch_size = batch_size;
-
-	svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
-			desc, sizeof(*desc));
-	if (!svc_info->si_seq_info.sqi_desc) {
-		OSAL_LOG_ERROR("failed to setup sequencer desc!");
-		return EINVAL;
-	}
-
-	return PNSO_OK;
-}
-
 static struct crypto_desc *
 get_desc(struct per_core_resource *pcr, bool per_block)
 {
@@ -486,33 +453,5 @@ void
 crypto_put_batch_bulk_desc(struct mem_pool *mpool, struct crypto_desc *desc)
 {
 	return mpool_put_object(mpool, desc);
-}
-
-pnso_error_t
-crypto_setup_seq_desc(struct service_info *svc_info, struct crypto_desc *desc)
-{
-	pnso_error_t err = PNSO_OK;
-
-	if (putil_is_bulk_desc_in_use(svc_info->si_flags)) {
-		err = crypto_setup_batch_desc(svc_info, desc);
-		if (err)
-			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
-					err);
-		goto out;
-	}
-
-	if (chn_service_is_starter(svc_info)) {
-		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
-				desc, sizeof(struct crypto_desc));
-		if (!svc_info->si_seq_info.sqi_desc) {
-			err = EINVAL;
-			OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d",
-						err);
-			goto out;
-		}
-	}
-
-out:
-	return err;
 }
 

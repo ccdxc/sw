@@ -272,7 +272,8 @@ crypto_setup(struct service_info *svc_info,
 	svc_info->si_desc_flags = 0;
 	crypto_desc_fill(svc_info, svc_params->u.sp_crypto_desc);
 
-	err = crypto_setup_seq_desc(svc_info, svc_info->si_desc);
+	err = svc_seq_desc_setup(svc_info, svc_info->si_desc,
+				 sizeof(struct crypto_desc), 0);
 	if (err)
 		return err;
 

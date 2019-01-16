@@ -98,7 +98,8 @@ typedef struct storage_seq_qstate {
     uint8_t     desc1_next_pc_valid;
     storage_seq_qgroup_t qgroup;
     uint16_t    core_id;
-    uint8_t     pad[23];
+    uint8_t     rl_units_scale;
+    uint8_t     pad[22];
     uint8_t     eop_p2m_rsvd;   // reserved for PHV2MEM eop cmd cancel write
 
     storage_seq_qmetrics_t metrics;

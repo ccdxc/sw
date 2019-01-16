@@ -169,6 +169,7 @@ struct sequencer_info {
 
 	void *sqi_desc;			/* sequencer descriptor */
 	uint8_t *sqi_status_desc;
+	uint32_t sqi_data_len;
 
 	uint32_t sqi_hw_dflt_takes;
 	uint32_t sqi_hw_total_takes;
@@ -177,6 +178,7 @@ struct sequencer_info {
 };
 
 struct service_batch_info {
+	struct batch_page_entry *sbi_page_entry;
 	uint16_t sbi_num_entries;	/* total # of requests */
 	uint16_t sbi_bulk_desc_idx;	/* index within batch info descs */
 	uint16_t sbi_desc_idx;	/* index within bulk desc */
@@ -364,6 +366,12 @@ chn_service_is_last(const struct service_info *svc_info)
 }
 
 static inline bool
+chn_service_is_batched(const struct service_info *svc_info)
+{
+	return !!(svc_info->si_flags & CHAIN_SFLAG_IN_BATCH);
+}
+
+static inline bool
 chn_service_is_starter(const struct service_info *svc_info)
 {
 	return !!(svc_info->si_flags & (CHAIN_SFLAG_LONE_SERVICE |
@@ -374,6 +382,13 @@ static inline bool
 chn_service_is_mode_async(const struct service_info *svc_info)
 {
 	return !!(svc_info->si_flags & CHAIN_SFLAG_MODE_ASYNC);
+}
+
+static inline bool
+chn_service_is_batch_starter(const struct service_info *svc_info)
+{
+	return chn_service_is_batched(svc_info) &&
+	       chn_service_is_starter(svc_info);
 }
 
 static inline bool

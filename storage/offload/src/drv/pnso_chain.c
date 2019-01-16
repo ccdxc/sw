@@ -346,6 +346,7 @@ chn_read_write_result(struct service_chain *chain)
 
 static void
 init_service_batch_params(struct batch_info *batch_info,
+		struct batch_page_entry *page_entry,
 		uint16_t batch_request_idx, struct service_info *svc_info)
 {
 	struct service_batch_info *svc_batch_info = &svc_info->si_batch_info;
@@ -358,6 +359,7 @@ init_service_batch_params(struct batch_info *batch_info,
 	bulk_desc_idx = batch_request_idx / MAX_PAGE_ENTRIES;
 	desc_idx = batch_request_idx % MAX_PAGE_ENTRIES;
 
+	svc_batch_info->sbi_page_entry = page_entry;
 	svc_batch_info->sbi_num_entries = batch_info->bi_num_entries;
 	svc_batch_info->sbi_bulk_desc_idx = bulk_desc_idx;
 	svc_batch_info->sbi_desc_idx = desc_idx;
@@ -577,6 +579,7 @@ init_service_info(enum pnso_service_type svc_type,
 	svc_info->si_src_blist.blist = svc_params->sp_src_blist;
 	svc_info->si_src_blist.len =
 		pbuf_get_buffer_list_len(svc_params->sp_src_blist);
+	svc_info->si_seq_info.sqi_data_len = svc_info->si_src_blist.len;
 
 	svc_info->si_dst_blist.type = SERVICE_BUF_LIST_TYPE_DFLT;
 	svc_info->si_dst_blist.blist = svc_params->sp_dst_blist;
@@ -793,6 +796,7 @@ chn_create_chain(struct request_params *req_params)
 			svc_info->si_flags |= CHAIN_SFLAG_IN_BATCH;
 
 			init_service_batch_params(req_params->rp_batch_info,
+					req_params->rp_page_entry,
 					req_params->rp_batch_index, svc_info);
 		}
 

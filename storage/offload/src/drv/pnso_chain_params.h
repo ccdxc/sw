@@ -44,8 +44,11 @@ struct sequencer_desc {
 	uint8_t sd_ring_size;
 	uint8_t sd_batch_mode;
 	uint16_t sd_batch_size;
-	uint16_t sd_filler_0;
-	uint64_t sd_filler_1[3];
+	uint8_t sd_rl_units_scale;
+	uint8_t sd_filler_0;
+	uint32_t sd_data_len;
+	uint32_t sd_filler_1;
+	uint64_t sd_filler_2[2];
 } __attribute__((packed));
 
 struct next_db_spec {

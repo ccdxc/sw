@@ -118,12 +118,6 @@ pnso_error_t
 cpdc_setup_desc_blocks(struct service_info *svc_info, uint32_t algo_type,
 		fill_desc_fn_t fill_desc_fn);
 
-pnso_error_t cpdc_setup_batch_desc(struct service_info *svc_info,
-		struct cpdc_desc *desc);
-
-pnso_error_t cpdc_setup_seq_desc(struct service_info *svc_info,
-		struct cpdc_desc *desc, uint32_t num_tags);
-
 pnso_error_t cpdc_setup_interrupt_params(struct service_info *svc_info,
 		void *poll_ctx);
 

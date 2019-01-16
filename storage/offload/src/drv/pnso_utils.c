@@ -566,6 +566,90 @@ svc_poll_expiry_check(const struct service_info *svc_info,
 	return (osal_get_clock_nsec() - start_ts) >= timeout;
 }
 
+pnso_error_t
+svc_batch_seq_desc_setup(struct service_info *svc_info,
+			 void *seq_desc,
+			 uint32_t desc_size)
+{
+	struct service_batch_info *svc_batch_info;
+	struct batch_page_entry *page_entry;
+	uint32_t batch_size, remaining;
+
+	svc_batch_info = &svc_info->si_batch_info;
+	OSAL_ASSERT(svc_batch_info->sbi_num_entries);
+
+	/*
+	 * Calculate cumulative data length for all starter services
+	 * in the page. Services in sub-chains are accounted for using
+	 * chain_params data_len.
+	 */
+	if (chn_service_is_starter(svc_info)) {
+		page_entry = svc_batch_info->sbi_page_entry;
+		if (page_entry)
+			page_entry->bpe_data_len +=
+				svc_info->si_seq_info.sqi_data_len;
+	}
+
+	if (svc_batch_info->sbi_desc_idx != 0) {
+		OSAL_LOG_DEBUG("sequencer setup not needed!");
+		return PNSO_OK;
+	}
+
+	remaining = svc_batch_info->sbi_num_entries -
+		(svc_batch_info->sbi_bulk_desc_idx * MAX_PAGE_ENTRIES);
+	batch_size = (remaining / MAX_PAGE_ENTRIES) ? MAX_PAGE_ENTRIES :
+		remaining;
+
+	/* indicate batch processing only for 1st entry in the batch */
+	svc_info->si_seq_info.sqi_batch_mode = true;
+	svc_info->si_seq_info.sqi_batch_size = batch_size;
+
+	svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
+			seq_desc, desc_size);
+	if (!svc_info->si_seq_info.sqi_desc) {
+		OSAL_LOG_ERROR("failed to setup sequencer desc!");
+		return EINVAL;
+	}
+
+	return PNSO_OK;
+}
+
+pnso_error_t
+svc_seq_desc_setup(struct service_info *svc_info,
+		   void *seq_desc,
+		   uint32_t desc_size,
+		   uint32_t num_tags)
+{
+	pnso_error_t err = PNSO_OK;
+
+	if (chn_service_is_batch_starter(svc_info)) {
+		err = svc_batch_seq_desc_setup(svc_info, seq_desc, desc_size);
+		if (err)
+			OSAL_LOG_ERROR("failed to setup batch sequencer desc! err: %d",
+					err);
+		goto out;
+	}
+
+	if (chn_service_is_starter(svc_info)) {
+		if (num_tags > 1) {
+			svc_info->si_seq_info.sqi_batch_mode = true;
+			svc_info->si_seq_info.sqi_batch_size = num_tags;
+		}
+
+		svc_info->si_seq_info.sqi_desc = seq_setup_desc(svc_info,
+				seq_desc, desc_size);
+		if (!svc_info->si_seq_info.sqi_desc) {
+			err = EINVAL;
+			OSAL_LOG_DEBUG("failed to setup sequencer desc! num_tags: %d flags: %d err: %d",
+						num_tags, flags, err);
+			goto out;
+		}
+	}
+
+out:
+	return err;
+}
+
 struct mem_pool *
 pc_res_mpool_get(const struct per_core_resource *pcr,
 		 enum mem_pool_type type)

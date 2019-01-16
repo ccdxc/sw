@@ -128,7 +128,7 @@ decompress_setup(struct service_info *svc_info,
 		goto out;
 	}
 
-	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);
+	err = svc_seq_desc_setup(svc_info, dc_desc, sizeof(*dc_desc), 0);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
 		goto out;

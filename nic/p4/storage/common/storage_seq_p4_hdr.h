@@ -33,7 +33,8 @@ header_type seq_q_state_t {
     desc1_next_pc_valid: 8;
     qgroup          : 8;    // user assigned queue group
     core_id         : 16;   // user assigned host core ID
-    pad             : 184;
+    rl_units_scale  : 8;    // log2(units of data length) for rate limit scaling
+    pad             : 176;
                             // 
     // When canceling a doorbell push DMA command that is also the last (EOP)
     // in the DMA command set, NOP can't be used due to the EOP. The
@@ -104,6 +105,7 @@ header_type seq_barco_entry_t {
     barco_ring_size : 8;    // log2(ring_size)
     barco_batch_mode: 8;    // when barco_batch_mode is set.(bit 0)
     barco_batch_size: 16;   // barco_desc_addr is a vector of this many descriptors
+    barco_data_len  : 32;   // data length in bytes
   }
 }
 
@@ -491,6 +493,7 @@ header_type seq_kivec4_t {
 header_type seq_kivec5_t {
   fields {
     src_qaddr           : 34;   // must be in same field position as seq_kivec5xts_t
+    rl_units_scale      : 5;    // must be in same field position as seq_kivec5xts_t
     pad_buf_addr        : 34;   // pad buffer in HBM
     data_len            : 16;   // Length of compression data (either from descriptor or 
                                 // from the compression status)
@@ -522,6 +525,7 @@ header_type seq_kivec5_t {
 header_type seq_kivec5xts_t {
   fields {
     src_qaddr           : 34;   // must be in same field position as seq_kivec5_t
+    rl_units_scale      : 5;    // must be in same field position as seq_kivec5_t
     data_len            : 16;
     blk_boundary_shift  : 5;
     status_dma_en       : 1;
@@ -698,6 +702,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.desc_dlen_update_en, kivec.desc_dlen_update_en); \
   modify_field(scratch.hdr_version_wr_en, kivec.hdr_version_wr_en); \
   modify_field(scratch.cp_hdr_update_en, kivec.cp_hdr_update_en); \
+  modify_field(scratch.rl_units_scale, kivec.rl_units_scale);           \
 
 #define SEQ_KIVEC5XTS_USE(scratch, kivec)                               \
   modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
@@ -715,6 +720,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
   modify_field(scratch.sgl_pdma_len_from_desc, kivec.sgl_pdma_len_from_desc);\
   modify_field(scratch.desc_vec_push_en, kivec.desc_vec_push_en);       \
+  modify_field(scratch.rl_units_scale, kivec.rl_units_scale);           \
 
 #define SEQ_KIVEC6_USE(scratch, kivec)                                  \
   modify_field(scratch.aol_src_vec_addr, kivec.aol_src_vec_addr);       \

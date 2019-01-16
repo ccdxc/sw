@@ -73,6 +73,11 @@ enum {
     DB_ADDR_BASE_LOCAL)
 
 /*
+ * Max P4 instrinsic packet length is 14 bits
+ */
+#define INTRINS_PACKET_LEN_MAX          ((1 << 14) - 1)
+
+/*
  * Default publish interval fraction
  * e.g., 2 means 1/2 of a second
  */

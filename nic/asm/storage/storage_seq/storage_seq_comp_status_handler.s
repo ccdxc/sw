@@ -39,6 +39,11 @@ struct phv_ p;
 #define r_pad_buf_addr              r_sgl_len_total  // pad buffer address
 
 /*
+ * Registers reuse, post padding application
+ */
+#define r_rl_len                    r_last_blk_len   // rate limit length for SEQ_RATE_LIMIT_...()
+
+/*
  * Registers reuse, on compression error
  */
 #define r_alt_desc_addr             r_pad_boundary   // alternate descriptor address
@@ -260,12 +265,23 @@ sgl_pdma_xfer_full:
                                 storage_seq_comp_sgl_pdma_xfer)
 possible_barco_push:
 
+    // Use the newly calculated data length for rate limiting.
+    // General algorithm is as follows:
+    // - if next_db_action_barco_push
+    //     rate_limit_set(pad_en ? data_len + pad_len : data_len)
+    // - else if pdma_xfer_full
+    //     rate_limit_set(pad_en ? data_len + pad_len : data_len)
+    // - else if pdma_pad_only
+    //     rate_limit_set(pad_len)
+    SEQ_RATE_LIMIT_DATA_LEN_LOAD(SEQ_KIVEC5_DATA_LEN)
+    
     // If Barco ring push is applicable, execute table lock read
     // to get the current ring pindex. Note that this must be done
     // in the same stage as storage_seq_barco_entry_handler()
     // which is stage 3.
-    bbeq        SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 0, all_dma_complete
-    nop
+    bbeq        SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 0, possible_pdma_rate_limit
+    SEQ_RATE_LIMIT_DATA_LEN_ADD_c(c6, r_pad_len)        // delay slot
+    SEQ_RATE_LIMIT_SET(SEQ_KIVEC5_RL_UNITS_SCALE, c3)
 
     LOAD_TABLE_NO_LKUP_PC_IMM(0, storage_seq_barco_ring_pndx_read)
     
@@ -275,6 +291,14 @@ all_dma_complete:
     DMA_PTR_SETUP_e(dma_p2m_0_dma_cmd_pad,
                     dma_p2m_19_dma_cmd_eop,
                     p4_txdma_intr_dma_cmd_ptr)
+possible_pdma_rate_limit:
+
+    bbeq        SEQ_KIVEC5_SGL_PDMA_EN, 0, all_dma_complete
+    seq         c4, SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 1     // delay slot
+    SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(c4, r_pad_len)
+    SEQ_RATE_LIMIT_SET(SEQ_KIVEC5_RL_UNITS_SCALE, c3)
+    b           all_dma_complete
+    nop
 
 comp_error:
 

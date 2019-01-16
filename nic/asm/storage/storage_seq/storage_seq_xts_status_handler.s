@@ -15,6 +15,7 @@ struct phv_ p;
  * Registers usage:
  * CAUTION: r1 is also implicitly used by LOAD_TABLE1_FOR_ADDR_PC_IMM()
  */
+#define r_rl_len                    r3  // rate limit length for SEQ_RATE_LIMIT_...()
 #define r_src_qaddr                 r7  // qstate address
  
 %%
@@ -55,8 +56,11 @@ possible_barco_push:
    // in the same stage as storage_seq_barco_entry_handler()
    // which is stage 3.
    bbeq		SEQ_KIVEC5XTS_NEXT_DB_ACTION_BARCO_PUSH, 0, all_dma_complete
-   nop
+   SEQ_RATE_LIMIT_DATA_LEN_LOAD(SEQ_KIVEC5XTS_DATA_LEN) // delay slot
 
+   // set rate limit with known value here;
+   // storage_seq_xts_comp_len_update may update it later.
+   SEQ_RATE_LIMIT_SET(SEQ_KIVEC5XTS_RL_UNITS_SCALE, c3)
    LOAD_TABLE_NO_LKUP_PC_IMM(0, storage_seq_barco_ring_pndx_read)
    
 all_dma_complete:

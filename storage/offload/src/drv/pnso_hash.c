@@ -130,7 +130,8 @@ hash_setup(struct service_info *svc_info,
 
 	chn_service_hw_ring_take_set(svc_info, num_tags);
 
-	err = cpdc_setup_seq_desc(svc_info, hash_desc, num_tags);
+	err = svc_seq_desc_setup(svc_info, hash_desc,
+				 sizeof(*hash_desc), num_tags);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup sequencer desc! err: %d", err);
 		goto out;

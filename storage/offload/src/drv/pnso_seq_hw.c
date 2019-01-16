@@ -630,6 +630,7 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 	seq_desc->sd_pndx_size =
 		(uint8_t) ilog2(ring->accel_ring.ring_pndx_size);
 	seq_desc->sd_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
+	seq_desc->sd_data_len = htonl(svc_info->si_seq_info.sqi_data_len);
 
 	if (svc_info->si_seq_info.sqi_batch_mode) {
 		seq_desc->sd_batch_mode = true;
@@ -680,7 +681,9 @@ hw_cleanup_desc(struct service_info *svc_info)
 static void
 hw_ring_db(struct service_info *svc_info)
 {
+	struct batch_page_entry *page_entry;
 	struct queue *seq_q;
+	struct sequencer_desc *seq_desc;
 
 	OSAL_LOG_DEBUG("enter ... ");
 
@@ -689,6 +692,18 @@ hw_ring_db(struct service_info *svc_info)
 		OSAL_LOG_ERROR("failed to get sequencer q!");
 		OSAL_ASSERT(seq_q);
 		goto out;
+	}
+
+	/*
+	 * If db is being rung for a batch page, update descriptor data size
+	 * to the total data size represented by the page.
+	 */
+	page_entry = svc_info->si_batch_info ?
+		     svc_info->si_batch_info->sbi_page_entry : NULL;
+	if (page_entry) {
+		seq_desc = svc_info->si_seq_info.sqi_desc;
+		OSAL_ASSERT(seq_desc);
+		seq_desc->sd_data_len = htonl(page_entry->bpe_data_len);
 	}
 
 	sonic_q_ringdb(seq_q, svc_info->si_seq_info.sqi_index);
