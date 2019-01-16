@@ -633,6 +633,62 @@ validate_speed_lanes (port_speed_t speed, uint32_t num_lanes)
 }
 
 //-----------------------------------------------------------------------------
+// set port args given transceiver state
+//-----------------------------------------------------------------------------
+sdk_ret_t
+port_args_set_by_xcvr_state (port_args_t *port_args)
+{
+    // if xcvr is inserted:
+    //     set the cable type
+    //     set AN? TODO
+    // else:
+    //     set admin_state as ADMIN_DOWN
+    //     (only admin_state is down. user_admin_state as per request msg)
+
+    int xcvr_port =
+        sdk::lib::catalog::port_num_to_qsfp_port(port_args->port_num);
+
+    port::xcvr_port_mac_addr(xcvr_port, port_args->mac_addr);
+    // default cable type is CU
+    port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
+
+    if (xcvr_port != -1) {
+        if (sdk::platform::xcvr_valid(xcvr_port-1) == true) {
+            port_args->cable_type = sdk::platform::cable_type(xcvr_port-1);
+
+            // for older boards, cable type returned is NONE.
+            // Set it to CU
+            if (port_args->cable_type == cable_type_t::CABLE_TYPE_NONE) {
+                port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
+            }
+            port_args->port_an_args =
+                            sdk::platform::xcvr_get_an_args(xcvr_port - 1);
+
+           SDK_TRACE_DEBUG("port : %u, xcvr_port : %u, user_cap : %u "
+                              "fec ability : %u, fec request : %u, "
+                              "cable_type : %u", port_args->port_num,
+                              xcvr_port, port_args->port_an_args->user_cap,
+                              port_args->port_an_args->fec_ability,
+                              port_args->port_an_args->fec_request,
+                              port_args->cable_type);
+
+            switch (port_args->cable_type) {
+            case cable_type_t::CABLE_TYPE_FIBER:
+                // port_args->auto_neg_enable = false;
+                break;
+
+            default:
+                // port_args->auto_neg_enable = true;
+                break;
+            }
+        } else {
+            port_args->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+        }
+    }
+    return SDK_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
 // Validate port create config
 //-----------------------------------------------------------------------------
 static bool

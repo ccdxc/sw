@@ -52,7 +52,7 @@ typedef uint8_t    mac_addr_t[ETH_ADDR_LEN];
 #define IS_MCAST_MAC_ADDR(mac_addr)            ((mac_addr)[0] & 0x1)
 
 static inline void
-mac_str_to_addr (char *str, mac_addr_t *mac_addr)
+mac_str_to_addr (char *str, mac_addr_t mac_addr)
 {
     unsigned char* mac = (unsigned char*) mac_addr;
     sscanf(str, "%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8,

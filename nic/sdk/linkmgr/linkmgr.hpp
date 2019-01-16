@@ -80,6 +80,7 @@ sdk_ret_t port_delete(void *port);
 sdk_ret_t port_get(void *port, port_args_t *port_args);
 void linkmgr_start (void);
 void linkmgr_set_link_poll_enable(bool enable);
+sdk_ret_t port_args_set_by_xcvr_state(port_args_t *port_args);
 
 static inline void
 port_args_init (port_args_t *args)

@@ -542,87 +542,6 @@ port_prepare_rsp (PortResponse *rsp, hal_ret_t ret, hal_handle_t hal_handle_id)
     return HAL_RET_OK;
 }
 
-static hal_ret_t
-port_args_populate_mac_addr (int xcvr_port, port_args_t *port_args)
-{
-    std::string mac_addr_str;
-
-    if (readKey(MACADDRESS_KEY, mac_addr_str) == -1) {
-        HAL_TRACE_ERR("Failed to read MAC addr for xcvr_port: {}", xcvr_port);
-        return HAL_RET_ERR;
-    }
-
-    mac_str_to_addr((char*)mac_addr_str.c_str(),
-                    (mac_addr_t*)port_args->mac_addr);
-
-    // base mac addr is for first xcvr port.
-    // increment the last byte for subsequent ports.
-    port_args->mac_addr[5] += xcvr_port-1;
-
-    return HAL_RET_OK;
-}
-
-//------------------------------------------------------------------------------
-// set port_args based on xcvr state
-//------------------------------------------------------------------------------
-static hal_ret_t
-port_args_xcvr_set (port_args_t *port_args)
-{
-    // If xcvr is inserted:
-    //      set the cable type
-    //      set AN? TODO
-    // Else:
-    //      set admin_state as ADMIN_DOWN
-    //      (only admin_state is down. user_admin_state as per request msg)
-
-    int xcvr_port =
-        sdk::lib::catalog::port_num_to_qsfp_port(port_args->port_num);
-
-    port_args_populate_mac_addr (xcvr_port, port_args);
-
-    // default cable type is CU
-    port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
-
-    if (xcvr_port != -1) {
-        if (sdk::platform::xcvr_valid(xcvr_port-1) == true) {
-            port_args->cable_type = sdk::platform::cable_type(xcvr_port-1);
-
-            // For older boards, cable type returned is NONE.
-            // Set it to CU
-            if (port_args->cable_type == cable_type_t::CABLE_TYPE_NONE) {
-                port_args->cable_type = cable_type_t::CABLE_TYPE_CU;
-            }
-
-            port_args->port_an_args =
-                            sdk::platform::xcvr_get_an_args(xcvr_port-1);
-
-            HAL_TRACE_DEBUG("port: {}, xcvr_port: {}, "
-                            "user_cap: {}, fec_ability: {}, fec_request: {}, "
-                            "cable_type: {}",
-                            port_args->port_num,
-                            xcvr_port,
-                            port_args->port_an_args->user_cap,
-                            port_args->port_an_args->fec_ability,
-                            port_args->port_an_args->fec_request,
-                            port_args->cable_type);
-
-            switch (port_args->cable_type) {
-                case cable_type_t::CABLE_TYPE_FIBER:
-                    // port_args->auto_neg_enable = false;
-                    break;
-
-                default:
-                    // port_args->auto_neg_enable = true;
-                    break;
-            }
-        } else {
-            port_args->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
-        }
-    }
-
-    return HAL_RET_OK;
-}
-
 //------------------------------------------------------------------------------
 // process a port create request
 //------------------------------------------------------------------------------
@@ -666,8 +585,7 @@ port_create (port_args_t *port_args, hal_handle_t *hal_handle)
 
     // For config push, user_admin_state = admin_state
     port_args->user_admin_state = port_args->admin_state;
-
-    port_args_xcvr_set (port_args);
+    sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
 
     dhl_entry.handle  = pi_p->hal_handle_id;
     dhl_entry.obj     = pi_p;
@@ -880,8 +798,7 @@ port_update (port_args_t *port_args)
 
     // For config push, user_admin_state = admin_state
     port_args->user_admin_state = port_args->admin_state;
-
-    port_args_xcvr_set (port_args);
+    sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
 
     // form ctxt and call infra update object
     dhl_entry.handle     = pi_p->hal_handle_id;

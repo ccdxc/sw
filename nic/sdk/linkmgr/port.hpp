@@ -5,6 +5,7 @@
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
+#include "include/sdk/eth.hpp"
 #include "linkmgr_types.hpp"
 #include "linkmgr.hpp"
 #include "port_mac.hpp"
@@ -278,8 +279,8 @@ public:
     // ----------------------------------------------------
     // static methods
     // ----------------------------------------------------
-
     static sdk_ret_t port_init(linkmgr_cfg_t *cfg);
+    static sdk_ret_t xcvr_port_mac_addr(uint32_t xcvr_port, mac_addr_t mac_addr);
 
     // If current_thread is hal-control thread, invoke method directly
     // Else trigger hal-control thread to invoke method
