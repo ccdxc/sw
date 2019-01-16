@@ -119,12 +119,13 @@ crypto_desc_fill(struct service_info *svc_info,
 
 	if (chn_service_has_interm_status(svc_info)) {
 		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
-				&aligned_addr, sizeof(struct crypto_status_desc));
+				&aligned_addr,
+				sizeof(struct crypto_status_desc));
 		crypto_desc->cd_status_addr = aligned_addr;
-        }
+	}
 
 	crypto_desc->cd_db_addr = crypto_desc->cd_status_addr +
-				  offsetof(struct crypto_status_desc, csd_cpl_data);
+		offsetof(struct crypto_status_desc, csd_cpl_data);
 
 	CRYPTO_PPRINT_DESC(crypto_desc);
 out:

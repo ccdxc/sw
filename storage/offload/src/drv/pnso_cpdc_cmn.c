@@ -491,8 +491,7 @@ cpdc_setup_status_desc(struct service_info *svc_info,
 			cpdc_get_status_type(per_block),
 			&svc_info->si_status_desc);
 	if (err) {
-		OSAL_LOG_ERROR("cannot obtain status desc! "
-				"svc_type: %d per_block: %d err: %d",
+		OSAL_LOG_ERROR("cannot obtain status desc! svc_type: %d per_block: %d err: %d",
 				svc_info->si_type, per_block, err);
 		goto out;
 	}
@@ -540,8 +539,7 @@ cpdc_setup_rmem_status_desc(struct service_info *svc_info,
 				cpdc_get_rmem_status_type(per_block),
 				&svc_info->si_istatus_desc);
 		if (err) {
-			OSAL_LOG_ERROR("cannot obtain rmem status desc! "
-					"svc_type: %d per_block: %d err: %d",
+			OSAL_LOG_ERROR("cannot obtain rmem status desc! svc_type: %d per_block: %d err: %d",
 					svc_info->si_type, per_block, err);
 			goto out;
 		}
@@ -635,36 +633,36 @@ cpdc_fill_per_block_desc(struct service_info *svc_info,
 			       addr_len);
 	       pb_len = pb_sgl->cs_len_0;
 
-	       if (iter && (pb_len < block_size)) {
+	if (iter && (pb_len < block_size)) {
 		       iter = buffer_list_iter_addr_len_get(iter,
 				       block_size - pb_len, &addr_len);
 		       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_1, pb_sgl->cs_len_1,
 				       addr_len);
 		       pb_len += pb_sgl->cs_len_1;
-	       }
+	}
 
-	       if (iter && (pb_len < block_size)) {
+	if (iter && (pb_len < block_size)) {
 		       iter = buffer_list_iter_addr_len_get(iter,
 				       block_size - pb_len, &addr_len);
 		       BUFFER_ADDR_LEN_SET(pb_sgl->cs_addr_2, pb_sgl->cs_len_2,
 				       addr_len);
 		       pb_len += pb_sgl->cs_len_2;
-	       }
+	}
 
 	       total_len -= pb_len;
-	       if (total_len && (pb_len < block_size)) {
+	if (total_len && (pb_len < block_size)) {
 		       err = EINVAL;
 		       OSAL_LOG_ERROR("unable to hold a block size worth of data in one SGL! block: %d total_len: %d pb_len: %d err: %d",
 				       i, total_len, pb_len, err);
-		       goto out;
-	       }
+		goto out;
+	}
 
 	       err = fill_desc_fn(svc_info, algo_type, pb_len, pb_sgl, pb_desc, i);
-	       if (err) {
+	if (err) {
 			OSAL_LOG_ERROR("fill_desc_fn block %u err: %d",
 					i, err);
 			goto out;
-	       }
+	}
 	       pb_desc = get_next_desc(pb_desc, desc_object_size);
 	       pb_sgl = get_next_sgl(pb_sgl, sgl_object_size);
        }
@@ -782,14 +780,17 @@ cpdc_update_service_info_sgls(struct service_info *svc_info)
 
 	if (!chn_service_has_sub_chain(svc_info) &&
 	    chn_service_is_padding_applic(svc_info)) {
-		err = pc_res_sgl_vec_packed_get(svc_info->si_pcr, &svc_info->si_dst_blist,
-				svc_info->si_block_size, MPOOL_TYPE_CPDC_SGL_VECTOR,
+		err = pc_res_sgl_vec_packed_get(svc_info->si_pcr,
+				&svc_info->si_dst_blist,
+				svc_info->si_block_size,
+				MPOOL_TYPE_CPDC_SGL_VECTOR,
 				&svc_info->si_dst_sgl);
-        } else {
-		err = pc_res_sgl_packed_get(svc_info->si_pcr, &svc_info->si_dst_blist,
+	} else {
+		err = pc_res_sgl_packed_get(svc_info->si_pcr,
+				&svc_info->si_dst_blist,
 				CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,
 				&svc_info->si_dst_sgl);
-        }
+	}
 	if (err) {
 		OSAL_LOG_ERROR("cannot obtain dst sgl from pool! err: %d", err);
 		goto out_sgl;

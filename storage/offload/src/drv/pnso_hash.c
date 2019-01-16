@@ -47,7 +47,7 @@ fill_hash_desc(struct service_info *svc_info,
 	 */
 	desc->u.cd_bits.cc_hash_type = algo_type - 1;
 
-	desc->cd_datain_len = 
+	desc->cd_datain_len =
 		cpdc_desc_data_len_set_eval(PNSO_SVC_TYPE_HASH, buf_len);
 
 	err = svc_status_desc_addr_get(&svc_info->si_status_desc, block_no,

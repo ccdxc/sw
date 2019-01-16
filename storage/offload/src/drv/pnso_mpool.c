@@ -285,8 +285,9 @@ mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
 
 	/* compute pad and total pool size */
 	mpool->mp_config.mpc_object_size = object_size;
-	mpool->mp_config.mpc_pad_size = mpool_get_pad_size(object_size, align_size);
-	mpool->mp_config.mpc_vec_elem_size = 
+	mpool->mp_config.mpc_pad_size =
+		mpool_get_pad_size(object_size, align_size);
+	mpool->mp_config.mpc_vec_elem_size =
 		(object_size + mpool->mp_config.mpc_pad_size) * num_vec_elems;
 	mpool->mp_config.mpc_pool_size =
 		mpool->mp_config.mpc_vec_elem_size * num_objects;

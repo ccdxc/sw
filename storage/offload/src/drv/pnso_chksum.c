@@ -130,7 +130,7 @@ chksum_setup(struct service_info *svc_info,
 	 * NOTE: when chksum has a subchain, rmem status will be used but
 	 * only for the 1st chksum, hence the per-block flag is forced to
 	 * to false below.
-	 * 
+	 *
 	 * See additional comments in chksum_chain().
 	 */
 	err = cpdc_setup_rmem_status_desc(svc_info, false);

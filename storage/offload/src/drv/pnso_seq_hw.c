@@ -728,7 +728,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 
 	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
 	chain_params->ccp_cmd.ccpc_next_db_action_ring_push = 1;
-	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 
 	chain_params->ccp_pad_buf_addr = pad_buffer;
 	chain_params->ccp_pad_boundary_shift =
@@ -745,9 +744,9 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 			chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 			chain_params->ccp_aol_dst_vec_addr =
 				sonic_virt_to_phy(svc_info->si_sgl_pdma);
+
 			SGL_PDMA_PPRINT(chain_params->ccp_aol_dst_vec_addr);
 		}
-
 	} else
 		chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 
@@ -756,13 +755,15 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 				&chain_params->ccp_status_addr_0, 0);
 		if (err)
 			goto out;
+
 		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
 				&chain_params->ccp_status_addr_1, 0);
 		if (err)
 			goto out;
+
 		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
 		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
-        }
+	}
 	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 
 	if (svc_info->si_desc_flags & PNSO_CP_DFLAG_BYPASS_ONFAIL) {
@@ -919,16 +920,17 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 			(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
 	if (chn_service_has_interm_status(svc_info)) {
-                err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
-                                &chain_params->ccp_status_addr_0, 0);
-                if (err)
-                        goto out;
-                err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
-                                &chain_params->ccp_status_addr_1, 0);
-                if (err)
-                        goto out;
-		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
+		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+				&chain_params->ccp_status_addr_0, 0);
+		if (err)
+			goto out;
 
+		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
+				&chain_params->ccp_status_addr_1, 0);
+		if (err)
+			goto out;
+
+		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
 		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
 	}
 

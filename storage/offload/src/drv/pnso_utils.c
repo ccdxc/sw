@@ -355,8 +355,8 @@ svc_status_desc_addr_get(struct service_status_desc *svc_status,
 			osal_rmem_set(*ret_addr, 0, clear_size);
 		else
 			memset((char *)svc_status->desc + offset, 0,
-			       clear_size);
-        }
+					clear_size);
+	}
 
 	err = PNSO_OK;
 out:

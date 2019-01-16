@@ -395,7 +395,7 @@ setup_service_param_buffers(struct service_info *svc_info,
 	if (svc_prev) {
 		switch (svc_prev->si_type) {
 
-                case PNSO_SVC_TYPE_ENCRYPT:
+		case PNSO_SVC_TYPE_ENCRYPT:
 		case PNSO_SVC_TYPE_DECRYPT:
 		case PNSO_SVC_TYPE_COMPRESS:
 		case PNSO_SVC_TYPE_DECOMPRESS:
@@ -407,13 +407,13 @@ setup_service_param_buffers(struct service_info *svc_info,
 			svc_info->si_src_blist = svc_prev->si_src_blist;
 			break;
 
-                case PNSO_SVC_TYPE_DECOMPACT:
+		case PNSO_SVC_TYPE_DECOMPACT:
 		case PNSO_SVC_TYPE_NONE:
 		default:
 			OSAL_ASSERT(0);
 			return EINVAL;
 		}
-        }
+	}
 
 	/*
 	 * Pre-set the "service dependency" data length...As HW operation

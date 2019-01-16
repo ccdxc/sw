@@ -132,7 +132,7 @@ compress_setup(struct service_info *svc_info,
 	if (err) {
 		OSAL_LOG_ERROR("cannot fill_cp_desc! err: %d", err);
 		goto out;
-        }
+	}
 
 	err = cpdc_setup_seq_desc(svc_info, cp_desc, 0);
 	if (err) {
@@ -317,11 +317,11 @@ compress_poll(struct service_info *svc_info)
 	OSAL_LOG_DEBUG("cp/pad lone or last service in chain");
 
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
-	if(status_desc->csd_err) {
+	if (status_desc->csd_err) {
 		OSAL_LOG_DEBUG("cp failed - no need to wait for pad result");
 		goto out;
 	}
-  
+
 	start_ts = svc_poll_expiry_start(svc_info);
 	while (1) {
 		/* poll on padding opaque tag updated by P4+ */

@@ -115,7 +115,7 @@ decompress_setup(struct service_info *svc_info,
 	if (err) {
 		OSAL_LOG_ERROR("cannot fill_dc_desc! err: %d", err);
 		goto out;
-        }
+	}
 	clear_dc_header_present(svc_info->si_desc_flags, dc_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);
