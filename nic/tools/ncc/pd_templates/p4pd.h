@@ -424,6 +424,27 @@ typedef struct __attribute__((__packed__)) __${table}_${actionname} {
 //::                        #endfor
 } ${table}_${actionname}_t;
 //::                    #endif
+//::                    if pddict['tables'][table]['appdatafields']:
+//::                        actionname = pddict['tables'][table]['appdatafields'].keys()[0]
+//::                        fieldlist = pddict['tables'][table]['appdatafields'][actionname]
+//::                        if len(fieldlist):
+
+typedef struct __attribute__((__packed__)) __${table}_appdata {
+//::                            for fieldname, fieldwidth in fieldlist:
+//::                                if (fieldwidth <= 8):
+    uint8_t ${fieldname};
+//::                                elif (fieldwidth <= 16):
+    uint16_t ${fieldname};
+//::                                elif (fieldwidth <= 32):
+    uint32_t ${fieldname};
+//::                                else:
+//::                                    byte_fldwidth = (fieldwidth + 7) >> 3
+    uint8_t ${fieldname}[${byte_fldwidth}];
+//::                                #endif
+//::                            #endfor
+} ${table}_appdata_t;
+//::                        #endif
+//::                    #endif
 //::                #endfor
 
 typedef union __${table}_action_union {

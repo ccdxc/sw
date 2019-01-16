@@ -323,6 +323,8 @@ class capri_table:
         self.le_action_params = {}       #Collection of action paramerters that
                                             #are in little endian format.
         self.k_plus_d = {} #Dictionary of K+D fields for each table's action.
+        self.action_appfields = {} # SubList of action parameters used by flow table
+        self.action_hwfields = {} # List of action parameters that have get/set c-api
 
     def is_hash_table(self):
         return True if (self.match_type == match_type.EXACT_HASH_OTCAM or \
@@ -5097,10 +5099,13 @@ class capri_gress_tm:
                     data_size = 0
                     le_action_params = {}
                     for act in t.actions:
+                        actiondata_api = False
+                        appdata_api = False
                         if 'little_endian' in act._parsed_pragmas:
                             le_action_params[act.name] = \
                                                   get_pragma_param_list(act.\
                                                    _parsed_pragmas['little_endian'])
+
                         action_data = zip(act.signature, act.signature_widths)
                         ctable.action_data[act.name] = []
                         ad_size = 0
@@ -5112,7 +5117,34 @@ class capri_gress_tm:
                         if ad_size > data_size:
                             data_size = ad_size
 
+                        if 'capi' in act._parsed_pragmas:
+                            appfields = []
+                            if 'appdatafields' in act._parsed_pragmas['capi']:
+                                appdata_api = True
+                                appfields = get_pragma_param_list(
+                                           act._parsed_pragmas['capi']['appdatafields'])
+                            if 'hwfields_access_api' in act._parsed_pragmas['capi']:
+                                actiondata_api = True
+                        if appdata_api:
+                            appdata_fields = {}
+                            appdatafields = []
+                            for ad in action_data:
+                                if ad[0] in appfields:
+                                    appdatafields.append(ad)
+                            appdata_fields[act.name] = appdatafields
+                        if actiondata_api:
+                            hw_fields = {}
+                            hwfields = []
+                            for ad in action_data:
+                                if ad[0] not in appfields:
+                                    hwfields.append(ad)
+                            hw_fields[act.name] = hwfields
+
                     ctable.le_action_params = le_action_params
+                    if appdata_api:
+                        ctable.action_appfields = appdata_fields
+                    if actiondata_api:
+                        ctable.action_hwfields  = hw_fields
 
                     ctable.d_size = data_size
                     if ctable.num_actions() > 1:
