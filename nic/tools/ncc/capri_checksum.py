@@ -1738,10 +1738,7 @@ class Checksum:
         if calfldobj.option_checksum:
             csum_profile_obj.CsumProfileCsumLocSet(1)
             csum_profile_obj.CsumEightBitSet(1)
-            dprsr_payload_len_slot = \
-                    self.DeParserPayLoadLenSlotGet(calfldobj, parser)
-            csum_profile_obj.CsumProfilePhvLenSelSet(1,dprsr_payload_len_slot)
-        if calfldobj.no_phdr_in_checksum:
+        if calfldobj.payload_update_len_field != '':
             dprsr_payload_len_slot = \
                     self.DeParserPayLoadLenSlotGet(calfldobj, parser)
             csum_profile_obj.CsumProfilePhvLenSelSet(1,dprsr_payload_len_slot)
