@@ -81,9 +81,10 @@ enum PersonalityType {
     PERSONALITY_NAPLES_SIM_WITH_QEMU    = 3;
     // Naples Hardware
     PERSONALITY_NAPLES                  = 4;
-    PERSONALITY_MELLANOX                = 5;
-    PERSONALITY_BROADCOM                = 6;
-    PERSONALITY_INTEL                   = 7;
+    PERSONALITY_THIRD_PARTY_NIC         = 5;
+    PERSONALITY_MELLANOX                = 6;
+    PERSONALITY_BROADCOM                = 7;
+    PERSONALITY_INTEL                   = 8;
 }
 
 enum EntityType {
@@ -130,30 +131,32 @@ message Node {
     // Node specific configs
     oneof node_info {
         // naples
-        NaplesConfig    naples_config   = 6;
+        NaplesConfig    naples_config               = 6;
 
-        VeniceConfig    venice_config   = 7;
+        VeniceConfig    venice_config               = 7;
 
-        MellanoxConfig  mellanox_config = 8;
+        ThirdPartyNicConfig third_party_nic_config  = 8;
 
-        BroadcomConfig  broadcom_config = 9;
+        MellanoxConfig  mellanox_config = 9;
 
-        IntelConfig     intel_config    = 10;
+        BroadcomConfig  broadcom_config = 10;
+
+        IntelConfig     intel_config    = 11;
     }
 
     // NodeStatus captures the details of the node action
-    IotaAPIResponse     node_status     = 11;
+    IotaAPIResponse     node_status     = 12;
 
-    string              node_uuid       = 12;
+    string              node_uuid       = 13;
 
     // Optionally run a start up script during add or reload.
-    string              startup_script  = 13;
+    string              startup_script  = 14;
 
     // ESX configuration if node type is esx
-    VmwareESXConfig     esx_config      = 14;
+    VmwareESXConfig     esx_config      = 15;
 
     // Node OS
-    TestBedNodeOs       os              = 15;
+    TestBedNodeOs       os              = 16;
 }
 
 
@@ -182,6 +185,17 @@ message NaplesConfig {
 
     // Naples username in hw mode.
     string naples_password       = 8;
+
+    // Nic type
+    string nic_type              = 9;
+}
+
+message ThirdPartyNicConfig {
+
+    // nic type
+    string          nic_type     = 1;
+    // host intfs , returned as part of add node
+    repeated string host_intfs   = 2;
 }
 
 message MellanoxConfig {

@@ -30,8 +30,8 @@ testbundles:
         - networking/networking.testbundle
         - networking/telemetry.testbundle
         - linktest/linktest.testbundle
-#        - aging/aging.testbundle
-#       - alg/alg.testbundle
+        - aging/aging.testbundle
+        - alg/alg.testbundle
 #       #- firewall/policy.testbundle
         - firewall/conntrack.testbundle
         - firewall/normalization.testbundle

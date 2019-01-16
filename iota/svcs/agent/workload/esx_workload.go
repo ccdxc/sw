@@ -146,31 +146,10 @@ func (vm *vmESXWorkload) AddInterface(name string, macAddress string, ipaddress 
 		//return "", errors.Wrap(err, "Error in creating network")
 	}
 
-	/*
-		if err := vm.host.PowerOffVM(vm.vmName); err != nil {
-			return "", errors.Wrap(err, "Failed to power off VM")
-		}
-	*/
 	if err := vm.vm.ReconfigureNetwork(constants.EsxVMNetwork, nwName); err != nil {
 		return "", errors.Wrap(err, "Error in Reconfiguring VM network")
 	}
 
-	/*
-		if _, err := vm.host.BootVM(vm.vmName); err != nil {
-			return "", errors.Wrap(err, "Failed to power off VM")
-		}
-
-		if err := vm.waitForVMUp(restartTimeout); err != nil {
-			return "", errors.Wrap(err, "VM did not come up after reconfiguration.")
-		}
-
-		//CAll remote workload bring up to set up SSH handles
-		err := vm.remoteWorkload.BringUp(vm.ip, strconv.Itoa(sshPort), constants.EsxDataVMUsername, constants.EsxDataVMPassword)
-		if err != nil {
-			return "", errors.Wrap(err, "Remote workload bring up failed after reconfiguration")
-		}
-
-	*/
 	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterface); err != nil {
 		return "", errors.Wrap(err, "Disabling DHCP on interface failed")
 	}

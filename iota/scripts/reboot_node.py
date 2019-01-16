@@ -32,6 +32,11 @@ ROOT_EXP_PROMPT="~#"
 if GlobalOptions.os == 'freebsd':
     ROOT_EXP_PROMPT="~]#"
 
+if GlobalOptions.os == 'esx':
+    ROOT_EXP_PROMPT="~]"
+
+
+
 def IpmiReset():
     os.system("ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
               (GlobalOptions.cimc_ip, GlobalOptions.cimc_username, GlobalOptions.cimc_password))
@@ -42,11 +47,11 @@ class HostManagement:
         self.__ssh_host = "%s@%s" % (GlobalOptions.host_username, GlobalOptions.host_ip)
         self.__scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % GlobalOptions.host_password
         self.__ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % GlobalOptions.host_password
-        self.__wait_for_ssh()
-        self.__connect()
+        self._wait_for_ssh()
+        self._connect()
         return
 
-    def __connect(self):
+    def _connect(self):
         self.hdl = pexpect.spawn("ssh -o StrictHostKeyChecking=no %s" % self.__ssh_host)
         self.hdl.timeout = GlobalOptions.timeout
         self.hdl.logfile = sys.stdout.buffer
@@ -56,15 +61,15 @@ class HostManagement:
         self.hdl.sendline("uptime")
         self.hdl.expect_exact(ROOT_EXP_PROMPT)
         return
- 
 
-    def __wait_for_ssh(self):
+
+    def _wait_for_ssh(self):
         print("Waiting for host to be up.")
         for retry in range(60):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             ret = sock.connect_ex(('%s' % GlobalOptions.host_ip, 22))
             sock.settimeout(1)
-            if ret == 0: 
+            if ret == 0:
                 return
             else:
                 time.sleep(5)
@@ -80,7 +85,7 @@ class HostManagement:
             cmd = "%s %s \"%s\"" % (self.__ssh_pfx, self.__ssh_host, command)
         print(cmd)
         retcode = os.system(cmd)
-        if not ignore_result: 
+        if not ignore_result:
             assert(retcode == 0)
         return retcode
 
@@ -104,12 +109,37 @@ class HostManagement:
 
         # Wait for the host to start rebooting.
         time.sleep(30)
-        self.__wait_for_ssh()
-        self.__connect()
+        self._wait_for_ssh()
+        self._connect()
+        return
+
+class EsxHostManagement(HostManagement):
+    def __init__(self):
+        HostManagement.__init__(self)
+        return
+
+
+    def reboot(self):
+        self.hdl.sendline("sync")
+        self.hdl.expect_exact(ROOT_EXP_PROMPT)
+
+        self.hdl.sendline("reboot && sleep 30")
+        match = self.hdl.expect_exact([ROOT_EXP_PROMPT, pexpect.TIMEOUT, pexpect.EOF], timeout=10)
+        self.hdl.close()
+
+        # Wait for the host to start rebooting.
+        time.sleep(30)
+        self._wait_for_ssh()
+        self._connect()
         return
 
 def Main():
-    host = HostManagement()
+    host = None
+    if GlobalOptions.os == 'esx':
+        host = EsxHostManagement()
+    else:
+        host = HostManagement()
+
     host.reboot()
     return
 

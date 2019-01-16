@@ -5,15 +5,15 @@ meta:
 nodes:
     - node: node1
       name: node1
-      role: PERSONALITY_NAPLES
+      role: auto
       workloads:
             type    : WORKLOAD_TYPE_VM
-            image   : "build-115"
+            image   : "build-130"
 
 
     - node: node2
       name: node2
-      role: PERSONALITY_NAPLES
+      role: auto
       workloads:
             type    : WORKLOAD_TYPE_VM
-            image   : "build-115"
+            image   : "build-130"

@@ -75,7 +75,10 @@ class Node(object):
         return role
 
     def GetNicType(self):
-        return self.__inst.Resource.NICType
+        if getattr(self.__inst, "Resource", None):
+            return getattr(self.__inst.Resource, "NICType", "")
+        #Simenv does not have nic type
+        return ""
 
     def GetNicMgmtIP(self):
         return self.__nic_mgmt_ip
@@ -136,7 +139,10 @@ class Node(object):
         return self.__workload_image
 
     def AddToNodeMsg(self, msg, topology, testsuite):
-        msg.type = self.__role
+        if self.IsThirdParty():
+            msg.type = topo_pb2.PERSONALITY_THIRD_PARTY_NIC
+        else:
+            msg.type = self.__role
         msg.image = ""
         msg.ip_address = self.__ip_address
         msg.name = self.__name
@@ -146,6 +152,10 @@ class Node(object):
             msg.esx_config.username = self.__esx_username
             msg.esx_config.password = self.__esx_password
             msg.esx_config.ip_address = self.__ip_address
+        elif self.__os == 'linux':
+            msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
+        elif self.__os == 'freebsd':
+            msg.os = topo_pb2.TESTBED_NODE_OS_FREEBSD
 
         if self.Role() == topo_pb2.PERSONALITY_VENICE:
             msg.venice_config.control_intf = self.__control_intf
@@ -157,20 +167,24 @@ class Node(object):
                 peer_msg.host_name = n.Name()
                 peer_msg.ip_address = str(n.ControlIpAddress())
         else:
-            msg.naples_config.control_intf = self.__control_intf
-            msg.naples_config.control_ip = str(self.__control_ip)
-            if not self.IsNaplesHw() and not self.IsThirdParty():
-                msg.image = os.path.basename(testsuite.GetImages().naples)
-            for data_intf in self.__data_intfs:
-                msg.naples_config.data_intfs.append(data_intf)
-            for n in topology.Nodes():
-                if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
-                msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
+            if self.IsThirdParty():
+                msg.third_party_nic_config.nic_type = self.GetNicType()
+            else:
+                msg.naples_config.nic_type = self.GetNicType()
+                msg.naples_config.control_intf = self.__control_intf
+                msg.naples_config.control_ip = str(self.__control_ip)
+                if not self.IsNaplesHw() and not self.IsThirdParty():
+                    msg.image = os.path.basename(testsuite.GetImages().naples)
+                for data_intf in self.__data_intfs:
+                    msg.naples_config.data_intfs.append(data_intf)
+                for n in topology.Nodes():
+                    if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
+                    msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
 
-            msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
+                msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
 
-            msg.naples_config.naples_username = "root"
-            msg.naples_config.naples_password = "pen123"
+                msg.naples_config.naples_username = "root"
+                msg.naples_config.naples_password = "pen123"
 
             host_entity = msg.entities.add()
             host_entity.type = topo_pb2.ENTITY_TYPE_HOST
@@ -188,20 +202,15 @@ class Node(object):
 
     def ProcessResponse(self, resp):
         self.__uuid = resp.node_uuid
-        if self.IsMellanox():
-            self.__host_intfs = resp.mellanox_config.host_intfs
-        elif self.IsBroadcom():
-            self.__host_intfs = resp.broadcom_config.host_intfs
-        elif self.IsNaples():
+        if self.IsNaples():
             self.__host_intfs = resp.naples_config.host_intfs
             Logger.info("Node: %s UUID: %s" % (self.__name, self.__uuid))
-        elif self.IsIntel():
+        elif self.IsThirdParty():
             if GlobalOptions.dryrun:
                 self.__host_intfs = []
             else:
-                self.__host_intfs = resp.intel_config.host_intfs
+                self.__host_intfs = resp.third_party_nic_config.host_intfs
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
-
         if len(self.__host_intfs) == 0 and  not self.IsVenice():
             if GlobalOptions.dryrun:
                 self.__host_intfs = ["dummy_intf0", "dummy_intf1"]

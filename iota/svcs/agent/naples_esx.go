@@ -17,16 +17,25 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type esxNaplesHwNode struct {
+type esxHwNode struct {
 	naplesHwNode
 	hostIP           string
 	hostUsername     string
 	hostPassword     string
 	esxHostEntityKey string
+	nicType          string
 	host             *vmware.Host
 }
 
-func (naples *esxNaplesHwNode) setupWorkload(wload Workload.Workload, in *iota.Workload) (*iota.Workload, error) {
+type esxNaplesHwNode struct {
+	esxHwNode
+}
+
+type esxThirdPartyHwNode struct {
+	esxHwNode
+}
+
+func (naples *esxHwNode) setupWorkload(wload Workload.Workload, in *iota.Workload) (*iota.Workload, error) {
 	/* Create working directory and set that as base dir */
 	naples.logger.Println("Doing setup of esx workload")
 	wDir := Common.DstIotaEntitiesDir + "/" + in.GetWorkloadName()
@@ -46,7 +55,7 @@ func (naples *esxNaplesHwNode) setupWorkload(wload Workload.Workload, in *iota.W
 }
 
 // AddWorkload brings up a workload type on a given node
-func (naples *esxNaplesHwNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
+func (naples *esxHwNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
 
 	if _, ok := iota.WorkloadType_name[(int32)(in.GetWorkloadType())]; !ok {
 		msg := fmt.Sprintf("Workload Type %d not supported", in.GetWorkloadType())
@@ -104,14 +113,19 @@ func (naples *esxNaplesHwNode) AddWorkload(in *iota.Workload) (*iota.Workload, e
 	return resp, nil
 }
 
-func (naples *esxNaplesHwNode) getNaplesDataIntfs() ([]string, error) {
+func (naples *esxHwNode) getDataIntfs() ([]string, error) {
+
 	hostEntity, ok := naples.entityMap[naples.esxHostEntityKey]
 	if !ok {
 		return nil, errors.Errorf("Host entity not added : %s", naples.esxHostEntityKey)
 	}
 
-	cmd := []string{"esxcfg-nics", "-l", "|", "grep 'Pensando Ethernet PF'", "|", "cut -f1 -d ' '"}
-	cmdResp, _, _ := hostEntity.workload.RunCommand(cmd, "", 0, false, true)
+	cmd, err := naples.getInterfaceFindCommand("esx", naples.nicType)
+	if err != nil {
+		return nil, err
+	}
+	fullCmd := []string{cmd}
+	cmdResp, _, _ := hostEntity.workload.RunCommand(fullCmd, "", 0, false, true)
 	naples.logger.Printf("naples data intf find out %s", cmdResp.Stdout)
 	naples.logger.Printf("naples data intf find err %s", cmdResp.Stderr)
 	naples.logger.Printf("naples data intf find  exit code %d", cmdResp.ExitCode)
@@ -123,7 +137,7 @@ func (naples *esxNaplesHwNode) getNaplesDataIntfs() ([]string, error) {
 	return strings.Split(cmdResp.Stdout, "\r\n"), nil
 }
 
-func (naples *esxNaplesHwNode) getNaplesMgmtIntf() (string, error) {
+func (naples *esxHwNode) getNaplesMgmtIntf() (string, error) {
 
 	var sshHandle *ssh.Client
 	var err error
@@ -154,7 +168,7 @@ func (naples *esxNaplesHwNode) getNaplesMgmtIntf() (string, error) {
 	return strings.TrimSpace(strings.Split(cmdResp.Ctx.Stdout, "\n")[0]), nil
 }
 
-func (naples *esxNaplesHwNode) createNaplesMgmtSwitch() error {
+func (naples *esxHwNode) createNaplesMgmtSwitch() error {
 
 	naplesMgmtIntf, err := naples.getNaplesMgmtIntf()
 	if err != nil || naplesMgmtIntf == "" {
@@ -177,9 +191,9 @@ func (naples *esxNaplesHwNode) createNaplesMgmtSwitch() error {
 	return err
 }
 
-func (naples *esxNaplesHwNode) createNaplesDataSwitch() error {
+func (naples *esxHwNode) createNaplesDataSwitch() error {
 
-	naplesDataIntfs, err := naples.getNaplesDataIntfs()
+	naplesDataIntfs, err := naples.getDataIntfs()
 	if err != nil || len(naplesDataIntfs) == 0 {
 		return errors.New("No naples data interfaces discovered")
 	}
@@ -190,7 +204,7 @@ func (naples *esxNaplesHwNode) createNaplesDataSwitch() error {
 	return naples.host.AddVswitch(vsspec)
 }
 
-func (naples *esxNaplesHwNode) setUpNaplesMgmtNetwork() error {
+func (naples *esxHwNode) setUpNaplesMgmtNetwork() error {
 
 	if err := naples.createNaplesMgmtSwitch(); err != nil {
 		return errors.Wrap(err, "Failed to create naples mgmt switch")
@@ -219,7 +233,7 @@ func (naples *esxNaplesHwNode) setUpNaplesMgmtNetwork() error {
 	return nil
 }
 
-func (naples *esxNaplesHwNode) addHostEntity(in *iota.Node) error {
+func (naples *esxHwNode) addHostEntity(in *iota.Node) error {
 	for _, entityEntry := range in.GetEntities() {
 		var wload Workload.Workload
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_HOST {
@@ -248,7 +262,7 @@ func (naples *esxNaplesHwNode) addHostEntity(in *iota.Node) error {
 	return nil
 }
 
-func (naples *esxNaplesHwNode) addNaplesEntity(in *iota.Node) error {
+func (naples *esxHwNode) addNaplesEntity(in *iota.Node) error {
 	for _, entityEntry := range in.GetEntities() {
 		var wload Workload.Workload
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_NAPLES {
@@ -275,7 +289,7 @@ func (naples *esxNaplesHwNode) addNaplesEntity(in *iota.Node) error {
 	return nil
 }
 
-func (naples *esxNaplesHwNode) addNodeEntities(in *iota.Node) error {
+func (naples *esxHwNode) addNodeEntities(in *iota.Node) error {
 
 	/* First add host entitiy , as it requires to query for Naples interfaces*/
 	if err := naples.addHostEntity(in); err != nil {
@@ -285,8 +299,73 @@ func (naples *esxNaplesHwNode) addNodeEntities(in *iota.Node) error {
 	return naples.addNaplesEntity(in)
 }
 
+func (naples *esxHwNode) setHostIntfs(in *iota.Node) error {
+	return nil
+}
+
+func (naples *esxNaplesHwNode) setHostIntfs(in *iota.Node) error {
+	naplesDataIntfs, err := naples.getDataIntfs()
+	if err != nil || len(naplesDataIntfs) == 0 {
+		msg := "No naples data interfaces discovered"
+		naples.logger.Error(msg)
+		return errors.New(msg)
+	}
+	in.GetNaplesConfig().HostIntfs = naplesDataIntfs
+	return nil
+}
+
+func (naples *esxThirdPartyHwNode) setHostIntfs(in *iota.Node) error {
+	dataIntfs, err := naples.getDataIntfs()
+	if err != nil || len(dataIntfs) == 0 {
+		msg := "No data interfaces discovered"
+		naples.logger.Error(msg)
+		return errors.New(msg)
+	}
+	in.GetThirdPartyNicConfig().HostIntfs = dataIntfs
+	return nil
+}
+
 //Init initalize node type
 func (naples *esxNaplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
+	naples.nicType = in.GetNaplesConfig().GetNicType()
+	resp, err := naples.esxHwNode.Init(in)
+	if err != nil {
+		return resp, err
+	}
+
+	newResp := &iota.Node{NodeStatus: apiSuccess, NodeUuid: resp.GetNodeUuid(),
+		Name: resp.GetName(), IpAddress: resp.GetIpAddress(), Type: resp.GetType(),
+		NodeInfo: &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{}}}
+
+	if err = naples.setHostIntfs(newResp); err != nil {
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
+
+	}
+	return newResp, nil
+
+}
+
+//Init initalize node type
+func (thirdParty *esxThirdPartyHwNode) Init(in *iota.Node) (*iota.Node, error) {
+	thirdParty.nicType = in.GetThirdPartyNicConfig().GetNicType()
+	resp, err := thirdParty.esxHwNode.Init(in)
+	if err != nil {
+		return resp, err
+	}
+
+	newResp := &iota.Node{NodeStatus: apiSuccess, NodeUuid: resp.GetNodeUuid(),
+		Name: resp.GetName(), IpAddress: resp.GetIpAddress(), Type: resp.GetType(),
+		NodeInfo: &iota.Node_ThirdPartyNicConfig{ThirdPartyNicConfig: &iota.ThirdPartyNicConfig{}}}
+
+	if err = thirdParty.setHostIntfs(newResp); err != nil {
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
+
+	}
+	return newResp, nil
+}
+
+//Init initalize node type
+func (naples *esxHwNode) Init(in *iota.Node) (*iota.Node, error) {
 
 	naples.init(in)
 	naples.iotaNode.name = in.GetName()
@@ -313,14 +392,6 @@ func (naples *esxNaplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
 	}
 
-	naplesDataIntfs, err := naples.getNaplesDataIntfs()
-	if err != nil || len(naplesDataIntfs) == 0 {
-		msg := "No naples data interfaces discovered"
-		naples.logger.Error(msg)
-		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
-	}
-	in.GetNaplesConfig().HostIntfs = naplesDataIntfs
-
 	err = naples.createNaplesDataSwitch()
 	if err != nil {
 		msg := "failed to create naples data switch"
@@ -336,7 +407,9 @@ func (naples *esxNaplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
 	}
 
-	return &iota.Node{NodeStatus: apiSuccess, NodeUuid: nodeUUID,
+	resp := &iota.Node{NodeStatus: apiSuccess, NodeUuid: nodeUUID,
 		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
-		NodeInfo: &iota.Node_NaplesConfig{NaplesConfig: in.GetNaplesConfig()}}, nil
+		NodeInfo: &iota.Node_NaplesConfig{}}
+
+	return resp, nil
 }

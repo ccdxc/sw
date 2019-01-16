@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/pkg/errors"
 
@@ -30,8 +31,6 @@ const (
 	naplesSimHostIntfPrefix = "lif"
 	naplesBsdHosIntfPrefix  = "ionic"
 	naplesPciDevicePrefix   = "Device"
-	mellanoxPciDevicePrefix = "Ethernet"
-	broadcomPciDevicePrefix = "Ethernet"
 	bareMetalWorkloadName   = "bareMetalWorkload"
 	intelPciDevicePrefix    = "Ethernet"
 	maxStdoutSize           = 1024 * 1024 * 2
@@ -49,6 +48,12 @@ var workloadTypeMap = map[iota.WorkloadType]string{
 	iota.WorkloadType_WORKLOAD_TYPE_CONTAINER:  Workload.WorkloadTypeContainer,
 	iota.WorkloadType_WORKLOAD_TYPE_VM:         Workload.WorkloadTypeESX,
 	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL: Workload.WorkloadTypeBareMetal,
+}
+
+var nodOSMap = map[iota.TestBedNodeOs]string{
+	iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX:   "linux",
+	iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD: "freebsd",
+	iota.TestBedNodeOs_TESTBED_NODE_OS_ESX:     "esx",
 }
 
 type dataNode struct {
@@ -72,15 +77,7 @@ type naplesQemuNode struct {
 	naplesSimNode
 }
 
-type mellanoxNode struct {
-	dataNode
-}
-
-type broadcomNode struct {
-	dataNode
-}
-
-type intelNode struct {
+type thirdPartyDataNode struct {
 	dataNode
 }
 
@@ -717,17 +714,28 @@ func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		in.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{}}
 	}
 
-	in.GetNaplesConfig().HostIntfs, _ = Utils.GetIntfsMatchingDevicePrefix(naplesPciDevicePrefix)
-
-	if len(in.GetNaplesConfig().HostIntfs) == 0 && runtime.GOOS == "freebsd" {
-		in.GetNaplesConfig().HostIntfs = Utils.GetIntfsMatchingPrefix(naplesBsdHosIntfPrefix)
+	//cmd := []string{naplesScript}
+	cmd := []string{"ls"}
+	_, stdout, err := Utils.RunCmd(cmd, 0, false, true, nil)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to find  naples  err : %s", stdout)
+		naples.logger.Error(msg)
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
 	}
+
+	hostIntfs, err := naples.getHostInterfaces(nodOSMap[in.GetOs()], in.GetNaplesConfig().GetNicType())
+	if err != nil {
+		naples.logger.Error(err.Error())
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
+
+	}
+	in.GetNaplesConfig().HostIntfs = hostIntfs
 
 	naples.logger.Printf("Naples host interfaces : %v", in.GetNaplesConfig().HostIntfs)
 	for _, intf := range in.GetNaplesConfig().HostIntfs {
 		cmd := []string{"ifconfig", intf, "up"}
-		_, stdout, err := Utils.Run(cmd, 0, false, true, nil)
-		if err != nil {
+		naples.logger.Info("Bringing up intf " + intf)
+		if _, stdout, err := Utils.Run(cmd, 0, false, true, nil); err != nil {
 			msg := fmt.Sprintf("Failed to bring interface %s up err : %s", intf, stdout)
 			naples.logger.Error(msg)
 			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
@@ -814,45 +822,6 @@ func (dnode *dataNode) addNodeEntities(in *iota.Node) error {
 }
 
 //Init initalize node type
-func (mlx *mellanoxNode) Init(in *iota.Node) (resp *iota.Node, err error) {
-
-	mlx.init(in)
-	mlx.iotaNode.name = in.GetName()
-
-	if in.GetMellanoxConfig() == nil {
-		in.NodeInfo = &iota.Node_MellanoxConfig{MellanoxConfig: &iota.MellanoxConfig{}}
-	}
-
-	in.GetMellanoxConfig().HostIntfs, _ = Utils.GetIntfsMatchingDevicePrefix(mellanoxPciDevicePrefix)
-
-	mlx.logger.Printf("Mellanox host interfaces : %v", in.GetMellanoxConfig().HostIntfs)
-	for _, intf := range in.GetMellanoxConfig().HostIntfs {
-		cmd := []string{"ifconfig", intf, "up"}
-		_, stdout, err := Utils.Run(cmd, 0, false, true, nil)
-		if err != nil {
-			msg := fmt.Sprintf("Failed to bring interface %s up err : %s", intf, stdout)
-			mlx.logger.Errorf(msg)
-			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
-		}
-	}
-
-	/* Finally add entity type */
-	if err := mlx.addNodeEntities(in); err != nil {
-		mlx.logger.Error("Adding node entities failed")
-		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
-	}
-
-	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
-		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
-		NodeInfo: &iota.Node_MellanoxConfig{MellanoxConfig: in.GetMellanoxConfig()}}, nil
-}
-
-//NodeType return node type
-func (mellanoxNode) NodeType() iota.PersonalityType {
-	return iota.PersonalityType_PERSONALITY_MELLANOX
-}
-
-//Init initalize node type
 func (dnode *dataNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 	return nil, nil
 }
@@ -883,72 +852,90 @@ func (dnode *dataNode) NodeType() iota.PersonalityType {
 	return iota.PersonalityType_PERSONALITY_NONE
 }
 
-//Init initalize node type
-func (brcm *broadcomNode) Init(in *iota.Node) (resp *iota.Node, err error) {
-
-	brcm.init(in)
-	brcm.iotaNode.name = in.GetName()
-
-	if in.GetBroadcomConfig() == nil {
-		in.NodeInfo = &iota.Node_BroadcomConfig{BroadcomConfig: &iota.BroadcomConfig{}}
+func (dnode *dataNode) getInterfaceFindCommand(osType string, nicType string) (string, error) {
+	var data interface{}
+	var ok bool
+	file, e := ioutil.ReadFile(Common.DstNicFinderConf)
+	if e != nil {
+		return "", errors.New("Error opening Nic finder config file")
+	}
+	var deviceYAML map[string]interface{}
+	res := make(map[string]interface{})
+	if err := yaml.Unmarshal(file, &deviceYAML); err != nil {
+		return "", errors.New("Failed to parse  Nic finder config file")
 	}
 
-	in.GetBroadcomConfig().HostIntfs, _ = Utils.GetIntfsMatchingDevicePrefix(broadcomPciDevicePrefix)
+	if data, ok = deviceYAML[osType]; !ok {
+		return "", errors.New("Could not find OS type in nic finder config file")
+	}
+	for k, v := range data.(map[interface{}]interface{}) {
+		res[fmt.Sprintf("%v", k)] = v
+	}
 
-	brcm.logger.Printf("Broadcom host interfaces : %v", in.GetBroadcomConfig().HostIntfs)
-	for _, intf := range in.GetBroadcomConfig().HostIntfs {
-		cmd := []string{"ifconfig", intf, "up"}
-		_, stdout, err := Utils.Run(cmd, 0, false, true, nil)
-		if err != nil {
-			msg := fmt.Sprintf("Failed to bring interface %s up err : %s", intf, stdout)
-			brcm.logger.Errorf(msg)
-			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+	if data, ok = res[nicType]; !ok {
+		msg := fmt.Sprintf("Could not find type %s finder config file", nicType)
+		return "", errors.New(msg)
+	}
+
+	return data.(string), nil
+}
+
+func (dnode *dataNode) getHostInterfaces(osType string, nicType string) ([]string, error) {
+	var hostIntfs []string
+	cmd, err := dnode.getInterfaceFindCommand(osType, nicType)
+
+	if err != nil {
+		return nil, err
+	}
+
+	fullCmd := []string{cmd}
+	_, stdout, err := Utils.RunCmd(fullCmd, 0, false, true, nil)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to run command to discover interfaces %v", cmd)
+		return nil, errors.New(msg)
+	}
+	dnode.logger.Printf("Host interfaces cmd : %v", cmd)
+	dnode.logger.Printf("Host interfaces output : %v", strings.Split(stdout, "\n"))
+
+	for _, intf := range strings.Split(stdout, "\n") {
+		if intf != "" {
+			hostIntfs = append(hostIntfs, intf)
 		}
-	}
 
-	/* Finally add entity type */
-	if err := brcm.addNodeEntities(in); err != nil {
-		brcm.logger.Error("Adding node entities failed")
-		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
 	}
-
-	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
-		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
-		NodeInfo: &iota.Node_BroadcomConfig{BroadcomConfig: in.GetBroadcomConfig()}}, nil
+	return hostIntfs, nil
 }
 
 //Init initalize node type
-func (intel *intelNode) Init(in *iota.Node) (resp *iota.Node, err error) {
+func (thirdParty *thirdPartyDataNode) Init(in *iota.Node) (resp *iota.Node, err error) {
 
-	intel.init(in)
-	intel.iotaNode.name = in.GetName()
+	thirdParty.init(in)
+	thirdParty.iotaNode.name = in.GetName()
 
-	if in.GetIntelConfig() == nil {
-		in.NodeInfo = &iota.Node_IntelConfig{IntelConfig: &iota.IntelConfig{}}
+	if in.GetThirdPartyNicConfig() == nil {
+		msg := fmt.Sprintf("Third Party config not specified")
+		thirdParty.logger.Errorf(msg)
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, errors.New(msg)
 	}
 
-	in.GetIntelConfig().HostIntfs, _ = Utils.GetIntfsMatchingDevicePrefix(intelPciDevicePrefix)
+	hostIntfs, err := thirdParty.getHostInterfaces(nodOSMap[in.GetOs()], in.GetThirdPartyNicConfig().GetNicType())
+	if err != nil {
+		thirdParty.logger.Error(err.Error())
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
 
-	intel.logger.Printf("Intel host interfaces : %v", in.GetIntelConfig().HostIntfs)
-	for _, intf := range in.GetIntelConfig().HostIntfs {
-		cmd := []string{"ifconfig", intf, "up"}
-		_, stdout, err := Utils.Run(cmd, 0, false, true, nil)
-		if err != nil {
-			msg := fmt.Sprintf("Failed to bring interface %s up err : %s", intf, stdout)
-			intel.logger.Errorf(msg)
-			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
-		}
 	}
+	in.GetThirdPartyNicConfig().HostIntfs = hostIntfs
+	thirdParty.logger.Printf("Third Party interfaces : %v", in.GetThirdPartyNicConfig().HostIntfs)
 
 	/* Finally add entity type */
-	if err := intel.addNodeEntities(in); err != nil {
-		intel.logger.Error("Adding node entities failed")
+	if err := thirdParty.addNodeEntities(in); err != nil {
+		thirdParty.logger.Error("Adding node entities failed")
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
 	}
 
 	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}, NodeUuid: "",
 		Name: in.GetName(), IpAddress: in.GetIpAddress(), Type: in.GetType(),
-		NodeInfo: &iota.Node_IntelConfig{IntelConfig: in.GetIntelConfig()}}, nil
+		NodeInfo: &iota.Node_ThirdPartyNicConfig{ThirdPartyNicConfig: in.GetThirdPartyNicConfig()}}, nil
 }
 
 func (dnode *dataNode) GetWorkloadMsgs() []*iota.Workload {

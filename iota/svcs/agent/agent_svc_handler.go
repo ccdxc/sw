@@ -306,9 +306,7 @@ var iotaNodes = map[iota.PersonalityType]func() IotaNode{
 	iota.PersonalityType_PERSONALITY_NAPLES_SIM:           newNaplesSim,
 	iota.PersonalityType_PERSONALITY_VENICE:               newVenice,
 	iota.PersonalityType_PERSONALITY_NAPLES_SIM_WITH_QEMU: newNaplesQemu,
-	iota.PersonalityType_PERSONALITY_MELLANOX:             newMellanox,
-	iota.PersonalityType_PERSONALITY_BROADCOM:             newBroadcom,
-	iota.PersonalityType_PERSONALITY_INTEL:                newIntel,
+	iota.PersonalityType_PERSONALITY_THIRD_PARTY_NIC:      newThirdPartyNic,
 }
 
 func newNaples() IotaNode {
@@ -316,19 +314,15 @@ func newNaples() IotaNode {
 }
 
 func newEsxNaples() IotaNode {
-	return &esxNaplesHwNode{naplesHwNode: naplesHwNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-esx"}}}}
+	return &esxNaplesHwNode{esxHwNode: esxHwNode{naplesHwNode: naplesHwNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-esx"}}}}}
 }
 
-func newMellanox() IotaNode {
-	return &mellanoxNode{dataNode: dataNode{iotaNode: iotaNode{name: "mellanox"}}}
+func newEsxThirdPartyNic() IotaNode {
+	return &esxThirdPartyHwNode{esxHwNode: esxHwNode{naplesHwNode: naplesHwNode{dataNode: dataNode{iotaNode: iotaNode{name: "third-party-esx"}}}}}
 }
 
-func newBroadcom() IotaNode {
-	return &broadcomNode{dataNode: dataNode{iotaNode: iotaNode{name: "broadcom"}}}
-}
-
-func newIntel() IotaNode {
-	return &intelNode{dataNode: dataNode{iotaNode: iotaNode{name: "intel"}}}
+func newThirdPartyNic() IotaNode {
+	return &thirdPartyDataNode{dataNode: dataNode{iotaNode: iotaNode{name: "third-party"}}}
 }
 
 func newNaplesSim() IotaNode {
@@ -348,6 +342,8 @@ func newIotaNode(nodeType iota.PersonalityType, os iota.TestBedNodeOs) IotaNode 
 	//Hack for now as its just one type
 	if nodeType == iota.PersonalityType_PERSONALITY_NAPLES && os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 		return newEsxNaples()
+	} else if nodeType == iota.PersonalityType_PERSONALITY_THIRD_PARTY_NIC && os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		return newEsxThirdPartyNic()
 	}
 
 	if _, ok := iotaNodes[nodeType]; ok {

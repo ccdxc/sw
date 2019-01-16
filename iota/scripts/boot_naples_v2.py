@@ -499,8 +499,7 @@ class EsxHostManagement(HostManagement):
             sys.exit(1)
         dst_dir = outlines[0].strip("\n") + "/src/" + os.path.basename(tmp_driver) + "_dir"
 
-        self.__bld_vm_ssh_handle.exec_command("rm -f " + dst_dir)
-        self.__bld_vm_ssh_handle.exec_command("mkdir " + dst_dir)
+        self.__bld_vm_ssh_handle.exec_command("rm -rf " + dst_dir + " && mkdir -p " + dst_dir + " && sync ")
         # Copy the driver package
         self.bld_vm_copyin(tmp_driver, dst_dir = dst_dir)
         stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + " && tar -xvf " + os.path.basename(tmp_driver))

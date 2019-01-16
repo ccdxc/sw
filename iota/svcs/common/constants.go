@@ -24,6 +24,9 @@ const (
 	// IotaAgentBinaryNameFreebsd is the name of of the IOTA Agent Binary for Freebsd
 	IotaAgentBinaryNameFreebsd = "freebsd/" + IotaAgentBinaryName
 
+	//NicFinderConfFileName
+	NicFinderConfFileName = "nic.conf"
+
 	// VlansPerTestBed vlans that a testbed can manage
 	VlansPerTestBed = 10
 
@@ -65,6 +68,9 @@ const (
 
 	// BuildItBinary
 	BuildItBinary = "/sw/iota/images/buildit"
+
+	//DstNicFinderConf file to be used on node.
+	DstNicFinderConf = DstIotaAgentDir + "/nic.conf"
 
 	// EsxControlVmCpus Esx Control VM Cpus
 	EsxControlVMCpus = 4
@@ -116,6 +122,9 @@ var (
 
 	// IotaAgentBinaryPathFreebsd captures the location of the build IOTA Agent Binary for Freebsd
 	IotaAgentBinaryPathFreebsd = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/bin/agent/%s", os.Getenv("GOPATH"), IotaAgentBinaryNameFreebsd)
+
+	//NicFinderConf nic finder conf
+	NicFinderConf = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/scripts/%s", os.Getenv("GOPATH"), NicFinderConfFileName)
 
 	// DstIotaAgentBinary captures the location of agent on the remote nodes
 	DstIotaAgentBinary = fmt.Sprintf("%s/%s", DstIotaAgentDir, IotaAgentBinaryName)

@@ -149,10 +149,15 @@ func initEsxCtrlVM() (string, error) {
 
 	vsname := constants.EsxIotaCtrlSwitch
 	vsspec := vmware.VswitchSpec{Name: vsname}
-	host.AddVswitch(vsspec)
-
+	err = host.AddVswitch(vsspec)
+	if err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Failed to create vswitch %v ", err.Error())
+	}
 	nws := []vmware.NWSpec{{Name: constants.EsxDefaultNetwork, Vlan: int32(constants.EsxDefaultNetworkVlan)}, {Name: constants.EsxVMNetwork, Vlan: int32(constants.EsxVMNetworkVlan)}}
-	host.AddNetworks(nws, vsspec)
+	_, err = host.AddNetworks(nws, vsspec)
+	if err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Failed to create networks %v ", err.Error())
+	}
 
 	vmInfo, err := host.DeployVM(constants.EsxControlVMName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
 
