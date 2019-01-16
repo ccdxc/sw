@@ -20,6 +20,11 @@ api_engine    g_api_engine;
  * @{
  */
 
+slab *
+api_params_slab (void) {
+    return g_api_engine.api_params_slab();
+}
+
 /**
  * @brief    return a pre-populated de-duped API operation
  */
@@ -563,7 +568,7 @@ api_engine::batch_commit(void) {
     for (auto it = batch_ctxt_.api_ctxts.begin();
          it != batch_ctxt_.api_ctxts.end(); ++it) {
         if ((*it).api_params) {
-            api_params_slab()->free((*it).api_params);
+            api_params_free((*it).api_params, (*it).obj_id, (*it).api_op);
         }
     }
     batch_ctxt_.api_ctxts.clear();
@@ -597,7 +602,7 @@ api_engine::batch_abort(void) {
     for (auto it = batch_ctxt_.api_ctxts.begin();
          it != batch_ctxt_.api_ctxts.end(); ++it) {
         if ((*it).api_params) {
-            api_params_slab()->free((*it).api_params);
+            api_params_free((*it).api_params, (*it).obj_id, (*it).api_op);
         }
     }
     batch_ctxt_.api_ctxts.clear();

@@ -47,6 +47,7 @@ api_base::factory(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_ROUTE_TABLE:
         obj = route_table::factory(&api_ctxt->api_params->route_table_info);
+        return obj;
         break;
 
     case OBJ_ID_SECURITY_RULES:

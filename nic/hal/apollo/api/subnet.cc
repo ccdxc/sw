@@ -336,7 +336,8 @@ oci_subnet_create (_In_ oci_subnet_t *subnet)
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_SUBNET,
+                                                api::API_OP_CREATE);
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_CREATE;
         api_ctxt.obj_id = api::OBJ_ID_SUBNET;
@@ -359,7 +360,8 @@ oci_subnet_delete (_In_ oci_subnet_key_t *subnet_key)
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_SUBNET,
+                                                api::API_OP_DELETE);
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_DELETE;
         api_ctxt.obj_id = api::OBJ_ID_SUBNET;

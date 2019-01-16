@@ -42,6 +42,45 @@ protected:
 };
 
 //------------------------------------------------------------------------------
+// create route tables
+//------------------------------------------------------------------------------
+static void
+create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
+                     uint32_t num_routes, ip_prefix_t *tep_pfx,
+                     ip_prefix_t *route_pfx)
+{
+    uint32_t             ntables = num_vcns * num_subnets;
+    uint32_t             tep_offset = 3;
+    oci_route_table_t    route_table;
+
+    route_table.af = IP_AF_IPV4;
+    route_table.routes =
+        (oci_route_t *)malloc((num_routes * sizeof(oci_route_t)));
+    route_table.num_routes = num_routes;
+    for (uint32_t i = 1; i <= ntables; i++) {
+        route_table.key.id = i;
+        for (uint32_t j = 0; j < num_routes; j++) {
+            route_table.routes[j].prefix.len = 24;
+            route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
+            route_table.routes[j].prefix.addr.addr.v4_addr =
+                (route_pfx->addr.addr.v4_addr & 0xFF000000) | (j << 16);
+            route_table.routes[j].nh_ip.af = IP_AF_IPV4;
+            route_table.routes[j].nh_ip.addr.v4_addr =
+                tep_pfx->addr.addr.v4_addr + tep_offset++;
+            tep_offset %= num_teps;
+            if (tep_offset == 0) {
+                // skip MyTEP and gateway IPs
+                tep_offset += 3;
+            }
+            route_table.routes[j].nh_type = OCI_NH_TYPE_REMOTE_TEP;
+            route_table.routes[j].vcn_id = OCI_VCN_ID_INVALID;
+        }
+        SDK_ASSERT(oci_route_table_create(&route_table) == SDK_RET_OK);
+    }
+    return;
+}
+
+//------------------------------------------------------------------------------
 // 1. create 1 primary + 32 secondary IP for each of 1K local vnics
 // 2. create 1023 remote mappings per VCN
 //------------------------------------------------------------------------------
@@ -105,7 +144,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                 oci_mapping.subnet.vcn_id = i;
                 oci_mapping.subnet.id = j;
                 oci_mapping.slot = remote_slot++;
-                oci_mapping.tep.ip_addr = teppfx->addr.addr.v4_addr + tep_offset;
+                oci_mapping.tep.ip_addr =
+                    teppfx->addr.addr.v4_addr + tep_offset++;
                 tep_offset %= num_teps;
                 if (tep_offset == 0) {
                     // skip MyTEP and gateway IPs
@@ -235,10 +275,10 @@ static void
 create_objects (void)
 {
     uint32_t       num_vcns = 0, num_subnets = 0, num_vnics = 0, num_teps = 0;
-    uint32_t       num_remote_mappings = 0;
+    uint32_t       num_remote_mappings = 0, num_routes = 0;
     uint16_t       vlan_start = 1;
     pt::ptree      json_pt;
-    ip_prefix_t    teppfx, natpfx;
+    ip_prefix_t    teppfx, natpfx, routepfx;
     string         pfxstr;
 
     // parse the config and create objects
@@ -263,6 +303,12 @@ create_objects (void)
                 pfxstr = obj.second.get<std::string>("prefix");
                 ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &teppfx) == 0);
                 create_teps(num_teps, &teppfx);
+            } else if (kind == "route-table") {
+                num_routes = std::stol(obj.second.get<std::string>("count"));
+                pfxstr = obj.second.get<std::string>("prefix-start");
+                ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &routepfx) == 0);
+                create_route_tables(num_teps, 1024, 1,
+                                    num_routes, &teppfx, &routepfx);
             } else if (kind == "vcn") {
                 num_vcns = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
@@ -273,7 +319,7 @@ create_objects (void)
                 num_vnics = std::stol(obj.second.get<std::string>("count"));
                 vlan_start = std::stol(obj.second.get<std::string>("vlan-start"));
                 create_vnics(num_vcns, num_subnets, num_vnics, vlan_start);
-            } else if (kind == "mapping") {
+            } else if (kind == "remote-mapping") {
                 pfxstr = obj.second.get<std::string>("nat-prefix");
                 ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &natpfx) == 0);
                 num_remote_mappings = std::stol(obj.second.get<std::string>("count"));

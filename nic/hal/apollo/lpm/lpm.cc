@@ -80,8 +80,8 @@ typedef struct lpm_stage_meta_s {
  * @return       number of lookup stages (aka. depth of the interval tree)
  *
  * The computation is done as follows for IPv4:
- *     log16(2 * num_routes) = log16(1 << num_routes) =
- *     log2(1 << num_routes)/log2(16) = log2(1 << num_routes)/4
+ *     log16(2 * num_routes) = log16(num_routes << 1) =
+ *     log2(num_routes << 1)/log2(16) = log2(num_routes << 1)/4
  *     div by 4 is accomplished by right shift as we need to round up at the end
  * and for IPv6:
  *     log4(2 * num_routes)
@@ -90,9 +90,9 @@ static inline uint32_t
 lpm_stages (uint8_t ip_af, uint32_t num_routes)
 {
     if (ip_af == IP_AF_IPV4) {
-        return (uint32_t)ceil(log2f((float)(1 << num_routes)/4.0));
+        return (uint32_t)ceil(log2f((double)(num_routes << 1))/4.0);
     } else {
-        return (uint32_t)ceil(log2f((float)(1 << num_routes)/2.0));
+        return (uint32_t)ceil(log2f((double)(num_routes << 1))/2.0);
     }
 }
 
@@ -220,7 +220,8 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
          * but when 10.11.0.0/16 is seen, we don't need that interval as we have
          * actual user configured route for it
          */
-        if (IPADDR_EQ(&s.top().interval.ipaddr, &elem.interval.ipaddr)) {
+        SDK_ASSERT(s.empty() == false);
+        if (IPADDR_EQ(&(s.top().interval.ipaddr), &elem.interval.ipaddr)) {
             s.pop();
         }
 
@@ -244,7 +245,8 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
          * a fallback nexthop that is not relevant anymore once we saw
          * 11.11.255.0, so we should pop it
          */
-        if (IPADDR_EQ(&s.top().interval.ipaddr, &elem.interval.ipaddr)) {
+        SDK_ASSERT(s.empty() == false);
+        if (IPADDR_EQ(&(s.top().interval.ipaddr), &elem.interval.ipaddr)) {
             s.pop();
         }
 
@@ -253,7 +255,8 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
     }
 
     /**< emit whatever is remaining on the stack now */
-    while (IPADDR_LT(&s.top().interval.ipaddr, &end.interval.ipaddr)) {
+    SDK_ASSERT(s.empty() == false);
+    while (IPADDR_LT(&(s.top().interval.ipaddr), &end.interval.ipaddr)) {
         itable->nodes[num_intervals++] = s.top().interval;
         s.pop();
     }
@@ -394,8 +397,8 @@ lpm_tree_create (route_table_t *route_table,
     /**< allocate memory for creating all interval tree nodes */
     //num_intervals = compute_intervals(route_table->num_routes);
     itable.nodes =
-        (lpm_inode_t *) malloc(sizeof(lpm_inode_t) *
-                               (1 << route_table->num_routes));
+        (lpm_inode_t *)malloc(sizeof(lpm_inode_t) *
+                              (route_table->num_routes << 1));
     if (itable.nodes == NULL) {
         return sdk::SDK_RET_OOM;
     }

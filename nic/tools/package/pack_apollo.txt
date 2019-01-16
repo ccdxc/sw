@@ -4,6 +4,7 @@ nic/conf/*.json                                                   /nic/conf/
 nic/conf/*.ini                                                    /nic/conf/
 nic/conf/$PIPELINE/*.json                                         /nic/conf/$PIPELINE/
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_scale_test                /nic/bin/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE.so                /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_rxdma.so          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_txdma.so          /nic/lib/

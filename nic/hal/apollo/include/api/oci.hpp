@@ -19,20 +19,6 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
-// TODO: cleanup - not using these anywhere !!!
-/**
- * @brief    API status codes
- */
-typedef enum oci_status_e {
-    OCI_STAUS_OK,
-    OCI_STATUS_EXISTS,
-    OCI_STATUS_NOT_FOUND,
-    OCI_STATUS_OOM,
-    OCI_STATUS_INVALID_OPERATION,
-    OCI_STATUS_HW_PROGRAMMING_ERR,
-    OCI_STAUS_ERR,
-} oci_status_t;
-
 /**
  * @brief    invalid epoch
  */
