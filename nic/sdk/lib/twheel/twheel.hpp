@@ -16,25 +16,8 @@ using sdk::lib::slab;
 namespace sdk {
 namespace lib {
 
-#define TWHEEL_LOCK_SLICE(slice)                                       \
-{                                                                      \
-    if (thread_safe_) {                                                \
-        SDK_TRACE_ERR("Lock slice :%d", slice);                        \
-        SDK_SPINLOCK_LOCK(&twheel_[(slice)].slock_);                   \
-    }                                                                  \
-}
-
-#define TWHEEL_UNLOCK_SLICE(slice)                                     \
-{                                                                      \
-    if (thread_safe_) {                                                \
-        SDK_TRACE_ERR("Unlock slice :%d", slice);                      \
-        SDK_SPINLOCK_UNLOCK(&twheel_[(slice)].slock_);                 \
-    }                                                                  \
-}
-
 #define TWHEEL_DEFAULT_SLICE_DURATION    250      // in msecs
 #define TWHEEL_DEFAULT_DURATION          (2 * 60 * TIME_MSECS_PER_MIN) // 2 hrs
-#define TWHEEL_DEBUG                     0
 
 typedef void (*twheel_cb_t)(void *timer, uint32_t timer_id, void *ctxt);
 typedef struct twentry_s twentry_t;
@@ -100,7 +83,8 @@ private:
 private:
     twheel() {};
     ~twheel();
-    sdk_ret_t init(uint64_t slice_intvl, uint32_t wheel_duration, bool thread_safe);
+    sdk_ret_t init(uint64_t slice_intvl, uint32_t wheel_duration,
+                   bool thread_safe);
     void init_twentry_(twentry_t *twentry, uint32_t timer_id, uint64_t timeout,
                        bool periodic, void *ctxt, twheel_cb_t cb);
     void free_to_slab_(void *timer) {
@@ -111,9 +95,11 @@ private:
     // NOTE: this internal API is called under twheel slice lock
     inline void insert_timer_(twentry_t *twentry) {
     
-#if TWHEEL_DEBUG
-        SDK_TRACE_ERR("insert timer id: %d, timeout: %d, valid: %d, slice: %d, periodic: %d, twentry: %p",
-                      twentry->timer_id_, twentry->timeout_, twentry->valid_, twentry->slice_, twentry->periodic_, twentry);
+#if SDK_TWHEEL_DEBUG
+        SDK_TRACE_ERR("insert timer id : %d, timeout : %d, valid : %d, "
+                      "slice: %d, periodic: %d, twentry: %p",
+                      twentry->timer_id_, twentry->timeout_, twentry->valid_,
+                      twentry->slice_, twentry->periodic_, twentry);
 #endif
 	twentry_t *cur_entry = twheel_[twentry->slice_].slice_head_;
         twentry->next_ = cur_entry;
@@ -123,32 +109,38 @@ private:
         twheel_[twentry->slice_].slice_head_ = twentry;
         twentry->valid_ = TRUE;
         num_entries_++;
-        SDK_TRACE_ERR(" slice : %d, entry is : %p", twentry->slice_, twheel_[twentry->slice_].slice_head_);
+        SDK_TRACE_ERR(" slice : %d, entry is : %p", twentry->slice_,
+                      twheel_[twentry->slice_].slice_head_);
     }
     inline void unlink_timer_(twentry_t *twentry) {
         if (twentry == NULL) {
-#if TWHEEL_DEBUG
+#if SDK_TWHEEL_DEBUG
             SDK_TRACE_ERR("twentry null");
 #endif
             return;
         }
         
         if (twentry->next_) {
-#if TWHEEL_DEBUG
-            SDK_TRACE_ERR("next is not null next: %p, next_prev: %p prev: %p", twentry->next_, twentry->next_->prev_, twentry->prev_);
+#if SDK_TWHEEL_DEBUG
+            SDK_TRACE_ERR("next is not null next : %p, next_prev : %p "
+                          "prev : %p", twentry->next_, twentry->next_->prev_,
+                          twentry->prev_);
 #endif
             // removing last entry in the list
             twentry->next_->prev_ = twentry->prev_;
         }
         if (twentry->prev_ == NULL) {
             // removing the head of the list
-#if TWHEEL_DEBUG       
-            SDK_TRACE_ERR("prev is null in slice %d  slice_head %p t->n : %p", twentry->slice_, twheel_[twentry->slice_].slice_head_, twentry->next_);
+#if SDK_TWHEEL_DEBUG       
+            SDK_TRACE_ERR("prev is null in slice %d  slice_head %p t->n : %p",
+                          twentry->slice_, twheel_[twentry->slice_].slice_head_,
+                          twentry->next_);
 #endif
             twheel_[twentry->slice_].slice_head_ = twentry->next_;
         } else {
-#if TWHEEL_DEBUG            
-            SDK_TRACE_ERR("next is not null t->p->n : %p, t->n: %p ", twentry->prev_->next_, twentry->next_);
+#if SDK_TWHEEL_DEBUG            
+            SDK_TRACE_ERR("next is not null t->p->n : %p, t->n : %p ",
+                          twentry->prev_->next_, twentry->next_);
 #endif
             twentry->prev_->next_ = twentry->next_;
         } 
@@ -157,9 +149,10 @@ private:
 
     // NOTE: this internal API is called under twheel slice lock
     inline void remove_timer_(twentry_t *twentry) {
-#if TWHEEL_DEBUG
+#if SDK_TWHEEL_DEBUG
         SDK_TRACE_ERR("timer id: %d, timeout: %d, valid: %d, twentry: %p",
-                      twentry->timer_id_, twentry->timeout_, twentry->valid_, twentry);
+                      twentry->timer_id_, twentry->timeout_, twentry->valid_,
+                      twentry);
 #endif
 
         if (twentry->valid_ == FALSE) {
@@ -169,16 +162,7 @@ private:
         twentry->valid_ = FALSE;
     }
 
-    // NOTE: this internal API is called under twheel slice lock
-    inline void upd_timer_(twentry_t *twentry,
-                           uint64_t timeout, bool periodic) {
-        remove_timer_(twentry);
-        init_twentry_(twentry, twentry->timer_id_, timeout,
-                      periodic, twentry->ctxt_, twentry->cb_);
-        TWHEEL_LOCK_SLICE(twentry->slice_);
-        insert_timer_(twentry);
-        TWHEEL_UNLOCK_SLICE(twentry->slice_);
-    }
+    void upd_timer_(twentry_t *twentry, uint64_t timeout, bool periodic);
 };
 
 }    // namespace lib
