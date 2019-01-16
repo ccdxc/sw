@@ -10,6 +10,22 @@
 namespace sdk {
 namespace lib {
 
+#define TWHEEL_LOCK_SLICE(slice)                                       \
+{                                                                      \
+    if (thread_safe_) {                                                \
+        SDK_TRACE_ERR("Lock slice :%d", slice);                        \
+        SDK_SPINLOCK_LOCK(&twheel_[(slice)].slock_);                   \
+    }                                                                  \
+}
+
+#define TWHEEL_UNLOCK_SLICE(slice)                                     \
+{                                                                      \
+    if (thread_safe_) {                                                \
+        SDK_TRACE_ERR("Unlock slice :%d", slice);                      \
+        SDK_SPINLOCK_UNLOCK(&twheel_[(slice)].slock_);                 \
+    }                                                                  \
+}
+
 #define TWHEEL_DELAY_DELETE    2000    // 2 sec delay delete timeout
 
 //------------------------------------------------------------------------------
@@ -110,9 +126,9 @@ twheel::init_twentry_(twentry_t *twentry, uint32_t timer_id, uint64_t timeout,
 {
     uint32_t    rem, num_slices;
     
-#if TWHEEL_DEBUG
-    SDK_TRACE_ERR("init timer id: %d, timeout: %d, periodic: %d, twentry: %p",
-                      timer_id, timeout, periodic, twentry);
+#if SDK_TWHEEL_DEBUG
+    SDK_TRACE_ERR("init timer id : %u, timeout : %u, periodic : %d, "
+                  "twentry : %p", timer_id, timeout, periodic, twentry);
 #endif
 
     twentry->timer_id_ = timer_id;
@@ -132,6 +148,19 @@ twheel::init_twentry_(twentry_t *twentry, uint32_t timer_id, uint64_t timeout,
 }
 
 //------------------------------------------------------------------------------
+// NOTE: this internal API is called under twheel slice lock
+//------------------------------------------------------------------------------
+void
+twheel::upd_timer_(twentry_t *twentry, uint64_t timeout, bool periodic) {
+    remove_timer_(twentry);
+    init_twentry_(twentry, twentry->timer_id_, timeout,
+                  periodic, twentry->ctxt_, twentry->cb_);
+    TWHEEL_LOCK_SLICE(twentry->slice_);
+    insert_timer_(twentry);
+    TWHEEL_UNLOCK_SLICE(twentry->slice_);
+}
+
+//------------------------------------------------------------------------------
 // enqueue the timer for delay delete
 // NOTE: assumption here is that the timer entry is already removed from the
 //       timer wheel
@@ -141,8 +170,8 @@ twheel::init_twentry_(twentry_t *twentry, uint32_t timer_id, uint64_t timeout,
 void
 twheel::delay_delete_(twentry_t *twentry)
 {
-#if TWHEEL_DEBUG
-    SDK_TRACE_ERR("timer id: %d, timeout: %d, twentry: %p",
+#if SDK_TWHEEL_DEBUG
+    SDK_TRACE_ERR("timer id : %d, timeout : %d, twentry : %p",
                     twentry->timer_id_, twentry->timeout_, twentry);
 #endif
     init_twentry_(twentry, twentry->timer_id_,
@@ -166,9 +195,9 @@ twheel::add_timer(uint32_t timer_id, uint64_t timeout, void *ctxt,
     if (twentry == NULL) {
         return NULL;
     }
-#if TWHEEL_DEBUG
-    SDK_TRACE_ERR("added timer  id: %d, timeout: %d, periodic: %d, twentry: %p",
-                    timer_id, timeout, periodic, twentry);
+#if SDK_TWHEEL_DEBUG
+    SDK_TRACE_ERR("added timer id : %d, timeout : %d, periodic : %d, "
+                  "twentry : %p", timer_id, timeout, periodic, twentry);
 #endif
 
     init_twentry_(twentry, timer_id, timeout, periodic, ctxt, cb);
@@ -196,8 +225,9 @@ twheel::del_timer(void *timer)
     twentry = static_cast<twentry_t *>(timer);
     ctxt = twentry->ctxt_;
 #if THWEEL_DEBUG
-    SDK_TRACE_ERR("del timer  id: %d, timeout: %d, periodic: %d, twentry: %p",
-                  twentry->timer_id_, twentry->timeout_, twentry->periodic_, twentry);
+    SDK_TRACE_ERR("del timer id : %u, timeout : %u, periodic : %u, twentry: %p",
+                  twentry->timer_id_, twentry->timeout_, twentry->periodic_,
+                  twentry);
 #endif
     TWHEEL_LOCK_SLICE(slice = twentry->slice_);
     if (twentry->valid_ == TRUE) {    
@@ -300,24 +330,26 @@ twheel::tick(uint32_t msecs_elapsed)
     do {
         TWHEEL_LOCK_SLICE(curr_slice_);
         twentry = twheel_[curr_slice_].slice_head_;
-#if TWHEEL_DEBUG
-        SDK_TRACE_ERR("curr_slice_: %d", curr_slice_);
+#if SDK_TWHEEL_DEBUG
+        SDK_TRACE_ERR("curr_slice_ : %d", curr_slice_);
 #endif
         while (twentry) {
             if (twentry->valid_ == FALSE) {
                 // delay deleting memory for already freed timer
                 next_entry = twentry->next_;
-#if TWHEEL_DEBUG
-                SDK_TRACE_ERR("free to slab timer id: %d, timeout: %d, periodic: %d, twentry: %p",
-                             twentry->timer_id_, twentry->timeout_, twentry->periodic_, twentry);
+#if SDK_TWHEEL_DEBUG
+                SDK_TRACE_ERR("free to slab timer id : %d, timeout : %d, "
+                              "periodic : %d, twentry : %p", twentry->timer_id_,
+                              twentry->timeout_, twentry->periodic_, twentry);
 #endif
                 unlink_timer_(twentry);
                 free_to_slab_(twentry);
                 twentry = next_entry;
             } else {
                 if (twentry->nspins_) {
-#if TWHEEL_DEBUG
-                    SDK_TRACE_ERR("spin timer for timer id: %d, twentry: %p", twentry->timer_id_, twentry);
+#if SDK_TWHEEL_DEBUG
+                    SDK_TRACE_ERR("spin timer for timer id : %d, twentry : %p",
+                                  twentry->timer_id_, twentry);
 #endif
                     // revisit this after one more full spin
                     twentry->nspins_ -= 1;
@@ -326,9 +358,11 @@ twheel::tick(uint32_t msecs_elapsed)
                     // cache the next entry, in case callback function does
                     // something to this timer (it shouldn't ideally)
                     next_entry = twentry->next_;
-#if TWHEEL_DEBUG
-                    SDK_TRACE_ERR("calling the callback for timer id: %d , timeout: %d, periodic: %d, twentry: %p",
-                                  twentry->timer_id_, twentry->timeout_, twentry->periodic_, twentry);
+#if SDK_TWHEEL_DEBUG
+                    SDK_TRACE_ERR("calling the callback for timer id : %d , "
+                                  "timeout : %d, periodic : %d, twentry : %p",
+                                  twentry->timer_id_, twentry->timeout_,
+                                  twentry->periodic_, twentry);
 #endif
                     twentry->cb_(twentry, twentry->timer_id_,
                                  twentry->ctxt_);
@@ -338,22 +372,31 @@ twheel::tick(uint32_t msecs_elapsed)
                             // in the unlock-lock window, this timer got
                             // deleted, no need to reinsert (this is mostly
                             // sitting in the delay delete state)
-#if TWHEEL_DEBUG
-                            SDK_TRACE_ERR("upd timer for timer id: %d, twentry: %p", twentry->timer_id_, twentry);
+#if SDK_TWHEEL_DEBUG
+                            SDK_TRACE_ERR("upd timer for timer id : %d, "
+                                          "twentry : %p", twentry->timer_id_,
+                                          twentry);
 #endif
                             upd_timer_(twentry, twentry->timeout_, true);
                         }
                     } else {
                         if (twentry->valid_) {
                             // delete this timer, if its not already deleted
-#if TWHEEL_DEBUG
-                            SDK_TRACE_ERR("remove non periodic timer  id: %d, timeout: %d, periodic: %d, twentry: %p",
-                                         twentry->timer_id_, twentry->timeout_, twentry->periodic_, twentry);
+#if SDK_TWHEEL_DEBUG
+                            SDK_TRACE_ERR("remove non periodic timer id : %u, "
+                                          "timeout : %u, periodic : %u, "
+                                          "twentry : %p", twentry->timer_id_,
+                                          twentry->timeout_, twentry->periodic_,
+                                          twentry);
 #endif
                             remove_timer_(twentry);
-#if TWHEEL_DEBUG
-                            SDK_TRACE_ERR("add to delay del timer id: %d, timeout: %d, periodic: %d, twentry: %p next entry: %p",
-                              twentry->timer_id_, twentry->timeout_, twentry->periodic_, twentry, next_entry);
+#if SDK_TWHEEL_DEBUG
+                            SDK_TRACE_ERR("add to delay del timer id : %u, "
+                                          "timeout : %u, periodic : %u, "
+                                          "twentry : %p next entry : %p",
+                                          twentry->timer_id_, twentry->timeout_,
+                                          twentry->periodic_, twentry,
+                                          next_entry);
 #endif
                             delay_delete_(twentry);
                         }

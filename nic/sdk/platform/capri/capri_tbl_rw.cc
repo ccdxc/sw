@@ -139,8 +139,6 @@ static capri_tcam_shadow_mem_t *g_shadow_tcam_p4[2];
 static capri_sram_shadow_mem_t *g_shadow_sram_rxdma;
 static capri_sram_shadow_mem_t *g_shadow_sram_txdma;
 
-static void capri_debug_hbm_reset(void);
-
 static capri_sram_shadow_mem_t *
 get_sram_shadow_for_table (uint32_t tableid, int gress)
 {
@@ -839,7 +837,6 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     hbm_mem_base_addr = get_mem_addr(MEM_REGION_P4_PROGRAM_NAME);
 
     capri_mpu_icache_invalidate();
-    capri_debug_hbm_reset();
 
     /* Initialize tcam memories */
     capri_tcam_memory_init(capri_cfg);
@@ -1690,57 +1687,6 @@ capri_set_table_txdma_asm_base (int tableid,
     capri_table_txdma_asm_base[lcl_tableid] = asm_base;
     return;
 }
-
-#if 0
-static void
-capri_debug_hbm_read (void)
-{
-    sdk_ret_t ret = sdk::SDK_RET_OK;
-    uint64_t start_addr = get_mem_addr("mpu-debug");
-    uint64_t count = (get_mem_size_kb("mpu-debug") << 10) >> 3;
-    uint64_t addr;
-    uint64_t data;
-
-    SDK_TRACE_DEBUG("------------------ READ HBM START -----------");
-    for (uint64_t i = 0; i < count; i++) {
-        addr = (start_addr + (i<<3)) & 0xffffffff8;
-        ret = sdk::asic::asic_mem_read(addr, (uint8_t *)&data, sizeof(data));
-        if (ret != sdk::SDK_RET_OK) {
-            SDK_TRACE_DEBUG("ERROR reading {:#x} ret {} ", i, ret);
-            continue;
-        }
-        if (data != 0xabababababababab) {
-            SDK_TRACE_DEBUG("addr {:#x}, data {:#x}", i, data);
-        }
-    }
-    SDK_TRACE_DEBUG("------------------ READ HBM END -----------");
-}
-#endif
-
-static void
-capri_debug_hbm_reset (void)
-{
-    sdk_ret_t ret = sdk::SDK_RET_OK;
-    uint64_t start_addr = get_mem_addr("mpu-debug");
-    uint64_t count = (get_mem_size_kb("mpu-debug") << 10) >> 3;
-    uint64_t addr;
-    uint64_t data = 0xabababababababab;
-
-    SDK_ASSERT(start_addr == get_mem_addr("mpu-debug"));
-
-    SDK_TRACE_DEBUG("------------------ RESET HBM START -----------");
-    for (uint64_t i = 0; i < count; i++) {
-        addr = (start_addr + (i<<3)) & 0xffffffff8;
-        ret = sdk::asic::asic_mem_write(addr, (uint8_t *)&data, sizeof(data));
-        if (ret != sdk::SDK_RET_OK) {
-            SDK_TRACE_DEBUG("ERROR writing %llx ret %d ", i, ret);
-            continue;
-        }
-        SDK_TRACE_DEBUG("addr %llx, data %llx", i, data);
-    }
-    SDK_TRACE_DEBUG("------------------ RESET HBM END -----------");
-}
-
 
 vector < tuple < string, string, string >>
 asic_csr_dump_reg (char *block_name, bool exclude_mem)
