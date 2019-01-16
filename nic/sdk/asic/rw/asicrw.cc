@@ -65,7 +65,7 @@ static sdk_ret_t
 asic_do_read (thread *curr_thread, uint8_t opn, uint64_t addr,
               uint8_t *data, uint32_t len)
 {
-    uint16_t          pindx;
+    uint16_t          pindx = 0;
     asicrw_entry_t    *rw_entry;
     uint32_t          qid = curr_thread->thread_id();
 
