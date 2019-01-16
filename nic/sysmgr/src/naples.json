@@ -20,7 +20,7 @@
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "netagent",
-    "command": "/nic/bin/netagent -datapath hal -hostif lo",
+    "command": "/nic/bin/netagent -datapath hal",
     "dependencies": ["delphi", "hal"],
     "flags": ["no_watchdog", "non_critical"]
 }, {
