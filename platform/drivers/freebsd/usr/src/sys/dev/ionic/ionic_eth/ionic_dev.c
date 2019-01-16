@@ -165,6 +165,16 @@ void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
+void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index)
+{
+	union dev_cmd cmd = {
+		.lif_init.opcode = CMD_OPCODE_LIF_RESET,
+		.lif_init.index = index,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
 char *ionic_dev_asic_name(u8 asic_type)
 {
 	switch (asic_type) {

@@ -1835,6 +1835,14 @@ static void ionic_lif_rxqs_deinit(struct lif *lif)
 	}
 }
 
+static void ionic_lif_reset(struct lif *lif)
+{
+	struct ionic_dev *idev = &lif->ionic->idev;
+
+	ionic_dev_cmd_lif_reset(idev, lif->index);
+	ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
+}
+
 static void ionic_lif_deinit(struct lif *lif)
 {
 	ionic_lif_stats_dump_stop(lif);
@@ -1866,7 +1874,8 @@ static void ionic_lif_deinit(struct lif *lif)
 	ionic_lif_rxqs_deinit(lif);
 	ionic_lif_notifyq_deinit(lif);
 	ionic_lif_adminq_deinit(lif);
-	/* XXX: Do LIF deinit. */
+
+	ionic_lif_reset(lif);
 }
 
 void ionic_lifs_deinit(struct ionic *ionic)
