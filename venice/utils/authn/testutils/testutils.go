@@ -284,12 +284,12 @@ func MustDeleteTenant(apicl apiclient.Services, tenant string) {
 }
 
 // CreateRole creates a role
-func CreateRole(apicl apiclient.Services, name, tenant string, permissions ...auth.Permission) (*auth.Role, error) {
+func CreateRole(ctx context.Context, apicl apiclient.Services, name, tenant string, permissions ...auth.Permission) (*auth.Role, error) {
 	role := login.NewRole(name, tenant, permissions...)
 	var err error
 	var createdRole *auth.Role
 	if !testutils.CheckEventually(func() (bool, interface{}) {
-		createdRole, err = apicl.AuthV1().Role().Create(context.Background(), role)
+		createdRole, err = apicl.AuthV1().Role().Create(ctx, role)
 		if err == nil {
 			return true, nil
 		}
@@ -303,7 +303,16 @@ func CreateRole(apicl apiclient.Services, name, tenant string, permissions ...au
 
 // MustCreateRole creates a role and panics if fails
 func MustCreateRole(apicl apiclient.Services, name, tenant string, permissions ...auth.Permission) *auth.Role {
-	role, err := CreateRole(apicl, name, tenant, permissions...)
+	role, err := CreateRole(context.TODO(), apicl, name, tenant, permissions...)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in CreateRole", err))
+	}
+	return role
+}
+
+// MustCreateRoleWithCtx creates a role and panics if fails
+func MustCreateRoleWithCtx(ctx context.Context, apicl apiclient.Services, name, tenant string, permissions ...auth.Permission) *auth.Role {
+	role, err := CreateRole(ctx, apicl, name, tenant, permissions...)
 	if err != nil {
 		panic(fmt.Sprintf("error %s in CreateRole", err))
 	}
@@ -325,7 +334,7 @@ func MustDeleteRole(apicl apiclient.Services, name, tenant string) {
 }
 
 // CreateRoleBinding creates a role binding
-func CreateRoleBinding(apicl apiclient.Services, name, tenant, roleName string, users, groups []string) (*auth.RoleBinding, error) {
+func CreateRoleBinding(ctx context.Context, apicl apiclient.Services, name, tenant, roleName string, users, groups []string) (*auth.RoleBinding, error) {
 	// TODO: use func from rbac utils
 	roleBinding := &auth.RoleBinding{
 		TypeMeta: api.TypeMeta{Kind: string(auth.KindRoleBinding)},
@@ -342,7 +351,7 @@ func CreateRoleBinding(apicl apiclient.Services, name, tenant, roleName string, 
 	var err error
 	var createdRoleBinding *auth.RoleBinding
 	if !testutils.CheckEventually(func() (bool, interface{}) {
-		createdRoleBinding, err = apicl.AuthV1().RoleBinding().Create(context.Background(), roleBinding)
+		createdRoleBinding, err = apicl.AuthV1().RoleBinding().Create(ctx, roleBinding)
 		// 409 is returned when role binding already exists. 401 when auth is already bootstrapped.
 		if err == nil || strings.HasPrefix(err.Error(), "Status:(409)") || strings.HasPrefix(err.Error(), "Status:(401)") {
 			return true, nil
@@ -357,9 +366,18 @@ func CreateRoleBinding(apicl apiclient.Services, name, tenant, roleName string, 
 
 // MustCreateRoleBinding creates a role binding and panics if fails
 func MustCreateRoleBinding(apicl apiclient.Services, name, tenant, roleName string, users, groups []string) *auth.RoleBinding {
-	roleBinding, err := CreateRoleBinding(apicl, name, tenant, roleName, users, groups)
+	roleBinding, err := CreateRoleBinding(context.TODO(), apicl, name, tenant, roleName, users, groups)
 	if err != nil {
 		panic(fmt.Sprintf("error %s in CreateRoleBinding", err))
+	}
+	return roleBinding
+}
+
+// MustCreateRoleBindingWithCtx creates a role binding and panics if fails
+func MustCreateRoleBindingWithCtx(ctx context.Context, apicl apiclient.Services, name, tenant, roleName string, users, groups []string) *auth.RoleBinding {
+	roleBinding, err := CreateRoleBinding(ctx, apicl, name, tenant, roleName, users, groups)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in CreateRoleBindingWithCtx", err))
 	}
 	return roleBinding
 }

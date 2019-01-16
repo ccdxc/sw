@@ -125,70 +125,10 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 			err: false,
 		},
 		{
-			name: "when creating role binding",
-			in:   testNetworkAdminRoleBinding,
-			expectedOperations: []authz.Operation{
-				authz.NewOperation(authz.NewResource("testTenant",
-					string(apiclient.GroupNetwork),
-					string(network.KindNetwork),
-					authz.ResourceNamespaceAll, "network1"),
-					auth.Permission_Create.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
-					string(apiclient.GroupNetwork),
-					string(network.KindNetwork),
-					authz.ResourceNamespaceAll, "network2"),
-					auth.Permission_Create.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
-					string(apiclient.GroupNetwork),
-					string(network.KindNetwork),
-					authz.ResourceNamespaceAll, "network1"),
-					auth.Permission_Update.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
-					string(apiclient.GroupNetwork),
-					string(network.KindNetwork),
-					authz.ResourceNamespaceAll, "network2"),
-					auth.Permission_Update.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
-					string(apiclient.GroupNetwork),
-					string(network.KindNetwork),
-					authz.ResourceNamespaceAll, "network1"),
-					auth.Permission_Delete.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
-					string(apiclient.GroupNetwork),
-					string(network.KindNetwork),
-					authz.ResourceNamespaceAll, "network2"),
-					auth.Permission_Delete.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
-					string(apiclient.GroupNetwork),
-					string(network.KindLbPolicy),
-					authz.ResourceNamespaceAll, ""),
-					auth.Permission_Create.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
-					string(apiclient.GroupNetwork),
-					string(network.KindLbPolicy),
-					authz.ResourceNamespaceAll, ""),
-					auth.Permission_Update.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
-					string(apiclient.GroupNetwork),
-					string(network.KindLbPolicy),
-					authz.ResourceNamespaceAll, ""),
-					auth.Permission_Delete.String()),
-			},
-			out: testNetworkAdminRoleBinding,
-			err: false,
-		},
-		{
 			name:               "incorrect object type",
 			in:                 struct{ name string }{"testing"},
 			expectedOperations: nil,
 			out:                struct{ name string }{"testing"},
-			err:                true,
-		},
-		{
-			name:               "incorrect role name in role binding",
-			in:                 login.NewRoleBinding("IncorrectRoleBinding", "testTenant", "incorrectRoleName", "testUser", ""),
-			expectedOperations: nil,
-			out:                login.NewRoleBinding("IncorrectRoleBinding", "testTenant", "incorrectRoleName", "testUser", ""),
 			err:                true,
 		},
 	}
@@ -219,8 +159,6 @@ func TestAuthzRegistration(t *testing.T) {
 	ids := []serviceID{
 		{"Role", apiserver.CreateOper},
 		{"Role", apiserver.UpdateOper},
-		{"RoleBinding", apiserver.CreateOper},
-		{"RoleBinding", apiserver.UpdateOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
@@ -944,4 +882,92 @@ func TestAddOwnerHookRegistration(t *testing.T) {
 	svc = mocks.NewFakeAPIGwService(l, true)
 	err = r.registerAddOwnerHook(svc)
 	Assert(t, err != nil, "expected error in addOwner hook registration")
+}
+
+func TestAuthUserContext(t *testing.T) {
+	tests := []struct {
+		name     string
+		user     *auth.User
+		in       interface{}
+		out      interface{}
+		skipCall bool
+		err      bool
+	}{
+		{
+			name: "successful auth user context creation",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			in:       &auth.RoleBinding{},
+			out:      &auth.RoleBinding{},
+			skipCall: false,
+			err:      false,
+		},
+		{
+			name: "invalid object",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			in:       &struct{ name string }{name: "invalid object type"},
+			out:      &struct{ name string }{name: "invalid object type"},
+			skipCall: true,
+			err:      true,
+		},
+	}
+	r := &authHooks{}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	r.logger = log.GetNewLogger(logConfig)
+	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testNetworkAdminRole}, []*auth.RoleBinding{testNetworkAdminRoleBinding}, nil, nil)
+	for _, test := range tests {
+		nctx := apigwpkg.NewContextWithUser(context.TODO(), test.user)
+		nctx, out, skipCall, err := r.userContext(nctx, test.in)
+		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
+		Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out),
+			fmt.Sprintf("[%s] test failed, expected returned object [%v], got [%v]", test.name, test.out, out))
+	}
+}
+
+func TestAuthUserContextHookRegistration(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(l, false)
+	r := &authHooks{}
+	r.logger = l
+	err := r.registerUserContextHook(svc)
+	AssertOk(t, err, "userContext hook registration failed")
+
+	ids := []serviceID{
+		{"RoleBinding", apiserver.CreateOper},
+		{"RoleBinding", apiserver.UpdateOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
+		AssertOk(t, err, "error getting service profile for [%s] [%s]", id.kind, id.action)
+		Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre-call hooks [%d] for [%s] [%s] profile", len(prof.PreCallHooks()), id.kind, id.action))
+	}
+	// test error
+	svc = mocks.NewFakeAPIGwService(l, true)
+	err = r.registerUserContextHook(svc)
+	Assert(t, err != nil, "expected error in userContext hook registration")
 }

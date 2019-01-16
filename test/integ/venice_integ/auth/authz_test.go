@@ -6,14 +6,15 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 
-	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/network"
 	. "github.com/pensando/sw/test/utils"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -378,4 +379,64 @@ func TestUserSelfOperations(t *testing.T) {
 	}, "unable to reset password")
 	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: "testUser2", Password: user.Spec.Password, Tenant: testTenant})
 	AssertOk(t, err, "unable to get logged in context with new reset password")
+}
+
+func TestCommitBuffer(t *testing.T) {
+	// setup auth
+	// create staging buffer
+	// stage role
+	// stage role binding
+	// commit buffer
+	// get role, rolebinding
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+
+	ctx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "error creating logged in context")
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.StagingV1().Buffer().Create(ctx, &staging.Buffer{ObjectMeta: api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant}})
+		return err == nil, nil
+	}, fmt.Sprintf("unable to create staging buffer, err: %v", err))
+	defer tinfo.restcl.StagingV1().Buffer().Delete(ctx, &api.ObjectMeta{Name: "TestBuffer", Tenant: globals.DefaultTenant})
+	stagecl, err := apiclient.NewStagedRestAPIClient(tinfo.apiGwAddr, "TestBuffer")
+	AssertOk(t, err, "error creating staging client")
+	defer stagecl.Close()
+	MustCreateRoleWithCtx(ctx, stagecl, "NetworkAdminRole", globals.DefaultTenant, login.NewPermission(
+		globals.DefaultTenant,
+		string(apiclient.GroupNetwork),
+		string(network.KindNetwork),
+		authz.ResourceNamespaceAll,
+		"",
+		auth.Permission_AllActions.String()),
+		login.NewPermission(
+			globals.DefaultTenant,
+			string(apiclient.GroupAuth),
+			authz.ResourceKindAll,
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String()))
+	MustCreateRoleBindingWithCtx(ctx, stagecl, "NetworkAdminRoleBinding", globals.DefaultTenant, "NetworkAdminRole", []string{testUser}, nil)
+	ca := staging.CommitAction{}
+	ca.Name = "TestBuffer"
+	ca.Tenant = globals.DefaultTenant
+	_, err = tinfo.restcl.StagingV1().Buffer().Commit(ctx, &ca)
+	AssertOk(t, err, "unable to commit staging buffer")
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.AuthV1().Role().Get(ctx, &api.ObjectMeta{Name: "NetworkAdminRole", Tenant: globals.DefaultTenant})
+		return err == nil, nil
+	}, fmt.Sprintf("error retrieving role: %v", err))
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.AuthV1().RoleBinding().Get(ctx, &api.ObjectMeta{Name: "NetworkAdminRoleBinding", Tenant: globals.DefaultTenant})
+		return err == nil, nil
+	}, fmt.Sprintf("error retrieving role binding: %v", err))
+	MustDeleteRoleBinding(tinfo.apicl, "NetworkAdminRoleBinding", globals.DefaultTenant)
+	MustDeleteRole(tinfo.apicl, "NetworkAdminRole", globals.DefaultTenant)
 }

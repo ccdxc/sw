@@ -2,22 +2,34 @@ package impl
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"fmt"
+	"net"
 	"reflect"
 	"sort"
 	"testing"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/password"
 	"github.com/pensando/sw/venice/utils/authz"
+	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
+	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/ctxutils"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -895,6 +907,274 @@ func TestResetPassword(t *testing.T) {
 				fmt.Sprintf("[%v] test failed, reset password [%s] is not different than old password [%s]", test.name, user.Spec.Password, test.existing.Spec.Password))
 		}
 		kvs.Delete(ctx, userKey, nil)
+	}
+}
+
+func TestPrivilegeEscalationCheck(t *testing.T) {
+	tests := []struct {
+		name         string
+		ctx          context.Context
+		in           interface{}
+		role         *auth.Role
+		user         *auth.User
+		allowedPerms []auth.Permission
+		result       bool
+		err          error
+	}{
+		{
+			name: "incorrect object type",
+			ctx:  context.TODO(),
+			in:   struct{ name string }{"testing"},
+			role: login.NewRole("TestRole", globals.DefaultTenant,
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					string(security.KindSGPolicy),
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String())),
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: globals.DefaultTenant,
+					Name:   "TestUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			allowedPerms: []auth.Permission{
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					authz.ResourceKindAll,
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String()),
+			},
+			result: false,
+			err:    errInvalidInputType,
+		},
+		{
+			name: "valid case",
+			in:   *login.NewRoleBinding("TestRoleBinding", globals.DefaultTenant, "TestRole", "TestUser", ""),
+			role: login.NewRole("TestRole", globals.DefaultTenant,
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					string(security.KindSGPolicy),
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String())),
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: globals.DefaultTenant,
+					Name:   "TestUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			allowedPerms: []auth.Permission{
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					authz.ResourceKindAll,
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String()),
+			},
+			result: true,
+			err:    nil,
+		},
+		{
+			name: "privilege escalation",
+			in:   *login.NewRoleBinding("TestRoleBinding", globals.DefaultTenant, "TestRole", "TestUser", ""),
+			role: login.NewRole("TestRole", globals.DefaultTenant,
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					authz.ResourceKindAll,
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String())),
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: globals.DefaultTenant,
+					Name:   "TestUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			allowedPerms: []auth.Permission{
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					string(security.KindSGPolicy),
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String()),
+			},
+			result: false,
+			err:    status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")),
+		},
+		{
+			name: "no user in context",
+			in:   *login.NewRoleBinding("TestRoleBinding", globals.DefaultTenant, "TestRole", "TestUser", ""),
+			role: login.NewRole("TestRole", globals.DefaultTenant,
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					string(security.KindSGPolicy),
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String())),
+			user: nil,
+			allowedPerms: []auth.Permission{
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					authz.ResourceKindAll,
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String()),
+			},
+			result: false,
+			err:    status.Errorf(codes.Internal, "no user in context"),
+		},
+		{
+			name: "no permissions",
+			in:   *login.NewRoleBinding("TestRoleBinding", globals.DefaultTenant, "TestRole", "TestUser", ""),
+			role: login.NewRole("TestRole", globals.DefaultTenant,
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					string(security.KindSGPolicy),
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String())),
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: globals.DefaultTenant,
+					Name:   "TestUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			allowedPerms: []auth.Permission{},
+			result:       false,
+			err:          status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")),
+		},
+		{
+			name: "nil permissions",
+			in:   *login.NewRoleBinding("TestRoleBinding", globals.DefaultTenant, "TestRole", "TestUser", ""),
+			role: login.NewRole("TestRole", globals.DefaultTenant,
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					string(security.KindSGPolicy),
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String())),
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: globals.DefaultTenant,
+					Name:   "TestUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			allowedPerms: nil,
+			result:       false,
+			err:          status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", globals.DefaultTenant, "TestRoleBinding")),
+		},
+		{
+			name: "non existent role",
+			in:   *login.NewRoleBinding("TestRoleBinding", globals.DefaultTenant, "TestRole", "TestUser", ""),
+			role: login.NewRole("TestRole1", globals.DefaultTenant,
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					string(security.KindSGPolicy),
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String())),
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: globals.DefaultTenant,
+					Name:   "TestUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			allowedPerms: []auth.Permission{
+				login.NewPermission(globals.DefaultTenant,
+					string(apiclient.GroupSecurity),
+					authz.ResourceKindAll,
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String()),
+			},
+			result: false,
+			err:    kvstore.NewKeyNotFoundError("/venice/config/auth/roles/default/TestRole", 0),
+		},
+	}
+	r := authHooks{}
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	logConfig.Filter = log.AllowAllFilter
+	r.logger = log.GetNewLogger(logConfig)
+	addr := &net.IPAddr{
+		IP: net.ParseIP("1.2.3.4"),
+	}
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("error generating key: %v", err)
+	}
+	cert, err := certs.SelfSign(globals.APIGw, privateKey, certs.WithValidityDays(1))
+	if err != nil {
+		t.Fatalf("error generating certificate: %v", err)
+	}
+	ctx := ctxutils.MakeMockContext(addr, cert)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore: %v", err)
+	}
+	cluster := &cluster.Cluster{Status: cluster.ClusterStatus{AuthBootstrapped: true}}
+	err = kvs.Create(ctx, cluster.MakeKey("cluster"), cluster)
+	if err != nil {
+		t.Fatalf("error populating cluster obj in kvstore: %v", err)
+	}
+	for _, test := range tests {
+		nctx, err := authzgrpcctx.NewIncomingContextWithUserPerms(ctx, test.user, test.allowedPerms)
+		err = kvs.Create(nctx, test.role.MakeKey("auth"), test.role)
+		if err != nil {
+			t.Fatalf("error creating test role [%#v]in kvstore: %v", test.role, err)
+		}
+		_, ok, err := r.privilegeEscalationCheck(nctx, kvs, nil, "", apiserver.CreateOper, false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
+		kvs.Delete(nctx, test.role.MakeKey("auth"), nil)
 	}
 }
 

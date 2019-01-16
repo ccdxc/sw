@@ -42,7 +42,7 @@ func NewAuthorizer(ctx context.Context) (authz.Authorizer, error) {
 		ObjectMeta: *userMeta,
 	}
 	perms, ok, err := grpcctx.PermsFromIncomingContext(ctx)
-	if !ok || err != nil {
+	if err != nil {
 		return nil, err
 	}
 	return &authorizer{ctx: ctx, authorizer: rbac.NewUserAuthorizer(perms), user: user}, nil

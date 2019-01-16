@@ -134,7 +134,9 @@ func (tInfo *tInfo) teardown() {
 }
 
 func TestMain(m *testing.M) {
-	l := log.WithContext("module", "AuthIntegTest")
+	config := log.GetDefaultConfig("AuthIntegTest")
+	config.Filter = log.AllowAllFilter
+	l := log.GetNewLogger(config)
 	tinfo.l = l
 	tinfo.mockResolver = mockresolver.New()
 	grpclog.SetLogger(l)

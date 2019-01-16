@@ -8,14 +8,21 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn"
 	"github.com/pensando/sw/venice/utils/authn/password"
+	authzgrpc "github.com/pensando/sw/venice/utils/authz/grpc"
+	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -312,6 +319,52 @@ func (s *authHooks) validateRolePerms(i interface{}, ver string, ignStatus bool)
 	return errs
 }
 
+// privilegeEscalationCheck is a pre-commit hook to check if user is trying to escalate his privileges while creating or updating role binding
+func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	s.logger.DebugLog("msg", "AuthHook called to check privilege escalation")
+	r, ok := i.(auth.RoleBinding)
+	if !ok {
+		return i, false, errInvalidInputType
+	}
+	cluster := &cluster.Cluster{}
+	if err := kv.Get(ctx, cluster.MakeKey("cluster"), cluster); err != nil {
+		s.logger.ErrorLog("method", "privilegeEscalationCheck",
+			"msg", "error getting cluster with key",
+			"error", err)
+		return i, false, err
+	}
+	// check authorization only if request is coming from API Gateway and auth has been bootstrapped
+	if ctxutils.GetPeerID(ctx) == globals.APIGw && cluster.Status.AuthBootstrapped {
+		role := &auth.Role{ObjectMeta: api.ObjectMeta{Name: r.Spec.Role, Tenant: r.Tenant}}
+		roleKey := role.MakeKey("auth")
+		if err := kv.Get(ctx, roleKey, role); err != nil {
+			s.logger.ErrorLog("method", "privilegeEscalationCheck",
+				"msg", fmt.Sprintf("error getting role with key [%s]", roleKey),
+				"error", err)
+			return i, false, err
+		}
+		userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
+		if !ok {
+			s.logger.ErrorLog("method", "privilegeEscalationCheck", "msg", "no user in grpc metadata")
+			return i, false, status.Errorf(codes.Internal, "no user in context")
+		}
+		user := &auth.User{ObjectMeta: *userMeta}
+		// check if user is authorized to create the role binding
+		authorizer, err := authzgrpc.NewAuthorizer(ctx)
+		if err != nil {
+			s.logger.ErrorLog("method", "privilegeEscalationCheck", "msg", "error creating grpc authorizer", "error", err)
+			return i, false, status.Error(codes.Internal, err.Error())
+		}
+		ops := login.GetOperationsFromPermissions(role.Spec.Permissions)
+		ok, _ = authorizer.IsAuthorized(user, ops...)
+		if !ok {
+			return i, false, status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", r.GetTenant(), r.GetName()))
+		}
+		s.logger.InfoLog("method", "privilegeEscalationCheck", "msg", "success")
+	}
+	return i, true, nil
+}
+
 func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	r := authHooks{}
 	r.logger = logger.WithContext("Service", "AuthHooks")
@@ -322,6 +375,8 @@ func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("AuthenticationPolicy", apiserver.UpdateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("Role", apiserver.CreateOper).GetRequestType().WithValidate(r.validateRolePerms)
 	svc.GetCrudService("Role", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateRolePerms)
+	svc.GetCrudService("RoleBinding", apiserver.CreateOper).WithPreCommitHook(r.privilegeEscalationCheck)
+	svc.GetCrudService("RoleBinding", apiserver.UpdateOper).WithPreCommitHook(r.privilegeEscalationCheck)
 	// hook to change password
 	svc.GetMethod("PasswordChange").WithPreCommitHook(r.changePassword)
 	// hook to reset password

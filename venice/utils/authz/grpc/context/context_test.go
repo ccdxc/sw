@@ -61,15 +61,153 @@ func TestUserMetaFromIncomingContext(t *testing.T) {
 
 func TestNewOutgoingContextWithUserPerms(t *testing.T) {
 	tests := []struct {
+		name string
+		ctx  context.Context
+		user *auth.User
+		err  error
+	}{
+		{
+			name: "existing metadata",
+			ctx:  metadata.NewOutgoingContext(context.TODO(), metadata.Pairs("testkey", "testval")),
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "nil user",
+			ctx:  metadata.NewOutgoingContext(context.TODO(), metadata.Pairs("testkey", "testval")),
+			user: nil,
+			err:  errors.New("no user specified"),
+		},
+	}
+	perms := []auth.Permission{
+		login.NewPermission(
+			"testTenant",
+			"",
+			auth.Permission_Search.String(),
+			"",
+			"",
+			auth.Permission_Read.String()),
+		login.NewPermission(
+			"testTenant",
+			string(apiclient.GroupSecurity),
+			string(security.KindSGPolicy),
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String()),
+	}
+	for _, test := range tests {
+		ctx, err := NewOutgoingContextWithUserPerms(test.ctx, test.user, perms)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
+		if err == nil {
+			md, ok := metadata.FromOutgoingContext(ctx)
+			Assert(t, ok, fmt.Sprintf("[%s] test failed, no metadata in outgoing context", test.name))
+			usernames, ok := md[usernameKey]
+			Assert(t, ok == (test.user != nil && test.user.Name != ""), fmt.Sprintf("[%s] test failed, unexpected usernames [%v] in md", test.name, usernames))
+			Assert(t, !ok || (len(usernames) == 1 && test.user.Name == usernames[0]), fmt.Sprintf("[%s] test failed, expected username [%s], got [%v] in md", test.name, test.user.Name, usernames))
+			tenants, ok := md[userTenantKey]
+			Assert(t, ok == (test.user != nil && test.user.Tenant != ""), fmt.Sprintf("[%s] test failed, unexpected user tenant [%v] in md", test.name, tenants))
+			Assert(t, !ok || (len(tenants) == 1 && test.user.Tenant == tenants[0]), fmt.Sprintf("[%s] test failed, expected user tenant [%s], got [%v] in md", test.name, test.user.Tenant, tenants))
+			perms, ok := md[permsKey]
+			Assert(t, ok == (perms != nil), fmt.Sprintf("[%s] test failed, unexpected perms", test.name))
+			Assert(t, len(perms) == len(perms), fmt.Sprintf("[%s] test failed, unexpected perms: %v", test.name, perms))
+			vals, ok := md["testkey"]
+			Assert(t, ok, fmt.Sprintf("[%s] test failed, missing test values in md: %#v", test.name, md))
+			Assert(t, !ok || (len(vals) == 1 && vals[0] == "testval"), fmt.Sprintf("[%s] test failed, expected test value [%s], got [%v] in md", test.name, "testval", vals[0]))
+		}
+	}
+}
+
+func TestNewIncomingContextWithUserPerms(t *testing.T) {
+	tests := []struct {
+		name string
+		ctx  context.Context
+		user *auth.User
+		err  error
+	}{
+		{
+			name: "existing metadata",
+			ctx:  metadata.NewIncomingContext(context.TODO(), metadata.Pairs("testkey", "testval")),
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "nil user",
+			ctx:  metadata.NewIncomingContext(context.TODO(), metadata.Pairs("testkey", "testval")),
+			user: nil,
+			err:  errors.New("no user specified"),
+		},
+	}
+	perms := []auth.Permission{
+		login.NewPermission(
+			"testTenant",
+			"",
+			auth.Permission_Search.String(),
+			"",
+			"",
+			auth.Permission_Read.String()),
+		login.NewPermission(
+			"testTenant",
+			string(apiclient.GroupSecurity),
+			string(security.KindSGPolicy),
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String()),
+	}
+	for _, test := range tests {
+		ctx, err := NewIncomingContextWithUserPerms(test.ctx, test.user, perms)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
+		if err == nil {
+			md, ok := metadata.FromIncomingContext(ctx)
+			Assert(t, ok, fmt.Sprintf("[%s] test failed, no metadata in incoming context", test.name))
+			usernames, ok := md[usernameKey]
+			Assert(t, ok == (test.user != nil && test.user.Name != ""), fmt.Sprintf("[%s] test failed, unexpected usernames [%v] in md", test.name, usernames))
+			Assert(t, !ok || (len(usernames) == 1 && test.user.Name == usernames[0]), fmt.Sprintf("[%s] test failed, expected username [%s], got [%v] in md", test.name, test.user.Name, usernames))
+			tenants, ok := md[userTenantKey]
+			Assert(t, ok == (test.user != nil && test.user.Tenant != ""), fmt.Sprintf("[%s] test failed, unexpected user tenant [%v] in md", test.name, tenants))
+			Assert(t, !ok || (len(tenants) == 1 && test.user.Tenant == tenants[0]), fmt.Sprintf("[%s] test failed, expected user tenant [%s], got [%v] in md", test.name, test.user.Tenant, tenants))
+			perms, ok := md[permsKey]
+			Assert(t, ok == (perms != nil), fmt.Sprintf("[%s] test failed, unexpected perms", test.name))
+			Assert(t, len(perms) == len(perms), fmt.Sprintf("[%s] test failed, unexpected perms: %v", test.name, perms))
+			vals, ok := md["testkey"]
+			Assert(t, ok, fmt.Sprintf("[%s] test failed, missing test values in md: %#v", test.name, md))
+			Assert(t, !ok || (len(vals) == 1 && vals[0] == "testval"), fmt.Sprintf("[%s] test failed, expected test value [%s], got [%v] in md", test.name, "testval", vals[0]))
+		}
+	}
+}
+
+func TestPopulateMetadataWithUserPerms(t *testing.T) {
+	tests := []struct {
 		name  string
-		ctx   context.Context
 		user  *auth.User
 		perms []auth.Permission
 		err   error
 	}{
 		{
 			name: "no metadata",
-			ctx:  context.TODO(),
 			user: &auth.User{
 				TypeMeta: api.TypeMeta{Kind: "User"},
 				ObjectMeta: api.ObjectMeta{
@@ -103,7 +241,6 @@ func TestNewOutgoingContextWithUserPerms(t *testing.T) {
 		},
 		{
 			name: "nil user",
-			ctx:  context.TODO(),
 			user: nil,
 			perms: []auth.Permission{
 				login.NewPermission(
@@ -125,7 +262,6 @@ func TestNewOutgoingContextWithUserPerms(t *testing.T) {
 		},
 		{
 			name: "empty tenant",
-			ctx:  context.TODO(),
 			user: &auth.User{
 				TypeMeta: api.TypeMeta{Kind: "User"},
 				ObjectMeta: api.ObjectMeta{
@@ -159,7 +295,6 @@ func TestNewOutgoingContextWithUserPerms(t *testing.T) {
 		},
 		{
 			name: "empty username",
-			ctx:  context.TODO(),
 			user: &auth.User{
 				TypeMeta: api.TypeMeta{Kind: "User"},
 				ObjectMeta: api.ObjectMeta{
@@ -193,11 +328,10 @@ func TestNewOutgoingContextWithUserPerms(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		ctx, err := NewOutgoingContextWithUserPerms(test.ctx, test.user, test.perms)
+		md := metadata.MD{}
+		err := populateMetadataWithUserPerms(md, test.user, test.perms)
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
 		if err == nil {
-			md, ok := metadata.FromOutgoingContext(ctx)
-			Assert(t, ok, fmt.Sprintf("[%s] test failed, no metadata in outgoing context", test.name))
 			usernames, ok := md[usernameKey]
 			Assert(t, ok == (test.user != nil && test.user.Name != ""), fmt.Sprintf("[%s] test failed, unexpected usernames [%v] in md", test.name, usernames))
 			Assert(t, !ok || (len(usernames) == 1 && test.user.Name == usernames[0]), fmt.Sprintf("[%s] test failed, expected username [%s], got [%v] in md", test.name, test.user.Name, usernames))

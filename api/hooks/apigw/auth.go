@@ -123,13 +123,6 @@ func (a *authHooks) privilegeEscalationCheck(ctx context.Context, in interface{}
 			return ctx, in, err
 		}
 		operations = append(operations, login.GetOperationsFromPermissions(obj.Spec.Permissions)...)
-	case *auth.RoleBinding:
-		role, ok := a.permissionGetter.GetRole(obj.Spec.Role, obj.Tenant)
-		if !ok {
-			a.logger.Errorf("Role [%s] not found for role binding [%#v]", obj.Spec.Role, obj)
-			return ctx, in, fmt.Errorf("role [%s] not found", obj.Spec.Role)
-		}
-		operations = append(operations, login.GetOperationsFromPermissions(role.Spec.Permissions)...)
 	default:
 		return ctx, in, errors.New("invalid input type")
 	}
@@ -225,6 +218,19 @@ func (a *authHooks) ldapBindCheck(ctx context.Context, in interface{}) (context.
 	return ctx, obj, true, nil
 }
 
+// userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context
+func (a *authHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+	a.logger.DebugLog("msg", "APIGw userContext pre-call hook called for role binding create/update")
+	switch in.(type) {
+	case *auth.RoleBinding:
+	default:
+		return ctx, in, true, errors.New("invalid input type")
+	}
+	// we ignore the error if there are no user or perms to set. It could be the case when auth has not been bootstrapped and user is creating role binding
+	nctx, _ := newContextWithUserPerms(ctx, a.permissionGetter, a.logger)
+	return nctx, in, false, nil
+}
+
 func (a *authHooks) registerAddRolesHook(svc apigw.APIGatewayService) error {
 	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
 	for _, oper := range opers {
@@ -271,8 +277,6 @@ func (a *authHooks) registerPrivilegeEscalationHook(svc apigw.APIGatewayService)
 	ids := []serviceID{
 		{"Role", apiserver.CreateOper},
 		{"Role", apiserver.UpdateOper},
-		{"RoleBinding", apiserver.CreateOper},
-		{"RoleBinding", apiserver.UpdateOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
@@ -354,6 +358,22 @@ func (a *authHooks) registerAddOwnerHook(svc apigw.APIGatewayService) error {
 	return nil
 }
 
+func (a *authHooks) registerUserContextHook(svc apigw.APIGatewayService) error {
+	ids := []serviceID{
+		{"RoleBinding", apiserver.CreateOper},
+		{"RoleBinding", apiserver.UpdateOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
+		if err != nil {
+			return err
+		}
+		prof.AddPreCallHook(a.userContext)
+	}
+
+	return nil
+}
+
 func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
 	grpcaddr := globals.APIServer
@@ -402,7 +422,12 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 
 	// register pre-authz hook to set owner so that user can change/reset his own password or update user info
-	return r.registerAddOwnerHook(svc)
+	if err := r.registerAddOwnerHook(svc); err != nil {
+		return err
+	}
+
+	// register pre-call hook to set user and permissions in outgoing grpc context for role binding create/update
+	return r.registerUserContextHook(svc)
 }
 
 func init() {

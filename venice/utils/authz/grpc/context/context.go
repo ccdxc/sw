@@ -19,16 +19,6 @@ const (
 
 // NewOutgoingContextWithUserPerms creates a new context with user and permissions metadata to send to grpc backend.
 func NewOutgoingContextWithUserPerms(ctx context.Context, user *auth.User, perms []auth.Permission) (context.Context, error) {
-	// validate user obj
-	if user == nil {
-		return ctx, errors.New("no user specified")
-	}
-	if user.Tenant == "" {
-		return ctx, errors.New("tenant not populated in user")
-	}
-	if user.Name == "" {
-		return ctx, errors.New("username not populated in user object")
-	}
 	md, ok := metadata.FromOutgoingContext(ctx)
 	if !ok {
 		md = metadata.MD{}
@@ -36,16 +26,25 @@ func NewOutgoingContextWithUserPerms(ctx context.Context, user *auth.User, perms
 		md = md.Copy()
 	}
 	// set user info in md
-	md[userTenantKey] = []string{user.Tenant}
-	md[usernameKey] = []string{user.Name}
-	for _, perm := range perms {
-		data, err := perm.Marshal()
-		if err != nil {
-			return ctx, err
-		}
-		md[permsKey] = append(md[permsKey], string(data))
+	if err := populateMetadataWithUserPerms(md, user, perms); err != nil {
+		return ctx, err
 	}
 	return metadata.NewOutgoingContext(ctx, md), nil
+}
+
+// NewIncomingContextWithUserPerms creates a new context with user and permissions metadata to send to grpc backend. This is for testing only.
+func NewIncomingContextWithUserPerms(ctx context.Context, user *auth.User, perms []auth.Permission) (context.Context, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		md = metadata.MD{}
+	} else {
+		md = md.Copy()
+	}
+	// set user info in md
+	if err := populateMetadataWithUserPerms(md, user, perms); err != nil {
+		return ctx, err
+	}
+	return metadata.NewIncomingContext(ctx, md), nil
 }
 
 // PermsFromOutgoingContext returns user permissions from grpc metadata in outgoing context
@@ -109,4 +108,28 @@ func UserMetaFromOutgoingContext(ctx context.Context) (*api.ObjectMeta, bool) {
 		return nil, false
 	}
 	return &api.ObjectMeta{Name: names[0], Tenant: tenants[0]}, true
+}
+
+func populateMetadataWithUserPerms(md metadata.MD, user *auth.User, perms []auth.Permission) error {
+	// validate user obj
+	if user == nil {
+		return errors.New("no user specified")
+	}
+	if user.Tenant == "" {
+		return errors.New("tenant not populated in user")
+	}
+	if user.Name == "" {
+		return errors.New("username not populated in user object")
+	}
+	// set user info in md
+	md[userTenantKey] = []string{user.Tenant}
+	md[usernameKey] = []string{user.Name}
+	for _, perm := range perms {
+		data, err := perm.Marshal()
+		if err != nil {
+			return err
+		}
+		md[permsKey] = append(md[permsKey], string(data))
+	}
+	return nil
 }

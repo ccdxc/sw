@@ -10,7 +10,6 @@ import (
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
-	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -52,20 +51,13 @@ func (e *auditHooks) operations(ctx context.Context, in interface{}) (context.Co
 // userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context
 func (e *auditHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
 	e.logger.DebugLog("msg", "APIGw userContext pre-call hook called")
-	user, ok := apigwpkg.UserFromContext(ctx)
-	if !ok || user == nil {
-		e.logger.Errorf("no user present in context passed to userContext pre-call hook")
-		return ctx, in, true, apigwpkg.ErrNoUserInContext
-	}
 	switch in.(type) {
 	case *audit.EventRequest:
 	default:
 		return ctx, in, true, errors.New("invalid input type")
 	}
-	perms := e.permissionGetter.GetPermissions(user)
-	nctx, err := authzgrpcctx.NewOutgoingContextWithUserPerms(ctx, user, perms)
+	nctx, err := newContextWithUserPerms(ctx, e.permissionGetter, e.logger)
 	if err != nil {
-		e.logger.Errorf("error creating outgoing context with user permissions for user [%s|%s]: %v", user.Tenant, user.Name, err)
 		return ctx, in, true, err
 	}
 	return nctx, in, false, nil

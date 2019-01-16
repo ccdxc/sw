@@ -253,7 +253,7 @@ func (tu *TestUtils) SetupAuth() {
 		}
 	}
 	// create admin role binding
-	_, err = testutils.CreateRoleBinding(apicl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, []string{tu.User}, nil)
+	_, err = testutils.CreateRoleBinding(context.TODO(), apicl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, []string{tu.User}, nil)
 	if err != nil {
 		// 409 is returned when role binding already exists. 401 when auth is already bootstrapped. we are ok with that
 		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {

@@ -168,6 +168,8 @@ func Start() *Info {
 		tinfo.l.Fatalf("cannot create API server client (%v)", err)
 	}
 
+	// create cluster
+	testutils.MustCreateCluster(tinfo.apicl)
 	// create default tenant
 	testutils.MustCreateTenant(tinfo.apicl, globals.DefaultTenant)
 	// create user
@@ -181,6 +183,8 @@ func Start() *Info {
 	testutils.MustCreateRoleBinding(tinfo.apicl, "AdminRoleBinding", globals.DefaultTenant, globals.AdminRole, []string{testUser}, nil)
 	// create authentication policy with local auth enabled
 	testutils.MustCreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false})
+	// set auth bootstrap flag to true
+	testutils.MustSetAuthBootstrapFlag(tinfo.apicl)
 
 	return tinfo
 }
