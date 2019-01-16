@@ -29,6 +29,10 @@ aliases:
     - &CP_HASH_CHAIN_YML cp_hash_chain.yml
     - &CP_BOF_HASH_CHAIN_YML cp_bof_hash_chain.yml
     - &DECRYPT_DC_CHAIN_YML decrypt_dc_chain.yml
+    - &CHKSUM_CP_CHAIN_YML chksum-cp.yml
+    - &CHKSUM_CP_CHKSUM_YML chksum-cp-chksum.yml
+    - &CHKSUM_ENCRYPT_CHKSUM_YML chksum-encrypt-chksum.yml
+    - &DECRYPT_CHKSUM_YML decrypt-chksum.yml
     - &CPFLAGS_DEFAULT 0
     - &DCFLAGS_DEFAULT 0
     - &CPFLAGS_ZERO_PAD zero_pad
@@ -296,6 +300,50 @@ testcases:
         args    :
             wait        : '1.0'
             test        : *DECRYPT_DC_CHAIN_YML
+
+    -   name        : ChksumCpChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO3
+        args    :
+            wait        : '1.0'
+            test        : *CHKSUM_CP_CHAIN_YML
+
+    -   name        : ChksumCpChksumChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO3
+        args    :
+            wait        : '1.0'
+            test        : *CHKSUM_CP_CHKSUM_CHAIN_YML
+
+    -   name        : ChksumEncryptChksumChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO3
+        args    :
+            wait        : '1.0'
+            test        : *CHKSUM_ENCRYPT_CHKSUM_CHAIN_YML
+
+    -   name        : DecryptChksumChain
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO2
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO3
+        args    :
+            wait        : '1.0'
+            test        : *DECRYPT_CHKSUM_CHAIN_YML
 
 #    -   name    : Crypto
 #        testcase: testcases.storage.ymltest

@@ -1,0 +1,48 @@
+alias_group5:
+  - alias: 'chksum_algo=madler32'
+svc_chains:
+  - svc_chain:
+      idx: 1
+      #description: "cp(flags zero_pad, insert_hdr, bypass_on_fail, cp_hdr no cksum) + chksum (algo - madler32, flags - per_block)"
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: 8192
+      ops:
+        - compress:
+            flags: 'zero_pad,insert_header,bypass_onfail' #Not sure about cp_hdr no cksum
+            hdr_fmt_idx: 1
+            threshold_delta: 8
+            output_file: '%test_id%_compressed.bin'
+        - chksum:
+            algo_type: 'madler32'
+            flags: 'per_block'
+            output_file: 'cksum_per_block.bin'
+tests:
+  - test:
+      name: 'CP-pad-chksum-CHAIN-1'
+      idx: 1
+      svc_chains: 1
+      turbo: 0
+      repeat: 'param::repeat'
+      batch_depth: 'param::batch_depth'
+      mode: 'param::mode'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0,0
+        - size_compare:
+            idx: 2
+            type: lt
+            file1: '1_compressed.bin'
+            val: 8192 
+        - data_compare:
+            idx: 3
+            file1: '1_compressed.bin'
+            pattern: 0x00
+            offset: eof
+            len: eob
+        - size_compare:
+            idx: 4
+            file1: 'cksum_per_block.bin'
+            val: 8

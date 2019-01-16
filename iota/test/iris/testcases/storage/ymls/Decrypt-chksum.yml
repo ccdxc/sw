@@ -1,0 +1,80 @@
+alias_group5:
+  - alias: 'chksum_algo=madler32'
+svc_chains:
+  - svc_chain:
+      idx: 1
+      #description: "chksum (algo - madler32, flags - per_block : Plain checksum) + encryption + chksum (algo - madler32, flags - per_block : Cipher checksum)"
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: 8192
+      ops:
+        - encrypt:
+            key_idx: 1
+            algo_type: 1
+            iv_data: 000102030405060708090a0b0c0d0e0f
+            output_file: '%test_id%_encrypted.bin'
+  - svc_chain:
+      idx: 2
+      input:
+        file: '1_encrypted.bin'
+      ops:
+        - decrypt:
+            key_idx: 1
+            algo_type: 1
+            iv_data: 000102030405060708090a0b0c0d0e0f
+            output_file: '%test_id%_decrypted.bin'
+        - chksum:
+            algo_type: 'madler32'
+            flags: 'per_block'
+            output_file: '%test_id%_chksum_per_block.bin'
+
+tests:
+  - test:
+      name: 'Encrypt-CHAIN-1'
+      idx: 1
+      svc_chains: 1
+      turbo: 0
+      repeat: 'param::repeat'
+      batch_depth: 'param::batch_depth'
+      mode: 'param::mode'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0
+        - data_compare:
+            idx: 2
+            file1: '1_encrypted.bin'
+            type: ne
+            #pattern: 0x00
+            pattern: ababababababababababababababababababababababababababababababababababababab1234
+            #offset: eof
+            #len: eob
+            len: 8192
+        - size_compare:
+            idx: 2
+            type: eq
+            file1: '1_encrypted.bin'
+            val: 8192 
+  - test:
+      name: 'Decrypt-Chksum-CHAIN-2'
+      idx: 2
+      svc_chains: 2
+      turbo: 0
+      repeat: 'param::repeat'
+      batch_depth: 'param::batch_depth'
+      mode: 'param::mode'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0,0
+        - size_compare:
+            idx: 2
+            type: eq
+            file1: '2_decrypted.bin'
+            val: 8192
+        - size_compare:
+            idx: 3
+            file1: '2_chksum_per_block.bin'
+            val: 16

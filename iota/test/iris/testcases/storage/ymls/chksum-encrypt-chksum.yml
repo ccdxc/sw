@@ -1,0 +1,45 @@
+alias_group5:
+  - alias: 'chksum_algo=madler32'
+svc_chains:
+  - svc_chain:
+      idx: 1
+      #description: "chksum (algo - madler32, flags - per_block : Plain checksum) + encryption + chksum (algo - madler32, flags - per_block : Cipher checksum)"
+      input:
+        pattern: ababababababababababababababababababababababababababababababababababababab1234
+        len: 8192
+      ops:
+        - chksum:
+            algo_type: 'madler32'
+            flags: 'per_block' #Not sure about plain chksum per NetApp
+            output_file: '%test_id%_chksum_per_block.bin'
+        - encrypt:
+            key_idx: 1
+            iv_data: 000102030405060708090a0b0c0d0e0f
+            output_file: '%test_id%_encrypted.bin'
+        - chksum:
+            algo_type: 'madler32'
+            flags: 'per_block' #How to add Cipher chksum per NetApp
+            output_file: '%test_id%_chksum_per_block1.bin'
+
+tests:
+  - test:
+      name: 'Chksum-Encrypt-Chksum-CHAIN-1'
+      idx: 1
+      svc_chains: 1
+      turbo: 0
+      repeat: 'param::repeat'
+      batch_depth: 'param::batch_depth'
+      mode: 'param::mode'
+      validations:
+        - retcode_compare:
+            idx: 1
+            retcode: 0
+            svc_retcodes: 0,0,0
+        - size_compare:
+            idx: 2
+            file1: '1_chksum_per_block.bin'
+            val: 16
+        - size_compare:
+            idx: 1
+            file1: '1_chksum_per_block1.bin'
+            val: 16
