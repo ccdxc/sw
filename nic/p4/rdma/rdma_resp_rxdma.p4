@@ -115,6 +115,8 @@
 #define rx_table_s7_t2_action resp_rx_cqpt_process
 
 #define rx_table_s7_t0_action resp_rx_eqcb_process_t0
+#define rx_table_s7_t0_action1 resp_rx_phv_drop_mpu_only_process
+
 #define rx_table_s7_t1_action resp_rx_eqcb_process_t1
 
 #define rx_table_s7_t3_action resp_rx_stats_process
@@ -1882,6 +1884,11 @@ action resp_rx_rqcb1_write_back_process () {
 }
 
 action resp_rx_rqcb1_write_back_err_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+}
+
+action resp_rx_phv_drop_mpu_only_process () {
     // from ki global
     GENERATE_GLOBAL_K
 }

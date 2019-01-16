@@ -53,6 +53,7 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    resp_rx_rqcb1_write_back_mpu_only_process
     .param    resp_rx_launch_rqpt_process
     .param    resp_rx_rqcb1_write_back_err_process
+    .param    resp_rx_phv_drop_mpu_only_process
 
 .align
 resp_rx_rqcb_process:
@@ -953,8 +954,8 @@ ud_phv_drop:
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
 
 phv_drop:
-    phvwr.e     p.common.p4_intr_global_drop, 1
-    nop
+    phvwr       p.common.p4_intr_global_drop, 1
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_phv_drop_mpu_only_process, r0)
     
 /****** Logic to recirc packets ******/
 recirc_work_not_done:

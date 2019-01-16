@@ -35,6 +35,7 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    req_rx_completion_feedback_process
     .param    req_rx_sqcb1_recirc_sge_process
     .param    req_rx_sq_drain_feedback_process
+    .param    req_rx_dummy_drop_phv_process
 
 .align
 req_rx_sqcb1_process:
@@ -326,20 +327,13 @@ exit:
     // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back in stage3 to increment nxt-to-go-token-id and drop pvh.
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0)
 
-drop_feedback:
-    CAPRI_SET_TABLE_0_VALID(0)
-    phvwr         p.common.p4_intr_global_drop, 1
-
-    nop.e
-    nop
-
 process_feedback:
     seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_COMPLETION_FEEDBACK
     bcf            [c1], completion_feedback
     seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_TIMER_EXPIRY_FEEDBACK
     bcf            [c1], timer_expiry_feedback
     seq            c1, CAPRI_FEEDBACK_FEEDBACK_TYPE, RDMA_SQ_DRAIN_FEEDBACK
-    bcf            [!c1], drop_feedback
+    bcf            [!c1], drop_packet
 
 sq_drain_feedback:
     CAPRI_SQ_DRAIN_FEEDBACK_SSN(r1)
@@ -387,7 +381,7 @@ timer_expiry_feedback:
      
     CAPRI_TIMER_EXPIRY_FEEDBACK_SSN(r1)
     scwlt24        c1, d.max_ssn, r1
-    bbeq           d.bktrack_in_progress[0], 1, drop_feedback
+    bbeq           d.bktrack_in_progress[0], 1, drop_packet
     tblwr.c1       d.max_ssn, r1 // Branch Delay Slot
 
     CAPRI_SET_TABLE_0_VALID(0)
@@ -419,11 +413,13 @@ recirc_pkt:
     seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_SGE_WORK_PENDING // BD Slot
     bcf            [c2], process_recirc_sge_work_pending
     nop
+    // fall-through.Drop if not a known recirc reason
 
 drop_packet:
-    // Drop if not a known recirc reason
-    phvwr.e        p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_0_VALID(0)
+    phvwr          p.common.p4_intr_global_drop, 1
+    // Load dummy-drop-phv to avoid loading eth programs in stage 1 and 5. Today if no table is loaded, common-rxdma eth program
+    // will be loaded in stage1
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_drop_phv_process, r0) //Exit Slot
 
 recirc_for_turn:
     CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_recirc_mpu_only_process, r0)
@@ -438,12 +434,12 @@ process_recirc_error_disable_qp:
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_dummy_sqcb1_write_back_process, r0) //Exit Slot
 
 check_state:
-    slt       c2, d.state, QP_STATE_SQD
-    bcf       [!c2], process_req_rx
+    slt             c2, d.state, QP_STATE_SQD
+    bcf             [!c2], process_req_rx
     nop       // Branch Delay Slot
 
-    phvwr.e        p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_0_VALID(0)
+    b               drop_packet
+    nop
 
 process_recirc_sge_work_pending:
     CAPRI_RESET_TABLE_0_ARG()
@@ -452,5 +448,5 @@ process_recirc_sge_work_pending:
 
 table_error:
     // TODO add LIF stats
-    phvwr.e        p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_0_VALID(0) // Exit Slot
+    b               drop_packet
+    nop
