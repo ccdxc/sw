@@ -339,7 +339,7 @@ static inline int to_ionic_qp_modify_state(enum ib_qp_state to_state,
 struct ionic_v1_cqe {
 	union {
 		struct {
-			__le16		cmd_idx;
+			__be16		cmd_idx;
 			__u8		cmd_op;
 			__u8		rsvd[17];
 			__le16		old_sq_cindex;

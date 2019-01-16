@@ -92,9 +92,6 @@ MODULE_PARM_DESC(xxx_udp, "XXX Makeshift udp header in template.");
 static bool ionic_xxx_noop = false;
 module_param_named(xxx_noop, ionic_xxx_noop, bool, 0444);
 MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
-static bool ionic_xxx_aq_idx = false;
-module_param_named(xxx_aq_idx, ionic_xxx_aq_idx, bool, 0644);
-MODULE_PARM_DESC(xxx_aq_idx, "XXX Check aq cindex matches polling completion.");
 static bool ionic_xxx_aq_dbell = true;
 module_param_named(xxx_aq_dbell, ionic_xxx_aq_dbell, bool, 0644);
 MODULE_PARM_DESC(xxx_aq_dbell, "XXX Enable ringing aq doorbell (to test handling of aq failure).");
@@ -693,12 +690,17 @@ static void ionic_admin_poll_locked(struct ionic_ibdev *dev)
 			goto cq_next;
 		}
 
-		if (ionic_xxx_aq_idx &&
-		    unlikely(le16_to_cpu(cqe->admin.cmd_idx) != aq->q.cons)) {
+		if (unlikely(be16_to_cpu(cqe->admin.cmd_idx) != aq->q.cons)) {
 			dev_warn_ratelimited(&dev->ibdev.dev,
 					     "unexpected idx %u cons %u qid %u\n",
 					     le16_to_cpu(cqe->admin.cmd_idx),
 					     aq->q.cons, qid);
+			goto cq_next;
+		}
+
+		if (unlikely(ionic_queue_empty(&aq->q))) {
+			dev_warn_ratelimited(&dev->ibdev.dev,
+					     "unexpected cqe for empty adminq\n");
 			goto cq_next;
 		}
 
