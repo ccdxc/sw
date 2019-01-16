@@ -1,6 +1,6 @@
 meta:
     name    : post_diag_check
-    os      : [ linux, freebsd ]
+    os      : [ linux, freebsd, esx ]
     nics    : [ pensando, intel, mellanox, broadcom ]
     targetcount : 3
 

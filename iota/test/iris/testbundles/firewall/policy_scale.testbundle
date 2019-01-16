@@ -1,6 +1,7 @@
 meta:
     name    : policyscale
     nics    : [ pensando, intel, mellanox, broadcom ]
+    os      : [ linux, esx ]
     targetcount : 44 
 
 testcases:

@@ -1,6 +1,7 @@
 meta:
     name    : alg 
     nics    : [ pensando, intel, mellanox, broadcom ]
+    os      : [ linux, esx ]
     targetcount : 80
 
 testcases:

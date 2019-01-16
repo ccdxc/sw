@@ -429,7 +429,7 @@ class EsxHostManagement(HostManagement):
         self.__host_connect()
         for _ in range(0, 5):
 
-            stdin, stdout, stderr  = self.__ssh_handle.exec_command("cd %s/drivers-esx/ && chmod +x ./build.sh && ./build.sh --install" % HOST_NAPLES_DIR)
+            stdin, stdout, stderr  = self.__ssh_handle.exec_command("cd %s/drivers-esx-eth/ && chmod +x ./build.sh && ./build.sh --install" % HOST_NAPLES_DIR)
             #ret = self.run("cd %s/drivers-esx/ && chmod +x ./build.sh && ./build.sh" % HOST_NAPLES_DRIVERS_DIR, ignore_result = True)
             exit_status = stdout.channel.recv_exit_status()
             outlines=stdout.readlines()
@@ -509,14 +509,14 @@ class EsxHostManagement(HostManagement):
             print ("Failed to extract drivers", outlines)
             sys.exit(1)
 
-        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + "/drivers-esx && ./build.sh" )
+        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + "/drivers-esx-eth && ./build.sh" )
         exit_status = stdout.channel.recv_exit_status()
         outlines=stdout.readlines()
         if exit_status != 0:
             print ("Driver build failed ", ''.join(outlines))
             sys.exit(1)
 
-        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + " && tar -cJf " + os.path.basename(tmp_driver) + " drivers-esx")
+        stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + " && tar -cJf " + os.path.basename(tmp_driver) + " drivers-esx-eth")
         exit_status = stdout.channel.recv_exit_status()
         outlines=stdout.readlines()
         if exit_status != 0:

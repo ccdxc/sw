@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"gopkg.in/yaml.v2"
 
@@ -544,6 +545,15 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 		dnode.logger.Println("Command stdout :", cmd.Stdout)
 		dnode.logger.Println("Command stderr:", cmd.Stderr)
 
+		fixUtf := func(r rune) rune {
+			if r == utf8.RuneError {
+				return -1
+			}
+			return r
+		}
+
+		cmd.Stdout = strings.Map(fixUtf, cmd.Stdout)
+		cmd.Stderr = strings.Map(fixUtf, cmd.Stderr)
 		if len(cmd.Stdout) > maxStdoutSize || len(cmd.Stderr) > maxStdoutSize {
 			cmd.Stdout = ""
 			cmd.Stderr = "Stdout/Stderr output limit Exceeded."

@@ -1,6 +1,7 @@
 meta:
     name    : policy
     nics    : [ pensando, intel, mellanox, broadcom ]
+    os      : [ linux, esx ]
     targetcount : 7
 
 testcases:
