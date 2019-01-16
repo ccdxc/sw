@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringSNMPTrapServer_version,  } from './enums';
@@ -66,6 +66,10 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
         return MonitoringSNMPTrapServer.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return MonitoringSNMPTrapServer.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -79,11 +83,11 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['auth-config'] = new MonitoringAuthConfig();
         this['privacy-config'] = new MonitoringPrivacyConfig();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -126,7 +130,7 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
             this._formGroup = new FormGroup({
                 'host': new FormControl(this['host']),
                 'port': new FormControl(this['port']),
-                'version': new FormControl(this['version'], [enumValidator(MonitoringSNMPTrapServer_version), ]),
+                'version': new FormControl(this['version'], [required, enumValidator(MonitoringSNMPTrapServer_version), ]),
                 'community-or-user': new FormControl(this['community-or-user']),
                 'auth-config': this['auth-config'].$formGroup,
                 'privacy-config': this['privacy-config'].$formGroup,

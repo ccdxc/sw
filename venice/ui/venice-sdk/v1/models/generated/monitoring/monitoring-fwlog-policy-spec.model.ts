@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
@@ -48,6 +48,10 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
         return MonitoringFwlogPolicySpec.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return MonitoringFwlogPolicySpec.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -61,12 +65,12 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['targets'] = new Array<MonitoringExportConfig>();
         this['filter'] = new Array<MonitoringFwlogPolicySpec_filter>();
         this['config'] = new MonitoringSyslogExportConfig();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -98,7 +102,7 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'targets': new FormArray([]),
-                'format': new FormControl(this['format'], [enumValidator(MonitoringFwlogPolicySpec_format), ]),
+                'format': new FormControl(this['format'], [required, enumValidator(MonitoringFwlogPolicySpec_format), ]),
                 'filter': new FormControl(this['filter']),
                 'config': this['config'].$formGroup,
             });

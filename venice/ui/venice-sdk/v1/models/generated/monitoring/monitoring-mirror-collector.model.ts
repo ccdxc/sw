@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorCollector_type,  MonitoringMirrorCollector_type_uihint  } from './enums';
@@ -34,6 +34,10 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
         return MonitoringMirrorCollector.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return MonitoringMirrorCollector.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -47,10 +51,10 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['export-config'] = new MonitoringExportConfig();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -73,7 +77,7 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type'], [enumValidator(MonitoringMirrorCollector_type), ]),
+                'type': new FormControl(this['type'], [required, enumValidator(MonitoringMirrorCollector_type), ]),
                 'export-config': this['export-config'].$formGroup,
             });
         }

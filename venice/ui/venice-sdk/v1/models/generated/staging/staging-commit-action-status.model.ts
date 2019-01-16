@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { StagingCommitActionStatus_status,  } from './enums';
@@ -33,6 +33,10 @@ export class StagingCommitActionStatus extends BaseModel implements IStagingComm
         return StagingCommitActionStatus.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return StagingCommitActionStatus.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -46,9 +50,9 @@ export class StagingCommitActionStatus extends BaseModel implements IStagingComm
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -73,7 +77,7 @@ export class StagingCommitActionStatus extends BaseModel implements IStagingComm
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'status': new FormControl(this['status'], [enumValidator(StagingCommitActionStatus_status), ]),
+                'status': new FormControl(this['status'], [required, enumValidator(StagingCommitActionStatus_status), ]),
                 'reason': new FormControl(this['reason']),
             });
         }

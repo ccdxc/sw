@@ -25,6 +25,7 @@ import { SorticonComponent } from './sorticon/sorticon.component';
 import { BasecardComponent } from './basecard/basecard.component';
 import { LinegraphComponent } from './linegraph/linegraph.component';
 import { FlipComponent } from './flip/flip.component';
+import { ErrorTooltipDirective } from './directives/errorTooltip.directive';
 
 @NgModule({
   imports: [
@@ -56,6 +57,7 @@ import { FlipComponent } from './flip/flip.component';
     BasecardComponent,
     LinegraphComponent,
     FlipComponent,
+    ErrorTooltipDirective,
   ],
   exports: [
     PagebodyComponent,
@@ -77,6 +79,7 @@ import { FlipComponent } from './flip/flip.component';
     BasecardComponent,
     LinegraphComponent,
     FlipComponent,
+    ErrorTooltipDirective,
   ],
 })
 export class SharedModule { }

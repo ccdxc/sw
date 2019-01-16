@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchSearchRequest_mode,  } from './enums';
@@ -80,6 +80,10 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         return SearchSearchRequest.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return SearchSearchRequest.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -93,11 +97,11 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['query'] = new SearchSearchQuery();
         this['tenants'] = new Array<string>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -145,11 +149,11 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'query-string': new FormControl(this['query-string'], [Validators.maxLength(256), ]),
-                'from': new FormControl(this['from'], [Validators.max(1023), ]),
-                'max-results': new FormControl(this['max-results'], [Validators.max(8192), ]),
-                'sort-by': new FormControl(this['sort-by'], [Validators.maxLength(256), ]),
-                'mode': new FormControl(this['mode'], [enumValidator(SearchSearchRequest_mode), ]),
+                'query-string': new FormControl(this['query-string'], [maxLengthValidator(256), ]),
+                'from': new FormControl(this['from'], [maxValueValidator(1023), ]),
+                'max-results': new FormControl(this['max-results'], [maxValueValidator(8192), ]),
+                'sort-by': new FormControl(this['sort-by'], [maxLengthValidator(256), ]),
+                'mode': new FormControl(this['mode'], [required, enumValidator(SearchSearchRequest_mode), ]),
                 'query': this['query'].$formGroup,
                 'tenants': new FormControl(this['tenants']),
             });

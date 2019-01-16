@@ -9,6 +9,7 @@ import { MonitoringRoutingModule } from './monitoring-group.route';
 import { TroubleshootingComponent } from './troubleshooting/troubleshooting.component';
 import { SyslogComponent } from './syslog/syslog.component';
 import { MatchruleComponent } from './matchrule/matchrule.component';
+import { SharedModule } from '../shared/shared.module';
 
 
 
@@ -22,7 +23,8 @@ import { MatchruleComponent } from './matchrule/matchrule.component';
 
     PrimengModule,
     MaterialdesignModule,
-    MonitoringRoutingModule
+    MonitoringRoutingModule,
+    SharedModule
   ],
   declarations: [TroubleshootingComponent, MonitoringGroupComponent, SyslogComponent, MatchruleComponent],
   exports: [TroubleshootingComponent, MonitoringGroupComponent, SyslogComponent, MatchruleComponent]

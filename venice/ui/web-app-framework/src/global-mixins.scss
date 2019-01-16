@@ -5,6 +5,18 @@
   $matchColor : #6ba0e5;
   $errorColor : #e57553;
 
+  input.ui-inputtext:not(.ui-dropdown-filter),
+  textarea.ui-inputtext:not(.ui-dropdown-filter) {
+    font-size: 16px;
+    font-family: "Fira Sans Condensed" !important;
+    line-height: normal !important;
+    box-shadow: none !important;
+    background: rgb(247, 247, 247);
+    padding: 10px;
+    border-radius: 2px;
+    resize: none;
+  }
+
   input.ui-inputtext,
   textarea.ui-inputtext {
     padding-left: 10px;
@@ -17,24 +29,28 @@
     &:focus {
       box-shadow: inset 5px 0 0 0 $matchColor !important;
     }
-    &.error {
-      box-shadow: inset 5px 0 0 0 $errorColor !important;
+
+    &.error:hover, 
+    &.error:focus,
+    &.ng-dirty.ng-invalid:hover,
+    &.ng-dirty.ng-invalid:focus {
       border-radius: 2px;
       background-color: #ffffff !important;
       border: solid 1px $errorColor !important;
     }
-  }
 
-  input.ui-inputtext:not(.ui-dropdown-filter),
-  textarea.ui-inputtext:not(.ui-dropdown-filter) {
-    font-size: 16px;
-    font-family: "Fira Sans Condensed" !important;
-    line-height: normal !important;
-    box-shadow: none !important;
-    background: rgb(247, 247, 247);
-    padding: 10px;
-    border-radius: 2px;
-    resize: none;
+    &.error:focus,
+    &.ng-dirty.ng-invalid:focus {
+      box-shadow: inset 5px 0 0 0 $errorColor !important;
+    }
+
+    &.error,
+    &.ng-dirty.ng-invalid {
+    //   box-shadow: inset 5px 0 0 0 $errorColor !important;
+      border-radius: 2px;
+      background-color: #ffffff !important;
+      border: solid 1px $errorColor !important;
+    }
   }
 }
 

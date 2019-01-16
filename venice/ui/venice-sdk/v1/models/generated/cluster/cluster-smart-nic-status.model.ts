@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterSmartNICStatus_admission_phase,  ClusterSmartNICStatus_admission_phase_uihint  } from './enums';
@@ -70,6 +70,10 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         return ClusterSmartNICStatus.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return ClusterSmartNICStatus.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -83,13 +87,13 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['conditions'] = new Array<ClusterSmartNICCondition>();
         this['ip-config'] = new ClusterIPConfig();
         this['system-info'] = new ClusterSmartNICInfo();
         this['interfaces'] = new Array<string>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -133,7 +137,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'admission-phase': new FormControl(this['admission-phase'], [enumValidator(ClusterSmartNICStatus_admission_phase), ]),
+                'admission-phase': new FormControl(this['admission-phase'], [required, enumValidator(ClusterSmartNICStatus_admission_phase), ]),
                 'conditions': new FormArray([]),
                 'serial-num': new FormControl(this['serial-num']),
                 'primary-mac': new FormControl(this['primary-mac']),

@@ -35,9 +35,13 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *tsproto.MirrorSess
 	tSpec.PacketSize = ms.Spec.PacketSize
 	tSpec.StopConditions.MaxPacketCount = ms.Spec.StopConditions.MaxPacketCount
 	for _, c := range ms.Spec.Collectors {
+		var export monitoring.ExportConfig
+		if c.ExportCfg != nil {
+			export = *c.ExportCfg
+		}
 		tc := tsproto.MirrorCollector{
 			Type:      c.Type,
-			ExportCfg: c.ExportCfg,
+			ExportCfg: export,
 		}
 		tSpec.Collectors = append(tSpec.Collectors, tc)
 	}

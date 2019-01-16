@@ -4,10 +4,15 @@
 */
 /* tslint:disable */
 
-import { FormControl } from '@angular/forms';
+import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+
+function isEmptyInputValue(value: any): boolean {
+  // we don't check for string here so it also works with arrays
+  return value == null || value.length === 0;
+}
 
 export const maxValueValidator = (required: number) => {
-    return (control: FormControl) => {
+    return (control: AbstractControl) => {
         if (control.value !== undefined) {
             var actual = Number(control.value);
             if (isNaN(actual) || actual > required) {
@@ -15,7 +20,8 @@ export const maxValueValidator = (required: number) => {
                     maxValue: {
                         valid: false,
                         required: required,
-                        actual: actual
+                        actual: actual,
+                        message: "Value must be less than " + required
                     }
                 };
             }
@@ -25,7 +31,7 @@ export const maxValueValidator = (required: number) => {
 };
 
 export const minValueValidator = (required: number) => {
-    return (control: FormControl) => {
+    return (control: AbstractControl) => {
         if (control.value !== undefined) {
             var actual = Number(control.value);
             if (isNaN(actual) || actual < required) {
@@ -33,7 +39,8 @@ export const minValueValidator = (required: number) => {
                     minValue: {
                         valid: false,
                         required: required,
-                        actual: actual
+                        actual: actual,
+                        message: "Value must be greater than " + required
                     }
                 };
             }
@@ -42,9 +49,47 @@ export const minValueValidator = (required: number) => {
     };
 };
 
+export const minLengthValidator = (required: number) => {
+    return (control: AbstractControl): ValidationErrors | null => {
+        if (isEmptyInputValue(control.value)) {
+            return null;  // don't validate empty values to allow optional controls
+        }
+        const length: number = control.value ? control.value.length : 0;
+        if (length < required) {
+            return {'minlength': {
+                'requiredLength': required, 
+                'actualLength': length,
+                message: "Value must be at least " + required + " characters"
+            }}
+        }
+        return null;
+    };
+};
+
+export const maxLengthValidator = (required: number) => {
+    return (control: AbstractControl): ValidationErrors | null => {
+        if (isEmptyInputValue(control.value)) {
+            return null;  // don't validate empty values to allow optional controls
+        }
+        const length: number = control.value ? control.value.length : 0;
+        if (length > required) {
+            return {'minlength': {
+                'requiredLength': required, 
+                'actualLength': length,
+                message: "Value must be less than " + required + " characters"
+            }}
+        }
+        return null;
+    };
+};
+
+export const required = (control: AbstractControl): ValidationErrors | null => {
+    return isEmptyInputValue(control.value) ? {required : {'required': true, message: "This field is required"}} : null;
+}
+
 // required must be the enum type to check
 export const enumValidator = (required: any) => {
-    return (control: FormControl) => {
+    return (control: AbstractControl) => {
         if (control.value !== undefined && control.value !== null && control.value !== '') {
             var actual = control.value;
             if (!required[actual]) {
@@ -52,7 +97,8 @@ export const enumValidator = (required: any) => {
                     enum: {
                         valid: false,
                         required: required,
-                        actual: actual
+                        actual: actual,
+                        message: "Value must be one of the given options"
                     }
                 };
             }
@@ -60,3 +106,34 @@ export const enumValidator = (required: any) => {
         return null;
     };
 };
+
+export const patternValidator = (pattern: string|RegExp, message: string): ValidatorFn => {
+    if (!pattern) return Validators.nullValidator;
+    let regex: RegExp;
+    let regexStr: string;
+    if (typeof pattern === 'string') {
+      regexStr = '';
+
+      if (pattern.charAt(0) !== '^') regexStr += '^';
+
+      regexStr += pattern;
+
+      if (pattern.charAt(pattern.length - 1) !== '$') regexStr += '$';
+
+      regex = new RegExp(regexStr);
+    } else {
+      regexStr = pattern.toString();
+      regex = pattern;
+    }
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (isEmptyInputValue(control.value)) {
+        return null;  // don't validate empty values to allow optional controls
+      }
+      const value: string = control.value;
+      return regex.test(value) ? null :
+                                 {'pattern': {
+                                     'requiredPattern': regexStr, 'actualValue': value,
+                                     'message': message
+                                 }};
+    };
+  }

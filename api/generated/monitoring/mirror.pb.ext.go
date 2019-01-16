@@ -309,14 +309,15 @@ func (m *MatchSelector) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *MirrorCollector) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-
-	dlmtr := "."
-	if path == "" {
-		dlmtr = ""
-	}
-	npath := path + dlmtr + "ExportCfg"
-	if errs := m.ExportCfg.Validate(ver, npath, ignoreStatus); errs != nil {
-		ret = append(ret, errs...)
+	if m.ExportCfg != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "ExportCfg"
+		if errs := m.ExportCfg.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
 	}
 	if vs, ok := validatorMapMirror["MirrorCollector"][ver]; ok {
 		for _, v := range vs {

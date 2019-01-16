@@ -71,7 +71,7 @@ message MirrorCollector {
     string              Type        = 1 [(gogoproto.jsontag) = "type,omitempty", (venice.check) = "StrEnum(PacketCollectorType)"];
 
     // When collector type is Venice, collector export information is not required
-    ExportConfig    ExportCfg   = 3 [(gogoproto.nullable)=false, (gogoproto.jsontag) = "export-config,omitempty"];
+    ExportConfig    ExportCfg   = 3 [(gogoproto.nullable)=true, (gogoproto.jsontag) = "export-config,omitempty"];
 }
 
 // Traffic Selection Rules

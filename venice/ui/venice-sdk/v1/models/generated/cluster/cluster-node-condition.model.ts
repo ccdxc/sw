@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterNodeCondition_type,  ClusterNodeCondition_type_uihint  } from './enums';
@@ -53,6 +53,10 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
         return ClusterNodeCondition.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return ClusterNodeCondition.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -66,9 +70,9 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -108,8 +112,8 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type'], [enumValidator(ClusterNodeCondition_type), ]),
-                'status': new FormControl(this['status'], [enumValidator(ClusterNodeCondition_status), ]),
+                'type': new FormControl(this['type'], [required, enumValidator(ClusterNodeCondition_type), ]),
+                'status': new FormControl(this['status'], [required, enumValidator(ClusterNodeCondition_status), ]),
                 'last-transition-time': new FormControl(this['last-transition-time']),
                 'reason': new FormControl(this['reason']),
                 'message': new FormControl(this['message']),

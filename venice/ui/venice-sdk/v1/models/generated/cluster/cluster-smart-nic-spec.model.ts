@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
@@ -65,6 +65,10 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
         return ClusterSmartNICSpec.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return ClusterSmartNICSpec.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -78,11 +82,11 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['ip-config'] = new ClusterIPConfig();
         this['controllers'] = new Array<string>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -133,9 +137,9 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
                 'admit': new FormControl(this['admit']),
                 'hostname': new FormControl(this['hostname']),
                 'ip-config': this['ip-config'].$formGroup,
-                'mgmt-mode': new FormControl(this['mgmt-mode'], [enumValidator(ClusterSmartNICSpec_mgmt_mode), ]),
-                'network-mode': new FormControl(this['network-mode'], [enumValidator(ClusterSmartNICSpec_network_mode), ]),
-                'mgmt-vlan': new FormControl(this['mgmt-vlan'], [Validators.max(4095), ]),
+                'mgmt-mode': new FormControl(this['mgmt-mode'], [required, enumValidator(ClusterSmartNICSpec_mgmt_mode), ]),
+                'network-mode': new FormControl(this['network-mode'], [required, enumValidator(ClusterSmartNICSpec_network_mode), ]),
+                'mgmt-vlan': new FormControl(this['mgmt-vlan'], [maxValueValidator(4095), ]),
                 'controllers': new FormControl(this['controllers']),
             });
         }

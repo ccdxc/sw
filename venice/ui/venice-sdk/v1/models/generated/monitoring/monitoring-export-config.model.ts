@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringExternalCred, IMonitoringExternalCred } from './monitoring-external-cred.model';
@@ -17,6 +17,8 @@ export interface IMonitoringExportConfig {
 
 
 export class MonitoringExportConfig extends BaseModel implements IMonitoringExportConfig {
+    /** length of string should be between 1 and 2048
+     */
     'destination': string = null;
     /** should be a valid layer3 or layer 4 protocol and port/type
      */
@@ -24,6 +26,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     'credentials': MonitoringExternalCred = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'destination': {
+            description:  'length of string should be between 1 and 2048 ',
             type: 'string'
         },
         'transport': {
@@ -40,6 +43,10 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
         return MonitoringExportConfig.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return MonitoringExportConfig.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -53,10 +60,10 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['credentials'] = new MonitoringExternalCred();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -84,7 +91,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'destination': new FormControl(this['destination']),
+                'destination': new FormControl(this['destination'], [required, minLengthValidator(1), maxLengthValidator(2048), ]),
                 'transport': new FormControl(this['transport']),
                 'credentials': this['credentials'].$formGroup,
             });

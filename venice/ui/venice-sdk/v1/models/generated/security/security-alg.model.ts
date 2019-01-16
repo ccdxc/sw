@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityALG_type,  } from './enums';
@@ -58,6 +58,10 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
         return SecurityALG.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return SecurityALG.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -71,14 +75,14 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['icmp'] = new SecurityIcmp();
         this['dns'] = new SecurityDns();
         this['ftp'] = new SecurityFtp();
         this['sunrpc'] = new Array<SecuritySunrpc>();
         this['msrpc'] = new Array<SecurityMsrpc>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -113,7 +117,7 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type'], [enumValidator(SecurityALG_type), ]),
+                'type': new FormControl(this['type'], [required, enumValidator(SecurityALG_type), ]),
                 'icmp': this['icmp'].$formGroup,
                 'dns': this['dns'].$formGroup,
                 'ftp': this['ftp'].$formGroup,

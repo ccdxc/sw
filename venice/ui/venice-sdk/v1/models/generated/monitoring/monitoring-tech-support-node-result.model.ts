@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTechSupportNodeResult_status,  } from './enums';
@@ -43,6 +43,10 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
         return MonitoringTechSupportNodeResult.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return MonitoringTechSupportNodeResult.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -56,9 +60,9 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -95,7 +99,7 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
             this._formGroup = new FormGroup({
                 'start-time': new FormControl(this['start-time']),
                 'end-time': new FormControl(this['end-time']),
-                'status': new FormControl(this['status'], [enumValidator(MonitoringTechSupportNodeResult_status), ]),
+                'status': new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportNodeResult_status), ]),
                 'uri': new FormControl(this['uri']),
             });
         }

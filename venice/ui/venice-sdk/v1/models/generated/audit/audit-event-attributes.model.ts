@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuditEventAttributes_stage,  } from './enums';
@@ -110,6 +110,10 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
         return AuditEventAttributes.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return AuditEventAttributes.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -123,12 +127,12 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['user'] = new ApiObjectRef();
         this['client-ips'] = new Array<string>();
         this['resource'] = new ApiObjectRef();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -209,13 +213,13 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'stage': new FormControl(this['stage'], [enumValidator(AuditEventAttributes_stage), ]),
-                'level': new FormControl(this['level'], [enumValidator(AuditEventAttributes_level), ]),
+                'stage': new FormControl(this['stage'], [required, enumValidator(AuditEventAttributes_stage), ]),
+                'level': new FormControl(this['level'], [required, enumValidator(AuditEventAttributes_level), ]),
                 'user': this['user'].$formGroup,
                 'client-ips': new FormControl(this['client-ips']),
                 'resource': this['resource'].$formGroup,
                 'action': new FormControl(this['action']),
-                'outcome': new FormControl(this['outcome'], [enumValidator(AuditEventAttributes_outcome), ]),
+                'outcome': new FormControl(this['outcome'], [required, enumValidator(AuditEventAttributes_outcome), ]),
                 'request-uri': new FormControl(this['request-uri']),
                 'request-object': new FormControl(this['request-object']),
                 'response-object': new FormControl(this['response-object']),

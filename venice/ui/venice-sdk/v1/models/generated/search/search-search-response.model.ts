@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchError, ISearchError } from './search-error.model';
@@ -59,6 +59,10 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
         return SearchSearchResponse.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return SearchSearchResponse.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -72,13 +76,13 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['error'] = new SearchError();
         this['entries'] = new Array<SearchEntry>();
         this['preview-entries'] = new SearchTenantPreview();
         this['aggregated-entries'] = new SearchTenantAggregation();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**

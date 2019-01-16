@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkTLSServerPolicySpec_client_authentication,  } from './enums';
@@ -63,6 +63,10 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
         return NetworkTLSServerPolicySpec.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return NetworkTLSServerPolicySpec.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -76,12 +80,12 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['tls-server-certificates'] = new Array<string>();
         this['tls-server-trust-roots'] = new Array<string>();
         this['tls-server-allowed-peer-id'] = new Array<string>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -117,7 +121,7 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'tls-server-certificates': new FormControl(this['tls-server-certificates']),
-                'client-authentication': new FormControl(this['client-authentication'], [enumValidator(NetworkTLSServerPolicySpec_client_authentication), ]),
+                'client-authentication': new FormControl(this['client-authentication'], [required, enumValidator(NetworkTLSServerPolicySpec_client_authentication), ]),
                 'tls-server-trust-roots': new FormControl(this['tls-server-trust-roots']),
                 'tls-server-allowed-peer-id': new FormControl(this['tls-server-allowed-peer-id']),
             });

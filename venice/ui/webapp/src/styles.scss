@@ -262,6 +262,12 @@
     z-index: 100;
     white-space: nowrap;
   }
+  
+  .global-error-tooltip {
+    background: white;
+    outline: #e57553 solid 1px;
+    color: #676767;
+  }
 }
 
 

@@ -21582,7 +21582,7 @@
     },
     "web-app-framework": {
       "version": "file:../web-app-framework/dist/web-app-framework-0.0.0.tgz",
-      "integrity": "sha512-XW+9DaGz3kCIsCKD4++Tj35gli/9EJCtV9Uv3TufCdKpMlHHsghmG7LDKMRqsAsbdSd0xtepGTcKhof8wU+SRw==",
+      "integrity": "sha512-cx8yS3KktTU3V2zMf9r0Ym/f/omeABxYvva3KC5ApD8702wYwyVZWWW2E05Xv19X1RJQha3Sjh0AUcPD5thV8g==",
       "requires": {
         "@angular/animations": "7.0.3",
         "@angular/cdk": "7.0.3",

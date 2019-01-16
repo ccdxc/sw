@@ -36,7 +36,7 @@ var _ = Describe("MirrorSession Tests", func() {
 					Collectors: []monitoring.MirrorCollector{
 						{
 							Type: "ERSPAN",
-							ExportCfg: monitoring.ExportConfig{
+							ExportCfg: &monitoring.ExportConfig{
 								Destination: "100.1.1.1",
 							},
 						},

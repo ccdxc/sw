@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
@@ -42,6 +42,10 @@ export class RolloutRolloutList extends BaseModel implements IRolloutRolloutList
         return RolloutRolloutList.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return RolloutRolloutList.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -55,11 +59,11 @@ export class RolloutRolloutList extends BaseModel implements IRolloutRolloutList
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['list-meta'] = new ApiListMeta();
         this['items'] = new Array<RolloutRollout>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**

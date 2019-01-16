@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -50,6 +50,10 @@ export class MonitoringStatsPolicy extends BaseModel implements IMonitoringStats
         return MonitoringStatsPolicy.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return MonitoringStatsPolicy.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -63,12 +67,12 @@ export class MonitoringStatsPolicy extends BaseModel implements IMonitoringStats
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['meta'] = new ApiObjectMeta();
         this['spec'] = new MonitoringStatsPolicySpec();
         this['status'] = new MonitoringStatsPolicyStatus();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**

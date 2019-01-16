@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityProtoPort, ISecurityProtoPort } from './security-proto-port.model';
@@ -59,6 +59,10 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
         return SecuritySGRule.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return SecuritySGRule.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -72,7 +76,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['apps'] = new Array<string>();
         this['proto-ports'] = new Array<SecurityProtoPort>();
@@ -80,7 +84,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
         this['to-ip-addresses'] = new Array<string>();
         this['from-security-groups'] = new Array<string>();
         this['to-security-groups'] = new Array<string>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -130,7 +134,7 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
             this._formGroup = new FormGroup({
                 'apps': new FormControl(this['apps']),
                 'proto-ports': new FormArray([]),
-                'action': new FormControl(this['action'], [enumValidator(SecuritySGRule_action), ]),
+                'action': new FormControl(this['action'], [required, enumValidator(SecuritySGRule_action), ]),
                 'from-ip-addresses': new FormControl(this['from-ip-addresses']),
                 'to-ip-addresses': new FormControl(this['to-ip-addresses']),
                 'from-security-groups': new FormControl(this['from-security-groups']),

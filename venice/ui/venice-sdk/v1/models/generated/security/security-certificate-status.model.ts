@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityCertificateStatus_validity,  } from './enums';
@@ -37,6 +37,10 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
         return SecurityCertificateStatus.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return SecurityCertificateStatus.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -50,10 +54,10 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['workloads'] = new Array<string>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -78,7 +82,7 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'validity': new FormControl(this['validity'], [enumValidator(SecurityCertificateStatus_validity), ]),
+                'validity': new FormControl(this['validity'], [required, enumValidator(SecurityCertificateStatus_validity), ]),
                 'workloads': new FormControl(this['workloads']),
             });
         }

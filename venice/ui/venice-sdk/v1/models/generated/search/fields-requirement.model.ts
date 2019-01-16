@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { FieldsRequirement_operator,  FieldsRequirement_operator_uihint  } from './enums';
@@ -46,6 +46,10 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
         return FieldsRequirement.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return FieldsRequirement.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -59,10 +63,10 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['values'] = new Array<string>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -93,7 +97,7 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'key': new FormControl(this['key']),
-                'operator': new FormControl(this['operator'], [enumValidator(FieldsRequirement_operator), ]),
+                'operator': new FormControl(this['operator'], [required, enumValidator(FieldsRequirement_operator), ]),
                 'values': new FormControl(this['values']),
             });
         }

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTechSupportRequestStatus_status,  } from './enums';
@@ -43,6 +43,10 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
         return MonitoringTechSupportRequestStatus.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return MonitoringTechSupportRequestStatus.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -56,9 +60,9 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -94,7 +98,7 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'instance-id': new FormControl(this['instance-id']),
-                'status': new FormControl(this['status'], [enumValidator(MonitoringTechSupportRequestStatus_status), ]),
+                'status': new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportRequestStatus_status), ]),
                 'ctrlr-node-results': new FormControl(this['ctrlr-node-results']),
                 'smartnic-node-results': new FormControl(this['smartnic-node-results']),
             });

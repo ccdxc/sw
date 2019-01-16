@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthPermission, IAuthPermission } from './auth-permission.model';
@@ -26,6 +26,10 @@ export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
         return AuthRoleSpec.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return AuthRoleSpec.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -39,10 +43,10 @@ export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['permissions'] = new Array<AuthPermission>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**

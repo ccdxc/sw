@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthLdapServerStatus, IAuthLdapServerStatus } from './auth-ldap-server-status.model';
@@ -32,6 +32,10 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
         return AuthAuthenticationPolicyStatus.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return AuthAuthenticationPolicyStatus.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -45,11 +49,11 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['ldap-servers'] = new Array<AuthLdapServerStatus>();
         this['radius-servers'] = new Array<AuthRadiusServerStatus>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**

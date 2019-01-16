@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthPermission_actions,  AuthPermission_actions_uihint  } from './enums';
@@ -67,6 +67,10 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
         return AuthPermission.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return AuthPermission.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -80,11 +84,11 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['resource-names'] = new Array<string>();
         this['actions'] = new Array<AuthPermission_actions>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**

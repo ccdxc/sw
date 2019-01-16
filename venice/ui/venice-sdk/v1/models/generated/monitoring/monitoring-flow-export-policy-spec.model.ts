@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringFlowExportPolicySpec_format,  } from './enums';
@@ -51,6 +51,10 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
         return MonitoringFlowExportPolicySpec.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return MonitoringFlowExportPolicySpec.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -64,11 +68,11 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['match-rules'] = new Array<MonitoringMatchRule>();
         this['exports'] = new Array<MonitoringExportConfig>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -100,7 +104,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'interval': new FormControl(this['interval']),
-                'format': new FormControl(this['format'], [enumValidator(MonitoringFlowExportPolicySpec_format), ]),
+                'format': new FormControl(this['format'], [required, enumValidator(MonitoringFlowExportPolicySpec_format), ]),
                 'match-rules': new FormArray([]),
                 'exports': new FormArray([]),
             });

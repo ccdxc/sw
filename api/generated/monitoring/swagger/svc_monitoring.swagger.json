@@ -13360,6 +13360,9 @@
       "properties": {
         "destination": {
           "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "length of string should be between 1 and 2048\n",
           "title": "IP address or URL of the collector/entity to which the data is to be exported"
         },
         "transport": {

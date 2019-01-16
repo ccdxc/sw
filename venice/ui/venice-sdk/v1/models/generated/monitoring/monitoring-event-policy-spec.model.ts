@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringEventPolicySpec_format,  MonitoringEventPolicySpec_format_uihint  } from './enums';
@@ -46,6 +46,10 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
         return MonitoringEventPolicySpec.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return MonitoringEventPolicySpec.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -59,12 +63,12 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['selector'] = new FieldsSelector();
         this['targets'] = new Array<MonitoringExportConfig>();
         this['config'] = new MonitoringSyslogExportConfig();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -93,7 +97,7 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'format': new FormControl(this['format'], [enumValidator(MonitoringEventPolicySpec_format), ]),
+                'format': new FormControl(this['format'], [required, enumValidator(MonitoringEventPolicySpec_format), ]),
                 'selector': this['selector'].$formGroup,
                 'targets': new FormArray([]),
                 'config': this['config'].$formGroup,

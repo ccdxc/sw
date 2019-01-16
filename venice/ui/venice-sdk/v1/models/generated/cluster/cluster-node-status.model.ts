@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterNodeStatus_phase,  ClusterNodeStatus_phase_uihint  } from './enums';
@@ -43,6 +43,10 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
         return ClusterNodeStatus.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return ClusterNodeStatus.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -56,10 +60,10 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['conditions'] = new Array<ClusterNodeCondition>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -87,7 +91,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'phase': new FormControl(this['phase'], [enumValidator(ClusterNodeStatus_phase), ]),
+                'phase': new FormControl(this['phase'], [required, enumValidator(ClusterNodeStatus_phase), ]),
                 'quorum': new FormControl(this['quorum']),
                 'conditions': new FormArray([]),
             });

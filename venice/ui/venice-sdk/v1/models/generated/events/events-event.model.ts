@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -71,6 +71,10 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         return EventsEvent.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return EventsEvent.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -84,12 +88,12 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['meta'] = new ApiObjectMeta();
         this['object-ref'] = new ApiObjectRef();
         this['source'] = new EventsEventSource();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -146,7 +150,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
                 'meta': this['meta'].$formGroup,
-                'severity': new FormControl(this['severity'], [enumValidator(EventsEvent_severity), ]),
+                'severity': new FormControl(this['severity'], [required, enumValidator(EventsEvent_severity), ]),
                 'type': new FormControl(this['type']),
                 'message': new FormControl(this['message']),
                 'object-ref': this['object-ref'].$formGroup,

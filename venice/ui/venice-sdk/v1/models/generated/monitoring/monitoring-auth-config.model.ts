@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAuthConfig_algo,  } from './enums';
@@ -35,6 +35,10 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
         return MonitoringAuthConfig.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return MonitoringAuthConfig.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -48,9 +52,9 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -75,7 +79,7 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'algo': new FormControl(this['algo'], [enumValidator(MonitoringAuthConfig_algo), ]),
+                'algo': new FormControl(this['algo'], [required, enumValidator(MonitoringAuthConfig_algo), ]),
                 'password': new FormControl(this['password']),
             });
         }

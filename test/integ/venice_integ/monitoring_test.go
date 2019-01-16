@@ -45,7 +45,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 				},
 				{
 					Type: "ERSPAN",
-					ExportCfg: monitoring.ExportConfig{
+					ExportCfg: &monitoring.ExportConfig{
 						Destination: "111.1.1.1",
 					},
 				},
@@ -100,7 +100,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 			Collectors: []monitoring.MirrorCollector{
 				{
 					Type: "ERSPAN",
-					ExportCfg: monitoring.ExportConfig{
+					ExportCfg: &monitoring.ExportConfig{
 						Destination: "111.1.1.1",
 					},
 				},

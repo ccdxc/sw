@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
@@ -90,6 +90,10 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
         return Metrics_queryQuerySpec.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return Metrics_queryQuerySpec.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -103,12 +107,12 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['selector'] = new LabelsSelector();
         this['fields'] = new Array<string>();
         this['pagination'] = new Metrics_queryPaginationSpec();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -179,7 +183,7 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
                 'name': new FormControl(this['name']),
                 'selector': this['selector'].$formGroup,
                 'fields': new FormControl(this['fields']),
-                'function': new FormControl(this['function'], [enumValidator(Metrics_queryQuerySpec_function), ]),
+                'function': new FormControl(this['function'], [required, enumValidator(Metrics_queryQuerySpec_function), ]),
                 'start-time': new FormControl(this['start-time']),
                 'end-time': new FormControl(this['end-time']),
                 'group-by-time': new FormControl(this['group-by-time']),

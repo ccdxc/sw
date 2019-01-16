@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { RolloutRolloutPhase, IRolloutRolloutPhase } from './rollout-rollout-phase.model';
@@ -67,6 +67,10 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
         return RolloutRolloutStatus.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return RolloutRolloutStatus.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -80,12 +84,12 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['controller-nodes-status'] = new Array<RolloutRolloutPhase>();
         this['controller-services-status'] = new Array<RolloutRolloutPhase>();
         this['smartnics-status'] = new Array<RolloutRolloutPhase>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -137,7 +141,7 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
                 'controller-nodes-status': new FormArray([]),
                 'controller-services-status': new FormArray([]),
                 'smartnics-status': new FormArray([]),
-                'state': new FormControl(this['state'], [enumValidator(RolloutRolloutStatus_state), ]),
+                'state': new FormControl(this['state'], [required, enumValidator(RolloutRolloutStatus_state), ]),
                 'completion-percent': new FormControl(this['completion-percent']),
                 'start-time': new FormControl(this['start-time']),
                 'end-time': new FormControl(this['end-time']),

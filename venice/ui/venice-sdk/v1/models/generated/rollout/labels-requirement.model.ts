@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsRequirement_operator,  LabelsRequirement_operator_uihint  } from './enums';
@@ -46,6 +46,10 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
         return LabelsRequirement.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return LabelsRequirement.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -59,10 +63,10 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['values'] = new Array<string>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -93,7 +97,7 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'key': new FormControl(this['key']),
-                'operator': new FormControl(this['operator'], [enumValidator(LabelsRequirement_operator), ]),
+                'operator': new FormControl(this['operator'], [required, enumValidator(LabelsRequirement_operator), ]),
                 'values': new FormControl(this['values']),
             });
         }

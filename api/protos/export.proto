@@ -23,7 +23,7 @@ enum ExportAuthType {
 // Export Config specifies server address and user credentials
 message ExportConfig {
     // IP address or URL of the collector/entity to which the data is to be exported
-    string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty"];
+    string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty", (venice.check)="StrLen(1,2048)"];
 
     // protocol and Port number where an external collector is gathering the data
     // example "TCP/2055"

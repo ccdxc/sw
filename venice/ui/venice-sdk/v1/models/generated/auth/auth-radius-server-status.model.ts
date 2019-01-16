@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRadiusServerStatus_result,  } from './enums';
@@ -39,6 +39,10 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
         return AuthRadiusServerStatus.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return AuthRadiusServerStatus.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -52,10 +56,10 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['server'] = new AuthRadiusServer();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
@@ -83,7 +87,7 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'result': new FormControl(this['result'], [enumValidator(AuthRadiusServerStatus_result), ]),
+                'result': new FormControl(this['result'], [required, enumValidator(AuthRadiusServerStatus_result), ]),
                 'message': new FormControl(this['message']),
                 'server': this['server'].$formGroup,
             });

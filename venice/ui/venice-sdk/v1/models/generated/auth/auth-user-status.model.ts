@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthUserStatus_authenticators,  AuthUserStatus_authenticators_uihint  } from './enums';
@@ -43,6 +43,10 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         return AuthUserStatus.propInfo[propName];
     }
 
+    public getPropInfoConfig(): { [key:string]:PropInfoItem } {
+        return AuthUserStatus.propInfo;
+    }
+
     /**
      * Returns whether or not there is an enum property with a default value
     */
@@ -56,12 +60,12 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
      * constructor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
-    constructor(values?: any) {
+    constructor(values?: any, setDefaults:boolean = true) {
         super();
         this['roles'] = new Array<string>();
         this['user-groups'] = new Array<string>();
         this['authenticators'] = new Array<AuthUserStatus_authenticators>();
-        this.setValues(values);
+        this.setValues(values, setDefaults);
     }
 
     /**
