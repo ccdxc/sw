@@ -223,7 +223,7 @@ sdk_ret_t
 linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
                 q_notify_mode_t mode)
 {
-    uint16_t            pindx;
+    uint16_t            pindx = 0;
     sdk::lib::thread    *curr_thread = current_thread();
     uint32_t            curr_tid = curr_thread->thread_id();
     linkmgr_entry_t     *rw_entry;
@@ -238,10 +238,9 @@ linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
     // SDK_TRACE_DEBUG("Thread: %s, Notify op %d",
     //                 current_thread()->name(), operation);
 
-    while(!SDK_ATOMIC_COMPARE_EXCHANGE_WEAK(
-                                &g_linkmgr_workq[curr_tid].pindx,
-                                &pindx,
-                                (pindx+1) % LINKMGR_CONTROL_Q_SIZE));
+    while (!SDK_ATOMIC_COMPARE_EXCHANGE_WEAK(
+               &g_linkmgr_workq[curr_tid].pindx,
+               &pindx, (pindx+1) % LINKMGR_CONTROL_Q_SIZE));
 
     rw_entry = &g_linkmgr_workq[curr_tid].entries[pindx];
     rw_entry->opn = operation;
