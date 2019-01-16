@@ -1701,29 +1701,14 @@ void ionic_lifs_deinit(struct ionic *ionic)
         }
 }
 
-static VMK_ReturnStatus
-ionic_request_irq(struct lif *lif, struct qcq *qcq)
+static void 
+ionic_record_irq(struct lif *lif, struct qcq *qcq)
 {
-        VMK_ReturnStatus status;
-//	struct device *dev = lif->ionic->dev;
 	struct intr *intr = &qcq->intr;
 	struct queue *q = &qcq->q;
-//	struct napi_struct *napi = &qcq->napi;
 
 	vmk_Snprintf(intr->name, sizeof(intr->name),
 	             "%s-%s-%s", DRV_NAME, lif->name, q->name);
-//return devm_request_irq(dev, intr->vector, ionic_isr,
-//				0, intr->name, napi);
-
-        status = VMK_OK; 
-//                vmk_NetPollInterruptSet(qcq->netpoll,
-//                                         qcq->intr.cookie);
-        if (status != VMK_OK) {
-                ionic_err("vmk_NetPollInterruptSet() failed, status: %s",
-                          vmk_StatusToString(status));
-        }
-
-        return status;
 }
 
 static VMK_ReturnStatus
@@ -1764,13 +1749,7 @@ ionic_lif_adminq_init(struct lif *lif)
                 return status;
         }
 
-        status = ionic_request_irq(lif, qcq);
-	if (status != VMK_OK) {
-                ionic_err("ionic_request_irq() failed, status: %s",
-                          vmk_StatusToString(status));
-                vmk_NetPollDestroy(qcq->netpoll);
-                return status;
-	}
+        ionic_record_irq(lif, qcq);
 
 	qcq->flags |= QCQ_F_INITED;
 
@@ -1933,13 +1912,7 @@ ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
                 return status;
         }
 
-	status = ionic_request_irq(lif, qcq);
-	if (status != VMK_OK) {
-                ionic_err("ionic_request_irq() failed, status: %s",
-                          vmk_StatusToString(status));
-                vmk_NetPollDestroy(qcq->netpoll);
-                return status;
-	}
+	ionic_record_irq(lif, qcq);
 
 	qcq->flags |= QCQ_F_INITED;
 
@@ -2044,15 +2017,9 @@ ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
                 return status;
         }
 
-	status = ionic_request_irq(lif, qcq);
-	if (status != VMK_OK) {
-                ionic_err("ionic_request_irq() failed, status: %s",
-                          vmk_StatusToString(status));
-                vmk_NetPollDestroy(qcq->netpoll);
-                return status;
-	}
+	ionic_record_irq(lif, qcq);
 
-	qcq->flags |= QCQ_F_INITED;
+        qcq->flags |= QCQ_F_INITED;
 
 	ionic_info("rxq->qid %d\n", q->qid);
 	ionic_info("rxq->qtype %d\n", q->qtype);

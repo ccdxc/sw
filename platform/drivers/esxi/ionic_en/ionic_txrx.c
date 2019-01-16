@@ -97,13 +97,6 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         stats->pkts++;
         stats->bytes += comp->len;
 
-        //VMK_ASSERT(status == VMK_OK);
-
-//        dma_unmap_single(dev, dma_addr, desc->len, DMA_FROM_DEVICE);
-
-        //prefetch(skb->data - NET_IP_ALIGN);
-//        skb_put(skb, comp->len);
-//        skb->protocol = eth_type_trans(skb, netdev);
         vmk_PktFrameLenSet(pkt, comp->len);
 
 #ifdef HAPS
@@ -165,11 +158,14 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                 }
         }
 
-//        napi_gro_receive(&qcq->napi, skb);
 
         status = vmk_NetPollCheckState(qcq->netpoll,
                                        &poll_state);
-        VMK_ASSERT(status == VMK_OK);
+        if (VMK_UNLIKELY(status != VMK_OK)) {
+                ionic_err("vmk_NetPollCheckState() failed, status: %s",
+                          vmk_StatusToString(status));
+                VMK_ASSERT(0);
+        }
 
         if (VMK_LIKELY(poll_state == VMK_NETPOLL_ACTIVE)) {
                 status = vmk_NetPollRxPktQueue(qcq->netpoll,
@@ -207,18 +203,14 @@ ionic_rx_pkt_alloc(struct queue *q,
         VMK_ReturnStatus status;
         struct ionic_en_priv_data *priv_data;
         struct lif *lif = q->lif;
-//        struct net_device *netdev = lif->netdev;
-        //struct device *dev = lif->ionic->dev;
         struct rx_stats *stats = q_to_rx_stats(q);
         const vmk_SgElem *sge;
         vmk_PktHandle *new_pkt;
-        vmk_Bool is_flat;
 
         priv_data = IONIC_CONTAINER_OF(lif->ionic,
                                        struct ionic_en_priv_data,
                                        ionic);
 
-//        status = vmk_PktAlloc(len, &new_pkt);
         status = vmk_PktAllocForDMAEngine(len,
                                           priv_data->dma_engine_streaming,
                                           &new_pkt);
@@ -227,10 +219,6 @@ ionic_rx_pkt_alloc(struct queue *q,
                 return NULL;
         }
 
-        /* The pkt should be a flat one! */
-        is_flat = vmk_PktIsFlatBuffer(new_pkt);
-        VMK_ASSERT(is_flat == VMK_TRUE);
-        
         sge = vmk_PktSgElemGet(new_pkt, 0);
         VMK_ASSERT(sge);
 
@@ -266,8 +254,11 @@ ionic_rx_pkt_free(struct queue *q,
                                  VMK_DMA_DIRECTION_TO_MEMORY,
                                  len,
                                  dma_addr);
-        if (status == VMK_OK) {
+        if (VMK_LIKELY(status == VMK_OK)) {
                 ionic_en_pkt_release(pkt, NULL);
+        } else {
+                ionic_err("ionic_dma_unmap() failed, status: %s",
+                          vmk_StatusToString(status));
         }
 }
 
@@ -859,6 +850,7 @@ ionic_tx_calc_csum(struct queue *q,
                 return VMK_DMA_MAPPING_FAILED;
         }
 
+//        is_insert_vlan = !!(ctx->offload_flags & IONIC_TX_VLAN);
         is_insert_vlan = (ctx->offload_flags & IONIC_TX_VLAN) > 0?
                          VMK_TRUE : VMK_FALSE;
 

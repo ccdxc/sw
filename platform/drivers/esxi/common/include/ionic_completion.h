@@ -50,8 +50,8 @@ void
 ionic_complete(struct ionic_completion *completion);
 
 vmk_Bool
-ionic_wait_for_completion(struct ionic_completion *completion,
-                          vmk_uint32 timeout_ms);
+ionic_wait_for_completion_timeout(struct ionic_completion *completion,
+                                  vmk_uint32 timeout_ms);
 
 
 #endif /* End of _IONIC_COMPLETION_H_ */

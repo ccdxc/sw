@@ -1899,6 +1899,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
                 vlan_filters = is_rss? priv_data->uplink_handle.rx_rss_rings[rx_ring_idx].vlan_filter :
                                priv_data->uplink_handle.rx_rings[rx_ring_idx].vlan_filter;
         } else {
+                ionic_err("Unexpected filter class: %d", class);
                 VMK_ASSERT(0);
         }
 

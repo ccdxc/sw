@@ -173,7 +173,7 @@ ionic_complete(struct ionic_completion *completion)               // IN
 /*
  ******************************************************************************
  *
- * ionic_wait_for_completion --
+ * ionic_wait_for_completion_timeout --
  *
  *    Wait indefinitely for completion event to happen
  *
@@ -191,8 +191,8 @@ ionic_complete(struct ionic_completion *completion)               // IN
  */
 
 vmk_Bool
-ionic_wait_for_completion(struct ionic_completion *completion,    // IN
-                          vmk_uint32 timeout_ms)                  // IN
+ionic_wait_for_completion_timeout(struct ionic_completion *completion,    // IN
+                                  vmk_uint32 timeout_ms)                  // IN
 {
         VMK_ReturnStatus status = VMK_OK;
         vmk_Bool is_timeout = VMK_FALSE;
