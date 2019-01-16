@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
+	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
 )
 
 {{$fileName := .GetName}}
@@ -33,9 +34,9 @@ type {{.GetName}} struct {
 	key       {{.GetGolangTypeName}}
 	{{end}}
 	{{else if (eq .GetTypeName ".delphi.Counter") }}
-	{{.GetCamelCaseName}} gometrics.Counter
+	{{.GetCamelCaseName}} metrics.Counter
 	{{else if (eq .GetTypeName ".delphi.Gauge") }}
-	{{.GetCamelCaseName}}    gometrics.Gauge
+	{{.GetCamelCaseName}}    metrics.Gauge
 	{{end}} {{end}}
 
 	// private state
@@ -111,13 +112,13 @@ func (mtr *{{.GetName}}) getOffset(fldName string) int {
 {{if (eq .GetName "Key") }}
 {{else if (eq .GetTypeName ".delphi.Counter") }}
 // Set{{.GetCamelCaseName}} sets cunter in shared memory
-func (mtr *{{$msgName}}) Set{{.GetCamelCaseName}}(val gometrics.Counter) error {
+func (mtr *{{$msgName}}) Set{{.GetCamelCaseName}}(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("{{.GetCamelCaseName}}"))
 	return nil
 }
 {{else if (eq .GetTypeName ".delphi.Gauge") }}
 // Set{{.GetCamelCaseName}} sets gauge in shared memory
-func (mtr *{{$msgName}}) Set{{.GetCamelCaseName}}(val gometrics.Gauge) error {
+func (mtr *{{$msgName}}) Set{{.GetCamelCaseName}}(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("{{.GetCamelCaseName}}"))
 	return nil
 }

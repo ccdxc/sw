@@ -5,6 +5,7 @@ package goproto
 import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
+	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
 )
 
 type AsicTemperatureMetrics struct {
@@ -12,11 +13,11 @@ type AsicTemperatureMetrics struct {
 
 	key uint64
 
-	LocalTemperature gometrics.Counter
+	LocalTemperature metrics.Counter
 
-	DieTemperature gometrics.Counter
+	DieTemperature metrics.Counter
 
-	HbmTemperature gometrics.Counter
+	HbmTemperature metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -80,19 +81,19 @@ func (mtr *AsicTemperatureMetrics) getOffset(fldName string) int {
 }
 
 // SetLocalTemperature sets cunter in shared memory
-func (mtr *AsicTemperatureMetrics) SetLocalTemperature(val gometrics.Counter) error {
+func (mtr *AsicTemperatureMetrics) SetLocalTemperature(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("LocalTemperature"))
 	return nil
 }
 
 // SetDieTemperature sets cunter in shared memory
-func (mtr *AsicTemperatureMetrics) SetDieTemperature(val gometrics.Counter) error {
+func (mtr *AsicTemperatureMetrics) SetDieTemperature(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DieTemperature"))
 	return nil
 }
 
 // SetHbmTemperature sets cunter in shared memory
-func (mtr *AsicTemperatureMetrics) SetHbmTemperature(val gometrics.Counter) error {
+func (mtr *AsicTemperatureMetrics) SetHbmTemperature(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("HbmTemperature"))
 	return nil
 }
@@ -168,11 +169,11 @@ type AsicPowerMetrics struct {
 
 	key uint64
 
-	Pin gometrics.Counter
+	Pin metrics.Counter
 
-	Pout1 gometrics.Counter
+	Pout1 metrics.Counter
 
-	Pout2 gometrics.Counter
+	Pout2 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -236,19 +237,19 @@ func (mtr *AsicPowerMetrics) getOffset(fldName string) int {
 }
 
 // SetPin sets cunter in shared memory
-func (mtr *AsicPowerMetrics) SetPin(val gometrics.Counter) error {
+func (mtr *AsicPowerMetrics) SetPin(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Pin"))
 	return nil
 }
 
 // SetPout1 sets cunter in shared memory
-func (mtr *AsicPowerMetrics) SetPout1(val gometrics.Counter) error {
+func (mtr *AsicPowerMetrics) SetPout1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Pout1"))
 	return nil
 }
 
 // SetPout2 sets cunter in shared memory
-func (mtr *AsicPowerMetrics) SetPout2(val gometrics.Counter) error {
+func (mtr *AsicPowerMetrics) SetPout2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Pout2"))
 	return nil
 }

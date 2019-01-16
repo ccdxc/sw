@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"unsafe"
+	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
 )
 
 // delphiMetricsIterator keeps internal state of the metrics iterator
@@ -109,19 +110,19 @@ func (m *delphiMetrics) GetKey() []byte {
 	return C.GoBytes(unsafe.Pointer(C.MetricsEntryKey(m.entry)), C.MetricsEntryKeylen(m.entry))
 }
 
-func (m *delphiMetrics) GetCounter(offset int) Counter {
-	return Counter(C.GetCounter(m.entry, C.int(offset)))
+func (m *delphiMetrics) GetCounter(offset int) metrics.Counter {
+	return metrics.Counter(C.GetCounter(m.entry, C.int(offset)))
 }
 
-func (m *delphiMetrics) SetCounter(cntr Counter, offset int) {
+func (m *delphiMetrics) SetCounter(cntr metrics.Counter, offset int) {
 	C.SetCounter(m.entry, C.int(cntr), C.int(offset))
 }
 
-func (m *delphiMetrics) GetGauge(offset int) Gauge {
-	return Gauge(C.GetGauge(m.entry, C.int(offset)))
+func (m *delphiMetrics) GetGauge(offset int) metrics.Gauge {
+	return metrics.Gauge(C.GetGauge(m.entry, C.int(offset)))
 }
 
-func (m *delphiMetrics) SetGauge(gge Gauge, offset int) {
+func (m *delphiMetrics) SetGauge(gge metrics.Gauge, offset int) {
 	C.SetGauge(m.entry, C.double(gge), C.int(offset))
 }
 

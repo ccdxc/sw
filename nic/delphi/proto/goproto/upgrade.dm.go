@@ -5,6 +5,7 @@ package goproto
 import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
+	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
 )
 
 type UpgradeMetrics struct {
@@ -12,23 +13,23 @@ type UpgradeMetrics struct {
 
 	key uint32
 
-	IsUpgPossible gometrics.Counter
+	IsUpgPossible metrics.Counter
 
-	DisruptiveUpg gometrics.Counter
+	DisruptiveUpg metrics.Counter
 
-	NonDisruptiveUpg gometrics.Counter
+	NonDisruptiveUpg metrics.Counter
 
-	SuccessfulUpg gometrics.Counter
+	SuccessfulUpg metrics.Counter
 
-	FailedUpg gometrics.Counter
+	FailedUpg metrics.Counter
 
-	AbortedUpg gometrics.Counter
+	AbortedUpg metrics.Counter
 
-	NumRegApps gometrics.Gauge
+	NumRegApps metrics.Gauge
 
-	UpgPossible gometrics.Counter
+	UpgPossible metrics.Counter
 
-	UpgNotPossible gometrics.Counter
+	UpgNotPossible metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -152,55 +153,55 @@ func (mtr *UpgradeMetrics) getOffset(fldName string) int {
 }
 
 // SetIsUpgPossible sets cunter in shared memory
-func (mtr *UpgradeMetrics) SetIsUpgPossible(val gometrics.Counter) error {
+func (mtr *UpgradeMetrics) SetIsUpgPossible(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("IsUpgPossible"))
 	return nil
 }
 
 // SetDisruptiveUpg sets cunter in shared memory
-func (mtr *UpgradeMetrics) SetDisruptiveUpg(val gometrics.Counter) error {
+func (mtr *UpgradeMetrics) SetDisruptiveUpg(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DisruptiveUpg"))
 	return nil
 }
 
 // SetNonDisruptiveUpg sets cunter in shared memory
-func (mtr *UpgradeMetrics) SetNonDisruptiveUpg(val gometrics.Counter) error {
+func (mtr *UpgradeMetrics) SetNonDisruptiveUpg(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("NonDisruptiveUpg"))
 	return nil
 }
 
 // SetSuccessfulUpg sets cunter in shared memory
-func (mtr *UpgradeMetrics) SetSuccessfulUpg(val gometrics.Counter) error {
+func (mtr *UpgradeMetrics) SetSuccessfulUpg(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SuccessfulUpg"))
 	return nil
 }
 
 // SetFailedUpg sets cunter in shared memory
-func (mtr *UpgradeMetrics) SetFailedUpg(val gometrics.Counter) error {
+func (mtr *UpgradeMetrics) SetFailedUpg(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FailedUpg"))
 	return nil
 }
 
 // SetAbortedUpg sets cunter in shared memory
-func (mtr *UpgradeMetrics) SetAbortedUpg(val gometrics.Counter) error {
+func (mtr *UpgradeMetrics) SetAbortedUpg(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("AbortedUpg"))
 	return nil
 }
 
 // SetNumRegApps sets gauge in shared memory
-func (mtr *UpgradeMetrics) SetNumRegApps(val gometrics.Gauge) error {
+func (mtr *UpgradeMetrics) SetNumRegApps(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("NumRegApps"))
 	return nil
 }
 
 // SetUpgPossible sets cunter in shared memory
-func (mtr *UpgradeMetrics) SetUpgPossible(val gometrics.Counter) error {
+func (mtr *UpgradeMetrics) SetUpgPossible(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UpgPossible"))
 	return nil
 }
 
 // SetUpgNotPossible sets cunter in shared memory
-func (mtr *UpgradeMetrics) SetUpgNotPossible(val gometrics.Counter) error {
+func (mtr *UpgradeMetrics) SetUpgNotPossible(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UpgNotPossible"))
 	return nil
 }

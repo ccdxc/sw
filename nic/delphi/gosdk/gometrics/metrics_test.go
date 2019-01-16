@@ -7,14 +7,15 @@ import (
 	"testing"
 
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
 )
 
 type TestMetrics struct {
 	key       uint32
-	RxCounter Counter
-	TxCounter Counter
-	RxRate    Gauge
-	TxRate    Gauge
+	RxCounter metrics.Counter
+	TxCounter metrics.Counter
+	RxRate    metrics.Gauge
+	TxRate    metrics.Gauge
 
 	// private state
 	metrics Metrics
@@ -75,25 +76,25 @@ func (mtr *TestMetrics) getOffset(fldName string) int {
 }
 
 // SetRxCounter sets cunter in shared memory
-func (mtr *TestMetrics) SetRxCounter(val Counter) error {
+func (mtr *TestMetrics) SetRxCounter(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxCounter"))
 	return nil
 }
 
 // SetTxCounter sets counter in shared memory
-func (mtr *TestMetrics) SetTxCounter(val Counter) error {
+func (mtr *TestMetrics) SetTxCounter(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxCounter"))
 	return nil
 }
 
 // SetRxRate sets gauge in shared memory
-func (mtr *TestMetrics) SetRxRate(val Gauge) error {
+func (mtr *TestMetrics) SetRxRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("RxRate"))
 	return nil
 }
 
 // SetTxRate sets gause in shared memory
-func (mtr *TestMetrics) SetTxRate(val Gauge) error {
+func (mtr *TestMetrics) SetTxRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("TxRate"))
 	return nil
 }

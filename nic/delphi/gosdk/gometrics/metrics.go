@@ -6,16 +6,17 @@ import (
 	"encoding/binary"
 
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
 )
 
 // Metrics is the interface all meterics objects have to implement
 type Metrics interface {
 	GetKey() []byte                      // returns the key for the metrics
 	String() string                      // return json string
-	GetCounter(offset int) Counter       // get a counter attribute
-	GetGauge(offset int) Gauge           // get gauge attribute
-	SetCounter(cntr Counter, offset int) // set counter value
-	SetGauge(val Gauge, offset int)      // set gauge value
+	GetCounter(offset int) metrics.Counter       // get a counter attribute
+	GetGauge(offset int) metrics.Gauge           // get gauge attribute
+	SetCounter(cntr metrics.Counter, offset int) // set counter value
+	SetGauge(val metrics.Gauge, offset int)      // set gauge value
 }
 
 // MetricsIterator can iterate over a kind of metrics objects
@@ -25,20 +26,6 @@ type MetricsIterator interface {
 	Find(key []byte) (Metrics, error)   // get a specific metrics entry
 	Create(key []byte, len int) Metrics // create a metrics entry
 	Delete(key []byte) error            // delete a metrics entry
-}
-
-// type definitions
-type Counter uint64
-type Gauge float64
-
-// Size returns len of counter
-func (c Counter) Size() int {
-	return 8
-}
-
-// Size returns byte length of gauge
-func (g Gauge) Size() int {
-	return 8
 }
 
 // NewMetricsIterator returns new metrics iterator for a kind

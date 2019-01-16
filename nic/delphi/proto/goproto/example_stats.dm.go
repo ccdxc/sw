@@ -7,6 +7,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
+	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
 )
 
 type ExampleMetrics struct {
@@ -14,17 +15,17 @@ type ExampleMetrics struct {
 
 	key uint32
 
-	RxPkts gometrics.Counter
+	RxPkts metrics.Counter
 
-	TxPkts gometrics.Counter
+	TxPkts metrics.Counter
 
-	RxPktRate gometrics.Gauge
+	RxPktRate metrics.Gauge
 
-	TxPktRate gometrics.Gauge
+	TxPktRate metrics.Gauge
 
-	RxErrors gometrics.Counter
+	RxErrors metrics.Counter
 
-	TxErrors gometrics.Counter
+	TxErrors metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -118,37 +119,37 @@ func (mtr *ExampleMetrics) getOffset(fldName string) int {
 }
 
 // SetRxPkts sets cunter in shared memory
-func (mtr *ExampleMetrics) SetRxPkts(val gometrics.Counter) error {
+func (mtr *ExampleMetrics) SetRxPkts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxPkts"))
 	return nil
 }
 
 // SetTxPkts sets cunter in shared memory
-func (mtr *ExampleMetrics) SetTxPkts(val gometrics.Counter) error {
+func (mtr *ExampleMetrics) SetTxPkts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxPkts"))
 	return nil
 }
 
 // SetRxPktRate sets gauge in shared memory
-func (mtr *ExampleMetrics) SetRxPktRate(val gometrics.Gauge) error {
+func (mtr *ExampleMetrics) SetRxPktRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("RxPktRate"))
 	return nil
 }
 
 // SetTxPktRate sets gauge in shared memory
-func (mtr *ExampleMetrics) SetTxPktRate(val gometrics.Gauge) error {
+func (mtr *ExampleMetrics) SetTxPktRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("TxPktRate"))
 	return nil
 }
 
 // SetRxErrors sets cunter in shared memory
-func (mtr *ExampleMetrics) SetRxErrors(val gometrics.Counter) error {
+func (mtr *ExampleMetrics) SetRxErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxErrors"))
 	return nil
 }
 
 // SetTxErrors sets cunter in shared memory
-func (mtr *ExampleMetrics) SetTxErrors(val gometrics.Counter) error {
+func (mtr *ExampleMetrics) SetTxErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxErrors"))
 	return nil
 }
@@ -234,17 +235,17 @@ type NestedKeyExampleMetrics struct {
 
 	key ExampleKey
 
-	RxPkts gometrics.Counter
+	RxPkts metrics.Counter
 
-	TxPkts gometrics.Counter
+	TxPkts metrics.Counter
 
-	RxPktRate gometrics.Gauge
+	RxPktRate metrics.Gauge
 
-	TxPktRate gometrics.Gauge
+	TxPktRate metrics.Gauge
 
-	RxErrors gometrics.Counter
+	RxErrors metrics.Counter
 
-	TxErrors gometrics.Counter
+	TxErrors metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -338,37 +339,37 @@ func (mtr *NestedKeyExampleMetrics) getOffset(fldName string) int {
 }
 
 // SetRxPkts sets cunter in shared memory
-func (mtr *NestedKeyExampleMetrics) SetRxPkts(val gometrics.Counter) error {
+func (mtr *NestedKeyExampleMetrics) SetRxPkts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxPkts"))
 	return nil
 }
 
 // SetTxPkts sets cunter in shared memory
-func (mtr *NestedKeyExampleMetrics) SetTxPkts(val gometrics.Counter) error {
+func (mtr *NestedKeyExampleMetrics) SetTxPkts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxPkts"))
 	return nil
 }
 
 // SetRxPktRate sets gauge in shared memory
-func (mtr *NestedKeyExampleMetrics) SetRxPktRate(val gometrics.Gauge) error {
+func (mtr *NestedKeyExampleMetrics) SetRxPktRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("RxPktRate"))
 	return nil
 }
 
 // SetTxPktRate sets gauge in shared memory
-func (mtr *NestedKeyExampleMetrics) SetTxPktRate(val gometrics.Gauge) error {
+func (mtr *NestedKeyExampleMetrics) SetTxPktRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("TxPktRate"))
 	return nil
 }
 
 // SetRxErrors sets cunter in shared memory
-func (mtr *NestedKeyExampleMetrics) SetRxErrors(val gometrics.Counter) error {
+func (mtr *NestedKeyExampleMetrics) SetRxErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxErrors"))
 	return nil
 }
 
 // SetTxErrors sets cunter in shared memory
-func (mtr *NestedKeyExampleMetrics) SetTxErrors(val gometrics.Counter) error {
+func (mtr *NestedKeyExampleMetrics) SetTxErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxErrors"))
 	return nil
 }
@@ -447,17 +448,17 @@ type SingletonExampleMetrics struct {
 
 	key int
 
-	RxPkts gometrics.Counter
+	RxPkts metrics.Counter
 
-	TxPkts gometrics.Counter
+	TxPkts metrics.Counter
 
-	RxPktRate gometrics.Gauge
+	RxPktRate metrics.Gauge
 
-	TxPktRate gometrics.Gauge
+	TxPktRate metrics.Gauge
 
-	RxErrors gometrics.Counter
+	RxErrors metrics.Counter
 
-	TxErrors gometrics.Counter
+	TxErrors metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -549,37 +550,37 @@ func (mtr *SingletonExampleMetrics) getOffset(fldName string) int {
 }
 
 // SetRxPkts sets cunter in shared memory
-func (mtr *SingletonExampleMetrics) SetRxPkts(val gometrics.Counter) error {
+func (mtr *SingletonExampleMetrics) SetRxPkts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxPkts"))
 	return nil
 }
 
 // SetTxPkts sets cunter in shared memory
-func (mtr *SingletonExampleMetrics) SetTxPkts(val gometrics.Counter) error {
+func (mtr *SingletonExampleMetrics) SetTxPkts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxPkts"))
 	return nil
 }
 
 // SetRxPktRate sets gauge in shared memory
-func (mtr *SingletonExampleMetrics) SetRxPktRate(val gometrics.Gauge) error {
+func (mtr *SingletonExampleMetrics) SetRxPktRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("RxPktRate"))
 	return nil
 }
 
 // SetTxPktRate sets gauge in shared memory
-func (mtr *SingletonExampleMetrics) SetTxPktRate(val gometrics.Gauge) error {
+func (mtr *SingletonExampleMetrics) SetTxPktRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("TxPktRate"))
 	return nil
 }
 
 // SetRxErrors sets cunter in shared memory
-func (mtr *SingletonExampleMetrics) SetRxErrors(val gometrics.Counter) error {
+func (mtr *SingletonExampleMetrics) SetRxErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxErrors"))
 	return nil
 }
 
 // SetTxErrors sets cunter in shared memory
-func (mtr *SingletonExampleMetrics) SetTxErrors(val gometrics.Counter) error {
+func (mtr *SingletonExampleMetrics) SetTxErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxErrors"))
 	return nil
 }
@@ -654,17 +655,17 @@ type DpExampleMetrics struct {
 
 	key uint32
 
-	RxPkts gometrics.Counter
+	RxPkts metrics.Counter
 
-	TxPkts gometrics.Counter
+	TxPkts metrics.Counter
 
-	RxPktRate gometrics.Gauge
+	RxPktRate metrics.Gauge
 
-	TxPktRate gometrics.Gauge
+	TxPktRate metrics.Gauge
 
-	RxErrors gometrics.Counter
+	RxErrors metrics.Counter
 
-	TxErrors gometrics.Counter
+	TxErrors metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -758,37 +759,37 @@ func (mtr *DpExampleMetrics) getOffset(fldName string) int {
 }
 
 // SetRxPkts sets cunter in shared memory
-func (mtr *DpExampleMetrics) SetRxPkts(val gometrics.Counter) error {
+func (mtr *DpExampleMetrics) SetRxPkts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxPkts"))
 	return nil
 }
 
 // SetTxPkts sets cunter in shared memory
-func (mtr *DpExampleMetrics) SetTxPkts(val gometrics.Counter) error {
+func (mtr *DpExampleMetrics) SetTxPkts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxPkts"))
 	return nil
 }
 
 // SetRxPktRate sets gauge in shared memory
-func (mtr *DpExampleMetrics) SetRxPktRate(val gometrics.Gauge) error {
+func (mtr *DpExampleMetrics) SetRxPktRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("RxPktRate"))
 	return nil
 }
 
 // SetTxPktRate sets gauge in shared memory
-func (mtr *DpExampleMetrics) SetTxPktRate(val gometrics.Gauge) error {
+func (mtr *DpExampleMetrics) SetTxPktRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("TxPktRate"))
 	return nil
 }
 
 // SetRxErrors sets cunter in shared memory
-func (mtr *DpExampleMetrics) SetRxErrors(val gometrics.Counter) error {
+func (mtr *DpExampleMetrics) SetRxErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxErrors"))
 	return nil
 }
 
 // SetTxErrors sets cunter in shared memory
-func (mtr *DpExampleMetrics) SetTxErrors(val gometrics.Counter) error {
+func (mtr *DpExampleMetrics) SetTxErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxErrors"))
 	return nil
 }
@@ -864,17 +865,17 @@ type NestedKeyDpExampleMetrics struct {
 
 	key ExampleKey
 
-	RxPkts gometrics.Counter
+	RxPkts metrics.Counter
 
-	TxPkts gometrics.Counter
+	TxPkts metrics.Counter
 
-	RxPktRate gometrics.Gauge
+	RxPktRate metrics.Gauge
 
-	TxPktRate gometrics.Gauge
+	TxPktRate metrics.Gauge
 
-	RxErrors gometrics.Counter
+	RxErrors metrics.Counter
 
-	TxErrors gometrics.Counter
+	TxErrors metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -968,37 +969,37 @@ func (mtr *NestedKeyDpExampleMetrics) getOffset(fldName string) int {
 }
 
 // SetRxPkts sets cunter in shared memory
-func (mtr *NestedKeyDpExampleMetrics) SetRxPkts(val gometrics.Counter) error {
+func (mtr *NestedKeyDpExampleMetrics) SetRxPkts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxPkts"))
 	return nil
 }
 
 // SetTxPkts sets cunter in shared memory
-func (mtr *NestedKeyDpExampleMetrics) SetTxPkts(val gometrics.Counter) error {
+func (mtr *NestedKeyDpExampleMetrics) SetTxPkts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxPkts"))
 	return nil
 }
 
 // SetRxPktRate sets gauge in shared memory
-func (mtr *NestedKeyDpExampleMetrics) SetRxPktRate(val gometrics.Gauge) error {
+func (mtr *NestedKeyDpExampleMetrics) SetRxPktRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("RxPktRate"))
 	return nil
 }
 
 // SetTxPktRate sets gauge in shared memory
-func (mtr *NestedKeyDpExampleMetrics) SetTxPktRate(val gometrics.Gauge) error {
+func (mtr *NestedKeyDpExampleMetrics) SetTxPktRate(val metrics.Gauge) error {
 	mtr.metrics.SetGauge(val, mtr.getOffset("TxPktRate"))
 	return nil
 }
 
 // SetRxErrors sets cunter in shared memory
-func (mtr *NestedKeyDpExampleMetrics) SetRxErrors(val gometrics.Counter) error {
+func (mtr *NestedKeyDpExampleMetrics) SetRxErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RxErrors"))
 	return nil
 }
 
 // SetTxErrors sets cunter in shared memory
-func (mtr *NestedKeyDpExampleMetrics) SetTxErrors(val gometrics.Counter) error {
+func (mtr *NestedKeyDpExampleMetrics) SetTxErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TxErrors"))
 	return nil
 }

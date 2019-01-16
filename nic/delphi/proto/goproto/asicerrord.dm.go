@@ -5,6 +5,7 @@ package goproto
 import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
+	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
 )
 
 type DppintcreditMetrics struct {
@@ -12,23 +13,23 @@ type DppintcreditMetrics struct {
 
 	key uint64
 
-	PtrCreditOvflow gometrics.Counter
+	PtrCreditOvflow metrics.Counter
 
-	PtrCreditUndflow gometrics.Counter
+	PtrCreditUndflow metrics.Counter
 
-	PktCreditOvflow gometrics.Counter
+	PktCreditOvflow metrics.Counter
 
-	PktCreditUndflow gometrics.Counter
+	PktCreditUndflow metrics.Counter
 
-	FramerCreditOvflow gometrics.Counter
+	FramerCreditOvflow metrics.Counter
 
-	FramerCreditUndflow gometrics.Counter
+	FramerCreditUndflow metrics.Counter
 
-	FramerHdrfldVldOvfl gometrics.Counter
+	FramerHdrfldVldOvfl metrics.Counter
 
-	FramerHdrfldOffsetOvfl gometrics.Counter
+	FramerHdrfldOffsetOvfl metrics.Counter
 
-	ErrFramerHdrsizeZeroOvfl gometrics.Counter
+	ErrFramerHdrsizeZeroOvfl metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -152,55 +153,55 @@ func (mtr *DppintcreditMetrics) getOffset(fldName string) int {
 }
 
 // SetPtrCreditOvflow sets cunter in shared memory
-func (mtr *DppintcreditMetrics) SetPtrCreditOvflow(val gometrics.Counter) error {
+func (mtr *DppintcreditMetrics) SetPtrCreditOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PtrCreditOvflow"))
 	return nil
 }
 
 // SetPtrCreditUndflow sets cunter in shared memory
-func (mtr *DppintcreditMetrics) SetPtrCreditUndflow(val gometrics.Counter) error {
+func (mtr *DppintcreditMetrics) SetPtrCreditUndflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PtrCreditUndflow"))
 	return nil
 }
 
 // SetPktCreditOvflow sets cunter in shared memory
-func (mtr *DppintcreditMetrics) SetPktCreditOvflow(val gometrics.Counter) error {
+func (mtr *DppintcreditMetrics) SetPktCreditOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktCreditOvflow"))
 	return nil
 }
 
 // SetPktCreditUndflow sets cunter in shared memory
-func (mtr *DppintcreditMetrics) SetPktCreditUndflow(val gometrics.Counter) error {
+func (mtr *DppintcreditMetrics) SetPktCreditUndflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktCreditUndflow"))
 	return nil
 }
 
 // SetFramerCreditOvflow sets cunter in shared memory
-func (mtr *DppintcreditMetrics) SetFramerCreditOvflow(val gometrics.Counter) error {
+func (mtr *DppintcreditMetrics) SetFramerCreditOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FramerCreditOvflow"))
 	return nil
 }
 
 // SetFramerCreditUndflow sets cunter in shared memory
-func (mtr *DppintcreditMetrics) SetFramerCreditUndflow(val gometrics.Counter) error {
+func (mtr *DppintcreditMetrics) SetFramerCreditUndflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FramerCreditUndflow"))
 	return nil
 }
 
 // SetFramerHdrfldVldOvfl sets cunter in shared memory
-func (mtr *DppintcreditMetrics) SetFramerHdrfldVldOvfl(val gometrics.Counter) error {
+func (mtr *DppintcreditMetrics) SetFramerHdrfldVldOvfl(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FramerHdrfldVldOvfl"))
 	return nil
 }
 
 // SetFramerHdrfldOffsetOvfl sets cunter in shared memory
-func (mtr *DppintcreditMetrics) SetFramerHdrfldOffsetOvfl(val gometrics.Counter) error {
+func (mtr *DppintcreditMetrics) SetFramerHdrfldOffsetOvfl(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FramerHdrfldOffsetOvfl"))
 	return nil
 }
 
 // SetErrFramerHdrsizeZeroOvfl sets cunter in shared memory
-func (mtr *DppintcreditMetrics) SetErrFramerHdrsizeZeroOvfl(val gometrics.Counter) error {
+func (mtr *DppintcreditMetrics) SetErrFramerHdrsizeZeroOvfl(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrFramerHdrsizeZeroOvfl"))
 	return nil
 }
@@ -276,17 +277,17 @@ type DppintfifoMetrics struct {
 
 	key uint64
 
-	PhvFfOverflow gometrics.Counter
+	PhvFfOverflow metrics.Counter
 
-	OhiFfOverflow gometrics.Counter
+	OhiFfOverflow metrics.Counter
 
-	PktSizeFfOvflow gometrics.Counter
+	PktSizeFfOvflow metrics.Counter
 
-	PktSizeFfUndflow gometrics.Counter
+	PktSizeFfUndflow metrics.Counter
 
-	CsumPhvFfOvflow gometrics.Counter
+	CsumPhvFfOvflow metrics.Counter
 
-	CsumPhvFfUndflow gometrics.Counter
+	CsumPhvFfUndflow metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -380,37 +381,37 @@ func (mtr *DppintfifoMetrics) getOffset(fldName string) int {
 }
 
 // SetPhvFfOverflow sets cunter in shared memory
-func (mtr *DppintfifoMetrics) SetPhvFfOverflow(val gometrics.Counter) error {
+func (mtr *DppintfifoMetrics) SetPhvFfOverflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PhvFfOverflow"))
 	return nil
 }
 
 // SetOhiFfOverflow sets cunter in shared memory
-func (mtr *DppintfifoMetrics) SetOhiFfOverflow(val gometrics.Counter) error {
+func (mtr *DppintfifoMetrics) SetOhiFfOverflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("OhiFfOverflow"))
 	return nil
 }
 
 // SetPktSizeFfOvflow sets cunter in shared memory
-func (mtr *DppintfifoMetrics) SetPktSizeFfOvflow(val gometrics.Counter) error {
+func (mtr *DppintfifoMetrics) SetPktSizeFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktSizeFfOvflow"))
 	return nil
 }
 
 // SetPktSizeFfUndflow sets cunter in shared memory
-func (mtr *DppintfifoMetrics) SetPktSizeFfUndflow(val gometrics.Counter) error {
+func (mtr *DppintfifoMetrics) SetPktSizeFfUndflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktSizeFfUndflow"))
 	return nil
 }
 
 // SetCsumPhvFfOvflow sets cunter in shared memory
-func (mtr *DppintfifoMetrics) SetCsumPhvFfOvflow(val gometrics.Counter) error {
+func (mtr *DppintfifoMetrics) SetCsumPhvFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CsumPhvFfOvflow"))
 	return nil
 }
 
 // SetCsumPhvFfUndflow sets cunter in shared memory
-func (mtr *DppintfifoMetrics) SetCsumPhvFfUndflow(val gometrics.Counter) error {
+func (mtr *DppintfifoMetrics) SetCsumPhvFfUndflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CsumPhvFfUndflow"))
 	return nil
 }
@@ -486,39 +487,39 @@ type Dppintreg1Metrics struct {
 
 	key uint64
 
-	ErrPhvSopNoEop gometrics.Counter
+	ErrPhvSopNoEop metrics.Counter
 
-	ErrPhvEopNoSop gometrics.Counter
+	ErrPhvEopNoSop metrics.Counter
 
-	ErrOhiSopNoEop gometrics.Counter
+	ErrOhiSopNoEop metrics.Counter
 
-	ErrOhiEopNoSop gometrics.Counter
+	ErrOhiEopNoSop metrics.Counter
 
-	ErrFramerCreditOverrun gometrics.Counter
+	ErrFramerCreditOverrun metrics.Counter
 
-	ErrPacketsInFlightCreditOverrun gometrics.Counter
+	ErrPacketsInFlightCreditOverrun metrics.Counter
 
-	ErrNullHdrVld gometrics.Counter
+	ErrNullHdrVld metrics.Counter
 
-	ErrNullHdrfldVld gometrics.Counter
+	ErrNullHdrfldVld metrics.Counter
 
-	ErrMaxPktSize gometrics.Counter
+	ErrMaxPktSize metrics.Counter
 
-	ErrMaxActiveHdrs gometrics.Counter
+	ErrMaxActiveHdrs metrics.Counter
 
-	ErrPhvNoDataReferenceOhi gometrics.Counter
+	ErrPhvNoDataReferenceOhi metrics.Counter
 
-	ErrCsumMultipleHdr gometrics.Counter
+	ErrCsumMultipleHdr metrics.Counter
 
-	ErrCsumMultipleHdrCopy gometrics.Counter
+	ErrCsumMultipleHdrCopy metrics.Counter
 
-	ErrCrcMultipleHdr gometrics.Counter
+	ErrCrcMultipleHdr metrics.Counter
 
-	ErrPtrFifoCreditOverrun gometrics.Counter
+	ErrPtrFifoCreditOverrun metrics.Counter
 
-	ErrClipMaxPktSize gometrics.Counter
+	ErrClipMaxPktSize metrics.Counter
 
-	ErrMinPktSize gometrics.Counter
+	ErrMinPktSize metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -722,103 +723,103 @@ func (mtr *Dppintreg1Metrics) getOffset(fldName string) int {
 }
 
 // SetErrPhvSopNoEop sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrPhvSopNoEop(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrPhvSopNoEop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPhvSopNoEop"))
 	return nil
 }
 
 // SetErrPhvEopNoSop sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrPhvEopNoSop(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrPhvEopNoSop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPhvEopNoSop"))
 	return nil
 }
 
 // SetErrOhiSopNoEop sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrOhiSopNoEop(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrOhiSopNoEop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrOhiSopNoEop"))
 	return nil
 }
 
 // SetErrOhiEopNoSop sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrOhiEopNoSop(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrOhiEopNoSop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrOhiEopNoSop"))
 	return nil
 }
 
 // SetErrFramerCreditOverrun sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrFramerCreditOverrun(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrFramerCreditOverrun(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrFramerCreditOverrun"))
 	return nil
 }
 
 // SetErrPacketsInFlightCreditOverrun sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrPacketsInFlightCreditOverrun(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrPacketsInFlightCreditOverrun(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPacketsInFlightCreditOverrun"))
 	return nil
 }
 
 // SetErrNullHdrVld sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrNullHdrVld(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrNullHdrVld(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrNullHdrVld"))
 	return nil
 }
 
 // SetErrNullHdrfldVld sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrNullHdrfldVld(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrNullHdrfldVld(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrNullHdrfldVld"))
 	return nil
 }
 
 // SetErrMaxPktSize sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrMaxPktSize(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrMaxPktSize(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrMaxPktSize"))
 	return nil
 }
 
 // SetErrMaxActiveHdrs sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrMaxActiveHdrs(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrMaxActiveHdrs(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrMaxActiveHdrs"))
 	return nil
 }
 
 // SetErrPhvNoDataReferenceOhi sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrPhvNoDataReferenceOhi(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrPhvNoDataReferenceOhi(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPhvNoDataReferenceOhi"))
 	return nil
 }
 
 // SetErrCsumMultipleHdr sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrCsumMultipleHdr(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrCsumMultipleHdr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumMultipleHdr"))
 	return nil
 }
 
 // SetErrCsumMultipleHdrCopy sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrCsumMultipleHdrCopy(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrCsumMultipleHdrCopy(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumMultipleHdrCopy"))
 	return nil
 }
 
 // SetErrCrcMultipleHdr sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrCrcMultipleHdr(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrCrcMultipleHdr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCrcMultipleHdr"))
 	return nil
 }
 
 // SetErrPtrFifoCreditOverrun sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrPtrFifoCreditOverrun(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrPtrFifoCreditOverrun(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPtrFifoCreditOverrun"))
 	return nil
 }
 
 // SetErrClipMaxPktSize sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrClipMaxPktSize(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrClipMaxPktSize(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrClipMaxPktSize"))
 	return nil
 }
 
 // SetErrMinPktSize sets cunter in shared memory
-func (mtr *Dppintreg1Metrics) SetErrMinPktSize(val gometrics.Counter) error {
+func (mtr *Dppintreg1Metrics) SetErrMinPktSize(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrMinPktSize"))
 	return nil
 }
@@ -894,9 +895,9 @@ type Dppintreg2Metrics struct {
 
 	key uint64
 
-	FieldC gometrics.Counter
+	FieldC metrics.Counter
 
-	FieldD gometrics.Counter
+	FieldD metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -950,13 +951,13 @@ func (mtr *Dppintreg2Metrics) getOffset(fldName string) int {
 }
 
 // SetFieldC sets cunter in shared memory
-func (mtr *Dppintreg2Metrics) SetFieldC(val gometrics.Counter) error {
+func (mtr *Dppintreg2Metrics) SetFieldC(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FieldC"))
 	return nil
 }
 
 // SetFieldD sets cunter in shared memory
-func (mtr *Dppintreg2Metrics) SetFieldD(val gometrics.Counter) error {
+func (mtr *Dppintreg2Metrics) SetFieldD(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FieldD"))
 	return nil
 }
@@ -1032,69 +1033,69 @@ type IntspareMetrics struct {
 
 	key uint64
 
-	Spare_0 gometrics.Counter
+	Spare_0 metrics.Counter
 
-	Spare_1 gometrics.Counter
+	Spare_1 metrics.Counter
 
-	Spare_2 gometrics.Counter
+	Spare_2 metrics.Counter
 
-	Spare_3 gometrics.Counter
+	Spare_3 metrics.Counter
 
-	Spare_4 gometrics.Counter
+	Spare_4 metrics.Counter
 
-	Spare_5 gometrics.Counter
+	Spare_5 metrics.Counter
 
-	Spare_6 gometrics.Counter
+	Spare_6 metrics.Counter
 
-	Spare_7 gometrics.Counter
+	Spare_7 metrics.Counter
 
-	Spare_8 gometrics.Counter
+	Spare_8 metrics.Counter
 
-	Spare_9 gometrics.Counter
+	Spare_9 metrics.Counter
 
-	Spare_10 gometrics.Counter
+	Spare_10 metrics.Counter
 
-	Spare_11 gometrics.Counter
+	Spare_11 metrics.Counter
 
-	Spare_12 gometrics.Counter
+	Spare_12 metrics.Counter
 
-	Spare_13 gometrics.Counter
+	Spare_13 metrics.Counter
 
-	Spare_14 gometrics.Counter
+	Spare_14 metrics.Counter
 
-	Spare_15 gometrics.Counter
+	Spare_15 metrics.Counter
 
-	Spare_16 gometrics.Counter
+	Spare_16 metrics.Counter
 
-	Spare_17 gometrics.Counter
+	Spare_17 metrics.Counter
 
-	Spare_18 gometrics.Counter
+	Spare_18 metrics.Counter
 
-	Spare_19 gometrics.Counter
+	Spare_19 metrics.Counter
 
-	Spare_20 gometrics.Counter
+	Spare_20 metrics.Counter
 
-	Spare_21 gometrics.Counter
+	Spare_21 metrics.Counter
 
-	Spare_22 gometrics.Counter
+	Spare_22 metrics.Counter
 
-	Spare_23 gometrics.Counter
+	Spare_23 metrics.Counter
 
-	Spare_24 gometrics.Counter
+	Spare_24 metrics.Counter
 
-	Spare_25 gometrics.Counter
+	Spare_25 metrics.Counter
 
-	Spare_26 gometrics.Counter
+	Spare_26 metrics.Counter
 
-	Spare_27 gometrics.Counter
+	Spare_27 metrics.Counter
 
-	Spare_28 gometrics.Counter
+	Spare_28 metrics.Counter
 
-	Spare_29 gometrics.Counter
+	Spare_29 metrics.Counter
 
-	Spare_30 gometrics.Counter
+	Spare_30 metrics.Counter
 
-	Spare_31 gometrics.Counter
+	Spare_31 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -1448,193 +1449,193 @@ func (mtr *IntspareMetrics) getOffset(fldName string) int {
 }
 
 // SetSpare_0 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_0(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_0"))
 	return nil
 }
 
 // SetSpare_1 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_1(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_1"))
 	return nil
 }
 
 // SetSpare_2 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_2(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_2"))
 	return nil
 }
 
 // SetSpare_3 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_3(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_3"))
 	return nil
 }
 
 // SetSpare_4 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_4(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_4"))
 	return nil
 }
 
 // SetSpare_5 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_5(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_5(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_5"))
 	return nil
 }
 
 // SetSpare_6 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_6(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_6(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_6"))
 	return nil
 }
 
 // SetSpare_7 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_7(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_7(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_7"))
 	return nil
 }
 
 // SetSpare_8 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_8(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_8(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_8"))
 	return nil
 }
 
 // SetSpare_9 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_9(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_9(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_9"))
 	return nil
 }
 
 // SetSpare_10 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_10(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_10(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_10"))
 	return nil
 }
 
 // SetSpare_11 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_11(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_11(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_11"))
 	return nil
 }
 
 // SetSpare_12 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_12(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_12(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_12"))
 	return nil
 }
 
 // SetSpare_13 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_13(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_13(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_13"))
 	return nil
 }
 
 // SetSpare_14 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_14(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_14(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_14"))
 	return nil
 }
 
 // SetSpare_15 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_15(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_15(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_15"))
 	return nil
 }
 
 // SetSpare_16 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_16(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_16(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_16"))
 	return nil
 }
 
 // SetSpare_17 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_17(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_17(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_17"))
 	return nil
 }
 
 // SetSpare_18 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_18(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_18(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_18"))
 	return nil
 }
 
 // SetSpare_19 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_19(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_19(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_19"))
 	return nil
 }
 
 // SetSpare_20 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_20(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_20(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_20"))
 	return nil
 }
 
 // SetSpare_21 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_21(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_21(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_21"))
 	return nil
 }
 
 // SetSpare_22 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_22(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_22(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_22"))
 	return nil
 }
 
 // SetSpare_23 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_23(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_23(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_23"))
 	return nil
 }
 
 // SetSpare_24 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_24(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_24(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_24"))
 	return nil
 }
 
 // SetSpare_25 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_25(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_25(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_25"))
 	return nil
 }
 
 // SetSpare_26 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_26(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_26(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_26"))
 	return nil
 }
 
 // SetSpare_27 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_27(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_27(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_27"))
 	return nil
 }
 
 // SetSpare_28 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_28(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_28(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_28"))
 	return nil
 }
 
 // SetSpare_29 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_29(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_29(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_29"))
 	return nil
 }
 
 // SetSpare_30 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_30(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_30(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_30"))
 	return nil
 }
 
 // SetSpare_31 sets cunter in shared memory
-func (mtr *IntspareMetrics) SetSpare_31(val gometrics.Counter) error {
+func (mtr *IntspareMetrics) SetSpare_31(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Spare_31"))
 	return nil
 }
@@ -1710,13 +1711,13 @@ type DppintsramseccMetrics struct {
 
 	key uint64
 
-	DppPhvFifoUncorrectable gometrics.Counter
+	DppPhvFifoUncorrectable metrics.Counter
 
-	DppPhvFifoCorrectable gometrics.Counter
+	DppPhvFifoCorrectable metrics.Counter
 
-	DppOhiFifoUncorrectable gometrics.Counter
+	DppOhiFifoUncorrectable metrics.Counter
 
-	DppOhiFifoCorrectable gometrics.Counter
+	DppOhiFifoCorrectable metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -1790,25 +1791,25 @@ func (mtr *DppintsramseccMetrics) getOffset(fldName string) int {
 }
 
 // SetDppPhvFifoUncorrectable sets cunter in shared memory
-func (mtr *DppintsramseccMetrics) SetDppPhvFifoUncorrectable(val gometrics.Counter) error {
+func (mtr *DppintsramseccMetrics) SetDppPhvFifoUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DppPhvFifoUncorrectable"))
 	return nil
 }
 
 // SetDppPhvFifoCorrectable sets cunter in shared memory
-func (mtr *DppintsramseccMetrics) SetDppPhvFifoCorrectable(val gometrics.Counter) error {
+func (mtr *DppintsramseccMetrics) SetDppPhvFifoCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DppPhvFifoCorrectable"))
 	return nil
 }
 
 // SetDppOhiFifoUncorrectable sets cunter in shared memory
-func (mtr *DppintsramseccMetrics) SetDppOhiFifoUncorrectable(val gometrics.Counter) error {
+func (mtr *DppintsramseccMetrics) SetDppOhiFifoUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DppOhiFifoUncorrectable"))
 	return nil
 }
 
 // SetDppOhiFifoCorrectable sets cunter in shared memory
-func (mtr *DppintsramseccMetrics) SetDppOhiFifoCorrectable(val gometrics.Counter) error {
+func (mtr *DppintsramseccMetrics) SetDppOhiFifoCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DppOhiFifoCorrectable"))
 	return nil
 }
@@ -1884,13 +1885,13 @@ type DprintcreditMetrics struct {
 
 	key uint64
 
-	EgressCreditOvflow gometrics.Counter
+	EgressCreditOvflow metrics.Counter
 
-	EgressCreditUndflow gometrics.Counter
+	EgressCreditUndflow metrics.Counter
 
-	PktoutCreditOvflow gometrics.Counter
+	PktoutCreditOvflow metrics.Counter
 
-	PktoutCreditUndflow gometrics.Counter
+	PktoutCreditUndflow metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -1964,25 +1965,25 @@ func (mtr *DprintcreditMetrics) getOffset(fldName string) int {
 }
 
 // SetEgressCreditOvflow sets cunter in shared memory
-func (mtr *DprintcreditMetrics) SetEgressCreditOvflow(val gometrics.Counter) error {
+func (mtr *DprintcreditMetrics) SetEgressCreditOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EgressCreditOvflow"))
 	return nil
 }
 
 // SetEgressCreditUndflow sets cunter in shared memory
-func (mtr *DprintcreditMetrics) SetEgressCreditUndflow(val gometrics.Counter) error {
+func (mtr *DprintcreditMetrics) SetEgressCreditUndflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EgressCreditUndflow"))
 	return nil
 }
 
 // SetPktoutCreditOvflow sets cunter in shared memory
-func (mtr *DprintcreditMetrics) SetPktoutCreditOvflow(val gometrics.Counter) error {
+func (mtr *DprintcreditMetrics) SetPktoutCreditOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktoutCreditOvflow"))
 	return nil
 }
 
 // SetPktoutCreditUndflow sets cunter in shared memory
-func (mtr *DprintcreditMetrics) SetPktoutCreditUndflow(val gometrics.Counter) error {
+func (mtr *DprintcreditMetrics) SetPktoutCreditUndflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktoutCreditUndflow"))
 	return nil
 }
@@ -2058,17 +2059,17 @@ type DprintfifoMetrics struct {
 
 	key uint64
 
-	PhvFfOvflow gometrics.Counter
+	PhvFfOvflow metrics.Counter
 
-	OhiFfOvflow gometrics.Counter
+	OhiFfOvflow metrics.Counter
 
-	PktinFfOvflow gometrics.Counter
+	PktinFfOvflow metrics.Counter
 
-	PktoutFfUndflow gometrics.Counter
+	PktoutFfUndflow metrics.Counter
 
-	CsumFfOvflow gometrics.Counter
+	CsumFfOvflow metrics.Counter
 
-	PtrFfOvflow gometrics.Counter
+	PtrFfOvflow metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -2162,37 +2163,37 @@ func (mtr *DprintfifoMetrics) getOffset(fldName string) int {
 }
 
 // SetPhvFfOvflow sets cunter in shared memory
-func (mtr *DprintfifoMetrics) SetPhvFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintfifoMetrics) SetPhvFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PhvFfOvflow"))
 	return nil
 }
 
 // SetOhiFfOvflow sets cunter in shared memory
-func (mtr *DprintfifoMetrics) SetOhiFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintfifoMetrics) SetOhiFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("OhiFfOvflow"))
 	return nil
 }
 
 // SetPktinFfOvflow sets cunter in shared memory
-func (mtr *DprintfifoMetrics) SetPktinFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintfifoMetrics) SetPktinFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktinFfOvflow"))
 	return nil
 }
 
 // SetPktoutFfUndflow sets cunter in shared memory
-func (mtr *DprintfifoMetrics) SetPktoutFfUndflow(val gometrics.Counter) error {
+func (mtr *DprintfifoMetrics) SetPktoutFfUndflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktoutFfUndflow"))
 	return nil
 }
 
 // SetCsumFfOvflow sets cunter in shared memory
-func (mtr *DprintfifoMetrics) SetCsumFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintfifoMetrics) SetCsumFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CsumFfOvflow"))
 	return nil
 }
 
 // SetPtrFfOvflow sets cunter in shared memory
-func (mtr *DprintfifoMetrics) SetPtrFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintfifoMetrics) SetPtrFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PtrFfOvflow"))
 	return nil
 }
@@ -2268,45 +2269,45 @@ type DprintflopfifoMetrics struct {
 
 	key uint64
 
-	DataMuxForceBypassCrcFlopFfOvflow gometrics.Counter
+	DataMuxForceBypassCrcFlopFfOvflow metrics.Counter
 
-	DprCrcInfoFlopFfOvflow gometrics.Counter
+	DprCrcInfoFlopFfOvflow metrics.Counter
 
-	DprCrcUpdateInfoFlopFfOvflow gometrics.Counter
+	DprCrcUpdateInfoFlopFfOvflow metrics.Counter
 
-	DprCsumInfoFlopFfOvflow gometrics.Counter
+	DprCsumInfoFlopFfOvflow metrics.Counter
 
-	DataMuxForceBypassCsumFlopFfOvflow gometrics.Counter
+	DataMuxForceBypassCsumFlopFfOvflow metrics.Counter
 
-	DprCsumUpdateInfoFlopFfOvflow gometrics.Counter
+	DprCsumUpdateInfoFlopFfOvflow metrics.Counter
 
-	PtrEarlyPktEopInfoFlopFfOvflow gometrics.Counter
+	PtrEarlyPktEopInfoFlopFfOvflow metrics.Counter
 
-	DataMuxEopErrFlopFfOvflow gometrics.Counter
+	DataMuxEopErrFlopFfOvflow metrics.Counter
 
-	PktinEopErrFlopFfOvflow gometrics.Counter
+	PktinEopErrFlopFfOvflow metrics.Counter
 
-	CsumErrFlopFfOvflow gometrics.Counter
+	CsumErrFlopFfOvflow metrics.Counter
 
-	CrcErrFlopFfOvflow gometrics.Counter
+	CrcErrFlopFfOvflow metrics.Counter
 
-	DataMuxDropFlopFfOvflow gometrics.Counter
+	DataMuxDropFlopFfOvflow metrics.Counter
 
-	PhvPktDataFlopFfOvflow gometrics.Counter
+	PhvPktDataFlopFfOvflow metrics.Counter
 
-	PktoutLenCellFlopFfOvflow gometrics.Counter
+	PktoutLenCellFlopFfOvflow metrics.Counter
 
-	PaddingSizeFlopFfOvflow gometrics.Counter
+	PaddingSizeFlopFfOvflow metrics.Counter
 
-	PktinErrFlopFfOvflow gometrics.Counter
+	PktinErrFlopFfOvflow metrics.Counter
 
-	PhvNoDataFlopFfOvflow gometrics.Counter
+	PhvNoDataFlopFfOvflow metrics.Counter
 
-	PtrLookahaedFlopFfOvflow gometrics.Counter
+	PtrLookahaedFlopFfOvflow metrics.Counter
 
-	EopVldFlopFfOvflow gometrics.Counter
+	EopVldFlopFfOvflow metrics.Counter
 
-	CsumCalVldFlopFfOvflow gometrics.Counter
+	CsumCalVldFlopFfOvflow metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -2540,121 +2541,121 @@ func (mtr *DprintflopfifoMetrics) getOffset(fldName string) int {
 }
 
 // SetDataMuxForceBypassCrcFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetDataMuxForceBypassCrcFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetDataMuxForceBypassCrcFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DataMuxForceBypassCrcFlopFfOvflow"))
 	return nil
 }
 
 // SetDprCrcInfoFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetDprCrcInfoFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetDprCrcInfoFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprCrcInfoFlopFfOvflow"))
 	return nil
 }
 
 // SetDprCrcUpdateInfoFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetDprCrcUpdateInfoFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetDprCrcUpdateInfoFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprCrcUpdateInfoFlopFfOvflow"))
 	return nil
 }
 
 // SetDprCsumInfoFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetDprCsumInfoFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetDprCsumInfoFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprCsumInfoFlopFfOvflow"))
 	return nil
 }
 
 // SetDataMuxForceBypassCsumFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetDataMuxForceBypassCsumFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetDataMuxForceBypassCsumFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DataMuxForceBypassCsumFlopFfOvflow"))
 	return nil
 }
 
 // SetDprCsumUpdateInfoFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetDprCsumUpdateInfoFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetDprCsumUpdateInfoFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprCsumUpdateInfoFlopFfOvflow"))
 	return nil
 }
 
 // SetPtrEarlyPktEopInfoFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetPtrEarlyPktEopInfoFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetPtrEarlyPktEopInfoFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PtrEarlyPktEopInfoFlopFfOvflow"))
 	return nil
 }
 
 // SetDataMuxEopErrFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetDataMuxEopErrFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetDataMuxEopErrFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DataMuxEopErrFlopFfOvflow"))
 	return nil
 }
 
 // SetPktinEopErrFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetPktinEopErrFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetPktinEopErrFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktinEopErrFlopFfOvflow"))
 	return nil
 }
 
 // SetCsumErrFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetCsumErrFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetCsumErrFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CsumErrFlopFfOvflow"))
 	return nil
 }
 
 // SetCrcErrFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetCrcErrFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetCrcErrFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CrcErrFlopFfOvflow"))
 	return nil
 }
 
 // SetDataMuxDropFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetDataMuxDropFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetDataMuxDropFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DataMuxDropFlopFfOvflow"))
 	return nil
 }
 
 // SetPhvPktDataFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetPhvPktDataFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetPhvPktDataFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PhvPktDataFlopFfOvflow"))
 	return nil
 }
 
 // SetPktoutLenCellFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetPktoutLenCellFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetPktoutLenCellFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktoutLenCellFlopFfOvflow"))
 	return nil
 }
 
 // SetPaddingSizeFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetPaddingSizeFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetPaddingSizeFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PaddingSizeFlopFfOvflow"))
 	return nil
 }
 
 // SetPktinErrFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetPktinErrFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetPktinErrFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PktinErrFlopFfOvflow"))
 	return nil
 }
 
 // SetPhvNoDataFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetPhvNoDataFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetPhvNoDataFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PhvNoDataFlopFfOvflow"))
 	return nil
 }
 
 // SetPtrLookahaedFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetPtrLookahaedFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetPtrLookahaedFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PtrLookahaedFlopFfOvflow"))
 	return nil
 }
 
 // SetEopVldFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetEopVldFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetEopVldFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopVldFlopFfOvflow"))
 	return nil
 }
 
 // SetCsumCalVldFlopFfOvflow sets cunter in shared memory
-func (mtr *DprintflopfifoMetrics) SetCsumCalVldFlopFfOvflow(val gometrics.Counter) error {
+func (mtr *DprintflopfifoMetrics) SetCsumCalVldFlopFfOvflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CsumCalVldFlopFfOvflow"))
 	return nil
 }
@@ -2730,63 +2731,63 @@ type Dprintreg1Metrics struct {
 
 	key uint64
 
-	ErrPhvSopNoEop gometrics.Counter
+	ErrPhvSopNoEop metrics.Counter
 
-	ErrPhvEopNoSop gometrics.Counter
+	ErrPhvEopNoSop metrics.Counter
 
-	ErrOhiSopNoEop gometrics.Counter
+	ErrOhiSopNoEop metrics.Counter
 
-	ErrOhiEopNoSop gometrics.Counter
+	ErrOhiEopNoSop metrics.Counter
 
-	ErrPktinSopNoEop gometrics.Counter
+	ErrPktinSopNoEop metrics.Counter
 
-	ErrPktinEopNoSop gometrics.Counter
+	ErrPktinEopNoSop metrics.Counter
 
-	ErrCsumOffsetGtPktSize_4 gometrics.Counter
+	ErrCsumOffsetGtPktSize_4 metrics.Counter
 
-	ErrCsumOffsetGtPktSize_3 gometrics.Counter
+	ErrCsumOffsetGtPktSize_3 metrics.Counter
 
-	ErrCsumOffsetGtPktSize_2 gometrics.Counter
+	ErrCsumOffsetGtPktSize_2 metrics.Counter
 
-	ErrCsumOffsetGtPktSize_1 gometrics.Counter
+	ErrCsumOffsetGtPktSize_1 metrics.Counter
 
-	ErrCsumOffsetGtPktSize_0 gometrics.Counter
+	ErrCsumOffsetGtPktSize_0 metrics.Counter
 
-	ErrCsumPhdrOffsetGtPktSize_4 gometrics.Counter
+	ErrCsumPhdrOffsetGtPktSize_4 metrics.Counter
 
-	ErrCsumPhdrOffsetGtPktSize_3 gometrics.Counter
+	ErrCsumPhdrOffsetGtPktSize_3 metrics.Counter
 
-	ErrCsumPhdrOffsetGtPktSize_2 gometrics.Counter
+	ErrCsumPhdrOffsetGtPktSize_2 metrics.Counter
 
-	ErrCsumPhdrOffsetGtPktSize_1 gometrics.Counter
+	ErrCsumPhdrOffsetGtPktSize_1 metrics.Counter
 
-	ErrCsumPhdrOffsetGtPktSize_0 gometrics.Counter
+	ErrCsumPhdrOffsetGtPktSize_0 metrics.Counter
 
-	ErrCsumLocGtPktSize_4 gometrics.Counter
+	ErrCsumLocGtPktSize_4 metrics.Counter
 
-	ErrCsumLocGtPktSize_3 gometrics.Counter
+	ErrCsumLocGtPktSize_3 metrics.Counter
 
-	ErrCsumLocGtPktSize_2 gometrics.Counter
+	ErrCsumLocGtPktSize_2 metrics.Counter
 
-	ErrCsumLocGtPktSize_1 gometrics.Counter
+	ErrCsumLocGtPktSize_1 metrics.Counter
 
-	ErrCsumLocGtPktSize_0 gometrics.Counter
+	ErrCsumLocGtPktSize_0 metrics.Counter
 
-	ErrCrcOffsetGtPktSize gometrics.Counter
+	ErrCrcOffsetGtPktSize metrics.Counter
 
-	ErrCrcLocGtPktSize gometrics.Counter
+	ErrCrcLocGtPktSize metrics.Counter
 
-	ErrCrcMaskOffsetGtPktSize gometrics.Counter
+	ErrCrcMaskOffsetGtPktSize metrics.Counter
 
-	ErrPktEopEarly gometrics.Counter
+	ErrPktEopEarly metrics.Counter
 
-	ErrPtrFfOverflow gometrics.Counter
+	ErrPtrFfOverflow metrics.Counter
 
-	ErrCsumFfOverflow gometrics.Counter
+	ErrCsumFfOverflow metrics.Counter
 
-	ErrPktoutFfOverflow gometrics.Counter
+	ErrPktoutFfOverflow metrics.Counter
 
-	ErrPtrFromCfgOverflow gometrics.Counter
+	ErrPtrFromCfgOverflow metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -3110,175 +3111,175 @@ func (mtr *Dprintreg1Metrics) getOffset(fldName string) int {
 }
 
 // SetErrPhvSopNoEop sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrPhvSopNoEop(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrPhvSopNoEop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPhvSopNoEop"))
 	return nil
 }
 
 // SetErrPhvEopNoSop sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrPhvEopNoSop(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrPhvEopNoSop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPhvEopNoSop"))
 	return nil
 }
 
 // SetErrOhiSopNoEop sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrOhiSopNoEop(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrOhiSopNoEop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrOhiSopNoEop"))
 	return nil
 }
 
 // SetErrOhiEopNoSop sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrOhiEopNoSop(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrOhiEopNoSop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrOhiEopNoSop"))
 	return nil
 }
 
 // SetErrPktinSopNoEop sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrPktinSopNoEop(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrPktinSopNoEop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPktinSopNoEop"))
 	return nil
 }
 
 // SetErrPktinEopNoSop sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrPktinEopNoSop(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrPktinEopNoSop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPktinEopNoSop"))
 	return nil
 }
 
 // SetErrCsumOffsetGtPktSize_4 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumOffsetGtPktSize_4(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumOffsetGtPktSize_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumOffsetGtPktSize_4"))
 	return nil
 }
 
 // SetErrCsumOffsetGtPktSize_3 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumOffsetGtPktSize_3(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumOffsetGtPktSize_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumOffsetGtPktSize_3"))
 	return nil
 }
 
 // SetErrCsumOffsetGtPktSize_2 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumOffsetGtPktSize_2(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumOffsetGtPktSize_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumOffsetGtPktSize_2"))
 	return nil
 }
 
 // SetErrCsumOffsetGtPktSize_1 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumOffsetGtPktSize_1(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumOffsetGtPktSize_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumOffsetGtPktSize_1"))
 	return nil
 }
 
 // SetErrCsumOffsetGtPktSize_0 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumOffsetGtPktSize_0(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumOffsetGtPktSize_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumOffsetGtPktSize_0"))
 	return nil
 }
 
 // SetErrCsumPhdrOffsetGtPktSize_4 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_4(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumPhdrOffsetGtPktSize_4"))
 	return nil
 }
 
 // SetErrCsumPhdrOffsetGtPktSize_3 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_3(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumPhdrOffsetGtPktSize_3"))
 	return nil
 }
 
 // SetErrCsumPhdrOffsetGtPktSize_2 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_2(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumPhdrOffsetGtPktSize_2"))
 	return nil
 }
 
 // SetErrCsumPhdrOffsetGtPktSize_1 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_1(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumPhdrOffsetGtPktSize_1"))
 	return nil
 }
 
 // SetErrCsumPhdrOffsetGtPktSize_0 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_0(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumPhdrOffsetGtPktSize_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumPhdrOffsetGtPktSize_0"))
 	return nil
 }
 
 // SetErrCsumLocGtPktSize_4 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumLocGtPktSize_4(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumLocGtPktSize_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumLocGtPktSize_4"))
 	return nil
 }
 
 // SetErrCsumLocGtPktSize_3 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumLocGtPktSize_3(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumLocGtPktSize_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumLocGtPktSize_3"))
 	return nil
 }
 
 // SetErrCsumLocGtPktSize_2 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumLocGtPktSize_2(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumLocGtPktSize_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumLocGtPktSize_2"))
 	return nil
 }
 
 // SetErrCsumLocGtPktSize_1 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumLocGtPktSize_1(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumLocGtPktSize_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumLocGtPktSize_1"))
 	return nil
 }
 
 // SetErrCsumLocGtPktSize_0 sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumLocGtPktSize_0(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumLocGtPktSize_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumLocGtPktSize_0"))
 	return nil
 }
 
 // SetErrCrcOffsetGtPktSize sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCrcOffsetGtPktSize(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCrcOffsetGtPktSize(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCrcOffsetGtPktSize"))
 	return nil
 }
 
 // SetErrCrcLocGtPktSize sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCrcLocGtPktSize(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCrcLocGtPktSize(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCrcLocGtPktSize"))
 	return nil
 }
 
 // SetErrCrcMaskOffsetGtPktSize sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCrcMaskOffsetGtPktSize(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCrcMaskOffsetGtPktSize(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCrcMaskOffsetGtPktSize"))
 	return nil
 }
 
 // SetErrPktEopEarly sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrPktEopEarly(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrPktEopEarly(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPktEopEarly"))
 	return nil
 }
 
 // SetErrPtrFfOverflow sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrPtrFfOverflow(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrPtrFfOverflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPtrFfOverflow"))
 	return nil
 }
 
 // SetErrCsumFfOverflow sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrCsumFfOverflow(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrCsumFfOverflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumFfOverflow"))
 	return nil
 }
 
 // SetErrPktoutFfOverflow sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrPktoutFfOverflow(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrPktoutFfOverflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPktoutFfOverflow"))
 	return nil
 }
 
 // SetErrPtrFromCfgOverflow sets cunter in shared memory
-func (mtr *Dprintreg1Metrics) SetErrPtrFromCfgOverflow(val gometrics.Counter) error {
+func (mtr *Dprintreg1Metrics) SetErrPtrFromCfgOverflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrPtrFromCfgOverflow"))
 	return nil
 }
@@ -3354,21 +3355,21 @@ type Dprintreg2Metrics struct {
 
 	key uint64
 
-	FieldC gometrics.Counter
+	FieldC metrics.Counter
 
-	FieldD gometrics.Counter
+	FieldD metrics.Counter
 
-	ErrCsumStartGtEnd_4 gometrics.Counter
+	ErrCsumStartGtEnd_4 metrics.Counter
 
-	ErrCsumStartGtEnd_3 gometrics.Counter
+	ErrCsumStartGtEnd_3 metrics.Counter
 
-	ErrCsumStartGtEnd_2 gometrics.Counter
+	ErrCsumStartGtEnd_2 metrics.Counter
 
-	ErrCsumStartGtEnd_1 gometrics.Counter
+	ErrCsumStartGtEnd_1 metrics.Counter
 
-	ErrCsumStartGtEnd_0 gometrics.Counter
+	ErrCsumStartGtEnd_0 metrics.Counter
 
-	ErrCrcStartGtEnd gometrics.Counter
+	ErrCrcStartGtEnd metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -3482,49 +3483,49 @@ func (mtr *Dprintreg2Metrics) getOffset(fldName string) int {
 }
 
 // SetFieldC sets cunter in shared memory
-func (mtr *Dprintreg2Metrics) SetFieldC(val gometrics.Counter) error {
+func (mtr *Dprintreg2Metrics) SetFieldC(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FieldC"))
 	return nil
 }
 
 // SetFieldD sets cunter in shared memory
-func (mtr *Dprintreg2Metrics) SetFieldD(val gometrics.Counter) error {
+func (mtr *Dprintreg2Metrics) SetFieldD(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FieldD"))
 	return nil
 }
 
 // SetErrCsumStartGtEnd_4 sets cunter in shared memory
-func (mtr *Dprintreg2Metrics) SetErrCsumStartGtEnd_4(val gometrics.Counter) error {
+func (mtr *Dprintreg2Metrics) SetErrCsumStartGtEnd_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumStartGtEnd_4"))
 	return nil
 }
 
 // SetErrCsumStartGtEnd_3 sets cunter in shared memory
-func (mtr *Dprintreg2Metrics) SetErrCsumStartGtEnd_3(val gometrics.Counter) error {
+func (mtr *Dprintreg2Metrics) SetErrCsumStartGtEnd_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumStartGtEnd_3"))
 	return nil
 }
 
 // SetErrCsumStartGtEnd_2 sets cunter in shared memory
-func (mtr *Dprintreg2Metrics) SetErrCsumStartGtEnd_2(val gometrics.Counter) error {
+func (mtr *Dprintreg2Metrics) SetErrCsumStartGtEnd_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumStartGtEnd_2"))
 	return nil
 }
 
 // SetErrCsumStartGtEnd_1 sets cunter in shared memory
-func (mtr *Dprintreg2Metrics) SetErrCsumStartGtEnd_1(val gometrics.Counter) error {
+func (mtr *Dprintreg2Metrics) SetErrCsumStartGtEnd_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumStartGtEnd_1"))
 	return nil
 }
 
 // SetErrCsumStartGtEnd_0 sets cunter in shared memory
-func (mtr *Dprintreg2Metrics) SetErrCsumStartGtEnd_0(val gometrics.Counter) error {
+func (mtr *Dprintreg2Metrics) SetErrCsumStartGtEnd_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCsumStartGtEnd_0"))
 	return nil
 }
 
 // SetErrCrcStartGtEnd sets cunter in shared memory
-func (mtr *Dprintreg2Metrics) SetErrCrcStartGtEnd(val gometrics.Counter) error {
+func (mtr *Dprintreg2Metrics) SetErrCrcStartGtEnd(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ErrCrcStartGtEnd"))
 	return nil
 }
@@ -3600,29 +3601,29 @@ type DprintsramseccMetrics struct {
 
 	key uint64
 
-	DprPktinFifoUncorrectable gometrics.Counter
+	DprPktinFifoUncorrectable metrics.Counter
 
-	DprPktinFifoCorrectable gometrics.Counter
+	DprPktinFifoCorrectable metrics.Counter
 
-	DprCsumFifoUncorrectable gometrics.Counter
+	DprCsumFifoUncorrectable metrics.Counter
 
-	DprCsumFifoCorrectable gometrics.Counter
+	DprCsumFifoCorrectable metrics.Counter
 
-	DprPhvFifoUncorrectable gometrics.Counter
+	DprPhvFifoUncorrectable metrics.Counter
 
-	DprPhvFifoCorrectable gometrics.Counter
+	DprPhvFifoCorrectable metrics.Counter
 
-	DprOhiFifoUncorrectable gometrics.Counter
+	DprOhiFifoUncorrectable metrics.Counter
 
-	DprOhiFifoCorrectable gometrics.Counter
+	DprOhiFifoCorrectable metrics.Counter
 
-	DprPtrFifoUncorrectable gometrics.Counter
+	DprPtrFifoUncorrectable metrics.Counter
 
-	DprPtrFifoCorrectable gometrics.Counter
+	DprPtrFifoCorrectable metrics.Counter
 
-	DprPktoutFifoUncorrectable gometrics.Counter
+	DprPktoutFifoUncorrectable metrics.Counter
 
-	DprPktoutFifoCorrectable gometrics.Counter
+	DprPktoutFifoCorrectable metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -3776,73 +3777,73 @@ func (mtr *DprintsramseccMetrics) getOffset(fldName string) int {
 }
 
 // SetDprPktinFifoUncorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprPktinFifoUncorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprPktinFifoUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprPktinFifoUncorrectable"))
 	return nil
 }
 
 // SetDprPktinFifoCorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprPktinFifoCorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprPktinFifoCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprPktinFifoCorrectable"))
 	return nil
 }
 
 // SetDprCsumFifoUncorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprCsumFifoUncorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprCsumFifoUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprCsumFifoUncorrectable"))
 	return nil
 }
 
 // SetDprCsumFifoCorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprCsumFifoCorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprCsumFifoCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprCsumFifoCorrectable"))
 	return nil
 }
 
 // SetDprPhvFifoUncorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprPhvFifoUncorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprPhvFifoUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprPhvFifoUncorrectable"))
 	return nil
 }
 
 // SetDprPhvFifoCorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprPhvFifoCorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprPhvFifoCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprPhvFifoCorrectable"))
 	return nil
 }
 
 // SetDprOhiFifoUncorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprOhiFifoUncorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprOhiFifoUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprOhiFifoUncorrectable"))
 	return nil
 }
 
 // SetDprOhiFifoCorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprOhiFifoCorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprOhiFifoCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprOhiFifoCorrectable"))
 	return nil
 }
 
 // SetDprPtrFifoUncorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprPtrFifoUncorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprPtrFifoUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprPtrFifoUncorrectable"))
 	return nil
 }
 
 // SetDprPtrFifoCorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprPtrFifoCorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprPtrFifoCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprPtrFifoCorrectable"))
 	return nil
 }
 
 // SetDprPktoutFifoUncorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprPktoutFifoUncorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprPktoutFifoUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprPktoutFifoUncorrectable"))
 	return nil
 }
 
 // SetDprPktoutFifoCorrectable sets cunter in shared memory
-func (mtr *DprintsramseccMetrics) SetDprPktoutFifoCorrectable(val gometrics.Counter) error {
+func (mtr *DprintsramseccMetrics) SetDprPktoutFifoCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DprPktoutFifoCorrectable"))
 	return nil
 }
@@ -3918,41 +3919,41 @@ type SsepicsintbadaddrMetrics struct {
 
 	key uint64
 
-	Rdreq0BadAddr gometrics.Counter
+	Rdreq0BadAddr metrics.Counter
 
-	Wrreq0BadAddr gometrics.Counter
+	Wrreq0BadAddr metrics.Counter
 
-	Rdreq1BadAddr gometrics.Counter
+	Rdreq1BadAddr metrics.Counter
 
-	Wrreq1BadAddr gometrics.Counter
+	Wrreq1BadAddr metrics.Counter
 
-	Rdreq2BadAddr gometrics.Counter
+	Rdreq2BadAddr metrics.Counter
 
-	Wrreq2BadAddr gometrics.Counter
+	Wrreq2BadAddr metrics.Counter
 
-	Rdreq3BadAddr gometrics.Counter
+	Rdreq3BadAddr metrics.Counter
 
-	Wrreq3BadAddr gometrics.Counter
+	Wrreq3BadAddr metrics.Counter
 
-	Rdreq4BadAddr gometrics.Counter
+	Rdreq4BadAddr metrics.Counter
 
-	Wrreq4BadAddr gometrics.Counter
+	Wrreq4BadAddr metrics.Counter
 
-	Rdreq5BadAddr gometrics.Counter
+	Rdreq5BadAddr metrics.Counter
 
-	Wrreq5BadAddr gometrics.Counter
+	Wrreq5BadAddr metrics.Counter
 
-	Rdreq6BadAddr gometrics.Counter
+	Rdreq6BadAddr metrics.Counter
 
-	Wrreq6BadAddr gometrics.Counter
+	Wrreq6BadAddr metrics.Counter
 
-	Rdreq7BadAddr gometrics.Counter
+	Rdreq7BadAddr metrics.Counter
 
-	Wrreq7BadAddr gometrics.Counter
+	Wrreq7BadAddr metrics.Counter
 
-	CpuBadAddr gometrics.Counter
+	CpuBadAddr metrics.Counter
 
-	BgBadAddr gometrics.Counter
+	BgBadAddr metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -4166,109 +4167,109 @@ func (mtr *SsepicsintbadaddrMetrics) getOffset(fldName string) int {
 }
 
 // SetRdreq0BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetRdreq0BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq0BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq0BadAddr"))
 	return nil
 }
 
 // SetWrreq0BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetWrreq0BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq0BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq0BadAddr"))
 	return nil
 }
 
 // SetRdreq1BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetRdreq1BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq1BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq1BadAddr"))
 	return nil
 }
 
 // SetWrreq1BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetWrreq1BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq1BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq1BadAddr"))
 	return nil
 }
 
 // SetRdreq2BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetRdreq2BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq2BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq2BadAddr"))
 	return nil
 }
 
 // SetWrreq2BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetWrreq2BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq2BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq2BadAddr"))
 	return nil
 }
 
 // SetRdreq3BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetRdreq3BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq3BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq3BadAddr"))
 	return nil
 }
 
 // SetWrreq3BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetWrreq3BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq3BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq3BadAddr"))
 	return nil
 }
 
 // SetRdreq4BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetRdreq4BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq4BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq4BadAddr"))
 	return nil
 }
 
 // SetWrreq4BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetWrreq4BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq4BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq4BadAddr"))
 	return nil
 }
 
 // SetRdreq5BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetRdreq5BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq5BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq5BadAddr"))
 	return nil
 }
 
 // SetWrreq5BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetWrreq5BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq5BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq5BadAddr"))
 	return nil
 }
 
 // SetRdreq6BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetRdreq6BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq6BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq6BadAddr"))
 	return nil
 }
 
 // SetWrreq6BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetWrreq6BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq6BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq6BadAddr"))
 	return nil
 }
 
 // SetRdreq7BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetRdreq7BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetRdreq7BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Rdreq7BadAddr"))
 	return nil
 }
 
 // SetWrreq7BadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetWrreq7BadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetWrreq7BadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Wrreq7BadAddr"))
 	return nil
 }
 
 // SetCpuBadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetCpuBadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetCpuBadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CpuBadAddr"))
 	return nil
 }
 
 // SetBgBadAddr sets cunter in shared memory
-func (mtr *SsepicsintbadaddrMetrics) SetBgBadAddr(val gometrics.Counter) error {
+func (mtr *SsepicsintbadaddrMetrics) SetBgBadAddr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("BgBadAddr"))
 	return nil
 }
@@ -4344,37 +4345,37 @@ type SsepicsintbgMetrics struct {
 
 	key uint64
 
-	UnfinishedBg0 gometrics.Counter
+	UnfinishedBg0 metrics.Counter
 
-	UnfinishedBg1 gometrics.Counter
+	UnfinishedBg1 metrics.Counter
 
-	UnfinishedBg2 gometrics.Counter
+	UnfinishedBg2 metrics.Counter
 
-	UnfinishedBg3 gometrics.Counter
+	UnfinishedBg3 metrics.Counter
 
-	UnfinishedBg4 gometrics.Counter
+	UnfinishedBg4 metrics.Counter
 
-	UnfinishedBg5 gometrics.Counter
+	UnfinishedBg5 metrics.Counter
 
-	UnfinishedBg6 gometrics.Counter
+	UnfinishedBg6 metrics.Counter
 
-	UnfinishedBg7 gometrics.Counter
+	UnfinishedBg7 metrics.Counter
 
-	UnfinishedBg8 gometrics.Counter
+	UnfinishedBg8 metrics.Counter
 
-	UnfinishedBg9 gometrics.Counter
+	UnfinishedBg9 metrics.Counter
 
-	UnfinishedBg10 gometrics.Counter
+	UnfinishedBg10 metrics.Counter
 
-	UnfinishedBg11 gometrics.Counter
+	UnfinishedBg11 metrics.Counter
 
-	UnfinishedBg12 gometrics.Counter
+	UnfinishedBg12 metrics.Counter
 
-	UnfinishedBg13 gometrics.Counter
+	UnfinishedBg13 metrics.Counter
 
-	UnfinishedBg14 gometrics.Counter
+	UnfinishedBg14 metrics.Counter
 
-	UnfinishedBg15 gometrics.Counter
+	UnfinishedBg15 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -4568,97 +4569,97 @@ func (mtr *SsepicsintbgMetrics) getOffset(fldName string) int {
 }
 
 // SetUnfinishedBg0 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg0(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg0"))
 	return nil
 }
 
 // SetUnfinishedBg1 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg1(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg1"))
 	return nil
 }
 
 // SetUnfinishedBg2 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg2(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg2"))
 	return nil
 }
 
 // SetUnfinishedBg3 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg3(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg3"))
 	return nil
 }
 
 // SetUnfinishedBg4 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg4(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg4"))
 	return nil
 }
 
 // SetUnfinishedBg5 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg5(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg5(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg5"))
 	return nil
 }
 
 // SetUnfinishedBg6 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg6(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg6(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg6"))
 	return nil
 }
 
 // SetUnfinishedBg7 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg7(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg7(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg7"))
 	return nil
 }
 
 // SetUnfinishedBg8 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg8(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg8(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg8"))
 	return nil
 }
 
 // SetUnfinishedBg9 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg9(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg9(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg9"))
 	return nil
 }
 
 // SetUnfinishedBg10 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg10(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg10(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg10"))
 	return nil
 }
 
 // SetUnfinishedBg11 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg11(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg11(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg11"))
 	return nil
 }
 
 // SetUnfinishedBg12 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg12(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg12(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg12"))
 	return nil
 }
 
 // SetUnfinishedBg13 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg13(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg13(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg13"))
 	return nil
 }
 
 // SetUnfinishedBg14 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg14(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg14(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg14"))
 	return nil
 }
 
 // SetUnfinishedBg15 sets cunter in shared memory
-func (mtr *SsepicsintbgMetrics) SetUnfinishedBg15(val gometrics.Counter) error {
+func (mtr *SsepicsintbgMetrics) SetUnfinishedBg15(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UnfinishedBg15"))
 	return nil
 }
@@ -4734,11 +4735,11 @@ type SsepicsintpicsMetrics struct {
 
 	key uint64
 
-	UncorrectableEcc gometrics.Counter
+	UncorrectableEcc metrics.Counter
 
-	CorrectableEcc gometrics.Counter
+	CorrectableEcc metrics.Counter
 
-	TooManyRlSchError gometrics.Counter
+	TooManyRlSchError metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -4802,19 +4803,19 @@ func (mtr *SsepicsintpicsMetrics) getOffset(fldName string) int {
 }
 
 // SetUncorrectableEcc sets cunter in shared memory
-func (mtr *SsepicsintpicsMetrics) SetUncorrectableEcc(val gometrics.Counter) error {
+func (mtr *SsepicsintpicsMetrics) SetUncorrectableEcc(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableEcc"))
 	return nil
 }
 
 // SetCorrectableEcc sets cunter in shared memory
-func (mtr *SsepicsintpicsMetrics) SetCorrectableEcc(val gometrics.Counter) error {
+func (mtr *SsepicsintpicsMetrics) SetCorrectableEcc(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableEcc"))
 	return nil
 }
 
 // SetTooManyRlSchError sets cunter in shared memory
-func (mtr *SsepicsintpicsMetrics) SetTooManyRlSchError(val gometrics.Counter) error {
+func (mtr *SsepicsintpicsMetrics) SetTooManyRlSchError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TooManyRlSchError"))
 	return nil
 }
@@ -4890,19 +4891,19 @@ type DbwaintdbMetrics struct {
 
 	key uint64
 
-	DbCamConflict gometrics.Counter
+	DbCamConflict metrics.Counter
 
-	DbPidChkFail gometrics.Counter
+	DbPidChkFail metrics.Counter
 
-	DbQidOverflow gometrics.Counter
+	DbQidOverflow metrics.Counter
 
-	HostRingAccessErr gometrics.Counter
+	HostRingAccessErr metrics.Counter
 
-	TotalRingAccessErr gometrics.Counter
+	TotalRingAccessErr metrics.Counter
 
-	RrespErr gometrics.Counter
+	RrespErr metrics.Counter
 
-	BrespErr gometrics.Counter
+	BrespErr metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -5006,43 +5007,43 @@ func (mtr *DbwaintdbMetrics) getOffset(fldName string) int {
 }
 
 // SetDbCamConflict sets cunter in shared memory
-func (mtr *DbwaintdbMetrics) SetDbCamConflict(val gometrics.Counter) error {
+func (mtr *DbwaintdbMetrics) SetDbCamConflict(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DbCamConflict"))
 	return nil
 }
 
 // SetDbPidChkFail sets cunter in shared memory
-func (mtr *DbwaintdbMetrics) SetDbPidChkFail(val gometrics.Counter) error {
+func (mtr *DbwaintdbMetrics) SetDbPidChkFail(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DbPidChkFail"))
 	return nil
 }
 
 // SetDbQidOverflow sets cunter in shared memory
-func (mtr *DbwaintdbMetrics) SetDbQidOverflow(val gometrics.Counter) error {
+func (mtr *DbwaintdbMetrics) SetDbQidOverflow(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("DbQidOverflow"))
 	return nil
 }
 
 // SetHostRingAccessErr sets cunter in shared memory
-func (mtr *DbwaintdbMetrics) SetHostRingAccessErr(val gometrics.Counter) error {
+func (mtr *DbwaintdbMetrics) SetHostRingAccessErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("HostRingAccessErr"))
 	return nil
 }
 
 // SetTotalRingAccessErr sets cunter in shared memory
-func (mtr *DbwaintdbMetrics) SetTotalRingAccessErr(val gometrics.Counter) error {
+func (mtr *DbwaintdbMetrics) SetTotalRingAccessErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TotalRingAccessErr"))
 	return nil
 }
 
 // SetRrespErr sets cunter in shared memory
-func (mtr *DbwaintdbMetrics) SetRrespErr(val gometrics.Counter) error {
+func (mtr *DbwaintdbMetrics) SetRrespErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RrespErr"))
 	return nil
 }
 
 // SetBrespErr sets cunter in shared memory
-func (mtr *DbwaintdbMetrics) SetBrespErr(val gometrics.Counter) error {
+func (mtr *DbwaintdbMetrics) SetBrespErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("BrespErr"))
 	return nil
 }
@@ -5118,11 +5119,11 @@ type DbwaintlifqstatemapMetrics struct {
 
 	key uint64
 
-	EccUncorrectable gometrics.Counter
+	EccUncorrectable metrics.Counter
 
-	EccCorrectable gometrics.Counter
+	EccCorrectable metrics.Counter
 
-	QidInvalid gometrics.Counter
+	QidInvalid metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -5186,19 +5187,19 @@ func (mtr *DbwaintlifqstatemapMetrics) getOffset(fldName string) int {
 }
 
 // SetEccUncorrectable sets cunter in shared memory
-func (mtr *DbwaintlifqstatemapMetrics) SetEccUncorrectable(val gometrics.Counter) error {
+func (mtr *DbwaintlifqstatemapMetrics) SetEccUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EccUncorrectable"))
 	return nil
 }
 
 // SetEccCorrectable sets cunter in shared memory
-func (mtr *DbwaintlifqstatemapMetrics) SetEccCorrectable(val gometrics.Counter) error {
+func (mtr *DbwaintlifqstatemapMetrics) SetEccCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EccCorrectable"))
 	return nil
 }
 
 // SetQidInvalid sets cunter in shared memory
-func (mtr *DbwaintlifqstatemapMetrics) SetQidInvalid(val gometrics.Counter) error {
+func (mtr *DbwaintlifqstatemapMetrics) SetQidInvalid(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("QidInvalid"))
 	return nil
 }
@@ -5274,45 +5275,45 @@ type SgeteinterrMetrics struct {
 
 	key uint64
 
-	MissSop gometrics.Counter
+	MissSop metrics.Counter
 
-	MissEop gometrics.Counter
+	MissEop metrics.Counter
 
-	PhvMaxSize gometrics.Counter
+	PhvMaxSize metrics.Counter
 
-	SpuriousAxiRsp gometrics.Counter
+	SpuriousAxiRsp metrics.Counter
 
-	SpuriousTcamRsp gometrics.Counter
+	SpuriousTcamRsp metrics.Counter
 
-	Te2MpuTimeout gometrics.Counter
+	Te2MpuTimeout metrics.Counter
 
-	AxiRdrspErr gometrics.Counter
+	AxiRdrspErr metrics.Counter
 
-	AxiBadRead gometrics.Counter
+	AxiBadRead metrics.Counter
 
-	TcamReqIdxFifo gometrics.Counter
+	TcamReqIdxFifo metrics.Counter
 
-	TcamRspIdxFifo gometrics.Counter
+	TcamRspIdxFifo metrics.Counter
 
-	MpuReqIdxFifo gometrics.Counter
+	MpuReqIdxFifo metrics.Counter
 
-	AxiReqIdxFifo gometrics.Counter
+	AxiReqIdxFifo metrics.Counter
 
-	ProcTblVldWoProc gometrics.Counter
+	ProcTblVldWoProc metrics.Counter
 
-	PendWoWb gometrics.Counter
+	PendWoWb metrics.Counter
 
-	Pend1WoPend0 gometrics.Counter
+	Pend1WoPend0 metrics.Counter
 
-	BothPendDown gometrics.Counter
+	BothPendDown metrics.Counter
 
-	PendWoProcDown gometrics.Counter
+	PendWoProcDown metrics.Counter
 
-	BothPendWentUp gometrics.Counter
+	BothPendWentUp metrics.Counter
 
-	LoadedButNoProc gometrics.Counter
+	LoadedButNoProc metrics.Counter
 
-	LoadedButNoProcTblVld gometrics.Counter
+	LoadedButNoProcTblVld metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -5546,121 +5547,121 @@ func (mtr *SgeteinterrMetrics) getOffset(fldName string) int {
 }
 
 // SetMissSop sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetMissSop(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetMissSop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MissSop"))
 	return nil
 }
 
 // SetMissEop sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetMissEop(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetMissEop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MissEop"))
 	return nil
 }
 
 // SetPhvMaxSize sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetPhvMaxSize(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetPhvMaxSize(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PhvMaxSize"))
 	return nil
 }
 
 // SetSpuriousAxiRsp sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetSpuriousAxiRsp(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetSpuriousAxiRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousAxiRsp"))
 	return nil
 }
 
 // SetSpuriousTcamRsp sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetSpuriousTcamRsp(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetSpuriousTcamRsp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SpuriousTcamRsp"))
 	return nil
 }
 
 // SetTe2MpuTimeout sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetTe2MpuTimeout(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetTe2MpuTimeout(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Te2MpuTimeout"))
 	return nil
 }
 
 // SetAxiRdrspErr sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetAxiRdrspErr(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetAxiRdrspErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("AxiRdrspErr"))
 	return nil
 }
 
 // SetAxiBadRead sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetAxiBadRead(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetAxiBadRead(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("AxiBadRead"))
 	return nil
 }
 
 // SetTcamReqIdxFifo sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetTcamReqIdxFifo(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetTcamReqIdxFifo(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TcamReqIdxFifo"))
 	return nil
 }
 
 // SetTcamRspIdxFifo sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetTcamRspIdxFifo(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetTcamRspIdxFifo(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TcamRspIdxFifo"))
 	return nil
 }
 
 // SetMpuReqIdxFifo sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetMpuReqIdxFifo(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetMpuReqIdxFifo(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MpuReqIdxFifo"))
 	return nil
 }
 
 // SetAxiReqIdxFifo sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetAxiReqIdxFifo(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetAxiReqIdxFifo(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("AxiReqIdxFifo"))
 	return nil
 }
 
 // SetProcTblVldWoProc sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetProcTblVldWoProc(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetProcTblVldWoProc(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProcTblVldWoProc"))
 	return nil
 }
 
 // SetPendWoWb sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetPendWoWb(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetPendWoWb(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PendWoWb"))
 	return nil
 }
 
 // SetPend1WoPend0 sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetPend1WoPend0(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetPend1WoPend0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Pend1WoPend0"))
 	return nil
 }
 
 // SetBothPendDown sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetBothPendDown(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetBothPendDown(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("BothPendDown"))
 	return nil
 }
 
 // SetPendWoProcDown sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetPendWoProcDown(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetPendWoProcDown(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PendWoProcDown"))
 	return nil
 }
 
 // SetBothPendWentUp sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetBothPendWentUp(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetBothPendWentUp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("BothPendWentUp"))
 	return nil
 }
 
 // SetLoadedButNoProc sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetLoadedButNoProc(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetLoadedButNoProc(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("LoadedButNoProc"))
 	return nil
 }
 
 // SetLoadedButNoProcTblVld sets cunter in shared memory
-func (mtr *SgeteinterrMetrics) SetLoadedButNoProcTblVld(val gometrics.Counter) error {
+func (mtr *SgeteinterrMetrics) SetLoadedButNoProcTblVld(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("LoadedButNoProcTblVld"))
 	return nil
 }
@@ -5736,39 +5737,39 @@ type SgeteintinfoMetrics struct {
 
 	key uint64
 
-	ProfileCamHit0 gometrics.Counter
+	ProfileCamHit0 metrics.Counter
 
-	ProfileCamHit1 gometrics.Counter
+	ProfileCamHit1 metrics.Counter
 
-	ProfileCamHit2 gometrics.Counter
+	ProfileCamHit2 metrics.Counter
 
-	ProfileCamHit3 gometrics.Counter
+	ProfileCamHit3 metrics.Counter
 
-	ProfileCamHit4 gometrics.Counter
+	ProfileCamHit4 metrics.Counter
 
-	ProfileCamHit5 gometrics.Counter
+	ProfileCamHit5 metrics.Counter
 
-	ProfileCamHit6 gometrics.Counter
+	ProfileCamHit6 metrics.Counter
 
-	ProfileCamHit7 gometrics.Counter
+	ProfileCamHit7 metrics.Counter
 
-	ProfileCamHit8 gometrics.Counter
+	ProfileCamHit8 metrics.Counter
 
-	ProfileCamHit9 gometrics.Counter
+	ProfileCamHit9 metrics.Counter
 
-	ProfileCamHit10 gometrics.Counter
+	ProfileCamHit10 metrics.Counter
 
-	ProfileCamHit11 gometrics.Counter
+	ProfileCamHit11 metrics.Counter
 
-	ProfileCamHit12 gometrics.Counter
+	ProfileCamHit12 metrics.Counter
 
-	ProfileCamHit13 gometrics.Counter
+	ProfileCamHit13 metrics.Counter
 
-	ProfileCamHit14 gometrics.Counter
+	ProfileCamHit14 metrics.Counter
 
-	ProfileCamHit15 gometrics.Counter
+	ProfileCamHit15 metrics.Counter
 
-	ProfileCamMiss gometrics.Counter
+	ProfileCamMiss metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -5972,103 +5973,103 @@ func (mtr *SgeteintinfoMetrics) getOffset(fldName string) int {
 }
 
 // SetProfileCamHit0 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit0(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit0"))
 	return nil
 }
 
 // SetProfileCamHit1 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit1(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit1"))
 	return nil
 }
 
 // SetProfileCamHit2 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit2(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit2"))
 	return nil
 }
 
 // SetProfileCamHit3 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit3(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit3"))
 	return nil
 }
 
 // SetProfileCamHit4 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit4(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit4"))
 	return nil
 }
 
 // SetProfileCamHit5 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit5(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit5(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit5"))
 	return nil
 }
 
 // SetProfileCamHit6 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit6(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit6(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit6"))
 	return nil
 }
 
 // SetProfileCamHit7 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit7(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit7(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit7"))
 	return nil
 }
 
 // SetProfileCamHit8 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit8(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit8(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit8"))
 	return nil
 }
 
 // SetProfileCamHit9 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit9(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit9(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit9"))
 	return nil
 }
 
 // SetProfileCamHit10 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit10(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit10(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit10"))
 	return nil
 }
 
 // SetProfileCamHit11 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit11(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit11(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit11"))
 	return nil
 }
 
 // SetProfileCamHit12 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit12(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit12(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit12"))
 	return nil
 }
 
 // SetProfileCamHit13 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit13(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit13(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit13"))
 	return nil
 }
 
 // SetProfileCamHit14 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit14(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit14(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit14"))
 	return nil
 }
 
 // SetProfileCamHit15 sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamHit15(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamHit15(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamHit15"))
 	return nil
 }
 
 // SetProfileCamMiss sets cunter in shared memory
-func (mtr *SgeteintinfoMetrics) SetProfileCamMiss(val gometrics.Counter) error {
+func (mtr *SgeteintinfoMetrics) SetProfileCamMiss(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ProfileCamMiss"))
 	return nil
 }
@@ -6144,59 +6145,59 @@ type SgempuinterrMetrics struct {
 
 	key uint64
 
-	ResultsMismatch gometrics.Counter
+	ResultsMismatch metrics.Counter
 
-	SdpMemUncorrectable gometrics.Counter
+	SdpMemUncorrectable metrics.Counter
 
-	SdpMemCorrectable gometrics.Counter
+	SdpMemCorrectable metrics.Counter
 
-	IllegalOp_0 gometrics.Counter
+	IllegalOp_0 metrics.Counter
 
-	IllegalOp_1 gometrics.Counter
+	IllegalOp_1 metrics.Counter
 
-	IllegalOp_2 gometrics.Counter
+	IllegalOp_2 metrics.Counter
 
-	IllegalOp_3 gometrics.Counter
+	IllegalOp_3 metrics.Counter
 
-	MaxInst_0 gometrics.Counter
+	MaxInst_0 metrics.Counter
 
-	MaxInst_1 gometrics.Counter
+	MaxInst_1 metrics.Counter
 
-	MaxInst_2 gometrics.Counter
+	MaxInst_2 metrics.Counter
 
-	MaxInst_3 gometrics.Counter
+	MaxInst_3 metrics.Counter
 
-	Phvwr_0 gometrics.Counter
+	Phvwr_0 metrics.Counter
 
-	Phvwr_1 gometrics.Counter
+	Phvwr_1 metrics.Counter
 
-	Phvwr_2 gometrics.Counter
+	Phvwr_2 metrics.Counter
 
-	Phvwr_3 gometrics.Counter
+	Phvwr_3 metrics.Counter
 
-	WriteErr_0 gometrics.Counter
+	WriteErr_0 metrics.Counter
 
-	WriteErr_1 gometrics.Counter
+	WriteErr_1 metrics.Counter
 
-	WriteErr_2 gometrics.Counter
+	WriteErr_2 metrics.Counter
 
-	WriteErr_3 gometrics.Counter
+	WriteErr_3 metrics.Counter
 
-	CacheAxi_0 gometrics.Counter
+	CacheAxi_0 metrics.Counter
 
-	CacheAxi_1 gometrics.Counter
+	CacheAxi_1 metrics.Counter
 
-	CacheAxi_2 gometrics.Counter
+	CacheAxi_2 metrics.Counter
 
-	CacheAxi_3 gometrics.Counter
+	CacheAxi_3 metrics.Counter
 
-	CacheParity_0 gometrics.Counter
+	CacheParity_0 metrics.Counter
 
-	CacheParity_1 gometrics.Counter
+	CacheParity_1 metrics.Counter
 
-	CacheParity_2 gometrics.Counter
+	CacheParity_2 metrics.Counter
 
-	CacheParity_3 gometrics.Counter
+	CacheParity_3 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -6500,163 +6501,163 @@ func (mtr *SgempuinterrMetrics) getOffset(fldName string) int {
 }
 
 // SetResultsMismatch sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetResultsMismatch(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetResultsMismatch(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ResultsMismatch"))
 	return nil
 }
 
 // SetSdpMemUncorrectable sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetSdpMemUncorrectable(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetSdpMemUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SdpMemUncorrectable"))
 	return nil
 }
 
 // SetSdpMemCorrectable sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetSdpMemCorrectable(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetSdpMemCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SdpMemCorrectable"))
 	return nil
 }
 
 // SetIllegalOp_0 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetIllegalOp_0(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetIllegalOp_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("IllegalOp_0"))
 	return nil
 }
 
 // SetIllegalOp_1 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetIllegalOp_1(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetIllegalOp_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("IllegalOp_1"))
 	return nil
 }
 
 // SetIllegalOp_2 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetIllegalOp_2(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetIllegalOp_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("IllegalOp_2"))
 	return nil
 }
 
 // SetIllegalOp_3 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetIllegalOp_3(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetIllegalOp_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("IllegalOp_3"))
 	return nil
 }
 
 // SetMaxInst_0 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetMaxInst_0(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetMaxInst_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MaxInst_0"))
 	return nil
 }
 
 // SetMaxInst_1 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetMaxInst_1(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetMaxInst_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MaxInst_1"))
 	return nil
 }
 
 // SetMaxInst_2 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetMaxInst_2(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetMaxInst_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MaxInst_2"))
 	return nil
 }
 
 // SetMaxInst_3 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetMaxInst_3(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetMaxInst_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MaxInst_3"))
 	return nil
 }
 
 // SetPhvwr_0 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetPhvwr_0(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetPhvwr_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Phvwr_0"))
 	return nil
 }
 
 // SetPhvwr_1 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetPhvwr_1(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetPhvwr_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Phvwr_1"))
 	return nil
 }
 
 // SetPhvwr_2 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetPhvwr_2(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetPhvwr_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Phvwr_2"))
 	return nil
 }
 
 // SetPhvwr_3 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetPhvwr_3(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetPhvwr_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Phvwr_3"))
 	return nil
 }
 
 // SetWriteErr_0 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetWriteErr_0(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetWriteErr_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("WriteErr_0"))
 	return nil
 }
 
 // SetWriteErr_1 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetWriteErr_1(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetWriteErr_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("WriteErr_1"))
 	return nil
 }
 
 // SetWriteErr_2 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetWriteErr_2(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetWriteErr_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("WriteErr_2"))
 	return nil
 }
 
 // SetWriteErr_3 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetWriteErr_3(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetWriteErr_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("WriteErr_3"))
 	return nil
 }
 
 // SetCacheAxi_0 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetCacheAxi_0(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetCacheAxi_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CacheAxi_0"))
 	return nil
 }
 
 // SetCacheAxi_1 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetCacheAxi_1(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetCacheAxi_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CacheAxi_1"))
 	return nil
 }
 
 // SetCacheAxi_2 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetCacheAxi_2(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetCacheAxi_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CacheAxi_2"))
 	return nil
 }
 
 // SetCacheAxi_3 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetCacheAxi_3(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetCacheAxi_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CacheAxi_3"))
 	return nil
 }
 
 // SetCacheParity_0 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetCacheParity_0(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetCacheParity_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CacheParity_0"))
 	return nil
 }
 
 // SetCacheParity_1 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetCacheParity_1(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetCacheParity_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CacheParity_1"))
 	return nil
 }
 
 // SetCacheParity_2 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetCacheParity_2(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetCacheParity_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CacheParity_2"))
 	return nil
 }
 
 // SetCacheParity_3 sets cunter in shared memory
-func (mtr *SgempuinterrMetrics) SetCacheParity_3(val gometrics.Counter) error {
+func (mtr *SgempuinterrMetrics) SetCacheParity_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CacheParity_3"))
 	return nil
 }
@@ -6732,21 +6733,21 @@ type SgempuintinfoMetrics struct {
 
 	key uint64
 
-	TraceFull_0 gometrics.Counter
+	TraceFull_0 metrics.Counter
 
-	TraceFull_1 gometrics.Counter
+	TraceFull_1 metrics.Counter
 
-	TraceFull_2 gometrics.Counter
+	TraceFull_2 metrics.Counter
 
-	TraceFull_3 gometrics.Counter
+	TraceFull_3 metrics.Counter
 
-	MpuStop_0 gometrics.Counter
+	MpuStop_0 metrics.Counter
 
-	MpuStop_1 gometrics.Counter
+	MpuStop_1 metrics.Counter
 
-	MpuStop_2 gometrics.Counter
+	MpuStop_2 metrics.Counter
 
-	MpuStop_3 gometrics.Counter
+	MpuStop_3 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -6860,49 +6861,49 @@ func (mtr *SgempuintinfoMetrics) getOffset(fldName string) int {
 }
 
 // SetTraceFull_0 sets cunter in shared memory
-func (mtr *SgempuintinfoMetrics) SetTraceFull_0(val gometrics.Counter) error {
+func (mtr *SgempuintinfoMetrics) SetTraceFull_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_0"))
 	return nil
 }
 
 // SetTraceFull_1 sets cunter in shared memory
-func (mtr *SgempuintinfoMetrics) SetTraceFull_1(val gometrics.Counter) error {
+func (mtr *SgempuintinfoMetrics) SetTraceFull_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_1"))
 	return nil
 }
 
 // SetTraceFull_2 sets cunter in shared memory
-func (mtr *SgempuintinfoMetrics) SetTraceFull_2(val gometrics.Counter) error {
+func (mtr *SgempuintinfoMetrics) SetTraceFull_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_2"))
 	return nil
 }
 
 // SetTraceFull_3 sets cunter in shared memory
-func (mtr *SgempuintinfoMetrics) SetTraceFull_3(val gometrics.Counter) error {
+func (mtr *SgempuintinfoMetrics) SetTraceFull_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TraceFull_3"))
 	return nil
 }
 
 // SetMpuStop_0 sets cunter in shared memory
-func (mtr *SgempuintinfoMetrics) SetMpuStop_0(val gometrics.Counter) error {
+func (mtr *SgempuintinfoMetrics) SetMpuStop_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MpuStop_0"))
 	return nil
 }
 
 // SetMpuStop_1 sets cunter in shared memory
-func (mtr *SgempuintinfoMetrics) SetMpuStop_1(val gometrics.Counter) error {
+func (mtr *SgempuintinfoMetrics) SetMpuStop_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MpuStop_1"))
 	return nil
 }
 
 // SetMpuStop_2 sets cunter in shared memory
-func (mtr *SgempuintinfoMetrics) SetMpuStop_2(val gometrics.Counter) error {
+func (mtr *SgempuintinfoMetrics) SetMpuStop_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MpuStop_2"))
 	return nil
 }
 
 // SetMpuStop_3 sets cunter in shared memory
-func (mtr *SgempuintinfoMetrics) SetMpuStop_3(val gometrics.Counter) error {
+func (mtr *SgempuintinfoMetrics) SetMpuStop_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MpuStop_3"))
 	return nil
 }
@@ -6978,9 +6979,9 @@ type MdhensintaxierrMetrics struct {
 
 	key uint64
 
-	WrspErr gometrics.Counter
+	WrspErr metrics.Counter
 
-	RrspErr gometrics.Counter
+	RrspErr metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -7034,13 +7035,13 @@ func (mtr *MdhensintaxierrMetrics) getOffset(fldName string) int {
 }
 
 // SetWrspErr sets cunter in shared memory
-func (mtr *MdhensintaxierrMetrics) SetWrspErr(val gometrics.Counter) error {
+func (mtr *MdhensintaxierrMetrics) SetWrspErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("WrspErr"))
 	return nil
 }
 
 // SetRrspErr sets cunter in shared memory
-func (mtr *MdhensintaxierrMetrics) SetRrspErr(val gometrics.Counter) error {
+func (mtr *MdhensintaxierrMetrics) SetRrspErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RrspErr"))
 	return nil
 }
@@ -7116,9 +7117,9 @@ type MdhensinteccMetrics struct {
 
 	key uint64
 
-	CorrectableErr gometrics.Counter
+	CorrectableErr metrics.Counter
 
-	UncorrectableErr gometrics.Counter
+	UncorrectableErr metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -7172,13 +7173,13 @@ func (mtr *MdhensinteccMetrics) getOffset(fldName string) int {
 }
 
 // SetCorrectableErr sets cunter in shared memory
-func (mtr *MdhensinteccMetrics) SetCorrectableErr(val gometrics.Counter) error {
+func (mtr *MdhensinteccMetrics) SetCorrectableErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CorrectableErr"))
 	return nil
 }
 
 // SetUncorrectableErr sets cunter in shared memory
-func (mtr *MdhensinteccMetrics) SetUncorrectableErr(val gometrics.Counter) error {
+func (mtr *MdhensinteccMetrics) SetUncorrectableErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("UncorrectableErr"))
 	return nil
 }
@@ -7254,21 +7255,21 @@ type MdhensintipcoreMetrics struct {
 
 	key uint64
 
-	XtsEnc gometrics.Counter
+	XtsEnc metrics.Counter
 
-	Xts gometrics.Counter
+	Xts metrics.Counter
 
-	Gcm0 gometrics.Counter
+	Gcm0 metrics.Counter
 
-	Gcm1 gometrics.Counter
+	Gcm1 metrics.Counter
 
-	Drbg gometrics.Counter
+	Drbg metrics.Counter
 
-	Pk gometrics.Counter
+	Pk metrics.Counter
 
-	Cp gometrics.Counter
+	Cp metrics.Counter
 
-	Dc gometrics.Counter
+	Dc metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -7382,49 +7383,49 @@ func (mtr *MdhensintipcoreMetrics) getOffset(fldName string) int {
 }
 
 // SetXtsEnc sets cunter in shared memory
-func (mtr *MdhensintipcoreMetrics) SetXtsEnc(val gometrics.Counter) error {
+func (mtr *MdhensintipcoreMetrics) SetXtsEnc(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("XtsEnc"))
 	return nil
 }
 
 // SetXts sets cunter in shared memory
-func (mtr *MdhensintipcoreMetrics) SetXts(val gometrics.Counter) error {
+func (mtr *MdhensintipcoreMetrics) SetXts(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Xts"))
 	return nil
 }
 
 // SetGcm0 sets cunter in shared memory
-func (mtr *MdhensintipcoreMetrics) SetGcm0(val gometrics.Counter) error {
+func (mtr *MdhensintipcoreMetrics) SetGcm0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Gcm0"))
 	return nil
 }
 
 // SetGcm1 sets cunter in shared memory
-func (mtr *MdhensintipcoreMetrics) SetGcm1(val gometrics.Counter) error {
+func (mtr *MdhensintipcoreMetrics) SetGcm1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Gcm1"))
 	return nil
 }
 
 // SetDrbg sets cunter in shared memory
-func (mtr *MdhensintipcoreMetrics) SetDrbg(val gometrics.Counter) error {
+func (mtr *MdhensintipcoreMetrics) SetDrbg(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Drbg"))
 	return nil
 }
 
 // SetPk sets cunter in shared memory
-func (mtr *MdhensintipcoreMetrics) SetPk(val gometrics.Counter) error {
+func (mtr *MdhensintipcoreMetrics) SetPk(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Pk"))
 	return nil
 }
 
 // SetCp sets cunter in shared memory
-func (mtr *MdhensintipcoreMetrics) SetCp(val gometrics.Counter) error {
+func (mtr *MdhensintipcoreMetrics) SetCp(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Cp"))
 	return nil
 }
 
 // SetDc sets cunter in shared memory
-func (mtr *MdhensintipcoreMetrics) SetDc(val gometrics.Counter) error {
+func (mtr *MdhensintipcoreMetrics) SetDc(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Dc"))
 	return nil
 }
@@ -7500,21 +7501,21 @@ type MpmpnsintcryptoMetrics struct {
 
 	key uint64
 
-	Mpp0 gometrics.Counter
+	Mpp0 metrics.Counter
 
-	Mpp1 gometrics.Counter
+	Mpp1 metrics.Counter
 
-	Mpp2 gometrics.Counter
+	Mpp2 metrics.Counter
 
-	Mpp3 gometrics.Counter
+	Mpp3 metrics.Counter
 
-	Mpp4 gometrics.Counter
+	Mpp4 metrics.Counter
 
-	Mpp5 gometrics.Counter
+	Mpp5 metrics.Counter
 
-	Mpp6 gometrics.Counter
+	Mpp6 metrics.Counter
 
-	Mpp7 gometrics.Counter
+	Mpp7 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -7628,49 +7629,49 @@ func (mtr *MpmpnsintcryptoMetrics) getOffset(fldName string) int {
 }
 
 // SetMpp0 sets cunter in shared memory
-func (mtr *MpmpnsintcryptoMetrics) SetMpp0(val gometrics.Counter) error {
+func (mtr *MpmpnsintcryptoMetrics) SetMpp0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Mpp0"))
 	return nil
 }
 
 // SetMpp1 sets cunter in shared memory
-func (mtr *MpmpnsintcryptoMetrics) SetMpp1(val gometrics.Counter) error {
+func (mtr *MpmpnsintcryptoMetrics) SetMpp1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Mpp1"))
 	return nil
 }
 
 // SetMpp2 sets cunter in shared memory
-func (mtr *MpmpnsintcryptoMetrics) SetMpp2(val gometrics.Counter) error {
+func (mtr *MpmpnsintcryptoMetrics) SetMpp2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Mpp2"))
 	return nil
 }
 
 // SetMpp3 sets cunter in shared memory
-func (mtr *MpmpnsintcryptoMetrics) SetMpp3(val gometrics.Counter) error {
+func (mtr *MpmpnsintcryptoMetrics) SetMpp3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Mpp3"))
 	return nil
 }
 
 // SetMpp4 sets cunter in shared memory
-func (mtr *MpmpnsintcryptoMetrics) SetMpp4(val gometrics.Counter) error {
+func (mtr *MpmpnsintcryptoMetrics) SetMpp4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Mpp4"))
 	return nil
 }
 
 // SetMpp5 sets cunter in shared memory
-func (mtr *MpmpnsintcryptoMetrics) SetMpp5(val gometrics.Counter) error {
+func (mtr *MpmpnsintcryptoMetrics) SetMpp5(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Mpp5"))
 	return nil
 }
 
 // SetMpp6 sets cunter in shared memory
-func (mtr *MpmpnsintcryptoMetrics) SetMpp6(val gometrics.Counter) error {
+func (mtr *MpmpnsintcryptoMetrics) SetMpp6(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Mpp6"))
 	return nil
 }
 
 // SetMpp7 sets cunter in shared memory
-func (mtr *MpmpnsintcryptoMetrics) SetMpp7(val gometrics.Counter) error {
+func (mtr *MpmpnsintcryptoMetrics) SetMpp7(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Mpp7"))
 	return nil
 }
@@ -7746,9 +7747,9 @@ type PbpbcintcreditunderflowMetrics struct {
 
 	key uint64
 
-	Port_10 gometrics.Counter
+	Port_10 metrics.Counter
 
-	Port_11 gometrics.Counter
+	Port_11 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -7802,13 +7803,13 @@ func (mtr *PbpbcintcreditunderflowMetrics) getOffset(fldName string) int {
 }
 
 // SetPort_10 sets cunter in shared memory
-func (mtr *PbpbcintcreditunderflowMetrics) SetPort_10(val gometrics.Counter) error {
+func (mtr *PbpbcintcreditunderflowMetrics) SetPort_10(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Port_10"))
 	return nil
 }
 
 // SetPort_11 sets cunter in shared memory
-func (mtr *PbpbcintcreditunderflowMetrics) SetPort_11(val gometrics.Counter) error {
+func (mtr *PbpbcintcreditunderflowMetrics) SetPort_11(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Port_11"))
 	return nil
 }
@@ -7884,9 +7885,9 @@ type InteccdescMetrics struct {
 
 	key uint64
 
-	Uncorrectable gometrics.Counter
+	Uncorrectable metrics.Counter
 
-	Correctable gometrics.Counter
+	Correctable metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -7940,13 +7941,13 @@ func (mtr *InteccdescMetrics) getOffset(fldName string) int {
 }
 
 // SetUncorrectable sets cunter in shared memory
-func (mtr *InteccdescMetrics) SetUncorrectable(val gometrics.Counter) error {
+func (mtr *InteccdescMetrics) SetUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Uncorrectable"))
 	return nil
 }
 
 // SetCorrectable sets cunter in shared memory
-func (mtr *InteccdescMetrics) SetCorrectable(val gometrics.Counter) error {
+func (mtr *InteccdescMetrics) SetCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Correctable"))
 	return nil
 }
@@ -8022,53 +8023,53 @@ type PbpbcintpbusviolationMetrics struct {
 
 	key uint64
 
-	SopSopIn_0 gometrics.Counter
+	SopSopIn_0 metrics.Counter
 
-	SopSopIn_1 gometrics.Counter
+	SopSopIn_1 metrics.Counter
 
-	SopSopIn_2 gometrics.Counter
+	SopSopIn_2 metrics.Counter
 
-	SopSopIn_3 gometrics.Counter
+	SopSopIn_3 metrics.Counter
 
-	SopSopIn_4 gometrics.Counter
+	SopSopIn_4 metrics.Counter
 
-	SopSopIn_5 gometrics.Counter
+	SopSopIn_5 metrics.Counter
 
-	SopSopIn_6 gometrics.Counter
+	SopSopIn_6 metrics.Counter
 
-	SopSopIn_7 gometrics.Counter
+	SopSopIn_7 metrics.Counter
 
-	SopSopIn_8 gometrics.Counter
+	SopSopIn_8 metrics.Counter
 
-	SopSopIn_9 gometrics.Counter
+	SopSopIn_9 metrics.Counter
 
-	SopSopIn_10 gometrics.Counter
+	SopSopIn_10 metrics.Counter
 
-	SopSopIn_11 gometrics.Counter
+	SopSopIn_11 metrics.Counter
 
-	EopEopIn_0 gometrics.Counter
+	EopEopIn_0 metrics.Counter
 
-	EopEopIn_1 gometrics.Counter
+	EopEopIn_1 metrics.Counter
 
-	EopEopIn_2 gometrics.Counter
+	EopEopIn_2 metrics.Counter
 
-	EopEopIn_3 gometrics.Counter
+	EopEopIn_3 metrics.Counter
 
-	EopEopIn_4 gometrics.Counter
+	EopEopIn_4 metrics.Counter
 
-	EopEopIn_5 gometrics.Counter
+	EopEopIn_5 metrics.Counter
 
-	EopEopIn_6 gometrics.Counter
+	EopEopIn_6 metrics.Counter
 
-	EopEopIn_7 gometrics.Counter
+	EopEopIn_7 metrics.Counter
 
-	EopEopIn_8 gometrics.Counter
+	EopEopIn_8 metrics.Counter
 
-	EopEopIn_9 gometrics.Counter
+	EopEopIn_9 metrics.Counter
 
-	EopEopIn_10 gometrics.Counter
+	EopEopIn_10 metrics.Counter
 
-	EopEopIn_11 gometrics.Counter
+	EopEopIn_11 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -8342,145 +8343,145 @@ func (mtr *PbpbcintpbusviolationMetrics) getOffset(fldName string) int {
 }
 
 // SetSopSopIn_0 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_0(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_0"))
 	return nil
 }
 
 // SetSopSopIn_1 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_1(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_1"))
 	return nil
 }
 
 // SetSopSopIn_2 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_2(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_2"))
 	return nil
 }
 
 // SetSopSopIn_3 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_3(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_3"))
 	return nil
 }
 
 // SetSopSopIn_4 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_4(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_4"))
 	return nil
 }
 
 // SetSopSopIn_5 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_5(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_5(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_5"))
 	return nil
 }
 
 // SetSopSopIn_6 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_6(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_6(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_6"))
 	return nil
 }
 
 // SetSopSopIn_7 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_7(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_7(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_7"))
 	return nil
 }
 
 // SetSopSopIn_8 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_8(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_8(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_8"))
 	return nil
 }
 
 // SetSopSopIn_9 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_9(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_9(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_9"))
 	return nil
 }
 
 // SetSopSopIn_10 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_10(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_10(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_10"))
 	return nil
 }
 
 // SetSopSopIn_11 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_11(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetSopSopIn_11(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_11"))
 	return nil
 }
 
 // SetEopEopIn_0 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_0(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_0"))
 	return nil
 }
 
 // SetEopEopIn_1 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_1(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_1"))
 	return nil
 }
 
 // SetEopEopIn_2 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_2(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_2"))
 	return nil
 }
 
 // SetEopEopIn_3 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_3(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_3"))
 	return nil
 }
 
 // SetEopEopIn_4 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_4(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_4"))
 	return nil
 }
 
 // SetEopEopIn_5 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_5(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_5(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_5"))
 	return nil
 }
 
 // SetEopEopIn_6 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_6(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_6(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_6"))
 	return nil
 }
 
 // SetEopEopIn_7 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_7(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_7(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_7"))
 	return nil
 }
 
 // SetEopEopIn_8 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_8(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_8(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_8"))
 	return nil
 }
 
 // SetEopEopIn_9 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_9(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_9(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_9"))
 	return nil
 }
 
 // SetEopEopIn_10 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_10(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_10(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_10"))
 	return nil
 }
 
 // SetEopEopIn_11 sets cunter in shared memory
-func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_11(val gometrics.Counter) error {
+func (mtr *PbpbcintpbusviolationMetrics) SetEopEopIn_11(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_11"))
 	return nil
 }
@@ -8556,9 +8557,9 @@ type PbpbcintrplMetrics struct {
 
 	key uint64
 
-	MemoryError gometrics.Counter
+	MemoryError metrics.Counter
 
-	ZeroLastError gometrics.Counter
+	ZeroLastError metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -8612,13 +8613,13 @@ func (mtr *PbpbcintrplMetrics) getOffset(fldName string) int {
 }
 
 // SetMemoryError sets cunter in shared memory
-func (mtr *PbpbcintrplMetrics) SetMemoryError(val gometrics.Counter) error {
+func (mtr *PbpbcintrplMetrics) SetMemoryError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MemoryError"))
 	return nil
 }
 
 // SetZeroLastError sets cunter in shared memory
-func (mtr *PbpbcintrplMetrics) SetZeroLastError(val gometrics.Counter) error {
+func (mtr *PbpbcintrplMetrics) SetZeroLastError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("ZeroLastError"))
 	return nil
 }
@@ -8694,33 +8695,33 @@ type PbpbcintwriteMetrics struct {
 
 	key uint64
 
-	OutOfCells gometrics.Counter
+	OutOfCells metrics.Counter
 
-	OutOfCredit gometrics.Counter
+	OutOfCredit metrics.Counter
 
-	PortDisabled gometrics.Counter
+	PortDisabled metrics.Counter
 
-	Truncation gometrics.Counter
+	Truncation metrics.Counter
 
-	IntrinsicDrop gometrics.Counter
+	IntrinsicDrop metrics.Counter
 
-	OutOfCells1 gometrics.Counter
+	OutOfCells1 metrics.Counter
 
-	EnqErr gometrics.Counter
+	EnqErr metrics.Counter
 
-	TailDropCpu gometrics.Counter
+	TailDropCpu metrics.Counter
 
-	TailDropSpan gometrics.Counter
+	TailDropSpan metrics.Counter
 
-	MinSizeViol gometrics.Counter
+	MinSizeViol metrics.Counter
 
-	PortRange gometrics.Counter
+	PortRange metrics.Counter
 
-	CreditGrowthError gometrics.Counter
+	CreditGrowthError metrics.Counter
 
-	OqRange gometrics.Counter
+	OqRange metrics.Counter
 
-	XoffTimeout gometrics.Counter
+	XoffTimeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -8894,85 +8895,85 @@ func (mtr *PbpbcintwriteMetrics) getOffset(fldName string) int {
 }
 
 // SetOutOfCells sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetOutOfCells(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetOutOfCells(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells"))
 	return nil
 }
 
 // SetOutOfCredit sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetOutOfCredit(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetOutOfCredit(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCredit"))
 	return nil
 }
 
 // SetPortDisabled sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetPortDisabled(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetPortDisabled(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PortDisabled"))
 	return nil
 }
 
 // SetTruncation sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetTruncation(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetTruncation(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Truncation"))
 	return nil
 }
 
 // SetIntrinsicDrop sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetIntrinsicDrop(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetIntrinsicDrop(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("IntrinsicDrop"))
 	return nil
 }
 
 // SetOutOfCells1 sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetOutOfCells1(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetOutOfCells1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("OutOfCells1"))
 	return nil
 }
 
 // SetEnqErr sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetEnqErr(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetEnqErr(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EnqErr"))
 	return nil
 }
 
 // SetTailDropCpu sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetTailDropCpu(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetTailDropCpu(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropCpu"))
 	return nil
 }
 
 // SetTailDropSpan sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetTailDropSpan(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetTailDropSpan(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("TailDropSpan"))
 	return nil
 }
 
 // SetMinSizeViol sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetMinSizeViol(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetMinSizeViol(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("MinSizeViol"))
 	return nil
 }
 
 // SetPortRange sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetPortRange(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetPortRange(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("PortRange"))
 	return nil
 }
 
 // SetCreditGrowthError sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetCreditGrowthError(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetCreditGrowthError(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CreditGrowthError"))
 	return nil
 }
 
 // SetOqRange sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetOqRange(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetOqRange(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("OqRange"))
 	return nil
 }
 
 // SetXoffTimeout sets cunter in shared memory
-func (mtr *PbpbcintwriteMetrics) SetXoffTimeout(val gometrics.Counter) error {
+func (mtr *PbpbcintwriteMetrics) SetXoffTimeout(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("XoffTimeout"))
 	return nil
 }
@@ -9048,13 +9049,13 @@ type PbpbchbmintecchbmrbMetrics struct {
 
 	key uint64
 
-	RbUncorrectable gometrics.Counter
+	RbUncorrectable metrics.Counter
 
-	RbCorrectable gometrics.Counter
+	RbCorrectable metrics.Counter
 
-	CdtUncorrectable gometrics.Counter
+	CdtUncorrectable metrics.Counter
 
-	CdtCorrectable gometrics.Counter
+	CdtCorrectable metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -9128,25 +9129,25 @@ func (mtr *PbpbchbmintecchbmrbMetrics) getOffset(fldName string) int {
 }
 
 // SetRbUncorrectable sets cunter in shared memory
-func (mtr *PbpbchbmintecchbmrbMetrics) SetRbUncorrectable(val gometrics.Counter) error {
+func (mtr *PbpbchbmintecchbmrbMetrics) SetRbUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RbUncorrectable"))
 	return nil
 }
 
 // SetRbCorrectable sets cunter in shared memory
-func (mtr *PbpbchbmintecchbmrbMetrics) SetRbCorrectable(val gometrics.Counter) error {
+func (mtr *PbpbchbmintecchbmrbMetrics) SetRbCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("RbCorrectable"))
 	return nil
 }
 
 // SetCdtUncorrectable sets cunter in shared memory
-func (mtr *PbpbchbmintecchbmrbMetrics) SetCdtUncorrectable(val gometrics.Counter) error {
+func (mtr *PbpbchbmintecchbmrbMetrics) SetCdtUncorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CdtUncorrectable"))
 	return nil
 }
 
 // SetCdtCorrectable sets cunter in shared memory
-func (mtr *PbpbchbmintecchbmrbMetrics) SetCdtCorrectable(val gometrics.Counter) error {
+func (mtr *PbpbchbmintecchbmrbMetrics) SetCdtCorrectable(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CdtCorrectable"))
 	return nil
 }
@@ -9222,11 +9223,11 @@ type PbpbchbminthbmaxierrrspMetrics struct {
 
 	key uint64
 
-	Ctrl gometrics.Counter
+	Ctrl metrics.Counter
 
-	Pyld gometrics.Counter
+	Pyld metrics.Counter
 
-	R2A gometrics.Counter
+	R2A metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -9290,19 +9291,19 @@ func (mtr *PbpbchbminthbmaxierrrspMetrics) getOffset(fldName string) int {
 }
 
 // SetCtrl sets cunter in shared memory
-func (mtr *PbpbchbminthbmaxierrrspMetrics) SetCtrl(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmaxierrrspMetrics) SetCtrl(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Ctrl"))
 	return nil
 }
 
 // SetPyld sets cunter in shared memory
-func (mtr *PbpbchbminthbmaxierrrspMetrics) SetPyld(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmaxierrrspMetrics) SetPyld(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Pyld"))
 	return nil
 }
 
 // SetR2A sets cunter in shared memory
-func (mtr *PbpbchbminthbmaxierrrspMetrics) SetR2A(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmaxierrrspMetrics) SetR2A(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("R2A"))
 	return nil
 }
@@ -9378,45 +9379,45 @@ type PbpbchbminthbmdropMetrics struct {
 
 	key uint64
 
-	Occupancy_0 gometrics.Counter
+	Occupancy_0 metrics.Counter
 
-	Occupancy_1 gometrics.Counter
+	Occupancy_1 metrics.Counter
 
-	Occupancy_2 gometrics.Counter
+	Occupancy_2 metrics.Counter
 
-	Occupancy_3 gometrics.Counter
+	Occupancy_3 metrics.Counter
 
-	Occupancy_4 gometrics.Counter
+	Occupancy_4 metrics.Counter
 
-	Occupancy_5 gometrics.Counter
+	Occupancy_5 metrics.Counter
 
-	Occupancy_6 gometrics.Counter
+	Occupancy_6 metrics.Counter
 
-	Occupancy_7 gometrics.Counter
+	Occupancy_7 metrics.Counter
 
-	Occupancy_8 gometrics.Counter
+	Occupancy_8 metrics.Counter
 
-	Occupancy_9 gometrics.Counter
+	Occupancy_9 metrics.Counter
 
-	CtrlFull_0 gometrics.Counter
+	CtrlFull_0 metrics.Counter
 
-	CtrlFull_1 gometrics.Counter
+	CtrlFull_1 metrics.Counter
 
-	CtrlFull_2 gometrics.Counter
+	CtrlFull_2 metrics.Counter
 
-	CtrlFull_3 gometrics.Counter
+	CtrlFull_3 metrics.Counter
 
-	CtrlFull_4 gometrics.Counter
+	CtrlFull_4 metrics.Counter
 
-	CtrlFull_5 gometrics.Counter
+	CtrlFull_5 metrics.Counter
 
-	CtrlFull_6 gometrics.Counter
+	CtrlFull_6 metrics.Counter
 
-	CtrlFull_7 gometrics.Counter
+	CtrlFull_7 metrics.Counter
 
-	CtrlFull_8 gometrics.Counter
+	CtrlFull_8 metrics.Counter
 
-	CtrlFull_9 gometrics.Counter
+	CtrlFull_9 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -9650,121 +9651,121 @@ func (mtr *PbpbchbminthbmdropMetrics) getOffset(fldName string) int {
 }
 
 // SetOccupancy_0 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_0(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Occupancy_0"))
 	return nil
 }
 
 // SetOccupancy_1 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_1(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Occupancy_1"))
 	return nil
 }
 
 // SetOccupancy_2 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_2(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Occupancy_2"))
 	return nil
 }
 
 // SetOccupancy_3 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_3(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Occupancy_3"))
 	return nil
 }
 
 // SetOccupancy_4 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_4(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Occupancy_4"))
 	return nil
 }
 
 // SetOccupancy_5 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_5(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_5(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Occupancy_5"))
 	return nil
 }
 
 // SetOccupancy_6 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_6(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_6(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Occupancy_6"))
 	return nil
 }
 
 // SetOccupancy_7 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_7(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_7(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Occupancy_7"))
 	return nil
 }
 
 // SetOccupancy_8 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_8(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_8(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Occupancy_8"))
 	return nil
 }
 
 // SetOccupancy_9 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_9(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetOccupancy_9(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Occupancy_9"))
 	return nil
 }
 
 // SetCtrlFull_0 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_0(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CtrlFull_0"))
 	return nil
 }
 
 // SetCtrlFull_1 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_1(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CtrlFull_1"))
 	return nil
 }
 
 // SetCtrlFull_2 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_2(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CtrlFull_2"))
 	return nil
 }
 
 // SetCtrlFull_3 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_3(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CtrlFull_3"))
 	return nil
 }
 
 // SetCtrlFull_4 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_4(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CtrlFull_4"))
 	return nil
 }
 
 // SetCtrlFull_5 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_5(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_5(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CtrlFull_5"))
 	return nil
 }
 
 // SetCtrlFull_6 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_6(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_6(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CtrlFull_6"))
 	return nil
 }
 
 // SetCtrlFull_7 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_7(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_7(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CtrlFull_7"))
 	return nil
 }
 
 // SetCtrlFull_8 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_8(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_8(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CtrlFull_8"))
 	return nil
 }
 
 // SetCtrlFull_9 sets cunter in shared memory
-func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_9(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmdropMetrics) SetCtrlFull_9(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CtrlFull_9"))
 	return nil
 }
@@ -9840,45 +9841,45 @@ type PbpbchbminthbmpbusviolationMetrics struct {
 
 	key uint64
 
-	SopSopIn_0 gometrics.Counter
+	SopSopIn_0 metrics.Counter
 
-	SopSopIn_1 gometrics.Counter
+	SopSopIn_1 metrics.Counter
 
-	SopSopIn_2 gometrics.Counter
+	SopSopIn_2 metrics.Counter
 
-	SopSopIn_3 gometrics.Counter
+	SopSopIn_3 metrics.Counter
 
-	SopSopIn_4 gometrics.Counter
+	SopSopIn_4 metrics.Counter
 
-	SopSopIn_5 gometrics.Counter
+	SopSopIn_5 metrics.Counter
 
-	SopSopIn_6 gometrics.Counter
+	SopSopIn_6 metrics.Counter
 
-	SopSopIn_7 gometrics.Counter
+	SopSopIn_7 metrics.Counter
 
-	SopSopIn_8 gometrics.Counter
+	SopSopIn_8 metrics.Counter
 
-	SopSopIn_9 gometrics.Counter
+	SopSopIn_9 metrics.Counter
 
-	EopEopIn_0 gometrics.Counter
+	EopEopIn_0 metrics.Counter
 
-	EopEopIn_1 gometrics.Counter
+	EopEopIn_1 metrics.Counter
 
-	EopEopIn_2 gometrics.Counter
+	EopEopIn_2 metrics.Counter
 
-	EopEopIn_3 gometrics.Counter
+	EopEopIn_3 metrics.Counter
 
-	EopEopIn_4 gometrics.Counter
+	EopEopIn_4 metrics.Counter
 
-	EopEopIn_5 gometrics.Counter
+	EopEopIn_5 metrics.Counter
 
-	EopEopIn_6 gometrics.Counter
+	EopEopIn_6 metrics.Counter
 
-	EopEopIn_7 gometrics.Counter
+	EopEopIn_7 metrics.Counter
 
-	EopEopIn_8 gometrics.Counter
+	EopEopIn_8 metrics.Counter
 
-	EopEopIn_9 gometrics.Counter
+	EopEopIn_9 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -10112,121 +10113,121 @@ func (mtr *PbpbchbminthbmpbusviolationMetrics) getOffset(fldName string) int {
 }
 
 // SetSopSopIn_0 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_0(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_0"))
 	return nil
 }
 
 // SetSopSopIn_1 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_1(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_1"))
 	return nil
 }
 
 // SetSopSopIn_2 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_2(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_2"))
 	return nil
 }
 
 // SetSopSopIn_3 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_3(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_3"))
 	return nil
 }
 
 // SetSopSopIn_4 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_4(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_4"))
 	return nil
 }
 
 // SetSopSopIn_5 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_5(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_5(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_5"))
 	return nil
 }
 
 // SetSopSopIn_6 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_6(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_6(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_6"))
 	return nil
 }
 
 // SetSopSopIn_7 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_7(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_7(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_7"))
 	return nil
 }
 
 // SetSopSopIn_8 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_8(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_8(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_8"))
 	return nil
 }
 
 // SetSopSopIn_9 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_9(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetSopSopIn_9(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("SopSopIn_9"))
 	return nil
 }
 
 // SetEopEopIn_0 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_0(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_0"))
 	return nil
 }
 
 // SetEopEopIn_1 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_1(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_1"))
 	return nil
 }
 
 // SetEopEopIn_2 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_2(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_2(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_2"))
 	return nil
 }
 
 // SetEopEopIn_3 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_3(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_3(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_3"))
 	return nil
 }
 
 // SetEopEopIn_4 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_4(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_4(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_4"))
 	return nil
 }
 
 // SetEopEopIn_5 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_5(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_5(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_5"))
 	return nil
 }
 
 // SetEopEopIn_6 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_6(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_6(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_6"))
 	return nil
 }
 
 // SetEopEopIn_7 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_7(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_7(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_7"))
 	return nil
 }
 
 // SetEopEopIn_8 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_8(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_8(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_8"))
 	return nil
 }
 
 // SetEopEopIn_9 sets cunter in shared memory
-func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_9(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmpbusviolationMetrics) SetEopEopIn_9(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("EopEopIn_9"))
 	return nil
 }
@@ -10302,7 +10303,7 @@ type PbpbchbminthbmxoffMetrics struct {
 
 	key uint64
 
-	Timeout gometrics.Counter
+	Timeout metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -10346,7 +10347,7 @@ func (mtr *PbpbchbminthbmxoffMetrics) getOffset(fldName string) int {
 }
 
 // SetTimeout sets cunter in shared memory
-func (mtr *PbpbchbminthbmxoffMetrics) SetTimeout(val gometrics.Counter) error {
+func (mtr *PbpbchbminthbmxoffMetrics) SetTimeout(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Timeout"))
 	return nil
 }
@@ -10422,9 +10423,9 @@ type McmchintmcMetrics struct {
 
 	key uint64
 
-	Ecc_1BitThresPs1 gometrics.Counter
+	Ecc_1BitThresPs1 metrics.Counter
 
-	Ecc_1BitThresPs0 gometrics.Counter
+	Ecc_1BitThresPs0 metrics.Counter
 
 	// private state
 	metrics gometrics.Metrics
@@ -10478,13 +10479,13 @@ func (mtr *McmchintmcMetrics) getOffset(fldName string) int {
 }
 
 // SetEcc_1BitThresPs1 sets cunter in shared memory
-func (mtr *McmchintmcMetrics) SetEcc_1BitThresPs1(val gometrics.Counter) error {
+func (mtr *McmchintmcMetrics) SetEcc_1BitThresPs1(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Ecc_1BitThresPs1"))
 	return nil
 }
 
 // SetEcc_1BitThresPs0 sets cunter in shared memory
-func (mtr *McmchintmcMetrics) SetEcc_1BitThresPs0(val gometrics.Counter) error {
+func (mtr *McmchintmcMetrics) SetEcc_1BitThresPs0(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("Ecc_1BitThresPs0"))
 	return nil
 }
