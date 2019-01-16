@@ -8,7 +8,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
@@ -95,7 +95,7 @@ nat_pool_init (nat_pool_t *pool)
     if (!pool) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&pool->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&pool->slock, PTHREAD_PROCESS_SHARED);
     dllist_reset(&pool->addr_ranges);
     pool->hal_handle = HAL_HANDLE_INVALID;
 
@@ -117,7 +117,7 @@ nat_pool_alloc_init (void)
 static inline hal_ret_t
 nat_pool_free (nat_pool_t *pool)
 {
-    HAL_SPINLOCK_DESTROY(&pool->slock);
+    SDK_SPINLOCK_DESTROY(&pool->slock);
     hal::delay_delete_to_slab(HAL_SLAB_NAT_POOL, pool);
     return HAL_RET_OK;
 }

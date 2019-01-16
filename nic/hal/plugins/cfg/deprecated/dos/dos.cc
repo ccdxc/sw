@@ -4,7 +4,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/dos/dos.hpp"
@@ -51,7 +51,7 @@ dos_policy_init (dos_policy_t *dos_policy)
     if (!dos_policy) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&dos_policy->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&dos_policy->slock, PTHREAD_PROCESS_SHARED);
 
     // initialize the operational state
 
@@ -73,7 +73,7 @@ dos_policy_alloc_init (void)
 static inline hal_ret_t
 dos_policy_free (dos_policy_t *dos_policy)
 {
-    HAL_SPINLOCK_DESTROY(&dos_policy->slock);
+    SDK_SPINLOCK_DESTROY(&dos_policy->slock);
     hal::delay_delete_to_slab(HAL_SLAB_DOS_POLICY, dos_policy);
     return HAL_RET_OK;
 }

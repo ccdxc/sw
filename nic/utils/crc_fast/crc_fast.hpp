@@ -4,7 +4,7 @@
 #define __CRC_FAST_HPP__
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 
 namespace hal {
 namespace utils {
@@ -20,7 +20,7 @@ public:
                     uint8_t poly_index);
 
 private:
-    hal_spinlock_t    slock_;          // lock for thread safety
+    sdk_spinlock_t    slock_;          // lock for thread safety
     bool              thread_safe_;    // TRUE if thread safety is needed
     uint8_t           num_polys_;
     uint32_t          **crcTable_;
@@ -32,13 +32,13 @@ private:
 
     void lock_(void) {
         if (thread_safe_) {
-          HAL_SPINLOCK_LOCK(&slock_);
+          SDK_SPINLOCK_LOCK(&slock_);
         }
     }
 
     void unlock_(void) {
         if (thread_safe_) {
-          HAL_SPINLOCK_UNLOCK(&slock_);
+          SDK_SPINLOCK_UNLOCK(&slock_);
         }
     }
 

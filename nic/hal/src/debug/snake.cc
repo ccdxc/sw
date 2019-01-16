@@ -27,7 +27,7 @@ snake_test_init (snake_test_t *snake_test)
     if (!snake_test) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&snake_test->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&snake_test->slock, PTHREAD_PROCESS_SHARED);
 
     memset(snake_test, 0, sizeof(snake_test_t));
 
@@ -43,7 +43,7 @@ snake_test_alloc_init (void)
 static inline hal_ret_t
 snake_test_free (snake_test_t *snake_test)
 {
-    HAL_SPINLOCK_DESTROY(&snake_test->slock);
+    SDK_SPINLOCK_DESTROY(&snake_test->slock);
     hal::delay_delete_to_slab(HAL_SLAB_SNAKE_TEST, snake_test);
     return HAL_RET_OK;
 }

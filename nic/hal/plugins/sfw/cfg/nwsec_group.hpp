@@ -56,13 +56,13 @@ typedef struct rpc_programid_ {
 } rpc_programid_t;
 
 typedef struct nwsec_policy_appid_s {
-    hal_spinlock_t      slock;              // Lock to protect this structure
+    sdk_spinlock_t      slock;              // Lock to protect this structure
     uint32_t            appid;
     dllist_ctxt_t       lentry;
 } __PACK__ nwsec_policy_appid_t;
 
 typedef struct nwsec_group_s {
-    hal_spinlock_t     slock;
+    sdk_spinlock_t     slock;
     uint32_t           sg_id;
     dllist_ctxt_t      ep_list_head;
     dllist_ctxt_t      nw_list_head;
@@ -96,7 +96,7 @@ nwsec_policy_appid_init(nwsec_policy_appid_t *nwsec_plcy_appids)
     if (!nwsec_plcy_appids) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&nwsec_plcy_appids->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&nwsec_plcy_appids->slock, PTHREAD_PROCESS_SHARED);
     dllist_reset(&nwsec_plcy_appids->lentry);
     return nwsec_plcy_appids;
 }
@@ -110,7 +110,7 @@ nwsec_policy_appid_alloc_and_init(void)
 static inline hal_ret_t
 nwsec_policy_appid_free(nwsec_policy_appid_t *nwsec_plcy_rules)
 {
-    HAL_SPINLOCK_DESTROY(&nwsec_plcy_rules->slock);
+    SDK_SPINLOCK_DESTROY(&nwsec_plcy_rules->slock);
     hal::delay_delete_to_slab(HAL_SLAB_NWSEC_POLICY_APPID, nwsec_plcy_rules);
     return HAL_RET_OK;
 }
@@ -160,7 +160,7 @@ nwsec_group_init (nwsec_group_t *nwsec_grp)
     nwsec_grp->hal_handle = HAL_HANDLE_INVALID;
     dllist_reset(&nwsec_grp->nw_list_head);
     dllist_reset(&nwsec_grp->ep_list_head);
-    HAL_SPINLOCK_INIT(&nwsec_grp->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&nwsec_grp->slock, PTHREAD_PROCESS_SHARED);
 
     return nwsec_grp;
 }
@@ -176,7 +176,7 @@ nwsec_group_alloc_init (void)
 static inline hal_ret_t
 nwsec_group_free(nwsec_group_t *nwsec_grp)
 {
-    HAL_SPINLOCK_DESTROY(&nwsec_grp->slock);
+    SDK_SPINLOCK_DESTROY(&nwsec_grp->slock);
     hal::delay_delete_to_slab(HAL_SLAB_NWSEC_GROUP, nwsec_grp);
     return HAL_RET_OK;
 }

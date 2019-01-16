@@ -31,7 +31,7 @@ typedef struct l4lb_key_s {
 
 // l4lb service entry
 typedef struct l4lb_service_entry_s {
-    hal_spinlock_t          slock;                  // lock to protect this structure
+    sdk_spinlock_t          slock;                  // lock to protect this structure
     l4lb_key_t              l4lb_key;               // l4lb key
     mac_addr_t              serv_mac_addr;          // service mac address
     uint16_t                proxy_arp_en:1;         // proxy arp enable

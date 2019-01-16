@@ -9,7 +9,7 @@
 #include "lib/list/list.hpp"
 #include "lib/ht/ht.hpp"
 #include "nic/utils/block_list/block_list.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp" // TODO Cleanup needed
 #include "gen/proto/kh.pb.h"
 #include "gen/proto/gft.pb.h"
@@ -178,7 +178,7 @@ typedef struct gft_hdr_group_exact_match_profile_s {
 // flags for GFT exact match profile
 #define GFT_EXACT_MATCH_PROFILE_RDMA_FLOW      0x00000001
 typedef struct gft_exact_match_profile_s {
-    hal_spinlock_t                         slock;      // lock to protect this structure
+    sdk_spinlock_t                         slock;      // lock to protect this structure
     gft_profile_id_t                       profile_id; // profile id
     uint32_t                               flags;      // GFT_EXACT_MATCH_PROFILE_XXX flags, if any
     gft_table_type_t                       table_type;
@@ -217,7 +217,7 @@ gft_exact_match_profile_init (gft_exact_match_profile_t *profile)
     if (!profile) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&profile->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&profile->slock, PTHREAD_PROCESS_SHARED);
     profile->profile_id = 0;
     profile->flags = 0;
     profile->table_type = GFT_TABLE_TYPE_NONE;
@@ -241,7 +241,7 @@ gft_exact_match_profile_alloc_init (void)
 static inline hal_ret_t
 gft_exact_match_profile_free (gft_exact_match_profile_t *profile)
 {
-    HAL_SPINLOCK_DESTROY(&profile->slock);
+    SDK_SPINLOCK_DESTROY(&profile->slock);
     hal::delay_delete_to_slab(HAL_SLAB_GFT_EXACT_MATCH_PROFILE, profile);
     return HAL_RET_OK;
 }
@@ -354,7 +354,7 @@ typedef struct gft_hdr_group_xposition_profile_s {
 #define GFT_HXP_CUSTOM_ACTION_PRESENT                              0x00000080
 #define GFT_HXP_META_ACTION_BEFORE_HEADER_TRANSPOSITION            0x00000100
 typedef struct gft_hdr_xposition_profile_s {
-    hal_spinlock_t                       slock;         // lock to protect this structure
+    sdk_spinlock_t                       slock;         // lock to protect this structure
     gft_profile_id_t                     profile_id;    // profile id
     uint32_t                             flags;         // GFT_HXP_XXX flags, if any
     gft_table_type_t                     table_type;    // table type
@@ -393,7 +393,7 @@ gft_hdr_transposition_profile_init (gft_hdr_xposition_profile_t *profile)
     if (!profile) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&profile->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&profile->slock, PTHREAD_PROCESS_SHARED);
     profile->profile_id = 0;
     profile->flags = 0;
     profile->table_type = GFT_TABLE_TYPE_NONE;
@@ -417,7 +417,7 @@ gft_hdr_transposition_profile_alloc_init (void)
 static inline hal_ret_t
 gft_hdr_transposition_profile_free (gft_hdr_xposition_profile_t *profile)
 {
-    HAL_SPINLOCK_DESTROY(&profile->slock);
+    SDK_SPINLOCK_DESTROY(&profile->slock);
     hal::delay_delete_to_slab(HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE, profile);
     return HAL_RET_OK;
 }
@@ -518,7 +518,7 @@ typedef enum gft_flow_entry_cache_hint_e {
 } gft_flow_entry_cache_hint_t;
 
 typedef struct gft_exact_match_flow_entry_s {
-    hal_spinlock_t                 slock;                              // lock to protect this structure
+    sdk_spinlock_t                 slock;                              // lock to protect this structure
     gft_flow_entry_id_t            flow_entry_id;                      // flow entry id allocated by the app
 
     uint32_t                       flags;                              // GFT_EMFE_XXX flags
@@ -567,7 +567,7 @@ gft_exact_match_flow_entry_init (gft_exact_match_flow_entry_t *flow_entry)
     if (!flow_entry) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&flow_entry->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&flow_entry->slock, PTHREAD_PROCESS_SHARED);
     flow_entry->flow_entry_id = 0;
     flow_entry->flags = 0;
     flow_entry->table_type = GFT_TABLE_TYPE_NONE;
@@ -599,7 +599,7 @@ gft_exact_match_flow_entry_alloc_init (void)
 static inline hal_ret_t
 gft_exact_match_flow_entry_free (gft_exact_match_flow_entry_t *flow_entry)
 {
-    HAL_SPINLOCK_DESTROY(&flow_entry->slock);
+    SDK_SPINLOCK_DESTROY(&flow_entry->slock);
     hal::delay_delete_to_slab(HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY, flow_entry);
     return HAL_RET_OK;
 }

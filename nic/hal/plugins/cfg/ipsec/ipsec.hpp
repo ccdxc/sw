@@ -143,12 +143,12 @@ typedef struct ipsec_cfg_pol_s {
     dllist_ctxt_t        rule_list;
 
     // operational
-    hal_spinlock_t       slock;
+    sdk_spinlock_t       slock;
     hal_handle_t         hal_hdl;
 } ipsec_cfg_pol_t;
 
 typedef struct ipsec_sa_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     ipsec_sa_id_t         sa_id;                   // CB id
     ip_addr_t             tunnel_sip4;
     ip_addr_t             tunnel_dip4;
@@ -206,7 +206,7 @@ typedef struct ipsec_sa_s {
 
 
 typedef struct ipsec_rule_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     ipsec_rule_id_t       rule_id;                   // CB id
     hal_handle_t          hal_handle;              // HAL allocated handle
     ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
@@ -435,7 +435,7 @@ ipsec_sa_init (ipsec_sa_t *ipsec_sa)
     }
     memset(ipsec_sa, 0, sizeof(ipsec_sa_t));
  
-    HAL_SPINLOCK_INIT(&ipsec_sa->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&ipsec_sa->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     ipsec_sa->pd = NULL;
@@ -457,7 +457,7 @@ ipsec_sa_alloc_init (void)
 static inline hal_ret_t
 ipsec_sa_free (ipsec_sa_t *ipsec_sa)
 {
-    HAL_SPINLOCK_DESTROY(&ipsec_sa->slock);
+    SDK_SPINLOCK_DESTROY(&ipsec_sa->slock);
     hal::delay_delete_to_slab(HAL_SLAB_IPSEC_SA, ipsec_sa);
     return HAL_RET_OK;
 }
@@ -518,7 +518,7 @@ ipsec_cfg_pol_free (ipsec_cfg_pol_t *pol)
 static inline void
 ipsec_cfg_pol_init (ipsec_cfg_pol_t *pol)
 {
-    HAL_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
     dllist_reset(&pol->rule_list);
     pol->hal_hdl = HAL_HANDLE_INVALID;
 }
@@ -526,7 +526,7 @@ ipsec_cfg_pol_init (ipsec_cfg_pol_t *pol)
 static inline void
 ipsec_cfg_pol_uninit (ipsec_cfg_pol_t *pol)
 {
-    HAL_SPINLOCK_DESTROY(&pol->slock);
+    SDK_SPINLOCK_DESTROY(&pol->slock);
 }
 
 static inline ipsec_cfg_pol_t *

@@ -5,7 +5,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "lib/bitmap/bitmap.hpp"
 #include "nic/utils/nat/addr_db.hpp"
 
@@ -26,7 +26,7 @@ typedef struct nat_pool_key_s {
 
 // NAT pool
 typedef struct nat_pool_s {
-    hal_spinlock_t    slock;                // lock to protect this structure
+    sdk_spinlock_t    slock;                // lock to protect this structure
     nat_pool_key_t    key;                  // key for the nat pool
     dllist_ctxt_t     addr_ranges;          // NAT address ranges
 

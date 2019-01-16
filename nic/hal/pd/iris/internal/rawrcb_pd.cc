@@ -1,6 +1,6 @@
 #include "nic/include/base.hpp"
 #include <arpa/inet.h>
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "platform/capri/capri_common.hpp"
 #include "nic/hal/pd/iris/internal/rawrcb_pd.hpp"

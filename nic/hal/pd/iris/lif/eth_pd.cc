@@ -2,7 +2,7 @@
 #include <cstring>
 
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/base.hpp"

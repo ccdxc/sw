@@ -5,7 +5,7 @@
 #include <google/protobuf/util/json_util.h>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
@@ -140,7 +140,7 @@ l2seg_init (l2seg_t *l2seg)
     if (!l2seg) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&l2seg->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&l2seg->slock, PTHREAD_PROCESS_SHARED);
     l2seg->vrf_handle       = 0;
     l2seg->seg_id           = 0;
     l2seg->segment_type     = types::L2_SEGMENT_TYPE_NONE;
@@ -182,7 +182,7 @@ l2seg_alloc_init (void)
 static inline hal_ret_t
 l2seg_free (l2seg_t *l2seg)
 {
-    HAL_SPINLOCK_DESTROY(&l2seg->slock);
+    SDK_SPINLOCK_DESTROY(&l2seg->slock);
     hal::delay_delete_to_slab(HAL_SLAB_L2SEG, l2seg);
     return HAL_RET_OK;
 }

@@ -4,7 +4,7 @@
 // sw PHV injection
 //-----------------------------------------------------------------------------
 
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/pd.hpp"
 

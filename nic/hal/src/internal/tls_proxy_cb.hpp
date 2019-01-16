@@ -32,7 +32,7 @@ using internal::TlsCbGetResponseMsg;
 namespace hal {
 
 typedef struct tlscb_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     tlscb_id_t            cb_id;                   // TLS CB id
     uint32_t              command;
     uint64_t              sesq_base;
@@ -97,7 +97,7 @@ tlscb_init (tlscb_t *tlscb)
     if (!tlscb) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&tlscb->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&tlscb->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     tlscb->pd = NULL;
@@ -119,7 +119,7 @@ tlscb_alloc_init (void)
 static inline hal_ret_t
 tlscb_free (tlscb_t *tlscb)
 {
-    HAL_SPINLOCK_DESTROY(&tlscb->slock);
+    SDK_SPINLOCK_DESTROY(&tlscb->slock);
     hal::delay_delete_to_slab(HAL_SLAB_TLSCB, tlscb);
     return HAL_RET_OK;
 }

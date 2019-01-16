@@ -7,7 +7,7 @@
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
 #include "lib/slab/slab.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 
 using sdk::lib::slab;
 
@@ -54,7 +54,7 @@ private:
     ptnode_t          *root_;                    // root of the patricia tree
     uint16_t          max_key_len_;              // in bits (multiple of 8)
     bool              thread_safe_;              // TRUE for thread safety
-    hal_spinlock_t    slock_;                    // lock for thread safety
+    sdk_spinlock_t    slock_;                    // lock for thread safety
     slab              *ptnode_slab_;             // slab for internal ptnodes
 
     uint32_t          num_entries_;              // total no. of entries

@@ -9,7 +9,7 @@
 #include "lib/list/list.hpp"
 #include "lib/ht/ht.hpp"
 #include "nic/utils/block_list/block_list.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/hal.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
@@ -41,7 +41,7 @@ using vrf::VrfGetResponseMsg;
 namespace hal {
 
 typedef struct vrf_s {
-    hal_spinlock_t     slock;                // lock to protect this structure
+    sdk_spinlock_t     slock;                // lock to protect this structure
     types::VrfType     vrf_type;             // type of the vrf
     vrf_id_t           vrf_id;               // app provided vrf id
     hal_handle_t       nwsec_profile_handle; // security profile handle
@@ -87,13 +87,13 @@ typedef struct vrf_update_app_ctxt_s {
 static inline void
 vrf_lock (vrf_t *vrf, const char *fname, int lineno, const char *fxname)
 {
-    HAL_SPINLOCK_LOCK(&vrf->slock);
+    SDK_SPINLOCK_LOCK(&vrf->slock);
 }
 
 static inline void
 vrf_unlock (vrf_t *vrf, const char *fname, int lineno, const char *fxname)
 {
-    HAL_SPINLOCK_UNLOCK(&vrf->slock);
+    SDK_SPINLOCK_UNLOCK(&vrf->slock);
 }
 
 //------------------------------------------------------------------------------

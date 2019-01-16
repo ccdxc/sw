@@ -37,7 +37,7 @@ typedef struct network_key_s {
 // network pefix object
 // TODO: capture multiple categories of multiple-labels
 typedef struct network_s {
-    hal_spinlock_t    slock;                // lock to protect this structure
+    sdk_spinlock_t    slock;                // lock to protect this structure
     network_key_t     nw_key;               // key of the network object
     hal_handle_t      gw_ep_handle;         // gateway EP's handle
     ip_addr_t         gw_ip;                // gateway IP address
@@ -87,7 +87,7 @@ network_lock (network_t *network, const char *fname, int lineno,
     HAL_TRACE_DEBUG("Locking network : {} from {} : {} : {}",
                     network_to_str(network),
                     fname, lineno, fxname);
-    HAL_SPINLOCK_LOCK(&network->slock);
+    SDK_SPINLOCK_LOCK(&network->slock);
 }
 
 static inline void
@@ -97,7 +97,7 @@ network_unlock (network_t *network, const char *fname, int lineno,
     HAL_TRACE_DEBUG("Unlocking network : {} from {} : {} : {}",
                     network_to_str(network),
                     fname, lineno, fxname);
-    HAL_SPINLOCK_UNLOCK(&network->slock);
+    SDK_SPINLOCK_UNLOCK(&network->slock);
 }
 
 // allocate a network instance
@@ -120,7 +120,7 @@ network_init (network_t *network)
     if (!network) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&network->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&network->slock, PTHREAD_PROCESS_SHARED);
 
     sdk::lib::dllist_reset(&network->sg_list_head);
     sdk::lib::dllist_reset(&network->l2seg_list_head);
@@ -149,7 +149,7 @@ network_alloc_init (void)
 static inline hal_ret_t
 network_free (network_t *network)
 {
-    HAL_SPINLOCK_DESTROY(&network->slock);
+    SDK_SPINLOCK_DESTROY(&network->slock);
     hal::delay_delete_to_slab(HAL_SLAB_NETWORK, network);
     return HAL_RET_OK;
 }

@@ -102,7 +102,7 @@ typedef struct ep_sg_s {
 // endpoint data structure
 // TODO: capture multiple categories of multiple-labels
 typedef struct ep_s {
-    hal_spinlock_t       slock;                // lock to protect this structure
+    sdk_spinlock_t       slock;                // lock to protect this structure
     ep_l2_key_t          l2_key;               // MAC, vlan information
     hal_handle_t         nw_handle;            // network this EP belongs to
     hal_handle_t         l2seg_handle;         // L2 segment this endpoint belongs to
@@ -172,14 +172,14 @@ static inline void
 ep_lock (ep_t *ep, const char *fname,
           int lineno, const char *fxname)
 {
-    HAL_SPINLOCK_LOCK(&ep->slock);
+    SDK_SPINLOCK_LOCK(&ep->slock);
 }
 
 static inline void
 ep_unlock (ep_t *ep, const char *fname,
             int lineno, const char *fxname)
 {
-    HAL_SPINLOCK_UNLOCK(&ep->slock);
+    SDK_SPINLOCK_UNLOCK(&ep->slock);
 }
 
 typedef void (*sessions_empty_cb_t)(const ep_t *ep);

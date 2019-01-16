@@ -24,7 +24,7 @@ namespace hal {
 
 // nexthop object
 typedef struct nexthop_s {
-    hal_spinlock_t    slock;                // lock to protect this structure
+    sdk_spinlock_t    slock;                // lock to protect this structure
     nh_id_t           nh_id;                // next hop id
     hal_handle_t      hal_handle;           // HAL allocated handle
 
@@ -55,7 +55,7 @@ nexthop_lock (nexthop_t *nexthop, const char *fname, int lineno,
     HAL_TRACE_DEBUG("Locking nexthop : {} from {} : {} : {}",
                     nexthop_to_str(nexthop),
                     fname, lineno, fxname);
-    HAL_SPINLOCK_LOCK(&nexthop->slock);
+    SDK_SPINLOCK_LOCK(&nexthop->slock);
 }
 
 static inline void
@@ -65,7 +65,7 @@ nexthop_unlock (nexthop_t *nexthop, const char *fname, int lineno,
     HAL_TRACE_DEBUG("Unlocking nexthop : {} from {} : {} : {}",
                     nexthop_to_str(nexthop),
                     fname, lineno, fxname);
-    HAL_SPINLOCK_UNLOCK(&nexthop->slock);
+    SDK_SPINLOCK_UNLOCK(&nexthop->slock);
 }
 
 // allocate a nexthop instance
@@ -88,7 +88,7 @@ nexthop_init (nexthop_t *nexthop)
     if (!nexthop) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&nexthop->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&nexthop->slock, PTHREAD_PROCESS_SHARED);
 
     nexthop->nh_id      = 0;
     nexthop->hal_handle = HAL_HANDLE_INVALID;
@@ -110,7 +110,7 @@ nexthop_alloc_init (void)
 static inline hal_ret_t
 nexthop_free (nexthop_t *nexthop)
 {
-    HAL_SPINLOCK_DESTROY(&nexthop->slock);
+    SDK_SPINLOCK_DESTROY(&nexthop->slock);
     hal::delay_delete_to_slab(HAL_SLAB_NEXTHOP, nexthop);
     return HAL_RET_OK;
 }

@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/pd/iris/nw/vrf_pd.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/iris/aclqos/acl_pd.hpp"
 #include "nic/include/pd_api.hpp"

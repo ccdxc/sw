@@ -425,17 +425,17 @@ add_session_to_db (vrf_t *vrf, l2seg_t *l2seg_s, l2seg_t *l2seg_d,
 
     dllist_reset(&session->sif_session_lentry);
     if (sif) {
-        HAL_SPINLOCK_LOCK(&sif->slock);
+        SDK_SPINLOCK_LOCK(&sif->slock);
         // sdk::lib::dllist_add(&sif->session_list_head, &session->sif_session_lentry);
-        HAL_SPINLOCK_UNLOCK(&sif->slock);
+        SDK_SPINLOCK_UNLOCK(&sif->slock);
     }
 
     dllist_reset(&session->dif_session_lentry);
     if (dif && sif != dif) {
-        HAL_SPINLOCK_LOCK(&dif->slock);
+        SDK_SPINLOCK_LOCK(&dif->slock);
         // sdk::lib::dllist_add(&dif->session_list_head,
         //                  &session->dif_session_lentry);
-        HAL_SPINLOCK_UNLOCK(&dif->slock);
+        SDK_SPINLOCK_UNLOCK(&dif->slock);
     }
 
     return HAL_RET_OK;
@@ -1170,7 +1170,7 @@ flow_create_fte (const flow_cfg_t *cfg,
     }
 
     *flow = {};
-    HAL_SPINLOCK_INIT(&flow->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&flow->slock, PTHREAD_PROCESS_SHARED);
     flow->flow_key_ht_ctxt.reset();
 
     if (cfg){
@@ -1190,7 +1190,7 @@ flow_create_fte (const flow_cfg_t *cfg,
             return NULL;
         }
         *assoc_flow = {};
-        HAL_SPINLOCK_INIT(&assoc_flow->slock, PTHREAD_PROCESS_SHARED);
+        SDK_SPINLOCK_INIT(&assoc_flow->slock, PTHREAD_PROCESS_SHARED);
         assoc_flow->flow_key_ht_ctxt.reset();
         assoc_flow->config = *cfg_assoc;
         if (attrs_assoc) {

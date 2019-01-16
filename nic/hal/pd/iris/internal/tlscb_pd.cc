@@ -1,7 +1,7 @@
 #include "nic/include/base.hpp"
 #include <arpa/inet.h>
 #include "nic/hal/pd/libs/wring/wring_pd.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"

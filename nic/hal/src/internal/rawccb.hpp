@@ -32,7 +32,7 @@ using internal::RawcCbGetResponseMsg;
 namespace hal {
 
 typedef struct rawccb_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     rawccb_id_t           cb_id;
 
     /*

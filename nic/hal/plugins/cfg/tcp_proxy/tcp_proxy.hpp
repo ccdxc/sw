@@ -156,13 +156,13 @@ typedef struct tcp_proxy_cfg_pol_s {
     dllist_ctxt_t        rule_list;
 
     // operational
-    hal_spinlock_t       slock;
+    sdk_spinlock_t       slock;
     hal_handle_t         hal_hdl;
 } tcp_proxy_cfg_pol_t;
 
 
 typedef struct tcp_proxy_rule_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     tcp_proxy_rule_id_t       rule_id;                   // CB id
     hal_handle_t          hal_handle;              // HAL allocated handle
     ht_ctxt_t             ht_ctxt;                 // id based hash table ctxt
@@ -170,7 +170,7 @@ typedef struct tcp_proxy_rule_s {
 } __PACK__ tcp_proxy_rule_t;
 
 typedef struct tcp_proxy_cb_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     tcp_proxy_cb_id_t            cb_id;                   // TCP CB id
     uint32_t              rcv_nxt;
     uint32_t              snd_nxt;
@@ -518,7 +518,7 @@ tcp_proxy_cfg_pol_free (tcp_proxy_cfg_pol_t *pol)
 static inline void
 tcp_proxy_cfg_pol_init (tcp_proxy_cfg_pol_t *pol)
 {
-    HAL_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&pol->slock, PTHREAD_PROCESS_SHARED);
     dllist_reset(&pol->rule_list);
     pol->hal_hdl = HAL_HANDLE_INVALID;
 }
@@ -526,7 +526,7 @@ tcp_proxy_cfg_pol_init (tcp_proxy_cfg_pol_t *pol)
 static inline void
 tcp_proxy_cfg_pol_uninit (tcp_proxy_cfg_pol_t *pol)
 {
-    HAL_SPINLOCK_DESTROY(&pol->slock);
+    SDK_SPINLOCK_DESTROY(&pol->slock);
 }
 
 static inline tcp_proxy_cfg_pol_t *
@@ -820,7 +820,7 @@ tcp_proxy_cb_init (tcp_proxy_cb_t *tcp_proxy_cb)
     if (!tcp_proxy_cb) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&tcp_proxy_cb->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&tcp_proxy_cb->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     tcp_proxy_cb->pd = NULL;
@@ -842,7 +842,7 @@ tcp_proxy_cb_alloc_init (void)
 static inline hal_ret_t
 tcp_proxy_cb_free (tcp_proxy_cb_t *tcp_proxy_cb)
 {
-    HAL_SPINLOCK_DESTROY(&tcp_proxy_cb->slock);
+    SDK_SPINLOCK_DESTROY(&tcp_proxy_cb->slock);
     hal::delay_delete_to_slab(HAL_SLAB_TCPCB, tcp_proxy_cb);
     return HAL_RET_OK;
 }

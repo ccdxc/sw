@@ -197,7 +197,7 @@ private:
 
     // following comes from linux process virtual memory
     shmmgr       *mmgr_;
-    wp_rwlock    rwlock_;
+    sdk::wp_rwlock rwlock_;
     typedef struct slab_meta_s {
         hal_obj_id_t       obj_id;           // unique object id
     } slab_meta_t;

@@ -7,7 +7,7 @@
 
 #include "nic/include/base.hpp"
 #include "gen/proto/debug.pb.h"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 
 using debug::SnakeTestRequestMsg;
 using debug::SnakeTestResponseMsg;
@@ -22,7 +22,7 @@ using debug::SnakeTestDeleteResponse;
 namespace hal {
 
 typedef struct snake_test_s {
-    hal_spinlock_t       slock;
+    sdk_spinlock_t       slock;
     hal_handle_t         hal_handle;
     types::SnakeTestType type;
     vlan_id_t            vlan;

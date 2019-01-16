@@ -4,7 +4,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/src/internal/rawccb.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
@@ -78,7 +78,7 @@ rawccb_init (rawccb_t *rawccb)
     if (!rawccb) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&rawccb->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&rawccb->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     rawccb->pd = NULL;
@@ -100,7 +100,7 @@ rawccb_alloc_init (void)
 static inline hal_ret_t
 rawccb_free (rawccb_t *rawccb)
 {
-    HAL_SPINLOCK_DESTROY(&rawccb->slock);
+    SDK_SPINLOCK_DESTROY(&rawccb->slock);
     hal::delay_delete_to_slab(HAL_SLAB_RAWCCB, rawccb);
     return HAL_RET_OK;
 }

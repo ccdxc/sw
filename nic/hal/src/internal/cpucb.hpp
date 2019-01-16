@@ -33,7 +33,7 @@ using cpucb::CpuCbGetResponseMsg;
 namespace hal {
 
 typedef struct cpucb_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     cpucb_id_t            cb_id;                   // CB id
     uint8_t               cfg_flags;               // Configuration flags
     hal_handle_t          hal_handle;              // HAL allocated handle
@@ -79,7 +79,7 @@ cpucb_init (cpucb_t *cpucb)
     if (!cpucb) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&cpucb->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&cpucb->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     cpucb->pd = NULL;
@@ -101,7 +101,7 @@ cpucb_alloc_init (void)
 static inline hal_ret_t
 cpucb_free (cpucb_t *cpucb)
 {
-    HAL_SPINLOCK_DESTROY(&cpucb->slock);
+    SDK_SPINLOCK_DESTROY(&cpucb->slock);
     hal::delay_delete_to_slab(HAL_SLAB_CPUCB, cpucb);
     return HAL_RET_OK;
 }

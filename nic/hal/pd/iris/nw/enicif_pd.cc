@@ -1,4 +1,4 @@
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/hal/plugins/cfg/lif/lif_api.hpp"

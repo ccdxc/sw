@@ -409,7 +409,7 @@ fte_span_init (fte_span_t *fte_span)
     if (!fte_span) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&fte_span->slock, PTHREAD_PROCESS_SHARED);
+    SDK_SPINLOCK_INIT(&fte_span->slock, PTHREAD_PROCESS_SHARED);
 
     memset(fte_span, 0, sizeof(fte_span_t));
 
@@ -425,7 +425,7 @@ fte_span_alloc_init (void)
 static inline hal_ret_t
 fte_span_free (fte_span_t *fte_span)
 {
-    HAL_SPINLOCK_DESTROY(&fte_span->slock);
+    SDK_SPINLOCK_DESTROY(&fte_span->slock);
     hal::delay_delete_to_slab(HAL_SLAB_FTE_SPAN, fte_span);
     return HAL_RET_OK;
 }

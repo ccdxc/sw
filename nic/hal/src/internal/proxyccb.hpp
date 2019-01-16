@@ -33,7 +33,7 @@ using internal::ProxycCbGetResponseMsg;
 namespace hal {
 
 typedef struct proxyccb_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     proxyccb_id_t         cb_id;
 
     /*

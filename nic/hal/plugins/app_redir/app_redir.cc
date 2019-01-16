@@ -5,7 +5,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "app_redir_plugin.hpp"
 #include "app_redir.hpp"
 #include "app_redir_headers.hpp"
@@ -23,7 +23,7 @@ typedef enum {
 } proxy_flow_type_include_t;
 
 
-static hal_spinlock_t       mirror_create_lock;
+static sdk_spinlock_t       mirror_create_lock;
 
 #if APP_REDIR_VISIBILITY_USE_MIRROR_SESSION
 static mirror_session_id_t  visib_mirror_session_id;
@@ -37,7 +37,7 @@ static oif_list_id_t        visib_oif_list_id;
 void
 app_redir_init(void)
 {
-    HAL_SPINLOCK_INIT(&mirror_create_lock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&mirror_create_lock, PTHREAD_PROCESS_PRIVATE);
 }
 
 
@@ -359,7 +359,7 @@ app_redir_span_create_init(fte::ctx_t& ctx)
     rawrcb_t            *rawrcb;
     hal_ret_t           ret = HAL_RET_OK;
 
-    HAL_SPINLOCK_LOCK(&mirror_create_lock);
+    SDK_SPINLOCK_LOCK(&mirror_create_lock);
     rawrcb = find_rawrcb_by_id(APP_REDIR_SPAN_RAWRCB_ID);
     if (!rawrcb) {
 
@@ -376,7 +376,7 @@ app_redir_span_create_init(fte::ctx_t& ctx)
         }
     }
 
-    HAL_SPINLOCK_UNLOCK(&mirror_create_lock);
+    SDK_SPINLOCK_UNLOCK(&mirror_create_lock);
     return ret;
 }
 

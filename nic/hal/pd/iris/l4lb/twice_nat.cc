@@ -1,6 +1,6 @@
 #include "nic/include/base.hpp"
 #include <arpa/inet.h>
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/pd/iris/nw/rw_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include <netinet/ether.h>

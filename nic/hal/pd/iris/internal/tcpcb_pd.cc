@@ -4,7 +4,7 @@
 #include <iomanip>
 #include "nic/include/base.hpp"
 #include <arpa/inet.h>
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/iris/internal/tcpcb_pd.hpp"
 #include "nic/hal/pd/iris/p4pd_tcp_proxy_api.h"

@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/pd/gft/gft_state.hpp"
 #include "nic/hal/pd/gft/lif_pd.hpp"
 #include "nic/hal/src/internal/proxy.hpp"

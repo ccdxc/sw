@@ -5,7 +5,7 @@
 #include <google/protobuf/util/json_util.h>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/sfw/cfg/nwsec_group.hpp"
 #include "gen/hal/include/hal_api_stats.hpp"
@@ -476,9 +476,9 @@ add_nw_to_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
     nwsec_policy_nw_info->handle_id = nw_handle_id;
     dllist_reset(&nwsec_policy_nw_info->dllist_ctxt);
 
-    HAL_SPINLOCK_LOCK(&nwsec_grp->slock);
+    SDK_SPINLOCK_LOCK(&nwsec_grp->slock);
     dllist_add(&nwsec_grp->nw_list_head, &nwsec_policy_nw_info->dllist_ctxt);
-    HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);
+    SDK_SPINLOCK_UNLOCK(&nwsec_grp->slock);
 
     HAL_TRACE_DEBUG("add sg => nw, handles:{} => {}",
                     nwsec_grp->hal_handle, nw_handle_id);
@@ -499,7 +499,7 @@ del_nw_from_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
         HAL_TRACE_DEBUG("segment id {} not found", sg_id);
         return HAL_RET_SG_NOT_FOUND;
     }
-    HAL_SPINLOCK_LOCK(&nwsec_grp->slock);
+    SDK_SPINLOCK_LOCK(&nwsec_grp->slock);
     dllist_for_each_safe(curr, next, &nwsec_grp->nw_list_head) {
         nwsec_policy_nw_info = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (nwsec_policy_nw_info->handle_id == nw_handle_id) {
@@ -512,7 +512,7 @@ del_nw_from_security_group(uint32_t sg_id, hal_handle_t nw_handle_id)
             ret = HAL_RET_OK;
         }
     }
-    HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);
+    SDK_SPINLOCK_UNLOCK(&nwsec_grp->slock);
 
     HAL_TRACE_DEBUG("del sg =/=> nw, handles:{} =/=> {}",
                     nwsec_grp->hal_handle, nw_handle_id);
@@ -556,9 +556,9 @@ add_ep_to_security_group(uint32_t sg_id, hal_handle_t ep_handle_id)
     nwsec_policy_ep_info->handle_id = ep_handle_id;
     dllist_reset(&nwsec_policy_ep_info->dllist_ctxt);
 
-    HAL_SPINLOCK_LOCK(&nwsec_grp->slock);
+    SDK_SPINLOCK_LOCK(&nwsec_grp->slock);
     dllist_add(&nwsec_grp->ep_list_head, &nwsec_policy_ep_info->dllist_ctxt);
-    HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);
+    SDK_SPINLOCK_UNLOCK(&nwsec_grp->slock);
 
     return HAL_RET_OK;
 }
@@ -579,7 +579,7 @@ del_ep_from_security_group(uint32_t sg_id, hal_handle_t ep_handle_id)
     }
 
 
-    HAL_SPINLOCK_LOCK(&nwsec_grp->slock);
+    SDK_SPINLOCK_LOCK(&nwsec_grp->slock);
     dllist_for_each_safe(curr, next,  &nwsec_grp->ep_list_head) {
         nwsec_policy_ep_info  = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         if (nwsec_policy_ep_info != NULL) {
@@ -587,12 +587,12 @@ del_ep_from_security_group(uint32_t sg_id, hal_handle_t ep_handle_id)
                 sdk::lib::dllist_del(curr);
                 hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY,
                                           nwsec_policy_ep_info);
-                HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);
+                SDK_SPINLOCK_UNLOCK(&nwsec_grp->slock);
                 return HAL_RET_OK;
             }
         }
     }
-    HAL_SPINLOCK_UNLOCK(&nwsec_grp->slock);
+    SDK_SPINLOCK_UNLOCK(&nwsec_grp->slock);
     return HAL_RET_NW_HANDLE_NOT_FOUND;
 }
 

@@ -4,7 +4,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/src/internal/proxyrcb.hpp"
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
@@ -78,7 +78,7 @@ proxyrcb_init (proxyrcb_t *proxyrcb)
     if (!proxyrcb) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&proxyrcb->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&proxyrcb->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     proxyrcb->pd = NULL;
@@ -100,7 +100,7 @@ proxyrcb_alloc_init (void)
 static inline hal_ret_t
 proxyrcb_free (proxyrcb_t *proxyrcb)
 {
-    HAL_SPINLOCK_DESTROY(&proxyrcb->slock);
+    SDK_SPINLOCK_DESTROY(&proxyrcb->slock);
     hal::delay_delete_to_slab(HAL_SLAB_PROXYRCB, proxyrcb);
     return HAL_RET_OK;
 }

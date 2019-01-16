@@ -93,7 +93,7 @@ typedef struct proxy_meta_s {
 } proxy_meta_t;
 
 typedef struct proxy_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     types::ProxyType      type;                    // Proxy Type
 
     // meta
@@ -150,7 +150,7 @@ typedef struct tls_proxy_flow_info_s {
 } tls_proxy_flow_info_t;
 
 typedef struct proxy_flow_info_s {
-    hal_spinlock_t      slock;                   // lock to protect this structure
+    sdk_spinlock_t      slock;                   // lock to protect this structure
     flow_key_t          flow_key;                // Flow
     qid_t               qid1;                    // qid instance 1 (e.g. hflow)
     qid_t               qid2;                    // qid instance 2 (e.g. nflow)

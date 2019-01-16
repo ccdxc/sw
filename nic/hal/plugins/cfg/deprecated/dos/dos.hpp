@@ -9,7 +9,7 @@
 #include "nic/include/base.hpp"
 #include "lib/list/list.hpp"
 #include "lib/ht/ht.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/lib/hal_handle.hpp"
 #include "nic/include/pd.hpp"
 
@@ -85,7 +85,7 @@ typedef struct dos_policy_prop_s {
 } __PACK__ dos_policy_prop_t;
 
 typedef struct dos_policy_s {
-    hal_spinlock_t        slock;                  // lock to protect this structure
+    sdk_spinlock_t        slock;                  // lock to protect this structure
     hal_handle_t          hal_handle;             // HAL allocated handle
     hal_handle_t          vrf_handle;             // vrf handle
 

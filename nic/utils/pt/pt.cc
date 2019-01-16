@@ -22,7 +22,7 @@ pt::init(const char *name, uint16_t max_key_len, bool thread_safe)
     max_key_len_ = max_key_len;
     thread_safe_ = thread_safe;
     if (thread_safe) {
-        HAL_ASSERT_RETURN(!HAL_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE),
+        HAL_ASSERT_RETURN(!SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE),
                           false);
     }
 
@@ -79,7 +79,7 @@ pt::~pt()
     }
 
     if (thread_safe_) {
-        HAL_SPINLOCK_DESTROY(&slock_);
+        SDK_SPINLOCK_DESTROY(&slock_);
     }
 }
 

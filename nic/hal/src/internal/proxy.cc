@@ -6,7 +6,7 @@
 #include "nic/hal/src/internal/cpucb.hpp"
 #include "nic/include/base.hpp"
 #include "nic/hal/hal.hpp"
-#include "nic/include/hal_lock.hpp"
+#include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/pd_api.hpp"
@@ -175,7 +175,7 @@ proxy_init (proxy_t *proxy)
     if (!proxy) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&proxy->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&proxy->slock, PTHREAD_PROCESS_PRIVATE);
 
     // initialize the operational state
     proxy->pd = NULL;
@@ -197,7 +197,7 @@ proxy_alloc_init (void)
 static inline hal_ret_t
 proxy_free (proxy_t *proxy)
 {
-    HAL_SPINLOCK_DESTROY(&proxy->slock);
+    SDK_SPINLOCK_DESTROY(&proxy->slock);
     hal::delay_delete_to_slab(HAL_SLAB_PROXY, proxy);
     return HAL_RET_OK;
 }
@@ -221,7 +221,7 @@ proxy_flow_info_init (proxy_flow_info_t *pfi)
     if(!pfi) {
         return NULL;
     }
-    HAL_SPINLOCK_INIT(&pfi->slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&pfi->slock, PTHREAD_PROCESS_PRIVATE);
     pfi->flow_ht_ctxt.reset();
     return pfi;
 }
@@ -236,7 +236,7 @@ proxy_flow_info_alloc_init (void)
 static inline hal_ret_t
 proxy_flow_info_free (proxy_flow_info_t *proxy_flow_info)
 {
-    HAL_SPINLOCK_DESTROY(&proxy_flow_info->slock);
+    SDK_SPINLOCK_DESTROY(&proxy_flow_info->slock);
     hal::delay_delete_to_slab(HAL_SLAB_PROXY_FLOW_INFO,
                                         proxy_flow_info);
     return HAL_RET_OK;

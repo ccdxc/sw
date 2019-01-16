@@ -285,7 +285,7 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp1) {
     memset(&rpc_info, 0, sizeof(rpc_info_t));
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     memset(&app_sess, 0, sizeof(app_session_t));
-    HAL_SPINLOCK_INIT(&app_sess.slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&app_sess.slock, PTHREAD_PROCESS_PRIVATE);
     alg_state.info = &rpc_info;
     alg_state.app_session = &app_sess;
     rpc_info.pkt_type = PDU_NONE;
@@ -355,7 +355,7 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp2) {
     memset(&rpc_info, 0, sizeof(rpc_info_t));
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     memset(&app_sess, 0, sizeof(app_session_t));
-    HAL_SPINLOCK_INIT(&app_sess.slock, PTHREAD_PROCESS_PRIVATE);
+    SDK_SPINLOCK_INIT(&app_sess.slock, PTHREAD_PROCESS_PRIVATE);
     alg_state.info = &rpc_info;
     alg_state.app_session = &app_sess;
     alg_state.isCtrl = TRUE;

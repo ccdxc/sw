@@ -66,7 +66,7 @@ typedef struct eplearn_cfg_s {
 
 
 typedef struct l2seg_s {
-    hal_spinlock_t        slock;                   // lock to protect this structure
+    sdk_spinlock_t        slock;                   // lock to protect this structure
     hal_handle_t          vrf_handle;              // vrf's handle
     l2seg_id_t            seg_id;                  // L2 segment id
     L2SegmentType         segment_type;            // type of L2 segment
@@ -140,7 +140,7 @@ l2seg_lock (l2seg_t *l2seg, const char *fname, int lineno, const char *fxname)
     HAL_TRACE_DEBUG("{}:operlock:locking l2seg:{} from {}:{}:{}",
                     __FUNCTION__, l2seg->seg_id,
                     fname, lineno, fxname);
-    HAL_SPINLOCK_LOCK(&l2seg->slock);
+    SDK_SPINLOCK_LOCK(&l2seg->slock);
 }
 
 static inline void
@@ -149,7 +149,7 @@ l2seg_unlock (l2seg_t *l2seg, const char *fname, int lineno, const char *fxname)
     HAL_TRACE_DEBUG("{}:operlock:unlocking l2seg:{} from {}:{}:{}",
                     __FUNCTION__, l2seg->seg_id,
                     fname, lineno, fxname);
-    HAL_SPINLOCK_UNLOCK(&l2seg->slock);
+    SDK_SPINLOCK_UNLOCK(&l2seg->slock);
 }
 
 static inline bool
