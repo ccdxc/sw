@@ -38,20 +38,20 @@ mtrack_map_walk_cb (void *ctxt, uint32_t alloc_id,
 
     if (!ctxt || !minfo) {
         HAL_ABORT(FALSE);
-        return true;
+        return false;
     }
     rsp = (debug::MemTrackGetResponseMsg *)ctxt;
     response = rsp->add_response();
     if (!response) {
         // memory allocation failure, stop walking !!
-        return true;
+        return false;
     }
     response->set_api_status(types::API_STATUS_OK);
     response->mutable_spec()->set_alloc_id(alloc_id);
     response->mutable_stats()->set_num_allocs(minfo->num_allocs);
     response->mutable_stats()->set_num_frees(minfo->num_frees);
 
-    return false;
+    return true;
 }
 
 hal_ret_t
