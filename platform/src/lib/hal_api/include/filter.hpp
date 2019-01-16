@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "hal.hpp"
-#include "lif.hpp"
 #include "enic.hpp"
 #include "endpoint.hpp"
 #include "multicast.hpp"

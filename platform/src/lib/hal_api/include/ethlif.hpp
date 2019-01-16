@@ -5,7 +5,6 @@
 
 #include "hal_types.hpp"
 
-// #include "lif.hpp"
 #include "hal.hpp"
 #include "enic.hpp"
 #include "uplink.hpp"
@@ -49,6 +48,7 @@ public:
     Enic *GetEnic();
     HalVrf *GetVrf();
     HalL2Segment *GetNativeL2Seg();
+    uint32_t GetId();
     uint32_t GetHwLifId();
     bool GetIsPromiscuous();
     hal_lif_info_t *GetLifInfo();
@@ -89,7 +89,8 @@ private:
     std::set<mac_vlan_t> mac_vlan_table_;
 
     // Oper State
-    Lif *lif_;
+    uint32_t id_;
+    intf::LifSpec spec;
 
     // Valid only for internal mgmt mnic
     HalVrf *vrf_;
@@ -98,6 +99,11 @@ private:
     // Oper State (For Expanding to EPs in Classic):
     std::map<mac_vlan_filter_t, MacVlanFilter*> mac_vlan_filter_table;
 
+    void TriggerHalCreate();
+    void TriggerHalDelete();
+    void TriggerHalUpdate();
+    void PopulateRequest(intf::LifRequestMsg &req_msg,
+                         intf::LifSpec **req_ptr);
     void CreateMacVlanFilter(mac_t mac, vlan_t vlan);
     void DeleteMacVlanFilter(mac_t mac, vlan_t vlan);
     void CreateMacFilter(mac_t mac);
@@ -107,6 +113,9 @@ private:
 
     // For upgrade. hw_lif_id -> EthLif
     static EthLifMap ethlif_db;
+
+    static sdk::lib::indexer *allocator;
+    static constexpr uint32_t max_lifs = 1024;
 };
 
 #endif // __ETH_LIF_HPP__

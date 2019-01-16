@@ -18,7 +18,7 @@
             "adminq_count" : 1,
             "intr_count" : 4,
             "network" : {
-                "uplink" : 130
+                "uplink" : 9
             }
         },
         {
@@ -31,7 +31,7 @@
             "adminq_count" : 1,
             "intr_count" : 4,
             "network" : {
-                "uplink" : 128
+                "uplink" : 1
             }
         },
         {
@@ -44,7 +44,7 @@
             "adminq_count" : 1,
             "intr_count" : 4,
             "network" : {
-                "uplink" : 129
+                "uplink" : 5
             }
         },
         {
@@ -75,7 +75,7 @@
                 "num_vfs" : 0
             },
             "network" : {
-                "uplink" : 128
+                "uplink" : 1
             },
             "rdma" : {
                 "sq_count" : 4096,
@@ -104,7 +104,7 @@
                 "num_vfs" : 0
             },
             "network" : {
-                "uplink" : 129
+                "uplink" : 5
             },
             "rdma" : {
                 "sq_count" : 4096,

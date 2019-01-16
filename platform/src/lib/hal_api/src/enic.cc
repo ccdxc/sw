@@ -53,7 +53,7 @@ Enic::Enic(EthLif *ethlif)
     req->set_type(::intf::IfType::IF_TYPE_ENIC);
     req->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
     req->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
-    req->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(ethlif->GetLif()->GetId());
+    req->mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(ethlif->GetId());
     req->mutable_if_enic_info()->mutable_classic_enic_info()->
         set_native_l2segment_id(ethlif->GetNativeL2Seg()->GetId());
     // req->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
@@ -64,14 +64,14 @@ Enic::Enic(EthLif *ethlif)
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.status().if_handle();
             NIC_LOG_DEBUG("Created Enic id: {} for Lif: {} handle: {}",
-                            id, ethlif->GetLif()->GetId(), handle);
+                            id, ethlif->GetId(), handle);
         } else {
             NIC_LOG_ERR("Failed to create Enic for Lif: {}. err: {}",
-                          ethlif->GetLif()->GetId(), rsp.api_status());
+                          ethlif->GetId(), rsp.api_status());
         }
     } else {
         NIC_LOG_ERR("Failed to create Enic for Lif: {}. err: {}:{}",
-                      ethlif->GetLif()->GetId(), status.error_code(), status.error_message());
+                      ethlif->GetId(), status.error_code(), status.error_message());
     }
 
     // Store spec
@@ -127,7 +127,7 @@ Enic::TriggerHalUpdate()
     spec->set_admin_status(::intf::IfStatus::IF_STATUS_UP);
     spec->mutable_if_enic_info()->set_enic_type(::intf::IF_ENIC_TYPE_CLASSIC);
     spec->mutable_if_enic_info()->mutable_lif_key_or_handle()->
-        set_lif_id(ethlif->GetLif()->GetId());
+        set_lif_id(ethlif->GetId());
     spec->mutable_if_enic_info()->mutable_classic_enic_info()->
         set_native_l2segment_id(ethlif->GetNativeL2Seg()->GetId());
     for (auto l2seg_it = l2seg_refs.begin(); l2seg_it != l2seg_refs.end(); l2seg_it++) {

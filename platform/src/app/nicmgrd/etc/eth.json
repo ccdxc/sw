@@ -31,7 +31,7 @@
                 "num_vfs" : 0
             },
             "network" : {
-                "uplink" : 128,
+                "uplink" : 1,
                 "vrf" : 1,
                 "native_l2seg" : 1
             },

@@ -8,7 +8,6 @@
 
 #include "hal_types.hpp"
 #include "hal.hpp"
-#include "lif.hpp"
 #include "vrf.hpp"
 #include "l2seg.hpp"
 #include "endpoint.hpp"

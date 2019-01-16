@@ -747,7 +747,7 @@ HalClient::LifCreate(hal_lif_info_t *hal_lif_info)
     NIC_LOG_DEBUG("Creating with Lif: id: {}, type: {}, pinned_uplink: {}, hw_lif_id: {}, rdma_en: {}",
                  hal_lif_info->id,
                  hal_lif_info->type,
-                 hal_lif_info->pinned_uplink ? hal_lif_info->pinned_uplink->GetId() : 0,
+                 hal_lif_info->pinned_uplink_port_num,
                  hal_lif_info->hw_lif_id,
                  hal_lif_info->enable_rdma);
 
@@ -764,10 +764,10 @@ HalClient::LifCreate(hal_lif_info_t *hal_lif_info)
     NIC_LOG_DEBUG("hw_lif_id {} id {} eth_lif->id {} ",
                  hal_lif_info->hw_lif_id,
                  hal_lif_info->id,
-                 eth_lif->GetLif()->GetHwLifId());
+                 eth_lif->GetHwLifId());
 
     // Passed hw_lif_id should be same as HAL returned
-    NIC_ASSERT(hal_lif_info->hw_lif_id == eth_lif->GetLif()->GetHwLifId());
+    NIC_ASSERT(hal_lif_info->hw_lif_id == eth_lif->GetHwLifId());
 
     return 0;
 }

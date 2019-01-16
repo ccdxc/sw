@@ -12,8 +12,11 @@ typedef std::list<std::shared_ptr<Uplink>> UplinkList;
 class Uplink : public HalObject
 {
 public:
-  static Uplink *Factory(uplink_id_t id, bool is_oob = false);
+  static Uplink *Factory(uplink_id_t id, uint32_t port_num, bool is_oob = false);
   static void Destroy(Uplink *uplink);
+  static void CreateVrfs();
+  static Uplink *GetUplink(uint32_t port_num);
+
   int UpdateHalWithNativeL2seg(uint32_t native_l2seg_id);
   void CreateVrf();
 
@@ -35,7 +38,7 @@ public:
 
 private:
   // APIs
-  Uplink(uplink_id_t id, bool is_oob = false);
+  Uplink(uplink_id_t id, uint32_t port_num, bool is_oob = false);
   ~Uplink() {}
 
   uplink_id_t id_;              // Uplink PI Id
@@ -46,7 +49,7 @@ private:
   HalVrf *vrf_;                 // Vrf on the uplink. Appl. in classic.
   HalL2Segment *native_l2seg_;  // Native L2seg
 
-  // id -> Uplink
+  // port_num -> Uplink
   static std::map<uint64_t, Uplink*> uplink_db;
 };
 

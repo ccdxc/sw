@@ -75,7 +75,6 @@ string string_format( const std::string& format, Args ... args )
 
 sdk::lib::indexer *Eth::fltr_allocator = sdk::lib::indexer::factory(4096);
 
-
 Eth::Eth(HalClient *hal_client,
          HalCommonClient *hal_common_client,
          void *dev_spec,
@@ -207,7 +206,7 @@ Eth::Eth(HalClient *hal_client,
     hal_lif_info_.hw_lif_id = lif_base;
     hal_lif_info_.name = spec->name;
     hal_lif_info_.type = ConvertDevTypeToLifType(spec->eth_type);
-    hal_lif_info_.pinned_uplink = spec->uplink;
+    hal_lif_info_.pinned_uplink_port_num = spec->uplink_port_num;
     hal_lif_info_.enable_rdma = spec->enable_rdma;
     hal_lif_info_.pushed_to_hal = false;
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
@@ -218,7 +217,7 @@ Eth::Eth(HalClient *hal_client,
                  hal_lif_info_.id,
                  hal_lif_info_.hw_lif_id,
                  macaddr2str(spec->mac_addr),
-                 spec->uplink ? spec->uplink->GetPortNum() : 0);
+                 spec->uplink_port_num);
 
     // Stats
     stats_mem_addr = pd->mem_start_addr(CAPRI_HBM_REG_LIF_STATS);
@@ -645,7 +644,8 @@ Eth::NotifyBlockUpdate(void *obj)
 void
 Eth::LinkEventHandler(port_status_t *evd)
 {
-    if (spec->uplink == NULL || spec->uplink->GetPortNum() != evd->port_id) {
+    // if (spec->uplink == NULL || spec->uplink->GetPortNum() != evd->port_id) {
+    if (spec->uplink_port_num != evd->port_id) {
         return;
     }
 
@@ -1240,11 +1240,11 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
         cosA = 1;
         cosB = HalClient::GetTxTrafficClassCos(spec->qos_group,
-                                            spec->uplink ? spec->uplink->GetPortNum() : 0);
+                                               spec->uplink_port_num);
         if (cosB < 0) {
             NIC_LOG_ERR("lif-{}: Failed to get cosB for group {}, uplink {}",
                         hal_lif_info_.hw_lif_id, spec->qos_group,
-                        spec->uplink ? spec->uplink->GetPortNum() : 0);
+                        spec->uplink_port_num);
             return (DEVCMD_ERROR);
         }
         uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
@@ -1669,9 +1669,9 @@ Eth::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     // Init the notify block
     notify_block->eid = 1;
-    if (spec->uplink) {
+    if (spec->uplink_port_num) {
         port_status_t port_status;
-        hal->PortStatusGet(spec->uplink->GetPortNum(), port_status);
+        hal->PortStatusGet(spec->uplink_port_num, port_status);
         notify_block->link_status = port_status.oper_status;
         notify_block->link_speed = port_status.oper_status ? port_status.port_speed : 0;
     } else {
