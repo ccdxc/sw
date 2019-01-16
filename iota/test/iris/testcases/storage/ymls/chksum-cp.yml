@@ -39,7 +39,7 @@ tests:
             idx: 3
             type: lt
             file1: '1_compressed.bin'
-            val: '$size'
+            val: 8192
         - data_compare:
             idx: 4
             file1: '1_compressed.bin'
