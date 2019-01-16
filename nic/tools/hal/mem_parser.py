@@ -84,6 +84,7 @@ def parse_file():
     nlist = ""
     olist = ""
     slist = ""
+    eslist = ""
     clist = ""
     rlist = ""
     idx = 0
@@ -142,7 +143,7 @@ def parse_file():
             nlist = nlist + "\n    " + nbase + "NAME, \\"
             olist = olist + "\n    " + nbase + "START_OFFSET, \\"
             slist = slist + "\n    " + nbase + "SIZE, \\"
-            eslist = slist + "\n    " + nbase + "ELEMENT_SIZE, \\"
+            eslist = eslist + "\n    " + nbase + "ELEMENT_SIZE, \\"
             clist = clist + "\n    " + nbase + "CACHE_PIPE, \\"
             rlist = rlist + "\n    " + nbase + "RESET, \\"
 

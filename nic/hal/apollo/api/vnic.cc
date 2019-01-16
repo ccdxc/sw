@@ -288,7 +288,8 @@ oci_vnic_create (_In_ oci_vnic_t *vnic)
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_VNIC,
+                                                api::API_OP_CREATE);
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_CREATE;
         api_ctxt.obj_id = api::OBJ_ID_VNIC;
@@ -311,7 +312,8 @@ oci_vnic_delete (_In_ oci_vnic_key_t *vnic_key)
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_VNIC,
+                                                api::API_OP_DELETE);
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_DELETE;
         api_ctxt.obj_id = api::OBJ_ID_VNIC;

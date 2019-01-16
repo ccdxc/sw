@@ -18,7 +18,9 @@
  * @{
  */
 
-#define OCI_MAX_VCN        1024
+#define OCI_VCN_ID_INVALID      0xFFFF  /**< invalid substrate id */
+#define OCI_VCN_ID_SUBSTRATE    0       /**< this VCN id is reserved for substrate */
+#define OCI_MAX_VCN             1024
 
 /**
  * @brief VCN Key

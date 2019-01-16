@@ -103,10 +103,7 @@ mapping_entry::reserve_resources_(void) {
  */
 sdk_ret_t
 mapping_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t    ret;
-
     reserve_resources_();
-    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -278,7 +275,8 @@ oci_mapping_create (_In_ oci_mapping_t *mapping)
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_MAPPING,
+                                                api::API_OP_CREATE);
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_CREATE;
         api_ctxt.obj_id = api::OBJ_ID_MAPPING;
@@ -301,7 +299,8 @@ oci_mapping_delete (_In_ oci_mapping_key_t *mapping_key)
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_MAPPING,
+                                                api::API_OP_DELETE);
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_DELETE;
         api_ctxt.obj_id = api::OBJ_ID_MAPPING;

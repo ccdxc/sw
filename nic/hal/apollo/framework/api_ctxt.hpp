@@ -44,6 +44,27 @@ typedef struct api_ctxt_s {
     api_params_t    *api_params;    /**< API specific params */
 } api_ctxt_t;
 
+slab *api_params_slab(void);
+static inline api_params_t *
+api_params_alloc (obj_id_t obj_id, api_op_t api_op)
+{
+    return (api_params_t *)api_params_slab()->alloc();
+}
+
+static inline void
+api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
+{
+    if (obj_id == api::OBJ_ID_ROUTE_TABLE &&
+        (api_op == api::API_OP_CREATE ||
+        (api_op == api::API_OP_UPDATE))) {
+        if (api_params->route_table_info.routes) {
+            SDK_FREE(OCI_MEM_ALLOC_ROUTE_TABLE,
+                     api_params->route_table_info.routes);
+        }
+    }
+    return api_params_slab()->free(api_params);
+}
+
 }    // namespace api
 
 using api::api_ctxt_t;

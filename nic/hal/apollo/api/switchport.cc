@@ -218,7 +218,8 @@ oci_switchport_create (_In_ oci_switchport_t *switchport)
     api_ctxt_t    api_ctxt;
     sdk_ret_t     rv;
 
-    api_ctxt.api_params = (api_params_t *)api::api_params_slab()->alloc();
+    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_SWITCHPORT,
+                                                api::API_OP_CREATE);
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_CREATE;
         api_ctxt.obj_id = api::OBJ_ID_SWITCHPORT;

@@ -240,12 +240,6 @@ private:
 /**< API engine (singleton) instance */
 extern api_engine    g_api_engine;
 
-static inline slab *
-api_params_slab (void)
-{
-    return g_api_engine.api_params_slab();
-}
-
 }    // namespace api
 
 #endif    /** __API_ENGINE_HPP__ */

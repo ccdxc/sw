@@ -101,7 +101,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     api::tep_entry       *tep;
 
     route_table_info = &obj_ctxt->api_params->route_table_info;
-    SDK_ASSERT_RETURN((route_table_info->route_list.num_rules > 0),
+    SDK_ASSERT_RETURN((route_table_info->num_routes > 0),
                       sdk::SDK_RET_INVALID_ARG);
 
     /**< allocate memory for the library to build route table */
@@ -109,17 +109,14 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         (route_table_t *)
             SDK_MALLOC(OCI_MEM_ALLOC_ROUTE_TABLE,
                        sizeof(route_table_t) +
-                           (route_table_info->route_list.num_rules *
-                            sizeof(route_t)));
+                           (route_table_info->num_routes * sizeof(route_t)));
     SDK_ASSERT_RETURN((rtable != NULL), sdk::SDK_RET_OOM);
 
     rtable->af = route_table_info->af;
-    rtable->num_routes = route_table_info->route_list.num_rules;
+    rtable->num_routes = route_table_info->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
-        rtable->routes[i].prefix =
-            route_table_info->route_list.rules[i].key.prefix;
-        tep_key.ip_addr =
-            route_table_info->route_list.rules[i].nh_ip.addr.v4_addr;
+        rtable->routes[i].prefix = route_table_info->routes[i].prefix;
+        tep_key.ip_addr = route_table_info->routes[i].nh_ip.addr.v4_addr;
         tep = tep_db()->tep_find(&tep_key);
         SDK_ASSERT(tep != NULL);
         rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();

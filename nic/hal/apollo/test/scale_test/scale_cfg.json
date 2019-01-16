@@ -13,21 +13,29 @@
             "prefix": "1.0.0.0/8"
         },
         {
+            "_comment_" : "routes per routing table, middle 2 octets are used to create routes",
+            "kind" : "route-table",
+            "count" : "1024",
+            "prefix-start" : "4.0.0.0/8"
+        },
+        {
             "_comment_" : "All VCNs have same prefix",
             "kind" : "vcn",
             "count" : "1024",
-            "prefix" : "10.0.0.0/8",
+            "prefix" : "2.0.0.0/8",
             "subnets" : "1"
         },
         {
+            "_comment_" : "per vcn, per subnet vnic scale",
             "kind" : "vnic",
             "count" : "1",
             "vlan-start" : "1"
         },
         {
-            "kind" : "mapping",
+            "_comment_" : "32 mapping per VNIC are created by default",
+            "kind" : "remote-mapping",
             "count" : "1",
-            "nat-prefix" : "99.0.0.0/8"
+            "nat-prefix" : "3.0.0.0/8"
         }
     ]
 }
