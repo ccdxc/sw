@@ -17,6 +17,9 @@
 #include "cap_pics_c_hdr.h"
 #include "cap_wa_c_hdr.h"
 
+#include "nic/sdk/platform/fru/fru.hpp"
+#include "platform/src/lib/misc/include/maclib.h"
+
 #include "logger.hpp"
 
 #include "dev.hpp"
@@ -41,29 +44,6 @@ struct queue_info DeviceManager::qinfo [NUM_QUEUE_TYPES] = {
     },
 };
 
-uint64_t
-mac_to_int(std::string const& s)
-{
-    unsigned char m[6];
-    int rc = sscanf(s.c_str(), "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
-                    m + 0, m + 1, m + 2, m + 3, m + 4, m + 5);
-
-    if (rc != 6) {
-        throw std::runtime_error("invalid mac address " + s);
-    }
-
-    return (
-            uint64_t(m[0]) << 40 |
-            uint64_t(m[1]) << 32 |
-            uint64_t(m[2]) << 24 |
-            uint64_t(m[3]) << 16 |
-            uint64_t(m[4]) << 8 |
-            uint64_t(m[5])
-        );
-}
-
-#define CASE(type) case type: return #type
-
 EthDevType
 eth_dev_type_str_to_type(std::string const& s)
 {
@@ -83,8 +63,11 @@ eth_dev_type_str_to_type(std::string const& s)
     }
 }
 
+#define CASE(type) case type: return #type
+
 const char
-*eth_dev_type_to_str(EthDevType type) {
+*eth_dev_type_to_str(EthDevType type)
+{
     switch(type) {
         CASE(ETH_UNKNOWN);
         CASE(ETH_HOST);
@@ -110,6 +93,8 @@ oprom_type_str_to_type(std::string const& s)
         return OPROM_UNKNOWN;
     }
 }
+
+#define CASE(type) case type: return #type
 
 const char *oprom_type_to_str(OpromType type)
 {
@@ -342,21 +327,44 @@ DeviceManager::LoadConfig(string path)
 {
     struct eth_devspec *eth_spec;
     struct accel_devspec *accel_spec;
-    char *system_uuid = getenv("SYSUUID");
-    uint64_t sys_mac_base;
 
     NIC_HEADER_TRACE("Loading Config");
     NIC_LOG_DEBUG("Json: {}", path);
-
     boost::property_tree::read_json(path, spec);
-    if (!system_uuid || !strcmp(system_uuid, "")) {
-        sys_mac_base = 0x00DEADBEEF00llu;
+
+    // Determine the base mac address
+    uint64_t sys_mac_base = 0;
+    uint64_t fru_mac = 0;
+    uint64_t cfg_mac = 0;
+    string mac_str;
+#ifdef __aarch64__
+    if (readKey(MACADDRESS_KEY, mac_str) == 0) {
+        mac_from_str(&fru_mac, mac_str.c_str());
     } else {
-        sys_mac_base = mac_to_int(system_uuid);
+        NIC_LOG_ERR("Failed to read MAC address from FRU");
+    }
+#endif
+    if (getenv("SYSUUID") != NULL) {
+        mac_from_str(&cfg_mac, getenv("SYSUUID"));
+    } else {
+        NIC_LOG_DEBUG("MAC address environment variable is not set");
     }
 
-    NIC_LOG_DEBUG("Entered SysUuid={} SysMacBase={}",
-                 system_uuid == NULL ? "" : system_uuid, sys_mac_base);
+    // Validate & set base mac address
+    if (is_unicast_mac_addr(&fru_mac)) {
+        NIC_LOG_INFO("FRU mac address {:#x}", fru_mac);
+        sys_mac_base = fru_mac;
+    } else if (is_unicast_mac_addr(&cfg_mac)) {
+        NIC_LOG_INFO("Configured mac address {:#x}", cfg_mac);
+        sys_mac_base = cfg_mac;
+    } else {
+        NIC_LOG_DEBUG("Invalid mac addresses: FRU {:#x} and config {:#x}",
+            fru_mac, cfg_mac);
+        mac_from_str(&sys_mac_base, "00:de:ad:be:ef:00");
+    }
+
+    char sys_mac_str[32] = {0};
+    NIC_LOG_INFO("Base mac address {} {}", sys_mac_str, mac_to_str(&sys_mac_base, sys_mac_str, sizeof(sys_mac_str)));
 
     // Create Network
     if (spec.get_child_optional("network")) {

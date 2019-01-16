@@ -9,31 +9,26 @@
 
 #include "maclib.h"
 
-char *
-mac_to_str(const mac_t *m)
-{
-    static char buf[32];
-    return mac_to_str_r(m, buf, sizeof(buf));
-}
 
 char *
-mac_to_str_r(const mac_t *m, char *buf, const size_t bufsz)
+mac_to_str(const mac_t *m, char *str, const uint64_t strsz)
 {
-    snprintf(buf, bufsz, "%02x:%02x:%02x:%02x:%02x:%02x",
-             m->buf[0], m->buf[1], m->buf[2],
-             m->buf[3], m->buf[4], m->buf[5]);
-    return buf;
+    uint8_t *p = (uint8_t *)m;
+    int r = snprintf(str, strsz, "%02x:%02x:%02x:%02x:%02x:%02x",
+                     p[5], p[4], p[3], p[2], p[1], p[0]);
+    return (r > 0) ? str : "";
 }
 
-int 
+int
 mac_from_str(mac_t *m, const char *str)
 {
-    int i, mw[6];
-
-    if (sscanf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
-               &mw[0], &mw[1], &mw[2], &mw[3], &mw[4], &mw[5]) == 6) {
-        for (i = 0; i < 6; i++) {
-            m->buf[i] = mw[i];
+    uint8_t *p = (uint8_t *)m;
+    unsigned int w[6];
+    int r = sscanf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
+                   &w[5], &w[4], &w[3], &w[2], &w[1], &w[0]);
+    if (r == 6) {
+        for (int i = 0; i < 6; i++) {
+            p[i] = w[i];
         }
         return 0;
     }

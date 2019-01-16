@@ -175,21 +175,11 @@ int readKey(std::string key, std::string &value)
             return -1;
         }
     }
+
     if (input.get_optional<std::string>(key)) {
         value = input.get<std::string>(key);
-    }
-    else {
+    } else {
         return -1;
     }
     return 0;
-}
-
-int readMac(std::string &value)
-{
-    return readKey(MACADDRESS_KEY, value);
-}
-
-int readNumberMacs(std::string &value)
-{
-    return readKey(NUMMACADDR_KEY, value);
 }
