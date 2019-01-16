@@ -360,8 +360,6 @@ PD_FUNC_STUB(pd_asic_init);
 PD_FUNC_STUB(pd_table_properties_get);
 
 // capri
-PD_FUNC_STUB(pd_get_start_offset);
-PD_FUNC_STUB(pd_get_size_kb);
 PD_FUNC_STUB(pd_push_qstate_to_capri);
 PD_FUNC_STUB(pd_clear_qstate);
 PD_FUNC_STUB(pd_read_qstate);

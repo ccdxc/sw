@@ -33,37 +33,8 @@ typedef struct asicpd_sw_phv_state_ {
     uint32_t    drop_no_data_cntr;
 } asicpd_sw_phv_state_t;
 
-typedef struct pd_hbm_bw_get_args_s {
-    uint32_t      num_samples;
-    uint32_t      sleep_interval;
-    asic_hbm_bw_t *hbm_bw;
-} __PACK__ pd_hbm_bw_get_args_t;
-
-typedef struct pd_llc_get_args_s {
-    uint32_t mask;
-    uint32_t data[16];
-} pd_llc_get_args_t;
-
-typedef struct scheduler_cos_stats_s {
-    uint32_t cos;
-    bool xon_status;
-    uint32_t doorbell_count;
-} scheduler_cos_stats_t;
-
-typedef struct pd_scheduler_stats_get_args_s {
-    uint32_t doorbell_set_count;
-    uint32_t doorbell_clear_count;
-    uint32_t ratelimit_start_count;
-    uint32_t ratelimit_stop_count;
-    scheduler_cos_stats_t cos_stats[16];
-} pd_scheduler_stats_get_args_t;
-
-hal_ret_t
-asic_pd_scheduler_stats_get (pd_scheduler_stats_get_args_t *scheduler_stats_args);
-
 hal_ret_t asicpd_toeplitz_init(void);
 hal_ret_t asicpd_p4plus_table_init(hal::hal_cfg_t *hal_cfg);
-hal_ret_t asicpd_p4plus_recirc_init(void);
 hal_ret_t asicpd_stats_addr_get(int tblid, uint32_t index,
                                 asicpd_stats_region_info_t *region_arr,
                                 int arrlen, hbm_addr_t *stats_addr_p);
@@ -74,9 +45,6 @@ hal_ret_t asicpd_sw_phv_inject(asicpd_swphv_type_t type, uint8_t prof_num,
                                void *data);
 hal_ret_t asicpd_sw_phv_get(asicpd_swphv_type_t type, uint8_t prof_num,
                             asicpd_sw_phv_state_t *state);
-hal_ret_t asic_pd_hbm_bw_get(pd_hbm_bw_get_args_t *hbm_bw_args);
-hal_ret_t asic_pd_llc_setup(pd_llc_get_args_t *llc_args);
-hal_ret_t asic_pd_llc_get(pd_llc_get_args_t *llc_args);
 hal_ret_t xcvr_valid_check_enable(bool enable);
 
 }    // namespace pd

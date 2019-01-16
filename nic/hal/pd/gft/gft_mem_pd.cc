@@ -523,7 +523,7 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     HAL_ASSERT(sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg) == SDK_RET_OK);
     HAL_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_table_init(hal_cfg) == HAL_RET_OK);
-    HAL_ASSERT(asicpd_p4plus_recirc_init() == HAL_RET_OK);
+    HAL_ASSERT(sdk::asic::pd::asicpd_p4plus_recirc_init() == SDK_RET_OK);
 
     // common asic pd init (must be called after capri asic init)
     HAL_ASSERT(sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg) == SDK_RET_OK);

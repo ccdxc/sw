@@ -47,7 +47,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
-#include "nic/hal/pd/asicpd/asic_pd_scheduler.hpp"
+#include "nic/sdk/asic/pd/scheduler.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/hal/pd/iris/ipsec/ipsec_pd.hpp"
 #include "nic/hal/pd/iris/event/hal_event_pd.hpp"
@@ -1161,7 +1161,7 @@ pd_mem_init_phase2 (pd_func_args_t *pd_func_args)
     HAL_ASSERT(hal_pd_lif_stats_region_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_toeplitz_init() == HAL_RET_OK);
     HAL_ASSERT(asicpd_p4plus_table_init(hal_cfg) == HAL_RET_OK);
-    HAL_ASSERT(asicpd_p4plus_recirc_init() == HAL_RET_OK);
+    HAL_ASSERT(sdk::asic::pd::asicpd_p4plus_recirc_init() == SDK_RET_OK);
     // Following routines must be called after capri asic init
     HAL_ASSERT(sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg) == SDK_RET_OK);
     HAL_ASSERT(sdk::asic::pd::asicpd_program_table_mpu_pc() == SDK_RET_OK);
