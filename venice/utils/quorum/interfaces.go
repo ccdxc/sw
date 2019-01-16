@@ -65,6 +65,9 @@ type Interface interface {
 	// Add adds a new member to the quorum.
 	Add(member *Member) error
 
+	// Defrag defrag db of a quorum member.
+	Defrag(member *Member) error
+
 	// Remove removes an existing quorum member.
 	Remove(id uint64) error
 }

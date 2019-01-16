@@ -36,7 +36,7 @@ $ vagrant ssh
 $ make
 ```
 
-Running make is `sw` folder will compile all venice binaries and run unit test. `make build` will just compile all binaries. `make unit-test-cover` will run all unit tests. `make gen` will compile all proto file and genrate code from it.
+Running make is `sw` folder will compile all venice binaries and run unit test. `make build` will just compile all binaries. `make unit-test-cover` will run all unit tests. `make gen` will compile all proto file and generate code from it.
 
 ##### 5. Create a pensando cluster
 ```

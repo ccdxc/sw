@@ -31,6 +31,18 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
+const (
+	intervalPeriod     = 24 * time.Hour
+	hourToTick     int = 02
+	minuteToTick   int = 00
+	secondToTick   int = 00
+)
+
+//DefragJobTicker defragmentation timer
+type DefragJobTicker struct {
+	t *time.Timer
+}
+
 // Services that run on node that wins the Leader election.
 // TODO: Spread these out when it makes sense to do so.
 var (
@@ -42,6 +54,7 @@ var (
 	// cluster status will be updated every 30 seconds or
 	// when any leader event is observed or when cluster is created/updated
 	clusterStatusUpdateTime = 30 * time.Second
+	jt                      = NewDefragJobTicker()
 )
 
 type masterService struct {
@@ -67,6 +80,28 @@ type masterService struct {
 
 // MasterOption fills the optional params
 type MasterOption func(service *masterService)
+
+//compute the NextTickDuration
+func getNextTickDuration() time.Duration {
+	log.Infof("getNextTickDuration")
+	now := time.Now()
+	nextTick := time.Date(now.Year(), now.Month(), now.Day(), hourToTick, minuteToTick, secondToTick, 0, time.Local)
+	if nextTick.Before(now) {
+		nextTick = nextTick.Add(intervalPeriod)
+	}
+	return nextTick.Sub(time.Now())
+}
+
+//NewDefragJobTicker creates a new Ticker
+func NewDefragJobTicker() DefragJobTicker {
+	return DefragJobTicker{time.NewTimer(getNextTickDuration())}
+}
+
+//update Ticker with new duration
+func (jt DefragJobTicker) updateDefragJobTicker() {
+	log.Infof("updating  DefragJobTicker")
+	jt.t.Reset(getNextTickDuration())
+}
 
 // WithCfgWatcherMasterOption to pass a specifc types.CfgWatcherService implementation
 func WithCfgWatcherMasterOption(cfgWatcher types.CfgWatcherService) MasterOption {
@@ -247,6 +282,8 @@ func (m *masterService) startLeaderServices() error {
 		m.esCuratorSvc.Start()
 	}
 
+	go performQuorumDefrag(true)
+
 	return nil
 }
 
@@ -272,6 +309,9 @@ func (m *masterService) Stop() {
 
 // caller holds the lock
 func (m *masterService) stopLeaderServices() {
+
+	go performQuorumDefrag(false)
+
 	if env.ServiceRolloutClient != nil {
 		env.ServiceRolloutClient.Stop()
 	}
@@ -457,6 +497,26 @@ func (m *masterService) handleClusterEvent(et kvstore.WatchEventType, cluster *c
 	case kvstore.Deleted:
 		return
 	}
+}
+
+// do defragment on Quorum member
+func performQuorumDefrag(start bool) {
+
+	if start {
+
+		for {
+			<-jt.t.C
+			var members, _ = env.Quorum.List()
+			for _, member := range members {
+				env.Quorum.Defrag(&member)
+				time.Sleep(time.Minute * 5)
+			}
+			jt.updateDefragJobTicker()
+		}
+	} else {
+		jt.t.Stop()
+	}
+
 }
 
 // handleSmartNIC handles SmartNIC updates

@@ -293,6 +293,21 @@ func (e *etcdQuorum) Add(member *quorum.Member) error {
 	return nil
 }
 
+// Add adds new member to the quorum.
+func (e *etcdQuorum) Defrag(member *quorum.Member) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
+	defer cancel()
+
+	_, err := e.client.Defragment(ctx, member.ClientURLs[0])
+	if err != nil {
+		return err
+
+	}
+
+	log.Infof("Defragmented member: %v", member.ClientURLs)
+	return nil
+}
+
 // Remove removes an existing quorum member.
 func (e *etcdQuorum) Remove(id uint64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
