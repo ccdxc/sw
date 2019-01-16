@@ -1,7 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = gogo.proto
-#MODULE_PIPELINE     = iris gft
+MODULE_PIPELINE     = iris gft
 MODULE_GEN_TYPES    = CC PY
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \

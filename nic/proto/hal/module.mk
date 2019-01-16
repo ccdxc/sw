@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = hal.proto
-#MODULE_PIPELINE     = iris gft
+MODULE_PIPELINE     = iris gft
 MODULE_PREREQS      = gogo.proto
 MODULE_GEN_TYPES    = CC PY DELPHI
 MODULE_INCS         = ${MODULE_DIR} \
