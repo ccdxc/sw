@@ -43,14 +43,6 @@ Uplink::Destroy(Uplink *uplink)
         // Delete Vrf
         HalVrf::Destroy(uplink->GetVrf());
     }
-#if 0
-    if (hal->GetMode() == FWD_MODE_CLASSIC ||
-        uplink->IsOOB()) {
-
-        // Delete Vrf
-        HalVrf::Destroy(uplink->GetVrf());
-    }
-#endif
 
     // Remove from DB
     uplink_db.erase(uplink->GetPortNum());
@@ -91,14 +83,6 @@ Uplink::CreateVrf()
     // In both Classic and hostpin modes, every uplink will get a VRF.
     vrf_ = HalVrf::Factory(IsOOB() ? types::VRF_TYPE_OOB_MANAGEMENT : types::VRF_TYPE_INBAND_MANAGEMENT,
                            this);
-
-#if 0
-    if (hal->GetMode() == FWD_MODE_CLASSIC || IsOOB()) {
-        // Create VRF for each uplink
-        vrf = HalVrf::Factory(IsOOB() ? types::VRF_TYPE_MANAGEMENT : types::VRF_TYPE_CUSTOMER,
-                              this);
-    }
-#endif
 }
 
 void

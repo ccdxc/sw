@@ -103,20 +103,6 @@ HalL2Segment::Lookup(HalVrf *vrf, uint16_t vlan)
     }
 }
 
-#if 0
-shared_ptr<HalL2Segment>
-HalL2Segment::GetInstance(shared_ptr<HalVrf> vrf, uint16_t vlan)
-{
-    l2seg_key_t key(vrf->GetId(), vlan);
-
-    if (registry.find(key) == registry.cend()) {
-        registry[key] = make_shared<HalL2Segment>(vrf, vlan);
-    }
-
-    return registry[key];
-}
-#endif
-
 HalL2Segment::~HalL2Segment()
 {
     grpc::ClientContext                     context;

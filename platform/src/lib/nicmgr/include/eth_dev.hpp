@@ -187,9 +187,10 @@ private:
     HalCommonClient *hal_common_client;
     hal_lif_info_t hal_lif_info_;
     const hal_lif_info_t *nicmgr_lif_info;
+    std::map<uint64_t, EthLif *> lif_map;
+    uint8_t cosA, cosB;
     // Device state
     std::string nd_name, dev_name;
-    uint8_t cosA, cosB;
     enum lif_state lif_state;
     // Resources
     int32_t lif_base;
@@ -246,6 +247,7 @@ private:
     enum DevcmdStatus _CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
+    enum DevcmdStatus _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data);

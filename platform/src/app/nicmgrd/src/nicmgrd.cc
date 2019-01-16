@@ -20,8 +20,6 @@
 
 using namespace std;
 
-uint16_t base_mac = 0x0a0a;
-
 DeviceManager *devmgr;
 pciemgr *pciemgr;
 static string config_file;

@@ -143,13 +143,17 @@ const char *eth_dev_type_to_str(EthDevType type);
  * Eth Device Spec
  */
 struct eth_devspec {
-    // Delphi Object Key
+    // Delphi
     uint64_t dev_uuid;
-    // FWD
-    EthDevType  eth_type;
+    // Device
+    EthDevType eth_type;
     std::string name;
-    uint32_t    uplink_port_num;
-    // Uplink      *uplink;
+    OpromType oprom;
+    uint8_t  pcie_port;
+    bool host_dev;
+    // Network
+    uint32_t uplink_port_num;
+    std::string qos_group;
     // RES
     uint32_t lif_count;
     uint32_t rxq_count;
@@ -158,12 +162,8 @@ struct eth_devspec {
     uint32_t adminq_count;
     uint32_t intr_count;
     uint64_t mac_addr;
-    // DEV
-    bool     host_dev;
-    OpromType oprom;
-    uint8_t  pcie_port;
     // RDMA
-    bool     enable_rdma;
+    bool enable_rdma;
     uint32_t pte_count;
     uint32_t key_count;
     uint32_t ah_count;
@@ -173,10 +173,7 @@ struct eth_devspec {
     uint32_t rdma_eq_count;
     uint32_t rdma_adminq_count;
     uint32_t rdma_pid_count;
-    //in 8MB units
-    uint32_t barmap_size;
-
-    std::string qos_group;
+    uint32_t barmap_size;    // in 8MB units
 };
 
 typedef struct dev_cmd_db {

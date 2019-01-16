@@ -40,7 +40,6 @@ typedef struct hal_queue_info_s {
 } hal_queue_info_t;
 
 typedef struct hal_lif_info_s {
-    uint64_t id;
     uint64_t hw_lif_id;
     std::string name;
     types::LifType type;

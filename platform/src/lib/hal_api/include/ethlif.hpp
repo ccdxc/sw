@@ -75,10 +75,6 @@ private:
     EthLif(hal_lif_info_t *info);
     ~EthLif();
 
-    static sdk::lib::indexer *filter_allocator;
-    static constexpr uint64_t max_macaddrs_per_lif = 64;
-    static constexpr uint64_t max_vlans_per_lif = 8;
-    static constexpr uint64_t max_filters_per_lif = 4096;
     static EthLif *internal_mgmt_ethlif;
 
     // Config State (For Disruptive Upgrade):
@@ -114,7 +110,6 @@ private:
     // For upgrade. hw_lif_id -> EthLif
     static EthLifMap ethlif_db;
 
-    static sdk::lib::indexer *allocator;
     static constexpr uint32_t max_lifs = 1024;
 };
 

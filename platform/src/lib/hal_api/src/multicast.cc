@@ -5,6 +5,7 @@
 #include <grpc++/grpc++.h>
 
 #include "multicast.hpp"
+#include "print.hpp"
 
 using namespace std;
 
@@ -57,14 +58,15 @@ HalMulticast::HalMulticast(HalL2Segment *l2seg, mac_t mac)
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            NIC_LOG_DEBUG("Created Mcast L2seg: {}, Mac: {}", l2seg->GetId(), mac);
+            NIC_LOG_DEBUG("Created Mcast L2seg: {}, Mac: {}", l2seg->GetId(),
+                macaddr2str(mac));
         } else {
-            NIC_LOG_ERR("Failed to create Mcast L2seg: {}, Mac: {} err: {}", l2seg->GetId(), mac,
-                          rsp.api_status());
+            NIC_LOG_ERR("Failed to create Mcast L2seg: {}, Mac: {} err: {}", l2seg->GetId(),
+                macaddr2str(mac), rsp.api_status());
         }
     } else {
-        NIC_LOG_ERR("Failed to create Mcast L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(), mac,
-                      status.error_code(), status.error_message());
+        NIC_LOG_ERR("Failed to create Mcast L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
+            macaddr2str(mac), status.error_code(), status.error_message());
     }
 }
 
@@ -88,14 +90,15 @@ HalMulticast::~HalMulticast()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            NIC_LOG_ERR("Failed to delete Mcast L2seg: {}, Mac: {}. err: {}", l2seg->GetId(), mac,
-                          rsp.api_status());
+            NIC_LOG_ERR("Failed to delete Mcast L2seg: {}, Mac: {}. err: {}", l2seg->GetId(),
+                macaddr2str(mac), rsp.api_status());
         } else {
-            NIC_LOG_DEBUG("Delete Mcast L2seg: {}, Mac: {}", l2seg->GetId(), mac);
+            NIC_LOG_DEBUG("Delete Mcast L2seg: {}, Mac: {}", l2seg->GetId(),
+                macaddr2str(mac));
         }
     } else {
         NIC_LOG_ERR("Failed to delete Mcast L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
-                      mac, status.error_code(), status.error_message());
+            macaddr2str(mac), status.error_code(), status.error_message());
     }
 }
 
@@ -139,14 +142,15 @@ HalMulticast::TriggerHal()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            NIC_LOG_DEBUG("Updated Mcast L2seg: {}, Mac: {}", l2seg->GetId(), mac);
+            NIC_LOG_DEBUG("Updated Mcast L2seg: {}, Mac: {}", l2seg->GetId(),
+                macaddr2str(mac));
         } else {
-            NIC_LOG_ERR("Failed to update Mcast L2seg: {}, Mac: {}. err: {}", l2seg->GetId(), mac,
-                          rsp.api_status());
+            NIC_LOG_ERR("Failed to update Mcast L2seg: {}, Mac: {}. err: {}", l2seg->GetId(),
+                macaddr2str(mac), rsp.api_status());
         }
     } else {
-        NIC_LOG_ERR("Failed to update Mcast L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(), mac,
-                      status.error_code(), status.error_message());
+        NIC_LOG_ERR("Failed to update Mcast L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
+            macaddr2str(mac), status.error_code(), status.error_message());
     }
 }
 

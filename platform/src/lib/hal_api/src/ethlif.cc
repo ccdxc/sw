@@ -18,10 +18,7 @@ using namespace std;
 const char qstate_64[64] = { 0 };
 const char qstate_1024[1024] = { 0 };
 
-sdk::lib::indexer *EthLif::filter_allocator = sdk::lib::indexer::factory(EthLif::max_filters_per_lif, false, true);
 EthLif *EthLif::internal_mgmt_ethlif = NULL;
-sdk::lib::indexer *EthLif::allocator = sdk::lib::indexer::factory(EthLif::max_lifs, false, true);
-
 EthLifMap EthLif::ethlif_db;
 
 EthLif *
@@ -818,17 +815,8 @@ EthLif::TriggerHalCreate()
     intf::LifQStateMapEntry    *lif_qstate_map_ent;
     hal_lif_info_t             *lif_info = GetLifInfo();
 
-    if (lif_info->id == 0) {
-        // Nicmgr has to always pass the id and hw_lif_id
-        NIC_ASSERT(0);
-        if (allocator->alloc(&id_) != sdk::lib::indexer::SUCCESS) {
-            NIC_LOG_ERR("Failed to create Lif for hw_lif_id: {}. Index Exhaustion",
-                          lif_info->hw_lif_id);
-            return;
-        }
-    } else {
-        id_ = lif_info->id;
-    }
+    id_ = lif_info->hw_lif_id;
+    assert(id_ != 0);
 
     // Set default number of max filters if nothing is passed
     if (!lif_info->max_vlan_filters) {
@@ -1056,13 +1044,6 @@ EthLif::IsOOBMnic()
 {
     return (info_.type ==
             types::LIF_TYPE_MNIC_OOB_MANAGEMENT);
-#if 0
-    Uplink *up = GetUplink();
-    if (up) {
-        return up->IsOOB();
-    }
-    return false;
-#endif
 }
 
 bool

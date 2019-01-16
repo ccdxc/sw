@@ -275,7 +275,6 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     };
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
-    hal_lif_info_.id = lif_base;
     hal_lif_info_.hw_lif_id = lif_base;
     hal_lif_info_.name = spec->name;
     hal_lif_info_.type = types::LIF_TYPE_NONE;
@@ -1121,7 +1120,7 @@ Accel_PF::_DevcmdCryptoKeyUpdate(void *req, void *req_data,
     key_accum->num_key_parts = std::min(key_accum->num_key_parts + 1,
                                         (uint32_t)CMD_CRYPTO_KEY_PART_MAX);
     if (cmd->trigger_update) {
-        ret_val = hal->crypto_key_index_update(cmd->key_index,
+        ret_val = hal->CryptoKeyIndexUpdate(cmd->key_index,
                               crypto_key_type_tbl[cmd->key_type],
                               &key_accum->key_data[0][0],
                               key_accum->num_key_parts * CMD_CRYPTO_KEY_PART_SIZE);

@@ -85,7 +85,6 @@ struct queue_info {
  * Lif info structure set by LifCreateF
  */
 struct lif_info {
-  uint64_t lif_id;
   uint64_t hw_lif_id;
   types::LifType lif_type;
   bool enable_rdma;
@@ -156,138 +155,11 @@ public:
 
   ForwardingMode get_fwd_mode() { return this->fwd_mode; }
 
-#if 0
-  /* Segment APIs */
-  int L2SegmentProbe();
-
-  uint64_t L2SegmentGet(uint64_t l2seg_id);
-
-  uint64_t L2SegmentCreate(uint64_t vrf_id,
-                           uint64_t l2seg_id,
-                           uint16_t vlan_id);
-
-  int AddL2SegmentOnUplink(uint64_t uplink_id,
-                           uint64_t l2seg_id);
-
-  /* VRF APIs */
-  int VrfProbe();
-
-  uint64_t VrfGet(uint64_t vrf_id);
-
-  uint64_t VrfCreate(uint64_t vrf_id);
-
-  /* Uplink APIs */
-  int UplinkProbe();
-
-  uint64_t UplinkCreate(uint64_t uplink_id,
-                        uint64_t port_num,
-                        uint64_t native_l2seg_id);
-
-  int UplinkDelete(uint64_t uplink_id);
-
-  /* Endpoint NIC APIs */
-  uint64_t EnicCreate(uint64_t enic_id,
-                      uint64_t lif_id,
-                      uint64_t native_l2seg_id,
-                      vector<uint64_t>& nonnative_l2seg_id);
-
-  int EnicDelete(uint64_t enic_id);
-
-  /* Endpoint APIs */
-  int EndpointProbe();
-
-  uint64_t EndpointCreate(uint64_t vrf_id,
-                          uint64_t l2seg_id,
-                          uint64_t enic_id,
-                          uint64_t mac_addr);
-
-  int EndpointDelete(uint64_t vrf_id,
-                     uint64_t l2seg_id,
-                     uint64_t enic_id,
-                     uint64_t mac_addr);
-
-  /* Interface APIs */
-  int InterfaceProbe();
-
-  int InterfaceDelete(uint64_t if_id);
-
-  /* LIF APIs */
-  int LifProbe();
-
-#endif
-  uint64_t LifGet(uint64_t lif_id, struct lif_info *lif_info);
-
-  uint64_t LifCreate(uint64_t lif_id,
-                     struct queue_info* queue_info,
-                     struct lif_info *lif_info,
-                     uint64_t uplink_id,
-                     bool enable_rdma,
-                     uint32_t max_pt_entries,
-                     uint32_t max_keys,
-                     uint32_t max_ahs,
-                     uint32_t hw_lif_id = 0);
-
   uint64_t LifCreate(hal_lif_info_t *hal_lif_info);
 
-  uint64_t LifDelete(uint64_t lif_id);
-
-  int LifSetVlanOffload(uint64_t lif_id, bool strip, bool insert);
-
-  int LifSetFilterMode(uint64_t lif_id, bool bcast, bool all_mc, bool promisc);
-
-  int LifSetRssConfig(uint64_t lif_id, LifRssType type, string key, string table);
-
   int PgmBaseAddrGet(const char *prog_name, uint64_t *base_addr);
-  int AllocHbmAddress(const char *handle, uint64_t *addr, uint32_t *size);
 
-  /* Multicast APIs */
-
-  // (vrf_id, l2seg_id, group) > enic_id
-  map<tuple<uint64_t, uint64_t, uint64_t>, vector<uint64_t>> mcast_groups;
-
-  int MulticastProbe();
-
-  int MulticastGroupGet(uint64_t group,
-                        uint64_t vrf_id,
-                        uint64_t l2seg_id);
-
-  int MulticastGroupCreate(uint64_t group,
-                           uint64_t vrf_id,
-                           uint64_t l2seg_id);
-
-  int MulticastGroupUpdate(uint64_t group,
-                           uint64_t vrf_id,
-                           uint64_t l2seg_id,
-                           vector<uint64_t>& oifs_list);
-
-  int MulticastGroupJoin(uint64_t group,
-                         uint64_t vrf_id,
-                         uint64_t l2seg_id,
-                         uint64_t enic_id);
-
-  int MulticastGroupLeave(uint64_t group,
-                          uint64_t vrf_id,
-                          uint64_t l2seg_id,
-                          uint64_t enic_id);
-
-  int MulticastGroupDelete(uint64_t group,
-                           uint64_t vrf_id,
-                           uint64_t l2seg_id);
-
-  /* RDMA APIs */
-
-  int RDMACreateEQ(uint64_t lif_id, uint32_t eq_num,
-                   uint32_t num_eq_wqes, uint32_t eq_wqe_size,
-                   uint32_t eqe_base_addr_pa, uint32_t int_num);
-
-  int RDMACreateCQ(uint64_t lif_id,
-                   uint32_t cq_num, uint16_t cq_wqe_size, uint16_t num_cq_wqes,
-                   uint32_t host_pg_size,
-                   uint64_t pa, uint32_t eq_num);
-
-  int RDMACreateAdminQ(uint64_t lif_id, uint32_t aq_num,
-                       uint32_t log_num_wqes, uint32_t log_wqe_size,
-                       uint64_t va, uint32_t cq_num);
+  /* Accel APIs */
   int AccelRGroupAdd(const std::string& rgroup_name);
   int AccelRGroupDel(const std::string& rgroup_name);
   int AccelRGroupRingAdd(const std::string& rgroup_name,
@@ -319,37 +191,16 @@ public:
                             accel_rgroup_rmetrics_rsp_cb_t rsp_cb_func,
                             void *user_ctx,
                             uint32_t& ret_num_entries);
-  int crypto_key_index_update(uint32_t key_index,
-                              types::CryptoKeyType key_type,
-                              void *key,
-                              uint32_t key_size);
+  int CryptoKeyIndexUpdate(uint32_t key_index,
+                            types::CryptoKeyType key_type,
+                            void *key,
+                            uint32_t key_size);
 
-    /* Filter APIs */
-  int FilterAdd(uint64_t lif_id, uint64_t mac, uint32_t vlan);
-  int FilterDel(uint64_t lif_id, uint64_t mac, uint32_t vlan);
-
-  static int32_t GetTxTrafficClassCos(const std::string &group, uint32_t uplink_port);
-
-  /* State */
-  map<uint64_t, LifSpec> lif_map;               /* lif_id to lif_spec */
-  map<uint64_t, uint64_t> lif2enic_map;         /* lif_id to enic_id */
-
-  map<uint64_t, InterfaceSpec> enic_map;        /* enic_id to enic_spec */
-  map<uint64_t, vector<uint64_t>> enic2ep_map;  /* enic_id to ep_handle */
-
-  map<uint64_t, uint64_t> uplink2id;            /* uplink_port to uplink_id */
-  map<uint32_t, uint64_t> seg2vlan;             /* l2seg_id to vlan_id */
-  map<uint32_t, uint64_t> vlan2seg;             /* vlan_id to l2seg_id */
-
-  map<uint64_t, uint64_t> vrf_id2handle;        /* vrf_id to vrf_handle */
-  map<uint64_t, uint64_t> enic_id2handle;       /* enic_handle to enic_id */
-  map<uint64_t, uint64_t> l2seg_id2handle;      /* l2seg_id to l2seg_handle */
-
-  map<uint64_t, EthLif*> eth_lif_map;
-
+  /* Port APIs */
   int PortStatusGet(uint32_t portnum, port_status_t &pi);
 
-  friend ostream& operator<<(ostream&, const HalClient&);
+  /* State */
+  map<uint64_t, EthLif*> eth_lif_map;
 
   enum ForwardingMode fwd_mode;
 
