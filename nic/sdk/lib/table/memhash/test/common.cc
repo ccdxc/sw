@@ -79,8 +79,8 @@ h5_gendata ()
     static uint32_t index = 1;
     static mem_hash_h5_appdata_t data;
 
-    data.d2 = 1;
-    data.d1 = index++;
+    data.d1 = 1;
+    data.d2 = index++;
 
     return (void *)&data;
 }
@@ -103,8 +103,8 @@ h5_data2str(void *data)
 
     len += sprintf(str, "Valid:%d D1:%d D2:%d",
                    acdata->action_u.info.entry_valid, 
-                   acdata->action_u.info.appdata.d1,
-                   acdata->action_u.info.appdata.d2);
+                   acdata->action_u.info.d1,
+                   acdata->action_u.info.d2);
 
     if (acdata->action_u.info.hint1) {
         len += sprintf(str + len, "Hash1:%#x Hint1:%d ",
@@ -133,7 +133,7 @@ h5_data2str(void *data)
     }
     if (acdata->action_u.info.more_hints) {
         len += sprintf(str + len, "MoreHashs:%#x MoreHints:%d",
-                      acdata->action_u.info.more_hashes,
+                      acdata->action_u.info.more_hashs,
                       acdata->action_u.info.more_hints);
     }
 

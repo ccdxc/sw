@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* RVPATH check                                                              */
 /*****************************************************************************/
+@pragma capi appdatafields vcn_id subnet_id overlay_mac
+@pragma capi hwfields_access_api
 action remote_vnic_mapping_rx_info(entry_valid, vcn_id, subnet_id, overlay_mac,
                                    hash1, hint1, hash2, hint2, hash3,
                                    hint3, hash4, hint4, hash5, hint5,

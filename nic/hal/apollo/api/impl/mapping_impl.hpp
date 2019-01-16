@@ -23,23 +23,6 @@ namespace impl {
  * @{
  */
 
-typedef struct local_ip_mapping_data_s {
-    uint16_t    vcn_id;
-    uint8_t     vcn_id_valid;    // TODO: when is this used ?
-    uint32_t    xlate_index;
-    uint8_t     ip_type;         // TODO: there is no use for this anymore !!
-} __PACK__ local_ip_mapping_data_t;
-
-typedef struct remote_vnic_mapping_rx_data_s {
-    uint16_t    vcn_id;
-    uint16_t    subnet_id;
-    uint8_t     overlay_mac[6];
-} __PACK__ remote_vnic_mapping_rx_data_t;
-
-typedef struct remote_vnic_mapping_tx_data_s {
-    uint16_t    nexthop_index;
-} __PACK__ remote_vnic_mapping_tx_data_t;
-
 /**
  * @brief    mapping implementation
  */

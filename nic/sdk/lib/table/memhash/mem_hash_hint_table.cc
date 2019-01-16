@@ -83,7 +83,8 @@ mem_hash_hint_table::alloc_(mem_hash_api_context *ctx) {
                         indexer_->get_size());
         return SDK_RET_NO_RESOURCE;
     }
-    SDK_TRACE_DEBUG("%s: Allocated index:%d", ctx->idstr(), ctx->hint);
+    SDK_TRACE_DEBUG("%s: Allocated index:%d Meta:[%s]",
+                    ctx->idstr(), ctx->hint, ctx->metastr());
 
     // Set write pending
     ctx->write_pending = true;
@@ -247,7 +248,7 @@ sdk_ret_t
 mem_hash_hint_table::defragment_(mem_hash_api_context *ectx) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *tctx = NULL;
-    mem_hash_api_context *pctx = NULL;
+    mem_hash_api_context *tempctx = NULL;
 
     // Defragmentation Sequence
     // vars used in this function:
@@ -284,12 +285,11 @@ mem_hash_hint_table::defragment_(mem_hash_api_context *ectx) {
         // We have to destroy only the chain built by the tail traversal
         // when etcx == tctx, all the parent contexts will be freed when
         // the recursive stack unwinds.
-        pctx = tctx->pctx;
-        mem_hash_api_context::destroy(tctx);
-        while (pctx && pctx != ectx) {
-            tctx = pctx;
+        tempctx = tctx->pctx;
+        while (tctx && tctx != ectx) {
             mem_hash_api_context::destroy(tctx);
-            pctx = pctx->pctx;
+            tctx = tempctx;
+            tempctx = tctx->pctx;
         }
     }
 

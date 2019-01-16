@@ -47,8 +47,9 @@ typedef struct mem_hash_factory_params_ {
 typedef struct mem_hash_api_params_ {
     void *key; // Input Param
     void *appdata; // Input Param
-    bool hash_valid; // Input Param
-    uint32_t hash_32b; // Input/Output Param
+    uint8_t action_id; // Input Param
+    bool hash_valid; // Input/Output Param (Input is Optional) 
+    uint32_t hash_32b; // Input/Output Param (Input is Optional)
     mem_hash_handle_t handle; // Input/Output Param
 } mem_hash_api_params_t;
 
@@ -61,7 +62,6 @@ typedef struct mem_hash_properties_ {
     uint32_t num_hints;
     uint32_t key_len;
     uint32_t data_len;
-    uint32_t appdata_len;
     uint32_t max_recircs;
     uint32_t hash_poly;
     table_health_monitor_func_t health_monitor_func;

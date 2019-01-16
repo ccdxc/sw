@@ -4638,6 +4638,48 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
 }
 
 //::        if genappdatafield_api:
+uint32_t
+${api_prefix}_actiondata_appdata_size_get(uint32_t   tableid,
+                            uint8_t    actionid)
+{
+    switch (tableid) {
+//::            for table, tid in tabledict.items():
+//::                if pddict['tables'][table]['appdatafields']:
+//::                    caps_tablename = table.upper()
+        case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
+            switch (actionid) {
+//::                    for action in pddict['tables'][table]['actions']:
+//::                        actionname, _ = action
+//::                        caps_actname = actionname.upper()
+//::                        fieldlist = pddict['tables'][table]['appdatafields'][actionname]
+//::                        if len(fieldlist):
+                case ${caps_tablename}_${caps_actname}_ID:
+                return sizeof(${table}_appdata_t);
+                break;
+//::                        #endif
+//::                    #endfor
+                default:
+                    // Invalid action
+                    assert(0);
+                    return (P4PD_FAIL);
+                break;
+            }
+        break;
+//::                #else:
+//::                    continue
+//::                #endif
+//::            #endfor
+        default:
+            // Invalid tableid
+            assert(0);
+            return (P4PD_FAIL);
+        break;
+    }
+
+    assert(0);
+    return 0;
+}
+
 p4pd_error_t
 ${api_prefix}_actiondata_appdata_set(uint32_t   tableid,
                             uint8_t    actionid,
@@ -4657,7 +4699,9 @@ ${api_prefix}_actiondata_appdata_set(uint32_t   tableid,
 //::                        if len(fieldlist):
                 case ${caps_tablename}_${caps_actname}_ID:
 //::                            for fieldname, fieldwidth in fieldlist:
-                ((${table}_actiondata_t*)actiondata)->action_u.${table}_${actionname}.${fieldname} = ((${table}_appdata_t*)appdata)->${fieldname};
+                memcpy(&((${table}_actiondata_t*)actiondata)->action_u.${table}_${actionname}.${fieldname},
+                       &((${table}_appdata_t*)appdata)->${fieldname},
+                       sizeof(((${table}_appdata_t*)appdata)->${fieldname}));
 //::                            #endfor
                 break;
 //::                        #endif
@@ -4699,7 +4743,9 @@ ${api_prefix}_actiondata_appdata_get(uint32_t   tableid,
 //::                        if len(fieldlist):
                 case ${caps_tablename}_${caps_actname}_ID:
 //::                            for fieldname, fieldwidth in fieldlist:
-                ((${table}_appdata_t*)appdata)->${fieldname} = ((${table}_actiondata_t*)actiondata)->action_u.${table}_${actionname}.${fieldname};
+                memcpy(&((${table}_appdata_t*)appdata)->${fieldname},
+                       &((${table}_actiondata_t*)actiondata)->action_u.${table}_${actionname}.${fieldname},
+                       sizeof(((${table}_appdata_t*)appdata)->${fieldname}));
 //::                            #endfor
                 break;
 //::                        #endif
@@ -4818,6 +4864,7 @@ ${api_prefix}_actiondata_hwfield_set(uint32_t   tableid,
                     return (P4PD_FAIL);
                 break;
             }
+            break;
 //::                #else:
 //::                    continue
 //::                #endif
@@ -4885,6 +4932,7 @@ ${api_prefix}_actiondata_hwfield_get(uint32_t   tableid,
                     return (P4PD_FAIL);
                 break;
             }
+            break;
 //::                #else:
 //::                    continue
 //::                #endif

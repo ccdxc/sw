@@ -1,6 +1,8 @@
 /******************************************************************************/
 /* Local IP mapping                                                           */
 /******************************************************************************/
+@pragma capi appdatafields vcn_id vcn_id_valid xlate_index ip_type
+@pragma capi hwfields_access_api
 action local_ip_mapping_info(entry_valid,
                              vcn_id, vcn_id_valid, xlate_index, ip_type,
                              hash1, hint1, hash2, hint2, hash3, hint3,
@@ -154,6 +156,8 @@ control local_ip_mapping {
 /******************************************************************************/
 /* IP mapping on TX direction                                                 */
 /******************************************************************************/
+@pragma capi appdatafields nexthop_index
+@pragma capi hwfields_access_api
 action remote_vnic_mapping_tx_info(entry_valid, nexthop_index,
                                    hash1, hint1, hash2, hint2, hash3, hint3,
                                    hash4, hint4, hash5, hint5, hash6, hint6,

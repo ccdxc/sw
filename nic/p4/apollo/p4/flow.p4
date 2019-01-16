@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* Policy                                                                    */
 /*****************************************************************************/
+@pragma capi appdatafields flow_index flow_role
+@pragma capi hwfields_access_api
 action flow_hash(entry_valid, flow_index, flow_role,
                  hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
                  hash5, hint5, more_hashes, more_hints) {

@@ -71,13 +71,13 @@ mem_hash_main_table::destroy_(mem_hash_main_table *table) {
 sdk_ret_t
 mem_hash_main_table::initctx_(mem_hash_api_context *ctx) {
     // By now, we should have a valid hash value.
-    SDK_ASSERT(ctx->hash_valid);
+    SDK_ASSERT(ctx->in_hash_valid);
 
     ctx->table_id = table_id_;
 
     // Derive the table_index
-    ctx->table_index = ctx->hash_32b % table_size_;
-    ctx->hash_msbits = (ctx->hash_32b >> num_table_index_bits_) & MASK(num_hash_bits_);
+    ctx->table_index = ctx->in_hash_32b % table_size_;
+    ctx->hash_msbits = (ctx->in_hash_32b >> num_table_index_bits_) & MASK(num_hash_bits_);
     ctx->bucket = &buckets_[ctx->table_index];
     SDK_ASSERT(ctx->bucket);
 
@@ -93,15 +93,36 @@ mem_hash_main_table::initctx_(mem_hash_api_context *ctx) {
 sdk_ret_t
 mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
+    
+    // INSERT SEQUENCE:
+    // 1) Insert to Main Table
+    // 2) If COLLISION:
+    //      2.1) Call Hint Table insert api
+    //          2.1.1) Insert to Hint Table
+    //          2.1.2) If COLLISION:
+    //              2.1.2.1) Recursive call to (2.1)
+    //          2.1.3) If SUCCESS, write Hint Table bucket to HW
+    //      2.2) If Hint Table insert is Successful,
+    //           Write the Main Table bucket to HW
+    // 3) Else if SUCCESS, insert is complete.
 
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
     ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->insert_(ctx);
+    if (ret == SDK_RET_COLLISION) {
+        // COLLISION case
+        ret = hint_table_->insert_(ctx);
+    }
 
     if (ret == SDK_RET_OK) {
-        // Write to HW only if this is a terminal node.
-        // In case of collision, write will be called after
-        // the downstream nodes are written.
+        // 2 CASES:
+        // CASE 1: Write to HW only if this is a terminal node.
+        // 
+        // CASE 2: In case of collision, after the downstream nodes are 
+        //         written. we can update the main entry. This will ensure 
+        //         make before break for any downstream changes.
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->write_(ctx);
+    } else {
+        SDK_TRACE_DEBUG("MainTable: insert failed: ret:%d", ret);
     }
 
     return ret;
@@ -124,8 +145,8 @@ mem_hash_main_table::find_(mem_hash_api_context *ctx,
                            mem_hash_api_context **match_ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    if (!ctx->hw_valid) {
-        // If hw_valid, then context is already initialized.
+    if (!ctx->sw_valid) {
+        // If sw_valid, then context is already initialized.
         SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
     }
 

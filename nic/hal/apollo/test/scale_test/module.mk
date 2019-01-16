@@ -10,7 +10,7 @@ MODULE_SOLIBS   = pal ociframework ocicore ociapi ociapi_impl ocitestutils \
                   sdkp4 sdkp4utils sdkcapri_csrint sdkcapri_asicrw_if sdkcapri \
 				  sdkplatformutils sdkxcvrdriver sdkasicpd lpmitree \
                   p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
-                  bm_allocator mtrack sdklinkmgr sdklinkmgrcsr
+                  bm_allocator mtrack sdklinkmgr sdklinkmgrcsr memhash
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
 				   ${NIC_CAPSIM_LDLIBS} \
 				   ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

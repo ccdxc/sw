@@ -43,7 +43,7 @@ typedef struct __attribute__((__packed__)) __mem_hash_h10_info {
     uint16_t hint9;
     uint16_t hash10;
     uint16_t hint10;
-    uint8_t more_hashes;
+    uint8_t more_hashs;
     uint16_t more_hints;
 } mem_hash_h10_info_t;
 
@@ -67,24 +67,25 @@ typedef struct __attribute__((__packed__)) __mem_hash_h5_key {
 } mem_hash_h5_key_t;
 
 typedef struct __attribute__((__packed__)) __mem_hash_h5_appdata {
-    uint32_t d1;
-    uint8_t d2;
+    uint8_t d1;
+    uint32_t d2;
 } mem_hash_h5_appdata_t;
 
 typedef struct __attribute__((__packed__)) __mem_hash_h5_info {
-    mem_hash_h5_appdata_t appdata;
     uint8_t entry_valid;
-    uint8_t hash1;
+    uint8_t d1;
+    uint32_t d2;
+    uint16_t hash1;
     uint32_t hint1;
-    uint8_t hash2;
+    uint16_t hash2;
     uint32_t hint2;
-    uint8_t hash3;
+    uint16_t hash3;
     uint32_t hint3;
-    uint8_t hash4;
+    uint16_t hash4;
     uint32_t hint4;
-    uint8_t hash5;
+    uint16_t hash5;
     uint32_t hint5;
-    uint8_t more_hashes;
+    uint8_t more_hashs;
     uint32_t more_hints;
 } mem_hash_h5_info_t;
 
@@ -106,10 +107,21 @@ typedef enum mem_hash_p4pd_table_ids_ {
     MEM_HASH_P4TBL_ID_MAX        = 5,
 } mem_hash_p4_table_id;
 
+typedef enum mem_hash_h5_action_ids {
+    MEM_HASH_P4TBL_ID_H5_ACTION_ID_0    = 0,
+} mem_hash_h5_action_ids_t;
+
+typedef enum mem_hash_h10_action_ids {
+    MEM_HASH_P4TBL_ID_H10_ACTION_ID_0    = 0,
+} mem_hash_h10_action_ids_t;
+
 int
 mem_hash_mock_init ();
 
 int
 mem_hash_mock_cleanup ();
+
+uint32_t
+mem_hash_mock_get_valid_count (uint32_t table_id);
 
 #endif

@@ -21,8 +21,48 @@
 void *__zmq_sock;
 void *__zmq_context;
 const char* __lmodel_env = getenv("CAPRI_MOCK_MODE");
+const char* __lmodel_mock_memory_mode = getenv("CAPRI_MOCK_MEMORY_MODE");
 const char* __write_verify_enable = getenv("CAPRI_WRITE_VERIFY_ENABLE");
 std::mutex g_zmq_mutex;
+
+uint64_t __mock_mem_base = 0xC0000000ul;
+uint64_t __mock_mem_size = 4294967295ul;
+uint8_t *__mock_mem;
+
+int mock_memory_init()
+{
+    __mock_mem = (uint8_t *)malloc(__mock_mem_size);
+    memset(__mock_mem, 0, sizeof(__mock_mem_size));
+    return 0;
+}
+
+bool mock_memory_write (uint64_t addr, uint8_t * data, uint32_t size)
+{
+    uint64_t offset = 0;
+    if (!__mock_mem) mock_memory_init();
+    offset = addr - __mock_mem_base;
+    if (offset > __mock_mem_size) {
+        assert(0);
+    }
+    //printf("mock_memory_write: addr:%p size:%d\n",
+    //       __mock_mem + offset, size);
+    memcpy(__mock_mem + offset, data, size);
+    return true;
+}
+
+bool mock_memory_read (uint64_t addr, uint8_t * data, uint32_t size)
+{
+    uint64_t offset = 0;
+    if (!__mock_mem) mock_memory_init();
+    offset = addr - __mock_mem_base;
+    if (offset > __mock_mem_size) {
+        assert(0);
+    }
+    //printf("mock_memory_read: addr:%p size:%d\n",
+    //       __mock_mem + offset, size);
+    memcpy(data, __mock_mem + offset, size);
+    return true;
+}
 
 int lib_model_connect ()
 {
@@ -30,9 +70,14 @@ int lib_model_connect ()
     int         rc;
     uint16_t    event;
     int         timeout_ms = MODEL_ZMQ_SOCK_TIMEOUT_SEC * 1000;
+    
+    if (__lmodel_mock_memory_mode) {
+        return mock_memory_init();
+    }
 
-    if (__lmodel_env)
+    if (__lmodel_env) {
         return 0;
+    }
 
     if (getenv("MODEL_TIMEOUT")) {
         printf("Setting MODEL_TIMEOUT to %s\n", getenv("MODEL_TIMEOUT"));
@@ -248,9 +293,14 @@ bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
 
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
+    
+    if (__lmodel_mock_memory_mode) {
+        return mock_memory_read(addr, data, size);
+    }
 
-    if (__lmodel_env)
+    if (__lmodel_env) {
         return true;
+    }
     if (size > MODEL_ZMQ_MEM_BUFF_SIZE)
         assert(0);
     buff = (buffer_hdr_t *) buffer;
@@ -265,7 +315,6 @@ bool read_mem (uint64_t addr, uint8_t * data, uint32_t size)
     return true;
 }
 
-
 bool write_mem_pcie (uint64_t addr, uint8_t * data, uint32_t size)
 {
     int rc;
@@ -274,9 +323,14 @@ bool write_mem_pcie (uint64_t addr, uint8_t * data, uint32_t size)
 
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
+    
+    if (__lmodel_mock_memory_mode) {
+        return mock_memory_write(addr, data, size);
+    }
 
-    if (__lmodel_env)
+    if (__lmodel_env) {
         return true;
+    }
     buff = (buffer_hdr_t *) buffer;
     buff->type = BUFF_TYPE_MEM_WRITE_PCIE;
     buff->addr = addr;
@@ -308,6 +362,10 @@ bool write_mem (uint64_t addr, uint8_t * data, uint32_t size)
 
     char buffer[MODEL_ZMQ_MEM_BUFF_SIZE] = {0};
     buffer_hdr_t *buff;
+
+    if (__lmodel_mock_memory_mode) {
+        return mock_memory_write(addr, data, size);
+    }
 
     if (__lmodel_env)
         return true;

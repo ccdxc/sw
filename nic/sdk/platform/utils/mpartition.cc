@@ -125,7 +125,11 @@ mem_addr_t
 mpartition::start_addr(const char *name)
 {
     mem_addr_t start_offset = this->start_offset(name);
-    return start_offset != INVALID_MEM_ADDRESS ? addr(start_offset) : INVALID_MEM_ADDRESS;
+    if (start_offset == INVALID_MEM_ADDRESS) {
+        SDK_TRACE_ERR("ERROR: Invalid start_offset for name: %s", name);
+        return start_offset;
+    }
+    return addr(start_offset);
 }
 
 uint32_t

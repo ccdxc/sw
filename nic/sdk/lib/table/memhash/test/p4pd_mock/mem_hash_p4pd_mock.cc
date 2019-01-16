@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stddef.h>
 
 #include "lib/p4/p4_api.hpp"
 #include "mem_hash_p4pd_mock.hpp"
@@ -132,6 +133,33 @@ mem_hash_mock_cleanup ()
     return 0;
 }
 
+uint32_t
+mem_hash_mock_get_valid_count (uint32_t table_id)
+{
+    uint32_t count = 0;
+    for (uint32_t i = 0; i < mem_hash_mock_table_sizes[table_id].tsize; i++) {
+        switch (table_id) {
+        case MEM_HASH_P4TBL_ID_H10:
+        case MEM_HASH_P4TBL_ID_H10_OHASH:
+        {
+            mem_hash_h10_actiondata_t *dlist = (mem_hash_h10_actiondata_t *)(mocktables[table_id].dlist);
+            count = count + dlist[i].action_u.info.entry_valid;
+            break;
+        }
+        case MEM_HASH_P4TBL_ID_H5:
+        case MEM_HASH_P4TBL_ID_H5_OHASH:
+        {
+            mem_hash_h5_actiondata_t *dlist = (mem_hash_h5_actiondata_t *)(mocktables[table_id].dlist);
+            count = count + dlist[i].action_u.info.entry_valid;
+            break;
+        }
+        default:
+            assert(0);
+        }
+    }
+    return count;
+}
+
 int 
 p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwkey,
                   unsigned char *hwkey_y, void *actiondata)
@@ -218,7 +246,6 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     props->tablename = (char *) "MemHashMainTable";
     props->key_struct_size = sizeinfo->ksize;
     props->actiondata_struct_size = sizeinfo->dsize;
-    props->appdata_struct_size = sizeinfo->asize;
     props->hash_type = 0;
     props->tabledepth = sizeinfo->tsize;
     
@@ -234,6 +261,7 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
 }
 
 // ===================== NEW FUNCTIONS =======================
+#if 0
 p4pd_error_t
 p4pd_mem_hash_entry_set_action_id(uint32_t table_id,
                                   void *data,
@@ -458,23 +486,23 @@ p4pd_mem_hash_entry_get_more_hints(uint32_t table_id,
 
 
 p4pd_error_t
-p4pd_mem_hash_entry_set_more_hashes(uint32_t table_id,
+p4pd_mem_hash_entry_set_more_hashs(uint32_t table_id,
                                    void *data,
-                                   uint32_t more_hashes)
+                                   uint32_t more_hashs)
 {
     switch (table_id) {
     case MEM_HASH_P4TBL_ID_H10:
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
         mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)data;
-        dst->action_u.info.more_hashes = more_hashes;
+        dst->action_u.info.more_hashs = more_hashs;
         break;
     }
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
     {
         mem_hash_h5_actiondata_t *dst = (mem_hash_h5_actiondata_t *)data;
-        dst->action_u.info.more_hashes = more_hashes;
+        dst->action_u.info.more_hashs = more_hashs;
         break;
     }
     default:
@@ -484,7 +512,7 @@ p4pd_mem_hash_entry_set_more_hashes(uint32_t table_id,
 }
 
 uint8_t
-p4pd_mem_hash_entry_get_more_hashes(uint32_t table_id,
+p4pd_mem_hash_entry_get_more_hashs(uint32_t table_id,
                                    void *data)
 {
     switch (table_id) {
@@ -492,14 +520,14 @@ p4pd_mem_hash_entry_get_more_hashes(uint32_t table_id,
     case MEM_HASH_P4TBL_ID_H10_OHASH:
     {
         mem_hash_h10_actiondata_t *dst = (mem_hash_h10_actiondata_t *)data;
-        return dst->action_u.info.more_hashes;
+        return dst->action_u.info.more_hashs;
         break;
     }
     case MEM_HASH_P4TBL_ID_H5:
     case MEM_HASH_P4TBL_ID_H5_OHASH:
     {
         mem_hash_h5_actiondata_t *dst = (mem_hash_h5_actiondata_t *)data;
-        return dst->action_u.info.more_hashes;
+        return dst->action_u.info.more_hashs;
         break;
     }
     default:
@@ -605,3 +633,231 @@ p4pd_mem_hash_entry_get_num_hints(uint32_t table_id)
     }
     return 0;
 }
+#endif
+
+p4pd_error_t
+p4pd_actiondata_appdata_set(uint32_t   tableid,
+                            uint8_t    actionid,
+                            void       *appdata,
+                            void       *actiondata)
+{
+    switch (tableid) {
+        case MEM_HASH_P4TBL_ID_H5:
+        case MEM_HASH_P4TBL_ID_H5_OHASH:
+            switch (actionid) {
+                case MEM_HASH_P4TBL_ID_H5_ACTION_ID_0:
+                ((mem_hash_h5_actiondata_t*)actiondata)->action_u.info.d1 = ((mem_hash_h5_appdata_t*)appdata)->d1;
+                ((mem_hash_h5_actiondata_t*)actiondata)->action_u.info.d2 = ((mem_hash_h5_appdata_t*)appdata)->d2;
+                break;
+                default:
+                    // Invalid action
+                    return (P4PD_FAIL);
+                break;
+            }
+        break;
+        default:
+            // Invalid tableid
+            return (P4PD_FAIL);
+        break;
+    }
+    return (P4PD_SUCCESS);
+}
+
+p4pd_error_t
+p4pd_actiondata_appdata_get(uint32_t   tableid,
+                            uint8_t    actionid,
+                            void       *appdata,
+                            void       *actiondata)
+{
+    switch (tableid) {
+        case MEM_HASH_P4TBL_ID_H5:
+        case MEM_HASH_P4TBL_ID_H5_OHASH:
+            switch (actionid) {
+                case MEM_HASH_P4TBL_ID_H5_ACTION_ID_0:
+                ((mem_hash_h5_appdata_t*)appdata)->d1 = ((mem_hash_h5_actiondata_t*)actiondata)->action_u.info.d1;
+                ((mem_hash_h5_appdata_t*)appdata)->d2 = ((mem_hash_h5_actiondata_t*)actiondata)->action_u.info.d2;
+                break;
+                default:
+                    // Invalid action
+                    return (P4PD_FAIL);
+                break;
+            }
+        break;
+        default:
+            // Invalid tableid
+            return (P4PD_FAIL);
+        break;
+    }
+    return (P4PD_SUCCESS);
+}
+
+uint32_t
+p4pd_actiondata_appdata_size_get(uint32_t   tableid,
+                                 uint8_t    actionid)
+{
+    switch (tableid) {
+        case MEM_HASH_P4TBL_ID_H5:
+        case MEM_HASH_P4TBL_ID_H5_OHASH:
+            switch (actionid) {
+                case MEM_HASH_P4TBL_ID_H5_ACTION_ID_0:
+                return sizeof(mem_hash_h5_appdata_t);
+                break;
+                default:
+                    assert(0);
+                    // Invalid action
+                    return (P4PD_FAIL);
+                break;
+            }
+        break;
+        default:
+            assert(0);
+            // Invalid tableid
+            return (P4PD_FAIL);
+        break;
+    }
+    assert(0);
+    return (0);
+}
+
+p4pd_error_t
+p4pd_actiondata_hwfield_set(uint32_t   tableid,
+                            uint8_t    actionid,
+                            uint32_t   argument_slotid,
+                            uint8_t    *argumentvalue,
+                            void       *actiondata)
+{
+    switch (tableid) {
+        case MEM_HASH_P4TBL_ID_H5:
+        case MEM_HASH_P4TBL_ID_H5_OHASH:
+            ((mem_hash_h5_actiondata_t*)actiondata)->action_id = actionid;
+            switch (actionid) {
+                case MEM_HASH_P4TBL_ID_H5_ACTION_ID_0:
+                    {
+                        if (argument_slotid >= 13) {
+                            assert(0);
+                            return (P4PD_FAIL);
+                        }
+                        uint32_t argument_offsets[] = {
+                            offsetof(mem_hash_h5_info_t, entry_valid),
+                            offsetof(mem_hash_h5_info_t, hash1),
+                            offsetof(mem_hash_h5_info_t, hint1),
+                            offsetof(mem_hash_h5_info_t, hash2),
+                            offsetof(mem_hash_h5_info_t, hint2),
+                            offsetof(mem_hash_h5_info_t, hash3),
+                            offsetof(mem_hash_h5_info_t, hint3),
+                            offsetof(mem_hash_h5_info_t, hash4),
+                            offsetof(mem_hash_h5_info_t, hint4),
+                            offsetof(mem_hash_h5_info_t, hash5),
+                            offsetof(mem_hash_h5_info_t, hint5),
+                            offsetof(mem_hash_h5_info_t, more_hashs),
+                            offsetof(mem_hash_h5_info_t, more_hints),
+                        };
+                        uint32_t argument_byte_width[] = {
+                            sizeof(uint8_t),
+                            sizeof(uint16_t),
+                            sizeof(uint32_t),
+                            sizeof(uint16_t),
+                            sizeof(uint32_t),
+                            sizeof(uint16_t),
+                            sizeof(uint32_t),
+                            sizeof(uint16_t),
+                            sizeof(uint32_t),
+                            sizeof(uint16_t),
+                            sizeof(uint32_t),
+                            sizeof(uint8_t),
+                            sizeof(uint32_t),
+                        };
+
+                        uint8_t* structbase = (uint8_t*)&(((mem_hash_h5_actiondata_t*)actiondata)->action_u);
+                        memcpy((structbase + argument_offsets[argument_slotid]),
+                                argumentvalue, argument_byte_width[argument_slotid]);
+                    }
+                break;
+                default:
+                    // Invalid action
+                    assert(0);
+                    return (P4PD_FAIL);
+                break;
+            }
+            break;
+        default:
+            // Invalid tableid
+            assert(0);
+            return (P4PD_FAIL);
+        break;
+    }
+    return (P4PD_SUCCESS);
+}
+
+p4pd_error_t
+p4pd_actiondata_hwfield_get(uint32_t   tableid,
+                            uint8_t    actionid,
+                            uint32_t   argument_slotid,
+                            uint8_t    *argumentvalue,
+                            void       *actiondata)
+{
+    switch (tableid) {
+        case MEM_HASH_P4TBL_ID_H5:
+        case MEM_HASH_P4TBL_ID_H5_OHASH:
+            switch (actionid) {
+                case MEM_HASH_P4TBL_ID_H5_ACTION_ID_0:
+                    {
+                        if (argument_slotid >= 13) {
+                            assert(0);
+                            return (P4PD_FAIL);
+                        }
+                        uint32_t argument_offsets[] = {
+                            offsetof(mem_hash_h5_info_t, entry_valid),
+                            offsetof(mem_hash_h5_info_t, hash1),
+                            offsetof(mem_hash_h5_info_t, hint1),
+                            offsetof(mem_hash_h5_info_t, hash2),
+                            offsetof(mem_hash_h5_info_t, hint2),
+                            offsetof(mem_hash_h5_info_t, hash3),
+                            offsetof(mem_hash_h5_info_t, hint3),
+                            offsetof(mem_hash_h5_info_t, hash4),
+                            offsetof(mem_hash_h5_info_t, hint4),
+                            offsetof(mem_hash_h5_info_t, hash5),
+                            offsetof(mem_hash_h5_info_t, hint5),
+                            offsetof(mem_hash_h5_info_t, more_hashs),
+                            offsetof(mem_hash_h5_info_t, more_hints),
+                        };
+                        uint32_t argument_byte_width[] = {
+                            sizeof(uint8_t),
+                            sizeof(uint16_t),
+                            sizeof(uint32_t),
+                            sizeof(uint16_t),
+                            sizeof(uint32_t),
+                            sizeof(uint16_t),
+                            sizeof(uint32_t),
+                            sizeof(uint16_t),
+                            sizeof(uint32_t),
+                            sizeof(uint16_t),
+                            sizeof(uint32_t),
+                            sizeof(uint8_t),
+                            sizeof(uint32_t),
+                        };
+                        uint8_t* structbase = (uint8_t*)&(((mem_hash_h5_actiondata_t*)actiondata)->action_u);
+                        memcpy(argumentvalue, (structbase + argument_offsets[argument_slotid]),
+                               argument_byte_width[argument_slotid]);
+                    }
+                break;
+                default:
+                    // Invalid action
+                    assert(0);
+                    return (P4PD_FAIL);
+                break;
+            }
+            break;
+        default:
+            // Invalid tableid
+            assert(0);
+            return (P4PD_FAIL);
+        break;
+    }
+    return (P4PD_SUCCESS);
+}
+
+
+
+
+

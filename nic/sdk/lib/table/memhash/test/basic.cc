@@ -29,8 +29,8 @@ protected:
         params.table_id = MEM_HASH_P4TBL_ID_H5;
         params.num_hints = 5;
         params.max_recircs = MAX_RECIRCS;
-        params.key2str = h5_key2str;
-        params.appdata2str = h5_appdata2str;
+        params.key2str = NULL; //h5_key2str;
+        params.appdata2str = NULL; //h5_appdata2str;
         table = mem_hash::factory(&params);
         assert(table);
         mem_hash_mock_init();

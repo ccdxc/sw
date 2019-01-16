@@ -18,6 +18,9 @@
 #include "nic/p4/apollo/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+
+using sdk::table::mem_hash_api_params_t;
 
 namespace impl {
 
@@ -146,7 +149,8 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
     sdk_ret_t                   ret;
     vnic_impl                   *vnic_impl_obj;
     local_ip_mapping_swkey_t    local_ip_mapping_key = { 0 };
-    local_ip_mapping_data_t     local_ip_mapping_data = { 0 };
+    local_ip_mapping_appdata_t  local_ip_mapping_data = { 0 };
+    mem_hash_api_params_t       api_params = { 0 };
 
     vnic_impl_obj =
         (vnic_impl *)vnic_db()->vnic_find(&mapping_info->vnic)->impl();
@@ -159,9 +163,12 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
     local_ip_mapping_data.vcn_id_valid = true;
     local_ip_mapping_data.xlate_index = nat_idx1_;
     local_ip_mapping_data.ip_type = IP_TYPE_OVERLAY;
-    ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(
-              &local_ip_mapping_key, &local_ip_mapping_data,
-              &local_ip_mapping_data_idx1_);
+
+    // Prepare the api parameters
+    api_params.key = &local_ip_mapping_key;
+    api_params.appdata = &local_ip_mapping_data;
+    api_params.action_id = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;
+    ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(&api_params);
     if ((ret != SDK_RET_OK) && (ret != sdk::SDK_RET_COLLISION)) {
         goto error;
     }
@@ -176,10 +183,14 @@ mapping_impl::add_local_ip_mapping_entries_(vcn_entry *vcn,
         local_ip_mapping_data.vcn_id_valid = true;
         local_ip_mapping_data.xlate_index = nat_idx2_;
         local_ip_mapping_data.ip_type = IP_TYPE_PUBLIC;
-        ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(
-                  &local_ip_mapping_key, &local_ip_mapping_data,
-                  &local_ip_mapping_data_idx2_);
-        if ((ret != SDK_RET_OK) && (ret != sdk::SDK_RET_COLLISION)) {
+   
+        // API params has input/output fields, cannot re-use it as it is.
+        memset(&api_params, 0, sizeof(api_params));
+        api_params.key = &local_ip_mapping_key;
+        api_params.appdata = &local_ip_mapping_data;
+        api_params.action_id = LOCAL_IP_MAPPING_LOCAL_IP_MAPPING_INFO_ID;
+        ret = mapping_impl_db()->local_ip_mapping_tbl()->insert(&api_params);
+        if (ret != SDK_RET_OK) {
             goto error;
         }
     }
@@ -202,8 +213,9 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
                                                   subnet_entry *subnet,
                                                   oci_mapping_t *mapping_info) {
     sdk_ret_t                         ret;
-    remote_vnic_mapping_rx_swkey_t    remote_vnic_mapping_rx_key = { 0 };
-    remote_vnic_mapping_rx_data_t     remote_vnic_mapping_rx_data = { 0 };
+    remote_vnic_mapping_rx_swkey_t remote_vnic_mapping_rx_key = { 0 };
+    remote_vnic_mapping_rx_appdata_t remote_vnic_mapping_rx_data = { 0 };
+    mem_hash_api_params_t api_params = { 0 };
 
     remote_vnic_mapping_rx_key.vnic_metadata_src_slot_id =
         mapping_info->slot;
@@ -213,10 +225,12 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
     remote_vnic_mapping_rx_data.subnet_id = subnet->hw_id();
     memcpy(remote_vnic_mapping_rx_data.overlay_mac,
            mapping_info->overlay_mac, ETH_ADDR_LEN);
-    ret = mapping_impl_db()->remote_vnic_mapping_rx_tbl()->insert(
-              &remote_vnic_mapping_rx_key, &remote_vnic_mapping_rx_data,
-              &remote_vnic_mapping_rx_idx_);
-    if (ret == SDK_RET_OK || sdk::SDK_RET_COLLISION) {
+
+    api_params.key = &remote_vnic_mapping_rx_key;
+    api_params.appdata = &remote_vnic_mapping_rx_data;
+    api_params.action_id = REMOTE_VNIC_MAPPING_RX_REMOTE_VNIC_MAPPING_RX_INFO_ID; 
+    ret = mapping_impl_db()->remote_vnic_mapping_rx_tbl()->insert(&api_params);
+    if (ret == SDK_RET_OK) {
         return SDK_RET_OK;
     }
     return ret;
@@ -231,10 +245,11 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
 sdk_ret_t
 mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
                                                   oci_mapping_t *mapping_info) {
-    sdk_ret_t                         ret;
-    remote_vnic_mapping_tx_swkey_t    remote_vnic_mapping_tx_key = { 0 };
-    remote_vnic_mapping_tx_data_t     remote_vnic_mapping_tx_data = { 0 };
-    tep_impl                          *tep_impl_obj;
+    sdk_ret_t ret;
+    remote_vnic_mapping_tx_swkey_t remote_vnic_mapping_tx_key = { 0 };
+    remote_vnic_mapping_tx_appdata_t remote_vnic_mapping_tx_data = { 0 };
+    tep_impl *tep_impl_obj;
+    mem_hash_api_params_t api_params = { 0 };
 
     tep_impl_obj =
         (tep_impl *)tep_db()->tep_find(&mapping_info->tep)->impl();
@@ -244,11 +259,13 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
            mapping_info->key.ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
     // TODO: dst_slot_id should come from here, p4 needs to change
     remote_vnic_mapping_tx_data.nexthop_index = tep_impl_obj->nh_id();
-    ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->insert(
-               &remote_vnic_mapping_tx_key,
-               &remote_vnic_mapping_tx_data,
-               &remote_vnic_mapping_tx_idx_);
-    if (ret == SDK_RET_OK || sdk::SDK_RET_COLLISION) {
+
+    api_params.key = &remote_vnic_mapping_tx_key;
+    api_params.appdata = &remote_vnic_mapping_tx_data;
+    api_params.action_id = REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID;
+
+    ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->insert(&api_params);
+    if (ret == SDK_RET_OK) {
         return SDK_RET_OK;
     }
     return ret;

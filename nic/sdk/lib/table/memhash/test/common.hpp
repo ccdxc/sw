@@ -12,6 +12,7 @@ using sdk::table::mem_hash_api_params_t;
 using sdk::table::mem_hash_factory_params_t;
 
 #define MAX_RECIRCS 8
+#define MAX_MORE_LEVELS (MAX_RECIRCS - 1)
 
 #define H5_MAX_HINTS 5
 #define H5_MAX_ENTRIES 16*1024*1024

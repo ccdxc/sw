@@ -45,12 +45,12 @@
             "cache": "p4ig"
         },
         {
-            "name": "remote_vnic_mapping_rx_overflow",
+            "name": "remote_vnic_mapping_rx_ohash",
             "size": "16384K",
             "cache": "p4ig"
         },
         {
-            "name": "local_ip_mappings_overflow",
+            "name": "local_ip_mapping_ohash",
             "size": "1024K",
             "cache": "p4ig"
         },
@@ -70,7 +70,7 @@
             "cache": "p4eg"
         },
         {
-            "name": "remote_vnic_mapping_tx_overflow",
+            "name": "remote_vnic_mapping_tx_ohash",
             "size": "16384K",
             "cache": "p4eg"
         },

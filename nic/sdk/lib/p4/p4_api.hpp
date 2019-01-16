@@ -110,7 +110,6 @@ typedef struct p4pd_table_properties_ {
     bool                    is_oflow_table;
     uint16_t                key_struct_size; /* SW Key struct size in bytes */
     uint16_t                actiondata_struct_size; /* SW action data struct size in bytes */
-    uint16_t                appdata_struct_size; /* SW app info struct size in bytes */
     uint32_t                tabledepth; /* Number of entries */
     uint8_t                 stage; /* Stage # in pipeline */
     uint8_t                 oflow_table_id; /* if has_otcam is True */
@@ -757,57 +756,34 @@ p4pd_global_table_properties_get(uint32_t tableid, void *tbl_ctx);
  * Functions to read/modify Mem Hash entries.
  */
 p4pd_error_t
-p4pd_mem_hash_entry_set_action_id(uint32_t table_id,
-                                  void *data,
-                                  uint32_t action_id);
+p4pd_actiondata_hwfield_set(uint32_t   tableid,
+                            uint8_t    actionid,
+                            uint32_t   argument_slotid,
+                            uint8_t    *argumentvalue,
+                            void       *actiondata);
 
 p4pd_error_t
-p4pd_mem_hash_entry_set_entry_valid(uint32_t table_id,
-                                    void *data,
-                                    uint8_t entry_valid);
-
-uint8_t
-p4pd_mem_hash_entry_get_entry_valid(uint32_t table_id,
-                                    void *data);
+p4pd_actiondata_hwfield_get(uint32_t   tableid,
+                            uint8_t    actionid,
+                            uint32_t   argument_slotid,
+                            uint8_t    *argumentvalue,
+                            void       *actiondata);
 
 p4pd_error_t
-p4pd_mem_hash_entry_set_hint(uint32_t table_id,
-                             void *swdata,
-                             uint32_t hint,
-                             uint32_t slot);
+p4pd_actiondata_appdata_get(uint32_t   tableid,
+                            uint8_t    actionid,
+                            void       *appdata,
+                            void       *actiondata);
 
 p4pd_error_t
-p4pd_mem_hash_entry_set_hash(uint32_t table_id,
-                             void *swdata,
-                             uint32_t hash,
-                             uint32_t slot);
-
-p4pd_error_t
-p4pd_mem_hash_entry_set_more_hints(uint32_t table_id,
-                                   void *swdata,
-                                   uint8_t more_hints);
-
-p4pd_error_t
-p4pd_mem_hash_entry_set_more_hashes(uint32_t table_id,
-                                    void *swdata,
-                                    uint32_t more_hashes);
+p4pd_actiondata_appdata_set(uint32_t   tableid,
+                            uint8_t    actionid,
+                            void       *appdata,
+                            void       *actiondata);
 
 uint32_t
-p4pd_mem_hash_entry_get_hash(uint32_t table_id,
-                             void *swdata,
-                             uint32_t slot);
+p4pd_actiondata_appdata_size_get(uint32_t   tableid,
+                                 uint8_t    actionid);
 
-uint32_t
-p4pd_mem_hash_entry_get_hint(uint32_t table_id,
-                             void *swdata,
-                             uint32_t slot);
-
-uint8_t
-p4pd_mem_hash_entry_get_more_hashes(uint32_t table_id,
-                                    void *swdata);
-
-uint32_t
-p4pd_mem_hash_entry_get_more_hints(uint32_t table_id,
-                                   void *swdata);
 
 #endif    // __P4_API_H__

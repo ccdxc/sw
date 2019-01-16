@@ -12,6 +12,10 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/p4/apollo/include/defines.h"
 
+#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+
+using sdk::table::mem_hash_factory_params_t;
+
 namespace impl {
 
 /**
@@ -24,49 +28,36 @@ namespace impl {
  * @brief    constructor
  */
 mapping_impl_state::mapping_impl_state(oci_state *state) {
-    p4pd_table_properties_t    tinfo, ctinfo;
+    p4pd_table_properties_t tinfo;
+    mem_hash_factory_params_t mhparams;
 
     /**< instantiate P4 tables for bookkeeping */
-    p4pd_table_properties_get(P4TBL_ID_LOCAL_IP_MAPPING, &tinfo);
-    p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
-    local_ip_mapping_tbl_ =
-        HbmHash::factory(tinfo.tablename, P4TBL_ID_LOCAL_IP_MAPPING,
-                         tinfo.oflow_table_id, tinfo.tabledepth,
-                         ctinfo.tabledepth, tinfo.key_struct_size,
-                         sizeof(local_ip_mapping_data_t),
-                         P4_LOCAL_IP_MAPPING_NUM_HINTS_PER_ENTRY,
-                         8,    /**< max recircs */
-                         static_cast<HbmHash::HashPoly>(tinfo.hash_type),
-                         OCI_MEM_ALLOC_LOCAL_IP_MAPPING_TBL, true,
-                         NULL);    // TODO: table_health_monitor
+    bzero(&mhparams, sizeof(mhparams));
+    mhparams.max_recircs = 8;
+    mhparams.health_monitor_func = NULL;
+
+    // Local IP Mapping table
+    mhparams.table_id = P4TBL_ID_LOCAL_IP_MAPPING;
+    mhparams.num_hints = P4_LOCAL_IP_MAPPING_NUM_HINTS_PER_ENTRY;
+    mhparams.key2str = NULL;
+    mhparams.appdata2str = NULL;
+    local_ip_mapping_tbl_ = mem_hash::factory(&mhparams);
     SDK_ASSERT(local_ip_mapping_tbl_ != NULL);
 
-    p4pd_table_properties_get(P4TBL_ID_REMOTE_VNIC_MAPPING_RX, &tinfo);
-    p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
-    remote_vnic_mapping_rx_tbl_ =
-        HbmHash::factory(tinfo.tablename, P4TBL_ID_REMOTE_VNIC_MAPPING_RX,
-                         tinfo.oflow_table_id, tinfo.tabledepth,
-                         ctinfo.tabledepth, tinfo.key_struct_size,
-                         sizeof(remote_vnic_mapping_rx_data_t),
-                         P4_REMOTE_VNIC_MAPPING_RX_NUM_HINTS_PER_ENTRY,
-                         8,    /**< max recircs */
-                         static_cast<HbmHash::HashPoly>(tinfo.hash_type),
-                         OCI_MEM_ALLOC_REMOTE_VNIC_MAPPING_RX_TBL, true,
-                         NULL);    // TODO: table_health_monitor
+    // Remote VNIC Mapping RX table
+    mhparams.table_id = P4TBL_ID_REMOTE_VNIC_MAPPING_RX;
+    mhparams.num_hints = P4_REMOTE_VNIC_MAPPING_RX_NUM_HINTS_PER_ENTRY;
+    mhparams.key2str = NULL;
+    mhparams.appdata2str = NULL;
+    remote_vnic_mapping_rx_tbl_ = mem_hash::factory(&mhparams);
     SDK_ASSERT(remote_vnic_mapping_rx_tbl_ != NULL);
 
-    p4pd_table_properties_get(P4TBL_ID_REMOTE_VNIC_MAPPING_TX, &tinfo);
-    p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
-    remote_vnic_mapping_tx_tbl_ =
-        HbmHash::factory(tinfo.tablename, P4TBL_ID_REMOTE_VNIC_MAPPING_TX,
-                         tinfo.oflow_table_id, tinfo.tabledepth,
-                         ctinfo.tabledepth, tinfo.key_struct_size,
-                         sizeof(remote_vnic_mapping_rx_data_t),
-                         P4_REMOTE_VNIC_MAPPING_TX_NUM_HINTS_PER_ENTRY,
-                         8,    /**< max recircs */
-                         static_cast<HbmHash::HashPoly>(tinfo.hash_type),
-                         OCI_MEM_ALLOC_REMOTE_VNIC_MAPPING_TX_TBL, true,
-                         NULL);    // TODO: table_health_monitor
+    // Remote VNIC Mapping RX table
+    mhparams.table_id = P4TBL_ID_REMOTE_VNIC_MAPPING_TX;
+    mhparams.num_hints = P4_REMOTE_VNIC_MAPPING_TX_NUM_HINTS_PER_ENTRY;
+    mhparams.key2str = NULL;
+    mhparams.appdata2str = NULL;
+    remote_vnic_mapping_tx_tbl_ = mem_hash::factory(&mhparams);
     SDK_ASSERT(remote_vnic_mapping_tx_tbl_ != NULL);
 
     p4pd_table_properties_get(P4TBL_ID_NAT, &tinfo);
@@ -81,9 +72,9 @@ mapping_impl_state::mapping_impl_state(oci_state *state) {
  * @brief    destructor
  */
 mapping_impl_state::~mapping_impl_state() {
-    HbmHash::destroy(local_ip_mapping_tbl_);
-    HbmHash::destroy(remote_vnic_mapping_rx_tbl_);
-    HbmHash::destroy(remote_vnic_mapping_tx_tbl_);
+    mem_hash::destroy(local_ip_mapping_tbl_);
+    mem_hash::destroy(remote_vnic_mapping_rx_tbl_);
+    mem_hash::destroy(remote_vnic_mapping_tx_tbl_);
 }
 
 /** @} */    // end of OCI_MAPPING_IMPL_STATE
