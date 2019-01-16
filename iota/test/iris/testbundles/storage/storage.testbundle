@@ -30,9 +30,9 @@ aliases:
     - &CP_BOF_HASH_CHAIN_YML cp_bof_hash_chain.yml
     - &DECRYPT_DC_CHAIN_YML decrypt_dc_chain.yml
     - &CHKSUM_CP_CHAIN_YML chksum-cp.yml
-    - &CHKSUM_CP_CHKSUM_YML chksum-cp-chksum.yml
-    - &CHKSUM_ENCRYPT_CHKSUM_YML chksum-encrypt-chksum.yml
-    - &DECRYPT_CHKSUM_YML decrypt-chksum.yml
+    - &CHKSUM_CP_CHKSUM_CHAIN_YML chksum-cp-chksum.yml
+    - &CHKSUM_ENCRYPT_CHKSUM_CHAIN_YML chksum-encrypt-chksum.yml
+    - &DECRYPT_CHKSUM_CHAIN_YML decrypt-chksum.yml
     - &CPFLAGS_DEFAULT 0
     - &DCFLAGS_DEFAULT 0
     - &CPFLAGS_ZERO_PAD zero_pad
