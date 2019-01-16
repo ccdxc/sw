@@ -1983,10 +1983,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 		IONIC_NETDEV_INFO(ifp, "ioctl: %s (Add/Del Multicast Filter)\n",
 			(command == SIOCADDMULTI) ? "SIOCADDMULTI" : "SIOCDELMULTI");
 		IONIC_CORE_LOCK(lif);
-		if (ifp->if_drv_flags & IFF_DRV_RUNNING)
-			ionic_set_multi(lif);
-		/* multicast filters are accumulated in ifp->if_multiaddrs, while
-		   the interface is down */
+		ionic_set_multi(lif);
 		IONIC_CORE_UNLOCK(lif);
 		break;
 
