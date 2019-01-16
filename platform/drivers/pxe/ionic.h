@@ -93,7 +93,7 @@ typedef u64 dma_addr_t;
 #define LIF_NAME_MAX_SZ (32)
 #define DEFAULT_COS 0
 #define DEFAULT_INTR_INDEX 0
-#define NTXQ_DESC 128
+#define NTXQ_DESC 16
 #define NRXQ_DESC 16
 #define NOTIFYQ_LENGTH	16
 //#define RX_RING_DOORBELL_STRIDE ((1 << 3) - 1)

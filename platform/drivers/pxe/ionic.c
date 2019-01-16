@@ -64,11 +64,13 @@ static int ionic_check_link ( struct net_device *netdev ) {
 	struct ionic *ionic = netdev->priv;
 	u16 link_up;
 
-	DBGC(ionic, "Inside %s::Checking for link status\n", __FUNCTION__ );
 	link_up = ionic->ionic_lif->notifyblock->link_status;
 	if(link_up) {
+		netdev_link_up ( netdev );
 		DBGC(ionic, "link up with speed %dMBPS\n",
 			 ionic->ionic_lif->notifyblock->link_speed);
+	} else {
+		netdev_link_down ( netdev );
 	}
 	return 0;
 }
@@ -88,13 +90,16 @@ static int ionic_check_link ( struct net_device *netdev ) {
 static int ionic_open(struct net_device *netdev)
 {
 	struct ionic *ionic = netdev->priv;
+	int mtu;
 	int err;
 
 	err = ionic_qcq_enable(ionic->ionic_lif->txqcqs);
 	if (err)
 		return err;
 
-	ionic_rx_fill(netdev, netdev->max_pkt_len);
+	// fill rx buffers
+	mtu = ETH_HLEN + netdev->mtu + 4;
+	ionic_rx_fill(netdev, mtu);
 
 	err = ionic_lif_rx_mode(ionic->ionic_lif, 0x1F);
 	if (err)
@@ -103,6 +108,9 @@ static int ionic_open(struct net_device *netdev)
 	err = ionic_qcq_enable(ionic->ionic_lif->rxqcqs);
 	if (err)
 		return err;
+
+	//Update Link Status
+	ionic_check_link(netdev);
 
 	return 0;
 }
@@ -176,6 +184,7 @@ static int ionic_transmit(struct net_device *netdev,
  */
 static void ionic_poll(struct net_device *netdev)
 {
+	int mtu;
 
 	// Poll for transmit completions
 	ionic_poll_tx(netdev);
@@ -184,7 +193,12 @@ static void ionic_poll(struct net_device *netdev)
 	ionic_poll_rx(netdev);
 
 	// Refill receive ring
-	ionic_rx_fill(netdev, netdev->max_pkt_len);
+	mtu = ETH_HLEN + netdev->mtu + 4;
+	ionic_rx_fill(netdev, mtu);
+
+	//Update Link Status
+	ionic_check_link(netdev);
+
 }
 
 /**
@@ -275,7 +289,8 @@ static int ionic_probe(struct pci_device *pci)
 	pci_set_drvdata(pci, netdev);
 	netdev->dev = &pci->dev;
 	memset(ionic, 0, sizeof(*ionic));
-
+	printf("Waiting for the Nic to start\n");
+	sleep ( 30 );
 	// Fix up PCI device
 	adjust_pci_device(pci);
 
@@ -285,8 +300,6 @@ static int ionic_probe(struct pci_device *pci)
 		DBG2("%s :: the number of bars is %x mapped the bars.\n", __FUNCTION__, ionic->num_bars);
 		goto err_ionicunmap;
 	}
-
-	mdelay(100);  //TODO remove this once pcibar is fixed.
 
 	errorcode = ionic_setup(ionic);
 	if (errorcode) {
