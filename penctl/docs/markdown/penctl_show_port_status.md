@@ -1,21 +1,20 @@
-## penctl show port
+## penctl show port status
 
-show port object
+show port object status
 
 ### Synopsis
 
 
-show port object
+show port object status
 
 ```
-penctl show port [flags]
+penctl show port status [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help          help for port
-      --port uint32   Specify port number (default 1)
+  -h, --help   help for status
 ```
 
 ### Options inherited from parent commands
@@ -23,12 +22,12 @@ penctl show port [flags]
 ```
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
+      --port uint32        Specify port number (default 1)
   -t, --tabular            display in tabular format (default true)
   -v, --version            display version of penctl
   -y, --yaml               display in yaml format
 ```
 
 ### SEE ALSO
-* [penctl show](penctl_show.md)	 - Show Object and Information
-* [penctl show port status](penctl_show_port_status.md)	 - show port object status
+* [penctl show port](penctl_show_port.md)	 - show port object
 

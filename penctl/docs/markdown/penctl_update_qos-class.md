@@ -19,6 +19,7 @@ penctl update qos-class [flags]
       --dwrr-bw uint32                Specify DWRR BW percentage (0-100)
   -h, --help                          help for qos-class
       --mtu uint32                    Specify MTU (default 1500)
+      --pfc-cos uint32                Specify COS value for PFC
       --pfc-enable                    Enable PFC with default values
       --qosgroup string               Specify qos group. Valid groups: default,user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6 (default "user-defined-1")
       --strict-priority-rate uint32   Specify strict priority rate in bps

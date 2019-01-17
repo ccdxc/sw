@@ -7,7 +7,7 @@ import iota.test.iris.testcases.penctl.common as common
 
 def_tech_support_file_name = "naples-tech-support.tar.gz"
 def_tech_support_dir_name = "NaplesTechSupport"
-tech_support_dirs = ["cores", "events", "logs", "penctl.ver", "cmd_out"]
+def_tech_support_dirs = ["cores", "events", "logs", "penctl.ver", "cmd_out"]
 def_tech_support_log_files = ["hal.log", "nicmgr.log", "pciemgrd.log", "linkmgr.log"]
 
 
@@ -97,8 +97,8 @@ def Verify(tc):
                 return api.types.status.FAILURE
         for n, cmd in zip(tc.Nodes, resp.commands):
             sub_dirs = list(filter(None, cmd.stdout.split("\n")))
-            if set(sub_dirs) != set(tech_support_dirs):
-                api.Logger.error("Tech support dirs  don't match : expected %s, actual %s" %(tech_support_dirs, sub_dirs))
+            if set(sub_dirs) != set(def_tech_support_dirs):
+                api.Logger.error("Tech support dirs  don't match : expected %s, actual %s" %(def_tech_support_dirs, sub_dirs))
                 return api.types.status.FAILURE
 
         return api.types.status.SUCCESS
