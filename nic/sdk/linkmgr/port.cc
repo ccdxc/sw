@@ -9,6 +9,7 @@
 #include "lib/periodic/periodic.hpp"
 #include "include/sdk/asic/capri/cap_mx_api.h"
 #include "platform/drivers/xcvr.hpp"
+#include "platform/fru/fru.hpp"
 #include "lib/pal/pal.hpp"
 
 namespace sdk {
@@ -1254,10 +1255,9 @@ port::port_mac_set_pause_src_addr(uint8_t *mac_addr) {
     return SDK_RET_OK;
 }
 
-// ----------------------------------------------------
+//----------------------------------------------------
 // static methods
-// ----------------------------------------------------
-
+//----------------------------------------------------
 sdk_ret_t
 port::port_init(linkmgr_cfg_t *cfg)
 {
@@ -1323,6 +1323,22 @@ port::port_init(linkmgr_cfg_t *cfg)
     sdk::lib::pal_program_marvell(0, 0x8140);
 
     return rc;
+}
+
+sdk_ret_t
+port::xcvr_port_mac_addr(uint32_t xcvr_port, mac_addr_t mac_addr) {
+    std::string   mac_addr_str;
+
+    if (readKey(MACADDRESS_KEY, mac_addr_str) == -1) {
+        SDK_TRACE_ERR("Failed to read MAC addr for xcvr_port %u", xcvr_port);
+        return SDK_RET_ERR;
+    }
+    mac_str_to_addr((char *)mac_addr_str.c_str(), mac_addr);
+
+    // base mac addr is for first xcvr port, increment the last byte for
+    // subsequent ports
+    mac_addr[5] += (uint8_t)(xcvr_port - 1);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
