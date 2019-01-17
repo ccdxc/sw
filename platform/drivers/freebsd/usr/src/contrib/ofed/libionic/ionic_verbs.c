@@ -250,6 +250,7 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	struct ionic_qp *qp = NULL;
 	struct ionic_rq_meta *meta;
 	uint32_t src_qpn, st_len;
+	uint16_t vlan_tag;
 	uint8_t op;
 
 	if (cqe_qp->rq_flush)
@@ -338,6 +339,9 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	src_qpn = be32toh(cqe->recv.src_qpn_op);
 	op = src_qpn >> IONIC_V1_CQE_RECV_OP_SHIFT;
 
+	src_qpn &= IONIC_V1_CQE_RECV_QPN_MASK;
+	op &= IONIC_V1_CQE_RECV_OP_MASK;
+
 	/* XXX makeshift: cqe has recv flags in qtf, not all in srq_qpn_op */
 	if (op == OP_TYPE_RDMA_OPER_WITH_IMM) {
 		op = IONIC_V1_CQE_RECV_OP_RDMA_IMM;
@@ -364,12 +368,17 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 	}
 
 	wc->byte_len = st_len;
-	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
-	wc->pkey_index = be16toh(cqe->recv.pkey_index);
+	wc->src_qp = src_qpn;
 
 	if (qp->vqp.qp.qp_type == IBV_QPT_UD) {
 		wc->wc_flags |= IBV_WC_GRH;
+
+		/* vlan_tag in cqe will be valid from dpath even if no vlan */
+		vlan_tag = be16toh(cqe->recv.vlan_tag);
+		wc->sl = vlan_tag >> 13; /* 802.1q PCP */
 	}
+
+	wc->pkey_index = 0;
 
 out:
 	ionic_queue_consume(&qp->rq);

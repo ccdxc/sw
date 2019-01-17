@@ -152,7 +152,7 @@ struct ionic_v1_cqe {
 			__u64		wqe_id;
 			__be32		src_qpn_op;
 			__u8		src_mac[6];
-			__be16		pkey_index;
+			__be16		vlan_tag;
 			__be32		imm_data_rkey;
 		} recv;
 		struct {
@@ -171,10 +171,17 @@ enum ionic_v1_cqe_src_qpn_bits {
 	IONIC_V1_CQE_RECV_QPN_MASK	= 0xffffff,
 	IONIC_V1_CQE_RECV_OP_SHIFT	= 24,
 
+	/* XXX MASK could be 0x3, but need 0x1f for makeshift values:
+	 * OP_TYPE_RDMA_OPER_WITH_IMM, OP_TYPE_SEND_RCVD
+	 */
+	IONIC_V1_CQE_RECV_OP_MASK	= 0x1f,
 	IONIC_V1_CQE_RECV_OP_SEND	= 0,
 	IONIC_V1_CQE_RECV_OP_SEND_INV	= 1,
 	IONIC_V1_CQE_RECV_OP_SEND_IMM	= 2,
 	IONIC_V1_CQE_RECV_OP_RDMA_IMM	= 3,
+
+	IONIC_V1_CQE_RECV_IS_IPV4	= (1u << 7),
+	IONIC_V1_CQE_RECV_IS_VLAN	= (1u << 6),
 };
 
 /* bits for cqe qid_type_flags */
@@ -201,6 +208,23 @@ static inline bool ionic_v1_cqe_color(struct ionic_v1_cqe *cqe)
 static inline bool ionic_v1_cqe_error(struct ionic_v1_cqe *cqe)
 {
 	return !!(cqe->qid_type_flags & htobe32(IONIC_V1_CQE_ERROR));
+}
+
+static inline bool ionic_v1_cqe_recv_is_ipv4(struct ionic_v1_cqe *cqe)
+{
+	/* should be indicated in src_qpn_op, but might be in qtf bits */
+	return !!(cqe->recv.src_qpn_op &
+		  htobe32(IONIC_V1_CQE_RECV_IS_IPV4)) ||
+		!!(cqe->qid_type_flags &
+		   htobe32(IONIC_V1_CQE_RCVD_IPV4));
+}
+
+static inline bool ionic_v1_cqe_recv_is_vlan(struct ionic_v1_cqe *cqe)
+{
+	/* should be indicated in src_qpn_op, but might be in DEI bit */
+	return !!(cqe->recv.src_qpn_op &
+		  htobe32(IONIC_V1_CQE_RECV_IS_VLAN)) ||
+		!!(cqe->recv.vlan_tag & htobe16(1u << 12)); /* 802.1q DEI */
 }
 
 static inline void ionic_v1_cqe_clean(struct ionic_v1_cqe *cqe)

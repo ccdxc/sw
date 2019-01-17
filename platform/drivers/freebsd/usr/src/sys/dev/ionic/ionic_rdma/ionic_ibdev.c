@@ -2639,6 +2639,7 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	struct ionic_qp *qp = NULL;
 	struct ionic_rq_meta *meta;
 	u32 src_qpn, st_len;
+	u16 vlan_tag;
 	u8 op;
 
 	if (cqe_qp->rq_flush)
@@ -2713,6 +2714,9 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	src_qpn = be32_to_cpu(cqe->recv.src_qpn_op);
 	op = src_qpn >> IONIC_V1_CQE_RECV_OP_SHIFT;
 
+	src_qpn &= IONIC_V1_CQE_RECV_QPN_MASK;
+	op &= IONIC_V1_CQE_RECV_OP_MASK;
+
 	/* XXX makeshift: cqe has recv flags in qtf, not all in srq_qpn_op */
 	if (op == OP_TYPE_RDMA_OPER_WITH_IMM) {
 		op = IONIC_V1_CQE_RECV_OP_RDMA_IMM;
@@ -2739,14 +2743,30 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	}
 
 	wc->byte_len = st_len;
-	wc->src_qp = src_qpn & IONIC_V1_CQE_RECV_QPN_MASK;
-	wc->pkey_index = be16_to_cpu(cqe->recv.pkey_index);
+	wc->src_qp = src_qpn;
 
 	if (qp->ibqp.qp_type == IB_QPT_UD ||
 	    qp->ibqp.qp_type == IB_QPT_GSI) {
-		wc->wc_flags |= IB_WC_GRH;
+		wc->wc_flags |= IB_WC_GRH | IB_WC_WITH_SMAC;
 		ether_addr_copy(wc->smac, cqe->recv.src_mac);
+
+		wc->wc_flags |= IB_WC_WITH_NETWORK_HDR_TYPE;
+		if (ionic_v1_cqe_recv_is_ipv4(cqe))
+			wc->network_hdr_type = RDMA_NETWORK_IPV4;
+		else
+			wc->network_hdr_type = RDMA_NETWORK_IPV6;
+
+		if (ionic_v1_cqe_recv_is_vlan(cqe))
+			wc->wc_flags |= IB_WC_WITH_VLAN;
+
+		/* vlan_tag in cqe will be valid from dpath even if no vlan */
+		vlan_tag = be16_to_cpu(cqe->recv.vlan_tag);
+		wc->vlan_id = vlan_tag & 0xfff; /* 802.1q VID */
+		wc->sl = vlan_tag >> 13; /* 802.1q PCP */
 	}
+
+	wc->pkey_index = 0;
+	wc->port_num = 1;
 
 out:
 	ionic_queue_consume(&qp->rq);
