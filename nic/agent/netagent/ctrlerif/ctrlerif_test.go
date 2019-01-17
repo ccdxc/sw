@@ -600,6 +600,11 @@ func (ag *fakeAgent) UpdateApp(app *netproto.App) error {
 	return nil
 }
 
+// GetNaplesInfo returns naples info.
+func (ag *fakeAgent) GetNaplesInfo() (info *types.NaplesInfo, err error) {
+	return
+}
+
 // DeleteApp deletes an app. Stubbed out to satisfy interface
 func (ag *fakeAgent) DeleteApp(tn, ns, name string) error {
 	meta := api.ObjectMeta{

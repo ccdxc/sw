@@ -86,6 +86,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 		}
 	}
 	log.Infof("NIC mode: %v change completed err: %v", n.config.Spec.Mode, err)
+	n.UpdateMgmtIP()
 
 	return err
 }

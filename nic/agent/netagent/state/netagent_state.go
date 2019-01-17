@@ -38,6 +38,8 @@ func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath string) 
 
 	na.init(emdb, dp)
 
+	na.Mode = mode.String()
+
 	c := config.Agent{
 		ObjectMeta: api.ObjectMeta{
 			Name: "AgentConfig",

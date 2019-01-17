@@ -201,8 +201,7 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 		"host",
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,
-		r,
-		nil)
+		r)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 	}

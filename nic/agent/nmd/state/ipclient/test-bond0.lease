@@ -1,0 +1,21 @@
+lease {
+  interface "bond0";
+  fixed-address 192.168.70.5;
+  filename "pxelinux.0";
+  server-name "pxe.pensando.io";
+  option subnet-mask 255.255.252.0;
+  option routers 192.168.68.1;
+  option dhcp-lease-time 432000;
+  option dhcp-message-type 5;
+  option domain-name-servers 192.168.68.2;
+  option dhcp-server-identifier 192.168.68.2;
+  option dhcp-renewal-time 216000;
+  option broadcast-address 192.168.71.255;
+  option dhcp-rebinding-time 378000;
+  option host-name "tb26-host1-naples";
+  option domain-name "pensando.io";
+  option vendor-encapsulated-options f1:8:a:7:3:5:a:7:3:9;
+  renew 6 2000/01/08 22:21:49;
+  rebind 2 2000/01/11 06:32:19;
+  expire 2 2000/01/11 21:32:19;
+}

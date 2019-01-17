@@ -217,8 +217,7 @@ func createNMD(t *testing.T, dbPath, priMac, restURL string) (*nmdInfo, error) {
 		*mode,
 		globals.NicRegIntvl*time.Second,
 		globals.NicUpdIntvl*time.Second,
-		resolverClient,
-		nil)
+		resolverClient)
 	if err != nil {
 		t.Errorf("Error creating NMD. Err: %v", err)
 		return nil, err

@@ -6,4 +6,5 @@ COPY netagent /
 COPY nmd /
 COPY nevtsproxy /
 COPY tmagent /
+COPY fakedelphihub /
 CMD /netagent -npm pen-npm -resolver-urls pen-master:9002 -hostif s0 -datapath mock -mode managed -disabletsa"

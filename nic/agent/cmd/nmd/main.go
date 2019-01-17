@@ -15,10 +15,13 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
+	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	"github.com/pensando/sw/nic/delphi/proto/delphi"
+	_ "github.com/pensando/sw/nic/delphi/sdk/proto"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -143,20 +146,29 @@ func main() {
 
 	var delphiClient clientAPI.Client
 	var uc state.UpgMgrAPI
+	var dServ *nmd.DelphiService
 	if !*standalone {
-		dServ := nmd.NewDelphiService()
+		dServ = nmd.NewDelphiService()
 		delphiClient, err = gosdk.NewClient(dServ)
 		if err != nil {
 			log.Fatalf("Error creating delphi client . Err: %v", err)
 		}
+		dServ.DelphiClient = delphiClient
+
+		// mount objects
+		delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
+		log.Infof("Mounting naples status rw")
+
 		// create a upgrade client
 		uc, err = upg.NewNaplesUpgradeClient(delphiClient)
 		if err != nil {
 			log.Fatalf("Error creating Upgrade client . Err: %v", err)
 		}
 		srv.sysmgrClient = sysmgr.NewClient(delphiClient, srv.Name())
-	}
 
+	} else {
+		log.Infof("Cannot Set object, delphiclient is nil")
+	}
 	// create the new NMD
 	nm, err := nmd.NewAgent(pa, uc,
 		*nmdDbPath,
@@ -170,10 +182,15 @@ func main() {
 		*mode,
 		time.Duration(*regInterval)*time.Second,
 		time.Duration(*updInterval)*time.Second,
-		resolverClient,
-		delphiClient)
+		resolverClient)
 	if err != nil {
 		log.Fatalf("Error creating NMD. Err: %v", err)
+	}
+
+	if delphiClient != nil {
+		nm.DelphiClient = delphiClient
+		dServ.Agent = nm
+		go delphiClient.Run()
 	}
 
 	log.Infof("%s is running {%+v}", globals.Nmd, nm)

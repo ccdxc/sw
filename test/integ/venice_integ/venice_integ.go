@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
+
 	"golang.org/x/net/context"
 	"gopkg.in/check.v1"
 
@@ -30,6 +32,10 @@ import (
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	"github.com/pensando/sw/nic/delphi/gosdk"
+
+	// This import is a workaround for delphi client crash
+	_ "github.com/pensando/sw/nic/delphi/sdk/proto"
+
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
@@ -278,7 +284,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		// create the new NMD
 		nmd, err := nmd.NewAgent(pa, uc, dbPath, hostID, hostID, smartNICServerURL,
 			cmdAuthServer, restURL, "", "", "network", globals.NicRegIntvl*time.Second,
-			globals.NicUpdIntvl*time.Second, it.resolverClient, nil)
+			globals.NicUpdIntvl*time.Second, it.resolverClient)
 		if err != nil {
 			log.Fatalf("Error creating NMD. Err: %v", err)
 		}
@@ -580,6 +586,13 @@ func (it *veniceIntegSuite) startAgent() {
 		if aerr != nil {
 			log.Fatalf("Error creating netagent. Err: %v", aerr)
 		}
+
+		// TODO Remove this when nmd and delphi hub are integrated with venice_integ and npm_integ
+		npmClient, err := ctrlerif.NewNpmClient(agent.NetworkAgent, globals.Npm, rc)
+		if err != nil {
+			log.Errorf("Error creating NPM client. Err: %v", err)
+		}
+		agent.NpmClient = npmClient
 
 		tsdp, aerr := tshal.NewHalDatapath("mock")
 		if aerr != nil {

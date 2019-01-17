@@ -107,7 +107,6 @@ var _ = BeforeSuite(func() {
 			}
 			_, err = ts.restSvc.ClusterV1().Host().Create(ts.tu.NewLoggedInContext(context.Background()), host)
 			Expect(err).ShouldNot(HaveOccurred())
-
 			// Switch to managed mode
 			naples.Spec.Mode = nmd.MgmtMode_NETWORK
 			By(fmt.Sprintf("Switching Naples %+v to managed mode", naples))

@@ -42,7 +42,7 @@ type client struct {
 // Mount a kind to get notifications and/or make changes to the objects. Must
 // be called before the calling `Dial`
 func (c *client) MountKind(kind string, mode delphi.MountMode) error {
-
+	log.Infof("DELPHI DEBUG: MOUNT KIND(): Kind: %v", kind)
 	// FIXME: error out if already connected
 	c.mounts = append(c.mounts, &delphi_messenger.MountData{
 		Kind: kind,
@@ -55,7 +55,7 @@ func (c *client) MountKind(kind string, mode delphi.MountMode) error {
 // Mount a kind to get notifications and/or make changes to the objects. Must
 // be called before the calling `Dial`
 func (c *client) MountKindKey(kind string, key string, mode delphi.MountMode) error {
-
+	log.Infof("DELPHI DEBUG: MOUNTKINDKEY() Kind: %v", kind)
 	// FIXME: error out if already connected
 	c.mounts = append(c.mounts, &delphi_messenger.MountData{
 		Kind: kind,
@@ -276,6 +276,8 @@ func (c *client) updateSubtree(op delphi.ObjectOperation, kind string,
 func (c *client) updateSubtrees(objlist []*delphi_messenger.ObjectData, triggerEvents bool) {
 	for _, obj := range objlist {
 		factory := clientApi.Factories[obj.Meta.Kind]
+		log.Infof("DELPHIDEBUG: Factory: %v", factory)
+		log.Infof("DELPHIDEBUG: Obj: %v", obj)
 		baseObj, err := factory(c, obj.Data)
 		oldObj := c.GetObject(obj.Meta.Kind, obj.Meta.Key)
 		if err != nil {

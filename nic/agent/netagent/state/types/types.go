@@ -84,6 +84,13 @@ type IPSecRuleRef struct {
 	RuleID      uint64
 }
 
+// NaplesInfo is a read-only object containing information about Naples
+type NaplesInfo struct {
+	UUID          string   `json:"naples-uuid,omitempty"`
+	ControllerIPs []string `json:"controller-ips,omitempty"`
+	Mode          string   `json:"naples-mode,omitempty"`
+}
+
 // DepSolver is a netagent state object dependency solver
 type DepSolver interface {
 	ObjectKey(o api.ObjectMeta, t api.TypeMeta) string        // ObjectKey generates an the lookup key for an object. tenant|name for tenants, namespace|tenant|name for namespaces and kind|tenant|namespace|name for all other objects
@@ -123,6 +130,8 @@ type NetAgent struct {
 	AppDB             map[string]*netproto.App             // App DB
 	SecurityProfileDB map[string]*netproto.SecurityProfile //Security Profile DB
 	RuleIDAppLUT      sync.Map                             // SGPolicy Rule ID to App Objects look up table.
+	ControllerIPs     []string                             // Controller IPs that NetAgent is using
+	Mode              string                               //Netagent Mode
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent
@@ -227,6 +236,7 @@ type CtrlerIntf interface {
 	UpdateApp(app *netproto.App) error                                          // updates an App
 	DeleteApp(app, ns, name string) error                                       // deletes an App
 	GetHwInterfaces() error                                                     // Gets all the uplinks created on the hal by nic mgr
+	GetNaplesInfo() (*NaplesInfo, error)                                        // Returns Naples information
 }
 
 // PluginIntf is the API provided by the netagent to plugins

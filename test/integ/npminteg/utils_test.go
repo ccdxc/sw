@@ -7,6 +7,8 @@ import (
 
 	"github.com/prometheus/common/log"
 
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
@@ -42,6 +44,14 @@ func CreateAgent(kind datapath.Kind, srvURL string, resolver resolver.Interface)
 
 	restServer, err := restapi.NewRestServer(nagent.NetworkAgent, nil, nil, "")
 	nagent.RestServer = restServer
+
+	// Create NPM Client.
+	// TODO Remove this when nmd and delphi hub are integrated with venice_integ and npm_integ
+	npmClient, err := ctrlerif.NewNpmClient(nagent.NetworkAgent, srvURL, resolver)
+	if err != nil {
+		log.Errorf("Error creating NPM client. Err: %v", err)
+	}
+	nagent.NpmClient = npmClient
 
 	// create an agent instance
 	ag := Dpagent{

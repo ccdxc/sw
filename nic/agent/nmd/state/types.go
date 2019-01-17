@@ -12,6 +12,8 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
+	ipclient "github.com/pensando/sw/nic/agent/nmd/state/ipclient"
+	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/emstore"
@@ -31,8 +33,10 @@ type NMD struct {
 	rollout  RolloutCtrlAPI  // Rollout API Object
 	upgmgr   UpgMgrAPI       // Upgrade Manager API
 
-	config nmd.Naples    // Naples config received via REST
-	nic    *cmd.SmartNIC // SmartNIC object
+	config       nmd.Naples    // Naples config received via REST
+	nic          *cmd.SmartNIC // SmartNIC object
+	DelphiClient clientAPI.Client
+	IPClient     *ipclient.IPClient
 
 	stopNICReg     chan bool     // channel to stop NIC registration
 	nicRegInterval time.Duration // time interval between nic registration in seconds
@@ -155,4 +159,33 @@ func (n *NMD) GetListenURL() string {
 		return n.listener.Addr().String()
 	}
 	return ""
+}
+
+// CreateIPClient creates IPClient to run DHCP
+func (n *NMD) CreateIPClient(delphiClient clientAPI.Client) {
+	n.Lock()
+	defer n.Unlock()
+
+	n.IPClient = ipclient.NewIPClient(delphiClient, 0, "", 0, "", nil)
+}
+
+// GetIPClient returns the handle to the ip client
+func (n *NMD) GetIPClient() *ipclient.IPClient {
+	n.Lock()
+	defer n.Unlock()
+
+	return n.IPClient
+}
+
+// UpdateMgmtIP updates the management IP
+func (n *NMD) UpdateMgmtIP() error {
+	n.Lock()
+	defer n.Unlock()
+
+	if n.IPClient != nil {
+		err := n.IPClient.Update(n.config.Spec.NetworkMode, n.config.Spec.IPConfig.IPAddress, n.config.Spec.MgmtVlan, n.config.Spec.Hostname, n.config.Spec.Controllers)
+		return err
+	}
+
+	return nil
 }

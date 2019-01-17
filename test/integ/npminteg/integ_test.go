@@ -17,13 +17,16 @@ import (
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/utils/tsdb"
 
+	// This import is a workaround for delphi client crash
+	_ "github.com/pensando/sw/nic/delphi/sdk/proto"
+
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"

@@ -1,0 +1,50 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package nmd;
+
+import "delphi.proto";
+
+// NaplesStatus contains current status of a Naples I/O subsystem
+message NaplesStatus {
+    option (delphi.update_event)            = true;
+    option (delphi.singleton)               = true;
+    delphi.ObjectMeta               Meta    = 1;
+
+    enum Mode {
+        // ui-hint: None
+        NONE                    = 0;
+
+        // ui-hint: Host Managed
+        HOST_MANAGED            = 1;
+
+        // ui-hint: Network Managed Inband
+        NETWORK_MANAGED_INBAND  = 2;
+
+        // ui-hint: Network Managed Out of Band
+        NETWORK_MANAGED_OOB     = 3;
+    }
+
+    enum RegistrationPhase {
+        // ui-hint: Unknown
+        UNKNOWN      = 0; // Unknown status, initial state.
+        // ui-hint: Registering
+        REGISTERING  = 1; // NIC registration is in progress, set when Naples initiated registration
+        // ui-hint: Rejected
+        REJECTED     = 2; // NIC is rejected, due to invalid cert
+        // ui-hint: Pending
+        PENDING      = 3; // NIC is validated but waiting for manual approval
+        // ui-hint: Admitted
+        ADMITTED     = 4; // NIC is validated and admitted
+    }
+    // Current phase of the NIC adapter in the system
+    RegistrationPhase    Phase      = 2;
+
+    // Resolved Controllers/Venice IPs
+    repeated string Controllers     = 3;
+
+    // Naples management mode
+    Mode NaplesMode                 = 4;
+}
+

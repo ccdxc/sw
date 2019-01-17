@@ -90,6 +90,7 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, t
 		"/api/telemetry/flowexports/": addFlowExportPolicyAPIRoutes,
 		"/api/system/ports":           addPortAPIRoutes,
 		"/api/apps":                   addAppAPIRoutes,
+		"/api/system/info":            addNaplesInfoAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

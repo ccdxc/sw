@@ -10,11 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pensando/sw/venice/utils/tsdb"
-
-	"github.com/pensando/sw/venice/utils/netutils"
-
 	"github.com/pensando/sw/nic/agent/netagent"
+	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/revproxy"
 	protos "github.com/pensando/sw/nic/agent/netagent/protos"
@@ -22,9 +19,12 @@ import (
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	tstypes "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
+	_ "github.com/pensando/sw/nic/delphi/sdk/proto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // Main function
@@ -88,8 +88,8 @@ func main() {
 
 	if *mode == "managed" {
 		agMode = protos.AgentMode_MANAGED
-		// create a resolver
-		resolverClient = resolver.New(&resolver.Config{Name: "naples-netagent", Servers: strings.Split(*resolverURLs, ",")})
+		// TODO Remove this once e2e is migrated to IOTA
+		resolverClient = resolver.New(&resolver.Config{Name: globals.Netagent, Servers: strings.Split(*resolverURLs, ",")})
 		opt := tsdb.Options{
 			ClientName:     "naples-netagent",
 			ResolverClient: resolverClient,
@@ -99,6 +99,7 @@ func main() {
 		if err != nil {
 			log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
 		}
+
 	} else {
 		agMode = protos.AgentMode_CLASSIC
 	}
@@ -110,6 +111,15 @@ func main() {
 	}
 	log.Printf("NetAgent {%+v} instantiated", ag)
 
+	// TODO Remove manual setting up of npm client based on cmdline flag once venice e2e tests are moved to IOTA
+	if agMode == protos.AgentMode_MANAGED {
+		// create the NPM client
+		npmClient, err := ctrlerif.NewNpmClient(ag.NetworkAgent, *npmURL, ag.ResolverClient)
+		if err != nil {
+			log.Errorf("Error creating NPM client. Err: %v", err)
+		}
+		ag.NpmClient = npmClient
+	}
 	// create the new Troublehshooting agent
 	var tsdp tstypes.TsDatapathAPI
 	// ToDo Remove mock hal datapath prior to FCS
