@@ -72,8 +72,8 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'recirc_reason', 2):
             return False
     
-        # recirc bth opcode should be 6 (write_first)
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'recirc_bth_opcode', 6):
+        # last bth opcode should be 6 (write_first)
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'last_bth_opcode', 6):
             return False
 
         # recirc bth psn should be the psn of the packet (which is same as pre_qstate.e_psn)

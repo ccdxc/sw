@@ -334,7 +334,16 @@ header_type resp_tx_to_stage_stats_info_t {
         last_msn                         :   24;
         lif_error_id_vld                 :    1;
         lif_error_id                     :    4;
-        pad                              :   51;
+        rsvd                             :    3;
+        qp_err_disabled                  :    1;
+        qp_err_dis_rsvd_rkey_err         :    1;
+        qp_err_dis_rkey_state_err        :    1;
+        qp_err_dis_rkey_pd_mismatch      :    1;
+        qp_err_dis_rkey_acc_ctrl_err     :    1;
+        qp_err_dis_rkey_va_err           :    1;
+        qp_err_dis_type2a_mw_qp_mismatch :    1;
+        qp_err_dis_resp_rx               :    1;
+        pad                              :   40;
     }
 }
 
@@ -790,6 +799,15 @@ action resp_tx_stats_process () {
     modify_field(to_s7_stats_info_scr.last_msn, to_s7_stats_info.last_msn);
     modify_field(to_s7_stats_info_scr.lif_error_id_vld, to_s7_stats_info.lif_error_id_vld);
     modify_field(to_s7_stats_info_scr.lif_error_id, to_s7_stats_info.lif_error_id);
+    modify_field(to_s7_stats_info_scr.rsvd, to_s7_stats_info.rsvd);
+    modify_field(to_s7_stats_info_scr.qp_err_disabled, to_s7_stats_info.qp_err_disabled);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_rsvd_rkey_err, to_s7_stats_info.qp_err_dis_rsvd_rkey_err);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_rkey_state_err, to_s7_stats_info.qp_err_dis_rkey_state_err);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_rkey_pd_mismatch, to_s7_stats_info.qp_err_dis_rkey_pd_mismatch);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_rkey_acc_ctrl_err, to_s7_stats_info.qp_err_dis_rkey_acc_ctrl_err);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_rkey_va_err, to_s7_stats_info.qp_err_dis_rkey_va_err);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_type2a_mw_qp_mismatch, to_s7_stats_info.qp_err_dis_type2a_mw_qp_mismatch);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_resp_rx, to_s7_stats_info.qp_err_dis_resp_rx);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage

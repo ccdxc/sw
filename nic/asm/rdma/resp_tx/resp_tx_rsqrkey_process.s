@@ -55,7 +55,7 @@ resp_tx_rsqrkey_process:
 
     // if (!(lkey_p->acc_ctrl & ACC_CTRL_LOCAL_WRITE)) {
     ARE_ALL_FLAGS_SET_B(c1, d.acc_ctrl, ACC_CTRL_REMOTE_READ)
-    bcf         [!c1], error_completion
+    bcf         [!c1], rkey_acc_ctrl_err
 
     add         ABS_VA, K_XFER_VA, r0 // BD Slot
     IS_ANY_FLAG_SET_B(c1, d.acc_ctrl, ACC_CTRL_ZERO_BASED)
@@ -67,7 +67,7 @@ resp_tx_rsqrkey_process:
     slt         c1, ABS_VA, d.base_va // BD Slot
     add         r1, d.base_va, d.len
     sslt        c2, r1, ABS_VA, K_XFER_BYTES
-    bcf         [c1 | c2], error_completion
+    bcf         [c1 | c2], rkey_va_err
     nop         //BD slot
 
     // check if state is valid (same for MR and MW)
@@ -76,7 +76,7 @@ resp_tx_rsqrkey_process:
 
     // access is allowed only in valid state
     seq         c1, d.state, KEY_STATE_VALID // BD Slot
-    bcf         [!c1], error_completion
+    bcf         [!c1], rkey_state_err
 
     // check PD if MR
     seq         c5, d.type, MR_TYPE_MR // BD Slot
@@ -90,11 +90,11 @@ resp_tx_rsqrkey_process:
     bcf         [c3], cookie_check
     nop // BD Slot
 
-    b           error_completion
+    b           rkey_qp_err
 
 check_pd:
     seq         c4, d.pd, K_PD // BD slot
-    bcf         [!c4], error_completion
+    bcf         [!c4], rkey_pd_err
     nop         // BD Slot
 
 cookie_check:
@@ -217,6 +217,36 @@ dcqcn:
 exit:
     nop.e
     nop
+
+rsvd_rkey_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rsvd_rkey_err), 1 // BD Slot
+
+rkey_pd_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rkey_pd_mismatch), 1 // BD Slot
+
+rkey_qp_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_type2a_mw_qp_mismatch), 1 // BD Slot
+
+rkey_state_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rkey_state_err), 1 // BD Slot
+
+rkey_acc_ctrl_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rkey_acc_ctrl_err), 1 // BD Slot
+
+rkey_va_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_rkey_va_err), 1 // BD Slot
 
 error_completion:
     // When rkey validation for a read response fails, we generate a NAK

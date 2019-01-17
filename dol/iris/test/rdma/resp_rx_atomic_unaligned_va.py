@@ -59,12 +59,16 @@ def TestCaseVerify(tc):
         return False
 
     ############     STATS VALIDATIONS #################
-    #verify that qp_err_disabled is set to 1
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+    # verify that error disable stats are updated
+    if not VerifyErrStatistics(tc):
         return False
 
     #verify that unaligned_atomic_va_err is set to 1
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_unaligned_atomic_va_err', 1):
+        return False
+
+    # last bth opcode should be 20 (atomic_fetch_add)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'last_bth_opcode', 20):
         return False
 
     return True

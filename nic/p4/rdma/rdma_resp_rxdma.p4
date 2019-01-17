@@ -426,7 +426,7 @@ header_type resp_rx_to_stage_stats_info_t {
         lif_error_id_vld                 :    1;
         lif_error_id                     :    4;
         recirc_reason                    :    4;
-        recirc_bth_opcode                :    8;
+        last_bth_opcode                  :    8;
         recirc_bth_psn                   :   24;
         pad                              :   32;
     }
@@ -1688,7 +1688,7 @@ action resp_rx_stats_process () {
     modify_field(to_s7_stats_info_scr.lif_error_id_vld, to_s7_stats_info.lif_error_id_vld);
     modify_field(to_s7_stats_info_scr.lif_error_id, to_s7_stats_info.lif_error_id);
     modify_field(to_s7_stats_info_scr.recirc_reason, to_s7_stats_info.recirc_reason);
-    modify_field(to_s7_stats_info_scr.recirc_bth_opcode, to_s7_stats_info.recirc_bth_opcode);
+    modify_field(to_s7_stats_info_scr.last_bth_opcode, to_s7_stats_info.last_bth_opcode);
     modify_field(to_s7_stats_info_scr.recirc_bth_psn, to_s7_stats_info.recirc_bth_psn);
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 

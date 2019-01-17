@@ -244,8 +244,17 @@ struct rqcb4_t {
     last_psn: 24;
     last_syndrome: 8;
     last_msn: 24;
-    error_disable_qp: 1;
-    rsvd: 7;
+
+    qp_err_disabled                     :    1;
+    // rsqrkey errors
+    qp_err_dis_rsvd_rkey_err            :    1;
+    qp_err_dis_rkey_state_err           :    1;
+    qp_err_dis_rkey_pd_mismatch         :    1;
+    qp_err_dis_rkey_acc_ctrl_err        :    1;
+    qp_err_dis_rkey_va_err              :    1;
+    qp_err_dis_type2a_mw_qp_mismatch    :    1;
+    // resp_rx err
+    qp_err_dis_resp_rx                  :    1;
 
     pad: 160;
 };
@@ -309,7 +318,7 @@ struct rqcb5_t {
     //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.
     //are remembered for further debugging.
     recirc_bth_psn: 24;
-    recirc_bth_opcode: 8;
+    last_bth_opcode: 8;
     recirc_reason: 4;
     max_recirc_cnt_err: 1;
     pad: 75;

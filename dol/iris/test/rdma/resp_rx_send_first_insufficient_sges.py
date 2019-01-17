@@ -20,39 +20,11 @@ def TestCaseSetup(tc):
     tc.pvtdata.mr_slab_1 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_1.GID())
     tc.pvtdata.l_key1 = tc.pvtdata.mr_slab_1.lkey
 
-    # Slab 2
-    tc.pvtdata.slab_2 = rs.lqp.pd.ep.GetNewSlab()
-    tc.pvtdata.mr_slab_2 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_2.GID())
-    tc.pvtdata.l_key2 = tc.pvtdata.mr_slab_2.lkey
-
-    # Slab 3
-    tc.pvtdata.slab_3 = rs.lqp.pd.ep.GetNewSlab()
-    tc.pvtdata.mr_slab_3 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_3.GID())
-    tc.pvtdata.l_key3 = tc.pvtdata.mr_slab_3.lkey
-
-    # Slab 4
-    tc.pvtdata.slab_4 = rs.lqp.pd.ep.GetNewSlab()
-    tc.pvtdata.mr_slab_4 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_4.GID())
-    tc.pvtdata.l_key4 = tc.pvtdata.mr_slab_4.lkey
-
-    # Slab 5
-    tc.pvtdata.slab_5 = rs.lqp.pd.ep.GetNewSlab()
-    tc.pvtdata.mr_slab_5 = rs.lqp.pd.mrs.Get('MR-' + tc.pvtdata.slab_5.GID())
-    tc.pvtdata.l_key5 = tc.pvtdata.mr_slab_5.lkey
-
     if (GlobalOptions.dryrun):
         tc.pvtdata.mr_va1 = 0
-        tc.pvtdata.mr_va2 = 0
-        tc.pvtdata.mr_va3 = 0
-        tc.pvtdata.mr_va4 = 0
-        tc.pvtdata.mr_va5 = 0
         return True
     else:
         tc.pvtdata.mr_va1 = tc.pvtdata.slab_1.address + 1088
-        tc.pvtdata.mr_va2 = tc.pvtdata.slab_2.address + 1088
-        tc.pvtdata.mr_va3 = tc.pvtdata.slab_3.address + 1088
-        tc.pvtdata.mr_va4 = tc.pvtdata.slab_4.address + 1088
-        tc.pvtdata.mr_va5 = tc.pvtdata.slab_5.address + 1088
 
     return
 
@@ -100,16 +72,12 @@ def TestCaseStepVerify(tc, step):
         if not VerifyErrStatistics(tc):
             return False
 
-        #verify that max_sge_err is set to 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_max_sge_err', 1):
+        #verify that insuff_sge_err is set to 1
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_insuff_sge_err', 1):
             return False
-
-        # last bth opcode should be 4 (send_only)
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'last_bth_opcode', 4):
-            return False
-
-        ############     CQ VALIDATIONS #################
-        if not ValidateCQCompletions(tc, 1, 1):
+    
+        # last bth opcode should be 0 (send_first)
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'last_bth_opcode', 0):
             return False
 
     elif step.step_id == 1:

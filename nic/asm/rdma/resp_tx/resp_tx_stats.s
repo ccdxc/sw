@@ -14,6 +14,7 @@ struct rqcb4_t d;
 #define K_LAST_SYNDROME CAPRI_KEY_FIELD(IN_P, last_syndrome)
 #define K_LAST_MSN CAPRI_KEY_FIELD(IN_P, last_msn)
 #define K_LAST_PSN CAPRI_KEY_FIELD(IN_P, last_psn)
+#define K_ERR_DIS_REASON_CODES CAPRI_KEY_RANGE(IN_P, qp_err_disabled, qp_err_dis_resp_rx)
 
 #define GLOBAL_FLAGS r7
 #define RQCB4_ADDR   r3
@@ -35,7 +36,7 @@ resp_tx_stats_process:
     bcf              [!c1], bubble_to_next_stage
 
     // if already error disabled, do not update the stats anymore
-    bbeq             d.error_disable_qp, 1, exit
+    bbeq             d.qp_err_disabled, 1, exit
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
 
     tbladd           d.num_bytes, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes)
@@ -120,7 +121,7 @@ err_dis_qp_stats:
     tblwr           d.last_syndrome, K_LAST_SYNDROME
     tblwr           d.last_psn, K_LAST_PSN
     tblwr           d.last_msn, K_LAST_MSN
-    tblwr           d.error_disable_qp, 1
+    tblor           d.{qp_err_disabled...qp_err_dis_resp_rx}, K_ERR_DIS_REASON_CODES
 
 handle_error_lif_stats:
 

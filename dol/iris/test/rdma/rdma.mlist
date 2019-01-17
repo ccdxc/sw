@@ -1010,7 +1010,7 @@ modules:
         name    : RDMA_RX_SEND_FIRST_INSUFFICIENT_SGES
         enable  : True
         package : test.rdma
-        module  : resp_rx_send_only_insufficient_sges
+        module  : resp_rx_send_first_insufficient_sges
         spec    : resp_rx_send_first_insufficient_sges.testspec
         ignore  : False
  
@@ -1042,7 +1042,7 @@ modules:
         name    : RDMA_RX_SEND_FIRST_0_SGES
         enable  : True
         package : test.rdma
-        module  : resp_rx_send_only_insufficient_sges
+        module  : resp_rx_send_first_insufficient_sges
         spec    : resp_rx_send_first_0_sges.testspec
         ignore  : False
  

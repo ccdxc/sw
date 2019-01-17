@@ -24,7 +24,7 @@ struct rqcb5_t d;
 #define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
 #define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
 #define K_RECIRC_REASON CAPRI_KEY_FIELD(IN_P, recirc_reason)
-#define K_RECIRC_BTH_OPCODE CAPRI_KEY_FIELD(IN_P, recirc_bth_opcode)
+#define K_LAST_BTH_OPCODE CAPRI_KEY_FIELD(IN_P, last_bth_opcode)
 #define K_RECIRC_BTH_PSN CAPRI_KEY_FIELD(IN_P, recirc_bth_psn)
 #define K_ERR_DIS_REASON_CODES CAPRI_KEY_RANGE(IN_P, qp_err_disabled, qp_err_dis_rsvd_sbit1_ebit5)
 
@@ -50,6 +50,7 @@ resp_rx_stats_process:
     tblmincri.c5     d.num_dup_rd_atomic_bt_pkts, MASK_16, 1
     tblmincri.c4     d.num_dup_rd_atomic_drop_pkts, MASK_16, 1
     tblor            d.{qp_err_disabled...qp_err_dis_rsvd}, K_ERR_DIS_REASON_CODES
+    tblwr            d.last_bth_opcode, K_LAST_BTH_OPCODE
 
     bcf              [c7 | c6 | c5 | c4], handle_error_lif_stats
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
@@ -156,7 +157,7 @@ max_recirc_cnt_err:
     //are remembered for further debugging.
     tblwr           d.max_recirc_cnt_err, 1     //BD Slot
     tblwr           d.recirc_reason, K_RECIRC_REASON
-    tblwr.e         d.recirc_bth_opcode, K_RECIRC_BTH_OPCODE
+    tblwr.e         d.last_bth_opcode, K_LAST_BTH_OPCODE
     tblwr           d.recirc_bth_psn, K_RECIRC_BTH_PSN  //Exit Slot
 
 bubble_to_next_stage:

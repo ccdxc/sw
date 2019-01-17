@@ -47,14 +47,18 @@ def TestCaseVerify(tc):
         return False
 
     ############     STATS VALIDATIONS #################
-    #verify that qp_err_disabled is set to 1
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+    # verify that error disable stats are updated
+    if not VerifyErrStatistics(tc):
         return False
 
     #verify that key_va_err is set to 1
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_key_va_err', 1):                                           
         return False
         
+    # last bth opcode should be 6 (write_first)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'last_bth_opcode', 6):
+        return False
+
     ############     ASYNC EQ VALIDATIONS #################
     if not ValidateAsyncEQChecks(tc):
         return False

@@ -56,6 +56,21 @@ def VerifyErrQState(tc):
 
     return True
 
+def VerifyErrStatistics(tc):
+    #verify that qp_err_disabled is set to 1
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+        return False
+
+    #verify that tx_qp_err_disabled is set to 1
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'tx_qp_err_disabled', 1):
+        return False
+
+    #verify that tx_qp_err_dis_resp_rx is set to 1
+    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'tx_qp_err_dis_resp_rx', 1):
+        return False
+
+    return True
+
 def PopulatePreQStates(tc):
     rs = tc.config.rdmasession
 
@@ -171,6 +186,15 @@ def ResetErrQState(tc):
     rs.lqp.rq.qstate.data.qp_err_dis_mr_mw_pd_mismatch = 0
     rs.lqp.rq.qstate.data.qp_err_dis_mr_state_invalid = 0
     rs.lqp.rq.qstate.data.qp_err_dis_mr_cookie_mismatch = 0
+    rs.lqp.rq.qstate.data.last_bth_opcode = 0
+    rs.lqp.rq.qstate.data.tx_qp_err_disabled = 0
+    rs.lqp.rq.qstate.data.tx_qp_err_dis_rsvd_rkey_err = 0
+    rs.lqp.rq.qstate.data.tx_qp_err_dis_rkey_state_err = 0
+    rs.lqp.rq.qstate.data.tx_qp_err_dis_rkey_pd_mismatch = 0
+    rs.lqp.rq.qstate.data.tx_qp_err_dis_rkey_acc_ctrl_err = 0
+    rs.lqp.rq.qstate.data.tx_qp_err_dis_rkey_va_err = 0
+    rs.lqp.rq.qstate.data.tx_qp_err_dis_type2a_mw_qp_mismatch = 0
+    rs.lqp.rq.qstate.data.tx_qp_err_dis_resp_rx = 0
     rs.lqp.rq.qstate.WriteWithDelay()
 
     return

@@ -80,12 +80,16 @@ def TestCaseVerify(tc):
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_read_req_msgs', 1):
         return False
 
-    #verify that qp_err_disabled is set to 1
-    if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+    # verify that error disable stats are updated
+    if not VerifyErrStatistics(tc):
         return False
 
     #verify that key_pd_mismatch is set to 1
     if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_key_pd_mismatch', 1):
+        return False
+
+    # last bth opcode should be 12 (RDMA read)
+    if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'last_bth_opcode', 12):
         return False
 
    ############     CQ VALIDATIONS #################

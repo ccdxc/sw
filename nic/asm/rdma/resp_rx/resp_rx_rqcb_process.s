@@ -170,7 +170,7 @@ process_send_write_fml:
     
     // last packet should be at least 1 byte
     beq.c3      REM_PYLD_BYTES, r0, inv_req_nak_last_pkt_len_err
-    nop // BD Slot
+    phvwr       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, last_bth_opcode), CAPRI_APP_DATA_BTH_OPCODE // BD Slot
 
     // first/middle packets should be of pmtu size
     sne         c7, r3, REM_PYLD_BYTES
@@ -363,7 +363,7 @@ process_only_rd_atomic:
     // check expected op type and pkt type for only packets 
     seq         c1, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY
     bcf         [!c1], inv_req_nak_opcode_err
-    nop // BD Slot
+    phvwr       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, last_bth_opcode), CAPRI_APP_DATA_BTH_OPCODE // BD Slot
 
     bcf         [c6 | c5 | c3], process_read_atomic
     phvwr       p.s1.ack_info.psn, d.e_psn // BD Slot
@@ -761,11 +761,13 @@ drop_duplicate_rd_atomic:
 
 /****** Logic for NAKs ******/
 inv_req_nak_serv_type:
+    phvwr       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, last_bth_opcode), CAPRI_APP_DATA_BTH_OPCODE
     b           inv_req_nak
     phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
                 CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_svc_type_err), 1 // BD Slot
 
 inv_req_nak_pyld_len_err:
+    phvwr       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, last_bth_opcode), CAPRI_APP_DATA_BTH_OPCODE
     b           inv_req_nak
     phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
                 CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_pyld_len_err), 1 // BD Slot
@@ -877,6 +879,7 @@ process_ud:
     crestore [c2, c1], r7, (RESP_RX_FLAG_SEND | RESP_RX_FLAG_ONLY)
     // c2: send, c1: only
 
+    phvwr       CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, last_bth_opcode), CAPRI_APP_DATA_BTH_OPCODE
     phvwr       CAPRI_PHV_FIELD(TO_S_WQE_P, priv_oper_enable), d.priv_oper_enable
     seq         c7, CAPRI_APP_DATA_BTH_OPCODE[7:5], d.serv_type
     seq         c3, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0
@@ -1068,7 +1071,7 @@ max_recirc_cnt_err:
     phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, max_recirc_cnt_err), 1, \
                 CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, recirc_reason), CAPRI_APP_DATA_RECIRC_REASON
 
-    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, recirc_bth_opcode), CAPRI_APP_DATA_BTH_OPCODE, \
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, last_bth_opcode), CAPRI_APP_DATA_BTH_OPCODE, \
                 CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, recirc_bth_psn), CAPRI_APP_DATA_BTH_PSN
 
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_err_process, r0)

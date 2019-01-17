@@ -90,12 +90,16 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_bytes', 0):
             return False
 
-        #verify that qp_err_disabled is set to 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+        # verify that error disable stats are updated
+        if not VerifyErrStatistics(tc):
             return False
 
         #verify that type2a_mw_qp_mismatch is set to 1
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_type2a_mw_qp_mismatch', 1):
+            return False
+
+        # last bth opcode should be 20 (atomic_fetch_add)
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'last_bth_opcode', 20):
             return False
 
         # TODO check this

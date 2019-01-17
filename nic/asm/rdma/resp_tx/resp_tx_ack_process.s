@@ -36,6 +36,9 @@ resp_tx_ack_process:
     // for any nak code other than NAK_CODE_SEQ_ERR, we need to error disable qp
     phvwr       CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
 
+    phvwrpair   CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_resp_rx), 1
+
     // when rq generates the flush wqe, it is communicated to resp_tx side using a vendor
     // specific nak code. In this case, all we have to do is to move the state to Error.
     // This happens in the write back code. Note that we don't even need to inform sq, 

@@ -72,14 +72,18 @@ def TestCaseStepVerify(tc, step):
             return False
  
         ############     STATS VALIDATIONS #################
-        #verify that qp_err_disabled is set to 1
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_disabled', 1):
+        # verify that error disable stats are updated
+        if not VerifyErrStatistics(tc):
             return False
 
         #verify that insuff_sge_err is set to 1
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'qp_err_dis_insuff_sge_err', 1):
             return False
    
+        # last bth opcode should be 1 (send_middle)
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.rq_post_qstate, 'last_bth_opcode', 1):
+            return False
+
     elif step.step_id == 1:
 
         if not ValidatePostSyncCQChecks(tc):
