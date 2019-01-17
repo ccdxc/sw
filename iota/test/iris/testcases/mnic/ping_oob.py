@@ -6,7 +6,8 @@ def Setup(tc):
 
 def Trigger(tc):
     pairs = api.GetRemoteWorkloadPairs()
-    mgmt_ip = api.GetNaplesMgmtIpAddresses()
+    #mgmt_ip = api.GetNaplesMgmtIpAddresses()
+    mgmt_ip = ["192.168.68.1"]
     w1 = pairs[0][0]
     w2 = pairs[0][1]
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
