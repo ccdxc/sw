@@ -1,24 +1,39 @@
 package debug
 
-// This package makes exporting of debug counters from internal components easy
+// This package is for easily collecting internal metrics locally and
+// for keeping status data that is available for a socket.
 //
 // Usage:
-//	Somewhere in the codepath, call this once
-// debugStats := debug.New("instance")
-
-// Starts a http server if you are not doing this already
-//	go http.ListenAndServe(restURL, nil)
-
-// if you are using a different http demux like gorilla/martini register a handler like below instead
-//     martiniRouter.Get("/debug/vars", expvar.Handler())
-
-// in your code you can increment any counter by giving a name like:
-// debugStats.Increment("DeleteNetwork")
-
-// From bash you can do GET to get the value of counters - Example output below
-// 	curl http://10.100.0.11:9006/debug/vars
-
-// {
-// "cmdline": ["/npm","-resolver-urls","node1:9009,node2:9009,node3:9009"],
-// "debugStats_instance": {"CreateNetwork": 123020, "DeleteNetwork": 123020}
-// }
+// Somewhere in the codepath, call this once
+//
+// 		dbg := debug.New("path/to/debug.sock", SocketInfoFunction
+//
+// To start the socket server, call:
+//
+//		dbg.StartServer()
+//
+// You can then connect to the socket with
+//
+//  	curl --unix-socket /path/to/debug.sock http://localhost/debug
+//
+// Which will trigger socketInfoFunction to run and will return
+// the value over the socket
+//
+// If you already have a server running, you can just use the
+// DebugHandler function
+//
+// 		r.HandleFunc("/debug", dbg.DebugHandler).Methods("GET")
+//
+// For collecting local metrics, the module must have first initialized ntsdb:
+//
+// 		ntsdb.Init(ctx, opts)
+//
+// then build the metric obj
+//
+//    dbg.BuildMetricObj(tableName, keyTags)
+//
+// You can the access the table through
+//
+//		dbg.MetricObj
+//
+// Collected metrics are aviailable on the local server being run by ntsdb

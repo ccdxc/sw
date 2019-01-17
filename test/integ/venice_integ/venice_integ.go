@@ -473,7 +473,7 @@ func (it *veniceIntegSuite) startCitadel() {
 	log.Infof("Datanode %+v and broker %+v are running", dn, br)
 
 	// start the http server
-	hsrv, err := httpserver.NewHTTPServer(httpURL, br)
+	hsrv, err := httpserver.NewHTTPServer(httpURL, br, nil)
 	if err != nil {
 		log.Fatalf("Error creating HTTP server. Err: %v", err)
 	}

@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/certs"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -42,7 +42,7 @@ type CmdClient struct {
 	nmd                   state.NmdAPI       // NMD instance
 	watchCtx              context.Context    // ctx for object watch
 	watchCancel           context.CancelFunc // cancel for object watch
-	debugStats            *debug.Stats
+	debugStats            *debugStats.Stats
 	startTime             time.Time
 }
 
@@ -68,7 +68,7 @@ func NewCmdClient(nmd state.NmdAPI, cmdRegistrationURL, cmdUpdatesURL string, re
 		startTime:          time.Now(),
 	}
 
-	client.debugStats = debug.New(fmt.Sprintf("cmdif-%s", client.getAgentName())).Tsdb().Kind("nmdStats").TsdbPeriod(5 * time.Second).Build()
+	client.debugStats = debugStats.New(fmt.Sprintf("cmdif-%s", client.getAgentName())).Tsdb().Kind("nmdStats").TsdbPeriod(5 * time.Second).Build()
 
 	// register the NMD client as a controller plugin
 	err := nmd.RegisterCMD(&client)

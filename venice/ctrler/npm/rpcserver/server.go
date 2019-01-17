@@ -6,7 +6,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -21,7 +21,7 @@ type RPCServer struct {
 	sgpolicyHandler  *SGPolicyRPCServer        // security policy RPC handler
 	fwprofileHandler *FirewallProfileRPCServer // firewall profile RPC handler
 	appHandler       *AppRPCServer             // app RPC handler
-	debugStats       *debug.Stats              // Debug stats
+	debugStats       *debugStats.Stats         // Debug stats
 }
 
 // Stop stops the rpc server
@@ -31,7 +31,7 @@ func (rs *RPCServer) Stop() error {
 }
 
 // NewRPCServer creates a new instance of
-func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr, debugStats *debug.Stats) (*RPCServer, error) {
+func NewRPCServer(listenURL string, stateMgr *statemgr.Statemgr, debugStats *debugStats.Stats) (*RPCServer, error) {
 	// create an RPC server
 	grpcServer, err := rpckit.NewRPCServer(globals.Npm, listenURL)
 	if err != nil {

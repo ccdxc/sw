@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -60,7 +60,7 @@ func TestNetworkWatcher(t *testing.T) {
 	}
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", "", nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, "", "", nil, debugStats.New(t.Name()).Build())
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return
@@ -116,7 +116,7 @@ func TestVmmEndpointWatcher(t *testing.T) {
 	}
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", "", nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, "", "", nil, debugStats.New(t.Name()).Build())
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return
@@ -188,7 +188,7 @@ func TestSecurityGroupWatcher(t *testing.T) {
 	}
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", "", nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, "", "", nil, debugStats.New(t.Name()).Build())
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return
@@ -244,7 +244,7 @@ func TestSgPolicyWatcher(t *testing.T) {
 	}
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", "", nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, "", "", nil, debugStats.New(t.Name()).Build())
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return
@@ -326,7 +326,7 @@ func TestTenantWatcher(t *testing.T) {
 	}
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", "", nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, "", "", nil, debugStats.New(t.Name()).Build())
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return
@@ -367,7 +367,7 @@ func TestRestartWatchers(t *testing.T) {
 		return
 	}
 
-	w, err := NewWatcher(stateMgr, "", "", nil, debug.New(t.Name()).Build())
+	w, err := NewWatcher(stateMgr, "", "", nil, debugStats.New(t.Name()).Build())
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return
@@ -477,7 +477,7 @@ func TestWorkloadHandler(t *testing.T) {
 	}
 
 	// create watcher
-	watcher, err := NewWatcher(stateMgr, "", "", nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, "", "", nil, debugStats.New(t.Name()).Build())
 	if err != nil {
 		t.Fatalf("Error creating api server watcher. Err: %v", err)
 		return

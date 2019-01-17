@@ -9,8 +9,6 @@ import (
 	"reflect"
 	"time"
 
-	"net/http"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -18,7 +16,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	vLog "github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -35,7 +33,7 @@ type PolicyManager struct {
 	// name server
 	nsClient resolver.Interface
 	// debug stats
-	debugStats *debug.Stats
+	debugStats *debugStats.Stats
 	// policyDB
 	policyDb *memdb.Memdb
 	// tpm rpc server
@@ -341,13 +339,25 @@ func (pm *PolicyManager) deleteDatabase(tenantName string, dbName string) error 
 	return nil
 }
 
-// Debug dump all policy cache for debug
-func (pm *PolicyManager) Debug(w http.ResponseWriter, r *http.Request) {
-	d, err := pm.policyDb.MarshalJSON()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+// Debug function dumps all policy cache for debug
+func (pm *PolicyManager) Debug() interface{} {
+	kind := []string{"StatsPolicy", "FwlogPolicy", "FlowExportPolicy"}
+	dbgInfo := struct {
+		Policy  map[string]map[string]memdb.Object
+		Clients map[string]map[string]string
+	}{
+		Policy:  map[string]map[string]memdb.Object{},
+		Clients: map[string]map[string]string{},
 	}
 
-	w.Write(d)
+	for _, key := range kind {
+		dbgInfo.Policy[key] = map[string]memdb.Object{}
+
+		pl := pm.policyDb.ListObjects(key)
+		for _, p := range pl {
+			dbgInfo.Policy[key][p.GetObjectMeta().GetName()] = p
+		}
+	}
+	dbgInfo.Clients = pm.rpcServer.Debug()
+	return dbgInfo
 }

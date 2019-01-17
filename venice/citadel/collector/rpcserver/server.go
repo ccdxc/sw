@@ -9,6 +9,7 @@ package rpcserver
 
 import (
 	"sync/atomic"
+	"time"
 
 	"github.com/influxdata/influxdb/models"
 	context "golang.org/x/net/context"
@@ -17,6 +18,7 @@ import (
 	tec "github.com/pensando/sw/venice/citadel/collector"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -25,12 +27,20 @@ const (
 	reporterKey = "reporterID"
 )
 
+// DebugEntry defines the debug info for each collector
+type DebugEntry struct {
+	LastReportedTime string `json:"last-reported-time"`
+	Reporter         string `json:"reporter"`
+}
+
 // CollRPCSrv defines a collector RPC server
 type CollRPCSrv struct {
 	grpcSrv   *rpckit.RPCServer
 	badPoints uint64
 	badReqs   uint64
 	c         *tec.Collector
+	// dbgInfo holds mapping from ip to the last timestamp since we received data from that ip
+	dbgInfo map[string]DebugEntry
 }
 
 // NewCollRPCSrv creates and starts a collector RPC server
@@ -43,6 +53,7 @@ func NewCollRPCSrv(listenURL string, c *tec.Collector) (*CollRPCSrv, error) {
 	srv := &CollRPCSrv{
 		c:       c,
 		grpcSrv: s,
+		dbgInfo: map[string]DebugEntry{},
 	}
 	metric.RegisterMetricApiServer(s.GrpcServer, srv)
 	s.Start()
@@ -76,6 +87,14 @@ func (s *CollRPCSrv) WriteLines(c context.Context, lb *metric.LineBundle) (*api.
 		return e, nil
 	}
 	s.c.WriteLines(c, lb.GetDbName(), lb.Lines)
+
+	peer := ctxutils.GetPeerAddress(c)
+	if len(peer) > 0 {
+		s.dbgInfo[peer] = DebugEntry{
+			LastReportedTime: time.Now().Format(time.RFC3339),
+		}
+	}
+
 	return e, nil
 }
 
@@ -97,7 +116,25 @@ func (s *CollRPCSrv) WriteMetrics(c context.Context, mb *metric.MetricBundle) (*
 		s.c.WritePoints(c, mb.GetDbName(), "", p)
 	}
 
+	peer := ctxutils.GetPeerAddress(c)
+	if len(peer) > 0 {
+		s.dbgInfo[peer] = DebugEntry{
+			LastReportedTime: time.Now().Format(time.RFC3339),
+			Reporter:         mb.GetReporter(),
+		}
+	}
+
 	return e, nil
+}
+
+// Debug returns the debug information of the collector
+func (s *CollRPCSrv) Debug() interface{} {
+	dbgInfo := struct {
+		Collectors map[string]DebugEntry
+	}{
+		Collectors: s.dbgInfo,
+	}
+	return dbgInfo
 }
 
 func (s *CollRPCSrv) convertToPoints(mb *metric.MetricBundle) []models.Point {

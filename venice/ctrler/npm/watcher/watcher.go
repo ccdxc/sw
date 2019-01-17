@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -49,7 +49,7 @@ type Watcher struct {
 	watchCtx         context.Context                 // ctx for watchers
 	watchCancel      context.CancelFunc              // cancel for watchers
 	stopFlag         syncFlag                        // boolean flag to exit the API watchers
-	debugStats       *debug.Stats                    // debug Stats
+	debugStats       *debugStats.Stats               // debug Stats
 }
 
 // handleNetworkEvent handles network event
@@ -566,7 +566,7 @@ func (w *Watcher) Stop() {
 }
 
 // NewWatcher returns a new watcher object
-func NewWatcher(sm *statemgr.Statemgr, apisrvURL, vmmURL string, resolver resolver.Interface, debugStats *debug.Stats) (*Watcher, error) {
+func NewWatcher(sm *statemgr.Statemgr, apisrvURL, vmmURL string, resolver resolver.Interface, debugStats *debugStats.Stats) (*Watcher, error) {
 	// create context and cancel
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 

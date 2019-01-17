@@ -26,6 +26,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/citadel/watcher"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -117,13 +118,6 @@ func main() {
 
 	log.Infof("Datanode %+v and broker %+v are running", dn, br)
 
-	// start the http server
-	hsrv, err := httpserver.NewHTTPServer(*httpURL, br)
-	if err != nil {
-		log.Fatalf("Error creating HTTP server. Err: %v", err)
-	}
-	log.Infof("HTTP server is listening on %s", hsrv.GetAddr())
-
 	// start collector, use citadel
 	c := collector.NewCollector(br)
 
@@ -134,6 +128,16 @@ func main() {
 	}
 
 	log.Infof("%s is running {%+v}", globals.Citadel, srv)
+
+	// Creating debug instance
+	dbg := debug.New(srv.Debug)
+
+	// start the http server
+	hsrv, err := httpserver.NewHTTPServer(*httpURL, br, dbg)
+	if err != nil {
+		log.Fatalf("Error creating HTTP server. Err: %v", err)
+	}
+	log.Infof("HTTP server is listening on %s", hsrv.GetAddr())
 
 	qsrv, err := query.NewQueryService(*queryURL, br)
 

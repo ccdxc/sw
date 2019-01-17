@@ -5,24 +5,21 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/gorilla/mux"
 
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
-var dbgSock = "/var/run/pensando/tpm.sock"
+var dbgSock = globals.DebugDir + "/tpm.sock"
 var pkgName = globals.Tpm
 
 // main function of the Telemetry Policy Manager
@@ -77,18 +74,13 @@ func main() {
 	}
 
 	// debug
-	router := mux.NewRouter()
-	router.HandleFunc("/debug", pm.Debug).Methods("GET")
-	// sudo curl --unix-socket /var/run/pensando/tpm.sock http://localhost/debug
-	os.Remove(dbgSock)
-	l, err := net.Listen("unix", dbgSock)
+	// curl --unix-socket /var/run/pensando/debug/tpm.sock http://localhost/debug
+	debugSocket := debug.New(pm.Debug)
+	err = debugSocket.StartServer(dbgSock)
 	if err != nil {
-		log.Fatalf("failed to initialize debug, %s", err)
+		log.Fatalf("Failed to start debug server, %v", err)
 	}
-	defer l.Close()
-	go func() {
-		log.Fatal(http.Serve(l, router))
-	}()
+	defer debugSocket.StopServer()
 
 	log.Infof("%s is running {%+v}", globals.Tpm, pm)
 	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.Tpm, utils.GetHostname()), nil)

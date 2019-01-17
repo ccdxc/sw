@@ -155,6 +155,22 @@ func TestServer(t *testing.T) {
 	tu.Assert(t, tb.srv.badReqs == 0, "Expected 0 badReqs, got ", tb.srv.badReqs)
 	tu.Assert(t, tb.srv.badPoints == 0, "Expected 0 badPoints, got ", tb.srv.badPoints)
 
+	// Verify debug info
+	debugInf := tb.srv.Debug()
+	dbgInfo := debugInf.(struct {
+		Collectors map[string]DebugEntry
+	})
+	tu.Assert(t, len(dbgInfo.Collectors) > 0, "Expected debug info to contain last request")
+	for _, v := range dbgInfo.Collectors {
+		// Timestamp should be within last couple seconds
+		entryTime, err := time.Parse(time.RFC3339, v.LastReportedTime)
+		tu.AssertOk(t, err, "Failed to parse time")
+		elapsedTime := time.Since(entryTime).Seconds()
+		tu.Assert(t, elapsedTime < 5 && elapsedTime >= 0, "reported timestamp was in the expected time range")
+		tu.Assert(t, v.Reporter == "UT", "DB Name did not match")
+	}
+	tu.Assert(t, len(dbgInfo.Collectors) > 0, "Expected debug info to contain last request")
+
 	// No DB specified
 	bundle := tb.getMetricBundle(1, "PktCount", "Counter")
 	bundle.Reporter = "UT"

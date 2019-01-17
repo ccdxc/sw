@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/broker"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
+	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
@@ -31,7 +32,7 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer creates a http server
-func NewHTTPServer(listenURL string, broker *broker.Broker) (*HTTPServer, error) {
+func NewHTTPServer(listenURL string, broker *broker.Broker, dbg *debug.Debug) (*HTTPServer, error) {
 	// create http server instance
 	hsrv := HTTPServer{
 		listenURL: listenURL,
@@ -56,6 +57,9 @@ func NewHTTPServer(listenURL string, broker *broker.Broker) (*HTTPServer, error)
 
 	// debug api for getting cluster state
 	r.HandleFunc("/info", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.infoReqHandler))).Methods("GET")
+	if dbg != nil {
+		r.HandleFunc("/debug", dbg.DebugHandler).Methods("GET")
+	}
 
 	// all unknown routes
 	r.HandleFunc("/{*}", unknownAction)

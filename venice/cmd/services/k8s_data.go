@@ -47,8 +47,8 @@ var logVolume = protos.ModuleSpec_Volume{
 // runVolume is a volume to keep run time configs.
 var runVolume = protos.ModuleSpec_Volume{
 	Name:      "run",
-	HostPath:  "/var/run/pensando/",
-	MountPath: "/var/run/pensando/",
+	HostPath:  globals.RuntimeDir,
+	MountPath: globals.RuntimeDir,
 }
 
 // eventsVolume is a reusable volume definition for Pensando events.

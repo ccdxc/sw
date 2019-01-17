@@ -156,6 +156,16 @@ func TestWatchStatsPolicy(t *testing.T) {
 			fmt.Sprintf("interval [%v] didn't match in policy, [%+v] ", evPolicy, f))
 	}
 
+	// Check debug
+	clients := f.Debug()
+	tu.Assert(t, len(clients["StatsPolicy"]) > 0, "debug for fwlog policy was empty")
+	for _, v := range clients["StatsPolicy"] {
+		entryTime, err := time.Parse(time.RFC3339, v)
+		tu.AssertOk(t, err, "Failed to parse time")
+		elapsedTime := time.Since(entryTime).Seconds()
+		tu.Assert(t, elapsedTime < 5 && elapsedTime >= 0, "reported timestamp was in the expected time range")
+	}
+
 	// update object
 	policyDb.UpdateObject(sp["stats-1"])
 	updObj, err := evWatch.Recv()
@@ -245,6 +255,16 @@ func TestWatchFwlogPolicy(t *testing.T) {
 
 		tu.Assert(t, reflect.DeepEqual(evPolicy.Spec.Targets, cfgPolicy.Spec.Targets),
 			fmt.Sprintf("policy exports [%v] didn't match in policy, {%+v} ", evPolicy, fp))
+	}
+
+	// Check debug
+	clients := f.Debug()
+	tu.Assert(t, len(clients["FwlogPolicy"]) > 0, "debug for fwlog policy was empty")
+	for _, v := range clients["FwlogPolicy"] {
+		entryTime, err := time.Parse(time.RFC3339, v)
+		tu.AssertOk(t, err, "Failed to parse time")
+		elapsedTime := time.Since(entryTime).Seconds()
+		tu.Assert(t, elapsedTime < 5 && elapsedTime >= 0, "reported timestamp was in the expected time range")
 	}
 
 	// update object
@@ -359,12 +379,22 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 			fmt.Sprintf("policy [%v] didn't match in policy, {%+v} ", evPolicy, cfgPolicy))
 	}
 
+	// Check debug
+	clients := f.Debug()
+	tu.Assert(t, len(clients["FlowExportPolicy"]) > 0, "debug for FlowExportPolicy was empty")
+	for _, v := range clients["FlowExportPolicy"] {
+		entryTime, err := time.Parse(time.RFC3339, v)
+		tu.AssertOk(t, err, "Failed to parse time")
+		elapsedTime := time.Since(entryTime).Seconds()
+		tu.Assert(t, elapsedTime < 5 && elapsedTime >= 0, "reported timestamp was in the expected time range")
+	}
+
 	// update object
 	flowObj := flow["flow-2"]
 
 	policyDb.UpdateObject(flowObj)
 	updObj, err := evWatch.Recv()
-	tu.AssertOk(t, err, "failed to receive fwlog policy update")
+	tu.AssertOk(t, err, "failed to receive flow export policy update")
 	tu.Assert(t, updObj.EventType == api.EventType_UpdateEvent, fmt.Sprintf("got event: %+v, expected: %v",
 		updObj, api.EventType_UpdateEvent))
 

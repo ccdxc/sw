@@ -12,7 +12,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
@@ -22,7 +22,7 @@ const maxWatchEventsPerMesage = 100
 // NetworkRPCServer is the network RPC server
 type NetworkRPCServer struct {
 	stateMgr   *statemgr.Statemgr // reference to network manager
-	debugStats *debug.Stats
+	debugStats *debugStats.Stats
 }
 
 // GetNetwork returns an instance of network
@@ -187,6 +187,6 @@ func (n *NetworkRPCServer) WatchNetworks(sel *api.ObjectMeta, stream netproto.Ne
 }
 
 // NewNetworkRPCServer returns a network RPC server
-func NewNetworkRPCServer(stateMgr *statemgr.Statemgr, debugStats *debug.Stats) (*NetworkRPCServer, error) {
+func NewNetworkRPCServer(stateMgr *statemgr.Statemgr, debugStats *debugStats.Stats) (*NetworkRPCServer, error) {
 	return &NetworkRPCServer{stateMgr: stateMgr, debugStats: debugStats}, nil
 }

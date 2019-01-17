@@ -12,7 +12,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/rollout/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -27,7 +27,7 @@ type Watcher struct {
 	statemgr    *statemgr.Statemgr // reference to state manager
 	watchCtx    context.Context    // ctx for watchers
 	watchCancel context.CancelFunc // cancel for watchers
-	debugStats  *debug.Stats
+	debugStats  *debugStats.Stats
 }
 
 // Stop watcher
@@ -38,7 +38,7 @@ func (w *Watcher) Stop() {
 }
 
 // NewWatcher returns a new watcher object
-func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL string, resolver resolver.Interface, debugStats *debug.Stats) (*Watcher, error) {
+func NewWatcher(statemgr *statemgr.Statemgr, apisrvURL string, resolver resolver.Interface, debugStats *debugStats.Stats) (*Watcher, error) {
 	// create context and cancel
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 

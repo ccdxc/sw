@@ -72,6 +72,11 @@ func Init(ctx context.Context, opts *Opts) {
 	go startLocalRESTServer(global)
 }
 
+// IsInitialized returns whether tsdb has been initialized
+func IsInitialized() bool {
+	return global != nil
+}
+
 // Cleanup pushes all pending metrics and frees up resources allocated to the tsdb client
 func Cleanup() {
 	if global == nil {

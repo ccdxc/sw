@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -44,7 +44,7 @@ type NpmClient struct {
 	stopped         bool                          // is the npm client stopped?
 	pendingEpCreate map[string]*netproto.Endpoint // pending endpoint create request
 	pendingEpDelete map[string]*netproto.Endpoint // pending endpoint delete requests
-	debugStats      *debug.Stats
+	debugStats      *debugStats.Stats
 	startTime       time.Time
 }
 
@@ -71,7 +71,7 @@ func NewNpmClient(agent types.CtrlerIntf, srvURL string, resolverClient resolver
 		clientFactory:   rpckit.NewClientFactory(agent.GetAgentID()),
 	}
 
-	client.debugStats = debug.New(fmt.Sprintf("npmif-%s", client.getAgentName())).Tsdb().Kind("netagentStats").TsdbPeriod(5 * time.Second).Build()
+	client.debugStats = debugStats.New(fmt.Sprintf("npmif-%s", client.getAgentName())).Tsdb().Kind("netagentStats").TsdbPeriod(5 * time.Second).Build()
 
 	// register the NPM client as a controller plugin
 	err := agent.RegisterCtrlerIf(&client)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/pensando/sw/api"
 	apiProtos "github.com/pensando/sw/api/generated/monitoring"
@@ -61,9 +62,11 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 
 	// track clients
 	peer := ctxutils.GetPeerAddress(ctx)
-	p.clients.Store(peer, true)
-	defer p.clients.Delete(peer)
-	rpcLog.Infof("watch stats policy from [%v]", peer)
+	if len(peer) > 0 {
+		p.clients.Store(peer, time.Now().Format(time.RFC3339))
+		defer p.clients.Delete(peer)
+		rpcLog.Infof("watch stats policy from [%v]", peer)
+	}
 
 	// send existing policy
 	for _, obj := range p.policyDb.ListObjects("StatsPolicy") {
@@ -94,6 +97,10 @@ func (p *statsPolicyRPCServer) WatchStatsPolicy(in *api.ObjectMeta, out tpmProto
 			if !ok {
 				rpcLog.Errorf("error from %v in stats channel", peer)
 				return fmt.Errorf("invalid event from watch channel")
+			}
+			// Update last activity time
+			if len(peer) > 0 {
+				p.clients.Store(peer, time.Now().Format(time.RFC3339))
 			}
 
 			if policy, ok := event.Obj.(*apiProtos.StatsPolicy); ok {
@@ -133,9 +140,11 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 
 	// track clients
 	peer := ctxutils.GetPeerAddress(ctx)
-	p.clients.Store(peer, true)
-	defer p.clients.Delete(peer)
-	rpcLog.Infof("watch fwlog policy from [%v]", peer)
+	if len(peer) > 0 {
+		p.clients.Store(peer, time.Now().Format(time.RFC3339))
+		defer p.clients.Delete(peer)
+		rpcLog.Infof("watch fwlog policy from [%v]", peer)
+	}
 
 	// send existing policy
 	for _, obj := range p.policyDb.ListObjects("FwlogPolicy") {
@@ -165,6 +174,11 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 			if !ok {
 				rpcLog.Errorf("error from %v in fwlog channel ", peer)
 				return fmt.Errorf("invalid event from watch channel")
+			}
+
+			// Update last activity time
+			if len(peer) > 0 {
+				p.clients.Store(peer, time.Now().Format(time.RFC3339))
 			}
 
 			policy, ok := event.Obj.(*apiProtos.FwlogPolicy)
@@ -203,8 +217,10 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 
 	// track clients
 	peer := ctxutils.GetPeerAddress(ctx)
-	p.clients.Store(peer, true)
-	defer p.clients.Delete(peer)
+	if len(peer) > 0 {
+		p.clients.Store(peer, time.Now().Format(time.RFC3339))
+		defer p.clients.Delete(peer)
+	}
 
 	rpcLog.Infof("watch flowexport policy from [%v]", peer)
 
@@ -242,6 +258,11 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 			if !ok {
 				rpcLog.Errorf("error from %v in flowexport channel", peer)
 				return fmt.Errorf("invalid event from watch channel")
+			}
+
+			// Update last activity time
+			if len(peer) > 0 {
+				p.clients.Store(peer, time.Now().Format(time.RFC3339))
 			}
 
 			p, err := json.Marshal(event.Obj)
@@ -283,6 +304,40 @@ func (s *PolicyRPCServer) SetCollectionInterval(interval string) error {
 // GetListenURL is to get grpc listen address
 func (s *PolicyRPCServer) GetListenURL() string {
 	return s.server.GetListenURL()
+}
+
+// Debug is to dump the state
+func (s *PolicyRPCServer) Debug() map[string]map[string]string {
+	clients := map[string]map[string]string{
+		"StatsPolicy":      map[string]string{},
+		"FwlogPolicy":      map[string]string{},
+		"FlowExportPolicy": map[string]string{},
+	}
+	s.statsPolicyRPCServer.clients.Range(func(k interface{}, v interface{}) bool {
+		if key, ok := k.(string); ok {
+			if val, ok := v.(string); ok {
+				clients["StatsPolicy"][key] = val
+			}
+		}
+		return true
+	})
+	s.fwlogPolicyRPCServer.clients.Range(func(k interface{}, v interface{}) bool {
+		if key, ok := k.(string); ok {
+			if val, ok := v.(string); ok {
+				clients["FwlogPolicy"][key] = val
+			}
+		}
+		return true
+	})
+	s.flowExportPolicyRPCServer.clients.Range(func(k interface{}, v interface{}) bool {
+		if key, ok := k.(string); ok {
+			if val, ok := v.(string); ok {
+				clients["FlowExportPolicy"][key] = val
+			}
+		}
+		return true
+	})
+	return clients
 }
 
 // NewRPCServer starts a new instance of rpc server

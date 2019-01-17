@@ -1,4 +1,4 @@
-package debug
+package debugStats
 
 import (
 	"expvar"

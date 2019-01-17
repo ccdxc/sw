@@ -84,6 +84,12 @@ const (
 	// Update directory
 	UpdateDir = "/update"
 
+	// Runtime directory
+	RuntimeDir = "/var/run/pensando"
+
+	// Debug directory
+	DebugDir = RuntimeDir + "/debug"
+
 	//Reverse Proxy Router Port
 	RevProxyPort = "8888"
 

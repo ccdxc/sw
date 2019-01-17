@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/systemd"
 )
@@ -37,7 +38,7 @@ func copyFileContents(src, dst string) (err error) {
 }
 
 const (
-	installerTmpDir       = "/var/run/pensando/installer"
+	installerTmpDir       = globals.RuntimeDir + "/installer"
 	tmpImageFileName      = "venice.tgz"
 	installerMetaFileName = "venice-install.json"
 )

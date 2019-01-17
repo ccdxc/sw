@@ -36,7 +36,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/ctrler/npm/watcher"
 	"github.com/pensando/sw/venice/ctrler/npm/writer"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -46,14 +46,14 @@ type Netctrler struct {
 	StateMgr   *statemgr.Statemgr   // state manager
 	Watchr     *watcher.Watcher     // watcher
 	RPCServer  *rpcserver.RPCServer // rpc server
-	debugStats *debug.Stats
+	debugStats *debugStats.Stats
 	writr      writer.Writer
 }
 
 // NewNetctrler returns a controller instance
 func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface) (*Netctrler, error) {
 
-	debugStats := debug.New(restURL).Build()
+	debugStats := debugStats.New(restURL).Build()
 
 	wr, err := writer.NewAPISrvWriter(apisrvURL, resolver)
 	if err != nil {

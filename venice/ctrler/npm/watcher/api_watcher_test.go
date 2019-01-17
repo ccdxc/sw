@@ -23,7 +23,7 @@ import (
 	vchserver "github.com/pensando/sw/venice/orch/vchub/server"
 	vchstore "github.com/pensando/sw/venice/orch/vchub/store"
 	"github.com/pensando/sw/venice/utils"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -74,7 +74,7 @@ func TestApiWatcher(t *testing.T) {
 	time.Sleep(time.Millisecond * 10)
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, apisrvURL, vmmURL, nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, apisrvURL, vmmURL, nil, debugStats.New(t.Name()).Build())
 	AssertOk(t, err, "Error creating watchr")
 	Assert(t, (watcher != nil), "Error creating watcher", watcher)
 	time.Sleep(time.Millisecond * 10)
@@ -269,7 +269,7 @@ func TestAPIServerRestarts(t *testing.T) {
 	time.Sleep(time.Millisecond * 10)
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, apisrvURL, vmmURL, nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, apisrvURL, vmmURL, nil, debugStats.New(t.Name()).Build())
 	AssertOk(t, err, "Error creating watchr")
 	Assert(t, (watcher != nil), "Error creating watcher", watcher)
 	time.Sleep(time.Millisecond * 10)
@@ -534,7 +534,7 @@ func TestAPIServerRestarts(t *testing.T) {
 	AssertOk(t, err, "Error restarting api server")
 	apicl, err = apiclient.NewGrpcAPIClient(globals.Npm, apisrvURL, l)
 	AssertOk(t, err, "Error restarting api server client")
-	watcher, err = NewWatcher(stateMgr, apisrvURL, vmmURL, nil, debug.New(t.Name()).Build())
+	watcher, err = NewWatcher(stateMgr, apisrvURL, vmmURL, nil, debugStats.New(t.Name()).Build())
 	AssertOk(t, err, "Error restarting watcher")
 
 	// wait for the objects to come back
@@ -637,7 +637,7 @@ func TestApiWatcherConnectDisconnect(t *testing.T) {
 	vmmURL := vchubSrvListener.ListenURL.String()
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, "", vmmURL, nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, "", vmmURL, nil, debugStats.New(t.Name()).Build())
 	AssertOk(t, err, "Error creating watchr")
 	Assert(t, (watcher != nil), "Error creating watcher", watcher)
 	time.Sleep(time.Millisecond * 10)
@@ -673,7 +673,7 @@ func TestWorkloadWatcher(t *testing.T) {
 	defer apiSrv.Stop()
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, apisrvURL, "", nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, apisrvURL, "", nil, debugStats.New(t.Name()).Build())
 	AssertOk(t, err, "Error creating watchr")
 	Assert(t, (watcher != nil), "Error creating watcher", watcher)
 	time.Sleep(time.Millisecond * 10)
@@ -815,7 +815,7 @@ func TestFirewallWatcher(t *testing.T) {
 	defer apiSrv.Stop()
 
 	// create watcher on api server
-	watcher, err := NewWatcher(stateMgr, apisrvURL, "", nil, debug.New(t.Name()).Build())
+	watcher, err := NewWatcher(stateMgr, apisrvURL, "", nil, debugStats.New(t.Name()).Build())
 	AssertOk(t, err, "Error creating watchr")
 	Assert(t, (watcher != nil), "Error creating watcher", watcher)
 	time.Sleep(time.Millisecond * 10)

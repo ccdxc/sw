@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -96,7 +96,7 @@ func createRPCServerClient(t *testing.T) (*statemgr.Statemgr, *RPCServer, *rpcki
 	AssertOk(t, err, "Failed to create network")
 
 	// start the rpc server
-	rpcServer, err := NewRPCServer(testServerURL, stateMgr, debug.New(t.Name()).Build())
+	rpcServer, err := NewRPCServer(testServerURL, stateMgr, debugStats.New(t.Name()).Build())
 	if err != nil {
 		t.Fatalf("Error creating RPC server. Err: %v", err)
 	}

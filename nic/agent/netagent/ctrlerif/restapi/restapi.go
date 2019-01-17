@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	tpa "github.com/pensando/sw/nic/agent/tpa/state/types"
 	troubleshooting "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
-	"github.com/pensando/sw/venice/utils/debug"
+	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -98,7 +98,7 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, t
 		subRouter(sub, &srv)
 	}
 
-	router.Methods("DELETE").Subrouter().Handle("/debug/vars", debug.ClearHandler())
+	router.Methods("DELETE").Subrouter().Handle("/debug/vars", debugStats.ClearHandler())
 	router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/", pprof.Index)
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
