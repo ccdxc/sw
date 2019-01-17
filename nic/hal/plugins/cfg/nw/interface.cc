@@ -1986,7 +1986,7 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("update commit cb {}",
                     intf->if_id);
-    printf("Original: %p, Clone: %p\n", intf, intf_clone);
+    //printf("Original: %p, Clone: %p\n", intf, intf_clone);
 
     dllist_move(&intf_clone->mc_entry_list_head, &intf->mc_entry_list_head);
 
@@ -3463,7 +3463,7 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
         }
         int n = if_tunnel_info.prop_mpls_info().overlay_ip_size();
         for (int i = 0; i < n; i++) {
-            if (if_tunnel_info.prop_mpls_info().overlay_ip(i).v4_addr()) {
+            if (!if_tunnel_info.prop_mpls_info().overlay_ip(i).v4_addr()) {
                 HAL_TRACE_ERR("Overlay IP is not v4 type");
                 ret = HAL_RET_IF_INFO_INVALID;
                 goto end;

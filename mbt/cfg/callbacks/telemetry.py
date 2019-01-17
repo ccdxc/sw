@@ -47,3 +47,4 @@ def FlowMatchPreCreateCb(data, req_spec, resp_spec):
     else:
         req_spec.request[0].match.dst_address[0].address.prefix.ipv4_subnet.prefix_len = GrpcReqRspMsg.generate_ip_address(req_spec.request[0].match.dst_address[0].address.prefix.ipv4_subnet.address, types_pb2.IP_AF_INET)
     req_spec.request[0].action.agg_scheme[0] = telemetry_pb2.NONE
+    req_spec.request[0].action.action[0] = telemetry_pb2.MIRROR
