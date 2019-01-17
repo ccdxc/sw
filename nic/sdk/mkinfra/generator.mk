@@ -138,12 +138,16 @@ define INCLUDE_MODULEMK
         $${TGID}_FLAGS              += ${CONFIG_ARLIB_FLAGS}
         $${TGID}_RECIPE_TYPE        := ARLIB
         $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
-        CXX_TARGETIDS               += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            CXX_TARGETIDS               += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".so"
         $${TGID}_FLAGS              += ${CONFIG_SOLIB_FLAGS}
         $${TGID}_RECIPE_TYPE        := SOLIB
         $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
-        CXX_TARGETIDS               += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            CXX_TARGETIDS               += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".gtest"
         $${TGID}_INCS               += ${CONFIG_GTEST_INCS}
         $${TGID}_LIBS               += ${CONFIG_GTEST_LIBS}
@@ -153,35 +157,51 @@ define INCLUDE_MODULEMK
         $${TGID}_RECIPE_TYPE        := BIN
         $${TGID}_RECIPE_SUBTYPE     := GTEST
         $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
-        GTEST_TARGETIDS             += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            GTEST_TARGETIDS             += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".p4bin"
         $${TGID}_RECIPE_TYPE        := P4BIN
         $${TGID}_NCC_OPTS           := ${CMD_NCC_OPTS} $${MODULE_NCC_OPTS}
-        P4_TARGETIDS                += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            P4_TARGETIDS                += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".asmbin"
         $${TGID}_RECIPE_TYPE        := ASMBIN
         $${TGID}_CAPAS_OPTS         := ${CMD_CAPAS_OPTS} $${MODULE_CAPAS_OPTS}
         $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
-        ASM_TARGETIDS               += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            ASM_TARGETIDS               += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".proto"
         $${TGID}_RECIPE_TYPE        := PROTO
-        PROTO_TARGETIDS             += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            PROTO_TARGETIDS             += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".svcgen"
         $${TGID}_RECIPE_TYPE        := SVCGEN
-        SVCGEN_TARGETIDS            += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            SVCGEN_TARGETIDS            += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".memrgns"
         $${TGID}_RECIPE_TYPE        := MEMRGNS
         $${TGID}_BASECMD            := $${MODULE_BASECMD}
         $${TGID}_ARGS               := $${MODULE_ARGS}
-        MEMRGNS_TARGETIDS           += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            MEMRGNS_TARGETIDS           += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".mockgen"
         $${TGID}_RECIPE_TYPE        := MOCKGEN
         $${TGID}_MOCKGEN_OPTS       := $${MODULE_MOCKGEN_OPTS}
-        MOCKGEN_TARGETIDS           += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            MOCKGEN_TARGETIDS           += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".goimports"
         $${TGID}_RECIPE_TYPE        := GOIMPORTS
         $${TGID}_GOIMPORTS_OPTS     := $${MODULE_GOIMPORTS_OPTS}
-        GOIMPORTS_TARGETIDS         += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            GOIMPORTS_TARGETIDS         += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".export"
         $${TGID}_RECIPE_TYPE        := EXPORT
         $${TGID}_EXPORT_DIR         := $${MODULE_EXPORT_DIR}
@@ -199,21 +219,29 @@ define INCLUDE_MODULEMK
         $${TGID}_OUTFILE            := $${MODULE_OUTFILE}
         $${TGID}_ARGS               := $${MODULE_ARGS}
         $${TGID}_RECIPE_TYPE        := TENJIN
-        CXX_TARGETIDS               += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            CXX_TARGETIDS               += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".gobin"
         $${TGID}_RECIPE_TYPE        := GOBIN
-        GOBIN_TARGETIDS             += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            GOBIN_TARGETIDS             += $${TGID}
+        endif
         $${TGID}_GOPKG              := $${MODULE_GOPKG}
     else ifeq "$$(suffix $${MODULE_TARGET})" ".submake"
         $${TGID}_RECIPE_TYPE        := SUBMAKE
-        SUBMAKE_TARGETIDS           += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            SUBMAKE_TARGETIDS           += $${TGID}
+        endif
     else ifeq "$$(suffix $${MODULE_TARGET})" ".swigcli"
         $${TGID}_RECIPE_TYPE        := SWIGCLI
         SWIGCLI_TARGETIDS           += $${TGID}
     else
         $${TGID}_RECIPE_TYPE        := BIN
         $${TGID}_DEFS               += ${${PIPELINE}_DEFS}
-        CXX_TARGETIDS               += $${TGID}
+        ifeq "$${$${TGID}_PIPELINE}" "${PIPELINE}"
+            CXX_TARGETIDS               += $${TGID}
+        endif
     endif
 
     CLEAN_DIRS += $${MODULE_CLEAN_DIRS}
