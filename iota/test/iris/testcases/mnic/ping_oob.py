@@ -19,11 +19,13 @@ def Trigger(tc):
         if w1.IsNaples():
             for if_ip in mgmt_ip:
                 ping_cmd = "ping -I oob_mnic0 -c3 %s" % (if_ip)
+            api.Trigger_AddNaplesCommand(req, w1.node_name, "ifconfig oob_mnic0")
             api.Trigger_AddNaplesCommand(req, w1.node_name, ping_cmd)
 
         if w2.IsNaples():
             for if_ip in mgmt_ip:
                 ping_cmd = "ping -I oob_mnic0 -c3 %s" % (if_ip)
+            api.Trigger_AddNaplesCommand(req, w2.node_name, "ifconfig oob_mnic0")
             api.Trigger_AddNaplesCommand(req, w2.node_name, ping_cmd)
 
         tc.resp = api.Trigger(req)
