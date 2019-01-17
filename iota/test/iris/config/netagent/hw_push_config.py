@@ -159,6 +159,8 @@ def __add_config_classic_workloads(req, target_node = None):
             num_ifs = len(node_ifs[node])
         num_ifs = min(len(node_ifs[node]), num_ifs)
 
+    # Hardcoding this for now.
+    num_ifs = 2
     vlan = 0
     for i in range(num_ifs):
         subnet = subnet_allocator.Alloc()
