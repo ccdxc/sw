@@ -3,7 +3,6 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = apollo_scale_test.gtest
 MODULE_PIPELINE = apollo
-MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = pal ociframework ocicore ociapi ociapi_impl ocitestutils \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} \
@@ -13,7 +12,6 @@ MODULE_SOLIBS   = pal ociframework ocicore ociapi ociapi_impl ocitestutils \
                   bm_allocator mtrack sdklinkmgr sdklinkmgrcsr memhash
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
 				   ${NIC_CAPSIM_LDLIBS} \
-				   ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
 				   ${NIC_THIRDPARTY_SSL_LDLIBS} AAPL
 MODULE_INCS     = ${NIC_CSR_INCS}
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}

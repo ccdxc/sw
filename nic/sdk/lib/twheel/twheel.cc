@@ -13,7 +13,6 @@ namespace lib {
 #define TWHEEL_LOCK_SLICE(slice)                                       \
 {                                                                      \
     if (thread_safe_) {                                                \
-        SDK_TRACE_ERR("Lock slice :%d", slice);                        \
         SDK_SPINLOCK_LOCK(&twheel_[(slice)].slock_);                   \
     }                                                                  \
 }
@@ -21,7 +20,6 @@ namespace lib {
 #define TWHEEL_UNLOCK_SLICE(slice)                                     \
 {                                                                      \
     if (thread_safe_) {                                                \
-        SDK_TRACE_ERR("Unlock slice :%d", slice);                      \
         SDK_SPINLOCK_UNLOCK(&twheel_[(slice)].slock_);                 \
     }                                                                  \
 }
