@@ -3529,6 +3529,8 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
         auto prefix = addr.prefix();
         hal_if->source_gw.len = prefix.ipv4_subnet().prefix_len();
         hal_if->source_gw.v4_addr = prefix.ipv4_subnet().address().v4_addr();
+        MAC_UINT64_TO_ADDR(hal_if->gw_mac_da,
+                           if_tunnel_info.prop_mpls_info().gw_mac_da());
     } else {
         ret = HAL_RET_IF_INFO_INVALID;
         HAL_TRACE_ERR("Unsupported encap type : {}", hal_if->encap_type);
@@ -3536,16 +3538,18 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
     }
 
     // Get remote tep EP
-    rtep_ep = tunnel_if_get_remote_tep_ep(hal_if);
-    if (!rtep_ep) {
-        ret = HAL_RET_IF_INFO_INVALID;
-        HAL_TRACE_ERR("Unable to find rtep ep for IP : {}, ret : {}",
-                      hal_if->encap_type == TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_VXLAN ?
-                      ipaddr2str(&hal_if->vxlan_rtep) :
-                      ipaddr2str(&hal_if->gre_dest), ret);
-        goto end;
+    if (hal_if->encap_type != TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
+        rtep_ep = tunnel_if_get_remote_tep_ep(hal_if);
+        if (!rtep_ep) {
+            ret = HAL_RET_IF_INFO_INVALID;
+            HAL_TRACE_ERR("Unable to find rtep ep for IP : {}, ret : {}",
+                          hal_if->encap_type == TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_VXLAN ?
+                          ipaddr2str(&hal_if->vxlan_rtep) :
+                          ipaddr2str(&hal_if->gre_dest), ret);
+            goto end;
+        }
+        hal_if->rtep_ep_handle = rtep_ep->hal_handle;
     }
-    hal_if->rtep_ep_handle = rtep_ep->hal_handle;
 
 end:
 

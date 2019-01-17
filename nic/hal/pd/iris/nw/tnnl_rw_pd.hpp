@@ -114,6 +114,7 @@ extern bool tnnl_rw_entry_pd_compare_key_func(void *key1, void *key2);
 hal_ret_t tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan(pd_tnnl_rw_entry_t *tnnl_rwe);
 hal_ret_t tnnl_rw_pd_pgm_tnnl_rw_tbl_vxlan(pd_tnnl_rw_entry_t *tnnl_rwe);
 hal_ret_t tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan(pd_tnnl_rw_entry_t *tnnl_rwe);
+hal_ret_t tnnl_rw_pd_pgm_tnnl_rw_tbl_mpls_udp(pd_tnnl_rw_entry_t *tnnl_rwe);
 hal_ret_t tnnl_rw_pd_depgm_tnnl_rw_tbl(pd_tnnl_rw_entry_t *tnnl_rwe);
 hal_ret_t tnnl_rw_entry_find(pd_tnnl_rw_entry_key_t *tnnl_rw_key, pd_tnnl_rw_entry_t **tnnl_rwe);
 

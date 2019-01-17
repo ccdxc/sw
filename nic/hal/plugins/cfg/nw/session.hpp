@@ -63,7 +63,8 @@ typedef enum tunnel_rewrite_actions_enum {
     TUNNEL_REWRITE_ENCAP_VXLAN_ID = 1,
     TUNNEL_REWRITE_ENCAP_ERSPAN_ID = 2,
     TUNNEL_REWRITE_ENCAP_VLAN_ID = 3,
-    TUNNEL_REWRITE_MAX_ID = 4
+    TUNNEL_REWRITE_ENCAP_MPLS_UDP_ID = 4,
+    TUNNEL_REWRITE_MAX_ID = 5
 } tunnel_rewrite_actions_en;
 
 // from p4pd.h
