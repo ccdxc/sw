@@ -10,8 +10,7 @@ MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   ${NIC_SDK_SOLIBS} \
                   bm_allocator bitmap mtrack \
                   sdkcapri sdkp4 sdkp4utils sdkxcvrdriver
-MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
-                  ${NIC_THIRDPARTY_SSL_LDLIBS} \
+MODULE_LDLIBS   = ${NIC_THIRDPARTY_SSL_LDLIBS} \
                   ${NIC_CAPSIM_LDLIBS} \
                   ${NIC_COMMON_LDLIBS}
 include ${MKDEFS}/post.mk

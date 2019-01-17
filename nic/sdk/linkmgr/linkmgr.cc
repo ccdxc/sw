@@ -38,7 +38,7 @@ linkmgr_queue_t g_linkmgr_workq[LINKMGR_THREAD_ID_MAX];
 bool port_link_poll_en = true;
 
 bool
-port_link_poll_enabled(void)
+port_link_poll_enabled (void)
 {
     return port_link_poll_en;
 }
@@ -336,7 +336,7 @@ port_debounce_timer (linkmgr_entry_data_t *data)
 }
 
 sdk_ret_t
-xcvr_poll_timer_wrapper(linkmgr_entry_data_t *data)
+xcvr_poll_timer_wrapper (linkmgr_entry_data_t *data)
 {
     sdk::platform::xcvr_poll_timer();
 
@@ -351,7 +351,7 @@ xcvr_poll_timer_wrapper(linkmgr_entry_data_t *data)
 }
 
 sdk_ret_t
-port_link_poll_timer(linkmgr_entry_data_t *data)
+port_link_poll_timer (linkmgr_entry_data_t *data)
 {
     if (port_link_poll_enabled() == true) {
         for (int i = 0; i < MAX_UPLINK_PORTS; ++i) {
@@ -518,7 +518,7 @@ thread_init (linkmgr_cfg_t *cfg)
 }
 
 static void
-linkmgr_workq_init(void)
+linkmgr_workq_init (void)
 {
     uint32_t qid = 0;
     for (qid = 0; qid < LINKMGR_THREAD_ID_MAX; qid++) {
@@ -704,7 +704,7 @@ validate_port_create (port_args_t *args)
         return false;
     }
 
-    return validate_speed_lanes (args->port_speed, args->num_lanes);
+    return validate_speed_lanes(args->port_speed, args->num_lanes);
 }
 
 static void

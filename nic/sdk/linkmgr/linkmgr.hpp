@@ -69,6 +69,7 @@ typedef struct port_args_s {
     port_link_sm_t        link_sm;                    // internal port state machine
     port_loopback_mode_t  loopback_mode;              // port loopback mode - MAC/PHY
     uint32_t              num_link_down;              // number of link down events
+    uint32_t              breakout_modes;             // supported breakout modes
     uint8_t               mac_addr[6];                // MAC addr of port
     uint32_t              sbus_addr[MAX_PORT_LANES];  // set the sbus addr for each lane
 } __PACK__ port_args_t;
@@ -92,5 +93,6 @@ port_args_init (port_args_t *args)
 }    // namespace sdk
 
 using sdk::linkmgr::linkmgr_cfg_t;
+using sdk::linkmgr::port_args_t;
 
 #endif    // __SDK_LINKMGR_HPP__

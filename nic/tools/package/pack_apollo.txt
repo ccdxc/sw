@@ -8,6 +8,8 @@ nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_scale_test                /nic/bin/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE.so                /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_rxdma.so          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_txdma.so          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libp4pd_common_p4plus_txdma.so      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libp4pd_common_p4plus_rxdma.so      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmodel_client.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so               /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_asicrw_if.so            /nic/lib/
@@ -33,6 +35,9 @@ nic/build/$ARCH/$PIPELINE/lib/libtcam.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libtimerfd.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcatalog.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkplatformutils.so              /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgr.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgrcsr.so                 /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmemhash.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdcommon.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcore.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libfte_mock.so                      /nic/lib/
@@ -62,6 +67,7 @@ nic/build/$ARCH/$PIPELINE/lib/libociapi.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libocicore.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libociframework.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libocitestutils.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblpmitree.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblpmitree.so.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/
 nic/build/$ARCH/$PIPELINE/bin/p4pasm/                             /nic/conf/$PIPELINE/p4plus_bin/
@@ -77,7 +83,10 @@ nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/p4pd/capri_p4_table_map
 nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so /platform/lib/
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_without_main.so /platform/lib/
+nic/sdk/third-party/avago/build/aarch64/bin/aapl                  /nic/bin/
+nic/sdk/third-party/avago/build/aarch64/lib/aapl/C/libAAPL.so     /nic/lib/
 nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin
+nic/hal/apollo/test/scale_test/scale_cfg.json                     /nic/conf
 
 #process memory scripts
 nic/tools/run_mem_check.sh                                          /nic/tools/

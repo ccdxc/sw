@@ -252,7 +252,7 @@ thread::start(void *ctxt)
         SDK_TRACE_DEBUG("Instantiated thread, "
                         "name : %s, id : %u, role %u, "
                         "sched_policy : %d, priority : %u, "
-                        "CPU mask: 0x%lx, configured cores mask : %lu, "
+                        "CPU mask: 0x%lx, cores mask : %lu, "
                         "configured cores : %d, available cores : %d",
                         name_, thread_id_, thread_role_,
                         sched_policy_, prio_,

@@ -14,6 +14,7 @@
 #include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/api/impl/oci_impl_state.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
+#include "nic/hal/apollo/api/port.hpp"
 #include "nic/hal/apollo/core/core.hpp"
 
 namespace api {
@@ -107,7 +108,7 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
     linkmgr_cfg_t    cfg;
 
     memset(&cfg, 0, sizeof(cfg));
-    cfg.platform_type = platform_type_t::PLATFORM_TYPE_SIM;
+    cfg.platform_type = g_oci_state.platform_type();
     cfg.catalog = catalog;
     cfg.cfg_path = cfg_path;
     cfg.port_event_cb = NULL;
@@ -148,7 +149,6 @@ oci_init (oci_init_params_t *params)
     ret = core::parse_global_config(params->cfg_file, &api::g_oci_state);
     SDK_ASSERT(ret == SDK_RET_OK);
     api::g_oci_state.set_mpartition(sdk::platform::utils::mpartition::factory());
-    api::g_oci_state.set_platform_type(platform_type_t::PLATFORM_TYPE_SIM);
     if ((api::g_oci_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) ||
         (api::g_oci_state.platform_type() == platform_type_t::PLATFORM_TYPE_HAPS) ||
         (api::g_oci_state.platform_type() == platform_type_t::PLATFORM_TYPE_MOCK)) {
@@ -174,6 +174,7 @@ oci_init (oci_init_params_t *params)
 
     /**< trigger linkmgr initialization */
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
+    SDK_ASSERT(api::create_ports() == SDK_RET_OK);
     return SDK_RET_OK;
 }
 

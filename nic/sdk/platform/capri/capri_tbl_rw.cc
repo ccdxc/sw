@@ -144,15 +144,15 @@ get_sram_shadow_for_table (uint32_t tableid, int gress)
 {
     if ((tableid >= p4pd_tableid_min_get()) &&
         (tableid <= p4pd_tableid_max_get())) {
-        SDK_TRACE_DEBUG("Working with p4 sram shadow for table %u", tableid);
+        //SDK_TRACE_DEBUG("Working with p4 sram shadow for table %u", tableid);
         return (g_shadow_sram_p4[gress]);
     } else if ((tableid >= p4pd_rxdma_tableid_min_get()) &&
                (tableid <= p4pd_rxdma_tableid_max_get())) {
-        SDK_TRACE_DEBUG("Working with rxdma shadow for table %u", tableid);
+        //SDK_TRACE_DEBUG("Working with rxdma shadow for table %u", tableid);
         return (g_shadow_sram_rxdma);
     } else if ((tableid >= p4pd_txdma_tableid_min_get()) &&
                (tableid <= p4pd_txdma_tableid_max_get())) {
-        SDK_TRACE_DEBUG("Working with txdma shadow for table %u", tableid);
+        //SDK_TRACE_DEBUG("Working with txdma shadow for table %u", tableid);
         return (g_shadow_sram_txdma);
     } else {
         SDK_ASSERT(0);
