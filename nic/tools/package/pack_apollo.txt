@@ -40,7 +40,6 @@ nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgrcsr.so                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmemhash.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdcommon.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcore.so                          /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libfte_mock.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libbm_allocator.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libbitmap.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libtrace.so                         /nic/lib/
