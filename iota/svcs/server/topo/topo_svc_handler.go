@@ -6,8 +6,9 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/pensando/sw/iota/svcs/common"
 	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/iota/svcs/common"
 
 	"golang.org/x/crypto/ssh"
 
