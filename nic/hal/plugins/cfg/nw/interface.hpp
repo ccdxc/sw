@@ -157,6 +157,7 @@ typedef struct if_s {
                     ipv4_addr_t     tun_dst_ip;      // Tunnel/outer dest. ip-address (outgoing)
                     mpls_tag_t      mpls_tag;        // MPLS tag information (outgoing)
                     ipv4_prefix_t   source_gw;       // Source gateway ipv4 prefix for MPLSoUDP
+                    mac_addr_t      gw_mac_da;       // Dest. MAC address of the gateway
                     uint32_t        ingress_bw;      // Ingress BW (in KBytes/sec)
                     uint32_t        egress_bw;       // Egress BW (in KBytes/sec)
                     uint8_t         num_overlay_ip;

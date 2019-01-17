@@ -170,6 +170,8 @@ tnnl_rw_entry_alloc(pd_tnnl_rw_entry_key_t *tnnl_rw_key,
         ret = tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan(tnnl_rwe);
     } else if ((uint8_t)tnnl_rwe->tnnl_rw_key.tnnl_rw_act == (uint8_t)TUNNEL_REWRITE_ENCAP_VLAN_ID) {
         ret = tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan(tnnl_rwe);
+    } else if ((uint8_t)tnnl_rwe->tnnl_rw_key.tnnl_rw_act == (uint8_t)TUNNEL_REWRITE_ENCAP_MPLS_UDP_ID) {
+        ret = tnnl_rw_pd_pgm_tnnl_rw_tbl_mpls_udp(tnnl_rwe);
     }
     if (ret != HAL_RET_OK) {
         del_tnnl_rw_entry_pd_from_db(tnnl_rwe);
@@ -328,6 +330,45 @@ tnnl_rw_pd_depgm_tnnl_rw_tbl(pd_tnnl_rw_entry_t *tnnl_rwe)
 //-----------------------------------------------------------------------------
 // Programming the hw entry
 //-----------------------------------------------------------------------------
+#define data_mpls_udp data.action_u.tunnel_rewrite_encap_mpls_udp
+hal_ret_t
+tnnl_rw_pd_pgm_tnnl_rw_tbl_mpls_udp (pd_tnnl_rw_entry_t *tnnl_rwe)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    sdk_ret_t                   sdk_ret;
+    tunnel_rewrite_actiondata_t   data;
+    directmap                   *tnnl_rw_tbl = NULL;
+
+    memset(&data, 0, sizeof(data));
+
+    tnnl_rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
+    HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
+
+    memcpy(data_mpls_udp.mac_sa, tnnl_rwe->tnnl_rw_key.mac_sa, ETH_ADDR_LEN);
+    memrev(data_mpls_udp.mac_sa, ETH_ADDR_LEN);
+    memcpy(data_mpls_udp.mac_da, tnnl_rwe->tnnl_rw_key.mac_da, ETH_ADDR_LEN);
+    memrev(data_mpls_udp.mac_da, ETH_ADDR_LEN);
+    memcpy(&data_mpls_udp.ip_sa, &tnnl_rwe->tnnl_rw_key.ip_sa.addr, sizeof(uint32_t));
+    memcpy(&data_mpls_udp.ip_da, &tnnl_rwe->tnnl_rw_key.ip_da.addr, sizeof(uint32_t));
+    data_mpls_udp.ip_type = tnnl_rwe->tnnl_rw_key.ip_type;
+    data_mpls_udp.vlan_valid = tnnl_rwe->tnnl_rw_key.vlan_valid;
+    data_mpls_udp.vlan_id = tnnl_rwe->tnnl_rw_key.vlan_id;
+    data.action_id = tnnl_rwe->tnnl_rw_key.tnnl_rw_act;
+    sdk_ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD-tnnl_rw: Unable to program at tnnl_rw_id: {} for ",
+                      tnnl_rwe->tnnl_rw_idx);
+        tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
+    } else {
+        HAL_TRACE_DEBUG("Programmed at tnnl_rw_id: {} for ",
+                        tnnl_rwe->tnnl_rw_idx);
+        tnnl_rw_entry_key_trace(&tnnl_rwe->tnnl_rw_key);
+    }
+
+    return ret;
+}
+
 #define data_erspan data.action_u.tunnel_rewrite_encap_erspan
 hal_ret_t
 tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan (pd_tnnl_rw_entry_t *tnnl_rwe)

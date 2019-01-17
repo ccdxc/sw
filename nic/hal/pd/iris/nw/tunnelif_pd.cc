@@ -665,7 +665,7 @@ pd_tunnelif_del_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif)
     return ret;
 }
 
-tunnel_rewrite_actions_en
+tunnel_rewrite_actions_enum
 pd_tunnelif_get_p4pd_encap_action_id (intf::IfTunnelEncapType encap_type)
 {
     switch (encap_type) {
@@ -673,6 +673,8 @@ pd_tunnelif_get_p4pd_encap_action_id (intf::IfTunnelEncapType encap_type)
             return TUNNEL_REWRITE_ENCAP_VXLAN_ID;
         case intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_GRE:
             return TUNNEL_REWRITE_ENCAP_ERSPAN_ID;
+        case intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS:
+            return TUNNEL_REWRITE_ENCAP_MPLS_UDP_ID;
         default:
             return TUNNEL_REWRITE_NOP_ID;
     }
@@ -699,24 +701,23 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     HAL_ABORT_TRACE(pi_if, "PD should always have PI");
 
     actionid = pd_tunnelif_get_p4pd_encap_action_id(pi_if->encap_type);
-
-    rtep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
-    HAL_ABORT_TRACE(rtep_ep, "ABORT:should have caught in PI");
-
-    l2seg = l2seg_lookup_by_handle(rtep_ep->l2seg_handle);
-    HAL_ABORT_TRACE(l2seg, "ABORT: EP should not exist with no l2seg");
-
-    ep_if = find_if_by_handle(rtep_ep->if_handle);
-    HAL_ABORT_TRACE(ep_if, "ABORT: EP should not exist with no IF");
-
-    ret = if_l2seg_get_encap(ep_if, l2seg, &vlan_v, &vlan_id);
-    HAL_ABORT_TRACE(ret == HAL_RET_OK, "ABORT: EP presence means "
-                    "l2seg should be UP on IF");
-
     tnnl_rw_key->tnnl_rw_act = (tunnel_rewrite_actions_en) actionid;
 
     if ((actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) ||
         (actionid == TUNNEL_REWRITE_ENCAP_ERSPAN_ID)) {
+        rtep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
+        HAL_ABORT_TRACE(rtep_ep, "ABORT:should have caught in PI");
+    
+        l2seg = l2seg_lookup_by_handle(rtep_ep->l2seg_handle);
+        HAL_ABORT_TRACE(l2seg, "ABORT: EP should not exist with no l2seg");
+    
+        ep_if = find_if_by_handle(rtep_ep->if_handle);
+        HAL_ABORT_TRACE(ep_if, "ABORT: EP should not exist with no IF");
+    
+        ret = if_l2seg_get_encap(ep_if, l2seg, &vlan_v, &vlan_id);
+        HAL_ABORT_TRACE(ret == HAL_RET_OK, "ABORT: EP presence means "
+                        "l2seg should be UP on IF");
+        
         /* MAC DA */
         mac = ep_get_mac_addr(rtep_ep);
         memcpy(tnnl_rw_key->mac_da, mac, sizeof(mac_addr_t));
@@ -737,11 +738,19 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
             memcpy(&tnnl_rw_key->ip_da, &pi_if->gre_dest,
                    sizeof(ip_addr_t));
         }
-
         tnnl_rw_key->ip_type = IP_HEADER_TYPE_IPV4;
-
         tnnl_rw_key->vlan_valid = vlan_v;
         tnnl_rw_key->vlan_id = vlan_id;
+    } else if (actionid == TUNNEL_REWRITE_ENCAP_MPLS_UDP_ID) {
+        memcpy(tnnl_rw_key->mac_da, pi_if->gw_mac_da, sizeof(mac_addr_t));
+        memset(tnnl_rw_key->mac_sa, 0, sizeof(mac_addr_t));
+        tnnl_rw_key->ip_sa.af = IP_AF_IPV4;
+        tnnl_rw_key->ip_sa.addr.v4_addr = pi_if->substrate_ip;
+        tnnl_rw_key->ip_da.af = IP_AF_IPV4;
+        tnnl_rw_key->ip_da.addr.v4_addr = pi_if->tun_dst_ip;
+        tnnl_rw_key->ip_type = IP_HEADER_TYPE_IPV4;
+        tnnl_rw_key->vlan_valid = 0;
+        tnnl_rw_key->vlan_id = 0;
     }
 
     return ret;
