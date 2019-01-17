@@ -26,10 +26,13 @@ eth_rx_rss_params:
 
   indexb              r7, r1, [RSS_IPV4_UDP, RSS_IPV4_TCP, RSS_IPV4, RSS_NONE], 0
   indexb              r7, r1, [RSS_IPV6_UDP, RSS_IPV6_TCP, RSS_IPV6], 1
+  seq                 c7, r7, ~0x0
+  indexb.c7           r7, r1, [PKT_TYPE_IPV4_UDP, PKT_TYPE_IPV4_TCP, 0xff, 0], 0
+  indexb.c7           r7, r1, [PKT_TYPE_IPV6_UDP, PKT_TYPE_IPV6_TCP, 0], 1
 
 .brbegin
   br                  r7[2:0]
-  phvwr               p.eth_rx_cq_desc_rss_type, r7
+  phvwr               p.eth_rx_cq_desc_rss_type, r7[2:0]
 
   .brcase 0
     b                   eth_rx_rss_none
@@ -61,6 +64,7 @@ eth_rx_rss_params:
     phvwri              p.{app_header_table0_valid...app_header_table3_valid}, 0
 
   .brcase 7
+    phvwr               p.eth_rx_cq_desc_rss_type, 0
     b                   eth_rx_rss_none
     phvwri              p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
 
