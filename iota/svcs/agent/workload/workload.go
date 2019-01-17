@@ -532,8 +532,15 @@ func (app *remoteWorkload) Reinit() error {
 		User: app.username,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(app.password),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
+				answers = make([]string, len(questions))
+				for n := range questions {
+					answers[n] = app.password
+				}
+
+				return answers, nil
+			}),
+		}, HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 	fmt.Println("App : ", app.ip, app.port, app.username, app.password)
 	if app.sshHandle, err = ssh.Dial("tcp", app.ip+":"+app.port, config); err != nil {

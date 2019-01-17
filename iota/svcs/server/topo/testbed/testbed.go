@@ -3,13 +3,9 @@ package testbed
 import (
 	"context"
 	"fmt"
-	"os"
-	"os/exec"
 	"strings"
 
 	"golang.org/x/crypto/ssh"
-
-	"github.com/pkg/errors"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	constants "github.com/pensando/sw/iota/svcs/common"
@@ -18,32 +14,6 @@ import (
 	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
 )
-
-func (n *TestNode) downloadControlVMImage() (string, error) {
-
-	ctrlVMDir := constants.ControlVMImageDirectory + "/" + constants.EsxControlVMImage
-	imageName := constants.EsxControlVMImage + ".ova"
-	cwd, _ := os.Getwd()
-	mkdir := []string{"mkdir", "-p", ctrlVMDir}
-	if stdout, err := exec.Command(mkdir[0], mkdir[1:]...).CombinedOutput(); err != nil {
-		return "", errors.Wrap(err, string(stdout))
-	}
-
-	os.Chdir(ctrlVMDir)
-	defer os.Chdir(cwd)
-
-	buildIt := []string{constants.BuildItBinary, "-t", constants.BuildItURL, "image", "pull", "-o", imageName, constants.EsxControlVMImage}
-	if stdout, err := exec.Command(buildIt[0], buildIt[1:]...).CombinedOutput(); err != nil {
-		return "", errors.Wrap(err, string(stdout))
-	}
-
-	tarCmd := []string{"tar", "-xvf", imageName}
-	if stdout, err := exec.Command(tarCmd[0], tarCmd[1:]...).CombinedOutput(); err != nil {
-		return "", errors.Wrap(err, string(stdout))
-	}
-
-	return ctrlVMDir, nil
-}
 
 func (n *TestNode) cleanupEsxNode() error {
 
@@ -67,13 +37,22 @@ func (n *TestNode) cleanupEsxNode() error {
 	}
 
 	/* Delete all invalid VMS too */
+	pass := n.Node.EsxConfig.Password
 	cfg := &ssh.ClientConfig{
 		User: n.Node.EsxConfig.Username,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(n.Node.EsxConfig.Password),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
+				answers = make([]string, len(questions))
+				for n := range questions {
+					answers[n] = pass
+				}
+
+				return answers, nil
+			}),
+		}, HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
+
 	runner := runner.NewRunner(cfg)
 	addr := fmt.Sprintf("%s:%d", n.Node.EsxConfig.IpAddress, constants.SSHPort)
 	cmd := `vim-cmd /vmsvc/getallvm  2>&1 >/dev/null  | cut -d' ' -f 4`
@@ -111,12 +90,9 @@ func (n *TestNode) cleanupEsxNode() error {
 }
 
 func (n *TestNode) initEsxNode() error {
-	var ctrlVMDir string
 	var err error
 
-	if ctrlVMDir, err = n.downloadControlVMImage(); err != nil {
-		return errors.Wrap(err, "Download control image failed")
-	}
+	ctrlVMDir := constants.ControlVMImageDirectory + "/" + constants.EsxControlVMImage
 
 	host, err := vmware.NewHost(context.Background(), n.Node.EsxConfig.IpAddress, n.Node.EsxConfig.Username, n.Node.EsxConfig.Password)
 	if err != nil {
@@ -309,7 +285,14 @@ func InitSSHConfig(user, pass string) *ssh.ClientConfig {
 		User: user,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(pass),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
+				answers = make([]string, len(questions))
+				for n := range questions {
+					answers[n] = pass
+				}
+
+				return answers, nil
+			}),
+		}, HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 }

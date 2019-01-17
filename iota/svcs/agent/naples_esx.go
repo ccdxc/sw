@@ -146,8 +146,15 @@ func (naples *esxHwNode) getNaplesMgmtIntf() (string, error) {
 		User: naples.hostUsername,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(naples.hostPassword),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
+				answers = make([]string, len(questions))
+				for n := range questions {
+					answers[n] = naples.hostPassword
+				}
+
+				return answers, nil
+			}),
+		}, HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
 	sshHandle, err = ssh.Dial("tcp", naples.hostIP+":"+strconv.Itoa(sshPort), sshConfig)

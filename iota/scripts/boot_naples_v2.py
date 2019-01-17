@@ -444,9 +444,10 @@ class EsxHostManagement(HostManagement):
             self.__host_connect()
         assert(install_success)
         #After installing drivers, no need to do esx startup as we are done installing firmware and driver
-        self.__check_naples_deivce()
+        #Skip naples check as reboot is not done
+        #self.__check_naples_deivce()
         #Sleep for some time to get all other services up
-        time.sleep(30)
+        #time.sleep(30)
 
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
         if mount_data:
