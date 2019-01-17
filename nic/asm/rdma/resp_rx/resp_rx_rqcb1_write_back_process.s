@@ -166,7 +166,7 @@ check_ack_nak:
     bcf         [!c3], invoke_stats
     nop // BD Slot
 
-#ifdef HAPS
+#if defined (HAPS) || defined (HW)
     RESP_RX_POST_ACK_INFO_TO_TXDMA_HW_DB_ONLY(DMA_CMD_BASE,
                                    K_GLOBAL_LIF,
                                    K_GLOBAL_QTYPE,
