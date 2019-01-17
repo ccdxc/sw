@@ -221,20 +221,7 @@ static bool ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
 			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_UDP_IPV6);
 			stats->rss_udp_ip6++;
 			break;
-		case RXQ_COMP_RSS_TYPE_IPV6_EX:
-			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_IPV6_EX);
-			stats->rss_ip6_ex++;
-			break;
-		case RXQ_COMP_RSS_TYPE_IPV6_TCP_EX:
-			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_TCP_IPV6_EX);
-			stats->rss_tcp_ip6_ex++;
-			tcp = true;
-			break;
-		case RXQ_COMP_RSS_TYPE_IPV6_UDP_EX:
-			M_HASHTYPE_SET(m, M_HASHTYPE_RSS_UDP_IPV6_EX);
-			stats->rss_udp_ip6_ex++;
-			break;
-		default:	/* XXX: Not used */
+		default:
 			M_HASHTYPE_SET(m, M_HASHTYPE_OPAQUE_HASH);
 			stats->rss_unknown++;
 			break;
@@ -2046,22 +2033,13 @@ ionic_set_rss_type(void)
 		rss_types |= IONIC_RSS_TYPE_IPV6_TCP;
 	if (rss_hash_config & RSS_HASHTYPE_RSS_UDP_IPV6)
 		rss_types |= IONIC_RSS_TYPE_IPV6_UDP;
-	if (rss_hash_config & RSS_HASHTYPE_RSS_IPV6_EX)
-		rss_types |= IONIC_RSS_TYPE_IPV6_EX;
-	if (rss_hash_config & RSS_HASHTYPE_RSS_TCP_IPV6_EX)
-		rss_types |= IONIC_RSS_TYPE_IPV6_TCP_EX;
-	if (rss_hash_config & RSS_HASHTYPE_RSS_UDP_IPV4_EX)
-		rss_types |= IONIC_RSS_TYPE_IPV6_UDP_EX;
 #else
 	uint16_t rss_types = IONIC_RSS_TYPE_IPV4
 			       | IONIC_RSS_TYPE_IPV4_TCP
 			       | IONIC_RSS_TYPE_IPV4_UDP
 			       | IONIC_RSS_TYPE_IPV6
 			       | IONIC_RSS_TYPE_IPV6_TCP
-			       | IONIC_RSS_TYPE_IPV6_UDP
-			       | IONIC_RSS_TYPE_IPV6_EX
-			       | IONIC_RSS_TYPE_IPV6_TCP_EX
-			       | IONIC_RSS_TYPE_IPV6_UDP_EX;
+			       | IONIC_RSS_TYPE_IPV6_UDP;
 #endif
 
 	return (rss_types);
