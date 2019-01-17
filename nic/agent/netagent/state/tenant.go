@@ -34,12 +34,12 @@ func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 		return nil
 	}
 
-	tn.Status.TenantID, err = na.Store.GetNextID(types.VrfID)
-
+	vrfID, err := na.Store.GetNextID(types.VrfID)
 	if err != nil {
 		log.Errorf("Could not allocate tenant id. {%+v}", err)
 		return err
 	}
+	tn.Status.TenantID = vrfID + types.VrfOffset
 
 	// create it in datapath
 	err = na.Datapath.CreateVrf(tn.Status.TenantID, "")

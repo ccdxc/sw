@@ -32,7 +32,12 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 		return nil
 	}
 
-	ns.Status.NamespaceID, err = na.Store.GetNextID(types.VrfID)
+	vrfID, err := na.Store.GetNextID(types.VrfID)
+	if err != nil {
+		log.Errorf("Could not allocate namespace id. {%+v}", err)
+		return err
+	}
+	ns.Status.NamespaceID = vrfID + types.VrfOffset
 
 	if err != nil {
 		log.Errorf("Could not allocate namespace id. {%+v}", err)

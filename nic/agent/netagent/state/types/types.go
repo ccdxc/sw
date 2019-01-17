@@ -25,6 +25,9 @@ const (
 
 	// TunnelOffset will ensure that agent will allocate tunnel IDs starting from UplinkOffset + 20000
 	TunnelOffset = UplinkOffset + 20000
+
+	// VrfOffset will ensure that agent will allocate VRF IDs starting from 65.i.e. NETAGENT_VRF_ID_MIN
+	VrfOffset = 64
 )
 
 // ID types
