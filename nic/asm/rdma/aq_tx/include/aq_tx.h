@@ -133,10 +133,11 @@ struct aq_tx_phv_t {
     union {
         struct aq_tx_dma_cmds_flit_t flit_9;
         struct {
+            proxy_cindex: 16;
             map_count_completed: 32;
             first_pass: 8;
             busy: 8;
-            pad: 80;
+            pad: 64;
             dma_cmds_1_2_3: 384;
         };
     };

@@ -31,13 +31,16 @@ rdma_aq_tx_feedback_process:
     // OP_TYPE, ERROR and STATUS is set in prior stages
 
     seq         c2, K_AQ_CMD_DONE, 1
-    tblwr.c2    AQ_C_INDEX, AQ_PROXY_C_INDEX
 
-    bcf         [!c2], exit
+    bcf         [!c2], multi_pass
+    add         r2, r0, K_WQE_ID  //BD slot
     
-    phvwr       p.rdma_feedback.feedback_type, RDMA_AQ_FEEDBACK  //BD slot
+    phvwr       p.rdma_feedback.feedback_type, RDMA_AQ_FEEDBACK  
     phvwr       p.rdma_feedback.aq_completion.wqe_id, K_WQE_ID
 
+    mincr       r2, d.log_num_wqes, 1
+    phvwr       p.proxy_cindex, r2[15:0].hx
+    
     //get DMA cmd entry based on dma_cmd_index
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_FEEDBACK)
 
@@ -82,3 +85,11 @@ bubble_to_next_stage:
 exit:
     nop.e
     nop
+
+multi_pass:
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_BUSY)
+    DMA_SET_END_OF_PKT(DMA_CMD_PHV2PKT_T, r6)
+    DMA_SET_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
+    nop.e
+    nop
+    

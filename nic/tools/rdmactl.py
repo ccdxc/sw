@@ -53,22 +53,26 @@ class RdmaAQCB0state(Packet):
         LEShortField("p_index0", 0),
         LEShortField("c_index0", 0),
 
-        LEShortField("proxy_cindex", 0),
+        IntField("map_count_completed", 0),
+        ByteField("first_pass", 0),
+        ByteField("busy", 0),
+
+        BitField("rsvd1", 0, 32),
+
         BitField("log_wqe_size", 0, 5),
         BitField("log_num_size", 0, 5),
         BitField("ring_empty_sched_eval_done", 0, 1), 
         BitField("rsvd2", 0 , 5),
 
         XLongField("phy_base_addr", 0),
-        ByteField("rsvd", 0),
+
+        ByteField("rsvd3", 0),
         X3BytesField("aq_id", 0),
         X3BytesField("cq_id", 0),
         ByteField("error", 0),
+
         XLongField("cqcb_addr", 0),
-        IntField("map_count_completed", 0),
-        ByteField("first_pass", 0),
-        ByteField("busy", 0),
-        BitField("pad", 0, 144),
+        BitField("pad", 0, 128),
     ]
 
 
@@ -816,7 +820,7 @@ class RdmaAQWqeBase(Packet):
         ByteEnumField("op", 0, {0:'NOP', 1:'Create CQ', 2:'Create QP', 3:'Reg MR', 6:'Dereg MR', 9:'Modify QP', 11:'Destroy QP', 12:'Stats Dump'}),
         ByteField("type_state", 0),
         XLEShortField("dbid_flags", 0),
-        LEIntField("id_ver", 0),
+        IntField("id_ver", 0),
     ]
 
 class RdmaAQWqeStats(Packet):
@@ -925,7 +929,7 @@ bind_layers(RdmaAQWqeBase, RdmaAQWqeQuery, op=10)
 class RdmaAqCqe(Packet):
     name = "RdmaAqCqe"
     fields_desc = [
-        LEShortField("cmd_idx", 0),
+        ShortField("cmd_idx", 0),
         ByteField("cmd_op", 0),
         BitField("rsvd", 0, 136),
         LEShortField("old_sq_cindex", 0),
@@ -952,7 +956,10 @@ def parse_dmesg():
                 for i in range(4):
                     line = fp.readline().rstrip('\n')
                     print line
-                    m = re.match(r"(.*?wqe\W+\[\w+\])\W+([ A-Fa-f0-9]*)$", line)
+                    if sys.platform.startswith('freebsd'):
+                        m = re.match(r"(.*wqe\W+\[.*?\])([ A-Fa-f0-9]+).*", line)
+                    else:
+                        m = re.match(r"(.*wqe.*:)([ A-Fa-f0-9]+).*", line)
                     if m is not None:
                         tmp_str = tmp_str + m.group(2)
                     else:
@@ -975,7 +982,10 @@ def parse_dmesg():
                 i = 0
                 for i in range(2):
                     print line
-                    m = re.match(r"(.*?cqe\W+\[\w+\])\W+([ A-Fa-f0-9]*)$", line)
+                    if sys.platform.startswith('freebsd'):
+                        m = re.match(r"(.*cqe\W+\[.*?\])([ A-Fa-f0-9]+).*", line)
+                    else:
+                        m = re.match(r"(.*cqe.*:)([ A-Fa-f0-9]+).*", line)
                     if m is not None:
                         tmp_str = tmp_str + m.group(2)
                     else:

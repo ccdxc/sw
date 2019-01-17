@@ -21,7 +21,11 @@ struct aqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
     struct capri_intrinsic_ring_t ring0;
 
-    proxy_cindex: 16;
+    map_count_completed: 32;
+    first_pass: 8;
+    busy: 8;
+
+    rsvd1: 32;
 
     log_wqe_size: 5;
     log_num_wqes: 5;
@@ -30,7 +34,7 @@ struct aqcb0_t {
 
     phy_base_addr: 64;
 
-    rsvd: 8;
+    rsvd3: 8;
     aq_id: 24;
 
     cq_id: 24;
@@ -38,12 +42,9 @@ struct aqcb0_t {
 
     cqcb_addr: 64;
 
-    map_count_completed: 32;
-    first_pass: 8;
-    busy: 8;
-    
-    pad: 144;
+    pad: 128;
 };
+
 
 struct aqcb1_t {
     num_nop: 16;

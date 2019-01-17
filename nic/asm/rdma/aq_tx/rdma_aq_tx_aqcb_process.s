@@ -42,9 +42,11 @@ rdma_aq_tx_aqcb_process:
         nop
 
         tblwr       d.busy, 1 //BD Slot
+        tblwr.f       d.ring_empty_sched_eval_done, 0 //BD Slot
 
         //Default   values
         phvwr       p.first_pass, 1
+        phvwr       p.proxy_cindex, AQ_C_INDEX
         phvwr       CAPRI_PHV_FIELD(TO_S_FB_INFO_P, aq_cmd_done), 1
     
         // copy intrinsic to global
@@ -62,8 +64,8 @@ rdma_aq_tx_aqcb_process:
 
         DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_BUSY)
         mfspr       r2, spr_tbladdr
-        add         r2, r2, FIELD_OFFSET(aqcb0_t, map_count_completed)
-        DMA_HBM_PHV2MEM_SETUP_F(r6, map_count_completed, busy, r2)    
+        add         r2, r2, FIELD_OFFSET(aqcb0_t, ring0.cindex)
+        DMA_HBM_PHV2MEM_SETUP_F(r6, proxy_cindex, busy, r2)    
     
         CAPRI_RESET_TABLE_0_ARG()
 
@@ -76,10 +78,7 @@ rdma_aq_tx_aqcb_process:
 
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_wqe_process, r3)
 
-        /* increment the proxy cindex only if it is the first pass of an admin command */
-        tblmincri.c2   AQ_PROXY_C_INDEX, d.log_num_wqes, 1
-
-        tblwr.e     d.ring_empty_sched_eval_done, 0 //BD Slot
+        nop.e
         nop
     
     .brend
