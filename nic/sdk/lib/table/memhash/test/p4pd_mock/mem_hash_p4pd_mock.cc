@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 #include <assert.h>
 #include <string.h>
@@ -42,7 +42,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         // MEM_HASH_P4TBL_ID_H10
         .name = "MEM_HASH_P4TBL_ID_H10",
         .ksize = sizeof(mem_hash_h10_key_t), 
-        .dsize = sizeof(mem_hash_h10_info_t),
+        .dsize = sizeof(mem_hash_h10_actiondata_t),
         .asize = sizeof(mem_hash_h10_appdata_t),
         .tsize = 256*1024,
     },
@@ -50,7 +50,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         // MEM_HASH_P4TBL_ID_H10_OHASH
         .name = "MEM_HASH_P4TBL_ID_H10_OHASH",
         .ksize = sizeof(mem_hash_h10_key_t), 
-        .dsize = sizeof(mem_hash_h10_info_t),
+        .dsize = sizeof(mem_hash_h10_actiondata_t),
         .asize = sizeof(mem_hash_h10_appdata_t),
         .tsize = 64*1024,
     },
@@ -58,7 +58,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         // MEM_HASH_P4TBL_ID_H5
         .name = "MEM_HASH_P4TBL_ID_H5",
         .ksize = sizeof(mem_hash_h5_key_t), 
-        .dsize = sizeof(mem_hash_h5_info_t),
+        .dsize = sizeof(mem_hash_h5_actiondata_t),
         .asize = sizeof(mem_hash_h5_appdata_t),
         .tsize = 16*1024*1024,
     },
@@ -66,7 +66,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         // MEM_HASH_P4TBL_ID_H5_OHASH
         .name = "MEM_HASH_P4TBL_ID_H5_OHASH",
         .ksize = sizeof(mem_hash_h5_key_t), 
-        .dsize = sizeof(mem_hash_h5_info_t),
+        .dsize = sizeof(mem_hash_h5_actiondata_t),
         .asize = sizeof(mem_hash_h5_appdata_t),
         .tsize = 2*1024*1024,
     },
@@ -77,7 +77,7 @@ typedef struct mem_hash_mock_table_s {
     void    *dlist;
 } mem_hash_mock_table_t;
 
-mem_hash_mock_table_t mocktables[MEM_HASH_P4TBL_ID_MAX];
+static mem_hash_mock_table_t mocktables[MEM_HASH_P4TBL_ID_MAX];
 
 typedef int p4pd_error_t;
 
@@ -150,6 +150,9 @@ mem_hash_mock_get_valid_count (uint32_t table_id)
         case MEM_HASH_P4TBL_ID_H5_OHASH:
         {
             mem_hash_h5_actiondata_t *dlist = (mem_hash_h5_actiondata_t *)(mocktables[table_id].dlist);
+            if (dlist[i].action_u.info.entry_valid) { 
+                assert(dlist[i].action_u.info.entry_valid == 1);
+            }
             count = count + dlist[i].action_u.info.entry_valid;
             break;
         }

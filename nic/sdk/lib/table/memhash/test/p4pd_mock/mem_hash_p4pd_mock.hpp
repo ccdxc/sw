@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // This file contains Key and Data structures used to test the mem hash library.
 // The variations mostly are because of the difference in key and data sizes which
 // changes the number of hints.

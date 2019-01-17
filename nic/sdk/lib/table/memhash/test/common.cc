@@ -1,10 +1,11 @@
 //------------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
 
+#include "include/sdk/table.hpp"
 #include "nic/sdk/lib/table/memhash/test/p4pd_mock/mem_hash_p4pd_mock.hpp"
 #include "common.hpp"
 
@@ -147,7 +148,7 @@ h5_alloc_entry()
 }
 
 h5_entry_t*
-h5_gen_cache_entry (h5_crc32_t *crc32, mem_hash_api_params_t *params)
+h5_gen_cache_entry (h5_crc32_t *crc32, sdk_table_api_params_t *params)
 {
     void *key = NULL;
     void *data = NULL;
@@ -180,7 +181,7 @@ h5_get_cache_count ()
 }
 
 h5_entry_t *
-h5_get_cache_entry (uint32_t index, mem_hash_api_params_t *params)
+h5_get_cache_entry (uint32_t index, sdk_table_api_params_t *params)
 {
     h5_entry_t *entry = &g_h5_cache[index];
     
@@ -193,7 +194,7 @@ h5_get_cache_entry (uint32_t index, mem_hash_api_params_t *params)
 }
 
 h5_entry_t *
-h5_get_updated_cache_entry (uint32_t index, mem_hash_api_params_t *params)
+h5_get_updated_cache_entry (uint32_t index, sdk_table_api_params_t *params)
 {
     h5_entry_t *entry = h5_get_cache_entry(index, params);
     void *data = NULL;

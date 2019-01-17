@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #include "include/sdk/base.hpp"
 
@@ -16,7 +16,7 @@ using sdk::table::memhash::mem_hash_api_context;
 // Factory method to instantiate the mem_hash_main_table class
 //---------------------------------------------------------------------------
 mem_hash_main_table *
-mem_hash_main_table::factory(uint32_t id, uint32_t size, void *hint_table) {
+mem_hash_main_table::factory(mem_hash_properties_t *props) {
     void *mem = NULL;
     mem_hash_main_table *table = NULL;
     sdk_ret_t ret = SDK_RET_OK;
@@ -29,7 +29,7 @@ mem_hash_main_table::factory(uint32_t id, uint32_t size, void *hint_table) {
 
     table = new (mem) mem_hash_main_table();
 
-    ret = table->init_(id, size, hint_table);
+    ret = table->init_(props);
     if (ret != SDK_RET_OK) {
         table->~mem_hash_main_table();
         SDK_FREE(SDK_MEM_ALLOC_mem_HASH_MAIN_TABLE, mem);
@@ -42,17 +42,19 @@ mem_hash_main_table::factory(uint32_t id, uint32_t size, void *hint_table) {
 // mem_hash_main_table init_()
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash_main_table::init_(uint32_t id, uint32_t size, void *hint_table) {
+mem_hash_main_table::init_(mem_hash_properties_t *props) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    ret = mem_hash_base_table::init_(id, size);
+    ret = mem_hash_base_table::init_(props->main_table_id,
+                                     props->main_table_size);
 
     num_hash_bits_ = 32 - num_table_index_bits_;
     SDK_TRACE_DEBUG("MainTable: Created mem_hash_main_table "
                     "TableID:%d TableSize:%d NumTableIndexBits:%d NumHashBits:%d",
                     table_id_, table_size_, num_table_index_bits_, num_hash_bits_);
 
-    hint_table_ = static_cast<mem_hash_hint_table*>(hint_table);
+    hint_table_ = mem_hash_hint_table::factory(props);
+    SDK_ASSERT_RETURN(hint_table_, SDK_RET_OOM);
 
     return ret;
 }
@@ -62,6 +64,7 @@ mem_hash_main_table::init_(uint32_t id, uint32_t size, void *hint_table) {
 //---------------------------------------------------------------------------
 void
 mem_hash_main_table::destroy_(mem_hash_main_table *table) {
+    mem_hash_hint_table::destroy_(table->hint_table_);
     mem_hash_base_table::destroy_(table);
 }
 
@@ -121,6 +124,8 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
         //         written. we can update the main entry. This will ensure 
         //         make before break for any downstream changes.
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->write_(ctx);
+
+        MEM_HASH_HANDLE_SET_INDEX(ctx, ctx->table_index);
     } else {
         SDK_TRACE_DEBUG("MainTable: insert failed: ret:%d", ret);
     }
@@ -133,8 +138,33 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_main_table::remove_(mem_hash_api_context *ctx) {
+    sdk_ret_t ret = SDK_RET_OK;
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
-    return static_cast<mem_hash_table_bucket*>(ctx->bucket)->remove_(ctx);
+    ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->remove_(ctx);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    SDK_ASSERT(ctx->match_type);
+
+    if (ctx->is_exact_match()) {
+        // This means there was an exact match in the main table and
+        // it was removed. Check and defragment the hints if required.
+        if (ctx->is_hint_valid()) {
+            ret = hint_table_->defragment_(ctx);
+            if (ret != SDK_RET_OK) {
+                SDK_TRACE_DEBUG("defragment_ failed, ret:%d", ret);
+            }
+        }
+    } else {
+        // We have a hint match, traverse the hints to remove the entry.
+        ret = hint_table_->remove_(ctx);
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_DEBUG("hint table remove_ failed, ret:%d", ret);
+        }
+    }
+
+    return ret;
 }
 
 //---------------------------------------------------------------------------

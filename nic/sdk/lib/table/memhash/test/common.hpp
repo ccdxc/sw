@@ -1,14 +1,15 @@
 //------------------------------------------------------------------------------
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
 #ifndef __COMMON_HPP__
 #define __COMMON_HPP__
 
+#include "include/sdk/table.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/sdk/lib/table/memhash/test/p4pd_mock/mem_hash_p4pd_mock.hpp"
 
-using sdk::table::mem_hash_api_params_t;
+using sdk::table::sdk_table_api_params_t;
 using sdk::table::mem_hash_factory_params_t;
 
 #define MAX_RECIRCS 8
@@ -61,18 +62,18 @@ void* h10_gendata();
 
 uint32_t h10_gencrc32(bool nextindex = true, bool nexthint = true);
 h5_entry_t* h5_get_cache_entry(uint32_t index,
-                               mem_hash_api_params_t *params);
+                               sdk_table_api_params_t *params);
 h5_entry_t * h5_get_updated_cache_entry(uint32_t index, 
-                                        mem_hash_api_params_t *params);
+                                        sdk_table_api_params_t *params);
 h5_entry_t* h5_gen_cache_entry(h5_crc32_t *crc32,
-                               mem_hash_api_params_t *params);
+                               sdk_table_api_params_t *params);
 uint32_t h5_get_cache_count();
 void h5_reset_cache();
 
 h10_entry_t* h10_get_cache_entry(uint32_t index,
-                                 mem_hash_api_params_t *params);
+                                 sdk_table_api_params_t *params);
 h10_entry_t* h10_gen_cache_entry(h10_crc32_t *crc32,
-                                 mem_hash_api_params_t *params);
+                                 sdk_table_api_params_t *params);
 uint32_t h10_get_cache_count();
 void h10_reset_cache();
 
