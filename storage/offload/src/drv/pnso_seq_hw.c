@@ -339,17 +339,19 @@ pprint_crypto_chain_params(const struct crypto_chain_params *chain_params)
 static void
 __write_bit_(uint8_t *p, unsigned int bit_off, bool val)
 {
-	unsigned int start_byte = bit_off >> 3;
-	uint8_t mask = 1 << (7 - (bit_off & 7));
+	unsigned int start_byte;
+	uint8_t mask;
 
-	if (val)
+	/* Assumes p was already memset to zero, no need to clear bits */
+	if (val) {
+		start_byte = bit_off >> 3;
+		mask = 1 << (7 - (bit_off & 7));
 		p[start_byte] |= mask;
-	else
-		p[start_byte] &= ~mask;
+	}
 }
 
 static void
-write_bit_fields(void *ptr, unsigned int start_bit_offset,
+write_bits(void *ptr, unsigned int start_bit_offset,
 		unsigned int size_in_bits, uint64_t value)
 {
 	uint8_t *p = (uint8_t *)ptr;
@@ -362,6 +364,21 @@ write_bit_fields(void *ptr, unsigned int start_bit_offset,
 				value & (1ull << bit_no));
 	}
 }
+
+/* Assumes bit_offset is an even multiple of 64, and length is 64 */
+static void
+write_64bits(void *ptr, unsigned int start_bit_offset,
+	     uint64_t value)
+{
+	uint64_t *p = (uint64_t *)(ptr + (start_bit_offset / 8));
+
+	*p = cpu_to_be64(value);
+}
+
+#define write_bit_fields(p, off, sz, val) \
+	if ((sz) == 64 && ((off) & 63) == 0) write_64bits(p, off, val);	\
+	else write_bits(p, off, sz, val)
+
 
 static void
 fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
@@ -423,7 +440,7 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 			cmd->ccpc_next_db_action_ring_push);
 
 	// desc bytes 64-127
-	write_bit_fields(seq_status_desc, 512 + 0, 64, 0);
+	//write_bit_fields(seq_status_desc, 512 + 0, 64, 0);
 	write_bit_fields(seq_status_desc, 512 + 64, 64,
 			chain_params->ccp_comp_buf_addr);
 	write_bit_fields(seq_status_desc, 512 + 128, 64,
