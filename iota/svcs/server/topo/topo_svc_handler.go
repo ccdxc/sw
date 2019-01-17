@@ -3,8 +3,11 @@ package topo
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
 
 	"github.com/pensando/sw/iota/svcs/common"
+	"github.com/pkg/errors"
 
 	"golang.org/x/crypto/ssh"
 
@@ -30,6 +33,32 @@ func NewTopologyServiceHandler() *TopologyService {
 	return &topoServer
 }
 
+func (n *TopologyService) downloadImages() error {
+
+	ctrlVMDir := common.ControlVMImageDirectory + "/" + common.EsxControlVMImage
+	imageName := common.EsxControlVMImage + ".ova"
+	cwd, _ := os.Getwd()
+	mkdir := []string{"mkdir", "-p", ctrlVMDir}
+	if stdout, err := exec.Command(mkdir[0], mkdir[1:]...).CombinedOutput(); err != nil {
+		return errors.Wrap(err, string(stdout))
+	}
+
+	os.Chdir(ctrlVMDir)
+	defer os.Chdir(cwd)
+
+	buildIt := []string{common.BuildItBinary, "-t", common.BuildItURL, "image", "pull", "-o", imageName, common.EsxControlVMImage}
+	if stdout, err := exec.Command(buildIt[0], buildIt[1:]...).CombinedOutput(); err != nil {
+		return errors.Wrap(err, string(stdout))
+	}
+
+	tarCmd := []string{"tar", "-xvf", imageName}
+	if stdout, err := exec.Command(tarCmd[0], tarCmd[1:]...).CombinedOutput(); err != nil {
+		return errors.Wrap(err, string(stdout))
+	}
+
+	return nil
+}
+
 // InitTestBed does initiates a test bed
 func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | InitTestBed. Received Request Msg: %v", req)
@@ -38,6 +67,13 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	var err error
 	ts.TestBedInfo = req
 
+	if err := ts.downloadImages(); err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Download images failed. Err: %v", err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		req.ApiResponse.ErrorMsg = fmt.Sprintf("Download images failed")
+		return req, nil
+
+	}
 	// Preflight checks
 	if len(req.Nodes) == 0 {
 		log.Errorf("TOPO SVC | InitTestBed | No Nodes present. Err: %v", err)

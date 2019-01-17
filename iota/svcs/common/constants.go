@@ -66,9 +66,6 @@ const (
 	// EsxControlVMImage image to use
 	EsxControlVMImage = "build-114"
 
-	// BuildItBinary
-	BuildItBinary = "/sw/iota/images/buildit"
-
 	//DstNicFinderConf file to be used on node.
 	DstNicFinderConf = DstIotaAgentDir + "/nic.conf"
 
@@ -128,6 +125,9 @@ var (
 
 	// DstIotaAgentBinary captures the location of agent on the remote nodes
 	DstIotaAgentBinary = fmt.Sprintf("%s/%s", DstIotaAgentDir, IotaAgentBinaryName)
+
+	// BuildItBinary
+	BuildItBinary = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/images/buildit", os.Getenv("GOPATH"))
 
 	// CleanupCommands lists the clean up commands required to clean up an IOTA node.
 	CleanupCommands = []string{

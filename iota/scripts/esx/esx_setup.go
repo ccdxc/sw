@@ -184,10 +184,16 @@ func getIotaAgentClient(ip, username, password string) (iota.IotaAgentApiClient,
 		User: username,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(password),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
+			ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
+				answers = make([]string, len(questions))
+				for n := range questions {
+					answers[n] = password
+				}
 
+				return answers, nil
+			}),
+		}, HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
 	copier := copier.NewCopier(cfg)
 
 	agentBinary := constants.IotaAgentBinaryPathLinux
