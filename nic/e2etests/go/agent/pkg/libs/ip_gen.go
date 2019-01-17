@@ -1,13 +1,14 @@
 package libs
 
 import (
-	"encoding/binary"
 	"fmt"
 	"math/rand"
 	"net"
+
+	log "github.com/sirupsen/logrus"
 )
 
-func GenSubnets(count int) (subnets []string) {
+func GenSubnetsFixed(count int) (subnets []string) {
 	// Fixed seed to generate repeatable IP Addresses
 	rand.Seed(HEIMDALL_RANDOM_SEED)
 
@@ -16,10 +17,10 @@ func GenSubnets(count int) (subnets []string) {
 		ip := make([]byte, size)
 		ip[0] = 10
 		for i := 1; i < size; i++ {
-			ip[i] = byte(rand.Intn(10))
+			ip[i] = byte(rand.Intn(255))
 		}
 		/* Ignore Experimental address to */
-		if net.IP(ip).IsGlobalUnicast() && ip[0] <= 240{
+		if net.IP(ip).IsGlobalUnicast() && ip[0] <= 240 {
 			cidr := fmt.Sprintf("%s/24", net.IP(ip).To4().String())
 			subnets = append(subnets, cidr)
 		}
@@ -27,7 +28,7 @@ func GenSubnets(count int) (subnets []string) {
 	return
 }
 
-func GenIPAddress(subnet string, numEp int) (ipAddrs []string, gw string, err error) {
+func GenIPAddress(subnet string, numEp int, generateAll bool) (ipAddrs []string, gw string, err error) {
 	ip, ipNet, err := net.ParseCIDR(subnet)
 	if err != nil {
 		return
@@ -51,6 +52,10 @@ func GenIPAddress(subnet string, numEp int) (ipAddrs []string, gw string, err er
 	// Assign the first valid IP as gw
 	gw = ipAddrs[0]
 
+	// If generate all, return all the IPs in a given subnet
+	if generateAll {
+		return
+	}
 	// Assign remaining IPs to be used as endpoints
 	ipAddrs = ipAddrs[1 : numEp+1]
 
@@ -65,11 +70,38 @@ func GenIPAddress(subnet string, numEp int) (ipAddrs []string, gw string, err er
 
 }
 
-func uint32ToIPv4(intIP uint32) net.IP {
-	ip := make(net.IP, 4)
-	binary.BigEndian.PutUint32(ip, intIP)
-	return ip
+// GenSubnets generates non overlapping subnets from a valid starting cidr block
+func GenSubnets(networkStart string, count int) ([]string, error) {
+	var subnets []string
+	baseIP, baseNet, _ := net.ParseCIDR(networkStart)
+	if baseNet.IP.Equal(net.IPv4zero) {
+		log.Errorf("invalid network start: %v", networkStart)
+		return nil, fmt.Errorf("invalid network start. %v", networkStart)
+	}
+	subnets = append(subnets, baseNet.String())
+	for baseIP := baseIP.Mask(baseNet.Mask); len(subnets) != count; {
+		nextIP(baseIP)
+		prev := subnets[len(subnets)-1]
+		_, prevSubnet, _ := net.ParseCIDR(prev)
+		if !prevSubnet.Contains(baseIP) {
+			nextSubnet := net.IPNet{
+				IP:   baseIP,
+				Mask: baseNet.Mask,
+			}
+			subnets = append(subnets, nextSubnet.String())
+		}
+
+	}
+
+	return subnets, nil
 }
+
+//
+//func uint32ToIPv4(intIP uint32) net.IP {
+//	ip := make(net.IP, 4)
+//	binary.BigEndian.PutUint32(ip, intIP)
+//	return ip
+//}
 
 func nextIP(ip net.IP) {
 	for j := len(ip) - 1; j >= 0; j-- {

@@ -10,6 +10,7 @@ var (
 	SIM_START_UP_SCRIPT    = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/sim/naples/start-naples-docker.sh", os.Getenv("GOPATH"))
 	SIM_STOP_SCRIPT        = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/sim/naples/stop-naples-docker.sh", os.Getenv("GOPATH"))
 	HEALTH_CHECK_SCRIPT    = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/e2etests/go/agent/scripts/check-naples-health.sh", os.Getenv("GOPATH"))
+	DEFAULT_TEMPLATE_FILE  = fmt.Sprintf("%s/src/github.com/pensando/sw/nic/e2etests/go/agent/configs/scale/heimdall.tmpl.json", os.Getenv("GOPATH"))
 	LIF_COUNT              = 256 // TODO get this from the manifest file
 	LIF_START              = 100 // TODO don't hard code this. Currently hntap assumes the lifs will start from id 100.
 	UPLINK_COUNT           = 2   // TODO get this from the manifest file
@@ -24,10 +25,20 @@ type Object struct {
 	Count        int    `yaml:"count,omitempty"`
 	RestEndpoint string `yaml:"rest-endpoint,omitempty"`
 	SpecFile     string `yaml:"spec-file,omitempty"`
+	TemplateFile string `yaml:"tmpl-file,omitempty"`
 }
 
 type Config struct {
 	Objects []Object `yaml:"objects"`
+}
+
+type ConfigTemplate struct {
+	ParentCIDR          string   `json:"network-start,omitempty"`
+	VlanOffset          uint32   `json:"vlan-offset,omitempty"`
+	USegVlanOffset      uint32   `json:"useg-vlan-offset,omitempty"`
+	FirewallPolicyRules []string `json:"firewall-policy-rules,omitempty"`
+	ALGInfo             []string `json:"alg-info,omitempty"`
+	FlowMonInterval     string   `json:"flowmon-timeout,omitempty"`
 }
 
 func init() {

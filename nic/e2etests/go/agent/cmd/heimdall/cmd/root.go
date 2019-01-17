@@ -22,6 +22,7 @@ var RootCmd = &cobra.Command{
 func Execute() {
 	RootCmd.AddCommand(runCmd)
 	RootCmd.AddCommand(trafficCmd)
+	RootCmd.AddCommand(genCmd)
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -4,18 +4,35 @@
 objects:
 - kind: Namespace
   name: scale-vrf
-  count: 16
+  count: 1
   rest-endpoint: "/api/namespaces/"
 - kind: Network
   name: scale-nw
   count: 128
   rest-endpoint: "/api/networks/"
-- kind: Endpoint
-  name: scale-ep
+- kind: LocalEndpoint
+  name: scale-ep-local
   count: 512
   rest-endpoint: "/api/endpoints/"
+- kind: RemoteEndpoint
+  name: scale-ep-remote
+  count: 24000
+  rest-endpoint: "/api/endpoints/"
+- kind: App
+  name: scale-app
+  count: 7
+  rest-endpoint: "/api/apps/"
 - kind: SGPolicy
   name: scale-sg-policy
   count: 1
   rest-endpoint: "/api/security/policies/"
-  spec-file: "generated/1k_rules.json"
+- kind: SGRule
+  count: 58000
+- kind: SecurityProfile
+  name: scale-sec-profile
+  count: 16
+- kind: FlowExportPolicy
+  name: scale-flow-mon
+  count: 1
+- kind: FlowMonitorRule
+  count: 1000
