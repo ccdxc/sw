@@ -37,10 +37,8 @@ message BufferItemList {
     api.TypeMeta T      = 1  [(gogoproto.embed) = true,
                               (gogoproto.nullable) = false,
                               (gogoproto.jsontag) = ",inline"];
-
-    api.ObjectMeta O    = 2  [(gogoproto.embed) = true,
-                              (gogoproto.nullable) = false,
-                              (gogoproto.jsontag) = "meta,inline"];
-
+    api.ListMeta L      = 2  [(gogoproto.embed) = true,
+                             (gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = ",inline"];
     repeated BufferItem Items = 3;
 }

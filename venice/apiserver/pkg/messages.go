@@ -61,11 +61,13 @@ type MessageHdlr struct {
 	selfLinkFunc apisrv.UpdateSelfLinkFunc
 	// functions to invoke before/after writing/reading to storage
 	storageTransformer []apisrv.ObjStorageTransformer
+	// updateObjMetaFunc is function to the update the object meta
+	updateMetaFunc func(context.Context, interface{}, bool) kvstore.UpdateFunc
 	// updateSpecFn returns a function that returns a kvstore.UpdateFunc
-	updateSpecFn func(interface{}) kvstore.UpdateFunc
+	updateSpecFn func(context.Context, interface{}) kvstore.UpdateFunc
 	// updateStatusFn returns a function that returns a kvstore.UpdateFunc
 	updateStatusFn func(interface{}) kvstore.UpdateFunc
-	//getRuntimeObject returns the runtime.Object
+	// getRuntimeObject returns the runtime.Object
 	getRuntimeObject func(interface{}) runtime.Object
 }
 
@@ -159,8 +161,14 @@ func (m *MessageHdlr) WithStorageTransformer(st apisrv.ObjStorageTransformer) ap
 	return m
 }
 
+// WithUpdateMetaFunction is a consistent update function for updating the object meta
+func (m *MessageHdlr) WithUpdateMetaFunction(fn func(context.Context, interface{}, bool) kvstore.UpdateFunc) apisrv.Message {
+	m.updateMetaFunc = fn
+	return m
+}
+
 // WithReplaceSpecFunction is a consistent update function for replacing the Spec
-func (m *MessageHdlr) WithReplaceSpecFunction(fn func(interface{}) kvstore.UpdateFunc) apisrv.Message {
+func (m *MessageHdlr) WithReplaceSpecFunction(fn func(context.Context, interface{}) kvstore.UpdateFunc) apisrv.Message {
 	m.updateSpecFn = fn
 	return m
 }
@@ -196,7 +204,7 @@ func (m *MessageHdlr) WriteToKvTxn(ctx context.Context, kvs kvstore.Interface, t
 	if m.txnUpdateFunc != nil {
 		var updateFn kvstore.UpdateFunc
 		if updateSpec {
-			updateFn = m.updateSpecFn(i)
+			updateFn = m.updateSpecFn(ctx, i)
 		}
 		return m.txnUpdateFunc(ctx, kvs, txn, i, prefix, create, updateFn)
 	}
@@ -208,7 +216,7 @@ func (m *MessageHdlr) WriteToKv(ctx context.Context, kvs kvstore.Interface, i in
 	if m.kvUpdateFunc != nil {
 		var updateFn kvstore.UpdateFunc
 		if updateSpec {
-			updateFn = m.updateSpecFn(i)
+			updateFn = m.updateSpecFn(ctx, i)
 		}
 		return m.kvUpdateFunc(ctx, kvs, i, prefix, create, updateFn)
 	}
@@ -340,7 +348,7 @@ func (m *MessageHdlr) WriteModTime(i interface{}) (interface{}, error) {
 	return i, nil
 }
 
-//UpdateSelfLink update the object with the self link provided
+// UpdateSelfLink update the object with the self link provided
 func (m *MessageHdlr) UpdateSelfLink(path, ver, prefix string, i interface{}) (interface{}, error) {
 	if m.selfLinkFunc != nil {
 		return m.selfLinkFunc(path, ver, prefix, i)
@@ -415,8 +423,13 @@ func (m *MessageHdlr) TransformFromStorage(ctx context.Context, oper apisrv.APIO
 	return obj, nil
 }
 
+// GetUpdateMetaFunc returns the Update function for updating ObjectMeta
+func (m *MessageHdlr) GetUpdateMetaFunc() func(context.Context, interface{}, bool) kvstore.UpdateFunc {
+	return m.updateMetaFunc
+}
+
 // GetUpdateSpecFunc returns the Update function for Spec update
-func (m *MessageHdlr) GetUpdateSpecFunc() func(interface{}) kvstore.UpdateFunc {
+func (m *MessageHdlr) GetUpdateSpecFunc() func(context.Context, interface{}) kvstore.UpdateFunc {
 	return m.updateSpecFn
 }
 

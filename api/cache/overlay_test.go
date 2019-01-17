@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/api_test"
 	cachemocks "github.com/pensando/sw/api/cache/mocks"
+	"github.com/pensando/sw/api/cache/ovpb"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -25,10 +26,10 @@ func TestOverlayCRD(t *testing.T) {
 
 	// Create overlay
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	r1, err := NewOverlay("tenant1", "new1", "/base/", c, nil)
+	r1, err := NewOverlay("tenant1", "new1", "/base/", c, nil, false)
 	AssertOk(t, err, "could not create new overlay")
 
-	r2, err := NewOverlay("tenant1", "new2", "/base/", c, nil)
+	r2, err := NewOverlay("tenant1", "new2", "/base/", c, nil, false)
 	AssertOk(t, err, "could not create new overlay")
 	Assert(t, len(overlaysSingleton.ovMap) == 2, "number of overlays do not match, expecting 2 got %d", len(overlaysSingleton.ovMap))
 
@@ -48,7 +49,7 @@ func TestOverlayCRD(t *testing.T) {
 	Assert(t, err != nil, "found non-existent overlay")
 
 	// Add Duplicate
-	_, err = NewOverlay("tenant1", "new1", "/base/", c, nil)
+	_, err = NewOverlay("tenant1", "new1", "/base/", c, nil, false)
 	if err == nil {
 		t.Fatalf("could add duplicate overlay")
 	}
@@ -71,7 +72,7 @@ func TestOverlayCRD(t *testing.T) {
 
 func TestOverlayCreate(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testCreate", "/base/", c, nil)
+	o, _ := NewOverlay("tenant1", "testCreate", "/base/", c, nil, false)
 	defer DelOverlay("tenant1", "testCreate")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -171,13 +172,14 @@ func TestOverlayCreate(t *testing.T) {
 
 func TestOverlayUpdate(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testUpdate", "/base/", c, nil)
+	o, _ := NewOverlay("tenant1", "testUpdate", "/base/", c, nil, false)
 	defer DelOverlay("tenant1", "testUpdate")
 	ov := o.(*overlay)
 	ctx := context.TODO()
 	obj := &apitest.TestObj{}
 	obj.Name = "testObj"
 	obj.Spec = "Spec 1"
+	obj.GenerationID = "1"
 	orig := &apitest.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}}
 	orig.Name = "testObj"
 	orig.Spec = "Original Spec"
@@ -410,7 +412,7 @@ func TestOverlayUpdate(t *testing.T) {
 
 func TestOverlayDelete(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testDelete", "/base/", c, nil)
+	o, _ := NewOverlay("tenant1", "testDelete", "/base/", c, nil, false)
 	defer DelOverlay("tenant1", "testDelete")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -515,7 +517,7 @@ func TestOverlayDelete(t *testing.T) {
 
 func TestOverlayGet(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil)
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil, false)
 	defer DelOverlay("tenant1", "testGet")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -582,7 +584,7 @@ func TestOverlayGet(t *testing.T) {
 
 func TestOverlayList(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testList", "/base/", c, nil)
+	o, _ := NewOverlay("tenant1", "testList", "/base/", c, nil, false)
 	defer DelOverlay("tenant1", "testList")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -774,7 +776,7 @@ func TestOverlayList(t *testing.T) {
 
 func TestParseParsePath(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testUpdate", "/base", c, nil)
+	o, _ := NewOverlay("tenant1", "testUpdate", "/base", c, nil, false)
 	defer DelOverlay("tenant1", "testUpdate")
 	ov := o.(*overlay)
 
@@ -805,7 +807,7 @@ type handlerResp struct {
 
 func TestVerify(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil)
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil, false)
 	defer DelOverlay("tenant1", "testGet")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -903,7 +905,7 @@ func TestVerify(t *testing.T) {
 
 func TestClearBuffer(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil)
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil, false)
 	defer DelOverlay("tenant1", "testGet")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -968,7 +970,7 @@ func TestCommit(t *testing.T) {
 		active: true,
 	}
 	c.pool.AddToPool(fkv)
-	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil)
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil, false)
 	txn := &cachemocks.FakeTxn{}
 	fkv.Txn = txn
 	ov := o.(*overlay)
@@ -1085,4 +1087,113 @@ func TestCommit(t *testing.T) {
 	Assert(t, len(keyMap) == 0, "did not find following keys in transaction %v", keyMap)
 	DelOverlay("tenant1", "testGet")
 
+}
+
+func TestOverlayRestore(t *testing.T) {
+	fakeKv := &cachemocks.FakeKvStore{}
+	fserver := mocks.NewFakeServer()
+	fservice := mocks.NewFakeService()
+	fmethod1 := mocks.NewFakeMethod(true)
+	fmethod2 := mocks.NewFakeMethod(true)
+	fservice.AddMethod("method1", fmethod1)
+	fservice.AddMethod("method2", fmethod2)
+	fserver.SvcMap["service1"] = fservice.(*mocks.FakeService)
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: fakeKv}
+	o1, _ := NewOverlay("tenant1", "testCreate1", "/base/", c, fserver, false)
+	defer DelOverlay("tenant1", "testCreate1")
+	ov1 := o1.(*overlay)
+	o2, _ := NewOverlay("tenant1", "testCreate2", "/base/", c, fserver, false)
+	defer DelOverlay("tenant1", "testCreate2")
+	ov2 := o2.(*overlay)
+	ctx := context.TODO()
+
+	// Create empty
+	fakeDB := make(map[string]overlaypb.BufferItem)
+	fakeKv.Createfn = func(Ctx context.Context, key string, in runtime.Object) error {
+		obj := in.(*overlaypb.BufferItem)
+		fakeDB[key] = *obj
+		return nil
+	}
+	fakeKv.Listfn = func(ctx context.Context, key string, into runtime.Object) error {
+		obj := into.(*overlaypb.BufferItemList)
+		for _, v := range fakeDB {
+			r := v
+			obj.Items = append(obj.Items, &r)
+		}
+		return nil
+	}
+	c.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		return errors.New("NotFound")
+	}
+	crObj1 := &apitest.TestObj{
+		ObjectMeta: api.ObjectMeta{Name: "Object1"},
+		Spec:       "Spec1",
+	}
+	key1 := "/test/key1"
+	crObj2 := &apitest.TestObj{
+		ObjectMeta: api.ObjectMeta{Name: "Object2"},
+		Spec:       "Spec2",
+	}
+	key2 := "/test/key2"
+	crObj3 := &apitest.TestObj{
+		ObjectMeta: api.ObjectMeta{Name: "Object3"},
+		Spec:       "Spec3",
+	}
+	key3 := "/test/key3"
+
+	err := ov1.CreatePrimary(ctx, "service1", "method1", "/test/uri1", key1, crObj1, crObj1)
+	AssertOk(t, err, "failed to create in overlay")
+	Assert(t, c.FakeKvStore.Creates == 0, "not expecting write to KV store got %d writes", c.FakeKvStore.Creates)
+	Assert(t, fakeKv.Creates == 1, "expecting 1 write to KV store got %d writes", fakeKv.Creates)
+
+	err = ov1.CreatePrimary(ctx, "service1", "method2", "/test/uri2", key2, crObj2, crObj2)
+	AssertOk(t, err, "failed to create in overlay")
+	Assert(t, c.FakeKvStore.Creates == 0, "not expecting write to KV store got %d writes", c.FakeKvStore.Creates)
+	Assert(t, fakeKv.Creates == 2, "expecting 2 writes to KV store got %d writes", fakeKv.Creates)
+
+	err = ov2.CreatePrimary(ctx, "service1", "method1", "/test/uri3", key3, crObj3, crObj3)
+	AssertOk(t, err, "failed to create in overlay")
+	Assert(t, c.FakeKvStore.Creates == 0, "not expecting write to KV store got %d writes", c.FakeKvStore.Creates)
+	Assert(t, fakeKv.Creates == 3, "not expecting 3 writes to KV store got %d writes", fakeKv.Creates)
+
+	// delete the overlays db
+	overlaysSingleton.ovMap = make(map[string]apiintf.OverlayInterface)
+
+	restoreOverlays(ctx, "/base/", c, fserver)
+	Assert(t, len(overlaysSingleton.ovMap) == 2, "expecting overlays to be restored found [%d][%+v]", len(overlaysSingleton.ovMap))
+	Assert(t, len(ov1.overlay) == 2, "expecting 2 objects in overlay got [%d]", len(ov1.overlay))
+	Assert(t, len(ov2.overlay) == 1, "expecting 1 objects in overlay got [%d]", len(ov2.overlay))
+	// Verify contents of a key
+	expMap := map[string]*overlayObj{
+		"/test/key1": &overlayObj{
+			oper:        operCreate,
+			primary:     true,
+			serviceName: "service1",
+			methodName:  "method1",
+			key:         "/test/key1",
+			URI:         "/test/uri1",
+			orig:        crObj1,
+			val:         crObj1,
+		},
+		"/test/key2": &overlayObj{
+			oper:        operCreate,
+			primary:     true,
+			serviceName: "service1",
+			methodName:  "method2",
+			key:         "/test/key2",
+			URI:         "/test/uri2",
+			orig:        crObj2,
+			val:         crObj2,
+		},
+	}
+
+	for k, v := range ov1.overlay {
+		v1, ok := expMap[k]
+		Assert(t, ok, "key not expected [%v]", k)
+		Assert(t, v.methodName == v1.methodName, "Method name does not match got[%v] want [%v]", v.methodName, v1.methodName)
+		Assert(t, v.serviceName == v1.serviceName, "serviceName does not match got[%v] want [%v]", v.serviceName, v1.serviceName)
+		Assert(t, v.key == v1.key, "key does not match got[%v] want [%v]", v.key, v1.key)
+		Assert(t, v.URI == v1.URI, "uri does not match got[%v] want [%v]", v.URI, v1.URI)
+		Assert(t, reflect.DeepEqual(v.orig, v1.orig), "object [%v] does not match \n got[%+v]\nwant[%+v]", k, v.orig, v1.orig)
+	}
 }

@@ -635,7 +635,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*security.SecurityGroup)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "security")
 
 					strEvent := &security.AutoMsgSecurityGroupWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -735,7 +735,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*security.SGPolicy)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "security")
 
 					strEvent := &security.AutoMsgSGPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -835,7 +835,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*security.App)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "security")
 
 					strEvent := &security.AutoMsgAppWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -935,7 +935,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*security.FirewallProfile)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "security")
 
 					strEvent := &security.AutoMsgFirewallProfileWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1035,7 +1035,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*security.Certificate)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "security")
 
 					strEvent := &security.AutoMsgCertificateWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1135,7 +1135,7 @@ func (s *ssecuritySvc_securityBackend) regWatchersFunc(ctx context.Context, logg
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*security.TrafficEncryptionPolicy)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "security", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "security")
 
 					strEvent := &security.AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

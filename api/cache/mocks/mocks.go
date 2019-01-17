@@ -35,6 +35,11 @@ func (f *FakeCache) Start() error {
 	return nil
 }
 
+// Restore is mock implementation
+func (f *FakeCache) Restore() error {
+	return nil
+}
+
 // Clear is mock implementation
 func (f *FakeCache) Clear() {
 }
@@ -340,6 +345,9 @@ type FakeOverlay struct {
 
 // Start is a mock implementation
 func (f *FakeOverlay) Start() error { return nil }
+
+// Restore is a mock implementation
+func (f *FakeOverlay) Restore() error { return nil }
 
 // Clear is a mock implementation
 func (f *FakeOverlay) Clear() {}

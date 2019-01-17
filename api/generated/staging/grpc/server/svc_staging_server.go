@@ -260,7 +260,7 @@ func (s *sstagingSvc_stagingBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*staging.Buffer)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "staging", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "staging")
 
 					strEvent := &staging.AutoMsgBufferWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

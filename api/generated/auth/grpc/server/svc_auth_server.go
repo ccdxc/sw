@@ -501,7 +501,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*auth.User)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "auth", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "auth")
 					{
 						txin, err := auth.StorageUserTransformer.TransformFromStorage(nctx, *in)
 						if err != nil {
@@ -608,7 +608,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*auth.AuthenticationPolicy)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "auth", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "auth")
 					{
 						txin, err := auth.StorageAuthenticationPolicyTransformer.TransformFromStorage(nctx, *in)
 						if err != nil {
@@ -715,7 +715,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*auth.Role)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "auth", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "auth")
 
 					strEvent := &auth.AutoMsgRoleWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -815,7 +815,7 @@ func (s *sauthSvc_authBackend) regWatchersFunc(ctx context.Context, logger log.L
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*auth.RoleBinding)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "auth", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "auth")
 
 					strEvent := &auth.AutoMsgRoleBindingWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

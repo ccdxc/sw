@@ -361,6 +361,8 @@ func (s *store) PurgeDeleted(past time.Duration) {
 
 // Clear cleans up all objects in the store.
 func (s *store) Clear() {
+	defer s.Unlock()
+	s.Lock()
 	s.objs.DeleteSubtree(patricia.Prefix("/"))
 }
 

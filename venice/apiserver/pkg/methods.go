@@ -15,6 +15,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -182,7 +183,9 @@ func (m *MethodHdlr) MakeURI(i interface{}) (string, error) {
 //updateStagingBuffer updates the staging buffer
 func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid string, orig, i interface{}, oper apiserver.APIOperType, updateSpec bool) (interface{}, error) {
 	if !singletonAPISrv.getRunState() {
-		return nil, errShuttingDown.makeError(nil, []string{}, "")
+		if _, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvInitRestore); !ok {
+			return nil, errShuttingDown.makeError(nil, []string{}, "")
+		}
 	}
 	l := singletonAPISrv.Logger
 	key, err := m.getMethDbKey(i, oper)
@@ -215,6 +218,21 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			l.ErrorLog("msg", "Unable to update self link", "oper", "Create", "error", err)
 			return nil, errInternalError.makeError(i, []string{"Unable to update self link"}, "")
 		}
+		if updateSpec {
+			updateFn := m.requestType.GetUpdateSpecFunc()
+			nobj, err := updateFn(ctx, i)(nil)
+			if err != nil {
+				return nil, errKVStoreOperation.makeError(i, []string{errors.Wrap(err, "Unable to update object").Error()}, "")
+			}
+			obj = nobj
+		} else {
+			updateFn := m.requestType.GetUpdateMetaFunc()
+			nobj, err := updateFn(ctx, i, true)(nil)
+			if err != nil {
+				return nil, errKVStoreOperation.makeError(i, []string{errors.Wrap(err, "Unable to update object meta").Error()}, "")
+			}
+			obj = nobj
+		}
 		err = kv.CreatePrimary(ctx, svcName, methName, uri, key, origObj, obj)
 		if err != nil {
 			return nil, errKVStoreOperation.makeError(i, []string{err.Error()}, "")
@@ -234,9 +252,22 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 
 		if updateSpec {
 			updateFn := m.requestType.GetUpdateSpecFunc()
-			err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, origObj, obj, updateFn(obj))
+			nobj, err := updateFn(ctx, i)(obj)
+			if err != nil {
+				err = errKVStoreOperation.makeError(i, []string{errors.Wrap(err, "Unable to update object").Error()}, "")
+			} else {
+				err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, origObj, nobj, updateFn(ctx, obj))
+			}
+			obj = nobj
 		} else {
-			err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, origObj, obj, nil)
+			updateFn := m.requestType.GetUpdateMetaFunc()
+			nobj, err := updateFn(ctx, i, false)(obj)
+			if err != nil {
+				err = errKVStoreOperation.makeError(i, []string{errors.Wrap(err, "Unable to update object meta").Error()}, "")
+			} else {
+				err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, origObj, nobj, updateFn(ctx, obj, false))
+			}
+			obj = nobj
 		}
 		if err != nil {
 			err = errKVStoreOperation.makeError(i, []string{err.Error()}, "")
@@ -278,7 +309,9 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 // updateKvStore handles updating the KV store either via a transaction or without as needed.
 func (m *MethodHdlr) updateKvStore(ctx context.Context, i interface{}, oper apiserver.APIOperType, kvs kvstore.Interface, txn kvstore.Txn, updateSpec bool) (interface{}, error) {
 	if !singletonAPISrv.getRunState() {
-		return nil, errShuttingDown.makeError(nil, []string{}, "")
+		if _, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvInitRestore); !ok {
+			return nil, errShuttingDown.makeError(nil, []string{}, "")
+		}
 	}
 	l := singletonAPISrv.Logger
 	key, err := m.getMethDbKey(i, oper)
@@ -432,10 +465,12 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	l := singletonAPISrv.Logger
 
 	if !singletonAPISrv.getRunState() {
-		return nil, errShuttingDown.makeError(nil, []string{}, "")
+		if _, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvInitRestore); !ok {
+			return nil, errShuttingDown.makeError(nil, []string{}, "")
+		}
 	}
 
-	l.DebugLog("service", m.svcPrefix, "method", m.name, "version", m.version)
+	l.InfoLog("service", m.svcPrefix, "method", m.name, "version", m.version)
 	if m.enabled == false {
 		l.Infof("Api is disabled ignoring invocation")
 		return nil, errAPIDisabled.makeError(nil, []string{"Api is disabled"}, "")

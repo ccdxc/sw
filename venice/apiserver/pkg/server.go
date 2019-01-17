@@ -199,7 +199,7 @@ func (a *apiSrv) GetService(name string) apiserver.Service {
 // CreateOverlay creates a new overlay on top of API server cache
 func (a *apiSrv) CreateOverlay(tenant, name, base string) (apiintf.CacheInterface, error) {
 	if a.apiCache != nil {
-		return cache.NewOverlay(tenant, name, base, a.apiCache, a)
+		return cache.NewOverlay(tenant, name, base, a.apiCache, a, false)
 	}
 	return nil, errors.New("cache not found")
 }
@@ -296,12 +296,13 @@ func (a *apiSrv) Run(config apiserver.Config) {
 			}
 		}
 	}
+	a.apiCache.Restore()
 	a.Logger.Log("msg", "added Kvstore connections to pool", "count", poolSize, "len", len(a.kvPool))
 	a.Unlock()
 	a.runstate.cond.L.Lock()
 	a.Logger.Log("Grpc Listen Start", a.runstate.addr)
-	s.Start()
 	a.runstate.running = true
+	s.Start()
 	a.runstate.cond.L.Unlock()
 	a.runstate.cond.Broadcast()
 	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.APIServer, utils.GetHostname()), nil)

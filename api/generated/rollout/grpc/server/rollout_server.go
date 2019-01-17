@@ -17,6 +17,7 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/cache"
 	rollout "github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
@@ -73,6 +74,7 @@ func (s *srolloutRolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					new.GenerationID = "1"
 					new.UUID = r.UUID
 					new.CreationTime = r.CreationTime
+					new.SelfLink = r.SelfLink
 					r = *new
 				} else {
 					r.GenerationID = "1"
@@ -128,6 +130,7 @@ func (s *srolloutRolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					new.GenerationID = "1"
 					new.UUID = r.UUID
 					new.CreationTime = r.CreationTime
+					new.SelfLink = r.SelfLink
 					r = *new
 				} else {
 					r.GenerationID = "1"
@@ -225,7 +228,7 @@ func (s *srolloutRolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(rollout.Rollout)
 			return r.Validate(ver, "", ignoreStatus)
-		}).WithReplaceSpecFunction(func(i interface{}) kvstore.UpdateFunc {
+		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *rollout.Rollout
 			if v, ok := i.(rollout.Rollout); ok {
 				n = &v
@@ -235,14 +238,57 @@ func (s *srolloutRolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 				return nil
 			}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
-				if ret, ok := oldObj.(*rollout.Rollout); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime
-					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+				if create {
+					n.UUID = uuid.NewV4().String()
+					ts, err := types.TimestampProto(time.Now())
 					if err != nil {
-						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
-						ret.GenerationID = "2"
-					} else {
-						ret.GenerationID = fmt.Sprintf("%d", gen+1)
+						return nil, err
+					}
+					n.CreationTime.Timestamp = *ts
+					n.ModTime.Timestamp.Nanos = 0
+					n.ModTime.Timestamp.Seconds = 0
+					n.GenerationID = "1"
+					return n, nil
+				}
+				if oldObj == nil {
+					return nil, errors.New("nil object")
+				}
+				o := oldObj.(*rollout.Rollout)
+				n.UUID, n.CreationTime, n.Namespace, n.GenerationID = o.UUID, o.CreationTime, o.Namespace, o.GenerationID
+				ts, err := types.TimestampProto(time.Now())
+				if err != nil {
+					return nil, err
+				}
+				n.ModTime.Timestamp = *ts
+				return n, nil
+			}
+		}).WithReplaceSpecFunction(func(ctx context.Context, i interface{}) kvstore.UpdateFunc {
+			var n *rollout.Rollout
+			if v, ok := i.(rollout.Rollout); ok {
+				n = &v
+			} else if v, ok := i.(*rollout.Rollout); ok {
+				n = v
+			} else {
+				return nil
+			}
+			dryRun := cache.IsDryRun(ctx)
+			return func(oldObj runtime.Object) (runtime.Object, error) {
+				if oldObj == nil {
+					rete := &rollout.Rollout{}
+					rete.TypeMeta, rete.ObjectMeta, rete.Spec = n.TypeMeta, n.ObjectMeta, n.Spec
+					rete.GenerationID = "1"
+					return rete, nil
+				}
+				if ret, ok := oldObj.(*rollout.Rollout); ok {
+					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime, n.SelfLink
+					if !dryRun {
+						gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
+						if err != nil {
+							l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "error", err)
+							ret.GenerationID = "2"
+						} else {
+							ret.GenerationID = fmt.Sprintf("%d", gen+1)
+						}
 					}
 					ret.Spec = n.Spec
 					return ret, nil

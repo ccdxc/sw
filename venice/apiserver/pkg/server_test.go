@@ -10,6 +10,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api/cache"
+
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	apisrv "github.com/pensando/sw/venice/apiserver"
@@ -95,13 +97,12 @@ func TestRegistration(t *testing.T) {
 	m1 := mocks.NewFakeMessage("TestType1", "", true)
 	m2 := mocks.NewFakeMessage("TestType2", "", true)
 	msgs := make(map[string]apisrv.Message)
-	msgs["msg1"] = m1
-	msgs["msg2"] = m2
+	msgs["test-service.msg1"] = m1
+	msgs["test-service.msg2"] = m2
 	a.RegisterMessages("test-service", msgs)
 	if len(a.messages) != 2 {
 		t.Errorf("incorrect number of messages expected[2] found [%d]", len(a.messages))
 	}
-
 }
 
 func TestDupRegistration(t *testing.T) {
@@ -208,6 +209,22 @@ func TestRunApiSrv(t *testing.T) {
 		t.Errorf("Was expecting [2] hooks invocation found [%d]", s1.hookcbCalled)
 	}
 
+	ver := a.GetVersion()
+	if ver != "v1" {
+		t.Errorf("returned wrong version [%v]", ver)
+	}
+	// Check we are able to create overlays
+	_, err = a.CreateOverlay("default", "notused", "/test/")
+	if err != nil {
+		t.Errorf("error creating overlay (%s)", err)
+	}
+	ov, err := cache.GetOverlay("default", "notused")
+	if err != nil {
+		t.Errorf("error retrieving overlay (%s)", err)
+	}
+	if ov == nil {
+		t.Errorf("overlay is nil")
+	}
 	c := a.getKvConn()
 	if c == nil {
 		t.Fatalf("Connection is nil")

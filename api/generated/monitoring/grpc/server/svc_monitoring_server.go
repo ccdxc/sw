@@ -935,7 +935,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*monitoring.EventPolicy)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
 
 					strEvent := &monitoring.AutoMsgEventPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1035,7 +1035,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*monitoring.StatsPolicy)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
 
 					strEvent := &monitoring.AutoMsgStatsPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1135,7 +1135,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*monitoring.FwlogPolicy)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
 
 					strEvent := &monitoring.AutoMsgFwlogPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1235,7 +1235,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*monitoring.FlowExportPolicy)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
 
 					strEvent := &monitoring.AutoMsgFlowExportPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1335,7 +1335,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*monitoring.Alert)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
 
 					strEvent := &monitoring.AutoMsgAlertWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1435,7 +1435,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*monitoring.AlertPolicy)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
 
 					strEvent := &monitoring.AutoMsgAlertPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1535,7 +1535,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*monitoring.AlertDestination)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
 
 					strEvent := &monitoring.AutoMsgAlertDestinationWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1635,7 +1635,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*monitoring.MirrorSession)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
 
 					strEvent := &monitoring.AutoMsgMirrorSessionWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1735,7 +1735,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*monitoring.TroubleshootingSession)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
 
 					strEvent := &monitoring.AutoMsgTroubleshootingSessionWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -1835,7 +1835,7 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*monitoring.TechSupportRequest)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "monitoring", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
 
 					strEvent := &monitoring.AutoMsgTechSupportRequestWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

@@ -244,7 +244,7 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*rollout.Rollout)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "rollout", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "rollout")
 
 					strEvent := &rollout.AutoMsgRolloutWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

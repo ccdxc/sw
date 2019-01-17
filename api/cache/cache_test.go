@@ -457,11 +457,11 @@ func TestCacheWatch(t *testing.T) {
 
 	c.Watch(ctx, key, "0")
 	<-fakeq.dqCh
-	defer fakeqs.Unlock()
 	fakeqs.Lock()
 	if fakeqs.adds != 1 || fakeq.dequeues != 1 {
 		t.Errorf("wrong counts %d/%d", fakeqs.adds, fakeq.dequeues)
 	}
+	fakeqs.Unlock()
 	c.Close()
 }
 

@@ -261,8 +261,10 @@ type MessageRegistration interface {
 	WithSelfLinkWriter(fn UpdateSelfLinkFunc) Message
 	// WithStorageTransformer registers Storage Transformers
 	WithStorageTransformer(stx ObjStorageTransformer) Message
+	// WithUpdateMetaFunction is a consistent update function for updating the ObjectMeta
+	WithUpdateMetaFunction(fn func(ctx context.Context, in interface{}, create bool) kvstore.UpdateFunc) Message
 	// WithReplaceSpecFunction is a consistent update function for replacing the Spec
-	WithReplaceSpecFunction(fn func(interface{}) kvstore.UpdateFunc) Message
+	WithReplaceSpecFunction(fn func(context.Context, interface{}) kvstore.UpdateFunc) Message
 	// WithReplaceStatusFunction is a consistent update function for replacing the Status
 	WithReplaceStatusFunction(fn func(interface{}) kvstore.UpdateFunc) Message
 	// WithGetRuntimeObject gets the runtime object
@@ -305,14 +307,16 @@ type MessageAction interface {
 	WriteCreationTime(i interface{}) (interface{}, error)
 	// WriteModTime writes the modification time of the object to now
 	WriteModTime(i interface{}) (interface{}, error)
-	//UpdateSelfLink update the object with the self link provided
+	// UpdateSelfLink update the object with the self link provided
 	UpdateSelfLink(path, ver, prefix string, i interface{}) (interface{}, error)
 	// TransformToStorage transforms the object before writing to storage
 	TransformToStorage(ctx context.Context, oper APIOperType, i interface{}) (interface{}, error)
 	// TransformFromStorage transforms the object after reading from storage
 	TransformFromStorage(ctx context.Context, oper APIOperType, i interface{}) (interface{}, error)
+	// GetUpdateObjectMetaFunc returns a function for updating object meta
+	GetUpdateMetaFunc() func(context.Context, interface{}, bool) kvstore.UpdateFunc
 	// GetUpdateSpecFunc returns the Update function for Spec update
-	GetUpdateSpecFunc() func(interface{}) kvstore.UpdateFunc
+	GetUpdateSpecFunc() func(context.Context, interface{}) kvstore.UpdateFunc
 	// GetUpdateStatusFunc returns the Update function for Status update
 	GetUpdateStatusFunc() func(interface{}) kvstore.UpdateFunc
 	// GetRuntimeObject retursn the runtime.Object

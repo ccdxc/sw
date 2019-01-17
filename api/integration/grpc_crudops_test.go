@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"expvar"
 	"fmt"
+	"net"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -12,7 +14,10 @@ import (
 	"testing"
 	"time"
 
-	mapset "github.com/deckarep/golang-set"
+	"github.com/deckarep/golang-set"
+
+	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
@@ -1398,7 +1403,8 @@ func TestStaging(t *testing.T) {
 		customers = []bookstore.Customer{
 			{
 				ObjectMeta: api.ObjectMeta{
-					Name: "customer1",
+					Name:     "customer1",
+					SelfLink: "/junk",
 				},
 				TypeMeta: api.TypeMeta{
 					Kind: "Customer",
@@ -1902,6 +1908,9 @@ func TestStaging(t *testing.T) {
 			t.Fatalf("expecting [] verification errors found [%d] [%v]", len(buf.Status.Errors), buf.Status.Errors)
 		}
 		lst, err = restcl.BookstoreV1().Customer().List(ctx, &lopts)
+		if len(lst) > 0 {
+			t.Fatalf("found customer object after delete [%+v]", lst)
+		}
 		// Get non-staged object
 		for _, v := range names {
 			objectMeta := api.ObjectMeta{Name: v}
@@ -1909,6 +1918,108 @@ func TestStaging(t *testing.T) {
 			if err == nil {
 				t.Fatalf("found object after deletion  %s", v)
 			}
+		}
+	}
+	{ // test restore path
+		lopts := api.ListWatchOptions{}
+		lst, err := restcl.BookstoreV1().Customer().List(ctx, &lopts)
+		AssertOk(t, err, "failed to list object via rest (%s)", err)
+		for _, v := range lst {
+			fmt.Printf("object before restore is [%+v]\n", v)
+		}
+		customers[0].Spec.Address = "This is just before restore"
+		_, err = restcl.BookstoreV1().Customer().Create(ctx, &customers[0])
+		AssertOk(t, err, "failed to create object via rest (%s)", err)
+		_, err = restcl.BookstoreV1().Customer().Create(ctx, &customers[1])
+		AssertOk(t, err, "failed to create object via rest (%s)", err)
+		_, err = stagecl.BookstoreV1().Customer().Create(ctx, &customers[2])
+		AssertOk(t, err, "failed to create object via staging (%s)", err)
+		changedCustomer := customers[0]
+		changedCustomer.Spec.Address = "changed address"
+		_, err = stagecl.BookstoreV1().Customer().Update(ctx, &changedCustomer)
+		AssertOk(t, err, "failed to update object via staging (%s)", err)
+		_, err = stagecl.BookstoreV1().Customer().Delete(ctx, &customers[1].ObjectMeta)
+		AssertOk(t, err, "failed to delete object via staging (%s)", err)
+		opts := api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   bufName,
+		}
+		bufobj, err := restcl.StagingV1().Buffer().Get(ctx, &opts)
+		AssertOk(t, err, "failed to get staging buffer (%s)", err)
+		apisrv := apisrvpkg.MustGetAPIServer()
+		apisrv.Stop()
+		gw := apigwpkg.MustGetAPIGateway()
+		gw.Stop()
+		// allow ports to close
+		time.Sleep(time.Second)
+		config := tinfo.apisrvConfig
+		// config.GrpcServerPort = ":" + tinfo.apiserverport
+		go apisrv.Run(config)
+		apisrv.WaitRunning()
+		addr, err := apisrv.GetAddr()
+		if err != nil {
+			t.Fatalf("could not get apiserver address after restart(%s)", err)
+		}
+		_, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			os.Exit(-1)
+		}
+		tinfo.apiserverport = port
+		gwconfig := tinfo.gwConfig
+		gwconfig.BackendOverride["pen-apiserver"] = "localhost:" + port
+		go gw.Run(gwconfig)
+		gw.WaitRunning()
+		gwaddr, err := gw.GetAddr()
+		if err != nil {
+			os.Exit(-1)
+		}
+		_, port, err = net.SplitHostPort(gwaddr.String())
+		if err != nil {
+			os.Exit(-1)
+		}
+		tinfo.apigwport = port
+		tinfo.cache = apisrvpkg.GetAPIServerCache()
+		restcl.Close()
+		apicl.Close()
+		restcl, err = apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
+		if err != nil {
+			t.Fatalf("cannot create REST client")
+		}
+		defer restcl.Close()
+
+		apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+		apicl, err = client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+		if err != nil {
+			t.Fatalf("cannot create grpc client")
+		}
+		defer apicl.Close()
+
+		AssertEventually(t, func() (bool, interface{}) {
+			ctx, err = NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+			return err == nil, nil
+		}, "failed to get logged in context after restart", "10ms", "5s")
+
+		var bufobj1 *staging.Buffer
+		AssertEventually(t, func() (bool, interface{}) {
+			bufobj1, err = restcl.StagingV1().Buffer().Get(ctx, &opts)
+			return err == nil, nil
+		}, "failed to get buffer after restart", "10ms", "3s")
+		Assert(t, len(bufobj.Status.Items) == len(bufobj1.Status.Items), "number of items in buffer does not match got[%d] want [%d]", len(bufobj1.Status.Items), len(bufobj.Status.Items))
+		itemMap := make(map[string]staging.Item)
+		for _, v := range bufobj.Status.Items {
+			itemMap[v.ItemId.URI] = staging.Item{ItemId: v.ItemId}
+		}
+		for _, v := range bufobj1.Status.Items {
+			v1, ok := itemMap[v.ItemId.URI]
+			Assert(t, ok, "unknown key after restore[%v]", v.ItemId.URI)
+			Assert(t, reflect.DeepEqual(v1.ItemId, v.ItemId), "restored buffer item does not match\n[ got]:[%+v]\n[want]:[%+v]\n", v, v1)
+		}
+		lst, err = restcl.BookstoreV1().Customer().List(ctx, &lopts)
+		AssertOk(t, err, "failed to list via rest (%s)", err)
+		for _, v := range lst {
+			vopts := api.ObjectMeta{Name: v.Name}
+			_, err := restcl.BookstoreV1().Customer().Delete(ctx, &vopts)
+			AssertOk(t, err, "failed to delete via rest (%s)", err)
 		}
 	}
 	{ // Delete staging object

@@ -72,6 +72,8 @@ type tInfo struct {
 	esServer      *esmock.ElasticServer
 	certsrvurl    string
 	userCred      *auth.PasswordCredential
+	apisrvConfig  apiserver.Config
+	gwConfig      apigw.Config
 }
 
 var tinfo tInfo
@@ -149,7 +151,7 @@ func TestMain(m *testing.M) {
 	l := log.WithContext("module", "CrudOpsTest")
 	tinfo.l = l
 	scheme := runtime.GetDefaultScheme()
-	srvconfig := apiserver.Config{
+	tinfo.apisrvConfig = apiserver.Config{
 		GrpcServerPort: apiserverAddress,
 		DebugMode:      false,
 		Logger:         l,
@@ -174,7 +176,7 @@ func TestMain(m *testing.M) {
 	// Start ApiServer
 	trace.Init("ApiServer")
 	srv := apiserverpkg.MustGetAPIServer()
-	go srv.Run(srvconfig)
+	go srv.Run(tinfo.apisrvConfig)
 	srv.WaitRunning()
 	addr, err := srv.GetAddr()
 	if err != nil {
@@ -187,7 +189,7 @@ func TestMain(m *testing.M) {
 	tinfo.cache = apiserverpkg.GetAPIServerCache()
 	tinfo.apiserverport = port
 	// Start the API Gateway
-	gwconfig := apigw.Config{
+	tinfo.gwConfig = apigw.Config{
 		HTTPAddr:  ":0",
 		DebugMode: true,
 		Logger:    l,
@@ -201,7 +203,7 @@ func TestMain(m *testing.M) {
 		Auditor: auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
 	}
 	gw := apigwpkg.MustGetAPIGateway()
-	go gw.Run(gwconfig)
+	go gw.Run(tinfo.gwConfig)
 	gw.WaitRunning()
 	gwaddr, err := gw.GetAddr()
 	if err != nil {

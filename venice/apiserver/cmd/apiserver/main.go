@@ -114,6 +114,6 @@ func main() {
 	go http.Serve(dbgsock, nil)
 
 	srv := apisrvpkg.MustGetAPIServer()
-	pl.Infof("%s is running {%+v}", globals.APIServer, srv)
+	pl.Infof("%s is running", globals.APIServer)
 	srv.Run(config)
 }

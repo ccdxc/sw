@@ -15,6 +15,7 @@ type SuccessCbFunc func(key string, obj, prev runtime.Object)
 type CacheInterface interface {
 	kvstore.Interface
 	Start() error
+	Restore() error
 	Clear()
 	GetKvConn() kvstore.Interface
 }

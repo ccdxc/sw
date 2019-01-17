@@ -68,9 +68,9 @@ func TestMessageWith(t *testing.T) {
 	m := NewMessage("TestType1").WithValidate(f.ValidateFunc).WithDefaulter(f.DefaultFunc)
 	m = m.WithKvUpdater(f.KvUpdateFunc).WithKvGetter(f.KvGetFunc).WithKvDelFunc(f.KvDelFunc).WithObjectVersionWriter(f.ObjverwriteFunc)
 	m = m.WithKvTxnUpdater(f.TxnUpdateFunc).WithKvTxnDelFunc(f.DelFromKvTxnFunc).WithSelfLinkWriter(f.SelfLinkWriterFunc)
-	m = m.WithKvWatchFunc(f.KvwatchFunc).WithKvListFunc(f.KvListFunc).WithReplaceStatusFunction(f.GetUpdateSpecFunc())
+	m = m.WithKvWatchFunc(f.KvwatchFunc).WithKvListFunc(f.KvListFunc).WithReplaceStatusFunction(f.GetUpdateStatusFunc())
 	m = m.WithUUIDWriter(f.CreateUUID).WithReplaceSpecFunction(f.GetUpdateSpecFunc()).WithGetRuntimeObject(f.GetRuntimeObject)
-	m = m.WithModTimeWriter(f.WriteModTime).WithCreationTimeWriter(f.WriteCreationTime).WithObjectVersionWriter(f.WriteObjVersion)
+	m = m.WithModTimeWriter(f.WriteModTime).WithCreationTimeWriter(f.WriteCreationTime).WithObjectVersionWriter(f.WriteObjVersion).WithUpdateMetaFunction(f.GetUpdateMetaFunc())
 	stx := mocks.ObjStorageTransformer{}
 	m = m.WithStorageTransformer(&stx)
 	singletonAPISrv.runstate.running = true
@@ -121,8 +121,8 @@ func TestMessageWith(t *testing.T) {
 	if fn == nil {
 		t.Fatalf("UpdateSpecFunc returned nil")
 	}
-	fn = m.GetUpdateStatusFunc()
-	if fn == nil {
+	fn1 := m.GetUpdateStatusFunc()
+	if fn1 == nil {
 		t.Fatalf("UpdateStatusFunc returned nil")
 	}
 	obj := TestType1{}
@@ -172,5 +172,9 @@ func TestMessageWith(t *testing.T) {
 	err := m.WatchFromKv(&opts, stream, "test")
 	if err != nil {
 		t.Errorf("watch returned error (%s)", err)
+	}
+
+	if m.GetUpdateMetaFunc() == nil {
+		t.Errorf("expecting UpdateMetaFunc to be set")
 	}
 }

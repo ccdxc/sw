@@ -13,11 +13,12 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/pensando/sw/api/utils"
+	"github.com/pensando/sw/api/errors"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache/ovpb"
 	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/helper"
@@ -30,8 +31,8 @@ type dryRunMarker struct {
 }
 
 // setStagingBufferInGrpcMD sets the GRPC metadata with buffer ID
-func setStagingBufferInGrpcMD(ctx context.Context, id string) context.Context {
-	pair := metadata.Pairs(apiserver.RequestParamStagingBufferID, id)
+func setStagingBufferInGrpcMD(ctx context.Context, tenant, id string) context.Context {
+	pair := metadata.Pairs(apiserver.RequestParamStagingBufferID, id, apiserver.RequestParamTenant, tenant)
 	inMd, ok := metadata.FromIncomingContext(ctx)
 	if ok {
 		nMd := metadata.Join(inMd, pair)
@@ -113,6 +114,7 @@ type overlay struct {
 	tenant      string
 	id          string
 	baseKey     string
+	ephemeral   bool
 	overlay     map[string]*overlayObj
 	comparators []kvstore.Cmp
 }
@@ -169,7 +171,7 @@ func DelOverlay(tenant, id string) error {
 }
 
 // NewOverlay creates a new overlay over the passed cache.Interface
-func NewOverlay(tenant, id, baseKey string, c apiintf.CacheInterface, apisrv apiserver.Server) (apiintf.OverlayInterface, error) {
+func NewOverlay(tenant, id, baseKey string, c apiintf.CacheInterface, apisrv apiserver.Server, local bool) (apiintf.OverlayInterface, error) {
 	defer overlaysSingleton.Unlock()
 	overlaysSingleton.Lock()
 	once.Do(initOverlayMap)
@@ -184,6 +186,7 @@ func NewOverlay(tenant, id, baseKey string, c apiintf.CacheInterface, apisrv api
 		baseKey:        strings.TrimSuffix(baseKey, "/"),
 		overlay:        make(map[string]*overlayObj),
 		server:         apisrv,
+		ephemeral:      local,
 		revision:       1,
 	}
 	log.Infof("creating new overlay %s, base path %s", id, o.baseKey)
@@ -201,24 +204,59 @@ func SetOverlay(tenant, id string, ov apiintf.OverlayInterface) {
 	overlaysSingleton.ovMap[name] = ov
 }
 
-func restoreOverlays(c apiintf.CacheInterface) {
-	defer overlaysSingleton.Unlock()
-	overlaysSingleton.Lock()
-
+func restoreOverlays(ctx context.Context, base string, c apiintf.CacheInterface, server apiserver.Server) error {
 	// XXX-TODO(sanjayt): need to handle issue where we are recovering from a prefix watcher failure
 	//   and the overlay has been deleted behind our back. Very unlikely case when there is only one
 	//   API server in the cluster.
+	overlaysSingleton.Lock()
 	for _, v := range overlaysSingleton.ovMap {
 		ov := v.(*overlay)
 		ov.Lock()
-		// It is okay to release all locks on exit, no operations are possible on the staging buffer till
-		// restore is done, So big hammer and nuke everything and restore instead of a mark and sweep.
-		defer ov.Unlock()
 		ov.overlay = make(map[string]*overlayObj)
+		ov.comparators = nil
+		ov.Unlock()
 	}
-
+	initOverlayMap()
+	overlaysSingleton.Unlock()
 	// restore from the kvstore backend for each overlay.
-	// XXX-TBD(sanjayt): Restore the overlay path from persisted staging object.
+	kv := c.GetKvConn()
+	into := &overlaypb.BufferItemList{}
+	err := kv.List(ctx, base, into)
+	if err != nil {
+		log.ErrorLog("msg", "failed to list buffer items", "error", err)
+		return err
+	}
+	log.Infof("Restoring [%d] Overlays", len(into.Items))
+	// This is not a dry run, but staging is supported from APIGw only so set replace status
+	nctx := apiutils.SetVar(setReplaceStatusInGrpcMD(ctx), apiutils.CtxKeyAPISrvInitRestore, true)
+	for _, v := range into.Items {
+		o, err := GetOverlay(v.Tenant, v.Name)
+		if err != nil {
+			o, err = NewOverlay(v.Tenant, v.Name, base, c, server, false)
+			if err != nil {
+				log.Errorf("could not create overlay [%v/%v] to restore (%s)", v.Tenant, v.Name, err)
+				continue
+			}
+		}
+		ov := o.(*overlay)
+		if err = ov.restoreKvObj(nctx, v); err != nil {
+			log.Errorf("failed to restore overlay object (%v)", apierrors.FromError(err))
+		}
+	}
+	return nil
+}
+
+func makeBufferKey(base, tenant, id, key string) string {
+	return fmt.Sprintf("%s/tenant/%v/buffer/%v/%s", base, tenant, id, strings.TrimPrefix(key, "/"))
+}
+
+func parseKey(base, key string) (string, string, error) {
+	s := strings.TrimPrefix(key, base)
+	p := strings.SplitN(s, "/", 6)
+	if len(p) < 6 {
+		return "", "", errors.New("could not parse")
+	}
+	return p[2], p[4], nil
 }
 
 func (c *overlay) findObjects(ctx context.Context, key string, into runtime.Object) (*overlayObj, error) {
@@ -235,19 +273,20 @@ func (c *overlay) findObjects(ctx context.Context, key string, into runtime.Obje
 }
 
 func (c *overlay) makeBufferKey(key string) string {
-	return fmt.Sprintf("%s/tenant/%v/buffer/%v/%s", c.baseKey, c.tenant, c.id, strings.TrimPrefix(key, "/"))
+	return makeBufferKey(c.baseKey, c.tenant, c.id, key)
 }
 
 func (c *overlay) parseKey(key string) (string, string, error) {
-	s := strings.TrimPrefix(key, c.baseKey)
-	p := strings.SplitN(s, "/", 6)
-	if len(p) < 6 {
-		return "", "", errors.New("could not parse")
-	}
-	return p[2], p[4], nil
+	return parseKey(c.baseKey, key)
 }
 
 func (c *overlay) createKvObj(ctx context.Context, uri, key string, obj *overlayObj) error {
+	if c.ephemeral {
+		return nil
+	}
+	if _, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvInitRestore); ok {
+		return nil
+	}
 	if !obj.primary {
 		return nil
 	}
@@ -264,11 +303,14 @@ func (c *overlay) createKvObj(ctx context.Context, uri, key string, obj *overlay
 		kind = obj.val.GetObjectKind()
 	}
 	ovObj := &overlaypb.BufferItem{
-		TypeMeta: api.TypeMeta{Kind: "BufferItem"},
+		TypeMeta:   api.TypeMeta{Kind: "BufferItem"},
+		ObjectMeta: api.ObjectMeta{Tenant: c.tenant, Name: c.id},
 		ItemId: &overlaypb.BufferItem_Id{
-			Kind:   kind,
-			URI:    uri,
-			Method: string(obj.oper),
+			Kind:      kind,
+			URI:       uri,
+			Operation: string(obj.oper),
+			Method:    obj.methodName,
+			Service:   obj.serviceName,
 		},
 	}
 	var err error
@@ -287,6 +329,12 @@ func (c *overlay) createKvObj(ctx context.Context, uri, key string, obj *overlay
 }
 
 func (c *overlay) updateKvObj(ctx context.Context, key string, obj *overlayObj) error {
+	if c.ephemeral {
+		return nil
+	}
+	if _, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvInitRestore); ok {
+		return nil
+	}
 	if !obj.primary {
 		return nil
 	}
@@ -306,11 +354,14 @@ func (c *overlay) updateKvObj(ctx context.Context, key string, obj *overlayObj) 
 	}
 	ovKey := c.makeBufferKey(key)
 	ovObj := &overlaypb.BufferItem{
-		TypeMeta: api.TypeMeta{Kind: "BufferItem"},
+		TypeMeta:   api.TypeMeta{Kind: "BufferItem"},
+		ObjectMeta: api.ObjectMeta{Tenant: c.tenant, Name: c.id},
 		ItemId: &overlaypb.BufferItem_Id{
-			Kind:   kind,
-			URI:    key,
-			Method: string(operCreate),
+			Kind:      kind,
+			URI:       key,
+			Operation: string(obj.oper),
+			Method:    obj.methodName,
+			Service:   obj.serviceName,
 		},
 	}
 	var err error
@@ -329,6 +380,13 @@ func (c *overlay) updateKvObj(ctx context.Context, key string, obj *overlayObj) 
 }
 
 func (c *overlay) deleteKvObj(ctx context.Context, key string, obj *overlayObj) error {
+	if c.ephemeral {
+		return nil
+	}
+	if _, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvInitRestore); ok {
+		// If we are in restore path, no need to persist to kvstore.
+		return nil
+	}
 	if !obj.primary {
 		return nil
 	}
@@ -346,8 +404,44 @@ func (c *overlay) deleteKvObj(ctx context.Context, key string, obj *overlayObj) 
 	return nil
 }
 
+// restoreKvObj
+func (c *overlay) restoreKvObj(ctx context.Context, in *overlaypb.BufferItem) error {
+	nctx := setStagingBufferInGrpcMD(ctx, in.Tenant, in.Name)
+	svc := c.server.GetService(in.ItemId.Service)
+	if svc == nil {
+		return fmt.Errorf("could not find service during restore [%s][%s/%s]", in.ItemId.Service, in.Tenant, in.Name)
+	}
+	m := svc.GetMethod(in.ItemId.Method)
+	if m == nil {
+		return fmt.Errorf("could not find method during restore [%s/%s][%s/%s]", in.ItemId.Service, in.ItemId.Method, in.Tenant, in.Name)
+	}
+
+	robj := &types.DynamicAny{}
+	err := types.UnmarshalAny(in.Object, robj)
+	if err != nil {
+		return errors.Wrap(err, "unable to unmarshal object during restore")
+	}
+	v, ok := robj.Message.(runtime.Object)
+	if !ok {
+		return fmt.Errorf("unmarshalled object not correct type")
+	}
+	var obj interface{}
+	obj = v
+	if obj != nil && reflect.TypeOf(obj).Kind() == reflect.Ptr {
+		obj = reflect.Indirect(reflect.ValueOf(obj)).Interface()
+	}
+	_, err = m.HandleInvocation(nctx, obj)
+	if err != nil {
+		return errors.Wrap(err, "failed to restore object")
+	}
+	return nil
+}
+
 // cleanupKvObjs cleans up all persisted data for the overlay
 func (c *overlay) cleanupKvObjs(ctx context.Context) error {
+	if c.ephemeral {
+		return nil
+	}
 	kv := c.GetKvConn()
 	if kv == nil {
 		return errors.New("no connection to KV store to persist")
@@ -391,6 +485,13 @@ func (c *overlay) create(ctx context.Context, service, method, uri, key string, 
 		ovObj.val = obj
 		return nil
 	}
+
+	objm, err := runtime.GetObjectMeta(obj)
+	if err != nil {
+		log.ErrorLog("msg", "failed to retrieve object meta", "operation", "create")
+		return err
+	}
+	objm.GenerationID = "1"
 
 	ovObj = &overlayObj{
 		oper:        operCreate,
@@ -507,6 +608,12 @@ func (c *overlay) update(ctx context.Context, service, method, uri, key string, 
 		// Not in Cache, in overlay
 		oper = operCreate
 		ovObj.val = obj
+		objm, err := runtime.GetObjectMeta(obj)
+		if err != nil {
+			log.ErrorLog("msg", "failed to retrieve object meta", "operation", "create")
+			return err
+		}
+		objm.GenerationID = "1"
 	} else {
 		// In cache and in overlay
 		ovObj.oper = operUpdate
@@ -570,6 +677,9 @@ func (c *overlay) delete(ctx context.Context, service, method, uri, key string, 
 	// Not in Overlay, not in Cache
 	if ovObj == nil && err != nil {
 		into = nil
+		if err != nil {
+			return err
+		}
 		return fmt.Errorf("does not exist")
 	}
 	ovObj = c.overlay[key]

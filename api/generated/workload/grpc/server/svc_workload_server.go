@@ -319,7 +319,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*workload.Endpoint)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "workload", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "workload")
 
 					strEvent := &workload.AutoMsgEndpointWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -419,7 +419,7 @@ func (s *sworkloadSvc_workloadBackend) regWatchersFunc(ctx context.Context, logg
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*workload.Workload)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "workload", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "workload")
 
 					strEvent := &workload.AutoMsgWorkloadWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

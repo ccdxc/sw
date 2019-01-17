@@ -231,7 +231,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 					p.lastVer = "0"
 					establishWatcher()
 					sweepFunc(p.ctx)
-					restoreOverlays(p.parent)
+					restoreOverlays(p.ctx, globals.StagingBasePath, p.parent, p.parent.apiserver)
 					continue
 				}
 				meta, ver := mustGetObjectMetaVersion(ev.Object)
@@ -474,9 +474,47 @@ func (c *cache) Start() error {
 	return nil
 }
 
+// Restores any persisted state.
+func (c *cache) Restore() error {
+	// First populate cache from the backend
+	into := struct {
+		api.TypeMeta
+		api.ListMeta
+		Items []runtime.Object
+	}{}
+
+	if err := c.listBackend(context.Background(), globals.ConfigRootPrefix+"/", &into); err == nil {
+		c.logger.Infof("got [%d] objects from backend while restoring cache", len(into.Items))
+		c.Lock()
+		for _, v := range into.Items {
+			meta, ver := mustGetObjectMetaVersion(v)
+			if meta.SelfLink == "" {
+				log.Fatalf("invalid Self link for object [%+v]", v)
+			}
+			err := c.store.Set(meta.SelfLink, ver, v, nil)
+			c.logger.Infof("restoring object [%v] from backend while restoring cache(%v)", meta.SelfLink, err)
+		}
+		c.Unlock()
+	}
+	// restore any persisted overlays
+	err := restoreOverlays(context.Background(), globals.StagingBasePath, c, c.config.APIServer)
+	if err != nil {
+		c.logger.Errorf("restoring logger returned error (%s)", err)
+		return err
+	}
+	c.logger.Infof("restoring overlays complete")
+	return nil
+}
+
+func (c *cache) clear() {
+	c.store.Clear()
+}
+
 // Clear clears all entries in the cache
 func (c *cache) Clear() {
-	// XXX-TODO(sanjayt)
+	defer c.Unlock()
+	c.Lock()
+	c.clear()
 }
 
 // getCbFunc is a helper func used to generate SuccessCbFunc for use with cache
@@ -828,9 +866,14 @@ func (c *cache) Close() {
 	if c.argus != nil {
 		c.argus.Stop()
 	}
-	c.Clear()
+
 	defer c.Unlock()
 	c.Lock()
+	qs := c.queues.Get("/")
+	for _, q := range qs {
+		q.Stop()
+	}
+	c.clear()
 	for {
 		i := c.pool.GetFromPool()
 		if i == nil {

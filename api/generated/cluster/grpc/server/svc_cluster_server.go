@@ -542,7 +542,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*cluster.Cluster)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "cluster")
 
 					strEvent := &cluster.AutoMsgClusterWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -642,7 +642,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*cluster.Node)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "cluster")
 
 					strEvent := &cluster.AutoMsgNodeWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -742,7 +742,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*cluster.Host)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "cluster")
 
 					strEvent := &cluster.AutoMsgHostWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -842,7 +842,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*cluster.SmartNIC)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "cluster")
 
 					strEvent := &cluster.AutoMsgSmartNICWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -942,7 +942,7 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*cluster.Tenant)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "cluster", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "cluster")
 
 					strEvent := &cluster.AutoMsgTenantWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

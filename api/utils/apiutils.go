@@ -19,6 +19,7 @@ const (
 	CtxKeyAPIGwHTTPWriter     = "ApiGwHttpWriter"
 	CtxKeyAPIGwWebSocketWatch = "ApiGwWebSocketWatch"
 	CtxKeyAPIGwWebSocketConn  = "ApiGwWebSocketConn"
+	CtxKeyAPISrvInitRestore   = "InitRestorePath"
 )
 
 // SetDruRun sets the dry run flag in the the context

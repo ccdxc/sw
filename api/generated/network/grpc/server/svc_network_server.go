@@ -402,7 +402,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*network.Network)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "network", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "network")
 
 					strEvent := &network.AutoMsgNetworkWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -502,7 +502,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*network.Service)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "network", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "network")
 
 					strEvent := &network.AutoMsgServiceWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
@@ -602,7 +602,7 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 						return fmt.Errorf("unable to clone object (%s)", err)
 					}
 					in := cin.(*network.LbPolicy)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "network", "v1")
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "network")
 
 					strEvent := &network.AutoMsgLbPolicyWatchHelper_WatchEvent{
 						Type:   string(ev.Type),

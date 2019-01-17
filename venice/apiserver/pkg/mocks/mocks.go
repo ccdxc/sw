@@ -335,8 +335,13 @@ func (m *FakeMessage) WithStorageTransformer(stx apisrv.ObjStorageTransformer) a
 	return m
 }
 
+// WithUpdateMetaFunction is a consistent update function for updating the Object Meta
+func (m *FakeMessage) WithUpdateMetaFunction(fn func(ctx context.Context, in interface{}, create bool) kvstore.UpdateFunc) apisrv.Message {
+	return m
+}
+
 // WithReplaceSpecFunction is a consistent update function for replacing the Spec
-func (m *FakeMessage) WithReplaceSpecFunction(fn func(interface{}) kvstore.UpdateFunc) apisrv.Message {
+func (m *FakeMessage) WithReplaceSpecFunction(fn func(context.Context, interface{}) kvstore.UpdateFunc) apisrv.Message {
 	return m
 }
 
@@ -436,17 +441,17 @@ func (m *FakeMessage) Validate(i interface{}, ver string, ignoreStatus bool) []e
 	return []error{errors.New("Setup to fail validation")}
 }
 
-//UpdateSelfLink update the object with the self link provided
+// UpdateSelfLink update the object with the self link provided
 func (m *FakeMessage) UpdateSelfLink(path, ver, prefix string, i interface{}) (interface{}, error) {
 	return i, nil
 }
 
-//TransformToStorage is a mock method for testing
+// TransformToStorage is a mock method for testing
 func (m *FakeMessage) TransformToStorage(ctx context.Context, oper apisrv.APIOperType, i interface{}) (interface{}, error) {
 	return i, nil
 }
 
-//TransformFromStorage is a mock method for testing
+// TransformFromStorage is a mock method for testing
 func (m *FakeMessage) TransformFromStorage(ctx context.Context, oper apisrv.APIOperType, i interface{}) (interface{}, error) {
 	return i, nil
 }
@@ -541,9 +546,18 @@ func (m *FakeMessage) WriteModTime(i interface{}) (interface{}, error) {
 	return i, nil
 }
 
+// GetUpdateMetaFunc returns the Update function for meta update
+func (m *FakeMessage) GetUpdateMetaFunc() func(context.Context, interface{}, bool) kvstore.UpdateFunc {
+	return func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
+		return func(old runtime.Object) (runtime.Object, error) {
+			return old, nil
+		}
+	}
+}
+
 // GetUpdateSpecFunc returns the Update function for Spec update
-func (m *FakeMessage) GetUpdateSpecFunc() func(interface{}) kvstore.UpdateFunc {
-	return func(i interface{}) kvstore.UpdateFunc {
+func (m *FakeMessage) GetUpdateSpecFunc() func(context.Context, interface{}) kvstore.UpdateFunc {
+	return func(ctx context.Context, i interface{}) kvstore.UpdateFunc {
 		return func(old runtime.Object) (runtime.Object, error) {
 			return old, nil
 		}

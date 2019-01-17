@@ -294,11 +294,15 @@ func (w *watchEventQ) Enqueue(evType kvstore.WatchEventType, obj, prev runtime.O
 func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb eventHandlerFn, cleanupFn func()) {
 	tracker := watcher{}
 	tracker.ctx, tracker.cancel = context.WithCancel(ctx)
+	w.wg.Add(1)
 	tel := w.watcherList.Insert(&tracker)
 	if cleanupFn != nil {
 		defer cleanupFn()
 	}
-	defer w.watcherList.Remove(tel)
+	defer func() {
+		w.watcherList.Remove(tel)
+		w.wg.Done()
+	}()
 	var wg sync.WaitGroup
 	var startVer uint64
 
@@ -625,7 +629,7 @@ func (w *watchEventQ) Stop() bool {
 		return true
 	}
 	w.watcherList.Iterate(stopWatchers)
-
+	w.wg.Wait()
 	cleanFn := func(i interface{}) {}
 	w.eventList.RemoveAll(cleanFn)
 	return true
