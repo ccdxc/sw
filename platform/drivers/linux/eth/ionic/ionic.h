@@ -11,7 +11,7 @@
 
 #define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
-#define DRV_VERSION		"0.2.0"
+#define DRV_VERSION		"0.4.0"
 
 extern unsigned int ntxqs;
 extern unsigned int nrxqs;

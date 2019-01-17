@@ -1876,7 +1876,7 @@ err_out_notifyq_deinit:
 	ionic_lif_qcq_deinit(lif, lif->notifyqcq);
 err_out_adminq_deinit:
 	ionic_lif_qcq_deinit(lif, lif->adminqcq);
-	//TODO: ionic_lif_reset(lif);
+	ionic_lif_reset(lif);
 
 	return err;
 }
