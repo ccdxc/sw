@@ -12,8 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	"github.com/pkg/errors"
+
+	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 )
 
 var (

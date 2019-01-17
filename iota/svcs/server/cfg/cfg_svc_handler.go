@@ -38,6 +38,7 @@ func NewConfigServiceHandler() *ConfigService {
 // MakeCluster brings up venice cluster
 func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMsg) (*iota.MakeClusterMsg, error) {
 	log.Infof("CFG SVC | DEBUG | MakeCluster. Received Request Msg: %v", req)
+	defer log.Infof("CFG SVC | DEBUG | MakeCluster Returned: %v", req)
 	var clusterObj cluster.Cluster
 
 	err := json.Unmarshal([]byte(req.Config), &clusterObj)
@@ -73,6 +74,7 @@ func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMs
 //InitCfgService initiates a config management service
 func (c *ConfigService) InitCfgService(ctx context.Context, req *iota.InitConfigMsg) (*iota.InitConfigMsg, error) {
 	log.Infof("CFG SVC | DEBUG | InitCfgService. Received Request Msg: %v", req)
+	defer log.Infof("CFG SVC | DEBUG | InitCfgService Returned: %v", req)
 
 	if len(req.Vlans) == 0 {
 		log.Errorf("CFG SVC | InitCfgService call failed. | Missing allocated VLANs")
@@ -102,6 +104,7 @@ func (c *ConfigService) InitCfgService(ctx context.Context, req *iota.InitConfig
 // GenerateConfigs generates base configs
 func (c *ConfigService) GenerateConfigs(ctx context.Context, req *iota.GenerateConfigMsg) (*iota.ConfigMsg, error) {
 	log.Infof("CFG SVC | DEBUG | GenerateConfigs. Received Request Msg: %v", req)
+	defer log.Infof("CFG SVC | DEBUG | GenerateConfigs Returned: %v", req)
 
 	c.NaplesHosts = req.Hosts
 
@@ -132,6 +135,8 @@ func (c *ConfigService) GenerateConfigs(ctx context.Context, req *iota.GenerateC
 // ConfigureAuth configures auth and returns a super admin JWT Token
 func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*iota.AuthMsg, error) {
 	// TODO fix this for Agent configs
+	log.Infof("CFG SVC | DEBUG | ConfigAuth. Received Request Msg: %v", req)
+	defer log.Infof("CFG SVC | DEBUG | ConfigAuth Returned: %v", req)
 	veniceAPIGw := c.CfgState.Endpoints[0]
 	tenantURL := fmt.Sprintf("%s/configs/cluster/v1/tenants", veniceAPIGw)
 	authPolicyURL := fmt.Sprintf("%s/configs/auth/v1/authn-policy", veniceAPIGw)
@@ -150,8 +155,6 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		},
 		Spec: cluster.TenantSpec{},
 	}
-
-	fmt.Println("BALERION: ", tenantURL)
 
 	_, response, err := common.HTTPPost(tenantURL, c.AuthToken, &tenant)
 	log.Infof("CFG SVC | INFO | Creating Tenant | Received Response Msg: %v", response)
@@ -340,6 +343,7 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 // QueryConfig queries the configs
 func (c *ConfigService) QueryConfig(ctx context.Context, req *iota.ConfigQueryMsg) (*iota.ConfigMsg, error) {
 	log.Infof("CFG SVC | DEBUG | QueryConfig. Received Request Msg: %v", req)
+	defer log.Infof("CFG SVC | DEBUG | QueryConfig Returned: %v", req)
 
 	resp := &iota.ConfigMsg{
 		ApiResponse: &iota.IotaAPIResponse{

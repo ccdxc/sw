@@ -4,7 +4,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-    "time"
+	"time"
+
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 
@@ -22,7 +23,7 @@ func NewCopier(c *ssh.ClientConfig) *Copier {
 	copier := &Copier{
 		SSHClientConfig: c,
 	}
-    copier.SSHClientConfig.Timeout = (10 * time.Second)
+	copier.SSHClientConfig.Timeout = (10 * time.Second)
 	return copier
 }
 

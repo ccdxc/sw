@@ -11,9 +11,10 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 
+	log "github.com/sirupsen/logrus"
+
 	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 const (

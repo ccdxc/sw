@@ -7,14 +7,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/ssh"
+
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	Workload "github.com/pensando/sw/iota/svcs/agent/workload"
 	Common "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/vmware"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh"
 )
 
 type esxHwNode struct {

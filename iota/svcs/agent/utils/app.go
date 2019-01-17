@@ -254,14 +254,14 @@ func (ns *NS) SetIPAddress(intfName string, ipAddress string, vlan int, ipv6 boo
 		}
 	}
 
-    var cmd []string
-    if ipv6 {
-        cmdlist := []string {"ifconfig", intf.Name, "inet6", "add", ipAddress}
-        cmd = append(cmd, cmdlist...)
-    } else {
-        cmdlist := []string {"ifconfig", intf.Name, ipAddress}
-        cmd = append(cmd, cmdlist...)
-    }
+	var cmd []string
+	if ipv6 {
+		cmdlist := []string{"ifconfig", intf.Name, "inet6", "add", ipAddress}
+		cmd = append(cmd, cmdlist...)
+	} else {
+		cmdlist := []string{"ifconfig", intf.Name, ipAddress}
+		cmd = append(cmd, cmdlist...)
+	}
 
 	if stdout, err := ns.RunCommand(cmd, 0, false); err != nil {
 		return errors.Wrap(err, stdout)
@@ -494,7 +494,7 @@ func (ctr *Container) RunCommand(cmdHandle CommandHandle, timeout uint32) (Comma
 		cTimeout = time.After(time.Second * time.Duration(timeout))
 	}
 	retCode := 0
-    go StdCopy(stdout, stderr, hResp.Reader)
+	go StdCopy(stdout, stderr, hResp.Reader)
 	for true {
 		cmdResp, err := ctr.client.ContainerExecInspect(context.Background(), (string)(cmdHandle))
 		if err != nil || cmdResp.Running == false {

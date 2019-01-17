@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
-    "runtime"
 
 	log "github.com/sirupsen/logrus"
 
@@ -363,6 +363,7 @@ var GetIntfsMatchingPrefix = func(prefix string) []string {
 	}
 	return ret
 }
+
 // GetIntfsMatchingDevicePrefix get intfs matching device prefix
 func GetIntfsMatchingDevicePrefixLinux(devicePrefix string) ([]string, error) {
 	hostIntfs := []string{}
@@ -399,9 +400,9 @@ func GetIntfsMatchingDevicePrefixLinux(devicePrefix string) ([]string, error) {
 			pci := strings.Split(line, " ")[0]
 			for pciAddr, intf := range pciIntfMap {
 				if strings.Contains(pciAddr, pci) {
-                    if intf != "eno1" && intf != "eno2" {
-    					hostIntfs = append(hostIntfs, intf)
-                    }
+					if intf != "eno1" && intf != "eno2" {
+						hostIntfs = append(hostIntfs, intf)
+					}
 				}
 			}
 
@@ -412,31 +413,30 @@ func GetIntfsMatchingDevicePrefixLinux(devicePrefix string) ([]string, error) {
 
 // GetIntfsMatchingDevicePrefix get intfs matching device prefix
 func GetIntfsMatchingDevicePrefixFreeBSD(devicePrefix string) ([]string, error) {
-    hostIntfs := []string{}
+	hostIntfs := []string{}
 	cmd := []string{"ifconfig", "-l"}
 
 	_, stdout, err := Run(cmd, 0, false, true, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, stdout)
 	}
-    for _, line := range strings.Split(stdout, "\n") {
-        for _, intf := range strings.Split(line, " ") {
-            if intf != "ix0" && intf != "ix1" && intf != "lo0" && intf != "tun0" && intf != "" {
-                hostIntfs = append(hostIntfs, intf)
-            }
-        }
-    }
-    return hostIntfs, nil
+	for _, line := range strings.Split(stdout, "\n") {
+		for _, intf := range strings.Split(line, " ") {
+			if intf != "ix0" && intf != "ix1" && intf != "lo0" && intf != "tun0" && intf != "" {
+				hostIntfs = append(hostIntfs, intf)
+			}
+		}
+	}
+	return hostIntfs, nil
 }
-
 
 // GetIntfsMatchingDevicePrefix get intfs matching device prefix
 func GetIntfsMatchingDevicePrefix(devicePrefix string) ([]string, error) {
-    if runtime.GOOS == "freebsd" {
-        return GetIntfsMatchingDevicePrefixFreeBSD(devicePrefix)
-    } else {
-        return GetIntfsMatchingDevicePrefixLinux(devicePrefix)
-    }
+	if runtime.GOOS == "freebsd" {
+		return GetIntfsMatchingDevicePrefixFreeBSD(devicePrefix)
+	} else {
+		return GetIntfsMatchingDevicePrefixLinux(devicePrefix)
+	}
 }
 
 //RestHelper is a wrapper for rest

@@ -33,6 +33,7 @@ func NewTopologyServiceHandler() *TopologyService {
 // InitTestBed does initiates a test bed
 func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | InitTestBed. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | InitTestBed Returned: %v", req)
 	var vlans []uint32
 	var err error
 	ts.TestBedInfo = req
@@ -117,6 +118,8 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 // CleanUpTestBed cleans up a testbed
 func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | CleanUpTestBed. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | CleanUpTestBed Returned: %v", req)
+
 	if len(req.Username) == 0 || len(req.Password) == 0 {
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("Request must include a user name and password")
@@ -165,6 +168,7 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 // AddNodes adds nodes to the topology
 func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | AddNodes. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | AddNodes Returned: %v", req)
 
 	if req.NodeOp != iota.Op_ADD {
 		log.Errorf("TOPO SVC | AddNodes | AddNodes call failed")
@@ -244,6 +248,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 // DeleteNodes deletes a node from the topology
 func (ts *TopologyService) DeleteNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | DeleteNodes. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | DeleteNodes Returned: %v", req)
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
@@ -252,6 +257,7 @@ func (ts *TopologyService) DeleteNodes(ctx context.Context, req *iota.NodeMsg) (
 // GetNodes returns the current topology information
 func (ts *TopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | GetNodes. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | GetNodes Returned: %v", req)
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
@@ -265,6 +271,8 @@ func (ts *TopologyService) SaveNode(ctx context.Context, req *iota.NodeMsg) (*io
 
 // ReloadNode saves and loads node personality
 func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | ReloadNodes. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | ReloadNodes Returned: %v", req)
 
 	rNodes := []*testbed.TestNode{}
 
@@ -311,6 +319,7 @@ func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (
 // AddWorkloads adds a workload on a given node
 func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | AddWorkloads. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | AddWorkloads Returned: %v", req)
 
 	if req.WorkloadOp != iota.Op_ADD {
 		log.Errorf("TOPO SVC | AddWorkloads | AddWorkloads call failed")
@@ -402,6 +411,7 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 // DeleteWorkloads deletes a workload
 func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | DeleteWorkloads. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | DeleteWorkloads Returned: %v", req)
 
 	if req.WorkloadOp != iota.Op_DELETE {
 		log.Errorf("TOPO SVC | DeleteWorkloads | DeleteWorkloads call failed")
@@ -589,6 +599,7 @@ func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.Trigg
 // Trigger triggers a workload
 func (ts *TopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | Trigger. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | Trigger Returned: %v", req)
 
 	if req.TriggerOp == iota.TriggerOp_TYPE_NONE {
 		log.Errorf("TOPO SVC | Trigger | Trigger call failed")
@@ -615,7 +626,8 @@ func (ts *TopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*
 
 // CheckClusterHealth checks the e2e cluster health
 func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.NodeMsg) (*iota.ClusterHealthMsg, error) {
-
+	log.Infof("TOPO SVC | DEBUG | CheckClusterHealth. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | CheckClusterHealth Returned: %v", req)
 	resp := &iota.ClusterHealthMsg{}
 	for _, reqNode := range req.Nodes {
 		if node, ok := ts.ProvisionedNodes[reqNode.Name]; ok {
@@ -635,6 +647,8 @@ func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.Nod
 
 // WorkloadCopy does copy of items to/from entity.
 func (ts *TopologyService) EntityCopy(ctx context.Context, req *iota.EntityCopyMsg) (*iota.EntityCopyMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | EntityCopy. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | EntityCopy Returned: %v", req)
 
 	node, ok := ts.ProvisionedNodes[req.NodeName]
 	if !ok {

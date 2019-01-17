@@ -14,9 +14,10 @@ import (
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	constants "github.com/pensando/sw/iota/svcs/common"
 
-	"github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/pensando/sw/iota/svcs/common/vmware"
 )
 
 const (

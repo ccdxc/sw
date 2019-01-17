@@ -10,14 +10,15 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/ssh"
+
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/copier"
 	"github.com/pensando/sw/iota/svcs/common/runner"
 	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh"
 
 	"github.com/spf13/cobra"
 )

@@ -7,12 +7,13 @@ import (
 	"net"
 	"time"
 
+	"golang.org/x/crypto/ssh"
+
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/runner"
 	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
-	"golang.org/x/crypto/ssh"
 )
 
 const (

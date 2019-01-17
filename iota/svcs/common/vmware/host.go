@@ -613,8 +613,8 @@ func (h *Host) reconfigureVM(vm *object.VirtualMachine, ncpus uint, memory uint)
 
 	task, err = vm.Reconfigure(h.context.context, types.VirtualMachineConfigSpec{
 		MemoryReservationLockedToMax: &t,
-		NumCPUs:  int32(ncpus),
-		MemoryMB: bigMemory,
+		NumCPUs:                      int32(ncpus),
+		MemoryMB:                     bigMemory,
 	})
 	if err != nil {
 		return err

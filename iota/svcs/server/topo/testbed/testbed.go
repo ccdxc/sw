@@ -9,13 +9,14 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
+	"github.com/pkg/errors"
+
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/copier"
 	"github.com/pensando/sw/iota/svcs/common/runner"
 	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pkg/errors"
 )
 
 func (n *TestNode) downloadControlVMImage() (string, error) {

@@ -1,8 +1,9 @@
 package testbed
 
 import (
-	iota "github.com/pensando/sw/iota/protos/gogen"
 	"golang.org/x/crypto/ssh"
+
+	iota "github.com/pensando/sw/iota/protos/gogen"
 )
 
 // TestNode wraps an iota TestNode
