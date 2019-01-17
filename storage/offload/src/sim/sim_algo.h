@@ -8,7 +8,7 @@
 bool algo_sha_gen(void *scratch, unsigned char *hash,
 		  const unsigned char *msg, int len, int hash_bits);
 uint32_t algo_gen_adler32(unsigned char *msg, size_t bytes);
-uint32_t algo_gen_madler(uint64_t *data, size_t len);
+uint32_t algo_gen_madler_with_pad(unsigned char *msg, size_t bytes);
 uint32_t algo_gen_crc32c(uint8_t *data, uint32_t length);
 uint64_t algo_gen_mcrc64(uint8_t *data, uint32_t length);
 

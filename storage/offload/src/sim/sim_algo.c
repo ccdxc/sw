@@ -7,6 +7,7 @@
 #if 0
 #include <stdint.h>
 #endif
+#include <string.h>
 
 #include "osal_stdtypes.h"
 
@@ -148,18 +149,31 @@ static uint32_t integer_modulus128(uint128_t a, uint32_t b)
 #endif
 
 const uint32_t PRIME_BASE = 65521;
-uint32_t algo_gen_madler(uint64_t *data, size_t len)
+uint32_t algo_gen_madler_with_pad(unsigned char* msg, size_t bytes)
 {
 	uint128_t sumA = 1;
 	uint128_t sumB = 0;
 	uint32_t sumA_mod;
 	uint32_t sumB_mod;
+	uint64_t *data = (uint64_t *)msg;
+	uint64_t pad = 0;
+	size_t len = bytes / 8;
+	uint8_t rem = bytes % 8;
+
+	if (rem) {
+		memcpy(&pad, &data[len], rem);
+	}
 
 	for (; len > 0; ++data, --len) {
 		sumA += *data;
 		sumB += sumA;
 	}
 
+	if (rem) {
+                sumA += pad;
+                sumB += sumA;
+	}
+ 
 	sumA_mod = integer_modulus128(sumA, PRIME_BASE);
 	sumB_mod = integer_modulus128(sumB, PRIME_BASE);
 

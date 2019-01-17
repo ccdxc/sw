@@ -899,7 +899,7 @@ static pnso_error_t svc_exec_chksum_one_block(struct sim_svc_ctx *ctx,
 		break;
 
 	case PNSO_CHKSUM_TYPE_MADLER32:
-		temp32 = algo_gen_madler((uint64_t *) block->buf, block->len);
+		temp32 = algo_gen_madler_with_pad((uint8_t *) block->buf, block->len);
 		*((uint32_t *) chksum_buf) = temp32;
 		break;
 
