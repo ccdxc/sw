@@ -44,7 +44,6 @@ typedef struct hal_lif_info_s {
     std::string name;
     types::LifType type;
     uint32_t pinned_uplink_port_num;
-    // Uplink *pinned_uplink;
     bool is_management;
     bool vlan_strip_en;
     bool vlan_insert_en;

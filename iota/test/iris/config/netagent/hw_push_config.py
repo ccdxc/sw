@@ -7,7 +7,9 @@ import time
 from collections import defaultdict
 
 import iota.harness.api as api
+import iota.harness.infra.utils.parser as parser
 import iota.test.iris.config.netagent.api as netagent_api
+import iota.harness.infra.resmgr as resmgr
 
 import iota.protos.pygen.types_pb2 as types_pb2
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
@@ -131,9 +133,97 @@ def __add_config_worklads(req, target_node = None):
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
 
+def __add_config_classic_workloads(req, target_node = None):
+    classic_yml = "{}/classic.yml".format(api.GetTopologyDirectory())
+    spec = parser.YmlParse(classic_yml)
+    spec.subifs.num = getattr(spec.subifs, 'num', 0)
+    api.Logger.info("No of Subif Workloads to be created: %d" % spec.subifs.num)
+    # Note: Make sure the num in yml should always
+    #       be less than TESTBED_NUM_VLANS_CLASSIC
+    req.workload_op = topo_svc.ADD
+    nodes = api.GetWorkloadNodeHostnames()
+    subnet_allocator = resmgr.IpAddressStep("192.170.1.1", "0.0.1.0")
+    ipv6_subnet_allocator = resmgr.Ipv6AddressStep("1000::0:1", "0::1:0:0")
+    mac_allocator = resmgr.MacAddressStep("00AA.0000.0001", "0000.0000.0001")
+    api.Testbed_AllocateVlan()
+
+    # For every subif, create 1 WL on each node
+    # Get subnet of this subif
+    num_ifs = 0
+    node_ifs = {}
+    for node in nodes:
+        if target_node != None and node != target_node:
+            continue
+        node_ifs[node] = api.GetNaplesHostInterfaces(node)
+        if num_ifs == 0:
+            num_ifs = len(node_ifs[node])
+        num_ifs = min(len(node_ifs[node]), num_ifs)
+
+    pdb.set_trace()
+
+    vlan = 0
+    for i in range(num_ifs):
+        subnet = subnet_allocator.Alloc()
+        ipv6_subnet = ipv6_subnet_allocator.Alloc()
+        ip4_allocator = resmgr.IpAddressStep(subnet, "0.0.0.1")
+        ip6_allocator = resmgr.Ipv6AddressStep(ipv6_subnet, "0::1")
+        for node in nodes:
+            wl_msg = req.workloads.add()
+            ip4_addr_str = str(ip4_allocator.Alloc())
+            ip6_addr_str = str(ip6_allocator.Alloc())
+            wl_msg.ip_prefix = ip4_addr_str + "/24"
+            wl_msg.ipv6_prefix = ip6_addr_str + "/96"
+            wl_msg.mac_address = mac_allocator.Alloc().get()
+            wl_msg.encap_vlan = vlan
+            wl_msg.uplink_vlan = wl_msg.encap_vlan
+            wl_msg.workload_name = node + "_subif_" + str(vlan)
+            wl_msg.node_name = node
+            wl_msg.pinned_port = 1
+            wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+            wl_msg.interface = node_ifs[node][i]
+            wl_msg.workload_type = api.GetWorkloadTypeForNode(node)
+            wl_msg.workload_image = api.GetWorkloadImageForNode(node)
+
+    # Subif_num -> vlan, ipv4 address, ipv6 address
+    #vlans = {}
+    #ip4_alloc = {}
+    #ip6_alloc = {}
+    for i in range(num_ifs):
+        for j in range(spec.subifs.num):
+            subnet = subnet_allocator.Alloc()
+            ipv6_subnet = ipv6_subnet_allocator.Alloc()
+            vlan = api.Testbed_AllocateVlan()
+            ip4_alloc = resmgr.IpAddressStep(subnet, "0.0.0.1")
+            ip6_alloc = resmgr.Ipv6AddressStep(ipv6_subnet, "0::1")
+            for node in nodes:
+               if target_node != None and node != target_node:
+                   continue
+               #pdb.set_trace()
+               wl_msg = req.workloads.add()
+               ip4_addr_str = str(ip4_alloc.Alloc())
+               ip6_addr_str = str(ip6_alloc.Alloc())
+               wl_msg.ip_prefix = ip4_addr_str + "/24"
+               wl_msg.ipv6_prefix = ip6_addr_str + "/96"
+               wl_msg.mac_address = mac_allocator.Alloc().get()
+               wl_msg.encap_vlan = vlan
+               wl_msg.uplink_vlan = wl_msg.encap_vlan
+               wl_msg.workload_name = node + "_subif_" + str(vlan)
+               wl_msg.node_name = node
+               wl_msg.pinned_port = 1
+               wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+               wl_msg.interface = node_ifs[node][i]
+               wl_msg.workload_type = api.GetWorkloadTypeForNode(node)
+               wl_msg.workload_image = api.GetWorkloadImageForNode(node)
+
 def __add_workloads(target_node = None):
     req = topo_svc.WorkloadMsg()
-    __add_config_worklads(req, target_node)
+    if api.GetNicMode() == 'hostpin':
+        __add_config_worklads(req, target_node)
+    if api.GetNicMode() == 'classic':
+        __add_config_classic_workloads(req, target_node)
+    else:
+        assert(0)
+
     if len(req.workloads):
         resp = api.AddWorkloads(req)
         if resp is None:
