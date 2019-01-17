@@ -22,6 +22,7 @@ PCIEPORT_CAP            gen4x16     gen<Gen>x<Width>
 PCIEDEV_CAP             gen4x16     gen<Gen>x<Width>
 PCIE_CAP                gen4x16     gen<Gen>x<Width>
 PCIE_REDUCE_RX_CRED     0           0|1
+PCIE_FORCE_BARS_LOAD    1           0|1
 ----------------
 # script files in /sysconfig/config0/pcie-poweron
 pcie-poweron            <none>
@@ -134,6 +135,9 @@ PCIE_REDUCE_RX_CRED
         // Reduced pending initiator RD requests - Can be changed anytime
         cfg_itr_axi_resp_order.rd_id_limit=32
 
+PCIE_FORCE_BARS_LOAD
+    If set to 1, load bars as soon as the address is set and don't
+    check CMD.mem_enable,io_enable or ROMBAR.enable first.
 ----------------
 pcie-poweron
 pcie-poweron-%d

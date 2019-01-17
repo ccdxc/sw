@@ -21,7 +21,8 @@
 static pciehwbar_t *
 pciehw_bar_get(pciehwdev_t *phwdev, const int idx)
 {
-    if (idx < 0 || idx >= 6) return NULL;
+    if (idx < 0 || idx > 7) return NULL;
+    if (idx == 7) return &phwdev->rombar;
     return &phwdev->bar[idx];
 }
 

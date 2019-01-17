@@ -377,6 +377,9 @@ Eth::LoadOprom()
     std::string rom_file_path;
     uint64_t rom_file_size, rom_bar_size;
 
+    rom_mem_addr = 0;
+    rom_mem_size = 0;
+
     // FIXME: Get the filepaths from catalog
 #ifdef __aarch64__
     rom_file_path = "/platform/oprom/";
@@ -424,6 +427,8 @@ Eth::LoadOprom()
     if ((rom_mem_addr % rom_bar_size) != 0) {
         NIC_LOG_ERR("{}: rom_mem_addr is not naturally aligned", spec->name);
         fclose(rom_file);
+        rom_mem_addr = 0;
+        rom_mem_size = 0;
         return false;
     }
 
@@ -452,13 +457,8 @@ Eth::CreateHostDevice()
 
     if (!LoadOprom()) {
         NIC_LOG_ERR("{}: Failed to load oprom", spec->name);
-        rom_mem_addr = 0;
-        rom_mem_size = 0;
         // FIXME: error out after oproms are pacakged in the image
         // return false;
-    } else {
-        rom_mem_addr = 0;
-        rom_mem_size = 0;
     }
 
     pci_resources.lif_valid = 1;

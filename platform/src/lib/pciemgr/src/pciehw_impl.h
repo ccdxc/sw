@@ -164,6 +164,7 @@ typedef struct pcie_stlp_s pcie_stlp_t;
 
 pciehw_mem_t *pciehw_get_hwmem(void);
 pciehw_shmem_t *pciehw_get_shmem(void);
+pciehdev_params_t *pciehw_get_params(void);
 pciehwdev_t *pciehwdev_get(pciehwdevh_t hwdevh);
 pciehwdevh_t pciehwdev_geth(const pciehwdev_t *phwdev);
 void pciehwdev_get_cfgspace(const pciehwdev_t *phwdev, cfgspace_t *cs);

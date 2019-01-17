@@ -193,29 +193,21 @@ cfg_baraddr(cfgspace_t *cs, const u_int32_t cfgoff, const u_int32_t barlen)
 }
 
 static void
-pciehw_cfg_mem_enable(pciehwdev_t *phwdev, const int on)
+pciehw_cfg_bars_enable(pciehwdev_t *phwdev, const u_int16_t cmd)
 {
+    const int io_en = (cmd & 0x1) != 0;
+    const int mem_en = (cmd & 0x2) != 0;
     pciehwbar_t *phwbar;
     int i;
 
     for (phwbar = phwdev->bar, i = 0; i < PCIEHW_NBAR; i++, phwbar++) {
-        if (phwbar->valid &&
-            (phwbar->type == PCIEHWBARTYPE_MEM ||
+        if (!phwbar->valid) continue;
+
+        if ((phwbar->type == PCIEHWBARTYPE_MEM ||
              phwbar->type == PCIEHWBARTYPE_MEM64)) {
-            pciehw_bar_enable(phwbar, on);
-        }
-    }
-}
-
-static void
-pciehw_cfg_io_enable(pciehwdev_t *phwdev, const int on)
-{
-    pciehwbar_t *phwbar;
-    int i;
-
-    for (phwbar = phwdev->bar, i = 0; i < PCIEHW_NBAR; i++, phwbar++) {
-        if (phwbar->valid && phwbar->type == PCIEHWBARTYPE_IO) {
-            pciehw_bar_enable(phwbar, on);
+            pciehw_bar_enable(phwbar, mem_en);
+        } else if (phwbar->type == PCIEHWBARTYPE_IO) {
+            pciehw_bar_enable(phwbar, io_en);
         }
     }
 }
@@ -250,10 +242,9 @@ pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
     }
 
     /* bar control */
-    pciehw_cfg_io_enable(phwdev, (cmd & 0x1) != 0);
-    pciehw_cfg_mem_enable(phwdev, (cmd & 0x2) != 0);
+    pciehw_cfg_bars_enable(phwdev, cmd);
 
-    /* cmd mem_enable might have enabled rombar */
+    /* cmd.mem_enable might have enabled rombar */
     pciehw_cfg_rombar_enable(&phwdev->rombar, &cs);
 
     /* intx_disable */
@@ -275,6 +266,7 @@ pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
     pciehwbar_t *phwbar;
     cfgspace_t cs;
     int i, cfgoff;
+    u_int16_t cmd;
 
     pciehwdev_get_cfgspace(phwdev, &cs);
 
@@ -294,6 +286,15 @@ pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
             cfgoff += barlen;
         }
     }
+
+    /*
+     * XXX We don't really need to enable bars when the bar addresses
+     * are written, because the enable/disable state is in the CMD register.
+     * But we put this here to give us a chance to load the bars early
+     * when the address arrives if force_bars_load is specified.
+     */
+    cmd = cfgspace_readw(&cs, PCI_COMMAND);
+    pciehw_cfg_bars_enable(phwdev, cmd);
 }
 
 static void

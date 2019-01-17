@@ -327,7 +327,7 @@ pciehw_pmt_load_bar(pciehwbar_t *phwbar)
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     u_int32_t pmti = phwbar->pmtb;
     pciehw_spmt_t *spmt = &pshmem->spmt[phwbar->pmtb];
-    pciehw_spmt_t *spmte;
+    pciehw_spmt_t *spmte = spmt + phwbar->pmtc;
     const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
     const u_int16_t bdf = pciehwdev_get_bdf(phwdev);
 
@@ -340,7 +340,11 @@ pciehw_pmt_load_bar(pciehwbar_t *phwbar)
 
     assert(phwbar->valid);
 
-    spmte = spmt + phwbar->pmtc;
+#ifdef __aarch64__
+    pciesys_loginfo("%s: bar %d pmt %d loaded\n",
+                    pciehwdev_get_name(phwdev), spmt->cfgidx, pmti);
+#endif
+
     for ( ; spmt < spmte; spmt++, pmti++) {
         /*
          * Load PRT first, then load PMT so PMT tcam search hit
@@ -362,12 +366,17 @@ void
 pciehw_pmt_unload_bar(pciehwbar_t *phwbar)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    pciehw_spmt_t *spmt, *spmte;
-    u_int32_t pmti;
+    pciehw_spmt_t *spmt  = &pshmem->spmt[phwbar->pmtb];
+    pciehw_spmt_t *spmte = spmt + phwbar->pmtc;
+    u_int32_t pmti = phwbar->pmtb;
 
-    spmt  = &pshmem->spmt[phwbar->pmtb];
-    spmte = spmt + phwbar->pmtc;
-    for (pmti = phwbar->pmtb; spmt < spmte; spmt++, pmti++) {
+#ifdef __aarch64__
+    const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
+    pciesys_loginfo("%s: bar %d pmt %d unloaded\n",
+                    pciehwdev_get_name(phwdev), spmt->cfgidx, pmti);
+#endif
+
+    for ( ; spmt < spmte; spmt++, pmti++) {
         /*
          * Unload PMT first THEN PRT, so PMT tcam search will not hit
          * and PRT is unreferenced.  Then safe to unload PRT.
@@ -384,11 +393,16 @@ pciehw_pmt_unload_bar(pciehwbar_t *phwbar)
 void
 pciehw_pmt_enable_bar(pciehwbar_t *phwbar, const int on)
 {
+    pciehdev_params_t *params = pciehw_get_params();
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     const u_int32_t pmti = phwbar->pmtb;
     pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
 
-    if (on && !spmt->loaded) {
+    if (params->force_bars_load) {
+        if (!spmt->loaded) {
+            pciehw_pmt_load_bar(phwbar);
+        }
+    } else if (on && !spmt->loaded) {
         pciehw_pmt_load_bar(phwbar);
     } else if (!on && spmt->loaded) {
         pciehw_pmt_unload_bar(phwbar);
@@ -399,19 +413,24 @@ void
 pciehw_pmt_setaddr(pciehwbar_t *phwbar, const u_int64_t addr)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    pciehw_spmt_t *spmt, *spmte;
+    u_int32_t pmti = phwbar->pmtb;
+    pciehw_spmt_t *spmt = &pshmem->spmt[phwbar->pmtb];
+    pciehw_spmt_t *spmte = spmt + phwbar->pmtc;
+
+#ifdef __aarch64__
+    const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
+    pciesys_loginfo("%s: bar %d pmt %d setaddr 0x%" PRIx64 "\n",
+                    pciehwdev_get_name(phwdev), spmt->cfgidx, pmti, addr);
+#endif
 
     /* update addr */
-    spmt  = &pshmem->spmt[phwbar->pmtb];
-    spmte = spmt + phwbar->pmtc;
-    for ( ; spmt < spmte; spmt++) {
+    for ( ; spmt < spmte; spmt++, pmti++) {
         pmt_bar_setaddr(&spmt->pmt, addr + spmt->baroff);
-    }
 
-    /* if loaded, reload with new addr */
-    spmt = &pshmem->spmt[phwbar->pmtb];
-    if (spmt->loaded) {
-        pciehw_pmt_load_bar(phwbar);
+        /* if loaded, update hw too */
+        if (spmt->loaded) {
+            pmt_set(pmti, &spmt->pmt);
+        }
     }
 }
 

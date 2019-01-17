@@ -50,6 +50,13 @@ pciehw_get_shmem(void)
     return phw->pcieshmem;
 }
 
+pciehdev_params_t *
+pciehw_get_params(void)
+{
+    pciehw_t *phw = pciehw_get();
+    return &phw->params;
+}
+
 pciehwdev_t *
 pciehwdev_get(pciehwdevh_t hwdevh)
 {
@@ -442,6 +449,31 @@ pciehw_set_initmode(void)
     }
 }
 
+static u_int64_t
+getenv_override_ull(const char *label, const char *name, const u_int64_t def)
+{
+    const char *env = getenv(name);
+    if (env) {
+        u_int64_t val = strtoull(env, NULL, 0);
+        pciesys_loginfo("%s: $%s override %" PRIu64 " (0x%" PRIx64 ")\n",
+                        label, name, val, val);
+        return val;
+    }
+    return def;
+}
+
+static u_int64_t
+pciehw_param_ull(const char *name, const u_int64_t def)
+{
+    return getenv_override_ull("pciehw", name, def);
+}
+
+static void
+pciehw_init_params(pciehdev_params_t *p)
+{
+    p->force_bars_load = pciehw_param_ull("PCIE_FORCE_BARS_LOAD", 1);
+}
+
 int
 pciehw_open(pciehdev_params_t *params)
 {
@@ -457,6 +489,8 @@ pciehw_open(pciehdev_params_t *params)
     if (params) {
         phw->params = *params;
     }
+
+    pciehw_init_params(&phw->params);
 
     pciehw_set_initmode();
 
