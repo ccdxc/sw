@@ -42,15 +42,19 @@ typedef union h10_crc32_s {
 } h10_crc32_t;
 
 typedef struct h5_entry_s {
-    mem_hash_h5_key_t           key;
-    mem_hash_h5_appdata_t       appdata;
-    h5_crc32_t                  crc32;
+    mem_hash_h5_key_t key;
+    mem_hash_h5_appdata_t appdata;
+    h5_crc32_t crc32;
+    bool crc32_valid;
+    uint64_t handle;
 } h5_entry_t;
 
 typedef struct h10_entry_s {
-    mem_hash_h10_key_t           key;
-    mem_hash_h10_actiondata_t    data;
-    h10_crc32_t                  crc32;
+    mem_hash_h10_key_t key;
+    mem_hash_h10_actiondata_t data;
+    h10_crc32_t crc32;
+    bool crc32_valid;
+    uint64_t handle;
 } h10_entry_t;
 
 
@@ -62,18 +66,22 @@ void* h10_gendata();
 
 uint32_t h10_gencrc32(bool nextindex = true, bool nexthint = true);
 h5_entry_t* h5_get_cache_entry(uint32_t index,
-                               sdk_table_api_params_t *params);
+                               sdk_table_api_params_t *params,
+                               bool with_handle);
 h5_entry_t * h5_get_updated_cache_entry(uint32_t index, 
-                                        sdk_table_api_params_t *params);
+                                        sdk_table_api_params_t *params,
+                                        bool with_handle);
 h5_entry_t* h5_gen_cache_entry(h5_crc32_t *crc32,
-                               sdk_table_api_params_t *params);
+                               sdk_table_api_params_t *params,
+                               bool gen_crc32 = true);
 uint32_t h5_get_cache_count();
 void h5_reset_cache();
 
 h10_entry_t* h10_get_cache_entry(uint32_t index,
                                  sdk_table_api_params_t *params);
 h10_entry_t* h10_gen_cache_entry(h10_crc32_t *crc32,
-                                 sdk_table_api_params_t *params);
+                                 sdk_table_api_params_t *params,
+                                 bool gen_crc32 = true);
 uint32_t h10_get_cache_count();
 void h10_reset_cache();
 
@@ -81,5 +89,8 @@ char* h5_key2str(void *key);
 char* h5_appdata2str(void *data);
 char* h10_key2str(void *key);
 char* h10_appdata2str(void *data);
+
+h5_entry_t* h5_alloc_entry();
+void h5_free_entry(h5_entry_t *entry);
 
 #endif // __COMMON_HPP__

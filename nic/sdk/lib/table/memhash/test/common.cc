@@ -142,17 +142,49 @@ h5_data2str(void *data)
 }
 
 static h5_entry_t*
-h5_alloc_entry()
+h5_alloc_cache_entry()
 {
     return &g_h5_cache[g_h5_cache_index++];
 }
 
+h5_entry_t *
+h5_alloc_entry()
+{
+    return (h5_entry_t *)malloc(sizeof(h5_entry_t));
+}
+
+void
+h5_free_entry(h5_entry_t *entry)
+{
+    free(entry);
+}
+
+static void
+fill_params (sdk_table_api_params_t *params,
+             h5_entry_t *entry, bool with_handle)
+{
+    if (params) {
+        params->key = &entry->key;
+        params->appdata = &entry->appdata;
+        params->hash_32b = entry->crc32.val;
+        params->hash_valid = entry->crc32_valid;
+        if (with_handle) {
+            params->handle = entry->handle;
+        }
+    }
+    return;
+}
+
 h5_entry_t*
-h5_gen_cache_entry (h5_crc32_t *crc32, sdk_table_api_params_t *params)
+h5_gen_cache_entry (h5_crc32_t *crc32,
+                    sdk_table_api_params_t *params, 
+                    bool gen_crc32)
 {
     void *key = NULL;
     void *data = NULL;
-    h5_entry_t *entry = h5_alloc_entry();
+    h5_entry_t *entry = h5_alloc_cache_entry();
+
+    memset(entry, 0, sizeof(h5_entry_t));
 
     key = h5_genkey();
     memcpy(&entry->key, key, sizeof(entry->key));
@@ -160,16 +192,19 @@ h5_gen_cache_entry (h5_crc32_t *crc32, sdk_table_api_params_t *params)
     data = h5_gendata();
     memcpy(&entry->appdata, data, sizeof(entry->appdata));
 
-    if (crc32) {
-        entry->crc32 = *crc32;
+    if (gen_crc32) {
+        if (crc32) {
+            entry->crc32 = *crc32;
+        } else {
+            entry->crc32.val = h5_gencrc32();
+        }
+        entry->crc32_valid = true;
     } else {
-        entry->crc32.val = h5_gencrc32();
+        entry->crc32.val = 0;
+        entry->crc32_valid = false;
     }
 
-    params->key = &entry->key;
-    params->appdata = &entry->appdata;
-    params->hash_32b = entry->crc32.val;
-    params->hash_valid = true;
+    fill_params(params, entry, true);
  
     return entry;
 }
@@ -181,35 +216,32 @@ h5_get_cache_count ()
 }
 
 h5_entry_t *
-h5_get_cache_entry (uint32_t index, sdk_table_api_params_t *params)
+h5_get_cache_entry (uint32_t index,
+                    sdk_table_api_params_t *params,
+                    bool with_handle)
 {
     h5_entry_t *entry = &g_h5_cache[index];
-    
-    params->key = &entry->key;
-    params->appdata = &entry->appdata;
-    params->hash_32b = entry->crc32.val;
-    params->hash_valid = true;
-
+    fill_params(params, entry, with_handle);
     return entry;
 }
 
 h5_entry_t *
-h5_get_updated_cache_entry (uint32_t index, sdk_table_api_params_t *params)
+h5_get_updated_cache_entry (uint32_t index, sdk_table_api_params_t *params,
+                            bool with_handle)
 {
-    h5_entry_t *entry = h5_get_cache_entry(index, params);
     void *data = NULL;
-    
+    h5_entry_t *entry = h5_get_cache_entry(index, params, with_handle);
     data = h5_gendata();
     memcpy(&entry->appdata, data, sizeof(entry->appdata));
-    params->appdata = &entry->appdata;
-
+    fill_params(params, entry, with_handle);
     return entry;
 }
 
 void
 h5_reset_cache()
 {
+    // zero out only the used entries.
+    bzero(g_h5_cache, sizeof(h5_entry_t) * g_h5_cache_index);
     g_h5_cache_index = 0;
-    //bzero(g_h5_cache, sizeof(g_h5_cache));
     return;
 }

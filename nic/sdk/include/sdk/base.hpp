@@ -172,7 +172,10 @@ do {                                                       \
     ENTRY(SDK_RET_COLLISION,                  13,   "collision detected")                   \
     ENTRY(SDK_RET_MAX_RECIRC_EXCEED,          14,   "maximum recirc exceeded")              \
     ENTRY(SDK_RET_HW_READ_ERR,                15,   "h/w read error")                       \
-    ENTRY(SDK_RET_MAX,                        16,   "max return value")                     \
+    ENTRY(SDK_RET_TXN_NOT_FOUND,              16,   "transaction not found")                \
+    ENTRY(SDK_RET_TXN_EXISTS,                 17,   "transaction exists")                   \
+    ENTRY(SDK_RET_TXN_INCOMPLETE,             18,   "transaction incomplete")               \
+    ENTRY(SDK_RET_MAX,                        19,   "max return value")                     \
     ENTRY(SDK_RET_ERR,                        255,  "catch all generic error")
 
 SDK_DEFINE_ENUM(sdk_ret_t, SDK_RET_ENTRIES)

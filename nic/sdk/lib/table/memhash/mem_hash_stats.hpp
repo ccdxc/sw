@@ -53,6 +53,7 @@ public:
     }
 
     sdk_ret_t insert(sdk_ret_t status) {
+        SDK_TRACE_DEBUG("Updating insert stats, ret:%d", status);
         if (status == SDK_RET_OK) {
             insert_++;
         } else if (status == SDK_RET_ENTRY_EXISTS) {
@@ -64,6 +65,7 @@ public:
     }
 
     sdk_ret_t update(sdk_ret_t status) {
+        SDK_TRACE_DEBUG("Updating update stats, ret:%d", status);
         if (status == SDK_RET_OK) {
             update_++;
         } else {
@@ -73,12 +75,33 @@ public:
     }
 
     sdk_ret_t remove(sdk_ret_t status) {
+        SDK_TRACE_DEBUG("Updating remove stats, ret:%d", status);
         if (status == SDK_RET_OK) {
             remove_++;
         } else if (status == SDK_RET_ENTRY_NOT_FOUND) {
             remove_not_found_++;
         } else {
             remove_fail_++;
+        }
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t reserve(sdk_ret_t status) {
+        SDK_TRACE_DEBUG("Updating reserve stats, ret:%d", status);
+        if (status == SDK_RET_OK) {
+            reserve_++;
+        } else {
+            reserve_fail_++;
+        }
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t get(sdk_ret_t status) {
+        SDK_TRACE_DEBUG("Updating get stats, ret:%d", status);
+        if (status == SDK_RET_OK) {
+            get_++;
+        } else {
+            get_fail_++;
         }
         return SDK_RET_OK;
     }
@@ -106,38 +129,37 @@ class mem_hash_table_stats {
 private:
     uint32_t    entries_;
     uint32_t    hints_;
-    uint32_t    avg_hint_level_;
-    uint32_t    max_hint_level_;
 
 public:
     mem_hash_table_stats() {
         entries_ = 0;
         hints_ = 0;
-        avg_hint_level_ = 0;
-        max_hint_level_ = 0;
     }
 
     ~mem_hash_table_stats() {
     }
 
     sdk_ret_t insert(uint32_t level) {
-        SDK_ASSERT(entries_ && hints_);
         entries_++;
         if (level) {
             hints_++;
-            if (level > max_hint_level_) {
-                max_hint_level_ = level;
-            }
         }
         return SDK_RET_OK;
     }
 
     sdk_ret_t remove(uint32_t level) {
-        SDK_ASSERT(entries_ && hints_);
+        SDK_ASSERT(entries_);
         entries_--;
         if (level) {
+            SDK_ASSERT(hints_);
             hints_--;
         }
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t get(sdk_table_stats_t *stats) {
+        stats->entries = entries_;
+        stats->collisions = hints_;
         return SDK_RET_OK;
     }
 };

@@ -51,6 +51,11 @@ typedef struct sdk_table_api_stats_ {
     uint32_t release_fail;
 } sdk_table_api_stats_t;
 
+typedef struct sdk_table_stats_ {
+    uint32_t entries;
+    uint32_t collisions;
+} sdk_table_stats_t;
+
 } // namespace table
 } // namespace sdk
 #endif // __SDK_TABLE_HPP__

@@ -100,10 +100,10 @@ typedef struct __attribute__((__packed__)) __mem_hash_h5_actiondata {
 
 typedef enum mem_hash_p4pd_table_ids_ {
     MEM_HASH_P4TBL_ID_NONE       = 0,
-    MEM_HASH_P4TBL_ID_H10        = 1,
-    MEM_HASH_P4TBL_ID_H10_OHASH  = 2,
-    MEM_HASH_P4TBL_ID_H5         = 3,
-    MEM_HASH_P4TBL_ID_H5_OHASH   = 4,
+    MEM_HASH_P4TBL_ID_H5         = 1,
+    MEM_HASH_P4TBL_ID_H5_OHASH   = 2,
+    MEM_HASH_P4TBL_ID_H10        = 3,
+    MEM_HASH_P4TBL_ID_H10_OHASH  = 4,
     MEM_HASH_P4TBL_ID_MAX        = 5,
 } mem_hash_p4_table_id;
 

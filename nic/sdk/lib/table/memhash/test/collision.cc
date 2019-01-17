@@ -17,7 +17,7 @@ TEST_F(collision, insert_update_full_mesh) {
     rs = InsertWithHash(1, H5_MAX_HINTS, MAX_RECIRCS);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
-    rs = UpdateAllCached();
+    rs = UpdateAllCached(sdk::SDK_RET_OK, false);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
@@ -27,7 +27,7 @@ TEST_F(collision, insert_remove_full_mesh) {
     rs = InsertWithHash(1, H5_MAX_HINTS, MAX_RECIRCS);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
-    rs = RemoveAllCached();
+    rs = RemoveAllCached(sdk::SDK_RET_OK, false);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
@@ -42,7 +42,7 @@ TEST_F(collision, insert_remove_full_mesh_more_hashs) {
     rs = InsertWithHash(MAX_MORE_LEVELS, H5_MAX_HINTS, MAX_RECIRCS);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
-    rs = RemoveAllCached();
+    rs = RemoveAllCached(sdk::SDK_RET_OK, false);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
@@ -51,7 +51,7 @@ TEST_F(collision, insert_update_full_mesh_more_hashs) {
     rs = InsertWithHash(MAX_MORE_LEVELS, H5_MAX_HINTS, MAX_RECIRCS);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
-    rs = UpdateAllCached();
+    rs = UpdateAllCached(sdk::SDK_RET_OK, false);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
@@ -68,7 +68,7 @@ TEST_F(collision, update_exm_match_chain) {
     rs = InsertWithHash(1, 1, MAX_RECIRCS);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
-    rs = UpdateAllCached();
+    rs = UpdateAllCached(sdk::SDK_RET_OK, false);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 

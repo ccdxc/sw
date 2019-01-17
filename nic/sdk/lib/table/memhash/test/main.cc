@@ -55,11 +55,8 @@ main(int argc, char **argv)
 
     std::string logfile;
     logfile = std::string("./hal.log");
-    hal::utils::trace_init("hal", 0x3, true,
-                           logfile.c_str(),
-                           TRACE_FILE_SIZE_DEFAULT,
-                           TRACE_NUM_FILES_DEFAULT,
-                           ::utils::trace_debug);
+    hal::utils::trace_init("hal", 0x3, true, logfile.c_str(),
+                           1 << 30, 1, ::utils::trace_debug);
 
     memhash_sdk_init();
 
