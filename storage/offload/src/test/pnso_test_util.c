@@ -8,8 +8,10 @@
 #include <ctype.h>
 #include "osal_stdtypes.h"
 #include "osal_random.h"
+#include "osal_assert.h"
 #include "pnso_api.h"
 #include "pnso_test.h"
+#include "pnso_pbuf.h"
 
 #define pnso_srand osal_srand
 #define pnso_rand osal_rand
@@ -48,44 +50,33 @@ void test_fill_buflist(struct pnso_buffer_list *buflist,
 	}
 }
 
-static uint8_t random_data[4096];
+static uint8_t g_random_data[64 * 1024];
+static bool g_random_initialized;
+
+void test_init_random(uint32_t seed)
+{
+	size_t i;
+	uint32_t rnum = 0;
+
+	pnso_srand(seed);
+
+	for (i = 0; i < sizeof(g_random_data); i += sizeof(uint32_t)) {
+		rnum = pnso_rand();
+		*(uint32_t*)(g_random_data+i) = rnum;
+	}
+	g_random_initialized = true;
+}
 
 /* Fill buflist with random values */
 pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed, uint32_t random_len)
 {
-	size_t i, j;
-	uint32_t rnum = 0;
-	uint8_t *dst;
+	OSAL_ASSERT(g_random_initialized);
+	if (!random_len)
+		random_len = pbuf_get_buffer_list_len(buflist);
+	if (random_len > sizeof(g_random_data))
+		random_len = sizeof(g_random_data);
 
-	pnso_srand(seed);
-
-	if (random_len) {
-		if (random_len > sizeof(random_data))
-			random_len = sizeof(random_data);
-
-		for (i = 0; i < random_len; i += sizeof(uint32_t)) {
-			rnum = pnso_rand();
-			*(uint32_t*)(random_data+i) = rnum;
-		}
-
-		test_fill_buflist(buflist, random_data, random_len);
-		return PNSO_OK;
-	}
-
-	for (i = 0; i < buflist->count; i++) {
-		if (!buflist->buffers[i].len) {
-			continue;
-		}
-
-		dst = (uint8_t *) buflist->buffers[i].buf;
-		for (j = 0; j < buflist->buffers[i].len; j++) {
-			if ((j % 4) == 0) {
-				rnum = pnso_rand();
-			}
-			dst[j] = (rnum >> ((j % 4) * 8)) & 0xff;
-		}
-	}
-
+	test_fill_buflist(buflist, g_random_data, random_len);
 	return PNSO_OK;
 }
 

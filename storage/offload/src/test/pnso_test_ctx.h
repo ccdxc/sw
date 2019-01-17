@@ -188,17 +188,31 @@ struct worker_queue {
 	uint32_t head;
 	uint32_t tail;
 	uint32_t max_count;
+	uint64_t enqueue_count;
+	uint64_t enqueue_full_count;
+	uint64_t enqueue_empty_count;
+	uint64_t dequeue_count;
+	uint64_t dequeue_full_count;
+	uint64_t dequeue_empty_count;
 	struct batch_context *batch_ctxs[0];
 };
 
 static inline bool worker_queue_is_full(struct worker_queue *q)
 {
-	return osal_atomic_read(&q->atomic_count) >= q->max_count;
+	if (osal_atomic_read(&q->atomic_count) >= q->max_count) {
+		q->enqueue_full_count++;
+		return true;
+	}
+	return false;
 }
 
 static inline bool worker_queue_is_empty(struct worker_queue *q)
 {
-	return osal_atomic_read(&q->atomic_count) <= 0;
+	if (osal_atomic_read(&q->atomic_count) <= 0) {
+		q->dequeue_empty_count++;
+		return true;
+	}
+	return false;
 }
 
 static inline struct batch_context *_worker_queue_dequeue(struct worker_queue *q)
@@ -208,13 +222,20 @@ static inline struct batch_context *_worker_queue_dequeue(struct worker_queue *q
 	batch = q->batch_ctxs[q->tail % q->max_count];
 	q->tail++;
 	osal_atomic_fetch_sub(&q->atomic_count, 1);
+	q->dequeue_count++;
 	return batch;
 }
 
 static inline struct batch_context *worker_queue_dequeue(struct worker_queue *q)
 {
-	if (worker_queue_is_empty(q))
+	int count = osal_atomic_read(&q->atomic_count);
+
+	if (count <= 0) {
+		q->dequeue_empty_count++;
 		return NULL;
+	} else if (count >= q->max_count) {
+		q->dequeue_full_count++;
+	}
 
 	return _worker_queue_dequeue(q);
 }
@@ -236,13 +257,20 @@ static inline void _worker_queue_enqueue(struct worker_queue *q,
 	q->batch_ctxs[q->head % q->max_count] = batch;
 	q->head++;
 	osal_atomic_fetch_add(&q->atomic_count, 1);
+	q->enqueue_count++;
 }
 
 static inline bool worker_queue_enqueue(struct worker_queue *q,
 					struct batch_context *batch)
 {
-	if (worker_queue_is_full(q))
+	int count = osal_atomic_read(&q->atomic_count);
+
+	if (count <= 0) {
+		q->enqueue_empty_count++;
+	} else if (count >= q->max_count) {
+		q->enqueue_full_count++;
 		return false;
+	}
 
 	_worker_queue_enqueue(q, batch);
 	return true;

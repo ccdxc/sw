@@ -1382,6 +1382,7 @@ static void aggregate_testcase_stats(struct testcase_stats *ts1,
 
 	ts1->elapsed_time = elapsed_time;
 	if (ts2->agg_stats.total_latency) {
+		tmp = ts1->agg_stats.total_latency;
 		ts1->agg_stats.total_latency += ts2->agg_stats.total_latency;
 		if (ts1->agg_stats.min_latency == 0 ||
 		    ts1->agg_stats.min_latency > ts2->agg_stats.total_latency) {
@@ -1390,6 +1391,9 @@ static void aggregate_testcase_stats(struct testcase_stats *ts1,
 		if (ts1->agg_stats.max_latency == 0 ||
 		    ts1->agg_stats.max_latency < ts2->agg_stats.total_latency) {
 			ts1->agg_stats.max_latency = ts2->agg_stats.total_latency;
+		}
+		if (tmp > ts1->agg_stats.total_latency) {
+			PNSO_LOG_WARN("Total latency counter wrapped around\n");
 		}
 	}
 	for (i = 0; i < 2; i++) {
@@ -2024,7 +2028,7 @@ static int worker_loop(void *param)
 			if (poll_err == EBUSY) {
 				/* Not ready yet, re-enqueue */
 				_worker_queue_enqueue(ctx->poll_q, batch_ctx);
-					batch_ctx = NULL;
+				batch_ctx = NULL;
 			} else if (poll_err == PNSO_OK) {
 				/* completion handler called by poll_fn */
 				PNSO_LOG_DEBUG("DEBUG: polled batch completion\n");
@@ -2088,6 +2092,7 @@ static struct worker_queue *alloc_worker_queue(uint32_t max_entries)
 
 	q = TEST_ALLOC(sizeof(*q) + (max_entries * sizeof(struct batch_context *)));
 	if (q) {
+		memset(q, 0, sizeof(*q));
 		osal_spin_lock_init(&q->lock);
 		osal_atomic_init(&q->atomic_count, 0);
 		q->head = 0;
@@ -2189,6 +2194,29 @@ static uint16_t cpu_mask_to_core_count(uint64_t cpu_mask)
 
 	return max_core_count;
 }
+
+static void init_testcase_svc_chains(struct testcase_context *test_ctx)
+{
+	const struct test_testcase *testcase = test_ctx->testcase;
+	uint32_t chain_i, chain_idx;
+	struct test_node *node;
+	struct test_svc_chain *svc_chain;
+
+	for (chain_i = 0; chain_i < testcase->svc_chain_count; chain_i++) {
+		chain_idx = testcase->svc_chains[chain_i];
+		NODE_FIND_ID(test_ctx->desc->svc_chains, chain_idx);
+		svc_chain = (struct test_svc_chain *) node;
+
+		if (!svc_chain->input.pattern[0] &&
+		    !svc_chain->input.pathname[0]) {
+			test_init_random(svc_chain->input.random_seed);
+			PNSO_LOG_DEBUG("Init testcase %u svc_chain %u with random seed %u\n",
+				       testcase->node.idx, chain_idx,
+				       svc_chain->input.random_seed);
+		}
+	}
+}
+
 
 static struct testcase_context *alloc_testcase_context(const struct test_desc *desc,
 						       const struct test_testcase *testcase)
@@ -2293,26 +2321,34 @@ static pnso_error_t start_worker_threads(struct testcase_context *ctx)
 	return err;
 }
 
-static void print_worker_queue(struct worker_queue *q, const char *name)
+static void print_worker_queue(struct worker_queue *q, const char *name, bool verbose)
 {
 	int count = osal_atomic_read(&q->atomic_count);
 
 	OSAL_LOG_ERROR("  Queue %s, count %d:\n", name, count);
-	if (count) {
-		OSAL_LOG_ERROR("    head %u, tail %u, max_count %u\n",
+	if (count || verbose) {
+		OSAL_LOG_ERROR("    enqueues: success %llu, full %llu, empty %llu\n",
+			       (unsigned long long) q->enqueue_count,
+			       (unsigned long long) q->enqueue_full_count,
+			       (unsigned long long) q->enqueue_empty_count);
+		OSAL_LOG_ERROR("    dequeues: success %llu, full %llu, empty %llu\n",
+			       (unsigned long long) q->dequeue_count,
+			       (unsigned long long) q->dequeue_full_count,
+			       (unsigned long long) q->dequeue_empty_count);
+		OSAL_LOG_ERROR("    head %u, tail %u, depth %u\n",
 			       q->head, q->tail, q->max_count);
 	}
 }
 
-static void print_worker_ctx(struct worker_context *work_ctx, uint64_t cur_ts)
+static void print_worker_ctx(struct worker_context *work_ctx, uint64_t cur_ts, bool verbose)
 {
 	OSAL_LOG_ERROR("Worker %u, pending_batch_count %u, idle_time %llums\n",
 		       work_ctx->worker_id, work_ctx->pending_batch_count,
 		       (unsigned long long) (cur_ts - work_ctx->last_active_ts)/OSAL_NSEC_PER_MSEC);
-	if (work_ctx->pending_batch_count) {
-		print_worker_queue(work_ctx->submit_q, "submit_q");
-		print_worker_queue(work_ctx->complete_q, "complete_q");
-		print_worker_queue(work_ctx->poll_q, "poll_q");
+	if (work_ctx->pending_batch_count || verbose) {
+		print_worker_queue(work_ctx->submit_q, "submit_q", verbose);
+		print_worker_queue(work_ctx->complete_q, "complete_q", verbose);
+		print_worker_queue(work_ctx->poll_q, "poll_q", verbose);
 	}
 }
 
@@ -2320,12 +2356,13 @@ static void print_testcase_ctx(struct testcase_context *ctx)
 {
 	int i;
 	uint64_t cur_ts = osal_get_clock_nsec();
+	bool verbose = (g_osal_log_level >= OSAL_LOG_LEVEL_INFO);
 
 	OSAL_LOG_ERROR("Testcase %u\n", ctx->testcase->node.idx);
-	print_worker_queue(ctx->batch_ctx_freelist, "batch_ctx_freelist");
+	print_worker_queue(ctx->batch_ctx_freelist, "batch_ctx_freelist", verbose);
 
 	for (i = 0; i < ctx->worker_count; i++) {
-		print_worker_ctx(ctx->worker_ctxs[i], cur_ts);
+		print_worker_ctx(ctx->worker_ctxs[i], cur_ts, verbose);
 	}
 }
 
@@ -2353,7 +2390,9 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	struct worker_context *worker_ctx;
 	struct batch_context *batch_ctx;
 	uint64_t batch_completion_count = 0;
+	uint64_t batch_completion_empty_count = 0;
 	uint64_t batch_submit_count = 0;
+	uint64_t batch_submit_full_count = 0;
 	uint64_t req_submit_count = 0;
 	uint64_t req_completion_count = 0;
 	uint64_t fail_count = 0;
@@ -2365,6 +2404,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	uint64_t max_idle_time = 0;
 	uint64_t loop_count = 0;
 	uint32_t next_status_time;
+	bool b_shutting_down = false;
 	int worker_id;
 
 	PNSO_LOG_DEBUG("enter pnso_test_run_testcase(%u) ...\n",
@@ -2376,6 +2416,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			       testcase->node.idx);
 		return ENOMEM;
 	}
+	init_testcase_svc_chains(ctx);
 
 	ctx->vars[TEST_VAR_BLOCK_SIZE] = desc->init_params.block_size;
 	ctx->vars[TEST_VAR_ITER] = 0;
@@ -2400,6 +2441,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		loop_count++;
 		worker_ctx = ctx->worker_ctxs[worker_id];
 
+		/* Batch completion */
 		batch_ctx = worker_queue_dequeue(worker_ctx->complete_q);
 		if (batch_ctx) {
 			PNSO_LOG_DEBUG("DEBUG: batch completed, batch_count %llu\n",
@@ -2415,15 +2457,19 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			batch_completion_count++;
 			req_completion_count += testcase->batch_depth;
 			worker_ctx->pending_batch_count--;
-		} else if (osal_atomic_read(&g_shutdown) ||
-			   (req_submit_count >= testcase->repeat)) {
+		} else {
+			batch_completion_empty_count++;
+		}
+
+		/* Batch submission */
+		if (b_shutting_down ||
+		    (req_submit_count >= testcase->repeat)) {
 			/* No more requests to submit */
 		} else if (need_rate_limit(ctx, elapsed_time)) {
 			/* skip idle timeout during active rate limiting */
 //			last_active_ts = osal_get_clock_nsec();
 			rate_limit_loop_count++;
-		} else if (!worker_queue_is_full(worker_ctx->submit_q) &&
-			   worker_ctx->pending_batch_count < ctx->batch_concurrency) {
+		} else if (worker_ctx->pending_batch_count < ctx->batch_concurrency) {
 			/* submit new batch request */
 			batch_ctx = worker_queue_dequeue(ctx->batch_ctx_freelist);
 			if (batch_ctx) {
@@ -2452,6 +2498,8 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			err = ETIMEDOUT;
 			print_testcase_ctx(ctx);
 			break;
+		} else {
+			batch_submit_full_count++;
 		}
 
 		/* Operations limited to run occasionally */
@@ -2496,18 +2544,24 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 						 (unsigned long long) rate_limit_loop_count);
 				}
 			}
-			osal_sched_yield();
-		} else {
-			osal_yield();
 		}
 
 		/* Iterate workers on each loop */
 		if (++worker_id >= ctx->worker_count) {
 			worker_id = 0;
+			b_shutting_down = (bool) osal_atomic_read(&g_shutdown);
+			osal_sched_yield();
+		} else {
+			osal_yield();
 		}
 	}
 	osal_atomic_set(&g_testcase_active, 0);
 	PNSO_LOG_DEBUG("DEBUG: exiting testcase while loop\n");
+
+	if (err != ETIMEDOUT &&
+	    g_osal_log_level >= OSAL_LOG_LEVEL_INFO) {
+		print_testcase_ctx(ctx);
+	}
 
 	/* Final tally for stats */
 	elapsed_time = osal_get_clock_nsec() - ctx->start_time;
@@ -2519,7 +2573,8 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 
 	PNSO_LOG("PenCAKE Testcase %u %s: status %d, elapsed_time %llums, "
 		 "req_submit_count %llu, max_idle_time_ns %llu, "
-		 "batch_submit_count %llu, batch_completion_count %llu, "
+		 "batch_submit_count %llu, batch_submit_full_count %llu, "
+		 "batch_completion_count %llu, batch_completion_empty_count %llu, "
 		 "rate_limit_loops %llu\n",
 		 testcase->node.idx, testcase->name, err,
 		 (unsigned long long) (elapsed_time /
@@ -2527,7 +2582,9 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		 (unsigned long long) req_submit_count,
 		 (unsigned long long) max_idle_time,
 		 (unsigned long long) batch_submit_count,
+		 (unsigned long long) batch_submit_full_count,
 		 (unsigned long long) batch_completion_count,
+		 (unsigned long long) batch_completion_empty_count,
 		 (unsigned long long) rate_limit_loop_count);
 
 	PNSO_LOG_DEBUG("DEBUG: pnso_test_run_testcase freeing test context\n");
