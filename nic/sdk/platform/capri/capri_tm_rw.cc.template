@@ -544,7 +544,7 @@ capri_tm_dump_${fn}_regs (void)
     ${inst_name}.read();
     ${trace_register(inst_name)}
 //:: #endfor
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
 }
 //:: #endfor
 //::
@@ -717,7 +717,7 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
             return sdk::SDK_RET_ERR;
     }
 
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
     SDK_TRACE_DEBUG("Updated the iq %u on port %u",
                     iq, port);
 
@@ -772,7 +772,7 @@ capri_tm_uplink_input_map_update (tm_port_t port,
         default:
             return sdk::SDK_RET_INVALID_ARG;
     }
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
     return sdk::SDK_RET_OK;
 }
 
@@ -830,7 +830,7 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
         default:
             return sdk::SDK_RET_INVALID_ARG;
     }
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
     return sdk::SDK_RET_OK;
 }
 
@@ -898,7 +898,7 @@ capri_tm_uplink_oq_update(tm_port_t port,
         default:
             return sdk::SDK_RET_INVALID_ARG;
     }
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
 
     return sdk::SDK_RET_OK;
 }
@@ -1005,7 +1005,7 @@ capri_tm_scheduler_map_update_l${level} (uint32_t port,
         ${trace_register("pbc_csr.dhs_sched.entry[0]")}
         pbc_csr.dhs_sched.entry[0].write();
     }
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
     SDK_TRACE_DEBUG("Updated the output queue scheduler on port %u "
                     "level %u, node %u",
                     port, ${level}, node);
@@ -1079,7 +1079,7 @@ capri_tm_uplink_lif_set (uint32_t port,
     /* Write the csr */
     ${trace_register("pbc_csr.cfg_src_port_to_lif_map")}
     pbc_csr.cfg_src_port_to_lif_map.write();
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
 
     SDK_TRACE_DEBUG("Set the lif %u on port %u",
                     lif, port);
@@ -1122,7 +1122,7 @@ capri_tm_get_hbm_occupancy(tm_hbm_fifo_type_e fifo_type, uint32_t context)
         default:
             return occupancy;
     }
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
 
     return occupancy;
 }
@@ -1249,7 +1249,7 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
         default:
             return sdk::SDK_RET_ERR;
     }
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
 
     /* If we're disabling the port, we need to wait until all HBM contexts are
      * free
@@ -1263,7 +1263,7 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
         }
     }
 
-    SDK_TRACE_DEBUG("%sd uplink port %u",
+    SDK_TRACE_DEBUG("%s uplink port %u",
                     enable ? "Enable" : "Disable", port);
     return sdk::SDK_RET_OK;
 }
@@ -1643,7 +1643,7 @@ capri_tm_program_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
     }
 //::    #endfor
 //:: #endfor
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
     return ret;
 }
 
@@ -1729,7 +1729,7 @@ capri_tm_program_p4_credits (capri_tm_buf_cfg_t *buf_cfg)
     }
 //::    #endif
 //:: #endfor
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
 
     return ret;
 }
@@ -1967,7 +1967,7 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
         pbc_csr.hbm.cfg_hbm_threshold.write();
     }
 
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
 
     return ret;
 }
@@ -2122,7 +2122,7 @@ capri_tm_port_program_defaults (void)
     pbc_csr.port_${p}.cfg_oq.write();
 //:: #endfor
 
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
     return sdk::SDK_RET_OK;
 }
 
@@ -2193,7 +2193,7 @@ capri_tm_init_hbm_q_map (void)
         stringstream data;
         data << hex << endl;
         ${trace_register("pbc_csr.hbm.hbm_port_" + str(p) + ".cfg_hbm_tc_to_q")}
-        SDK_TRACE_DEBUG("%s", data.str());
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
 
         hbm_csr.hbm_port_${p}.cfg_hbm_tc_to_q.write();
     }
@@ -2230,7 +2230,7 @@ capri_tm_init_hbm_q_map (void)
         data << hex << endl;
         ${trace_register("pbc_csr.hbm.hbm_port_" + str(p) + ".cfg_hbm_parser")}
         ${trace_register("pbc_csr.cfg_parser" + str(p))}
-        SDK_TRACE_DEBUG("%s", data.str());
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
 
         hbm_csr.hbm_port_${p}.cfg_hbm_parser.write();
         pbc_csr.cfg_parser${p}.write();
@@ -2332,7 +2332,7 @@ capri_tm_init_hbm (capri_tm_buf_cfg_t *buf_cfg)
     ${trace_register("pbc_csr.hbm.cfg_hbm_axi_base")}
     pbc_csr.hbm.cfg_hbm_axi_base.write();
 
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
     return sdk::SDK_RET_OK;
 }
 
@@ -2382,7 +2382,7 @@ capri_tm_global_init (void)
         stringstream data;
         data << hex << endl;
         ${trace_register("pbc_csr.hbm.cfg_hbm_" + reg_name + "_ctrl_init")}
-        SDK_TRACE_DEBUG("%s", data.str());
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
         hbm_csr.cfg_hbm_${reg_name}_ctrl_init.write();
     }
 //:: #endfor
@@ -2395,7 +2395,7 @@ capri_tm_global_init (void)
         stringstream data;
         data << hex << endl;
         ${trace_register("pbc_csr.hbm.cfg_hbm_" + reg_name + "_ctrl_init")}
-        SDK_TRACE_DEBUG("%s", data.str());
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
         hbm_csr.cfg_hbm_${reg_name}_ctrl_init.write();
     }
 //:: #endfor
@@ -2449,7 +2449,7 @@ capri_tm_global_init (void)
         ${trace_register("pbc_csr.cfg_island_control")}
         ${trace_register("pbc_csr.cfg_rc")}
         ${trace_register("pbc_csr.cfg_sched")}
-        SDK_TRACE_DEBUG("%s", data.str());
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
 
         pbc_csr.cfg_tail_drop.write();
         pbc_csr.cfg_fc_mgr_0.write();
@@ -2545,7 +2545,7 @@ capri_tm_init_enable_ports (void)
         stringstream data;
         data << hex << endl;
         ${trace_register("pbc_csr.port_" + str(p) + ".cfg_write_control")}
-        SDK_TRACE_DEBUG("%s", data.str());
+        SDK_TRACE_DEBUG("%s", data.str().c_str());
 
         pbc_csr.port_${p}.cfg_write_control.write();
     }
@@ -2644,7 +2644,7 @@ capri_tm_update_perf_run_config (void)
     hbm_csr.hbm_port_${p}.cfg_hbm_parser.write();
 //::    #endif
 //:: #endfor
-    SDK_TRACE_DEBUG("%s", data.str());
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
     return sdk::SDK_RET_OK;
 }
 
