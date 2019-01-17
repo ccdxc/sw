@@ -1139,12 +1139,13 @@ func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.Flo
 		},
 	})
 
+	flowExpList := []*tpmprotos.FlowExportPolicy{}
+
 	if err != nil {
 		log.Errorf("failed to list flow export policy, err:%s", err)
-		return nil, fmt.Errorf("failed to list flow export policy")
+		return flowExpList, nil
 	}
 
-	flowExpList := []*tpmprotos.FlowExportPolicy{}
 	for _, obj := range objList {
 		readObj, err := s.store.Read(obj)
 		if err != nil || readObj == nil {

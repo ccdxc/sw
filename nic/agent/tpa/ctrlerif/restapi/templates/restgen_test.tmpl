@@ -28,8 +28,62 @@ import (
                         err := netutils.HTTPGet("http://"+agentRestURL+"/api/telemetry/flowexports/", &{{lower $crudObject}}{{title .}} )
                         AssertOk(t, err, "Error getting {{lower $crudObject}}s from the REST Server")
                     }
+
+                {{else if strEq . "put"}}
+                                    func Test{{title $crudObject}}{{title .}}(t *testing.T){
+                                        t.Parallel()
+                                        var resp Response
+                                        var {{lower $crudObject}}Get tpmprotos.{{title $crudObject}}
+                                        {{lower .}}Data := tpmprotos.{{title $crudObject}}{
+                                            TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
+                                            ObjectMeta: api.ObjectMeta{
+                                                Tenant: "default",
+                                                Namespace: "default",
+                                                Name: "test{{title .}}{{title $crudObject}}",
+                                            },
+                                            Spec:   tpmprotos.{{title $crudObject}}Spec{
+                                                   MatchRules: []tsproto.MatchRule{
+                                                                     {
+                                                                           Src: &tsproto.MatchSelector{
+                                                                                 IPAddresses: []string{"1.1.1.1"},
+                                                                           },
+                                                                           Dst: &tsproto.MatchSelector{
+                                                                                 IPAddresses: []string{"1.1.1.2"},
+                                                                           },
+                                                                           AppProtoSel: &tsproto.AppProtoSelector{
+                                                                                Ports: []string{"TCP/1000"},
+                                                                           },
+                                                                    },
+                                                  },
+                                                    Interval: "15s",
+                                                    Format:"IPFIX",
+                                                    Exports: []monitoring.ExportConfig{
+                                                        {
+                                                        Destination: "10.1.1.0",
+                                                        Transport: "UDP/2055",
+                                                        },
+                                                   },
+                                                },
+                                        }
+                                        err := netutils.HTTPPost("http://"+agentRestURL+"/api/telemetry/flowexports/", &{{lower .}}Data, &resp)
+                                        AssertOk(t, err, "Error posting {{lower $crudObject}} to REST Server")
+
+                                        // change protocol & interval
+                                        {{lower .}}Data.Spec.Interval = "60s"
+                                        {{lower .}}Data.Spec.Exports[0].Transport = "TCP/2055"
+
+                                        // put
+                                        err = netutils.HTTPPut("http://"+agentRestURL+"/api/telemetry/flowexports/default/default/" + "test{{title .}}{{title $crudObject}}/", &{{lower .}}Data, &resp)
+                                        AssertOk(t, err, "Error in PUT {{lower $crudObject}} to REST Server")
+
+                                        getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/telemetry/flowexports/default/default/"+"test{{title .}}{{title $crudObject}}/", &{{lower $crudObject}}Get)
+                                        AssertOk(t, getErr, "Error getting {{lower $crudObject}}s from the REST Server")
+
+                                    }
+
                 {{else if strEq . "post"}}
                     func Test{{title $crudObject}}{{title .}}(t *testing.T){
+                        t.Parallel()
                         var resp Response
                         var {{lower $crudObject}}Get tpmprotos.{{title $crudObject}}
                         {{lower .}}Data := tpmprotos.{{title $crudObject}}{
@@ -41,18 +95,18 @@ import (
                             },
                             Spec:   tpmprotos.{{title $crudObject}}Spec{
                                    MatchRules: []tsproto.MatchRule{
-                            				{
-                            					Src: &tsproto.MatchSelector{
-                            						IPAddresses: []string{"1.1.1.1"},
-                            					},
-                            					Dst: &tsproto.MatchSelector{
-                            						IPAddresses: []string{"1.1.1.2"},
-                            					},
-                            					AppProtoSel: &tsproto.AppProtoSelector{
-                            						Ports: []string{"TCP/1000"},
-                            					},
-                            				},
-                            		},
+                                                       {
+                                                                Src: &tsproto.MatchSelector{
+                                                                     IPAddresses: []string{"1.1.1.1"},
+                                                                },
+                                                                Dst: &tsproto.MatchSelector{
+                                                                     IPAddresses: []string{"1.1.1.2"},
+                                                                },
+                                                                AppProtoSel: &tsproto.AppProtoSelector{
+                                                                     Ports: []string{"TCP/1000"},
+                                                                },
+                                                       },
+                                    },
                                     Interval: "15s",
                                     Format:"IPFIX",
                                     Exports: []monitoring.ExportConfig{
@@ -72,6 +126,7 @@ import (
 
                 {{else if strEq . "delete"}}
                     func Test{{title $crudObject}}{{title .}}(t *testing.T){
+                         t.Parallel()
                         var resp Response
                         {{lower .}}Data := tpmprotos.{{title $crudObject}}{
                             TypeMeta:   api.TypeMeta{Kind: "{{title $crudObject}}"},
@@ -81,7 +136,7 @@ import (
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
                              Spec:   tpmprotos.{{title $crudObject}}Spec{
-				MatchRules: []tsproto.MatchRule{
+                                          MatchRules: []tsproto.MatchRule{
                                                           {       
                                                                 Src: &tsproto.MatchSelector{
                                                                           IPAddresses: []string{"1.1.1.1"},

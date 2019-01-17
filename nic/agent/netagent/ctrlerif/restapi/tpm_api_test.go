@@ -25,6 +25,7 @@ func TestFlowExportPolicyList(t *testing.T) {
 }
 
 func TestFlowExportPolicyPost(t *testing.T) {
+	t.Parallel()
 	var resp Response
 	var flowexportpolicyGet tpmprotos.FlowExportPolicy
 	postData := tpmprotos.FlowExportPolicy{
@@ -66,6 +67,7 @@ func TestFlowExportPolicyPost(t *testing.T) {
 }
 
 func TestFlowExportPolicyDelete(t *testing.T) {
+	t.Parallel()
 	var resp Response
 	deleteData := tpmprotos.FlowExportPolicy{
 		TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"},
@@ -112,4 +114,55 @@ func TestFlowExportPolicyDelete(t *testing.T) {
 	AssertOk(t, err, "Error posting flowexportpolicy to REST Server")
 	delErr := netutils.HTTPDelete("http://"+agentRestURL+"/api/telemetry/flowexports/default/default/"+"testDeleteFlowExportPolicy", &deleteMeta, &resp)
 	AssertOk(t, delErr, "Error deleting flowexportpolicys from the REST Server")
+}
+
+func TestFlowExportPolicyPut(t *testing.T) {
+	t.Parallel()
+	var resp Response
+	var flowexportpolicyGet tpmprotos.FlowExportPolicy
+	putData := tpmprotos.FlowExportPolicy{
+		TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testPutFlowExportPolicy",
+		},
+		Spec: tpmprotos.FlowExportPolicySpec{
+			MatchRules: []tsproto.MatchRule{
+				{
+					Src: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.1"},
+					},
+					Dst: &tsproto.MatchSelector{
+						IPAddresses: []string{"1.1.1.2"},
+					},
+					AppProtoSel: &tsproto.AppProtoSelector{
+						Ports: []string{"TCP/1000"},
+					},
+				},
+			},
+			Interval: "15s",
+			Format:   "IPFIX",
+			Exports: []monitoring.ExportConfig{
+				{
+					Destination: "10.1.1.0",
+					Transport:   "UDP/2055",
+				},
+			},
+		},
+	}
+	err := netutils.HTTPPost("http://"+agentRestURL+"/api/telemetry/flowexports/", &putData, &resp)
+	AssertOk(t, err, "Error posting flowexportpolicy to REST Server")
+
+	// change protocol & interval
+	putData.Spec.Interval = "60s"
+	putData.Spec.Exports[0].Transport = "TCP/2055"
+
+	// put
+	err = netutils.HTTPPut("http://"+agentRestURL+"/api/telemetry/flowexports/default/default/"+"testPutFlowExportPolicy/", &putData, &resp)
+	AssertOk(t, err, "Error in PUT flowexportpolicy to REST Server")
+
+	getErr := netutils.HTTPGet("http://"+agentRestURL+"/api/telemetry/flowexports/default/default/"+"testPutFlowExportPolicy/", &flowexportpolicyGet)
+	AssertOk(t, getErr, "Error getting flowexportpolicys from the REST Server")
+
 }
