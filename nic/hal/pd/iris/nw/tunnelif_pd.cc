@@ -269,12 +269,33 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
             intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_VXLAN) {
         // Program Input mapping native table
         ret = pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif,
+                                                     INGRESS_TUNNEL_TYPE_VXLAN,
                                                      is_upgrade);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
             goto fail_flag;
         // Program Input mapping tunneled table
         ret = pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif,
+                                                       INGRESS_TUNNEL_TYPE_VXLAN,
                                                        is_upgrade);
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
+            goto fail_flag;
+    } else if (hal_if->encap_type ==
+            intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
+        // Program Input mapping native table
+        ret = pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif,
+                                                     INGRESS_TUNNEL_TYPE_MPLS_L3VPN,
+                                                     is_upgrade);
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
+            goto fail_flag;
+        // Program Input mapping tunneled table
+        ret = pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif,
+                                                       INGRESS_TUNNEL_TYPE_MPLS_L3VPN,
+                                                       is_upgrade);
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
+            goto fail_flag;
+        // Program the VF properties table
+        ret = pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif, hal_if->if_id,
+                                                is_upgrade);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
             goto fail_flag;
     }
@@ -343,18 +364,20 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
                          bool inner_v6_vld, bool v4_tep,
                          int actionid,
                          p4pd_table_id tbl_id, uint32_t *idx,
-                         bool is_upgrade)
+                         bool is_upgrade, uint16_t vf_id)
 {
     hal_ret_t                           ret = HAL_RET_OK;
     sdk_ret_t                           sdk_ret;
     input_mapping_native_swkey_t        key;
     input_mapping_native_swkey_mask_t   mask;
-    input_mapping_native_actiondata_t     data;
+    input_mapping_native_actiondata_t   native_data = {0};
+    input_mapping_tunneled_actiondata_t tun_data = {0};
     tcam                                *tcam;
+    void                                *data;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
     HAL_ASSERT(tcam != NULL);
-    /* Input mapping native and tunneled tables have the same key, mask and data
+    /* Input mapping native and tunneled tables have the same key and mask
      * So, we can populate the structs and typecast accordingly */
     memset(&key, 0, sizeof(input_mapping_native_swkey_t));
     memset(&mask, 0, sizeof(input_mapping_native_swkey_mask_t));
@@ -374,11 +397,20 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
         HAL_TRACE_ERR("IPv6 TEP is not supprted");
         return HAL_RET_NOT_SUPPORTED;
     }
-    data.action_id = actionid;
+    if (tbl_id == P4TBL_ID_INPUT_MAPPING_NATIVE) {
+        data = &native_data;
+        native_data.action_id = actionid;
+    } else if (tbl_id == P4TBL_ID_INPUT_MAPPING_TUNNELED) {
+        data = &tun_data;
+        tun_data.action_id = actionid;
+        if (tunnel_type == INGRESS_TUNNEL_TYPE_MPLS_L3VPN) {
+            tun_data.action_u.input_mapping_tunneled_tunneled_ipv4_packet.vf_id = vf_id;
+        }
+    }
     if (is_upgrade) {
-        sdk_ret = tcam->insert_withid(&key, &mask, &data, *idx);
+        sdk_ret = tcam->insert_withid(&key, &mask, data, *idx);
     } else {
-        sdk_ret = tcam->insert(&key, &mask, &data, (uint32_t *)idx);
+        sdk_ret = tcam->insert(&key, &mask, data, (uint32_t *)idx);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret == HAL_RET_ENTRY_EXISTS) {
@@ -398,40 +430,52 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
 
 hal_ret_t
 pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif,
+                                       int tunnel_type,
                                        bool is_upgrade)
 {
     hal_ret_t                            ret;
     if_t                                 *pi_if;
     bool                                 v4_tep = false;
+    ip_addr_t                            dst_addr;
+    ip_addr_t                            *dst_addr_ptr;
 
     pi_if = (if_t *) pd_tunnelif->pi_if;
     if (!pi_if) {
         return (HAL_RET_ERR);
     }
-    if (pi_if->vxlan_ltep.af == IP_AF_IPV4) {
+    
+    if (tunnel_type == INGRESS_TUNNEL_TYPE_VXLAN) {
+        dst_addr_ptr = &pi_if->vxlan_ltep;
+        if (pi_if->vxlan_ltep.af == IP_AF_IPV4) {
+            v4_tep = true;
+        }
+    } else if (tunnel_type == INGRESS_TUNNEL_TYPE_MPLS_L3VPN) {
+        dst_addr.af = IP_AF_IPV4;
+        dst_addr.addr.v4_addr = pi_if->substrate_ip;
+        dst_addr_ptr = &dst_addr;
         v4_tep = true;
     }
 
     /* We program 3 entries for every MyTEP */
     /* Entry 1 */
-    ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
+    ret = pd_tunnelif_program_tcam(dst_addr_ptr, tunnel_type,
                                true, false, v4_tep, INPUT_MAPPING_NATIVE_NOP_ID,
                                P4TBL_ID_INPUT_MAPPING_NATIVE,
-                               &pd_tunnelif->imn_idx[0], is_upgrade);
+                               &pd_tunnelif->imn_idx[0], is_upgrade, 0);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
     /* Entry 2 */
-    ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
+    ret = pd_tunnelif_program_tcam(dst_addr_ptr, tunnel_type,
                                false, true, v4_tep, INPUT_MAPPING_NATIVE_NOP_ID,
                                P4TBL_ID_INPUT_MAPPING_NATIVE,
-                               &pd_tunnelif->imn_idx[1], is_upgrade);
+                               &pd_tunnelif->imn_idx[1], is_upgrade, 0);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
     /* Entry 3 */
-    ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
+    ret = pd_tunnelif_program_tcam(dst_addr_ptr, tunnel_type,
                                false, false, v4_tep, INPUT_MAPPING_NATIVE_NOP_ID,
                                P4TBL_ID_INPUT_MAPPING_NATIVE,
-                               &pd_tunnelif->imn_idx[2], is_upgrade);
+                               &pd_tunnelif->imn_idx[2], is_upgrade, 0);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
 
@@ -445,46 +489,57 @@ fail_flag:
 
 hal_ret_t
 pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
+                                         int tunnel_type,
                                          bool is_upgrade)
 {
     hal_ret_t                            ret;
     if_t                                 *pi_if;
     bool                                 v4_tep = false;
+    ip_addr_t                            dst_addr;
+    ip_addr_t                            *dst_addr_ptr;
 
     pi_if = (if_t *) pd_tunnelif->pi_if;
     if (!pi_if) {
         return (HAL_RET_ERR);
     }
-    if (pi_if->vxlan_ltep.af == IP_AF_IPV4) {
+    if (tunnel_type == INGRESS_TUNNEL_TYPE_VXLAN) {
+        dst_addr_ptr = &pi_if->vxlan_ltep;
+        if (pi_if->vxlan_ltep.af == IP_AF_IPV4) {
+            v4_tep = true;
+        }
+    } else if (tunnel_type == INGRESS_TUNNEL_TYPE_MPLS_L3VPN) {
+        dst_addr.af = IP_AF_IPV4;
+        dst_addr.addr.v4_addr = pi_if->substrate_ip;
+        dst_addr_ptr = &dst_addr;
         v4_tep = true;
     }
 
     /* We program 3 entries for every MyTEP */
     /* Entry 1 */
-    ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
+    ret = pd_tunnelif_program_tcam(dst_addr_ptr, tunnel_type,
                                true, false, v4_tep,
                                INPUT_MAPPING_TUNNELED_TUNNELED_IPV4_PACKET_ID,
                                P4TBL_ID_INPUT_MAPPING_TUNNELED,
                                &pd_tunnelif->imt_idx[0],
-                               is_upgrade);
+                               is_upgrade, pi_if->if_id);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
     /* Entry 2 */
-    ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
+    ret = pd_tunnelif_program_tcam(dst_addr_ptr, tunnel_type,
                                false, true, v4_tep,
                                INPUT_MAPPING_TUNNELED_TUNNELED_IPV6_PACKET_ID,
                                P4TBL_ID_INPUT_MAPPING_TUNNELED,
                                &pd_tunnelif->imt_idx[1],
-                               is_upgrade);
+                               is_upgrade, pi_if->if_id);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
     /* Entry 3 */
-    ret = pd_tunnelif_program_tcam(&pi_if->vxlan_ltep, INGRESS_TUNNEL_TYPE_VXLAN,
+    ret = pd_tunnelif_program_tcam(dst_addr_ptr, tunnel_type,
                                false, false, v4_tep,
                                INPUT_MAPPING_TUNNELED_TUNNELED_NON_IP_PACKET_ID,
                                P4TBL_ID_INPUT_MAPPING_TUNNELED,
                                &pd_tunnelif->imt_idx[2],
-                               is_upgrade);
+                               is_upgrade, pi_if->if_id);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
 
@@ -497,13 +552,54 @@ fail_flag:
 }
 
 hal_ret_t
+pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif_t *pd_tif, uint16_t vf_id,
+                                  bool is_upgrade)
+{
+    hal_ret_t                       ret;
+    sdk_ret_t                       sdk_ret;
+    directmap                       *dm;
+    vf_properties_actiondata_t      d = { 0 };
+    if_t                            *pi_if;
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_VF_PROPERTIES);
+    HAL_ASSERT(dm != NULL);
+    HAL_ASSERT(pd_tif != NULL);
+    
+    pi_if = (if_t *) pd_tif->pi_if;
+    HAL_ASSERT(pi_if != NULL);
+    
+    d.action_id = VF_PROPERTIES_VF_PROPERTIES_ID;
+    d.action_u.vf_properties_vf_properties.overlay_ip1 = pi_if->overlay_ip[0];
+    d.action_u.vf_properties_vf_properties.overlay_ip2 =
+                        (pi_if->num_overlay_ip > 1) ? pi_if->overlay_ip[1] : 0;
+    d.action_u.vf_properties_vf_properties.mpls_in1 = pi_if->mpls_if[0].label;
+    d.action_u.vf_properties_vf_properties.mpls_in2 =
+                        (pi_if->num_mpls_if > 1) ? pi_if->mpls_if[1].label : 0;
+    d.action_u.vf_properties_vf_properties.gw_prefix = pi_if->source_gw.v4_addr;
+    d.action_u.vf_properties_vf_properties.gw_prefix_len = pi_if->source_gw.len;
+    d.action_u.vf_properties_vf_properties.tunnel_originate = 1;
+    d.action_u.vf_properties_vf_properties.tunnel_rewrite_index = pd_tif->tunnel_rw_idx;
+    d.action_u.vf_properties_vf_properties.mpls_out = pi_if->mpls_tag.label;
+
+    // insert the entry
+    sdk_ret = dm->insert_withid(&d, vf_id);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("VF properties table write failure, err : {}", ret);
+        return ret;
+    }
+    pd_tif->vf_prop_idx = vf_id;
+    return ret;
+}
+
+hal_ret_t
 pd_tunnelif_add_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif, uint8_t actionid,
                                        tunnel_rewrite_action_union_t *act)
 {
     hal_ret_t                   ret;
     sdk_ret_t                   sdk_ret;
     directmap                   *dm;
-    tunnel_rewrite_actiondata_t   d = { 0 };
+    tunnel_rewrite_actiondata_t d = { 0 };
     uint32_t                    idx;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
