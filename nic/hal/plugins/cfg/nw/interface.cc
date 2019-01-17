@@ -728,9 +728,11 @@ if_add_to_db_and_refs (if_t *hal_if)
                 HAL_ABORT(ret == HAL_RET_OK);
             }
         } else {
-            // add to lif
-            ret = lif_add_if(lif, hal_if);
-            HAL_ABORT(ret == HAL_RET_OK);
+            if (lif) {
+                // add to lif
+                ret = lif_add_if(lif, hal_if);
+                HAL_ABORT(ret == HAL_RET_OK);
+            }
 
             // Add to uplink's back refs
             if (hal_if->pinned_uplink != HAL_HANDLE_INVALID) {
@@ -3784,18 +3786,22 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
             // Remove from lif
             lif = find_lif_by_handle(intf->lif_handle);
-            ret = lif_del_if(lif, intf);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Unable to remove if from lif");
-                goto end;
+            if (lif) {
+                ret = lif_del_if(lif, intf);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to remove if from lif");
+                    goto end;
+                }
             }
         } else {
             // Remove from lif
             lif = find_lif_by_handle(intf->lif_handle);
-            ret = lif_del_if(lif, intf);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Unable to remove if from lif");
-                goto end;
+            if (lif) {
+                ret = lif_del_if(lif, intf);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to remove if from lif");
+                    goto end;
+                }
             }
 
             // Del to uplink's back refs

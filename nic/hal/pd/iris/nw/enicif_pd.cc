@@ -733,6 +733,11 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
                                                   TABLE_OPER_INSERT);
     }
 
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("unable to program inp prop mac vlan table. ret:{}", ret);
+        goto end;
+    }
+
     // Program Output Mapping
     ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL, NULL,
                                               TABLE_OPER_INSERT);
@@ -756,6 +761,7 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
         }
     }
 
+end:
     return ret;
 }
 
