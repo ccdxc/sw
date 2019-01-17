@@ -207,6 +207,7 @@ public:
     virtual enum DevcmdStatus CmdHandler(
         void *req, void *req_data,
         void *resp, void *resp_data) = 0;
+    virtual void ThreadsWaitJoin(void) {}
     enum DeviceType GetType() { return type; }
     void SetType(enum DeviceType type) { this->type = type;}
 private:
@@ -234,6 +235,7 @@ public:
     void CreateUplinkVRFs();
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
     int GenerateQstateInfoJson(std::string qstate_info_file);
+    void ThreadsWaitJoin(void);
 
 private:
     static DeviceManager *instance;

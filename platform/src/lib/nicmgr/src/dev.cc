@@ -759,3 +759,12 @@ DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
     pt::write_json(qstate_info_file, root);
     return 0;
 }
+
+void
+DeviceManager::ThreadsWaitJoin(void)
+{
+    for (auto it = devices.cbegin(); it != devices.cend(); it++) {
+        Device *dev = it->second;
+        dev->ThreadsWaitJoin();
+    }
+}

@@ -7,6 +7,8 @@
 
 #include "nic/include/accel_ring.h"
 #include "nic/include/storage_seq_common.h"
+#include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/sdk/linkmgr/linkmgr_types.hpp"
 
 #include "platform/src/lib/hal_api/include/hal_types.hpp"
 #include "platform/src/lib/evutils/include/evutils.h"
@@ -14,7 +16,7 @@
 #include "dev.hpp"
 #include "hal_client.hpp"
 
-
+#define ACCEL_DEV_CONTROL_CORES_MASK    (1 << CONTROL_CORE_ID)
 #define ACCEL_DEV_PAGE_SIZE             4096
 #define ACCEL_DEV_PAGE_MASK             (ACCEL_DEV_PAGE_SIZE - 1)
 
@@ -206,6 +208,39 @@ typedef struct seq_queue_init_cmd seq_queue_init_cmd_t;
 typedef struct seq_queue_control_cmd seq_queue_control_cmd_t;
 
 /**
+ * Accelerator work thread
+ */
+class AccelWorkThread {
+public:
+    AccelWorkThread(std::string thread_name,
+                    uint64_t cores_mask,
+                    void *user_ctx,
+                    sdk::lib::thread_entry_func_t entry_func);
+    ~AccelWorkThread();
+
+    void *user_ctx_get(void) { return user_ctx; }
+    void work_lock(void);
+    void work_unlock(void);
+    void work_notify(void);
+    void wait_for_work(void);
+    bool terminate_get(void) { return terminate; }
+    void terminate_set(bool sense) { terminate = sense; }
+    bool stop_work_get(void) { return stop_work; }
+    void stop_work_set(bool sense) { stop_work = sense; }
+    void yield(void) { if (thread->can_yield()) pthread_yield(); else usleep(5000); }
+    void join(void);
+
+private:
+    std::string         thread_name;
+    sdk::lib::thread    *thread;
+    void                *user_ctx;
+    pthread_mutex_t     work_mutex;
+    pthread_cond_t      work_cond;
+    bool                stop_work;
+    bool                terminate;
+};
+
+/**
  * Accelerator PF Device
  */
 class Accel_PF : public Device {
@@ -221,8 +256,11 @@ public:
     void HalEventHandler(bool status);
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
     hal_lif_info_t *GetHalLifInfo(void) { return &hal_lif_info_; }
+    virtual void ThreadsWaitJoin(void);
 
     dev_cmd_regs_t              *devcmd;
+
+    friend void *seq_queue_info_publish_thread(void *ctx);
 
 private:
     // Device Spec
@@ -232,6 +270,7 @@ private:
     delphi::objects::AccelPfInfoPtr delphi_pf;
     std::vector<delphi::objects::AccelSeqQueueInfoPtr> delphi_qinfo_vec;
     std::vector<delphi::objects::AccelSeqQueueMetricsPtr> delphi_qmetrics_vec;
+
     // PD Info
     PdClient *pd;
     // HAL Info
@@ -280,6 +319,8 @@ private:
                                             void *resp, void *resp_data);
     enum DevcmdStatus _DevcmdSeqQueueInit(void *req, void *req_data,
                                           void *resp, void *resp_data);
+    enum DevcmdStatus _DevcmdSeqQueueInitComplete(void *req, void *req_data,
+                                                  void *resp, void *resp_data);
     enum DevcmdStatus _DevcmdSeqQueueBatchInit(void *req, void *req_data,
                                                void *resp, void *resp_data);
     enum DevcmdStatus _DevcmdSeqQueueControl(void *req, void *req_data,
@@ -317,9 +358,6 @@ private:
 
     void periodic_sync(ev::timer &watcher, int revents);
     void delphi_update(void);
-    void seq_queue_info_publish(uint32_t qid,
-                                storage_seq_qgroup_t qgroup,
-                                uint32_t core_id);
     const char*opcode_to_str(enum cmd_opcode opcode);
 };
 

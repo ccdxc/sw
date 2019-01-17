@@ -38,6 +38,8 @@
 static int
 sonic_lif_seq_q_batch_init(struct seq_queue_batch *batch,
 			   void *cb_arg);
+static int
+sonic_lif_seq_q_init_complete(struct lif *lif);
 
 static int
 sonic_lif_seq_q_batch_control(struct seq_queue_batch *batch,
@@ -1319,6 +1321,9 @@ static int sonic_lif_init(struct lif *lif)
 		err = sonic_lif_per_core_resources_legacy_post_init(lif);
 	if (err)
 		goto err_out_per_core_res_deinit;
+	err = sonic_lif_seq_q_init_complete(lif);
+	if (err && (err != SONIC_DEVCMD_UNKNOWN))
+		goto err_out_per_core_res_deinit;
 
 	lif->api_private = NULL;
 
@@ -1908,6 +1913,24 @@ sonic_lif_seq_q_batch_init(struct seq_queue_batch *batch,
 		      ctx.cmd.seq_queue_batch_init.wring_size);
 
 	err = sonic_adminq_post_wait(batch->lif, &ctx);
+	if (err)
+		return err;
+
+	return err;
+}
+
+static int
+sonic_lif_seq_q_init_complete(struct lif *lif)
+{
+	struct sonic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.seq_queue_init_complete = {
+			.opcode = CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE,
+		},
+	};
+	int err;
+
+	err = sonic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
 

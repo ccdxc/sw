@@ -44,6 +44,7 @@ extern class pciemgr *pciemgr;
 #define ACCEL_DEV_RING_OP_QUIESCE_TIME_US       1000000
 #define ACCEL_DEV_ALL_RINGS_MAX_QUIESCE_TIME_US (10 * ACCEL_DEV_RING_OP_QUIESCE_TIME_US)
 #define ACCEL_DEV_NUM_CRYPTO_KEYS_MIN           512     // arbitrary low water mark
+#define ACCEL_QID_PUBLISH_YIELD_POINT           128
 
 static void
 accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring);
@@ -51,6 +52,9 @@ accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring);
 static accel_rgroup_ring_t&
 accel_pf_rgroup_find_create(uint32_t ring_handle,
                             uint32_t sub_ring);
+void *
+seq_queue_info_publish_thread(void *ctx);
+
 static uint32_t log_2(uint32_t x);
 static uint64_t timestamp(void);
 
@@ -62,6 +66,10 @@ string string_format( const std::string& format, Args ... args )
     snprintf( buf.get(), size, format.c_str(), args ... );
     return string( buf.get(), buf.get() + size - 1 ); // ignore '\0'
 }
+
+static std::vector<AccelWorkThread *> accel_threads_vec;
+static AccelWorkThread *delphi_qinfo_thread;
+static uint32_t accel_thread_id;
 
 static types::CryptoKeyType crypto_key_type_tbl[] = {
     [CMD_CRYPTO_KEY_TYPE_AES128] = types::CRYPTO_KEY_TYPE_AES128,
@@ -334,6 +342,12 @@ Accel_PF::DelphiDeviceInit(void)
     int64_t                             addr;
 
     if (g_nicmgr_svc) {
+        delphi_qinfo_thread = 
+            new AccelWorkThread(spec->name + "_qinfo",
+                                ACCEL_DEV_CONTROL_CORES_MASK,
+                                this, seq_queue_info_publish_thread);
+        accel_threads_vec.push_back(delphi_qinfo_thread);
+
         delphi_pf = make_shared<delphi::objects::AccelPfInfo>();
         delphi::objects::AccelPfInfoPtr shared_pf(delphi_pf);
         shared_pf->set_key(std::to_string(hal_lif_info_.hw_lif_id));
@@ -349,7 +363,8 @@ Accel_PF::DelphiDeviceInit(void)
         for (qid = 0; qid < seq_created_count; qid++) {
             seq_qkey.set_qid(std::to_string(qid));
 
-            addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, STORAGE_SEQ_QTYPE_SQ, qid);
+            addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id,
+                                             STORAGE_SEQ_QTYPE_SQ, qid);
             if (addr < 0) {
                 NIC_LOG_ERR("lif-{}: Failed to get qstate address for SEQ qid {}",
                     hal_lif_info_.hw_lif_id, qid);
@@ -366,20 +381,16 @@ Accel_PF::DelphiDeviceInit(void)
              * Some of the fields below will be updated when driver
              * issues _DevcmdSeqQueueInit().
              */
-#if 0
-            /*
-             * Disabled for the time being to reduce FW init time.
-             * Reinstate in the future when a thread is available to
-             * manage these AccelSeqQueueInfo updates.
-             */
             auto qinfo = make_shared<delphi::objects::AccelSeqQueueInfo>();
             qinfo->mutable_key()->set_lifid(std::to_string(hal_lif_info_.hw_lif_id));
             qinfo->mutable_key()->set_qid(std::to_string(qid));
             qinfo->set_qstateaddr(addr);
+            qinfo->set_qgroup((::accel_metrics::AccelSeqQGroup)STORAGE_SEQ_QGROUP_CPDC);
+            qinfo->set_coreid(0);
             delphi_qinfo_vec.push_back(std::move(qinfo));
-#endif
-            seq_queue_info_publish(qid, STORAGE_SEQ_QGROUP_CPDC, 0);
         }
+
+        delphi_qinfo_thread->work_notify();
     }
 
     return 0;
@@ -464,6 +475,7 @@ Accel_PF::opcode_to_str(enum cmd_opcode opcode)
         CASE(CMD_OPCODE_LIF_INIT);
         CASE(CMD_OPCODE_ADMINQ_INIT);
         CASE(CMD_OPCODE_SEQ_QUEUE_INIT);
+        CASE(CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE);
         CASE(CMD_OPCODE_SEQ_QUEUE_ENABLE);
         CASE(CMD_OPCODE_SEQ_QUEUE_DISABLE);
         CASE(CMD_OPCODE_CRYPTO_KEY_UPDATE);
@@ -511,6 +523,10 @@ Accel_PF::CmdHandler(void *req, void *req_data,
 
     case CMD_OPCODE_SEQ_QUEUE_INIT:
         status = this->_DevcmdSeqQueueInit(req, req_data, resp, resp_data);
+        break;
+
+    case CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE:
+        status = this->_DevcmdSeqQueueInitComplete(req, req_data, resp, resp_data);
         break;
 
     case CMD_OPCODE_SEQ_QUEUE_BATCH_INIT:
@@ -621,6 +637,10 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
 
     if (!hal_lif_info_.pushed_to_hal) {
         return (DEVCMD_SUCCESS);
+    }
+
+    if (delphi_qinfo_thread) {
+        delphi_qinfo_thread->stop_work_set(true);
     }
 
     // Disable all sequencer queues
@@ -903,7 +923,6 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     WRITE_MEM(qstate_addr, (uint8_t *)&qstate, sizeof(qstate), 0);
     invalidate_txdma_cacheline(qstate_addr);
 
-    seq_queue_info_publish(qid, cmd->qgroup, cmd->core_id);
     return (DEVCMD_SUCCESS);
 }
 
@@ -920,12 +939,31 @@ Accel_PF::_DevcmdSeqQueueInit(void *req, void *req_data,
                   "wring_size {} entry_size {}", hal_lif_info_.hw_lif_id,
                   cmd->index, cmd->qgroup, cmd->core_id, cmd->wring_base,
                   cmd->wring_size, cmd->entry_size);
+    /*
+     * Stop any in-progress delphi uploads until INIT_COMPLETE received.
+     */
+    if (delphi_qinfo_thread) {
+        delphi_qinfo_thread->stop_work_set(true);
+    }
     status = _DevcmdSeqQueueSingleInit(cmd);
 
     cpl->qid = cmd->index;
     cpl->qtype = STORAGE_SEQ_QTYPE_SQ;
 
     return status;
+}
+
+enum DevcmdStatus
+Accel_PF::_DevcmdSeqQueueInitComplete(void *req, void *req_data,
+                                     void *resp, void *resp_data)
+{
+    NIC_LOG_DEBUG("lif-{} CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE: ",
+                  hal_lif_info_.hw_lif_id);
+    if (delphi_qinfo_thread) {
+        delphi_qinfo_thread->work_notify();
+    }
+
+    return (DEVCMD_SUCCESS);
 }
 
 enum DevcmdStatus
@@ -943,6 +981,12 @@ Accel_PF::_DevcmdSeqQueueBatchInit(void *req, void *req_data,
                   "wring_size {} entry_size {}", hal_lif_info_.hw_lif_id,
                   batch_cmd->index, batch_cmd->qgroup, batch_cmd->num_queues,
                   batch_cmd->wring_base, batch_cmd->wring_size, batch_cmd->entry_size);
+    /*
+     * Stop any in-progress delphi uploads until INIT_COMPLETE received.
+     */
+    if (delphi_qinfo_thread) {
+        delphi_qinfo_thread->stop_work_set(true);
+    }
     cmd.opcode = CMD_OPCODE_SEQ_QUEUE_INIT;
     cmd.index = batch_cmd->index;
     cmd.pid = batch_cmd->pid;
@@ -1567,19 +1611,36 @@ Accel_PF::periodic_sync(ev::timer &watcher, int revents)
 }
 
 /*
- * Publish AccelSeqQueueInfo object to Delphi.
+ * Publish AccelSeqQueueInfo objects to Delphi.
  */
-void
-Accel_PF::seq_queue_info_publish(uint32_t qid,
-                                 storage_seq_qgroup_t qgroup,
-                                 uint32_t core_id)
+void *
+seq_queue_info_publish_thread(void *ctx)
 {
-    if (g_nicmgr_svc && (qid < delphi_qinfo_vec.size())) {
-        delphi::objects::AccelSeqQueueInfoPtr shared_q(delphi_qinfo_vec.at(qid));
-        shared_q->set_qgroup((::accel_metrics::AccelSeqQGroup)qgroup);
-        shared_q->set_coreid(core_id);
-        g_nicmgr_svc->sdk()->SetObject(shared_q);
+    AccelWorkThread *thread = (AccelWorkThread *)ctx;
+    Accel_PF        *accel_pf = (Accel_PF *)thread->user_ctx_get();
+    uint32_t        qid;
+
+    thread->work_lock();
+    while (!thread->terminate_get()) {
+        thread->wait_for_work();
+
+        for (qid = 0;
+             (qid < accel_pf->delphi_qinfo_vec.size()) &&
+             !thread->stop_work_get() && !thread->terminate_get();
+             qid++) {
+
+            g_nicmgr_svc->sdk()->QueueUpdate(
+                     accel_pf->delphi_qinfo_vec.at(qid));
+            if ((qid % ACCEL_QID_PUBLISH_YIELD_POINT) == 0) {
+                thread->yield();
+            }
+        }
+
+        thread->stop_work_set(true);
     }
+
+    thread->work_unlock();
+    return nullptr;
 }
 
 /*
@@ -1757,3 +1818,114 @@ Accel_PF::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client)
     hal = hal_client;
     hal_common_client = hal_cmn_client;
 }
+
+void
+Accel_PF::ThreadsWaitJoin(void)
+{
+    for (uint32_t i = 0; i < accel_threads_vec.size(); i++) {
+        auto thread = accel_threads_vec.at(i);
+
+        thread->terminate_set(true);
+        thread->work_notify();
+        thread->join();
+    }
+}
+
+/*
+ * Accelerator work thread
+ */
+AccelWorkThread::AccelWorkThread(std::string thread_name,
+                                 uint64_t cores_mask,
+                                 void *user_ctx,
+                                 sdk::lib::thread_entry_func_t entry_func) :
+    thread_name(thread_name),
+    thread(nullptr),
+    user_ctx(user_ctx),
+    stop_work(true),
+    terminate(false)
+{
+    if (pthread_mutex_init(&work_mutex, NULL)) {
+         NIC_LOG_ERR("{} failed work mutex init: error {}",
+                     thread_name, errno);
+         throw;
+    }
+    if (pthread_cond_init(&work_cond, NULL)) {
+         NIC_LOG_ERR("{} failed work cond init: error {}",
+                     thread_name, errno);
+         throw;
+    }
+
+    sdk::lib::thread::control_cores_mask_set(cores_mask);
+    thread = sdk::lib::thread::factory(thread_name.c_str(),
+                                       accel_thread_id++,
+                                       sdk::lib::THREAD_ROLE_CONTROL,
+                                       cores_mask,
+                                       entry_func,
+                                       sched_get_priority_max(SCHED_OTHER),
+                                       SCHED_OTHER, true);
+    if (!thread) {
+        NIC_LOG_ERR("failed to create thread {}", thread_name);
+        throw;
+    }
+
+    thread->start(this);
+}
+
+AccelWorkThread::~AccelWorkThread()
+{
+    if (thread) {
+        sdk::lib::thread::destroy(thread);
+    }
+}
+
+void
+AccelWorkThread::work_lock(void)
+{
+    if (pthread_mutex_lock(&work_mutex)) {
+        NIC_LOG_ERR("{} failed work mutex lock: error {}",
+                    thread_name, errno);
+        throw;
+    }
+}
+
+void
+AccelWorkThread::work_unlock(void)
+{
+    if (pthread_mutex_unlock(&work_mutex)) {
+        NIC_LOG_ERR("{} failed work mutex unlock: error {}",
+                    thread_name, errno);
+    }
+}
+
+void
+AccelWorkThread::work_notify(void)
+{
+    work_lock();
+    stop_work = false;
+    if (pthread_cond_signal(&work_cond)) {
+        NIC_LOG_ERR("{} failed to notify work: error {}",
+                    thread_name, errno);
+        throw;
+    }
+    work_unlock();
+}
+
+void
+AccelWorkThread::wait_for_work(void)
+{
+    if (pthread_cond_wait(&work_cond, &work_mutex)) {
+        NIC_LOG_ERR("{} failed to wait for work: error {}",
+                    thread_name, errno);
+        throw;
+    }
+}
+
+void
+AccelWorkThread::join(void)
+{
+    if (pthread_join(thread->pthread_id(), NULL)) {
+        NIC_LOG_ERR("{} failed to join: error {}",
+                    thread_name, errno);
+    }
+}
+

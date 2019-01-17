@@ -64,6 +64,7 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 		{ CMD_OPCODE_SEQ_QUEUE_BATCH_INIT, "CMD_OPCODE_SEQ_QUEUE_BATCH_INIT" },
 		{ CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE, "CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE" },
 		{ CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE, "CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE" },
+		{ CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE, "CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE" },
 		{ 0, 0 }, /* keep last */
 	};
 	struct cmds *cmd = cmds;
@@ -77,10 +78,12 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 			}
 			cmd++;
 		}
+		if (ctx->comp.cpl.status == DEVCMD_UNKNOWN)
+		       return SONIC_DEVCMD_UNKNOWN;
+
 		OSAL_LOG_ERROR("(%d) %s failed: %d",
-			ctx->cmd.cmd.opcode, name, ctx->comp.cpl.status);
-		return ctx->comp.cpl.status == DEVCMD_UNKNOWN ? 
-		       SONIC_DEVCMD_UNKNOWN : SONIC_DEVCMD_ERROR;
+			       ctx->cmd.cmd.opcode, name, ctx->comp.cpl.status);
+		return SONIC_DEVCMD_ERROR;
 	}
 
 	return 0;

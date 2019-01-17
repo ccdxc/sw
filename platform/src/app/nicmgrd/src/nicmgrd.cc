@@ -61,6 +61,9 @@ sdk_init (void)
 static void
 atexit_handler (void)
 {
+    if (devmgr) {
+        devmgr->ThreadsWaitJoin();
+    }
     if (utils::logger::logger()) {
         utils::logger::logger()->flush();
     }

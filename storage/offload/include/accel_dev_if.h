@@ -43,6 +43,7 @@ enum cmd_opcode {
 	CMD_OPCODE_SEQ_QUEUE_BATCH_INIT	= 10,
 	CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE = 11,
 	CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE = 12,
+	CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE = 13,
 
 	CMD_OPCODE_SEQ_QUEUE_DUMP	= 0xf0,
 };
@@ -430,6 +431,28 @@ typedef struct seq_queue_batch_init_cpl {
 } seq_queue_batch_init_cpl_t;
 
 /**
+ * seq_queue_init_complete_cmd_t - Sequencer queue init complete command
+ * @opcode:     opcode = 13
+ */
+typedef struct seq_queue_init_complete_cmd {
+	uint16_t    opcode;
+	uint16_t    rsvd[31];
+} seq_queue_init_complete_cmd_t;
+
+/**
+ * seq_queue_init_complete_cpl_t - Sequencer queue init complete command completion
+ * @status:     The status of the command.  Values for status are:
+ *                 0 = Successful completion
+ */
+typedef struct seq_queue_init_complete_cpl {
+	uint32_t    status  :8,
+	            rsvd    :24;
+	uint32_t    rsvd1;
+	uint32_t    rsvd2;
+	uint32_t    rsvd3;
+} seq_queue_init_complete_cpl_t;
+
+/**
  * crypto_key_update_cmd_t - Crypto key update command
  * @opcode:       opcode = 4
  * @pid:          Process ID
@@ -583,6 +606,7 @@ typedef union adminq_cmd {
 	crypto_key_update_cmd_t crypto_key_update;
 	seq_queue_batch_init_cmd_t seq_queue_batch_init;
 	seq_queue_batch_control_cmd_t seq_queue_batch_control;
+	seq_queue_init_complete_cmd_t seq_queue_init_complete;
 } adminq_cmd_t;
 
 typedef union adminq_cpl {
@@ -590,6 +614,7 @@ typedef union adminq_cpl {
 	nop_cpl_t               nop;
 	seq_queue_init_cpl_t    seq_queue_init;
 	seq_queue_dump_cpl_t    seq_queue_dump;
+	seq_queue_init_complete_cpl_t seq_queue_init_complete;
 	crypto_key_update_cpl_t crypto_key_update;
 } adminq_cpl_t;
 
