@@ -537,6 +537,8 @@ putil_put_interm_buf_list(struct service_info *svc_info)
 	}
 }
 
+#define POLL_LOOP_BASE_TIMEOUT (50 * OSAL_NSEC_PER_MSEC)
+
 uint64_t
 svc_poll_expiry_start(const struct service_info *svc_info)
 {
@@ -557,6 +559,7 @@ svc_poll_expiry_check(const struct service_info *svc_info,
 
 	if (batch_info)
 		timeout *= max(batch_info->bi_num_entries, (uint32_t)1);
+	timeout += POLL_LOOP_BASE_TIMEOUT;
 
 	return (osal_get_clock_nsec() - start_ts) >= timeout;
 }
