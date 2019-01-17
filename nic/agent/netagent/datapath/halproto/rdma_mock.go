@@ -35,42 +35,6 @@ func (m *MockRdmaClient) EXPECT() *MockRdmaClientMockRecorder {
 	return m.recorder
 }
 
-// RdmaQpCreate mocks base method
-func (m *MockRdmaClient) RdmaQpCreate(ctx context.Context, in *RdmaQpRequestMsg, opts ...grpc.CallOption) (*RdmaQpResponseMsg, error) {
-	varargs := []interface{}{ctx, in}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "RdmaQpCreate", varargs...)
-	ret0, _ := ret[0].(*RdmaQpResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RdmaQpCreate indicates an expected call of RdmaQpCreate
-func (mr *MockRdmaClientMockRecorder) RdmaQpCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaQpCreate", reflect.TypeOf((*MockRdmaClient)(nil).RdmaQpCreate), varargs...)
-}
-
-// RdmaQpUpdate mocks base method
-func (m *MockRdmaClient) RdmaQpUpdate(ctx context.Context, in *RdmaQpUpdateRequestMsg, opts ...grpc.CallOption) (*RdmaQpUpdateResponseMsg, error) {
-	varargs := []interface{}{ctx, in}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "RdmaQpUpdate", varargs...)
-	ret0, _ := ret[0].(*RdmaQpUpdateResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RdmaQpUpdate indicates an expected call of RdmaQpUpdate
-func (mr *MockRdmaClientMockRecorder) RdmaQpUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaQpUpdate", reflect.TypeOf((*MockRdmaClient)(nil).RdmaQpUpdate), varargs...)
-}
-
 // RdmaAhCreate mocks base method
 func (m *MockRdmaClient) RdmaAhCreate(ctx context.Context, in *RdmaAhRequestMsg, opts ...grpc.CallOption) (*RdmaAhResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -125,60 +89,6 @@ func (mr *MockRdmaClientMockRecorder) RdmaEqCreate(ctx, in interface{}, opts ...
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaEqCreate", reflect.TypeOf((*MockRdmaClient)(nil).RdmaEqCreate), varargs...)
 }
 
-// RdmaMemReg mocks base method
-func (m *MockRdmaClient) RdmaMemReg(ctx context.Context, in *RdmaMemRegRequestMsg, opts ...grpc.CallOption) (*RdmaMemRegResponseMsg, error) {
-	varargs := []interface{}{ctx, in}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "RdmaMemReg", varargs...)
-	ret0, _ := ret[0].(*RdmaMemRegResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RdmaMemReg indicates an expected call of RdmaMemReg
-func (mr *MockRdmaClientMockRecorder) RdmaMemReg(ctx, in interface{}, opts ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaMemReg", reflect.TypeOf((*MockRdmaClient)(nil).RdmaMemReg), varargs...)
-}
-
-// RdmaAllocLkey mocks base method
-func (m *MockRdmaClient) RdmaAllocLkey(ctx context.Context, in *RdmaAllocLkeyRequestMsg, opts ...grpc.CallOption) (*RdmaAllocLkeyResponseMsg, error) {
-	varargs := []interface{}{ctx, in}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "RdmaAllocLkey", varargs...)
-	ret0, _ := ret[0].(*RdmaAllocLkeyResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RdmaAllocLkey indicates an expected call of RdmaAllocLkey
-func (mr *MockRdmaClientMockRecorder) RdmaAllocLkey(ctx, in interface{}, opts ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaAllocLkey", reflect.TypeOf((*MockRdmaClient)(nil).RdmaAllocLkey), varargs...)
-}
-
-// RdmaMemWindow mocks base method
-func (m *MockRdmaClient) RdmaMemWindow(ctx context.Context, in *RdmaMemWindowRequestMsg, opts ...grpc.CallOption) (*RdmaMemWindowResponseMsg, error) {
-	varargs := []interface{}{ctx, in}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "RdmaMemWindow", varargs...)
-	ret0, _ := ret[0].(*RdmaMemWindowResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RdmaMemWindow indicates an expected call of RdmaMemWindow
-func (mr *MockRdmaClientMockRecorder) RdmaMemWindow(ctx, in interface{}, opts ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaMemWindow", reflect.TypeOf((*MockRdmaClient)(nil).RdmaMemWindow), varargs...)
-}
-
 // RdmaAqCreate mocks base method
 func (m *MockRdmaClient) RdmaAqCreate(ctx context.Context, in *RdmaAqRequestMsg, opts ...grpc.CallOption) (*RdmaAqResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -220,32 +130,6 @@ func (m *MockRdmaServer) EXPECT() *MockRdmaServerMockRecorder {
 	return m.recorder
 }
 
-// RdmaQpCreate mocks base method
-func (m *MockRdmaServer) RdmaQpCreate(arg0 context.Context, arg1 *RdmaQpRequestMsg) (*RdmaQpResponseMsg, error) {
-	ret := m.ctrl.Call(m, "RdmaQpCreate", arg0, arg1)
-	ret0, _ := ret[0].(*RdmaQpResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RdmaQpCreate indicates an expected call of RdmaQpCreate
-func (mr *MockRdmaServerMockRecorder) RdmaQpCreate(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaQpCreate", reflect.TypeOf((*MockRdmaServer)(nil).RdmaQpCreate), arg0, arg1)
-}
-
-// RdmaQpUpdate mocks base method
-func (m *MockRdmaServer) RdmaQpUpdate(arg0 context.Context, arg1 *RdmaQpUpdateRequestMsg) (*RdmaQpUpdateResponseMsg, error) {
-	ret := m.ctrl.Call(m, "RdmaQpUpdate", arg0, arg1)
-	ret0, _ := ret[0].(*RdmaQpUpdateResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RdmaQpUpdate indicates an expected call of RdmaQpUpdate
-func (mr *MockRdmaServerMockRecorder) RdmaQpUpdate(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaQpUpdate", reflect.TypeOf((*MockRdmaServer)(nil).RdmaQpUpdate), arg0, arg1)
-}
-
 // RdmaAhCreate mocks base method
 func (m *MockRdmaServer) RdmaAhCreate(arg0 context.Context, arg1 *RdmaAhRequestMsg) (*RdmaAhResponseMsg, error) {
 	ret := m.ctrl.Call(m, "RdmaAhCreate", arg0, arg1)
@@ -283,45 +167,6 @@ func (m *MockRdmaServer) RdmaEqCreate(arg0 context.Context, arg1 *RdmaEqRequestM
 // RdmaEqCreate indicates an expected call of RdmaEqCreate
 func (mr *MockRdmaServerMockRecorder) RdmaEqCreate(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaEqCreate", reflect.TypeOf((*MockRdmaServer)(nil).RdmaEqCreate), arg0, arg1)
-}
-
-// RdmaMemReg mocks base method
-func (m *MockRdmaServer) RdmaMemReg(arg0 context.Context, arg1 *RdmaMemRegRequestMsg) (*RdmaMemRegResponseMsg, error) {
-	ret := m.ctrl.Call(m, "RdmaMemReg", arg0, arg1)
-	ret0, _ := ret[0].(*RdmaMemRegResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RdmaMemReg indicates an expected call of RdmaMemReg
-func (mr *MockRdmaServerMockRecorder) RdmaMemReg(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaMemReg", reflect.TypeOf((*MockRdmaServer)(nil).RdmaMemReg), arg0, arg1)
-}
-
-// RdmaAllocLkey mocks base method
-func (m *MockRdmaServer) RdmaAllocLkey(arg0 context.Context, arg1 *RdmaAllocLkeyRequestMsg) (*RdmaAllocLkeyResponseMsg, error) {
-	ret := m.ctrl.Call(m, "RdmaAllocLkey", arg0, arg1)
-	ret0, _ := ret[0].(*RdmaAllocLkeyResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RdmaAllocLkey indicates an expected call of RdmaAllocLkey
-func (mr *MockRdmaServerMockRecorder) RdmaAllocLkey(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaAllocLkey", reflect.TypeOf((*MockRdmaServer)(nil).RdmaAllocLkey), arg0, arg1)
-}
-
-// RdmaMemWindow mocks base method
-func (m *MockRdmaServer) RdmaMemWindow(arg0 context.Context, arg1 *RdmaMemWindowRequestMsg) (*RdmaMemWindowResponseMsg, error) {
-	ret := m.ctrl.Call(m, "RdmaMemWindow", arg0, arg1)
-	ret0, _ := ret[0].(*RdmaMemWindowResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// RdmaMemWindow indicates an expected call of RdmaMemWindow
-func (mr *MockRdmaServerMockRecorder) RdmaMemWindow(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RdmaMemWindow", reflect.TypeOf((*MockRdmaServer)(nil).RdmaMemWindow), arg0, arg1)
 }
 
 // RdmaAqCreate mocks base method

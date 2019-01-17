@@ -26,7 +26,6 @@
 
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/table_svc.hpp"
-#include "nic/hal/svc/rdma_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
@@ -34,6 +33,7 @@
 
 #include "gen/hal/svc/telemetry_svc_gen.hpp"
 #include "gen/hal/svc/nw_svc_gen.hpp"
+#include "gen/hal/svc/rdma_svc_gen.hpp"
 #include "gen/hal/svc/vrf_svc_gen.hpp"
 #include "gen/hal/svc/l2segment_svc_gen.hpp"
 #include "gen/hal/svc/internal_svc_gen.hpp"

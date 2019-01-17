@@ -247,6 +247,15 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
+            "name"      : "rdma",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_rdma.so",
+            "init_func" : "rdma_init",
+            "exit_func" : "rdma_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
             "name"      : "gft",
             "provider"  : "pensando.io",
             "lib"       : "libcfg_plugin_gft.so",

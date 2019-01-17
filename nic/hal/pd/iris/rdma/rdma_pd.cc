@@ -1,6 +1,6 @@
 #include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/include/pd_api.hpp"
-#include "nic/hal/pd/iris/internal/rdma_pd.hpp"
+#include "nic/hal/pd/iris/rdma/rdma_pd.hpp"
 #include "nic/include/pd.hpp"
 #include "nic/include/base.hpp"
 #include "lib/table/directmap/directmap.hpp"

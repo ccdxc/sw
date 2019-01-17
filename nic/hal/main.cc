@@ -29,7 +29,6 @@
 
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/table_svc.hpp"
-#include "nic/hal/svc/rdma_svc.hpp"
 #include "nic/hal/svc/event_svc.hpp"
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
@@ -38,6 +37,7 @@
 #include "gen/hal/svc/vrf_svc_gen.hpp"
 #include "gen/hal/svc/l2segment_svc_gen.hpp"
 #include "gen/hal/svc/nw_svc_gen.hpp"
+#include "gen/hal/svc/rdma_svc_gen.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "gen/hal/svc/endpoint_svc_gen.hpp"
 #include "gen/hal/svc/session_svc_gen.hpp"
@@ -70,7 +70,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     NetworkServiceImpl       nw_svc;
     InterfaceServiceImpl     if_svc;
     InternalServiceImpl      internal_svc;
-    RdmaServiceImpl          rdma_svc;
     L2SegmentServiceImpl     l2seg_svc;
     DebugServiceImpl         debug_svc;
     TableServiceImpl         table_svc;
@@ -98,7 +97,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     // register all services
     if (hal_cfg->features == hal::HAL_FEATURE_SET_IRIS) {
         server_builder->RegisterService(&internal_svc);
-        server_builder->RegisterService(&rdma_svc);
         server_builder->RegisterService(&debug_svc);
         server_builder->RegisterService(&table_svc);
         server_builder->RegisterService(&nic_svc);
@@ -110,7 +108,6 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
         server_builder->RegisterService(&system_svc);
         server_builder->RegisterService(&swphv_svc);
     } else if (hal_cfg->features == hal::HAL_FEATURE_SET_GFT) {
-        server_builder->RegisterService(&rdma_svc);
         server_builder->RegisterService(&system_svc);
     }
 

@@ -416,6 +416,7 @@ void RdmaMemRegister(uint64_t va, uint64_t pa, uint32_t len, uint32_t lkey,
   rdma::RdmaMemRegRequestMsg req;
   rdma::RdmaMemRegResponseMsg resp;
   rdma::RdmaMemRegSpec *mr = req.add_request();
+  Status status = Status::OK;
 
   mr->set_hw_lif_id(g_rdma_hw_lif_id);
   mr->set_pd(kRdmaPD);
@@ -438,7 +439,9 @@ void RdmaMemRegister(uint64_t va, uint64_t pa, uint32_t len, uint32_t lkey,
 
 
   grpc::ClientContext context;
-  auto status = rdma_stub->RdmaMemReg(&context, req, &resp);
+#ifdef RDMA_ADMIN
+  status = rdma_stub->RdmaMemReg(&context, req, &resp);
+#endif
   assert(status.ok());
 }
 
@@ -450,6 +453,7 @@ void CreateCQ(uint32_t cq_num, uint64_t pa, uint32_t len, bool is_targetCQ) {
   rdma::RdmaCqRequestMsg req;
   rdma::RdmaCqResponseMsg resp;
   rdma::RdmaCqSpec *cq = req.add_request();
+  Status status = Status::OK;
 
   cq->set_cq_num(cq_num);
   cq->set_hw_lif_id(g_rdma_hw_lif_id);
@@ -486,7 +490,9 @@ void CreateCQ(uint32_t cq_num, uint64_t pa, uint32_t len, bool is_targetCQ) {
   }
 
   grpc::ClientContext context;
-  auto status = rdma_stub->RdmaCqCreate(&context, req, &resp);
+#ifdef RDMA_ADMIN
+  status = rdma_stub->RdmaCqCreate(&context, req, &resp);
+#endif
   assert(status.ok());
 }
 
@@ -505,6 +511,7 @@ void CreateInitiatorQP() {
   rdma::RdmaQpRequestMsg req;
   rdma::RdmaQpResponseMsg resp;
   rdma::RdmaQpSpec *rq = req.add_request();
+  Status status = Status::OK;
 
   rq->set_qp_num(0);
   rq->set_hw_lif_id(g_rdma_hw_lif_id);
@@ -545,7 +552,9 @@ void CreateInitiatorQP() {
 #endif
   
   grpc::ClientContext context;
-  auto status = rdma_stub->RdmaQpCreate(&context, req, &resp);
+#ifdef RDMA_ADMIN
+  status = rdma_stub->RdmaQpCreate(&context, req, &resp);
+#endif
   assert(status.ok());
 }
 
@@ -553,6 +562,7 @@ void CreateTargetQP() {
   rdma::RdmaQpRequestMsg req;
   rdma::RdmaQpResponseMsg resp;
   rdma::RdmaQpSpec *rq = req.add_request();
+  Status status = Status::OK;
 
   rq->set_qp_num(1);
   rq->set_hw_lif_id(g_rdma_hw_lif_id);
@@ -592,7 +602,9 @@ void CreateTargetQP() {
 #endif
   
   grpc::ClientContext context;
-  auto status = rdma_stub->RdmaQpCreate(&context, req, &resp);
+#ifdef RDMA_ADMIN
+  status = rdma_stub->RdmaQpCreate(&context, req, &resp);
+#endif
   assert(status.ok());
 }
 
@@ -626,12 +638,15 @@ void ConnectInitiatorAndTarget(uint32_t qp1, uint32_t qp2, uint64_t mac1,
   rdma::RdmaQpUpdateRequestMsg req;
   rdma::RdmaQpUpdateResponseMsg resp;
   rdma::RdmaQpUpdateSpec *qu = req.add_request();
+  Status status = Status::OK;
   qu->set_qp_num(qp1);
   qu->set_hw_lif_id(g_rdma_hw_lif_id);
   qu->set_oper(rdma::RDMA_UPDATE_QP_OPER_SET_DEST_QPN);
   qu->set_dst_qp_num(qp2);
   grpc::ClientContext context1;
-  auto status = rdma_stub->RdmaQpUpdate(&context1, req, &resp);
+#ifdef RDMA_ADMIN
+  status = rdma_stub->RdmaQpUpdate(&context1, req, &resp);
+#endif
   assert(status.ok());
 
   req.clear_request();
@@ -643,7 +658,9 @@ void ConnectInitiatorAndTarget(uint32_t qp1, uint32_t qp2, uint64_t mac1,
   qu->set_dst_qp_num(qp2);
   qu->set_header_template(hdr, sizeof(hdr));
   grpc::ClientContext context2;
+#ifdef RDMA_ADMIN
   status = rdma_stub->RdmaQpUpdate(&context2, req, &resp);
+#endif
   assert(status.ok());
 
   req.clear_request();
@@ -655,7 +672,9 @@ void ConnectInitiatorAndTarget(uint32_t qp1, uint32_t qp2, uint64_t mac1,
   qu->set_dst_qp_num(qp2);
   qu->set_qstate(3);
   grpc::ClientContext context3;
+#ifdef RDMA_ADMIN
   status = rdma_stub->RdmaQpUpdate(&context3, req, &resp);
+#endif
   assert(status.ok());
 }
 

@@ -76,6 +76,7 @@ export NIC_SDK_SOLIBS   := list slab shmmgr mmgr sdkpal sdkfru \
     sdkp4loader sdkasicrw
 
 export NIC_HAL_DLOPEN_SOLIBS := cfg_plugin_nw \
+                                cfg_plugin_rdma \
                                 cfg_plugin_aclqos \
                                 cfg_plugin_nat \
                                 cfg_plugin_gft \

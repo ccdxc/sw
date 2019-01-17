@@ -17,6 +17,7 @@ MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/lif/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/mcast/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/nw/*.cc) \
+                  $(wildcard ${MODULE_SRC_DIR}/rdma/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/ipsec/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/tcp_proxy/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/debug/*.cc) \

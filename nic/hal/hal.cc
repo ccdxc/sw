@@ -13,7 +13,6 @@
 #include "nic/include/hal_pd.hpp"
 #include "lib/periodic/periodic.hpp"
 #include "platform/capri/capri_lif_manager.hpp"
-#include "nic/hal/src/internal/rdma.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/fte/fte_core.hpp"
@@ -244,11 +243,6 @@ hal_init (hal_cfg_t *hal_cfg)
                             "Clock delta computation initialization failure");
          HAL_TRACE_DEBUG("Platform clock delta computation init done");
     }
-
-    // do rdma init
-    ret = rdma_hal_init();
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                            "RDMA intialization failure");
 
     // unless periodic thread is fully initialized and
     // done calling all plugins' thread init callbacks

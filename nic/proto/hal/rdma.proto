@@ -11,10 +11,6 @@ package rdma;
 
 // Interface service definition
 service Rdma {
-  // Queue Pair related APIs
-  rpc RdmaQpCreate(RdmaQpRequestMsg) returns (RdmaQpResponseMsg) {}
-  rpc RdmaQpUpdate(RdmaQpUpdateRequestMsg) returns (RdmaQpUpdateResponseMsg) {}
-
   rpc RdmaAhCreate(RdmaAhRequestMsg) returns (RdmaAhResponseMsg) {}
   
   // Completion Q related APIs
@@ -22,15 +18,6 @@ service Rdma {
 
   // Completion Q related APIs
   rpc RdmaEqCreate(RdmaEqRequestMsg) returns (RdmaEqResponseMsg) {}
-
-  // Register Memory related APIs
-  rpc RdmaMemReg(RdmaMemRegRequestMsg) returns (RdmaMemRegResponseMsg) {}
-
-  // Allocated Lkey  related APIs
-  rpc RdmaAllocLkey(RdmaAllocLkeyRequestMsg) returns (RdmaAllocLkeyResponseMsg) {}
-
-  // Memory Window related APIs
-  rpc RdmaMemWindow(RdmaMemWindowRequestMsg) returns (RdmaMemWindowResponseMsg) {}
 
   // Create the admin queue
   rpc RdmaAqCreate(RdmaAqRequestMsg) returns (RdmaAqResponseMsg) {}

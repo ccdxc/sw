@@ -447,9 +447,9 @@ int main(int argc, char**argv) {
       run_comp_tests = true;
       run_comp_seq_tests = true;
       run_xts_tests = true;
-      run_rdma_tests = true;
-      run_rdma_lif_override_tests = true;
-      run_rdma_xts_tests = true;
+      run_rdma_tests = false;
+      run_rdma_lif_override_tests = false;
+      run_rdma_xts_tests = false;
       run_xts_perf_tests = false;
       run_comp_perf_tests = false;
       run_pdma_tests = true;
@@ -463,7 +463,7 @@ int main(int argc, char**argv) {
       run_comp_tests = true;
       run_comp_seq_tests = true;
       run_xts_tests = true;
-      run_rdma_tests = true;
+      run_rdma_tests = false;
       run_rdma_xts_tests = false;		// Enable after s/w debugging
       run_rdma_lif_override_tests = false;	// Enable after h/w model changes
       run_xts_perf_tests = false;		// Never enable this for RTL sanity
@@ -476,11 +476,11 @@ int main(int argc, char**argv) {
   } else if (FLAGS_test_group == "nvme") {
       run_nvme_tests = true;
   } else if (FLAGS_test_group == "nvme_dp") {
-      run_nvme_dp_tests = true;
+      run_nvme_dp_tests = false;
   } else if (FLAGS_test_group == "nvme_dp_scale") {
-      run_nvme_dp_scale_tests = true;
+      run_nvme_dp_scale_tests = false;
   } else if (FLAGS_test_group == "nvme_dp_scale_perf") {
-      run_nvme_dp_scale_perf = true;
+      run_nvme_dp_scale_perf = false;
   } else if (FLAGS_test_group == "nvme_be") {
       run_nvme_be_tests = true;
       run_nvme_wrr_tests = true;
@@ -492,9 +492,9 @@ int main(int argc, char**argv) {
   } else if (FLAGS_test_group == "xts") {
       run_xts_tests = true;
   } else if (FLAGS_test_group == "rdma") {
-      run_rdma_tests = true;
-      run_rdma_xts_tests = true;
-      run_rdma_lif_override_tests = true;
+      run_rdma_tests = false;
+      run_rdma_xts_tests = false;
+      run_rdma_lif_override_tests = false;
   } else if (FLAGS_test_group == "xts_perf") {
       run_xts_perf_tests = true;
   } else if (FLAGS_test_group == "comp_perf") {
@@ -504,7 +504,7 @@ int main(int argc, char**argv) {
   } else if (FLAGS_test_group == "noc_perf") {
       run_noc_perf_tests = true;
   } else if (FLAGS_test_group == "rdma_perf") {
-      run_rdma_perf_tests = true;
+      run_rdma_perf_tests = false;
   } else if (FLAGS_test_group == "acc_scale") {
       if (FLAGS_acc_scale_test.empty()) {
           run_acc_scale_tests_map |= ACC_SCALE_TEST_ALL;
@@ -517,7 +517,7 @@ int main(int argc, char**argv) {
       run_xts_perf_tests = true;
       run_noc_perf_tests = true;
       run_comp_perf_tests = true;
-      run_rdma_perf_tests = true;
+      run_rdma_perf_tests = false;
   } else if (FLAGS_test_group == "nicmgr") {
 
       // Limit to a few selected tests, particularly we want to
