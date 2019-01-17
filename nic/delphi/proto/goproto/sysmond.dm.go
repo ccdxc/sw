@@ -150,6 +150,11 @@ func (it *AsicTemperatureMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *AsicTemperatureMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewAsicTemperatureMetricsIterator returns an iterator
 func NewAsicTemperatureMetricsIterator() (*AsicTemperatureMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("AsicTemperatureMetrics")
@@ -304,6 +309,11 @@ func (it *AsicPowerMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *AsicPowerMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewAsicPowerMetricsIterator returns an iterator

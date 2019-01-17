@@ -44,9 +44,9 @@ func (s *RestServer) runLifMetricsListHandler(r *http.Request) (interface{}, err
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("LifMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New LifMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 

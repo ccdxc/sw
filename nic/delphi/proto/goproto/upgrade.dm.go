@@ -258,6 +258,11 @@ func (it *UpgradeMetricsIterator) Delete(key uint32) error {
 
 }
 
+// Free frees the iterator memory
+func (it *UpgradeMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewUpgradeMetricsIterator returns an iterator
 func NewUpgradeMetricsIterator() (*UpgradeMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("UpgradeMetrics")

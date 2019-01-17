@@ -1392,6 +1392,11 @@ func (it *LifMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *LifMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewLifMetricsIterator returns an iterator
 func NewLifMetricsIterator() (*LifMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("LifMetrics")

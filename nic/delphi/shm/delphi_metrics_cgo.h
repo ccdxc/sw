@@ -24,6 +24,7 @@ DelphiMetrics_cgo MetricsIteratorNext_cgo(DelphiMetricsIterator_cgo iter);
 DelphiMetrics_cgo MetricsIteratorGet_cgo(DelphiMetricsIterator_cgo iter);
 DelphiMetrics_cgo MetricsIteratorFind_cgo(DelphiMetricsIterator_cgo iter, char *key, int keylen);
 void MetricsIteratorDelete_cgo(DelphiMetricsIterator_cgo iter, char *key, int keylen);
+void MetricsIteratorFree_cgo(DelphiMetricsIterator_cgo metr);
 
 
 void MetricsCreateTable(const char *kind);

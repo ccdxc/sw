@@ -206,6 +206,11 @@ func (it *{{$msgName}}Iterator) Delete(key {{.GetGolangTypeName}}) error {
 {{end}}{{end}}{{end}}
 }
 
+// Free frees the iterator memory
+func (it *{{$msgName}}Iterator) Free() {
+	it.iter.Free()
+}
+
 // New{{.GetName}}Iterator returns an iterator
 func New{{.GetName}}Iterator() (*{{.GetName}}Iterator, error) {
 	iter, err := gometrics.NewMetricsIterator("{{.GetName}}")

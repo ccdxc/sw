@@ -44,9 +44,9 @@ func (s *RestServer) runUpgradeMetricsListHandler(r *http.Request) (interface{},
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("UpgradeMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New UpgradeMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 

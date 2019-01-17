@@ -206,6 +206,11 @@ func (it *ExampleMetricsIterator) Delete(key uint32) error {
 
 }
 
+// Free frees the iterator memory
+func (it *ExampleMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewExampleMetricsIterator returns an iterator
 func NewExampleMetricsIterator() (*ExampleMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("ExampleMetrics")
@@ -429,6 +434,11 @@ func (it *NestedKeyExampleMetricsIterator) Delete(key ExampleKey) error {
 
 }
 
+// Free frees the iterator memory
+func (it *NestedKeyExampleMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewNestedKeyExampleMetricsIterator returns an iterator
 func NewNestedKeyExampleMetricsIterator() (*NestedKeyExampleMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("NestedKeyExampleMetrics")
@@ -634,6 +644,11 @@ func (it *SingletonExampleMetricsIterator) Create() (*SingletonExampleMetrics, e
 func (it *SingletonExampleMetricsIterator) Delete() error {
 	return it.iter.Delete(gometrics.EncodeScalarKey(uint32(0)))
 
+}
+
+// Free frees the iterator memory
+func (it *SingletonExampleMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewSingletonExampleMetricsIterator returns an iterator
@@ -844,6 +859,11 @@ func (it *DpExampleMetricsIterator) Delete(key uint32) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *DpExampleMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewDpExampleMetricsIterator returns an iterator
@@ -1057,6 +1077,11 @@ func (it *NestedKeyDpExampleMetricsIterator) Delete(key ExampleKey) error {
 	buf, _ := proto.Marshal(&key)
 	return it.iter.Delete(buf)
 
+}
+
+// Free frees the iterator memory
+func (it *NestedKeyDpExampleMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewNestedKeyDpExampleMetricsIterator returns an iterator

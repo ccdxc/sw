@@ -258,6 +258,11 @@ func (it *DppintcreditMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *DppintcreditMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewDppintcreditMetricsIterator returns an iterator
 func NewDppintcreditMetricsIterator() (*DppintcreditMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("DppintcreditMetrics")
@@ -466,6 +471,11 @@ func (it *DppintfifoMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *DppintfifoMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewDppintfifoMetricsIterator returns an iterator
@@ -876,6 +886,11 @@ func (it *Dppintreg1MetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *Dppintreg1MetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewDppintreg1MetricsIterator returns an iterator
 func NewDppintreg1MetricsIterator() (*Dppintreg1MetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("Dppintreg1Metrics")
@@ -1012,6 +1027,11 @@ func (it *Dppintreg2MetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *Dppintreg2MetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewDppintreg2MetricsIterator returns an iterator
@@ -1692,6 +1712,11 @@ func (it *IntspareMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *IntspareMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewIntspareMetricsIterator returns an iterator
 func NewIntspareMetricsIterator() (*IntspareMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("IntspareMetrics")
@@ -1866,6 +1891,11 @@ func (it *DppintsramseccMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *DppintsramseccMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewDppintsramseccMetricsIterator returns an iterator
 func NewDppintsramseccMetricsIterator() (*DppintsramseccMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("DppintsramseccMetrics")
@@ -2038,6 +2068,11 @@ func (it *DprintcreditMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *DprintcreditMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewDprintcreditMetricsIterator returns an iterator
@@ -2248,6 +2283,11 @@ func (it *DprintfifoMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *DprintfifoMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewDprintfifoMetricsIterator returns an iterator
@@ -2710,6 +2750,11 @@ func (it *DprintflopfifoMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *DprintflopfifoMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewDprintflopfifoMetricsIterator returns an iterator
@@ -3336,6 +3381,11 @@ func (it *Dprintreg1MetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *Dprintreg1MetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewDprintreg1MetricsIterator returns an iterator
 func NewDprintreg1MetricsIterator() (*Dprintreg1MetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("Dprintreg1Metrics")
@@ -3580,6 +3630,11 @@ func (it *Dprintreg2MetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *Dprintreg2MetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewDprintreg2MetricsIterator returns an iterator
@@ -3898,6 +3953,11 @@ func (it *DprintsramseccMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *DprintsramseccMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewDprintsramseccMetricsIterator returns an iterator
@@ -4326,6 +4386,11 @@ func (it *SsepicsintbadaddrMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *SsepicsintbadaddrMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewSsepicsintbadaddrMetricsIterator returns an iterator
 func NewSsepicsintbadaddrMetricsIterator() (*SsepicsintbadaddrMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("SsepicsintbadaddrMetrics")
@@ -4716,6 +4781,11 @@ func (it *SsepicsintbgMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *SsepicsintbgMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewSsepicsintbgMetricsIterator returns an iterator
 func NewSsepicsintbgMetricsIterator() (*SsepicsintbgMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("SsepicsintbgMetrics")
@@ -4870,6 +4940,11 @@ func (it *SsepicsintpicsMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *SsepicsintpicsMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewSsepicsintpicsMetricsIterator returns an iterator
@@ -5100,6 +5175,11 @@ func (it *DbwaintdbMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *DbwaintdbMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewDbwaintdbMetricsIterator returns an iterator
 func NewDbwaintdbMetricsIterator() (*DbwaintdbMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("DbwaintdbMetrics")
@@ -5254,6 +5334,11 @@ func (it *DbwaintlifqstatemapMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *DbwaintlifqstatemapMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewDbwaintlifqstatemapMetricsIterator returns an iterator
@@ -5718,6 +5803,11 @@ func (it *SgeteinterrMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *SgeteinterrMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewSgeteinterrMetricsIterator returns an iterator
 func NewSgeteinterrMetricsIterator() (*SgeteinterrMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("SgeteinterrMetrics")
@@ -6124,6 +6214,11 @@ func (it *SgeteintinfoMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *SgeteintinfoMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewSgeteintinfoMetricsIterator returns an iterator
@@ -6714,6 +6809,11 @@ func (it *SgempuinterrMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *SgempuinterrMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewSgempuinterrMetricsIterator returns an iterator
 func NewSgempuinterrMetricsIterator() (*SgempuinterrMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("SgempuinterrMetrics")
@@ -6960,6 +7060,11 @@ func (it *SgempuintinfoMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *SgempuintinfoMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewSgempuintinfoMetricsIterator returns an iterator
 func NewSgempuintinfoMetricsIterator() (*SgempuintinfoMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("SgempuintinfoMetrics")
@@ -7098,6 +7203,11 @@ func (it *MdhensintaxierrMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *MdhensintaxierrMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewMdhensintaxierrMetricsIterator returns an iterator
 func NewMdhensintaxierrMetricsIterator() (*MdhensintaxierrMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("MdhensintaxierrMetrics")
@@ -7234,6 +7344,11 @@ func (it *MdhensinteccMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *MdhensinteccMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewMdhensinteccMetricsIterator returns an iterator
@@ -7482,6 +7597,11 @@ func (it *MdhensintipcoreMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *MdhensintipcoreMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewMdhensintipcoreMetricsIterator returns an iterator
 func NewMdhensintipcoreMetricsIterator() (*MdhensintipcoreMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("MdhensintipcoreMetrics")
@@ -7728,6 +7848,11 @@ func (it *MpmpnsintcryptoMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *MpmpnsintcryptoMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewMpmpnsintcryptoMetricsIterator returns an iterator
 func NewMpmpnsintcryptoMetricsIterator() (*MpmpnsintcryptoMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("MpmpnsintcryptoMetrics")
@@ -7866,6 +7991,11 @@ func (it *PbpbcintcreditunderflowMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *PbpbcintcreditunderflowMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewPbpbcintcreditunderflowMetricsIterator returns an iterator
 func NewPbpbcintcreditunderflowMetricsIterator() (*PbpbcintcreditunderflowMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("PbpbcintcreditunderflowMetrics")
@@ -8002,6 +8132,11 @@ func (it *InteccdescMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *InteccdescMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewInteccdescMetricsIterator returns an iterator
@@ -8538,6 +8673,11 @@ func (it *PbpbcintpbusviolationMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *PbpbcintpbusviolationMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewPbpbcintpbusviolationMetricsIterator returns an iterator
 func NewPbpbcintpbusviolationMetricsIterator() (*PbpbcintpbusviolationMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("PbpbcintpbusviolationMetrics")
@@ -8674,6 +8814,11 @@ func (it *PbpbcintrplMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *PbpbcintrplMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewPbpbcintrplMetricsIterator returns an iterator
@@ -9030,6 +9175,11 @@ func (it *PbpbcintwriteMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *PbpbcintwriteMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewPbpbcintwriteMetricsIterator returns an iterator
 func NewPbpbcintwriteMetricsIterator() (*PbpbcintwriteMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("PbpbcintwriteMetrics")
@@ -9204,6 +9354,11 @@ func (it *PbpbchbmintecchbmrbMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *PbpbchbmintecchbmrbMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewPbpbchbmintecchbmrbMetricsIterator returns an iterator
 func NewPbpbchbmintecchbmrbMetricsIterator() (*PbpbchbmintecchbmrbMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("PbpbchbmintecchbmrbMetrics")
@@ -9358,6 +9513,11 @@ func (it *PbpbchbminthbmaxierrrspMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *PbpbchbminthbmaxierrrspMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewPbpbchbminthbmaxierrrspMetricsIterator returns an iterator
@@ -9822,6 +9982,11 @@ func (it *PbpbchbminthbmdropMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *PbpbchbminthbmdropMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewPbpbchbminthbmdropMetricsIterator returns an iterator
 func NewPbpbchbminthbmdropMetricsIterator() (*PbpbchbminthbmdropMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("PbpbchbminthbmdropMetrics")
@@ -10284,6 +10449,11 @@ func (it *PbpbchbminthbmpbusviolationMetricsIterator) Delete(key uint64) error {
 
 }
 
+// Free frees the iterator memory
+func (it *PbpbchbminthbmpbusviolationMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewPbpbchbminthbmpbusviolationMetricsIterator returns an iterator
 func NewPbpbchbminthbmpbusviolationMetricsIterator() (*PbpbchbminthbmpbusviolationMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("PbpbchbminthbmpbusviolationMetrics")
@@ -10402,6 +10572,11 @@ func (it *PbpbchbminthbmxoffMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *PbpbchbminthbmxoffMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewPbpbchbminthbmxoffMetricsIterator returns an iterator
@@ -10540,6 +10715,11 @@ func (it *McmchintmcMetricsIterator) Delete(key uint64) error {
 
 	return it.iter.Delete(gometrics.EncodeScalarKey(key))
 
+}
+
+// Free frees the iterator memory
+func (it *McmchintmcMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewMcmchintmcMetricsIterator returns an iterator

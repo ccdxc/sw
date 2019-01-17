@@ -26,6 +26,7 @@ type MetricsIterator interface {
 	Find(key []byte) (Metrics, error)   // get a specific metrics entry
 	Create(key []byte, len int) Metrics // create a metrics entry
 	Delete(key []byte) error            // delete a metrics entry
+	Free()                              // frees the the iterator
 }
 
 // NewMetricsIterator returns new metrics iterator for a kind

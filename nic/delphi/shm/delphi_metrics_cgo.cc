@@ -92,6 +92,14 @@ DelphiMetrics_cgo MetricsIteratorGet_cgo(DelphiMetricsIterator_cgo metr) {
     return (void *)mptr;
 }
 
+// MetricsIteratorFree_cgo frees the memory associated with iterator
+void MetricsIteratorFree_cgo(DelphiMetricsIterator_cgo metr) {
+    IteratorCtx *mptr = ((IteratorCtx *)metr);
+
+    mptr->tbl_ = nullptr;
+    delete mptr;
+}
+
 const char *MetricsEntryKey(DelphiMetrics_cgo mtr) {
     return KEY_PTR_FROM_HASH_ENTRY(HASH_ENTRY_FROM_VAL_PTR(mtr, delphi::metrics::DelphiMetrics::GetDelphiShm()));
 }

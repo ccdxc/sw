@@ -44,9 +44,9 @@ func (s *RestServer) runAsicPowerMetricsListHandler(r *http.Request) (interface{
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("AsicPowerMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New AsicPowerMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -82,9 +82,9 @@ func (s *RestServer) runAsicTemperatureMetricsListHandler(r *http.Request) (inte
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("AsicTemperatureMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New AsicTemperatureMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 

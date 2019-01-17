@@ -92,9 +92,11 @@ func (it *delphiMetricsIterator) Delete(key []byte) error {
 	return nil
 }
 
+func (it *delphiMetricsIterator) Free() {
+	C.MetricsIteratorFree_cgo(it.cgo_iter)
+}
+
 func (m *delphiMetrics) String() string {
-	// keystr := C.GoString(C.MetricsEntryKey(m.entry))
-	// valstr := C.GoString(MetricsEntryValue(m.entry))
 	kBytes := C.GoBytes(unsafe.Pointer(C.MetricsEntryKey(m.entry)), C.int(m.keylen))
 	retstr := ""
 

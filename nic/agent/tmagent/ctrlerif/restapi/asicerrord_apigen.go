@@ -44,9 +44,9 @@ func (s *RestServer) runDbwaintdbMetricsListHandler(r *http.Request) (interface{
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("DbwaintdbMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New DbwaintdbMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -82,9 +82,9 @@ func (s *RestServer) runDbwaintlifqstatemapMetricsListHandler(r *http.Request) (
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("DbwaintlifqstatemapMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New DbwaintlifqstatemapMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -120,9 +120,9 @@ func (s *RestServer) runDppintcreditMetricsListHandler(r *http.Request) (interfa
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("DppintcreditMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New DppintcreditMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -158,9 +158,9 @@ func (s *RestServer) runDppintfifoMetricsListHandler(r *http.Request) (interface
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("DppintfifoMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New DppintfifoMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -196,9 +196,9 @@ func (s *RestServer) runDppintreg1MetricsListHandler(r *http.Request) (interface
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("Dppintreg1MetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New Dppintreg1Metrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -234,9 +234,9 @@ func (s *RestServer) runDppintreg2MetricsListHandler(r *http.Request) (interface
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("Dppintreg2MetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New Dppintreg2Metrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -272,9 +272,9 @@ func (s *RestServer) runDppintsramseccMetricsListHandler(r *http.Request) (inter
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("DppintsramseccMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New DppintsramseccMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -310,9 +310,9 @@ func (s *RestServer) runDprintcreditMetricsListHandler(r *http.Request) (interfa
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("DprintcreditMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New DprintcreditMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -348,9 +348,9 @@ func (s *RestServer) runDprintfifoMetricsListHandler(r *http.Request) (interface
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("DprintfifoMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New DprintfifoMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -386,9 +386,9 @@ func (s *RestServer) runDprintflopfifoMetricsListHandler(r *http.Request) (inter
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("DprintflopfifoMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New DprintflopfifoMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -424,9 +424,9 @@ func (s *RestServer) runDprintreg1MetricsListHandler(r *http.Request) (interface
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("Dprintreg1MetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New Dprintreg1Metrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -462,9 +462,9 @@ func (s *RestServer) runDprintreg2MetricsListHandler(r *http.Request) (interface
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("Dprintreg2MetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New Dprintreg2Metrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -500,9 +500,9 @@ func (s *RestServer) runDprintsramseccMetricsListHandler(r *http.Request) (inter
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("DprintsramseccMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New DprintsramseccMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -538,9 +538,9 @@ func (s *RestServer) runInteccdescMetricsListHandler(r *http.Request) (interface
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("InteccdescMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New InteccdescMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -576,9 +576,9 @@ func (s *RestServer) runIntspareMetricsListHandler(r *http.Request) (interface{}
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("IntspareMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New IntspareMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -614,9 +614,9 @@ func (s *RestServer) runMcmchintmcMetricsListHandler(r *http.Request) (interface
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("McmchintmcMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New McmchintmcMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -652,9 +652,9 @@ func (s *RestServer) runMdhensintaxierrMetricsListHandler(r *http.Request) (inte
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("MdhensintaxierrMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New MdhensintaxierrMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -690,9 +690,9 @@ func (s *RestServer) runMdhensinteccMetricsListHandler(r *http.Request) (interfa
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("MdhensinteccMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New MdhensinteccMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -728,9 +728,9 @@ func (s *RestServer) runMdhensintipcoreMetricsListHandler(r *http.Request) (inte
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("MdhensintipcoreMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New MdhensintipcoreMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -766,9 +766,9 @@ func (s *RestServer) runMpmpnsintcryptoMetricsListHandler(r *http.Request) (inte
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("MpmpnsintcryptoMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New MpmpnsintcryptoMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -804,9 +804,9 @@ func (s *RestServer) runPbpbchbmintecchbmrbMetricsListHandler(r *http.Request) (
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("PbpbchbmintecchbmrbMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New PbpbchbmintecchbmrbMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -842,9 +842,9 @@ func (s *RestServer) runPbpbchbminthbmaxierrrspMetricsListHandler(r *http.Reques
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("PbpbchbminthbmaxierrrspMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New PbpbchbminthbmaxierrrspMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -880,9 +880,9 @@ func (s *RestServer) runPbpbchbminthbmdropMetricsListHandler(r *http.Request) (i
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("PbpbchbminthbmdropMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New PbpbchbminthbmdropMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -918,9 +918,9 @@ func (s *RestServer) runPbpbchbminthbmpbusviolationMetricsListHandler(r *http.Re
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("PbpbchbminthbmpbusviolationMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New PbpbchbminthbmpbusviolationMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -956,9 +956,9 @@ func (s *RestServer) runPbpbchbminthbmxoffMetricsListHandler(r *http.Request) (i
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("PbpbchbminthbmxoffMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New PbpbchbminthbmxoffMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -994,9 +994,9 @@ func (s *RestServer) runPbpbcintcreditunderflowMetricsListHandler(r *http.Reques
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("PbpbcintcreditunderflowMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New PbpbcintcreditunderflowMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -1032,9 +1032,9 @@ func (s *RestServer) runPbpbcintpbusviolationMetricsListHandler(r *http.Request)
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("PbpbcintpbusviolationMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New PbpbcintpbusviolationMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -1070,9 +1070,9 @@ func (s *RestServer) runPbpbcintrplMetricsListHandler(r *http.Request) (interfac
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("PbpbcintrplMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New PbpbcintrplMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -1108,9 +1108,9 @@ func (s *RestServer) runPbpbcintwriteMetricsListHandler(r *http.Request) (interf
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("PbpbcintwriteMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New PbpbcintwriteMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -1146,9 +1146,9 @@ func (s *RestServer) runSgempuinterrMetricsListHandler(r *http.Request) (interfa
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("SgempuinterrMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New SgempuinterrMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -1184,9 +1184,9 @@ func (s *RestServer) runSgempuintinfoMetricsListHandler(r *http.Request) (interf
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("SgempuintinfoMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New SgempuintinfoMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -1222,9 +1222,9 @@ func (s *RestServer) runSgeteinterrMetricsListHandler(r *http.Request) (interfac
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("SgeteinterrMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New SgeteinterrMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -1260,9 +1260,9 @@ func (s *RestServer) runSgeteintinfoMetricsListHandler(r *http.Request) (interfa
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("SgeteintinfoMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New SgeteintinfoMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -1298,9 +1298,9 @@ func (s *RestServer) runSsepicsintbadaddrMetricsListHandler(r *http.Request) (in
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("SsepicsintbadaddrMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New SsepicsintbadaddrMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -1336,9 +1336,9 @@ func (s *RestServer) runSsepicsintbgMetricsListHandler(r *http.Request) (interfa
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("SsepicsintbgMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New SsepicsintbgMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -1374,9 +1374,9 @@ func (s *RestServer) runSsepicsintpicsMetricsListHandler(r *http.Request) (inter
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("SsepicsintpicsMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New SsepicsintpicsMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 

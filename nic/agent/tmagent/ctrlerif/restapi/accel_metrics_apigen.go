@@ -44,9 +44,9 @@ func (s *RestServer) runAccelHwRingMetricsListHandler(r *http.Request) (interfac
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("AccelHwRingMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New AccelHwRingMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 
@@ -82,9 +82,9 @@ func (s *RestServer) runAccelSeqQueueMetricsListHandler(r *http.Request) (interf
 		temp := iter.Next()
 		temp.ObjectMeta = *(tstr.GetObjectMeta("AccelSeqQueueMetricsKey", temp.GetKey()))
 		mtr = append(mtr, *temp)
-		log.Infof("New AccelSeqQueueMetrics: %+v", *temp)
 	}
-	log.Infof("Got GET LIST request")
+	iter.Free()
+
 	return mtr, nil
 }
 

@@ -417,6 +417,11 @@ func (it *AccelSeqQueueMetricsIterator) Delete(key AccelSeqQueueKey) error {
 
 }
 
+// Free frees the iterator memory
+func (it *AccelSeqQueueMetricsIterator) Free() {
+	it.iter.Free()
+}
+
 // NewAccelSeqQueueMetricsIterator returns an iterator
 func NewAccelSeqQueueMetricsIterator() (*AccelSeqQueueMetricsIterator, error) {
 	iter, err := gometrics.NewMetricsIterator("AccelSeqQueueMetrics")
@@ -584,6 +589,11 @@ func (it *AccelHwRingMetricsIterator) Delete(key AccelHwRingKey) error {
 	buf, _ := proto.Marshal(&key)
 	return it.iter.Delete(buf)
 
+}
+
+// Free frees the iterator memory
+func (it *AccelHwRingMetricsIterator) Free() {
+	it.iter.Free()
 }
 
 // NewAccelHwRingMetricsIterator returns an iterator
