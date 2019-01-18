@@ -26,7 +26,6 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     phvwr p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33} 
     phvwr p.barco_req_command, d.barco_enc_cmd
     phvwr p.t0_s2s_iv_size, d.iv_size
-    phvwr p.t0_s2s_icv_size, d.icv_size
 
     phvwri p.{app_header_table0_valid...app_header_table2_valid}, 7 
     phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex[33:6] 

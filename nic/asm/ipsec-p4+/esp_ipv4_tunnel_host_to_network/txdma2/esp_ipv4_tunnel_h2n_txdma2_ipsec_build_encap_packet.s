@@ -38,7 +38,6 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     addi r3, r3, 2
     phvwr p.enc_pay_load_dma_cmd_size, r3
     //ICV
-    //phvwr p.icv_header_dma_cmd_size, k.txdma2_global_icv_size
     phvwri p.icv_header_dma_cmd_size, IPSEC_DEFAULT_ICV_SIZE 
     add r1, k.t0_s2s_out_page_addr, ESP_FIXED_HDR_SIZE+2 
     blti r1, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_out_page

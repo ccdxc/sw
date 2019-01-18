@@ -36,7 +36,7 @@ dma_cmd_to_move_input_pkt_to_mem:
     blti  r3, CAPRI_HBM_BASE, esp_ipv4_tunnel_n2h_update_input_desc_aol_illegal_dma_in_page
     phvwr p.dma_cmd_pkt2mem2_dma_cmd_addr, r3 
     add r5, k.ipsec_to_stage3_payload_size, k.ipsec_to_stage3_iv_size
-    add r5, r5, k.ipsec_global_icv_size
+    add r5, r5, IPSEC_DEFAULT_ICV_SIZE 
     phvwr p.dma_cmd_pkt2mem2_dma_cmd_size, r5 
 
 dma_cmd_to_write_salt_after_seq_no:

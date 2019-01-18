@@ -19,7 +19,6 @@ ipsec_esp_v4_tunnel_n2h_good_pkt:
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 11 
     phvwri p.common_te0_phv_table_addr, INDESC_SEMAPHORE_ADDR
 
-    phvwr p.ipsec_global_icv_size, d.icv_size
     phvwr p.ipsec_int_header_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.ipsec_global_ipsec_cb_index, d.ipsec_cb_index
     phvwr.e p.ipsec_to_stage3_iv_size, d.iv_size

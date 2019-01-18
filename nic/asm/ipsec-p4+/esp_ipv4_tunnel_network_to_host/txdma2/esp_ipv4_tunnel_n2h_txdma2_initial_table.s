@@ -20,7 +20,6 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
 
     seq c1, d.is_v6, 1
     phvwr p.txdma2_global_iv_size, d.iv_size
-    phvwr p.txdma2_global_icv_size, d.icv_size
 
     phvwri p.app_header_table0_valid, 1
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 14 

@@ -36,7 +36,6 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
     phvwri p.common_te0_phv_table_pc, esp_ipv4_tunnel_h2n_txdma2_ipsec_dummy[33:6] 
     phvwri.f p.common_te0_phv_table_addr, TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE 
     //phvwr p.txdma2_global_iv_size, d.iv_size
-    //phvwr.f p.txdma2_global_icv_size, d.icv_size
     seq c1, d.{barco_ring_pindex}.hx, d.{barco_ring_cindex}.hx 
     b.!c1 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_do_nothing
     addi r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_IPSEC_ESP)

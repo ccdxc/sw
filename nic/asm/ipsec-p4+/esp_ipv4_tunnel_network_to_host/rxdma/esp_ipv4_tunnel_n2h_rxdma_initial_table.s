@@ -27,7 +27,7 @@ esp_ipv4_tunnel_n2h_rxdma_initial_table:
     // p4 sends payload_end as end of the packet including 2+icv
     add r2, r0, k.p42p4plus_hdr_ipsec_payload_end
     addi.c1 r2, r2, IPV6_HDR_SIZE
-    sub r2, r2, d.icv_size
+    sub r2, r2, IPSEC_DEFAULT_ICV_SIZE 
     addi r2, r2, IPSEC_SALT_HEADROOM
     phvwr p.ipsec_int_header_tailroom_offset, r2
 
