@@ -35,12 +35,13 @@ func main() {
 	log.SetConfig(logConfig)
 
 	// command line args
-	var numHosts = flag.Int("hosts", 3, "Number of hosts / agents")
-	var datapathKind = flag.String("datapath", "mock", "Specify the datapath type. mock | hal | delphi")
-	var skipAuth = flag.Bool("skipauth", false, "Skip Authorization")
-	var apigwPort = flag.String("apiport", "", "API Gateway port (default 9090)")
-	var startElastic = flag.Bool("elastic", true, "Start Elasticsearch")
-	flag.Parse()
+	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	var numHosts = flagSet.Int("hosts", 3, "Number of hosts / agents")
+	var datapathKind = flagSet.String("datapath", "mock", "Specify the datapath type. mock | hal | delphi")
+	var skipAuth = flagSet.Bool("skipauth", false, "Skip Authorization")
+	var apigwPort = flagSet.String("apiport", "", "API Gateway port (default 9090)")
+	var startElastic = flagSet.Bool("elastic", true, "Start Elasticsearch")
+	flagSet.Parse(os.Args[1:])
 
 	config := veniceinteg.GetDefaultSuiteConfig()
 	config.NumHosts = *numHosts

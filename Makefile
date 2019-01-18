@@ -380,6 +380,10 @@ e2e-venice:
 e2e-iota: e2e-naples e2e-venice
 	$(MAKE) -C iota
 
+# venice emulator
+palazzo:
+	go install -v github.com/pensando/sw/test/integ/palazzo/
+
 ui-framework:
 	npm version;
 	cd venice/ui/web-app-framework && npm run replaceShrinkwrap && npm run pack
