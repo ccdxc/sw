@@ -16,23 +16,19 @@ KSRC ?= /lib/modules/$(shell uname -r)/build
 #KOPT += W=1		# extra warnings
 #KOPT += C=1		# static analysis
 #KOPT += CHECK=sparse	# static analysis tool
-KOPT += KCPPFLAGS="-DHAPS -I$(CURDIR)/../common" 
-#KOPT += KCPPFLAGS="-DHAPS -I/home/anish/sw/platform/drivers/common" 
 
+KOPT += KCPPFLAGS="-DHAPS"
 KOPT += CONFIG_IONIC=m
 KOPT += CONFIG_INFINIBAND_IONIC_RDMA=m
 
 all:
-	$(MAKE) -C $(KSRC) $(KOPT) M=$(IONIC_ETH_SRC)
-	$(MAKE) -C $(KSRC) $(KOPT) M=$(IONIC_RDMA_SRC)
+	$(MAKE) -C $(KSRC) $(KOPT) M=$(CURDIR)
 
 clean:
-	$(MAKE) -C $(KSRC) $(KOPT) M=$(IONIC_ETH_SRC) clean
-	$(MAKE) -C $(KSRC) $(KOPT) M=$(IONIC_RDMA_SRC) clean
+	$(MAKE) -C $(KSRC) $(KOPT) M=$(CURDIR) clean
 
 install modules_install:
-	$(MAKE) -C $(KSRC) $(KOPT) M=$(IONIC_ETH_SRC) modules_install
-	$(MAKE) -C $(KSRC) $(KOPT) M=$(IONIC_RDMA_SRC) modules_install
+	$(MAKE) -C $(KSRC) $(KOPT) M=$(CURDIR) modules_install
 
 cscope:
 	find $(IONIC_ETH_SRC) $(IONIC_RDMA_SRC) -name '*.[ch]' > cscope.files
