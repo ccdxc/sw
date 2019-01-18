@@ -166,10 +166,10 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
 {
     uint32_t    i, nreqs = req->request_size();
 
-    HAL_TRACE_DEBUG("Rcvd ${method[0]}");
+    //HAL_TRACE_DEBUG("Rcvd ${method[0]}");
 //::             if file_name_prefix in session_file and 'Get' in method[0]:
     if (nreqs == 0) {
-        HAL_TRACE_DEBUG("Rcvd Session Get All Request");
+        //HAL_TRACE_DEBUG("Rcvd Session Get All Request");
         hal::hal_cfg_db_open(hal::CFG_OP_READ);
         hal::session_get_all(rsp);
         hal::hal_cfg_db_close();
@@ -177,16 +177,16 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
     }
 //::             elif file_name_prefix in session_file and 'Delete' in method[0]:
     if (nreqs == 0) {
-        HAL_TRACE_DEBUG("Rcvd Session Delete All Request");
+        //HAL_TRACE_DEBUG("Rcvd Session Delete All Request");
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         hal::session_delete_all(rsp);
         hal::hal_cfg_db_close();
         return Status::OK;
     }
 //::             else:
-     if (nreqs == 0) {
-         return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
-     }
+    if (nreqs == 0) {
+        return Status(grpc::StatusCode::INVALID_ARGUMENT, "Empty Request");
+    }
 //::             #endif
 //::    write_api_stats_enum(enumC, hal_name)
 //::    enumC = enumC + 3

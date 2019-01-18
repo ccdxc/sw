@@ -55,12 +55,18 @@ def PreCreateCb(data, req_spec, resp_spec):
             GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_TUNNEL:
-        req_spec.request[0].type = interface_pb2.IF_TYPE_ENIC
-
+        req_spec.request[0].if_tunnel_info.encap_type = interface_pb2.IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS
         if (utils.mbt_v2()):
-            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info, ext_refs=ext_refs)
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_tunnel_info.prop_mpls_info, ext_refs=ext_refs)
         else:
-            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_tunnel_info.prop_mpls_info)
+        if req_spec.request[0].if_tunnel_info.prop_mpls_info.substrate_ip.ip_af == types_pb2.IP_AF_INET6:
+            GrpcReqRspMsg.generate_ip_address(req_spec.request[0].if_tunnel_info.prop_mpls_info.substrate_ip, types_pb2.IP_AF_INET)
+        for overlay_ip in req_spec.request[0].if_tunnel_info.prop_mpls_info.overlay_ip:
+            GrpcReqRspMsg.generate_ip_address(overlay_ip, types_pb2.IP_AF_INET)
+        if req_spec.request[0].if_tunnel_info.prop_mpls_info.tunnel_dest_ip.ip_af == types_pb2.IP_AF_INET6:
+            GrpcReqRspMsg.generate_ip_address(req_spec.request[0].if_tunnel_info.prop_mpls_info.tunnel_dest_ip, types_pb2.IP_AF_INET)
+        req_spec.request[0].if_tunnel_info.prop_mpls_info.source_gw.prefix.ipv4_subnet.prefix_len = GrpcReqRspMsg.generate_ip_address(req_spec.request[0].if_tunnel_info.prop_mpls_info.source_gw.prefix.ipv4_subnet.address, types_pb2.IP_AF_INET)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK_PC or \
        req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK:
@@ -149,12 +155,19 @@ def PreUpdateCb(data, req_spec, resp_spec):
                 GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_TUNNEL:
-        req_spec.request[0].type = interface_pb2.IF_TYPE_ENIC
+        req_spec.request[0].if_tunnel_info.encap_type = interface_pb2.IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS
         if (utils.mbt_v2()):
-            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info, ext_refs=ext_refs)
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_tunnel_info.prop_mpls_info, ext_refs=ext_refs)
         else:
-            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
-
+            GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_tunnel_info.prop_mpls_info)
+        if req_spec.request[0].if_tunnel_info.prop_mpls_info.substrate_ip.ip_af == types_pb2.IP_AF_INET6:
+            GrpcReqRspMsg.generate_ip_address(req_spec.request[0].if_tunnel_info.prop_mpls_info.substrate_ip, types_pb2.IP_AF_INET)
+        if req_spec.request[0].if_tunnel_info.prop_mpls_info.overlay_ip[0].ip_af == types_pb2.IP_AF_INET6:
+            GrpcReqRspMsg.generate_ip_address(req_spec.request[0].if_tunnel_info.prop_mpls_info.overlay_ip[0], types_pb2.IP_AF_INET)
+        if req_spec.request[0].if_tunnel_info.prop_mpls_info.tunnel_dest_ip.ip_af == types_pb2.IP_AF_INET6:
+            GrpcReqRspMsg.generate_ip_address(req_spec.request[0].if_tunnel_info.prop_mpls_info.tunnel_dest_ip, types_pb2.IP_AF_INET)
+        req_spec.request[0].if_tunnel_info.prop_mpls_info.source_gw.prefix.ipv4_subnet.prefix_len = GrpcReqRspMsg.generate_ip_address(req_spec.request[0].if_tunnel_info.prop_mpls_info.source_gw.prefix.ipv4_subnet.address, types_pb2.IP_AF_INET)
+ 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK:
         global port_num
         req_spec.request[0].if_uplink_info.port_num = port_num

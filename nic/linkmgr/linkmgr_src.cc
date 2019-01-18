@@ -704,7 +704,7 @@ port_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("update commit CB {}.",
                      pi_p->port_num);
-    printf("Original: %p, Clone: %p\n", pi_p, pi_clone_p);
+    //printf("Original: %p, Clone: %p\n", pi_p, pi_clone_p);
 
     // Free PD
     sdk::linkmgr::port_args_init(&port_args);
