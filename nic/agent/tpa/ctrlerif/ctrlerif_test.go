@@ -1,6 +1,7 @@
 package ctrlerif
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -108,6 +109,32 @@ func TestWatchFwlogPolicy(t *testing.T) {
 		p := policyDb.ListObjects("FwlogPolicy")
 		return len(p) == 2, p
 	}, "fwlog update failed")
+
+	contents := map[string]struct {
+		Watchers []int
+	}{}
+
+	AssertEventually(t, func() (bool, interface{}) {
+		data, err := policyDb.MarshalJSON()
+		if err != nil {
+			return false, err
+		}
+
+		err = json.Unmarshal(data, &contents)
+		if err != nil {
+			return false, err
+		}
+
+		for _, v := range contents {
+			for _, w := range v.Watchers {
+				if w != 0 {
+					return false, contents
+				}
+			}
+		}
+		return true, contents
+	}, "found pending policy events")
+
 }
 
 func TestWatchFlowExportPolicy(t *testing.T) {
@@ -172,6 +199,31 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 		p := policyDb.ListObjects("FlowExportPolicy")
 		return len(p) == 2, p
 	}, "FlowExportPolicy update failed")
+
+	contents := map[string]struct {
+		Watchers []int
+	}{}
+
+	AssertEventually(t, func() (bool, interface{}) {
+		data, err := policyDb.MarshalJSON()
+		if err != nil {
+			return false, err
+		}
+
+		err = json.Unmarshal(data, &contents)
+		if err != nil {
+			return false, err
+		}
+
+		for _, v := range contents {
+			for _, w := range v.Watchers {
+				if w != 0 {
+					return false, contents
+				}
+			}
+		}
+		return true, contents
+	}, "found pending policy events")
 }
 
 func TestRpcServer(t *testing.T) {

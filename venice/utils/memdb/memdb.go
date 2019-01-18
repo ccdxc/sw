@@ -345,8 +345,8 @@ func (md *Memdb) MarshalJSON() ([]byte, error) {
 	defer md.Unlock()
 
 	contents := map[string]struct {
-		Object      map[string]Object
-		NumWatchers int
+		Object   map[string]Object
+		Watchers []int
 	}{}
 
 	for kind, objs := range md.objdb {
@@ -355,10 +355,15 @@ func (md *Memdb) MarshalJSON() ([]byte, error) {
 			o[name] = obj.obj
 		}
 
+		watchers := []int{}
+		for _, ch := range objs.watchers {
+			watchers = append(watchers, len(ch))
+		}
+
 		contents[kind] = struct {
-			Object      map[string]Object
-			NumWatchers int
-		}{Object: o, NumWatchers: len(objs.watchers)}
+			Object   map[string]Object
+			Watchers []int
+		}{Object: o, Watchers: watchers}
 
 	}
 

@@ -324,7 +324,7 @@ func TestMarshal(t *testing.T) {
 	AssertOk(t, err, "Error marshalling object")
 
 	o := map[string]struct {
-		NumWatchers int
+		Watchers []int
 	}{}
 
 	err = json.Unmarshal(mo, &o)
@@ -333,7 +333,7 @@ func TestMarshal(t *testing.T) {
 	Assert(t, len(o) == 1, "invalid number of objects", len(o))
 
 	for _, v := range o {
-		Assert(t, v.NumWatchers == 1, "invalid number of watchers", v)
+		Assert(t, len(v.Watchers) == 1, "invalid number of watchers", v)
 	}
 }
 
