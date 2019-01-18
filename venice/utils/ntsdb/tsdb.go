@@ -104,7 +104,6 @@ type Obj interface {
 	Bool(field string) api.Bool
 	Histogram(field string) api.Histogram
 	Summary(field string) api.Summary
-	Point(keys map[string]string, fields map[string]interface{}, ts time.Time)
 	Points(points []*Point, ts time.Time) error
 	AtomicBegin(ts time.Time)
 	AtomicEnd()
@@ -555,18 +554,6 @@ func (s *iSummary) AddSample(value float64) {
 
 	s.totalCount++
 	s.totalValue += value
-
-	obj.dirty = true
-}
-
-//todo: remove
-// Point creates a point with keys/fields in the time series
-func (obj *iObj) Point(keys map[string]string, fields map[string]interface{}, ts time.Time) {
-	if ts.IsZero() {
-		ts = time.Now()
-	}
-
-	createNewMetricPointFromKeysFields(obj, keys, fields, ts)
 
 	obj.dirty = true
 }

@@ -567,9 +567,12 @@ func (s *PolicyState) ProcessFWEvent(ev *ipcproto.FWEvent, ts time.Time) {
 		ts = time.Unix(0, unixnano)
 	}
 
-	fwlog := map[string]string{"src": ipSrc, "dest": ipDest, "dPort": dPort, "ipProt": ipProt, "action": action, "direction": dir, "rule-id": ruleID}
-	s.fwTable.Point(fwlog,
-		map[string]interface{}{"sPort": int64(ev.GetSport())}, ts)
+	point := &ntsdb.Point{
+		Tags:   map[string]string{"src": ipSrc, "dest": ipDest, "dPort": dPort, "ipProt": ipProt, "action": action, "direction": dir, "rule-id": ruleID},
+		Fields: map[string]interface{}{"sPort": int64(ev.GetSport())},
+	}
+
+	s.fwTable.Points([]*ntsdb.Point{point}, ts)
 
 	// set src/dest vrf
 	vrfList := map[uint64]bool{
@@ -577,13 +580,15 @@ func (s *PolicyState) ProcessFWEvent(ev *ipcproto.FWEvent, ts time.Time) {
 		ev.DestVrf:   true,
 	}
 
+	// todo: decide tags & fields in fwlog
+
 	// check dest/src vrf
 	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
 		if col, ok := v.(*fwlogCollector); ok {
 			col.Lock()
 			if _, ok := vrfList[col.vrf]; ok {
 				if col.syslogFd != nil && col.filter&(1<<uint32(ev.Fwaction)) != 0 {
-					s.sendFwLog(col, fwlog)
+					s.sendFwLog(col, point.Tags)
 				}
 			} else {
 				log.Errorf("invalid collector")

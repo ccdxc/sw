@@ -345,12 +345,19 @@ func TestMetricsWithPoints(t *testing.T) {
 
 		obj.Counter("rxpkts").Inc()
 		obj.PrecisionGauge("bandwidth").Set(76.1, time.Time{})
-		obj.Point(
-			map[string]string{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
-			map[string]interface{}{"action": "rejected"}, time.Time{})
-		obj.Point(
-			map[string]string{"src": "10.1.1.1", "dest": "12.1.1.1", "port": "80"},
-			map[string]interface{}{"action": "permitted"}, time.Time{})
+		obj.Points([]*Point{
+			{
+				Tags:   map[string]string{"src": "10.1.1.1", "dest": "11.1.1.1", "port": "8080"},
+				Fields: map[string]interface{}{"action": "rejected"},
+			},
+		}, time.Time{})
+
+		obj.Points([]*Point{
+			{
+				Tags:   map[string]string{"src": "10.1.1.1", "dest": "12.1.1.1", "port": "80"},
+				Fields: map[string]interface{}{"action": "permitted"},
+			},
+		}, time.Time{})
 
 		tags := []map[string]string{
 			keyTags,
