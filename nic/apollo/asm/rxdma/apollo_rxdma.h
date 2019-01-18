@@ -1,4 +1,5 @@
-#include "../../../p4/apollo/include/defines.h"
+#include "../../p4/include/defines.h"
+#include "../../p4/include/slacl_defines.h"
 #include "capri-macros.h"
 #include "platform/capri/capri_common.hpp"
 

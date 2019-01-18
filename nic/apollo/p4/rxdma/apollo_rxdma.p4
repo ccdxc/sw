@@ -1,4 +1,4 @@
-#include "../../include/intrinsic.p4"
+#include "../../../p4/include/intrinsic.p4"
 
 #include "../include/defines.h"
 #include "../include/table_sizes.h"

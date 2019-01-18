@@ -1,4 +1,4 @@
-#include "../../../p4/apollo/include/lpm_defines.h"
+#include "../../p4/include/lpm_defines.h"
 
 %%
 

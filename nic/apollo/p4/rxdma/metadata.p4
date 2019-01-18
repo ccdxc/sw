@@ -1,5 +1,5 @@
-#include "../../common-p4+/capri_dma_cmd.p4"
-#include "../../common-p4+/capri_doorbell.p4"
+#include "../../../p4/common-p4+/capri_dma_cmd.p4"
+#include "../../../p4/common-p4+/capri_doorbell.p4"
 
 header_type slacl_metadata_t {
     fields {
