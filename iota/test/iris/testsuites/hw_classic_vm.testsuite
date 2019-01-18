@@ -27,7 +27,7 @@ common:
 
 testbundles:
     # Relative paths from iota/test/iris/testbundles/
-    - networking/networking.testbundle
+    - networking/connectivity.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
