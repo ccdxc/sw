@@ -23,7 +23,12 @@ make -j12 -C drivers || exit
 # build krping
 #
 
+# This krping will build on 4.15, but needs compat work for 4.9 and 4.19
+if [[ "$(uname -r)" == *4.15.0* ]] ; then
 make -j12 -C krping || exit
+else
+echo 'Skipping the build of krping module'
+fi
 
 #
 # build rdma-core
