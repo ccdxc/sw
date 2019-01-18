@@ -282,7 +282,8 @@ err_out_unmap_bars:
 	ionic_unmap_bars(ionic);
 	ionic_pci_deinit(pdev);
 	pci_set_drvdata(pdev, NULL);
-
+	if(ionic->idev.cmb_inuse)
+		free(ionic->idev.cmb_inuse, M_IONIC);
 	free(ionic, M_IONIC);
 
 	return err;
@@ -305,6 +306,8 @@ static void ionic_remove(struct pci_dev *pdev)
 	ionic_pci_deinit(pdev);
 	pci_set_drvdata(pdev, NULL);
 
+	if(ionic->idev.cmb_inuse)
+		free(ionic->idev.cmb_inuse, M_IONIC);
 	free(ionic, M_IONIC);
 }
 
