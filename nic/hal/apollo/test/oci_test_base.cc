@@ -23,34 +23,33 @@ trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
     char       logbuf[1024];
     va_list    args;
 
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    printf(logbuf);
+    va_end(args);
+
     switch (trace_level) {
     case sdk::lib::SDK_TRACE_LEVEL_NONE:
         return 0;
         break;
     case sdk::lib::SDK_TRACE_LEVEL_ERR:
-        printf("[E] ");
+        fprintf(stderr, "[E] %s\n", logbuf);
         break;
     case sdk::lib::SDK_TRACE_LEVEL_WARN:
-        printf("[W] ");
+        fprintf(stderr, "[W] %s\n", logbuf);
         break;
     case sdk::lib::SDK_TRACE_LEVEL_INFO:
-        printf("[I] ");
+        fprintf(stdout, "[I] %s\n", logbuf);
         break;
     case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
-        printf("[D] ");
+        fprintf(stdout, "[D] %s\n", logbuf);
         break;
     case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
-        printf("[V] ");
+        fprintf(stdout, "[V] %s\n", logbuf);
         break;
     default:
         break;
     }
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    printf(logbuf);
-    printf("\n");
-    va_end(args);
-
     return 0;
 }
 
