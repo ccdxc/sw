@@ -30,7 +30,6 @@ subnet_entry::subnet_entry() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
-    lpm_base_addr_ = 0XFFFFFFFFFFFFFFFF;
     policy_base_addr_ = 0XFFFFFFFFFFFFFFFF;
 }
 
@@ -79,9 +78,10 @@ sdk_ret_t
 subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     oci_subnet_t *oci_subnet = &api_ctxt->api_params->subnet_info;
 
-    memcpy(&this->key_, &oci_subnet->key, sizeof(oci_subnet_key_t));
-    memcpy(&this->vr_mac_, &oci_subnet->vr_mac, sizeof(mac_addr_t));
-    // TODO: do we need to store vr_ip as well ? forgot now !!
+    memcpy(&key_, &oci_subnet->key, sizeof(oci_subnet_key_t));
+    memcpy(&route_table_, &oci_subnet->route_table,
+           sizeof(oci_route_table_key_t));
+    memcpy(&vr_mac_, &oci_subnet->vr_mac, sizeof(mac_addr_t));
     this->ht_ctxt_.reset();
     return SDK_RET_OK;
 }
@@ -113,9 +113,10 @@ subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
      */
     oci_subnet_t *oci_subnet = &obj_ctxt->api_params->subnet_info;
     OCI_TRACE_DEBUG("Creating subnet (vcn %u, subnet %u), pfx %s, vr ip %s, "
-                    "vr_mac %s", key_.vcn_id, key_.id,
+                    "vr_mac %s, route table %u", key_.vcn_id, key_.id,
                     ippfx2str(&oci_subnet->pfx), ipaddr2str(&oci_subnet->vr_ip),
-                    macaddr2str(oci_subnet->vr_mac));
+                    macaddr2str(oci_subnet->vr_mac),
+                    oci_subnet->route_table.id);
     return reserve_resources_();
 }
 
@@ -127,9 +128,6 @@ sdk_ret_t
 subnet_entry::release_resources_(void) {
     if (hw_id_ != 0xFF) {
         subnet_db()->subnet_idxr()->free(hw_id_);
-    }
-    if (lpm_base_addr_ != 0xFFFFFFFFFFFFFFFF) {
-        // TODO: free this block
     }
     if (policy_base_addr_ != 0xFFFFFFFFFFFFFFFF) {
         // TODO: free this block

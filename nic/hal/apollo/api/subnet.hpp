@@ -46,55 +46,12 @@ class subnet_entry : public api_base {
      */
     static void destroy(subnet_entry *subnet);
 
-#if 0
-    /**
-     * @brief     handle a subnet create by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_create(api_ctxt_t *api_ctxt) override;
-
-    /**
-     * @brief     handle a subnet update by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_update(api_ctxt_t *api_ctxt) override;
-
-    /**
-     * @brief     handle a subnet delete by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_delete(api_ctxt_t *api_ctxt) override;
-
-    /**
-     * @brief     handle a subnet get by allocating all required resources
-     *            and keeping them ready for commit phase
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t process_get(api_ctxt_t *api_ctxt) override;
-#endif
-
     /**
      * @brief     initialize subnet entry with the given config
      * @param[in] api_ctxt API context carrying the configuration
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
-
-#if 0
-    /**
-     * @brief     update/override the subnet object with given config
-     * @param[in] api_ctxt API context carrying the configuration
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t update_config(api_ctxt_t *api_ctxt) override;
-#endif
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -159,34 +116,6 @@ class subnet_entry : public api_base {
      */
     virtual sdk_ret_t delay_delete(void) override;
 
-#if 0
-    /**
-     * @brief    commit() is invokved during commit phase of the API processing
-     *           and is not expected to fail as all required resources are
-     *           already allocated by now. Based on the API operation, this API
-     *           is expected to process either create/retrieve/update/delete. If
-     *           any temporary state was stashed in the api_ctxt while
-     *           processing this API, it should be freed here
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     *
-     * NOTE:     commit() is not expected to fail
-     */
-    virtual sdk_ret_t commit(api_ctxt_t *api_ctxt) override;
-
-    /**
-     * @brief     abort() is invoked during abort phase of the API processing
-     *            and is not expected to fail. During this phase, all associated
-     *            resources must be freed and global DBs need to be restored
-     *            back to their original state and any transient state stashed
-     *            in api_ctxt while processing this API should also be freed
-     *            here
-     * @param[in] api_ctxt    transient state associated with this API
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    virtual sdk_ret_t abort(api_ctxt_t *api_ctxt) override;
-#endif
-
     /**
      * @brief     helper function to get key given subnet entry
      * @param[in] entry    pointer to subnet instance
@@ -223,9 +152,8 @@ class subnet_entry : public api_base {
 
     mac_addr_t& vr_mac(void) { return vr_mac_; }
 
-    // TODO: impl APIs
     uint16_t hw_id(void) const { return hw_id_; }
-    mem_addr_t lpm_root(void) const { return lpm_base_addr_; }
+    oci_route_table_key_t route_table(void) const { return route_table_; }
     mem_addr_t policy_tree_root(void) const { return policy_base_addr_; }
 
 private:
@@ -248,16 +176,15 @@ private:
     sdk_ret_t release_resources_(void);
 
  private:
-    oci_subnet_key_t    key_;               /**< subnet Key */
-    mac_addr_t          vr_mac_;            /**< virtual router MAC */
-    ht_ctxt_t           ht_ctxt_;           /**< hash table context */
+    oci_subnet_key_t         key_;               /**< subnet Key */
+    oci_route_table_key_t    route_table_;       /**< route table id */
+    mac_addr_t               vr_mac_;            /**< virtual router MAC */
+    ht_ctxt_t                ht_ctxt_;           /**< hash table context */
 
     /**< P4 datapath specific state */
-    uint16_t            hw_id_;             /**< hardware id */
-    mem_addr_t          lpm_base_addr_;     /**< LPM base address for current
-                                                 epoch */
-    mem_addr_t          policy_base_addr_;  /**< security policy rules base
-                                                 address for current epoch */
+    uint16_t                 hw_id_;             /**< hardware id */
+    mem_addr_t               policy_base_addr_;  /**< security policy rules base
+                                                      address for current epoch */
 } __PACK__;
 
 /** @} */    // end of OCI_SUBNET_ENTRY

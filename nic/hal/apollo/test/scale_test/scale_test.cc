@@ -200,6 +200,7 @@ create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
 {
     sdk_ret_t       rv;
     oci_subnet_t    oci_subnet;
+    uint32_t        route_table_id = 1;
 
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&oci_subnet, 0, sizeof(oci_subnet));
@@ -213,6 +214,7 @@ create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
         oci_subnet.vr_ip.addr.v4_addr = oci_subnet.pfx.addr.addr.v4_addr | 0x1;
         MAC_UINT64_TO_ADDR(oci_subnet.vr_mac,
                            (uint64_t)oci_subnet.vr_ip.addr.v4_addr);
+        oci_subnet.route_table.id = route_table_id++;
         rv = oci_subnet_create(&oci_subnet);
         ASSERT_TRUE(rv == SDK_RET_OK);
     }

@@ -96,7 +96,7 @@ public:
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
 
-    uint16_t lpm_root_addr(void) { return lpm_root_addr_; }
+    mem_addr_t lpm_root_addr(void) { return lpm_root_addr_; }
 
 private:
     /**< @brief    constructor */
