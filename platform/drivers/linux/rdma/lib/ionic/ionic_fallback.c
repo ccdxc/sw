@@ -272,12 +272,9 @@ static int fallback_modify_qp(struct ibv_qp *ibqp,
 			      struct ibv_qp_attr *attr,
 			      int mask)
 {
-	struct ibv_modify_qp_ex req = {};
-	struct ib_uverbs_ex_modify_qp_resp resp = {};
+	struct ibv_modify_qp req = {};
 
-	return ibv_cmd_modify_qp_ex(ibqp, attr, mask,
-				    &req, sizeof(req), sizeof(req),
-				    &resp, sizeof(resp), sizeof(resp));
+	return ibv_cmd_modify_qp(ibqp, attr, mask, &req, sizeof(req));
 }
 
 static int fallback_query_qp(struct ibv_qp *ibqp,

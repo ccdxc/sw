@@ -1169,17 +1169,14 @@ static int ionic_modify_qp(struct ibv_qp *ibqp,
 			   struct ibv_qp_attr *attr,
 			   int attr_mask)
 {
-	struct ibv_modify_qp_ex cmd = {};
-	struct ib_uverbs_ex_modify_qp_resp resp = {};
+	struct ibv_modify_qp cmd = {};
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
 	int rc;
 
 	if (!attr_mask)
 		return 0;
 
-	rc = ibv_cmd_modify_qp_ex(ibqp, attr, attr_mask,
-				  &cmd, sizeof(cmd), sizeof(cmd),
-				  &resp, sizeof(resp), sizeof(resp));
+	rc = ibv_cmd_modify_qp(ibqp, attr, attr_mask, &cmd, sizeof(cmd));
 	if (rc)
 		goto err_cmd;
 
