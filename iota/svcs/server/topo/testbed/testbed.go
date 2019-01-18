@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 
@@ -279,7 +280,7 @@ func AllocateVLANS(switchPortID uint32) (vlans []uint32, err error) {
 	return
 }
 
-// InitSSHConfig establishes the SSH Config requrired for remote logging in of the nodes
+// InitSSHConfig establishes the SSH Config required for remote logging in of the nodes
 func InitSSHConfig(user, pass string) *ssh.ClientConfig {
 	return &ssh.ClientConfig{
 		User: user,
@@ -290,9 +291,10 @@ func InitSSHConfig(user, pass string) *ssh.ClientConfig {
 				for n := range questions {
 					answers[n] = pass
 				}
-
 				return answers, nil
 			}),
-		}, HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Second * 30,
 	}
 }
