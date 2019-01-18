@@ -25,8 +25,8 @@ storage_seq_comp_status_desc1_handler_start:
     SEQ_METRICS0_TABLE1_COMMIT(SEQ_KIVEC5_SRC_QADDR)
 
     phvwrpair	p.seq_kivec5_data_len, d.data_len, \
-                p.{seq_kivec5_stop_chain_on_error...seq_kivec5_chain_alt_desc_on_error}, \
-    	        d.{stop_chain_on_error...chain_alt_desc_on_error}
+                p.{seq_kivec5_stop_chain_on_error...seq_kivec5_integ_data_null_en}, \
+    	        d.{stop_chain_on_error...integ_data_null_en}
     phvwr	p.seq_kivec3_comp_buf_addr, d.comp_buf_addr
 
 if0:

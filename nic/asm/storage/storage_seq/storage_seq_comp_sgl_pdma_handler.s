@@ -23,6 +23,11 @@ struct phv_ p;
 #define r_last_dma_cmd_ptr          r7  // pointer to last TxDMA descriptor in flit
 
 /*
+ * Registers reuse, pre 1st series of PDMA transfer
+ */
+#define r_comp_buf_addr             r3  // pointer to comp buffer address
+ 
+/*
  * Registers reuse, post 1st series of PDMA transfer
  */
 #define r_sgl_rem_len               r_src_len   // SGL tuple remaining length
@@ -42,10 +47,32 @@ struct phv_ p;
 
 storage_seq_comp_sgl_pdma_xfer:
 
+
+    // Note: this function is a common entry point for both SGL PDMA xfer
+    // and integrity data write.
+    
+    bbeq        SEQ_KIVEC5_INTEG_DATA0_WR_EN, 0, possible_sgl_pdma
+    seq         c3, SEQ_KIVEC5_INTEG_DATA_NULL_EN, 1    // delay slot
+    phvwr.c3	p.integ_data0_len, r0
+    
+    add         r_comp_buf_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0
+    DMA_PHV2MEM_SETUP(integ_data0_len,
+                      integ_data0_len,
+                      r_comp_buf_addr, dma_p2m_18)
+                      
+    // Fence to ensure PDMA mem2mem completes before writing integ_data0.
+    // The last op is DB/intr which must become a fence fence.
+    DMA_PHV2MEM_FENCE(dma_p2m_18)
+    DMA_PHV2MEM_FENCE_FENCE(dma_p2m_19)
+    SEQ_METRICS_SET(integ_data0_writes)
+
+possible_sgl_pdma:    
+    bbeq        SEQ_KIVEC5_SGL_PDMA_EN, 0, exit
+
    //  r_src_len stores the running count of data remaining to be xfered
    //  r_src_addr stores the offeset of the source data buffer from where
    //  the current xfer is to be done.
-   add          r_src_len, SEQ_KIVEC5_DATA_LEN, r0
+   add          r_src_len, SEQ_KIVEC5_DATA_LEN, r0      // delay slot
    seq          c1, SEQ_KIVEC8_ALT_BUF_ADDR_EN, 1
    add.c1	r_src_addr, SEQ_KIVEC8_ALT_BUF_ADDR, r0
    add.!c1	r_src_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0

@@ -21,16 +21,36 @@ struct phv_ p;
  */
 #define r_pad_len                   r3  // padding length
 #define r_pad_dest                  r4  // pointer to destination to apply padding
+#define r_comp_buf_addr             r5  // pointer to comp buffer address
 #define r_src_qaddr                 r7  // for SEQ_METRICS_TABLE_COMMIT
 
 %%
     SEQ_METRICS_PARAMS()
 
 storage_seq_comp_sgl_pad_only_xfer:
+
+    // Note: this function is a common entry point for both SGL pad-only xfer
+    // and integrity data write.
+    
+    bbeq        SEQ_KIVEC5_INTEG_DATA0_WR_EN, 0, possible_sgl_pad
+    seq         c3, SEQ_KIVEC5_INTEG_DATA_NULL_EN, 1            // delay slot
+    phvwr.c3	p.integ_data0_len, r0
+    
+    // No fence needed for integ_data0 since any prior PDMA mem2mem
+    // would only be pad data xfer and, presumably, be outside of
+    // the integ_data0 area.
+    add         r_comp_buf_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0
+    DMA_PHV2MEM_SETUP(integ_data0_len,
+                      integ_data0_len,
+                      r_comp_buf_addr, dma_p2m_18)
+    SEQ_METRICS_SET(integ_data0_writes)
+
+possible_sgl_pad:    
+    bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, exit
     
     // dst_addr to apply padding = d.addr0 + last_blk_len
     
-    add         r_pad_len, SEQ_KIVEC3_PAD_LEN, r0
+    add         r_pad_len, SEQ_KIVEC3_PAD_LEN, r0               // delay slot
     beq         r_pad_len, r0, exit
     add         r_pad_dest, d.addr0, SEQ_KIVEC3_LAST_BLK_LEN    // delay slot
 

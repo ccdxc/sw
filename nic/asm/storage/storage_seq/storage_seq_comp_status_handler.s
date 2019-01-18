@@ -57,10 +57,11 @@ storage_seq_comp_status_handler:
     add         r_status, d.status, r0
     smeqh       c4, r_status, 0xf000, 0x8000
     bcf         [!c4], comp_error
+    phvwr	p.integ_data0_len, d.integ_data0              // delay slot
    
     // Note: output_data_len contains compressed data length plus header length.
     
-    seq	        c3, SEQ_KIVEC5_DATA_LEN_FROM_DESC, 1        // delay slot
+    seq	        c3, SEQ_KIVEC5_DATA_LEN_FROM_DESC, 1
     cmov        r_comp_data_len, c3, SEQ_KIVEC5_DATA_LEN, d.output_data_len
     seq	        c3, r_comp_data_len, r0
     add.c3      r_comp_data_len, 65536, r0
@@ -215,9 +216,9 @@ endsw0:
     
 possible_sgl_pdma_xfer:
 
-    // PDMA compressed data
-    seq         c3, SEQ_KIVEC5_SGL_PDMA_EN, 1
-    bcf         [!c3], possible_barco_push
+    // PDMA compressed data and/or write integrity data to dest comp buffer
+    seq         c3, SEQ_KIVEC5_INTEG_DATA0_WR_EN, 0
+    bbeq.c3     SEQ_KIVEC5_SGL_PDMA_EN, 0, possible_barco_push
     phvwr.!c6   p.seq_kivec3_pad_len, r0        // delay slot
     bbeq        SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 0, sgl_pdma_xfer_full
     nop

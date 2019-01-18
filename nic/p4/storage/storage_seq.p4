@@ -119,6 +119,8 @@ metadata storage_capri_len32_t last_blk_len;
 @pragma dont_trim
 metadata storage_capri_len8_t null_byte;
 @pragma dont_trim
+metadata storage_capri_len32_t integ_data0;
+@pragma dont_trim
 @pragma pa_align 512
 metadata barco_sgl_tuple2_pad_t barco_sgl_tuple2_pad;
 @pragma dont_trim
@@ -605,7 +607,8 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
                                      data_len_from_desc, aol_pad_en, sgl_pad_en,
                                      sgl_sparse_format_en, sgl_pdma_en, sgl_pdma_pad_only,
 				     sgl_pdma_alt_src_on_error, desc_vec_push_en,
-				     chain_alt_desc_on_error) {
+				     chain_alt_desc_on_error, integ_data0_wr_en,
+				     integ_data_null_en) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC5_USE(seq_kivec5_scratch, seq_kivec5)
@@ -630,6 +633,8 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_comp_status_desc1_scratch.sgl_pdma_alt_src_on_error, sgl_pdma_alt_src_on_error);
   modify_field(seq_comp_status_desc1_scratch.desc_vec_push_en, desc_vec_push_en);
   modify_field(seq_comp_status_desc1_scratch.chain_alt_desc_on_error, chain_alt_desc_on_error);
+  modify_field(seq_comp_status_desc1_scratch.integ_data0_wr_en, integ_data0_wr_en);
+  modify_field(seq_comp_status_desc1_scratch.integ_data_null_en, integ_data_null_en);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(seq_kivec5.pad_buf_addr, seq_comp_status_desc1_scratch.pad_buf_addr);
@@ -645,6 +650,8 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_kivec5.sgl_pdma_alt_src_on_error, seq_comp_status_desc1_scratch.sgl_pdma_alt_src_on_error);
   modify_field(seq_kivec5.desc_vec_push_en, seq_comp_status_desc1_scratch.desc_vec_push_en);
   modify_field(seq_kivec5.chain_alt_desc_on_error, seq_comp_status_desc1_scratch.chain_alt_desc_on_error);
+  modify_field(seq_kivec5.integ_data0_wr_en, seq_comp_status_desc1_scratch.integ_data0_wr_en);
+  modify_field(seq_kivec5.integ_data_null_en, seq_comp_status_desc1_scratch.integ_data_null_en);
   modify_field(seq_kivec8.alt_buf_addr, seq_comp_status_desc1_scratch.alt_buf_addr);
 }
 
@@ -653,8 +660,9 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
  *                           SGL address for next stage to do the PDMA.
  *****************************************************************************/
 
-@pragma little_endian status output_data_len rsvd
-action seq_comp_status_handler(status, output_data_len, rsvd) {
+@pragma little_endian status output_data_len partial_data integ_data0 integ_data1
+action seq_comp_status_handler(status, output_data_len, partial_data,
+                               integ_data0, integ_data1) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC2_USE(seq_kivec2_scratch, seq_kivec2)
@@ -664,7 +672,9 @@ action seq_comp_status_handler(status, output_data_len, rsvd) {
   // For D vector generation (type inference). No need to translate this to ASM.
   modify_field(seq_comp_status_scratch.status, status);
   modify_field(seq_comp_status_scratch.output_data_len, output_data_len);
-  modify_field(seq_comp_status_scratch.rsvd, rsvd);
+  modify_field(seq_comp_status_scratch.partial_data, partial_data);
+  modify_field(seq_comp_status_scratch.integ_data0, integ_data0);
+  modify_field(seq_comp_status_scratch.integ_data1, integ_data1);
 
   // Store the data length in the K+I vector for later use if the descriptor
   // has not provided this information
@@ -1228,11 +1238,12 @@ action seq_metrics1_commit(aol_pad_reqs, sgl_pad_reqs, sgl_pdma_xfers,
  *  seq_metrics2_commit : Update and commit metrics2 to qstate.
  *****************************************************************************/
 @pragma little_endian len_updates
-action seq_metrics2_commit(len_updates) {
+action seq_metrics2_commit(len_updates, integ_data0_writes) {
 			   
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC9_USE(seq_kivec9_scratch, seq_kivec9)
   
   modify_field(seq_metrics2.len_updates, len_updates);
+  modify_field(seq_metrics2.integ_data0_writes, integ_data0_writes);
 }
 

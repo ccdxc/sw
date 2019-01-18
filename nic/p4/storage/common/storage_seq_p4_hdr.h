@@ -79,7 +79,8 @@ header_type seq_q_state_metrics2_t {
 
     // CAUTION: order of fields must match seq_kivec9_t
     len_updates         : 64;
-    pad                 : 448;
+    integ_data0_writes  : 64;
+    pad                 : 384;
   }
 }
 
@@ -160,6 +161,8 @@ header_type seq_comp_status_desc1_t {
     sgl_pdma_alt_src_on_error:1;
     desc_vec_push_en:1;
     chain_alt_desc_on_error: 1;
+    integ_data0_wr_en: 1;
+    integ_data_null_en: 1;
   }
 }
 
@@ -184,7 +187,9 @@ header_type seq_comp_status_t {
   fields {
     status          : 16;   // Valid bit and error status
     output_data_len : 16;   // Output bits
-    rsvd            : 32;   // Reserved
+    partial_data    : 32;
+    integ_data0     : 32;
+    integ_data1     : 32;
   }
 }
 
@@ -500,6 +505,8 @@ header_type seq_kivec5_t {
     sgl_pdma_alt_src_on_error: 1;
     desc_vec_push_en    : 1;
     chain_alt_desc_on_error: 1;
+    integ_data0_wr_en   : 1;
+    integ_data_null_en  : 1;
   }
 }
 
@@ -581,6 +588,7 @@ header_type seq_kivec9_t {
     // CAUTION: order of fields must match seq_q_state_metrics2_t
     metrics2_start     : 1;
     len_updates        : 1;
+    integ_data0_writes : 1;
     metrics2_end       : 1;
   }
 }
@@ -678,6 +686,8 @@ header_type seq_kivec10_t {
   modify_field(scratch.sgl_pdma_pad_only, kivec.sgl_pdma_pad_only);     \
   modify_field(scratch.sgl_pdma_alt_src_on_error, kivec.sgl_pdma_alt_src_on_error);\
   modify_field(scratch.desc_vec_push_en, kivec.desc_vec_push_en);       \
+  modify_field(scratch.integ_data0_wr_en, kivec.integ_data0_wr_en);     \
+  modify_field(scratch.integ_data_null_en, kivec.integ_data_null_en);   \
 
 #define SEQ_KIVEC5XTS_USE(scratch, kivec)                               \
   modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
@@ -731,6 +741,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.metrics1_end, kivec.metrics1_end);               \
   modify_field(scratch.metrics2_start, kivec.metrics2_start);           \
   modify_field(scratch.len_updates, kivec.len_updates);                 \
+  modify_field(scratch.integ_data0_writes, kivec.integ_data0_writes);   \
   modify_field(scratch.metrics2_end, kivec.metrics2_end);               \
   
 #define SEQ_KIVEC10_USE(scratch, kivec)                                 \

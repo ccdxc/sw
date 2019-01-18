@@ -29,5 +29,5 @@ storage_seq_metrics2_commit:
     CLEAR_TABLE3                                        // delay slot
     
     SEQ_METRICS_TBLADD_c_e(c3, len_updates, SEQ_KIVEC9_LEN_UPDATES)
-
+    SEQ_METRICS_TBLADD_c_e(c3, integ_data0_writes, SEQ_KIVEC9_INTEG_DATA0_WRITES)
 
