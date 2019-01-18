@@ -748,6 +748,10 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 			SGL_PDMA_PPRINT(chain_params->ccp_aol_dst_vec_addr);
 		}
 
+	} else
+		chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
+
+	if (chn_service_has_interm_status(svc_info)) {
 		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
 				&chain_params->ccp_status_addr_0, 0);
 		if (err)
@@ -757,11 +761,9 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		if (err)
 			goto out;
 		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
-
 		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
-		chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
-	} else
-		chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
+        }
+	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 
 	if (svc_info->si_desc_flags & PNSO_CP_DFLAG_BYPASS_ONFAIL) {
 		chain_params->ccp_cmd.ccpc_chain_alt_desc_on_error = 1;
