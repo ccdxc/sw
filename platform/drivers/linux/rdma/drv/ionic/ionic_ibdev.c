@@ -449,8 +449,13 @@ static int ionic_pgtbl_umem(struct ionic_tbl_buf *buf, struct ib_umem *umem)
 	u64 page_size, page_dma;
 	int rc = 0, sg_i, page_i, page_count, page_shift;
 
+#ifdef HAVE_UMEM_PAGE_SHIFT
 	page_shift = umem->page_shift;
 	page_size = BIT_ULL(page_shift);
+#else
+	page_size = umem->page_size;
+	page_shift = order_base_2(page_size);
+#endif
 
 	for_each_sg(umem->sg_head.sgl, sg, umem->nmap, sg_i) {
 		page_dma = sg_dma_address(sg);
@@ -1184,7 +1189,7 @@ static struct net_device *ionic_get_netdev(struct ib_device *ibdev, u8 port)
 	return dev->ndev;
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
+#ifdef HAVE_REQUIRED_IB_GID
 static int ionic_query_gid(struct ib_device *ibdev, u8 port, int index,
 			   union ib_gid *gid)
 {
@@ -1199,29 +1204,30 @@ static int ionic_query_gid(struct ib_device *ibdev, u8 port, int index,
 	return rc;
 }
 
-/* XXX instead change ib_core ib_gid_to_network_type to const */
-static enum rdma_network_type
-const_ib_gid_to_network_type(enum ib_gid_type gid_type,
-			     const union ib_gid *gid)
-{
-	union ib_gid gid_copy = *gid;
-
-	return ib_gid_to_network_type(gid_type, &gid_copy);
-}
-
+#ifdef HAVE_IB_GID_DEV_PORT_INDEX
+static int ionic_add_gid(struct ib_device *ibdev, u8 port,
+			 unsigned int index, const union ib_gid *gid,
+			 const struct ib_gid_attr *attr, void **context)
+#else
 static int ionic_add_gid(const union ib_gid *gid,
 			 const struct ib_gid_attr *attr, void **context)
+#endif
 {
 	enum rdma_network_type net;
 
-	net = const_ib_gid_to_network_type(attr->gid_type, gid);
+	net = ib_gid_to_network_type(attr->gid_type, gid);
 	if (net != RDMA_NETWORK_IPV4 && net != RDMA_NETWORK_IPV6)
 		return -EINVAL;
 
 	return 0;
 }
 
+#ifdef HAVE_IB_GID_DEV_PORT_INDEX
+static int ionic_del_gid(struct ib_device *ibdev, u8 port,
+			 unsigned int index, void **context)
+#else
 static int ionic_del_gid(const struct ib_gid_attr *attr, void **context)
+#endif
 {
 	return 0;
 }
@@ -1465,27 +1471,34 @@ static int ionic_dealloc_pd(struct ib_pd *ibpd)
 	return 0;
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
 static int ionic_build_hdr(struct ionic_ibdev *dev,
 			   struct ib_ud_header *hdr,
 			   const struct rdma_ah_attr *attr)
 {
 	const struct ib_global_route *grh;
+#ifndef HAVE_AH_ATTR_CACHED_GID
 	struct ib_gid_attr sgid_attr;
 	union ib_gid sgid;
 	u8 smac[ETH_ALEN];
-	u16 vlan;
+#endif
 	enum rdma_network_type net;
+	u16 vlan;
 	int rc;
 
 	if (attr->ah_flags != IB_AH_GRH)
 		return -EINVAL;
 
+#ifdef HAVE_RDMA_AH_ATTR_TYPE_ROCE
 	if (attr->type != RDMA_AH_ATTR_TYPE_ROCE)
 		return -EINVAL;
+#endif
 
 	grh = rdma_ah_read_grh(attr);
 
+#ifdef HAVE_AH_ATTR_CACHED_GID
+	vlan = rdma_vlan_dev_vlan_id(grh->sgid_attr->ndev);
+	net = rdma_gid_attr_network_type(grh->sgid_attr);
+#else
 	rc = ib_get_cached_gid(&dev->ibdev, 1, grh->sgid_index,
 			       &sgid, &sgid_attr);
 	if (rc)
@@ -1501,119 +1514,71 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 	dev_put(sgid_attr.ndev); /* hold from ib_get_cached_gid */
 	sgid_attr.ndev = NULL;
 
-	if (net != const_ib_gid_to_network_type(sgid_attr.gid_type, &grh->dgid))
+	if (net != ib_gid_to_network_type(sgid_attr.gid_type, &grh->dgid))
 		return -EINVAL;
-
-	rc = ib_ud_header_init(0,	/* no payload */
-			       0,	/* no lrh */
-			       1,	/* yes eth */
-			       vlan != 0xffff,
-			       0,	/* no grh */
-			       net == RDMA_NETWORK_IPV4 ? 4 : 6,
-			       1,	/* yes udp */
-			       0,	/* no imm */
-			       hdr);
-	if (rc)
-		return rc;
-
-	ether_addr_copy(hdr->eth.smac_h, smac);
-	ether_addr_copy(hdr->eth.dmac_h, attr->roce.dmac);
-
-	if (net == RDMA_NETWORK_IPV4) {
-		hdr->eth.type = cpu_to_be16(ETH_P_IP);
-		hdr->ip4.tos = ionic_set_ecn(grh->traffic_class);
-		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
-		hdr->ip4.ttl = grh->hop_limit;
-		hdr->ip4.tot_len = 65535;
-		hdr->ip4.saddr = *(const __be32 *)(sgid.raw + 12);
-		hdr->ip4.daddr = *(const __be32 *)(grh->dgid.raw + 12);
-	} else {
-		hdr->eth.type = cpu_to_be16(ETH_P_IPV6);
-		hdr->grh.traffic_class = ionic_set_ecn(grh->traffic_class);
-		hdr->grh.flow_label = cpu_to_be32(grh->flow_label);
-		hdr->grh.hop_limit = grh->hop_limit;
-		hdr->grh.source_gid = sgid;
-		hdr->grh.destination_gid = grh->dgid;
-	}
-
-	if (vlan != 0xffff) {
-		vlan |= attr->sl << 13; /* 802.1q PCP */
-		hdr->vlan.tag = cpu_to_be16(vlan);
-		hdr->vlan.type = hdr->eth.type;
-		hdr->eth.type = cpu_to_be16(ETH_P_8021Q);
-	}
-
-	hdr->udp.sport = cpu_to_be16(49152); /* XXX hardcode val */
-	hdr->udp.dport = cpu_to_be16(ROCE_V2_UDP_DPORT);
-
-	return 0;
-}
-#else
-static int ionic_build_hdr(struct ionic_ibdev *dev,
-			   struct ib_ud_header *hdr,
-			   const struct rdma_ah_attr *attr)
-{
-	const struct ib_global_route *grh;
-	enum rdma_network_type net;
-	u16 vlan;
-	int rc;
-
-	if (attr->ah_flags != IB_AH_GRH)
-		return -EINVAL;
-
-	if (attr->type != RDMA_AH_ATTR_TYPE_ROCE)
-		return -EINVAL;
-
-	grh = rdma_ah_read_grh(attr);
-
-	vlan = rdma_vlan_dev_vlan_id(grh->sgid_attr->ndev);
-	net = rdma_gid_attr_network_type(grh->sgid_attr);
-
-	rc = ib_ud_header_init(0,	/* no payload */
-			       0,	/* no lrh */
-			       1,	/* yes eth */
-			       vlan != 0xffff,
-			       0,	/* no grh */
-			       net == RDMA_NETWORK_IPV4 ? 4 : 6,
-			       1,	/* yes udp */
-			       0,	/* no imm */
-			       hdr);
-	if (rc)
-		return rc;
-
-	ether_addr_copy(hdr->eth.smac_h, grh->sgid_attr->ndev->dev_addr);
-	ether_addr_copy(hdr->eth.dmac_h, attr->roce.dmac);
-
-	if (net == RDMA_NETWORK_IPV4) {
-		hdr->eth.type = cpu_to_be16(ETH_P_IP);
-		hdr->ip4.tos = ionic_set_ecn(grh->traffic_class);
-		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
-		hdr->ip4.ttl = grh->hop_limit;
-		hdr->ip4.tot_len = 65535;
-		hdr->ip4.saddr = *(const __be32 *)(grh->sgid_attr->gid.raw + 12);
-		hdr->ip4.daddr = *(const __be32 *)(grh->dgid.raw + 12);
-	} else {
-		hdr->eth.type = cpu_to_be16(ETH_P_IPV6);
-		hdr->grh.traffic_class = ionic_set_ecn(grh->traffic_class);
-		hdr->grh.flow_label = cpu_to_be32(grh->flow_label);
-		hdr->grh.hop_limit = grh->hop_limit;
-		hdr->grh.source_gid = grh->sgid_attr->gid;
-		hdr->grh.destination_gid = grh->dgid;
-	}
-
-	if (vlan != 0xffff) {
-		vlan |= attr->sl << 13; /* 802.1q PCP */
-		hdr->vlan.tag = cpu_to_be16(vlan);
-		hdr->vlan.type = hdr->eth.type;
-		hdr->eth.type = cpu_to_be16(ETH_P_8021Q);
-	}
-
-	hdr->udp.sport = cpu_to_be16(49152); /* XXX hardcode val */
-	hdr->udp.dport = cpu_to_be16(ROCE_V2_UDP_DPORT);
-
-	return 0;
-}
 #endif
+
+	rc = ib_ud_header_init(0,	/* no payload */
+			       0,	/* no lrh */
+			       1,	/* yes eth */
+			       vlan != 0xffff,
+			       0,	/* no grh */
+			       net == RDMA_NETWORK_IPV4 ? 4 : 6,
+			       1,	/* yes udp */
+			       0,	/* no imm */
+			       hdr);
+	if (rc)
+		return rc;
+
+#ifdef HAVE_AH_ATTR_CACHED_GID
+	ether_addr_copy(hdr->eth.smac_h, grh->sgid_attr->ndev->dev_addr);
+#else
+	ether_addr_copy(hdr->eth.smac_h, smac);
+#endif
+
+#ifdef HAVE_RDMA_AH_ATTR_TYPE_ROCE
+	ether_addr_copy(hdr->eth.dmac_h, attr->roce.dmac);
+#else
+	ether_addr_copy(hdr->eth.dmac_h, attr->dmac);
+#endif
+
+	if (net == RDMA_NETWORK_IPV4) {
+		hdr->eth.type = cpu_to_be16(ETH_P_IP);
+		hdr->ip4.tos = ionic_set_ecn(grh->traffic_class);
+		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
+		hdr->ip4.ttl = grh->hop_limit;
+		hdr->ip4.tot_len = 65535;
+#ifdef HAVE_AH_ATTR_CACHED_GID
+		hdr->ip4.saddr = *(const __be32 *)(grh->sgid_attr->gid.raw + 12);
+#else
+		hdr->ip4.saddr = *(const __be32 *)(sgid.raw + 12);
+#endif
+		hdr->ip4.daddr = *(const __be32 *)(grh->dgid.raw + 12);
+	} else {
+		hdr->eth.type = cpu_to_be16(ETH_P_IPV6);
+		hdr->grh.traffic_class = ionic_set_ecn(grh->traffic_class);
+		hdr->grh.flow_label = cpu_to_be32(grh->flow_label);
+		hdr->grh.hop_limit = grh->hop_limit;
+#ifdef HAVE_AH_ATTR_CACHED_GID
+		hdr->grh.source_gid = grh->sgid_attr->gid;
+#else
+		hdr->grh.source_gid = sgid;
+#endif
+		hdr->grh.destination_gid = grh->dgid;
+	}
+
+	if (vlan != 0xffff) {
+		vlan |= attr->sl << 13; /* 802.1q PCP */
+		hdr->vlan.tag = cpu_to_be16(vlan);
+		hdr->vlan.type = hdr->eth.type;
+		hdr->eth.type = cpu_to_be16(ETH_P_8021Q);
+	}
+
+	hdr->udp.sport = cpu_to_be16(49152); /* XXX hardcode val */
+	hdr->udp.dport = cpu_to_be16(ROCE_V2_UDP_DPORT);
+
+	return 0;
+}
 
 static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 				  struct ionic_ah *ah,
@@ -1766,9 +1731,14 @@ static int ionic_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid)
 	}
 }
 
+#ifdef HAVE_CREATE_AH_UDATA
 static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 				     struct rdma_ah_attr *attr,
 				     struct ib_udata *udata)
+#else
+static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
+				     struct rdma_ah_attr *attr)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibpd->device);
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibpd->uobject);
@@ -1777,12 +1747,14 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	struct ionic_ah_resp resp = {};
 	int rc;
 
+#ifdef HAVE_CREATE_AH_UDATA
 	if (ctx)
 		rc = ionic_validate_udata(udata, 0, sizeof(resp));
 	else
 		rc = ionic_validate_udata(udata, 0, 0);
 	if (rc)
 		goto err_ah;
+#endif
 
 	ah = kzalloc(sizeof(*ah), GFP_ATOMIC);
 	if (!ah) {
@@ -1801,15 +1773,19 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	if (ctx) {
 		resp.ahid = ah->ahid;
 
+#ifdef HAVE_CREATE_AH_UDATA
 		rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
 		if (rc)
 			goto err_resp;
+#endif
 	}
 
 	return &ah->ibah;
 
+#ifdef HAVE_CREATE_AH_UDATA
 err_resp:
 	ionic_destroy_ah_cmd(dev, ah->ahid);
+#endif
 err_cmd:
 	ionic_put_ahid(dev, ah->ahid);
 err_ahid:
@@ -3293,7 +3269,9 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 				.access_flags = cpu_to_be32(flags),
 				.rq_psn = attr->rq_psn,
 				.sq_psn = attr->sq_psn,
+#ifdef HAVE_QP_RATE_LIMIT
 				.rate_limit_kbps = cpu_to_le32(attr->rate_limit),
+#endif
 				.pmtu = (attr->path_mtu + 7), /* XXX add 7 on device */
 				.retry = attr->retry_cnt | (attr->rnr_retry << 4),
 				.rnr_timer = attr->min_rnr_timer,
@@ -4266,7 +4244,9 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 	attr->rnr_retry = query_buf->retry_rnrtry >> 4;
 	attr->alt_port_num = 0;
 	attr->alt_timeout = 0;
+#ifdef HAVE_QP_RATE_LIMIT
 	attr->rate_limit = le32_to_cpu(query_buf->rate_limit_kbps);
+#endif
 
 err_dma:
 	kfree(query_buf);
@@ -4318,7 +4298,9 @@ static int ionic_query_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 	init_attr->create_flags = 0;
 	init_attr->port_num = 0;
 	init_attr->rwq_ind_tbl = ibqp->rwq_ind_tbl;
+#ifdef HAVE_QP_INIT_SRC_QPN
 	init_attr->source_qpn = 0;
+#endif
 
 err_cmd:
 	return rc;
@@ -5075,57 +5057,51 @@ out:
 }
 
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
-static int ionic_post_send(struct ib_qp *ibqp,
-			   struct ib_send_wr *wr,
-			   struct ib_send_wr **bad)
-{
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibqp->device);
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibqp->uobject);
-	struct ionic_cq *cq = to_ionic_cq(ibqp->send_cq);
-	struct ionic_qp *qp = to_ionic_qp(ibqp);
-
-	return ionic_post_send_common(dev, ctx, cq, qp, wr,
-				      (const struct ib_send_wr **)bad);
-}
-
-static int ionic_post_recv(struct ib_qp *ibqp,
-			   struct ib_recv_wr *wr,
-			   struct ib_recv_wr **bad)
-{
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibqp->device);
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibqp->uobject);
-	struct ionic_cq *cq = to_ionic_cq(ibqp->recv_cq);
-	struct ionic_qp *qp = to_ionic_qp(ibqp);
-
-	return ionic_post_recv_common(dev, ctx, cq, qp, wr,
-				      (const struct ib_recv_wr **)bad);
-}
-#else
+#ifdef HAVE_CONST_IB_WR
 static int ionic_post_send(struct ib_qp *ibqp,
 			   const struct ib_send_wr *wr,
 			   const struct ib_send_wr **bad)
+#else
+static int ionic_post_send(struct ib_qp *ibqp,
+			   struct ib_send_wr *wr,
+			   struct ib_send_wr **bad)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibqp->device);
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibqp->uobject);
 	struct ionic_cq *cq = to_ionic_cq(ibqp->send_cq);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
 
+#ifdef HAVE_CONST_IB_WR
 	return ionic_post_send_common(dev, ctx, cq, qp, wr, bad);
+#else
+	return ionic_post_send_common(dev, ctx, cq, qp, wr,
+				      (const struct ib_send_wr **)bad);
+#endif
 }
 
+#ifdef HAVE_CONST_IB_WR
 static int ionic_post_recv(struct ib_qp *ibqp,
 			   const struct ib_recv_wr *wr,
 			   const struct ib_recv_wr **bad)
+#else
+static int ionic_post_recv(struct ib_qp *ibqp,
+			   struct ib_recv_wr *wr,
+			   struct ib_recv_wr **bad)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibqp->device);
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibqp->uobject);
 	struct ionic_cq *cq = to_ionic_cq(ibqp->recv_cq);
 	struct ionic_qp *qp = to_ionic_qp(ibqp);
 
+#ifdef HAVE_CONST_IB_WR
 	return ionic_post_recv_common(dev, ctx, cq, qp, wr, bad);
-}
+#else
+	return ionic_post_recv_common(dev, ctx, cq, qp, wr,
+				      (const struct ib_recv_wr **)bad);
 #endif
+}
 
 static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 				       struct ib_srq_init_attr *attr,
@@ -5198,7 +5174,11 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 		tbl_insert(&dev->qp_tbl, qp, qp->qpid);
 		mutex_unlock(&dev->tbl_lock);
 
+#ifdef HAVE_SRQ_EXT_CQ
 		cq = to_ionic_cq(attr->ext.cq);
+#else
+		cq = to_ionic_cq(attr->ext.xrc.cq);
+#endif
 		spin_lock_irqsave(&cq->lock, irqflags);
 		spin_unlock_irqrestore(&cq->lock, irqflags);
 	}
@@ -5249,7 +5229,11 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 		tbl_delete(&dev->qp_tbl, qp->qpid);
 		mutex_unlock(&dev->tbl_lock);
 
+#ifdef HAVE_SRQ_EXT_CQ
 		cq = to_ionic_cq(qp->ibsrq.ext.cq);
+#else
+		cq = to_ionic_cq(qp->ibsrq.ext.xrc.cq);
+#endif
 		spin_lock_irqsave(&cq->lock, irqflags);
 		ionic_clean_cq(cq, qp->qpid);
 		list_del(&qp->cq_flush_rq);
@@ -5264,38 +5248,36 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 	return 0;
 }
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
-static int ionic_post_srq_recv(struct ib_srq *ibsrq,
-			       struct ib_recv_wr *wr,
-			       struct ib_recv_wr **bad)
-{
-	struct ionic_ibdev *dev = to_ionic_ibdev(ibsrq->device);
-	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibsrq->uobject);
-	struct ionic_cq *cq = NULL;
-	struct ionic_qp *qp = to_ionic_srq(ibsrq);
-
-	if (ibsrq->ext.cq)
-		cq = to_ionic_cq(ibsrq->ext.cq);
-
-	return ionic_post_recv_common(dev, ctx, cq, qp, wr,
-				      (const struct ib_recv_wr **)bad);
-}
-#else
+#ifdef HAVE_CONST_IB_WR
 static int ionic_post_srq_recv(struct ib_srq *ibsrq,
 			       const struct ib_recv_wr *wr,
 			       const struct ib_recv_wr **bad)
+#else
+static int ionic_post_srq_recv(struct ib_srq *ibsrq,
+			       struct ib_recv_wr *wr,
+			       struct ib_recv_wr **bad)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibsrq->device);
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibsrq->uobject);
 	struct ionic_cq *cq = NULL;
 	struct ionic_qp *qp = to_ionic_srq(ibsrq);
 
+#ifdef HAVE_SRQ_EXT_CQ
 	if (ibsrq->ext.cq)
 		cq = to_ionic_cq(ibsrq->ext.cq);
-
-	return ionic_post_recv_common(dev, ctx, cq, qp, wr, bad);
-}
+#else
+	if (ibsrq->ext.xrc.cq)
+		cq = to_ionic_cq(ibsrq->ext.xrc.cq);
 #endif
+
+#ifdef HAVE_CONST_IB_WR
+	return ionic_post_recv_common(dev, ctx, cq, qp, wr, bad);
+#else
+	return ionic_post_recv_common(dev, ctx, cq, qp, wr,
+				      (const struct ib_recv_wr **)bad);
+#endif
+}
 
 static int ionic_get_port_immutable(struct ib_device *ibdev, u8 port,
 				    struct ib_port_immutable *attr)
@@ -5314,11 +5296,19 @@ static int ionic_get_port_immutable(struct ib_device *ibdev, u8 port,
 	return 0;
 }
 
+#ifdef HAVE_GET_DEV_FW_STR
+#ifdef HAVE_GET_DEV_FW_STR_LEN
+static void ionic_get_dev_fw_str(struct ib_device *ibdev, char *str,
+				 size_t str_len)
+#else
 static void ionic_get_dev_fw_str(struct ib_device *ibdev, char *str)
+#endif
 {
 	str[0] = 0;
 }
+#endif
 
+#ifdef HAVE_GET_VECTOR_AFFINITY
 static const struct cpumask *ionic_get_vector_affinity(struct ib_device *ibdev,
 						       int comp_vector)
 {
@@ -5329,6 +5319,7 @@ static const struct cpumask *ionic_get_vector_affinity(struct ib_device *ibdev,
 
 	return irq_get_affinity_mask(dev->eq_vec[comp_vector]->irq);
 }
+#endif
 
 static void ionic_port_event(struct ionic_ibdev *dev, enum ib_event_type event)
 {
@@ -6226,13 +6217,13 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		IB_DEVICE_MEM_MGT_EXTENSIONS |
 		IB_DEVICE_MEM_WINDOW_TYPE_2B |
 		0;
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
+#ifdef HAVE_IBDEV_MAX_SEND_RECV_SGE
+	dev->dev_attr.max_send_sge = ionic_v1_send_wqe_max_sge(dev->max_stride);
+	dev->dev_attr.max_recv_sge = ionic_v1_recv_wqe_max_sge(dev->max_stride);
+#else
 	dev->dev_attr.max_sge =
 		min(ionic_v1_send_wqe_max_sge(dev->max_stride),
 		    ionic_v1_recv_wqe_max_sge(dev->max_stride));
-#else
-	dev->dev_attr.max_send_sge = ionic_v1_send_wqe_max_sge(dev->max_stride);
-	dev->dev_attr.max_recv_sge = ionic_v1_recv_wqe_max_sge(dev->max_stride);
 #endif
 	dev->dev_attr.max_sge_rd = 0;
 	dev->dev_attr.max_cq = dev->inuse_cqid.inuse_size;
@@ -6266,12 +6257,17 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		dev->port_attr.state = IB_PORT_DOWN;
 		dev->port_attr.phys_state = PHYS_STATE_DOWN;
 	}
+#ifdef HAVE_NETDEV_MAX_MTU
 	dev->port_attr.max_mtu = ib_mtu_int_to_enum(ndev->max_mtu);
+#else
+	dev->port_attr.max_mtu = IB_MTU_4096;
+#endif
 	dev->port_attr.active_mtu = ib_mtu_int_to_enum(ndev->mtu);
 	dev->port_attr.gid_tbl_len = ionic_max_gid;
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
+#ifdef HAVE_IBDEV_PORT_CAP_FLAGS
 	dev->port_attr.port_cap_flags = IB_PORT_IP_BASED_GIDS;
-#else
+#endif
+#ifdef HAVE_IBDEV_IP_GIDS
 	dev->port_attr.ip_gids = true;
 #endif
 	dev->port_attr.max_msg_sz = 0x80000000;
@@ -6349,7 +6345,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		0;
 	ibdev->uverbs_ex_cmd_mask =
 		BIT_ULL(IB_USER_VERBS_EX_CMD_CREATE_QP)		|
+#ifdef HAVE_EX_CMD_MODIFY_QP
 		BIT_ULL(IB_USER_VERBS_EX_CMD_MODIFY_QP)		|
+#endif
 		0;
 
 	dev->ibdev.alloc_hw_stats	= ionic_alloc_hw_stats;
@@ -6359,7 +6357,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->ibdev.query_port		= ionic_query_port;
 	dev->ibdev.get_link_layer	= ionic_get_link_layer;
 	dev->ibdev.get_netdev		= ionic_get_netdev;
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,19,0))
+#ifdef HAVE_REQUIRED_IB_GID
 	dev->ibdev.query_gid		= ionic_query_gid;
 	dev->ibdev.add_gid		= ionic_add_gid;
 	dev->ibdev.del_gid		= ionic_del_gid;
@@ -6408,14 +6406,22 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->ibdev.post_srq_recv	= ionic_post_srq_recv;
 
 	dev->ibdev.get_port_immutable	= ionic_get_port_immutable;
+#ifdef HAVE_GET_DEV_FW_STR
 	dev->ibdev.get_dev_fw_str	= ionic_get_dev_fw_str;
+#endif
+#ifdef HAVE_GET_VECTOR_AFFINITY
 	dev->ibdev.get_vector_affinity	= ionic_get_vector_affinity;
+#endif
 
 	if (ionic_xxx_noop) {
 		rc = ionic_noop_cmd(dev);
 		if (rc)
 			dev_err(&dev->ibdev.dev, "admin queue may be inoperable\n");
 	}
+
+#ifdef HAVE_REQUIRED_DMA_DEVICE
+	ibdev->dma_device = ibdev->dev.parent;
+#endif
 
 	rc = ib_register_device(ibdev, NULL);
 	if (rc)
