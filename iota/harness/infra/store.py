@@ -46,6 +46,7 @@ class Workload:
             self.ipv6_address = msg.ipv6_prefix.split('/')[0]
             self.mac_address = msg.mac_address
             self.interface = msg.interface
+            self.parent_interface = msg.parent_interface
             self.interface_type = msg.interface_type
             self.pinned_port = msg.pinned_port
             self.uplink_vlan = msg.uplink_vlan

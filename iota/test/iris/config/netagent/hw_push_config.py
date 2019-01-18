@@ -181,6 +181,7 @@ def __add_config_classic_workloads(req, target_node = None):
             wl_msg.pinned_port = 1
             wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
             wl_msg.interface = node_ifs[node][i]
+            wl_msg.parent_interface = node_ifs[node][i]
             wl_msg.workload_type = api.GetWorkloadTypeForNode(node)
             wl_msg.workload_image = api.GetWorkloadImageForNode(node)
 
@@ -212,6 +213,7 @@ def __add_config_classic_workloads(req, target_node = None):
                wl_msg.pinned_port = 1
                wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
                wl_msg.interface = node_ifs[node][i]
+               wl_msg.parent_interface = node_ifs[node][i]
                wl_msg.workload_type = api.GetWorkloadTypeForNode(node)
                wl_msg.workload_image = api.GetWorkloadImageForNode(node)
 
@@ -265,12 +267,17 @@ def __delete_classic_workloads(target_node = None):
         wl_msg = req.workloads.add()
         wl_msg.workload_name = wl.workload_name
         wl_msg.node_name = wl.node_name
+    if len(req.workloads):
+        resp = api.DeleteWorkloads(req, True)
+        if resp is None:
+            sys.exit(1)
 
 def __readd_classic_workloads(target_node = None):
     req = topo_svc.WorkloadMsg()
+    #pdb.set_trace()
     for wl in api.GetWorkloads():
         if target_node and target_node != wl.node_name:
-            api.Logger.info("Skipping delete workload for node %s" % wl.node_name)
+            api.Logger.info("Skipping add classic workload for node %s" % wl.node_name)
             continue
         req.workload_op = topo_svc.ADD
         wl_msg = req.workloads.add()
@@ -283,9 +290,14 @@ def __readd_classic_workloads(target_node = None):
         wl_msg.node_name = wl.node_name
         wl_msg.pinned_port = wl.pinned_port
         wl_msg.interface_type = wl.interface_type
-        wl_msg.interface = wl.interface
+        wl_msg.interface = wl.parent_interface
+        wl_msg.parent_interface = wl.parent_interface
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
+    if len(req.workloads):
+        resp = api.AddWorkloads(req, True)
+        if resp is None:
+            sys.exit(1)
 
 def __delete_workloads(target_node = None):
     ep_objs = netagent_api.QueryConfigs(kind='Endpoint')
