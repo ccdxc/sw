@@ -485,15 +485,6 @@ TEST_F(vrf_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
-    // Create nwsec
-    sp_spec1.mutable_key_or_handle()->set_profile_id(32);
-    sp_spec1.set_ipsg_en(false);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::securityprofile_create(sp_spec1, &sp_rsp1);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
-
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(3);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
@@ -554,14 +545,6 @@ TEST_F(vrf_test, test3)
     printf("ret: %d api_status: %d\n", ret, if_l2seg_rsp.api_status());
     ASSERT_TRUE(ret == HAL_RET_OK);
     hal::hal_cfg_db_close();
-
-    // Update vrf
-    ten_spec1.mutable_key_or_handle()->set_vrf_id(3);
-    ten_spec1.mutable_security_key_handle()->set_profile_handle(nwsec_hdl1);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::vrf_update(ten_spec1, &ten_rsp1);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
 }
 
 // ----------------------------------------------------------------------------
@@ -731,15 +714,6 @@ TEST_F(vrf_test, test5)
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
-
-    // Create nwsec
-    sp_spec1.mutable_key_or_handle()->set_profile_id(52);
-    sp_spec1.set_ipsg_en(false);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::securityprofile_create(sp_spec1, &sp_rsp1);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    // uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
 
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(5);
@@ -959,15 +933,6 @@ TEST_F(vrf_test, test8)
     ASSERT_TRUE(ret == HAL_RET_OK);
     uint64_t nwsec_hdl = sp_rsp.mutable_profile_status()->profile_handle();
 
-    // Create nwsec
-    sp_spec1.mutable_key_or_handle()->set_profile_id(82);
-    sp_spec1.set_ipsg_en(false);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::securityprofile_create(sp_spec1, &sp_rsp1);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
-    uint64_t nwsec_hdl1 = sp_rsp1.mutable_profile_status()->profile_handle();
-
     // Create vrf
     ten_spec.mutable_key_or_handle()->set_vrf_id(8);
     ten_spec.mutable_security_key_handle()->set_profile_handle(nwsec_hdl);
@@ -1042,14 +1007,6 @@ TEST_F(vrf_test, test8)
 
         }
     }
-
-    // Update vrf
-    ten_spec1.mutable_key_or_handle()->set_vrf_id(8);
-    ten_spec1.mutable_security_key_handle()->set_profile_handle(nwsec_hdl1);
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::vrf_update(ten_spec1, &ten_rsp1);
-    hal::hal_cfg_db_close();
-    ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Set device mode as Smart switch
     nic_req.mutable_device()->set_device_mode(device::DEVICE_MODE_MANAGED_HOST_PIN);
