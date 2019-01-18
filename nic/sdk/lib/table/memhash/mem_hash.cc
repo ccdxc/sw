@@ -134,7 +134,7 @@ mem_hash::genhash_(sdk_table_api_params_t *params) {
     uint32_t hw_key_len = 0;
     uint32_t hw_data_len = 0;
     p4pd_error_t p4pdret = P4PD_SUCCESS;
-    uint8_t hw_key[MEM_HASH_MAX_HW_KEY_LEN];
+    uint8_t hw_key[MEM_HASH_MAX_HW_KEY_LEN] = { 0 };
     uint32_t hash_32b = 0;
 
     if (params->hash_valid) {

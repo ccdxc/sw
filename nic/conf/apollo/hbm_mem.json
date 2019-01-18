@@ -32,26 +32,59 @@
         {
             "name": "local_ip_mapping",
             "size": "8192K",
-            "cache": "p4ig"
+            "cache": "p4ig",
+            "reset": true
         },
         {
             "name": "remote_vnic_mapping_rx",
             "size": "65536K",
-            "cache": "p4ig"
-        },
-        {
-            "name": "flow",
-            "size": "1048576K",
-            "cache": "p4ig"
+            "cache": "p4ig",
+            "reset": true
         },
         {
             "name": "remote_vnic_mapping_rx_ohash",
             "size": "16384K",
-            "cache": "p4ig"
+            "cache": "p4ig",
+            "reset": true
         },
         {
             "name": "local_ip_mapping_ohash",
             "size": "1024K",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "remote_vnic_mapping_tx",
+            "size": "65536K",
+            "cache": "p4eg",
+            "reset": true
+        },
+        {
+            "name": "remote_vnic_mapping_tx_ohash",
+            "size": "16384K",
+            "cache": "p4eg",
+            "reset": true
+        },
+        {
+            "name": "nat",
+            "size": "131072K",
+            "cache": "p4eg"
+        },
+        {
+            "name": "lpm_v4",
+            "_comment": "(1024+1) * (64 + 16 * 64 + 16 * 16 * 64)",
+            "size": "17908800B",
+            "element_size": "17472B",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "slacl",
+            "size": "264K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "flow",
+            "size": "1048576K",
             "cache": "p4ig"
         },
         {
@@ -63,33 +96,6 @@
             "name": "flow_stats",
             "size": "524288K",
             "cache": "p4ig"
-        },
-        {
-            "name": "remote_vnic_mapping_tx",
-            "size": "65536K",
-            "cache": "p4eg"
-        },
-        {
-            "name": "remote_vnic_mapping_tx_ohash",
-            "size": "16384K",
-            "cache": "p4eg"
-        },
-        {
-            "name": "nat",
-            "size": "131072K",
-            "cache": "p4eg"
-        },
-        {
-            "name": "slacl",
-            "size": "264K",
-            "cache": "p4plus-rxdma"
-        },
-        {
-            "name": "lpm_v4",
-            "_comment": "(1024+1) * (64 + 16 * 64 + 16 * 16 * 64)",
-            "size": "17908800B",
-            "element_size": "17472B",
-            "cache": "p4plus-txdma"
         },
         {
             "name": "udp_flow_overflow0",
