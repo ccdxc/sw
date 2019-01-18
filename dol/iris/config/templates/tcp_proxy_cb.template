@@ -33,9 +33,10 @@ snd_wnd     : 10000
 rcv_wnd     : 1000
 snd_wscale  : 0
 rcv_wscale  : 0
-snd_cwnd    : 10
-snd_cwnd_cnt : 9
-rcv_mss     : 9216
+snd_cwnd    : 10000
+snd_ssthresh: 4000
+rcv_mss     : 2000
+smss        : 2000
 source_port : 47273
 source_lif  : 0
 dest_port   : 80
@@ -79,3 +80,4 @@ debug_atomic4_incr7     : 0
 debug_atomic5_incr7     : 0
 debug_atomic6_incr7     : 0
 other_qid   : 0
+cc_flags  : 0

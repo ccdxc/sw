@@ -19,7 +19,7 @@ struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 
 %%
 
-    .param          tcp_rx_stage1_dummy
+    .param          tcp_rx_process_start
     .align
 tcp_rx_read_shared_stage0_start:
 #ifdef CAPRI_IGNORE_TIMESTAMP
@@ -40,18 +40,10 @@ tcp_rx_read_shared_stage0_start:
     phvwri.c1       p.p4_intr_global_drop, 1
     bcf             [c1], flow_terminate
 
-    /*
-     * Adjust quick based on acks sent in tx pipeline
-     *
-     * p.s1_s2s_quick_acks_decr = tx_quick_acks_decr - rx_quick_acks_decr
-     * rx_quick_acks_decr = tx_quick_acks_decr
-     */
-    sub             r1, d.quick_acks_decr, d.quick_acks_decr_old
-    tblwr           d.quick_acks_decr_old, d.quick_acks_decr
-    phvwr           p.s1_s2s_quick_acks_decr, r1
-
-    phvwr           p.s1_s2s_fin_sent, d.fin_sent
-    tblwr.f         d.fin_sent, 0
+    phvwrpair       p.s1_s2s_fin_sent, d.fin_sent, \
+                        p.s1_s2s_cc_rto_signal, d.rto_event
+    tblwr           d.fin_sent, 0
+    tblwr.f         d.rto_event, 0
 
     phvwr           p.s1_s2s_rst_sent, d.rst_sent
 
@@ -64,14 +56,16 @@ read_l7_proxy_cfg:
     phvwri.c2   p.common_phv_l7_proxy_type_redirect, 1
 #endif
 table_read_RX:
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_rx_stage1_dummy)
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+                tcp_rx_process_start, k.p4_rxdma_intr_qstate_addr,
+                TCP_TCB_RX_OFFSET, TABLE_SIZE_512_BITS)
 
     /* Setup the to-stage/stage-to-stage variables based
      * on the p42p4+ app header info
      */
     phvwrpair       p.s1_s2s_rcv_tsval[31:8], k.tcp_app_header_ts_s0_e23, \
                         p.s1_s2s_rcv_tsval[7:0], k.tcp_app_header_ts_s24_e31
-    phvwr           p.to_s4_rcv_tsecr, k.tcp_app_header_prev_echo_ts
+    phvwr           p.to_s3_rcv_tsecr, k.tcp_app_header_prev_echo_ts
 
     add             r1, r0, d.debug_dol
     smeqh           c1, r1, TCP_DDOL_TSOPT_SUPPORT, TCP_DDOL_TSOPT_SUPPORT
@@ -83,8 +77,7 @@ table_read_RX:
     phvwrpair       p.common_phv_debug_dol, d.debug_dol[7:0], \
                         p.common_phv_ecn_flags, d.ecn_flags_tx[1:0]
 
-    phvwr           p.s1_s2s_packets_out, d.packets_out
-    phvwr           p.to_s2_serq_cidx, d.serq_cidx
+    phvwr           p.to_s1_serq_cidx, d.serq_cidx
 
     phvwr.f.e       p.to_s6_payload_len, k.tcp_app_header_payload_len
     nop

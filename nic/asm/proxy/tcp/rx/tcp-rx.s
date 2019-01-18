@@ -9,11 +9,11 @@
 #include "tcp_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s2_t0_tcp_rx_k.h"
+#include "INGRESS_s1_t0_tcp_rx_k.h"
 
 struct phv_ p;
-struct s2_t0_tcp_rx_k_ k;
-struct s2_t0_tcp_rx_d d;
+struct s1_t0_tcp_rx_k_ k;
+struct s1_t0_tcp_rx_d d;
 
 %%
     .param          tcp_ack_start
@@ -36,16 +36,11 @@ tcp_rx_process_start:
 #endif
 
     /*
-     * Adjust quick based on acks sent in tx pipeline
-     */
-    tblssub         d.u.tcp_rx_d.quick, k.s1_s2s_quick_acks_decr
-
-    /*
      * Fast Path checks
      */
     sne             c1, d.u.tcp_rx_d.state, TCP_ESTABLISHED
     seq.!c1         c1, k.s1_s2s_fin_sent, 1
-    sne             c2, d.u.tcp_rx_d.rcv_nxt, k.to_s2_seq
+    sne             c2, d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_seq
     scwlt           c3, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
 
     // disable timestamp checking for now
@@ -57,7 +52,7 @@ tcp_rx_process_start:
      */
     add             r2, d.u.tcp_rx_d.serq_pidx, 1
     and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
-    seq             c4, r2, k.to_s2_serq_cidx
+    seq             c4, r2, k.to_s1_serq_cidx
 
     /*
      * Header Prediction
@@ -84,7 +79,7 @@ tcp_store_ts_recent:
      *      tcp_store_ts_recent(tp)
      *
      */
-    seq             c1, k.to_s2_rcv_wup, d.u.tcp_rx_d.rcv_nxt
+    seq             c1, k.to_s1_rcv_wup, d.u.tcp_rx_d.rcv_nxt
     tblwr.c1        d.u.tcp_rx_d.ts_recent, k.s1_s2s_rcv_tsval
 
     /*
@@ -162,7 +157,7 @@ table_read_setup_next:
     phvwr           p.rx2tx_extra_rcv_mss, d.u.tcp_rx_d.rcv_mss
     phvwr           p.rx2tx_extra_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr           p.rx2tx_extra_state, d.u.tcp_rx_d.state
-    phvwr           p.to_s3_flag, d.u.tcp_rx_d.flag
+    phvwr           p.to_s2_flag, d.u.tcp_rx_d.flag
 flow_cpu_rx_process_done:
     /*
      * c7 = drop
@@ -213,98 +208,6 @@ tcp_rx_end:
     nop
 
 
-
-tcp_ecn_check_ce:
-    sne             c4, r7, r0
-
-    add             r1, k.to_s2_ip_dsfield, r0
-    andi            r1, r1, INET_ECN_MASK
-
-    smeqb           c5, r1, INET_ECN_NOT_ECT, INET_ECN_NOT_ECT
-    smeqb           c4, r1, INET_ECN_ECT_1, INET_ECN_ECT_1
-    smeqb           c3, r1, INET_ECN_ECT_0, INET_ECN_ECT_0
-    smeqb           c2, r1, INET_ECN_CE, INET_ECN_CE
-
-    //.cscase   INET_ECN_NOT_ECT
-    setcf           c1, [c0]
-    smeqb.c5        c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN, TCP_ECN_SEEN
-    bal.c1          r7, tcp_enter_quickack_mode
-    nop
-
-    //.cscase INET_ECN_ECT_1
-    setcf           c1,[c0]
-    smeqb.c4        c1, d.u.tcp_rx_d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
-    addi.c1         r2, r0, CA_EVENT_ECN_NO_CE
-    //phvwr.c1        p.common_phv_ca_event, r2
-    tblor.c4        d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN
-
-    //.cscase INET_ECN_ECT_0
-    setcf           c1, [c0]
-    smeqb.c3        c1, d.u.tcp_rx_d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
-    addi.c1         r2, r0, CA_EVENT_ECN_NO_CE
-    //phvwr.c1        p.common_phv_ca_event, r2
-    tblor.c3        d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN
-
-    //.cscase INET_ECN_CE
-    setcf           c1, [c0]
-    smeqb.c2        c1, d.u.tcp_rx_d.ca_flags, TCP_CONG_NEEDS_ECN, TCP_CONG_NEEDS_ECN
-    addi.c1         r2, r0, CA_EVENT_ECN_IS_CE
-    //phvwr.c1        p.common_phv_ca_event, r2
-    setcf           c1, [c0]
-    smeqb.c2        c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_DEMAND_CWR, TCP_ECN_DEMAND_CWR
-    bal.!c1         r7, tcp_enter_quickack_mode
-    tblor.!c1       d.u.tcp_rx_d.ecn_flags, TCP_ECN_DEMAND_CWR
-    tblor           d.u.tcp_rx_d.ecn_flags, TCP_ECN_SEEN
-    //.csend
-
-tcp_ecn_check_ce_done:
-    jr.c4           r7
-    setcf           c4,[!c0]
-
-tcp_incr_quickack:
-    /* unsigned int quickacks = tp->fc.rcv_wnd / (2 * tp->rx_opt.rcv_mss); */
-
-    /* rcv_mss_shft = 1 for 1.5k (rounded to 2k), 3 for 9k (rounded to 8k) */
-
-    add             r2, k.s1_s2s_rcv_mss_shft, RCV_MSS_SHFT_BASE
-    sll             r1, r2, k.s1_s2s_window
-
-    /* r1 = quickacks */
-
-    /*
-       if (quickacks == 0)
-        quickacks = 2;
-     *
-     */
-
-    seq.c1          c2, r1, r0
-    addi.c2         r1, r0, 2
-    /*
-       if (quickacks > tp->tx.quick)
-           /* Maximal number of ACKs sent quickly to accelerate slow-start. *
-       #define TCP_MAX_QUICKACKS       16U
-
-       tp->tx.quick = min(quickacks, TCP_MAX_QUICKACKS);
-     */
-    slt             c2, d.u.tcp_rx_d.quick,r1
-    addi            r2, r0, TCP_MAX_QUICKACKS
-    slt.c2          c3, r2, r1
-    tblwr.c3        d.u.tcp_rx_d.quick, TCP_MAX_QUICKACKS
-    tblwr.!c3       d.u.tcp_rx_d.quick, r1
-
-    jr              r7
-    tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
-
-tcp_enter_quickack_mode:
-    bal             r7, tcp_incr_quickack
-    nop
-    tblwr           d.u.tcp_rx_d.pingpong, r0
-    phvwr           p.common_phv_pingpong, d.u.tcp_rx_d.pingpong
-    tblwr           d.u.tcp_rx_d.ato, TCP_ATO_MIN
-    sne             c4, r7, r0
-    jr.c4           r7
-    add             r7, r0, r0
-
 tcp_rx_slow_path:
     tbladd          d.{u.tcp_rx_d.slow_path_cnt}.hx, 1
     seq             c1, k.s1_s2s_payload_len, r0
@@ -331,7 +234,7 @@ tcp_rx_slow_path:
 
     seq             c2, d.u.tcp_rx_d.state, TCP_LISTEN
     phvwri.c2       p.common_phv_write_tcp_app_hdr,1
-    phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.{to_s2_seq}.wx
+    phvwr.c2        p.cpu_hdr2_tcp_seqNo, k.{s1_s2s_seq}.wx
     phvwr.c2        p.{cpu_hdr2_tcp_AckNo_1,cpu_hdr3_tcp_AckNo_2}, k.{s1_s2s_ack_seq}.wx
     phvwr.c2        p.cpu_hdr2_tcp_flags, k.common_phv_flags
 
@@ -346,7 +249,7 @@ tcp_rx_slow_path:
      * but send ack. We don't partially accept unacknowledged bytes yet,
      * the entire frame is dropped.
      */
-    sne             c1, k.to_s2_seq, d.u.tcp_rx_d.rcv_nxt
+    sne             c1, k.s1_s2s_seq, d.u.tcp_rx_d.rcv_nxt
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
     phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
@@ -366,7 +269,7 @@ tcp_rx_slow_path:
     sne             c1, k.s1_s2s_payload_len, r0
     add             r2, d.u.tcp_rx_d.serq_pidx, 1
     and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
-    seq             c2, r2, k.to_s2_serq_cidx
+    seq             c2, r2, k.to_s1_serq_cidx
     setcf           c7, [c1 & c2]
     tbladd.c7       d.{u.tcp_rx_d.serq_full_cnt}.hx, 1
     phvwri.c7       p.p4_intr_global_drop, 1
@@ -438,13 +341,19 @@ tcp_rx_slow_path_post_fin_handling:
             goto slow_path  ;
     }
     */
-    sub             r1, r4, d.u.tcp_rx_d.ts_recent
-    slt             c1, r1, r0
-    bcf             [c1],slow_path
-    nop
+    //sub             r1, r4, d.u.tcp_rx_d.ts_recent
+    //slt             c1, r1, r0
+    //bcf             [c1],slow_path
+    //nop
 
     seq             c1, k.s1_s2s_payload_len, r0
-    b.c1            flow_rx_process_done
+    // Handle data in FIN_WAIT states
+    seq             c2, d.u.tcp_rx_d.state, TCP_FIN_WAIT1
+    seq.!c2         c2, d.u.tcp_rx_d.state, TCP_FIN_WAIT2
+    bcf             [!c1 & c2], tcp_rx_fast_path
+    nop
+
+    b               flow_rx_process_done
     nop
 
 flow_rx_drop:
@@ -470,7 +379,7 @@ tcp_rx_rst_handling:
     // check for serq full
     add             r2, d.u.tcp_rx_d.serq_pidx, 1
     and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
-    seq             c7, r2, k.to_s2_serq_cidx
+    seq             c7, r2, k.to_s1_serq_cidx
     tbladd.c7       d.{u.tcp_rx_d.serq_full_cnt}.hx, 1
     phvwri.c7       p.p4_intr_global_drop, 1
     b.c7            flow_rx_process_done

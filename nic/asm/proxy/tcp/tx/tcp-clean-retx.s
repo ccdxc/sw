@@ -18,14 +18,14 @@ struct s3_t0_tcp_tx_retx_d d;
 
 %%
     .align
-    .param          tcp_cc_and_fra_process_start
+    .param          tcp_xmit_process_start
     .param          tcp_tx_read_nmdr_gc_idx_start
     .param          TCP_PROXY_STATS
 
 tcp_clean_retx_process_start:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
-                        tcp_cc_and_fra_process_start, k.common_phv_qstate_addr,
-                        TCP_TCB_CC_AND_FRA_OFFSET, TABLE_SIZE_512_BITS)
+                        tcp_xmit_process_start, k.common_phv_qstate_addr,
+                        TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 
 tcp_retx_snd_una_update:
     seq             c1, k.t0_s2s_clean_retx_state, TCP_RST
@@ -132,13 +132,14 @@ tcp_retx_cleanup_sesq:
     // increment retx_ci before writing
     add             r2, k.to_s3_sesq_retx_ci, 0
     mincr           r2, CAPRI_SESQ_RING_SLOTS_SHIFT, r5
-    // write new sesq retx ci into TCP producer (TLS for example)
-    memwr.h         d.sesq_ci_addr, r2
     // write new sesq retx ci value into TCP CB
     memwr.h         r1, r2
     // remove barrier
     add             r1, r1, 4
     memwr.b         r1, 0
+    // write new sesq retx ci into TCP producer (TLS for example)
+    add             r1, r0, d.sesq_ci_addr
+    memwr.h         r1, r2
 tcp_retx_cleanup_sesq_end:
 
     /*
@@ -227,13 +228,14 @@ tcp_retx_rst_cleanup_sesq:
     // increment retx_ci before writing
     add             r2, k.to_s3_sesq_retx_ci, 0
     mincr           r2, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
-    // write new sesq retx ci into TCP producer (TLS for example)
-    memwr.h         d.sesq_ci_addr, r2
     // write new sesq retx ci value into TCP CB
     memwr.h         r1, r2
     // remove barrier
     add             r1, r1, 4
     memwr.h         r1, 0
+    // write new sesq retx ci into TCP producer (TLS for example)
+    add             r1, r0, d.sesq_ci_addr
+    memwr.h         r1, r2
 tcp_retx_rst_cleanup_sesq_end:
 
     b               free_descriptor

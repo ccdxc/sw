@@ -41,50 +41,25 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         quick_acks_decr                 : 4                     ;\
         fin_sent                        : 1                     ;\
         rst_sent                        : 1                     ;\
-        pad1_tx2rx                      : 2                     ;\
+        rto_event                       : 1                     ;\
+        pad1_tx2rx                      : 1                     ;\
 
-
+// offset 0 (TCP_TCB_RX2TX_EXTRA_SND_CWND_OFFSET)
 #define RX2TX_SHARED_EXTRA_STATE \
+        snd_cwnd                        : 32                    ;\
         rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
         snd_wnd                         : 16                    ;\
         rcv_wnd                         : 16                    ;\
         rto                             : 16                    ;\
         snd_una                         : SEQ_NUMBER_WIDTH      ;\
         rcv_tsval                       : TS_WIDTH              ;\
-        srtt_us                         : TS_WIDTH              ;\
-        prior_ssthresh                  : WINDOW_WIDTH          ;\
-        high_seq                        : SEQ_NUMBER_WIDTH      ;\
-        ooo_datalen                     : COUNTER16             ;\
-        reordering                      : COUNTER32             ;\
-        undo_retrans                    : SEQ_NUMBER_WIDTH      ;\
-        snd_ssthresh                    : WINDOW_WIDTH          ;\
-        loss_cwnd                       : WINDOW_WIDTH          ;\
-        write_seq                       : SEQ_NUMBER_WIDTH      ;\
         rcv_mss                         : 16                    ;\
+        cc_flags                        : 16                    ;\
         state                           : 8                     ;\
-        ca_state                        : 8                     ;\
-        ecn_flags                       : 8                     ;\
-        num_sacks                       : 8                     ;\
         pending_dup_ack_send            : 1                     ;\
         pending_challenge_ack_send      : 1                     ;\
-        pending_sync_mss                : 1                     ;\
-        pending_tso_pmtu_probe          : 1                     ;\
-        pending_tso_data                : 1                     ;\
-        pending_tso_probe_data          : 1                     ;\
-        pending_tso_probe               : 1                     ;\
-        pending_ooo_se_recv             : 1                     ;\
-        pending_tso_retx                : 1                     ;\
-        pending_rexmit                  : 2                     ;\
-        pending                         : 2                     ;\
-        ack_blocked                     : 1                     ;\
-        ack_pending                     : 3                     ;\
-        snd_wscale                      : 4                     ;\
-        rcv_mss_shft                    : 4                     ;\
-        quick                           : 4                     ;\
-        pingpong                        : 1                     ;\
-        pending_reset_backoff           : 1                     ;\
-        dsack                           : 1                     ;\
-        pad_rx2tx_extra                 : 13                    ;\
+        rx2tx_end_marker                : 6                     ;\
+        pad_rx2tx_extra                 : 288                   ;\
 
 #define TCB_RETX_SHARED_STATE \
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
@@ -96,27 +71,9 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         last_snd_wnd                    : 16                    ;\
         tx_rst_sent                     : 1                     ;\
 
-#define TCB_CC_AND_FRA_SHARED_STATE \
-        prr_out                 : 16;   \
-        prr_delivered           : 16;   \
-        last_time               : 32;   \
-        epoch_start             : 32;   \
-        cnt                     : 16;   \
-        last_max_cwnd           : 16;   \
-        snd_cwnd_cnt            : 16;   \
-        snd_cwnd_clamp          : 16;   \
-        snd_cwnd                : 16;   \
-        prior_cwnd              : 16;   \
-        last_cwnd               : 16;   \
-        tune_reordering         : 8;    \
-        sack_reordering         : 8;    \
-        max_packets_out         : 8;    \
-        ca_state                : 8;    \
-        delayed_ack             : 8;
-
 #define TCB_XMIT_SHARED_STATE \
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
-        snd_wscale                      : 16                    ;\
+        snd_wscale                      : 8                     ;\
         xmit_cursor_addr                : 40                    ;\
         sesq_tx_ci                      : 16                    ;\
         xmit_offset                     : 16                    ;\
@@ -125,6 +82,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         sacked_out                      : 16                    ;\
         retrans_out                     : 16                    ;\
         lost_out                        : 16                    ;\
+        smss                            : 16                    ;\
         is_cwnd_limited                 : 8                     ;\
         rto_backoff                     : 8                     ;\
         no_window                       : 1                     ;\
@@ -151,20 +109,12 @@ tx_ring_pi,\
 last_snd_wnd,\
 tx_rst_sent
 
-#define CC_AND_FRA_SHARED_PARAMS \
-prr_out,\
-prr_delivered, last_time, epoch_start, cnt,\
-last_max_cwnd, snd_cwnd_cnt, snd_cwnd_clamp,\
-snd_cwnd, prior_cwnd, last_cwnd,\
-tune_reordering, sack_reordering,\
-max_packets_out, ca_state, delayed_ack
-
 #define XMIT_SHARED_PARAMS \
 snd_nxt,snd_wscale,\
 xmit_cursor_addr, sesq_tx_ci,\
 xmit_offset, xmit_len,\
 packets_out, sacked_out, retrans_out, lost_out,\
-is_cwnd_limited, rto_backoff, no_window
+smss, is_cwnd_limited, rto_backoff, no_window
 
 #define TSO_PARAMS                                                        \
 ip_id, source_lif, source_port, dest_port, header_len,\
@@ -182,24 +132,6 @@ quick_acks_decr
     modify_field(retx_d.last_snd_wnd, last_snd_wnd); \
     modify_field(retx_d.tx_rst_sent, tx_rst_sent); \
 
-#define GENERATE_CC_AND_FRA_SHARED_D \
-    modify_field(cc_and_fra_d.prr_out, prr_out); \
-    modify_field(cc_and_fra_d.prr_delivered, prr_delivered); \
-    modify_field(cc_and_fra_d.last_time, last_time); \
-    modify_field(cc_and_fra_d.epoch_start, epoch_start); \
-    modify_field(cc_and_fra_d.cnt, cnt); \
-    modify_field(cc_and_fra_d.last_max_cwnd, last_max_cwnd); \
-    modify_field(cc_and_fra_d.snd_cwnd_cnt, snd_cwnd_cnt); \
-    modify_field(cc_and_fra_d.snd_cwnd_clamp, snd_cwnd_clamp); \
-    modify_field(cc_and_fra_d.snd_cwnd, snd_cwnd); \
-    modify_field(cc_and_fra_d.prior_cwnd, prior_cwnd); \
-    modify_field(cc_and_fra_d.last_cwnd, last_cwnd); \
-    modify_field(cc_and_fra_d.tune_reordering, tune_reordering); \
-    modify_field(cc_and_fra_d.sack_reordering, sack_reordering); \
-    modify_field(cc_and_fra_d.max_packets_out, max_packets_out); \
-    modify_field(cc_and_fra_d.ca_state, ca_state); \
-    modify_field(cc_and_fra_d.delayed_ack, delayed_ack); \
-
 #define GENERATE_XMIT_SHARED_D \
     modify_field(xmit_d.snd_nxt, snd_nxt); \
     modify_field(xmit_d.snd_wscale, snd_wscale); \
@@ -211,6 +143,7 @@ quick_acks_decr
     modify_field(xmit_d.sacked_out, sacked_out); \
     modify_field(xmit_d.retrans_out, retrans_out); \
     modify_field(xmit_d.lost_out, lost_out); \
+    modify_field(xmit_d.smss, smss); \
     modify_field(xmit_d.is_cwnd_limited, is_cwnd_limited); \
     modify_field(xmit_d.rto_backoff, rto_backoff); \
     modify_field(xmit_d.no_window, no_window); \

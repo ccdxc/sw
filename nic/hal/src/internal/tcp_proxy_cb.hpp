@@ -50,6 +50,7 @@ typedef struct tcpcb_s {
     uint32_t              snd_wnd;
     uint32_t              snd_cwnd;
     uint32_t              rcv_mss;
+    uint32_t              smss;
     uint16_t              source_port;
     uint16_t              dest_port;
     uint8_t               header_template[64];
@@ -133,6 +134,10 @@ typedef struct tcpcb_s {
     uint32_t              ato;
     uint32_t              ato_deadline;
     uint32_t              rto_deadline;
+    uint32_t              snd_ssthresh;
+    uint32_t              cc_algo;
+    uint32_t              snd_recover;
+    uint32_t              cc_flags;
 
     // PD state
     void                  *pd;                     // all PD specific state

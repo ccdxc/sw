@@ -135,8 +135,10 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     }
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
+    tcpcb->snd_ssthresh = spec.snd_ssthresh();
     tcpcb->snd_cwnd_cnt = spec.snd_cwnd_cnt();
     tcpcb->rcv_mss = spec.rcv_mss();
+    tcpcb->smss = spec.smss();
     tcpcb->source_port = spec.source_port();
     tcpcb->dest_port = spec.dest_port();
     tcpcb->header_len = spec.header_len();
@@ -225,8 +227,10 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->debug_dol_tx = spec.debug_dol_tx();
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
+    tcpcb->snd_ssthresh = spec.snd_ssthresh();
     tcpcb->snd_cwnd_cnt = spec.snd_cwnd_cnt();
     tcpcb->rcv_mss = spec.rcv_mss();
+    tcpcb->smss = spec.smss();
     tcpcb->source_port = spec.source_port();
     tcpcb->dest_port = spec.dest_port();
     tcpcb->state = spec.state();
@@ -425,6 +429,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_rcv_nxt(rtcpcb.rcv_nxt);
     rsp->mutable_spec()->set_rx_ts(rtcpcb.rx_ts);
     rsp->mutable_spec()->set_snd_nxt(rtcpcb.snd_nxt);
+    rsp->mutable_spec()->set_snd_recover(rtcpcb.snd_recover);
     rsp->mutable_spec()->set_snd_una(rtcpcb.snd_una);
     rsp->mutable_spec()->set_rcv_tsval(rtcpcb.rcv_tsval);
     rsp->mutable_spec()->set_ts_recent(rtcpcb.ts_recent);
@@ -438,8 +443,10 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_asesq_base(rtcpcb.asesq_base);
     rsp->mutable_spec()->set_snd_wnd(rtcpcb.snd_wnd);
     rsp->mutable_spec()->set_snd_cwnd(rtcpcb.snd_cwnd);
+    rsp->mutable_spec()->set_snd_ssthresh(rtcpcb.snd_ssthresh);
     rsp->mutable_spec()->set_snd_cwnd_cnt(rtcpcb.snd_cwnd_cnt);
     rsp->mutable_spec()->set_rcv_mss(rtcpcb.rcv_mss);
+    rsp->mutable_spec()->set_smss(rtcpcb.smss);
     rsp->mutable_spec()->set_source_port(rtcpcb.source_port);
     rsp->mutable_spec()->set_dest_port(rtcpcb.dest_port);
     rsp->mutable_spec()->set_header_len(rtcpcb.header_len);
@@ -519,6 +526,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_partial_ack_cnt(rtcpcb.partial_ack_cnt);
     rsp->mutable_stats()->set_rto_deadline(rtcpcb.rto_deadline);
     rsp->mutable_stats()->set_ato_deadline(rtcpcb.ato_deadline);
+    rsp->mutable_stats()->set_cc_flags(rtcpcb.cc_flags);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

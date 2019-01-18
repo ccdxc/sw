@@ -79,8 +79,9 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.asesq_ci                  = self.asesq_ci
            req_spec.snd_wnd                   = self.snd_wnd
            req_spec.snd_cwnd                  = self.snd_cwnd
-           req_spec.snd_cwnd_cnt              = self.snd_cwnd_cnt
+           req_spec.snd_ssthresh              = self.snd_ssthresh
            req_spec.rcv_mss                   = self.rcv_mss
+           req_spec.smss                      = self.smss
            req_spec.source_port               = self.source_port
            req_spec.dest_port                 = self.dest_port
            req_spec.state                     = self.state
@@ -121,8 +122,10 @@ class TcpCbObject(base.ConfigObjectBase):
             self.asesq_ci = resp_spec.spec.asesq_ci
             self.snd_wnd = resp_spec.spec.snd_wnd
             self.snd_cwnd = resp_spec.spec.snd_cwnd
-            self.snd_cwnd_cnt = resp_spec.spec.snd_cwnd_cnt
+            self.snd_ssthresh = resp_spec.spec.snd_ssthresh
+            self.snd_recover = resp_spec.spec.snd_recover
             self.rcv_mss = resp_spec.spec.rcv_mss
+            self.smss = resp_spec.spec.smss
             self.source_port = resp_spec.spec.source_port
             self.dest_port = resp_spec.spec.dest_port
             self.state = resp_spec.spec.state
@@ -161,6 +164,8 @@ class TcpCbObject(base.ConfigObjectBase):
             self.debug_atomic4_incr7 = resp_spec.stats.debug_atomic4_incr7
             self.debug_atomic5_incr7 = resp_spec.stats.debug_atomic5_incr7
             self.debug_atomic6_incr7 = resp_spec.stats.debug_atomic6_incr7
+
+            self.cc_flags = resp_spec.stats.cc_flags
 
         return
 

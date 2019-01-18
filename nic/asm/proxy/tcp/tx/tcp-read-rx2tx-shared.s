@@ -20,7 +20,6 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
     .param          tcp_tx_read_rx2tx_shared_extra_clean_retx_stage1_start
     .param          tcp_tx_sesq_read_ci_stage1_start
     .param          tcp_tx_sesq_read_retx_ci_stage1_start
-    .param          tcp_tx_process_read_xmit_start
 
 
 // mask ring clean_retx and pending_tx when barrier is set
@@ -91,7 +90,7 @@ tcp_tx_launch_sesq:
 
     tblmincri.f     d.{ci_0}.hx, CAPRI_SESQ_RING_SLOTS_SHIFT, 1
     phvwr           p.common_phv_debug_dol_bypass_barco, d.debug_dol_tx[TCP_TX_DDOL_BYPASS_BARCO_BIT]
-    phvwr           p.to_s5_sesq_tx_ci, r6
+    phvwr           p.to_s4_sesq_tx_ci, r6
 
     /*
      * Ring doorbell to set CI if pi == ci
@@ -199,7 +198,7 @@ tcp_tx_launch_pending_tx:
     // if sesq_tx_ci is invalid, quit
     bbeq            d.sesq_tx_ci[15], 1, tcp_tx_launch_pending_abort
 
-    phvwr           p.to_s5_window_open, 1
+    phvwr           p.to_s4_window_open, 1
     tblwr           d.{ci_0}.hx, d.sesq_tx_ci
     tblwr           d.sesq_tx_ci, TCP_TX_INVALID_SESQ_TX_CI
     b               tcp_tx_launch_sesq
@@ -304,7 +303,6 @@ pending_rx2tx_clean_asesq:
     sub             r2, CAPRI_ASESQ_RING_SLOTS, d.asesq_retx_ci
     slt             c1, r2, r1[CAPRI_ASESQ_RING_SLOTS_SHIFT-1:0]
     add.c1          r1, r0, r2
-    phvwr           p.to_s1_num_retx_pkts, r1[CAPRI_ASESQ_RING_SLOTS_SHIFT-1:0]
     phvwr           p.t0_s2s_clean_retx_num_retx_pkts, r1[CAPRI_ASESQ_RING_SLOTS_SHIFT-1:0]
 
     phvwri          p.common_phv_pending_asesq, 1
@@ -327,7 +325,6 @@ pending_rx2tx_clean_sesq:
     sub             r2, CAPRI_SESQ_RING_SLOTS, d.sesq_retx_ci
     slt             c1, r2, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
     add.c1          r1, r0, r2
-    phvwr           p.to_s1_num_retx_pkts, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
     phvwr           p.t0_s2s_clean_retx_num_retx_pkts, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
 
     /*
@@ -341,12 +338,8 @@ pending_rx2tx_clean_sesq_done:
     // barrier is set to non-zero here in stage 0, and set to 0 in stage 3.
     // Sometimes we see that barrier memwr to 0 in stage 3 overtakes the tblwr
     // in stage 0. This wrfence is to preserve the order
-    wrfence
+    wrfence.e
 
-    CAPRI_NEXT_TABLE_READ_OFFSET_e(2, TABLE_LOCK_DIS,
-                        tcp_tx_process_read_xmit_start,
-                        k.p4_txdma_intr_qstate_addr,
-                        TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
     nop
 
 clean_retx_flush_and_drop:

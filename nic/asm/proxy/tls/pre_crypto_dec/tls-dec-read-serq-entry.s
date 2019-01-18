@@ -22,7 +22,8 @@ struct tx_table_s1_t0_k k;
 
 
 tls_dec_read_serq_entry_process:
-    memwr.h     k.to_s1_serq_prod_ci_addr, k.to_s1_serq_ci
+    add         r1, r0, k.to_s1_serq_prod_ci_addr
+    memwr.h     r1, k.to_s1_serq_ci
     phvwr       p.to_s2_idesc, d.u.read_serq_entry_d.idesc[31:0]
     phvwrpair   p.to_s5_idesc, d.u.read_serq_entry_d.idesc[31:0], \
                 p.to_s6_idesc, d.u.read_serq_entry_d.idesc[31:0]

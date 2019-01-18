@@ -7,11 +7,11 @@
 #include "tcp-table.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s4_t1_tcp_rx_k.h"
+#include "INGRESS_s3_t1_tcp_rx_k.h"
 
 struct phv_ p;
-struct s4_t1_tcp_rx_k_ k;
-struct s4_t1_tcp_rx_rdesc_alloc_d d;
+struct s3_t1_tcp_rx_k_ k;
+struct s3_t1_tcp_rx_rdesc_alloc_d d;
 
 %%
     .align

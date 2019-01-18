@@ -18,15 +18,16 @@ struct s3_t0_tcp_tx_retx_d d;
 
 %%
     .align
-    .param          tcp_cc_and_fra_process_start
+    .param          tcp_xmit_process_start
+    .param          tcp_xmit_ack_process_start
     .param          tcp_tx_read_nmdr_gc_idx_start
 
 tcp_retx_process_start:
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
-                        tcp_cc_and_fra_process_start, k.common_phv_qstate_addr,
-                        TCP_TCB_CC_AND_FRA_OFFSET, TABLE_SIZE_512_BITS)
-
     bbeq            k.common_phv_pending_ack_send, 1, tcp_retx_ack_send
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+                        tcp_xmit_process_start,
+                        k.common_phv_qstate_addr,
+                        TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
 
     seq             c1, k.common_phv_pending_rto, 1
     seq             c2, k.common_phv_pending_fast_retx, 1
@@ -55,7 +56,7 @@ tcp_retx_enqueue:
 
 tcp_retx_retransmit:
     phvwr           p.t0_s2s_snd_nxt, d.retx_snd_una
-    phvwri          p.to_s6_pending_tso_data, 1
+    phvwri          p.to_s5_pending_tso_data, 1
     nop.e
     nop
 
@@ -69,6 +70,10 @@ tcp_retx_reschedule_tx:
     nop
 
 tcp_retx_ack_send:
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+                        tcp_xmit_ack_process_start,
+                        k.common_phv_qstate_addr,
+                        TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
     /*
      * Check if we need to send ack, else clear table_valid
      */

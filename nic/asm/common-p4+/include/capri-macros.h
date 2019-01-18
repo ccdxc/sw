@@ -557,12 +557,15 @@
         phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_PHV_TO_MEM;                   \
         phvwr       p.##_dma_cmd_prefix##_addr, __addr
 
+#define DMA_CACHE 1
+
 #define CAPRI_DMA_CMD_PHV2MEM_SETUP(_dma_cmd_prefix, __addr, _sfield, _efield)                  \
         phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \
                     ((CAPRI_PHV_END_OFFSET(_efield) << 18) |                                    \
                      (CAPRI_PHV_START_OFFSET(_sfield) << 8) |                                   \
+                     (DMA_CACHE << 5) |                                                         \
                      CAPRI_DMA_COMMAND_PHV_TO_MEM);                                             \
-        phvwrpair   p.##_dma_cmd_prefix##_addr, __addr, p.##_dma_cmd_prefix##_cache, 1
+        phvwr       p.##_dma_cmd_prefix##_addr, __addr
 
 #define CAPRI_DMA_CMD_PHV2MEM_SETUP_COND(_dma_cmd_prefix, __addr, _sfield, _efield, _cond)      \
         phvwri._cond p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \

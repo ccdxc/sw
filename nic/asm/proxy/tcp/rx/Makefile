@@ -13,7 +13,6 @@ ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/asm_out/
 ALT_ASM_HDR_DIR = $(GEN_DIR)/$(PROJ)/alt_asm_out/
 P4_DIR = $(TOPDIR)/p4/proxy
 COMMON_P4_DIR = $(TOPDIR)/p4/common-p4+
-INC_DIRS = -I. -I$(ALT_ASM_HDR_DIR) -I$(ASM_HDR_DIR) -I../include -I../../../common-p4+/include -I../../../cpu-p4plus/include -I$(TOPDIR)/include -I../../include
 SRC_DIR = .
 
 CAPSIM_BIN = ../../../../asic/capri/model/capsim-gen/bin/capsim
@@ -27,8 +26,9 @@ SRC_FILES := \
     $(SRC_DIR)/tcp-read-tx2rx-shared-ext.s \
     $(SRC_DIR)/tcp-rpage-alloc.s \
     $(SRC_DIR)/tcp-rtt.s \
-    $(SRC_DIR)/tcp-rx-stage1-dummy.s \
     $(SRC_DIR)/tcp-rx.s \
+    $(SRC_DIR)/tcp-cc.s \
+    $(SRC_DIR)/tcp-cc-newreno.s \
     $(SRC_DIR)/tcp-fc.s \
     $(SRC_DIR)/tcp-rx-stats.s \
     $(SRC_DIR)/tcp-slow-write-serq.s \

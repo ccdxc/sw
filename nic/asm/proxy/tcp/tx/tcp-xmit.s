@@ -10,11 +10,11 @@
 #include "tcp_common.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s5_t0_tcp_tx_k.h"
+#include "INGRESS_s4_t0_tcp_tx_k.h"
 
 struct phv_ p;
-struct s5_t0_tcp_tx_k_ k;
-struct s5_t0_tcp_tx_xmit_d d;
+struct s4_t0_tcp_tx_k_ k;
+struct s4_t0_tcp_tx_xmit_d d;
 
 %%
     .align
@@ -49,7 +49,7 @@ tcp_tx_enqueue:
      * If we have no window, bail out
      */
     seq             c1, d.no_window, 1
-    seq             c2, k.to_s5_window_open, 1
+    seq             c2, k.to_s4_window_open, 1
     bcf             [c1 & !c2], tcp_tx_end_program_and_drop
     nop
     tblwr           d.no_window, 0
@@ -60,16 +60,8 @@ tcp_tx_enqueue:
     bal.c1          r_linkaddr, tcp_tx_handle_fin
     nop
 
-    /* Check if cwnd allows transmit of data
-     * Return value in c_retval
-     */
-    bal             r_linkaddr, tcp_cwnd_test
-    nop
-    b.!c_retval     tcp_tx_no_window
-    nop
-
     /* 
-     * Check if peer rcv wnd allows transmit of data.
+     * Check if window allows transmit of data.
      * Return value in c_retval
      */
     bal             r_linkaddr, tcp_snd_wnd_test
@@ -80,7 +72,7 @@ tcp_tx_enqueue:
     /* Inform TSO stage following later to check for any data to
      * send from retx queue
      */
-    phvwri          p.to_s6_pending_tso_data, 1
+    phvwri          p.to_s5_pending_tso_data, 1
 
 flow_read_xmit_cursor_start:
     /* Get the point where we are supposed to read from */
@@ -97,13 +89,13 @@ rearm_rto:
     bbeq            k.common_phv_debug_dol_dont_start_retx_timer, 1, rearm_rto_done
 #endif
 
-    CAPRI_OPERAND_DEBUG(k.to_s5_rto)
+    CAPRI_OPERAND_DEBUG(k.to_s4_rto)
 
     /*
      * r2 = rto
      *    = min(rto << backoff, TCP_RTO_MAX)
      */
-    sll             r2, k.to_s5_rto, d.rto_backoff
+    sll             r2, k.to_s4_rto, d.rto_backoff
     slt             c1, r2, TCP_RTO_MAX_TICK
     add.!c1         r2, r0, TCP_RTO_MAX_TICK
 
@@ -135,52 +127,18 @@ flow_read_xmit_cursor_done:
     nop
 
 
-
-tcp_cwnd_test:
-    // TODO 
-    /* in_flight = packets_out - (sacked_out + lost_out) + retrans_out
-    */
-    /* r1 = packets_out + retrans_out */
-    add             r1, d.packets_out, d.retrans_out
-    /* r2 = left_out = sacked_out + lost_out */
-    add             r2, d.sacked_out, d.lost_out
-    /* r1 = in_flight = (packets_out + retrans_out) - (sacked_out + lost_out)*/
-    sub             r1, r1, r2
-    /* c1 = (in_flight >= cwnd) */
-    sle             c1, k.to_s5_snd_cwnd, r1
-    bcf             [c1], tcp_cwnd_test_done
-    /* no cwnd remaining */
-    addi.c1         r6, r0, 0
-    /* r6 = snd_cwnd >> 1 */
-    add             r6, k.to_s5_snd_cwnd, r0
-    srl             r6, r6, 1
-
-    addi            r5, r0, 1
-    slt             c2, r6,r5
-    add.c2          r6, r5, r0
-    /* at this point r6 = max(cwnd >> 1, 1) */
-    /* r5 = cwnd - in_flight */
-    sub             r5, k.to_s5_snd_cwnd, r1
-    slt             c2, r5, r6
-    add.c2          r6, r5, r0
-    /* At this point r6 = min((max(cwnd >>1, 1) , (cwnd - in_flight)) */
-tcp_cwnd_test_done:
-    // TODO
-    // for now unconditionally return cwnd available
-    setcf           c_retval, [c0]
-    jr              r_linkaddr
-    nop
-
 /*
- * Return snd_wnd available
+ * Return send window available
  *
  * r1 = snd_nxt + len
- * r2 = snd_una + snd_wnd
+ * r2 = snd_una + min(snd_wnd, snd_cwnd)
  * return (r1 <= r2)
  */
 tcp_snd_wnd_test:
     add             r1, d.snd_nxt, k.t0_s2s_len
     sll             r2, k.t0_s2s_snd_wnd, d.snd_wscale
+    slt             c1, k.to_s4_snd_cwnd, r2
+    add.c1          r2, r0, k.to_s4_snd_cwnd
     add             r2, r2, k.common_phv_snd_una
     scwle           c_retval, r1, r2
     jr              r_linkaddr
@@ -227,6 +185,13 @@ tcp_tx_end_program_and_drop:
     nop
 
 tcp_tx_retransmit:
+    // Change snd_cwnd in rx2tx CB, so we don't have a stale value there
+    add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_EXTRA_SND_CWND_OFFSET
+    memwr.w         r1, d.smss
+
+    // indicate to rx pipeline that timeout occured
+    phvwr           p.tx2rx_rto_event, 1
+
     b               rearm_rto
     tbladd          d.rto_backoff, 1
 
@@ -235,4 +200,4 @@ tcp_tx_no_window:
     // Bail out, but remember the current ci in stage 0 CB
     tblwr           d.no_window, 1
     b               tcp_tx_end_program_and_drop
-    memwr.h         r1, k.to_s5_sesq_tx_ci
+    memwr.h         r1, k.to_s4_sesq_tx_ci

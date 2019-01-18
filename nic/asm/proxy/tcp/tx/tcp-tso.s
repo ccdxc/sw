@@ -10,11 +10,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "defines.h"
-#include "INGRESS_s6_t0_tcp_tx_k.h"
+#include "INGRESS_s5_t0_tcp_tx_k.h"
 
 struct phv_ p    ;
-struct s6_t0_tcp_tx_k_ k    ;
-struct s6_t0_tcp_tx_tso_d d    ;
+struct s5_t0_tcp_tx_k_ k    ;
+struct s5_t0_tcp_tx_tso_d d    ;
 
 
 %%
@@ -26,7 +26,7 @@ tcp_tso_process_start:
     sne             c6, k.common_phv_debug_dol_dont_tx, r0
     bcf             [c6], flow_tso_process_done
     phvwri.c6       p.p4_intr_global_drop, 1
-    or              r1, k.to_s6_pending_tso_data, k.to_s6_pending_tso_retx
+    or              r1, k.to_s5_pending_tso_data, k.to_s5_pending_tso_retx
     or              r1, r1, k.common_phv_pending_ack_send
     sne             c1, r1, r0
     bal.c1          r7, tcp_write_xmit
@@ -98,7 +98,7 @@ dma_cmd_tcp_header:
 
     //phvwr           p.tcp_header_data_ofs, 8		// 32 bytes
     phvwrpair       p.tcp_header_data_ofs, 5, \
-                        p.tcp_header_window, k.to_s6_rcv_wnd
+                        p.tcp_header_window, k.to_s5_rcv_wnd
 	phvwr           p.{tcp_nop_opt1_kind...tcp_nop_opt2_kind}, \
                         (TCPOPT_NOP << 8 | TCPOPT_NOP)
 
@@ -124,8 +124,8 @@ dma_cmd_data:
     seq             c1, k.t0_s2s_len, 0
     b.c1            pkts_sent_stats_update_start
     phvwri.c1       p.tcp_header_dma_dma_pkt_eop, 1
-    slt             c1, k.to_s6_rcv_mss, k.t0_s2s_len
-    add.c1          r6, k.to_s6_rcv_mss, r0
+    slt             c1, k.to_s5_rcv_mss, k.t0_s2s_len
+    add.c1          r6, k.to_s5_rcv_mss, r0
     add.!c1         r6, k.t0_s2s_len, r0
 
     phvwrpair       p.data_dma_dma_cmd_size, r6, \
@@ -134,19 +134,19 @@ dma_cmd_data:
                         1 << 4 | CAPRI_DMA_COMMAND_MEM_TO_PKT
         
 bytes_sent_stats_update_start:
-    CAPRI_STATS_INC(bytes_sent, r6, d.bytes_sent, p.to_s7_bytes_sent)
+    CAPRI_STATS_INC(bytes_sent, r6, d.bytes_sent, p.to_s6_bytes_sent)
 bytes_sent_stats_update_end:
 
 pkts_sent_stats_update_start:
-    CAPRI_STATS_INC(pkts_sent, 1, d.pkts_sent, p.to_s7_pkts_sent)
+    CAPRI_STATS_INC(pkts_sent, 1, d.pkts_sent, p.to_s6_pkts_sent)
 pkts_sent_stats_update_end:
 
 debug_num_phv_to_pkt_stats_update_start:
-    CAPRI_STATS_INC(debug_num_phv_to_pkt, 2, d.debug_num_phv_to_pkt, p.to_s7_debug_num_phv_to_pkt)
+    CAPRI_STATS_INC(debug_num_phv_to_pkt, 2, d.debug_num_phv_to_pkt, p.to_s6_debug_num_phv_to_pkt)
 debug_num_phv_to_pkt_stats_update_end:
 
 debug_num_mem_to_pkt_stats_update_start:
-    CAPRI_STATS_INC(debug_num_mem_to_pkt, 2, d.debug_num_mem_to_pkt, p.to_s7_debug_num_mem_to_pkt)
+    CAPRI_STATS_INC(debug_num_mem_to_pkt, 2, d.debug_num_mem_to_pkt, p.to_s6_debug_num_mem_to_pkt)
 debug_num_mem_to_pkt_stats_update_end:
 
 dma_cmd_write_tx2rx_shared:

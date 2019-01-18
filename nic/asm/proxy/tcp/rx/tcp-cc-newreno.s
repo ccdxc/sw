@@ -1,0 +1,140 @@
+/*
+ *  Implements the RTT stage of the RxDMA P4+ pipeline
+ */
+
+#include "tcp-constants.h"
+#include "tcp-shared-state.h"
+#include "tcp-macros.h"
+#include "tcp-table.h"
+#include "ingress.h"
+#include "INGRESS_p.h"
+#include "INGRESS_s4_t0_tcp_rx_k.h"
+
+struct phv_ p;
+struct s4_t0_tcp_rx_k_ k;
+struct s4_t0_tcp_rx_tcp_cc_d d;
+
+
+%%
+    .param          tcp_rx_cc_stage_end
+    .align
+tcp_cc_new_reno:
+    /*
+     * RTO event occurred in Tx pipeline. Handle that first
+     */
+    seq             c1, k.s1_s2s_cc_rto_signal, 1
+    bal.c1          r7, tcp_cc_new_reno_rto_event
+    nop
+
+    /*
+     * Regular ack received when not in recovery
+     */
+    seq             c1, k.to_s4_cc_flags, 0
+    seq             c2, k.to_s4_cc_ack_signal, TCP_CC_ACK
+    seq             c3, d.cc_flags, 0
+    bcf             [c1 & c2 & c3], tcp_cc_new_reno_ack_recvd
+
+    /*
+     * Exit fast_recovery
+     */
+    seq             c4, d.cc_flags, TCP_CCF_FAST_RECOVERY
+    bcf             [c1 & c2 & c4], tcp_cc_exit_fast_recovery
+
+    /*
+     * Entering recovery due to fast retransmit
+     */
+    smeqb           c5, k.to_s4_cc_flags, TCP_CCF_FAST_RECOVERY, TCP_CCF_FAST_RECOVERY
+    bcf             [c5 & c3], tcp_cc_enter_fast_recovery
+
+    /*
+     * dup_ack/partial_ack in fast retransmit
+     */
+    seq             c6, k.to_s4_cc_ack_signal, TCP_CC_DUPACK
+    seq.!c6         c6, k.to_s4_cc_ack_signal, TCP_CC_PARTIAL_ACK
+    bcf             [c6 & c4], tcp_cc_dupack_fast_recovery
+    nop
+
+    j               tcp_rx_cc_stage_end
+    nop
+
+/*
+ * Handle regular ack received
+ * (slow start or congestion avoidance)
+ */
+tcp_cc_new_reno_ack_recvd:
+    slt             c1, d.snd_ssthresh, d.snd_cwnd
+    b.c1            tcp_cc_new_reno_cong_avoid
+    nop
+tcp_cc_new_reno_slow_start:
+    // incr = smss
+    // cwnd = min(cwnd + incr, max_win)
+    add             r1, d.snd_cwnd, d.smss
+    slt             c1, d.max_win, r1
+    add.c1          r1, r0, d.max_win
+    j               tcp_rx_cc_stage_end
+    tblwr           d.snd_cwnd, r1
+tcp_cc_new_reno_cong_avoid:
+    // incr = max((smss * smss / snd_cwnd), 1);
+    div             r1, d.smss_squared, d.snd_cwnd
+    slt             c1, r1, 1
+    add.c1          r1, r0, 1
+
+    // cwnd = min(cwnd + incr, max_win)
+    add             r1, r1, d.snd_cwnd
+    slt             c1, d.max_win, r1
+    add.c1          r1, r0, d.max_win
+    j               tcp_rx_cc_stage_end
+    tblwr           d.snd_cwnd, r1
+
+/*
+ * Enter fast recovery
+ */
+tcp_cc_enter_fast_recovery:
+    // snd_cwnd = max(cwnd/2, 2*SMSS)
+    srl             r1, d.snd_cwnd, 1
+    sll             r2, d.smss, 1
+    slt             c1, r1, r2
+    add.c1          r1, r0, r2
+    tblwr           d.snd_ssthresh, r1
+    // inflate snd_cwnd
+    mul             r2, d.smss, TCP_FASTRETRANS_THRESH
+    add             r1, r1, r2
+    tblwr           d.snd_cwnd, r1
+    j               tcp_rx_cc_stage_end
+    tblwr           d.cc_flags, TCP_CCF_FAST_RECOVERY
+
+/*
+ * Exit fast recovery
+ */
+tcp_cc_exit_fast_recovery:
+    tblwr           d.snd_cwnd, d.snd_ssthresh
+    j               tcp_rx_cc_stage_end
+    tblwr           d.cc_flags, 0
+
+/*
+ * dupack in fast recovery
+ */
+tcp_cc_dupack_fast_recovery:
+    // inflate cwnd by 1 mss
+    j               tcp_rx_cc_stage_end
+    tbladd          d.snd_cwnd, d.smss
+
+tcp_cc_new_reno_rto_event:
+    // r3 = min(cwnd, awnd)
+    sll             r3, k.to_s4_snd_wnd, d.snd_wscale
+    slt             c1, d.snd_cwnd, r3
+    add.c1          r3, r0, d.snd_cwnd
+
+    // snd_ssthresh = max(min(cwnd, awnd)/2, 2*SMSS)
+    srl             r1, r3, 1
+    sll             r2, d.smss, 1
+    slt             c1, r1, r2
+    add.c1          r1, r0, r2
+    tblwr           d.snd_ssthresh, r1
+
+    // snd_cwnd = 1 MSS
+    tblwr           d.snd_cwnd, d.smss
+
+    jr              r7
+    // exit recovery
+    tblwr           d.cc_flags, 0

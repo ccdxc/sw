@@ -37,6 +37,9 @@ tcp_state_LISTEN = 10
 tcp_state_CLOSING = 11
 tcp_state_NEW_SYN_RECV = 12
 
+tcp_cc_flags_FAST_RECOVERY = 0x1
+tcp_cc_flags_CONG_RECOVERY = 0x2
+
 ETH_IP_HDR_SZE = 34
 ETH_IP_VLAN_HDR_SZE = 38
 
@@ -76,6 +79,8 @@ def SetupProxyArgs(tc):
     pkt_free = 0
     serq_full = False
     snd_cwnd = 0
+    rcv_mss = 0
+    snd_ssthresh = 0
     rto_backoff = 0
     snd_wnd = 0
     if hasattr(tc.module.args, 'same_flow'):
@@ -140,6 +145,12 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'snd_cwnd'):
         snd_cwnd = tc.module.args.snd_cwnd
         logger.info("- snd_cwnd %s" % tc.module.args.snd_cwnd)
+    if hasattr(tc.module.args, 'rcv_mss'):
+        rcv_mss = tc.module.args.rcv_mss
+        logger.info("- rcv_mss %s" % tc.module.args.rcv_mss)
+    if hasattr(tc.module.args, 'snd_ssthresh'):
+        snd_ssthresh = tc.module.args.snd_ssthresh
+        logger.info("- snd_ssthresh %s" % tc.module.args.snd_ssthresh)
     if hasattr(tc.module.args, 'rto_backoff'):
         rto_backoff = tc.module.args.rto_backoff
         logger.info("- rto_backoff %s" % tc.module.args.rto_backoff)
@@ -225,6 +236,8 @@ def SetupProxyArgs(tc):
     tc.pvtdata.pkt_free = pkt_free
     tc.pvtdata.serq_full = serq_full
     tc.pvtdata.snd_cwnd = snd_cwnd
+    tc.pvtdata.rcv_mss = rcv_mss
+    tc.pvtdata.snd_ssthresh = snd_ssthresh
     tc.pvtdata.rto_backoff = rto_backoff
     tc.pvtdata.snd_wnd = snd_wnd
 
@@ -247,7 +260,10 @@ def init_tcb1(tcb, session):
     tcb.snd_una = 0x1FEFEFF0
     tcb.rcv_tsval = 0x1AFAFAFA
     tcb.ts_recent = 0x1AFAFAF0
-    tcb.snd_cwnd = 10000
+    tcb.snd_cwnd = 8000
+    tcb.rcv_mss = 2000
+    tcb.smss = 2000
+    tcb.snd_ssthresh = 4000
 
     tcb.source_port = session.iflow.dport
     tcb.dest_port = session.iflow.sport
@@ -308,10 +324,16 @@ def init_tcb_inorder(tc, tcb):
     if tc.pvtdata.snd_cwnd:
         tcb.snd_cwnd = tc.pvtdata.snd_cwnd
     else:
-        tcb.snd_cwnd = 10        # snd_cwnd is in packets
-    if tc.pvtdata.test_cong_avoid:
-        tcb.snd_cwnd_cnt = tcb.snd_cwnd - 1
-    tcb.rcv_mss = 9216
+        tcb.snd_cwnd = 10000
+    if tc.pvtdata.snd_ssthresh:
+        tcb.snd_ssthresh = tc.pvtdata.snd_ssthresh
+    else:
+        tcb.snd_ssthresh = 4000
+    if tc.pvtdata.rcv_mss:
+        tcb.rcv_mss = tc.pvtdata.rcv_mss
+    else:
+        tcb.rcv_mss = 2000
+    tcb.smss = tcb.rcv_mss
     tcb.debug_dol = 0
     if tc.pvtdata.send_ack_flow1:
         tcb.debug_dol_tx = 0
@@ -411,6 +433,9 @@ def init_tcb2(tcb, session):
     tcb.rcv_tsval = 0x2AFAFAFA
     tcb.ts_recent = 0x2AFAFAF0
     tcb.snd_cwnd = 10000
+    tcb.rcv_mss = 2000
+    tcb.smss = 2000
+    tcb.snd_ssthresh = 4000
 
     tcb.source_port = session.iflow.sport
     tcb.dest_port = session.iflow.dport
@@ -471,10 +496,16 @@ def init_tcb_inorder2(tc, tcb):
     if tc.pvtdata.snd_cwnd:
         tcb.snd_cwnd = tc.pvtdata.snd_cwnd
     else:
-        tcb.snd_cwnd = 10        # snd_cwnd is in packets
-    if tc.pvtdata.test_cong_avoid:
-        tcb.snd_cwnd_cnt = tcb.snd_cwnd - 1
-    tcb.rcv_mss = 9216
+        tcb.snd_cwnd = 10000
+    if tc.pvtdata.snd_ssthresh:
+        tcb.snd_ssthresh = tc.pvtdata.snd_ssthresh
+    else:
+        tcb.snd_ssthresh = 4000
+    if tc.pvtdata.rcv_mss:
+        tcb.rcv_mss = tc.pvtdata.rcv_mss
+    else:
+        tcb.rcv_mss = 2000
+    tcb.smss = tcb.rcv_mss
     tcb.debug_dol = 0
     if tc.pvtdata.send_ack_flow2:
         tcb.debug_dol_tx = 0

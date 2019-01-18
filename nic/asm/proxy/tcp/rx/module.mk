@@ -18,9 +18,10 @@ MODULE_SRCS     = $(MODULE_DIR)/tcp-ack.s \
                   $(MODULE_DIR)/tcp-read-tx2rx-shared-ext.s \
                   $(MODULE_DIR)/tcp-rpage-alloc.s \
                   $(MODULE_DIR)/tcp-rtt.s \
-                  $(MODULE_DIR)/tcp-rx-stage1-dummy.s \
                   $(MODULE_DIR)/tcp-rx.s \
                   $(MODULE_DIR)/tcp-fc.s \
+                  $(MODULE_DIR)/tcp-cc.s \
+                  $(MODULE_DIR)/tcp-cc-newreno.s \
                   $(MODULE_DIR)/tcp-rx-stats.s \
                   $(MODULE_DIR)/tcp-slow-write-serq.s \
                   $(MODULE_DIR)/tcp-write-serq.s \

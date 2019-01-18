@@ -28,7 +28,11 @@ tcp_tx_read_rx2tx_shared_extra_clean_retx_stage1_start:
      */
     phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
                         p.t0_s2s_state, d.state
-    phvwr           p.to_s4_snd_ssthresh, d.snd_ssthresh
+
+    // In close wait state, don't batch freeing of descriptors
+    seq             c1, d.state, TCP_ESTABLISHED
+    phvwr.!c1       p.t0_s2s_clean_retx_num_retx_pkts, 1
+
     phvwr.e         p.common_phv_snd_una, d.snd_una
     phvwr           p.t0_s2s_rcv_nxt, d.rcv_nxt
     nop

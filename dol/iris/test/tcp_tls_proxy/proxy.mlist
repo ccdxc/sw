@@ -244,7 +244,6 @@ modules:
             maxflows: 1
             key_size : 16
             num_pkts : 10
-            snd_cwnd : 10
         iterate :
             - flow: filter://type=IPV4
 
@@ -544,7 +543,6 @@ modules:
             bypass_barco : 1
             maxflows : 1
             num_pkts : 10
-            snd_cwnd : 10
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_SEND_ACK
@@ -641,6 +639,23 @@ modules:
             bypass_barco : 1
             maxflows : 1
             test_cong_avoid : 1
+            snd_cwnd : 8000
+            snd_ssthresh : 4000
+            rcv_mss : 2000
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_SLOW_START
+        spec    : uplink_to_uplink_clean_retx_partial.testspec
+        module  : pkt_to_p4
+        rtl     : False 
+        args    :
+            num_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            test_slow_start : 1
+            snd_cwnd : 8000
+            snd_ssthresh : 10000
+            rcv_mss : 2000
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_RETX_TIMER
@@ -878,7 +893,6 @@ modules:
             bypass_barco : 1
             maxflows : 1
             num_pkts : 10
-            snd_cwnd : 10
 
     - module:
         name    : HOST_TO_UL_BYPASS_BARCO_SAME_FLOW
@@ -935,7 +949,6 @@ modules:
             bypass_barco : 1
             maxflows : 1
             num_pkts : 10
-            snd_cwnd : 10
 
     - module:
         name    : PKT_TO_SESQ
@@ -1151,6 +1164,78 @@ modules:
             maxflows : 1
             num_retx_pkts : 1
             snd_wnd : 1000
+            fast_recovery : 1
+            snd_cwnd : 8000
+            snd_ssthresh : 10000
+            rcv_mss : 2000
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_FAST_RETX_4DUPACKS
+        spec    : uplink_to_uplink_fast_retx_4dupacks.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            num_retx_pkts : 1
+            snd_wnd : 1000
+            fast_recovery : 1
+            inflate_cwnd : 1
+            snd_cwnd : 8000
+            snd_ssthresh : 10000
+            rcv_mss : 2000
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_EXIT_FAST_RECOVERY
+        spec    : uplink_to_uplink_exit_fast_recovery.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            num_retx_pkts : 1
+            snd_wnd : 1000
+            fast_recovery : 1
+            exit_fast_recovery : 1
+            snd_cwnd : 8000
+            snd_ssthresh : 10000
+            rcv_mss : 2000
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_PARTIAL_ACK
+        spec    : uplink_to_uplink_partial_ack.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            num_rx_pkts : 2
+            num_retx_pkts : 2
+            snd_wnd : 1000
+            fast_recovery : 1
+            inflate_cwnd : 1
+            partial_ack : 1
+            snd_cwnd : 8000
+            snd_ssthresh : 10000
+            rcv_mss : 2000
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_PARTIAL_ACK_EXIT_RECOVERY
+        spec    : uplink_to_uplink_partial_ack_exit_recovery.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            num_rx_pkts : 2
+            num_retx_pkts : 2
+            snd_wnd : 1000
+            fast_recovery : 1
+            exit_fast_recovery : 1
+            partial_ack : 1
+            snd_cwnd : 8000
+            snd_ssthresh : 10000
+            rcv_mss : 2000
 
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_NO_FAST_RETX_DUP_ACK_WINDOW_CHANGE

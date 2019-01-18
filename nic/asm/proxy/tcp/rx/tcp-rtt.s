@@ -8,15 +8,15 @@
 #include "tcp-table.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
-#include "INGRESS_s4_t0_tcp_rx_k.h"
+#include "INGRESS_s3_t0_tcp_rx_k.h"
     
 struct phv_ p;
-struct s4_t0_tcp_rx_k_ k;
-struct s4_t0_tcp_rx_tcp_rtt_d d;
+struct s3_t0_tcp_rx_k_ k;
+struct s3_t0_tcp_rx_tcp_rtt_d d;
 
     
 %%
-    .param          tcp_rx_fc_stage_start
+    .param          tcp_rx_cc_stage_start
     .align
 tcp_rx_rtt_start:
 
@@ -63,7 +63,7 @@ tcp_rx_rtt_start:
     /* TSval format: Bits 13-44 of the Capri timestamp (i.e. 10us granularity) */
     /* TODO: other clock rates (333MHz?) */
     srl         r2, r4, d.ts_shift
-    sub         r1, r2, k.to_s4_rcv_tsecr
+    sub         r1, r2, k.to_s3_rcv_tsecr
 
     /* Early execution of mul due to single cycle stall */
     mul         r3, r1, d.ts_ganularity_us   /* r3 now is in 1 us units */
@@ -188,7 +188,7 @@ m_ge_0_done:
     srl.c2      r4, r4,2
     sub.c2      r5, d.rttvar_us, r4
     tblwr       d.rttvar_us, r5
-    tblwr.c1    d.rtt_seq, k.to_s4_snd_nxt
+    tblwr.c1    d.rtt_seq, k.to_s3_snd_nxt
     addi.c1     r4, r0, TCP_RTO_MIN
     b           tcp_rtt_estimator_done
     tblwr.c1    d.mdev_max_us, r4
@@ -214,7 +214,7 @@ first_rtt_measure:
     tblwr       d.mdev_max_us, d.rttvar_us
     
     /* tp->rtt.rtt_seq = tp->tx.snd_nxt; */
-    tblwr       d.rtt_seq, k.to_s4_snd_nxt
+    tblwr       d.rtt_seq, k.to_s3_snd_nxt
 
 tcp_rtt_estimator_done:
     /* r1 -> srtt */
@@ -252,12 +252,12 @@ tcp_set_rto:
      * via rx2tx_extra_pending_reset_backoff
      */
 flow_rtt_process_done:
-    phvwr       p.rx2tx_extra_rcv_tsval, k.to_s4_rcv_tsval
+    phvwr       p.rx2tx_extra_rcv_tsval, k.to_s3_rcv_tsval
     
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
-                        tcp_rx_fc_stage_start,
+                        tcp_rx_cc_stage_start,
                         k.common_phv_qstate_addr,
-                        TCP_TCB_FC_OFFSET, TABLE_SIZE_512_BITS)
+                        TCP_TCB_CC_OFFSET, TABLE_SIZE_512_BITS)
     nop.e
     nop
 

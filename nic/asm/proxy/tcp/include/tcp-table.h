@@ -19,13 +19,18 @@
                     (TCP_TCB_RX2TX_SHARED_OFFSET + 48)
 #define TCP_TCB_RX2TX_RTO_OFFSET \
                     (TCP_TCB_RX2TX_SHARED_OFFSET + 50)
+
 #define TCP_TCB_TX2RX_SHARED_OFFSET     64
 #define TCP_TCB_TX2RX_SHARED_WRITE_OFFSET \
                     (TCP_TCB_TX2RX_SHARED_OFFSET + 32)  // skip intrinsic part etc
+
 #define TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET     128
+#define TCP_TCB_RX2TX_EXTRA_SND_CWND_OFFSET \
+                    (TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET + 0)
+
 #define TCP_TCB_RX_OFFSET                     192
 #define TCP_TCB_RTT_OFFSET                    256
-#define TCP_TCB_CC_AND_FRA_OFFSET             320
+#define TCP_TCB_CC_OFFSET                     320
 #define TCP_TCB_RETX_OFFSET                   384
 #define TCP_TCB_FC_OFFSET                     448
 #define TCP_TCB_WRITE_SERQ_OFFSET             512

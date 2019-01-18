@@ -37,9 +37,6 @@ tcp_tx_sesq_read_retx_ci_stage1_start:
         b.c1            read_asesq_ci_end
         blti            r4, CAPRI_HBM_BASE, tcp_tx_read_sesq_ci_fatal_error
 
-        // r5 is num pkts in retx queue
-        add             r5, r0, k.to_s1_num_retx_pkts        
-
         sub             r4, d.{descr2_addr}, NIC_DESC_ENTRY_0_OFFSET
         phvwr           p.ring_entry2_descr_addr, r4
         phvwr           p.t0_s2s_clean_retx_len2, d.len2
@@ -61,6 +58,14 @@ tcp_tx_sesq_read_retx_ci_stage1_start:
         sub             r4, d.{descr8_addr}, NIC_DESC_ENTRY_0_OFFSET
         phvwr           p.ring_entry8_descr_addr, r4
         phvwr           p.t0_s2s_clean_retx_len8, d.len8
+
+        // HACK to handle descriptors with FIN flag - they will be zero length,
+        // but occupy a sequence number so increment by 1. Need to find a
+        // better way to free these descriptors
+        seq             c1, d.len1, 0
+        phvwr.c1        p.t0_s2s_clean_retx_len1, 1
+        // Don't need to handle the rest of the descriptors as we don't batch
+        // free in CLOSE_WAIT state
 
 read_sesq_ci_end:
         CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_tx_s2_bubble_start)

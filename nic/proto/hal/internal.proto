@@ -402,6 +402,8 @@ message TcpCbSpec {
   uint32                pred_flags                 = 34;
   uint32                other_qid                  = 35;
   uint32                packets_out                = 36;
+  uint32                snd_ssthresh               = 37;
+  uint32                cc_algo                    = 38;
   uint32                rto_backoff                = 39;
   uint32                cpu_id                     = 40;
   uint32                serq_ci                    = 41;
@@ -411,6 +413,8 @@ message TcpCbSpec {
   uint32                sesq_tx_ci                 = 45;
   bool                  delay_ack                  = 46;
   uint32                ato                        = 47;
+  uint32                snd_recover                = 48;
+  uint32                smss                       = 49;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request
@@ -508,6 +512,7 @@ message TcpCbStats {
   uint32                partial_ack_cnt            = 10026;
   uint32                ato_deadline               = 10027;
   uint32                rto_deadline               = 10028;
+  uint32                cc_flags                   = 10029;
 }
 
 // TcpCbGetResponse captures all the information about a tcpcb

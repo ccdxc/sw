@@ -235,10 +235,13 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
 
     HAL_TRACE_DEBUG("tcp rcv window = {}", window);
 
+    // TODO : we need to get this from LKL/OFP
     spec.set_rcv_wnd(window);
-    spec.set_snd_cwnd(8000);
     spec.set_snd_wnd(8000);
     spec.set_rcv_mss(9216);
+    spec.set_smss(9216);
+    spec.set_snd_cwnd(8000);
+    spec.set_snd_ssthresh(8000 * 10);
     spec.set_ato(TCP_ATO_USEC);
     spec.set_delay_ack(true);
     // pred_flags
@@ -391,7 +394,9 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_snd_wnd(get_rsp.mutable_spec()->snd_wnd());
     spec->set_rcv_wnd(get_rsp.mutable_spec()->rcv_wnd());
     spec->set_snd_cwnd(get_rsp.mutable_spec()->snd_cwnd());
+    spec->set_snd_ssthresh(get_rsp.mutable_spec()->snd_ssthresh());
     spec->set_rcv_mss(get_rsp.mutable_spec()->rcv_mss());
+    spec->set_smss(get_rsp.mutable_spec()->smss());
     spec->set_source_port(get_rsp.mutable_spec()->source_port());
     spec->set_dest_port(get_rsp.mutable_spec()->dest_port());
     spec->set_header_len(get_rsp.mutable_spec()->header_len());
@@ -466,6 +471,7 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
     spec->set_rcv_wnd(get_rsp.mutable_spec()->rcv_wnd());
     spec->set_snd_cwnd(get_rsp.mutable_spec()->snd_cwnd());
     spec->set_rcv_mss(get_rsp.mutable_spec()->rcv_mss());
+    spec->set_smss(get_rsp.mutable_spec()->smss());
     spec->set_source_port(get_rsp.mutable_spec()->source_port());
     spec->set_dest_port(get_rsp.mutable_spec()->dest_port());
     spec->set_header_len(get_rsp.mutable_spec()->header_len());

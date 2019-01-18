@@ -398,13 +398,46 @@ def TestCaseVerify(tc):
                         (rnmdpr_big_cur.ci, rnmdpr_big.ci + tc.pvtdata.pkt_free))
                 return False
 
-    if tc.pvtdata.test_cong_avoid:
-        if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + 1:
-            print("cong_avoid: failed to increment cwnd (%d)" % \
-                    other_tcpcb_cur.snd_cwnd)
+    if hasattr(tc.module.args, 'test_cong_avoid'):
+        incr = (other_tcpcb.rcv_mss * other_tcpcb.rcv_mss) / \
+                other_tcpcb.snd_cwnd
+        if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + incr:
+            print("cong_avoid: failed to increment cwnd (%d) by (%d)" % \
+                    (other_tcpcb_cur.snd_cwnd, incr))
             return False
-        if other_tcpcb_cur.snd_cwnd_cnt != 0:
-            print("cong_avoid: failed to set snd_cwnd_cnt to 0")
+
+    if hasattr(tc.module.args, 'test_slow_start'):
+        incr = other_tcpcb.rcv_mss
+        if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + incr:
+            print("slow_start: failed to increment cwnd (%d) by (%d)" % \
+                    (other_tcpcb_cur.snd_cwnd, incr))
+            return False
+
+    if hasattr(tc.module.args, 'fast_recovery'):
+        if not hasattr(tc.module.args, 'exit_fast_recovery'):
+            inflate = 3
+            if hasattr(tc.module.args, 'inflate_cwnd'):
+                inflate += int(tc.module.args.inflate_cwnd)
+            new_snd_cwnd = other_tcpcb.snd_cwnd / 2 + inflate * other_tcpcb.rcv_mss
+            new_snd_ssthresh = other_tcpcb.snd_cwnd / 2
+            snd_recover = other_tcpcb_cur.snd_nxt
+            cc_flags = tcp_proxy.tcp_cc_flags_FAST_RECOVERY
+        else:
+            new_snd_cwnd = other_tcpcb.snd_cwnd / 2
+            new_snd_ssthresh = other_tcpcb.snd_cwnd / 2
+            snd_recover = 0
+            cc_flags = 0
+        if other_tcpcb_cur.snd_cwnd != new_snd_cwnd:
+            print("snd_cwnd %d not as expected (%d)" % (other_tcpcb_cur.snd_cwnd, new_snd_cwnd))
+            return False
+        if other_tcpcb_cur.snd_ssthresh != new_snd_ssthresh:
+            print("snd_ssthresh %d not as expected (%d)" % (other_tcpcb_cur.snd_ssthresh, new_snd_ssthresh))
+            return False
+        if other_tcpcb_cur.snd_recover != snd_recover:
+            print("snd_recover %d not as expected (%d)" % (other_tcpcb_cur.snd_recover, snd_recover))
+            return False
+        if other_tcpcb_cur.cc_flags != cc_flags:
+            print("cc_flags (%d) not as expected (%d)" % (other_tcpcb_cur.cc_flags, cc_flags))
             return False
 
     if tc.pvtdata.fin:

@@ -25,18 +25,17 @@ tcp_rx_read_shared_stage0_start_ext:
     /* Setup the to-stage/stage-to-stage variables based
      * on the p42p4+ app header info
      */
-    phvwr           p.to_s2_data_ofs_rsvd[7:4], k.tcp_app_header_dataOffset
-    phvwrpair       p.to_s2_rcv_wup, d.rcv_wup, \
-                        p.to_s2_seq, k.tcp_app_header_seqNo
+    phvwr           p.to_s1_data_ofs_rsvd[7:4], k.tcp_app_header_dataOffset
+    phvwr           p.to_s1_rcv_wup, d.rcv_wup
     //phvwr           p.cpu_hdr3_tcp_window, k.{tcp_app_header_window}.hx
 
-    phvwrpair       p.to_s4_rcv_tsval[31:8], k.tcp_app_header_ts_s0_e23, \
-                        p.to_s4_rcv_tsval[7:0], k.tcp_app_header_ts_s24_e31
+    phvwrpair       p.to_s3_rcv_tsval[31:8], k.tcp_app_header_ts_s0_e23, \
+                        p.to_s3_rcv_tsval[7:0], k.tcp_app_header_ts_s24_e31
 
     phvwrpair       p.s1_s2s_ack_seq, k.tcp_app_header_ackNo, \
                         p.s1_s2s_snd_nxt, d.snd_nxt
     phvwrpair       p.s1_s2s_payload_len, k.tcp_app_header_payload_len, \
-                        p.s1_s2s_window, k.tcp_app_header_window
-    phvwrpair       p.to_s3_seq, k.tcp_app_header_seqNo, p.to_s3_payload_len, k.tcp_app_header_payload_len
+                        p.s1_s2s_seq, k.tcp_app_header_seqNo
+    phvwr           p.to_s2_window, k.tcp_app_header_window
     nop.e
     nop

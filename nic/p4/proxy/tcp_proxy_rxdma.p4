@@ -14,15 +14,14 @@
 #define rx_table_s1_t0 s1_t0_tcp_rx
 
 #define rx_table_s2_t0 s2_t0_tcp_rx
+#define rx_table_s2_t1 s2_t1_tcp_rx
+#define rx_table_s2_t2 s2_t2_tcp_rx
 
 #define rx_table_s3_t0 s3_t0_tcp_rx
 #define rx_table_s3_t1 s3_t1_tcp_rx
 #define rx_table_s3_t2 s3_t2_tcp_rx
-#define rx_table_s3_t3 s3_t3_tcp_rx
 
 #define rx_table_s4_t0 s4_t0_tcp_rx
-#define rx_table_s4_t1 s4_t1_tcp_rx
-#define rx_table_s4_t2 s4_t2_tcp_rx
 #define rx_table_s4_t3 s4_t3_tcp_rx
 
 #define rx_table_s5_t0 s5_t0_tcp_rx
@@ -40,24 +39,18 @@
 /******************************************************************************
  * Action names
  *****************************************************************************/
-#define rx_table_s1_t0_action tcp_stage1_dummy
+#define rx_table_s1_t0_action tcp_rx
 
-#define rx_table_s2_t0_action tcp_rx
+#define rx_table_s2_t0_action tcp_ack
+#define rx_table_s2_t1_action read_rnmdr
+#define rx_table_s2_t2_action read_rnmpr
 
-#define rx_table_s3_t0_action1 tcp_ack
-#define rx_table_s3_t0_action2 tcp_ooo_book_keeping
+#define rx_table_s3_t0_action tcp_rtt
+#define rx_table_s3_t0_action1 tcp_ooo_book_keeping
+#define rx_table_s3_t1_action rdesc_alloc
+#define rx_table_s3_t2_action rpage_alloc
 
-#define rx_table_s3_t1_action read_rnmdr
-
-#define rx_table_s3_t2_action read_rnmpr
-
-#define rx_table_s3_t3_action l7_read_rnmdr
-
-
-#define rx_table_s4_t0_action tcp_rtt
-#define rx_table_s4_t1_action rdesc_alloc
-#define rx_table_s4_t2_action rpage_alloc
-#define rx_table_s4_t3_action0 l7_rdesc_alloc
+#define rx_table_s4_t0_action tcp_cc
 #define rx_table_s4_t3_action1 tcp_ooo_qbase_sem_alloc
 #define rx_table_s4_t3_action2 tcp_ooo_dummy_launch_s4
 
@@ -136,13 +129,6 @@ header_type read_tx2rxd_t {
 }
 
 // d for stage 1
-header_type read_tls_stage0_d_t {
-    fields {
-        CAPRI_QSTATE_HEADER_RING(0) // TLS_SCHED_RING_SERQ
-    }
-}
-
-// d for stage 2
 header_type tcp_rx_d_t {
     fields {
         bytes_acked             : 16;   // tcp_ack stage
@@ -159,21 +145,21 @@ header_type tcp_rx_d_t {
         snd_una                 : 32;   // tcp_ack stage
         snd_wl1                 : 32;   // tcp_ack stage
         pred_flags              : 32;   // tcp_ack stage
-        max_window              : 16;   // tcp_ack_stage
+        snd_recover             : 32;   // tcp_ack stage
         bytes_rcvd              : 16;
         snd_wnd                 : 16;   // tcp_ack stage
         serq_pidx               : 16; 
         rcv_mss                 : 16;
+        num_dup_acks            : 16;   // tcp_ack_stage
+        cc_flags                : 8;    // tcp_ack stage
         quick                   : 8;
         flag                    : 8;    // used with .l not written back
         rto                     : 8;
         ecn_flags               : 8;
         state                   : 8;
         parsed_state            : 8;
-        snd_wscale              : 4;
         pending                 : 3;
         ca_flags                : 2;
-        num_dup_acks            : 2;
         write_serq              : 1;
         fastopen_rsk            : 1;
         pingpong                : 1;
@@ -181,31 +167,7 @@ header_type tcp_rx_d_t {
     }
 }
 
-// d for stage 3 table 0 - ooo book keeping
-header_type ooo_book_keeping_t {
-    fields {
-        start_seq0      : 32;
-        end_seq0        : 32;
-        tail_index0     : 16;
-        start_seq1      : 32;
-        end_seq1        : 32;
-        tail_index1     : 16;
-        start_seq2      : 32;
-        end_seq2        : 32;
-        tail_index2     : 16;
-        start_seq3      : 32;
-        end_seq3        : 32;
-        tail_index3     : 16;
-        ooo_alloc_fail  : 32;
-        ooo_queue0_full : 16;
-        ooo_queue1_full : 16;
-        ooo_queue2_full : 16;
-        ooo_queue3_full : 16;
-        ooo_pad         : 96;
-    }
-}
-
-// d for stage 3 table 1
+// d for stage 2 table 1
 header_type read_rnmdr_d_t {
     fields {
         rnmdr_pidx              : 32;
@@ -213,7 +175,7 @@ header_type read_rnmdr_d_t {
     }
 }
 
-// d for stage 3 table 2
+// d for stage 2 table 2
 header_type read_rnmpr_d_t {
     fields {
         rnmpr_pidx              : 32;
@@ -221,15 +183,8 @@ header_type read_rnmpr_d_t {
     }
 }
 
-// d for stage 3 table 3
-header_type read_serq_d_t {
-    fields {
-        serq_pidx               : 16;
-    }
-}
-
        
-// d for stage 4 table 0
+// d for stage 3 table 0
 header_type tcp_rtt_d_t {
     fields {
         srtt_us                 : 32;
@@ -269,7 +224,7 @@ header_type tcp_rtt_d_t {
     modify_field(tcp_rtt_d.backoff, backoff);                   \
     
 
-// d for stage 4 table 1
+// d for stage 3 table 1
 header_type rdesc_alloc_d_t {
     fields {
         desc                    : 64;
@@ -277,11 +232,63 @@ header_type rdesc_alloc_d_t {
     }
 }
 
-// d for stage 4 table 2
+// d for stage 3 table 2
 header_type rpage_alloc_d_t {
     fields {
         page                    : 64;
         pad                     : 448;
+    }
+}
+
+// d for stage 3 table 0 - ooo book keeping
+header_type ooo_book_keeping_t {
+    fields {
+        start_seq0      : 32;
+        end_seq0        : 32;
+        tail_index0     : 16;
+        start_seq1      : 32;
+        end_seq1        : 32;
+        tail_index1     : 16;
+        start_seq2      : 32;
+        end_seq2        : 32;
+        tail_index2     : 16;
+        start_seq3      : 32;
+        end_seq3        : 32;
+        tail_index3     : 16;
+        ooo_alloc_fail  : 32;
+        ooo_queue0_full : 16;
+        ooo_queue1_full : 16;
+        ooo_queue2_full : 16;
+        ooo_queue3_full : 16;
+        ooo_pad         : 96;
+    }
+}
+
+#define CC_D_PARAMS \
+        cc_algo, smss, smss_squared, snd_cwnd, snd_ssthresh, \
+        max_win, snd_wscale, cc_flags
+
+#define GENERATE_CC_D \
+    modify_field(tcp_cc_d.cc_algo, cc_algo); \
+    modify_field(tcp_cc_d.smss, smss); \
+    modify_field(tcp_cc_d.smss_squared, smss_squared); \
+    modify_field(tcp_cc_d.snd_cwnd, snd_cwnd); \
+    modify_field(tcp_cc_d.snd_ssthresh, snd_ssthresh); \
+    modify_field(tcp_cc_d.max_win, max_win); \
+    modify_field(tcp_cc_d.snd_wscale, snd_wscale); \
+    modify_field(tcp_cc_d.cc_flags, cc_flags);
+
+// d for stage 4 table 0
+header_type tcp_cc_d_t {
+    fields {
+        cc_algo                 : 8;
+        smss                    : 16;
+        smss_squared            : 32;
+        snd_cwnd                : 32;
+        snd_ssthresh            : 32;
+        max_win                 : 32;
+        snd_wscale              : 8;
+        cc_flags                : 1;
     }
 }
 
@@ -309,7 +316,7 @@ header_type tcp_fc_d_t {
         dummy                   : 16;
         l7_descr                : 32;
         rcv_wnd                 : 16;
-        rcv_wscale              : 16;
+        rcv_wscale              : 8;
         cpu_id                  : 8;
     }
 }
@@ -357,7 +364,7 @@ header_type ooo_qbase_addr_t {
 /******************************************************************************
  * Global PHV definitions
  *****************************************************************************/
-header_type to_stage_2_phv_t {
+header_type to_stage_1_phv_t {
     // tcp-rx
     fields {
         data_ofs_rsvd           : 8;
@@ -368,21 +375,30 @@ header_type to_stage_2_phv_t {
     }
 }
 
-header_type to_stage_3_phv_t {
+header_type to_stage_2_phv_t {
     // tcp-ack
     fields {
         flag                    : 8;
-        seq                     : 32;
-        payload_len             : 16;
+        window                  : 16;
     }
 }
 
-header_type to_stage_4_phv_t {
-    // tcp-rtt, read-rnmdr, read-rnmpr, read-serq
+header_type to_stage_3_phv_t {
+    // tcp-rtt, read-rnmdr, read-rnmpr
     fields {
         snd_nxt                 : 32;
         rcv_tsval               : 32;
         rcv_tsecr               : 32;
+    }
+}
+
+header_type to_stage_4_phv_t {
+    // tcp-cc
+    fields {
+        bytes_acked             : 32;
+        snd_wnd                 : 16;
+        cc_ack_signal           : 8;
+        cc_flags                : 8;
     }
 }
 
@@ -459,25 +475,25 @@ header_type common_global_phv_t {
 header_type s1_s2s_phv_t {
     fields {
         payload_len             : 16;
+        seq                     : 32;
         ack_seq                 : 32;
         snd_nxt                 : 32;
         rcv_tsval               : 32;
-        packets_out             : 16;
-        window                  : 16;
         rcv_mss_shft            : 4;
         quick_acks_decr         : 4;
         fin_sent                : 1;
         rst_sent                : 1;
+        cc_rto_signal           : 1;
     }
 }
 
-header_type s4_t1_s2s_phv_t {
+header_type s3_t1_s2s_phv_t {
     fields {
         rnmdr_pidx              : 16;
     }
 }
 
-header_type s4_t2_s2s_phv_t {
+header_type s3_t2_s2s_phv_t {
     fields {
         rnmpr_pidx              : 16;
     }
@@ -515,8 +531,6 @@ header_type s6_t3_s2s_phv_t {
 @pragma scratch_metadata
 metadata read_tx2rxd_t read_tx2rxd;
 @pragma scratch_metadata
-metadata read_tls_stage0_d_t read_tls_stage0_d;
-@pragma scratch_metadata
 metadata tcp_rx_d_t tcp_rx_d;
 @pragma scratch_metadata
 metadata tcp_rtt_d_t tcp_rtt_d;
@@ -529,11 +543,7 @@ metadata read_rnmdr_d_t l7_read_rnmdr_d;
 @pragma scratch_metadata
 metadata read_ooo_qbase_index_t read_ooo_qbase_index;
 @pragma scratch_metadata
-metadata read_serq_d_t read_serq_d;
-//@pragma scratch_metadata
-//metadata tcp_fra_d_t tcp_fra_d;
-//@pragma scratch_metadata
-//metadata tcp_cc_d_t tcp_cc_d;
+metadata tcp_cc_d_t tcp_cc_d;
 @pragma scratch_metadata
 metadata tcp_fc_d_t tcp_fc_d;
 @pragma scratch_metadata
@@ -565,20 +575,17 @@ metadata p4_to_p4plus_tcp_proxy_base_header_t tcp_app_header;
 metadata p4_to_p4plus_tcp_proxy_base_header_t tcp_scratch_app;
 
 @pragma pa_header_union ingress to_stage_1 cpu_hdr1
+metadata to_stage_1_phv_t to_s1;
 metadata p4_to_p4plus_cpu_pkt_1_t cpu_hdr1;
 
 @pragma pa_header_union ingress to_stage_2 cpu_hdr2
 metadata to_stage_2_phv_t to_s2;
-@pragma dont_trim
 metadata p4_to_p4plus_cpu_pkt_2_t cpu_hdr2;
 
 @pragma pa_header_union ingress to_stage_3 cpu_hdr3
-@pragma dont_trim
+metadata to_stage_3_phv_t to_s3;
 metadata p4_to_p4plus_cpu_pkt_3_t cpu_hdr3;
 
-
-@pragma pa_header_union ingress to_stage_3
-metadata to_stage_3_phv_t to_s3;
 @pragma pa_header_union ingress to_stage_4
 metadata to_stage_4_phv_t to_s4;
 @pragma pa_header_union ingress to_stage_5
@@ -593,9 +600,11 @@ metadata common_global_phv_t common_phv;
 @pragma scratch_metadata
 metadata p4_to_p4plus_cpu_pkt_1_t to_cpu1_scratch;
 @pragma scratch_metadata
-metadata to_stage_2_phv_t to_s2_scratch;
+metadata to_stage_1_phv_t to_s1_scratch;
 @pragma scratch_metadata
 metadata p4_to_p4plus_cpu_pkt_2_t to_cpu2_scratch;
+@pragma scratch_metadata
+metadata to_stage_2_phv_t to_s2_scratch;
 @pragma scratch_metadata
 metadata to_stage_3_phv_t to_s3_scratch;
 @pragma scratch_metadata
@@ -611,9 +620,9 @@ metadata to_stage_7_phv_t to_s7_scratch;
 @pragma scratch_metadata
 metadata s1_s2s_phv_t s1_s2s_scratch;
 @pragma scratch_metadata
-metadata s4_t1_s2s_phv_t s4_t1_s2s_scratch;
+metadata s3_t1_s2s_phv_t s3_t1_s2s_scratch;
 @pragma scratch_metadata
-metadata s4_t2_s2s_phv_t s4_t2_s2s_scratch;
+metadata s3_t2_s2s_phv_t s3_t2_s2s_scratch;
 @pragma scratch_metadata
 metadata s6_s2s_phv_t s6_s2s_scratch;
 @pragma scratch_metadata
@@ -631,11 +640,11 @@ metadata s1_s2s_phv_t s1_s2s;
 metadata s6_s2s_phv_t s6_s2s;
 
 @pragma pa_header_union ingress common_t1_s2s s6_t1_s2s
-metadata s4_t1_s2s_phv_t s4_t1_s2s;
+metadata s3_t1_s2s_phv_t s3_t1_s2s;
 metadata s6_t1_s2s_phv_t s6_t1_s2s;
 
 @pragma pa_header_union ingress common_t2_s2s s6_t2_s2s
-metadata s4_t2_s2s_phv_t s4_t2_s2s;
+metadata s3_t2_s2s_phv_t s3_t2_s2s;
 metadata s6_t2_s2s_phv_t s6_t2_s2s;
 
 @pragma pa_header_union ingress common_t3_s2s s6_t3_s2s
@@ -654,14 +663,6 @@ metadata doorbell_data_t db_data;
 metadata doorbell_data_t db_data2;
 @pragma dont_trim
 metadata doorbell_data_t db_data3;
-
-header_type ring_entry_pad_t {
-    fields {
-        ring_entry_pad      : 24;
-    }
-}
-@pragma dont_trim
-metadata ring_entry_pad_t  ring_entry_pad;
 
 /* ring_entry and aol needs to be contiguous in PHV */
 header_type ooq_rx2tx_queue_entry_t {
@@ -757,7 +758,8 @@ metadata dma_cmd_phv2mem_t l7_doorbell;             // dma cmd 12
 action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
                   serq_ring_size, l7_proxy_type, debug_dol, quick_acks_decr_old,
                   pad2, serq_cidx, pad1, prr_out, snd_nxt, rcv_wup, packets_out,
-                  ecn_flags_tx, quick_acks_decr, fin_sent, rst_sent, pad1_tx2rx) {
+                  ecn_flags_tx, quick_acks_decr, fin_sent, rst_sent, rto_event,
+                  pad1_tx2rx) {
     // k + i for stage 0
 
     // from intrinsic
@@ -812,39 +814,17 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(read_tx2rxd.quick_acks_decr, quick_acks_decr);
     modify_field(read_tx2rxd.fin_sent, fin_sent);
     modify_field(read_tx2rxd.rst_sent, rst_sent);
+    modify_field(read_tx2rxd.rto_event, rto_event);
     modify_field(read_tx2rxd.pad1_tx2rx, pad1_tx2rx);
-}
-
-/*
- * Stage 1 table 0 action
- */
-action tcp_stage1_dummy() {
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // k + i for stage 1
-
-	modify_field(to_cpu1_scratch.src_lif, cpu_hdr1.src_lif);
-	modify_field(to_cpu1_scratch.lif, cpu_hdr1.lif);
-	modify_field(to_cpu1_scratch.qtype, cpu_hdr1.qtype);
-	modify_field(to_cpu1_scratch.qid, cpu_hdr1.qid);
-	modify_field(to_cpu1_scratch.lkp_vrf, cpu_hdr1.lkp_vrf);
-	modify_field(to_cpu1_scratch.pad, cpu_hdr1.pad);
-	modify_field(to_cpu1_scratch.lkp_dir, cpu_hdr1.lkp_dir);
-	modify_field(to_cpu1_scratch.lkp_inst, cpu_hdr1.lkp_inst);
-	modify_field(to_cpu1_scratch.lkp_type, cpu_hdr1.lkp_type);
-	modify_field(to_cpu1_scratch.flags, cpu_hdr1.flags);
-	modify_field(to_cpu1_scratch.l2_offset, cpu_hdr1.l2_offset);
-	modify_field(to_cpu1_scratch.l3_offset_1, cpu_hdr1.l3_offset_1);
 }
 
 #define TCP_RX_CB_PARAMS \
         bytes_acked, slow_path_cnt, serq_full_cnt, ooo_cnt, \
         ato, del_ack_pi, cfg_flags, \
         rcv_nxt, rcv_tstamp, ts_recent, lrcv_time, \
-        snd_una, snd_wl1, pred_flags, max_window, bytes_rcvd, \
-        snd_wnd, rcv_mss, rto, ecn_flags, state, \
-        parsed_state, flag, serq_pidx, quick, snd_wscale, pending, ca_flags, \
+        snd_una, snd_wl1, pred_flags, snd_recover, bytes_rcvd, \
+        snd_wnd, rcv_mss, cc_flags, rto, ecn_flags, state, \
+        parsed_state, flag, serq_pidx, quick, pending, ca_flags, \
         num_dup_acks, write_serq, fastopen_rsk, pingpong, \
         alloc_descr
 
@@ -863,10 +843,11 @@ action tcp_stage1_dummy() {
     modify_field(tcp_rx_d.snd_una, snd_una); \
     modify_field(tcp_rx_d.snd_wl1, snd_wl1); \
     modify_field(tcp_rx_d.pred_flags, pred_flags); \
-    modify_field(tcp_rx_d.max_window, max_window); \
+    modify_field(tcp_rx_d.snd_recover, snd_recover); \
     modify_field(tcp_rx_d.bytes_rcvd, bytes_rcvd); \
     modify_field(tcp_rx_d.snd_wnd, snd_wnd); \
     modify_field(tcp_rx_d.rcv_mss, rcv_mss); \
+    modify_field(tcp_rx_d.cc_flags, cc_flags); \
     modify_field(tcp_rx_d.rto, rto); \
     modify_field(tcp_rx_d.ecn_flags, ecn_flags); \
     modify_field(tcp_rx_d.state, state); \
@@ -874,7 +855,6 @@ action tcp_stage1_dummy() {
     modify_field(tcp_rx_d.flag, flag); \
     modify_field(tcp_rx_d.serq_pidx, serq_pidx); \
     modify_field(tcp_rx_d.quick, quick); \
-    modify_field(tcp_rx_d.snd_wscale, snd_wscale); \
     modify_field(tcp_rx_d.pending, pending); \
     modify_field(tcp_rx_d.ca_flags, ca_flags); \
     modify_field(tcp_rx_d.num_dup_acks, num_dup_acks); \
@@ -883,21 +863,63 @@ action tcp_stage1_dummy() {
     modify_field(tcp_rx_d.pingpong, pingpong); \
     modify_field(tcp_rx_d.alloc_descr, alloc_descr);
 
+#define GENERATE_S1_S2S_K \
+    modify_field(s1_s2s_scratch.payload_len, s1_s2s.payload_len); \
+    modify_field(s1_s2s_scratch.seq, s1_s2s.seq); \
+    modify_field(s1_s2s_scratch.ack_seq, s1_s2s.ack_seq); \
+    modify_field(s1_s2s_scratch.snd_nxt, s1_s2s.snd_nxt); \
+    modify_field(s1_s2s_scratch.rcv_mss_shft, s1_s2s.rcv_mss_shft); \
+    modify_field(s1_s2s_scratch.rcv_tsval, s1_s2s.rcv_tsval); \
+    modify_field(s1_s2s_scratch.quick_acks_decr, s1_s2s.quick_acks_decr); \
+    modify_field(s1_s2s_scratch.fin_sent, s1_s2s.fin_sent); \
+    modify_field(s1_s2s_scratch.rst_sent, s1_s2s.rst_sent); \
+    modify_field(s1_s2s_scratch.cc_rto_signal, s1_s2s.cc_rto_signal);
+
+/*
+ * Stage 1 table 0 action
+ */
+action tcp_rx(TCP_RX_CB_PARAMS) {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // k + i for stage 1
+    if (write_serq == 0) {
+        modify_field(to_s1_scratch.data_ofs_rsvd, to_s1.data_ofs_rsvd);
+        modify_field(to_s1_scratch.rcv_wup, to_s1.rcv_wup);
+        modify_field(to_s1_scratch.seq, to_s1.seq);
+        modify_field(to_s1_scratch.serq_cidx, to_s1.serq_cidx);
+        modify_field(to_s1_scratch.ip_dsfield, to_s1.ip_dsfield);
+    }
+
+    if (write_serq == 1) {
+        modify_field(to_cpu1_scratch.src_lif, cpu_hdr1.src_lif);
+        modify_field(to_cpu1_scratch.lif, cpu_hdr1.lif);
+        modify_field(to_cpu1_scratch.qtype, cpu_hdr1.qtype);
+        modify_field(to_cpu1_scratch.qid, cpu_hdr1.qid);
+        modify_field(to_cpu1_scratch.lkp_vrf, cpu_hdr1.lkp_vrf);
+        modify_field(to_cpu1_scratch.pad, cpu_hdr1.pad);
+        modify_field(to_cpu1_scratch.lkp_dir, cpu_hdr1.lkp_dir);
+        modify_field(to_cpu1_scratch.lkp_inst, cpu_hdr1.lkp_inst);
+        modify_field(to_cpu1_scratch.lkp_type, cpu_hdr1.lkp_type);
+        modify_field(to_cpu1_scratch.flags, cpu_hdr1.flags);
+        modify_field(to_cpu1_scratch.l2_offset, cpu_hdr1.l2_offset);
+        modify_field(to_cpu1_scratch.l3_offset_1, cpu_hdr1.l3_offset_1);
+    }
+
+    GENERATE_S1_S2S_K
+
+    // d for stage 1 tcp-rx
+    TCP_RX_CB_D
+}
+
 /*
  * Stage 2 table 0 action
  */
-action tcp_rx(TCP_RX_CB_PARAMS) {
-    // k + i for stage 1
+action tcp_ack(TCP_RX_CB_PARAMS) {
+    // k + i for stage 2
 
-
-    // from to_stage 2
-    if (write_serq == 1) {
-        modify_field(to_s2_scratch.data_ofs_rsvd, to_s2.data_ofs_rsvd);
-        modify_field(to_s2_scratch.rcv_wup, to_s2.rcv_wup);
-        modify_field(to_s2_scratch.seq, to_s2.seq);
-        modify_field(to_s2_scratch.serq_cidx, to_s2.serq_cidx);
-        modify_field(to_s2_scratch.ip_dsfield, to_s2.ip_dsfield);
-    }
+    // from ki global
+    GENERATE_GLOBAL_K
 
     if (write_serq == 0) {
         modify_field(to_cpu2_scratch.l3_offset_2, cpu_hdr2.l3_offset_2);
@@ -907,24 +929,35 @@ action tcp_rx(TCP_RX_CB_PARAMS) {
         modify_field(to_cpu2_scratch.tcp_seqNo, cpu_hdr2.tcp_seqNo);
         modify_field(to_cpu2_scratch.tcp_AckNo_1, cpu_hdr2.tcp_AckNo_1);
     }
-
-
-    // from ki global
-    GENERATE_GLOBAL_K
+    // from to_stage 2
+    if (write_serq == 1) {
+        modify_field(to_s2_scratch.flag, to_s2.flag);
+        modify_field(to_s2_scratch.window, to_s2.window);
+    }
 
     // from stage to stage
-    modify_field(s1_s2s_scratch.payload_len, s1_s2s.payload_len);
-    modify_field(s1_s2s_scratch.ack_seq, s1_s2s.ack_seq);
-    modify_field(s1_s2s_scratch.snd_nxt, s1_s2s.snd_nxt);
-    modify_field(s1_s2s_scratch.packets_out, s1_s2s.packets_out);
-    modify_field(s1_s2s_scratch.window, s1_s2s.window);
-    modify_field(s1_s2s_scratch.rcv_mss_shft, s1_s2s.rcv_mss_shft);
-    modify_field(s1_s2s_scratch.rcv_tsval, s1_s2s.rcv_tsval);
-    modify_field(s1_s2s_scratch.quick_acks_decr, s1_s2s.quick_acks_decr);
-    modify_field(s1_s2s_scratch.fin_sent, s1_s2s.fin_sent);
+    GENERATE_S1_S2S_K
 
-    // d for stage 2 tcp-rx
+    // d for stage 2 (reuse tcp-rx cb)
     TCP_RX_CB_D
+}
+
+/*
+ * Stage 2 table 1 action
+ */
+action read_rnmdr(rnmdr_pidx, rnmdr_pidx_full) {
+    // d for stage 2 table 1 read-rnmdr-idx
+    modify_field(read_rnmdr_d.rnmdr_pidx, rnmdr_pidx);
+    modify_field(read_rnmdr_d.rnmdr_pidx_full, rnmdr_pidx_full);
+}
+
+/*
+ * Stage 2 table 2 action
+ */
+action read_rnmpr(rnmpr_pidx, rnmpr_pidx_full) {
+    // d for stage 2 table 2 read-rnmpr-idx
+    modify_field(read_rnmpr_d.rnmpr_pidx, rnmpr_pidx);
+    modify_field(read_rnmpr_d.rnmpr_pidx_full, rnmpr_pidx_full);
 }
 
 /*
@@ -961,19 +994,21 @@ action tcp_ooo_book_keeping (start_seq0, end_seq0, tail_index0,
 
                              
 /*
- * Stage 3 table 0 action1
+ * Stage 3 table 0 action
  */
-action tcp_ack(TCP_RX_CB_PARAMS) {
+action tcp_rtt(RTT_D_PARAMS) {
     // k + i for stage 3
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // from to_stage 3
-    if (flag == 0) {
-        modify_field(to_s3_scratch.flag, to_s3.flag);
+    if (backoff == 0) {
+        modify_field(to_s3_scratch.snd_nxt, to_s3.snd_nxt);
+        modify_field(to_s3_scratch.rcv_tsval, to_s3.rcv_tsval);
+        modify_field(to_s3_scratch.rcv_tsecr, to_s3.rcv_tsecr);
     }
-    if (flag == 1) {
+    if (backoff == 1) {
         modify_field(to_cpu3_scratch.tcp_AckNo_2, cpu_hdr3.tcp_AckNo_2);
         modify_field(to_cpu3_scratch.tcp_window, cpu_hdr3.tcp_window);
         modify_field(to_cpu3_scratch.tcp_options, cpu_hdr3.tcp_options);
@@ -983,113 +1018,67 @@ action tcp_ack(TCP_RX_CB_PARAMS) {
 
     // from stage to stage
 
-    // d for stage 3 (reuse tcp-rx cb)
-    TCP_RX_CB_D
+    // d for rtt stage
+    GENERATE_RTT_D
 }
 
 /*
  * Stage 3 table 1 action
  */
-action read_rnmdr(rnmdr_pidx, rnmdr_pidx_full) {
-    // d for stage 2 table 1 read-rnmdr-idx
-    modify_field(read_rnmdr_d.rnmdr_pidx, rnmdr_pidx);
-    modify_field(read_rnmdr_d.rnmdr_pidx_full, rnmdr_pidx_full);
-}
-
-/*
- * Stage 3 table 2 action
- */
-action read_rnmpr(rnmpr_pidx, rnmpr_pidx_full) {
-    // d for stage 2 table 2 read-rnmpr-idx
-    modify_field(read_rnmpr_d.rnmpr_pidx, rnmpr_pidx);
-    modify_field(read_rnmpr_d.rnmpr_pidx_full, rnmpr_pidx_full);
-}
-
-/*
- * Stage 3 table 3 action
- */
-action l7_read_rnmdr(rnmdr_pidx, rnmdr_pidx_full) {
-    // d for stage 2 table 3 read-serq-idx
-    modify_field(l7_read_rnmdr_d.rnmdr_pidx, rnmdr_pidx);
-    modify_field(l7_read_rnmdr_d.rnmdr_pidx_full, rnmdr_pidx_full);
-
-}
-
-/*
- * Stage 4 table 0 action
- */
-action tcp_rtt(RTT_D_PARAMS) {
-    // k + i for stage 4
-
-    // from to_stage
-    modify_field(to_s4_scratch.snd_nxt, to_s4.snd_nxt);
-    modify_field(to_s4_scratch.rcv_tsval, to_s4.rcv_tsval);
-    modify_field(to_s4_scratch.rcv_tsecr, to_s4.rcv_tsecr);
-
-    // from ki global
-    GENERATE_GLOBAL_K
-
-    // from stage to stage
-
-    // d for stage 4 tcp-rtt
-    GENERATE_RTT_D
-}
-
-/*
- * Stage 4 table 1 action
- */
 action rdesc_alloc(desc, pad) {
     // k + i for stage 3 table 1
 
-    // from to_stage 4
+    // from to_stage 3
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // from stage to stage
-    modify_field(s4_t1_s2s_scratch.rnmdr_pidx, s4_t1_s2s.rnmdr_pidx);
+    modify_field(s3_t1_s2s_scratch.rnmdr_pidx, s3_t1_s2s.rnmdr_pidx);
 
-    // d for stage 4 table 1
+    // d for stage 3 table 1
     modify_field(rdesc_alloc_d.desc, desc);
     modify_field(rdesc_alloc_d.pad, pad);
 }
 
 /*
- * Stage 4 table 2 action
+ * Stage 3 table 2 action
  */
 action rpage_alloc(page, pad) {
     // k + i for stage 3 table 2
 
-    // from to_stage 4
+    // from to_stage 3
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // from stage to stage
-    modify_field(s4_t2_s2s_scratch.rnmpr_pidx, s4_t2_s2s.rnmpr_pidx);
+    modify_field(s3_t2_s2s_scratch.rnmpr_pidx, s3_t2_s2s.rnmpr_pidx);
 
-    // d for stage 4 table 2
+    // d for stage 3 table 2
     modify_field(rpage_alloc_d.page, page);
     modify_field(rpage_alloc_d.pad, pad);
 }
 
 /*
- * Stage 4 table 3 action1
+ * Stage 4 table 0 action
  */
-action l7_rdesc_alloc(desc, pad) {
-    // k + i for stage 3 table 1
+action tcp_cc(CC_D_PARAMS) {
+    // k + i for stage 4
 
-    // from to_stage 4
+    // from to_stage
+    modify_field(to_s4_scratch.bytes_acked, to_s4.bytes_acked);
+    modify_field(to_s4_scratch.snd_wnd, to_s4.snd_wnd);
+    modify_field(to_s4_scratch.cc_ack_signal, to_s4.cc_ack_signal);
+    modify_field(to_s4_scratch.cc_flags, to_s4.cc_flags);
 
     // from ki global
     GENERATE_GLOBAL_K
 
     // from stage to stage
-    //modify_field(s4_t1_s2s_scratch.rnmdr_pidx, s4_t1_s2s.rnmdr_pidx);
 
-    // d for stage 4 table 1
-    modify_field(l7_rdesc_alloc_d.desc, desc);
-    modify_field(l7_rdesc_alloc_d.pad, pad);
+    // d for stage 4 tcp-cc
+    GENERATE_CC_D
 }
 
 

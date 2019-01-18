@@ -112,6 +112,16 @@
 #define TCP_RTO_MAX_TICK                    (TCP_RTO_MAX / TCP_TIMER_TICK)
 #define TCP_RTO_MIN_TICK                    (TCP_RTO_MIN / TCP_TIMER_TICK)
 
+/*
+ * CC related
+ */
+#define TCP_MAX_WIN                         65535
+
+// CC algo
+#define TCP_CC_ALGO_NONE                    0
+#define TCP_CC_ALGO_NEW_RENO                1
+
+
 // Global stats
 #define TCP_PROXY_STATS_RNMDR_FULL              (0 << 3)
 #define TCP_PROXY_STATS_INVALID_SESQ_DESCR      (1 << 3)
