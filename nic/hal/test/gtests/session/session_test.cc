@@ -1813,7 +1813,7 @@ TEST_F(session_test, test10)
     nkh = l2seg_spec.add_network_key_handle();
     nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-    l2seg_spec.mutable_wire_encap()->set_encap_value(301);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(1001);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close();
@@ -1825,7 +1825,7 @@ TEST_F(session_test, test10)
     nkh = l2seg_spec.add_network_key_handle();
     nkh->set_nw_handle(nw_hdl1);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
-    l2seg_spec.mutable_wire_encap()->set_encap_value(302);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(1002);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close();
@@ -1845,7 +1845,7 @@ TEST_F(session_test, test10)
     enicif_spec1.mutable_key_or_handle()->set_interface_id(101);
     enicif_spec1.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
     enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(101);
-    enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(13);
+    enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(101);
     enicif_spec1.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x000000000001);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec1, &enicif_rsp1);
@@ -1858,7 +1858,7 @@ TEST_F(session_test, test10)
     enicif_spec2.mutable_key_or_handle()->set_interface_id(102);
     enicif_spec2.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_USEG);
     enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(102);
-    enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(14);
+    enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(102);
     enicif_spec2.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(0x000000000002);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(enicif_spec2, &enicif_rsp2);
