@@ -74,8 +74,8 @@ main(int argc, char *argv[])
 
     pciehdevice_resources_t p;
     memset(&p, 0, sizeof(p));
-    p.lif = 5;
-    p.lif_valid = 1;
+    p.lifb = 5;
+    p.lifc = 1;
     p.intrb = 0;
     p.intrc = 4;
     p.romsz = 4096;

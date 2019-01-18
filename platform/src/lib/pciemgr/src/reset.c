@@ -18,7 +18,7 @@
 static void
 reset_intr_pba_cfg(pciehwdev_t *phwdev)
 {
-    const u_int32_t lif = phwdev->lif;
+    const u_int32_t lif = phwdev->lifb;
     const u_int32_t intrb = phwdev->intrb;
     const u_int32_t intrc = phwdev->intrc;
 
@@ -28,7 +28,7 @@ reset_intr_pba_cfg(pciehwdev_t *phwdev)
 static void
 reset_intr_fwcfg(pciehwdev_t *phwdev)
 {
-    const u_int32_t lif = phwdev->lif;
+    const u_int32_t lif = phwdev->lifb;
     const u_int32_t intrb = phwdev->intrb;
     const u_int32_t intrc = phwdev->intrc;
     u_int32_t intr;

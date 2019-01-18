@@ -61,14 +61,21 @@ portmap_setlif(const u_int32_t lif, const u_int8_t port)
  */
 
 int
-pciehw_portmap_load(const u_int32_t lif, const u_int8_t port)
+pciehw_portmap_load(const u_int32_t lifb,
+                    const u_int32_t lifc,
+                    const u_int8_t port)
 {
-    portmap_setlif(lif, port);
+    u_int32_t lif;
+
+    for (lif = lifb; lif < lifb + lifc; lif++) {
+        portmap_setlif(lif, port);
+    }
     return 0;
 }
 
 int
-pciehw_portmap_unload(const u_int32_t lif)
+pciehw_portmap_unload(const u_int32_t lifb,
+                      const u_int32_t lifc)
 {
     /* nothing to do */
     return 0;

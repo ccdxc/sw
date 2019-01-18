@@ -235,18 +235,18 @@ cmd_add(int argc, char *argv[])
         case 'D':
             r.devcmddbpa = strtoull(optarg, NULL, 0);
             break;
+        case 'i':
+            r.intrc = strtoul(optarg, NULL, 0);
+            break;
         case 'I':
             r.intrb = strtoul(optarg, NULL, 0);
             break;
         case 'l':
-            r.nlifs = strtoul(optarg, NULL, 0);
+            r.lifc = strtoul(optarg, NULL, 0);
             break;
         case 'L':
-            r.lif = strtoul(optarg, NULL, 0);
-            r.lif_valid = 1;
-            break;
-        case 'i':
-            r.intrc = strtoul(optarg, NULL, 0);
+            r.lifb = strtoul(optarg, NULL, 0);
+            if (r.lifc == 0) r.lifc = 1;
             break;
         case 'N':
             name = optarg;

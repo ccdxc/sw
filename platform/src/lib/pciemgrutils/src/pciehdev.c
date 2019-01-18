@@ -33,10 +33,8 @@ pciehdev_new(const char *name, const pciehdevice_resources_t *pres)
 
     pciehdev_setconf_defaults(pdev);
     if (pres) {
-        if (pres->lif_valid) {
-            pdev->lif = pres->lif;
-            pdev->lif_valid = pres->lif_valid;
-        }
+        pdev->lifb = pres->lifb;
+        pdev->lifc = pres->lifc;
         pdev->intrb = pres->intrb;
         pdev->intrc = pres->intrc;
         pdev->port = pres->port;
@@ -124,10 +122,16 @@ pciehdev_get_port(pciehdev_t *pdev)
     return pdev->port;
 }
 
-int
-pciehdev_get_lif(pciehdev_t *pdev)
+u_int32_t
+pciehdev_get_lifb(pciehdev_t *pdev)
 {
-    return pdev->lif_valid ? pdev->lif : -1;
+    return pdev->lifb;
+}
+
+u_int32_t
+pciehdev_get_lifc(pciehdev_t *pdev)
+{
+    return pdev->lifc;
 }
 
 u_int32_t

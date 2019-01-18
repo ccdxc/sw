@@ -35,8 +35,11 @@ typedef struct {
 } __attribute__((packed)) hdrt_t;
 
 void pciehw_hdrt_init(void);
-int pciehw_hdrt_load(const u_int32_t lif, const u_int16_t bdf);
-int pciehw_hdrt_unload(const u_int32_t lif);
+int pciehw_hdrt_load(const u_int32_t lifb,
+                     const u_int32_t lifc,
+                     const u_int16_t bdf);
+int pciehw_hdrt_unload(const u_int32_t lifb,
+                       const u_int32_t lifc);
 void pciehw_hdrt_dbg(int argc, char *argv[]);
 
 #endif /* __HDRT_H__ */

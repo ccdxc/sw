@@ -81,7 +81,7 @@ add_common_resource_bar(pciehbars_t *pbars,
                 0x8,    /* prtsize */
                 PMT_BARF_RD);
     prt_res_enc(&prt,
-                intr_pba_addr(pres->lif),
+                intr_pba_addr(pres->lifb),
                 intr_pba_size(pres->intrc),
                 PRT_RESF_NONE);
     pciehbarreg_add_prt(&preg, &prt);
@@ -94,6 +94,13 @@ add_common_resource_bar(pciehbars_t *pbars,
         const u_int32_t stride = roundup_power2(intr_drvcfg_size(1));
         const int vfbitb = ffs(intr_drvcfg_size(1)) - 1;
         const int vfbitc = (ffs(pmtsize) - 1) - vfbitb;
+
+        /*
+         * We can fit up to 128 intrs in this page.
+         * (We could extend into the next page which is
+         * currently free?)
+         */
+        assert(pres->intrc <= 0x1000 / stride);
 
         memset(&preg, 0, sizeof(preg));
         preg.baroff = 0x3000;
@@ -126,6 +133,13 @@ add_common_resource_bar(pciehbars_t *pbars,
         const int vfbitb = ffs(intr_msixcfg_size(1)) - 1;
         const int vfbitc = (ffs(pmtsize) - 1) - vfbitb;
 
+        /*
+         * We can fit up to 256 intrs in this page.
+         * (If we need more we'll have to rearrange things.
+         * Could push the PBA region to +0x7800?)
+         */
+        assert(pres->intrc <= 0x1000 / stride);
+
         memset(&preg, 0, sizeof(preg));
         preg.baroff = 0x6000;
         pmt_bar_enc(&preg.pmt,
@@ -155,7 +169,7 @@ add_common_resource_bar(pciehbars_t *pbars,
                 0x8,    /* prtsize */
                 PMT_BARF_RD);
     prt_res_enc(&prt,
-                intr_pba_addr(pres->lif),
+                intr_pba_addr(pres->lifb),
                 intr_pba_size(pres->intrc),
                 PRT_RESF_NONE);
     pciehbarreg_add_prt(&preg, &prt);
@@ -197,7 +211,7 @@ add_common_doorbell_bar(pciehbars_t *pbars,
      * bar so if lifs is not an even power-of-2 we'll (silently)
      * reduce.  XXX assert?
      */
-    nlifs = MAX(pres->nlifs, 1);
+    nlifs = MAX(pres->lifc, 1);
     nlifs2 = roundup_power2(nlifs);
     /*assert(nlifs2 == nlifs);*/
     while (nlifs2 > nlifs) nlifs2 >>= 1;
@@ -235,7 +249,7 @@ add_common_doorbell_bar(pciehbars_t *pbars,
     bitc = ffs(nlifs2) - 1;
     pmt_bar_setr_lif(&preg.pmt, bitb, bitc);
 
-    prt_db64_enc(&prt, pres->lif, upd);
+    prt_db64_enc(&prt, pres->lifb, upd);
     pciehbarreg_add_prt(&preg, &prt);
 
     pciehbar_add_reg(&pbar, &preg);

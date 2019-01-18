@@ -228,8 +228,9 @@ do_dev_add(pmmsg_t *m)
     /* log what we got */
     {
         pciehbar_t *pbar = pdev->pbars->bars;
-        pciesys_loginfo("dev_add: port %d %s lif %d\n",
-                        pdev->port, pdev->name, pdev->lif);
+        pciesys_loginfo("dev_add: port %d %s lifs %d-%d\n",
+                        pdev->port, pdev->name, pdev->lifb,
+                        pdev->lifb + pdev->lifc - 1);
         for (b = 0; b < PCIEHBAR_NBARS; b++, pbar++) {
             if (pbar->size == 0) continue;
             pciesys_logdebug("  bar %d nregs %d\n", b, pbar->nregs);
