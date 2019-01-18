@@ -176,7 +176,7 @@ def __add_config_classic_workloads(req, target_node = None):
             wl_msg.mac_address = mac_allocator.Alloc().get()
             wl_msg.encap_vlan = vlan
             wl_msg.uplink_vlan = wl_msg.encap_vlan
-            wl_msg.workload_name = node + "_subif_" + str(vlan)
+            wl_msg.workload_name = node + "_" + node_ifs[node][i] + "_subif_" + str(vlan)
             wl_msg.node_name = node
             wl_msg.pinned_port = 1
             wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
@@ -207,7 +207,7 @@ def __add_config_classic_workloads(req, target_node = None):
                wl_msg.mac_address = mac_allocator.Alloc().get()
                wl_msg.encap_vlan = vlan
                wl_msg.uplink_vlan = wl_msg.encap_vlan
-               wl_msg.workload_name = node + "_subif_" + str(vlan)
+               wl_msg.workload_name = node + "_" + node_ifs[node][i] + "_subif_" + str(vlan)
                wl_msg.node_name = node
                wl_msg.pinned_port = 1
                wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
@@ -254,6 +254,39 @@ def AddNaplesWorkloads(target_node=None):
         if resp is None:
             sys.exit(1)
 
+
+def __delete_classic_workloads(target_node = None):
+    req = topo_svc.WorkloadMsg()
+    for wl in api.GetWorkloads():
+        if target_node and target_node != wl.node_name:
+            api.Logger.info("Skipping delete workload for node %s" % wl.node_name)
+            continue
+        req.workload_op = topo_svc.DELETE
+        wl_msg = req.workloads.add()
+        wl_msg.workload_name = wl.workload_name
+        wl_msg.node_name = wl.node_name
+
+def __readd_classic_workloads(target_node = None):
+    req = topo_svc.WorkloadMsg()
+    for wl in api.GetWorkloads():
+        if target_node and target_node != wl.node_name:
+            api.Logger.info("Skipping delete workload for node %s" % wl.node_name)
+            continue
+        req.workload_op = topo_svc.ADD
+        wl_msg = req.workloads.add()
+        wl_msg.ip_prefix = wl.ip_prefix
+        wl_msg.ipv6_prefix = wl.ipv6_prefix
+        wl_msg.mac_address = wl.mac_address
+        wl_msg.encap_vlan = wl.encap_vlan
+        wl_msg.uplink_vlan = wl.uplink_vlan
+        wl_msg.workload_name = wl.workload_name
+        wl_msg.node_name = wl.node_name
+        wl_msg.pinned_port = wl.pinned_port
+        wl_msg.interface_type = wl.interface_type
+        wl_msg.interface = wl.interface
+        wl_msg.workload_type = wl.workload_type
+        wl_msg.workload_image = wl.workload_image
+
 def __delete_workloads(target_node = None):
     ep_objs = netagent_api.QueryConfigs(kind='Endpoint')
     req = topo_svc.WorkloadMsg()
@@ -275,8 +308,12 @@ def __delete_workloads(target_node = None):
             sys.exit(1)
 
 def ReAddWorkloads(node):
-    __delete_workloads(node)
-    __add_workloads(node)
+    if api.GetNicMode() == 'classic':
+        __delete_classic_workloads(node)
+        __readd_classic_workloads(node)
+    else:
+        __delete_workloads(node)
+        __add_workloads(node)
     AddNaplesWorkloads(node)
 
 

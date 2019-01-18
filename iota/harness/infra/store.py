@@ -36,6 +36,8 @@ class Workload:
     def __init__(self, msg=None):
         if msg:
             self.workload_name = msg.workload_name
+            self.workload_type = msg.workload_type
+            self.workload_image = msg.workload_image
             self.node_name = msg.node_name
             self.encap_vlan = msg.encap_vlan
             self.ip_prefix = msg.ip_prefix
