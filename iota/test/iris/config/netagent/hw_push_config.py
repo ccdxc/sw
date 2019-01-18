@@ -219,7 +219,7 @@ def __add_workloads(target_node = None):
     req = topo_svc.WorkloadMsg()
     if api.GetNicMode() == 'hostpin':
         __add_config_worklads(req, target_node)
-    if api.GetNicMode() == 'classic':
+    elif api.GetNicMode() == 'classic':
         __add_config_classic_workloads(req, target_node)
     else:
         assert(0)
