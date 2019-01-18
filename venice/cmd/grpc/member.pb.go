@@ -34,7 +34,7 @@ import fmt "fmt"
 import math "math"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
 import _ "github.com/gogo/protobuf/gogoproto"
-import cluster1 "github.com/pensando/sw/api/generated/cluster"
+import cluster2 "github.com/pensando/sw/api/generated/cluster"
 import api "github.com/pensando/sw/api"
 import certapi "github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 
@@ -323,7 +323,7 @@ func (*ClusterDisjoinResp) Descriptor() ([]byte, []int) { return fileDescriptorM
 
 // NMD --> CMD
 type NICAdmissionRequest struct {
-	Nic cluster1.SmartNIC `protobuf:"bytes,1,opt,name=Nic" json:"nic,omitempty"`
+	Nic cluster2.SmartNIC `protobuf:"bytes,1,opt,name=Nic" json:"nic,omitempty"`
 	// Factory Certificate
 	Cert []byte `protobuf:"bytes,2,opt,name=Cert,proto3" json:"cert,omitempty"`
 	// Cluster Certificate Signing Request
@@ -335,11 +335,11 @@ func (m *NICAdmissionRequest) String() string            { return proto.CompactT
 func (*NICAdmissionRequest) ProtoMessage()               {}
 func (*NICAdmissionRequest) Descriptor() ([]byte, []int) { return fileDescriptorMember, []int{9} }
 
-func (m *NICAdmissionRequest) GetNic() cluster1.SmartNIC {
+func (m *NICAdmissionRequest) GetNic() cluster2.SmartNIC {
 	if m != nil {
 		return m.Nic
 	}
-	return cluster1.SmartNIC{}
+	return cluster2.SmartNIC{}
 }
 
 func (m *NICAdmissionRequest) GetCert() []byte {
@@ -515,7 +515,7 @@ func (m *RegisterNICResponse) GetAdmissionResponse() *NICAdmissionResponse {
 // Update NIC request
 type UpdateNICRequest struct {
 	// SmartNIC object
-	Nic cluster1.SmartNIC `protobuf:"bytes,1,opt,name=Nic" json:"nic,omitempty"`
+	Nic cluster2.SmartNIC `protobuf:"bytes,1,opt,name=Nic" json:"nic,omitempty"`
 }
 
 func (m *UpdateNICRequest) Reset()                    { *m = UpdateNICRequest{} }
@@ -523,17 +523,17 @@ func (m *UpdateNICRequest) String() string            { return proto.CompactText
 func (*UpdateNICRequest) ProtoMessage()               {}
 func (*UpdateNICRequest) Descriptor() ([]byte, []int) { return fileDescriptorMember, []int{15} }
 
-func (m *UpdateNICRequest) GetNic() cluster1.SmartNIC {
+func (m *UpdateNICRequest) GetNic() cluster2.SmartNIC {
 	if m != nil {
 		return m.Nic
 	}
-	return cluster1.SmartNIC{}
+	return cluster2.SmartNIC{}
 }
 
 // Update NIC response
 type UpdateNICResponse struct {
 	// SmartNIC object
-	Nic *cluster1.SmartNIC `protobuf:"bytes,1,opt,name=Nic" json:"nic,omitempty"`
+	Nic *cluster2.SmartNIC `protobuf:"bytes,1,opt,name=Nic" json:"nic,omitempty"`
 }
 
 func (m *UpdateNICResponse) Reset()                    { *m = UpdateNICResponse{} }
@@ -541,7 +541,7 @@ func (m *UpdateNICResponse) String() string            { return proto.CompactTex
 func (*UpdateNICResponse) ProtoMessage()               {}
 func (*UpdateNICResponse) Descriptor() ([]byte, []int) { return fileDescriptorMember, []int{16} }
 
-func (m *UpdateNICResponse) GetNic() *cluster1.SmartNIC {
+func (m *UpdateNICResponse) GetNic() *cluster2.SmartNIC {
 	if m != nil {
 		return m.Nic
 	}
@@ -551,7 +551,7 @@ func (m *UpdateNICResponse) GetNic() *cluster1.SmartNIC {
 // SmartNIC watch event
 type SmartNICEvent struct {
 	EventType api.EventType     `protobuf:"varint,1,opt,name=EventType,proto3,enum=api.EventType" json:"eventType,omitempty"`
-	Nic       cluster1.SmartNIC `protobuf:"bytes,2,opt,name=Nic" json:"nic,omitempty"`
+	Nic       cluster2.SmartNIC `protobuf:"bytes,2,opt,name=Nic" json:"nic,omitempty"`
 }
 
 func (m *SmartNICEvent) Reset()                    { *m = SmartNICEvent{} }
@@ -566,11 +566,11 @@ func (m *SmartNICEvent) GetEventType() api.EventType {
 	return api.EventType_CreateEvent
 }
 
-func (m *SmartNICEvent) GetNic() cluster1.SmartNIC {
+func (m *SmartNICEvent) GetNic() cluster2.SmartNIC {
 	if m != nil {
 		return m.Nic
 	}
-	return cluster1.SmartNIC{}
+	return cluster2.SmartNIC{}
 }
 
 func init() {
@@ -3976,7 +3976,7 @@ func (m *UpdateNICResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Nic == nil {
-				m.Nic = &cluster1.SmartNIC{}
+				m.Nic = &cluster2.SmartNIC{}
 			}
 			if err := m.Nic.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
