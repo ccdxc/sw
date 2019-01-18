@@ -1,0 +1,17 @@
+# Feature Test Modules List
+feature:
+    id          : mpls_udp
+    sub         : tx
+    package     : test.mpls_udp
+    module      : mpls_udp
+    spec        : tx.testspec
+    enable      : True
+    ignore      : False
+
+
+modules:
+    - module:
+        name    : IPV4_UDP_QTAG
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True

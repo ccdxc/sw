@@ -1,0 +1,39 @@
+# Topology specification
+meta:
+    id: TOPO_BASE
+
+uplink:
+    - entry:
+        id      : Uplink1
+        port    : 1
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+    - entry:
+        id      : Uplink2
+        port    : 2
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+uplinkpc: None
+
+proxy: None
+
+ipsec: None
+
+acls: None
+
+qos : True
+
+security_profiles: None
+security_policy: None
+
+tenants:
+    -   spec    : ref://store/specs/id=MPLS_UDPTOPO_TENANT_OVERLAY_MPLS_UDP
+        count   : 1
+        lifns   : range/301/304
+        uplink  : ref://store/objects/id=Uplink1
+
+cpu: None

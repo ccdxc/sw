@@ -344,8 +344,8 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_mpls_udp (pd_tnnl_rw_entry_t *tnnl_rwe)
     tnnl_rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
     HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
 
-    memcpy(data_mpls_udp.mac_sa, tnnl_rwe->tnnl_rw_key.mac_sa, ETH_ADDR_LEN);
-    memrev(data_mpls_udp.mac_sa, ETH_ADDR_LEN);
+    //memcpy(data_mpls_udp.mac_sa, tnnl_rwe->tnnl_rw_key.mac_sa, ETH_ADDR_LEN);
+    //memrev(data_mpls_udp.mac_sa, ETH_ADDR_LEN);
     memcpy(data_mpls_udp.mac_da, tnnl_rwe->tnnl_rw_key.mac_da, ETH_ADDR_LEN);
     memrev(data_mpls_udp.mac_da, ETH_ADDR_LEN);
     memcpy(&data_mpls_udp.ip_sa, &tnnl_rwe->tnnl_rw_key.ip_sa.addr, sizeof(uint32_t));

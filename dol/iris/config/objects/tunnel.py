@@ -134,7 +134,39 @@ class TunnelObject(base.ConfigObjectBase):
             req_spec.if_tunnel_info.gre_info.source.v4_addr = self.ltep.getnum()
             req_spec.if_tunnel_info.gre_info.destination.ip_af = haldefs.common.IP_AF_INET
             req_spec.if_tunnel_info.gre_info.destination.v4_addr = self.remote_ep.ipaddrs[0].getnum()
-
+        elif self.encap_type == "MPLS_UDP":
+            #import pdb; pdb.set_trace()
+            # Substrate IP (DIPo incoming)
+            req_spec.key_or_handle.interface_id = 3
+            req_spec.if_tunnel_info.encap_type = haldefs.interface.IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS
+            req_spec.if_tunnel_info.prop_mpls_info.substrate_ip.ip_af = haldefs.common.IP_AF_INET
+            req_spec.if_tunnel_info.prop_mpls_info.substrate_ip.v4_addr = self.ltep.getnum()
+            # Tunnel dest IP (DIPo outgoing)
+            req_spec.if_tunnel_info.prop_mpls_info.tunnel_dest_ip.ip_af = haldefs.common.IP_AF_INET
+            req_spec.if_tunnel_info.prop_mpls_info.tunnel_dest_ip.v4_addr = self.rtep.getnum()
+            # Overlay IP (DIPi incoming)
+            oip = req_spec.if_tunnel_info.prop_mpls_info.overlay_ip.add()
+            oip.ip_af = haldefs.common.IP_AF_INET
+            oip.v4_addr = self.rtep.getnum()
+            oip.v4_addr = self.ltep.getnum()
+            # MPLS if (MPLS-tag incoming)
+            mplsif = req_spec.if_tunnel_info.prop_mpls_info.mpls_if.add()
+            mplsif.label = 12345
+            mplsif.exp = 0
+            mplsif.ttl = 64
+            # MPLS tag (MPLS-tag outgoing)
+            req_spec.if_tunnel_info.prop_mpls_info.mpls_tag.label = 54321
+            req_spec.if_tunnel_info.prop_mpls_info.mpls_tag.exp = 0
+            req_spec.if_tunnel_info.prop_mpls_info.mpls_tag.ttl = 64
+            # Source GW (IPv4 prefix) 10.10.10.0/24
+            req_spec.if_tunnel_info.prop_mpls_info.source_gw.prefix.ipv4_subnet.address.ip_af = haldefs.common.IP_AF_INET
+            req_spec.if_tunnel_info.prop_mpls_info.source_gw.prefix.ipv4_subnet.address.v4_addr = 168430080
+            req_spec.if_tunnel_info.prop_mpls_info.source_gw.prefix.ipv4_subnet.prefix_len = 24
+            # Ingress/Egress BW
+            req_spec.if_tunnel_info.prop_mpls_info.ingress_bw = 100000
+            req_spec.if_tunnel_info.prop_mpls_info.egress_bw = 100000
+            # GW mac
+            req_spec.if_tunnel_info.prop_mpls_info.gw_mac_da = 12345
 #        # QOS stuff
 #        if self.txqos.cos is not None:
 #            req_spec.tx_qos_actions.marking_spec.pcp_rewrite_en = True
@@ -142,7 +174,6 @@ class TunnelObject(base.ConfigObjectBase):
 #        if self.txqos.dscp is not None:
 #            req_spec.tx_qos_actions.marking_spec.dscp_rewrite_en = True
 #            req_spec.tx_qos_actions.marking_spec.dscp = self.txqos.dscp
- 
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):

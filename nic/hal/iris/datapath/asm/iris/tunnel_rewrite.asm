@@ -81,15 +81,14 @@ encap_mpls_udp:
   or          r5, r0, k.capri_p4_intrinsic_packet_len
   add         r7, r5, -2
   // ethernet header
-  phvwrpair   p.ethernet_dstAddr, d.u.encap_mpls_udp_d.mac_da, \
-                p.ethernet_srcAddr, d.u.encap_mpls_udp_d.mac_sa
+  phvwr       p.ethernet_dstAddr, d.u.encap_mpls_udp_d.mac_da
   // udp header
   add         r1, r0, k.rewrite_metadata_entropy_hash, 48
   or          r1, r1, UDP_PORT_MPLS, 32
   or          r1, r1, r7, 16
   phvwr       p.{udp_srcPort...udp_checksum}, r1
   // mpls header
-  or          r1, 0x120, k.rewrite_metadata_tunnel_vnid, 12
+  or          r1, 0x140, k.rewrite_metadata_tunnel_vnid, 12
   phvwr       p.{mpls_0_label,mpls_0_exp,mpls_0_bos,mpls_0_ttl}, r1
   // set header valid bits
   phvwr       p.{mpls_0_valid,udp_valid}, 0x3
