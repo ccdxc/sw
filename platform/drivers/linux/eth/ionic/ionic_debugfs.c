@@ -187,6 +187,7 @@ void ionic_debugfs_del_dev(struct ionic *ionic)
 	scratch_bufs_free(ionic);
 #endif
 	debugfs_remove_recursive(ionic->dentry);
+	ionic->dentry = NULL;
 }
 
 static int bars_show(struct seq_file *seq, void *v)
@@ -396,6 +397,7 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 	qcq_dentry = debugfs_create_dir(q->name, lif->dentry);
 	if (IS_ERR_OR_NULL(qcq_dentry))
 		return PTR_ERR(qcq_dentry);
+	qcq->dentry = qcq_dentry;
 
 	debugfs_create_x32("total_size", 0400, qcq_dentry, &qcq->total_size);
 	debugfs_create_x64("base_pa", 0400, qcq_dentry, &qcq->base_pa);
@@ -571,6 +573,18 @@ int ionic_debugfs_add_lif(struct lif *lif)
 		return PTR_ERR(netdev_dentry);
 
 	return 0;
+}
+
+void ionic_debugfs_del_lif(struct lif *lif)
+{
+	debugfs_remove_recursive(lif->dentry);
+	lif->dentry = NULL;
+}
+
+void ionic_debugfs_del_qcq(struct qcq *qcq)
+{
+	debugfs_remove_recursive(qcq->dentry);
+	qcq->dentry = NULL;
 }
 
 #endif

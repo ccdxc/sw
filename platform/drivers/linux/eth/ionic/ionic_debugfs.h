@@ -25,6 +25,8 @@ int ionic_debugfs_add_ident(struct ionic *ionic);
 int ionic_debugfs_add_sizes(struct ionic *ionic);
 int ionic_debugfs_add_lif(struct lif *lif);
 int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq);
+void ionic_debugfs_del_lif(struct lif *lif);
+void ionic_debugfs_del_qcq(struct qcq *qcq);
 #else
 static inline void ionic_debugfs_create(void) { }
 static inline void ionic_debugfs_destroy(void) { }
@@ -36,6 +38,8 @@ static inline int ionic_debugfs_add_ident(struct ionic *ionic) { return 0; }
 static inline int ionic_debugfs_add_sizes(struct ionic *ionic) { return 0; }
 static inline int ionic_debugfs_add_lif(struct lif *lif) { return 0; }
 static inline int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq) { return 0; }
+static inline void ionic_debugfs_del_lif(struct lif *lif) { return 0; }
+static inline void ionic_debugfs_del_qcq(struct qcq *qcq) { return 0; }
 #endif
 
 #endif /* _IONIC_DEBUGFS_H_ */

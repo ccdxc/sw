@@ -1222,6 +1222,8 @@ static void ionic_lif_free(struct lif *lif)
 		lif->notifyblock_pa = 0;
 	}
 
+	ionic_debugfs_del_lif(lif);
+
 	free_netdev(lif->netdev);
 }
 
@@ -1376,6 +1378,8 @@ static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 
 	if (!qcq)
 		return;
+
+	ionic_debugfs_del_qcq(qcq);
 
 	if (!(qcq->flags & QCQ_F_INITED))
 		return;

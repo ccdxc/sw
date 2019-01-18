@@ -69,6 +69,7 @@ struct qcq {
 		struct rx_stats rx;
 	} stats;
 	unsigned int flags;
+	struct dentry *dentry;
 };
 
 #define q_to_qcq(q)		container_of(q, struct qcq, q)
