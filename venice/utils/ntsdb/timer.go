@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -245,6 +246,12 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 		case bool:
 			v := field.(bool)
 			mfs[key] = &metric.Field{F: &metric.Field_Bool{Bool: v}}
+		case metrics.Counter:
+			v := int64(field.(metrics.Counter))
+			mfs[key] = &metric.Field{F: &metric.Field_Int64{Int64: v}}
+		case metrics.Gauge:
+			v := float64(field.(metrics.Gauge))
+			mfs[key] = &metric.Field{F: &metric.Field_Float64{Float64: v}}
 		default:
 			log.Errorf("Unrecognized type %T", k)
 		}

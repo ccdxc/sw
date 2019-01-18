@@ -7,89 +7,183 @@
 package restapi
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/fatih/structs"
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/delphi/proto/goproto"
 	_ "github.com/pensando/sw/nic/utils/ntranslate/accel_metrics"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ntranslate"
+	tsdb "github.com/pensando/sw/venice/utils/ntsdb"
 )
-
-func init() {
-	name := "/telemetry/v1/metrics/accelhwringmetrics/"
-	if prefixRoutes == nil {
-		prefixRoutes = make(map[string]routeAddFunc)
-	}
-	prefixRoutes[name] = addAccelHwRingMetricsAPIRoutes
-}
 
 // addAccelHwRingMetricsAPIRoutes adds routes for AccelHwRingMetrics
 func addAccelHwRingMetricsAPIRoutes(r *mux.Router, srv *RestServer) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(srv.runAccelHwRingMetricsGetHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.runAccelHwRingMetricsListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(srv.getAccelHwRingMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listAccelHwRingMetricsHandler))
 }
 
-// runAccelHwRingMetricsListHandler is the List Handler for AccelHwRingMetrics
-func (s *RestServer) runAccelHwRingMetricsListHandler(r *http.Request) (interface{}, error) {
+// listAccelHwRingMetricsHandler is the List Handler for AccelHwRingMetrics
+func (s *RestServer) listAccelHwRingMetricsHandler(r *http.Request) (interface{}, error) {
 	iter, err := goproto.NewAccelHwRingMetricsIterator()
 	if err != nil {
-		log.Infof("Error: %s", err)
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
 	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
 	var mtr []goproto.AccelHwRingMetrics
-	tstr := ntranslate.MustGetTranslator()
+
 	for iter.HasNext() {
 		temp := iter.Next()
-		temp.ObjectMeta = *(tstr.GetObjectMeta("AccelHwRingMetricsKey", temp.GetKey()))
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.keyTranslator.GetObjectMeta("AccelHwRingMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for AccelHwRingMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
 		mtr = append(mtr, *temp)
 	}
 	iter.Free()
-
 	return mtr, nil
 }
 
-// runAccelHwRingMetricsGetHandler is the Get Handler for AccelHwRingMetrics
-func (s *RestServer) runAccelHwRingMetricsGetHandler(r *http.Request) (interface{}, error) {
+// getAccelHwRingMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getAccelHwRingMetricsPoints() ([]*tsdb.Point, error) {
+	iter, err := goproto.NewAccelHwRingMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	points := []*tsdb.Point{}
+
+	for iter.HasNext() {
+		m := iter.Next()
+		if m == nil {
+			continue
+		}
+
+		// translate key to meta
+		objMeta := s.keyTranslator.GetObjectMeta("AccelHwRingMetricsKey", m.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for AccelHwRingMetrics key %+v", m.GetKey())
+			continue
+		}
+		tags := s.getTagsFromMeta(objMeta)
+		fields := structs.Map(m)
+
+		if len(fields) > 0 {
+			delete(fields, "ObjectMeta")
+			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
+		}
+	}
+
+	iter.Free()
+	return points, nil
+}
+
+// getAccelHwRingMetricsHandler is the Get Handler for AccelHwRingMetrics
+func (s *RestServer) getAccelHwRingMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request AccelHwRingMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
-func init() {
-	name := "/telemetry/v1/metrics/accelseqqueuemetrics/"
-	if prefixRoutes == nil {
-		prefixRoutes = make(map[string]routeAddFunc)
-	}
-	prefixRoutes[name] = addAccelSeqQueueMetricsAPIRoutes
-}
-
 // addAccelSeqQueueMetricsAPIRoutes adds routes for AccelSeqQueueMetrics
 func addAccelSeqQueueMetricsAPIRoutes(r *mux.Router, srv *RestServer) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(srv.runAccelSeqQueueMetricsGetHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.runAccelSeqQueueMetricsListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(srv.getAccelSeqQueueMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listAccelSeqQueueMetricsHandler))
 }
 
-// runAccelSeqQueueMetricsListHandler is the List Handler for AccelSeqQueueMetrics
-func (s *RestServer) runAccelSeqQueueMetricsListHandler(r *http.Request) (interface{}, error) {
+// listAccelSeqQueueMetricsHandler is the List Handler for AccelSeqQueueMetrics
+func (s *RestServer) listAccelSeqQueueMetricsHandler(r *http.Request) (interface{}, error) {
 	iter, err := goproto.NewAccelSeqQueueMetricsIterator()
 	if err != nil {
-		log.Infof("Error: %s", err)
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
 	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
 	var mtr []goproto.AccelSeqQueueMetrics
-	tstr := ntranslate.MustGetTranslator()
+
 	for iter.HasNext() {
 		temp := iter.Next()
-		temp.ObjectMeta = *(tstr.GetObjectMeta("AccelSeqQueueMetricsKey", temp.GetKey()))
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.keyTranslator.GetObjectMeta("AccelSeqQueueMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for AccelSeqQueueMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
 		mtr = append(mtr, *temp)
 	}
 	iter.Free()
-
 	return mtr, nil
 }
 
-// runAccelSeqQueueMetricsGetHandler is the Get Handler for AccelSeqQueueMetrics
-func (s *RestServer) runAccelSeqQueueMetricsGetHandler(r *http.Request) (interface{}, error) {
+// getAccelSeqQueueMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getAccelSeqQueueMetricsPoints() ([]*tsdb.Point, error) {
+	iter, err := goproto.NewAccelSeqQueueMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	points := []*tsdb.Point{}
+
+	for iter.HasNext() {
+		m := iter.Next()
+		if m == nil {
+			continue
+		}
+
+		// translate key to meta
+		objMeta := s.keyTranslator.GetObjectMeta("AccelSeqQueueMetricsKey", m.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for AccelSeqQueueMetrics key %+v", m.GetKey())
+			continue
+		}
+		tags := s.getTagsFromMeta(objMeta)
+		fields := structs.Map(m)
+
+		if len(fields) > 0 {
+			delete(fields, "ObjectMeta")
+			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
+		}
+	}
+
+	iter.Free()
+	return points, nil
+}
+
+// getAccelSeqQueueMetricsHandler is the Get Handler for AccelSeqQueueMetrics
+func (s *RestServer) getAccelSeqQueueMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request AccelSeqQueueMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }

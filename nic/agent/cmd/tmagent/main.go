@@ -28,6 +28,9 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
+// reportInterval is how often(in seconds) tmagent sends metrics to TSDB
+const reportInterval = 30
+
 type service struct {
 	name         string
 	sysmgrClient *sysmgr.Client
@@ -46,25 +49,32 @@ func (s *service) Name() string {
 	return s.name
 }
 
-func reportMetrics(nodeUUID string, rc resolver.Interface) error {
+// TelemetryAgent keeps the telementry agent state
+type TelemetryAgent struct {
+	tpCtrler   *state.PolicyState
+	tpClient   *ctrlerif.TpClient
+	nodeUUID   string
+	restServer *restapi.RestServer
+}
+
+func (ta *TelemetryAgent) reportMetrics(ctx context.Context, rc resolver.Interface) error {
 	// report node metrics
 	node := &cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{
 			Kind: "SmartNIC",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: nodeUUID,
+			Name: ta.nodeUUID,
 		},
 	}
 
-	return nodewatcher.NewNodeWatcher(context.Background(), node, rc, 30, log.WithContext("pkg", "nodewatcher"))
-}
+	if err := nodewatcher.NewNodeWatcher(ctx, node, rc, reportInterval, log.WithContext("pkg", "nodewatcher")); err != nil {
+		return err
+	}
 
-// TelemetryAgent keeps the telementry agent state
-type TelemetryAgent struct {
-	tpCtrler *state.PolicyState
-	tpClient *ctrlerif.TpClient
-	nodeUUID string
+	// report delphi metrics
+	go ta.restServer.ReportMetrics(reportInterval)
+	return nil
 }
 
 func main() {
@@ -156,6 +166,11 @@ func main() {
 	defer tmAgent.tpCtrler.Close()
 	defer cancel()
 
+	tmAgent.restServer, err = restapi.NewRestServer(ctx, *restURL)
+	if err != nil {
+		log.Fatalf("failed to create tmagent rest API server, Err: %v", err)
+	}
+
 	if *mode == "network" {
 
 		tmAgent.tpClient, err = ctrlerif.NewTpClient(tmAgent.nodeUUID, tmAgent.tpCtrler, globals.Tpm, rc)
@@ -163,7 +178,7 @@ func main() {
 			log.Fatalf("failed to init tmagent controller, err: %v", err)
 		}
 
-		if err := reportMetrics(tmAgent.nodeUUID, rc); err != nil {
+		if err := tmAgent.reportMetrics(ctx, rc); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -171,11 +186,6 @@ func main() {
 	for ix := 0; ix < instCount; ix++ {
 		ipc := shm.IPCInstance()
 		go ipc.Receive(context.Background(), tmAgent.tpCtrler.ProcessFWEvent)
-	}
-
-	_, err = restapi.NewRestServer(*restURL)
-	if err != nil {
-		log.Errorf("Error creating the rest API server. Err: %v", err)
 	}
 
 	delphiClient, err := delphi.NewClient(srv)

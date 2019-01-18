@@ -2561,6 +2561,7 @@
     "github.com/docker/docker/api/types/container",
     "github.com/docker/docker/api/types/mount",
     "github.com/docker/docker/client",
+    "github.com/fatih/structs",
     "github.com/fsnotify/fsnotify",
     "github.com/ghodss/yaml",
     "github.com/go-kit/kit/endpoint",

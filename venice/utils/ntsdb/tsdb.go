@@ -105,6 +105,7 @@ type Obj interface {
 	Histogram(field string) api.Histogram
 	Summary(field string) api.Summary
 	Point(keys map[string]string, fields map[string]interface{}, ts time.Time)
+	Points(points []*Point, ts time.Time) error
 	AtomicBegin(ts time.Time)
 	AtomicEnd()
 	Push()
@@ -141,7 +142,11 @@ func NewObj(tableName string, keys map[string]string, metrics interface{}, opts 
 	// objName is uniquely determind from the set of keys
 	// if the keys overlap, then object is considered existing
 	// and an existing value is returned
-	objName := getObjName(keys)
+	objName := tableName
+	if len(keys) > 0 {
+		objName = getObjName(keys)
+	}
+
 	obj, ok := global.objs[objName]
 	if ok {
 		return obj, nil
@@ -554,6 +559,7 @@ func (s *iSummary) AddSample(value float64) {
 	obj.dirty = true
 }
 
+//todo: remove
 // Point creates a point with keys/fields in the time series
 func (obj *iObj) Point(keys map[string]string, fields map[string]interface{}, ts time.Time) {
 	if ts.IsZero() {
@@ -563,4 +569,24 @@ func (obj *iObj) Point(keys map[string]string, fields map[string]interface{}, ts
 	createNewMetricPointFromKeysFields(obj, keys, fields, ts)
 
 	obj.dirty = true
+}
+
+// Point contains tags and fields, used to add multiple points
+type Point struct {
+	Tags   map[string]string
+	Fields map[string]interface{}
+}
+
+// Points add multiple points in tsdb client
+func (obj *iObj) Points(points []*Point, ts time.Time) error {
+	if ts.IsZero() {
+		ts = time.Now()
+	}
+
+	for _, v := range points {
+		createNewMetricPointFromKeysFields(obj, v.Tags, v.Fields, ts)
+	}
+	obj.dirty = true
+
+	return nil
 }

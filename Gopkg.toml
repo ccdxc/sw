@@ -326,3 +326,7 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 [[constraint]]
   branch = "master"
   name = "github.com/RackSec/srslog"
+
+[[constraint]]
+  name = "github.com/fatih/structs"
+  version = "1.0.0"

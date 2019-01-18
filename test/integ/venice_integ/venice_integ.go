@@ -14,6 +14,8 @@ import (
 	"golang.org/x/net/context"
 	"gopkg.in/check.v1"
 
+	"github.com/pensando/sw/venice/utils/tsdb"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
@@ -28,6 +30,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	nmdproto "github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
+	tmrestapi "github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
@@ -78,7 +81,6 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 	tutils "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
-	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // integ test suite parameters
@@ -152,6 +154,7 @@ type veniceIntegSuite struct {
 	tsCtrler            *tsm.TsCtrler
 	agents              []*netagent.Agent
 	tsAgents            []*troubleshooting.Agent
+	tmAgent             []*tmrestapi.RestServer
 	nmds                []*nmd.Agent
 	restClient          apiclient.Services
 	apisrvClient        apiclient.Services
@@ -498,6 +501,10 @@ func (it *veniceIntegSuite) startCitadel() {
 	watcher := watcher.NewWatcher(integTestApisrvURL, br, it.resolverClient)
 	go watcher.WatchTenant(context.Background())
 
+	if err := br.CreateDatabase(context.Background(), globals.DefaultTenant); err != nil {
+		log.Fatalf(err.Error())
+	}
+
 	// wait forever
 	waitCh := make(chan bool)
 	<-waitCh
@@ -657,9 +664,20 @@ func (it *veniceIntegSuite) startAgent() {
 			},
 		}
 
-		err = nodewatcher.NewNodeWatcher(context.Background(), node, it.resolverClient, 10, it.logger)
-		if err != nil {
-			log.Fatalf("Error creating NodeWatcher. Err: %v", err)
+		if i == 0 { // start only 1 instance
+			// Init the TSDB
+			err = nodewatcher.NewNodeWatcher(context.Background(), node, it.resolverClient, 10, it.logger)
+			if err != nil {
+				log.Fatalf("Error creating NodeWatcher. Err: %v", err)
+			}
+
+			res, err := tmrestapi.NewRestServer(context.Background(), fmt.Sprintf("localhost:%d", it.config.TmAgentRestPort+i))
+			if err != nil {
+				log.Fatalf("Error creating tmagent rest server. Err: %v", err)
+			}
+
+			go res.ReportMetrics(10)
+			it.tmAgent = append(it.tmAgent, res)
 		}
 	}
 }
@@ -829,6 +847,11 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
 		os.Remove(dbPath)
 	}
+
+	for _, ag := range it.tmAgent {
+		ag.Stop()
+	}
+
 	for _, ag := range it.tsAgents {
 		ag.Stop()
 	}

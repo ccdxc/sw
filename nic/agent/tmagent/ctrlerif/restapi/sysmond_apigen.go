@@ -7,89 +7,183 @@
 package restapi
 
 import (
+	"fmt"
 	"net/http"
 
+	"github.com/fatih/structs"
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/delphi/proto/goproto"
 	_ "github.com/pensando/sw/nic/utils/ntranslate/sysmond"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ntranslate"
+	tsdb "github.com/pensando/sw/venice/utils/ntsdb"
 )
-
-func init() {
-	name := "/telemetry/v1/metrics/asicpowermetrics/"
-	if prefixRoutes == nil {
-		prefixRoutes = make(map[string]routeAddFunc)
-	}
-	prefixRoutes[name] = addAsicPowerMetricsAPIRoutes
-}
 
 // addAsicPowerMetricsAPIRoutes adds routes for AsicPowerMetrics
 func addAsicPowerMetricsAPIRoutes(r *mux.Router, srv *RestServer) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(srv.runAsicPowerMetricsGetHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.runAsicPowerMetricsListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(srv.getAsicPowerMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listAsicPowerMetricsHandler))
 }
 
-// runAsicPowerMetricsListHandler is the List Handler for AsicPowerMetrics
-func (s *RestServer) runAsicPowerMetricsListHandler(r *http.Request) (interface{}, error) {
+// listAsicPowerMetricsHandler is the List Handler for AsicPowerMetrics
+func (s *RestServer) listAsicPowerMetricsHandler(r *http.Request) (interface{}, error) {
 	iter, err := goproto.NewAsicPowerMetricsIterator()
 	if err != nil {
-		log.Infof("Error: %s", err)
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
 	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
 	var mtr []goproto.AsicPowerMetrics
-	tstr := ntranslate.MustGetTranslator()
+
 	for iter.HasNext() {
 		temp := iter.Next()
-		temp.ObjectMeta = *(tstr.GetObjectMeta("AsicPowerMetricsKey", temp.GetKey()))
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.keyTranslator.GetObjectMeta("AsicPowerMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for AsicPowerMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
 		mtr = append(mtr, *temp)
 	}
 	iter.Free()
-
 	return mtr, nil
 }
 
-// runAsicPowerMetricsGetHandler is the Get Handler for AsicPowerMetrics
-func (s *RestServer) runAsicPowerMetricsGetHandler(r *http.Request) (interface{}, error) {
+// getAsicPowerMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getAsicPowerMetricsPoints() ([]*tsdb.Point, error) {
+	iter, err := goproto.NewAsicPowerMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	points := []*tsdb.Point{}
+
+	for iter.HasNext() {
+		m := iter.Next()
+		if m == nil {
+			continue
+		}
+
+		// translate key to meta
+		objMeta := s.keyTranslator.GetObjectMeta("AsicPowerMetricsKey", m.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for AsicPowerMetrics key %+v", m.GetKey())
+			continue
+		}
+		tags := s.getTagsFromMeta(objMeta)
+		fields := structs.Map(m)
+
+		if len(fields) > 0 {
+			delete(fields, "ObjectMeta")
+			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
+		}
+	}
+
+	iter.Free()
+	return points, nil
+}
+
+// getAsicPowerMetricsHandler is the Get Handler for AsicPowerMetrics
+func (s *RestServer) getAsicPowerMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request AsicPowerMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }
 
-func init() {
-	name := "/telemetry/v1/metrics/asictemperaturemetrics/"
-	if prefixRoutes == nil {
-		prefixRoutes = make(map[string]routeAddFunc)
-	}
-	prefixRoutes[name] = addAsicTemperatureMetricsAPIRoutes
-}
-
 // addAsicTemperatureMetricsAPIRoutes adds routes for AsicTemperatureMetrics
 func addAsicTemperatureMetricsAPIRoutes(r *mux.Router, srv *RestServer) {
-	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(srv.runAsicTemperatureMetricsGetHandler))
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.runAsicTemperatureMetricsListHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(srv.getAsicTemperatureMetricsHandler))
+	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.listAsicTemperatureMetricsHandler))
 }
 
-// runAsicTemperatureMetricsListHandler is the List Handler for AsicTemperatureMetrics
-func (s *RestServer) runAsicTemperatureMetricsListHandler(r *http.Request) (interface{}, error) {
+// listAsicTemperatureMetricsHandler is the List Handler for AsicTemperatureMetrics
+func (s *RestServer) listAsicTemperatureMetricsHandler(r *http.Request) (interface{}, error) {
 	iter, err := goproto.NewAsicTemperatureMetricsIterator()
 	if err != nil {
-		log.Infof("Error: %s", err)
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
 	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
 	var mtr []goproto.AsicTemperatureMetrics
-	tstr := ntranslate.MustGetTranslator()
+
 	for iter.HasNext() {
 		temp := iter.Next()
-		temp.ObjectMeta = *(tstr.GetObjectMeta("AsicTemperatureMetricsKey", temp.GetKey()))
+		if temp == nil {
+			continue
+		}
+
+		objMeta := s.keyTranslator.GetObjectMeta("AsicTemperatureMetricsKey", temp.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for AsicTemperatureMetrics key %+v", temp.GetKey())
+			continue
+		}
+
+		temp.ObjectMeta = *objMeta
 		mtr = append(mtr, *temp)
 	}
 	iter.Free()
-
 	return mtr, nil
 }
 
-// runAsicTemperatureMetricsGetHandler is the Get Handler for AsicTemperatureMetrics
-func (s *RestServer) runAsicTemperatureMetricsGetHandler(r *http.Request) (interface{}, error) {
+// getAsicTemperatureMetricsPoints returns tags and fields to save in Venice TSDB
+func (s *RestServer) getAsicTemperatureMetricsPoints() ([]*tsdb.Point, error) {
+	iter, err := goproto.NewAsicTemperatureMetricsIterator()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+	}
+
+	// for OSX tests
+	if iter == nil {
+		return nil, nil
+	}
+
+	points := []*tsdb.Point{}
+
+	for iter.HasNext() {
+		m := iter.Next()
+		if m == nil {
+			continue
+		}
+
+		// translate key to meta
+		objMeta := s.keyTranslator.GetObjectMeta("AsicTemperatureMetricsKey", m.GetKey())
+		if objMeta == nil {
+			log.Errorf("failed to get objMeta for AsicTemperatureMetrics key %+v", m.GetKey())
+			continue
+		}
+		tags := s.getTagsFromMeta(objMeta)
+		fields := structs.Map(m)
+
+		if len(fields) > 0 {
+			delete(fields, "ObjectMeta")
+			points = append(points, &tsdb.Point{Tags: tags, Fields: fields})
+		}
+	}
+
+	iter.Free()
+	return points, nil
+}
+
+// getAsicTemperatureMetricsHandler is the Get Handler for AsicTemperatureMetrics
+func (s *RestServer) getAsicTemperatureMetricsHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Got GET request AsicTemperatureMetrics/%s", mux.Vars(r)["Meta.Name"])
 	return nil, nil
 }

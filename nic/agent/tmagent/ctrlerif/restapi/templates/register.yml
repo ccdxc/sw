@@ -1,0 +1,4 @@
+ basepath: "github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi/templates"
+ templates:
+   - template: "register.tmpl"
+     outputpath: "register.go"

@@ -3,10 +3,20 @@
 package restapi
 
 import (
+	"context"
 	"expvar"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/pprof"
+	"sync"
+	"time"
+
+	"github.com/pensando/sw/venice/utils/ntranslate"
+
+	"github.com/pensando/sw/api"
+
+	tsdb "github.com/pensando/sw/venice/utils/ntsdb"
 
 	"github.com/gorilla/mux"
 
@@ -17,9 +27,15 @@ import (
 
 // RestServer is the REST api server
 type RestServer struct {
-	listenURL  string       // URL where http server is listening
-	listener   net.Listener // socket listener
-	httpServer *http.Server // HTTP server
+	ctx               context.Context
+	cancel            context.CancelFunc
+	waitGrp           sync.WaitGroup
+	listenURL         string                   // URL where http server is listening
+	listener          net.Listener             // socket listener
+	httpServer        *http.Server             // HTTP server
+	keyTranslator     *ntranslate.Translator   // key to objMeta translator
+	prefixRoutes      map[string]routeAddFunc  // REST API route add functions
+	getPointsFuncList map[string]getPointsFunc // Get metrics points
 }
 
 // Response captures the HTTP Response sent by Agent REST Server
@@ -30,20 +46,18 @@ type Response struct {
 }
 
 type routeAddFunc func(*mux.Router, *RestServer)
-
-var prefixRoutes map[string]routeAddFunc
-
-func init() {
-	if prefixRoutes == nil {
-		prefixRoutes = make(map[string]routeAddFunc)
-	}
-}
+type getPointsFunc func() ([]*tsdb.Point, error)
 
 // NewRestServer creates a new HTTP server servicg REST api
-func NewRestServer(listenURL string) (*RestServer, error) {
+func NewRestServer(ctx context.Context, listenURL string) (*RestServer, error) {
+
+	ctx, cancel := context.WithCancel(ctx)
+
 	// create server instance
 	srv := RestServer{
 		listenURL: listenURL,
+		ctx:       ctx,
+		cancel:    cancel,
 	}
 
 	// if no URL was specified, just return (used during unit/integ tests)
@@ -51,10 +65,21 @@ func NewRestServer(listenURL string) (*RestServer, error) {
 		return &srv, nil
 	}
 
+	tstr := ntranslate.MustGetTranslator()
+	if tstr == nil {
+		return nil, fmt.Errorf("failed to get key to objMeta translator")
+	}
+
+	srv.keyTranslator = tstr
+
 	// setup the top level routes
 	router := mux.NewRouter()
 
-	for prefix, subRouter := range prefixRoutes {
+	// update functions from auto-generated code
+	srv.registerAPIRoutes()
+	srv.registerListMetrics()
+
+	for prefix, subRouter := range srv.prefixRoutes {
 		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
 		subRouter(sub, &srv)
 	}
@@ -84,8 +109,70 @@ func NewRestServer(listenURL string) (*RestServer, error) {
 	// create a http server
 	srv.httpServer = &http.Server{Addr: listenURL, Handler: router}
 	go srv.httpServer.Serve(listener)
-
+	srv.waitGrp.Add(1)
 	return &srv, nil
+}
+
+// getTagsFromMeta returns tags to store in Venice TSDB
+func (s *RestServer) getTagsFromMeta(meta *api.ObjectMeta) map[string]string {
+	return map[string]string{
+		"tenant":    meta.Tenant,
+		"namespace": meta.Namespace,
+		"name":      meta.Name,
+	}
+}
+
+// ReportMetrics sends metrics to tsdb
+func (s *RestServer) ReportMetrics(frequency int) {
+	defer s.waitGrp.Done()
+
+	tsdbObj := map[string]tsdb.Obj{}
+
+	// create tsdb objects
+	for kind := range s.getPointsFuncList {
+		obj, err := tsdb.NewObj(kind, nil, nil, nil)
+		if err != nil {
+			log.Errorf("failed to create tsdb object for kind: %s", kind)
+			continue
+		}
+
+		if obj == nil {
+			log.Errorf("found invalid tsdb object for kind: %s", kind)
+			continue
+		}
+
+		tsdbObj[kind] = obj
+	}
+
+	for {
+		select {
+		case <-time.After(time.Duration(frequency) * time.Second):
+			ts := time.Now()
+
+			for kind, obj := range tsdbObj {
+				mi, err := s.getPointsFuncList[kind]()
+				if err != nil {
+					log.Errorf("failed to get %s metrics, %s", kind, err)
+					continue
+				}
+
+				// skip empty entry
+				if len(mi) == 0 {
+					continue
+				}
+
+				if err := obj.Points(mi, ts); err != nil {
+					log.Errorf("failed to add <%s> metrics to tsdb, %s", kind, err)
+					continue
+				}
+
+			}
+
+		case <-s.ctx.Done():
+			log.Infof("stopped reporting metrics")
+			return
+		}
+	}
 }
 
 // GetListenURL returns the listen URL of the http server
@@ -103,5 +190,7 @@ func (s *RestServer) Stop() error {
 		s.httpServer.Close()
 	}
 
+	s.cancel()
+	s.waitGrp.Wait()
 	return nil
 }

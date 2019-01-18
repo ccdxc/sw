@@ -7,48 +7,97 @@
 package restapi
 import (
 	"github.com/gorilla/mux"
+	"github.com/fatih/structs"
 	"github.com/pensando/sw/nic/delphi/proto/goproto"
 	"github.com/pensando/sw/venice/utils/ntranslate"
+        tsdb "github.com/pensando/sw/venice/utils/ntsdb"
 	_ "github.com/pensando/sw/nic/utils/ntranslate/{{$pkgName}}"
 )
 
  {{$msgs := .Messages}}
  {{range $msgs}}
     {{if (HasSuffix .GetName "Metrics")}}
-	func init() {
-		name := "/telemetry/v1/metrics/{{ToLower .GetName}}/"
-		if prefixRoutes == nil {
-			prefixRoutes = make(map[string]routeAddFunc)
-		}
-		prefixRoutes[name] = add{{.GetName}}APIRoutes
-	}
 
 	// add{{.GetName}}APIRoutes adds routes for {{.GetName}}
 	func add{{.GetName}}APIRoutes(r *mux.Router, srv *RestServer){
-		r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(srv.run{{.GetName}}GetHandler))
-		r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.run{{.GetName}}ListHandler))
+		r.Methods("GET").Subrouter().HandleFunc("/{Meta.Tenant}/{Meta.Name}/", httputils.MakeHTTPHandler(srv.get{{.GetName}}Handler))
+		r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.list{{.GetName}}Handler))
 	}
 
-	// run{{.GetName}}ListHandler is the List Handler for {{.GetName}}
-	func (s *RestServer) run{{.GetName}}ListHandler(r *http.Request) (interface{}, error){
+	// list{{.GetName}}Handler is the List Handler for {{.GetName}}
+	func (s *RestServer) list{{.GetName}}Handler(r *http.Request) (interface{}, error){
 		iter, err := goproto.New{{.GetName}}Iterator()
 		if err != nil {
-			log.Infof("Error: %s", err)
+			return nil, fmt.Errorf("failed to get metrics, error: %s", err)
 		}
+
+		// for OSX tests
+		if iter == nil {
+			return nil, nil
+		}
+
 		var mtr []goproto.{{.GetName}}
-		tstr := ntranslate.MustGetTranslator()
+
 		for iter.HasNext() {
 			temp := iter.Next()
-			temp.ObjectMeta = *(tstr.GetObjectMeta("{{.GetName}}Key", temp.GetKey()))
+			if temp == nil {
+				continue
+			}
+
+			objMeta := s.keyTranslator.GetObjectMeta("{{.GetName}}Key", temp.GetKey())
+			if objMeta == nil {
+				log.Errorf("failed to get objMeta for {{.GetName}} key %+v", temp.GetKey())
+				continue
+			}
+
+			temp.ObjectMeta = *objMeta
 			mtr = append(mtr, *temp)
 		}
 		iter.Free()
-
 		return mtr, nil
 	}
 
-	// run{{.GetName}}GetHandler is the Get Handler for {{.GetName}}
-	func (s *RestServer) run{{.GetName}}GetHandler(r *http.Request) (interface{}, error){
+	// get{{.GetName}}Points returns tags and fields to save in Venice TSDB
+	func (s *RestServer) get{{.GetName}}Points() ([]*tsdb.Point, error){
+		iter, err := goproto.New{{.GetName}}Iterator()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get metrics, error: %s", err)
+		}
+
+		// for OSX tests
+		if iter == nil {
+			return nil, nil
+		}
+
+		points := []*tsdb.Point{}
+
+		for iter.HasNext() {
+			m := iter.Next()
+			if m == nil {
+			     continue
+			}
+
+			// translate key to meta
+			objMeta := s.keyTranslator.GetObjectMeta("{{.GetName}}Key", m.GetKey())
+			if objMeta == nil {
+				log.Errorf("failed to get objMeta for {{.GetName}} key %+v", m.GetKey())
+				continue
+			}
+			tags := s.getTagsFromMeta(objMeta)
+			fields := structs.Map(m)
+
+			if len(fields) > 0 {
+			    delete(fields, "ObjectMeta")
+			    points = append(points, &tsdb.Point{Tags:tags, Fields: fields})
+			}
+		}
+
+		iter.Free()
+		return points, nil
+	}
+
+	// get{{.GetName}}Handler is the Get Handler for {{.GetName}}
+	func (s *RestServer) get{{.GetName}}Handler(r *http.Request) (interface{}, error){
 		log.Infof("Got GET request {{.GetName}}/%s", mux.Vars(r)["Meta.Name"])
 		return nil, nil
 	}
