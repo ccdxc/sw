@@ -1,6 +1,7 @@
 package ntsdb
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -41,7 +42,7 @@ func stopLocalRESTServer() {
 		return
 	}
 
-	global.httpServer.Shutdown(nil)
+	global.httpServer.Shutdown(context.Background())
 }
 
 // LocalMetric is the export format for local curl queries

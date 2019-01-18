@@ -40,8 +40,8 @@ func TestMain(m *testing.M) {
 	time.Sleep(2 * time.Second)
 
 	testCode := m.Run()
-	defer srv1.httpServer.Shutdown(nil)
-	defer srv2.httpServer.Shutdown(nil)
+	defer srv1.httpServer.Close()
+	defer srv2.httpServer.Close()
 	defer rev.Stop()
 	os.Exit(testCode)
 }

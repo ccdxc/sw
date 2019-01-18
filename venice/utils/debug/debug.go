@@ -1,12 +1,14 @@
 package debug
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -87,9 +89,10 @@ func (ds *Debug) Destroy() error {
 // StopServer gracefully shutsdown the socket
 func (ds *Debug) StopServer() error {
 	if ds.srv != nil {
-		err := ds.srv.Shutdown(nil)
-		if err != nil {
-			log.Errorf("failed to shutdown debug socket, %s", err)
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancelFunc()
+		if err := ds.srv.Shutdown(ctx); err != nil {
+			log.Errorf("failed to gracefully shutdown debug socket, %s", err)
 			return err
 		}
 		ds.srv = nil

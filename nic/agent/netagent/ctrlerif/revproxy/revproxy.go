@@ -1,11 +1,13 @@
 package revproxy
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -95,7 +97,9 @@ func handleStopRequest(res http.ResponseWriter, req *http.Request) {
 // Stop stops the http server
 func (s *Server) Stop() error {
 	if s.httpServer != nil {
-		if err := s.httpServer.Shutdown(nil); err != nil {
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancelFunc()
+		if err := s.httpServer.Shutdown(ctx); err != nil {
 			log.Fatalf("Could not shut Reverse Proxy Router. Err: %v", err)
 		}
 	}

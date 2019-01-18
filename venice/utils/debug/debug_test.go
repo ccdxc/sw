@@ -79,7 +79,10 @@ func TestDebugMetrics(t *testing.T) {
 	table.String("version").Set("v0.1", time.Time{})
 
 	lms := []ntsdb.LocalMetric{}
-	netutils.HTTPGet(fmt.Sprintf("http://localhost:%v", port), &lms)
+	AssertEventually(t, func() (bool, interface{}) {
+		netutils.HTTPGet(fmt.Sprintf("http://localhost:%v", port), &lms)
+		return len(lms) > 0, nil
+	}, "failed to get response from localhost")
 
 	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["rx_ep_create_msg"] == "3", fmt.Sprintf("invalid lms attributes %+v", lms))
