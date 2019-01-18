@@ -69,6 +69,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
     uint64_t                                    ipsec_cb_ring_addr;
     uint64_t                                    ipsec_barco_ring_addr;
     uint16_t                                    key_index;
+    uint8_t                                     zeros[P4PD_HBM_IPSEC_CB_ENTRY_SIZE];
 
     // hardware index for this entry
     ipseccb_hw_id_t hwid = ipseccb_pd->hw_id +
@@ -137,12 +138,18 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.vrf_vlan = htons(ipseccb_pd->ipseccb->vrf_vlan);
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.is_v6 = ipseccb_pd->ipseccb->is_v6;
-    }
-    HAL_TRACE_DEBUG("Programming Decrypt stage0 at hw-id: {:#x}", hwid);
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
-                P4PLUS_CACHE_INVALIDATE_BOTH)){
-        HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
-        ret = HAL_RET_HW_FAIL;
+        HAL_TRACE_DEBUG("Programming Decrypt stage0 at hw-id: {:#x}", hwid);
+        if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
+                    P4PLUS_CACHE_INVALIDATE_BOTH)){
+            HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
+            ret = HAL_RET_HW_FAIL;
+        }
+    } else {
+         memset(zeros, 0, P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
+         if (!p4plus_hbm_write(hwid, (uint8_t*)&zeros, sizeof(zeros), P4PLUS_CACHE_INVALIDATE_BOTH)) {
+             HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
+             ret = HAL_RET_HW_FAIL;
+         }
     }
     return ret;
 }
@@ -171,7 +178,7 @@ p4pd_add_or_del_ipsec_decrypt_part2(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
 }
 
 hal_ret_t
-p4pd_add_or_del_ipseccb_decrypt_rxdma_entry(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
+p4pd_add_or_del_ipseccb_decrypt_entry(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -324,12 +331,6 @@ p4pd_get_ipsec_decrypt_tx_stage0_prog_addr(uint64_t* offset)
 }
 
 hal_ret_t
-p4pd_add_or_del_ipseccb_decrypt_txdma_entry(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
-{
-    return HAL_RET_OK;
-}
-
-hal_ret_t
 p4pd_get_ipseccb_decrypt_txdma_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
 {
     /* TODO */
@@ -352,26 +353,6 @@ pd_ipseccb_decrypt_get_base_hw_index(pd_ipseccb_decrypt_t* ipseccb_pd)
         (ipseccb_pd->ipseccb->cb_id * P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
 }
 
-hal_ret_t
-p4pd_add_or_del_ipseccb_decrypt_entry(pd_ipseccb_decrypt_t* ipseccb_pd, bool del)
-{
-    hal_ret_t                   ret = HAL_RET_OK;
-
-    ret = p4pd_add_or_del_ipseccb_decrypt_rxdma_entry(ipseccb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto err;
-    }
-
-    ret = p4pd_add_or_del_ipseccb_decrypt_txdma_entry(ipseccb_pd, del);
-    if(ret != HAL_RET_OK) {
-        goto err;
-    }
-
-err:
-    return ret;
-}
-
-static
 hal_ret_t
 p4pd_get_ipseccb_decrypt_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
 {

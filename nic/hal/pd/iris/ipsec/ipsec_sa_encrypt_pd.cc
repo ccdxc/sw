@@ -73,8 +73,6 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
     ipsec_sa_t*                                 ipsec_sa = ipsec_sa_pd->ipsec_sa;
     uint8_t                                     zeros[P4PD_HBM_IPSEC_CB_ENTRY_SIZE];
 
-    memset(zeros, 0, P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
-
     // hardware index for this entry
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
         (P4PD_IPSECCB_STAGE_ENTRY_OFFSET * P4PD_HWID_IPSEC_QSTATE1);
@@ -169,17 +167,18 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
 
         HAL_TRACE_DEBUG("flags {} is_v6 {} is_nat_t {} is_random {} extra_pad {}", data.u.ipsec_encap_rxdma_initial_table_d.flags,
                         ipsec_sa->is_v6, ipsec_sa->is_nat_t, ipsec_sa->is_random, ipsec_sa->extra_pad);
-    }
-
-    HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: {:#x}", hwid);
-    if (!p4plus_hbm_write(hwid, (uint8_t*)&zeros, sizeof(zeros), P4PLUS_CACHE_INVALIDATE_BOTH)) {
-        HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
-        ret = HAL_RET_HW_FAIL;
-    }
-    if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
-                P4PLUS_CACHE_INVALIDATE_BOTH)){
-        HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
-        ret = HAL_RET_HW_FAIL;
+        HAL_TRACE_DEBUG("Programming ipsec stage0 at hw-id: {:#x}", hwid);
+        if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
+                    P4PLUS_CACHE_INVALIDATE_BOTH)){
+            HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
+            ret = HAL_RET_HW_FAIL;
+        }
+    } else {
+        memset(zeros, 0, P4PD_HBM_IPSEC_CB_ENTRY_SIZE);
+        if (!p4plus_hbm_write(hwid, (uint8_t*)&zeros, sizeof(zeros), P4PLUS_CACHE_INVALIDATE_BOTH)) {
+            HAL_TRACE_ERR("Failed to create rx: stage0 entry for IPSECCB");
+            ret = HAL_RET_HW_FAIL;
+        }
     }
     return ret;
 }
@@ -276,7 +275,7 @@ p4pd_add_or_del_ipsec_ip_header_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
 }
 
 hal_ret_t
-p4pd_add_or_del_ipseccb_rxdma_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
+p4pd_add_or_del_ipseccb_encrypt_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
@@ -454,7 +453,7 @@ p4pd_add_or_del_ipsec_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
 {
     hal_ret_t                   ret = HAL_RET_OK;
 
-    ret = p4pd_add_or_del_ipseccb_rxdma_entry(ipsec_sa_pd, del);
+    ret = p4pd_add_or_del_ipseccb_encrypt_entry(ipsec_sa_pd, del);
     if(ret != HAL_RET_OK) {
         goto err;
     }
@@ -465,7 +464,7 @@ err:
 
 static
 hal_ret_t
-p4pd_get_ipsec_sa_entry(pd_ipsec_t* ipsec_sa_pd)
+p4pd_get_ipsec_sa_encrypt_entry(pd_ipsec_t* ipsec_sa_pd)
 {
     hal_ret_t                   ret = HAL_RET_OK;
 
@@ -673,7 +672,7 @@ pd_ipsec_encrypt_get (pd_func_args_t *pd_func_args)
     HAL_TRACE_DEBUG("Received hw-id {:#x}", ipsec_sa_pd.hw_id);
 
     // get hw ipsec_sa entry
-    ret = p4pd_get_ipsec_sa_entry(&ipsec_sa_pd);
+    ret = p4pd_get_ipsec_sa_encrypt_entry(&ipsec_sa_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Get request failed for id: 0x{:#x}", ipsec_sa_pd.ipsec_sa->sa_id);
         return ret;
