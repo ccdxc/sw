@@ -11,6 +11,7 @@
 #include "nic/hal/apollo/api/vcn.hpp"
 #include "nic/hal/apollo/api/subnet.hpp"
 #include "nic/hal/apollo/api/vnic.hpp"
+#include "nic/hal/apollo/api/impl/route_impl.hpp"
 #include "nic/hal/apollo/api/impl/vnic_impl.hpp"
 #include "nic/hal/apollo/api/impl/oci_impl_state.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
@@ -191,17 +192,24 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
  */
 #define local_vnic_by_vlan_tx_info    action_u.local_vnic_by_vlan_tx_local_vnic_info_tx
 #define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
+#define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
+    for (uint32_t i = 0; i < (p4_addr_size); i++) {                       \
+        p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
+    }
+
 sdk_ret_t
 vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
                        api_op_t api_op, obj_ctxt_t *obj_ctxt)
 {
-    sdk_ret_t                                   ret;
-    vcn_entry                                   *vcn;
-    subnet_entry                                *subnet;
-    local_vnic_by_vlan_tx_actiondata_t          vnic_by_vlan_data = { 0 };
-    local_vnic_by_slot_rx_swkey_t               vnic_by_slot_key = { 0 };
-    local_vnic_by_slot_rx_actiondata_t          vnic_by_slot_data = { 0 };
-    oci_vnic_t                                  *vnic_info;
+    sdk_ret_t                             ret;
+    vcn_entry                             *vcn;
+    subnet_entry                          *subnet;
+    local_vnic_by_vlan_tx_actiondata_t    vnic_by_vlan_data = { 0 };
+    local_vnic_by_slot_rx_swkey_t         vnic_by_slot_key = { 0 };
+    local_vnic_by_slot_rx_actiondata_t    vnic_by_slot_data = { 0 };
+    oci_vnic_t                            *vnic_info;
+    oci_route_table_key_t                 route_table_key;
+    route_table                           *route_table;
 
     vnic_info = &obj_ctxt->api_params->vnic_info;
     vcn = vcn_db()->vcn_find(&vnic_info->vcn);
@@ -212,6 +220,9 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     if (subnet == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
     }
+    route_table_key = subnet->route_table();
+    route_table = route_table_db()->route_table_find(&route_table_key);
+
     switch (api_op) {
     case api::API_OP_CREATE:
         /**< initialize local_vnic_by_vlan_tx table entry */
@@ -225,8 +236,9 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
             vnic_info->rsc_pool_id;
         // TODO: do we need to enhance the vnic API here to take this ?
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group_2 = 0;
-        //vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_addr_1 =
-            //subnet->lpm_root();
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_addr_1,
+                                (((impl::route_table_impl *)(route_table->impl()))->lpm_root_addr()),
+                                5);
         //vnic_by_vlan_data.local_vnic_by_vlan_tx_info.slacl_addr_1 =
             //subnet->policy_tree_root();
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 = epoch;

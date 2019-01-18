@@ -23,6 +23,7 @@ create_port (port_args_t *port_args)
 {
     void    *port_handle;
 
+    OCI_TRACE_DEBUG("Creating port %u", port_args->port_num);
     port_args->user_admin_state = port_args->admin_state;
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
     port_handle = sdk::linkmgr::port_create(port_args);
