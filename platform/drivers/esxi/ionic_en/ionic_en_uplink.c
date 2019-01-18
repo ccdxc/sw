@@ -578,7 +578,7 @@ ionic_en_uplink_mtu_set(vmk_AddrCookie driver_data,               // IN
                 goto out;
         }
 
-        ionic_err("Current MTU: %d, new MTU: %d", cur_mtu, new_mtu);
+        ionic_info("Current MTU: %d, new MTU: %d", cur_mtu, new_mtu);
 
         ionic_en_uplink_quiesce_io(driver_data);
 
@@ -1712,6 +1712,9 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
 
         VMK_ASSERT(uplink_handle->max_rx_normal_queues > 0);
 
+        priv_data->ionic.ntxqs_per_lif = uplink_handle->max_tx_queues;
+        priv_data->ionic.nrxqs_per_lif = uplink_handle->max_rx_queues;
+
         uplink_q_info->defaultRxQueueID    = VMK_UPLINK_QUEUE_DEFAULT_QUEUEID;
         uplink_q_info->defaultTxQueueID    = VMK_UPLINK_QUEUE_DEFAULT_QUEUEID;
         uplink_q_info->activeRxQueues      = 0;
@@ -2296,7 +2299,7 @@ ionic_en_netpoll_create(vmk_NetPoll *netpoll,                           // OUT
         }
 
         if (ring_type == IONIC_EN_RX_RING &&
-            qcq->ring_idx < uplink_handle->max_rx_normal_queues) {
+            qcq->ring_idx < uplink_handle->max_rx_queues) {
                 shared_q_data_idx = qcq->ring_idx;
         } else if (ring_type == IONIC_EN_TX_RING) {
                 shared_q_data_idx = uplink_handle->max_rx_queues +

@@ -304,8 +304,8 @@ ionic_rx_fill(struct queue *q)
 
                 pkt = ionic_rx_pkt_alloc(q, len, &dma_addr);
                 if (VMK_UNLIKELY(!pkt)) {
-                        ionic_err("Queue index: %d, num_q_avail: %d",
-                                  q->index, num_q_avail);
+                        ionic_warn("Queue index: %d, num_q_avail: %d",
+                                   q->index, num_q_avail);
                         break;
                 }
 #if 0
@@ -1446,9 +1446,7 @@ ionic_en_rx_rss_ring_init(vmk_uint32 ring_idx,
                           struct ionic_en_priv_data *priv_data,
                           struct lif *lif)
 {
-        VMK_ReturnStatus status;
         vmk_uint32 i, attached_rx_ring_idx, num_attached_rings;
-        vmk_Name netpoll_name;
         struct ionic_en_rx_rss_ring *rx_rss_ring;
         struct ionic_en_uplink_handle *uplink_handle;
 
@@ -1476,24 +1474,10 @@ ionic_en_rx_rss_ring_init(vmk_uint32 ring_idx,
                 rx_rss_ring->p_attached_rx_rings[i] =
                         &uplink_handle->rx_rings[attached_rx_ring_idx];
 
-                vmk_NameFormat(&netpoll_name,
-                               "%s-rx-rss-%d",
-                               IONIC_DRV_NAME, attached_rx_ring_idx);
-                status = vmk_NetPollRegisterUplink(rx_rss_ring->p_attached_rx_rings[i]->netpoll,
-                                                   uplink_handle->uplink_dev,
-                                                   netpoll_name,
-                                                   VMK_TRUE);
-                VMK_ASSERT(status == VMK_OK);
-                if (status != VMK_OK) {
-                        ionic_err("vmk_NetPollRegisterUplink() failed, status: %s",
-                                  vmk_StatusToString(status));
-                }
         }
 
         rx_rss_ring->is_init               = VMK_TRUE;
         rx_rss_ring->is_actived            = VMK_FALSE;
-
-        ionic_en_rxq_start(uplink_handle, shared_q_data_idx);
 }
 
 
@@ -1522,7 +1506,6 @@ void
 ionic_en_rx_rss_ring_deinit(vmk_uint32 ring_idx,
                             struct ionic_en_priv_data *priv_data)
 {
-        VMK_ReturnStatus status;
         vmk_uint32 i, attached_rx_ring_idx, num_attached_rings;
         struct ionic_en_rx_rss_ring *rx_rss_ring;
 
@@ -1540,20 +1523,12 @@ ionic_en_rx_rss_ring_deinit(vmk_uint32 ring_idx,
                 ionic_en_rx_ring_deinit(attached_rx_ring_idx,
                                         priv_data);
 
-
-                status = vmk_NetPollUnregisterUplink(
-                                rx_rss_ring->p_attached_rx_rings[i]->netpoll);
-                VMK_ASSERT(status == VMK_OK);
-
                 rx_rss_ring->p_attached_rx_rings[i] = NULL;
         }
 
 
         rx_rss_ring->is_init           = VMK_FALSE;
         rx_rss_ring->is_actived        = VMK_FALSE;
-
-        ionic_en_rxq_quiesce(&priv_data->uplink_handle,
-                             rx_rss_ring->shared_q_data_idx);
 }
 
 
