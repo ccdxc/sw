@@ -99,8 +99,8 @@ void
 reset_hbm_regions (capri_cfg_t *capri_cfg)
 {
     mpartition_region_t *reg;
-    uint8_t             tmp[1024], zeros[1024] = {0};
-    uint64_t            addr = 0;
+    //uint8_t             tmp[1024], zeros[1024] = {0};
+    //uint64_t            addr = 0;
 
     if (capri_cfg && (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HAPS ||
                     capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HW)) {
@@ -113,8 +113,9 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
                     sdk::asic::asic_mem_write(g_capri_state_pd->mempartition()->addr(reg->start_offset),
                                               NULL, reg->size);
                 } else if (capri_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {
+#if 0
                     /*
-                     * Comparing for all "reset" regions is delaying HAL UP.
+                     * comparing for all "reset" regions is delaying HAL UP.
                      * Nicmgr is getting dev cmds before that and Nicmgr cores as HalGRPCClient is NULL.
                      * So just checking nicmgrqstate map.
                      */
@@ -131,6 +132,7 @@ reset_hbm_regions (capri_cfg_t *capri_cfg)
                             addr += 1024;
                         }
                     }
+#endif
                 }
             }
         }
