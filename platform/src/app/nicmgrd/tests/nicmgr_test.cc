@@ -65,7 +65,7 @@ create_uplinks()
          // Wait for State change or deadline
          channel->WaitForStateChange(state, gpr_time_from_seconds(1, GPR_TIMESPAN));
          state = channel->GetState(true);
-         cout << "[INFO] Connecting to HAL, channel status = " << channel->GetState(true) << endl;
+        // cout << "[INFO] Connecting to HAL, channel status = " << channel->GetState(true) << endl;
      }
 
     std::unique_ptr<Interface::Stub> intf_stub_ = Interface::NewStub(channel);
@@ -189,16 +189,17 @@ TEST_F(nicmgr_test, test1)
     union dev_cmd_comp d_comp;
 
     // RESET
+    d_cmd = {0};
     d_cmd.cmd.opcode = CMD_OPCODE_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // LIF_INIT
-    struct lif_init_cmd init_cmd;
+    struct lif_init_cmd init_cmd = {0};
     init_cmd.opcode = CMD_OPCODE_LIF_INIT;
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
-    struct rx_filter_add_cmd rx_cmd;
+    struct rx_filter_add_cmd rx_cmd = {0};
     // struct rx_filter_add_comp rx_comp;
     rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
     rx_cmd.match = RX_FILTER_MATCH_VLAN;
@@ -208,6 +209,7 @@ TEST_F(nicmgr_test, test1)
     // memcpy(&d_comp, &rx_comp, sizeof(rx_comp));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
+    rx_cmd = {0};
     rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
     rx_cmd.match = RX_FILTER_MATCH_MAC;
     uint64_t mac1 = 0x12345678ABCD;
@@ -216,29 +218,33 @@ TEST_F(nicmgr_test, test1)
     memcpy(&d_cmd, &rx_cmd, sizeof(rx_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
-     // Set modes
-     struct rx_mode_set_cmd rx_mode_cmd;
-     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-     rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
-     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
-     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+    // Set modes
+    struct rx_mode_set_cmd rx_mode_cmd = {0};
+    rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
+    rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
+    memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
-     // Set Promiscuous mode
-     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-     rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
-     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
-     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+    // Set Promiscuous mode
+    rx_mode_cmd = {0};
+    rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
+    rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
+    memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // RESET
+    d_cmd = {0};
     d_cmd.cmd.opcode = CMD_OPCODE_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // LIF_INIT
+    init_cmd = {0};
     init_cmd.opcode = CMD_OPCODE_LIF_INIT;
     memcpy(&d_cmd, &init_cmd, sizeof(init_cmd));
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // Mac Filter
+    rx_cmd = {0};
     rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
     rx_cmd.match = RX_FILTER_MATCH_MAC;
     mac1 = 0x12345678ABCD;
@@ -252,6 +258,7 @@ TEST_F(nicmgr_test, test1)
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     for (int i = 1; i < num_vlan_filters; i++) {
         // Vlan Filter
+        rx_cmd = {0};
         rx_cmd.opcode = CMD_OPCODE_RX_FILTER_ADD;
         rx_cmd.match = RX_FILTER_MATCH_VLAN;
         rx_cmd.vlan.vlan = i;
@@ -266,19 +273,22 @@ TEST_F(nicmgr_test, test1)
     printf("Time taken to install %d vlan filters: %lu us, %lu secs\n",
            num_vlan_filters, duration, duration_secs);
 
-     // Set modes
-     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-     rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
-     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
-     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
+    // Set modes
+    rx_mode_cmd = {0};
+    rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
+    rx_mode_cmd.rx_mode = RX_MODE_F_BROADCAST;
+    memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
+    eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
-     // Set Promiscuous mode
-     rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
-     rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
-     memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
+    // Set Promiscuous mode
+    rx_mode_cmd = {0};
+    rx_mode_cmd.opcode = CMD_OPCODE_RX_MODE_SET;
+    rx_mode_cmd.rx_mode = RX_MODE_F_PROMISC;
+    memcpy(&d_cmd, &rx_mode_cmd, sizeof(rx_mode_cmd));
      eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
     // RESET
+    d_cmd = {0};
     d_cmd.cmd.opcode = CMD_OPCODE_RESET;
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 }

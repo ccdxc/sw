@@ -252,11 +252,15 @@ public:
     void DevcmdHandler();
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
+    enum DevcmdStatus AdminCmdHandler(uint64_t lif_id,
+                                      void *req, void *req_data,
+                                      void *resp, void *resp_data);
 
     void HalEventHandler(bool status);
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
     hal_lif_info_t *GetHalLifInfo(void) { return &hal_lif_info_; }
     virtual void ThreadsWaitJoin(void);
+    uint32_t GetHalLifCount() { return spec->lif_count; }
 
     dev_cmd_regs_t              *devcmd;
 

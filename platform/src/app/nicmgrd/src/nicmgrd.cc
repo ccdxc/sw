@@ -64,6 +64,8 @@ atexit_handler (void)
     if (devmgr) {
         devmgr->ThreadsWaitJoin();
     }
+    fflush(stdout);
+    fflush(stderr);
     if (utils::logger::logger()) {
         utils::logger::logger()->flush();
     }

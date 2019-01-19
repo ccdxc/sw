@@ -5588,7 +5588,7 @@ static int ionic_rdma_reset_devcmd(struct ionic_ibdev *dev)
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
 		.cmd.rdma_reset = {
 			.opcode = (__force u16)cpu_to_le16(CMD_OPCODE_RDMA_RESET_LIF),
-			.lif_id = (__force u16)cpu_to_le16(dev->lif_id),
+			.lif_index = (__force u16)cpu_to_le16(dev->lif_id),
 		},
 	};
 
@@ -5604,7 +5604,7 @@ static int ionic_rdma_queue_devcmd(struct ionic_ibdev *dev,
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
 		.cmd.rdma_queue = {
 			.opcode = cpu_to_le16(opcode),
-			.lif_id = cpu_to_le16(dev->lif_id),
+			.lif_index = cpu_to_le16(dev->lif_id),
 			.qid_ver = cpu_to_le32(qid),
 			.cid = cpu_to_le32(cid),
 			.dbid = cpu_to_le16(dev->dbid),

@@ -149,7 +149,7 @@ struct eth_devspec {
     EthDevType eth_type;
     std::string name;
     OpromType oprom;
-    uint8_t  pcie_port;
+    uint8_t pcie_port;
     bool host_dev;
     // Network
     uint32_t uplink_port_num;
@@ -176,7 +176,7 @@ struct eth_devspec {
     uint32_t barmap_size;    // in 8MB units
 };
 
-typedef struct dev_cmd_db {
+typedef struct dev_cmd_db_s {
     uint32_t    v;
 } dev_cmd_db_t;
 
@@ -204,7 +204,8 @@ class PdClient;
  */
 class Device {
 public:
-    virtual enum DevcmdStatus CmdHandler(
+    virtual enum DevcmdStatus AdminCmdHandler(
+        uint64_t lif_id,
         void *req, void *req_data,
         void *resp, void *resp_data) = 0;
     virtual void ThreadsWaitJoin(void) {}

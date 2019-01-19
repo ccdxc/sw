@@ -1332,7 +1332,7 @@ struct debug_q_dump_comp {
 /**
  * struct rdma_reset_cmd - Reset RDMA LIF cmd
  * @opcode:        opcode = 50
- * @lif_id:        hardware lif id
+ * @lif_index:     lif index
  *
  * There is no rdma specific dev command completion struct.  Completion uses
  * the common struct admin_comp.  Only the status is indicated.  Nonzero status
@@ -1340,14 +1340,14 @@ struct debug_q_dump_comp {
  **/
 struct rdma_reset_cmd {
 	u16 opcode;
-	u16 lif_id;
+	u16 lif_index;
 	u8 rsvd[60];
 };
 
 /**
  * struct rdma_queue_cmd - Create RDMA Queue command
  * @opcode:        opcode = 51, 52, 53
- * @lif_id:        hardware lif id
+ * @lif_index      lif index
  * @qid_ver:       (qid | (rdma version << 24))
  * @cid:           intr, eq_id, or cq_id
  * @dbid:          doorbell page id
@@ -1375,7 +1375,7 @@ struct rdma_reset_cmd {
  **/
 struct rdma_queue_cmd {
 	u16 opcode;
-	u16 lif_id;
+	u16 lif_index;
 	u32 qid_ver;
 	u32 cid;
 	u16 dbid;

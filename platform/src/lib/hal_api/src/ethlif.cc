@@ -847,9 +847,9 @@ EthLif::TriggerHalCreate()
         NIC_LOG_DEBUG("Processing queue type: {}, size: {}", i, qinfo.size);
         if (qinfo.size < 1) continue;
 
-        NIC_LOG_DEBUG("Queue type_num: {}, entries: {}, purpose: {}, prog: {}, label: {}",
+        NIC_LOG_DEBUG("Queue type_num: {}, entries: {}, purpose: {}",
                       qinfo.type_num,
-                      qinfo.entries, qinfo.purpose, qinfo.prog, qinfo.label);
+                      qinfo.entries, qinfo.purpose);
 
         lif_qstate_map_ent = req->add_lif_qstate_map();
         lif_qstate_map_ent->set_type_num(qinfo.type_num);

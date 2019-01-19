@@ -206,7 +206,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     cmb_mem_addr = pd->mp_->start_addr(CAPRI_BARCO_KEY_DESC);
     cmb_mem_size = pd->mp_->size(CAPRI_BARCO_KEY_DESC);
     if (cmb_mem_addr == INVALID_MEM_ADDRESS || cmb_mem_size == 0) {
-        NIC_LOG_ERR("Failed to get HBM base for {}", CAPRI_BARCO_KEY_DESC);
+        NIC_LOG_ERR("{}: Failed to get HBM base for {}", spec->name, CAPRI_BARCO_KEY_DESC);
         throw;
     }
 
@@ -217,12 +217,12 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                             (uint32_t)CRYPTO_KEY_COUNT_MAX);
     num_crypto_keys_max = num_keys_max / 2;
     crypto_key_idx_base = num_crypto_keys_max;
-    NIC_LOG_DEBUG("Key region size {} bytes crypto_key_idx_base {} "
-                 "num_crypto_keys_max {}", cmb_mem_size, crypto_key_idx_base,
-                 num_crypto_keys_max);
+    NIC_LOG_DEBUG("{}: Key region size {} bytes crypto_key_idx_base {} "
+                 "num_crypto_keys_max {}", spec->name, cmb_mem_size,
+                 crypto_key_idx_base, num_crypto_keys_max);
     if (num_crypto_keys_max < ACCEL_DEV_NUM_CRYPTO_KEYS_MIN) {
-        NIC_LOG_ERR("num_crypto_keys_max {} too small, expected at least {}",
-                    num_crypto_keys_max, ACCEL_DEV_NUM_CRYPTO_KEYS_MIN);
+        NIC_LOG_ERR("{}: num_crypto_keys_max {} too small, expected at least {}",
+                    spec->name, num_crypto_keys_max, ACCEL_DEV_NUM_CRYPTO_KEYS_MIN);
         throw;
     }
 
@@ -230,7 +230,8 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     cmb_mem_addr = pd->mp_->start_addr(STORAGE_SEQ_HBM_HANDLE);
     cmb_mem_size = pd->mp_->size(STORAGE_SEQ_HBM_HANDLE);
     if (cmb_mem_addr == INVALID_MEM_ADDRESS || cmb_mem_size == 0) {
-        NIC_LOG_ERR("Failed to get HBM base for {}", STORAGE_SEQ_HBM_HANDLE);
+        NIC_LOG_ERR("{}: Failed to get HBM base for {}", spec->name,
+            STORAGE_SEQ_HBM_HANDLE);
         throw;
     }
 
@@ -250,9 +251,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     // Create the device
     if (spec->pcie_port == 0xff) {
-        NIC_LOG_DEBUG("lif-{}: Skipped creating PCI device, pcie_port {}",
-            hal_lif_info_.hw_lif_id, spec->pcie_port);
-        throw;
+        NIC_LOG_DEBUG("{}: Skipped creating PCI device", spec->name);
     } else {
         if (!CreateHostDevice()) {
             NIC_LOG_ERR("{}: Failed to create device", spec->name);
@@ -311,11 +310,10 @@ Accel_PF::CreateHostDevice()
     pci_resources.cmbsz = cmb_mem_size;
 
     // Create PCI device
-    NIC_LOG_DEBUG("lif-{}: Creating PCI device", hal_lif_info_.hw_lif_id);
+    NIC_LOG_DEBUG("{}: Creating PCI device", spec->name);
     pdev = pciehdev_accel_new(spec->name.c_str(), &pci_resources);
     if (pdev == NULL) {
-        NIC_LOG_ERR("lif-{}: Failed to create PCI device",
-            hal_lif_info_.hw_lif_id);
+        NIC_LOG_ERR("{}: Failed to create PCI device", spec->name);
         return false;
     }
     pciehdev_set_priv(pdev, (void *)this);
@@ -324,8 +322,7 @@ Accel_PF::CreateHostDevice()
     if (pciemgr) {
         int ret = pciemgr->add_device(pdev);
         if (ret != 0) {
-            NIC_LOG_ERR("lif-{}: Failed to add PCI device to topology",
-                hal_lif_info_.hw_lif_id);
+            NIC_LOG_ERR("{}: Failed to add PCI device to topology", spec->name);
             return false;
         }
     }
@@ -486,6 +483,14 @@ Accel_PF::opcode_to_str(enum cmd_opcode opcode)
         CASE(CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE);
         default: return "DEVCMD_UNKNOWN";
     }
+}
+
+enum DevcmdStatus
+Accel_PF::AdminCmdHandler(uint64_t lif_id,
+    void *req, void *req_data,
+    void *resp, void *resp_data)
+{
+    return CmdHandler(req, req_data, resp, resp_data);
 }
 
 enum DevcmdStatus

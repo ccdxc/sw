@@ -123,11 +123,6 @@ invalidate_txdma_cacheline(uint64_t addr)
               ((addr >> 6) << 1));
 }
 
-void DeviceManager::CreateUplinkVRFs()
-{
-    Uplink::CreateVrfs();
-}
-
 void
 DeviceManager::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client)
 {
@@ -174,7 +169,7 @@ void DeviceManager::HalEventHandler(bool is_up)
 
     // Create VRFs for uplinks
     NIC_LOG_DEBUG("Creating VRFs for uplinks");
-    CreateUplinkVRFs();
+    Uplink::CreateVrfs();
 
     uint64_t ret = hal->LifCreate(&hal_lif_info_);
     if (ret != 0) {
@@ -529,7 +524,9 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
     case ETH:
         eth_dev = new Eth(hal, hal_common_client, dev_spec, &hal_lif_info_, pd);
         eth_dev->SetType(type);
-        devices[eth_dev->GetHalLifInfo()->hw_lif_id] = (Device *)eth_dev;
+        for (uint32_t lif = 0; lif < eth_dev->GetHalLifCount(); lif++) {
+            devices[eth_dev->GetHalLifInfo()->hw_lif_id] = (Device *)eth_dev;
+        }
         return (Device *)eth_dev;
     case ACCEL:
         accel_dev = new Accel_PF(hal, dev_spec, &hal_lif_info_, pd);
@@ -624,7 +621,8 @@ DeviceManager::AdminQPoll(void *obj)
         } else {
             req_error = false;
             dev = devmgr->devices[req_desc.lif];
-            dev->CmdHandler(&req_desc.cmd, (void *)&req_data,
+            dev->AdminCmdHandler(req_desc.lif,
+                &req_desc.cmd, (void *)&req_data,
                 &resp_desc.comp, (void *)&resp_data);
         }
 
