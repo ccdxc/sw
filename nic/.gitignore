@@ -88,3 +88,7 @@ mpu_prog_info.json
 *.tar
 compile_commands.json
 bullseye_hal.cov
+agent/cmd/halctl/halctl_ext/bash_completion
+agent/cmd/halctl/halctl_ext/man_pages
+agent/cmd/halctl/halctl_ext/markdown
+
