@@ -1324,6 +1324,12 @@ ionic_lif_netdev_alloc(struct lif* lif, int ndescs)
 	ifp->if_transmit = ionic_start_xmit;
 	ifp->if_qflush = ionic_tx_qflush;
 	ifp->if_snd.ifq_maxlen = ndescs;
+
+	if (lif->ionic->is_mgmt_nic)
+		ifp->if_baudrate = IF_Gbps(1);
+	else
+		ifp->if_baudrate = IF_Gbps(100);
+
 	if_setgetcounterfn(ifp, ionic_get_counter);
 	/* Capabilities are set later on. */
 

@@ -2521,6 +2521,8 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 		return;
 	}
 
+	ifp->if_baudrate = IF_Mbps(lif->link_speed);
+
 	ifmr->ifm_status |= IFM_ACTIVE;
 	ifmr->ifm_active |= IFM_FDX;
 
@@ -2576,7 +2578,7 @@ static void ionic_lif_set_netdev_info(struct lif *lif)
 
 	IONIC_NETDEV_INFO(lif->netdev, "SET_NETDEV_INFO %s %s\n",
 		ctx.cmd.netdev_info.nd_name, ctx.cmd.netdev_info.dev_name);
-	
+
 	ionic_adminq_post_wait(lif, &ctx);
 }
 /*
