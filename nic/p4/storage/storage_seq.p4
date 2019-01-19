@@ -608,7 +608,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
                                      sgl_sparse_format_en, sgl_pdma_en, sgl_pdma_pad_only,
 				     sgl_pdma_alt_src_on_error, desc_vec_push_en,
 				     chain_alt_desc_on_error, integ_data0_wr_en,
-				     integ_data_null_en) {
+				     integ_data_null_en, desc_dlen_update_en) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC5_USE(seq_kivec5_scratch, seq_kivec5)
@@ -635,6 +635,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_comp_status_desc1_scratch.chain_alt_desc_on_error, chain_alt_desc_on_error);
   modify_field(seq_comp_status_desc1_scratch.integ_data0_wr_en, integ_data0_wr_en);
   modify_field(seq_comp_status_desc1_scratch.integ_data_null_en, integ_data_null_en);
+  modify_field(seq_comp_status_desc1_scratch.desc_dlen_update_en, desc_dlen_update_en);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(seq_kivec5.pad_buf_addr, seq_comp_status_desc1_scratch.pad_buf_addr);
@@ -652,6 +653,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_kivec5.chain_alt_desc_on_error, seq_comp_status_desc1_scratch.chain_alt_desc_on_error);
   modify_field(seq_kivec5.integ_data0_wr_en, seq_comp_status_desc1_scratch.integ_data0_wr_en);
   modify_field(seq_kivec5.integ_data_null_en, seq_comp_status_desc1_scratch.integ_data_null_en);
+  modify_field(seq_kivec5.desc_dlen_update_en, seq_comp_status_desc1_scratch.desc_dlen_update_en);
   modify_field(seq_kivec8.alt_buf_addr, seq_comp_status_desc1_scratch.alt_buf_addr);
 }
 

@@ -233,6 +233,12 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 			cmd->ccpc_sgl_pdma_alt_src_on_error);
 	OSAL_LOG_DEBUG("%30s: %d", "ccpc_desc_vec_push_en",
 			cmd->ccpc_desc_vec_push_en);
+	OSAL_LOG_DEBUG("%30s: %d", "integ_data0_wr_en",
+			cmd->integ_data0_wr_en);
+	OSAL_LOG_DEBUG("%30s: %d", "integ_data_null_en",
+			cmd->integ_data_null_en);
+	OSAL_LOG_DEBUG("%30s: %d", "desc_dlen_update_en",
+			cmd->desc_dlen_update_en);
 }
 
 static void __attribute__((unused))
@@ -483,6 +489,12 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 			cmd->ccpc_desc_vec_push_en);
 	write_bit_fields(seq_status_desc, 512 + 478, 1,
 			cmd->ccpc_chain_alt_desc_on_error);
+	write_bit_fields(seq_status_desc, 512 + 479, 1,
+			cmd->integ_data0_wr_en);
+	write_bit_fields(seq_status_desc, 512 + 480, 1,
+			cmd->integ_data_null_en);
+	write_bit_fields(seq_status_desc, 512 + 481, 1,
+			cmd->desc_dlen_update_en);
 }
 
 static void

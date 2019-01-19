@@ -275,6 +275,8 @@
     k.seq_kivec5_integ_data0_wr_en
 #define SEQ_KIVEC5_INTEG_DATA_NULL_EN           \
     k.seq_kivec5_integ_data_null_en
+#define SEQ_KIVEC5_DESC_DLEN_UPDATE_EN          \
+    k.seq_kivec5_desc_dlen_update_en
 
 #define SEQ_KIVEC5XTS_SRC_QADDR                 \
     k.{seq_kivec5xts_src_qaddr_sbit0_ebit7...seq_kivec5xts_src_qaddr_sbit32_ebit33}

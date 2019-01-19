@@ -163,6 +163,7 @@ header_type seq_comp_status_desc1_t {
     chain_alt_desc_on_error: 1;
     integ_data0_wr_en: 1;
     integ_data_null_en: 1;
+    desc_dlen_update_en: 1; // 1 => update comp desc datain_len
   }
 }
 
@@ -507,6 +508,7 @@ header_type seq_kivec5_t {
     chain_alt_desc_on_error: 1;
     integ_data0_wr_en   : 1;
     integ_data_null_en  : 1;
+    desc_dlen_update_en : 1;
   }
 }
 
@@ -688,6 +690,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.desc_vec_push_en, kivec.desc_vec_push_en);       \
   modify_field(scratch.integ_data0_wr_en, kivec.integ_data0_wr_en);     \
   modify_field(scratch.integ_data_null_en, kivec.integ_data_null_en);   \
+  modify_field(scratch.desc_dlen_update_en, kivec.desc_dlen_update_en); \
 
 #define SEQ_KIVEC5XTS_USE(scratch, kivec)                               \
   modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \

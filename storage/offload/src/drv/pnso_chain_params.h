@@ -75,20 +75,23 @@ struct sequencer_spec {
 };
 
 struct cpdc_chain_params_command {
-	uint16_t ccpc_data_len_from_desc:1;
-	uint16_t ccpc_status_dma_en:1;
-	uint16_t ccpc_next_doorbell_en:1;
-	uint16_t ccpc_intr_en:1;
-	uint16_t ccpc_next_db_action_ring_push:1;
-	uint16_t ccpc_stop_chain_on_error:1;
-	uint16_t ccpc_chain_alt_desc_on_error:1;
-	uint16_t ccpc_aol_pad_en:1;
-	uint16_t ccpc_sgl_pad_en:1;
-	uint16_t ccpc_sgl_sparse_format_en:1;
-	uint16_t ccpc_sgl_pdma_en:1;
-	uint16_t ccpc_sgl_pdma_pad_only:1;
-	uint16_t ccpc_sgl_pdma_alt_src_on_error:1;
-	uint16_t ccpc_desc_vec_push_en:1;
+	uint32_t ccpc_data_len_from_desc:1;
+	uint32_t ccpc_status_dma_en:1;
+	uint32_t ccpc_next_doorbell_en:1;
+	uint32_t ccpc_intr_en:1;
+	uint32_t ccpc_next_db_action_ring_push:1;
+	uint32_t ccpc_stop_chain_on_error:1;
+	uint32_t ccpc_chain_alt_desc_on_error:1;
+	uint32_t ccpc_aol_pad_en:1;
+	uint32_t ccpc_sgl_pad_en:1;
+	uint32_t ccpc_sgl_sparse_format_en:1;
+	uint32_t ccpc_sgl_pdma_en:1;
+	uint32_t ccpc_sgl_pdma_pad_only:1;
+	uint32_t ccpc_sgl_pdma_alt_src_on_error:1;
+	uint32_t ccpc_desc_vec_push_en:1;
+	uint32_t integ_data0_wr_en:1;
+	uint32_t integ_data_null_en:1;
+	uint32_t desc_dlen_update_en:1;
 };
 
 struct cpdc_chain_params {

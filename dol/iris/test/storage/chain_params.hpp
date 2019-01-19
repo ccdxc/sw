@@ -78,7 +78,7 @@ typedef struct {
     uint16_t data_len;		    // Remaining data length of compression buffer
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
     uint8_t  pad_boundary_shift;// log2(pad block length)
-    uint16_t data_len_from_desc   :1,	// use desc data_len rather than output_data_len
+    uint32_t data_len_from_desc   :1,	// use desc data_len rather than output_data_len
              status_dma_en        :1,	// enable PDMA of status_addr0 to status_addr1
     // NOTE: intr_en and next_doorbell_en can be enabled together.
     // When comp/decomp succeeds, Order of evaluation: 1. next_doorbell_en 2. intr_en.
@@ -98,7 +98,10 @@ typedef struct {
                                       // This mode requires sgl_pad_hash_en as P4+ will glean
                                       // the buffers info from the supplied sgl_vec_pa.
              sgl_pdma_alt_src_on_error:1,// SGL PDMA with alternate source buffer on error
-             desc_vec_push_en     : 1;// barco_desc_addr points to a vector of descriptors to be pushed
+             desc_vec_push_en     : 1,// barco_desc_addr points to a vector of descriptors to be pushed
+             integ_data0_wr_en    : 1,// enable write of integ_data0 to comp_buf_addr
+             integ_data_null_en   : 1,// copy zero to comp_buf_addr instead
+             desc_dlen_update_en  : 1;// enable update of CP desc datain_len field
 } chain_params_comp_t;
 
 /*

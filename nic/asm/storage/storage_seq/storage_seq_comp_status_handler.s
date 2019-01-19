@@ -25,6 +25,11 @@ struct phv_ p;
 #define r_last_sgl_p                r7  // pointer to last SGL
 
 /*
+ * Registers reuse, pre SGL updates
+ */
+#define r_comp_desc_p               r7  // pointer to chain descrriptor
+
+/*
  * Registers reuse, post padding calculations
  */
 #define r_status                    r_last_sgl_p     // comp status, briefly used at beginning
@@ -79,6 +84,17 @@ storage_seq_comp_status_handler:
     sll         r_total_len, r_num_blks, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT
     sub         r_pad_len, r_total_len, r_comp_data_len
     sub         r_last_blk_len, r_pad_boundary, r_pad_len
+
+    // If requested, do in-stage datain_len update in the descriptor.
+    // This memory update must complete before storage_seq_barco_chain_action
+    // transfers the decriptor(s) to Barco.
+if0:
+    bbeq        SEQ_KIVEC5_DESC_DLEN_UPDATE_EN, 0, endif0
+    add         r_comp_desc_p, SEQ_KIVEC4_BARCO_DESC_ADDR, \
+                SIZE_IN_BYTES(offsetof(struct comp_desc_le_t, datain_len)) // delay slot
+    memwr.hx    r_comp_desc_p, r_total_len
+    wrfence
+endif0:    
 
     // In the per-block hash or encryption case, we now indicate to
     // storage_seq_barco_chain_action the correct number of descriptors.
