@@ -69,7 +69,10 @@ process_feedback:
     
     seq         c1, k.rdma_aq_feedback_feedback_type, RDMA_AQ_FEEDBACK
     bcf         [!c1], exit
+    nop
 
+    phvwr       p.common.p4_intr_global_debug_trace, 1
+    
     seq         c1, K_ERROR, r0
     bcf         [!c1], aq_feedback
 
