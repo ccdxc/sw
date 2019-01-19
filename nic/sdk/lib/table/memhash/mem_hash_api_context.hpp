@@ -9,6 +9,7 @@
 #include "lib/p4/p4_api.hpp"
 
 #include "mem_hash.hpp"
+#include "mem_hash_stats.hpp"
 
 using sdk::table::mem_hash_factory_params_t;
 using sdk::table::mem_hash_properties_t;
@@ -28,11 +29,11 @@ typedef union mem_hash_handle_ {
 } __attribute__((__packed__)) mem_hash_handle_t;
 
 #define MEM_HASH_HANDLE_SET_HINT(_ctx, _hint) { \
-        ((mem_hash_handle_t *)((_ctx)->handle))->hint = (_hint); \
-        ((mem_hash_handle_t *)((_ctx)->handle))->is_hint = true; \
+        ((_ctx)->handle)->hint = (_hint); \
+        ((_ctx)->handle)->is_hint = true; \
 }
 #define MEM_HASH_HANDLE_SET_INDEX(_ctx, _index) {\
-        ((mem_hash_handle_t *)((_ctx)->handle))->index = (_index); \
+        ((_ctx)->handle)->index = (_index); \
 }
 
 #define HINT_SLOT_IS_INVALID(_slot) \
@@ -82,12 +83,24 @@ public:
         HINT_SLOT_MORE  = 0xFF,
     };
 
+    enum api_op {
+        API_NONE,
+        API_INSERT,
+        API_REMOVE,
+        API_UPDATE,
+        API_GET,
+        API_RESERVE,
+        API_RELEASE,
+    };
 
 private:
     static uint32_t numctx_;
     static mem_hash_api_context* alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
                                         uint32_t sw_appdata_len);
 public:
+    // Operation
+    api_op op;
+
     // Input params
     void *in_key;
     void *in_appdata;
@@ -136,16 +149,21 @@ public:
     mem_hash_api_context *pctx;
 
     // Handle to the entry
-    uint64_t *handle;
+    mem_hash_handle_t *handle;
+
+    // Table stats
+    mem_hash_table_stats *table_stats;
 
 public:
     static mem_hash_api_context* factory(mem_hash_api_context *pctx);
-    static mem_hash_api_context* factory(sdk_table_api_params_t *params,
-                                         mem_hash_properties_t *props);
+    static mem_hash_api_context* factory(uint32_t op, sdk_table_api_params_t *params,
+                                         mem_hash_properties_t *props,
+                                         mem_hash_table_stats *table_stats);
     static void destroy(mem_hash_api_context* ctx);
     char* sw_data2str();
     void print_sw_data();
     void print_input();
+    void print_handle();
 
     // Constructor
     mem_hash_api_context() {
@@ -194,12 +212,12 @@ public:
         return str;
     }
 
-    bool ismain() {
+    bool is_main() {
         return (level == 0);
     }
 
     const char* idstr() {
-        sprintf(str2, "%s%d-L%d", ismain() ? "M" : "H", table_index, level);
+        sprintf(str2, "%s%d-L%d", is_main() ? "M" : "H", table_index, level);
         return str2;
     }
 
@@ -209,6 +227,18 @@ public:
 
     bool is_max_recircs() {
         return (level >= max_recircs);
+    }
+
+    bool is_reserve() {
+        return (op == API_RESERVE);
+    }
+
+    bool is_release() {
+        return (op == API_RELEASE);
+    }
+
+    bool is_handle_valid() {
+        return handle->value != 0;
     }
 };
 

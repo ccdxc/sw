@@ -89,8 +89,12 @@ private:
     sdk_ret_t   init_(mem_hash_properties_t *props);
     sdk_ret_t   initctx_(mem_hash_api_context *ctx);
     sdk_ret_t   insert_(mem_hash_api_context *ctx);
+    sdk_ret_t   insert_with_handle_(mem_hash_api_context *ctx);
     sdk_ret_t   remove_(mem_hash_api_context *ctx);
+    sdk_ret_t   remove_with_handle_(mem_hash_api_context *ctx);
     sdk_ret_t   update_(mem_hash_api_context *ctx);
+    sdk_ret_t   get_(mem_hash_api_context *ctx);
+    sdk_ret_t   get_with_handle_(mem_hash_api_context *ctx);
     sdk_ret_t   find_(mem_hash_api_context *ctx,
                       mem_hash_api_context **retctx);
 

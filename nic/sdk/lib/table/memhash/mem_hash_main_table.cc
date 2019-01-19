@@ -1,6 +1,7 @@
 //-----------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
+#include <string.h>
 #include "include/sdk/base.hpp"
 
 #include "mem_hash_table.hpp"
@@ -90,13 +91,38 @@ mem_hash_main_table::initctx_(mem_hash_api_context *ctx) {
     return static_cast<mem_hash_table_bucket*>(ctx->bucket)->read_(ctx);
 }
 
+sdk_ret_t
+mem_hash_main_table::insert_with_handle_(mem_hash_api_context *ctx) {
+    sdk_ret_t ret = SDK_RET_OK;
+ 
+    SDK_ASSERT(ctx->table_index == ctx->handle->index);
+    if (ctx->handle->is_hint == 0) {
+        // This handle is for the main table.
+        // Write key and data to the hardware.
+        SDK_TRACE_DEBUG("writing to main table.");
+        ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->insert_with_handle_(ctx);
+    } else {
+        ctx->hint = ctx->handle->hint;
+        SDK_TRACE_DEBUG("adding to hint table, hint=%d", ctx->hint);
+        ret = hint_table_->insert_(ctx);
+    }
+
+    return ret;
+}
+
 //---------------------------------------------------------------------------
 // mem_hash_main_table insert_: Insert entry to main table
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
-    
+    SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
+
+    // If handle is valid, insert directly using the handle.
+    if (ctx->is_handle_valid()) {
+        return insert_with_handle_(ctx);
+    }
+
     // INSERT SEQUENCE:
     // 1) Insert to Main Table
     // 2) If COLLISION:
@@ -109,7 +135,6 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
     //           Write the Main Table bucket to HW
     // 3) Else if SUCCESS, insert is complete.
 
-    SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
     ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->insert_(ctx);
     if (ret == SDK_RET_COLLISION) {
         // COLLISION case
@@ -124,7 +149,6 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
         //         written. we can update the main entry. This will ensure 
         //         make before break for any downstream changes.
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->write_(ctx);
-
         MEM_HASH_HANDLE_SET_INDEX(ctx, ctx->table_index);
     } else {
         SDK_TRACE_DEBUG("MainTable: insert failed: ret:%d", ret);
@@ -220,6 +244,31 @@ mem_hash_main_table::update_(mem_hash_api_context *ctx) {
     if (ret != SDK_RET_OK) {
         goto update_return;
     }
+
+update_return:
+    if (match_ctx && match_ctx != ctx) {
+        mem_hash_api_context::destroy(match_ctx);
+    }
+
+    return ret;
+}
+
+//---------------------------------------------------------------------------
+// mem_hash_main_table update_: Remove entry from main table
+//---------------------------------------------------------------------------
+sdk_ret_t
+mem_hash_main_table::get_(mem_hash_api_context *ctx) {
+    sdk_ret_t ret = SDK_RET_OK;
+    mem_hash_api_context *match_ctx = NULL;
+
+    SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
+
+    ret = find_(ctx, &match_ctx);
+    if (ret != SDK_RET_OK) {
+        goto update_return;
+    }
+
+    memcpy(ctx->in_appdata, ctx->sw_appdata, ctx->sw_appdata_len); 
 
 update_return:
     if (match_ctx && match_ctx != ctx) {

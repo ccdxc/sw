@@ -36,13 +36,13 @@ public:
     };
 
 private:
-    uint8_t     valid_  : 1;
-    uint8_t     full_   : 1;
-    uint8_t     type_   : 1;
-    uint8_t     spare_  : 5;
+    uint8_t valid_  : 1;
+    uint8_t reserved_: 1;
+    uint8_t spare_  : 6;
 
 private:
     sdk_ret_t insert_(mem_hash_api_context *ctx);
+    sdk_ret_t insert_with_handle_(mem_hash_api_context *ctx);
     sdk_ret_t update_(mem_hash_api_context *ctx);
     sdk_ret_t remove_(mem_hash_api_context *ctx);
     sdk_ret_t read_(mem_hash_api_context *ctx);

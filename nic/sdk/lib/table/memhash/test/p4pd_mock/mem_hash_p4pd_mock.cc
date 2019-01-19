@@ -30,7 +30,7 @@ typedef struct mem_hash_mock_table_size_ {
 } mem_hash_mock_table_size_t;
 
 mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
-    {  
+    [ MEM_HASH_P4TBL_ID_NONE ] = {  
         // MEM_HASH_P4TBL_ID_NONE
         .name = "NONE",
         .ksize = 0,
@@ -38,23 +38,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         .asize = 0,
         .tsize = 0,
     },
-    {
-        // MEM_HASH_P4TBL_ID_H10
-        .name = "MEM_HASH_P4TBL_ID_H10",
-        .ksize = sizeof(mem_hash_h10_key_t), 
-        .dsize = sizeof(mem_hash_h10_actiondata_t),
-        .asize = sizeof(mem_hash_h10_appdata_t),
-        .tsize = 256*1024,
-    },
-    {
-        // MEM_HASH_P4TBL_ID_H10_OHASH
-        .name = "MEM_HASH_P4TBL_ID_H10_OHASH",
-        .ksize = sizeof(mem_hash_h10_key_t), 
-        .dsize = sizeof(mem_hash_h10_actiondata_t),
-        .asize = sizeof(mem_hash_h10_appdata_t),
-        .tsize = 64*1024,
-    },
-    {
+    [ MEM_HASH_P4TBL_ID_H5 ] = {
         // MEM_HASH_P4TBL_ID_H5
         .name = "MEM_HASH_P4TBL_ID_H5",
         .ksize = sizeof(mem_hash_h5_key_t), 
@@ -62,7 +46,7 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         .asize = sizeof(mem_hash_h5_appdata_t),
         .tsize = 16*1024*1024,
     },
-    {
+    [ MEM_HASH_P4TBL_ID_H5_OHASH ] = {
         // MEM_HASH_P4TBL_ID_H5_OHASH
         .name = "MEM_HASH_P4TBL_ID_H5_OHASH",
         .ksize = sizeof(mem_hash_h5_key_t), 
@@ -70,6 +54,31 @@ mem_hash_mock_table_size_t mem_hash_mock_table_sizes[] = {
         .asize = sizeof(mem_hash_h5_appdata_t),
         .tsize = 2*1024*1024,
     },
+    [ MEM_HASH_P4TBL_ID_H10 ] = {
+        // MEM_HASH_P4TBL_ID_H10
+        .name = "MEM_HASH_P4TBL_ID_H10",
+        .ksize = sizeof(mem_hash_h10_key_t), 
+        .dsize = sizeof(mem_hash_h10_actiondata_t),
+        .asize = sizeof(mem_hash_h10_appdata_t),
+        .tsize = 256*1024,
+    },
+    [ MEM_HASH_P4TBL_ID_H10_OHASH ] = {
+        // MEM_HASH_P4TBL_ID_H10_OHASH
+        .name = "MEM_HASH_P4TBL_ID_H10_OHASH",
+        .ksize = sizeof(mem_hash_h10_key_t), 
+        .dsize = sizeof(mem_hash_h10_actiondata_t),
+        .asize = sizeof(mem_hash_h10_appdata_t),
+        .tsize = 64*1024,
+    },
+    [ MEM_HASH_P4TBL_ID_MAX ] = {  
+        // MEM_HASH_P4TBL_ID_MAX
+        .name = "NONE",
+        .ksize = 0,
+        .dsize = 0,
+        .asize = 0,
+        .tsize = 0,
+    },
+
 };
 
 typedef struct mem_hash_mock_table_s {
@@ -232,6 +241,20 @@ p4pd_entry_read(uint32_t table_id, uint32_t index, void *swkey,
 
     return 0;
 }
+
+p4pd_error_t
+p4pd_hwkey_hwmask_build(uint32_t   tableid,
+                        void       *swkey,
+                        void       *swkey_mask,
+                        uint8_t    *hw_key,
+                        uint8_t    *hw_key_y)
+{
+    uint32_t ksize = 0;
+    get_key_data_sizes_(tableid, &ksize, NULL);
+    memcpy(hw_key, swkey, ksize);
+    return 0;
+}
+
 
 p4pd_error_t
 p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)

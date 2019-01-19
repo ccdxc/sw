@@ -18,6 +18,15 @@ using sdk::table::memhash::mem_hash_api_context;
 #define FOREACH_HINT(_n) for (uint32_t i = 1; i <= (_n); i++)
 #define FOREACH_HINT_REVERSE(_n) for (uint32_t i = (_n); i > 0; i--)
 
+#define PRINT_SW_DATA(_ctx) {\
+    SDK_TRACE_DEBUG("- Key:[%s]", (_ctx)->key2str ? (_ctx)->key2str((_ctx)->sw_key) : \
+                    mem_hash_utils_rawstr((_ctx)->sw_key, (_ctx)->sw_key_len)); \
+    SDK_TRACE_DEBUG("- AppData:[%s]", \
+                    (_ctx)->appdata2str ? (_ctx)->appdata2str((_ctx)->sw_appdata) : \
+                    mem_hash_utils_rawstr((_ctx)->sw_appdata, (_ctx)->sw_appdata_len)); \
+    SDK_TRACE_DEBUG("- HwData:[%s]", (_ctx)->sw_data2str()); \
+}
+
 //---------------------------------------------------------------------------
 // mem_hash_table_bucket read_ : Read entry from the hardware
 //---------------------------------------------------------------------------
@@ -30,7 +39,7 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
     }
 
     SDK_ASSERT(ctx->table_id);
-    if (!ctx->ismain()) {
+    if (!ctx->is_main()) {
         SDK_ASSERT(ctx->table_index);
     }
 
@@ -42,7 +51,7 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
     get_sw_data_appdata_(ctx);
     SDK_TRACE_DEBUG("%s: HW Read: TableID:%d TableIndex:%d", ctx->idstr(),
                     ctx->table_id, ctx->table_index);
-    ctx->print_sw_data();
+    PRINT_SW_DATA(ctx);
 
     ctx->sw_valid = true;
 
@@ -61,7 +70,7 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
     }
 
     SDK_ASSERT(ctx->sw_valid && ctx->table_id);
-    if (!ctx->ismain()) {
+    if (!ctx->is_main()) {
         SDK_ASSERT(ctx->table_index);
     }
 
@@ -79,12 +88,12 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
 
     SDK_TRACE_DEBUG("%s: HW Write: TableID:%d TableIndex:%d", ctx->idstr(),
                     ctx->table_id, ctx->table_index);
-    ctx->print_sw_data();
+    PRINT_SW_DATA(ctx);
 
     pdret = p4pd_entry_write(ctx->table_id, ctx->table_index,
                              ctx->sw_key, NULL, ctx->sw_data);
     if (pdret != P4PD_SUCCESS) {
-        SDK_TRACE_ERR("HW write: ret:%d", pdret);
+        SDK_TRACE_ERR("HW write failed: ret:%d", pdret);
         // Write failure is fatal
         SDK_ASSERT(0);
         return SDK_RET_HW_PROGRAM_ERR;
@@ -134,7 +143,7 @@ mem_hash_table_bucket::set_sw_data_appdata_(mem_hash_api_context *ctx, void *app
     ctx->write_pending = true;
     memcpy(ctx->sw_appdata, appdata, ctx->sw_appdata_len);
     mem_hash_p4pd_appdata_set(ctx, appdata);
-    ctx->print_sw_data();
+    PRINT_SW_DATA(ctx);
     return SDK_RET_OK;
 }
 
@@ -184,13 +193,32 @@ mem_hash_table_bucket::create_(mem_hash_api_context *ctx) {
     SDK_TRACE_DEBUG("%s: Creating new bucket.", ctx->idstr());
     SDK_TRACE_DEBUG("- Meta: [%s]", ctx->metastr());
 
-    // This is a new entry, key is present with the entry.
-    ret = set_sw_key_(ctx, ctx->in_key);
-    SDK_ASSERT(ret == SDK_RET_OK);
+    if (ctx->is_reserve() == false) {
+        // This is a new entry, key is present with the entry.
+        ret = set_sw_key_(ctx, ctx->in_key);
+        SDK_ASSERT(ret == SDK_RET_OK);
 
-    // Fill common data
-    ret = set_sw_data_appdata_(ctx, ctx->in_appdata);
-    SDK_ASSERT(ret == SDK_RET_OK);
+        // Fill common data
+        ret = set_sw_data_appdata_(ctx, ctx->in_appdata);
+        SDK_ASSERT(ret == SDK_RET_OK);
+        
+        if (!reserved_) {
+            // update stats only If we are inserting a new entry 
+            // reserved entries are counted already during 
+            // reserve api
+            ctx->table_stats->insert(ctx->level);
+        }
+    } else {
+        ctx->table_stats->insert(ctx->level);
+        reserved_ = true;
+    }
+    
+    // Set the Handle
+    if (ctx->is_main()) {
+        MEM_HASH_HANDLE_SET_INDEX(ctx, ctx->table_index);
+    } else {
+        MEM_HASH_HANDLE_SET_HINT(ctx, ctx->table_index);
+    }
 
     // Update the bucket meta data
     valid_ = true;
@@ -274,7 +302,7 @@ mem_hash_table_bucket::append_(mem_hash_api_context *ctx) {
         ret = find_first_free_hint_(ctx);
         SDK_TRACE_DEBUG("- PostMeta(find_first_free_hint_): [%s]", ctx->metastr());
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("Failed to find_first_free_hint_ ret:%d", ret);
+            SDK_TRACE_ERR("failed to find_first_free_hint_ ret:%d", ret);
             return ret;
         }
         // We continue with the collision path handling
@@ -291,6 +319,22 @@ mem_hash_table_bucket::append_(mem_hash_api_context *ctx) {
 sdk_ret_t
 mem_hash_table_bucket::insert_(mem_hash_api_context *ctx) {
     return valid_ ? append_(ctx) : create_(ctx);
+}
+
+//---------------------------------------------------------------------------
+// mem_hash_table_bucket insert_: Insert an entry into the bucket.
+//---------------------------------------------------------------------------
+sdk_ret_t
+mem_hash_table_bucket::insert_with_handle_(mem_hash_api_context *ctx) {
+    sdk_ret_t ret = SDK_RET_OK;
+
+    ret = create_(ctx);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("failed to create entry, ret:%d", ret);
+        return ret;
+    }
+
+    return write_(ctx);
 }
 
 //---------------------------------------------------------------------------
@@ -336,15 +380,15 @@ mem_hash_table_bucket::find_first_free_hint_(mem_hash_api_context *ctx) {
 
     if (!HINT_SLOT_IS_INVALID(ctx->hint_slot)) {
         // We have found a valid hint slot.
-        SDK_TRACE_ERR("hint slot %d is free", ctx->hint_slot);
+        SDK_TRACE_DEBUG("hint slot %d is free", ctx->hint_slot);
     } else {
         ctx->more_hashs = mem_hash_p4pd_get_more_hashs(ctx);
         if (ctx->more_hashs == 0) {
-            SDK_TRACE_ERR("more_hashs slot is free");
+            SDK_TRACE_DEBUG("more_hashs slot is free");
             ctx->hint = mem_hash_p4pd_get_more_hints(ctx);
             HINT_SLOT_SET_MORE(ctx->hint_slot);
         } else {
-            SDK_TRACE_ERR("all hint slots are full");
+            SDK_TRACE_DEBUG("all hint slots are full");
             ret = SDK_RET_NO_RESOURCE;
         }
     }
@@ -486,7 +530,7 @@ mem_hash_table_bucket::remove_(mem_hash_api_context *ctx) {
 
     ret = find_(ctx);
     if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("Failed to find match. ret:%d", ret);
+        SDK_TRACE_ERR("failed to find match. ret:%d", ret);
         return ret;
     }
     SDK_TRACE_DEBUG("%s: find_ result ret:%d Ctx: [%s]", ctx->idstr(), ret,
@@ -514,6 +558,10 @@ mem_hash_table_bucket::remove_(mem_hash_api_context *ctx) {
             return ret;
         }
         ret = SDK_RET_OK;
+        // Since this bucket has no hints, we can update stats here.
+        // If it had hints, then it would be update during defragmentation
+        SDK_TRACE_DEBUG("decrementing table_stats for %s", ctx->idstr());
+        ctx->table_stats->remove(ctx->level);
     } else if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("find_last_hint_ failed. ret:%d", ret);
     }
@@ -638,7 +686,15 @@ mem_hash_table_bucket::defragment_(mem_hash_api_context *ectx,
         // STEP 6: Write tctx to HW
         ret = static_cast<mem_hash_table_bucket *>(tctx->bucket)->write_(tctx);
         SDK_ASSERT(ret == SDK_RET_OK);
-    }
 
+        // We always update the stats using the level of the tail context, this
+        // is to make sure the 'hints' in table stats are accurate.
+        // Without this, following will be the problem scenario,
+        // when we remove an entry from main table, we decrement the stats using
+        // the main table level (0), however after defragmentation, we will move
+        // some hint to this entry, but we never account that stats.
+        tctx->table_stats->remove(tctx->level);
+        SDK_TRACE_DEBUG("decrementing table_stats for %s", tctx->idstr());
+    }
     return SDK_RET_OK;
 }

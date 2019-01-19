@@ -11,6 +11,7 @@
 #include "mem_hash_p4pd.hpp"
 #include "mem_hash.hpp"
 #include "mem_hash_utils.hpp"
+#include "mem_hash_stats.hpp"
 
 using sdk::table::mem_hash_factory_params_t;
 using sdk::table::mem_hash_properties_t;
@@ -24,7 +25,7 @@ mem_hash_api_context::alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
     mem = (mem_hash_api_context *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_API_CTX,
                                               sizeof(mem_hash_api_context));
     if (!mem) {
-        SDK_TRACE_ERR("Failed to alloc api context.");
+        SDK_TRACE_ERR("failed to alloc api context.");
         return NULL;
     }
 
@@ -35,7 +36,7 @@ mem_hash_api_context::alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
     }
 
     if (!ctx->sw_key) {
-        SDK_TRACE_ERR("Failed to alloc sw_key:%p", ctx->sw_key);
+        SDK_TRACE_ERR("failed to alloc sw_key:%p", ctx->sw_key);
         destroy(ctx);
         return NULL;
     }
@@ -44,7 +45,7 @@ mem_hash_api_context::alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
     if (ctx->sw_data_len) {
         ctx->sw_data = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_HWDATA, sw_data_len);
         if (!ctx->sw_data) {
-            SDK_TRACE_ERR("Failed to alloc sw_data:%p.", ctx->sw_data);
+            SDK_TRACE_ERR("failed to alloc sw_data:%p.", ctx->sw_data);
             destroy(ctx);
             return NULL;
         }
@@ -55,7 +56,7 @@ mem_hash_api_context::alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
         ctx->sw_appdata = (uint8_t *)SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_HWAPPDATA, 
                                                sw_appdata_len);
         if (!ctx->sw_data) {
-            SDK_TRACE_ERR("Failed to alloc sw_appdata:%p.", ctx->sw_appdata);
+            SDK_TRACE_ERR("failed to alloc sw_appdata:%p.", ctx->sw_appdata);
             destroy(ctx);
             return NULL;
         }
@@ -97,6 +98,8 @@ mem_hash_api_context::factory(mem_hash_api_context *pctx) {
     if (!ctx) {
         return NULL;
     }
+    ctx->op = pctx->op;
+
     // Copy the api params
     ctx->in_key = pctx->in_key;
     ctx->in_appdata = pctx->in_appdata;
@@ -114,13 +117,19 @@ mem_hash_api_context::factory(mem_hash_api_context *pctx) {
     // Use the handle from the parent context.
     ctx->handle = pctx->handle;
 
+    // Save the table_stats pointer
+    ctx->table_stats = pctx->table_stats;
+
+    // Save parent context
     ctx->pctx = pctx;
     return ctx;
 }
 
 mem_hash_api_context*
-mem_hash_api_context::factory(sdk_table_api_params_t *params,
-                              mem_hash_properties_t *props) {
+mem_hash_api_context::factory(uint32_t op, 
+                              sdk_table_api_params_t *params,
+                              mem_hash_properties_t *props,
+                              mem_hash_table_stats *table_stats) {
     uint32_t appdata_len = 0;
 
     appdata_len = p4pd_actiondata_appdata_size_get(props->main_table_id,
@@ -130,6 +139,8 @@ mem_hash_api_context::factory(sdk_table_api_params_t *params,
     if (!ctx) {
         return NULL;
     }
+    ctx->op = static_cast<mem_hash_api_context::api_op>(op);
+
     // Copy the api params
     ctx->in_key = params->key;
     ctx->in_appdata = params->appdata;
@@ -146,7 +157,10 @@ mem_hash_api_context::factory(sdk_table_api_params_t *params,
     ctx->appdata2str = props->appdata2str;
 
     // Use the handle from the params.
-    ctx->handle = &params->handle;
+    ctx->handle = reinterpret_cast<mem_hash_handle_t*>(&params->handle);
+
+    // Save the table_stats pointer
+    ctx->table_stats = table_stats;
     return ctx;
 }
 
@@ -170,14 +184,9 @@ mem_hash_api_context::destroy(mem_hash_api_context* ctx) {
 }
 
 void
-mem_hash_api_context::print_sw_data() {
-    SDK_TRACE_DEBUG("- Key:[%s]",
-        key2str ? key2str(sw_key) : 
-                  mem_hash_utils_rawstr(sw_key, sw_key_len));
-    SDK_TRACE_DEBUG("- AppData:[%s]",
-        appdata2str ? appdata2str(sw_appdata) :
-                      mem_hash_utils_rawstr(sw_appdata, sw_appdata_len));
-    SDK_TRACE_DEBUG("- HwData:[%s]", sw_data2str());
+mem_hash_api_context::print_handle() {
+    SDK_TRACE_DEBUG("- Handle: IsHint=%d Index=%d Hint=%d",
+                    handle->is_hint, handle->index, handle->hint);
 }
 
 void
@@ -185,7 +194,12 @@ mem_hash_api_context::print_input() {
     SDK_TRACE_DEBUG("- Key:[%s] Hash:[%#x]",
         key2str ? key2str(in_key) :
                   mem_hash_utils_rawstr(in_key, sw_key_len), in_hash_32b);
+    SDK_TRACE_DEBUG("- RawKey:[%s]",
+                    mem_hash_utils_rawstr(in_key, sw_key_len));
     SDK_TRACE_DEBUG("- AppData:[%s]",
         appdata2str ? appdata2str(in_appdata) :
                       mem_hash_utils_rawstr(in_appdata, sw_appdata_len));
+    SDK_TRACE_DEBUG("- RawData:[%s]",
+                    mem_hash_utils_rawstr(in_appdata, sw_appdata_len));
+    print_handle();
 }

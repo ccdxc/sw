@@ -155,7 +155,7 @@ mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
     if (!HINT_IS_VALID(pctx->hint)) {
         ret = alloc_(pctx);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("Failed to allocate hint. ret:%d", ret);
+            SDK_TRACE_ERR("failed to allocate hint. ret:%d", ret);
             return ret;
         }
     }
@@ -163,24 +163,28 @@ mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
     // Create a new context for this entry from parent context
     hctx = mem_hash_api_context::factory(pctx);
     if (hctx == NULL) {
-        SDK_TRACE_ERR("Failed to create api context");
+        SDK_TRACE_ERR("failed to create api context");
         return SDK_RET_OOM;
     }
 
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
 
-    // Insert entry to the bucket
-    ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->insert_(hctx);
-    if (ret == SDK_RET_COLLISION) {
-        // Recursively call the insert_ with hint table context
-        ret = insert_(hctx);
-    }
+    if (hctx->is_handle_valid()) {
+        // If handle is valid, insert directly using the handle.
+        ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->insert_with_handle_(hctx);
+    } else {
+        // Insert entry to the bucket
+        ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->insert_(hctx);
+        if (ret == SDK_RET_COLLISION) {
+            // Recursively call the insert_ with hint table context
+            ret = insert_(hctx);
+        }
 
-    // Write to hardware
-    if (ret == SDK_RET_OK) {
-        MEM_HASH_HANDLE_SET_HINT(hctx, hctx->table_index);
-        ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->write_(hctx);
+        // Write to hardware
+        if (ret == SDK_RET_OK) {
+            ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->write_(hctx);
+        }
     }
 
     mem_hash_api_context::destroy(hctx);
@@ -206,7 +210,7 @@ mem_hash_hint_table::tail_(mem_hash_api_context *ctx,
 
     tctx = mem_hash_api_context::factory(ctx);
     if (tctx == NULL) {
-        SDK_TRACE_ERR("Failed to create api context");
+        SDK_TRACE_ERR("failed to create api context");
         return SDK_RET_OOM;
     }
 
@@ -309,7 +313,7 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
 
     hctx = mem_hash_api_context::factory(ctx);
     if (hctx == NULL) {
-        SDK_TRACE_ERR("Failed to create api context");
+        SDK_TRACE_ERR("failed to create api context");
         return SDK_RET_OOM;
     }
 
@@ -348,7 +352,7 @@ mem_hash_hint_table::find_(mem_hash_api_context *ctx,
 
     hctx = mem_hash_api_context::factory(ctx);
     if (hctx == NULL) {
-        SDK_TRACE_ERR("Failed to create api context");
+        SDK_TRACE_ERR("failed to create api context");
         return SDK_RET_OOM;
     }
 
