@@ -153,6 +153,7 @@ protected:
         hal::hal_cfg_db_close();
         ASSERT_TRUE(ret == HAL_RET_OK);
 
+        uint64_t mac = 0x0000DEADBEEF;
         // Create enicif1
         enicif_spec.set_type(intf::IF_TYPE_ENIC);
         enicif_spec.mutable_key_or_handle()->set_interface_id(ENIC_IF_ID1);
@@ -160,6 +161,7 @@ protected:
         enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(LIF_ID);
         enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(L2SEGMENT_ID);
         enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(ENCAP_VLAN_ID);
+        enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(mac++);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::interface_create(enicif_spec, &enicif_rsp);
         hal::hal_cfg_db_close();
@@ -172,6 +174,7 @@ protected:
         enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(LIF_ID);
         enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(L2SEGMENT_ID);
         enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(ENCAP_VLAN_ID);
+        enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(mac++);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::interface_create(enicif_spec, &enicif_rsp);
         hal::hal_cfg_db_close();
@@ -184,6 +187,7 @@ protected:
         enicif_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(LIF_ID);
         enicif_spec.mutable_if_enic_info()->mutable_enic_info()->mutable_l2segment_key_handle()->set_segment_id(L2SEGMENT_ID);
         enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_encap_vlan_id(ENCAP_VLAN_ID);
+        enicif_spec.mutable_if_enic_info()->mutable_enic_info()->set_mac_address(mac++);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         ret = hal::interface_create(enicif_spec, &enicif_rsp);
         hal::hal_cfg_db_close();
