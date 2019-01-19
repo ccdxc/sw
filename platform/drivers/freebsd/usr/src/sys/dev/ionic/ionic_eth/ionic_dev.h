@@ -264,6 +264,8 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(struct rdma_queue_cmd) != 64);
 	BUILD_BUG_ON(sizeof(union adminq_cmd) != 64);
 	BUILD_BUG_ON(sizeof(union adminq_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct set_netdev_info_cmd) != 64);
+	BUILD_BUG_ON(sizeof(set_netdev_info_comp) != 16);
 }
 
 struct ionic_dev

@@ -2560,6 +2560,25 @@ ionic_media_change(struct ifnet *ifp)
 	return (ENODEV);
 }
 
+static void ionic_lif_set_netdev_info(struct lif *lif)
+{
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.netdev_info = {
+			.opcode = CMD_OPCODE_SET_NETDEV_INFO,
+		},
+	};
+
+	strlcpy(ctx.cmd.netdev_info.nd_name, lif->netdev->if_xname,
+		sizeof(ctx.cmd.netdev_info.nd_name));
+	strlcpy(ctx.cmd.netdev_info.dev_name, ionic_bus_info(lif->ionic),
+		sizeof(ctx.cmd.netdev_info.dev_name));
+
+	IONIC_NETDEV_INFO(lif->netdev, "SET_NETDEV_INFO %s %s\n",
+		ctx.cmd.netdev_info.nd_name, ctx.cmd.netdev_info.dev_name);
+	
+	ionic_adminq_post_wait(lif, &ctx);
+}
 /*
  * Do the rest of netdev initialisation.
  */
@@ -2591,6 +2610,8 @@ static int ionic_station_set(struct lif *lif)
 	ionic_addr_add(lif->netdev, lif->dev_addr);
 
 	ether_ifattach(netdev, lif->dev_addr);
+
+	ionic_lif_set_netdev_info(lif);
 
 	lif->max_frame_size = netdev->if_mtu + ETHER_HDR_LEN + ETHER_VLAN_ENCAP_LEN + ETHER_CRC_LEN;
 
