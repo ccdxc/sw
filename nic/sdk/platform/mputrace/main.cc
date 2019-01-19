@@ -10,7 +10,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "platform/mputrace/mputrace.hpp"
-#include "nic/sdk/platform/capri/csr/asicrw_if.hpp"
+#include "platform/capri/csr/asicrw_if.hpp"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 // TODO check if we need to get it from a common location
 #include "gen/platform/mem_regions.hpp"
@@ -19,10 +19,11 @@ namespace sdk {
 namespace platform {
 
 sdk::types::mem_addr_t g_trace_base;
+sdk::types::mem_addr_t g_trace_end;
 #define roundup(x, y) ((((x) + ((y)-1)) / (y)) * (y)) /* to any y */
 #define TRACE_BASE roundup(MEM_REGION_ADDR(MPU_TRACE), 4096)
-#define TRACE_END                                                              \
-    (MEM_REGION_ADDR(MPU_TRACE) + MEM_REGION_MPU_TRACE_SIZE_KB * 1024)
+#define TRACE_END  (MEM_REGION_ADDR(MPU_TRACE) + \
+                         MEM_REGION_MPU_TRACE_SIZE )
 
 std::map<std::string, int> pipeline_str_to_id = {
     {"txdma", TXDMA},
@@ -52,7 +53,7 @@ int g_pipeline;
 int g_stage;
 int g_mpu;
 char *g_pipeline_name;
-mpu_trace_record_t *record;
+mputrace_instance_t *record;
 
 static void
 mputrace_register()
@@ -71,12 +72,13 @@ mputrace_register()
 }
 
 void
-parse_options(mpu_trace_record_t *record)
+parse_options(mputrace_instance_t *record)
 {
     char *option, *value;
 
     assert(record != NULL);
 
+    record->enable = false;
     record->trace_enable = false;
     record->phv_debug = false;
     record->phv_error = false;
@@ -134,6 +136,18 @@ parse_options(mpu_trace_record_t *record)
                 break;
         }
     }
+
+    uint8_t trace_all = !(record->trace_enable ||
+                            record->phv_debug ||
+                            record->phv_error ||
+                            record->watch_pc);
+    if (!trace_all && record->enable) {
+        printf("Invalid configuration.\n"
+               "enable option overrides these options - "
+               "trace_enable, phv_debug, phv_error, watch_pc\n");
+    }
+
+    record->enable = trace_all;
 
     return;
 }
@@ -223,11 +237,12 @@ static inline void
 mputrace_parse_options()
 {
     g_trace_base = TRACE_BASE;
+    g_trace_end = TRACE_END;
     bool enable;
     if (record == NULL) {
-        record = (mpu_trace_record_t *)malloc(sizeof(mpu_trace_record_t));
+        record = (mputrace_instance_t *)malloc(sizeof(mputrace_instance_t));
     }
-    memset(record, 0, sizeof(mpu_trace_record_t));
+    memset(record, 0, sizeof(mputrace_instance_t));
     parse_options(record);
 
     for (int p = 0; p < PIPE_CNT; p++) {
@@ -238,7 +253,6 @@ mputrace_parse_options()
                          (g_stage == -1 || s == g_stage) &&
                          (g_mpu == -1 || m == g_mpu);
                 if (enable) {
-                    record->enable = 1;
                     mputrace_config_trace(p, s, m, record);
                 }
             }
@@ -337,9 +351,10 @@ mputrace_handle_options(int argc, char *argv[])
 {
     int ret = 0;
     std::map<std::string, int> oper = {
-        {"conf", MPUTRACE_CONFIG},     {"enable", MPUTRACE_ENABLE},
-        {"disable", MPUTRACE_DISABLE}, {"dump", MPUTRACE_DUMP},
-        {"reset", MPUTRACE_RESET},     {"show", MPUTRACE_SHOW},
+        {"conf", MPUTRACE_CONFIG},
+        {"dump", MPUTRACE_DUMP},
+        {"reset", MPUTRACE_RESET},
+        {"show", MPUTRACE_SHOW},
     };
 
     switch (oper[std::string((const char *)argv[1])]) {
@@ -366,8 +381,6 @@ mputrace_handle_options(int argc, char *argv[])
         case MPUTRACE_SHOW:
             mpu_trace_show();
             break;
-        case MPUTRACE_ENABLE:
-        case MPUTRACE_DISABLE:
         default:
             ret = mputrace_error(argv);
     }

@@ -59,8 +59,6 @@ typedef enum mputrace_arg_types_s {
 
 typedef enum mputrace_op_type_s {
     MPUTRACE_CONFIG,
-    MPUTRACE_ENABLE,
-    MPUTRACE_DISABLE,
     MPUTRACE_RESET,
     MPUTRACE_DUMP,
     MPUTRACE_SHOW
@@ -68,32 +66,37 @@ typedef enum mputrace_op_type_s {
 
 #pragma pack(push, 1)
 
-typedef struct mpu_trace_record_s {
+typedef struct mputrace_instance_s {
     uint8_t pipeline_type;
     uint32_t stage_id;
     uint32_t mpu;
-    uint8_t enable;
-    uint8_t trace_enable;
-    uint8_t phv_debug;
-    uint8_t phv_error;
-    uint64_t watch_pc;
+    /// trigger options
+    uint8_t enable; // this is a continuous trigger, if this is enabled
+                    // all phvs are traced irrespective of the next 4 triggers
+    uint8_t trace_enable; // tracing starts if a trace instr is in the program
+    uint8_t phv_debug; // trace only for phvs with phv_debug enabled
+    uint8_t phv_error; // trace only for phvs with table error enabled
+    uint64_t watch_pc; // trace whenever pc == watch_pc
+    /// data to be traced
     uint64_t trace_addr;
-    uint8_t table_key;
-    uint8_t instructions;
-    uint8_t wrap;
+    uint8_t table_key; // Data and Key pair
+    uint8_t instructions; // Instructions
+
+    uint8_t wrap; // Trace data will wrap over if this is enabled
     uint8_t reset;
     uint32_t trace_size;
-    uint8_t __pad[27]; // Pad to 64 bytes
-} mpu_trace_record_t;
 
-static_assert(sizeof(mpu_trace_record_t) == 64,
-              "mpu trace record struct should be 64B");
+    uint8_t __pad[27]; // Pad to 64 bytes
+} mputrace_instance_t;
+
+static_assert(sizeof(mputrace_instance_t) == 64,
+              "mpu trace instance struct should be 64B");
 
 #pragma pack(pop)
 
 extern std::map<int, int> max_stages;
 
-void mputrace_config_trace(int, int, int, mpu_trace_record_t *);
+void mputrace_config_trace(int, int, int, mputrace_instance_t *);
 void mputrace_disable_trace();
 void mputrace_enable_trace();
 void mputrace_reset();
@@ -102,6 +105,7 @@ void mputrace_show();
 
 extern char g_MPUTRACE_DUMP_FILE[MPUTRACE_STR_NAME_LEN];
 extern uint64_t g_trace_base;
+extern uint64_t g_trace_end;
 
 } // end namespace platform
 } // end namespace sdk

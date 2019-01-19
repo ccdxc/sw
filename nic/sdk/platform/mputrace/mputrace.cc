@@ -18,6 +18,7 @@ namespace platform {
 ///
 int g_pipeline_index = 0;
 
+#define ADDR 0x3f
 #define MPUTRACE_FOR_EACH_PIPELINE(pipeline, fn, args)                         \
     stage_count = sizeof(pipeline.mpu) / sizeof(cap_mpu_csr_t);                \
     fn(stage_count, pipeline.mpu, args);
@@ -35,10 +36,14 @@ mputrace_util_get_trace_size(cap_mpu_csr_trace_t trace)
 }
 
 int
-mputrace_util_get_enable(cap_mpu_csr_trace_t trace)
+mputrace_util_is_trace_enabled(cap_mpu_csr_trace_t trace)
 {
     trace.read();
-    return (int)trace.int_var__enable;
+    return (int)trace.int_var__enable ||
+        (int)trace.int_var__trace_enable ||
+        (int)trace.int_var__phv_debug ||
+        (int)trace.int_var__phv_error ||
+        (int)trace.int_var__watch_enable;
 }
 
 void
@@ -51,7 +56,7 @@ mputrace_erase_trace_buffer(sdk::types::mem_addr_t trace_addr, int trace_size)
 /// mputrace config and enable functions
 ///
 void
-mputrace_set_args(mpu_trace_record_t *args, int stage, int mpu)
+mputrace_set_args(mputrace_instance_t *args, int stage, int mpu)
 {
     args->stage_id = stage;
     args->mpu = mpu;
@@ -97,9 +102,12 @@ capri_mpu_trace_enable_internal(cap_mpu_csr_trace_t &trace, uint32_t stage_id,
 }
 
 void
-capri_mpu_trace_enable(cap_mpu_csr_trace_t &trace, mpu_trace_record_t *args)
+capri_mpu_trace_enable(cap_mpu_csr_trace_t &trace, mputrace_instance_t *args)
 {
     static sdk::types::mem_addr_t trace_addr = g_trace_base;
+
+    assert(trace_addr + (args->trace_size * TRACE_ENTRY_SIZE) < g_trace_end);
+    assert((trace_addr & ADDR) == 0x0);
 
     capri_mpu_trace_enable_internal(
         trace, args->stage_id, args->mpu, args->enable, args->trace_enable,
@@ -111,31 +119,31 @@ capri_mpu_trace_enable(cap_mpu_csr_trace_t &trace, mpu_trace_record_t *args)
 }
 
 static inline void
-mputrace_program_txdma_mpu(cap_top_csr_t &cap0, mpu_trace_record_t *args)
+mputrace_program_txdma_mpu(cap_top_csr_t &cap0, mputrace_instance_t *args)
 {
     capri_mpu_trace_enable(cap0.pct.mpu[args->stage_id].trace[args->mpu], args);
 }
 
 static inline void
-mputrace_program_rxdma_mpu(cap_top_csr_t &cap0, mpu_trace_record_t *args)
+mputrace_program_rxdma_mpu(cap_top_csr_t &cap0, mputrace_instance_t *args)
 {
     capri_mpu_trace_enable(cap0.pcr.mpu[args->stage_id].trace[args->mpu], args);
 }
 
 static inline void
-mputrace_program_sgi_mpu(cap_top_csr_t &cap0, mpu_trace_record_t *args)
+mputrace_program_sgi_mpu(cap_top_csr_t &cap0, mputrace_instance_t *args)
 {
     capri_mpu_trace_enable(cap0.sgi.mpu[args->stage_id].trace[args->mpu], args);
 }
 
 static inline void
-mputrace_program_sge_mpu(cap_top_csr_t &cap0, mpu_trace_record_t *args)
+mputrace_program_sge_mpu(cap_top_csr_t &cap0, mputrace_instance_t *args)
 {
     capri_mpu_trace_enable(cap0.sge.mpu[args->stage_id].trace[args->mpu], args);
 }
 
 static inline void
-mputrace_program_mpu(mpu_trace_record_t *args)
+mputrace_program_mpu(mputrace_instance_t *args)
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
     switch (args->pipeline_type) {
@@ -162,14 +170,14 @@ mputrace_program_mpu(mpu_trace_record_t *args)
 /// Enable tracing for each mpu.
 ///
 void
-mputrace_trace_enable(mpu_trace_record_t *args)
+mputrace_trace_enable(mputrace_instance_t *args)
 {
     mputrace_program_mpu(args);
 }
 
 static inline void
 mputrace_fill_pd_args(int pipeline, int stage, int mpu,
-                      mpu_trace_record_t *args, mpu_trace_record_t *record)
+                      mputrace_instance_t *args, mputrace_instance_t *record)
 {
     args->pipeline_type = pipeline;
     args->stage_id = stage;
@@ -199,16 +207,16 @@ mputrace_reset_before_config()
 
 void
 mputrace_config_trace(int pipeline, int stage, int mpu,
-                      mpu_trace_record_t *record)
+                      mputrace_instance_t *record)
 {
     mputrace_reset_before_config();
-    mpu_trace_record_t args = {0};
+    mputrace_instance_t args = {0};
     mputrace_fill_pd_args(pipeline, stage, mpu, &args, record);
     mputrace_trace_enable(&args);
 }
 
 static inline void
-mputrace_dump_fill_record(mpu_trace_record_t *record, cap_mpu_csr_trace_t trace,
+mputrace_dump_fill_record(mputrace_instance_t *record, cap_mpu_csr_trace_t trace,
                           int pipeline, int stage, int mpu)
 {
     record->pipeline_type = pipeline;
@@ -232,7 +240,7 @@ void
 mputrace_dump_trace_to_file(cap_mpu_csr_trace_t trace, int pipeline, int stage,
                             int mpu)
 {
-    mpu_trace_record_t record = {};
+    mputrace_instance_t record = {};
     trace.read();
 
     uint32_t trace_size = mputrace_util_get_trace_size(trace);
@@ -262,7 +270,7 @@ mputrace_dump_trace(int stage_count, cap_mpu_csr_t *mpu_ptr, int pipeline)
 {
     for (int stage = 0; stage < stage_count; stage++) {
         for (int mpu = 0; mpu < MPUTRACE_MAX_MPU; mpu++) {
-            if (mputrace_util_get_enable(mpu_ptr->trace[mpu])) {
+            if (mputrace_util_is_trace_enabled(mpu_ptr->trace[mpu])) {
                 mputrace_dump_trace_to_file(mpu_ptr->trace[mpu], pipeline,
                                             stage, mpu);
             }
@@ -293,7 +301,7 @@ mputrace_reset_trace_buffer_internal(cap_mpu_csr_trace_t trace, void *ptr)
     uint32_t trace_size = 0;
     trace.read();
 
-    if (mputrace_util_get_enable(trace)) {
+    if (mputrace_util_is_trace_enabled(trace)) {
         trace_addr = mputrace_util_get_trace_addr(trace);
         trace_size = mputrace_util_get_trace_size(trace);
         mputrace_erase_trace_buffer(trace_addr, trace_size);
@@ -302,7 +310,7 @@ mputrace_reset_trace_buffer_internal(cap_mpu_csr_trace_t trace, void *ptr)
 
 static inline void
 mputrace_reset_trace(int stage_count, cap_mpu_csr_t *mpu_ptr,
-                     mpu_trace_record_t *args)
+                     mputrace_instance_t *args)
 {
     for (int s = 0; s < stage_count; s++) {
         for (int mpu = 0; mpu < MPUTRACE_MAX_MPU; mpu++) {
@@ -324,7 +332,7 @@ mputrace_reset_trace_buffer(cap_top_csr_t &cap0)
 }
 
 static inline void
-capri_mpu_trace_reset(cap_mpu_csr_trace_t &trace, mpu_trace_record_t *args)
+capri_mpu_trace_reset(cap_mpu_csr_trace_t &trace, mputrace_instance_t *args)
 {
     capri_mpu_trace_enable_internal(
         trace, args->stage_id, args->mpu, args->enable, args->trace_enable,
@@ -335,7 +343,7 @@ capri_mpu_trace_reset(cap_mpu_csr_trace_t &trace, mpu_trace_record_t *args)
 
 static inline void
 mputrace_reset_trace_regs(int stage_count, cap_mpu_csr_t *mpu_ptr,
-                          mpu_trace_record_t *args)
+                          mputrace_instance_t *args)
 {
     for (int s = 0; s < stage_count; s++) {
         for (int mpu = 0; mpu < MPUTRACE_MAX_MPU; mpu++) {
@@ -348,7 +356,7 @@ mputrace_reset_trace_regs(int stage_count, cap_mpu_csr_t *mpu_ptr,
 void
 mputrace_reset_regs(cap_top_csr_t &cap0)
 {
-    mpu_trace_record_t args = {0};
+    mputrace_instance_t args = {0};
     int stage_count = 0;
 
     MPUTRACE_FOR_EACH_PIPELINE(cap0.sgi, mputrace_reset_trace_regs, &args);
@@ -357,14 +365,15 @@ mputrace_reset_regs(cap_top_csr_t &cap0)
     MPUTRACE_FOR_EACH_PIPELINE(cap0.pcr, mputrace_reset_trace_regs, &args);
 }
 
+/// First clear the registers and then the buffer
 void
 mputrace_reset_capri()
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
+    mputrace_reset_regs(cap0);
     mputrace_reset_trace_buffer(cap0);
 
-    mputrace_reset_regs(cap0);
 }
 
 void
@@ -378,10 +387,10 @@ mputrace_reset()
 ///
 void
 mputrace_show_pipeline_internal(cap_mpu_csr_trace_t trace,
-                                mpu_trace_record_t *args)
+                                mputrace_instance_t *args)
 {
     trace.read();
-    if (mputrace_util_get_enable(trace)) {
+    if (mputrace_util_is_trace_enabled(trace)) {
         printf("%10" PRIu8 " %10" PRIu32 " %10" PRIu32 " %10" PRIu8 " %10" PRIu8
                " %10" PRIu8 " %10" PRIu8 " %10" PRIu8 " %10" PRIu8
                " 0x%08" PRIx64 " %10" PRIu8 " %10" PRIu8 " 0x%08" PRIx64
@@ -406,7 +415,7 @@ mputrace_show_pipeline_internal(cap_mpu_csr_trace_t trace,
 
 static inline void
 mputrace_show_trace(int stage_count, cap_mpu_csr_t *mpu_ptr,
-                    mpu_trace_record_t *args)
+                    mputrace_instance_t *args)
 {
     g_pipeline_index++;
     for (int stage = 0; stage < stage_count; stage++) {
@@ -422,7 +431,7 @@ void
 mputrace_capri_show()
 {
     cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    mpu_trace_record_t args = {0};
+    mputrace_instance_t args = {0};
     int stage_count = 0;
 
     MPUTRACE_FOR_EACH_PIPELINE(cap0.sgi, mputrace_show_trace, &args);
