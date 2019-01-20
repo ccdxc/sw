@@ -8,7 +8,7 @@ targets:
     sub-area:
     feature:
   build_aarch64:
-    commands: [ "sh", "-c", "cd /sw/nic && make ARCH=aarch64" ]
+    commands: [ "sh", "-c", "cd /usr/src/github.com/pensando/sw/nic && make ARCH=aarch64" ]
     owners: ["email:neel@pensando.io"]
     area:
     sub-area:

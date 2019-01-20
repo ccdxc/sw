@@ -13,7 +13,7 @@ func main() {
 	halctl := cmd.NewHalctlCommand()
 
 	// For Bash Completion
-	halctl.GenBashCompletionFile("bash_completion/out.sh")
+	halctl.GenBashCompletionFile("bash_completion/halctl_bash_complete.sh")
 
 	// Generate Man Page
 	header := &doc.GenManHeader{
