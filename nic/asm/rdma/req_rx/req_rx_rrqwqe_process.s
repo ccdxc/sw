@@ -357,5 +357,6 @@ invalid_nak_code:
     CAPRI_SET_TABLE_0_VALID(0)
 
 invalid_read_or_atomic_rsp_msn:
+    CAPRI_SET_TABLE_0_VALID(0)
     phvwr          CAPRI_PHV_FIELD(TO_S4_P, error_drop_phv), 1
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)

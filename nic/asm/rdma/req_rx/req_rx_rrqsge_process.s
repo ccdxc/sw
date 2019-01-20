@@ -165,11 +165,8 @@ set_arg:
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
     phvwr.c5  CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, last_pkt), 1
 
-    SQCB1_ADDR_GET(r5)
-    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_rx_sqcb1_write_back_process, r5)
- 
-    nop.e
-    nop
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
 recirc:
     // increment dma_cmd_start_index by num of DMA cmds consumed for 2 SGES per pass
@@ -194,7 +191,8 @@ err_no_dma_cmds:
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1 
     // Error disable QP
-    phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    phvwr         CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    b              set_arg
     CAPRI_SET_TABLE_0_VALID(0)
 
 table_error:
@@ -204,7 +202,7 @@ table_error:
 
     phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
     phvwr          CAPRI_PHV_RANGE(TO_S7_P, lif_cqe_error_id_vld, lif_error_id), \
-                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_ACC_ERR_OFFSET))
+                    ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_REMOTE_OPER_ERR_OFFSET))
 
     // update stats
     phvwr          CAPRI_PHV_FIELD(TO_S7_P, qp_err_disabled), 1
@@ -212,8 +210,6 @@ table_error:
     phvwr.c3       CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_phv_intrinsic_error), 1
     phvwr.c7       CAPRI_PHV_FIELD(TO_S7_P, qp_err_dis_table_resp_error), 1
 
-    phvwr          p.common.p4_intr_global_drop, 1
+    b              set_arg
     CAPRI_SET_TABLE_0_VALID(0)
 
-    // invoke an mpu-only program which will bubble down and eventually invoke write back
-    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
