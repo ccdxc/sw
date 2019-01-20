@@ -4254,12 +4254,14 @@ enic_if_upd_l2seg_list_update(InterfaceSpec& spec, if_t *hal_if,
 
     dllist_for_each(lnode, &(hal_if->l2seg_list_clsc_head)) {
         entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
+#if 0
         HAL_TRACE_DEBUG("Checking for l2seg: {}",
                 entry->l2seg_handle);
+#endif
         for (i = 0; i < num_l2segs; i++) {
             l2seg_key_handle = clsc_enic_info->l2segment_key_handle(i);
             l2seg = l2seg_lookup_key_or_handle(l2seg_key_handle);
-            HAL_TRACE_DEBUG("grpc l2seg handle: {}", l2seg->hal_handle);
+            // HAL_TRACE_DEBUG("grpc l2seg handle: {}", l2seg->hal_handle);
             if (entry->l2seg_handle == l2seg->hal_handle) {
                 l2seg_exists = true;
                 break;
