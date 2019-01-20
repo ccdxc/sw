@@ -20,6 +20,10 @@ api_engine    g_api_engine;
  * @{
  */
 
+/**
+ * @brief    return API parameters slab
+ * @return    pointer to the API parameters slab
+ */
 slab *
 api_params_slab (void) {
     return g_api_engine.api_params_slab();

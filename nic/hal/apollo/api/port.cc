@@ -6,6 +6,7 @@
  * @brief   This file handles port operations
  */
 #include "nic/sdk/linkmgr/linkmgr.hpp"
+#include "nic/sdk/linkmgr/port.hpp"
 #include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
 
@@ -42,13 +43,37 @@ create_port (port_args_t *port_args)
  * @return       SDK_RET_OK on success, failure status code on error
  */
 static sdk_ret_t
-populate_port_info (uint32_t fp_port, port_args_t *port_args)
+populate_port_info (uint32_t fp_port, uint32_t port_num, port_args_t *port_args)
 {
-    port_args->port_num = fp_port;
+    uint32_t    asic, asic_port;
+
+    port_args->port_num = port_num;
     port_args->port_type = g_oci_state.catalogue()->port_type_fp(fp_port);
-    port_args->port_speed = g_oci_state.catalogue()->port_speed(fp_port);
+    if (port_args->port_type == port_type_t::PORT_TYPE_ETH) {
+        port_args->port_speed = port_speed_t::PORT_SPEED_100G;
+        port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
+    } else if (port_args->port_type == port_type_t::PORT_TYPE_MGMT) {
+        port_args->port_speed = port_speed_t::PORT_SPEED_1G;
+        port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+    }
     port_args->admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
     port_args->num_lanes = g_oci_state.catalogue()->num_lanes_fp(fp_port);
+    asic = sdk::linkmgr::port::port_num_to_asic_num(port_num);
+    asic_port = sdk::linkmgr::port::port_num_to_asic_port(port_num);
+    port_args->mac_id =
+        g_oci_state.catalogue()->asic_port_to_mac_id(asic, asic_port);
+    port_args->mac_ch =
+        g_oci_state.catalogue()->asic_port_to_mac_ch(asic, asic_port);
+    port_args->auto_neg_enable = false;
+    port_args->debounce_time = 0;
+    port_args->mtu = 0;    /**< default will be set to max mtu */
+    port_args->pause = port_pause_type_t::PORT_PAUSE_TYPE_LINK;
+    port_args->loopback_mode = port_loopback_mode_t::PORT_LOOPBACK_MODE_NONE;
+
+    for (uint32_t i = 0; i < port_args->num_lanes; i++) {
+        port_args->sbus_addr[i] =
+            g_oci_state.catalogue()->sbus_addr(asic, asic_port, i);
+    }
     port_args->breakout_modes =
         g_oci_state.catalogue()->breakout_modes(fp_port);
 
@@ -64,12 +89,14 @@ create_ports (void)
 {
     uint32_t       num_fp_ports;
     port_args_t    port_args;
+    uint32_t       port_num = 1;
 
     num_fp_ports = g_oci_state.catalogue()->num_fp_ports();
-    for (uint32_t fp_port = 1; fp_port < num_fp_ports; fp_port++) {
+    for (uint32_t fp_port = 1; fp_port <= num_fp_ports; fp_port++) {
         memset(&port_args, 0, sizeof(port_args));
-        populate_port_info(fp_port, &port_args);
+        populate_port_info(fp_port, port_num, &port_args);
         create_port(&port_args);
+        port_num += g_oci_state.catalogue()->num_lanes_fp(fp_port);
     }
     return SDK_RET_OK;
 }
