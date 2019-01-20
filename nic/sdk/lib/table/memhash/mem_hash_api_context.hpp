@@ -10,9 +10,11 @@
 
 #include "mem_hash.hpp"
 #include "mem_hash_stats.hpp"
+#include "mem_hash_txn.hpp"
 
 using sdk::table::mem_hash_factory_params_t;
 using sdk::table::mem_hash_properties_t;
+using sdk::table::mem_hash_txn;
 
 namespace sdk {
 namespace table {
@@ -154,11 +156,15 @@ public:
     // Table stats
     mem_hash_table_stats *table_stats;
 
+    // API transaction
+    mem_hash_txn *txn;
+
 public:
     static mem_hash_api_context* factory(mem_hash_api_context *pctx);
     static mem_hash_api_context* factory(uint32_t op, sdk_table_api_params_t *params,
                                          mem_hash_properties_t *props,
-                                         mem_hash_table_stats *table_stats);
+                                         mem_hash_table_stats *table_stats,
+                                         mem_hash_txn *txn);
     static void destroy(mem_hash_api_context* ctx);
     char* sw_data2str();
     void print_sw_data();

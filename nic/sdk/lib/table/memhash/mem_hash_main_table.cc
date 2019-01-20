@@ -91,6 +91,9 @@ mem_hash_main_table::initctx_(mem_hash_api_context *ctx) {
     return static_cast<mem_hash_table_bucket*>(ctx->bucket)->read_(ctx);
 }
 
+//---------------------------------------------------------------------------
+// mem_hash_main_table insert_with_handle_: Insert entry to main table
+//---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_main_table::insert_with_handle_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
@@ -158,12 +161,40 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
 }
 
 //---------------------------------------------------------------------------
+// mem_hash_main_table remove_with_handle_: Remove entry from main table
+//---------------------------------------------------------------------------
+sdk_ret_t
+mem_hash_main_table::remove_with_handle_(mem_hash_api_context *ctx) {
+    sdk_ret_t ret = SDK_RET_OK;
+ 
+    SDK_ASSERT(ctx->table_index == ctx->handle->index);
+    if (ctx->handle->is_hint == 0) {
+        // This handle is for the main table.
+        // Write key and data to the hardware.
+        SDK_TRACE_DEBUG("writing to main table.");
+        ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->remove_with_handle_(ctx);
+    } else {
+        ctx->hint = ctx->handle->hint;
+        SDK_TRACE_DEBUG("removing from hint table, hint=%d", ctx->hint);
+        ret = hint_table_->remove_(ctx);
+    }
+
+    return ret;
+}
+
+//---------------------------------------------------------------------------
 // mem_hash_main_table remove_: Remove entry from main table
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_main_table::remove_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
+
+    // If handle is valid, insert directly using the handle.
+    if (ctx->is_handle_valid()) {
+        return remove_with_handle_(ctx);
+    }
+
     ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->remove_(ctx);
     if (ret != SDK_RET_OK) {
         return ret;

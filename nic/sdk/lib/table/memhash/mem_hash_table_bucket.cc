@@ -206,10 +206,13 @@ mem_hash_table_bucket::create_(mem_hash_api_context *ctx) {
             // update stats only If we are inserting a new entry 
             // reserved entries are counted already during 
             // reserve api
-            ctx->table_stats->insert(ctx->level);
+            ctx->table_stats->insert(!ctx->is_main());
+        } else {
+            reserved_ = false;
+            ctx->txn->release();
         }
     } else {
-        ctx->table_stats->insert(ctx->level);
+        ctx->table_stats->insert(!ctx->is_main());
         reserved_ = true;
     }
     
@@ -322,7 +325,7 @@ mem_hash_table_bucket::insert_(mem_hash_api_context *ctx) {
 }
 
 //---------------------------------------------------------------------------
-// mem_hash_table_bucket insert_: Insert an entry into the bucket.
+// mem_hash_table_bucket insert_with_handle_: Insert an entry into the bucket.
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_table_bucket::insert_with_handle_(mem_hash_api_context *ctx) {
@@ -518,6 +521,19 @@ mem_hash_table_bucket::clear_hint_(mem_hash_api_context *ctx) {
 }
 
 //---------------------------------------------------------------------------
+// mem_hash_table_bucket remove_with_handle_: Remove an entry from the bucket.
+//---------------------------------------------------------------------------
+sdk_ret_t
+mem_hash_table_bucket::remove_with_handle_(mem_hash_api_context *ctx) {
+    // This is an exact match entry, clear the key and data fields.
+    clear_sw_key_(ctx);
+    clear_sw_data_appdata_(ctx);
+    valid_ = false;
+    ctx->table_stats->remove(ctx->handle->is_hint);
+    return write_(ctx);
+}
+
+//---------------------------------------------------------------------------
 // mem_hash_table_bucket remove_: Remove an entry from the bucket.
 //---------------------------------------------------------------------------
 sdk_ret_t
@@ -538,7 +554,7 @@ mem_hash_table_bucket::remove_(mem_hash_api_context *ctx) {
 
     // If it is not an exact match, then no further processing is required
     // at this stage.
-    if (! ctx->is_exact_match()) {
+    if (!ctx->is_exact_match()) {
         return ret;
     }
 
@@ -693,7 +709,7 @@ mem_hash_table_bucket::defragment_(mem_hash_api_context *ectx,
         // when we remove an entry from main table, we decrement the stats using
         // the main table level (0), however after defragmentation, we will move
         // some hint to this entry, but we never account that stats.
-        tctx->table_stats->remove(tctx->level);
+        tctx->table_stats->remove(!tctx->is_main());
         SDK_TRACE_DEBUG("decrementing table_stats for %s", tctx->idstr());
     }
     return SDK_RET_OK;

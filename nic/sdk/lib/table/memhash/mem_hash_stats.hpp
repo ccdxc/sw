@@ -96,6 +96,16 @@ public:
         return SDK_RET_OK;
     }
 
+    sdk_ret_t release(sdk_ret_t status) {
+        SDK_TRACE_DEBUG("Updating release stats, ret:%d", status);
+        if (status == SDK_RET_OK) {
+            release_++;
+        } else {
+            release_fail_++;
+        }
+        return SDK_RET_OK;
+    }
+
     sdk_ret_t get(sdk_ret_t status) {
         SDK_TRACE_DEBUG("Updating get stats, ret:%d", status);
         if (status == SDK_RET_OK) {
@@ -139,18 +149,18 @@ public:
     ~mem_hash_table_stats() {
     }
 
-    sdk_ret_t insert(uint32_t level) {
+    sdk_ret_t insert(bool is_hint) {
         entries_++;
-        if (level) {
+        if (is_hint) {
             hints_++;
         }
         return SDK_RET_OK;
     }
 
-    sdk_ret_t remove(uint32_t level) {
+    sdk_ret_t remove(bool is_hint) {
         SDK_ASSERT(entries_);
         entries_--;
-        if (level) {
+        if (is_hint) {
             SDK_ASSERT(hints_);
             hints_--;
         }
