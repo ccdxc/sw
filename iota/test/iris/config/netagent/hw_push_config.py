@@ -134,6 +134,123 @@ def __add_config_worklads(req, target_node = None):
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
 
 def __add_config_classic_workloads(req, target_node = None):
+    classic_yml = "{}/config.yml".format(api.GetTopologyDirectory())
+    spec = parser.YmlParse(classic_yml)
+    api.Logger.info("Config yml: \n %s" % str(spec))
+    req.workload_op = topo_svc.ADD
+    # Saving node IFs
+    nodes = api.GetWorkloadNodeHostnames()
+    node_ifs = {}
+    for node in nodes:
+        if target_node != None and node != target_node:
+            continue
+        node_ifs[node] = api.GetNaplesHostInterfaces(node)
+    # Reading network and workload specs
+    network_specs = {}
+    workload_specs = {}
+    for net in spec.spec.networks:
+        network_specs[net.network.name] = net.network
+    for wl in spec.spec.workloads:
+        workload_specs[wl.workload.name] = wl.workload
+    # Forming subnet allocators
+    subnet_allocator = {}
+    ipv4_subnet_allocator = {}
+    ipv6_subnet_allocator = {}
+    for k,net in network_specs.items():
+        if net.ipv4.enable:
+            ipv4_subnet_allocator[net.name] = resmgr.IpAddressStep(net.ipv4.ipam_base.split('/')[0], # 10.255.0.0/16 \
+                                                                   str(ipaddress.IPv4Address(1 << int(net.ipv4.ipam_base.split('/')[1]))))
+            ipv6_subnet_allocator[net.name] = resmgr.Ipv6AddressStep(net.ipv6.ipam_base.split('/')[0], # 2000::/48 \
+                                                                   str(ipaddress.IPv6Address(1 << int(net.ipv6.ipam_base.split('/')[1]))))
+    mac_allocator = resmgr.MacAddressStep("00AA.0000.0001", "0000.0000.0001")
+    api.Testbed_AllocateVlan()
+    # Forming native workloads
+    native_nw_spec = {} # intf -> nw_spec
+    native_ipv4_allocator = {} # intf -> ipv4_allocator
+    native_ipv6_allocator = {} # intf -> ipv6_allocator
+    for workload in spec.instances.workloads:
+        wl = workload.workload
+        if wl.spec == 'native':
+            for intf in wl.interfaces:
+                if intf not in native_nw_spec:
+                    wl_spec = workload_specs[wl.spec]
+                    nw_spec = network_specs[wl_spec.network_spec]
+                    native_nw_spec[intf] = nw_spec
+                    ipv4_subnet = ipv4_subnet_allocator[nw_spec.name].Alloc()
+                    native_ipv4_allocator[intf] = resmgr.IpAddressStep(ipv4_subnet, "0.0.0.1")
+                    native_ipv4_allocator[intf].Alloc() # To skip 0 ip
+                    ipv6_subnet = ipv6_subnet_allocator[nw_spec.name].Alloc()
+                    native_ipv6_allocator[intf] = resmgr.Ipv6AddressStep(ipv6_subnet, "0::1")
+                    native_ipv6_allocator[intf].Alloc() # To skip 0 ip
+                nw_spec = native_nw_spec[intf]
+                ipv4_allocator = native_ipv4_allocator[intf]
+                ipv6_allocator = native_ipv6_allocator[intf]
+                vlan = 0
+                node_intf = node_ifs[wl.node][int(intf.replace('host_if', '')) - 1]
+                wl_msg = req.workloads.add()
+                ip4_addr_str = str(ipv4_allocator.Alloc())
+                ip6_addr_str = str(ipv6_allocator.Alloc())
+                wl_msg.ip_prefix = ip4_addr_str + "/" + str(nw_spec.ipv4.prefix_length)
+                wl_msg.ipv6_prefix = ip6_addr_str + "/" + str(nw_spec.ipv6.prefix_length)
+                wl_msg.mac_address = mac_allocator.Alloc().get()
+                wl_msg.encap_vlan = vlan
+                wl_msg.uplink_vlan = wl_msg.encap_vlan
+                wl_msg.workload_name = wl.node + "_" + node_intf + "_subif_" + str(vlan)
+                wl_msg.node_name = wl.node
+                wl_msg.pinned_port = 1
+                wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+                wl_msg.interface = node_intf
+                wl_msg.parent_interface = node_intf
+                wl_msg.workload_type = api.GetWorkloadTypeForNode(wl.node)
+                wl_msg.workload_image = api.GetWorkloadImageForNode(wl.node)
+    # Forming subif  workloads
+    nw_specs = {} # ith subif -> nw_spec
+    ipv4_allocators = {} # ith subif -> ipv4_allocator
+    ipv6_allocators = {} # ith subif  -> ipv6_allocator
+    for workload in spec.instances.workloads:
+        wl = workload.workload
+        if wl.spec == 'tagged':
+            if wl.count == 'auto':
+                num_subifs = 3
+            else:
+                num_subifs = int(wl.count)
+            for i in range(num_subifs):
+                if i not in nw_specs:
+                    wl_spec = workload_specs[wl.spec]
+                    nw_spec = network_specs[wl_spec.network_spec]
+                    nw_specs[i] = nw_spec
+                    ipv4_subnet = ipv4_subnet_allocator[nw_spec.name].Alloc()
+                    ipv4_allocators[i] = resmgr.IpAddressStep(ipv4_subnet, "0.0.0.1")
+                    ipv4_allocators[i].Alloc() # To skip 0 ip
+                    ipv6_subnet = ipv6_subnet_allocator[nw_spec.name].Alloc()
+                    ipv6_allocators[i] = resmgr.Ipv6AddressStep(ipv6_subnet, "0::1")
+                    ipv6_allocators[i].Alloc() # To skip 0 ip
+                intf = wl.interfaces[i % len(wl.interfaces)]
+                nw_spec = nw_specs[i]
+                ipv4_allocator = ipv4_allocators[i]
+                ipv6_allocator = ipv6_allocators[i]
+                vlan = api.Testbed_AllocateVlan()
+                node_intf = node_ifs[wl.node][int(intf.replace('host_if', '')) - 1]
+                wl_msg = req.workloads.add()
+                ip4_addr_str = str(ipv4_allocator.Alloc())
+                ip6_addr_str = str(ipv6_allocator.Alloc())
+                wl_msg.ip_prefix = ip4_addr_str + "/" + str(nw_spec.ipv4.prefix_length)
+                wl_msg.ipv6_prefix = ip6_addr_str + "/" + str(nw_spec.ipv6.prefix_length)
+                wl_msg.mac_address = mac_allocator.Alloc().get()
+                wl_msg.encap_vlan = vlan
+                wl_msg.uplink_vlan = wl_msg.encap_vlan
+                wl_msg.workload_name = wl.node + "_" + node_intf + "_subif_" + str(vlan)
+                wl_msg.node_name = wl.node
+                wl_msg.pinned_port = 1
+                wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
+                wl_msg.interface = node_intf
+                wl_msg.parent_interface = node_intf
+                wl_msg.workload_type = api.GetWorkloadTypeForNode(wl.node)
+                wl_msg.workload_image = api.GetWorkloadImageForNode(wl.node)
+
+
+'''
+def __add_config_classic_workloads(req, target_node = None):
     classic_yml = "{}/classic.yml".format(api.GetTopologyDirectory())
     spec = parser.YmlParse(classic_yml)
     spec.subifs.num = getattr(spec.subifs, 'num', 0)
@@ -216,6 +333,7 @@ def __add_config_classic_workloads(req, target_node = None):
                wl_msg.parent_interface = node_ifs[node][i]
                wl_msg.workload_type = api.GetWorkloadTypeForNode(node)
                wl_msg.workload_image = api.GetWorkloadImageForNode(node)
+'''
 
 def __add_workloads(target_node = None):
     req = topo_svc.WorkloadMsg()
