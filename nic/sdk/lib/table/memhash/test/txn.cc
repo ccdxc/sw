@@ -7,14 +7,7 @@
 class txn: public MemHashGtestBase {
 };
 
-TEST_F(txn, start)
-{
-    sdk_ret_t rs;
-    rs = TxnStart();
-    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-}
-
-TEST_F(txn, end)
+TEST_F(txn, start_end)
 {
     sdk_ret_t rs;
     rs = TxnStart();
@@ -23,12 +16,16 @@ TEST_F(txn, end)
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
-TEST_F(txn, reserve)
+TEST_F(txn, reserve_release)
 {
     sdk_ret_t rs;
     rs = TxnStart();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     rs = Reserve(1, sdk::SDK_RET_OK);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    rs = ReleaseAllCached(sdk::SDK_RET_OK, true);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    rs = TxnEnd();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
@@ -38,6 +35,10 @@ TEST_F(txn, reserve_collision_chain)
     rs = TxnStart();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     rs = ReserveWithHash(1);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    rs = ReleaseAllCached(sdk::SDK_RET_OK, true);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    rs = TxnEnd();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
@@ -50,6 +51,8 @@ TEST_F(txn, insert_collision_chain_with_handle)
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     rs = InsertAllCached(sdk::SDK_RET_OK, true);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    rs = TxnEnd();
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
 
@@ -59,6 +62,8 @@ TEST_F(txn, dup_start)
     rs = TxnStart();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     rs = TxnStart(sdk::SDK_RET_TXN_EXISTS);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    rs = TxnEnd();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
@@ -81,5 +86,9 @@ TEST_F(txn, incomplete_end)
     rs = Reserve(1, sdk::SDK_RET_OK);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
     rs = TxnEnd(sdk::SDK_RET_TXN_INCOMPLETE);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    rs = ReleaseAllCached(sdk::SDK_RET_OK, true);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    rs = TxnEnd();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }

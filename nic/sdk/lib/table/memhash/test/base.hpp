@@ -241,6 +241,19 @@ protected:
         return SDK_RET_OK;
     }
 
+    sdk_ret_t ReleaseAllCached(sdk_ret_t expret, bool with_handle) {
+        sdk_ret_t rs;
+        uint32_t i = 0;
+        sdk_table_api_params_t params = { 0 };
+
+        for (i = 0; i < h5_get_cache_count(); i++) {
+            h5_get_cache_entry(i, &params, with_handle);
+            rs = release_(&params);
+            MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
+        }
+        return SDK_RET_OK;
+    }
+
     sdk_ret_t GetAllCached(sdk_ret_t expret, bool with_handle) {
         sdk_ret_t rs;
         uint32_t i = 0;

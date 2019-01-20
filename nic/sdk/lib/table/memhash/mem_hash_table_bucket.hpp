@@ -45,6 +45,7 @@ private:
     sdk_ret_t insert_with_handle_(mem_hash_api_context *ctx);
     sdk_ret_t update_(mem_hash_api_context *ctx);
     sdk_ret_t remove_(mem_hash_api_context *ctx);
+    sdk_ret_t remove_with_handle_(mem_hash_api_context *ctx);
     sdk_ret_t read_(mem_hash_api_context *ctx);
     sdk_ret_t write_(mem_hash_api_context *ctx);
     sdk_ret_t set_sw_key_(mem_hash_api_context *ctx, void *key);

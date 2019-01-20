@@ -13,6 +13,7 @@
 #include "lib/utils/crc_fast.hpp"
 
 #include "mem_hash_stats.hpp"
+#include "mem_hash_txn.hpp"
 
 using namespace std;
 
@@ -23,6 +24,7 @@ using sdk::utils::crcFast;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::memhash::mem_hash_api_stats;
 using sdk::table::memhash::mem_hash_table_stats;
+using sdk::table::memhash::mem_hash_txn;
 
 typedef struct mem_hash_factory_params_ {
     uint32_t table_id;
@@ -49,11 +51,6 @@ typedef struct mem_hash_properties_ {
     appdata2str_t appdata2str;
 } mem_hash_properties_t;
 
-typedef struct mem_hash_api_txn_ {
-    bool valid;
-    uint32_t reserved_count;
-} mem_hash_api_txn_t;
-
 class mem_hash {
 private:
     mem_hash_properties_t *props_;
@@ -61,7 +58,7 @@ private:
     crcFast *crc32gen_;
     mem_hash_api_stats api_stats_;
     mem_hash_table_stats table_stats_;
-    mem_hash_api_txn_t txn_;
+    mem_hash_txn txn_;
 
 private:
     sdk_ret_t init_(mem_hash_factory_params_t *params);

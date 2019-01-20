@@ -120,6 +120,9 @@ mem_hash_api_context::factory(mem_hash_api_context *pctx) {
     // Save the table_stats pointer
     ctx->table_stats = pctx->table_stats;
 
+    // Save the transaction
+    ctx->txn = pctx->txn;
+
     // Save parent context
     ctx->pctx = pctx;
     return ctx;
@@ -129,7 +132,8 @@ mem_hash_api_context*
 mem_hash_api_context::factory(uint32_t op, 
                               sdk_table_api_params_t *params,
                               mem_hash_properties_t *props,
-                              mem_hash_table_stats *table_stats) {
+                              mem_hash_table_stats *table_stats,
+                              mem_hash_txn *txn) {
     uint32_t appdata_len = 0;
 
     appdata_len = p4pd_actiondata_appdata_size_get(props->main_table_id,
@@ -161,6 +165,9 @@ mem_hash_api_context::factory(uint32_t op,
 
     // Save the table_stats pointer
     ctx->table_stats = table_stats;
+
+    // Save the transaction
+    ctx->txn = txn;
     return ctx;
 }
 

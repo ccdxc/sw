@@ -319,22 +319,26 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
 
     // Initialize the context
     SDK_ASSERT_RETURN(initctx_(hctx) == SDK_RET_OK, SDK_RET_ERR);
-
-    // Remove entry from the bucket
-    ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->remove_(hctx);
-    if (ret != SDK_RET_OK) {
-        SDK_TRACE_ERR("remove_ failed. ret:%d", ret);
-        mem_hash_api_context::destroy(hctx);
-        return ret;
-    }
-
-    if (hctx->is_exact_match()) {
-        // This means there was an exact match in the hint table and
-        // it was removed. Check and defragment the hints if required.
-        ret = defragment_(hctx);
+    if (hctx->is_handle_valid()) {
+        // If handle is valid, insert directly using the handle.
+        ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->remove_with_handle_(hctx);
     } else {
-        // We only found a matching hint, so remove the entry recursively
-        ret = remove_(hctx);
+        // Remove entry from the bucket
+        ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->remove_(hctx);
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("remove_ failed. ret:%d", ret);
+            mem_hash_api_context::destroy(hctx);
+            return ret;
+        }
+
+        if (hctx->is_exact_match()) {
+            // This means there was an exact match in the hint table and
+            // it was removed. Check and defragment the hints if required.
+            ret = defragment_(hctx);
+        } else {
+            // We only found a matching hint, so remove the entry recursively
+            ret = remove_(hctx);
+        }
     }
 
     mem_hash_api_context::destroy(hctx);

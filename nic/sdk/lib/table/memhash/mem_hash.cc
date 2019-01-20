@@ -19,6 +19,7 @@ using sdk::table::memhash::mem_hash_api_context;
 using sdk::table::memhash::mem_hash_main_table;
 using sdk::table::memhash::mem_hash_hint_table;
 using sdk::table::memhash::mem_hash_table_bucket;
+using sdk::table::memhash::mem_hash_txn;
 
 #define MEM_HASH_MAX_HW_KEY_LEN 128
 thread_local uint8_t g_hw_key[MEM_HASH_MAX_HW_KEY_LEN];
@@ -137,6 +138,7 @@ mem_hash::destroy(mem_hash *table) {
 
     SDK_TRACE_DEBUG("Number of API contexts = %d", mem_hash_api_context::count());
     SDK_ASSERT(mem_hash_api_context::count() == 0);
+    SDK_ASSERT(table->txn_.validate() == SDK_RET_OK);
     MEM_HASH_TRACE_API_END("DestroyTable");
 }
 
@@ -201,7 +203,8 @@ mem_hash::create_api_context_(uint32_t op, sdk_table_api_params_t *params,
     }
 
     SDK_TRACE_DEBUG("Memhash inserting entry");
-    mctx = mem_hash_api_context::factory(op, params, props_, &table_stats_);
+    mctx = mem_hash_api_context::factory(op, params, props_,
+                                         &table_stats_, &txn_);
     if (!mctx) {
         SDK_TRACE_ERR("MainTable: create api context failed ret:%d", ret);
         return SDK_RET_OOM;
@@ -364,9 +367,8 @@ mem_hash::reserve(sdk_table_api_params_t *params) {
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("reserve_ failed. ret:%d", ret);
     } else {
-        SDK_ASSERT(txn_.valid);
-        txn_.reserved_count++;
-        SDK_TRACE_DEBUG("txn: reserved count = %d", txn_.reserved_count);
+        SDK_ASSERT(txn_.is_valid());
+        txn_.reserve();
         mctx->print_handle();
     }
     
@@ -382,7 +384,31 @@ mem_hash::reserve(sdk_table_api_params_t *params) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash::release(sdk_table_api_params_t *params) {
+    sdk_ret_t ret = SDK_RET_OK;
+    mem_hash_api_context *mctx = NULL;   // Main Table Context
+
     MEM_HASH_TRACE_API_BEGIN_();
+    SDK_ASSERT(params->key && params->handle);
+
+    ret = create_api_context_(mem_hash_api_context::API_RELEASE,
+                              params, (void **)&mctx);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("failed to create api context. ret:%d", ret);
+        return ret;
+    }
+    
+    ret = static_cast<mem_hash_main_table*>(main_table_)->remove_(mctx);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("reserve_ failed. ret:%d", ret);
+    } else {
+        SDK_ASSERT(txn_.is_valid());
+        txn_.release();
+        mctx->print_handle();
+    }
+    
+    mem_hash_api_context::destroy(mctx);
+
+    api_stats_.release(sdk::SDK_RET_OK);
     MEM_HASH_TRACE_API_END_();
     return SDK_RET_OK;
 }
@@ -403,15 +429,11 @@ mem_hash::stats_get(sdk_table_api_stats_t *stats,
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash::txn_start() {
+    sdk_ret_t ret;
     MEM_HASH_TRACE_API_BEGIN_();
-    if (txn_.valid) {
-        SDK_TRACE_ERR("transaction already in progress");
-        return SDK_RET_TXN_EXISTS;
-    }
-    SDK_ASSERT(txn_.reserved_count == 0);
-    txn_.valid = true;
+    ret = txn_.start();
     MEM_HASH_TRACE_API_END_();
-    return SDK_RET_OK;
+    return ret;
 }
 
 //---------------------------------------------------------------------------
@@ -419,18 +441,9 @@ mem_hash::txn_start() {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash::txn_end() {
+    sdk_ret_t ret = SDK_RET_OK;
     MEM_HASH_TRACE_API_BEGIN_();
-    if (txn_.valid == false) {
-        SDK_TRACE_ERR("transaction not started");
-        return SDK_RET_TXN_NOT_FOUND;
-    }
-
-    if (txn_.reserved_count != 0) {
-        SDK_TRACE_ERR("trying to end incomplete transaction");
-        return SDK_RET_TXN_INCOMPLETE;
-    }
-
-    txn_.valid = false;
+    ret = txn_.end();
     MEM_HASH_TRACE_API_END_();
-    return SDK_RET_OK;
+    return ret;
 }

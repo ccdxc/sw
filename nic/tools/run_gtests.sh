@@ -1,7 +1,10 @@
 #! /bin/bash
 
+TOOLS_DIR=`dirname $0`
+ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export WS_TOP="/sw"
-export TOPDIR="/sw/nic"
+export NICDIR=`dirname $ABS_TOOLS_DIR`
+export TOPDIR=$NICDIR
 export HAL_LOG_DIR=${TOPDIR}
 export CAPRI_MOCK_MODE=1
 export BUILD_DIR=${TOPDIR}/build/x86_64/iris/
