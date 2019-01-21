@@ -12,7 +12,7 @@
 #include "mem_hash_stats.hpp"
 #include "mem_hash_txn.hpp"
 
-using sdk::table::mem_hash_factory_params_t;
+using sdk::table::sdk_table_factory_params_t;
 using sdk::table::mem_hash_properties_t;
 using sdk::table::mem_hash_txn;
 
@@ -85,23 +85,13 @@ public:
         HINT_SLOT_MORE  = 0xFF,
     };
 
-    enum api_op {
-        API_NONE,
-        API_INSERT,
-        API_REMOVE,
-        API_UPDATE,
-        API_GET,
-        API_RESERVE,
-        API_RELEASE,
-    };
-
 private:
     static uint32_t numctx_;
     static mem_hash_api_context* alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
                                         uint32_t sw_appdata_len);
 public:
     // Operation
-    api_op op;
+    sdk_table_api_op_t op;
 
     // Input params
     void *in_key;
@@ -236,11 +226,11 @@ public:
     }
 
     bool is_reserve() {
-        return (op == API_RESERVE);
+        return (op == SDK_TABLE_API_RESERVE);
     }
 
     bool is_release() {
-        return (op == API_RELEASE);
+        return (op == SDK_TABLE_API_RELEASE);
     }
 
     bool is_handle_valid() {

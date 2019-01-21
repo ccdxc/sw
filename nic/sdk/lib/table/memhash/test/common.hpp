@@ -10,7 +10,6 @@
 #include "nic/sdk/lib/table/memhash/test/p4pd_mock/mem_hash_p4pd_mock.hpp"
 
 using sdk::table::sdk_table_api_params_t;
-using sdk::table::mem_hash_factory_params_t;
 
 #define MAX_RECIRCS 8
 #define MAX_MORE_LEVELS (MAX_RECIRCS - 1)
