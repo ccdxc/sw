@@ -178,4 +178,31 @@ cpdc_desc_data_len_get_eval(enum pnso_service_type svc_type,
 	return data_len;
 }
 
+static inline uint64_t *
+cpdc_cp_pad_cpl_addr_get(struct cpdc_status_desc *status_desc)
+{
+	OSAL_ASSERT(sizeof(status_desc->csd_sha >= sizeof(uint64_t)));
+	return (uint64_t *)&status_desc->csd_sha[0];
+}
+
+static inline void
+cpdc_cp_hdr_chksum_info_get(const struct service_info *svc_info,
+			    uint32_t *ret_chksum_offs,
+			    uint32_t *ret_chksum_len)
+{
+	struct cp_header_format *hdr_fmt;
+
+	hdr_fmt = lookup_hdr_format(svc_info->hdr_fmt_idx, false);
+	OSAL_ASSERT(hdr_fmt);
+	*ret_chksum_offs = hdr_fmt->chksum_offs;
+	*ret_chksum_len = hdr_fmt->chksum_len;
+}
+
+static inline void
+cpdc_desc_is_integ_madler32(const struct cpdc_desc *desc)
+{
+	return desc->u.cd_bits.cc_integrity_type == 
+			(PNSO_CHKSUM_TYPE_MADLER32 - 1);
+}
+
 #endif /* __PNSO_CPDC_CMN_H__ */

@@ -55,16 +55,25 @@ storage_seq_comp_sgl_pdma_xfer:
     seq         c3, SEQ_KIVEC5_INTEG_DATA_NULL_EN, 1    // delay slot
     phvwr.c3	p.integ_data0_len, r0
     
-    add         r_comp_buf_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0
+    add         r_comp_buf_addr, SEQ_KIVEC3_COMP_BUF_ADDR, \
+                SEQ_KIVEC3_HDR_CHKSUM_OFFSET
     DMA_PHV2MEM_SETUP(integ_data0_len,
                       integ_data0_len,
                       r_comp_buf_addr, dma_p2m_18)
                       
-    // Fence to ensure PDMA mem2mem completes before writing integ_data0.
-    // The last op is DB/intr which must become a fence fence.
+    // If r_comp_buf_addr were an HBM address then the integ_data write into
+    // HBM would complete before the fenced DB ring.
+    //
+    // Otherwise, r_comp_buf_addr would be a host address and there could be
+    // some pending mem2mem xfers into it so a fence would be needed to
+    // ensure they completed before writing the integ_data0. In addition,
+    // the last op is DB/intr which must become a fence fence.
+    seq        c4, r_comp_buf_addr[STORAGE_PHYS_ADDR_HOST_POS], 0
+    bcf        [c4], possible_sgl_pdma
+    SEQ_METRICS_SET(integ_data0_writes)                 // delay slot
+    
     DMA_PHV2MEM_FENCE(dma_p2m_18)
     DMA_PHV2MEM_FENCE_FENCE(dma_p2m_19)
-    SEQ_METRICS_SET(integ_data0_writes)
 
 possible_sgl_pdma:    
     bbeq        SEQ_KIVEC5_SGL_PDMA_EN, 0, exit

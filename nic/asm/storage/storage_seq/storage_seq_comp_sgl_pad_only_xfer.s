@@ -39,7 +39,8 @@ storage_seq_comp_sgl_pad_only_xfer:
     // No fence needed for integ_data0 since any prior PDMA mem2mem
     // would only be pad data xfer and, presumably, be outside of
     // the integ_data0 area.
-    add         r_comp_buf_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0
+    add         r_comp_buf_addr, SEQ_KIVEC3_COMP_BUF_ADDR, \
+                SEQ_KIVEC3_HDR_CHKSUM_OFFSET
     DMA_PHV2MEM_SETUP(integ_data0_len,
                       integ_data0_len,
                       r_comp_buf_addr, dma_p2m_18)

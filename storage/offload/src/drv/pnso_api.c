@@ -113,6 +113,8 @@ pnso_register_compression_header_format(
 	/* Fill the entry */
 	format->fmt_idx = hdr_fmt_idx;
 	format->fmt = *cp_hdr_fmt;
+	format->chksum_offs = 0;
+	format->chksum_len = 0;
 
 	/* Find the total header length */
 	total_hdr_len = 0;
@@ -147,6 +149,10 @@ pnso_register_compression_header_format(
 		tlv_to_buf(format->static_hdr+tlv->offset, tlv->length,
 			       tlv->value);
 		format->type_mask |= 1 << tlv->type;
+		if (tlv->type == PNSO_HDR_FIELD_TYPE_INDATA_CHKSUM) {
+			format->chksum_offs = tlv->offset;
+			format->chksum_len = tlv->len;
+		}
 	}
 
 	return PNSO_OK;

@@ -529,7 +529,7 @@ cpdc_setup_rmem_status_desc(struct service_info *svc_info,
 
 	pcr = svc_info->si_pcr;
 	if (chn_service_has_sub_chain(svc_info) ||
-	    chn_service_is_padding_applic(svc_info)) {
+	    chn_service_is_cp_padding_applic(svc_info)) {
 
 		/*
 		 * Note: for rmem status, the responsibility of clearing
@@ -779,7 +779,7 @@ cpdc_update_service_info_sgls(struct service_info *svc_info)
 	}
 
 	if (!chn_service_has_sub_chain(svc_info) &&
-	    chn_service_is_padding_applic(svc_info)) {
+	    chn_service_is_cp_padding_applic(svc_info)) {
 		err = pc_res_sgl_vec_packed_get(svc_info->si_pcr,
 				&svc_info->si_dst_blist,
 				svc_info->si_block_size,
@@ -1090,7 +1090,7 @@ cpdc_setup_interrupt_params(struct service_info *svc_info, void *poll_ctx)
 
 	cp_desc->u.cd_bits.cc_otag_on = 1;
 
-	if (chn_service_is_padding_applic(svc_info)) {
+	if (chn_service_is_cp_padding_applic(svc_info)) {
 		cp_desc->cd_otag_addr =
 			sonic_intr_get_db_addr(pcr, (uint64_t) poll_ctx);
 		if (!cp_desc->cd_otag_addr) {

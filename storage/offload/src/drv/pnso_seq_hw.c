@@ -201,6 +201,8 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_status_offset_0",
 			chain_params->ccp_status_offset_0);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_hdr_chksum_offset",
+			chain_params->ccp_hdr_chksum_offset);
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_pad_boundary_shift",
 			chain_params->ccp_pad_boundary_shift);
 
@@ -440,13 +442,15 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 			chain_params->ccp_status_len);
 	write_bit_fields(seq_status_desc, 458, 7,
 			chain_params->ccp_status_offset_0);
-	write_bit_fields(seq_status_desc, 465, 1,
+	write_bit_fields(seq_status_desc, 465, 6,
+			chain_params->ccp_hdr_chksum_offset);
+	write_bit_fields(seq_status_desc, 471, 1,
 			cmd->ccpc_status_dma_en);
-	write_bit_fields(seq_status_desc, 466, 1,
+	write_bit_fields(seq_status_desc, 472, 1,
 			cmd->ccpc_next_doorbell_en);
-	write_bit_fields(seq_status_desc, 467, 1,
+	write_bit_fields(seq_status_desc, 473, 1,
 			cmd->ccpc_intr_en);
-	write_bit_fields(seq_status_desc, 468, 1,
+	write_bit_fields(seq_status_desc, 474, 1,
 			cmd->ccpc_next_db_action_ring_push);
 
 	// desc bytes 64-127
@@ -719,6 +723,8 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	uint8_t *seq_status_desc;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 	struct interm_buf_list *iblist;
+	uint32_t chksum_offs;
+	uint32_t chksum_len;
 
 	struct lif *lif;
 
@@ -767,6 +773,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
+	chain_params->ccp_comp_buf_addr = svc_info->si_dst_blist.blist.buffers[0].buf;
 
 	if (chn_service_has_interm_blist(svc_info)) {
 		iblist = &svc_info->si_iblist;
@@ -802,6 +809,16 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	if (svc_info->si_desc_flags & PNSO_CP_DFLAG_BYPASS_ONFAIL) {
 		chain_params->ccp_cmd.ccpc_chain_alt_desc_on_error = 1;
 		chain_params->ccp_cmd.ccpc_stop_chain_on_error = 0;
+	}
+
+	if (chn_service_is_cp_hdr_insert_applic(svc_info) &&
+	    cpdc_desc_is_integ_madler32(cp_desc)) {
+
+		cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs,
+					&chksum_len);
+		chain_params->ccp_hdr_chksum_offset = chksum_offs;
+		chain_params->ccp_cmd.integ_data0_wr_en = 1;
+		chain_params->ccp_cmd.integ_data_null_en = (chksum_len == 0);
 	}
 
 	OSAL_LOG_INFO("ring: %s index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
@@ -881,6 +898,8 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	struct sequencer_info *seq_info;
 	struct sequencer_spec *seq_spec;
 	uint32_t index;
+	uint32_t chksum_offs;
+	uint32_t chksum_len;
 	uint16_t qtype;
 	uint8_t *seq_status_desc;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
@@ -924,7 +943,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for cp+pad */
 
 	chain_params->ccp_next_db_spec.nds_addr =
-		sonic_virt_to_phy(&status_desc->csd_integrity_data);
+		sonic_virt_to_phy(cpdc_cp_pad_cpl_addr_get(status_desc));
 	chain_params->ccp_next_db_spec.nds_data =
 		cpu_to_be64(CPDC_PAD_STATUS_DATA);
 
@@ -965,6 +984,16 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 
 		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
 		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
+	}
+
+	if (chn_service_is_cp_hdr_insert_applic(svc_info) &&
+	    cpdc_desc_is_integ_madler32(cp_desc)) {
+
+		cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs,
+					&chksum_len);
+		chain_params->ccp_hdr_chksum_offset = chksum_offs;
+		chain_params->ccp_cmd.integ_data0_wr_en = 1;
+		chain_params->ccp_cmd.integ_data_null_en = (chksum_len == 0);
 	}
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;

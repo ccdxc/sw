@@ -117,6 +117,7 @@ struct cpdc_chain_params {
 	uint16_t ccp_data_len;
 
 	uint8_t ccp_status_offset_0;
+	uint8_t ccp_hdr_chksum_offset;
 	uint8_t ccp_pad_boundary_shift;
 
 	struct cpdc_chain_params_command ccp_cmd;

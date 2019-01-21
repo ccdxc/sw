@@ -40,6 +40,7 @@ storage_seq_comp_status_desc0_handler_start:
    PCI_SET_INTERRUPT_DATA()
    phvwr        p.{seq_kivec5_status_dma_en...seq_kivec5_next_db_action_barco_push}, \
    	        d.{status_dma_en...next_db_action_barco_push}
+   phvwr	p.seq_kivec3_hdr_chksum_offset, d.hdr_chksum_offset
    bbeq         d.next_db_en, 0, intr_check
    phvwr	p.seq_kivec10_intr_addr, d.intr_addr    // delay slot
 

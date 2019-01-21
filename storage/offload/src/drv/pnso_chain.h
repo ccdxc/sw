@@ -231,10 +231,12 @@ struct service_crypto_aol {
 
 struct service_info {
 	uint8_t si_type;
+	uint8_t algo_type;
 	uint16_t si_flags;		/* service flags (SFLAGS) */
 
 	uint16_t si_block_size;
 	uint16_t si_desc_flags;		/* caller supplied desc flags */
+	uint16_t hdr_fmt_idx;
 	bool tags_updated;
 	uint32_t si_num_tags;		/* for tracking # of hash or checksum */
 
@@ -392,17 +394,41 @@ chn_service_has_interm_status(const struct service_info *svc_info)
 }
 
 static inline bool
+chn_service_type_is_cp(const struct service_info *svc_info)
+{
+	return svc_info->si_type == PNSO_SVC_TYPE_COMPRESS;
+}
+
+static inline bool
+chn_service_type_is_dc(const struct service_info *svc_info)
+{
+	return svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS;
+}
+
+static inline bool
 chn_service_type_is_cpdc(const struct service_info *svc_info)
 {
-	return (svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) ||
-	       (svc_info->si_type == PNSO_SVC_TYPE_DECOMPRESS);
+	return chn_service_type_is_cp(svc_info) ||
+	       chn_service_type_is_dc(svc_info);
+}
+
+static inline bool
+chn_service_type_is_hash(const struct service_info *svc_info)
+{
+	return svc_info->si_type == PNSO_SVC_TYPE_HASH;
+}
+
+static inline bool
+chn_service_type_is_chksum(const struct service_info *svc_info)
+{
+	return svc_info->si_type == PNSO_SVC_TYPE_CHKSUM;
 }
 
 static inline bool
 chn_service_type_is_hashchksum(const struct service_info *svc_info)
 {
-	return (svc_info->si_type == PNSO_SVC_TYPE_HASH) ||
-	       (svc_info->si_type == PNSO_SVC_TYPE_CHKSUM);
+	return chn_service_type_is_hash(svc_info) ||
+	       chn_service_type_is_chksum(svc_info);
 }
 
 static inline bool
@@ -448,10 +474,17 @@ chn_service_prev_svc_get(struct service_info *svc_info)
 }
 
 static inline bool
-chn_service_is_padding_applic(const struct service_info *svc_info)
+chn_service_is_cp_padding_applic(const struct service_info *svc_info)
 {
-	return (svc_info->si_type == PNSO_SVC_TYPE_COMPRESS) &&
+	return chn_service_type_is_cp(svc_info) &&
 	       (svc_info->si_desc_flags & PNSO_CP_DFLAG_ZERO_PAD);
+}
+
+static inline bool
+chn_service_is_cp_hdr_insert_applic(const struct service_info *svc_info)
+{
+	return chn_service_type_is_cp(svc_info) &&
+	       (svc_info->si_desc_flags & PNSO_CP_DFLAG_INSERT_HEADER);
 }
 
 uint32_t chn_service_deps_data_len_get(struct service_info *svc_info);
@@ -461,7 +494,7 @@ chn_service_deps_data_len_set(struct service_info *svc_info,
 			      uint32_t data_len)
 {
 	svc_info->si_svc_deps.sd_data_len = data_len;
-	if (chn_service_is_padding_applic(svc_info)) {
+	if (chn_service_is_cp_padding_applic(svc_info)) {
 		OSAL_ASSERT(is_power_of_2(svc_info->si_block_size));
 		svc_info->si_svc_deps.sd_data_len =
 			REQ_SZ_ROUND_UP_TO_BLK_SZ(data_len,

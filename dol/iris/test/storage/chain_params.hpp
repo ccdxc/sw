@@ -77,6 +77,7 @@ typedef struct {
     uint16_t status_len;		// Length for status PDMA purposes
     uint16_t data_len;		    // Remaining data length of compression buffer
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
+    uint8_t  hdr_chksum_offset; // Offset to chksum field in CP header
     uint8_t  pad_boundary_shift;// log2(pad block length)
     uint32_t data_len_from_desc   :1,	// use desc data_len rather than output_data_len
              status_dma_en        :1,	// enable PDMA of status_addr0 to status_addr1

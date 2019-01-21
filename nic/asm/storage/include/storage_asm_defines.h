@@ -18,6 +18,8 @@
 #define SIZE_IN_BYTES(bits)             ((bits) / BITS_PER_BYTE)
 #endif
 
+#define STORAGE_PHYS_ADDR_HOST_POS      63
+
 // Macros for accessing fields in the storage K+I vector
 #define STORAGE_KIVEC0_W_NDX                    \
     k.storage_kivec0_w_ndx
@@ -216,6 +218,8 @@
     k.seq_kivec3_num_blks
 #define SEQ_KIVEC3_SGL_TUPLE_NO                 \
     k.seq_kivec3_sgl_tuple_no
+#define SEQ_KIVEC3_HDR_CHKSUM_OFFSET            \
+    k.{seq_kivec3_hdr_chksum_offset_sbit0_ebit0...seq_kivec3_hdr_chksum_offset_sbit1_ebit5}
 
 #define SEQ_KIVEC3XTS_DECR_BUF_ADDR             \
     k.seq_kivec3xts_decr_buf_addr

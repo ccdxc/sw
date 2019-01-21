@@ -50,6 +50,10 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	desc->u.cd_bits.cc_enabled = 1;
 	desc->u.cd_bits.cc_insert_header =
 		is_dflag_insert_header_enabled(svc_info->si_desc_flags);
+	/*
+	 * Default assumption for integrity algo is MADLER32
+	 */
+	desc->u.cd_bits.cc_integrity_type = PNSO_CHKSUM_TYPE_MADLER32 - 1;
 
 	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_dst_is_list = 1;
@@ -294,6 +298,7 @@ compress_poll(struct service_info *svc_info)
 	pnso_error_t err;
 
 	volatile struct cpdc_status_desc *status_desc;
+	volatile uint64_t *cp_pad_cpl_addr;
 	uint64_t start_ts;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -323,9 +328,10 @@ compress_poll(struct service_info *svc_info)
 	}
 
 	start_ts = svc_poll_expiry_start(svc_info);
+        cp_pad_cpl_addr = cpdc_cp_pad_cpl_addr_get(status_desc);
 	while (1) {
 		/* poll on padding opaque tag updated by P4+ */
-		if (status_desc->csd_integrity_data == CPDC_PAD_STATUS_DATA) {
+		if (*cp_pad_cpl_addr == CPDC_PAD_STATUS_DATA) {
 			OSAL_LOG_DEBUG("cp/pad status data matched!");
 			break;
 		}
@@ -365,8 +371,8 @@ compress_read_status(struct service_info *svc_info)
 	struct cpdc_sgl	*dst_sgl;
 	struct chain_sgl_pdma_tuple *tuple;
 	struct pnso_compression_header *cp_hdr = NULL;
-	uint64_t cp_hdr_pa;
-	uint32_t datain_len;
+	uint32_t chksum_offs;
+	uint32_t chksum_len;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -387,8 +393,7 @@ compress_read_status(struct service_info *svc_info)
 		goto pass_err;
 	}
 
-	if (cp_desc->u.cd_bits.cc_enabled &&
-			cp_desc->u.cd_bits.cc_insert_header) {
+	if (chn_service_is_cp_hdr_insert_applic(svc_info)) {
 		dst_sgl = svc_info->si_dst_sgl.sgl;
 
 		if (svc_info->si_sgl_pdma) {
@@ -397,10 +402,9 @@ compress_read_status(struct service_info *svc_info)
 				cp_hdr = sonic_phy_to_virt(tuple->addr);
 		} else if (svc_info->si_dst_blist.type ==
 				SERVICE_BUF_LIST_TYPE_HOST) {
-			dst_sgl = svc_info->si_dst_sgl.sgl;
-			cp_hdr_pa = sonic_devpa_to_hostpa(dst_sgl->cs_addr_0);
-			cp_hdr = (struct pnso_compression_header *)
-				sonic_phy_to_virt(cp_hdr_pa);
+			if (dst_sgl->cs_len_0 >= sizeof(*cp_hdr))
+				cp_hdr = (struct pnso_compression_header *)
+					sonic_phy_to_virt(dst_sgl->cs_addr_0);
 		}
 
 		if (!cp_hdr) {
@@ -412,14 +416,30 @@ compress_read_status(struct service_info *svc_info)
 			       (uint64_t) dst_sgl,
 			       (uint64_t) dst_sgl->cs_addr_0,
 			       (uint64_t) cp_hdr);
-
 		/* TODO-cp: verify hard-coded CP version, etc. */
 
-		if (cp_hdr->chksum == 0) {
-			err = EINVAL;	/* PNSO_ERR_CPDC_CHECKSUM_FAILED?? */
-			OSAL_LOG_ERROR("zero checksum in header! err: %d",
-					CP_STATUS_CHECKSUM_FAILED);
-			goto out;
+		/*
+		 * When a chksum field is present in cp_hdr, overwrite it with
+		 * integ_data from the status desc (due to a HW constraint).
+		 * Note that in chaining case, even though P4+ chainer (if requested)
+		 * would also have done the copy, it might have done so only to the
+		 * intermediate RMEM destination buffer rather than to the host.
+		 * Hence, we ensure that the host buffer overwrite happens here.
+		 */
+		cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs, &chksum_len);
+		if (chksum_len) {
+			OSAL_ASSERT((chksum_len <= sizeof(cp_hdr->chksum) &&
+				(chksum_offs == offsetof(pnso_compression_header, chksum));
+			memcpy((char *)cp_hdr + chksum_offs,
+				&status_desc->csd_integrity_data, chksum_len);
+			if (cp_hdr->chksum == 0) {
+				err = EINVAL;	/* PNSO_ERR_CPDC_CHECKSUM_FAILED?? */
+				OSAL_LOG_ERROR("zero checksum in header! err: %d",
+						CP_STATUS_CHECKSUM_FAILED);
+				goto out;
+			}
+		} else {
+			cp_hdr->chksum = 0;
 		}
 
 		datain_len = cp_desc->cd_datain_len == 0 ?

@@ -125,6 +125,7 @@ header_type seq_comp_status_desc0_t {
     intr_data       : 32;   // Data that needs to be written for interrupt
     status_len      : 16;   // Length of the compression status
     status_offset0  : 7;    // Add this to status_addr0 before DMA into status_addr1 
+    hdr_chksum_offset:6;    // Offset to chksum field in CP header
     status_dma_en   : 1;    // 1 => DMA status, 0 => don't DMA 
     next_db_en      : 1;    // 1 => Ring next sequencer doorbell, 0 => don't ring
     intr_en         : 1;    // 1 => Fire the MSI-X interrupt, 0 => don't fire
@@ -459,6 +460,7 @@ header_type seq_kivec3_t {
     last_blk_len        : 16;
     num_blks            : 5;
     sgl_tuple_no        : 2;
+    hdr_chksum_offset   : 6;
   }
 }
 
@@ -656,6 +658,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.last_blk_len, kivec.last_blk_len);               \
   modify_field(scratch.num_blks, kivec.num_blks);                       \
   modify_field(scratch.sgl_tuple_no, kivec.sgl_tuple_no);               \
+  modify_field(scratch.hdr_chksum_offset, kivec.hdr_chksum_offset);     \
 
 #define SEQ_KIVEC3XTS_USE(scratch, kivec)                               \
   modify_field(scratch.decr_buf_addr, kivec.decr_buf_addr);             \
