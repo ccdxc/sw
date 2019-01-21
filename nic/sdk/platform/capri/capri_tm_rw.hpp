@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include "include/sdk/base.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
+#include "nic/sdk/platform/capri/capri_p4.hpp"
 
 namespace sdk {
 namespace platform {
@@ -107,10 +108,8 @@ capri_tm_q_valid (tm_q_t tm_q)
     return true;
 }
 
-bool 
-capri_tm_port_is_uplink_port(uint32_t port);
-bool 
-capri_tm_port_is_dma_port(uint32_t port);
+bool capri_tm_port_is_uplink_port(uint32_t port);
+bool capri_tm_port_is_dma_port(uint32_t port);
 
 // APIs to update the hardware
 typedef struct tm_uplink_iq_params_s {
@@ -120,30 +119,22 @@ typedef struct tm_uplink_iq_params_s {
     tm_q_t   p4_q;
 } __PACK__ tm_uplink_iq_params_t;
 
-sdk_ret_t
-capri_tm_uplink_iq_params_update(tm_port_t port,
-                                 tm_q_t iq,
-                                 tm_uplink_iq_params_t *iq_params);
+sdk_ret_t capri_tm_uplink_iq_params_update(tm_port_t port, tm_q_t iq,
+                                           tm_uplink_iq_params_t *iq_params);
 
-sdk_ret_t
-capri_tm_uplink_input_map_update(tm_port_t port,
-                                 uint32_t dot1q_pcp,
-                                 tm_q_t iq);
+sdk_ret_t capri_tm_uplink_input_map_update(tm_port_t port, uint32_t dot1q_pcp,
+                                           tm_q_t iq);
 
 typedef struct tm_uplink_input_dscp_map_s {
     bool        ip_dscp[CAPRI_TM_MAX_DSCP_VALS];
     uint32_t    dot1q_pcp;
 } tm_uplink_input_dscp_map_t;
 
-sdk_ret_t
-capri_tm_uplink_input_dscp_map_update(tm_port_t port,
-                                      tm_uplink_input_dscp_map_t *dscp_map);
+sdk_ret_t capri_tm_uplink_input_dscp_map_update(tm_port_t port,
+                                                tm_uplink_input_dscp_map_t *dscp_map);
 
-sdk_ret_t
-capri_tm_uplink_oq_update(tm_port_t port,
-                          tm_q_t oq,
-                          bool xoff_enable,
-                          uint32_t xoff_cos);
+sdk_ret_t capri_tm_uplink_oq_update(tm_port_t port, tm_q_t oq,
+                                    bool xoff_enable, uint32_t xoff_cos);
 
 #define TM_SCHED_TYPES(ENTRY)                    \
     ENTRY(TM_SCHED_TYPE_DWRR,       0, "dwrr")   \
@@ -179,11 +170,10 @@ typedef enum {
  *                           queue scheduler
  * @return sdk_ret_t: Status of the operation
  */
-sdk_ret_t 
-capri_tm_scheduler_map_update(tm_port_t port,
-                              tm_queue_node_type_e node_type,
-                              uint32_t node,
-                              tm_queue_node_params_t *node_params);
+sdk_ret_t capri_tm_scheduler_map_update(tm_port_t port,
+                                        tm_queue_node_type_e node_type,
+                                        uint32_t node,
+                                        tm_queue_node_params_t *node_params);
 
 /** capri_tm_uplink_lif_set
  * API to program the lif value on an uplink port
@@ -192,32 +182,27 @@ capri_tm_scheduler_map_update(tm_port_t port,
  * @param lif[in]: The lif value to set
  * @return sdk_ret_t: Status of the operation
  */
-sdk_ret_t 
-capri_tm_uplink_lif_set(tm_port_t port,
-                        uint32_t lif);
+sdk_ret_t capri_tm_uplink_lif_set(tm_port_t port, uint32_t lif);
 
 /** capri_tm_hw_config_load_poll
  * API to poll the config load completion
  *
  */
-sdk_ret_t 
-capri_tm_hw_config_load_poll(int phase);
+sdk_ret_t capri_tm_hw_config_load_poll(int phase);
 
 /** capri_tm_asic_init
  * API to call asic initialization routines for the PBC block 
  *
  * @return sdk_ret_t: Status of the operation
  */
-sdk_ret_t
-capri_tm_asic_init(void);
+sdk_ret_t capri_tm_asic_init(void);
 
 /** capri_tm_init
  * API to initialize the PBC block in hardware 
  *
  * @return sdk_ret_t: Status of the operation
  */
-sdk_ret_t
-capri_tm_init(sdk::lib::catalog* catalog);
+sdk_ret_t capri_tm_init(sdk::lib::catalog* catalog);
 
 /** capri_tm_repl_table_base_addr_set
  * API to program the base address in HBM for the replication table
@@ -225,8 +210,7 @@ capri_tm_init(sdk::lib::catalog* catalog);
  * @param addr[in]: HBM Base address for the replication table
  * @return sdk_ret_t: Status of the operation
  */
-sdk_ret_t
-capri_tm_repl_table_base_addr_set(uint64_t addr);
+sdk_ret_t capri_tm_repl_table_base_addr_set(uint64_t addr);
 
 /** capri_tm_repl_table_token_size_set
  * API to program the size of the replication token
@@ -234,8 +218,7 @@ capri_tm_repl_table_base_addr_set(uint64_t addr);
  * @param num_tokens[in]: Size of the token in bits
  * @return sdk_ret_t: Status of the operation
  */
-sdk_ret_t
-capri_tm_repl_table_token_size_set(uint32_t size_in_bits);
+sdk_ret_t capri_tm_repl_table_token_size_set(uint32_t size_in_bits);
 
 /** capri_tm_get_clock_tick
  * API to get the hardware clock tick.
@@ -243,20 +226,27 @@ capri_tm_repl_table_token_size_set(uint32_t size_in_bits);
  * @param  tick[in]: Pointer to store the returned hardware clock.
  * @return sdk_ret_t: Status of the operation
  */
-sdk_ret_t
-capri_tm_get_clock_tick(uint64_t *tick);
+sdk_ret_t capri_tm_get_clock_tick(uint64_t *tick);
 
 /** capri_tm_enable_disable_uplink_port
  * API to enable/disable an uplink port. Need to be called for link up/down 
  * events etc
  */
-sdk_ret_t
-capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable);
+sdk_ret_t capri_tm_enable_disable_uplink_port(tm_port_t port, bool enable);
 
-void
-capri_tm_dump_debug_regs(void);
-void
-capri_tm_dump_config_regs(void);
+/**
+ * return front panel port number give TM/PB port number
+ */
+static inline int
+capri_tm_port_to_fp_port (uint32_t tm_port)
+{
+    SDK_ASSERT((tm_port >= TM_UPLINK_PORT_BEGIN) &&
+               (tm_port <= TM_UPLINK_PORT_END));
+    return tm_port - TM_UPLINK_PORT_BEGIN + 1;
+}
+
+void capri_tm_dump_debug_regs(void);
+void capri_tm_dump_config_regs(void);
 
 typedef struct tm_iq_oflow_fifo_stats_s {
     uint64_t good_pkts_in;
@@ -272,21 +262,19 @@ typedef struct tm_iq_stats_s {
     uint32_t                 peak_occupancy;
 } __PACK__ tm_iq_stats_t;
 
-sdk_ret_t
-capri_tm_get_iq_stats(tm_port_t port, tm_q_t iq, tm_iq_stats_t *iq_stats);
+sdk_ret_t capri_tm_get_iq_stats(tm_port_t port, tm_q_t iq,
+                                tm_iq_stats_t *iq_stats);
 
-sdk_ret_t
-capri_tm_reset_iq_stats(tm_port_t port, tm_q_t iq);
+sdk_ret_t capri_tm_reset_iq_stats(tm_port_t port, tm_q_t iq);
 
 typedef struct tm_oq_stats_s {
     uint32_t queue_depth;
 } __PACK__ tm_oq_stats_t;
 
-sdk_ret_t
-capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats);
+sdk_ret_t capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq,
+                                tm_oq_stats_t *oq_stats);
 
-sdk_ret_t
-capri_tm_periodic_stats_update(void);
+sdk_ret_t capri_tm_periodic_stats_update(void);
 
 typedef enum {
    BUFFER_INTRINSIC_DROP = 0,        // Pkts dropped due to intrinsic drop bit being set
@@ -336,18 +324,14 @@ typedef struct tm_pb_debug_stats_s {
     tm_pb_debug_oflow_fifo_stats_t  oflow_fifo_stats;
 } tm_pb_debug_stats_t;
 
-sdk_ret_t
-capri_tm_get_pb_debug_stats(tm_port_t port, 
-                            tm_pb_debug_stats_t *debug_stats, 
-                            bool reset);
+sdk_ret_t capri_tm_get_pb_debug_stats(tm_port_t port,
+                                      tm_pb_debug_stats_t *debug_stats,
+                                      bool reset);
+uint32_t capri_tm_get_num_iqs_for_port(tm_port_t port);
+uint32_t capri_tm_get_num_oqs_for_port(tm_port_t port);
 
-uint32_t
-capri_tm_get_num_iqs_for_port (tm_port_t port);
-uint32_t
-capri_tm_get_num_oqs_for_port (tm_port_t port);
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk
 
-} // namespace capri
-} // namespace platform
-} // namespace sdk
-
-#endif
+#endif    // __CAPRI_TM_RW_HPP__

@@ -39,6 +39,12 @@ public:
     static sdk_ret_t init(asic_cfg_t *asic_cfg);
 
     /**
+     * @brief    dump all the debug information to given file
+     * @param[in] fp    file handle
+     */
+    static void debug_dump(FILE *fp);
+
+    /**
      * @brief        factory method to instantiate an impl object
      * @param[in]    impl    object id
      * @param[in]    args    args (not interpreted by this class)

@@ -37,6 +37,12 @@ public:
      */
     virtual sdk_ret_t asic_init(void) override;
 
+    /**
+     * @brief    dump all the debug information to given file
+     * @param[in] fp    file handle
+     */
+    virtual void debug_dump(FILE *fp);
+
 private:
     capri_impl() {}
 

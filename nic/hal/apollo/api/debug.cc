@@ -8,6 +8,7 @@
 
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/hal/apollo/core/trace.hpp"
+#include "nic/hal/apollo/framework/impl_base.hpp"
 #include "nic/hal/apollo/api/port.hpp"
 
 namespace debug {
@@ -141,7 +142,8 @@ system_dump (const char *filename) {
     }
 
     api::port_get(0, port_info_dump, fp);
-    // impl_base::dump();
+    impl_base::debug_dump(fp);
+    fflush(fp);
     // oci_state::dump()
 
     return SDK_RET_OK;
