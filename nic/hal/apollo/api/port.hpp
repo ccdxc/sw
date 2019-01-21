@@ -6,10 +6,16 @@
  * @brief   APIs for port implementation
  */
 
+#include "nic/sdk/linkmgr/linkmgr.hpp"
+
 #if !defined (__PORT_HPP__)
 #define __PORT_HPP__
 
 namespace api {
+
+#define OCI_MAX_PORT        16
+
+typedef void (*port_cb_t)(sdk::linkmgr::port_args_t *);
 
 /**
  * @brief     create all ports based on the catalog information

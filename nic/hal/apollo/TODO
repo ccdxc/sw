@@ -1,0 +1,5 @@
+- create a system class
+  - oci_state will be a member of this (rename oci_state --> cstate aka. config state)
+  - oci_impl_state will be a member of this (rename oci_impl_state --> pstate aka. pipeline state)
+  - move port store in to this system class (we may need a class called inventory under which
+    ports, pb, register stuff etc and other physical stuff can be moved)
