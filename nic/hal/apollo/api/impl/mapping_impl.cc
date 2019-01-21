@@ -290,9 +290,14 @@ mapping_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     mapping_info = &obj_ctxt->api_params->mapping_info;
     vcn = vcn_db()->vcn_find(&mapping_info->key.vcn);
     subnet = subnet_db()->subnet_find(&mapping_info->subnet);
-    OCI_TRACE_DEBUG("Programming vcn %u, ip %s mapping",
+    OCI_TRACE_DEBUG("Programming mapping (vcn %u, ip %s), subnet %u, tep %s, "
+                    "overlay mac %s, slot %u, vnic %u",
                     mapping_info->key.vcn.id,
-                    ipaddr2str(&mapping_info->key.ip_addr));
+                    ipaddr2str(&mapping_info->key.ip_addr),
+                    mapping_info->subnet.id,
+                    ipv4addr2str(mapping_info->tep.ip_addr),
+                    macaddr2str(mapping_info->overlay_mac),
+                    mapping_info->slot, mapping_info->vnic.id);
     if (is_local_) {
         /**< allocate NAT table entries */
         ret = add_nat_entries_(mapping_info);
