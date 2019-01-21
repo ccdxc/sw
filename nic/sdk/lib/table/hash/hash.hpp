@@ -12,12 +12,14 @@
 #define __SDK_HASH_HPP__
 
 #include <boost/crc.hpp>
+#include "lib/utils/crc_fast.hpp"
 #include "include/sdk/mem.hpp"
 #include "include/sdk/base.hpp"
 #include "lib/table/common/table.hpp"
 #include "lib/table/hash/hash_entry.hpp"
 
 using namespace std;
+using sdk::utils::crcFast;
 using sdk::table::table_health_state_t;
 using sdk::table::table_health_monitor_func_t;
 
@@ -101,6 +103,7 @@ private:
     bool                        entry_trace_en_;    // entry trace enable
     table_health_state_t        health_state_;  // health state
     table_health_monitor_func_t health_monitor_func_;   // health mon. cb
+    crcFast                     *crc32gen_;
 
     // Static Declarations
     static const uint8_t otcam_bit_ = 28;    // Dleft or OTcam ?

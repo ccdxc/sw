@@ -6,6 +6,7 @@
 #include "lib/table/tcam/tcam.hpp"
 #include "lib/p4/p4_api.hpp"
 #include "hash.hpp"
+#include "lib/utils/crc_fast.hpp"
 
 namespace sdk {
 namespace table {
@@ -119,6 +120,9 @@ hash::hash(char *name, uint32_t dleft_table_id, uint32_t otcam_table_id,
     // uint32_t hwdatalen_bits = hwdata_len_;
     hwkey_len_ = (hwkey_len_ >> 3) + ((hwkey_len_ & 0x7) ? 1 : 0);
     hwdata_len_ = (hwdata_len_ >> 3) + ((hwdata_len_ & 0x7) ? 1 : 0);
+
+    crc32gen_ = crcFast::factory();
+    SDK_ASSERT(crc32gen_);
 }
 
 // ---------------------------------------------------------------------------
@@ -663,6 +667,9 @@ uint32_t
 hash::generate_hash_(void *key, uint32_t key_len)
 {
     uint32_t hash_val = 0;
+    hash_val = crc32gen_->compute_crc((uint8_t *)key, key_len, hash_poly_);
+
+#if 0
     uint32_t crc_init_val = 0x00000000;
     boost::crc_basic<32> *crc_hash;
     // TODO - Replace this with whatever hardware implements
@@ -699,9 +706,9 @@ hash::generate_hash_(void *key, uint32_t key_len)
     }
 
 end:
-
     delete crc_hash;
     //SDK_TRACE_DEBUG("hashVal: 0x%x, Idx: %d", hash_val, hash_val % dleft_capacity_);
+#endif
     return hash_val % dleft_capacity_;
 }
 

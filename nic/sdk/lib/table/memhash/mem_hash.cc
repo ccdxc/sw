@@ -2,6 +2,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #include <string.h>
+
+#include "include/sdk/lock.hpp"
 #include "include/sdk/base.hpp"
 #include "include/sdk/table.hpp"
 #include "lib/p4/p4_api.hpp"
@@ -25,18 +27,27 @@ using sdk::table::memhash::mem_hash_txn;
 thread_local uint8_t g_hw_key[MEM_HASH_MAX_HW_KEY_LEN];
 uint32_t mem_hash_api_context::numctx_ = 0;
 
-#define MEM_HASH_TRACE_API_BEGIN(_name) {\
+#define MEM_HASH_API_BEGIN(_name) {\
         const char *marker = "-------------------------"; \
         SDK_TRACE_DEBUG("%s Api Begin For Table: %s %s",\
                         marker, _name, marker);\
 }
-#define MEM_HASH_TRACE_API_END(_name) {\
+
+#define MEM_HASH_API_END(_name) {\
         const char *marker = "-------------------------"; \
         SDK_TRACE_DEBUG("%s Api End For Table: %s %s",\
                         marker, _name, marker);\
 }
-#define MEM_HASH_TRACE_API_BEGIN_() MEM_HASH_TRACE_API_BEGIN(props_->name.c_str())
-#define MEM_HASH_TRACE_API_END_() MEM_HASH_TRACE_API_END(props_->name.c_str())
+
+#define MEM_HASH_API_BEGIN_() {\
+        MEM_HASH_API_BEGIN(props_->name.c_str());\
+        SDK_SPINLOCK_UNLOCK(&slock_);\
+}
+
+#define MEM_HASH_API_END_() {\
+        MEM_HASH_API_END(props_->name.c_str());\
+        SDK_SPINLOCK_LOCK(&slock_);\
+}
 
 //---------------------------------------------------------------------------
 // Factory method to instantiate the class
@@ -47,7 +58,7 @@ mem_hash::factory(mem_hash_factory_params_t *params) {
     mem_hash *memhash = NULL;
     sdk_ret_t ret = SDK_RET_OK;
 
-    MEM_HASH_TRACE_API_BEGIN("NewTable");
+    MEM_HASH_API_BEGIN("NewTable");
     mem = (mem_hash *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH, sizeof(mem_hash));
     if (mem) {
         memhash = new (mem) mem_hash();
@@ -58,7 +69,7 @@ mem_hash::factory(mem_hash_factory_params_t *params) {
         }
     }
 
-    MEM_HASH_TRACE_API_END("NewTable");
+    MEM_HASH_API_END("NewTable");
     return memhash;
 }
 
@@ -132,14 +143,14 @@ mem_hash::init_(mem_hash_factory_params_t *params) {
 //---------------------------------------------------------------------------
 void
 mem_hash::destroy(mem_hash *table) {
-    MEM_HASH_TRACE_API_BEGIN("DestroyTable");
+    MEM_HASH_API_BEGIN("DestroyTable");
     SDK_TRACE_DEBUG("Destroying mem_hash table %p", table);
     mem_hash_main_table::destroy_(static_cast<mem_hash_main_table*>(table->main_table_));
 
     SDK_TRACE_DEBUG("Number of API contexts = %d", mem_hash_api_context::count());
     SDK_ASSERT(mem_hash_api_context::count() == 0);
     SDK_ASSERT(table->txn_.validate() == SDK_RET_OK);
-    MEM_HASH_TRACE_API_END("DestroyTable");
+    MEM_HASH_API_END("DestroyTable");
 }
 
 //---------------------------------------------------------------------------
@@ -224,7 +235,7 @@ mem_hash::insert(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
 
-    MEM_HASH_TRACE_API_BEGIN_();
+    MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key && params->appdata);
 
     ret = create_api_context_(mem_hash_api_context::API_INSERT,
@@ -242,7 +253,7 @@ mem_hash::insert(sdk_table_api_params_t *params) {
     mem_hash_api_context::destroy(mctx);
 
     api_stats_.insert(ret);
-    MEM_HASH_TRACE_API_END_();
+    MEM_HASH_API_END_();
     return ret;
 }
 
@@ -254,7 +265,7 @@ mem_hash::update(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
 
-    MEM_HASH_TRACE_API_BEGIN_();
+    MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key && params->appdata);
 
     ret = create_api_context_(mem_hash_api_context::API_UPDATE,
@@ -275,7 +286,7 @@ mem_hash::update(sdk_table_api_params_t *params) {
 
 update_return:
     api_stats_.update(ret);
-    MEM_HASH_TRACE_API_END_();
+    MEM_HASH_API_END_();
     return ret;
 }
 
@@ -287,7 +298,7 @@ mem_hash::remove(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
 
-    MEM_HASH_TRACE_API_BEGIN_();
+    MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key);
 
     ret = create_api_context_(mem_hash_api_context::API_REMOVE,
@@ -308,7 +319,7 @@ mem_hash::remove(sdk_table_api_params_t *params) {
 
 remove_return:
     api_stats_.remove(ret);
-    MEM_HASH_TRACE_API_END_();
+    MEM_HASH_API_END_();
     return ret;
 }
 
@@ -320,7 +331,7 @@ mem_hash::get(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
 
-    MEM_HASH_TRACE_API_BEGIN_();
+    MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key);
 
     ret = create_api_context_(mem_hash_api_context::API_GET,
@@ -341,7 +352,7 @@ mem_hash::get(sdk_table_api_params_t *params) {
 
 get_return:
     api_stats_.get(ret);
-    MEM_HASH_TRACE_API_END_();
+    MEM_HASH_API_END_();
     return ret;
 }
 
@@ -353,7 +364,7 @@ mem_hash::reserve(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
 
-    MEM_HASH_TRACE_API_BEGIN_();
+    MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key);
 
     ret = create_api_context_(mem_hash_api_context::API_RESERVE,
@@ -375,7 +386,7 @@ mem_hash::reserve(sdk_table_api_params_t *params) {
     mem_hash_api_context::destroy(mctx);
 
     api_stats_.reserve(ret);
-    MEM_HASH_TRACE_API_END_();
+    MEM_HASH_API_END_();
     return SDK_RET_OK;
 }
 
@@ -387,7 +398,7 @@ mem_hash::release(sdk_table_api_params_t *params) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
 
-    MEM_HASH_TRACE_API_BEGIN_();
+    MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key && params->handle);
 
     ret = create_api_context_(mem_hash_api_context::API_RELEASE,
@@ -409,7 +420,7 @@ mem_hash::release(sdk_table_api_params_t *params) {
     mem_hash_api_context::destroy(mctx);
 
     api_stats_.release(sdk::SDK_RET_OK);
-    MEM_HASH_TRACE_API_END_();
+    MEM_HASH_API_END_();
     return SDK_RET_OK;
 }
 
@@ -419,8 +430,10 @@ mem_hash::release(sdk_table_api_params_t *params) {
 sdk_ret_t
 mem_hash::stats_get(sdk_table_api_stats_t *stats,
                     sdk_table_stats_t *table_stats) {
+    MEM_HASH_API_BEGIN_();
     api_stats_.get(stats);
     table_stats_.get(table_stats);
+    MEM_HASH_API_END_();
     return SDK_RET_OK;
 }
 
@@ -430,9 +443,9 @@ mem_hash::stats_get(sdk_table_api_stats_t *stats,
 sdk_ret_t
 mem_hash::txn_start() {
     sdk_ret_t ret;
-    MEM_HASH_TRACE_API_BEGIN_();
+    MEM_HASH_API_BEGIN_();
     ret = txn_.start();
-    MEM_HASH_TRACE_API_END_();
+    MEM_HASH_API_END_();
     return ret;
 }
 
@@ -442,8 +455,8 @@ mem_hash::txn_start() {
 sdk_ret_t
 mem_hash::txn_end() {
     sdk_ret_t ret = SDK_RET_OK;
-    MEM_HASH_TRACE_API_BEGIN_();
+    MEM_HASH_API_BEGIN_();
     ret = txn_.end();
-    MEM_HASH_TRACE_API_END_();
+    MEM_HASH_API_END_();
     return ret;
 }
