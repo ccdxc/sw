@@ -164,4 +164,24 @@ thread_spawn (oci_state *state)
     return SDK_RET_OK;
 }
 
+/**
+ * install signal handler for given signal
+ */
+sdk_ret_t
+sig_init (int signal, sig_handler_t sig_handler)
+{
+    struct sigaction    act;
+
+    if (sig_handler == NULL) {
+        return SDK_RET_ERR;
+    }
+
+    memset(&act, 0, sizeof(act));
+    act.sa_sigaction = sig_handler;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(signal, &act, NULL);
+
+    return SDK_RET_OK;
+}
+
 }    // namespace core
