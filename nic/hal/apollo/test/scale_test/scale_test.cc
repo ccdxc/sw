@@ -23,6 +23,7 @@ namespace pt = boost::property_tree;
 
 char                *g_input_cfg_file = NULL;
 char                *g_cfg_file = NULL;
+bool                g_daemon_mode = false;
 ip_prefix_t         g_vcn_ippfx = { 0 };
 oci_switchport_t    g_sw_port = { 0 };
 
@@ -348,9 +349,11 @@ TEST_F(scale_test, scale_test_create) {
     rv = oci_batch_commit();
     ASSERT_TRUE(rv == SDK_RET_OK);
 
-    //printf("Entering forever loop ...\n");
-    //fflush(stdout);
-    //while (1);
+    if (g_daemon_mode) {
+        printf("Entering forever loop ...\n");
+        fflush(stdout);
+        while (1);
+    }
 }
 
 // print help message showing usage of HAL
@@ -367,12 +370,13 @@ main (int argc, char **argv)
     int               oc;
     struct option longopts[] = {
        { "config",    required_argument, NULL, 'c' },
+       { "daemon",    required_argument, NULL, 'd' },
        { "help",      no_argument,       NULL, 'h' },
        { 0,           0,                 0,     0 }
     };
 
     // parse CLI options
-    while ((oc = getopt_long(argc, argv, ":hc:i:W;", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hdc:i:W;", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             g_cfg_file = optarg;
@@ -381,6 +385,10 @@ main (int argc, char **argv)
                 print_usage(argv);
                 exit(1);
             }
+            break;
+
+        case 'd':
+            g_daemon_mode = true;
             break;
 
         case 'i':
