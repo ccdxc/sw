@@ -36,8 +36,9 @@ def Trigger(tc):
         timeout = 150
         #timeout = tc.security_profile['security-profiles'][0]['spec']['timeouts']['udp']
 
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
     for cnt in range(tc.args.count):
-        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
         cmd_cookie = "iperf -s"
         api.Trigger_AddCommand(req, server.node_name, server.workload_name,
                            "%s-s -t 300" % basecmd, background = True)
@@ -56,10 +57,10 @@ def Trigger(tc):
         api.Trigger_AddNaplesCommand(req, naples.node_name, "/nic/bin/halctl clear session")
         tc.cmd_cookies.append(cmd_cookie)
 
-        trig_resp = api.Trigger(req)
-        term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+    trig_resp = api.Trigger(req)
+    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
 
-        tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
     return api.types.status.SUCCESS
 
 def Verify(tc):

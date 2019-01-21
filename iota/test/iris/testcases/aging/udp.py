@@ -4,6 +4,8 @@ import iota.harness.api as api
 from iota.test.iris.testcases.aging.aging_utils import *
 import pdb
 
+GRACE_TIME=5
+
 def Setup(tc):
     return api.types.status.SUCCESS
 
@@ -36,16 +38,17 @@ def Trigger(tc):
     #Step 0: Update the timeout in the config object
     update_timeout(timeout_str, tc.iterators.timeout)
 
-    profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 11")
-    profcommandresp = api.Trigger(profilereq)
-    cmd = profcommandresp.commands[-1]
-    for command in profcommandresp.commands:
-        api.PrintCommandResults(command)
-    timeout = get_haltimeout(timeout_str, cmd)
-    tc.config_update_fail = 0
-    if (timeout != timetoseconds(tc.iterators.timeout)):
-        tc.config_update_fail = 1
+    #profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    #api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 11")
+    #profcommandresp = api.Trigger(profilereq)
+    #cmd = profcommandresp.commands[-1]
+    #for command in profcommandresp.commands:
+    #    api.PrintCommandResults(command)
+    #timeout = get_haltimeout(timeout_str, cmd)
+    #tc.config_update_fail = 0
+    #if (timeout != timetoseconds(tc.iterators.timeout)):
+    #    tc.config_update_fail = 1
+    timeout = timetoseconds(tc.iterators.timeout)
 
     cmd_cookie = "start server"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
@@ -63,7 +66,7 @@ def Trigger(tc):
 
     #Get it from the config
     cmd_cookie = "sleep"
-    api.Trigger_AddNaplesCommand(req, naples.node_name, "sleep %s" % timeout, timeout=300)
+    api.Trigger_AddNaplesCommand(req, naples.node_name, "sleep %s" % (timeout + GRACE_TIME), timeout=300)
     tc.cmd_cookies.append(cmd_cookie)
 
     cmd_cookie = "After aging show session"
@@ -80,8 +83,8 @@ def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
-    if tc.config_update_fail == 1:
-        return api.types.status.FAILURE
+    #if tc.config_update_fail == 1:
+    #    return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS
     cookie_idx = 0

@@ -36,16 +36,10 @@ protected:
         hal::rpc_programid_t programids[] = { { "10000", 120 },
                                               { "10024", 100 },
                                               { "10023", 300 } };
+        hal::rpc_programid_t uuids[] = { {"e1af83085d1f11c991a408002b14a0fa", 90}, };
 
         // firewall rules
         std::vector<v4_rule_t> rules = {
-            v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
-                        from: {},
-                        to: {},
-                        app: { proto:IPPROTO_TCP,
-                               dport_low: SUNRPC_PORT, dport_high: SUNRPC_PORT,
-                               alg: nwsec::APP_SVC_SUN_RPC,
-                               } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
                         from: {},
                         to: {},
@@ -59,8 +53,19 @@ protected:
                         from: {},
                         to: {},
                         app: { proto:IPPROTO_TCP,
+                               dport_low: SUNRPC_PORT, dport_high: SUNRPC_PORT,
+                               alg: nwsec::APP_SVC_SUN_RPC,
+                               has_alg_opts: true,
+                               alg_opt: { opt: { sunrpc_opts: { programid_sz: 3, program_ids: programids }, }, },
+                               } },
+            v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_ALLOW,
+                        from: {},
+                        to: {},
+                        app: { proto:IPPROTO_TCP,
                                dport_low: MSRPC_PORT, dport_high: MSRPC_PORT,
                                alg: nwsec::APP_SVC_MSFT_RPC,
+                               has_alg_opts: true,
+                               alg_opt: { opt: { msrpc_opts: { uuid_sz: 1, uuids: uuids }, }, },
                                } },
             v4_rule_t { action: nwsec::SECURITY_RULE_ACTION_DENY,
                         from: {},

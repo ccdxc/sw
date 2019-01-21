@@ -9,7 +9,7 @@ testcases:
         testcase: testcases.aging.ping
         iterators:
             type              : simple
-            timeout           : [10s, 30s, 100s]
+            timeout           : [10s, 30s, 68s]
         args    :
             type: remote_only
 
@@ -17,7 +17,7 @@ testcases:
         testcase: testcases.aging.udp
         iterators:
             type              : simple 
-            timeout           : [20s, 30s, 100s]
+            timeout           : [20s, 30s, 70s]
         args    :
             type: local_only
 
@@ -25,7 +25,7 @@ testcases:
         testcase: testcases.aging.tcp
         iterators:
             type              : simple
-            timeout           : [10s, 30s, 100s]
+            timeout           : [10s, 30s, 60s]
         args    :
             type: local_only
 
@@ -33,7 +33,7 @@ testcases:
         testcase: testcases.aging.tcp_conn_setup_timeout
         iterators:
             type   : simple
-            timeout : [1s, 45s, 2m0s]
+            timeout : [1s, 45s, 1m0s]
         args    :
            type: local_only
 
@@ -41,7 +41,7 @@ testcases:
         testcase: testcases.aging.tcp_half_closed_timeout
         iterators:
             type    : simple
-            timeout : [1s, 3m20s, 2m]
+            timeout : [1s, 1m20s, 1m]
         args    :
             type: local_only
    
@@ -49,7 +49,7 @@ testcases:
         testcase: testcases.aging.tcp_close_timeout
         iterators:
             type    : simple
-            timeout : [0s, 1m40s, 45s]
+            timeout : [0s, 1m0s, 45s]
         args    :
             type: local_only 
 
@@ -60,13 +60,13 @@ testcases:
             proto     : [ udp, tcp ]
         args    :
             type: local_only
-            count: 10 
+            count: 5 
 
     -   name    : TCPTickleTimeout
         testcase: testcases.aging.tcp_timeout_tickle
         iterators:
             type    : simple
-            timeout : [80s, 1m20s, 1m35s]
+            timeout : [45s, 0m50s, 1m5s]
         args    :
             type: local_only
 
@@ -75,7 +75,7 @@ testcases:
         iterators:
             type      : nested 
             proto     : [ udp, tcp ]
-            timeout   : [10s, 15s, 90s]
+            timeout   : [10s, 15s, 70s]
         args    :
             type: local_only
 

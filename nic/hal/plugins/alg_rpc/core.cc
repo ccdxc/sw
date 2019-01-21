@@ -163,6 +163,22 @@ uint8_t *alloc_rpc_pkt(void) {
     return ((uint8_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, MAX_ALG_RPC_PKT_SZ));
 }
 
+void copy_sfw_info(sfw_info_t *sfw_info, rpc_info_t *rpc_info) {
+    uint32_t pgmid_list_sz = 0;
+
+    if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC) {
+        rpc_info->pgmid_sz = sfw_info->alg_opts.opt.sunrpc_opts.programid_sz;
+        pgmid_list_sz = (sizeof(hal::rpc_programid_t)*sfw_info->alg_opts.opt.sunrpc_opts.programid_sz);
+        rpc_info->pgm_ids = (hal::rpc_programid_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, pgmid_list_sz);
+        memcpy(rpc_info->pgm_ids, sfw_info->alg_opts.opt.sunrpc_opts.program_ids, pgmid_list_sz);
+    } else if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC) {
+        rpc_info->pgmid_sz = sfw_info->alg_opts.opt.msrpc_opts.uuid_sz;
+        pgmid_list_sz = (sizeof(hal::rpc_programid_t)*sfw_info->alg_opts.opt.msrpc_opts.uuid_sz);
+        rpc_info->pgm_ids = (hal::rpc_programid_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, pgmid_list_sz);
+        memcpy(rpc_info->pgm_ids, sfw_info->alg_opts.opt.msrpc_opts.uuids, pgmid_list_sz);
+    }
+}
+
 /*
  * Expected flow callback. FTE issues this callback with the expected flow data
  */
@@ -233,7 +249,6 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
     incr_num_exp_flows(rpc_info);
     
     // Need to add the entry with a timer
-    // Todo(Pavithra) add timer to every RPC ALG entry
     HAL_TRACE_DEBUG("Inserting RPC entry with key: {}", key);
 }
 
@@ -249,6 +264,10 @@ void rpcinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
          */
         if (rpc_info->pkt_len && rpc_info->pkt)
             HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);
+    
+        if (rpc_info->pgmid_sz && rpc_info->pgm_ids)
+            HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pgm_ids);
+       
         g_rpc_state->alg_info_slab()->free((rpc_info_t *)l4_sess->info);
     }
 

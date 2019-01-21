@@ -66,7 +66,8 @@ typedef struct rpc_info_ {
     uint32_t           dport;
     uint32_t           vers;
     uint8_t            pkt_type;
-    uint32_t           map_entry_timeout;
+    uint8_t            pgmid_sz;
+    rpc_programid_t   *pgm_ids;
     union {
         struct { /* SUNRPC Info */
             uint32_t   xid;
@@ -96,6 +97,7 @@ void incr_parse_error(rpc_info_t *info);
 void incr_data_sess(rpc_info_t *info);
 void incr_max_pkt_sz(rpc_info_t  *info);
 void incr_num_exp_flows(rpc_info_t *info);
+void copy_sfw_info(sfw_info_t *sfw_info, rpc_info_t *rpc_info);
 
 }  // namespace alg_rpc
 }  // namespace plugins

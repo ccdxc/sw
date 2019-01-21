@@ -1016,9 +1016,12 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
             opt->msrpc_opts.uuids = (rpc_programid_t *)HAL_CALLOC(HAL_MEM_ALLOC_SFW,
                                         (sizeof(rpc_programid_t)*app.msrpc_option_info().data_size()));
             HAL_ASSERT(opt->msrpc_opts.uuids != NULL);
+            opt->msrpc_opts.uuid_sz = app.msrpc_option_info().data_size();
             for (int idx=0; idx<app.msrpc_option_info().data_size(); idx++) {
+                 int size = (app.msrpc_option_info().data(idx).program_id().size() <= MAX_UUID_SZ)?\
+                             app.msrpc_option_info().data(idx).program_id().size():MAX_UUID_SZ;
                  memcpy(opt->msrpc_opts.uuids[idx].program_id, 
-                        (void *)app.msrpc_option_info().data(idx).program_id().c_str(), MAX_UUID_SZ);
+                        (void *)app.msrpc_option_info().data(idx).program_id().c_str(), size);
                  opt->msrpc_opts.uuids[idx].timeout = app.msrpc_option_info().data(idx).idle_timeout();
             }
         }
@@ -1027,9 +1030,12 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
             opt->sunrpc_opts.program_ids = (rpc_programid_t *)HAL_CALLOC(HAL_MEM_ALLOC_SFW,
                                         (sizeof(rpc_programid_t)*app.sun_rpc_option_info().data_size()));
             HAL_ASSERT(opt->sunrpc_opts.program_ids != NULL);
+            opt->sunrpc_opts.programid_sz = app.sun_rpc_option_info().data_size();
             for (int idx=0; idx<app.sun_rpc_option_info().data_size(); idx++) {
+                 int size = (app.sun_rpc_option_info().data(idx).program_id().size() <= MAX_UUID_SZ)?\
+                             app.sun_rpc_option_info().data(idx).program_id().size():MAX_UUID_SZ;
                  memcpy(opt->sunrpc_opts.program_ids[idx].program_id, 
-                        (void *)app.sun_rpc_option_info().data(idx).program_id().c_str(), MAX_UUID_SZ);
+                        (void *)app.sun_rpc_option_info().data(idx).program_id().c_str(), size);
                  opt->sunrpc_opts.program_ids[idx].timeout = app.sun_rpc_option_info().data(idx).idle_timeout();
             }
         }

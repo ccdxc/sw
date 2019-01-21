@@ -33,16 +33,17 @@ def Trigger(tc):
     #Step 0: Update the timeout in the config object
     update_timeout("tcp-close", tc.iterators.timeout)
     
-    profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 11")
-    profcommandresp = api.Trigger(profilereq)
-    cmd = profcommandresp.commands[-1]
-    for command in profcommandresp.commands:
-        api.PrintCommandResults(command)
-    timeout = get_haltimeout("tcp-close", cmd)
-    tc.config_update_fail = 0
-    if (timeout != timetoseconds(tc.iterators.timeout)):
-        tc.config_update_fail = 1
+    #profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    #api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 11")
+    #profcommandresp = api.Trigger(profilereq)
+    #cmd = profcommandresp.commands[-1]
+    #for command in profcommandresp.commands:
+    #    api.PrintCommandResults(command)
+    #timeout = get_haltimeout("tcp-close", cmd)
+    #tc.config_update_fail = 0
+    #if (timeout != timetoseconds(tc.iterators.timeout)):
+    #    tc.config_update_fail = 1
+    timeout = timetoseconds(tc.iterators.timeout)
 
     #Step 1: Start TCP Server
     server_port = api.AllocateTcpPort()
@@ -114,8 +115,8 @@ def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
-    if tc.config_update_fail == 1:
-        return api.types.status.FAILURE
+    #if tc.config_update_fail == 1:
+    #    return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS
     #Verify Half close timeout & session state

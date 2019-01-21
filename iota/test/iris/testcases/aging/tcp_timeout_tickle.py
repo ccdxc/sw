@@ -8,6 +8,7 @@ import pdb
 
 def Setup(tc):
     api.Logger.info("Setup.")
+    update_timeout('tcp-connection-setup', "10s")
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -31,25 +32,27 @@ def Trigger(tc):
     #Step 0: Update the timeout in the config object
     update_timeout("tcp-timeout", tc.iterators.timeout)
 
-    profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 11")
-    profcommandresp = api.Trigger(profilereq)
-    cmd = profcommandresp.commands[-1]
-    for command in profcommandresp.commands:
-        api.PrintCommandResults(command)
-    profcommandtermresp = api.Trigger_TerminateAllCommands(profcommandresp)
-    profcommandaggresp = api.Trigger_AggregateCommandsResponse(profcommandresp, profcommandtermresp)
-    timeout = get_haltimeout("tcp-timeout", cmd)
-    tc.config_update_fail = 0
-    if (timeout != timetoseconds(tc.iterators.timeout)):
-        tc.config_update_fail = 1
+    #profilereq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    #api.Trigger_AddNaplesCommand(profilereq, naples.node_name, "/nic/bin/halctl show nwsec profile --id 11")
+    #profcommandresp = api.Trigger(profilereq)
+    #cmd = profcommandresp.commands[-1]
+    #for command in profcommandresp.commands:
+    #    api.PrintCommandResults(command)
+    #profcommandtermresp = api.Trigger_TerminateAllCommands(profcommandresp)
+    #profcommandaggresp = api.Trigger_AggregateCommandsResponse(profcommandresp, profcommandtermresp)
+    #timeout = get_haltimeout("tcp-timeout", cmd)
+    #tc.config_update_fail = 0
+    #if (timeout != timetoseconds(tc.iterators.timeout)):
+    #    tc.config_update_fail = 1
+
+    timeout = timetoseconds(tc.iterators.timeout)
 
     #Step 1: Start TCPDUMP in background at the client
-    api.Trigger_AddCommand(req1, client.node_name, client.workload_name, "tcpdump -i {} > out.txt".format(client.interface), background=True)
-    tc.cmd_cookies1.append("tcpdump client");
+    #api.Trigger_AddCommand(req1, client.node_name, client.workload_name, "tcpdump -i {} > out.txt".format(client.interface), background=True)
+    #tc.cmd_cookies1.append("tcpdump client");
 
-    api.Trigger_AddCommand(req1, server.node_name, server.workload_name, "tcpdump -i {} > out.txt".format(server.interface), background=True)
-    tc.cmd_cookies1.append("tcpdump server");
+    #api.Trigger_AddCommand(req1, server.node_name, server.workload_name, "tcpdump -i {} > out.txt".format(server.interface), background=True)
+    #tc.cmd_cookies1.append("tcpdump server");
 
     #Step 2: Start TCP Server
     server_port = api.AllocateTcpPort() 
@@ -107,16 +110,20 @@ def Trigger(tc):
     # Terminate client, server & tcpdump
     term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
     tc.resp1 = api.Trigger_AggregateCommandsResponse(trig_resp1, term_resp1)
-    
-    req3 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+   
+    if tc.itickles == 0 or tc.rtickles == 0:
+        req3 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-     #Step 8: Check TCPDUMP to make sure we sent the packet
-    #api.Trigger_AddCommand(req3, server.node_name, server.workload_name, "grep \"{}.{} >\" out.txt | grep \"\[\.\]\" | grep \"length 0\"".format(client.ip_address, client_port))
-    #tc.cmd_cookies3.append("Check sent tickle")
+        api.Trigger_AddNaplesCommand(req3, naples.node_name, "sleep 10")
+        tc.cmd_cookies3.append("sleep")
+       
+        api.Trigger_AddNaplesCommand(req3, naples.node_name, "/nic/bin/halctl show session --handle {} --yaml".format(sess_hdl))
+        tc.cmd_cookies3.append("Re-validate tickle")
 
-    trig_resp3 = api.Trigger(req3)
-    term_resp3 = api.Trigger_TerminateAllCommands(trig_resp3)
-    tc.tcpdump_resp = api.Trigger_AggregateCommandsResponse(trig_resp3, term_resp3)
+        trig_resp3 = api.Trigger(req3)
+        tc.itickles, tc.iresets, tc.rtickles, tc.rresets = get_tickleinfo(trig_resp3.commands[-1])
+        term_resp3 = api.Trigger_TerminateAllCommands(trig_resp3)
+        tc.tcpdump_resp = api.Trigger_AggregateCommandsResponse(trig_resp3, term_resp3)
 
     return api.types.status.SUCCESS
         
@@ -124,8 +131,8 @@ def Verify(tc):
     if tc.resp1 is None:
         return api.types.status.FAILURE
 
-    if tc.config_update_fail == 1:
-        return api.types.status.FAILURE
+    #if tc.config_update_fail == 1:
+    #    return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS
     #Verify Half close timeout & session state
@@ -144,17 +151,6 @@ def Verify(tc):
     if tc.itickles == 0 or tc.rtickles == 0:
        result = api.types.status.FAILURE
 
-    cookie_idx = 0
-    #Verify TCP DUMP responses
-    for cmd in tc.tcpdump_resp.commands:
-        api.PrintCommandResults(cmd)
-        if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            
-            result = api.types.status.FAILURE
-        if tc.cmd_cookies3[cookie_idx].find("After tickle") != -1:
-            if cmd.stdout == -1:
-                result = api.types.status.FAILURE
-        cookie_idx += 1
     return result        
 
 def Teardown(tc):
