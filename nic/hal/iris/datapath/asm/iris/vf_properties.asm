@@ -40,7 +40,7 @@ vf_properties_uplink:
 vf_properties_host:
     phvwr           p.tunnel_metadata_tunnel_originate, \
                         d.u.vf_properties_d.tunnel_originate
-    phvwr           p.tunnel_metadata_tunnel_vni, d.u.vf_properties_d.mpls_out
+    phvwr           p.rewrite_metadata_tunnel_vnid, d.u.vf_properties_d.mpls_out
     phvwr           p.rewrite_metadata_tunnel_rewrite_index, \
                         d.u.vf_properties_d.tunnel_rewrite_index
     seq             c1, k.control_metadata_dst_class_e, TRUE

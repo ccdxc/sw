@@ -405,7 +405,7 @@ action vf_properties(overlay_ip1, overlay_ip2, mpls_in1, mpls_in2,
             modify_field(scratch_metadata.mpls_label1, mpls_out);
             modify_field(scratch_metadata.flag, tunnel_originate);
             modify_field(tunnel_metadata.tunnel_originate, scratch_metadata.flag);
-            modify_field(tunnel_metadata.tunnel_vni, scratch_metadata.mpls_label1);
+            modify_field(rewrite_metadata.tunnel_vnid, scratch_metadata.mpls_label1);
             modify_field(rewrite_metadata.tunnel_rewrite_index, tunnel_rewrite_index);
         }
         if (control_metadata.dst_class_e == TRUE) {

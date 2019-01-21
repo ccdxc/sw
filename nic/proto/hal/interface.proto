@@ -483,15 +483,16 @@ message IfTunnelGREInfo {
 }
 
 message IfTunnelProprietaryMpls {
-  types.IPAddress              substrate_ip     = 1 [(gogoproto.moretags) = "venice:mandatory"]; // Substrate/tunnel outer dest. ip-address (incoming)
-  repeated types.IPAddress     overlay_ip       = 2 [(gogoproto.moretags) = "venice:mandatory"]; // Overlay/inner dest. ip-address (incoming)
-  repeated types.MplsTag       mpls_if          = 3 [(gogoproto.moretags) = "venice:mandatory"]; // MPLS tag information (incoming)
-  types.IPAddress              tunnel_dest_ip   = 4 [(gogoproto.moretags) = "venice:mandatory"]; // Tunnel/outer dest. ip-address (outgoing)
-  types.MplsTag                mpls_tag         = 5 [(gogoproto.moretags) = "venice:mandatory"]; // MPLS tag information (outgoing)
-  types.Address                source_gw        = 6 [(gogoproto.moretags) = "venice:mandatory"]; // Source gateway ip-address (can be prefix or range)
-  uint32                       ingress_bw       = 7 [(gogoproto.moretags) = "venice:mandatory"]; // Ingress BW (in KBytes/sec)
-  uint32                       egress_bw        = 8 [(gogoproto.moretags) = "venice:mandatory"]; // Egress BW (in KBytes/sec)
-  fixed64                      gw_mac_da        = 9 [(gogoproto.moretags) = "venice:mandatory"]; // Dest. MAC Address of the gateway
+  types.IPAddress              substrate_ip      = 1  [(gogoproto.moretags) = "venice:mandatory"]; // Substrate/tunnel outer dest. ip-address (incoming)
+  repeated types.IPAddress     overlay_ip        = 2  [(gogoproto.moretags) = "venice:mandatory"]; // Overlay/inner dest. ip-address (incoming)
+  repeated types.MplsTag       mpls_if           = 3  [(gogoproto.moretags) = "venice:mandatory"]; // MPLS tag information (incoming)
+  types.IPAddress              tunnel_dest_ip    = 4  [(gogoproto.moretags) = "venice:mandatory"]; // Tunnel/outer dest. ip-address (outgoing)
+  types.MplsTag                mpls_tag          = 5  [(gogoproto.moretags) = "venice:mandatory"]; // MPLS tag information (outgoing)
+  types.Address                source_gw         = 6  [(gogoproto.moretags) = "venice:mandatory"]; // Source gateway ip-address (can be prefix or range)
+  uint32                       ingress_bw        = 7  [(gogoproto.moretags) = "venice:mandatory"]; // Ingress BW (in KBytes/sec)
+  uint32                       egress_bw         = 8  [(gogoproto.moretags) = "venice:mandatory"]; // Egress BW (in KBytes/sec)
+  fixed64                      gw_mac_da         = 9  [(gogoproto.moretags) = "venice:mandatory"]; // Dest. MAC Address of the gateway
+  string                       lif_name          = 10 [(gogoproto.moretags) = "venice:mandatory"]; // LIF's name
 }
 
 message IfTunnelInfo {
