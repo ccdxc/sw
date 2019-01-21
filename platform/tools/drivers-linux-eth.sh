@@ -69,7 +69,7 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude=".tmp_versions/" \
   "$DRIVERS_SRC/eth/" "$GEN_DIR/drivers/eth"
 
-cp "$DRIVERS_SRC/makefile" "$GEN_DIR/drivers/"
+cp "$DRIVERS_SRC/Makefile" "$GEN_DIR/drivers/"
 
 rsync -r --copy-links \
   --exclude=".git/" \
