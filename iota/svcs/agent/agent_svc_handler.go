@@ -127,6 +127,10 @@ func (agent *Service) SaveNode(ctx context.Context, req *iota.Node) (*iota.Node,
 		wloadGob := wloadsGobFile(agent.node.NodeName())
 		msgs := [][]byte{}
 		for _, wloadMsg := range workloadMsgs {
+                        if wloadMsg == nil {
+                            continue
+                        }
+                        agent.logger.Printf(" Workload msg %v\n", wloadMsg)
 			msg, _ := wloadMsg.Marshal()
 			msgs = append(msgs, msg)
 		}
@@ -160,10 +164,9 @@ func (agent *Service) reloadWorkloads(ctx context.Context, req *iota.Node) error
 		}
 	}
 	//Add workloads
-	for _, wload := range wloads {
-		if resp, err := agent.AddWorkload(ctx, wload); err != nil || resp.GetWorkloadStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK {
-			return err
-		}
+	wloadMsg := &iota.WorkloadMsg{Workloads: wloads}
+	if resp, err := agent.AddWorkloads(ctx, wloadMsg); err != nil || resp.GetApiResponse().GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
+		return err
 	}
 
 	return nil
@@ -226,17 +229,17 @@ func (agent *Service) DeleteNode(ctx context.Context, in *iota.Node) (*iota.Node
 }
 
 // AddWorkload brings up a workload type on a given node
-func (agent *Service) AddWorkload(ctx context.Context, in *iota.Workload) (*iota.Workload, error) {
+func (agent *Service) AddWorkloads(ctx context.Context, in *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 
 	/* Check if the node running an instance to add a workload */
-	agent.logger.Printf("Received Add workload : %v", in)
-	if agent.node == nil || agent.node.NodeName() != in.GetNodeName() {
+	agent.logger.Printf("Received Add workloads : %v", in)
+	if agent.node == nil {
 		msg := fmt.Sprintf("Invalid workload add request received")
 		agent.logger.Error(msg)
-		return &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
+		return &iota.WorkloadMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
 	}
 
-	resp, err := agent.node.AddWorkload(in)
+	resp, err := agent.node.AddWorkloads(in)
 
 	if err != nil {
 

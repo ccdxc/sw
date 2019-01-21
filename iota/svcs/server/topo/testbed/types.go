@@ -16,7 +16,7 @@ type TestNode struct {
 	AgentClient  iota.IotaAgentApiClient
 	TriggerInfo  []*iota.TriggerMsg
 	TriggerResp  []*iota.TriggerMsg
-	WorkloadInfo iota.WorkloadMsg
-	WorkloadResp iota.WorkloadMsg
+	WorkloadInfo *iota.WorkloadMsg
+	WorkloadResp *iota.WorkloadMsg
 	Os           iota.TestBedNodeOs
 }

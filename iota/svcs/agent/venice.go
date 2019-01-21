@@ -96,9 +96,9 @@ func (venice *veniceNode) Init(in *iota.Node) (*iota.Node, error) {
 }
 
 // AddWorkload brings up a workload type on a given node
-func (venice *veniceNode) AddWorkload(*iota.Workload) (*iota.Workload, error) {
+func (venice *veniceNode) AddWorkloads(*iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	venice.logger.Println("Add workload on venice not supported.")
-	return &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
+	return &iota.WorkloadMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 }
 
 // DeleteWorkload deletes a given workload

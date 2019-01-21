@@ -20,7 +20,7 @@ service IotaAgentApi {
     rpc DeleteNode (Node) returns (Node) {};
 
     // AddWorkloads brings up a workload type on a given node
-    rpc AddWorkload (Workload) returns (Workload) {};
+    rpc AddWorkloads (WorkloadMsg) returns (WorkloadMsg) {};
 
     // DeleteWorkloads deletes a given workload
     rpc DeleteWorkload (Workload) returns (Workload) {};

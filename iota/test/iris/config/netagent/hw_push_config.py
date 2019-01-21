@@ -129,6 +129,7 @@ def __add_config_worklads(req, target_node = None):
         else:
             assert(0)
         wl_msg.interface = host_if
+        wl_msg.parent_interface = host_if
 
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
@@ -372,6 +373,7 @@ def AddNaplesWorkloads(target_node=None):
         wl_msg.ip_prefix = wl.ip_address + "/" + '24'
         #wl_msg.ipv6_prefix = __prepare_ipv6_address_str_for_endpoint(ep)
         wl_msg.interface = wl.interface
+        wl_msg.parent_interface = wl.interface
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
         wl_msg.workload_type  = topo_svc.WorkloadType.Value('WORKLOAD_TYPE_BARE_METAL')
     if len(req.workloads):

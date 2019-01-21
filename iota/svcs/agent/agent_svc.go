@@ -27,7 +27,7 @@ type IotaNode interface {
 	Destroy(*iota.Node) (*iota.Node, error)
 
 	// AddWorkloads brings up a workload type on a given node
-	AddWorkload(*iota.Workload) (*iota.Workload, error)
+	AddWorkloads(*iota.WorkloadMsg) (*iota.WorkloadMsg, error)
 
 	// DeleteWorkloads deletes a given workload
 	DeleteWorkload(*iota.Workload) (*iota.Workload, error)

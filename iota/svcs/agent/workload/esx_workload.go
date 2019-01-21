@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -38,24 +37,20 @@ type vmESXWorkload struct {
 
 func (vm *vmESXWorkload) downloadDataVMImage(image string) (string, error) {
 
-	dataVMDir := constants.DataVMImageDirectory + "/" + image
-	imageName := image + ".ova"
-	cwd, _ := os.Getwd()
+	dataVMDir := constants.DataVMImageDirectory + "/" + image + "_" + vm.Name()
+	dstImage := dataVMDir + "/" + image + ".ova"
 	mkdir := []string{"mkdir", "-p", dataVMDir}
 	if stdout, err := exec.Command(mkdir[0], mkdir[1:]...).CombinedOutput(); err != nil {
 		return "", errors.Wrap(err, string(stdout))
 	}
 
-	os.Chdir(dataVMDir)
-	defer os.Chdir(cwd)
-
-	buildIt := []string{"/usr/local/bin/buildit", "-t", constants.BuildItURL, "image", "pull", "-o", imageName, image}
+	buildIt := []string{"/usr/local/bin/buildit", "-t", constants.BuildItURL, "image", "pull", "-o", dstImage, image}
 	if stdout, err := exec.Command(buildIt[0], buildIt[1:]...).CombinedOutput(); err != nil {
 		return "", errors.Wrap(err, string(stdout))
 	}
 
 	vm.logger.Info("Download complete for VM image")
-	tarCmd := []string{"tar", "-xvf", imageName}
+	tarCmd := []string{"tar", "-xvf", dstImage, "-C", dataVMDir}
 	if stdout, err := exec.Command(tarCmd[0], tarCmd[1:]...).CombinedOutput(); err != nil {
 		return "", errors.Wrap(err, string(stdout))
 	}

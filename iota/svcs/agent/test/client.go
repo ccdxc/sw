@@ -243,8 +243,9 @@ var workloadCmd = &cobra.Command{
 		}
 
 		if add {
-			resp, _ := agentClient.AddWorkload(context.Background(), workload)
-			if resp.GetWorkloadStatus().GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
+			workloadMsg := &iota.WorkloadMsg{WorkloadOp: iota.Op_ADD, Workloads: []*iota.Workload{workload}}
+			resp, _ := agentClient.AddWorkloads(context.Background(), workloadMsg)
+			if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 				return errors.New("Add workload failed")
 			}
 		} else {
