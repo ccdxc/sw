@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "include/sdk/lock.hpp"
 #include "include/sdk/base.hpp"
 #include "include/sdk/mem.hpp"
 #include "include/sdk/table.hpp"
@@ -59,6 +60,7 @@ private:
     mem_hash_api_stats api_stats_;
     mem_hash_table_stats table_stats_;
     mem_hash_txn txn_;
+    sdk_spinlock_t slock_;
 
 private:
     sdk_ret_t init_(mem_hash_factory_params_t *params);
@@ -71,9 +73,11 @@ public:
     static void destroy(mem_hash *memhash);
 
     mem_hash() {
+        SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     }
 
     ~mem_hash() {
+        SDK_SPINLOCK_DESTROY(&slock_);
     }
 
     sdk_ret_t txn_start();
