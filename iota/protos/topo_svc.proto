@@ -293,16 +293,19 @@ message Workload {
     // Interface to which workload needs to be attached.
     string interface                        = 9;
 
-    InterfaceType interface_type            = 10;
+    // Parent Interface for classic workload
+    string parent_interface                 = 10;
+
+    InterfaceType interface_type            = 11;
 
     // Interface to which workload needs to be attached.
-    uint32 pinned_port                      = 11;
+    uint32 pinned_port                      = 12;
 
     // uplink vlan for the traffic going outside node.
-    uint32 uplink_vlan                      = 12;
+    uint32 uplink_vlan                      = 13;
 
     // Workload Status
-    IotaAPIResponse workload_status         = 13;
+    IotaAPIResponse workload_status         = 14;
 }
 
 enum TriggerOp {

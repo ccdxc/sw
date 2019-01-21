@@ -103,20 +103,14 @@ def AddWorkloads(req, skip_store=False):
             store.AddWorkloads(resp)
     return resp
 
-def DeleteWorkloads(req):
+def DeleteWorkloads(req, skip_store=False):
     global gl_topo_svc_stub
     Logger.debug("Delete Workloads:")
     resp = __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
     if IsApiResponseOk(resp):
-        Logger.debug("Delete Workloads:")
+        if not skip_store:
+            store.DeleteWorkloads(req)
     return resp
-
-
-def DeleteWorkloads(req):
-    store.DeleteWorkloads(req)
-    global gl_topo_svc_stub
-    Logger.debug("Delete Workloads:")
-    return __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
 
 def GetWorkloads():
     return store.GetWorkloads()

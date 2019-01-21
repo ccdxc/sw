@@ -242,7 +242,6 @@ private:
 
     boost::property_tree::ptree spec;
     std::map<uint64_t, Device*> devices; // lif -> device
-    // std::map<uint64_t, Uplink*> uplinks; // uplink_id -> Uplink
 
     // Service Lif Info
     hal_lif_info_t hal_lif_info_;

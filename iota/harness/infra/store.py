@@ -36,6 +36,8 @@ class Workload:
     def __init__(self, msg=None):
         if msg:
             self.workload_name = msg.workload_name
+            self.workload_type = msg.workload_type
+            self.workload_image = msg.workload_image
             self.node_name = msg.node_name
             self.encap_vlan = msg.encap_vlan
             self.ip_prefix = msg.ip_prefix
@@ -44,6 +46,7 @@ class Workload:
             self.ipv6_address = msg.ipv6_prefix.split('/')[0]
             self.mac_address = msg.mac_address
             self.interface = msg.interface
+            self.parent_interface = msg.parent_interface
             self.interface_type = msg.interface_type
             self.pinned_port = msg.pinned_port
             self.uplink_vlan = msg.uplink_vlan
