@@ -33,7 +33,7 @@ func main() {
 	var (
 		hostIf          = flag.String("hostif", "lo", "Host facing interface")
 		agentDbPath     = flag.String("agentdb", "/tmp/naples-netagent.db", "Agent Database file")
-		npmURL          = flag.String("npm", "master.local:"+globals.NpmRPCPort, "NPM RPC server URL")
+		npmURL          = flag.String("npm", globals.Npm, "NPM RPC server URL")
 		tpmURL          = flag.String("tpm", "master.local:"+globals.TpmRPCPort, "TPM RPC server URL")
 		disableTSA      = flag.Bool("disabletsa", false, " Disable Telemetry and Troubleshooting agents")
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
