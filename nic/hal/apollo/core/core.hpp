@@ -9,6 +9,7 @@
 #if !defined (__OCI_CORE_HPP__)
 #define __OCI_CORE_HPP__
 
+#include <signal.h>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
 
@@ -26,6 +27,9 @@ enum {
 sdk_ret_t thread_spawn(oci_state *state);
 sdk_ret_t parse_global_config(string cfg_file, oci_state *state);
 sdk_ret_t parse_pipeline_config(const char *cfgfile, oci_state *state);
+
+typedef void (*sig_handler_t)(int sig, siginfo_t *info, void *ptr);
+sdk_ret_t sig_init(int signal, sig_handler_t sig_handler);
 
 }    // namespace core
 

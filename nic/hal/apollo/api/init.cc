@@ -28,11 +28,12 @@ namespace api {
 #define JP4_PRGM        "p4_program"
 #define JRXDMA_PRGM     "rxdma_program"
 #define JTXDMA_PRGM     "txdma_program"
+
 /**
  * @brief    initialize all common global asic configuration parameters
- * @param[in]    pointer to asic configuration instance
+ * @param[in] asic_cfg   pointer to asic configuration instance
  */
-static void
+static inline void
 asic_global_config_init (asic_cfg_t *asic_cfg)
 {
     asic_cfg->asic_type = sdk::types::asic_type_t::SDK_ASIC_TYPE_CAPRI;
@@ -50,9 +51,9 @@ asic_global_config_init (asic_cfg_t *asic_cfg)
 
 /**
  * @brief    initialize all the p4 program specific configuration parameters
- * @param[in]    pointer to asic configuration instance
+ * @param[in] asic_cfg   pointer to asic configuration instance
  */
-static void
+static inline void
 asic_program_config_init (asic_cfg_t *asic_cfg)
 {
     asic_cfg->num_pgm_cfgs = 3;
@@ -64,7 +65,7 @@ asic_program_config_init (asic_cfg_t *asic_cfg)
 
 /**
  * @brief    initialize all the asm specific configuration parameters
- * @param[in]    pointer to asic configuration instance
+ * @param[in] asic_cfg   pointer to asic configuration instance
  */
 // TODO: @cruzj, we need to get apollo out of this, so this is generic and
 //       can be pushed down to impl_base::init() along with
@@ -92,9 +93,9 @@ asic_asm_config_init (asic_cfg_t *asic_cfg)
 
 /**
  * @brief    initialize all the asic configuration parameters
- * @param[in]    pointer to asic configuration instance
+ * @param[in] asic_cfg   pointer to asic configuration instance
  */
-static void
+static inline void
 asic_config_init (asic_cfg_t *asic_cfg)
 {
     asic_global_config_init(asic_cfg);
@@ -102,7 +103,12 @@ asic_config_init (asic_cfg_t *asic_cfg)
     asic_asm_config_init(asic_cfg);
 }
 
-static sdk_ret_t
+/**
+ * @brief    initialize linkmgr to manage ports
+ * @param[in] catalog    pointer to asic catalog instance
+ * @param[in] cfg_path   path to the global configuration file
+ */
+static inline sdk_ret_t
 linkmgr_init (catalog *catalog, const char *cfg_path)
 {
     linkmgr_cfg_t    cfg;
@@ -121,6 +127,18 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
     sdk::linkmgr::linkmgr_start();
 
     return SDK_RET_OK;
+}
+
+/**
+ * @brief    handle the signal
+ * @param[in] sig   signal caught
+ * @param[in] info  detailed information about signal
+ * @param[in] ptr   pointer to context passed during signal installation, if any
+ */
+static void
+sig_handler (int sig, siginfo_t *info, void *ptr)
+{
+    OCI_TRACE_DEBUG("Caught signal %d", sig);
 }
 
 }    // namespace api
@@ -175,6 +193,10 @@ oci_init (oci_init_params_t *params)
     /**< trigger linkmgr initialization */
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
     SDK_ASSERT(api::create_ports() == SDK_RET_OK);
+
+    /**< initialize all the signal handlers */
+    core::sig_init(SIGUSR1, api::sig_handler);
+
     return SDK_RET_OK;
 }
 

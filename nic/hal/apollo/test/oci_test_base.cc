@@ -25,7 +25,6 @@ trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
-    printf(logbuf);
     va_end(args);
 
     switch (trace_level) {
