@@ -58,6 +58,7 @@ req_rx_sqcb1_process:
 
     // is this a new packet or recirc packet
     seq            c1, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, 0 // Branch Delay Slot
+    nop
 process_req_rx:
     bcf            [!c1], recirc_pkt
     cmov           TOKEN_ID, c1, d.token_id, CAPRI_APP_DATA_RECIRC_TOKEN_ID // BD Slot
