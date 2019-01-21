@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 
     sdk::lib::logger::init(diag_logger);
 
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
   
     sprintf(diag_banner, "%s%s result", argv[1], (strcmp(argv[1], "post") ? "-diags" : ""));
 

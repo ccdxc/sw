@@ -52,9 +52,9 @@ sdk_ret_t
 catalog::populate_asic(ptree::value_type &asic, catalog_asic_t *asic_p)
 {
     if (asic.second.get<std::string>("name", "") ==  "capri") {
-        asic_p->type = sdk::types::asic_type_t::SDK_ASIC_TYPE_CAPRI;
+        asic_p->type = asic_type_t::SDK_ASIC_TYPE_CAPRI;
     } else {
-        asic_p->type = sdk::types::asic_type_t::SDK_ASIC_TYPE_NONE;
+        asic_p->type = asic_type_t::SDK_ASIC_TYPE_NONE;
     }
 
     asic_p->max_ports = asic.second.get<uint32_t>("max_ports", 0);

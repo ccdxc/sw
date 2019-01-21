@@ -50,9 +50,9 @@ namespace pd {
 #define BARCO_MPP3_QSTATS_HBM_TABLE_OFFSET  (BARCO_MPP2_CI_HBM_TABLE_OFFSET + BARCO_RING_SHADOW_CI_SIZE)
 
 
-hal_ret_t capri_barco_rings_init(sdk::types::platform_type_t platform);
+hal_ret_t capri_barco_rings_init(platform_type_t platform);
 hal_ret_t capri_barco_res_allocator_init(void);
-hal_ret_t capri_barco_crypto_init(sdk::types::platform_type_t platform);
+hal_ret_t capri_barco_crypto_init(platform_type_t platform);
 hal_ret_t capri_barco_init_key(uint32_t key_idx, uint64_t key_addr);
 hal_ret_t capri_barco_setup_key(uint32_t key_idx, types::CryptoKeyType key_type, uint8_t *key,
         uint32_t key_size);

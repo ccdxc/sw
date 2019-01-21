@@ -11,7 +11,7 @@
 
 using sdk::SDK_RET_OK;
 using boost::property_tree::ptree;
-using sdk::types::platform_type_t;
+using sdk::platform::platform_type_t;
 
 namespace linkmgr {
     extern hal_ret_t linkmgr_parse_cfg(const char *cfgfile,

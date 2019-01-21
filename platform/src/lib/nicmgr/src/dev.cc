@@ -284,10 +284,10 @@ DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mo
     init_done = false;
     instance = this;
 #ifdef __x86_64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) ==
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
                sdk::lib::PAL_RET_OK);
 #elif __aarch64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) ==
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
                sdk::lib::PAL_RET_OK);
 #endif
     this->fwd_mode = fwd_mode;

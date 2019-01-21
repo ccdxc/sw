@@ -12,9 +12,9 @@ main(int argc, char *argv[])
 {
     // initialize the pal
 #ifdef __x86_64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_MOCK) == sdk::lib::PAL_RET_OK);
 #elif __aarch64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
 #endif
 
     std::cout << "QSFP port 1 : " << sdk::lib::pal_is_qsfp_port_present(1) << std::endl;

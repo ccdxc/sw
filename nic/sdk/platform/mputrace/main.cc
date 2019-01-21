@@ -401,10 +401,10 @@ main(int argc, char *argv[])
     }
 
 #ifdef __x86_64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) ==
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
            sdk::lib::PAL_RET_OK);
 #elif __aarch64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HW) ==
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW) ==
            sdk::lib::PAL_RET_OK);
 #endif
 

@@ -69,7 +69,7 @@ debug_hbm_read_write (uint64_t start_addr, uint32_t num_bytes, bool read)
 
 int main (int argc, char **argv)
 {
-    sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HW);
+    sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
     uint64_t addr = 0x0;
     uint64_t data = 0x0;
     uint8_t data8[32];

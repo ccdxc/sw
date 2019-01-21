@@ -331,7 +331,7 @@ TEST_F(hello_test, test1) {
     hal::utils::trace_init("hal", 0, true, "hal.log",
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
                            ::utils::trace_debug);
-    ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
+    ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM);
     ASSERT_EQ(ret, HAL_RET_OK);
 
     cfg.num_pgm_cfgs = 1;

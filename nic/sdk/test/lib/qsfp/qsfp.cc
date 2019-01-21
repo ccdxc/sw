@@ -36,9 +36,9 @@ TEST_F(qsfp_test, pal_hw_qsfp_write) {
     uint8_t i;
     // initialize the pal
 #ifdef __x86_64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
 #elif __aarch64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
 #endif
 
     qsfp_buffer = (uint8_t*)malloc(QSFP_READ_SIZE);
@@ -96,9 +96,9 @@ TEST_F(qsfp_test, pal_hw_qsfp_read) {
     uint8_t i;
     // initialize the pal
 #ifdef __x86_64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);
 #elif __aarch64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
 #endif
     qsfp_buffer = (uint8_t*)malloc(QSFP_READ_SIZE);
     if (qsfp_buffer == NULL) {

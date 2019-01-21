@@ -5,6 +5,7 @@
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/types.hpp"
+#include "include/sdk/platform.hpp"
 #include "platform/pal/include/pal_types.h"
 
 namespace sdk {
@@ -71,12 +72,12 @@ typedef struct pal_rwvectors_s {
 } __PACK__ pal_rwvectors_t;
 
 typedef struct pal_info_s {
-    sdk::types::platform_type_t platform_type;
+    platform_type_t platform_type;
     pal_rwvectors_t             rwvecs;
 } __PACK__ pal_info_t;
 extern pal_info_t   gl_pal_info;
 
-pal_ret_t pal_init(sdk::types::platform_type_t platform_type);
+pal_ret_t pal_init(platform_type_t platform_type);
 
 static inline pal_ret_t
 pal_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words = 1)

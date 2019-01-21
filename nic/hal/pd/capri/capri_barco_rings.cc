@@ -1759,7 +1759,7 @@ hal_ret_t capri_barco_ring_consume(types::BarcoRings barco_ring_type)
 }
 
 
-hal_ret_t capri_barco_rings_init(sdk::types::platform_type_t platform)
+hal_ret_t capri_barco_rings_init(platform_type_t platform)
 {
     uint16_t        idx;
     uint64_t        opa_tag_addr = 0;

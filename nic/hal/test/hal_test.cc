@@ -3152,7 +3152,7 @@ main (int argc, char** argv)
 
     bool qos_class_get = false;
 
-    sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK);
+    sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_MOCK);
 
     if (argc > 1) {
         if (!strcmp(argv[1], "port_test")) {

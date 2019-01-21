@@ -815,9 +815,9 @@ TEST_F(apollo_test, test1) {
     printf("Connecting to ASIC\n");
     sdk::lib::logger::init(sdk_trace_cb);
 #ifdef HW
-    ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HW);
+    ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
 #else
-    ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
+    ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM);
 #endif
 
     cfg.num_pgm_cfgs = 3;

@@ -31,7 +31,7 @@ typedef struct asic_asm_cfg_s {
 } asic_asm_cfg_t;
 
 typedef struct asic_cfg_s {
-    sdk::types::asic_type_t          asic_type;
+    sdk::platform::asic_type_t          asic_type;
     std::string          loader_info_file;
     std::string          default_config_dir;    // TODO: vasanth, pls. remove this up eventually
     uint32_t             admin_cos;

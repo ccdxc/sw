@@ -85,21 +85,6 @@ enum class port_type_t {
     PORT_TYPE_MGMT    = 2,
 };
 
-enum class platform_type_t {
-    PLATFORM_TYPE_NONE = 0,
-    PLATFORM_TYPE_SIM  = 1,
-    PLATFORM_TYPE_HAPS = 2,
-    PLATFORM_TYPE_HW   = 3,
-    PLATFORM_TYPE_MOCK = 4,
-    PLATFORM_TYPE_ZEBU = 5,
-    PLATFORM_TYPE_RTL = 6,
-};
-
-enum class asic_type_t {
-    SDK_ASIC_TYPE_NONE,
-    SDK_ASIC_TYPE_CAPRI,
-};
-
 enum class port_admin_state_t {
     PORT_ADMIN_STATE_NONE    = 0,
     PORT_ADMIN_STATE_UP      = 1,
@@ -195,7 +180,6 @@ using sdk::types::port_speed_t;
 using sdk::types::port_type_t;
 using sdk::types::port_admin_state_t;
 using sdk::types::port_oper_status_t;
-using sdk::types::platform_type_t;
 using sdk::types::port_fec_type_t;
 using sdk::types::port_pause_type_t;
 using sdk::types::port_event_t;
@@ -208,7 +192,6 @@ using sdk::types::xcvr_event_info_t;
 using sdk::types::port_an_args_t;
 using sdk::types::port_link_sm_t;
 using sdk::types::port_loopback_mode_t;
-using sdk::types::asic_type_t;
 
 #endif    // __SDK_TYPES_HPP__
 

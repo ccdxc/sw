@@ -720,7 +720,7 @@ public:
         return (cfg_db_->register_slab(slab_id, slab_args));
     }
 
-    sdk::types::platform_type_t platform_type() { return platform_; }
+    platform_type_t platform_type() { return platform_; }
 
 private:
     // following come from shared memory or non-linux HBM memory
@@ -732,7 +732,7 @@ private:
     shmmgr               *mmgr_;
     sdk::lib::catalog    *catalog_;
     hal_obj_meta         **obj_meta_;
-    sdk::types::platform_type_t platform_;
+    platform_type_t platform_;
 
 private:
     void cleanup(void);

@@ -25,7 +25,7 @@ protected:
 
    // Will be called at the beginning of all test cases in this class
    static void SetUpTestCase() {
-	   sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
+	   sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM);
    }
 
 };

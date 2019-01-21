@@ -30,7 +30,7 @@ void DelphiMetricsInit_cgo() {
     // initialize pal
 #ifdef __x86_64__
 #elif __aarch64__
-    assert(sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
+    assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
 #endif
 
 }

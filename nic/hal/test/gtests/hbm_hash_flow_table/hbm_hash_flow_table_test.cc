@@ -1436,7 +1436,7 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
 
     SDK_TRACE_DEBUG("Starting Main ... \n");
-    sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_MOCK);
+    sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_MOCK);
 
     p4pd_cfg_t                 p4pd_cfg = {
         .table_map_cfg_file  = "iris/capri_p4_table_map.json",

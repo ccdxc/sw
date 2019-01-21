@@ -11,7 +11,7 @@ namespace lib {
 pal_info_t   gl_pal_info;
 
 static pal_ret_t
-pal_init_cfg (sdk::types::platform_type_t platform_type)
+pal_init_cfg (platform_type_t platform_type)
 {
     memset(&gl_pal_info, 0, sizeof(gl_pal_info));
     gl_pal_info.platform_type = platform_type;
@@ -19,24 +19,24 @@ pal_init_cfg (sdk::types::platform_type_t platform_type)
 }
 
 pal_ret_t
-pal_init (sdk::types::platform_type_t platform_type)
+pal_init (platform_type_t platform_type)
 {
     if(pal_init_cfg(platform_type) != PAL_RET_OK) {
 	return PAL_RET_NOK;
     }
 
     switch(platform_type) {
-    case sdk::types::platform_type_t::PLATFORM_TYPE_HW:
-    case sdk::types::platform_type_t::PLATFORM_TYPE_HAPS:
+    case platform_type_t::PLATFORM_TYPE_HW:
+    case platform_type_t::PLATFORM_TYPE_HAPS:
         SDK_TRACE_DEBUG("Initializing PAL in HW mode\n");
         return pal_hw_init();
 
-    case sdk::types::platform_type_t::PLATFORM_TYPE_SIM:
-    case sdk::types::platform_type_t::PLATFORM_TYPE_ZEBU:
+    case platform_type_t::PLATFORM_TYPE_SIM:
+    case platform_type_t::PLATFORM_TYPE_ZEBU:
         SDK_TRACE_DEBUG("Initializing PAL in SIM mode\n");
         return pal_init_sim();
 
-    case sdk::types::platform_type_t::PLATFORM_TYPE_MOCK:
+    case platform_type_t::PLATFORM_TYPE_MOCK:
         SDK_TRACE_DEBUG("Initializing PAL in MOCK mode\n");
         return pal_mock_init();
 

@@ -485,7 +485,7 @@ TEST_F(apollo_test, test1) {
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
                            ::utils::trace_debug);
 
-    ret = sdk::lib::pal_init(sdk::types::platform_type_t::PLATFORM_TYPE_SIM);
+    ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM);
     ASSERT_NE(ret, -1);
     ret = capri_load_config((char *)"obj/apollo/pgm_bin");
     ASSERT_NE(ret, -1);

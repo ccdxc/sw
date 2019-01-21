@@ -47,7 +47,7 @@ typedef struct capri_cfg_s {
     std::string                 cfg_path;
     sdk::lib::catalog           *catalog;
     mpartition                  *mempartition;
-    sdk::types::platform_type_t platform;
+    platform_type_t platform;
     sdk::asic::completion_cb_t completion_func;
 } capri_cfg_t;
 
