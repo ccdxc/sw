@@ -22,7 +22,7 @@ namespace api {
  */
 // TODO: we will handle the case when epoch rollsover later !!
 static inline uint8_t
-pick_older_epoch_idx(uint32_t epoch1, uint32_t epoch2)
+pick_older_epoch_idx (uint32_t epoch1, uint32_t epoch2)
 {
     if (epoch1 == OCI_EPOCH_INVALID) {
         return 0;
