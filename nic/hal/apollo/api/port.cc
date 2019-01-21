@@ -5,14 +5,16 @@
  *
  * @brief   This file handles port operations
  */
-#include "nic/sdk/linkmgr/linkmgr.hpp"
+
 #include "nic/sdk/linkmgr/port.hpp"
+#include "nic/hal/apollo/api/port.hpp"
 #include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/core/oci_state.hpp"
 
 namespace api {
 
-void *g_port_store[8];
+/**< port handles indexed by the front panel port number (starting from 1) */
+void *g_port_store[OCI_MAX_PORT + 1];
 
 /**
  * @brief        create a port with the given configuration information
@@ -89,14 +91,61 @@ create_ports (void)
 {
     uint32_t       num_fp_ports;
     port_args_t    port_args;
-    uint32_t       port_num = 1;
 
     num_fp_ports = g_oci_state.catalogue()->num_fp_ports();
-    for (uint32_t fp_port = 1; fp_port <= num_fp_ports; fp_port++) {
+    for (uint32_t fp_port = 1, port_num = 1;
+         fp_port <= num_fp_ports; fp_port++) {
         memset(&port_args, 0, sizeof(port_args));
         populate_port_info(fp_port, port_num, &port_args);
         create_port(&port_args);
         port_num += g_oci_state.catalogue()->num_lanes_fp(fp_port);
+    }
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    get port information based on port number
+ * @param[in]    fp_port    front panel port number or 0 for all ports
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+port_get (uint32_t fp_port, port_cb_t port_cb) {
+    sdk_ret_t      ret;
+    port_args_t    port_info;
+
+    if (fp_port == 0) {
+        /**< iterate over all ports */
+        for (uint32_t fp_port = 1;
+             fp_port <= g_oci_state.catalogue()->num_fp_ports(); fp_port++) {
+            memset(&port_info, 0, sizeof(port_info));
+            if (g_port_store[fp_port] == NULL)  {
+                OCI_TRACE_ERR("Port %u not created, skipping", fp_port);
+                continue;
+            }
+            ret = sdk::linkmgr::port_get(g_port_store[fp_port], &port_info);
+            if (ret != sdk::SDK_RET_OK) {
+                OCI_TRACE_ERR("Failed to get port %u info", fp_port);
+                continue;
+            }
+            /** call the per port callback for this port */
+            port_cb(&port_info);
+        }
+    } else {
+        if (fp_port > OCI_MAX_PORT) {
+            OCI_TRACE_ERR("Invalid port number %u", fp_port);
+            return SDK_RET_INVALID_ARG;
+        }
+        if (g_port_store[fp_port] == NULL)  {
+            OCI_TRACE_ERR("Port %u not created", fp_port);
+            return SDK_RET_INVALID_OP;
+        }
+        ret = sdk::linkmgr::port_get(g_port_store[fp_port], &port_info);
+        if (ret != sdk::SDK_RET_OK) {
+            OCI_TRACE_ERR("Failed to get port %u info", fp_port);
+            return ret;
+        }
+        /** call the per port callback for this port */
+        port_cb(&port_info);
     }
     return SDK_RET_OK;
 }

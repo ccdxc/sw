@@ -198,6 +198,8 @@ typedef enum sdk_status_e {
 using sdk::sdk_ret_t;
 using sdk::SDK_RET_OK;
 using sdk::SDK_RET_ERR;
+using sdk::SDK_RET_INVALID_ARG;
+using sdk::SDK_RET_INVALID_OP;
 using sdk::sdk_status_t;
 
 #endif    // __SDK_BASE_HPP__
