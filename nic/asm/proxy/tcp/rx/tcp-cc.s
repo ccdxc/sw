@@ -35,6 +35,7 @@ tcp_rx_cc_stage_start:
 
 tcp_rx_cc_stage_end:
     phvwr           p.rx2tx_extra_snd_cwnd, d.snd_cwnd
+    phvwr           p.rx2tx_extra_t_flags, d.t_flags
     CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_EN,
                         tcp_rx_fc_stage_start,
                         k.common_phv_qstate_addr,

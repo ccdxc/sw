@@ -3,21 +3,8 @@
 
 #include "proxy-constants.h"
 
-#define TCPCB_SACKED_ACKED	0x01	/* SKB ACK'd by a SACK block	*/
-#define TCPCB_SACKED_RETRANS	0x02	/* SKB retransmitted		*/
-#define TCPCB_LOST		0x04	/* SKB is lost			*/
-#define TCPCB_TAGBITS		0x07	/* All tag bits			*/
-#define TCPCB_REPAIRED		0x10	/* SKB repaired (no skb_mstamp)	*/
-#define TCPCB_EVER_RETRANS	0x80	/* Ever retransmitted frame	*/
-#define TCPCB_RETRANS		(TCPCB_SACKED_RETRANS|TCPCB_EVER_RETRANS| \
-				TCPCB_REPAIRED)
-#define IP_LEN_OFFSET 16
-#define TCP_SEQ_OFFSET 40
-
 #define MAX_ENTRIES_PER_DESC 2
 #define MAX_ENTRIES_PER_DESC_MASK 0xF
-
-#define NIC_PAGE_HDR_SIZE                    52         /* sizeof(nic_page_hdr_t) */
 
 #define NIC_BRQ_ENTRY_SIZE                   128
 #define NIC_BRQ_ENTRY_SIZE_SHIFT             7          /* for 128B */
@@ -45,96 +32,6 @@
 #define BARCO_INPUT_OPAGE_AAD                0
 #define BARCO_INPUT_OPAGE_IV                 (BARCO_INPUT_OPAGE_AAD + 16)
 #define BARCO_INPUT_OPAGE_AUTHTAG            (BARCO_INPUT_OPAGE_IV + 16)
-
-
-#define NIC_DESC_ENTRY_ADDR_OFFSET           8          /* &((nic_desc_entry_t *)0)->addr */
-#define NIC_DESC_ENTRY_OFF_OFFSET            0xc        /* &((nic_desc_entry_t *)0)->offset */
-#define NIC_DESC_ENTRY_LEN_OFFSET            0xe        /* &((nic_desc_entry_t *)0)->len */
-
-#define NIC_DESC_NUM_ENTRIES_OFFSET          0x40       /* &((nic_desc_t *)0)->num_entries */
-#define NIC_DESC_ENTRY_OFFSET(_i)            &((nic_desc_t *)0)->entry[(_i)]
-#define NIC_DESC_SCRATCH_OFFSET              0          /* &((nic_desc_t *)0)->scratch[0] */
-#define ETH_IP_TCP_HDR_SIZE                  54         /* (sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct tlshdr))*/
-#define TCPIP_HDR_SIZE                       40         /* (sizeof(struct iphdr) + sizeof(struct tlshdr)) */
-#define TCP_HDR_SIZE                         20
-#define ETHHDR_SMAC_OFFSET                   6          /* &((struct ethhdr *)0)->h_source */
-#define ETHHDR_PROTO_OFFSET                  12         /* &((struct ethhdr *)0)->h_proto */
-#define IPHDR_OFFSET                         14         /* sizeof(struct ethhdr) */
-#define ETH_P_IP                             0x0800     /* Internet Protocol packet     */
-#define ETH_P_ARP                            0x0806     /* Address Resolution packet    */
-
-#define SCHED_PENDING_BIT_SHIFT              2
-#define SCHED_PENDING_BIT_BASE               0xabab0000 
-
-#define RCV_MSS_SHFT_BASE                    1
-
-/* Standard well-defined IP protocols.  */
-
-#define  IPPROTO_IP  0               /* Dummy protocol for TCP               */
-
-#define  IPPROTO_ICMP 1             /* Internet Control Message Protocol    */
-
-#define  IPPROTO_IGMP 2             /* Internet Group Management Protocol   */
-
-#define  IPPROTO_IPIP 4             /* IPIP tunnels (older KA9Q tunnels use 94) */
-
-#define  IPPROTO_TCP  6              /* Transmission Control Protocol        */
-
-#define  IPPROTO_EGP  8              /* Exterior Gateway Protocol            */
-
-#define  IPPROTO_PUP 12             /* PUP protocol                         */
-
-#define  IPPROTO_UDP 17             /* User Datagram Protocol               */
-
-#define  IPPROTO_IDP 22             /* XNS IDP protocol                     */
-
-#define  IPPROTO_TP 29              /* SO Transport Protocol Class 4        */
-
-#define  IPPROTO_DCCP 33            /* Datagram Congestion Control Protocol */
-
-#define  IPPROTO_IPV6 41            /* IPv6-in-IPv4 tunnelling              */
-
-#define  IPPROTO_RSVP 46            /* RSVP Protocol                        */
-
-#define  IPPROTO_GRE 47             /* Cisco GRE tunnels (rfc 1701,1702)    */
-
-#define  IPPROTO_ESP 50             /* Encapsulation Security Payload protocol */
-
-#define  IPPROTO_AH 51              /* Authentication Header protocol       */
-
-#define  IPPROTO_MTP 92             /* Multicast Transport Protocol         */
-
-#define  IPPROTO_BEETPH  94          /* IP option pseudo header for BEET     */
-
-#define  IPPROTO_ENCAP  98           /* Encapsulation Header                 */
-
-#define  IPPROTO_PIM 103            /* Protocol Independent Multicast       */
-
-#define  IPPROTO_COMP 108           /* Compression Header Protocol          */
-
-#define  IPPROTO_SCTP  132           /* Stream Control Transport Protocol    */
-
-#define  IPPROTO_UDPLITE  136        /* UDP-Lite (RFC 3828)                  */
-
-#define  IPPROTO_MPLS 137           /* MPLS in IP (RFC 4023)                */
-
-#define  IPPROTO_RAW  255            /* Raw IP packets                       */
-
-
-
-#define PAGE_CELL_SIZE 32 /* A page is divided into 32B cells */
-#define PAGE_CELL_SIZE_SHFT 5 
-
-#define CACHE_LINE_SIZE 64
-#define NIC_PAGE_SIZE (128 * CACHE_LINE_SIZE)
-#define NIC_PAGE_SIZE_SHFT 13
-#define NIC_PAGE_HEADROOM (17 * CACHE_LINE_SIZE)
-#define NIC_CPU_HDR_SIZE 328
-#define NIC_CPU_HDR_SIZE_BYTES 41 /* NIC_CPU_HDR_SIZE/8 */
-#define NIC_CPU_HDR_OFFSET 1047 /* (NIC_PAGE_HEADROOM - NIC_CPU_HDR_SIZE_BYTES) */
-
-
-#define ETH_ALEN 6
 
 #define ENC_FLOW_ID_MASK 0x8000
 

@@ -15,8 +15,6 @@ struct phv_ p;
 struct common_p4plus_stage0_app_header_table_k_ k;
 struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 
-#define COMMA     ,
-
 %%
 
     .param          tcp_rx_read_tls_stage0_start

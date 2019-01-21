@@ -37,12 +37,11 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
         rcv_wup                         : 32                    ;\
         packets_out                     : 16                    ;\
-        ecn_flags_tx                    : 8                     ;\
         quick_acks_decr                 : 4                     ;\
         fin_sent                        : 1                     ;\
         rst_sent                        : 1                     ;\
         rto_event                       : 1                     ;\
-        pad1_tx2rx                      : 1                     ;\
+        pad1_tx2rx                      : 9                     ;\
 
 // offset 0 (TCP_TCB_RX2TX_EXTRA_SND_CWND_OFFSET)
 #define RX2TX_SHARED_EXTRA_STATE \
@@ -55,11 +54,12 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         rcv_tsval                       : TS_WIDTH              ;\
         rcv_mss                         : 16                    ;\
         cc_flags                        : 16                    ;\
+        t_flags                         : 8                     ;\
         state                           : 8                     ;\
         pending_dup_ack_send            : 1                     ;\
         pending_challenge_ack_send      : 1                     ;\
         rx2tx_end_marker                : 6                     ;\
-        pad_rx2tx_extra                 : 288                   ;\
+        pad_rx2tx_extra                 : 280                   ;\
 
 #define TCB_RETX_SHARED_STATE \
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\

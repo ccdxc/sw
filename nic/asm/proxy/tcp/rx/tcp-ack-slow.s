@@ -20,7 +20,6 @@ struct s2_t0_tcp_rx_tcp_ack_d d;
     .param          tcp_rx_rtt_start
 
 #define c_est c6
-#define c_win_upd c5
 #define c_snd_una_advanced c4
 
 tcp_ack_slow:
@@ -30,7 +29,7 @@ tcp_ack_slow:
 #endif
 
     /*
-     * RTO event occurred in Tx pipeline. Handle that first
+     * if RTO event occurred in Tx pipeline. Handle that first
      */
     seq             c1, k.s1_s2s_cc_rto_signal, 1
     bal.c1          r7, tcp_ack_rto_event
@@ -41,15 +40,25 @@ tcp_ack_slow:
      */
     sne             c_snd_una_advanced, k.s1_s2s_ack_seq, d.snd_una
     smneb           c2, k.to_s2_flag, FLAG_DATA, FLAG_DATA
+    seq             c5, d.snd_wnd, k.to_s2_window
     /*
      * RFC 5681: consider it as a dup_ack only if window
      * has not changed
      */
 
-    bcf             [c_est & !c_win_upd & !c_snd_una_advanced & c2], tcp_dup_ack
+    bcf             [c_est & c5 & !c_snd_una_advanced & c2], tcp_dup_ack
     nop
 
-    bcf             [c_est & !c_win_upd & !c_snd_una_advanced], dup_ack
+    bcf             [c_est & c5 & !c_snd_una_advanced], dup_ack
+    nop
+
+    phvwr           p.to_s4_cc_ack_signal, TCP_CC_ACK_SIGNAL
+
+    /*
+     * Check for ECE bit
+     */
+    smeqb           c1, k.to_s2_flag, FLAG_ECE, FLAG_ECE
+    bal.c1          r7, tcp_ack_ece
     nop
 
     bcf             [c_est], tcp_ack_established_slow
@@ -100,7 +109,7 @@ tcp_ack_established_slow:
      *          tcp_replace_ts_recent(tp, TCP_SKB_CB(skb)->seq);
      *
      */
-    smeqb           c2, d.flag, FLAG_UPDATE_TS_RECENT, FLAG_UPDATE_TS_RECENT
+    smeqb           c2, k.to_s2_flag, FLAG_UPDATE_TS_RECENT, FLAG_UPDATE_TS_RECENT
     b.!c2           tcp_replace_ts_recent_end
 tcp_replace_ts_recent:
     // TODO : implement this
@@ -136,10 +145,9 @@ bytes_acked_stats_update_end:
     setcf           c3, [c1 & !c2]
     phvwrmi.c3      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_FAST_RETRANS, \
                         TCP_PENDING_TXDMA_FAST_RETRANS
-    phvwrpair.c3    p.to_s4_cc_ack_signal, TCP_CC_PARTIAL_ACK, \
+    phvwrpair.c3    p.to_s4_cc_ack_signal, TCP_CC_PARTIAL_ACK_SIGNAL, \
                         p.to_s4_cc_flags, d.cc_flags
-    phvwrpair.!c3   p.to_s4_cc_ack_signal, TCP_CC_ACK, \
-                        p.to_s4_cc_flags, d.cc_flags
+    phvwr.!c3       p.to_s4_cc_flags, d.cc_flags
 
 tcp_snd_una_update_end:
     /*
@@ -182,7 +190,7 @@ tcp_dup_ack:
 tcp_dup_ack_eq_thresh:
     tblor           d.cc_flags, TCP_CCF_FAST_RECOVERY
     tblwr           d.snd_recover, k.s1_s2s_snd_nxt
-    phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_DUPACK, \
+    phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_DUPACK_SIGNAL, \
                         p.to_s4_cc_flags, d.cc_flags
     b               tcp_dup_ack_done
     /*
@@ -192,15 +200,30 @@ tcp_dup_ack_eq_thresh:
                         TCP_PENDING_TXDMA_FAST_RETRANS
 tcp_dup_ack_gt_thresh:
     b               tcp_dup_ack_done
-    phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_DUPACK, \
+    phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_DUPACK_SIGNAL, \
                         p.to_s4_cc_flags, d.cc_flags
 
 tcp_dup_ack_done:
     b               tcp_in_ack_event_end
     nop
 
+/******************************************************************************
+ * Functions
+ *****************************************************************************/
 tcp_ack_rto_event:
     // exit recovery
     tblwr           d.cc_flags, 0
     jr              r7
     tblwr           d.num_dup_acks, 0
+
+tcp_ack_ece:
+    // If already in CONG_RECOVERY, exit
+    smeqb           c1, d.cc_flags, TCP_CCF_CONG_RECOVERY, TCP_CCF_CONG_RECOVERY
+    jr.c1           r7
+    nop
+
+    tblor           d.cc_flags, TCP_CCF_CONG_RECOVERY
+    tblwr           d.snd_recover, k.s1_s2s_snd_nxt
+    jr              r7
+    phvwr           p.to_s4_cc_ack_signal, TCP_CC_ECE_SIGNAL
+

@@ -584,7 +584,7 @@ action read_rx2tx(RX2TX_PARAMS) {
  */
 action read_rx2tx_extra(
        snd_cwnd, rcv_nxt, snd_wnd, rcv_wnd, rto, snd_una, rcv_tsval,
-       rcv_mss, cc_flags, state, pending_dup_ack_send,
+       rcv_mss, cc_flags, t_flags, state, pending_dup_ack_send,
        pending_challenge_ack_send) {
 
     // from ki global
@@ -605,6 +605,7 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.snd_una, snd_una);
     modify_field(rx2tx_extra_d.rcv_tsval, rcv_tsval);
     modify_field(rx2tx_extra_d.cc_flags, cc_flags);
+    modify_field(rx2tx_extra_d.t_flags, t_flags);
     modify_field(rx2tx_extra_d.rcv_mss, rcv_mss);
     modify_field(rx2tx_extra_d.state, state);
     modify_field(rx2tx_extra_d.pending_dup_ack_send, pending_dup_ack_send);

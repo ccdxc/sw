@@ -6,15 +6,15 @@
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
-#include "tcp-constants.h"  
+#include "tcp-constants.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "INGRESS_s5_t0_tcp_rx_k.h"
-    
+
 struct phv_ p;
 struct s5_t0_tcp_rx_k_ k;
 struct s5_t0_tcp_rx_tcp_fc_d d;
-    
+
 %%
     .param          tcp_rx_write_serq_stage_start
     .param          tcp_rx_write_serq_stage_start2
@@ -23,7 +23,7 @@ struct s5_t0_tcp_rx_tcp_fc_d d;
 #ifdef L7_PROXY_SUPPORT
     .param          tcp_rx_write_l7q_stage_start
 #endif
-    .align  
+    .align
 tcp_rx_fc_stage_start:
     seq         c1, k.common_phv_write_arq, 1
     bcf         [c1], tcp_cpu_rx
@@ -38,7 +38,7 @@ tcp_rx_fc_stage_start:
     CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_EN,
                 tcp_rx_write_serq_stage_start3, k.common_phv_qstate_addr,
                 TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
-    
+
     /*
      * c1 = ooo received, store allocated page and descr in d
      *
@@ -56,12 +56,12 @@ tcp_rx_fc_stage_start:
     phvwr.c2    p.to_s6_page, d.page
     phvwr.c2    p.s6_t2_s2s_l7_descr, d.l7_descr
 
-flow_fc_process_done:   
+flow_fc_process_done:
     phvwr       p.rx2tx_extra_rcv_wnd, d.rcv_wnd
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
                 tcp_rx_write_serq_stage_start, k.common_phv_qstate_addr,
                 TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
-   
+
 #ifdef L7_PROXY_SUPPORT
     /* Disable l7 aspect for now */
     sne     c1, k.common_phv_l7_proxy_en, r0
@@ -74,8 +74,8 @@ flow_fc_process_done:
 tcp_cpu_rx:
     CPU_ARQ_SEM_INF_ADDR(d.cpu_id, r3)
     phvwr       p.s6_t1_s2s_cpu_id, d.cpu_id
-        
-    CAPRI_NEXT_TABLE_READ(1, 
+
+    CAPRI_NEXT_TABLE_READ(1,
                           TABLE_LOCK_DIS,
                           tcp_rx_write_arq_stage_start,
                           r3,
@@ -90,9 +90,8 @@ tcp_l7_rx:
                                  TABLE_LOCK_EN,
                                  tcp_rx_write_l7q_stage_start,
                                  k.common_phv_qstate_addr,
-                                 TCP_TCB_WRITE_L7Q_OFFSET, 
+                                 TCP_TCB_WRITE_L7Q_OFFSET,
                                  TABLE_SIZE_512_BITS)
     nop.e
     nop
 #endif
-   

@@ -1,6 +1,15 @@
 #ifndef __PROXY_CONSTANTS_H
 #define __PROXY_CONSTANTS_H
 
+#define NIC_PAGE_HDR_SIZE                    0         /* sizeof(nic_page_hdr_t) */
+
+#define CACHE_LINE_SIZE                     64
+#define NIC_PAGE_SIZE                       (128 * CACHE_LINE_SIZE)
+#define NIC_PAGE_SIZE_SHFT                  13
+#define NIC_PAGE_HEADROOM                   (17 * CACHE_LINE_SIZE)
+#define NIC_CPU_HDR_SIZE                    328
+#define NIC_CPU_HDR_SIZE_BYTES              (NIC_CPU_HDR_SIZE/8)
+
 #define NIC_DESC_ENTRY_TCP_FLAGS_OFFSET      56
 #define NIC_DESC_ENTRY_0_OFFSET              64         /* &((nic_desc_t *)0)->entry[0]*/
 #define NIC_DESC_ENTRY_L_OFFSET              96         /* &((nic_desc_t *)0)->entry[1]*/
@@ -13,6 +22,8 @@
 #define NIC_SESQ_ENTRY_SIZE_SHIFT            3          /* for 8B */
 #define NIC_L7Q_ENTRY_SIZE                   8
 #define NIC_L7Q_ENTRY_SIZE_SHIFT             3          /* for 8B */
+
+#define PKT_DESC_AOL_OFFSET                  64
 
 // L7 Redirect Type
 #define L7_PROXY_TYPE_NONE                   0

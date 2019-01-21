@@ -10,11 +10,11 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "INGRESS_s1_t0_tcp_tx_k.h"
-	
+
 struct phv_ p;
 struct s1_t0_tcp_tx_k_ k;
 struct s1_t0_tcp_tx_read_rx2tx_extra_d d;
-	
+
 %%
     .align
     .param      tcp_tx_process_pending_start
@@ -28,7 +28,8 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     CAPRI_OPERAND_DEBUG(d.rcv_mss)
     CAPRI_OPERAND_DEBUG(k.common_phv_pending_rx2tx)
     phvwr           p.common_phv_snd_una, d.snd_una
-    phvwri          p.tcp_header_flags, TCPHDR_ACK
+    or              r1, d.t_flags, TCPHDR_ACK
+    phvwr           p.tcp_header_flags, r1
     phvwrpair       p.t0_s2s_snd_wnd, d.snd_wnd, \
                         p.t0_s2s_state, d.state
     // HACK: Force a timer of 100 ticks

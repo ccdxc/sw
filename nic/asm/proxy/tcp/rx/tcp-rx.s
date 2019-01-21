@@ -18,9 +18,6 @@ struct s1_t0_tcp_rx_d d;
 %%
     .param          tcp_ack_start
     .param          tcp_rx_read_rnmdr_start
-#ifdef L7_PROXY_SUPPORT
-    .param          tcp_rx_l7_read_rnmdr_start
-#endif
     .align
 
     /*
@@ -104,13 +101,6 @@ bytes_rcvd_stats_update_end:
 
 tcp_event_data_recv:
 tcp_event_data_rcv_done:
-    /*
-     * if (tp->rx.ecn_flags & TCP_ECN_OK)
-     */
-    smeqb           c1, d.u.tcp_rx_d.ecn_flags, TCP_ECN_OK, TCP_ECN_OK
-    //bcf             [c1], tcp_ecn_check_ce TODO
-    nop
-
     tblwr           d.u.tcp_rx_d.lrcv_time, r4
 
 tcp_ack_snd_check:
@@ -176,33 +166,11 @@ table_read_RTT:
 table_read_RNMDR_ALLOC_IDX:
     /*
      * Allocate page and descriptor if alloc_descr is 1.
-     * TODO : we can optimize to not allocate page if
-     * payload_len is 0
      */
     seq             c3, d.u.tcp_rx_d.alloc_descr, 1
-#ifdef L7_PROXY_SUPPORT 
-    phvwr.!c3       p.common_phv_l7_proxy_en, 0
-    phvwr.!c3       p.common_phv_l7_proxy_type_redirect, 0
-#endif
-    //bcf             [!c3], table_read_RNMPR_ALLOC_IDX
     bcf             [!c3], tcp_rx_end
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_start,
                         RNMDPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
-#ifdef L7_PROXY_SUPPORT
-table_read_L7_RNDMR_ALLOC_IDX:
-    seq             c1, k.common_phv_l7_proxy_en, 1
-    b.!c1.e         tcp_rx_end
-    smeqb           c1, d.u.tcp_rx_d.parsed_state, \
-                            TCP_PARSED_STATE_HANDLE_IN_CPU, \
-                            TCP_PARSED_STATE_HANDLE_IN_CPU
-    phvwr.c1        p.common_phv_l7_proxy_en, 0
-    b.c1            tcp_rx_end
-    seq             c2, k.common_phv_l7_proxy_type_redirect, 1
-    phvwri.c2       p.app_header_table1_valid, 0
-    phvwri.c2       p.common_phv_write_serq, 0
-    CAPRI_NEXT_TABLE_READ_i(3, TABLE_LOCK_DIS, tcp_rx_l7_read_rnmdr_start,
-                        RNMDPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
-#endif
 tcp_rx_end:
     nop.e
     nop
@@ -218,8 +186,10 @@ tcp_rx_slow_path:
     smeqb           c1, k.common_phv_flags, TCPHDR_SYN, TCPHDR_SYN
     tblwr.c1.l      d.u.tcp_rx_d.alloc_descr, 1
 
-    smeqb           c1, k.common_phv_flags, TCPHDR_RST, TCPHDR_RST
-    b.c1            tcp_rx_rst_handling
+    smeqb           c1, k.common_phv_flags, TCPHDR_ECE, TCPHDR_ECE
+    tblor.c1.l      d.u.tcp_rx_d.flag, (FLAG_ECE | FLAG_SLOWPATH)
+
+    bbeq            k.common_phv_flags[TCPHDR_RST_BIT], 1, tcp_rx_rst_handling
 
     seq             c1, d.u.tcp_rx_d.state, TCP_RST
     seq             c2, k.s1_s2s_rst_sent, 1
@@ -347,10 +317,9 @@ tcp_rx_slow_path_post_fin_handling:
     //nop
 
     seq             c1, k.s1_s2s_payload_len, r0
-    // Handle data in FIN_WAIT states
-    seq             c2, d.u.tcp_rx_d.state, TCP_FIN_WAIT1
-    seq.!c2         c2, d.u.tcp_rx_d.state, TCP_FIN_WAIT2
-    bcf             [!c1 & c2], tcp_rx_fast_path
+    // We have to handle data in FIN_WAIT states or for example
+    // when ECE bit was set
+    bcf             [!c1], tcp_rx_fast_path
     nop
 
     b               flow_rx_process_done

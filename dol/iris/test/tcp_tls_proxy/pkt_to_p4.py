@@ -413,8 +413,15 @@ def TestCaseVerify(tc):
                     (other_tcpcb_cur.snd_cwnd, incr))
             return False
 
-    if hasattr(tc.module.args, 'fast_recovery'):
-        if not hasattr(tc.module.args, 'exit_fast_recovery'):
+    if hasattr(tc.module.args, 'fast_recovery') or \
+            hasattr(tc.module.args, 'cong_recovery'):
+        if hasattr(tc.module.args, 'cong_recovery'):
+            new_snd_cwnd = other_tcpcb.snd_cwnd / 2
+            new_snd_ssthresh = other_tcpcb.snd_cwnd / 2
+            snd_recover = other_tcpcb.snd_nxt + \
+                    tc.packets.Get('PKT1').payloadsize
+            cc_flags = tcp_proxy.tcp_cc_flags_CONG_RECOVERY
+        elif not hasattr(tc.module.args, 'exit_fast_recovery'):
             inflate = 3
             if hasattr(tc.module.args, 'inflate_cwnd'):
                 inflate += int(tc.module.args.inflate_cwnd)

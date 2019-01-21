@@ -43,7 +43,6 @@
 
 #define rx_table_s2_t0_action tcp_ack
 #define rx_table_s2_t1_action read_rnmdr
-#define rx_table_s2_t2_action read_rnmpr
 
 #define rx_table_s3_t0_action tcp_rtt
 #define rx_table_s3_t0_action1 tcp_ooo_book_keeping
@@ -80,7 +79,6 @@
     modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
     modify_field(common_global_scratch.debug_dol, common_phv.debug_dol); \
     modify_field(common_global_scratch.quick, common_phv.quick); \
-    modify_field(common_global_scratch.ecn_flags, common_phv.ecn_flags); \
     modify_field(common_global_scratch.process_ack_flag, \
                             common_phv.process_ack_flag); \
     modify_field(common_global_scratch.flags, common_phv.flags); \
@@ -155,7 +153,6 @@ header_type tcp_rx_d_t {
         quick                   : 8;
         flag                    : 8;    // used with .l not written back
         rto                     : 8;
-        ecn_flags               : 8;
         state                   : 8;
         parsed_state            : 8;
         pending                 : 3;
@@ -175,15 +172,6 @@ header_type read_rnmdr_d_t {
     }
 }
 
-// d for stage 2 table 2
-header_type read_rnmpr_d_t {
-    fields {
-        rnmpr_pidx              : 32;
-        rnmpr_pidx_full         : 8;
-    }
-}
-
-       
 // d for stage 3 table 0
 header_type tcp_rtt_d_t {
     fields {
@@ -266,7 +254,7 @@ header_type ooo_book_keeping_t {
 
 #define CC_D_PARAMS \
         cc_algo, smss, smss_squared, snd_cwnd, snd_ssthresh, \
-        max_win, snd_wscale, cc_flags
+        max_win, snd_wscale, cc_flags, t_flags
 
 #define GENERATE_CC_D \
     modify_field(tcp_cc_d.cc_algo, cc_algo); \
@@ -276,7 +264,8 @@ header_type ooo_book_keeping_t {
     modify_field(tcp_cc_d.snd_ssthresh, snd_ssthresh); \
     modify_field(tcp_cc_d.max_win, max_win); \
     modify_field(tcp_cc_d.snd_wscale, snd_wscale); \
-    modify_field(tcp_cc_d.cc_flags, cc_flags);
+    modify_field(tcp_cc_d.cc_flags, cc_flags); \
+    modify_field(tcp_cc_d.t_flags, t_flags);
 
 // d for stage 4 table 0
 header_type tcp_cc_d_t {
@@ -288,7 +277,8 @@ header_type tcp_cc_d_t {
         snd_ssthresh            : 32;
         max_win                 : 32;
         snd_wscale              : 8;
-        cc_flags                : 1;
+        cc_flags                : 8;
+        t_flags                 : 8;
     }
 }
 
@@ -452,7 +442,6 @@ header_type common_global_phv_t {
         debug_dol               : 8;
         flags                   : 8;
         quick                   : 3;
-        ecn_flags               : 2;
         process_ack_flag        : 1;
         is_dupack               : 1;
         ooo_rcv                 : 1;
@@ -536,8 +525,6 @@ metadata tcp_rx_d_t tcp_rx_d;
 metadata tcp_rtt_d_t tcp_rtt_d;
 @pragma scratch_metadata
 metadata read_rnmdr_d_t read_rnmdr_d;
-@pragma scratch_metadata
-metadata read_rnmpr_d_t read_rnmpr_d;
 @pragma scratch_metadata
 metadata read_rnmdr_d_t l7_read_rnmdr_d;
 @pragma scratch_metadata
@@ -758,7 +745,7 @@ metadata dma_cmd_phv2mem_t l7_doorbell;             // dma cmd 12
 action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
                   serq_ring_size, l7_proxy_type, debug_dol, quick_acks_decr_old,
                   pad2, serq_cidx, pad1, prr_out, snd_nxt, rcv_wup, packets_out,
-                  ecn_flags_tx, quick_acks_decr, fin_sent, rst_sent, rto_event,
+                  quick_acks_decr, fin_sent, rst_sent, rto_event,
                   pad1_tx2rx) {
     // k + i for stage 0
 
@@ -810,7 +797,6 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(read_tx2rxd.snd_nxt, snd_nxt);
     modify_field(read_tx2rxd.rcv_wup, rcv_wup);
     modify_field(read_tx2rxd.packets_out, packets_out);
-    modify_field(read_tx2rxd.ecn_flags_tx, ecn_flags_tx);
     modify_field(read_tx2rxd.quick_acks_decr, quick_acks_decr);
     modify_field(read_tx2rxd.fin_sent, fin_sent);
     modify_field(read_tx2rxd.rst_sent, rst_sent);
@@ -823,7 +809,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         ato, del_ack_pi, cfg_flags, \
         rcv_nxt, rcv_tstamp, ts_recent, lrcv_time, \
         snd_una, snd_wl1, pred_flags, snd_recover, bytes_rcvd, \
-        snd_wnd, rcv_mss, cc_flags, rto, ecn_flags, state, \
+        snd_wnd, rcv_mss, cc_flags, rto, state, \
         parsed_state, flag, serq_pidx, quick, pending, ca_flags, \
         num_dup_acks, write_serq, fastopen_rsk, pingpong, \
         alloc_descr
@@ -849,7 +835,6 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(tcp_rx_d.rcv_mss, rcv_mss); \
     modify_field(tcp_rx_d.cc_flags, cc_flags); \
     modify_field(tcp_rx_d.rto, rto); \
-    modify_field(tcp_rx_d.ecn_flags, ecn_flags); \
     modify_field(tcp_rx_d.state, state); \
     modify_field(tcp_rx_d.parsed_state, parsed_state); \
     modify_field(tcp_rx_d.flag, flag); \
@@ -949,15 +934,6 @@ action read_rnmdr(rnmdr_pidx, rnmdr_pidx_full) {
     // d for stage 2 table 1 read-rnmdr-idx
     modify_field(read_rnmdr_d.rnmdr_pidx, rnmdr_pidx);
     modify_field(read_rnmdr_d.rnmdr_pidx_full, rnmdr_pidx_full);
-}
-
-/*
- * Stage 2 table 2 action
- */
-action read_rnmpr(rnmpr_pidx, rnmpr_pidx_full) {
-    // d for stage 2 table 2 read-rnmpr-idx
-    modify_field(read_rnmpr_d.rnmpr_pidx, rnmpr_pidx);
-    modify_field(read_rnmpr_d.rnmpr_pidx_full, rnmpr_pidx_full);
 }
 
 /*

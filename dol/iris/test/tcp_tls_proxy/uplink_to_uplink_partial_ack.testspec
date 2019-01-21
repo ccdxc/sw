@@ -74,7 +74,7 @@ packets:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
     - packet:
-        id          : PKT1_OUT
+        id          : BASE_PKT1_OUT
         template    : callback://networking/packets/GetPacketTemplateByFlow
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         encaps      : callback://networking/packets/GetPacketEncaps
@@ -104,7 +104,18 @@ packets:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
 
     - packet:
-        id          : PKT2_OUT
+        id          : PKT1_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT1_OUT
+
+    - packet:
+        id          : PKT1_OUT_RETRY
+        clone       : ref://testcase/packets/id=BASE_PKT1_OUT
+        headers     :
+            tcp:
+                flags   : ack,cwr
+
+    - packet:
+        id          : BASE_PKT2_OUT
         template    : callback://networking/packets/GetPacketTemplateByFlow
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         encaps      : callback://networking/packets/GetPacketEncaps
@@ -132,6 +143,17 @@ packets:
                 options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+
+    - packet:
+        id          : PKT2_OUT
+        clone       : ref://testcase/packets/id=BASE_PKT2_OUT
+
+    - packet:
+        id          : PKT2_OUT_RETRY
+        clone       : ref://testcase/packets/id=BASE_PKT2_OUT
+        headers     :
+            tcp:
+                flags   : ack,cwr
 
     - packet:
         id          : PKT1_DUP_ACK
@@ -220,8 +242,8 @@ expect:
             object  : ref://testcase/packets/id=PKT2_OUT
             port    : ref://testcase/config/dst/endpoint/intf/ports
         - packet:
-            object  : ref://testcase/packets/id=PKT1_OUT
+            object  : ref://testcase/packets/id=PKT1_OUT_RETRY
             port    : ref://testcase/config/dst/endpoint/intf/ports
         - packet:
-            object  : ref://testcase/packets/id=PKT2_OUT
+            object  : ref://testcase/packets/id=PKT2_OUT_RETRY
             port    : ref://testcase/config/dst/endpoint/intf/ports

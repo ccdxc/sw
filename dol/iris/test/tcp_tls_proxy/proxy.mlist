@@ -1246,3 +1246,19 @@ modules:
             bypass_barco : 1
             maxflows : 1
             snd_wnd : 1000
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_ECE
+        spec    : uplink_to_uplink_ece.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            num_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            snd_wnd : 1000
+            cong_recovery : 1
+            snd_cwnd : 8000
+            snd_ssthresh : 10000
+            rcv_mss : 2000
+

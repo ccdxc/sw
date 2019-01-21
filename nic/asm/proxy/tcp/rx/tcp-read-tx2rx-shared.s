@@ -15,8 +15,6 @@ struct phv_ p;
 struct common_p4plus_stage0_app_header_table_k_ k;
 struct common_p4plus_stage0_app_header_table_read_tx2rx_d d;
 
-#define COMMA     ,
-
 %%
 
     .param          tcp_rx_process_start
@@ -74,8 +72,7 @@ table_read_RX:
 
     phvwrpair       p.common_phv_fid, k.p4_rxdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_rxdma_intr_qstate_addr
-    phvwrpair       p.common_phv_debug_dol, d.debug_dol[7:0], \
-                        p.common_phv_ecn_flags, d.ecn_flags_tx[1:0]
+    phvwr           p.common_phv_debug_dol, d.debug_dol[7:0]
 
     phvwr           p.to_s1_serq_cidx, d.serq_cidx
 

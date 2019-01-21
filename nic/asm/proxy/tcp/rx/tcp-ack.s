@@ -27,34 +27,46 @@ struct s2_t0_tcp_rx_tcp_ack_d d;
     .param          tcp_ack_slow
 
 #define c_est c6
-#define c_win_upd c5
 
 tcp_ack_start:
-    tblwr.l         d.flag, k.to_s2_flag
+    /*
+     * Pure data, ack_seq hasn't advanced
+     *
+     * fast path if
+     *      state == ESTABLISHED &&
+     *      (flag & FLAG_DATA) == FLAG_DATA &&
+     *      ack_seq == snd_una &&
+     *      not in recovery
+     */
+    and             r1, k.to_s2_flag, FLAG_DATA
+    seq             c1, r1, FLAG_DATA
+    seq             c3, d.snd_una, k.s1_s2s_ack_seq
+    seq             c4, d.cc_flags, 0
+    seq             c_est, d.state, TCP_ESTABLISHED
+    bcf             [c1 & c3 & c4 & c_est], tcp_ack_done
 
     /*
+     * Ack has advanced
+     *
      * fast path if
      *      state == ESTABLISHED &&
      *      !(flag & FLAG_SLOWPATH) &&
+     *      not in recovery &&
      *      ack_seq <= snd_nxt &&
      *      ack_seq > snd_una
-     *      rcv_wnd has not changed
      */
     smeqb           c1, k.to_s2_flag, FLAG_SLOWPATH, FLAG_SLOWPATH
     scwlt           c2, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
     scwle           c3, k.s1_s2s_ack_seq, d.snd_una
     sne             c4, d.cc_flags, 0
-    seq             c_est, d.state, TCP_ESTABLISHED
-    sne             c_win_upd, d.snd_wnd, k.to_s2_window
-    setcf           c7, [c1 | c2 | c3 | c4 | c_win_upd | !c_est]
+    setcf           c7, [c1 | c2 | c3 | c4 | !c_est]
     j.c7            tcp_ack_slow
     nop
 
-    tblwr           d.num_dup_acks, 0
 tcp_ack_fast:
-    tblor.l         d.flag, FLAG_SND_UNA_ADVANCED
+    tblwr           d.num_dup_acks, 0
     phvwri          p.common_phv_process_ack_flag, 1
-    phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_ACK, \
+    phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_ACK_SIGNAL, \
                         p.to_s4_cc_flags, d.cc_flags
 tcp_update_wl_fast:
     tblwr           d.snd_wl1, k.s1_s2s_ack_seq
@@ -65,8 +77,6 @@ bytes_acked_stats_update_start:
 bytes_acked_stats_update_end:
     phvwr           p.to_s4_bytes_acked, r3[31:0]
     tblwr           d.snd_una, k.s1_s2s_ack_seq
-
-    tblor.l         d.flag, FLAG_WIN_UPDATE
 
     /*
      * tell txdma we have work to do
