@@ -9,6 +9,7 @@
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
+#include "platform/capri/csrint/csr_init.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
@@ -815,18 +816,7 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     if (ret != CAPRI_OK) {
         return ret;
     }
-
-    // register hal cpu interface
-    auto cpu_if = new cpu_hal_if("cpu", "all");
-    cpu::access()->add_if("cpu_if", cpu_if);
-    cpu::access()->set_cur_if_name("cpu_if");
-
-    // Register at top level all MRL classes.
-    cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
-
-    cap0_ptr->init(0);
-    CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
-    register_chip_inst("cap0", 0, 0);
+    csr_init();
 
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();
@@ -851,20 +841,8 @@ capri_p4plus_table_rw_init (void)
     // Before making this call, it is expected that
     // in HAL init sequence, p4pd_init() is already called..
     // !!!!!!
-
     capri_p4plus_shadow_init();
-
-    // register hal cpu interface
-    auto cpu_if = new cpu_hal_if("cpu", "all");
-    cpu::access()->add_if("cpu_if", cpu_if);
-    cpu::access()->set_cur_if_name("cpu_if");
-
-    // Register at top level all MRL classes.
-    cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
-
-    cap0_ptr->init(0);
-    CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
-    register_chip_inst("cap0", 0, 0);
+    csr_init();
 
     return (CAPRI_OK);
 }

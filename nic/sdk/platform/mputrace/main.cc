@@ -12,6 +12,7 @@
 #include "platform/mputrace/mputrace.hpp"
 #include "platform/capri/csr/asicrw_if.hpp"
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
+#include "platform/capri/csrint/csr_init.hpp"
 // TODO check if we need to get it from a common location
 #include "gen/platform/mem_regions.hpp"
 
@@ -54,22 +55,6 @@ int g_stage;
 int g_mpu;
 char *g_pipeline_name;
 mputrace_instance_t *record;
-
-static void
-mputrace_register()
-{
-    // register hal cpu interface
-    auto cpu_if = new cpu_hal_if("cpu", "all");
-    cpu::access()->add_if("cpu_if", cpu_if);
-    cpu::access()->set_cur_if_name("cpu_if");
-
-    // Register at top level all MRL classes.
-    cap_top_csr_t *cap0_ptr = new cap_top_csr_t("cap0");
-
-    cap0_ptr->init(0);
-    CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
-    register_chip_inst("cap0", 0, 0);
-}
 
 void
 parse_options(mputrace_instance_t *record)
@@ -351,10 +336,8 @@ mputrace_handle_options(int argc, char *argv[])
 {
     int ret = 0;
     std::map<std::string, int> oper = {
-        {"conf", MPUTRACE_CONFIG},
-        {"dump", MPUTRACE_DUMP},
-        {"reset", MPUTRACE_RESET},
-        {"show", MPUTRACE_SHOW},
+        {"conf", MPUTRACE_CONFIG}, {"dump", MPUTRACE_DUMP},
+        {"reset", MPUTRACE_RESET}, {"show", MPUTRACE_SHOW},
     };
 
     switch (oper[std::string((const char *)argv[1])]) {
@@ -408,7 +391,7 @@ main(int argc, char *argv[])
            sdk::lib::PAL_RET_OK);
 #endif
 
-    sdk::platform::mputrace_register();
+    csr_init();
     ret = sdk::platform::mputrace_handle_options(argc, argv);
 
     return ret;
