@@ -3,13 +3,14 @@
  */
 
 #include "sysmond.h"
-#include "platform/src/lib/sensor/sensor.h"
+#include "nic/sdk/platform/sensor/sensor.hpp"
 
 #define PIN_INPUT_FILE "/sys/class/hwmon/hwmon1/power1_input"
 #define POUT1_INPUT_FILE "/sys/class/hwmon/hwmon1/power2_input"
 #define POUT2_INPUT_FILE "/sys/class/hwmon/hwmon1/power3_input"
 
 static delphi::objects::asicpowermetrics_t    asicpower;
+using namespace sdk::platform::sensor;
 
 static void
 checkpower(void)

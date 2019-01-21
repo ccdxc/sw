@@ -1,6 +1,10 @@
-#include "pal.hpp"
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+#include "lib/pal/pal.hpp"
 #include "cpld_test.h"
-#include "logger.hpp"
+
+namespace sdk {
+namespace platform {
+namespace diag {
 
 #define CPLD_COMMON_TESTS_OPTION    \
     {"all", no_argument, NULL, 'a'}, /* Run all the tests */ \
@@ -158,3 +162,6 @@ diag_ret_e cpld_test(test_mode_e mode, int argc, char* argv[])
    return (retval ? TEST_PASS : TEST_FAIL); 
 }
 
+} // namespace diag
+} // namespace platform
+} // namespace sdk

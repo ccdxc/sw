@@ -2,8 +2,8 @@
  * Copyright (c) 2017-2018, Pensando Systems Inc.
  */
 
-#ifndef __SENSOR_H__
-#define __SENSOR_H__
+#ifndef __SENSOR_HPP__
+#define __SENSOR_HPP__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +11,10 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "nic/sdk/include/sdk/base.hpp"
+
+namespace sdk {
+namespace platform {
+namespace sensor {
 
 #define PIN_INPUT_FILE "/sys/class/hwmon/hwmon1/power1_input"
 #define POUT1_INPUT_FILE "/sys/class/hwmon/hwmon1/power2_input"
@@ -27,4 +31,8 @@ int read_pin(uint64_t *pin);
 int read_pout1(uint64_t *pout1);
 int read_pout2(uint64_t *pout2);
 
-#endif /* __SENSOR_H__ */
+} // namespace sensor
+} // namespace platform
+} // namespace sdk
+
+#endif /* __SENSOR_HPP__ */

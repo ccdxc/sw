@@ -1,4 +1,9 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include "serdes_test.h"
+
+namespace sdk {
+namespace platform {
+namespace diag {
 
 #define SERDES_COMMON_TESTS_OPTION    \
     {"all", no_argument, NULL, 'a'}, /* Run all the tests */ \
@@ -217,4 +222,6 @@ diag_ret_e serdes_test(test_mode_e mode, int argc, char* argv[])
 
    return (retval ? TEST_PASS : TEST_FAIL);
 }
-
+} // namespace diag
+} // namespace platform
+} // namespace sdk

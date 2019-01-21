@@ -1,7 +1,16 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include <linux/rtc.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <fcntl.h>
 #include "rtc_test.h"
-#include "logger.hpp"
+
+namespace sdk {
+namespace platform {
+namespace diag {
 
 int duration = SLEEP_INTERVAL;
 
@@ -133,4 +142,6 @@ diag_ret_e rtc_test(test_mode_e mode, int argc, char* argv[])
 
    return (retval ? TEST_PASS : TEST_FAIL);
 }
-
+} // namespace diag
+} // namespace platform
+} // namespace sdk

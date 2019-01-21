@@ -1,8 +1,13 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include "temp_sensor_test.h"
-#include "logger.hpp"
-#include "sensor.h"
-#include "cap_nwl_sbus_api.h"
-#include "cap_sbus_api.h"
+#include "platform/sensor/sensor.hpp"
+#include "nic/asic/capri/verif/apis/cap_nwl_sbus_api.h"
+#include "nic/asic/capri/verif/apis/cap_sbus_api.h"
+
+namespace sdk {
+namespace platform {
+namespace diag {
+
 
 #define TEMP_SENSOR_COMMON_TESTS_OPTION    \
     {"all", no_argument, NULL, 'a'}, /* Run all the tests */ \
@@ -93,7 +98,7 @@ int local_temp_sensor_test()
     uint64_t local_temperature = 0;
     int retval = 0;
 
-    retval = read_local_temperature(&local_temperature);
+    retval = sdk::platform::sensor::read_local_temperature(&local_temperature);
 
     if (retval)
     {
@@ -253,4 +258,6 @@ diag_ret_e temp_sensor_test(test_mode_e mode, int argc, char* argv[])
 
    return (retval ? TEST_PASS : TEST_FAIL);
 }
-
+} // namespace diag
+} // namespace platform
+} // namespace sdk
