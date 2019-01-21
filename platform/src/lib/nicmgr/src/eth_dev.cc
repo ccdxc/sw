@@ -141,13 +141,15 @@ Eth::Eth(HalClient *hal_client,
         lif_res->cmb_mem_addr = cmb_mem_addr;
         lif_res->cmb_mem_size = cmb_mem_size;
 
-        __EthLif *eth_lif = new __EthLif(hal_client, hal_common_client,
+        EthLif *eth_lif = new EthLif(hal_client, hal_common_client,
             dev_spec, nicmgr_lif_info, pd_client, lif_res);
         lif_map[lif_id] = eth_lif;
     }
 
     // Enable Devcmd Handling
-    evutil_timer_start(&devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.01);
+    evutil_timer_start(&devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
+    evutil_add_check(&devcmd_check, Eth::DevcmdPoll, this);
+    evutil_add_prepare(&devcmd_prepare, Eth::DevcmdPoll, this);
 }
 
 static void *
@@ -317,7 +319,7 @@ Eth::CreateHostDevice()
 
     pci_resources.port = spec->pcie_port;
     pci_resources.lifb = lif_base;
-    pci_resources.lifc = 1;
+    pci_resources.lifc = spec->lif_count;
     pci_resources.intrb = intr_base;
     pci_resources.intrc = spec->intr_count;
     pci_resources.npids = spec->rdma_pid_count;
@@ -508,8 +510,7 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     sprintf((char *)&rsp->dev.serial_num, "naples");
     // TODO: Get this from sw
     sprintf((char *)&rsp->dev.fw_version, "v0.0.1");
-    rsp->dev.nlifs = 1;
-    // At least one ndbpgs_per_lif
+    rsp->dev.nlifs = spec->lif_count;
     rsp->dev.nintrs = spec->intr_count;
     rsp->dev.ndbpgs_per_lif = MAX(spec->rdma_pid_count, 1);
     rsp->dev.nucasts_per_lif = 32;
@@ -617,7 +618,7 @@ enum DevcmdStatus
 Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 {
     enum DevcmdStatus status;
-    __EthLif *eth_lif = NULL;
+    EthLif *eth_lif = NULL;
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_RESET", spec->name);
 
@@ -643,7 +644,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
     uint64_t lif_id = lif_base + cmd->index;
-    __EthLif *eth_lif = NULL;
+    EthLif *eth_lif = NULL;
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_LIF_INIT: index {}", spec->name, cmd->index);
 
@@ -667,7 +668,7 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_reset_cmd *cmd = (struct lif_reset_cmd *)req;
     uint64_t lif_id = lif_base + cmd->index;
-    __EthLif *eth_lif = NULL;
+    EthLif *eth_lif = NULL;
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_LIF_RESET: index {}", spec->name, cmd->index);
 
@@ -691,7 +692,7 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct adminq_init_cmd *cmd = (struct adminq_init_cmd *)req;
     uint64_t lif_id = lif_base + cmd->lif_index;
-    __EthLif *eth_lif = NULL;
+    EthLif *eth_lif = NULL;
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_ADMINQ_INIT: lif_index {}", spec->name, cmd->lif_index);
 
@@ -715,7 +716,7 @@ Eth::AdminCmdHandler(uint64_t lif_id,
     void *req, void *req_data,
     void *resp, void *resp_data)
 {
-    __EthLif *eth_lif = NULL;
+    EthLif *eth_lif = NULL;
 
     auto it = lif_map.find(lif_id);
     if (it == lif_map.cend()) {
@@ -747,7 +748,7 @@ Eth::HalEventHandler(bool status)
     }
 
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
-        __EthLif *eth_lif = it->second;
+        EthLif *eth_lif = it->second;
         eth_lif->HalEventHandler(status);
     }
 }
@@ -756,7 +757,7 @@ void
 Eth::LinkEventHandler(port_status_t *evd)
 {
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
-        __EthLif *eth_lif = it->second;
+        EthLif *eth_lif = it->second;
         eth_lif->LinkEventHandler(evd);
     }
 }
@@ -797,7 +798,7 @@ int
 Eth::GenerateQstateInfoJson(pt::ptree &lifs)
 {
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
-        __EthLif *eth_lif = it->second;
+        EthLif *eth_lif = it->second;
         eth_lif->GenerateQstateInfoJson(lifs);
     }
 
@@ -811,7 +812,7 @@ Eth::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client)
     hal_common_client = hal_cmn_client;
 
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
-        __EthLif *eth_lif = it->second;
+        EthLif *eth_lif = it->second;
         eth_lif->SetHalClient(hal_client, hal_cmn_client);
     }
 }

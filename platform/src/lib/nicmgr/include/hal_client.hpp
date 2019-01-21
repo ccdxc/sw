@@ -20,7 +20,7 @@
 #include "gen/proto/internal.pb.h"
 #include "gen/proto/port.grpc.pb.h"
 
-#include "platform/src/lib/hal_api/include/ethlif.hpp"
+#include "platform/src/lib/hal_api/include/lif.hpp"
 #include "platform/src/lib/hal_api/include/qos.hpp"
 
 using namespace kh;
@@ -200,7 +200,7 @@ public:
   int PortStatusGet(uint32_t portnum, port_status_t &pi);
 
   /* State */
-  map<uint64_t, EthLif*> eth_lif_map;
+  map<uint64_t, Lif*> eth_lif_map;
 
   enum ForwardingMode fwd_mode;
 

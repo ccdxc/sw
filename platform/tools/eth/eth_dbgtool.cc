@@ -103,7 +103,10 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
 
     queue_info_t qinfo[8] = {0};
 
-    assert(get_lif_qstate(lif, qinfo));
+    if (!get_lif_qstate(lif, qinfo)) {
+        printf("Failed to get qinfo for lif %u\n", lif);
+        return;
+    }
 
     if (qinfo[qtype].size == 0) {
         printf("Invalid type %u for lif %u\n", qtype, lif);
@@ -157,7 +160,7 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
             }
             break;
         default:
-            assert(0);
+            printf("Invalid qtype %u for lif %u\n", qtype, lif);
         }
     }
 }
@@ -172,7 +175,10 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
     struct edma_qstate qstate_edmaq = {0};
     queue_info_t qinfo[8] = {0};
 
-    assert(get_lif_qstate(lif, qinfo));
+    if (!get_lif_qstate(lif, qinfo)) {
+        printf("Failed to get qinfo for lif %u\n", lif);
+        return;
+    }
 
     if (qinfo[qtype].size == 0) {
         printf("Invalid type %u for lif %u\n", qtype, lif);
@@ -301,7 +307,7 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
         }
         break;
     default:
-        assert(0);
+        printf("Invalid qtype %u for lif %u\n", qtype, lif);
     }
 }
 
@@ -310,7 +316,10 @@ eth_stats(uint16_t lif)
 {
     sdk::platform::utils::mpartition *mp_ =
         sdk::platform::utils::mpartition::factory();
-    assert(mp_);
+    if (mp_ == NULL) {
+        printf("Failed to init mpartition library\n");
+        return;
+    }
 
     uint64_t addr = mp_->start_addr("lif_stats") + (lif << 10);
     printf("\naddr: 0x%lx\n\n", addr);
@@ -421,7 +430,10 @@ nicmgr_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
     nicmgr_resp_qstate_t qstate_resp = {0};
     queue_info_t qinfo[8] = {0};
 
-    assert(get_lif_qstate(lif, qinfo));
+    if (!get_lif_qstate(lif, qinfo)) {
+        printf("Failed to get qinfo for lif %u\n", lif);
+        return;
+    }
 
     if (qinfo[qtype].size == 0) {
         printf("Invalid type %u for lif %u\n", qtype, lif);
@@ -480,7 +492,7 @@ nicmgr_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_resp.cq_ring_base, qstate_resp.intr_assert_index);
         break;
     default:
-        assert(0);
+        printf("Invalid qtype %u for lif %u\n", qtype, lif);
     }
 }
 
@@ -491,7 +503,10 @@ nicmgr_qpoll(uint16_t lif, uint8_t qtype)
     nicmgr_resp_qstate_t qstate_resp = {0};
     queue_info_t qinfo[8] = {0};
 
-    assert(get_lif_qstate(lif, qinfo));
+    if (!get_lif_qstate(lif, qinfo)) {
+        printf("Failed to get qinfo for lif %u\n", lif);
+        return;
+    }
 
     if (qinfo[qtype].size == 0) {
         printf("Invalid type %u for lif %u\n", qtype, lif);
@@ -519,7 +534,7 @@ nicmgr_qpoll(uint16_t lif, uint8_t qtype)
                    qstate_resp.sta.color);
             break;
         default:
-            assert(0);
+            printf("Invalid qtype %u for lif %u\n", qtype, lif);
         }
     }
 }
@@ -541,6 +556,22 @@ usage()
     printf("   find           <addr> <size_in_bytes> <pattern>\n");
     printf("   nfind          <addr> <size_in_bytes> <pattern>\n");
     exit(1);
+}
+
+void
+qinfo(uint16_t lif)
+{
+    queue_info_t qinfo[8] = {0};
+
+    if (!get_lif_qstate(lif, qinfo)) {
+        printf("Failed to get qinfo for lif %u\n", lif);
+        return;
+    }
+
+    for (int qtype = 0; qtype < 8; qtype++) {
+        printf("qtype: %d    base: %12lx    size: %6u    count: %6u\n", qtype,
+                qinfo[qtype].base, qinfo[qtype].size, qinfo[qtype].length);
+    }
 }
 
 int
@@ -571,12 +602,7 @@ main(int argc, char **argv)
             usage();
         }
         uint16_t lif = std::strtoul(argv[2], NULL, 0);
-        queue_info_t qinfo[8] = {0};
-        assert(get_lif_qstate(lif, qinfo));
-        for (int qtype = 0; qtype < 8; qtype++) {
-            printf("qtype: %d    base: %12lx    size: %6u    count: %6u\n", qtype,
-                   qinfo[qtype].base, qinfo[qtype].size, qinfo[qtype].length);
-        }
+        qinfo(lif);
     } else if (strcmp(argv[1], "qstate") == 0) {
         if (argc != 5) {
             usage();
@@ -637,7 +663,10 @@ main(int argc, char **argv)
         }
         uint64_t addr = strtoul(argv[2], NULL, 16);
         uint32_t size = strtoul(argv[3], NULL, 0);
-        assert(argc == (int)(4 + size));
+        if (argc == (int)(4 + size)) {
+            printf("Not enough bytes to write\n");
+            usage();
+        }
         uint8_t *buf = (uint8_t *)calloc(1, size);
         assert(buf != NULL);
         for (uint32_t i = 0; i < size; i++) {

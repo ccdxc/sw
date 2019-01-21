@@ -28,14 +28,14 @@ typedef kh::FilterType filter_type_t;
 class MacVlanFilter : public HalObject
 {
 public:
-  static MacVlanFilter *Factory(EthLif *eth_lif,
+  static MacVlanFilter *Factory(Lif *lif,
                                 mac_t mac, vlan_t vlan,
                                 filter_type_t type = kh::FILTER_LIF_MAC_VLAN);
   static void Destroy(MacVlanFilter *filter);
 
 private:
     MacVlanFilter(
-        EthLif *eth_lif,
+        Lif *lif,
         mac_t mac, vlan_t vlan,
         filter_type_t type);
     ~MacVlanFilter();
@@ -44,7 +44,7 @@ private:
     mac_t _mac;
     vlan_t _vlan;
 
-    EthLif *eth_lif;
+    Lif *lif;
     HalEndpoint *ep;
     HalMulticast *mcast;
 

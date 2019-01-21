@@ -300,7 +300,7 @@ Accel_PF::CreateHostDevice()
 
     pci_resources.port = spec->pcie_port;
     pci_resources.lifb = lif_base;
-    pci_resources.lifc = 1;
+    pci_resources.lifc = spec->lif_count;
     pci_resources.intrb = intr_base;
     pci_resources.intrc = spec->intr_count;
     pci_resources.npids = 1;
@@ -598,7 +598,7 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
     sprintf((char *)&rsp->dev.serial_num, "haps");
     // TODO: Get this from sw
     sprintf((char *)&rsp->dev.fw_version, "v0.0.1");
-    rsp->dev.num_lifs = 1;
+    rsp->dev.num_lifs = spec->lif_count;
     memset(&rsp->dev.lif_tbl[0], 0, sizeof(identify_lif_t));
     rsp->dev.lif_tbl[0].hw_lif_id = hal_lif_info_.hw_lif_id;
     rsp->dev.lif_tbl[0].hw_lif_local_dbaddr =

@@ -1,7 +1,7 @@
 
 
 #include "filter.hpp"
-#include "ethlif.hpp"
+#include "lif.hpp"
 #include "print.hpp"
 #include "utils.hpp"
 
@@ -9,10 +9,10 @@ using namespace std;
 
 
 MacVlanFilter *
-MacVlanFilter::Factory(EthLif *eth_lif, mac_t mac, vlan_t vlan,
+MacVlanFilter::Factory(Lif *lif, mac_t mac, vlan_t vlan,
                        filter_type_t type)
 {
-    MacVlanFilter *filter = new MacVlanFilter(eth_lif, mac, vlan, type);
+    MacVlanFilter *filter = new MacVlanFilter(lif, mac, vlan, type);
 
     return filter;
 }
@@ -30,7 +30,7 @@ MacVlanFilter::Destroy(MacVlanFilter *filter)
  * MAC-VLAN filter
  */
 MacVlanFilter::MacVlanFilter(
-    EthLif *eth_lif,
+    Lif *lif,
     mac_t mac, vlan_t vlan, filter_type_t type)
 {
     grpc::Status                status;
@@ -44,20 +44,20 @@ MacVlanFilter::MacVlanFilter(
     _type = type;
     _mac = mac;
     _vlan = vlan;
-    this->eth_lif = eth_lif;
+    this->lif = lif;
 
     NIC_LOG_DEBUG("Mac-Vlan entity creation. Type: {}, lif: {}, mac: {}, vlan: {}. ",
                     _type,
-                    eth_lif->GetId(),
+                    lif->GetId(),
                     macaddr2str(mac), vlan);
 
-    if (eth_lif->IsClassicForwarding()) {
+    if (lif->IsClassicForwarding()) {
         // Unicast:
         //  - Add vlan to Enic. May have already been added.
         //  - Create EP
         // HalMulticast:
         //  - Add Enic to multicast
-        enic = eth_lif->GetEnic();
+        enic = lif->GetEnic();
         enic->AddVlan(vlan);
         l2seg = enic->GetL2seg(vlan);
         if (!l2seg) {
@@ -73,7 +73,7 @@ MacVlanFilter::MacVlanFilter(
     } else {
         // Create Filter to HAL
         req = req_msg.add_request();
-        req->mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(eth_lif->GetId());
+        req->mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->set_lif_id(lif->GetId());
         req->mutable_key_or_handle()->mutable_filter_key()->set_mac_address(mac);
         req->mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(vlan);
 
@@ -129,11 +129,11 @@ MacVlanFilter::~MacVlanFilter()
     HalEndpoint                             *ep;
 
     NIC_LOG_DEBUG("Mac-Vlan entity deletion. lif: {}, mac: {}, vlan: {}. ",
-                    eth_lif->GetId(),
+                    lif->GetId(),
                     macaddr2str(_mac), _vlan);
 
-    if (eth_lif->IsClassicForwarding()) {
-        enic = eth_lif->GetEnic();
+    if (lif->IsClassicForwarding()) {
+        enic = lif->GetEnic();
         l2seg = enic->GetL2seg(_vlan);
         if (is_multicast(_mac)) {
             mcast = HalMulticast::GetInstance(l2seg, _mac);
@@ -152,7 +152,7 @@ MacVlanFilter::~MacVlanFilter()
         // Create Filter to HAL
         req = req_msg.add_request();
         req->mutable_key_or_handle()->mutable_filter_key()->mutable_lif_key_or_handle()->
-            set_lif_id(eth_lif->GetId());
+            set_lif_id(lif->GetId());
         req->mutable_key_or_handle()->mutable_filter_key()->set_mac_address(_mac);
         req->mutable_key_or_handle()->mutable_filter_key()->set_vlan_id(_vlan);
         req->mutable_key_or_handle()->mutable_filter_key()->set_type(_type);

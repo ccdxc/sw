@@ -75,7 +75,7 @@ HalClient::LifCreate(hal_lif_info_t *hal_lif_info)
     // Nicmgr should always allocate hw_lif_id and pass to HAL
     NIC_ASSERT(hal_lif_info->hw_lif_id != 0);
 
-    EthLif *eth_lif = EthLif::Factory(hal_lif_info);
+    Lif *eth_lif = Lif::Factory(hal_lif_info);
     hal_lif_info->pushed_to_hal = true;
 
     eth_lif_map[hal_lif_info->hw_lif_id] = eth_lif;

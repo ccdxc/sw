@@ -68,7 +68,7 @@ private:
     // HAL Info
     HalClient *hal;
     HalCommonClient *hal_common_client;
-    std::map<uint64_t, __EthLif *> lif_map;
+    std::map<uint64_t, EthLif *> lif_map;
     // Resources
     int32_t lif_base;
     uint32_t intr_base;
@@ -86,6 +86,8 @@ private:
     pciehdev_t *pdev;
     // Tasks
     evutil_timer devcmd_timer;
+    evutil_check devcmd_check;
+    evutil_prepare devcmd_prepare;
     // Device Constructors
     bool CreateHostDevice();
     bool CreateLocalDevice();

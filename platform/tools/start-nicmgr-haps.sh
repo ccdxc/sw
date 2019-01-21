@@ -23,35 +23,23 @@ if [ -r $SYSCONFIG/sysuuid ]; then
     export SYSUUID=`cat $SYSCONFIG/sysuuid`
 fi
 
-#sleep 30
-
-if [[ "$FWD_MODE" != "classic" ]]; then
-    if [ -r $SYSCONFIG/eth-smart.json ]; then
-        ARGS="-s -c $SYSCONFIG/eth-smart.json -p haps"
-    else
-        ARGS="-s -c $NICMGR_CONFIG_PATH/eth-smart.json -p haps"
-    fi
+export CONFIG_FILE=""
+if [ -r $SYSCONFIG/nicmgrd.json ]; then
+    CONFIG_FILE=`jq -r '.profile.device' $SYSCONFIG/nicmgrd.json`
 else
-    if [ -r $SYSCONFIG/device.json ]; then
-        ARGS="-c $SYSCONFIG/device.json -p haps"
+    if [[ "$FWD_MODE" != "classic" ]]; then
+        CONFIG_FILE="$NICMGR_CONFIG_PATH/eth_smart.json"
     else
-        ARGS="-c $NICMGR_CONFIG_PATH/device.json -p haps"
+        CONFIG_FILE="$NICMGR_CONFIG_PATH/device.json"
     fi
 fi
 
+export MODE_FLAG=""
+if [[ "$FWD_MODE" != "classic" ]]; then
+    MODE_FLAG="-s"
+fi
+
+ARGS="$MODE_FLAG -c $CONFIG_FILE -p haps"
+
 export LD_LIBRARY_PATH=$NICMGR_LIBRARY_PATH
 exec $PLATFORM_DIR/bin/nicmgrd $ARGS
-# [[ $? -ne 0 ]] && echo "Failed to start NICMGR!" && exit 1
-
-# echo "NICMGR WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
-
-# while [ 1 ]
-# do
-#     OUTPUT="$(tail -100 /nicmgr.stdout 2>&1 | grep "Polling enabled")"
-#     if [[  ! -z "$OUTPUT" ]]; then
-#         break
-#     fi
-#     sleep 3
-# done
-
-# echo "NICMGR UP: `date +%x_%H:%M:%S:%N`"

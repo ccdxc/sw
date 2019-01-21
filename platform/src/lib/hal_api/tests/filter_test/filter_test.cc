@@ -3,7 +3,7 @@
 
 #include "platform/src/lib/hal_api/include/hal_grpc_client.hpp"
 #include "platform/src/lib/hal_api/include/uplink.hpp"
-#include "platform/src/lib/hal_api/include/ethlif.hpp"
+#include "platform/src/lib/hal_api/include/lif.hpp"
 #include "platform/src/lib/hal_api/include/hal_types.hpp"
 
 using namespace std;
@@ -59,8 +59,8 @@ TEST_F(filter_test, test1)
     info.max_vlan_filters = 10;
     info.max_mac_filters = 10;
     info.max_mac_vlan_filters = 10;
-    EthLif *lif1 = EthLif::Factory(&info);
-    // EthLif *lif2 = EthLif::Factory(2 /*hw_lif_id*/, up2, false /*is_mgmt*/);
+    Lif *lif1 = Lif::Factory(&info);
+    // Lif *lif2 = Lif::Factory(2 /*hw_lif_id*/, up2, false /*is_mgmt*/);
 
     // Change lif params
     lif1->UpdateReceivePromiscuous(false);
@@ -152,7 +152,7 @@ TEST_F(filter_test, test1)
     EXPECT_EQ(ret, HAL_IRISC_RET_LIMIT_REACHED);
 
 
-    EthLif::Destroy(lif1);
+    Lif::Destroy(lif1);
     // HalGRPCClient::Destroy(client);
 }
 
@@ -182,8 +182,8 @@ TEST_F(filter_test, test2)
     info.max_vlan_filters = 10;
     info.max_mac_filters = 10;
     info.max_mac_vlan_filters = 10;
-    EthLif *lif1 = EthLif::Factory(&info);
-    EthLif::Factory(&info);
+    Lif *lif1 = Lif::Factory(&info);
+    Lif::Factory(&info);
 
     // Add Mac filter
     lif1->AddMac(mac1);

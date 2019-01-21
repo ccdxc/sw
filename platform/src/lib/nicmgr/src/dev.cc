@@ -265,7 +265,9 @@ void DeviceManager::HalEventHandler(bool is_up)
     // Setting hal clients in all devices
     SetHalClient(hal, hal_common_client);
 
-    evutil_timer_start(&adminq_timer, DeviceManager::AdminQPoll, this, 0.01, 0.01);
+    evutil_timer_start(&adminq_timer, DeviceManager::AdminQPoll, this, 0, 0.001);
+    evutil_add_check(&adminq_check, DeviceManager::AdminQPoll, this);
+    evutil_add_prepare(&adminq_prepare, DeviceManager::AdminQPoll, this);
 
     init_done = true;
 }
@@ -525,7 +527,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         eth_dev = new Eth(hal, hal_common_client, dev_spec, &hal_lif_info_, pd);
         eth_dev->SetType(type);
         for (uint32_t lif = 0; lif < eth_dev->GetHalLifCount(); lif++) {
-            devices[eth_dev->GetHalLifInfo()->hw_lif_id] = (Device *)eth_dev;
+            devices[eth_dev->GetHalLifInfo()->hw_lif_id + lif] = (Device *)eth_dev;
         }
         return (Device *)eth_dev;
     case ACCEL:
@@ -701,6 +703,8 @@ DeviceManager::AdminQPoll(void *obj)
 
             NIC_LOG_DEBUG("response: POST: p_index0 {}, c_index0 {}, head {}, tail {}",
                 p_index0, c_index0, devmgr->resp_head, devmgr->resp_tail);
+
+            NIC_HEADER_TRACE("AdminCmd End");
         }
     }
 }

@@ -2,7 +2,7 @@
     "network" : {
         "uplink" : [
             { "id" : 128, "port": 1 },
-            { "id" : 129, "port": 2 },
+            { "id" : 129, "port": 5 },
             { "id" : 130, "port": 9, "oob" : "true" }
         ]
     },
@@ -12,6 +12,7 @@
             "name" : "oob_mnic0",
             "dev_uuid" : 11,
             "type": "oob_mgmt",
+            "lif_count" : 1,
             "rxq_count" : 1,
             "txq_count" : 1,
             "eq_count" : 1,
@@ -25,6 +26,7 @@
             "name" : "inb_mnic0",
             "dev_uuid" : 12,
             "type": "inband_mgmt",
+            "lif_count" : 1,
             "rxq_count" : 1,
             "txq_count" : 1,
             "eq_count" : 1,
@@ -38,6 +40,7 @@
             "name" : "inb_mnic1",
             "dev_uuid" : 13,
             "type": "inband_mgmt",
+            "lif_count" : 1,
             "rxq_count" : 1,
             "txq_count" : 1,
             "eq_count" : 1,
@@ -51,6 +54,7 @@
             "name" : "int_mnic0",
             "dev_uuid" : 14,
             "type": "internal_mgmt",
+            "lif_count" : 1,
             "rxq_count" : 1,
             "txq_count" : 1,
             "eq_count" : 1,
@@ -64,100 +68,53 @@
             "name" : "eth0",
             "dev_uuid" : 1,
             "type": "host",
-            "rxq_count" : 16,
-            "txq_count" : 16,
+            "lif_count" : 64,
+            "rxq_count" : 1,
+            "txq_count" : 1,
             "eq_count" : 1,
-            "adminq_count" : 16,
-            "intr_count" : 34,
-            "qos_group" : "DEFAULT",
+            "adminq_count" : 1,
+            "intr_count" : 256,
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0
+                "num_vfs" : 0,
+                "oprom": "uefi"
             },
             "network" : {
                 "uplink" : 1
-            },
-            "rdma" : {
-                "sq_count" : 4096,
-                "rq_count" : 4096,
-                "cq_count" : 2048,
-                "eq_count" : 4096,
-                "adminq_count" : 1,
-                "pid_count" : 256,
-                "pte_count" : 8388608,
-                "key_count" : 262144,
-                "ah_count"  : 8192,
-                "barmap_size" : 1
             }
         },
         {
             "name" : "eth1",
             "dev_uuid" : 2,
             "type": "host",
-            "rxq_count" : 16,
-            "txq_count" : 16,
+            "lif_count" : 64,
+            "rxq_count" : 1,
+            "txq_count" : 1,
             "eq_count" : 1,
-            "adminq_count" : 16,
-            "intr_count" : 34,
+            "adminq_count" : 1,
+            "intr_count" : 256,
             "pcie" : {
                 "port" : 0,
-                "num_vfs" : 0
+                "num_vfs" : 0,
+                "oprom": "uefi"
             },
             "network" : {
                 "uplink" : 5
-            },
-            "rdma" : {
-                "sq_count" : 4096,
-                "rq_count" : 4096,
-                "cq_count" : 2048,
-                "eq_count" : 4096,
-                "adminq_count" : 1,
-                "pid_count" : 256,
-                "pte_count" : 8388608,
-                "key_count" : 262144,
-                "ah_count"  : 8192,
-                "barmap_size" : 1
             }
         },
         {
             "name" : "eth_mgmt0",
             "dev_uuid" : 3,
             "type": "host_mgmt",
-            "rxq_count" : 16,
-            "txq_count" : 16,
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
             "eq_count" : 1,
-            "adminq_count" : 16,
-            "intr_count" : 34,
+            "adminq_count" : 1,
+            "intr_count" : 3,
             "pcie" : {
                 "port" : 0,
                 "num_vfs" : 0
-            },
-            "rdma" : {
-                "sq_count" : 16,
-                "rq_count" : 16,
-                "cq_count" : 16,
-                "eq_count" : 16,
-                "adminq_count" : 16,
-                "pid_count" : 256,
-                "pte_count" : 16,
-                "key_count" : 16,
-                "ah_count"  : 16,
-                "barmap_size" : 0
-            }
-        }
-    ],
-
-    "accel_dev" : [
-        {
-            "name" : "accel",
-            "seq_queue_count" : 24576,
-            "adminq_count" : 1,
-            "intr_count" : 64,
-            "publish_interval" : {
-                "sec_fraction" : 2
-            },
-            "pcie" : {
-                "port" : 0
             }
         }
     ]

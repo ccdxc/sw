@@ -615,7 +615,6 @@ int PdClient::program_qstate(struct queue_info* queue_info,
                      type, lif_info->qstate_addr[type]);
     }
 
-    DeviceManager::GetInstance()->GenerateQstateInfoJson(gen_dir_path_ + QSTATE_INFO_FILE_NAME);
     return 0;
 }
 

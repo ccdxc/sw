@@ -1,16 +1,9 @@
 {
     "network" : {
-        "vrf" : [
-            { "id" : 1 }
-        ],
-        "l2seg" : [
-            { "id" : 1, "vlan": 1, "vrf" : 1 },
-            { "id" : 2, "vlan": 10, "vrf" : 1 },
-            { "id" : 3, "vlan": 16, "vrf" : 1 }
-        ],
         "uplink" : [
-            { "id" : 128, "port": 1, "native_l2seg": 1, "nonnative_l2seg" : [2, 3] },
-            { "id" : 129, "port": 2, "native_l2seg": 1, "nonnative_l2seg" : [2, 3] }
+            { "id" : 128, "port": 1 },
+            { "id" : 129, "port": 5 },
+            { "id" : 130, "port": 9, "oob" : "true" }
         ]
     },
 

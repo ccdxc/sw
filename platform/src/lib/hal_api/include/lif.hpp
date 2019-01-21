@@ -11,15 +11,15 @@
 #include "vrf.hpp"
 #include "filter.hpp"
 
-typedef std::map<uint32_t, EthLif*> EthLifMap;
+typedef std::map<uint32_t, Lif*> LifMap;
 
-class EthLif : public HalObject
+class Lif : public HalObject
 {
 public:
 
-    static EthLif *Factory(hal_lif_info_t *info);
+    static Lif *Factory(hal_lif_info_t *info);
 
-    static void Destroy(EthLif *eth_lif);
+    static void Destroy(Lif *lif);
 
     hal_irisc_ret_t AddMac(mac_t mac, bool re_add = false);
     hal_irisc_ret_t DelMac(mac_t mac, bool update_db = true);
@@ -30,11 +30,11 @@ public:
     hal_irisc_ret_t AddMacVlan(mac_t mac, vlan_t vlan);
     hal_irisc_ret_t DelMacVlan(mac_t mac, vlan_t vlan, bool update_db = true);
 
-    hal_irisc_ret_t UpdateVlanStripEn(bool vlan_stip_en);
-    hal_irisc_ret_t UpdateVlanInsertEn(bool vlan_insert_en);
-    hal_irisc_ret_t UpdateReceiveBroadcast(bool receive_broadcast);
-    hal_irisc_ret_t UpdateReceiveAllMulticast(bool receive_all_multicast);
-    hal_irisc_ret_t UpdateReceivePromiscuous(bool receive_promiscuous);
+    hal_irisc_ret_t UpdateVlanOffload(bool vlan_strip, bool vlan_insert);
+    hal_irisc_ret_t UpdateReceiveMode(bool broadcast, bool all_multicast,
+        bool promiscuous);
+
+    hal_irisc_ret_t UpdateName(std::string name);
 
     void Reset();
 
@@ -52,13 +52,13 @@ public:
     uint32_t GetHwLifId();
     bool GetIsPromiscuous();
     hal_lif_info_t *GetLifInfo();
-    static EthLif *GetInternalMgmtEthLif() { return EthLif::internal_mgmt_ethlif; }
+    static Lif *GetInternalMgmtEthLif() { return Lif::internal_mgmt_ethlif; }
 
     // Set APIs
     void SetEnic(Enic *enic);
     void SetVrf(HalVrf *vrf) { vrf_ = vrf; }
     void SetNativeL2Seg(HalL2Segment *l2seg) { native_l2seg_ = l2seg; }
-    static void SetInternalMgmtEthLif(EthLif *eth_lif) { EthLif::internal_mgmt_ethlif = eth_lif; }
+    static void SetInternalMgmtEthLif(Lif *lif) { Lif::internal_mgmt_ethlif = lif; }
 
     bool IsMnic();
     bool IsOOBMnic();
@@ -72,10 +72,10 @@ public:
     void DeProgramMCFilters();
 
 private:
-    EthLif(hal_lif_info_t *info);
-    ~EthLif();
+    Lif(hal_lif_info_t *info);
+    ~Lif();
 
-    static EthLif *internal_mgmt_ethlif;
+    static Lif *internal_mgmt_ethlif;
 
     // Config State (For Disruptive Upgrade):
     hal_lif_info_t info_;
@@ -107,8 +107,14 @@ private:
     void CreateVlanFilter(vlan_t vlan);
     void DeleteVlanFilter(vlan_t vlan);
 
-    // For upgrade. hw_lif_id -> EthLif
-    static EthLifMap ethlif_db;
+    hal_irisc_ret_t UpdateVlanStripEn(bool vlan_strip_en);
+    hal_irisc_ret_t UpdateVlanInsertEn(bool vlan_insert_en);
+    hal_irisc_ret_t UpdateReceiveBroadcast(bool receive_broadcast);
+    hal_irisc_ret_t UpdateReceiveAllMulticast(bool receive_all_multicast);
+    hal_irisc_ret_t UpdateReceivePromiscuous(bool receive_promiscuous);
+
+    // For upgrade. hw_lif_id -> Lif
+    static LifMap ethlif_db;
 
     static constexpr uint32_t max_lifs = 1024;
 };

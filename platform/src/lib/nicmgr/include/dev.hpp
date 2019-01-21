@@ -257,8 +257,12 @@ private:
     bool init_done;
     std::string config_file;
 
-    // AdminQ
+    // Tasks
     evutil_timer adminq_timer;
+    evutil_check adminq_check;
+    evutil_prepare adminq_prepare;
+
+    // AdminQ
     uint64_t req_ring_base;
     uint64_t resp_ring_base;
     uint16_t ring_size;

@@ -74,7 +74,7 @@ protected:
 
 // Forward Declrations of all HAL objects
 class Lif;
-class EthLif;
+class Lif;
 class Enic;
 class HalEndpoint;
 class HalL2Segment;

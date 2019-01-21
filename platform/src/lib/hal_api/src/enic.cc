@@ -3,7 +3,7 @@
 #include <grpc++/grpc++.h>
 
 #include "enic.hpp"
-#include "ethlif.hpp"
+#include "lif.hpp"
 
 using namespace std;
 
@@ -12,7 +12,7 @@ using namespace std;
 sdk::lib::indexer *Enic::allocator = sdk::lib::indexer::factory(Enic::max_enics, false, true);
 
 Enic *
-Enic::Factory(EthLif *ethlif)
+Enic::Factory(Lif *ethlif)
 {
     Enic *enic = new Enic(ethlif);
 
@@ -28,7 +28,7 @@ Enic::Destroy(Enic *enic)
 }
 
 // Classic ENIC constructor
-Enic::Enic(EthLif *ethlif)
+Enic::Enic(Lif *ethlif)
 {
     grpc::ClientContext             context;
     grpc::Status                    status;

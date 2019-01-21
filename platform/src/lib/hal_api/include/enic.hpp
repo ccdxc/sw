@@ -24,7 +24,7 @@ typedef struct l2seg_info_s {
 class Enic : public HalObject
 {
 public:
-    static Enic *Factory(EthLif *ethlif);
+    static Enic *Factory(Lif *ethlif);
     static void Destroy(Enic *enic);
 
     // Classic ENIC APIs only
@@ -38,7 +38,7 @@ public:
     HalL2Segment *GetL2seg(vlan_t vlan);
 
 private:
-    Enic(EthLif *ethlif);
+    Enic(Lif *ethlif);
 
     uint32_t id;
     uint64_t handle;
@@ -48,7 +48,7 @@ private:
 
     intf::InterfaceSpec spec;
 
-    EthLif *ethlif;
+    Lif *ethlif;
     std::map<vlan_t, l2seg_info_t *> l2seg_refs;
 
     static sdk::lib::indexer *allocator;

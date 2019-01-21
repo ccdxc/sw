@@ -58,9 +58,9 @@ enum lif_state {
     LIF_STATE_DOWN,
 };
 
-class __EthLif {
+class EthLif {
 public:
-    __EthLif(HalClient *hal_client,
+    EthLif(HalClient *hal_client,
         HalCommonClient *hal_common_client,
         void *dev_spec,
         hal_lif_info_t *nicmgr_lif_info,
@@ -94,7 +94,7 @@ private:
     HalCommonClient *hal_common_client;
     hal_lif_info_t hal_lif_info_;
     const hal_lif_info_t *nicmgr_lif_info;
-    EthLif *lif;
+    Lif *lif;
     eth_lif_res_t *res;
     uint8_t cosA, cosB;
     // Spec
@@ -125,6 +125,7 @@ private:
     map<uint64_t, tuple<uint64_t, uint16_t>> mac_vlans;
     // Tasks
     evutil_timer stats_timer;
+    evutil_check stats_check;
 
     /* AdminQ Commands */
     static void AdminQPoll(void *obj);
@@ -151,6 +152,7 @@ private:
 
     // Callbacks
     static void StatsUpdate(void *obj);
+    static void StatsUpdateCheck(void *obj);
     static void NotifyBlockUpdate(void *arg);
 
     // Helper methods
