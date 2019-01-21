@@ -42,6 +42,15 @@ impl_base::init(asic_cfg_t *asic_cfg) {
 }
 
 /**
+ * @brief    dump all the debug information to given file
+ * @param[in] fp    file handle
+ */
+void
+impl_base::debug_dump(FILE *fp) {
+    asic_impl_->debug_dump(fp);
+}
+
+/**
  * @brief        factory method to instantiate an impl object
  * @param[in]    impl    object id
  * @param[in]    args    args (not interpreted by this class)

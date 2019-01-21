@@ -38,6 +38,12 @@ public:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t asic_init(void) { return sdk::SDK_RET_ERR; }
+
+    /**
+     * @brief    dump all the debug information to given file
+     * @param[in] fp    file handle
+     */
+    virtual void debug_dump(FILE *fp) { }
 };
 
 /** @} */    // end of OCI_ASIC_IMPL
