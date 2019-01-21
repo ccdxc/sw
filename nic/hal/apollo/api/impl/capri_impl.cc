@@ -75,30 +75,32 @@ capri_impl::asic_init(void) {
 void
 capri_impl::debug_dump(FILE *fp) {
     sdk_ret_t              ret;
-    bool                   reset = false;
+    bool                   reset = true;
     sdk::platform::capri:: tm_pb_debug_stats_t    debug_stats = {};
 
+    fprintf(fp, "PB/TM statistics\n");
     for (uint32_t port = 0; port < TM_NUM_PORTS; port++) {
         ret = capri_tm_get_pb_debug_stats(port, &debug_stats, reset);
         if ((port >= TM_UPLINK_PORT_BEGIN) && (port <= TM_UPLINK_PORT_END)) {
-            fprintf(fp, "TM Uplink Port %u\n",
+            fprintf(fp, "  TM Uplink Port %u\n",
                     sdk::platform::capri::capri_tm_port_to_fp_port(port));
-            fprintf(fp, "\tIn  : %u\n", debug_stats.buffer_stats.sop_count_in);
-            fprintf(fp, "\tOut : %u\n", debug_stats.buffer_stats.sop_count_out);
+            fprintf(fp, "    In  : %u\n", debug_stats.buffer_stats.sop_count_in);
+            fprintf(fp, "    Out : %u\n", debug_stats.buffer_stats.sop_count_out);
         } else if (port == TM_DMA_PORT_BEGIN) {
-            fprintf(fp, "RxDMA\n\tIn  : %u\n\tOut : %u\n",
+            fprintf(fp, "  RxDMA\n    In  : %u\n    Out : %u\n",
                     debug_stats.buffer_stats.sop_count_in,
                     debug_stats.buffer_stats.sop_count_out);
         } else if (port == TM_PORT_INGRESS) {
-            fprintf(fp, "P4 IG\n\tIn  : %u\n\tOut : %u\n",
+            fprintf(fp, "  P4 IG\n    In  : %u\n    Out : %u\n",
                     debug_stats.buffer_stats.sop_count_in,
                     debug_stats.buffer_stats.sop_count_out);
         } else if (port == TM_PORT_EGRESS) {
-            fprintf(fp, "P4 EG In  : %u\n\tOut : %u\n",
+            fprintf(fp, "  P4 EG In  : %u\n    Out : %u\n",
                     debug_stats.buffer_stats.sop_count_in,
                     debug_stats.buffer_stats.sop_count_out);
         }
     }
+    fprintf(fp, "\n");
 }
 
 /** @} */    // end of OCI_ASIC_IMPL

@@ -113,8 +113,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     oci_mapping.slot = vnic_key;
                     oci_mapping.tep.ip_addr = g_sw_port.switch_ip_addr;
                     MAC_UINT64_TO_ADDR(oci_mapping.overlay_mac,
-                                       ((((uint64_t)i & 0xFFFF) << 40ul) |
-                                        ((j & 0xFF) << 16) | k));
+                                       (((((uint64_t)i & 0x3FF) << 20) |
+                                         ((j & 0x3FF) << 10) | (k & 0x3FF))));
                     oci_mapping.vnic.id = vnic_key;
                     if (natpfx) {
                         oci_mapping.public_ip_valid = true;
@@ -152,8 +152,9 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     tep_offset += 3;
                 }
                 MAC_UINT64_TO_ADDR(oci_mapping.overlay_mac,
-                                   ((((uint64_t)i & 0xFFFF) << 40ul) |
-                                    ((j & 0xFF) << 16) | mac_offset++));
+                                   (((((uint64_t)i & 0x3FF) << 20) |
+                                     ((j & 0x3FF) << 10) |
+                                     ((num_vnics + k) & 0x3FF))));
                 rv = oci_mapping_create(&oci_mapping);
                 ASSERT_TRUE(rv == SDK_RET_OK);
             }
@@ -181,8 +182,8 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
                 oci_vnic.wire_vlan = vlan_start + vnic_key - 1;
                 oci_vnic.slot = vnic_key;
                 MAC_UINT64_TO_ADDR(oci_vnic.mac_addr,
-                                   ((((uint64_t)i & 0xFFFF) << 40ul) |
-                                    ((j & 0xFF) << 16) | k));
+                                   (((((uint64_t)i & 0x3FF) << 20) |
+                                     ((j & 0x3FF) << 10) | (k & 0x3FF))));
                 oci_vnic.rsc_pool_id = 1;
                 oci_vnic.src_dst_check = (k & 0x1);
                 rv = oci_vnic_create(&oci_vnic);
@@ -211,7 +212,8 @@ create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
             (oci_subnet.pfx.addr.addr.v4_addr) | ((i - 1) << 14);
         oci_subnet.pfx.len = 18;
         oci_subnet.vr_ip.af = IP_AF_IPV4;
-        oci_subnet.vr_ip.addr.v4_addr = oci_subnet.pfx.addr.addr.v4_addr | 0x1;
+        //oci_subnet.vr_ip.addr.v4_addr = oci_subnet.pfx.addr.addr.v4_addr | 0x1;
+        oci_subnet.vr_ip.addr.v4_addr = oci_subnet.pfx.addr.addr.v4_addr;
         MAC_UINT64_TO_ADDR(oci_subnet.vr_mac,
                            (uint64_t)oci_subnet.vr_ip.addr.v4_addr);
         oci_subnet.route_table.id = route_table_id++;

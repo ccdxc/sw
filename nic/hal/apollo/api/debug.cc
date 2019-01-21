@@ -111,12 +111,12 @@ port_info_dump (sdk::linkmgr::port_args_t *port_info, void *ctxt)
 {
     FILE    *fp = (FILE *)ctxt;
 
-    fprintf(fp, "port %u, type %u\n", port_info->port_num,
+    fprintf(fp, "Port %u, Type %u\n", port_info->port_num,
             (uint32_t)port_info->port_type);
 
     if (port_info->port_type == port_type_t::PORT_TYPE_ETH) {
         for (uint32_t i = 0; i < MAX_MAC_STATS; i++) {
-            fprintf(fp, "%-41s : %lu\n", eth_mac_stats[i].c_str(),
+            fprintf(fp, "  %-41s : %lu\n", eth_mac_stats[i].c_str(),
                     port_info->stats_data[i]);
         }
     } else if (port_info->port_type == port_type_t::PORT_TYPE_MGMT) {
@@ -125,6 +125,7 @@ port_info_dump (sdk::linkmgr::port_args_t *port_info, void *ctxt)
                     //port_info->stats_data[i]);
         }
     }
+    fprintf(fp, "\n");
 }
 
 /**

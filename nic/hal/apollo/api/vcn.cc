@@ -104,7 +104,7 @@ vcn_entry::program_config(obj_ctxt_t *obj_ctxt) {
      * can use while programming vnics, routes etc.
      */
     oci_vcn_t *oci_vcn = &obj_ctxt->api_params->vcn_info;
-    OCI_TRACE_DEBUG("Programming VCN %u, type %u, pfx %s", key_.id,
+    OCI_TRACE_DEBUG("Programming vcn %u, type %u, pfx %s", key_.id,
                     oci_vcn->type, ippfx2str(&oci_vcn->pfx));
     return reserve_resources_();
 }
