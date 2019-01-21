@@ -176,6 +176,7 @@ sig_init (int signal, sig_handler_t sig_handler)
         return SDK_RET_ERR;
     }
 
+    OCI_TRACE_DEBUG("Installing signal handler for signal %d", signal);
     memset(&act, 0, sizeof(act));
     act.sa_sigaction = sig_handler;
     act.sa_flags = SA_SIGINFO;

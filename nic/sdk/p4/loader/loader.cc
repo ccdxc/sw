@@ -703,5 +703,5 @@ p4_list_program_addr (const char *cfg_path, const char *filename)
 
     return SDK_RET_OK;
 }
-} //namespace p4
-} //namespace sdk
+}    // namespace p4
+}    // namespace sdk

@@ -345,6 +345,10 @@ TEST_F(scale_test, scale_test_create) {
     create_objects();
     rv = oci_batch_commit();
     ASSERT_TRUE(rv == SDK_RET_OK);
+
+    //printf("Entering forever loop ...\n");
+    //fflush(stdout);
+    //while (1);
 }
 
 // print help message showing usage of HAL

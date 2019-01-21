@@ -27,24 +27,24 @@ typedef struct mac_info_s {
 } mac_info_t;
 
 typedef struct mac_fn_s_ {
-    int (*mac_cfg) (mac_info_t *mac_info);
-    int (*mac_enable) (uint32_t port_num, uint32_t speed,
-                       uint32_t num_lanes, bool enable);
-    int (*mac_soft_reset)  (uint32_t port_num, uint32_t speed,
-                            uint32_t num_lanes, bool reset);
-    int (*mac_stats_reset)  (uint32_t mac_inst, uint32_t mac_ch, bool reset);
-    int (*mac_intr_clear)  (uint32_t port_num, uint32_t speed,
-                            uint32_t num_lanes);
-    int (*mac_intr_enable) (uint32_t port_num, uint32_t speed,
-                            uint32_t num_lanes, bool enable);
-    bool (*mac_faults_get) (uint32_t port_num);
-    bool (*mac_sync_get)   (uint32_t port_num);
-    int  (*mac_flush_set)  (uint32_t port_num, bool enable);
-    int  (*mac_stats_get)  (uint32_t mac_inst, uint32_t mac_ch,
-                            uint64_t *stats_data);
+    int (*mac_cfg)(mac_info_t *mac_info);
+    int (*mac_enable)(uint32_t port_num, uint32_t speed,
+                      uint32_t num_lanes, bool enable);
+    int (*mac_soft_reset)(uint32_t port_num, uint32_t speed,
+                          uint32_t num_lanes, bool reset);
+    int (*mac_stats_reset)(uint32_t mac_inst, uint32_t mac_ch, bool reset);
+    int (*mac_intr_clear)(uint32_t port_num, uint32_t speed,
+                          uint32_t num_lanes);
+    int (*mac_intr_enable)(uint32_t port_num, uint32_t speed,
+                           uint32_t num_lanes, bool enable);
+    bool (*mac_faults_get)(uint32_t port_num);
+    bool (*mac_sync_get)(uint32_t port_num);
+    int  (*mac_flush_set)(uint32_t port_num, bool enable);
+    int  (*mac_stats_get)(uint32_t mac_inst, uint32_t mac_ch,
+                          uint64_t *stats_data);
     int  (*mac_pause_src_addr)(uint32_t mac_inst, uint32_t mac_ch,
                                uint8_t *mac_addr);
-    int  (*mac_deinit)     (uint32_t mac_inst, uint32_t mac_ch);
+    int  (*mac_deinit)(uint32_t mac_inst, uint32_t mac_ch);
 } mac_fn_t;
 
 extern mac_fn_t mac_fns;

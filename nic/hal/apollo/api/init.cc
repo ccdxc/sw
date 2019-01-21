@@ -16,6 +16,7 @@
 #include "nic/hal/apollo/core/oci_state.hpp"
 #include "nic/hal/apollo/api/port.hpp"
 #include "nic/hal/apollo/core/core.hpp"
+#include "nic/hal/apollo/api/debug.hpp"
 
 namespace api {
 
@@ -139,6 +140,7 @@ static void
 sig_handler (int sig, siginfo_t *info, void *ptr)
 {
     OCI_TRACE_DEBUG("Caught signal %d", sig);
+    debug::system_dump("hal.info");
 }
 
 }    // namespace api
