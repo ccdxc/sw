@@ -376,8 +376,12 @@ write_64bits(void *ptr, unsigned int start_bit_offset,
 }
 
 #define write_bit_fields(p, off, sz, val) \
-	if ((sz) == 64 && ((off) & 63) == 0) write_64bits(p, off, val);	\
-	else write_bits(p, off, sz, val)
+	if ((sz) == 64 && ((off) & 63) == 0) { \
+		if (val) write_64bits(p, off, val); \
+	} else { \
+		if (val) write_bits(p, off, sz, val); \
+	}
+
 
 
 static void
