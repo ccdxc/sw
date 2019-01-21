@@ -163,6 +163,7 @@ def __add_config_classic_workloads(req, target_node = None):
             ipv6_subnet_allocator[net.name] = resmgr.Ipv6AddressStep(net.ipv6.ipam_base.split('/')[0], # 2000::/48 \
                                                                    str(ipaddress.IPv6Address(1 << int(net.ipv6.ipam_base.split('/')[1]))))
     mac_allocator = resmgr.MacAddressStep("00AA.0000.0001", "0000.0000.0001")
+    # Using up first vlan for native
     api.Testbed_AllocateVlan()
     # Forming native workloads
     native_nw_spec = {} # intf -> nw_spec
@@ -207,11 +208,12 @@ def __add_config_classic_workloads(req, target_node = None):
     nw_specs = {} # ith subif -> nw_spec
     ipv4_allocators = {} # ith subif -> ipv4_allocator
     ipv6_allocators = {} # ith subif  -> ipv6_allocator
+    vlans = {} # ith subif -> vlan
     for workload in spec.instances.workloads:
         wl = workload.workload
         if wl.spec == 'tagged':
             if wl.count == 'auto':
-                num_subifs = 3
+                num_subifs = (api.Testbed_GetVlanCount() - 1) # 1 for native
             else:
                 num_subifs = int(wl.count)
             for i in range(num_subifs):
@@ -225,11 +227,12 @@ def __add_config_classic_workloads(req, target_node = None):
                     ipv6_subnet = ipv6_subnet_allocator[nw_spec.name].Alloc()
                     ipv6_allocators[i] = resmgr.Ipv6AddressStep(ipv6_subnet, "0::1")
                     ipv6_allocators[i].Alloc() # To skip 0 ip
+                    vlans[i] = api.Testbed_AllocateVlan()
                 intf = wl.interfaces[i % len(wl.interfaces)]
                 nw_spec = nw_specs[i]
                 ipv4_allocator = ipv4_allocators[i]
                 ipv6_allocator = ipv6_allocators[i]
-                vlan = api.Testbed_AllocateVlan()
+                vlan = vlans[i]
                 node_intf = node_ifs[wl.node][int(intf.replace('host_if', '')) - 1]
                 wl_msg = req.workloads.add()
                 ip4_addr_str = str(ipv4_allocator.Alloc())

@@ -235,6 +235,9 @@ def DoNodeConfig(node_name):
 def Testbed_AllocateVlan():
     return store.GetTestbed().AllocateVlan()
 
+def Testbed_GetVlanCount():
+    return store.GetTestbed().GetVlanCount()
+
 def Abort():
     return store.GetTestbed().GetCurrentTestsuite().Abort()
 
