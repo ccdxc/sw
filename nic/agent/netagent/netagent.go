@@ -224,7 +224,7 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		ag.NetworkAgent.Ctrlerif = nil
 
 		// create the NPM client
-		npmClient, err := ctrlerif.NewNpmClient(ag.NetworkAgent, "master.local:"+globals.NpmRPCPort, ag.ResolverClient)
+		npmClient, err := ctrlerif.NewNpmClient(ag.NetworkAgent, globals.Npm, ag.ResolverClient)
 		if err != nil {
 			log.Errorf("Error creating NPM client. Err: %v", err)
 		}
