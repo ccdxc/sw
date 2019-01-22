@@ -262,6 +262,7 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 		IONIC_QUE_INFO(rxq, "RX Status %d\n", comp->status);
 		stats->comp_err++;
 		m_freem(m);
+		rxbuf->m = NULL;
 		return;
 	}
 
@@ -269,7 +270,7 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	if (comp->len > ETHER_MAX_FRAME(rxq->lif->netdev, ETHERTYPE_VLAN, 1)) {
 		IONIC_QUE_INFO(rxq, "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
 		m_freem(m);
-	
+		rxbuf->m = NULL;
 		return;
 	}
 #endif
@@ -352,6 +353,8 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 		return (ENOMEM);
 	}
 
+	KASSERT(rxbuf->m == NULL, ("rxuf %d is not empty", index));
+
 	m->m_pkthdr.len = m->m_len = len;
 	rxbuf->m = m;
 
@@ -370,11 +373,15 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 
 void ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
 {
+	//KASSERT(rxbuf->m == NULL, ("rxbuf already empty"));
+
 	rxq->stats.mbuf_free++;
 	bus_dmamap_sync(rxq->buf_tag, rxbuf->dma_map, BUS_DMASYNC_POSTREAD);
 	bus_dmamap_unload(rxq->buf_tag, rxbuf->dma_map);
 
-	m_freem(rxbuf->m);
+	if (rxbuf->m)
+		m_freem(rxbuf->m);
+
 	rxbuf->m = NULL;
 }
 
@@ -792,15 +799,16 @@ ionic_get_header_size(struct txque *txq, struct mbuf *mb, uint16_t *eth_type,
 	return (0);
 }
 
-static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
+static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 {
 	struct txq_desc *desc;
 	struct txq_sg_desc *sg;
 	struct tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *txbuf;
+	struct mbuf *m = *m_headp;
 	bool offload = false;
 	int i, error, index, nsegs;
-	bus_dma_segment_t  seg[IONIC_TX_MAX_SG_ELEMS + 1]; /* Extra for the first segment. */
+	bus_dma_segment_t  seg[IONIC_MAX_TSO_SG_ENTRIES + 1]; /* Extra for the first segment. */
 
 	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n",
 		 txq->head_index, txq->tail_index);
@@ -819,24 +827,27 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf *m)
 	if (error == EFBIG) {
 		struct mbuf *newm;
 
-		stats->linearize++;
+		stats->mbuf_defrag++;
 		newm = m_defrag(m, M_NOWAIT);
 		if (newm == NULL) {
-			stats->linearize_err++;
+			stats->mbuf_defrag_err++;
 			m_freem(m);
-			m = NULL;
-			IONIC_QUE_ERROR(txq, "failed to linearize\n");
+			*m_headp = NULL;
+			IONIC_QUE_ERROR(txq, "failed to defrag mbuf\n");
 			return (ENOBUFS);
 		}
-		m = newm;
-		error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, m,
+		*m_headp = newm;
+		error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, newm,
 			seg, &nsegs, BUS_DMA_NOWAIT);
 	}
-	if (error) {
+	if (error || (nsegs > IONIC_MAX_TSO_SG_ENTRIES)) {
 		m_freem(m);
-		m = NULL;
+		*m_headp = NULL;
 		stats->dma_map_err++;
-		IONIC_QUE_ERROR(txq, "setting up dma map failed, error: %d\n", error);
+		IONIC_QUE_ERROR(txq, "setting up dma map failed, segs %d/%d, error: %d\n",
+				nsegs, IONIC_MAX_TSO_SG_ENTRIES, error);
+		/* Too many segments. */
+		error = (error == 0) ? EFBIG : error;
 		return (error);
 	}
 
@@ -945,27 +956,29 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 }
 #endif
 
-static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
+static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 {
+	struct mbuf *m = *m_headp;
 	uint32_t mss = m->m_pkthdr.tso_segsz;
 	struct tx_stats *stats = &txq->stats;
-	struct ifnet* ifp = txq->lif->netdev;
 	struct ionic_tx_buf *first_txbuf, *txbuf;
 	struct txq_desc *desc;
 	struct txq_sg_desc *sg;
 	uint16_t eth_type;
 	int i, j, index, hdr_len, proto, error, nsegs;
 	uint32_t frag_offset, desc_len, remain_len, frag_remain_len, desc_max_size;
-	bus_dma_segment_t  seg[IONIC_MAX_TSO_SEG];
+	bus_dma_segment_t  seg[IONIC_MAX_TSO_SG_ENTRIES + 1]; /* Extra for the first segment. */
 
 	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n",
 		txq->head_index, txq->tail_index);
 
 	if ((error = ionic_get_header_size(txq, m, &eth_type, &proto, &hdr_len))) {
-		IONIC_NETDEV_ERROR(ifp, "mbuf packet discarded, type: %x proto: %x"
+		IONIC_QUE_ERROR(txq, "mbuf packet discarded, type: %x proto: %x"
 			" hdr_len :%u\n", eth_type, proto, hdr_len);
 		ionic_dump_mbuf(m);
 		stats->bad_ethtype++;
+		m_freem(m);
+		*m_headp = NULL;
 		return (error);
 	}
 
@@ -981,24 +994,28 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 	if (error == EFBIG) {
 		struct mbuf *newm;
 
-		stats->linearize++;
+		stats->mbuf_defrag++;
 		newm = m_defrag(m, M_NOWAIT);
 		if (newm == NULL) {
-			stats->linearize_err++;
+			stats->mbuf_defrag_err++;
 			m_freem(m);
-			m = NULL;
-			IONIC_QUE_ERROR(txq, "failed to linearize\n");
+			*m_headp = NULL;
+			IONIC_QUE_ERROR(txq, "mbuf_defrag returned NULL\n");
 			return (ENOBUFS);
 		}
-		m = newm;
-		error = bus_dmamap_load_mbuf_sg(txq->buf_tag, first_txbuf->dma_map, m,
+		*m_headp = newm;
+		error = bus_dmamap_load_mbuf_sg(txq->buf_tag, first_txbuf->dma_map, newm,
 			seg, &nsegs, BUS_DMA_NOWAIT);
 	}
-	if (error) {
+	if (error || (nsegs > IONIC_MAX_TSO_SG_ENTRIES)) {
 		m_freem(m);
-		m = NULL;
+		*m_headp = NULL;
 		stats->dma_map_err++;
-		IONIC_QUE_ERROR(txq, "setting up dma map failed, error: %d\n", error);
+		IONIC_QUE_ERROR(txq, "setting up dma map failed, seg %d/%d , error: %d\n",
+				nsegs, IONIC_MAX_TSO_SG_ENTRIES, error);
+		/* Too many fragments. */
+		error = (error == 0) ? EFBIG : error;
+
 		return (error);
 	}
 
@@ -1071,7 +1088,7 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 		/* 
 		 * Now populate SG list, with the remaining fragments upto MSS size.
 		 */
-		for ( j = 0 ; j < IONIC_TX_MAX_SG_ELEMS && (i < nsegs) && desc_len < desc_max_size; j++) {
+		for ( j = 0 ; j < IONIC_MAX_TSO_SG_ENTRIES && (i < nsegs) && desc_len < desc_max_size; j++) {
 			sg->elems[j].addr = seg[i].ds_addr + frag_offset;
 			sg->elems[j].len = min(frag_remain_len, (desc_max_size - desc_len));
 			frag_remain_len -= sg->elems[j].len;
@@ -1114,7 +1131,7 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf *m)
 }
 
 
-static int ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf *m)
+static int ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf **m)
 {
 	struct tx_stats *stats;
 	int err;
@@ -1125,9 +1142,9 @@ static int ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf *m)
 	stats = &txq->stats;
 
 	/* Send a copy of the frame to the BPF listener */
-	ETHER_BPF_MTAP(ifp, m);
+	ETHER_BPF_MTAP(ifp, *m);
 
-	if (m->m_pkthdr.csum_flags & CSUM_TSO)
+	if ((*m)->m_pkthdr.csum_flags & CSUM_TSO)
 		err = ionic_tx_tso_setup(txq, m);
 	else
 		err = ionic_tx_setup(txq, m);
@@ -1152,7 +1169,7 @@ ionic_start_xmit_locked(struct ifnet* ifp, struct txque* txq)
 	ionic_intr_return_credits(&txq->intr, work_done, 0, false);
 #endif
 	while ((m = drbr_peek(ifp, txq->br)) != NULL) {
-		if ((err = ionic_xmit(ifp, txq, m)) != 0) {
+		if ((err = ionic_xmit(ifp, txq, &m)) != 0) {
 			if (m == NULL) {
 				drbr_advance(ifp, txq->br);
 			} else {
@@ -1495,10 +1512,10 @@ ionic_lif_add_txtstat(struct txque *txq, struct sysctl_ctx_list *ctx,
 					 &txstat->re_queue, "Packets were requeued");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "no_descs", CTLFLAG_RD,
 					 &txstat->no_descs, "Descriptors not available");
-	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "linearize", CTLFLAG_RD,
-					 &txstat->linearize, "Linearize  mbuf");
-	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "linearize_err", CTLFLAG_RD,
-					 &txstat->linearize_err, "Linearize  mbuf failed");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "mbuf_defrag", CTLFLAG_RD,
+					 &txstat->mbuf_defrag, "Linearize  mbuf");
+	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "mbuf_defrag_err", CTLFLAG_RD,
+					 &txstat->mbuf_defrag_err, "Linearize  mbuf failed");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "bad_ethtype", CTLFLAG_RD,
 					 &txstat->bad_ethtype, "Tx malformed Ethernet");
 
@@ -2054,7 +2071,6 @@ ionic_set_rss_type(void)
 int
 ionic_lif_rss_setup(struct lif *lif)
 {
-	struct net_device *netdev = lif->netdev;
 	struct device *dev = lif->ionic->dev;
 	size_t tbl_size = sizeof(*lif->rss_ind_tbl) * RSS_IND_TBL_SIZE;
 	unsigned int i;
@@ -2077,7 +2093,7 @@ ionic_lif_rss_setup(struct lif *lif)
 					      GFP_KERNEL);
 
 	if (!lif->rss_ind_tbl) {
-		IONIC_NETDEV_ERROR(netdev, "failed to allocate RSS table\n");
+		IONIC_NETDEV_ERROR(lif->netdev, "failed to allocate RSS table\n");
 		return -ENOMEM;
 	}
 

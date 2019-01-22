@@ -47,8 +47,8 @@ struct tx_stats {
 	u64 bytes;
 	u64 clean;
 	u64 re_queue;
-	u64 linearize;
-	u64 linearize_err;
+	u64 mbuf_defrag;
+	u64 mbuf_defrag_err;
 	u64 no_descs;
 	u64 no_csum_offload;
 	u64 csum_offload;
