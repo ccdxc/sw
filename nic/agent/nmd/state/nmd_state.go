@@ -487,6 +487,43 @@ func NaplesCoreDeleteHandler(r *http.Request) (interface{}, error) {
 	return resp, nil
 }
 
+func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
+	parts := strings.Fields(req.Opts)
+	cmd := exec.Command(req.Executable, parts...)
+	stdoutStderr, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(fmt.Sprintf(err.Error()) + ":" + string(stdoutStderr)), err
+	}
+	return string(stdoutStderr), nil
+}
+
+//NaplesPkgVerify is used to verify the package
+func NaplesPkgVerify(pkgName string) (string, error) {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/fwupdate",
+		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -v"}, ""),
+	}
+	return naplesExecCmd(v)
+}
+
+//NaplesPkgInstall is used to install the package in emmc
+func NaplesPkgInstall(pkgName string) (string, error) {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/fwupdate",
+		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -i all"}, ""),
+	}
+	return naplesExecCmd(v)
+}
+
+//NaplesSetBootImg  is used to set the boot variable
+func NaplesSetBootImg() (string, error) {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/fwupdate",
+		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
+	}
+	return naplesExecCmd(v)
+}
+
 //NaplesCmdExecHandler is the REST handler to execute any binary on naples and return the output
 func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
 	req := nmd.NaplesCmdExecute{}
@@ -505,11 +542,5 @@ func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
 	}
 
 	log.Infof("Naples Cmd Execute Request: %+v env: [%s]", req, os.Environ())
-	parts := strings.Fields(req.Opts)
-	cmd := exec.Command(req.Executable, parts...)
-	stdoutStderr, err := cmd.CombinedOutput()
-	if err != nil {
-		return string(fmt.Sprintf(err.Error()) + ":" + string(stdoutStderr)), err
-	}
-	return string(stdoutStderr), nil
+	return naplesExecCmd(&req)
 }
