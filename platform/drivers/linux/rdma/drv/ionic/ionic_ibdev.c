@@ -4072,8 +4072,7 @@ static int ionic_check_modify_qp(struct ionic_qp *qp, struct ib_qp_attr *attr,
 	enum ib_qp_state next_state = (mask & IB_QP_STATE) ?
 		attr->qp_state : cur_state;
 
-	if (!ib_modify_qp_is_ok(cur_state, next_state, qp->ibqp.qp_type, mask,
-				IB_LINK_LAYER_ETHERNET))
+	if (!ib_modify_qp_is_ok(cur_state, next_state, qp->ibqp.qp_type, mask))
 		return -EINVAL;
 
 	/* unprivileged qp not allowed priveleged qkey */
@@ -6293,7 +6292,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	ibdev->owner = THIS_MODULE;
 	ibdev->dev.parent = dev->hwdev;
 
+#ifndef HAVE_IB_REGISTER_DEVICE_NAME
 	strlcpy(ibdev->name, "ionic_%d", IB_DEVICE_NAME_MAX);
+#endif
 	strlcpy(ibdev->node_desc, DEVICE_DESCRIPTION, IB_DEVICE_NODE_DESC_MAX);
 
 	ibdev->node_type = RDMA_NODE_IB_CA;
@@ -6423,7 +6424,11 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	ibdev->dma_device = ibdev->dev.parent;
 #endif
 
+#ifdef HAVE_IB_REGISTER_DEVICE_NAME
+	rc = ib_register_device(ibdev, "ionic_%d", NULL);
+#else
 	rc = ib_register_device(ibdev, NULL);
+#endif
 	if (rc)
 		goto err_register;
 
