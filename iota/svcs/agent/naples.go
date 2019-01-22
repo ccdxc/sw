@@ -364,7 +364,7 @@ func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workl
 
 	var intf string
 
-	if attachedIntf, err := wload.AddInterface(in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), in.GetIpv6Prefix(), int(in.GetEncapVlan())); err != nil {
+	if attachedIntf, err := wload.AddInterface(in.GetParentInterface(), in.GetMacAddress(), in.GetIpPrefix(), in.GetIpv6Prefix(), int(in.GetEncapVlan())); err != nil {
 		msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
 		dnode.logger.Error(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}

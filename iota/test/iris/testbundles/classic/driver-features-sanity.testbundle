@@ -124,7 +124,7 @@ testcases:
 
     -   name    : UplinkIntf_TSO_AFTER_RESTART
         testcase: testcases.drivers.features
-        enable  : False
+        enable  : True
         iterators :
             type               : nested
             mtu                : [ '8192']
