@@ -1,13 +1,14 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 #include <time.h>
 
-#include "pal.hpp"
-#include "rtc_test.h"
-#include "cpld_test.h"
-#include "temp_sensor_test.h"
-#include "logger.hpp"
-#include "diag_utils.h"
+#include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/platform/diag/rtc_test.h"
+#include "nic/sdk/platform/diag/cpld_test.h"
+#include "nic/sdk/platform/diag/temp_sensor_test.h"
+#include "nic/sdk/platform/diag/diag_utils.h"
+#include "nic/sdk/lib/logger/logger.hpp"
 
 #define ARRAY_LEN(var)   (int)((sizeof(var)/sizeof(var[0])))
 
@@ -23,6 +24,7 @@
 
 typedef std::shared_ptr<spdlog::logger> Logger;
 static Logger current_logger;
+using namespace sdk::platform::diag;
 
 struct test_info
 {

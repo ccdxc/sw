@@ -1,7 +1,11 @@
 /*
  * Copyright (c) 2018, Pensando Systems Inc.
  */
-#include "sensor.h"
+#include "sensor.hpp"
+
+namespace sdk {
+namespace platform {
+namespace sensor {
 
 static int
 read_file(const char *filename, uint64_t *variable)
@@ -67,3 +71,7 @@ int read_pout2(uint64_t *pout2)
     }
     return read_file(POUT2_INPUT_FILE, pout2);
 }
+
+} // namespace sensor
+} // namespace platform
+} // namespace sdk

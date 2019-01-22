@@ -4,7 +4,7 @@
 
 #include "sysmond.h"
 #include "nic/asic/capri/verif/apis/cap_nwl_sbus_api.h"
-#include "platform/src/lib/sensor/sensor.h"
+#include "nic/sdk/platform/sensor/sensor.hpp"
 
 static delphi::objects::asictemperaturemetrics_t    asictemp;
 
@@ -15,7 +15,7 @@ checktemperature(void)
     uint8_t key = 0;
     uint32_t ret;
 
-    ret = read_die_temperature(&asictemp.die_temperature);
+    ret = sdk::platform::sensor::read_die_temperature(&asictemp.die_temperature);
     if (!ret) {
         asictemp.die_temperature = asictemp.die_temperature / 1000;
         TRACE_INFO(GetLogger(), "{:s} is : {:d}W",
@@ -24,7 +24,7 @@ checktemperature(void)
         TRACE_ERR(GetLogger(), "Reading die temperature failed");
     }
 
-    ret = read_local_temperature(&asictemp.local_temperature);
+    ret = sdk::platform::sensor::read_local_temperature(&asictemp.local_temperature);
     if (!ret) {
         asictemp.local_temperature = asictemp.local_temperature / 1000;
         TRACE_INFO(GetLogger(), "{:s} is : {:d}W",
