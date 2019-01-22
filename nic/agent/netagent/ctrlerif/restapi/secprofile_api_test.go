@@ -49,6 +49,7 @@ func TestSecurityProfilePost(t *testing.T) {
 			Name:      "testPostSecurityProfile",
 		},
 		Spec: netproto.SecurityProfileSpec{
+			AttachNamespaces: []string{"default"},
 			Timeouts: &netproto.Timeouts{
 				SessionIdle:        "10s",
 				TCP:                "1m",
@@ -94,6 +95,7 @@ func TestSecurityProfileDelete(t *testing.T) {
 			Name:      "testDeleteSecurityProfile",
 		},
 		Spec: netproto.SecurityProfileSpec{
+			AttachNamespaces: []string{"default"},
 			Timeouts: &netproto.Timeouts{
 				SessionIdle:        "10s",
 				TCP:                "1m",

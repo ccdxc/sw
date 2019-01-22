@@ -205,9 +205,8 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 	ns := netproto.Namespace{
 		TypeMeta: api.TypeMeta{Kind: "Namespace"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant:    "preCreatedTenant",
-			Name:      "preCreatedNamespace",
-			Namespace: "preCreatedNamespace",
+			Tenant: "preCreatedTenant",
+			Name:   "preCreatedNamespace",
 		},
 	}
 

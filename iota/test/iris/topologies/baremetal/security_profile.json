@@ -11,6 +11,9 @@
         "namespace": "default"
       },
       "spec": {
+        "attach-namespaces": [
+          "default"
+        ],
         "timeouts": {
           "session-idle": "90s",
           "tcp": "1h",

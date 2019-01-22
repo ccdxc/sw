@@ -16,6 +16,7 @@ import (
 
 // CreateSecurityProfile creates a security profile
 func (na *Nagent) CreateSecurityProfile(profile *netproto.SecurityProfile) error {
+	var attachmentVrfs []*netproto.Namespace
 	err := na.validateMeta(profile.Kind, profile.ObjectMeta)
 	if err != nil {
 		return err
@@ -38,6 +39,16 @@ func (na *Nagent) CreateSecurityProfile(profile *netproto.SecurityProfile) error
 		return err
 	}
 
+	// Find the attachment namespaces
+	for _, namespace := range profile.Spec.AttachNamespaces {
+		ns, err := na.FindNamespace(profile.Tenant, namespace)
+		if err != nil {
+			log.Errorf("Failed to find the attachment namespace: %v. Err: %v", namespace, err)
+			return err
+		}
+		attachmentVrfs = append(attachmentVrfs, ns)
+	}
+
 	profile.Status.SecurityProfileID, err = na.Store.GetNextID(types.SecurityProfileID)
 	profile.Status.SecurityProfileID += types.SecurityProfileOffset
 
@@ -47,7 +58,7 @@ func (na *Nagent) CreateSecurityProfile(profile *netproto.SecurityProfile) error
 	}
 
 	// create it in datapath
-	err = na.Datapath.CreateSecurityProfile(profile, ns)
+	err = na.Datapath.CreateSecurityProfile(profile, attachmentVrfs)
 	if err != nil {
 		log.Errorf("Error creating security profile in datapath. SecurityProfile {%+v}. Err: %v", profile, err)
 		return err
@@ -104,6 +115,8 @@ func (na *Nagent) ListSecurityProfile() []*netproto.SecurityProfile {
 
 // UpdateSecurityProfile updates a security profile
 func (na *Nagent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error {
+	var attachmentVrfs []*netproto.Namespace
+
 	// find the corresponding namespace
 	_, err := na.FindNamespace(profile.Tenant, profile.Namespace)
 	if err != nil {
@@ -120,10 +133,21 @@ func (na *Nagent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error
 		log.Infof("Nothing to update.")
 		return nil
 	}
+
+	// Find the attachment namespaces
+	for _, namespace := range profile.Spec.AttachNamespaces {
+		ns, err := na.FindNamespace(profile.Tenant, namespace)
+		if err != nil {
+			log.Errorf("Failed to find the attachment namespace: %v. Err: %v", namespace, err)
+			return err
+		}
+		attachmentVrfs = append(attachmentVrfs, ns)
+	}
+
 	// Populate the ID from existing security profile to ensure that HAL recognizes this.
 	profile.Status.SecurityProfileID = existingProfile.Status.SecurityProfileID
 
-	err = na.Datapath.UpdateSecurityProfile(profile)
+	err = na.Datapath.UpdateSecurityProfile(profile, attachmentVrfs)
 	if err != nil {
 		log.Errorf("Error updating the Security Profile {%+v} in datapath. Err: %v", existingProfile, err)
 		return err
@@ -138,6 +162,8 @@ func (na *Nagent) UpdateSecurityProfile(profile *netproto.SecurityProfile) error
 
 // DeleteSecurityProfile deletes a security profile
 func (na *Nagent) DeleteSecurityProfile(tn, namespace, name string) error {
+	var attachmentVrfs []*netproto.Namespace
+
 	sgp := &netproto.SecurityProfile{
 		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
 		ObjectMeta: api.ObjectMeta{
@@ -162,6 +188,16 @@ func (na *Nagent) DeleteSecurityProfile(tn, namespace, name string) error {
 		return errors.New("security profile not found")
 	}
 
+	// Find the attachment namespaces
+	for _, namespace := range existingSecurityProfile.Spec.AttachNamespaces {
+		ns, err := na.FindNamespace(existingSecurityProfile.Tenant, namespace)
+		if err != nil {
+			log.Errorf("Failed to find the attachment namespace: %v. Err: %v", namespace, err)
+			return err
+		}
+		attachmentVrfs = append(attachmentVrfs, ns)
+	}
+
 	// check if the current security profile has any objects referring to it
 	err = na.Solver.Solve(existingSecurityProfile)
 	if err != nil {
@@ -170,7 +206,7 @@ func (na *Nagent) DeleteSecurityProfile(tn, namespace, name string) error {
 	}
 
 	// delete it in the datapath
-	err = na.Datapath.DeleteSecurityProfile(existingSecurityProfile, ns)
+	err = na.Datapath.DeleteSecurityProfile(existingSecurityProfile, attachmentVrfs)
 	if err != nil {
 		log.Errorf("Error deleting security profile {%+v}. Err: %v", sgp, err)
 		// continue cleaning up

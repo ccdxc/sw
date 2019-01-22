@@ -303,9 +303,9 @@ type NetDatapathAPI interface {
 	CreatePort(port *netproto.Port) (*netproto.Port, error)                                                                                                          // Creates a port in the datapath
 	UpdatePort(port *netproto.Port) (*netproto.Port, error)                                                                                                          // Updates a port in the datapath
 	DeletePort(port *netproto.Port) error                                                                                                                            // Deletes a port in the datapath
-	CreateSecurityProfile(profile *netproto.SecurityProfile, vrf *netproto.Namespace) error                                                                          // Creates a security profile in the datapath
-	UpdateSecurityProfile(profile *netproto.SecurityProfile) error                                                                                                   // Updates a  security profile in the datapath
-	DeleteSecurityProfile(profile *netproto.SecurityProfile, vrf *netproto.Namespace) error                                                                          // Deletes a security profile in the datapath
+	CreateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error                                                             // Creates a security profile in the datapath
+	UpdateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error                                                             // Updates a  security profile in the datapath
+	DeleteSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error                                                             // Deletes a security profile in the datapath
 	GetUUID() (string, error)                                                                                                                                        // GetUUID gets the FRU information for the NAPLES from HAL.
 }
 
