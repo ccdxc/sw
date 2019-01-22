@@ -518,7 +518,8 @@ func (a adapterBookstoreV1) AutoListBook(oldctx oldcontext.Context, t *api.ListW
 		return nil, errors.New("unknown service profile")
 	}
 
-	t.Tenant, t.Namespace = "", ""
+	t.Tenant = ""
+	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "BookList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -543,7 +544,8 @@ func (a adapterBookstoreV1) AutoListCoupon(oldctx oldcontext.Context, t *api.Lis
 		return nil, errors.New("unknown service profile")
 	}
 
-	t.Tenant, t.Namespace = "", ""
+	t.Tenant = ""
+	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "CouponList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -568,7 +570,8 @@ func (a adapterBookstoreV1) AutoListCustomer(oldctx oldcontext.Context, t *api.L
 		return nil, errors.New("unknown service profile")
 	}
 
-	t.Tenant, t.Namespace = "", ""
+	t.Tenant = ""
+	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "CustomerList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -593,7 +596,8 @@ func (a adapterBookstoreV1) AutoListOrder(oldctx oldcontext.Context, t *api.List
 		return nil, errors.New("unknown service profile")
 	}
 
-	t.Tenant, t.Namespace = "", ""
+	t.Tenant = ""
+	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "OrderList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -618,7 +622,8 @@ func (a adapterBookstoreV1) AutoListPublisher(oldctx oldcontext.Context, t *api.
 		return nil, errors.New("unknown service profile")
 	}
 
-	t.Tenant, t.Namespace = "", ""
+	t.Tenant = ""
+	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "PublisherList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -643,7 +648,8 @@ func (a adapterBookstoreV1) AutoListStore(oldctx oldcontext.Context, t *api.List
 		return nil, errors.New("unknown service profile")
 	}
 
-	t.Tenant, t.Namespace = "", ""
+	t.Tenant = ""
+	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "StoreList", t.Tenant, t.Namespace, "bookstore", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -905,7 +911,8 @@ func (a adapterBookstoreV1) AutoWatchOrder(oldctx oldcontext.Context, in *api.Li
 		return nil, errors.New("unknown service profile")
 	}
 
-	in.Tenant, in.Namespace = "", ""
+	in.Tenant = ""
+	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Order", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -961,7 +968,8 @@ func (a adapterBookstoreV1) AutoWatchBook(oldctx oldcontext.Context, in *api.Lis
 		return nil, errors.New("unknown service profile")
 	}
 
-	in.Tenant, in.Namespace = "", ""
+	in.Tenant = ""
+	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Book", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -1017,7 +1025,8 @@ func (a adapterBookstoreV1) AutoWatchPublisher(oldctx oldcontext.Context, in *ap
 		return nil, errors.New("unknown service profile")
 	}
 
-	in.Tenant, in.Namespace = "", ""
+	in.Tenant = ""
+	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Publisher", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -1073,7 +1082,8 @@ func (a adapterBookstoreV1) AutoWatchStore(oldctx oldcontext.Context, in *api.Li
 		return nil, errors.New("unknown service profile")
 	}
 
-	in.Tenant, in.Namespace = "", ""
+	in.Tenant = ""
+	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Store", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -1129,7 +1139,8 @@ func (a adapterBookstoreV1) AutoWatchCoupon(oldctx oldcontext.Context, in *api.L
 		return nil, errors.New("unknown service profile")
 	}
 
-	in.Tenant, in.Namespace = "", ""
+	in.Tenant = ""
+	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Coupon", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -1185,7 +1196,8 @@ func (a adapterBookstoreV1) AutoWatchCustomer(oldctx oldcontext.Context, in *api
 		return nil, errors.New("unknown service profile")
 	}
 
-	in.Tenant, in.Namespace = "", ""
+	in.Tenant = ""
+	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Customer", in.Tenant, in.Namespace, "bookstore"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -1282,7 +1294,7 @@ func (e *sBookstoreV1GwService) setupSvcProfile() {
 	e.svcProf["Cleardiscount"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Order", "bookstore", apiserver.CreateOper)
 
 	e.svcProf["Restock"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Book", "bookstore", apiserver.CreateOper)
-	e.svcProf["_RProxy_"+"/uploads/"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
+	e.svcProf["_RProxy_"+"/"+"uploads"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -1342,13 +1354,13 @@ func (e *sBookstoreV1GwService) CompleteRegistration(ctx context.Context,
 		logger.ErrorLog("msg", "failed to register swagger spec", "service", "bookstore.BookstoreV1", "error", err)
 	}
 	{
-		name := "_RProxy_" + "/uploads/"
+		name := "_RProxy_" + "/" + "uploads"
 		svcProf, err := e.GetServiceProfile(name)
 		if err != nil {
 			logger.Fatalf("failed to get service profile for [%s](%s)", name, err)
 		}
 
-		rproxy, err := apigwpkg.NewRProxyHandler("/configs/bookstore/v1/uploads/", "http://localhost:9918", svcProf)
+		rproxy, err := apigwpkg.NewRProxyHandler("uploads", "/configs/bookstore/v1/", "/apis", "http://localhost:9918", svcProf)
 		if err != nil {
 			logger.Fatalf("failed to get proxy handler for [%s](%s)", name, err)
 		}

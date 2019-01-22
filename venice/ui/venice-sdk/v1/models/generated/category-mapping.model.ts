@@ -21,6 +21,8 @@ import { AuditEvent } from './audit';
 import { NetworkNetwork } from './network';
 import { NetworkService } from './network';
 import { NetworkLbPolicy } from './network';
+import { ObjstoreBucket } from './objstore';
+import { ObjstoreObject } from './objstore';
 import { RolloutRollout } from './rollout';
 import { SecuritySecurityGroup } from './security';
 import { SecuritySGPolicy } from './security';
@@ -62,6 +64,10 @@ export const CategoryMapping  = {
     "Network" : new NetworkNetwork(),
     "Service" : new NetworkService(),
     "LbPolicy" : new NetworkLbPolicy(),
+  },
+  "Objstore" : {
+    "Bucket" : new ObjstoreBucket(),
+    "Object" : new ObjstoreObject(),
   },
   "Rollout" : {
     "Rollout" : new RolloutRollout(),

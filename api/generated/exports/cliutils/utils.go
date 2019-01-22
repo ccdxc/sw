@@ -22,6 +22,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/monitoring/cli"
 	// blank import to pull in network service into cli utils
 	_ "github.com/pensando/sw/api/generated/network/cli"
+	// blank import to pull in objstore service into cli utils
+	_ "github.com/pensando/sw/api/generated/objstore/cli"
 	// blank import to pull in rollout service into cli utils
 	_ "github.com/pensando/sw/api/generated/rollout/cli"
 	// blank import to pull in search service into cli utils

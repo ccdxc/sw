@@ -22,6 +22,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/monitoring/grpc/server"
 	// blank import to pull in network service into api server
 	_ "github.com/pensando/sw/api/generated/network/grpc/server"
+	// blank import to pull in objstore service into api server
+	_ "github.com/pensando/sw/api/generated/objstore/grpc/server"
 	// blank import to pull in rollout service into api server
 	_ "github.com/pensando/sw/api/generated/rollout/grpc/server"
 	// blank import to pull in search service into api server

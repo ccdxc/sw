@@ -130,6 +130,7 @@ func (a adapterStagingV1) AutoListBuffer(oldctx oldcontext.Context, t *api.ListW
 	if t.Tenant == "" {
 		t.Tenant = globals.DefaultTenant
 	}
+	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "BufferList", t.Tenant, t.Namespace, "staging", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -276,6 +277,7 @@ func (a adapterStagingV1) AutoWatchBuffer(oldctx oldcontext.Context, in *api.Lis
 		return nil, errors.New("unknown service profile")
 	}
 
+	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Buffer", in.Tenant, in.Namespace, "staging"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)

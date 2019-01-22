@@ -91,6 +91,20 @@
       "svc_network.proto"
     ]
   },
+  "objstore": {
+    "Svcs": {
+      "ObjstoreV1": {
+        "Version": "v1",
+        "Messages": [
+          "Bucket",
+          "Object"
+        ]
+      }
+    },
+    "Files": [
+      "svc_objstore.proto"
+    ]
+  },
   "rollout": {
     "Svcs": {
       "RolloutV1": {

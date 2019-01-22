@@ -127,7 +127,8 @@ func (a adapterRolloutV1) AutoListRollout(oldctx oldcontext.Context, t *api.List
 		return nil, errors.New("unknown service profile")
 	}
 
-	t.Tenant, t.Namespace = "", ""
+	t.Tenant = ""
+	t.Namespace = ""
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "RolloutList", t.Tenant, t.Namespace, "rollout", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -228,7 +229,8 @@ func (a adapterRolloutV1) AutoWatchRollout(oldctx oldcontext.Context, in *api.Li
 		return nil, errors.New("unknown service profile")
 	}
 
-	in.Tenant, in.Namespace = "", ""
+	in.Tenant = ""
+	in.Namespace = ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Rollout", in.Tenant, in.Namespace, "rollout"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
