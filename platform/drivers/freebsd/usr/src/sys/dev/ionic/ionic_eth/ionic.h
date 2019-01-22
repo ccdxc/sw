@@ -39,9 +39,9 @@
 #define IONIX_RX_MAX_DESC	(64 * SIZE_1K)
 
 /* TSO DMA related definitions. */
-#define IONIC_MAX_TSO_SEG 		32
-#define IONIC_MAX_TSO_SEG_SIZE 	(64 * SIZE_1K)
-#define IONIC_MAX_TSO_SIZE 		(16 * IONIC_MAX_TSO_SEG_SIZE)
+#define IONIC_MAX_TSO_SG_ENTRIES 	(IONIC_TX_MAX_SG_ELEMS)
+#define IONIC_MAX_TSO_SG_SIZE 		(64 * SIZE_1K)
+#define IONIC_MAX_TSO_SIZE 		(64 * SIZE_1K)
 
 MALLOC_DECLARE(M_IONIC);
 
@@ -67,9 +67,9 @@ MALLOC_DECLARE(M_IONIC);
 #endif
 
 #define IONIC_DEV_WARN(d, f, args...) 						\
-		IONIC_DEV_DEBUG(d, "[%s:%d]WARN:" f, __func__, __LINE__, ## args)
+		IONIC_DEV_DEBUG(d, "[%s:%d]" f, __func__, __LINE__, ## args)
 #define IONIC_DEV_ERROR(d, f, args...) 						\
-		IONIC_DEV_DEBUG(d, "[%s:%d]ERROR:" f, __func__, __LINE__, ## args)
+		IONIC_DEV_DEBUG(d, "[%s:%d]" f, __func__, __LINE__, ## args)
 
 /* Netdev related. */
 #define IONIC_NETDEV_DEBUG(dev, fmt, ...) 					\
@@ -83,9 +83,9 @@ MALLOC_DECLARE(M_IONIC);
 #endif
 
 #define IONIC_NETDEV_WARN(dev, fmt, ...) 						\
-		IONIC_NETDEV_DEBUG(dev, "WARN:" fmt, ##__VA_ARGS__)
+		IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
 #define IONIC_NETDEV_ERROR(dev, fmt, ...) 						\
-		IONIC_NETDEV_DEBUG(dev, "ERROR:" fmt, ##__VA_ARGS__)
+		IONIC_NETDEV_DEBUG(dev, fmt, ##__VA_ARGS__)
 
 /* Print the MAC address. */
 #ifdef __FreeBSD__
@@ -109,9 +109,9 @@ MALLOC_DECLARE(M_IONIC);
 #endif
 
 #define IONIC_QUE_WARN(q, fmt, ...)								\
-		IONIC_QUE_DEBUG(q, "WARN:" fmt, ##__VA_ARGS__)
+		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
 #define IONIC_QUE_ERROR(q, fmt, ...)							\
-		IONIC_QUE_DEBUG(q, "ERROR:" fmt, ##__VA_ARGS__)
+		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)
 
 #if defined(IONIC_ENABLE_TRACING)
 #define IONIC_TX_TRACE(q, fmt, ...)		IONIC_QUE_DEBUG(q, fmt, ##__VA_ARGS__)

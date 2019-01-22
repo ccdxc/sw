@@ -1250,8 +1250,8 @@ static int ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	         /*      filter */ NULL,
 	         /*   filterarg */ NULL,
 	         /*     maxsize */ IONIC_MAX_TSO_SIZE,
-	         /*   nsegments */ IONIC_MAX_TSO_SEG,
-	         /*  maxsegsize */ IONIC_MAX_TSO_SEG_SIZE,
+	         /*   nsegments */ IONIC_MAX_TSO_SG_ENTRIES,
+	         /*  maxsegsize */ IONIC_MAX_TSO_SG_SIZE,
 	         /*       flags */ 0,
 	         /*    lockfunc */ NULL,
 	         /* lockfuncarg */ NULL,
@@ -2616,6 +2616,9 @@ static int ionic_station_set(struct lif *lif)
 	ionic_lif_set_netdev_info(lif);
 
 	lif->max_frame_size = netdev->if_mtu + ETHER_HDR_LEN + ETHER_VLAN_ENCAP_LEN + ETHER_CRC_LEN;
+        netdev->if_hw_tsomax = IONIC_MAX_TSO_SIZE - (ETHER_HDR_LEN + ETHER_CRC_LEN);
+        netdev->if_hw_tsomaxsegcount = IONIC_MAX_TSO_SG_ENTRIES;
+        netdev->if_hw_tsomaxsegsize = IONIC_MAX_TSO_SG_SIZE;
 
 	ifmedia_init(&lif->media, IFM_IMASK, ionic_media_change,
 	    ionic_media_status);
