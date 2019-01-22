@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"net/http"
 	"sync"
 
 	api "github.com/pensando/sw/api"
@@ -170,6 +171,7 @@ type CtrlerIntf interface {
 	GetTechSupportRequest(pcSession *tsproto.TechSupportRequest) *tsproto.TechSupportRequest
 	UpdateTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
 	DeleteTechSupportRequest(pcSession *tsproto.TechSupportRequest) error
+	Debug(w http.ResponseWriter, r *http.Request)
 }
 
 // TsDatapathAPI is all APIs provided by datapath/hal module. Implemented in datapath/hal.go (and in mockhal.go)

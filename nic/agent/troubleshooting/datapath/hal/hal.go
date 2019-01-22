@@ -240,19 +240,19 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 			log.Infof("delete mirror session %+v", mirrorReqMsg)
 			_, err := hd.Hal.TeleClient.MirrorSessionDelete(context.Background(), delReq)
 			if err != nil {
-				log.Errorf("Error deleteing mirror session. Err: %v", err)
+				log.Errorf("Error deleting mirror session. Err: %v, req: %+v", err, delReq)
 				return []uint64{}, []uint64{}, err
 			}
 		}
 
 		resp, err := hd.Hal.TeleClient.MirrorSessionCreate(context.Background(), mirrorReqMsg)
 		if err != nil {
-			log.Errorf("Error creating mirror session. Err: %v", err)
+			log.Errorf("Error creating mirror session. Err: %v, req:%+v", err, mirrorReqMsg)
 		}
 		if hd.Kind.String() == "hal" {
 			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				log.Errorf("HAL returned non OK status when creating mirror session. %v",
-					resp.Response[0].ApiStatus)
+				log.Errorf("HAL returned non OK status when creating mirror session. %+v, req: %+v",
+					resp.Response[0].ApiStatus, mirrorReqMsg)
 				err = ErrMirrorCreate
 			} else {
 				halConsumedMirrorSessions = append(halConsumedMirrorSessions, mirrorReqMsg)
@@ -266,13 +266,13 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 		for _, flowRuleReqMsg := range flowRuleReqMsgList {
 			resp, err := hd.Hal.TeleClient.FlowMonitorRuleCreate(context.Background(), flowRuleReqMsg)
 			if err != nil {
-				log.Errorf("Error creating flow monitor rule. Err: %v", err)
+				log.Errorf("Error creating flow monitor rule. Err: %v, req: %+v", err, flowRuleReqMsg)
 			}
 			if err == nil && hd.Kind.String() == "hal" {
 				for _, Response := range resp.Response {
 					if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-						log.Errorf("Flow monitor rule error. HAL returned Err. %v",
-							Response.ApiStatus)
+						log.Errorf("Flow monitor rule create error. HAL returned Err. %v, req: %+v",
+							Response.ApiStatus, flowRuleReqMsg)
 						err = ErrFlowMonitorRuleCreate
 					} else {
 						halConsumedFlowRules = append(halConsumedFlowRules, flowRuleReqMsg)
@@ -286,13 +286,13 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 		for _, dropRuleReqMsg := range dropRuleReqMsgList {
 			resp, err := hd.Hal.TeleClient.DropMonitorRuleCreate(context.Background(), dropRuleReqMsg)
 			if err != nil {
-				log.Errorf("Error creating drop monitor rule. Err: %v", err)
+				log.Errorf("Error creating drop monitor rule. Err: %v, req: %+v", err, dropRuleReqMsg)
 			}
 			if err == nil && hd.Kind.String() == "hal" {
 				for _, Response := range resp.Response {
 					if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-						log.Errorf("Drop monitor rule error. HAL returned Err. %v",
-							Response.ApiStatus)
+						log.Errorf("Drop monitor rule create error. HAL returned Err. %v, req: %+v",
+							Response.ApiStatus, dropRuleReqMsg)
 						err = ErrDropMonitorRuleCreate
 					} else {
 						halConsumedDropRules = append(halConsumedDropRules, dropRuleReqMsg)
@@ -410,12 +410,12 @@ func (hd *Datapath) DeletePacketCaptureSession(mirrorSessionKey string, mirrorDe
 	if mirrorDeleteReqMsg != nil {
 		resp, err := hd.Hal.TeleClient.MirrorSessionDelete(context.Background(), mirrorDeleteReqMsg)
 		if err != nil {
-			log.Errorf("Error deleting  mirror session. Err: %v", err)
+			log.Errorf("Error deleting  mirror session. Err: %v, req:%+v", err, mirrorDeleteReqMsg)
 		}
 		if hd.Kind.String() == "hal" {
 			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				log.Errorf("HAL returned non OK status when deleting  mirror session. %v",
-					resp.Response[0].ApiStatus)
+				log.Errorf("HAL returned non OK status when deleting mirror session. %v, req: %+v",
+					resp.Response[0].ApiStatus, mirrorDeleteReqMsg)
 				err = ErrMirrorCreate
 			}
 		}
@@ -428,7 +428,7 @@ func (hd *Datapath) UpdateFlowMonitorRule(flowRuleReqMsgList []*halproto.FlowMon
 	for _, flowRuleReqMsg := range flowRuleReqMsgList {
 		resp, err := hd.Hal.TeleClient.FlowMonitorRuleCreate(context.Background(), flowRuleReqMsg)
 		if err != nil {
-			log.Errorf("Error creating flow monitor rule. Err: %v", err)
+			log.Errorf("Error creating flow monitor rule. Err: %v, req:%+v", err, flowRuleReqMsg)
 		}
 		if err == nil && hd.Kind.String() == "hal" {
 			for _, Response := range resp.Response {
@@ -447,13 +447,13 @@ func (hd *Datapath) DeleteFlowMonitorRule(flowRuleDeleteReqMsgList []*halproto.F
 	for _, flowRuleDeleteReqMsg := range flowRuleDeleteReqMsgList {
 		resp, err := hd.Hal.TeleClient.FlowMonitorRuleDelete(context.Background(), flowRuleDeleteReqMsg)
 		if err != nil {
-			log.Errorf("Error deleting flow monitor rule. Err: %v", err)
+			log.Errorf("Error deleting flow monitor rule. Err: %v, req: %+v", err, flowRuleDeleteReqMsg)
 		}
 		if err == nil && hd.Kind.String() == "hal" {
 			for _, Response := range resp.Response {
 				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-					log.Errorf("Flow monitor rule delete error. HAL returned Err. %v",
-						Response.ApiStatus)
+					log.Errorf("Flow monitor rule delete error. HAL returned Err. %v, req: %+v",
+						Response.ApiStatus, flowRuleDeleteReqMsg)
 				}
 			}
 		}
@@ -466,13 +466,13 @@ func (hd *Datapath) UpdateDropMonitorRule(dropRuleReqMsgList []*halproto.DropMon
 	for _, dropRuleReqMsg := range dropRuleReqMsgList {
 		resp, err := hd.Hal.TeleClient.DropMonitorRuleCreate(context.Background(), dropRuleReqMsg)
 		if err != nil {
-			log.Errorf("Error creating drop monitor rule. Err: %v", err)
+			log.Errorf("Error creating drop monitor rule. Err: %v, req: %+v", err, dropRuleReqMsg)
 		}
 		if err == nil && hd.Kind.String() == "hal" {
 			for _, Response := range resp.Response {
 				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-					log.Errorf("Drop monitor rule error. HAL returned Err. %v",
-						Response.ApiStatus)
+					log.Errorf("Drop monitor rule error. HAL returned Err. %v, req: %+v",
+						Response.ApiStatus, dropRuleReqMsg)
 				}
 			}
 		}
@@ -485,13 +485,13 @@ func (hd *Datapath) DeleteDropMonitorRule(dropRuleDeleteReqMsgList []*halproto.D
 	for _, dropRuleDeleteReqMsg := range dropRuleDeleteReqMsgList {
 		resp, err := hd.Hal.TeleClient.DropMonitorRuleDelete(context.Background(), dropRuleDeleteReqMsg)
 		if err != nil {
-			log.Errorf("Error deleting drop monitor rule. Err: %v", err)
+			log.Errorf("Error deleting drop monitor rule. Err: %v, req: %+v", err, dropRuleDeleteReqMsg)
 		}
 		if err == nil && hd.Kind.String() == "hal" {
 			for _, Response := range resp.Response {
 				if Response.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-					log.Errorf("Drop monitor rule delete error. HAL returned Err. %v",
-						Response.ApiStatus)
+					log.Errorf("Drop monitor rule delete error. HAL returned Err. %v, req: %+v",
+						Response.ApiStatus, dropRuleDeleteReqMsg)
 				}
 			}
 		}

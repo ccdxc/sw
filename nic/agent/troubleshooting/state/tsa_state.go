@@ -2,8 +2,10 @@ package state
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
@@ -1582,6 +1584,54 @@ func (tsa *Tagent) GetMirrorSession(pcSession *tsproto.MirrorSession) *tsproto.M
 		return nil
 	}
 	return oldMs
+}
+
+// Debug gets debug info
+func (tsa *Tagent) Debug(w http.ResponseWriter, r *http.Request) {
+	type dbgInfo struct {
+		MirrorSessionDB       map[string]*tsproto.MirrorSession
+		MirrorSessionNameToID map[string]uint64
+		MirrorSessionIDToObj  map[uint64]types.MirrorSessionObj
+		// key: types.FlowMonitorRuleSpec
+		FlowMonitorRuleToID    map[string]uint64
+		FlowMonitorRuleIDToObj map[uint64]types.FlowMonitorObj
+		// key: halproto.DropReasons
+		DropRuleToID       map[string]uint64
+		DropRuleIDToObj    map[uint64]types.DropMonitorObj
+		AllocatedMirrorIds map[uint64]bool
+	}
+
+	dbg := dbgInfo{
+		MirrorSessionDB:        tsa.DB.MirrorSessionDB,
+		MirrorSessionNameToID:  tsa.DB.MirrorSessionNameToID,
+		MirrorSessionIDToObj:   tsa.DB.MirrorSessionIDToObj,
+		FlowMonitorRuleIDToObj: tsa.DB.FlowMonitorRuleIDToObj,
+		DropRuleIDToObj:        tsa.DB.DropRuleIDToObj,
+		AllocatedMirrorIds:     tsa.DB.AllocatedMirrorIds,
+	}
+
+	FlowMonitorRuleToID := map[string]uint64{}
+	for k, v := range tsa.DB.FlowMonitorRuleToID {
+		b, err := json.Marshal(k)
+		if err != nil {
+			log.Warnf("failed to marshal %+v", k)
+			continue
+		}
+		FlowMonitorRuleToID[string(b)] = v
+	}
+
+	DropRuleToID := map[string]uint64{}
+	for k, v := range tsa.DB.DropRuleToID {
+		b, err := json.Marshal(k)
+		if err != nil {
+			log.Warnf("failed to marshal %+v", k)
+			continue
+		}
+		DropRuleToID[string(b)] = v
+	}
+	dbg.FlowMonitorRuleToID = FlowMonitorRuleToID
+	dbg.DropRuleToID = DropRuleToID
+	json.NewEncoder(w).Encode(dbg)
 }
 
 // ListMirrorSession lists all mirror sessions

@@ -116,6 +116,10 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, t
 		router.Methods("GET").Subrouter().Handle("/debug/tpa", http.HandlerFunc(tpAgent.Debug))
 	}
 
+	if tsagent != nil {
+		router.Methods("GET").Subrouter().Handle("/debug/tsa", http.HandlerFunc(tsagent.Debug))
+	}
+
 	log.Infof("Starting server at %s", listenURL)
 
 	// listener
