@@ -124,10 +124,10 @@ static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0))
 #define dma_alloc_coherent dma_zalloc_coherent
+#define RDMA_CREATE_AH_SLEEPABLE 0
 #else
 #define HAVE_IB_DEVICE_OPS
 #define HAVE_CREATE_AH_FLAGS
-#define HAVE_CREATE_AH_SLEEPABLE
 #endif
 
 /* other compat for not yet upstream changes */

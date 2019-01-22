@@ -1602,10 +1602,8 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 	void *hdr_buf;
 	int rc, hdr_len = 0, gfp = GFP_ATOMIC;
 
-#ifdef HAVE_CREATE_AH_SLEEPABLE
 	if (flags & RDMA_CREATE_AH_SLEEPABLE)
 		gfp = GFP_KERNEL;
-#endif
 
 	hdr = kmalloc(sizeof(*hdr), gfp);
 	if (!hdr) {
@@ -1647,16 +1645,12 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 
 	ionic_admin_post(dev, &wr);
 
-#ifdef HAVE_CREATE_AH_SLEEPABLE
 	if (flags & RDMA_CREATE_AH_SLEEPABLE) {
 		ionic_admin_wait(dev, &wr);
 		rc = 0;
 	} else {
 		rc = ionic_admin_busy_wait(dev, &wr);
 	}
-#else
-	rc = ionic_admin_busy_wait(dev, &wr);
-#endif
 
 	if (rc) {
 		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
@@ -1711,16 +1705,12 @@ static int ionic_v1_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid, u32 flags)
 
 	ionic_admin_post(dev, &wr);
 
-#ifdef HAVE_CREATE_AH_SLEEPABLE
 	if (flags & RDMA_CREATE_AH_SLEEPABLE) {
 		ionic_admin_wait(dev, &wr);
 		rc = 0;
 	} else {
 		rc = ionic_admin_busy_wait(dev, &wr);
 	}
-#else
-	rc = ionic_admin_busy_wait(dev, &wr);
-#endif
 
 	if (rc) {
 		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
@@ -1780,6 +1770,9 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	struct ionic_ah *ah;
 	struct ionic_ah_resp resp = {};
 	int rc, gfp = GFP_ATOMIC;
+#ifndef HAVE_CREATE_AH_FLAGS
+	u32 flags = 0;
+#endif
 
 #ifdef HAVE_CREATE_AH_UDATA
 	if (ctx)
@@ -1790,10 +1783,8 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 		goto err_ah;
 #endif
 
-#ifdef HAVE_CREATE_AH_SLEEPABLE
 	if (flags & RDMA_CREATE_AH_SLEEPABLE)
 		gfp = GFP_KERNEL;
-#endif
 
 	ah = kzalloc(sizeof(*ah), gfp);
 	if (!ah) {
@@ -1805,11 +1796,7 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	if (rc)
 		goto err_ahid;
 
-#ifdef HAVE_CREATE_AH_FLAGS
 	rc = ionic_create_ah_cmd(dev, ah, pd, attr, flags);
-#else
-	rc = ionic_create_ah_cmd(dev, ah, pd, attr, 0);
-#endif
 	if (rc)
 		goto err_cmd;
 
@@ -1827,11 +1814,7 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 
 #ifdef HAVE_CREATE_AH_UDATA
 err_resp:
-#ifdef HAVE_CREATE_AH_FLAGS
 	ionic_destroy_ah_cmd(dev, ah->ahid, flags);
-#else
-	ionic_destroy_ah_cmd(dev, ah->ahid, 0);
-#endif
 #endif
 err_cmd:
 	ionic_put_ahid(dev, ah->ahid);
@@ -1850,12 +1833,11 @@ static int ionic_destroy_ah(struct ib_ah *ibah)
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibah->device);
 	struct ionic_ah *ah = to_ionic_ah(ibah);
 	int rc;
-
-#ifdef HAVE_CREATE_AH_FLAGS
-	rc = ionic_destroy_ah_cmd(dev, ah->ahid, flags);
-#else
-	rc = ionic_destroy_ah_cmd(dev, ah->ahid, 0);
+#ifndef HAVE_CREATE_AH_FLAGS
+	u32 flags = 0;
 #endif
+
+	rc = ionic_destroy_ah_cmd(dev, ah->ahid, flags);
 	if (rc)
 		return rc;
 
