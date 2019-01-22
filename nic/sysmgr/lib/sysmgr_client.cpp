@@ -91,3 +91,7 @@ void Client::service_up(std::string name)
         logger->debug("No service up reactor for {}", name);
     }
 }
+
+void Client::restart_system()
+{
+}

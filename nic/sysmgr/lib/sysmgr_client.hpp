@@ -27,6 +27,7 @@ namespace sysmgr
       void init_done();
       void test_done();
       void register_service_reactor(std::string name, ServiceStatusReactorPtr rctor);
+      void restart_system();
       virtual delphi::error OnSysmgrServiceStatusCreate(delphi::objects::SysmgrServiceStatusPtr obj);
       virtual delphi::error OnSysmgrServiceStatusUpdate(delphi::objects::SysmgrServiceStatusPtr obj);
    private:
