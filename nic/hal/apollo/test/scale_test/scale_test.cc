@@ -280,7 +280,7 @@ static void
 create_objects (void)
 {
     uint32_t       num_vcns = 0, num_subnets = 0, num_vnics = 0, num_teps = 0;
-    uint32_t       num_remote_mappings = 0, num_routes = 0;
+    uint32_t       num_remote_mappings = 0, num_routes = 0, num_ip_per_vnic = 1;
     uint16_t       vlan_start = 1;
     pt::ptree      json_pt;
     ip_prefix_t    teppfx, natpfx, routepfx;
@@ -322,14 +322,19 @@ create_objects (void)
                 create_vcns(num_vcns, &g_vcn_ippfx, num_subnets);
             } else if (kind == "vnic") {
                 num_vnics = std::stol(obj.second.get<std::string>("count"));
-                vlan_start = std::stol(obj.second.get<std::string>("vlan-start"));
+                vlan_start =
+                    std::stol(obj.second.get<std::string>("vlan-start"));
                 create_vnics(num_vcns, num_subnets, num_vnics, vlan_start);
-            } else if (kind == "remote-mapping") {
+            } else if (kind == "mappings") {
                 pfxstr = obj.second.get<std::string>("nat-prefix");
                 ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &natpfx) == 0);
-                num_remote_mappings = std::stol(obj.second.get<std::string>("count"));
-                create_mappings(num_teps, num_vcns, num_subnets, num_vnics, 32,
-                                &teppfx, &natpfx, num_remote_mappings);
+                num_remote_mappings =
+                    std::stol(obj.second.get<std::string>("remotes"));
+                num_ip_per_vnic =
+                    std::stol(obj.second.get<std::string>("locals"));
+                create_mappings(num_teps, num_vcns, num_subnets, num_vnics,
+                                num_ip_per_vnic, &teppfx, &natpfx,
+                                num_remote_mappings);
             }
         }
     } catch (std::exception const& e) {

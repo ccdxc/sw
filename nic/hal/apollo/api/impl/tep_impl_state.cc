@@ -36,6 +36,14 @@ tep_impl_state::tep_impl_state(oci_state *state) {
                                      tinfo.actiondata_struct_size,
                                      false, true, NULL);
     SDK_ASSERT(tep_tx_tbl_ != NULL);
+
+    p4pd_table_properties_get(P4TBL_ID_NEXTHOP_TX, &tinfo);
+    // TODO: table_health_monitor_cb is passed as NULL here !!
+    nh_tx_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_NEXTHOP_TX,
+                                     tinfo.tabledepth,
+                                     tinfo.actiondata_struct_size,
+                                     false, true, NULL);
+    SDK_ASSERT(tep_tx_tbl_ != NULL);
 }
 
 /**
@@ -44,6 +52,7 @@ tep_impl_state::tep_impl_state(oci_state *state) {
 tep_impl_state::~tep_impl_state() {
     indexer::destroy(tep_idxr_);
     directmap::destroy(tep_tx_tbl_);
+    directmap::destroy(nh_tx_tbl_);
 }
 
 /** @} */    // end of OCI_TEP_IMPL_STATE

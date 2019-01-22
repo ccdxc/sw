@@ -33,8 +33,9 @@
         },
         {
             "_comment_" : "32 mapping per VNIC are created by default",
-            "kind" : "remote-mapping",
-            "count" : "1",
+            "kind" : "mappings",
+            "remotes" : "1",
+            "locals" : "32",
             "nat-prefix" : "3.0.0.0/8"
         }
     ]

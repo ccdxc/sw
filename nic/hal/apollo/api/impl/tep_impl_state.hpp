@@ -35,13 +35,15 @@ public:
     ~tep_impl_state();
 
 private:
-    directmap *tep_tx_tbl(void) { return tep_tx_tbl_; }
     indexer *tep_idxr(void) { return tep_idxr_; }
+    directmap *tep_tx_tbl(void) { return tep_tx_tbl_; }
+    directmap *nh_tx_tbl(void) { return nh_tx_tbl_; }
     friend class tep_impl;   /**< tep_impl class is friend of tep_impl_state */
 
 private:
     indexer      *tep_idxr_;    /**< indexer to allocate hw ids for TEPs */
     directmap    *tep_tx_tbl_;  /**< directmap table for TEP_TX */
+    directmap    *nh_tx_tbl_;   /**< directmap table for NH_TX */
 };
 
 /** * @} */    // end of OCI_TEP_IMPL_STATE
