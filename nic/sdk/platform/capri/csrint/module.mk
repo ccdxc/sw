@@ -3,6 +3,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libsdkcapri_csrint.so
 MODULE_DEFS     = ${NIC_CSR_DEFINES}
 MODULE_FLAGS    = -DCAPRI_SW ${NIC_CSR_FLAGS}
+MODULE_SOLIBS   := sdkcapri_asicrw_if
 MODULE_EXCLUDE_FLAGS = -O2
 MODULE_INCS     = ${NIC_CSR_INCS} ${MODULE_DIR}
 MODULE_SRCS     = ${TOPDIR}/nic/asic/capri/model/cap_top/cap_top_csr.cc \
@@ -90,6 +91,7 @@ MODULE_SRCS     = ${TOPDIR}/nic/asic/capri/model/cap_top/cap_top_csr.cc \
                   ${TOPDIR}/nic/asic/ip/verif/pcpp/pknobs_reader.cc \
                   ${TOPDIR}/nic/asic/capri/verif/apis/cap_nwl_sbus_api.cc \
                   ${TOPDIR}/nic/asic/capri/verif/apis/cap_sbus_api.cc \
+		  ${TOPDIR}/nic/sdk/platform/capri/csrint/csr_init.cc \
                   $(wildcard ${TOPDIR}/nic/asic/capri/model/cap_dpa/*csr.cc) \
                   $(wildcard ${TOPDIR}/nic/asic/capri/model/cap_pb/*port*csr.cc)
 include ${MKDEFS}/post.mk
