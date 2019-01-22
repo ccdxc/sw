@@ -23,7 +23,6 @@ function finish {
 }
 trap finish EXIT
 
-rm -rf *.log core.*
 export PATH=${PATH}:${BUILD_DIR}/bin
 $GDB apollo_scale_test -c hal.json -i ${NICDIR}/hal/apollo/test/scale_test/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/hal/apollo/test/scale_test/scale_cfg.json
