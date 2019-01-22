@@ -53,6 +53,7 @@ PACKAGES = %w[
   git
   iperf3
   vlc
+  sudo
 ]
 
 run "yum install -y #{PACKAGES.join(" ")}"

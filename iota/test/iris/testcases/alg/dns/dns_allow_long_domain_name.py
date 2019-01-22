@@ -33,7 +33,7 @@ def Trigger(tc):
     SetupDNSServer(server)
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "echo \"nameserver %s\" | tee -a /etc/resolv.conf"%(server.ip_address))
+                           "sudo echo \'nameserver %s\' | sudo tee -a /etc/resolv.conf"%(server.ip_address))
     tc.cmd_cookies.append("Setup resolv conf")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,

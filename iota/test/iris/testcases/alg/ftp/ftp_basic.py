@@ -72,7 +72,7 @@ def Trigger(tc):
     tc.cmd_cookies.append("Before put on server")
 
     api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
-                           "cd ftpdir && chmod +x ftp.sh && ./ftp.sh")
+                           "cd ftpdir && chmod +x ftp.sh && ./ftp.sh", timeout=300)
     tc.cmd_cookies.append("Run FTP")
 
     ## Add Naples command validation

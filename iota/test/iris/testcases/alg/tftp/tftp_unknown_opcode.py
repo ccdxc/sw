@@ -27,6 +27,14 @@ def Trigger(tc):
                                 "/nic/bin/halctl clear session")
     tc.cmd_cookies.append("clear session")
 
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
+                           "yum install -y git", timeout=600)
+    tc.cmd_cookies.append("Install git")
+ 
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
+                           "sh -c 'git clone https://github.com/secdev/scapy && cd scapy && python3 setup.py install'", timeout=600)
+    tc.cmd_cookies.append("Install scapy")
+
     dir_path = os.path.dirname(os.path.realpath(__file__)) 
     tftpunknownop = dir_path + '/' + "tftp_unknown_op.py"
     f = open(tftpunknownop, "w")
@@ -42,7 +50,7 @@ def Trigger(tc):
        return api.types.status.FAILURE 
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "cd tftpdir && chmod +x tftp_unknown_op.py && ./tftp_unknown_op.py")
+                           "sh -c 'cd tftpdir && chmod +x tftp_unknown_op.py && ./tftp_unknown_op.py'")
     tc.cmd_cookies.append("TFTP Uknown Opcode Server: %s(%s) <--> Client: %s(%s)" %\
                            (server.workload_name, server.ip_address, client.workload_name, client.ip_address))
 
@@ -69,7 +77,10 @@ def Verify(tc):
         api.Logger.info("Results for %s" % (tc.cmd_cookies[cookie_idx]))
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            result = api.types.status.FAILURE
+            if tc.cmd_cookies[cookie_idx].find("Install") != -1:
+               result = api.types.status.SUCCESS
+            else:
+               result = api.types.status.FAILURE
         if (tc.cmd_cookies[cookie_idx].find("show session") != -1  or \
             tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1) and \
             cmd.stdout != '':

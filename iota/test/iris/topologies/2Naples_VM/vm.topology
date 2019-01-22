@@ -8,7 +8,7 @@ nodes:
       role: auto
       workloads:
             type    : WORKLOAD_TYPE_VM
-            image   : "build-130"
+            image   : "build-137"
 
 
     - node: node2
@@ -16,4 +16,4 @@ nodes:
       role: auto
       workloads:
             type    : WORKLOAD_TYPE_VM
-            image   : "build-130"
+            image   : "build-137"

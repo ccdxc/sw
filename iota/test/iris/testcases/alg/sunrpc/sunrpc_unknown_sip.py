@@ -32,19 +32,19 @@ def Trigger(tc):
     SetupNFSServer(server, client1)
 
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "ls -al /home/sunrpcmntdir | grep sunrpc_file.txt")
+                           "sh -c 'ls -al /home/sunrpcmntdir | grep sunrpc_file.txt'")
     tc.cmd_cookies.append("Before rpc")
 
     api.Trigger_AddCommand(req, client1.node_name, client1.workload_name,
-                           "mkdir -p sunrpcmntdir && mount %s:/home/sunrpcmntdir sunrpcmntdir"%(server.ip_address))
+                           "sh -c 'mkdir -p sunrpcmntdir && mount %s:/home/sunrpcmntdir sunrpcmntdir' "%(server.ip_address))
     tc.cmd_cookies.append("Create mount point")
     
     api.Trigger_AddCommand(req, client1.node_name, client1.workload_name,
-                           "echo \"hello world\" | tee -a sunrpcmntdir/sunrpc_file.txt")
+                           "sh -c 'echo \'hello world\' | tee -a sunrpcmntdir/sunrpc_file.txt' ")
     tc.cmd_cookies.append("Create file")
 
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "cat /home/sunrpcmntdir/sunrpc_file.txt | grep \"hello world\"")
+                           "sh -c 'cat /home/sunrpcmntdir/sunrpc_file.txt | grep \'hello world\' ' ")
     tc.cmd_cookies.append("After rpc")
 
     # Add Naples command validation

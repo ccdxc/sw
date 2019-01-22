@@ -20,6 +20,8 @@ var (
 	traceLevel          string
 	secProfID           uint32
 	connTrack           string
+	ipNormalization     string
+	tcpNormalization    string
 	tcpTimeout          uint32
 	udpTimeout          uint32
 	icmpTimeout         uint32
@@ -189,6 +191,8 @@ func init() {
 	secProfDebugCmd.Flags().Uint32Var(&idleTimeout, "idle-timeout", 90, "Session aging timeout for non TCP/UDP/ICMP in range 0-172800 (0 means no aging)")
 	secProfDebugCmd.Flags().Uint32Var(&tcpCxnsetupTimeout, "tcp-cxnsetup-timeout", 30, "TCP Connection setup timeout for 3-way handshake in range 0-60 (0 means no timeout)")
 	secProfDebugCmd.Flags().Uint32Var(&tcpHalfcloseTimeout, "tcp-halfclose-timeout", 120, "TCP Half close timeout when FIN is received on one direction in range 0-172800 (0 means no timeout)")
+	secProfDebugCmd.Flags().StringVar(&ipNormalization, "ip-normalization", "off", "Turn IP Normalization on/off")
+	secProfDebugCmd.Flags().StringVar(&tcpNormalization, "tcp-normalization", "off", "Turn TCP Normalization on/off")
 	secProfDebugCmd.MarkFlagRequired("id")
 
 	regDebugCmd.Flags().Uint32Var(&regID, "reg-id", 0, "Specify register ID")
@@ -774,6 +778,22 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 			}
 			// Set conn tracking
 			secProf.CnxnTrackingEn = inputToConnTrack(connTrack)
+		}
+		if cmd.Flags().Changed("ip-normalization") {
+			if isConnTrackValid(ipNormalization) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			// Set conn tracking
+			secProf.IpNormalizationEn = inputToConnTrack(ipNormalization)
+		}
+		if cmd.Flags().Changed("tcp-normalization") {
+			if isConnTrackValid(tcpNormalization) != true {
+				fmt.Printf("Invalid argument\n")
+				return
+			}
+			// Set conn tracking
+			secProf.TcpNormalizationEn = inputToConnTrack(tcpNormalization)
 		}
 		if cmd.Flags().Changed("tcp-timeout") {
 			if isTimeoutValid("TCP", tcpTimeout) != true {

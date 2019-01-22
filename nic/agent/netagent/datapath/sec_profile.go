@@ -191,7 +191,7 @@ func (hd *Datapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf
 				IcmpRedirectMsgDrop:    true,
 				CnxnTrackingEn:         true,
 				TcpNormalizationEn:     true,
-				IpNormalizationEn:      true,
+				IpNormalizationEn:      false,
 
 				// Default Normalization action allow
 				IpDfAction:            constants.IPDFAction,
@@ -415,7 +415,7 @@ func (hd *Datapath) UpdateSecurityProfile(profile *netproto.SecurityProfile) err
 				IcmpRedirectMsgDrop:    true,
 				CnxnTrackingEn:         true,
 				TcpNormalizationEn:     true,
-				IpNormalizationEn:      true,
+				IpNormalizationEn:      false,
 
 				// Default Normalization action allow
 				IpDfAction:            constants.IPDFAction,
