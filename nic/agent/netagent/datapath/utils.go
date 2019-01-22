@@ -84,7 +84,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 		}
 
 		// Build proto/port from dst app configs.
-		log.Infof("BALERION CONVERT PORT: %v", dst.AppConfigs)
+		log.Infof("Convert Port: %v", dst.AppConfigs)
 
 		for _, d := range dst.AppConfigs {
 			// TODO Unify the proto/port definitions between App Object and Match Selectors to avoid manually building this.

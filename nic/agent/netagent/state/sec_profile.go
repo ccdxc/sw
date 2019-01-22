@@ -173,7 +173,7 @@ func (na *Nagent) DeleteSecurityProfile(tn, namespace, name string) error {
 	err = na.Datapath.DeleteSecurityProfile(existingSecurityProfile, ns)
 	if err != nil {
 		log.Errorf("Error deleting security profile {%+v}. Err: %v", sgp, err)
-		// continue cleaning up
+		return err
 	}
 
 	err = na.Solver.Remove(ns, existingSecurityProfile)
