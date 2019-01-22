@@ -786,6 +786,8 @@ func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resOb
 // RProxyHandler handles reverse proxy paths
 type RProxyHandler struct {
 	path        string
+	trim        string
+	prefix      string
 	svcProfile  apigw.ServiceProfile
 	proxy       *httputil.ReverseProxy
 	apiGw       *apiGw
@@ -819,9 +821,13 @@ func (p *RProxyHandler) director(r *http.Request) {
 		r.Host, r.URL.Host = "", ""
 		return
 	}
+	path := strings.TrimPrefix(r.URL.Path, p.trim)
+	path = p.prefix + "/" + path
+	r.URL.Path = path
 	r.Host = durl.Host
 	r.URL.Host = durl.Host
 	r.URL.Scheme = durl.Scheme
+	p.apiGw.logger.Infof("got call to proxy director returning [%v][%v][%v][%v]", r.URL.Host, r.URL.Scheme, r.URL.Path, durl.Scheme)
 }
 
 // ServeHTTP satisfies the http.Handler interface
@@ -829,6 +835,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var err error
 	nctx := r.Context()
 
+	p.apiGw.logger.Infof("Handling HTTP proxy request")
 	// Call all PreAuthZHooks, if any of them return err then abort
 	pnHooks := p.svcProfile.PreAuthNHooks()
 	skipAuth := p.apiGw.skipAuth
@@ -911,6 +918,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if !skipCall {
 		nr := r.WithContext(nctx)
+		p.apiGw.logger.Infof("Calling Proxy handler with [%v][%v][%v][%v]", nr.RequestURI, nr.URL.Scheme, nr.URL.Host, nr.URL.Path)
 		p.proxy.ServeHTTP(w, nr)
 	}
 	postCall := p.svcProfile.PostCallHooks()
@@ -931,8 +939,8 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // NewRProxyHandler creates a new RProxyHandler
-func NewRProxyHandler(path, destination string, svcProf apigw.ServiceProfile) (*RProxyHandler, error) {
-	ret := &RProxyHandler{path: path, svcProfile: svcProf, destination: destination}
+func NewRProxyHandler(path, trim, prefix, destination string, svcProf apigw.ServiceProfile) (*RProxyHandler, error) {
+	ret := &RProxyHandler{path: path, trim: trim, prefix: prefix, svcProfile: svcProf, destination: destination}
 	durl, err := url.Parse(destination + path)
 	if err != nil {
 		return nil, err
@@ -943,7 +951,7 @@ func NewRProxyHandler(path, destination string, svcProf apigw.ServiceProfile) (*
 			ret.useResolver = true
 		} else {
 			// specified as host:port add "http://" by default
-			durl, err = url.Parse("http://" + destination + path)
+			durl, err = url.Parse("https://" + destination + path)
 			if err != nil {
 				return nil, err
 			}
@@ -960,7 +968,9 @@ func NewRProxyHandler(path, destination string, svcProf apigw.ServiceProfile) (*
 		} else {
 			ret.scheme = "http://"
 		}
+		ret.scheme = "http://"
 	}
+	log.Infof("created proxy handler with [%v][%v][%v][%v]", ret.path, ret.trim, ret.prefix, destination)
 	ret.rnd = rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
 	return ret, nil
 }

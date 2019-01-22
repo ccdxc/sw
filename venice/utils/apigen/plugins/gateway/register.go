@@ -2178,9 +2178,33 @@ func isObjTenanted(file *descriptor.File, obj string) (bool, error) {
 	return isTenanted(msg)
 }
 
+func isNamespaced(msg *descriptor.Message) (bool, error) {
+	dbk, err := getDbKey(msg)
+	if err != nil {
+		return false, err
+	}
+	for _, c := range dbk {
+		if c.Type == "field" && c.Val == "Namespace" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func isObjNamespaced(file *descriptor.File, obj string) (bool, error) {
+	name := "." + file.GoPkg.Name + "." + obj
+	msg, err := file.Reg.LookupMsg("", name)
+	if err != nil {
+		return false, err
+	}
+	return isNamespaced(msg)
+}
+
 // ProxyPath is parameters for reverse proxy endpoints
 type ProxyPath struct {
 	Prefix   string
+	TrimPath string
+	Path     string
 	FullPath string
 	Backend  string
 }
@@ -2216,9 +2240,24 @@ func getProxyPaths(svc *descriptor.Service) ([]ProxyPath, error) {
 		if _, ok := pathMap[opt.GetPathPrefix()]; ok {
 			glog.Fatalf("duplicate path detected in proxy paths service [%s] path [%s]", *svc.Name, opt.GetPathPrefix())
 		}
+		fullpath := "/" + category + "/" + svcParams.Prefix + "/" + svcParams.Version + "/" + strings.TrimPrefix(opt.GetPath(), "/")
+		if svcParams.Prefix == "" {
+			fullpath = "/" + category + "/" + svcParams.Version + "/" + strings.TrimPrefix(opt.GetPath(), "/")
+		}
 
-		path := "/" + category + "/" + svcParams.Prefix + "/" + svcParams.Version + "/" + strings.TrimPrefix(opt.GetPathPrefix(), "/")
-		ret = append(ret, ProxyPath{Prefix: opt.GetPathPrefix(), FullPath: path, Backend: opt.GetBackend()})
+		trimpath := "/" + category + "/" + svcParams.Prefix + "/" + svcParams.Version + "/"
+		if svcParams.Prefix == "" {
+			trimpath = "/" + category + "/" + svcParams.Version + "/"
+		}
+		path := opt.Path
+		path = strings.TrimPrefix(path, "/")
+		path = strings.TrimSuffix(path, "/")
+		prefix := opt.PathPrefix
+		prefix = strings.TrimPrefix(prefix, "/")
+		prefix = strings.TrimSuffix(prefix, "/")
+		prefix = "/" + prefix
+
+		ret = append(ret, ProxyPath{Prefix: prefix, Path: path, TrimPath: trimpath, FullPath: fullpath, Backend: opt.GetBackend()})
 	}
 	return ret, nil
 }
@@ -2292,7 +2331,9 @@ func init() {
 	reg.RegisterFunc("isStreaming", isStreaming)
 	reg.RegisterFunc("isClientStreaming", isClientStreaming)
 	reg.RegisterFunc("isTenanted", isTenanted)
+	reg.RegisterFunc("isNamespaced", isNamespaced)
 	reg.RegisterFunc("isObjTenanted", isObjTenanted)
+	reg.RegisterFunc("isObjNamespaced", isObjNamespaced)
 	reg.RegisterFunc("getProxyPaths", getProxyPaths)
 	reg.RegisterFunc("HasSuffix", strings.HasSuffix)
 	reg.RegisterFunc("TrimSuffix", strings.TrimSuffix)

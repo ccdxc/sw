@@ -188,7 +188,9 @@ const (
 	EvtsProxyRPCPort = "9012"
 
 	// objstore port
-	VosPort = "19001"
+	VosGRPcPort  = "9051"
+	VosHTTPPort  = "9052"
+	VosMinioPort = "19001"
 
 	// tmagent port
 	TmAGENTRestPort = "9013"

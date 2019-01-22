@@ -59,7 +59,9 @@ message ProxyEndpoint {
   string Backend = 1;
   // URI path that needs to be reverse proxied to Backend. this is a simple path prefix
   //  sub-paths for which will all be forwarded. Only one rule per path prefix is allowed.
-  string PathPrefix = 2;
+  string Path = 2;
+  // PathPrefix is the prefix to add towards the proxy backend
+  string PathPrefix = 3;
 }
 
 // Venice Option extensions applicable at the file level.

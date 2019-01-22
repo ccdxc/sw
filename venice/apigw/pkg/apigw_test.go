@@ -686,7 +686,7 @@ func TestNewProxyHandler(t *testing.T) {
 		{path: "/test/path1", destination: "unknowns://localhost:1111", useResolver: true},
 	}
 	for _, c := range goodcases {
-		p, err := NewRProxyHandler(c.path, c.destination, nil)
+		p, err := NewRProxyHandler(c.path, "", "", c.destination, nil)
 		if err != nil {
 			t.Fatalf("failed get proxy handler")
 		}
@@ -699,7 +699,7 @@ func TestNewProxyHandler(t *testing.T) {
 	}
 	badcases := []string{":ahtt#@Sc---ada", "-http:\\aadadaada"}
 	for _, c := range badcases {
-		_, err := NewRProxyHandler("/test/path1", c, nil)
+		_, err := NewRProxyHandler("/test/path1", "", "", c, nil)
 		if err == nil {
 			t.Fatalf("expecting to fail [%s]", c)
 		}
@@ -734,7 +734,7 @@ func TestProxyDirector(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to get http request(%s)", err)
 	}
-	p, err := NewRProxyHandler("/test/path", "dummyserver", nil)
+	p, err := NewRProxyHandler("/test/path", "", "", "dummyserver", nil)
 	if err != nil {
 		t.Fatalf("unable to get proxy handler (%s)", err)
 	}
@@ -801,7 +801,7 @@ func TestHandleProxyRequest(t *testing.T) {
 		"req-method", "GET"))
 	// context with authz operations
 	mock.retAuthzCtx = NewContextWithOperations(ctx, nil)
-	p, err := NewRProxyHandler("/test/path", "dummyserver", prof)
+	p, err := NewRProxyHandler("/test/path", "", "", "dummyserver", prof)
 	if err != nil {
 		t.Fatalf("unable to get proxy handler (%s)", err)
 	}

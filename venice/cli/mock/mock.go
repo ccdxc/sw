@@ -154,6 +154,7 @@ func Start() *Info {
 			"search",
 			"events",
 			"audit",
+			"objstore",
 		},
 		Auditor: auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
 	}

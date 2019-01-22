@@ -169,7 +169,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	// start API gateway
 	tInfo.apiGw, tInfo.apiGwAddr, err = testutils.StartAPIGateway(":0", false,
 		map[string]string{globals.APIServer: tInfo.apiServerAddr, globals.Spyglass: tInfo.fdrAddr},
-		[]string{"metrics_query"}, []string{}, tInfo.l)
+		[]string{"metrics_query", "objstore"}, []string{}, tInfo.l)
 	if err != nil {
 		return err
 	}

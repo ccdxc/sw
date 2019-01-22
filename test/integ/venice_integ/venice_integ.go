@@ -742,8 +742,9 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	// start spyglass and elasticsearch
 	if it.config.StartEventsAndSearch {
 		it.startEventsAndSearch()
+		it.disabledServices = []string{"objstore"}
 	} else {
-		it.disabledServices = []string{"search", "events"}
+		it.disabledServices = []string{"search", "events", "objstore"}
 	}
 
 	// start API gateway

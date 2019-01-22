@@ -3,6 +3,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 	"path/filepath"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/vos"
+	"github.com/pensando/sw/venice/vos/pkg"
 )
 
 var pkgName = globals.Vos
@@ -51,9 +52,11 @@ func main() {
 	log.Infof("resolver-urls %+v", nsURLs)
 	log.Infof("starting object store with args : {%+v}", os.Args)
 
-	args := []string{pkgName, "server", "--address", fmt.Sprintf(":%s", globals.VosPort), "/disk1"}
+	args := []string{pkgName, "server", "--address", fmt.Sprintf(":%s", globals.VosMinioPort), "/disk1"}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	// init obj store
-	err := vos.New(args)
+	err := vos.New(ctx, args)
 	if err != nil {
 		// let the scheduler restart obj store
 		log.Fatalf("failed to init object store, %s", err)

@@ -1,0 +1,33 @@
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+package objstore;
+
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "objstore.proto";
+
+option (venice.fileGrpcDest) = "pen-vos";
+option (venice.fileCategory) = "objstore";
+option (venice.fileApiServerBacked) = false;
+
+service ObjstoreV1 {
+    option (venice.apiPrefix)           = "";
+    option (venice.apiVersion)          = "v1";
+
+    option (venice.apiGrpcCrudService)  = "Bucket";
+    option (venice.apiGrpcCrudService)  = "Object";
+
+    option (venice.apiRestService) = {
+        Object: "Object"
+        Method: [ "get", "list", "delete" ]
+    };
+
+    option (venice.proxyPrefix) = {
+      Path:         "/uploads/"
+      PathPrefix:   "/apis/v1"
+      Backend:      "pen-vos-http"
+    };
+}

@@ -17,6 +17,8 @@ import (
 	"github.com/onsi/gomega"
 	"golang.org/x/crypto/ssh"
 
+	"github.com/pensando/sw/venice/utils/objstore/client"
+
 	"github.com/pensando/sw/api"
 
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -97,6 +99,7 @@ type TestUtils struct {
 	APIGwAddr       string
 	tlsProvider     rpckit.TLSProvider
 	APIClient       apiclient.Services
+	VOSClient       objstore.Client
 	Logger          log.Logger
 	VeniceConf      string                  // whole file in string format
 	DisabledModules []string                // list of disabled venice modules
@@ -343,6 +346,22 @@ func (tu *TestUtils) Init() {
 	if err != nil {
 		ginkgo.Fail(fmt.Sprintf("cannot create client to apiServer, err: %v", err))
 	}
+	tu.SetupObjstoreClient()
+
+}
+
+// SetupObjstoreClient sets up the Objstore client
+func (tu *TestUtils) SetupObjstoreClient() error {
+	var err error
+	// Setup the objstore client
+	tlcConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	tu.VOSClient, err = objstore.NewClient("default", "images", tu.resolver, objstore.WithTLSConfig(tlcConfig))
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("cannot create client to objstore, err: %v", err))
+	}
+	return err
 }
 
 // Close any open connections to nodes

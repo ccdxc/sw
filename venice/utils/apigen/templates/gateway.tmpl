@@ -64,7 +64,8 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	if t.Tenant == "" {
 		t.Tenant = globals.DefaultTenant
 	}{{else}}
-	t.Tenant, t.Namespace = "", ""{{end}}
+	t.Tenant = ""{{end}}{{if isNamespaced (getListTypeMsg .ResponseType)}}{{else}}
+    t.Namespace = ""{{end}}
 	oper, kind, tenant, namespace, group, name:= apiserver.ListOper, "{{getOutputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", ""
 	{{else}}{{if isActionMethod .}}
 	oper, kind, tenant, namespace, group, name := apiserver.{{$params.Oper}}, "{{getActionTarget .}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
@@ -148,7 +149,8 @@ func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.L
 		return nil, errors.New("unknown service profile")
 	}
 	{{if isObjTenanted $svc.File . }}{{else}}
-	in.Tenant, in.Namespace = "", ""{{end}}
+	in.Tenant = ""{{end}}{{if isObjNamespaced $svc.File . }}{{else}}
+		in.Namespace = "" {{end}}
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "{{.}}", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -222,7 +224,7 @@ func (e *s{{.Name}}GwService) setupSvcProfile() {
     {{$x := (saveStr (getInputType $pkgname . false) 0)}}{{$x := (saveStr $params.Oper  1)}}{{end}}{{end}}{{end}}{{end}}
 
 	e.svcProf["{{.Name}}"] = apigwpkg.NewServiceProfile(e.defSvcProf, "{{getStr 0}}", "{{$svcparams.Prefix}}", apiserver.{{getStr 1}}){{end}}{{end}}{{$proxyPaths := getProxyPaths .}}{{range $proxyPaths}}
-	e.svcProf["_RProxy_" + "{{.Prefix}}"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper){{end}}
+	e.svcProf["_RProxy_" + "/" + "{{.Path}}"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper){{end}}
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -284,13 +286,13 @@ func (e *s{{.Name}}GwService) CompleteRegistration(ctx context.Context,
 		logger.ErrorLog("msg", "failed to register swagger spec", "service", "{{$pkgname}}.{{.Name}}", "error", err)
 	}{{end}} {{$proxyPaths := getProxyPaths .}}{{range $proxyPaths}}
 	{
-		name := "_RProxy_" + "{{.Prefix}}"
+		name := "_RProxy_" + "/" + "{{.Path}}"
 		svcProf, err := e.GetServiceProfile(name)
 		if err != nil {
 			logger.Fatalf("failed to get service profile for [%s](%s)", name, err)
 		}
 
-		rproxy, err := apigwpkg.NewRProxyHandler("{{.FullPath}}", "{{.Backend}}", svcProf)
+		rproxy, err := apigwpkg.NewRProxyHandler("{{.Path}}", "{{.TrimPath}}", "{{.Prefix}}", "{{.Backend}}", svcProf)
 		if err != nil {
 			logger.Fatalf("failed to get proxy handler for [%s](%s)", name, err)
 		}

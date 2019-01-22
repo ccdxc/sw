@@ -143,7 +143,7 @@ func (it *objstoreIntegSuite) SetUpSuite(c *C) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "objstore1",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		Node:    "localhost",
 		URL:     minioURL,
 	}

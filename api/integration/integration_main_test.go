@@ -199,6 +199,7 @@ func TestMain(m *testing.M) {
 		},
 		SkipBackends: []string{
 			"metrics_query",
+			"objstore",
 		},
 		Auditor: auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
 	}

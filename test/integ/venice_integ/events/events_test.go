@@ -370,7 +370,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 
 	// API gateway
 	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0", false,
-		map[string]string{globals.APIServer: ti.apiServerAddr, globals.Spyglass: fdrAddr}, []string{"metrics_query"}, []string{}, ti.logger)
+		map[string]string{globals.APIServer: ti.apiServerAddr, globals.Spyglass: fdrAddr}, []string{"metrics_query", "objstore"}, []string{}, ti.logger)
 	AssertOk(t, err, "failed to start API gateway")
 	defer apiGw.Stop()
 
@@ -958,7 +958,7 @@ func TestEventsAlertEngine(t *testing.T) {
 
 	// API gateway
 	apiGw, apiGwAddr, err := testutils.StartAPIGateway(":0", false,
-		map[string]string{globals.APIServer: ti.apiServerAddr, globals.Spyglass: fdrAddr}, []string{"metrics_query"}, []string{}, ti.logger)
+		map[string]string{globals.APIServer: ti.apiServerAddr, globals.Spyglass: fdrAddr}, []string{"metrics_query", "objstore"}, []string{}, ti.logger)
 	AssertOk(t, err, "failed to start API gateway, err: %v", err)
 	defer apiGw.Stop()
 

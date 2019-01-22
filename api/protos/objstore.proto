@@ -1,0 +1,53 @@
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+package objstore;
+
+
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// Bucket names are always lower case
+enum Buckets {
+    images          = 0;
+    techsupport     = 1;
+    packetcapture   = 2;
+}
+
+message BucketSpec {
+    string Description = 1 [(gogoproto.jsontag) = "description"];
+}
+
+message BucketStatus {
+    int32 NumObjects    = 1 [(gogoproto.jsontag) = "num-objects"];
+    int32 TotalSize     = 2 [(gogoproto.jsontag) = "total-size"];
+}
+
+message Bucket {
+    api.TypeMeta T      = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O    = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+    option (venice.objectPrefix) = {Collection: "buckets"};
+
+    BucketSpec      Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec"];
+    BucketStatus    Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status"];
+
+}
+
+message ObjectStatus {
+    int64 Size      = 1 [(gogoproto.jsontag) = "size"];
+    string Digest   = 2 [(gogoproto.jsontag) = "digest"];
+}
+
+message ObjectSpec {
+    string ContentType = 1 [(gogoproto.jsontag) = "content-type"];
+}
+
+message Object {
+    api.TypeMeta T      = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O    = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
+    option (venice.objectPrefix) = {Collection: "objects", Path: "/{O.Namespace}"};
+
+    ObjectSpec      Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec"];
+    ObjectStatus    Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status"];
+}

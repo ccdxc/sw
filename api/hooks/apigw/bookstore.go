@@ -30,6 +30,10 @@ func (b *bookstoreHooks) postCallHook(ctx context.Context, i interface{}) (conte
 	return ctx, in, nil
 }
 
+func (b *bookstoreHooks) skipAuthN(ctx context.Context, in interface{}) (retCtx context.Context, retIn interface{}, skipAuth bool, err error) {
+	return ctx, in, true, nil
+}
+
 func registerBookstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	r := bookstoreHooks{logger: l}
 	prof, err := svc.GetCrudServiceProfile("Order", "create")
@@ -38,6 +42,14 @@ func registerBookstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 	prof.AddPreCallHook(r.preCallHook)
 	prof.AddPostCallHook(r.postCallHook)
+	prof, err = svc.GetProxyServiceProfile("/uploads")
+	if err != nil {
+		return err
+	}
+	if prof == nil {
+		log.Fatalf("Got profile to be Nil")
+	}
+	prof.AddPreAuthNHook(r.skipAuthN)
 	return nil
 }
 

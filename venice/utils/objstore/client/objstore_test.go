@@ -60,9 +60,9 @@ func TestNewClient(t *testing.T) {
 			Kind: "ServiceInstance",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: globals.Vos,
+			Name: globals.VosMinio,
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     l.Addr().(*net.TCPAddr).String(),
 	})
 	tu.AssertOk(t, err, "failed to add objstore sercvice")
@@ -75,9 +75,9 @@ func TestNewClient(t *testing.T) {
 			Kind: "ServiceInstance",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: globals.Vos,
+			Name: globals.VosMinio,
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1001",
 	})
 	tu.AssertOk(t, err, "failed to add 127.0.0.1:1001 service")
@@ -93,7 +93,7 @@ func TestNewClient(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server1",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1001",
 	})
 	tu.AssertOk(t, err, "failed to add server1 service")
@@ -105,7 +105,7 @@ func TestNewClient(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     l.Addr().(*net.TCPAddr).String(),
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
@@ -130,9 +130,9 @@ func TestGetObjStoreAddr(t *testing.T) {
 			Kind: "ServiceInstance",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name: globals.Vos,
+			Name: globals.VosMinio,
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1001",
 	})
 	tu.AssertOk(t, err, "failed to add objstore service")
@@ -160,7 +160,7 @@ func TestPutObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server1",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1001",
 	})
 	tu.AssertOk(t, err, "failed to add server1 ")
@@ -172,7 +172,7 @@ func TestPutObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     l.Addr().(*net.TCPAddr).String(),
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
@@ -184,7 +184,7 @@ func TestPutObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server3",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 	tu.AssertOk(t, err, "failed to add server2 ")
@@ -226,7 +226,7 @@ func TestPutObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 
@@ -254,7 +254,7 @@ func TestGetObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server1",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1001",
 	})
 	tu.AssertOk(t, err, "failed to add server1 ")
@@ -266,7 +266,7 @@ func TestGetObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     l.Addr().(*net.TCPAddr).String(),
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
@@ -278,7 +278,7 @@ func TestGetObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server3",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 	tu.AssertOk(t, err, "failed to add server2 ")
@@ -319,7 +319,7 @@ func TestGetObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 
@@ -347,7 +347,7 @@ func TestStatObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server1",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1001",
 	})
 	tu.AssertOk(t, err, "failed to add server1 ")
@@ -359,7 +359,7 @@ func TestStatObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     l.Addr().(*net.TCPAddr).String(),
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
@@ -371,7 +371,7 @@ func TestStatObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server3",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 	tu.AssertOk(t, err, "failed to add server2 ")
@@ -420,7 +420,7 @@ func TestStatObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 
@@ -449,7 +449,7 @@ func TestListObjects(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server1",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1001",
 	})
 	tu.AssertOk(t, err, "failed to add server1 ")
@@ -461,7 +461,7 @@ func TestListObjects(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     l.Addr().(*net.TCPAddr).String(),
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
@@ -473,7 +473,7 @@ func TestListObjects(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server3",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 	tu.AssertOk(t, err, "failed to add server2 ")
@@ -513,7 +513,7 @@ func TestListObjects(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 
@@ -529,7 +529,7 @@ func TestListObjects(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 
@@ -557,7 +557,7 @@ func TestRemoveObjects(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server1",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1001",
 	})
 	tu.AssertOk(t, err, "failed to add server1 ")
@@ -569,7 +569,7 @@ func TestRemoveObjects(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     l.Addr().(*net.TCPAddr).String(),
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
@@ -581,7 +581,7 @@ func TestRemoveObjects(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server3",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 	tu.AssertOk(t, err, "failed to add server2 ")
@@ -618,7 +618,7 @@ func TestRemoveObjects(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 
@@ -634,7 +634,7 @@ func TestRemoveObjects(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server2",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1003",
 	})
 
@@ -662,7 +662,7 @@ func TestGetStreamObjectAtOffset(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server1",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     l.Addr().(*net.TCPAddr).String(),
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")
@@ -719,7 +719,7 @@ func TestPutStreamObject(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Name: "server1",
 		},
-		Service: globals.Vos,
+		Service: globals.VosMinio,
 		URL:     "127.0.0.1:1001",
 	})
 	tu.AssertOk(t, err, "failed to add server2 service")

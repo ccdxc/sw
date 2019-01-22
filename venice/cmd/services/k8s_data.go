@@ -475,7 +475,15 @@ var k8sModules = map[string]protos.Module{
 					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.Vos,
-							Port: runtime.MustUint32(globals.VosPort),
+							Port: runtime.MustUint32(globals.VosGRPcPort),
+						},
+						{
+							Name: globals.VosHTTP,
+							Port: runtime.MustUint32(globals.VosHTTPPort),
+						},
+						{
+							Name: globals.VosMinio,
+							Port: runtime.MustUint32(globals.VosMinioPort),
 						},
 					},
 					Args: []string{

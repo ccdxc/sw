@@ -3031,7 +3031,7 @@ func TestGetProxyPaths(t *testing.T) {
 					input_type: '.example.Nest1'
 					output_type: '.example.Nest1'
 				>
-				options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.proxyPrefix]:{PathPrefix: "/test", Backend: "localhost:9999"} [venice.proxyPrefix]:{PathPrefix: "/test2", Backend: "resolved-svc"} >
+				options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.proxyPrefix]:{PathPrefix: "/backapi1", Path: "/test1", Backend: "localhost:9999"} [venice.proxyPrefix]:{PathPrefix: "/backapi2", Path: "/test2", Backend: "resolved-svc"} >
 			>
 			`,
 	} {
@@ -3056,8 +3056,8 @@ func TestGetProxyPaths(t *testing.T) {
 		t.Fatalf("failed to get proxy paths")
 	}
 	exp := []ProxyPath{
-		{Prefix: "/test", FullPath: "/configs/example/v1/test", Backend: "localhost:9999"},
-		{Prefix: "/test2", FullPath: "/configs/example/v1/test2", Backend: "resolved-svc"},
+		{Prefix: "/backapi1", TrimPath: "/configs/example/v1/", Path: "test1", FullPath: "/configs/example/v1/test1", Backend: "localhost:9999"},
+		{Prefix: "/backapi2", TrimPath: "/configs/example/v1/", Path: "test2", FullPath: "/configs/example/v1/test2", Backend: "resolved-svc"},
 	}
 	if !reflect.DeepEqual(pp, exp) {
 		t.Fatalf("Proxy paths does not match exp[%+v] got [%+v]", exp, pp)

@@ -275,7 +275,8 @@ service BookstoreV1 {
     };
   // Reverse Proxy Path
   option (venice.proxyPrefix) = {
-      PathPrefix: "/uploads/"
+      Path: "/uploads/"
+      PathPrefix: "apis/"
       Backend: "http://localhost:9918"
   };
 }

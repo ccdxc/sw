@@ -55,7 +55,16 @@ func (m *fakeAPIGwService) GetCrudServiceProfile(object string, oper apiserver.A
 
 // GetProxyServiceProfile is a fake implementation
 func (m *fakeAPIGwService) GetProxyServiceProfile(path string) (apigw.ServiceProfile, error) {
-	return nil, nil
+	name := "_RProxy_" + path
+	if m.simulateError {
+		return nil, errors.New("not found")
+	}
+	if ret, ok := m.svcProf[name]; ok {
+		return ret, nil
+	}
+	prof := apigwpkg.NewServiceProfile(nil, "", "", apiserver.CreateOper)
+	m.svcProf[name] = prof
+	return prof, nil
 }
 
 // NewFakeAPIGwService is used to test API Gateway hooks
