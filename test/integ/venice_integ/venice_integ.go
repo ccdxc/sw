@@ -36,9 +36,6 @@ import (
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	"github.com/pensando/sw/nic/delphi/gosdk"
 
-	// This import is a workaround for delphi client crash
-	_ "github.com/pensando/sw/nic/delphi/sdk/proto"
-
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"

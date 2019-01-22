@@ -60,6 +60,7 @@ func TestClientBasic(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewClient(): %s", err)
 	}
+	c1.MountKind("TestInterfaceSpec", delphi.MountMode_ReadMode)
 
 	go c1.Run()
 
@@ -83,7 +84,7 @@ func TestClientBasic(t *testing.T) {
 		name:            "test2",
 	}
 	c2, err := NewClient(s2)
-	c2.MountKind("Interface", delphi.MountMode_ReadMode)
+	c2.MountKind("TestInterfaceSpec", delphi.MountMode_ReadMode)
 	c2.MountKindKey("Interface", "Intf:20", delphi.MountMode_ReadMode)
 
 	go c2.Run()

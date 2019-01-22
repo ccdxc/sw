@@ -19,7 +19,6 @@ import (
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
 	tstypes "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
-	_ "github.com/pensando/sw/nic/delphi/sdk/proto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"

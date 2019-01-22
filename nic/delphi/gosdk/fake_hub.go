@@ -19,17 +19,22 @@ type Hub interface {
 	Stop()
 }
 
+type hubClient struct {
+	connection    net.Conn
+	subscriptions map[string]struct{}
+}
+
 type hub struct {
 	listener net.Listener
 	quit     chan struct{}
-	clients  []net.Conn
+	clients  map[net.Conn]*hubClient
 }
 
 // NewFakeHub creates a new hub instance
 func NewFakeHub() Hub {
 	return &hub{
 		quit:    make(chan struct{}),
-		clients: make([]net.Conn, 0),
+		clients: make(map[net.Conn]*hubClient),
 	}
 }
 
@@ -52,7 +57,10 @@ func (h *hub) Stop() {
 }
 
 func (h *hub) runReceiver(conn net.Conn) {
-	h.clients = append(h.clients, conn)
+	h.clients[conn] = &hubClient{
+		connection:    conn,
+		subscriptions: make(map[string]struct{}),
+	}
 	r := bufio.NewReader(conn)
 	for {
 		buf, err := r.Peek(4)
@@ -98,7 +106,7 @@ func (h *hub) runLoop() {
 		select {
 		case _ = <-h.quit:
 			for _, c := range h.clients {
-				c.Close()
+				c.connection.Close()
 			}
 			return
 		}
@@ -108,7 +116,7 @@ func (h *hub) runLoop() {
 func (h *hub) handleMessage(conn net.Conn, message *messenger.Message) {
 	switch message.GetType() {
 	case messenger.MessageType_MountReq:
-		h.sendMountResp(conn, message)
+		h.sendMountResp(h.clients[conn], message)
 	case messenger.MessageType_ChangeReq:
 		for _, c := range h.clients {
 			h.sendNotify(c, message)
@@ -117,7 +125,7 @@ func (h *hub) handleMessage(conn net.Conn, message *messenger.Message) {
 	}
 }
 
-func (h *hub) sendMountResp(conn net.Conn, msg *messenger.Message) {
+func (h *hub) sendMountResp(cl *hubClient, msg *messenger.Message) {
 	var req messenger.MountReqMsg
 	objects := msg.GetObjects()
 	if len(objects) != 1 {
@@ -126,6 +134,10 @@ func (h *hub) sendMountResp(conn net.Conn, msg *messenger.Message) {
 	err := proto.Unmarshal(objects[0].GetData(), &req)
 	if err != nil {
 		panic(err)
+	}
+
+	for _, m := range req.Mounts {
+		cl.subscriptions[m.Kind] = struct{}{}
 	}
 
 	mountRsp := messenger.MountRespMsg{
@@ -157,17 +169,23 @@ func (h *hub) sendMountResp(conn net.Conn, msg *messenger.Message) {
 
 	buffer.EncodeMessage(&message)
 
-	_, err = conn.Write(buffer.Bytes())
+	_, err = cl.connection.Write(buffer.Bytes())
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (h *hub) sendNotify(conn net.Conn, msg *messenger.Message) {
+func (h *hub) sendNotify(cl *hubClient, msg *messenger.Message) {
+	objects := make([]*messenger.ObjectData, 0)
+	for _, o := range msg.GetObjects() {
+		if _, ok := cl.subscriptions[o.Meta.Kind]; ok {
+			objects = append(objects, o)
+		}
+	}
 	message := messenger.Message{
 		Type:      messenger.MessageType_Notify,
 		MessageId: 1,
-		Objects:   msg.GetObjects(),
+		Objects:   objects,
 	}
 
 	e := make([]byte, 0)
@@ -175,7 +193,7 @@ func (h *hub) sendNotify(conn net.Conn, msg *messenger.Message) {
 
 	buffer.EncodeMessage(&message)
 
-	_, err := conn.Write(buffer.Bytes())
+	_, err := cl.connection.Write(buffer.Bytes())
 	if err != nil {
 		panic(err)
 	}

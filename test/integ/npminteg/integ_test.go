@@ -8,9 +8,6 @@ import (
 	"testing"
 	"time"
 
-	// This import is a workaround for delphi client crash
-	_ "github.com/pensando/sw/nic/delphi/sdk/proto"
-
 	. "gopkg.in/check.v1"
 	check "gopkg.in/check.v1"
 

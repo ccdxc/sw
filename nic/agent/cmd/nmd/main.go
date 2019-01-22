@@ -21,7 +21,6 @@ import (
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
-	_ "github.com/pensando/sw/nic/delphi/sdk/proto"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
