@@ -20,6 +20,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 
 using sdk::table::sdk_table_api_params_t;
 
@@ -224,9 +225,8 @@ mapping_impl::add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
     remote_vnic_mapping_rx_data.vcn_id = vcn->hw_id();
     // TODO: why do we need subnet id here ??
     remote_vnic_mapping_rx_data.subnet_id = subnet->hw_id();
-    memcpy(remote_vnic_mapping_rx_data.overlay_mac,
-           mapping_info->overlay_mac, ETH_ADDR_LEN);
-
+    sdk::lib::memrev(remote_vnic_mapping_rx_data.overlay_mac,
+                     mapping_info->overlay_mac, ETH_ADDR_LEN);
     api_params.key = &remote_vnic_mapping_rx_key;
     api_params.appdata = &remote_vnic_mapping_rx_data;
     api_params.action_id = REMOTE_VNIC_MAPPING_RX_REMOTE_VNIC_MAPPING_RX_INFO_ID; 
@@ -260,6 +260,9 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
            mapping_info->key.ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
     // TODO: dst_slot_id should come from here, p4 needs to change
     remote_vnic_mapping_tx_data.nexthop_index = tep_impl_obj->nh_id();
+
+    OCI_TRACE_DEBUG("TEP %s, vcn hw id %u, nh id %u", ipv4addr2str(mapping_info->tep.ip_addr),
+                    vcn->hw_id(), tep_impl_obj->nh_id());
 
     api_params.key = &remote_vnic_mapping_tx_key;
     api_params.appdata = &remote_vnic_mapping_tx_data;

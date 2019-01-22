@@ -458,7 +458,7 @@ asicpd_tcam_table_entry_write (uint32_t tableid,
                                                 (void*)key, (void*)keymask,
                                                 (void*)data, buffer,
                                                 sizeof(buffer));
-        SDK_TRACE_DEBUG("{}", buffer);
+        SDK_TRACE_DEBUG("%s", buffer);
     }
 #endif
 
