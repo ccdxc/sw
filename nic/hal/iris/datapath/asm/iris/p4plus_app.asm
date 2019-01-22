@@ -91,8 +91,15 @@ p4plus_app_tcp_proxy:
   or            r1, r1, k.tcp_option_three_sack_valid, 2
   or            r1, r1, k.tcp_option_four_sack_valid, 3
   indexn        r2, r1, [0xF, 0x7, 0x3, 0x1, 0x0], 0
-  phvwrpair     p.p4_to_p4plus_tcp_proxy_num_sack_blocks, r2, \
-                    p.p4_to_p4plus_tcp_proxy_payload_len, r3
+  or            r2, r2, k.tcp_option_timestamp_valid, 3
+  seq           c1, k.ipv4_valid, 1
+  or.c1         r2, r2, k.ipv4_diffserv[1:0], 4
+  or.!c1        r2, r2, k.ipv6_trafficClass_sbit4_ebit7[1:0]
+  or            r3, r3, r2, 16
+  phvwr         p.{p4_to_p4plus_tcp_proxy_ecn, \
+                    p4_to_p4plus_tcp_proxy_timestamp_valid, \
+                    p4_to_p4plus_tcp_proxy_num_sack_blocks, \
+                    p4_to_p4plus_tcp_proxy_payload_len}, r3
 
   phvwr         p.capri_rxdma_intrinsic_valid, TRUE
   phvwr.e       p.capri_rxdma_intrinsic_rx_splitter_offset, \
