@@ -213,7 +213,9 @@ def __add_config_classic_workloads(req, target_node = None):
         wl = workload.workload
         if wl.spec == 'tagged':
             if wl.count == 'auto':
-                num_subifs = (api.Testbed_GetVlanCount() - 1) # 1 for native
+                # Uncomment this once the bug PS-724 is fixed
+                #num_subifs = (api.Testbed_GetVlanCount() - 1) # 1 for native
+                num_subifs = 32
             else:
                 num_subifs = int(wl.count)
             for i in range(num_subifs):

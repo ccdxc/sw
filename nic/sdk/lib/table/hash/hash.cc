@@ -194,7 +194,7 @@ hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
         }
 
     } else {
-        SDK_TRACE_DEBUG("hash::%s: otcam Insert ", __FUNCTION__);
+        SDK_TRACE_DEBUG("otcam Insert: otcam_usage: %d", oflow_num_entries_in_use());
         if (he != NULL && !std::memcmp(he->key, key, swkey_len_)) {
             rs = SDK_RET_ENTRY_EXISTS;
             goto end;
