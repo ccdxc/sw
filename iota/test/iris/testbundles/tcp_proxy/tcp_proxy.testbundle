@@ -1,0 +1,13 @@
+meta:
+    name    : tcp_proxy 
+    os      : [ linux ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    targetcount : 35
+   # os      : [ linux ]
+
+testcases:
+    -   name    : iperf_thru_tcp_proxy
+        testcase: testcases.tcp_proxy.iperf
+        iterators:
+            type  : simple 
+            port  : [ 69, 70, 71 ]
