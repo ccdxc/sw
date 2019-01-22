@@ -2544,15 +2544,15 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 						 (unsigned long long) rate_limit_loop_count);
 				}
 			}
+			osal_sched_yield();
+		} else {
+			osal_yield();
 		}
 
 		/* Iterate workers on each loop */
 		if (++worker_id >= ctx->worker_count) {
 			worker_id = 0;
 			b_shutting_down = (bool) osal_atomic_read(&g_shutdown);
-			osal_sched_yield();
-		} else {
-			osal_yield();
 		}
 	}
 	osal_atomic_set(&g_testcase_active, 0);
