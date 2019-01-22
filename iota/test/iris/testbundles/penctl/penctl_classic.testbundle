@@ -31,8 +31,10 @@ testcases:
     -   name    : CHECK_FIRMWARE
         testcase: testcases.penctl.firmware
 
-    -   name    : CHECK_METRICS
-        testcase: testcases.penctl.lif_metrics
+    # Disabling this test for now, as it re-configures 
+    # interfaces which is breaking rdma_reg in regressions
+    #-   name    : CHECK_METRICS
+    #    testcase: testcases.penctl.lif_metrics
 
     -   name    : CHECK_EXECUTE
         testcase: testcases.penctl.execute
