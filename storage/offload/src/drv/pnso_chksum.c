@@ -220,8 +220,7 @@ out:
 
 static pnso_error_t
 chksum_sub_chain_from_cpdc(struct service_info *svc_info,
-			   struct cpdc_chain_params *cpdc_chain,
-			   bool integ_data0_copy)
+			   struct cpdc_chain_params *cpdc_chain)
 {
 	pnso_error_t err;
 	struct cpdc_desc *chksum_desc;
@@ -234,7 +233,7 @@ chksum_sub_chain_from_cpdc(struct service_info *svc_info,
 		svc_info->si_pb_sgl : svc_info->si_src_sgl.sgl;
 
 	err = seq_setup_chksum_chain_params(cpdc_chain, svc_info, chksum_desc,
-			sgl, svc_info->si_num_tags, integ_data0_copy);
+			sgl, svc_info->si_num_tags);
 	if (err) {
 		OSAL_LOG_ERROR("failed to setup checksum in chain! err: %d",
 				err);

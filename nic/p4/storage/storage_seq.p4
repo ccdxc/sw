@@ -663,7 +663,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
  *                           SGL address for next stage to do the PDMA.
  *****************************************************************************/
 
-@pragma little_endian status output_data_len partial_data integ_data0 integ_data1
+@pragma little_endian status output_data_len partial_data
 action seq_comp_status_handler(status, output_data_len, partial_data,
                                integ_data0, integ_data1) {
 

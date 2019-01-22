@@ -22,6 +22,7 @@
 #include "pnso_chain_params.h"
 #include "pnso_seq_ops.h"
 #include "pnso_cpdc.h"
+#include "pnso_cpdc_cmn.h"
 #include "pnso_init.h"
 
 /**
@@ -709,6 +710,24 @@ out:
 	OSAL_LOG_DEBUG("exit!");
 }
 
+static void
+hw_setup_cp_hdr_integ_data_wr(struct service_info *svc_info,
+		struct cpdc_desc *cp_desc,
+		struct cpdc_chain_params *chain_params)
+{
+	uint32_t chksum_offs;
+	uint32_t chksum_len;
+
+	cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs, &chksum_len);
+	if (chn_service_is_cp_hdr_insert_applic(svc_info) &&
+	    (cpdc_desc_is_integ_madler32(cp_desc) || (chksum_len == 0))) {
+
+		chain_params->ccp_hdr_chksum_offset = chksum_offs;
+		chain_params->ccp_cmd.integ_data0_wr_en = 1;
+		chain_params->ccp_cmd.integ_data_null_en = (chksum_len == 0);
+	}
+}
+
 static pnso_error_t
 hw_setup_cp_chain_params(struct service_info *svc_info,
 		struct cpdc_desc *cp_desc,
@@ -723,8 +742,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	uint8_t *seq_status_desc;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 	struct interm_buf_list *iblist;
-	uint32_t chksum_offs;
-	uint32_t chksum_len;
 
 	struct lif *lif;
 
@@ -773,7 +790,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
-	chain_params->ccp_comp_buf_addr = svc_info->si_dst_blist.blist.buffers[0].buf;
+	chain_params->ccp_comp_buf_addr = svc_info->si_dst_blist.blist->buffers[0].buf;
 
 	if (chn_service_has_interm_blist(svc_info)) {
 		iblist = &svc_info->si_iblist;
@@ -811,15 +828,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		chain_params->ccp_cmd.ccpc_stop_chain_on_error = 0;
 	}
 
-	if (chn_service_is_cp_hdr_insert_applic(svc_info) &&
-	    cpdc_desc_is_integ_madler32(cp_desc)) {
-
-		cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs,
-					&chksum_len);
-		chain_params->ccp_hdr_chksum_offset = chksum_offs;
-		chain_params->ccp_cmd.integ_data0_wr_en = 1;
-		chain_params->ccp_cmd.integ_data_null_en = (chksum_len == 0);
-	}
+	hw_setup_cp_hdr_integ_data_wr(svc_info, cp_desc, chain_params);
 
 	OSAL_LOG_INFO("ring: %s index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
 			ring->name, index, (uint64_t) cp_desc,
@@ -898,8 +907,6 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	struct sequencer_info *seq_info;
 	struct sequencer_spec *seq_spec;
 	uint32_t index;
-	uint32_t chksum_offs;
-	uint32_t chksum_len;
 	uint16_t qtype;
 	uint8_t *seq_status_desc;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
@@ -943,7 +950,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for cp+pad */
 
 	chain_params->ccp_next_db_spec.nds_addr =
-		sonic_virt_to_phy(cpdc_cp_pad_cpl_addr_get(status_desc));
+		sonic_virt_to_phy((void *)cpdc_cp_pad_cpl_addr_get(status_desc));
 	chain_params->ccp_next_db_spec.nds_data =
 		cpu_to_be64(CPDC_PAD_STATUS_DATA);
 
@@ -986,15 +993,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
 	}
 
-	if (chn_service_is_cp_hdr_insert_applic(svc_info) &&
-	    cpdc_desc_is_integ_madler32(cp_desc)) {
-
-		cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs,
-					&chksum_len);
-		chain_params->ccp_hdr_chksum_offset = chksum_offs;
-		chain_params->ccp_cmd.integ_data0_wr_en = 1;
-		chain_params->ccp_cmd.integ_data_null_en = (chksum_len == 0);
-	}
+	hw_setup_cp_hdr_integ_data_wr(svc_info, cp_desc, chain_params);
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 
@@ -1050,6 +1049,9 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
+	chain_params->ccp_cmd.desc_dlen_update_en =
+		(svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) == 0;
+
 	/*
 	 * hash/chksum executes multiple requests, one per block; hence,
 	 * indicate to P4+ to push a vector of descriptors

@@ -62,7 +62,7 @@ storage_seq_comp_status_handler:
     add         r_status, d.status, r0
     smeqh       c4, r_status, 0xf000, 0x8000
     bcf         [!c4], comp_error
-    phvwr	p.integ_data0_len, d.integ_data0              // delay slot
+    phvwr	p.integ_data0_len, d.integ_data0        // delay slot
    
     // Note: output_data_len contains compressed data length plus header length.
     
