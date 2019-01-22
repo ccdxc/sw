@@ -11,6 +11,13 @@
 #ifndef __CSR_INIT_HPP__
 #define __CSR_INIT_HPP__
 
+namespace sdk {
+namespace platform {
+namespace capri {
+
 void csr_init(void);
 
+} // end namespace capri
+} // end namespace platform
+} // end namespace sdk
 #endif    // __CSR_INIT_HPP__

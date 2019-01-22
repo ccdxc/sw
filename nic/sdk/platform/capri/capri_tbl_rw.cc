@@ -816,7 +816,7 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     if (ret != CAPRI_OK) {
         return ret;
     }
-    csr_init();
+    sdk::platform::capri::csr_init();
 
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();
@@ -842,7 +842,7 @@ capri_p4plus_table_rw_init (void)
     // in HAL init sequence, p4pd_init() is already called..
     // !!!!!!
     capri_p4plus_shadow_init();
-    csr_init();
+    sdk::platform::capri::csr_init();
 
     return (CAPRI_OK);
 }
