@@ -185,5 +185,15 @@ uint32_t lkl_get_tcpcb_rcv_wscale(void *tcpcb)
     return lkl_tcpcb_rcv_wscale(tcpcb);
 }
 
+uint32_t lkl_get_tcpcb_snd_cwnd(void *tcpcb)
+{
+    return lkl_tcpcb_snd_cwnd(tcpcb);
+}
+
+uint32_t lkl_get_tcpcb_snd_ssthresh(void *tcpcb)
+{
+    return lkl_tcpcb_snd_ssthresh(tcpcb);
+}
+
 }
 }
