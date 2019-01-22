@@ -17,6 +17,7 @@
 #include "nic/hal/apollo/core/oci_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 
 namespace impl {
 
@@ -131,10 +132,10 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     /**< initialize egress_local_vnic_info_rx table entry */
     egress_vnic_data.action_id =
         EGRESS_LOCAL_VNIC_INFO_RX_EGRESS_LOCAL_VNIC_INFO_RX_ID;
-    memcpy(egress_vnic_data.egress_local_vnic_info_rx_action.vr_mac,
-           subnet->vr_mac(), ETH_ADDR_LEN);
-    memcpy(egress_vnic_data.egress_local_vnic_info_rx_action.overlay_mac,
-           vnic_info->mac_addr, ETH_ADDR_LEN);
+    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_rx_action.vr_mac,
+                     subnet->vr_mac(), ETH_ADDR_LEN);
+    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_rx_action.overlay_mac,
+                     vnic_info->mac_addr, ETH_ADDR_LEN);
     egress_vnic_data.egress_local_vnic_info_rx_action.overlay_vlan_id =
         vnic_info->wire_vlan;
     egress_vnic_data.egress_local_vnic_info_rx_action.subnet_id =
@@ -243,8 +244,8 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
             //subnet->policy_tree_root();
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 = epoch;
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2 = OCI_EPOCH_INVALID;
-        memcpy(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.overlay_mac,
-               vnic_info->mac_addr, ETH_ADDR_LEN);
+        sdk::lib::memrev(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.overlay_mac,
+                         vnic_info->mac_addr, ETH_ADDR_LEN);
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.src_slot_id =
             vnic_info->slot;
         ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->insert_withid(&vnic_by_vlan_data,

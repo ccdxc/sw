@@ -30,6 +30,13 @@ ffs_msb (uint64_t mask) {
     return (sizeof(mask) * NUM_BITS_IN_BYTE) - __builtin_clzl(mask);
 }
 
+static inline void
+memrev (uint8_t *dst, uint8_t *src, size_t size)
+{
+    for (src = src + (size - 1); size > 0; size--) {
+        *dst++ = *src--;
+    }
+}
 
 }    // namespace lib
 }    // namespace sdk
