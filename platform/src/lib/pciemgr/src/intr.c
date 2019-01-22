@@ -20,7 +20,7 @@
 static void
 init_intr_pba_cfg(pciehwdev_t *phwdev)
 {
-    const u_int32_t lif = phwdev->lif;
+    const u_int32_t lif = phwdev->lifb;
     const u_int32_t intrb = phwdev->intrb;
     const u_int32_t intrc = phwdev->intrc;
 
@@ -30,7 +30,7 @@ init_intr_pba_cfg(pciehwdev_t *phwdev)
 static void
 init_intr_fwcfg(pciehwdev_t *phwdev)
 {
-    const u_int32_t lif = phwdev->lif;
+    const u_int32_t lif = phwdev->lifb;
     const int port = phwdev->port;
     const u_int8_t intpin = phwdev->intpin;
     const u_int32_t intrb = phwdev->intrb;

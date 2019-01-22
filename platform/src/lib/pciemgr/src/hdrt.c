@@ -59,17 +59,27 @@ hdrt_set_itr(const u_int32_t lif, const u_int16_t bdf)
  */
 
 int
-pciehw_hdrt_load(const u_int32_t lif, const u_int16_t bdf)
+pciehw_hdrt_load(const u_int32_t lifb,
+                 const u_int32_t lifc,
+                 const u_int16_t bdf)
 {
-    hdrt_set_itr(lif, bdf);
+    u_int32_t lif;
+
+    for (lif = lifb; lif < lifb + lifc; lif++) {
+        hdrt_set_itr(lif, bdf);
+    }
     return 0;
 }
 
 int
-pciehw_hdrt_unload(const u_int32_t lif)
+pciehw_hdrt_unload(const u_int32_t lifb, const u_int32_t lifc)
 {
-    const hdrt_t h = { 0 };
-    hdrt_set(lif, &h);
+    const hdrt_t h0 = { 0 };
+    u_int32_t lif;
+
+    for (lif = lifb; lif < lifb + lifc; lif++) {
+        hdrt_set(lif, &h0);
+    }
     return 0;
 }
 

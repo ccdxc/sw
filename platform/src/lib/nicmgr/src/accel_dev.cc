@@ -298,11 +298,11 @@ Accel_PF::CreateHostDevice()
 {
     pciehdevice_resources_t pci_resources = {0};
 
-    pci_resources.lif_valid = 1;
-    pci_resources.lif = lif_base;
+    pci_resources.port = spec->pcie_port;
+    pci_resources.lifb = lif_base;
+    pci_resources.lifc = 1;
     pci_resources.intrb = intr_base;
     pci_resources.intrc = spec->intr_count;
-    pci_resources.port = spec->pcie_port;
     pci_resources.npids = 1;
     pci_resources.devcmdpa = devcmd_mem_addr;
     pci_resources.devcmddbpa = devcmddb_mem_addr;

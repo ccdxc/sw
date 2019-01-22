@@ -68,7 +68,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 
     /* MSI-X Interrupt PBA */
     prt_res_enc(&prt,
-                intr_pba_addr(pres->lif),
+                intr_pba_addr(pres->lifb),
                 intr_pba_size(pres->intrc),
                 PRT_RESF_NONE);
     pciehbarreg_add_prt(&preg, &prt);

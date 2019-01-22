@@ -205,18 +205,14 @@ pciehw_foreach(int port, pciehw_cb_t cb, void *cbarg)
 static void
 pciehw_hostup(pciehwdev_t *phwdev, void *arg)
 {
-    if (phwdev->lif_valid) {
-        pciehw_hdrt_load(phwdev->lif, phwdev->bdf);
-    }
+    pciehw_hdrt_load(phwdev->lifb, phwdev->lifc, phwdev->bdf);
 }
 
 static void
 pciehw_hostdn(pciehwdev_t *phwdev, void *arg)
 {
     pciehw_intr_reset(phwdev);
-    if (phwdev->lif_valid) {
-        pciehw_hdrt_unload(phwdev->lif);
-    }
+    pciehw_hdrt_unload(phwdev->lifb, phwdev->lifc);
     /* XXX reset cfg/bars */
 }
 
@@ -638,19 +634,15 @@ pciehw_finalize_dev(pciehdev_t *pdev)
 {
     pciehwdev_t *phwdev = pciehwdev_alloc(pdev);
     pciehdev_t *parent, *peer, *child;
-    int lif;
 
     phwdev->pdev = pdev;
     phwdev->bdf = pciehdev_get_bdf(pdev);
     phwdev->port = pciehdev_get_port(pdev);
+    phwdev->lifb = pciehdev_get_lifb(pdev);
+    phwdev->lifc = pciehdev_get_lifc(pdev);
     phwdev->intrb = pciehdev_get_intrb(pdev);
     phwdev->intrc = pciehdev_get_intrc(pdev);
 
-    lif = pciehdev_get_lif(pdev);
-    if (lif >= 0) {
-        phwdev->lif_valid = 1;
-        phwdev->lif = lif;
-    }
     parent = pciehdev_get_parent(pdev);
     phwdev->parenth = parent ? pciehwdev_geth(pciehdev_get_hwdev(parent)) : 0;
 
@@ -662,13 +654,12 @@ pciehw_finalize_dev(pciehdev_t *pdev)
     if (parent) {
         /* bar first, then cfg below */
         pciehw_bars_finalize(pdev);
-        if (phwdev->lif_valid) {
-            /*
-             * We'll load hdrt when the link comes up.
-             * pciehw_hdrt_load(phwdev->lif, phwdev->bdf);
-             */
-            pciehw_portmap_load(phwdev->lif, phwdev->port);
-        }
+
+        /*
+         * We'll load hdrt when the link comes up.
+         * pciehw_hdrt_load(phwdev->lifb, phwdev->lifc, phwdev->bdf);
+         */
+        pciehw_portmap_load(phwdev->lifb, phwdev->lifc, phwdev->port);
     }
 
     /* cfg after bar above */
@@ -747,15 +738,19 @@ dev_show1(const pciehwdev_t *phwdev, const int flags)
     char lifstr[8] = { '\0' };
     char intrsstr[16] = { '\0' };
 
-    if (phwdev->lif_valid) {
-        snprintf(lifstr, sizeof(lifstr), "%d", phwdev->lif);
+    if (phwdev->lifc == 1) {
+        snprintf(lifstr, sizeof(lifstr), "%d", phwdev->lifb);
+    } else if (phwdev->lifc > 1) {
+        snprintf(lifstr, sizeof(lifstr), "%d-%d",
+                 phwdev->lifb,
+                 phwdev->lifb + phwdev->lifc - 1);
     }
     if (phwdev->intrc) {
         snprintf(intrsstr, sizeof(intrsstr), "%d-%d",
                  phwdev->intrb,
                  phwdev->intrb + phwdev->intrc - 1);
     }
-    pciesys_loginfo("%-3d %-4s %-16s %1d:%-7s %c    %-5s\n",
+    pciesys_loginfo("%-3d %-9s %-16s %1d:%-7s %c    %-5s\n",
                     pciehwdev_geth(phwdev),
                     lifstr,
                     pciehwdev_get_name(phwdev),
@@ -796,8 +791,8 @@ pciehw_dev_show(int argc, char *argv[])
         }
     }
 
-    pciesys_loginfo("%-3s %-4s %-16s %-9s %-4s %-5s\n",
-                    "hdl", "lif", "name", "p:bdf", "intx", "intrs");
+    pciesys_loginfo("%-3s %-9s %-16s %-9s %-4s %-5s\n",
+                    "hdl", "lif", "name", "p:bb:dd.f", "intx", "intrs");
     if (optind >= argc) {
         dev_show_all(flags);
     } else {

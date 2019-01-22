@@ -50,7 +50,8 @@ pciehdev_t *pciehdev_get_by_bdf(const u_int8_t port, const u_int16_t bdf);
 pciehdev_t *pciehdev_get_by_name(const char *name);
 
 u_int8_t pciehdev_get_port(pciehdev_t *pdev);
-int pciehdev_get_lif(pciehdev_t *pdev);
+u_int32_t pciehdev_get_lifb(pciehdev_t *pdev);
+u_int32_t pciehdev_get_lifc(pciehdev_t *pdev);
 u_int32_t pciehdev_get_intrb(pciehdev_t *pdev);
 u_int32_t pciehdev_get_intrc(pciehdev_t *pdev);
 char *pciehdev_get_name(pciehdev_t *pdev);

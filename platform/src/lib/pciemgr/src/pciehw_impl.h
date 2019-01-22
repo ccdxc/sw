@@ -65,8 +65,8 @@ typedef struct pciehwdev_s {
     int port;                           /* pcie port */
     void *pdev;                         /* pciehdev */
     u_int16_t bdf;                      /* bdf of this dev */
-    u_int16_t lif_valid:1;              /* lif is valid */
-    u_int32_t lif;                      /* lif for this dev */
+    u_int32_t lifc;                     /* lif count for this dev */
+    u_int32_t lifb;                     /* lif base  for this dev */
     u_int32_t intrb;                    /* intr resource base */
     u_int32_t intrc;                    /* intr resource count */
     pciehwdevh_t parenth;               /* handle to parent */
