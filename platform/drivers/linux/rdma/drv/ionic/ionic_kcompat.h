@@ -122,6 +122,14 @@ static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
 #define HAVE_IB_REGISTER_DEVICE_NAME
 #endif
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0))
+#define dma_alloc_coherent dma_zalloc_coherent
+#else
+#define HAVE_IB_DEVICE_OPS
+#define HAVE_CREATE_AH_FLAGS
+#define HAVE_CREATE_AH_SLEEPABLE
+#endif
+
 /* other compat for not yet upstream changes */
 
 /* change ib_gid_to_network_type to accept const ib_gid */
