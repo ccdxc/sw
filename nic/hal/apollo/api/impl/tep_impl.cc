@@ -7,11 +7,13 @@
  */
 
 #include "nic/hal/apollo/core/mem.hpp"
+#include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/framework/api_engine.hpp"
 #include "nic/hal/apollo/api/tep.hpp"
 #include "nic/hal/apollo/api/impl/tep_impl.hpp"
 #include "nic/hal/apollo/api/impl/oci_impl_state.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
+#include "nic/apollo/p4/include/defines.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 
 namespace impl {
@@ -91,6 +93,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t              ret;
     oci_tep_t              *tep_info;
     tep_tx_actiondata_t    tep_tx_data = { 0 };
+    nexthop_tx_actiondata_t  nh_tx_data = { 0 };
 
     tep_info = &obj_ctxt->api_params->tep_info;
     tep_tx_data.action_id = TEP_TX_UDP_TEP_TX_ID;
@@ -98,6 +101,18 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_udp_action.dmac,
                        0x00020B0A0D0E);
     ret = tep_impl_db()->tep_tx_tbl()->insert_withid(&tep_tx_data, hw_id_);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // TODO: This whole thing is hack !!!
+    nh_tx_data.action_id = NEXTHOP_TX_NEXTHOP_INFO_ID;
+    nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index = hw_id_;
+    nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = VNIC_ENCAP;
+    nh_tx_data.action_u.nexthop_tx_nexthop_info.dst_slot_id = 0xAB;
+    ret = tep_impl_db()->nh_tx_tbl()->insert(&nh_tx_data, (uint32_t *)&nh_id_);
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    OCI_TRACE_DEBUG("Programmed TEP, hw id %u, nh id %u", hw_id_, nh_id_);
+
     return ret;
 }
 
