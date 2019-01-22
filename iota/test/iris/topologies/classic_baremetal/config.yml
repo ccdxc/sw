@@ -18,8 +18,8 @@ spec:
                 # All networks will get subnets from this base prefix.
                 # E.g. 10.255.1.0/24, 10.255.2.0/24 and so on.
                 ipam_base: 10.255.0.0/16
-                
-                # Desired prefix length of each network 
+
+                # Desired prefix length of each network
                 # This should be bigger than the prefix length of 'ipam_base'
                 prefix_length: 24
 
@@ -31,7 +31,7 @@ spec:
                 # All networks will get subnets from this base prefix.
                 # E.g. 10.255.1.0/24, 10.255.2.0/24 and so on.
                 ipam_base: 2000::/48
-                
+
                 # Desired prefix length of each network
                 # This should be bigger than the prefix length of 'ipam_base'
                 prefix_length: 64
@@ -49,7 +49,7 @@ spec:
             tagged      : True
 
 instances:
-    networks: 
+    networks:
         count       : auto
         distribution: all
 
@@ -61,41 +61,48 @@ instances:
             # Interfaces controls the distribution of workloads on
             # all the available host interfaces.
             # Distribution is equal, 1 on each interface
-            interfaces  : 
+            interfaces  :
                 - host_if1 # Tag or Label for Interface1
                 - host_if2 # Tag or Label for Interface2
+
+        # If you want unequal distribution. Uncomment this.
+        #- workload:
+        #    node        : node1
+        #    count       : auto
+        #    spec        : tagged
+        #    # Unequal distribution
+        #    # host_if1 = 2/3rd workloads
+        #    # host_if2 = 1/3rd workloads
+        #    interfaces  :
+        #        - host_if1
+        #        - host_if2
+        #        - host_if1
 
         - workload:
             node        : node1
             count       : auto
             spec        : tagged
-            # Unequal distribution
-            # host_if1 = 2/3rd workloads
-            # host_if2 = 1/3rd workloads
+            # Distribution is equal, 1 on each interface
             interfaces  :
                 - host_if1
                 - host_if2
-                - host_if1
 
         - workload:
             node        : node2
             count       : 2
             spec        : native
             # Some kind of a tag for host if
-            interfaces  : 
+            interfaces  :
                 - host_if1 # Tag or Label for Interface1
                 - host_if2 # Tag or Label for Interface2
 
         - workload:
-            node        : node1
+            node        : node2
             count       : auto
             spec        : tagged
             interface   : auto
-            # Unequal distribution
-            # host_if1 = 2/3rd workloads
-            # host_if2 = 1/3rd workloads
+            # Distribution is equal, 1 on each interface
             interfaces  :
                 - host_if1
                 - host_if2
-                - host_if1
 
