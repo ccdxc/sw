@@ -9,10 +9,12 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/hal/apollo/core/mem.hpp"
+#include "nic/hal/apollo/core/trace.hpp"
 #include "nic/hal/apollo/api/switchport.hpp"
 #include "nic/hal/apollo/api/impl/switchport_impl.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
 
 namespace impl {
 
@@ -55,14 +57,19 @@ switchport_impl::destroy(switchport_impl *impl) {
  */
 sdk_ret_t
 switchport_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    switchport_entry *switchport = (switchport_entry *)api_obj;
+    mac_addr_t          tmp;
+    switchport_entry    *switchport = (switchport_entry *)api_obj;
 
+    sdk::lib::memrev(tmp, switchport->mac_addr(), ETH_ADDR_LEN);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                                                  switchport->ip_addr());
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
                                                  switchport->ip_addr());
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
                                                  MAC_TO_UINT64(switchport->mac_addr()));
+    OCI_TRACE_DEBUG("Programmed switchport IP %s, MAC %s as table constants",
+                    ipv4addr2str(switchport->ip_addr()),
+                    macaddr2str(switchport->mac_addr()));
     return SDK_RET_OK;
 }
 
@@ -92,13 +99,15 @@ sdk_ret_t
 switchport_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                            obj_ctxt_t *obj_ctxt) {
     switchport_entry *switchport = (switchport_entry *)curr_obj;
+    mac_addr_t tmp;
+    sdk::lib::memrev(tmp, switchport->mac_addr(), ETH_ADDR_LEN);
 
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                                                  switchport->ip_addr());
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
                                                  switchport->ip_addr());
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
-                                                 MAC_TO_UINT64(switchport->mac_addr()));
+                                                 MAC_TO_UINT64(tmp));
     return SDK_RET_OK;
 }
 

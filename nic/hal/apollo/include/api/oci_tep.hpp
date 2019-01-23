@@ -21,21 +21,23 @@
 #define OCI_MAX_TEP                1024
 
 /**
- * @brief Defines encap type
+ * @brief supproted encap types
  */
 typedef enum oci_encap_type_e {
-    OCI_ENCAP_TYPE_IPINIP_GRE = 0,    /**< GRE tunnel */
+    OCI_ENCAP_TYPE_NONE       = 0,
+    OCI_ENCAP_TYPE_GW_ENCAP   = 1,    /**< MPLSoUDP with single mpls label */
+    OCI_ENCAP_TYPE_VNIC       = 2,    /**< MPLSoUDP with two mpls labels */
 } oci_encap_type_t;
 
 /**
- * @brief Tunnel Key
+ * @brief tunnel endpoint key
  */
 typedef struct oci_tep_key_s {
     ipv4_addr_t    ip_addr;    /**< Tunnel IP address */
 } __PACK__ oci_tep_key_t;
 
 /**
- * @brief Tunnel
+ * @brief tunnel information
  */
 typedef struct oci_tep_s {
     oci_tep_key_t       key;     /**< Tunnel key */
@@ -43,20 +45,16 @@ typedef struct oci_tep_s {
 } __PACK__ oci_tep_t;
 
 /**
- * @brief Create tep
- *
- * @param[in] tep Tunnel information
- *
+ * @brief create tep
+ * @param[in] tep tunnel information
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t oci_tep_create(_In_ oci_tep_t *tep);
 
 
 /**
- * @brief Delete tep
- *
- * @param[in] tep_key Tunnel Key
- *
+ * @brief delete tep
+ * @param[in] tep_key tunnel key
  * @return #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t oci_tep_delete(_In_ oci_tep_key_t *tep_key);

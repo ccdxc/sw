@@ -17,6 +17,8 @@
 #include "nic/hal/apollo/include/api/oci_subnet.hpp"
 #include "nic/hal/apollo/include/api/oci_vnic.hpp"
 #include "nic/hal/apollo/include/api/oci_mapping.hpp"
+#include "nic/sdk/platform/capri/capri_p4.hpp"
+#include "nic/model_sim/include/lib_model_client.h"
 
 using std::string;
 namespace pt = boost::property_tree;
@@ -25,7 +27,27 @@ char                *g_input_cfg_file = NULL;
 char                *g_cfg_file = NULL;
 bool                g_daemon_mode = false;
 ip_prefix_t         g_vcn_ippfx = { 0 };
-oci_switchport_t    g_sw_port = { 0 };
+oci_switchport_t    g_swport = { 0 };
+
+uint8_t g_snd_pkt1[] = {
+    0x00, 0x00, 0x00, 0x10, 0x04, 0x02, 0x00, 0x00,
+    0x00, 0x10, 0x04, 0x01, 0x81, 0x00, 0x00, 0x01,
+    0x08, 0x00, 0x45, 0x00, 0x00, 0x1C, 0x0D, 0x03,
+    0x00, 0x00, 0x40, 0x11, 0x69, 0xCC, 0x02, 0x00,
+    0x00, 0x01, 0x02, 0x00, 0x00, 0x02, 0x03, 0xE8,
+    0x27, 0x10, 0x00, 0x08, 0xD0, 0xE3
+};
+
+uint8_t g_rcv_pkt1[] = {
+    0x00, 0x02, 0x0B, 0x0A, 0x0D, 0x0E, 0x00, 0x02, 0x01, 0x00, 0x00, 0x01,
+    0x08, 0x00, 0x45, 0x00, 0x00, 0x4E, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
+    0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x01, 0x00, 0x03, 0xC1, 0xA6, 0xB8,
+    0x19, 0xEB, 0x00, 0x3A, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x0A,
+    0xB1, 0x00, 0x45, 0x00, 0x00, 0x1C, 0x0D, 0x03, 0x00, 0x00, 0x40, 0x11,
+    0x69, 0xCC, 0x02, 0x00, 0x00, 0x01, 0x02, 0x00, 0x00, 0x02, 0x03, 0xE8,
+    0x27, 0x10, 0x00, 0x08, 0xD0, 0xE3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 
 class scale_test : public oci_test_base {
 protected:
@@ -112,7 +134,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     oci_mapping.subnet.vcn_id = i;
                     oci_mapping.subnet.id = j;
                     oci_mapping.slot = vnic_key;
-                    oci_mapping.tep.ip_addr = g_sw_port.switch_ip_addr;
+                    oci_mapping.tep.ip_addr = g_swport.switch_ip_addr;
                     MAC_UINT64_TO_ADDR(oci_mapping.overlay_mac,
                                        (((((uint64_t)i & 0x3FF) << 20) |
                                          ((j & 0x3FF) << 10) | (k & 0x3FF))));
@@ -186,7 +208,7 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
                                    (((((uint64_t)i & 0x3FF) << 20) |
                                      ((j & 0x3FF) << 10) | (k & 0x3FF))));
                 oci_vnic.rsc_pool_id = 1;
-                oci_vnic.src_dst_check = (k & 0x1);
+                oci_vnic.src_dst_check = false; //(k & 0x1);
                 rv = oci_vnic_create(&oci_vnic);
                 ASSERT_TRUE(rv == SDK_RET_OK);
                 vnic_key++;
@@ -257,7 +279,7 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         // 1st IP in the TEP prefix is local TEP, 2nd is gateway IP,
         // so skip them
         oci_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 2 + i;
-        oci_tep.type = OCI_ENCAP_TYPE_IPINIP_GRE;
+        oci_tep.type = OCI_ENCAP_TYPE_VNIC;
         rv = oci_tep_create(&oci_tep);
         ASSERT_TRUE(rv == SDK_RET_OK);
     }
@@ -268,11 +290,11 @@ create_switchport_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
 {
     sdk_ret_t           rv;
 
-    memset(&g_sw_port, 0, sizeof(g_sw_port));
-    g_sw_port.switch_ip_addr = ipaddr;
-    MAC_UINT64_TO_ADDR(g_sw_port.switch_mac_addr, macaddr);
-    g_sw_port.gateway_ip_addr = gwip;
-    rv = oci_switchport_create(&g_sw_port);
+    memset(&g_swport, 0, sizeof(g_swport));
+    g_swport.switch_ip_addr = ipaddr;
+    MAC_UINT64_TO_ADDR(g_swport.switch_mac_addr, macaddr);
+    g_swport.gateway_ip_addr = gwip;
+    rv = oci_switchport_create(&g_swport);
     ASSERT_TRUE(rv == SDK_RET_OK);
 }
 
@@ -296,7 +318,7 @@ create_objects (void)
                 struct in_addr    ipaddr, gwip;
                 uint64_t          macaddr;
 
-                macaddr = std::stol(obj.second.get<std::string>("mac-addr"));
+                macaddr = std::stoull(obj.second.get<std::string>("mac-addr"), 0, 0);
                 inet_aton(obj.second.get<std::string>("ip-addr").c_str(),
                           &ipaddr);
                 inet_aton(obj.second.get<std::string>("gw-ip-addr").c_str(),
@@ -343,6 +365,71 @@ create_objects (void)
     }
 }
 
+#ifdef SIM
+static void
+send_packet (void)
+{
+    uint32_t port = 0;
+    uint32_t cos = 0;
+    std::vector<uint8_t> ipkt;
+    std::vector<uint8_t> opkt;
+    std::vector<uint8_t> epkt;
+    uint32_t i = 0;
+    uint32_t tcscale = 1;
+    int tcid = 0;
+    int tcid_filter = 0;
+
+    if (getenv("TCSCALE")) {
+        tcscale = atoi(getenv("TCSCALE"));
+    }
+
+    if (getenv("TCID")) {
+        tcid_filter = atoi(getenv("TCID"));
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt1));
+        memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
+        epkt.resize(sizeof(g_rcv_pkt1));
+        memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
+        std::cout << "Testing Host to Switch" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i+1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i+1);
+        }
+    }
+
+#if 0
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt2));
+        memcpy(ipkt.data(), g_snd_pkt2, sizeof(g_snd_pkt2));
+        epkt.resize(sizeof(g_rcv_pkt2));
+        memcpy(epkt.data(), g_rcv_pkt2, sizeof(g_rcv_pkt2));
+        std::cout << "Testing Switch to Host" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i+1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_1);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_0);
+            }
+            testcase_end(tcid, i+1);
+        }
+    }
+#endif
+    exit_simulation();
+}
+#endif
+
 TEST_F(scale_test, scale_test_create) {
     sdk_ret_t             rv;
     oci_batch_params_t    batch_params = { 0 };
@@ -353,6 +440,10 @@ TEST_F(scale_test, scale_test_create) {
     create_objects();
     rv = oci_batch_commit();
     ASSERT_TRUE(rv == SDK_RET_OK);
+
+#ifdef SIM
+    send_packet();
+#endif
 
     if (g_daemon_mode) {
         printf("Entering forever loop ...\n");

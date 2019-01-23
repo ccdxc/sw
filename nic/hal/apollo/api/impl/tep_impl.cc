@@ -90,23 +90,28 @@ tep_impl::release_resources(api_base *api_obj) {
 #define tep_tx_udp_action    action_u.tep_tx_udp_tep_tx
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t              ret;
-    oci_tep_t              *tep_info;
-    tep_tx_actiondata_t    tep_tx_data = { 0 };
-    nexthop_tx_actiondata_t  nh_tx_data = { 0 };
+    sdk_ret_t                  ret;
+    oci_tep_t                  *tep_info;
+    tep_tx_actiondata_t        tep_tx_data = { 0 };
+    nexthop_tx_actiondata_t    nh_tx_data = { 0 };
 
     tep_info = &obj_ctxt->api_params->tep_info;
     tep_tx_data.action_id = TEP_TX_UDP_TEP_TX_ID;
     tep_tx_data.tep_tx_udp_action.dipo = tep_info->key.ip_addr;
-    MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_udp_action.dmac,
-                       0x00020B0A0D0E);
+
+    // TODO: fix this when fte plugin is available
+    MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_udp_action.dmac, 0x0E0D0A0B0200);
     ret = tep_impl_db()->tep_tx_tbl()->insert_withid(&tep_tx_data, hw_id_);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    // TODO: This whole thing is hack !!!
     nh_tx_data.action_id = NEXTHOP_TX_NEXTHOP_INFO_ID;
     nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index = hw_id_;
-    nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = VNIC_ENCAP;
+    if (tep_info->type == OCI_ENCAP_TYPE_GW_ENCAP) {
+        nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = GW_ENCAP;
+    } else if (tep_info->type == OCI_ENCAP_TYPE_VNIC) {
+        nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = VNIC_ENCAP;
+    }
+    // TODO: fix this once p4/asm is fixed
     nh_tx_data.action_u.nexthop_tx_nexthop_info.dst_slot_id = 0xAB;
     ret = tep_impl_db()->nh_tx_tbl()->insert(&nh_tx_data, (uint32_t *)&nh_id_);
     SDK_ASSERT(ret == SDK_RET_OK);
