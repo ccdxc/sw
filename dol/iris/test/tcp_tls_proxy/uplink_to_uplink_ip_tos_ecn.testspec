@@ -34,7 +34,7 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
-                tos     : 0
+                tos     : 3
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -102,7 +102,7 @@ packets:
                 seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
                 window  : 1000
-                flags   : ack
+                flags   : ack,ece
                 options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
 
 trigger:

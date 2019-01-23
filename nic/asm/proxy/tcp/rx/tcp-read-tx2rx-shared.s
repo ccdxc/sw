@@ -45,14 +45,6 @@ tcp_rx_read_shared_stage0_start:
 
     phvwr           p.s1_s2s_rst_sent, d.rst_sent
 
-#ifdef L7_PROXY_SUPPORT
-    /* Disable l7 aspect for now */
-read_l7_proxy_cfg:
-    sne         c1, d.l7_proxy_type, L7_PROXY_TYPE_NONE
-    phvwri.c1   p.common_phv_l7_proxy_en, 1
-    seq         c2, d.l7_proxy_type, L7_PROXY_TYPE_REDIR
-    phvwri.c2   p.common_phv_l7_proxy_type_redirect, 1
-#endif
 table_read_RX:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                 tcp_rx_process_start, k.p4_rxdma_intr_qstate_addr,
@@ -72,7 +64,8 @@ table_read_RX:
 
     phvwrpair       p.common_phv_fid, k.p4_rxdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_rxdma_intr_qstate_addr
-    phvwr           p.common_phv_debug_dol, d.debug_dol[7:0]
+    phvwrpair       p.common_phv_debug_dol, d.debug_dol[7:0], \
+                        p.common_phv_ip_tos_ecn, k.tcp_app_header_ecn
 
     phvwr           p.to_s1_serq_cidx, d.serq_cidx
 

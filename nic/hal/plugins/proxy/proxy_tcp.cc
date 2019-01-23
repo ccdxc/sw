@@ -35,7 +35,7 @@ thread_local fte::ctx_t *gl_ctx;
     _buf[_i++] = 0x08; \
     _buf[_i++] = 0x00; \
     _buf[_i++] = 0x45; \
-    _buf[_i++] = 0x08; \
+    _buf[_i++] = 0x09; \
     _buf[_i++] = 0x00; \
     _buf[_i++] = 0x28; \
     _buf[_i++] = 0x00; \
@@ -51,7 +51,7 @@ thread_local fte::ctx_t *gl_ctx;
     _buf[_i++] = 0x86; \
     _buf[_i++] = 0xdd; \
     _buf[_i++] = 0x60; \
-    _buf[_i++] = 0x00; \
+    _buf[_i++] = 0x01; \
     _buf[_i++] = 0x00; \
     _buf[_i++] = 0x00; \
     _buf[_i++] = 0x00; \

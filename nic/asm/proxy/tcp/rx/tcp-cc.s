@@ -34,6 +34,9 @@ tcp_rx_cc_stage_start:
     .brend
 
 tcp_rx_cc_stage_end:
+    seq             c1, d.ip_tos_ecn_received, 1
+    seq.!c1         c1, k.common_phv_ip_tos_ecn, 3
+    bal.c1          r7, tcp_rx_cc_handle_ip_tos
     phvwr           p.rx2tx_extra_snd_cwnd, d.snd_cwnd
     phvwr           p.rx2tx_extra_t_flags, d.t_flags
     CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_EN,
@@ -43,3 +46,14 @@ tcp_rx_cc_stage_end:
     nop
 
 
+/******************************************************************************
+ * Functions
+ *****************************************************************************/
+ tcp_rx_cc_handle_ip_tos:
+    smeqb           c1, k.common_phv_flags, TCPHDR_CWR, TCPHDR_CWR
+    tblwr.c1        d.ip_tos_ecn_received, 0
+    seq             c1, k.common_phv_ip_tos_ecn, 3
+    tblwr.c1        d.ip_tos_ecn_received, 1
+    seq             c1, d.ip_tos_ecn_received, 1
+    jr              r7
+    tblor.c1.l      d.t_flags, TCPHDR_ECE

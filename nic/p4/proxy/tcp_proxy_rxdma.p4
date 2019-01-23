@@ -256,7 +256,8 @@ header_type ooo_book_keeping_t {
 
 #define CC_D_PARAMS \
         snd_cwnd, cc_algo, smss, smss_squared, snd_ssthresh, \
-        max_win, snd_wscale, cc_flags, t_flags
+        max_win, snd_wscale, cc_flags, t_flags, \
+        ip_tos_ecn_received
 
 #define GENERATE_CC_D \
     modify_field(tcp_cc_d.snd_cwnd, snd_cwnd); \
@@ -267,7 +268,8 @@ header_type ooo_book_keeping_t {
     modify_field(tcp_cc_d.max_win, max_win); \
     modify_field(tcp_cc_d.snd_wscale, snd_wscale); \
     modify_field(tcp_cc_d.cc_flags, cc_flags); \
-    modify_field(tcp_cc_d.t_flags, t_flags);
+    modify_field(tcp_cc_d.t_flags, t_flags); \
+    modify_field(tcp_cc_d.ip_tos_ecn_received, ip_tos_ecn_received);
 
 // d for stage 4 table 0
 header_type tcp_cc_d_t {
@@ -281,6 +283,7 @@ header_type tcp_cc_d_t {
         snd_wscale              : 8;
         cc_flags                : 8;
         t_flags                 : 8;
+        ip_tos_ecn_received     : 1;
     }
 }
 
@@ -457,6 +460,7 @@ header_type common_global_phv_t {
         tsopt_enabled           : 1;
         tsopt_available         : 1;
         skip_pkt_dma            : 1;
+        ip_tos_ecn              : 2;
     }
 }
 

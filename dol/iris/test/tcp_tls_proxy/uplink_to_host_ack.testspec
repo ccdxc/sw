@@ -49,6 +49,8 @@ packets:
         headers     :
             qtag:
                 vlan    : ref://testcase/config/src/segment/vlan_id
+            ipv4:
+                tos     : 0
 
     - packet:
         id          : PKT2 # Expected Packet

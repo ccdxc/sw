@@ -122,6 +122,7 @@ packets:
                 src     : ref://testcase/config/flow/dip
                 dst     : ref://testcase/config/flow/sip
                 ttl     : 64
+                tos     : 0
             ipv6:
                 src     : ref://testcase/config/flow/dip
                 dst     : ref://testcase/config/flow/sip

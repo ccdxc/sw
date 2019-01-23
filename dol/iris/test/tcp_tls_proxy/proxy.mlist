@@ -424,18 +424,6 @@ modules:
             - flow: filter://type=IPV4
 
     - module:
-        name    : UL_TO_UL_BYPASS_BARCO_SAME_FLOW
-        spec    : uplink_to_uplink.testspec
-        module  : pkt_to_p4
-        args    :
-            bypass_barco : 1
-            maxflows : 1
-            same_flow : 1
-        iterate :
-            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
-              segment   : filter://native=False
-
-    - module:
         name    : UL_TO_UL_BYPASS_BARCO
         spec    : uplink_to_uplink.testspec
         module  : pkt_to_p4
@@ -841,19 +829,6 @@ modules:
             test_mpu_tblsetaddr : 1
 
     - module:
-        name    : UL_TO_HOST_BYPASS_BARCO_SAME_FLOW
-        spec    : uplink_to_host.testspec
-        module  : pkt_to_p4
-        rtl     : True
-        args :
-              bypass_barco : 1
-              maxflows : 1
-              same_flow : 1
-        iterate :
-            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
-              segment   : filter://native=False
-
-    - module:
         name    : UL_TO_HOST_BYPASS_BARCO
         spec    : uplink_to_host.testspec
         module  : pkt_to_p4
@@ -895,19 +870,6 @@ modules:
             bypass_barco : 1
             maxflows : 1
             num_pkts : 10
-
-    - module:
-        name    : HOST_TO_UL_BYPASS_BARCO_SAME_FLOW
-        spec    : host_to_uplink.testspec
-        module  : pkt_to_p4
-        rtl     : True
-        args :
-              bypass_barco : 1
-              maxflows : 1
-              same_flow : 1
-        iterate :
-            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
-              segment   : filter://native=False
 
     - module:
         name    : HOST_TO_UL_BYPASS_BARCO
@@ -1264,3 +1226,33 @@ modules:
             snd_ssthresh : 10000
             rcv_mss : 2000
 
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_IP_TOS_ECN
+        spec    : uplink_to_uplink_ip_tos_ecn.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows : 1
+            send_ack_flow1 : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_IP_TOS_ECN_2PKTS
+        spec    : uplink_to_uplink_ip_tos_ecn_2pkts.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 2
+            num_ack_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            send_ack_flow1 : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_IP_TOS_ECN_2PKTS_1CWR
+        spec    : uplink_to_uplink_ip_tos_ecn_2pkts_1cwr.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 2
+            num_ack_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            send_ack_flow1 : 1
