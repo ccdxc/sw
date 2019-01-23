@@ -139,6 +139,9 @@ struct ionic_ibdev {
 
 	struct work_struct	reset_work;
 
+	unsigned long		admin_stamp;
+
+	struct delayed_work	admin_dwork;
 	struct work_struct	admin_work;
 	spinlock_t		admin_lock;
 	struct ionic_aq		*adminq;

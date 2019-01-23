@@ -62,6 +62,9 @@ MODULE_LICENSE("Dual BSD/GPL");
 /* admin queue will be considered failed if a command takes longer */
 #define IONIC_ADMIN_TIMEOUT (HZ * 2)
 
+/* will poll for admin cq to tolerate and report from missed event */
+#define IONIC_ADMIN_DELAY (HZ / 4)
+
 /* resource is not reserved on the device, indicated in tbl_order */
 #define IONIC_RES_INVALID -1
 
@@ -106,19 +109,19 @@ static bool ionic_dbgfs_enable = true; /* XXX false for release */
 module_param_named(ionic_rdma_dbgfs_enable, ionic_dbgfs_enable, bool, 0444);
 MODULE_PARM_DESC(ionic_rdma_dbgfs_enable, "Expose resource info in debugfs.");
 
-static u16 ionic_aq_depth = 0x3f; /* XXX needs tuning */
+static u16 ionic_aq_depth = 0x7ff;
 module_param_named(ionic_rdma_aq_depth, ionic_aq_depth, ushort, 0444);
 MODULE_PARM_DESC(ionic_rdma_aq_depth, "Min depth for admin queues.");
 
-static u16 ionic_eq_depth = 0x1ff; /* XXX needs tuning */
+static u16 ionic_eq_depth = 0xfff;
 module_param_named(ionic_rdma_eq_depth, ionic_eq_depth, ushort, 0444);
 MODULE_PARM_DESC(ionic_rdma_eq_depth, "Min depth for event queues.");
 
-static u16 ionic_eq_isr_budget = 10; /* XXX needs tuning */
+static u16 ionic_eq_isr_budget = 10;
 module_param_named(ionic_rdma_isr_budget, ionic_eq_isr_budget, ushort, 0644);
 MODULE_PARM_DESC(ionic_rdma_isr_budget, "Max events to poll per round in isr context.");
 
-static u16 ionic_eq_work_budget = 1000; /* XXX needs tuning */
+static u16 ionic_eq_work_budget = 1000;
 module_param_named(ionic_rdma_work_budget, ionic_eq_work_budget, ushort, 0644);
 MODULE_PARM_DESC(ionic_rdma_work_budget, "Max events to poll per round in work context.");
 
@@ -657,6 +660,78 @@ static void ionic_clean_cq(struct ionic_cq *cq, u32 qpid)
 	}
 }
 
+static void ionic_admin_timedout(struct ionic_ibdev *dev)
+{
+	struct ionic_aq *aq = dev->adminq;
+	struct ionic_cq *cq = dev->admincq;
+	unsigned long irqflags;
+	u16 pos;
+
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	if (ionic_queue_empty(&aq->q))
+		goto out;
+
+	queue_work(ionic_evt_workq, &dev->reset_work);
+
+	dev_err(&dev->ibdev.dev, "admin command timed out\n");
+
+	dev_warn(&dev->ibdev.dev, "admin timeout was set for %lums\n",
+		 jiffies_to_msecs(IONIC_ADMIN_TIMEOUT));
+	dev_warn(&dev->ibdev.dev, "admin inactivity for %lums\n",
+		 jiffies_to_msecs(jiffies - dev->admin_stamp));
+
+	dev_warn(&dev->ibdev.dev, "admin commands outstanding %u\n",
+		 ionic_queue_length(&aq->q));
+	dev_warn(&dev->ibdev.dev, "more commands pending? %s\n",
+		 list_empty(&aq->wr_post) ? "no" : "yes");
+
+	pos = cq->q.prod;
+
+	dev_warn(&dev->ibdev.dev, "admin cq pos %u (next to complete)\n", pos);
+	print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
+		       ionic_queue_at(&cq->q, pos),
+		       BIT(cq->q.stride_log2), true);
+
+	pos = (pos - 1) & cq->q.mask;
+
+	dev_warn(&dev->ibdev.dev, "admin cq pos %u (last completed)\n", pos);
+	print_hex_dump(KERN_WARNING, "cqe ", DUMP_PREFIX_OFFSET, 16, 1,
+		       ionic_queue_at(&cq->q, pos),
+		       BIT(cq->q.stride_log2), true);
+
+	pos = aq->q.cons;
+
+	dev_warn(&dev->ibdev.dev, "admin pos %u (next to complete)\n", pos);
+	print_hex_dump(KERN_WARNING, "cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+		       ionic_queue_at(&aq->q, pos),
+		       BIT(aq->q.stride_log2), true);
+
+	pos = (aq->q.prod - 1) & aq->q.mask;
+	if (pos == aq->q.cons)
+		goto out;
+
+	dev_warn(&dev->ibdev.dev, "admin pos %u (last posted)\n", pos);
+	print_hex_dump(KERN_WARNING, "cmd ", DUMP_PREFIX_OFFSET, 16, 1,
+		       ionic_queue_at(&aq->q, pos),
+		       BIT(aq->q.stride_log2), true);
+
+out:
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+}
+
+static void ionic_admin_reset_dwork(struct ionic_ibdev *dev)
+{
+	if (dev->admin_state < IONIC_ADMIN_KILLED)
+		mod_delayed_work(ionic_evt_workq, &dev->admin_dwork,
+				 IONIC_ADMIN_DELAY);
+}
+
+static void ionic_admin_reset_wdog(struct ionic_ibdev *dev)
+{
+	dev->admin_stamp = jiffies;
+	ionic_admin_reset_dwork(dev);
+}
+
 static void ionic_admin_poll_locked(struct ionic_ibdev *dev)
 {
 	struct ionic_aq *aq = dev->adminq;
@@ -738,6 +813,7 @@ cq_next:
 	}
 
 	if (old_prod != cq->q.prod) {
+		ionic_admin_reset_wdog(dev);
 		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
 				 ionic_queue_dbell_val(&cq->q));
 		queue_work(ionic_evt_workq, &dev->admin_work);
@@ -754,6 +830,9 @@ cq_next:
 		return;
 
 	old_prod = aq->q.prod;
+
+	if (ionic_queue_empty(&aq->q) && !list_empty(&aq->wr_post))
+		ionic_admin_reset_wdog(dev);
 
 	while (!ionic_queue_full(&aq->q) && !list_empty(&aq->wr_post)) {
 		wqe = ionic_queue_at_prod(&aq->q);
@@ -779,6 +858,43 @@ cq_next:
 	if (old_prod != aq->q.prod && ionic_xxx_aq_dbell)
 		ionic_dbell_ring(&dev->dbpage[dev->aq_qtype],
 				 ionic_queue_dbell_val(&aq->q));
+}
+
+static void ionic_admin_dwork(struct work_struct *ws)
+{
+	struct ionic_ibdev *dev =
+		container_of(ws, struct ionic_ibdev, admin_dwork.work);
+	struct ionic_aq *aq = dev->adminq;
+	unsigned long irqflags;
+	bool progress = false;
+	u16 pos;
+
+	/* see if polling the admin cq now makes some progress */
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	if (ionic_queue_empty(&aq->q)) {
+		progress = true;
+	} else {
+		pos = aq->q.cons;
+		ionic_admin_poll_locked(dev);
+		if (pos != aq->q.cons) {
+			dev_warn(&dev->ibdev.dev,
+				 "missed event for admin cq\n");
+			progress = true;
+		}
+	}
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+
+	if (progress)
+		return;
+
+	dev_warn(&dev->ibdev.dev, "no progress after %lums\n",
+		 jiffies_to_msecs(jiffies - dev->admin_stamp));
+
+	/* if no progress was made, try to poll again later, until timeout */
+	if (time_is_after_eq_jiffies(dev->admin_stamp + IONIC_ADMIN_TIMEOUT))
+		ionic_admin_reset_dwork(dev);
+	else
+		ionic_admin_timedout(dev);
 }
 
 static void ionic_admin_work(struct work_struct *ws)
@@ -824,58 +940,9 @@ void ionic_admin_cancel(struct ionic_ibdev *dev, struct ionic_admin_wr *wr)
 	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
 }
 
-static void ionic_admin_timedout(struct ionic_ibdev *dev,
-				 struct ionic_admin_wr *wr)
-{
-	unsigned long irqflags;
-
-	dev_err(&dev->ibdev.dev, "admin command timed out\n");
-
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
-	if (wr->status == IONIC_ADMIN_POSTED)
-		dev_dbg(&dev->ibdev.dev, "cmd not in queue\n");
-	else
-		dev_dbg(&dev->ibdev.dev, "pos %d in queue\n", wr->status);
-	print_hex_dump_debug("cmd ", DUMP_PREFIX_OFFSET, 16, 1,
-			     &wr->wqe, sizeof(wr->wqe), true);
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
-
-	queue_work(ionic_evt_workq, &dev->reset_work);
-	wait_for_completion(&wr->work);
-}
-
 static void ionic_admin_wait(struct ionic_ibdev *dev,
 			     struct ionic_admin_wr *wr)
 {
-	long timeout;
-
-	timeout = wait_for_completion_timeout(&wr->work, IONIC_ADMIN_TIMEOUT);
-	if (timeout)
-		return;
-
-	/* XXX bug in linuxkpi wait_for_completion_timeout?
-	 *
-	 * Seen some times that complete_all is called, but some time later
-	 * wait_for_completion_timeout returns zero indicating that it timed
-	 * out.  Also, the actual time waited when seeing this issue can be
-	 * longer than IONIC_ADMIN_TIMEOUT.
-	 *
-	 * To work around, check for completion_done here.  At least this will
-	 * let the system continue without an error.  It should survive, but
-	 * waiting longer than IONIC_ADMIN_TIMEOUT for recovery is not great.
-	 *
-	 * Considered waiting for a shorter period in a loop, to try to catch
-	 * this early.  Since the wait time seems not to be actually bounded by
-	 * the timeout given, wonder if waiting in a loop will have the
-	 * mitigating effect or if it could possibly make things worse.
-	 */
-	if (completion_done(&wr->work)) {
-		dev_warn(&dev->ibdev.dev, "BUG wait_for_competion_timeout\n");
-		return;
-	}
-
-	/* did not complete before timeout */
-	ionic_admin_timedout(dev, wr);
 	wait_for_completion(&wr->work);
 }
 
@@ -893,7 +960,7 @@ static int ionic_admin_busy_wait(struct ionic_ibdev *dev,
 		 * but initiate rdma lif reset and indicate error to caller.
 		 */
 		if (try_i >= IONIC_ADMIN_BUSY_RETRY_COUNT) {
-			ionic_admin_timedout(dev, wr);
+			ionic_admin_timedout(dev);
 			return -ETIMEDOUT;
 		}
 
@@ -5877,6 +5944,7 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 
 	INIT_WORK(&dev->reset_work, ionic_reset_work);
 	INIT_WORK(&dev->admin_work, ionic_admin_work);
+	INIT_DELAYED_WORK(&dev->admin_dwork, ionic_admin_dwork);
 	spin_lock_init(&dev->admin_lock);
 	dev->admincq = NULL;
 	dev->adminq = NULL;
@@ -5940,6 +6008,7 @@ static void ionic_destroy_rdma_admin(struct ionic_ibdev *dev)
 	struct ionic_eq *eq;
 
 	cancel_work_sync(&dev->admin_work);
+	cancel_delayed_work_sync(&dev->admin_dwork);
 	cancel_work_sync(&dev->reset_work);
 
 	if (dev->adminq)
