@@ -1263,6 +1263,8 @@ func (e *sBookstoreV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetStore"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Store", "bookstore", apiserver.GetOper)
 
+	e.svcProf["AutoListBook"] = apigwpkg.NewServiceProfile(e.defSvcProf, "BookList", "bookstore", apiserver.ListOper)
+
 	e.svcProf["AutoListCustomer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "CustomerList", "bookstore", apiserver.ListOper)
 
 	e.svcProf["AutoListOrder"] = apigwpkg.NewServiceProfile(e.defSvcProf, "OrderList", "bookstore", apiserver.ListOper)

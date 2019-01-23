@@ -182,6 +182,25 @@
           "type": "integer",
           "format": "int32",
           "description": "max. number of events to be fetched for the request."
+        },
+        "sort-order": {
+          "type": "string",
+          "enum": [
+            "None",
+            "ByName",
+            "ByNameReverse",
+            "ByVersion",
+            "ByVersionReverse"
+          ],
+          "default": "None",
+          "x-ui-hints": {
+            "ByName": "By Name",
+            "ByNameReverse": "By Name Reverse",
+            "ByVersion": "By Version",
+            "ByVersionReverse": "By Version Reverse",
+            "None": "None"
+          },
+          "description": "order to sort List results in."
         }
       }
     },

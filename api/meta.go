@@ -71,6 +71,10 @@ func (m *Status) Clone(into interface{}) (interface{}, error) {
 
 // Defaults applies defaults to the object
 func (m *ListWatchOptions) Defaults(ver string) bool {
+	if m.SortOrder != ListWatchOptions_None.String() {
+		m.SortOrder = ListWatchOptions_None.String()
+		return true
+	}
 	return false
 }
 
@@ -149,6 +153,9 @@ func (m *ListWatchOptions) Validate(ver, path string, ignoreStatus bool) []error
 	}
 	if !resVerRe.Match([]byte(m.ObjectMeta.ResourceVersion)) {
 		ret = append(ret, fmt.Errorf("%s.ResourceVersion is invalid", path))
+	}
+	if _, ok := ListWatchOptions_SortOrders_value[m.SortOrder]; !ok {
+		ret = append(ret, fmt.Errorf("%s.SortOder is not one of allowed strings", path))
 	}
 	return ret
 }

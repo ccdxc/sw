@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/listerwatcher"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -28,6 +29,7 @@ import (
 var _ api.ObjectMeta
 var _ grpc.ServerStream
 var _ fmt.Formatter
+var _ *listerwatcher.WatcherClient
 
 // MiddlewareMetricsV1Client add middleware to the client
 type MiddlewareMetricsV1Client func(ServiceMetricsV1Client) ServiceMetricsV1Client

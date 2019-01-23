@@ -227,7 +227,7 @@ service BookstoreV1 {
   //   Pattern - Pattern for the URI
   option (venice.apiRestService) = {
         Object: "Book"
-        Method: [ "get", "put" ]
+        Method: [ "get", "put", "list" ]
      };
 
   option (venice.apiRestService) = {

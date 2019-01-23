@@ -32,6 +32,7 @@ import (
 var _ api.ObjectMeta
 var _ grpc.ServerStream
 var _ fmt.Formatter
+var _ *listerwatcher.WatcherClient
 
 // MiddlewareBookstoreV1Client add middleware to the client
 type MiddlewareBookstoreV1Client func(ServiceBookstoreV1Client) ServiceBookstoreV1Client
@@ -2809,8 +2810,7 @@ func makeURIBookstoreV1AutoGetStoreGetOper(in *Store) string {
 
 //
 func makeURIBookstoreV1AutoListBookListOper(in *api.ListWatchOptions) string {
-	return ""
-
+	return fmt.Sprint("/configs/bookstore/v1", "/books")
 }
 
 //
@@ -3169,7 +3169,23 @@ func (r *EndpointsBookstoreV1RestClient) AutoDeleteBook(ctx context.Context, in 
 
 // AutoListBook CRUD method for Book
 func (r *EndpointsBookstoreV1RestClient) AutoListBook(ctx context.Context, options *api.ListWatchOptions) (*BookList, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIBookstoreV1AutoListBookListOper(options)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, options, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespBookstoreV1AutoListBook(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*BookList), err
 }
 
 // AutoWatchBook CRUD method for Book

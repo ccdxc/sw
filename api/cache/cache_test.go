@@ -5,6 +5,9 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+	"time"
+
+	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	cachemocks "github.com/pensando/sw/api/cache/mocks"
@@ -380,24 +383,31 @@ func TestCacheList(t *testing.T) {
 	}
 	str := &cachemocks.FakeStore{}
 	c := cache{
-		store:  str,
-		pool:   &connPool{},
-		queues: &fakeWatchPrefixes{},
-		logger: log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
-		active: true,
+		store:     str,
+		pool:      &connPool{},
+		queues:    &fakeWatchPrefixes{},
+		logger:    log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
+		active:    true,
+		versioner: runtime.NewObjectVersioner(),
 	}
 	c.pool.AddToPool(kstr)
 	key := "/testkey"
 	ctx := context.TODO()
 	b1 := &testObj{}
-	b1.ResourceVersion = "10"
+	b1.ResourceVersion = "110"
 	b1.Name = "book 1"
+	ts, _ := types.TimestampProto(time.Now())
+	b1.CreationTime.Timestamp = *ts
 	b2 := &testObj{}
 	b2.ResourceVersion = "100"
 	b2.Name = "book 2"
+	ts, _ = types.TimestampProto(time.Now())
+	b2.CreationTime.Timestamp = *ts
 	b3 := &testObj{}
 	b3.ResourceVersion = "231"
 	b3.Name = "book 3"
+	ts, _ = types.TimestampProto(time.Now())
+	b3.CreationTime.Timestamp = *ts
 	expected := []runtime.Object{b1, b2, b3}
 
 	t.Logf("  -> test list (plain and filtered)")
@@ -423,6 +433,175 @@ func TestCacheList(t *testing.T) {
 			t.Errorf("Found an object that was not matched in list %+v", cmp)
 		}
 	}
+
+	opts := api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByName.String()}
+	exp := []runtime.Object{b1, b2, b3}
+	expected = []runtime.Object{b1, b2, b3}
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != 3 {
+		t.Errorf("expecting 3 objects, got %d", len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	opts.SortOrder = api.ListWatchOptions_ByNameReverse.String()
+	exp = []runtime.Object{b3, b2, b1}
+	expected = []runtime.Object{b1, b2, b3}
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != 3 {
+		t.Errorf("expecting 3 objects, got %d", len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	opts.SortOrder = api.ListWatchOptions_ByVersion.String()
+	exp = []runtime.Object{b2, b1, b3}
+	expected = []runtime.Object{b1, b2, b3}
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != 3 {
+		t.Errorf("expecting 3 objects, got %d", len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	opts.SortOrder = api.ListWatchOptions_ByVersionReverse.String()
+	exp = []runtime.Object{b3, b1, b2}
+	expected = []runtime.Object{b1, b2, b3}
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != 3 {
+		t.Errorf("expecting 3 objects, got %d", len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	opts.SortOrder = api.ListWatchOptions_ByModTime.String()
+	exp = []runtime.Object{b2, b1, b3}
+	expected = []runtime.Object{b1, b2, b3}
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != 3 {
+		t.Errorf("expecting 3 objects, got %d", len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	opts.SortOrder = api.ListWatchOptions_ByModTimeReverse.String()
+	exp = []runtime.Object{b3, b1, b2}
+	expected = []runtime.Object{b1, b2, b3}
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != 3 {
+		t.Errorf("expecting 3 objects, got %d", len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	opts.SortOrder = api.ListWatchOptions_ByCreationTime.String()
+	exp = []runtime.Object{b2, b1, b3}
+	expected = []runtime.Object{b1, b2, b3}
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != 3 {
+		t.Errorf("expecting 3 objects, got %d", len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	opts.SortOrder = api.ListWatchOptions_ByCreationTimeReverse.String()
+	exp = []runtime.Object{b3, b1, b2}
+	expected = []runtime.Object{b3, b2, b1}
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != 3 {
+		t.Errorf("expecting 3 objects, got %d", len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
 	c.Close()
 }
 

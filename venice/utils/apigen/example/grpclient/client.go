@@ -5,6 +5,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math/rand"
 	"reflect"
 
 	"github.com/pensando/sw/api"
@@ -18,6 +19,7 @@ func main() {
 	var (
 		grpcaddr = flag.String("grpc-server", "localhost:9003", "GRPC Port to connect to")
 		watch    = flag.Bool("watch", false, "watch publishers")
+		sort     = flag.Bool("sort", false, "prep for sort tests")
 	)
 	flag.Parse()
 
@@ -31,6 +33,71 @@ func main() {
 		l.Fatalf("Failed to connect to gRPC server [%s]\n", *grpcaddr)
 	}
 
+	if *sort {
+		letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+		genName := func(l int) string {
+			r := make([]rune, l)
+			for i := range r {
+				r[i] = letters[rand.Intn(len(letters))]
+			}
+			return string(r)
+		}
+
+		bl, err := apicl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{SortOrder: "None"})
+		if err != nil {
+			fmt.Printf("error getting list of objects (%s)", err)
+		}
+		for _, v := range bl {
+			meta := &api.ObjectMeta{Name: v.GetName()}
+			_, err = apicl.BookstoreV1().Book().Delete(ctx, meta)
+			if err != nil {
+				fmt.Printf("error deleting object[%v](%s)", meta, err)
+				return
+			}
+		}
+
+		names := []string{}
+		for i := 0; i < 10; i++ {
+			b := bookstore.Book{}
+			b.Name = genName(5)
+			b.Spec.Category = "ChildrensLit"
+			names = append(names, b.Name)
+			_, err := apicl.BookstoreV1().Book().Create(ctx, &b)
+			if err != nil {
+				fmt.Printf("failed to create book [%v](%s)", b.Name, err)
+				return
+			}
+		}
+
+		res := make([][]string, len(api.ListWatchOptions_SortOrders_name))
+		for i := 0; i < len(api.ListWatchOptions_SortOrders_name); i++ {
+			opts := api.ListWatchOptions{}
+			opts.SortOrder = api.ListWatchOptions_SortOrders_name[int32(i)]
+			bl, err := apicl.BookstoreV1().Book().List(ctx, &opts)
+			if err != nil {
+				fmt.Printf("could not list for order [%v]\n", api.ListWatchOptions_SortOrders_name[int32(i)])
+				return
+			}
+			fmt.Printf("[%v] got %d entries\n", api.ListWatchOptions_SortOrders_name[int32(i)], len(bl))
+			res[i] = make([]string, len(names))
+			for i1, b := range bl {
+				res[i][i1] = b.Name
+			}
+		}
+		fmt.Printf("Books names created/listed - \n [NUM] \t %20s ", "created")
+		for i := 0; i < len(api.ListWatchOptions_SortOrders_name); i++ {
+			fmt.Printf("\t[%20s]", api.ListWatchOptions_SortOrders_name[int32(i)])
+		}
+		fmt.Printf("\n")
+		for i, n := range names {
+			fmt.Printf(" [%3d] \t %20s ", i, n)
+			for i1 := 0; i1 < len(api.ListWatchOptions_SortOrders_name); i1++ {
+				fmt.Printf("\t[%20s]", res[i1][i])
+			}
+			fmt.Printf("\n")
+		}
+		return
+	}
 	if *watch {
 		opts := api.ListWatchOptions{FieldSelector: "Spec.Id=112"}
 		watcher, err := apicl.BookstoreV1().Publisher().Watch(ctx, &opts)

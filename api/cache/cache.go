@@ -5,6 +5,7 @@ import (
 	"expvar"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -80,6 +81,7 @@ type cache struct {
 	logger    log.Logger
 	config    Config
 	apiserver apiserver.Server
+	versioner runtime.Versioner
 }
 
 // watchServer provides a kvstore.Watcher interface for watches established
@@ -411,9 +413,10 @@ func (t *cacheTxn) Update(key string, obj runtime.Object, cs ...kvstore.Cmp) err
 // CreateNewCache creates a new cache instance with the config provided
 func CreateNewCache(config Config) (apiintf.CacheInterface, error) {
 	ret := cache{
-		store:  NewStore(),
-		pool:   &connPool{},
-		logger: config.Logger,
+		store:     NewStore(),
+		pool:      &connPool{},
+		logger:    config.Logger,
+		versioner: runtime.NewObjectVersioner(),
 	}
 	wconfig := WatchEventQConfig{
 		SweepInterval:     defSweepInterval,
@@ -665,6 +668,90 @@ func (c *cache) Get(ctx context.Context, key string, into runtime.Object) error 
 	return nil
 }
 
+func (c *cache) sortByVersion(items []runtime.Object, dir bool) func(i, j int) bool {
+	return func(i, j int) bool {
+		v1, err := c.versioner.GetVersion(items[i])
+		if err != nil {
+			// This should never happen. Recovery is undefined, hence panic.
+			panic("could not retrieve object version")
+		}
+		v2, err := c.versioner.GetVersion(items[j])
+		if err != nil {
+			// This should never happen. Recovery is undefined, hence panic.
+			panic("could not retrieve object version")
+		}
+		if dir {
+			return v1 < v2
+		}
+		return v2 < v1
+	}
+}
+
+func (c *cache) sortByName(items []runtime.Object, dir bool) func(i, j int) bool {
+	return func(i, j int) bool {
+		oma, ok := items[i].(runtime.ObjectMetaAccessor)
+		if !ok {
+			panic("object of wrong type")
+		}
+		om1 := oma.GetObjectMeta()
+		if om1 == nil {
+			// This should never happen. Recovery is undefined, hence panic.
+			panic("could not retrieve object version")
+		}
+		oma, ok = items[j].(runtime.ObjectMetaAccessor)
+		if !ok {
+			panic("object of wrong type")
+		}
+		om2 := oma.GetObjectMeta()
+		if om2 == nil {
+			// This should never happen. Recovery is undefined, hence panic.
+			panic("could not retrieve object version")
+		}
+		if dir {
+			return om1.Name < om2.Name
+		}
+		return om2.Name < om1.Name
+	}
+}
+
+func (c *cache) sortByCreationTime(items []runtime.Object, dir bool) func(i, j int) bool {
+	return func(i, j int) bool {
+		oma, ok := items[i].(runtime.ObjectMetaAccessor)
+		if !ok {
+			panic("object of wrong type")
+		}
+		om1 := oma.GetObjectMeta()
+		if om1 == nil {
+			// This should never happen. Recovery is undefined, hence panic.
+			panic("could not retrieve object version")
+		}
+		oma, ok = items[j].(runtime.ObjectMetaAccessor)
+		if !ok {
+			panic("object of wrong type")
+		}
+		om2 := oma.GetObjectMeta()
+		if om2 == nil {
+			// This should never happen. Recovery is undefined, hence panic.
+			panic("could not retrieve object version")
+		}
+		ts1, err := om1.CreationTime.Time()
+		if err != nil {
+			log.Errorf("Failed to get creation time [%v]", om1.CreationTime)
+			return true
+		}
+		ts2, err := om2.CreationTime.Time()
+		if err != nil {
+			log.Errorf("Failed to get creation time [%v]", om2.CreationTime)
+			return false
+		}
+		before := ts1.Before(ts2)
+		if dir {
+			return before
+		}
+		return !before
+	}
+}
+
 // ListFiltered returns a list in into filtered as per the opts passed in
 func (c *cache) ListFiltered(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error {
 	defer c.RUnlock()
@@ -691,6 +778,24 @@ func (c *cache) ListFiltered(ctx context.Context, prefix string, into runtime.Ob
 	items, err := c.store.List(prefix, kind, opts)
 	if err != nil {
 		return fmt.Errorf("Object list failed: %s", err.Error())
+	}
+	if opts.SortOrder != api.ListWatchOptions_None.String() && opts.SortOrder != "" {
+		switch opts.SortOrder {
+		case api.ListWatchOptions_ByName.String():
+			sort.Slice(items, c.sortByName(items, true))
+		case api.ListWatchOptions_ByNameReverse.String():
+			sort.Slice(items, c.sortByName(items, false))
+		case api.ListWatchOptions_ByVersion.String(), api.ListWatchOptions_ByModTime.String():
+			sort.Slice(items, c.sortByVersion(items, true))
+		case api.ListWatchOptions_ByVersionReverse.String(), api.ListWatchOptions_ByModTimeReverse.String():
+			sort.Slice(items, c.sortByVersion(items, false))
+		case api.ListWatchOptions_ByCreationTime.String():
+			sort.Slice(items, c.sortByCreationTime(items, true))
+		case api.ListWatchOptions_ByCreationTimeReverse.String():
+			sort.Slice(items, c.sortByCreationTime(items, false))
+		default:
+			return fmt.Errorf("unknown sort order [%s]", opts.SortOrder)
+		}
 	}
 	for _, kvo := range items {
 		if ptr {

@@ -6,6 +6,18 @@
 
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
+export enum ApiListWatchOptions_sort_order {
+    'None' = "None",
+    'ByName' = "ByName",
+    'ByNameReverse' = "ByNameReverse",
+    'ByVersion' = "ByVersion",
+    'ByVersionReverse' = "ByVersionReverse",
+    'ByCreationTime' = "ByCreationTime",
+    'ByCreationTimeReverse' = "ByCreationTimeReverse",
+    'ByModTime' = "ByModTime",
+    'ByModTimeReverse' = "ByModTimeReverse",
+}
+
 export enum LabelsRequirement_operator {
     'equals' = "equals",
     'notEquals' = "notEquals",
@@ -43,6 +55,18 @@ export enum SecuritySGRule_action {
 }
 
 
+export enum ApiListWatchOptions_sort_order_uihint {
+    'ByCreationTime' = "By Creation Time",
+    'ByCreationTimeReverse' = "By Creation Time Reverse",
+    'ByModTime' = "By Modification Time",
+    'ByModTimeReverse' = "By Modification Time Reverse",
+    'ByName' = "By Name",
+    'ByNameReverse' = "By Name Reverse",
+    'ByVersion' = "By Version",
+    'ByVersionReverse' = "By Version Reverse",
+    'None' = "None",
+}
+
 export enum LabelsRequirement_operator_uihint {
     'notEquals' = "not equals",
     'notIn' = "not in",
@@ -79,11 +103,13 @@ export class AllEnums {
         return AllEnums._instance;
     }
 
+    ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     LabelsRequirement_operator = LabelsRequirement_operator;
     SecurityALG_type = SecurityALG_type;
     SecurityCertificateSpec_usages = SecurityCertificateSpec_usages;
     SecurityCertificateStatus_validity = SecurityCertificateStatus_validity;
     SecuritySGRule_action = SecuritySGRule_action;
 
+    ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;
 }

@@ -1,6 +1,8 @@
 syntax = "proto3";
 package api;
 
+import "google/api/annotations.proto";
+import "github.com/pensando/sw/venice/utils/apigen/annotations/venice.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
@@ -86,6 +88,17 @@ message ObjectRef {
 }
 
 message ListWatchOptions {
+  enum SortOrders {
+    None                  = 0; // ui-hint: None
+    ByName                = 1; // ui-hint: By Name
+    ByNameReverse         = 2; // ui-hint: By Name Reverse
+    ByVersion             = 3; // ui-hint: By Version
+    ByVersionReverse      = 4; // ui-hint: By Version Reverse
+    ByCreationTime        = 5; // ui-hint: By Creation Time
+    ByCreationTimeReverse = 6; // ui-hint: By Creation Time Reverse
+    ByModTime             = 7; // ui-hint: By Modification Time
+    ByModTimeReverse      = 8; // ui-hint: By Modification Time Reverse
+  }
   ObjectMeta O                        = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ""];
   // LabelSelector to select on labels in list or watch results.
   string LabelSelector                = 2 [(gogoproto.jsontag) = "label-selector,omitempty"];
@@ -98,6 +111,8 @@ message ListWatchOptions {
   int32 From                          = 6 [(gogoproto.jsontag) = "from,omitempty"];
   // max. number of events to be fetched for the request.
   int32 MaxResults                    = 7 [(gogoproto.jsontag) = "max-results,omitempty"];
+  // order to sort List results in.
+  string SortOrder                    = 8 [(gogoproto.jsontag) = "sort-order,omitempty", (venice.check) = "StrEnum(ListWatchOptions.SortOrders)"];
 }
 
 message WatchEvent {

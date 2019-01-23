@@ -933,7 +933,7 @@ func (a *restObjBookstoreV1Book) Allowed(oper apiserver.APIOperType) bool {
 	case apiserver.DeleteOper:
 		return false
 	case apiserver.ListOper:
-		return false
+		return true
 	case apiserver.WatchOper:
 		return false
 	default:

@@ -299,7 +299,31 @@ func restPutOrder(hostname, token string, obj interface{}) error {
 }
 
 func restGetBook(hostname, tenant, token string, obj interface{}) error {
-	return fmt.Errorf("get operation not supported for Book object")
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*bookstore.Book); ok {
+		nv, err := restcl.BookstoreV1().Book().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*bookstore.BookList); ok {
+		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
+		nv, err := restcl.BookstoreV1().Book().List(loginCtx, &opts)
+		if err != nil {
+			return err
+		}
+		v.Items = nv
+	}
+	return nil
+
 }
 
 func restDeleteBook(hostname, token string, obj interface{}) error {

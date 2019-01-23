@@ -32,6 +32,7 @@ import (
 var _ api.ObjectMeta
 var _ grpc.ServerStream
 var _ fmt.Formatter
+var _ *listerwatcher.WatcherClient
 
 // MiddlewareWorkloadV1Client add middleware to the client
 type MiddlewareWorkloadV1Client func(ServiceWorkloadV1Client) ServiceWorkloadV1Client

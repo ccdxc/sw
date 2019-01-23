@@ -2662,7 +2662,11 @@ func (s *sbookstoreExampleBackend) regSvcsFunc(ctx context.Context, logger log.L
 
 		s.endpointsBookstoreV1.fnAutoListBook = srv.AddMethod("AutoListBook",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["bookstore.BookList"], "bookstore", "AutoListBook")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
+			in, ok := i.(api.ListWatchOptions)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "bookstore/v1/books/", in.Name), nil
 		}).HandleInvocation
 
 		s.endpointsBookstoreV1.fnAutoListCoupon = srv.AddMethod("AutoListCoupon",

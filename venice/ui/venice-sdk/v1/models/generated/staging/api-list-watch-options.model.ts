@@ -7,6 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
+import { ApiListWatchOptions_sort_order,  ApiListWatchOptions_sort_order_uihint  } from './enums';
 
 export interface IApiListWatchOptions {
     'name'?: string;
@@ -24,6 +25,7 @@ export interface IApiListWatchOptions {
     'field-change-selector'?: Array<string>;
     'from'?: number;
     'max-results'?: number;
+    'sort-order'?: ApiListWatchOptions_sort_order;
 }
 
 
@@ -46,6 +48,8 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'from': number = null;
     /** max. number of events to be fetched for the request. */
     'max-results': number = null;
+    /** order to sort List results in. */
+    'sort-order': ApiListWatchOptions_sort_order = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'name': {
             type: 'string'
@@ -94,6 +98,12 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
         'max-results': {
             description:  'max. number of events to be fetched for the request.',
             type: 'number'
+        },
+        'sort-order': {
+            enum: ApiListWatchOptions_sort_order_uihint,
+            default: 'None',
+            description:  'order to sort List results in.',
+            type: 'string'
         },
     }
 
@@ -204,6 +214,11 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('max-results')) {
             this['max-results'] = ApiListWatchOptions.propInfo['max-results'].default;
         }
+        if (values && values['sort-order'] != null) {
+            this['sort-order'] = values['sort-order'];
+        } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('sort-order')) {
+            this['sort-order'] = <ApiListWatchOptions_sort_order>  ApiListWatchOptions.propInfo['sort-order'].default;
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -226,6 +241,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
                 'field-change-selector': new FormControl(this['field-change-selector']),
                 'from': new FormControl(this['from']),
                 'max-results': new FormControl(this['max-results']),
+                'sort-order': new FormControl(this['sort-order'], [required, enumValidator(ApiListWatchOptions_sort_order), ]),
             });
         }
         return this._formGroup;
@@ -252,6 +268,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             this._formGroup.controls['field-change-selector'].setValue(this['field-change-selector']);
             this._formGroup.controls['from'].setValue(this['from']);
             this._formGroup.controls['max-results'].setValue(this['max-results']);
+            this._formGroup.controls['sort-order'].setValue(this['sort-order']);
         }
     }
 }

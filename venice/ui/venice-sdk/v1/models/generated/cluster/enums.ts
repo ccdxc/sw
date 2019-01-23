@@ -6,6 +6,18 @@
 
 // generate enum based on strings instead of numbers
 // (see https://blog.rsuter.com/how-to-implement-an-enum-with-string-values-in-typescript/)
+export enum ApiListWatchOptions_sort_order {
+    'None' = "None",
+    'ByName' = "ByName",
+    'ByNameReverse' = "ByNameReverse",
+    'ByVersion' = "ByVersion",
+    'ByVersionReverse' = "ByVersionReverse",
+    'ByCreationTime' = "ByCreationTime",
+    'ByCreationTimeReverse' = "ByCreationTimeReverse",
+    'ByModTime' = "ByModTime",
+    'ByModTimeReverse' = "ByModTimeReverse",
+}
+
 export enum ClusterMemInfo_type {
     'UNKNOWN' = "UNKNOWN",
     'HBM' = "HBM",
@@ -58,6 +70,18 @@ export enum ClusterSmartNICStatus_admission_phase {
     'ADMITTED' = "ADMITTED",
 }
 
+
+export enum ApiListWatchOptions_sort_order_uihint {
+    'ByCreationTime' = "By Creation Time",
+    'ByCreationTimeReverse' = "By Creation Time Reverse",
+    'ByModTime' = "By Modification Time",
+    'ByModTimeReverse' = "By Modification Time Reverse",
+    'ByName' = "By Name",
+    'ByNameReverse' = "By Name Reverse",
+    'ByVersion' = "By Version",
+    'ByVersionReverse' = "By Version Reverse",
+    'None' = "None",
+}
 
 export enum ClusterNodeCondition_type_uihint {
     'LEADER' = "Leader",
@@ -136,6 +160,7 @@ export class AllEnums {
         return AllEnums._instance;
     }
 
+    ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     ClusterMemInfo_type = ClusterMemInfo_type;
     ClusterNodeCondition_type = ClusterNodeCondition_type;
     ClusterNodeCondition_status = ClusterNodeCondition_status;
@@ -146,6 +171,7 @@ export class AllEnums {
     ClusterSmartNICSpec_network_mode = ClusterSmartNICSpec_network_mode;
     ClusterSmartNICStatus_admission_phase = ClusterSmartNICStatus_admission_phase;
 
+    ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
     ClusterNodeCondition_type_uihint = ClusterNodeCondition_type_uihint;
     ClusterNodeCondition_status_uihint = ClusterNodeCondition_status_uihint;
     ClusterNodeStatus_phase_uihint = ClusterNodeStatus_phase_uihint;

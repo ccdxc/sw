@@ -5,9 +5,11 @@ import (
 	"encoding/base64"
 	"expvar"
 	"fmt"
+	"math/rand"
 	"net"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -2216,4 +2218,198 @@ func TestRestWatchers(t *testing.T) {
 		return nwcnt == cnt, nil
 	}, fmt.Sprintf("watchers did not close [exp/got][%v/%v]", cnt, nwcnt), "100ms", "3s")
 
+}
+
+func TestSorting(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+	// create logged in context
+	ctx, err = NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	bl, err := restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "error getting list of objects")
+	for _, v := range bl {
+		meta := &api.ObjectMeta{Name: v.GetName()}
+		_, err = apicl.BookstoreV1().Book().Delete(ctx, meta)
+		AssertOk(t, err, fmt.Sprintf("error deleting object[%v](%s)", meta, err))
+	}
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	genName := func(l int) string {
+		r := make([]rune, l)
+		for i := range r {
+			r[i] = letters[rand.Intn(len(letters))]
+		}
+		return string(r)
+	}
+	{ // create a publisher to satisfy dependency
+		pub := bookstore.Publisher{
+			ObjectMeta: api.ObjectMeta{
+				Name: "Sahara",
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "Publisher",
+			},
+			Spec: bookstore.PublisherSpec{
+				Id:      "111",
+				Address: "#1 hilane, timbuktoo",
+				WebAddr: "http://sahara-books.org",
+			},
+		}
+		_, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub)
+		AssertOk(t, err, "could not create publisher (%s)", err)
+	}
+	names := []string{}
+	tries := 0
+	for i := 0; i < 100; i++ {
+		b := bookstore.Book{}
+		b.Name = genName(5)
+		b.Spec.Category = "ChildrensLit"
+		_, err := apicl.BookstoreV1().Book().Create(ctx, &b)
+		if err != nil {
+			// Possible clash in generated names retry
+			i--
+		} else {
+			names = append(names, b.Name)
+		}
+		tries++
+		Assert(t, tries < 200, "tries exceeded creating books", tries)
+	}
+	// modify one item
+	b := bookstore.Book{}
+	b.Name = names[42]
+	b.Spec.Category = "ChildrensLit"
+	_, err = apicl.BookstoreV1().Book().Update(ctx, &b)
+	if err != nil {
+		t.Fatalf("failed to update book [%v](%s)", names[42], err)
+	}
+	modnames := []string{}
+	modnames = append(modnames, names[:42]...)
+	modnames = append(modnames, names[43:]...)
+	modnames = append(modnames, names[42])
+
+	nameMap := make(map[string]bool)
+	for i := range names {
+		nameMap[names[i]] = true
+	}
+	checkPresent := func(books []*bookstore.Book) error {
+		if len(books) != len(names) {
+			return fmt.Errorf("len of books does not match [%v]/[%v]", len(books), len(names))
+		}
+		for _, b := range books {
+			v, ok := nameMap[b.Name]
+			if !ok {
+				return fmt.Errorf("found non existent book [%v]", b.Name)
+			}
+			if !v {
+				return fmt.Errorf("duplicate book in list [%v]", b.Name)
+			}
+			nameMap[b.Name] = false
+		}
+		for i := range names {
+			nameMap[names[i]] = true
+		}
+		return nil
+	}
+	{ // Default
+		bl, err := restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{})
+		AssertOk(t, err, "failed to get list of books")
+		err = checkPresent(bl)
+		AssertOk(t, err, "CheckPresent failed")
+	}
+	{ // None
+		bl, err := restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_None.String()})
+		AssertOk(t, err, "failed to get list of books")
+		err = checkPresent(bl)
+		AssertOk(t, err, "CheckPresent failed")
+	}
+	{ // ByCreationTime
+		bl, err = restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByCreationTime.String()})
+		AssertOk(t, err, "failed to list books (%v)", err)
+		for i, b := range bl {
+			if names[i] != b.Name {
+				t.Errorf("did not match [%v]/[%v]", names[i], b.Name)
+			}
+		}
+	}
+	{ // ByCreationTime Reverse
+		bl, err = restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByCreationTimeReverse.String()})
+		AssertOk(t, err, "failed to list books (%v)", err)
+		for i, b := range bl {
+			if names[len(names)-1-i] != b.Name {
+				t.Errorf("did not match [%v]/[%v]", names[i], b.Name)
+			}
+		}
+	}
+	{ // ByModTime
+		bl, err = restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByModTime.String()})
+		AssertOk(t, err, "failed to list books (%v)", err)
+		for i, b := range bl {
+			if modnames[i] != b.Name {
+				t.Errorf("did not match [%v]/[%v]", names[i], b.Name)
+			}
+		}
+	}
+	{ // ByModTime Reverse
+		bl, err = restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByModTimeReverse.String()})
+		AssertOk(t, err, "failed to list books (%v)", err)
+		for i, b := range bl {
+			if modnames[len(names)-1-i] != b.Name {
+				t.Errorf("did not match [%v]/[%v]", names[i], b.Name)
+			}
+		}
+	}
+	{ // ByVersion
+		bl, err = restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByVersion.String()})
+		AssertOk(t, err, "failed to list books (%v)", err)
+		for i, b := range bl {
+			if modnames[i] != b.Name {
+				t.Errorf("did not match [%v]/[%v]", names[i], b.Name)
+			}
+		}
+	}
+	{ // ByVersion Reverse
+		bl, err = restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByVersionReverse.String()})
+		AssertOk(t, err, "failed to list books (%v)", err)
+		for i, b := range bl {
+			if modnames[len(names)-1-i] != b.Name {
+				t.Errorf("did not match [%v]/[%v]", names[i], b.Name)
+			}
+		}
+	}
+	{ // By name
+		// Sort names by name
+		sort.Slice(names, func(i, j int) bool {
+			return names[i] < names[j]
+		})
+		bl, err = restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByName.String()})
+		AssertOk(t, err, "failed to list books (%v)", err)
+		for i, b := range bl {
+			if names[i] != b.Name {
+				t.Errorf("did not match [%v]/[%v]", names[i], b.Name)
+			}
+		}
+	}
+	{ // ByName Reverse
+		bl, err = restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByNameReverse.String()})
+		AssertOk(t, err, "failed to list books (%v)", err)
+		for i, b := range bl {
+			if names[len(names)-1-i] != b.Name {
+				t.Errorf("did not match [%v]/[%v]", names[i], b.Name)
+			}
+		}
+	}
 }

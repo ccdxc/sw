@@ -61,6 +61,8 @@ var typesMapMeta = map[string]*Struct{
 
 			"MaxResults": Field{Name: "MaxResults", CLITag: CLIInfo{ID: "max-results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "max-results", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 
+			"SortOrder": Field{Name: "SortOrder", CLITag: CLIInfo{ID: "sort-order", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "sort-order", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
 			"Name": Field{Name: "Name", CLITag: CLIInfo{ID: "name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "name", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
 			"Tenant": Field{Name: "Tenant", CLITag: CLIInfo{ID: "tenant", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
