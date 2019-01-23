@@ -52,7 +52,7 @@ int ionic_queue_init(struct ionic_queue *q, struct device *dma_dev,
 	q->size = BIT_ULL(q->depth_log2 + q->stride_log2);
 	q->mask = BIT(q->depth_log2) - 1;
 
-	q->ptr = dma_zalloc_coherent(dma_dev, q->size, &q->dma, GFP_KERNEL);
+	q->ptr = dma_alloc_coherent(dma_dev, q->size, &q->dma, GFP_KERNEL);
 	if (!q->ptr)
 		return -ENOMEM;
 

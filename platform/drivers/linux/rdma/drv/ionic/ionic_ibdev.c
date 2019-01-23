@@ -1583,7 +1583,8 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 				  struct ionic_ah *ah,
 				  struct ionic_pd *pd,
-				  struct rdma_ah_attr *attr)
+				  struct rdma_ah_attr *attr,
+				  u32 flags)
 {
 	struct ionic_admin_wr wr = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
@@ -1599,9 +1600,12 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 	struct ib_ud_header *hdr;
 	dma_addr_t hdr_dma = 0;
 	void *hdr_buf;
-	int rc, hdr_len = 0;
+	int rc, hdr_len = 0, gfp = GFP_ATOMIC;
 
-	hdr = kmalloc(sizeof(*hdr), GFP_ATOMIC);
+	if (flags & RDMA_CREATE_AH_SLEEPABLE)
+		gfp = GFP_KERNEL;
+
+	hdr = kmalloc(sizeof(*hdr), gfp);
 	if (!hdr) {
 		rc = -ENOMEM;
 		goto err_hdr;
@@ -1611,7 +1615,7 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_buf;
 
-	hdr_buf = kmalloc(PAGE_SIZE, GFP_ATOMIC);
+	hdr_buf = kmalloc(PAGE_SIZE, gfp);
 	if (!hdr_buf) {
 		rc = -ENOMEM;
 		goto err_buf;
@@ -1641,7 +1645,13 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 
 	ionic_admin_post(dev, &wr);
 
-	rc = ionic_admin_busy_wait(dev, &wr);
+	if (flags & RDMA_CREATE_AH_SLEEPABLE) {
+		ionic_admin_wait(dev, &wr);
+		rc = 0;
+	} else {
+		rc = ionic_admin_busy_wait(dev, &wr);
+	}
+
 	if (rc) {
 		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
 		ionic_admin_cancel(dev, &wr);
@@ -1669,19 +1679,20 @@ err_hdr:
 static int ionic_create_ah_cmd(struct ionic_ibdev *dev,
 			       struct ionic_ah *ah,
 			       struct ionic_pd *pd,
-			       struct rdma_ah_attr *attr)
+			       struct rdma_ah_attr *attr,
+			       u32 flags)
 {
 	switch (dev->rdma_version) {
 	case 1:
 		if (dev->admin_opcodes > IONIC_V1_ADMIN_CREATE_AH)
-			return ionic_v1_create_ah_cmd(dev, ah, pd, attr);
+			return ionic_v1_create_ah_cmd(dev, ah, pd, attr, flags);
 		return -ENOSYS;
 	default:
 		return -ENOSYS;
 	}
 }
 
-static int ionic_v1_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid)
+static int ionic_v1_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid, u32 flags)
 {
 	struct ionic_admin_wr wr = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
@@ -1694,7 +1705,13 @@ static int ionic_v1_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid)
 
 	ionic_admin_post(dev, &wr);
 
-	rc = ionic_admin_busy_wait(dev, &wr);
+	if (flags & RDMA_CREATE_AH_SLEEPABLE) {
+		ionic_admin_wait(dev, &wr);
+		rc = 0;
+	} else {
+		rc = ionic_admin_busy_wait(dev, &wr);
+	}
+
 	if (rc) {
 		dev_warn(&dev->ibdev.dev, "wait status %d\n", rc);
 		ionic_admin_cancel(dev, &wr);
@@ -1717,12 +1734,12 @@ static int ionic_v1_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid)
 	return rc;
 }
 
-static int ionic_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid)
+static int ionic_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid, u32 flags)
 {
 	switch (dev->rdma_version) {
 	case 1:
 		if (dev->admin_opcodes > IONIC_V1_ADMIN_DESTROY_AH)
-			return ionic_v1_destroy_ah_cmd(dev, ahid);
+			return ionic_v1_destroy_ah_cmd(dev, ahid, flags);
 		/* XXX require opcode destroy ah */
 		//return -ENOSYS;
 		return 0;
@@ -1732,9 +1749,16 @@ static int ionic_destroy_ah_cmd(struct ionic_ibdev *dev, u32 ahid)
 }
 
 #ifdef HAVE_CREATE_AH_UDATA
+#ifdef HAVE_CREATE_AH_FLAGS
+static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
+				     struct rdma_ah_attr *attr,
+				     u32 flags,
+				     struct ib_udata *udata)
+#else
 static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 				     struct rdma_ah_attr *attr,
 				     struct ib_udata *udata)
+#endif
 #else
 static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 				     struct rdma_ah_attr *attr)
@@ -1745,7 +1769,10 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_ah *ah;
 	struct ionic_ah_resp resp = {};
-	int rc;
+	int rc, gfp = GFP_ATOMIC;
+#ifndef HAVE_CREATE_AH_FLAGS
+	u32 flags = 0;
+#endif
 
 #ifdef HAVE_CREATE_AH_UDATA
 	if (ctx)
@@ -1756,7 +1783,10 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 		goto err_ah;
 #endif
 
-	ah = kzalloc(sizeof(*ah), GFP_ATOMIC);
+	if (flags & RDMA_CREATE_AH_SLEEPABLE)
+		gfp = GFP_KERNEL;
+
+	ah = kzalloc(sizeof(*ah), gfp);
 	if (!ah) {
 		rc = -ENOMEM;
 		goto err_ah;
@@ -1766,7 +1796,7 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	if (rc)
 		goto err_ahid;
 
-	rc = ionic_create_ah_cmd(dev, ah, pd, attr);
+	rc = ionic_create_ah_cmd(dev, ah, pd, attr, flags);
 	if (rc)
 		goto err_cmd;
 
@@ -1784,7 +1814,7 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 
 #ifdef HAVE_CREATE_AH_UDATA
 err_resp:
-	ionic_destroy_ah_cmd(dev, ah->ahid);
+	ionic_destroy_ah_cmd(dev, ah->ahid, flags);
 #endif
 err_cmd:
 	ionic_put_ahid(dev, ah->ahid);
@@ -1794,13 +1824,20 @@ err_ah:
 	return ERR_PTR(rc);
 }
 
+#ifdef HAVE_CREATE_AH_FLAGS
+static int ionic_destroy_ah(struct ib_ah *ibah, u32 flags)
+#else
 static int ionic_destroy_ah(struct ib_ah *ibah)
+#endif
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibah->device);
 	struct ionic_ah *ah = to_ionic_ah(ibah);
 	int rc;
+#ifndef HAVE_CREATE_AH_FLAGS
+	u32 flags = 0;
+#endif
 
-	rc = ionic_destroy_ah_cmd(dev, ah->ahid);
+	rc = ionic_destroy_ah_cmd(dev, ah->ahid, flags);
 	if (rc)
 		return rc;
 
@@ -4072,8 +4109,7 @@ static int ionic_check_modify_qp(struct ionic_qp *qp, struct ib_qp_attr *attr,
 	enum ib_qp_state next_state = (mask & IB_QP_STATE) ?
 		attr->qp_state : cur_state;
 
-	if (!ib_modify_qp_is_ok(cur_state, next_state, qp->ibqp.qp_type, mask,
-				IB_LINK_LAYER_ETHERNET))
+	if (!ib_modify_qp_is_ok(cur_state, next_state, qp->ibqp.qp_type, mask))
 		return -EINVAL;
 
 	/* unprivileged qp not allowed priveleged qkey */
@@ -6035,6 +6071,73 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 	dev_put(ndev);
 }
 
+#ifdef HAVE_IB_DEVICE_OPS
+static const struct ib_device_ops ionic_dev_ops = {
+	.alloc_hw_stats		= ionic_alloc_hw_stats,
+	.get_hw_stats		= ionic_get_hw_stats,
+
+	.query_device		= ionic_query_device,
+	.query_port		= ionic_query_port,
+	.get_link_layer		= ionic_get_link_layer,
+	.get_netdev		= ionic_get_netdev,
+#ifdef HAVE_REQUIRED_IB_GID
+	.query_gid		= ionic_query_gid,
+	.add_gid		= ionic_add_gid,
+	.del_gid		= ionic_del_gid,
+#endif
+	.query_pkey		= ionic_query_pkey,
+	.modify_device		= ionic_modify_device,
+	.modify_port		= ionic_modify_port,
+
+	.alloc_ucontext		= ionic_alloc_ucontext,
+	.dealloc_ucontext	= ionic_dealloc_ucontext,
+	.mmap			= ionic_mmap,
+
+	.alloc_pd		= ionic_alloc_pd,
+	.dealloc_pd		= ionic_dealloc_pd,
+
+	.create_ah		= ionic_create_ah,
+	.destroy_ah		= ionic_destroy_ah,
+
+	.get_dma_mr		= ionic_get_dma_mr,
+	.reg_user_mr		= ionic_reg_user_mr,
+	.rereg_user_mr		= ionic_rereg_user_mr,
+	.dereg_mr		= ionic_dereg_mr,
+	.alloc_mr		= ionic_alloc_mr,
+	.map_mr_sg		= ionic_map_mr_sg,
+
+	.alloc_mw		= ionic_alloc_mw,
+	.dealloc_mw		= ionic_dealloc_mw,
+
+	.create_cq		= ionic_create_cq,
+	.destroy_cq		= ionic_destroy_cq,
+	.resize_cq		= ionic_resize_cq,
+	.poll_cq		= ionic_poll_cq,
+	.req_notify_cq		= ionic_req_notify_cq,
+
+	.create_qp		= ionic_create_qp,
+	.modify_qp		= ionic_modify_qp,
+	.query_qp		= ionic_query_qp,
+	.destroy_qp		= ionic_destroy_qp,
+	.post_send		= ionic_post_send,
+	.post_recv		= ionic_post_recv,
+
+	.create_srq		= ionic_create_srq,
+	.modify_srq		= ionic_modify_srq,
+	.query_srq		= ionic_query_srq,
+	.destroy_srq		= ionic_destroy_srq,
+	.post_srq_recv		= ionic_post_srq_recv,
+
+	.get_port_immutable	= ionic_get_port_immutable,
+#ifdef HAVE_GET_DEV_FW_STR
+	.get_dev_fw_str		= ionic_get_dev_fw_str,
+#endif
+#ifdef HAVE_GET_VECTOR_AFFINITY
+	.get_vector_affinity	= ionic_get_vector_affinity,
+#endif
+};
+#endif
+
 static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 					      struct net_device *ndev)
 {
@@ -6293,7 +6396,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	ibdev->owner = THIS_MODULE;
 	ibdev->dev.parent = dev->hwdev;
 
+#ifndef HAVE_IB_REGISTER_DEVICE_NAME
 	strlcpy(ibdev->name, "ionic_%d", IB_DEVICE_NAME_MAX);
+#endif
 	strlcpy(ibdev->node_desc, DEVICE_DESCRIPTION, IB_DEVICE_NODE_DESC_MAX);
 
 	ibdev->node_type = RDMA_NODE_IB_CA;
@@ -6350,6 +6455,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 #endif
 		0;
 
+#ifdef HAVE_IB_DEVICE_OPS
+	ib_set_device_ops(&dev->ibdev, &ionic_dev_ops);
+#else
 	dev->ibdev.alloc_hw_stats	= ionic_alloc_hw_stats;
 	dev->ibdev.get_hw_stats		= ionic_get_hw_stats;
 
@@ -6412,6 +6520,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 #ifdef HAVE_GET_VECTOR_AFFINITY
 	dev->ibdev.get_vector_affinity	= ionic_get_vector_affinity;
 #endif
+#endif
 
 	if (ionic_xxx_noop) {
 		rc = ionic_noop_cmd(dev);
@@ -6423,7 +6532,11 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	ibdev->dma_device = ibdev->dev.parent;
 #endif
 
+#ifdef HAVE_IB_REGISTER_DEVICE_NAME
+	rc = ib_register_device(ibdev, "ionic_%d", NULL);
+#else
 	rc = ib_register_device(ibdev, NULL);
+#endif
 	if (rc)
 		goto err_register;
 

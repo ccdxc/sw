@@ -114,6 +114,22 @@ static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
 #define HAVE_IBDEV_MAX_SEND_RECV_SGE
 #endif
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4,20,0))
+#define ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask) \
+	ib_modify_qp_is_ok(cur_state, new_state, qp_type, attr_mask, \
+			   IB_LINK_LAYER_ETHERNET)
+#else
+#define HAVE_IB_REGISTER_DEVICE_NAME
+#endif
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5,0,0))
+#define dma_alloc_coherent dma_zalloc_coherent
+#define RDMA_CREATE_AH_SLEEPABLE 0
+#else
+#define HAVE_IB_DEVICE_OPS
+#define HAVE_CREATE_AH_FLAGS
+#endif
+
 /* other compat for not yet upstream changes */
 
 /* change ib_gid_to_network_type to accept const ib_gid */
