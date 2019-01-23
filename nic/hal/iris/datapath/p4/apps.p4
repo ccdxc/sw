@@ -51,6 +51,16 @@ action p4plus_app_tcp_proxy() {
     if (tcp_option_four_sack.valid == TRUE) {
         modify_field(p4_to_p4plus_tcp_proxy.num_sack_blocks, 4);
     }
+    if (tcp_option_timestamp.valid == TRUE) {
+        modify_field(p4_to_p4plus_tcp_proxy.timestamp_valid, TRUE);
+    }
+    if (ipv4.valid == TRUE) {
+        modify_field(p4_to_p4plus_tcp_proxy.ecn, ipv4.diffserv, 0x3);
+    } else {
+        if (ipv6.valid == TRUE) {
+            modify_field(p4_to_p4plus_tcp_proxy.ecn, ipv6.trafficClass, 0x3);
+        }
+    }
 
     add_header(capri_rxdma_intrinsic);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
