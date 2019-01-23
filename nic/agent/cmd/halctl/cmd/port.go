@@ -79,7 +79,7 @@ func init() {
 	portDebugCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
 	portDebugCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
 	portDebugCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "disable", "Enable or disable auto-neg using enable | disable")
-	portDebugCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - none, up, down")
+	portDebugCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - up, down")
 	portDebugCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portDebugCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
 }
@@ -646,8 +646,6 @@ func inputToSpeed(str string) halproto.PortSpeed {
 
 func isAdminStateValid(str string) bool {
 	switch str {
-	case "none":
-		return true
 	case "up":
 		return true
 	case "down":
@@ -659,8 +657,6 @@ func isAdminStateValid(str string) bool {
 
 func inputToAdminState(str string) halproto.PortAdminState {
 	switch str {
-	case "none":
-		return halproto.PortAdminState_PORT_ADMIN_STATE_NONE
 	case "up":
 		return halproto.PortAdminState_PORT_ADMIN_STATE_UP
 	case "down":
