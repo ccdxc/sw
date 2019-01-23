@@ -141,8 +141,8 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     hal_slab_args_t   slab_args;
 
     // initialize slab for HAL handles
-    slab = register_slab(HAL_SLAB_HANDLE, slab_args={.name = "hal_handle", 
-                       .size=sizeof(hal_handle), .num_elements=64, 
+    slab = register_slab(HAL_SLAB_HANDLE, slab_args={.name = "hal_handle",
+                       .size=sizeof(hal_handle), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
@@ -169,19 +169,19 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 	// initialize vrf related data structures
     slab = register_slab(HAL_SLAB_VRF, slab_args={.name="vrf",
                         .size=sizeof(hal::vrf_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize network related data structures
     slab = register_slab(HAL_SLAB_NETWORK, slab_args={.name="network",
                         .size=sizeof(hal::network_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize security profile related data structures
     slab = register_slab(HAL_SLAB_SECURITY_PROFILE, slab_args={.name="nwsec_profile",
                         .size=sizeof(hal::nwsec_profile_t), .num_elements=8,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
 #if 0
@@ -205,53 +205,53 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     // initialize L2 segment related data structures
     slab = register_slab(HAL_SLAB_L2SEG, slab_args={.name="l2seg",
                         .size=sizeof(hal::l2seg_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
-    slab = register_slab(HAL_SLAB_L2SEG_UPLINK_OIF_LIST, 
+    slab = register_slab(HAL_SLAB_L2SEG_UPLINK_OIF_LIST,
                          slab_args={.name="l2seg_uplink_oif_list",
                         .size=sizeof(hal::l2_seg_uplink_oif_list_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize multicast related data structures
     slab = register_slab(HAL_SLAB_MC_ENTRY,
                          slab_args={.name="mc_entry",
                         .size=sizeof(hal::mc_entry_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_OIF_LIST,
                          slab_args={.name="oif_list",
                         .size=sizeof(hal::oif_list_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_OIF,
                          slab_args={.name="oif",
                         .size=sizeof(hal::oif_db_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize LIF related data structures
     slab = register_slab(HAL_SLAB_LIF,
                          slab_args={.name="lif",
                         .size=sizeof(hal::lif_t), .num_elements=8,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize interface related data structures
     slab = register_slab(HAL_SLAB_IF,
                          slab_args={.name="interface",
                         .size=sizeof(hal::if_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize enic l2seg entry related data structures
     slab = register_slab(HAL_SLAB_ENIC_L2SEG_ENTRY,
                          slab_args={.name="if_l2seg_entry",
                         .size=sizeof(hal::if_l2seg_entry_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize endpoint related data structures
@@ -297,21 +297,21 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     slab = register_slab(HAL_SLAB_QOS_CLASS,
                          slab_args={.name="qos_class",
                         .size=sizeof(hal::qos_class_t), .num_elements=8,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Copp related data structures
     slab = register_slab(HAL_SLAB_COPP,
                          slab_args={.name="copp",
                         .size=sizeof(hal::copp_t), .num_elements=8,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Acl related data structures
     slab = register_slab(HAL_SLAB_ACL,
                          slab_args={.name="acl",
                         .size=sizeof(hal::acl_t), .num_elements=8,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_CPU_PKT,
@@ -446,14 +446,14 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     slab = register_slab(HAL_SLAB_FTE_SPAN,
                          slab_args={.name="fte_span",
                         .size=sizeof(hal::fte_span_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     // initialize snake test slab
     slab = register_slab(HAL_SLAB_SNAKE_TEST,
                          slab_args={.name="snake_test",
                         .size=sizeof(hal::snake_test_t), .num_elements=2,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     HAL_ASSERT_RETURN((slab != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
@@ -461,19 +461,19 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
         slab = register_slab(HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
                          slab_args={.name="gft_exactm_prof",
                         .size=sizeof(hal::gft_exact_match_profile_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
         HAL_ASSERT_RETURN((slab != NULL), false);
 
         slab = register_slab(HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE,
                          slab_args={.name="gft_hdr_xpos_prof",
                         .size=sizeof(hal::gft_hdr_xposition_profile_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
         HAL_ASSERT_RETURN((slab != NULL), false);
 
         slab = register_slab(HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY,
                          slab_args={.name="gft_exactm_flow_ent",
                         .size=sizeof(hal::gft_exact_match_flow_entry_t), .num_elements=16,
-                       .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
         HAL_ASSERT_RETURN((slab != NULL), false);
     }
 
