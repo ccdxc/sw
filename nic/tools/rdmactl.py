@@ -7,6 +7,9 @@ from subprocess import call
 import subprocess
 import binascii
 import time
+import telnetlib
+import json
+import re
 
 pcie_id=None
 lif_id=0
@@ -35,6 +38,60 @@ DBG_WR_DATA='dbg_wr_data'
 DUMP_DATA='/tmp/hexdump_data'
 
 DMESG_FILE='/tmp/dmesg.txt'
+
+def getPwd():
+    pwd = os.path.dirname(sys.argv[0])
+    pwd = os.path.abspath(pwd)
+    return pwd
+
+def sendTelnetCmd(self, cmd, exp, **kwargs):
+
+    if "timeout" in kwargs:
+        timeout = kwargs["timeout"]
+    else:
+        timeout = 30
+
+    self.write(cmd)
+    op = self.expect(exp, timeout=timeout)
+    return op
+
+def clearLine(console, port):
+    tn = telnetlib.Telnet(console)
+    logging.info('Clearing line for {0}'.format(console))
+
+    # expect either of two prompts
+    res = tn.expect(["Username: ", "Password: "], timeout=5)
+    if (res[0] == 0):
+        sendTelnetCmd(tn, 'admin\n', ['Password: '])
+
+    sendTelnetCmd(tn, 'N0isystem$\n', ['#'])
+    cmd = 'clear line ' + str(port) + '\n'
+    sendTelnetCmd(tn, cmd, ['confirm'])
+    sendTelnetCmd(tn, 'y\n', ['#'])
+
+    tn.write("exit\n")
+    tn.close()
+    logging.info('Done')
+
+def telnetToConsole(console, port):
+    logging.info('telnet to {0} {1}'.format(console, port))
+    tn = telnetlib.Telnet(console, port)
+    time.sleep(2)
+    tn.write("\n")
+    op = tn.expect(['capri login: ', '#'], timeout=5)
+    logging.info(op[2])
+    if op[0] == 0:
+        tn.write("root\n")
+        op = tn.expect(['Password: '], timeout=5)
+        logging.info(op[2])
+        tn.write("pen123\n")
+        op = tn.expect(['#'], timeout=5)
+        logging.info(op[2])
+
+    tn.write("ls -lrt /\n")
+    op = tn.expect(['#'], timeout=5)
+    logging.info(op[2])
+    return tn
 
 class RdmaAQCB0state(Packet):
     name = "RdmaAQCB0state"
@@ -944,6 +1001,61 @@ class RdmaAqCqe(Packet):
         XIntField("qid_type_flags", 0),
     ]
 
+class RdmaRsqReadstate(Packet):
+    name = "RdmaRsqReadstate"
+    fields_desc = [
+        BitField("read_or_atomic", 0, 1),
+        BitField("rsvd1", 0, 7),
+        X3BytesField("psn", 0),
+        XLongField("rsvd2", 0),
+        IntField("r_key", 0),
+        XLongField("va", 0),
+        IntField("len", 0),
+        XIntField("offset", 0),
+        BitField("pad", 0, 256),
+    ]
+
+class RdmaRsqAtomicstate(Packet):
+    name = "RdmaRsqAtomicstate"
+    fields_desc = [
+        BitField("read_or_atomic", 0, 1),
+        BitField("rsvd1", 0, 7),
+        X3BytesField("psn", 0),
+        XLongField("rsvd2", 0),
+        IntField("r_key", 0),
+        XLongField("va", 0),
+        XLongField("orig_data", 0),
+        BitField("pad", 0, 256),
+    ]
+
+class RdmaRrqReadstate(Packet):
+    name = "RdmaRrqReadstate"
+    fields_desc = [
+        BitField("read_rsp_or_atomic", 0, 1),
+        BitField("rsvd", 0, 7),
+        ByteField("num_sges", 0),
+        X3BytesField("psn", 0),
+        X3BytesField("msn", 0),
+        IntField("len", 0),
+        XLongField("wqe_sge_list_addr", 0),
+        BitField("pad", 0, 96),
+    ]
+
+class RdmaRrqAtomicstate(Packet):
+    name = "RdmaRrqAtomicstate"
+    fields_desc = [
+        BitField("read_rsp_or_atomic", 0, 1),
+        BitField("rsvd", 0, 7),
+        ByteField("num_sges", 0),
+        X3BytesField("psn", 0),
+        X3BytesField("msn", 0),
+        XLongField("va", 0),
+        IntField("len", 0),
+        IntField("l_key", 0),
+        ByteField("op_type", 0),
+        BitField("pad", 0, 56),
+    ]
+
 def parse_dmesg():
 
     if args.dmesg:
@@ -1046,6 +1158,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dmesg', help='parse dmesg and parse rdma adminq wqes/cqes', action='store_true', default=False)
 parser.add_argument('--dmesg_file', help='parse dmesg from file and parse rdma adminq wqes/cqes')
 parser.add_argument('--DEVNAME', help='prints info for given rdma device')
+parser.add_argument('--offline', help='prints rdma per queue state through the console when the host is not accessible', action='store_true', default=False)
+parser.add_argument('--host', help='name of the host where Naples is present', type=str)
 grp = parser.add_mutually_exclusive_group()
 grp.add_argument('--sqcb0', help='prints sqcb0 state given qid', type=int, metavar='qid')
 grp.add_argument('--sqcb1', help='prints sqcb1 state given qid', type=int, metavar='qid')
@@ -1068,8 +1182,245 @@ grp.add_argument('--pt_entry', help='print page table entry given pt offset', ty
 grp.add_argument('--lif_stats', help='prints rdma LIF statistics', action='store_true', default=False)
 grp.add_argument('--q_stats', help='prints rdma per queue statistics', type=int, metavar='qid')
 grp.add_argument('--q_state', help='prints rdma per queue state', type=int, metavar='qid')
+grp.add_argument('--rsq', help='prints rdma rsq entries', type=int, metavar='qid')
+grp.add_argument('--rrq', help='prints rdma rrq entries', type=int, metavar='qid')
 
 args = parser.parse_args()
+
+# offline debug
+if args.host is not None and args.offline is True:
+
+    # throw an error for unsupported options
+    if args.cqcb is not None or \
+       args.eqcb is not None or \
+       args.aqcb0 is not None or \
+       args.aqcb1 is not None or \
+       args.kt_entry is not None or \
+       args.pt_entry is not None or \
+       args.lif_stats is True or \
+       args.q_stats is not None or \
+       args.q_state is not None:
+
+        print("ERROR: This option is not yet supported in offline mode")
+        exit()
+
+    pwd = getPwd()
+    cfg = pwd + '/../conf/dev.json'
+    with open(cfg, 'r') as f:
+        dev_dict = json.load(f)
+    for dev in dev_dict:
+        if (dev["host"] == args.host):
+            break
+
+    console = dev['console']
+    port = dev['port']
+
+    # clear line
+    clearLine(console, port)
+    time.sleep(1)
+
+    # telnet to console
+    port_num = int(int(port) + 2000)
+    tn = telnetToConsole(console, port_num)
+
+    # get SQ base address
+    tn.write('grep -r rdma_lif /var/log/nicmgr.log | grep sq_base | cut -d \' \' -f 7\n')
+    op = tn.expect(['#'], timeout=5)
+    op_list = op[2].split('\n')
+    if (len(op_list) == 2):
+        print("ERROR: Failed to get sq_base_address from the NIC")
+        exit()
+    sq_base_addr_lif0 = op_list[1].rstrip()
+    sq_base_addr_lif1 = op_list[2].rstrip()
+    #print(sq_base_addr_lif0)
+
+    # get RQ base address
+    tn.write('grep -r rdma_lif /var/log/nicmgr.log | grep rq_base | cut -d \' \' -f 7\n')
+    op = tn.expect(['#'], timeout=5)
+    op_list = op[2].split('\n')
+    if (len(op_list) == 2):
+        print("ERROR: Failed to get rq_base_address from the NIC")
+        exit()
+    rq_base_addr_lif0 = op_list[1].rstrip()
+    rq_base_addr_lif1 = op_list[2].rstrip()
+    #print(rq_base_addr_lif0)
+
+    # calculate the offset for specified CB
+    if args.rqcb0 is not None: 
+        qid = args.rqcb0 
+        addr = int(rq_base_addr_lif0, 16) 
+        offset = 0
+    elif args.rqcb1 is not None: 
+        qid = args.rqcb1 
+        addr = int(rq_base_addr_lif0, 16) 
+        offset = 64
+    elif args.rqcb2 is not None: 
+        qid = args.rqcb2 
+        addr = int(rq_base_addr_lif0, 16) 
+        offset = 128
+    elif args.rqcb3 is not None: 
+        qid = args.rqcb3 
+        addr = int(rq_base_addr_lif0, 16) 
+        offset = 192
+    elif args.resp_tx_stats is not None: 
+        qid = args.resp_tx_stats
+        addr = int(rq_base_addr_lif0, 16)
+        offset = 256
+    elif args.resp_rx_stats is not None: 
+        qid = args.resp_rx_stats
+        addr = int(rq_base_addr_lif0, 16)
+        offset = 320
+    elif args.sqcb0 is not None: 
+        qid = args.sqcb0
+        addr = int(sq_base_addr_lif0, 16)
+        offset = 0
+    elif args.sqcb1 is not None: 
+        qid = args.sqcb1
+        addr = int(sq_base_addr_lif0, 16)
+        offset = 64
+    elif args.sqcb2 is not None: 
+        qid = args.sqcb2
+        addr = int(sq_base_addr_lif0, 16)
+        offset = 128
+    elif args.sqcb3 is not None: 
+        qid = args.sqcb3
+        addr = int(sq_base_addr_lif0, 16)
+        offset = 192
+    elif args.req_tx_stats is not None: 
+        qid = args.req_tx_stats
+        addr = int(sq_base_addr_lif0, 16)
+        offset = 256
+    elif args.req_rx_stats is not None: 
+        qid = args.req_rx_stats
+        addr = int(sq_base_addr_lif0, 16)
+        offset = 320
+    elif args.rsq is not None: 
+        qid = args.rsq
+        addr = int(rq_base_addr_lif0, 16)
+        offset = 64
+    elif args.rrq is not None: 
+        qid = args.rrq
+        addr = int(sq_base_addr_lif0, 16)
+        offset = 64
+
+    offset += int(512*qid)
+    #print(offset)
+
+    # dump 64 bytes
+    addr = str(hex(addr + offset))
+    #print(addr)
+    cmd = '/platform/bin/eth_dbgtool memrd ' + addr + ' 64\n'
+    tn.write(cmd)
+    op = tn.expect(['#'], timeout=5)
+    op_list = op[2].split('\n')
+    data = ''
+    for i in range(1, 5):
+        line = op_list[i].split(' ')
+        for j in range(2, 18):
+            data += line[j]
+    #print(data)
+
+    # format the data
+    cb_str = data.decode("hex")
+
+    # print
+    if args.rqcb0 is not None: RdmaRQCB0state(cb_str).show()
+    elif args.rqcb1 is not None: RdmaRQCB1state(cb_str).show()
+    elif args.rqcb2 is not None: RdmaRQCB2state(cb_str).show()
+    elif args.rqcb3 is not None: RdmaRQCB3state(cb_str).show()
+    elif args.resp_tx_stats is not None: RdmaRespTxStats(cb_str).show()
+    elif args.resp_rx_stats is not None: RdmaRespRxStats(cb_str).show()
+    elif args.sqcb0 is not None: RdmaSQCB0state(cb_str).show()
+    elif args.sqcb1 is not None: RdmaSQCB1state(cb_str).show()
+    elif args.sqcb2 is not None: RdmaSQCB2state(cb_str).show()
+    elif args.sqcb3 is not None: RdmaSQCB3state(cb_str).show()
+    elif args.req_tx_stats is not None: RdmaReqTxStats(cb_str).show()
+    elif args.req_rx_stats is not None: RdmaReqRxStats(cb_str).show()
+    elif args.rsq is not None: 
+
+        buff = str(RdmaRQCB1state(cb_str).show(dump=True))
+
+        # get the rsq_base_addr from rqcb1
+        m = re.search('rsq_base_addr/q_key= (.*)', buff)
+        rsq_base_addr = str(hex(int(m.group(1), 16) << 3))
+
+        # dump all 32 rsq entries
+        # ideally we should read log_rsq_size to figure out the depth of RSQ
+        # but destroy QP overwrites this with 0 since it is in the same
+        # byte as cb1_state. so if it is 0, we assume default RSQ size of 32
+        m = re.search('log_rsq_size= (.*)', buff)
+        rsq_size = 1 << (int(m.group(1), 16))
+        if (rsq_size == 1):
+            rsq_size = 32
+
+        for k in range(0, rsq_size):
+            print("RSQ entry: {0}".format(k))
+            print("==============")
+            addr = hex(int(rsq_base_addr, 16) + int(32*k))
+            cmd = '/platform/bin/eth_dbgtool memrd ' + addr + ' 32\n'
+            tn.write(cmd)
+            op = tn.expect(['#'], timeout=5)
+            op_list = op[2].split('\n')
+            data = ''
+            for i in range(1, 3):
+                line = op_list[i].split(' ')
+                for j in range(2, 18):
+                    data += line[j]
+            cb_str = data.decode("hex")
+
+            # check if read or atomic and decode accordingly
+            if (k == 0):
+                buff = RdmaRsqReadstate(cb_str).show(dump=True)
+                m = re.search('read_or_atomic= (.*)', buff)
+                rd_or_atomic = m.group(1)
+
+            if (rd_or_atomic == '0'):
+                RdmaRsqReadstate(cb_str).show()
+            else:
+                RdmaRsqAtomicstate(cb_str).show()
+
+    elif args.rrq is not None:
+
+        buff = str(RdmaSQCB1state(cb_str).show(dump=True))
+
+        # get rrq_base_addr from sqcb1
+        m = re.search('sqcb1_rrq_base_addr= (.*)', buff)
+        rrq_base_addr = str(hex(int(m.group(1), 16) << 3))
+
+        # get log_rrq_size from sqcb1
+        m = re.search('sqcb1_log_rrq_size= (.*)', buff)
+        rrq_size = 1 << int(m.group(1), 16)
+
+        # dump all rrq entries
+        for k in range(0, rrq_size):
+            print("RRQ entry: {0}".format(k))
+            print("==============")
+            addr = hex(int(rrq_base_addr, 16) + int(32*k))
+            cmd = '/platform/bin/eth_dbgtool memrd ' + addr + ' 32\n'
+            tn.write(cmd)
+            op = tn.expect(['#'], timeout=5)
+            op_list = op[2].split('\n')
+            data = ''
+            for i in range(1, 3):
+                line = op_list[i].split(' ')
+                for j in range(2, 18):
+                    data += line[j]
+            cb_str = data.decode("hex")
+
+            # check if read or atomic and decode accordingly
+            if (k == 0):
+                buff = RdmaRrqReadstate(cb_str).show(dump=True)
+                m = re.search('read_rsp_or_atomic= (.*)', buff)
+                rd_or_atomic = m.group(1)
+
+            if (rd_or_atomic == '0'):
+                RdmaRrqReadstate(cb_str).show()
+            else:
+                RdmaRrqAtomicstate(cb_str).show()
+    # clear line
+    clearLine(console, port)
+
+    exit()
 
 #print args
 if args.dmesg is False and args.dmesg_file is None :
@@ -1095,7 +1446,6 @@ if args.dmesg is False and args.dmesg_file is None :
             pcie_id, tmp = pcie_id.split(pcie_id[-1])
             #print "derived " + pcie_id + " as pcie id for device " + args.DEVNAME
         
-
 if args.cqcb is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_CQ, args.cqcb, 0, 64)
     cqcb = RdmaCQstate(bin_str)
@@ -1216,5 +1566,10 @@ elif args.dmesg is True:
     parse_dmesg()
 elif args.dmesg_file is not None:
     parse_dmesg()
-
+elif args.rsq is not None:
+    print("ERROR: This option is not yet supported. Try with --offline")
+    exit()
+elif args.rrq is not None:
+    print("ERROR: This option is not yet supported. Try with --offline")
+    exit()
     
