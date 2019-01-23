@@ -415,6 +415,7 @@ message TcpCbSpec {
   uint32                ato                        = 47;
   uint32                snd_recover                = 48;
   uint32                smss                       = 49;
+  uint32                initial_window             = 50;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request
@@ -513,6 +514,7 @@ message TcpCbStats {
   uint32                ato_deadline               = 10027;
   uint32                rto_deadline               = 10028;
   uint32                cc_flags                   = 10029;
+  uint32                idle_deadline              = 10030;
 }
 
 // TcpCbGetResponse captures all the information about a tcpcb

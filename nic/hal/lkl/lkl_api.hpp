@@ -25,6 +25,7 @@ uint32_t lkl_get_tcpcb_snd_wscale(void *tcpcb);
 uint32_t lkl_get_tcpcb_rcv_wscale(void *tcpcb);
 uint32_t lkl_get_tcpcb_snd_cwnd(void *tcpcb);
 uint32_t lkl_get_tcpcb_snd_ssthresh(void *tcpcb);
+uint32_t lkl_get_tcpcb_smss(void *tcpcb);
 }
 }
 #endif //__LKL_API_HPP__

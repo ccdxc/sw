@@ -73,6 +73,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 #define TCB_XMIT_SHARED_STATE \
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
+        initial_window                  : 32                    ;\
         snd_wscale                      : 8                     ;\
         xmit_cursor_addr                : 40                    ;\
         sesq_tx_ci                      : 16                    ;\
@@ -110,7 +111,7 @@ last_snd_wnd,\
 tx_rst_sent
 
 #define XMIT_SHARED_PARAMS \
-snd_nxt,snd_wscale,\
+snd_nxt, initial_window, snd_wscale,\
 xmit_cursor_addr, sesq_tx_ci,\
 xmit_offset, xmit_len,\
 packets_out, sacked_out, retrans_out, lost_out,\
@@ -134,6 +135,7 @@ quick_acks_decr
 
 #define GENERATE_XMIT_SHARED_D \
     modify_field(xmit_d.snd_nxt, snd_nxt); \
+    modify_field(xmit_d.initial_window, initial_window); \
     modify_field(xmit_d.snd_wscale, snd_wscale); \
     modify_field(xmit_d.xmit_cursor_addr, xmit_cursor_addr); \
     modify_field(xmit_d.sesq_tx_ci, sesq_tx_ci); \

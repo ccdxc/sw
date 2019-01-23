@@ -181,5 +181,6 @@ unsigned char lkl_tcpcb_snd_wscale(void *tcpcb);
 unsigned char lkl_tcpcb_rcv_wscale(void *tcpcb);
 unsigned int lkl_tcpcb_snd_cwnd(void *tcpcb);
 unsigned int lkl_tcpcb_snd_ssthresh(void *tcpcb);
+unsigned int lkl_tcpcb_smss(void *tcpcb);
 
 #endif

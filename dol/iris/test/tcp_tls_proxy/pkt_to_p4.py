@@ -398,6 +398,12 @@ def TestCaseVerify(tc):
                         (rnmdpr_big_cur.ci, rnmdpr_big.ci + tc.pvtdata.pkt_free))
                 return False
 
+    if hasattr(tc.module.args, 'test_cwnd_idle'):
+        if other_tcpcb_cur.snd_cwnd != other_tcpcb.initial_window:
+            print("snd_wnd (%d) is not initial_window (%d) after idle timeout" % \
+                    (other_tcpcb_cur.snd_cwnd, other_tcpcb.initial_window))
+            return False
+
     if hasattr(tc.module.args, 'test_cong_avoid'):
         incr = (other_tcpcb.rcv_mss * other_tcpcb.rcv_mss) / \
                 other_tcpcb.snd_cwnd

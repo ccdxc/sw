@@ -79,6 +79,7 @@ def SetupProxyArgs(tc):
     pkt_free = 0
     serq_full = False
     snd_cwnd = 0
+    initial_window = 0
     rcv_mss = 0
     snd_ssthresh = 0
     rto_backoff = 0
@@ -145,6 +146,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'snd_cwnd'):
         snd_cwnd = tc.module.args.snd_cwnd
         logger.info("- snd_cwnd %s" % tc.module.args.snd_cwnd)
+    if hasattr(tc.module.args, 'initial_window'):
+        initial_window = tc.module.args.initial_window
+        logger.info("- initial_window %s" % tc.module.args.initial_window)
     if hasattr(tc.module.args, 'rcv_mss'):
         rcv_mss = tc.module.args.rcv_mss
         logger.info("- rcv_mss %s" % tc.module.args.rcv_mss)
@@ -236,6 +240,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.pkt_free = pkt_free
     tc.pvtdata.serq_full = serq_full
     tc.pvtdata.snd_cwnd = snd_cwnd
+    tc.pvtdata.initial_window = initial_window
     tc.pvtdata.rcv_mss = rcv_mss
     tc.pvtdata.snd_ssthresh = snd_ssthresh
     tc.pvtdata.rto_backoff = rto_backoff
@@ -261,6 +266,7 @@ def init_tcb1(tcb, session):
     tcb.rcv_tsval = 0x1AFAFAFA
     tcb.ts_recent = 0x1AFAFAF0
     tcb.snd_cwnd = 8000
+    tcb.initial_window = 8000
     tcb.rcv_mss = 2000
     tcb.smss = 2000
     tcb.snd_ssthresh = 4000
@@ -325,6 +331,10 @@ def init_tcb_inorder(tc, tcb):
         tcb.snd_cwnd = tc.pvtdata.snd_cwnd
     else:
         tcb.snd_cwnd = 10000
+    if tc.pvtdata.initial_window:
+        tcb.initial_window = tc.pvtdata.initial_window
+    else:
+        tcb.initial_window = 10000
     if tc.pvtdata.snd_ssthresh:
         tcb.snd_ssthresh = tc.pvtdata.snd_ssthresh
     else:
@@ -433,6 +443,7 @@ def init_tcb2(tcb, session):
     tcb.rcv_tsval = 0x2AFAFAFA
     tcb.ts_recent = 0x2AFAFAF0
     tcb.snd_cwnd = 10000
+    tcb.initial_window = 10000
     tcb.rcv_mss = 2000
     tcb.smss = 2000
     tcb.snd_ssthresh = 4000
@@ -497,6 +508,10 @@ def init_tcb_inorder2(tc, tcb):
         tcb.snd_cwnd = tc.pvtdata.snd_cwnd
     else:
         tcb.snd_cwnd = 10000
+    if tc.pvtdata.initial_window:
+        tcb.initial_window = tc.pvtdata.initial_window
+    else:
+        tcb.initial_window = 10000
     if tc.pvtdata.snd_ssthresh:
         tcb.snd_ssthresh = tc.pvtdata.snd_ssthresh
     else:

@@ -134,10 +134,12 @@ typedef struct tcpcb_s {
     uint32_t              ato;
     uint32_t              ato_deadline;
     uint32_t              rto_deadline;
+    uint32_t              idle_deadline;
     uint32_t              snd_ssthresh;
     uint32_t              cc_algo;
     uint32_t              snd_recover;
     uint32_t              cc_flags;
+    uint32_t              initial_window;
 
     // PD state
     void                  *pd;                     // all PD specific state

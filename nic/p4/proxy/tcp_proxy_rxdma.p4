@@ -252,15 +252,17 @@ header_type ooo_book_keeping_t {
     }
 }
 
+// offset 0 (TCP_TCB_CC_SND_CWND_OFFSET)
+
 #define CC_D_PARAMS \
-        cc_algo, smss, smss_squared, snd_cwnd, snd_ssthresh, \
+        snd_cwnd, cc_algo, smss, smss_squared, snd_ssthresh, \
         max_win, snd_wscale, cc_flags, t_flags
 
 #define GENERATE_CC_D \
+    modify_field(tcp_cc_d.snd_cwnd, snd_cwnd); \
     modify_field(tcp_cc_d.cc_algo, cc_algo); \
     modify_field(tcp_cc_d.smss, smss); \
     modify_field(tcp_cc_d.smss_squared, smss_squared); \
-    modify_field(tcp_cc_d.snd_cwnd, snd_cwnd); \
     modify_field(tcp_cc_d.snd_ssthresh, snd_ssthresh); \
     modify_field(tcp_cc_d.max_win, max_win); \
     modify_field(tcp_cc_d.snd_wscale, snd_wscale); \
@@ -270,10 +272,10 @@ header_type ooo_book_keeping_t {
 // d for stage 4 table 0
 header_type tcp_cc_d_t {
     fields {
+        snd_cwnd                : 32;
         cc_algo                 : 8;
         smss                    : 16;
         smss_squared            : 32;
-        snd_cwnd                : 32;
         snd_ssthresh            : 32;
         max_win                 : 32;
         snd_wscale              : 8;

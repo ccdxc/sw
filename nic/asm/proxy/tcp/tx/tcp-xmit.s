@@ -166,7 +166,12 @@ tcp_tx_xmit_snd_una_update:
 
     tblssub         d.packets_out, k.t0_s2s_packets_out_decr
     seq             c1, d.packets_out, 0
-    // cancel retx timer if packets_out == 0
+    b.!c1           tcp_tx_end_program
+    // if packets_out == 0
+    //      start idle timer
+    //      cancel retx timer
+    add.c1          r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_IDLE_TO_OFFSET
+    memwr.h.c1      r1, k.to_s4_rto
     add.c1          r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_RTO_OFFSET
     memwr.h.c1      r1, 0
 
@@ -201,3 +206,21 @@ tcp_tx_no_window:
     tblwr           d.no_window, 1
     b               tcp_tx_end_program_and_drop
     memwr.h         r1, k.to_s4_sesq_tx_ci
+
+/*
+ * Idle timer expired, reduce cwnd and quit
+ */
+.align
+tcp_xmit_idle_process_start:
+    /*
+     * RFC 5681 (Restarting Idle Connections)
+     * cwnd = min(cwnd, initial_window)
+     */
+    add             r2, r0, k.to_s4_snd_cwnd
+    slt             c1, d.initial_window, r2
+    add.c1          r2, r0, d.initial_window
+
+    add             r1, k.common_phv_qstate_addr, TCP_TCB_CC_SND_CWND_OFFSET
+    memwr.w         r1, r2
+    phvwri.e        p.p4_intr_global_drop, 1
+    CAPRI_CLEAR_TABLE_VALID(0)

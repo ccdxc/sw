@@ -123,6 +123,8 @@ header_type rx2tx_d_t {
         // retransmission timeout decremented on every timer tick
         rto_deadline : 16;      // offset 50 (TCP_TCB_RX2TX_RTO_OFFSET)
 
+        idle_deadline : 16;     // offset 52 (TCP_TCB_RX2TX_IDLE_TO_OFFSET)
+
         debug_dol_tx : 16;
 
         sesq_base : HBM_ADDRESS_WIDTH;
@@ -234,6 +236,7 @@ header_type common_global_phv_t {
         pending_dup_ack_send    : 1;
         pending_ack_send        : 1;
         pending_rto             : 1;
+        pending_idle            : 1;
         pending_fast_retx       : 1;
         partial_retx_cleanup    : 1;
         debug_dol_dont_send_ack : 1;
@@ -503,8 +506,8 @@ metadata dma_cmd_phv2mem_t tx2rx_dma;        // dma cmd 8
 rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0,ci_0, pi_1, ci_1,\
 pi_2, ci_2, pi_3, ci_3, pi_4, ci_4, pi_5, ci_5, pi_6, ci_6,\
 pi_7, ci_7, sesq_tx_ci, sesq_retx_ci, asesq_retx_ci, clean_retx_pending,\
-debug_dol_tblsetaddr, ato_deadline, rto_deadline, debug_dol_tx, sesq_base,\
-perpetual_timer_started
+debug_dol_tblsetaddr, ato_deadline, rto_deadline, idle_deadline, debug_dol_tx,\
+sesq_base, perpetual_timer_started
 
 #define GENERATE_RX2TX_D                                                                               \
     modify_field(rx2tx_d.rsvd, rsvd);                                                                  \
@@ -538,6 +541,7 @@ perpetual_timer_started
     modify_field(rx2tx_d.debug_dol_tblsetaddr, debug_dol_tblsetaddr);                                  \
     modify_field(rx2tx_d.ato_deadline, ato_deadline);                                                  \
     modify_field(rx2tx_d.rto_deadline, rto_deadline);                                                  \
+    modify_field(rx2tx_d.idle_deadline, idle_deadline);                                                \
     modify_field(rx2tx_d.debug_dol_tx, debug_dol_tx);                                                  \
     modify_field(rx2tx_d.sesq_base, sesq_base);                                                        \
     modify_field(rx2tx_d.perpetual_timer_started, perpetual_timer_started);                            \

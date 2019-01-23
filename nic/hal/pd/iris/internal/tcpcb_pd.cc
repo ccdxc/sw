@@ -872,6 +872,7 @@ p4pd_add_or_del_tcp_tx_xmit_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.is_cwnd_limited = 0x00;
         data.rto_backoff = (uint8_t)htonl(tcpcb_pd->tcpcb->rto_backoff);
         data.smss = htons(tcpcb_pd->tcpcb->smss);
+        data.initial_window = htonl(tcpcb_pd->tcpcb->initial_window);
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -1025,6 +1026,7 @@ p4pd_get_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->fast_timer_ci = data.u.read_rx2tx_d.ci_2;
     tcpcb_pd->tcpcb->rto_deadline = ntohs(data.u.read_rx2tx_d.rto_deadline);
     tcpcb_pd->tcpcb->ato_deadline = ntohs(data.u.read_rx2tx_d.ato_deadline);
+    tcpcb_pd->tcpcb->idle_deadline = ntohs(data.u.read_rx2tx_d.idle_deadline);
 
     HAL_TRACE_DEBUG("Received sesq_base: {:#x}", tcpcb_pd->tcpcb->sesq_base);
     HAL_TRACE_DEBUG("Received sesq_pi: {:#x}", tcpcb_pd->tcpcb->sesq_pi);
@@ -1096,6 +1098,7 @@ p4pd_get_tcp_tx_xmit_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->packets_out = ntohs(data.packets_out);
     tcpcb_pd->tcpcb->rto_backoff = data.rto_backoff;
     tcpcb_pd->tcpcb->snd_wscale = data.snd_wscale;
+    tcpcb_pd->tcpcb->initial_window = ntohl(data.initial_window);
 
     HAL_TRACE_DEBUG("TCPCB packets_out: {}", tcpcb_pd->tcpcb->packets_out);
 

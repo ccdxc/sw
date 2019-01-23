@@ -135,6 +135,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     }
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
+    tcpcb->initial_window = spec.initial_window();
     tcpcb->snd_ssthresh = spec.snd_ssthresh();
     tcpcb->snd_cwnd_cnt = spec.snd_cwnd_cnt();
     tcpcb->rcv_mss = spec.rcv_mss();
@@ -227,6 +228,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->debug_dol_tx = spec.debug_dol_tx();
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
+    tcpcb->initial_window = spec.initial_window();
     tcpcb->snd_ssthresh = spec.snd_ssthresh();
     tcpcb->snd_cwnd_cnt = spec.snd_cwnd_cnt();
     tcpcb->rcv_mss = spec.rcv_mss();
@@ -443,6 +445,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_asesq_base(rtcpcb.asesq_base);
     rsp->mutable_spec()->set_snd_wnd(rtcpcb.snd_wnd);
     rsp->mutable_spec()->set_snd_cwnd(rtcpcb.snd_cwnd);
+    rsp->mutable_spec()->set_initial_window(rtcpcb.initial_window);
     rsp->mutable_spec()->set_snd_ssthresh(rtcpcb.snd_ssthresh);
     rsp->mutable_spec()->set_snd_cwnd_cnt(rtcpcb.snd_cwnd_cnt);
     rsp->mutable_spec()->set_rcv_mss(rtcpcb.rcv_mss);
@@ -526,6 +529,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_partial_ack_cnt(rtcpcb.partial_ack_cnt);
     rsp->mutable_stats()->set_rto_deadline(rtcpcb.rto_deadline);
     rsp->mutable_stats()->set_ato_deadline(rtcpcb.ato_deadline);
+    rsp->mutable_stats()->set_idle_deadline(rtcpcb.idle_deadline);
     rsp->mutable_stats()->set_cc_flags(rtcpcb.cc_flags);
 
     rsp->set_api_status(types::API_STATUS_OK);

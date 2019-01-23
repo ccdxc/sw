@@ -157,6 +157,7 @@ tcp_snd_una_update_end:
                         TCP_PENDING_TXDMA_SND_UNA_UPDATE
 
 tcp_in_ack_event_end:
+tcp_dup_ack_done:
     tblwr           d.snd_wnd, k.to_s2_window
     phvwr           p.to_s4_snd_wnd, k.to_s2_window
     phvwr           p.common_phv_snd_una, d.snd_una
@@ -202,10 +203,6 @@ tcp_dup_ack_gt_thresh:
     b               tcp_dup_ack_done
     phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_DUPACK_SIGNAL, \
                         p.to_s4_cc_flags, d.cc_flags
-
-tcp_dup_ack_done:
-    b               tcp_in_ack_event_end
-    nop
 
 /******************************************************************************
  * Functions

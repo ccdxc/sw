@@ -195,5 +195,10 @@ uint32_t lkl_get_tcpcb_snd_ssthresh(void *tcpcb)
     return lkl_tcpcb_snd_ssthresh(tcpcb);
 }
 
+uint32_t lkl_get_tcpcb_smss(void *tcpcb)
+{
+    return lkl_tcpcb_smss(tcpcb);
+}
+
 }
 }

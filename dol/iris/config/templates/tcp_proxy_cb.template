@@ -33,6 +33,7 @@ snd_wnd     : 10000
 rcv_wnd     : 1000
 snd_wscale  : 0
 rcv_wscale  : 0
+intial_window : 10000
 snd_cwnd    : 10000
 snd_ssthresh: 4000
 rcv_mss     : 2000

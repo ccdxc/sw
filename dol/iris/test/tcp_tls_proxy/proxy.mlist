@@ -718,6 +718,8 @@ modules:
         spec    : uplink_to_uplink_cancel_retx.testspec
         module  : pkt_to_p4
         args    :
+            test_cwnd_idle : 1
+            initial_window : 4000
             num_pkts : 1
             num_ack_pkts : 1
             bypass_barco : 1

@@ -389,13 +389,16 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
         spec->set_snd_wscale(hal::pd::lkl_get_tcpcb_snd_wscale(tcpcb));
         spec->set_rcv_wscale(hal::pd::lkl_get_tcpcb_rcv_wscale(tcpcb));
         spec->set_snd_ssthresh(hal::pd::lkl_get_tcpcb_snd_ssthresh(tcpcb));
-        smss = get_rsp.mutable_spec()->smss();
+        spec->set_smss(hal::pd::lkl_get_tcpcb_smss(tcpcb));
+        smss = hal::pd::lkl_get_tcpcb_smss(tcpcb);
+        HAL_TRACE_DEBUG("smss={}", smss);
         init_cwnd_segments = hal::pd::lkl_get_tcpcb_snd_cwnd(tcpcb);
         // RFC 6928
         // initial window = min (10*MSS, max (2*MSS, 14600))
         init_cwnd = std::min(init_cwnd_segments * smss,
                             std::max(2 * smss, init_cwnd_segments * 1460));
         spec->set_snd_cwnd(init_cwnd);
+        spec->set_initial_window(init_cwnd);
         HAL_TRACE_DEBUG("lkl snd_cwnd={} snd_ssthresh={}",
                         init_cwnd,
                         hal::pd::lkl_get_tcpcb_snd_ssthresh(tcpcb));
@@ -408,7 +411,6 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_snd_wnd(get_rsp.mutable_spec()->snd_wnd());
     spec->set_rcv_wnd(get_rsp.mutable_spec()->rcv_wnd());
     spec->set_rcv_mss(get_rsp.mutable_spec()->rcv_mss());
-    spec->set_smss(get_rsp.mutable_spec()->smss());
     spec->set_source_port(get_rsp.mutable_spec()->source_port());
     spec->set_dest_port(get_rsp.mutable_spec()->dest_port());
     spec->set_header_len(get_rsp.mutable_spec()->header_len());

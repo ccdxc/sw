@@ -17,6 +17,7 @@ struct s0_t0_tcp_tx_read_rx2tx_d d;
 %%
     .align
     .param          tcp_tx_read_rx2tx_shared_extra_stage1_start
+    .param          tcp_tx_read_rx2tx_shared_extra_idle_start
     .param          tcp_tx_read_rx2tx_shared_extra_clean_retx_stage1_start
     .param          tcp_tx_sesq_read_ci_stage1_start
     .param          tcp_tx_sesq_read_retx_ci_stage1_start
@@ -407,7 +408,8 @@ tcp_tx_fast_retrans:
 tcp_tx_ft_expired:
     seq             c1, d.rto_deadline, 0
     seq             c2, d.ato_deadline, 0
-    bcf             [c1 & c2], tcp_tx_stop_perpetual_timer_and_exit
+    seq             c3, d.idle_deadline, 0
+    bcf             [c1 & c2 & c3], tcp_tx_stop_perpetual_timer_and_exit
     nop
 #ifdef HW
     bal             r7, tcp_tx_start_perpetual_timer
@@ -419,8 +421,8 @@ tcp_tx_ft_expired:
     bal.c1          r7, tcp_tx_start_perpetual_timer
 #endif
     /*
-     * c3 ==> both ato and rto are going to expire
-     * Decrement both ato and rto, if not both are going to expire (!c3)
+     * c4 ==> both ato and rto are going to expire
+     * Decrement both ato and rto, if not both are going to expire (!c4)
      *
      * decrement rto, and check for retransmission timer expired (c1)
      *
@@ -439,18 +441,35 @@ tcp_tx_ft_expired:
      * If TRUE, we want to do delack handling
      */
     seq             c2, d.ato_deadline, 1
-    setcf           c3, [c1 & c2]
-    tblssub.!c3     d.ato_deadline, 1
+    setcf           c4, [c1 & c2]
+    tblssub.!c4     d.ato_deadline, 1
+    seq             c3, d.idle_deadline, 1
+    tblssub         d.idle_deadline, 1
     tbladd.f        d.{ci_2}.hx, 1
 
     // Ring doorbell to clear scheduler if necessary
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     // data will be in r3
     CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
-    bcf             [!c1 & !c2], tcp_tx_rx2tx_end
+    bcf             [!c1 & !c2 & !c3], tcp_tx_rx2tx_end
     memwr.dx        r4, r3
 
     b.c1            tcp_tx_retx_timer_expired
+    nop
+    b.c2            tcp_tx_del_ack_timer_expired
+    nop
+
+    // c3 = true (idle timeout)
+
+tcp_tx_idle_timer_expired:
+    phvwr           p.common_phv_pending_idle, 1
+
+    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
+                        tcp_tx_read_rx2tx_shared_extra_idle_start,
+                        k.p4_txdma_intr_qstate_addr,
+                        TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, TABLE_SIZE_512_BITS)
+    phvwrpair.e     p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
     nop
 
 tcp_tx_del_ack_timer_expired:
