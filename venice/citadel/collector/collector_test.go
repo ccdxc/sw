@@ -49,6 +49,13 @@ func TestCollectorBasic(t *testing.T) {
 	ss := statssim.NewStatsSim()
 	ss.Init()
 
+	// Create a database
+	dbname := "testDb"
+	err = c.CreateDatabase(context.Background(), dbname)
+	tu.AssertOk(t, err, "create databse failed err: %v", err)
+	tu.Assert(t, len(s.DatabasesCreated) == 1, "Expected 1 db got ", s.DatabasesCreated)
+	tu.Assert(t, s.DatabasesCreated[0] == dbname, "Expected db to be %s, got %s", dbname, s.DatabasesCreated)
+
 	// write a single point
 	p := getPoints(ss, 1)
 	c.WritePoints(context.Background(), testDB, testMeas, p)

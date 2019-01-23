@@ -17,6 +17,8 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	telemetry "github.com/pensando/sw/api/generated/monitoring"
 	mockapi "github.com/pensando/sw/api/mock"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
+	mockmetric "github.com/pensando/sw/venice/citadel/collector/rpcserver/metric/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	mockkvs "github.com/pensando/sw/venice/utils/kvstore/mock"
 	vLog "github.com/pensando/sw/venice/utils/log"
@@ -237,7 +239,7 @@ func TestProcessEvents(t *testing.T) {
 	mSp.EXPECT().Watch(ctx, opts).Return(nil, fmt.Errorf("failed to watch stats")).Times(1)
 	mapi := mockapi.NewMockServices(ctrl)
 	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
-	pa.client = mapi
+	pa.apiClient = mapi
 
 	err := pa.processEvents(parentCtx)
 	tu.Assert(t, err != nil, "missed stats failure")
@@ -309,7 +311,7 @@ func TestEventLoop(t *testing.T) {
 	mTenant := mockapi.NewMockClusterV1TenantInterface(ctrl)
 	tV1.mTnt = mTenant
 	mapi := mockapi.NewMockServices(ctrl)
-	pa.client = mapi
+	pa.apiClient = mapi
 
 	// stats watch
 	statsCh := make(chan *kvstore.WatchEvent, 2)
@@ -458,7 +460,10 @@ func TestProcessTenant(t *testing.T) {
 	tu.AssertOk(t, err, "failed to create policy manager")
 
 	mapi := mockapi.NewMockServices(ctrl)
-	pa.client = mapi
+	pa.apiClient = mapi
+
+	mMetric := mockmetric.NewMockMetricApiClient(ctrl)
+	pa.metricClient = mMetric
 
 	sV1 := &mockMonitoringV1{}
 	mSp := mockapi.NewMockMonitoringV1StatsPolicyInterface(ctrl)
@@ -481,6 +486,11 @@ func TestProcessTenant(t *testing.T) {
 	// create
 	mapi.EXPECT().MonitoringV1().Return(sV1).Times(2)
 	mSp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, nil)
+
+	expReq := &metric.DatabaseReq{
+		DatabaseName: tenant.GetName(),
+	}
+	mMetric.EXPECT().CreateDatabase(parentCtx, expReq).Times(1)
 
 	err = pa.processTenants(parentCtx, kvstore.Created, tenant)
 	tu.AssertOk(t, err, "processTenant create failed")
@@ -513,7 +523,12 @@ func TestClientRetry(t *testing.T) {
 	pa, err := NewPolicyManager(listenURL, r)
 	tu.AssertOk(t, err, "failed to create policy manager")
 
-	_, err = pa.initGrpcClient("rpc-service", retry)
+	_, err = pa.initAPIGrpcClient("rpc-server", retry)
+	tu.Assert(t, err != nil, "failed to test grpc cient")
+	tu.Assert(t, strings.Contains(err.Error(), fmt.Sprintf("exhausted all attempts(%d)", retry)),
+		fmt.Sprintf("failed to match error message, got :%s", err))
+
+	_, err = pa.initMetricGrpcClient("rpc-server", retry)
 	tu.Assert(t, err != nil, "failed to test grpc cient")
 	tu.Assert(t, strings.Contains(err.Error(), fmt.Sprintf("exhausted all attempts(%d)", retry)),
 		fmt.Sprintf("failed to match error message, got :%s", err))

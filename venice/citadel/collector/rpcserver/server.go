@@ -45,7 +45,7 @@ type CollRPCSrv struct {
 
 // NewCollRPCSrv creates and starts a collector RPC server
 func NewCollRPCSrv(listenURL string, c *tec.Collector) (*CollRPCSrv, error) {
-	s, err := rpckit.NewRPCServer(globals.Citadel, listenURL, rpckit.WithLoggerEnabled(false))
+	s, err := rpckit.NewRPCServer(globals.Collector, listenURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
 		log.Infof("failed to start grpc server: %v", err)
 		return nil, err
@@ -178,6 +178,16 @@ func (s *CollRPCSrv) convertToPoints(mb *metric.MetricBundle) []models.Point {
 	}
 
 	return res
+}
+
+// CreateDatabase implements the RPC method
+func (s *CollRPCSrv) CreateDatabase(c context.Context, req *metric.DatabaseReq) (*metric.StatusResp, error) {
+	var resp metric.StatusResp
+	err := s.c.CreateDatabase(c, req.GetDatabaseName())
+	if err != nil {
+		resp.Status = err.Error()
+	}
+	return &resp, err
 }
 
 func readFields(f map[string]*metric.Field) map[string]interface{} {

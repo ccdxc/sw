@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 
 	influx "github.com/influxdata/influxdb/client/v2"
@@ -72,6 +73,32 @@ func (cl *influxClient) Stop() {
 }
 
 func (cl *influxClient) CreateDatabase(ctx context.Context, database string) error {
+	var err error
+
+	URL := cl.URL
+	URL.Path = "query"
+	req, err := http.NewRequest("POST", URL.String(), strings.NewReader(database))
+	if err != nil {
+		return err
+	}
+
+	params := req.URL.Query()
+	req.URL.RawQuery = params.Encode()
+
+	resp, err := cl.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
+		return fmt.Errorf(string(body))
+	}
 	return nil
 }
 

@@ -30,3 +30,8 @@ func (c *Collector) WritePoints(ctx context.Context, db, table string, points []
 func (c *Collector) WriteLines(ctx context.Context, db string, lines []string) error {
 	return c.tsdbClient.WriteLines(ctx, db, lines)
 }
+
+// CreateDatabase creates a database in TSDB
+func (c *Collector) CreateDatabase(ctx context.Context, dbName string) error {
+	return c.tsdbClient.CreateDatabase(ctx, dbName)
+}

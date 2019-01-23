@@ -14,6 +14,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 service MetricApi {
 	rpc WriteMetrics(MetricBundle) returns (api.Empty) {}
 	rpc WriteLines(LineBundle) returns (api.Empty) {}
+	rpc CreateDatabase(DatabaseReq) returns (StatusResp) {}
 }
 
 message LineBundle {
@@ -45,4 +46,13 @@ message MetricBundle {
 	string dbName = 1;
 	string reporter = 2;
 	repeated MetricPoint metrics = 3;
+}
+
+// status resp
+message StatusResp {
+    string Status = 1; // response status
+}
+
+message DatabaseReq {
+    string DatabaseName    = 1;
 }

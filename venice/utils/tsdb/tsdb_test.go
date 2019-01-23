@@ -294,6 +294,11 @@ func (d *dummyMetricServer) WriteMetrics(ctx context.Context, mb *metric.MetricB
 	return &api.Empty{}, nil
 }
 
+// CreateDatabase method allows for creating a database
+func (d *dummyMetricServer) CreateDatabase(ctx context.Context, in *metric.DatabaseReq) (*metric.StatusResp, error) {
+	return &metric.StatusResp{}, nil
+}
+
 func (d *dummyMetricServer) WriteLines(ctx context.Context, lb *metric.LineBundle) (*api.Empty, error) {
 	return &api.Empty{}, nil
 }

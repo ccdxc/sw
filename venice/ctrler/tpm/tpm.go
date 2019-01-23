@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	telemetry "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -27,7 +28,9 @@ import (
 // PolicyManager policy manager global info
 type PolicyManager struct {
 	// api client
-	client apiclient.Services
+	apiClient apiclient.Services
+	// metric client
+	metricClient metric.MetricApiClient
 	// cancel watch operation
 	cancel context.CancelFunc
 	// name server
@@ -81,15 +84,20 @@ func (pm *PolicyManager) HandleEvents() error {
 	defer pm.cancel()
 
 	for {
-		if pm.client, err = pm.initGrpcClient(globals.APIServer, maxRetry); err != nil {
-			pmLog.Fatalf("failed to init grpc client, error: %s", err)
+		if pm.apiClient, err = pm.initAPIGrpcClient(globals.APIServer, maxRetry); err != nil {
+			pmLog.Fatalf("failed to init api grpc client, error: %s", err)
 		}
 		pmLog.Infof("connected to {%s}", globals.APIServer)
+
+		if pm.metricClient, err = pm.initMetricGrpcClient(globals.Collector, maxRetry); err != nil {
+			pmLog.Fatalf("failed to init metric grpc client, error: %s", err)
+		}
+		pmLog.Infof("connected to {%s}", globals.Collector)
 
 		pm.processEvents(ctx)
 
 		// close rpc services
-		pm.client.Close()
+		pm.apiClient.Close()
 
 		// context canceled, return
 		if err := ctx.Err(); err != nil {
@@ -100,8 +108,8 @@ func (pm *PolicyManager) HandleEvents() error {
 	}
 }
 
-// init grpc client
-func (pm *PolicyManager) initGrpcClient(serviceName string, retry int) (apiclient.Services, error) {
+// init api grpc client
+func (pm *PolicyManager) initAPIGrpcClient(serviceName string, retry int) (apiclient.Services, error) {
 	for i := 0; i < retry; i++ {
 		// create a grpc client
 		client, apiErr := apiclient.NewGrpcAPIClient(globals.Tpm, serviceName, vLog.WithContext("pkg", "TPM-GRPC-API"),
@@ -109,7 +117,26 @@ func (pm *PolicyManager) initGrpcClient(serviceName string, retry int) (apiclien
 		if apiErr == nil {
 			return client, nil
 		}
-		pmLog.Warnf("failed to connect to {%s}, error: %s, retry", globals.APIServer, apiErr)
+		pmLog.Warnf("failed to connect to {%s}, error: %s, retry", serviceName, apiErr)
+		time.Sleep(2 * time.Second)
+	}
+	return nil, fmt.Errorf("failed to connect to {%s}, exhausted all attempts(%d)", serviceName, retry)
+}
+
+// init metric grpc client
+func (pm *PolicyManager) initMetricGrpcClient(serviceName string, retry int) (metric.MetricApiClient, error) {
+	for i := 0; i < retry; i++ {
+		// create a grpc client
+		client, err := rpckit.NewRPCClient(globals.Tpm, serviceName,
+			rpckit.WithBalancer(balancer.New(pm.nsClient)))
+		if err != nil {
+			pmLog.ErrorLog("msg", "Failed to connect to gRPC server", "URL", serviceName, "error", err)
+			// return nil, err
+		} else {
+			return metric.NewMetricApiClient(client.ClientConn), nil
+		}
+
+		pmLog.Warnf("failed to connect to {%s}, error: %s, retry", serviceName, err)
 		time.Sleep(2 * time.Second)
 	}
 	return nil, fmt.Errorf("failed to connect to {%s}, exhausted all attempts(%d)", serviceName, retry)
@@ -127,7 +154,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 	selCases := []reflect.SelectCase{}
 
 	// stats
-	watcher, err := pm.client.MonitoringV1().StatsPolicy().Watch(ctx, &opts)
+	watcher, err := pm.apiClient.MonitoringV1().StatsPolicy().Watch(ctx, &opts)
 	if err != nil {
 		pmLog.Errorf("failed to watch stats policy, error: {%s}", err)
 		return err
@@ -139,7 +166,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
 	// fwlog
-	watcher, err = pm.client.MonitoringV1().FwlogPolicy().Watch(ctx, &opts)
+	watcher, err = pm.apiClient.MonitoringV1().FwlogPolicy().Watch(ctx, &opts)
 	if err != nil {
 		pmLog.Errorf("failed to watch fwlog policy, error: {%s}", err)
 		return err
@@ -151,7 +178,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
 	// export
-	watcher, err = pm.client.MonitoringV1().FlowExportPolicy().Watch(ctx, &opts)
+	watcher, err = pm.apiClient.MonitoringV1().FlowExportPolicy().Watch(ctx, &opts)
 	if err != nil {
 		pmLog.Errorf("failed to watch export policy, error: {%s}", err)
 		return err
@@ -163,7 +190,7 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		Chan: reflect.ValueOf(watcher.EventChan())})
 
 	// watch tenants
-	watcher, err = pm.client.ClusterV1().Tenant().Watch(ctx, &opts)
+	watcher, err = pm.apiClient.ClusterV1().Tenant().Watch(ctx, &opts)
 	if err != nil {
 		pmLog.Errorf("failed to watch tenant, error: {%s}", err)
 		return err
@@ -296,11 +323,21 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 			Spec: GetDefaultStatsSpec(),
 		}
 
-		if _, err := pm.client.MonitoringV1().StatsPolicy().Get(ctx, &statsPolicy.ObjectMeta); err != nil {
-			if _, err := pm.client.MonitoringV1().StatsPolicy().Create(ctx, statsPolicy); err != nil {
+		if _, err := pm.apiClient.MonitoringV1().StatsPolicy().Get(ctx, &statsPolicy.ObjectMeta); err != nil {
+			if _, err := pm.apiClient.MonitoringV1().StatsPolicy().Create(ctx, statsPolicy); err != nil {
 				pmLog.Errorf("failed to create stats policy for tenant %s, error: %s", tenant.GetName(), err)
 				return err
 			}
+		}
+
+		// create database request
+		databaseReq := &metric.DatabaseReq{
+			DatabaseName: tenant.GetName(),
+		}
+
+		if _, err := pm.metricClient.CreateDatabase(ctx, databaseReq); err != nil {
+			pmLog.Errorf("failed to create database for tenant %s, error: %s", tenant.GetName(), err)
+			return err
 		}
 
 	case kvstore.Updated: // no-op
@@ -312,7 +349,7 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 			Tenant: tenant.GetName(),
 		}
 
-		if _, err := pm.client.MonitoringV1().StatsPolicy().Delete(ctx, objMeta); err != nil {
+		if _, err := pm.apiClient.MonitoringV1().StatsPolicy().Delete(ctx, objMeta); err != nil {
 			pmLog.Errorf("failed to delete stats policy for tenant %s, error: %s", tenant.GetName(), err)
 			return err
 		}

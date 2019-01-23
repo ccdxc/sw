@@ -44,6 +44,11 @@ func (f *Collector) WriteLines(ctx context.Context, in *metric.LineBundle) (*api
 	return &api.Empty{}, nil
 }
 
+// CreateDatabase method allows for creating a database
+func (f *Collector) CreateDatabase(ctx context.Context, in *metric.DatabaseReq) (*metric.StatusResp, error) {
+	return &metric.StatusResp{}, nil
+}
+
 // ValidateSendInterval gets the time when last write function was called
 func (f *Collector) ValidateSendInterval(expDuration time.Duration) bool {
 	actualDuration := f.lastWrite.Sub(f.prevWrite)

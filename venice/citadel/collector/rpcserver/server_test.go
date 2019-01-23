@@ -145,6 +145,15 @@ func TestServer(t *testing.T) {
 	tb.Setup(t)
 	defer tb.Teardown()
 
+	dbName := "testDb"
+	req := &metric.DatabaseReq{
+		DatabaseName: dbName,
+	}
+	_, err := tb.mc.CreateDatabase(context.Background(), req)
+	tu.AssertOk(t, err, "create databse failed err: %v", err)
+	tu.Assert(t, len(tb.dbA.DatabasesCreated) == 1, "Expected 1 db got ", tb.dbA.DatabasesCreated)
+	tu.Assert(t, tb.dbA.DatabasesCreated[0] == dbName, "Expected db to be %s, got %s", dbName, tb.dbA.DatabasesCreated)
+
 	// Perform simple writes
 	tb.verifyBasic(t, 1, 1, "Gauge")
 	tb.verifyBasic(t, 1, 2, "Counter")

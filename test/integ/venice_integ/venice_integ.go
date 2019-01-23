@@ -46,7 +46,6 @@ import (
 	"github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
-	"github.com/pensando/sw/venice/citadel/watcher"
 	"github.com/pensando/sw/venice/cmd/cache"
 	cmdenv "github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
@@ -493,14 +492,6 @@ func (it *veniceIntegSuite) startCitadel() {
 	qsrv, err := query.NewQueryService(queryURL, br)
 
 	log.Infof("query server is listening on %+v", qsrv)
-
-	// watch for tenants
-	watcher := watcher.NewWatcher(integTestApisrvURL, br, it.resolverClient)
-	go watcher.WatchTenant(context.Background())
-
-	if err := br.CreateDatabase(context.Background(), globals.DefaultTenant); err != nil {
-		log.Fatalf(err.Error())
-	}
 
 	// wait forever
 	waitCh := make(chan bool)
