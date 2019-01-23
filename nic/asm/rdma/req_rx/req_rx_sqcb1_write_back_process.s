@@ -13,9 +13,9 @@ struct sqcb1_t d;
 
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit24_ebit31)
-#define K_MSG_PSN CAPRI_KEY_RANGE(IN_P, msg_psn_sbit0_ebit15, msg_psn_sbit16_ebit23)
 #define K_REXMIT_PSN CAPRI_KEY_RANGE(IN_P, rexmit_psn_sbit0_ebit2, rexmit_psn_sbit19_ebit23)
 #define K_MSN CAPRI_KEY_RANGE(IN_P, msn_sbit0_ebit2, msn_sbit19_ebit23)
+#define K_RRQ_SPEC_CINDEX CAPRI_KEY_RANGE(IN_TO_S_P, rrq_spec_cindex_sbit0_ebit6, rrq_spec_cindex_sbit15_ebit15)
 
 #define K_MY_TOKEN_ID CAPRI_KEY_RANGE(IN_TO_S_P, my_token_id_sbit0_ebit1, my_token_id_sbit2_ebit7)
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit13)
@@ -47,7 +47,10 @@ req_rx_sqcb1_write_back_process:
 
     bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, error_drop_phv), 1, inc_token_and_drop_phv
 
-    scwlt24        c2, K_REXMIT_PSN, d.rexmit_psn // Branch Delay Slot
+    sne            c2, K_RRQ_SPEC_CINDEX, RRQ_C_INDEX
+    bcf            [c2], inc_token_and_drop_phv
+
+    scwlt24        c2, K_REXMIT_PSN, d.rexmit_psn
     bcf            [c2], inc_token_and_drop_phv
 
     seq            c1, CAPRI_KEY_FIELD(IN_P, incr_nxt_to_go_token_id), 1 // BD-Slot

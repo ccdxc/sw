@@ -420,12 +420,12 @@ class RdmaSQstate(Packet):
         ByteField("nxt_to_go_token_id", 0),
         ByteField("token_id", 0),
 
-        X3BytesField("msg_psn", 0),
+        X3BytesField("sqcb1_rsvd4", 0),
         X3BytesField("rexmit_psn", 0),
         X3BytesField("msn", 0),
 
         BitField("credits", 0, 5),
-        BitField("sqcb1_rsvd4", 0, 3),
+        BitField("sqcb1_rsvd5", 0, 3),
 
         X3BytesField("max_tx_psn", 0),
         X3BytesField("max_ssn", 0),
@@ -437,11 +437,11 @@ class RdmaSQstate(Packet):
         BitField("sqcb1_priv_oper_enable", 0, 1),
         BitField("sqcb1_sq_drained", 0, 1),
         BitField("sqd_async_notify_enable", 0, 1),
-        BitField("sqcb1_rsvd5", 0, 2),
+        BitField("sqcb1_rsvd6", 0, 2),
         ByteField("sqcb1_bktrack_in_progress", 0),
         IntField("sqcb1_pd", 0),
         BitField("rrq_spec_cindex", 0, 16),
-        BitField("sqcb1_rsvd6", 0, 16),
+        BitField("sqcb1_rsvd7", 0, 16),
 
         #SQCB2
         X3BytesField("dst_qp", 0),

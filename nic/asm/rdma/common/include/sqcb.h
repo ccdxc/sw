@@ -156,12 +156,12 @@ struct sqcb1_t {
     nxt_to_go_token_id             : 8;  // RW S3
     token_id                       : 8;  // RW S0
 
-    msg_psn                        : 24; // RW S0
+    rsvd4                          : 24; // RW S0
     rexmit_psn                     : 24; // RW S0
     msn                            : 24; // RW S0
 
     credits                        : 5;  // RW S0 
-    rsvd4                          : 3;
+    rsvd5                          : 3;
 
     max_tx_psn                     : 24; // RW S0
     max_ssn                        : 24; // RW S0
@@ -173,12 +173,12 @@ struct sqcb1_t {
     sqcb1_priv_oper_enable         : 1;  // RO
     sq_drained                     : 1;  // RW S5
     sqd_async_notify_enable        : 1;  // RO S5
-    rsvd5                          : 2;
+    rsvd6                          : 2;
 
     bktrack_in_progress            : 8; // RW S3 (W0 S5 TXDMA)
     pd                             : 32; // RO
     rrq_spec_cindex                : 16;
-    rsvd6                          : 16;
+    rsvd7                          : 16;
 };
 
 struct sqcb2_t {

@@ -122,8 +122,8 @@ def TestCaseStepVerify(tc, step):
             return False
      
         # verify that msg_psn is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msg_psn', 0):
-            return False
+        #if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msg_psn', 0):
+        #    return False
 
         # validate cqcb pindex and color
         if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):

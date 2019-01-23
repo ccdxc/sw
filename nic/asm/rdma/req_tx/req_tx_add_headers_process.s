@@ -244,7 +244,7 @@ add_headers:
         
         sub            r5, d.tx_psn, K_READ_REQ_ADJUST
         mincr          r5, 24, r0
-        phvwrpair      p.rrqwqe.psn, r5, p.rrqwqe.msn, d.ssn
+        phvwrpair      p.rrqwqe.psn, r5, p.{rrqwqe.e_psn, rrqwqe.msn}, d.{tx_psn, ssn}
         
         // dma_cmd[3]
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
@@ -365,7 +365,7 @@ add_headers:
         add            r3, r3, d.rrq_pindex, LOG_RRQ_WQE_SIZE
         
         phvwr          RRQWQE_ATOMIC_OP_TYPE, K_OP_TYPE
-        phvwr          p.{rrqwqe.psn, rrqwqe.msn}, d.{tx_psn, ssn}
+        phvwrpair      p.rrqwqe.psn, d.tx_psn, p.{rrqwqe.e_psn, rrqwqe.msn}, d.{tx_psn, ssn}
         
         // dma_cmd[3] 
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)
@@ -388,7 +388,7 @@ add_headers:
         add            r3, r3, d.rrq_pindex, LOG_RRQ_WQE_SIZE
         
         phvwr          RRQWQE_ATOMIC_OP_TYPE, K_OP_TYPE
-        phvwr          p.{rrqwqe.psn, rrqwqe.msn}, d.{tx_psn, ssn}
+        phvwrpair      p.rrqwqe.psn, d.tx_psn, p.{rrqwqe.e_psn, rrqwqe.msn}, d.{tx_psn, ssn}
         
         // dma_cmd[3] - rrqwqe
         DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RRQWQE)

@@ -62,13 +62,6 @@ req_tx_bktrack_sqcb2_write_back_process:
      add            r2, FIELD_OFFSET(sqcb1_t, rrq_spec_cindex), r1
      memwr.h        r2, 0
 
-     add            r2, FIELD_OFFSET(sqcb1_t, msg_psn), r1
-     memwr.b        r2, K_MSG_PSN[23:16]
-     add            r2, r2, 1
-     memwr.b        r2, K_MSG_PSN[15:8]
-     add            r2, r2, 1
-     memwr.b        r2, K_MSG_PSN[7:0]
-
      tblwr          d.{rrq_pindex, rrq_cindex}, 0
  
      tblwr          d.need_credits, 0

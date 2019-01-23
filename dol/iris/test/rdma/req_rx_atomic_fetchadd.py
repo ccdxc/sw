@@ -142,8 +142,8 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that msg_psn is equal to 0 as its not multi-packet message
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msg_psn', 0):
-            return False
+        #if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msg_psn', 0):
+        #    return False
 
     elif step.step_id == 2:
 

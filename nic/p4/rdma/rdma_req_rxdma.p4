@@ -254,6 +254,7 @@ header_type req_rx_to_stage_sqcb1_wb_info_t {
         error_disable_qp                 :    1;
         error_drop_phv                   :    1;
         sge_opt                          :    1;
+        rrq_spec_cindex                  :   16;
     }
 }
 
@@ -1471,6 +1472,7 @@ action req_rx_sqcb1_write_back_process () {
     modify_field(to_s4_sqcb1_wb_info_scr.error_disable_qp, to_s4_sqcb1_wb_info.error_disable_qp);
     modify_field(to_s4_sqcb1_wb_info_scr.error_drop_phv, to_s4_sqcb1_wb_info.error_drop_phv);
     modify_field(to_s4_sqcb1_wb_info_scr.sge_opt, to_s4_sqcb1_wb_info.sge_opt);
+    modify_field(to_s4_sqcb1_wb_info_scr.rrq_spec_cindex, to_s4_sqcb1_wb_info.rrq_spec_cindex);
 
     // stage to stage
     modify_field(t2_s2s_sqcb1_write_back_info_scr.cur_sge_offset, t2_s2s_sqcb1_write_back_info.cur_sge_offset);

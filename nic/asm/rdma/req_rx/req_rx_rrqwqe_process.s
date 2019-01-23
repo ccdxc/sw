@@ -14,7 +14,6 @@ struct req_rx_s1_t0_k k;
 #define IN_P t0_s2s_sqcb1_to_rrqwqe_info
 #define IN_TO_S_P to_s1_rrqwqe_info
 
-#define K_MSG_PSN CAPRI_KEY_RANGE(IN_P, msg_psn_sbit0_ebit15, msg_psn_sbit16_ebit23)
 #define K_SSN       CAPRI_KEY_RANGE(IN_P, ssn_sbit0_ebit7, ssn_sbit16_ebit23)
 #define K_CUR_SGE_OFFSET CAPRI_KEY_RANGE(IN_P, cur_sge_offset_sbit0_ebit7, cur_sge_offset_sbit16_ebit31)
 #define K_CUR_SGE_ID CAPRI_KEY_FIELD(IN_P, cur_sge_id)
@@ -29,6 +28,7 @@ struct req_rx_s1_t0_k k;
 #define K_REMAINING_PAYLOAD_BYTES CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit13)
 
 #define TO_S1_RECIRC_P to_s1_recirc_info
+#define TO_S2_P to_s2_rrqsge_info
 #define TO_S4_P to_s4_sqcb1_wb_info
 #define TO_S6_P to_s6_cq_info
 #define TO_S7_P to_s7_stats_info
@@ -85,8 +85,7 @@ ack_or_nak_or_rnr:
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
     CAPRI_RESET_TABLE_2_ARG()
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msg_psn), K_MSG_PSN, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
+    phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_offset), K_CUR_SGE_OFFSET, \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_id), K_CUR_SGE_ID
     
@@ -198,22 +197,17 @@ read_or_atomic_or_implicit_nak:
     scwlt24.c4     c2, K_AETH_MSN, d.msn
     bcf            [c4 & !c3 & c2], invalid_read_or_atomic_rsp_msn
 
-    // pkt->psn == sqcb1_p->psn + sqcb1_p->msg_psn
-    add            r6, d.psn, K_MSG_PSN
-    mincr          r6, 24, r0
-    sne            c2, K_BTH_PSN, r6
-    bcf            [c2], implicit_nak
+    // pkt->psn == rrqwqe_p->e_psn
+    sne            c2, K_BTH_PSN, d.e_psn
+    bcf            [c2], invalid_read_or_atomic_rsp_msn
 
 read_or_atomic:
-    // if (first)
-    //     min((rrqwqe_p->msn -1), sqcb1_to_rrqwqe_info_p->msn)
-    // else
-    //     min(rrqwqe_p->msn, sqcb1_to_rrqwqe_info_p->msn)
-    add            r1, d.msn, 0 // Branch Delay Slot
+    sub            r1, d.e_psn, d.psn
+    mincr          r1, 24, 0
+    tblmincri      d.e_psn, 24, 1
 
-    phvwr          p.cqe.send.msn, r1
-    add            r6, K_BTH_PSN, 1
-    phvwr          p.rexmit_psn, r6
+    phvwr          p.cqe.send.msn, d.msn
+    phvwr          p.rexmit_psn, d.e_psn
     
     seq            c2, d.read_rsp_or_atomic, RRQ_OP_TYPE_READ
     bcf            [!c2], atomic
@@ -238,6 +232,10 @@ read:
     phvwrpair CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, num_valid_sges), r3, \
               CAPRI_PHV_FIELD(RRQWQE_TO_SGE_P, dma_cmd_start_index), K_DMA_CMD_START_INDEX
 
+    // Pass the relative pkt_psn for this read msg so that rrqsge_process can use to offset into
+    // sge
+    phvwr     CAPRI_PHV_FIELD(TO_S2_P, msg_psn), r1
+
     // if read_resp contains already ack'ed msn, do not post CQ
     // ideally this should happen only with read_resp_first. For read_resp_last
     // or read_resp_only, msn should always be the un-acked msn
@@ -250,11 +248,8 @@ read:
     phvwr     CAPRI_PHV_FIELD(TO_S1_RECIRC_P, rrqwqe_sge_list_addr), d.read.wqe_sge_list_addr
 
     CAPRI_RESET_TABLE_2_ARG()
-    add            r3, K_MSG_PSN, r0
-    mincr          r3, 24, 1
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msg_psn), r3, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6
-    phvwr.e   CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r1
+    phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), d.e_psn
+    phvwr.e   CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), d.msn
     phvwr.c4  CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
 
 zero_length_read:
@@ -264,12 +259,11 @@ zero_length_read:
     // table 0 and 1 are taken for sge process
     CAPRI_RESET_TABLE_2_ARG()
 
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msg_psn), K_MSG_PSN, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
+    phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1, \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, last_pkt), 1
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r1
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), d.e_psn, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), d.msn
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
 atomic:
@@ -298,12 +292,11 @@ atomic:
     // table 0 and 1 are taken for sge process
     CAPRI_RESET_TABLE_2_ARG()
 
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msg_psn), K_MSG_PSN, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
+    phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1, \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, last_pkt), 1
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r1
+    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), d.e_psn, \
+              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), d.msn
 
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
@@ -312,12 +305,8 @@ end:
     nop
 
 implicit_nak:
-    // PSN of the next expected read/atomic response is start psn 
-    // contained in rrq wqe or start_psn + msg_psn stored
-    // in sqcb1 if already few read response packets were received
-    add            r6, d.psn, K_MSG_PSN
-    mincr          r6, 24, r0
-    phvwr          p.rexmit_psn, r6
+    // PSN of the next expected read/atomic response to rexmit from
+    phvwr          p.rexmit_psn, d.e_psn
     
     // if its implicit nak, completion can be posted till wqe before
     // the first outstanding read request wqe
@@ -341,13 +330,11 @@ implicit_nak:
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
 
     CAPRI_RESET_TABLE_2_ARG()
-    phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msg_psn), K_MSG_PSN, \
-              CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
+    phvwr     CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, incr_nxt_to_go_token_id), 1
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_offset), K_CUR_SGE_OFFSET, \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, cur_sge_id), K_CUR_SGE_ID
-    phvwrpair.e CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), r6, \
+    phvwrpair.e CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), d.e_psn, \
                 CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
-
     phvwrpair CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_bktrack), 1, \
               CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
 

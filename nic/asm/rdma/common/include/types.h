@@ -747,13 +747,13 @@ struct sqwqe_t {
 struct rrqwqe_read_t {
     len                : 32;
     wqe_sge_list_addr  : 64;
-    pad                : 96; 
+    pad                : 72;
 };
 
 struct rrqwqe_atomic_t {
     struct sge_t sge;
     op_type            : 8;
-    pad                : 56;
+    pad                : 32;
 
 };
 
@@ -765,6 +765,7 @@ struct rrqwqe_t {
     rsvd               : 7;
     num_sges           : 8;
     psn                : 24;
+    e_psn              : 24;
     msn                : 24;
     union {
         struct rrqwqe_read_t   read;
@@ -777,6 +778,7 @@ struct rrqwqe_d_t {
     rsvd               : 7;
     num_sges           : 8;
     psn                : 24;
+    e_psn              : 24;
     msn                : 24;
     union {
         struct rrqwqe_read_t   read;

@@ -363,20 +363,54 @@ modules:
         ignore  : False
 
     - module:
-        name    : RDMA_TX_READ_AS_IMPLICIT_NAK
+        name    : RDMA_TX_OOO_READ_ONLY
         enable  : True
         package : test.rdma
-        module  : req_tx_read_as_implicit_nak
-        spec    : req_tx_read_as_implicit_nak.testspec
+        module  : req_tx_ooo_read_only
+        spec    : req_tx_ooo_read_only.testspec
         ignore  : False
+        selectors:
+            maxrdmasessions: 1
 
     - module:
-        name    : RDMA_TX_ATOMIC_AS_IMPLICIT_NAK
+        name    : RDMA_TX_OOO_READ_FIRST
         enable  : True
         package : test.rdma
-        module  : req_tx_atomic_as_implicit_nak
-        spec    : req_tx_atomic_as_implicit_nak.testspec
+        module  : req_tx_ooo_read_first
+        spec    : req_tx_ooo_read_first.testspec
         ignore  : False
+        selectors:
+            maxrdmasessions: 1
+
+    - module:
+        name    : RDMA_TX_OOO_READ_MID
+        enable  : True
+        package : test.rdma
+        module  : req_tx_ooo_read_mid
+        spec    : req_tx_ooo_read_mid.testspec
+        ignore  : False
+        selectors:
+            maxrdmasessions: 1
+
+    - module:
+        name    : RDMA_TX_OOO_READ_LAST
+        enable  : True
+        package : test.rdma
+        module  : req_tx_ooo_read_last
+        spec    : req_tx_ooo_read_last.testspec
+        ignore  : False
+        selectors:
+            maxrdmasessions: 1
+
+    - module:
+        name    : RDMA_TX_OOO_ATOMIC
+        enable  : True
+        package : test.rdma
+        module  : req_tx_ooo_atomic
+        spec    : req_tx_ooo_atomic.testspec
+        ignore  : False
+        selectors:
+            maxrdmasessions: 1
 
     - module:
         name    : RDMA_TX_SQ_BKTRACK_SGE3_START

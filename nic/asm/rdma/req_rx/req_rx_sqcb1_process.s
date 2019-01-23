@@ -133,7 +133,6 @@ process_rx_pkt:
     bcf            [!c1], invalid_serv_type
 
     CAPRI_RESET_TABLE_0_ARG()
-    phvwr          CAPRI_PHV_FIELD(SQCB1_TO_RRQWQE_P, msg_psn), d.msg_psn
 
     ARE_ALL_FLAGS_SET(c3, r1, REQ_RX_FLAG_ACK) // Branch Delay Slot
     bcf            [!c3], atomic 
@@ -184,17 +183,12 @@ read:
     bcf            [c4], rrq_empty
     phvwr          CAPRI_PHV_FIELD(TO_S2_P, priv_oper_enable), d.sqcb1_priv_oper_enable //BD Slot
 
-    bcf            [!c7], update_msg_psn
+    bcf            [!c7], check_psn
     nop            // Branch Delay Slot
 
     phvwr          CAPRI_PHV_FIELD(TO_S1_P, sge_opt), 1
-    phvwrpair      CAPRI_PHV_FIELD(TO_S2_P, msg_psn), d.msg_psn, \
-                   CAPRI_PHV_FIELD(TO_S2_P, log_pmtu), d.log_pmtu
+    phvwr          CAPRI_PHV_FIELD(TO_S2_P, log_pmtu), d.log_pmtu
     phvwr          CAPRI_PHV_FIELD(TO_S4_P, sge_opt), 1
-
-update_msg_psn:
-    tblmincri.c3   d.msg_psn, 24, 1
-    tblwr.c2       d.msg_psn, 0
 
 check_psn:
     // Update max_tx_psn/ssn to the maximum forward progress
@@ -293,11 +287,15 @@ set_rrqwqe_pc:
     sll            r5, d.rrq_base_addr, RRQ_BASE_ADDR_SHIFT
     add            r5, r5, d.rrq_spec_cindex, LOG_RRQ_WQE_SIZE
 
+    phvwr          CAPRI_PHV_FIELD(TO_S4_P, rrq_spec_cindex), d.rrq_spec_cindex
     // Increment spec-cindex for Read-Resp-Only/Read-Resp-Last/Atomic packets.
     IS_ANY_FLAG_SET(c2, r1, REQ_RX_FLAG_ONLY| REQ_RX_FLAG_LAST| REQ_RX_FLAG_ATOMIC_AETH)
     tblmincri.c2   d.rrq_spec_cindex, d.log_rrq_size, 1
 
-    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, req_rx_rrqwqe_process, r5)
+    // If rrq is empty(c4 is true), do not load rrqwqe entry but invoke mpu only
+    // req_rx_rrqwqe_process. If rrq is non-empty, load rrqwqe and lock
+    // the table to update msg_psn in the rrqwqe
+    CAPRI_NEXT_TABLE0_C_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, r0, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_256_BITS, r5, req_rx_rrqwqe_process, c4)
 
 recirc_work_done:
     // Load dummy-write-back in stage1 which eventually loads sqcb1-write-back.
