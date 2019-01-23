@@ -1,9 +1,9 @@
 package ntsdb
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -22,27 +22,48 @@ import (
 
 // startLocalRESTServer starts a rest server to expose local metrics directly from the process
 func startLocalRESTServer(global *globalInfo) {
-	if global.opts.LocalPort == 0 {
+	if !global.opts.StartLocalServer {
 		global.wg.Done()
 		return
 	}
-	http.HandleFunc("/", localMetricsHandler)
+	http.HandleFunc("/", LocalMetricsHandler)
 
-	global.httpServer = &http.Server{Addr: fmt.Sprintf("%s:%d", globals.Localhost, global.opts.LocalPort)}
+	srv := &http.Server{Addr: fmt.Sprintf("%s:%d", globals.Localhost, global.opts.LocalPort)}
+	global.httpServer = srv
 	global.wg.Done()
 
-	err := global.httpServer.ListenAndServe()
-	if err != nil {
-		panic(fmt.Sprintf("unable to start local server at url '%s'", global.httpServer.Addr))
+	addr := srv.Addr
+	if addr == "" {
+		addr = ":http"
 	}
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Errorf("unable to start local server at url '%s', err: %v", global.httpServer.Addr, err)
+		return
+	}
+	log.Infof("Starting server listening at %s", ln.Addr().String())
+	global.listener = ln
+	err = srv.Serve(ln)
+	log.Errorf("Server stopped: %v", err)
+}
+
+// GetLocalAddress returns the address of the REST server
+func GetLocalAddress() string {
+	if global.listener != nil {
+		return "http://" + global.listener.Addr().String()
+	}
+	return ""
 }
 
 func stopLocalRESTServer() {
-	if global.opts.LocalPort == 0 {
+	if !global.opts.StartLocalServer {
 		return
 	}
-
-	global.httpServer.Shutdown(context.Background())
+	if global.httpServer != nil {
+		global.httpServer.Shutdown(nil)
+		global.httpServer = nil
+		global.listener = nil
+	}
 }
 
 // LocalMetric is the export format for local curl queries
@@ -52,12 +73,17 @@ type LocalMetric struct {
 	Attributes map[string]string // Values of various attributes measured for a given metric (last snapshot)
 }
 
+// LocalMetricsHandler handles http requests for local metrics and writes the response
 // Local metrics serve modules a way to fetch internal metrics gathered using the client lib
 // Supported local URL format (simple two hierarchy system:
 //     / 				- all objs
 //     /<table-name>			- specific obj, all attributes
 //     /<table-name>/attribute-name	- specific obj, specific attribute
-func localMetricsHandler(w http.ResponseWriter, r *http.Request) {
+func LocalMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	if !IsInitialized() {
+		json.NewEncoder(w).Encode("ntsdb is not initialized")
+		return
+	}
 	skipObjFn := func(tableName string, obj *iObj) bool {
 		// when displaying all tables, skip non-dirty tables, and skip non local tables
 		if tableName == "" && (!obj.dirty || !obj.opts.Local) {
@@ -99,7 +125,7 @@ func localMetricsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(objs) == 0 {
 		var err error
-		if tableName == "" {
+		if tableName != "" {
 			err = fmt.Errorf("obj %s not found", tableName)
 		} else {
 			err = fmt.Errorf("no objs found")

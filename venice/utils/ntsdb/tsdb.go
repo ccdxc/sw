@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -32,6 +33,7 @@ type globalInfo struct {
 	objs        map[string]*iObj       // cache for various objs
 	deletedObjs []*iObj                // deleted list of objs
 	httpServer  *http.Server           // local http server
+	listener    net.Listener           // listener used by http server
 	cancelFunc  context.CancelFunc     // cancel function to initiate internal cleanup
 }
 
@@ -45,7 +47,8 @@ type Opts struct {
 	DBName                  string             // backend database name
 	ConnectionRetryInterval time.Duration      // sleep period between connection retries
 	SendInterval            time.Duration      // push interval, system default is picked up if zero
-	LocalPort               int                // when non zero we would start a REST server to fetch local metrics
+	LocalPort               int                // port to start local server on
+	StartLocalServer        bool               // whether to start a local server or not
 }
 
 // Init initializes the tsdb package; must be called before any other tsdb apis can be used

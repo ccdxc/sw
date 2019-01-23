@@ -77,11 +77,12 @@ func TestSetup(t *testing.T) {
 	}
 
 	options := &Opts{
-		ClientName:   t.Name(),
-		Collector:    ts.rpcServer.GetListenURL(),
-		SendInterval: testSendInterval,
-		DBName:       "objMetrics",
-		LocalPort:    rand.Int()%52000 + 8000,
+		ClientName:       t.Name(),
+		Collector:        ts.rpcServer.GetListenURL(),
+		SendInterval:     testSendInterval,
+		DBName:           "objMetrics",
+		LocalPort:        0,
+		StartLocalServer: true,
 	}
 
 	Init(ts.context, options)
@@ -674,7 +675,7 @@ func TestLocalObj(t *testing.T) {
 	obj.String("version").Set("v0.1", timeStamp)
 
 	lms := []LocalMetric{}
-	httpGet(t, fmt.Sprintf("http://localhost:%v", global.opts.LocalPort), &lms)
+	httpGet(t, GetLocalAddress(), &lms)
 	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["rx_ep_create_msg"] == "3", fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["peer_disconnects"] == "1", fmt.Sprintf("invalid lms attributes %+v", lms))
@@ -699,7 +700,8 @@ func TestLocalObjMultipleRecords(t *testing.T) {
 	obj.PrecisionGauge("cpu_in_use").Set(44.3, time.Time{})
 
 	lms := []LocalMetric{}
-	httpGet(t, fmt.Sprintf("http://localhost:%v/%s", global.opts.LocalPort, tName), &lms)
+
+	httpGet(t, fmt.Sprintf("%s/%s", GetLocalAddress(), tName), &lms)
 	Assert(t, len(lms) == 2, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["counter1"] == "2", fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["cpu_in_use"] == "34.4", fmt.Sprintf("invalid lms attributes %+v", lms))
@@ -730,7 +732,7 @@ func TestLocalOneObj(t *testing.T) {
 	obj2.PrecisionGauge("guage2").Set(23, time.Time{})
 
 	lms := []LocalMetric{}
-	httpGet(t, fmt.Sprintf("http://localhost:%v/%s", global.opts.LocalPort, tName), &lms)
+	httpGet(t, fmt.Sprintf("%s/%s", GetLocalAddress(), tName), &lms)
 	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, len(lms[0].Attributes) == 2, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["counter1"] == "2", fmt.Sprintf("invalid lms attributes %+v", lms))
@@ -751,7 +753,7 @@ func TestLocalObjAttribute(t *testing.T) {
 	obj.PrecisionGauge("cpu_in_use").Set(34.4, time.Time{})
 
 	lms := []LocalMetric{}
-	httpGet(t, fmt.Sprintf("http://localhost:%v/%s/counter1", global.opts.LocalPort, tName), &lms)
+	httpGet(t, fmt.Sprintf("%s/%s/counter1", GetLocalAddress(), tName), &lms)
 	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, len(lms[0].Attributes) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["counter1"] == "2", fmt.Sprintf("invalid lms attributes %+v", lms))
@@ -775,13 +777,13 @@ func TestReadNonLocalObj(t *testing.T) {
 	obj.Counter("txbytes").Set(2200)
 
 	lms := []LocalMetric{}
-	httpGet(t, fmt.Sprintf("http://localhost:%v/%s/txbytes", global.opts.LocalPort, tName), &lms)
+	httpGet(t, fmt.Sprintf("%s/%s/txbytes", GetLocalAddress(), tName), &lms)
 	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, len(lms[0].Attributes) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["txbytes"] == "2200", fmt.Sprintf("invalid lms attributes %+v", lms))
 
 	lms = []LocalMetric{}
-	httpGet(t, fmt.Sprintf("http://localhost:%v/%s", global.opts.LocalPort, tName), &lms)
+	httpGet(t, fmt.Sprintf("%s/%s", GetLocalAddress(), tName), &lms)
 	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, len(lms[0].Attributes) == 3, fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["rxpkts"] == "33", fmt.Sprintf("invalid lms attributes %+v", lms))

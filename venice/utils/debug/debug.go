@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -18,6 +19,9 @@ import (
 
 // SocketInfoFunction is the function signature the caller needs to pass into debug socket
 type SocketInfoFunction = func() interface{}
+
+var debugPath = "/debug"
+var debugMetricsPath = "/debugMetrics"
 
 // Debug allows for collecting local metrics and status for debugging
 type Debug struct {
@@ -33,11 +37,18 @@ func New(socketInfoFunc SocketInfoFunction) *Debug {
 	}
 }
 
+func debugMetricsHandler(w http.ResponseWriter, r *http.Request) {
+	r.URL.Path = strings.Replace(r.URL.Path, debugMetricsPath, "", 1)
+	ntsdb.LocalMetricsHandler(w, r)
+}
+
 // StartServer starts the socket listener
 func (ds *Debug) StartServer(dbgSockPath string) error {
 	router := mux.NewRouter()
+	router.PathPrefix(debugMetricsPath).HandlerFunc(debugMetricsHandler).Methods("GET")
+
 	os.MkdirAll(filepath.Dir(dbgSockPath), 0700)
-	router.HandleFunc("/debug", ds.DebugHandler).Methods("GET")
+	router.HandleFunc(debugPath, ds.DebugHandler).Methods("GET")
 	os.Remove(dbgSockPath)
 	l, err := net.Listen("unix", dbgSockPath)
 	if err != nil {
@@ -91,11 +102,18 @@ func (ds *Debug) StopServer() error {
 	if ds.srv != nil {
 		ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancelFunc()
-		if err := ds.srv.Shutdown(ctx); err != nil {
+		err := ds.srv.Shutdown(ctx)
+		if err != nil {
 			log.Errorf("failed to gracefully shutdown debug socket, %s", err)
-			return err
+			err = ds.srv.Close()
+			if err != nil {
+				log.Errorf("Closing debug socket returned err, %s", err)
+			}
 		}
+		// Regardless of error, we set to nil since once ShutDown has been called on a
+		// server it can no longer be reused
 		ds.srv = nil
+		return err
 	}
 	return nil
 }

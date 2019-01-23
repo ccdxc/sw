@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/ntsdb"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -57,13 +55,26 @@ func TestDebugInfo(t *testing.T) {
 	AssertOk(t, err, "failed to close debug socket")
 }
 
+func createSocketClient(dbgSock string) http.Client {
+	return http.Client{
+		Transport: &http.Transport{
+			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+				return net.Dial("unix", dbgSock)
+			},
+		},
+	}
+}
+
 func TestDebugMetrics(t *testing.T) {
-	port := rand.Int()%52000 + 8000
-	debugSocket := New(nil)
+	dbgSock := "test.sock"
+	debugSocket := New(socketInfoFunction)
 	err := debugSocket.BuildMetricObj("debugTable", nil)
 	Assert(t, err != nil, "building table before ntsdb init should have failed")
 
-	ntsdb.Init(context.Background(), &ntsdb.Opts{LocalPort: port})
+	err = debugSocket.StartServer(dbgSock)
+	AssertOk(t, err, "Failed to start debug socket")
+
+	ntsdb.Init(context.Background(), &ntsdb.Opts{})
 
 	err = debugSocket.BuildMetricObj("debugTable", nil)
 	AssertOk(t, err, "Failed to build metrics table")
@@ -79,9 +90,27 @@ func TestDebugMetrics(t *testing.T) {
 	table.String("version").Set("v0.1", time.Time{})
 
 	lms := []ntsdb.LocalMetric{}
+	client := createSocketClient(dbgSock)
+
 	AssertEventually(t, func() (bool, interface{}) {
-		netutils.HTTPGet(fmt.Sprintf("http://localhost:%v", port), &lms)
+		resp, err := client.Get("http://localhost/debugMetrics")
+		if err != nil {
+			return false, err
+		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return false, err
+		}
+
+		err = json.Unmarshal(body, &lms)
+		if err != nil {
+			return false, err
+		}
+
 		return len(lms) > 0, nil
+
 	}, "failed to get response from localhost")
 
 	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
@@ -91,6 +120,22 @@ func TestDebugMetrics(t *testing.T) {
 	Assert(t, lms[0].Attributes["cpu_in_use"] == "34.4", fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["mem_in_use"] == "102", fmt.Sprintf("invalid lms attributes %+v", lms))
 	Assert(t, lms[0].Attributes["version"] == "v0.1", fmt.Sprintf("invalid lms attributes %+v", lms))
+
+	// Server is running by now, so we don't need an assert eventually
+	lms = []ntsdb.LocalMetric{}
+	resp, err := client.Get("http://localhost/debugMetrics/debugTable/rx_ep_create_msg")
+	AssertOk(t, err, "GET request failed")
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	AssertOk(t, err, "Failed to read response")
+
+	err = json.Unmarshal(body, &lms)
+	AssertOk(t, err, "Failed to unmarshall response")
+
+	Assert(t, len(lms) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
+	Assert(t, len(lms[0].Attributes) == 1, fmt.Sprintf("invalid lms attributes %+v", lms))
+	Assert(t, lms[0].Attributes["rx_ep_create_msg"] == "3", fmt.Sprintf("invalid lms attributes %+v", lms))
 
 	err = debugSocket.Destroy()
 	AssertOk(t, err, "Failed to destory ")
