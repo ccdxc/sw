@@ -50,7 +50,7 @@ func init() {
 	portCmd.Flags().StringVar(&portPause, "pause", "none", "Specify pause - link, pfc, none")
 	portCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
 	portCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "disable", "Enable or disable auto-neg using enable | disable")
-	portCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - none, up, down")
+	portCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - up, down")
 	portCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
 
@@ -229,8 +229,6 @@ func isPauseTypeValid(str string) bool {
 
 func isAdminStateValid(str string) bool {
 	switch str {
-	case "none":
-		return true
 	case "up":
 		return true
 	case "down":
