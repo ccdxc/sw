@@ -152,5 +152,7 @@ public:
 }    // namespace table
 }    // namespace sdk
 
+using sdk::table::tcam;
+
 #endif    // __SDK_TCAM_HPP__
 

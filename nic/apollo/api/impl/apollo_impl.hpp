@@ -38,8 +38,10 @@ public:
     virtual sdk_ret_t pipeline_init(void) override;
 
 private:
+    /**< constructor */
     apollo_impl() {}
 
+    /**< destructor */
     ~apollo_impl() {}
 
     /*
@@ -49,8 +51,26 @@ private:
      */
     sdk_ret_t init_(pipeline_cfg_t *pipeline_cfg);
 
+    /**
+     * @brief    init routine to initialize key native table
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t key_native_init_(void);
+
+    /**
+     * @brief    init routine to initialize key tunnel table
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t key_tunneled_init_(void);
+
+    /**
+     * @brief    program all datapath tables that require one time initialization
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t table_init_(void);
+
 private:
-    pipeline_cfg_t           pipeline_cfg_;
+    pipeline_cfg_t      pipeline_cfg_;
 };
 
 }    // namespace impl
