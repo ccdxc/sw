@@ -61,7 +61,8 @@ namespace pd {
 // ---------------------------------
 //  Table_Lib_Trace = !P4PD_Lib_Trace
 //  Effectively don't want dual tracing or no tracing.
-#define ENTRY_TRACE_EN SDK_LOG_TABLE_WRITE ? false : true
+// #define ENTRY_TRACE_EN SDK_LOG_TABLE_WRITE ? false : true
+#define ENTRY_TRACE_EN true
 
 class hal_state_pd *g_hal_state_pd;
 
