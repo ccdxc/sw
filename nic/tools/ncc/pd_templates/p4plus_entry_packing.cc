@@ -54,10 +54,11 @@
  * be lost.
  */
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "gen/p4gen/${hdrdir}/include/${p4prog}p4pd_internal.h"
+#include <assert.h>
 #include "gen/p4gen/${hdrdir}/include/${p4prog}p4pd.h"
 #include "nic/sdk/lib/p4/p4_utils.hpp"
 
@@ -66,6 +67,8 @@ uint16_t ${prefix}_tbl_swkey_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
 uint16_t ${prefix}_tbl_sw_action_data_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
 
 /* ------ Per table Functions  ------- */
+
+
 
 //::     tabledict = OrderedDict() # key=table-name
 //::     tableid = start_table_base
@@ -101,8 +104,24 @@ uint16_t ${prefix}_tbl_sw_action_data_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
 //::        if not pddict['tables'][table]['is_raw']:
 //::            continue
 //::        #endif
+
+/* Query key details for p4-table '${table}'
+ *
+ * Arguments:
+ *  IN  : uint32_t tableid             : Table Id that identifies
+ *                                       P4 table. This id is obtained
+ *                                       from p4pd_table_id_enum.
+ *
+ *  OUT : uint32_t *hwactiondata_len   : Action data length in bits.
+ *
+ * Return Value:
+ *  None
+ */
+
 static void
-${table}_hwentry_query(uint32_t tableid, uint8_t action_id, uint32_t* hwactiondata_len)
+${table}_hwentry_query(uint32_t tableid,
+                       uint8_t action_id,
+                       uint32_t* hwactiondata_len)
 {
     *hwactiondata_len = 0;
     switch(action_id) {
@@ -124,9 +143,18 @@ ${table}_hwentry_query(uint32_t tableid, uint8_t action_id, uint32_t* hwactionda
     return;
 }
 
-static void
-${table}_pack_action_data(uint32_t tableid, uint8_t action_id, ${table}_actiondata_t *actiondata, uint8_t *packed_actiondata)
+
+
+static uint16_t
+${table}_pack_action_data(uint32_t tableid, uint8_t action_id,
+                          ${table}_actiondata_t *actiondata,
+                          uint8_t *packed_actiondata)
 {
+    uint16_t dest_start_bit;
+
+    dest_start_bit = 0;
+    (void)dest_start_bit;
+
     switch(action_id) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
@@ -135,47 +163,41 @@ ${table}_pack_action_data(uint32_t tableid, uint8_t action_id, ${table}_actionda
 //::                    continue
 //::                #endif
         case ${tbl}_${actname}_ID:
-            {
-                ${table}_actiondata_bitfield_t *__actiondata = (${table}_actiondata_bitfield_t *)packed_actiondata;
 //::                for actionfld in actionfldlist:
 //::                    actionfldname, actionfldwidth = actionfld
-//::                    if actionfldwidth <= 8:
-                __actiondata->action_u.${table}_${actionname}.${actionfldname} =
-                             (uint8_t)(actiondata->action_u.${table}_${actionname}.${actionfldname});
-//::                    elif actionfldwidth <= 16:
-                __actiondata->action_u.${table}_${actionname}.${actionfldname} =
-                             (uint16_t)(actiondata->action_u.${table}_${actionname}.${actionfldname});
-//::                    elif actionfldwidth <= 32:
-                __actiondata->action_u.${table}_${actionname}.${actionfldname} =
-                             (uint32_t)(actiondata->action_u.${table}_${actionname}.${actionfldname});
-//::                    elif actionfldwidth <= 64:
-                __actiondata->action_u.${table}_${actionname}.${actionfldname} =
-                             *(uint64_t*)(&(actiondata->action_u.${table}_${actionname}.${actionfldname}));
-//::                    else:
-//::                        actionfldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
-                memcpy(__actiondata->action_u.${table}_${actionname}.${actionfldname},
-                       actiondata->action_u.${table}_${actionname}.${actionfldname},
-                       ${actionfldwidth_byte});
-//::                    #endif
-//::                #endfor
-//::                if pddict['tables'][table]['location'] != 'HBM':
-                unsigned int s = sizeof(${table}_actiondata_bitfield_t);
-                for (unsigned int i = 0; i < (sizeof(${table}_actiondata_bitfield_t) >> 1); i++) {
-                    uint8_t b = packed_actiondata[i];
-                    packed_actiondata[i] = packed_actiondata[s - i];
-                    packed_actiondata[s - i] = b;
-                }
-//::                #endif
+            if ((dest_start_bit + ${actionfldwidth})
+                > P4PD_MAX_ACTION_DATA_LEN) {
+                assert(0);
             }
+            p4pd_utils_copy_le_src_to_be_dest(packed_actiondata,
+                           dest_start_bit,
+//::                    if actionfldwidth <= 32:
+                           (uint8_t*)&(actiondata->action_u.\
+                                ${table}_${actionname}.${actionfldname}),
+//::                    else:
+                           (uint8_t*)(actiondata->action_u.\
+                                ${table}_${actionname}.${actionfldname}),
+//::                    #endif
+                           0, /* Start bit in source */
+                           ${actionfldwidth});
+            dest_start_bit += ${actionfldwidth};
+//::                #endfor
         break;
 //::            #endfor
     }
+    return (dest_start_bit);
 }
 
+
 static void
-${table}_unpack_action_data(uint32_t tableid, uint8_t actionid, uint8_t *packed_actiondata, ${table}_actiondata_t *actiondata)
+${table}_unpack_action_data(uint32_t tableid,
+                            uint8_t actionid,
+                            uint8_t *packed_actiondata,
+                            ${table}_actiondata_t *actiondata)
 {
+
     memset(actiondata, 0, sizeof(${table}_actiondata_t));
+
     switch(actionid) {
 //::            for action in pddict['tables'][table]['actions']:
 //::                (actionname, actionfldlist) = action
@@ -184,65 +206,60 @@ ${table}_unpack_action_data(uint32_t tableid, uint8_t actionid, uint8_t *packed_
 //::                    continue
 //::                #endif
         case ${tbl}_${actname}_ID:
-            {
-//::                if pddict['tables'][table]['location'] != 'HBM':
-                unsigned int s = sizeof(${table}_actiondata_bitfield_t);
-                for (unsigned int i = 0; i < (sizeof(${table}_actiondata_bitfield_t) >> 1); i++) {
-                    uint8_t b = packed_actiondata[i];
-                    packed_actiondata[i] = packed_actiondata[s - i - 1];
-                    packed_actiondata[s - i - 1] = b;
-                }
-//::                #endif
-                ${table}_actiondata_bitfield_t *__actiondata = (${table}_actiondata_bitfield_t *)packed_actiondata;
-//::                for actionfld in actionfldlist:
-//::                    actionfldname, actionfldwidth = actionfld
-//::                    if actionfldwidth <= 8:
-                actiondata->action_u.${table}_${actionname}.${actionfldname} =
-                                 (uint8_t)(__actiondata->action_u.${table}_${actionname}.${actionfldname});
-//::                    elif actionfldwidth <= 16:
-                actiondata->action_u.${table}_${actionname}.${actionfldname} =
-                                 (uint16_t)(__actiondata->action_u.${table}_${actionname}.${actionfldname});
-//::                    elif actionfldwidth <= 32:
-                actiondata->action_u.${table}_${actionname}.${actionfldname} =
-                                 (uint32_t)(__actiondata->action_u.${table}_${actionname}.${actionfldname});
-//::                    elif actionfldwidth <= 64:
-                *(uint64_t*)(&(actiondata->action_u.${table}_${actionname}.${actionfldname})) =
-                            (uint64_t)(__actiondata->action_u.${table}_${actionname}.${actionfldname});
-//::                    else:
-//::                        actionfldwidth_byte = (actionfldwidth / 8) + (1 if actionfldwidth % 8 else 0)
-                memcpy(actiondata->action_u.${table}_${actionname}.${actionfldname},
-                       __actiondata->action_u.${table}_${actionname}.${actionfldname},
-                       ${actionfldwidth_byte});
-//::                    #endif
-//::                #endfor
-            }
+                    memcpy(&(actiondata->action_u.${table}_${actionname}),
+                           (${table}_${actionname}_t*)packed_actiondata,
+                           sizeof(${table}_${actionname}_t));
         break;
 //::            #endfor
     }
 }
 
 static p4pd_error_t
-${table}_entry_decode(uint32_t tableid, uint8_t actionid, uint8_t *hwentry, ${table}_actiondata_t* actiondata)
+${table}_entry_decode(uint32_t tableid,
+                      uint8_t actionid,
+                      uint8_t *hwentry,
+                      ${table}_actiondata_t* actiondata)
 {
-    ${table}_unpack_action_data(tableid, actionid, hwentry, actiondata);
+
+    ${table}_unpack_action_data(tableid, actionid,
+                                hwentry, actiondata);
+
     return (P4PD_SUCCESS);
 }
 
-static p4pd_error_t
-${table}_entry_pack(uint32_t tableid, uint8_t action_id, ${table}_actiondata_t *actiondata, uint8_t *packed_entry)
+
+
+static int
+${table}_entry_pack(uint32_t tableid, uint8_t action_id,
+                    ${table}_actiondata_t *actiondata,
+                    uint8_t *packed_entry)
 {
-    ${table}_pack_action_data(tableid, action_id, actiondata, packed_entry);
+    uint8_t  packed_actiondata[P4PD_MAX_ACTION_DATA_LEN] = {0};
+    uint16_t actiondatalen;
+
+    actiondatalen = ${table}_pack_action_data(tableid, action_id, actiondata,
+                                              packed_actiondata);
+    p4pd_utils_p4table_entry_prepare(packed_entry,
+                               0xff,
+                               NULL /* Index Table. No MatchKey*/,
+                               0, /* Zero matchkeylen */
+                               packed_actiondata,
+                               actiondatalen);
     return (P4PD_SUCCESS);
 }
 
 //::     #endfor
 
+
 //::    if len(tabledict):
+
 //::        if pddict['p4plus']:
 //::            api_prefix = 'p4pd_' + pddict['p4program']
 //::        else:
 //::            api_prefix = 'p4pd'
 //::        #endif
+
+
 /* Query key details for p4-table
  *
  * Arguments:
@@ -256,7 +273,8 @@ ${table}_entry_pack(uint32_t tableid, uint8_t action_id, ${table}_actiondata_t *
  *  None
  */
 void
-${api_prefix}_raw_table_hwentry_query(uint32_t tableid, uint8_t action_id, uint32_t *hwactiondata_len)
+${api_prefix}_raw_table_hwentry_query(uint32_t tableid, uint8_t action_id,
+                                      uint32_t *hwactiondata_len)
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
@@ -271,6 +289,7 @@ ${api_prefix}_raw_table_hwentry_query(uint32_t tableid, uint8_t action_id, uint3
 //::        #endfor
     }
 }
+
 
 /*
  * Builds byte stream of P4-table entry that can be installed into hardware table.
@@ -292,10 +311,13 @@ ${api_prefix}_raw_table_hwentry_query(uint32_t tableid, uint8_t action_id, uint3
  *                                API {program_name}_raw_table_hwentry_query()
  *
  * Return Value:
- *  p4pd_error_t                : P4PD_SUCCESS when no error.
+ *  int                          : Zero when success else -1
  */
-p4pd_error_t
-${api_prefix}_entry_pack(uint32_t tableid, uint8_t action_id, void *actiondata, uint8_t *packed_entry)
+int
+${api_prefix}_entry_pack(uint32_t tableid,
+                         uint8_t action_id,
+                         void    *actiondata,
+                         uint8_t *packed_entry)
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
@@ -336,10 +358,14 @@ ${api_prefix}_entry_pack(uint32_t tableid, uint8_t action_id, void *actiondata, 
  *                                 as void* actiondata should be casted to correct
  *                                 structure to use it.
  * Return Value:
- *  p4pd_error_t                 : P4PD_SUCCESS when no error.
+ *  int                          : Zero when success else -1
  */
 int
-${api_prefix}_entry_unpack(uint32_t tableid, uint8_t actionid, uint8_t *hwentry, uint32_t entry_width, void *actiondata)
+${api_prefix}_entry_unpack(uint32_t tableid,
+                           uint8_t actionid,
+                           uint8_t *hwentry,
+                           uint32_t entry_width,
+                           void    *actiondata)
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
@@ -355,10 +381,10 @@ ${api_prefix}_entry_unpack(uint32_t tableid, uint8_t actionid, uint8_t *hwentry,
 //::        #endfor
         default:
             // Invalid tableid
-            return (P4PD_FAIL);
+            return (-1);
         break;
     }
-    return (P4PD_SUCCESS);
+    return (-1);
 }
 
 /*
