@@ -101,7 +101,7 @@ uint16_t ${prefix}_tbl_sw_action_data_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
 //::        if pddict['tables'][table]['is_toeplitz_hash']:
 //::            continue
 //::        #endif
-//::        if not pddict['tables'][table]['is_raw']:
+//::        if not pddict['tables'][table]['is_raw'] and not pddict['tables'][table]['is_raw_index']:
 //::            continue
 //::        #endif
 
@@ -278,7 +278,7 @@ ${api_prefix}_raw_table_hwentry_query(uint32_t tableid, uint8_t action_id,
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
-//::            if not pddict['tables'][table]['is_raw']:
+//::            if not pddict['tables'][table]['is_raw'] and not pddict['tables'][table]['is_raw_index']:
 //::                continue
 //::            #endif
 //::            caps_tablename = table.upper()
@@ -321,7 +321,7 @@ ${api_prefix}_entry_pack(uint32_t tableid,
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
-//::            if not pddict['tables'][table]['is_raw']:
+//::            if not pddict['tables'][table]['is_raw'] and not pddict['tables'][table]['is_raw_index']:
 //::                continue
 //::            #endif
 //::            caps_tablename = table.upper()
@@ -369,7 +369,7 @@ ${api_prefix}_entry_unpack(uint32_t tableid,
 {
     switch (tableid) {
 //::        for table, tid in tabledict.items():
-//::            if not pddict['tables'][table]['is_raw']:
+//::            if not pddict['tables'][table]['is_raw'] and not pddict['tables'][table]['is_raw_index']:
 //::                continue
 //::            #endif
 //::            caps_tablename = table.upper()
@@ -406,7 +406,7 @@ ${api_prefix}_is_raw_table(uint32_t tableid)
 //::        for table, tid in tabledict.items():
 //::            caps_tablename = table.upper()
         case P4${caps_p4prog}TBL_ID_${caps_tablename}: /* p4-table '${table}' */
-//::            if pddict['tables'][table]['is_raw']:
+//::            if pddict['tables'][table]['is_raw'] or pddict['tables'][table]['is_raw_index']:
             return true;
 //::            else:
             return false;
