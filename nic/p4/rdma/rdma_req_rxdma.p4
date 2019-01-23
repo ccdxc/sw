@@ -281,7 +281,11 @@ header_type req_rx_to_stage_stats_info_t {
         qp_err_dis_phv_intrinsic_error   :    1;
         qp_err_dis_table_resp_error      :    1;
         qp_err_dis_rsvd                  :    16;
-        pad                              :   74;
+        max_recirc_cnt_err               :    1;
+        recirc_reason                    :    4;
+        recirc_bth_opcode                :    8;
+        recirc_bth_psn                   :   24; 
+        pad                              :   37;
     }
 }
 
@@ -1550,6 +1554,10 @@ action req_rx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_phv_intrinsic_error, to_s7_stats_info.qp_err_dis_phv_intrinsic_error);
     modify_field(to_s7_stats_info_scr.qp_err_dis_table_resp_error, to_s7_stats_info.qp_err_dis_table_resp_error);
     modify_field(to_s7_stats_info_scr.qp_err_dis_rsvd, to_s7_stats_info.qp_err_dis_rsvd);
+    modify_field(to_s7_stats_info_scr.max_recirc_cnt_err, to_s7_stats_info.max_recirc_cnt_err);
+    modify_field(to_s7_stats_info_scr.recirc_reason, to_s7_stats_info.recirc_reason);
+    modify_field(to_s7_stats_info_scr.recirc_bth_opcode, to_s7_stats_info.recirc_bth_opcode);
+    modify_field(to_s7_stats_info_scr.recirc_bth_psn, to_s7_stats_info.recirc_bth_psn); 
     modify_field(to_s7_stats_info_scr.pad, to_s7_stats_info.pad);
 
     // stage to stage
