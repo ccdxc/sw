@@ -77,7 +77,8 @@ pd_vrf_create (pd_func_args_t *pd_func_args)
 
 end:
     if (ret != HAL_RET_OK) {
-        vrf_pd_cleanup(vrf_pd);
+        HAL_TRACE_ERR("Unable to create vrf PD. ret: {}", ret);
+        // vrf_pd_cleanup(vrf_pd);
     }
 
     return ret;
@@ -378,7 +379,11 @@ vrf_pd_program_hw (pd_vrf_t *vrf_pd, bool is_upgrade)
 
     // program input properties table, for cpu traffic
     ret = vrf_pd_pgm_inp_prop_tbl(vrf_pd, is_upgrade);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Unable to program inp. prop table for"
+                        "cpu tx traffic. ret: {}", ret);
+        goto end;
+    }
 
     // program input mapping native & tunnel tables: For MyTep Termination
     if (((vrf_t *)(vrf_pd->vrf))->vrf_type == types::VRF_TYPE_INFRA) {
@@ -387,6 +392,7 @@ vrf_pd_program_hw (pd_vrf_t *vrf_pd, bool is_upgrade)
                                          gipo_prefix, is_upgrade);
     }
 
+end:
     return ret;
 }
 
@@ -427,7 +433,12 @@ vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd, bool is_upgrade)
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to program from_cpu_entry input properties");
+        HAL_TRACE_ERR("Unable to program from_cpu_entry input properties. ret: {}", ret);
+        if (ret == HAL_RET_ENTRY_EXISTS) {
+            // If hash lib returns entry exists, return hw prog error. Otherwise
+            // entry exists means that vrf was already created.
+            ret = HAL_RET_HW_PROG_ERR;
+        }
         goto end;
     } else {
         HAL_TRACE_DEBUG("Programmed from_cpu_entry input properties at:{}",

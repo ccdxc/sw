@@ -115,6 +115,8 @@ hal_ret_t l2seg_uplink_depgm_input_properties_tbl (l2seg_t *l2seg,
 hal_ret_t l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg,
                                                 if_t *hal_if,
                                                 bool is_upgrade = false);
+hal_ret_t l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg_t *l2seg);
+hal_ret_t l2seg_pd_depgm_cpu_tx_inp_prop_tbl (pd_l2seg_t *l2seg_pd);
 }   // namespace pd
 }   // namespace hal
 

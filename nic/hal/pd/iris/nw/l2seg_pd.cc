@@ -260,7 +260,8 @@ pd_l2seg_create (pd_func_args_t *pd_func_args)
 
 end:
     if (ret != HAL_RET_OK) {
-        l2seg_pd_cleanup(l2seg_pd);
+        HAL_TRACE_ERR("Unable to create l2seg PD. ret: {}", ret);
+        // l2seg_pd_cleanup(l2seg_pd);
     }
 
     return ret;
@@ -402,20 +403,13 @@ end:
     return ret;
 }
 
-// ----------------------------------------------------------------------------
-// DeProgram input propterties table
-// ----------------------------------------------------------------------------
-hal_ret_t
-l2seg_uplink_depgm_input_properties_tbl (l2seg_t *l2seg, if_t *hal_if)
-{
-    hal_ret_t                   ret = HAL_RET_OK;
-    sdk_ret_t                   sdk_ret;
-    sdk_hash                    *inp_prop_tbl = NULL;
-    uint32_t                    uplink_ifpc_id = 0;
-    pd_l2seg_t                  *l2seg_pd =  NULL;
 
-    uplink_ifpc_id = if_get_uplink_ifpc_id(hal_if);
-    l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
+hal_ret_t
+l2seg_pd_depgm_if_inp_prop_tbl(pd_l2seg_t *l2seg_pd, uint32_t uplink_ifpc_id)
+{
+    hal_ret_t   ret           = HAL_RET_OK;
+    sdk_ret_t   sdk_ret       = sdk::SDK_RET_OK;
+    sdk_hash    *inp_prop_tbl = NULL;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
@@ -428,10 +422,10 @@ l2seg_uplink_depgm_input_properties_tbl (l2seg_t *l2seg, if_t *hal_if)
                           "table:input_properties index:{}",
                           l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
         } else {
-            HAL_TRACE_DEBUG("De-programmed: l2seg:{}, If: {}, Inp.Prop.Idx: {}, "
+            HAL_TRACE_DEBUG("De-programmed: l2seg:{}, ifpc_id: {}, Inp.Prop.Idx: {}, "
                             "uplink_ifpc_id: {}",
-                            l2seg_keyhandle_to_str(l2seg),
-                            if_keyhandle_to_str(hal_if),
+                            l2seg_keyhandle_to_str((l2seg_t *)l2seg_pd->l2seg),
+                            uplink_ifpc_id,
                             l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id],
                             uplink_ifpc_id);
         }
@@ -448,10 +442,10 @@ l2seg_uplink_depgm_input_properties_tbl (l2seg_t *l2seg, if_t *hal_if)
                           "table:input_properties index:{}",
                           l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id]);
         } else {
-            HAL_TRACE_DEBUG("De-programmed: l2seg:{}, If: {}, Inp.Prop.Idx: {}, "
+            HAL_TRACE_DEBUG("De-programmed: l2seg:{}, ifpc_id: {}, Inp.Prop.Idx: {}, "
                             "uplink_ifpc_id: {}",
-                            l2seg_keyhandle_to_str(l2seg),
-                            if_keyhandle_to_str(hal_if),
+                            l2seg_keyhandle_to_str((l2seg_t *)l2seg_pd->l2seg),
+                            uplink_ifpc_id,
                             l2seg_pd->inp_prop_tbl_idx_pri[uplink_ifpc_id],
                             uplink_ifpc_id);
         }
@@ -459,6 +453,50 @@ l2seg_uplink_depgm_input_properties_tbl (l2seg_t *l2seg, if_t *hal_if)
     }
 
     return ret;
+}
+
+// ----------------------------------------------------------------------------
+// DeProgram input propterties table
+// ----------------------------------------------------------------------------
+hal_ret_t
+l2seg_uplink_depgm_input_properties_tbl (l2seg_t *l2seg, if_t *hal_if)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    uint32_t                    uplink_ifpc_id = 0;
+    pd_l2seg_t                  *l2seg_pd =  NULL;
+
+    uplink_ifpc_id = if_get_uplink_ifpc_id(hal_if);
+    l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
+
+    ret = l2seg_pd_depgm_if_inp_prop_tbl(l2seg_pd, uplink_ifpc_id);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to de-pgm inp. prop. tabl for "
+                      "(l2seg: {}, if: {}). ifpc_id: {}. ret: {}",
+                      l2seg->seg_id, hal_if->if_id, uplink_ifpc_id, ret);
+    }
+
+    return ret;
+}
+
+hal_ret_t
+l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg_t *l2seg)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    pd_l2seg_t  *l2seg_pd =  NULL;
+
+    l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
+
+    for (int i = 0; i < HAL_MAX_UPLINK_IF_PCS; i++) {
+        ret = l2seg_pd_depgm_if_inp_prop_tbl(l2seg_pd, i);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Unable to depgm ifs inp. prop. tbl. "
+                          "ifpc_id: {}. ret: {}", i, ret);
+            break;
+        }
+    }
+
+    return ret;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -509,14 +547,18 @@ l2seg_pd_deprogram_hw (pd_l2seg_t *l2seg_pd)
     l2seg_t     *l2seg = (l2seg_t *)l2seg_pd->l2seg;
 
     // de-program Input properties Table
-    ret = l2seg_pd_depgm_inp_prop_tbl(l2seg_pd);
+    ret = l2seg_pd_depgm_cpu_tx_inp_prop_tbl(l2seg_pd);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Unable to deprogram hw");
+        HAL_TRACE_ERR("Unable to deprogram cpu tx inp. prop. entry. ret: {}",
+                      ret);
     }
 
     // de-program member IFs
-    ret = l2seg_pd_depgm_mbr_ifs(l2seg->mbrif_list, l2seg);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    ret = l2seg_pd_depgm_ifs_inp_prop_tbl(l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to deprogram ifs inp. prop. tbl. ret: {}",
+                      ret);
+    }
 
     return ret;
 }
@@ -525,7 +567,7 @@ l2seg_pd_deprogram_hw (pd_l2seg_t *l2seg_pd)
 // deprogram input propterties table for cpu tx traffic
 //-----------------------------------------------------------------------------
 hal_ret_t
-l2seg_pd_depgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
+l2seg_pd_depgm_cpu_tx_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
 {
     hal_ret_t   ret           = HAL_RET_OK;
     sdk_ret_t   sdk_ret       = sdk::SDK_RET_OK;
@@ -857,16 +899,19 @@ l2seg_pd_pgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg, bool is_upgrade)
             ret = l2seg_uplink_pgm_input_properties_tbl(l2seg,
                                                         hal_if,
                                                         is_upgrade);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Unable to program input properties for "
+                              "(l2seg:{}, uplink:{}). ret: {}",
+                              l2seg->seg_id, hal_if->if_id, ret);
+                goto end;
+            }
         break;
-#if 0
-        case intf::IF_TYPE_LIF:
-        break;
-#endif
         default:
             HAL_ASSERT(0);
         }
     }
 
+end:
     return ret;
 }
 
@@ -881,12 +926,19 @@ l2seg_pd_program_hw (pd_l2seg_t *l2seg_pd, bool is_upgrade)
 
     // program Input properties Table for CPU TX traffic
     ret = l2seg_pd_pgm_inp_prop_tbl(l2seg_pd, is_upgrade);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to program CPU TX entry for L2seg. ret: {}", ret);
+        goto end;
+    }
 
     // program member IFs
     ret = l2seg_pd_pgm_mbr_ifs(l2seg->mbrif_list, l2seg, is_upgrade);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to program member IFs. ret: {}", ret);
+        goto end;
+    }
 
+end:
     return ret;
 }
 
@@ -931,6 +983,7 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
         sdk_ret = inp_prop_tbl->insert_withid(&key, &data,
                                               l2seg_pd->inp_prop_tbl_cpu_idx);
     } else {
+        // sdk_ret = sdk::SDK_RET_NO_RESOURCE;
         sdk_ret = inp_prop_tbl->insert(&key, &data, &l2seg_pd->inp_prop_tbl_cpu_idx);
     }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);

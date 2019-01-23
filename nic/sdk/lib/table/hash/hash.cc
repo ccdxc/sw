@@ -272,7 +272,7 @@ hash::insert_withid(void *key, void *data, uint32_t index, void *key_mask)
             goto end;
         }
 
-        SDK_TRACE_DEBUG("dleft insert at: {}", dleft_id);
+        SDK_TRACE_DEBUG("dleft insert at: %d", dleft_id);
 
         // check if entry exists
         he = (hash_entry_t *)entry_ht_->lookup(&dleft_id);

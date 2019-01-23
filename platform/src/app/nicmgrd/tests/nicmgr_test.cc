@@ -254,7 +254,8 @@ TEST_F(nicmgr_test, test1)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 
 
-    int num_vlan_filters = 2048;
+    // int num_vlan_filters = 2048;
+    int num_vlan_filters = 1;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     for (int i = 1; i < num_vlan_filters; i++) {
         // Vlan Filter

@@ -917,8 +917,13 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
         sdk_ret = reg_mac_tbl->insert(&key, &data, &hash_idx);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("classic: unable to program for ep:{}",
-                          ep_l2_key_to_str(pi_ep));
+            HAL_TRACE_ERR("classic: unable to program for ep:{}, ret: {}",
+                          ep_l2_key_to_str(pi_ep), ret);
+            if (ret == HAL_RET_ENTRY_EXISTS) {
+                // If hash lib returns entry exists, return hw prog error. Otherwise
+                // entry exists means that vrf was already created.
+                ret = HAL_RET_HW_PROG_ERR;
+            }
             goto end;
         } else {
             HAL_TRACE_DEBUG("classic: programmed for ep:{} at hash_idx:{}",
