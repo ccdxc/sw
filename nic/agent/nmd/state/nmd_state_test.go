@@ -1286,7 +1286,7 @@ func TestNaplesPkgVerify(t *testing.T) {
 			log.Errorf("respBody not as expected, got:%s", string(respBody))
 			return false, nil
 		}
-		resp, err := NaplesPkgVerify("dot1")
+		resp, err := naplesPkgVerify("dot1")
 		if err == nil {
 			log.Errorf("Verified invalid package, err:%+v resp:%s", err, resp)
 			return false, nil
@@ -1369,7 +1369,7 @@ func TestNaplesSetBootImg(t *testing.T) {
 			log.Errorf("respBody not as expected, got:%s", string(respBody))
 			return false, nil
 		}
-		resp, err := NaplesPkgVerify("dot1")
+		resp, err := naplesSetBootImg()
 		if err == nil {
 			log.Errorf("Verified invalid package, err:%+v resp:%s", err, resp)
 			return false, nil
@@ -1452,7 +1452,7 @@ func TestNaplesPkgInstall(t *testing.T) {
 			log.Errorf("respBody not as expected, got:%s", string(respBody))
 			return false, nil
 		}
-		resp, err := NaplesPkgInstall("dot1")
+		resp, err := naplesPkgInstall("dot1")
 		if err == nil {
 			log.Errorf("Verified invalid package, err:%+v resp:%s", err, resp)
 			return false, nil

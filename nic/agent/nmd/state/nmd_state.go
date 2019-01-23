@@ -497,8 +497,7 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 	return string(stdoutStderr), nil
 }
 
-//NaplesPkgVerify is used to verify the package
-func NaplesPkgVerify(pkgName string) (string, error) {
+func naplesPkgVerify(pkgName string) (string, error) {
 	v := &nmd.NaplesCmdExecute{
 		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -v"}, ""),
@@ -506,8 +505,7 @@ func NaplesPkgVerify(pkgName string) (string, error) {
 	return naplesExecCmd(v)
 }
 
-//NaplesPkgInstall is used to install the package in emmc
-func NaplesPkgInstall(pkgName string) (string, error) {
+func naplesPkgInstall(pkgName string) (string, error) {
 	v := &nmd.NaplesCmdExecute{
 		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -i all"}, ""),
@@ -515,8 +513,7 @@ func NaplesPkgInstall(pkgName string) (string, error) {
 	return naplesExecCmd(v)
 }
 
-//NaplesSetBootImg  is used to set the boot variable
-func NaplesSetBootImg() (string, error) {
+func naplesSetBootImg() (string, error) {
 	v := &nmd.NaplesCmdExecute{
 		Executable: "/nic/tools/fwupdate",
 		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),

@@ -2,7 +2,7 @@ meta:
     name    : penctl
     os      : [ linux, freebsd ]
     nics    : [ pensando, mellanox, intel ]
-    targetcount : 120
+    targetcount : 40
 
 testcases:
     -   name    : CHECK_LOGS
