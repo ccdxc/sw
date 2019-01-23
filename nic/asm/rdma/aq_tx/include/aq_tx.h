@@ -41,6 +41,7 @@
 // Modify QP Set Header Template
 #define AQ_TX_DMA_CMD_MOD_QP_AH_DST    (AQ_TX_MAX_DMA_CMDS - 3)
 #define AQ_TX_DMA_CMD_MOD_QP_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 4)
+#define AQ_TX_DMA_CMD_CLEAR_STATS_CB   (AQ_TX_MAX_DMA_CMDS -5)
 
 /* DMA Cmds for Create AH */
 #define AQ_TX_DMA_CMD_CREATE_AH_DST    (AQ_TX_MAX_DMA_CMDS - 3)
@@ -153,6 +154,7 @@ struct aq_tx_phv_t {
     union {
         struct aq_tx_dma_cmds_flit_t flit_7;
         struct sqcb1_t sqcb1;
+        struct sqcb4_t sqcb4;
         struct err_feedback_t resp_feedback;
     };
         
@@ -162,6 +164,7 @@ struct aq_tx_phv_t {
         struct key_entry_t key;
         struct sqcb0_t sqcb0;
         struct cqcb_t  cqcb;
+        struct sqcb3_t sqcb3;
         ah_size :8;
     };
 

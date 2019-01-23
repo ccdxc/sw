@@ -71,8 +71,6 @@ process_feedback:
     bcf         [!c1], exit
     nop
 
-    phvwr       p.common.p4_intr_global_debug_trace, 1
-    
     seq         c1, K_ERROR, r0
     bcf         [!c1], aq_feedback
 
