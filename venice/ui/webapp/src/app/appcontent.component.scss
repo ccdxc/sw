@@ -1,3 +1,5 @@
+@import 'src/global-mixins';
+
 .pensUI-app {
   width: 100vw;
   height: 100vh;
@@ -27,6 +29,24 @@
   width: 30px;
   padding:1px 3px;
   margin: auto 4px auto 1px;
+}
+
+.app-shell-doclink,
+.app-shell-doclink:hover {
+  outline: none !important;
+  margin-left: 10px;
+  @include primary-font(14px, black);
+  .mat-button {
+    outline: none !important;
+    .mat-button-focus-overlay {
+      background: #676763;
+    }
+  }
+  .mat-button:hover {
+    .mat-button-focus-overlay {
+      opacity: 0.2;
+    }
+  }
 }
 
 .app-shell-header-logo-div .mat-icon-button .mat-icon {

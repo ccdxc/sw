@@ -1,6 +1,6 @@
 <div class="login-outter-div">
     <div class="container login-container">
-        <div class="row login-centere-div">
+        <div class="row login-center-div">
             
             <div *ngIf="successMessage" class="alert alert-success login-progress"></div>
             <form (ngSubmit)="login()" class="login-form">
@@ -18,6 +18,9 @@
                 </div>
                 <div class="form-group">
                     <button type="submit" class="btn btn-info button-bg login-signin-btn" [disabled]="!isLoginInputValided()">SIGN IN</button>
+                </div>
+                <div class="login-doc-link">
+                    <a [href]="docLink">GO TO DOCS</a>
                 </div>
             </form>
         </div>

@@ -25,6 +25,9 @@
 
                     <span class="app-shell-spacer"></span>
                     <div class="app-shell-toolbar-icon-div">
+                        <a class="app-shell-doclink" [href]="docLink" target="_blank">
+                            <button [disableRipple]="true" mat-button>DOCS</button>
+                        </a> 
                         <!-- Commenting out for August release -->
                         <!-- <button mat-button>Save</button> -->
                         <!-- <button mat-icon-button (click)="onToolbarIconClick($event, 'notifications')">

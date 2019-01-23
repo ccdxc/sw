@@ -34,6 +34,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   browsertype = '';
   browserversion = '';
 
+  docLink: string = Utility.getDocURL();
 
   _currentComponent: any;
 

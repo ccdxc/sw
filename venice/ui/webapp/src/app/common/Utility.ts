@@ -31,11 +31,14 @@ export class Utility {
   /**
    * get REST API server URL
    * In production enviornment, UI is hosted along with API-Gateway. Thus, UI url is that same as API-GW url.
-   * In dev enviorment, we will use environment.server_url setting.
-   * Note: proxy.conf.json target value should be equal to environment.server_url
+   * In dev enviorment, we proxy all requests to the server specified in proxy.conf.js
    */
   static getRESTAPIServerAndPort(): string {
-    return (environment.isRESTAPIReady && environment.production) ? window.location.protocol + '//' + window.location.hostname + ':' + window.location.port : environment.server_url + ':' + environment.server_port;
+    return window.location.protocol + '//' + window.location.hostname + ':' + window.location.port
+  }
+
+  static getDocURL(): string {
+    return Utility.getRESTAPIServerAndPort() + '/docs/';
   }
 
   static getBaseUIUrl(): string {

@@ -27,7 +27,7 @@ export class LoginComponent extends CommonComponent implements OnInit, OnDestroy
   // due to the second request.
   loginInProgress: boolean = false;
 
-
+  docLink: string = Utility.getDocURL();
 
   constructor(
     private _authService: AuthService,

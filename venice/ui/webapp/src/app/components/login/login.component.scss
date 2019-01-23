@@ -164,7 +164,7 @@
   vertical-align: middle;
 }
 
-.login-centere-div {
+.login-center-div {
   width: 600px;
   opacity: 0.8;
   background-color: #ffffff;
@@ -174,7 +174,12 @@
 }
 
 .login-form {
-  padding: 50px 100px;
+  padding: 50px 100px 25px 100px;
+}
+
+.login-doc-link {
+  text-align: center;
+  margin-top: 35px;
 }
 
 .loign-image {
