@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/login"
@@ -100,6 +101,22 @@ func (cl *clusterHooks) validateClusterConfig(i interface{}, ver string, ignStat
 	return err
 }
 
+// Validate the given tenant config
+func (cl *clusterHooks) validateTenantConfig(tenantConfig cluster.Tenant) error {
+	tenantName := tenantConfig.GetName()
+
+	if len(tenantName) > api.MaxTenantNameLen {
+		return fmt.Errorf("tenant name too long (max %v chars)", api.MaxTenantNameLen)
+	}
+
+	// allow only lower case characters in tenant name
+	if !api.TenantNameRe.Match([]byte(tenantName)) {
+		return errors.New("tenant name does not meet naming requirements")
+	}
+
+	return nil
+}
+
 // createDefaultRoles is a pre-commit hook for tenant create operation that creates default roles when a tenant is created
 func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Tenant)
@@ -112,6 +129,10 @@ func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Inter
 		return i, false, errors.New("invalid input type")
 	}
 	cl.logger.Debugf("API server hook called to create default roles for tenant [%v]", r.Name)
+
+	if err := cl.validateTenantConfig(r); err != nil {
+		return i, false, err
+	}
 
 	allowedTenant := r.GetName()
 	// if "default" tenant then give permissions to all tenants

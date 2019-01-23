@@ -2,6 +2,7 @@ package authn
 
 import (
 	"crypto/rand"
+	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
@@ -22,7 +23,7 @@ func CreateExternalUser(username, tenant, fullname, email string, groups []strin
 	// Create external user
 	objMeta := &api.ObjectMeta{
 		Name:   username,
-		Tenant: tenant,
+		Tenant: strings.ToLower(tenant),
 	}
 
 	// user object

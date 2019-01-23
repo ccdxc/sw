@@ -197,7 +197,7 @@ func (it *veniceIntegSuite) TestTenantWatch(c *C) {
 
 // test tpm
 func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
-	tenantName := fmt.Sprintf("tenant-100")
+	tenantName := fmt.Sprintf("tenant100")
 	// create a tenant
 	_, err := it.createTenant(tenantName)
 	AssertOk(c, err, "Error creating tenant")

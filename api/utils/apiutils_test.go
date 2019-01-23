@@ -33,6 +33,7 @@ func TestObjectMetaValidation(t *testing.T) {
 
 	badNames := []string{
 		"This is not a good name", "-NietherIsThis", ".OrThis", "Not#still", "coke-vm-1.", "coke-vm-1-", "coke-vm-1_", "tooLooooooooooooooooooooooooooooooooooooooooooooooooooooooooooonnng",
+		"_tenant", "+tenant", ".", "..", "ten/ant/", "t*enant", "t<en>", "t//enant", "ten|ant", "-",
 	}
 	for _, c := range badNames {
 		meta.Name = c

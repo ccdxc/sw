@@ -4,6 +4,7 @@ package elastic
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/venice/globals"
@@ -78,12 +79,12 @@ func GetIndex(dtype globals.DataType, tenant string) string {
 
 	switch dtype {
 	case globals.Configs:
-		return fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype))
+		return strings.ToLower(fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype)))
 	case globals.Alerts, globals.Events, globals.AuditLogs, globals.DebugLogs:
 		if !utils.IsEmpty(tenant) {
-			return fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay)
+			return strings.ToLower(fmt.Sprintf("%s.%s.%s.%s", ExternalIndexPrefix, tenant, GetDocType(dtype), currentDay))
 		}
-		return fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, GetDocType(dtype), currentDay)
+		return strings.ToLower(fmt.Sprintf("%s.%s.%s", ExternalIndexPrefix, GetDocType(dtype), currentDay))
 	case globals.Stats:
 		return "N/A"
 	}

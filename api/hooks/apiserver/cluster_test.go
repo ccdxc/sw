@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -317,6 +318,79 @@ func TestClusterObject(t *testing.T) {
 	}
 }
 
+func TestTenantObject(t *testing.T) {
+	cl := &clusterHooks{
+		logger: log.SetConfig(log.GetDefaultConfig("Cluster-Hooks-Test")),
+	}
+
+	// various tenant configs
+	tenantObjs := []struct {
+		obj cluster.Tenant
+		err error
+	}{
+		// tenant name > 48 characters
+		{
+			cluster.Tenant{
+				ObjectMeta: api.ObjectMeta{
+					Name: "qvbtgbie3nzpk81bc4hgr4xfplzsygw0tnid7h95xgwpzmd2fjo202wzqm1z",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Tenant",
+					APIVersion: "v1",
+				},
+			},
+			errors.New("tenant name too long (max 48 chars)"),
+		},
+		// invalid tenant name
+		{
+			cluster.Tenant{
+				ObjectMeta: api.ObjectMeta{
+					Name: "TestCluster1",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Tenant",
+					APIVersion: "v1",
+				},
+			},
+			errors.New("tenant name does not meet naming requirements"),
+		},
+		// valid cluster object #1
+		{
+			cluster.Tenant{
+				ObjectMeta: api.ObjectMeta{
+					Name: "testcluster2",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Tenant",
+					APIVersion: "v1",
+				},
+			},
+			nil,
+		},
+		// valid cluster object #2
+		{
+			cluster.Tenant{
+				ObjectMeta: api.ObjectMeta{
+					Name: "95110",
+				},
+				TypeMeta: api.TypeMeta{
+					Kind:       "Tenant",
+					APIVersion: "v1",
+				},
+			},
+			nil,
+		},
+	}
+
+	// Execute the node config testcases
+	for _, tc := range tenantObjs {
+		t.Run(tc.obj.Name, func(t *testing.T) {
+			err := cl.validateTenantConfig(tc.obj)
+			Assert(t, (tc.err != nil && err.Error() == tc.err.Error()) || err == tc.err, "expected: %v, got: %v", tc.err, err)
+		})
+	}
+}
+
 func TestCreateDefaultRoles(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -346,15 +420,15 @@ func TestCreateDefaultRoles(t *testing.T) {
 			in: cluster.Tenant{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testTenant",
+					Tenant: "testtenant",
+					Name:   "testtenant",
 				},
 			},
 			out: cluster.Tenant{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testTenant",
+					Tenant: "testtenant",
+					Name:   "testtenant",
 				},
 			},
 			txnEmpty: false,
@@ -367,15 +441,15 @@ func TestCreateDefaultRoles(t *testing.T) {
 			in: cluster.Tenant{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testTenant",
+					Tenant: "testtenant",
+					Name:   "testtenant",
 				},
 			},
 			out: cluster.Tenant{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
-					Tenant: "testTenant",
-					Name:   "testTenant",
+					Tenant: "testtenant",
+					Name:   "testtenant",
 				},
 			},
 			txnEmpty: true,
@@ -402,6 +476,7 @@ func TestCreateDefaultRoles(t *testing.T) {
 	for _, test := range tests {
 		txn := kvs.NewTxn()
 		out, ok, err := clusterHooks.createDefaultRoles(ctx, kvs, txn, "", test.oper, false, test.in)
+		fmt.Println(err)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, test.err == (err != nil), fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))

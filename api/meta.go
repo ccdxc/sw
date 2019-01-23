@@ -7,12 +7,18 @@ import (
 	golangproto "github.com/golang/protobuf/proto"
 )
 
+// TenantNameRe tenant name regexp for validation
+var TenantNameRe = regexp.MustCompile(`^[a-z0-9]+$`)
+
 var nameRe = regexp.MustCompile(`^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`)
 var resVerRe = regexp.MustCompile(`[0-9]*`)
 
 const (
 	// MaxNameLen is the max number of characters allowed in a naming property.
 	MaxNameLen = 64
+
+	// MaxTenantNameLen is the max number of characters allowed for a tenant name.
+	MaxTenantNameLen = 48
 )
 
 // GetObjectKind returns the kind of an object.
@@ -87,11 +93,11 @@ func (o *ObjectMeta) Validate(ver, path string, ignoreStatus bool) []error {
 	if !nameRe.Match([]byte(o.Name)) {
 		ret = append(ret, fmt.Errorf("%s.Name does not meet naming requirements", path))
 	}
-	if len(o.Tenant) > MaxNameLen {
-		ret = append(ret, fmt.Errorf("%s.Tenant too long(max 64 chars)", path))
+	if len(o.Tenant) > MaxTenantNameLen {
+		ret = append(ret, fmt.Errorf("%s.Tenant too long(max %v chars)", path, MaxTenantNameLen))
 	}
 	if len(o.Tenant) > 0 {
-		if !nameRe.Match([]byte(o.Tenant)) {
+		if !TenantNameRe.Match([]byte(o.Tenant)) {
 			ret = append(ret, fmt.Errorf("%s.Tenant does not meet naming requirements", path))
 		}
 	}

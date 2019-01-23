@@ -28,7 +28,7 @@ const (
 	// users
 	testUser     = "test"
 	testPassword = "pensandoo0"
-	testTenant   = "testTenant"
+	testTenant   = "testtenant"
 )
 
 var (

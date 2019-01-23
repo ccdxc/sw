@@ -73,7 +73,7 @@ func TestWatcher(t *testing.T) {
 	tenant := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "testTenant",
+			Name: "testtenant",
 		},
 	}
 	_, err = apicl.ClusterV1().Tenant().Create(context.Background(), &tenant)
@@ -88,13 +88,13 @@ func TestWatcher(t *testing.T) {
 	role := auth.Role{
 		TypeMeta: api.TypeMeta{Kind: "Role"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testTenant",
+			Tenant: "testtenant",
 			Name:   "testRole",
 		},
 		Spec: auth.RoleSpec{
 			Permissions: []auth.Permission{
 				{
-					ResourceTenant:    "testTenant",
+					ResourceTenant:    "testtenant",
 					ResourceGroup:     string(apiclient.GroupNetwork),
 					ResourceKind:      string(network.KindNetwork),
 					ResourceNamespace: "finance",
@@ -116,7 +116,7 @@ func TestWatcher(t *testing.T) {
 	roleBinding := auth.RoleBinding{
 		TypeMeta: api.TypeMeta{Kind: "RoleBinding"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testTenant",
+			Tenant: "testtenant",
 			Name:   "testRoleBinding",
 		},
 		Spec: auth.RoleBindingSpec{

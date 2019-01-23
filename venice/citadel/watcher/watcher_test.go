@@ -61,7 +61,7 @@ func TestWatchTenant(t *testing.T) {
 	tenant := cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "testTenant",
+			Name: "testtenant",
 		},
 	}
 	_, err = apicl.ClusterV1().Tenant().Create(context.Background(), &tenant)
@@ -69,7 +69,7 @@ func TestWatchTenant(t *testing.T) {
 	r := mockresolver.New()
 	br := mockbroker.NewMockInf(ctrl)
 
-	br.EXPECT().CreateDatabase(ctx, "testTenant").Return(nil)
+	br.EXPECT().CreateDatabase(ctx, "testtenant").Return(nil)
 
 	watcher := NewWatcher(apiSrvAddr, br, r)
 	c1 := make(chan string, 1)
@@ -85,12 +85,12 @@ func TestWatchTenant(t *testing.T) {
 	}
 
 	// Create second tenant
-	br.EXPECT().CreateDatabase(ctx, "testTenant2").Return(nil)
+	br.EXPECT().CreateDatabase(ctx, "testtenant2").Return(nil)
 
 	tenant = cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "testTenant2",
+			Name: "testtenant2",
 		},
 	}
 	_, err = apicl.ClusterV1().Tenant().Create(context.Background(), &tenant)
