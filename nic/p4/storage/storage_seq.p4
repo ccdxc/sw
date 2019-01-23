@@ -514,9 +514,10 @@ action seq_barco_ring_pndx_read() {
 action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
                                      barco_pndx_addr, barco_pndx_shadow_addr,
                                      barco_desc_size, barco_pndx_size, barco_ring_size,
-                                     barco_num_descs, status_addr0, status_addr1,
+                                     barco_num_descs, hdr_chksum_offset,
+                                     status_addr0, status_addr1,
                                      intr_addr, intr_data, status_len, 
-				     status_offset0, hdr_chksum_offset, status_dma_en,
+				     status_offset0, status_dma_en,
                                      next_db_en, intr_en, next_db_action_barco_push) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -533,13 +534,13 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_comp_status_desc0_scratch.barco_pndx_size, barco_pndx_size);
   modify_field(seq_comp_status_desc0_scratch.barco_ring_size, barco_ring_size);
   modify_field(seq_comp_status_desc0_scratch.barco_num_descs, barco_num_descs);
+  modify_field(seq_comp_status_desc0_scratch.hdr_chksum_offset, hdr_chksum_offset);
   modify_field(seq_comp_status_desc0_scratch.status_addr0, status_addr0);
   modify_field(seq_comp_status_desc0_scratch.status_addr1, status_addr1);
   modify_field(seq_comp_status_desc0_scratch.intr_addr, intr_addr);
   modify_field(seq_comp_status_desc0_scratch.intr_data, intr_data);
   modify_field(seq_comp_status_desc0_scratch.status_len, status_len);
   modify_field(seq_comp_status_desc0_scratch.status_offset0, status_offset0);
-  modify_field(seq_comp_status_desc0_scratch.hdr_chksum_offset, hdr_chksum_offset);
   modify_field(seq_comp_status_desc0_scratch.status_dma_en, status_dma_en);
   modify_field(seq_comp_status_desc0_scratch.next_db_en, next_db_en);
   modify_field(seq_comp_status_desc0_scratch.intr_en, intr_en);
@@ -919,7 +920,8 @@ action seq_comp_aol_pad_handler() {
 action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
                                     barco_pndx_addr, barco_pndx_shadow_addr,
                                     barco_desc_size, barco_pndx_size, barco_ring_size,
-                                    barco_num_descs, status_addr0, status_addr1, 
+                                    barco_num_descs, rsvd0,
+                                    status_addr0, status_addr1, 
                                     intr_addr, intr_data, status_len, 
 				    status_offset0, status_dma_en,
                                     next_db_en, intr_en, next_db_action_barco_push) {
@@ -937,6 +939,7 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_xts_status_desc0_scratch.barco_pndx_size, barco_pndx_size);
   modify_field(seq_xts_status_desc0_scratch.barco_ring_size, barco_ring_size);
   modify_field(seq_xts_status_desc0_scratch.barco_num_descs, barco_num_descs);
+  modify_field(seq_xts_status_desc0_scratch.rsvd0, rsvd0);
   modify_field(seq_xts_status_desc0_scratch.status_addr0, status_addr0);
   modify_field(seq_xts_status_desc0_scratch.status_addr1, status_addr1);
   modify_field(seq_xts_status_desc0_scratch.intr_addr, intr_addr);

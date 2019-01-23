@@ -187,21 +187,26 @@ cpdc_cp_pad_cpl_addr_get(volatile struct cpdc_status_desc *status_desc)
 	return (uint64_t *)&status_desc->csd_sha[0];
 }
 
-static inline void
+static inline bool
 cpdc_cp_hdr_chksum_info_get(const struct service_info *svc_info,
 			    uint32_t *ret_chksum_offs,
 			    uint32_t *ret_chksum_len)
 {
 	struct cp_header_format *hdr_fmt;
 
+	*ret_chksum_offs = 0;
+	*ret_chksum_len = 0;
 	hdr_fmt = lookup_hdr_format(svc_info->hdr_fmt_idx, false);
-	OSAL_ASSERT(hdr_fmt);
-	*ret_chksum_offs = hdr_fmt->chksum_offs;
-	*ret_chksum_len = hdr_fmt->chksum_len;
+	if (hdr_fmt) {
+		*ret_chksum_offs = hdr_fmt->chksum_offs;
+		*ret_chksum_len = hdr_fmt->chksum_len;
+		return true;
+	}
+        return false;
 }
 
 static inline bool
-cpdc_desc_is_integ_madler32(const struct cpdc_desc *desc)
+cpdc_desc_is_integ_data_wr_required(const struct cpdc_desc *desc)
 {
 	return desc->u.cd_bits.cc_integrity_type == CP_INTEGRITY_M_ADLER32;
 }

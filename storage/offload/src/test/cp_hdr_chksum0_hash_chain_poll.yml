@@ -42,7 +42,7 @@ tests:
         - retcode_compare:
             idx: 1
             retcode: 0
-            svc_retcodes: 0
+            svc_retcodes: 0,0
         - size_compare:
             idx: 2
             type: lt
@@ -55,6 +55,12 @@ tests:
             offset: eof
             len: eob
         - size_compare:
-            idx: 1
+            idx: 4
             file1: '1_hash_full.bin'
             val: 64
+        - data_compare:
+            idx: 5
+            file1: '1_compressed.bin'
+            pattern: 0x00
+            offset: 0
+            len: 4

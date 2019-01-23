@@ -435,22 +435,17 @@ compress_read_status(struct service_info *svc_info)
 		 * intermediate RMEM destination buffer rather than to the host.
 		 * Hence, we ensure that the host buffer overwrite happens here.
 		 */
-		cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs, &chksum_len);
-		if (chksum_len) {
-			if (cpdc_desc_is_integ_madler32(cp_desc)) {
-    				OSAL_ASSERT((chksum_len == sizeof(cp_hdr->chksum)) &&
-    					(chksum_offs == 
-    				 	offsetof(struct pnso_compression_header, chksum)));
-    				cp_hdr->chksum = (uint32_t)status_desc->csd_integrity_data;
-    				if (cp_hdr->chksum == 0) {
-    					err = EINVAL;	/* PNSO_ERR_CPDC_CHECKSUM_FAILED?? */
-    					OSAL_LOG_ERROR("zero checksum in header! err: %d",
-    							CP_STATUS_CHECKSUM_FAILED);
-    					goto out;
+		if (cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs, &chksum_len)) {
+			if (chksum_len) {
+				if (cpdc_desc_is_integ_data_wr_required(cp_desc)) {
+    					OSAL_ASSERT((chksum_len == sizeof(cp_hdr->chksum)) &&
+    						(chksum_offs == 
+    				 		offsetof(struct pnso_compression_header, chksum)));
+    					cp_hdr->chksum = (uint32_t)status_desc->csd_integrity_data;
 				}
-    			}
-		} else
-			cp_hdr->chksum = 0;
+			} else
+				cp_hdr->chksum = 0;
+		}
 
 #ifdef SIMPLE_INTEG_DATA0_WR_VERIFY
 		if (chn_service_has_interm_blist(svc_info)) {

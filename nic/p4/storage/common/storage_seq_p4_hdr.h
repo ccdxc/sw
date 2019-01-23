@@ -119,13 +119,13 @@ header_type seq_comp_status_desc0_t {
     barco_pndx_size : 3;    // log2(producer index size)
     barco_ring_size : 5;    // log2(ring_size)
     barco_num_descs : 10;   // initial number of descriptors to xfer to Barco
+    hdr_chksum_offset:6;    // Offset to chksum field in CP header
     status_addr0    : 64;   // Address where compression status will be placed
     status_addr1    : 64;   // 2nd address where compression status will be placed
     intr_addr       : 64;   // Address where interrupt needs to be written
     intr_data       : 32;   // Data that needs to be written for interrupt
     status_len      : 16;   // Length of the compression status
-    status_offset0  : 7;    // Add this to status_addr0 before DMA into status_addr1 
-    hdr_chksum_offset:6;    // Offset to chksum field in CP header
+    status_offset0  : 8;    // Add this to status_addr0 before DMA into status_addr1 
     status_dma_en   : 1;    // 1 => DMA status, 0 => don't DMA 
     next_db_en      : 1;    // 1 => Ring next sequencer doorbell, 0 => don't ring
     intr_en         : 1;    // 1 => Fire the MSI-X interrupt, 0 => don't fire
@@ -216,12 +216,13 @@ header_type seq_xts_status_desc0_t {
     barco_pndx_size : 3;    // log2(producer index size)
     barco_ring_size : 5;    // log2(ring_size)
     barco_num_descs : 10;   // log2(descriptor set size)
+    rsvd0           : 6;
     status_addr0    : 64;   // Address where HW crypto status was placed
     status_addr1    : 64;   // 2nd address where a copy of above status can be made
     intr_addr       : 64;   // Address where interrupt needs to be written
     intr_data       : 32;   // Data that needs to be written for interrupt
     status_len      : 16;   // Length of the crypto status
-    status_offset0  : 7;    // Add this to status_addr0 before DMA into status_addr1 
+    status_offset0  : 8;    // Add this to status_addr0 before DMA into status_addr1 
     status_dma_en   : 1;    // 1 => DMA status, 0 => don't DMA 
     next_db_en      : 1;    // 1 => Ring next sequencer doorbell, 0 => don't ring
     intr_en         : 1;    // 1 => Fire the MSI-X interrupt, 0 => don't fire
