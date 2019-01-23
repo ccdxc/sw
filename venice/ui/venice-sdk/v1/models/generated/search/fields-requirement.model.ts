@@ -11,7 +11,7 @@ import { FieldsRequirement_operator,  FieldsRequirement_operator_uihint  } from 
 
 export interface IFieldsRequirement {
     'key'?: string;
-    'operator'?: FieldsRequirement_operator;
+    'operator': FieldsRequirement_operator;
     'values'?: Array<string>;
 }
 
@@ -78,16 +78,22 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
             this['key'] = values['key'];
         } else if (fillDefaults && FieldsRequirement.hasDefaultValue('key')) {
             this['key'] = FieldsRequirement.propInfo['key'].default;
+        } else {
+            this['key'] = null
         }
         if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
         } else if (fillDefaults && FieldsRequirement.hasDefaultValue('operator')) {
             this['operator'] = <FieldsRequirement_operator>  FieldsRequirement.propInfo['operator'].default;
+        } else {
+            this['operator'] = null
         }
         if (values && values['values'] != null) {
             this['values'] = values['values'];
         } else if (fillDefaults && FieldsRequirement.hasDefaultValue('values')) {
             this['values'] = [ FieldsRequirement.propInfo['values'].default];
+        } else {
+            this['values'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

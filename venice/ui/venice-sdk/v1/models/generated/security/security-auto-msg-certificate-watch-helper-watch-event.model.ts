@@ -63,9 +63,13 @@ export class SecurityAutoMsgCertificateWatchHelperWatchEvent extends BaseModel i
             this['type'] = values['type'];
         } else if (fillDefaults && SecurityAutoMsgCertificateWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = SecurityAutoMsgCertificateWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

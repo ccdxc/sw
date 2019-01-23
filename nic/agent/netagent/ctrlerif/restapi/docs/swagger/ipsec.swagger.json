@@ -670,6 +670,9 @@
     },
     "netprotoIPSecRule": {
       "type": "object",
+      "required": [
+        "sa-type"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -751,6 +754,12 @@
     },
     "netprotoIPSecSADecryptSpec": {
       "type": "object",
+      "required": [
+        "protocol",
+        "authentication-algorithm",
+        "decryption-algorithm",
+        "rekey-decryption-algorithm"
+      ],
       "properties": {
         "protocol": {
           "type": "string",
@@ -903,6 +912,11 @@
     },
     "netprotoIPSecSAEncryptSpec": {
       "type": "object",
+      "required": [
+        "protocol",
+        "authentication-algorithm",
+        "encryption-algorithm"
+      ],
       "properties": {
         "protocol": {
           "type": "string",

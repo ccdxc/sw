@@ -60,12 +60,16 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this['time-window'].setValues(values['time-window']);
+            this['time-window'].setValues(values['time-window'], fillDefaults);
+        } else {
+            this['time-window'].setValues(null, fillDefaults);
         }
         if (values && values['report-url'] != null) {
             this['report-url'] = values['report-url'];
         } else if (fillDefaults && MonitoringTsResult.hasDefaultValue('report-url')) {
             this['report-url'] = MonitoringTsResult.propInfo['report-url'].default;
+        } else {
+            this['report-url'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

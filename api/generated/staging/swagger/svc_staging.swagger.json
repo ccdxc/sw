@@ -1548,6 +1548,9 @@
     },
     "stagingBufferStatus": {
       "type": "object",
+      "required": [
+        "validation-result"
+      ],
       "properties": {
         "validation-result": {
           "type": "string",
@@ -1610,6 +1613,9 @@
     },
     "stagingClearActionStatus": {
       "type": "object",
+      "required": [
+        "status"
+      ],
       "properties": {
         "status": {
           "type": "string",
@@ -1650,6 +1656,9 @@
     },
     "stagingCommitActionStatus": {
       "type": "object",
+      "required": [
+        "status"
+      ],
       "properties": {
         "status": {
           "type": "string",

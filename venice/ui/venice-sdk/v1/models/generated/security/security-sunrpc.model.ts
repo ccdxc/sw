@@ -65,11 +65,15 @@ export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
             this['program-id'] = values['program-id'];
         } else if (fillDefaults && SecuritySunrpc.hasDefaultValue('program-id')) {
             this['program-id'] = SecuritySunrpc.propInfo['program-id'].default;
+        } else {
+            this['program-id'] = null
         }
         if (values && values['timeout'] != null) {
             this['timeout'] = values['timeout'];
         } else if (fillDefaults && SecuritySunrpc.hasDefaultValue('timeout')) {
             this['timeout'] = SecuritySunrpc.propInfo['timeout'].default;
+        } else {
+            this['timeout'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

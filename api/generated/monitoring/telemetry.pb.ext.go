@@ -106,6 +106,7 @@ func (m *FlowExportPolicySpec) Defaults(ver string) bool {
 	switch ver {
 	default:
 		m.Format = "Ipfix"
+		m.Interval = "10s"
 	}
 	return ret
 }
@@ -479,8 +480,12 @@ func init() {
 
 	validatorMapTelemetry["FlowExportPolicySpec"]["all"] = append(validatorMapTelemetry["FlowExportPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FlowExportPolicySpec)
-		if !validators.Duration(m.Interval) {
-			return fmt.Errorf("%v validation failed", path+"."+"Interval")
+		args := make([]string, 0)
+		args = append(args, "1s")
+		args = append(args, "24h")
+
+		if !validators.Duration(m.Interval, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"Interval")
 		}
 		return nil
 	})
@@ -507,19 +512,26 @@ func init() {
 	})
 
 	validatorMapTelemetry["StatsPolicySpec"] = make(map[string][]func(string, interface{}) error)
-
 	validatorMapTelemetry["StatsPolicySpec"]["all"] = append(validatorMapTelemetry["StatsPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*StatsPolicySpec)
-		if !validators.Duration(m.DownSampleRetentionTime) {
-			return fmt.Errorf("%v validation failed", path+"."+"DownSampleRetentionTime")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.DownSampleRetentionTime, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"DownSampleRetentionTime")
 		}
 		return nil
 	})
 
 	validatorMapTelemetry["StatsPolicySpec"]["all"] = append(validatorMapTelemetry["StatsPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*StatsPolicySpec)
-		if !validators.Duration(m.RetentionTime) {
-			return fmt.Errorf("%v validation failed", path+"."+"RetentionTime")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.RetentionTime, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"RetentionTime")
 		}
 		return nil
 	})

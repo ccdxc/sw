@@ -85,27 +85,39 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
             this['enabled'] = values['enabled'];
         } else if (fillDefaults && AuthLdap.hasDefaultValue('enabled')) {
             this['enabled'] = AuthLdap.propInfo['enabled'].default;
+        } else {
+            this['enabled'] = null
         }
         if (values && values['base-dn'] != null) {
             this['base-dn'] = values['base-dn'];
         } else if (fillDefaults && AuthLdap.hasDefaultValue('base-dn')) {
             this['base-dn'] = AuthLdap.propInfo['base-dn'].default;
+        } else {
+            this['base-dn'] = null
         }
         if (values && values['bind-dn'] != null) {
             this['bind-dn'] = values['bind-dn'];
         } else if (fillDefaults && AuthLdap.hasDefaultValue('bind-dn')) {
             this['bind-dn'] = AuthLdap.propInfo['bind-dn'].default;
+        } else {
+            this['bind-dn'] = null
         }
         if (values && values['bind-password'] != null) {
             this['bind-password'] = values['bind-password'];
         } else if (fillDefaults && AuthLdap.hasDefaultValue('bind-password')) {
             this['bind-password'] = AuthLdap.propInfo['bind-password'].default;
+        } else {
+            this['bind-password'] = null
         }
         if (values) {
-            this['attribute-mapping'].setValues(values['attribute-mapping']);
+            this['attribute-mapping'].setValues(values['attribute-mapping'], fillDefaults);
+        } else {
+            this['attribute-mapping'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<AuthLdapServer>(this, 'servers', values['servers'], AuthLdapServer);
+        } else {
+            this['servers'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

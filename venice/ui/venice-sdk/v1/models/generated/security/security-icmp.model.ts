@@ -61,11 +61,15 @@ export class SecurityIcmp extends BaseModel implements ISecurityIcmp {
             this['type'] = values['type'];
         } else if (fillDefaults && SecurityIcmp.hasDefaultValue('type')) {
             this['type'] = SecurityIcmp.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['code'] != null) {
             this['code'] = values['code'];
         } else if (fillDefaults && SecurityIcmp.hasDefaultValue('code')) {
             this['code'] = SecurityIcmp.propInfo['code'].default;
+        } else {
+            this['code'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

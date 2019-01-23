@@ -75,17 +75,25 @@ export class MonitoringFlowExportPolicyList extends BaseModel implements IMonito
             this['kind'] = values['kind'];
         } else if (fillDefaults && MonitoringFlowExportPolicyList.hasDefaultValue('kind')) {
             this['kind'] = MonitoringFlowExportPolicyList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && MonitoringFlowExportPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringFlowExportPolicyList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<MonitoringFlowExportPolicy>(this, 'items', values['items'], MonitoringFlowExportPolicy);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

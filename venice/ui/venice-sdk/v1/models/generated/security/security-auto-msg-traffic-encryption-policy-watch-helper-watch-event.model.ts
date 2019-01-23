@@ -63,9 +63,13 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent extends
             this['type'] = values['type'];
         } else if (fillDefaults && SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

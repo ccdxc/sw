@@ -60,6 +60,8 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
             this['text'] = values['text'];
         } else if (fillDefaults && SearchTextRequirement.hasDefaultValue('text')) {
             this['text'] = [ SearchTextRequirement.propInfo['text'].default];
+        } else {
+            this['text'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

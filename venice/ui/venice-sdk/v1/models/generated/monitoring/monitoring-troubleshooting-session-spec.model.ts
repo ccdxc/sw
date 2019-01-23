@@ -72,20 +72,28 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this['flow-selector'].setValues(values['flow-selector']);
+            this['flow-selector'].setValues(values['flow-selector'], fillDefaults);
+        } else {
+            this['flow-selector'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['time-window'].setValues(values['time-window']);
+            this['time-window'].setValues(values['time-window'], fillDefaults);
+        } else {
+            this['time-window'].setValues(null, fillDefaults);
         }
         if (values && values['repeat-every'] != null) {
             this['repeat-every'] = values['repeat-every'];
         } else if (fillDefaults && MonitoringTroubleshootingSessionSpec.hasDefaultValue('repeat-every')) {
             this['repeat-every'] = MonitoringTroubleshootingSessionSpec.propInfo['repeat-every'].default;
+        } else {
+            this['repeat-every'] = null
         }
         if (values && values['enable-mirroring'] != null) {
             this['enable-mirroring'] = values['enable-mirroring'];
         } else if (fillDefaults && MonitoringTroubleshootingSessionSpec.hasDefaultValue('enable-mirroring')) {
             this['enable-mirroring'] = MonitoringTroubleshootingSessionSpec.propInfo['enable-mirroring'].default;
+        } else {
+            this['enable-mirroring'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

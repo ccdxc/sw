@@ -75,17 +75,25 @@ export class SecurityTrafficEncryptionPolicyList extends BaseModel implements IS
             this['kind'] = values['kind'];
         } else if (fillDefaults && SecurityTrafficEncryptionPolicyList.hasDefaultValue('kind')) {
             this['kind'] = SecurityTrafficEncryptionPolicyList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && SecurityTrafficEncryptionPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = SecurityTrafficEncryptionPolicyList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<SecurityTrafficEncryptionPolicy>(this, 'items', values['items'], SecurityTrafficEncryptionPolicy);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -4034,6 +4034,9 @@
     },
     "clusterMemInfo": {
       "type": "object",
+      "required": [
+        "type"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -4078,6 +4081,10 @@
     },
     "clusterNodeCondition": {
       "type": "object",
+      "required": [
+        "type",
+        "status"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -4148,6 +4155,9 @@
     },
     "clusterNodeStatus": {
       "type": "object",
+      "required": [
+        "phase"
+      ],
       "properties": {
         "phase": {
           "type": "string",
@@ -4230,6 +4240,10 @@
     },
     "clusterSmartNICCondition": {
       "type": "object",
+      "required": [
+        "type",
+        "status"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -4338,6 +4352,11 @@
     },
     "clusterSmartNICSpec": {
       "type": "object",
+      "required": [
+        "mgmt-mode",
+        "network-mode",
+        "mgmt-vlan"
+      ],
       "properties": {
         "admit": {
           "type": "boolean",
@@ -4397,6 +4416,9 @@
     },
     "clusterSmartNICStatus": {
       "type": "object",
+      "required": [
+        "admission-phase"
+      ],
       "properties": {
         "admission-phase": {
           "type": "string",

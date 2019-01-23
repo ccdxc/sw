@@ -63,9 +63,13 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
             this['type'] = values['type'];
         } else if (fillDefaults && ApiWatchEvent.hasDefaultValue('type')) {
             this['type'] = ApiWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

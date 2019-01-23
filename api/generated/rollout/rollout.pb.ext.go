@@ -316,11 +316,14 @@ func init() {
 	})
 
 	validatorMapRollout["RolloutSpec"] = make(map[string][]func(string, interface{}) error)
-
 	validatorMapRollout["RolloutSpec"]["all"] = append(validatorMapRollout["RolloutSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*RolloutSpec)
-		if !validators.Duration(m.Duration) {
-			return fmt.Errorf("%v validation failed", path+"."+"Duration")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.EmptyOrDuration(m.Duration, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"Duration")
 		}
 		return nil
 	})

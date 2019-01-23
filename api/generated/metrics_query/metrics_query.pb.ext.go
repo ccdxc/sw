@@ -246,7 +246,7 @@ func init() {
 		args = append(args, "name")
 
 		for _, v := range m.Fields {
-			if !validators.RegExp(v, args) {
+			if !validators.EmptyOrRegExp(v, args) {
 				return fmt.Errorf("%v failed validation", path+"."+"Fields")
 			}
 		}
@@ -267,7 +267,7 @@ func init() {
 		args := make([]string, 0)
 		args = append(args, "name")
 
-		if !validators.RegExp(m.GroupbyField, args) {
+		if !validators.EmptyOrRegExp(m.GroupbyField, args) {
 			return fmt.Errorf("%v failed validation", path+"."+"GroupbyField")
 		}
 		return nil
@@ -275,8 +275,24 @@ func init() {
 
 	validatorMapMetrics_query["QuerySpec"]["all"] = append(validatorMapMetrics_query["QuerySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*QuerySpec)
-		if !validators.Duration(m.GroupbyTime) {
-			return fmt.Errorf("%v validation failed", path+"."+"GroupbyTime")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.EmptyOrDuration(m.GroupbyTime, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"GroupbyTime")
+		}
+		return nil
+	})
+
+	validatorMapMetrics_query["QuerySpec"]["all"] = append(validatorMapMetrics_query["QuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*QuerySpec)
+		args := make([]string, 0)
+		args = append(args, "1")
+		args = append(args, "100")
+
+		if !validators.StrLen(m.Name, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"Name")
 		}
 		return nil
 	})

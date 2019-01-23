@@ -15,9 +15,6 @@ import (
 	"github.com/pensando/sw/venice/utils/ref"
 )
 
-// Default parameters
-var defaultExpiryTime = "2h"
-
 // MirrorSessionState - Internal state for MirrorSession
 type MirrorSessionState struct {
 	Mutex sync.Mutex
@@ -52,17 +49,8 @@ func (mss *MirrorSessionState) handleSchTimer() {
 }
 
 func (mss *MirrorSessionState) getExpDuration() time.Duration {
-	// Exp time is *after* timer starts
-	expDuration, _ := time.ParseDuration(defaultExpiryTime)
-
-	if mss.MirrorSession.Spec.StopConditions.ExpiryDuration != "" {
-		// format conversion is checked by common Venice parameter checker hook
-		mssExpDuration, _ := time.ParseDuration(mss.MirrorSession.Spec.StopConditions.ExpiryDuration)
-		if mssExpDuration.Nanoseconds() < expDuration.Nanoseconds() {
-			// use user provided value if it is less than max allowed
-			expDuration = mssExpDuration
-		}
-	}
+	// format conversion and max duration (2h) is checked by common Venice parameter checker hook
+	expDuration, _ := time.ParseDuration(mss.MirrorSession.Spec.StopConditions.ExpiryDuration)
 	return expDuration
 }
 

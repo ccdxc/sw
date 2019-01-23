@@ -11,7 +11,7 @@ import { RolloutRolloutPhase_phase,  RolloutRolloutPhase_phase_uihint  } from '.
 
 export interface IRolloutRolloutPhase {
     'name'?: string;
-    'phase'?: RolloutRolloutPhase_phase;
+    'phase': RolloutRolloutPhase_phase;
     'start-time'?: Date;
     'end-time'?: Date;
     'reason'?: string;
@@ -89,31 +89,43 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
             this['name'] = values['name'];
         } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('name')) {
             this['name'] = RolloutRolloutPhase.propInfo['name'].default;
+        } else {
+            this['name'] = null
         }
         if (values && values['phase'] != null) {
             this['phase'] = values['phase'];
         } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('phase')) {
             this['phase'] = <RolloutRolloutPhase_phase>  RolloutRolloutPhase.propInfo['phase'].default;
+        } else {
+            this['phase'] = null
         }
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
         } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('start-time')) {
             this['start-time'] = RolloutRolloutPhase.propInfo['start-time'].default;
+        } else {
+            this['start-time'] = null
         }
         if (values && values['end-time'] != null) {
             this['end-time'] = values['end-time'];
         } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('end-time')) {
             this['end-time'] = RolloutRolloutPhase.propInfo['end-time'].default;
+        } else {
+            this['end-time'] = null
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
         } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('reason')) {
             this['reason'] = RolloutRolloutPhase.propInfo['reason'].default;
+        } else {
+            this['reason'] = null
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
         } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('message')) {
             this['message'] = RolloutRolloutPhase.propInfo['message'].default;
+        } else {
+            this['message'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

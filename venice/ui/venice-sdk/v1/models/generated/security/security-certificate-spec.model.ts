@@ -11,7 +11,7 @@ import { SecurityCertificateSpec_usages,  } from './enums';
 
 export interface ISecurityCertificateSpec {
     'description'?: string;
-    'usages'?: Array<SecurityCertificateSpec_usages>;
+    'usages': Array<SecurityCertificateSpec_usages>;
     'body'?: string;
     'trust-chain'?: string;
 }
@@ -87,21 +87,29 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
             this['description'] = values['description'];
         } else if (fillDefaults && SecurityCertificateSpec.hasDefaultValue('description')) {
             this['description'] = SecurityCertificateSpec.propInfo['description'].default;
+        } else {
+            this['description'] = null
         }
         if (values && values['usages'] != null) {
             this['usages'] = values['usages'];
         } else if (fillDefaults && SecurityCertificateSpec.hasDefaultValue('usages')) {
             this['usages'] = [ SecurityCertificateSpec.propInfo['usages'].default];
+        } else {
+            this['usages'] = [];
         }
         if (values && values['body'] != null) {
             this['body'] = values['body'];
         } else if (fillDefaults && SecurityCertificateSpec.hasDefaultValue('body')) {
             this['body'] = SecurityCertificateSpec.propInfo['body'].default;
+        } else {
+            this['body'] = null
         }
         if (values && values['trust-chain'] != null) {
             this['trust-chain'] = values['trust-chain'];
         } else if (fillDefaults && SecurityCertificateSpec.hasDefaultValue('trust-chain')) {
             this['trust-chain'] = SecurityCertificateSpec.propInfo['trust-chain'].default;
+        } else {
+            this['trust-chain'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

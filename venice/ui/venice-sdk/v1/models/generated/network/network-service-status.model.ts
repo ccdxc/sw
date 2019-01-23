@@ -57,6 +57,8 @@ export class NetworkServiceStatus extends BaseModel implements INetworkServiceSt
             this['workloads'] = values['workloads'];
         } else if (fillDefaults && NetworkServiceStatus.hasDefaultValue('workloads')) {
             this['workloads'] = [ NetworkServiceStatus.propInfo['workloads'].default];
+        } else {
+            this['workloads'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -56,6 +56,8 @@ export class ClusterStorageInfo extends BaseModel implements IClusterStorageInfo
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<ClusterStorageDeviceInfo>(this, 'devices', values['devices'], ClusterStorageDeviceInfo);
+        } else {
+            this['devices'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -56,6 +56,8 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>(this, 'events', values['events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

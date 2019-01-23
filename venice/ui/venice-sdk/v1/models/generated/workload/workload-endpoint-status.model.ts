@@ -122,71 +122,99 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
             this['workload-name'] = values['workload-name'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('workload-name')) {
             this['workload-name'] = WorkloadEndpointStatus.propInfo['workload-name'].default;
+        } else {
+            this['workload-name'] = null
         }
         if (values && values['network'] != null) {
             this['network'] = values['network'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('network')) {
             this['network'] = WorkloadEndpointStatus.propInfo['network'].default;
+        } else {
+            this['network'] = null
         }
         if (values && values['homing-host-addr'] != null) {
             this['homing-host-addr'] = values['homing-host-addr'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('homing-host-addr')) {
             this['homing-host-addr'] = WorkloadEndpointStatus.propInfo['homing-host-addr'].default;
+        } else {
+            this['homing-host-addr'] = null
         }
         if (values && values['homing-host-name'] != null) {
             this['homing-host-name'] = values['homing-host-name'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('homing-host-name')) {
             this['homing-host-name'] = WorkloadEndpointStatus.propInfo['homing-host-name'].default;
+        } else {
+            this['homing-host-name'] = null
         }
         if (values && values['ipv4-address'] != null) {
             this['ipv4-address'] = values['ipv4-address'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv4-address')) {
             this['ipv4-address'] = WorkloadEndpointStatus.propInfo['ipv4-address'].default;
+        } else {
+            this['ipv4-address'] = null
         }
         if (values && values['ipv4-gateway'] != null) {
             this['ipv4-gateway'] = values['ipv4-gateway'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv4-gateway')) {
             this['ipv4-gateway'] = WorkloadEndpointStatus.propInfo['ipv4-gateway'].default;
+        } else {
+            this['ipv4-gateway'] = null
         }
         if (values && values['ipv6-address'] != null) {
             this['ipv6-address'] = values['ipv6-address'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv6-address')) {
             this['ipv6-address'] = WorkloadEndpointStatus.propInfo['ipv6-address'].default;
+        } else {
+            this['ipv6-address'] = null
         }
         if (values && values['ipv6-gateway'] != null) {
             this['ipv6-gateway'] = values['ipv6-gateway'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('ipv6-gateway')) {
             this['ipv6-gateway'] = WorkloadEndpointStatus.propInfo['ipv6-gateway'].default;
+        } else {
+            this['ipv6-gateway'] = null
         }
         if (values && values['mac-address'] != null) {
             this['mac-address'] = values['mac-address'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('mac-address')) {
             this['mac-address'] = WorkloadEndpointStatus.propInfo['mac-address'].default;
+        } else {
+            this['mac-address'] = null
         }
         if (values && values['node-uuid'] != null) {
             this['node-uuid'] = values['node-uuid'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('node-uuid')) {
             this['node-uuid'] = WorkloadEndpointStatus.propInfo['node-uuid'].default;
+        } else {
+            this['node-uuid'] = null
         }
         if (values && values['EndpointState'] != null) {
             this['EndpointState'] = values['EndpointState'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('EndpointState')) {
             this['EndpointState'] = WorkloadEndpointStatus.propInfo['EndpointState'].default;
+        } else {
+            this['EndpointState'] = null
         }
         if (values && values['SecurityGroups'] != null) {
             this['SecurityGroups'] = values['SecurityGroups'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('SecurityGroups')) {
             this['SecurityGroups'] = [ WorkloadEndpointStatus.propInfo['SecurityGroups'].default];
+        } else {
+            this['SecurityGroups'] = [];
         }
         if (values && values['micro-segment-vlan'] != null) {
             this['micro-segment-vlan'] = values['micro-segment-vlan'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('micro-segment-vlan')) {
             this['micro-segment-vlan'] = WorkloadEndpointStatus.propInfo['micro-segment-vlan'].default;
+        } else {
+            this['micro-segment-vlan'] = null
         }
         if (values && values['workload-attributes'] != null) {
             this['workload-attributes'] = values['workload-attributes'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('workload-attributes')) {
             this['workload-attributes'] = WorkloadEndpointStatus.propInfo['workload-attributes'].default;
+        } else {
+            this['workload-attributes'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

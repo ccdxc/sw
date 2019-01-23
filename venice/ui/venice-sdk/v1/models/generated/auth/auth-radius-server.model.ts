@@ -12,7 +12,7 @@ import { AuthRadiusServer_auth_method,  } from './enums';
 export interface IAuthRadiusServer {
     'url'?: string;
     'secret'?: string;
-    'auth-method'?: AuthRadiusServer_auth_method;
+    'auth-method': AuthRadiusServer_auth_method;
     'trusted-certs'?: string;
 }
 
@@ -74,21 +74,29 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
             this['url'] = values['url'];
         } else if (fillDefaults && AuthRadiusServer.hasDefaultValue('url')) {
             this['url'] = AuthRadiusServer.propInfo['url'].default;
+        } else {
+            this['url'] = null
         }
         if (values && values['secret'] != null) {
             this['secret'] = values['secret'];
         } else if (fillDefaults && AuthRadiusServer.hasDefaultValue('secret')) {
             this['secret'] = AuthRadiusServer.propInfo['secret'].default;
+        } else {
+            this['secret'] = null
         }
         if (values && values['auth-method'] != null) {
             this['auth-method'] = values['auth-method'];
         } else if (fillDefaults && AuthRadiusServer.hasDefaultValue('auth-method')) {
             this['auth-method'] = <AuthRadiusServer_auth_method>  AuthRadiusServer.propInfo['auth-method'].default;
+        } else {
+            this['auth-method'] = null
         }
         if (values && values['trusted-certs'] != null) {
             this['trusted-certs'] = values['trusted-certs'];
         } else if (fillDefaults && AuthRadiusServer.hasDefaultValue('trusted-certs')) {
             this['trusted-certs'] = AuthRadiusServer.propInfo['trusted-certs'].default;
+        } else {
+            this['trusted-certs'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

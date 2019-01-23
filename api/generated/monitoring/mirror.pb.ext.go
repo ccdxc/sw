@@ -264,6 +264,11 @@ func (m *MirrorStopConditions) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *MirrorStopConditions) Defaults(ver string) bool {
 	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.ExpiryDuration = "2h"
+	}
 	return ret
 }
 
@@ -511,11 +516,14 @@ func init() {
 	})
 
 	validatorMapMirror["MirrorStopConditions"] = make(map[string][]func(string, interface{}) error)
-
 	validatorMapMirror["MirrorStopConditions"]["all"] = append(validatorMapMirror["MirrorStopConditions"]["all"], func(path string, i interface{}) error {
 		m := i.(*MirrorStopConditions)
-		if !validators.Duration(m.ExpiryDuration) {
-			return fmt.Errorf("%v validation failed", path+"."+"ExpiryDuration")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "2h")
+
+		if !validators.Duration(m.ExpiryDuration, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"ExpiryDuration")
 		}
 		return nil
 	})

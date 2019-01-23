@@ -56,6 +56,8 @@ export class SearchKindAggregation extends BaseModel implements ISearchKindAggre
             this['kinds'] = values['kinds'];
         } else if (fillDefaults && SearchKindAggregation.hasDefaultValue('kinds')) {
             this['kinds'] = SearchKindAggregation.propInfo['kinds'].default;
+        } else {
+            this['kinds'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

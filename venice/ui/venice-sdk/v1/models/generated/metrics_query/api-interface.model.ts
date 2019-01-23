@@ -78,24 +78,34 @@ export class ApiInterface extends BaseModel implements IApiInterface {
             this['Str'] = values['Str'];
         } else if (fillDefaults && ApiInterface.hasDefaultValue('Str')) {
             this['Str'] = ApiInterface.propInfo['Str'].default;
+        } else {
+            this['Str'] = null
         }
         if (values && values['Int64'] != null) {
             this['Int64'] = values['Int64'];
         } else if (fillDefaults && ApiInterface.hasDefaultValue('Int64')) {
             this['Int64'] = ApiInterface.propInfo['Int64'].default;
+        } else {
+            this['Int64'] = null
         }
         if (values && values['Bool'] != null) {
             this['Bool'] = values['Bool'];
         } else if (fillDefaults && ApiInterface.hasDefaultValue('Bool')) {
             this['Bool'] = ApiInterface.propInfo['Bool'].default;
+        } else {
+            this['Bool'] = null
         }
         if (values && values['Float'] != null) {
             this['Float'] = values['Float'];
         } else if (fillDefaults && ApiInterface.hasDefaultValue('Float')) {
             this['Float'] = ApiInterface.propInfo['Float'].default;
+        } else {
+            this['Float'] = null
         }
         if (values) {
-            this['Interfaces'].setValues(values['Interfaces']);
+            this['Interfaces'].setValues(values['Interfaces'], fillDefaults);
+        } else {
+            this['Interfaces'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

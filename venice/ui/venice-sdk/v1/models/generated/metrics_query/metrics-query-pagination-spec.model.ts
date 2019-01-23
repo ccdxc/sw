@@ -61,11 +61,15 @@ export class Metrics_queryPaginationSpec extends BaseModel implements IMetrics_q
             this['offset'] = values['offset'];
         } else if (fillDefaults && Metrics_queryPaginationSpec.hasDefaultValue('offset')) {
             this['offset'] = Metrics_queryPaginationSpec.propInfo['offset'].default;
+        } else {
+            this['offset'] = null
         }
         if (values && values['count'] != null) {
             this['count'] = values['count'];
         } else if (fillDefaults && Metrics_queryPaginationSpec.hasDefaultValue('count')) {
             this['count'] = Metrics_queryPaginationSpec.propInfo['count'].default;
+        } else {
+            this['count'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

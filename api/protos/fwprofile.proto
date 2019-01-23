@@ -14,27 +14,27 @@ import "github.com/pensando/sw/api/meta.proto";
 // FirewallProfileSpec - spec part of FirewallProfile object
 message FirewallProfileSpec {
     // Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object
-    string SessionIdleTimeout           = 1 [(gogoproto.jsontag) = "session-idle-timeout,omitempty", (venice.check) = "Duration()"];
+    string SessionIdleTimeout           = 1 [(gogoproto.jsontag) = "session-idle-timeout,omitempty", (venice.default) = "90s", (venice.check) = "Duration(0,0)"];
     // TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN
-    string TCPConnectionSetupTimeout    = 2 [(gogoproto.jsontag) = "tcp-connection-setup-timeout,omitempty", (venice.check) = "Duration()"];
+    string TCPConnectionSetupTimeout    = 2 [(gogoproto.jsontag) = "tcp-connection-setup-timeout,omitempty", (venice.default) = "30s", (venice.check) = "Duration(0,0)"];
     // TCP Close Timeout is the time for which TCP session is kept after a FIN is seen
-    string TCPCloseTimeout              = 3 [(gogoproto.jsontag) = "tcp-close-timeout,omitempty", (venice.check) = "Duration()"];
+    string TCPCloseTimeout              = 3 [(gogoproto.jsontag) = "tcp-close-timeout,omitempty", (venice.default) = "15s", (venice.check) = "Duration(0,0)"];
     // TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not received
-    string TCPHalfClosedTimeout         = 4 [(gogoproto.jsontag) = "tcp-half-closed-timeout,omitempty", (venice.check) = "Duration()"];
+    string TCPHalfClosedTimeout         = 4 [(gogoproto.jsontag) = "tcp-half-closed-timeout,omitempty", (venice.default) = "120s", (venice.check) = "Duration(0,0)"];
     // TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flow
-    string TCPDropTimeout               = 5 [(gogoproto.jsontag) = "tcp-drop-timeout,omitempty", (venice.check) = "Duration()"];
+    string TCPDropTimeout               = 5 [(gogoproto.jsontag) = "tcp-drop-timeout,omitempty", (venice.default) = "90s", (venice.check) = "Duration(0,0)"];
     // UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flow
-    string UDPDropTimeout               = 6 [(gogoproto.jsontag) = "udp-drop-timeout,omitempty", (venice.check) = "Duration()"];
+    string UDPDropTimeout               = 6 [(gogoproto.jsontag) = "udp-drop-timeout,omitempty", (venice.default) = "60s", (venice.check) = "Duration(0,0)"];
     // ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flow
-    string ICMPDropTimeout              = 7 [(gogoproto.jsontag) = "icmp-drop-timeout,omitempty", (venice.check) = "Duration()"];
+    string ICMPDropTimeout              = 7 [(gogoproto.jsontag) = "icmp-drop-timeout,omitempty", (venice.default) = "60s", (venice.check) = "Duration(0,0)"];
     // Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flow
-    string DropTimeout                  = 8 [(gogoproto.jsontag) = "drop-timeout,omitempty", (venice.check) = "Duration()"];
+    string DropTimeout                  = 8 [(gogoproto.jsontag) = "drop-timeout,omitempty", (venice.default) = "60s", (venice.check) = "Duration(0,0)"];
     // Tcp Timeout is the period for which a TCP session is kept alive during inactivity
-    string TcpTimeout                   = 9 [(gogoproto.jsontag) = "tcp-timeout,omitempty", (venice.check) = "Duration()"];
+    string TcpTimeout                   = 9 [(gogoproto.jsontag) = "tcp-timeout,omitempty", (venice.default) = "3600s", (venice.check) = "Duration(0,0)"];
     // Udp Timeout is the period for which a UDP session is kept alive during inactivity
-    string UdpTimeout                   = 10 [(gogoproto.jsontag) = "udp-timeout,omitempty", (venice.check) = "Duration()"];
+    string UdpTimeout                   = 10 [(gogoproto.jsontag) = "udp-timeout,omitempty", (venice.default) = "30s", (venice.check) = "Duration(0,0)"];
     // Icmp Timeout is the period for which a ICMP session is kept alive during inactivity
-    string IcmpTimeout                  = 11 [(gogoproto.jsontag) = "icmp-timeout,omitempty", (venice.check) = "Duration()"];
+    string IcmpTimeout                  = 11 [(gogoproto.jsontag) = "icmp-timeout,omitempty", (venice.default) = "6s", (venice.check) = "Duration(0,0)"];
 }
 
 

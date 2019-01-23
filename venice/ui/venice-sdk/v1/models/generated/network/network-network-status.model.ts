@@ -62,11 +62,15 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
             this['workloads'] = values['workloads'];
         } else if (fillDefaults && NetworkNetworkStatus.hasDefaultValue('workloads')) {
             this['workloads'] = [ NetworkNetworkStatus.propInfo['workloads'].default];
+        } else {
+            this['workloads'] = [];
         }
         if (values && values['allocated-ipv4-addrs'] != null) {
             this['allocated-ipv4-addrs'] = values['allocated-ipv4-addrs'];
         } else if (fillDefaults && NetworkNetworkStatus.hasDefaultValue('allocated-ipv4-addrs')) {
             this['allocated-ipv4-addrs'] = NetworkNetworkStatus.propInfo['allocated-ipv4-addrs'].default;
+        } else {
+            this['allocated-ipv4-addrs'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

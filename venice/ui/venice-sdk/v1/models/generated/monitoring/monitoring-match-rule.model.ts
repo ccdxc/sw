@@ -68,13 +68,19 @@ export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRu
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this['source'].setValues(values['source']);
+            this['source'].setValues(values['source'], fillDefaults);
+        } else {
+            this['source'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['destination'].setValues(values['destination']);
+            this['destination'].setValues(values['destination'], fillDefaults);
+        } else {
+            this['destination'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['app-protocol-selectors'].setValues(values['app-protocol-selectors']);
+            this['app-protocol-selectors'].setValues(values['app-protocol-selectors'], fillDefaults);
+        } else {
+            this['app-protocol-selectors'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

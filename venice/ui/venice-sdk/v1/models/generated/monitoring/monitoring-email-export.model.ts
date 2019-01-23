@@ -57,6 +57,8 @@ export class MonitoringEmailExport extends BaseModel implements IMonitoringEmail
             this['email-list'] = values['email-list'];
         } else if (fillDefaults && MonitoringEmailExport.hasDefaultValue('email-list')) {
             this['email-list'] = [ MonitoringEmailExport.propInfo['email-list'].default];
+        } else {
+            this['email-list'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

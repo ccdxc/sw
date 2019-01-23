@@ -12,7 +12,7 @@ import { StagingValidationError, IStagingValidationError } from './staging-valid
 import { StagingItem, IStagingItem } from './staging-item.model';
 
 export interface IStagingBufferStatus {
-    'validation-result'?: StagingBufferStatus_validation_result;
+    'validation-result': StagingBufferStatus_validation_result;
     'errors'?: Array<IStagingValidationError>;
     'items'?: Array<IStagingItem>;
 }
@@ -73,12 +73,18 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
             this['validation-result'] = values['validation-result'];
         } else if (fillDefaults && StagingBufferStatus.hasDefaultValue('validation-result')) {
             this['validation-result'] = <StagingBufferStatus_validation_result>  StagingBufferStatus.propInfo['validation-result'].default;
+        } else {
+            this['validation-result'] = null
         }
         if (values) {
             this.fillModelArray<StagingValidationError>(this, 'errors', values['errors'], StagingValidationError);
+        } else {
+            this['errors'] = [];
         }
         if (values) {
             this.fillModelArray<StagingItem>(this, 'items', values['items'], StagingItem);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

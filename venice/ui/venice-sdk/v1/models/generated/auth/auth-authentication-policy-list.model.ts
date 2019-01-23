@@ -75,17 +75,25 @@ export class AuthAuthenticationPolicyList extends BaseModel implements IAuthAuth
             this['kind'] = values['kind'];
         } else if (fillDefaults && AuthAuthenticationPolicyList.hasDefaultValue('kind')) {
             this['kind'] = AuthAuthenticationPolicyList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && AuthAuthenticationPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = AuthAuthenticationPolicyList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<AuthAuthenticationPolicy>(this, 'items', values['items'], AuthAuthenticationPolicy);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -157,80 +157,114 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
             this['kind'] = values['kind'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('kind')) {
             this['kind'] = AuditEvent.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('api-version')) {
             this['api-version'] = AuditEvent.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['meta'].setValues(values['meta']);
+            this['meta'].setValues(values['meta'], fillDefaults);
+        } else {
+            this['meta'].setValues(null, fillDefaults);
         }
         if (values && values['stage'] != null) {
             this['stage'] = values['stage'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('stage')) {
             this['stage'] = <AuditEvent_stage>  AuditEvent.propInfo['stage'].default;
+        } else {
+            this['stage'] = null
         }
         if (values && values['level'] != null) {
             this['level'] = values['level'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('level')) {
             this['level'] = <AuditEvent_level>  AuditEvent.propInfo['level'].default;
+        } else {
+            this['level'] = null
         }
         if (values) {
-            this['user'].setValues(values['user']);
+            this['user'].setValues(values['user'], fillDefaults);
+        } else {
+            this['user'].setValues(null, fillDefaults);
         }
         if (values && values['client-ips'] != null) {
             this['client-ips'] = values['client-ips'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('client-ips')) {
             this['client-ips'] = [ AuditEvent.propInfo['client-ips'].default];
+        } else {
+            this['client-ips'] = [];
         }
         if (values) {
-            this['resource'].setValues(values['resource']);
+            this['resource'].setValues(values['resource'], fillDefaults);
+        } else {
+            this['resource'].setValues(null, fillDefaults);
         }
         if (values && values['action'] != null) {
             this['action'] = values['action'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('action')) {
             this['action'] = AuditEvent.propInfo['action'].default;
+        } else {
+            this['action'] = null
         }
         if (values && values['outcome'] != null) {
             this['outcome'] = values['outcome'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('outcome')) {
             this['outcome'] = <AuditEvent_outcome>  AuditEvent.propInfo['outcome'].default;
+        } else {
+            this['outcome'] = null
         }
         if (values && values['request-uri'] != null) {
             this['request-uri'] = values['request-uri'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('request-uri')) {
             this['request-uri'] = AuditEvent.propInfo['request-uri'].default;
+        } else {
+            this['request-uri'] = null
         }
         if (values && values['request-object'] != null) {
             this['request-object'] = values['request-object'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('request-object')) {
             this['request-object'] = AuditEvent.propInfo['request-object'].default;
+        } else {
+            this['request-object'] = null
         }
         if (values && values['response-object'] != null) {
             this['response-object'] = values['response-object'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('response-object')) {
             this['response-object'] = AuditEvent.propInfo['response-object'].default;
+        } else {
+            this['response-object'] = null
         }
         if (values && values['gateway-node'] != null) {
             this['gateway-node'] = values['gateway-node'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('gateway-node')) {
             this['gateway-node'] = AuditEvent.propInfo['gateway-node'].default;
+        } else {
+            this['gateway-node'] = null
         }
         if (values && values['gateway-ip'] != null) {
             this['gateway-ip'] = values['gateway-ip'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('gateway-ip')) {
             this['gateway-ip'] = AuditEvent.propInfo['gateway-ip'].default;
+        } else {
+            this['gateway-ip'] = null
         }
         if (values && values['service-name'] != null) {
             this['service-name'] = values['service-name'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('service-name')) {
             this['service-name'] = AuditEvent.propInfo['service-name'].default;
+        } else {
+            this['service-name'] = null
         }
         if (values && values['data'] != null) {
             this['data'] = values['data'];
         } else if (fillDefaults && AuditEvent.hasDefaultValue('data')) {
             this['data'] = AuditEvent.propInfo['data'].default;
+        } else {
+            this['data'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -242,13 +276,13 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
                 'meta': this['meta'].$formGroup,
-                'stage': new FormControl(this['stage'], [required, enumValidator(AuditEvent_stage), ]),
-                'level': new FormControl(this['level'], [required, enumValidator(AuditEvent_level), ]),
+                'stage': new FormControl(this['stage'], [enumValidator(AuditEvent_stage), ]),
+                'level': new FormControl(this['level'], [enumValidator(AuditEvent_level), ]),
                 'user': this['user'].$formGroup,
                 'client-ips': new FormControl(this['client-ips']),
                 'resource': this['resource'].$formGroup,
                 'action': new FormControl(this['action']),
-                'outcome': new FormControl(this['outcome'], [required, enumValidator(AuditEvent_outcome), ]),
+                'outcome': new FormControl(this['outcome'], [enumValidator(AuditEvent_outcome), ]),
                 'request-uri': new FormControl(this['request-uri']),
                 'request-object': new FormControl(this['request-object']),
                 'response-object': new FormControl(this['response-object']),

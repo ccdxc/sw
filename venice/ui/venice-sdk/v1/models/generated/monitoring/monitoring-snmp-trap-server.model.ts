@@ -14,7 +14,7 @@ import { MonitoringPrivacyConfig, IMonitoringPrivacyConfig } from './monitoring-
 export interface IMonitoringSNMPTrapServer {
     'host'?: string;
     'port'?: string;
-    'version'?: MonitoringSNMPTrapServer_version;
+    'version': MonitoringSNMPTrapServer_version;
     'community-or-user'?: string;
     'auth-config'?: IMonitoringAuthConfig;
     'privacy-config'?: IMonitoringPrivacyConfig;
@@ -99,27 +99,39 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
             this['host'] = values['host'];
         } else if (fillDefaults && MonitoringSNMPTrapServer.hasDefaultValue('host')) {
             this['host'] = MonitoringSNMPTrapServer.propInfo['host'].default;
+        } else {
+            this['host'] = null
         }
         if (values && values['port'] != null) {
             this['port'] = values['port'];
         } else if (fillDefaults && MonitoringSNMPTrapServer.hasDefaultValue('port')) {
             this['port'] = MonitoringSNMPTrapServer.propInfo['port'].default;
+        } else {
+            this['port'] = null
         }
         if (values && values['version'] != null) {
             this['version'] = values['version'];
         } else if (fillDefaults && MonitoringSNMPTrapServer.hasDefaultValue('version')) {
             this['version'] = <MonitoringSNMPTrapServer_version>  MonitoringSNMPTrapServer.propInfo['version'].default;
+        } else {
+            this['version'] = null
         }
         if (values && values['community-or-user'] != null) {
             this['community-or-user'] = values['community-or-user'];
         } else if (fillDefaults && MonitoringSNMPTrapServer.hasDefaultValue('community-or-user')) {
             this['community-or-user'] = MonitoringSNMPTrapServer.propInfo['community-or-user'].default;
+        } else {
+            this['community-or-user'] = null
         }
         if (values) {
-            this['auth-config'].setValues(values['auth-config']);
+            this['auth-config'].setValues(values['auth-config'], fillDefaults);
+        } else {
+            this['auth-config'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['privacy-config'].setValues(values['privacy-config']);
+            this['privacy-config'].setValues(values['privacy-config'], fillDefaults);
+        } else {
+            this['privacy-config'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

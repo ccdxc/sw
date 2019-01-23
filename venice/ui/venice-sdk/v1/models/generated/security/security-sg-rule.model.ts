@@ -13,7 +13,7 @@ import { SecuritySGRule_action,  } from './enums';
 export interface ISecuritySGRule {
     'apps'?: Array<string>;
     'proto-ports'?: Array<ISecurityProtoPort>;
-    'action'?: SecuritySGRule_action;
+    'action': SecuritySGRule_action;
     'from-ip-addresses'?: Array<string>;
     'to-ip-addresses'?: Array<string>;
     'from-security-groups'?: Array<string>;
@@ -96,34 +96,48 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
             this['apps'] = values['apps'];
         } else if (fillDefaults && SecuritySGRule.hasDefaultValue('apps')) {
             this['apps'] = [ SecuritySGRule.propInfo['apps'].default];
+        } else {
+            this['apps'] = [];
         }
         if (values) {
             this.fillModelArray<SecurityProtoPort>(this, 'proto-ports', values['proto-ports'], SecurityProtoPort);
+        } else {
+            this['proto-ports'] = [];
         }
         if (values && values['action'] != null) {
             this['action'] = values['action'];
         } else if (fillDefaults && SecuritySGRule.hasDefaultValue('action')) {
             this['action'] = <SecuritySGRule_action>  SecuritySGRule.propInfo['action'].default;
+        } else {
+            this['action'] = null
         }
         if (values && values['from-ip-addresses'] != null) {
             this['from-ip-addresses'] = values['from-ip-addresses'];
         } else if (fillDefaults && SecuritySGRule.hasDefaultValue('from-ip-addresses')) {
             this['from-ip-addresses'] = [ SecuritySGRule.propInfo['from-ip-addresses'].default];
+        } else {
+            this['from-ip-addresses'] = [];
         }
         if (values && values['to-ip-addresses'] != null) {
             this['to-ip-addresses'] = values['to-ip-addresses'];
         } else if (fillDefaults && SecuritySGRule.hasDefaultValue('to-ip-addresses')) {
             this['to-ip-addresses'] = [ SecuritySGRule.propInfo['to-ip-addresses'].default];
+        } else {
+            this['to-ip-addresses'] = [];
         }
         if (values && values['from-security-groups'] != null) {
             this['from-security-groups'] = values['from-security-groups'];
         } else if (fillDefaults && SecuritySGRule.hasDefaultValue('from-security-groups')) {
             this['from-security-groups'] = [ SecuritySGRule.propInfo['from-security-groups'].default];
+        } else {
+            this['from-security-groups'] = [];
         }
         if (values && values['to-security-groups'] != null) {
             this['to-security-groups'] = values['to-security-groups'];
         } else if (fillDefaults && SecuritySGRule.hasDefaultValue('to-security-groups')) {
             this['to-security-groups'] = [ SecuritySGRule.propInfo['to-security-groups'].default];
+        } else {
+            this['to-security-groups'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

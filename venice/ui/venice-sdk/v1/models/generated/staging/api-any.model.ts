@@ -61,11 +61,15 @@ export class ApiAny extends BaseModel implements IApiAny {
             this['type_url'] = values['type_url'];
         } else if (fillDefaults && ApiAny.hasDefaultValue('type_url')) {
             this['type_url'] = ApiAny.propInfo['type_url'].default;
+        } else {
+            this['type_url'] = null
         }
         if (values && values['value'] != null) {
             this['value'] = values['value'];
         } else if (fillDefaults && ApiAny.hasDefaultValue('value')) {
             this['value'] = ApiAny.propInfo['value'].default;
+        } else {
+            this['value'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

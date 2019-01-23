@@ -105,40 +105,58 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
             this['kind'] = values['kind'];
         } else if (fillDefaults && EventsEvent.hasDefaultValue('kind')) {
             this['kind'] = EventsEvent.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && EventsEvent.hasDefaultValue('api-version')) {
             this['api-version'] = EventsEvent.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['meta'].setValues(values['meta']);
+            this['meta'].setValues(values['meta'], fillDefaults);
+        } else {
+            this['meta'].setValues(null, fillDefaults);
         }
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
         } else if (fillDefaults && EventsEvent.hasDefaultValue('severity')) {
             this['severity'] = <EventsEvent_severity>  EventsEvent.propInfo['severity'].default;
+        } else {
+            this['severity'] = null
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && EventsEvent.hasDefaultValue('type')) {
             this['type'] = EventsEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
         } else if (fillDefaults && EventsEvent.hasDefaultValue('message')) {
             this['message'] = EventsEvent.propInfo['message'].default;
+        } else {
+            this['message'] = null
         }
         if (values) {
-            this['object-ref'].setValues(values['object-ref']);
+            this['object-ref'].setValues(values['object-ref'], fillDefaults);
+        } else {
+            this['object-ref'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['source'].setValues(values['source']);
+            this['source'].setValues(values['source'], fillDefaults);
+        } else {
+            this['source'].setValues(null, fillDefaults);
         }
         if (values && values['count'] != null) {
             this['count'] = values['count'];
         } else if (fillDefaults && EventsEvent.hasDefaultValue('count')) {
             this['count'] = EventsEvent.propInfo['count'].default;
+        } else {
+            this['count'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -150,7 +168,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
                 'meta': this['meta'].$formGroup,
-                'severity': new FormControl(this['severity'], [required, enumValidator(EventsEvent_severity), ]),
+                'severity': new FormControl(this['severity'], [enumValidator(EventsEvent_severity), ]),
                 'type': new FormControl(this['type']),
                 'message': new FormControl(this['message']),
                 'object-ref': this['object-ref'].$formGroup,

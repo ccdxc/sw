@@ -56,6 +56,8 @@ export class SecurityFtp extends BaseModel implements ISecurityFtp {
             this['allow-mismatch-ip-address'] = values['allow-mismatch-ip-address'];
         } else if (fillDefaults && SecurityFtp.hasDefaultValue('allow-mismatch-ip-address')) {
             this['allow-mismatch-ip-address'] = SecurityFtp.propInfo['allow-mismatch-ip-address'].default;
+        } else {
+            this['allow-mismatch-ip-address'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

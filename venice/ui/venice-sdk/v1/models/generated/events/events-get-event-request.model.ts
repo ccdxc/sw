@@ -56,6 +56,8 @@ export class EventsGetEventRequest extends BaseModel implements IEventsGetEventR
             this['uuid'] = values['uuid'];
         } else if (fillDefaults && EventsGetEventRequest.hasDefaultValue('uuid')) {
             this['uuid'] = EventsGetEventRequest.propInfo['uuid'].default;
+        } else {
+            this['uuid'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

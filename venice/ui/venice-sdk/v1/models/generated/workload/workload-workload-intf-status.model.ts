@@ -62,11 +62,15 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
             this['ip-addresses'] = values['ip-addresses'];
         } else if (fillDefaults && WorkloadWorkloadIntfStatus.hasDefaultValue('ip-addresses')) {
             this['ip-addresses'] = [ WorkloadWorkloadIntfStatus.propInfo['ip-addresses'].default];
+        } else {
+            this['ip-addresses'] = [];
         }
         if (values && values['endpoint'] != null) {
             this['endpoint'] = values['endpoint'];
         } else if (fillDefaults && WorkloadWorkloadIntfStatus.hasDefaultValue('endpoint')) {
             this['endpoint'] = WorkloadWorkloadIntfStatus.propInfo['endpoint'].default;
+        } else {
+            this['endpoint'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

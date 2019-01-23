@@ -63,9 +63,13 @@ export class ClusterAutoMsgSmartNICWatchHelperWatchEvent extends BaseModel imple
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterAutoMsgSmartNICWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = ClusterAutoMsgSmartNICWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

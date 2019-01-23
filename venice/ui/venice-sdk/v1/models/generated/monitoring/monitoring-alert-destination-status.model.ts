@@ -56,6 +56,8 @@ export class MonitoringAlertDestinationStatus extends BaseModel implements IMoni
             this['total-notifications-sent'] = values['total-notifications-sent'];
         } else if (fillDefaults && MonitoringAlertDestinationStatus.hasDefaultValue('total-notifications-sent')) {
             this['total-notifications-sent'] = MonitoringAlertDestinationStatus.propInfo['total-notifications-sent'].default;
+        } else {
+            this['total-notifications-sent'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

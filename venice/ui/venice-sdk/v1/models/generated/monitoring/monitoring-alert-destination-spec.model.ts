@@ -76,16 +76,24 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this['selector'].setValues(values['selector']);
+            this['selector'].setValues(values['selector'], fillDefaults);
+        } else {
+            this['selector'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['email-export'].setValues(values['email-export']);
+            this['email-export'].setValues(values['email-export'], fillDefaults);
+        } else {
+            this['email-export'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['snmp-export'].setValues(values['snmp-export']);
+            this['snmp-export'].setValues(values['snmp-export'], fillDefaults);
+        } else {
+            this['snmp-export'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['syslog-export'].setValues(values['syslog-export']);
+            this['syslog-export'].setValues(values['syslog-export'], fillDefaults);
+        } else {
+            this['syslog-export'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

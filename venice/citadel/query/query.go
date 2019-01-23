@@ -127,7 +127,7 @@ func (q *Server) validateQuerySpec(qs *metrics_query.QuerySpec) error {
 		}
 	}
 
-	if !validators.Duration(qs.GroupbyTime) {
+	if qs.GroupbyTime != "" && !validators.Duration(qs.GroupbyTime, []string{"0", "0"}) {
 		return status.Errorf(codes.InvalidArgument, "group-by-time value %s was not a valid duration", qs.GroupbyTime)
 	}
 

@@ -9,8 +9,8 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringStatsPolicySpec {
-    'retention-time'?: string;
-    'downsample-retention-time'?: string;
+    'retention-time': string;
+    'downsample-retention-time': string;
 }
 
 
@@ -73,11 +73,15 @@ export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringS
             this['retention-time'] = values['retention-time'];
         } else if (fillDefaults && MonitoringStatsPolicySpec.hasDefaultValue('retention-time')) {
             this['retention-time'] = MonitoringStatsPolicySpec.propInfo['retention-time'].default;
+        } else {
+            this['retention-time'] = null
         }
         if (values && values['downsample-retention-time'] != null) {
             this['downsample-retention-time'] = values['downsample-retention-time'];
         } else if (fillDefaults && MonitoringStatsPolicySpec.hasDefaultValue('downsample-retention-time')) {
             this['downsample-retention-time'] = MonitoringStatsPolicySpec.propInfo['downsample-retention-time'].default;
+        } else {
+            this['downsample-retention-time'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -86,8 +90,8 @@ export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringS
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'retention-time': new FormControl(this['retention-time']),
-                'downsample-retention-time': new FormControl(this['downsample-retention-time']),
+                'retention-time': new FormControl(this['retention-time'], [required, ]),
+                'downsample-retention-time': new FormControl(this['downsample-retention-time'], [required, ]),
             });
         }
         return this._formGroup;

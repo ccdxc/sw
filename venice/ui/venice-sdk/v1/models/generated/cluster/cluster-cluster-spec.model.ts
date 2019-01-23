@@ -86,21 +86,29 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
             this['quorum-nodes'] = values['quorum-nodes'];
         } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('quorum-nodes')) {
             this['quorum-nodes'] = [ ClusterClusterSpec.propInfo['quorum-nodes'].default];
+        } else {
+            this['quorum-nodes'] = [];
         }
         if (values && values['virtual-ip'] != null) {
             this['virtual-ip'] = values['virtual-ip'];
         } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('virtual-ip')) {
             this['virtual-ip'] = ClusterClusterSpec.propInfo['virtual-ip'].default;
+        } else {
+            this['virtual-ip'] = null
         }
         if (values && values['ntp-servers'] != null) {
             this['ntp-servers'] = values['ntp-servers'];
         } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('ntp-servers')) {
             this['ntp-servers'] = [ ClusterClusterSpec.propInfo['ntp-servers'].default];
+        } else {
+            this['ntp-servers'] = [];
         }
         if (values && values['auto-admit-nics'] != null) {
             this['auto-admit-nics'] = values['auto-admit-nics'];
         } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('auto-admit-nics')) {
             this['auto-admit-nics'] = ClusterClusterSpec.propInfo['auto-admit-nics'].default;
+        } else {
+            this['auto-admit-nics'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

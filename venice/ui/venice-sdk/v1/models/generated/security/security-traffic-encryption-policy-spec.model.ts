@@ -75,17 +75,25 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
             this['mode'] = values['mode'];
         } else if (fillDefaults && SecurityTrafficEncryptionPolicySpec.hasDefaultValue('mode')) {
             this['mode'] = SecurityTrafficEncryptionPolicySpec.propInfo['mode'].default;
+        } else {
+            this['mode'] = null
         }
         if (values) {
-            this['tls'].setValues(values['tls']);
+            this['tls'].setValues(values['tls'], fillDefaults);
+        } else {
+            this['tls'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['ipsec'].setValues(values['ipsec']);
+            this['ipsec'].setValues(values['ipsec'], fillDefaults);
+        } else {
+            this['ipsec'].setValues(null, fillDefaults);
         }
         if (values && values['key-rotation-interval-secs'] != null) {
             this['key-rotation-interval-secs'] = values['key-rotation-interval-secs'];
         } else if (fillDefaults && SecurityTrafficEncryptionPolicySpec.hasDefaultValue('key-rotation-interval-secs')) {
             this['key-rotation-interval-secs'] = SecurityTrafficEncryptionPolicySpec.propInfo['key-rotation-interval-secs'].default;
+        } else {
+            this['key-rotation-interval-secs'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -63,11 +63,15 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
             this['kind'] = values['kind'];
         } else if (fillDefaults && ApiTypeMeta.hasDefaultValue('kind')) {
             this['kind'] = ApiTypeMeta.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && ApiTypeMeta.hasDefaultValue('api-version')) {
             this['api-version'] = ApiTypeMeta.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -1069,6 +1069,9 @@
     },
     "labelsRequirement": {
       "type": "object",
+      "required": [
+        "operator"
+      ],
       "properties": {
         "key": {
           "type": "string",
@@ -1180,6 +1183,9 @@
     },
     "rolloutRolloutPhase": {
       "type": "object",
+      "required": [
+        "phase"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -1229,6 +1235,10 @@
     },
     "rolloutRolloutSpec": {
       "type": "object",
+      "required": [
+        "strategy",
+        "upgrade-type"
+      ],
       "properties": {
         "version": {
           "type": "string",
@@ -1306,6 +1316,9 @@
     },
     "rolloutRolloutStatus": {
       "type": "object",
+      "required": [
+        "state"
+      ],
       "properties": {
         "controller-nodes-status": {
           "type": "array",

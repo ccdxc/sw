@@ -75,17 +75,25 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
             this['kind'] = values['kind'];
         } else if (fillDefaults && MonitoringAlertList.hasDefaultValue('kind')) {
             this['kind'] = MonitoringAlertList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && MonitoringAlertList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringAlertList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<MonitoringAlert>(this, 'items', values['items'], MonitoringAlert);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

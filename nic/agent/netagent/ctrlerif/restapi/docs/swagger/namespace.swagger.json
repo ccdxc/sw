@@ -449,6 +449,9 @@
     },
     "netprotoNamespaceSpec": {
       "type": "object",
+      "required": [
+        "namespace-type"
+      ],
       "properties": {
         "namespace-type": {
           "type": "string",

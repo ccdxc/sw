@@ -78,24 +78,34 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
             this['kind'] = values['kind'];
         } else if (fillDefaults && AuthPasswordChangeRequest.hasDefaultValue('kind')) {
             this['kind'] = AuthPasswordChangeRequest.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && AuthPasswordChangeRequest.hasDefaultValue('api-version')) {
             this['api-version'] = AuthPasswordChangeRequest.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['meta'].setValues(values['meta']);
+            this['meta'].setValues(values['meta'], fillDefaults);
+        } else {
+            this['meta'].setValues(null, fillDefaults);
         }
         if (values && values['old-password'] != null) {
             this['old-password'] = values['old-password'];
         } else if (fillDefaults && AuthPasswordChangeRequest.hasDefaultValue('old-password')) {
             this['old-password'] = AuthPasswordChangeRequest.propInfo['old-password'].default;
+        } else {
+            this['old-password'] = null
         }
         if (values && values['new-password'] != null) {
             this['new-password'] = values['new-password'];
         } else if (fillDefaults && AuthPasswordChangeRequest.hasDefaultValue('new-password')) {
             this['new-password'] = AuthPasswordChangeRequest.propInfo['new-password'].default;
+        } else {
+            this['new-password'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -56,6 +56,8 @@ export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<AuthPermission>(this, 'permissions', values['permissions'], AuthPermission);
+        } else {
+            this['permissions'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

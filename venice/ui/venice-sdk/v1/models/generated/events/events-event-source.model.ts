@@ -65,11 +65,15 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
             this['component'] = values['component'];
         } else if (fillDefaults && EventsEventSource.hasDefaultValue('component')) {
             this['component'] = EventsEventSource.propInfo['component'].default;
+        } else {
+            this['component'] = null
         }
         if (values && values['node-name'] != null) {
             this['node-name'] = values['node-name'];
         } else if (fillDefaults && EventsEventSource.hasDefaultValue('node-name')) {
             this['node-name'] = EventsEventSource.propInfo['node-name'].default;
+        } else {
+            this['node-name'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

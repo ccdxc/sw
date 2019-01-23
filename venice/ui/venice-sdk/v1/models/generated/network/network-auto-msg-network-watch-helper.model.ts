@@ -56,6 +56,8 @@ export class NetworkAutoMsgNetworkWatchHelper extends BaseModel implements INetw
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<NetworkAutoMsgNetworkWatchHelperWatchEvent>(this, 'events', values['events'], NetworkAutoMsgNetworkWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

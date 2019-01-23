@@ -14,8 +14,8 @@ import { MonitoringSyslogExportConfig, IMonitoringSyslogExportConfig } from './m
 
 export interface IMonitoringFwlogPolicySpec {
     'targets'?: Array<IMonitoringExportConfig>;
-    'format'?: MonitoringFwlogPolicySpec_format;
-    'filter'?: Array<MonitoringFwlogPolicySpec_filter>;
+    'format': MonitoringFwlogPolicySpec_format;
+    'filter': Array<MonitoringFwlogPolicySpec_filter>;
     'config'?: IMonitoringSyslogExportConfig;
 }
 
@@ -80,19 +80,27 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringExportConfig>(this, 'targets', values['targets'], MonitoringExportConfig);
+        } else {
+            this['targets'] = [];
         }
         if (values && values['format'] != null) {
             this['format'] = values['format'];
         } else if (fillDefaults && MonitoringFwlogPolicySpec.hasDefaultValue('format')) {
             this['format'] = <MonitoringFwlogPolicySpec_format>  MonitoringFwlogPolicySpec.propInfo['format'].default;
+        } else {
+            this['format'] = null
         }
         if (values && values['filter'] != null) {
             this['filter'] = values['filter'];
         } else if (fillDefaults && MonitoringFwlogPolicySpec.hasDefaultValue('filter')) {
             this['filter'] = [ MonitoringFwlogPolicySpec.propInfo['filter'].default];
+        } else {
+            this['filter'] = [];
         }
         if (values) {
-            this['config'].setValues(values['config']);
+            this['config'].setValues(values['config'], fillDefaults);
+        } else {
+            this['config'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

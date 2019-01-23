@@ -71,21 +71,29 @@ export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
             this['speed'] = values['speed'];
         } else if (fillDefaults && ClusterCPUInfo.hasDefaultValue('speed')) {
             this['speed'] = ClusterCPUInfo.propInfo['speed'].default;
+        } else {
+            this['speed'] = null
         }
         if (values && values['num-sockets'] != null) {
             this['num-sockets'] = values['num-sockets'];
         } else if (fillDefaults && ClusterCPUInfo.hasDefaultValue('num-sockets')) {
             this['num-sockets'] = ClusterCPUInfo.propInfo['num-sockets'].default;
+        } else {
+            this['num-sockets'] = null
         }
         if (values && values['num-cores'] != null) {
             this['num-cores'] = values['num-cores'];
         } else if (fillDefaults && ClusterCPUInfo.hasDefaultValue('num-cores')) {
             this['num-cores'] = ClusterCPUInfo.propInfo['num-cores'].default;
+        } else {
+            this['num-cores'] = null
         }
         if (values && values['num-threads'] != null) {
             this['num-threads'] = values['num-threads'];
         } else if (fillDefaults && ClusterCPUInfo.hasDefaultValue('num-threads')) {
             this['num-threads'] = ClusterCPUInfo.propInfo['num-threads'].default;
+        } else {
+            this['num-threads'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

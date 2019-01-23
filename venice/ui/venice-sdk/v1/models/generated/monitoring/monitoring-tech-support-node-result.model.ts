@@ -12,7 +12,7 @@ import { MonitoringTechSupportNodeResult_status,  } from './enums';
 export interface IMonitoringTechSupportNodeResult {
     'start-time'?: Date;
     'end-time'?: Date;
-    'status'?: MonitoringTechSupportNodeResult_status;
+    'status': MonitoringTechSupportNodeResult_status;
     'uri'?: string;
 }
 
@@ -74,21 +74,29 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
             this['start-time'] = values['start-time'];
         } else if (fillDefaults && MonitoringTechSupportNodeResult.hasDefaultValue('start-time')) {
             this['start-time'] = MonitoringTechSupportNodeResult.propInfo['start-time'].default;
+        } else {
+            this['start-time'] = null
         }
         if (values && values['end-time'] != null) {
             this['end-time'] = values['end-time'];
         } else if (fillDefaults && MonitoringTechSupportNodeResult.hasDefaultValue('end-time')) {
             this['end-time'] = MonitoringTechSupportNodeResult.propInfo['end-time'].default;
+        } else {
+            this['end-time'] = null
         }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
         } else if (fillDefaults && MonitoringTechSupportNodeResult.hasDefaultValue('status')) {
             this['status'] = <MonitoringTechSupportNodeResult_status>  MonitoringTechSupportNodeResult.propInfo['status'].default;
+        } else {
+            this['status'] = null
         }
         if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
         } else if (fillDefaults && MonitoringTechSupportNodeResult.hasDefaultValue('uri')) {
             this['uri'] = MonitoringTechSupportNodeResult.propInfo['uri'].default;
+        } else {
+            this['uri'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

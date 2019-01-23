@@ -56,6 +56,8 @@ export class MonitoringAutoMsgAlertDestinationWatchHelper extends BaseModel impl
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

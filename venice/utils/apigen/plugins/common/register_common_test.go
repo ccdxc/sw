@@ -555,50 +555,92 @@ func TestFieldProfiles(t *testing.T) {
 			field <
 				name: 'str_field2'
 				type: TYPE_STRING
-				options:<[venice.check]: "IPAddr()">
+				options:<[venice.check]: "EmptyOrStrLen(4,30)" [venice.check]: "v1:StrLen(5,31)">
 				number: 5
 			>
 			field <
 				name: 'str_field3'
 				type: TYPE_STRING
-				options:<[venice.check]: "HostAddr()">
+				options:<[venice.check]: "StrLen(4,-1)" [venice.check]: "v1:StrLen(5,31)">
 				number: 6
 			>
 			field <
 				name: 'str_field4'
 				type: TYPE_STRING
-				options:<[venice.check]: "MacAddr()">
+				options:<[venice.check]: "IPAddr()">
 				number: 7
 			>
 			field <
 				name: 'str_field5'
 				type: TYPE_STRING
-				options:<[venice.check]: "URI()">
+				options:<[venice.check]: "HostAddr()">
 				number: 8
 			>
 			field <
 				name: 'str_field6'
 				type: TYPE_STRING
-				options:<[venice.check]: "UUID()">
+				options:<[venice.check]: "MacAddr()">
 				number: 9
 			>
 			field <
 				name: 'str_field7'
 				type: TYPE_STRING
+				options:<[venice.check]: "URI()">
+				number: 10 
+			>
+			field <
+				name: 'str_field8'
+				type: TYPE_STRING
+				options:<[venice.check]: "UUID()">
+				number: 11
+			>
+			field <
+				name: 'str_field9'
+				type: TYPE_STRING
 				options:<[venice.check]: "IPv4()">
-				number: 10
+				number: 12
 			>
 			field <
 				name: 'int_field1'
 				type: TYPE_STRING
 				options:<[venice.check]: "IntRange(3, 1000)">
-				number: 11
+				number: 13
 			>
 			field <
 				name: 'regexp_field1'
 				type: TYPE_STRING
 				options:<[venice.check]: "RegExp(name)">
-				number: 12
+				number: 14
+			>
+			field <
+				name: 'regexp_field2'
+				type: TYPE_STRING
+				options:<[venice.check]: "EmptyOrRegExp(name)">
+				number: 15
+			>
+			field <
+				name: 'duration1'
+				type: TYPE_STRING
+				options:<[venice.check]: "Duration(4m,30m)">
+				number: 15
+			>
+			field <
+				name: 'duration2'
+				type: TYPE_STRING
+				options:<[venice.check]: "Duration(4m,0)">
+				number: 15
+			>
+			field <
+				name: 'duration3'
+				type: TYPE_STRING
+				options:<[venice.check]: "Duration(0,30m)">
+				number: 15
+			>
+			field <
+				name: 'duration4'
+				type: TYPE_STRING
+				options:<[venice.check]: "EmptyOrDuration(4m,30m)">
+				number: 15
 			>
 		>
 		enum_type <
@@ -636,6 +678,7 @@ func TestFieldProfiles(t *testing.T) {
 					"Value2": "hint2",
 				},
 			},
+			Required: map[string]bool{"all": true},
 		},
 		"enum_field2": FieldProfile{
 			Enum: map[string][]string{
@@ -646,48 +689,93 @@ func TestFieldProfiles(t *testing.T) {
 					"Value3": "hint3",
 				},
 			},
+			Required: map[string]bool{"all": true},
 		},
 		"enum_field3": FieldProfile{
 			Enum: map[string][]string{
 				"all": []string{"Value3", "Value4"},
 			},
+			Required: map[string]bool{"all": true},
 		},
 		"str_field1": FieldProfile{
 			MinLen:    map[string]int64{"all": int64(4), "v1": int64(5)},
 			MaxLen:    map[string]int64{"all": int64(30), "v1": int64(31)},
 			DocString: map[string]string{"all": "length of string should be between 4 and 30", "v1": "length of string should be between 5 and 31"},
+			Required:  map[string]bool{"all": true},
 		},
 		"str_field2": FieldProfile{
-			DocString: map[string]string{"all": "IP address"},
-			Example:   map[string]string{"all": "10.1.1.1"},
+			MinLen:    map[string]int64{"all": int64(4), "v1": int64(5)},
+			MaxLen:    map[string]int64{"all": int64(30), "v1": int64(31)},
+			DocString: map[string]string{"all": "length of string should be between 4 and 30", "v1": "length of string should be between 5 and 31"},
+			Required:  map[string]bool{"all": false},
 		},
 		"str_field3": FieldProfile{
-			DocString: map[string]string{"all": "IP address or hostname"},
-			Example:   map[string]string{"all": "10.1.1.1"},
+			MinLen:    map[string]int64{"all": int64(4), "v1": int64(5)},
+			MaxLen:    map[string]int64{"v1": int64(31)},
+			DocString: map[string]string{"all": "length of string should be at least 4", "v1": "length of string should be between 5 and 31"},
+			Required:  map[string]bool{"all": true},
 		},
 		"str_field4": FieldProfile{
-			DocString: map[string]string{"all": "MAC address"},
-			Example:   map[string]string{"all": "00:00"},
+			DocString: map[string]string{"all": "IP address"},
+			Example:   map[string]string{"all": "10.1.1.1"},
+			Required:  map[string]bool{"all": true},
 		},
 		"str_field5": FieldProfile{
-			DocString: map[string]string{"all": "valid URI"},
-			Example:   map[string]string{"all": "https://"},
+			DocString: map[string]string{"all": "IP address or hostname"},
+			Example:   map[string]string{"all": "10.1.1.1"},
+			Required:  map[string]bool{"all": true},
 		},
 		"str_field6": FieldProfile{
-			DocString: map[string]string{"all": "valid UUID"},
-			Example:   map[string]string{"all": "49943a2c-9d76-11e7-abc4-cec278b6b50a"},
+			DocString: map[string]string{"all": "MAC address"},
+			Example:   map[string]string{"all": "00:00"},
+			Required:  map[string]bool{"all": true},
 		},
 		"str_field7": FieldProfile{
+			DocString: map[string]string{"all": "valid URI"},
+			Example:   map[string]string{"all": "https://"},
+			Required:  map[string]bool{"all": true},
+		},
+		"str_field8": FieldProfile{
+			DocString: map[string]string{"all": "valid UUID"},
+			Example:   map[string]string{"all": "49943a2c-9d76-11e7-abc4-cec278b6b50a"},
+			Required:  map[string]bool{"all": true},
+		},
+		"str_field9": FieldProfile{
 			DocString: map[string]string{"all": "IPv4 address"},
 			Example:   map[string]string{"all": "10.1.1.1"},
+			Required:  map[string]bool{"all": true},
 		},
 		"int_field1": FieldProfile{
 			MinInt:    map[string]int64{"all": int64(3)},
 			MaxInt:    map[string]int64{"all": int64(1000)},
 			DocString: map[string]string{"all": "value should be between 3 and 1000"},
+			Required:  map[string]bool{"all": true},
 		},
 		"regexp_field1": FieldProfile{
 			DocString: map[string]string{"all": "must start and end with alpha numeric and can have alphanumeric, -, _, ., :"},
+			Pattern:   map[string]string{"all": `^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`},
+			Required:  map[string]bool{"all": true},
+		},
+		"regexp_field2": FieldProfile{
+			DocString: map[string]string{"all": "must start and end with alpha numeric and can have alphanumeric, -, _, ., :"},
+			Pattern:   map[string]string{"all": `^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`},
+			Required:  map[string]bool{"all": false},
+		},
+		"duration1": FieldProfile{
+			DocString: map[string]string{"all": "should be a valid time duration"},
+			Required:  map[string]bool{"all": true},
+		},
+		"duration2": FieldProfile{
+			DocString: map[string]string{"all": "should be a valid time duration of at least 4m0s"},
+			Required:  map[string]bool{"all": true},
+		},
+		"duration3": FieldProfile{
+			DocString: map[string]string{"all": "should be a valid time duration of at most 30m0s"},
+			Required:  map[string]bool{"all": true},
+		},
+		"duration4": FieldProfile{
+			DocString: map[string]string{"all": "should be a valid time duration between 4m0s and 30m0s"},
+			Required:  map[string]bool{"all": false},
 		},
 	}
 	msg, err := r.LookupMsg("", ".example.TestMsg")
@@ -718,7 +806,7 @@ func TestFieldProfiles(t *testing.T) {
 					}
 				}
 				if len(profile.MinInt) != len(c.MinInt) {
-					t.Fatalf("lenghts of MinInts do not match for [%v]", *fld.Name)
+					t.Fatalf("lengths of MinInts do not match for [%v]", *fld.Name)
 				}
 				if len(profile.MinInt) > 0 {
 					if !reflect.DeepEqual(profile.MinInt, c.MinInt) {
@@ -726,7 +814,7 @@ func TestFieldProfiles(t *testing.T) {
 					}
 				}
 				if len(profile.MaxInt) != len(c.MaxInt) {
-					t.Fatalf("lenghts of MaxInts do not match for [%v]", *fld.Name)
+					t.Fatalf("lengths of MaxInts do not match for [%v]", *fld.Name)
 				}
 				if len(profile.MaxInt) > 0 {
 					if !reflect.DeepEqual(profile.MaxInt, c.MaxInt) {
@@ -734,7 +822,7 @@ func TestFieldProfiles(t *testing.T) {
 					}
 				}
 				if len(profile.MinLen) != len(c.MinLen) {
-					t.Fatalf("lenghts of MinLens do not match for [%v]", *fld.Name)
+					t.Fatalf("lengths of MinLens do not match for [%v]", *fld.Name)
 				}
 				if len(profile.MinLen) > 0 {
 					if !reflect.DeepEqual(profile.MinLen, c.MinLen) {
@@ -742,7 +830,8 @@ func TestFieldProfiles(t *testing.T) {
 					}
 				}
 				if len(profile.MaxLen) != len(c.MaxLen) {
-					t.Fatalf("lenghts of MaxLens do not match for [%v]", *fld.Name)
+
+					t.Fatalf("lengths of MaxLens do not match for [%v], %v, %v", *fld.Name, profile.MaxLen, c.MaxLen)
 				}
 				if len(profile.MaxLen) > 0 {
 					if !reflect.DeepEqual(profile.MaxLen, c.MaxLen) {
@@ -760,6 +849,20 @@ func TestFieldProfiles(t *testing.T) {
 					for k, v := range c.Example {
 						if !strings.Contains(profile.Example[k], v) {
 							t.Fatalf("Example does not match for [%v] got [%v] should contain [%v]", *fld.Name, profile.Example[k], v)
+						}
+					}
+				}
+				if len(c.Pattern) > 0 {
+					for k, v := range c.Pattern {
+						if !strings.Contains(profile.Pattern[k], v) {
+							t.Fatalf("Pattern does not match for [%v] got [%v] should contain [%v]", *fld.Name, profile.Pattern[k], v)
+						}
+					}
+				}
+				if len(c.Required) > 0 {
+					for k, v := range c.Required {
+						if !profile.Required[k] == v {
+							t.Fatalf("Required does not match for [%v] got [%v] should contain [%v]", *fld.Name, profile.Required[k], v)
 						}
 					}
 				}

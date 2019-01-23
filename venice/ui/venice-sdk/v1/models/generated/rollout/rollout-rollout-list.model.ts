@@ -75,17 +75,25 @@ export class RolloutRolloutList extends BaseModel implements IRolloutRolloutList
             this['kind'] = values['kind'];
         } else if (fillDefaults && RolloutRolloutList.hasDefaultValue('kind')) {
             this['kind'] = RolloutRolloutList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && RolloutRolloutList.hasDefaultValue('api-version')) {
             this['api-version'] = RolloutRolloutList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<RolloutRollout>(this, 'items', values['items'], RolloutRollout);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

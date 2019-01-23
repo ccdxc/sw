@@ -1221,11 +1221,14 @@ func init() {
 	validatorMapAuth = make(map[string]map[string][]func(string, interface{}) error)
 
 	validatorMapAuth["AuthenticationPolicySpec"] = make(map[string][]func(string, interface{}) error)
-
 	validatorMapAuth["AuthenticationPolicySpec"]["all"] = append(validatorMapAuth["AuthenticationPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AuthenticationPolicySpec)
-		if !validators.Duration(m.TokenExpiry) {
-			return fmt.Errorf("%v validation failed", path+"."+"TokenExpiry")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.TokenExpiry, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"TokenExpiry")
 		}
 		return nil
 	})

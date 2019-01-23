@@ -56,6 +56,8 @@ export class MonitoringAutoMsgMirrorSessionWatchHelper extends BaseModel impleme
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

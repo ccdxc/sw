@@ -56,6 +56,8 @@ export class ApiStatusResult extends BaseModel implements IApiStatusResult {
             this['Str'] = values['Str'];
         } else if (fillDefaults && ApiStatusResult.hasDefaultValue('Str')) {
             this['Str'] = ApiStatusResult.propInfo['Str'].default;
+        } else {
+            this['Str'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -73,7 +73,7 @@ export const maxLengthValidator = (required: number) => {
         }
         const length: number = control.value ? control.value.length : 0;
         if (length > required) {
-            return {'minlength': {
+            return {'maxlength': {
                 'requiredLength': required, 
                 'actualLength': length,
                 message: "Value must be less than " + required + " characters"

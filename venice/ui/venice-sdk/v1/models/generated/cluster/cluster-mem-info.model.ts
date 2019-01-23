@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { ClusterMemInfo_type,  } from './enums';
 
 export interface IClusterMemInfo {
-    'type'?: ClusterMemInfo_type;
+    'type': ClusterMemInfo_type;
     'size'?: string;
 }
 
@@ -64,11 +64,15 @@ export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterMemInfo.hasDefaultValue('type')) {
             this['type'] = <ClusterMemInfo_type>  ClusterMemInfo.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['size'] != null) {
             this['size'] = values['size'];
         } else if (fillDefaults && ClusterMemInfo.hasDefaultValue('size')) {
             this['size'] = ClusterMemInfo.propInfo['size'].default;
+        } else {
+            this['size'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

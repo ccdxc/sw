@@ -86,26 +86,36 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && ApiObjectRef.hasDefaultValue('tenant')) {
             this['tenant'] = ApiObjectRef.propInfo['tenant'].default;
+        } else {
+            this['tenant'] = null
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
         } else if (fillDefaults && ApiObjectRef.hasDefaultValue('namespace')) {
             this['namespace'] = ApiObjectRef.propInfo['namespace'].default;
+        } else {
+            this['namespace'] = null
         }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && ApiObjectRef.hasDefaultValue('kind')) {
             this['kind'] = ApiObjectRef.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
         } else if (fillDefaults && ApiObjectRef.hasDefaultValue('name')) {
             this['name'] = ApiObjectRef.propInfo['name'].default;
+        } else {
+            this['name'] = null
         }
         if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
         } else if (fillDefaults && ApiObjectRef.hasDefaultValue('uri')) {
             this['uri'] = ApiObjectRef.propInfo['uri'].default;
+        } else {
+            this['uri'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -69,16 +69,22 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
             this['endpoints'] = values['endpoints'];
         } else if (fillDefaults && MonitoringMatchSelector.hasDefaultValue('endpoints')) {
             this['endpoints'] = [ MonitoringMatchSelector.propInfo['endpoints'].default];
+        } else {
+            this['endpoints'] = [];
         }
         if (values && values['ip-addresses'] != null) {
             this['ip-addresses'] = values['ip-addresses'];
         } else if (fillDefaults && MonitoringMatchSelector.hasDefaultValue('ip-addresses')) {
             this['ip-addresses'] = [ MonitoringMatchSelector.propInfo['ip-addresses'].default];
+        } else {
+            this['ip-addresses'] = [];
         }
         if (values && values['mac-addresses'] != null) {
             this['mac-addresses'] = values['mac-addresses'];
         } else if (fillDefaults && MonitoringMatchSelector.hasDefaultValue('mac-addresses')) {
             this['mac-addresses'] = [ MonitoringMatchSelector.propInfo['mac-addresses'].default];
+        } else {
+            this['mac-addresses'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

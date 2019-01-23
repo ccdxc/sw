@@ -56,6 +56,8 @@ export class SearchEntryList extends BaseModel implements ISearchEntryList {
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<SearchEntry>(this, 'entries', values['entries'], SearchEntry);
+        } else {
+            this['entries'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

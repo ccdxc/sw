@@ -61,11 +61,15 @@ export class SearchError extends BaseModel implements ISearchError {
             this['type'] = values['type'];
         } else if (fillDefaults && SearchError.hasDefaultValue('type')) {
             this['type'] = SearchError.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
         } else if (fillDefaults && SearchError.hasDefaultValue('reason')) {
             this['reason'] = SearchError.propInfo['reason'].default;
+        } else {
+            this['reason'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

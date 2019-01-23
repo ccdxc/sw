@@ -56,6 +56,8 @@ export class MonitoringMirrorStartConditions extends BaseModel implements IMonit
             this['schedule-time'] = values['schedule-time'];
         } else if (fillDefaults && MonitoringMirrorStartConditions.hasDefaultValue('schedule-time')) {
             this['schedule-time'] = MonitoringMirrorStartConditions.propInfo['schedule-time'].default;
+        } else {
+            this['schedule-time'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

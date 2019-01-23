@@ -63,11 +63,15 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
             this['workloads'] = values['workloads'];
         } else if (fillDefaults && SecuritySecurityGroupStatus.hasDefaultValue('workloads')) {
             this['workloads'] = [ SecuritySecurityGroupStatus.propInfo['workloads'].default];
+        } else {
+            this['workloads'] = [];
         }
         if (values && values['Policies'] != null) {
             this['Policies'] = values['Policies'];
         } else if (fillDefaults && SecuritySecurityGroupStatus.hasDefaultValue('Policies')) {
             this['Policies'] = [ SecuritySecurityGroupStatus.propInfo['Policies'].default];
+        } else {
+            this['Policies'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

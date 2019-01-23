@@ -66,16 +66,22 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
             this['total-hits'] = values['total-hits'];
         } else if (fillDefaults && MonitoringAlertPolicyStatus.hasDefaultValue('total-hits')) {
             this['total-hits'] = MonitoringAlertPolicyStatus.propInfo['total-hits'].default;
+        } else {
+            this['total-hits'] = null
         }
         if (values && values['open-alerts'] != null) {
             this['open-alerts'] = values['open-alerts'];
         } else if (fillDefaults && MonitoringAlertPolicyStatus.hasDefaultValue('open-alerts')) {
             this['open-alerts'] = MonitoringAlertPolicyStatus.propInfo['open-alerts'].default;
+        } else {
+            this['open-alerts'] = null
         }
         if (values && values['acknowledged-alerts'] != null) {
             this['acknowledged-alerts'] = values['acknowledged-alerts'];
         } else if (fillDefaults && MonitoringAlertPolicyStatus.hasDefaultValue('acknowledged-alerts')) {
             this['acknowledged-alerts'] = MonitoringAlertPolicyStatus.propInfo['acknowledged-alerts'].default;
+        } else {
+            this['acknowledged-alerts'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

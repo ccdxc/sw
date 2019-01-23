@@ -11,7 +11,7 @@ import { LabelsRequirement_operator,  LabelsRequirement_operator_uihint  } from 
 
 export interface ILabelsRequirement {
     'key'?: string;
-    'operator'?: LabelsRequirement_operator;
+    'operator': LabelsRequirement_operator;
     'values'?: Array<string>;
 }
 
@@ -78,16 +78,22 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
             this['key'] = values['key'];
         } else if (fillDefaults && LabelsRequirement.hasDefaultValue('key')) {
             this['key'] = LabelsRequirement.propInfo['key'].default;
+        } else {
+            this['key'] = null
         }
         if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
         } else if (fillDefaults && LabelsRequirement.hasDefaultValue('operator')) {
             this['operator'] = <LabelsRequirement_operator>  LabelsRequirement.propInfo['operator'].default;
+        } else {
+            this['operator'] = null
         }
         if (values && values['values'] != null) {
             this['values'] = values['values'];
         } else if (fillDefaults && LabelsRequirement.hasDefaultValue('values')) {
             this['values'] = [ LabelsRequirement.propInfo['values'].default];
+        } else {
+            this['values'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

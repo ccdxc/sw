@@ -56,6 +56,8 @@ export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
             this['admin-user'] = values['admin-user'];
         } else if (fillDefaults && ClusterTenantSpec.hasDefaultValue('admin-user')) {
             this['admin-user'] = ClusterTenantSpec.propInfo['admin-user'].default;
+        } else {
+            this['admin-user'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

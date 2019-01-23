@@ -75,21 +75,29 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
             this['key'] = values['key'];
         } else if (fillDefaults && MonitoringMatchedRequirement.hasDefaultValue('key')) {
             this['key'] = MonitoringMatchedRequirement.propInfo['key'].default;
+        } else {
+            this['key'] = null
         }
         if (values && values['operator'] != null) {
             this['operator'] = values['operator'];
         } else if (fillDefaults && MonitoringMatchedRequirement.hasDefaultValue('operator')) {
             this['operator'] = <MonitoringMatchedRequirement_operator>  MonitoringMatchedRequirement.propInfo['operator'].default;
+        } else {
+            this['operator'] = null
         }
         if (values && values['values'] != null) {
             this['values'] = values['values'];
         } else if (fillDefaults && MonitoringMatchedRequirement.hasDefaultValue('values')) {
             this['values'] = [ MonitoringMatchedRequirement.propInfo['values'].default];
+        } else {
+            this['values'] = [];
         }
         if (values && values['observed-value'] != null) {
             this['observed-value'] = values['observed-value'];
         } else if (fillDefaults && MonitoringMatchedRequirement.hasDefaultValue('observed-value')) {
             this['observed-value'] = MonitoringMatchedRequirement.propInfo['observed-value'].default;
+        } else {
+            this['observed-value'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -99,7 +107,7 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'key': new FormControl(this['key']),
-                'operator': new FormControl(this['operator'], [required, enumValidator(MonitoringMatchedRequirement_operator), ]),
+                'operator': new FormControl(this['operator'], [enumValidator(MonitoringMatchedRequirement_operator), ]),
                 'values': new FormControl(this['values']),
                 'observed-value': new FormControl(this['observed-value']),
             });

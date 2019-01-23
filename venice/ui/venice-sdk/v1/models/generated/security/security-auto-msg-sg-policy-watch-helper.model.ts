@@ -56,6 +56,8 @@ export class SecurityAutoMsgSGPolicyWatchHelper extends BaseModel implements ISe
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<SecurityAutoMsgSGPolicyWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgSGPolicyWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

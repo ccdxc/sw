@@ -9,7 +9,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringAppProtoSelector {
-    'ports'?: Array<string>;
+    'ports': Array<string>;
     'applications'?: Array<string>;
 }
 
@@ -67,11 +67,15 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
             this['ports'] = values['ports'];
         } else if (fillDefaults && MonitoringAppProtoSelector.hasDefaultValue('ports')) {
             this['ports'] = [ MonitoringAppProtoSelector.propInfo['ports'].default];
+        } else {
+            this['ports'] = [];
         }
         if (values && values['applications'] != null) {
             this['applications'] = values['applications'];
         } else if (fillDefaults && MonitoringAppProtoSelector.hasDefaultValue('applications')) {
             this['applications'] = [ MonitoringAppProtoSelector.propInfo['applications'].default];
+        } else {
+            this['applications'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

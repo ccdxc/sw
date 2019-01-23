@@ -56,6 +56,8 @@ export class SecurityAutoMsgCertificateWatchHelper extends BaseModel implements 
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<SecurityAutoMsgCertificateWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgCertificateWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

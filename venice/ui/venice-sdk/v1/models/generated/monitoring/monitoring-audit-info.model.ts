@@ -65,11 +65,15 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
             this['user'] = values['user'];
         } else if (fillDefaults && MonitoringAuditInfo.hasDefaultValue('user')) {
             this['user'] = MonitoringAuditInfo.propInfo['user'].default;
+        } else {
+            this['user'] = null
         }
         if (values && values['time'] != null) {
             this['time'] = values['time'];
         } else if (fillDefaults && MonitoringAuditInfo.hasDefaultValue('time')) {
             this['time'] = MonitoringAuditInfo.propInfo['time'].default;
+        } else {
+            this['time'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

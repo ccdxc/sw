@@ -75,17 +75,25 @@ export class ClusterSmartNICList extends BaseModel implements IClusterSmartNICLi
             this['kind'] = values['kind'];
         } else if (fillDefaults && ClusterSmartNICList.hasDefaultValue('kind')) {
             this['kind'] = ClusterSmartNICList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && ClusterSmartNICList.hasDefaultValue('api-version')) {
             this['api-version'] = ClusterSmartNICList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<ClusterSmartNIC>(this, 'items', values['items'], ClusterSmartNIC);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

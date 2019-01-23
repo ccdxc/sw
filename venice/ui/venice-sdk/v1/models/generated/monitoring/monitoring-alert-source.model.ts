@@ -61,11 +61,15 @@ export class MonitoringAlertSource extends BaseModel implements IMonitoringAlert
             this['component'] = values['component'];
         } else if (fillDefaults && MonitoringAlertSource.hasDefaultValue('component')) {
             this['component'] = MonitoringAlertSource.propInfo['component'].default;
+        } else {
+            this['component'] = null
         }
         if (values && values['node-name'] != null) {
             this['node-name'] = values['node-name'];
         } else if (fillDefaults && MonitoringAlertSource.hasDefaultValue('node-name')) {
             this['node-name'] = MonitoringAlertSource.propInfo['node-name'].default;
+        } else {
+            this['node-name'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

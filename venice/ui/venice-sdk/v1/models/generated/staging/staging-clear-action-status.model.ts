@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { StagingClearActionStatus_status,  } from './enums';
 
 export interface IStagingClearActionStatus {
-    'status'?: StagingClearActionStatus_status;
+    'status': StagingClearActionStatus_status;
     'reason'?: string;
 }
 
@@ -64,11 +64,15 @@ export class StagingClearActionStatus extends BaseModel implements IStagingClear
             this['status'] = values['status'];
         } else if (fillDefaults && StagingClearActionStatus.hasDefaultValue('status')) {
             this['status'] = <StagingClearActionStatus_status>  StagingClearActionStatus.propInfo['status'].default;
+        } else {
+            this['status'] = null
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
         } else if (fillDefaults && StagingClearActionStatus.hasDefaultValue('reason')) {
             this['reason'] = StagingClearActionStatus.propInfo['reason'].default;
+        } else {
+            this['reason'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

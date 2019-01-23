@@ -15,7 +15,7 @@ export interface IAuthPermission {
     'resource-kind'?: string;
     'resource-namespace'?: string;
     'resource-names'?: Array<string>;
-    'actions'?: Array<AuthPermission_actions>;
+    'actions': Array<AuthPermission_actions>;
 }
 
 
@@ -100,31 +100,43 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
             this['resource-tenant'] = values['resource-tenant'];
         } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-tenant')) {
             this['resource-tenant'] = AuthPermission.propInfo['resource-tenant'].default;
+        } else {
+            this['resource-tenant'] = null
         }
         if (values && values['resource-group'] != null) {
             this['resource-group'] = values['resource-group'];
         } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-group')) {
             this['resource-group'] = AuthPermission.propInfo['resource-group'].default;
+        } else {
+            this['resource-group'] = null
         }
         if (values && values['resource-kind'] != null) {
             this['resource-kind'] = values['resource-kind'];
         } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-kind')) {
             this['resource-kind'] = AuthPermission.propInfo['resource-kind'].default;
+        } else {
+            this['resource-kind'] = null
         }
         if (values && values['resource-namespace'] != null) {
             this['resource-namespace'] = values['resource-namespace'];
         } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-namespace')) {
             this['resource-namespace'] = AuthPermission.propInfo['resource-namespace'].default;
+        } else {
+            this['resource-namespace'] = null
         }
         if (values && values['resource-names'] != null) {
             this['resource-names'] = values['resource-names'];
         } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-names')) {
             this['resource-names'] = [ AuthPermission.propInfo['resource-names'].default];
+        } else {
+            this['resource-names'] = [];
         }
         if (values && values['actions'] != null) {
             this['actions'] = values['actions'];
         } else if (fillDefaults && AuthPermission.hasDefaultValue('actions')) {
             this['actions'] = [ AuthPermission.propInfo['actions'].default];
+        } else {
+            this['actions'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

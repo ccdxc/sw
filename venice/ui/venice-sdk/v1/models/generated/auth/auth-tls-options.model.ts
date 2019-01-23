@@ -79,21 +79,29 @@ export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
             this['start-tls'] = values['start-tls'];
         } else if (fillDefaults && AuthTLSOptions.hasDefaultValue('start-tls')) {
             this['start-tls'] = AuthTLSOptions.propInfo['start-tls'].default;
+        } else {
+            this['start-tls'] = null
         }
         if (values && values['skip-server-cert-verification'] != null) {
             this['skip-server-cert-verification'] = values['skip-server-cert-verification'];
         } else if (fillDefaults && AuthTLSOptions.hasDefaultValue('skip-server-cert-verification')) {
             this['skip-server-cert-verification'] = AuthTLSOptions.propInfo['skip-server-cert-verification'].default;
+        } else {
+            this['skip-server-cert-verification'] = null
         }
         if (values && values['server-name'] != null) {
             this['server-name'] = values['server-name'];
         } else if (fillDefaults && AuthTLSOptions.hasDefaultValue('server-name')) {
             this['server-name'] = AuthTLSOptions.propInfo['server-name'].default;
+        } else {
+            this['server-name'] = null
         }
         if (values && values['trusted-certs'] != null) {
             this['trusted-certs'] = values['trusted-certs'];
         } else if (fillDefaults && AuthTLSOptions.hasDefaultValue('trusted-certs')) {
             this['trusted-certs'] = AuthTLSOptions.propInfo['trusted-certs'].default;
+        } else {
+            this['trusted-certs'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

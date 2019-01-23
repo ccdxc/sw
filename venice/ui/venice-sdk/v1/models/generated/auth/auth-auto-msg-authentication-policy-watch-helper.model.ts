@@ -56,6 +56,8 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelper extends BaseModel implem
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent>(this, 'events', values['events'], AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringExternalCred_auth_type,  MonitoringExternalCred_auth_type_uihint  } from './enums';
 
 export interface IMonitoringExternalCred {
-    'auth-type'?: MonitoringExternalCred_auth_type;
+    'auth-type': MonitoringExternalCred_auth_type;
     'username'?: string;
     'password'?: string;
     'bearer-token'?: string;
@@ -93,36 +93,50 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
             this['auth-type'] = values['auth-type'];
         } else if (fillDefaults && MonitoringExternalCred.hasDefaultValue('auth-type')) {
             this['auth-type'] = <MonitoringExternalCred_auth_type>  MonitoringExternalCred.propInfo['auth-type'].default;
+        } else {
+            this['auth-type'] = null
         }
         if (values && values['username'] != null) {
             this['username'] = values['username'];
         } else if (fillDefaults && MonitoringExternalCred.hasDefaultValue('username')) {
             this['username'] = MonitoringExternalCred.propInfo['username'].default;
+        } else {
+            this['username'] = null
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
         } else if (fillDefaults && MonitoringExternalCred.hasDefaultValue('password')) {
             this['password'] = MonitoringExternalCred.propInfo['password'].default;
+        } else {
+            this['password'] = null
         }
         if (values && values['bearer-token'] != null) {
             this['bearer-token'] = values['bearer-token'];
         } else if (fillDefaults && MonitoringExternalCred.hasDefaultValue('bearer-token')) {
             this['bearer-token'] = MonitoringExternalCred.propInfo['bearer-token'].default;
+        } else {
+            this['bearer-token'] = null
         }
         if (values && values['cert-data'] != null) {
             this['cert-data'] = values['cert-data'];
         } else if (fillDefaults && MonitoringExternalCred.hasDefaultValue('cert-data')) {
             this['cert-data'] = MonitoringExternalCred.propInfo['cert-data'].default;
+        } else {
+            this['cert-data'] = null
         }
         if (values && values['key-data'] != null) {
             this['key-data'] = values['key-data'];
         } else if (fillDefaults && MonitoringExternalCred.hasDefaultValue('key-data')) {
             this['key-data'] = MonitoringExternalCred.propInfo['key-data'].default;
+        } else {
+            this['key-data'] = null
         }
         if (values && values['ca-data'] != null) {
             this['ca-data'] = values['ca-data'];
         } else if (fillDefaults && MonitoringExternalCred.hasDefaultValue('ca-data')) {
             this['ca-data'] = MonitoringExternalCred.propInfo['ca-data'].default;
+        } else {
+            this['ca-data'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

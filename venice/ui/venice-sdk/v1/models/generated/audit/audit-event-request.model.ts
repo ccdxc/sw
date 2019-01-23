@@ -56,6 +56,8 @@ export class AuditEventRequest extends BaseModel implements IAuditEventRequest {
             this['uuid'] = values['uuid'];
         } else if (fillDefaults && AuditEventRequest.hasDefaultValue('uuid')) {
             this['uuid'] = AuditEventRequest.propInfo['uuid'].default;
+        } else {
+            this['uuid'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

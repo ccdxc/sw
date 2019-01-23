@@ -56,6 +56,8 @@ export class SearchTenantAggregation extends BaseModel implements ISearchTenantA
             this['tenants'] = values['tenants'];
         } else if (fillDefaults && SearchTenantAggregation.hasDefaultValue('tenants')) {
             this['tenants'] = SearchTenantAggregation.propInfo['tenants'].default;
+        } else {
+            this['tenants'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

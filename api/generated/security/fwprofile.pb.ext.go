@@ -81,6 +81,21 @@ func (m *FirewallProfileSpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *FirewallProfileSpec) Defaults(ver string) bool {
 	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.DropTimeout = "60s"
+		m.ICMPDropTimeout = "60s"
+		m.IcmpTimeout = "6s"
+		m.SessionIdleTimeout = "90s"
+		m.TCPCloseTimeout = "15s"
+		m.TCPConnectionSetupTimeout = "30s"
+		m.TCPDropTimeout = "90s"
+		m.TCPHalfClosedTimeout = "120s"
+		m.TcpTimeout = "3600s"
+		m.UDPDropTimeout = "60s"
+		m.UdpTimeout = "30s"
+	}
 	return ret
 }
 
@@ -162,91 +177,134 @@ func init() {
 	validatorMapFwprofile = make(map[string]map[string][]func(string, interface{}) error)
 
 	validatorMapFwprofile["FirewallProfileSpec"] = make(map[string][]func(string, interface{}) error)
-
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.DropTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"DropTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.DropTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"DropTimeout")
 		}
 		return nil
 	})
 
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.ICMPDropTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"ICMPDropTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.ICMPDropTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"ICMPDropTimeout")
 		}
 		return nil
 	})
 
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.IcmpTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"IcmpTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.IcmpTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"IcmpTimeout")
 		}
 		return nil
 	})
 
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.SessionIdleTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"SessionIdleTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.SessionIdleTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"SessionIdleTimeout")
 		}
 		return nil
 	})
 
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.TCPCloseTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"TCPCloseTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.TCPCloseTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"TCPCloseTimeout")
 		}
 		return nil
 	})
 
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.TCPConnectionSetupTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"TCPConnectionSetupTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.TCPConnectionSetupTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"TCPConnectionSetupTimeout")
 		}
 		return nil
 	})
 
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.TCPDropTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"TCPDropTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.TCPDropTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"TCPDropTimeout")
 		}
 		return nil
 	})
 
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.TCPHalfClosedTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"TCPHalfClosedTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.TCPHalfClosedTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"TCPHalfClosedTimeout")
 		}
 		return nil
 	})
 
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.TcpTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"TcpTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.TcpTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"TcpTimeout")
 		}
 		return nil
 	})
 
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.UDPDropTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"UDPDropTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.UDPDropTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"UDPDropTimeout")
 		}
 		return nil
 	})
 
 	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*FirewallProfileSpec)
-		if !validators.Duration(m.UdpTimeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"UdpTimeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.Duration(m.UdpTimeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"UdpTimeout")
 		}
 		return nil
 	})

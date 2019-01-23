@@ -14,7 +14,7 @@ export interface IRolloutRolloutStatus {
     'controller-nodes-status'?: Array<IRolloutRolloutPhase>;
     'controller-services-status'?: Array<IRolloutRolloutPhase>;
     'smartnics-status'?: Array<IRolloutRolloutPhase>;
-    'state'?: RolloutRolloutStatus_state;
+    'state': RolloutRolloutStatus_state;
     'completion-percent'?: number;
     'start-time'?: Date;
     'end-time'?: Date;
@@ -99,37 +99,53 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<RolloutRolloutPhase>(this, 'controller-nodes-status', values['controller-nodes-status'], RolloutRolloutPhase);
+        } else {
+            this['controller-nodes-status'] = [];
         }
         if (values) {
             this.fillModelArray<RolloutRolloutPhase>(this, 'controller-services-status', values['controller-services-status'], RolloutRolloutPhase);
+        } else {
+            this['controller-services-status'] = [];
         }
         if (values) {
             this.fillModelArray<RolloutRolloutPhase>(this, 'smartnics-status', values['smartnics-status'], RolloutRolloutPhase);
+        } else {
+            this['smartnics-status'] = [];
         }
         if (values && values['state'] != null) {
             this['state'] = values['state'];
         } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('state')) {
             this['state'] = <RolloutRolloutStatus_state>  RolloutRolloutStatus.propInfo['state'].default;
+        } else {
+            this['state'] = null
         }
         if (values && values['completion-percent'] != null) {
             this['completion-percent'] = values['completion-percent'];
         } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('completion-percent')) {
             this['completion-percent'] = RolloutRolloutStatus.propInfo['completion-percent'].default;
+        } else {
+            this['completion-percent'] = null
         }
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
         } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('start-time')) {
             this['start-time'] = RolloutRolloutStatus.propInfo['start-time'].default;
+        } else {
+            this['start-time'] = null
         }
         if (values && values['end-time'] != null) {
             this['end-time'] = values['end-time'];
         } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('end-time')) {
             this['end-time'] = RolloutRolloutStatus.propInfo['end-time'].default;
+        } else {
+            this['end-time'] = null
         }
         if (values && values['prev-version'] != null) {
             this['prev-version'] = values['prev-version'];
         } else if (fillDefaults && RolloutRolloutStatus.hasDefaultValue('prev-version')) {
             this['prev-version'] = RolloutRolloutStatus.propInfo['prev-version'].default;
+        } else {
+            this['prev-version'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

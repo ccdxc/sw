@@ -46,7 +46,7 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	revProxyPort = globals.RevProxyPort
-	if !impl.IPAddr(naplesIP) {
+	if !validators.IPAddr(naplesIP) {
 		panic(errors.New("Not valid Naples IP"))
 	}
 	if verbose {

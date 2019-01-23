@@ -63,9 +63,13 @@ export class MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent extends Base
             this['type'] = values['type'];
         } else if (fillDefaults && MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = MonitoringAutoMsgAlertDestinationWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

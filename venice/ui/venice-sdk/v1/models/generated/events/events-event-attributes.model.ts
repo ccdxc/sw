@@ -12,7 +12,7 @@ import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
 import { EventsEventSource, IEventsEventSource } from './events-event-source.model';
 
 export interface IEventsEventAttributes {
-    'severity'?: EventsEventAttributes_severity;
+    'severity': EventsEventAttributes_severity;
     'type'?: string;
     'message'?: string;
     'object-ref'?: IApiObjectRef;
@@ -88,27 +88,39 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
             this['severity'] = values['severity'];
         } else if (fillDefaults && EventsEventAttributes.hasDefaultValue('severity')) {
             this['severity'] = <EventsEventAttributes_severity>  EventsEventAttributes.propInfo['severity'].default;
+        } else {
+            this['severity'] = null
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && EventsEventAttributes.hasDefaultValue('type')) {
             this['type'] = EventsEventAttributes.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
         } else if (fillDefaults && EventsEventAttributes.hasDefaultValue('message')) {
             this['message'] = EventsEventAttributes.propInfo['message'].default;
+        } else {
+            this['message'] = null
         }
         if (values) {
-            this['object-ref'].setValues(values['object-ref']);
+            this['object-ref'].setValues(values['object-ref'], fillDefaults);
+        } else {
+            this['object-ref'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['source'].setValues(values['source']);
+            this['source'].setValues(values['source'], fillDefaults);
+        } else {
+            this['source'].setValues(null, fillDefaults);
         }
         if (values && values['count'] != null) {
             this['count'] = values['count'];
         } else if (fillDefaults && EventsEventAttributes.hasDefaultValue('count')) {
             this['count'] = EventsEventAttributes.propInfo['count'].default;
+        } else {
+            this['count'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

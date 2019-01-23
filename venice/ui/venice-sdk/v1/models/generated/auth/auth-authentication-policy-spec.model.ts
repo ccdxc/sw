@@ -12,7 +12,7 @@ import { AuthAuthenticators, IAuthAuthenticators } from './auth-authenticators.m
 export interface IAuthAuthenticationPolicySpec {
     'authenticators'?: IAuthAuthenticators;
     'secret'?: string;
-    'token-expiry'?: string;
+    'token-expiry': string;
 }
 
 
@@ -70,17 +70,23 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this['authenticators'].setValues(values['authenticators']);
+            this['authenticators'].setValues(values['authenticators'], fillDefaults);
+        } else {
+            this['authenticators'].setValues(null, fillDefaults);
         }
         if (values && values['secret'] != null) {
             this['secret'] = values['secret'];
         } else if (fillDefaults && AuthAuthenticationPolicySpec.hasDefaultValue('secret')) {
             this['secret'] = AuthAuthenticationPolicySpec.propInfo['secret'].default;
+        } else {
+            this['secret'] = null
         }
         if (values && values['token-expiry'] != null) {
             this['token-expiry'] = values['token-expiry'];
         } else if (fillDefaults && AuthAuthenticationPolicySpec.hasDefaultValue('token-expiry')) {
             this['token-expiry'] = AuthAuthenticationPolicySpec.propInfo['token-expiry'].default;
+        } else {
+            this['token-expiry'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -91,7 +97,7 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
             this._formGroup = new FormGroup({
                 'authenticators': this['authenticators'].$formGroup,
                 'secret': new FormControl(this['secret']),
-                'token-expiry': new FormControl(this['token-expiry']),
+                'token-expiry': new FormControl(this['token-expiry'], [required, ]),
             });
         }
         return this._formGroup;

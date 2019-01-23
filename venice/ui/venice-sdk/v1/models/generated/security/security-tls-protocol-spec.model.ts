@@ -61,11 +61,15 @@ export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSPr
             this['version'] = values['version'];
         } else if (fillDefaults && SecurityTLSProtocolSpec.hasDefaultValue('version')) {
             this['version'] = SecurityTLSProtocolSpec.propInfo['version'].default;
+        } else {
+            this['version'] = null
         }
         if (values && values['cipher-suite'] != null) {
             this['cipher-suite'] = values['cipher-suite'];
         } else if (fillDefaults && SecurityTLSProtocolSpec.hasDefaultValue('cipher-suite')) {
             this['cipher-suite'] = SecurityTLSProtocolSpec.propInfo['cipher-suite'].default;
+        } else {
+            this['cipher-suite'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

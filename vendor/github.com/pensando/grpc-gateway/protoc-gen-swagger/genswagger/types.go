@@ -131,11 +131,13 @@ type SchemaCore struct {
 	Default string   `json:"default,omitempty"`
 
 	// Extended Properties
-	Minimum   int    `json:"minimum,omitempty"`
-	Maximum   int    `json:"maximum,omitempty"`
-	MinLength int    `json:"minLength,omitempty"`
-	MaxLength int    `json:"maxLength,omitempty"`
-	Example   string `json:"example,omitempty"`
+	Minimum   int      `json:"minimum,omitempty"`
+	Maximum   int      `json:"maximum,omitempty"`
+	MinLength int      `json:"minLength,omitempty"`
+	MaxLength int      `json:"maxLength,omitempty"`
+	Example   string   `json:"example,omitempty"`
+	Required  []string `json:"required,omitempty"`
+	Pattern   string   `json:"pattern,omitempty"`
 
 	// Extenstions
 	XUiHints map[string]string `json:"x-ui-hints,omitempty"`

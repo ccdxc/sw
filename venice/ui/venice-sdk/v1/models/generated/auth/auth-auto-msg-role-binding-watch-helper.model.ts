@@ -56,6 +56,8 @@ export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAut
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<AuthAutoMsgRoleBindingWatchHelperWatchEvent>(this, 'events', values['events'], AuthAutoMsgRoleBindingWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

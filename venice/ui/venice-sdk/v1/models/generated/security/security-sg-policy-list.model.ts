@@ -75,17 +75,25 @@ export class SecuritySGPolicyList extends BaseModel implements ISecuritySGPolicy
             this['kind'] = values['kind'];
         } else if (fillDefaults && SecuritySGPolicyList.hasDefaultValue('kind')) {
             this['kind'] = SecuritySGPolicyList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && SecuritySGPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = SecuritySGPolicyList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<SecuritySGPolicy>(this, 'items', values['items'], SecuritySGPolicy);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -56,6 +56,8 @@ export class MonitoringAutoMsgTechSupportRequestWatchHelper extends BaseModel im
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

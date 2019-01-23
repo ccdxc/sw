@@ -68,14 +68,20 @@ export class AuthPasswordResetRequest extends BaseModel implements IAuthPassword
             this['kind'] = values['kind'];
         } else if (fillDefaults && AuthPasswordResetRequest.hasDefaultValue('kind')) {
             this['kind'] = AuthPasswordResetRequest.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && AuthPasswordResetRequest.hasDefaultValue('api-version')) {
             this['api-version'] = AuthPasswordResetRequest.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['meta'].setValues(values['meta']);
+            this['meta'].setValues(values['meta'], fillDefaults);
+        } else {
+            this['meta'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

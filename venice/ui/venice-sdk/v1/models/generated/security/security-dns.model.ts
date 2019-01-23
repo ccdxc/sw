@@ -76,26 +76,36 @@ export class SecurityDns extends BaseModel implements ISecurityDns {
             this['drop-multi-question-packets'] = values['drop-multi-question-packets'];
         } else if (fillDefaults && SecurityDns.hasDefaultValue('drop-multi-question-packets')) {
             this['drop-multi-question-packets'] = SecurityDns.propInfo['drop-multi-question-packets'].default;
+        } else {
+            this['drop-multi-question-packets'] = null
         }
         if (values && values['drop-large-domain-name-packets'] != null) {
             this['drop-large-domain-name-packets'] = values['drop-large-domain-name-packets'];
         } else if (fillDefaults && SecurityDns.hasDefaultValue('drop-large-domain-name-packets')) {
             this['drop-large-domain-name-packets'] = SecurityDns.propInfo['drop-large-domain-name-packets'].default;
+        } else {
+            this['drop-large-domain-name-packets'] = null
         }
         if (values && values['drop-long-label-packets'] != null) {
             this['drop-long-label-packets'] = values['drop-long-label-packets'];
         } else if (fillDefaults && SecurityDns.hasDefaultValue('drop-long-label-packets')) {
             this['drop-long-label-packets'] = SecurityDns.propInfo['drop-long-label-packets'].default;
+        } else {
+            this['drop-long-label-packets'] = null
         }
         if (values && values['max-message-length'] != null) {
             this['max-message-length'] = values['max-message-length'];
         } else if (fillDefaults && SecurityDns.hasDefaultValue('max-message-length')) {
             this['max-message-length'] = SecurityDns.propInfo['max-message-length'].default;
+        } else {
+            this['max-message-length'] = null
         }
         if (values && values['query-response-timeout'] != null) {
             this['query-response-timeout'] = values['query-response-timeout'];
         } else if (fillDefaults && SecurityDns.hasDefaultValue('query-response-timeout')) {
             this['query-response-timeout'] = SecurityDns.propInfo['query-response-timeout'].default;
+        } else {
+            this['query-response-timeout'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

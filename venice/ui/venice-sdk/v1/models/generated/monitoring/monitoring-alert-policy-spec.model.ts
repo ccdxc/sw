@@ -12,7 +12,7 @@ import { FieldsRequirement, IFieldsRequirement } from './fields-requirement.mode
 
 export interface IMonitoringAlertPolicySpec {
     'resource'?: string;
-    'severity'?: MonitoringAlertPolicySpec_severity;
+    'severity': MonitoringAlertPolicySpec_severity;
     'message'?: string;
     'requirements'?: Array<IFieldsRequirement>;
     'persistence-duration'?: string;
@@ -118,44 +118,62 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
             this['resource'] = values['resource'];
         } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('resource')) {
             this['resource'] = MonitoringAlertPolicySpec.propInfo['resource'].default;
+        } else {
+            this['resource'] = null
         }
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
         } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('severity')) {
             this['severity'] = <MonitoringAlertPolicySpec_severity>  MonitoringAlertPolicySpec.propInfo['severity'].default;
+        } else {
+            this['severity'] = null
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
         } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('message')) {
             this['message'] = MonitoringAlertPolicySpec.propInfo['message'].default;
+        } else {
+            this['message'] = null
         }
         if (values) {
             this.fillModelArray<FieldsRequirement>(this, 'requirements', values['requirements'], FieldsRequirement);
+        } else {
+            this['requirements'] = [];
         }
         if (values && values['persistence-duration'] != null) {
             this['persistence-duration'] = values['persistence-duration'];
         } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('persistence-duration')) {
             this['persistence-duration'] = MonitoringAlertPolicySpec.propInfo['persistence-duration'].default;
+        } else {
+            this['persistence-duration'] = null
         }
         if (values && values['clear-duration'] != null) {
             this['clear-duration'] = values['clear-duration'];
         } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('clear-duration')) {
             this['clear-duration'] = MonitoringAlertPolicySpec.propInfo['clear-duration'].default;
+        } else {
+            this['clear-duration'] = null
         }
         if (values && values['enable'] != null) {
             this['enable'] = values['enable'];
         } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('enable')) {
             this['enable'] = MonitoringAlertPolicySpec.propInfo['enable'].default;
+        } else {
+            this['enable'] = null
         }
         if (values && values['auto-resolve'] != null) {
             this['auto-resolve'] = values['auto-resolve'];
         } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('auto-resolve')) {
             this['auto-resolve'] = MonitoringAlertPolicySpec.propInfo['auto-resolve'].default;
+        } else {
+            this['auto-resolve'] = null
         }
         if (values && values['destinations'] != null) {
             this['destinations'] = values['destinations'];
         } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('destinations')) {
             this['destinations'] = [ MonitoringAlertPolicySpec.propInfo['destinations'].default];
+        } else {
+            this['destinations'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

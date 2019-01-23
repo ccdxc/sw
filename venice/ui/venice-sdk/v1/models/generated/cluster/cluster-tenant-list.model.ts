@@ -75,17 +75,25 @@ export class ClusterTenantList extends BaseModel implements IClusterTenantList {
             this['kind'] = values['kind'];
         } else if (fillDefaults && ClusterTenantList.hasDefaultValue('kind')) {
             this['kind'] = ClusterTenantList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && ClusterTenantList.hasDefaultValue('api-version')) {
             this['api-version'] = ClusterTenantList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<ClusterTenant>(this, 'items', values['items'], ClusterTenant);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

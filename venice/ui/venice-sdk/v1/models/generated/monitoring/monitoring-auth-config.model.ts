@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringAuthConfig_algo,  } from './enums';
 
 export interface IMonitoringAuthConfig {
-    'algo'?: MonitoringAuthConfig_algo;
+    'algo': MonitoringAuthConfig_algo;
     'password'?: string;
 }
 
@@ -66,11 +66,15 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
             this['algo'] = values['algo'];
         } else if (fillDefaults && MonitoringAuthConfig.hasDefaultValue('algo')) {
             this['algo'] = <MonitoringAuthConfig_algo>  MonitoringAuthConfig.propInfo['algo'].default;
+        } else {
+            this['algo'] = null
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
         } else if (fillDefaults && MonitoringAuthConfig.hasDefaultValue('password')) {
             this['password'] = MonitoringAuthConfig.propInfo['password'].default;
+        } else {
+            this['password'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

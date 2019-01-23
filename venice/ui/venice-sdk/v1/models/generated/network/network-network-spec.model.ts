@@ -86,36 +86,50 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('type')) {
             this['type'] = NetworkNetworkSpec.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['ipv4-subnet'] != null) {
             this['ipv4-subnet'] = values['ipv4-subnet'];
         } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('ipv4-subnet')) {
             this['ipv4-subnet'] = NetworkNetworkSpec.propInfo['ipv4-subnet'].default;
+        } else {
+            this['ipv4-subnet'] = null
         }
         if (values && values['ipv4-gateway'] != null) {
             this['ipv4-gateway'] = values['ipv4-gateway'];
         } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('ipv4-gateway')) {
             this['ipv4-gateway'] = NetworkNetworkSpec.propInfo['ipv4-gateway'].default;
+        } else {
+            this['ipv4-gateway'] = null
         }
         if (values && values['ipv6-subnet'] != null) {
             this['ipv6-subnet'] = values['ipv6-subnet'];
         } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('ipv6-subnet')) {
             this['ipv6-subnet'] = NetworkNetworkSpec.propInfo['ipv6-subnet'].default;
+        } else {
+            this['ipv6-subnet'] = null
         }
         if (values && values['ipv6-gateway'] != null) {
             this['ipv6-gateway'] = values['ipv6-gateway'];
         } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('ipv6-gateway')) {
             this['ipv6-gateway'] = NetworkNetworkSpec.propInfo['ipv6-gateway'].default;
+        } else {
+            this['ipv6-gateway'] = null
         }
         if (values && values['vlan-id'] != null) {
             this['vlan-id'] = values['vlan-id'];
         } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('vlan-id')) {
             this['vlan-id'] = NetworkNetworkSpec.propInfo['vlan-id'].default;
+        } else {
+            this['vlan-id'] = null
         }
         if (values && values['vxlan-vni'] != null) {
             this['vxlan-vni'] = values['vxlan-vni'];
         } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('vxlan-vni')) {
             this['vxlan-vni'] = NetworkNetworkSpec.propInfo['vxlan-vni'].default;
+        } else {
+            this['vxlan-vni'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

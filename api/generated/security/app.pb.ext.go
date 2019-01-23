@@ -421,31 +421,40 @@ func init() {
 	})
 
 	validatorMapApp["AppSpec"] = make(map[string][]func(string, interface{}) error)
-
 	validatorMapApp["AppSpec"]["all"] = append(validatorMapApp["AppSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AppSpec)
-		if !validators.Duration(m.Timeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"Timeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.EmptyOrDuration(m.Timeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"Timeout")
 		}
 		return nil
 	})
 
 	validatorMapApp["Msrpc"] = make(map[string][]func(string, interface{}) error)
-
 	validatorMapApp["Msrpc"]["all"] = append(validatorMapApp["Msrpc"]["all"], func(path string, i interface{}) error {
 		m := i.(*Msrpc)
-		if !validators.Duration(m.Timeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"Timeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.EmptyOrDuration(m.Timeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"Timeout")
 		}
 		return nil
 	})
 
 	validatorMapApp["Sunrpc"] = make(map[string][]func(string, interface{}) error)
-
 	validatorMapApp["Sunrpc"]["all"] = append(validatorMapApp["Sunrpc"]["all"], func(path string, i interface{}) error {
 		m := i.(*Sunrpc)
-		if !validators.Duration(m.Timeout) {
-			return fmt.Errorf("%v validation failed", path+"."+"Timeout")
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "0")
+
+		if !validators.EmptyOrDuration(m.Timeout, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"Timeout")
 		}
 		return nil
 	})

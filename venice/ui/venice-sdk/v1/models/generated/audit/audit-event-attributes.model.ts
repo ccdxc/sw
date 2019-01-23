@@ -13,14 +13,14 @@ import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
 import { AuditEventAttributes_outcome,  } from './enums';
 
 export interface IAuditEventAttributes {
-    'stage'?: AuditEventAttributes_stage;
-    'level'?: AuditEventAttributes_level;
+    'stage': AuditEventAttributes_stage;
+    'level': AuditEventAttributes_level;
     'user'?: IApiObjectRef;
     'client-ips'?: Array<string>;
     'resource'?: IApiObjectRef;
     'action'?: string;
-    'outcome'?: AuditEventAttributes_outcome;
-    'request-uri'?: string;
+    'outcome': AuditEventAttributes_outcome;
+    'request-uri': string;
     'request-object'?: string;
     'response-object'?: string;
     'gateway-node'?: string;
@@ -144,67 +144,95 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
             this['stage'] = values['stage'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('stage')) {
             this['stage'] = <AuditEventAttributes_stage>  AuditEventAttributes.propInfo['stage'].default;
+        } else {
+            this['stage'] = null
         }
         if (values && values['level'] != null) {
             this['level'] = values['level'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('level')) {
             this['level'] = <AuditEventAttributes_level>  AuditEventAttributes.propInfo['level'].default;
+        } else {
+            this['level'] = null
         }
         if (values) {
-            this['user'].setValues(values['user']);
+            this['user'].setValues(values['user'], fillDefaults);
+        } else {
+            this['user'].setValues(null, fillDefaults);
         }
         if (values && values['client-ips'] != null) {
             this['client-ips'] = values['client-ips'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('client-ips')) {
             this['client-ips'] = [ AuditEventAttributes.propInfo['client-ips'].default];
+        } else {
+            this['client-ips'] = [];
         }
         if (values) {
-            this['resource'].setValues(values['resource']);
+            this['resource'].setValues(values['resource'], fillDefaults);
+        } else {
+            this['resource'].setValues(null, fillDefaults);
         }
         if (values && values['action'] != null) {
             this['action'] = values['action'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('action')) {
             this['action'] = AuditEventAttributes.propInfo['action'].default;
+        } else {
+            this['action'] = null
         }
         if (values && values['outcome'] != null) {
             this['outcome'] = values['outcome'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('outcome')) {
             this['outcome'] = <AuditEventAttributes_outcome>  AuditEventAttributes.propInfo['outcome'].default;
+        } else {
+            this['outcome'] = null
         }
         if (values && values['request-uri'] != null) {
             this['request-uri'] = values['request-uri'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('request-uri')) {
             this['request-uri'] = AuditEventAttributes.propInfo['request-uri'].default;
+        } else {
+            this['request-uri'] = null
         }
         if (values && values['request-object'] != null) {
             this['request-object'] = values['request-object'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('request-object')) {
             this['request-object'] = AuditEventAttributes.propInfo['request-object'].default;
+        } else {
+            this['request-object'] = null
         }
         if (values && values['response-object'] != null) {
             this['response-object'] = values['response-object'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('response-object')) {
             this['response-object'] = AuditEventAttributes.propInfo['response-object'].default;
+        } else {
+            this['response-object'] = null
         }
         if (values && values['gateway-node'] != null) {
             this['gateway-node'] = values['gateway-node'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('gateway-node')) {
             this['gateway-node'] = AuditEventAttributes.propInfo['gateway-node'].default;
+        } else {
+            this['gateway-node'] = null
         }
         if (values && values['gateway-ip'] != null) {
             this['gateway-ip'] = values['gateway-ip'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('gateway-ip')) {
             this['gateway-ip'] = AuditEventAttributes.propInfo['gateway-ip'].default;
+        } else {
+            this['gateway-ip'] = null
         }
         if (values && values['service-name'] != null) {
             this['service-name'] = values['service-name'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('service-name')) {
             this['service-name'] = AuditEventAttributes.propInfo['service-name'].default;
+        } else {
+            this['service-name'] = null
         }
         if (values && values['data'] != null) {
             this['data'] = values['data'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('data')) {
             this['data'] = AuditEventAttributes.propInfo['data'].default;
+        } else {
+            this['data'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -220,7 +248,7 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
                 'resource': this['resource'].$formGroup,
                 'action': new FormControl(this['action']),
                 'outcome': new FormControl(this['outcome'], [required, enumValidator(AuditEventAttributes_outcome), ]),
-                'request-uri': new FormControl(this['request-uri']),
+                'request-uri': new FormControl(this['request-uri'], [required, ]),
                 'request-object': new FormControl(this['request-object']),
                 'response-object': new FormControl(this['response-object']),
                 'gateway-node': new FormControl(this['gateway-node']),

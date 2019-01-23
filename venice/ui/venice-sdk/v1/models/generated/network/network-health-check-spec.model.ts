@@ -76,26 +76,36 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
             this['interval'] = values['interval'];
         } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('interval')) {
             this['interval'] = NetworkHealthCheckSpec.propInfo['interval'].default;
+        } else {
+            this['interval'] = null
         }
         if (values && values['probes-per-interval'] != null) {
             this['probes-per-interval'] = values['probes-per-interval'];
         } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('probes-per-interval')) {
             this['probes-per-interval'] = NetworkHealthCheckSpec.propInfo['probes-per-interval'].default;
+        } else {
+            this['probes-per-interval'] = null
         }
         if (values && values['probe-port-or-url'] != null) {
             this['probe-port-or-url'] = values['probe-port-or-url'];
         } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('probe-port-or-url')) {
             this['probe-port-or-url'] = NetworkHealthCheckSpec.propInfo['probe-port-or-url'].default;
+        } else {
+            this['probe-port-or-url'] = null
         }
         if (values && values['max-timeouts'] != null) {
             this['max-timeouts'] = values['max-timeouts'];
         } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('max-timeouts')) {
             this['max-timeouts'] = NetworkHealthCheckSpec.propInfo['max-timeouts'].default;
+        } else {
+            this['max-timeouts'] = null
         }
         if (values && values['declare-healthy-count'] != null) {
             this['declare-healthy-count'] = values['declare-healthy-count'];
         } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('declare-healthy-count')) {
             this['declare-healthy-count'] = NetworkHealthCheckSpec.propInfo['declare-healthy-count'].default;
+        } else {
+            this['declare-healthy-count'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -10,8 +10,8 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringExternalCred, IMonitoringExternalCred } from './monitoring-external-cred.model';
 
 export interface IMonitoringExportConfig {
-    'destination'?: string;
-    'transport'?: string;
+    'destination': string;
+    'transport': string;
     'credentials'?: IMonitoringExternalCred;
 }
 
@@ -75,14 +75,20 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
             this['destination'] = values['destination'];
         } else if (fillDefaults && MonitoringExportConfig.hasDefaultValue('destination')) {
             this['destination'] = MonitoringExportConfig.propInfo['destination'].default;
+        } else {
+            this['destination'] = null
         }
         if (values && values['transport'] != null) {
             this['transport'] = values['transport'];
         } else if (fillDefaults && MonitoringExportConfig.hasDefaultValue('transport')) {
             this['transport'] = MonitoringExportConfig.propInfo['transport'].default;
+        } else {
+            this['transport'] = null
         }
         if (values) {
-            this['credentials'].setValues(values['credentials']);
+            this['credentials'].setValues(values['credentials'], fillDefaults);
+        } else {
+            this['credentials'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -92,7 +98,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'destination': new FormControl(this['destination'], [required, minLengthValidator(1), maxLengthValidator(2048), ]),
-                'transport': new FormControl(this['transport']),
+                'transport': new FormControl(this['transport'], [required, ]),
                 'credentials': this['credentials'].$formGroup,
             });
         }

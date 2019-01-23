@@ -56,6 +56,8 @@ export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<ApiInterface>(this, 'Values', values['Values'], ApiInterface);
+        } else {
+            this['Values'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

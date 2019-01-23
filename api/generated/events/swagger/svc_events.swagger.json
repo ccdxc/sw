@@ -506,6 +506,9 @@
     },
     "eventsEventAttributes": {
       "type": "object",
+      "required": [
+        "severity"
+      ],
       "properties": {
         "severity": {
           "type": "string",

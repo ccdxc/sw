@@ -82,20 +82,30 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
             this['kind'] = values['kind'];
         } else if (fillDefaults && MonitoringMirrorSession.hasDefaultValue('kind')) {
             this['kind'] = MonitoringMirrorSession.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && MonitoringMirrorSession.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringMirrorSession.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['meta'].setValues(values['meta']);
+            this['meta'].setValues(values['meta'], fillDefaults);
+        } else {
+            this['meta'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['mirror-session-spec'].setValues(values['mirror-session-spec']);
+            this['mirror-session-spec'].setValues(values['mirror-session-spec'], fillDefaults);
+        } else {
+            this['mirror-session-spec'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['status'].setValues(values['status']);
+            this['status'].setValues(values['status'], fillDefaults);
+        } else {
+            this['status'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

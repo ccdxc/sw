@@ -71,14 +71,20 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<SecurityProtoPort>(this, 'proto-ports', values['proto-ports'], SecurityProtoPort);
+        } else {
+            this['proto-ports'] = [];
         }
         if (values && values['timeout'] != null) {
             this['timeout'] = values['timeout'];
         } else if (fillDefaults && SecurityAppSpec.hasDefaultValue('timeout')) {
             this['timeout'] = SecurityAppSpec.propInfo['timeout'].default;
+        } else {
+            this['timeout'] = null
         }
         if (values) {
-            this['alg'].setValues(values['alg']);
+            this['alg'].setValues(values['alg'], fillDefaults);
+        } else {
+            this['alg'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

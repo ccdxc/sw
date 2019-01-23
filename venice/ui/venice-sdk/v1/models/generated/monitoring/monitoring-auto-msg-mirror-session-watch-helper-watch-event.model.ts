@@ -63,9 +63,13 @@ export class MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent extends BaseMod
             this['type'] = values['type'];
         } else if (fillDefaults && MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

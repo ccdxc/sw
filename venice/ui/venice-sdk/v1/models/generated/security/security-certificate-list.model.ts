@@ -75,17 +75,25 @@ export class SecurityCertificateList extends BaseModel implements ISecurityCerti
             this['kind'] = values['kind'];
         } else if (fillDefaults && SecurityCertificateList.hasDefaultValue('kind')) {
             this['kind'] = SecurityCertificateList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && SecurityCertificateList.hasDefaultValue('api-version')) {
             this['api-version'] = SecurityCertificateList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<SecurityCertificate>(this, 'items', values['items'], SecurityCertificate);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

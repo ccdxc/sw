@@ -23,7 +23,7 @@ message RolloutSpec {
 
     // Duration, if specified, after which the rollout is supposed to stop, if not completed by that time
     // Typically represents the end of Maintenance window
-    string Duration                             = 3 [(gogoproto.jsontag) = "duration,omitempty", (venice.check)="Duration()"];
+    string Duration                             = 3 [(gogoproto.jsontag) = "duration,omitempty", (venice.check)="EmptyOrDuration(0,0)"];
 
     // Strategy in which the nodes are upgraded - subject to other constraints below
     enum StrategyType {

@@ -94,22 +94,32 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<SearchTextRequirement>(this, 'texts', values['texts'], SearchTextRequirement);
+        } else {
+            this['texts'] = [];
         }
         if (values && values['categories'] != null) {
             this['categories'] = values['categories'];
         } else if (fillDefaults && SearchSearchQuery.hasDefaultValue('categories')) {
             this['categories'] = [ SearchSearchQuery.propInfo['categories'].default];
+        } else {
+            this['categories'] = [];
         }
         if (values && values['kinds'] != null) {
             this['kinds'] = values['kinds'];
         } else if (fillDefaults && SearchSearchQuery.hasDefaultValue('kinds')) {
             this['kinds'] = [ SearchSearchQuery.propInfo['kinds'].default];
+        } else {
+            this['kinds'] = [];
         }
         if (values) {
-            this['fields'].setValues(values['fields']);
+            this['fields'].setValues(values['fields'], fillDefaults);
+        } else {
+            this['fields'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['labels'].setValues(values['labels']);
+            this['labels'].setValues(values['labels'], fillDefaults);
+        } else {
+            this['labels'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

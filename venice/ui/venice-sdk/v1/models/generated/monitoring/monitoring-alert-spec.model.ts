@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringAlertSpec_state,  MonitoringAlertSpec_state_uihint  } from './enums';
 
 export interface IMonitoringAlertSpec {
-    'state'?: MonitoringAlertSpec_state;
+    'state': MonitoringAlertSpec_state;
 }
 
 
@@ -59,6 +59,8 @@ export class MonitoringAlertSpec extends BaseModel implements IMonitoringAlertSp
             this['state'] = values['state'];
         } else if (fillDefaults && MonitoringAlertSpec.hasDefaultValue('state')) {
             this['state'] = <MonitoringAlertSpec_state>  MonitoringAlertSpec.propInfo['state'].default;
+        } else {
+            this['state'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

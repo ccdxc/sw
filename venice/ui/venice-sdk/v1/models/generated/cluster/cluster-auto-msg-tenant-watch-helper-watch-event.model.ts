@@ -63,9 +63,13 @@ export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel impleme
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterAutoMsgTenantWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = ClusterAutoMsgTenantWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -63,9 +63,13 @@ export class NetworkAutoMsgLbPolicyWatchHelperWatchEvent extends BaseModel imple
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkAutoMsgLbPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = NetworkAutoMsgLbPolicyWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

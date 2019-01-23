@@ -13,7 +13,7 @@ import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
 import { ClusterSmartNICInfo, IClusterSmartNICInfo } from './cluster-smart-nic-info.model';
 
 export interface IClusterSmartNICStatus {
-    'admission-phase'?: ClusterSmartNICStatus_admission_phase;
+    'admission-phase': ClusterSmartNICStatus_admission_phase;
     'conditions'?: Array<IClusterSmartNICCondition>;
     'serial-num'?: string;
     'primary-mac'?: string;
@@ -105,30 +105,44 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             this['admission-phase'] = values['admission-phase'];
         } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('admission-phase')) {
             this['admission-phase'] = <ClusterSmartNICStatus_admission_phase>  ClusterSmartNICStatus.propInfo['admission-phase'].default;
+        } else {
+            this['admission-phase'] = null
         }
         if (values) {
             this.fillModelArray<ClusterSmartNICCondition>(this, 'conditions', values['conditions'], ClusterSmartNICCondition);
+        } else {
+            this['conditions'] = [];
         }
         if (values && values['serial-num'] != null) {
             this['serial-num'] = values['serial-num'];
         } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('serial-num')) {
             this['serial-num'] = ClusterSmartNICStatus.propInfo['serial-num'].default;
+        } else {
+            this['serial-num'] = null
         }
         if (values && values['primary-mac'] != null) {
             this['primary-mac'] = values['primary-mac'];
         } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('primary-mac')) {
             this['primary-mac'] = ClusterSmartNICStatus.propInfo['primary-mac'].default;
+        } else {
+            this['primary-mac'] = null
         }
         if (values) {
-            this['ip-config'].setValues(values['ip-config']);
+            this['ip-config'].setValues(values['ip-config'], fillDefaults);
+        } else {
+            this['ip-config'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['system-info'].setValues(values['system-info']);
+            this['system-info'].setValues(values['system-info'], fillDefaults);
+        } else {
+            this['system-info'].setValues(null, fillDefaults);
         }
         if (values && values['interfaces'] != null) {
             this['interfaces'] = values['interfaces'];
         } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('interfaces')) {
             this['interfaces'] = [ ClusterSmartNICStatus.propInfo['interfaces'].default];
+        } else {
+            this['interfaces'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

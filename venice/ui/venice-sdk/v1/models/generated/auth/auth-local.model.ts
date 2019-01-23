@@ -56,6 +56,8 @@ export class AuthLocal extends BaseModel implements IAuthLocal {
             this['enabled'] = values['enabled'];
         } else if (fillDefaults && AuthLocal.hasDefaultValue('enabled')) {
             this['enabled'] = AuthLocal.propInfo['enabled'].default;
+        } else {
+            this['enabled'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

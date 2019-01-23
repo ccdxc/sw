@@ -56,6 +56,8 @@ export class ApiWatchEventList extends BaseModel implements IApiWatchEventList {
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<ApiWatchEvent>(this, 'events', values['events'], ApiWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -445,6 +445,9 @@
     },
     "netprotoPolicyRule": {
       "type": "object",
+      "required": [
+        "action"
+      ],
       "properties": {
         "action": {
           "type": "string",

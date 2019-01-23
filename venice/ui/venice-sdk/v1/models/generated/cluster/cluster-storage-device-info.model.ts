@@ -71,21 +71,29 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
             this['serial-num'] = values['serial-num'];
         } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('serial-num')) {
             this['serial-num'] = ClusterStorageDeviceInfo.propInfo['serial-num'].default;
+        } else {
+            this['serial-num'] = null
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('type')) {
             this['type'] = ClusterStorageDeviceInfo.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['vendor'] != null) {
             this['vendor'] = values['vendor'];
         } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('vendor')) {
             this['vendor'] = ClusterStorageDeviceInfo.propInfo['vendor'].default;
+        } else {
+            this['vendor'] = null
         }
         if (values && values['capacity'] != null) {
             this['capacity'] = values['capacity'];
         } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('capacity')) {
             this['capacity'] = ClusterStorageDeviceInfo.propInfo['capacity'].default;
+        } else {
+            this['capacity'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

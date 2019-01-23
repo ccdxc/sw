@@ -489,6 +489,9 @@
     },
     "fieldsRequirement": {
       "type": "object",
+      "required": [
+        "operator"
+      ],
       "properties": {
         "key": {
           "type": "string",
@@ -557,6 +560,9 @@
     },
     "labelsRequirement": {
       "type": "object",
+      "required": [
+        "operator"
+      ],
       "properties": {
         "key": {
           "type": "string",
@@ -742,6 +748,9 @@
     },
     "searchPolicySearchResponse": {
       "type": "object",
+      "required": [
+        "status"
+      ],
       "properties": {
         "status": {
           "type": "string",
@@ -850,6 +859,11 @@
     },
     "searchSearchRequest": {
       "type": "object",
+      "required": [
+        "from",
+        "max-results",
+        "mode"
+      ],
       "properties": {
         "query-string": {
           "type": "string",
@@ -995,6 +1009,9 @@
     },
     "securitySGRule": {
       "type": "object",
+      "required": [
+        "action"
+      ],
       "properties": {
         "apps": {
           "type": "array",

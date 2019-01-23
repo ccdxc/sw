@@ -55,7 +55,9 @@ export class SecuritySGPolicyStatus extends BaseModel implements ISecuritySGPoli
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this['propagation-status'].setValues(values['propagation-status']);
+            this['propagation-status'].setValues(values['propagation-status'], fillDefaults);
+        } else {
+            this['propagation-status'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

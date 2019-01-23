@@ -67,16 +67,22 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
             this['uri'] = values['uri'];
         } else if (fillDefaults && StagingValidationError.hasDefaultValue('uri')) {
             this['uri'] = StagingValidationError.propInfo['uri'].default;
+        } else {
+            this['uri'] = null
         }
         if (values && values['method'] != null) {
             this['method'] = values['method'];
         } else if (fillDefaults && StagingValidationError.hasDefaultValue('method')) {
             this['method'] = StagingValidationError.propInfo['method'].default;
+        } else {
+            this['method'] = null
         }
         if (values && values['error'] != null) {
             this['error'] = values['error'];
         } else if (fillDefaults && StagingValidationError.hasDefaultValue('error')) {
             this['error'] = [ StagingValidationError.propInfo['error'].default];
+        } else {
+            this['error'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

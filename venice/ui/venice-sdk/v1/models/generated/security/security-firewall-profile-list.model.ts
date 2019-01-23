@@ -75,17 +75,25 @@ export class SecurityFirewallProfileList extends BaseModel implements ISecurityF
             this['kind'] = values['kind'];
         } else if (fillDefaults && SecurityFirewallProfileList.hasDefaultValue('kind')) {
             this['kind'] = SecurityFirewallProfileList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && SecurityFirewallProfileList.hasDefaultValue('api-version')) {
             this['api-version'] = SecurityFirewallProfileList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<SecurityFirewallProfile>(this, 'items', values['items'], SecurityFirewallProfile);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

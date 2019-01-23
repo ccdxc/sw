@@ -56,6 +56,8 @@ export class StagingBufferSpec extends BaseModel implements IStagingBufferSpec {
             this['Contact'] = values['Contact'];
         } else if (fillDefaults && StagingBufferSpec.hasDefaultValue('Contact')) {
             this['Contact'] = StagingBufferSpec.propInfo['Contact'].default;
+        } else {
+            this['Contact'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

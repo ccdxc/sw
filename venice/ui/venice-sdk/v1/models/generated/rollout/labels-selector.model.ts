@@ -58,6 +58,8 @@ export class LabelsSelector extends BaseModel implements ILabelsSelector {
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<LabelsRequirement>(this, 'requirements', values['requirements'], LabelsRequirement);
+        } else {
+            this['requirements'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

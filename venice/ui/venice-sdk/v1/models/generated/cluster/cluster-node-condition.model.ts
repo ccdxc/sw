@@ -11,8 +11,8 @@ import { ClusterNodeCondition_type,  ClusterNodeCondition_type_uihint  } from '.
 import { ClusterNodeCondition_status,  ClusterNodeCondition_status_uihint  } from './enums';
 
 export interface IClusterNodeCondition {
-    'type'?: ClusterNodeCondition_type;
-    'status'?: ClusterNodeCondition_status;
+    'type': ClusterNodeCondition_type;
+    'status': ClusterNodeCondition_status;
     'last-transition-time'?: string;
     'reason'?: string;
     'message'?: string;
@@ -84,26 +84,36 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterNodeCondition.hasDefaultValue('type')) {
             this['type'] = <ClusterNodeCondition_type>  ClusterNodeCondition.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
         } else if (fillDefaults && ClusterNodeCondition.hasDefaultValue('status')) {
             this['status'] = <ClusterNodeCondition_status>  ClusterNodeCondition.propInfo['status'].default;
+        } else {
+            this['status'] = null
         }
         if (values && values['last-transition-time'] != null) {
             this['last-transition-time'] = values['last-transition-time'];
         } else if (fillDefaults && ClusterNodeCondition.hasDefaultValue('last-transition-time')) {
             this['last-transition-time'] = ClusterNodeCondition.propInfo['last-transition-time'].default;
+        } else {
+            this['last-transition-time'] = null
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
         } else if (fillDefaults && ClusterNodeCondition.hasDefaultValue('reason')) {
             this['reason'] = ClusterNodeCondition.propInfo['reason'].default;
+        } else {
+            this['reason'] = null
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
         } else if (fillDefaults && ClusterNodeCondition.hasDefaultValue('message')) {
             this['message'] = ClusterNodeCondition.propInfo['message'].default;
+        } else {
+            this['message'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

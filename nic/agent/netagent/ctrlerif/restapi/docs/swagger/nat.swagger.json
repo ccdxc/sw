@@ -859,6 +859,9 @@
     },
     "netprotoNatRule": {
       "type": "object",
+      "required": [
+        "action"
+      ],
       "properties": {
         "source": {
           "$ref": "#/definitions/netprotoMatchSelector",

@@ -5140,6 +5140,9 @@
     },
     "networkTLSServerPolicySpec": {
       "type": "object",
+      "required": [
+        "client-authentication"
+      ],
       "properties": {
         "tls-server-certificates": {
           "type": "array",

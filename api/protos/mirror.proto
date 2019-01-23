@@ -57,8 +57,8 @@ message MirrorStopConditions {
     // Stop after capturing specified number of packets
     uint32          MaxPacketCount  = 1 [(gogoproto.jsontag) = "max-packets,omitempty"];
     // Stop after specified amount of time. E.g. 1h, 20min
-    // When ExpiryDuration is not specified, Default is "2h"
-    string          ExpiryDuration  = 2 [(gogoproto.jsontag) = "expiry-duration,omitempty", (venice.check)="Duration()"];
+    // Maximum length allowed is 2h
+    string          ExpiryDuration  = 2 [(gogoproto.jsontag) = "expiry-duration,omitempty", (venice.default)="2h", (venice.check)="Duration(0,2h)"];
 }
 
 enum PacketCollectorType {

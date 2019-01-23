@@ -13,7 +13,7 @@ import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-ex
 import { MonitoringSyslogExportConfig, IMonitoringSyslogExportConfig } from './monitoring-syslog-export-config.model';
 
 export interface IMonitoringEventPolicySpec {
-    'format'?: MonitoringEventPolicySpec_format;
+    'format': MonitoringEventPolicySpec_format;
     'selector'?: IFieldsSelector;
     'targets'?: Array<IMonitoringExportConfig>;
     'config'?: IMonitoringSyslogExportConfig;
@@ -80,15 +80,23 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
             this['format'] = values['format'];
         } else if (fillDefaults && MonitoringEventPolicySpec.hasDefaultValue('format')) {
             this['format'] = <MonitoringEventPolicySpec_format>  MonitoringEventPolicySpec.propInfo['format'].default;
+        } else {
+            this['format'] = null
         }
         if (values) {
-            this['selector'].setValues(values['selector']);
+            this['selector'].setValues(values['selector'], fillDefaults);
+        } else {
+            this['selector'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<MonitoringExportConfig>(this, 'targets', values['targets'], MonitoringExportConfig);
+        } else {
+            this['targets'] = [];
         }
         if (values) {
-            this['config'].setValues(values['config']);
+            this['config'].setValues(values['config'], fillDefaults);
+        } else {
+            this['config'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

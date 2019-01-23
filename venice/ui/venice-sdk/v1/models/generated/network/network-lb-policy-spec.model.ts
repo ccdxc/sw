@@ -73,19 +73,27 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkLbPolicySpec.hasDefaultValue('type')) {
             this['type'] = NetworkLbPolicySpec.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['algorithm'] != null) {
             this['algorithm'] = values['algorithm'];
         } else if (fillDefaults && NetworkLbPolicySpec.hasDefaultValue('algorithm')) {
             this['algorithm'] = NetworkLbPolicySpec.propInfo['algorithm'].default;
+        } else {
+            this['algorithm'] = null
         }
         if (values && values['session-affinity'] != null) {
             this['session-affinity'] = values['session-affinity'];
         } else if (fillDefaults && NetworkLbPolicySpec.hasDefaultValue('session-affinity')) {
             this['session-affinity'] = NetworkLbPolicySpec.propInfo['session-affinity'].default;
+        } else {
+            this['session-affinity'] = null
         }
         if (values) {
-            this['health-check'].setValues(values['health-check']);
+            this['health-check'].setValues(values['health-check'], fillDefaults);
+        } else {
+            this['health-check'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

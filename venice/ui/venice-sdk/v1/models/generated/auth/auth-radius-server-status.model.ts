@@ -11,7 +11,7 @@ import { AuthRadiusServerStatus_result,  } from './enums';
 import { AuthRadiusServer, IAuthRadiusServer } from './auth-radius-server.model';
 
 export interface IAuthRadiusServerStatus {
-    'result'?: AuthRadiusServerStatus_result;
+    'result': AuthRadiusServerStatus_result;
     'message'?: string;
     'server'?: IAuthRadiusServer;
 }
@@ -71,14 +71,20 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
             this['result'] = values['result'];
         } else if (fillDefaults && AuthRadiusServerStatus.hasDefaultValue('result')) {
             this['result'] = <AuthRadiusServerStatus_result>  AuthRadiusServerStatus.propInfo['result'].default;
+        } else {
+            this['result'] = null
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
         } else if (fillDefaults && AuthRadiusServerStatus.hasDefaultValue('message')) {
             this['message'] = AuthRadiusServerStatus.propInfo['message'].default;
+        } else {
+            this['message'] = null
         }
         if (values) {
-            this['server'].setValues(values['server']);
+            this['server'].setValues(values['server'], fillDefaults);
+        } else {
+            this['server'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

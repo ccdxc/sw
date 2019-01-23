@@ -63,9 +63,13 @@ export class NetworkAutoMsgServiceWatchHelperWatchEvent extends BaseModel implem
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkAutoMsgServiceWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = NetworkAutoMsgServiceWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

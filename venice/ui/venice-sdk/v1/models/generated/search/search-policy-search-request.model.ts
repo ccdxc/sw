@@ -104,41 +104,57 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('tenant')) {
             this['tenant'] = SearchPolicySearchRequest.propInfo['tenant'].default;
+        } else {
+            this['tenant'] = null
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
         } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('namespace')) {
             this['namespace'] = SearchPolicySearchRequest.propInfo['namespace'].default;
+        } else {
+            this['namespace'] = null
         }
         if (values && values['sg-policy'] != null) {
             this['sg-policy'] = values['sg-policy'];
         } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('sg-policy')) {
             this['sg-policy'] = SearchPolicySearchRequest.propInfo['sg-policy'].default;
+        } else {
+            this['sg-policy'] = null
         }
         if (values && values['app'] != null) {
             this['app'] = values['app'];
         } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('app')) {
             this['app'] = SearchPolicySearchRequest.propInfo['app'].default;
+        } else {
+            this['app'] = null
         }
         if (values && values['from-ip-address'] != null) {
             this['from-ip-address'] = values['from-ip-address'];
         } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('from-ip-address')) {
             this['from-ip-address'] = SearchPolicySearchRequest.propInfo['from-ip-address'].default;
+        } else {
+            this['from-ip-address'] = null
         }
         if (values && values['to-ip-address'] != null) {
             this['to-ip-address'] = values['to-ip-address'];
         } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('to-ip-address')) {
             this['to-ip-address'] = SearchPolicySearchRequest.propInfo['to-ip-address'].default;
+        } else {
+            this['to-ip-address'] = null
         }
         if (values && values['from-security-group'] != null) {
             this['from-security-group'] = values['from-security-group'];
         } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('from-security-group')) {
             this['from-security-group'] = SearchPolicySearchRequest.propInfo['from-security-group'].default;
+        } else {
+            this['from-security-group'] = null
         }
         if (values && values['to-security-group'] != null) {
             this['to-security-group'] = values['to-security-group'];
         } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('to-security-group')) {
             this['to-security-group'] = SearchPolicySearchRequest.propInfo['to-security-group'].default;
+        } else {
+            this['to-security-group'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

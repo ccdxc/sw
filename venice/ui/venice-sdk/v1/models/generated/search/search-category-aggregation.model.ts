@@ -56,6 +56,8 @@ export class SearchCategoryAggregation extends BaseModel implements ISearchCateg
             this['categories'] = values['categories'];
         } else if (fillDefaults && SearchCategoryAggregation.hasDefaultValue('categories')) {
             this['categories'] = SearchCategoryAggregation.propInfo['categories'].default;
+        } else {
+            this['categories'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

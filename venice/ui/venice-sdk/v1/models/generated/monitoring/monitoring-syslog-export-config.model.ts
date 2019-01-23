@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringSyslogExportConfig_facility_override,  MonitoringSyslogExportConfig_facility_override_uihint  } from './enums';
 
 export interface IMonitoringSyslogExportConfig {
-    'facility-override'?: MonitoringSyslogExportConfig_facility_override;
+    'facility-override': MonitoringSyslogExportConfig_facility_override;
     'prefix'?: string;
 }
 
@@ -64,11 +64,15 @@ export class MonitoringSyslogExportConfig extends BaseModel implements IMonitori
             this['facility-override'] = values['facility-override'];
         } else if (fillDefaults && MonitoringSyslogExportConfig.hasDefaultValue('facility-override')) {
             this['facility-override'] = <MonitoringSyslogExportConfig_facility_override>  MonitoringSyslogExportConfig.propInfo['facility-override'].default;
+        } else {
+            this['facility-override'] = null
         }
         if (values && values['prefix'] != null) {
             this['prefix'] = values['prefix'];
         } else if (fillDefaults && MonitoringSyslogExportConfig.hasDefaultValue('prefix')) {
             this['prefix'] = MonitoringSyslogExportConfig.propInfo['prefix'].default;
+        } else {
+            this['prefix'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

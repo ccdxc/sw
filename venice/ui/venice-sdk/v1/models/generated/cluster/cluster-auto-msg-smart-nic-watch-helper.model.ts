@@ -56,6 +56,8 @@ export class ClusterAutoMsgSmartNICWatchHelper extends BaseModel implements IClu
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<ClusterAutoMsgSmartNICWatchHelperWatchEvent>(this, 'events', values['events'], ClusterAutoMsgSmartNICWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

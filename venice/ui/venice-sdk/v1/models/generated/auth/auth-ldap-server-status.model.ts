@@ -11,7 +11,7 @@ import { AuthLdapServerStatus_result,  } from './enums';
 import { AuthLdapServer, IAuthLdapServer } from './auth-ldap-server.model';
 
 export interface IAuthLdapServerStatus {
-    'result'?: AuthLdapServerStatus_result;
+    'result': AuthLdapServerStatus_result;
     'message'?: string;
     'server'?: IAuthLdapServer;
 }
@@ -71,14 +71,20 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
             this['result'] = values['result'];
         } else if (fillDefaults && AuthLdapServerStatus.hasDefaultValue('result')) {
             this['result'] = <AuthLdapServerStatus_result>  AuthLdapServerStatus.propInfo['result'].default;
+        } else {
+            this['result'] = null
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
         } else if (fillDefaults && AuthLdapServerStatus.hasDefaultValue('message')) {
             this['message'] = AuthLdapServerStatus.propInfo['message'].default;
+        } else {
+            this['message'] = null
         }
         if (values) {
-            this['server'].setValues(values['server']);
+            this['server'].setValues(values['server'], fillDefaults);
+        } else {
+            this['server'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

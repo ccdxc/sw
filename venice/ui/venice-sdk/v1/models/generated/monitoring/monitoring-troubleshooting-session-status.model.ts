@@ -11,7 +11,7 @@ import { MonitoringTroubleshootingSessionStatus_state,  MonitoringTroubleshootin
 import { MonitoringTsResult, IMonitoringTsResult } from './monitoring-ts-result.model';
 
 export interface IMonitoringTroubleshootingSessionStatus {
-    'state'?: MonitoringTroubleshootingSessionStatus_state;
+    'state': MonitoringTroubleshootingSessionStatus_state;
     'troubleshooting-results'?: Array<IMonitoringTsResult>;
 }
 
@@ -66,9 +66,13 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
             this['state'] = values['state'];
         } else if (fillDefaults && MonitoringTroubleshootingSessionStatus.hasDefaultValue('state')) {
             this['state'] = <MonitoringTroubleshootingSessionStatus_state>  MonitoringTroubleshootingSessionStatus.propInfo['state'].default;
+        } else {
+            this['state'] = null
         }
         if (values) {
             this.fillModelArray<MonitoringTsResult>(this, 'troubleshooting-results', values['troubleshooting-results'], MonitoringTsResult);
+        } else {
+            this['troubleshooting-results'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

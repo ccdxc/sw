@@ -14,7 +14,7 @@ import { MonitoringAlertReason, IMonitoringAlertReason } from './monitoring-aler
 import { MonitoringAuditInfo, IMonitoringAuditInfo } from './monitoring-audit-info.model';
 
 export interface IMonitoringAlertStatus {
-    'severity'?: MonitoringAlertStatus_severity;
+    'severity': MonitoringAlertStatus_severity;
     'source'?: IMonitoringAlertSource;
     'event-uri'?: string;
     'object-ref'?: IApiObjectRef;
@@ -106,31 +106,47 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
             this['severity'] = values['severity'];
         } else if (fillDefaults && MonitoringAlertStatus.hasDefaultValue('severity')) {
             this['severity'] = <MonitoringAlertStatus_severity>  MonitoringAlertStatus.propInfo['severity'].default;
+        } else {
+            this['severity'] = null
         }
         if (values) {
-            this['source'].setValues(values['source']);
+            this['source'].setValues(values['source'], fillDefaults);
+        } else {
+            this['source'].setValues(null, fillDefaults);
         }
         if (values && values['event-uri'] != null) {
             this['event-uri'] = values['event-uri'];
         } else if (fillDefaults && MonitoringAlertStatus.hasDefaultValue('event-uri')) {
             this['event-uri'] = MonitoringAlertStatus.propInfo['event-uri'].default;
+        } else {
+            this['event-uri'] = null
         }
         if (values) {
-            this['object-ref'].setValues(values['object-ref']);
+            this['object-ref'].setValues(values['object-ref'], fillDefaults);
+        } else {
+            this['object-ref'].setValues(null, fillDefaults);
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
         } else if (fillDefaults && MonitoringAlertStatus.hasDefaultValue('message')) {
             this['message'] = MonitoringAlertStatus.propInfo['message'].default;
+        } else {
+            this['message'] = null
         }
         if (values) {
-            this['reason'].setValues(values['reason']);
+            this['reason'].setValues(values['reason'], fillDefaults);
+        } else {
+            this['reason'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['acknowledged'].setValues(values['acknowledged']);
+            this['acknowledged'].setValues(values['acknowledged'], fillDefaults);
+        } else {
+            this['acknowledged'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['resolved'].setValues(values['resolved']);
+            this['resolved'].setValues(values['resolved'], fillDefaults);
+        } else {
+            this['resolved'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -11,7 +11,7 @@ import { MonitoringMirrorCollector_type,  MonitoringMirrorCollector_type_uihint 
 import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
 
 export interface IMonitoringMirrorCollector {
-    'type'?: MonitoringMirrorCollector_type;
+    'type': MonitoringMirrorCollector_type;
     'export-config'?: IMonitoringExportConfig;
 }
 
@@ -66,9 +66,13 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
             this['type'] = values['type'];
         } else if (fillDefaults && MonitoringMirrorCollector.hasDefaultValue('type')) {
             this['type'] = <MonitoringMirrorCollector_type>  MonitoringMirrorCollector.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['export-config'].setValues(values['export-config']);
+            this['export-config'].setValues(values['export-config'], fillDefaults);
+        } else {
+            this['export-config'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

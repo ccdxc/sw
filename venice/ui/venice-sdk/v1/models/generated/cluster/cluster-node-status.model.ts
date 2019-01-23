@@ -11,7 +11,7 @@ import { ClusterNodeStatus_phase,  ClusterNodeStatus_phase_uihint  } from './enu
 import { ClusterNodeCondition, IClusterNodeCondition } from './cluster-node-condition.model';
 
 export interface IClusterNodeStatus {
-    'phase'?: ClusterNodeStatus_phase;
+    'phase': ClusterNodeStatus_phase;
     'quorum'?: boolean;
     'conditions'?: Array<IClusterNodeCondition>;
 }
@@ -75,14 +75,20 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
             this['phase'] = values['phase'];
         } else if (fillDefaults && ClusterNodeStatus.hasDefaultValue('phase')) {
             this['phase'] = <ClusterNodeStatus_phase>  ClusterNodeStatus.propInfo['phase'].default;
+        } else {
+            this['phase'] = null
         }
         if (values && values['quorum'] != null) {
             this['quorum'] = values['quorum'];
         } else if (fillDefaults && ClusterNodeStatus.hasDefaultValue('quorum')) {
             this['quorum'] = ClusterNodeStatus.propInfo['quorum'].default;
+        } else {
+            this['quorum'] = null
         }
         if (values) {
             this.fillModelArray<ClusterNodeCondition>(this, 'conditions', values['conditions'], ClusterNodeCondition);
+        } else {
+            this['conditions'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

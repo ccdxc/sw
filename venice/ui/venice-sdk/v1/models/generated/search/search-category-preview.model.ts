@@ -56,6 +56,8 @@ export class SearchCategoryPreview extends BaseModel implements ISearchCategoryP
             this['categories'] = values['categories'];
         } else if (fillDefaults && SearchCategoryPreview.hasDefaultValue('categories')) {
             this['categories'] = SearchCategoryPreview.propInfo['categories'].default;
+        } else {
+            this['categories'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

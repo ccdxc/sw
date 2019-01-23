@@ -56,6 +56,8 @@ export class MonitoringAutoMsgStatsPolicyWatchHelper extends BaseModel implement
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringAutoMsgStatsPolicyWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgStatsPolicyWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

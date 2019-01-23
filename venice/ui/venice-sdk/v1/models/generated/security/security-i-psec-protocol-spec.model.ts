@@ -61,11 +61,15 @@ export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPs
             this['encryption-transform'] = values['encryption-transform'];
         } else if (fillDefaults && SecurityIPsecProtocolSpec.hasDefaultValue('encryption-transform')) {
             this['encryption-transform'] = SecurityIPsecProtocolSpec.propInfo['encryption-transform'].default;
+        } else {
+            this['encryption-transform'] = null
         }
         if (values && values['integrity-transform'] != null) {
             this['integrity-transform'] = values['integrity-transform'];
         } else if (fillDefaults && SecurityIPsecProtocolSpec.hasDefaultValue('integrity-transform')) {
             this['integrity-transform'] = SecurityIPsecProtocolSpec.propInfo['integrity-transform'].default;
+        } else {
+            this['integrity-transform'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

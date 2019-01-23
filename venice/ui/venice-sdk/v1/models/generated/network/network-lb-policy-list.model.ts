@@ -75,17 +75,25 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
             this['kind'] = values['kind'];
         } else if (fillDefaults && NetworkLbPolicyList.hasDefaultValue('kind')) {
             this['kind'] = NetworkLbPolicyList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && NetworkLbPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = NetworkLbPolicyList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<NetworkLbPolicy>(this, 'items', values['items'], NetworkLbPolicy);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

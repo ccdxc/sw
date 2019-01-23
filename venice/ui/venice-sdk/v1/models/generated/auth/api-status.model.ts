@@ -94,27 +94,39 @@ export class ApiStatus extends BaseModel implements IApiStatus {
             this['kind'] = values['kind'];
         } else if (fillDefaults && ApiStatus.hasDefaultValue('kind')) {
             this['kind'] = ApiStatus.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && ApiStatus.hasDefaultValue('api-version')) {
             this['api-version'] = ApiStatus.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['result'].setValues(values['result']);
+            this['result'].setValues(values['result'], fillDefaults);
+        } else {
+            this['result'].setValues(null, fillDefaults);
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
         } else if (fillDefaults && ApiStatus.hasDefaultValue('message')) {
             this['message'] = [ ApiStatus.propInfo['message'].default];
+        } else {
+            this['message'] = [];
         }
         if (values && values['code'] != null) {
             this['code'] = values['code'];
         } else if (fillDefaults && ApiStatus.hasDefaultValue('code')) {
             this['code'] = ApiStatus.propInfo['code'].default;
+        } else {
+            this['code'] = null
         }
         if (values) {
-            this['object-ref'].setValues(values['object-ref']);
+            this['object-ref'].setValues(values['object-ref'], fillDefaults);
+        } else {
+            this['object-ref'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

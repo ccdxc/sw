@@ -56,6 +56,8 @@ export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
             this['kinds'] = values['kinds'];
         } else if (fillDefaults && SearchKindPreview.hasDefaultValue('kinds')) {
             this['kinds'] = SearchKindPreview.propInfo['kinds'].default;
+        } else {
+            this['kinds'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

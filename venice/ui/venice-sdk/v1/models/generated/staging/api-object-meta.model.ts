@@ -124,51 +124,71 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
             this['name'] = values['name'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('name')) {
             this['name'] = ApiObjectMeta.propInfo['name'].default;
+        } else {
+            this['name'] = null
         }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('tenant')) {
             this['tenant'] = ApiObjectMeta.propInfo['tenant'].default;
+        } else {
+            this['tenant'] = null
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('namespace')) {
             this['namespace'] = ApiObjectMeta.propInfo['namespace'].default;
+        } else {
+            this['namespace'] = null
         }
         if (values && values['generation-id'] != null) {
             this['generation-id'] = values['generation-id'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('generation-id')) {
             this['generation-id'] = ApiObjectMeta.propInfo['generation-id'].default;
+        } else {
+            this['generation-id'] = null
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('resource-version')) {
             this['resource-version'] = ApiObjectMeta.propInfo['resource-version'].default;
+        } else {
+            this['resource-version'] = null
         }
         if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('uuid')) {
             this['uuid'] = ApiObjectMeta.propInfo['uuid'].default;
+        } else {
+            this['uuid'] = null
         }
         if (values && values['labels'] != null) {
             this['labels'] = values['labels'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('labels')) {
             this['labels'] = ApiObjectMeta.propInfo['labels'].default;
+        } else {
+            this['labels'] = null
         }
         if (values && values['creation-time'] != null) {
             this['creation-time'] = values['creation-time'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('creation-time')) {
             this['creation-time'] = ApiObjectMeta.propInfo['creation-time'].default;
+        } else {
+            this['creation-time'] = null
         }
         if (values && values['mod-time'] != null) {
             this['mod-time'] = values['mod-time'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('mod-time')) {
             this['mod-time'] = ApiObjectMeta.propInfo['mod-time'].default;
+        } else {
+            this['mod-time'] = null
         }
         if (values && values['self-link'] != null) {
             this['self-link'] = values['self-link'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('self-link')) {
             this['self-link'] = ApiObjectMeta.propInfo['self-link'].default;
+        } else {
+            this['self-link'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

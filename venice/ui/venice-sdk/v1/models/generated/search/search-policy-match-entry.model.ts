@@ -60,12 +60,16 @@ export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMa
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this['rule'].setValues(values['rule']);
+            this['rule'].setValues(values['rule'], fillDefaults);
+        } else {
+            this['rule'].setValues(null, fillDefaults);
         }
         if (values && values['index'] != null) {
             this['index'] = values['index'];
         } else if (fillDefaults && SearchPolicyMatchEntry.hasDefaultValue('index')) {
             this['index'] = SearchPolicyMatchEntry.propInfo['index'].default;
+        } else {
+            this['index'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

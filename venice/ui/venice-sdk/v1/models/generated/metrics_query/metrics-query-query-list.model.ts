@@ -68,14 +68,20 @@ export class Metrics_queryQueryList extends BaseModel implements IMetrics_queryQ
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && Metrics_queryQueryList.hasDefaultValue('tenant')) {
             this['tenant'] = Metrics_queryQueryList.propInfo['tenant'].default;
+        } else {
+            this['tenant'] = null
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
         } else if (fillDefaults && Metrics_queryQueryList.hasDefaultValue('namespace')) {
             this['namespace'] = Metrics_queryQueryList.propInfo['namespace'].default;
+        } else {
+            this['namespace'] = null
         }
         if (values) {
             this.fillModelArray<Metrics_queryQuerySpec>(this, 'queries', values['queries'], Metrics_queryQuerySpec);
+        } else {
+            this['queries'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

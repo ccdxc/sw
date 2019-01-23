@@ -388,6 +388,12 @@
     },
     "auditEventAttributes": {
       "type": "object",
+      "required": [
+        "stage",
+        "level",
+        "outcome",
+        "request-uri"
+      ],
       "properties": {
         "stage": {
           "type": "string",

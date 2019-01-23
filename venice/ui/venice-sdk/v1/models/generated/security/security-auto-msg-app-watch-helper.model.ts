@@ -56,6 +56,8 @@ export class SecurityAutoMsgAppWatchHelper extends BaseModel implements ISecurit
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<SecurityAutoMsgAppWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgAppWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -9,17 +9,17 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ISecurityFirewallProfileSpec {
-    'session-idle-timeout'?: string;
-    'tcp-connection-setup-timeout'?: string;
-    'tcp-close-timeout'?: string;
-    'tcp-half-closed-timeout'?: string;
-    'tcp-drop-timeout'?: string;
-    'udp-drop-timeout'?: string;
-    'icmp-drop-timeout'?: string;
-    'drop-timeout'?: string;
-    'tcp-timeout'?: string;
-    'udp-timeout'?: string;
-    'icmp-timeout'?: string;
+    'session-idle-timeout': string;
+    'tcp-connection-setup-timeout': string;
+    'tcp-close-timeout': string;
+    'tcp-half-closed-timeout': string;
+    'tcp-drop-timeout': string;
+    'udp-drop-timeout': string;
+    'icmp-drop-timeout': string;
+    'drop-timeout': string;
+    'tcp-timeout': string;
+    'udp-timeout': string;
+    'icmp-timeout': string;
 }
 
 
@@ -59,56 +59,67 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
     'icmp-timeout': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'session-idle-timeout': {
+            default: '90s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
         },
         'tcp-connection-setup-timeout': {
+            default: '30s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
         },
         'tcp-close-timeout': {
+            default: '15s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
         },
         'tcp-half-closed-timeout': {
+            default: '120s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
         },
         'tcp-drop-timeout': {
+            default: '90s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
         },
         'udp-drop-timeout': {
+            default: '60s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
         },
         'icmp-drop-timeout': {
+            default: '60s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
         },
         'drop-timeout': {
+            default: '60s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
         },
         'tcp-timeout': {
+            default: '3600s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
         },
         'udp-timeout': {
+            default: '30s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
         },
         'icmp-timeout': {
+            default: '6s',
             description:  'should be a valid time duration ',
             hint:  '2h',
             type: 'string'
@@ -150,56 +161,78 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
             this['session-idle-timeout'] = values['session-idle-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('session-idle-timeout')) {
             this['session-idle-timeout'] = SecurityFirewallProfileSpec.propInfo['session-idle-timeout'].default;
+        } else {
+            this['session-idle-timeout'] = null
         }
         if (values && values['tcp-connection-setup-timeout'] != null) {
             this['tcp-connection-setup-timeout'] = values['tcp-connection-setup-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('tcp-connection-setup-timeout')) {
             this['tcp-connection-setup-timeout'] = SecurityFirewallProfileSpec.propInfo['tcp-connection-setup-timeout'].default;
+        } else {
+            this['tcp-connection-setup-timeout'] = null
         }
         if (values && values['tcp-close-timeout'] != null) {
             this['tcp-close-timeout'] = values['tcp-close-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('tcp-close-timeout')) {
             this['tcp-close-timeout'] = SecurityFirewallProfileSpec.propInfo['tcp-close-timeout'].default;
+        } else {
+            this['tcp-close-timeout'] = null
         }
         if (values && values['tcp-half-closed-timeout'] != null) {
             this['tcp-half-closed-timeout'] = values['tcp-half-closed-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('tcp-half-closed-timeout')) {
             this['tcp-half-closed-timeout'] = SecurityFirewallProfileSpec.propInfo['tcp-half-closed-timeout'].default;
+        } else {
+            this['tcp-half-closed-timeout'] = null
         }
         if (values && values['tcp-drop-timeout'] != null) {
             this['tcp-drop-timeout'] = values['tcp-drop-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('tcp-drop-timeout')) {
             this['tcp-drop-timeout'] = SecurityFirewallProfileSpec.propInfo['tcp-drop-timeout'].default;
+        } else {
+            this['tcp-drop-timeout'] = null
         }
         if (values && values['udp-drop-timeout'] != null) {
             this['udp-drop-timeout'] = values['udp-drop-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('udp-drop-timeout')) {
             this['udp-drop-timeout'] = SecurityFirewallProfileSpec.propInfo['udp-drop-timeout'].default;
+        } else {
+            this['udp-drop-timeout'] = null
         }
         if (values && values['icmp-drop-timeout'] != null) {
             this['icmp-drop-timeout'] = values['icmp-drop-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('icmp-drop-timeout')) {
             this['icmp-drop-timeout'] = SecurityFirewallProfileSpec.propInfo['icmp-drop-timeout'].default;
+        } else {
+            this['icmp-drop-timeout'] = null
         }
         if (values && values['drop-timeout'] != null) {
             this['drop-timeout'] = values['drop-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('drop-timeout')) {
             this['drop-timeout'] = SecurityFirewallProfileSpec.propInfo['drop-timeout'].default;
+        } else {
+            this['drop-timeout'] = null
         }
         if (values && values['tcp-timeout'] != null) {
             this['tcp-timeout'] = values['tcp-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('tcp-timeout')) {
             this['tcp-timeout'] = SecurityFirewallProfileSpec.propInfo['tcp-timeout'].default;
+        } else {
+            this['tcp-timeout'] = null
         }
         if (values && values['udp-timeout'] != null) {
             this['udp-timeout'] = values['udp-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('udp-timeout')) {
             this['udp-timeout'] = SecurityFirewallProfileSpec.propInfo['udp-timeout'].default;
+        } else {
+            this['udp-timeout'] = null
         }
         if (values && values['icmp-timeout'] != null) {
             this['icmp-timeout'] = values['icmp-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('icmp-timeout')) {
             this['icmp-timeout'] = SecurityFirewallProfileSpec.propInfo['icmp-timeout'].default;
+        } else {
+            this['icmp-timeout'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -208,17 +241,17 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'session-idle-timeout': new FormControl(this['session-idle-timeout']),
-                'tcp-connection-setup-timeout': new FormControl(this['tcp-connection-setup-timeout']),
-                'tcp-close-timeout': new FormControl(this['tcp-close-timeout']),
-                'tcp-half-closed-timeout': new FormControl(this['tcp-half-closed-timeout']),
-                'tcp-drop-timeout': new FormControl(this['tcp-drop-timeout']),
-                'udp-drop-timeout': new FormControl(this['udp-drop-timeout']),
-                'icmp-drop-timeout': new FormControl(this['icmp-drop-timeout']),
-                'drop-timeout': new FormControl(this['drop-timeout']),
-                'tcp-timeout': new FormControl(this['tcp-timeout']),
-                'udp-timeout': new FormControl(this['udp-timeout']),
-                'icmp-timeout': new FormControl(this['icmp-timeout']),
+                'session-idle-timeout': new FormControl(this['session-idle-timeout'], [required, ]),
+                'tcp-connection-setup-timeout': new FormControl(this['tcp-connection-setup-timeout'], [required, ]),
+                'tcp-close-timeout': new FormControl(this['tcp-close-timeout'], [required, ]),
+                'tcp-half-closed-timeout': new FormControl(this['tcp-half-closed-timeout'], [required, ]),
+                'tcp-drop-timeout': new FormControl(this['tcp-drop-timeout'], [required, ]),
+                'udp-drop-timeout': new FormControl(this['udp-drop-timeout'], [required, ]),
+                'icmp-drop-timeout': new FormControl(this['icmp-drop-timeout'], [required, ]),
+                'drop-timeout': new FormControl(this['drop-timeout'], [required, ]),
+                'tcp-timeout': new FormControl(this['tcp-timeout'], [required, ]),
+                'udp-timeout': new FormControl(this['udp-timeout'], [required, ]),
+                'icmp-timeout': new FormControl(this['icmp-timeout'], [required, ]),
             });
         }
         return this._formGroup;

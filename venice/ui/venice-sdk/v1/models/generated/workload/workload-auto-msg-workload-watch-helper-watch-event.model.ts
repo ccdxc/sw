@@ -63,9 +63,13 @@ export class WorkloadAutoMsgWorkloadWatchHelperWatchEvent extends BaseModel impl
             this['type'] = values['type'];
         } else if (fillDefaults && WorkloadAutoMsgWorkloadWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = WorkloadAutoMsgWorkloadWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

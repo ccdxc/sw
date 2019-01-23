@@ -75,17 +75,25 @@ export class ClusterHostList extends BaseModel implements IClusterHostList {
             this['kind'] = values['kind'];
         } else if (fillDefaults && ClusterHostList.hasDefaultValue('kind')) {
             this['kind'] = ClusterHostList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && ClusterHostList.hasDefaultValue('api-version')) {
             this['api-version'] = ClusterHostList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<ClusterHost>(this, 'items', values['items'], ClusterHost);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

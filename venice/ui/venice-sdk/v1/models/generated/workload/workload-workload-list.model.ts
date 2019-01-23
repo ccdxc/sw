@@ -75,17 +75,25 @@ export class WorkloadWorkloadList extends BaseModel implements IWorkloadWorkload
             this['kind'] = values['kind'];
         } else if (fillDefaults && WorkloadWorkloadList.hasDefaultValue('kind')) {
             this['kind'] = WorkloadWorkloadList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && WorkloadWorkloadList.hasDefaultValue('api-version')) {
             this['api-version'] = WorkloadWorkloadList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<WorkloadWorkload>(this, 'items', values['items'], WorkloadWorkload);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

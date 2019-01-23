@@ -71,21 +71,29 @@ export class ClusterBiosInfo extends BaseModel implements IClusterBiosInfo {
             this['vendor'] = values['vendor'];
         } else if (fillDefaults && ClusterBiosInfo.hasDefaultValue('vendor')) {
             this['vendor'] = ClusterBiosInfo.propInfo['vendor'].default;
+        } else {
+            this['vendor'] = null
         }
         if (values && values['version'] != null) {
             this['version'] = values['version'];
         } else if (fillDefaults && ClusterBiosInfo.hasDefaultValue('version')) {
             this['version'] = ClusterBiosInfo.propInfo['version'].default;
+        } else {
+            this['version'] = null
         }
         if (values && values['fw-major-ver'] != null) {
             this['fw-major-ver'] = values['fw-major-ver'];
         } else if (fillDefaults && ClusterBiosInfo.hasDefaultValue('fw-major-ver')) {
             this['fw-major-ver'] = ClusterBiosInfo.propInfo['fw-major-ver'].default;
+        } else {
+            this['fw-major-ver'] = null
         }
         if (values && values['fw-minor-ver'] != null) {
             this['fw-minor-ver'] = values['fw-minor-ver'];
         } else if (fillDefaults && ClusterBiosInfo.hasDefaultValue('fw-minor-ver')) {
             this['fw-minor-ver'] = ClusterBiosInfo.propInfo['fw-minor-ver'].default;
+        } else {
+            this['fw-minor-ver'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

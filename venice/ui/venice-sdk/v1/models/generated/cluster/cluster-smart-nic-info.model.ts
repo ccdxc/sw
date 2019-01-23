@@ -83,19 +83,29 @@ export class ClusterSmartNICInfo extends BaseModel implements IClusterSmartNICIn
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this['bios-info'].setValues(values['bios-info']);
+            this['bios-info'].setValues(values['bios-info'], fillDefaults);
+        } else {
+            this['bios-info'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['os-info'].setValues(values['os-info']);
+            this['os-info'].setValues(values['os-info'], fillDefaults);
+        } else {
+            this['os-info'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['cpu-info'].setValues(values['cpu-info']);
+            this['cpu-info'].setValues(values['cpu-info'], fillDefaults);
+        } else {
+            this['cpu-info'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['memory-info'].setValues(values['memory-info']);
+            this['memory-info'].setValues(values['memory-info'], fillDefaults);
+        } else {
+            this['memory-info'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['storage-info'].setValues(values['storage-info']);
+            this['storage-info'].setValues(values['storage-info'], fillDefaults);
+        } else {
+            this['storage-info'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -63,9 +63,13 @@ export class MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent extends Ba
             this['type'] = values['type'];
         } else if (fillDefaults && MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

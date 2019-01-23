@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { WorkloadWorkloadIntfSpec, IWorkloadWorkloadIntfSpec } from './workload-workload-intf-spec.model';
 
 export interface IWorkloadWorkloadSpec {
-    'host-name'?: string;
+    'host-name': string;
     'interfaces'?: Array<IWorkloadWorkloadIntfSpec>;
 }
 
@@ -67,9 +67,13 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
             this['host-name'] = values['host-name'];
         } else if (fillDefaults && WorkloadWorkloadSpec.hasDefaultValue('host-name')) {
             this['host-name'] = WorkloadWorkloadSpec.propInfo['host-name'].default;
+        } else {
+            this['host-name'] = null
         }
         if (values) {
             this.fillModelArray<WorkloadWorkloadIntfSpec>(this, 'interfaces', values['interfaces'], WorkloadWorkloadIntfSpec);
+        } else {
+            this['interfaces'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -78,7 +82,7 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'host-name': new FormControl(this['host-name']),
+                'host-name': new FormControl(this['host-name'], [required, ]),
                 'interfaces': new FormArray([]),
             });
             // generate FormArray control elements

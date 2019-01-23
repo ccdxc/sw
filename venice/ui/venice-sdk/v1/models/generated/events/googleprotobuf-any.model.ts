@@ -85,11 +85,15 @@ export class GoogleprotobufAny extends BaseModel implements IGoogleprotobufAny {
             this['type_url'] = values['type_url'];
         } else if (fillDefaults && GoogleprotobufAny.hasDefaultValue('type_url')) {
             this['type_url'] = GoogleprotobufAny.propInfo['type_url'].default;
+        } else {
+            this['type_url'] = null
         }
         if (values && values['value'] != null) {
             this['value'] = values['value'];
         } else if (fillDefaults && GoogleprotobufAny.hasDefaultValue('value')) {
             this['value'] = GoogleprotobufAny.propInfo['value'].default;
+        } else {
+            this['value'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

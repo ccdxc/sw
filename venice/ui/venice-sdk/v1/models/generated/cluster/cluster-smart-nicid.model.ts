@@ -61,11 +61,15 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
             this['name'] = values['name'];
         } else if (fillDefaults && ClusterSmartNICID.hasDefaultValue('name')) {
             this['name'] = ClusterSmartNICID.propInfo['name'].default;
+        } else {
+            this['name'] = null
         }
         if (values && values['mac-address'] != null) {
             this['mac-address'] = values['mac-address'];
         } else if (fillDefaults && ClusterSmartNICID.hasDefaultValue('mac-address')) {
             this['mac-address'] = ClusterSmartNICID.propInfo['mac-address'].default;
+        } else {
+            this['mac-address'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

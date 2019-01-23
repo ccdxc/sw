@@ -10,13 +10,13 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 export interface IMonitoringMirrorStopConditions {
     'max-packets'?: number;
-    'expiry-duration'?: string;
+    'expiry-duration': string;
 }
 
 
 export class MonitoringMirrorStopConditions extends BaseModel implements IMonitoringMirrorStopConditions {
     'max-packets': number = null;
-    /** should be a valid time duration
+    /** should be a valid time duration of at most 2h0m0s
      */
     'expiry-duration': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
@@ -24,7 +24,8 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
             type: 'number'
         },
         'expiry-duration': {
-            description:  'should be a valid time duration ',
+            default: '2h',
+            description:  'should be a valid time duration of at most 2h0m0s ',
             hint:  '2h',
             type: 'string'
         },
@@ -65,11 +66,15 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
             this['max-packets'] = values['max-packets'];
         } else if (fillDefaults && MonitoringMirrorStopConditions.hasDefaultValue('max-packets')) {
             this['max-packets'] = MonitoringMirrorStopConditions.propInfo['max-packets'].default;
+        } else {
+            this['max-packets'] = null
         }
         if (values && values['expiry-duration'] != null) {
             this['expiry-duration'] = values['expiry-duration'];
         } else if (fillDefaults && MonitoringMirrorStopConditions.hasDefaultValue('expiry-duration')) {
             this['expiry-duration'] = MonitoringMirrorStopConditions.propInfo['expiry-duration'].default;
+        } else {
+            this['expiry-duration'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -79,7 +84,7 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'max-packets': new FormControl(this['max-packets']),
-                'expiry-duration': new FormControl(this['expiry-duration']),
+                'expiry-duration': new FormControl(this['expiry-duration'], [required, ]),
             });
         }
         return this._formGroup;

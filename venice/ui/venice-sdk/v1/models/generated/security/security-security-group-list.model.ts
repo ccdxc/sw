@@ -75,17 +75,25 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
             this['kind'] = values['kind'];
         } else if (fillDefaults && SecuritySecurityGroupList.hasDefaultValue('kind')) {
             this['kind'] = SecuritySecurityGroupList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && SecuritySecurityGroupList.hasDefaultValue('api-version')) {
             this['api-version'] = SecuritySecurityGroupList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<SecuritySecurityGroup>(this, 'items', values['items'], SecuritySecurityGroup);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

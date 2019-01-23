@@ -63,11 +63,15 @@ export class SecurityProtoPort extends BaseModel implements ISecurityProtoPort {
             this['protocol'] = values['protocol'];
         } else if (fillDefaults && SecurityProtoPort.hasDefaultValue('protocol')) {
             this['protocol'] = SecurityProtoPort.propInfo['protocol'].default;
+        } else {
+            this['protocol'] = null
         }
         if (values && values['ports'] != null) {
             this['ports'] = values['ports'];
         } else if (fillDefaults && SecurityProtoPort.hasDefaultValue('ports')) {
             this['ports'] = SecurityProtoPort.propInfo['ports'].default;
+        } else {
+            this['ports'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -94,28 +94,42 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
             this['total-hits'] = values['total-hits'];
         } else if (fillDefaults && SearchSearchResponse.hasDefaultValue('total-hits')) {
             this['total-hits'] = SearchSearchResponse.propInfo['total-hits'].default;
+        } else {
+            this['total-hits'] = null
         }
         if (values && values['actual-hits'] != null) {
             this['actual-hits'] = values['actual-hits'];
         } else if (fillDefaults && SearchSearchResponse.hasDefaultValue('actual-hits')) {
             this['actual-hits'] = SearchSearchResponse.propInfo['actual-hits'].default;
+        } else {
+            this['actual-hits'] = null
         }
         if (values && values['time-taken-msecs'] != null) {
             this['time-taken-msecs'] = values['time-taken-msecs'];
         } else if (fillDefaults && SearchSearchResponse.hasDefaultValue('time-taken-msecs')) {
             this['time-taken-msecs'] = SearchSearchResponse.propInfo['time-taken-msecs'].default;
+        } else {
+            this['time-taken-msecs'] = null
         }
         if (values) {
-            this['error'].setValues(values['error']);
+            this['error'].setValues(values['error'], fillDefaults);
+        } else {
+            this['error'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<SearchEntry>(this, 'entries', values['entries'], SearchEntry);
+        } else {
+            this['entries'] = [];
         }
         if (values) {
-            this['preview-entries'].setValues(values['preview-entries']);
+            this['preview-entries'].setValues(values['preview-entries'], fillDefaults);
+        } else {
+            this['preview-entries'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['aggregated-entries'].setValues(values['aggregated-entries']);
+            this['aggregated-entries'].setValues(values['aggregated-entries'], fillDefaults);
+        } else {
+            this['aggregated-entries'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

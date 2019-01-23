@@ -64,9 +64,13 @@ export class TechSupportRequestSpecNodeSelectorSpec extends BaseModel implements
             this['names'] = values['names'];
         } else if (fillDefaults && TechSupportRequestSpecNodeSelectorSpec.hasDefaultValue('names')) {
             this['names'] = [ TechSupportRequestSpecNodeSelectorSpec.propInfo['names'].default];
+        } else {
+            this['names'] = [];
         }
         if (values) {
-            this['labels'].setValues(values['labels']);
+            this['labels'].setValues(values['labels'], fillDefaults);
+        } else {
+            this['labels'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -56,6 +56,8 @@ export class AuthAutoMsgUserWatchHelper extends BaseModel implements IAuthAutoMs
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<AuthAutoMsgUserWatchHelperWatchEvent>(this, 'events', values['events'], AuthAutoMsgUserWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

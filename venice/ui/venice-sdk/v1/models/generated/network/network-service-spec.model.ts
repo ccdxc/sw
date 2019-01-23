@@ -86,27 +86,39 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
             this['workload-labels'] = values['workload-labels'];
         } else if (fillDefaults && NetworkServiceSpec.hasDefaultValue('workload-labels')) {
             this['workload-labels'] = [ NetworkServiceSpec.propInfo['workload-labels'].default];
+        } else {
+            this['workload-labels'] = [];
         }
         if (values && values['virtual-ip'] != null) {
             this['virtual-ip'] = values['virtual-ip'];
         } else if (fillDefaults && NetworkServiceSpec.hasDefaultValue('virtual-ip')) {
             this['virtual-ip'] = NetworkServiceSpec.propInfo['virtual-ip'].default;
+        } else {
+            this['virtual-ip'] = null
         }
         if (values && values['ports'] != null) {
             this['ports'] = values['ports'];
         } else if (fillDefaults && NetworkServiceSpec.hasDefaultValue('ports')) {
             this['ports'] = NetworkServiceSpec.propInfo['ports'].default;
+        } else {
+            this['ports'] = null
         }
         if (values && values['lb-policy'] != null) {
             this['lb-policy'] = values['lb-policy'];
         } else if (fillDefaults && NetworkServiceSpec.hasDefaultValue('lb-policy')) {
             this['lb-policy'] = NetworkServiceSpec.propInfo['lb-policy'].default;
+        } else {
+            this['lb-policy'] = null
         }
         if (values) {
-            this['tls-server-policy'].setValues(values['tls-server-policy']);
+            this['tls-server-policy'].setValues(values['tls-server-policy'], fillDefaults);
+        } else {
+            this['tls-server-policy'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['tls-client-policy'].setValues(values['tls-client-policy']);
+            this['tls-client-policy'].setValues(values['tls-client-policy'], fillDefaults);
+        } else {
+            this['tls-client-policy'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

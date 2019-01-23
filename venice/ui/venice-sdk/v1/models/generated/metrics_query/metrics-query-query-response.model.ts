@@ -68,14 +68,20 @@ export class Metrics_queryQueryResponse extends BaseModel implements IMetrics_qu
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && Metrics_queryQueryResponse.hasDefaultValue('tenant')) {
             this['tenant'] = Metrics_queryQueryResponse.propInfo['tenant'].default;
+        } else {
+            this['tenant'] = null
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
         } else if (fillDefaults && Metrics_queryQueryResponse.hasDefaultValue('namespace')) {
             this['namespace'] = Metrics_queryQueryResponse.propInfo['namespace'].default;
+        } else {
+            this['namespace'] = null
         }
         if (values) {
             this.fillModelArray<Metrics_queryQueryResult>(this, 'results', values['results'], Metrics_queryQueryResult);
+        } else {
+            this['results'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

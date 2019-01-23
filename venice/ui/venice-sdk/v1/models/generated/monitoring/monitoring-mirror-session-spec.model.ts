@@ -19,7 +19,7 @@ export interface IMonitoringMirrorSessionSpec {
     'stop-condition'?: IMonitoringMirrorStopConditions;
     'collectors'?: Array<IMonitoringMirrorCollector>;
     'match-rules'?: Array<IMonitoringMatchRule>;
-    'packet-filters'?: Array<MonitoringMirrorSessionSpec_packet_filters>;
+    'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters>;
 }
 
 
@@ -93,23 +93,35 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
             this['packet-size'] = values['packet-size'];
         } else if (fillDefaults && MonitoringMirrorSessionSpec.hasDefaultValue('packet-size')) {
             this['packet-size'] = MonitoringMirrorSessionSpec.propInfo['packet-size'].default;
+        } else {
+            this['packet-size'] = null
         }
         if (values) {
-            this['start-condition'].setValues(values['start-condition']);
+            this['start-condition'].setValues(values['start-condition'], fillDefaults);
+        } else {
+            this['start-condition'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['stop-condition'].setValues(values['stop-condition']);
+            this['stop-condition'].setValues(values['stop-condition'], fillDefaults);
+        } else {
+            this['stop-condition'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<MonitoringMirrorCollector>(this, 'collectors', values['collectors'], MonitoringMirrorCollector);
+        } else {
+            this['collectors'] = [];
         }
         if (values) {
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', values['match-rules'], MonitoringMatchRule);
+        } else {
+            this['match-rules'] = [];
         }
         if (values && values['packet-filters'] != null) {
             this['packet-filters'] = values['packet-filters'];
         } else if (fillDefaults && MonitoringMirrorSessionSpec.hasDefaultValue('packet-filters')) {
             this['packet-filters'] = [ MonitoringMirrorSessionSpec.propInfo['packet-filters'].default];
+        } else {
+            this['packet-filters'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

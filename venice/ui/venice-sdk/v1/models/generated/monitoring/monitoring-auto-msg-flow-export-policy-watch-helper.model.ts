@@ -56,6 +56,8 @@ export class MonitoringAutoMsgFlowExportPolicyWatchHelper extends BaseModel impl
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgFlowExportPolicyWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

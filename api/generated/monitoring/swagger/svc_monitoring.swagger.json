@@ -396,7 +396,7 @@
           },
           {
             "name": "stop-condition.expiry-duration",
-            "description": "Stop after specified amount of time. E.g. 1h, 20min\nWhen ExpiryDuration is not specified, Default is \"2h\". should be a valid time duration",
+            "description": "Stop after specified amount of time. E.g. 1h, 20min\nMaximum length allowed is 2h. should be a valid time duration of at most 2h0m0s",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3605,7 +3605,7 @@
           },
           {
             "name": "spec.interval",
-            "description": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'\nallowed range is '1s' to '24h'. should be a valid time duration",
+            "description": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'. should be a valid time duration between 1s and 24h0m0s",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5480,7 +5480,7 @@
           },
           {
             "name": "stop-condition.expiry-duration",
-            "description": "Stop after specified amount of time. E.g. 1h, 20min\nWhen ExpiryDuration is not specified, Default is \"2h\". should be a valid time duration",
+            "description": "Stop after specified amount of time. E.g. 1h, 20min\nMaximum length allowed is 2h. should be a valid time duration of at most 2h0m0s",
             "in": "query",
             "required": false,
             "type": "string"
@@ -8773,7 +8773,7 @@
           },
           {
             "name": "spec.interval",
-            "description": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'\nallowed range is '1s' to '24h'. should be a valid time duration",
+            "description": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'. should be a valid time duration between 1s and 24h0m0s",
             "in": "query",
             "required": false,
             "type": "string"
@@ -12798,6 +12798,9 @@
     },
     "fieldsRequirement": {
       "type": "object",
+      "required": [
+        "operator"
+      ],
       "properties": {
         "key": {
           "type": "string",
@@ -12866,6 +12869,9 @@
     },
     "labelsRequirement": {
       "type": "object",
+      "required": [
+        "operator"
+      ],
       "properties": {
         "key": {
           "type": "string",
@@ -13070,6 +13076,9 @@
     },
     "monitoringAlertPolicySpec": {
       "type": "object",
+      "required": [
+        "severity"
+      ],
       "properties": {
         "resource": {
           "type": "string",
@@ -13180,6 +13189,9 @@
     },
     "monitoringAlertSpec": {
       "type": "object",
+      "required": [
+        "state"
+      ],
       "properties": {
         "state": {
           "type": "string",
@@ -13200,6 +13212,9 @@
     },
     "monitoringAlertStatus": {
       "type": "object",
+      "required": [
+        "severity"
+      ],
       "properties": {
         "severity": {
           "type": "string",
@@ -13249,6 +13264,9 @@
     },
     "monitoringAppProtoSelector": {
       "type": "object",
+      "required": [
+        "ports"
+      ],
       "properties": {
         "ports": {
           "type": "array",
@@ -13286,6 +13304,9 @@
     },
     "monitoringAuthConfig": {
       "type": "object",
+      "required": [
+        "algo"
+      ],
       "properties": {
         "algo": {
           "type": "string",
@@ -13591,6 +13612,9 @@
     },
     "monitoringEventPolicySpec": {
       "type": "object",
+      "required": [
+        "format"
+      ],
       "properties": {
         "format": {
           "type": "string",
@@ -13629,6 +13653,10 @@
     },
     "monitoringExportConfig": {
       "type": "object",
+      "required": [
+        "destination",
+        "transport"
+      ],
       "properties": {
         "destination": {
           "type": "string",
@@ -13652,6 +13680,9 @@
     },
     "monitoringExternalCred": {
       "type": "object",
+      "required": [
+        "auth-type"
+      ],
       "properties": {
         "auth-type": {
           "type": "string",
@@ -13745,12 +13776,17 @@
     },
     "monitoringFlowExportPolicySpec": {
       "type": "object",
+      "required": [
+        "interval",
+        "format"
+      ],
       "properties": {
         "interval": {
           "type": "string",
+          "default": "10s",
           "example": "2h",
-          "description": "should be a valid time duration\n",
-          "title": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'\nallowed range is '1s' to '24h'"
+          "description": "should be a valid time duration between 1s and 24h0m0s\n",
+          "title": "Interval defines how often to push the records to an external collector\nThe value is specified as a string format, '10s', '20m'"
         },
         "format": {
           "type": "string",
@@ -13823,6 +13859,10 @@
     },
     "monitoringFwlogPolicySpec": {
       "type": "object",
+      "required": [
+        "format",
+        "filter"
+      ],
       "properties": {
         "targets": {
           "type": "array",
@@ -13964,6 +14004,9 @@
     },
     "monitoringMirrorCollector": {
       "type": "object",
+      "required": [
+        "type"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -14028,6 +14071,9 @@
     },
     "monitoringMirrorSessionSpec": {
       "type": "object",
+      "required": [
+        "packet-filters"
+      ],
       "properties": {
         "packet-size": {
           "type": "integer",
@@ -14079,6 +14125,9 @@
     },
     "monitoringMirrorSessionStatus": {
       "type": "object",
+      "required": [
+        "oper-state"
+      ],
       "properties": {
         "oper-state": {
           "type": "string",
@@ -14119,6 +14168,9 @@
     },
     "monitoringMirrorStopConditions": {
       "type": "object",
+      "required": [
+        "expiry-duration"
+      ],
       "properties": {
         "max-packets": {
           "type": "integer",
@@ -14127,15 +14179,19 @@
         },
         "expiry-duration": {
           "type": "string",
+          "default": "2h",
           "example": "2h",
-          "description": "should be a valid time duration\n",
-          "title": "Stop after specified amount of time. E.g. 1h, 20min\nWhen ExpiryDuration is not specified, Default is \"2h\""
+          "description": "should be a valid time duration of at most 2h0m0s\n",
+          "title": "Stop after specified amount of time. E.g. 1h, 20min\nMaximum length allowed is 2h"
         }
       },
       "title": "MirrorStopConditions - A MirrorSession will stop mirroring after this condition is met"
     },
     "monitoringPrivacyConfig": {
       "type": "object",
+      "required": [
+        "algo"
+      ],
       "properties": {
         "algo": {
           "type": "string",
@@ -14166,6 +14222,9 @@
     },
     "monitoringSNMPTrapServer": {
       "type": "object",
+      "required": [
+        "version"
+      ],
       "properties": {
         "host": {
           "type": "string",
@@ -14244,6 +14303,10 @@
     },
     "monitoringStatsPolicySpec": {
       "type": "object",
+      "required": [
+        "retention-time",
+        "downsample-retention-time"
+      ],
       "properties": {
         "retention-time": {
           "type": "string",
@@ -14268,6 +14331,9 @@
     },
     "monitoringSyslogExport": {
       "type": "object",
+      "required": [
+        "format"
+      ],
       "properties": {
         "format": {
           "type": "string",
@@ -14298,6 +14364,9 @@
     },
     "monitoringSyslogExportConfig": {
       "type": "object",
+      "required": [
+        "facility-override"
+      ],
       "properties": {
         "facility-override": {
           "type": "string",
@@ -14357,6 +14426,9 @@
     },
     "monitoringTechSupportNodeResult": {
       "type": "object",
+      "required": [
+        "status"
+      ],
       "properties": {
         "start-time": {
           "type": "string",
@@ -14443,6 +14515,9 @@
     },
     "monitoringTechSupportRequestStatus": {
       "type": "object",
+      "required": [
+        "status"
+      ],
       "properties": {
         "instance-id": {
           "type": "string"
@@ -14551,6 +14626,9 @@
     },
     "monitoringTroubleshootingSessionStatus": {
       "type": "object",
+      "required": [
+        "state"
+      ],
       "properties": {
         "state": {
           "type": "string",

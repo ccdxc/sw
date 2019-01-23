@@ -58,6 +58,8 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
             this['resource-version'] = values['resource-version'];
         } else if (fillDefaults && ApiListMeta.hasDefaultValue('resource-version')) {
             this['resource-version'] = ApiListMeta.propInfo['resource-version'].default;
+        } else {
+            this['resource-version'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

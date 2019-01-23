@@ -63,9 +63,13 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<AuthLdapServerStatus>(this, 'ldap-servers', values['ldap-servers'], AuthLdapServerStatus);
+        } else {
+            this['ldap-servers'] = [];
         }
         if (values) {
             this.fillModelArray<AuthRadiusServerStatus>(this, 'radius-servers', values['radius-servers'], AuthRadiusServerStatus);
+        } else {
+            this['radius-servers'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

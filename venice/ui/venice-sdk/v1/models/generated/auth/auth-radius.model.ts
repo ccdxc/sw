@@ -68,14 +68,20 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
             this['enabled'] = values['enabled'];
         } else if (fillDefaults && AuthRadius.hasDefaultValue('enabled')) {
             this['enabled'] = AuthRadius.propInfo['enabled'].default;
+        } else {
+            this['enabled'] = null
         }
         if (values && values['nas-id'] != null) {
             this['nas-id'] = values['nas-id'];
         } else if (fillDefaults && AuthRadius.hasDefaultValue('nas-id')) {
             this['nas-id'] = AuthRadius.propInfo['nas-id'].default;
+        } else {
+            this['nas-id'] = null
         }
         if (values) {
             this.fillModelArray<AuthRadiusServer>(this, 'servers', values['servers'], AuthRadiusServer);
+        } else {
+            this['servers'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

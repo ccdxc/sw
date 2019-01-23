@@ -75,17 +75,25 @@ export class MonitoringTechSupportRequestList extends BaseModel implements IMoni
             this['kind'] = values['kind'];
         } else if (fillDefaults && MonitoringTechSupportRequestList.hasDefaultValue('kind')) {
             this['kind'] = MonitoringTechSupportRequestList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && MonitoringTechSupportRequestList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringTechSupportRequestList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<MonitoringTechSupportRequest>(this, 'items', values['items'], MonitoringTechSupportRequest);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

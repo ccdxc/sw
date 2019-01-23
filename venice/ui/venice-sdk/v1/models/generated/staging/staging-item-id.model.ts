@@ -61,11 +61,15 @@ export class StagingItemId extends BaseModel implements IStagingItemId {
             this['uri'] = values['uri'];
         } else if (fillDefaults && StagingItemId.hasDefaultValue('uri')) {
             this['uri'] = StagingItemId.propInfo['uri'].default;
+        } else {
+            this['uri'] = null
         }
         if (values && values['method'] != null) {
             this['method'] = values['method'];
         } else if (fillDefaults && StagingItemId.hasDefaultValue('method')) {
             this['method'] = StagingItemId.propInfo['method'].default;
+        } else {
+            this['method'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

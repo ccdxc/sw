@@ -63,9 +63,13 @@ export class Metrics_queryQueryResult extends BaseModel implements IMetrics_quer
             this['statement_id'] = values['statement_id'];
         } else if (fillDefaults && Metrics_queryQueryResult.hasDefaultValue('statement_id')) {
             this['statement_id'] = Metrics_queryQueryResult.propInfo['statement_id'].default;
+        } else {
+            this['statement_id'] = null
         }
         if (values) {
             this.fillModelArray<Metrics_queryResultSeries>(this, 'series', values['series'], Metrics_queryResultSeries);
+        } else {
+            this['series'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

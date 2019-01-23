@@ -75,17 +75,25 @@ export class MonitoringMirrorSessionList extends BaseModel implements IMonitorin
             this['kind'] = values['kind'];
         } else if (fillDefaults && MonitoringMirrorSessionList.hasDefaultValue('kind')) {
             this['kind'] = MonitoringMirrorSessionList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && MonitoringMirrorSessionList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringMirrorSessionList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<MonitoringMirrorSession>(this, 'items', values['items'], MonitoringMirrorSession);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

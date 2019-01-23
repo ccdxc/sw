@@ -13,7 +13,7 @@ export interface IAuthUserStatus {
     'roles'?: Array<string>;
     'user-groups'?: Array<string>;
     'last-successful-login'?: Date;
-    'authenticators'?: Array<AuthUserStatus_authenticators>;
+    'authenticators': Array<AuthUserStatus_authenticators>;
 }
 
 
@@ -77,21 +77,29 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
             this['roles'] = values['roles'];
         } else if (fillDefaults && AuthUserStatus.hasDefaultValue('roles')) {
             this['roles'] = [ AuthUserStatus.propInfo['roles'].default];
+        } else {
+            this['roles'] = [];
         }
         if (values && values['user-groups'] != null) {
             this['user-groups'] = values['user-groups'];
         } else if (fillDefaults && AuthUserStatus.hasDefaultValue('user-groups')) {
             this['user-groups'] = [ AuthUserStatus.propInfo['user-groups'].default];
+        } else {
+            this['user-groups'] = [];
         }
         if (values && values['last-successful-login'] != null) {
             this['last-successful-login'] = values['last-successful-login'];
         } else if (fillDefaults && AuthUserStatus.hasDefaultValue('last-successful-login')) {
             this['last-successful-login'] = AuthUserStatus.propInfo['last-successful-login'].default;
+        } else {
+            this['last-successful-login'] = null
         }
         if (values && values['authenticators'] != null) {
             this['authenticators'] = values['authenticators'];
         } else if (fillDefaults && AuthUserStatus.hasDefaultValue('authenticators')) {
             this['authenticators'] = [ AuthUserStatus.propInfo['authenticators'].default];
+        } else {
+            this['authenticators'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

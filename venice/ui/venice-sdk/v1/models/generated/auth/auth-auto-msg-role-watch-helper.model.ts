@@ -56,6 +56,8 @@ export class AuthAutoMsgRoleWatchHelper extends BaseModel implements IAuthAutoMs
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<AuthAutoMsgRoleWatchHelperWatchEvent>(this, 'events', values['events'], AuthAutoMsgRoleWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

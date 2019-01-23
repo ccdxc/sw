@@ -143,76 +143,106 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             this['name'] = values['name'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('name')) {
             this['name'] = ApiListWatchOptions.propInfo['name'].default;
+        } else {
+            this['name'] = null
         }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('tenant')) {
             this['tenant'] = ApiListWatchOptions.propInfo['tenant'].default;
+        } else {
+            this['tenant'] = null
         }
         if (values && values['namespace'] != null) {
             this['namespace'] = values['namespace'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('namespace')) {
             this['namespace'] = ApiListWatchOptions.propInfo['namespace'].default;
+        } else {
+            this['namespace'] = null
         }
         if (values && values['generation-id'] != null) {
             this['generation-id'] = values['generation-id'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('generation-id')) {
             this['generation-id'] = ApiListWatchOptions.propInfo['generation-id'].default;
+        } else {
+            this['generation-id'] = null
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('resource-version')) {
             this['resource-version'] = ApiListWatchOptions.propInfo['resource-version'].default;
+        } else {
+            this['resource-version'] = null
         }
         if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('uuid')) {
             this['uuid'] = ApiListWatchOptions.propInfo['uuid'].default;
+        } else {
+            this['uuid'] = null
         }
         if (values && values['labels'] != null) {
             this['labels'] = values['labels'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('labels')) {
             this['labels'] = ApiListWatchOptions.propInfo['labels'].default;
+        } else {
+            this['labels'] = null
         }
         if (values && values['creation-time'] != null) {
             this['creation-time'] = values['creation-time'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('creation-time')) {
             this['creation-time'] = ApiListWatchOptions.propInfo['creation-time'].default;
+        } else {
+            this['creation-time'] = null
         }
         if (values && values['mod-time'] != null) {
             this['mod-time'] = values['mod-time'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('mod-time')) {
             this['mod-time'] = ApiListWatchOptions.propInfo['mod-time'].default;
+        } else {
+            this['mod-time'] = null
         }
         if (values && values['self-link'] != null) {
             this['self-link'] = values['self-link'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('self-link')) {
             this['self-link'] = ApiListWatchOptions.propInfo['self-link'].default;
+        } else {
+            this['self-link'] = null
         }
         if (values && values['label-selector'] != null) {
             this['label-selector'] = values['label-selector'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('label-selector')) {
             this['label-selector'] = ApiListWatchOptions.propInfo['label-selector'].default;
+        } else {
+            this['label-selector'] = null
         }
         if (values && values['field-selector'] != null) {
             this['field-selector'] = values['field-selector'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('field-selector')) {
             this['field-selector'] = ApiListWatchOptions.propInfo['field-selector'].default;
+        } else {
+            this['field-selector'] = null
         }
         if (values && values['field-change-selector'] != null) {
             this['field-change-selector'] = values['field-change-selector'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('field-change-selector')) {
             this['field-change-selector'] = [ ApiListWatchOptions.propInfo['field-change-selector'].default];
+        } else {
+            this['field-change-selector'] = [];
         }
         if (values && values['from'] != null) {
             this['from'] = values['from'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('from')) {
             this['from'] = ApiListWatchOptions.propInfo['from'].default;
+        } else {
+            this['from'] = null
         }
         if (values && values['max-results'] != null) {
             this['max-results'] = values['max-results'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('max-results')) {
             this['max-results'] = ApiListWatchOptions.propInfo['max-results'].default;
+        } else {
+            this['max-results'] = null
         }
         if (values && values['sort-order'] != null) {
             this['sort-order'] = values['sort-order'];

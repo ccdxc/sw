@@ -67,15 +67,21 @@ export class MonitoringTechSupportRequestSpec extends BaseModel implements IMoni
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this['collection-selector'].setValues(values['collection-selector']);
+            this['collection-selector'].setValues(values['collection-selector'], fillDefaults);
+        } else {
+            this['collection-selector'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['node-selector'].setValues(values['node-selector']);
+            this['node-selector'].setValues(values['node-selector'], fillDefaults);
+        } else {
+            this['node-selector'].setValues(null, fillDefaults);
         }
         if (values && values['verbosity'] != null) {
             this['verbosity'] = values['verbosity'];
         } else if (fillDefaults && MonitoringTechSupportRequestSpec.hasDefaultValue('verbosity')) {
             this['verbosity'] = MonitoringTechSupportRequestSpec.propInfo['verbosity'].default;
+        } else {
+            this['verbosity'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

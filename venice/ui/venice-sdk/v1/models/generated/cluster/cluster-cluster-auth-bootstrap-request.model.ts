@@ -68,14 +68,20 @@ export class ClusterClusterAuthBootstrapRequest extends BaseModel implements ICl
             this['kind'] = values['kind'];
         } else if (fillDefaults && ClusterClusterAuthBootstrapRequest.hasDefaultValue('kind')) {
             this['kind'] = ClusterClusterAuthBootstrapRequest.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && ClusterClusterAuthBootstrapRequest.hasDefaultValue('api-version')) {
             this['api-version'] = ClusterClusterAuthBootstrapRequest.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['meta'].setValues(values['meta']);
+            this['meta'].setValues(values['meta'], fillDefaults);
+        } else {
+            this['meta'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

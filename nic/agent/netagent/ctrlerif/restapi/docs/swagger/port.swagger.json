@@ -449,6 +449,10 @@
     },
     "netprotoPortSpec": {
       "type": "object",
+      "required": [
+        "type",
+        "admin-status"
+      ],
       "properties": {
         "speed": {
           "type": "string",
@@ -488,6 +492,10 @@
     },
     "netprotoPortStatus": {
       "type": "object",
+      "required": [
+        "oper-status",
+        "oper-speed"
+      ],
       "properties": {
         "oper-status": {
           "type": "string",

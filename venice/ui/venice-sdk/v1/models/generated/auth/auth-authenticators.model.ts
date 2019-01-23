@@ -13,7 +13,7 @@ import { AuthLocal, IAuthLocal } from './auth-local.model';
 import { AuthRadius, IAuthRadius } from './auth-radius.model';
 
 export interface IAuthAuthenticators {
-    'authenticator-order'?: Array<AuthAuthenticators_authenticator_order>;
+    'authenticator-order': Array<AuthAuthenticators_authenticator_order>;
     'ldap'?: IAuthLdap;
     'local'?: IAuthLocal;
     'radius'?: IAuthRadius;
@@ -81,15 +81,23 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
             this['authenticator-order'] = values['authenticator-order'];
         } else if (fillDefaults && AuthAuthenticators.hasDefaultValue('authenticator-order')) {
             this['authenticator-order'] = [ AuthAuthenticators.propInfo['authenticator-order'].default];
+        } else {
+            this['authenticator-order'] = [];
         }
         if (values) {
-            this['ldap'].setValues(values['ldap']);
+            this['ldap'].setValues(values['ldap'], fillDefaults);
+        } else {
+            this['ldap'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['local'].setValues(values['local']);
+            this['local'].setValues(values['local'], fillDefaults);
+        } else {
+            this['local'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['radius'].setValues(values['radius']);
+            this['radius'].setValues(values['radius'], fillDefaults);
+        } else {
+            this['radius'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

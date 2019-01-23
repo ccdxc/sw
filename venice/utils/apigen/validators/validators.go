@@ -1,4 +1,4 @@
-package impl
+package validators
 
 import (
 	"reflect"
@@ -25,15 +25,41 @@ var (
 	kindsMapOnce sync.Once
 )
 
-var (
-	// ATTENTION: When adding new expressions add a help string in utils/apigen/plugins/common/register_common.go
-	regexValidators = map[string]*regexp.Regexp{
-		"name":     regexp.MustCompile(`^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`),
-		"alphanum": regexp.MustCompile(`^[a-zA-Z0-9]+$`),
-		"alpha":    regexp.MustCompile(`^[a-zA-Z]+$`),
-		"num":      regexp.MustCompile(`^[0-9]+$`),
-	}
-)
+type regexpEntry struct {
+	Str     string
+	HelpStr string
+	Regexp  *regexp.Regexp
+}
+
+// RegexpList contains mapping from regexp name to the regex string,
+// the helpstring to appear in the swagger, and a pointer to a regexp
+var RegexpList = map[string]regexpEntry{
+	"name": {
+		Str:     `^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`,
+		Regexp:  regexp.MustCompile(`^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`),
+		HelpStr: "must start and end with alpha numeric and can have alphanumeric, -, _, ., :",
+	},
+	"alphanum": {
+		Str:     `^[a-zA-Z0-9]+$`,
+		Regexp:  regexp.MustCompile(`^[a-zA-Z0-9]+$`),
+		HelpStr: "must be alpha-numerics",
+	},
+	"alpha": {
+		Str:     `^[a-zA-Z]+$`,
+		Regexp:  regexp.MustCompile(`^[a-zA-Z]+$`),
+		HelpStr: "must be only alphabets",
+	},
+	"num": {
+		Str:     `^[0-9]+$`,
+		Regexp:  regexp.MustCompile(`^[0-9]+$`),
+		HelpStr: "must be only numerics",
+	},
+	"email": {
+		Str:     `^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$`,
+		Regexp:  regexp.MustCompile(`^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$`), // http://regexlib.com/Search.aspx?k=email
+		HelpStr: "must be a valid email",
+	},
+}
 
 func populateKindsMap() {
 	schema := runtime.GetDefaultScheme()
@@ -81,20 +107,29 @@ func getint(in interface{}) (int64, bool) {
 
 // StrLen validates that the input string is in the range
 //  args[0]  :  minimum length of string
-//  args[1]  :  maximum length of string
+//  args[1]  :  maximum length of string, if negative there is no max length
 func StrLen(in string, args []string) bool {
 	min, ok := convInt(args[0])
-	if !ok {
+	if !ok || len(in) < int(min) {
 		return false
 	}
+
 	max, ok := convInt(args[1])
-	if !ok {
-		return false
-	}
-	if len(in) < int(min) || len(in) > int(max) {
+	if !ok || (max >= 0 && len(in) > int(max)) {
 		return false
 	}
 	return true
+}
+
+// EmptyOrStrLen validates that the input string is in the range
+//  args[0]  :  minimum length of string
+//  args[1]  :  maximum length of string
+// or is empty
+func EmptyOrStrLen(in string, args []string) bool {
+	if len(in) == 0 {
+		return true
+	}
+	return StrLen(in, args)
 }
 
 // IntRange validates that the input integer is in the range
@@ -168,19 +203,42 @@ func UUID(i interface{}) bool {
 	return govldtr.IsUUID(in)
 }
 
-// Duration validates that input is a valid time Duration string
-func Duration(i interface{}) bool {
-	if d, ok := i.(string); ok {
-		if d == "" {
-			return true
-		}
-		_, err := time.ParseDuration(d)
-		if err != nil {
-			return false
-		}
+// Duration validates that inputs is a valid time Duration string
+//  args[0]  :  minimum time duration inclusive, 0 if any duration is allowed
+//  args[1]  :  maximum time duration inclusive, 0 if any duration is allowed
+func Duration(in string, args []string) bool {
+	if in == "" {
+		return false
+	}
+	min, err := time.ParseDuration(args[0])
+	if err != nil {
+		return false
+	}
+	max, err := time.ParseDuration(args[1])
+	if err != nil {
+		return false
+	}
+
+	inDuration, err := time.ParseDuration(in)
+	if err != nil {
+		return false
+	}
+
+	if min != 0 && min.Nanoseconds() > inDuration.Nanoseconds() {
+		return false
+	}
+	if max != 0 && inDuration.Nanoseconds() > max.Nanoseconds() {
+		return false
+	}
+	return true
+}
+
+// EmptyOrDuration validates that input is a valid time Duration string or is an empty string
+func EmptyOrDuration(in string, args []string) bool {
+	if in == "" {
 		return true
 	}
-	return false
+	return Duration(in, args)
 }
 
 // XXX We can make these maps programmable by the user, or allow user defined entries
@@ -404,9 +462,21 @@ func RegExp(i interface{}, args []string) bool {
 	if !ok {
 		return false
 	}
-	re, ok := regexValidators[args[0]]
+	entry, ok := RegexpList[args[0]]
 	if !ok {
 		return false
 	}
-	return re.Match([]byte(in))
+	return entry.Regexp.Match([]byte(in))
+}
+
+// EmptyOrRegExp validates input string against the named regexp specified in args[0] and allows empty strings
+func EmptyOrRegExp(i interface{}, args []string) bool {
+	in, ok := i.(string)
+	if !ok {
+		return false
+	}
+	if len(in) == 0 {
+		return true
+	}
+	return RegExp(i, args)
 }

@@ -56,6 +56,8 @@ export class StagingClearActionSpec extends BaseModel implements IStagingClearAc
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<StagingItemId>(this, 'items', values['items'], StagingItemId);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

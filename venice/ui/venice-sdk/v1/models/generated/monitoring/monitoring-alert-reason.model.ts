@@ -61,11 +61,15 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringMatchedRequirement>(this, 'matched-requirements', values['matched-requirements'], MonitoringMatchedRequirement);
+        } else {
+            this['matched-requirements'] = [];
         }
         if (values && values['alert-policy-id'] != null) {
             this['alert-policy-id'] = values['alert-policy-id'];
         } else if (fillDefaults && MonitoringAlertReason.hasDefaultValue('alert-policy-id')) {
             this['alert-policy-id'] = MonitoringAlertReason.propInfo['alert-policy-id'].default;
+        } else {
+            this['alert-policy-id'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

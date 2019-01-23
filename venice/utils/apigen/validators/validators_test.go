@@ -1,4 +1,4 @@
-package impl
+package validators
 
 import (
 	"testing"
@@ -8,15 +8,41 @@ import (
 )
 
 func TestStrLen(t *testing.T) {
-	str := "Abcdefghijklmnopqrstuvwzyz"
+	str := ""
 	var args []string
 	args = append(args, "10", "25")
 
 	if StrLen(str, args) {
 		t.Errorf("Validation should have failed")
 	}
+	str = "Abcdefghijklmnopqrstuvwzyz"
+	if StrLen(str, args) {
+		t.Errorf("Validation should have failed")
+	}
 	args[1] = "30"
 	if !StrLen(str, args) {
+		t.Errorf("Validation should have passed")
+	}
+	args[1] = "-10"
+	if !StrLen(str, args) {
+		t.Errorf("Validation should have passed")
+	}
+}
+
+func TestEmptyOrStrLen(t *testing.T) {
+	str := ""
+	var args []string
+	args = append(args, "10", "25")
+
+	if !EmptyOrStrLen(str, args) {
+		t.Errorf("Validation should have passed")
+	}
+	str = "Abcdefghijklmnopqrstuvwzyz"
+	if EmptyOrStrLen(str, args) {
+		t.Errorf("Validation should have failed")
+	}
+	args[1] = "30"
+	if !EmptyOrStrLen(str, args) {
 		t.Errorf("Validation should have passed")
 	}
 }
@@ -238,18 +264,52 @@ func TestL3L4Proto(t *testing.T) {
 
 func TestDuration(t *testing.T) {
 	goodCases := []string{
-		"10h", "2m", "3s",
+		"1h", "2m", "10s",
+	}
+	badCases := []string{
+		"1:20:10", "mytime", "3 s", "",
+	}
+	outOfRangeCases := []string{
+		"2h", "65m", "2s",
+	}
+	for _, c := range goodCases {
+		if ok := Duration(c, []string{"5s", "1h"}); !ok {
+			t.Errorf("Incorrect Error detection in %v", c)
+		}
+	}
+	for _, c := range badCases {
+		if ok := Duration(c, []string{"5s", "1h"}); ok {
+			t.Errorf("Undetected error in %v", c)
+		}
+	}
+	for _, c := range outOfRangeCases {
+		if ok := Duration(c, []string{"5s", "1h"}); ok {
+			t.Errorf("Undetected error in %v", c)
+		}
+	}
+
+	// all durations should pass if its empty
+	for _, c := range outOfRangeCases {
+		if ok := Duration(c, []string{"0", "0"}); !ok {
+			t.Errorf("Incorrect Error detection in %v", c)
+		}
+	}
+}
+
+func TestEmptyOrDuration(t *testing.T) {
+	goodCases := []string{
+		"10h", "2m", "3s", "",
 	}
 	badCases := []string{
 		"1:20:10", "mytime", "3 s",
 	}
 	for _, c := range goodCases {
-		if ok := Duration(c); !ok {
+		if ok := EmptyOrDuration(c, []string{"0", "0"}); !ok {
 			t.Errorf("Incorrect Error detection in %v", c)
 		}
 	}
 	for _, c := range badCases {
-		if ok := Duration(c); ok {
+		if ok := EmptyOrDuration(c, []string{"0", "0"}); ok {
 			t.Errorf("Undetected error in %v", c)
 		}
 	}
@@ -261,18 +321,25 @@ func TestRegExp(t *testing.T) {
 		val    string
 		result bool
 	}{
+		{exp: "name", val: "", result: false},
 		{exp: "name", val: "Andadaa_98", result: true},
 		{exp: "name", val: "Andadaa_:.98", result: true},
 		{exp: "name", val: "_Andadaa_98", result: false},
 		{exp: "name", val: "Andadaa_ 98", result: false},
 		{exp: "name", val: "Andadaa%_98", result: false},
 		{exp: "name", val: "Andadaa%_98", result: false},
+		{exp: "alphanum", val: "", result: false},
 		{exp: "alphanum", val: "Andadaa98", result: true},
 		{exp: "alphanum", val: "Andadaa_98", result: false},
+		{exp: "alpha", val: "", result: false},
 		{exp: "alpha", val: "Andadaa", result: true},
 		{exp: "alpha", val: "Andadaa1", result: false},
+		{exp: "num", val: "", result: false},
 		{exp: "num", val: "1123131122", result: true},
 		{exp: "num", val: "112313112a", result: false},
+		{exp: "email", val: "notAnEmail", result: false},
+		{exp: "email", val: "", result: false},
+		{exp: "email", val: "test@pensando.io", result: true},
 	}
 	for _, c := range cases {
 		args := []string{c.exp}
@@ -282,6 +349,38 @@ func TestRegExp(t *testing.T) {
 		}
 	}
 }
+
+func TestEmptyOrRegExp(t *testing.T) {
+	cases := []struct {
+		exp    string
+		val    string
+		result bool
+	}{
+		{exp: "name", val: "", result: true},
+		{exp: "name", val: "Andadaa_98", result: true},
+		{exp: "name", val: "_Andadaa_98", result: false},
+		{exp: "alphanum", val: "", result: true},
+		{exp: "alphanum", val: "Andadaa98", result: true},
+		{exp: "alphanum", val: "Andadaa_98", result: false},
+		{exp: "alpha", val: "", result: true},
+		{exp: "alpha", val: "Andadaa", result: true},
+		{exp: "alpha", val: "Andadaa1", result: false},
+		{exp: "num", val: "", result: true},
+		{exp: "num", val: "1123131122", result: true},
+		{exp: "num", val: "112313112a", result: false},
+		{exp: "email", val: "notAnEmail", result: false},
+		{exp: "email", val: "", result: true},
+		{exp: "email", val: "test@pensando.io", result: true},
+	}
+	for _, c := range cases {
+		args := []string{c.exp}
+		r := EmptyOrRegExp(c.val, args)
+		if r != c.result {
+			t.Errorf("[%v/[%v] expecting [%v] got [%v]", c.exp, c.val, c.result, r)
+		}
+	}
+}
+
 func TestValidKind(t *testing.T) {
 	types := map[string]*api.Struct{
 		"test.Type1": &api.Struct{

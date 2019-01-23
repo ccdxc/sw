@@ -5421,6 +5421,9 @@
     },
     "authAuthenticationPolicySpec": {
       "type": "object",
+      "required": [
+        "token-expiry"
+      ],
       "properties": {
         "authenticators": {
           "$ref": "#/definitions/authAuthenticators"
@@ -5459,6 +5462,9 @@
     },
     "authAuthenticators": {
       "type": "object",
+      "required": [
+        "authenticator-order"
+      ],
       "properties": {
         "authenticator-order": {
           "type": "array",
@@ -5648,6 +5654,9 @@
     },
     "authLdapServerStatus": {
       "type": "object",
+      "required": [
+        "result"
+      ],
       "properties": {
         "result": {
           "type": "string",
@@ -5717,6 +5726,9 @@
     },
     "authPermission": {
       "type": "object",
+      "required": [
+        "actions"
+      ],
       "properties": {
         "resource-tenant": {
           "type": "string",
@@ -5793,6 +5805,9 @@
     },
     "authRadiusServer": {
       "type": "object",
+      "required": [
+        "auth-method"
+      ],
       "properties": {
         "url": {
           "type": "string",
@@ -5820,6 +5835,9 @@
     },
     "authRadiusServerStatus": {
       "type": "object",
+      "required": [
+        "result"
+      ],
       "properties": {
         "result": {
           "type": "string",
@@ -6042,6 +6060,9 @@
     },
     "authUserSpec": {
       "type": "object",
+      "required": [
+        "type"
+      ],
       "properties": {
         "fullname": {
           "type": "string"
@@ -6069,6 +6090,9 @@
     },
     "authUserStatus": {
       "type": "object",
+      "required": [
+        "authenticators"
+      ],
       "properties": {
         "roles": {
           "type": "array",

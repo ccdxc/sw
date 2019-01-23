@@ -71,21 +71,29 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('type')) {
             this['type'] = ClusterOsInfo.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['kernel-relase'] != null) {
             this['kernel-relase'] = values['kernel-relase'];
         } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('kernel-relase')) {
             this['kernel-relase'] = ClusterOsInfo.propInfo['kernel-relase'].default;
+        } else {
+            this['kernel-relase'] = null
         }
         if (values && values['kernel-version'] != null) {
             this['kernel-version'] = values['kernel-version'];
         } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('kernel-version')) {
             this['kernel-version'] = ClusterOsInfo.propInfo['kernel-version'].default;
+        } else {
+            this['kernel-version'] = null
         }
         if (values && values['processor'] != null) {
             this['processor'] = values['processor'];
         } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('processor')) {
             this['processor'] = ClusterOsInfo.propInfo['processor'].default;
+        } else {
+            this['processor'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

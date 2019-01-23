@@ -15,9 +15,9 @@ export interface IClusterSmartNICSpec {
     'admit'?: boolean;
     'hostname'?: string;
     'ip-config'?: IClusterIPConfig;
-    'mgmt-mode'?: ClusterSmartNICSpec_mgmt_mode;
-    'network-mode'?: ClusterSmartNICSpec_network_mode;
-    'mgmt-vlan'?: number;
+    'mgmt-mode': ClusterSmartNICSpec_mgmt_mode;
+    'network-mode': ClusterSmartNICSpec_network_mode;
+    'mgmt-vlan': number;
     'controllers'?: Array<string>;
 }
 
@@ -98,34 +98,48 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
             this['admit'] = values['admit'];
         } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('admit')) {
             this['admit'] = ClusterSmartNICSpec.propInfo['admit'].default;
+        } else {
+            this['admit'] = null
         }
         if (values && values['hostname'] != null) {
             this['hostname'] = values['hostname'];
         } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('hostname')) {
             this['hostname'] = ClusterSmartNICSpec.propInfo['hostname'].default;
+        } else {
+            this['hostname'] = null
         }
         if (values) {
-            this['ip-config'].setValues(values['ip-config']);
+            this['ip-config'].setValues(values['ip-config'], fillDefaults);
+        } else {
+            this['ip-config'].setValues(null, fillDefaults);
         }
         if (values && values['mgmt-mode'] != null) {
             this['mgmt-mode'] = values['mgmt-mode'];
         } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('mgmt-mode')) {
             this['mgmt-mode'] = <ClusterSmartNICSpec_mgmt_mode>  ClusterSmartNICSpec.propInfo['mgmt-mode'].default;
+        } else {
+            this['mgmt-mode'] = null
         }
         if (values && values['network-mode'] != null) {
             this['network-mode'] = values['network-mode'];
         } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('network-mode')) {
             this['network-mode'] = <ClusterSmartNICSpec_network_mode>  ClusterSmartNICSpec.propInfo['network-mode'].default;
+        } else {
+            this['network-mode'] = null
         }
         if (values && values['mgmt-vlan'] != null) {
             this['mgmt-vlan'] = values['mgmt-vlan'];
         } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('mgmt-vlan')) {
             this['mgmt-vlan'] = ClusterSmartNICSpec.propInfo['mgmt-vlan'].default;
+        } else {
+            this['mgmt-vlan'] = null
         }
         if (values && values['controllers'] != null) {
             this['controllers'] = values['controllers'];
         } else if (fillDefaults && ClusterSmartNICSpec.hasDefaultValue('controllers')) {
             this['controllers'] = [ ClusterSmartNICSpec.propInfo['controllers'].default];
+        } else {
+            this['controllers'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -139,7 +153,7 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
                 'ip-config': this['ip-config'].$formGroup,
                 'mgmt-mode': new FormControl(this['mgmt-mode'], [required, enumValidator(ClusterSmartNICSpec_mgmt_mode), ]),
                 'network-mode': new FormControl(this['network-mode'], [required, enumValidator(ClusterSmartNICSpec_network_mode), ]),
-                'mgmt-vlan': new FormControl(this['mgmt-vlan'], [maxValueValidator(4095), ]),
+                'mgmt-vlan': new FormControl(this['mgmt-vlan'], [required, maxValueValidator(4095), ]),
                 'controllers': new FormControl(this['controllers']),
             });
         }

@@ -56,6 +56,8 @@ export class SearchTenantPreview extends BaseModel implements ISearchTenantPrevi
             this['tenants'] = values['tenants'];
         } else if (fillDefaults && SearchTenantPreview.hasDefaultValue('tenants')) {
             this['tenants'] = SearchTenantPreview.propInfo['tenants'].default;
+        } else {
+            this['tenants'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

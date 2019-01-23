@@ -56,6 +56,8 @@ export class SecurityAutoMsgSecurityGroupWatchHelper extends BaseModel implement
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgSecurityGroupWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

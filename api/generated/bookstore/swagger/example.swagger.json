@@ -2660,6 +2660,9 @@
     },
     "bookstoreBookEdition": {
       "type": "object",
+      "required": [
+        "year"
+      ],
       "properties": {
         "errata": {
           "type": "string",
@@ -2715,6 +2718,9 @@
     },
     "bookstoreBookSpec": {
       "type": "object",
+      "required": [
+        "category"
+      ],
       "properties": {
         "ISBNId": {
           "type": "string"
@@ -2869,6 +2875,9 @@
     },
     "bookstoreCustomerSpec": {
       "type": "object",
+      "required": [
+        ""
+      ],
       "properties": {
         "Address": {
           "type": "string"
@@ -2922,6 +2931,10 @@
     },
     "bookstoreOrderItem": {
       "type": "object",
+      "required": [
+        "",
+        ""
+      ],
       "properties": {
         "ISBNId": {
           "type": "string",
@@ -2977,6 +2990,9 @@
     },
     "bookstoreOrderStatus": {
       "type": "object",
+      "required": [
+        ""
+      ],
       "properties": {
         "Status": {
           "type": "string",
@@ -3070,9 +3086,14 @@
     },
     "bookstorePublisherSpec": {
       "type": "object",
+      "required": [
+        "id",
+        ""
+      ],
       "properties": {
         "id": {
           "type": "string",
+          "pattern": "^[a-zA-Z0-9]+$",
           "description": "must be alpha-numerics",
           "title": "cli-tags: id=pubid verobose-only=true\ncli-help: This is the publisherID"
         },

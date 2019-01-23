@@ -449,6 +449,10 @@
     },
     "netprotoTunnelSpec": {
       "type": "object",
+      "required": [
+        "type",
+        "admin-status"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -483,6 +487,9 @@
     },
     "netprotoTunnelStatus": {
       "type": "object",
+      "required": [
+        "oper-status"
+      ],
       "properties": {
         "oper-status": {
           "type": "string",

@@ -63,11 +63,15 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
             this['start-time'] = values['start-time'];
         } else if (fillDefaults && MonitoringTimeWindow.hasDefaultValue('start-time')) {
             this['start-time'] = MonitoringTimeWindow.propInfo['start-time'].default;
+        } else {
+            this['start-time'] = null
         }
         if (values && values['stop-time'] != null) {
             this['stop-time'] = values['stop-time'];
         } else if (fillDefaults && MonitoringTimeWindow.hasDefaultValue('stop-time')) {
             this['stop-time'] = MonitoringTimeWindow.propInfo['stop-time'].default;
+        } else {
+            this['stop-time'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

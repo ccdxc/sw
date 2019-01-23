@@ -63,7 +63,9 @@ export class SearchEntry extends BaseModel implements ISearchEntry {
     */
     setValues(values: any, fillDefaults = true): void {
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

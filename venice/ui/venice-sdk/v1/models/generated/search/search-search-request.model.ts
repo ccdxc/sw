@@ -12,10 +12,10 @@ import { SearchSearchQuery, ISearchSearchQuery } from './search-search-query.mod
 
 export interface ISearchSearchRequest {
     'query-string'?: string;
-    'from'?: number;
-    'max-results'?: number;
+    'from': number;
+    'max-results': number;
     'sort-by'?: string;
-    'mode'?: SearchSearchRequest_mode;
+    'mode': SearchSearchRequest_mode;
     'query'?: ISearchSearchQuery;
     'tenants'?: Array<string>;
 }
@@ -113,34 +113,48 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
             this['query-string'] = values['query-string'];
         } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('query-string')) {
             this['query-string'] = SearchSearchRequest.propInfo['query-string'].default;
+        } else {
+            this['query-string'] = null
         }
         if (values && values['from'] != null) {
             this['from'] = values['from'];
         } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('from')) {
             this['from'] = SearchSearchRequest.propInfo['from'].default;
+        } else {
+            this['from'] = null
         }
         if (values && values['max-results'] != null) {
             this['max-results'] = values['max-results'];
         } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('max-results')) {
             this['max-results'] = SearchSearchRequest.propInfo['max-results'].default;
+        } else {
+            this['max-results'] = null
         }
         if (values && values['sort-by'] != null) {
             this['sort-by'] = values['sort-by'];
         } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('sort-by')) {
             this['sort-by'] = SearchSearchRequest.propInfo['sort-by'].default;
+        } else {
+            this['sort-by'] = null
         }
         if (values && values['mode'] != null) {
             this['mode'] = values['mode'];
         } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('mode')) {
             this['mode'] = <SearchSearchRequest_mode>  SearchSearchRequest.propInfo['mode'].default;
+        } else {
+            this['mode'] = null
         }
         if (values) {
-            this['query'].setValues(values['query']);
+            this['query'].setValues(values['query'], fillDefaults);
+        } else {
+            this['query'].setValues(null, fillDefaults);
         }
         if (values && values['tenants'] != null) {
             this['tenants'] = values['tenants'];
         } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('tenants')) {
             this['tenants'] = [ SearchSearchRequest.propInfo['tenants'].default];
+        } else {
+            this['tenants'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -150,8 +164,8 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'query-string': new FormControl(this['query-string'], [maxLengthValidator(256), ]),
-                'from': new FormControl(this['from'], [maxValueValidator(1023), ]),
-                'max-results': new FormControl(this['max-results'], [maxValueValidator(8192), ]),
+                'from': new FormControl(this['from'], [required, maxValueValidator(1023), ]),
+                'max-results': new FormControl(this['max-results'], [required, maxValueValidator(8192), ]),
                 'sort-by': new FormControl(this['sort-by'], [maxLengthValidator(256), ]),
                 'mode': new FormControl(this['mode'], [required, enumValidator(SearchSearchRequest_mode), ]),
                 'query': this['query'].$formGroup,

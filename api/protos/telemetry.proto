@@ -44,13 +44,13 @@ message StatsPolicySpec {
      // The value is specified as a string format to be hours, days, or months etc.
      // e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
      // Default is 48h.
-     string RetentionTime = 1 [(gogoproto.jsontag) = "retention-time,omitempty", (venice.check)="Duration()", (venice.default)="48h"];
+     string RetentionTime = 1 [(gogoproto.jsontag) = "retention-time,omitempty", (venice.check)="Duration(0,0)", (venice.default)="48h"];
 
      // DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted
      // The value is specified as a string format to be hours, days, or months etc.
      // e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
      // Default is 168h
-     string DownSampleRetentionTime = 2 [(gogoproto.jsontag) = "downsample-retention-time,omitempty", (venice.check)="Duration()", (venice.default)="168h"];
+     string DownSampleRetentionTime = 2 [(gogoproto.jsontag) = "downsample-retention-time,omitempty", (venice.check)="Duration(0,0)", (venice.default)="168h"];
 }
 
 message StatsPolicy {
@@ -128,8 +128,7 @@ message FlowExportPolicySpec {
 
     // Interval defines how often to push the records to an external collector
     // The value is specified as a string format, '10s', '20m'
-    // allowed range is '1s' to '24h'
-    string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty", (venice.check)="Duration()"];
+    string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty", (venice.default)="10s", (venice.check)="Duration(1s,24h)"];
 
     string Format = 2 [(gogoproto.jsontag) = "format,omitempty", (venice.check) = "StrEnum(FlowExportPolicySpec.Formats)"];
 

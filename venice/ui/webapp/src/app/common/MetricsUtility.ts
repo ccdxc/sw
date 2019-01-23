@@ -112,6 +112,7 @@ export class MetricsUtility {
   public static timeSeriesQuery(kind: string, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
     const timeSeriesQuery: IMetrics_queryQuerySpec = {
       'kind': kind,
+      'name': null,
       'selector': selector,
       function: Metrics_queryQuerySpec_function.MEAN,
       'group-by-time': '5m',
@@ -164,6 +165,7 @@ export class MetricsUtility {
   public static pastFiveMinAverageQuery(kind: string, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
     const avgQuery: IMetrics_queryQuerySpec = {
       'kind': kind,
+      'name': null,
       'selector': selector,
       function: Metrics_queryQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
@@ -185,6 +187,7 @@ export class MetricsUtility {
   public static intervalAverageQuery(kind: string, startTime, endTime, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
     const avgQuery: IMetrics_queryQuerySpec = {
       'kind': kind,
+      'name': null,
       'selector': selector,
       function: Metrics_queryQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
@@ -209,6 +212,7 @@ export class MetricsUtility {
   public static pastDayAverageQuery(kind: string, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
     const avgQuery: IMetrics_queryQuerySpec = {
       'kind': kind,
+      'name': null,
       'selector': selector,
       function: Metrics_queryQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
@@ -230,6 +234,7 @@ export class MetricsUtility {
   public static maxObjQuery(kind: string, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
     const maxNodeQuery: IMetrics_queryQuerySpec = {
       'kind': kind,
+      'name': null,
       'selector': selector,
       function: Metrics_queryQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field

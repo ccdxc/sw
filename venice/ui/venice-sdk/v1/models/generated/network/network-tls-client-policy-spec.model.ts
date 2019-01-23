@@ -86,16 +86,22 @@ export class NetworkTLSClientPolicySpec extends BaseModel implements INetworkTLS
             this['tls-client-certificates-selector'] = values['tls-client-certificates-selector'];
         } else if (fillDefaults && NetworkTLSClientPolicySpec.hasDefaultValue('tls-client-certificates-selector')) {
             this['tls-client-certificates-selector'] = NetworkTLSClientPolicySpec.propInfo['tls-client-certificates-selector'].default;
+        } else {
+            this['tls-client-certificates-selector'] = null
         }
         if (values && values['tls-client-trust-roots'] != null) {
             this['tls-client-trust-roots'] = values['tls-client-trust-roots'];
         } else if (fillDefaults && NetworkTLSClientPolicySpec.hasDefaultValue('tls-client-trust-roots')) {
             this['tls-client-trust-roots'] = [ NetworkTLSClientPolicySpec.propInfo['tls-client-trust-roots'].default];
+        } else {
+            this['tls-client-trust-roots'] = [];
         }
         if (values && values['tls-client-allowed-peer-id'] != null) {
             this['tls-client-allowed-peer-id'] = values['tls-client-allowed-peer-id'];
         } else if (fillDefaults && NetworkTLSClientPolicySpec.hasDefaultValue('tls-client-allowed-peer-id')) {
             this['tls-client-allowed-peer-id'] = [ NetworkTLSClientPolicySpec.propInfo['tls-client-allowed-peer-id'].default];
+        } else {
+            this['tls-client-allowed-peer-id'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

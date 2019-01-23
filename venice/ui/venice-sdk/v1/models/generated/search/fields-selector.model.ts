@@ -58,6 +58,8 @@ export class FieldsSelector extends BaseModel implements IFieldsSelector {
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<FieldsRequirement>(this, 'requirements', values['requirements'], FieldsRequirement);
+        } else {
+            this['requirements'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

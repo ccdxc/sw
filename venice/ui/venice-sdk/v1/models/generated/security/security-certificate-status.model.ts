@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { SecurityCertificateStatus_validity,  } from './enums';
 
 export interface ISecurityCertificateStatus {
-    'validity'?: SecurityCertificateStatus_validity;
+    'validity': SecurityCertificateStatus_validity;
     'workloads'?: Array<string>;
 }
 
@@ -69,11 +69,15 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
             this['validity'] = values['validity'];
         } else if (fillDefaults && SecurityCertificateStatus.hasDefaultValue('validity')) {
             this['validity'] = <SecurityCertificateStatus_validity>  SecurityCertificateStatus.propInfo['validity'].default;
+        } else {
+            this['validity'] = null
         }
         if (values && values['workloads'] != null) {
             this['workloads'] = values['workloads'];
         } else if (fillDefaults && SecurityCertificateStatus.hasDefaultValue('workloads')) {
             this['workloads'] = [ SecurityCertificateStatus.propInfo['workloads'].default];
+        } else {
+            this['workloads'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

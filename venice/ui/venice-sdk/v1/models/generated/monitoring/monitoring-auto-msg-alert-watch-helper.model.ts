@@ -56,6 +56,8 @@ export class MonitoringAutoMsgAlertWatchHelper extends BaseModel implements IMon
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringAutoMsgAlertWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgAlertWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

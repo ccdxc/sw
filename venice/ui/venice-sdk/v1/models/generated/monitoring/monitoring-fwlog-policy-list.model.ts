@@ -75,17 +75,25 @@ export class MonitoringFwlogPolicyList extends BaseModel implements IMonitoringF
             this['kind'] = values['kind'];
         } else if (fillDefaults && MonitoringFwlogPolicyList.hasDefaultValue('kind')) {
             this['kind'] = MonitoringFwlogPolicyList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && MonitoringFwlogPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringFwlogPolicyList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<MonitoringFwlogPolicy>(this, 'items', values['items'], MonitoringFwlogPolicy);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -86,36 +86,50 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
             this['user'] = values['user'];
         } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('user')) {
             this['user'] = AuthLdapAttributeMapping.propInfo['user'].default;
+        } else {
+            this['user'] = null
         }
         if (values && values['user-object-class'] != null) {
             this['user-object-class'] = values['user-object-class'];
         } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('user-object-class')) {
             this['user-object-class'] = AuthLdapAttributeMapping.propInfo['user-object-class'].default;
+        } else {
+            this['user-object-class'] = null
         }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('tenant')) {
             this['tenant'] = AuthLdapAttributeMapping.propInfo['tenant'].default;
+        } else {
+            this['tenant'] = null
         }
         if (values && values['group'] != null) {
             this['group'] = values['group'];
         } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('group')) {
             this['group'] = AuthLdapAttributeMapping.propInfo['group'].default;
+        } else {
+            this['group'] = null
         }
         if (values && values['group-object-class'] != null) {
             this['group-object-class'] = values['group-object-class'];
         } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('group-object-class')) {
             this['group-object-class'] = AuthLdapAttributeMapping.propInfo['group-object-class'].default;
+        } else {
+            this['group-object-class'] = null
         }
         if (values && values['email'] != null) {
             this['email'] = values['email'];
         } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('email')) {
             this['email'] = AuthLdapAttributeMapping.propInfo['email'].default;
+        } else {
+            this['email'] = null
         }
         if (values && values['fullname'] != null) {
             this['fullname'] = values['fullname'];
         } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('fullname')) {
             this['fullname'] = AuthLdapAttributeMapping.propInfo['fullname'].default;
+        } else {
+            this['fullname'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

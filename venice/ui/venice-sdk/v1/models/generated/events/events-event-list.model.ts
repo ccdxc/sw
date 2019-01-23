@@ -73,19 +73,27 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
             this['kind'] = values['kind'];
         } else if (fillDefaults && EventsEventList.hasDefaultValue('kind')) {
             this['kind'] = EventsEventList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && EventsEventList.hasDefaultValue('api-version')) {
             this['api-version'] = EventsEventList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
         } else if (fillDefaults && EventsEventList.hasDefaultValue('resource-version')) {
             this['resource-version'] = EventsEventList.propInfo['resource-version'].default;
+        } else {
+            this['resource-version'] = null
         }
         if (values) {
             this.fillModelArray<EventsEvent>(this, 'items', values['items'], EventsEvent);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

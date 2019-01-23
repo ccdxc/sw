@@ -56,6 +56,8 @@ export class MonitoringAutoMsgTroubleshootingSessionWatchHelper extends BaseMode
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgTroubleshootingSessionWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

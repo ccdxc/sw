@@ -402,20 +402,34 @@ func methFinalizer(obj *genswagger.SwaggerPathItemObject, path *string, method *
 }
 
 func messageFinalizer(obj *genswagger.SwaggerSchemaObject, message *descriptor.Message, reg *descriptor.Registry) error {
+	// Adding the required field
+	req := []string{}
+	for _, f := range message.Fields {
+		profile, err := generateVeniceCheckFieldProfile(f, reg)
+		if err == nil && profile != nil {
+			// TODO: Use swagger version instead of all
+			if profile.Required["all"] {
+				tag := common.GetJSONTag(f)
+				req = append(req, tag)
+			}
+		}
+	}
+	if len(req) != 0 {
+		obj.Required = req
+	}
 	return nil
 }
 
-func fieldFinalizer(obj *genswagger.SwaggerSchemaObject, field *descriptor.Field, reg *descriptor.Registry) error {
-	glog.V(1).Infof("called Field Finalizer for %v", *field.Name)
+func generateVeniceCheckFieldProfile(field *descriptor.Field, reg *descriptor.Registry) (*common.FieldProfile, error) {
 	r, err := gwplugins.GetExtension("venice.check", field)
 	if err == nil {
-		// We hae some options specified
+		// We have some options specified
 		profile := common.FieldProfile{}
 		profile.Init()
 		for _, v := range r.([]string) {
 			fldv, err := common.ParseValidator(v)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			fn, ok := common.ValidatorProfileMap[fldv.Fn]
 			if !ok {
@@ -430,6 +444,16 @@ func fieldFinalizer(obj *genswagger.SwaggerSchemaObject, field *descriptor.Field
 				glog.Fatalf("cannot parse validator (%s)", err)
 			}
 		}
+		return &profile, nil
+	}
+	return nil, nil
+}
+
+func fieldFinalizer(obj *genswagger.SwaggerSchemaObject, field *descriptor.Field, reg *descriptor.Registry) error {
+	glog.V(1).Infof("called Field Finalizer for %v", *field.Name)
+	profile, err := generateVeniceCheckFieldProfile(field, reg)
+	// TODO: Use swagger version instead of all
+	if err == nil && profile != nil {
 		if len(profile.Enum) > 0 {
 			obj.Enum = append(obj.Enum, profile.Enum["all"]...)
 		}
@@ -456,6 +480,9 @@ func fieldFinalizer(obj *genswagger.SwaggerSchemaObject, field *descriptor.Field
 		}
 		if val, ok := profile.DocString["all"]; ok {
 			obj.Description = obj.Description + val
+		}
+		if val, ok := profile.Pattern["all"]; ok {
+			obj.Pattern = val
 		}
 	}
 	// Add Default to the spec

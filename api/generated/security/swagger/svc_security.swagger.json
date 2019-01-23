@@ -8593,6 +8593,9 @@
     },
     "labelsRequirement": {
       "type": "object",
+      "required": [
+        "operator"
+      ],
       "properties": {
         "key": {
           "type": "string",
@@ -8638,6 +8641,9 @@
     },
     "securityALG": {
       "type": "object",
+      "required": [
+        "type"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -8939,6 +8945,9 @@
     },
     "securityCertificateSpec": {
       "type": "object",
+      "required": [
+        "usages"
+      ],
       "properties": {
         "description": {
           "type": "string",
@@ -8969,6 +8978,9 @@
     },
     "securityCertificateStatus": {
       "type": "object",
+      "required": [
+        "validity"
+      ],
       "properties": {
         "validity": {
           "type": "string",
@@ -9065,69 +9077,93 @@
     },
     "securityFirewallProfileSpec": {
       "type": "object",
+      "required": [
+        "session-idle-timeout",
+        "tcp-connection-setup-timeout",
+        "tcp-close-timeout",
+        "tcp-half-closed-timeout",
+        "tcp-drop-timeout",
+        "udp-drop-timeout",
+        "icmp-drop-timeout",
+        "drop-timeout",
+        "tcp-timeout",
+        "udp-timeout",
+        "icmp-timeout"
+      ],
       "properties": {
         "session-idle-timeout": {
           "type": "string",
+          "default": "90s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object"
         },
         "tcp-connection-setup-timeout": {
           "type": "string",
+          "default": "30s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN"
         },
         "tcp-close-timeout": {
           "type": "string",
+          "default": "15s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "TCP Close Timeout is the time for which TCP session is kept after a FIN is seen"
         },
         "tcp-half-closed-timeout": {
           "type": "string",
+          "default": "120s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "TCP Half Closed Timeout is the time for which tCP session is kept when connection is half closed i.e. FIN sent by FIN_Ack not received"
         },
         "tcp-drop-timeout": {
           "type": "string",
+          "default": "90s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "TCP Drop Timeout is the period for which a drop entry is installed for a denied TCP flow"
         },
         "udp-drop-timeout": {
           "type": "string",
+          "default": "60s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "UDP Drop Timeout is the period for which a drop entry is installed for a denied UDP flow"
         },
         "icmp-drop-timeout": {
           "type": "string",
+          "default": "60s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "ICMP Drop Timeout is the period for which a drop entry is installed for a denied ICMP flow"
         },
         "drop-timeout": {
           "type": "string",
+          "default": "60s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "Drop Timeout is the period for which a drop entry is installed for a denied non tcp/udp/icmp flow"
         },
         "tcp-timeout": {
           "type": "string",
+          "default": "3600s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "Tcp Timeout is the period for which a TCP session is kept alive during inactivity"
         },
         "udp-timeout": {
           "type": "string",
+          "default": "30s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "Udp Timeout is the period for which a UDP session is kept alive during inactivity"
         },
         "icmp-timeout": {
           "type": "string",
+          "default": "6s",
           "example": "2h",
           "description": "should be a valid time duration\n",
           "title": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity"
@@ -9309,6 +9345,9 @@
     },
     "securitySGRule": {
       "type": "object",
+      "required": [
+        "action"
+      ],
       "properties": {
         "apps": {
           "type": "array",

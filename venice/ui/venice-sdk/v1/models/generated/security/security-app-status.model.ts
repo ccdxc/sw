@@ -57,6 +57,8 @@ export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
             this['attached-policies'] = values['attached-policies'];
         } else if (fillDefaults && SecurityAppStatus.hasDefaultValue('attached-policies')) {
             this['attached-policies'] = [ SecurityAppStatus.propInfo['attached-policies'].default];
+        } else {
+            this['attached-policies'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

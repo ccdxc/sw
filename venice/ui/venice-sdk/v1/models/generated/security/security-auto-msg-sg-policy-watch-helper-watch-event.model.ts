@@ -63,9 +63,13 @@ export class SecurityAutoMsgSGPolicyWatchHelperWatchEvent extends BaseModel impl
             this['type'] = values['type'];
         } else if (fillDefaults && SecurityAutoMsgSGPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = SecurityAutoMsgSGPolicyWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

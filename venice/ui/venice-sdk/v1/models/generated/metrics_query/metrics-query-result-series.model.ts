@@ -74,19 +74,27 @@ export class Metrics_queryResultSeries extends BaseModel implements IMetrics_que
             this['name'] = values['name'];
         } else if (fillDefaults && Metrics_queryResultSeries.hasDefaultValue('name')) {
             this['name'] = Metrics_queryResultSeries.propInfo['name'].default;
+        } else {
+            this['name'] = null
         }
         if (values && values['tags'] != null) {
             this['tags'] = values['tags'];
         } else if (fillDefaults && Metrics_queryResultSeries.hasDefaultValue('tags')) {
             this['tags'] = Metrics_queryResultSeries.propInfo['tags'].default;
+        } else {
+            this['tags'] = null
         }
         if (values && values['columns'] != null) {
             this['columns'] = values['columns'];
         } else if (fillDefaults && Metrics_queryResultSeries.hasDefaultValue('columns')) {
             this['columns'] = [ Metrics_queryResultSeries.propInfo['columns'].default];
+        } else {
+            this['columns'] = [];
         }
         if (values) {
             this.fillModelArray<ApiInterfaceSlice>(this, 'values', values['values'], ApiInterfaceSlice);
+        } else {
+            this['values'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -69,14 +69,20 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
             this['attach-groups'] = values['attach-groups'];
         } else if (fillDefaults && SecuritySGPolicySpec.hasDefaultValue('attach-groups')) {
             this['attach-groups'] = [ SecuritySGPolicySpec.propInfo['attach-groups'].default];
+        } else {
+            this['attach-groups'] = [];
         }
         if (values && values['attach-tenant'] != null) {
             this['attach-tenant'] = values['attach-tenant'];
         } else if (fillDefaults && SecuritySGPolicySpec.hasDefaultValue('attach-tenant')) {
             this['attach-tenant'] = SecuritySGPolicySpec.propInfo['attach-tenant'].default;
+        } else {
+            this['attach-tenant'] = null
         }
         if (values) {
             this.fillModelArray<SecuritySGRule>(this, 'rules', values['rules'], SecuritySGRule);
+        } else {
+            this['rules'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

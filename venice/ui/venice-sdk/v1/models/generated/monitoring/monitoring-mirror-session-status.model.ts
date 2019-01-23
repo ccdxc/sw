@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringMirrorSessionStatus_oper_state,  MonitoringMirrorSessionStatus_oper_state_uihint  } from './enums';
 
 export interface IMonitoringMirrorSessionStatus {
-    'oper-state'?: MonitoringMirrorSessionStatus_oper_state;
+    'oper-state': MonitoringMirrorSessionStatus_oper_state;
     'pcap-file-url'?: string;
     'started-at'?: Date;
 }
@@ -69,16 +69,22 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
             this['oper-state'] = values['oper-state'];
         } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('oper-state')) {
             this['oper-state'] = <MonitoringMirrorSessionStatus_oper_state>  MonitoringMirrorSessionStatus.propInfo['oper-state'].default;
+        } else {
+            this['oper-state'] = null
         }
         if (values && values['pcap-file-url'] != null) {
             this['pcap-file-url'] = values['pcap-file-url'];
         } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('pcap-file-url')) {
             this['pcap-file-url'] = MonitoringMirrorSessionStatus.propInfo['pcap-file-url'].default;
+        } else {
+            this['pcap-file-url'] = null
         }
         if (values && values['started-at'] != null) {
             this['started-at'] = values['started-at'];
         } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('started-at')) {
             this['started-at'] = MonitoringMirrorSessionStatus.propInfo['started-at'].default;
+        } else {
+            this['started-at'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

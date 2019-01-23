@@ -75,17 +75,25 @@ export class MonitoringEventPolicyList extends BaseModel implements IMonitoringE
             this['kind'] = values['kind'];
         } else if (fillDefaults && MonitoringEventPolicyList.hasDefaultValue('kind')) {
             this['kind'] = MonitoringEventPolicyList.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && MonitoringEventPolicyList.hasDefaultValue('api-version')) {
             this['api-version'] = MonitoringEventPolicyList.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values) {
-            this['list-meta'].setValues(values['list-meta']);
+            this['list-meta'].setValues(values['list-meta'], fillDefaults);
+        } else {
+            this['list-meta'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<MonitoringEventPolicy>(this, 'items', values['items'], MonitoringEventPolicy);
+        } else {
+            this['items'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

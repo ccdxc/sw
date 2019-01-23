@@ -57,6 +57,8 @@ export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicy
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkLbPolicyStatus.hasDefaultValue('type')) {
             this['type'] = [ NetworkLbPolicyStatus.propInfo['type'].default];
+        } else {
+            this['type'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

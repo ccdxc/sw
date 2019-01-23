@@ -12,7 +12,7 @@ import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-ex
 import { MonitoringSyslogExportConfig, IMonitoringSyslogExportConfig } from './monitoring-syslog-export-config.model';
 
 export interface IMonitoringSyslogExport {
-    'format'?: MonitoringSyslogExport_format;
+    'format': MonitoringSyslogExport_format;
     'targets'?: Array<IMonitoringExportConfig>;
     'config'?: IMonitoringSyslogExportConfig;
 }
@@ -73,12 +73,18 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
             this['format'] = values['format'];
         } else if (fillDefaults && MonitoringSyslogExport.hasDefaultValue('format')) {
             this['format'] = <MonitoringSyslogExport_format>  MonitoringSyslogExport.propInfo['format'].default;
+        } else {
+            this['format'] = null
         }
         if (values) {
             this.fillModelArray<MonitoringExportConfig>(this, 'targets', values['targets'], MonitoringExportConfig);
+        } else {
+            this['targets'] = [];
         }
         if (values) {
-            this['config'].setValues(values['config']);
+            this['config'].setValues(values['config'], fillDefaults);
+        } else {
+            this['config'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

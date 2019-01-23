@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { MonitoringPrivacyConfig_algo,  } from './enums';
 
 export interface IMonitoringPrivacyConfig {
-    'algo'?: MonitoringPrivacyConfig_algo;
+    'algo': MonitoringPrivacyConfig_algo;
     'password'?: string;
 }
 
@@ -66,11 +66,15 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
             this['algo'] = values['algo'];
         } else if (fillDefaults && MonitoringPrivacyConfig.hasDefaultValue('algo')) {
             this['algo'] = <MonitoringPrivacyConfig_algo>  MonitoringPrivacyConfig.propInfo['algo'].default;
+        } else {
+            this['algo'] = null
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
         } else if (fillDefaults && MonitoringPrivacyConfig.hasDefaultValue('password')) {
             this['password'] = MonitoringPrivacyConfig.propInfo['password'].default;
+        } else {
+            this['password'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

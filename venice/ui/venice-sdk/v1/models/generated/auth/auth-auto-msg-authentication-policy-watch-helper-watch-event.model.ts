@@ -63,9 +63,13 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseMo
             this['type'] = values['type'];
         } else if (fillDefaults && AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

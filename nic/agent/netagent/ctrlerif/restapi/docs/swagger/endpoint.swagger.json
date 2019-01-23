@@ -450,6 +450,9 @@
     },
     "netprotoEndpointSpec": {
       "type": "object",
+      "required": [
+        "interface-type"
+      ],
       "properties": {
         "endpoint-uuid": {
           "type": "string"

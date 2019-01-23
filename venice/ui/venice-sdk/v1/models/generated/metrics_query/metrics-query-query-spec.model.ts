@@ -14,10 +14,10 @@ import { Metrics_queryPaginationSpec, IMetrics_queryPaginationSpec } from './met
 export interface IMetrics_queryQuerySpec {
     'kind'?: string;
     'api-version'?: string;
-    'name'?: string;
+    'name': string;
     'selector'?: ILabelsSelector;
     'fields'?: Array<string>;
-    'function'?: Metrics_queryQuerySpec_function;
+    'function': Metrics_queryQuerySpec_function;
     'start-time'?: Date;
     'end-time'?: Date;
     'group-by-time'?: string;
@@ -124,52 +124,74 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
             this['kind'] = values['kind'];
         } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('kind')) {
             this['kind'] = Metrics_queryQuerySpec.propInfo['kind'].default;
+        } else {
+            this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
         } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('api-version')) {
             this['api-version'] = Metrics_queryQuerySpec.propInfo['api-version'].default;
+        } else {
+            this['api-version'] = null
         }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
         } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('name')) {
             this['name'] = Metrics_queryQuerySpec.propInfo['name'].default;
+        } else {
+            this['name'] = null
         }
         if (values) {
-            this['selector'].setValues(values['selector']);
+            this['selector'].setValues(values['selector'], fillDefaults);
+        } else {
+            this['selector'].setValues(null, fillDefaults);
         }
         if (values && values['fields'] != null) {
             this['fields'] = values['fields'];
         } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('fields')) {
             this['fields'] = [ Metrics_queryQuerySpec.propInfo['fields'].default];
+        } else {
+            this['fields'] = [];
         }
         if (values && values['function'] != null) {
             this['function'] = values['function'];
         } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('function')) {
             this['function'] = <Metrics_queryQuerySpec_function>  Metrics_queryQuerySpec.propInfo['function'].default;
+        } else {
+            this['function'] = null
         }
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
         } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('start-time')) {
             this['start-time'] = Metrics_queryQuerySpec.propInfo['start-time'].default;
+        } else {
+            this['start-time'] = null
         }
         if (values && values['end-time'] != null) {
             this['end-time'] = values['end-time'];
         } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('end-time')) {
             this['end-time'] = Metrics_queryQuerySpec.propInfo['end-time'].default;
+        } else {
+            this['end-time'] = null
         }
         if (values && values['group-by-time'] != null) {
             this['group-by-time'] = values['group-by-time'];
         } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('group-by-time')) {
             this['group-by-time'] = Metrics_queryQuerySpec.propInfo['group-by-time'].default;
+        } else {
+            this['group-by-time'] = null
         }
         if (values && values['group-by-field'] != null) {
             this['group-by-field'] = values['group-by-field'];
         } else if (fillDefaults && Metrics_queryQuerySpec.hasDefaultValue('group-by-field')) {
             this['group-by-field'] = Metrics_queryQuerySpec.propInfo['group-by-field'].default;
+        } else {
+            this['group-by-field'] = null
         }
         if (values) {
-            this['pagination'].setValues(values['pagination']);
+            this['pagination'].setValues(values['pagination'], fillDefaults);
+        } else {
+            this['pagination'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -180,14 +202,14 @@ export class Metrics_queryQuerySpec extends BaseModel implements IMetrics_queryQ
             this._formGroup = new FormGroup({
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
-                'name': new FormControl(this['name']),
+                'name': new FormControl(this['name'], [required, minLengthValidator(1), maxLengthValidator(100), ]),
                 'selector': this['selector'].$formGroup,
                 'fields': new FormControl(this['fields']),
                 'function': new FormControl(this['function'], [required, enumValidator(Metrics_queryQuerySpec_function), ]),
                 'start-time': new FormControl(this['start-time']),
                 'end-time': new FormControl(this['end-time']),
                 'group-by-time': new FormControl(this['group-by-time']),
-                'group-by-field': new FormControl(this['group-by-field']),
+                'group-by-field': new FormControl(this['group-by-field'], [patternValidator('^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, ., :'), ]),
                 'pagination': this['pagination'].$formGroup,
             });
         }

@@ -73,21 +73,29 @@ export class SecuritySGPolicyPropagationStatus extends BaseModel implements ISec
             this['generation-id'] = values['generation-id'];
         } else if (fillDefaults && SecuritySGPolicyPropagationStatus.hasDefaultValue('generation-id')) {
             this['generation-id'] = SecuritySGPolicyPropagationStatus.propInfo['generation-id'].default;
+        } else {
+            this['generation-id'] = null
         }
         if (values && values['updated'] != null) {
             this['updated'] = values['updated'];
         } else if (fillDefaults && SecuritySGPolicyPropagationStatus.hasDefaultValue('updated')) {
             this['updated'] = SecuritySGPolicyPropagationStatus.propInfo['updated'].default;
+        } else {
+            this['updated'] = null
         }
         if (values && values['pending'] != null) {
             this['pending'] = values['pending'];
         } else if (fillDefaults && SecuritySGPolicyPropagationStatus.hasDefaultValue('pending')) {
             this['pending'] = SecuritySGPolicyPropagationStatus.propInfo['pending'].default;
+        } else {
+            this['pending'] = null
         }
         if (values && values['min-version'] != null) {
             this['min-version'] = values['min-version'];
         } else if (fillDefaults && SecuritySGPolicyPropagationStatus.hasDefaultValue('min-version')) {
             this['min-version'] = SecuritySGPolicyPropagationStatus.propInfo['min-version'].default;
+        } else {
+            this['min-version'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

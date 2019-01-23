@@ -11,8 +11,8 @@ import { ClusterSmartNICCondition_type,  ClusterSmartNICCondition_type_uihint  }
 import { ClusterSmartNICCondition_status,  ClusterSmartNICCondition_status_uihint  } from './enums';
 
 export interface IClusterSmartNICCondition {
-    'type'?: ClusterSmartNICCondition_type;
-    'status'?: ClusterSmartNICCondition_status;
+    'type': ClusterSmartNICCondition_type;
+    'status': ClusterSmartNICCondition_status;
     'last-transition-time'?: string;
     'reason'?: string;
     'message'?: string;
@@ -84,26 +84,36 @@ export class ClusterSmartNICCondition extends BaseModel implements IClusterSmart
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterSmartNICCondition.hasDefaultValue('type')) {
             this['type'] = <ClusterSmartNICCondition_type>  ClusterSmartNICCondition.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
         } else if (fillDefaults && ClusterSmartNICCondition.hasDefaultValue('status')) {
             this['status'] = <ClusterSmartNICCondition_status>  ClusterSmartNICCondition.propInfo['status'].default;
+        } else {
+            this['status'] = null
         }
         if (values && values['last-transition-time'] != null) {
             this['last-transition-time'] = values['last-transition-time'];
         } else if (fillDefaults && ClusterSmartNICCondition.hasDefaultValue('last-transition-time')) {
             this['last-transition-time'] = ClusterSmartNICCondition.propInfo['last-transition-time'].default;
+        } else {
+            this['last-transition-time'] = null
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
         } else if (fillDefaults && ClusterSmartNICCondition.hasDefaultValue('reason')) {
             this['reason'] = ClusterSmartNICCondition.propInfo['reason'].default;
+        } else {
+            this['reason'] = null
         }
         if (values && values['message'] != null) {
             this['message'] = values['message'];
         } else if (fillDefaults && ClusterSmartNICCondition.hasDefaultValue('message')) {
             this['message'] = ClusterSmartNICCondition.propInfo['message'].default;
+        } else {
+            this['message'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

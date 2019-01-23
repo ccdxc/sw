@@ -3218,6 +3218,10 @@
     },
     "workloadWorkloadIntfSpec": {
       "type": "object",
+      "required": [
+        "micro-seg-vlan",
+        "external-vlan"
+      ],
       "properties": {
         "mac-address": {
           "type": "string",
@@ -3290,6 +3294,9 @@
     },
     "workloadWorkloadSpec": {
       "type": "object",
+      "required": [
+        "host-name"
+      ],
       "properties": {
         "host-name": {
           "type": "string",

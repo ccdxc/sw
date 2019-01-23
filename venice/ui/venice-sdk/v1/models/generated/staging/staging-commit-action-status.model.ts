@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { StagingCommitActionStatus_status,  } from './enums';
 
 export interface IStagingCommitActionStatus {
-    'status'?: StagingCommitActionStatus_status;
+    'status': StagingCommitActionStatus_status;
     'reason'?: string;
 }
 
@@ -64,11 +64,15 @@ export class StagingCommitActionStatus extends BaseModel implements IStagingComm
             this['status'] = values['status'];
         } else if (fillDefaults && StagingCommitActionStatus.hasDefaultValue('status')) {
             this['status'] = <StagingCommitActionStatus_status>  StagingCommitActionStatus.propInfo['status'].default;
+        } else {
+            this['status'] = null
         }
         if (values && values['reason'] != null) {
             this['reason'] = values['reason'];
         } else if (fillDefaults && StagingCommitActionStatus.hasDefaultValue('reason')) {
             this['reason'] = StagingCommitActionStatus.propInfo['reason'].default;
+        } else {
+            this['reason'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

@@ -83,31 +83,43 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
             this['leader'] = values['leader'];
         } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('leader')) {
             this['leader'] = ClusterClusterStatus.propInfo['leader'].default;
+        } else {
+            this['leader'] = null
         }
         if (values && values['last-leader-transition-time'] != null) {
             this['last-leader-transition-time'] = values['last-leader-transition-time'];
         } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('last-leader-transition-time')) {
             this['last-leader-transition-time'] = ClusterClusterStatus.propInfo['last-leader-transition-time'].default;
+        } else {
+            this['last-leader-transition-time'] = null
         }
         if (values && values['build-version'] != null) {
             this['build-version'] = values['build-version'];
         } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('build-version')) {
             this['build-version'] = ClusterClusterStatus.propInfo['build-version'].default;
+        } else {
+            this['build-version'] = null
         }
         if (values && values['vcs-commit'] != null) {
             this['vcs-commit'] = values['vcs-commit'];
         } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('vcs-commit')) {
             this['vcs-commit'] = ClusterClusterStatus.propInfo['vcs-commit'].default;
+        } else {
+            this['vcs-commit'] = null
         }
         if (values && values['build-date'] != null) {
             this['build-date'] = values['build-date'];
         } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('build-date')) {
             this['build-date'] = ClusterClusterStatus.propInfo['build-date'].default;
+        } else {
+            this['build-date'] = null
         }
         if (values && values['auth-bootstrapped'] != null) {
             this['auth-bootstrapped'] = values['auth-bootstrapped'];
         } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('auth-bootstrapped')) {
             this['auth-bootstrapped'] = ClusterClusterStatus.propInfo['auth-bootstrapped'].default;
+        } else {
+            this['auth-bootstrapped'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

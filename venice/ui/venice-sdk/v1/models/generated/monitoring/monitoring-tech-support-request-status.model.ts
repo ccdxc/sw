@@ -11,7 +11,7 @@ import { MonitoringTechSupportRequestStatus_status,  } from './enums';
 
 export interface IMonitoringTechSupportRequestStatus {
     'instance-id'?: string;
-    'status'?: MonitoringTechSupportRequestStatus_status;
+    'status': MonitoringTechSupportRequestStatus_status;
     'ctrlr-node-results'?: object;
     'smartnic-node-results'?: object;
 }
@@ -74,21 +74,29 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
             this['instance-id'] = values['instance-id'];
         } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('instance-id')) {
             this['instance-id'] = MonitoringTechSupportRequestStatus.propInfo['instance-id'].default;
+        } else {
+            this['instance-id'] = null
         }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
         } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('status')) {
             this['status'] = <MonitoringTechSupportRequestStatus_status>  MonitoringTechSupportRequestStatus.propInfo['status'].default;
+        } else {
+            this['status'] = null
         }
         if (values && values['ctrlr-node-results'] != null) {
             this['ctrlr-node-results'] = values['ctrlr-node-results'];
         } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('ctrlr-node-results')) {
             this['ctrlr-node-results'] = MonitoringTechSupportRequestStatus.propInfo['ctrlr-node-results'].default;
+        } else {
+            this['ctrlr-node-results'] = null
         }
         if (values && values['smartnic-node-results'] != null) {
             this['smartnic-node-results'] = values['smartnic-node-results'];
         } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('smartnic-node-results')) {
             this['smartnic-node-results'] = MonitoringTechSupportRequestStatus.propInfo['smartnic-node-results'].default;
+        } else {
+            this['smartnic-node-results'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

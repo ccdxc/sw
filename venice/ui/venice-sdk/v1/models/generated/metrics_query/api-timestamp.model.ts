@@ -61,11 +61,15 @@ export class ApiTimestamp extends BaseModel implements IApiTimestamp {
             this['seconds'] = values['seconds'];
         } else if (fillDefaults && ApiTimestamp.hasDefaultValue('seconds')) {
             this['seconds'] = ApiTimestamp.propInfo['seconds'].default;
+        } else {
+            this['seconds'] = null
         }
         if (values && values['nanos'] != null) {
             this['nanos'] = values['nanos'];
         } else if (fillDefaults && ApiTimestamp.hasDefaultValue('nanos')) {
             this['nanos'] = ApiTimestamp.propInfo['nanos'].default;
+        } else {
+            this['nanos'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

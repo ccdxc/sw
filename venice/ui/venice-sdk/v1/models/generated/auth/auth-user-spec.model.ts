@@ -13,7 +13,7 @@ export interface IAuthUserSpec {
     'fullname'?: string;
     'email'?: string;
     'password'?: string;
-    'type'?: AuthUserSpec_type;
+    'type': AuthUserSpec_type;
 }
 
 
@@ -74,21 +74,29 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
             this['fullname'] = values['fullname'];
         } else if (fillDefaults && AuthUserSpec.hasDefaultValue('fullname')) {
             this['fullname'] = AuthUserSpec.propInfo['fullname'].default;
+        } else {
+            this['fullname'] = null
         }
         if (values && values['email'] != null) {
             this['email'] = values['email'];
         } else if (fillDefaults && AuthUserSpec.hasDefaultValue('email')) {
             this['email'] = AuthUserSpec.propInfo['email'].default;
+        } else {
+            this['email'] = null
         }
         if (values && values['password'] != null) {
             this['password'] = values['password'];
         } else if (fillDefaults && AuthUserSpec.hasDefaultValue('password')) {
             this['password'] = AuthUserSpec.propInfo['password'].default;
+        } else {
+            this['password'] = null
         }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && AuthUserSpec.hasDefaultValue('type')) {
             this['type'] = <AuthUserSpec_type>  AuthUserSpec.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

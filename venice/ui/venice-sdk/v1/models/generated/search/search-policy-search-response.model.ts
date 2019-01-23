@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 import { SearchPolicySearchResponse_status,  } from './enums';
 
 export interface ISearchPolicySearchResponse {
-    'status'?: SearchPolicySearchResponse_status;
+    'status': SearchPolicySearchResponse_status;
     'results'?: object;
 }
 
@@ -66,11 +66,15 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
             this['status'] = values['status'];
         } else if (fillDefaults && SearchPolicySearchResponse.hasDefaultValue('status')) {
             this['status'] = <SearchPolicySearchResponse_status>  SearchPolicySearchResponse.propInfo['status'].default;
+        } else {
+            this['status'] = null
         }
         if (values && values['results'] != null) {
             this['results'] = values['results'];
         } else if (fillDefaults && SearchPolicySearchResponse.hasDefaultValue('results')) {
             this['results'] = SearchPolicySearchResponse.propInfo['results'].default;
+        } else {
+            this['results'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

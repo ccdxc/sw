@@ -63,9 +63,13 @@ export class RolloutAutoMsgRolloutWatchHelperWatchEvent extends BaseModel implem
             this['type'] = values['type'];
         } else if (fillDefaults && RolloutAutoMsgRolloutWatchHelperWatchEvent.hasDefaultValue('type')) {
             this['type'] = RolloutAutoMsgRolloutWatchHelperWatchEvent.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['object'].setValues(values['object']);
+            this['object'].setValues(values['object'], fillDefaults);
+        } else {
+            this['object'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

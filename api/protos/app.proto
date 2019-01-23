@@ -17,7 +17,7 @@ message AppSpec {
     // list of (protocol, ports) pairs
     repeated ProtoPort ProtoPorts  = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "proto-ports,omitempty"];
     // Timeout specifies for how long the connection be kept before removing the flow entry, specified in string as '200s', '5m', etc.
-    string Timeout                          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "Duration()"];
+    string Timeout                          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "EmptyOrDuration(0,0)"];
     // ALG configuration if specified
     ALG    ALG                              = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "alg,omitempty"];
 }
@@ -75,7 +75,7 @@ message Sunrpc {
     // RPC Program identifier
     string ProgramID        = 1 [(gogoproto.jsontag) = "program-id,omitempty"];
     // Timeout for this program id
-    string Timeout          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "Duration()"];
+    string Timeout          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "EmptyOrDuration(0,0)"];
 }
 
 // MSRPC ALG configuration
@@ -83,7 +83,7 @@ message Msrpc {
     // MSRPC Program identifier
     string ProgramUUID      = 1 [(gogoproto.jsontag) = "program-uuid,omitempty"];
     // Timeout for this program id
-    string Timeout          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "Duration()"];
+    string Timeout          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "EmptyOrDuration(0,0)"];
 }
 
 // AppStatus - status part of App object

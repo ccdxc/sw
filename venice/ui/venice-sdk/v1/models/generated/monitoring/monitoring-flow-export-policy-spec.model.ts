@@ -12,15 +12,15 @@ import { MonitoringMatchRule, IMonitoringMatchRule } from './monitoring-match-ru
 import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
 
 export interface IMonitoringFlowExportPolicySpec {
-    'interval'?: string;
-    'format'?: MonitoringFlowExportPolicySpec_format;
+    'interval': string;
+    'format': MonitoringFlowExportPolicySpec_format;
     'match-rules'?: Array<IMonitoringMatchRule>;
     'exports'?: Array<IMonitoringExportConfig>;
 }
 
 
 export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonitoringFlowExportPolicySpec {
-    /** should be a valid time duration
+    /** should be a valid time duration between 1s and 24h0m0s
      */
     'interval': string = null;
     'format': MonitoringFlowExportPolicySpec_format = null;
@@ -29,7 +29,8 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     'exports': Array<MonitoringExportConfig> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'interval': {
-            description:  'should be a valid time duration ',
+            default: '10s',
+            description:  'should be a valid time duration between 1s and 24h0m0s ',
             hint:  '2h',
             type: 'string'
         },
@@ -84,17 +85,25 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
             this['interval'] = values['interval'];
         } else if (fillDefaults && MonitoringFlowExportPolicySpec.hasDefaultValue('interval')) {
             this['interval'] = MonitoringFlowExportPolicySpec.propInfo['interval'].default;
+        } else {
+            this['interval'] = null
         }
         if (values && values['format'] != null) {
             this['format'] = values['format'];
         } else if (fillDefaults && MonitoringFlowExportPolicySpec.hasDefaultValue('format')) {
             this['format'] = <MonitoringFlowExportPolicySpec_format>  MonitoringFlowExportPolicySpec.propInfo['format'].default;
+        } else {
+            this['format'] = null
         }
         if (values) {
             this.fillModelArray<MonitoringMatchRule>(this, 'match-rules', values['match-rules'], MonitoringMatchRule);
+        } else {
+            this['match-rules'] = [];
         }
         if (values) {
             this.fillModelArray<MonitoringExportConfig>(this, 'exports', values['exports'], MonitoringExportConfig);
+        } else {
+            this['exports'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -103,7 +112,7 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'interval': new FormControl(this['interval']),
+                'interval': new FormControl(this['interval'], [required, ]),
                 'format': new FormControl(this['format'], [required, enumValidator(MonitoringFlowExportPolicySpec_format), ]),
                 'match-rules': new FormArray([]),
                 'exports': new FormArray([]),

@@ -15,7 +15,7 @@ import { SecuritySunrpc, ISecuritySunrpc } from './security-sunrpc.model';
 import { SecurityMsrpc, ISecurityMsrpc } from './security-msrpc.model';
 
 export interface ISecurityALG {
-    'type'?: SecurityALG_type;
+    'type': SecurityALG_type;
     'icmp'?: ISecurityIcmp;
     'dns'?: ISecurityDns;
     'ftp'?: ISecurityFtp;
@@ -94,21 +94,33 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
             this['type'] = values['type'];
         } else if (fillDefaults && SecurityALG.hasDefaultValue('type')) {
             this['type'] = <SecurityALG_type>  SecurityALG.propInfo['type'].default;
+        } else {
+            this['type'] = null
         }
         if (values) {
-            this['icmp'].setValues(values['icmp']);
+            this['icmp'].setValues(values['icmp'], fillDefaults);
+        } else {
+            this['icmp'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['dns'].setValues(values['dns']);
+            this['dns'].setValues(values['dns'], fillDefaults);
+        } else {
+            this['dns'].setValues(null, fillDefaults);
         }
         if (values) {
-            this['ftp'].setValues(values['ftp']);
+            this['ftp'].setValues(values['ftp'], fillDefaults);
+        } else {
+            this['ftp'].setValues(null, fillDefaults);
         }
         if (values) {
             this.fillModelArray<SecuritySunrpc>(this, 'sunrpc', values['sunrpc'], SecuritySunrpc);
+        } else {
+            this['sunrpc'] = [];
         }
         if (values) {
             this.fillModelArray<SecurityMsrpc>(this, 'msrpc', values['msrpc'], SecurityMsrpc);
+        } else {
+            this['msrpc'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

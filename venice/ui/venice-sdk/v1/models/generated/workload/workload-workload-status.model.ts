@@ -56,6 +56,8 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<WorkloadWorkloadIntfStatus>(this, 'interfaces', values['interfaces'], WorkloadWorkloadIntfStatus);
+        } else {
+            this['interfaces'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

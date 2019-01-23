@@ -56,6 +56,8 @@ export class RolloutAutoMsgRolloutWatchHelper extends BaseModel implements IRoll
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<RolloutAutoMsgRolloutWatchHelperWatchEvent>(this, 'events', values['events'], RolloutAutoMsgRolloutWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

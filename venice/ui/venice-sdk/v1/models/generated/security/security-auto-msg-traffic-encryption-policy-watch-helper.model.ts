@@ -56,6 +56,8 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

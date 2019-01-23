@@ -65,11 +65,15 @@ export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
             this['program-uuid'] = values['program-uuid'];
         } else if (fillDefaults && SecurityMsrpc.hasDefaultValue('program-uuid')) {
             this['program-uuid'] = SecurityMsrpc.propInfo['program-uuid'].default;
+        } else {
+            this['program-uuid'] = null
         }
         if (values && values['timeout'] != null) {
             this['timeout'] = values['timeout'];
         } else if (fillDefaults && SecurityMsrpc.hasDefaultValue('timeout')) {
             this['timeout'] = SecurityMsrpc.propInfo['timeout'].default;
+        } else {
+            this['timeout'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }

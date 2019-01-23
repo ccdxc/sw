@@ -10,8 +10,8 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 export interface IWorkloadWorkloadIntfSpec {
     'mac-address'?: string;
-    'micro-seg-vlan'?: number;
-    'external-vlan'?: number;
+    'micro-seg-vlan': number;
+    'external-vlan': number;
     'ip-addresses'?: Array<string>;
 }
 
@@ -78,21 +78,29 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
             this['mac-address'] = values['mac-address'];
         } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('mac-address')) {
             this['mac-address'] = WorkloadWorkloadIntfSpec.propInfo['mac-address'].default;
+        } else {
+            this['mac-address'] = null
         }
         if (values && values['micro-seg-vlan'] != null) {
             this['micro-seg-vlan'] = values['micro-seg-vlan'];
         } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('micro-seg-vlan')) {
             this['micro-seg-vlan'] = WorkloadWorkloadIntfSpec.propInfo['micro-seg-vlan'].default;
+        } else {
+            this['micro-seg-vlan'] = null
         }
         if (values && values['external-vlan'] != null) {
             this['external-vlan'] = values['external-vlan'];
         } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('external-vlan')) {
             this['external-vlan'] = WorkloadWorkloadIntfSpec.propInfo['external-vlan'].default;
+        } else {
+            this['external-vlan'] = null
         }
         if (values && values['ip-addresses'] != null) {
             this['ip-addresses'] = values['ip-addresses'];
         } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('ip-addresses')) {
             this['ip-addresses'] = [ WorkloadWorkloadIntfSpec.propInfo['ip-addresses'].default];
+        } else {
+            this['ip-addresses'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

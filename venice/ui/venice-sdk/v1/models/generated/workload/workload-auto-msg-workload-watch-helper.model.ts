@@ -56,6 +56,8 @@ export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWo
     setValues(values: any, fillDefaults = true): void {
         if (values) {
             this.fillModelArray<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>(this, 'events', values['events'], WorkloadAutoMsgWorkloadWatchHelperWatchEvent);
+        } else {
+            this['events'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }

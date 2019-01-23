@@ -63,9 +63,13 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
             this['url'] = values['url'];
         } else if (fillDefaults && AuthLdapServer.hasDefaultValue('url')) {
             this['url'] = AuthLdapServer.propInfo['url'].default;
+        } else {
+            this['url'] = null
         }
         if (values) {
-            this['tls-options'].setValues(values['tls-options']);
+            this['tls-options'].setValues(values['tls-options'], fillDefaults);
+        } else {
+            this['tls-options'].setValues(null, fillDefaults);
         }
         this.setFormGroupValuesToBeModelValues();
     }

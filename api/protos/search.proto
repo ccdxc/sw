@@ -144,7 +144,7 @@ message TextRequirement {
   // AND of words or phrases to be matched
   // The max text-string length is 256 bytes
   repeated string Text = 1 [(gogoproto.jsontag) = "text,omitempty",
-                            (venice.check) = "StrLen(0,256)"];
+                            (venice.check) = "EmptyOrStrLen(0,256)"];
 }
 
 // SearchQuery contains various search clauses, modifiers and its associated requirements.
@@ -180,13 +180,13 @@ message SearchQuery {
   // OR of Categories to be matched, AND and Exclude are not supported for this type
   // The max category string length is 64 bytes
   repeated string Categories        = 2 [(venice.check) = "StrEnum(Category.Type)",
-                                         (venice.check) = "StrLen(0,64)",
+                                         (venice.check) = "EmptyOrStrLen(0,64)",
                                          (gogoproto.jsontag) = "categories,omitempty"];
 
   // OR of Kinds to be matched, AND and Exclude are not supported for this type
   // The max kind string length is 64 bytes
   repeated string Kinds             = 3 [(venice.check) = "StrEnum(Kind.Type)",
-                                         (venice.check) = "StrLen(0,64)",
+                                         (venice.check) = "EmptyOrStrLen(0,64)",
                                          (gogoproto.jsontag) = "kinds,omitempty"];
 
   // Field Selector is AND of field.Requirements
@@ -349,7 +349,7 @@ message SearchRequest {
     // and pass the SearchRequest in a GET/POST Body
     // The max query-string length is 256 bytes
     string QueryString          = 1 [(gogoproto.jsontag) = "query-string,omitempty",
-                                     (venice.check) = "StrLen(0,256)"];
+                                     (venice.check) = "EmptyOrStrLen(0,256)"];
 
     // From represents the start offset (zero based), used in paginated search requests
     // The results returned would be in the range [From ... From+MaxResults-1]
@@ -369,7 +369,7 @@ message SearchRequest {
     // to be sorted by, For eg: "meta.name"
     // This can be specified as URI parameter.
     string SortBy               = 4 [(gogoproto.jsontag) = "sort-by,omitempty",
-                                     (venice.check) = "StrLen(0,256)"];
+                                     (venice.check) = "EmptyOrStrLen(0,256)"];
 
     // Query Mode 
     string Mode                 = 5 [(venice.check) = "StrEnum(SearchRequest.RequestMode)",
