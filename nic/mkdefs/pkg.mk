@@ -82,12 +82,3 @@ endif
 .PHONY: release-clean
 release-clean:
 	@rm -rf obj/release
-
-BRCTR="registry.test.pensando.io:5000/pensando/buildroot/dmichaels:20190117.1401"
-.PHONY: firmware
-firmware: package
-    ifeq (${ARCH},aarch64)
-		docker run --rm -v ${TOPDIR}:/sw ${BRCTR} sh -c 'make BUILD_SW_VERSION=${BUILD_SW_VERSION} BUILD_BR_VERSION=${BUILD_BR_VERSION} BR2_ROOTFS_OVERLAY="board/pensando/capri/rootfs-overlay /sw/fake_root_target/aarch64" && cp /buildroot/output/images/naples_fw.tar /sw/nic'
-    else
-		$(error Target 'firmware' is only valid for ARCH=aarch64)
-    endif
