@@ -1061,8 +1061,8 @@ process_feedback:
 
 table_error:
     // TODO add LIF stats
-    phvwr.e        p.common.p4_intr_global_drop, 1
-    nop // Exit Slot
+    phvwr          p.common.p4_intr_global_drop, 1
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_phv_drop_mpu_only_process, r0) // Exit Slot
 
 max_recirc_cnt_err:
     //a packet which went thru too many recirculations had to be terminated and qp had to 

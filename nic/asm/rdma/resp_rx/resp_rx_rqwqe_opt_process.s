@@ -43,7 +43,8 @@ struct rqwqe_base_t d;
 .align
 resp_rx_rqwqe_opt_process:
 
-    add         NUM_SGES, d.num_sges, r0
+    bcf         [c2 | c3 | c7], table_error
+    add         NUM_SGES, d.num_sges, r0 // BD Slot
     beqi        NUM_SGES, 0, nak
     // num_valid_sges == 2 ?
     seq         c1, NUM_SGES, 2   //BD Slot
@@ -242,6 +243,31 @@ nak:
     CAPRI_SET_TABLE_1_VALID(0)
 
     phvwr          p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
+
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+
+table_error:
+    // set err_dis_qp and completion flags
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_COMPLETION
+    and         GLOBAL_FLAGS, GLOBAL_FLAGS, ~(RESP_RX_FLAG_ACK_REQ)
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
+
+    phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1
+    // TODO update lif_error_id if needed
+
+    // update stats
+    phvwrpair.c2   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_table_error), 1
+
+    phvwrpair.c3   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_phv_intrinsic_error), 1
+
+    phvwrpair.c7   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_table_resp_error), 1
+
+    CAPRI_SET_TABLE_0_VALID(0)
 
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
