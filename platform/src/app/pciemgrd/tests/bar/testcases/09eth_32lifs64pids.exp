@@ -76,13 +76,13 @@ BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
 +----------------------------------------------------------------+
 |   6         5         4         3         2         1          |
 |3210987654321098765432109876543210987654321098765432109876543210|
-|............00000000000000000000001000100lllllpppppp......ttt...|
+|............00000000000000000000001000100vvvvvpppppp......ttt...|
 +----------------------------------------------------------------+
-vfe(V4) 22 vfs(V3) 23 prt_size(V2) 18 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
-BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
-2   38   mem   -wl   8M    0x0000022000000 0:02:00.0 0  
-    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
-    8    db64  --    64    0x0000022000000 LIF=4
+vfe(V4) 22 vfs(V3) 18 prt_size(V2) 18 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
+BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID VF      
+2   38   mem   -wl   8M    0x0000022000000 0:02:00.0 0   4-35
+    PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR    VFSTRIDE
+    8    db64  --    64    0x0000022000000 LIF=4         64      
 
 idx  id type rw p:bb:dd.f baraddr    size  vf    lif   prt   pid  qtype prts
 32    0 mem  -w 0:02:00.0 0x11111000 4                                  1   
@@ -91,7 +91,7 @@ idx  id type rw p:bb:dd.f baraddr    size  vf    lif   prt   pid  qtype prts
 35    0 mem  rw 0:02:00.0 0x11114000 128   6:5                          5   
 36    0 mem  rw 0:02:00.0 0x11117000 64    5:4                          6   
 37    0 mem  r- 0:02:00.0 0x11118000 8                                  7   
-38    0 mem  -w 0:02:00.0 0x22000000 8M         22:18 22:18 17:12  5:3  8   
+38    0 mem  -w 0:02:00.0 0x22000000 8M   22:18             17:12  5:3  8   
 idx  x                y                pmr
 32   0000001111100209 0fffffeeeeeffdf0 20020003 00208400 00004000 00000000
 33   0000001111000009 0fffffeeeee001f0 40040003 00c35800 00004000 00000000
@@ -99,4 +99,4 @@ idx  x                y                pmr
 35   0000001111400009 0fffffeeeebf81f0 200a0003 0c714a00 00004000 00000000
 36   0000001111700009 0fffffeeee8fc1f0 200c0003 0c610800 00004000 00000000
 37   0000001111800009 0fffffeeee7ffbf0 200e0003 0030c600 00004000 00000000
-38   0000002200000209 0fffffdd800001f0 20100003 0175e400 c6004000 00000001
+38   0000002200000209 0fffffdd800001f0 20100043 8d74a400 c6004000 00000001

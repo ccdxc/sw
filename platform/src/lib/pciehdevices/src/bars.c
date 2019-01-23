@@ -205,16 +205,11 @@ add_common_doorbell_bar(pciehbars_t *pbars,
      * At least 1 lif even if none specified.
      * Then we roundup to a power-of-2 because we are using an
      * adjacent group of db bar address bits for this field.
-     * If nlifs is not an even power-of-2 then we'll reduce
-     * nlifs2 until lower than nlifs.  We don't want to be able
-     * to access more than the provisioned number of lifs through this
-     * bar so if lifs is not an even power-of-2 we'll (silently)
-     * reduce.  XXX assert?
+     * If nlifs is not an even power-of-2 then we'll cap to
+     * nlifs in the vf_params fields below.
      */
     nlifs = MAX(pres->lifc, 1);
     nlifs2 = roundup_power2(nlifs);
-    /*assert(nlifs2 == nlifs);*/
-    while (nlifs2 > nlifs) nlifs2 >>= 1;
 
     /*
      * At least 1 pid even if none specified.
@@ -223,7 +218,8 @@ add_common_doorbell_bar(pciehbars_t *pbars,
      * It is ok to roundup above "npids"--we'll consume more
      * bar space, but if the doorbell is using pidcheck then
      * we won't be able to access the doorbell from the
-     * unconfigured pids.
+     * unconfigured pids because the driver will never give
+     * permission to access from the unused pids.
      */
     npids = MAX(pres->npids, 1);
     npids2 = roundup_power2(npids);
@@ -236,8 +232,8 @@ add_common_doorbell_bar(pciehbars_t *pbars,
     pmt_bar_enc(&preg.pmt,
                 pres->port,
                 PMT_TYPE_MEM,
-                pbar.size,  /* pmtsize */
-                pbar.size,  /* prtsize */
+                pbar.size,       /* pmtsize */
+                npids2 * 0x1000, /* prtsize */
                 PMT_BARF_WR);
     pmt_bar_set_qtype(&preg.pmt, 3, 0x7);
 
@@ -245,11 +241,17 @@ add_common_doorbell_bar(pciehbars_t *pbars,
      * Default page size 4k=1<<12, then
      * lif bits start above pid bits.
      */
-    bitb = 12 + ffs(npids2) - 1;
-    bitc = ffs(nlifs2) - 1;
-    pmt_bar_setr_lif(&preg.pmt, bitb, bitc);
+    if (nlifs > 1) {
+        bitb = 12 + ffs(npids2) - 1;
+        bitc = ffs(nlifs2) - 1;
+        pmt_bar_set_vfparams(&preg.pmt, bitb, bitc, pres->lifb, nlifs);
+    }
 
     prt_db64_enc(&prt, pres->lifb, upd);
+    if (nlifs > 1) {
+        /* if multiple lifs, set stride between lif db's */
+        prt_db_set_vfstride(&prt, 1 << 6);
+    }
     pciehbarreg_add_prt(&preg, &prt);
 
     pciehbar_add_reg(&pbar, &preg);

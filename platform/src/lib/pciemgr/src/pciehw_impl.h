@@ -24,7 +24,7 @@ typedef struct pciehw_s pciehw_t;
 
 #define PCIEHW_NPORTS   8
 #define PCIEHW_NBUS     16
-#define PCIEHW_NDEVS    16
+#define PCIEHW_NDEVS    48
 #define PCIEHW_CFGSZ    1024
 #define PCIEHW_NROMSK   128
 #define PCIEHW_ROMSKSZ  (PCIEHW_CFGSZ / sizeof (u_int32_t))
