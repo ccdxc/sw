@@ -391,7 +391,7 @@ main(int argc, char *argv[])
            sdk::lib::PAL_RET_OK);
 #endif
 
-    csr_init();
+    sdk::platform::capri::csr_init();
     ret = sdk::platform::mputrace_handle_options(argc, argv);
 
     return ret;

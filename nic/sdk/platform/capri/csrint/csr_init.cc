@@ -12,6 +12,10 @@
 #include "nic/asic/capri/model/utils/cap_csr_py_if.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 
+namespace sdk {
+namespace platform {
+namespace capri {
+
 void
 csr_init ()
 {
@@ -27,3 +31,7 @@ csr_init ()
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
     register_chip_inst("cap0", 0, 0);
 }
+
+} // end namespace capri
+} // end namespace platform
+} // end namespace sdk

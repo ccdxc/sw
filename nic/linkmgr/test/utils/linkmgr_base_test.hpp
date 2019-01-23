@@ -80,7 +80,7 @@ linkmgr_initialize (const char c_file[])
     sdk_cfg.cfg_path = cfg_path;
     sdk_cfg.catalog  = catalog;
 
-    csr_init();
+    sdk::platform::capri::csr_init();
 
     ret_hal = linkmgr::linkmgr_init(&sdk_cfg);
     if (ret_hal != HAL_RET_OK) {
