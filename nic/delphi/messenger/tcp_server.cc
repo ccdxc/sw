@@ -78,7 +78,7 @@ error TcpServer::Listen(int lis_port) {
     my_addr.sin_family = AF_INET ;
     my_addr.sin_port = htons(lis_port);
     memset(&(my_addr.sin_zero), 0, 8);
-    my_addr.sin_addr.s_addr = INADDR_ANY ;
+    my_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     // bind and listen to the port
     if (bind(hsock, (sockaddr*)&my_addr, sizeof(my_addr)) == -1 ){
