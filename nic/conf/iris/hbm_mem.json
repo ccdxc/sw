@@ -239,12 +239,12 @@
         {
             "_comment": "4K Objs of (9216 + 128)",
             "name": "big-tx-objs",
-            "size": "149504K"
+            "size": "74752K"
         },
         {
             "_comment": "4K Objs of (9216 + 128)",
             "name": "big-rx-objs",
-            "size": "149504K"
+            "size": "74752K"
         },
         {
             "name": "key-mem",
@@ -332,7 +332,7 @@
         },
         {
             "name": "rdma",
-            "size": "131072K",
+            "size": "280576K",
             "cache": "p4plus-all"
         },
         {
