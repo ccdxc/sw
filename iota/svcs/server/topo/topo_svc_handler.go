@@ -376,6 +376,9 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("AddWorkloads found to unprovisioned node : %v", w.NodeName)
 			return req, nil
 		}
+		if node.WorkloadInfo == nil {
+			node.WorkloadInfo = &iota.WorkloadMsg{WorkloadOp: iota.Op_ADD, Workloads: []*iota.Workload{}}
+		}
 		node.WorkloadInfo.Workloads = append(node.WorkloadInfo.Workloads, w)
 		added := false
 		for _, workloadNode := range workloadNodes {
@@ -395,13 +398,7 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 		for _, node := range workloadNodes {
 			node := node
 			pool.Go(func() error {
-				for _, w := range node.WorkloadInfo.Workloads {
-					if err := node.AddWorkload(w); err != nil {
-						return err
-					}
-				}
-				return nil
-
+				return node.AddWorkloads(node.WorkloadInfo)
 			})
 
 		}
@@ -410,8 +407,8 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 
 	resetAddWorkloads := func() {
 		for _, node := range workloadNodes {
-			node.WorkloadInfo.Workloads = nil
-			node.WorkloadResp.Workloads = nil
+			node.WorkloadInfo = nil
+			node.WorkloadResp = nil
 		}
 	}
 
@@ -422,6 +419,7 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | AddWorkloads |AddWorkloads Call Failed. %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		return req, nil
 	} else {
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	}
@@ -468,6 +466,10 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("DeleteWorkloads found to unprovisioned node : %v", w.NodeName)
 			return req, nil
 		}
+		if node.WorkloadInfo == nil {
+			node.WorkloadInfo = &iota.WorkloadMsg{WorkloadOp: iota.Op_ADD, Workloads: []*iota.Workload{}}
+			node.WorkloadResp = &iota.WorkloadMsg{WorkloadOp: iota.Op_ADD, Workloads: []*iota.Workload{}}
+		}
 		node.WorkloadInfo.Workloads = append(node.WorkloadInfo.Workloads, w)
 		added := false
 		for _, workloadNode := range workloadNodes {
@@ -502,8 +504,8 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 
 	resetDeleteWorkloads := func() {
 		for _, node := range workloadNodes {
-			node.WorkloadInfo.Workloads = nil
-			node.WorkloadResp.Workloads = nil
+			node.WorkloadInfo = nil
+			node.WorkloadResp = nil
 		}
 	}
 

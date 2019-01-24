@@ -9,12 +9,12 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// AddWorkload adds a workload on the node
-func (n *TestNode) AddWorkload(w *iota.Workload) error {
+// AddWorkloads adds a workload on the node
+func (n *TestNode) AddWorkloads(w *iota.WorkloadMsg) error {
 	log.Infof("TOPO SVC | DEBUG | STATE | WORKLOAD: %v", w)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
-	resp, err := n.AgentClient.AddWorkload(ctx, w)
+	resp, err := n.AgentClient.AddWorkloads(ctx, w)
 	log.Infof("TOPO SVC | DEBUG | AddWorkload Agent . Received Response Msg: %v", resp)
 
 	if err != nil {
@@ -22,12 +22,12 @@ func (n *TestNode) AddWorkload(w *iota.Workload) error {
 		return err
 	}
 
-	if resp.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		log.Errorf("Adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.WorkloadStatus.ApiStatus)
-		return fmt.Errorf("adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.WorkloadStatus.ApiStatus)
+	if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		log.Errorf("Adding workloads on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
+		return fmt.Errorf("adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
 	}
 
-	n.WorkloadResp.Workloads = append(n.WorkloadResp.Workloads, resp)
+	n.WorkloadResp = resp
 	return nil
 }
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/sync/errgroup"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
@@ -56,67 +57,93 @@ func (naples *esxHwNode) setupWorkload(wload Workload.Workload, in *iota.Workloa
 }
 
 // AddWorkload brings up a workload type on a given node
-func (naples *esxHwNode) AddWorkload(in *iota.Workload) (*iota.Workload, error) {
+func (naples *esxHwNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 
-	if _, ok := iota.WorkloadType_name[(int32)(in.GetWorkloadType())]; !ok {
-		msg := fmt.Sprintf("Workload Type %d not supported", in.GetWorkloadType())
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}
-		return resp, nil
+	addWorkload := func(in *iota.Workload) *iota.Workload {
+
+		if _, ok := iota.WorkloadType_name[(int32)(in.GetWorkloadType())]; !ok {
+			msg := fmt.Sprintf("Workload Type %d not supported", in.GetWorkloadType())
+			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}
+			return resp
+		}
+
+		wloadKey := in.GetWorkloadName()
+		var iotaWload iotaWorkload
+		naples.logger.Printf("Adding workload : %s", in.GetWorkloadName())
+		if item, ok := naples.entityMap.Load(wloadKey); ok {
+			msg := fmt.Sprintf("Trying to add workload %s, which already exists ", wloadKey)
+			naples.logger.Error(msg)
+			resp, _ := naples.configureWorkload(item.(iotaWorkload).workload, in)
+			return resp
+		}
+
+		wlType, ok := workloadTypeMap[in.GetWorkloadType()]
+		if !ok {
+			msg := fmt.Sprintf("Workload type %v not found", in.GetWorkloadType())
+			naples.logger.Error(msg)
+			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}
+			return resp
+		}
+
+		iotaWload.workload = Workload.NewWorkload(wlType, in.GetWorkloadName(), naples.name, naples.logger)
+
+		if iotaWload.workload == nil {
+			msg := fmt.Sprintf("Trying to add workload of invalid type : %v", wlType)
+			naples.logger.Error(msg)
+			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}
+			return resp
+		}
+
+		naples.logger.Printf("Setting up workload : %s", in.GetWorkloadName())
+		resp, err := naples.setupWorkload(iotaWload.workload, in)
+
+		if err != nil || resp.GetWorkloadStatus().GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
+			iotaWload.workload.TearDown()
+			return resp
+		}
+
+		if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], Common.EsxDataVMInterface,
+			0); err != nil {
+			msg := fmt.Sprintf("Error in sending arp probe : %s", err.Error())
+			naples.logger.Error(msg)
+			resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+			naples.entityMap.Delete(in.GetWorkloadName())
+			iotaWload.workload.TearDown()
+			return resp
+		}
+
+		iotaWload.workloadMsg = in
+		naples.entityMap.Store(wloadKey, iotaWload)
+		naples.logger.Printf("Added workload : %s (%s)", in.GetWorkloadName(), in.GetWorkloadType())
+		return resp
 	}
 
-	wloadKey := in.GetWorkloadName()
-	var iotaWload iotaWorkload
-	naples.logger.Printf("Adding workload : %s", in.GetWorkloadName())
-	if iotaWload, ok := naples.entityMap[wloadKey]; ok {
-		msg := fmt.Sprintf("Trying to add workload %s, which already exists ", wloadKey)
-		naples.logger.Error(msg)
-		return naples.configureWorkload(iotaWload.workload, in)
+	pool, _ := errgroup.WithContext(context.Background())
+	for index, wload := range in.Workloads {
+		wload := wload
+		index := index
+		pool.Go(func() error {
+			resp := addWorkload(wload)
+			in.Workloads[index] = resp
+			return nil
+		})
 	}
 
-	wlType, ok := workloadTypeMap[in.GetWorkloadType()]
-	if !ok {
-		msg := fmt.Sprintf("Workload type %v not found", in.GetWorkloadType())
-		naples.logger.Error(msg)
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}
-		return resp, nil
+	pool.Wait()
+	for _, wload := range in.Workloads {
+		if wload.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			in.ApiResponse = wload.WorkloadStatus
+			return in, errors.New(wload.WorkloadStatus.ErrorMsg)
+		}
 	}
+	in.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
 
-	iotaWload.workload = Workload.NewWorkload(wlType, in.GetWorkloadName(), naples.name, naples.logger)
-
-	if iotaWload.workload == nil {
-		msg := fmt.Sprintf("Trying to add workload of invalid type : %v", wlType)
-		naples.logger.Error(msg)
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}
-		return resp, nil
-	}
-
-	naples.logger.Printf("Setting up workload : %s", in.GetWorkloadName())
-	resp, err := naples.setupWorkload(iotaWload.workload, in)
-
-	if err != nil || resp.GetWorkloadStatus().GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
-		iotaWload.workload.TearDown()
-		return resp, nil
-	}
-
-	if err := iotaWload.workload.SendArpProbe(strings.Split(in.GetIpPrefix(), "/")[0], Common.EsxDataVMInterface,
-		0); err != nil {
-		msg := fmt.Sprintf("Error in sending arp probe : %s", err.Error())
-		naples.logger.Error(msg)
-		resp = &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
-		delete(naples.entityMap, in.GetWorkloadName())
-		iotaWload.workload.TearDown()
-		return resp, err
-	}
-
-	iotaWload.workloadMsg = in
-	naples.entityMap[wloadKey] = iotaWload
-	naples.logger.Printf("Added workload : %s (%s)", in.GetWorkloadName(), in.GetWorkloadType())
-	return resp, nil
+	return in, nil
 }
 
 func (naples *esxHwNode) getDataIntfs() ([]string, error) {
 
-	hostEntity, ok := naples.entityMap[naples.esxHostEntityKey]
+	hostEntity, ok := naples.entityMap.Load(naples.esxHostEntityKey)
 	if !ok {
 		return nil, errors.Errorf("Host entity not added : %s", naples.esxHostEntityKey)
 	}
@@ -126,7 +153,7 @@ func (naples *esxHwNode) getDataIntfs() ([]string, error) {
 		return nil, err
 	}
 	fullCmd := []string{cmd}
-	cmdResp, _, _ := hostEntity.workload.RunCommand(fullCmd, "", 0, false, true)
+	cmdResp, _, _ := hostEntity.(iotaWorkload).workload.RunCommand(fullCmd, "", 0, false, true)
 	naples.logger.Printf("naples data intf find out %s", cmdResp.Stdout)
 	naples.logger.Printf("naples data intf find err %s", cmdResp.Stderr)
 	naples.logger.Printf("naples data intf find  exit code %d", cmdResp.ExitCode)
@@ -252,7 +279,7 @@ func (naples *esxHwNode) addHostEntity(in *iota.Node) error {
 				naples.logger.Errorf("Naples ESX Hw entity type add failed %v", err.Error())
 				return err
 			}
-			naples.entityMap[naples.esxHostEntityKey] = iotaWorkload{workload: wload}
+			naples.entityMap.Store(naples.esxHostEntityKey, iotaWorkload{workload: wload})
 
 			//Add Naples host too
 			wload = Workload.NewWorkload(Workload.WorkloadTypeBareMetal, entityEntry.GetName(), naples.name, naples.logger)
@@ -261,7 +288,7 @@ func (naples *esxHwNode) addHostEntity(in *iota.Node) error {
 				naples.logger.Errorf("Naples Hw entity type add failed %v", err.Error())
 				return err
 			}
-			naples.entityMap[naples.hostEntityKey] = iotaWorkload{workload: wload}
+			naples.entityMap.Store(naples.hostEntityKey, iotaWorkload{workload: wload})
 			wDir := Common.DstIotaEntitiesDir + "/" + entityEntry.GetName()
 			wload.SetBaseDir(wDir)
 		}
@@ -290,7 +317,7 @@ func (naples *esxHwNode) addNaplesEntity(in *iota.Node) error {
 			wload.SetBaseDir(wDir)
 
 			if wload != nil {
-				naples.entityMap[entityEntry.GetName()] = iotaWorkload{workload: wload}
+				naples.entityMap.Store(entityEntry.GetName(), iotaWorkload{workload: wload})
 			}
 		}
 	}

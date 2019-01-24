@@ -45,8 +45,8 @@ func (*StubService) DeleteNode(ctx context.Context, req *iota.Node) (*iota.Node,
 }
 
 // AddWorkload brings up a workload type on a given node
-func (*StubService) AddWorkload(ctx context.Context, req *iota.Workload) (*iota.Workload, error) {
-	resp := &iota.Workload{}
+func (*StubService) AddWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
+	resp := &iota.WorkloadMsg{}
 	return resp, nil
 }
 

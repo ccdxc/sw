@@ -144,6 +144,9 @@ func (n *TestNode) RestartNode() error {
 		return err
 	}
 
+	//Give it some time for node to stabalize
+	time.Sleep(5 * time.Second)
+
 	n.SSHClient = sshclient
 
 	return nil

@@ -9,11 +9,11 @@ while [[ "$#" > 0 ]]; do
 done
 
 rm -f /root/.ssh/known_hosts
-rm -rf /pensando
-mkdir /pensando
 chown vm:vm /pensando
 
 if [ -n "$cleanup" ]; then
+    rm -rf /pensando
+    mkdir /pensando
     driver_dir="/naples/drivers-linux-eth"
     if [ ! -d "$driver_dir" ]; then
         echo "Cleanup Failed. No driver dir: $driver_dir"
