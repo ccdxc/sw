@@ -25,6 +25,13 @@ var epShowCmd = &cobra.Command{
 	Run:   epShowCmdHandler,
 }
 
+var epShowBriefCmd = &cobra.Command{
+	Use:   "brief",
+	Short: "show endpoint information",
+	Long:  "show endpoint object information",
+	Run:   epShowBriefCmdHandler,
+}
+
 var epShowSpecCmd = &cobra.Command{
 	Use:   "spec",
 	Short: "show endpoint spec information",
@@ -48,6 +55,7 @@ var filterShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(epShowCmd)
+	epShowCmd.AddCommand(epShowBriefCmd)
 	epShowCmd.AddCommand(epShowSpecCmd)
 	epShowCmd.AddCommand(epShowStatusCmd)
 	epShowCmd.Flags().Bool("yaml", false, "Output in yaml")
@@ -99,6 +107,46 @@ func filterShowCmdHandler(cmd *cobra.Command, args []string) {
 		b, _ := yaml.Marshal(respType.Interface())
 		fmt.Println(string(b) + "\n")
 		fmt.Println("---")
+	}
+}
+
+func epShowBriefCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		return
+	}
+	defer c.Close()
+
+	client := halproto.NewEndpointClient(c.ClientConn)
+
+	var req *halproto.EndpointGetRequest
+	// Get all Endpoints
+	req = &halproto.EndpointGetRequest{}
+	epGetReqMsg := &halproto.EndpointGetRequestMsg{
+		Request: []*halproto.EndpointGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.EndpointGet(context.Background(), epGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Endpoint failed. %v\n", err)
+		return
+	}
+
+	// Print Header
+	epShowBriefHeader(cmd, args)
+
+	ifIDToStr := ifGetAllStr()
+
+	// Print endpoints
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		epShowBriefOneResp(resp, ifIDToStr)
 	}
 }
 
@@ -290,6 +338,31 @@ func epDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	handleEpDetailShowCmd(cmd, nil)
+}
+
+func epShowBriefHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 50)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-24s%-32s\n",
+		"Vlan", "Mac", "Interface")
+	fmt.Println(hdrLine)
+}
+
+func epShowBriefOneResp(resp *halproto.EndpointGetResponse, ifIDToStr map[uint64]string) {
+	macStr := utils.MactoStr(resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetMacAddress())
+
+	var ifID uint64
+	ifID = resp.GetSpec().GetEndpointAttrs().GetInterfaceKeyHandle().GetInterfaceId()
+	ifIDStr := ifIDToStr[ifID]
+	l2segID := resp.GetSpec().GetKeyOrHandle().GetEndpointKey().GetL2Key().GetL2SegmentKeyHandle().GetSegmentId()
+	encap := l2segIDGetWireEncap(l2segID)
+	if encap == 8192 {
+		encap = 0
+	}
+
+	fmt.Printf("%-10d%-24s%-32s\n",
+		encap, macStr, ifIDStr)
 }
 
 func epShowHeader(cmd *cobra.Command, args []string) {

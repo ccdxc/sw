@@ -1047,6 +1047,10 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                sizeof(lif_clone->rss.indir));
     }
 
+    if (app_ctxt->name_changed) {
+        strcpy(lif_clone->name, spec->name().c_str());
+    }
+
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_lif_update_args_init(&args);
     args.lif                   = lif;
@@ -1369,6 +1373,12 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
             packet_filter().receive_all_multicast();
     }
 
+    if (strcmp(lif->name, spec->name().c_str())) {
+        HAL_TRACE_DEBUG("lif name change: {} => {}",
+                        lif->name, spec->name().c_str());
+        app_ctxt->name_changed = true;
+    }
+
     return ret;
 }
 
@@ -1445,7 +1455,8 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.pkt_filter_prom_changed ||
           app_ctxt.pkt_filter_bcast_changed ||
           app_ctxt.pkt_filter_allmc_changed ||
-          app_ctxt.pinned_uplink_changed)) {
+          app_ctxt.pinned_uplink_changed ||
+          app_ctxt.name_changed)) {
         HAL_TRACE_ERR("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
     }

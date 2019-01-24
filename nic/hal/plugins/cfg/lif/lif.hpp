@@ -23,7 +23,7 @@
 // Number of RSS indirection entries
 #define ETH_RSS_INDIR_LENGTH        128
 
-#define LIF_NAME_LEN 16
+#define LIF_NAME_LEN 32
 
 using intf::LifSpec;
 using intf::LifResponse;
@@ -140,6 +140,7 @@ typedef struct lif_update_app_ctxt_s {
     uint64_t     vlan_insert_en;
     hal_handle_t new_pinned_uplink;
     bool         rss_config_changed;
+    bool         name_changed:1;
 } __PACK__ lif_update_app_ctxt_t;
 
 #define HAL_MAX_LIFS                                 1024

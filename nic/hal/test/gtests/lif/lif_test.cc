@@ -199,11 +199,27 @@ TEST_F(lif_test, test5)
     hal_ret_t            ret;
     LifSpec spec;
     LifResponse rsp;
+    std::string name = "eth0";
 
     spec.mutable_key_or_handle()->set_lif_id(500);
     spec.set_hw_lif_id(15);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(spec, &rsp, NULL);
+    hal::hal_cfg_db_close();
+    printf("ret: %d\n", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update the name
+    spec.set_name("enp9s0");
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_update(spec, &rsp);
+    hal::hal_cfg_db_close();
+    printf("ret: %d\n", ret);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    spec.set_name("enp9s1");
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::lif_update(spec, &rsp);
     hal::hal_cfg_db_close();
     printf("ret: %d\n", ret);
     ASSERT_TRUE(ret == HAL_RET_OK);
