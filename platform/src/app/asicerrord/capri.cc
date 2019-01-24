@@ -293,7 +293,7 @@ CAPRI_INTR_KIND_BEGIN(sgeteintinfo, 17, SgeteintinfoMetrics)
 CAPRI_INTR_KIND_END(SgeteintinfoMetrics)
 
 CAPRI_INTR_KIND_BEGIN(sgempuinterr, 27, SgempuinterrMetrics)
-    CAPRI_INTR_KIND_FIELD(results_mismatch, 0, ERROR)
+    CAPRI_INTR_KIND_FIELD(results_mismatch, 0, INFO)
     CAPRI_INTR_KIND_FIELD(sdp_mem_uncorrectable, 1, ERROR)
     CAPRI_INTR_KIND_FIELD(sdp_mem_correctable, 2, ERROR)
     CAPRI_INTR_KIND_FIELD(illegal_op_0, 3, ERROR)
@@ -412,7 +412,7 @@ CAPRI_INTR_KIND_BEGIN(pbpbcintwrite, 14, PbpbcintwriteMetrics)
     CAPRI_INTR_KIND_FIELD(out_of_credit, 1, FATAL)
     CAPRI_INTR_KIND_FIELD(port_disabled, 2, FATAL)
     CAPRI_INTR_KIND_FIELD(truncation, 3, FATAL)
-    CAPRI_INTR_KIND_FIELD(intrinsic_drop, 4, FATAL)
+    CAPRI_INTR_KIND_FIELD(intrinsic_drop, 4, INFO)
     CAPRI_INTR_KIND_FIELD(out_of_cells1, 5, FATAL)
     CAPRI_INTR_KIND_FIELD(enq_err, 6, FATAL)
     CAPRI_INTR_KIND_FIELD(tail_drop_cpu, 7, FATAL)
@@ -608,7 +608,6 @@ void poll_capri_intr() {
     CAPRI_INTR_READ(mcmchintmcmetrics, 5, MC5_MCH_INT_MC_INTREG);
     CAPRI_INTR_READ(mcmchintmcmetrics, 6, MC6_MCH_INT_MC_INTREG);
     CAPRI_INTR_READ(mcmchintmcmetrics, 7, MC7_MCH_INT_MC_INTREG);
-    FLUSH();
 }
 
 void clear_capri_intr() {

@@ -66,14 +66,14 @@ class rotating_file_sink SPDLOG_FINAL : public base_sink < Mutex >
 {
 public:
     rotating_file_sink(const filename_t &base_filename,
-                       std::size_t max_size, std::size_t max_files) :
+                       std::size_t max_size, std::size_t max_files, bool truncate=true) :
         _base_filename(base_filename),
         _max_size(max_size),
         _max_files(max_files),
         _current_size(0),
         _file_helper()
     {
-        _file_helper.open(calc_filename(_base_filename, 0));
+        _file_helper.open(calc_filename(_base_filename, 0), truncate);
         _current_size = _file_helper.size(); //expensive. called only once
     }
 
