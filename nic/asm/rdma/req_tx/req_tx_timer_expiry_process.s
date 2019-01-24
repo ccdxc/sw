@@ -11,6 +11,7 @@ struct sqcb2_t d;
 %%
     .param rdma_num_clock_ticks_per_us
     .param req_tx_stats_process
+    .param req_tx_write_back_process
 
 .align
 req_tx_timer_expiry_process:
@@ -44,15 +45,15 @@ rnr_timeout:
     blt            r1, r2, restart_timer
 #endif
  
+    // Check rnr_retry_ctr for RNR
+    seq            c1, d.rnr_retry_ctr, 0 // Branch Delay Slot
+    bcf            [c1], rnr_retry_err
+    phvwrpair.!c1  CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout_rnr), 1 //BD Slot
+
     // Infinite retries if retry_ctr is set to 7
     seq            c1, d.rnr_retry_ctr, 7 // Branch Delay Slot
     tblsub.!c1     d.rnr_retry_ctr, 1
-
-    // Check rnr_retry_ctr for RNR
-    seq            c1, d.rnr_retry_ctr, 0 // Branch Delay Slot
-    bcf            [c1], err_completion
-    phvwrpair.!c1  CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout), 1, \
-                   CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout_rnr), 1 //BD Slot
 
     b              process_expiry
     nop
@@ -89,15 +90,15 @@ local_ack_timeout:
     blt            r1, r2, restart_timer
 #endif
 
+    // Check err_retry_ctr for retransmit timeout
+    seq            c1, d.err_retry_ctr, 0 // Branch Delay Slot
+    bcf            [c1], local_ack_retry_err
+    phvwrpair.!c1  CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout_local_ack), 1 //BD Slot
+
     // Infinite retries if retry_ctr is set to 7
     seq            c1, d.err_retry_ctr, 7 // Branch Delay Slot
     tblsub.!c1     d.err_retry_ctr, 1
-
-    // Check err_retry_ctr for retransmit timeout
-    seq            c1, d.err_retry_ctr, 0 // Branch Delay Slot
-    bcf            [c1], err_completion
-    phvwrpair.!c1  CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout), 1, \
-                   CAPRI_PHV_FIELD(TO_S7_STATS_P, timeout_local_ack), 1 //BD Slot
 
 process_expiry:
     // send timer_expiry feedback msg to RxDMA so that RxDMA can
@@ -141,10 +142,45 @@ restart_timer:
     nop.e
     nop
 
+rnr_retry_err:
+    phvwrpair    CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_disabled), 1, \
+                 CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_dis_rnr_retry_exceed), 1
+    b              err_completion
+    phvwrpair    p.{rdma_feedback.completion.status, rdma_feedback.completion.error,rdma_feedback.completion.err_qp_instantly}, \
+                     ((CQ_STATUS_RNR_RETRY_EXCEEDED << 2) | (1 << 1) | 1), \
+                 p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                     ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_RETRY_EXCEED_ERR_OFFSET))
+
+local_ack_retry_err:
+    phvwrpair    CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_disabled), 1, \
+                 CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_dis_err_retry_exceed), 1
+    phvwrpair    p.{rdma_feedback.completion.status, rdma_feedback.completion.error,rdma_feedback.completion.err_qp_instantly}, \
+                     ((CQ_STATUS_RETRY_EXCEEDED << 2) | (1 << 1) | 1), \
+                 p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                     ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_RETRY_EXCEED_ERR_OFFSET))
+
 err_completion:
-    // TODO post err completion
-    phvwr.e        p.common.p4_intr_global_drop, 1
+    // DMA commands for generating error-completion to RxDMA
+    phvwr          p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK
+    add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
+    phvwrp         r1, 0, CAPRI_SIZEOF_RANGE(struct req_tx_phv_t, p4_intr_global, p4_to_p4plus), r0
+    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_ERR_FEEDBACK)
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, p4_intr_global, p4_to_p4plus, 2)
+    DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, rdma_feedback, rdma_feedback, 1)
+
+    phvwrpair      p.p4_intr_global.tm_iport, TM_PORT_INGRESS, p.p4_intr_global.tm_oport, TM_PORT_DMA
+    phvwrpair      p.p4_intr_global.tm_iq, 0, p.p4_intr_global.lif, K_GLOBAL_LIF
+    SQCB0_ADDR_GET(r1)
+    phvwrpair      p.p4_intr_rxdma.intr_qid, K_GLOBAL_QID, p.p4_intr_rxdma.intr_qstate_addr, r1
+    phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
+
+    phvwrpair      p.p4_intr_rxdma.intr_qtype, K_GLOBAL_QTYPE, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
+    phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
+    phvwri         p.p4_to_p4plus.table0_valid, 1
+    DMA_SET_END_OF_PKT_END_OF_CMDS(DMA_CMD_PHV2PKT_T, r6)
+
     CAPRI_SET_TABLE_2_VALID(0)
+    CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
     
 spurious_expiry:
     tblwr          d.timer_on, 0

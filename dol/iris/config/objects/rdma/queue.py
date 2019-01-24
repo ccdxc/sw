@@ -551,7 +551,10 @@ class RdmaSQstate(Packet):
         BitField("qp_err_dis_table_error", 0, 1),
         BitField("qp_err_dis_phv_intrinsic_error", 0, 1),
         BitField("qp_err_dis_table_resp_error", 0, 1),
-        BitField("qp_err_dis_rsvd", 0, 30),
+        BitField("qp_err_dis_inv_optype", 0, 1),
+        BitField("qp_err_dis_err_retry_exceed", 0, 1),
+        BitField("qp_err_dis_rnr_retry_exceed", 0, 1),
+        BitField("qp_err_dis_rsvd", 0, 27),
         BitField("sqcb4", 0, 48),
 
         #SQCB5

@@ -1104,6 +1104,26 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_ACK_TIMEOUT_RETRY_EXCEED
+        enable  : True
+        package : test.rdma
+        module  : req_tx_ack_timeout_retry_exceed
+        spec    : req_tx_ack_timeout_retry_exceed.testspec
+        ignore  : False
+        selectors:
+            maxrdmasessions: 1
+
+    - module:
+        name    : RDMA_TX_RNR_RETRY_EXCEED
+        enable  : True
+        package : test.rdma
+        module  : req_tx_rnr_retry_exceed
+        spec    : req_tx_rnr_retry_exceed.testspec
+        ignore  : False
+        selectors:
+            maxrdmasessions: 1
+
+    - module:
         name    : RDMA_RX_SEND_ONLY_ARM_EQ
         enable  : True
         package : test.rdma

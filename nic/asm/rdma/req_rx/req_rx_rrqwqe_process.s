@@ -181,12 +181,12 @@ rnr:
     DMA_HBM_PHV2MEM_SETUP(r6, rnr_timeout, rnr_timeout, r3)
     DMA_SET_END_OF_CMDS(DMA_CMD_PHV2MEM_T, r6)
 
+    phvwr          CAPRI_PHV_RANGE(TO_S7_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_RNR_RETRY_ERR_OFFSET))
+
     phvwrpair.e    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, rexmit_psn), K_BTH_PSN, \
                    CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, msn), r2
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
-
-    phvwr          CAPRI_PHV_RANGE(TO_S7_P, lif_error_id_vld, lif_error_id), \
-                    ((1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_RX_RNR_RETRY_ERR_OFFSET))
 
 read_or_atomic_or_implicit_nak:
     ARE_ALL_FLAGS_SET(c3, r5, REQ_RX_FLAG_FIRST) // Branch Delay Slot
