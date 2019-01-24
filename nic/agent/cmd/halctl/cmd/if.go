@@ -335,6 +335,47 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 }
 
+func ifGetAllStr() map[uint64]string {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	defer c.Close()
+
+	var req *halproto.InterfaceGetRequest
+	req = &halproto.InterfaceGetRequest{}
+
+	ifGetReqMsg := &halproto.InterfaceGetRequestMsg{
+		Request: []*halproto.InterfaceGetRequest{req},
+	}
+
+	var m map[uint64]string
+	m = make(map[uint64]string)
+
+	// HAL call
+	respMsg, err := client.InterfaceGet(context.Background(), ifGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting if failed. %v\n", err)
+		return m
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			return m
+		}
+
+		id := resp.GetSpec().GetKeyOrHandle().GetInterfaceId()
+		m[id] = ifRespToStr(resp)
+	}
+
+	return m
+}
+
 func ifGetStrFromID(ifID []uint64) (int, []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
@@ -524,6 +565,32 @@ func ifShowOneResp(resp *halproto.InterfaceGetResponse) {
 		resp.GetStatus().GetIfHandle(),
 		ifTypeToStr(resp.GetSpec().GetType()))
 	fmt.Printf("\n")
+}
+
+func ifRespToStr(resp *halproto.InterfaceGetResponse) string {
+	switch resp.GetSpec().GetType() {
+	case halproto.IfType_IF_TYPE_ENIC:
+		// Get name from Lif
+		lifID := resp.GetSpec().GetIfEnicInfo().GetLifKeyOrHandle().GetLifId()
+		return lifIDGetName(lifID)
+	case halproto.IfType_IF_TYPE_UPLINK:
+		return fmt.Sprintf("Uplink-%d",
+			resp.GetSpec().GetIfUplinkInfo().GetPortNum())
+	case halproto.IfType_IF_TYPE_UPLINK_PC:
+		return fmt.Sprintf("UplinkPC-%d",
+			resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	case halproto.IfType_IF_TYPE_TUNNEL:
+		return fmt.Sprintf("Tunnel-%d",
+			resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	case halproto.IfType_IF_TYPE_CPU:
+		return fmt.Sprintf("CPU-%d",
+			resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	case halproto.IfType_IF_TYPE_APP_REDIR:
+		return fmt.Sprintf("AppRedir-%d",
+			resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	default:
+		return "Invalid"
+	}
 }
 
 func ifTypeToStr(ifType halproto.IfType) string {

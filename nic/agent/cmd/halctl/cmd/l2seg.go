@@ -453,6 +453,47 @@ func l2segEPdShowOneResp(resp *halproto.L2SegmentGetResponse) {
 	}
 }
 
+func l2segIDGetWireEncap(id uint64) uint32 {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewL2SegmentClient(c.ClientConn)
+
+	defer c.Close()
+
+	var req *halproto.L2SegmentGetRequest
+	req = &halproto.L2SegmentGetRequest{
+		KeyOrHandle: &halproto.L2SegmentKeyHandle{
+			KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
+				SegmentId: id,
+			},
+		},
+	}
+
+	l2segGetReqMsg := &halproto.L2SegmentGetRequestMsg{
+		Request: []*halproto.L2SegmentGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.L2SegmentGet(context.Background(), l2segGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting L2Seg failed. %v\n", err)
+		return 0
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		return resp.GetSpec().GetWireEncap().GetEncapValue()
+	}
+	return 0
+}
+
 func bcastFwdPolToStr(pol halproto.BroadcastFwdPolicy) string {
 	switch pol {
 	case halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_DROP:

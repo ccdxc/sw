@@ -299,3 +299,46 @@ func pktfltrToStr(fltrType *halproto.PktFilter) string {
 
 	return str
 }
+
+func lifIDGetName(id uint64) string {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	defer c.Close()
+
+	var req *halproto.LifGetRequest
+	// Get specific lif
+	req = &halproto.LifGetRequest{
+		KeyOrHandle: &halproto.LifKeyHandle{
+			KeyOrHandle: &halproto.LifKeyHandle_LifId{
+				LifId: id,
+			},
+		},
+	}
+
+	lifGetReqMsg := &halproto.LifGetRequestMsg{
+		Request: []*halproto.LifGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.LifGet(context.Background(), lifGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Lif failed. %v\n", err)
+		return "Invalid"
+	}
+
+	// Traverse LIFs
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		return resp.GetSpec().GetName()
+	}
+	return "Invalid"
+}
