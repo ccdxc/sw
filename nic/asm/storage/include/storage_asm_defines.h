@@ -18,6 +18,8 @@
 #define SIZE_IN_BYTES(bits)             ((bits) / BITS_PER_BYTE)
 #endif
 
+#define STORAGE_PHYS_ADDR_HOST_POS      63
+
 // Macros for accessing fields in the storage K+I vector
 #define STORAGE_KIVEC0_W_NDX                    \
     k.storage_kivec0_w_ndx
@@ -216,6 +218,8 @@
     k.seq_kivec3_num_blks
 #define SEQ_KIVEC3_SGL_TUPLE_NO                 \
     k.seq_kivec3_sgl_tuple_no
+#define SEQ_KIVEC3_HDR_CHKSUM_OFFSET            \
+    k.{seq_kivec3_hdr_chksum_offset_sbit0_ebit0...seq_kivec3_hdr_chksum_offset_sbit1_ebit5}
 
 #define SEQ_KIVEC3XTS_DECR_BUF_ADDR             \
     k.seq_kivec3xts_decr_buf_addr
@@ -271,6 +275,12 @@
     k.seq_kivec5_next_db_action_barco_push
 #define SEQ_KIVEC5_DESC_VEC_PUSH_EN             \
     k.seq_kivec5_desc_vec_push_en
+#define SEQ_KIVEC5_INTEG_DATA0_WR_EN            \
+    k.seq_kivec5_integ_data0_wr_en
+#define SEQ_KIVEC5_INTEG_DATA_NULL_EN           \
+    k.seq_kivec5_integ_data_null_en
+#define SEQ_KIVEC5_DESC_DLEN_UPDATE_EN          \
+    k.seq_kivec5_desc_dlen_update_en
 
 #define SEQ_KIVEC5XTS_SRC_QADDR                 \
     k.{seq_kivec5xts_src_qaddr_sbit0_ebit7...seq_kivec5xts_src_qaddr_sbit32_ebit33}
@@ -360,6 +370,8 @@
     k.{seq_kivec9_metrics2_start...seq_kivec9_metrics2_end}
 #define SEQ_KIVEC9_LEN_UPDATES                  \
     k.seq_kivec9_len_updates
+#define SEQ_KIVEC9_INTEG_DATA0_WRITES           \
+    k.seq_kivec9_integ_data0_writes
 
 #define SEQ_KIVEC10_INTR_ADDR                   \
     k.seq_kivec10_intr_addr
@@ -1019,6 +1031,9 @@ struct capri_dma_cmd_mem2mem_t {
 #define DMA_PHV2MEM_FENCE(_dma_cmd_X)                                   \
    phvwri   p._dma_cmd_X##_dma_cmd_wr_fence, 1;                         \
 
+#define DMA_PHV2MEM_FENCE_FENCE(_dma_cmd_X)                             \
+   phvwrpair p._dma_cmd_X##_dma_cmd_fence_fence, 1,                     \
+             p._dma_cmd_X##_dma_cmd_wr_fence, 0;                        \
 
 // DMA address update: Specify the destination address for the DMA command
 // _addr is given in a register

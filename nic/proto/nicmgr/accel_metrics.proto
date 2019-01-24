@@ -55,6 +55,7 @@ message AccelSeqQueueMetrics {
     delphi.Counter AltDescsTaken             = 16;    // Times an alternate descriptor were used
     delphi.Counter AltBufsTaken              = 17;    // Times an alternate source buffer were used
     delphi.Counter LenUpdateReqs             = 18;    // CP/DC length updates after decrypt
+    delphi.Counter IntegData0Writes          = 19;    // Integrity data0 writes requested
 }
 
 message AccelHwRingKey {

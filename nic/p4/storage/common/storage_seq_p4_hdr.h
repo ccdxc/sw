@@ -79,7 +79,8 @@ header_type seq_q_state_metrics2_t {
 
     // CAUTION: order of fields must match seq_kivec9_t
     len_updates         : 64;
-    pad                 : 448;
+    integ_data0_writes  : 64;
+    pad                 : 384;
   }
 }
 
@@ -118,12 +119,13 @@ header_type seq_comp_status_desc0_t {
     barco_pndx_size : 3;    // log2(producer index size)
     barco_ring_size : 5;    // log2(ring_size)
     barco_num_descs : 10;   // initial number of descriptors to xfer to Barco
+    hdr_chksum_offset:6;    // Offset to chksum field in CP header
     status_addr0    : 64;   // Address where compression status will be placed
     status_addr1    : 64;   // 2nd address where compression status will be placed
     intr_addr       : 64;   // Address where interrupt needs to be written
     intr_data       : 32;   // Data that needs to be written for interrupt
     status_len      : 16;   // Length of the compression status
-    status_offset0  : 7;    // Add this to status_addr0 before DMA into status_addr1 
+    status_offset0  : 8;    // Add this to status_addr0 before DMA into status_addr1 
     status_dma_en   : 1;    // 1 => DMA status, 0 => don't DMA 
     next_db_en      : 1;    // 1 => Ring next sequencer doorbell, 0 => don't ring
     intr_en         : 1;    // 1 => Fire the MSI-X interrupt, 0 => don't fire
@@ -160,6 +162,9 @@ header_type seq_comp_status_desc1_t {
     sgl_pdma_alt_src_on_error:1;
     desc_vec_push_en:1;
     chain_alt_desc_on_error: 1;
+    integ_data0_wr_en: 1;
+    integ_data_null_en: 1;
+    desc_dlen_update_en: 1; // 1 => update comp desc datain_len
   }
 }
 
@@ -184,7 +189,9 @@ header_type seq_comp_status_t {
   fields {
     status          : 16;   // Valid bit and error status
     output_data_len : 16;   // Output bits
-    rsvd            : 32;   // Reserved
+    partial_data    : 32;
+    integ_data0     : 32;
+    integ_data1     : 32;
   }
 }
 
@@ -209,12 +216,13 @@ header_type seq_xts_status_desc0_t {
     barco_pndx_size : 3;    // log2(producer index size)
     barco_ring_size : 5;    // log2(ring_size)
     barco_num_descs : 10;   // log2(descriptor set size)
+    rsvd0           : 6;
     status_addr0    : 64;   // Address where HW crypto status was placed
     status_addr1    : 64;   // 2nd address where a copy of above status can be made
     intr_addr       : 64;   // Address where interrupt needs to be written
     intr_data       : 32;   // Data that needs to be written for interrupt
     status_len      : 16;   // Length of the crypto status
-    status_offset0  : 7;    // Add this to status_addr0 before DMA into status_addr1 
+    status_offset0  : 8;    // Add this to status_addr0 before DMA into status_addr1 
     status_dma_en   : 1;    // 1 => DMA status, 0 => don't DMA 
     next_db_en      : 1;    // 1 => Ring next sequencer doorbell, 0 => don't ring
     intr_en         : 1;    // 1 => Fire the MSI-X interrupt, 0 => don't fire
@@ -453,6 +461,7 @@ header_type seq_kivec3_t {
     last_blk_len        : 16;
     num_blks            : 5;
     sgl_tuple_no        : 2;
+    hdr_chksum_offset   : 6;
   }
 }
 
@@ -500,6 +509,9 @@ header_type seq_kivec5_t {
     sgl_pdma_alt_src_on_error: 1;
     desc_vec_push_en    : 1;
     chain_alt_desc_on_error: 1;
+    integ_data0_wr_en   : 1;
+    integ_data_null_en  : 1;
+    desc_dlen_update_en : 1;
   }
 }
 
@@ -581,6 +593,7 @@ header_type seq_kivec9_t {
     // CAUTION: order of fields must match seq_q_state_metrics2_t
     metrics2_start     : 1;
     len_updates        : 1;
+    integ_data0_writes : 1;
     metrics2_end       : 1;
   }
 }
@@ -646,6 +659,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.last_blk_len, kivec.last_blk_len);               \
   modify_field(scratch.num_blks, kivec.num_blks);                       \
   modify_field(scratch.sgl_tuple_no, kivec.sgl_tuple_no);               \
+  modify_field(scratch.hdr_chksum_offset, kivec.hdr_chksum_offset);     \
 
 #define SEQ_KIVEC3XTS_USE(scratch, kivec)                               \
   modify_field(scratch.decr_buf_addr, kivec.decr_buf_addr);             \
@@ -678,6 +692,9 @@ header_type seq_kivec10_t {
   modify_field(scratch.sgl_pdma_pad_only, kivec.sgl_pdma_pad_only);     \
   modify_field(scratch.sgl_pdma_alt_src_on_error, kivec.sgl_pdma_alt_src_on_error);\
   modify_field(scratch.desc_vec_push_en, kivec.desc_vec_push_en);       \
+  modify_field(scratch.integ_data0_wr_en, kivec.integ_data0_wr_en);     \
+  modify_field(scratch.integ_data_null_en, kivec.integ_data_null_en);   \
+  modify_field(scratch.desc_dlen_update_en, kivec.desc_dlen_update_en); \
 
 #define SEQ_KIVEC5XTS_USE(scratch, kivec)                               \
   modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
@@ -731,6 +748,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.metrics1_end, kivec.metrics1_end);               \
   modify_field(scratch.metrics2_start, kivec.metrics2_start);           \
   modify_field(scratch.len_updates, kivec.len_updates);                 \
+  modify_field(scratch.integ_data0_writes, kivec.integ_data0_writes);   \
   modify_field(scratch.metrics2_end, kivec.metrics2_end);               \
   
 #define SEQ_KIVEC10_USE(scratch, kivec)                                 \

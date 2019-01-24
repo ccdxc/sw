@@ -15,6 +15,8 @@ struct cp_header_format {
 	uint32_t total_hdr_sz;
 	uint16_t flags;
 	uint16_t type_mask;
+	uint16_t chksum_offs;
+	uint16_t chksum_len;
 	enum pnso_compression_type pnso_algo;
 	uint8_t *static_hdr;
 	struct pnso_compression_header_format fmt;
@@ -176,6 +178,37 @@ cpdc_desc_data_len_get_eval(enum pnso_service_type svc_type,
 	}
 
 	return data_len;
+}
+
+static inline volatile uint64_t *
+cpdc_cp_pad_cpl_addr_get(volatile struct cpdc_status_desc *status_desc)
+{
+	OSAL_ASSERT(sizeof(status_desc->csd_sha) >= sizeof(uint64_t));
+	return (uint64_t *)&status_desc->csd_sha[0];
+}
+
+static inline bool
+cpdc_cp_hdr_chksum_info_get(const struct service_info *svc_info,
+			    uint32_t *ret_chksum_offs,
+			    uint32_t *ret_chksum_len)
+{
+	struct cp_header_format *hdr_fmt;
+
+	*ret_chksum_offs = 0;
+	*ret_chksum_len = 0;
+	hdr_fmt = lookup_hdr_format(svc_info->hdr_fmt_idx, false);
+	if (hdr_fmt) {
+		*ret_chksum_offs = hdr_fmt->chksum_offs;
+		*ret_chksum_len = hdr_fmt->chksum_len;
+		return true;
+	}
+        return false;
+}
+
+static inline bool
+cpdc_desc_is_integ_data_wr_required(const struct cpdc_desc *desc)
+{
+	return desc->u.cd_bits.cc_integrity_type == CP_INTEGRITY_M_ADLER32;
 }
 
 #endif /* __PNSO_CPDC_CMN_H__ */

@@ -22,6 +22,7 @@
 #include "pnso_chain_params.h"
 #include "pnso_seq_ops.h"
 #include "pnso_cpdc.h"
+#include "pnso_cpdc_cmn.h"
 #include "pnso_init.h"
 
 /**
@@ -201,6 +202,8 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_status_offset_0",
 			chain_params->ccp_status_offset_0);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_hdr_chksum_offset",
+			chain_params->ccp_hdr_chksum_offset);
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_pad_boundary_shift",
 			chain_params->ccp_pad_boundary_shift);
 
@@ -233,6 +236,12 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 			cmd->ccpc_sgl_pdma_alt_src_on_error);
 	OSAL_LOG_DEBUG("%30s: %d", "ccpc_desc_vec_push_en",
 			cmd->ccpc_desc_vec_push_en);
+	OSAL_LOG_DEBUG("%30s: %d", "integ_data0_wr_en",
+			cmd->integ_data0_wr_en);
+	OSAL_LOG_DEBUG("%30s: %d", "integ_data_null_en",
+			cmd->integ_data_null_en);
+	OSAL_LOG_DEBUG("%30s: %d", "desc_dlen_update_en",
+			cmd->desc_dlen_update_en);
 }
 
 static void __attribute__((unused))
@@ -448,25 +457,27 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 				next_db_spec->nds_data);
 	}
 
-	write_bit_fields(seq_status_desc, 218, 64,
+	write_bit_fields(seq_status_desc, 218, 6,
+			chain_params->ccp_hdr_chksum_offset);
+	write_bit_fields(seq_status_desc, 224, 64,
 			chain_params->ccp_status_addr_0);
-	write_bit_fields(seq_status_desc, 282, 64,
+	write_bit_fields(seq_status_desc, 288, 64,
 			chain_params->ccp_status_addr_1);
-	write_bit_fields(seq_status_desc, 346, 64,
+	write_bit_fields(seq_status_desc, 352, 64,
 			chain_params->ccp_intr_addr);
-	write_bit_fields(seq_status_desc, 410, 32,
+	write_bit_fields(seq_status_desc, 416, 32,
 			chain_params->ccp_intr_data);
-	write_bit_fields(seq_status_desc, 442, 16,
+	write_bit_fields(seq_status_desc, 448, 16,
 			chain_params->ccp_status_len);
-	write_bit_fields(seq_status_desc, 458, 7,
+	write_bit_fields(seq_status_desc, 464, 8,
 			chain_params->ccp_status_offset_0);
-	write_bit_fields(seq_status_desc, 465, 1,
+	write_bit_fields(seq_status_desc, 472, 1,
 			cmd->ccpc_status_dma_en);
-	write_bit_fields(seq_status_desc, 466, 1,
+	write_bit_fields(seq_status_desc, 473, 1,
 			cmd->ccpc_next_doorbell_en);
-	write_bit_fields(seq_status_desc, 467, 1,
+	write_bit_fields(seq_status_desc, 474, 1,
 			cmd->ccpc_intr_en);
-	write_bit_fields(seq_status_desc, 468, 1,
+	write_bit_fields(seq_status_desc, 475, 1,
 			cmd->ccpc_next_db_action_ring_push);
 
 	// desc bytes 64-127
@@ -509,6 +520,12 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 			cmd->ccpc_desc_vec_push_en);
 	write_bit_fields(seq_status_desc, 512 + 478, 1,
 			cmd->ccpc_chain_alt_desc_on_error);
+	write_bit_fields(seq_status_desc, 512 + 479, 1,
+			cmd->integ_data0_wr_en);
+	write_bit_fields(seq_status_desc, 512 + 480, 1,
+			cmd->integ_data_null_en);
+	write_bit_fields(seq_status_desc, 512 + 481, 1,
+			cmd->desc_dlen_update_en);
 }
 
 static void
@@ -549,25 +566,25 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 				next_db_spec->nds_data);
 	}
 
-	write_bit_fields(seq_status_desc, 218, 64,
+	write_bit_fields(seq_status_desc, 224, 64,
 			chain_params->ccp_status_addr_0);
-	write_bit_fields(seq_status_desc, 282, 64,
+	write_bit_fields(seq_status_desc, 288, 64,
 			chain_params->ccp_status_addr_1);
-	write_bit_fields(seq_status_desc, 346, 64,
+	write_bit_fields(seq_status_desc, 352, 64,
 			chain_params->ccp_intr_addr);
-	write_bit_fields(seq_status_desc, 410, 32,
+	write_bit_fields(seq_status_desc, 416, 32,
 			chain_params->ccp_intr_data);
-	write_bit_fields(seq_status_desc, 442, 16,
+	write_bit_fields(seq_status_desc, 448, 16,
 			chain_params->ccp_status_len);
-	write_bit_fields(seq_status_desc, 458, 7,
+	write_bit_fields(seq_status_desc, 464, 8,
 			chain_params->ccp_status_offset_0);
-	write_bit_fields(seq_status_desc, 465, 1,
+	write_bit_fields(seq_status_desc, 472, 1,
 			cmd->ccpc_status_dma_en);
-	write_bit_fields(seq_status_desc, 466, 1,
+	write_bit_fields(seq_status_desc, 473, 1,
 			cmd->ccpc_next_doorbell_en);
-	write_bit_fields(seq_status_desc, 467, 1,
+	write_bit_fields(seq_status_desc, 474, 1,
 			cmd->ccpc_intr_en);
-	write_bit_fields(seq_status_desc, 468, 1,
+	write_bit_fields(seq_status_desc, 475, 1,
 			cmd->ccpc_next_db_action_ring_push);
 
 	// desc bytes 64-127
@@ -719,6 +736,27 @@ out:
 	OSAL_LOG_DEBUG("exit!");
 }
 
+static void
+hw_setup_cp_hdr_integ_data_wr(struct service_info *svc_info,
+		struct cpdc_desc *cp_desc,
+		struct cpdc_chain_params *chain_params)
+{
+	uint32_t chksum_offs;
+	uint32_t chksum_len;
+
+	if (chn_service_is_cp_hdr_insert_applic(svc_info) &&
+	    cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs, &chksum_len)) {
+
+		if (cpdc_desc_is_integ_data_wr_required(cp_desc) ||
+		    (chksum_len == 0)) {
+
+			chain_params->ccp_hdr_chksum_offset = chksum_offs;
+			chain_params->ccp_cmd.integ_data0_wr_en = 1;
+			chain_params->ccp_cmd.integ_data_null_en = (chksum_len == 0);
+		}
+	}
+}
+
 static pnso_error_t
 hw_setup_cp_chain_params(struct service_info *svc_info,
 		struct cpdc_desc *cp_desc,
@@ -781,6 +819,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
+	chain_params->ccp_comp_buf_addr = svc_info->si_dst_blist.blist->buffers[0].buf;
 
 	if (chn_service_has_interm_blist(svc_info)) {
 		iblist = &svc_info->si_iblist;
@@ -817,6 +856,8 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		chain_params->ccp_cmd.ccpc_chain_alt_desc_on_error = 1;
 		chain_params->ccp_cmd.ccpc_stop_chain_on_error = 0;
 	}
+
+	hw_setup_cp_hdr_integ_data_wr(svc_info, cp_desc, chain_params);
 
 	OSAL_LOG_INFO("ring: %s index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
 			ring->name, index, (uint64_t) cp_desc,
@@ -938,7 +979,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	/* skip sqs_seq_next_q/sqs_seq_next_status_q not needed for cp+pad */
 
 	chain_params->ccp_next_db_spec.nds_addr =
-		sonic_virt_to_phy(&status_desc->csd_integrity_data);
+		sonic_virt_to_phy((void *)cpdc_cp_pad_cpl_addr_get(status_desc));
 	chain_params->ccp_next_db_spec.nds_data =
 		cpu_to_be64(CPDC_PAD_STATUS_DATA);
 
@@ -980,6 +1021,8 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
 		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
 	}
+
+	hw_setup_cp_hdr_integ_data_wr(svc_info, cp_desc, chain_params);
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 
@@ -1035,6 +1078,9 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
+	chain_params->ccp_cmd.desc_dlen_update_en =
+		(svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) == 0;
+
 	/*
 	 * hash/chksum executes multiple requests, one per block; hence,
 	 * indicate to P4+ to push a vector of descriptors

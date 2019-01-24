@@ -488,6 +488,8 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
                                     chain_params.status_len);
     STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, status_offset0,
                                     chain_params.status_offset0);
+    STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, hdr_chksum_offset,
+                                    chain_params.hdr_chksum_offset);
     STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, status_dma_en,
                                     chain_params.status_dma_en);
     STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, next_db_en,
@@ -536,6 +538,12 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
                                     chain_params.desc_vec_push_en);
     STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, chain_alt_desc_on_error, 
                                     chain_params.chain_alt_desc_on_error);
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, integ_data0_wr_en, 
+                                    chain_params.integ_data0_wr_en);
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, integ_data_null_en, 
+                                    chain_params.integ_data_null_en);
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, desc_dlen_update_en, 
+                                    chain_params.desc_dlen_update_en);
     STORAGE_SEQ_CS_DESC1_PACK(seq_status_desc->read() + 
                               STORAGE_SEQ_P4PD_TABLE_BYTE_WIDTH_DFLT, desc1_action);
 

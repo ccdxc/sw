@@ -120,6 +120,14 @@ struct cpdc_sgl {
  *	100 to 111 - reserved
  *
  */
+#define CP_CHKSUM_ADLER32		0
+#define CP_CHKSUM_CRC32C		1
+
+#define CP_INTEGRITY_M_CRC64		0
+#define CP_INTEGRITY_CRC32C		1
+#define CP_INTEGRITY_ADLER32		2
+#define CP_INTEGRITY_M_ADLER32		3
+
 struct cpdc_cmd {
 	uint16_t cc_enabled:1;
 	uint16_t cc_header_present:1;

@@ -25,6 +25,11 @@ struct phv_ p;
 #define r_last_sgl_p                r7  // pointer to last SGL
 
 /*
+ * Registers reuse, pre SGL updates
+ */
+#define r_comp_desc_p               r7  // pointer to chain descrriptor
+
+/*
  * Registers reuse, post padding calculations
  */
 #define r_status                    r_last_sgl_p     // comp status, briefly used at beginning
@@ -57,10 +62,11 @@ storage_seq_comp_status_handler:
     add         r_status, d.status, r0
     smeqh       c4, r_status, 0xf000, 0x8000
     bcf         [!c4], comp_error
+    phvwr	p.integ_data0_len, d.integ_data0        // delay slot
    
     // Note: output_data_len contains compressed data length plus header length.
     
-    seq	        c3, SEQ_KIVEC5_DATA_LEN_FROM_DESC, 1        // delay slot
+    seq	        c3, SEQ_KIVEC5_DATA_LEN_FROM_DESC, 1
     cmov        r_comp_data_len, c3, SEQ_KIVEC5_DATA_LEN, d.output_data_len
     seq	        c3, r_comp_data_len, r0
     add.c3      r_comp_data_len, 65536, r0
@@ -78,6 +84,17 @@ storage_seq_comp_status_handler:
     sll         r_total_len, r_num_blks, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT
     sub         r_pad_len, r_total_len, r_comp_data_len
     sub         r_last_blk_len, r_pad_boundary, r_pad_len
+
+    // If requested, do in-stage datain_len update in the descriptor.
+    // This memory update must complete before storage_seq_barco_chain_action
+    // transfers the decriptor(s) to Barco.
+if0:
+    bbeq        SEQ_KIVEC5_DESC_DLEN_UPDATE_EN, 0, endif0
+    add         r_comp_desc_p, SEQ_KIVEC4_BARCO_DESC_ADDR, \
+                SIZE_IN_BYTES(offsetof(struct comp_desc_le_t, datain_len)) // delay slot
+    memwr.hx    r_comp_desc_p, r_total_len
+    wrfence
+endif0:    
 
     // In the per-block hash or encryption case, we now indicate to
     // storage_seq_barco_chain_action the correct number of descriptors.
@@ -215,9 +232,9 @@ endsw0:
     
 possible_sgl_pdma_xfer:
 
-    // PDMA compressed data
-    seq         c3, SEQ_KIVEC5_SGL_PDMA_EN, 1
-    bcf         [!c3], possible_barco_push
+    // PDMA compressed data and/or write integrity data to dest comp buffer
+    seq         c3, SEQ_KIVEC5_INTEG_DATA0_WR_EN, 0
+    bbeq.c3     SEQ_KIVEC5_SGL_PDMA_EN, 0, possible_barco_push
     phvwr.!c6   p.seq_kivec3_pad_len, r0        // delay slot
     bbeq        SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 0, sgl_pdma_xfer_full
     nop

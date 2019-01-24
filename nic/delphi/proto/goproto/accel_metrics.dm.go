@@ -59,6 +59,8 @@ type AccelSeqQueueMetrics struct {
 
 	LenUpdateReqs metrics.Counter
 
+	IntegData0Writes metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -104,6 +106,8 @@ func (mtr *AccelSeqQueueMetrics) Size() int {
 	sz += mtr.AltBufsTaken.Size()
 
 	sz += mtr.LenUpdateReqs.Size()
+
+	sz += mtr.IntegData0Writes.Size()
 
 	return sz
 }
@@ -164,6 +168,9 @@ func (mtr *AccelSeqQueueMetrics) Unmarshal() error {
 
 	mtr.LenUpdateReqs = mtr.metrics.GetCounter(offset)
 	offset += mtr.LenUpdateReqs.Size()
+
+	mtr.IntegData0Writes = mtr.metrics.GetCounter(offset)
+	offset += mtr.IntegData0Writes.Size()
 
 	return nil
 }
@@ -256,6 +263,11 @@ func (mtr *AccelSeqQueueMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.LenUpdateReqs.Size()
+
+	if fldName == "IntegData0Writes" {
+		return offset
+	}
+	offset += mtr.IntegData0Writes.Size()
 
 	return offset
 }
@@ -359,6 +371,12 @@ func (mtr *AccelSeqQueueMetrics) SetAltBufsTaken(val metrics.Counter) error {
 // SetLenUpdateReqs sets cunter in shared memory
 func (mtr *AccelSeqQueueMetrics) SetLenUpdateReqs(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("LenUpdateReqs"))
+	return nil
+}
+
+// SetIntegData0Writes sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetIntegData0Writes(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("IntegData0Writes"))
 	return nil
 }
 
