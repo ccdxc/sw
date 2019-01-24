@@ -238,18 +238,19 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 			}
 
 			log.Infof("delete mirror session %+v", mirrorReqMsg)
-			_, err := hd.Hal.TeleClient.MirrorSessionDelete(context.Background(), delReq)
+			_, err = hd.Hal.TeleClient.MirrorSessionDelete(context.Background(), delReq)
 			if err != nil {
 				log.Errorf("Error deleting mirror session. Err: %v, req: %+v", err, delReq)
 				return []uint64{}, []uint64{}, err
 			}
 		}
 
-		resp, err := hd.Hal.TeleClient.MirrorSessionCreate(context.Background(), mirrorReqMsg)
+		var resp *halproto.MirrorSessionResponseMsg
+		resp, err = hd.Hal.TeleClient.MirrorSessionCreate(context.Background(), mirrorReqMsg)
 		if err != nil {
 			log.Errorf("Error creating mirror session. Err: %v, req:%+v", err, mirrorReqMsg)
 		}
-		if hd.Kind.String() == "hal" {
+		if err == nil && hd.Kind.String() == "hal" {
 			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 				log.Errorf("HAL returned non OK status when creating mirror session. %+v, req: %+v",
 					resp.Response[0].ApiStatus, mirrorReqMsg)
@@ -263,8 +264,9 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 	}
 
 	if err == nil && len(flowRuleReqMsgList) > 0 {
+		var resp *halproto.FlowMonitorRuleResponseMsg
 		for _, flowRuleReqMsg := range flowRuleReqMsgList {
-			resp, err := hd.Hal.TeleClient.FlowMonitorRuleCreate(context.Background(), flowRuleReqMsg)
+			resp, err = hd.Hal.TeleClient.FlowMonitorRuleCreate(context.Background(), flowRuleReqMsg)
 			if err != nil {
 				log.Errorf("Error creating flow monitor rule. Err: %v, req: %+v", err, flowRuleReqMsg)
 			}
@@ -283,8 +285,9 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 	}
 
 	if err == nil && len(dropRuleReqMsgList) > 0 {
+		var resp *halproto.DropMonitorRuleResponseMsg
 		for _, dropRuleReqMsg := range dropRuleReqMsgList {
-			resp, err := hd.Hal.TeleClient.DropMonitorRuleCreate(context.Background(), dropRuleReqMsg)
+			resp, err = hd.Hal.TeleClient.DropMonitorRuleCreate(context.Background(), dropRuleReqMsg)
 			if err != nil {
 				log.Errorf("Error creating drop monitor rule. Err: %v, req: %+v", err, dropRuleReqMsg)
 			}
@@ -405,21 +408,25 @@ func (hd *Datapath) UpdatePacketCaptureSession(mirrorSessionKey string, vrfID ui
 
 // DeletePacketCaptureSession deletes mirror session
 func (hd *Datapath) DeletePacketCaptureSession(mirrorSessionKey string, mirrorDeleteReqMsg *halproto.MirrorSessionDeleteRequestMsg) error {
-	var err error
 	log.Debugf("Delete packet capture session request being sent to Hal {%+v}", mirrorSessionKey)
-	if mirrorDeleteReqMsg != nil {
-		resp, err := hd.Hal.TeleClient.MirrorSessionDelete(context.Background(), mirrorDeleteReqMsg)
-		if err != nil {
-			log.Errorf("Error deleting  mirror session. Err: %v, req:%+v", err, mirrorDeleteReqMsg)
-		}
-		if hd.Kind.String() == "hal" {
-			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				log.Errorf("HAL returned non OK status when deleting mirror session. %v, req: %+v",
-					resp.Response[0].ApiStatus, mirrorDeleteReqMsg)
-				err = ErrMirrorCreate
-			}
+	if mirrorDeleteReqMsg == nil {
+		return nil
+	}
+
+	resp, err := hd.Hal.TeleClient.MirrorSessionDelete(context.Background(), mirrorDeleteReqMsg)
+	if err != nil {
+		log.Errorf("Error deleting  mirror session. Err: %v, req:%+v", err, mirrorDeleteReqMsg)
+		return err
+	}
+
+	if hd.Kind.String() == "hal" {
+		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			log.Errorf("HAL returned non OK status when deleting mirror session. %v, req: %+v",
+				resp.Response[0].ApiStatus, mirrorDeleteReqMsg)
+			err = ErrMirrorCreate
 		}
 	}
+
 	return err
 }
 
