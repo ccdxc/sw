@@ -219,6 +219,23 @@ mpool_type_is_rmem(enum mem_pool_type mpool_type)
 	return mpool_type >= MPOOL_TYPE_RMEM_START;
 }
 
+static inline bool
+mpool_type_is_soft_get_error(enum mem_pool_type mpool_type)
+{
+	switch (mpool_type) {
+
+	case MPOOL_TYPE_RMEM_INTERM_BUF:
+	case MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS:
+	case MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC:
+	case MPOOL_TYPE_RMEM_INTERM_CPDC_STATUS_DESC_VECTOR:
+		return true;
+
+	default:
+		break;
+	}
+	return false;
+}
+
 static inline uint64_t
 mpool_get_object_phy_addr(enum mem_pool_type mpool_type,
 			  void *object)

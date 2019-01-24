@@ -135,9 +135,8 @@ chksum_setup(struct service_info *svc_info,
 	 */
 	err = cpdc_setup_rmem_status_desc(svc_info, false);
 	if (err) {
-		OSAL_LOG_ERROR("cannot obtain cp rmem status desc from pool! err: %d",
-				err);
-		goto out;
+		OSAL_LOG_DEBUG("intermediate status not available, "
+				"using host status");
 	}
 
 	err = cpdc_setup_desc_blocks(svc_info, pnso_chksum_desc->algo_type,
@@ -180,24 +179,15 @@ chksum_chain(struct chain_entry *centry)
 		/*
 		 * If chksum_setup() had created any rmem status, it would have
 		 * done so for only the 1st chksum operation.
-		 */
-		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
-				&cpdc_chain->ccp_status_addr_0, 0);
-		if (err)
-			goto out;
-		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
-				&cpdc_chain->ccp_status_addr_1, 0);
-		if (err)
-			goto out;
-		cpdc_chain->ccp_status_len = sizeof(struct cpdc_status_desc);
-
-		/*
-		 * Chksum does not produce any data output for consumption by
-		 * the next service in the chain so we leave
+		 *
+		 * Also, chksum does not produce any data output for consumption
+		 * by the next service in the chain so we leave
 		 * ccpc_stop_chain_on_error at 0. Besides, P4+ chainer would only
 		 * examine status for one block (i.e., one operation result).
 		 */
-		cpdc_chain->ccp_cmd.ccpc_status_dma_en = true;
+		err = cpdc_setup_status_chain_dma(svc_info, cpdc_chain);
+		if (err)
+			goto out;
 
 		svc_next = chn_service_next_svc_get(svc_info);
 		OSAL_ASSERT(svc_next);

@@ -84,7 +84,8 @@ init_mpools(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 		goto out;
 
 	mpool_type = MPOOL_TYPE_SERVICE_CHAIN_ENTRY;
-	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
+	err = mpool_create(mpool_type, num_objects * MAX_CPDC_DESC_VEC_PER_REQ,
+			MPOOL_VEC_ELEM_SINGLE,
 			sizeof(struct chain_entry), PNSO_MEM_ALIGN_DESC,
 			&pcr->mpools[mpool_type]);
 	if (err)

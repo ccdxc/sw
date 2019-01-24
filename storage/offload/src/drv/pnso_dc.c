@@ -92,9 +92,8 @@ decompress_setup(struct service_info *svc_info,
 
 	err = cpdc_setup_rmem_status_desc(svc_info, false);
 	if (err) {
-		OSAL_LOG_ERROR("cannot obtain dc rmem status desc from pool! err: %d",
-				err);
-		goto out;
+		OSAL_LOG_DEBUG("intermediate status not available, "
+				"using host status");
 	}
 
 	err = cpdc_setup_rmem_dst_blist(svc_info, svc_params);
