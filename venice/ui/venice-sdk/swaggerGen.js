@@ -89,6 +89,10 @@ Object.keys(manifest).forEach( (category) => {
       "importPath": "./events",
       "importName": "EventsEvent",
     }
+    catObj["AuditEvent"] = {
+      "importPath": "./audit",
+      "importName": "AuditEvent",
+    }
   }
 });
 
