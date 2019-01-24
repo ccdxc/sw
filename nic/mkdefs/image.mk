@@ -21,7 +21,7 @@ LIBRARYPATH=LD_LIBRARY_PATH=${NICDIR}/buildroot/output/host/lib:$(LD_LIBRARY_PAT
 FAKEROOTOPTS=-l ${NICDIR}/buildroot/output/host/lib/libfakeroot.so -f ${NICDIR}/buildroot/output/host/bin/faked
 
 .PHONY: copy-overlay
-copy-overlay:
+copy-overlay: package
 	rsync -a --ignore-times --keep-dirlinks \
 		--chmod=u=rwX,go=rX --exclude .empty --exclude '*~' \
 		${TOPDIR}/fake_root_target/aarch64/ $(TARGET_DIR)/
