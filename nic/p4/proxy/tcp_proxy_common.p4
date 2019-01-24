@@ -55,11 +55,12 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         rcv_mss                         : 16                    ;\
         cc_flags                        : 16                    ;\
         t_flags                         : 8                     ;\
+        limited_transmit                : 8                     ;\
         state                           : 8                     ;\
         pending_dup_ack_send            : 1                     ;\
         pending_challenge_ack_send      : 1                     ;\
         rx2tx_end_marker                : 6                     ;\
-        pad_rx2tx_extra                 : 280                   ;\
+        pad_rx2tx_extra                 : 272                   ;\
 
 #define TCB_RETX_SHARED_STATE \
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
@@ -84,6 +85,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         retrans_out                     : 16                    ;\
         lost_out                        : 16                    ;\
         smss                            : 16                    ;\
+        limited_transmit                : 8                     ;\
         is_cwnd_limited                 : 8                     ;\
         rto_backoff                     : 8                     ;\
         no_window                       : 1                     ;\
@@ -115,7 +117,7 @@ snd_nxt, initial_window, snd_wscale,\
 xmit_cursor_addr, sesq_tx_ci,\
 xmit_offset, xmit_len,\
 packets_out, sacked_out, retrans_out, lost_out,\
-smss, is_cwnd_limited, rto_backoff, no_window
+smss, is_cwnd_limited, limited_transmit, rto_backoff, no_window
 
 #define TSO_PARAMS                                                        \
 ip_id, source_lif, source_port, dest_port, header_len,\
@@ -147,6 +149,7 @@ quick_acks_decr
     modify_field(xmit_d.lost_out, lost_out); \
     modify_field(xmit_d.smss, smss); \
     modify_field(xmit_d.is_cwnd_limited, is_cwnd_limited); \
+    modify_field(xmit_d.limited_transmit, limited_transmit); \
     modify_field(xmit_d.rto_backoff, rto_backoff); \
     modify_field(xmit_d.no_window, no_window); \
 

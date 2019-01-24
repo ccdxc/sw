@@ -140,9 +140,22 @@ tcp_snd_wnd_test:
     slt             c1, k.to_s4_snd_cwnd, r2
     add.c1          r2, r0, k.to_s4_snd_cwnd
     add             r2, r2, k.common_phv_snd_una
-    scwle           c_retval, r1, r2
+    scwle           c1, r1, r2
+    slt             c2, d.limited_transmit, k.t0_s2s_limited_transmit
+
+    // window not available but limited_transmit != 0
+    // incr local copy to keep track of how many packets
+    // we have sent due to limited_transmit
+    setcf           c3, [!c1 & c2]
+    tbladd.c3       d.limited_transmit, 1
+
+    // reset limited_transmit to 0 if not set in rx pipeline
+    seq             c4, k.t0_s2s_limited_transmit, 0
+    tblwr.c4        d.limited_transmit, 0
+
+    // Return TRUE if window available or can send due to limited transmit
     jr              r_linkaddr
-    nop
+    setcf           c_retval, [c1 | c2]
 
 
 tcp_tx_handle_fin:

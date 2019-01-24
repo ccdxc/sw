@@ -266,6 +266,10 @@ tcp_retx_cleaningup_more_error:
     // We can reach here for window change from peer without advancing snd_una
     // in which case, check if window is restricted and we can send more
     // packets
+    // 
+    // We can also reach here when limited_transmit != 0 (on receipt of the
+    // first 2 dupacks) in which case we want to transmit even if there is no
+    // window
 
     // if window is not restricted currently, quit
     // else if current window is greater than old window,
@@ -273,9 +277,10 @@ tcp_retx_cleaningup_more_error:
     // that are held in sesq
     seq             c1, k.to_s3_window_not_restricted, 1
     sle             c2, k.t0_s2s_snd_wnd, d.last_snd_wnd
+    seq.c2          c2, k.t0_s2s_clean_retx_limited_transmit, 0
     bcf             [c1 | c2], tcp_retx_remove_barrier_and_end_program
 
-tcp_retx_handle_window_change:
+tcp_retx_handle_window_change_or_limited_transmit:
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
                         DB_SCHED_UPD_EVAL, 0, LIF_TCP)
     tbladd          d.tx_ring_pi, 1

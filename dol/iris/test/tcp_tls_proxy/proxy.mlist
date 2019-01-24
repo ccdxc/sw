@@ -1286,3 +1286,29 @@ modules:
             bypass_barco : 1
             maxflows : 1
             send_ack_flow1 : 1
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_LIMITED_TRANSMIT_1PKT
+        spec    : uplink_to_uplink_zero_window_limited_transmit_1pkt.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows: 1
+            num_rx_pkts : 2
+            num_tx_pkts : 1
+            byte_calc_based_on_tx_pkts : True
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_LIMITED_TRANSMIT_2PKTS
+        spec    : uplink_to_uplink_zero_window_limited_transmit_2pkts.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco : 1
+            maxflows: 1
+            num_rx_pkts : 2
+            num_tx_pkts : 2
+            byte_calc_based_on_tx_pkts : True
+        iterate :
+            - flow: filter://type=IPV4

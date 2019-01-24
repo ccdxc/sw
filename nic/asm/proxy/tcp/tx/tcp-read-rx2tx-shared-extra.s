@@ -44,7 +44,8 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
 #endif
     phvwrpair       p.to_s5_rcv_mss, d.rcv_mss, \
                         p.to_s5_rcv_wnd, d.rcv_wnd
-    phvwr           p.t0_s2s_rcv_nxt, d.rcv_nxt
+    phvwrpair       p.t0_s2s_limited_transmit, d.limited_transmit[1:0], \
+                        p.t0_s2s_rcv_nxt, d.rcv_nxt
 
     phvwr           p.tcp_ts_opt_kind, TCPOPT_TIMESTAMP
     phvwr           p.tcp_ts_opt_len, TCPOLEN_TIMESTAMP

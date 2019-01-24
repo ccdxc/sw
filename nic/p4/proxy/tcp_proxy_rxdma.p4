@@ -87,7 +87,6 @@
     modify_field(common_global_scratch.write_serq, common_phv.write_serq); \
     modify_field(common_global_scratch.pending_del_ack_send, common_phv.pending_del_ack_send); \
     modify_field(common_global_scratch.pending_txdma, common_phv.pending_txdma); \
-    modify_field(common_global_scratch.pingpong, common_phv.pingpong); \
     modify_field(common_global_scratch.fatal_error, common_phv.fatal_error); \
     modify_field(common_global_scratch.write_arq, common_phv.write_arq); \
     modify_field(common_global_scratch.write_tcp_app_hdr, common_phv.write_tcp_app_hdr); \
@@ -155,11 +154,9 @@ header_type tcp_rx_d_t {
         rto                     : 8;
         state                   : 8;
         parsed_state            : 8;
+        limited_transmit        : 2;    // tcp_ack stage
         pending                 : 3;
-        ca_flags                : 2;
         write_serq              : 1;
-        fastopen_rsk            : 1;
-        pingpong                : 1;
         alloc_descr             : 1;    // used with .l not written back
     }
 }
@@ -459,7 +456,6 @@ header_type common_global_phv_t {
         write_serq              : 1;
         pending_del_ack_send    : 1;
         pending_txdma           : 4;
-        pingpong                : 1;
         fatal_error             : 1;
         write_arq               : 1;
         write_tcp_app_hdr       : 1;
@@ -821,10 +817,9 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         ato, del_ack_pi, cfg_flags, \
         rcv_nxt, rcv_tstamp, ts_recent, lrcv_time, \
         snd_una, snd_wl1, pred_flags, snd_recover, bytes_rcvd, \
-        snd_wnd, rcv_mss, cc_flags, rto, state, \
-        parsed_state, flag, serq_pidx, quick, pending, ca_flags, \
-        num_dup_acks, write_serq, fastopen_rsk, pingpong, \
-        alloc_descr
+        snd_wnd, serq_pidx, rcv_mss, num_dup_acks, cc_flags, quick, \
+        flag, rto, state, parsed_state, limited_transmit, pending, \
+        write_serq, alloc_descr
 
 #define TCP_RX_CB_D \
     modify_field(tcp_rx_d.bytes_acked, bytes_acked); \
@@ -844,20 +839,18 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(tcp_rx_d.snd_recover, snd_recover); \
     modify_field(tcp_rx_d.bytes_rcvd, bytes_rcvd); \
     modify_field(tcp_rx_d.snd_wnd, snd_wnd); \
+    modify_field(tcp_rx_d.serq_pidx, serq_pidx); \
     modify_field(tcp_rx_d.rcv_mss, rcv_mss); \
+    modify_field(tcp_rx_d.num_dup_acks, num_dup_acks); \
     modify_field(tcp_rx_d.cc_flags, cc_flags); \
+    modify_field(tcp_rx_d.quick, quick); \
+    modify_field(tcp_rx_d.flag, flag); \
     modify_field(tcp_rx_d.rto, rto); \
     modify_field(tcp_rx_d.state, state); \
     modify_field(tcp_rx_d.parsed_state, parsed_state); \
-    modify_field(tcp_rx_d.flag, flag); \
-    modify_field(tcp_rx_d.serq_pidx, serq_pidx); \
-    modify_field(tcp_rx_d.quick, quick); \
+    modify_field(tcp_rx_d.limited_transmit, limited_transmit); \
     modify_field(tcp_rx_d.pending, pending); \
-    modify_field(tcp_rx_d.ca_flags, ca_flags); \
-    modify_field(tcp_rx_d.num_dup_acks, num_dup_acks); \
     modify_field(tcp_rx_d.write_serq, write_serq); \
-    modify_field(tcp_rx_d.fastopen_rsk, fastopen_rsk); \
-    modify_field(tcp_rx_d.pingpong, pingpong); \
     modify_field(tcp_rx_d.alloc_descr, alloc_descr);
 
 #define GENERATE_S1_S2S_K \

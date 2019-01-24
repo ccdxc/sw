@@ -65,6 +65,7 @@ tcp_ack_start:
 
 tcp_ack_fast:
     tblwr           d.num_dup_acks, 0
+    tblwr           d.limited_transmit, 0
     phvwri          p.common_phv_process_ack_flag, 1
     phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_ACK_SIGNAL, \
                         p.to_s4_cc_flags, d.cc_flags
@@ -93,6 +94,7 @@ tcp_ack_done:
     phvwr           p.to_s4_snd_wnd, k.to_s2_window
     phvwrpair       p.rx2tx_extra_snd_wnd, k.to_s2_window, \
                         p.rx2tx_extra_snd_una, d.snd_una
+    phvwr           p.rx2tx_extra_limited_transmit, d.limited_transmit
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_rx_rtt_start,
                         k.common_phv_qstate_addr,

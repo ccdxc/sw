@@ -17,7 +17,7 @@ if nic_dir is None:
     print "WS_TOP is not set!"
     sys.exit(1)
 
-skip_config = 1
+skip_config = 0
 
 model_log = nic_dir + "/model.log"
 model1_log = nic_dir + "/model1.log"

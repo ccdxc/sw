@@ -315,6 +315,7 @@ header_type common_t0_s2s_phv_t {
         snd_wnd                 : 16;
         state                   : 8;
         packets_out_decr        : 4;
+        limited_transmit        : 2;
         addr                    : HBM_FULL_ADDRESS_WIDTH;
         len                     : 16;
         snd_nxt                 : SEQ_NUMBER_WIDTH;
@@ -327,6 +328,7 @@ header_type common_t0_s2s_clean_retx_phv_t {
         snd_wnd                 : 16;
         state                   : 8;
         packets_out_decr        : 4;
+        limited_transmit        : 2;
         num_retx_pkts           : 8;
         pkts_acked              : 8;
         len1                    : 14;
@@ -550,6 +552,7 @@ sesq_base, perpetual_timer_started
     modify_field(t0_s2s_scratch.snd_wnd, t0_s2s.snd_wnd);                               \
     modify_field(t0_s2s_scratch.state, t0_s2s.state);                                   \
     modify_field(t0_s2s_scratch.packets_out_decr, t0_s2s.packets_out_decr);             \
+    modify_field(t0_s2s_scratch.limited_transmit, t0_s2s.limited_transmit);             \
     modify_field(t0_s2s_scratch.addr, t0_s2s.addr);                                     \
     modify_field(t0_s2s_scratch.len, t0_s2s.len);                                       \
     modify_field(t0_s2s_scratch.snd_nxt, t0_s2s.snd_nxt);                               \
@@ -559,6 +562,7 @@ sesq_base, perpetual_timer_started
     modify_field(t0_s2s_clean_retx_scratch.snd_wnd, t0_s2s_clean_retx.snd_wnd); \
     modify_field(t0_s2s_clean_retx_scratch.state, t0_s2s_clean_retx.state); \
     modify_field(t0_s2s_clean_retx_scratch.packets_out_decr, t0_s2s_clean_retx.packets_out_decr); \
+    modify_field(t0_s2s_clean_retx_scratch.limited_transmit, t0_s2s_clean_retx.limited_transmit); \
     modify_field(t0_s2s_clean_retx_scratch.num_retx_pkts, t0_s2s_clean_retx.num_retx_pkts); \
     modify_field(t0_s2s_clean_retx_scratch.pkts_acked, t0_s2s_clean_retx.pkts_acked); \
     modify_field(t0_s2s_clean_retx_scratch.len1, t0_s2s_clean_retx.len1); \
@@ -588,8 +592,8 @@ action read_rx2tx(RX2TX_PARAMS) {
  */
 action read_rx2tx_extra(
        snd_cwnd, rcv_nxt, snd_wnd, rcv_wnd, rto, snd_una, rcv_tsval,
-       rcv_mss, cc_flags, t_flags, state, pending_dup_ack_send,
-       pending_challenge_ack_send) {
+       rcv_mss, cc_flags, t_flags, limited_transmit, state,
+       pending_dup_ack_send, pending_challenge_ack_send) {
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -610,6 +614,7 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.rcv_tsval, rcv_tsval);
     modify_field(rx2tx_extra_d.cc_flags, cc_flags);
     modify_field(rx2tx_extra_d.t_flags, t_flags);
+    modify_field(rx2tx_extra_d.limited_transmit, limited_transmit);
     modify_field(rx2tx_extra_d.rcv_mss, rcv_mss);
     modify_field(rx2tx_extra_d.state, state);
     modify_field(rx2tx_extra_d.pending_dup_ack_send, pending_dup_ack_send);

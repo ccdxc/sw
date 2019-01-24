@@ -127,6 +127,7 @@ bytes_acked_stats_update_start:
 bytes_acked_stats_update_end:
     /* Update snd_una */
     tblwr           d.snd_una, k.s1_s2s_ack_seq
+    tblwr           d.limited_transmit, 0
 
     phvwr           p.to_s4_bytes_acked, r3[31:0]
     /*
@@ -172,6 +173,7 @@ no_queue:
 tcp_ack_slow_launch_next_stage:
     phvwrpair       p.rx2tx_extra_snd_wnd, k.to_s2_window, \
                         p.rx2tx_extra_snd_una, d.snd_una
+    phvwr           p.rx2tx_extra_limited_transmit, d.limited_transmit
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_rx_rtt_start,
                         k.common_phv_qstate_addr,
@@ -183,12 +185,13 @@ tcp_dup_ack:
     tbladd          d.num_dup_acks, 1
 
     slt             c1, d.num_dup_acks, TCP_FASTRETRANS_THRESH
-    b.c1            tcp_dup_ack_done
+    b.c1            tcp_dup_ack_limited_transmit
 
     slt             c1, TCP_FASTRETRANS_THRESH, d.num_dup_acks
     b.c1            tcp_dup_ack_gt_thresh
     nop
 tcp_dup_ack_eq_thresh:
+    tblwr           d.limited_transmit, 0
     tblor           d.cc_flags, TCP_CCF_FAST_RECOVERY
     tblwr           d.snd_recover, k.s1_s2s_snd_nxt
     phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_DUPACK_SIGNAL, \
@@ -203,6 +206,14 @@ tcp_dup_ack_gt_thresh:
     b               tcp_dup_ack_done
     phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_DUPACK_SIGNAL, \
                         p.to_s4_cc_flags, d.cc_flags
+
+tcp_dup_ack_limited_transmit:
+    tblwr           d.limited_transmit, d.num_dup_acks
+    b               tcp_dup_ack_done
+    // tell txdma we have work to do
+    // if window is full on tx, this will allow it to transmit a packet
+    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, \
+                        TCP_PENDING_TXDMA_SND_UNA_UPDATE
 
 /******************************************************************************
  * Functions
