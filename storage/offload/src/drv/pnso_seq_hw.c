@@ -350,18 +350,43 @@ __write_bit_(uint8_t *p, unsigned int bit_off, bool val)
 	}
 }
 
+/* Assumes bit_off is an even multiple of 8, and length is 8 */
+static void
+__write_8bits_(uint8_t *p, unsigned int bit_off, uint8_t val)
+{
+	unsigned int start_byte;
+
+	if (val) {
+		start_byte = bit_off >> 3;
+		p[start_byte] = val;
+	}
+}
+
+/* Assumes 1 <= size_in_bits <= 64 */
 static void
 write_bits(void *ptr, unsigned int start_bit_offset,
 		unsigned int size_in_bits, uint64_t value)
 {
 	uint8_t *p = (uint8_t *)ptr;
-	int bit_no;
-	int off;
+	int bit_no = size_in_bits - 1;
+	int off = start_bit_offset;
 
-	for (off = 0, bit_no = (size_in_bits - 1);
-			bit_no >= 0; bit_no--, off++) {
-		__write_bit_(p, start_bit_offset + off,
-				value & (1ull << bit_no));
+	/* First write non-byte-aligned prefix */
+	for (; (off & 7) != 0 && bit_no >= 0; bit_no--, off++) {
+		__write_bit_(p, off,
+			     value & (1ull << bit_no));
+	}
+
+	/* Now write byte-aligned middle */
+	for (; bit_no >= 7; bit_no -= 8, off += 8) {
+		__write_8bits_(p, off,
+			       (value >> (bit_no - 7)) & 0xff);
+	}
+
+	/* Finally write non-byte-aligned suffix */
+	for (; bit_no >= 0; bit_no--, off++) {
+		__write_bit_(p, off,
+			     value & (1ull << bit_no));
 	}
 }
 
@@ -378,10 +403,11 @@ write_64bits(void *ptr, unsigned int start_bit_offset,
 #define write_bit_fields(p, off, sz, val) \
 	if ((sz) == 64 && ((off) & 63) == 0) { \
 		if (val) write_64bits(p, off, val); \
+	} else if ((sz) == 1) { \
+		__write_bit_((uint8_t *) (p), off, val); \
 	} else { \
 		if (val) write_bits(p, off, sz, val); \
 	}
-
 
 
 static void
