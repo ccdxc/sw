@@ -5,6 +5,9 @@
 /*
  * PAL register read/write APIs.
  */
+uint8_t pal_reg_rd8(const uint64_t pa);
+void pal_reg_wr8(const uint64_t pa, const uint8_t val);
+
 uint16_t pal_reg_rd16(const uint64_t pa);
 void pal_reg_wr16(const uint64_t pa, const uint16_t val);
 

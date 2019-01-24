@@ -36,11 +36,19 @@ print_trace (void)
     free (strings);
 }
 
+u_int8_t
+pal_reg_rd8(const u_int64_t pa)
+{
+    const u_int8_t val = *(u_int8_t *)pr_ptov(pa, 1, FREEACCESS);
+    pal_reg_trace("reg_rd8 0x%08"PRIx64" = 0x%"PRIx8"\n", pa, val);
+    return val;
+}
+
 u_int16_t
 pal_reg_rd16(const u_int64_t pa)
 {
     const u_int16_t val = *(u_int16_t *)pr_ptov(pa, 2, FREEACCESS);
-    pal_reg_trace("reg_rd32 0x%08"PRIx64" = 0x%"PRIx16"\n", pa, val);
+    pal_reg_trace("reg_rd16 0x%08"PRIx64" = 0x%"PRIx16"\n", pa, val);
     assert((pa & 0x1) == 0);
     return val;
 }
@@ -80,9 +88,16 @@ pal_reg_rd32w(const u_int64_t pa,
 }
 
 void
+pal_reg_wr8(const u_int64_t pa, const u_int8_t val)
+{
+    pal_reg_trace("reg_wr8 0x%08"PRIx64" = 0x%"PRIx8"\n", pa, val);
+    *(u_int32_t *)pr_ptov(pa, 1, FREEACCESS) = val;
+}
+
+void
 pal_reg_wr16(const u_int64_t pa, const u_int16_t val)
 {
-    pal_reg_trace("reg_wr32 0x%08"PRIx64" = 0x%"PRIx16"\n", pa, val);
+    pal_reg_trace("reg_wr16 0x%08"PRIx64" = 0x%"PRIx16"\n", pa, val);
     assert((pa & 0x1) == 0);
     *(u_int32_t *)pr_ptov(pa, 2, FREEACCESS) = val;
 }

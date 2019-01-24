@@ -139,7 +139,8 @@ pxb_reset_target_counters()
 void
 pxb_read_target_err_counters()
 {
-    uint64_t tlp_drop, rsp_err, ur_cpl;
+    uint64_t tlp_drop, ur_cpl;
+    uint32_t pxb_sat_tgt_rsp_err;
 
     // Unsupported request completions
     pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
@@ -153,12 +154,14 @@ pxb_read_target_err_counters()
 
     pal_reg_rd32w(CAP_ADDR_BASE_PXB_PXB_OFFSET +
                       CAP_PXB_CSR_SAT_TGT_RSP_ERR_BYTE_ADDRESS,
-                  (uint32_t *)&rsp_err, 2);
+                  (uint32_t *)&pxb_sat_tgt_rsp_err, 1);
 
     // Show
     asic->ur_cpl = ur_cpl;
     asic->tlp_drop = tlp_drop;
-    asic->rsp_err = rsp_err;
+    asic->ind_cnxt_mismatch = pxb_sat_tgt_rsp_err & 0xff;
+    asic->rresp_err = pxb_sat_tgt_rsp_err >> 8 & 0xff;
+    asic->bresp_err = pxb_sat_tgt_rsp_err >> 16 & 0xff;
 }
 
 void
@@ -409,8 +412,8 @@ capmon_asic_data_store4(uint64_t fcpe, uint64_t fc_timeout,
 }
 
 void
-capmon_asic_data_store5(uint64_t core_initiated_recovery,
-                        uint64_t ltssm_state_changed, uint64_t skp_os_err,
+capmon_asic_data_store5(uint8_t core_initiated_recovery,
+                        uint8_t ltssm_state_changed, uint64_t skp_os_err,
                         uint64_t deskew_err, uint64_t phystatus_err)
 {
     asic->core_initiated_recovery = core_initiated_recovery;
@@ -446,7 +449,7 @@ pxb_read_pport_err_counters(uint8_t port)
     uint64_t tx_nak_sent, txbuf_ecc_err;
 
     uint64_t fcpe, fc_timeout, replay_num_err, replay_timer_err;
-    uint64_t core_initiated_recovery, ltssm_state_changed;
+    uint8_t core_initiated_recovery, ltssm_state_changed;
     uint64_t skp_os_err, deskew_err, phystatus_err;
 
     uint64_t rx_malform_tlp, rx_framing_err, rx_ecrc_err, rxbuf_ecc_err,
@@ -506,15 +509,13 @@ pxb_read_pport_err_counters(uint8_t port)
             CAP_PP_CSR_PORT_P_SAT_P_PORT_CNT_REPLAY_TIMER_ERR_BYTE_ADDRESS,
         (uint32_t *)&replay_timer_err, 2);
 
-    pal_reg_rd32w(
+    core_initiated_recovery = pal_reg_rd8(
         CAP_ADDR_BASE_PP_PP_OFFSET +
-            CAP_PP_CSR_PORT_P_SAT_P_PORT_CNT_CORE_INITIATED_RECOVERY_BYTE_ADDRESS,
-        (uint32_t *)&core_initiated_recovery, 2);
+            CAP_PP_CSR_PORT_P_SAT_P_PORT_CNT_CORE_INITIATED_RECOVERY_BYTE_ADDRESS);
 
-    pal_reg_rd32w(
+    ltssm_state_changed = pal_reg_rd8(
         CAP_ADDR_BASE_PP_PP_OFFSET +
-            CAP_PP_CSR_PORT_P_SAT_P_PORT_CNT_LTSSM_STATE_CHANGED_BYTE_ADDRESS,
-        (uint32_t *)&ltssm_state_changed, 2);
+            CAP_PP_CSR_PORT_P_SAT_P_PORT_CNT_LTSSM_STATE_CHANGED_BYTE_ADDRESS);
 
     pal_reg_rd32w(
         CAP_ADDR_BASE_PP_PP_OFFSET +

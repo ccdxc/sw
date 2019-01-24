@@ -476,8 +476,10 @@ capmon_asic_display_target_counters()
 static inline void
 capmon_asic_display_target_err_counters()
 {
-    CAPMON_REPORT("  ur_cpl=%ld tlp_drop=%ld rsp_err=%ld\n", asic->ur_cpl,
-                  asic->tlp_drop, asic->rsp_err);
+    CAPMON_REPORT("  ur_cpl=%ld tlp_drop=%ld rresp_err=%d bresp_err=%d "
+                  "ind_cnxt_mismatch=%d\n", asic->ur_cpl,
+                  asic->tlp_drop, asic->rresp_err, asic->bresp_err,
+                  asic->ind_cnxt_mismatch);
 }
 
 static inline void
@@ -528,7 +530,7 @@ capmon_asic_display_pport_err_counters()
         "  rx_nullified=%ld rxbfr_overflow=%ld\n"
         "  tx_nak_sent=%ld txbuf_ecc_err=%ld\n"
         "  fcpe=%ld fc_timeout=%ld replay_num_err=%ld replay_timer_err=%ld\n"
-        "  core_initiated_recovery=%ld ltssm_state_changed=%ld\n"
+        "  core_initiated_recovery=%d ltssm_state_changed=%d\n"
         "  skp_os_err=%ld deskew_err=%ld phystatus_err=%ld\n"
         "  rx_malform_tlp=%ld rx_framing_err=%ld rx_ecrc_err=%ld\n"
         "  rx_nullify=%ld rx_watchdog_nullify=%ld rx_unsupp=%ld "

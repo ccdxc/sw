@@ -206,7 +206,9 @@ typedef struct asic_data_ {
     uint64_t axi_rd_tgt, axi_rd_64_tgt, axi_rd_bytes_tgt;
     uint64_t axi_wr_db64, axi_wr_db32;
 
-    uint64_t ur_cpl, tlp_drop, rsp_err;
+    uint64_t ur_cpl, tlp_drop;
+    uint8_t rresp_err, bresp_err, ind_cnxt_mismatch;
+
     /*
     Initiator
   wr_pend=0 rd_pend=0
@@ -242,7 +244,8 @@ typedef struct asic_data_ {
     uint64_t tx_nak_sent, txbuf_ecc_err;
 
     uint64_t fcpe, fc_timeout, replay_num_err, replay_timer_err;
-    uint64_t core_initiated_recovery, ltssm_state_changed;
+    uint8_t core_initiated_recovery;
+    uint8_t ltssm_state_changed;
     uint64_t skp_os_err, deskew_err, phystatus_err;
 
     uint64_t rx_malform_tlp, rx_framing_err, rx_ecrc_err, rxbuf_ecc_err,
