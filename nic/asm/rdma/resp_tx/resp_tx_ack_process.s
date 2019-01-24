@@ -44,8 +44,8 @@ resp_tx_ack_process:
     // This happens in the write back code. Note that we don't even need to inform sq, 
     // as flush itself is generated because of sq moving to error.
     seq         c4, d.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_FLUSH_RQ)
-    b           prepare_aeth 
-    phvwr.c4    CAPRI_PHV_FIELD(TO_S5_P, flush_rq), 1   //BD Slot
+    phvwr.c4    CAPRI_PHV_FIELD(TO_S5_P, flush_rq), 1
+    phvwr.c4    CAPRI_PHV_FIELD(TO_S7_P, flush_rq), 1
     
 prepare_aeth:
     // prepare aeth

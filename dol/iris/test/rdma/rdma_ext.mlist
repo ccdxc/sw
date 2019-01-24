@@ -1297,3 +1297,11 @@ modules:
         spec    : resp_rx_write_only_invalid_opcode.testspec
         ignore  : False
 
+    - module:
+        name    : RDMA_RX_SEND_ONLY_ERROR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_send_only_error
+        spec    : resp_rx_send_only_error.testspec
+        ignore  : False
+

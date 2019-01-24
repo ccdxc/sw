@@ -20,13 +20,14 @@ struct rqcb5_t d;
 
 #define K_FLAGS CAPRI_KEY_RANGE(IN_P, incr_recirc_drop, dup_rd_atomic_drop)
 #define K_MAX_RECIRC_CNT_ERR CAPRI_KEY_FIELD(IN_P, max_recirc_cnt_err)
+#define K_FEEDBACK CAPRI_KEY_FIELD(IN_P, qp_err_dis_feedback)
 #define K_LIF_CQE_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_cqe_error_id_vld)
 #define K_LIF_ERROR_ID_VLD CAPRI_KEY_FIELD(IN_P, lif_error_id_vld)
 #define K_LIF_ERROR_ID CAPRI_KEY_FIELD(IN_P, lif_error_id)
 #define K_RECIRC_REASON CAPRI_KEY_FIELD(IN_P, recirc_reason)
 #define K_LAST_BTH_OPCODE CAPRI_KEY_FIELD(IN_P, last_bth_opcode)
 #define K_RECIRC_BTH_PSN CAPRI_KEY_FIELD(IN_P, recirc_bth_psn)
-#define K_ERR_DIS_REASON_CODES CAPRI_KEY_RANGE(IN_P, qp_err_disabled, qp_err_dis_rsvd_sbit1_ebit5)
+#define K_ERR_DIS_REASON_CODES CAPRI_KEY_RANGE(IN_P, qp_err_disabled, qp_err_dis_rsvd)
 
 %%
 
@@ -49,7 +50,10 @@ resp_rx_stats_process:
     tblmincri.c6     d.num_dup_wr_send_pkts, MASK_16, 1
     tblmincri.c5     d.num_dup_rd_atomic_bt_pkts, MASK_16, 1
     tblmincri.c4     d.num_dup_rd_atomic_drop_pkts, MASK_16, 1
-    tblor            d.{qp_err_disabled...qp_err_dis_rsvd}, K_ERR_DIS_REASON_CODES
+
+    bbeq             K_FEEDBACK, 1, exit 
+    tblor            d.{qp_err_disabled...qp_err_dis_rsvd}, K_ERR_DIS_REASON_CODES // BD Slot
+
     tblwr            d.last_bth_opcode, K_LAST_BTH_OPCODE
 
     bcf              [c7 | c6 | c5 | c4], handle_error_lif_stats
@@ -71,7 +75,7 @@ resp_rx_stats_process:
     // via send with invalidate
     seq              c7, CAPRI_KEY_FIELD(to_s7_stats_info, incr_mem_window_inv), 1
     tblmincri.c7     d.num_mem_window_inv, MASK_16, 1
-    bcf              [c4 | c3 | c2 | c1], handle_lif_stats
+    bcf              [c4 | c3 | c2 | c1], update_pkts_per_msg
 
     ARE_ALL_FLAGS_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_IMMDT|RESP_RX_FLAG_SEND) //BD Slot
     tblmincri.c6     d.num_send_msgs_imm_data, MASK_16, 1
@@ -89,6 +93,7 @@ resp_rx_stats_process:
     setcf            c7, [!c5 & c4 & !c2 & !c1]
     tblmincri.c7     d.num_write_msgs, MASK_16, 1
 
+update_pkts_per_msg:
     IS_ANY_FLAG_SET(c6, GLOBAL_FLAGS, RESP_RX_FLAG_ONLY | RESP_RX_FLAG_FIRST | RESP_RX_FLAG_READ_REQ | RESP_RX_FLAG_ATOMIC_CSWAP | RESP_RX_FLAG_ATOMIC_FNA)
     tblwr.c6         d.num_pkts_in_cur_msg, 1
     tblmincri.!c6    d.num_pkts_in_cur_msg, MASK_16, 1
@@ -97,6 +102,7 @@ resp_rx_stats_process:
     add              r4, r0, d.max_pkts_in_any_msg
     sslt             c6, r4, d.num_pkts_in_cur_msg, r0
     tblwr.c6         d.max_pkts_in_any_msg, d.num_pkts_in_cur_msg
+    // fall through to handle_lif_stats
 
 handle_lif_stats:
 

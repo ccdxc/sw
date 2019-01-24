@@ -39,11 +39,13 @@ resp_tx_stats_process:
     bbeq             d.qp_err_disabled, 1, exit
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
 
+    // if flush rq, skip updating num_pkts and num_bytes
+    bbeq             CAPRI_KEY_FIELD(IN_P, flush_rq), 1, err_dis_qp_stats
+    crestore         [c7, c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_TX_FLAG_ATOMIC_RESP | RESP_TX_FLAG_READ_RESP | RESP_TX_FLAG_ACK | RESP_TX_FLAG_ONLY | RESP_TX_FLAG_LAST | RESP_TX_FLAG_FIRST | RESP_TX_FLAG_ERR_DIS_QP) // BD Slot
+    // c7 - atomic_resp, c6 - read_resp, c5 - ack, c4 - only, c3 - last, c2 - first, c1 - err_dis_qp
+
     tbladd           d.num_bytes, CAPRI_KEY_FIELD(to_s7_stats_info, pyld_bytes)
     tblmincri        d.num_pkts, MASK_32, 1
-
-    crestore         [c7, c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_TX_FLAG_ATOMIC_RESP | RESP_TX_FLAG_READ_RESP | RESP_TX_FLAG_ACK | RESP_TX_FLAG_ONLY | RESP_TX_FLAG_LAST | RESP_TX_FLAG_FIRST | RESP_TX_FLAG_ERR_DIS_QP)
-    // c7 - atomic_resp, c6 - read_resp, c5 - ack, c4 - only, c3 - last, c2 - first, c1 - err_dis_qp
 
     bcf              [c1], err_dis_qp_stats
     tblmincri.c7     d.num_atomic_resp_msgs, MASK_16, 1 //BD Slot

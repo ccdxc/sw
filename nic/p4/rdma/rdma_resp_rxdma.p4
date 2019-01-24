@@ -418,10 +418,11 @@ header_type resp_rx_to_stage_stats_info_t {
         qp_err_dis_mr_mw_pd_mismatch     :    1;
         qp_err_dis_mr_state_invalid      :    1;
         qp_err_dis_mr_cookie_mismatch    :    1;
+        qp_err_dis_feedback              :    1;
         qp_err_dis_table_error           :    1;
         qp_err_dis_phv_intrinsic_error   :    1;
         qp_err_dis_table_resp_error      :    1;
-        qp_err_dis_rsvd                  :    6;
+        qp_err_dis_rsvd                  :    5;
         max_recirc_cnt_err               :    1;
         lif_cqe_error_id_vld             :    1;
         lif_error_id_vld                 :    1;
@@ -1700,6 +1701,7 @@ action resp_rx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_key_pd_mismatch, to_s7_stats_info.qp_err_dis_key_pd_mismatch);
     modify_field(to_s7_stats_info_scr.qp_err_dis_key_acc_ctrl_err, to_s7_stats_info.qp_err_dis_key_acc_ctrl_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_key_va_err, to_s7_stats_info.qp_err_dis_key_va_err);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_feedback, to_s7_stats_info.qp_err_dis_feedback);
     modify_field(to_s7_stats_info_scr.qp_err_dis_table_error, to_s7_stats_info.qp_err_dis_table_error);
     modify_field(to_s7_stats_info_scr.qp_err_dis_phv_intrinsic_error, to_s7_stats_info.qp_err_dis_phv_intrinsic_error);
     modify_field(to_s7_stats_info_scr.qp_err_dis_table_resp_error, to_s7_stats_info.qp_err_dis_table_resp_error);

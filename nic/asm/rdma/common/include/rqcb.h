@@ -309,11 +309,13 @@ struct rqcb5_t {
     // rqlkey_mr_cookie_process
     qp_err_dis_mr_state_invalid         :    1;
     qp_err_dis_mr_cookie_mismatch       :    1;
+    // feedback
+    qp_err_dis_feedback                 :    1;
     // table errors
     qp_err_dis_table_error              :    1;
     qp_err_dis_phv_intrinsic_error      :    1;
     qp_err_dis_table_resp_error         :    1;
-    qp_err_dis_rsvd                     :    6;
+    qp_err_dis_rsvd                     :    5;
     //a packet which went thru too many recirculations had to be terminated and qp had to 
     //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.
     //are remembered for further debugging.
