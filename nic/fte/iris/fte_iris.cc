@@ -889,7 +889,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
         // change lif/vlan for uplink pkts
         if (cpu_rxhdr_->lkp_dir == hal::FLOW_DIR_FROM_UPLINK) {
      	    HAL_TRACE_DEBUG("fte: setting defaults for uplink -> host direction");
-            pkt_info->cpu_header.src_lif = hal::SERVICE_LIF_CPU;
+            pkt_info->cpu_header.src_lif = HAL_LIF_CPU;
             if (use_vrf_) {
                 hal::pd::pd_vrf_get_fromcpu_vlanid_args_t args;
                 args.vrf = use_vrf_;
@@ -954,7 +954,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         if (!drop()) {
        // This needs to be moved to plugin code
        //!hal::app_redir::app_redir_pkt_tx_ownership(*this)) {
-            queue_txpkt(pkt_, pkt_len_, NULL, NULL, hal::SERVICE_LIF_CPU, 
+            queue_txpkt(pkt_, pkt_len_, NULL, NULL, HAL_LIF_CPU, 
                         CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ, 
                         types::WRING_TYPE_ASQ, free_flow_miss_pkt);
          } else {

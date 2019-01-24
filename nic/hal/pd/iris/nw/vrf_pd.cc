@@ -411,7 +411,7 @@ vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd, bool is_upgrade)
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
-    key.capri_intrinsic_lif   = SERVICE_LIF_CPU;
+    key.capri_intrinsic_lif   = HAL_LIF_CPU;
     key.vlan_tag_valid        = 1;
     key.vlan_tag_vid          = vrf_pd->vrf_fromcpu_vlan_id;
     inp_prop.dir              = FLOW_DIR_FROM_UPLINK;

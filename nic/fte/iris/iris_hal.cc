@@ -84,7 +84,7 @@ hal_ret_t cpupkt_send(hal::pd::cpupkt_ctxt_t *ctx,
     args.p4_header = p4plus_header;
     args.data = pkt;
     args.data_len = pkt_len;
-    args.dest_lif = hal::SERVICE_LIF_CPU;
+    args.dest_lif = HAL_LIF_CPU;
     args.qtype = CPU_ASQ_QTYPE;
     args.qid = qid;
     args.ring_number = CPU_SCHED_RING_ASQ;

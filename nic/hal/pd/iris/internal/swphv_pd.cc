@@ -56,7 +56,7 @@ pd_swphv_inject (pd_func_args_t *pd_func_args)
     }
     case PD_SWPHV_TYPE_TXDMA:
     {
-        lif_id = SERVICE_LIF_CPU;
+        lif_id = HAL_LIF_CPU;
         tcp_proxy_txdma_ingress_phv_t *phv = (tcp_proxy_txdma_ingress_phv_t *)data;
         phv_size = sizeof(tcp_proxy_txdma_ingress_phv_t);
 

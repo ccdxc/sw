@@ -10,9 +10,9 @@ import infra.common.defs as defs
 # 
 # The following definitions should match proxy.hpp
 #
-service_lif_tcp_proxy = 33
-service_lif_tls_proxy = 34
-service_lif_cpu       = 35
+service_lif_cpu       = 33
+service_lif_tcp_proxy = 34
+service_lif_tls_proxy = 35
 service_lif_ipsec_esp = 36
 service_lif_ipsec_ah  = 37
 service_lif_ipfix     = 38

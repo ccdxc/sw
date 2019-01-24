@@ -9,8 +9,27 @@
 #include <iomanip>
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/include/cpupkt_api.hpp"
+#include "nic/include/globals.hpp"
 
 namespace fte {
+
+inline uint16_t parse_service_lif(const char *s)
+{
+    static std::map<std::string, uint16_t> _map = {
+        { "HAL_LIF_CPU"      ,  HAL_LIF_CPU},
+        { "SERVICE_LIF_TCP_PROXY",  SERVICE_LIF_TCP_PROXY},
+        { "SERVICE_LIF_TLS_PROXY",  SERVICE_LIF_TLS_PROXY},
+        { "SERVICE_LIF_IPSEC_ESP",  SERVICE_LIF_IPSEC_ESP},
+        { "SERVICE_LIF_IPSEC_AH",   SERVICE_LIF_IPSEC_AH},
+        { "SERVICE_LIF_IPFIX"    ,  SERVICE_LIF_IPFIX},
+        { "SERVICE_LIF_APP_REDIR",  SERVICE_LIF_APP_REDIR},
+        { "SERVICE_LIF_GC"       ,  SERVICE_LIF_GC},
+        { "SERVICE_LIF_P4PT"     ,  SERVICE_LIF_P4PT},
+        { "SERVICE_LIF_CPU_BYPASS", SERVICE_LIF_CPU_BYPASS},
+    };
+
+    return _map[s];
+}
 
 /*-----------------------------------------------------
     End FTE DB Constructor/Destructor APIs
@@ -363,9 +382,9 @@ register_pipeline(const std::string& name, lifqid_t& lifq,
 {
     pipeline_t *pipeline;
 
-    lifq.lif = hal::parse_service_lif(lif.c_str());
+    lifq.lif = parse_service_lif(lif.c_str());
     if (!qid.empty()) {
-        if (lifq.lif == hal::SERVICE_LIF_CPU) {
+        if (lifq.lif == HAL_LIF_CPU) {
             uint32_t id;
             if (CpucbId_Parse(qid, &id) == false) {
                 HAL_TRACE_ERR("plugins::parse_pipeline invalid qid {}", qid);

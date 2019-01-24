@@ -57,10 +57,6 @@ proxy_meta_init() {
     g_meta[types::PROXY_TYPE_GC] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_GC, 2, {{0, 1, 3}, {1, 1, 3}}}, types::PROXY_TYPE_NONE, false};
 
-    g_meta[types::PROXY_TYPE_CPU] =
-        (proxy_meta_t) {true, 1, {SERVICE_LIF_CPU, 1, {0, 2, (uint8_t)ceil(log2(types::CpucbId_ARRAYSIZE))}},
-                        types::PROXY_TYPE_NONE, false};
-
     g_meta[types::PROXY_TYPE_IPFIX] =
         (proxy_meta_t) {true, 1, {SERVICE_LIF_IPFIX, 1, {0, 1, 5}}, types::PROXY_TYPE_NONE, false};
 
@@ -290,7 +286,6 @@ static const char* proxy_type_to_str(types::ProxyType type)
         case types::PROXY_TYPE_TLS:  return "tls_proxy";
         case types::PROXY_TYPE_IPSEC: return "ipsec_proxy";
         case types::PROXY_TYPE_GC: return "gc_proxy";
-        case types::PROXY_TYPE_CPU: return "cpu_proxy";
         case types::PROXY_TYPE_IPFIX: return "ipf_proxy";
         case types::PROXY_TYPE_APP_REDIR: return "AR_proxy";
         case types::PROXY_TYPE_P4PT: return "p4pt_proxy";
@@ -462,9 +457,6 @@ proxy_post_lif_program_init(proxy_t* proxy)
     switch(proxy->type) {
     case types::PROXY_TYPE_TLS:
         ret = hal::tls::tls_api_init();
-        break;
-    case types::PROXY_TYPE_CPU:
-        ret = proxy_create_cpucb();
         break;
     case types::PROXY_TYPE_P4PT:
         // TODO: how is this code supposed to run with another P4 program?

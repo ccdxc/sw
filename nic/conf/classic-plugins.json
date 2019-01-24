@@ -66,7 +66,7 @@
     "pipelines": [
         {
             "name": "flow-miss",
-            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
             "outbound_features": [
                 "pensando.io/classic:fwding"
             ]

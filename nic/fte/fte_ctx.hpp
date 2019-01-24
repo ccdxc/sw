@@ -356,16 +356,16 @@ typedef struct header_update_s {
     };
 } __PACK__ header_update_t;
 
-const lifqid_t FLOW_MISS_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_FLOWMISS};
-const lifqid_t TCP_CLOSE_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_TCP_CLOSE};
-const lifqid_t ALG_CFLOW_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_RELIABLE_COPY};
-const lifqid_t NACL_REDIRECT_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_NACL_REDIRECT};
-const lifqid_t NACL_LOG_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_NACL_LOG};
-const lifqid_t QUIESCE_LIFQ   = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_QUIESCE};
-const lifqid_t TCP_PROXY_LIFQ = {hal::SERVICE_LIF_TCP_PROXY, 0, 0};
-const lifqid_t TLS_PROXY_LIFQ = {hal::SERVICE_LIF_TLS_PROXY, 0, 0};
-const lifqid_t APP_REDIR_LIFQ = {hal::SERVICE_LIF_APP_REDIR, 0, 0};
-const lifqid_t FTE_SPAN_LIFQ = {hal::SERVICE_LIF_CPU, 0, types::CPUCB_ID_FTE_SPAN};
+const lifqid_t FLOW_MISS_LIFQ = {HAL_LIF_CPU, 0, types::CPUCB_ID_FLOWMISS};
+const lifqid_t TCP_CLOSE_LIFQ = {HAL_LIF_CPU, 0, types::CPUCB_ID_TCP_CLOSE};
+const lifqid_t ALG_CFLOW_LIFQ = {HAL_LIF_CPU, 0, types::CPUCB_ID_RELIABLE_COPY};
+const lifqid_t NACL_REDIRECT_LIFQ = {HAL_LIF_CPU, 0, types::CPUCB_ID_NACL_REDIRECT};
+const lifqid_t NACL_LOG_LIFQ = {HAL_LIF_CPU, 0, types::CPUCB_ID_NACL_LOG};
+const lifqid_t QUIESCE_LIFQ   = {HAL_LIF_CPU, 0, types::CPUCB_ID_QUIESCE};
+const lifqid_t TCP_PROXY_LIFQ = {SERVICE_LIF_TCP_PROXY, 0, 0};
+const lifqid_t TLS_PROXY_LIFQ = {SERVICE_LIF_TLS_PROXY, 0, 0};
+const lifqid_t APP_REDIR_LIFQ = {SERVICE_LIF_APP_REDIR, 0, 0};
+const lifqid_t FTE_SPAN_LIFQ = {HAL_LIF_CPU, 0, types::CPUCB_ID_FTE_SPAN};
 
 std::string hex_str(const uint8_t *buf, size_t sz);
 
@@ -551,7 +551,7 @@ public:
     hal_ret_t queue_txpkt(uint8_t *pkt, size_t pkt_len,
                           hal::pd::cpu_to_p4plus_header_t *cpu_header = NULL,
                           hal::pd::p4plus_to_p4_header_t  *p4plus_header = NULL,
-                          uint16_t dest_lif = hal::SERVICE_LIF_CPU,
+                          uint16_t dest_lif = HAL_LIF_CPU,
                           uint8_t  qtype = CPU_ASQ_QTYPE,
                           uint32_t qid = CPU_ASQ_QID,
                           uint8_t  ring_number = CPU_SCHED_RING_ASQ,

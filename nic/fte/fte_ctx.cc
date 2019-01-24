@@ -247,7 +247,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     pkt_ = pkt;
     pkt_len_ = pkt_len;
 
-    if ((cpu_rxhdr->lif == hal::SERVICE_LIF_CPU) || app_redir_pkt_rx_raw(*this) ||
+    if ((cpu_rxhdr->lif == HAL_LIF_CPU) || app_redir_pkt_rx_raw(*this) ||
         (tcp_close())) {
         ret = init_flows(iflow, rflow);
         if (ret != HAL_RET_OK) {

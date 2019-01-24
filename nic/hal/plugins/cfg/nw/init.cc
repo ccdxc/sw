@@ -146,7 +146,7 @@ init (hal_cfg_t *hal_cfg)
     g_hal_state->set_allow_local_switch_for_promiscuous(true);
 
     // create cpu interface
-    ret = hal_cpu_if_create(SERVICE_LIF_CPU);
+    ret = hal_cpu_if_create(HAL_LIF_CPU);
     HAL_ABORT(ret == HAL_RET_OK);
 
     // Create FTE span. Only for iris pipeline

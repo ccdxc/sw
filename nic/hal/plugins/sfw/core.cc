@@ -280,7 +280,7 @@ net_sfw_generate_reject_pkt(ctx_t& ctx, bool status)
     }
 
     if (pkt_len)
-        ctx.queue_txpkt(pkt, pkt_len, &cpu_hdr, &p4plus_hdr, hal::SERVICE_LIF_CPU,
+        ctx.queue_txpkt(pkt, pkt_len, &cpu_hdr, &p4plus_hdr, HAL_LIF_CPU,
                     CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ, types::WRING_TYPE_ASQ,
                     net_sfw_free_reject_pkt);
 

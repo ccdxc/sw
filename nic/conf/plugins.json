@@ -288,7 +288,7 @@
     "pipelines": [
         {
             "name": "flow-miss",
-            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
             "outbound_features": [
                 "pensando.io/dol:test",
                 "pensando.io/network:ingress-checks",
@@ -353,7 +353,7 @@
         },
         {
             "name": "tcp-close",
-            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_TCP_CLOSE" },
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_TCP_CLOSE" },
             "outbound_features": [
                  "pensando.io/dol:test",
                  "pensando.io/sfw:conntrack"
@@ -383,7 +383,7 @@
         },
         {
             "name": "alg-cflow",
-            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_RELIABLE_COPY" },
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_RELIABLE_COPY" },
             "outbound_features": [
                 "pensando.io/alg_ftp:alg_ftp",
                 "pensando.io/alg_tftp:alg_tftp",
@@ -411,21 +411,21 @@
         },
         {
             "name": "nacl-redirect",
-            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_NACL_REDIRECT" },
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_NACL_REDIRECT" },
             "outbound_features": [
                 "pensando.io/dol:test"
             ]
         },
         {
             "name": "nacl-log",
-            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_NACL_LOG" },
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_NACL_LOG" },
             "outbound_features": [
                 "pensando.io/dol:test"
             ]
         },
         {
             "name": "quiesce",
-            "selector": { "lif": "SERVICE_LIF_CPU", "qid": "CPUCB_ID_QUIESCE" },
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_QUIESCE" },
             "outbound_features": [
                 "pensando.io/dol:test",
                 "pensando.io/proxy:quiesce"

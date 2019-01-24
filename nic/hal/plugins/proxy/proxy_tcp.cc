@@ -785,7 +785,7 @@ tcp_get_flow_encap_for_h2n_flow(const fte::ctx_t &ctx,
         HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for dl2seg", hw_vlan_id);
     }
 
-    flow_encap.i_src_lif = hal::SERVICE_LIF_CPU;
+    flow_encap.i_src_lif = HAL_LIF_CPU;
     flow_encap.i_src_vlan_id = hw_vlan_id;
     flow_encap.r_src_lif = ctx.cpu_rxhdr()->src_lif;
     flow_encap.r_src_vlan_id = ctx.sif()->encap_vlan;
@@ -840,7 +840,7 @@ tcp_get_flow_encap_for_n2h_flow(const fte::ctx_t &ctx,
 
     flow_encap.i_src_lif = hw_lif_id;
     flow_encap.i_src_vlan_id = ctx.dif()->encap_vlan;
-    flow_encap.r_src_lif = hal::SERVICE_LIF_CPU;
+    flow_encap.r_src_lif = HAL_LIF_CPU;
     flow_encap.r_src_vlan_id = hw_vlan_id;
     flow_encap.encrypt_qid = pfi.qid2;
     flow_encap.decrypt_qid = pfi.qid1;
@@ -881,9 +881,9 @@ tcp_get_flow_encap_for_n2n_flow(const fte::ctx_t &ctx,
         HAL_TRACE_DEBUG("tcp-proxy: Got hw_vlan_id={} for dl2seg", dhw_vlan_id);
     }
 
-    flow_encap.i_src_lif = hal::SERVICE_LIF_CPU;
+    flow_encap.i_src_lif = HAL_LIF_CPU;
     flow_encap.i_src_vlan_id = dhw_vlan_id;
-    flow_encap.r_src_lif = hal::SERVICE_LIF_CPU;
+    flow_encap.r_src_lif = HAL_LIF_CPU;
     flow_encap.r_src_vlan_id = shw_vlan_id;
     flow_encap.encrypt_qid = pfi.qid1;
     flow_encap.decrypt_qid = pfi.qid2;
@@ -1004,7 +1004,7 @@ tcp_exec(fte::ctx_t& ctx)
 {
     const fte::cpu_rxhdr_t* cpu_rxhdr = ctx.cpu_rxhdr();
 
-    if (cpu_rxhdr && (cpu_rxhdr->lif == hal::SERVICE_LIF_TCP_PROXY)) {
+    if (cpu_rxhdr && (cpu_rxhdr->lif == SERVICE_LIF_TCP_PROXY)) {
       return tcp_exec_tcp_lif(ctx);
     } else {
       return tcp_exec_cpu_lif(ctx);

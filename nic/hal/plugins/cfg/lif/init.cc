@@ -6,6 +6,7 @@
 #include "nic/hal/src/internal/proxy.hpp"
 #include "nic/include/hal_cfg.hpp"
 #include "platform/capri/capri_common.hpp"
+#include "nic/hal/src/internal/cpucb.hpp"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -43,7 +44,9 @@ lif_init (hal_cfg_t *hal_cfg)
     if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {
         hal_proxy_svc_init();
     }
-
+    if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {
+        program_cpu_lif();
+    }
     return HAL_RET_OK;
 }
 

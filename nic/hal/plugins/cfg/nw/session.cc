@@ -1533,7 +1533,7 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
     p4plus_header->compute_ip_csum = 1;
 
     // Fill in P4Plus and CPU header info
-    cpu_header->src_lif = hal::SERVICE_LIF_CPU;
+    cpu_header->src_lif = HAL_LIF_CPU;
     cpu_header->l2_offset = 0;
 
     ret = ep_get_from_flow_key(&key, &sep, &dep);
@@ -1548,7 +1548,7 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
     }
 
     if (key.dir == FLOW_DIR_FROM_UPLINK) {
-        cpu_header->src_lif = hal::SERVICE_LIF_CPU;
+        cpu_header->src_lif = HAL_LIF_CPU;
         if (flow->pgm_attrs.use_vrf) {
             pd::pd_vrf_get_fromcpu_vlanid_args_t args;
             args.vrf = hal::vrf_lookup_by_handle(vrf_handle);

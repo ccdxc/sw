@@ -13,7 +13,8 @@
 // lif hw id ranges
 #define HAL_LIF_ID_UPLINK_MIN              1      // uplink lif id range min
 #define HAL_LIF_ID_UPLINK_MAX              32     // uplink lif id range max
-#define HAL_LIF_ID_SVC_LIF_MIN             33     // service lif id range min
+#define HAL_LIF_CPU                        33     // cpu lif
+#define HAL_LIF_ID_SVC_LIF_MIN             34     // service lif id range min
 #define HAL_LIF_ID_SVC_LIF_MAX             64     // service lif id range max
 #define HAL_LIF_ID_MIN                     (HAL_LIF_ID_UPLINK_MIN)
 #define HAL_LIF_ID_MAX                     (HAL_LIF_ID_SVC_LIF_MAX)
@@ -30,5 +31,23 @@
 #define HAL_NWSEC_PROFILE_ID_MAX           15     // HAL security profile id max
 #define NETAGENT_NWSEC_PROFILE_ID_MIN      16     // netagent security profile id min
 #define NETAGENT_NWSEC_PROFILE_ID_MAX      255    // netagent security profile id max
+
+#define SERVICE_LIF_START                       HAL_LIF_ID_SVC_LIF_MIN
+#define HAL_PROXY_MAX_ST_LIF_PER_SVC            5
+#define HAL_PROXY_MAX_QTYPE_PER_LIF             8
+
+enum {
+    SERVICE_LIF_TCP_PROXY = SERVICE_LIF_START,
+    SERVICE_LIF_TLS_PROXY,
+    SERVICE_LIF_IPSEC_ESP,
+    SERVICE_LIF_IPSEC_AH,
+    SERVICE_LIF_IPFIX,
+    SERVICE_LIF_APP_REDIR,
+    SERVICE_LIF_GC,
+    SERVICE_LIF_P4PT,
+    SERVICE_LIF_CPU_BYPASS,
+    SERVICE_LIF_END
+};
+
 
 #endif    // __GLOBALS_HPP__

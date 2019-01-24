@@ -275,7 +275,6 @@ enum ProxyType {
   PROXY_TYPE_TLS                      = 2;
   PROXY_TYPE_IPSEC                    = 3;
   PROXY_TYPE_GC                       = 4;
-  PROXY_TYPE_CPU                      = 5;
   PROXY_TYPE_IPFIX                    = 6;
   PROXY_TYPE_APP_REDIR                = 7;
   PROXY_TYPE_P4PT                     = 8;

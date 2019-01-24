@@ -302,7 +302,7 @@ pd_cpucb_get_base_hw_index(pd_cpucb_t* cpucb_pd)
 
     // Get the base address of CPU CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_CPU, 0, 0);
+    uint64_t offset = lif_manager()->GetLIFQStateAddr(HAL_LIF_CPU, 0, 0);
     HAL_TRACE_DEBUG("received offset {:#x}", offset);
     return offset + \
         (cpucb_pd->cpucb->cb_id * P4PD_HBM_CPU_CB_ENTRY_SIZE);

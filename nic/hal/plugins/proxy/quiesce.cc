@@ -45,7 +45,7 @@ quiesce_transmit_pkt(void* data)
     hal::pd::p4plus_to_p4_header_t  p4plus_header = {};
 
     p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
-    cpu_header.src_lif = hal::SERVICE_LIF_CPU;
+    cpu_header.src_lif = HAL_LIF_CPU;
     cpu_header.hw_vlan_id = 0;
     cpu_header.flags = CPU_TO_P4PLUS_FLAGS_ADD_TX_QS_TRLR;
     cpu_header.l2_offset = 0;
@@ -72,7 +72,7 @@ quiesce_exec(fte::ctx_t& ctx)
 {
     const fte::cpu_rxhdr_t* cpu_rxhdr = ctx.cpu_rxhdr();
     HAL_TRACE_DEBUG("quiesce_exec: lif: {}",  cpu_rxhdr->lif);
-    if (cpu_rxhdr && (cpu_rxhdr->lif == hal::SERVICE_LIF_CPU)) {
+    if (cpu_rxhdr && (cpu_rxhdr->lif == HAL_LIF_CPU)) {
         return quiesce_exec_cpu_rx_lif(ctx);
     }
 

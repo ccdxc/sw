@@ -155,7 +155,7 @@ hal_ret_t cpupkt_send(cpupkt_ctxt_t* ctxt,
                       p4plus_to_p4_header_t* p4_header,
                       uint8_t* data,
                       size_t data_len,
-                      uint16_t dest_lif = SERVICE_LIF_CPU,
+                      uint16_t dest_lif = HAL_LIF_CPU,
                       uint8_t  qtype = CPU_ASQ_QTYPE,
                       uint32_t qid = CPU_ASQ_QID,
                       uint8_t  ring_number = CPU_SCHED_RING_ASQ);

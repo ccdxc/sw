@@ -961,7 +961,7 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
 
     nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)l2seg);
 
-    key.capri_intrinsic_lif = SERVICE_LIF_CPU;
+    key.capri_intrinsic_lif = HAL_LIF_CPU;
     inp_prop.dir       = FLOW_DIR_FROM_UPLINK;
 
     key.vlan_tag_valid = 1;

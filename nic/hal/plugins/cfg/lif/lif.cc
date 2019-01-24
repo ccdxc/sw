@@ -509,7 +509,7 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (lif_hal_info && lif_hal_info->with_hw_lif_id) {
         hw_lif_id = lif_hal_info->hw_lif_id;
         // Check that only service lifs are already allocated
-        if (hw_lif_id >= SERVICE_LIF_START && hw_lif_id < SERVICE_LIF_END) {
+        if (hw_lif_id >= HAL_LIF_CPU && hw_lif_id < SERVICE_LIF_END) {
             lif->qstate_pgm_in_hal = true;
             // make sure hw_lif_id is already allocated.
             LIFQState *qstate = lif_manager()->GetLIFQState(hw_lif_id);
@@ -1835,7 +1835,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
         entry->set_addr(lif_manager()->GetLIFQStateAddr(hw_lif_id, ent.type, 0));
     }
 
-    if (lif->lif_id == hal::SERVICE_LIF_CPU) {
+    if (lif->lif_id == HAL_LIF_CPU) {
         ret = cpucb_get_stats(lif->lif_id, rsp);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_DEBUG("cpucb pd stats get failed");
