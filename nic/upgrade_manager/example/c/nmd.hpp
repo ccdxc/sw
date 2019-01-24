@@ -23,8 +23,6 @@ public:
     NMDService(delphi::SdkPtr sk);
     NMDService(delphi::SdkPtr sk, string name);
 
-    // createUpgReqSpec creates a dummy Upgrade Request
-    void createUpgReqSpec();
     void updateUpgReqSpec();
     // override service name method
     virtual string Name() { return svcName_; }

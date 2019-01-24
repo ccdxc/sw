@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = upgrade_sdk_test.gtest
 MODULE_PIPELINE = iris
-MODULE_SOLIBS   = delphisdk upgrade_app upgradeproto sdkpal logger
+MODULE_SOLIBS   = delphisdk upgrade_app upgradeproto sdkpal logger sysmgr
 MODULE_ARLIBS   = delphishm
 MODULE_ARCH     = x86_64
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev dl

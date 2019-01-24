@@ -22,7 +22,7 @@ private:
     UpgAppRegReactPtr       upgAppRegHdlr_;
     delphi::SdkPtr          sdk_;
     string                  svcName_;
-    sysmgr::Client          sysMgr_;
+    sysmgr::ClientPtr       sysMgr_;
 public:
     // UpgradeService constructor
     UpgradeService(delphi::SdkPtr sk);
@@ -30,9 +30,6 @@ public:
 
     // OnMountComplete gets called when all the objects are mounted
     void OnMountComplete();
-
-    // createUpgReqSpec creates a dummy Upgrade Request
-    void createUpgReqSpec();
 
     // override service name method
     virtual string Name() { return svcName_; }

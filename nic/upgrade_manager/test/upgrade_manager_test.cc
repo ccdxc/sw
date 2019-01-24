@@ -10,27 +10,6 @@ using namespace std;
 using namespace upgrade;
 
 
-// --------------------- Reactor test upgrade ------------------------
-
-UPGREQ_REACTOR_TEST(UpgradeReactorTest, UpgReqReact);
-
-TEST_F(UpgradeReactorTest, BasicTest) {
-    // create an upgrade request spec object
-    delphi::objects::UpgradeMetricsPtr upgmetptr = delphi::objects::UpgradeMetrics::NewUpgradeMetrics(1);
-    delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
-    req->set_upgreqcmd(UpgStart);
-    req->set_upgreqtype(UpgTypeNonDisruptive);
-    sdk_->QueueUpdate(req);
-
-    // verify spec object is in db
-    ASSERT_EQ_EVENTUALLY(sdk_->ListKind("UpgReq").size(), 1) << "Upgrade request spec object was not created";
-
-    // verify corresponding status object got created
-    ASSERT_EQ_EVENTUALLY(sdk_->ListKind("UpgStateReq").size(), 0) << "Upgrade request status object was not created";
-    upgmetptr->Delete();
-}
-
-
 // --------------------- Service test upgrade ------------------------
 // init the delphi utest
 DELPHI_SERVICE_TEST(UpgradeTest, UpgradeService);

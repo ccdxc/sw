@@ -6,6 +6,7 @@
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "gen/proto/upgrade.delphi.hpp"
 #include "upgrade_resp.hpp"
+#include "nic/sysmgr/lib/sysmgr_client.hpp"
 
 namespace upgrade {
 
@@ -15,6 +16,7 @@ using namespace std;
 class UpgReqReact : public delphi::objects::UpgReqReactor {
     delphi::SdkPtr                         sdk_;
     UpgMgrRespPtr                          upgMgrResp_;
+    sysmgr::ClientPtr                      sysMgr_;
 
     vector<string>                         appRespFailStrList_;
     unordered_map<string, bool>            appRegMap_;
@@ -27,7 +29,7 @@ class UpgReqReact : public delphi::objects::UpgReqReactor {
     bool InvokePostStateHandler(UpgReqStateType reqType);
     bool InvokePreStateHandler(UpgReqStateType reqType);
 public:
-    UpgReqReact(delphi::SdkPtr sk) {
+    UpgReqReact(delphi::SdkPtr sk, sysmgr::ClientPtr sysMgr) {
         sdk_ = sk;
         appRespFail_ = false;
         upgAborted_  = false;
@@ -35,6 +37,7 @@ public:
         upgMgrResp_  = make_shared<UpgMgrResp>(sk);
         appRegMap_.clear();
         upgMetric_ = NULL;
+	sysMgr_ = sysMgr;
     }
 
     // OnUpgReqCreate gets called when UpgReq object is created

@@ -93,6 +93,7 @@ bool UpgPostStateHandler::PostPostLinkUpHandler(UpgCtx &ctx) {
 
 bool UpgPostStateHandler::PostSaveStateHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSaveState returning");
+    ctx.sysMgr->restart_system();
     return true;
 }
 } // namespace upgrade

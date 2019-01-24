@@ -16,7 +16,10 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk) : UpgradeService(sk, "UpgradeS
 }
 
 // UpgradeService constructor
-UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) : sysMgr_(sk, name){
+UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) {
+    // create sysmgr client
+    sysMgr_ = sysmgr::CreateClient(sk, name);
+
     // save a pointer to sdk
     sdk_ = sk;
     svcName_ = name;
@@ -32,7 +35,7 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) : sysMgr_(sk, nam
     delphi::objects::UpgApp::MountKey(sdk_, objUpgAppPtr, delphi::ReadWriteMode);
 
     // create upgrade manager event handler
-    upgMgr_ = make_shared<UpgReqReact>(sdk_);
+    upgMgr_ = make_shared<UpgReqReact>(sdk_, sysMgr_);
 
     upgAppRespHdlr_ = make_shared<UpgAppRespReact>(sdk_, upgMgr_);
     upgAppRegHdlr_ = make_shared<UpgAppRegReact>(upgMgr_, sdk_);
@@ -49,7 +52,7 @@ UpgradeService::UpgradeService(delphi::SdkPtr sk, string name) : sysMgr_(sk, nam
 
 // OnMountComplete gets called when all the objects are mounted
 void UpgradeService::OnMountComplete() {
-    sysMgr_.init_done();
+    sysMgr_->init_done();
     UPG_LOG_DEBUG("UpgradeService OnMountComplete got called\n");
 
     // walk all upgrade request objects and reconcile them

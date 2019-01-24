@@ -4,6 +4,7 @@
 #define __UPGRADE_CTX_H__
 
 #include "gen/proto/upgrade.delphi.hpp"
+#include "nic/sysmgr/lib/sysmgr_client.hpp"
 
 namespace upgrade {
 
@@ -25,6 +26,7 @@ typedef struct UpgCtx_ {
     unordered_map<string, ComponentMeta>    preUpgComps;
     unordered_map<string, ComponentMeta>    postUpgComps;
     UpgType                                 upgType;
+    sysmgr::ClientPtr                       sysMgr;
 } UpgCtx;
 
 }

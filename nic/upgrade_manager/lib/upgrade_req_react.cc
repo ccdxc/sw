@@ -231,6 +231,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
         return delphi::error("GetUpgCtxFromMeta failed");
     }
     ctx.upgType = req->upgreqtype();
+    ctx.sysMgr = sysMgr_;
     UpgReqStateType type = UpgStateCompatCheck;
     if (req->upgreqcmd() == IsUpgPossible) {
         UPG_LOG_INFO("CanUpgrade request received");
@@ -325,6 +326,7 @@ delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     }
     if (req->upgreqcmd() == UpgStart) {
         ctx.upgType = req->upgreqtype();
+        ctx.sysMgr = sysMgr_;
         UPG_LOG_DEBUG("OnUpgReqCmd got upgType {}", ctx.upgType);
         UPG_LOG_INFO("Start Upgrade");
         return StartUpgrade();
