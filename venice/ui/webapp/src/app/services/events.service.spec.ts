@@ -9,6 +9,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { BehaviorSubject } from 'rxjs';
 import { MessageService } from 'primeng/primeng';
+import { ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 
 describe('EventsService', () => {
   let postSpy;
@@ -75,11 +76,11 @@ describe('EventsService', () => {
     tick(1000);
     expect(serviceAny.pollingFetchData).toHaveBeenCalledTimes(1);
     pollingSpy.calls.reset();
-    service.pollEvents('handler1', { 'max-results': 100 });
+    service.pollEvents('handler1', { 'max-results': 100, "sort-order": ApiListWatchOptions_sort_order.None });
     expect(serviceAny.pollingUtility.terminatePolling).toHaveBeenCalledTimes(1);
     tick(1000);
     expect(serviceAny.pollingFetchData).toHaveBeenCalledTimes(1);
-    expect(serviceAny.pollingFetchData).toHaveBeenCalledWith('handler1', { 'max-results': 100, 'field-selector': 'meta.mod-time>2018-08-20T19:09:04.777255798Z' }, true);
+    expect(serviceAny.pollingFetchData).toHaveBeenCalledWith('handler1', { 'max-results': 100, 'field-selector': 'meta.mod-time>2018-08-20T19:09:04.777255798Z', "sort-order": ApiListWatchOptions_sort_order.None }, true);
     // Shouldn't have appended onto results from the first call
     expect(handler1.next).toHaveBeenCalledWith([{ meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]);
     subscription1.unsubscribe();
@@ -105,7 +106,7 @@ describe('EventsService', () => {
     tick(10000);
     // Check next poll adds mod time
     expect(serviceAny.pollingFetchData).toHaveBeenCalledTimes(1);
-    expect(serviceAny.pollingFetchData).toHaveBeenCalledWith('handler1', { 'field-selector': 'meta.mod-time>2018-08-20T19:09:04.777255798Z' }, true);
+    expect(serviceAny.pollingFetchData).toHaveBeenCalledWith('handler1', { 'field-selector': 'meta.mod-time>2018-08-20T19:09:04.777255798Z', "sort-order": ApiListWatchOptions_sort_order.None }, true);
     expect(handler1.next).toHaveBeenCalledTimes(1);
     // When not blank, should pass in updated array.
     expect(handler1.next).toHaveBeenCalledWith([{ meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }, { meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]);
@@ -132,7 +133,7 @@ describe('EventsService', () => {
 
     // Same scenario but with multiple field selectors
     pollingSpy.calls.reset();
-    handler1 = service.pollEvents('handler1', { 'field-selector': 'random>10,meta.mod-time>2018,random2>30' });
+    handler1 = service.pollEvents('handler1', { 'field-selector': 'random>10,meta.mod-time>2018,random2>30', "sort-order": ApiListWatchOptions_sort_order.None });
     spyOn(handler1, 'next').and.callThrough();
     subscription1 = handler1.subscribe();
     tick(1000);
@@ -141,7 +142,7 @@ describe('EventsService', () => {
     tick(10000);
     // Check next poll adds mod time
     expect(serviceAny.pollingFetchData).toHaveBeenCalledTimes(1);
-    expect(serviceAny.pollingFetchData).toHaveBeenCalledWith('handler1', { 'field-selector': 'random>10,meta.mod-time>2018-08-20T19:09:04.777255798Z,random2>30' }, true);
+    expect(serviceAny.pollingFetchData).toHaveBeenCalledWith('handler1', { 'field-selector': 'random>10,meta.mod-time>2018-08-20T19:09:04.777255798Z,random2>30', "sort-order": ApiListWatchOptions_sort_order.None }, true);
     expect(handler1.next).toHaveBeenCalledTimes(2);
     // When not blank, should pass in updated array.
     expect(handler1.next).toHaveBeenCalledWith([{ meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }, { meta: { 'mod-time': '2018-08-20T19:09:04.777255798Z' } }]);
@@ -162,12 +163,12 @@ describe('EventsService', () => {
 
   it('polls with bad meta mod-time requests should print an error', fakeAsync(inject([EventsService], (service: EventsService) => {
     const consoleSpy = spyOn(console, 'error');
-    const handler1 = service.pollEvents('handler1', { 'field-selector': 'meta.mod-time<10' });
+    const handler1 = service.pollEvents('handler1', { 'field-selector': 'meta.mod-time<10', "sort-order": ApiListWatchOptions_sort_order.None });
     const subscription = handler1.subscribe();
     tick(1000);
     expect(console.error).toHaveBeenCalledWith('Requests with meta.mod-time<XXX should not be made using polling');
     consoleSpy.calls.reset();
-    service.pollEvents('handler1', { 'field-selector': 'meta.mod-time>1,meta.mod-time>2' });
+    service.pollEvents('handler1', { 'field-selector': 'meta.mod-time>1,meta.mod-time>2', "sort-order": ApiListWatchOptions_sort_order.None });
     tick(1000);
     expect(console.error).toHaveBeenCalledWith('Multiple mod-time selectors should be combined into a single one');
     subscription.unsubscribe();
