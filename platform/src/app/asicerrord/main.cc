@@ -105,8 +105,9 @@ main(int argc, char *argv[])
     createTables();
     while (1) {
         // Dont block context switches, let the process sleep for some time
-        sleep(10);
+        sleep(1);
         // Poll for interrupts
+
         poll_capri_intr();
     }
     return (0);

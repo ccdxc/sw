@@ -230,8 +230,12 @@ static inline void poll_##kind##metrics(uint32_t key, uint32_t addr) { \
 #define CAPRI_INTR_KIND_FIELD(fld, offset, type) { \
     if (data & (1 << offset)) { \
         reg->fld++; \
-        INFO("Register {} key {} at address {:x} interrupt {} type {} times {}", \
-             regname, regkey, regaddr, #fld, errortostring(type),reg->fld); \
+        if (type == INFO) \
+            INFO("Register {} key {} at address {:x} interrupt {} type {} times {}", \
+                 regname, regkey, regaddr, #fld, errortostring(type),reg->fld); \
+        else \
+            ERR("Register {} key {} at address {:x} interrupt {} type {} times {}", \
+                 regname, regkey, regaddr, #fld, errortostring(type),reg->fld); \
     } \
 }
 
