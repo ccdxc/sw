@@ -228,6 +228,7 @@ TEST_F(endpoint_test, test1)
 
     hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
 
+    seed = 1548274278;
     fill_registered_mac(seed);
 
     sdk_ret_t      sdk_ret;
