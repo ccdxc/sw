@@ -273,7 +273,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
                 'field-change-selector': new FormControl(this['field-change-selector']),
                 'from': new FormControl(this['from']),
                 'max-results': new FormControl(this['max-results']),
-                'sort-order': new FormControl(this['sort-order'], [enumValidator(ApiListWatchOptions_sort_order), ]),
+                'sort-order': new FormControl(this['sort-order'], [required, enumValidator(ApiListWatchOptions_sort_order), ]),
             });
         }
         return this._formGroup;

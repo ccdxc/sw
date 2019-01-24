@@ -28,7 +28,7 @@ import { WhitespaceTrimDirective } from '@app/components/shared/directives/white
 import { TableheaderComponent } from '@app/components/shared/tableheader/tableheader.component';
 import { BehaviorSubject } from 'rxjs';
 import { Utility } from '@app/common/Utility';
-import { EventsEvent, EventsEventAttributes_severity_uihint } from '@sdk/v1/models/generated/events';
+import { EventsEvent, EventsEventAttributes_severity_uihint, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { Eventsv1Service } from '@sdk/v1/services/generated/eventsv1.service';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
@@ -120,7 +120,7 @@ describe('AlertseventsComponent', () => {
   });
 
   it('should have events in the table', async(() => {
-    expect(eventsService.pollEvents).toHaveBeenCalledWith('alertsevents', {});
+    expect(eventsService.pollEvents).toHaveBeenCalledWith('alertsevents', { "sort-order": ApiListWatchOptions_sort_order.None });
     // Switch to the events tab
     const tabs = fixture.debugElement.queryAll(By.css('.mat-tab-label'));
     expect(tabs.length).toBe(2);
