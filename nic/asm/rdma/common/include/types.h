@@ -559,6 +559,7 @@ struct sge_t {
     l_key: 32;
 };
 
+// wqe op types
 #define OP_TYPE_SEND                0
 #define OP_TYPE_SEND_INV            1
 #define OP_TYPE_SEND_IMM            2
@@ -572,10 +573,17 @@ struct sge_t {
 #define OP_TYPE_BIND_MW             10
 #define OP_TYPE_SEND_INV_IMM        11 // vendor specific
 #define OP_TYPE_FRMR                12
+#define OP_TYPE_INVALID             13
 
-#define OP_TYPE_RDMA_OPER_WITH_IMM 16
-#define OP_TYPE_SEND_RCVD          17
-#define OP_TYPE_INVALID            18
+// recv cqe op types
+#define OP_TYPE_CQE_RECV_SEND       0
+#define OP_TYPE_CQE_RECV_SEND_INV   1
+#define OP_TYPE_CQE_RECV_SEND_IMM   2
+#define OP_TYPE_CQE_RECV_RDMA_IMM   3
+
+//recv cqe flags
+#define CQE_RECV_IS_VLAN            (1 << 0)
+#define CQE_RECV_IS_IPv4            (1 << 1)
 
 #define TXWQE_SGE_OFFSET  32 //
 #define TXWQE_SGE_OFFSET_BITS   256 // 32 * 8
@@ -835,10 +843,15 @@ struct cqe_t {
         } admin;
         struct {
             wrid: 64;
-            op_type: 8;
+            struct {
+                ipv4: 1;
+                vlan: 1;
+                rsvd: 1;
+            } flags;
+            op_type: 5;
             src_qp: 24;
             smac: 48;
-            pkey_index: 16;
+            vlan_tag: 16;
             union {
                 imm_data: 32;
                 r_key: 32;
@@ -855,21 +868,9 @@ struct cqe_t {
         status: 32;
         length: 32;
     };
-    qid: 24;
-    type: 3;
-    union {
-        struct {
-            rsvd: 3;
-        } admin_flags;
-        struct {
-            imm_data_vld: 1;
-            rkey_inv_vld: 1;
-            ipv4: 1;
-        } recv_flags;
-        struct {
-            rsvd: 3;
-        } send_flags;
-    };
+    qid:  24;
+    type:  3;
+    rsvd:  3;
     error: 1;
     color: 1;
 };

@@ -138,7 +138,7 @@ header_type p4_to_p4plus_roce_bth_ieth_header_t {
     }
 }
 
-//416
+//416 + 32(ext)
 header_type p4_to_p4plus_roce_bth_deth_header_t {
     fields {
         common_header_bits  : 160;
@@ -148,10 +148,20 @@ header_type p4_to_p4plus_roce_bth_deth_header_t {
         deth_src_qp         : 24;
         dmac                : 48;
         smac                : 48;
+        //ethtype             : 16;
+        //vlan                : 16;
     }
 }
 
-//416 + 16(ext)
+//416 + 32(ext)
+header_type p4_to_p4plus_roce_bth_deth_ext_header_t {
+    fields {
+        ethtype             : 16;
+        vlan                : 16;
+    }
+}
+
+//416 + 64(ext)
 header_type p4_to_p4plus_roce_bth_deth_immeth_header_t {
     fields {
         common_header_bits  : 160;
@@ -162,13 +172,17 @@ header_type p4_to_p4plus_roce_bth_deth_immeth_header_t {
         dmac                : 48;
         smac_1              : 16;
         //smac_2              : 32;
+        //ethtype             : 16;
+        //vlan                : 16;
     }
 }
 
-//416 + 16(ext)
+//416 + 64(ext)
 header_type p4_to_p4plus_roce_bth_deth_immeth_ext_header_t {
     fields {
-        smac_2             : 32;
+        smac_2              : 32;
+        ethtype             : 16;
+        vlan                : 16;
     }
 }
 

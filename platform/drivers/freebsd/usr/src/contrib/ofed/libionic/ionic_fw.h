@@ -180,17 +180,14 @@ enum ionic_v1_cqe_src_qpn_bits {
 	IONIC_V1_CQE_RECV_OP_SEND_IMM	= 2,
 	IONIC_V1_CQE_RECV_OP_RDMA_IMM	= 3,
 
-	IONIC_V1_CQE_RECV_IS_IPV4	= (1u << 7),
-	IONIC_V1_CQE_RECV_IS_VLAN	= (1u << 6),
+	IONIC_V1_CQE_RECV_IS_IPV4	= (1u << (7 + IONIC_V1_CQE_RECV_OP_SHIFT)),
+	IONIC_V1_CQE_RECV_IS_VLAN	= (1u << (6 + IONIC_V1_CQE_RECV_OP_SHIFT)),
 };
 
 /* bits for cqe qid_type_flags */
 enum ionic_v1_cqe_qtf_bits {
 	IONIC_V1_CQE_COLOR		= (1u << 0),
 	IONIC_V1_CQE_ERROR		= (1u << 1),
-	IONIC_V1_CQE_RCVD_IPV4		= (1u << 2),
-	IONIC_V1_CQE_RCVD_WITH_INV	= (1u << 3),
-	IONIC_V1_CQE_RCVD_WITH_IMM	= (1u << 4),
 	IONIC_V1_CQE_TYPE_SHIFT		= 5,
 	IONIC_V1_CQE_TYPE_MASK		= 0x7,
 	IONIC_V1_CQE_QID_SHIFT		= 8,
@@ -212,19 +209,14 @@ static inline bool ionic_v1_cqe_error(struct ionic_v1_cqe *cqe)
 
 static inline bool ionic_v1_cqe_recv_is_ipv4(struct ionic_v1_cqe *cqe)
 {
-	/* should be indicated in src_qpn_op, but might be in qtf bits */
 	return !!(cqe->recv.src_qpn_op &
-		  htobe32(IONIC_V1_CQE_RECV_IS_IPV4)) ||
-		!!(cqe->qid_type_flags &
-		   htobe32(IONIC_V1_CQE_RCVD_IPV4));
+		  htobe32(IONIC_V1_CQE_RECV_IS_IPV4));
 }
 
 static inline bool ionic_v1_cqe_recv_is_vlan(struct ionic_v1_cqe *cqe)
 {
-	/* should be indicated in src_qpn_op, but might be in DEI bit */
 	return !!(cqe->recv.src_qpn_op &
-		  htobe32(IONIC_V1_CQE_RECV_IS_VLAN)) ||
-		!!(cqe->recv.vlan_tag & htobe16(1u << 12)); /* 802.1q DEI */
+		  htobe32(IONIC_V1_CQE_RECV_IS_VLAN));
 }
 
 static inline void ionic_v1_cqe_clean(struct ionic_v1_cqe *cqe)
@@ -390,11 +382,5 @@ static inline int ionic_v1_recv_wqe_max_sge(uint8_t stride_log2)
 
 	return sge - wqe->recv.sgl;
 }
-
-/* XXX to end of file: makeshift, will be removed */
-
-#define OP_TYPE_RDMA_OPER_WITH_IMM	16
-#define OP_TYPE_SEND_RCVD		17
-#define OP_TYPE_INVALID			18
 
 #endif

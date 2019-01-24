@@ -257,6 +257,12 @@ def GetUDSMAC(tc, desc):
 def GetUDInitiatorSMAC(tc, desc):
     return bytes(tc.config.rdmasession.session.initiator.ep.macaddr.getnum().to_bytes(6, 'big'))
 
+def GetUDEncapVLAN(tc, desc):
+    if GlobalOptions.classic is False:
+        return tc.config.rdmasession.session.initiator.ep.intf.encap_vlan_id
+    else:
+        return tc.config.rdmasession.session.initiator.ep.segment.vlan_id
+
 # Callbacks for RDMA Multicast
 def __get_ring_from_lif(lif, rtype, qid, rid):
     queue = lif.GetQ(rtype, qid)
@@ -557,3 +563,24 @@ def GetNumPTEntries(testcase, descriptor, args):
 
     num_pages += (int) (transfer_bytes / slab.page_size);
     return num_pages
+
+def GetCqeOpTypeSendOnly(tc, pkt):
+    return 0
+
+def GetCqeOpTypeSendInv(tc, pkt):
+    return 1
+
+def GetCqeOpTypeSendImm(tc, pkt):
+    return 2
+
+def GetCqeOpTypeRdmaImm(tc, pkt):
+    return 3
+
+def GetCqeFlagVlan(tc, pkt):
+    return 2
+
+def GetCqeFlagIpv4(tc, pkt):
+    return 4
+
+def GetCqeFlagVlanIpv4(tc, pkt):
+    return 6

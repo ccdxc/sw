@@ -243,8 +243,7 @@ write_non_first_pkt:
 
 wr_skip_immdt_as_dbell:
     CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, incr_c_index, 1)
-    phvwr       p.cqe.recv.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
-    phvwr       p.cqe.recv_flags.imm_data_vld, 1
+    phvwr       p.cqe.recv.op_type, OP_TYPE_CQE_RECV_RDMA_IMM
     b           rc_checkout
     phvwr       p.cqe.recv.imm_data, IMM_DATA //BD Slot
 
@@ -262,7 +261,7 @@ process_send:
     bcf         [!c7 | c4], skip_token_id_check
     seq         c7, TOKEN_ID, d.nxt_to_go_token_id // BD Slot
     bcf         [!c7], recirc_wait_for_turn
-    nop //BD Slot
+    phvwr       p.cqe.recv.op_type, OP_TYPE_CQE_RECV_SEND // BD Slot
 
 skip_token_id_check:
     // check expected op type and pkt type for send packets 
@@ -293,7 +292,6 @@ skip_token_id_check:
 send_sge_non_opt:
     // populate PD in lkey's to_stage
     CAPRI_SET_FIELD2(TO_S_LKEY_P, pd, d.pd)
-    phvwr       p.cqe.recv.op_type, OP_TYPE_SEND_RCVD
 
     crestore    [c7, c6, c5], r7, (RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT)
     // c7: completion, c6: inv_rkey, c5: immdt
@@ -312,15 +310,14 @@ send_sge_non_opt:
     bcf         [!c6], send_check_immdt
     phvwr.c7    CAPRI_PHV_FIELD(TO_S_LKEY_P, rsvd_key_err), 1   //BD Slot
 
-    phvwr       p.cqe.recv_flags.rkey_inv_vld, 1 
-    phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
+    phvwrpair   p.cqe.recv.op_type, OP_TYPE_CQE_RECV_SEND_INV, p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY 
     CAPRI_SET_FIELD2(TO_S_WQE_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
 
 send_check_immdt:
     bcf         [!c5], send_in_progress
     seq         c7, d.immdt_as_dbell, 1     //BD Slot
     bcf         [!c7], send_skip_immdt_as_dbell
-    phvwr.!c7   p.cqe.recv_flags.imm_data_vld, 1 // BD Slot
+    phvwr.!c7   p.cqe.recv.op_type, OP_TYPE_CQE_RECV_SEND_IMM // BD Slot
 
     //handle immdt_as_dbell
     and         r7, r7, ~(RESP_RX_FLAG_IMMDT)
@@ -395,13 +392,13 @@ send_sge_opt:
     crestore    [c7, c6], r7, (RESP_RX_FLAG_INV_RKEY | RESP_RX_FLAG_IMMDT) // BD Slot
     // c7: inv_rkey, c6: immdt
     bcf         [!c7 & !c6], rc_checkout
-    phvwr       p.cqe.recv.op_type, OP_TYPE_SEND_RCVD //BD Slot
+    phvwr       p.cqe.recv.op_type, OP_TYPE_CQE_RECV_SEND //BD Slot
 
     bcf         [!c7], send_only_check_immdt
     seq         c5, CAPRI_RXDMA_BTH_IETH_R_KEY, RDMA_RESERVED_LKEY_ID //BD Slot
     phvwr.c5    CAPRI_PHV_FIELD(TO_S_LKEY_P, rsvd_key_err), 1
 
-    phvwr       p.cqe.recv_flags.rkey_inv_vld, 1 
+    phvwrpair   p.cqe.recv.op_type, OP_TYPE_CQE_RECV_SEND_INV, p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY 
     phvwr       p.cqe.recv.r_key, CAPRI_RXDMA_BTH_IETH_R_KEY
 
     CAPRI_SET_FIELD2(TO_S_WQE_P, inv_r_key, CAPRI_RXDMA_BTH_IETH_R_KEY)
@@ -410,7 +407,7 @@ send_only_check_immdt:
     bcf         [!c6], rc_checkout
     seq         c7, d.immdt_as_dbell, 1     //BD Slot
     bcf         [!c7], send_only_skip_immdt_as_dbell
-    phvwr.!c7   p.cqe.recv_flags.imm_data_vld, 1     //BD Slot
+    phvwr.!c7   p.cqe.recv.op_type, OP_TYPE_CQE_RECV_SEND_IMM // BD Slot
 
     //handle immdt_as_dbell
     and         r7, r7, ~(RESP_RX_FLAG_IMMDT)
@@ -484,8 +481,7 @@ wr_only_skip_immdt_as_dbell:
     bcf        [c5], process_rnr
     CAPRI_SET_TABLE_1_VALID_C(c5, 0)
 
-    phvwr       p.cqe.recv.op_type, OP_TYPE_RDMA_OPER_WITH_IMM  //BD Slot
-    phvwr       p.cqe.recv_flags.imm_data_vld, 1
+    phvwr       p.cqe.recv.op_type, OP_TYPE_CQE_RECV_RDMA_IMM
     CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, incr_c_index, 1)
 
     b           rc_checkout
@@ -514,8 +510,7 @@ wr_only_zero_len_with_imm_data:
     phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_c_index), 1
 
     CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(IMM_DATA, c0)
-    phvwr       p.cqe.recv.op_type, OP_TYPE_RDMA_OPER_WITH_IMM
-    phvwr       p.cqe.recv_flags.imm_data_vld, 1
+    phvwr       p.cqe.recv.op_type, OP_TYPE_CQE_RECV_RDMA_IMM
     b           rc_checkout
     phvwr       p.cqe.recv.imm_data, IMM_DATA //BD Slot
 
@@ -903,16 +898,15 @@ process_ud:
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, r7)
 
     // populate completion entry
-    phvwr       p.cqe.recv.op_type, OP_TYPE_SEND_RCVD
     phvwrpair   p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID, p.cqe.type, CQE_TYPE_RECV
     phvwr       p.cqe.recv.src_qp[23:0], CAPRI_RXDMA_DETH_SRC_QP
-    phvwr       p.cqe.recv_flags.ipv4, 1
+    phvwrpair   p.cqe.recv.flags.ipv4, 1, p.cqe.recv.op_type, OP_TYPE_CQE_RECV_SEND
     CAPRI_RXDMA_DETH_SMAC(r5)
     CAPRI_RXDMA_DETH_IMMETH_SMAC1(r1)
+    sll.c6      r1, r1, 32
     cmov        r1, c6, r1, r5
     phvwr       p.cqe.recv.smac, r1
-    phvwr.c6    p.cqe.recv_flags.imm_data_vld, 1 
-    phvwr.c6    p.cqe.recv.imm_data, CAPRI_RXDMA_DETH_IMMETH_DATA
+    phvwrpair.c6    p.cqe.recv.op_type, OP_TYPE_CQE_RECV_SEND_IMM, p.cqe.recv.imm_data, CAPRI_RXDMA_DETH_IMMETH_DATA  
     
 
     // populate PD in lkey's to_stage

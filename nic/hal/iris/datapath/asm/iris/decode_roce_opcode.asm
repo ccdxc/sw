@@ -38,17 +38,17 @@ decode_roce_opcode:
 
   smeqb       c1, k.roce_bth_opCode, 0xE0, 0x60
 
-  // increment splitter offset to conditionally skip eth header for UD RDMA
-  add.c1      r1, r1, 14
-  phvwr.c1    p.p4_to_p4plus_roce_eth_valid, 1
+  // increment splitter offset to skip eth and vlan headers for UD RDMA
+  add.c1      r1, r1, 18
+  phvwr.c1    p.{p4_to_p4plus_roce_vlan_valid,p4_to_p4plus_roce_eth_valid}, 0x3
   phvwr.c1    p.control_metadata_rdma_ud, TRUE
   phvwr       p.capri_rxdma_intrinsic_rx_splitter_offset, r1
 
   // subtract udp header length 8 and icrc length 4
   sub         r1, k.udp_len, 12
   // add conditionally 40B for ip header length for UD RDMA
-  // For IPv6, store 40B of IPv6 header
-  // For IPv4, save 20B of hdr into first 20Bytes and rest 20Bytes are zero
+  // for IPv6, store 40B of IPv6 header
+  // for IPv4, store 20B of hdr into last 20B, the first 20B are zeros
   add.c1      r1, r1, 40
   sub.e       r1, r1, d.u.decode_roce_opcode_d.len
   phvwr       p.p4_to_p4plus_roce_payload_len, r1

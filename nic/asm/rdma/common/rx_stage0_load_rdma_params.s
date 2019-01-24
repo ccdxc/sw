@@ -52,7 +52,8 @@ rq:
     #CAPRI_SET_FIELD(r1, TO_S_EXT_HDR_INFO_T, ext_hdr_data, k.{ext_app_header_app_data3_sbit0_ebit31...ext_app_header_app_data3_sbit32_ebit63})
 
     // stage 3 for rqwqe
-    phvwr p.to_stage_3_to_stage_data[127:96], k.ext_app_header_app_data3[31:0]
+    // Accomodate smac (32 bits) + ethertype (16 bits) + vlan (16 bits) for UD packets
+    phvwr p.to_stage_3_to_stage_data[127:64], k.ext_app_header_app_data3[95:32]
     // stage 2 for rqrkey
     phvwr p.to_stage_2_to_stage_data[127:64], k.ext_app_header_app_data3[95:32]
 

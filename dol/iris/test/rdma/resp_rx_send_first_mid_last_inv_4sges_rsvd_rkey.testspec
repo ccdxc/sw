@@ -288,12 +288,11 @@ descriptors:
         fields:
             wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             qid: ref://testcase/config/rdmasession/lqp/id
-            op_type     : 17 # OP_TYPE_SEND_RCVD
+            op_type     : callback://rdma/rdma/GetCqeOpTypeSendInv
             status      : 7  #CQ_STATUS_LOCAL_ACC_ERR
             color  : callback://rdma/rdma/GetCQExpColor/entries=1
             error  : 1
 #           r_key       : ref://testcase/pvtdata/inv_r_key
-#           rkey_inv_vld: 1
             smac: callback://rdma/rdma/GetZeroMAC
  
     - descriptor:

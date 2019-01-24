@@ -169,9 +169,9 @@ descriptors:
             src_qp: ref://testcase/config/rdmasession/rqp/id
             color: callback://rdma/rdma/GetCQColorForMulticastCopy/idx=0,cq_wqe_num=0
             error  : 0
-            op_type: 17 #OP_TYPE_SEND_RCVD
+            op_type: callback://rdma/rdma/GetCqeOpTypeSendOnly
             status : 64 #msg_len
-            ipv4: 1
+            flags  : callback://rdma/rdma/GetCqeFlagIpv4
             smac: callback://rdma/rdma/GetUDInitiatorSMAC
 
     - descriptor:
@@ -208,9 +208,9 @@ descriptors:
             src_qp: ref://testcase/config/rdmasession/rqp/id
             color: callback://rdma/rdma/GetCQColorForMulticastCopy/idx=1,cq_wqe_num=0
             error: 0
-            op_type: 17 #OP_TYPE_SEND_RCVD
+            flags  : callback://rdma/rdma/GetCqeFlagIpv4
+            op_type: callback://rdma/rdma/GetCqeOpTypeSendOnly
             status : 64 #msg_len
-            ipv4: 1
             smac: callback://rdma/rdma/GetUDInitiatorSMAC
 
 session:

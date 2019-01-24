@@ -32,10 +32,12 @@ struct rqwqe_base_t d;
 #define KEY_ADDR r6
 #define DMA_CMD_BASE r6
 #define GLOBAL_FLAGS r6
+#define VLAN_TMP r2
 
 #define IN_P    t0_s2s_rqcb_to_wqe_info
 #define K_CURR_WQE_PTR CAPRI_KEY_RANGE(IN_P,curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
+#define K_EXT_HDR_DATA CAPRI_KEY_FIELD(IN_TO_S_P, ext_hdr_data)
 
 %%
     .param  resp_rx_rqlkey_process
@@ -243,7 +245,10 @@ send_only_zero_len_join:
 skip_inv_rkey:
 
     ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_UD|RESP_RX_FLAG_IMMDT)
-    phvwr.c2    p.cqe.recv.smac[31:0], CAPRI_KEY_FIELD(IN_TO_S_P, ext_hdr_data)
+    phvwr.c2    p.cqe.recv.smac[31:0], K_EXT_HDR_DATA[63:32]
+    cmov        VLAN_TMP, c2, K_EXT_HDR_DATA[31:0], K_EXT_HDR_DATA[63:32]
+    seq         c2, VLAN_TMP[31:16], 0x8100
+    phvwrpair.c2    p.cqe.recv.flags.vlan, 1, p.cqe.recv.vlan_tag, VLAN_TMP
 
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
     seq         c3, CAPRI_KEY_FIELD(IN_P, recirc_path), 1

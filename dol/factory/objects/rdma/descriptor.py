@@ -178,17 +178,16 @@ class RdmaSge(Packet):
 class RdmaCqDescriptorRecv(Packet):
     fields_desc = [
         LongField("wrid", 0),
-        ByteField("op_type", 0),
+        BitField("flags", 0, 3),
+        BitField("op_type", 0, 5),
         X3BytesField("src_qp", 0),
         MACField("smac", ETHER_ANY),
-        ShortField("pkey_index", 0),
+        ShortField("vlan_tag", 0),
         IntField("imm_data_or_r_key", 0),
         IntField("status_or_length", 0),
         X3BytesField("qid", 0),
         BitField("type", 0, 3),
-        BitField("imm_data_vld", 0, 1),
-        BitField("rkey_inv_vld", 0, 1),
-        BitField("ipv4", 0, 1),
+        BitField("rsvd", 0, 3),
         BitField("error", 0, 1),
         BitField("color", 0, 1),
     ]
@@ -202,7 +201,7 @@ class RdmaCqDescriptorSend(Packet):
         IntField("status", 0),
         X3BytesField("qid", 0),
         BitField("type", 0, 3),
-        BitField("flags", 0, 3),
+        BitField("rsvd", 0, 3),
         BitField("error", 0, 1),
         BitField("color", 0, 1),
     ]
@@ -217,7 +216,7 @@ class RdmaCqDescriptorAdmin(Packet):
         IntField("status", 0),
         X3BytesField("qid", 0),
         BitField("type", 0, 3),
-        BitField("flags", 0, 3),
+        BitField("rsvd", 0, 3),
         BitField("error", 0, 1),
         BitField("color", 0, 1),
     ]
@@ -913,17 +912,16 @@ class RdmaCqDescriptorRecvObject(base.FactoryObjectBase):
     def Init(self, spec):
         super().Init(spec)
         self.wrid = self.spec.fields.wrid if hasattr(self.spec.fields, 'wrid') else 0
+        self.flags = self.spec.fields.flags if hasattr(self.spec.fields, 'flags') else 0
         self.op_type = self.spec.fields.op_type if hasattr(self.spec.fields, 'op_type') else 0
-        self.rkey_inv_vld = self.spec.fields.rkey_inv_vld if hasattr(self.spec.fields, 'rkey_inv_vld') else 0
-        self.imm_data_vld = self.spec.fields.imm_data_vld if hasattr(self.spec.fields, 'imm_data_vld') else 0
-        self.ipv4 = self.spec.fields.ipv4 if hasattr(self.spec.fields, 'ipv4') else 0
         self.src_qp = self.spec.fields.src_qp if hasattr(self.spec.fields, 'src_qp') else 0
         self.smac = self.spec.fields.smac if hasattr(self.spec.fields, 'smac') else 0
-        self.pkey_index = self.spec.fields.pkey_index if hasattr(self.spec.fields, 'pkey_index') else 0
+        self.vlan_tag = self.spec.fields.vlan_tag if hasattr(self.spec.fields, 'vlan_tag') else 0
         self.imm_data_or_r_key = self.spec.fields.imm_data if hasattr(self.spec.fields, 'imm_data') else self.spec.fields.r_key if hasattr(self.spec.fields, 'r_key') else 0
         self.status_or_length = self.spec.fields.status if hasattr(self.spec.fields, 'status') else self.spec.fields.length if hasattr(self.spec.fields, 'length') else 0
         self.qid = self.spec.fields.qid if hasattr(self.spec.fields, 'qid') else 0
         self.type = self.spec.fields.type if hasattr(self.spec.fields, 'type') else 1 #CQE_TYPE_RECV
+        self.rsvd = 0
         self.error = self.spec.fields.error if hasattr(self.spec.fields, 'error') else 0
         self.color = self.spec.fields.color if hasattr(self.spec.fields, 'color') else 0
         #CQE_TYPE_RECV
@@ -934,16 +932,15 @@ class RdmaCqDescriptorRecvObject(base.FactoryObjectBase):
     def __create_desc(self):
         self.desc = RdmaCqDescriptorRecv(
             wrid=self.wrid,
+            flags=self.flags,
             op_type=self.op_type,
-            imm_data_vld=self.imm_data_vld,
-            rkey_inv_vld=self.rkey_inv_vld,
-            ipv4=self.ipv4,
             src_qp=self.src_qp,
             smac=self.smac,
-            pkey_index=self.pkey_index,
+            vlan_tag=self.vlan_tag,
             imm_data_or_r_key=self.imm_data_or_r_key,
             qid=self.qid,
             status_or_length=self.status_or_length,
+            rsvd=self.rsvd,
             type=self.type,
             error=self.error,
             color=self.color)
@@ -998,6 +995,11 @@ class RdmaCqDescriptorRecvObject(base.FactoryObjectBase):
 
         logger.info('wrid matched\n')
 
+        if self.desc.flags != other.desc.flags:
+            return False
+
+        logger.info('flags matched\n')
+
         if self.desc.op_type != other.desc.op_type:
             return False
 
@@ -1012,21 +1014,6 @@ class RdmaCqDescriptorRecvObject(base.FactoryObjectBase):
         if self.desc.error == 1:
            return True
 
-        if self.desc.imm_data_vld != other.desc.imm_data_vld:
-            return False
-
-        logger.info('imm_data_vld matched\n')
-
-        if self.desc.rkey_inv_vld != other.desc.rkey_inv_vld:
-            return False
-
-        logger.info('rkey_inv_vld matched\n')
-
-        if self.desc.ipv4 != other.desc.ipv4:
-            return False
-
-        logger.info('ipv4 matched\n')
-
         if self.desc.src_qp != other.desc.src_qp:
             return False
 
@@ -1037,10 +1024,10 @@ class RdmaCqDescriptorRecvObject(base.FactoryObjectBase):
 
         logger.info('smac matched\n')
 
-        if self.desc.pkey_index != other.desc.pkey_index:
+        if self.desc.vlan_tag != other.desc.vlan_tag:
             return False
 
-        logger.info('pkey_index matched\n')
+        logger.info('vlan_tag matched\n')
 
         if self.desc.imm_data_or_r_key != other.desc.imm_data_or_r_key:
             return False
@@ -1086,6 +1073,7 @@ class RdmaCqDescriptorSendObject(base.FactoryObjectBase):
         self.status = self.spec.fields.status if hasattr(self.spec.fields, 'status') else 0
         self.qid = self.spec.fields.qid if hasattr(self.spec.fields, 'qid') else 0
         self.type = self.spec.fields.type if hasattr(self.spec.fields, 'type') else 2 #CQE_TYPE_SEND_MSN
+        self.rsvd = 0
         self.error = self.spec.fields.error if hasattr(self.spec.fields, 'error') else 0
         self.color = self.spec.fields.color if hasattr(self.spec.fields, 'color') else 0
         #CQE_TYPE_SEND_MSN or CQE_TYPE_SEND_NPG
@@ -1216,6 +1204,7 @@ class RdmaCqDescriptorAdminObject(base.FactoryObjectBase):
         self.type = self.spec.fields.type if hasattr(self.spec.fields, 'type') else 0 #CQE_TYPE_ADMIN
         self.error = self.spec.fields.error if hasattr(self.spec.fields, 'error') else 0
         self.color = self.spec.fields.color if hasattr(self.spec.fields, 'color') else 0
+        self.rsvd = 0
         logger.info("CQ Descriptor type: %d" % self.type)
         assert(self.type == 0)  #CQE_TYPE_ADMIN
 

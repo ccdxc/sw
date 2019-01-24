@@ -115,7 +115,7 @@ descriptors:
         fields:
             wrid: ref://testcase/descriptors/id=RQ_DESC/wrid
             qid: ref://testcase/config/rdmasession/rqp/id
-            op_type: 17 #OP_TYPE_SEND_RCVD
+            op_type: callback://rdma/rdma/GetCqeOpTypeSendOnly
             status : 32 #msg_len
             color  : callback://rdma/rdma/GetCQExpColor
             error  : 0

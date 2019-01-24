@@ -12,15 +12,15 @@ selectors:
 #       interface   : filter://any
 #   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
     rdmasession     :
-        lqp         : filter://svc=0
-        rqp         : filter://svc=0
+        lqp         : filter://svc=3
+        rqp         : filter://svc=3
 #    maxflows    : 1 
-#    maxrdmasessions     : 4 
+#    maxrdmasessions     : 1 
 
 packets:
    - packet:
-        id          : BASE_PKT # Base packet
-        payloadsize : 63
+        id          : BASE_PYLD
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -28,8 +28,8 @@ packets:
 
    - packet:
         id          : IN_PKT    # Input packet 
-        payloadsize : ref://testcase/packets/id=BASE_PKT/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        payloadsize : ref://testcase/packets/id=BASE_PYLD/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_DETH_IMMDT,v6=ETH_IPV6_UDP_BTH_DETH_IMMDT
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -40,6 +40,7 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
                 dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
             qtag:
+                prio    : 0
                 vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/rdmasession/session/responder/addr
@@ -50,74 +51,53 @@ packets:
                 dst     : ref://testcase/config/rdmasession/session/initiator/addr
                 hlim    : 64
             udp:
-                len     : callback://common/callbacks/GetUdpLength
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 4 
+                opcode  : 101   # IBV_OPCODE_UD + IBV_OPCODE_SEND_ONLY_WITH_IMMEDIATE
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetRqPreEpsn
-                a       : 1
+            deth:
+                qkey    : ref://testcase/config/rdmasession/lqp/id
+                srcqp   : ref://testcase/config/rdmasession/rqp/id
+            immdt:
+                imm_data: ref://testcase/pvtdata/imm_data
             payload:
-                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
-            udp_options :
-                options :
-                    - kind   : NOP
-                      data   : 0x00
-                    - kind   : MSS
-                      data   : ref://testcase/pvtdata/roce_opt_mss
-                    - kind   : TIME
-                      #data   : ref://testcase/pvtdata/roce_opt_ts_list
-                      data   : 0x11223344 0x55667788
-                    - kind   : EOL
-                      data   : 0x00
+                data    : ref://testcase/packets/id=BASE_PYLD/rawbytes
 
    - packet:
-        id          : EXP_PKT    # Expected Ack packet
-        payloadsize : 0
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
-        icrc        : True
-        encaps      :   
-            - ref://factory/packets/id=ENCAP_QTAG
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://testcase/packets/id=BASE_PYLD/size
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ROCE_UD_IPV4,v6=ROCE_UD_IPV6
         headers     :
-            # Add all possible headers, the final headers will be selected
-            # based on the Flow.
-            eth:
-                src     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
-                dst     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
-            qtag:
-                vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
+            pad:
+                data0   : 00000000
+                data1   : 00000000
+                data2   : 00000000
+                data3   : 00000000
+                data4   : 00000000
             ipv4:
-                src     : ref://testcase/config/rdmasession/session/initiator/addr
-                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
                 ttl     : 64
+                len     : 120 #from the IN_PKT
             ipv6:
-                src     : ref://testcase/config/rdmasession/session/initiator/addr
-                dst     : ref://testcase/config/rdmasession/session/responder/addr
+                src     : ref://testcase/config/rdmasession/session/responder/addr
+                dst     : ref://testcase/config/rdmasession/session/initiator/addr
                 hlim    : 64
-            udp:
-                sport   : ref://testcase/config/rdmasession/session/iflow/sport
-                dport   : ref://testcase/config/rdmasession/session/iflow/dport
-            bth:
-                opcode  : 17 # ACK
-                destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
-            aeth:
-                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
-                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
+                plen    : 100 #from the IN_PKT
             payload:
-                data    : None
-
-
+                data    : ref://testcase/packets/id=BASE_PYLD/rawbytes
+               
 buffers:
     - buffer:
         id      : RQ_BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : ref://testcase/pvtdata/slab_1
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=IN_PKT/size
+               - size    : ref://testcase/packets/id=BASE_PKT/size
                  data    : None
 
     - buffer:
@@ -127,7 +107,7 @@ buffers:
            slab    : None
            offset  : 0
            segments:
-               - size    : 63
+               - size    : ref://testcase/packets/id=BASE_PKT/size
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
 descriptors:
@@ -141,7 +121,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=RQ_BUF/address
                   len : ref://testcase/buffers/id=RQ_BUF/size
-                  l_key: ref://testcase/pvtdata/mr_slab_1/lkey
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
 
     - descriptor:
         id      : EXP_RQ_DESC
@@ -154,7 +134,7 @@ descriptors:
             sges:
                 - va  : ref://testcase/buffers/id=RQ_BUF/address
                   len : ref://testcase/buffers/id=RQ_BUF/size
-                  l_key: ref://testcase/pvtdata/mr_slab_1/lkey
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/lkey
 
     - descriptor:
         id      : EXP_CQ_DESC
@@ -162,12 +142,15 @@ descriptors:
         fields:
             wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             qid: ref://testcase/config/rdmasession/lqp/id
-            op_type: callback://rdma/rdma/GetCqeOpTypeSendOnly
-            status : 63 #msg_len
+            src_qp : ref://testcase/config/rdmasession/rqp/id
+            flags  : callback://rdma/rdma/GetCqeFlagVlanIpv4
+            op_type: callback://rdma/rdma/GetCqeOpTypeSendImm
+            status : 104 #ip+msg_len
             color  : callback://rdma/rdma/GetCQExpColor
             error  : 0
-            smac: callback://rdma/rdma/GetZeroMAC
-            
+            smac: callback://rdma/rdma/GetUDSMAC
+            imm_data: ref://testcase/pvtdata/imm_data
+            vlan_tag: callback://rdma/rdma/GetUDEncapVLAN
 session:
     - step:
         trigger:
@@ -194,10 +177,6 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=EXP_PKT
-                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
         
     #set CI for CQ ring to that of proxy CI in DB data
     - step:

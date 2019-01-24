@@ -257,14 +257,13 @@ descriptors:
         fields:
             wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             qid: ref://testcase/config/rdmasession/lqp/id
-            op_type     : 17 # OP_TYPE_SEND_RCVD
+            op_type     : callback://rdma/rdma/GetCqeOpTypeSendOnly
             status      : 2112 #msg_len
             color  : callback://rdma/rdma/GetCQExpColor
             error  : 0
         #   imm_data shouldn't be valid as we marked the qp as immdt_as_dbell
         #   CQ_DESC should still be posted
         #   imm_data: ref://testcase/pvtdata/imm_data
-        #   imm_data_vld: 1
             smac: callback://rdma/rdma/GetZeroMAC
 
 session:

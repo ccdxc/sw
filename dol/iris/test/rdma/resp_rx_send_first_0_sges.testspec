@@ -113,7 +113,7 @@ descriptors:
         fields:
             wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             qid: ref://testcase/config/rdmasession/lqp/id
-            op_type: 17 #OP_TYPE_SEND_RCVD
+            op_type: callback://rdma/rdma/GetCqeOpTypeSendOnly
             status : 1  #CQ_STATUS_LOCAL_LEN_ERR
             color  : callback://rdma/rdma/GetCQExpColor
             error  : 1

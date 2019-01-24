@@ -30,11 +30,13 @@ action decode_roce_opcode(raw_flags, len, qtype, tm_oq_overwrite, tm_oq) {
             (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
              P4PLUS_ROCE_HDR_SZ));
         if ((roce_bth.opCode & 0xE0) == 0x60) {
+            /* unreliable delivery */
             add_header(p4_to_p4plus_roce_eth);
+            add_header(p4_to_p4plus_roce_vlan);
             modify_field(control_metadata.rdma_ud, TRUE);
-            /* increment splitter offset to conditionally skip eth header for UD RDMA */
-            add_to_field(capri_rxdma_intrinsic.rx_splitter_offset, 14);
-            /* add 40B for ip header length for UD RDMA */
+            /* increment splitter offset to skip eth and vlan header */
+            add_to_field(capri_rxdma_intrinsic.rx_splitter_offset, 18);
+            /* add 40B for ip header length */
             add_to_field(p4_to_p4plus_roce.payload_len, 40);
         }
     }

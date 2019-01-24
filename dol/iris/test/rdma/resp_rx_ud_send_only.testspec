@@ -40,6 +40,7 @@ packets:
                 src     : ref://testcase/config/rdmasession/session/responder/ep/macaddr
                 dst     : ref://testcase/config/rdmasession/session/initiator/ep/macaddr
             qtag:
+                prio    : 0
                 vlan    : ref://testcase/config/rdmasession/session/responder/ep/segment/vlan_id
             ipv4:
                 src     : ref://testcase/config/rdmasession/session/responder/addr
@@ -140,12 +141,13 @@ descriptors:
             wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             qid: ref://testcase/config/rdmasession/lqp/id
             src_qp : ref://testcase/config/rdmasession/rqp/id
-            op_type: 17 #OP_TYPE_SEND_RCVD
+            flags  : callback://rdma/rdma/GetCqeFlagVlanIpv4
+            op_type: callback://rdma/rdma/GetCqeOpTypeSendOnly
             status : 104 #ip+msg_len
             color  : callback://rdma/rdma/GetCQExpColor
             error  : 0
-            ipv4: 1
             smac: callback://rdma/rdma/GetUDSMAC
+            vlan_tag: callback://rdma/rdma/GetUDEncapVLAN
 
 session:
     - step:

@@ -1006,6 +1006,7 @@ table rx_stage0_load_rdma_params {
         rx_stage0_load_rdma_params_dummy2;
         rx_stage0_load_rdma_params_dummy3;
         rx_stage0_load_rdma_params_dummy4;
+        rx_stage0_load_rdma_params_dummy5;
     }
     size : LIF_TABLE_SIZE;
 }

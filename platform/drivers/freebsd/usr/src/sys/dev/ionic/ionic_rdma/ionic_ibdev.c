@@ -2784,17 +2784,6 @@ static int ionic_poll_recv(struct ionic_ibdev *dev, struct ionic_cq *cq,
 	src_qpn &= IONIC_V1_CQE_RECV_QPN_MASK;
 	op &= IONIC_V1_CQE_RECV_OP_MASK;
 
-	/* XXX makeshift: cqe has recv flags in qtf, not all in srq_qpn_op */
-	if (op == OP_TYPE_RDMA_OPER_WITH_IMM) {
-		op = IONIC_V1_CQE_RECV_OP_RDMA_IMM;
-	} else if (op == OP_TYPE_SEND_RCVD) {
-		op = IONIC_V1_CQE_RECV_OP_SEND;
-		if (cqe->qid_type_flags & cpu_to_be32(IONIC_V1_CQE_RCVD_WITH_IMM))
-			op = IONIC_V1_CQE_RECV_OP_SEND_IMM;
-		else if (cqe->qid_type_flags & cpu_to_be32(IONIC_V1_CQE_RCVD_WITH_INV))
-			op = IONIC_V1_CQE_RECV_OP_SEND_INV;
-	}
-
 	wc->opcode = IB_WC_RECV;
 	switch (op) {
 	case IONIC_V1_CQE_RECV_OP_RDMA_IMM:

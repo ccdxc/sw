@@ -105,6 +105,7 @@ header recirc_header_t recirc_header;
 header llc_header_t llc_header;
 header snap_header_t snap_header;
 @pragma pa_header_union ingress p4plus_to_p4_vlan
+@pragma pa_header_union egress p4_to_p4plus_roce_vlan
 header vlan_tag_t vlan_tag;
 header mpls_t mpls[MPLS_DEPTH];
 
@@ -251,6 +252,8 @@ header p4_to_p4plus_tcp_proxy_sack_header_t p4_to_p4plus_tcp_proxy_sack;
 
 @pragma synthetic_header
 header ethernet_t p4_to_p4plus_roce_eth;
+@pragma synthetic_header
+header vlan_tag_t p4_to_p4plus_roce_vlan;
 @pragma synthetic_header
 @pragma pa_field_union egress p4_to_p4plus_roce_ipv4.pad0           tcp_option_four_sack.first_le
 @pragma pa_field_union egress p4_to_p4plus_roce_ipv4.pad1           tcp_option_four_sack.first_re
@@ -1368,6 +1371,7 @@ parser parse_udp_option_unknown {
 @pragma deparse_only
 parser parse_roce_eth {
     extract(p4_to_p4plus_roce_eth);
+    extract(p4_to_p4plus_roce_vlan);
     extract(p4_to_p4plus_roce_ipv4);
     extract(p4_to_p4plus_roce_ipv6);
     return ingress;

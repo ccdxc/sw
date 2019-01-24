@@ -28,6 +28,7 @@
 #define rx_stage0_load_rdma_params_dummy2 rdma_stage0_ext_bth_xrceth_atomiceth_action
 #define rx_stage0_load_rdma_params_dummy3 rdma_stage0_ext_bth_xrceth_reth_immeth_action 
 #define rx_stage0_load_rdma_params_dummy4 rdma_stage0_ext_bth_deth_immeth_action
+#define rx_stage0_load_rdma_params_dummy5 rdma_stage0_ext_bth_deth_action
 
 /**** table declarations ****/
 
@@ -476,11 +477,11 @@ header_type resp_rx_to_stage_wb1_info_t {
 
 header_type resp_rx_to_stage_wqe_info_t {
     fields {
-        ext_hdr_data                     :   32;
+        ext_hdr_data                     :   64;
         inv_r_key                        :   32;
         spec_psn                         :   24;
         priv_oper_enable                 :   1;
-        pad                              :   39;
+        pad                              :   7;
     }
 }
 
@@ -584,12 +585,13 @@ metadata p4_to_p4plus_roce_bth_xrceth_ieth_header_t rdma_bth_xrceth_ieth;
 metadata rdma_completion_feedback_header_t rdma_completion_feedback;
 
 
-@pragma pa_header_union ingress ext_app_header rdma_bth_atomiceth_ext rdma_bth_xrceth_atomiceth_ext rdma_bth_xrceth_reth_immeth_ext rdma_bth_deth_immeth_ext
+@pragma pa_header_union ingress ext_app_header rdma_bth_atomiceth_ext rdma_bth_xrceth_atomiceth_ext rdma_bth_xrceth_reth_immeth_ext rdma_bth_deth_immeth_ext rdma_bth_deth_ext
 
 metadata p4_to_p4plus_roce_bth_atomiceth_ext_header_t rdma_bth_atomiceth_ext;
 metadata p4_to_p4plus_roce_bth_xrceth_atomiceth_ext_header_t rdma_bth_xrceth_atomiceth_ext;
 metadata p4_to_p4plus_roce_bth_xrceth_reth_immeth_ext_header_t rdma_bth_xrceth_reth_immeth_ext;
 metadata p4_to_p4plus_roce_bth_deth_immeth_ext_header_t rdma_bth_deth_immeth_ext;
+metadata p4_to_p4plus_roce_bth_deth_ext_header_t rdma_bth_deth_ext;
 
 @pragma scratch_metadata
 metadata roce_recirc_header_t rdma_recirc_scr;
@@ -638,6 +640,8 @@ metadata p4_to_p4plus_roce_bth_xrceth_atomiceth_ext_header_t rdma_bth_xrceth_ato
 metadata p4_to_p4plus_roce_bth_xrceth_reth_immeth_ext_header_t rdma_bth_xrceth_reth_immeth_ext_scr;
 @pragma scratch_metadata
 metadata p4_to_p4plus_roce_bth_deth_immeth_ext_header_t rdma_bth_deth_immeth_ext_scr;
+@pragma scratch_metadata
+metadata p4_to_p4plus_roce_bth_deth_ext_header_t rdma_bth_deth_ext_scr;
 
 /**** global header unions ****/
 
@@ -1081,6 +1085,19 @@ action rdma_stage0_bth_deth_action () {
     modify_field(rdma_bth_deth_scr.deth_src_qp, rdma_bth_deth.deth_src_qp);
     modify_field(rdma_bth_deth_scr.smac, rdma_bth_deth.smac);
     modify_field(rdma_bth_deth_scr.dmac, rdma_bth_deth.dmac);
+    //modify_field(rdma_bth_deth_scr.ethtype, rdma_bth_deth.ethtype);
+    //modify_field(rdma_bth_deth_scr.vlan, rdma_bth_deth.vlan);
+}
+
+
+/*
+ * Stage 0 table 0 bth deth immeth action
+ */
+action rdma_stage0_ext_bth_deth_action () {
+    // k + i for stage 0
+
+    modify_field(rdma_bth_deth_ext_scr.ethtype, rdma_bth_deth_ext.ethtype);
+    modify_field(rdma_bth_deth_ext_scr.vlan, rdma_bth_deth_ext.vlan);
 }
 
 
@@ -1111,6 +1128,8 @@ action rdma_stage0_bth_deth_immeth_action () {
     modify_field(rdma_bth_deth_immeth_scr.immeth_data, rdma_bth_deth_immeth.immeth_data);
     modify_field(rdma_bth_deth_immeth_scr.smac_1, rdma_bth_deth_immeth.smac_1);
     //modify_field(rdma_bth_deth_immeth_scr.smac_2, rdma_bth_deth_immeth.smac_2);
+    //modify_field(rdma_bth_deth_immeth_scr.ethtype, rdma_bth_deth_immeth.ethtype);
+    //modify_field(rdma_bth_deth_immeth_scr.vlan, rdma_bth_deth_immeth.vlan);
 }
 
 /*
@@ -1120,6 +1139,8 @@ action rdma_stage0_ext_bth_deth_immeth_action () {
     // k + i for stage 0
 
     modify_field(rdma_bth_deth_immeth_ext_scr.smac_2, rdma_bth_deth_immeth_ext.smac_2);
+    modify_field(rdma_bth_deth_immeth_ext_scr.ethtype, rdma_bth_deth_immeth_ext.ethtype);
+    modify_field(rdma_bth_deth_immeth_ext_scr.vlan, rdma_bth_deth_immeth_ext.vlan);
 }
 
 
