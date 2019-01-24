@@ -21,6 +21,9 @@ from iota.harness.infra.utils.logger import Logger as Logger
 
 ESX_CTRL_VM_BRINGUP_SCRIPT = "%s/iota/bin/iota_esx_setup" % (GlobalOptions.topdir)
 
+def _get_driver_version(file):
+    return os.path.basename(os.path.dirname(os.path.realpath(file)))
+
 class _Testbed:
     def __init__(self):
         self.curr_ts = None     # Current Testsuite
@@ -162,7 +165,13 @@ class _Testbed:
                     cmd.extend(["--host-username", instance.EsxUsername])
                     cmd.extend(["--host-password", instance.EsxPassword])
                 cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
-                cmd.extend(["--gold-drivers-pkg", "%s/platform/hosttools/x86_64/%s/goldfw/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs, instance.NodeOs)])
+                cmd.extend(["--gold-firmware-image", "%s/platform/goldfw/naples/naples_fw.tar" % (GlobalOptions.topdir)])
+                latest_gold_driver =  "%s/platform/hosttools/x86_64/%s/goldfw/latest/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs, instance.NodeOs)
+                old_gold_driver =  "%s/platform/hosttools/x86_64/%s/goldfw/old/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs, instance.NodeOs)
+                cmd.extend(["--gold-firmware-latest-version", _get_driver_version(latest_gold_driver)])
+                cmd.extend(["--gold-drivers-latest-pkg", latest_gold_driver])
+                cmd.extend(["--gold-firmware-old-version", _get_driver_version(old_gold_driver)])
+                cmd.extend(["--gold-drivers-old-pkg", old_gold_driver])
                 cmd.extend(["--uuid", "%s" % instance.Resource.NICUuid])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
                 if self.__fw_upgrade_done or GlobalOptions.only_reboot:

@@ -1,0 +1,1 @@
+platform/goldfw/naples/naples_fw.tar

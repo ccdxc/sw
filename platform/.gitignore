@@ -6,3 +6,4 @@ src/third-party/lib/ncurses/
 src/third-party/rdma/
 hosttools
 drivers/esxi/vib/
+goldfw
