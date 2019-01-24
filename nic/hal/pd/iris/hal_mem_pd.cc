@@ -81,7 +81,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] =
         slab::factory("vrf_pd", HAL_SLAB_VRF_PD,
                       sizeof(hal::pd::pd_vrf_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_VRF_PD)] != NULL),
                       false);
 
@@ -100,7 +100,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L2SEG_PD)] =
         slab::factory("l2seg_pd", HAL_SLAB_L2SEG_PD,
                       sizeof(hal::pd::pd_l2seg_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L2SEG_PD)] != NULL),
                       false);
 
@@ -120,7 +120,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_MC_ENTRY_PD)] =
         slab::factory("mc_entry_pd", HAL_SLAB_MC_ENTRY_PD,
                       sizeof(hal::pd::pd_mc_entry_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_MC_ENTRY_PD)] != NULL),
                       false);
 
@@ -134,7 +134,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] =
         slab::factory("lif_pd", HAL_SLAB_LIF_PD,
                       sizeof(hal::pd::pd_lif_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_LIF_PD)] != NULL),
                       false);
 
@@ -145,7 +145,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] =
         slab::factory("uplinkif_pd", HAL_SLAB_UPLINKIF_PD,
                       sizeof(hal::pd::pd_uplinkif_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKIF_PD)] != NULL),
                       false);
 
@@ -153,7 +153,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKPC_PD)] =
         slab::factory("uplinkpc_pd", HAL_SLAB_UPLINKPC_PD,
                       sizeof(hal::pd::pd_uplinkpc_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_UPLINKPC_PD)] != NULL),
                       false);
 
@@ -164,7 +164,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] =
         slab::factory("ENICIF_PD", HAL_SLAB_ENICIF_PD,
                       sizeof(hal::pd::pd_enicif_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ENICIF_PD)] != NULL),
                       false);
 
@@ -172,7 +172,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IF_L2SEG_PD)] =
         slab::factory("if_l2seg_pd", HAL_SLAB_IF_L2SEG_PD,
                       sizeof(hal::pd::pd_if_l2seg_entry_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_IF_L2SEG_PD)] != NULL),
                       false);
 
@@ -180,7 +180,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUIF_PD)] =
         slab::factory("cpuif_pd", HAL_SLAB_CPUIF_PD,
                       sizeof(hal::pd::pd_cpuif_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_CPUIF_PD)] != NULL),
                       false);
 
@@ -190,7 +190,7 @@ hal_state_pd::init(void)
                       HAL_SLAB_APP_REDIR_IF_PD,
                       sizeof(hal::pd::pd_app_redir_if_t),
                       2,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_APP_REDIR_IF_PD)] != NULL),
                       false);
 
@@ -200,7 +200,7 @@ hal_state_pd::init(void)
                       HAL_SLAB_TUNNELIF_PD,
                       sizeof(hal::pd::pd_tunnelif_t),
                       8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_TUNNELIF_PD)] != NULL),
                       false);
 
@@ -208,7 +208,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] =
         slab::factory("ep_pd", HAL_SLAB_EP_PD,
                       sizeof(hal::pd::pd_ep_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_PD)] != NULL),
                       false);
 
@@ -217,7 +217,7 @@ hal_state_pd::init(void)
         slab::factory("ep_pd_ip_entry",
                       HAL_SLAB_EP_IP_ENTRY_PD,
                       sizeof(hal::pd::pd_ep_ip_entry_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_EP_IP_ENTRY_PD)] != NULL),
                       false);
 
@@ -235,7 +235,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SECURITY_PROFILE_PD)] =
         slab::factory("nwsec_pd", HAL_SLAB_SECURITY_PROFILE_PD,
                       sizeof(hal::pd::pd_nwsec_profile_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SECURITY_PROFILE_PD)] != NULL),
                       false);
 
@@ -251,7 +251,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_QOS_CLASS_PD)] =
         slab::factory("qos_class_pd", HAL_SLAB_QOS_CLASS_PD,
                       sizeof(hal::pd::pd_qos_class_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_QOS_CLASS_PD)] != NULL),
                       false);
 
@@ -271,7 +271,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_COPP_PD)] =
         slab::factory("copp_pd", HAL_SLAB_COPP_PD,
                       sizeof(hal::pd::pd_copp_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_COPP_PD)] != NULL),
                       false);
 
@@ -309,7 +309,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)] =
         slab::factory("acl_pd", HAL_SLAB_ACL_PD,
                       sizeof(hal::pd::pd_acl_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_ACL_PD)] != NULL),
                       false);
 
@@ -380,7 +380,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] =
         slab::factory("l4lb_pd", HAL_SLAB_L4LB_PD,
                       sizeof(hal::pd::pd_l4lb_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_L4LB_PD)] != NULL),
                       false);
 
@@ -514,7 +514,7 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_FTE_SPAN_PD)] =
         slab::factory("fte_span_pd", HAL_SLAB_FTE_SPAN_PD,
                       sizeof(hal::pd::pd_fte_span_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_FTE_SPAN_PD)] != NULL),
                       false);
 
@@ -522,14 +522,14 @@ hal_state_pd::init(void)
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_PD)] =
         slab::factory("snake_test_pd", HAL_SLAB_SNAKE_TEST_PD,
                       sizeof(hal::pd::pd_snake_test_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_PD)] != NULL),
                       false);
 
     slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_IF_PD)] =
-        slab::factory("snake_test_pd", HAL_SLAB_SNAKE_TEST_IF_PD,
+        slab::factory("snake_test_if_pd", HAL_SLAB_SNAKE_TEST_IF_PD,
                       sizeof(hal::pd::pd_snake_test_if_t), 8,
-                      false, true, true);
+                      true, true, true);
     HAL_ASSERT_RETURN((slabs_[HAL_PD_SLAB_ID(HAL_SLAB_SNAKE_TEST_IF_PD)] != NULL),
                       false);
 
