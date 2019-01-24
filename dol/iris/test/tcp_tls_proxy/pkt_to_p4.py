@@ -405,15 +405,21 @@ def TestCaseVerify(tc):
             return False
 
     if hasattr(tc.module.args, 'test_cong_avoid'):
-        incr = (other_tcpcb.rcv_mss * other_tcpcb.rcv_mss) / \
-                other_tcpcb.snd_cwnd
+        if hasattr(tc.module.args, 'abc_l_var'):
+            incr = 0
+        else:
+            incr = (other_tcpcb.rcv_mss * other_tcpcb.rcv_mss) / \
+                    other_tcpcb.snd_cwnd
         if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + incr:
             print("cong_avoid: failed to increment cwnd (%d) by (%d)" % \
                     (other_tcpcb_cur.snd_cwnd, incr))
             return False
 
     if hasattr(tc.module.args, 'test_slow_start'):
-        incr = other_tcpcb.rcv_mss
+        if hasattr(tc.module.args, 'abc_l_var'):
+            incr = tc.packets.Get('PKT1').payloadsize
+        else:
+            incr = other_tcpcb.rcv_mss
         if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + incr:
             print("slow_start: failed to increment cwnd (%d) by (%d)" % \
                     (other_tcpcb_cur.snd_cwnd, incr))

@@ -126,7 +126,7 @@
 #define TCP_PROXY_STATS_RNMDR_FULL              (0 << 3)
 #define TCP_PROXY_STATS_INVALID_SESQ_DESCR      (1 << 3)
 #define TCP_PROXY_STATS_INVALID_RETX_SESQ_DESCR (2 << 3)
-#define TCP_PROXY_STATS_RETX_PARTIAL_ACK        (3 << 3)
+#define TCP_PROXY_STATS_RETX_STRETCH_ACK        (3 << 3)
 #define TCP_PROXY_STATS_RETX_NOP_SCHEDULE       (4 << 3)
 #define TCP_PROXY_STATS_GC_FULL                 (5 << 3)
 #define TCP_PROXY_STATS_TLS_GC_FULL             (6 << 3)

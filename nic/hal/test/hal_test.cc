@@ -1967,7 +1967,7 @@ public:
                 std::cout << "packets_out: " << stats.packets_out() << std::endl;
                 std::cout << "sesq_tx_ci: " << stats.sesq_tx_ci() << std::endl;
                 std::cout << "tx_ring_pi: " << stats.tx_ring_pi() << std::endl;
-                std::cout << "partial_ack_cnt: " << stats.partial_ack_cnt() << std::endl;
+                std::cout << "stretch_ack_cnt: " << stats.stretch_ack_cnt() << std::endl;
                 std::cout << std::endl;
             }
             return 0;

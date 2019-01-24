@@ -71,21 +71,61 @@ tcp_cc_new_reno_ack_recvd:
     slt             c1, d.snd_ssthresh, d.snd_cwnd
     b.c1            tcp_cc_new_reno_cong_avoid
     nop
+
+/*
+ * Slow Start
+ */
 tcp_cc_new_reno_slow_start:
-    // incr = smss
-    // cwnd = min(cwnd + incr, max_win)
-    add             r1, d.snd_cwnd, d.smss
+    // Without ABC, increment cwnd by 1 mss for every ack
+    seq             c1, d.abc_l_var, 0
+    b.c1            tcp_cc_new_reno_slow_start_incr_cwnd
+    add.c1          r1, r0, d.smss
+
+    // ABC  Appropriate Byte Counting
+    // incr (r1) = min(bytes_this_ack, l * smss)
+    // TODO : should use l=1, immediately after timeout
+    add             r1, r0, k.to_s4_bytes_acked
+    slt             c1, d.smss_times_abc_l, r1
+    add.c1          r1, r0, d.smss_times_abc_l
+    tblwr           d.abc_bytes_acked, 0
+
+tcp_cc_new_reno_slow_start_incr_cwnd:
+    // cwnd (r1) = min(cwnd + incr, max_win)
+    add             r1, d.snd_cwnd, r1
     slt             c1, d.max_win, r1
     add.c1          r1, r0, d.max_win
     j               tcp_rx_cc_stage_end
     tblwr           d.snd_cwnd, r1
+
+/*
+ * Congestion Avoidance
+ */
 tcp_cc_new_reno_cong_avoid:
-    // incr = max((smss * smss / snd_cwnd), 1);
+    seq             c1, d.abc_l_var, 0
+    b.c1            tcp_cc_new_reno_cong_avoid_skip_abc
+tcp_cc_new_reno_cong_abc:
+    // r1 = min(bytes_this_ack, l * mss)
+    add             r1, r0, k.to_s4_bytes_acked
+    slt             c1, d.smss_times_abc_l, r1
+    add.c1          r1, r0, d.smss_times_abc_l
+    tbladd          d.abc_bytes_acked, r1
+
+    // if abc_bytes_acked > snd_cwnd, incr = smss
+    // else incr = 0 and exit
+    slt             c1, d.snd_cwnd, d.abc_bytes_acked
+    j.!c1           tcp_rx_cc_stage_end
+    add.c1          r1, r0, d.smss
+    b               tcp_cc_new_reno_cong_avoid_incr_cwnd
+    tblsub          d.abc_bytes_acked, d.snd_cwnd
+    
+tcp_cc_new_reno_cong_avoid_skip_abc:
+    // incr (r1) = max((smss * smss / snd_cwnd), 1);
     div             r1, d.smss_squared, d.snd_cwnd
     slt             c1, r1, 1
     add.c1          r1, r0, 1
 
-    // cwnd = min(cwnd + incr, max_win)
+tcp_cc_new_reno_cong_avoid_incr_cwnd:
+    // cwnd (r1) = min(cwnd + incr, max_win)
     add             r1, r1, d.snd_cwnd
     slt             c1, d.max_win, r1
     add.c1          r1, r0, d.max_win

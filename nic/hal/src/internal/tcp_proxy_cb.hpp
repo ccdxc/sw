@@ -129,7 +129,7 @@ typedef struct tcpcb_s {
     uint32_t              packets_out;
     uint32_t              rto_pi;
     uint32_t              tx_ring_pi;
-    uint32_t              partial_ack_cnt;
+    uint32_t              stretch_ack_cnt;
     bool                  delay_ack;
     uint32_t              ato;
     uint32_t              ato_deadline;
@@ -140,6 +140,7 @@ typedef struct tcpcb_s {
     uint32_t              snd_recover;
     uint32_t              cc_flags;
     uint32_t              initial_window;
+    uint32_t              abc_l_var;
 
     // PD state
     void                  *pd;                     // all PD specific state

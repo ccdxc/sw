@@ -646,6 +646,36 @@ modules:
             rcv_mss : 2000
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_CONG_AVOID_ABC
+        spec    : uplink_to_uplink_clean_retx_partial.testspec
+        module  : pkt_to_p4
+        rtl     : False 
+        args    :
+            abc_l_var : 2
+            num_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            test_cong_avoid : 1
+            snd_cwnd : 8000
+            snd_ssthresh : 4000
+            rcv_mss : 2000
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_SLOW_START_ABC
+        spec    : uplink_to_uplink_clean_retx_partial.testspec
+        module  : pkt_to_p4
+        rtl     : False 
+        args    :
+            abc_l_var : 2
+            num_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            test_slow_start : 1
+            snd_cwnd : 8000
+            snd_ssthresh : 10000
+            rcv_mss : 2000
+
+    - module:
         name    : UL_TO_UL_BYPASS_BARCO_RETX_TIMER
         spec    : uplink_to_uplink_retx.testspec
         module  : pkt_to_p4

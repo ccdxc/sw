@@ -75,7 +75,7 @@ tcp_snd_una_update_fast:
 bytes_acked_stats_update_start:
     CAPRI_STATS_INC(bytes_acked, r1[31:0], d.bytes_acked, p.to_s7_bytes_acked)
 bytes_acked_stats_update_end:
-    phvwr           p.to_s4_bytes_acked, r3[31:0]
+    phvwr           p.to_s4_bytes_acked, r1[31:0]
     tblwr           d.snd_una, k.s1_s2s_ack_seq
 
     /*

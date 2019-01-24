@@ -416,6 +416,7 @@ message TcpCbSpec {
   uint32                snd_recover                = 48;
   uint32                smss                       = 49;
   uint32                initial_window             = 50;
+  uint32                abc_l_var                  = 51;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request
@@ -510,7 +511,7 @@ message TcpCbStats {
   uint32                sesq_retx_ci               = 10023;
   uint32                asesq_retx_ci              = 10024;
   uint32                tx_ring_pi                 = 10025;
-  uint32                partial_ack_cnt            = 10026;
+  uint32                stretch_ack_cnt            = 10026;
   uint32                ato_deadline               = 10027;
   uint32                rto_deadline               = 10028;
   uint32                cc_flags                   = 10029;

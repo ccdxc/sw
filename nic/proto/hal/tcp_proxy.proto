@@ -359,7 +359,7 @@ message TcpProxyGlobalStats {
   uint64 rnmdr_full = 1;
   uint64 invalid_sesq_descr = 2;
   uint64 invalid_retx_sesq_descr = 3;
-  uint64 retx_partial_ack = 4;
+  uint64 stretch_ack = 4;
   uint64 retx_nop_schedule = 5;
   uint64 gc_full = 6;
   uint64 tls_gc_full = 7;

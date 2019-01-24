@@ -159,6 +159,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_wscale = spec.rcv_wscale();
     tcpcb->delay_ack = spec.delay_ack();
     tcpcb->ato = spec.ato();
+    tcpcb->abc_l_var = spec.abc_l_var();
 
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -250,6 +251,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rcv_wscale = spec.rcv_wscale();
     tcpcb->delay_ack = spec.delay_ack();
     tcpcb->ato = spec.ato();
+    tcpcb->abc_l_var = spec.abc_l_var();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
@@ -476,6 +478,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_rcv_wscale(rtcpcb.rcv_wscale);
     rsp->mutable_spec()->set_delay_ack(rtcpcb.delay_ack);
     rsp->mutable_spec()->set_ato(rtcpcb.ato);
+    rsp->mutable_spec()->set_abc_l_var(rtcpcb.abc_l_var);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);
@@ -526,7 +529,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_packets_out(rtcpcb.packets_out);
     rsp->mutable_stats()->set_sesq_tx_ci(rtcpcb.sesq_tx_ci);
     rsp->mutable_stats()->set_tx_ring_pi(rtcpcb.tx_ring_pi);
-    rsp->mutable_stats()->set_partial_ack_cnt(rtcpcb.partial_ack_cnt);
+    rsp->mutable_stats()->set_stretch_ack_cnt(rtcpcb.stretch_ack_cnt);
     rsp->mutable_stats()->set_rto_deadline(rtcpcb.rto_deadline);
     rsp->mutable_stats()->set_ato_deadline(rtcpcb.ato_deadline);
     rsp->mutable_stats()->set_idle_deadline(rtcpcb.idle_deadline);
@@ -593,8 +596,8 @@ tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
                   pd_tcp_global_stats_get_args.invalid_sesq_descr);
     rsp->mutable_global_stats()->set_invalid_retx_sesq_descr(
                   pd_tcp_global_stats_get_args.invalid_retx_sesq_descr);
-    rsp->mutable_global_stats()->set_retx_partial_ack(
-                  pd_tcp_global_stats_get_args.retx_partial_ack);
+    rsp->mutable_global_stats()->set_stretch_ack(
+                  pd_tcp_global_stats_get_args.stretch_ack);
     rsp->mutable_global_stats()->set_retx_nop_schedule(
                   pd_tcp_global_stats_get_args.retx_nop_schedule);
     rsp->mutable_global_stats()->set_gc_full(

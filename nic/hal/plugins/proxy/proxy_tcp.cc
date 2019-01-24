@@ -244,6 +244,7 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
     spec.set_snd_ssthresh(8000 * 10);
     spec.set_ato(TCP_ATO_USEC);
     spec.set_delay_ack(true);
+    spec.set_abc_l_var(2);
     // pred_flags
     //   header len = 8 (32 bytes with timestamp)
     //   flags = ACK

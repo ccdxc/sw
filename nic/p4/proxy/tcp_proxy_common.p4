@@ -66,7 +66,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         sesq_ci_addr                    : HBM_ADDRESS_WIDTH     ;\
         gc_base                         : 64                    ;\
         last_ack                        : 32                    ;\
-        partial_ack_cnt                 : 32                    ;\
+        stretch_ack_cnt                 : 32                    ;\
         tx_ring_pi                      : 16                    ;\
         last_snd_wnd                    : 16                    ;\
         tx_rst_sent                     : 1                     ;\
@@ -105,7 +105,7 @@ retx_snd_una,\
 sesq_ci_addr,\
 gc_base,\
 last_ack,\
-partial_ack_cnt,\
+stretch_ack_cnt,\
 tx_ring_pi,\
 last_snd_wnd,\
 tx_rst_sent
@@ -128,7 +128,7 @@ quick_acks_decr
     modify_field(retx_d.sesq_ci_addr, sesq_ci_addr); \
     modify_field(retx_d.gc_base, gc_base); \
     modify_field(retx_d.last_ack, last_ack); \
-    modify_field(retx_d.partial_ack_cnt, partial_ack_cnt); \
+    modify_field(retx_d.stretch_ack_cnt, stretch_ack_cnt); \
     modify_field(retx_d.tx_ring_pi, tx_ring_pi); \
     modify_field(retx_d.last_snd_wnd, last_snd_wnd); \
     modify_field(retx_d.tx_rst_sent, tx_rst_sent); \

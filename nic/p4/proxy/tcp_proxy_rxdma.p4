@@ -255,8 +255,8 @@ header_type ooo_book_keeping_t {
 // offset 0 (TCP_TCB_CC_SND_CWND_OFFSET)
 
 #define CC_D_PARAMS \
-        snd_cwnd, cc_algo, smss, smss_squared, snd_ssthresh, \
-        max_win, snd_wscale, cc_flags, t_flags, \
+        snd_cwnd, cc_algo, smss, smss_squared,  smss_times_abc_l, snd_ssthresh, \
+        max_win, abc_bytes_acked, abc_l_var, snd_wscale, cc_flags, t_flags, \
         ip_tos_ecn_received
 
 #define GENERATE_CC_D \
@@ -264,8 +264,11 @@ header_type ooo_book_keeping_t {
     modify_field(tcp_cc_d.cc_algo, cc_algo); \
     modify_field(tcp_cc_d.smss, smss); \
     modify_field(tcp_cc_d.smss_squared, smss_squared); \
+    modify_field(tcp_cc_d.smss_times_abc_l, smss_times_abc_l); \
     modify_field(tcp_cc_d.snd_ssthresh, snd_ssthresh); \
     modify_field(tcp_cc_d.max_win, max_win); \
+    modify_field(tcp_cc_d.abc_bytes_acked, abc_bytes_acked); \
+    modify_field(tcp_cc_d.abc_l_var, abc_l_var); \
     modify_field(tcp_cc_d.snd_wscale, snd_wscale); \
     modify_field(tcp_cc_d.cc_flags, cc_flags); \
     modify_field(tcp_cc_d.t_flags, t_flags); \
@@ -278,8 +281,11 @@ header_type tcp_cc_d_t {
         cc_algo                 : 8;
         smss                    : 16;
         smss_squared            : 32;
+        smss_times_abc_l        : 32;
         snd_ssthresh            : 32;
         max_win                 : 32;
+        abc_bytes_acked         : 32;
+        abc_l_var               : 8;
         snd_wscale              : 8;
         cc_flags                : 8;
         t_flags                 : 8;

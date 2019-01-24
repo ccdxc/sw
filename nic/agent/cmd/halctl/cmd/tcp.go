@@ -128,7 +128,7 @@ func doTCPProxyGlobalStatsShowCmd(cmd *cobra.Command, args []string) {
 	fmt.Printf("%-30s : %-6d\n", "InvalidSesqDescr", respMsg.GlobalStats.InvalidSesqDescr)
 	fmt.Printf("%-30s : %-6d\n", "InvalidRetxSesqDescr",
 		respMsg.GlobalStats.InvalidRetxSesqDescr)
-	fmt.Printf("%-30s : %-6d\n", "RetxPartialAck", respMsg.GlobalStats.RetxPartialAck)
+	fmt.Printf("%-30s : %-6d\n", "StretchAck", respMsg.GlobalStats.StretchAck)
 	fmt.Printf("%-30s : %-6d\n", "RetxNopSchedule", respMsg.GlobalStats.RetxNopSchedule)
 	fmt.Printf("%-30s : %-6d\n", "GcFull", respMsg.GlobalStats.GcFull)
 	fmt.Printf("%-30s : %-6d\n", "TlsGcFull", respMsg.GlobalStats.TlsGcFull)
@@ -348,7 +348,7 @@ func showTCPStats(resp *halproto.TcpCbGetResponse) {
 	fmt.Printf("%-30s : %-6d\n", "clean_retx_ci", stats.CleanRetxCi)
 	fmt.Printf("%-30s : %-6d\n", "packets_out", stats.PacketsOut)
 	fmt.Printf("%-30s : %-6d\n", "tx_ring_pi", stats.TxRingPi)
-	fmt.Printf("%-30s : %-6d\n", "partial_ack_cnt", stats.PartialAckCnt)
+	fmt.Printf("%-30s : %-6d\n", "stretch_ack_cnt", stats.StretchAckCnt)
 	fmt.Printf("%-30s : %-6d\n", "rto_deadline", stats.RtoDeadline)
 	fmt.Printf("%-30s : %-6d\n", "ato_deadline", stats.AtoDeadline)
 	fmt.Printf("%-30s : %-6d\n", "idle_timeout_deadline", stats.IdleDeadline)

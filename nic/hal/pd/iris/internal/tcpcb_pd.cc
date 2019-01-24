@@ -231,6 +231,10 @@ p4pd_add_or_del_tcp_rx_tcp_cc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_cc_d.snd_ssthresh = htonl(tcpcb_pd->tcpcb->snd_ssthresh);
         data.u.tcp_cc_d.max_win = TCP_MAX_WIN << tcpcb_pd->tcpcb->snd_wscale;
         data.u.tcp_cc_d.snd_wscale = tcpcb_pd->tcpcb->snd_wscale;
+        // 'L' value for ABC : Appropriate Byte Counting
+        data.u.tcp_cc_d.abc_l_var = tcpcb_pd->tcpcb->abc_l_var;
+        data.u.tcp_cc_d.smss_times_abc_l = htonl(tcpcb_pd->tcpcb->smss *
+                data.u.tcp_cc_d.abc_l_var);
     }
 
     HAL_TRACE_DEBUG("Received snd_cwnd: {}", tcpcb_pd->tcpcb->snd_cwnd);
@@ -439,6 +443,7 @@ p4pd_get_tcp_rx_tcp_cc_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->snd_cwnd = ntohl(data.u.tcp_cc_d.snd_cwnd);
     tcpcb_pd->tcpcb->smss = ntohs(data.u.tcp_cc_d.smss);
     tcpcb_pd->tcpcb->snd_ssthresh = ntohl(data.u.tcp_cc_d.snd_ssthresh);
+    tcpcb_pd->tcpcb->abc_l_var = data.u.tcp_cc_d.abc_l_var;
 
     return HAL_RET_OK;
 }
@@ -1076,7 +1081,7 @@ p4pd_get_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd)
     // The following are used for DOL tests only
     tcpcb_pd->tcpcb->retx_snd_una = ntohl(data.retx_snd_una);
     tcpcb_pd->tcpcb->tx_ring_pi = ntohs(data.tx_ring_pi);
-    tcpcb_pd->tcpcb->partial_ack_cnt = ntohl(data.partial_ack_cnt);
+    tcpcb_pd->tcpcb->stretch_ack_cnt = ntohl(data.stretch_ack_cnt);
 
     return HAL_RET_OK;
 }

@@ -51,6 +51,7 @@ serq_ci      : 0
 rto_backoff  : 0
 delay_ack  : 0
 ato  : 0
+abc_l_var  : 0
 # pred_flags
 #   header len = 8 (32 bytes, assuming timestamp)
 #   flags = ACK

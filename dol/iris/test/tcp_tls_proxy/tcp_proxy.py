@@ -84,6 +84,7 @@ def SetupProxyArgs(tc):
     snd_ssthresh = 0
     rto_backoff = 0
     snd_wnd = 0
+    abc_l_var = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -161,6 +162,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'snd_wnd'):
         snd_wnd = tc.module.args.snd_wnd
         logger.info("- snd_wnd %s" % tc.module.args.snd_wnd)
+    if hasattr(tc.module.args, 'abc_l_var'):
+        abc_l_var = tc.module.args.abc_l_var
+        logger.info("- abc_l_var %s" % tc.module.args.abc_l_var)
     if hasattr(tc.module.args, 'num_rx_pkts'):
         num_rx_pkts = tc.module.args.num_rx_pkts
         logger.info("- num_rx_pkts %s" % tc.module.args.num_rx_pkts)
@@ -245,6 +249,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.snd_ssthresh = snd_ssthresh
     tc.pvtdata.rto_backoff = rto_backoff
     tc.pvtdata.snd_wnd = snd_wnd
+    tc.pvtdata.abc_l_var = abc_l_var
 
 def init_flow_pvtdata(tc, tcb1, tcb2):
     tc.pvtdata.flow1_rcv_nxt = tcb1.rcv_nxt
@@ -327,6 +332,7 @@ def init_tcb_inorder(tc, tcb):
     tcb.rcv_tsval = 0x1AFAFAFA
     tcb.ts_recent = 0x1AFAFAF0
     tcb.snd_wnd = 10000
+    tcb.abc_l_var = 0
     if tc.pvtdata.snd_cwnd:
         tcb.snd_cwnd = tc.pvtdata.snd_cwnd
     else:
@@ -376,6 +382,8 @@ def init_tcb_inorder(tc, tcb):
         tcb.rto_backoff = tc.pvtdata.rto_backoff
     if tc.pvtdata.snd_wnd:
         tcb.snd_wnd = tc.pvtdata.snd_wnd
+    if tc.pvtdata.abc_l_var:
+        tcb.abc_l_var = tc.pvtdata.abc_l_var
 
     vlan_id = 0
     if tc.pvtdata.same_flow:
@@ -504,6 +512,7 @@ def init_tcb_inorder2(tc, tcb):
     tcb.rcv_tsval = 0x2AFAFAFA
     tcb.ts_recent = 0x2AFAFAF0
     tcb.snd_wnd = 10000
+    tcb.abc_l_var = 0
     if tc.pvtdata.snd_cwnd:
         tcb.snd_cwnd = tc.pvtdata.snd_cwnd
     else:
@@ -547,6 +556,8 @@ def init_tcb_inorder2(tc, tcb):
         tcb.rto_backoff = tc.pvtdata.rto_backoff
     if tc.pvtdata.snd_wnd:
         tcb.snd_wnd = tc.pvtdata.snd_wnd
+    if tc.pvtdata.abc_l_var:
+        tcb.abc_l_var = tc.pvtdata.abc_l_var
 
     tcb.source_port = tc.config.flow.sport
     tcb.dest_port = tc.config.flow.dport

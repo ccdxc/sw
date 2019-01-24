@@ -45,7 +45,7 @@ tcp_retx_snd_una_update:
      */
     sub             r1, k.common_phv_snd_una, d.retx_snd_una
     slt             c1, r1[31:0], k.t0_s2s_clean_retx_len1
-    b.c1            tcp_retx_partial_ack
+    b.c1            tcp_retx_stretch_ack
 
 tcp_retx_calc_num_pkts_freed_start:
     // r1 = snd_una - retx_snd_una
@@ -247,11 +247,11 @@ tcp_retx_end_program:
     nop.e
     nop
 
-tcp_retx_partial_ack:
-    tbladd          d.partial_ack_cnt, 1
+tcp_retx_stretch_ack:
+    tbladd          d.stretch_ack_cnt, 1
     addui           r2, r0, hiword(TCP_PROXY_STATS)
     addi            r2, r2, loword(TCP_PROXY_STATS)
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RETX_PARTIAL_ACK, 1)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RETX_STRETCH_ACK, 1)
     b               tcp_retx_remove_barrier_and_end_program
 
 /*

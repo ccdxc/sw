@@ -222,5 +222,7 @@ tcp_xmit_idle_process_start:
 
     add             r1, k.common_phv_qstate_addr, TCP_TCB_CC_SND_CWND_OFFSET
     memwr.w         r1, r2
+    add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_EXTRA_SND_CWND_OFFSET
+    memwr.w         r1, r2
     phvwri.e        p.p4_intr_global_drop, 1
     CAPRI_CLEAR_TABLE_VALID(0)

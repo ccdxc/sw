@@ -2944,7 +2944,7 @@ typedef struct pd_tcp_global_stats_get_args_s {
     uint64_t rnmdr_full;
     uint64_t invalid_sesq_descr;
     uint64_t invalid_retx_sesq_descr;
-    uint64_t retx_partial_ack;
+    uint64_t stretch_ack;
     uint64_t retx_nop_schedule;
     uint64_t gc_full;
     uint64_t tls_gc_full;
