@@ -11,8 +11,8 @@ struct phv_ p;
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
 esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int:
     phvwri p.app_header_table2_valid, 0
-    //seq c1, d.{status_addr}.dx, 0
-    //bcf [!c1], esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int_phv_drop
+    seq c1, d.{status_addr}.dx, 0
+    bcf [!c1], esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int_phv_drop
     phvwr p.txdma2_global_pad_size, d.pad_size
     phvwr p.txdma2_global_l4_protocol, d.l4_protocol
     phvwr p.txdma2_global_payload_size, d.payload_size
