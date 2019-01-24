@@ -42,8 +42,16 @@ parser.add_argument('--image', dest='image',
                     default=None, help='Naples Image.')
 parser.add_argument('--drivers-pkg', dest='drivers_pkg',
                     default=None, help='Driver Package.')
-parser.add_argument('--gold-drivers-pkg', dest='gold_drivers_pkg',
-                    default=None, help='Gold Driver Package.')
+parser.add_argument('--gold-firmware-image', dest='gold_fw_img',
+                    default=None, help='Gold Firmware Image.')
+parser.add_argument('--gold-firmware-latest-version', dest='gold_fw_latest_ver',
+                    default=None, help='Gold Firmware latest version.')
+parser.add_argument('--gold-firmware-old-version', dest='gold_fw_old_ver',
+                    default=None, help='Gold Firmware old version.')
+parser.add_argument('--gold-drivers-latest-pkg', dest='gold_drv_latest_pkg',
+                    default=None, help='Gold Drivers latest package.')
+parser.add_argument('--gold-drivers-old-pkg', dest='gold_drv_old_pkg',
+                    default=None, help='Gold Drivers old package.')
 parser.add_argument('--host-username', dest='host_username',
                     default="root", help='Host Username')
 parser.add_argument('--host-password', dest='host_password',
@@ -95,6 +103,11 @@ if GlobalOptions.os == 'freebsd':
 
 if GlobalOptions.os == 'esx':
     ROOT_EXP_PROMPT="~]"
+
+gold_fw_latest = False
+
+def IsNaplesGoldFWLatest():
+    return gold_fw_latest
 
 def IpmiReset():
     os.system("ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
@@ -161,6 +174,7 @@ class EntityManagement:
             sys.exit(1)
         return retcode
 
+
     def RunNaplesCmd(self, command, ignore_failure = False):
         assert(ignore_failure == True or ignore_failure == False)
         full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no root@%s %s" %\
@@ -204,7 +218,24 @@ class NaplesManagement(EntityManagement):
         ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
         if ret == 1: self.SendlineExpect("", "#")
 
+    def ReadGoldFwVersion(self):
+        global gold_fw_latest
+        gold_fw_cmd = '''fwupdate -l | jq '.goldfw' | jq '.kernel_fit' | jq '.software_version' | tr -d '"\''''
+        try:
+            self.SendlineExpect(gold_fw_cmd, GlobalOptions.gold_fw_latest_ver + '\r\n' + '#')
+            gold_fw_latest = True
+            print ("Matched gold fw latest")
+        except:
+            try:
+                self.SendlineExpect(gold_fw_cmd, GlobalOptions.gold_fw_old_ver)
+                gold_fw_latest = False
+                print ("Matched gold fw older")
+            except:
+                print("Did not match any available gold fw")
+                sys.exit(1)
+
     def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
+
         if goldfw:
             self.SendlineExpect("fwupdate -s goldfw", "#")
 
@@ -293,6 +324,12 @@ class HostManagement(EntityManagement):
 
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
+
+
+    def InstallGoldFirmware(self):
+        self.CopyIN(GlobalOptions.gold_fw_img, host_dir = HOST_NAPLES_DIR, naples_dir = "/data")
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(GlobalOptions.gold_fw_img))
+        self.RunNaplesCmd("/nic/tools/fwupdate -l")
 
     def InitForUpgrade(self):
         pass
@@ -469,7 +506,8 @@ class EsxHostManagement(HostManagement):
         return
 
     def InitForUpgrade(self):
-        self.__install_drivers(GlobalOptions.gold_drivers_pkg)
+        gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
+        self.__install_drivers(gold_pkg)
 
     def InitForReboot(self):
         self.__install_drivers(GlobalOptions.drivers_pkg)
@@ -580,6 +618,9 @@ def Main():
     # Connect to Naples console.
     naples.Connect()
 
+    #Read Naples Gold FW version.
+    naples.ReadGoldFwVersion()
+
     # Check if we need to switch to GoldFw or not.
     if GlobalOptions.only_mode_change:
         # Case 2: Only change mode, reboot and install drivers
@@ -591,8 +632,12 @@ def Main():
         host.InitForUpgrade()
         host.Reboot()
         naples.Close()
-        host.Init(driver_pkg =  GlobalOptions.gold_drivers_pkg, cleanup = False)
+        gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
+        host.Init(driver_pkg =  gold_pkg, cleanup = False)
         host.InstallMainFirmware()
+        #Install gold fw if required.
+        if not IsNaplesGoldFWLatest():
+            host.InstallGoldFirmware()
 
     #Script that might have to run just before reboot
     # ESX would require drivers to be installed here to avoid
