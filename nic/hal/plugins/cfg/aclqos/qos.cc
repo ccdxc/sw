@@ -38,7 +38,7 @@ qos_class_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry;
     qos_class_t                 *qos_class = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -62,7 +62,7 @@ qos_class_compute_hash_func (void *key, uint32_t ht_size)
 bool
 qos_class_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
 
     if (!memcmp(key1, key2, sizeof(qos_class_key_t))) {
         return true;
@@ -122,7 +122,7 @@ find_qos_class_by_group (qos_group_t qos_group)
         qos_class_ht()->lookup(&qos_class_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_QOS_CLASS);
         qos_class = (qos_class_t *)hal_handle_get_obj(entry->handle_id);
         return qos_class;
@@ -623,7 +623,7 @@ qos_class_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t                 *qos_class = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -661,7 +661,7 @@ qos_class_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t                 *qos_class = NULL;
     hal_handle_t                hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
@@ -739,7 +739,7 @@ qos_class_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t             *qos_class = NULL;
     hal_handle_t            hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1056,7 +1056,7 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_update_app_ctxt_t    *app_ctxt = NULL;
     pd::pd_func_args_t             pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1075,7 +1075,7 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_qos_class_args.ip_dscp_changed = app_ctxt->ip_dscp_changed;
     pd_qos_class_args.dot1q_pcp_changed = app_ctxt->dot1q_pcp_changed;
     pd_qos_class_args.dot1q_pcp_src = app_ctxt->dot1q_pcp_src;
-    HAL_ASSERT(sizeof(pd_qos_class_args.ip_dscp_remove) ==
+    SDK_ASSERT(sizeof(pd_qos_class_args.ip_dscp_remove) ==
                sizeof(app_ctxt->ip_dscp_remove));
     memcpy(pd_qos_class_args.ip_dscp_remove, app_ctxt->ip_dscp_remove,
            sizeof(app_ctxt->ip_dscp_remove));
@@ -1150,7 +1150,7 @@ qos_class_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t           *qos_class = NULL;
     qos_class_t           *qos_class_clone = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1180,7 +1180,7 @@ qos_class_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t       *dhl_entry = NULL;
     qos_class_t             *qos_class_clone = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1413,7 +1413,7 @@ qos_class_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t                    *qos_class        = NULL;
     pd::pd_func_args_t             pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     // TODO: Check the dependency ref count for the qos_class.
     //       If its non zero, fail the delete.
@@ -1455,7 +1455,7 @@ qos_class_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     qos_class_t           *qos_class = NULL;
     hal_handle_t    hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1726,7 +1726,7 @@ qos_class_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     uint32_t            serialized_state_sz;
     qos_class_t         *qos_class = (qos_class_t *)obj;
 
-    HAL_ASSERT((qos_class != NULL) && (mlen != NULL));
+    SDK_ASSERT((qos_class != NULL) && (mlen != NULL));
     *mlen = 0;
 
     // get all information about this qos_class (includes spec, status & stats)
@@ -1807,7 +1807,7 @@ qos_class_restore_cb (void *obj, uint32_t len)
     // de-serialize the object
     if (qos_class_info.ParseFromArray(obj, len) == false) {
         HAL_TRACE_ERR("Failed to de-serialize a serialized qos_class obj");
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return 0;
     }
 
@@ -1871,7 +1871,7 @@ copp_get_key_func (void *entry)
     hal_handle_id_ht_entry_t *ht_entry;
     copp_t                   *copp = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -1895,7 +1895,7 @@ copp_compute_hash_func (void *key, uint32_t ht_size)
 bool
 copp_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
 
     if (!memcmp(key1, key2, sizeof(copp_key_t))) {
         return true;
@@ -1954,7 +1954,7 @@ find_copp_by_copp_type (copp_type_t copp_type)
         copp_ht()->lookup(&copp_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_COPP);
         copp = (copp_t *)hal_handle_get_obj(entry->handle_id);
         return copp;
@@ -2168,7 +2168,7 @@ copp_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t             *copp = NULL;
     pd::pd_func_args_t pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -2206,7 +2206,7 @@ copp_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t        *copp = NULL;
     hal_handle_t  hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
@@ -2284,7 +2284,7 @@ copp_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t             *copp = NULL;
     hal_handle_t       hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -2474,7 +2474,7 @@ copp_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t                    *copp_clone = NULL;
     pd::pd_func_args_t        pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -2552,7 +2552,7 @@ copp_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t   *dhl_entry = NULL;
     copp_t        *copp = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -2579,7 +2579,7 @@ copp_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t       *dhl_entry = NULL;
     copp_t             *copp_clone = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -2802,7 +2802,7 @@ copp_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t                    *copp        = NULL;
     pd::pd_func_args_t        pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     // TODO: Check the dependency ref count for the copp.
     //       If its non zero, fail the delete.
@@ -2844,7 +2844,7 @@ copp_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     copp_t           *copp = NULL;
     hal_handle_t    hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -3030,7 +3030,7 @@ copp_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     uint32_t        serialized_state_sz;
     copp_t          *copp = (copp_t *)obj;
 
-    HAL_ASSERT((copp != NULL) && (mlen != NULL));
+    SDK_ASSERT((copp != NULL) && (mlen != NULL));
     *mlen = 0;
 
     // get all information about this copp (includes spec, status & stats)
@@ -3111,7 +3111,7 @@ copp_restore_cb (void *obj, uint32_t len)
     // de-serialize the object
     if (copp_info.ParseFromArray(obj, len) == false) {
         HAL_TRACE_ERR("Failed to de-serialize a serialized copp obj");
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return 0;
     }
 

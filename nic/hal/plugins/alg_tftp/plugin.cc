@@ -35,19 +35,19 @@ extern "C" hal_ret_t alg_tftp_init(hal_cfg_t *hal_cfg) {
                          slab_args={.name="tftp_alg_appsess",
                         .size=sizeof(app_session_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((appsess_slab_ != NULL), HAL_RET_OOM);
+    SDK_ASSERT_RETURN((appsess_slab_ != NULL), HAL_RET_OOM);
 
     l4sess_slab_ = g_hal_state->register_slab(HAL_SLAB_TFTP_ALG_L4SESS,
                           slab_args={.name="tftp_alg_l4sess",
                          .size=sizeof(l4_alg_status_t), .num_elements=64, 
                          .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true}); 
-    HAL_ASSERT_RETURN((l4sess_slab_ != NULL), HAL_RET_OOM);
+    SDK_ASSERT_RETURN((l4sess_slab_ != NULL), HAL_RET_OOM);
 
     tftpinfo_slab_ = g_hal_state->register_slab(HAL_SLAB_TFTP_ALG_TFTPINFO,
                            slab_args={.name="tftp_alg_info",
                          .size=sizeof(tftp_info_t), .num_elements=64,
                          .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true}); 
-    HAL_ASSERT_RETURN((tftpinfo_slab_ != NULL), HAL_RET_OOM);
+    SDK_ASSERT_RETURN((tftpinfo_slab_ != NULL), HAL_RET_OOM);
 
     g_tftp_state = alg_state_t::factory(FTE_FEATURE_ALG_TFTP.c_str(),
                                   appsess_slab_, l4sess_slab_, tftpinfo_slab_,

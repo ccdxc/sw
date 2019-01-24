@@ -149,9 +149,9 @@ pd_enicif_delete (pd_if_delete_args_t *args)
     hal_ret_t      ret = HAL_RET_OK;
     pd_enicif_t    *enicif_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("deleting pd state for enicif: {}",
                     args->intf->if_id);
     enicif_pd = (pd_enicif_t *)args->intf->pd_if;
@@ -421,7 +421,7 @@ pd_enicif_dealloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list)
             HAL_TRACE_DEBUG("freeing pd enicif l2seg entry for l2seg_hdl: {}",
                             pi_l2seg_entry->l2seg_handle);
         } else {
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
         }
     }
 
@@ -617,7 +617,7 @@ pd_enicif_depgm_inp_prop_mac_vlan_entry(uint32_t *idx)
 
     inp_prop_mac_vlan_tbl = g_hal_state_pd->
         tcam_table(P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
-    HAL_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = inp_prop_mac_vlan_tbl->remove(*idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -648,7 +648,7 @@ pd_enicif_pgm_inp_prop_mac_vlan_entry(input_properties_mac_vlan_swkey_t *key,
     // Get the table
     inp_prop_mac_vlan_tbl = g_hal_state_pd->tcam_table(
                             P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
-    HAL_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
 
 
     if (oper == TABLE_OPER_INSERT) {
@@ -683,7 +683,7 @@ pd_enicif_pd_depgm_output_mapping_tbl (pd_enicif_t *pd_enicif)
     directmap           *dm_omap = NULL;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
-    HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
 
     sdk_ret = dm_omap->remove(pd_enicif->enic_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -712,7 +712,7 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
     // Check if lif is promiscous
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
         lif = if_get_lif(hal_if);
-        HAL_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
+        SDK_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
 
         if (lif->packet_filters.receive_promiscuous) {
             // skip's hw pgm as that will be triggered eventually
@@ -908,7 +908,7 @@ pd_enicif_upd_inp_prop_l2seg (if_t *hal_if,
         pd_if_l2seg = NULL;
     } else {
         l2seg_in_classic_enicif(hal_if, l2seg->hal_handle, &if_l2seg);
-        HAL_ASSERT(if_l2seg != NULL);
+        SDK_ASSERT(if_l2seg != NULL);
         pd_if_l2seg = (pd_if_l2seg_entry_t *)if_l2seg->pd;
     }
 
@@ -1034,7 +1034,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     }
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
 
     l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
 
@@ -1059,7 +1059,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
 #endif
 
     lif = if_get_lif(hal_if);
-    HAL_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
 
     if (!(upd_flags & ENICIF_UPD_FLAGS_NUM_PROM_LIFS)) {
         // no change in prom lifs
@@ -1122,7 +1122,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
         }
     } else {
         // This function will never be called for ENICs of type other than classic
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         // For Mnic(ARM Mgmt CPU) and mgmt NIC(Host Management),
         //       set the mode to be CLASSIC
         // inp_prop.nic_mode = NIC_MODE_SMART;
@@ -1244,7 +1244,7 @@ pd_enicif_pd_repgm_inp_prop_l2seg(pd_if_args_t *args,
     memset(&data, 0, sizeof(data));
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
     if (args->pinned_uplink_clsc_change) {
@@ -1309,7 +1309,7 @@ pd_enicif_pd_depgm_inp_prop_l2seg(uint32_t inp_prop_idx)
     memset(&data, 0, sizeof(data));
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = inp_prop_tbl->remove(inp_prop_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1508,7 +1508,7 @@ pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif_t *pd_enicif,
     HAL_TRACE_DEBUG("Action: {}", data.action_id);
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     if (oper == TABLE_OPER_INSERT) {
         sdk_ret = dm_omap->insert_withid(&data, pd_enicif->enic_lport_id);
@@ -1720,11 +1720,11 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
 #if 0
             if_t *pin_intf = find_if_by_handle (((if_t*)pd_enicif->pi_if)->pinned_uplink);
             HAL_TRACE_DEBUG("pin_id is {}", pin_intf->if_id);
-            HAL_ASSERT_RETURN((l2seg && pin_intf), HAL_RET_ERR);
+            SDK_ASSERT_RETURN((l2seg && pin_intf), HAL_RET_ERR);
 #endif
 
             ret = if_l2seg_get_multicast_rewrite_data(uplink, l2seg, &rdata);
-            HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
+            SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
 
             inp_prop_mac_vlan_data.tunnel_vnid = (uint32_t)rdata.qid_or_vnid;
             inp_prop_mac_vlan_data.dst_lport = (uint16_t)rdata.lport;
@@ -1734,7 +1734,7 @@ pd_enicif_inp_prop_form_data (pd_enicif_t *pd_enicif,
         }
 
         pd_l2seg = (pd_l2seg_t *)if_enicif_get_pd_l2seg((if_t*)pd_enicif->pi_if);
-        HAL_ASSERT_RETURN((pd_l2seg != NULL), HAL_RET_ERR);
+        SDK_ASSERT_RETURN((pd_l2seg != NULL), HAL_RET_ERR);
 
         if (!(upd_flags & ENICIF_UPD_FLAGS_NWSEC_PROF)) {
             // no change, take from l2seg.
@@ -1794,7 +1794,7 @@ pd_enicif_upd_inp_prop_mac_vlan_tbl (pd_enicif_t *pd_enicif,
 
     inp_prop_mac_vlan_tbl = g_hal_state_pd->tcam_table(
                             P4TBL_ID_INPUT_PROPERTIES_MAC_VLAN);
-    HAL_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((inp_prop_mac_vlan_tbl != NULL), HAL_RET_ERR);
 
     pd_enicif_inp_prop_form_data(pd_enicif, lif, upd_flags, nwsec_prof, NULL, NULL,
                                  data, true);
@@ -1864,10 +1864,10 @@ pd_enicif_get_l4_prof_idx(pd_enicif_t *pd_enicif)
     vrf_t    *pi_vrf = NULL;
 
     pi_if = (if_t *)pd_enicif->pi_if;
-    HAL_ASSERT_RETURN(pi_if != NULL, 0);
+    SDK_ASSERT_RETURN(pi_if != NULL, 0);
 
     pi_vrf = if_get_pi_vrf(pi_if);
-    HAL_ASSERT_RETURN(pi_vrf != NULL, 0);
+    SDK_ASSERT_RETURN(pi_vrf != NULL, 0);
 
     return ten_get_nwsec_prof_hw_id(pi_vrf);
 }
@@ -1880,7 +1880,7 @@ pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif)
     lif_t       *pi_lif = NULL;
 
     pi_if = (if_t *)pd_enicif->pi_if;
-    HAL_ASSERT_RETURN(pi_if != NULL, 0);
+    SDK_ASSERT_RETURN(pi_if != NULL, 0);
 
     pi_lif = if_get_lif(pi_if);
     // Enic may not have lif
@@ -1889,7 +1889,7 @@ pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif)
     }
 
     pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
-    HAL_ASSERT(pi_lif != NULL);
+    SDK_ASSERT(pi_lif != NULL);
 
 end:
     return pd_lif;

@@ -631,7 +631,7 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
     hal::flow_key_t    key;
     hal_ret_t          ret;
 
-    HAL_ASSERT(l4_sess != NULL);
+    SDK_ASSERT(l4_sess != NULL);
 
     if (!status) {
         if (l4_sess && l4_sess->isCtrl == true) {
@@ -653,7 +653,7 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
                  */
                 ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session,
                                                              key, &exp_flow);
-                HAL_ASSERT(ret == HAL_RET_OK);
+                SDK_ASSERT(ret == HAL_RET_OK);
                 exp_flow->entry.handler = expected_flow_handler;
                 exp_flow->alg = nwsec::APP_SVC_MSFT_RPC;
                 /*
@@ -663,13 +663,13 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
                 exp_flow->info = l4_sess->info;
                 HAL_TRACE_DEBUG("Setting expected flow {:p}", (void *)exp_flow);
                 l4_sess->info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
-                HAL_ASSERT(l4_sess->info != NULL);
+                SDK_ASSERT(l4_sess->info != NULL);
             }
         } else { /* Data session */
             l4_alg_status_t   *ctrl_sess =  g_rpc_state->get_ctrl_l4sess(\
                                                  l4_sess->app_session);
  
-            HAL_ASSERT(ctrl_sess);
+            SDK_ASSERT(ctrl_sess);
             incr_data_sess((rpc_info_t *)ctrl_sess->info); 
             if (ctx.key().proto == IP_PROTO_UDP) {
                 /*
@@ -701,7 +701,7 @@ size_t process_msrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
      * app session that created it.
      */
     ret = g_rpc_state->alloc_and_insert_l4_sess(exp_flow->app_session, &l4_sess);
-    HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
+    SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
     l4_sess->alg = nwsec::APP_SVC_MSFT_RPC;
     l4_sess->isCtrl = FALSE;
 
@@ -1000,13 +1000,13 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
              * Alloc APP session, L4 Session and RPC info
              */
             ret = g_rpc_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
-            HAL_ASSERT_RETURN((ret == HAL_RET_OK || ret == HAL_RET_ENTRY_EXISTS), ret);
+            SDK_ASSERT_RETURN((ret == HAL_RET_OK || ret == HAL_RET_ENTRY_EXISTS), ret);
             if (ret == HAL_RET_OK) {
                 ret = g_rpc_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
-                HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
+                SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
                 l4_sess->alg = nwsec::APP_SVC_MSFT_RPC;
                 rpc_info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
-                HAL_ASSERT_RETURN((rpc_info != NULL), HAL_RET_OOM);
+                SDK_ASSERT_RETURN((rpc_info != NULL), HAL_RET_OOM);
                 l4_sess->isCtrl = true;
                 l4_sess->info = rpc_info;
             }

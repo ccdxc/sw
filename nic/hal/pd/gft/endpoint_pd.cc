@@ -98,9 +98,9 @@ pd_ep_delete (pd_func_args_t *pd_func_args)
     pd_ep_delete_args_t *args = pd_func_args->pd_ep_delete;
     pd_ep_t    *ep_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->ep != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->ep->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->ep != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->ep->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("{}:deleting pd state for ep {}",
                     __FUNCTION__, ep_l2_key_to_str(args->ep));
     ep_pd = (pd_ep_t *)args->ep->pd;
@@ -233,7 +233,7 @@ ep_pd_pgm_tx_vport (pd_ep_t *pd_ep, table_oper_t oper)
     pi_if = find_if_by_handle(pi_ep->if_handle);
 
     tx_vport_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_TX_VPORT);
-    HAL_ASSERT_RETURN((tx_vport_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((tx_vport_tbl != NULL), HAL_RET_ERR);
 
 
     // key
@@ -304,7 +304,7 @@ ep_pd_pgm_rx_vport (pd_ep_t *pd_ep, table_oper_t oper)
     memset(&data, 0, sizeof(data));
 
     rx_vport_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_RX_VPORT);
-    HAL_ASSERT_RETURN((rx_vport_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rx_vport_tbl != NULL), HAL_RET_ERR);
 
     pi_if = find_if_by_handle(pi_ep->if_handle);
 

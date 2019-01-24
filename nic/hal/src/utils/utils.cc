@@ -481,7 +481,7 @@ end:
 hal_ret_t
 hal_unlink_and_free_from_handle_list (hal_handle_id_list_entry_t *entry)
 {
-    HAL_ASSERT(entry);
+    SDK_ASSERT(entry);
     HAL_TRACE_DEBUG("freeing list handle: {}", entry->handle_id);
     sdk::lib::dllist_del(&entry->dllist_ctxt);
     return hal::delay_delete_to_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, entry);
@@ -698,7 +698,7 @@ hal_find_changed_lists (block_list *exist_list,                         // _IN
         }
         hal_add_to_handle_block_list(*new_list, hdl);
         pair = new_hdls.insert(hdl);
-        HAL_ASSERT(pair.second);     // false: if elem. already exists
+        SDK_ASSERT(pair.second);     // false: if elem. already exists
     }
 
 

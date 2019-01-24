@@ -32,7 +32,7 @@ lif_id_get_key_func (void *entry)
     hal_handle_id_ht_entry_t *ht_entry = NULL;
     lif_t                    *lif      = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -50,7 +50,7 @@ lif_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 lif_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(lif_id_t *)key1 == *(lif_id_t *)key2) {
         return true;
     }
@@ -127,7 +127,7 @@ find_lif_by_id (lif_id_t lif_id)
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->lif_id_ht()->lookup(&lif_id);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_LIF);
         lif = (lif_t *)hal_handle_get_obj(entry->handle_id);
         return lif;

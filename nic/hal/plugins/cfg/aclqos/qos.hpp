@@ -405,7 +405,7 @@ copp_spec_copp_type_to_copp_type (kh::CoppType copp_type)
     case kh::COPP_TYPE_DHCP:
         return COPP_TYPE_DHCP;
     default:
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return COPP_TYPE_FLOW_MISS;
     }
 }
@@ -421,7 +421,7 @@ copp_type_to_spec_type (copp_type_t copp_type)
     case COPP_TYPE_DHCP:
         return kh::COPP_TYPE_DHCP;
     default:
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return kh::COPP_TYPE_FLOW_MISS;
     }
 }

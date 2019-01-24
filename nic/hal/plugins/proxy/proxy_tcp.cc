@@ -524,7 +524,7 @@ tcp_trigger_ack_send(uint32_t qid, tcp_header_t *tcp)
                                                      qid,
                                                      TCP_SCHED_RING_SEND_ACK);
 #endif
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    SDK_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     return ret;
 }
@@ -742,7 +742,7 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
             return fte::PIPELINE_END;
         }
         pfi = tcp_proxy_get_flow_info(flow_key);
-        HAL_ASSERT_RETURN((NULL != pfi), fte::PIPELINE_CONTINUE);
+        SDK_ASSERT_RETURN((NULL != pfi), fte::PIPELINE_CONTINUE);
         // Proxy type specific configuration
         ret = tcp_proxy_type_action(ctx, pfi);
         if (ret != HAL_RET_OK) {

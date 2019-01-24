@@ -49,10 +49,10 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add (uint32_t idx,
     directmap                    *dm;
     rx_stage0_load_rdma_params_actiondata_t data = { 0 };
 
-    HAL_ASSERT(idx < MAX_LIFS);
+    SDK_ASSERT(idx < MAX_LIFS);
 
     dm = g_hal_state_pd->p4plus_rxdma_dm_table(P4_COMMON_RXDMA_ACTIONS_TBL_ID_RX_STAGE0_LOAD_RDMA_PARAMS);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     data.action_id = RX_STAGE0_LOAD_RDMA_PARAMS_RX_STAGE0_LOAD_RDMA_PARAMS_ID;
     data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.rdma_en_qtype_mask = rdma_en_qtype_mask;
@@ -88,10 +88,10 @@ p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get (uint32_t idx, rx_st
     sdk_ret_t                    sdk_ret;
     directmap                    *dm;
 
-    HAL_ASSERT(idx < MAX_LIFS);
+    SDK_ASSERT(idx < MAX_LIFS);
 
     dm = g_hal_state_pd->p4plus_rxdma_dm_table(P4_COMMON_RXDMA_ACTIONS_TBL_ID_RX_STAGE0_LOAD_RDMA_PARAMS);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     sdk_ret = dm->retrieve(idx, data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -151,10 +151,10 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add (uint32_t idx,
     directmap                    *dm;
     tx_stage0_lif_params_table_actiondata_t data = { 0 };
 
-    HAL_ASSERT(idx < MAX_LIFS);
+    SDK_ASSERT(idx < MAX_LIFS);
 
     dm = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_STAGE0_LIF_PARAMS_TABLE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     data.action_id = TX_STAGE0_LIF_PARAMS_TABLE_TX_STAGE0_LIF_RDMA_PARAMS_ID;
     data.action_u.tx_stage0_lif_params_table_tx_stage0_lif_rdma_params.rdma_en_qtype_mask = rdma_en_qtype_mask;
@@ -193,10 +193,10 @@ p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get (uint32_t idx, tx_st
     sdk_ret_t                    sdk_ret;
     directmap                    *dm;
 
-    HAL_ASSERT(idx < MAX_LIFS);
+    SDK_ASSERT(idx < MAX_LIFS);
 
     dm = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_STAGE0_LIF_PARAMS_TABLE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     sdk_ret = dm->retrieve(idx, data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);

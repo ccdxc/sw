@@ -142,9 +142,9 @@ pd_lif_delete (pd_func_args_t *pd_func_args)
     pd_lif_delete_args_t *args = pd_func_args->pd_lif_delete;
     pd_lif_t       *lif_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->lif != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->lif->pd_lif != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->lif != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->lif->pd_lif != NULL), HAL_RET_INVALID_ARG);
     lif_pd = (pd_lif_t *)args->lif->pd_lif;
 
     // Deprogram
@@ -176,7 +176,7 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_create_args_t *args)
     } else {
         HAL_TRACE_ERR("pd-lif:{}:lif_id:{},hw_lif_id has to be allocated in PI",
                       __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 
     HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{} allocated hw_lif_id:{}",
@@ -420,7 +420,7 @@ lif_pd_rx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     rx_policer_actiondata_t d = {0};
 
     rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
-    HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
 
     d.actionid = RX_POLICER_EXECUTE_RX_POLICER_ID;
     if (pi_lif->qos_info.rx_policer.bps_rate == 0) {
@@ -463,7 +463,7 @@ lif_pd_rx_policer_deprogram_hw (pd_lif_t *pd_lif)
     directmap             *rx_policer_tbl = NULL;
 
     rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
-    HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = rx_policer_tbl->remove(pd_lif->hw_lif_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);

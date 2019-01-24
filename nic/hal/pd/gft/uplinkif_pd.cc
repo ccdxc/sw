@@ -73,9 +73,9 @@ pd_uplinkif_delete (pd_if_delete_args_t *args)
     hal_ret_t      ret = HAL_RET_OK;
     pd_uplinkif_t  *uplinkif_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("deleting pd state for uplinkif {}", args->intf->if_id);
     uplinkif_pd = (pd_uplinkif_t *)args->intf->pd_if;
 
@@ -225,7 +225,7 @@ uplinkif_pd_program_hw (pd_uplinkif_t *pd_upif)
 
     // TODO : program TM table port_num -> lif_hw_id
     ret = uplinkif_pd_pgm_tm_register(pd_upif);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    SDK_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     return ret;
 }

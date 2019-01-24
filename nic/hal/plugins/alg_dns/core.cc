@@ -127,7 +127,7 @@ static void dns_completion_hdlr (fte::ctx_t& ctx, bool status) {
                              ctx.feature_session_state(FTE_FEATURE_ALG_DNS));
     dns_info_t          *dns_info = (dns_info_t *)l4_sess->info;
 
-    HAL_ASSERT(l4_sess != NULL);
+    SDK_ASSERT(l4_sess != NULL);
 
     if (!status) {
         if (l4_sess)
@@ -390,7 +390,7 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
         }
         HAL_TRACE_DEBUG("DNS ALG - Session exists");
         dns_info = (dns_info_t *)l4_sess->info;
-        HAL_ASSERT(dns_info);
+        SDK_ASSERT(dns_info);
 
         /* Get the DNS id in the packet */
         get_dnsid_pkt(ctx, l4_sess);
@@ -407,14 +407,14 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
         /* Alloc APP session */
         HAL_TRACE_DEBUG("DNS ALG - Got new session");
         ret = g_dns_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
-        HAL_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
+        SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
         /* Alloc L4 session */
         ret = g_dns_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
-        HAL_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
+        SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
         l4_sess->alg = nwsec::APP_SVC_DNS;
         /* Allocate dns info to store the dllist head */
         dns_info = (dns_info_t *)g_dns_state->alg_info_slab()->alloc();
-        HAL_ASSERT_RETURN((dns_info != NULL), fte::PIPELINE_CONTINUE);
+        SDK_ASSERT_RETURN((dns_info != NULL), fte::PIPELINE_CONTINUE);
         /* Store the head node in L4 session info */
         l4_sess->info = (void *)dns_info;
         l4_sess->isCtrl = true;

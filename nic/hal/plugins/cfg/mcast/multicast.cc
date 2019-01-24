@@ -83,7 +83,7 @@ mc_entry_get_key_func (void *entry)
     mc_entry_t                  *mc_entry = NULL;
     hal_handle_id_ht_entry_t    *ht_entry = (hal_handle_id_ht_entry_t *)entry;
 
-    HAL_ASSERT(ht_entry != NULL);
+    SDK_ASSERT(ht_entry != NULL);
     mc_entry = (mc_entry_t *)hal_handle_get_obj(ht_entry->handle_id);
     return (void *)&(mc_entry->key);
 }
@@ -94,7 +94,7 @@ mc_entry_get_key_func (void *entry)
 uint32_t
 mc_entry_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(mc_key_t)) % ht_size;
 }
 
@@ -104,7 +104,7 @@ mc_entry_compute_hash_func (void *key, uint32_t ht_size)
 bool
 mc_entry_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     return (memcmp(key1, key2, sizeof(mc_key_t)) == 0);
 }
 
@@ -216,29 +216,29 @@ mc_entry_create_and_program_oifs (mc_entry_t *mc_entry)
     oif_t                         oif = {};
 
     l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
-    HAL_ASSERT(l2seg != NULL);
+    SDK_ASSERT(l2seg != NULL);
 
     ret = oif_list_create(&mc_entry->oif_list);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     if (is_forwarding_mode_host_pinned()) {
         ret = oif_list_set_honor_ingress(mc_entry->oif_list);
-        HAL_ASSERT(ret == HAL_RET_OK);
+        SDK_ASSERT(ret == HAL_RET_OK);
     }
 
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL);
+        SDK_ASSERT(pi_if != NULL);
         oif.intf = pi_if;
         oif.l2seg = l2seg;
         ret = oif_list_add_oif(mc_entry->oif_list, &oif);
-        HAL_ASSERT(ret == HAL_RET_OK);
+        SDK_ASSERT(ret == HAL_RET_OK);
     }
 
     if (is_forwarding_mode_classic_nic()) {
         ret = oif_list_attach(mc_entry->oif_list, l2seg_get_mcast_oif_list(l2seg));
-        HAL_ASSERT(ret == HAL_RET_OK);
+        SDK_ASSERT(ret == HAL_RET_OK);
     }
 
     return ret;
@@ -266,14 +266,14 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
 
     if (is_forwarding_mode_classic_nic()) {
         ret = oif_list_detach(mc_entry->oif_list);
-        HAL_ASSERT(ret == HAL_RET_OK);
+        SDK_ASSERT(ret == HAL_RET_OK);
     }
 
     // Now Delete the OIFs
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL);
+        SDK_ASSERT(pi_if != NULL);
         oif.intf = pi_if;
         oif.l2seg = l2seg;
         ret = oif_list_remove_oif(mc_entry->oif_list, &oif);
@@ -285,12 +285,12 @@ mc_entry_deprogram_and_delete_oifs(mc_entry_t *mc_entry)
 
     if (is_forwarding_mode_host_pinned()) {
         ret = oif_list_clr_honor_ingress(mc_entry->oif_list);
-        HAL_ASSERT(ret == HAL_RET_OK);
+        SDK_ASSERT(ret == HAL_RET_OK);
     }
 
     // Delete the OIF List
     ret = oif_list_delete(mc_entry->oif_list);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
     mc_entry->oif_list = OIF_LIST_ID_INVALID;
 
 end:
@@ -312,7 +312,7 @@ mc_entry_cleanup_and_delete(mc_entry_t *mc_entry)
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL);
+        SDK_ASSERT(pi_if != NULL);
         hal_remove_from_handle_list(&pi_if->mc_entry_list_head, mc_entry->hal_handle);
     }
 
@@ -321,7 +321,7 @@ mc_entry_cleanup_and_delete(mc_entry_t *mc_entry)
 
     // Free the multicast entry
     ret = mc_entry_free(mc_entry);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
     return ret;
 }
 
@@ -468,13 +468,13 @@ mc_entry_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_mc_entry_create_args_t pd_mc_entry_args = {};
     pd::pd_func_args_t            pd_func_args = {};
 
-    HAL_ASSERT(cfg_ctxt);
+    SDK_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     mc_entry = (mc_entry_t *)dhl_entry->obj;
 
-    HAL_ASSERT(mc_entry);
+    SDK_ASSERT(mc_entry);
 
     HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
                     mc_key_to_string(&mc_entry->key));
@@ -513,7 +513,7 @@ mc_entry_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_id_list_entry_t  *entry = NULL;
     if_t                        *pi_if = NULL;
 
-    HAL_ASSERT(cfg_ctxt);
+    SDK_ASSERT(cfg_ctxt);
 
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
@@ -536,7 +536,7 @@ mc_entry_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL);
+        SDK_ASSERT(pi_if != NULL);
         hal_add_to_handle_list(&pi_if->mc_entry_list_head, mc_entry->hal_handle);
     }
 
@@ -562,7 +562,7 @@ mc_entry_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_mc_entry_delete_args_t pd_mc_entry_args = {};
     pd::pd_func_args_t          pd_func_args = {};
 
-    HAL_ASSERT(cfg_ctxt);
+    SDK_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -782,13 +782,13 @@ mc_entry_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_mc_entry_delete_args_s pd_mc_entry_args = {};
     pd::pd_func_args_t          pd_func_args = {};
 
-    HAL_ASSERT(cfg_ctxt);
+    SDK_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     mc_entry = (mc_entry_t *)dhl_entry->obj;
 
-    HAL_ASSERT(mc_entry);
+    SDK_ASSERT(mc_entry);
     HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
                     mc_key_to_string(&mc_entry->key));
 
@@ -821,7 +821,7 @@ mc_entry_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     mc_entry_t                  *mc_entry = NULL;
     hal_handle_t                hal_handle;
 
-    HAL_ASSERT(cfg_ctxt);
+    SDK_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -858,7 +858,7 @@ mc_entry_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 end:
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("commit CBs can't fail: ret:{}", ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     return ret;
 }
@@ -1006,14 +1006,14 @@ mc_entry_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_mc_entry_update_args_t pd_mc_entry_args = {};
     pd::pd_func_args_t          pd_func_args = {};
 
-    HAL_ASSERT(cfg_ctxt);
+    SDK_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     upd_entry = (mc_entry_t *)dhl_entry->cloned_obj;
     mc_entry = (mc_entry_t *)dhl_entry->obj;
 
-    HAL_ASSERT(mc_entry && upd_entry);
+    SDK_ASSERT(mc_entry && upd_entry);
 
     HAL_TRACE_DEBUG("MC entry {}, key: {}", mc_entry->hal_handle,
                     mc_key_to_string(&mc_entry->key));
@@ -1053,7 +1053,7 @@ mc_entry_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_id_list_entry_t  *entry = NULL;
     if_t                        *pi_if = NULL;
 
-    HAL_ASSERT(cfg_ctxt);
+    SDK_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1081,14 +1081,14 @@ mc_entry_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dllist_for_each(lnode, &upd_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         pi_if = find_if_by_handle(entry->handle_id);
-        HAL_ASSERT(pi_if != NULL);
+        SDK_ASSERT(pi_if != NULL);
         hal_add_to_handle_list(&pi_if->mc_entry_list_head, upd_entry->hal_handle);
     }
 
 end:
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("commit CBs can't fail: ret:{}", ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     return ret;
 }
@@ -1104,7 +1104,7 @@ mc_entry_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     mc_entry_t                  *upd_entry = NULL;
 
-    HAL_ASSERT(cfg_ctxt);
+    SDK_ASSERT(cfg_ctxt);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -1230,7 +1230,7 @@ mc_entry_get_fill_rsp(MulticastEntryGetResponse *rsp,
     pd::pd_func_args_t              pd_func_args = {};
     pd::pd_mc_entry_get_args_t      pd_mc_entry_get_args = {};
 
-    HAL_ASSERT(mc_entry);
+    SDK_ASSERT(mc_entry);
 
     l2seg = l2seg_lookup_by_handle(mc_entry->key.l2seg_handle);
     if (l2seg == NULL) {
@@ -1269,7 +1269,7 @@ mc_entry_get_fill_rsp(MulticastEntryGetResponse *rsp,
     dllist_for_each(lnode, &mc_entry->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
         intf  = (if_t *)hal_handle_get_obj(entry->handle_id);
-        HAL_ASSERT(intf);
+        SDK_ASSERT(intf);
         rsp->mutable_spec()->add_oif_key_handles()->set_interface_id(intf->if_id);
         numoif ++;
     }

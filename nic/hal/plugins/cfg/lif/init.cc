@@ -36,7 +36,7 @@ lif_init (hal_cfg_t *hal_cfg)
                                                 "/gen/mpu_prog_info.json").c_str());
     mpartition *mp = mpartition::factory();
 
-    HAL_ASSERT(pinfo && mp);
+    SDK_ASSERT(pinfo && mp);
 
     g_lif_manager = LIFManager::factory(mp, pinfo, "lif2qstate_map");
 

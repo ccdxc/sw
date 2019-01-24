@@ -20,7 +20,7 @@ void        *g_pd_stub_so;
 hal_ret_t
 hal_pd_stub_assert (pd_func_args_t *args)
 {
-    HAL_ASSERT(FALSE);
+    SDK_ASSERT(FALSE);
     return HAL_RET_OK;
 }
 
@@ -53,7 +53,7 @@ hal_pd_stub_assert (pd_func_args_t *args)
 //       if (dlsym_error) {
 //           HAL_TRACE_ERR("{}: cannot load symbol from PD STUB LIB {}: {}",
 //                         __FUNCTION__, "pd_vrf_create", dlsym_error);
-//           HAL_ASSERT(0);
+//           SDK_ASSERT(0);
 //       }
 //   }
 //------------------------------------------------------------------------------
@@ -517,7 +517,7 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
         g_pd_so = dlopen(pdlib_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
         if (!g_pd_so) {
             HAL_TRACE_ERR("dlopen failed {}: {}", pdlib_path, dlerror());
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
         }
     }
 
@@ -529,7 +529,7 @@ hal_pd_libopen (hal_cfg_t *hal_cfg)
         g_pd_stub_so = dlopen(pdlib_stub_path.c_str(), RTLD_NOW|RTLD_GLOBAL);
         if (!g_pd_stub_so) {
             HAL_TRACE_ERR("{} dlopen failed {}", pdlib_stub_path, dlerror());
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
         }
     }
 
@@ -591,7 +591,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     asic_cfg_t                          asic_cfg;
     pd_asic_init_args_t                 args;
 
-    HAL_ASSERT(hal_cfg != NULL);
+    SDK_ASSERT(hal_cfg != NULL);
     hal_pd_module_init(hal_cfg);
 
     mem_init_args.cfg_path = hal_cfg->cfg_path.c_str();
@@ -605,7 +605,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
 
     // initialize PAL
     palrv = sdk::lib::pal_init(hal_cfg->platform);
-    HAL_ASSERT_GOTO(IS_PAL_API_SUCCESS(palrv), cleanup);
+    SDK_ASSERT_GOTO(IS_PAL_API_SUCCESS(palrv), cleanup);
 
     // do asic initialization
     asic_cfg.loader_info_file = hal_cfg->loader_info_file;
@@ -618,7 +618,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
     args.cfg = &asic_cfg;
     pd_func_args.pd_asic_init = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_ASIC_INIT, &pd_func_args);
-    HAL_ASSERT_GOTO((ret == HAL_RET_OK), cleanup);
+    SDK_ASSERT_GOTO((ret == HAL_RET_OK), cleanup);
 
     // start the asic-rw thread
     HAL_TRACE_DEBUG("Starting asic-rw thread ...");
@@ -631,7 +631,7 @@ hal_pd_init (hal_cfg_t *hal_cfg)
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             hal_cfg);
-    HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
+    SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                             "asicrw thread creation failure");
     hal_thread->start(hal_thread);
 

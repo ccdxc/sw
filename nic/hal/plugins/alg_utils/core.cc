@@ -219,7 +219,7 @@ out:
 
 static void * app_sess_get_key_func(void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((app_session_t *)entry)->key);
 }
 
@@ -231,7 +231,7 @@ static uint32_t app_sess_compute_hash_func(void *key, uint32_t ht_size)
 
 static bool app_sess_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     return (memcmp(key1, key2, sizeof(hal::flow_key_t)) == 0);
 }
 
@@ -490,7 +490,7 @@ l4_alg_status_t *alg_state::get_next_expflow(app_session_t *app_sess) {
     {
         l4_alg_status_t *exp_flow = dllist_entry(lentry,
                                   l4_alg_status_t, exp_flow_lentry);
-        HAL_ASSERT(exp_flow != NULL);
+        SDK_ASSERT(exp_flow != NULL);
         return exp_flow;
     }
     SDK_SPINLOCK_UNLOCK(&app_sess->slock);
@@ -509,7 +509,7 @@ l4_alg_status_t *alg_state::get_ctrl_l4sess(app_session_t *app_sess) {
     {
         l4_alg_status_t *l4_sess = dllist_entry(lentry,
                                   l4_alg_status_t, l4_sess_lentry);
-        HAL_ASSERT(l4_sess != NULL);
+        SDK_ASSERT(l4_sess != NULL);
         if (l4_sess->isCtrl == true) {
             SDK_SPINLOCK_UNLOCK(&app_sess->slock);
             return l4_sess;

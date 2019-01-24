@@ -15,7 +15,7 @@ namespace hal {
 void *
 oif_list_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry);
+    SDK_ASSERT(entry);
     return (void *)&(((oif_list_t*)entry)->id);
 }
 
@@ -25,7 +25,7 @@ oif_list_get_key_func (void *entry)
 uint32_t
 oif_list_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(oif_list_id_t)) % ht_size;
 }
 
@@ -35,7 +35,7 @@ oif_list_compute_hash_func (void *key, uint32_t ht_size)
 bool
 oif_list_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     return (memcmp(key1, key2, sizeof(oif_list_id_t)) == 0);
 }
 
@@ -109,7 +109,7 @@ static hal_ret_t oif_list_remove_from_db(oif_list_id_t list_id)
         return HAL_RET_ENTRY_NOT_FOUND;
     }
 
-    HAL_ASSERT(dllist_count(&oif_list->oifs) == 0);
+    SDK_ASSERT(dllist_count(&oif_list->oifs) == 0);
     return oif_list_free(oif_list);
 }
 
@@ -567,7 +567,7 @@ hal_ret_t oif_list_get(oif_list_id_t list_id, OifList *rsp)
         if_t *hal_if = (if_t *)hal_handle_get_obj(db_oif->if_hndl);
         l2seg_t *l2seg = (l2seg_t *)hal_handle_get_obj(db_oif->l2seg_hndl);
         Oif   *oif_rsp = rsp->add_oifs();
-        HAL_ASSERT(db_oif && hal_if && l2seg && oif_rsp);
+        SDK_ASSERT(db_oif && hal_if && l2seg && oif_rsp);
         oif_rsp->set_q_id(db_oif->qid);
         oif_rsp->set_q_purpose(db_oif->purpose);
         oif_rsp->mutable_interface()->set_interface_id(hal_if->if_id);

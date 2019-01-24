@@ -30,7 +30,7 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
     char            buff[4096] = {0};
 
     session = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
-    HAL_ASSERT_RETURN((session != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((session != NULL), HAL_RET_ERR);
 
     sdk_ret = session->update(id, action_data);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -40,7 +40,7 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
     } else {
         p4_err =  p4pd_table_ds_decoded_string_get(P4TBL_ID_MIRROR, 0, NULL, NULL,
                 action_data, buff, sizeof(buff));
-        HAL_ASSERT(p4_err == P4PD_SUCCESS);
+        SDK_ASSERT(p4_err == P4PD_SUCCESS);
         HAL_TRACE_DEBUG("{}: programmed session {}: {}",
                 __FUNCTION__, id, buff);
     }
@@ -67,7 +67,7 @@ pd_mirror_session_create(pd_func_args_t *pd_func_args)
 
     // Add to a PD datastructure instead of stack.
     memset(&action_data, 0, sizeof(mirror_actiondata_t));
-    HAL_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
+    SDK_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
 
     switch (args->session->dest_if->if_type) {
         case intf::IF_TYPE_TUNNEL:
@@ -125,7 +125,7 @@ pd_mirror_session_delete(pd_func_args_t *pd_func_args)
         return HAL_RET_INVALID_ARG;
     }
     memset(&action_data, 0, sizeof(mirror_actiondata_t));
-    HAL_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
+    SDK_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
     action_data.action_id = MIRROR_DROP_MIRROR_ID;
 
     return pd_mirror_update_hw(args->session->id, &action_data);
@@ -141,7 +141,7 @@ pd_mirror_session_get(pd_func_args_t *pd_func_args)
         return HAL_RET_INVALID_ARG;
     }
     memset(&action_data, 0, sizeof(mirror_actiondata_t));
-    HAL_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
+    SDK_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
 
     p4pd_error_t pdret;
     pdret = p4pd_entry_read(P4TBL_ID_MIRROR, args->session->id, NULL, NULL, (void *)&action_data);
@@ -337,7 +337,7 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     telemetry_export_dest_set_mac(d, cfg->dest_mac, false);
     telemetry_export_dest_commit(d);
     hal_cfg = g_hal_state_pd->hal_cfg();
-    HAL_ASSERT(hal_cfg);
+    SDK_ASSERT(hal_cfg);
     // Start timer for the collector, only in HW mode
     d->db_timer = 
         sdk::lib::timer_schedule((HAL_TIMER_ID_IPFIX_MIN + d->id),
@@ -371,7 +371,7 @@ pd_collector_delete(pd_func_args_t *pd_func_args)
         return HAL_RET_INVALID_ARG;
     }
     hal_cfg = g_hal_state_pd->hal_cfg();
-    HAL_ASSERT(hal_cfg);
+    SDK_ASSERT(hal_cfg);
     d = &export_destinations[cfg->collector_id];
     if (!d->valid) {
         HAL_TRACE_ERR("Collector does not exist, id {}", cfg->collector_id);
@@ -433,7 +433,7 @@ program_drop_stats_actiondata_table (drop_stats_actiondata_t *data,
     tcam        *tcam;
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     data->action_u.drop_stats_drop_stats.mirror_en = reason;
     data->action_u.drop_stats_drop_stats.mirror_session_id = sessid_bitmap;

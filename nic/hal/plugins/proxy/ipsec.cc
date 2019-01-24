@@ -174,7 +174,7 @@ const hal::ipv4_rule_t* ipsec_lookup_rules(vrf_id_t vrf_id, fte::ctx_t&ctx)
         acl_key.port_dst = ctx.get_key().dport;
         break;
     default:
-        HAL_ASSERT(true);
+        SDK_ASSERT(true);
         ret = HAL_RET_FTE_RULE_NO_MATCH;
     } //switch
     ipsec_acl_ctx_name(ctx_name, vrf_id);

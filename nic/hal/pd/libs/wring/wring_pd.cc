@@ -313,7 +313,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
 
     uint32_t required_size = meta->num_slots * meta->slot_size_in_bytes *
         meta->ring_types_in_region;
-    HAL_ASSERT(reg_size * 1024 >= required_size);
+    SDK_ASSERT(reg_size * 1024 >= required_size);
 
     // Allocate memory for storing value for a slot
     if (meta->skip_init_slots) {
@@ -629,7 +629,7 @@ wring_pd_init_global_rings()
 void *
 wring_pd_get_hw_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((pd_wring_t *)entry)->hw_id);
 }
 
@@ -642,7 +642,7 @@ wring_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 bool
 wring_pd_compare_hw_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(wring_hw_id_t *)key1 == *(wring_hw_id_t *)key2) {
         return true;
     }

@@ -110,7 +110,7 @@ ReplEntryHw::read(uint32_t index)
     uint64_t entry_offset = index * P4PD_REPL_ENTRY_WIDTH;
     uint64_t base_in_entry_units = repl_table_mem_offset / P4PD_REPL_ENTRY_WIDTH;
 
-    HAL_ASSERT(index < P4PD_REPL_TABLE_DEPTH);
+    SDK_ASSERT(index < P4PD_REPL_TABLE_DEPTH);
 
     sdk::asic::asic_mem_read(repl_table_mem_addr + entry_offset,
                              (uint8_t *)this, P4PD_REPL_ENTRY_WIDTH);
@@ -128,7 +128,7 @@ ReplEntryHw::write(uint32_t index)
     uint64_t entry_offset = index * P4PD_REPL_ENTRY_WIDTH;
     uint64_t base_in_entry_units = repl_table_mem_offset / P4PD_REPL_ENTRY_WIDTH;
 
-    HAL_ASSERT(index < P4PD_REPL_TABLE_DEPTH);
+    SDK_ASSERT(index < P4PD_REPL_TABLE_DEPTH);
 
     if (get_last_entry() == 0) {
         set_next_ptr(get_next_ptr() + base_in_entry_units);

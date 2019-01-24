@@ -55,7 +55,7 @@ calc_jenkins_hash_(void *key, void *data, HbmHash *fl, bool spooky)
     hwkey = HAL_CALLOC(0, fl->get_hwkey_len());
 
     rs = entry->form_hw_key(fl->get_table_id(), hwkey);
-    if (rs != sdk::SDK_RET_OK) HAL_ASSERT(0);
+    if (rs != sdk::SDK_RET_OK) SDK_ASSERT(0);
 
     // cal. hash
     if (spooky) {

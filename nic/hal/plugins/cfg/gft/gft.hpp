@@ -265,7 +265,7 @@ find_gft_exact_match_profile_by_id (gft_profile_id_t profile_id)
                 gft_exact_match_profile_id_ht()->lookup(&profile_id);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_GFT_EXACT_MATCH_PROFILE);
 
         profile =
@@ -441,7 +441,7 @@ find_gft_hdr_xposition_profile_by_id (gft_profile_id_t profile_id)
                 gft_hdr_transposition_profile_id_ht()->lookup(&profile_id);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_GFT_HDR_TRANSPOSITION_PROFILE);
 
         profile =
@@ -623,7 +623,7 @@ find_gft_exact_match_flow_entry_by_id (gft_flow_entry_id_t flow_entry_id)
                 gft_exact_match_flow_entry_id_ht()->lookup(&flow_entry_id);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_GFT_EXACT_MATCH_FLOW_ENTRY);
         flow_entry =
             (gft_exact_match_flow_entry_t *)hal_handle_get_obj(entry->handle_id);

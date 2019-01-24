@@ -15,7 +15,7 @@ namespace hal {
 void *
 proxyccb_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((proxyccb_t *)entry)->cb_id);
 }
 
@@ -28,7 +28,7 @@ proxyccb_compute_hash_func (void *key, uint32_t ht_size)
 bool
 proxyccb_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(proxyccb_id_t *)key1 == *(proxyccb_id_t *)key2) {
         return true;
     }
@@ -38,7 +38,7 @@ proxyccb_compare_key_func (void *key1, void *key2)
 void *
 proxyccb_get_handle_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((proxyccb_t *)entry)->hal_handle);
 }
 
@@ -51,7 +51,7 @@ proxyccb_compute_handle_hash_func (void *key, uint32_t ht_size)
 bool
 proxyccb_compare_handle_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }
@@ -245,7 +245,7 @@ proxyccb_create (internal::ProxycCbSpec& spec, internal::ProxycCbResponse *rsp)
 
     // add this PROXYC CB to our db
     ret = add_proxyccb_to_db(proxyccb);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);

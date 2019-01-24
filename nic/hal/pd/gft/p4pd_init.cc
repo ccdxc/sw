@@ -28,7 +28,7 @@ p4pd_rx_vport_init (void)
     tcam                    *rx_vport;
 
     rx_vport = g_hal_state_pd->tcam_table(P4TBL_ID_RX_VPORT);
-    HAL_ASSERT(rx_vport!= NULL);
+    SDK_ASSERT(rx_vport!= NULL);
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -225,7 +225,7 @@ p4pd_decode_roce_opcode_init (void)
     opc_to_info[129].parsed_hdrs_len = PARSED_HDRS_LEN_BTH;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_RX_ROCE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     for (idx = 0; idx < DECODE_ROCE_OPCODE_TABLE_SIZE; idx++) {
 
@@ -270,13 +270,13 @@ hal_ret_t
 p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
 {
     // hack for initial set of DOLs for Uplink -> Uplink
-    HAL_ASSERT(p4pd_rx_vport_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_rx_vport_init() == HAL_RET_OK);
 
     // Reserve 0th entry for tx and rx transposition tables
-    HAL_ASSERT(p4pd_tx_transp_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_rx_transp_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_tx_transp_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_rx_transp_init() == HAL_RET_OK);
 
-    HAL_ASSERT(p4pd_decode_roce_opcode_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_decode_roce_opcode_init() == HAL_RET_OK);
 
     return HAL_RET_OK;
 }

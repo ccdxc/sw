@@ -15,7 +15,7 @@ namespace pd {
 void *
 tnnl_rw_entry_pd_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((pd_tnnl_rw_entry_t*)entry)->tnnl_rw_key);
 }
 
@@ -34,7 +34,7 @@ tnnl_rw_entry_pd_compute_hash_func (void *key, uint32_t ht_size)
 bool
 tnnl_rw_entry_pd_compare_key_func(void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(pd_tnnl_rw_entry_key_t))) {
         return true;
     }
@@ -282,7 +282,7 @@ tnnl_rw_entry_delete(pd_tnnl_rw_entry_key_t *tnnl_rw_key)
         // Delete from DB
         ret = del_tnnl_rw_entry_pd_from_db(tnnl_rwe);
         if (ret != HAL_RET_OK) {
-            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+            SDK_ASSERT_RETURN(0, HAL_RET_ERR);
         }
 
         // Free the index
@@ -309,7 +309,7 @@ tnnl_rw_pd_depgm_tnnl_rw_tbl(pd_tnnl_rw_entry_t *tnnl_rwe)
     directmap            *tnnl_rw_tbl = NULL;
 
     tnnl_rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
-    HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = tnnl_rw_tbl->remove(tnnl_rwe->tnnl_rw_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -342,7 +342,7 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_mpls_udp (pd_tnnl_rw_entry_t *tnnl_rwe)
     memset(&data, 0, sizeof(data));
 
     tnnl_rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
-    HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
 
     //memcpy(data_mpls_udp.mac_sa, tnnl_rwe->tnnl_rw_key.mac_sa, ETH_ADDR_LEN);
     //memrev(data_mpls_udp.mac_sa, ETH_ADDR_LEN);
@@ -381,7 +381,7 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_erspan (pd_tnnl_rw_entry_t *tnnl_rwe)
     memset(&data, 0, sizeof(data));
 
     tnnl_rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
-    HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
 
     memcpy(data_erspan.mac_sa, tnnl_rwe->tnnl_rw_key.mac_sa, ETH_ADDR_LEN);
     memrev(data_erspan.mac_sa, ETH_ADDR_LEN);
@@ -420,7 +420,7 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_vxlan (pd_tnnl_rw_entry_t *tnnl_rwe)
     memset(&data, 0, sizeof(data));
 
     tnnl_rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
-    HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
 
     memcpy(data_vxlan.mac_sa, tnnl_rwe->tnnl_rw_key.mac_sa, ETH_ADDR_LEN);
     memrev(data_vxlan.mac_sa, ETH_ADDR_LEN);
@@ -458,7 +458,7 @@ tnnl_rw_pd_pgm_tnnl_rw_tbl_vlan (pd_tnnl_rw_entry_t *tnnl_rwe)
     memset(&data, 0, sizeof(data));
 
     tnnl_rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
-    HAL_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((tnnl_rw_tbl != NULL), HAL_RET_ERR);
 
     data.action_id = tnnl_rwe->tnnl_rw_key.tnnl_rw_act;
     sdk_ret = tnnl_rw_tbl->insert_withid(&data, tnnl_rwe->tnnl_rw_idx);

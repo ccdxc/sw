@@ -299,7 +299,7 @@ tls_api_init(void)
         hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, &pd_func_args);
         // asesq_ctx = hal::pd::cpupkt_ctxt_alloc_init();
         asesq_ctx = args.ctxt;
-        HAL_ASSERT_RETURN(asesq_ctx != NULL, HAL_RET_NO_RESOURCE);
+        SDK_ASSERT_RETURN(asesq_ctx != NULL, HAL_RET_NO_RESOURCE);
     }
 
     ret = g_ssl_helper.init();

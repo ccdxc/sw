@@ -50,7 +50,7 @@ hal_test_utils_get_slab (hal_slab_t slab_id)
     args.slab_id = slab_id;
     pd_func_args.pd_get_slab = &args;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_GET_SLAB, &pd_func_args);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
     return args.slab;
     // return g_hal_state_pd->get_slab(slab_id);
     // return NULL;
@@ -108,7 +108,7 @@ hal_test_utils_trace (slab_stats_t *pre, slab_stats_t *post)
     if (pre == NULL || post == NULL) {
         return;
     }
-    HAL_ASSERT(pre->slab_id == post->slab_id);
+    SDK_ASSERT(pre->slab_id == post->slab_id);
 
     HAL_TRACE_DEBUG("slab_id: {}", pre->slab_id);
     HAL_TRACE_DEBUG("           Pre             Post");
@@ -128,7 +128,7 @@ mtrack_cb (void *ctxt, uint32_t alloc_id, mtrack_info_t *minfo)
     mtrack_info_t       *mtrack_stats = (mtrack_info_t *)ctxt;
 
 #if 0
-    HAL_ASSERT(alloc_id < hal::HAL_MEM_ALLOC_OTHER);
+    SDK_ASSERT(alloc_id < hal::HAL_MEM_ALLOC_OTHER);
     mtrack_stats[alloc_id] = *minfo;
     HAL_TRACE_DEBUG("{}:alloc_id:{} -> allocs: {}, frees: {}; allocs: {}, frees: {}", __FUNCTION__, alloc_id,
                     minfo->num_allocs, minfo->num_frees, mtrack_stats[alloc_id].num_allocs, mtrack_stats[alloc_id].num_frees);

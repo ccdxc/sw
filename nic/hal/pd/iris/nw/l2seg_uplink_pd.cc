@@ -123,7 +123,7 @@ l2seg_uplink_pgm_input_properties_tbl(pd_add_l2seg_uplink_args_t *args)
     uplink_ifpc_id = if_get_uplink_ifpc_id(args->intf);
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     key.capri_intrinsic_lif = if_get_hw_lif_id(args->intf);
     key.entry_inactive_input_properties = 0;
@@ -250,7 +250,7 @@ l2seg_uplink_depgm_input_properties_tbl (pd_del_l2seg_uplink_args_t *args)
     l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(args->l2seg);
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     if (l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id] != INVALID_INDEXER_INDEX) {
         sdk_ret = inp_prop_tbl->remove(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
@@ -338,7 +338,7 @@ l2seg_uplink_inp_prop_form_data (pd_add_l2seg_uplink_args_t *args,
             inp_prop.clear_promiscuous_repl = 1;
         } else if (num_prom_lifs == 1) {
             // 1 prom. lif => Get prom lif from inp. props and no prom replication needed
-            HAL_ASSERT(l2seg_pd->prom_if_handle != HAL_HANDLE_INVALID);
+            SDK_ASSERT(l2seg_pd->prom_if_handle != HAL_HANDLE_INVALID);
             inp_prop.clear_promiscuous_repl = 1;
             prom_if = find_if_by_handle(l2seg_pd->prom_if_handle);
             if (prom_if) {
@@ -404,7 +404,7 @@ l2seg_uplink_upd_input_properties_tbl (pd_add_l2seg_uplink_args_t *args,
     uplink_ifpc_id = if_get_uplink_ifpc_id(args->intf);
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     if (!is_native) {
         // Update one entry

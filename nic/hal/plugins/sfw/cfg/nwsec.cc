@@ -24,7 +24,7 @@ nwsec_profile_id_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry;
     nwsec_profile_t             *nwsec = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -39,7 +39,7 @@ nwsec_profile_id_get_key_func (void *entry)
 uint32_t
 nwsec_profile_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key,
                                          sizeof(nwsec_profile_id_t)) % ht_size;
 }
@@ -50,7 +50,7 @@ nwsec_profile_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 nwsec_profile_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(nwsec_profile_id_t *)key1 == *(nwsec_profile_id_t *)key2) {
         return true;
     }
@@ -134,7 +134,7 @@ find_nwsec_profile_by_id (nwsec_profile_id_t profile_id)
         nwsec_profile_id_ht()->lookup(&profile_id);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_SECURITY_PROFILE);
 
         sec_prof = (nwsec_profile_t *)hal_handle_get_obj(entry->handle_id);
@@ -528,7 +528,7 @@ nwsec_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t                     *nwsec = NULL;
     pd::pd_func_args_t                  pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     // app_ctxt = (nwsec_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -564,7 +564,7 @@ nwsec_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t             *nwsec = NULL;
     hal_handle_t                hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -631,7 +631,7 @@ nwsec_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t                     *nwsec = NULL;
     hal_handle_t                        hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -944,7 +944,7 @@ nwsec_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_update_app_ctxt_t             *app_ctxt = NULL;
     pd::pd_func_args_t                  pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (nwsec_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -1025,7 +1025,7 @@ nwsec_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t                     *nwsec = NULL, *nwsec_clone = NULL;
     pd::pd_func_args_t                  pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     // app_ctxt = (nwsec_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -1076,7 +1076,7 @@ nwsec_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_nwsec_profile_mem_free_args_t pd_nwsec_args = { 0 };
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -1213,7 +1213,7 @@ nwsec_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_nwsec_profile_delete_args_t pd_nwsec_args = { 0 };
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -1248,7 +1248,7 @@ nwsec_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t                     *nwsec = NULL;
     hal_handle_t                hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -1693,7 +1693,7 @@ nwsec_prof_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     uint32_t                    serialized_state_sz;
     nwsec_profile_t             *sec_prof = (nwsec_profile_t *)obj;
 
-    HAL_ASSERT((sec_prof != NULL) && (mlen != NULL));
+    SDK_ASSERT((sec_prof != NULL) && (mlen != NULL));
     *mlen = 0;
 
     // get all information about this security profile (includes spec,
@@ -1808,7 +1808,7 @@ nwsec_prof_restore_cb (void *obj, uint32_t len)
     // de-serialize the object
     if (nwsec_info.ParseFromArray(obj, len) == false) {
         HAL_TRACE_ERR("Failed to de-serialize a serialized vrf obj");
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return 0;
     }
 

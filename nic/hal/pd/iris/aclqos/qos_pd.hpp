@@ -201,7 +201,7 @@ qos_class_pd_port_to_packet_buffer_port (tm_port_t port, qos::PacketBufferPort *
         buf_port->set_port_type(qos::PACKET_BUFFER_PORT_TYPE_P4EG);
         buf_port->set_port_num(TM_PORT_EGRESS);
     } else {
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 }
 

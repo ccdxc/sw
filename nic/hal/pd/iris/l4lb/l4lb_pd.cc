@@ -157,7 +157,7 @@ l4lb_pd_pgm_rw_tbl(pd_l4lb_t *pd_l4lb)
     mac = &pi_l4lb->serv_mac_addr;
 
     rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
-    HAL_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
 
     // mac_sa = ... Get it from l2seg rmac
     // mac_da = ... Get it from EP's NH
@@ -187,7 +187,7 @@ l4lb_pd_pgm_rw_tbl(pd_l4lb_t *pd_l4lb)
                 memrev(data.action_u.rewrite_rewrite.mac_sa, 6);
                 break;
             default:
-                HAL_ASSERT(0);
+                SDK_ASSERT(0);
         }
         data.action_id = i;
         sdk_ret = rw_tbl->insert(&data, &(pd_l4lb->rw_tbl_idx[i]));
@@ -258,7 +258,7 @@ l4lb_pd_get_rw_tbl_idx_from_pi_l4lb(l4lb_service_entry_t *pi_l4lb, rewrite_actio
 uint32_t
 l4lb_pd_get_rw_tbl_idx(pd_l4lb_t *pd_l4lb, rewrite_actions_en rw_act)
 {
-    HAL_ASSERT(rw_act < REWRITE_MAX_ID);
+    SDK_ASSERT(rw_act < REWRITE_MAX_ID);
 
     HAL_TRACE_DEBUG("rw_act:{}, rw_idx:{}", rw_act,
             pd_l4lb->rw_tbl_idx[rw_act]);

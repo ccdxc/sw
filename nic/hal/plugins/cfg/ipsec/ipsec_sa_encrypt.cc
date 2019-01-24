@@ -15,7 +15,7 @@ namespace hal {
 void *
 ipsec_sa_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     HAL_TRACE_DEBUG("Got id as {}\n", (((ipsec_sa_t *)entry)->sa_id));
     return (void *)&(((ipsec_sa_t *)entry)->sa_id);
 }
@@ -29,7 +29,7 @@ ipsec_sa_compute_hash_func (void *key, uint32_t ht_size)
 bool
 ipsec_sa_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*((ipsec_sa_id_t *)key1) == *((ipsec_sa_id_t *)key2)) {
         return true;
     }
@@ -39,7 +39,7 @@ ipsec_sa_compare_key_func (void *key1, void *key2)
 void *
 ipsec_sa_get_handle_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((ipsec_sa_t *)entry)->hal_handle);
 }
 
@@ -52,7 +52,7 @@ ipsec_sa_compute_handle_hash_func (void *key, uint32_t ht_size)
 bool
 ipsec_sa_compare_handle_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }
@@ -207,7 +207,7 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     }
     // add this L2 segment to our db
     ret = add_ipsec_sa_to_db(ipsec);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);

@@ -90,7 +90,7 @@ program_cpu_lif(void)
 
     // get lport-id for this lif
     lif_t* lif = find_lif_by_id(HAL_LIF_CPU);
-    HAL_ASSERT_RETURN((NULL != lif), HAL_RET_LIF_NOT_FOUND);
+    SDK_ASSERT_RETURN((NULL != lif), HAL_RET_LIF_NOT_FOUND);
 
     args.pi_lif = lif;
     pd_func_args.pd_lif_get_lport_id = &args;

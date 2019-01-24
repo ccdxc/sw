@@ -46,7 +46,7 @@ lklshim_mem_init(void)
     lklshim_flowdb_slab = slab::factory("lklshim_flowdb", HAL_SLAB_LKLSHIM_FLOWDB,
                                 sizeof(lklshim_flow_t), 16,
                                 false, true, true);
-    HAL_ASSERT_RETURN((lklshim_flowdb_slab != NULL), false);
+    SDK_ASSERT_RETURN((lklshim_flowdb_slab != NULL), false);
 
     return true;
 }
@@ -57,7 +57,7 @@ lklshim_flow_entry_create (lklshim_flow_key_t *flow_key)
     lklshim_flow_t *flow;
 
     flow = (lklshim_flow_t *) lklshim_flowdb_slab->alloc();
-    HAL_ASSERT_RETURN((flow != NULL), NULL);
+    SDK_ASSERT_RETURN((flow != NULL), NULL);
 
     memcpy(&flow->key, flow_key, sizeof(flow->key));
     return(flow);
@@ -223,7 +223,7 @@ lklshim_trigger_flow_connection (lklshim_flow_t *flow, hal::flow_direction_t dir
     memset(if_to_bind, 0, sizeof(char)*IF_NAME);
     src_ip = (char*)&flow->key.src_ip.v4_addr;
     fd = lkl_sys_socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-    HAL_ASSERT_RETURN((fd >= 0), false);
+    SDK_ASSERT_RETURN((fd >= 0), false);
     strncpy(if_to_bind, flow->netns.dev, sizeof(char)*IF_NAME);
     if (dir != hal::FLOW_DIR_FROM_DMA) {
         flow->netns.sockfd = fd;

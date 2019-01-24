@@ -30,7 +30,7 @@ namespace pd {
 void *
 proxyrcb_pd_get_hw_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((pd_proxyrcb_t *)entry)->hw_id);
 }
 
@@ -43,7 +43,7 @@ proxyrcb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 bool
 proxyrcb_pd_compare_hw_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(proxyrcb_hw_id_t *)key1 == *(proxyrcb_hw_id_t *)key2) {
         return true;
     }
@@ -441,7 +441,7 @@ cleanup:
 proxyrcb_hw_addr_t
 pd_proxyrcb_get_base_hw_addr(pd_proxyrcb_t* proxyrcb_pd)
 {
-    HAL_ASSERT(NULL != proxyrcb_pd);
+    SDK_ASSERT(NULL != proxyrcb_pd);
 
     // Get the base address of PROXYR CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.

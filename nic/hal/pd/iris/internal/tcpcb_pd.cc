@@ -40,7 +40,7 @@ std::string hex_dump(const uint8_t *buf, size_t sz)
 void *
 tcpcb_pd_get_hw_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((pd_tcpcb_t *)entry)->hw_id);
 }
 
@@ -53,7 +53,7 @@ tcpcb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 bool
 tcpcb_pd_compare_hw_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(tcpcb_hw_id_t *)key1 == *(tcpcb_hw_id_t *)key2) {
         return true;
     }
@@ -1196,8 +1196,8 @@ cleanup:
 tcpcb_hw_id_t
 pd_tcpcb_get_base_hw_index(pd_tcpcb_t* tcpcb_pd)
 {
-    HAL_ASSERT(NULL != tcpcb_pd);
-    HAL_ASSERT(NULL != tcpcb_pd->tcpcb);
+    SDK_ASSERT(NULL != tcpcb_pd);
+    SDK_ASSERT(NULL != tcpcb_pd->tcpcb);
 
     // Get the base address of TCP CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.

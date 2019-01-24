@@ -34,7 +34,7 @@ ep_get_l2_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry;
     ep_t                        *ep = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -58,7 +58,7 @@ ep_compute_l2_hash_func (void *key, uint32_t ht_size)
 bool
 ep_compare_l2_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(ep_l2_key_t))) {
         return true;
     }
@@ -71,7 +71,7 @@ ep_compare_l2_key_func (void *key1, void *key2)
 void *
 ep_get_l3_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((ep_l3_entry_t *)entry)->l3_key);
 }
 
@@ -90,7 +90,7 @@ ep_compute_l3_hash_func (void *key, uint32_t ht_size)
 bool
 ep_compare_l3_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(ep_l3_key_t))) {
         return true;
     }
@@ -180,7 +180,7 @@ find_ep_by_l2_key (l2seg_id_t l2seg_id, const mac_addr_t mac_addr)
         ep_l2_ht()->lookup(&l2_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_ENDPOINT);
         ep = (ep_t *)hal_handle_get_obj(entry->handle_id);
         return ep;
@@ -212,7 +212,7 @@ find_ep_by_l3_key (ep_l3_key_t *ep_l3_key)
 {
     ep_l3_entry_t    *ep_l3_entry;
 
-    HAL_ASSERT(ep_l3_key != NULL);
+    SDK_ASSERT(ep_l3_key != NULL);
     ep_l3_entry =
         (ep_l3_entry_t *)g_hal_state->ep_l3_entry_ht()->lookup(ep_l3_key);
     if (ep_l3_entry == NULL) {
@@ -475,7 +475,7 @@ endpoint_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_create_app_ctxt_t    *app_ctxt  = NULL;
     pd::pd_func_args_t      pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -535,7 +535,7 @@ endpoint_add_to_db (ep_t *ep, vrf_t *vrf)
     // add EP as back ref to if
     if (ep->if_handle != HAL_HANDLE_INVALID) {
         hal_if = find_if_by_handle(ep->if_handle);
-        HAL_ASSERT(hal_if != NULL);
+        SDK_ASSERT(hal_if != NULL);
         ret = if_add_ep(hal_if, ep);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("failed to add ep to if. err: {}", ret);
@@ -585,7 +585,7 @@ endpoint_del_from_db (ep_t *ep)
     // del EP as back ref from if
     if (ep->if_handle != HAL_HANDLE_INVALID) {
         hal_if = find_if_by_handle(ep->if_handle);
-        HAL_ASSERT(hal_if != NULL);
+        SDK_ASSERT(hal_if != NULL);
         ret = if_del_ep(hal_if, ep);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("failed to del ep from if. err: {}", ret);
@@ -613,7 +613,7 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     // hal_handle_t         hal_handle   = 0;
     ep_create_app_ctxt_t *app_ctxt    = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -732,7 +732,7 @@ endpoint_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_t                            *ep = NULL;
     hal_handle_t                    hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     ep = (ep_t *)dhl_entry->obj;
@@ -980,7 +980,7 @@ ep_init_from_spec (ep_t *ep, const EndpointSpec& spec, bool create)
             ep->sgs.sg_id_cnt++;
             ep->sgs.next_sg_p = NULL;
             ret = add_ep_to_security_group(nwsec_group->sg_id, ep->hal_handle);
-            HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+            SDK_ASSERT_RETURN(ret == HAL_RET_OK, ret);
         }
     }
 
@@ -1175,7 +1175,7 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_update_app_ctxt_t            *app_ctxt = NULL;
     pd::pd_func_args_t              pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt  = (ep_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -1266,7 +1266,7 @@ endpoint_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_update_app_ctxt_t        *app_ctxt = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (ep_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -1312,7 +1312,7 @@ endpoint_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_update_app_ctxt_t        *app_ctxt = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (ep_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -1424,8 +1424,8 @@ endpoint_validate_update_change (ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
     hal_ret_t               ret     = HAL_RET_OK;
     if_t                    *hal_if = NULL;
 
-    HAL_ASSERT_RETURN(ep != NULL, HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(ep != NULL, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
 
     if (app_ctxt->vmotion_state_change) {
         if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_NONE, VMOTION_STATE_START) ||
@@ -1498,8 +1498,8 @@ endpoint_check_update (EndpointUpdateRequest& req, ep_t *ep,
 {
     hal_ret_t               ret = HAL_RET_OK;
 
-    HAL_ASSERT_RETURN(ep != NULL, HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(ep != NULL, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
 
     app_ctxt->if_change = false;
     app_ctxt->vmotion_state_change = false;
@@ -1949,7 +1949,7 @@ endpoint_update_pi_with_iplist (ep_t *ep, dllist_ctxt_t *add_iplist,
 #endif
         } else {
             // IPs which are getting deleted should be present in PI EP
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
         }
     }
 
@@ -2142,7 +2142,7 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_t                        *ep = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
 
     // TODO: Check the dependency ref count for the ep.
     //       If its non zero, fail the delete.
@@ -2181,7 +2181,7 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep_t                        *ep = NULL;
     hal_handle_t                hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -2669,7 +2669,7 @@ ep_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     ep_t                    *ep = (ep_t *)obj;
 
     HAL_TRACE_DEBUG("Storing EPs");
-    HAL_ASSERT((ep != NULL) && (mlen != NULL));
+    SDK_ASSERT((ep != NULL) && (mlen != NULL));
     *mlen = 0;
 
     // get all information about this ep (includes spec, status & stats)
@@ -2815,7 +2815,7 @@ ep_restore_cb (void *obj, uint32_t len)
     // de-serialize the object
     if (ep_info.ParseFromArray(obj, len) == false) {
         HAL_TRACE_ERR("Failed to de-serialize a serialized EP obj");
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return 0;
     }
 

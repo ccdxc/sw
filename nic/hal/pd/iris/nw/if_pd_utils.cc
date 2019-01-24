@@ -26,7 +26,7 @@ bool
 if_is_cpu_if(if_t *pi_if)
 {
     intf::IfType    if_type;
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
 
     if_type = intf_get_if_type(pi_if);
     return if_type == intf::IF_TYPE_CPU ? true : false;
@@ -39,7 +39,7 @@ bool
 if_is_app_redir_if(if_t *pi_if)
 {
     intf::IfType    if_type;
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
 
     if_type = intf_get_if_type(pi_if);
     return if_type == intf::IF_TYPE_APP_REDIR ? true : false;
@@ -52,7 +52,7 @@ bool
 if_is_tunnel_if(if_t *pi_if)
 {
     intf::IfType    if_type;
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
 
     if_type = intf_get_if_type(pi_if);
     return if_type == intf::IF_TYPE_TUNNEL ? true : false;
@@ -70,10 +70,10 @@ pd_lif_get_lport_id (pd_func_args_t *pd_func_args)
     lif_t *pi_lif = args->pi_lif;
 
 
-    HAL_ASSERT(pi_lif != NULL);
+    SDK_ASSERT(pi_lif != NULL);
 
     pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
-    HAL_ASSERT(pd_lif != NULL);
+    SDK_ASSERT(pd_lif != NULL);
 
     args->lport_id =  pd_lif->lif_lport_id;
 
@@ -93,7 +93,7 @@ pd_lif_get_hw_lif_id(lif_t *lif, uint32_t *hw_lif_id)
     }
 
     pd_lif = (pd_lif_t *)lif_get_pd_lif(lif);
-    HAL_ASSERT(pd_lif != NULL);
+    SDK_ASSERT(pd_lif != NULL);
 
     *hw_lif_id = pd_lif->hw_lif_id;
 
@@ -137,19 +137,19 @@ pd_if_get_lport_id(pd_func_args_t *pd_func_args)
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
             pd_enicif = (pd_enicif_t *)if_get_pd_if(pi_if);
-            HAL_ASSERT(pd_enicif!= NULL);
+            SDK_ASSERT(pd_enicif!= NULL);
 
             args->lport_id = pd_enicif->enic_lport_id;
             break;
         case intf::IF_TYPE_UPLINK:
             pd_upif = (pd_uplinkif_t *)if_get_pd_if(pi_if);
-            HAL_ASSERT(pd_upif != NULL);
+            SDK_ASSERT(pd_upif != NULL);
 
             args->lport_id = pd_upif->upif_lport_id;
             break;
         case intf::IF_TYPE_UPLINK_PC:
             pd_uppc = (pd_uplinkpc_t *)if_get_pd_if((hal::if_t *)pi_if);
-            HAL_ASSERT(pd_uppc != NULL);
+            SDK_ASSERT(pd_uppc != NULL);
 
             args->lport_id = pd_uppc->uppc_lport_id;
             break;
@@ -160,23 +160,23 @@ pd_if_get_lport_id(pd_func_args_t *pd_func_args)
             remote_tep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
             ep_if = if_get_if_from_ep(remote_tep_ep);
             tif_type = intf_get_if_type(ep_if);
-            HAL_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
+            SDK_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
             /* Recursive resolution to get the tunnel LIF */
             args->lport_id = if_get_lport_id(ep_if);
             break;
         case intf::IF_TYPE_CPU:
             pd_cpuif = (pd_cpuif_t *)if_get_pd_if(pi_if);
-            HAL_ASSERT(pd_cpuif!= NULL);
+            SDK_ASSERT(pd_cpuif!= NULL);
 
             args->lport_id = pd_cpuif->cpu_lport_id;
             break;
         case intf::IF_TYPE_APP_REDIR:
             pd_app_redir_if = (pd_app_redir_if_t *)if_get_pd_if(pi_if);
-            HAL_ASSERT(pd_app_redir_if!= NULL);
+            SDK_ASSERT(pd_app_redir_if!= NULL);
             args->lport_id = pd_app_redir_if->lport_id;
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
 end:
@@ -220,7 +220,7 @@ pd_if_get_hw_lif_id(pd_func_args_t *pd_func_args)
     if_t *pi_if = args->pi_if;
     hal_ret_t       ret = HAL_RET_OK;
 
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
 
     args->hw_lif_id = INVALID_INDEXER_INDEX;
 
@@ -242,13 +242,13 @@ pd_if_get_hw_lif_id(pd_func_args_t *pd_func_args)
             break;
         case intf::IF_TYPE_UPLINK:
             pd_upif = (pd_uplinkif_t *)if_get_pd_if(pi_if);
-            HAL_ASSERT(pd_upif != NULL);
+            SDK_ASSERT(pd_upif != NULL);
 
             args->hw_lif_id = pd_upif->hw_lif_id;
             break;
         case intf::IF_TYPE_UPLINK_PC:
             pd_uppc = (pd_uplinkpc_t *)if_get_pd_if((hal::if_t *)pi_if);
-            HAL_ASSERT(pd_uppc != NULL);
+            SDK_ASSERT(pd_uppc != NULL);
 
             args->hw_lif_id = pd_uppc->hw_lif_id;
             break;
@@ -259,12 +259,12 @@ pd_if_get_hw_lif_id(pd_func_args_t *pd_func_args)
             remote_tep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
             ep_if = if_get_if_from_ep(remote_tep_ep);
             tif_type = intf_get_if_type(ep_if);
-            HAL_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
+            SDK_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
             /* Recursive resolution to get the tunnel LIF */
             args->hw_lif_id = if_get_hw_lif_id(ep_if);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
 end:
@@ -328,7 +328,7 @@ if_get_uplink_ifpc_id(if_t *pi_if)
     intf::IfType    if_type;
     uint32_t        upifpc_id = 0;
 
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
 
     if_type = intf_get_if_type(pi_if);
     switch(if_type) {
@@ -337,20 +337,20 @@ if_get_uplink_ifpc_id(if_t *pi_if)
             break;
         case intf::IF_TYPE_UPLINK:
             pd_upif = (pd_uplinkif_t *)if_get_pd_if(pi_if);
-            HAL_ASSERT(pd_upif != NULL);
+            SDK_ASSERT(pd_upif != NULL);
 
             upifpc_id = pd_upif->up_ifpc_id;
             break;
         case intf::IF_TYPE_UPLINK_PC:
             pd_uppc = (pd_uplinkpc_t *)if_get_pd_if((hal::if_t *)pi_if);
-            HAL_ASSERT(pd_uppc != NULL);
+            SDK_ASSERT(pd_uppc != NULL);
 
             upifpc_id = pd_uppc->up_ifpc_id;
             break;
         case intf::IF_TYPE_TUNNEL:
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return upifpc_id;
@@ -367,7 +367,7 @@ if_get_uplink_lport_id(if_t *pi_if)
     intf::IfType    if_type;
     uint32_t        lport_id = 0;
 
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
 
     if_type = intf_get_if_type(pi_if);
     switch(if_type) {
@@ -375,20 +375,20 @@ if_get_uplink_lport_id(if_t *pi_if)
             break;
         case intf::IF_TYPE_UPLINK:
             pd_upif = (pd_uplinkif_t *)if_get_pd_if(pi_if);
-            HAL_ASSERT(pd_upif != NULL);
+            SDK_ASSERT(pd_upif != NULL);
 
             lport_id = pd_upif->upif_lport_id;
             break;
         case intf::IF_TYPE_UPLINK_PC:
             pd_uppc = (pd_uplinkpc_t *)if_get_pd_if((hal::if_t *)pi_if);
-            HAL_ASSERT(pd_uppc != NULL);
+            SDK_ASSERT(pd_uppc != NULL);
 
             lport_id = pd_uppc->uppc_lport_id;
             break;
         case intf::IF_TYPE_TUNNEL:
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return lport_id;
@@ -440,7 +440,7 @@ pd_if_get_tm_oport(pd_func_args_t *pd_func_args)
             remote_tep_ep = find_ep_by_handle(pi_if->rtep_ep_handle);
             ep_if = if_get_if_from_ep(remote_tep_ep);
             tif_type = intf_get_if_type(ep_if);
-            HAL_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
+            SDK_ASSERT(tif_type != intf::IF_TYPE_TUNNEL);
             /* Recursive resolution to get the tm_oport*/
             // args->tm_oport = if_get_tm_oport(ep_if);
             tmp_args.pi_if = ep_if;
@@ -453,7 +453,7 @@ pd_if_get_tm_oport(pd_func_args_t *pd_func_args)
             args->tm_oport = TM_PORT_DMA;
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
 end:
@@ -475,16 +475,16 @@ if_get_pi_vrf(if_t *pi_if)
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
             pi_vrf = vrf_lookup_by_id(pi_if->tid);
-            HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
+            SDK_ASSERT_RETURN(pi_vrf != NULL, NULL);
             break;
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
             break;
         case intf::IF_TYPE_TUNNEL:
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
     return pi_vrf;
 }
@@ -498,7 +498,7 @@ l2seg_get_pi_vrf(l2seg_t *pi_l2seg)
     vrf_t    *pi_vrf = NULL;
 
     pi_vrf = vrf_lookup_by_handle(pi_l2seg->vrf_handle);
-    HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
+    SDK_ASSERT_RETURN(pi_vrf != NULL, NULL);
 
     return pi_vrf;
 }

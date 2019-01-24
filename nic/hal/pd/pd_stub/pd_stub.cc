@@ -12,7 +12,7 @@ namespace pd {
 hal_ret_t                                                               \
 API (API ## _args_t *args)                                              \
 {                                                                       \
-    HAL_ASSERT(FALSE);                                                  \
+    SDK_ASSERT(FALSE);                                                  \
     return HAL_RET_OK;                                                  \
 }
 #endif
@@ -20,7 +20,7 @@ API (API ## _args_t *args)                                              \
 hal_ret_t                                                               \
 API (pd_func_args_t *args)                                              \
 {                                                                       \
-    HAL_ASSERT(FALSE);                                                  \
+    SDK_ASSERT(FALSE);                                                  \
     return HAL_RET_OK;                                                  \
 }
 
@@ -29,7 +29,7 @@ API (pd_func_args_t *args)                                              \
 hal_ret_t                                                               \
 API (ARGS ## _args_t *args)                                             \
 {                                                                       \
-    HAL_ASSERT(FALSE);                                                  \
+    SDK_ASSERT(FALSE);                                                  \
     return HAL_RET_OK;                                                  \
 }
 

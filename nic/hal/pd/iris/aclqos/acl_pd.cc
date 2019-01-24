@@ -492,7 +492,7 @@ acl_pd_pgm_acl_tbl (pd_acl_t *pd_acl, bool update,
 #endif
 
     acl_tbl = g_hal_state_pd->acl_table();
-    HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
 
     // Insert the entry
     if (is_restore) {
@@ -522,7 +522,7 @@ acl_pd_cleanup_acl_tbl (pd_acl_t *pd_acl)
     acl_tcam  *acl_tbl = NULL;
 
     acl_tbl = g_hal_state_pd->acl_table();
-    HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
 
     ret = acl_tbl->remove(pd_acl->handle);
     if (ret != HAL_RET_OK) {
@@ -615,9 +615,9 @@ pd_acl_update (pd_func_args_t *pd_func_args)
     pd_acl_update_args_t *args = pd_func_args->pd_acl_update;
     pd_acl_t  *pd_acl;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->acl != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->acl->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->acl != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->acl->pd != NULL), HAL_RET_INVALID_ARG);
 
     HAL_TRACE_DEBUG("updating pd state for acl:{}",
                     args->acl->key);
@@ -638,9 +638,9 @@ pd_acl_delete (pd_func_args_t *pd_func_args)
     pd_acl_delete_args_t *args = pd_func_args->pd_acl_delete;
     pd_acl_t *pd_acl;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->acl != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->acl->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->acl != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->acl->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("deleting pd state for acl {}",
                     args->acl->key);
     pd_acl = (pd_acl_t *)args->acl->pd;
@@ -755,7 +755,7 @@ pd_acl_get (pd_func_args_t *pd_func_args)
     auto acl_info = rsp->mutable_status()->mutable_epd_status();
 
     acl_tbl = g_hal_state_pd->acl_table();
-    HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
 
     ret = acl_tbl->get_index(pd_acl->handle, &hw_tcam_idx);
     if (ret != HAL_RET_OK) {
@@ -795,7 +795,7 @@ pd_acl_restore (pd_func_args_t *pd_func_args)
     pd_acl_restore_args_t *args = pd_func_args->pd_acl_restore;
     pd_acl_t *acl_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("Restoring pd state for acl {}", args->acl->key);
 
     // allocate PD acl state

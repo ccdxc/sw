@@ -20,7 +20,7 @@ namespace hal {
 void *
 crypto_cert_store_get_key_func(void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((crypto_cert_t *)entry)->cert_id);
 }
 
@@ -33,7 +33,7 @@ crypto_cert_store_compute_hash_func(void *key, uint32_t ht_size)
 bool
 crypto_cert_store_compare_key_func(void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if(*(crypto_cert_id_t *) key1 == *(crypto_cert_id_t *)key2) {
         return true;
     }
@@ -761,7 +761,7 @@ hal_ret_t crypto_asym_api_setup_cert(internal::CryptoApiRequest &req,
         if(!cert) {
             HAL_TRACE_ERR("cert cannot be found {}",
                           req.setup_cert().cert_id());
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
         }
         bio = BIO_new_mem_buf(req.setup_cert().body().c_str(), -1);
         if(!bio) {

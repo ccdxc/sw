@@ -36,7 +36,7 @@ nat_pool_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry = NULL;
     nat_pool_t                  *nat_pool = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -54,7 +54,7 @@ nat_pool_get_key_func (void *entry)
 uint32_t
 nat_pool_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(nat_pool_key_t)) % ht_size;
 }
 
@@ -64,7 +64,7 @@ nat_pool_compute_hash_func (void *key, uint32_t ht_size)
 bool
 nat_pool_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(nat_pool_key_t))) {
         return true;
     }
@@ -869,7 +869,7 @@ nat_mapping_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry = NULL;
     addr_entry_t                *mapping = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -887,7 +887,7 @@ nat_mapping_get_key_func (void *entry)
 uint32_t
 nat_mapping_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key,
                                          sizeof(addr_entry_key_t)) % ht_size;
 }
@@ -898,7 +898,7 @@ nat_mapping_compute_hash_func (void *key, uint32_t ht_size)
 bool
 nat_mapping_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(addr_entry_key_t))) {
         return true;
     }

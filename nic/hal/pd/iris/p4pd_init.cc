@@ -49,7 +49,7 @@ p4pd_ddos_policers_init (void)
      */
     dm = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_VF_POLICER);
     dm_act = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_VF_POLICER_ACTION);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
     for (int i = 0; i < 4; i++) {
         sdk_ret = dm->insert_withid(&d_svf, i);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -67,7 +67,7 @@ p4pd_ddos_policers_init (void)
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SERVICE_POLICER);
     dm_act = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SERVICE_POLICER_ACTION);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
     for (int i = 0; i < 4; i++) {
         sdk_ret = dm->insert_withid(&d_service, i);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -85,7 +85,7 @@ p4pd_ddos_policers_init (void)
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_DST_POLICER);
     dm_act = g_hal_state_pd->dm_table(P4TBL_ID_DDOS_SRC_DST_POLICER_ACTION);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
     for (int i = 0; i < 4; i++) {
         sdk_ret = dm->insert_withid(&d_srcdst, i);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -117,7 +117,7 @@ p4pd_input_mapping_native_init (p4pd_def_cfg_t *p4pd_def_cfg)
     tcam                                 *tcam;
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_INPUT_MAPPING_NATIVE);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     // entry for IPv4 native packets
     memset(&key, 0, sizeof(key));
@@ -226,7 +226,7 @@ p4pd_input_mapping_tunneled_init (p4pd_def_cfg_t *p4pd_def_cfg)
     tcam                                 *tcam;
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_INPUT_MAPPING_TUNNELED);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     // no-op entry for IPv4 native packets
     memset(&key, 0, sizeof(key));
@@ -331,7 +331,7 @@ p4pd_l4_profile_init (void)
     l4_profile_actiondata_t    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
     sdk_ret = dm->insert_withid(&data, L4_PROF_DEFAULT_ENTRY);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -352,7 +352,7 @@ p4pd_flow_info_init (void)
     flow_info_actiondata_t    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     // "catch-all" flow miss entry
     data.action_id = FLOW_INFO_FLOW_MISS_ID;
@@ -393,7 +393,7 @@ p4pd_session_state_init (void)
     session_state_actiondata_t    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     // "catch-all" nop entry
     data.action_id = SESSION_STATE_NOP_ID;
@@ -422,7 +422,7 @@ p4pd_flow_stats_init (void)
     flow_stats_actiondata_t   data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     // "catch-all" nop entry
     data.action_id = FLOW_STATS_FLOW_STATS_ID;
@@ -460,7 +460,7 @@ p4pd_drop_stats_init (void)
     drop_stats_actiondata_t    data     = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     for (int i = DROP_MIN; i <= DROP_MAX; i++) {
         uint64_t drop_reason = ((uint64_t)1 << i);
@@ -510,7 +510,7 @@ p4pd_egress_drop_stats_init (void)
     egress_drop_stats_actiondata_t    data     = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     for (int i = EGRESS_DROP_MIN; i <= EGRESS_DROP_MAX; i++) {
         uint64_t drop_reason = ((uint64_t)1 << i);
@@ -558,7 +558,7 @@ p4pd_qos_init (uint32_t admin_cos)
     qos_actiondata_t d = {0};
 
     qos_tbl = g_hal_state_pd->dm_table(P4TBL_ID_QOS);
-    HAL_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
+    SDK_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
 
     for (int i = 0; i < QOS_TABLE_SIZE; i++) {
         sdk_ret = qos_tbl->insert_withid(&d, i);
@@ -590,7 +590,7 @@ p4pd_p4plus_app_init (void)
     p4plus_app_actiondata_t data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_P4PLUS_APP);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     for (int i = P4PLUS_APPTYPE_MIN; i <= P4PLUS_APPTYPE_MAX; i++) {
         switch(i) {
@@ -624,7 +624,7 @@ p4pd_p4plus_app_init (void)
                 break;
             default:
                 HAL_TRACE_ERR("Unknown app_type: {}", i);
-                HAL_ASSERT(0);
+                SDK_ASSERT(0);
         }
 
         sdk_ret = dm->insert_withid(&data, i);
@@ -684,7 +684,7 @@ p4pd_tunnel_decap_copy_inner_init (void)
     tunnel_decap_copy_inner_actiondata_t    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_DECAP_COPY_INNER);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     idx = p4pd_get_tunnel_decap_copy_inner_tbl_idx(true, true, false, false);
     data.action_id = TUNNEL_DECAP_COPY_INNER_COPY_INNER_IPV4_UDP_ID;
@@ -792,7 +792,7 @@ p4pd_twice_nat_init (void)
     twice_nat_actiondata_t    data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     // "catch-all" nop entry
     data.action_id = TWICE_NAT_NOP_ID;
@@ -824,7 +824,7 @@ p4pd_rewrite_init (void)
 
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     // "catch-all" nop entry
     rw_key.rw_act = REWRITE_NOP_ID;
@@ -899,7 +899,7 @@ p4pd_tunnel_encap_update_inner (void)
     tunnel_encap_update_inner_actiondata_t  data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_ENCAP_UPDATE_INNER);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     idx = p4pd_get_tunnel_encap_update_inner_tbl_idx(false, true, true, false, false);
     data.action_id = TUNNEL_ENCAP_UPDATE_INNER_ENCAP_INNER_IPV4_UDP_REWRITE_ID;
@@ -1026,7 +1026,7 @@ p4pd_tunnel_rewrite_init (void)
     pd_tnnl_rw_entry_info_t      rw_info{};
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     rw_info.with_id = true;
 
@@ -1066,7 +1066,7 @@ p4pd_mirror_table_init (void)
     mirror_actiondata_t            data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     // Initialize for usable span session.
     data.action_id = MIRROR_DROP_MIRROR_ID;
@@ -1185,7 +1185,7 @@ p4pd_decode_roce_opcode_init (void)
     opc_to_info[129].type = Q_TYPE_RDMA_RQ;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_DECODE_ROCE_OPCODE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     for (idx = 0; idx < DECODE_ROCE_OPCODE_TABLE_SIZE; idx++) {
 
@@ -1293,7 +1293,7 @@ p4pd_compute_checksum_init(void)
 
     idx = 0;
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_COMPUTE_CHECKSUM);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     // don't compute checksum for rdma apptype
     memset(&key, 0, sizeof(key));
@@ -1305,7 +1305,7 @@ p4pd_compute_checksum_init(void)
     mask.control_metadata_p4plus_app_id_mask = 0xFF;
     data.action_id = COMPUTE_CHECKSUM_NOP_ID;
     sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);
-    HAL_ASSERT(sdk_ret == sdk::SDK_RET_OK);
+    SDK_ASSERT(sdk_ret == sdk::SDK_RET_OK);
     idx++;
 
     // don't compute checksum for tcptls apptype
@@ -1318,7 +1318,7 @@ p4pd_compute_checksum_init(void)
     mask.control_metadata_p4plus_app_id_mask = 0xFF;
     data.action_id = COMPUTE_CHECKSUM_NOP_ID;
     sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);
-    HAL_ASSERT(sdk_ret == sdk::SDK_RET_OK);
+    SDK_ASSERT(sdk_ret == sdk::SDK_RET_OK);
     idx++;
 
     // don't compute checksum for p4pt apptype
@@ -1331,7 +1331,7 @@ p4pd_compute_checksum_init(void)
     mask.control_metadata_p4plus_app_id_mask = 0xFF;
     data.action_id = COMPUTE_CHECKSUM_NOP_ID;
     sdk_ret = tcam->insert_withid(&key, &mask, &data, idx);
-    HAL_ASSERT(sdk_ret == sdk::SDK_RET_OK);
+    SDK_ASSERT(sdk_ret == sdk::SDK_RET_OK);
     idx++;
 
     // p4plus_app_id is don't care for all the entries below
@@ -1517,36 +1517,36 @@ hal_ret_t
 p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
 {
     // initialize all P4 ingress tables with default entries, if any
-    HAL_ASSERT(p4pd_input_mapping_native_init(p4pd_def_cfg) == HAL_RET_OK);
-    HAL_ASSERT(p4pd_input_mapping_tunneled_init(p4pd_def_cfg) == HAL_RET_OK);
-    HAL_ASSERT(p4pd_l4_profile_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_flow_info_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_session_state_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_flow_stats_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_drop_stats_init() == HAL_RET_OK);
-    //HAL_ASSERT(p4pd_ddos_policers_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_qos_init(p4pd_def_cfg->admin_cos) == HAL_RET_OK);
+    SDK_ASSERT(p4pd_input_mapping_native_init(p4pd_def_cfg) == HAL_RET_OK);
+    SDK_ASSERT(p4pd_input_mapping_tunneled_init(p4pd_def_cfg) == HAL_RET_OK);
+    SDK_ASSERT(p4pd_l4_profile_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_flow_info_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_session_state_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_flow_stats_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_drop_stats_init() == HAL_RET_OK);
+    //SDK_ASSERT(p4pd_ddos_policers_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_qos_init(p4pd_def_cfg->admin_cos) == HAL_RET_OK);
 
     // initialize all P4 egress tables with default entries, if any
-    HAL_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_twice_nat_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_rewrite_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_tunnel_encap_update_inner() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_tunnel_rewrite_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_decode_roce_opcode_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_p4plus_app_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_mirror_table_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_compute_checksum_init() == HAL_RET_OK);
-    HAL_ASSERT(p4pd_egress_drop_stats_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_tunnel_decap_copy_inner_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_twice_nat_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_rewrite_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_tunnel_encap_update_inner() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_tunnel_rewrite_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_decode_roce_opcode_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_p4plus_app_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_mirror_table_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_compute_checksum_init() == HAL_RET_OK);
+    SDK_ASSERT(p4pd_egress_drop_stats_init() == HAL_RET_OK);
 
     // initialize all PB/TM tables with default entries, if any
     // Even though this is not really a P4 Table it is very
     // tightly coupled with our P4 Program and after discussing
     // we put this call here conciously.
-    HAL_ASSERT(capri_repl_pgm_def_entries() == HAL_RET_OK);
+    SDK_ASSERT(capri_repl_pgm_def_entries() == HAL_RET_OK);
 
     // Setting NIC's forwarding mode
-    HAL_ASSERT(p4pd_forwarding_mode_init(p4pd_def_cfg) == HAL_RET_OK);
+    SDK_ASSERT(p4pd_forwarding_mode_init(p4pd_def_cfg) == HAL_RET_OK);
     return HAL_RET_OK;
 }
 

@@ -184,7 +184,7 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
     uint64_t            drop_reason_mask = ~0;
 
     acl_tbl = g_hal_state_pd->acl_table();
-    HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -357,7 +357,7 @@ pd_fte_span_create (pd_func_args_t *pd_func_args)
     pd_fte_span_create_args_t *args = pd_func_args->pd_fte_span_create;
     pd_fte_span_t                *fte_span_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
 
     // allocate PD fte_span state
     fte_span_pd = fte_span_pd_alloc_init();

@@ -507,7 +507,7 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     exp_flow->alg = l4_sess->alg;
     exp_flow->sess_hdl = l4_sess->sess_hdl;
     data_ftp_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
-    HAL_ASSERT(data_ftp_info != NULL);
+    SDK_ASSERT(data_ftp_info != NULL);
 
     exp_flow->info = data_ftp_info;
     data_ftp_info->skip_sfw = TRUE;
@@ -697,12 +697,12 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
              * Alloc APP session, L4 Session and FTP info
              */
             ret = g_ftp_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
-            HAL_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
+            SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
             ret = g_ftp_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
-            HAL_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
+            SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
             l4_sess->alg = nwsec::APP_SVC_FTP;
             ftp_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
-            HAL_ASSERT_RETURN((ftp_info != NULL), fte::PIPELINE_CONTINUE);
+            SDK_ASSERT_RETURN((ftp_info != NULL), fte::PIPELINE_CONTINUE);
             l4_sess->isCtrl = TRUE;
             l4_sess->info = ftp_info;
             ftp_info->state = FTP_INIT;

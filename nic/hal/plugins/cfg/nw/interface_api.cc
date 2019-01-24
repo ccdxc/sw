@@ -20,7 +20,7 @@ lif_get_lif_id (lif_t *pi_lif)
 uint8_t
 lif_get_qtype (lif_t *pi_lif, intf::LifQPurpose purpose)
 {
-    HAL_ASSERT_RETURN(purpose <= intf::LifQPurpose_MAX, 0);
+    SDK_ASSERT_RETURN(purpose <= intf::LifQPurpose_MAX, 0);
 
     return pi_lif->qinfo[purpose].type;
 }
@@ -194,7 +194,7 @@ if_enicif_get_pd_l2seg (if_t *pi_if)
     l2seg_t *pi_seg = NULL;
 
     pi_seg = (l2seg_t *)if_enicif_get_pi_l2seg(pi_if);
-    HAL_ASSERT_RETURN(pi_seg != NULL, NULL);
+    SDK_ASSERT_RETURN(pi_seg != NULL, NULL);
 
     return pi_seg->pd;
 }
@@ -259,7 +259,7 @@ if_enicif_get_pi_nwsec (if_t *pi_if)
             return NULL;
         }
         pi_vrf = vrf_lookup_by_id(pi_if->tid);
-        HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
+        SDK_ASSERT_RETURN(pi_vrf != NULL, NULL);
         pi_nwsec =
             find_nwsec_profile_by_handle(pi_vrf->nwsec_profile_handle);
         if (!pi_nwsec) {
@@ -297,7 +297,7 @@ if_enicif_get_native_l2seg_clsc_vlan (if_t *pi_if, uint32_t *vlan_id)
     intf::IfType        if_type = intf::IF_TYPE_NONE;
     l2seg_t             *pi_seg = NULL;
 
-    HAL_ASSERT(pi_if != NULL && vlan_id != NULL);
+    SDK_ASSERT(pi_if != NULL && vlan_id != NULL);
 
     if_type  = intf_get_if_type(pi_if);
     *vlan_id = 0;
@@ -344,7 +344,7 @@ if_enicif_get_pinned_if (if_t *pi_if, if_t **uplink_if)
     lif_t               *lif    = NULL;
     hal_handle_t        uplink_hdl = HAL_HANDLE_INVALID;
 
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
 
     *uplink_if = NULL;
 
@@ -417,7 +417,7 @@ if_l2seg_get_encap_vlan (if_t *pi_if, l2seg_t *pi_l2seg)
 {
     intf::IfType    if_type;
 
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
 
     if_type = intf_get_if_type(pi_if);
     switch(if_type) {
@@ -435,10 +435,10 @@ if_l2seg_get_encap_vlan (if_t *pi_if, l2seg_t *pi_l2seg)
             break;
         case intf::IF_TYPE_TUNNEL:
             // TODO: Handle Tunnels
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return 0;
@@ -478,7 +478,7 @@ if_l2seg_get_encap (if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
             *vlan_id = 0;
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
             break;
     }
     break;
@@ -495,13 +495,13 @@ if_l2seg_get_encap (if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
         break;
 
     case intf::IF_TYPE_TUNNEL:
-        // DO NOT REMOVE HAL_ASSERT
+        // DO NOT REMOVE SDK_ASSERT
         // This API is not expected to be called for tunnel-if
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         break;
 
     default:
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 
     HAL_TRACE_DEBUG("{}, L2seg: {}, vlan_v: {}, vlan_id: {}",

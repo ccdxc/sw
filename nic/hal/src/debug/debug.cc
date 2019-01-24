@@ -509,7 +509,7 @@ fte_span_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     fte_span_t                       *fte_span = NULL;
     pd::pd_func_args_t               pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -533,7 +533,7 @@ fte_span_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     fte_span_t                  *fte_span  = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -666,7 +666,7 @@ fte_span_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     fte_span_t                       /**fte_span  = NULL, */*fte_span_clone = NULL;
     pd::pd_func_args_t               pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -690,7 +690,7 @@ fte_span_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     fte_span_t                  /**fte_span  = NULL, */*fte_span_clone = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 

@@ -67,7 +67,7 @@ hal_ret_t
 ReplTableEntry::add_replication(ReplEntry *re)
 {
     hal_ret_t rs = HAL_RET_OK;
-    HAL_ASSERT_GOTO(num_repl_entries_ <
+    SDK_ASSERT_GOTO(num_repl_entries_ <
             repl_list_->get_met()->get_max_num_repls_per_entry(), end);
 
     HAL_TRACE_DEBUG("{}: Adding replication entry to repl_table_entry: {}",
@@ -98,7 +98,7 @@ ReplTableEntry::del_replication(void *data)
     hal_ret_t       rs = HAL_RET_ENTRY_NOT_FOUND;
     ReplEntry       *re = NULL;
 
-    HAL_ASSERT_GOTO(num_repl_entries_ != 0, end);
+    SDK_ASSERT_GOTO(num_repl_entries_ != 0, end);
 
     HAL_TRACE_DEBUG("{}: Deleting replication entry from repl_table_entry: {}",
                     __FUNCTION__, repl_table_index_);
@@ -181,7 +181,7 @@ ReplTableEntry::program_table()
                     hw_entry.get_last_entry(),
                     hw_entry.get_num_tokens(),
                     hw_entry.get_next_ptr());
-    HAL_ASSERT(!(hw_entry.get_last_entry() == 0 &&
+    SDK_ASSERT(!(hw_entry.get_last_entry() == 0 &&
                get_repl_table_index() == hw_entry.get_next_ptr()));
     return hw_entry.write(get_repl_table_index());
 }

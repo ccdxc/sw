@@ -457,9 +457,9 @@ pd_gft_exact_match_profile_create (pd_gft_exact_match_profile_args_t *gft_args)
 
     // we are relying on the keys of all 4 tables are identical
     // if that changes, we will have to do field level assignments
-    HAL_ASSERT(sizeof(rx_key1) == sizeof(rx_key2));
-    HAL_ASSERT(sizeof(rx_key1) == sizeof(rx_key3));
-    HAL_ASSERT(sizeof(rx_key1) == sizeof(rx_key4));
+    SDK_ASSERT(sizeof(rx_key1) == sizeof(rx_key2));
+    SDK_ASSERT(sizeof(rx_key1) == sizeof(rx_key3));
+    SDK_ASSERT(sizeof(rx_key1) == sizeof(rx_key4));
 
     // set up keys in other tables to be identical
     memcpy(&rx_key2, &rx_key1, sizeof(rx_key1));

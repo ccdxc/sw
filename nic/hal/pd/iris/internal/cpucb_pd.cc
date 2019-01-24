@@ -19,7 +19,7 @@ namespace pd {
 void *
 cpucb_pd_get_hw_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((pd_cpucb_t *)entry)->hw_id);
 }
 
@@ -32,7 +32,7 @@ cpucb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 bool
 cpucb_pd_compare_hw_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(cpucb_hw_id_t *)key1 == *(cpucb_hw_id_t *)key2) {
         return true;
     }
@@ -297,8 +297,8 @@ cleanup:
 cpucb_hw_id_t
 pd_cpucb_get_base_hw_index(pd_cpucb_t* cpucb_pd)
 {
-    HAL_ASSERT(NULL != cpucb_pd);
-    HAL_ASSERT(NULL != cpucb_pd->cpucb);
+    SDK_ASSERT(NULL != cpucb_pd);
+    SDK_ASSERT(NULL != cpucb_pd->cpucb);
 
     // Get the base address of CPU CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.

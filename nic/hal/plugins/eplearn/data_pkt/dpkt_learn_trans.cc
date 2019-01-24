@@ -24,7 +24,7 @@ namespace eplearn {
 uint32_t dpkt_learn_entry_delete_timeout = DPKT_LEARN_ENTRY_DELETE_TIMEOUT;
 
 void *dpkt_learn_trans_get_key_func(void *entry) {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)(((dpkt_learn_trans_t *)entry)->trans_key_ptr());
 }
 
@@ -37,7 +37,7 @@ void dpkt_learn_entry_delete_timeout_set(uint32_t timeout) {
 }
 
 bool dpkt_learn_trans_compare_key_func(void *key1, void *key2) {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (memcmp(key1, key2, sizeof(dpkt_learn_trans_key_t)) == 0) {
         return true;
     }
@@ -178,7 +178,7 @@ bool dpkt_learn_trans_t::dpkt_learn_fsm_t::del_ip_entry(fsm_state_ctx ctx,
             trans->log_error("IP delete update failed");
         }
         ep_entry = trans->get_ep_entry();
-        HAL_ASSERT(ep_entry == NULL);
+        SDK_ASSERT(ep_entry == NULL);
     }
 
     return true;

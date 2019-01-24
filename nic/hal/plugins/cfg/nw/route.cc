@@ -25,7 +25,7 @@ route_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry;
     route_t                     *route = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -50,7 +50,7 @@ route_compute_hash_func (void *key, uint32_t ht_size)
 bool
 route_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(route_key_t))) {
         return true;
     }
@@ -779,7 +779,7 @@ route_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 end:
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("commit cbs can't fail: ret:{}", ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     return ret;
 }
@@ -791,7 +791,7 @@ route_clean_handle_mapping (hal_handle_t route_handle)
     route_t     *route = NULL;
 
     route = route_lookup_by_handle(route_handle);
-    HAL_ASSERT(route != NULL);
+    SDK_ASSERT(route != NULL);
 
     // Remove object from handle id based hash table
     hal_handle_free(route_handle);

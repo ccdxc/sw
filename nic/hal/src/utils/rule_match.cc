@@ -529,7 +529,7 @@ rule_lib_init(const char *name, acl_config_t *cfg)
                                rule_ctr_get_key_func,
                                rule_ctr_compute_hash_func,
                                rule_ctr_compare_key_func);
-    HAL_ASSERT_RETURN((rcfg->rule_ctr_ht != NULL), NULL);
+    SDK_ASSERT_RETURN((rcfg->rule_ctr_ht != NULL), NULL);
 
     // Rule cfg is not maintained as part of hal_state. rule lib data is not expected to persistent
     // Each plugin has to recreate the rules.

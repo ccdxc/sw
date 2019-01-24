@@ -135,7 +135,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
         if (key == "forwarding_mode") {
             hal_cfg->forwarding_mode = hal_get_forwarding_mode(val);
             if (hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_NONE) {
-                HAL_ASSERT_TRACE_RETURN(FALSE, HAL_RET_INVALID_ARG,
+                SDK_ASSERT_TRACE_RETURN(FALSE, HAL_RET_INVALID_ARG,
                                         "Invalid forwarding mode {}", val);
             }
         }
@@ -168,7 +168,7 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
             sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
             NULL);
-    HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
+    SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                             "Failed to spawn delphic thread");
     hal_thread->start(hal_thread);
     return HAL_RET_OK;
@@ -189,7 +189,7 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // parse and initialize the catalog
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
-    HAL_ASSERT_TRACE_RETURN(catalog != NULL, HAL_RET_ERR, "Catalog file error");
+    SDK_ASSERT_TRACE_RETURN(catalog != NULL, HAL_RET_ERR, "Catalog file error");
     hal_cfg->catalog = catalog;
     hal_cfg->mempartition = sdk::platform::utils::mpartition::factory();
 
@@ -197,7 +197,7 @@ hal_init (hal_cfg_t *hal_cfg)
     ret = hal_cores_validate(catalog->cores_mask(),
                              hal_cfg->control_cores_mask,
                              hal_cfg->data_cores_mask);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "CPU core validation failure");
 
     // initialize random number generator
@@ -214,15 +214,15 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // do HAL state initialization
     ret = hal_state_init(hal_cfg);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "HAL state init failure");
     ret = hal_main_thread_init(hal_cfg);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "HAL main thread initialization failure");
 
     // do platform dependent init
     ret = pd::hal_pd_init(hal_cfg);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "HAL PD layer initialization failure");
     HAL_TRACE_DEBUG("Platform initialization done");
 
@@ -231,7 +231,7 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // spawn all necessary PI threads
     ret = hal_thread_init(hal_cfg);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "HAL thread initialization failure");
     HAL_TRACE_DEBUG("Spawned all HAL threads");
 
@@ -239,7 +239,7 @@ hal_init (hal_cfg_t *hal_cfg)
     if ((hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&
         (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
          ret = pd::hal_pd_clock_delta_comp_init(hal_cfg);
-         HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+         SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Clock delta computation initialization failure");
          HAL_TRACE_DEBUG("Platform clock delta computation init done");
     }
@@ -391,7 +391,7 @@ asiccfg_init_completion_event(sdk_status_t status)
             hal_status = hal::HAL_STATUS_UP;
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
     hal::svc::set_hal_status(hal_status);
 }

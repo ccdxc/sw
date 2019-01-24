@@ -40,7 +40,7 @@ if_id_get_key_func (void *entry)
     hal_handle_id_ht_entry_t *ht_entry = NULL;
     if_t                     *hal_if   = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -211,7 +211,7 @@ find_if_by_id (if_id_t if_id)
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
 
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_INTERFACE);
 
         hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
@@ -244,7 +244,7 @@ find_if_by_handle (hal_handle_t handle)
     //       Print proper msg.
 
     // check for object type
-    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
+    SDK_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
                HAL_OBJ_ID_INTERFACE);
     return (if_t *)hal_handle_get_obj(handle);
 #endif
@@ -522,7 +522,7 @@ enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
     hal_ret_t                   ret = HAL_RET_OK;
     oif_t                       oif = {};
 
-    HAL_ASSERT(l2seg && hal_if && lif);
+    SDK_ASSERT(l2seg && hal_if && lif);
 
     oif.intf = hal_if;
     oif.l2seg = l2seg;
@@ -530,28 +530,28 @@ enicif_classic_update_oif_lists(if_t *hal_if, l2seg_t *l2seg,
     if (add) {
         if (lif->packet_filters.receive_broadcast) {
             ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
         if (lif->packet_filters.receive_all_multicast) {
             ret = oif_list_add_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
         if (lif->packet_filters.receive_promiscuous) {
             ret = oif_list_add_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
     } else {
         if (lif->packet_filters.receive_broadcast) {
             ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
         if (lif->packet_filters.receive_all_multicast) {
             ret = oif_list_remove_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
         if (lif->packet_filters.receive_promiscuous) {
             ret = oif_list_remove_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
     }
 
@@ -571,30 +571,30 @@ enicif_classic_update_l2seg_oiflist(if_t *hal_if, l2seg_t *l2seg,
     if (lif_upd->pkt_filter_bcast_changed) {
         if (lif_upd->receive_broadcast) {
             ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         } else {
             ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
     }
 
     if (lif_upd->pkt_filter_allmc_changed) {
         if (lif_upd->receive_all_multicast) {
             ret = oif_list_add_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         } else {
             ret = oif_list_remove_oif(l2seg_get_mcast_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
     }
 
     if (lif_upd->pkt_filter_prom_changed) {
         if (lif_upd->receive_promiscous) {
             ret = oif_list_add_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         } else {
             ret = oif_list_remove_oif(l2seg_get_prmsc_oif_list(l2seg), &oif);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
     }
 
@@ -613,7 +613,7 @@ if_update_classic_oif_lists(if_t *hal_if, lif_update_app_ctxt_t *lif_upd)
     // Add native L2Segment if valid
     if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
         nat_l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
-        HAL_ASSERT(nat_l2seg);
+        SDK_ASSERT(nat_l2seg);
         ret = enicif_classic_update_l2seg_oiflist(hal_if, nat_l2seg,
                                                   lif_upd);
     }
@@ -637,7 +637,7 @@ if_update_oif_lists(if_t *hal_if, bool add)
     hal_ret_t  ret = HAL_RET_OK;
     l2seg_t    *l2seg = NULL, *nat_l2seg = NULL;
 
-    HAL_ASSERT(hal_if);
+    SDK_ASSERT(hal_if);
     HAL_TRACE_DEBUG("if_id : {}", hal_if->if_id);
 
     // If its enic, add to l2seg and lif
@@ -671,13 +671,13 @@ if_update_oif_lists(if_t *hal_if, bool add)
             // Add native L2Segment if valid
             if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
                 nat_l2seg = l2seg_lookup_by_handle(hal_if->native_l2seg_clsc);
-                HAL_ASSERT(nat_l2seg);
+                SDK_ASSERT(nat_l2seg);
                 ret = enicif_classic_update_oif_lists(hal_if, nat_l2seg, lif, add);
-                HAL_ASSERT(ret == HAL_RET_OK);
+                SDK_ASSERT(ret == HAL_RET_OK);
             }
 
             ret = enicif_update_l2segs_oif_lists(hal_if, lif, add);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
     }
 
@@ -744,7 +744,7 @@ if_add_to_db_and_refs (if_t *hal_if)
                     goto end;
                 }
                 ret = uplink_add_enicif(uplink, hal_if);
-                HAL_ASSERT(ret == HAL_RET_OK);
+                SDK_ASSERT(ret == HAL_RET_OK);
             }
             // Add to native l2seg's back ref
             if (hal_if->native_l2seg_clsc != HAL_HANDLE_INVALID) {
@@ -756,7 +756,7 @@ if_add_to_db_and_refs (if_t *hal_if)
                     goto end;
                 }
                 ret = l2seg_add_back_if(nat_l2seg, hal_if);
-                HAL_ASSERT(ret == HAL_RET_OK);
+                SDK_ASSERT(ret == HAL_RET_OK);
             }
 
             //  - Add back refs to all l2segs
@@ -1218,7 +1218,7 @@ enic_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     HAL_TRACE_DEBUG("update for if_id : {}",
                     spec.key_or_handle().interface_id());
 
-    HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
 
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
         auto clsc_enic_info = if_enic_info.mutable_classic_enic_info();
@@ -1369,7 +1369,7 @@ uplink_if_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     HAL_TRACE_DEBUG("update for if_id : {}",
                     spec.key_or_handle().interface_id());
 
-    HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
 
     if (hal_if->native_l2seg != spec.if_uplink_info().native_l2segment_id()) {
         new_seg_id = spec.if_uplink_info().native_l2segment_id();
@@ -1419,7 +1419,7 @@ uplink_pc_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     HAL_TRACE_DEBUG("update for if_id : {}",
                     spec.key_or_handle().interface_id());
 
-    HAL_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
 
     // check of native l2seg change
     if (hal_if->native_l2seg != spec.if_uplink_pc_info().native_l2segment_id()) {
@@ -1463,7 +1463,7 @@ uplink_pc_update_check_for_change (InterfaceSpec& spec, if_t *hal_if,
     for (int i = 0; i < spec.if_uplink_pc_info().l2segment_id_size(); i++) {
         l2seg_id = spec.if_uplink_pc_info().l2segment_id(i);
         l2seg = find_l2seg_by_id(l2seg_id);
-        HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_INVALID_ARG);
+        SDK_ASSERT_RETURN(l2seg != NULL, HAL_RET_INVALID_ARG);
         uplinkpc_add_l2segment(hal_if, l2seg);
         app_ctxt->l2segids_change = true;
     }
@@ -1783,13 +1783,13 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
 
         // Add the back reference in l2seg
         ret = l2seg_add_back_if(l2seg, hal_if);
-        HAL_ASSERT(ret == HAL_RET_OK);
+        SDK_ASSERT(ret == HAL_RET_OK);
     }
 
     dllist_for_each_safe(curr, next, app_ctxt->del_l2segclsclist) {
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
         l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
-        HAL_ASSERT(l2seg != NULL);
+        SDK_ASSERT(l2seg != NULL);
 
         // Remove entry from temp. list
         sdk::lib::dllist_del(&entry->lentry);
@@ -1800,7 +1800,7 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
 
             // Del the back reference from l2seg
             ret = l2seg_del_back_if(l2seg, hal_if);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
 
             // free entry from temp list
             hal::delay_delete_to_slab(HAL_SLAB_ENIC_L2SEG_ENTRY,
@@ -1854,13 +1854,13 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
 
         // Add the back reference in l2seg
         ret = l2seg_add_if(l2seg, hal_if);
-        HAL_ASSERT(ret == HAL_RET_OK);
+        SDK_ASSERT(ret == HAL_RET_OK);
     }
 
     for (const void *ptr : *app_ctxt->del_l2segclsclist) {
         p_hdl_id = (hal_handle_t *)ptr;
         l2seg = l2seg_lookup_by_handle(*p_hdl_id);
-        HAL_ASSERT(l2seg != NULL);
+        SDK_ASSERT(l2seg != NULL);
 
         // Remove entry from temp. list
         hal_del_from_handle_block_list(app_ctxt->del_l2segclsclist, *p_hdl_id);
@@ -1871,7 +1871,7 @@ enicif_update_pi_with_l2seg_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
 
             // Del the back reference from l2seg
             ret = l2seg_del_if(l2seg, hal_if);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         }
     }
 
@@ -2014,14 +2014,14 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 // Update uplink's relation
                 old_uplink = find_if_by_handle(intf->pinned_uplink);
                 new_uplink = find_if_by_handle(app_ctxt->new_pinned_uplink);
-                HAL_ASSERT(old_uplink != NULL && new_uplink != NULL);
+                SDK_ASSERT(old_uplink != NULL && new_uplink != NULL);
 
                 // Remove from older uplink
                 ret = uplink_del_enicif(old_uplink, intf);
-                HAL_ASSERT(ret == HAL_RET_OK);
+                SDK_ASSERT(ret == HAL_RET_OK);
                 // Add to new uplink
                 ret = uplink_add_enicif(new_uplink, intf);
-                HAL_ASSERT(ret == HAL_RET_OK);
+                SDK_ASSERT(ret == HAL_RET_OK);
             }
 
             if (app_ctxt->native_l2seg_clsc_change) {
@@ -2032,17 +2032,17 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 // Update native l2seg's relation
                 if (intf->native_l2seg_clsc != HAL_HANDLE_INVALID) {
                     old_nat_l2seg = l2seg_lookup_by_handle(intf->native_l2seg_clsc);
-                    HAL_ASSERT(old_nat_l2seg != NULL);
+                    SDK_ASSERT(old_nat_l2seg != NULL);
                     // Remove from older nat l2seg
                     ret = l2seg_del_back_if(old_nat_l2seg, intf);
-                    HAL_ASSERT(ret == HAL_RET_OK);
+                    SDK_ASSERT(ret == HAL_RET_OK);
                 }
                 // Add to new nat l2seg
                 if (app_ctxt->new_native_l2seg_clsc != HAL_HANDLE_INVALID) {
                     new_nat_l2seg = l2seg_lookup_by_handle(app_ctxt->new_native_l2seg_clsc);
-                    HAL_ASSERT(new_nat_l2seg != NULL);
+                    SDK_ASSERT(new_nat_l2seg != NULL);
                     ret = l2seg_add_back_if(new_nat_l2seg, intf);
-                    HAL_ASSERT(ret == HAL_RET_OK);
+                    SDK_ASSERT(ret == HAL_RET_OK);
                 }
             }
 
@@ -2641,7 +2641,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     // Fetch L2 Segment and Uplink If
     hal_if = fetch_if_ifl2seg(spec);
     l2seg = fetch_l2seg_ifl2seg(spec);
-    HAL_ASSERT((hal_if != NULL) && (l2seg != NULL));
+    SDK_ASSERT((hal_if != NULL) && (l2seg != NULL));
 
     HAL_TRACE_DEBUG("if_id : {} <=> l2seg_id : {}",
                     hal_if->if_id, l2seg->seg_id);
@@ -2720,7 +2720,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     // Fetch L2 Segment and Uplink If
     hal_if = fetch_if_ifl2seg(spec);
     l2seg = fetch_l2seg_ifl2seg(spec);
-    HAL_ASSERT((hal_if != NULL) && (l2seg != NULL));
+    SDK_ASSERT((hal_if != NULL) && (l2seg != NULL));
 
     HAL_TRACE_DEBUG("if_id : {} <=> l2seg_id : {}",
                     hal_if->if_id, l2seg->seg_id);
@@ -3285,7 +3285,7 @@ uplink_if_create (const InterfaceSpec& spec, if_t *hal_if)
     // TODO: for a member port, we can have valid pc#
     ret = pltfm_get_port_from_front_port_num(spec.if_uplink_info().port_num(),
                                              &hal_if->uplink_port_num);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(ret == HAL_RET_OK, HAL_RET_INVALID_ARG);
 
     // hal_if->uplink_pc_num = HAL_PC_INVALID;
     hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
@@ -3813,7 +3813,7 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                     goto end;
                 }
                 ret = uplink_del_enicif(uplink, intf);
-                HAL_ASSERT(ret == HAL_RET_OK);
+                SDK_ASSERT(ret == HAL_RET_OK);
             }
             // Del from native l2seg's back ref
             if (intf->native_l2seg_clsc != HAL_HANDLE_INVALID) {
@@ -3825,13 +3825,13 @@ if_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 }
 
                 ret = l2seg_del_back_if(nat_l2seg, intf);
-                HAL_ASSERT(ret == HAL_RET_OK);
+                SDK_ASSERT(ret == HAL_RET_OK);
             }
 
             //  - Del back refs to all l2segs
             ret = enicif_update_l2segs_relation(&intf->l2seg_list_clsc_head,
                                                 intf, false);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Failed to del l2seg -/-> enicif "
                               "relation ret : {}",
@@ -4539,7 +4539,7 @@ enicif_update_l2segs_oif_lists(if_t *hal_if, lif_t *lif, bool add)
         entry = dllist_entry(curr, if_l2seg_entry_t, lentry);
         l2seg = l2seg_lookup_by_handle(entry->l2seg_handle);
 
-        HAL_ASSERT(l2seg);
+        SDK_ASSERT(l2seg);
 
         ret = enicif_classic_update_oif_lists(hal_if, l2seg, lif, add);
     }
@@ -4954,7 +4954,7 @@ if_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     uint32_t                serialized_state_sz;
     if_t                    *hal_if = (if_t *)obj;
 
-    HAL_ASSERT((hal_if != NULL) && (mlen != NULL));
+    SDK_ASSERT((hal_if != NULL) && (mlen != NULL));
     *mlen = 0;
 
     // get all information about this interface
@@ -5074,17 +5074,17 @@ if_restore_cb (void *obj, uint32_t len)
     ret = if_init_from_spec(hal_if, if_info.spec());
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to init IF from spec. err:{}", ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     ret = if_init_from_status(hal_if, if_info.status());
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to init IF from status. err:{}", ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     ret = if_init_from_stats(hal_if, if_info.stats());
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to init IF from stats. err:{}", ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 
     // repopulate handle db

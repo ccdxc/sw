@@ -15,7 +15,7 @@ namespace hal {
 void *
 rawrcb_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((rawrcb_t *)entry)->cb_id);
 }
 
@@ -28,7 +28,7 @@ rawrcb_compute_hash_func (void *key, uint32_t ht_size)
 bool
 rawrcb_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(rawrcb_id_t *)key1 == *(rawrcb_id_t *)key2) {
         return true;
     }
@@ -38,7 +38,7 @@ rawrcb_compare_key_func (void *key1, void *key2)
 void *
 rawrcb_get_handle_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((rawrcb_t *)entry)->hal_handle);
 }
 
@@ -51,7 +51,7 @@ rawrcb_compute_handle_hash_func (void *key, uint32_t ht_size)
 bool
 rawrcb_compare_handle_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }
@@ -206,7 +206,7 @@ rawrcb_create (RawrCbSpec& spec, RawrCbResponse *rsp)
 
     // add this RAWR CB to our db
     ret = add_rawrcb_to_db(rawrcb);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);

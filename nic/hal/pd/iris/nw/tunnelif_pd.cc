@@ -74,9 +74,9 @@ pd_tunnelif_delete (pd_if_delete_args_t *args)
     hal_ret_t        ret = HAL_RET_OK;
     pd_tunnelif_t    *tunnelif_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("deleting pd state for tunnelif: {}",
                     args->intf->if_id);
     tunnelif_pd = (pd_tunnelif_t *)args->intf->pd_if;
@@ -129,12 +129,12 @@ pd_tunnelif_restore_data (pd_if_restore_args_t *args)
 
 
     pd_tif->tunnel_rw_idx = tnnl_info.tunnel_rw_idx();
-    HAL_ASSERT(tnnl_info.inp_map_nat_idx_size() == 0 ||
+    SDK_ASSERT(tnnl_info.inp_map_nat_idx_size() == 0 ||
                tnnl_info.inp_map_nat_idx_size() == 3);
     for (int i = 0; i < tnnl_info.inp_map_nat_idx_size(); i++) {
         pd_tif->imn_idx[i] = tnnl_info.inp_map_nat_idx(i);
     }
-    HAL_ASSERT(tnnl_info.inp_map_tnl_idx_size() == 0 ||
+    SDK_ASSERT(tnnl_info.inp_map_tnl_idx_size() == 0 ||
                tnnl_info.inp_map_tnl_idx_size() == 3);
     for (int i = 0; i < tnnl_info.inp_map_tnl_idx_size(); i++) {
         pd_tif->imt_idx[i] = tnnl_info.inp_map_tnl_idx(i);
@@ -258,7 +258,7 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
     if_t                 *hal_if;
 
     hal_if = (if_t *) pd_tunnelif->pi_if;
-    HAL_ASSERT(hal_if != NULL);
+    SDK_ASSERT(hal_if != NULL);
 
     ret = pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif, is_upgrade);
     if (ret != HAL_RET_OK)
@@ -336,7 +336,7 @@ pd_tunnelif_del_inp_mapp_entries(pd_tunnelif_t *pd_tunnelif,
     uint32_t    *arr;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     if (tbl_id == P4TBL_ID_INPUT_MAPPING_NATIVE) {
         arr = pd_tunnelif->imn_idx;
@@ -376,7 +376,7 @@ pd_tunnelif_program_tcam(ip_addr_t *ip_addr,
     void                                *data;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
     /* Input mapping native and tunneled tables have the same key and mask
      * So, we can populate the structs and typecast accordingly */
     memset(&key, 0, sizeof(input_mapping_native_swkey_t));
@@ -562,11 +562,11 @@ pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif_t *pd_tif, uint16_t vf_id,
     if_t                            *pi_if;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_VF_PROPERTIES);
-    HAL_ASSERT(dm != NULL);
-    HAL_ASSERT(pd_tif != NULL);
+    SDK_ASSERT(dm != NULL);
+    SDK_ASSERT(pd_tif != NULL);
     
     pi_if = (if_t *) pd_tif->pi_if;
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
     
     d.action_id = VF_PROPERTIES_VF_PROPERTIES_ID;
     d.action_u.vf_properties_vf_properties.overlay_ip1 = pi_if->overlay_ip[0];
@@ -603,8 +603,8 @@ pd_tunnelif_add_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif, uint8_t actionid,
     uint32_t                    idx;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
-    HAL_ASSERT(dm != NULL);
-    HAL_ASSERT(pd_tif != NULL);
+    SDK_ASSERT(dm != NULL);
+    SDK_ASSERT(pd_tif != NULL);
 
     d.action_id = actionid;
     d.action_u = *act;
@@ -627,7 +627,7 @@ pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
     pd_tnnl_rw_entry_key_t      key = { 0 };
 
     ret = pd_tunnelif_form_data(&key, pd_tif);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     ret = tnnl_rw_entry_delete(&key);
     if (ret != HAL_RET_OK) {
@@ -649,8 +649,8 @@ pd_tunnelif_del_tunnel_rw_table_entry (pd_tunnelif_t *pd_tif)
     directmap   *dm;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TUNNEL_REWRITE);
-    HAL_ASSERT(dm != NULL);
-    HAL_ASSERT(pd_tif != NULL);
+    SDK_ASSERT(dm != NULL);
+    SDK_ASSERT(pd_tif != NULL);
 
     // remove the entry
     if (pd_tif->tunnel_rw_idx != INVALID_INDEXER_INDEX) {
@@ -767,7 +767,7 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif, bool is_upgrade)
     pd_tnnl_rw_entry_info_t     rw_info{};
 
     ret = pd_tunnelif_form_data(&key, pd_tif);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     if (!is_upgrade) {
         ret = tnnl_rw_entry_find_or_alloc(&key, (uint32_t *)&pd_tif->tunnel_rw_idx);
@@ -809,21 +809,21 @@ pd_tunnelif_pgm_tunnel_rewrite_tbl(pd_tunnelif_t *pd_tif)
 
     memset(&act, 0, sizeof(tunnel_rewrite_action_union_t));
     pi_if = (if_t *) pd_tif->pi_if;
-    HAL_ASSERT(pi_if);
+    SDK_ASSERT(pi_if);
 
     actionid = pd_tunnelif_get_p4pd_encap_action_id (pi_if->encap_type);
 
     remote_tep_ep = if_get_tunnelif_remote_tep_ep(pi_if, &v4_valid);
-    HAL_ASSERT(remote_tep_ep);
+    SDK_ASSERT(remote_tep_ep);
 
     l2seg = l2seg_lookup_by_handle(remote_tep_ep->l2seg_handle);
-    HAL_ASSERT(l2seg);
+    SDK_ASSERT(l2seg);
 
     ep_if = find_if_by_handle(remote_tep_ep->if_handle);
-    HAL_ASSERT(ep_if);
+    SDK_ASSERT(ep_if);
 
     ret = if_l2seg_get_encap(ep_if, l2seg, &vlan_v, &vlan_id);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     if (actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {
         /* Populate vxlan encap params */

@@ -34,19 +34,19 @@ extern "C" hal_ret_t alg_ftp_init(hal_cfg_t *hal_cfg) {
                         slab_args={.name="ftp_alg_appsess",
                        .size=sizeof(app_session_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((appsess_slab_ != NULL), HAL_RET_OOM);
+    SDK_ASSERT_RETURN((appsess_slab_ != NULL), HAL_RET_OOM);
 
     l4sess_slab_ =  g_hal_state->register_slab(HAL_SLAB_FTP_ALG_L4SESS,
                        slab_args={.name="ftp_alg_l4sess",
                        .size=sizeof(l4_alg_status_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((l4sess_slab_ != NULL), HAL_RET_OOM);
+    SDK_ASSERT_RETURN((l4sess_slab_ != NULL), HAL_RET_OOM);
 
     ftpinfo_slab_  =  g_hal_state->register_slab(HAL_SLAB_FTP_ALG_FTPINFO,
                        slab_args={.name="ftp_alg_ftpinfo",
                        .size=sizeof(ftp_info_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((ftpinfo_slab_ != NULL), HAL_RET_OOM);
+    SDK_ASSERT_RETURN((ftpinfo_slab_ != NULL), HAL_RET_OOM);
 
     g_ftp_state = alg_state_t::factory(FTE_FEATURE_ALG_FTP.c_str(),
                                        appsess_slab_, l4sess_slab_,

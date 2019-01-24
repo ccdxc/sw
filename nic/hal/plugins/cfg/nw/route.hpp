@@ -136,7 +136,7 @@ route_lookup_by_key (route_key_t *key)
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->route_ht()->lookup(key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_ROUTE);
 
         route = (route_t *)hal_handle_get_obj(entry->handle_id);

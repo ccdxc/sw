@@ -87,7 +87,7 @@ hal_ret_t pd_oif_list_add_oif(pd_func_args_t *pd_func_args)
     if_t *pi_if = oif->intf;
     l2seg_t *pi_l2seg = oif->l2seg;
 
-    HAL_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
 
     ret = if_l2seg_get_multicast_rewrite_data(pi_if, pi_l2seg, &data);
     if (ret != HAL_RET_OK) {
@@ -116,11 +116,11 @@ hal_ret_t pd_oif_list_add_qp_oif(pd_func_args_t *pd_func_args)
     if_t *pi_if = oif->intf;
     l2seg_t *pi_l2seg = oif->l2seg;
 
-    HAL_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
 
     data.lport = if_get_lport_id(pi_if);
 
-    HAL_ASSERT(hal::intf_get_if_type(pi_if) == intf::IF_TYPE_ENIC);
+    SDK_ASSERT(hal::intf_get_if_type(pi_if) == intf::IF_TYPE_ENIC);
     hal::lif_t *lif = if_get_lif(pi_if);
     if (lif == NULL) {
         return HAL_RET_LIF_NOT_FOUND;
@@ -161,7 +161,7 @@ hal_ret_t pd_oif_list_remove_oif(pd_func_args_t *pd_func_args)
     if_t *pi_if = oif->intf;
     l2seg_t *pi_l2seg = oif->l2seg;
 
-    HAL_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(pi_if && pi_l2seg, HAL_RET_INVALID_ARG);
 
     ret = if_l2seg_get_multicast_rewrite_data(pi_if, pi_l2seg, &data);
     if (ret != HAL_RET_OK) {
@@ -211,8 +211,8 @@ hal_ret_t pd_oif_list_clr_honor_ingress(pd_func_args_t *pd_func_args)
 hal_ret_t pd_oif_list_get(pd_func_args_t *pd_func_args) {
     pd_oif_list_get_args_t *args = pd_func_args->pd_oif_list_get;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->rsp != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->rsp != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("Getting pd state for oif list {}", args->list);
 
     args->rsp->mutable_epd_info()->set_rep_index(args->list);

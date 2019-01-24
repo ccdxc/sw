@@ -54,7 +54,7 @@ find_l4lb_by_key (l4lb_key_t *key)
 {
     l4lb_service_entry_t    *l4lb_entry;
 
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     l4lb_entry =
         (l4lb_service_entry_t *)g_hal_state->l4lb_ht()->lookup(key);
     if (l4lb_entry == NULL) {

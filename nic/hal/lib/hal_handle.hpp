@@ -115,7 +115,7 @@ hal_handle_id_get_key_func (void *entry)
 {
     hal_handle_ht_entry_t    *ht_entry;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_ht_entry_t *)entry;
     return (void *)&(((hal_handle *)ht_entry->handle)->handle_id_);
 }
@@ -129,7 +129,7 @@ hal_handle_id_compute_hash_func (void *key, uint32_t ht_size)
 static inline bool
 hal_handle_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }

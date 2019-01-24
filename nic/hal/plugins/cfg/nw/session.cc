@@ -75,7 +75,7 @@ session_stats_t  g_session_stats = {};
 void *
 session_get_handle_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((session_t *)entry)->hal_handle);
 }
 
@@ -88,7 +88,7 @@ session_compute_handle_hash_func (void *key, uint32_t ht_size)
 bool
 session_compare_handle_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }
@@ -98,7 +98,7 @@ session_compare_handle_key_func (void *key1, void *key2)
 void *
 session_get_iflow_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((session_t *)entry)->iflow->config.key);
 }
 
@@ -111,7 +111,7 @@ session_compute_iflow_hash_func (void *key, uint32_t ht_size)
 bool
 session_compare_iflow_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(flow_key_t))) {
         return true;
     }
@@ -121,7 +121,7 @@ session_compare_iflow_key_func (void *key1, void *key2)
 void *
 session_get_rflow_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((session_t *)entry)->rflow->config.key);
 }
 
@@ -134,7 +134,7 @@ session_compute_rflow_hash_func (void *key, uint32_t ht_size)
 bool
 session_compare_rflow_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(flow_key_t))) {
         return true;
     }
@@ -144,7 +144,7 @@ session_compare_rflow_key_func (void *key1, void *key2)
 void *
 flow_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((flow_t *)entry)->config.key);
 }
 
@@ -157,7 +157,7 @@ flow_compute_hash_func (void *key, uint32_t ht_size)
 bool
 flow_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(flow_key_t))) {
         return true;
     }
@@ -1249,7 +1249,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     session_t                    *session;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_ASSERT(args->vrf && args->iflow && args->iflow_attrs);
+    SDK_ASSERT(args->vrf && args->iflow && args->iflow_attrs);
 
     // allocate a session
     session = (session_t *)g_hal_state->session_slab()->alloc();
@@ -1347,7 +1347,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     // add this session to our db
     ret = add_session_to_db(args->vrf, args->sl2seg, args->dl2seg,
                             args->sep, args->dep, args->sif, args->dif, session);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     if (session_handle) {
         *session_handle = session->hal_handle;
@@ -1393,7 +1393,7 @@ session_update(const session_args_t *args, session_t *session)
     pd::pd_session_update_args_t    pd_session_args;
     pd::pd_func_args_t              pd_func_args = {0};
 
-    //HAL_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
+    //SDK_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
     if (session->fte_id != fte::fte_id()) {
         HAL_TRACE_ERR("session fte_id {} current fte_id {}", session->fte_id, fte::fte_id());
@@ -1454,7 +1454,7 @@ session_delete(const session_args_t *args, session_t *session)
     pd::pd_func_args_t              pd_func_args = {0};
 
 
-    HAL_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
     del_session_from_db(args->sep, args->dep, session);
 
@@ -2004,7 +2004,7 @@ session_age_cb (void *entry, void *ctxt)
         if (session->iflow->config.key.proto == IPPROTO_TCP) {
             tklectx = (tcptkle_timer_ctx_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_TIMER_CTXT,
                                                      sizeof(tcptkle_timer_ctx_t));
-            HAL_ASSERT_RETURN((tklectx != NULL), false);
+            SDK_ASSERT_RETURN((tklectx != NULL), false);
 
             tklectx->session_handle = session->hal_handle;
             tklectx->num_tickles = 1;
@@ -2028,7 +2028,7 @@ session_age_cb (void *entry, void *ctxt)
                 args->tctx_list[session->fte_id] = (tcptkle_timer_ctx_t **)HAL_CALLOC(
                           HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE,
                           sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
-                HAL_ASSERT(args->tctx_list[session->fte_id] != NULL);
+                SDK_ASSERT(args->tctx_list[session->fte_id] != NULL);
                 args->num_ctx[session->fte_id] = 0;
             }
         } else {
@@ -2051,7 +2051,7 @@ session_age_cb (void *entry, void *ctxt)
                 ret = fte::fte_softq_enqueue(session->fte_id,
                                     process_hal_periodic_sess_delete,
                                     (void *)args->session_list[session->fte_id]);
-                HAL_ASSERT(ret == HAL_RET_OK);
+                SDK_ASSERT(ret == HAL_RET_OK);
 #if SESSION_AGE_DEBUG
                 HAL_TRACE_DEBUG("Enqueued session_list: {:p}",
                                 (void *)args->session_list[session->fte_id]);
@@ -2060,7 +2060,7 @@ session_age_cb (void *entry, void *ctxt)
                 args->session_list[session->fte_id] = (hal_handle_t *)HAL_CALLOC(
                                  HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
                                 sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
-                HAL_ASSERT(args->session_list[session->fte_id] != NULL);
+                SDK_ASSERT(args->session_list[session->fte_id] != NULL);
                 args->num_del_sess[session->fte_id] = 0;
             }
             SDK_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1); 
@@ -2094,30 +2094,30 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     args.num_ctx = (uint8_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_AGE_ARGS,
                                    (sizeof(uint8_t)*HAL_MAX_DATA_THREAD));
-    HAL_ASSERT(args.num_ctx != NULL);
+    SDK_ASSERT(args.num_ctx != NULL);
 
     args.num_del_sess = (uint8_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_AGE_ARGS,
                                      sizeof(uint8_t)*HAL_MAX_DATA_THREAD);
-    HAL_ASSERT(args.num_del_sess != NULL);
+    SDK_ASSERT(args.num_del_sess != NULL);
 
     args.tctx_list = (timer_ctx_list *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_TIMER_CTXT,
                               sizeof(timer_ctx_list)*HAL_MAX_DATA_THREAD);
-    HAL_ASSERT(args.tctx_list != NULL);
+    SDK_ASSERT(args.tctx_list != NULL);
 
     args.session_list = (timer_handle_list *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_HANDLE_LIST,
                                 sizeof(timer_handle_list)*HAL_MAX_DATA_THREAD);
-    HAL_ASSERT(args.session_list != NULL);
+    SDK_ASSERT(args.session_list != NULL);
 
     for (fte_id=0; fte_id<HAL_MAX_DATA_THREAD; fte_id++) {
         args.tctx_list[fte_id] = (tcptkle_timer_ctx_t **)HAL_CALLOC(
                           HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE,
                           sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
-        HAL_ASSERT(args.tctx_list[fte_id] != NULL);
+        SDK_ASSERT(args.tctx_list[fte_id] != NULL);
 
         args.session_list[fte_id] = (hal_handle_t *)HAL_CALLOC(
                                  HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
                                 sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
-        HAL_ASSERT(args.session_list[fte_id] != NULL);
+        SDK_ASSERT(args.session_list[fte_id] != NULL);
 
         args.num_ctx[fte_id] = 0;
         args.num_del_sess[fte_id] = 0;
@@ -2148,7 +2148,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
             ret = fte::fte_softq_enqueue(fte_id,
                                   process_hal_periodic_tkle,
                                   (void *)args.tctx_list[fte_id]);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
         } else {
             // Nothing was queued - so we can cleanup the alloced memory
             HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE, args.tctx_list[fte_id]); 
@@ -2157,11 +2157,11 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
         if (args.num_del_sess[fte_id]) {
             // We should never end up in a case where num_del_sess is set but
             // session list is null
-            HAL_ASSERT(args.session_list[fte_id] != NULL);
+            SDK_ASSERT(args.session_list[fte_id] != NULL);
             ret = fte::fte_softq_enqueue(fte_id,
                                   process_hal_periodic_sess_delete,
                                   (void *)args.session_list[fte_id]);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
 
         } else {
             // Nothing was queued - so we can cleanup the alloced memory

@@ -24,7 +24,7 @@ pd_vrf_create (pd_func_args_t *pd_func_args)
     pd_vrf_create_args_t *args = pd_func_args->pd_vrf_create;
     pd_vrf_t                *vrf_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("{}:creating pd state for vrf {}",
                     __FUNCTION__, args->vrf->vrf_id);
 
@@ -82,9 +82,9 @@ pd_vrf_delete (pd_func_args_t *pd_func_args)
     pd_vrf_delete_args_t *args = pd_func_args->pd_vrf_delete;
     pd_vrf_t    *vrf_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->vrf != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->vrf->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->vrf != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->vrf->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("{}:Deleting pd state for vrf {}",
                     __FUNCTION__, args->vrf->vrf_id);
     vrf_pd = (pd_vrf_t *)args->vrf->pd;

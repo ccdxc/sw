@@ -85,7 +85,7 @@ proxy_meta_init() {
 void *
 proxy_flow_ht_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((proxy_flow_info_t *)entry)->flow_key);
 }
 
@@ -98,7 +98,7 @@ proxy_flow_ht_compute_hash_func (void *key, uint32_t ht_size)
 bool
 proxy_flow_ht_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if(memcmp(key1, key2, sizeof(flow_key_t)) == 0) {
         return true;
     }
@@ -108,7 +108,7 @@ proxy_flow_ht_compare_key_func (void *key1, void *key2)
 void *
 proxy_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((proxy_t *)entry)->type);
 }
 
@@ -121,7 +121,7 @@ proxy_compute_hash_func (void *key, uint32_t ht_size)
 bool
 proxy_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(types::ProxyType *)key1 == *(types::ProxyType *)key2) {
         return true;
     }
@@ -131,7 +131,7 @@ proxy_compare_key_func (void *key1, void *key2)
 void *
 proxy_get_handle_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((proxy_t *)entry)->hal_handle);
 }
 
@@ -144,7 +144,7 @@ proxy_compute_handle_hash_func (void *key, uint32_t ht_size)
 bool
 proxy_compare_handle_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }
@@ -355,7 +355,7 @@ proxy_program_lif(proxy_t* proxy)
 
         // get lport-id for this lif
         lif_t* lif = find_lif_by_id(meta_lif_info->lif_id);
-        HAL_ASSERT_RETURN((NULL != lif), HAL_RET_LIF_NOT_FOUND);
+        SDK_ASSERT_RETURN((NULL != lif), HAL_RET_LIF_NOT_FOUND);
 
 #if 0
         lif_args.pi_lif = lif;
@@ -499,13 +499,13 @@ proxy_factory(types::ProxyType type)
                                   hal::proxy_flow_ht_get_key_func,
                                   hal::proxy_flow_ht_compute_hash_func,
                                  hal::proxy_flow_ht_compare_key_func);
-    HAL_ASSERT(proxy->flow_ht_ != NULL);
+    SDK_ASSERT(proxy->flow_ht_ != NULL);
 
     // Instantiate QID indexer
     if (meta->num_lif) {
         proxy->qid_idxr_ = sdk::lib::indexer::factory(HAL_MAX_QID, true,
                                               meta->indexer_skip_zero);
-        HAL_ASSERT(NULL != proxy->qid_idxr_);
+        SDK_ASSERT(NULL != proxy->qid_idxr_);
     }
 
    // initialize default params
@@ -522,7 +522,7 @@ proxy_factory(types::ProxyType type)
 
     // add this Proxy to our db
     ret = add_proxy_to_db(proxy);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     return proxy;
 }

@@ -73,9 +73,9 @@ pd_app_redir_if_delete (pd_if_delete_args_t *args)
     hal_ret_t      ret = HAL_RET_OK;
     pd_app_redir_if_t  *app_redir_if_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("deleting pd state for app_redir_if {}",
                     args->intf->if_id);
     app_redir_if_pd = (pd_app_redir_if_t *)args->intf->pd_if;
@@ -250,13 +250,13 @@ pd_app_redir_if_get_pd_lif(pd_app_redir_if_t *pd_app_redir_if)
     lif_t       *pi_lif = NULL;
 
     pi_if = (if_t *)pd_app_redir_if->pi_if;
-    HAL_ASSERT_RETURN(pi_if != NULL, 0);
+    SDK_ASSERT_RETURN(pi_if != NULL, 0);
 
     pi_lif = if_get_lif(pi_if);
-    HAL_ASSERT(pi_lif != NULL);
+    SDK_ASSERT(pi_lif != NULL);
 
     pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
-    HAL_ASSERT(pi_lif != NULL);
+    SDK_ASSERT(pi_lif != NULL);
 
     return pd_lif;
 }

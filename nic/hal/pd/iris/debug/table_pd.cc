@@ -286,7 +286,7 @@ pd_table_tcam_get_entries (uint32_t table_id, TableResponse *rsp)
     TableTcamMsg *msg = rsp->mutable_tcam_table();
 
     cb.tcam_table = g_hal_state_pd->tcam_table(table_id);
-    HAL_ASSERT_RETURN((cb.tcam_table != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((cb.tcam_table != NULL), HAL_RET_ERR);
     cb.msg = msg;
 
     cb.tcam_table->iterate(pd_table_tcam_entry, &cb);
@@ -322,7 +322,7 @@ pd_table_hash_get_entries (uint32_t table_id, TableResponse *rsp)
     TableHashMsg *msg = rsp->mutable_hash_table();
 
     cb.hash_table = g_hal_state_pd->hash_tcam_table(table_id);
-    HAL_ASSERT_RETURN((cb.hash_table != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((cb.hash_table != NULL), HAL_RET_ERR);
     cb.msg = msg;
 
     cb.hash_table->iterate(pd_table_hash_entry, &cb, sdk_hash::BOTH);
@@ -357,7 +357,7 @@ pd_table_flow_get_entries (uint32_t table_id, TableResponse *rsp)
     TableFlowMsg *msg = rsp->mutable_flow_table();
 
     cb.flow = g_hal_state_pd->flow_table();
-    HAL_ASSERT_RETURN((cb.flow != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((cb.flow != NULL), HAL_RET_ERR);
     cb.msg = msg;
 
     cb.flow->iterate(pd_table_flow_entry, &cb);
@@ -396,7 +396,7 @@ pd_table_met_get_entries (uint32_t table_id, TableResponse *rsp)
     Met *met = NULL;
 
     met = g_hal_state_pd->met_table();
-    HAL_ASSERT_RETURN((met != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((met != NULL), HAL_RET_ERR);
     cb.msg = msg;
 
     met->iterate(pd_table_met_entry, &cb);

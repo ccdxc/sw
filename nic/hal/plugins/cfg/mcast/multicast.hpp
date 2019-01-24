@@ -132,7 +132,7 @@ find_mc_entry_by_key (mc_key_t *mc_key)
     entry = (hal_handle_id_ht_entry_t *)g_hal_state->mc_key_ht()->lookup(mc_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_MC_ENTRY);
         mc_entry = (mc_entry_t *)hal_handle_get_obj(entry->handle_id);
         return mc_entry;
@@ -157,7 +157,7 @@ find_mc_entry_by_handle (hal_handle_t handle)
                         __FUNCTION__, handle);
         return NULL;
     }
-    // HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
+    // SDK_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
     //           HAL_OBJ_ID_TENANT);
    return (mc_entry_t *)hal_handle_get_obj(handle);
 }

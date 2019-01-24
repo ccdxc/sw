@@ -294,7 +294,7 @@ filter_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif_t                       *lif = NULL;
     filter_delete_app_ctxt_t    *app_ctxt  = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (filter_delete_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -330,7 +330,7 @@ filter_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t       hal_handle = 0;
     lif_t              *lif = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -475,7 +475,7 @@ filter_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif_t                       *lif = NULL;
     filter_create_app_ctxt_t    *app_ctxt  = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (filter_create_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -508,7 +508,7 @@ filter_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     lif_t                       *lif = NULL;
     filter_create_app_ctxt_t    *app_ctxt  = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -557,7 +557,7 @@ filter_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     filter_t *filter                     = NULL;
     hal_handle_t hal_handle              = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     filter = (filter_t *)dhl_entry->obj;
@@ -630,7 +630,7 @@ filter_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry;
     filter_t                    *filter = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -659,7 +659,7 @@ filter_compare_key_func (void *key1, void *key2)
                     filter_key_to_str((filter_key_t*)key1),
                     filter_key_to_str((filter_key_t*)key2));
 #endif
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(filter_key_t))) {
         return true;
     }
@@ -810,7 +810,7 @@ filter_lookup_by_key (filter_key_t *key)
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
 
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                 HAL_OBJ_ID_FILTER);
 
         filter = (filter_t *)hal_handle_get_obj(entry->handle_id);
@@ -1055,7 +1055,7 @@ filter_check_enic_with_filter (filter_key_t *upd_key, lif_t *lif, if_t *hal_if,
 
     if (egress_en) {
         // Update filter match should not be set
-        HAL_ASSERT((upd_filter_bset & db_filters_bset) == 0);
+        SDK_ASSERT((upd_filter_bset & db_filters_bset) == 0);
 
         if (upd_filter_match == kh::FILTER_LIF) {
             HAL_TRACE_DEBUG("(Lif,*,*) filter. Update enic: {}",
@@ -1101,7 +1101,7 @@ filter_check_enic_with_filter (filter_key_t *upd_key, lif_t *lif, if_t *hal_if,
         }
     } else {
         // Update filter match should be set
-        HAL_ASSERT(upd_filter_bset & db_filters_bset);
+        SDK_ASSERT(upd_filter_bset & db_filters_bset);
 
         if (upd_filter_match == kh::FILTER_LIF) {
             if (FILTER_CHECK(db_filters_bset, kh::FILTER_LIF_MAC_VLAN)) {

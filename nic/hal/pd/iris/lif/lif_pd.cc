@@ -179,9 +179,9 @@ pd_lif_delete (pd_func_args_t *pd_func_args)
     pd_lif_delete_args_t *args = pd_func_args->pd_lif_delete;
     pd_lif_t       *lif_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->lif != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->lif->pd_lif != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->lif != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->lif->pd_lif != NULL), HAL_RET_INVALID_ARG);
     lif_pd = (pd_lif_t *)args->lif->pd_lif;
 
     // Deprogram
@@ -227,7 +227,7 @@ lif_pd_alloc_res(pd_lif_t *pd_lif, pd_lif_create_args_t *args)
     } else {
         HAL_TRACE_ERR("pd-lif:{}:lif_id:{},hw_lif_id has to be allocated in PI",
                       __FUNCTION__, lif_get_lif_id((lif_t *)pd_lif->pi_lif));
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 
     HAL_TRACE_DEBUG("pd-lif:{}:lif_id:{} allocated hw_lif_id:{}",
@@ -489,7 +489,7 @@ pd_lif_get_enic_lport(lif_id_t lif_id)
 
     lif = find_lif_by_id(lif_id);
     if (lif) {
-        HAL_ASSERT(dllist_count(&lif->if_list_head) == 1);
+        SDK_ASSERT(dllist_count(&lif->if_list_head) == 1);
         dllist_for_each(lnode, &lif->if_list_head) {
             entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
             hal_if = find_if_by_handle(entry->handle_id);
@@ -515,7 +515,7 @@ pd_lif_handle_promiscous_filter_change (lif_t *lif,
 
     // only one enic per lif in classic mode. Prom. mode change happens only
     // in classic nic.
-    HAL_ASSERT(dllist_count(&lif->if_list_head) == 1);
+    SDK_ASSERT(dllist_count(&lif->if_list_head) == 1);
 
     dllist_for_each(lnode, &lif->if_list_head) {
         entry = dllist_entry(lnode, hal_handle_id_list_entry_t, dllist_ctxt);
@@ -548,7 +548,7 @@ lif_pd_tx_policer_program_hw (pd_lif_t *pd_lif, bool update)
     uint64_t rate;
 
     tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE);
-    HAL_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
 
     d.action_id = TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE_TX_STAGE5_LIF_EGRESS_RL_PARAMS_ID;
 
@@ -625,7 +625,7 @@ lif_pd_tx_policer_deprogram_hw (pd_lif_t *pd_lif)
     directmap             *tx_policer_tbl = NULL;
 
     tx_policer_tbl = g_hal_state_pd->p4plus_txdma_dm_table(P4_COMMON_TXDMA_ACTIONS_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE);
-    HAL_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((tx_policer_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = tx_policer_tbl->remove(pd_lif->hw_lif_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -657,7 +657,7 @@ lif_pd_rx_policer_tbl_program_hw (pd_lif_t *pd_lif, bool update)
     uint64_t              rate;
 
     rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
-    HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
 
     d.action_id = RX_POLICER_EXECUTE_RX_POLICER_ID;
 
@@ -731,7 +731,7 @@ lif_pd_rx_policer_action_tbl_reset_hw (pd_lif_t *pd_lif, bool insert)
     rx_policer_action_actiondata_t d = {0};
 
     rx_policer_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER_ACTION);
-    HAL_ASSERT_RETURN((rx_policer_action_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rx_policer_action_tbl != NULL), HAL_RET_ERR);
 
     d.action_id = RX_POLICER_ACTION_RX_POLICER_ACTION_ID;
 
@@ -785,7 +785,7 @@ lif_pd_rx_policer_tbl_deprogram_hw (pd_lif_t *pd_lif)
     directmap             *rx_policer_tbl = NULL;
 
     rx_policer_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER);
-    HAL_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rx_policer_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = rx_policer_tbl->remove(pd_lif->hw_lif_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -941,7 +941,7 @@ lif_pd_populate_rx_policer_stats (qos::PolicerStats *stats_rsp, pd_lif_t *pd_lif
     rx_policer_action_actiondata_t d;
 
     rx_policer_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_RX_POLICER_ACTION);
-    HAL_ASSERT_RETURN((rx_policer_action_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rx_policer_action_tbl != NULL), HAL_RET_ERR);
 
     ret = hal_pd_stats_addr_get(P4TBL_ID_RX_POLICER_ACTION,
                                 pd_lif->hw_lif_id, &stats_addr);
@@ -1080,7 +1080,7 @@ lif_pd_pgm_output_mapping_tbl(pd_lif_t *pd_lif, pd_lif_update_args_t *args,
     //      - Switch : FALSE
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     if (oper == TABLE_OPER_INSERT) {
         sdk_ret = dm_omap->insert_withid(&data, pd_lif->lif_lport_id);
@@ -1122,7 +1122,7 @@ lif_pd_depgm_output_mapping_tbl (pd_lif_t *pd_lif)
     directmap                   *dm_omap = NULL;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     sdk_ret = dm_omap->remove(pd_lif->lif_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);

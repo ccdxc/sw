@@ -87,7 +87,7 @@ update_src_if(fte::ctx_t&ctx)
 
     // sif = hal::find_if_by_handle(ctx.dep()->pinned_if_handle);
     sif = ep_get_pinned_uplink(ctx.dep());
-    HAL_ASSERT_RETURN(sif, HAL_RET_IF_NOT_FOUND);
+    SDK_ASSERT_RETURN(sif, HAL_RET_IF_NOT_FOUND);
 
     // Drop the packet if the pkt src_if is not the expected if
     pd::pd_if_get_hw_lif_id_args_t args;

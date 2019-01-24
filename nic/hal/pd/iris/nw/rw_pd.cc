@@ -15,7 +15,7 @@ namespace pd {
 void *
 rw_entry_pd_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((pd_rw_entry_t*)entry)->rw_key);
 }
 
@@ -34,7 +34,7 @@ rw_entry_pd_compute_hash_func (void *key, uint32_t ht_size)
 bool
 rw_entry_pd_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
 	if (!memcmp(key1, key2, sizeof(pd_rw_entry_key_t))) {
 		return true;
 	}
@@ -250,7 +250,7 @@ rw_entry_delete (pd_rw_entry_key_t *rw_key)
         // Delete from DB
         ret = del_rw_entry_pd_from_db(rwe);
         if (ret != HAL_RET_OK) {
-            HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+            SDK_ASSERT_RETURN(0, HAL_RET_ERR);
         }
 
         // Free the index
@@ -279,7 +279,7 @@ rw_pd_depgm_rw_tbl (pd_rw_entry_t *rwe)
     fmt::MemoryWriter    buf;
 
     rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
-    HAL_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = rw_tbl->remove(rwe->rw_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -317,7 +317,7 @@ rw_pd_pgm_rw_tbl (pd_rw_entry_t *rwe)
 
 
     rw_tbl = g_hal_state_pd->dm_table(P4TBL_ID_REWRITE);
-    HAL_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rw_tbl != NULL), HAL_RET_ERR);
 
     memcpy(data.action_u.rewrite_rewrite.mac_sa, rwe->rw_key.mac_sa, 6);
     memrev(data.action_u.rewrite_rewrite.mac_sa, 6);

@@ -59,7 +59,7 @@ copp_pd_cleanup_copp_tbl (pd_copp_t *pd_copp)
     directmap       *copp_tbl = NULL;
 
     copp_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP);
-    HAL_ASSERT_RETURN((copp_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((copp_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = copp_tbl->remove(pd_copp->hw_policer_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -84,7 +84,7 @@ copp_pd_reset_copp_action_tbl (pd_copp_t *pd_copp, bool insert)
     copp_action_actiondata_t d = {0};
 
     copp_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP_ACTION);
-    HAL_ASSERT_RETURN((copp_action_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((copp_action_tbl != NULL), HAL_RET_ERR);
 
     d.action_id = COPP_EXECUTE_COPP_ID;
 
@@ -139,7 +139,7 @@ copp_pd_program_copp_tbl (pd_copp_t *pd_copp, bool update, bool is_restore)
     uint64_t        rate;
 
     copp_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP);
-    HAL_ASSERT_RETURN((copp_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((copp_tbl != NULL), HAL_RET_ERR);
 
     d.action_id = COPP_EXECUTE_COPP_ID;
 
@@ -296,9 +296,9 @@ pd_copp_update (pd_func_args_t *pd_func_args)
     pd_copp_update_args_t *args = pd_func_args->pd_copp_update;
     pd_copp_t  *pd_copp;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->copp != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->copp->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->copp != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->copp->pd != NULL), HAL_RET_INVALID_ARG);
 
     HAL_TRACE_DEBUG("updating pd state for copp:{}",
                     args->copp->key);
@@ -319,9 +319,9 @@ pd_copp_delete (pd_func_args_t *pd_func_args)
     pd_copp_delete_args_t *args = pd_func_args->pd_copp_delete;
     pd_copp_t             *pd_copp;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->copp != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->copp->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->copp != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->copp->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("deleting pd state for copp {}",
                     args->copp->key);
     pd_copp = (pd_copp_t *)args->copp->pd;
@@ -435,7 +435,7 @@ copp_pd_populate_policer_stats (qos::PolicerStats *stats_rsp, pd_copp_t *pd_copp
     copp_action_actiondata_t  d;
 
     copp_action_tbl = g_hal_state_pd->dm_table(P4TBL_ID_COPP_ACTION);
-    HAL_ASSERT_RETURN((copp_action_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((copp_action_tbl != NULL), HAL_RET_ERR);
 
     ret = hal_pd_stats_addr_get(P4TBL_ID_COPP_ACTION, 
                                 pd_copp->hw_policer_id, &stats_addr);
@@ -561,7 +561,7 @@ pd_copp_restore (pd_func_args_t *pd_func_args)
     pd_copp_restore_args_t *args = pd_func_args->pd_copp_restore;
     pd_copp_t *copp_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("Restoring pd state for copp {}", args->copp->key);
 
     // allocate PD copp state

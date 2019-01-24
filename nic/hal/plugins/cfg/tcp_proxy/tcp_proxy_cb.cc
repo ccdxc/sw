@@ -15,7 +15,7 @@ namespace hal {
 void *
 tcp_proxy_cb_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((tcp_proxy_cb_t *)entry)->cb_id);
 }
 
@@ -28,7 +28,7 @@ tcp_proxy_cb_compute_hash_func (void *key, uint32_t ht_size)
 bool
 tcp_proxy_cb_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(tcp_proxy_cb_id_t *)key1 == *(tcp_proxy_cb_id_t *)key2) {
         return true;
     }
@@ -38,7 +38,7 @@ tcp_proxy_cb_compare_key_func (void *key1, void *key2)
 void *
 tcp_proxy_cb_get_handle_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((tcp_proxy_cb_t *)entry)->hal_handle);
 }
 
@@ -51,7 +51,7 @@ tcp_proxy_cb_compute_handle_hash_func (void *key, uint32_t ht_size)
 bool
 tcp_proxy_cb_compare_handle_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }
@@ -166,7 +166,7 @@ tcp_proxy_cb_create (TcpProxyCbSpec& spec, TcpProxyCbResponse *rsp)
 
     // add this L2 segment to our db
     ret = add_tcp_proxy_cb_to_db(tcp_proxy_cb);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     HAL_TRACE_DEBUG("Added TCPCB to DB  with id: {}", tcp_proxy_cb->cb_id);
     // prepare the response

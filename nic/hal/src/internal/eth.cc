@@ -25,9 +25,9 @@ eth_rss_init (uint32_t hw_lif_id, lif_rss_info_t *rss, lif_queue_info_t *qinfo)
 
     HAL_TRACE_DEBUG("{}: Entered\n", __FUNCTION__);
 
-    //HAL_ASSERT(hw_lif_id < MAX_LIFS);
-    HAL_ASSERT(rss != NULL);
-    HAL_ASSERT(qinfo != NULL);
+    //SDK_ASSERT(hw_lif_id < MAX_LIFS);
+    SDK_ASSERT(rss != NULL);
+    SDK_ASSERT(qinfo != NULL);
 
     pd::pd_rss_params_table_entry_add_args_t args;
     pd::pd_func_args_t          pd_func_args = {0};
@@ -38,7 +38,7 @@ eth_rss_init (uint32_t hw_lif_id, lif_rss_info_t *rss, lif_queue_info_t *qinfo)
     pd::hal_pd_call(pd::PD_FUNC_ID_RSS_PARAMS_TABLE_ADD, &pd_func_args);
 
     num_queues = qinfo[intf::LIF_QUEUE_PURPOSE_RX].num_queues;
-    HAL_ASSERT(num_queues < ETH_RSS_MAX_QUEUES);
+    SDK_ASSERT(num_queues < ETH_RSS_MAX_QUEUES);
 
     if (num_queues > 0) {
         for (unsigned int index = 0; index < ETH_RSS_LIF_INDIR_TBL_LEN; index++) {

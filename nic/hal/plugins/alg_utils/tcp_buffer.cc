@@ -101,7 +101,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
         (num_segments_ <= 0 || compare_seq_numbers(end, segments_[0].start) < 0)) {
         //HAL_TRACE_DEBUG("Calling data handler");
         size_t processed = data_handler_(handler_ctx_, payload, payload_len);
-        HAL_ASSERT_RETURN(processed <= payload_len, HAL_RET_INVALID_ARG);
+        SDK_ASSERT_RETURN(processed <= payload_len, HAL_RET_INVALID_ARG);
         cur_seq_ += processed;
         if (processed == payload_len) {
             // all payload is processed, return
@@ -204,7 +204,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
         //HAL_TRACE_DEBUG("Data handler invoked");
         size_t processed = data_handler_(handler_ctx_, buff_, segments_[0].end - segments_[0].start);
 
-        HAL_ASSERT_RETURN(processed <= (segments_[0].end - segments_[0].start), HAL_RET_INVALID_ARG);
+        SDK_ASSERT_RETURN(processed <= (segments_[0].end - segments_[0].start), HAL_RET_INVALID_ARG);
 
         if (processed > 0) {
             segments_[0].start += processed;

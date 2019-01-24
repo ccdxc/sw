@@ -43,7 +43,7 @@ pd_vrf_create (pd_func_args_t *pd_func_args)
     pd_vrf_create_args_t *args = pd_func_args->pd_vrf_create;
     pd_vrf_t                *vrf_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
 
     // allocate PD vrf state
     vrf_pd = vrf_pd_alloc_init();
@@ -124,9 +124,9 @@ pd_vrf_delete (pd_func_args_t *pd_func_args)
     pd_vrf_delete_args_t *args = pd_func_args->pd_vrf_delete;
     pd_vrf_t    *vrf_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->vrf != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->vrf->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->vrf != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->vrf->pd != NULL), HAL_RET_INVALID_ARG);
 
     vrf_pd = (pd_vrf_t *)args->vrf->pd;
 
@@ -211,7 +211,7 @@ pd_vrf_restore (pd_func_args_t *pd_func_args)
     pd_vrf_restore_args_t *args = pd_func_args->pd_vrf_restore;
     pd_vrf_t    *vrf_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("Restoring pd state for vrf {}", args->vrf->vrf_id);
 
     // allocate PD vrf state
@@ -350,7 +350,7 @@ vrf_pd_depgm_inp_prop_tbl (pd_vrf_t *vrf_pd)
 
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     if (vrf_pd->inp_prop_tbl_cpu_idx != INVALID_INDEXER_INDEX) {
         sdk_ret = inp_prop_tbl->remove(vrf_pd->inp_prop_tbl_cpu_idx);
@@ -409,7 +409,7 @@ vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd, bool is_upgrade)
     input_properties_actiondata_t data          = { 0 };
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     key.capri_intrinsic_lif   = HAL_LIF_CPU;
     key.vlan_tag_valid        = 1;
@@ -469,7 +469,7 @@ pd_vrf_program_input_mapping_table(ip_prefix_t *ip_prefix,
     tcam                                *tcam;
 
     tcam = g_hal_state_pd->tcam_table(tbl_id);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
     /* Input mapping native and tunneled tables have the same key, mask and data
      * So, we can populate the structs and typecast accordingly */
     memset(&key, 0, sizeof(input_mapping_native_swkey_t));

@@ -49,7 +49,7 @@ flow_lkupid_get_hw_key_func (void *entry)
     vrf_t                    *vrf      = NULL;
     pd_vrf_t                 *vrf_pd   = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if ((ht_entry == NULL) || (ht_entry->handle_id == HAL_HANDLE_INVALID)) {
         return NULL;
@@ -66,7 +66,7 @@ flow_lkupid_get_hw_key_func (void *entry)
         return (void *)&(vrf_pd->vrf_fl_lkup_id);
     } else {
         // TODO: Remove assert eventually
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return NULL;
     }
 }
@@ -86,7 +86,7 @@ flow_lkupid_compute_hw_hash_func (void *key, uint32_t ht_size)
 bool
 flow_lkupid_compare_hw_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(uint32_t *)key1 == *(uint32_t *)key2) {
         return true;
     }
@@ -126,7 +126,7 @@ hal_ret_t pd_get_object_from_flow_lkupid(pd_func_args_t *pd_func_args)
         *pi_obj = hal_handle_get_obj(entry->handle_id);
     } else {
         // TODO: Remove assert eventually
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         ret = HAL_RET_ERR;
         goto end;
     }
@@ -375,9 +375,9 @@ pd_l2seg_delete (pd_func_args_t *pd_func_args)
     pd_l2seg_delete_args_t *args = pd_func_args->pd_l2seg_delete;
     pd_l2seg_t     *l2seg_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->l2seg != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->l2seg->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->l2seg != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->l2seg->pd != NULL), HAL_RET_INVALID_ARG);
     l2seg_pd = (pd_l2seg_t *)args->l2seg->pd;
 
     // deprogram HW
@@ -412,7 +412,7 @@ l2seg_pd_depgm_if_inp_prop_tbl(pd_l2seg_t *l2seg_pd, uint32_t uplink_ifpc_id)
     sdk_hash    *inp_prop_tbl = NULL;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     if (l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id] != INVALID_INDEXER_INDEX) {
         sdk_ret = inp_prop_tbl->remove(l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
@@ -529,7 +529,7 @@ l2seg_pd_depgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg)
         break;
 #endif
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
         }
     }
 
@@ -574,7 +574,7 @@ l2seg_pd_depgm_cpu_tx_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
     sdk_hash    *inp_prop_tbl = NULL;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     if (l2seg_pd->inp_prop_tbl_cpu_idx != INVALID_INDEXER_INDEX) {
         sdk_ret = inp_prop_tbl->remove(l2seg_pd->inp_prop_tbl_cpu_idx);
@@ -652,7 +652,7 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
             inp_prop.clear_promiscuous_repl = 1;
         } else if (num_prom_lifs == 1) {
             // 1 prom. lif => Get prom lif from inp. props and no prom replication needed
-            HAL_ASSERT(l2seg_pd->prom_if_handle != HAL_HANDLE_INVALID);
+            SDK_ASSERT(l2seg_pd->prom_if_handle != HAL_HANDLE_INVALID);
             inp_prop.clear_promiscuous_repl = 1;
             prom_if = find_if_by_handle(l2seg_pd->prom_if_handle);
             if (prom_if) {
@@ -736,7 +736,7 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
     uplink_ifpc_id = if_get_uplink_ifpc_id(hal_if);
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     key.capri_intrinsic_lif = if_get_hw_lif_id(hal_if);
     key.entry_inactive_input_properties = 0;
@@ -907,7 +907,7 @@ l2seg_pd_pgm_mbr_ifs (block_list *if_list, l2seg_t *l2seg, bool is_upgrade)
             }
         break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
         }
     }
 
@@ -957,7 +957,7 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     nwsec_profile_t             *nwsec_prof   = NULL;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)l2seg);
 
@@ -1101,7 +1101,7 @@ l2seg_pd_cleanup (pd_l2seg_t *l2seg_pd)
     // check if there are no add_l2seg_on_uplinks referrals.
     // This should never happen as the refs will be checked in PI itself
     l2seguplink_count = l2seg_pd_l2seguplink_count(l2seg_pd);
-    HAL_ASSERT_RETURN((l2seguplink_count == 0), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((l2seguplink_count == 0), HAL_RET_ERR);
 
     // releasing resources
     ret = l2seg_pd_dealloc_res(l2seg_pd);
@@ -1131,7 +1131,7 @@ l2seg_pd_alloc_hwid (pd_l2seg_t *pd_l2seg)
     hal_ret_t    ret = HAL_RET_OK;
 
     ten_pd = pd_l2seg_get_pd_vrf(pd_l2seg);
-    HAL_ASSERT_RETURN(ten_pd != NULL, HAL_RET_VRF_NOT_FOUND);
+    SDK_ASSERT_RETURN(ten_pd != NULL, HAL_RET_VRF_NOT_FOUND);
 
     ret = vrf_pd_alloc_l2seg_hw_id(ten_pd, (uint32_t *)&pd_l2seg->l2seg_hw_id);
     if (ret != HAL_RET_OK) {
@@ -1158,7 +1158,7 @@ l2seg_pd_dealloc_hwid(pd_l2seg_t *l2seg_pd)
 
     if (l2seg_pd->l2seg_hw_id != INVALID_INDEXER_INDEX) {
         ten_pd = pd_l2seg_get_pd_vrf(l2seg_pd);
-        HAL_ASSERT_RETURN(ten_pd != NULL, HAL_RET_VRF_NOT_FOUND);
+        SDK_ASSERT_RETURN(ten_pd != NULL, HAL_RET_VRF_NOT_FOUND);
 
         ret = vrf_pd_free_l2seg_hw_id(ten_pd, l2seg_pd->l2seg_hw_id);
         if (ret != HAL_RET_OK) {
@@ -1227,10 +1227,10 @@ pd_l2seg_get_l4_prof_idx (pd_l2seg_t *pd_l2seg)
     vrf_t        *pi_vrf = NULL;
 
     pi_l2seg = (l2seg_t *)pd_l2seg->l2seg;
-    HAL_ASSERT_RETURN(pi_l2seg != NULL, 0);
+    SDK_ASSERT_RETURN(pi_l2seg != NULL, 0);
 
     pi_vrf = l2seg_get_pi_vrf(pi_l2seg);
-    HAL_ASSERT_RETURN(pi_vrf != NULL, 0);
+    SDK_ASSERT_RETURN(pi_vrf != NULL, 0);
 
     return ten_get_nwsec_prof_hw_id(pi_vrf);
 }
@@ -1245,10 +1245,10 @@ pd_l2seg_get_pd_vrf (pd_l2seg_t *pd_l2seg)
     vrf_t        *pi_vrf = NULL;
 
     pi_l2seg = (l2seg_t *)pd_l2seg->l2seg;
-    HAL_ASSERT_RETURN(pi_l2seg != NULL, 0);
+    SDK_ASSERT_RETURN(pi_l2seg != NULL, 0);
 
     pi_vrf = l2seg_get_pi_vrf(pi_l2seg);
-    HAL_ASSERT_RETURN(pi_vrf != NULL, 0);
+    SDK_ASSERT_RETURN(pi_vrf != NULL, 0);
 
     return (pd_vrf_t *)pi_vrf->pd;
 }
@@ -1405,7 +1405,7 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
                     }
                 }
             }
-            HAL_ASSERT(eff_prom_enic_if != NULL);
+            SDK_ASSERT(eff_prom_enic_if != NULL);
             pd_enicif = (pd_enicif_t *)eff_prom_enic_if->pd_if;
             pd_l2seg->prom_if_handle = eff_prom_enic_if->hal_handle;
             pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
@@ -1437,7 +1437,7 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
                                                    pd_l2seg->num_prom_lifs);
                 break;
             case intf::IF_TYPE_UPLINK:
-                // HAL_ASSERT(0);
+                // SDK_ASSERT(0);
                 up_args.l2seg = l2seg;
                 up_args.intf = hal_if;
                 ret = l2seg_uplink_upd_input_properties_tbl(&up_args,
@@ -1450,7 +1450,7 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
                 // Handle Uplink PCs
                 break;
             default:
-                HAL_ASSERT(0);
+                SDK_ASSERT(0);
             }
         }
         for (const void *ptr : *l2seg->mbrif_list) {
@@ -1461,7 +1461,7 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
             HAL_TRACE_DEBUG("Processing IF: {}, type: {}", *p_hdl_id, if_type);
             switch(if_type) {
             case intf::IF_TYPE_ENIC:
-                HAL_ASSERT(0);
+                SDK_ASSERT(0);
                 ret = pd_enicif_upd_inp_prop_l2seg(hal_if, l2seg,
                                                    ENICIF_UPD_FLAGS_NUM_PROM_LIFS,
                                                    pd_l2seg->num_prom_lifs);
@@ -1479,7 +1479,7 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
                 // Handle Uplink PCs
                 break;
             default:
-                HAL_ASSERT(0);
+                SDK_ASSERT(0);
             }
         }
     }

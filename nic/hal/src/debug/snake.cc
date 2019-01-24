@@ -73,7 +73,7 @@ snake_test_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     snake_test_t                     *snake = NULL;
     pd::pd_func_args_t               pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -97,7 +97,7 @@ snake_test_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t                 *dhl_entry = NULL;
     snake_test_t                *snake_test  = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -139,7 +139,7 @@ snake_test_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     snake_test_t *snake                  = NULL;
     hal_handle_t hal_handle              = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     snake = (snake_test_t *)dhl_entry->obj;
@@ -275,7 +275,7 @@ snake_test_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_snake_test_delete_args_t pd_snake_args = { 0 };
     pd::pd_func_args_t              pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     snake = (snake_test_t *)dhl_entry->obj;
@@ -300,7 +300,7 @@ snake_test_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     snake_test_t       *snake = NULL;
     hal_handle_t       hal_handle = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     snake = (snake_test_t *)dhl_entry->obj;

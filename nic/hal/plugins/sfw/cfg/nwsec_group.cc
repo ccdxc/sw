@@ -82,7 +82,7 @@ nwsec_group_get_key_func (void *entry)
 {
     hal_handle_id_ht_entry_t   *ht_entry;
     nwsec_group_t              *nwsec_grp = NULL;
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *) entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -101,7 +101,7 @@ nwsec_group_compute_hash_func (void *key, uint32_t ht_size)
 bool
 nwsec_group_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(nwsec_group_id_t *) key1 == *(nwsec_group_id_t *)key2) {
         return true;
     }
@@ -686,7 +686,7 @@ bool
 nwsec_rulelist_compare_key_func (void *key1, void *key2)
 {
     dllist_ctxt_t    lentry;
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     // Compare the hash value
     if (!memcmp(key1, key2, sizeof(rule_key_t))) {
         return true;
@@ -697,7 +697,7 @@ nwsec_rulelist_compare_key_func (void *key1, void *key2)
 void *
 nwsec_rulelist_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return &((nwsec_rulelist_t *)entry)->rule_id;
 }
 
@@ -811,7 +811,7 @@ nwsec_policy_init (nwsec_policy_t *policy)
                                                         hal::nwsec_rulelist_get_key_func,
                                                         hal::nwsec_rulelist_compute_hash_func,
                                                         hal::nwsec_rulelist_compare_key_func);
-        HAL_ASSERT_RETURN((policy->rules_ht[policy->version] != NULL), NULL);
+        SDK_ASSERT_RETURN((policy->rules_ht[policy->version] != NULL), NULL);
     }
     policy->ht_ctxt.reset();
     policy->acl_ctx = NULL;
@@ -918,7 +918,7 @@ find_nwsec_policy_by_key(uint32_t policy_id, uint32_t vrf_id)
     entry = (hal_handle_id_ht_entry_t *) g_hal_state->
             nwsec_policy_ht()->lookup(&policy_key);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == HAL_OBJ_ID_SECURITY_POLICY);
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() == HAL_OBJ_ID_SECURITY_POLICY);
         policy = (nwsec_policy_t *)hal_handle_get_obj(entry->handle_id);
         return policy;
     }
@@ -951,7 +951,7 @@ bool
 nwsec_policy_compare_key_func (void *key1, void *key2)
 {
     dllist_ctxt_t    lentry;
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     // Compare the hash value
     if (!memcmp(key1, key2, sizeof(policy_key_t))) {
         return true;
@@ -965,7 +965,7 @@ nwsec_policy_get_key_func (void *entry)
 
     hal_handle_id_ht_entry_t   *ht_entry;
     nwsec_policy_t             *policy = NULL;
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *) entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -1015,7 +1015,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
         if (app.msrpc_option_info().data_size()) {
             opt->msrpc_opts.uuids = (rpc_programid_t *)HAL_CALLOC(HAL_MEM_ALLOC_SFW,
                                         (sizeof(rpc_programid_t)*app.msrpc_option_info().data_size()));
-            HAL_ASSERT(opt->msrpc_opts.uuids != NULL);
+            SDK_ASSERT(opt->msrpc_opts.uuids != NULL);
             opt->msrpc_opts.uuid_sz = app.msrpc_option_info().data_size();
             for (int idx=0; idx<app.msrpc_option_info().data_size(); idx++) {
                  int size = (app.msrpc_option_info().data(idx).program_id().size() <= MAX_UUID_SZ)?\
@@ -1029,7 +1029,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
         if (app.sun_rpc_option_info().data_size()) {
             opt->sunrpc_opts.program_ids = (rpc_programid_t *)HAL_CALLOC(HAL_MEM_ALLOC_SFW,
                                         (sizeof(rpc_programid_t)*app.sun_rpc_option_info().data_size()));
-            HAL_ASSERT(opt->sunrpc_opts.program_ids != NULL);
+            SDK_ASSERT(opt->sunrpc_opts.program_ids != NULL);
             opt->sunrpc_opts.programid_sz = app.sun_rpc_option_info().data_size();
             for (int idx=0; idx<app.sun_rpc_option_info().data_size(); idx++) {
                  int size = (app.sun_rpc_option_info().data(idx).program_id().size() <= MAX_UUID_SZ)?\

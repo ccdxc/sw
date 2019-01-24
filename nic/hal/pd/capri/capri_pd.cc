@@ -51,7 +51,7 @@ pd_get_pc_offset (pd_func_args_t *pd_func_args)
     int32_t ret = get_pc_offset(args->pinfo, args->prog_name,
                                 args->label, args->offset);
 
-    HAL_ASSERT(ret == 0);
+    SDK_ASSERT(ret == 0);
     return HAL_RET_OK;
 
 }
@@ -73,7 +73,7 @@ pd_capri_hbm_write_mem (pd_func_args_t *pd_func_args)
     sdk::asic::asic_mem_write(args->addr, (uint8_t *)args->buf, args->size);
 
     reg = get_hbm_region_by_address(args->addr);
-    HAL_ASSERT(reg != NULL);
+    SDK_ASSERT(reg != NULL);
 
     if(is_region_cache_pipe_p4plus_all(reg)) {
         action = P4PLUS_CACHE_INVALIDATE_BOTH;

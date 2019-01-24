@@ -83,7 +83,7 @@ ndp_process_entry(const unsigned char *ether_pkt,
         options = neight_advert->options;
         option_type = NDP_OPT_TARGET_LINK_LAYER_ADDR;
     } else {
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 
     option = icmpv6_get_option(options, 8, option_type);

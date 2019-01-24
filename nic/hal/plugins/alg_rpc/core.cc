@@ -232,11 +232,11 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
         ret = g_rpc_state->alloc_and_insert_exp_flow(l4_sess->app_session,
                                                   key, &exp_flow, true, timeout, true);
     }
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
     exp_flow->entry.handler = expected_flow_handler;
     exp_flow->alg = l4_sess->alg;
     exp_flow->info = g_rpc_state->alg_info_slab()->alloc();
-    HAL_ASSERT(exp_flow->info != NULL);
+    SDK_ASSERT(exp_flow->info != NULL);
     exp_flow_info = (rpc_info_t *)exp_flow->info;
     exp_flow_info->skip_sfw = TRUE;
     if (exp_flow->alg == nwsec::APP_SVC_MSFT_RPC) {

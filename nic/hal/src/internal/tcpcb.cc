@@ -19,7 +19,7 @@ using hal::tls::proxy_tls_bypass_mode;
 void *
 tcpcb_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((tcpcb_t *)entry)->cb_id);
 }
 
@@ -32,7 +32,7 @@ tcpcb_compute_hash_func (void *key, uint32_t ht_size)
 bool
 tcpcb_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(tcpcb_id_t *)key1 == *(tcpcb_id_t *)key2) {
         return true;
     }
@@ -42,7 +42,7 @@ tcpcb_compare_key_func (void *key1, void *key2)
 void *
 tcpcb_get_handle_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((tcpcb_t *)entry)->hal_handle);
 }
 
@@ -55,7 +55,7 @@ tcpcb_compute_handle_hash_func (void *key, uint32_t ht_size)
 bool
 tcpcb_compare_handle_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }
@@ -176,7 +176,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
 
     // add this L2 segment to our db
     ret = add_tcpcb_to_db(tcpcb);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     HAL_TRACE_DEBUG("Added TCPCB to DB  with id: {}", tcpcb->cb_id);
     // prepare the response

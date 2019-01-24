@@ -23,7 +23,7 @@ Met::factory(std::string table_name, uint32_t table_id,
     sdk::platform::utils::mpartition *mpart;
 
     mpart = sdk::platform::utils::mpartition::get_instance();
-    HAL_ASSERT(mpart != NULL);
+    SDK_ASSERT(mpart != NULL);
     repl_table_mem_addr = mpart->start_addr(JP4_REPL);
     repl_table_mem_offset = mpart->start_offset(JP4_REPL);
 
@@ -478,7 +478,7 @@ Met::free_repl_table_index(uint32_t idx)
 void
 Met::stats_incr(stats stat)
 {
-    HAL_ASSERT_RETURN_VOID((stat < STATS_MAX));
+    SDK_ASSERT_RETURN_VOID((stat < STATS_MAX));
     stats_[stat]++;
 }
 
@@ -488,7 +488,7 @@ Met::stats_incr(stats stat)
 void
 Met::stats_decr(stats stat)
 {
-    HAL_ASSERT_RETURN_VOID((stat < STATS_MAX));
+    SDK_ASSERT_RETURN_VOID((stat < STATS_MAX));
     stats_[stat]--;
 }
 
@@ -503,23 +503,23 @@ Met::stats_update(Met::api ap, hal_ret_t rs)
             if(rs == HAL_RET_OK) stats_incr(STATS_INS_SUCCESS);
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_INS_FAIL_HW);
             else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
-            else HAL_ASSERT(0);
+            else SDK_ASSERT(0);
             break;
         case UPDATE:
             if(rs == HAL_RET_OK) stats_incr(STATS_UPD_SUCCESS);
             else if(rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_UPD_FAIL_ENTRY_NOT_FOUND);
-            else HAL_ASSERT(0);
+            else SDK_ASSERT(0);
             break;
         case REMOVE:
             if (rs == HAL_RET_OK) stats_incr(STATS_REM_SUCCESS);
             else if (rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
             else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_REM_FAIL_HW);
-            else HAL_ASSERT(0);
+            else SDK_ASSERT(0);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 }
 
