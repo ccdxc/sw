@@ -33,6 +33,7 @@
     "@ngrx/core": "^1.2.0",
     "@ngrx/effects": "^7.0.0-beta.0",
     "@ngrx/store": "^7.0.0-beta.0",
+    "@types/chart.js": "^2.7.41",
     "@types/jquery": "^3.3.5",
     "ajv": "^6.4.0",
     "angular-gridster2": "^4.7.2",
