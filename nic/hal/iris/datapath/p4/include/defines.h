@@ -133,8 +133,9 @@
 #define EGRESS_DROP_POLICER                     3
 #define EGRESS_DROP_COPP                        4
 #define EGRESS_DROP_CHECKSUM_ERR                5
+#define EGRESS_DROP_HARDWARE_ERR                6
 #define EGRESS_DROP_MIN                         EGRESS_DROP_OUTPUT_MAPPING
-#define EGRESS_DROP_MAX                         EGRESS_DROP_CHECKSUM_ERR
+#define EGRESS_DROP_MAX                         EGRESS_DROP_HARDWARE_ERR
 
 /*****************************************************************************/
 /* Rewrite flags                                                             */

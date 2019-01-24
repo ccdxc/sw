@@ -29,5 +29,5 @@ egress_drop_stats:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 egress_drop_stats_error:
-  nop.e
+  phvwr       p.capri_intrinsic_drop, TRUE
   nop
