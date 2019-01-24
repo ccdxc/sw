@@ -38,6 +38,13 @@ import (
 	_ "github.com/pensando/sw/api/hooks/apigw"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	_ "github.com/pensando/sw/venice/apigw/svc"
+
+	// added on top
+	"fmt"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/workload"
 )
 
 const (
@@ -186,6 +193,8 @@ func Start() *Info {
 	// set auth bootstrap flag to true
 	testutils.MustSetAuthBootstrapFlag(tinfo.apicl)
 
+	tinfo.createMiscObjects()
+
 	return tinfo
 }
 
@@ -194,4 +203,61 @@ func (tinfo *Info) Stop() {
 	tinfo.apicl.Close()
 	tinfo.apisvc.Stop()
 	tinfo.apigwsvc.Stop()
+}
+
+// create miscObjects create objects in the mock backend because POST is not allowed on certain objects
+func (tinfo *Info) createMiscObjects() {
+
+	// SmartNICs
+	for i := 0; i < 5; i++ {
+		// smartNic params
+		snic := cluster.SmartNIC{
+			TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+			ObjectMeta: api.ObjectMeta{
+				Name: fmt.Sprintf("snic-host-%d", i),
+			},
+			Spec: cluster.SmartNICSpec{
+				MgmtMode:    "NETWORK",
+				NetworkMode: "OOB",
+			},
+			Status: cluster.SmartNICStatus{
+				AdmissionPhase: "ADMITTED",
+				PrimaryMAC:     fmt.Sprintf("00:ae.dd:%x%x:%x%x:%x%x", i, i, i, i, i, i),
+			},
+		}
+
+		_, err := tinfo.apicl.ClusterV1().SmartNIC().Create(context.Background(), &snic)
+		if err != nil {
+			tinfo.l.Fatalf("unable to create smartnic object: err %s,\n%+v", err, snic)
+		}
+	}
+
+	// Endpoints
+	for i := 0; i < 10; i++ {
+		ep := workload.Endpoint{
+			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			ObjectMeta: api.ObjectMeta{
+				Name:      fmt.Sprintf("ep-%d", i),
+				Tenant:    "default",
+				Namespace: "default",
+			},
+			Spec: workload.EndpointSpec{},
+			Status: workload.EndpointStatus{
+				WorkloadName:       fmt.Sprintf("workload-%d", i),
+				Network:            "subnet-31-31",
+				HomingHostName:     fmt.Sprintf("esx-lab2-1%d", i),
+				IPv4Address:        fmt.Sprintf("31.31.0.%d", i),
+				IPv4Gateway:        "31.31.0.254",
+				MacAddress:         fmt.Sprintf("00.ae.cd.%x%x.%x%x.%x%x", i, i, i, i, i, i),
+				EndpointState:      "up",
+				SecurityGroups:     []string{"core-svcs", "lab-22"},
+				MicroSegmentVlan:   111,
+				WorkloadAttributes: map[string]string{"os": "linux", "version": "rhel7.5"},
+			},
+		}
+		_, err := tinfo.apicl.WorkloadV1().Endpoint().Create(context.Background(), &ep)
+		if err != nil {
+			tinfo.l.Fatalf("unable to create endpoint object: err %s,\n%+v", err, ep)
+		}
+	}
 }

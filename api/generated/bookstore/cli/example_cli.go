@@ -138,6 +138,20 @@ func removeCustomerOper(obj interface{}) error {
 	return nil
 }
 
+// CreateOrderFlags specifies flags for Order create operation
+var CreateOrderFlags = []gen.CliFlag{}
+
+func removeOrderOper(obj interface{}) error {
+	if v, ok := obj.(*bookstore.Order); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
+		v.Status = bookstore.OrderStatus{}
+	}
+	return nil
+}
+
 // CreatePublisherFlags specifies flags for Publisher create operation
 var CreatePublisherFlags = []gen.CliFlag{
 	{
@@ -204,6 +218,8 @@ func init() {
 
 	cl.AddCliInfo("bookstore.Customer", "create", CreateCustomerFlags)
 	cl.AddRemoveObjOperFunc("bookstore.Customer", removeCustomerOper)
+
+	cl.AddRemoveObjOperFunc("bookstore.Order", removeOrderOper)
 
 	cl.AddCliInfo("bookstore.Publisher", "create", CreatePublisherFlags)
 	cl.AddRemoveObjOperFunc("bookstore.Publisher", removePublisherOper)

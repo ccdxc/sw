@@ -63,6 +63,20 @@ func removeClearActionOper(obj interface{}) error {
 	return nil
 }
 
+// CreateCommitActionFlags specifies flags for CommitAction create operation
+var CreateCommitActionFlags = []gen.CliFlag{}
+
+func removeCommitActionOper(obj interface{}) error {
+	if v, ok := obj.(*staging.CommitAction); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
+		v.Status = staging.CommitActionStatus{}
+	}
+	return nil
+}
+
 func init() {
 	cl := gen.GetInfo()
 
@@ -71,5 +85,7 @@ func init() {
 
 	cl.AddCliInfo("staging.ClearAction", "create", CreateClearActionFlags)
 	cl.AddRemoveObjOperFunc("staging.ClearAction", removeClearActionOper)
+
+	cl.AddRemoveObjOperFunc("staging.CommitAction", removeCommitActionOper)
 
 }

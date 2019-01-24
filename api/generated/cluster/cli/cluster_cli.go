@@ -77,6 +77,20 @@ func removeHostOper(obj interface{}) error {
 	return nil
 }
 
+// CreateNodeFlags specifies flags for Node create operation
+var CreateNodeFlags = []gen.CliFlag{}
+
+func removeNodeOper(obj interface{}) error {
+	if v, ok := obj.(*cluster.Node); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
+		v.Status = cluster.NodeStatus{}
+	}
+	return nil
+}
+
 func init() {
 	cl := gen.GetInfo()
 
@@ -85,5 +99,7 @@ func init() {
 
 	cl.AddCliInfo("cluster.Host", "create", CreateHostFlags)
 	cl.AddRemoveObjOperFunc("cluster.Host", removeHostOper)
+
+	cl.AddRemoveObjOperFunc("cluster.Node", removeNodeOper)
 
 }

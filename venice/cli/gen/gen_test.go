@@ -43,7 +43,7 @@ func TestAddFlags(t *testing.T) {
 	if newFlags1[0].ID != "field1" || newFlags1[0].Type != "Bool" {
 		t.Fatalf("invalid newFlags: %+v", newFlags1)
 	}
-	if _, err := cf.FindFlags("two", "delete"); err == nil {
+	if flags, _ := cf.FindFlags("two", "delete"); len(flags) > 0 {
 		t.Fatalf("found flags for delete oper")
 	}
 

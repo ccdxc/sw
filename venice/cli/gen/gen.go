@@ -136,7 +136,7 @@ func (cf *Info) FindFlags(objName, oper string) ([]CliFlag, error) {
 			return cliFlags, nil
 		}
 	}
-	return []CliFlag{}, fmt.Errorf("unable to find flags for '%s'", objName)
+	return []CliFlag{}, nil
 }
 
 // FindSvcName gives back the fully qualified object and object list name

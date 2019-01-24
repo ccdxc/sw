@@ -1997,7 +1997,7 @@ func getCLIFlagMap(file *descriptor.File) map[string][]cgen.CliFlag {
 			cliFlags = append(cliFlags, cf)
 		}
 
-		if len(cliFlags) > 0 {
+		if len(s.CLITags) > 0 {
 			cliFlagMap[msgName] = cliFlags
 		}
 	}

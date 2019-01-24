@@ -133,6 +133,7 @@ func patchCmd(c *cli.Context) {
 func readCmd(c *cli.Context) {
 	ctx := &context{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "read"); err != nil {
+		fmt.Println(err)
 		return
 	}
 
@@ -435,6 +436,11 @@ func snapshotCmd(c *cli.Context) {
 		ctx.subcmd = subcmd
 		if err := populateGenCtx(ctx); err != nil {
 			fmt.Printf("error populating generated context: %s", err)
+			continue
+		}
+
+		if ctx.restGetFunc == nil {
+			// REST GET function is not available on some objects
 			continue
 		}
 

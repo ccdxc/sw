@@ -70,8 +70,8 @@ type context struct {
 }
 
 const (
-	defaultServer = "http://localhost:19001"
-	helpTmpl      = `NAME:
+	defaultVeniceURL = "http://localhost:9000"
+	helpTmpl         = `NAME:
 {{.Name}} - {{.Usage}}
 USAGE:
   {{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
@@ -107,9 +107,9 @@ var penServerFlags = []cli.Flag{
 	},
 	cli.StringFlag{
 		Name:   "server",
-		Value:  defaultServer,
+		Value:  defaultVeniceURL,
 		Usage:  "Complete URL of the pensando server",
-		EnvVar: "PENSERVER",
+		EnvVar: "VENICE_URL",
 	},
 }
 

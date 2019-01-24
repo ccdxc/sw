@@ -5,3 +5,30 @@ Package clusterCliUtilsBackend is a auto generated package.
 Input file: networkinterface.proto
 */
 package cli
+
+import (
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/cli/gen"
+)
+
+// CreateNetworkInterfaceFlags specifies flags for NetworkInterface create operation
+var CreateNetworkInterfaceFlags = []gen.CliFlag{}
+
+func removeNetworkInterfaceOper(obj interface{}) error {
+	if v, ok := obj.(*cluster.NetworkInterface); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
+		v.Status = cluster.NetworkInterfaceStatus{}
+	}
+	return nil
+}
+
+func init() {
+	cl := gen.GetInfo()
+
+	cl.AddRemoveObjOperFunc("cluster.NetworkInterface", removeNetworkInterfaceOper)
+
+}

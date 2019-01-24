@@ -20,7 +20,9 @@ const (
 func getKvsValue(path, mapKeyPath string, obj reflect.Value, kvs map[string]cliField) {
 	switch obj.Kind() {
 	case reflect.Ptr:
-		getKvsValue(path, mapKeyPath, reflect.Indirect(obj), kvs)
+		if !obj.IsNil() {
+			getKvsValue(path, mapKeyPath, reflect.Indirect(obj), kvs)
+		}
 	case reflect.Struct:
 		for i := 0; i < obj.NumField(); i++ {
 			typeField := obj.Type().Field(i)

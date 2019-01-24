@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
 )
@@ -103,6 +104,45 @@ func TestGetKvs(t *testing.T) {
 	}
 	if !reflect.DeepEqual(specKvs["external-vlan"].values, []string{"100", "200"}) {
 		t.Fatalf("unable to get specKvs %+v", specKvs)
+	}
+}
+
+func TestGetKvsSmartNIC(t *testing.T) {
+	ctx := &context{subcmd: "smartnic"}
+	if err := populateGenCtx(ctx); err != nil {
+		t.Fatalf("unable to populate gen info - %s", err)
+	}
+
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name: fmt.Sprintf("snic-host-23"),
+		},
+		Spec: cluster.SmartNICSpec{
+			MgmtMode:    "NETWORK",
+			NetworkMode: "OOB",
+		},
+		Status: cluster.SmartNICStatus{
+			AdmissionPhase: "ADMITTED",
+			PrimaryMAC:     "00:ae:ed:33:33:33",
+		},
+	}
+
+	objKvs := make(map[string]cliField)
+	if getKvs(ctx, snic, "", objKvs); len(objKvs) == 0 {
+		t.Fatalf("unable to get spec kvs from obj")
+	}
+	if !reflect.DeepEqual(objKvs["mgmt-mode"].values, []string{"NETWORK"}) {
+		t.Fatalf("unable to get objKvs %+v", objKvs)
+	}
+	if !reflect.DeepEqual(objKvs["network-mode"].values, []string{"OOB"}) {
+		t.Fatalf("unable to get objKvs %+v", objKvs)
+	}
+	if !reflect.DeepEqual(objKvs["admission-phase"].values, []string{"ADMITTED"}) {
+		t.Fatalf("unable to get objKvs %+v", objKvs)
+	}
+	if !reflect.DeepEqual(objKvs["primary-mac"].values, []string{"00:ae:ed:33:33:33"}) {
+		t.Fatalf("unable to get objKvs %+v", objKvs)
 	}
 }
 

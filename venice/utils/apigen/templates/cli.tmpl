@@ -45,7 +45,7 @@ func remove{{$svcObj.ObjName}}Oper(obj interface{}) error {
 func init() {
 	cl := gen.GetInfo()
 	{{range $svcAndObjName, $cliFlags := $cliFlagMap}} {{$svcObj := (splitSvcObj $svcAndObjName)}}
-	cl.AddCliInfo("{{$svcAndObjName}}", "create", Create{{$svcObj.ObjName}}Flags)
+	{{if len $cliFlags}}cl.AddCliInfo("{{$svcAndObjName}}", "create", Create{{$svcObj.ObjName}}Flags){{end}}
 	cl.AddRemoveObjOperFunc("{{$svcAndObjName}}", remove{{$svcObj.ObjName}}Oper)
 	{{ end }}
 }{{ end }}

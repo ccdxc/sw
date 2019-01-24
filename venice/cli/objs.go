@@ -45,22 +45,22 @@ func populateGenCtx(ctx *context) error {
 	}
 
 	ctx.restGetFunc, err = ctx.genInfo.FindRestGetFunc(ctx.subcmd, "v1")
-	if err != nil {
+	if ctx.cmd == "read" && err != nil {
 		return err
 	}
 
 	ctx.restDeleteFunc, err = ctx.genInfo.FindRestDeleteFunc(ctx.subcmd, "v1")
-	if err != nil {
+	if ctx.cmd == "delete" && err != nil {
 		return err
 	}
 
 	ctx.restPutFunc, err = ctx.genInfo.FindRestPutFunc(ctx.subcmd, "v1")
-	if err != nil {
+	if (ctx.cmd == "patch" || ctx.cmd == "edit") && err != nil {
 		return err
 	}
 
 	ctx.restPostFunc, err = ctx.genInfo.FindRestPostFunc(ctx.subcmd, "v1")
-	if err != nil {
+	if ctx.cmd == "create" && err != nil {
 		return err
 	}
 
