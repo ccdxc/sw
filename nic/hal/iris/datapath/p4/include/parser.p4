@@ -1057,6 +1057,7 @@ calculated_field tcp.checksum {
     update ipv6_tcp_checksum if (valid(ipv6));
 }
 
+@pragma capture_payload_offset
 parser parse_tcp_ipv6 {
     extract(tcp);
     set_metadata(flow_lkp_metadata.lkp_sport, latest.srcPort);
@@ -1069,7 +1070,6 @@ parser parse_tcp_ipv6 {
     }
 }
 
-@pragma hdr_len parser_metadata.parse_tcp_counter
 @pragma capture_payload_offset
 parser parse_tcp_ipv4 {
     extract(tcp);
