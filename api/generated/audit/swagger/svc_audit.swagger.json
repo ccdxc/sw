@@ -45,6 +45,9 @@
   "definitions": {
     "apiListWatchOptions": {
       "type": "object",
+      "required": [
+        "sort-order"
+      ],
       "properties": {
         "name": {
           "type": "string"

@@ -11,7 +11,7 @@ import { EventsService } from '@app/services/events.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { EventsEvent_severity, EventsEvent_severity_uihint, IApiListWatchOptions, IEventsEvent } from '@sdk/v1/models/generated/events';
+import { EventsEvent_severity, EventsEvent_severity_uihint, IApiListWatchOptions, IEventsEvent, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchQuery_kinds, SearchSearchRequest, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { Table } from 'primeng/table';
@@ -78,7 +78,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // This are the events that will be displayed
   filteredEvents: IEventsEvent[] = [];
 
-  eventsPostBody: IApiListWatchOptions = {};
+  eventsPostBody: IApiListWatchOptions = { "sort-order": ApiListWatchOptions_sort_order.None };
 
   // All columns are set as not sortable as it isn't currently supported
   // TODO: Support sorting columns
@@ -213,7 +213,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   genQueryBodies() {
     if (this.selector != null) {
       this.eventsPostBody = {
-        'field-selector': this.selector.eventSelector
+        'field-selector': this.selector.eventSelector,
+        "sort-order": ApiListWatchOptions_sort_order.None
       };
       this.alertQuery = {
         'field-selector': this.selector.alertSelector

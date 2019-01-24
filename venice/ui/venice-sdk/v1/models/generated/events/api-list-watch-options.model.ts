@@ -25,7 +25,7 @@ export interface IApiListWatchOptions {
     'field-change-selector'?: Array<string>;
     'from'?: number;
     'max-results'?: number;
-    'sort-order'?: ApiListWatchOptions_sort_order;
+    'sort-order': ApiListWatchOptions_sort_order;
 }
 
 
@@ -248,6 +248,8 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             this['sort-order'] = values['sort-order'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('sort-order')) {
             this['sort-order'] = <ApiListWatchOptions_sort_order>  ApiListWatchOptions.propInfo['sort-order'].default;
+        } else {
+            this['sort-order'] = null
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -271,7 +273,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
                 'field-change-selector': new FormControl(this['field-change-selector']),
                 'from': new FormControl(this['from']),
                 'max-results': new FormControl(this['max-results']),
-                'sort-order': new FormControl(this['sort-order'], [required, enumValidator(ApiListWatchOptions_sort_order), ]),
+                'sort-order': new FormControl(this['sort-order'], [enumValidator(ApiListWatchOptions_sort_order), ]),
             });
         }
         return this._formGroup;

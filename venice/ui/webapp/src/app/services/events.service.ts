@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { EventsService as EventGenService } from '@app/services/generated/events.service';
 import { ControllerService } from '@app/services/controller.service';
 import { HttpClient } from '@angular/common/http';
-import { IEventsEvent, IEventsEventList, ApiListWatchOptions, IApiListWatchOptions } from '@sdk/v1/models/generated/events';
+import { IEventsEvent, IEventsEventList, ApiListWatchOptions, IApiListWatchOptions, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { PollUtility, PollingInstance } from '@app/services/PollUtility';
 
 /**
@@ -33,7 +33,7 @@ export class EventsService extends EventGenService {
       this.POLLING_INTERVAL);
   }
 
-  pollEvents(key: string, body: IApiListWatchOptions = {}) {
+  pollEvents(key: string, body: IApiListWatchOptions = { "sort-order": ApiListWatchOptions_sort_order.None }) {
     const poll: PollingInstance = this.pollingUtility.initiatePolling(key, body, true, this.POLLING_INTERVAL, 0);
     return poll.handler;
   }
