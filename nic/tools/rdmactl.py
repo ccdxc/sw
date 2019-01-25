@@ -799,23 +799,24 @@ class RdmaKeyTableEntry(Packet):
     name = "RdmaKeyTableEntry"
     fields_desc = [
         ByteField("user_key", 0),
-        XBitField("state", 0, 4),
-        XBitField("type", 0, 4),
-        ByteField("acc_ctrl", 0),
+        BitField("state", 0, 4),
+        BitField("type", 0, 4),
+        XByteField("acc_ctrl", 0),
         ByteField("log_page_size", 0),
-        IntField("len", 0),
+        LongField("len", 0),
         LongField("base_va", 0),
         IntField("pt_base", 0),
         IntField("pd", 0),
-        XBitField("host_addr", 0, 1),
-        XBitField("override_lif_vld", 0, 1),
-        XBitField("override_lif", 0, 12),
-        XBitField("rsvd1", 0, 18),
-        ByteField("flags", 0),
+        BitField("host_addr", 0, 1),
+        BitField("override_lif_vld", 0, 1),
+        BitField("override_lif", 0, 12),
+        BitField("rsvd1", 0, 18),
+        XByteField("flags", 0),
         X3BytesField("qp", 0),
         IntField("mr_l_key", 0),
         IntField("mr_cookie", 0),
-        XBitField("rsvd2", 0, 192)
+        IntField("num_pt_entries_rsvd", 0),
+        BitField("rsvd2", 0, 128)
     ]
 
 class RdmaPageTableEntry(Packet):

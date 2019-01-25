@@ -1029,7 +1029,7 @@ struct key_entry_t {
     type: 4;
     union access_ctrl_flags_t acc_ctrl; //8 bits
     log_page_size: 8;
-    len: 32;
+    len: 64;
     base_va: 64;
     pt_base: 32;
     pd: 32;
@@ -1042,7 +1042,7 @@ struct key_entry_t {
     mr_l_key: 32;
     mr_cookie: 32;
     num_pt_entries_rsvd: 32;
-    rsvd2: 160;
+    rsvd2: 128;
 };
 
 struct key_entry_aligned_t {
@@ -1051,7 +1051,7 @@ struct key_entry_aligned_t {
     type: 4;
     union access_ctrl_flags_t acc_ctrl; //8 bits
     log_page_size: 8;
-    len: 32;
+    len: 64;
     base_va: 64;
     pt_base: 32;
     pd: 32;
@@ -1065,7 +1065,7 @@ struct key_entry_aligned_t {
     mr_cookie: 32;
     num_pt_entries_rsvd: 32;
     // pad added for easy access of d[] in mpu program
-    rsvd2: 160;
+    rsvd2: 128;
 };
 
 #define GET_NUM_PAGES(_va_r, _bytes_r, _page_size_imm, _num_pages_r, _scratch_r)  \
