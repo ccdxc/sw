@@ -1,5 +1,12 @@
 ---
+version: 2.0
 targets:
+  submodules:
+    commands: ["/go/src/github.com/pensando/sw/scripts/check-submodules.sh", ""]
+    owners: ["email:stavros@pensando.io"]
+    area:
+    sub-area:
+    feature:
 image:
   bind_dir: "/go/src/github.com/pensando/sw"
 rebase: true
