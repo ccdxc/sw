@@ -79,7 +79,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     default:
         HAL_TRACE_ERR("Unknown slab id {}", slab_id);
-        HAL_ASSERT(FALSE);
+        SDK_ASSERT(FALSE);
         return HAL_RET_INVALID_ARG;
     }
 
@@ -99,7 +99,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     default:
         HAL_TRACE_ERR("Unknown slab id {}", slab_id);
-        HAL_ASSERT(FALSE);
+        SDK_ASSERT(FALSE);
         return HAL_RET_INVALID_ARG;
     }
     return HAL_RET_OK;

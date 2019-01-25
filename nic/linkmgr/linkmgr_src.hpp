@@ -123,7 +123,7 @@ find_port_by_id (port_num_t port_num)
 
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(
+        SDK_ASSERT(hal_handle_get_from_handle_id(
                 entry->handle_id)->obj_id() == HAL_OBJ_ID_PORT);
         pi_p = (port_t *)hal_handle_get_obj(entry->handle_id);
         return pi_p;

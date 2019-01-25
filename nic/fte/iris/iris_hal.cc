@@ -30,25 +30,25 @@ cpupkt_ctxt_alloc_init(uint32_t qid)
 
     pd_func_args.pd_cpupkt_ctxt_alloc_init = &args;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, &pd_func_args);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     rx_args.ctxt = args.ctxt;
     rx_args.type = types::WRING_TYPE_ARQRX;
     rx_args.queue_id = qid;
     pd_func_args.pd_cpupkt_register_rx_queue = &rx_args;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, &pd_func_args);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     rx_args.type = types::WRING_TYPE_ASCQ;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, &pd_func_args);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     tx_args.ctxt = args.ctxt;
     tx_args.type = types::WRING_TYPE_ASQ;
     tx_args.queue_id = qid;
     pd_func_args.pd_cpupkt_register_tx_queue = &tx_args;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_TXQ, &pd_func_args);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     return args.ctxt;
 }

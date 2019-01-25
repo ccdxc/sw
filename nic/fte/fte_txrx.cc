@@ -95,9 +95,9 @@ fte_start(void *ctxt)
     uint8_t            fte_id;
 
     fte_id = curr_thread->thread_id() - hal::HAL_THREAD_ID_FTE_MIN;
-    HAL_ASSERT(t_inst == NULL);
-    HAL_ASSERT(fte_id < hal::MAX_FTE_THREADS);
-    HAL_ASSERT(g_inst_list[fte_id] == NULL);
+    SDK_ASSERT(t_inst == NULL);
+    SDK_ASSERT(fte_id < hal::MAX_FTE_THREADS);
+    SDK_ASSERT(g_inst_list[fte_id] == NULL);
 
     t_inst = g_inst_list[fte_id] = new inst_t(fte_id);
     t_inst->start(curr_thread);
@@ -113,7 +113,7 @@ fte_asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
              hal::pd::p4plus_to_p4_header_t* p4plus_header,
              uint8_t* pkt, size_t pkt_len)
 {
-    HAL_ASSERT_RETURN(t_inst, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(t_inst, HAL_RET_INVALID_ARG);
     return t_inst->asq_send(cpu_header, p4plus_header, pkt, pkt_len);
 }
 
@@ -128,7 +128,7 @@ fte_id()
         return 0;
     }
 
-    HAL_ASSERT_RETURN(t_inst, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(t_inst, HAL_RET_INVALID_ARG);
     return t_inst->get_id();
 }
 
@@ -143,7 +143,7 @@ get_current_ipc_logger_inst()
         return 0;
     }
 
-    HAL_ASSERT_RETURN(t_inst, NULL);
+    SDK_ASSERT_RETURN(t_inst, NULL);
     return t_inst->get_ipc_logger();
 }
 
@@ -161,9 +161,9 @@ fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
         fn(data);
     }
 
-    HAL_ASSERT_RETURN(t_inst == NULL, HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN(fte_id < hal::MAX_FTE_THREADS, HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN(fn, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(t_inst == NULL, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(fte_id < hal::MAX_FTE_THREADS, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(fn, HAL_RET_INVALID_ARG);
 
     inst_t *inst = g_inst_list[fte_id];
 
@@ -291,12 +291,12 @@ void inst_t::ctx_mem_init()
 void inst_t::start(sdk::lib::thread *curr_thread)
 {
     hal::hal_cfg_t *hal_cfg = (hal::hal_cfg_t *)curr_thread->data();
-    HAL_ASSERT(hal_cfg);
+    SDK_ASSERT(hal_cfg);
 
     HAL_TRACE_DEBUG("Starting FTE instance: {}", hal_cfg->shm_mode);
     if (hal_cfg->shm_mode) {
         logger_ = ipc_logger::factory();
-        HAL_ASSERT(logger_);
+        SDK_ASSERT(logger_);
     }
 
     ctx_mem_init();

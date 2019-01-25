@@ -119,7 +119,7 @@ void feature_state_init(feature_state_t *feature_state, uint16_t num_features)
     feature_t *feature;
     uint8_t *ctx_state_start = (uint8_t *)(feature_state + num_features);
 
-    HAL_ASSERT(num_features <= g_num_features_);
+    SDK_ASSERT(num_features <= g_num_features_);
 
     for (uint16_t id = 0; id < num_features; id++) {
         feature_state[id].session_state = NULL;

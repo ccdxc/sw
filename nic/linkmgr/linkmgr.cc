@@ -304,14 +304,14 @@ linkmgr_global_init (linkmgr_cfg_t *linkmgr_cfg)
         cfg_file     = std::string(cfg_path) + "/" + cfg_file;
         catalog_file = std::string(cfg_path) + "/" + catalog_file;
     } else {
-        HAL_ASSERT(FALSE);
+        SDK_ASSERT(FALSE);
     }
 
     linkmgr_parse_cfg(cfg_file.c_str(), linkmgr_cfg);
 
     catalog = sdk::lib::catalog::factory(catalog_file);
 
-    HAL_ASSERT_RETURN((catalog != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((catalog != NULL), HAL_RET_ERR);
 
     if (sdk::lib::pal_init(linkmgr_cfg->platform_type) !=
                                             sdk::lib::PAL_RET_OK) {

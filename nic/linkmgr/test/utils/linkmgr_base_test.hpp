@@ -59,7 +59,7 @@ linkmgr_initialize (const char c_file[])
     if (cfg_path) {
         cfg_file = std::string(cfg_path) + "/" + cfg_file;
     } else {
-        HAL_ASSERT(FALSE);
+        SDK_ASSERT(FALSE);
     }
 
     linkmgr::linkmgr_parse_cfg(cfg_file.c_str(), &linkmgr_cfg);

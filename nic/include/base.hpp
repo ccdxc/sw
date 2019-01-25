@@ -88,8 +88,6 @@ typedef uint32_t        sg_id_t;
 typedef uint32_t        hal_timer_id_t;
 typedef uint32_t        tcp_proxy_cb_id_t;
 
-#define __HAL_ASSERT__(x)            assert(x)
-
 #define HAL_ABORT(cond)                                    \
 do {                                                       \
     if (unlikely(!(cond))) {                               \
@@ -120,51 +118,6 @@ do {                                                       \
     }                                                      \
 } while (FALSE)
 
-#define HAL_ASSERT_RETURN(cond, rv)                        \
-do {                                                       \
-    if (unlikely(!(cond))) {                               \
-        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
-        __HAL_ASSERT__(FALSE);                             \
-        return rv;                                         \
-    }                                                      \
-} while (FALSE)
-
-#define HAL_ASSERT_RETURN_VOID(cond)                       \
-do {                                                       \
-    if (unlikely(!(cond))) {                               \
-        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
-        return;                                            \
-    }                                                      \
-} while (FALSE)
-
-#define HAL_ASSERT_TRACE_RETURN(cond, rv, args...)         \
-do {                                                       \
-    if (unlikely(!(cond))) {                               \
-        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
-        HAL_TRACE_ERR(args);                               \
-        return rv;                                         \
-    }                                                      \
-} while (FALSE)
-
-#define HAL_ASSERT_TRACE_RETURN_VOID(cond, args...)        \
-do {                                                       \
-    if (unlikely(!(cond))) {                               \
-        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
-        HAL_TRACE_ERR(args);                               \
-        return;                                            \
-    }                                                      \
-} while (FALSE)
-
-#define HAL_ASSERT_GOTO(cond, label)                       \
-do {                                                       \
-    if (unlikely(!(cond))) {                               \
-        HAL_TRACE_ERR("ASSERT FAILURE(" #cond ")");        \
-        __HAL_ASSERT__(FALSE);                             \
-        goto label;                                        \
-    }                                                      \
-} while (FALSE)
-
-#define HAL_ASSERT(cond)                             __HAL_ASSERT__(cond)
 #define HAL_NOP                                      ((void) FALSE)
 #define HAL_GET_SYSTEM_CLOCK(_val)   \
     clock_gettime(CLOCK_MONOTONIC, _val);

@@ -228,14 +228,14 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
              packet_free(packet);
              return HAL_RET_FTE_SPAN;
          }
-         // HAL_ASSERT(result == PACKET_OK);
-         // HAL_ASSERT(error == NULL);
+         // SDK_ASSERT(result == PACKET_OK);
+         // SDK_ASSERT(error == NULL);
 
          char *dump = NULL;
          // int status = packet_to_string(packet, DUMP_SHORT, &dump, &error);
          int status = packet_to_string(packet, DUMP_VERBOSE, &dump, &error);
-         HAL_ASSERT(status == STATUS_OK);
-         HAL_ASSERT(error == NULL);
+         SDK_ASSERT(status == STATUS_OK);
+         SDK_ASSERT(error == NULL);
 
          HAL_TRACE_DEBUG("fte: fte-span packet: {}", dump);
          free(dump);
@@ -497,23 +497,23 @@ ctx_t::advance_to_next_stage() {
     if (existing_session()) {
         if (role_ == hal::FLOW_ROLE_INITIATOR &&
             session()->iflow && session()->iflow->assoc_flow) {
-            HAL_ASSERT_RETURN(istage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
+            SDK_ASSERT_RETURN(istage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
             istage_++;
             HAL_TRACE_DEBUG("fte: advancing to next iflow stage {}", istage_);
         } else if (role_ == hal::FLOW_ROLE_RESPONDER &&
                    session()->rflow && session()->rflow->assoc_flow) {
-            HAL_ASSERT_RETURN(rstage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
+            SDK_ASSERT_RETURN(rstage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
             rstage_++;
             HAL_TRACE_DEBUG("fte: advancing to next rflow stage {}", rstage_);
         }
     } else {
 
         if (role_ == hal::FLOW_ROLE_INITIATOR && iflow_[istage_]->valid_fwding()) {
-            HAL_ASSERT_RETURN(istage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
+            SDK_ASSERT_RETURN(istage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
             istage_++;
             HAL_TRACE_DEBUG("fte: advancing to next iflow stage {}", istage_);
         } else if (rflow_[rstage_]->valid_fwding()){
-            HAL_ASSERT_RETURN(rstage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
+            SDK_ASSERT_RETURN(rstage_ + 1 < MAX_STAGES, HAL_RET_INVALID_OP);
             rstage_++;
             HAL_TRACE_DEBUG("fte: advancing to next rflow stage {}", rstage_);
         }

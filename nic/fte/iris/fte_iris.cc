@@ -51,7 +51,7 @@ ctx_t::extract_flow_key()
                                           sess_spec_->initiator_flow().flow_key());
     }
 
-    HAL_ASSERT_RETURN(cpu_rxhdr_ != NULL && pkt_ != NULL, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(cpu_rxhdr_ != NULL && pkt_ != NULL, HAL_RET_INVALID_ARG);
 
     key_.dir = cpu_rxhdr_->lkp_dir;
 
@@ -71,7 +71,7 @@ ctx_t::extract_flow_key()
         svrf_ = dvrf_ = hal::vrf_lookup_by_handle(sl2seg_->vrf_handle);
         key_.svrf_id = key_.dvrf_id = svrf_->vrf_id;
     } else if (obj_id == hal::HAL_OBJ_ID_VRF)  {
-        HAL_ASSERT_RETURN(cpu_rxhdr_->lkp_type != hal::FLOW_KEY_LOOKUP_TYPE_MAC, HAL_RET_ERR);
+        SDK_ASSERT_RETURN(cpu_rxhdr_->lkp_type != hal::FLOW_KEY_LOOKUP_TYPE_MAC, HAL_RET_ERR);
         use_vrf_ = svrf_ = (hal::vrf_t *)obj;
         key_.svrf_id = key_.dvrf_id  = svrf_->vrf_id;
     } else {
@@ -173,7 +173,7 @@ ctx_t::lookup_flow_objs()
             dvrf_ = svrf_;
         } else {
             dvrf_ = hal::vrf_lookup_by_id(key_.dvrf_id);
-            HAL_ASSERT_RETURN(dvrf_, HAL_RET_VRF_NOT_FOUND);
+            SDK_ASSERT_RETURN(dvrf_, HAL_RET_VRF_NOT_FOUND);
         }
     }
 
@@ -188,10 +188,10 @@ ctx_t::lookup_flow_objs()
         if ((sl2seg_ == NULL) || 
             (sl2seg_ != NULL && sl2seg_->hal_handle != sep_->l2seg_handle)) {
             sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
-            HAL_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
+            SDK_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         }
         sif_ = hal::find_if_by_handle(sep_->if_handle);
-        HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
+        SDK_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
     } else {
         HAL_TRACE_ERR("fte: src ep unknown");
         //If we already found sl2seg_ during key lookup for flow miss
@@ -204,7 +204,7 @@ ctx_t::lookup_flow_objs()
                 sep_handle_ = sep_->hal_handle;
                 HAL_TRACE_INFO("fte: src ep found by L2 lookup seg_id:{} smac:{}", sl2seg_->seg_id, macaddr2str(ethhdr->smac));
                 sif_ = hal::find_if_by_handle(sep_->if_handle);
-                HAL_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
+                SDK_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
             }
         }
     }
@@ -214,7 +214,7 @@ ctx_t::lookup_flow_objs()
             dl2seg_ = sl2seg_;
         } else {
             dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
-            HAL_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
+            SDK_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         }
     } else {
         HAL_TRACE_INFO("fte: dest ep unknown");
@@ -231,7 +231,7 @@ ctx_t::lookup_flow_objs()
 
     if (dep_) {
         dif_ = hal::find_if_by_handle(dep_->if_handle);
-        HAL_ASSERT_RETURN(dif_, HAL_RET_IF_NOT_FOUND);
+        SDK_ASSERT_RETURN(dif_, HAL_RET_IF_NOT_FOUND);
          /* Check if LIF is known for the dep */
         if (dif_->if_type == intf::IF_TYPE_ENIC) {
              hal::lif_t *dlif = if_get_lif(dif_);
@@ -775,7 +775,7 @@ ctx_t::update_for_dnat(hal::flow_role_t role, const header_rewrite_info_t& heade
         dep_handle_ = dep_->hal_handle;
         dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
         dif_ = hal::find_if_by_handle(dep_->if_handle);
-        HAL_ASSERT(dif_ != NULL);
+        SDK_ASSERT(dif_ != NULL);
     }
 
     // If we are doing dnat on iflow, update the rflow's key

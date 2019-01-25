@@ -348,7 +348,7 @@ itree_t::insert(const itree_t::node_t *node, uint32_t low, uint32_t high,
 const itree_t::node_t *
 itree_t::min_del(const itree_t::node_t *node)
 {
-    HAL_ASSERT(!EMPTY(node));
+    SDK_ASSERT(!EMPTY(node));
 
     const itree_t::node_t *x, *y, *a, *b, *c;
     node_ref_t ref{node};

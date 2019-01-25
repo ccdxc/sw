@@ -420,7 +420,7 @@ __EthLif::FreeUpMacFilters()
         filter_id = it->first;
         rs = fltr_allocator->free(filter_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("Failed to free filter_id: {}, err: {}",
+            NIC_LOG_ERR("Failed to free filter_id: {}, err: {}",
                           filter_id, rs);
             // return (DEVCMD_ERROR);
         }
@@ -439,7 +439,7 @@ __EthLif::FreeUpVlanFilters()
         filter_id = it->first;
         rs = fltr_allocator->free(filter_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("Failed to free filter_id: {}, err: {}",
+            NIC_LOG_ERR("Failed to free filter_id: {}, err: {}",
                           filter_id, rs);
             // return (DEVCMD_ERROR);
         }
@@ -458,7 +458,7 @@ __EthLif::FreeUpMacVlanFilters()
         filter_id = it->first;
         rs = fltr_allocator->free(filter_id);
         if (rs != indexer::SUCCESS) {
-            HAL_TRACE_ERR("Failed to free filter_id: {}, err: {}",
+            NIC_LOG_ERR("Failed to free filter_id: {}, err: {}",
                           filter_id, rs);
             // return (DEVCMD_ERROR);
         }
@@ -1470,7 +1470,7 @@ __EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data
 
     rs = fltr_allocator->free(cmd->filter_id);
     if (rs != indexer::SUCCESS) {
-        HAL_TRACE_ERR("Failed to free filter_id: {}, err: {}",
+        NIC_LOG_ERR("Failed to free filter_id: {}, err: {}",
                       cmd->filter_id, rs);
         return (DEVCMD_ERROR);
     }

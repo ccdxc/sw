@@ -155,7 +155,7 @@ PdClient::p4plus_txdma_init_tables()
         (directmap **)calloc(sizeof(directmap *),
                              (P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MAX -
                               P4_COMMON_TXDMA_ACTIONS_TBL_ID_INDEX_MIN + 1));
-    HAL_ASSERT(p4plus_txdma_dm_tables_ != NULL);
+    SDK_ASSERT(p4plus_txdma_dm_tables_ != NULL);
 
     // TODO:
     // 1. take care of instantiating flow_table_, acl_table_ and met_table_
@@ -165,7 +165,7 @@ PdClient::p4plus_txdma_init_tables()
     for (tid = P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMIN;
          tid < P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX; tid++) {
         rc = p4pluspd_txdma_table_properties_get(tid, &tinfo);
-        HAL_ASSERT(rc == P4PD_SUCCESS);
+        SDK_ASSERT(rc == P4PD_SUCCESS);
 
         switch (tinfo.table_type) {
         case P4_TBL_TYPE_INDEX:
@@ -1019,7 +1019,7 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     cq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_CQ);
     NIC_FUNC_DEBUG("lif-{}: cq_base_addr: {:#x}, max_cqs: {} ",
                   lif, cq_base_addr, roundup_to_pow_2(max_cqs));
-    HAL_ASSERT((cq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
+    SDK_ASSERT((cq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.cqcb_base_addr_hi = cq_base_addr >> CQCB_ADDR_HI_SHIFT;
     sram_lif_entry.log_num_cq_entries = log2(roundup_to_pow_2(max_cqs));
 
@@ -1027,14 +1027,14 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
     sq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
     NIC_FUNC_DEBUG("lif-{}: sq_base_addr: {:#x}",
                     lif, sq_base_addr);
-    HAL_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
+    SDK_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
 
     // Fill the RQ info in sram_lif_entry
     rq_base_addr = lm_->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
     NIC_FUNC_DEBUG("lif-{}: rq_base_addr: {:#x}",
                     lif, rq_base_addr);
-    HAL_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
+    SDK_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
 
     // Setup page table and key table entries
