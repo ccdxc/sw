@@ -32,6 +32,8 @@ DUMP_TYPE_PT=3
 DUMP_TYPE_KT=4
 DUMP_TYPE_AQ=5
 DUMP_TYPE_LIF=6
+AQ_DEBUG_ENABLE=7
+AQ_DEBUG_DISABLE=8
 
 DBG_WR_CTRL='dbg_wr_ctrl'
 DBG_WR_DATA='dbg_wr_data'
@@ -114,8 +116,9 @@ class RdmaAQCB0state(Packet):
         ByteField("first_pass", 0),
         ByteField("busy", 0),
 
-        BitField("rsvd1", 0, 32),
-
+        BitField("rsvd1", 0, 24),
+        BitField("debug", 0, 8),
+        
         BitField("log_wqe_size", 0, 5),
         BitField("log_num_size", 0, 5),
         BitField("ring_empty_sched_eval_done", 0, 1), 
@@ -1190,6 +1193,8 @@ grp.add_argument('--q_stats', help='prints rdma per queue statistics', type=int,
 grp.add_argument('--q_state', help='prints rdma per queue state', type=int, metavar='qid')
 grp.add_argument('--rsq', help='prints rdma rsq entries', type=int, metavar='qid')
 grp.add_argument('--rrq', help='prints rdma rrq entries', type=int, metavar='qid')
+grp.add_argument('--aq_debug_enable', help='Enable AQ captrace', type=int, metavar='qid')
+grp.add_argument('--aq_debug_disable', help='Disable AQ captrace', type=int, metavar='qid')
 
 args = parser.parse_args()
 
@@ -1470,6 +1475,10 @@ elif args.aqcb1 is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_AQ, 1, 64, 64)
     aqcb1 = RdmaAQCB1state(bin_str)
     aqcb1.show()
+elif args.aq_debug_enable is not None:
+    bin_str = exec_dump_cmd(AQ_DEBUG_ENABLE, 1, 0, 64)
+elif args.aq_debug_disable is not None:
+    bin_str = exec_dump_cmd(AQ_DEBUG_DISABLE, 1, 0, 64)
 elif args.sqcb0 is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.sqcb0, 0, 64)
     sqcb0 = RdmaSQCB0state(bin_str)

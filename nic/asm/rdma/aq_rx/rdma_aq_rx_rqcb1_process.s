@@ -37,7 +37,15 @@ state:
     bbne        CAPRI_KEY_FIELD(IN_P, state_valid), 1, pmtu
     nop
     
-    tblwr       d.state, CAPRI_KEY_FIELD(IN_P, state)
+    seq         c2, CAPRI_KEY_FIELD(IN_P, state), QP_STATE_INIT
+    bcf         [!c2], pmtu
+    tblwr       d.state, CAPRI_KEY_FIELD(IN_P, state)  //BD slot
+
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_CLEAR_STATS_CB)
+    mfspr       r2, spr_tbladdr
+    add         r2, r2, 1, (2*LOG_CB_UNIT_SIZE_BYTES)
+
+    DMA_PHV2MEM_SETUP(r6, c1, rqcb3, rqcb4, r2)
     
 pmtu:
     bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, q_key

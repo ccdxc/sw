@@ -531,8 +531,12 @@ stats_dump:
     .brcase     AQ_STATS_DUMP_TYPE_LIF
         b           lif_dump
         nop
-    .brcase     7
-    .brcase     8
+    .brcase     AQ_CAPTRACE_ENABLE
+        b           aq_captrace_enable
+        nop
+    .brcase     AQ_CAPTRACE_DISABLE
+        b           aq_captrace_disable
+        nop
     .brcase     9
     .brcase     10
     .brcase     11
@@ -554,6 +558,24 @@ aq_dump:
     b           prepare_feedback
     nop
 
+aq_captrace_enable:
+
+    add         r1, r0, K_CB_ADDR
+    add         r1, r1, FIELD_OFFSET(aqcb0_t, debug)
+    memwr.b     r1, 1
+    
+    b           prepare_feedback
+    nop
+    
+aq_captrace_disable:
+    
+    add         r1, r0, K_CB_ADDR
+    add         r1, r1, FIELD_OFFSET(aqcb0_t, debug)
+    memwr.b     r1, 0
+    
+    b           prepare_feedback
+    nop
+    
 lif_dump:
 
 #ifndef GFT

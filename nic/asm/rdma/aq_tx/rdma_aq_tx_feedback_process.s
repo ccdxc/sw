@@ -51,6 +51,8 @@ rdma_aq_tx_feedback_process:
     DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, common.p4_intr_global_tm_iport, common.p4_intr_global_tm_instance_type, 2)
     phvwrpair   p.common.p4_intr_global_tm_iport, TM_PORT_DMA, p.common.p4_intr_global_tm_oport, TM_PORT_DMA
 
+    phvwr       p.common.p4_intr_global_debug_trace, d.debug
+    
     // dma_cmd[0] : addr2 - p4_intr, p4_rxdma_intr, rdma_feedback
     DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, p4_intr, rdma_feedback, 1)
 

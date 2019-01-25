@@ -28,6 +28,9 @@
 #define AQ_RX_DMA_CMD_CREATE_QP_RQPT_DST    (AQ_RX_MAX_DMA_CMDS - 6)
 #define AQ_RX_DMA_CMD_CREATE_QP_RQPT_SRC    (AQ_RX_MAX_DMA_CMDS - 7)
 
+//following cmds are for modify qp
+#define AQ_RX_DMA_CMD_CLEAR_STATS_CB          (AQ_RX_MAX_DMA_CMDS - 5)
+
 #define AQ_RX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi) \
     CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
 
@@ -61,12 +64,14 @@ struct aq_rx_phv_t {
     union {
         struct aq_rx_dma_cmds_flit_t flit_8;
         struct rqcb1_t rqcb1;
+        struct rqcb4_t rqcb4;
     };
      
     /* flit 7 */
     union {
         struct aq_rx_dma_cmds_flit_t flit_7;
         struct rqcb0_t rqcb0;
+        struct rqcb3_t rqcb3;
     };
 
     /* flit 6 */

@@ -25,7 +25,8 @@ struct aqcb0_t {
     first_pass: 8;
     busy: 8;
 
-    rsvd1: 32;
+    rsvd1: 24;
+    debug: 8;
 
     log_wqe_size: 5;
     log_num_wqes: 5;

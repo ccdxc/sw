@@ -347,7 +347,9 @@ typedef struct aqcb0_s {
     uint16_t log_num_wqes: 5;
     uint16_t log_wqe_size: 5;
 
-    uint8_t  rsvd1[4];
+    uint8_t  debug;
+    uint8_t  rsvd1[3];
+    
     uint8_t  busy;
     uint8_t  first_pass;
     uint32_t map_count_completed;
