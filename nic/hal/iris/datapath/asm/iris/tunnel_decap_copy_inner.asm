@@ -22,8 +22,9 @@ copy_inner_ipv4_udp:
   phvwr       p.{udp_srcPort...udp_len}, k.{inner_udp_srcPort...inner_udp_len}
   phvwr       p.udp_checksum, k.inner_udp_checksum
   phvwr       p.ipv4_valid, TRUE
+  phvwr       p.ipv4_options_blob2_valid, k.inner_ipv4_options_blob_valid
   phvwr       p.udp_valid, TRUE
-  phvwr.e     p.inner_ipv4_valid, FALSE
+  phvwr.e     p.{inner_ipv4_options_blob_valid,inner_ipv4_valid}, 0
   phvwr       p.inner_udp_valid, FALSE
 
 .align
@@ -32,7 +33,8 @@ copy_inner_ipv4_other:
                     k.{inner_ipv4_version...inner_ipv4_fragOffset_sbit5_ebit12}
   phvwr       p.{ipv4_ttl...ipv4_dstAddr}, k.{inner_ipv4_ttl...inner_ipv4_dstAddr}
   phvwr       p.ipv4_valid, TRUE
-  phvwr.e     p.inner_ipv4_valid, FALSE
+  phvwr       p.ipv4_options_blob2_valid, k.inner_ipv4_options_blob_valid
+  phvwr.e     p.{inner_ipv4_options_blob_valid,inner_ipv4_valid}, 0
   phvwr       p.udp_valid, FALSE
 
 .align
@@ -73,10 +75,11 @@ copy_inner_eth_ipv4_udp:
   phvwr       p.udp_checksum, k.inner_udp_checksum
   phvwr       p.ethernet_valid, TRUE
   phvwr       p.ipv4_valid, TRUE
+  phvwr       p.ipv4_options_blob2_valid, k.inner_ipv4_options_blob_valid
   phvwr       p.udp_valid, TRUE
   phvwr       p.inner_ethernet_valid, FALSE
   phvwr       p.vlan_tag_valid, FALSE
-  phvwr.e     p.inner_ipv4_valid, FALSE
+  phvwr.e     p.{inner_ipv4_options_blob_valid,inner_ipv4_valid}, 0
   phvwr       p.inner_udp_valid, FALSE
 
 .align
@@ -88,9 +91,10 @@ copy_inner_eth_ipv4_other:
   phvwr       p.{ipv4_ttl...ipv4_dstAddr}, k.{inner_ipv4_ttl...inner_ipv4_dstAddr}
   phvwr       p.ethernet_valid, TRUE
   phvwr       p.ipv4_valid, TRUE
+  phvwr       p.ipv4_options_blob2_valid, k.inner_ipv4_options_blob_valid
   phvwr       p.inner_ethernet_valid, FALSE
   phvwr       p.vlan_tag_valid, FALSE
-  phvwr.e     p.inner_ipv4_valid, FALSE
+  phvwr.e     p.{inner_ipv4_options_blob_valid,inner_ipv4_valid}, 0
   phvwr       p.udp_valid, FALSE
 
 .align

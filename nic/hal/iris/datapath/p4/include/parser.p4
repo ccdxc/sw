@@ -66,6 +66,11 @@ header_type parser_ohi_t {
         chksum                      : 16; //UDP option chksum needs location in OHI (GSO engine is used)
         udp_opt_len                 : 16; //ohi variable that captures option len
         icrc_len                    : 16;
+
+        ipv4_options_blob2___start_off          : 16;
+        inner_ipv4_options_blob2___start_off    : 16;
+        ipv4_options_blob2___hdr_len            : 16;
+        inner_ipv4_options_blob2___hdr_len      : 16;
     }
 }
 
@@ -185,6 +190,7 @@ header udp_opt_unknown_t udp_opt_unknown;
 // IPv4 Options
 @pragma hdr_len parser_metadata.ip_options_len
 header ipv4_options_blob_t ipv4_options_blob;
+header ipv4_options_blob_t ipv4_options_blob2;
 header ipv4_option_eol_t ipv4_option_eol;
 header ipv4_option_nop_t ipv4_option_nop;
 header ipv4_option_rr_t ipv4_option_rr;
@@ -193,6 +199,7 @@ header ipv4_option_generic_t ipv4_option_generic;
 // Inner IPv4 Options
 @pragma hdr_len parser_metadata.inner_ip_options_len
 header ipv4_options_blob_t inner_ipv4_options_blob;
+header ipv4_options_blob_t inner_ipv4_options_blob2;
 header ipv4_option_eol_t inner_ipv4_option_eol;
 header ipv4_option_nop_t inner_ipv4_option_nop;
 header ipv4_option_rr_t inner_ipv4_option_rr;
@@ -770,8 +777,21 @@ parser parse_ipv4_options {
 
 @pragma dont_advance_packet
 parser parse_ipv4_options_blob {
+    set_metadata(ohi.inner_ipv4_options_blob2___start_off, current + 0);
+    set_metadata(ohi.inner_ipv4_options_blob2___hdr_len,
+                 parser_metadata.ip_options_len - 1);
     extract(ipv4_options_blob);
     set_metadata(l3_metadata.ip_option_seen, 1);
+    return select(current(0, 8)) {
+        default : parse_ipv4_options;
+        0xff mask 0x00 : parse_ipv4_options_blob_deparse;
+    }
+}
+
+@pragma xgress egress
+@pragma deparse_only
+parser parse_ipv4_options_blob_deparse {
+    extract(ipv4_options_blob2);
     return parse_ipv4_options;
 }
 
@@ -1604,8 +1624,21 @@ parser parse_inner_ipv4_options {
 
 @pragma dont_advance_packet
 parser parse_inner_ipv4_options_blob {
+    set_metadata(ohi.ipv4_options_blob2___start_off, current + 0);
+    set_metadata(ohi.ipv4_options_blob2___hdr_len,
+                 parser_metadata.inner_ip_options_len - 1);
     extract(inner_ipv4_options_blob);
     set_metadata(l3_metadata.inner_ip_option_seen, 1);
+    return select(current(0, 8)) {
+        default : parse_inner_ipv4_options;
+        0xFF mask 0x00 : parse_inner_ipv4_options_blob_deparse;
+    }
+}
+
+@pragma xgress egress
+@pragma deparse_only
+parser parse_inner_ipv4_options_blob_deparse {
+    extract(inner_ipv4_options_blob2);
     return parse_inner_ipv4_options;
 }
 

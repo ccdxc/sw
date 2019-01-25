@@ -28,13 +28,21 @@ metadata ipsec_metadata_t ipsec_metadata;
 action copy_inner_ipv4_udp() {
     copy_header(ipv4, inner_ipv4);
     copy_header(udp, inner_udp);
+    if (inner_ipv4_options_blob.valid == TRUE) {
+        // copy_header(ipv4_options_blob2, inner_ipv4_options_blob);
+    }
     remove_header(inner_ipv4);
+    remove_header(inner_ipv4_options_blob);
     remove_header(inner_udp);
 }
 
 action copy_inner_ipv4_other() {
     copy_header(ipv4, inner_ipv4);
+    if (inner_ipv4_options_blob.valid == TRUE) {
+        // copy_header(ipv4_options_blob2, inner_ipv4_options_blob);
+    }
     remove_header(inner_ipv4);
+    remove_header(inner_ipv4_options_blob);
     remove_header(udp);
 }
 
@@ -57,8 +65,12 @@ action copy_inner_eth_ipv4_udp() {
     copy_header(ethernet, inner_ethernet);
     copy_header(ipv4, inner_ipv4);
     copy_header(udp, inner_udp);
+    if (inner_ipv4_options_blob.valid == TRUE) {
+        // copy_header(ipv4_options_blob2, inner_ipv4_options_blob);
+    }
     remove_header(inner_ethernet);
     remove_header(inner_ipv4);
+    remove_header(inner_ipv4_options_blob);
     remove_header(inner_udp);
     remove_header(vlan_tag);
 }
@@ -66,8 +78,12 @@ action copy_inner_eth_ipv4_udp() {
 action copy_inner_eth_ipv4_other() {
     copy_header(ethernet, inner_ethernet);
     copy_header(ipv4, inner_ipv4);
+    if (inner_ipv4_options_blob.valid == TRUE) {
+        // copy_header(ipv4_options_blob2, inner_ipv4_options_blob);
+    }
     remove_header(inner_ethernet);
     remove_header(inner_ipv4);
+    remove_header(inner_ipv4_options_blob);
     remove_header(udp);
     remove_header(vlan_tag);
 }
@@ -688,8 +704,16 @@ table tunnel_rewrite {
 action encap_inner_ipv4_udp_rewrite() {
     copy_header(inner_ipv4, ipv4);
     copy_header(inner_udp, udp);
+    if (ipv4_options_blob.valid == TRUE) {
+        // copy_header(inner_ipv4_options_blob2, ipv4_options_blob);
+    }
+    if (ipv4_options_blob2.valid == TRUE) {
+        // copy_header(inner_ipv4_options_blob2, ipv4_options_blob2);
+    }
     remove_header(udp);
     remove_header(ipv4);
+    remove_header(ipv4_options_blob);
+    remove_header(ipv4_options_blob2);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
 
     /* update checksum flags */
@@ -709,7 +733,16 @@ action encap_inner_ipv4_udp_rewrite() {
 
 action encap_inner_ipv4_tcp_rewrite() {
     copy_header(inner_ipv4, ipv4);
+    if (ipv4_options_blob.valid == TRUE) {
+        // copy_header(inner_ipv4_options_blob2, ipv4_options_blob);
+    }
+    if (ipv4_options_blob2.valid == TRUE) {
+        // decap followed by encap, retain the original inner blob header
+        // modify_field(inner_ipv4_options_blob.valid, TRUE);
+    }
     remove_header(ipv4);
+    remove_header(ipv4_options_blob);
+    remove_header(ipv4_options_blob2);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
 
     /* update checksum flags */
@@ -729,7 +762,16 @@ action encap_inner_ipv4_tcp_rewrite() {
 
 action encap_inner_ipv4_icmp_rewrite() {
     copy_header(inner_ipv4, ipv4);
+    if (ipv4_options_blob.valid == TRUE) {
+        // copy_header(inner_ipv4_options_blob2, ipv4_options_blob);
+    }
+    if (ipv4_options_blob2.valid == TRUE) {
+        // decap followed by encap, retain the original inner blob header
+        // modify_field(inner_ipv4_options_blob.valid, TRUE);
+    }
     remove_header(ipv4);
+    remove_header(ipv4_options_blob);
+    remove_header(ipv4_options_blob2);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
 
     /* update checksum flags */
@@ -743,7 +785,16 @@ action encap_inner_ipv4_icmp_rewrite() {
 
 action encap_inner_ipv4_unknown_rewrite() {
     copy_header(inner_ipv4, ipv4);
+    if (ipv4_options_blob.valid == TRUE) {
+        // copy_header(inner_ipv4_options_blob2, ipv4_options_blob);
+    }
+    if (ipv4_options_blob2.valid == TRUE) {
+        // decap followed by encap, retain the original inner blob header
+        // modify_field(inner_ipv4_options_blob.valid, TRUE);
+    }
     remove_header(ipv4);
+    remove_header(ipv4_options_blob);
+    remove_header(ipv4_options_blob2);
     modify_field(tunnel_metadata.inner_ip_proto, IP_PROTO_IPV4);
 
     /* update checksum flags */

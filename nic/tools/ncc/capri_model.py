@@ -82,7 +82,7 @@ capri_model = {
         'num_extracts' : 16,
         'num_ohi' : 64,
         'num_ohi_per_state' : 4,
-        'ohi_threshold' : 56,   # artificial limit to test and also to reserve some ohis for crc..
+        'ohi_threshold' : 60,   # artificial limit to test and also to reserve some ohis for crc..
         'parser_num_flits' : 4, # derived from num_flits = 2*num_flits
         'max_lkp_offset' : 64,      # bytes
         'max_extract' : 64,         # bytes

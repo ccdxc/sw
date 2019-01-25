@@ -18,6 +18,10 @@ encap_inner_ipv4_udp_rewrite:
   phvwr       p.{inner_udp_srcPort...inner_udp_checksum}, k.{udp_srcPort...udp_checksum}
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_UDP
   phvwrpair   p.inner_ipv4_valid, TRUE, p.ipv4_valid, FALSE
+  crestore    [c2-c1], k.{ipv4_options_blob2_valid, ipv4_options_blob_valid}, 0x3
+  phvwr.c2    p.inner_ipv4_options_blob_valid, TRUE
+  phvwr.c1    p.inner_ipv4_options_blob2_valid, TRUE
+  phvwr       p.{ipv4_options_blob2_valid,ipv4_options_blob_valid}, r0
   phvwrpair   p.inner_udp_valid, TRUE, p.udp_valid, FALSE
   phvwrpair.e p.control_metadata_checksum_ctl[CHECKSUM_CTL_INNER_IP_CHECKSUM], \
                 k.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], \
@@ -32,6 +36,10 @@ encap_inner_ipv4_tcp_rewrite:
   phvwr       p.{inner_ipv4_totalLen...inner_ipv4_dstAddr}, k.{ipv4_totalLen...ipv4_dstAddr}
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV4
   phvwrpair   p.inner_ipv4_valid, TRUE, p.ipv4_valid, FALSE
+  crestore    [c2-c1], k.{ipv4_options_blob2_valid, ipv4_options_blob_valid}, 0x3
+  phvwr.c2    p.inner_ipv4_options_blob_valid, TRUE
+  phvwr.c1    p.inner_ipv4_options_blob2_valid, TRUE
+  phvwr       p.{ipv4_options_blob2_valid,ipv4_options_blob_valid}, r0
   phvwrpair.e p.control_metadata_checksum_ctl[CHECKSUM_CTL_INNER_IP_CHECKSUM], \
                 k.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], \
                 p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], 0
@@ -46,6 +54,10 @@ encap_inner_ipv4_unknown_rewrite:
   phvwr       p.{inner_ipv4_totalLen...inner_ipv4_dstAddr}, k.{ipv4_totalLen...ipv4_dstAddr}
   phvwr       p.tunnel_metadata_inner_ip_proto, IP_PROTO_IPV4
   phvwrpair   p.inner_ipv4_valid, TRUE, p.ipv4_valid, FALSE
+  crestore    [c2-c1], k.{ipv4_options_blob2_valid, ipv4_options_blob_valid}, 0x3
+  phvwr.c2    p.inner_ipv4_options_blob_valid, TRUE
+  phvwr.c1    p.inner_ipv4_options_blob2_valid, TRUE
+  phvwr       p.{ipv4_options_blob2_valid,ipv4_options_blob_valid}, r0
   phvwrpair.e p.control_metadata_checksum_ctl[CHECKSUM_CTL_INNER_IP_CHECKSUM], \
                 k.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], \
                 p.control_metadata_checksum_ctl[CHECKSUM_CTL_IP_CHECKSUM], 0
