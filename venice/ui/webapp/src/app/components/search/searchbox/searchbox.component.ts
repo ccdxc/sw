@@ -232,7 +232,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
       payload = this.buildComplexSearchPayload(cleangrammarList, inputSearchString);
     }
 
-    const searchSearchRequest = new SearchSearchRequest(payload);
+    const searchSearchRequest = new SearchSearchRequest(payload, false); // instantiate a SearchSearchRequest without default values set
     this._callSearchRESTAPI(searchSearchRequest, inputSearchString, suggestionOnlyMode);
     return payload;
   }

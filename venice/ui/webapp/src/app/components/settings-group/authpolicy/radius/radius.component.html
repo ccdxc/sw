@@ -159,7 +159,7 @@
           <!-- Field Values -->
           <div fxFlex fxLayout="column">
             <div fxFlex="30px" fxLayout="row" class="radius-value">
-              <input fxFlex="nogrow" class="radius-input" formControlName="url" spellcheck="false" type="text"  pInputText  placeholder="">
+              <input fxFlex="nogrow"class="radius-input" formControlName="url" app-errorTooltip spellcheck="false" type="text"  pInputText  placeholder="">
             </div>
           </div>
         </div>
@@ -175,7 +175,7 @@
           <!-- Field Values - edit mode -->
           <div fxFlex fxLayout="column" *ngIf="radiusEditMode">
             <div fxFlex="30px" fxLayout="row" class="radius-value">
-              <input fxFlex="nogrow" formControlName="secret" class="radius-input radius-server-secret" spellcheck="false" type="text"  pInputText  placeholder="">
+              <input fxFlex="nogrow" formControlName="secret" app-errorTooltip  class="radius-input radius-server-secret" spellcheck="false" type="text"  pInputText  placeholder="">
             </div>
           </div>
   

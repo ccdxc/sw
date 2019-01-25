@@ -1,5 +1,7 @@
 import { Component, OnInit, Output, EventEmitter, Input, ViewEncapsulation } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
+import { AbstractControl } from '@angular/forms';
+import { Utility } from '@app/common/Utility';
 
 @Component({
   selector: 'app-authpolicybase',
@@ -61,5 +63,24 @@ export class AuthpolicybaseComponent implements OnInit {
     if (this.canLowerAuthRank()) {
       this.changeAuthRank.emit(this.currentRank + 1);
     }
+  }
+
+ /*  getControlTooltip(control: AbstractControl, field: string, defaultTooltip: string): string {
+    const tooltopString = this.getControlValidationText(control, field, defaultTooltip);
+    return Utility.getControlTooltip(control, field, defaultTooltip);
+  } */
+
+  /**
+   * Get tooltip for control.
+   * Extended class should override this API to get tooltip from class.propInfo
+   * Say, the control is AuthRadius.server.url (AuthRadiusServer), it should get AuthRadiusServer.propInfo.url.description
+   * @param control
+   * @param field
+   * @param defaultTooltip
+   *
+   *
+   */
+  getControlValidationText(control: AbstractControl, field: string, defaultTooltip: string): string {
+    return defaultTooltip;
   }
 }

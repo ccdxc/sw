@@ -11,6 +11,8 @@ import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model
 import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
 import { HttpErrorResponse } from '@angular/common/http';
 
+import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
+
 
 
 export class Utility {
@@ -833,6 +835,49 @@ export class Utility {
   public static roundDownTime(min, time: Date = new Date): Date {
     const coeff = 1000 * 60 * min;
     return new Date(Math.floor(time.getTime() / coeff) * coeff);
+  }
+
+  /**
+   * This API traverse the form group to check if every control is validation error free.
+   * @param form: FormGroup | FormArray
+   */
+  public static getAllFormgroupErrors(form: FormGroup | FormArray): { [key: string]: any; } | null {
+    let hasError = false;
+    const result = Object.keys(form.controls).reduce((acc, key) => {
+      // for debug: console.log('basecomponent.getAllFormgroupErrors()', acc , key);
+      const control = form.get(key);
+      let errors = null;
+      if (control instanceof FormGroup || control instanceof FormArray) {
+        errors = this.getAllFormgroupErrors(control);
+      } else {
+        errors = control.invalid;
+      }
+      if (errors) {
+        acc[key] = errors;
+        hasError = true;
+      }
+      return acc;
+    }, {} as { [key: string]: any; });
+    return hasError ? result : null;
+  }
+
+  /**
+   * This API generate tooltip message for form control based on validation result.
+   * For example
+   * 1. In authpolicy radius.server.secret field, secret validation rule is "required && minlen >= 1"
+   * Utililty.getControlTooltip (server,'secret', 'please enter secret, min-len >=5' ); // see html to, 'server' is the control 
+   *
+   * 2. In authpolicy ladp.base-password  field
+   * Utililty.getControlTooltip (server, null, 'please enter password, min-len >=8' );
+   */
+  public static getControlTooltip(control: AbstractControl, field: string, defaultTooltip: string): string {
+    if (control) {
+      const targetControl = (field) ? control.get(field) : control;
+      if (targetControl && targetControl.errors) {
+        return JSON.stringify(targetControl.errors);
+      }
+    }
+    return (defaultTooltip) ? defaultTooltip : (field) ? field : '' ;
   }
 
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()

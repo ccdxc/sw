@@ -1,18 +1,22 @@
-import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, OnChanges, SimpleChanges, AfterContentInit } from '@angular/core';
+import { Validators } from '@angular/forms';
 import { AuthpolicybaseComponent } from '@app/components/settings-group/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
 import { IAuthRadius, AuthRadius, AuthRadiusServer } from '@sdk/v1/models/generated/auth';
-import { FormArray } from '@angular/forms';
+import { FormArray, AbstractControl } from '@angular/forms';
 import { SelectItem } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
 import { ControllerService } from '@app/services/controller.service';
 
 /**
  * RadiusComponent is a child component of AuthPolicy.component (parent)
- * parent passes in "radiusData" to child, child has a "radiusObject" to reflect "LDAPDradiusDataata".
+ * parent passes in "radiusData" to child, child has a "radiusObject" to reflect "RadiusData".
  *
  * When user wants to save Radius, RadiusComponent emits event to parent and let parent handles the REST calls.
  *
+ * Validation:
+ * 2019-01-24, if we change auth.proto  validation settings, it will cause a lot of go tests failures.
+ * We set validation in UI instead.  see setRadiusValidationRules() API
  */
 @Component({
   selector: 'app-radius',
@@ -25,7 +29,7 @@ import { ControllerService } from '@app/services/controller.service';
   },
   animations: [Animations]
 })
-export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, OnChanges {
+export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, OnChanges, AfterContentInit  {
   isHover: boolean = false;
   radiusEditMode: boolean = false;
   inCreateMode: boolean = false;
@@ -43,6 +47,9 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   }
 
   ngOnInit() {
+  }
+
+  ngAfterContentInit() {
     this.updateRadiusObject();
     this.setRadiusEditMode(false); // set radiusEditMode to false, UI will disable  Radius-enabled slider widget
   }
@@ -53,7 +60,27 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
 
   updateRadiusObject() {
     this.radiusObject.setValues(this.radiusData);
+    this.setRadiusValidationRules();
   }
+
+  private setRadiusValidationRules() {
+    const servers: FormArray = this.radiusObject.$formGroup.get('servers') as FormArray;
+    if (servers.length > 0) {
+      const controls = servers.controls;
+      for (let i = 0; i < controls.length; i++) {
+        const control: AbstractControl = controls[i];
+        this.setValidatorOnServerControl(control);
+      }
+    }
+  }
+
+  private setValidatorOnServerControl(control: AbstractControl) {
+    control.get('url').setValidators(Validators.required);
+    control.get('secret').setValidators(Validators.required);
+    control.get('auth-method').setValidators(Validators.required);
+  }
+
+
 
   updateRadiusData() {
     if (this.radiusObject) {
@@ -62,35 +89,18 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   }
 
   toggleEdit() {
-    this.setRadiusEditMode (!this.radiusEditMode);
+    this.setRadiusEditMode(!this.radiusEditMode);
     if (this.radiusEditMode) {
+      // Add a blank server if there is none
       if (this.radiusObject.servers.length === 0) {
-        const servers = this.radiusObject.$formGroup.get('servers') as FormArray;
-        servers.insert(0, new AuthRadiusServer().$formGroup);
+        this.addServer();
       }
+      this.setRadiusValidationRules();
     }
   }
 
   isAllInputsValid(authRadius: AuthRadius): boolean {
-    const radius = authRadius.getFormGroupValues();
-    if (radius.servers.length < 1) {
-      return false;
-    } else {
-      for (let i = 0; i < radius.servers.length; i++ ) {
-        const server = radius.servers[i];
-        if (!this.isRadiusServerValid(server)) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
-  isRadiusServerValid(server: any): boolean {
-    if (Utility.isEmpty(server.url) || Utility.isEmpty(server.secret)) {
-      return false;
-    }
-    return true;
+    return (!Utility.getAllFormgroupErrors(authRadius.$formGroup));
   }
 
   /**
@@ -100,22 +110,23 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     return this.isAllInputsValid(this.radiusObject);
   }
 
-  setRadiusEnableControl( ) {
+  setRadiusEnableControl() {
     if (this.radiusEditMode) {
-        this.radiusObject.$formGroup.controls['enabled'].enable();
+      this.radiusObject.$formGroup.controls['enabled'].enable();
     } else {
       this.radiusObject.$formGroup.controls['enabled'].disable();
     }
   }
 
-  setRadiusEditMode (isInEditMode) {
+  setRadiusEditMode(isInEditMode) {
     this.radiusEditMode = isInEditMode;
     this.setRadiusEnableControl();
   }
 
   addServer() {
     const servers = this.radiusObject.$formGroup.get('servers') as FormArray;
-    servers.insert(0, new AuthRadiusServer().$formGroup);
+    const newServer = new AuthRadiusServer().$formGroup;
+    servers.insert(0, newServer);
   }
 
   removeServer(index) {
@@ -158,4 +169,5 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     this.setRadiusEditMode(true);
     this.radiusObject.$formGroup.controls['enabled'].setValue(true);  // set RADIUS enable when set "create RADIUS"
   }
+
 }

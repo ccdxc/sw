@@ -1,7 +1,9 @@
 import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, ViewChild, ViewChildren, SimpleChanges, OnChanges, AfterViewInit, AfterContentInit } from '@angular/core';
+import { Validators, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { AuthpolicybaseComponent } from '@app/components/settings-group/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
 import { AuthLdap, AuthLdapServer, AuthAuthenticationPolicy } from '@sdk/v1/models/generated/auth';
+import { required } from '@sdk/v1/models/generated/auth/validators.ts';
 import { FormArray, FormControl, AbstractControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material';
 
@@ -18,6 +20,9 @@ import { ControllerService } from '@app/services/controller.service';
  *
  * "LDAPEditMode" is used to control switching view/edit UI.  When it is non-edit mode, mat-slider widget will be disabled.
  *
+ * Validation:
+ * 2019-01-24, if we change auth.proto  validation settings, it will cause a lot of go tests failures.
+ * We set validation in UI instead.  see setLDAPValidationRules() API
  */
 @Component({
   selector: 'app-ldap',
@@ -71,6 +76,48 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
 
   updateLDAPObject() {
     this.LDAPObject.setValues(this.LDAPData);
+    this.setLDAPValidationRules();
+  }
+
+  private setLDAPValidationRules() {
+    // TODO: Changing auth.proto LDAP validation rule has ripple effects on go-test, we set validator in UI 2019-01-24
+    this.LDAPObject.$formGroup.get(['bind-dn']).setValidators(required);
+    this.LDAPObject.$formGroup.get(['base-dn']).setValidators(required);
+    this.LDAPObject.$formGroup.get(['bind-password']).setValidators(required);
+
+    const servers: FormArray = this.LDAPObject.$formGroup.get('servers') as FormArray;
+    if (servers.length > 0) {
+      const controls = servers.controls;
+      for (let i = 0; i < controls.length; i++) {
+        const control: AbstractControl = controls[i];
+        this.setValidatorOnServerControl(control);
+      }
+    }
+  }
+  private setValidatorOnServerControl(control: AbstractControl) {
+    control.get('url').setValidators(required);
+    const controlTLSOption = control.get(['tls-options']);
+    control.get(['tls-options', 'server-name']).setValidators(this.isTLSOptionFieldRequired(controlTLSOption, 'server-name'));
+    control.get(['tls-options', 'trusted-certs']).setValidators(this.isTLSOptionFieldRequired(controlTLSOption, 'trusted-certs'));
+  }
+
+  /**
+   * TLSOptions trust-certs is not required if Skip-Server-CertVerification is set to true.
+   * TLSOptions server name is not required if Skip-Server-CertVerification is set to true.
+   * @param controlTLSOption
+   */
+  private isTLSOptionFieldRequired(controlTLSOption: AbstractControl, fieldname: string): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (controlTLSOption.get(['skip-server-cert-verification']).value === false && Utility.isEmpty(controlTLSOption.get([fieldname]).value)) {
+        return {
+          required: {
+            'required': true,
+            'message': 'This field is required if skip-server-cert-verification set to false'
+          }
+        };
+      }
+      return null;
+    };
   }
 
   updateLDAPData() {
@@ -85,8 +132,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
       this.verifyCertToggleFormArray = new FormArray([]);
       // Add a blank server if there is none
       if (this.LDAPObject.servers.length === 0) {
-        const serversLDAP = this.LDAPObject.$formGroup.get('servers') as FormArray;
-        serversLDAP.insert(0, new AuthLdapServer({ 'tls-options': { 'start-tls': true, 'skip-server-cert-verification': false } }).$formGroup);
+        this.addServer();
       }
       const servers = this.LDAPObject.$formGroup.get('servers') as FormArray;
       // Each server, we register the verify toggle, and check for diasbling fields
@@ -139,13 +185,22 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   // true toggle on the UI means this field should be false.
   toggleSkipVerification(server: FormControl, index: number, event: MatSlideToggleChange) {
     server.get(['tls-options', 'skip-server-cert-verification']).setValue(!event.checked);
+    // once toggling the slide, we want to re-run the validation
+    server.get(['tls-options', 'server-name']).updateValueAndValidity();
+    server.get(['tls-options', 'trusted-certs']).updateValueAndValidity();
     // TODO: comment out this line "this.checkServerTlsDisabling(server, index);" // per pull/8528 comment  -> allow the trusted-certs be filled out while skip verification is true.
   }
 
   addServer() {
     const servers = this.LDAPObject.$formGroup.get('servers') as FormArray;
-    servers.insert(0, new AuthLdapServer({ 'tls-options': { 'start-tls': true, 'skip-server-cert-verification': false } }).$formGroup);
+    const newServer = new AuthLdapServer({ 'tls-options': { 'start-tls': true, 'skip-server-cert-verification': false } }).$formGroup;
+    servers.insert(0, newServer);
     this.verifyCertToggleFormArray.insert(0, new FormControl(true));
+
+    setTimeout(() => {
+      // TODO: have to use a timer here to avoid angular firing up error on state inconsistency
+      this.setValidatorOnServerControl(newServer);
+    }, 1000);
   }
 
   removeServer(index) {
@@ -184,32 +239,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   }
 
   isAllInputsValid(authLDAP: AuthLdap): boolean {
-    const ldap = authLDAP.getFormGroupValues();
-    if (Utility.isEmpty(ldap['base-dn'])
-      || Utility.isEmpty(ldap['bind-dn'])
-      || Utility.isEmpty(ldap['bind-password'])) {
-      return false;
-    }
-    if (ldap.servers.length < 1) {
-      return false;
-    } else {
-      for (let i = 0; i < ldap.servers.length; i++) {
-        const server = ldap.servers[i];
-        if (!this.isServerValid(server)) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-  isServerValid(server: AuthLdapServer): boolean {
-    if (Utility.isEmpty(server.url)
-      || Utility.isEmpty(server['tls-options']['server-name'])
-      || (Utility.isEmpty(server['tls-options']['trusted-certs']) && server['tls-options']['skip-server-cert-verification'] === true)
-    ) {
-      return false;
-    }
-    return true;
+    return (!Utility.getAllFormgroupErrors(authLDAP.$formGroup));
   }
 
   createLDAP() {

@@ -8,6 +8,7 @@ import { SelectItem, MessageService } from 'primeng/primeng';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
 import { AuthRoleBinding, AuthUser } from '@sdk/v1/models/generated/auth';
+import { Utility } from '@app/common/Utility';
 
 
 @Component({
@@ -104,7 +105,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
 
 
   onSaveAddUser($event) {
-    const errors = this.getAllFormgroupErrors(this.newAuthUser.$formGroup);
+    const errors = Utility.getAllFormgroupErrors(this.newAuthUser.$formGroup);
     if (errors === null) {
       this.addUser();
     }
@@ -123,7 +124,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
   }
 
   isAllInputsValidated() {
-    const hasFormGroupError = this.getAllFormgroupErrors(this.newAuthUser.$formGroup);
+    const hasFormGroupError = Utility.getAllFormgroupErrors(this.newAuthUser.$formGroup);
     const hasSelectedRole = (this.selectedRolebindings && this.selectedRolebindings.length > 0);
     return (hasFormGroupError === null) && (hasSelectedRole);
   }

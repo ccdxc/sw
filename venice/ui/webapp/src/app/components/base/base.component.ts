@@ -221,25 +221,6 @@ export class BaseComponent extends CommonComponent implements OnInit {
     return JSON.stringify(obj, null, 1);
   }
 
-  getAllFormgroupErrors(form: FormGroup | FormArray): { [key: string]: any; } | null {
-    let hasError = false;
-    const result = Object.keys(form.controls).reduce((acc, key) => {
-      // for debug: console.log('basecomponent.getAllFormgroupErrors()', acc , key);
-      const control = form.get(key);
-      let errors = null;
-      if (control instanceof FormGroup || control instanceof FormArray) {
-        errors = this.getAllFormgroupErrors(control);
-      } else {
-        errors = control.invalid;
-      }
-      if (errors) {
-        acc[key] = errors;
-        hasError = true;
-      }
-      return acc;
-    }, {} as { [key: string]: any; });
-    return hasError ? result : null;
-  }
 
   displayColumn(data, col): any {
     const fields = col.field.split('.');

@@ -108,14 +108,14 @@
           <!-- Field Values - edit mode -->
           <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" formControlName="bind-dn" class="ldap-input" spellcheck="false" type="text"  pInputText  placeholder="">
+              <input fxFlex="nogrow" formControlName="bind-dn"  app-errorTooltip  class="ldap-input" spellcheck="false" type="text"  pInputText  placeholder="">
               <div fxFlex="nogrow" class="global-button-primary ldap-bind-connection-button" (click)="onCheckLDAPBindConnect($event)">Test Bind</div>
               <mat-icon *ngIf="hasBindConfigError()" (click)="onBindErrorMessageClick()"  title="{{getBindConfigErrorTooltip()}}" class="ldap-test-error-icon">
                   error
               </mat-icon>
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" formControlName="bind-password" class="ldap-input" spellcheck="false" type="text"  pInputText  placeholder="">
+                <input fxFlex="nogrow" formControlName="bind-password"  app-errorTooltip  class="ldap-input" spellcheck="false" type="text"  pInputText  placeholder="">
             </div>
           </div>
           <!-- Field Values - view mode -->
@@ -153,7 +153,7 @@
           <!-- Field Values - edit mode -->
           <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" class="ldap-input" formControlName="base-dn" spellcheck="false" type="text"  pInputText  placeholder="">
+              <input fxFlex="nogrow" class="ldap-input" formControlName="base-dn"  app-errorTooltip  spellcheck="false" type="text"  pInputText  placeholder="">
             </div>
             <ng-container formGroupName="attribute-mapping">
               <div fxFlex="30px" fxLayout="row" class="ldap-value">
@@ -313,7 +313,7 @@
             <!-- Field Values -->
             <div fxFlex fxLayout="column">
               <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="url" spellcheck="false" type="text"  pInputText  placeholder="">
+                <input fxFlex="nogrow" class="ldap-input" formControlName="url"  app-errorTooltip  spellcheck="false" type="text"  pInputText  placeholder="">
               </div>           
             </div>
           </div>
@@ -342,13 +342,13 @@
                 Verify Server Certificate
               </div>
               <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="server-name" spellcheck="false" type="text"  pInputText placeholder="">
+                <input fxFlex="nogrow" class="ldap-input" formControlName="server-name"  app-errorTooltip  spellcheck="false" type="text"  pInputText placeholder="">
               </div>
             </div>
           </div>
         </div>
         <ng-container formGroupName="tls-options">
-          <textarea fxFlex formControlName="trusted-certs" placeholder="Trusted Certificates..." class="ldap-server-certs" pInputTextarea></textarea>
+          <textarea fxFlex formControlName="trusted-certs"  app-errorTooltip   placeholder="Trusted Certificates..." class="ldap-server-certs" pInputTextarea></textarea>
         </ng-container>
     </div>
     <div fxFlex="10px"></div>
