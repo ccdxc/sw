@@ -19,6 +19,15 @@ enum ForwardingMode {
 }
 
 //------------------------------------------------------------------------------
+// supported feature profiles
+//------------------------------------------------------------------------------
+enum FeatureProfile {
+  FEATURE_PROFILE_NONE                = 0;
+  FEATURE_PROFILE_CLASSIC_DEFAULT     = 1;  // default classic mode profile with 2 host devices
+  FEATURE_PROFILE_CLASSIC_DEV_SCALE   = 2;  // scaled up classic mode w.r.t devices
+}
+
+//------------------------------------------------------------------------------
 // SystemSpec captures the system level global configuraiton
 // NOTE:
 // fwd_mode is init time configuration and this object must be pushed
@@ -26,8 +35,9 @@ enum ForwardingMode {
 // config object is
 //------------------------------------------------------------------------------
 message SystemSpec {
-  option (delphi.update_event)  = true;
-  option (delphi.singleton)     = true;
-  delphi.ObjectMeta    Meta     = 1;    // common delphi meta
-  ForwardingMode       fwd_mode = 2;    // forwarding mode
+  option (delphi.update_event)         = true;
+  option (delphi.singleton)            = true;
+  delphi.ObjectMeta    Meta            = 1;    // common delphi meta
+  ForwardingMode       fwd_mode        = 2;    // forwarding mode
+  FeatureProfile       feature_profile = 3;  // feature profile
 }
