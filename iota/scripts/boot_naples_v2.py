@@ -505,6 +505,13 @@ class EsxHostManagement(HostManagement):
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
 
+    def InstallGoldFirmware(self):
+        self.ctrl_vm_copyin(GlobalOptions.gold_fw_img,
+                    host_dir = HOST_ESX_NAPLES_IMAGES_DIR,
+                    naples_dir = "/data")
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(GlobalOptions.gold_fw_img))
+        self.RunNaplesCmd("/nic/tools/fwupdate -l")
+
     def InitForUpgrade(self):
         gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
         self.__install_drivers(gold_pkg)
