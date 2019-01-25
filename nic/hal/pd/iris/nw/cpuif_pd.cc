@@ -73,9 +73,9 @@ pd_cpuif_delete (pd_if_delete_args_t *args)
     hal_ret_t      ret = HAL_RET_OK;
     pd_cpuif_t  *cpuif_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("Deleting pd state for cpuif {}",
                     args->intf->if_id);
     cpuif_pd = (pd_cpuif_t *)args->intf->pd_if;
@@ -268,7 +268,7 @@ pd_cpuif_pd_depgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif)
     directmap                   *dm_omap = NULL;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
-    HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
 
     sdk_ret = dm_omap->remove(pd_cpuif->cpu_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -322,7 +322,7 @@ pd_cpuif_pd_pgm_output_mapping_tbl(pd_cpuif_t *pd_cpuif)
     om_cpu.cpu_copy_tm_oq = 0;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     sdk_ret = dm_omap->insert_withid(&data, pd_cpuif->cpu_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -344,13 +344,13 @@ pd_cpuif_get_pd_lif(pd_cpuif_t *pd_cpuif)
     lif_t       *pi_lif = NULL;
 
     pi_if = (if_t *)pd_cpuif->pi_if;
-    HAL_ASSERT_RETURN(pi_if != NULL, 0);
+    SDK_ASSERT_RETURN(pi_if != NULL, 0);
 
     pi_lif = if_get_lif(pi_if);
-    HAL_ASSERT(pi_lif != NULL);
+    SDK_ASSERT(pi_lif != NULL);
 
     pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
-    HAL_ASSERT(pi_lif != NULL);
+    SDK_ASSERT(pi_lif != NULL);
 
     return pd_lif;
 }

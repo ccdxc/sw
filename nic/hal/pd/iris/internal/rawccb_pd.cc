@@ -28,7 +28,7 @@ namespace pd {
 void *
 rawccb_pd_get_hw_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((pd_rawccb_t *)entry)->hw_id);
 }
 
@@ -41,7 +41,7 @@ rawccb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 bool
 rawccb_pd_compare_hw_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(rawccb_hw_id_t *)key1 == *(rawccb_hw_id_t *)key2) {
         return true;
     }
@@ -318,7 +318,7 @@ cleanup:
 rawccb_hw_addr_t
 pd_rawccb_get_base_hw_addr(pd_rawccb_t* rawccb_pd)
 {
-    HAL_ASSERT(NULL != rawccb_pd);
+    SDK_ASSERT(NULL != rawccb_pd);
 
     // Get the base address of RAWC CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.

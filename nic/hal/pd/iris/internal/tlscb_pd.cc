@@ -21,7 +21,7 @@ namespace pd {
 void *
 tlscb_pd_get_hw_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((pd_tlscb_t *)entry)->hw_id);
 }
 
@@ -34,7 +34,7 @@ tlscb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 bool
 tlscb_pd_compare_hw_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(tlscb_hw_id_t *)key1 == *(tlscb_hw_id_t *)key2) {
         return true;
     }
@@ -432,8 +432,8 @@ cleanup:
 tlscb_hw_id_t
 pd_tlscb_get_base_hw_index(pd_tlscb_t* tlscb_pd)
 {
-    HAL_ASSERT(NULL != tlscb_pd);
-    HAL_ASSERT(NULL != tlscb_pd->tlscb);
+    SDK_ASSERT(NULL != tlscb_pd);
+    SDK_ASSERT(NULL != tlscb_pd->tlscb);
 
     // Get the base address of TLS CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.

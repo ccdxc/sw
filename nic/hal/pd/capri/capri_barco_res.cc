@@ -217,28 +217,28 @@ hal_ret_t capri_barco_res_allocator_init(void)
             slab::factory("CRYPTO PEND-REQ PD", HAL_SLAB_CRYPTO_PEND_REQ_PD,
                           sizeof(hal::pd::crypto_pend_req_t), 128,
                           true, true, true);
-        HAL_ASSERT_RETURN(g_hal_capri_barco_pend_req_pd_slab != NULL, HAL_RET_OOM);
+        SDK_ASSERT_RETURN(g_hal_capri_barco_pend_req_pd_slab != NULL, HAL_RET_OOM);
     }
     dllist_init(&g_pend_req_list);
     
     barco_indexers[CRYPTO_BARCO_RES_ASYM_DMA_DESCR] =
         sdk::lib::indexer::factory(CRYPTO_ASYM_DMA_DESCR_COUNT_MAX);
-    HAL_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_ASYM_DMA_DESCR] != NULL,
+    SDK_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_ASYM_DMA_DESCR] != NULL,
                       HAL_RET_OOM);
 
      barco_indexers[CRYPTO_BARCO_RES_HBM_MEM_512B] =
          sdk::lib::indexer::factory(CRYPTO_HBM_MEM_COUNT_MAX);
-     HAL_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_HBM_MEM_512B] != NULL,
+     SDK_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_HBM_MEM_512B] != NULL,
                        HAL_RET_OOM);
 
      barco_indexers[CRYPTO_BARCO_RES_ASYM_KEY_DESCR] =
          sdk::lib::indexer::factory(CRYPTO_ASYM_KEY_DESCR_COUNT_MAX);
-     HAL_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_ASYM_KEY_DESCR] != NULL,
+     SDK_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_ASYM_KEY_DESCR] != NULL,
                        HAL_RET_OOM);
 
      barco_indexers[CRYPTO_BARCO_RES_SYM_MSG_DESCR] =
          sdk::lib::indexer::factory(CRYPTO_SYM_MSG_DESCR_COUNT_MAX);
-     HAL_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_SYM_MSG_DESCR] != NULL,
+     SDK_ASSERT_RETURN(barco_indexers[CRYPTO_BARCO_RES_SYM_MSG_DESCR] != NULL,
                        HAL_RET_OOM);
 
     for (idx = CRYPTO_BARCO_RES_MIN; idx < CRYPTO_BARCO_RES_MAX; idx++) {

@@ -21,7 +21,7 @@ hal_obj_meta    *g_obj_meta[HAL_OBJ_ID_MAX];
 hal_ret_t
 hal_default_marshall_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
 {
-    HAL_ASSERT((obj != NULL) && (mlen != NULL));
+    SDK_ASSERT((obj != NULL) && (mlen != NULL));
     *mlen = 0;
     return HAL_RET_OK;
 }

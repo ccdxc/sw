@@ -90,7 +90,7 @@ pd_enicif_pgm_tx_vport(pd_enicif_t *pd_enicif, table_oper_t oper)
     memset(&data, 0, sizeof(data));
 
     tx_vport_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_TX_VPORT);
-    HAL_ASSERT_RETURN((tx_vport_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((tx_vport_tbl != NULL), HAL_RET_ERR);
 
     // key
     mac = if_get_mac_addr((if_t*)pd_enicif->pi_if);
@@ -156,7 +156,7 @@ pd_enicif_pgm_rx_vport (pd_enicif_t *pd_enicif, table_oper_t oper)
     memset(&data, 0, sizeof(data));
 
     rx_vport_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_RX_VPORT);
-    HAL_ASSERT_RETURN((rx_vport_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((rx_vport_tbl != NULL), HAL_RET_ERR);
 
     pd_lif = pd_enicif_get_pd_lif(pd_enicif);
 
@@ -316,9 +316,9 @@ pd_enicif_delete (pd_if_delete_args_t *args)
     hal_ret_t      ret = HAL_RET_OK;
     pd_enicif_t    *enicif_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("deleting pd state for enicif: {}",
                     args->intf->if_id);
     enicif_pd = (pd_enicif_t *)args->intf->pd_if;
@@ -385,13 +385,13 @@ pd_enicif_get_pd_lif(pd_enicif_t *pd_enicif)
     lif_t       *pi_lif = NULL;
 
     pi_if = (if_t *)pd_enicif->pi_if;
-    HAL_ASSERT_RETURN(pi_if != NULL, 0);
+    SDK_ASSERT_RETURN(pi_if != NULL, 0);
 
     pi_lif = if_get_lif(pi_if);
-    HAL_ASSERT(pi_lif != NULL);
+    SDK_ASSERT(pi_lif != NULL);
 
     pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
-    HAL_ASSERT(pi_lif != NULL);
+    SDK_ASSERT(pi_lif != NULL);
 
     return pd_lif;
 }

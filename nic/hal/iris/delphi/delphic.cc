@@ -30,12 +30,12 @@ delphi_client_start (void *ctxt)
 {
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
     g_delphic = make_shared<delphi_client>(sdk);
-    HAL_ASSERT(g_delphic != NULL);
+    SDK_ASSERT(g_delphic != NULL);
     HAL_TRACE_DEBUG("HAL delphi thread started ...");
 
     // init linkmgr services
     Status ret = linkmgr::port_svc_init(sdk);
-    HAL_ASSERT_TRACE_RETURN(ret.ok(), NULL,
+    SDK_ASSERT_TRACE_RETURN(ret.ok(), NULL,
                             "Port service initialization failure");
 
     // register delphi client

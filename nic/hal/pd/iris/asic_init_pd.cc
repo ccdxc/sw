@@ -40,15 +40,15 @@ pd_asic_init (pd_func_args_t *pd_func_args)
 
     sdk_ret = sdk::asic::asic_init(args->cfg);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Asic init failure, err : {}", ret);
 
     ret = capri_sw_phv_init();
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Capri s/w phv init failure, err : {}", ret);
 
     ret = capri_barco_crypto_init(args->cfg->platform);
-    HAL_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
+    SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
                             "Capri barco crypto init failure, err : {}", ret);
     return HAL_RET_OK;
 }

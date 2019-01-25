@@ -17,7 +17,7 @@ namespace hal {
 void *
 wring_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((wring_t *)entry)->wring_id);
 }
 
@@ -30,7 +30,7 @@ wring_compute_hash_func (void *key, uint32_t ht_size)
 bool
 wring_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(wring_id_t *)key1 == *(wring_id_t *)key2) {
         return true;
     }
@@ -40,7 +40,7 @@ wring_compare_key_func (void *key1, void *key2)
 void *
 wring_get_handle_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((wring_t *)entry)->hal_handle);
 }
 
@@ -53,7 +53,7 @@ wring_compute_handle_hash_func (void *key, uint32_t ht_size)
 bool
 wring_compare_handle_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }
@@ -136,7 +136,7 @@ wring_create (WRingSpec& spec, WRingResponse *rsp)
 
     // add this L2 segment to our db
     ret = add_wring_to_db(wring);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);

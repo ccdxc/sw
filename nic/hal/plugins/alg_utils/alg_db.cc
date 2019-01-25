@@ -11,7 +11,7 @@ namespace alg_utils {
 
 static void * expected_flow_get_key_func(void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((expected_flow_t *)entry)->key);
 }
 
@@ -23,7 +23,7 @@ static uint32_t expected_flow_compute_hash_func(void *key, uint32_t ht_size)
 
 static bool expected_flow_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     return (memcmp(key1, key2, sizeof(exp_flow_key_t)) == 0);
 }
 

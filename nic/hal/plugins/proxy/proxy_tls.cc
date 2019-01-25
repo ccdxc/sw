@@ -56,7 +56,7 @@ tls_exec(fte::ctx_t& ctx)
             hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_ALLOC_INIT, &pd_func_args);
             asesq_ctx = args.ctxt;
             // asesq_ctx = hal::pd::cpupkt_ctxt_alloc_init();
-            HAL_ASSERT_RETURN(asesq_ctx != NULL, fte::PIPELINE_CONTINUE);
+            SDK_ASSERT_RETURN(asesq_ctx != NULL, fte::PIPELINE_CONTINUE);
         }
 
         hal::pd::pd_cpupkt_register_tx_queue_args_t t_args;
@@ -70,7 +70,7 @@ tls_exec(fte::ctx_t& ctx)
                                                 types::WRING_TYPE_ASESQ,
                                                 cpu_rxhdr->qid);
 #endif
-        HAL_ASSERT_RETURN(ret == HAL_RET_OK, fte::PIPELINE_CONTINUE);
+        SDK_ASSERT_RETURN(ret == HAL_RET_OK, fte::PIPELINE_CONTINUE);
 
         hal::pd::pd_cpupkt_send_args_t s_args;
         s_args.ctxt = asesq_ctx;

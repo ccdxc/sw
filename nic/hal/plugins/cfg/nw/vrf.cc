@@ -27,7 +27,7 @@ vrf_id_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry = NULL;
     vrf_t                       *vrf      = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -42,7 +42,7 @@ vrf_id_get_key_func (void *entry)
 uint32_t
 vrf_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(vrf_id_t)) % ht_size;
 }
 
@@ -155,7 +155,7 @@ vrf_lookup_by_id (vrf_id_t tid)
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
 
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                 HAL_OBJ_ID_VRF);
 
         vrf = (vrf_t *)hal_handle_get_obj(entry->handle_id);
@@ -296,7 +296,7 @@ vrf_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf_t                       *vrf = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -328,7 +328,7 @@ vrf_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t                hal_handle = 0;
     vrf_create_app_ctxt_t       *app_ctxt  = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     // assumption is there is only one element in the list
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
@@ -394,7 +394,7 @@ vrf_create_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf_t *vrf                           = NULL;
     hal_handle_t hal_handle              = 0;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     vrf = (vrf_t *)dhl_entry->obj;
@@ -760,7 +760,7 @@ vrf_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf_update_app_ctxt_t       *app_ctxt   = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt  = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -832,7 +832,7 @@ vrf_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     nwsec_profile_t                   *nwsec_prof = NULL;
     pd::pd_func_args_t                pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -908,7 +908,7 @@ vrf_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf_t                           *vrf        = NULL;
     pd::pd_func_args_t              pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     // app_ctxt = (vrf_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
@@ -1168,7 +1168,7 @@ vrf_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     vrf_t                       *vrf        = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     // TODO: Check the dependency ref count for the vrf.
     //       If its non zero, fail the delete.
 
@@ -1206,7 +1206,7 @@ vrf_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle_t       hal_handle = 0;
     nwsec_profile_t    *sec_prof = NULL;
 
-    HAL_ASSERT(cfg_ctxt != NULL);
+    SDK_ASSERT(cfg_ctxt != NULL);
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
 
@@ -1547,7 +1547,7 @@ vrf_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     uint32_t          serialized_state_sz;
     vrf_t             *vrf = (vrf_t *)obj;
 
-    HAL_ASSERT((vrf != NULL) && (mlen != NULL));
+    SDK_ASSERT((vrf != NULL) && (mlen != NULL));
     *mlen = 0;
 
     // get all information about this vrf (includes spec, status & stats)
@@ -1632,7 +1632,7 @@ vrf_restore_cb (void *obj, uint32_t len)
     // de-serialize the object
     if (vrf_info.ParseFromArray(obj, len) == false) {
         HAL_TRACE_ERR("Failed to de-serialize a serialized vrf obj");
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return 0;
     }
 
@@ -1647,17 +1647,17 @@ vrf_restore_cb (void *obj, uint32_t len)
     ret = vrf_init_from_spec(vrf, vrf_info.spec());
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to init VRF from spec. err:{}", ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     ret = vrf_init_from_status(vrf, vrf_info.status());
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to init VRF from status. err:{}", ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     ret = vrf_init_from_stats(vrf, vrf_info.stats());
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Unable to init VRF from stats. err:{}", ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 
     // repopulate handle db

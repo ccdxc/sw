@@ -579,7 +579,7 @@ acl_tcam::retrieve_from_hw(acl_tcam_entry_handle_t handle, void *key, void *key_
 
     pd_err = p4pd_entry_read(table_id_, tentry->get_index(),
                              key, key_mask, data);
-    HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
+    SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
     if (pd_err != P4PD_SUCCESS) {
         ret = HAL_RET_HW_FAIL;
     }
@@ -650,7 +650,7 @@ acl_tcam::deprogram_table_(uint32_t index)
     // P4-API: write
     pd_err = p4pd_entry_write(table_id_, index, (uint8_t *)hwkey,
                               (uint8_t *)hwkeymask, swdata);
-    HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
+    SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
 end:
     if (hwkey) 		::operator delete(hwkey);
@@ -692,7 +692,7 @@ acl_tcam::program_table_(TcamEntry *te, uint32_t index,
     pd_err = p4pd_hwkey_hwmask_build(table_id_, k, m,
                                      (uint8_t *)hwkey, (uint8_t *)hwkeymask);
 
-    HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
+    SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
     // Entry trace
     entry_trace_(k, m, d, index);
@@ -700,7 +700,7 @@ acl_tcam::program_table_(TcamEntry *te, uint32_t index,
     // P4-API: write
     pd_err = p4pd_entry_write(table_id_, index, (uint8_t *)hwkey,
                               (uint8_t *)hwkeymask, d);
-    HAL_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
+    SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
 
 end:
     if (hwkey) 		::operator delete(hwkey);
@@ -780,9 +780,9 @@ acl_tcam::create_move_chain_(uint32_t target_up,
     // The last move should be from either target_up or target_down so that
     // the new entry goes here
     if (move_up) {
-        HAL_ASSERT_GOTO(target_up == move_chain[num_moves-1], cleanup);
+        SDK_ASSERT_GOTO(target_up == move_chain[num_moves-1], cleanup);
     } else {
-        HAL_ASSERT_GOTO(target_down == move_chain[num_moves-1], cleanup);
+        SDK_ASSERT_GOTO(target_down == move_chain[num_moves-1], cleanup);
     }
 
     *num_moves_p = num_moves;
@@ -894,7 +894,7 @@ acl_tcam::update_priority_range_for_clear_(priority_t priority, uint32_t index)
     prio_range_t *prio_range;
 
     prio_range = get_prio_range_(priority);
-    HAL_ASSERT((index >= prio_range->start) &&
+    SDK_ASSERT((index >= prio_range->start) &&
                (index <= prio_range->end));
     if (prio_range->start == prio_range->end) {
         // We have only one entry in this priority range
@@ -904,12 +904,12 @@ acl_tcam::update_priority_range_for_clear_(priority_t priority, uint32_t index)
         // New start is the next in use bit
         sret = inuse_bmp_->next_set(index, &prio_range->start);
         ret = hal_sdk_ret_to_hal_ret(sret);
-        HAL_ASSERT(ret == HAL_RET_OK);
+        SDK_ASSERT(ret == HAL_RET_OK);
     } else if (prio_range->end == index) {
         // New end is the prev in use bit
         sret = inuse_bmp_->prev_set(index, &prio_range->end);
         ret = hal_sdk_ret_to_hal_ret(sret);
-        HAL_ASSERT(ret == HAL_RET_OK);
+        SDK_ASSERT(ret == HAL_RET_OK);
     }
 }
 
@@ -920,7 +920,7 @@ acl_tcam::set_entry_(uint32_t index,
     update_priority_range_for_insert_(tentry->get_priority(), index);
     tentry->set_index(index);
     inuse_bmp_->set(index);
-    HAL_ASSERT(tcam_entries_[index] == NULL);
+    SDK_ASSERT(tcam_entries_[index] == NULL);
     tcam_entries_[index] = tentry;
 }
 
@@ -1017,7 +1017,7 @@ acl_tcam::populate_move_chain_(move_chain_t *move_chain, uint32_t num_moves,
 
     tcam_prio_map::iterator itr;
     itr = tcam_prio_map_->find(tentry->get_priority());
-    HAL_ASSERT_GOTO(itr != tcam_prio_map_->end()
+    SDK_ASSERT_GOTO(itr != tcam_prio_map_->end()
                     && "Priority map entry doesn't exist", cleanup);
 
     if (!move_up) {
@@ -1026,12 +1026,12 @@ acl_tcam::populate_move_chain_(move_chain_t *move_chain, uint32_t num_moves,
 
     for (i = 0; i < num_moves; i++) {
         if (move_up) {
-            HAL_ASSERT_GOTO(itr != tcam_prio_map_->end() &&
+            SDK_ASSERT_GOTO(itr != tcam_prio_map_->end() &&
                             "Priority map iter encountered end", cleanup);
             move_chain[i] = itr->second->end;
             itr++;
         } else {
-            HAL_ASSERT_GOTO(itr != tcam_prio_map_->begin() &&
+            SDK_ASSERT_GOTO(itr != tcam_prio_map_->begin() &&
                             "Priority map iter encountered begin", cleanup);
             itr--;
             move_chain[i] = itr->second->start;
@@ -1079,7 +1079,7 @@ acl_tcam::fetch_stats(const uint64_t **stats)
 void
 acl_tcam::stats_incr(stats stat)
 {
-    HAL_ASSERT_RETURN_VOID((stat < STATS_MAX));
+    SDK_ASSERT_RETURN_VOID((stat < STATS_MAX));
     stats_[stat]++;
 }
 
@@ -1089,7 +1089,7 @@ acl_tcam::stats_incr(stats stat)
 void
 acl_tcam::stats_decr(stats stat)
 {
-    HAL_ASSERT_RETURN_VOID((stat < STATS_MAX));
+    SDK_ASSERT_RETURN_VOID((stat < STATS_MAX));
     stats_[stat]--;
 }
 
@@ -1106,7 +1106,7 @@ acl_tcam::stats_update(acl_tcam::api ap, hal_ret_t rs)
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_INS_FAIL_HW);
             else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_INS_FAIL_NO_RES);
             else if(rs == HAL_RET_ENTRY_EXISTS) stats_incr(STATS_INS_FAIL_ENTRY_EXISTS);
-            else HAL_ASSERT(0);
+            else SDK_ASSERT(0);
             break;
         case UPDATE:
             if(rs == HAL_RET_OK) stats_incr(STATS_UPD_SUCCESS);
@@ -1115,30 +1115,30 @@ acl_tcam::stats_update(acl_tcam::api ap, hal_ret_t rs)
             else if(rs == HAL_RET_HW_FAIL) stats_incr(STATS_UPD_FAIL_HW);
             else if(rs == HAL_RET_INVALID_ARG) stats_incr(STATS_UPD_FAIL_INVALID_ARG);
             else if(rs == HAL_RET_NO_RESOURCE) stats_incr(STATS_UPD_FAIL_NO_RES);
-            else HAL_ASSERT(0);
+            else SDK_ASSERT(0);
             break;
         case REMOVE:
             if (rs == HAL_RET_OK) stats_incr(STATS_REM_SUCCESS);
             else if (rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_REM_FAIL_ENTRY_NOT_FOUND);
             else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_REM_FAIL_HW);
-            else HAL_ASSERT(0);
+            else SDK_ASSERT(0);
             break;
         case RETRIEVE:
             if (rs == HAL_RET_OK) stats_incr(STATS_RETR_SUCCESS);
             else if (rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_RETR_FAIL_ENTRY_NOT_FOUND);
-            else HAL_ASSERT(0);
+            else SDK_ASSERT(0);
             break;
         case RETRIEVE_FROM_HW:
             if (rs == HAL_RET_OK) stats_incr(STATS_RETR_FROM_HW_SUCCESS);
             else if (rs == HAL_RET_ENTRY_NOT_FOUND)
                 stats_incr(STATS_RETR_FROM_HW_FAIL_ENTRY_NOT_FOUND);
             else if (rs == HAL_RET_HW_FAIL) stats_incr(STATS_RETR_FROM_HW_FAIL_HW);
-            else HAL_ASSERT(0);
+            else SDK_ASSERT(0);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 }
 
@@ -1202,7 +1202,7 @@ acl_tcam::entry_trace_(void *key, void *key_mask, void *data, uint32_t index)
     p4_err = p4pd_table_ds_decoded_string_get(table_id_, index,
             key, key_mask, data,
             buff, sizeof(buff));
-    HAL_ASSERT(p4_err == P4PD_SUCCESS);
+    SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
     HAL_TRACE_DEBUG("Index: {} \n {}", index, buff);
 

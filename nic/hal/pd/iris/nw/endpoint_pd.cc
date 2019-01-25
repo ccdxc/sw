@@ -133,9 +133,9 @@ pd_ep_delete (pd_func_args_t *pd_func_args)
     pd_ep_delete_args_t *args = pd_func_args->pd_ep_delete;
     pd_ep_t      *ep_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->ep != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->ep->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->ep != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->ep->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("deleting pd state for ep {}",
                     ep_l2_key_to_str(args->ep));
 
@@ -507,7 +507,7 @@ ep_pd_delete_pd_ip_entries(ep_t *pi_ep, dllist_ctxt_t *pi_ep_list)
             HAL_TRACE_DEBUG("Freeing PD IP Entry: {}",
                             ipaddr2str(&(pi_ip_entry->ip_addr)));
         } else {
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
         }
     }
 
@@ -694,7 +694,7 @@ ep_pd_depgm_ipsg_tble_per_ip(pd_ep_ip_entry_t *pd_ip_entry)
     memset(&data, 0, sizeof(data));
 
     ipsg_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_IPSG);
-    HAL_ASSERT_RETURN((ipsg_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((ipsg_tbl != NULL), HAL_RET_ERR);
     HAL_TRACE_DEBUG("Delete the ipsg_tbl at index {}", pd_ip_entry->ipsg_tbl_idx);
 
     if (pd_ip_entry->ipsg_tbl_idx != INVALID_INDEXER_INDEX) {
@@ -767,11 +767,11 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep,
     memset(&data, 0, sizeof(data));
 
     ipsg_tbl = g_hal_state_pd->tcam_table(P4TBL_ID_IPSG);
-    HAL_ASSERT_RETURN((ipsg_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((ipsg_tbl != NULL), HAL_RET_ERR);
 
     key.entry_inactive_ipsg = 0;
     l2seg = l2seg_lookup_by_handle(pi_ep->l2seg_handle);
-    HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
+    SDK_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
     key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
     memcpy(key.flow_lkp_metadata_lkp_src,
            pi_ip_entry->ip_addr.addr.v6_addr.addr8,
@@ -791,7 +791,7 @@ ep_pd_pgm_ipsg_tble_per_ip(pd_ep_t *pd_ep,
     memset(key_mask.flow_lkp_metadata_lkp_src_mask, ~0,
             sizeof(key_mask.flow_lkp_metadata_lkp_src_mask));
 
-    HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_IF_NOT_FOUND);
+    SDK_ASSERT_RETURN(l2seg != NULL, HAL_RET_IF_NOT_FOUND);
     data.action_id = IPSG_IPSG_HIT_ID;
     // data.action_u.ipsg_ipsg_hit.src_lport = if_get_lport_id(pi_if);
     if (if_args && if_args->lif_change) {
@@ -894,11 +894,11 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep, table_oper_t oper)
     memset(&data, 0, sizeof(data));
 
     reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
-    HAL_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
 
     // lkp_vrf
     l2seg = l2seg_lookup_by_handle(pi_ep->l2seg_handle);
-    HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
+    SDK_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
     key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
 
     // lkp_mac
@@ -970,7 +970,7 @@ ep_pd_depgm_registered_mac(pd_ep_t *pd_ep)
     memset(&data, 0, sizeof(data));
 
     reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
-    HAL_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = reg_mac_tbl->remove(pd_ep->reg_mac_tbl_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1063,28 +1063,28 @@ ep_pd_get_hw_lif_id(ep_t *pi_ep)
     intf::IfType    if_type;
 
     pi_if = ep_find_if_by_handle(pi_ep);
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
 
     if_type = intf_get_if_type(pi_if);
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
             pi_lif = if_get_lif(pi_if);
-            HAL_ASSERT(pi_lif != NULL);
+            SDK_ASSERT(pi_lif != NULL);
 
             pd_lif = (pd_lif_t *)lif_get_pd_lif(pi_lif);
-            HAL_ASSERT(pi_lif != NULL);
+            SDK_ASSERT(pi_lif != NULL);
 
             return pd_lif->hw_lif_id;
             break;
         case intf::IF_TYPE_UPLINK:
             pd_upif = (pd_uplinkif_t *)if_get_pd_if(pi_if);
-            HAL_ASSERT(pd_upif != NULL);
+            SDK_ASSERT(pd_upif != NULL);
 
             return pd_upif->hw_lif_id;
             break;
         case intf::IF_TYPE_UPLINK_PC:
             pd_uppc = (pd_uplinkpc_t *)if_get_pd_if(pi_if);
-            HAL_ASSERT(pd_uppc != NULL);
+            SDK_ASSERT(pd_uppc != NULL);
 
             return pd_uppc->hw_lif_id;
             break;
@@ -1092,7 +1092,7 @@ ep_pd_get_hw_lif_id(ep_t *pi_ep)
             return (if_get_hw_lif_id(pi_if));
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return 0;
@@ -1107,7 +1107,7 @@ ep_pd_get_if_type(ep_t *pi_ep)
     if_t            *pi_if;
 
     pi_if = ep_find_if_by_handle(pi_ep);
-    HAL_ASSERT(pi_if != NULL);
+    SDK_ASSERT(pi_if != NULL);
 
     return intf_get_if_type(pi_if);
 }
@@ -1129,7 +1129,7 @@ ep_pd_get_rw_tbl_idx_from_pi_ep(ep_t *pi_ep, rewrite_actions_en rw_act)
 uint32_t
 ep_pd_get_rw_tbl_idx(pd_ep_t *pd_ep, rewrite_actions_en rw_act)
 {
-    HAL_ASSERT(rw_act < REWRITE_MAX_ID);
+    SDK_ASSERT(rw_act < REWRITE_MAX_ID);
 
     return pd_ep->rw_tbl_idx[rw_act];
 }
@@ -1153,7 +1153,7 @@ uint32_t
 ep_pd_get_tnnl_rw_tbl_idx(pd_ep_t *pd_ep,
                           tunnel_rewrite_actions_en tnnl_rw_act) {
 
-    HAL_ASSERT(tnnl_rw_act < TUNNEL_REWRITE_MAX_ID);
+    SDK_ASSERT(tnnl_rw_act < TUNNEL_REWRITE_MAX_ID);
     if (tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VLAN_ID) {
         return g_hal_state_pd->tnnl_rwr_tbl_encap_vlan_idx();
     } else if (tnnl_rw_act == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {

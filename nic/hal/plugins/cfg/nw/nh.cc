@@ -24,7 +24,7 @@ nexthop_id_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry;
     nexthop_t                   *nh = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -49,7 +49,7 @@ nexthop_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 nexthop_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(nh_id_t *)key1 == *(nh_id_t *)key2) {
         return true;
     }
@@ -93,7 +93,7 @@ nexthop_add_to_db (nexthop_t *nh, hal_handle_t handle)
     // add nexthop as back ref to if
     if (nh->if_handle != HAL_HANDLE_INVALID) {
         hal_if = find_if_by_handle(nh->if_handle);
-        HAL_ASSERT(hal_if != NULL);
+        SDK_ASSERT(hal_if != NULL);
         ret = if_add_nh(hal_if, nh);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("failed to add nh to if. err: {}", ret);
@@ -104,7 +104,7 @@ nexthop_add_to_db (nexthop_t *nh, hal_handle_t handle)
     // add nexthop as back ref to ep
     if (nh->ep_handle != HAL_HANDLE_INVALID) {
         ep = find_ep_by_handle(nh->ep_handle);
-        HAL_ASSERT(ep != NULL);
+        SDK_ASSERT(ep != NULL);
         ret = ep_add_nh(ep, nh);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("failed to add nh to if. err: {}", ret);
@@ -144,7 +144,7 @@ nexthop_del_from_db (nexthop_t *nh)
     // add nexthop as back ref to if
     if (nh->if_handle != HAL_HANDLE_INVALID) {
         hal_if = find_if_by_handle(nh->if_handle);
-        HAL_ASSERT(hal_if != NULL);
+        SDK_ASSERT(hal_if != NULL);
         ret = if_del_nh(hal_if, nh);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("failed to add nh to if. err: {}", ret);
@@ -155,7 +155,7 @@ nexthop_del_from_db (nexthop_t *nh)
     // add nexthop as back ref to ep
     if (nh->ep_handle != HAL_HANDLE_INVALID) {
         ep = find_ep_by_handle(nh->ep_handle);
-        HAL_ASSERT(ep != NULL);
+        SDK_ASSERT(ep != NULL);
         ret = ep_del_nh(ep, nh);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("failed to add nh to if. err: {}", ret);
@@ -810,7 +810,7 @@ nexthop_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 end:
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("commit cbs can't fail: ret:{}", ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     return ret;
 }

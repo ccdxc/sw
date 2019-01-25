@@ -295,7 +295,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                                   sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_DATA),
                                   sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_DATA),
                                   hal_cfg);
-            HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
+            SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                                     "FTE thread {} creation failed", tid);
             data_cores_mask = data_cores_mask & (data_cores_mask-1);
         }
@@ -311,7 +311,7 @@ hal_thread_init (hal_cfg_t *hal_cfg)
                           sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                           sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
                           NULL);
-    HAL_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
+    SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                             "HAL periodic thread create failure");
     hal_thread->start(hal_thread);
 

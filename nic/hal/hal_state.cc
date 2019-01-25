@@ -144,45 +144,45 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     slab = register_slab(HAL_SLAB_HANDLE, slab_args={.name = "hal_handle",
                        .size=sizeof(hal_handle), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_HANDLE_HT_ENTRY, slab_args={.name = "hal_hdl_ht_ent",
                        .size=sizeof(hal_handle_ht_entry_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_HANDLE_LIST_ENTRY, slab_args={.name="hal_hdl_list_ent",
                         .size=sizeof(hal_handle_list_entry_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_HANDLE_ID_HT_ENTRY, slab_args={.name="hal_hdl_id_ht_ent",
                         .size=sizeof(hal_handle_id_ht_entry_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_HANDLE_ID_LIST_ENTRY, slab_args={.name="hal_hdl_id_list_ent",
                         .size=sizeof(hal_handle_id_list_entry_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
 	// initialize vrf related data structures
     slab = register_slab(HAL_SLAB_VRF, slab_args={.name="vrf",
                         .size=sizeof(hal::vrf_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize network related data structures
     slab = register_slab(HAL_SLAB_NETWORK, slab_args={.name="network",
                         .size=sizeof(hal::network_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize security profile related data structures
     slab = register_slab(HAL_SLAB_SECURITY_PROFILE, slab_args={.name="nwsec_profile",
                         .size=sizeof(hal::nwsec_profile_t), .num_elements=8,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
 #if 0
     // initialize dos policy related data structures
@@ -191,7 +191,7 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       HAL_SLAB_DOS_POLICY,
                       sizeof(hal::dos_policy_t), 8,
                       false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_DOS_POLICY] != NULL), false);
+    SDK_ASSERT_RETURN((slabs_[HAL_SLAB_DOS_POLICY] != NULL), false);
 
     // initialize dos policy sg list related data structures
     slabs_[HAL_SLAB_DOS_POLICY_SG_LIST] =
@@ -199,262 +199,262 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       HAL_SLAB_DOS_POLICY_SG_LIST,
                       sizeof(hal::dos_policy_sg_list_entry_t), 8,
                       false, true, true, mmgr);
-    HAL_ASSERT_RETURN((slabs_[HAL_SLAB_DOS_POLICY_SG_LIST] != NULL), false);
+    SDK_ASSERT_RETURN((slabs_[HAL_SLAB_DOS_POLICY_SG_LIST] != NULL), false);
 #endif
 
     // initialize L2 segment related data structures
     slab = register_slab(HAL_SLAB_L2SEG, slab_args={.name="l2seg",
                         .size=sizeof(hal::l2seg_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_L2SEG_UPLINK_OIF_LIST,
                          slab_args={.name="l2seg_uplink_oif_list",
                         .size=sizeof(hal::l2_seg_uplink_oif_list_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize multicast related data structures
     slab = register_slab(HAL_SLAB_MC_ENTRY,
                          slab_args={.name="mc_entry",
                         .size=sizeof(hal::mc_entry_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_OIF_LIST,
                          slab_args={.name="oif_list",
                         .size=sizeof(hal::oif_list_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_OIF,
                          slab_args={.name="oif",
                         .size=sizeof(hal::oif_db_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize LIF related data structures
     slab = register_slab(HAL_SLAB_LIF,
                          slab_args={.name="lif",
                         .size=sizeof(hal::lif_t), .num_elements=8,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize interface related data structures
     slab = register_slab(HAL_SLAB_IF,
                          slab_args={.name="interface",
                         .size=sizeof(hal::if_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize enic l2seg entry related data structures
     slab = register_slab(HAL_SLAB_ENIC_L2SEG_ENTRY,
                          slab_args={.name="if_l2seg_entry",
                         .size=sizeof(hal::if_l2seg_entry_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize endpoint related data structures
     slab = register_slab(HAL_SLAB_EP,
                          slab_args={.name="ep",
                         .size=sizeof(hal::ep_t), .num_elements=128,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_EP_IP_ENTRY,
                          slab_args={.name="ep_ip_entry",
                         .size=sizeof(hal::ep_ip_entry_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_EP_L3_ENTRY,
                          slab_args={.name="ep_l3_entry",
                         .size=sizeof(hal::ep_l3_entry_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize flow/session related data structures
     slab = register_slab(HAL_SLAB_FLOW,
                          slab_args={.name="flow",
                         .size=sizeof(hal::flow_t), .num_elements=128,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_SESSION,
                          slab_args={.name="session",
                         .size=sizeof(hal::session_t), .num_elements=128,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize l4lb related data structures
     slab = register_slab(HAL_SLAB_L4LB,
                          slab_args={.name="l4lb",
                         .size=sizeof(hal::l4lb_service_entry_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Qos-class related data structures
     slab = register_slab(HAL_SLAB_QOS_CLASS,
                          slab_args={.name="qos_class",
                         .size=sizeof(hal::qos_class_t), .num_elements=8,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Copp related data structures
     slab = register_slab(HAL_SLAB_COPP,
                          slab_args={.name="copp",
                         .size=sizeof(hal::copp_t), .num_elements=8,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Acl related data structures
     slab = register_slab(HAL_SLAB_ACL,
                          slab_args={.name="acl",
                         .size=sizeof(hal::acl_t), .num_elements=8,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_CPU_PKT,
                          slab_args={.name="cpu_pkt",
                         .size=9216, .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_NWSEC_GROUP,
                          slab_args={.name="nwsec_group",
                         .size=sizeof(hal::nwsec_group_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_V4ADDR_LIST_ELEM,
                          slab_args={.name="v4addr_list_elem",
                         .size=(sizeof(hal::addr_list_elem_t) + sizeof(ipv4_range_t)), .num_elements=8,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_V6ADDR_LIST_ELEM,
                          slab_args={.name="v6addr_list_elem",
                         .size=(sizeof(hal::addr_list_elem_t) + sizeof(ipv6_range_t)), .num_elements=8,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_PORT_LIST_ELEM,
                          slab_args={.name="port_list_elem",
                         .size=sizeof(hal::port_list_elem_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_SG_LIST_ELEM,
                          slab_args={.name="sg_list_elem",
                         .size=sizeof(hal::sg_list_elem_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_ICMP_LIST_ELEM,
                          slab_args={.name="icmp_list_elem",
                         .size=sizeof(hal::icmp_list_elem_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_MACADDR_LIST_ELEM,
                          slab_args={.name="macaddr_list_elem",
                         .size=sizeof(hal::mac_addr_list_elem_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_NAT_POOL,
                          slab_args={.name="natpool",
                         .size=sizeof(hal::nat_pool_t), .num_elements=8,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_NAT_CFG_RULE,
                          slab_args={.name="nat_cfg_rule",
                         .size=sizeof(hal::nat_cfg_rule_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_NAT_CFG_POL,
                          slab_args={.name="nat_cfg_policy",
                         .size=sizeof(hal::nat_cfg_pol_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_NEXTHOP,
                          slab_args={.name="nexthop",
                         .size=sizeof(hal::nexthop_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_ROUTE,
                          slab_args={.name="route",
                         .size=sizeof(hal::route_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_ROUTE_ACL_RULE,
                          slab_args={.name="route_acl_rule",
                         .size=sizeof(hal::route_acl_rule_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_FLOWMON_RULE,
                          slab_args={.name="flowmon_rule",
                         .size=sizeof(hal::flow_monitor_rule_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
-    HAL_ASSERT_RETURN((flow_monitor_acl_ctx_create() == HAL_RET_OK), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((flow_monitor_acl_ctx_create() == HAL_RET_OK), false);
 
     slab = register_slab(HAL_SLAB_ROUTE_ACL_USERDATA,
                          slab_args={.name="route_acl_userdata",
                         .size=sizeof(route_acl_user_data_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_IPSEC_CFG_RULE,
                          slab_args={.name="ipsec_cfg_rule",
                         .size=sizeof(hal::ipsec_cfg_rule_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_IPSEC_CFG_POL,
                          slab_args={.name="ipsec_cfg_policy",
                         .size=sizeof(hal::ipsec_cfg_pol_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_TCP_PROXY_CFG_RULE,
                          slab_args={.name="tcp_proxy_cfg_rule",
                         .size=sizeof(hal::tcp_proxy_cfg_rule_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_TCP_PROXY_CFG_POL,
                          slab_args={.name="tcp_proxy_cfg_policy",
                         .size=sizeof(hal::tcp_proxy_cfg_pol_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize filter related data structures
     slab = register_slab(HAL_SLAB_FILTER,
                          slab_args={.name="filter",
                         .size=sizeof(hal::filter_t), .num_elements=128,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize FTE Span
     slab = register_slab(HAL_SLAB_FTE_SPAN,
                          slab_args={.name="fte_span",
                         .size=sizeof(hal::fte_span_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize snake test slab
     slab = register_slab(HAL_SLAB_SNAKE_TEST,
                          slab_args={.name="snake_test",
                         .size=sizeof(hal::snake_test_t), .num_elements=2,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
@@ -462,19 +462,19 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                          slab_args={.name="gft_exactm_prof",
                         .size=sizeof(hal::gft_exact_match_profile_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-        HAL_ASSERT_RETURN((slab != NULL), false);
+        SDK_ASSERT_RETURN((slab != NULL), false);
 
         slab = register_slab(HAL_SLAB_GFT_HDR_TRANSPOSITION_PROFILE,
                          slab_args={.name="gft_hdr_xpos_prof",
                         .size=sizeof(hal::gft_hdr_xposition_profile_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-        HAL_ASSERT_RETURN((slab != NULL), false);
+        SDK_ASSERT_RETURN((slab != NULL), false);
 
         slab = register_slab(HAL_SLAB_GFT_EXACT_MATCH_FLOW_ENTRY,
                          slab_args={.name="gft_exactm_flow_ent",
                         .size=sizeof(hal::gft_exact_match_flow_entry_t), .num_elements=16,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-        HAL_ASSERT_RETURN((slab != NULL), false);
+        SDK_ASSERT_RETURN((slab != NULL), false);
     }
 
     return true;
@@ -495,136 +495,136 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                          slab_args={.name="crypto_cert_store",
                         .size=sizeof(hal::crypto_cert_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize TLS CB related data structures
     slab = register_slab(HAL_SLAB_TLSCB,
                          slab_args={.name="tlscb",
                         .size=sizeof(hal::tlscb_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize TCB CB related data structures
     slab = register_slab(HAL_SLAB_TCPCB,
                          slab_args={.name="tcpcb",
                         .size=sizeof(hal::tcpcb_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize WRing related data structures
     slab = register_slab(HAL_SLAB_WRING,
                          slab_args={.name="wring",
                         .size=sizeof(hal::wring_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize IPSEC CB related data structures
     slab = register_slab(HAL_SLAB_IPSECCB,
                          slab_args={.name="ipseccb",
                         .size=sizeof(hal::ipseccb_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_IPSEC_SA,
                          slab_args={.name="ipsec_sa",
                         .size=sizeof(hal::ipsec_sa_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize CPU CB related data structures
     slab = register_slab(HAL_SLAB_CPUCB,
                          slab_args={.name="cpucb",
                         .size=sizeof(hal::cpucb_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Raw Redirect CB related data structures
     slab = register_slab(HAL_SLAB_RAWRCB,
                          slab_args={.name="rawrcb",
                         .size=sizeof(hal::rawrcb_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Raw Chain CB related data structures
     slab = register_slab(HAL_SLAB_RAWCCB,
                          slab_args={.name="rawccb",
                         .size=sizeof(hal::rawccb_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Raw Redirect CB related data structures
     slab = register_slab(HAL_SLAB_PROXYRCB,
                          slab_args={.name="proxyrcb",
                         .size=sizeof(hal::proxyrcb_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     // initialize Raw Chain CB related data structures
     slab = register_slab(HAL_SLAB_PROXYCCB,
                          slab_args={.name="proxyccb",
                         .size=sizeof(hal::proxyccb_t), .num_elements=16,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_NWSEC_POLICY,
                          slab_args={.name="nwsec_policy",
                         .size=sizeof(hal::nwsec_policy_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_NWSEC_POLICY_APPID,
                          slab_args={.name="nwsec_policy_appid",
                         .size=sizeof(hal::nwsec_policy_appid_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_NWSEC_RULE,
                          slab_args={.name="nwsec_rule",
                         .size=sizeof(hal::nwsec_rule_t), .num_elements=1024,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_NWSEC_RULE_LIST,
                          slab_args={.name="nwsec_rule_list",
                         .size=sizeof(hal::nwsec_rulelist_t), .num_elements=1024,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_IPV4_RULE,
                          slab_args={.name="ipv4_rule",
                         .size=sizeof(hal::ipv4_rule_t), .num_elements=1024,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_RULE_CFG,
                          slab_args={.name="rule_cfg",
                         .size=sizeof(hal::rule_cfg_t), .num_elements=1024,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_RULE_DATA,
                          slab_args={.name="rule_data",
                         .size=sizeof(hal::rule_data_t), .num_elements=1024,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_RULE_CTR,
                          slab_args={.name="rule_ctr",
                         .size=sizeof(hal::rule_ctr_t), .num_elements=1024,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_PROXY,
                          slab_args={.name="proxy",
                         .size=sizeof(hal::proxy_t), .num_elements=HAL_MAX_PROXY,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_PROXY_FLOW_INFO,
                          slab_args={.name="proxy_flow_info",
                         .size=sizeof(hal::proxy_flow_info_t), .num_elements=HAL_MAX_PROXY_FLOWS,
                        .thread_safe=false, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((slab != NULL), false);
+    SDK_ASSERT_RETURN((slab != NULL), false);
 
     return true;
 }
@@ -638,8 +638,8 @@ bool
 hal_cfg_db::init(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 {
     mmgr_ = mmgr;
-    HAL_ASSERT_RETURN((init_pss(hal_cfg, mmgr) == true), false);
-    HAL_ASSERT_RETURN((init_vss(hal_cfg) == true), false);
+    SDK_ASSERT_RETURN((init_pss(hal_cfg, mmgr) == true), false);
+    SDK_ASSERT_RETURN((init_vss(hal_cfg) == true), false);
     return true;
 }
 
@@ -824,7 +824,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::hal_handle_id_compute_hash_func,
                   hal::hal_handle_id_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((hal_handle_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((hal_handle_id_ht_ != NULL), false);
 
     // initialize vrf related data structures
     HAL_HT_CREATE("vrf", vrf_id_ht_,
@@ -833,7 +833,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::vrf_id_compute_hash_func,
                   hal::vrf_id_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((vrf_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((vrf_id_ht_ != NULL), false);
 
     // initialize network related data structures
     HAL_HT_CREATE("nw", network_key_ht_,
@@ -842,7 +842,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::network_compute_hash_func,
                   hal::network_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((network_key_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((network_key_ht_ != NULL), false);
 
     // initialize security profile related data structures
     HAL_HT_CREATE("nwsec-profile", nwsec_profile_id_ht_,
@@ -851,7 +851,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::nwsec_profile_id_compute_hash_func,
                   hal::nwsec_profile_id_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((nwsec_profile_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((nwsec_profile_id_ht_ != NULL), false);
 
     // initialize L2 segment related data structures
     HAL_HT_CREATE("l2seg", l2seg_id_ht_,
@@ -860,7 +860,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::l2seg_id_compute_hash_func,
                   hal::l2seg_id_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((l2seg_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((l2seg_id_ht_ != NULL), false);
 
     HAL_HT_CREATE("l2seg_uplink_oifs", l2seg_uplink_oif_ht_,
                   HAL_MAX_MC_ENTRIES >> 1,
@@ -868,7 +868,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::l2seg_uplink_oif_compute_hash_func,
                   hal::l2seg_uplink_oif_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((l2seg_uplink_oif_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((l2seg_uplink_oif_ht_ != NULL), false);
 
     HAL_HT_CREATE("EP L2", ep_l2_ht_,
                   HAL_MAX_ENDPOINTS >> 1,
@@ -876,7 +876,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::ep_compute_l2_hash_func,
                   hal::ep_compare_l2_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((ep_l2_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((ep_l2_ht_ != NULL), false);
 
     HAL_HT_CREATE("EP L3", ep_l3_entry_ht_,
                   HAL_MAX_ENDPOINTS,     // twice that of EPs, 1 IPv4,  IPv6 per EP
@@ -884,7 +884,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::ep_compute_l3_hash_func,
                   hal::ep_compare_l3_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((ep_l3_entry_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((ep_l3_entry_ht_ != NULL), false);
 
     // initialize mc entry related data structures
     HAL_HT_CREATE("mcast", mc_key_ht_,
@@ -893,14 +893,14 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::mc_entry_compute_hash_func,
                   hal::mc_entry_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((mc_key_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((mc_key_ht_ != NULL), false);
     HAL_HT_CREATE("OIF List", oif_list_id_ht_,
                   HAL_MAX_OIF_LISTS >> 1,
                   hal::oif_list_get_key_func,
                   hal::oif_list_compute_hash_func,
                   hal::oif_list_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((oif_list_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((oif_list_id_ht_ != NULL), false);
 
     // initialize LIF related data structures
     HAL_HT_CREATE("lif", lif_id_ht_,
@@ -909,7 +909,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::lif_id_compute_hash_func,
                   hal::lif_id_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((lif_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((lif_id_ht_ != NULL), false);
 
     // initialize interface related data structures
     HAL_HT_CREATE("interface", if_id_ht_,
@@ -918,7 +918,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::if_id_compute_hash_func,
                   hal::if_id_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((if_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((if_id_ht_ != NULL), false);
 
     // initialize flow/session related data structures
     HAL_HT_CREATE("session-handle", session_hal_handle_ht_,
@@ -927,7 +927,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::session_compute_handle_hash_func,
                   hal::session_compare_handle_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((session_hal_handle_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((session_hal_handle_ht_ != NULL), false);
 
     HAL_HT_CREATE("iflow", session_hal_iflow_ht_,
                   HAL_MAX_SESSIONS >> 1,
@@ -935,7 +935,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::session_compute_iflow_hash_func,
                   hal::session_compare_iflow_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((session_hal_iflow_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((session_hal_iflow_ht_ != NULL), false);
 
     HAL_HT_CREATE("rflow", session_hal_rflow_ht_,
                   HAL_MAX_SESSIONS >> 1,
@@ -943,7 +943,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::session_compute_rflow_hash_func,
                   hal::session_compare_rflow_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((session_hal_rflow_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((session_hal_rflow_ht_ != NULL), false);
 
     // initialize l4lb related data structures
     HAL_HT_CREATE("L4 LB", l4lb_ht_,
@@ -952,7 +952,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::l4lb_compute_key_hash_func,
                   hal::l4lb_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((l4lb_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((l4lb_ht_ != NULL), false);
 
     // initialize Qos-class related data structures
     HAL_HT_CREATE("QoS-Class", qos_class_ht_,
@@ -961,7 +961,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::qos_class_compute_hash_func,
                   hal::qos_class_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((qos_class_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((qos_class_ht_ != NULL), false);
 
     // initialize Copp related data structures
     HAL_HT_CREATE("COPP", copp_ht_,
@@ -970,7 +970,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::copp_compute_hash_func,
                   hal::copp_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((copp_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((copp_ht_ != NULL), false);
 
     // initialize acl related data structures
     HAL_HT_CREATE("ACL", acl_ht_,
@@ -979,7 +979,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::acl_compute_hash_func,
                   hal::acl_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((acl_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((acl_ht_ != NULL), false);
 
     HAL_HT_CREATE("security-group", nwsec_group_ht_,
                   HAL_MAX_NW_SEC_GROUP_CFG >> 1,
@@ -987,7 +987,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::nwsec_group_compute_hash_func,
                   hal::nwsec_group_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
 
     HAL_HT_CREATE("rule_cfg", rule_cfg_ht_,
                   HAL_MAX_NW_SEC_GROUP_CFG >> 1,
@@ -995,7 +995,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::rule_cfg_compute_hash_func,
                   hal::rule_cfg_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((nwsec_group_ht_ != NULL), false);
 
     // initialize NAT related data structures
     HAL_HT_CREATE("natpool", nat_pool_ht_,
@@ -1004,7 +1004,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::nat_pool_compute_hash_func,
                   hal::nat_pool_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((nat_pool_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((nat_pool_ht_ != NULL), false);
 
     HAL_HT_CREATE("nat-addr-map", nat_mapping_ht_,
                   HAL_MAX_NAT_ADDR_MAP >> 1,
@@ -1012,7 +1012,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::nat_mapping_compute_hash_func,
                   hal::nat_mapping_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((nat_mapping_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((nat_mapping_ht_ != NULL), false);
 
     // initialize nexthop related data structures
     HAL_HT_CREATE("nexthop", nexthop_id_ht_,
@@ -1021,7 +1021,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::nexthop_id_compute_hash_func,
                   hal::nexthop_id_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((nexthop_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((nexthop_id_ht_ != NULL), false);
 
     // initialize route related data structures
     HAL_HT_CREATE("route", route_ht_,
@@ -1030,7 +1030,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::route_compute_hash_func,
                   hal::route_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((route_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((route_ht_ != NULL), false);
 
     HAL_HT_CREATE("FILTER", filter_ht_,
                   HAL_MAX_FILTERS >> 1,
@@ -1038,9 +1038,9 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   hal::filter_compute_key_hash_func,
                   hal::filter_compare_key_func,
                   true, mmgr);
-    HAL_ASSERT_RETURN((filter_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((filter_ht_ != NULL), false);
 
-    HAL_ASSERT_RETURN((route_acl_create() == HAL_RET_OK), false);
+    SDK_ASSERT_RETURN((route_acl_create() == HAL_RET_OK), false);
 
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         HAL_HT_CREATE("gft-profiles",
@@ -1050,7 +1050,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       hal::gft_exact_match_profile_id_compute_hash_func,
                       hal::gft_exact_match_profile_id_compare_key_func,
                       true, mmgr);
-        HAL_ASSERT_RETURN((gft_exact_match_profile_id_ht_ != NULL), false);
+        SDK_ASSERT_RETURN((gft_exact_match_profile_id_ht_ != NULL), false);
 
         HAL_HT_CREATE("gft-transpositions",
                       gft_hdr_transposition_profile_id_ht_,
@@ -1059,7 +1059,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       hal::gft_hdr_transposition_profile_id_compute_hash_func,
                       hal::gft_hdr_transposition_profile_id_compare_key_func,
                       true, mmgr);
-        HAL_ASSERT_RETURN((gft_hdr_transposition_profile_id_ht_ != NULL), false);
+        SDK_ASSERT_RETURN((gft_hdr_transposition_profile_id_ht_ != NULL), false);
 
         HAL_HT_CREATE("gft-flow",
                       gft_exact_match_flow_entry_id_ht_,
@@ -1068,7 +1068,7 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                       hal::gft_exact_match_flow_entry_id_compute_hash_func,
                       hal::gft_exact_match_flow_entry_id_compare_key_func,
                       true, mmgr);
-        HAL_ASSERT_RETURN((gft_exact_match_flow_entry_id_ht_ != NULL), false);
+        SDK_ASSERT_RETURN((gft_exact_match_flow_entry_id_ht_ != NULL), false);
     }
 
     return true;
@@ -1082,14 +1082,14 @@ bool
 hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
 {
     event_mgr_ = eventmgr::factory(HAL_MAX_EVENTS);
-    HAL_ASSERT_RETURN((event_mgr_ != NULL), false);
+    SDK_ASSERT_RETURN((event_mgr_ != NULL), false);
 
     // initialize Crypto Cert store related data structures
     crypto_cert_store_id_ht_ = ht::factory(HAL_MAX_CRYPTO_CERT_STORE_ELEMS,
                                            hal::crypto_cert_store_get_key_func,
                                            hal::crypto_cert_store_compute_hash_func,
                                            hal::crypto_cert_store_compare_key_func);
-    HAL_ASSERT_RETURN((crypto_cert_store_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((crypto_cert_store_id_ht_ != NULL), false);
 
     // initialize TLS CB related data structures
     HAL_HT_CREATE("tlscb", tlscb_id_ht_,
@@ -1097,7 +1097,7 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::tlscb_get_key_func,
                   hal::tlscb_compute_hash_func,
                   hal::tlscb_compare_key_func);
-    HAL_ASSERT_RETURN((tlscb_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((tlscb_id_ht_ != NULL), false);
 
     // initialize TCB CB related data structures
     HAL_HT_CREATE("tcpcb", tcpcb_id_ht_,
@@ -1105,13 +1105,13 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::tcpcb_get_key_func,
                   hal::tcpcb_compute_hash_func,
                   hal::tcpcb_compare_key_func);
-    HAL_ASSERT_RETURN((tcpcb_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((tcpcb_id_ht_ != NULL), false);
 
     qos_cmap_pcp_bmp_ = bitmap::factory(HAL_MAX_DOT1Q_PCP_VALS, true);
-    HAL_ASSERT_RETURN((qos_cmap_pcp_bmp_ != NULL), false);
+    SDK_ASSERT_RETURN((qos_cmap_pcp_bmp_ != NULL), false);
 
     qos_cmap_dscp_bmp_ = bitmap::factory(HAL_MAX_IP_DSCP_VALS, true);
-    HAL_ASSERT_RETURN((qos_cmap_dscp_bmp_ != NULL), false);
+    SDK_ASSERT_RETURN((qos_cmap_dscp_bmp_ != NULL), false);
 
     // initialize WRing related data structures
     HAL_HT_CREATE("wringid", wring_id_ht_,
@@ -1119,7 +1119,7 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::wring_get_key_func,
                   hal::wring_compute_hash_func,
                   hal::wring_compare_key_func);
-    HAL_ASSERT_RETURN((wring_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((wring_id_ht_ != NULL), false);
 
     // initialize proxy service related data structures
     HAL_HT_CREATE("proxy-type", proxy_type_ht_,
@@ -1127,7 +1127,7 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::proxy_get_key_func,
                   hal::proxy_compute_hash_func,
                   hal::proxy_compare_key_func);
-    HAL_ASSERT_RETURN((proxy_type_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((proxy_type_ht_ != NULL), false);
 
     // initialize IPSEC CB related data structures
     HAL_HT_CREATE("ipseccb", ipseccb_id_ht_,
@@ -1135,7 +1135,7 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::ipseccb_get_key_func,
                   hal::ipseccb_compute_hash_func,
                   hal::ipseccb_compare_key_func);
-    HAL_ASSERT_RETURN((ipseccb_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((ipseccb_id_ht_ != NULL), false);
 
     // initialize IPSEC SA related data structures
     HAL_HT_CREATE("ipsec_sa", ipsec_sa_id_ht_,
@@ -1143,14 +1143,14 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::ipsec_sa_get_key_func,
                   hal::ipsec_sa_compute_hash_func,
                   hal::ipsec_sa_compare_key_func);
-    HAL_ASSERT_RETURN((ipsec_sa_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((ipsec_sa_id_ht_ != NULL), false);
 
     HAL_HT_CREATE("ipsec_sa_hal_hdl", ipsec_sa_hal_hdl_ht_,
                   HAL_MAX_IPSEC_SA/2,
                   hal::ipsec_sa_get_handle_key_func,
                   hal::ipsec_sa_compute_handle_hash_func,
                   hal::ipsec_sa_compare_handle_key_func);
-    HAL_ASSERT_RETURN((ipsec_sa_hal_hdl_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((ipsec_sa_hal_hdl_ht_ != NULL), false);
 
     // initialize CPU CB related data structures
     HAL_HT_CREATE("cpucb", cpucb_id_ht_,
@@ -1158,7 +1158,7 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::cpucb_get_key_func,
                   hal::cpucb_compute_hash_func,
                   hal::cpucb_compare_key_func);
-    HAL_ASSERT_RETURN((cpucb_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((cpucb_id_ht_ != NULL), false);
 
     // initialize Raw Redirect CB related data structures
     HAL_HT_CREATE("rawrcb", rawrcb_id_ht_,
@@ -1166,7 +1166,7 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::rawrcb_get_key_func,
                   hal::rawrcb_compute_hash_func,
                   hal::rawrcb_compare_key_func);
-    HAL_ASSERT_RETURN((rawrcb_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((rawrcb_id_ht_ != NULL), false);
 
     // initialize Raw Chain CB related data structures
     HAL_HT_CREATE("rawccb", rawccb_id_ht_,
@@ -1174,7 +1174,7 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::rawccb_get_key_func,
                   hal::rawccb_compute_hash_func,
                   hal::rawccb_compare_key_func);
-    HAL_ASSERT_RETURN((rawccb_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((rawccb_id_ht_ != NULL), false);
 
     // initialize Raw Redirect CB related data structures
     HAL_HT_CREATE("proxyrcb", proxyrcb_id_ht_,
@@ -1182,7 +1182,7 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::proxyrcb_get_key_func,
                   hal::proxyrcb_compute_hash_func,
                   hal::proxyrcb_compare_key_func);
-    HAL_ASSERT_RETURN((proxyrcb_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((proxyrcb_id_ht_ != NULL), false);
 
     // initialize Raw Chain CB related data structures
     HAL_HT_CREATE("proxyccb", proxyccb_id_ht_,
@@ -1190,35 +1190,35 @@ hal_oper_db::init_vss(hal_cfg_t *hal_cfg)
                   hal::proxyccb_get_key_func,
                   hal::proxyccb_compute_hash_func,
                   hal::proxyccb_compare_key_func);
-    HAL_ASSERT_RETURN((proxyccb_id_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((proxyccb_id_ht_ != NULL), false);
 
     HAL_HT_CREATE("sfw policy", nwsec_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::nwsec_policy_get_key_func,
                   hal::nwsec_policy_compute_hash_func,
                   hal::nwsec_policy_compare_key_func);
-    HAL_ASSERT_RETURN((nwsec_policy_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((nwsec_policy_ht_ != NULL), false);
 
     HAL_HT_CREATE("nat policy", nat_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::nat_cfg_pol_key_func_get,
                   hal::nat_cfg_pol_hash_func_compute,
                   hal::nat_cfg_pol_key_func_compare);
-    HAL_ASSERT_RETURN((nat_policy_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((nat_policy_ht_ != NULL), false);
 
     HAL_HT_CREATE("ipsec policy", ipsec_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::ipsec_cfg_pol_key_func_get,
                   hal::ipsec_cfg_pol_hash_func_compute,
                   hal::ipsec_cfg_pol_key_func_compare);
-    HAL_ASSERT_RETURN((ipsec_policy_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((ipsec_policy_ht_ != NULL), false);
 
     HAL_HT_CREATE("tcp_proxy policy", tcp_proxy_policy_ht_,
                   HAL_MAX_VRFS >> 1,
                   hal::tcp_proxy_cfg_pol_key_func_get,
                   hal::tcp_proxy_cfg_pol_hash_func_compute,
                   hal::tcp_proxy_cfg_pol_key_func_compare);
-    HAL_ASSERT_RETURN((tcp_proxy_policy_ht_ != NULL), false);
+    SDK_ASSERT_RETURN((tcp_proxy_policy_ht_ != NULL), false);
 
     return true;
 }
@@ -1230,8 +1230,8 @@ bool
 hal_oper_db::init(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 {
     mmgr_ = mmgr;
-    HAL_ASSERT_RETURN((init_pss(hal_cfg, mmgr) == true), false);
-    HAL_ASSERT_RETURN((init_vss(hal_cfg) == true), false);
+    SDK_ASSERT_RETURN((init_pss(hal_cfg, mmgr) == true), false);
+    SDK_ASSERT_RETURN((init_vss(hal_cfg) == true), false);
     return true;
 }
 
@@ -1447,10 +1447,10 @@ hal_state::hal_state(hal_obj_meta **obj_meta, hal_cfg_t *hal_cfg, shmmgr *mmgr)
     obj_meta_ = obj_meta;
 
     cfg_db_ = hal_cfg_db::factory(hal_cfg, mmgr);
-    HAL_ASSERT_GOTO(cfg_db_, error);
+    SDK_ASSERT_GOTO(cfg_db_, error);
 
     oper_db_ = hal_oper_db::factory(hal_cfg, mmgr);
-    HAL_ASSERT_GOTO(oper_db_, error);
+    SDK_ASSERT_GOTO(oper_db_, error);
 
     if (mmgr) {
         api_stats_ =
@@ -1461,7 +1461,7 @@ hal_state::hal_state(hal_obj_meta **obj_meta, hal_cfg_t *hal_cfg, shmmgr *mmgr)
                                         sizeof(hal_stats_t) * HAL_API_MAX);
     }
     platform_ = hal_cfg->platform;
-    HAL_ASSERT_GOTO(api_stats_, error);
+    SDK_ASSERT_GOTO(api_stats_, error);
     return;
 
 error:
@@ -1522,7 +1522,7 @@ end:
 static hal_ret_t
 hal_obj_unmarshall (hal_state_umctxt_t *umctxt)
 {
-    HAL_ASSERT((umctxt != NULL) && (umctxt->obj != NULL) && (umctxt->len > 0));
+    SDK_ASSERT((umctxt != NULL) && (umctxt->obj != NULL) && (umctxt->len > 0));
     HAL_TRACE_DEBUG("Unmarshalling obj id {}, len {}",
                     umctxt->obj_id, umctxt->len);
     umctxt->unmarshall_cb(umctxt->obj, umctxt->len);
@@ -1550,19 +1550,19 @@ hal_state::preserve_state(void)
                         (void *)HAL_SERIALIZED_STATE_STORE_VADDR);
     if (g_h3s_shmmgr == NULL) {
         HAL_TRACE_ERR("Failed to create HAL serialized state store");
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return 0;
     }
 
     // construct our root (aka. hints) object
     fm_shm_mgr = (fixed_managed_shared_memory *)g_h3s_shmmgr->mmgr();
     h3s_hints = fm_shm_mgr->construct<hal_state_hints>(HAL_STATE_HINTS)();
-    HAL_ASSERT(h3s_hints != NULL);
+    SDK_ASSERT(h3s_hints != NULL);
 
     // initialize the marshalling context
     mctxt.len = avail_sz = g_h3s_shmmgr->free_size() - 32;    // 32 bytes for internal meta of boost mem mgr.
     mctxt.mem = (uint8_t *)g_h3s_shmmgr->alloc(avail_sz);
-    HAL_ASSERT(mctxt.mem != NULL);
+    SDK_ASSERT(mctxt.mem != NULL);
     h3s_hints->set_pi_state(mctxt.mem);
 
     // walk all objects and preserve the state, if needed
@@ -1575,7 +1575,7 @@ hal_state::preserve_state(void)
         mctxt.obj_id = (uint32_t)obj_id;
         mctxt.marshall_cb = obj_meta_[obj_id]->marshall_cb();
         slab_obj = cfg_db_->get_slab(obj_meta_[obj_id]->slab_id());
-        HAL_ASSERT(slab_obj != NULL);
+        SDK_ASSERT(slab_obj != NULL);
         HAL_TRACE_DEBUG("Preserving state in slab {} for obj id {}",
                         slab_obj->name(), obj_id);
         slab_obj->walk(hal_obj_marshall, &mctxt);
@@ -1758,7 +1758,7 @@ hal_state_init (hal_cfg_t *hal_cfg)
     }
 
     // in all cases g_hal_state must be setup by now
-    HAL_ASSERT_RETURN((g_hal_state != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state != NULL), HAL_RET_ERR);
     g_hal_state->set_catalog(hal_cfg->catalog);
 
     return HAL_RET_OK;
@@ -2057,7 +2057,7 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     default:
         HAL_TRACE_ERR("Unknown slab id {}", slab_id);
-        HAL_ASSERT(FALSE);
+        SDK_ASSERT(FALSE);
         return HAL_RET_INVALID_ARG;
         break;
     }

@@ -24,7 +24,7 @@ namespace eplearn {
 #define ARP_PROBE_TIMEOUT  3 * (TIME_MSECS_PER_SEC)
 
 void *arptrans_get_key_func(void *entry) {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)(((arp_trans_t *)entry)->trans_key_ptr());
 }
 
@@ -33,7 +33,7 @@ uint32_t arptrans_compute_hash_func(void *key, uint32_t ht_size) {
 }
 
 bool arptrans_compare_key_func(void *key1, void *key2) {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (memcmp(key1, key2, sizeof(arp_trans_key_t)) == 0) {
         return true;
     }
@@ -192,7 +192,7 @@ bool arp_trans_t::arp_fsm_t::del_ip_entry(fsm_state_ctx ctx,
             trans->log_error("IP delete update failed");
         }
         ep_entry = trans->get_ep_entry();
-        HAL_ASSERT(ep_entry == NULL);
+        SDK_ASSERT(ep_entry == NULL);
     }
 
     return true;

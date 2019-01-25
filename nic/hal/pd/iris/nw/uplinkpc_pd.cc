@@ -129,9 +129,9 @@ pd_uplinkpc_delete (pd_if_delete_args_t *args)
     hal_ret_t      ret = HAL_RET_OK;
     pd_uplinkpc_t    *uplinkpc_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("deleting pd state for uplinkpc {}",
                     args->intf->if_id);
     uplinkpc_pd = (pd_uplinkpc_t *)args->intf->pd_if;
@@ -437,7 +437,7 @@ uplinkpc_pd_depgm_output_mapping_tbl (pd_uplinkpc_t *pd_upif)
     directmap                   *dm_omap = NULL;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
-    HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
 
     sdk_ret = dm_omap->remove(pd_upif->uppc_lport_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -466,7 +466,7 @@ uplinkpc_pd_program_hw(pd_uplinkpc_t *pd_upif, bool is_upgrade)
     // Upgrade: There is no table lib for this. Does only HW programming.
     if (!is_upgrade) {
         ret = uplinkpc_pd_pgm_tm_register(pd_upif, true);
-        HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+        SDK_ASSERT_RETURN(ret == HAL_RET_OK, ret);
     }
 
     /*
@@ -478,7 +478,7 @@ uplinkpc_pd_program_hw(pd_uplinkpc_t *pd_upif, bool is_upgrade)
     ret = uplinkpc_pd_pgm_output_mapping_tbl(pd_upif,
                                              pi_if->mbr_if_list,
                                              TABLE_OPER_INSERT);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    SDK_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     // TODO: Un-program Output Mapping Table and
     //       tm table program for member port
@@ -662,7 +662,7 @@ uplinkpc_pd_pgm_output_mapping_tbl(pd_uplinkpc_t *pd_uppcif,
     //      - Switch : FALSE
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
-    HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
 
 
     if (oper == TABLE_OPER_INSERT) {

@@ -39,8 +39,8 @@ p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
     p4pd_error_t        pd_err;
     eth_rx_rss_params_actiondata_t data = { 0 };
 
-    HAL_ASSERT(hw_lif_id < MAX_LIFS);
-    HAL_ASSERT(rss_key != NULL);
+    SDK_ASSERT(hw_lif_id < MAX_LIFS);
+    SDK_ASSERT(rss_key != NULL);
 
     data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_type = rss_type;
     memcpy(&data.action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,
@@ -53,7 +53,7 @@ p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
                                      hw_lif_id, NULL, NULL, &data);
     if (pd_err != P4PD_SUCCESS) {
         ret = HAL_RET_HW_FAIL;
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 
     return ret;
@@ -66,14 +66,14 @@ p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
     hal_ret_t           ret = HAL_RET_OK;
     p4pd_error_t        pd_err;
 
-    HAL_ASSERT(hw_lif_id < MAX_LIFS);
-    HAL_ASSERT(data != NULL);
+    SDK_ASSERT(hw_lif_id < MAX_LIFS);
+    SDK_ASSERT(data != NULL);
 
     pd_err = p4pd_global_entry_read(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_PARAMS,
                                     hw_lif_id, NULL, NULL, data);
     if (pd_err != P4PD_SUCCESS) {
         ret = HAL_RET_HW_FAIL;
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
 
     memrev((uint8_t *)&data->action_u.eth_rx_rss_params_eth_rx_rss_params.rss_key,

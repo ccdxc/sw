@@ -29,7 +29,7 @@ pd_system_drop_stats_set (int id, drop_stats_actiondata_t *data)
     tcam                     *tcam;
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     data->action_id = DROP_STATS_DROP_STATS_ID;
     sdk_ret = tcam->update(id, data);
@@ -53,7 +53,7 @@ pd_system_clear_drop_stats (uint8_t idx)
     drop_stats_actiondata_t    data = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     // Read from drop stats table
     sdk_ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
@@ -92,7 +92,7 @@ pd_system_populate_drop_stats (DropStatsEntry *stats_entry, uint8_t idx)
     drop_stats_actiondata_t    data = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     // Retrieve from SW to get the stats idx
     sdk_ret = tcam->retrieve(idx, &key, &key_mask, &data);
@@ -202,7 +202,7 @@ pd_system_populate_egress_drop_stats (EgressDropStatsEntry *stats_entry, uint8_t
     egress_drop_stats_actiondata_t    data = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     // Retrieve from SW to get the stats idx
     sdk_ret = tcam->retrieve(idx, &key, &key_mask, &data);
@@ -256,7 +256,7 @@ pd_system_egress_drop_stats_set (int id, egress_drop_stats_actiondata_t *data)
     tcam                     *tcam;
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     data->action_id = EGRESS_DROP_STATS_EGRESS_DROP_STATS_ID;
     sdk_ret = tcam->update(id, data);
@@ -280,7 +280,7 @@ pd_system_clear_egress_drop_stats (uint8_t idx)
     egress_drop_stats_actiondata_t    data = { 0 };
 
     tcam = g_hal_state_pd->tcam_table(P4TBL_ID_EGRESS_DROP_STATS);
-    HAL_ASSERT(tcam != NULL);
+    SDK_ASSERT(tcam != NULL);
 
     // Read from drop stats table
     sdk_ret = tcam->retrieve_from_hw(idx, &key, &key_mask, &data);
@@ -325,7 +325,7 @@ hbm_get_addr_for_stat_index (p4pd_table_id table_id,
     p4pd_table_properties_t  tbl_ctx;
 
     stats_base_addr =  get_mem_addr(CAPRI_HBM_REG_P4_ATOMIC_STATS);
-    HAL_ASSERT(stats_base_addr != INVALID_MEM_ADDRESS);
+    SDK_ASSERT(stats_base_addr != INVALID_MEM_ADDRESS);
     stats_base_addr &= ~((uint64_t)0x80000000);
 
     switch (table_id) {

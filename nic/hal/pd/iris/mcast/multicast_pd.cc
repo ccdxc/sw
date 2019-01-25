@@ -54,11 +54,11 @@ pd_mc_entry_pgm_registered_mac(pd_mc_entry_t *pd_mc_entry, table_oper_t oper)
     memset(&data, 0, sizeof(data));
 
     reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
-    HAL_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
 
     // lkp_vrf
     l2seg = l2seg_lookup_by_handle(pi_mc_entry->key.l2seg_handle);
-    HAL_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
+    SDK_ASSERT_RETURN(l2seg != NULL, HAL_RET_L2SEG_NOT_FOUND);
     key.flow_lkp_metadata_lkp_vrf = ((pd_l2seg_t *)(l2seg->pd))->l2seg_fl_lkup_id;
 
     // lkp_mac
@@ -116,7 +116,7 @@ pd_mc_entry_depgm_registered_mac (pd_mc_entry_t *mc_entry_pd)
     mc_entry_t                  *mc_entry = (mc_entry_t*) mc_entry_pd->mc_entry;
 
     reg_mac_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_REGISTERED_MACS);
-    HAL_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
 
     sdk_ret = reg_mac_tbl->remove(mc_entry_pd->reg_mac_tbl_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -141,7 +141,7 @@ mc_entry_pd_program_hw (pd_mc_entry_t *mc_entry_pd)
 
     // Program Registered Mac Table
     ret = pd_mc_entry_pgm_registered_mac(mc_entry_pd, TABLE_OPER_INSERT);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    SDK_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     return ret;
 }
@@ -156,7 +156,7 @@ mc_entry_pd_update_hw (pd_mc_entry_t *mc_entry_pd)
 
     // Program Registered Mac Table
     ret = pd_mc_entry_pgm_registered_mac(mc_entry_pd, TABLE_OPER_UPDATE);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    SDK_ASSERT_RETURN(ret == HAL_RET_OK, ret);
 
     return ret;
 }
@@ -193,10 +193,10 @@ pd_mc_entry_get (pd_func_args_t *pd_func_args)
     pd_mc_entry_get_args_t *args = pd_func_args->pd_mc_entry_get;
     pd_mc_entry_t           *mc_entry_pd = NULL;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->rsp != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->rsp != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
 
     HAL_TRACE_DEBUG("Getting pd state for mc_entry {}",
                     mc_key_to_string(&args->mc_entry->key));
@@ -256,10 +256,10 @@ pd_mc_entry_update (pd_func_args_t *pd_func_args)
     pd_mc_entry_update_args_t *args = pd_func_args->pd_mc_entry_update;
     pd_mc_entry_t           *mc_entry_pd = NULL;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->upd_entry != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->upd_entry != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("Updating pd state for mc_entry {}",
                     mc_key_to_string(&args->mc_entry->key));
 
@@ -287,9 +287,9 @@ pd_mc_entry_delete (pd_func_args_t *pd_func_args)
     pd_mc_entry_delete_args_t *args = pd_func_args->pd_mc_entry_delete;
     pd_mc_entry_t     *mc_entry_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->mc_entry != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->mc_entry->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("Deleting pd state for mc_entry {}",
                     mc_key_to_string(&args->mc_entry->key));
 

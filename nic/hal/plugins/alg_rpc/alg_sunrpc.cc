@@ -304,7 +304,7 @@ static void sunrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
     l4_alg_status_t   *l4_sess = (l4_alg_status_t *)alg_status(\
                                  ctx.feature_session_state(FTE_FEATURE_ALG_RPC));
 
-    HAL_ASSERT(l4_sess != NULL);
+    SDK_ASSERT(l4_sess != NULL);
 
     if (!status) {
         if (l4_sess && l4_sess->isCtrl == true) {
@@ -338,7 +338,7 @@ size_t process_sunrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
      */
 
     ret = g_rpc_state->alloc_and_insert_l4_sess(exp_flow->app_session, &l4_sess);
-    HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
+    SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
     l4_sess->alg = nwsec::APP_SVC_SUN_RPC;
     l4_sess->isCtrl = FALSE;
 
@@ -356,7 +356,7 @@ size_t process_sunrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
  */
 static void reset_rpc_info(rpc_info_t *rpc_info) {
 
-    HAL_ASSERT(rpc_info);
+    SDK_ASSERT(rpc_info);
 
     if (rpc_info->pkt_len && rpc_info->pkt != NULL) {
         HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);
@@ -667,13 +667,13 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
              * Alloc APP session, L4 Session and RPC info
              */
             ret = g_rpc_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
-            HAL_ASSERT_RETURN((ret == HAL_RET_OK || ret == HAL_RET_ENTRY_EXISTS), ret);
+            SDK_ASSERT_RETURN((ret == HAL_RET_OK || ret == HAL_RET_ENTRY_EXISTS), ret);
             if (ret == HAL_RET_OK) {
                 ret = g_rpc_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
-                HAL_ASSERT_RETURN((ret == HAL_RET_OK), ret);
+                SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
                 l4_sess->alg = nwsec::APP_SVC_SUN_RPC;
                 rpc_info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
-                HAL_ASSERT_RETURN((rpc_info != NULL), HAL_RET_OOM);
+                SDK_ASSERT_RETURN((rpc_info != NULL), HAL_RET_OOM);
                 l4_sess->isCtrl = TRUE;
                 l4_sess->info = rpc_info;
             }

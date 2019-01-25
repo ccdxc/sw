@@ -87,7 +87,7 @@ l2seg_get_pi_nwsec(l2seg_t *l2seg)
 
     // Check if if is enicif
     pi_vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
-    HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
+    SDK_ASSERT_RETURN(pi_vrf != NULL, NULL);
     pi_nwsec = find_nwsec_profile_by_handle(pi_vrf->nwsec_profile_handle);
     if (!pi_nwsec) {
         return NULL;

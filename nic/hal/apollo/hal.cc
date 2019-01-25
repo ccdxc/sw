@@ -84,7 +84,7 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // parse and initialize the catalog
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
-    HAL_ASSERT(catalog != NULL);
+    SDK_ASSERT(catalog != NULL);
     hal_cfg->catalog = catalog;
     hal_cfg->mempartition = sdk::platform::utils::mpartition::factory();
 

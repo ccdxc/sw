@@ -53,7 +53,7 @@ hal_handle::factory(hal_obj_id_t obj_id)
 
     // allocate from the handle slab
     mem = hal_handle_slab()->alloc();
-    HAL_ASSERT_RETURN((mem != NULL), NULL);
+    SDK_ASSERT_RETURN((mem != NULL), NULL);
 
     handle = new(mem) hal_handle();
     // initialize the handle instance

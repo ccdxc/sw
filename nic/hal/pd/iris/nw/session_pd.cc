@@ -36,9 +36,9 @@ p4pd_add_flow_stats_table_entry (uint32_t *flow_stats_idx, uint64_t clock)
     directmap                *dm;
     flow_stats_actiondata_t    d = { 0 };
 
-    HAL_ASSERT(flow_stats_idx != NULL);
+    SDK_ASSERT(flow_stats_idx != NULL);
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
 
     d.action_id = FLOW_STATS_FLOW_STATS_ID;
@@ -73,7 +73,7 @@ p4pd_del_flow_stats_table_entry (uint32_t flow_stats_idx)
     }
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     return hal_sdk_ret_to_hal_ret(dm->remove(flow_stats_idx));
 }
@@ -162,13 +162,13 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
     session_state_actiondata_t d = { 0 };
     session_t                *session = (session_t *)session_pd->session;
 
-    HAL_ASSERT(session_pd != NULL);
+    SDK_ASSERT(session_pd != NULL);
     iflow = session->iflow;
     rflow = session->rflow;
-    HAL_ASSERT((iflow != NULL) && (rflow != NULL));
+    SDK_ASSERT((iflow != NULL) && (rflow != NULL));
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     // populate the action information
     d.action_id = SESSION_STATE_TCP_SESSION_STATE_INFO_ID;
@@ -251,7 +251,7 @@ p4pd_del_session_state_table_entry (uint32_t session_state_idx)
     }
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     return hal_sdk_ret_to_hal_ret(dm->remove(session_state_idx));
 }
@@ -279,7 +279,7 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
     sess_pd = session->pd;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     sdk_ret = dm->retrieve(flow_pd->flow_stats_hw_id, &d);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -444,7 +444,7 @@ p4pd_del_flow_info_table_entry (uint32_t index)
     }
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     return hal_sdk_ret_to_hal_ret(dm->remove(index));
 }
@@ -922,7 +922,7 @@ pd_session_update (pd_func_args_t *pd_func_args)
 
     session_pd = session->pd;
 
-    HAL_ASSERT(session_pd != NULL);
+    SDK_ASSERT(session_pd != NULL);
 
     if (session->rflow) {
         HAL_TRACE_DEBUG("Programming Rflow");
@@ -998,7 +998,7 @@ pd_session_delete (pd_func_args_t *pd_func_args)
 
     session_pd = args->session->pd;
 
-    HAL_ASSERT(session_pd != NULL);
+    SDK_ASSERT(session_pd != NULL);
 
     // del flow stats entries first
     p4pd_del_flow_stats_table_entries(session_pd);
@@ -1042,7 +1042,7 @@ pd_session_get (pd_func_args_t *pd_func_args)
 
     if (args->session->conn_track_en) {
         dm = g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
-        HAL_ASSERT(dm != NULL);
+        SDK_ASSERT(dm != NULL);
 
         sdk_ret = dm->retrieve(pd_session->session_state_idx, &d);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1152,7 +1152,7 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     }
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     if (args->aug == false) {
         if (args->role == FLOW_ROLE_INITIATOR) {
@@ -1183,7 +1183,7 @@ pd_flow_get (pd_func_args_t *pd_func_args)
     }
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     sdk_ret = dm->retrieve(pd_flow.flow_stats_hw_id, &f);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -1227,7 +1227,7 @@ pd_add_cpu_bypass_flow_info (uint32_t *flow_info_hwid)
     }
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_FLOW_INFO);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     d.action_id = FLOW_INFO_FLOW_INFO_FROM_CPU_ID;
 

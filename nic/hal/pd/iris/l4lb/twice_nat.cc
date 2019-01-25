@@ -21,7 +21,7 @@ pd_twice_nat_add(pd_func_args_t *pd_func_args)
 
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     data.action_id = args->twice_nat_act;
     data.action_u.twice_nat_twice_nat_rewrite_info.l4_port = args->nat_l4_port;
@@ -61,7 +61,7 @@ pd_twice_nat_del(pd_func_args_t *pd_func_args)
     pd_twice_nat_entry_args_t *args = t_args->args;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_TWICE_NAT);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     data.action_id = args->twice_nat_act;
     data.action_u.twice_nat_twice_nat_rewrite_info.l4_port = args->nat_l4_port;

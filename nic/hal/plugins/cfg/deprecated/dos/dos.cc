@@ -16,7 +16,7 @@ namespace hal {
 uint32_t
 dos_policy_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key,
                                       sizeof(dos_policy_id_t)) % ht_size;
 }
@@ -24,7 +24,7 @@ dos_policy_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 dos_policy_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(dos_policy_id_t *)key1 == *(dos_policy_id_t *)key2) {
         return true;
     }
@@ -86,7 +86,7 @@ find_dos_policy_by_handle (hal_handle_t handle)
         return NULL;
     }
     // check for object type
-    HAL_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
+    SDK_ASSERT(hal_handle_get_from_handle_id(handle)->obj_id() ==
                HAL_OBJ_ID_DOS_POLICY);
     return (dos_policy_t *)hal_handle_get_obj(handle);
 }
@@ -181,7 +181,7 @@ dos_policy_props_init_from_spec (dos_policy_prop_t *dosp,
     /* Lookup the SG by handle and then get the SG-id */
     if (spec.peer_sg_handle() != HAL_HANDLE_INVALID) {
         nwsec_group = nwsec_group_lookup_by_handle(spec.peer_sg_handle());
-        HAL_ASSERT(nwsec_group);
+        SDK_ASSERT(nwsec_group);
         dosp->peer_sg_id = nwsec_group->sg_id;
     } else {
         dosp->peer_sg_id = HAL_NWSEC_INVALID_SG_ID;
@@ -207,7 +207,7 @@ dos_policy_init_from_spec (dos_policy_t *dosp,
     for (int i = 0; i < num_sgs; i++) {
         /* Lookup the SG by handle and then get the SG-id */
         nwsec_group = nwsec_group_lookup_by_handle(spec.sg_handle(i));
-        HAL_ASSERT(nwsec_group);
+        SDK_ASSERT(nwsec_group);
         sg_id = nwsec_group->sg_id;
         /* Add to the security group list */
         entry = (dos_policy_sg_list_entry_t *)g_hal_state->

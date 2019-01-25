@@ -68,7 +68,7 @@ vrf_pd_init (pd_vrf_t *vrf_pd)
 
     vrf_pd->l2seg_hw_id_idxr_ =
         sdk::lib::indexer::factory(HAL_MAX_HW_L2SEGMENTS, true, true);
-    HAL_ASSERT_RETURN((vrf_pd->l2seg_hw_id_idxr_ != NULL), NULL);
+    SDK_ASSERT_RETURN((vrf_pd->l2seg_hw_id_idxr_ != NULL), NULL);
 
     // prevention of usage of 0
     vrf_pd->l2seg_hw_id_idxr_->alloc_withid(0);

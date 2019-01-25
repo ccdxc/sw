@@ -826,7 +826,7 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     i++;
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below
-    HAL_ASSERT(i <= P4PLUS_SYMBOLS_MAX);
+    SDK_ASSERT(i <= P4PLUS_SYMBOLS_MAX);
 
     return i;
 }

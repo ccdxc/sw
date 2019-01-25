@@ -159,7 +159,7 @@ expected_flow_handler(fte::ctx_t &ctx, alg_utils::expected_flow_t *entry)
 #if 0
     // create l4_sess for data flow
     ret = g_rtsp_state->alloc_and_insert_l4_sess(exp_flow->app_session, &l4_sess);
-    HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+    SDK_ASSERT_RETURN(ret == HAL_RET_OK, ret);
     l4_sess->isCtrl = FALSE;
     l4_sess->info = rtsp_sess;
     l4_sess->alg = nwsec::APP_SVC_RTSP;
@@ -353,7 +353,7 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
         // Lookup/create session
         memcpy(sess_key.id, msg.hdrs.session.id, sizeof(sess_key.id));
         app_sess = get_app_session(sess_key, l4_sess->app_session);
-        HAL_ASSERT_RETURN(app_sess, HAL_RET_OOM);
+        SDK_ASSERT_RETURN(app_sess, HAL_RET_OOM);
 
         // create expected flows if it is a rtsp resp with transport header
         switch (msg.type) {
@@ -376,7 +376,7 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
  */
 static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
     alg_utils::l4_alg_status_t *l4_sess = alg_utils::alg_status(ctx.feature_session_state());
-    HAL_ASSERT(l4_sess);
+    SDK_ASSERT(l4_sess);
 
     // cleanup the session if it is an abort
     if (status == false) {
@@ -429,7 +429,7 @@ rtsp_new_control_session(fte::ctx_t &ctx)
         sess_key.ip.addr = ctx.key().dip;
         sess_key.port = ctx.key().dport;
         app_sess = get_app_session(sess_key);
-        HAL_ASSERT_RETURN(app_sess, HAL_RET_OOM);
+        SDK_ASSERT_RETURN(app_sess, HAL_RET_OOM);
 
         app_sess->isCtrl = true; // This is the control APP session
         ret = g_rtsp_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);

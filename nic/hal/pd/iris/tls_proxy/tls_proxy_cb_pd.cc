@@ -19,7 +19,7 @@ namespace pd {
 void *
 tls_proxy_cb_pd_get_hw_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((pd_tls_proxy_cb_t *)entry)->hw_id);
 }
 
@@ -32,7 +32,7 @@ tls_proxy_cb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 bool
 tls_proxy_cb_pd_compare_hw_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(tls_proxy_cb_hw_id_t *)key1 == *(tls_proxy_cb_hw_id_t *)key2) {
         return true;
     }
@@ -423,8 +423,8 @@ cleanup:
 tls_proxy_cb_hw_id_t
 pd_tls_proxy_cb_get_base_hw_index(pd_tls_proxy_cb_t* tls_proxy_cb_pd)
 {
-    HAL_ASSERT(NULL != tls_proxy_cb_pd);
-    HAL_ASSERT(NULL != tls_proxy_cb_pd->tls_proxy_cb);
+    SDK_ASSERT(NULL != tls_proxy_cb_pd);
+    SDK_ASSERT(NULL != tls_proxy_cb_pd->tls_proxy_cb);
 
     // Get the base address of TLS CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.

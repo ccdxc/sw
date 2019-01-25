@@ -52,9 +52,9 @@ pd_snake_test_delete (pd_func_args_t *pd_func_args)
     pd_snake_test_delete_args_t *args = pd_func_args->pd_snake_test_delete;
     pd_snake_test_t    *snake_test_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->snake != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->snake->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->snake != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->snake->pd != NULL), HAL_RET_INVALID_ARG);
 
     snake_test_pd = (pd_snake_test_t *)args->snake->pd;
 
@@ -257,7 +257,7 @@ pd_snake_test_loop_pgm_omap (pd_snake_test_if_t *snake_if)
     om_tmoport.dst_lif = snake_if->hw_lif_id;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
-    HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
 
     sdk_ret = dm_omap->insert_withid(&data, snake_if->slport);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -278,7 +278,7 @@ pd_snake_test_loop_depgm_omap (pd_snake_test_if_t *snake_if)
     sdk_ret_t                   sdk_ret;
 
     dm_omap = g_hal_state_pd->dm_table(P4TBL_ID_OUTPUT_MAPPING);
-    HAL_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((dm_omap != NULL), HAL_RET_ERR);
 
     sdk_ret = dm_omap->remove(snake_if->slport);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -306,7 +306,7 @@ pd_snake_test_loop_pgm_nacl (pd_snake_test_if_t *snake_if)
     memset(&data, 0, sizeof(data));
 
     acl_tbl = g_hal_state_pd->acl_table();
-    HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
 
     // (slport) => (dlport, no_drop)
 
@@ -341,7 +341,7 @@ pd_snake_test_loop_depgm_nacl (pd_snake_test_if_t *snake_if)
     acl_tcam            *acl_tbl = NULL;
 
     acl_tbl = g_hal_state_pd->acl_table();
-    HAL_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
     ret = acl_tbl->remove(snake_if->nacl_idx);
     if (ret == HAL_RET_OK) {
         HAL_TRACE_DEBUG("DeProgrammed nacl at: {}.", snake_if->nacl_idx);
@@ -378,7 +378,7 @@ pd_snake_test_loop_pgm_inp_props (pd_snake_test_if_t *snake_if,
     inp_prop.src_lport = snake_if->slport;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
     sdk_ret = inp_prop_tbl->insert(&key, &data, &snake_if->inp_prop_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
@@ -403,7 +403,7 @@ pd_snake_test_loop_depgm_inp_props (pd_snake_test_if_t *snake_if)
     sdk_hash                        *inp_prop_tbl = NULL;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
-    HAL_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
 
     sdk_ret = inp_prop_tbl->remove(snake_if->inp_prop_idx);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);

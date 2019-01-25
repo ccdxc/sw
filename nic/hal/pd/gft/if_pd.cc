@@ -34,7 +34,7 @@ pd_if_create (pd_func_args_t *pd_func_args)
             ret = pd_uplinkif_create(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
     // Branch out for different interface types
     return ret;
@@ -61,7 +61,7 @@ pd_if_update (pd_func_args_t *pd_func_args)
             ret = pd_uplinkif_update(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -88,7 +88,7 @@ pd_if_delete (pd_func_args_t *pd_func_args)
             ret = pd_uplinkif_delete(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -115,7 +115,7 @@ pd_if_mem_free (pd_func_args_t *pd_func_args)
             ret = pd_uplinkif_mem_free(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -141,7 +141,7 @@ pd_if_make_clone (pd_func_args_t *pd_func_args)
             ret = pd_uplinkif_make_clone(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;

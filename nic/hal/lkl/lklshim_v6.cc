@@ -177,7 +177,7 @@ lklshim_trigger_v6_flow_connection (lklshim_flow_t *flow, hal::flow_direction_t 
     memset(if_to_bind, 0, sizeof(char)*IF_NAME);
     src_ip = (char*)&flow->key.src_ip.v6_addr;
     fd = lkl_sys_socket(AF_INET6, SOCK_STREAM | SOCK_NONBLOCK, 0);
-    HAL_ASSERT_RETURN((fd >= 0), false);
+    SDK_ASSERT_RETURN((fd >= 0), false);
     strncpy(if_to_bind, flow->netns.dev, sizeof(char)*IF_NAME);
     if (dir != hal::FLOW_DIR_FROM_DMA) {
         flow->netns.sockfd = fd;

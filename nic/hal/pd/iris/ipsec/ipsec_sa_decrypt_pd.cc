@@ -330,8 +330,8 @@ p4pd_get_ipsec_sa_decrypt_tx_stage0_prog_addr(uint64_t* offset)
 ipsec_sa_hw_id_t
 pd_ipsec_decrypt_get_base_hw_index(pd_ipsec_t* ipsec_sa_pd)
 {
-    HAL_ASSERT(NULL != ipsec_sa_pd);
-    HAL_ASSERT(NULL != ipsec_sa_pd->ipsec_sa);
+    SDK_ASSERT(NULL != ipsec_sa_pd);
+    SDK_ASSERT(NULL != ipsec_sa_pd->ipsec_sa);
 
     // Get the base address of IPSEC CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.

@@ -72,7 +72,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
             acl_key.port_dst = ctx.get_key().dport;
             break;
         default:
-            HAL_ASSERT(true);
+            SDK_ASSERT(true);
             ret = HAL_RET_FTE_RULE_NO_MATCH;
             goto end;
         }

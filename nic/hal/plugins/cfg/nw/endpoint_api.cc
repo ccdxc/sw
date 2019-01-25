@@ -29,7 +29,7 @@ ep_get_rmac (ep_t *pi_ep, l2seg_t *l2seg)
     network_t *nw;
     nw = ep_get_nw(pi_ep, l2seg);
     if (!nw) {
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     return (&nw->rmac_addr);
 }
@@ -155,7 +155,7 @@ ep_get_pi_nwsec (ep_t *pi_ep)
     nwsec_profile_t    *pi_nwsec;
 
     pi_vrf = vrf_lookup_by_handle(pi_ep->vrf_handle);
-    HAL_ASSERT_RETURN(pi_vrf != NULL, NULL);
+    SDK_ASSERT_RETURN(pi_vrf != NULL, NULL);
 
     pi_nwsec = find_nwsec_profile_by_handle(pi_vrf->nwsec_profile_handle);
 

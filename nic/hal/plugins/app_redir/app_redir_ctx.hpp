@@ -195,7 +195,7 @@ public:
     appid_state_t appid_state() const { return appid_info_->state_; }
     void set_appid_state(appid_state_t state) {
       if(state == APPID_STATE_NEEDED)
-          HAL_ASSERT(0);
+          SDK_ASSERT(0);
       else if(appid_info_)
         appid_info_->state_ = state;
     }
@@ -214,7 +214,7 @@ public:
 
     void set_appid_needed(fte::ctx_t& ctx) {
         if(appid_info_) {
-            //HAL_ASSERT(0);
+            //SDK_ASSERT(0);
             return;
         } else {
             appid_info_ = (appid_info_t *)ctx.feature_session_state(FTE_FEATURE_APP_REDIR_APPID);

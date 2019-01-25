@@ -26,7 +26,7 @@ network_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry;
     network_t                   *nw = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -35,7 +35,7 @@ network_get_key_func (void *entry)
     return (void *)&(nw->nw_key);
 
 #if 0
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((network_t *)entry)->nw_key);
 #endif
 }
@@ -55,7 +55,7 @@ network_compute_hash_func (void *key, uint32_t ht_size)
 bool
 network_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(network_key_t))) {
         return true;
     }
@@ -335,7 +335,7 @@ network_read_security_groups (network_t *nw, const NetworkSpec& spec)
         sg_handle = sg->hal_handle;
         hal_add_to_handle_list(&nw->sg_list_head, sg_handle);
         // ret = add_nw_to_security_group(sg->sg_id, nw->hal_handle);
-        // HAL_ASSERT_RETURN(ret == HAL_RET_OK, ret);
+        // SDK_ASSERT_RETURN(ret == HAL_RET_OK, ret);
     }
 
     return ret;
@@ -1316,7 +1316,7 @@ end:
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("{}:commit cbs can't fail: ret:{}",
                       __FUNCTION__, ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     return ret;
 }
@@ -1570,7 +1570,7 @@ nw_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     uint32_t                serialized_state_sz;
     network_t               *nw = (network_t *)obj;
 
-    HAL_ASSERT((nw != NULL) && (mlen != NULL));
+    SDK_ASSERT((nw != NULL) && (mlen != NULL));
     *mlen = 0;
 
     // get all information about this network (includes spec, status & stats)
@@ -1635,7 +1635,7 @@ nw_restore_cb (void *obj, uint32_t len)
     // de-serialize the object
     if (nw_info.ParseFromArray(obj, len) == false) {
         HAL_TRACE_ERR("Failed to de-serialize a serialized network obj");
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return 0;
     }
 

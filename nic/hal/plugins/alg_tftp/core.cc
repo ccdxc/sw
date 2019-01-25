@@ -169,7 +169,7 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
     hal_ret_t          ret;
     tftp_info_t       *tftp_info = NULL;
 
-    HAL_ASSERT(l4_sess != NULL);
+    SDK_ASSERT(l4_sess != NULL);
 
     if (!status) {
         if (l4_sess && l4_sess->isCtrl == TRUE) {
@@ -187,14 +187,14 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
              */
             ret = g_tftp_state->alloc_and_insert_exp_flow(l4_sess->app_session,
                                                          key, &exp_flow);
-            HAL_ASSERT(ret == HAL_RET_OK);
+            SDK_ASSERT(ret == HAL_RET_OK);
             exp_flow->entry.handler = expected_flow_handler;
             exp_flow->alg = nwsec::APP_SVC_TFTP;
             exp_flow->info = l4_sess->info;
             exp_flow->sess_hdl = l4_sess->sess_hdl;
             HAL_TRACE_DEBUG("Setting expected flow {:p}", (void *)exp_flow);
             l4_sess->info = (tftp_info_t *)g_tftp_state->alg_info_slab()->alloc();
-            HAL_ASSERT(l4_sess->info != NULL);
+            SDK_ASSERT(l4_sess->info != NULL);
         } else { /* Data session */
             /*
              * Data session flow has been installed sucessfully
@@ -217,9 +217,9 @@ hal_ret_t process_tftp(fte::ctx_t& ctx, l4_alg_status_t *exp_flow) {
     uint16_t              tftpop = 0;
     tftp_info_t          *info = NULL;
 
-    HAL_ASSERT(exp_flow != NULL);
+    SDK_ASSERT(exp_flow != NULL);
     info = (tftp_info_t *)exp_flow->info;
-    HAL_ASSERT(info != NULL);
+    SDK_ASSERT(info != NULL);
 
     // Payload offset from CPU header
     offset = ctx.cpu_rxhdr()->payload_offset;
@@ -246,7 +246,7 @@ hal_ret_t process_tftp(fte::ctx_t& ctx, l4_alg_status_t *exp_flow) {
                 tftpop != 5) { /* ERROR */
                 HAL_TRACE_DEBUG("TFTP Unknown Opcode response received");
                 l4_sess = g_tftp_state->get_ctrl_l4sess(exp_flow->app_session);
-                HAL_ASSERT(l4_sess != NULL);
+                SDK_ASSERT(l4_sess != NULL);
                 incr_unknown_opcode(l4_sess);
             }
             break;
@@ -259,14 +259,14 @@ hal_ret_t process_tftp(fte::ctx_t& ctx, l4_alg_status_t *exp_flow) {
                 tftpop != 5) { /* ERROR */
                 HAL_TRACE_DEBUG("TFTP Unknown Opcode response received");
                 l4_sess = g_tftp_state->get_ctrl_l4sess(exp_flow->app_session);
-                HAL_ASSERT(l4_sess != NULL);
+                SDK_ASSERT(l4_sess != NULL);
                 incr_unknown_opcode(l4_sess);
             }
             break;
 
         default:
            // Shouldnt be here
-           HAL_ASSERT(0);
+           SDK_ASSERT(0);
            return ret;
     }
     ctx.register_completion_handler(tftp_completion_hdlr);
@@ -336,12 +336,12 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
              * Alloc APP session, EXP flow and TFTP info
              */
             ret = g_tftp_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
-            HAL_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
+            SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
             ret = g_tftp_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
-            HAL_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
+            SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
             l4_sess->alg = nwsec::APP_SVC_TFTP;
             tftp_info = (tftp_info_t *)g_tftp_state->alg_info_slab()->alloc();
-            HAL_ASSERT_RETURN((tftp_info != NULL), fte::PIPELINE_CONTINUE);
+            SDK_ASSERT_RETURN((tftp_info != NULL), fte::PIPELINE_CONTINUE);
             l4_sess->isCtrl = TRUE;
             l4_sess->info = tftp_info;
             tftp_info->tftpop = tftpop;
@@ -359,7 +359,7 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
         if (l4_sess != NULL && l4_sess->alg == nwsec::APP_SVC_TFTP) {
             HAL_TRACE_DEBUG("TFTP ALG invoking callback");
             tftp_info = (tftp_info_t *)l4_sess->info;
-            HAL_ASSERT(tftp_info);
+            SDK_ASSERT(tftp_info);
 
             if (tftp_info->callback != NULL) {
                 tftp_info->callback(ctx, l4_sess);

@@ -474,7 +474,7 @@ ipsec_cfg_pol_key_func_get (void *entry)
     ipsec_cfg_pol_t *pol = NULL;
     hal_handle_id_ht_entry_t *ht_entry;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     if ((ht_entry = (hal_handle_id_ht_entry_t *)entry) == NULL)
         return NULL;
 
@@ -492,7 +492,7 @@ ipsec_cfg_pol_hash_func_compute (void *key, uint32_t ht_size)
 static inline bool
 ipsec_cfg_pol_key_func_compare (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(ipsec_cfg_pol_key_t)))
         return true;
 

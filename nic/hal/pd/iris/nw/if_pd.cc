@@ -46,7 +46,7 @@ pd_if_create (pd_func_args_t *pd_func_args)
             ret = pd_app_redir_if_create(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
     // Branch out for different interface types
     return ret;
@@ -83,7 +83,7 @@ pd_if_update (pd_func_args_t *pd_func_args)
             ret = pd_app_redir_if_update(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -120,7 +120,7 @@ pd_if_delete (pd_func_args_t *pd_func_args)
             ret = pd_app_redir_if_delete(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -157,7 +157,7 @@ pd_if_get (pd_func_args_t *pd_func_args)
             ret = pd_app_redir_if_get(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -195,7 +195,7 @@ pd_if_restore (pd_func_args_t *pd_func_args)
             ret = pd_app_redir_if_restore(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -244,7 +244,7 @@ pd_if_mem_free (pd_func_args_t *pd_func_args)
             ret = pd_app_redir_if_mem_free(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -282,7 +282,7 @@ pd_if_make_clone (pd_func_args_t *pd_func_args)
             ret = pd_app_redir_if_make_clone(args);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -319,7 +319,7 @@ pd_if_nwsec_update (pd_func_args_t *pd_func_args)
                                                         args->nwsec_prof, 0, NULL);
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -337,8 +337,8 @@ if_l2seg_get_encap_rewrite(if_t *pi_if, l2seg_t *pi_l2seg, uint32_t *encap_data,
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    HAL_ASSERT_RETURN(pi_if && pi_l2seg && encap_data, HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN(rewrite_idx && tnnl_rewrite_idx, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(pi_if && pi_l2seg && encap_data, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(rewrite_idx && tnnl_rewrite_idx, HAL_RET_INVALID_ARG);
 
     switch(hal::intf_get_if_type(pi_if)) {
         case intf::IF_TYPE_ENIC:
@@ -369,7 +369,7 @@ if_l2seg_get_encap_rewrite(if_t *pi_if, l2seg_t *pi_l2seg, uint32_t *encap_data,
             // TODO: Handle for Tunnel case
             break;
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
     return ret;
@@ -409,11 +409,11 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
         return HAL_RET_OK;
     }
 
-    HAL_ASSERT_RETURN(pi_if, HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN(pi_l2seg, HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN(data, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(pi_if, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(pi_l2seg, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(data, HAL_RET_INVALID_ARG);
 
-    HAL_ASSERT_RETURN(pi_if && pi_l2seg && data, HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN(pi_if && pi_l2seg && data, HAL_RET_INVALID_ARG);
 
     data->lport = if_get_lport_id(pi_if);
     switch (hal::intf_get_if_type(pi_if)) {
@@ -519,7 +519,7 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
                     break;
                 }
                 default:
-                    HAL_ASSERT(0);
+                    SDK_ASSERT(0);
             }
             break;
         }
@@ -532,7 +532,7 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
             break;
         }
         default:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
     }
 
 end:

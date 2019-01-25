@@ -35,19 +35,19 @@ extern "C" hal_ret_t alg_rpc_init(hal_cfg_t *hal_cfg) {
                         slab_args={.name="rpc_alg_appsess",
                        .size=sizeof(app_session_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((appsess_slab_ != NULL), HAL_RET_OOM);
+    SDK_ASSERT_RETURN((appsess_slab_ != NULL), HAL_RET_OOM);
 
     l4sess_slab_ = g_hal_state->register_slab(HAL_SLAB_RPC_ALG_L4SESS,
                         slab_args={.name="rpc_alg_l4sess",
                        .size=sizeof(l4_alg_status_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((l4sess_slab_ != NULL), HAL_RET_OOM);
+    SDK_ASSERT_RETURN((l4sess_slab_ != NULL), HAL_RET_OOM);
 
     rpcinfo_slab_  = g_hal_state->register_slab(HAL_SLAB_RPC_ALG_RPCINFO,
                         slab_args={.name="rpc_alg_rpcinfo",
                        .size=sizeof(rpc_info_t), .num_elements=64,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
-    HAL_ASSERT_RETURN((rpcinfo_slab_ != NULL), HAL_RET_OOM);
+    SDK_ASSERT_RETURN((rpcinfo_slab_ != NULL), HAL_RET_OOM);
 
     g_rpc_state = alg_state_t::factory(FTE_FEATURE_ALG_RPC.c_str(),
                           appsess_slab_, l4sess_slab_, rpcinfo_slab_, NULL,

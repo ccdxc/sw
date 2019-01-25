@@ -578,7 +578,7 @@ SSLHelper::init_pse_engine()
     cfg_path = getenv("HAL_CONFIG_PATH");
     if (!cfg_path) {
         HAL_TRACE_ERR("Please set HAL_CONFIG_PATH env. variable");
-        HAL_ASSERT_RETURN(0, HAL_RET_ERR);
+        SDK_ASSERT_RETURN(0, HAL_RET_ERR);
     }
 
     //eng_path =  std::string(cfg_path) + "/openssl/engine/libpse.so";
@@ -621,13 +621,13 @@ SSLHelper::init_ssl_ctxt()
     HAL_TRACE_DEBUG("SSL: Initializing SSL Context");
     // Client
     client_ctx =  SSL_CTX_new(TLS_client_method());
-    HAL_ASSERT(client_ctx != NULL);
+    SDK_ASSERT(client_ctx != NULL);
     SSL_CTX_set_info_callback(client_ctx, ssl_info_callback);
     SSL_CTX_set_mode(client_ctx, SSL_MODE_ASYNC);
 
     // Server
     server_ctx = SSL_CTX_new(TLS_server_method());
-    HAL_ASSERT(server_ctx != NULL);
+    SDK_ASSERT(server_ctx != NULL);
     SSL_CTX_set_info_callback(server_ctx, ssl_info_callback);
     SSL_CTX_set_mode(server_ctx, SSL_MODE_ASYNC);
 

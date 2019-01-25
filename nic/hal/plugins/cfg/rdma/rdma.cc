@@ -30,7 +30,7 @@ RDMAManager::RDMAManager() {
   uint32_t num_units = (kHBMSizeKB * 1024) / kAllocUnit;
 
   // Minimum 128 MB
-  HAL_ASSERT(kHBMSizeKB >= (128 * 1024));
+  SDK_ASSERT(kHBMSizeKB >= (128 * 1024));
 
   if (hbm_addr & 0xFFF) {
     // Not 4K aligned.
@@ -123,7 +123,7 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table write failure for rxdma, idx : {}, err : {}",
                       lif, ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return ret;
     }
 
@@ -149,7 +149,7 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("stage0 rdma LIF table write failure for txdma, idx : {}, err : {}",
                       lif, ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return ret;
     }
 
@@ -182,7 +182,7 @@ uint64_t rdma_lif_pt_base_addr(uint32_t lif)
     hal_ret_t           rc;
 
     rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
-    HAL_ASSERT(rc == HAL_RET_OK);
+    SDK_ASSERT(rc == HAL_RET_OK);
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
                     "log_num_pt_entries {} rdma_en_qtype_mask {}\n",
                     __FUNCTION__, __LINE__, lif,
@@ -203,7 +203,7 @@ uint64_t rdma_lif_kt_base_addr(uint32_t lif)
     hal_ret_t           rc;
 
     rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
-    HAL_ASSERT(rc == HAL_RET_OK);
+    SDK_ASSERT(rc == HAL_RET_OK);
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
                     "log_num_pt_entries {} rdma_en_qtype_mask {}\n",
                     __FUNCTION__, __LINE__, lif,
@@ -224,7 +224,7 @@ uint64_t rdma_lif_at_base_addr(uint32_t lif)
     hal_ret_t           rc;
 
     rc = rdma_tx_sram_lif_entry_get(lif, &sram_lif_entry);
-    HAL_ASSERT(rc == HAL_RET_OK);
+    SDK_ASSERT(rc == HAL_RET_OK);
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - ah_base_addr_page_id {} "
                     "rdma_en_qtype_mask {}\n",
                     __FUNCTION__, __LINE__, lif,
@@ -243,7 +243,7 @@ uint64_t rdma_lif_barmap_base_addr(uint32_t lif)
     hal_ret_t           rc;
 
     rc = rdma_tx_sram_lif_entry_get(lif, &sram_lif_entry);
-    HAL_ASSERT(rc == HAL_RET_OK);
+    SDK_ASSERT(rc == HAL_RET_OK);
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - barmap_base_addr_id {} "
                     "rdma_en_qtype_mask {}\n",
                     __FUNCTION__, __LINE__, lif,
@@ -295,7 +295,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     HAL_TRACE_DEBUG("({},{}): Lif {} cq_base_addr: {:#x}, max_cqs: {} log_num_cq_entries: {}",
            __FUNCTION__, __LINE__, lif, cq_base_addr,
            max_cqs, log2(roundup_to_pow_2(max_cqs)));
-    HAL_ASSERT((cq_base_addr & ((1 << CQCB_ADDR_HI_SHIFT) - 1)) == 0);
+    SDK_ASSERT((cq_base_addr & ((1 << CQCB_ADDR_HI_SHIFT) - 1)) == 0);
     sram_lif_entry.cqcb_base_addr_hi = cq_base_addr >> CQCB_ADDR_HI_SHIFT;
     sram_lif_entry.log_num_cq_entries = log2(roundup_to_pow_2(max_cqs));
 
@@ -303,14 +303,14 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     sq_base_addr = lif_manager()->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_SQ);
     HAL_TRACE_DEBUG("({},{}): Lif {} sq_base_addr: {:#x}",
                     __FUNCTION__, __LINE__, lif, sq_base_addr);
-    HAL_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
+    SDK_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
 
     // Fill the RQ info in sram_lif_entry
     rq_base_addr = lif_manager()->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
     HAL_TRACE_DEBUG("({},{}): Lif {} rq_base_addr: {:#x}",
                     __FUNCTION__, __LINE__, lif, rq_base_addr);
-    HAL_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
+    SDK_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
     
     // Setup page table and key table entries
@@ -385,7 +385,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
            sram_lif_entry.aq_qtype);
 
     rc = rdma_sram_lif_init(lif, &sram_lif_entry);
-    HAL_ASSERT(rc == HAL_RET_OK);
+    SDK_ASSERT(rc == HAL_RET_OK);
     HAL_TRACE_DEBUG("({},{}): Lif: {}: SRAM LIF INIT successful\n", __FUNCTION__, __LINE__, lif);
 
     HAL_TRACE_DEBUG("({},{}): Lif: {}: LIF Init successful\n", __FUNCTION__, __LINE__, lif);
@@ -684,7 +684,7 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
     cqcb.ring_header.pc = offset >> 6;
 
     stage0_rdma_cq_tx_prog_addr(&offset_verify);
-    HAL_ASSERT(offset == offset_verify);
+    SDK_ASSERT(offset == offset_verify);
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial CQCB State, CQCB->PT: {:#x} cqcb_size: {}",
@@ -755,7 +755,7 @@ rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
     rsp->set_api_status(types::API_STATUS_OK);
     // Fill the EQ Interrupt address = Intr_table base + 8 bytes for each intr_num
     hbm_eq_intr_table_base = mp->start_addr("rdma-eq-intr-table");
-    HAL_ASSERT(hbm_eq_intr_table_base > 0);
+    SDK_ASSERT(hbm_eq_intr_table_base > 0);
     //eqcb.int_assert_addr = hbm_eq_intr_table_base + spec.int_num() * sizeof(uint8_t);
 
     eqcb.int_assert_addr = intr_assert_addr(spec.int_num());
@@ -813,7 +813,7 @@ rdma_aq_create (RdmaAqSpec& spec, RdmaAqResponse *rsp)
     stage0_rdma_aq_tx_prog_addr(&offset);
     aqcb.aqcb0.ring_header.pc = offset >> 6;
 
-    //HAL_ASSERT(offset == offset_verify);
+    //SDK_ASSERT(offset == offset_verify);
 
     // write to hardware
     HAL_TRACE_DEBUG("{}: LIF: {}: Writting initial AQCB State, AQCB->phy_addr: {:#x} "

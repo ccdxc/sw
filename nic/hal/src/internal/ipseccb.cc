@@ -18,7 +18,7 @@ namespace hal {
 void *
 ipseccb_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((ipseccb_t *)entry)->cb_id);
 }
 
@@ -31,7 +31,7 @@ ipseccb_compute_hash_func (void *key, uint32_t ht_size)
 bool
 ipseccb_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(ipseccb_id_t *)key1 == *(ipseccb_id_t *)key2) {
         return true;
     }
@@ -41,7 +41,7 @@ ipseccb_compare_key_func (void *key1, void *key2)
 void *
 ipseccb_get_handle_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((ipseccb_t *)entry)->hal_handle);
 }
 
@@ -54,7 +54,7 @@ ipseccb_compute_handle_hash_func (void *key, uint32_t ht_size)
 bool
 ipseccb_compare_handle_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }
@@ -206,7 +206,7 @@ ipseccb_create (IpsecCbSpec& spec, IpsecCbResponse *rsp)
 
     // add this L2 segment to our db
     ret = add_ipseccb_to_db(ipseccb);
-    HAL_ASSERT(ret == HAL_RET_OK);
+    SDK_ASSERT(ret == HAL_RET_OK);
 
     // prepare the response
     rsp->set_api_status(types::API_STATUS_OK);

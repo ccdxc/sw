@@ -180,7 +180,7 @@ ReplList::del_replication(void *data)
                 if (repl_te->get_repl_table_index() != repl_tbl_index_) {
                     rs = met_->free_repl_table_index(
                             repl_te->get_repl_table_index());
-                    HAL_ASSERT(rs == HAL_RET_OK);
+                    SDK_ASSERT(rs == HAL_RET_OK);
                     // delete repl_te;
                     ReplTableEntry::destroy(repl_te);
                     num_repl_tbl_entries_--;
@@ -357,9 +357,9 @@ ReplList::cleanup_last_repl_table_entry()
     hal_ret_t       rs       = HAL_RET_OK;
     ReplTableEntry  *repl_te = last_repl_tbl_entry_;
 
-    HAL_ASSERT(last_repl_tbl_entry_);
-    HAL_ASSERT(num_repl_tbl_entries_ == 1);
-    HAL_ASSERT(last_repl_tbl_entry_->get_num_repl_entries() == 0);
+    SDK_ASSERT(last_repl_tbl_entry_);
+    SDK_ASSERT(num_repl_tbl_entries_ == 1);
+    SDK_ASSERT(last_repl_tbl_entry_->get_num_repl_entries() == 0);
 
     if (get_attached_list_index()) {
         rs = detach_frm_repl_list();

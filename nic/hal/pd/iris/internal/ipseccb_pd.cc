@@ -22,7 +22,7 @@ hal_ret_t p4pd_get_ipsec_tx_stage0_prog_addr(uint64_t* offset);
 void *
 ipseccb_pd_get_hw_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((pd_ipseccb_encrypt_t *)entry)->hw_id);
 }
 
@@ -35,7 +35,7 @@ ipseccb_pd_compute_hw_hash_func (void *key, uint32_t ht_size)
 bool
 ipseccb_pd_compare_hw_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(ipseccb_hw_id_t *)key1 == *(ipseccb_hw_id_t *)key2) {
         return true;
     }
@@ -433,8 +433,8 @@ p4pd_get_ipseccb_txdma_entry(pd_ipseccb_encrypt_t* ipseccb_pd)
 ipseccb_hw_id_t
 pd_ipseccb_get_base_hw_index(pd_ipseccb_encrypt_t* ipseccb_pd)
 {
-    HAL_ASSERT(NULL != ipseccb_pd);
-    HAL_ASSERT(NULL != ipseccb_pd->ipseccb);
+    SDK_ASSERT(NULL != ipseccb_pd);
+    SDK_ASSERT(NULL != ipseccb_pd->ipseccb);
 
     // Get the base address of IPSEC CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.

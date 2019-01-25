@@ -505,7 +505,7 @@ hal_ret_t capri_barco_xts0_key_array_init(void)
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
     key_array_base = get_mem_addr(key_desc_array);
-    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
+    SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
@@ -591,7 +591,7 @@ hal_ret_t capri_barco_xts1_key_array_init(void)
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
     key_array_base = get_mem_addr(key_desc_array);
-    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
+    SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
@@ -677,7 +677,7 @@ hal_ret_t capri_barco_mpp0_key_array_init(void)
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
     key_array_base = get_mem_addr(key_desc_array);
-    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
+    SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
@@ -852,7 +852,7 @@ hal_ret_t capri_barco_mpp1_key_array_init(void)
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
     key_array_base = get_mem_addr(key_desc_array);
-    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
+    SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
@@ -944,7 +944,7 @@ hal_ret_t capri_barco_mpp2_key_array_init(void)
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
     key_array_base = get_mem_addr(key_desc_array);
-    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
+    SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
@@ -1036,7 +1036,7 @@ hal_ret_t capri_barco_mpp3_key_array_init(void)
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
     key_array_base = get_mem_addr(key_desc_array);
-    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
+    SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
@@ -1128,7 +1128,7 @@ hal_ret_t capri_barco_gcm0_key_array_init(void)
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
     key_array_base = get_mem_addr(key_desc_array);
-    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
+    SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */
@@ -1304,7 +1304,7 @@ hal_ret_t capri_barco_gcm1_key_array_init(void)
     // Currently sharing the same key descriptor array as GCM
     // Eventually all symmetric protocols will share one large key array
     key_array_base = get_mem_addr(key_desc_array);
-    HAL_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
+    SDK_ASSERT(key_array_base != INVALID_MEM_ADDRESS);
     /* All regions in hbm_mem.json are in multiples of 1kb and hence should already be aligned to 16byte
      * but confirm
      */

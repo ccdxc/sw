@@ -47,7 +47,7 @@ gft_exact_match_profile_id_get_key_func (void *entry)
     hal_handle_id_ht_entry_t     *ht_entry;
     gft_exact_match_profile_t    *profile = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     profile =
         (gft_exact_match_profile_t *)hal_handle_get_obj(ht_entry->handle_id);
@@ -60,7 +60,7 @@ gft_exact_match_profile_id_get_key_func (void *entry)
 uint32_t
 gft_exact_match_profile_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key,
                sizeof(gft_profile_id_t)) % ht_size;
 }
@@ -71,7 +71,7 @@ gft_exact_match_profile_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 gft_exact_match_profile_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(gft_profile_id_t *)key1 == *(gft_profile_id_t *)key2) {
         return true;
     }
@@ -87,7 +87,7 @@ gft_hdr_transposition_profile_id_get_key_func (void *entry)
     hal_handle_id_ht_entry_t       *ht_entry;
     gft_hdr_xposition_profile_t    *profile = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     profile =
         (gft_hdr_xposition_profile_t *)hal_handle_get_obj(ht_entry->handle_id);
@@ -100,7 +100,7 @@ gft_hdr_transposition_profile_id_get_key_func (void *entry)
 uint32_t
 gft_hdr_transposition_profile_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key,
                sizeof(gft_profile_id_t)) % ht_size;
 }
@@ -111,7 +111,7 @@ gft_hdr_transposition_profile_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 gft_hdr_transposition_profile_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(gft_profile_id_t *)key1 == *(gft_profile_id_t *)key2) {
         return true;
     }
@@ -127,7 +127,7 @@ gft_exact_match_flow_entry_id_get_key_func (void *entry)
     hal_handle_id_ht_entry_t        *ht_entry;
     gft_exact_match_flow_entry_t    *flow_entry = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     flow_entry =
         (gft_exact_match_flow_entry_t *)hal_handle_get_obj(ht_entry->handle_id);
@@ -140,7 +140,7 @@ gft_exact_match_flow_entry_id_get_key_func (void *entry)
 uint32_t
 gft_exact_match_flow_entry_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key,
                sizeof(gft_flow_entry_id_t)) % ht_size;
 }
@@ -151,7 +151,7 @@ gft_exact_match_flow_entry_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 gft_exact_match_flow_entry_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(gft_flow_entry_id_t *)key1 == *(gft_flow_entry_id_t *)key2) {
         return true;
     }
@@ -1144,25 +1144,25 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
     gft_hdr_group_exact_match_t       *gft_em;
     gft_hdr_group_xposition_t         *gft_ht;
 
-    HAL_ASSERT(spec.key_or_handle().key_or_handle_case() ==
+    SDK_ASSERT(spec.key_or_handle().key_or_handle_case() ==
                    GftExactMatchFlowEntryKeyHandle::kFlowEntryId);
     gft_emp = gft_emp_lookup_key_or_handle(spec.exact_match_profile());
-    HAL_ASSERT(gft_emp);
+    SDK_ASSERT(gft_emp);
 
 #if 0
     // No need of xposition profile
     gft_htp = gft_htp_lookup_key_or_handle(spec.transposition_profile());
-    HAL_ASSERT(gft_htp);
+    SDK_ASSERT(gft_htp);
 #endif
 
     flow_entry->table_type = gft_spec_to_hal_table_type(spec.table_type());
     flow_entry->num_exact_matches = spec.exact_matches_size();
-    HAL_ASSERT(flow_entry->num_exact_matches != 0);
+    SDK_ASSERT(flow_entry->num_exact_matches != 0);
     flow_entry->exact_matches =
         (gft_hdr_group_exact_match_t *)HAL_CALLOC(HAL_MEM_ALLOC_GFT_EXACT_MATCH,
                                                   flow_entry->num_exact_matches *
                                                   sizeof(gft_hdr_group_exact_match_t));
-    HAL_ASSERT(flow_entry->exact_matches != NULL);
+    SDK_ASSERT(flow_entry->exact_matches != NULL);
 
     flow_entry->num_transpositions = spec.transpositions_size();
     if (flow_entry->num_transpositions != 0) {
@@ -1170,7 +1170,7 @@ gft_emfe_init_from_spec (gft_exact_match_flow_entry_t *flow_entry,
             (gft_hdr_group_xposition_t *)HAL_CALLOC(HAL_MEM_ALLOC_GFT_HDR_GROUP_TRANSPOSITION,
                                                     flow_entry->num_transpositions *
                                                     sizeof(gft_hdr_group_xposition_t));
-        HAL_ASSERT(flow_entry->transpositions != NULL);
+        SDK_ASSERT(flow_entry->transpositions != NULL);
     }
 
     flow_entry->flow_entry_id = spec.key_or_handle().flow_entry_id();

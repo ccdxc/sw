@@ -104,9 +104,9 @@ pd_nwsec_profile_delete (pd_func_args_t *pd_func_args)
     pd_nwsec_profile_delete_args_t *args = pd_func_args->pd_nwsec_profile_delete;
     pd_nwsec_profile_t  *nwsec_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->nwsec_profile != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->nwsec_profile->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->nwsec_profile != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->nwsec_profile->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("{}:deleting pd state for nwsec profile {}",
                     __FUNCTION__, args->nwsec_profile->profile_id);
     nwsec_pd = (pd_nwsec_profile_t *)args->nwsec_profile->pd;
@@ -171,7 +171,7 @@ pd_nwsec_profile_restore (pd_func_args_t *pd_func_args)
     pd_nwsec_profile_restore_args_t *args = pd_func_args->pd_nwsec_profile_restore;
     pd_nwsec_profile_t  *nwsec_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("Restoring pd state for vrf {}",
                     args->nwsec_profile->profile_id);
 
@@ -234,7 +234,7 @@ nwsec_pd_depgm_l4_prof_tbl (pd_nwsec_profile_t *nwsec_pd)
     directmap                   *dm;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
-    HAL_ASSERT_RETURN((dm != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((dm != NULL), HAL_RET_ERR);
 
     sdk_ret = dm->remove(nwsec_pd->nwsec_hw_id);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -263,7 +263,7 @@ nwsec_pd_pgm_l4_profile_table (pd_nwsec_profile_t *pd_nw, bool create,
     nwsec_profile_t *profile = (hal::nwsec_profile_t*)pd_nw->nwsec_profile;
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
-    HAL_ASSERT(dm != NULL);
+    SDK_ASSERT(dm != NULL);
 
     data.action_u.l4_profile_l4_profile.ip_normalization_en =
         profile->ip_normalization_en;

@@ -81,7 +81,7 @@ pd_qos_get_alloc_q_count (qos_class_t *qos_class,
             alloc_params->pcie_oq = false;
             break;
         case NUM_QOS_GROUPS:
-            HAL_ASSERT(0);
+            SDK_ASSERT(0);
             break;
     }
 
@@ -126,9 +126,9 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
 
     qos_group = qos_class_get_qos_group(qos_class);
 
-    HAL_ASSERT(q_alloc_params.cnt_uplink_iq <= 1);
-    HAL_ASSERT(q_alloc_params.cnt_txdma_iq <= HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS);
-    HAL_ASSERT(q_alloc_params.cnt_oq <= 1);
+    SDK_ASSERT(q_alloc_params.cnt_uplink_iq <= 1);
+    SDK_ASSERT(q_alloc_params.cnt_txdma_iq <= HAL_PD_QOS_MAX_TX_QUEUES_PER_CLASS);
+    SDK_ASSERT(q_alloc_params.cnt_oq <= 1);
 
     HAL_TRACE_DEBUG("Qos-class {} resource required "
                     "iq: uplink {} txdma {}/dest_oq {} type {} pcie {}",
@@ -249,7 +249,7 @@ qos_class_pd_dealloc_res (pd_qos_class_t *pd_qos_class)
         if (pd_qos_class->dest_oq_type == HAL_PD_QOS_OQ_COMMON) {
             g_hal_state_pd->qos_common_oq_idxr()->free(pd_qos_class->dest_oq);
         } else {
-            HAL_ASSERT(pd_qos_class->dest_oq >= CAPRI_TM_RXDMA_OQ_OFFSET);
+            SDK_ASSERT(pd_qos_class->dest_oq >= CAPRI_TM_RXDMA_OQ_OFFSET);
             g_hal_state_pd->qos_rxdma_oq_idxr()->free(
                 pd_qos_class->dest_oq - CAPRI_TM_RXDMA_OQ_OFFSET);
         }
@@ -351,7 +351,7 @@ qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
     iq_params.mtu = qos_class->mtu;
     iq_params.xoff_threshold = qos_class->pfc.xoff_threshold;
     iq_params.xon_threshold = qos_class->pfc.xon_threshold;
-    HAL_ASSERT(capri_tm_q_valid(pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX]));
+    SDK_ASSERT(capri_tm_q_valid(pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX]));
     iq_params.p4_q = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
@@ -390,7 +390,7 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     has_pcp = (qos_class->cmap.type == QOS_CMAP_TYPE_PCP) ||
                 (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
  
-    HAL_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
+    SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
                sizeof(dscp_map.ip_dscp));
     memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
            sizeof(qos_class->cmap.ip_dscp));
@@ -444,7 +444,7 @@ qos_class_pd_update_uplink_iq_map_remove (bool dot1q_remove, uint32_t dot1q_pcp,
         default_qos_class_iq = default_qos_class->pd->uplink.iq;
     }
 
-    HAL_ASSERT(cnt_ip_dscp == SDK_ARRAY_SIZE(dscp_map.ip_dscp));
+    SDK_ASSERT(cnt_ip_dscp == SDK_ARRAY_SIZE(dscp_map.ip_dscp));
     memcpy(dscp_map.ip_dscp, ip_dscp_vals, sizeof(dscp_map.ip_dscp));
     dscp_map.dot1q_pcp = default_qos_class_dot1q_pcp;
 
@@ -571,7 +571,7 @@ qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
     uint32_t       qos_class_id;
 
     qos_tbl = g_hal_state_pd->dm_table(P4TBL_ID_QOS);
-    HAL_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
+    SDK_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
 
     for (unsigned i = 0; i < SDK_ARRAY_SIZE(pd_qos_class->p4_ig_q); i++) {
         if (!capri_tm_q_valid(pd_qos_class->p4_ig_q[i])) {
@@ -581,7 +581,7 @@ qos_class_pd_program_qos_table (pd_qos_class_t *pd_qos_class)
 
         memset(&d, 0, sizeof(d));
         QOS_ACTION(egress_tm_oq) = pd_qos_class->p4_eg_q[i];
-        HAL_ASSERT(capri_tm_q_valid(pd_qos_class->p4_eg_q[i]));
+        SDK_ASSERT(capri_tm_q_valid(pd_qos_class->p4_eg_q[i]));
         QOS_ACTION(dest_tm_oq) = pd_qos_class->dest_oq;
         if (i != HAL_PD_QOS_IQ_RX) {
             QOS_ACTION(cos_en) = qos_class->marking.pcp_rewrite_en;
@@ -688,14 +688,14 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
         iq_idx = 0;
         oq_idx = 0;
         if (capri_tm_q_valid(qos_class_pd->uplink.iq)) {
-            HAL_ASSERT(iq_idx < iq_cnt);
+            SDK_ASSERT(iq_idx < iq_cnt);
             input_queue = &iqs[port][iq_idx++];
             input_queue->valid = true;
             input_queue->iq = qos_class_pd->uplink.iq;
         }
 
         if (capri_tm_q_valid(qos_class_pd->dest_oq)) {
-            HAL_ASSERT(oq_idx < oq_cnt);
+            SDK_ASSERT(oq_idx < oq_cnt);
             output_queue = &oqs[port][oq_idx++];
             output_queue->valid = true;
             output_queue->oq = qos_class_pd->dest_oq;
@@ -706,7 +706,7 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
         oq_idx = 0;
         for (unsigned i = 0; i < SDK_ARRAY_SIZE(qos_class_pd->txdma); i++) {
             if (capri_tm_q_valid(qos_class_pd->txdma[i].iq)) {
-                HAL_ASSERT(iq_idx < iq_cnt);
+                SDK_ASSERT(iq_idx < iq_cnt);
                 input_queue = &iqs[port][iq_idx++];
                 input_queue->valid = true;
                 input_queue->iq = qos_class_pd->txdma[i].iq;
@@ -714,7 +714,7 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
         }
 
         if (capri_tm_q_valid(qos_class_pd->dest_oq)) {
-            HAL_ASSERT(oq_idx < oq_cnt);
+            SDK_ASSERT(oq_idx < oq_cnt);
             output_queue = &oqs[port][oq_idx++];
             output_queue->valid = true;
             output_queue->oq = qos_class_pd->dest_oq;
@@ -727,12 +727,12 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
     oq_idx = 0;
     for (unsigned i = 0; i < SDK_ARRAY_SIZE(qos_class_pd->p4_ig_q); i++) {
         if (capri_tm_q_valid(qos_class_pd->p4_ig_q[i])) {
-            HAL_ASSERT(iq_idx < iq_cnt);
+            SDK_ASSERT(iq_idx < iq_cnt);
             input_queue = &iqs[port][iq_idx++];
             input_queue->valid = true;
             input_queue->iq = qos_class_pd->p4_ig_q[i];
 
-            HAL_ASSERT(oq_idx < oq_cnt);
+            SDK_ASSERT(oq_idx < oq_cnt);
             output_queue = &oqs[port][oq_idx++];
             output_queue->valid = true;
             output_queue->oq = qos_class_pd->p4_ig_q[i];
@@ -745,12 +745,12 @@ qos_class_pd_get_all_queues (pd_qos_class_t *qos_class_pd,
     oq_idx = 0;
     for (unsigned i = 0; i < SDK_ARRAY_SIZE(qos_class_pd->p4_eg_q); i++) {
         if (capri_tm_q_valid(qos_class_pd->p4_eg_q[i])) {
-            HAL_ASSERT(iq_idx < iq_cnt);
+            SDK_ASSERT(iq_idx < iq_cnt);
             input_queue = &iqs[port][iq_idx++];
             input_queue->valid = true;
             input_queue->iq = qos_class_pd->p4_eg_q[i];
 
-            HAL_ASSERT(oq_idx < oq_cnt);
+            SDK_ASSERT(oq_idx < oq_cnt);
             output_queue = &oqs[port][oq_idx++];
             output_queue->valid = true;
             output_queue->oq = qos_class_pd->p4_eg_q[i];
@@ -923,9 +923,9 @@ pd_qos_class_delete (pd_func_args_t *pd_func_args)
     pd_qos_class_delete_args_t *args = pd_func_args->pd_qos_class_delete;
     pd_qos_class_t *qos_class_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->qos_class != NULL), HAL_RET_INVALID_ARG);
-    HAL_ASSERT_RETURN((args->qos_class->pd != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->qos_class != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args->qos_class->pd != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("deleting pd state for qos_class {}",
                     args->qos_class->key);
     qos_class_pd = (pd_qos_class_t *)args->qos_class->pd;
@@ -1154,7 +1154,7 @@ pd_qos_class_restore (pd_func_args_t *pd_func_args)
     pd_qos_class_restore_args_t *args = pd_func_args->pd_qos_class_restore;
     pd_qos_class_t *qos_class_pd;
 
-    HAL_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
+    SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     HAL_TRACE_DEBUG("Restoring pd state for qos_class {}", args->qos_class->key);
 
     // allocate PD qos_class state

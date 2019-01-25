@@ -13,7 +13,7 @@ namespace hal {
 namespace eplearn {
 
 void *dhcptrans_get_key_func(void *entry) {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)(((dhcp_trans_t *)entry)->trans_key_ptr());
 }
 
@@ -22,7 +22,7 @@ uint32_t dhcptrans_compute_hash_func(void *key, uint32_t ht_size) {
 }
 
 bool dhcptrans_compare_key_func(void *key1, void *key2) {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (memcmp(key1, key2, sizeof(dhcp_trans_key_t)) == 0) {
         return true;
     }
@@ -181,7 +181,7 @@ update_flow_fwding(fte::ctx_t *fte_ctx)
     }
     dl2seg = (hal::l2seg_t *)obj;
 
-    HAL_ASSERT(dl2seg != nullptr);
+    SDK_ASSERT(dl2seg != nullptr);
     ethhdr = (ether_header_t *)(fte_ctx->pkt() + cpu_rxhdr_->l2_offset);
     dep = hal::find_ep_by_l2_key(dl2seg->seg_id, ethhdr->dmac);
     if (dep == nullptr) {

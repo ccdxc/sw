@@ -27,7 +27,7 @@ l2seg_uplink_oif_get_key_func (void *entry)
     l2_seg_uplink_oif_list_t    *l2_seg_uplink_oif_list = NULL;
     hal_handle_id_ht_entry_t    *ht_entry = (hal_handle_id_ht_entry_t *)entry;
 
-    HAL_ASSERT(ht_entry != NULL);
+    SDK_ASSERT(ht_entry != NULL);
     l2_seg_uplink_oif_list = (l2_seg_uplink_oif_list_t *)
             hal_handle_get_obj(ht_entry->handle_id);
     return (void *)&(l2_seg_uplink_oif_list->key);
@@ -39,7 +39,7 @@ l2seg_uplink_oif_get_key_func (void *entry)
 uint32_t
 l2seg_uplink_oif_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::
            fnv_hash(key, sizeof(l2_seg_uplink_oif_list_key_t)) % ht_size;
 }
@@ -50,7 +50,7 @@ l2seg_uplink_oif_compute_hash_func (void *key, uint32_t ht_size)
 bool
 l2seg_uplink_oif_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     return (memcmp(key1, key2, sizeof(l2_seg_uplink_oif_list_key_t)) == 0);
 }
 
@@ -88,7 +88,7 @@ l2seg_id_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry;
     l2seg_t                     *l2seg = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
@@ -103,7 +103,7 @@ l2seg_id_get_key_func (void *entry)
 uint32_t
 l2seg_id_compute_hash_func (void *key, uint32_t ht_size)
 {
-    HAL_ASSERT(key != NULL);
+    SDK_ASSERT(key != NULL);
     return sdk::lib::hash_algo::fnv_hash(key, sizeof(l2seg_id_t)) % ht_size;
 }
 
@@ -113,7 +113,7 @@ l2seg_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 l2seg_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(l2seg_id_t *)key1 == *(l2seg_id_t *)key2) {
         return true;
     }
@@ -216,7 +216,7 @@ find_l2seg_by_id (l2seg_id_t l2seg_id)
         l2seg_id_ht()->lookup(&l2seg_id);
     if (entry && (entry->handle_id != HAL_HANDLE_INVALID)) {
         // check for object type
-        HAL_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
+        SDK_ASSERT(hal_handle_get_from_handle_id(entry->handle_id)->obj_id() ==
                    HAL_OBJ_ID_L2SEG);
         l2seg = (l2seg_t *)hal_handle_get_obj(entry->handle_id);
         return l2seg;
@@ -2316,7 +2316,7 @@ end:
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("commit cbs can't fail: ret : {}",
                       ret);
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
     }
     return ret;
 }
@@ -2504,7 +2504,7 @@ l2segment_get_list_cb (void *list_entry, void *ctxt)
 
     // l2seg should not be deleted here because we are still in the context
     // of the config thread.
-    HAL_ASSERT(l2seg != NULL);
+    SDK_ASSERT(l2seg != NULL);
 
     l2segment_process_get(l2seg, response);
 
@@ -2804,7 +2804,7 @@ l2seg_store_cb (void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen)
     uint32_t                serialized_state_sz;
     l2seg_t                 *l2seg = (l2seg_t *)obj;
 
-    HAL_ASSERT((l2seg != NULL) && (mlen != NULL));
+    SDK_ASSERT((l2seg != NULL) && (mlen != NULL));
     *mlen = 0;
 
     // get all information about this l2seg (includes spec, status & stats)
@@ -2891,7 +2891,7 @@ l2seg_restore_cb (void *obj, uint32_t len)
     // de-serialize the object
     if (l2seg_info.ParseFromArray(obj, len) == false) {
         HAL_TRACE_ERR("Failed to de-serialize a serialized l2seg obj");
-        HAL_ASSERT(0);
+        SDK_ASSERT(0);
         return 0;
     }
 

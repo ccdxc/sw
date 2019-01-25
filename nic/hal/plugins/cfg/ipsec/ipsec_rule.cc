@@ -22,7 +22,7 @@ namespace hal {
 void *
 ipsec_rule_get_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((ipsec_rule_t *)entry)->rule_id);
 }
 
@@ -35,7 +35,7 @@ ipsec_rule_compute_hash_func (void *key, uint32_t ht_size)
 bool
 ipsec_rule_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(ipsec_rule_id_t *)key1 == *(ipsec_rule_id_t *)key2) {
         return true;
     }
@@ -45,7 +45,7 @@ ipsec_rule_compare_key_func (void *key1, void *key2)
 void *
 ipsec_rule_get_handle_key_func (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((ipsec_rule_t *)entry)->hal_handle);
 }
 
@@ -58,7 +58,7 @@ ipsec_rule_compute_handle_hash_func (void *key, uint32_t ht_size)
 bool
 ipsec_rule_compare_handle_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(hal_handle_t *)key1 == *(hal_handle_t *)key2) {
         return true;
     }
