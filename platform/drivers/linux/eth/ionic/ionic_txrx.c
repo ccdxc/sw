@@ -265,10 +265,11 @@ void ionic_rx_refill(struct queue *q)
 
 		desc = cur->desc;
 
-		ionic_rx_skb_free(q, cur->cb_arg, desc->len, desc->addr);
 		skb = ionic_rx_skb_alloc(q, len, &dma_addr);
 		if (!skb)
 			return;
+
+		ionic_rx_skb_free(q, cur->cb_arg, desc->len, desc->addr);
 
 		cur->cb_arg = skb;
 		desc->addr = dma_addr;
