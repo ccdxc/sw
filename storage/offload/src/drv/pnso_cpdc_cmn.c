@@ -141,6 +141,8 @@ pprint_sgl(uint64_t sgl_pa)
 {
 	const struct cpdc_sgl *sgl;
 
+	if(g_osal_log_level < OSAL_LOG_LEVEL_DEBUG)
+		return;
 	sgl = (const struct cpdc_sgl *) sonic_phy_to_virt(sgl_pa);
 	if (!sgl)
 		return;
