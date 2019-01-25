@@ -32,12 +32,13 @@ struct rqwqe_base_t d;
 #define KEY_ADDR r6
 #define DMA_CMD_BASE r6
 #define GLOBAL_FLAGS r6
-#define VLAN_TMP r2
+#define UD_TMP r2
 
 #define IN_P    t0_s2s_rqcb_to_wqe_info
 #define K_CURR_WQE_PTR CAPRI_KEY_RANGE(IN_P,curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit56_ebit63)
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
-#define K_EXT_HDR_DATA CAPRI_KEY_FIELD(IN_TO_S_P, ext_hdr_data)
+#define K_EXT_HDR_DATA CAPRI_KEY_RANGE(IN_TO_S_P, ext_hdr_data_sbit0_ebit63, ext_hdr_data_sbit64_ebit68)
+#define K_INV_R_KEY CAPRI_KEY_RANGE(IN_TO_S_P, inv_r_key_sbit0_ebit2, inv_r_key_sbit27_ebit31)
 
 %%
     .param  resp_rx_rqlkey_process
@@ -237,24 +238,72 @@ send_only_zero_len_join:
     // if invalidate rkey is present, invoke it by loading appopriate
     // key entry, else load the same program as MPU only.
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, TMP)
-    add         TMP, r0, CAPRI_KEY_FIELD(IN_TO_S_P, inv_r_key)
+    add         TMP, r0, K_INV_R_KEY
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, TMP)
 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_validate_process, KEY_ADDR)
 
 skip_inv_rkey:
 
-    ARE_ALL_FLAGS_SET(c2, r7, RESP_RX_FLAG_UD|RESP_RX_FLAG_IMMDT)
-    phvwr.c2    p.cqe.recv.smac[31:0], K_EXT_HDR_DATA[63:32]
-    cmov        VLAN_TMP, c2, K_EXT_HDR_DATA[31:0], K_EXT_HDR_DATA[63:32]
-    seq         c2, VLAN_TMP[31:16], 0x8100
-    phvwrpair.c2    p.cqe.recv.flags.vlan, 1, p.cqe.recv.vlan_tag, VLAN_TMP
+    bbne        K_GLOBAL_FLAG(_ud), 1, skip_ud
+    seq         c3, CAPRI_KEY_FIELD(IN_P, recirc_path), 1 // BD Slot
+
+    /* Ext Header formats for UD QPs with bit positions:
+     *
+     * 1. SEND_IMM + VLAN
+     * 68               37                 21                    5                  0
+     * ------------------------------------------------------------------------------
+     * | SMAC (4 bytes) | Ethtype (2 bytes) | Vlan Tag (2 bytes) | Ethtype (5 bits) |
+     * ------------------------------------------------------------------------------
+     *
+     * 2. SEND_IMM only
+     * 68               37                32
+     * -------------------------------------
+     * | SMAC (4 bytes) | Ethtype (5 bits) |
+     * -------------------------------------
+     *
+     * 3. VLAN only
+     * 68                  53                   37                32
+     * -------------------------------------------------------------
+     * | Ethtype (2 bytes) | Vlan Tag (2 bytes) | Ethtype (5 bits) |
+     * -------------------------------------------------------------
+     *
+     * 4. SEND_ONLY, No Vlan
+     * 68                64
+     * --------------------
+     * | Ethtype (5 bits) |
+     * --------------------
+     */
+
+    bbeq        K_GLOBAL_FLAG(_immdt), 1, immdt
+    nop         // BD Slot
+
+    // is VLAN present?
+    seq         c2, K_EXT_HDR_DATA[68:53], 0x8100
+    phvwrpair.c2    p.cqe.recv.flags.vlan, 1, p.cqe.recv.vlan_tag, K_EXT_HDR_DATA[52:37]
+
+    b           ud_common
+    cmov        UD_TMP, c2, K_EXT_HDR_DATA[36:32], K_EXT_HDR_DATA[68:64]    // BD Slot
+
+immdt:
+    phvwr       p.cqe.recv.smac[31:0], K_EXT_HDR_DATA[68:37]
+
+    // is VLAN present?
+    seq         c2, K_EXT_HDR_DATA[36:21], 0x8100
+    phvwrpair.c2    p.cqe.recv.flags.vlan, 1, p.cqe.recv.vlan_tag, K_EXT_HDR_DATA[20:5]
+
+    cmov        UD_TMP, c2, K_EXT_HDR_DATA[4:0], K_EXT_HDR_DATA[36:32]
+
+ud_common:
+    seq         c2, UD_TMP, 0x1
+    phvwr.c2    p.cqe.recv.flags.ipv4, 1
+
+skip_ud:
 
     IS_ANY_FLAG_SET(c2, r7, RESP_RX_FLAG_FIRST)
-    seq         c3, CAPRI_KEY_FIELD(IN_P, recirc_path), 1
     bcf         [!c2 | c3], non_first_or_recirc_pkt
     // pass the rkey to write back, since wb calls inv_rkey. Note that this s2s across multiple(two, 3 to 5) stages
-    phvwr.!c3   CAPRI_PHV_FIELD(INFO_WBCB1_P, inv_r_key), CAPRI_KEY_FIELD(IN_TO_S_P, inv_r_key) //BD Slot
+    phvwr.!c3   CAPRI_PHV_FIELD(INFO_WBCB1_P, inv_r_key), K_INV_R_KEY //BD Slot
 
     // only first packet need to set num_sges and wqe_ptr values into
     // rqcb1. middle/last packets will simply use these fields from cb

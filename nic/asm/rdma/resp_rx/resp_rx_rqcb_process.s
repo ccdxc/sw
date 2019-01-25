@@ -899,8 +899,7 @@ process_ud:
 
     // populate completion entry
     phvwrpair   p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID, p.cqe.type, CQE_TYPE_RECV
-    phvwr       p.cqe.recv.src_qp[23:0], CAPRI_RXDMA_DETH_SRC_QP
-    phvwrpair   p.cqe.recv.flags.ipv4, 1, p.cqe.recv.op_type, OP_TYPE_CQE_RECV_SEND
+    phvwrpair   p.cqe.recv.op_type, OP_TYPE_CQE_RECV_SEND, p.cqe.recv.src_qp[23:0], CAPRI_RXDMA_DETH_SRC_QP
     CAPRI_RXDMA_DETH_SMAC(r5)
     CAPRI_RXDMA_DETH_IMMETH_SMAC1(r1)
     sll.c6      r1, r1, 32

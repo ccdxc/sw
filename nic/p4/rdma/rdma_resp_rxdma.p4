@@ -478,11 +478,11 @@ header_type resp_rx_to_stage_wb1_info_t {
 
 header_type resp_rx_to_stage_wqe_info_t {
     fields {
-        ext_hdr_data                     :   64;
+        ext_hdr_data                     :   69;
         inv_r_key                        :   32;
         spec_psn                         :   24;
         priv_oper_enable                 :   1;
-        pad                              :   7;
+        pad                              :   2;
     }
 }
 
@@ -1086,8 +1086,9 @@ action rdma_stage0_bth_deth_action () {
     modify_field(rdma_bth_deth_scr.deth_src_qp, rdma_bth_deth.deth_src_qp);
     modify_field(rdma_bth_deth_scr.smac, rdma_bth_deth.smac);
     modify_field(rdma_bth_deth_scr.dmac, rdma_bth_deth.dmac);
-    //modify_field(rdma_bth_deth_scr.ethtype, rdma_bth_deth.ethtype);
+    //modify_field(rdma_bth_deth_scr.vlan_ethtype, rdma_bth_deth.vlan_ethtype);
     //modify_field(rdma_bth_deth_scr.vlan, rdma_bth_deth.vlan);
+    //modify_field(rdma_bth_deth_scr.ethtype, rdma_bth_deth.ethtype);
 }
 
 
@@ -1097,8 +1098,9 @@ action rdma_stage0_bth_deth_action () {
 action rdma_stage0_ext_bth_deth_action () {
     // k + i for stage 0
 
-    modify_field(rdma_bth_deth_ext_scr.ethtype, rdma_bth_deth_ext.ethtype);
+    modify_field(rdma_bth_deth_ext_scr.vlan_ethtype, rdma_bth_deth_ext.vlan_ethtype);
     modify_field(rdma_bth_deth_ext_scr.vlan, rdma_bth_deth_ext.vlan);
+    modify_field(rdma_bth_deth_ext_scr.ethtype, rdma_bth_deth_ext.ethtype);
 }
 
 
@@ -1129,8 +1131,9 @@ action rdma_stage0_bth_deth_immeth_action () {
     modify_field(rdma_bth_deth_immeth_scr.immeth_data, rdma_bth_deth_immeth.immeth_data);
     modify_field(rdma_bth_deth_immeth_scr.smac_1, rdma_bth_deth_immeth.smac_1);
     //modify_field(rdma_bth_deth_immeth_scr.smac_2, rdma_bth_deth_immeth.smac_2);
-    //modify_field(rdma_bth_deth_immeth_scr.ethtype, rdma_bth_deth_immeth.ethtype);
+    //modify_field(rdma_bth_deth_immeth_scr.vlan_ethtype, rdma_bth_deth_immeth.vlan_ethtype);
     //modify_field(rdma_bth_deth_immeth_scr.vlan, rdma_bth_deth_immeth.vlan);
+    //modify_field(rdma_bth_deth_immeth_scr.ethtype, rdma_bth_deth_immeth.ethtype);
 }
 
 /*
@@ -1140,8 +1143,9 @@ action rdma_stage0_ext_bth_deth_immeth_action () {
     // k + i for stage 0
 
     modify_field(rdma_bth_deth_immeth_ext_scr.smac_2, rdma_bth_deth_immeth_ext.smac_2);
-    modify_field(rdma_bth_deth_immeth_ext_scr.ethtype, rdma_bth_deth_immeth_ext.ethtype);
+    modify_field(rdma_bth_deth_immeth_ext_scr.vlan_ethtype, rdma_bth_deth_immeth_ext.vlan_ethtype);
     modify_field(rdma_bth_deth_immeth_ext_scr.vlan, rdma_bth_deth_immeth_ext.vlan);
+    modify_field(rdma_bth_deth_immeth_ext_scr.ethtype, rdma_bth_deth_immeth_ext.ethtype);
 }
 
 
