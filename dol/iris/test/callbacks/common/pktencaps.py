@@ -27,6 +27,12 @@ def AddPacketEncapVxlan(pkt, encap):
     pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'vxlan'] + pkt.hdrsorder
     return
 
+def AddPacketEncapMpls(pkt, encap):
+    #pdb.set_trace()
+    pkt.hdrsorder = pkt.hdrsorder[1:]
+    pkt.hdrsorder = ['outereth', 'outeripv4', 'outerudp', 'mpls'] + pkt.hdrsorder
+    return
+
 def AddPacketEncapErspan(pkt, encap):
     pkt.hdrsorder = ['erspaneth', 'erspanqtag', 'erspanipv4', 'erspangre', 'erspan'] + pkt.hdrsorder
     return

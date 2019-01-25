@@ -1,17 +1,319 @@
 # Feature Test Modules List
+# Encap combinations
+# Options    Opt-type    Class-E    Expected (Encap)
+# F          -               F      MPLS encap (from config)
+# F          -               T      Drop
+#
+# T          valid           T      MPLS encap (from RR)
+# T          invalid         T      Drop
+# T          zero            T      Drop
+# T          mcast_start     T      Drop
+# T          mcast_end       T      Drop
+# T          mcast_middle    T      Drop
+#
+# T          valid           F      MPLS encap (from config)
+# T          invalid         F      MPLS encap (from config)
+# T          zero            F      MPLS encap (from config)
+# T          mcast_start     F      MPLS encap (from config)
+# T          mcast_end       F      MPLS encap (from config)
+# T          mcast_middle    F      MPLS encap (from config)
+
 feature:
     id          : mpls_udp
     sub         : tx
     package     : test.mpls_udp
     module      : mpls_udp
-    spec        : tx.testspec
     enable      : True
     ignore      : False
 
 
 modules:
     - module:
-        name    : IPV4_UDP_QTAG
+        name    : ENCAP
+        spec    : tx.testspec
+        args:
+            options : False
+            classe  : False
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_CLASSE_NOOPT_DROP
+        spec    : tx.testspec
+        args:
+            options : False
+            classe  : True
+            drop    : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_CLASSE_VALID
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_valid
+            classe  : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+    
+    - module:
+        name    : ENCAP_OPT_CLASSE_INVALID_DROP
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_invalid
+            classe  : True
+            drop    : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_CLASSE_ZERO_DROP
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_zero
+            classe  : True
+            drop    : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_CLASSE_MCAST_START_DROP
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_mcast_start
+            classe  : True
+            drop    : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_CLASSE_MCAST_END_DROP
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_mcast_end
+            classe  : True
+            drop    : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_CLASSE_MCAST_MIDDLE_DROP
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_mcast_middle
+            classe  : True
+            drop    : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_NO_CLASSE_VALID
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_valid
+            classe  : False
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+    
+    - module:
+        name    : ENCAP_OPT_NO_CLASSE_INVALID
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_invalid
+            classe  : False
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_NO_CLASSE_ZERO
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_zero
+            classe  : False
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_NO_CLASSE_MCAST_START
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_mcast_start
+            classe  : False
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_NO_CLASSE_MCAST_END
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_mcast_end
+            classe  : False
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_NO_CLASSE_MCAST_MIDDLE
+        spec    : tx.testspec
+        args:
+            options : True
+            opttype : one_mcast_middle
+            classe  : False
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_CLASSE_TWO
+        spec    : tx.testspec
+        args:
+            options : True
+            classe  : True
+            opttype : ORCL,MTUPROBE
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_CLASSE_TWO_MULTI_EOL
+        spec    : tx.testspec
+        args:
+            options : True
+            classe  : True
+            opttype : ORCL,MTUPROBE,EOL,EOL,EOL
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_CLASSE_MIDDLE
+        spec    : tx.testspec
+        args:
+            options : True
+            classe  : True
+            opttype : SECURITY,ORCL,MTUPROBE
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_CLASSE_END
+        spec    : tx.testspec
+        args:
+            options : True
+            classe  : True
+            opttype : SECURITY,MTUREPLY,ORCL
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : ENCAP_OPT_CLASSE_END_MULTI_EOL
+        spec    : tx.testspec
+        args:
+            options : True
+            classe  : True
+            opttype : SECURITY,MTUREPLY,ORCL,EOL,EOL,EOL
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+

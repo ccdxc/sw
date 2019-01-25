@@ -248,6 +248,13 @@ class ScapyHeaderBuilder_BOOTP(ScapyHeaderBuilder_BASE):
 
 BOOTP_builder = ScapyHeaderBuilder_BOOTP()
 
+class ScapyHeaderBuilder_MPLS(ScapyHeaderBuilder_BASE):
+    def build(self, hdr):
+        mplshdr = super().build(hdr)
+        return mplshdr
+
+MPLS_builder = ScapyHeaderBuilder_MPLS()
+
 class ScapyHeaderBuilder_TFTP(ScapyHeaderBuilder_BASE):
     opcode_map = [
            ('RRQ', 0x1),

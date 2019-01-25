@@ -28,13 +28,10 @@ packets:
                 src     : ref://testcase/config/src/endpoint/macaddr
                 dst     : ref://testcase/config/dst/endpoint/macaddr
             ipv4:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
+                src     : 10.10.10.1
+                dst     : callback://mpls_udp/callbacks/GetIpv4DstAddress
                 ttl     : 64
-            ipv6:
-                src     : ref://testcase/config/flow/sip
-                dst     : ref://testcase/config/flow/dip
-                hlim    : 64
+                options : callback://mpls_udp/callbacks/GetIpv4Options
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
@@ -46,38 +43,37 @@ packets:
                 code    : ref://testcase/config/flow/icmpcode
                 type    : ref://testcase/config/flow/icmptype
                 id      : ref://testcase/config/flow/icmpid
-            icmpv6:
-                code    : ref://testcase/config/flow/icmpcode
-                type    : ref://testcase/config/flow/icmptype
-                id      : ref://testcase/config/flow/icmpid
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1 # Base packet
+        id          : PKT1
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
-            #qtag    :
-                #vlan: ref://testcase/config/src/segment/vlan_id
-                #vlan: callback://networking/packets/GetVlanId
             tcp:
                 flags: ack
 
     - packet:
-        id          : EXP_PKT # Base packet
+        id          : EXP_PKT
         clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        encaps      : callback://networking/packets/GetMplsPacketEncaps
         headers     :
-            #qtag:
-            #    vlan: ref://testcase/config/dst/segment/vlan_id
-            #    prio: ref://testcase/config/flow/txqos/cos
-            ipv4:
-                tos : ref://testcase/config/flow/txqos/dscp
-            ipv6:
-                tc  : ref://testcase/config/flow/txqos/dscp
-            tcp:
-                flags: ack
+            outereth    :
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : 00:00:00:00:30:39
+            outeripv4:
+                src     : ref://testcase/config/flow/sip
+                dst     : callback://mpls_udp/callbacks/GetExpectedIpv4DstAddress
+                tos     : 0
+                id      : 0
+                ttl     : 64
+            outerudp:
+                dport   : 6635
+                chksum  : 0
+            mpls:
+                label   : 54321
+                ttl     : 64
 
 buffers:
     - buffer:
@@ -113,10 +109,12 @@ expect:
     delay   : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
-            object  : callback://classic/callbacks/GetTxExpectedPacket/expktid=PKT1
-            port    : 0
+            #object  : ref://testcase/packets/id=EXP_PKT
+            object  : callback://mpls_udp/callbacks/GetExpectedPacket
+            port    : 1
 
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+

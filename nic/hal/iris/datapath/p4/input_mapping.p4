@@ -393,7 +393,7 @@ action vf_properties(overlay_ip1, overlay_ip2, mpls_in1, mpls_in2,
         }
         if (control_metadata.src_class_e == TRUE) {
             if ((control_metadata.record_route_inner_dst_ip == 0) or
-                ((control_metadata.record_route_inner_dst_ip & 0xF0000000) == 0xF0000000) or
+                ((control_metadata.record_route_inner_dst_ip & 0xF0000000) == 0xE0000000) or
                 ((control_metadata.record_route_inner_dst_ip & scratch_metadata.ipv4_mask) !=
                  (scratch_metadata.ipv4_prefix & scratch_metadata.ipv4_mask))) {
                 modify_field(control_metadata.drop_reason, DROP_VF_BAD_RR_DST_IP);
@@ -410,7 +410,7 @@ action vf_properties(overlay_ip1, overlay_ip2, mpls_in1, mpls_in2,
         }
         if (control_metadata.dst_class_e == TRUE) {
             if ((control_metadata.record_route_dst_ip == 0) or
-                ((control_metadata.record_route_dst_ip & 0xF0000000) == 0xF0000000) or
+                ((control_metadata.record_route_dst_ip & 0xF0000000) == 0xE0000000) or
                 ((control_metadata.record_route_dst_ip & scratch_metadata.ipv4_mask) !=
                  (scratch_metadata.ipv4_prefix & scratch_metadata.ipv4_mask))) {
                 modify_field(control_metadata.drop_reason, DROP_VF_BAD_RR_DST_IP);

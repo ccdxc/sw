@@ -28,11 +28,12 @@ vf_properties_uplink:
     seq             c1, k.control_metadata_src_class_e, TRUE
     nop.!c1.e
     seq             c1, k.control_metadata_record_route_inner_dst_ip, r0
-    seq.!c1         c1, k.control_metadata_record_route_inner_dst_ip[31:28], 0xF
-    sll             r1, 1, d.u.vf_properties_d.gw_prefix_len
-    sub             r1, r1, 1
+    seq.!c1         c1, k.control_metadata_record_route_inner_dst_ip[31:28], 0xE
+    add             r1, r0, -1
+    sub             r2, 32, d.u.vf_properties_d.gw_prefix_len
+    sll             r1, r1, r2
     and             r2, k.control_metadata_record_route_inner_dst_ip, r1
-    seq.!c1         c1, r2[31:0], d.u.vf_properties_d.gw_prefix
+    sne.!c1         c1, r2[31:0], d.u.vf_properties_d.gw_prefix
     nop.!c1.e
     phvwr.c1.e      p.control_metadata_drop_reason[DROP_VF_BAD_RR_DST_IP], 1
     phvwr           p.capri_intrinsic_drop, TRUE
@@ -46,11 +47,12 @@ vf_properties_host:
     seq             c1, k.control_metadata_dst_class_e, TRUE
     nop.!c1.e
     seq             c1, k.control_metadata_record_route_dst_ip, r0
-    seq.!c1         c1, k.control_metadata_record_route_dst_ip[31:28], 0xF
-    sll             r1, 1, d.u.vf_properties_d.gw_prefix_len
-    sub             r1, r1, 1
+    seq.!c1         c1, k.control_metadata_record_route_dst_ip[31:28], 0xE
+    add             r1, r0, -1
+    sub             r2, 32, d.u.vf_properties_d.gw_prefix_len
+    sll             r1, r1, r2
     and             r2, k.control_metadata_record_route_dst_ip, r1
-    seq.!c1         c1, r2[31:0], d.u.vf_properties_d.gw_prefix
+    sne.!c1         c1, r2[31:0], d.u.vf_properties_d.gw_prefix
     phvwr.!c1.e     p.nat_metadata_nat_ip[127:96], \
                         k.control_metadata_record_route_dst_ip
     phvwr.c1.e      p.control_metadata_drop_reason[DROP_VF_BAD_RR_DST_IP], 1
