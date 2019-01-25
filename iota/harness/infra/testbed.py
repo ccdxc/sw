@@ -234,6 +234,16 @@ class _Testbed:
         self.__instpool = iter(self.__tbspec.Instances)
         self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__vlan_base, api.GetNicMode())
         self.__recover_testbed()
+        if GlobalOptions.dryrun:
+            status = types.status.SUCCESS
+        else:
+            status = self.__cleanup_testbed()
+            if status != types.status.SUCCESS:
+                return status
+            #status = self.__cleanup_testbed_script()
+            #if status != types.status.SUCCESS:
+            #    return status
+
         msg = self.__prepare_TestBedMsg(self.curr_ts)
         resp = api.InitTestbed(msg)
         if resp is None:
@@ -249,15 +259,6 @@ class _Testbed:
         self.prev_ts = self.curr_ts
         self.curr_ts = ts
 
-        if GlobalOptions.dryrun:
-            status = types.status.SUCCESS
-        else:
-            status = self.__cleanup_testbed()
-            if status != types.status.SUCCESS:
-                return status
-            #status = self.__cleanup_testbed_script()
-            #if status != types.status.SUCCESS:
-            #    return status
 
         store.Cleanup()
         status = self.__init_testbed()
