@@ -12,10 +12,12 @@ ifneq ($(PIPELINE),hello)
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target host
 ifeq ($(ARCH),aarch64)
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
+	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
         --pipeline $(PIPELINE)
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
+	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
 		--pipeline $(PIPELINE) --target sim --no-strip
 endif
@@ -42,10 +44,12 @@ endif
 
 package-arm-dev: package-clean ${PKG_PREREQS}
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
+	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target arm-dev --no-strip
 
 package-haps-dbg: package-clean ${PKG_PREREQS}
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/update_version.sh
+	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target haps-dbg
 
 .PHONY: package-storage-offload
