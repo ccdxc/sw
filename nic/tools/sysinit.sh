@@ -27,6 +27,13 @@ ifconfig lo up
 # start memtun
 /platform/bin/memtun &
 
+# if not already present, create a cache file recording the firmware inventory
+# at boot-time.  will be preserved across a live-update, and so always
+# provides a record of how things looked when we booted (seen with fwupdate -L)
+if [[ ! -r /var/run/fwupdate.cache ]]; then
+    /nic/tools/fwupdate -C
+fi
+
 # check for all the binaries
 if [[ ! -f $NIC_DIR/bin/hal ]]; then
     echo "HAL binary not found"

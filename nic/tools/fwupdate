@@ -3,8 +3,6 @@
 #
 # FIRMWARE UPDATE UTILITY
 #
-# *** DOES NOT SUPPORT LIVE UPDATE ***
-#
 
 R=""
 if [ `arch` != aarch64 ]; then
@@ -36,10 +34,13 @@ usage: fwupdate [--from-legacy] action [options]
   action:
     -i "fwnames"    - Install package (requires -p and fwnames)
     -v              - Verify package file (required -p)
+    -V fwname       - Verify installed image
     -r              - Show running image name
     -s fwname       - Set startup image name
     -S              - Show startup image name
     -l              - List installed images
+    -L              - List loaded (running) images
+    -C              - Create /var/run/fwupdate.cache
 
   options:
     -p pkgfile      - Package filename
@@ -72,6 +73,7 @@ IGNORE_MISSING=0
 WANT_STARTUP=""
 FROM_LEGACY=0
 TO_LEGACY=0
+VERIFY_FWNAME=""
 D=""
 
 # Legacy support
@@ -100,14 +102,17 @@ main()
         action=INIT_EMMC
         shift
     fi
-    while getopts "i:vrs:Slp:DI" opt; do
+    while getopts "i:vV:rs:SlLp:DIC" opt; do
         case "$opt" in
         i) action=INSTALL; need_pkg=1; INSTALL_IMAGES=$OPTARG; ;;
-        v) action=VERIFY; need_pkg=1; ;;
+        v) action=VERIFY_PACKAGE; need_pkg=1; ;;
+        V) action=VERIFY_IMAGE; VERIFY_FWNAME=$OPTARG; ;;
         r) action=GET_RUNNING_FW; ;;
         s) action=SET_STARTUP_FW; WANT_STARTUP=$OPTARG; ;;
         S) action=SHOW_STARTUP_FW ;;
         l) action=LIST_FW; ;;
+        L) action=LIST_LOADED; ;;
+        C) action=WRITE_CACHEFILE; ;;
         p) PKG=$OPTARG; ;;
         D) DRY_RUN=dry_run; ;;
         I) IGNORE_MISSING=1; ;;
@@ -122,6 +127,7 @@ main()
     mkdir -p $D
     MANIFEST=$D/MANIFEST
     TMPFILE=$D/tmpfile
+    CACHEFILE=$R/var/run/fwupdate.cache
 
     finish() {
         rm -rf $D
@@ -143,8 +149,8 @@ main()
         #MANIFEST=MANIFEST.test
     fi
 
-    if [ $action != VERIFY ]; then
-        RUNNING_FW=`get_kernel_fwname`
+    if [ $action != VERIFY_PACKAGE ]; then
+        RUNNING_FW=`get_running_fwname`
         ALT_FW=`alt_fw_of $RUNNING_FW`
     fi
 
@@ -157,8 +163,12 @@ main()
         init_emmc
         ;;
 
-    VERIFY)
+    VERIFY_PACKAGE)
         verify_package
+        ;;
+
+    VERIFY_IMAGE)
+        verify_image
         ;;
 
     INSTALL)
@@ -180,6 +190,15 @@ main()
     LIST_FW)
         list_firmware
         ;;
+
+    LIST_LOADED)
+        list_loaded_firmware
+        ;;
+
+    WRITE_CACHEFILE)
+        write_cachefile
+        ;;
+
     *)
         ;;
     esac
@@ -257,7 +276,6 @@ get_kernel_fwname()
 }
 
 # get_root_mount_uuid
-# NOT USED
 get_root_mount_uuid()
 {
     local devid partno dev s
@@ -275,8 +293,26 @@ get_root_mount_uuid()
     echo $s
 }
 
+# get_running_fwname
+# The running firmware name comes first from the kernel's /proc/cmdline, and
+# then, for mainfwa or mainfwb, from the mounted filesystem.
+get_running_fwname()
+{
+    local fwname uuid
+
+    fwname=`get_kernel_fwname`
+    case $fwname in
+    mainfwa|mainfwb)
+        uuid=`get_root_mount_uuid`
+        fwname=`partuuid_to_fwname $uuid`
+        ;;
+    *)
+        ;;
+    esac
+    echo $fwname
+}
+
 # partuuid_to_image D4E53BE5-7DC1-4199-914C-48EDFEA92C5E
-# NOT USED
 partuuid_to_fwname()
 {
     local uuid=$1
@@ -590,6 +626,7 @@ legacy_fwobj_to_fwtype()
     esac
 }
 
+# Verify the contents of a naples_fw.tar file
 verify_package()
 {
     local fwobj want_type want_files remainder found i fileobj
@@ -683,6 +720,89 @@ do_install_file()
         fatal "do_install_file: Invalid install device $dev"
         ;;
     esac
+}
+
+# Verify the integrity of an installed image
+do_verify_image()
+{
+    local fwname=$1
+    local fwobj fwtype files fileobj size
+    local s dev part offs f path devsz ersz
+    local algo hash got_hash blks dblks
+
+    fwobj=`fwname_to_fwobj $fwname`
+    fwtype=`$fwobj_to_fwtype $fwobj`
+    files=`$fwtype_to_files $fwtype`
+    for f in $files; do
+        echo -n "Verifying $f..."
+        s=`$file_to_target $fwname $f`; set -- $s; dev=$1; part=$2; offs=$3
+        case "$dev" in
+        mtd)
+            s=`find_mtdpart_byname $part`; set -- $s; path=$1; devsz=$2; ersz=$3
+            ;;
+        mmc)
+            s=`find_mmcpart_bypartuuid $part`; set -- $s; path=$1; devsz=$2
+            ;;
+        *)
+            fatal "verify_image: unexpected dev $dev"
+            ;;
+        esac
+        case "$f" in
+        image)
+            if [ $fwname != uboot ]; then
+                fatal "verify_image: non-uboot image not supported"
+            fi
+            s=`get_uboot_info $path`; set -- $s; size=$1; algo=$2; hash=$3
+            ;;
+        system_image)
+            s=`get_system_image_info $path`; set -- $s; size=$1; algo=$2; hash=$3
+            ;;
+        kernel_fit)
+            s=`get_kernel_fit_info $path`; set -- $s; size=$1; algo=$2; hash=$3
+            ;;
+        *)
+            fatal "verify_image: unexpected file $f"
+            ;;
+        esac
+        case "$dev" in
+        mtd)
+            s=`find_mtdpart_byname $part`; set -- $s; path=$1; devsz=$2; ersz=$3
+            blks=`to_blocks $size $ersz`
+            got_hash=`dd if=$path bs=$ersz count=$blks status=none | head -c $size | hash $algo`
+            ;;
+        mmc)
+            s=`find_mmcpart_bypartuuid $part`; set -- $s; path=$1; devsz=$2
+            dblks=`to_blocks $size 512`
+            got_hash=`dd if=$path bs=512 count=$dblks status=none | head -c $size | hash $algo`
+            ;;
+        *)
+            fatal "verify_image: unexpected dev $dev"
+            ;;
+        esac
+        if [ "$got_hash" != "$hash" ]; then
+            echo " FAILED"
+            fatal "verify_image: Verify failed"
+        fi
+        echo " OK"
+    done
+}
+
+verify_image()
+{
+    local fwname=$VERIFY_FWNAME
+
+    case "$fwname" in
+    uboot|mainfwa|mainfwb|goldfw|diagfw)
+        ;;
+    altfw)
+        fwname=$ALT_FW
+        ;;
+    *)
+        fatal "verify_image: Unknown image name $fwname"
+        ;;
+    esac
+    echo "===> Verifying target image $fwname"
+    do_verify_image $fwname
 }
 
 invalidate_mtd()
@@ -837,7 +957,9 @@ do_set_startup_image()
 {
     local fwname=$1 dev devsz s
 
-    fwname_to_fwobj $fwname
+    echo "===> Verifying target startup image $fwname"
+    do_verify_image $fwname
+
     echo "===> Setting startup firmware to $fwname"
     s=`find_mtdpart_byname $MTDPART_FWSEL`; set -- $s; dev=$1
     flash_erase -q $dev 0 1
@@ -892,57 +1014,93 @@ extract_meta()
     dd if=$infile bs=1 skip=$(($offs + 8)) count=$len status=none > $outfile
 }
 
-show_meta()
-{
-    local s="`jq -r .version $TMPFILE`"
-    if [ "$s" != null ]; then
-        cat << EOF
-            "version": "$s"
-EOF
-    else
-        cat << EOF
-            "build_date": "`jq -r .build_date $TMPFILE`",
-            "build_user": "`jq -r .build_user $TMPFILE`",
-            "base_version": "`jq -r .base_version $TMPFILE`",
-            "software_version": "`jq -r .software_version $TMPFILE`"
-EOF
-    fi
-}
-
-JPREF=""
-JFPREF=""
-do_list_uboot_image()
+get_uboot_info()
 {
     local UBOOT_SIZE_MAGIC=0xfb89090a
     local dev=$1 u_magic u_len
     set -- `dd if=$dev bs=16 count=1 status=none | od -t x4 | head -1`
     u_magic=0x$3
     if [ $u_magic != $UBOOT_SIZE_MAGIC ]; then
-        return 0
+        echo "uboot magic not found" >&2
+        return 1
     fi
     u_len=$((0x$4))
     if extract_meta $dev $u_len $TMPFILE; then
-        cat << EOF
-        $JPREF "image": {
-            `show_meta`
-        }
-EOF
-    JPREF=,
+        echo $u_len
+        jq -r -M ".verify.algorithm, .verify.hash" $TMPFILE
+    else
+        echo "uboot metadata not found" >&2
+        return 1
     fi
 }
 
-do_list_system_image()
+get_kernel_fit_info()
+{
+    local KERNEL_ITB_MAGIC=0xd00dfeed
+    local dev=$1 v k_magic k_len
+    set -- `dd if=$dev bs=4 count=2 status=none | od -t x1 | head -1`
+    v=$(((0x$2 << 24) + (0x$3 << 16) + (0x$4 << 8) + 0x$5))
+    k_magic=`printf "0x%08x\n" $v`
+    if [ $k_magic != $KERNEL_ITB_MAGIC ]; then
+        echo "kernel_fit magic not found" >&2
+        return 1
+    fi
+    k_len=$(((0x$6 << 24) + (0x$7 << 16) + (0x$8 << 8) + 0x$9))
+    if extract_meta $dev $k_len $TMPFILE; then
+        echo $k_len
+        jq -r -M ".verify.algorithm, .verify.hash" $TMPFILE
+    else
+        echo "kernel_fit metadata not found" >&2
+        return 1
+    fi
+}
+
+get_system_image_info()
 {
     local SQUASHFS_MAGIC=0x73717368
     local dev=$1 s_magic s_len
     set -- `dd if=$dev bs=4 count=1 status=none | od -t x4 | head -1`
     s_magic=0x$2
     if [ $s_magic != $SQUASHFS_MAGIC ]; then
-        return 0
+        echo "system_info magic not found" >&2
+        return 1
     fi
     set -- `dd if=$dev bs=8 skip=5 count=1 status=none | od -t x8 | head -1`
     s_len=$(((0x$2 + 4095) & -4096))
     if extract_meta $dev $s_len $TMPFILE; then
+        echo $s_len
+        jq -r -M ".verify.algorithm, .verify.hash" $TMPFILE
+    else
+        echo "system_image metadata not found" >&2
+        return 1
+    fi
+}
+
+show_meta()
+{
+    jq -r "del(.verify)" $TMPFILE | \
+    jq -r "del(.metadata_version)" | sed -e '1d' -e '$d'
+}
+
+JPREF=""
+JFPREF=""
+do_list_uboot_image()
+{
+    local dev=$1
+    if get_uboot_info $dev >/dev/null 2>&1; then
+        cat << EOF
+        $JPREF "image": {
+            `show_meta`
+        }
+EOF
+        JPREF=,
+    fi
+}
+
+do_list_system_image()
+{
+    local dev=$1
+    if get_system_image_info $dev >/dev/null 2>&1; then
         cat << EOF
         $JPREF "system_image": {
             `show_meta`
@@ -954,16 +1112,8 @@ EOF
 
 do_list_kernel_fit()
 {
-    local KERNEL_ITB_MAGIC=0xd00dfeed
-    local dev=$1 v k_magic k_len
-    set -- `dd if=$dev bs=4 count=2 status=none | od -t x1 | head -1`
-    v=$(((0x$2 << 24) + (0x$3 << 16) + (0x$4 << 8) + 0x$5))
-    k_magic=`printf "0x%08x\n" $v`
-    if [ $k_magic != $KERNEL_ITB_MAGIC ]; then
-        return 0
-    fi
-    k_len=$(((0x$6 << 24) + (0x$7 << 16) + (0x$8 << 8) + 0x$9))
-    if extract_meta $dev $k_len $TMPFILE; then
+    local dev=$1
+    if get_kernel_fit_info $dev >/dev/null 2>&1; then
         cat << EOF
         $JPREF "kernel_fit": {
             `show_meta`
@@ -1027,6 +1177,51 @@ list_firmware()
         do_list_firmware $fwname
     done
     echo "}"
+    ) | jq -r -M .
+}
+
+write_cachefile()
+{
+    list_firmware > $CACHEFILE
+}
+
+# The list of running firmware comes from /var/run/fwupdate.cache
+# which is created at startup.  Firmware update operations can
+# proceed to overwrite these images that we booted from, so
+# the cache ensures that we always have a record of where we came from
+list_loaded_firmware()
+{
+    if [ ! -f $CACHEFILE ]; then
+        fatal "$CACHEFILE not found"
+        exit 1
+    fi
+    local fwname
+    (
+        echo "{ \"uboot\":"
+        fwname=`get_kernel_fwname`
+        jq -r -M .uboot $CACHEFILE
+        echo ","
+        case "$fwname" in
+        mainfwa|mainfwb)
+            # Pull the kernel from the fwupdate.cache, but determine
+            # the currently mounted filesystem
+            echo "\"$RUNNING_FW\":"
+            echo '{ "kernel_fit":'
+            jq -r -M .$fwname.kernel_fit $CACHEFILE
+            echo ', "system_image":'
+            (
+                echo {
+                do_list_firmware $RUNNING_FW
+                echo }
+            ) | jq -r -M .$RUNNING_FW.system_image
+            echo }
+            ;;
+        *)
+            echo "\"$fwname\":"
+            jq -r -M  .$fwname $CACHEFILE
+            ;;
+        esac
+        echo "}"
     ) | jq -r -M .
 }
 
