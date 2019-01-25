@@ -2,6 +2,7 @@ package statemgr
 
 import (
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/pensando/sw/venice/utils/log"
@@ -167,7 +168,7 @@ var roFSM = [][]fsmNode{
 		fsmEvSuccess:               {nextSt: fsmstRolloutSuccess, actFn: fsmAcRolloutSuccess},
 		fsmEvOneSmartNICUpgFail:    {nextSt: fsmstRollingoutOutSmartNIC}, // TODO
 		fsmEvOneSmartNICUpgSuccess: {nextSt: fsmstRollingoutOutSmartNIC}, // TODO
-
+		fsmEvFail:                  {nextSt: fsmstRolloutFail, actFn: fsmAcRolloutFail},
 	},
 }
 
@@ -190,6 +191,7 @@ func (ros *RolloutState) runFSM() {
 }
 
 func fsmAcCreated(ros *RolloutState) {
+	ros.setPreviousVersion("TODO_PREV_VERSION")
 	if ros.Spec.SmartNICsOnly {
 		ros.eventChan <- fsmEvVeniceBypass
 	} else {
@@ -254,6 +256,7 @@ func fsmAcIssueNextVeniceRollout(ros *RolloutState) {
 		log.Errorf("Error %s issuing rollout to next venice", err)
 		return
 	}
+	ros.setStartTime()
 	if numPendingRollout == 0 {
 		if !ros.allVeniceRolloutSuccess() { // some venice rollout failed
 			ros.eventChan <- fsmEvFail
@@ -278,13 +281,20 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 	go func() {
 		defer ros.Done()
 		ros.doUpdateSmartNICs()
-		// TODO: Handle Failures in smartNIC
-		ros.eventChan <- fsmEvSuccess
+
+		numFailures := atomic.LoadUint32(&ros.numFailuresSeen)
+		if numFailures <= ros.Spec.MaxNICFailuresBeforeAbort {
+			ros.eventChan <- fsmEvSuccess
+		} else {
+			ros.eventChan <- fsmEvFail
+		}
 	}()
 }
 func fsmAcRolloutSuccess(ros *RolloutState) {
-	ros.writer.WriteRollout(ros.Rollout)
+	ros.setEndTime()
+	ros.saveStatus()
 }
 func fsmAcRolloutFail(ros *RolloutState) {
-	ros.writer.WriteRollout(ros.Rollout)
+	ros.setEndTime()
+	ros.saveStatus()
 }

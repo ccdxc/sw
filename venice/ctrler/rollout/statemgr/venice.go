@@ -7,6 +7,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -109,6 +110,9 @@ func (vros *VeniceRolloutState) UpdateVeniceRolloutStatus(newStatus *protos.Veni
 
 	log.Infof("Updating status of VeniceRollout %v", vros.VeniceRollout.Name)
 
+	var message, reason string
+	var phase rollout.RolloutPhase_Phases
+
 	vros.Mutex.Lock()
 	for _, s := range newStatus.OpStatus {
 		if s.Version != version {
@@ -123,25 +127,32 @@ func (vros *VeniceRolloutState) UpdateVeniceRolloutStatus(newStatus *protos.Veni
 			switch s.Op {
 			case protos.VeniceOp_VenicePreCheck:
 				evt = fsmEvOneVenicePreUpgSuccess
+				phase = rollout.RolloutPhase_WAITING_FOR_TURN
 			case protos.VeniceOp_VeniceRunVersion:
 				evt = fsmEvOneVeniceUpgSuccess
-			}
+				phase = rollout.RolloutPhase_COMPLETE
 
+			}
 		} else {
 			switch s.Op {
 			case protos.VeniceOp_VenicePreCheck:
 				evt = fsmEvOneVenicePreUpgFail
+				phase = rollout.RolloutPhase_FAIL
 			case protos.VeniceOp_VeniceRunVersion:
 				evt = fsmEvOneVeniceUpgFail
+				phase = rollout.RolloutPhase_FAIL
 			}
 		}
 		vros.status[s.Op] = s
 		if evt != fsmEvInvalid {
 			vros.ros.eventChan <- evt
+			message = s.Message
+			reason = s.OpStatus
 		}
 	}
 	vros.Statemgr.memDB.UpdateObject(vros)
 	vros.Mutex.Unlock()
+	vros.ros.setVenicePhase(vros.Name, reason, message, phase)
 
 	return nil
 }

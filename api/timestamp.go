@@ -43,6 +43,16 @@ func (t Timestamp) Time() (time.Time, error) {
 	return types.TimestampFromProto(&t.Timestamp)
 }
 
+// SetTime sets Time . This enables us to change the implementation later
+func (t *Timestamp) SetTime(pt time.Time) error {
+	ts, err := types.TimestampProto(pt)
+	if err != nil {
+		return err
+	}
+	t.Timestamp = *ts
+	return nil
+}
+
 // Parse parses a timestamp expression. The following expressions are
 // supported:
 // time.RFC3339Nano +/- time.Duration
@@ -60,14 +70,7 @@ func (t *Timestamp) Parse(e string) error {
 	if err != nil {
 		return err
 	}
-
-	ts, err := types.TimestampProto(pt)
-	if err != nil {
-		return err
-	}
-	t.Timestamp = *ts
-
-	return nil
+	return t.SetTime(pt)
 
 }
 

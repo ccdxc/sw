@@ -7,6 +7,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -107,6 +108,10 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 	version := sros.ros.Rollout.Spec.Version
 
 	log.Infof("Updating status of ServiceRollout %v", sros.ServiceRollout.Name)
+
+	var message, reason string
+	var phase rollout.RolloutPhase_Phases
+
 	sros.Mutex.Lock()
 	for _, s := range newStatus.OpStatus {
 		if s.Version != version {
@@ -121,11 +126,13 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 			switch s.Op {
 			case protos.ServiceOp_ServiceRunVersion:
 				evt = fsmEvServiceUpgOK
+				phase = rollout.RolloutPhase_COMPLETE
 			}
 		} else {
 			switch s.Op {
 			case protos.ServiceOp_ServiceRunVersion:
 				evt = fsmEvServiceUpgFail
+				phase = rollout.RolloutPhase_FAIL
 			}
 		}
 		sros.status[s.Op] = s
@@ -135,4 +142,6 @@ func (sros *ServiceRolloutState) UpdateServiceRolloutStatus(newStatus *protos.Se
 	}
 	sros.Statemgr.memDB.UpdateObject(sros)
 	sros.Mutex.Unlock()
+	sros.ros.setServicePhase(sros.Name, reason, message, phase)
+
 }

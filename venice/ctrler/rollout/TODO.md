@@ -16,12 +16,8 @@ From Review:
 * Rename nmd_interfaces.go from API to something else.
 
 Pending Implementation tasks:
-* Implement Linear/Exponential scheme for upgrading naples
-* Handle PreUpgrade Failures of smartNIC
-* Implement MaxFailures 
 * Implement Stop of Rollout
 * Implement Delete of Rollout when the Rollout is in progress.
-* Set the status in Rollout object correctly
 * On restart of Rollout controller, restore Status/State from the Rollout Object and skip the upgrade of those that are 
     completed already.
 * CMD should persist the venice Rollout state of the node at its level to provide idempotency.

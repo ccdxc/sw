@@ -3,6 +3,7 @@ package statemgr
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
@@ -304,98 +305,113 @@ Loop:
 			// Rollout is being stopped. Dont issue any more requests
 			return
 		case snicState, ok := <-workCh:
-			if !ok {
-				log.Debugf("End of Workchannel. Closing")
-				return
-			}
-			log.Debugf("Got work %#v", snicState)
-
-			watchChan := make(chan memdb.Event, memdb.WatchLen)
-			defer close(watchChan)
-			sm.WatchObjects("SmartNICRollout", watchChan)
-			defer sm.StopWatchObjects("SmartNICRollout", watchChan)
-
-			snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
-			if err == nil {
-				if st := snicROState.status[op]; st.OpStatus != "" {
-					log.Debugf("smartnic %v already has status for version %s op %s", snicState.Name, version, op)
-					continue
-				} else {
-					snicROState.addSpecOp(version, op)
-				}
-			} else {
-				// smartNICRollout Object does not exist. Create it
-				snicRollout := protos.SmartNICRollout{
-					TypeMeta: api.TypeMeta{
-						Kind: kindSmartNICRollout,
-					},
-					ObjectMeta: api.ObjectMeta{
-						Name:   snicState.Name,
-						Tenant: snicState.Tenant,
-					},
-					Spec: protos.SmartNICRolloutSpec{
-						Ops: []*protos.SmartNICOpSpec{
-							{
-								Op:      op,
-								Version: version,
-							},
-						},
-					},
-				}
-				log.Debugf("Creating smartNICRolloutState %#v", snicRollout)
-				err = sm.CreateSmartNICRolloutState(&snicRollout, ros)
-				if err != nil {
-					log.Errorf("Error %v creating smartnic rollout state", err)
-					continue
-				}
-			}
-
-			// Wait for response from  the NIC
-		WaitLoop:
-			for {
-				select {
-				case <-ros.stopChan:
-					// Rollout is being stopped/deleted.
-					// Can return immediately now not waiting for a response from NAPLES.
-					// If needed, in the future we wait for a response from NAPLES before coming out of this loop
+			{
+				if !ok {
+					log.Debugf("End of Workchannel. Closing")
 					return
-				case evt, ok := <-watchChan:
-					if !ok {
-						log.Errorf("Error reading from local watch channel. Closing watch")
-						break Loop
-					}
+				}
+				numFailures := atomic.LoadUint32(&ros.numFailuresSeen)
+				if numFailures > ros.Spec.MaxNICFailuresBeforeAbort {
+					log.Debugf("Skipping upgrade for %s as MaxFailures reached", snicState)
+					continue
+				}
 
-					snRolloutState, err := SmartNICRolloutStateFromObj(evt.Obj)
-					if err != nil {
-						log.Errorf("Error getting smartNICRollout from statemgr. Err: %v", err)
-						break WaitLoop
-					}
-					if snRolloutState.Name == snicState.Name {
-						log.Debugf("Got status %#v to smartNIC request for %v", snRolloutState.status, snRolloutState.Name)
-						if !snRolloutState.anyPendingOp() {
-							break WaitLoop
-						} else {
-							log.Debugf("Still waiting for response from %s", snRolloutState.Name)
-						}
+				log.Debugf("Got work %#v", snicState)
+
+				watchChan := make(chan memdb.Event, memdb.WatchLen)
+				defer close(watchChan)
+				sm.WatchObjects("SmartNICRollout", watchChan)
+				defer sm.StopWatchObjects("SmartNICRollout", watchChan)
+
+				snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
+				if err == nil {
+					if st := snicROState.status[op]; st.OpStatus != "" {
+						log.Debugf("smartnic %v already has status for version %s op %s", snicState.Name, version, op)
+						continue
 					} else {
-						log.Debugf("Got status for smartnic %s in context of %s", snRolloutState.Name, snicState.Name)
+						snicROState.addSpecOp(version, op)
 					}
-				case <-time.After(preUpgradeTimeout):
-					log.Debugf("Timeout waiting for status update of smartNIC %s", snicState.Name)
-					snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
-					if err == nil {
-						snicROState.UpdateSmartNICRolloutStatus(&protos.SmartNICRolloutStatus{
-							OpStatus: []protos.SmartNICOpStatus{
+				} else {
+					// smartNICRollout Object does not exist. Create it
+					snicRollout := protos.SmartNICRollout{
+						TypeMeta: api.TypeMeta{
+							Kind: kindSmartNICRollout,
+						},
+						ObjectMeta: api.ObjectMeta{
+							Name:   snicState.Name,
+							Tenant: snicState.Tenant,
+						},
+						Spec: protos.SmartNICRolloutSpec{
+							Ops: []*protos.SmartNICOpSpec{
 								{
-									Op:       op,
-									Version:  version,
-									OpStatus: "timeout",
-									Message:  "Timeout waiting for status from smartNIC",
+									Op:      op,
+									Version: version,
 								},
 							},
-						})
+						},
 					}
-					break WaitLoop
+					log.Debugf("Creating smartNICRolloutState %#v", snicRollout)
+					err = sm.CreateSmartNICRolloutState(&snicRollout, ros)
+					if err != nil {
+						log.Errorf("Error %v creating smartnic rollout state", err)
+						continue
+					}
+				}
+				var phase roproto.RolloutPhase_Phases
+				if op == protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot || op == protos.SmartNICOp_SmartNICPreCheckForDisruptive {
+					phase = roproto.RolloutPhase_PRE_CHECK
+				} else {
+					phase = roproto.RolloutPhase_PROGRESSING
+				}
+				ros.setSmartNICPhase(snicState.Name, "", "", phase)
+
+				// Wait for response from  the NIC
+			WaitLoop:
+				for {
+					select {
+					case <-ros.stopChan:
+						// Rollout is being stopped/deleted.
+						// Can return immediately now not waiting for a response from NAPLES.
+						// If needed, in the future we wait for a response from NAPLES before coming out of this loop
+						return
+					case evt, ok := <-watchChan:
+						if !ok {
+							log.Errorf("Error reading from local watch channel. Closing watch")
+							break Loop
+						}
+
+						snRolloutState, err := SmartNICRolloutStateFromObj(evt.Obj)
+						if err != nil {
+							log.Errorf("Error getting smartNICRollout from statemgr. Err: %v", err)
+							break WaitLoop
+						}
+						if snRolloutState.Name == snicState.Name {
+							log.Debugf("Got status %#v to smartNIC request for %v", snRolloutState.status, snRolloutState.Name)
+							if !snRolloutState.anyPendingOp() {
+								break WaitLoop
+							} else {
+								log.Debugf("Still waiting for response from %s", snRolloutState.Name)
+							}
+						} else {
+							log.Debugf("Got status for smartnic %s in context of %s", snRolloutState.Name, snicState.Name)
+						}
+					case <-time.After(preUpgradeTimeout):
+						log.Debugf("Timeout waiting for status update of smartNIC %s", snicState.Name)
+						snicROState, err := sm.GetSmartNICRolloutState(snicState.Tenant, snicState.Name)
+						if err == nil {
+							snicROState.UpdateSmartNICRolloutStatus(&protos.SmartNICRolloutStatus{
+								OpStatus: []protos.SmartNICOpStatus{
+									{
+										Op:       op,
+										Version:  version,
+										OpStatus: "timeout",
+										Message:  "Timeout waiting for status from smartNIC",
+									},
+								},
+							})
+						}
+						break WaitLoop
+					}
 				}
 			}
 		}
@@ -426,13 +442,17 @@ func (ros *RolloutState) preUpgradeSmartNICs() {
 
 	for _, s := range sn {
 		log.Infof("op:%s for %s", op.String(), spew.Sdump(s))
-		ros.issueSmartNICOp(s, op)
+		if ros.Spec.Strategy == roproto.RolloutSpec_EXPONENTIAL.String() {
+			ros.issueSmartNICOpExponential(s, op)
+		} else {
+			ros.issueSmartNICOpLinear(s, op)
+		}
 	}
 
 	log.Infof("completed smartNIC Rollout Preupgrade")
 }
 
-func (ros *RolloutState) issueSmartNICOp(snStates []*SmartNICState, Op protos.SmartNICOp) {
+func (ros *RolloutState) issueSmartNICOpLinear(snStates []*SmartNICState, Op protos.SmartNICOp) {
 	sm := ros.Statemgr
 
 	numParallel := ros.Spec.MaxParallel
@@ -446,10 +466,6 @@ func (ros *RolloutState) issueSmartNICOp(snStates []*SmartNICState, Op protos.Sm
 		sm.smartNICWG.Add(1)
 		go sm.smartNICWorkers(workCh, &sm.smartNICWG, ros, Op)
 	}
-
-	// TODO: Implement Exponential policy
-	// TODO: Implement max-failures
-
 	// give work to worker threads and wait for all of them to complete
 	for _, sn := range snStates {
 		log.Debugf("Adding %v to work", sn)
@@ -458,6 +474,46 @@ func (ros *RolloutState) issueSmartNICOp(snStates []*SmartNICState, Op protos.Sm
 	close(workCh)
 
 	sm.smartNICWG.Wait()
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func (ros *RolloutState) issueSmartNICOpExponential(snStates []*SmartNICState, Op protos.SmartNICOp) {
+	sm := ros.Statemgr
+
+	numParallel := int(ros.Spec.MaxParallel) // if numParallel is 0 then unlimited parallelism
+
+	curParallel := 1
+	curIndex := 0
+
+	for curIndex < len(snStates) {
+		workPending := len(snStates) - curIndex
+
+		// In each iteration of the outer loop, we execute numJobs in parallel
+		numJobs := min(curParallel, workPending)
+
+		workCh := make(chan *SmartNICState, numJobs)
+		for i := 0; i < numJobs; i++ {
+			sm.smartNICWG.Add(1)
+			go sm.smartNICWorkers(workCh, &sm.smartNICWG, ros, Op)
+			log.Debugf("Adding %v to work", snStates[curIndex])
+			workCh <- snStates[curIndex]
+			curIndex++
+		}
+		close(workCh)
+
+		curParallel = 2 * curParallel
+		if numParallel != 0 { // user limited max parallelism to this
+			curParallel = min(curParallel, numParallel)
+		}
+		sm.smartNICWG.Wait()
+	}
+
 }
 
 func (ros *RolloutState) doUpdateSmartNICs() {
@@ -483,7 +539,11 @@ func (ros *RolloutState) doUpdateSmartNICs() {
 	sn := orderSmartNICs(ros.Rollout.Spec.OrderConstraints, ros.Rollout.Spec.SmartNICMustMatchConstraint, snStates)
 	for _, s := range sn {
 		log.Infof("op:%s for %s", op.String(), spew.Sdump(s))
-		ros.issueSmartNICOp(s, op)
+		if ros.Spec.Strategy == roproto.RolloutSpec_EXPONENTIAL.String() {
+			ros.issueSmartNICOpExponential(s, op)
+		} else {
+			ros.issueSmartNICOpLinear(s, op)
+		}
 	}
 	log.Infof("completed smartNIC Rollout")
 }

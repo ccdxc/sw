@@ -5,7 +5,9 @@ package statemgr
 import (
 	"fmt"
 	"sync"
+	"time"
 
+	"github.com/pensando/sw/api"
 	roproto "github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -27,6 +29,7 @@ type RolloutState struct {
 	fsm [][]fsmNode
 
 	numPreUpgradeFailures int32 // number of failures seen so far (computed from status)
+	numFailuresSeen       uint32
 }
 
 func (sm *Statemgr) handleRolloutEvent(et kvstore.WatchEventType, ro *roproto.Rollout) {
@@ -122,4 +125,153 @@ func (ros *RolloutState) stop() {
 	ros.Wait()
 	ros.currentState = fsmstInvalid
 
+}
+
+// === Status updaters ===
+func (ros *RolloutState) saveStatus() {
+	if ros != nil && ros.writer != nil {
+		ros.writer.WriteRollout(ros.Rollout)
+	}
+}
+
+func (ros *RolloutState) setPreviousVersion(v string) {
+	if ros.Status.PreviousVersion == "" {
+		ros.Status.PreviousVersion = v
+		ros.saveStatus()
+	}
+}
+func (ros *RolloutState) setStartTime() {
+	if ros.Status.StartTime == nil {
+		t := api.Timestamp{}
+		t.SetTime(time.Now())
+		ros.Status.StartTime = &t
+		ros.saveStatus()
+	}
+}
+
+func (ros *RolloutState) setEndTime() {
+	if ros.Status.EndTime == nil {
+		t := api.Timestamp{}
+		t.SetTime(time.Now())
+		ros.Status.EndTime = &t
+		ros.saveStatus()
+	}
+}
+
+func (ros *RolloutState) setStateAndPercentage(state string, percent uint32) {
+	ros.Status.CompletionPercentage = percent
+	ros.Status.OperationalState = state
+}
+
+func (ros *RolloutState) setVenicePhase(name, reason, message string, phase roproto.RolloutPhase_Phases) {
+	index := -1
+	for i, curStatus := range ros.Status.ControllerNodesStatus {
+		if curStatus.Name == name {
+			index = i
+		}
+	}
+
+	if index == -1 {
+		rp := roproto.RolloutPhase{
+			Name: name,
+		}
+		ros.Status.ControllerNodesStatus = append(ros.Status.ControllerNodesStatus, &rp)
+		index = len(ros.Status.ControllerNodesStatus) - 1
+	}
+
+	switch phase {
+	case roproto.RolloutPhase_PROGRESSING:
+		startTime := api.Timestamp{}
+		startTime.SetTime(time.Now())
+		ros.Status.ControllerNodesStatus[index].StartTime = &startTime
+
+	case roproto.RolloutPhase_COMPLETE, roproto.RolloutPhase_FAIL:
+		endTime := api.Timestamp{}
+		endTime.SetTime(time.Now())
+		ros.Status.ControllerNodesStatus[index].EndTime = &endTime
+
+	case roproto.RolloutPhase_PRE_CHECK:
+	case roproto.RolloutPhase_DEPENDENCIES_CHECK:
+	case roproto.RolloutPhase_WAITING_FOR_TURN:
+
+	}
+	ros.Status.ControllerNodesStatus[index].Reason = reason
+	ros.Status.ControllerNodesStatus[index].Message = message
+	ros.Status.ControllerNodesStatus[index].Phase = phase.String()
+	ros.saveStatus()
+}
+
+func (ros *RolloutState) setServicePhase(name, reason, message string, phase roproto.RolloutPhase_Phases) {
+	index := -1
+	for i, curStatus := range ros.Status.ControllerServicesStatus {
+		if curStatus.Name == name {
+			index = i
+		}
+	}
+
+	if index == -1 {
+		rp := roproto.RolloutPhase{
+			Name: name,
+		}
+		ros.Status.ControllerServicesStatus = append(ros.Status.ControllerServicesStatus, &rp)
+		index = len(ros.Status.ControllerServicesStatus) - 1
+	}
+
+	switch phase {
+	case roproto.RolloutPhase_PROGRESSING:
+		startTime := api.Timestamp{}
+		startTime.SetTime(time.Now())
+		ros.Status.ControllerServicesStatus[index].StartTime = &startTime
+
+	case roproto.RolloutPhase_COMPLETE, roproto.RolloutPhase_FAIL:
+		endTime := api.Timestamp{}
+		endTime.SetTime(time.Now())
+		ros.Status.ControllerServicesStatus[index].EndTime = &endTime
+
+	case roproto.RolloutPhase_PRE_CHECK:
+	case roproto.RolloutPhase_DEPENDENCIES_CHECK:
+	case roproto.RolloutPhase_WAITING_FOR_TURN:
+
+	}
+	ros.Status.ControllerServicesStatus[index].Reason = reason
+	ros.Status.ControllerServicesStatus[index].Message = message
+	ros.Status.ControllerServicesStatus[index].Phase = phase.String()
+	ros.saveStatus()
+}
+func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase roproto.RolloutPhase_Phases) {
+	index := -1
+	for i, curStatus := range ros.Status.SmartNICsStatus {
+		if curStatus.Name == name {
+			index = i
+		}
+	}
+
+	if index == -1 {
+		rp := roproto.RolloutPhase{
+			Name: name,
+		}
+		ros.Status.SmartNICsStatus = append(ros.Status.SmartNICsStatus, &rp)
+		index = len(ros.Status.SmartNICsStatus) - 1
+	}
+
+	switch phase {
+	case roproto.RolloutPhase_PROGRESSING:
+		startTime := api.Timestamp{}
+		startTime.SetTime(time.Now())
+		ros.Status.SmartNICsStatus[index].StartTime = &startTime
+
+	case roproto.RolloutPhase_COMPLETE, roproto.RolloutPhase_FAIL:
+		endTime := api.Timestamp{}
+		endTime.SetTime(time.Now())
+		ros.Status.SmartNICsStatus[index].EndTime = &endTime
+
+	case roproto.RolloutPhase_PRE_CHECK:
+	case roproto.RolloutPhase_DEPENDENCIES_CHECK:
+	case roproto.RolloutPhase_WAITING_FOR_TURN:
+
+	}
+	ros.Status.SmartNICsStatus[index].Reason = reason
+	ros.Status.SmartNICsStatus[index].Message = message
+	ros.Status.SmartNICsStatus[index].Phase = phase.String()
+	ros.saveStatus()
 }

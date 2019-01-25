@@ -8,6 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -110,6 +111,8 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 	log.Infof("Updating status of SmartNICRollout %v", snicState.SmartNICRollout.Name)
 	version := snicState.ros.Rollout.Spec.Version
 
+	var phase rollout.RolloutPhase_Phases
+	var reason, message string
 	snicState.Mutex.Lock()
 	for _, s := range newStatus.OpStatus {
 		if s.Version != version {
@@ -124,34 +127,48 @@ func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *pr
 			switch s.Op {
 			case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
 				evt = fsmEvOneSmartNICPreupgSuccess
+				phase = rollout.RolloutPhase_WAITING_FOR_TURN
 			case protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICPreupgSuccess
+				phase = rollout.RolloutPhase_WAITING_FOR_TURN
 			case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICUpgSuccess
+				phase = rollout.RolloutPhase_COMPLETE
 			case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
 				evt = fsmEvOneSmartNICUpgSuccess
+				phase = rollout.RolloutPhase_COMPLETE
 			}
 		} else {
 			switch s.Op {
 			case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
 				evt = fsmEvOneSmartNICPreupgFail
 				atomic.AddInt32(&snicState.ros.numPreUpgradeFailures, 1)
+				phase = rollout.RolloutPhase_FAIL
 			case protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICPreupgFail
 				atomic.AddInt32(&snicState.ros.numPreUpgradeFailures, 1)
+				phase = rollout.RolloutPhase_FAIL
 			case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
+				atomic.AddUint32(&snicState.ros.numFailuresSeen, 1)
 				evt = fsmEvOneSmartNICUpgFail
+				phase = rollout.RolloutPhase_FAIL
 			case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
+				atomic.AddUint32(&snicState.ros.numFailuresSeen, 1)
 				evt = fsmEvOneSmartNICUpgFail
+				phase = rollout.RolloutPhase_FAIL
 			}
 		}
 		snicState.status[s.Op] = s
 		if evt != fsmEvInvalid {
 			snicState.ros.eventChan <- evt
+			message = s.Message
+			reason = s.OpStatus
 		}
 	}
 	snicState.Statemgr.memDB.UpdateObject(snicState)
 	snicState.Mutex.Unlock()
+	snicState.ros.setSmartNICPhase(snicState.Name, reason, message, phase)
+
 }
 
 func (snicState *SmartNICRolloutState) anyPendingOp() bool {
