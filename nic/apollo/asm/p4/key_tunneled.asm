@@ -24,11 +24,14 @@ tunneled_ipv4_packet:
 .align
 tunneled_ipv6_packet:
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV6
-    phvwr           p.key_metadata_src, \
-                        k.{ipv6_2_srcAddr_sbit0_ebit31...ipv6_2_srcAddr_sbit64_ebit127}
-    phvwr           p.key_metadata_dst, k.ipv6_2_dstAddr
+    phvwr           p.key_metadata_dst, k.{ipv6_2_dstAddr_sbit0_ebit31, \
+                                           ipv6_2_dstAddr_sbit32_ebit63, \
+                                           ipv6_2_dstAddr_sbit64_ebit127}
     phvwr.e         p.key_metadata_proto, k.ipv6_2_nextHdr
-    phvwr           p.control_metadata_mapping_lkp_addr, k.ipv6_2_dstAddr
+    phvwr           p.control_metadata_mapping_lkp_addr, \
+                        k.{ipv6_2_dstAddr_sbit0_ebit31, \
+                           ipv6_2_dstAddr_sbit32_ebit63, \
+                           ipv6_2_dstAddr_sbit64_ebit127}
 
 .align
 tunneled_nonip_packet:

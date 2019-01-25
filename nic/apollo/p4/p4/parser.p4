@@ -228,15 +228,14 @@ parser parse_vxlan_1 {
 
 parser parse_mpls {
     return select(current(23, 1)) {
-        0 : parse_mpls_src_dst;
+        0 : parse_mpls_src;
         default : parse_mpls_dst;
     }
 }
 
-parser parse_mpls_src_dst {
+parser parse_mpls_src {
     extract(mpls_src);
-    extract(mpls_dst);
-    return parse_mpls_payload;
+    return parse_mpls_dst;
 }
 
 parser parse_mpls_dst {
@@ -298,6 +297,7 @@ parser parse_ipv4_2 {
 
 parser parse_ipv6_2 {
     extract(ipv6_2);
+    set_metadata(key_metadata.src, latest.srcAddr);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
