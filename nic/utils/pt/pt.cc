@@ -22,7 +22,7 @@ pt::init(const char *name, uint16_t max_key_len, bool thread_safe)
     max_key_len_ = max_key_len;
     thread_safe_ = thread_safe;
     if (thread_safe) {
-        HAL_ASSERT_RETURN(!SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE),
+        SDK_ASSERT_RETURN(!SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE),
                           false);
     }
 

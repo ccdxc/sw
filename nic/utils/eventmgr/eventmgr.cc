@@ -25,7 +25,7 @@ event_map_compute_hash_func (void *key, uint32_t ht_size)
 static bool
 event_map_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(event_id_t *)key1 == *(event_id_t *)key2) {
         return true;
     }
@@ -47,7 +47,7 @@ listener_map_compute_hash_func (void *key, uint32_t ht_size)
 static bool
 listener_map_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(void **)key1 == *(void **)key2) {
         return true;
     }

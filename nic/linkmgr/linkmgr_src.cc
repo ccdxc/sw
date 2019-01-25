@@ -133,7 +133,7 @@ linkmgr_logger_init (void)
                               1 /* number of files */,
                               ::utils::trace_debug,
                               ::utils::log_none);
-    HAL_ASSERT(logger != NULL);
+    SDK_ASSERT(logger != NULL);
 
     return logger;
 }
@@ -297,7 +297,7 @@ linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
     sdk_ret_t  sdk_ret   = SDK_RET_OK;
 
     g_linkmgr_state = linkmgr_state::factory();
-    HAL_ASSERT_RETURN((g_linkmgr_state != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((g_linkmgr_state != NULL), HAL_RET_ERR);
 
     // store the catalog in global hal state
     g_linkmgr_state->set_catalog(sdk_cfg->catalog);
@@ -330,13 +330,13 @@ port_id_get_key_func (void *entry)
     hal_handle_id_ht_entry_t    *ht_entry;
     port_t                      *pi_p = NULL;
 
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     ht_entry = (hal_handle_id_ht_entry_t *)entry;
     if (ht_entry == NULL) {
         return NULL;
     }
     pi_p = (port_t *)hal_handle_get_obj(ht_entry->handle_id);
-    HAL_ASSERT(pi_p != NULL);
+    SDK_ASSERT(pi_p != NULL);
     return (void *)&(pi_p->port_num);
 }
 
@@ -349,7 +349,7 @@ port_id_compute_hash_func (void *key, uint32_t ht_size)
 bool
 port_id_compare_key_func (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (*(port_num_t *)key1 == *(port_num_t *)key2) {
         return true;
     }

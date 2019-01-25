@@ -17,7 +17,7 @@ namespace nat {
 static void *
 addr_entry_key_func_get (void *entry)
 {
-    HAL_ASSERT(entry != NULL);
+    SDK_ASSERT(entry != NULL);
     return (void *)&(((addr_entry_t *)entry)->key);
 }
 
@@ -31,7 +31,7 @@ addr_entry_key_hash_func_compute (void *key, uint32_t ht_size)
 static bool
 addr_entry_key_func_compare (void *key1, void *key2)
 {
-    HAL_ASSERT((key1 != NULL) && (key2 != NULL));
+    SDK_ASSERT((key1 != NULL) && (key2 != NULL));
     if (!memcmp(key1, key2, sizeof(addr_entry_key_t)))
         return true;
     return false;
@@ -46,7 +46,7 @@ addr_db_init (uint32_t db_size)
                               addr_entry_key_func_get,
                               addr_entry_key_hash_func_compute,
                               addr_entry_key_func_compare);
-    HAL_ASSERT_RETURN((addr_db_ != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((addr_db_ != NULL), HAL_RET_ERR);
 
     return HAL_RET_OK;
 }
@@ -94,7 +94,7 @@ addr_entry_slab_init (void)
                                 sizeof(addr_entry_t),
                                 NAT_MAX_ADDR,
                                 true, true, true, hal::hal_mmgr());
-    HAL_ASSERT_RETURN((addr_entry_slab_ != NULL), HAL_RET_ERR);
+    SDK_ASSERT_RETURN((addr_entry_slab_ != NULL), HAL_RET_ERR);
 
     return HAL_RET_OK;
 }

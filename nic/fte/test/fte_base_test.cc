@@ -431,7 +431,7 @@ hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
             if (fn_ctx->ret == HAL_RET_OK) {
                 fn_ctx->ret = ctx->process();
             }
-            HAL_ASSERT(fn_ctx->ret == HAL_RET_OK);
+            SDK_ASSERT(fn_ctx->ret == HAL_RET_OK);
             hal::hal_cfg_db_close();
         }
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);

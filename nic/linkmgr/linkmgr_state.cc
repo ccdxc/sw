@@ -69,7 +69,7 @@ cfg_db::factory(void)
     cfg_db  *cfg = NULL;
 
     mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(cfg_db));
-    HAL_ASSERT_RETURN((mem != NULL), NULL);
+    SDK_ASSERT_RETURN((mem != NULL), NULL);
 
     cfg = new(mem) cfg_db();
     if (cfg->init() == false) {
@@ -237,7 +237,7 @@ mem_db::factory(void)
     mem_db  *memdb = NULL;
 
     mem = HAL_CALLOC(HAL_MEM_ALLOC_INFRA, sizeof(mem_db));
-    HAL_ASSERT_RETURN((mem != NULL), NULL);
+    SDK_ASSERT_RETURN((mem != NULL), NULL);
 
     memdb = new(mem) mem_db();
     if (memdb->init() == false) {
