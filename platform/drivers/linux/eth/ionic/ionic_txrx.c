@@ -286,7 +286,10 @@ void ionic_rx_empty(struct queue *q)
 
 	while (cur != q->head) {
 		desc = cur->desc;
+
 		ionic_rx_skb_free(q, cur->cb_arg, desc->len, desc->addr);
+		cur->cb_arg = NULL;
+
 		cur = cur->next;
 	}
 }
