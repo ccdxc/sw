@@ -341,6 +341,18 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
     case PRT_TYPE_DB64: {
         prt_db_t *db = &prt->db;
 
+        if (prt->res.vfstride >= 2) {
+        pciesys_loginfo("    %-4d %-5s %c%c    %-5s 0x%013"PRIx64" "
+                        "LIF=%-7d   %-8d\n",
+                        prti,
+                        prt_type_str(db->type),
+                        db->indirect ? 'i' : '-',
+                        db->notify ? 'n' : '-',
+                        human_readable(64),
+                        baraddr,
+                        db->lif,
+                        1 << db->vfstride);
+        } else {
         pciesys_loginfo("    %-4d %-5s %c%c    %-5s 0x%013"PRIx64" "
                         "LIF=%d\n",
                         prti,
@@ -350,6 +362,7 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
                         human_readable(64),
                         baraddr,
                         db->lif);
+        }
         break;
     }
     case PRT_TYPE_DB32:
@@ -463,7 +476,7 @@ bar_address_format_db(const pmt_t *pmt, const prt_t *prt, char *line,
     const u_int32_t lifb = prtb;
     const u_int32_t lifc = bitspan(lifb, r->vfstart);
     const u_int32_t vfb = r->vfstart;
-    const u_int32_t vfc = bitspan(vfb, r->vfend - 1);
+    const u_int32_t vfc = bitspan(vfb, r->vfend);
     int i;
 
     bar_address_format_addr(pmt, prt, line);
@@ -476,7 +489,7 @@ bar_address_format_db(const pmt_t *pmt, const prt_t *prt, char *line,
     memset(&line[qidb], 'q', qidc);
     memset(&line[resb], 'r', resc);
     memset(&line[pidb], 'p', pidc);
-    memset(&line[lifb], 'l', lifc);
+    memset(&line[lifb], 'L', lifc);
     memset(&line[vfb],  'v', vfc);
 }
 
