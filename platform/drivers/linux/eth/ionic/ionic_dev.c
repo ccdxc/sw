@@ -426,6 +426,8 @@ void ionic_q_rewind(struct queue *q, struct desc_info *start)
 	while (cur != q->head) {
 		if (cur->cb)
 			cur->cb(q, cur, NULL, cur->cb_arg);
+		cur->cb = NULL;
+		cur->cb_arg = NULL;
 		cur = cur->next;
 	}
 
@@ -459,6 +461,8 @@ void ionic_q_service(struct queue *q, struct cq_info *cq_info,
 		if (desc_info->cb)
 			desc_info->cb(q, desc_info, cq_info,
 				      desc_info->cb_arg);
+		desc_info->cb = NULL;
+		desc_info->cb_arg = NULL;
 		q->tail = q->tail->next;
 	} while (desc_info->index != stop_index);
 }
