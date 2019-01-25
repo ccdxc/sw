@@ -49,6 +49,7 @@ func main() {
 		Module:      globals.Citadel,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowAllFilter,
+		Debug:       false,
 		CtxSelector: log.ContextAll,
 		LogToStdout: *logToStdoutFlag,
 		LogToFile:   true,

@@ -48,6 +48,7 @@ func NewHTTPServer(listenURL string, broker *broker.Broker, dbg *debug.Debug) (*
 	r.HandleFunc("/delete", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.deletedbReqHandler))).Methods("POST")
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("GET")
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("POST")
+	r.HandleFunc("/ping", hsrv.pingReqHandler).Methods("GET")
 
 	// kv apis
 	r.HandleFunc("/kv/get", hsrv.getKvReqHandler).Methods("GET")
@@ -189,6 +190,11 @@ func (hsrv *HTTPServer) queryReqHandler(w http.ResponseWriter, r *http.Request) 
 		w.Write(content)
 	}
 	return
+}
+
+// pingReqHandler handles a ping request
+func (hsrv *HTTPServer) pingReqHandler(w http.ResponseWriter, r *http.Request) {
+	// return success, called by influxdb tools
 }
 
 // infoReqHandler returns cluster state
