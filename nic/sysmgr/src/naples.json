@@ -48,4 +48,9 @@
     "command": "/platform/bin/sysmond",
     "dependencies": ["delphi", "hal"],
     "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "upgrade",
+    "command": "/nic/bin/upgrade",
+    "dependencies": ["delphi"],
+    "flags": ["no_watchdog", "non_critical"]
 }]
