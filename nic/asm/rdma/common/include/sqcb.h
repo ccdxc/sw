@@ -58,7 +58,7 @@
 
 #define SQCB0_FRPMR_DMA_DONE_BIT_OFFSET      4
 #define SQCB0_FLUSH_RQ_BIT_OFFSET            3
-
+#define SQCB0_SERVICE_BIT_OFFSET             4
 struct sqcb0_t {
     struct capri_intrinsic_qstate_t intrinsic;
     struct capri_intrinsic_ring_t ring0;
@@ -326,7 +326,14 @@ struct sqcb5_t {
     qp_err_dis_phv_intrinsic_error   :    1;
     qp_err_dis_table_resp_error      :    1;
     qp_err_dis_rsvd                  :    16;
-    pad: 256;
+    //a packet which went thru too many recirculations in req_rx had to be terminated and qp had to 
+    //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.
+    //are remembered for further debugging.
+    recirc_bth_psn: 24;
+    recirc_bth_opcode: 8;
+    recirc_reason: 4;
+    max_recirc_cnt_err: 1;
+    pad: 219;
 };
 
 struct sqcb_t {

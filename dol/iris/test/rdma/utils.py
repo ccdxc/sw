@@ -146,6 +146,8 @@ def ResetErrQState(tc):
     rs.lqp.sq.qstate.data.msn = ((rs.lqp.sq.qstate.data.ssn - 1) & 0xFFFFFF)
     rs.lqp.sq.qstate.data.max_ssn = rs.lqp.sq.qstate.data.ssn
     rs.lqp.sq.qstate.data.timer_on = 0
+    rs.lqp.sq.qstate.data.sqcb5_max_recirc_cnt_err = 0
+    rs.lqp.rq.qstate.data.work_not_done_recirc_cnt = 0
     rs.lqp.sq.qstate.WriteWithDelay()
 
     #Reset Rq

@@ -26,6 +26,11 @@ struct sqcb5_t d;
 #define K_QP_ERR_DISABLED      CAPRI_KEY_FIELD(IN_P, qp_err_disabled)
 #define K_FLAGS CAPRI_KEY_RANGE(IN_P, table_error, table_resp_error)
 
+#define K_MAX_RECIRC_CNT_ERR CAPRI_KEY_FIELD(IN_P, max_recirc_cnt_err) 
+#define K_RECIRC_REASON CAPRI_KEY_RANGE(IN_P, recirc_reason_sbit0_ebit0, recirc_reason_sbit1_ebit3)
+#define K_RECIRC_BTH_OPCODE CAPRI_KEY_RANGE(IN_P, recirc_bth_opcode_sbit0_ebit4, recirc_bth_opcode_sbit5_ebit7)
+#define K_RECIRC_BTH_PSN CAPRI_KEY_RANGE(IN_P, recirc_bth_psn_sbit0_ebit4, recirc_bth_psn_sbit21_ebit23) 
+
 %%
 
 .param  lif_stats_base
@@ -39,6 +44,9 @@ req_rx_stats_process:
     bcf              [!c1], bubble_to_next_stage
 
     add              GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS //BD Slot
+
+    bbeq             K_MAX_RECIRC_CNT_ERR, 1, max_recirc_cnt_err 
+    nop // BD-slot
 
     bbeq             K_LIF_ERROR_ID_VLD, 1, handle_error_lif_stats
     tblor            d.{qp_err_disabled...qp_err_dis_rsvd}, K_ERR_DIS_REASON_CODES //BD Slot
@@ -91,6 +99,18 @@ done:
 
     nop.e
     nop
+
+
+max_recirc_cnt_err:
+    //if max_recirc_cnt_err bit is already set, do not overwrite the info
+    bbeq            d.max_recirc_cnt_err, 1, done
+    //a packet which went thru too many recirculations had to be terminated and qp had to                
+    //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.            
+    //are remembered for further debugging.
+    tblwr           d.max_recirc_cnt_err, 1     //BD Slot
+    tblwr           d.recirc_reason, K_RECIRC_REASON
+    tblwr.e         d.recirc_bth_opcode, K_RECIRC_BTH_OPCODE
+    tblwr           d.recirc_bth_psn, K_RECIRC_BTH_PSN  //Exit Slot 
 
 handle_error_lif_stats:
 

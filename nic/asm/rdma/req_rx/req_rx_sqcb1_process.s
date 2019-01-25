@@ -23,6 +23,8 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define TOKEN_ID r6
 #define WORK_NOT_DONE_RECIRC_CNT_MAX    8
 #define WQE_SIZE_2_SGES                 6
+#define P4_INTR_RECIRC_COUNT_MAX        6
+#define RDMA_RECIRC_ITER_COUNT_MAX      15 
 
 %%
 
@@ -36,6 +38,7 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    req_rx_sqcb1_recirc_sge_process
     .param    req_rx_sq_drain_feedback_process
     .param    req_rx_dummy_drop_phv_process
+    .param    req_rx_sqcb1_write_back_err_process
 
 .align
 req_rx_sqcb1_process:
@@ -390,17 +393,31 @@ timer_expiry_feedback:
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_timer_expiry_process, r0)
 
 recirc_pkt:
+
+    // clear recirc bit and process the packet based on recirc reason
+    phvwr           p.common.p4_intr_recirc, 0
+
+    // if the p4 intrinsic recirc_count has not hit the limit, proceed with pkt handling
+    seq             c6, CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT, P4_INTR_RECIRC_COUNT_MAX
+    bcf             [!c6], skip_recirc_cnt_max_check
+
+    // check if phv's recirc iter count has hit the limit
+    add             r6, 1, CAPRI_APP_DATA_RECIRC_ITER_COUNT //BD Slot
+
+    // did we reach recirc_iter_count to 15 ? 
+    seq             c6, r6, RDMA_RECIRC_ITER_COUNT_MAX
+    bcf             [c6], max_recirc_cnt_err
+    phvwr.!c6       p.common.p4_intr_recirc_count, 1  //BD Slot
+    phvwr           p.common.rdma_recirc_recirc_iter_count, r6
+
+
+skip_recirc_cnt_max_check:
     // If backtrack is already in progress then continue with processing
     // until req_rx_sqcb1_write_back, where bktrack_in_progress flag is checked
     // and recirc packet is dropped if in the middle of bktracking. This allows
     // nxt_to_go_token_id to be incremented in write_back stage for recirc packets
 
     /****** Logic to handle already recirculated packets ******/
-
-    // clear recirc bit and process the packet based on recirc reason
-    // TODO Revert recirc count back to 1 to have inifinite recircs without
-    // modifying hw config registers for recirc
-    phvwrpair      p.common.p4_intr_recirc_count, 1, p.common.p4_intr_recirc, 0
 
     seq            c2, CAPRI_APP_DATA_RECIRC_REASON, CAPRI_RECIRC_REASON_INORDER_WORK_NOT_DONE 
     bcf            [c2], process_recirc_work_not_done
@@ -449,3 +466,16 @@ table_error:
     // TODO add LIF stats
     b               drop_packet
     nop
+
+max_recirc_cnt_err:
+    //a packet which went thru too many recirculations had to be terminated and qp had to 
+    //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc. 
+    //are remembered for further debugging.
+    phvwrpair   CAPRI_PHV_FIELD(TO_S7_P, max_recirc_cnt_err), 1, \
+                CAPRI_PHV_FIELD(TO_S7_P, recirc_reason), CAPRI_APP_DATA_RECIRC_REASON
+
+    phvwrpair   CAPRI_PHV_FIELD(TO_S7_P, recirc_bth_opcode), CAPRI_APP_DATA_BTH_OPCODE, \
+                CAPRI_PHV_FIELD(TO_S7_P, recirc_bth_psn), CAPRI_APP_DATA_BTH_PSN
+
+    CAPRI_SET_TABLE_0_VALID(0)
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_err_process, r0)     

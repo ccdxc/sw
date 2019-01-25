@@ -1211,3 +1211,21 @@ modules:
         module  : req_tx_fast_register_phy_mr_8MB
         spec    : req_tx_fast_register_phy_mr_8MB.testspec
         ignore  : False
+
+# Max Recirc Tests
+    - module:
+        name    : REQ_RX_RECIRC_MAX_COUNT_ERR1
+        enable  : True
+        package : test.rdma
+        module  : req_rx_recirc_max_count_err1
+        spec    : req_rx_recirc_max_count_err1.testspec
+        ignore  : False
+
+    - module:
+        name    : REQ_RX_RECIRC_MAX_COUNT_ERR2
+        enable  : True
+        package : test.rdma
+        module  : req_rx_recirc_max_count_err2
+        spec    : req_rx_recirc_max_count_err2.testspec
+        ignore  : False
+
