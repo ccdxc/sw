@@ -20,6 +20,7 @@
 
 #include "pnso_utils.h"
 #include "pnso_chain_params.h"
+#include "pnso_seq.h"
 #include "pnso_seq_ops.h"
 #include "pnso_cpdc.h"
 #include "pnso_cpdc_cmn.h"
@@ -426,18 +427,36 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	struct next_db_spec *next_db_spec;
 	struct ring_spec *ring_spec;
 	struct cpdc_chain_params_command *cmd;
+	struct seq_cpdc_status_desc0 *desc0;
+	struct seq_cpdc_status_desc1 *desc1;
 
+	desc0 = (struct seq_cpdc_status_desc0 *)seq_status_desc;
+	desc1 = (struct seq_cpdc_status_desc1 *)(seq_status_desc + sizeof(*desc0));
 	ring_spec = &chain_params->ccp_ring_spec;
 	next_db_spec = &chain_params->ccp_next_db_spec;
 	cmd = &chain_params->ccp_cmd;
 
 	memset(seq_status_desc, 0, SONIC_SEQ_STATUS_Q_DESC_SIZE);
-	// desc bytes 0-63
+	desc0->status_addr0 = cpu_to_be64(chain_params->ccp_status_addr_0);
+	desc0->status_addr1 = cpu_to_be64(chain_params->ccp_status_addr_1);
+	desc0->intr_addr = cpu_to_be64(chain_params->ccp_intr_addr);
+	desc0->intr_data = htonl(chain_params->ccp_intr_data);
+	desc0->status_len = htons(chain_params->ccp_status_len);
+	desc0->status_offset = chain_params->ccp_status_offset_0;
+
 	if (cmd->ccpc_next_db_action_ring_push) {
-		write_bit_fields(seq_status_desc, 0, 64,
-				ring_spec->rs_ring_addr);
-		write_bit_fields(seq_status_desc, 64, 64,
-				ring_spec->rs_desc_addr);
+		desc0->next_db.addr = cpu_to_be64(ring_spec->rs_ring_addr);
+		desc0->next_db.data = cpu_to_be64(ring_spec->rs_desc_addr);
+
+#ifdef HAVE_RING_TEMPLATES
+		/*
+		 * Use template here, and update the non-fixed fiels as follows
+		 */
+		write_bit_fields(seq_status_desc, 208, 10,
+				ring_spec->rs_num_descs);
+		write_bit_fields(seq_status_desc, 218, 6,
+				chain_params->ccp_hdr_chksum_offset);
+#else
 		write_bit_fields(seq_status_desc, 128, 34,
 				ring_spec->rs_pndx_addr);
 		write_bit_fields(seq_status_desc, 162, 34,
@@ -450,82 +469,41 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 				ring_spec->rs_ring_size);
 		write_bit_fields(seq_status_desc, 208, 10,
 				ring_spec->rs_num_descs);
+                write_bit_fields(seq_status_desc, 218, 6,
+                                chain_params->ccp_hdr_chksum_offset);
+#endif
 	} else {
-		write_bit_fields(seq_status_desc, 0, 64,
-				next_db_spec->nds_addr);
-		write_bit_fields(seq_status_desc, 64, 64,
-				next_db_spec->nds_data);
+		desc0->next_db.addr = cpu_to_be64(next_db_spec->nds_addr);
+		desc0->next_db.data = cpu_to_be64(next_db_spec->nds_data);
 	}
 
-	write_bit_fields(seq_status_desc, 218, 6,
-			chain_params->ccp_hdr_chksum_offset);
-	write_bit_fields(seq_status_desc, 224, 64,
-			chain_params->ccp_status_addr_0);
-	write_bit_fields(seq_status_desc, 288, 64,
-			chain_params->ccp_status_addr_1);
-	write_bit_fields(seq_status_desc, 352, 64,
-			chain_params->ccp_intr_addr);
-	write_bit_fields(seq_status_desc, 416, 32,
-			chain_params->ccp_intr_data);
-	write_bit_fields(seq_status_desc, 448, 16,
-			chain_params->ccp_status_len);
-	write_bit_fields(seq_status_desc, 464, 8,
-			chain_params->ccp_status_offset_0);
-	write_bit_fields(seq_status_desc, 472, 1,
-			cmd->ccpc_status_dma_en);
-	write_bit_fields(seq_status_desc, 473, 1,
-			cmd->ccpc_next_doorbell_en);
-	write_bit_fields(seq_status_desc, 474, 1,
-			cmd->ccpc_intr_en);
-	write_bit_fields(seq_status_desc, 475, 1,
-			cmd->ccpc_next_db_action_ring_push);
+	desc0->options.status_dma_en = cmd->ccpc_status_dma_en;
+	desc0->options.next_db_en = cmd->ccpc_next_doorbell_en;
+	desc0->options.intr_en = cmd->ccpc_intr_en;
+	desc0->options.action_push = cmd->ccpc_next_db_action_ring_push;
 
-	// desc bytes 64-127
-	//write_bit_fields(seq_status_desc, 512 + 0, 64, 0);
-	write_bit_fields(seq_status_desc, 512 + 64, 64,
-			chain_params->ccp_comp_buf_addr);
-	write_bit_fields(seq_status_desc, 512 + 128, 64,
-			chain_params->ccp_aol_src_vec_addr);
-	write_bit_fields(seq_status_desc, 512 + 192, 64,
-			chain_params->ccp_aol_dst_vec_addr);
-	write_bit_fields(seq_status_desc, 512 + 256, 64,
-			chain_params->ccp_sgl_vec_addr);
-	write_bit_fields(seq_status_desc, 512 + 320, 64,
-			chain_params->ccp_pad_buf_addr);
-	write_bit_fields(seq_status_desc, 512 + 384, 64,
-			chain_params->ccp_alt_buf_addr);
-	write_bit_fields(seq_status_desc, 512 + 448, 16,
-			chain_params->ccp_data_len);
+	desc1->comp_buf_addr = cpu_to_be64(chain_params->ccp_comp_buf_addr);
+	desc1->aol_src_vec_addr = cpu_to_be64(chain_params->ccp_aol_src_vec_addr);
+	desc1->aol_dst_vec_addr = cpu_to_be64(chain_params->ccp_aol_dst_vec_addr);
+	desc1->sgl_vec_addr = cpu_to_be64(chain_params->ccp_sgl_vec_addr);
+	desc1->pad_buf_addr = cpu_to_be64(chain_params->ccp_pad_buf_addr);
+	desc1->alt_buf_addr = cpu_to_be64(chain_params->ccp_alt_buf_addr);
+	desc1->data_len = htons(chain_params->ccp_data_len);
 
-	write_bit_fields(seq_status_desc, 512 + 464, 5,
-			chain_params->ccp_pad_boundary_shift);
-
-	write_bit_fields(seq_status_desc, 512 + 469, 1,
-			cmd->ccpc_stop_chain_on_error);
-	write_bit_fields(seq_status_desc, 512 + 470, 1,
-			cmd->ccpc_data_len_from_desc);
-	write_bit_fields(seq_status_desc, 512 + 471, 1,
-			cmd->ccpc_aol_pad_en);
-	write_bit_fields(seq_status_desc, 512 + 472, 1,
-			cmd->ccpc_sgl_pad_en);
-	write_bit_fields(seq_status_desc, 512 + 473, 1,
-			cmd->ccpc_sgl_sparse_format_en);
-	write_bit_fields(seq_status_desc, 512 + 474, 1,
-			cmd->ccpc_sgl_pdma_en);
-	write_bit_fields(seq_status_desc, 512 + 475, 1,
-			cmd->ccpc_sgl_pdma_pad_only);
-	write_bit_fields(seq_status_desc, 512 + 476, 1,
-			cmd->ccpc_sgl_pdma_alt_src_on_error);
-	write_bit_fields(seq_status_desc, 512 + 477, 1,
-			cmd->ccpc_desc_vec_push_en);
-	write_bit_fields(seq_status_desc, 512 + 478, 1,
-			cmd->ccpc_chain_alt_desc_on_error);
-	write_bit_fields(seq_status_desc, 512 + 479, 1,
-			cmd->integ_data0_wr_en);
-	write_bit_fields(seq_status_desc, 512 + 480, 1,
-			cmd->integ_data_null_en);
-	write_bit_fields(seq_status_desc, 512 + 481, 1,
-			cmd->desc_dlen_update_en);
+	desc1->options.blk_boundary_shift = chain_params->ccp_pad_boundary_shift;
+	desc1->options.stop_chain_on_error = cmd->ccpc_stop_chain_on_error;
+	desc1->options.data_len_from_desc = cmd->ccpc_data_len_from_desc;
+	desc1->options.aol_pad_en = cmd->ccpc_aol_pad_en;
+	desc1->options.sgl_pad_en = cmd->ccpc_sgl_pad_en;
+	desc1->options.sgl_sparse_format_en = cmd->ccpc_sgl_sparse_format_en;
+	desc1->options.sgl_pdma_en = cmd->ccpc_sgl_pdma_en;
+	desc1->options.sgl_pdma_pad_only = cmd->ccpc_sgl_pdma_pad_only;
+	desc1->options.sgl_pdma_alt_src_on_error = cmd->ccpc_sgl_pdma_alt_src_on_error;
+	desc1->options.desc_vec_push_en = cmd->ccpc_desc_vec_push_en;
+	desc1->options.chain_alt_desc_on_error = cmd->ccpc_chain_alt_desc_on_error;
+	desc1->options.integ_data0_wr_en = cmd->integ_data0_wr_en;
+	desc1->options.integ_data_null_en = cmd->integ_data_null_en;
+	desc1->options.desc_dlen_update_en = cmd->desc_dlen_update_en;
 }
 
 static void
@@ -535,18 +513,34 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 	struct next_db_spec *next_db_spec;
 	struct ring_spec *ring_spec;
 	struct crypto_chain_params_command *cmd;
+	struct seq_crypto_status_desc0 *desc0;
+	struct seq_crypto_status_desc1 *desc1;
 
+	desc0 = (struct seq_crypto_status_desc0 *)seq_status_desc;
+	desc1 = (struct seq_crypto_status_desc1 *)(seq_status_desc + sizeof(*desc0));
 	ring_spec = &chain_params->ccp_ring_spec;
 	next_db_spec = &chain_params->ccp_next_db_spec;
 	cmd = &chain_params->ccp_cmd;
 
 	memset(seq_status_desc, 0, SONIC_SEQ_STATUS_Q_DESC_SIZE);
-	// desc bytes 0-63
+	desc0->status_addr0 = cpu_to_be64(chain_params->ccp_status_addr_0);
+	desc0->status_addr1 = cpu_to_be64(chain_params->ccp_status_addr_1);
+	desc0->intr_addr = cpu_to_be64(chain_params->ccp_intr_addr);
+	desc0->intr_data = htonl(chain_params->ccp_intr_data);
+	desc0->status_len = htons(chain_params->ccp_status_len);
+	desc0->status_offset = chain_params->ccp_status_offset_0;
+
 	if (cmd->ccpc_next_db_action_ring_push) {
-		write_bit_fields(seq_status_desc, 0, 64,
-				ring_spec->rs_ring_addr);
-		write_bit_fields(seq_status_desc, 64, 64,
-				ring_spec->rs_desc_addr);
+		desc0->next_db.addr = cpu_to_be64(ring_spec->rs_ring_addr);
+		desc0->next_db.data = cpu_to_be64(ring_spec->rs_desc_addr);
+
+#ifdef HAVE_RING_TEMPLATES
+		/*
+		 * Use template here, and update the non-fixed fiels as follows
+		 */
+		write_bit_fields(seq_status_desc, 208, 10,
+				ring_spec->rs_num_descs);
+#else
 		write_bit_fields(seq_status_desc, 128, 34,
 				ring_spec->rs_pndx_addr);
 		write_bit_fields(seq_status_desc, 162, 34,
@@ -559,61 +553,31 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 				ring_spec->rs_ring_size);
 		write_bit_fields(seq_status_desc, 208, 10,
 				ring_spec->rs_num_descs);
+#endif
 	} else {
-		write_bit_fields(seq_status_desc, 0, 64,
-				next_db_spec->nds_addr);
-		write_bit_fields(seq_status_desc, 64, 64,
-				next_db_spec->nds_data);
+		desc0->next_db.addr = cpu_to_be64(next_db_spec->nds_addr);
+		desc0->next_db.data = cpu_to_be64(next_db_spec->nds_data);
 	}
 
-	write_bit_fields(seq_status_desc, 224, 64,
-			chain_params->ccp_status_addr_0);
-	write_bit_fields(seq_status_desc, 288, 64,
-			chain_params->ccp_status_addr_1);
-	write_bit_fields(seq_status_desc, 352, 64,
-			chain_params->ccp_intr_addr);
-	write_bit_fields(seq_status_desc, 416, 32,
-			chain_params->ccp_intr_data);
-	write_bit_fields(seq_status_desc, 448, 16,
-			chain_params->ccp_status_len);
-	write_bit_fields(seq_status_desc, 464, 8,
-			chain_params->ccp_status_offset_0);
-	write_bit_fields(seq_status_desc, 472, 1,
-			cmd->ccpc_status_dma_en);
-	write_bit_fields(seq_status_desc, 473, 1,
-			cmd->ccpc_next_doorbell_en);
-	write_bit_fields(seq_status_desc, 474, 1,
-			cmd->ccpc_intr_en);
-	write_bit_fields(seq_status_desc, 475, 1,
-			cmd->ccpc_next_db_action_ring_push);
+	desc0->options.status_dma_en = cmd->ccpc_status_dma_en;
+	desc0->options.next_db_en = cmd->ccpc_next_doorbell_en;
+	desc0->options.intr_en = cmd->ccpc_intr_en;
+	desc0->options.action_push = cmd->ccpc_next_db_action_ring_push;
 
-	// desc bytes 64-127
-	write_bit_fields(seq_status_desc, 512 + 0, 64,
-			chain_params->ccp_comp_sgl_src_addr);
-	write_bit_fields(seq_status_desc, 512 + 64, 64,
-			chain_params->ccp_sgl_pdma_dst_addr);
-	write_bit_fields(seq_status_desc, 512 + 128, 64,
-			chain_params->ccp_crypto_buf_addr);
-	write_bit_fields(seq_status_desc, 512 + 192, 16,
-			chain_params->ccp_data_len);
-	write_bit_fields(seq_status_desc, 512 + 208, 5,
-			chain_params->ccp_blk_boundary_shift);
-	write_bit_fields(seq_status_desc, 512 + 213, 1,
-			cmd->ccpc_stop_chain_on_error);
-	write_bit_fields(seq_status_desc, 512 + 214, 1,
-			cmd->ccpc_comp_len_update_en);
-	write_bit_fields(seq_status_desc, 512 + 215, 1,
-			cmd->ccpc_comp_sgl_src_en);
-	write_bit_fields(seq_status_desc, 512 + 216, 1,
-			cmd->ccpc_comp_sgl_src_vec_en);
-	write_bit_fields(seq_status_desc, 512 + 217, 1,
-			cmd->ccpc_sgl_sparse_format_en);
-	write_bit_fields(seq_status_desc, 512 + 218, 1,
-			cmd->ccpc_sgl_pdma_en);
-	write_bit_fields(seq_status_desc, 512 + 219, 1,
-			cmd->ccpc_sgl_pdma_len_from_desc);
-	write_bit_fields(seq_status_desc, 512 + 220, 1,
-			cmd->ccpc_desc_vec_push_en);
+	desc1->comp_sgl_src_addr = cpu_to_be64(chain_params->ccp_comp_sgl_src_addr);
+	desc1->sgl_pdma_dst_addr = cpu_to_be64(chain_params->ccp_sgl_pdma_dst_addr);
+	desc1->crypto_buf_addr = cpu_to_be64(chain_params->ccp_crypto_buf_addr);
+	desc1->data_len = htons(chain_params->ccp_data_len);
+
+	desc1->options.blk_boundary_shift = chain_params->ccp_blk_boundary_shift;
+	desc1->options.stop_chain_on_error = cmd->ccpc_stop_chain_on_error;
+	desc1->options.comp_len_update_en = cmd->ccpc_comp_len_update_en;
+	desc1->options.comp_sgl_src_en = cmd->ccpc_comp_sgl_src_en;
+	desc1->options.comp_sgl_src_vec_en = cmd->ccpc_comp_sgl_src_vec_en;
+	desc1->options.sgl_sparse_format_en = cmd->ccpc_sgl_sparse_format_en;
+	desc1->options.sgl_pdma_en = cmd->ccpc_sgl_pdma_en;
+	desc1->options.sgl_pdma_len_from_desc = cmd->ccpc_sgl_pdma_len_from_desc;
+	desc1->options.desc_vec_push_en = cmd->ccpc_desc_vec_push_en;
 }
 
 static void *
@@ -820,6 +784,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 	chain_params->ccp_comp_buf_addr = svc_info->si_dst_blist.blist->buffers[0].buf;
+        chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 
 	if (chn_service_has_interm_blist(svc_info)) {
 		iblist = &svc_info->si_iblist;
@@ -827,7 +792,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		chain_params->ccp_data_len = iblist->blist.buffers[0].len;
 
 		if (svc_info->si_sgl_pdma) {
-			chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
 			chain_params->ccp_aol_dst_vec_addr =
 				sonic_virt_to_phy(svc_info->si_sgl_pdma);
 
@@ -836,20 +800,10 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	} else
 		chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 
-	if (chn_service_has_interm_status(svc_info)) {
-		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
-				&chain_params->ccp_status_addr_0, 0);
-		if (err)
-			goto out;
+	err = cpdc_setup_status_chain_dma(svc_info, chain_params);
+	if (err)
+		goto out;
 
-		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
-				&chain_params->ccp_status_addr_1, 0);
-		if (err)
-			goto out;
-
-		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
-		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
-	}
 	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 
 	if (svc_info->si_desc_flags & PNSO_CP_DFLAG_BYPASS_ONFAIL) {
@@ -1007,20 +961,9 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	chain_params->ccp_pad_boundary_shift =
 			(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
-	if (chn_service_has_interm_status(svc_info)) {
-		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
-				&chain_params->ccp_status_addr_0, 0);
-		if (err)
-			goto out;
-
-		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
-				&chain_params->ccp_status_addr_1, 0);
-		if (err)
-			goto out;
-
-		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
-		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
-	}
+	err = cpdc_setup_status_chain_dma(svc_info, chain_params);
+	if (err)
+		goto out;
 
 	hw_setup_cp_hdr_integ_data_wr(svc_info, cp_desc, chain_params);
 

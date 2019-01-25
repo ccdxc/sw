@@ -540,12 +540,32 @@ cpdc_setup_rmem_status_desc(struct service_info *svc_info,
 		err = pc_res_svc_status_get(pcr,
 				cpdc_get_rmem_status_type(per_block),
 				&svc_info->si_istatus_desc);
-		if (err) {
-			OSAL_LOG_ERROR("cannot obtain rmem status desc! svc_type: %d per_block: %d err: %d",
-					svc_info->si_type, per_block, err);
-			goto out;
-		}
 	}
+	return err;
+}
+
+pnso_error_t
+cpdc_setup_status_chain_dma(struct service_info *svc_info,
+			    struct cpdc_chain_params *chain_params)
+{
+	pnso_error_t err;
+
+	err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
+			&chain_params->ccp_status_addr_0, 0);
+	if (err)
+		goto out;
+
+	if (chn_service_has_interm_status(svc_info)) {
+		chain_params->ccp_status_addr_1 = chain_params->ccp_status_addr_0;
+		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+				&chain_params->ccp_status_addr_0, 0);
+		if (err)
+			goto out;
+
+		chain_params->ccp_status_len = sizeof(struct cpdc_status_desc);
+		chain_params->ccp_cmd.ccpc_status_dma_en = 1;
+	}
+
 out:
 	return err;
 }
@@ -1191,9 +1211,9 @@ cpdc_setup_rmem_dst_blist(struct service_info *svc_info,
 
 		err = putil_get_interm_buf_list(svc_info);
 		if (err) {
-			OSAL_LOG_ERROR("failed to obtain intermediate buffers! err: %d",
-					err);
-			return err;
+			OSAL_LOG_DEBUG("intermediate buffers not available, "
+					"using supplied host buffers (if any)");
+			err = PNSO_OK;
 		}
 
 		if (chn_service_has_interm_blist(svc_info) &&

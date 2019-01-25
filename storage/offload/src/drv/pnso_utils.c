@@ -304,8 +304,10 @@ pc_res_svc_status_get(const struct per_core_resource *pcr,
 					mpool_type, &svc_status->num_elems,
 					&svc_status->elem_size);
 	if (!svc_status->desc) {
-		OSAL_LOG_ERROR("cannot obtain service_status from pool %s: err: %d",
-			       mpool_get_type_str(mpool_type), err);
+		if (!mpool_type_is_soft_get_error(mpool_type)) {
+			OSAL_LOG_ERROR("cannot obtain service_status from pool "
+				"%s: err: %d", mpool_get_type_str(mpool_type), err);
+		}
 		goto out;
 	}
 	svc_status->mpool_type = mpool_type;
@@ -587,7 +589,7 @@ pc_res_mpool_object_get(const struct per_core_resource *pcr,
 	mpool = pc_res_mpool_get(pcr, type);
 	if (mpool) {
 		obj = mpool_get_object(mpool);
-		if (!obj)
+		if (!obj && !mpool_type_is_soft_get_error(type))
 			OSAL_LOG_ERROR("cannot obtain object from pool %s",
 					mpool_get_type_str(type));
 	}
@@ -608,7 +610,7 @@ pc_res_mpool_object_get_with_size(const struct per_core_resource *pcr,
 	if (mpool) {
 		*ret_size = mpool_get_object_size(mpool);
 		obj = mpool_get_object(mpool);
-		if (!obj)
+		if (!obj && !mpool_type_is_soft_get_error(type))
 			OSAL_LOG_ERROR("cannot obtain pcr object from pool %s",
 					mpool_get_type_str(type));
 	}
@@ -632,7 +634,7 @@ pc_res_mpool_object_get_with_num_vec_elems(const struct per_core_resource *pcr,
 		*ret_elem_size = mpool_get_object_base_size(mpool) +
 				 mpool_get_object_pad_size(mpool);
 		obj = mpool_get_object(mpool);
-		if (!obj)
+		if (!obj && !mpool_type_is_soft_get_error(type))
 			OSAL_LOG_ERROR("cannot obtain pcr object from pool %s",
 					mpool_get_type_str(type));
 	}

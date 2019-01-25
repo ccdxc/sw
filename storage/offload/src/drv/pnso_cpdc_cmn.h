@@ -71,6 +71,9 @@ void cpdc_teardown_status_desc(struct service_info *svc_info);
 pnso_error_t
 cpdc_setup_rmem_status_desc(struct service_info *svc_info,
 			    bool per_block);
+pnso_error_t
+cpdc_setup_status_chain_dma(struct service_info *svc_info,
+			    struct cpdc_chain_params *chain_params);
 
 void cpdc_teardown_rmem_status_desc(struct service_info *svc_info);
 

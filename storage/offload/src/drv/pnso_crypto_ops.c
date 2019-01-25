@@ -147,16 +147,16 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 		orig_dst_blist = svc_info->si_dst_blist;
 		err = putil_get_interm_buf_list(svc_info);
 		if (err) {
-			OSAL_LOG_ERROR("failed to obtain intermediate buffers");
-			return err;
+			OSAL_LOG_DEBUG("intermediate buffers not available, "
+					"using supplied host buffers (if any)");
 		}
 
 		err = pc_res_svc_status_get(svc_info->si_pcr,
 				MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS,
 				&svc_info->si_istatus_desc);
 		if (err) {
-			OSAL_LOG_ERROR("failed to obtain intermediate status_desc");
-			return err;
+			OSAL_LOG_DEBUG("intermediate status not available, "
+					"using host status");
 		}
 
 		if (chn_service_has_interm_blist(svc_info) &&
@@ -315,18 +315,21 @@ crypto_chain(struct chain_entry *centry)
 			}
 		}
 
-		err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
 				&crypto_chain->ccp_status_addr_0, 0);
 		if (err)
 			goto out;
-		err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
-				&crypto_chain->ccp_status_addr_1, 0);
-		if (err)
-			goto out;
-		crypto_chain->ccp_status_len =
-			sizeof(struct crypto_status_desc);
 
-		crypto_chain->ccp_cmd.ccpc_status_dma_en = true;
+		if (chn_service_has_interm_status(svc_info)) {
+			crypto_chain->ccp_status_addr_1 = crypto_chain->ccp_status_addr_0;
+			err = svc_status_desc_addr_get(&svc_info->si_istatus_desc, 0,
+						&crypto_chain->ccp_status_addr_0, 0);
+			if (err)
+				goto out;
+
+			crypto_chain->ccp_status_len = sizeof(struct crypto_status_desc);
+			crypto_chain->ccp_cmd.ccpc_status_dma_en = true;
+		}
 		crypto_chain->ccp_cmd.ccpc_stop_chain_on_error = true;
 
 		svc_next = chn_service_next_svc_get(svc_info);
