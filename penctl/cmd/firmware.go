@@ -87,7 +87,7 @@ func showFirmwareDetailCmdHandler(cmd *cobra.Command, args []string) error {
 		Opts:       strings.Join([]string{"-l"}, ""),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -108,7 +108,7 @@ func showRunningFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		Opts:       strings.Join([]string{"-r"}, ""),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -129,7 +129,7 @@ func showStartupFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		Opts:       strings.Join([]string{"-S"}, ""),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -150,7 +150,7 @@ func setStartupFirmwareMainfwaCmdHandler(cmd *cobra.Command, args []string) erro
 		Opts:       strings.Join([]string{"-s ", "mainfwa"}, ""),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -171,7 +171,7 @@ func setStartupFirmwareMainfwbCmdHandler(cmd *cobra.Command, args []string) erro
 		Opts:       strings.Join([]string{"-s ", "mainfwb"}, ""),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -212,7 +212,7 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		"uploadFile": mustOpen(uploadFile),
 		"uploadPath": strings.NewReader("/update/"),
 	}
-	resp, err := restPostForm(revProxyPort, "update/", values)
+	resp, err := restPostForm("update/", values)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -225,7 +225,7 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		Opts:       strings.Join([]string{"-p ", "/update/" + firmware, " -i all"}, ""),
 	}
 
-	resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err = restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		v = &nmd.NaplesCmdExecute{
@@ -233,7 +233,7 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 			Opts:       strings.Join([]string{"-rf ", "/update/" + firmware}, ""),
 		}
 
-		resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+		resp, err = restGetWithBody(v, "cmd/v1/naples/")
 		if err != nil {
 			fmt.Println(err)
 			return err
@@ -261,7 +261,7 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		Opts:       strings.Join([]string{"-rf ", "/update/" + firmware}, ""),
 	}
 
-	resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err = restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -279,7 +279,7 @@ func setFirmwareCmdHandler(cmd *cobra.Command, args []string) error {
 		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
 	}
 
-	resp, err = restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err = restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return err

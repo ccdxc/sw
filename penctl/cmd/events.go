@@ -23,7 +23,7 @@ func init() {
 }
 
 func eventsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	resp, err := restGet(revProxyPort, "monitoring/v1/naples/events/events")
+	resp, err := restGet("monitoring/v1/naples/events/events")
 	if err != nil {
 		fmt.Println("No events found")
 		return nil

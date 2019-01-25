@@ -30,5 +30,6 @@ penctl show port [flags]
 
 ### SEE ALSO
 * [penctl show](penctl_show.md)	 - Show Object and Information
+* [penctl show port statistics](penctl_show_port_statistics.md)	 - show port statistics
 * [penctl show port status](penctl_show_port_status.md)	 - show port object status
 

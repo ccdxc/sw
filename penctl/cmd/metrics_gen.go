@@ -23,7 +23,7 @@ var lifmetricsShowCmd = &cobra.Command{
 func lifmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	bodyBytes, err := restGet(revProxyPort, "telemetry/v1/metrics/lifmetrics/")
+	bodyBytes, err := restGet("telemetry/v1/metrics/lifmetrics/")
 	if err != nil {
 		fmt.Println(err)
 		return err

@@ -45,7 +45,7 @@ func execBinCmdHandler(cmd *cobra.Command, args []string) error {
 	if args[0] == "-v" {
 		verbose = true
 	}
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return err

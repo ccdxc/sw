@@ -1,26 +1,26 @@
-.. _penctl_create:
+.. _penctl_show_port_statistics:
 
-penctl create
--------------
+penctl show port statistics
+---------------------------
 
-Create Object
+show port statistics
 
 Synopsis
 ~~~~~~~~
 
 
+show port statistics
 
----------------
- Create Object 
----------------
+::
 
+  penctl show port statistics [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for create
+  -h, --help   help for statistics
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -29,6 +29,7 @@ Options inherited from parent commands
 
   -i, --interface string   ethernet device of naples
   -j, --json               display in json format
+      --port uint32        Specify port number (default 1)
   -t, --tabular            display in tabular format (default true)
   -v, --version            display version of penctl
   -y, --yaml               display in yaml format
@@ -36,7 +37,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl <penctl.rst>`_ 	 - Pensando CLIs
-* `penctl create interface <penctl_create_interface.rst>`_ 	 - Create interface
-* `penctl create qos-class <penctl_create_qos-class.rst>`_ 	 - qos-class object
+* `penctl show port <penctl_show_port.rst>`_ 	 - show port object
 

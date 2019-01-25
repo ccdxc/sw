@@ -29,8 +29,7 @@ def GetNaplesMgmtIntf(node):
     return naples_host_mgmt_if[0]
 
 def __get_pen_ctl_cmd(node):
-    mgmt_intf = GetNaplesMgmtIntf(node)
-    return "PENETHDEV=%s %s " % (mgmt_intf, PENCTL_EXEC[node])
+    return "NAPLES_URL=http://%s %s " % (GetNaplesMgmtIP(node), PENCTL_EXEC[node])
 
 def AddPenctlCommand(req, node, cmd):
     api.Trigger_AddHostCommand(req, node, __get_pen_ctl_cmd(node) + cmd, background = False,

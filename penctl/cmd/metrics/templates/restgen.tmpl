@@ -26,7 +26,7 @@ import (
 	func {{ToLower .GetName}}ShowCmdHandler(cmd *cobra.Command, args []string) error {
 		tabularFormat = false
 		jsonFormat = true
-		bodyBytes, err := restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/")
+		bodyBytes, err := restGet("telemetry/v1/metrics/{{ToLower .GetName}}/")
 		if err != nil {
 			fmt.Println(err)
 			return err

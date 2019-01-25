@@ -38,5 +38,6 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl show <penctl_show.rst>`_ 	 - Show Object and Information
+* `penctl show port statistics <penctl_show_port_statistics.rst>`_ 	 - show port statistics
 * `penctl show port status <penctl_show_port_status.rst>`_ 	 - show port object status
 
