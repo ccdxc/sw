@@ -10,6 +10,7 @@
 
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/apollo/framework/asic_impl_base.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 
 namespace impl {
 
@@ -54,6 +55,13 @@ private:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t init_(asic_cfg_t *asic_cfg);
+
+    /**
+     * @brief    dump per TM port stats
+     * @param[in] fp       file handle
+     * @param[in] stats    pointer to the stats
+     */
+    void dump_tm_debug_stats_(FILE *fp, tm_pb_debug_stats_t *debug_stats);
 
 private:
     asic_cfg_t           asic_cfg_;

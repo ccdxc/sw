@@ -334,4 +334,6 @@ uint32_t capri_tm_get_num_oqs_for_port(tm_port_t port);
 }    // namespace platform
 }    // namespace sdk
 
+using sdk::platform::capri::tm_pb_debug_stats_t;
+
 #endif    // __CAPRI_TM_RW_HPP__
