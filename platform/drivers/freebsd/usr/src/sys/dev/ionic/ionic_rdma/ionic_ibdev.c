@@ -1265,7 +1265,7 @@ static int ionic_query_device(struct ib_device *ibdev,
 static int ib_get_eth_speed(struct ib_device *ibdev, u8 port,
 			    u8 *speed, u8 *width)
 {
-	*width = IB_WIDTH_1X;
+	*width = IB_WIDTH_4X;
 	*speed = IB_SPEED_EDR;
 
 	return 0;
