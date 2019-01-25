@@ -297,7 +297,7 @@ sonic_get_per_core_intr_assert_addr(struct per_core_resource *pcr)
 #define DBG_CHK_RING_ID(r)	dbg_check_ring_id(r)
 #endif
 
-static inline int
+static inline int __attribute__ ((unused))
 dbg_check_ring_id(uint32_t accel_ring_id)
 {
 	return (accel_ring_id >= ACCEL_RING_ID_MAX) ? -EINVAL : PNSO_OK;
