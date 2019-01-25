@@ -162,6 +162,7 @@ typedef struct if_s {
                     uint32_t        egress_bw;       // Egress BW (in KBytes/sec)
                     uint8_t         num_overlay_ip;
                     uint8_t         num_mpls_if;
+                    uint32_t        lif_id;
                 } __PACK__;
                 /* Add structs for other tunnel types */
             } __PACK__;

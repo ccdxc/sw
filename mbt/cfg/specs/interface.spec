@@ -58,13 +58,13 @@ objects:
             request  : LifRequestMsg
             response : LifResponseMsg
             pre_cb   : callback://interface/LifPreCreateCb
-            post_cb  : None
+            post_cb  : callback://interface/LifPostCreateCb
         delete:
             api      : LifDelete
             request  : LifDeleteRequestMsg
             response : LifDeleteResponseMsg
             pre_cb   : None
-            post_cb  : None
+            post_cb  : callback://interface/LifPostDeleteCb
         get:
             api      : LifGet
             request  : LifGetRequestMsg

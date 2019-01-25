@@ -22,6 +22,7 @@
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/hal/src/debug/snake.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 
 #ifdef SHM
 #define slab_ptr_t        offset_ptr<slab>
@@ -338,6 +339,8 @@ public:
     void set_snake_test(snake_test_t *snake) { snake_test_ = snake; }
     snake_test_t *snake_test(void) const { return snake_test_; }
 
+    std::map<std::string, uint32_t> *lif_name_id_map() { return &lif_name_id_map_; }
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -391,6 +394,7 @@ private:
     bitmap                  *qos_cmap_pcp_bmp_;
     bitmap                  *qos_cmap_dscp_bmp_;
 
+    std::map<std::string, uint32_t> lif_name_id_map_;               // lif name to lif id map
     hal_handle_t            infra_vrf_handle_;                      // infra vrf handle
     eventmgr                *event_mgr_;
     ip_addr_t               mytep_ip_;
@@ -721,6 +725,23 @@ public:
     }
 
     platform_type_t platform_type() { return platform_; }
+
+    bool lif_name_id_map_insert(std::string lif_name, uint32_t lif_id) {
+        auto ptr = oper_db_->lif_name_id_map()->insert(std::make_pair(lif_name, lif_id));
+        return ptr.second;
+    }
+    bool lif_name_id_map_delete(std::string lif_name) {
+        auto size = oper_db_->lif_name_id_map()->erase(lif_name);
+        return (size == 1);
+    }
+    uint32_t lif_name_id_map_find(std::string lif_name) {
+        auto find = oper_db_->lif_name_id_map()->find(lif_name);
+        if (find != oper_db_->lif_name_id_map()->end()) {
+            return find->second;
+        } else {
+            return LIF_ID_INVALID;
+        }
+    }
 
 private:
     // following come from shared memory or non-linux HBM memory
