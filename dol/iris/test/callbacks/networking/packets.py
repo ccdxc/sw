@@ -135,6 +135,9 @@ def GetExpectedPacketEncaps(testcase, packet):
     testcase.pvtdata.priotag = ptag
     return encaps
 
+def GetMplsPacketEncaps(testcase, packet):
+    return [__get_template('ENCAP_MPLS')]
+
 def GetExpectedPacketCos(testcase, packet):
 #    if testcase.config.src.tenant.IsQosEnabled() and\
 #       testcase.config.flow.txqos.cos is not None:

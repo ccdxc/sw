@@ -1,0 +1,9 @@
+meta:
+    id      : MPLS
+    scapy   : MPLS
+    size    : 4
+fields:
+    label   : 0
+    exp     : const/0
+    bos     : const/1
+    ttl     : const/64

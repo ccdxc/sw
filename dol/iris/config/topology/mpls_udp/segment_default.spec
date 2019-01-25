@@ -5,6 +5,7 @@ meta:
 type        : tenant
 fabencap    : vlan
 native      : True
+mpls        : True
 broadcast   : flood
 multicast   : flood
 l4lb        : False

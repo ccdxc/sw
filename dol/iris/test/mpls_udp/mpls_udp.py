@@ -10,6 +10,7 @@ def Setup(infra, module):
     return
 
 def TestCaseSetup(tc):
+    tc.AddIgnorePacketField('UDP', 'sport')
     modcbs.TestCaseSetup(tc)
     return
 
