@@ -321,16 +321,19 @@ struct per_core_resource {
 
 	struct queue cp_seq_q;
 	struct queue dc_seq_q;
+	int next_cpdc_statusq_id;
 	unsigned int num_cpdc_status_qs;
 	DECLARE_BITMAP(cpdc_seq_status_qs_bmp, MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES);
 	struct queue cpdc_seq_status_qs[MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES];
+	spinlock_t seq_cpdc_statusq_lock;
 
 	struct queue crypto_enc_seq_q;
 	struct queue crypto_dec_seq_q;
+	int next_crypto_statusq_id;
 	unsigned int num_crypto_status_qs;
 	DECLARE_BITMAP(crypto_seq_status_qs_bmp, MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES);
 	struct queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
-	spinlock_t seq_statusq_lock;
+	spinlock_t seq_crypto_statusq_lock;
 
   	struct intr intr;
 	struct sonic_event_list *evl; /* top half event list */

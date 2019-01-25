@@ -44,7 +44,7 @@ device_if.h bus_if.h vnode_if.h pci_if.h \
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include
 INCDIRS = include src/osal src/osal/test src/common src/drv src/drv/linux/kernel src/drv/test
 CFLAGS+= $(INCDIRS:%=-I$(PWD)/%)
-CFLAGS+= -DHAPS -D__KERNEL__ -DDENABLE_PNSO_SONIC_TEST
+CFLAGS+= -DHAPS -D__KERNEL__ -DDENABLE_PNSO_SONIC_TEST -DNDEBUG
 
 .include <bsd.kmod.mk>
 

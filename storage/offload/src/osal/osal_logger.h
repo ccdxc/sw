@@ -66,11 +66,11 @@ extern char g_osal_log_prefix[PREFIX_STR_LEN];
 #else
 #ifndef __FreeBSD__
 #define KSPACE_LOG(level, ...)						\
-	if ((enum osal_log_level) level <= g_osal_log_level)		\
+	if (unlikely((enum osal_log_level) level <= g_osal_log_level))		\
 		printk(__VA_ARGS__)
 #else
 #define KSPACE_LOG(level, ...)						\
-	if ((enum osal_log_level) level <= g_osal_log_level) {		\
+	if (unlikely((enum osal_log_level) level <= g_osal_log_level)) {		\
 		printk(__VA_ARGS__);					\
 		printk("\n");						\
 	}
