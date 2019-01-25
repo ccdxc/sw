@@ -11,6 +11,7 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
+//#include "nic/sdk/platform/utils/program.hpp"
 #include "nic/sdk/platform/utils/mpartition.hpp"
 #include "nic/apollo/api/switchport.hpp"
 #include "nic/apollo/api/tep.hpp"
@@ -19,8 +20,10 @@
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/route.hpp"
+//#include "nic/sdk/platform/capri/capri_lif_manager.hpp"
 
 using std::string;
+//using sdk::platform::capri::LIFManager;
 
 namespace api {
 
@@ -39,6 +42,10 @@ public:
     catalog *catalogue(void) const { return catalog_; }
     void set_mpartition(mpartition *mpartition) { mpartition_ = mpartition; }
     mpartition *mempartition(void) const { return mpartition_; }
+    //void set_prog_info(program_info *pginfo) { pginfo_ = pginfo; }
+    //program_info *prog_info(void) const { return pginfo_; }
+    //void set_lif_mgr(LIFManager *lm) { lm_ = lm; }
+    //LIFManager *lm(void) const { return lm_; }
     void set_platform_type(platform_type_t type) { platform_type_ = type; }
     platform_type_t platform_type(void) const { return platform_type_; }
     void set_control_cores_mask(uint64_t control_cores_mask) {
@@ -69,6 +76,8 @@ private:
     string               cfg_path_;
     catalog              *catalog_;
     mpartition           *mpartition_;
+    //program_info         *pginfo_;
+    //LIFManager           *lm_;
     platform_type_t      platform_type_;
     uint64_t             control_cores_mask_;
     uint16_t             num_control_cores_;

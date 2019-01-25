@@ -11,6 +11,7 @@
 #define __OCI_IMPL_STATE_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/apollo/api/impl/apollo_impl_state.hpp"
 #include "nic/apollo/api/impl/switchport_impl.hpp"
 #include "nic/apollo/api/impl/tep_impl_state.hpp"
 #include "nic/apollo/api/impl/vnic_impl_state.hpp"
@@ -38,18 +39,26 @@ public:
     sdk_ret_t init(oci_state *state);
     oci_impl_state();
     ~oci_impl_state();
+    apollo_impl_state *apollo_impl_db(void) { return apollo_impl_db_; }
     tep_impl_state *tep_impl_db(void) { return tep_impl_db_; }
     vnic_impl_state *vnic_impl_db(void) { return vnic_impl_db_; }
     mapping_impl_state *mapping_impl_db(void) { return mapping_impl_db_; }
     route_table_impl_state *route_table_impl_db(void) { return route_table_impl_db_; }
 
 private:
+    apollo_impl_state         *apollo_impl_db_;
     tep_impl_state            *tep_impl_db_;
     vnic_impl_state           *vnic_impl_db_;
     mapping_impl_state        *mapping_impl_db_;
     route_table_impl_state    *route_table_impl_db_;
 };
 extern oci_impl_state g_oci_impl_state;
+
+static inline apollo_impl_state *
+apollo_impl_db (void)
+{
+    return  g_oci_impl_state.apollo_impl_db();
+}
 
 static inline tep_impl_state *
 tep_impl_db (void)
