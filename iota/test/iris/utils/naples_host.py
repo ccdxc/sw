@@ -51,6 +51,13 @@ def GetNaplesInbandInterfaces(node):
     inband_intfs = ['inb_mnic0', 'inb_mnic1']
     return inband_intfs
 
+def getNaplesInterfaces(naples_node):
+    int_mgmt_intf_list = GetNaplesInternalMgmtInterfaces(naples_node)
+    oob_intf_list = GetNaplesOobInterfaces(naples_node)
+    inb_mnic_intf_list = GetNaplesInbandInterfaces(naples_node)
+
+    naples_intf_list = int_mgmt_intf_list + oob_intf_list + inb_mnic_intf_list
+    return naples_intf_list
 
 def GetIPAddress(node, interface):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)

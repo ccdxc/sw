@@ -1,0 +1,16 @@
+meta:
+    name    : filters
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    targetcount : 10
+
+testcases:
+    -   name    : Unicast_MAC_Filter
+        testcase: testcases.filters.unicast_mac_filter
+        disable : True
+        ignore  : True
+        iterators :
+            type       : nested
+            mac_change : [ no, yes ]
+            pktsize    : [ 128 ]
+            ipaf       : [ ipv6, ipv4 ]
