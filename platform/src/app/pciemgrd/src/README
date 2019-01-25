@@ -22,7 +22,7 @@ PCIEPORT_CAP            gen4x16     gen<Gen>x<Width>
 PCIEDEV_CAP             gen4x16     gen<Gen>x<Width>
 PCIE_CAP                gen4x16     gen<Gen>x<Width>
 PCIE_REDUCE_RX_CRED     0           0|1
-PCIE_FORCE_BARS_LOAD    1           0|1
+PCIE_FORCE_BARS_LOAD    0           0|1
 ----------------
 # script files in /sysconfig/config0/pcie-poweron
 pcie-poweron            <none>

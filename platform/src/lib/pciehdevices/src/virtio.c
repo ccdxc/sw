@@ -33,7 +33,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
                 PMT_TYPE_IO,
                 pbar.size, /* barsize */
                 pbar.size, /* prtsize */
-                PMT_BARF_RW);
+                PMTF_RW);
 
     /* XXX */
     prt_res_enc(&prt, 0, 0, PRT_RESF_NONE);
@@ -56,7 +56,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
                 PMT_TYPE_MEM,
                 pbar.size, /* barsize */
                 0x1000,    /* prtsize */
-                PMT_BARF_RW);
+                PMTF_RW);
 
     /* MSI-X Interrupt Table */
     prt_res_enc(&prt,

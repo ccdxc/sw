@@ -5,8 +5,8 @@ nfail=0
 for tc in testcases/*.in; do
     tb=`echo $tc | sed -e 's/\.in$//'`
     rm -f $HOME/.palreg-*
-    ../testtools/genrun pciemgrd < $tc > /dev/null
-    ../testtools/genrun lspci -nvvvxxxx > $tb.out
+    ../testtools/genrun pciemgrd < $tc > $tb.out
+    ../testtools/genrun lspci -nvvvxxxx >> $tb.out
     if ! cmp -s $tb.exp $tb.out; then
 	printf "%-40s FAILED ***\n" $tc
 	diff $tb.exp $tb.out

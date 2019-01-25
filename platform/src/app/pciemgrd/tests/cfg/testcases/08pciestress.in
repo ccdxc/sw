@@ -1,3 +1,4 @@
 add pciestress
 finalize
+dbg pciehw pmt -c
 exit

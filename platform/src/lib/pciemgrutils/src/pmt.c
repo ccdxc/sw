@@ -221,9 +221,9 @@ pmt_bar_allows_rw(const pmt_t *pmt, const int rw)
     pmt_entry_dec(&pmt->pmte, &dm);
 
     /*
-     * Either don't care about rw,
+     * Either mask says don't care about rw,
      *     OR
-     * rw matches what we are looking for.
+     * rw data matches what we are looking for.
      */
     return dm.mask.bar.rw == 0 || dm.data.bar.rw == rw;
 }
@@ -240,23 +240,47 @@ pmt_bar_allows_wr(const pmt_t *pmt)
     return pmt_bar_allows_rw(pmt, 1);
 }
 
+static void
+pmt_rw_enc(const u_int32_t pmtf, u_int8_t *rwp, u_int8_t *rwmp)
+{
+    /*
+     * Read/write settings.
+     * If read-only  is desired set rw mask=1 and match rw=0.
+     * If write-only is desired set rw mask=1 and match rw=1.
+     * Otherwise default rw mask=0 so "don't care"
+     * matches both reads and writes.
+     */
+    if ((pmtf & PMTF_RW) == PMTF_RD) {
+        *rwp = 0; *rwmp = 1;    /* read-only */
+    } else if ((pmtf & PMTF_RW) == PMTF_WR) {
+        *rwp = 1; *rwmp = 1;    /* write-only */
+    } else {
+        *rwp = 0; *rwmp = 0;    /* read/write */
+    }
+}
+
 void
 pmt_cfg_enc(pmt_t *pmt,
             const u_int8_t port,
             const u_int16_t bdf,
+            const u_int16_t bdfm,
             const u_int64_t cfgpa,
             const u_int16_t addr,
             const u_int16_t addrm,
             const u_int8_t romsksel,
             const u_int8_t vfstridesel,
-            const u_int8_t notify,
-            const u_int8_t indirect)
+            const u_int32_t pmtf)
 {
     const u_int64_t cfgpadw = cfgpa >> 2;
+    const u_int8_t notify = (pmtf & PMTF_NOTIFY) != 0;
+    const u_int8_t indirect = (pmtf & PMTF_INDIRECT) != 0;
     pmt_datamask_t dm;
     pmr_cfg_entry_t *pmr = &pmt->pmre.cfg;
+    u_int8_t rw, rwm;
 
     memset(pmt, 0, sizeof(*pmt));
+
+    pmt_rw_enc(pmtf, &rw, &rwm);
 
     dm.data.all = 0;
     dm.mask.all = 0;
@@ -271,8 +295,8 @@ pmt_cfg_enc(pmt_t *pmt,
     DM_SET_CFG(dm, tblid, 0, 0x0); /* tblid don't care, for now */
     DM_SET_CFG(dm, type, PMT_TYPE_CFG, 0x7);
     DM_SET_CFG(dm, port, port, 0x7);
-    DM_SET_CFG(dm, rw, 0, 0x0);
-    DM_SET_CFG(dm, bdf, bdf, 0xffff);
+    DM_SET_CFG(dm, rw, rw, rwm);
+    DM_SET_CFG(dm, bdf, bdf, bdfm);
     DM_SET_CFG(dm, addrdw, addr >> 2, addrm >> 2);
 
     pmt_entry_enc(&pmt->pmte, &dm);
@@ -303,11 +327,13 @@ pmt_bar_enc(pmt_t *pmt,
             const u_int8_t type,
             const u_int64_t pmtsize,
             const u_int32_t prtsize,
-            const u_int32_t pmtflags)
+            const u_int32_t pmtf)
 {
     pmr_bar_entry_t *pmr = &pmt->pmre.bar;
     const u_int64_t addrm = ~((1ULL << (ffsll(pmtsize) - 1)) - 1);
     const u_int8_t prtbitb = ffs(prtsize) - 1;
+    const u_int8_t notify = (pmtf & PMTF_NOTIFY) != 0;
+    const u_int8_t indirect = (pmtf & PMTF_INDIRECT) != 0;
     u_int8_t rw, rwm;
     pmt_datamask_t dm;
 
@@ -315,18 +341,7 @@ pmt_bar_enc(pmt_t *pmt,
     assert((pmtsize & (pmtsize - 1)) == 0);
     assert((prtsize & (prtsize - 1)) == 0);
 
-    /*
-     * Read/write settings.  Default rw mask = 0 so "don't care"
-     * matches both reads and writes.
-     * If read-only  is desired set rw mask = 1 and match rw=0.
-     * If write-only is desired set rw mask = 1 and match rw=1.
-     */
-    rw = 0; rwm = 0;
-    if ((pmtflags & PMT_BARF_RW) == PMT_BARF_RD) {
-        rw = 0; rwm = 1;
-    } else if ((pmtflags & PMT_BARF_RW) == PMT_BARF_WR) {
-        rw = 1; rwm = 1;
-    }
+    pmt_rw_enc(pmtf, &rw, &rwm);
 
     memset(pmt, 0, sizeof(*pmt));
 
@@ -351,8 +366,8 @@ pmt_bar_enc(pmt_t *pmt,
     pmr->valid     = 1;
     pmr->type      = type;
     pmr->vfbase    = 0;
-    pmr->indirect  = 0;
-    pmr->notify    = 0;
+    pmr->indirect  = indirect;
+    pmr->notify    = notify;
     pmr->prtb      = 0;
     pmr->prtc      = 0;
     pmr->prtsize   = prtbitb;

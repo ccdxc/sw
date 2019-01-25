@@ -23,7 +23,6 @@ struct pciehw_s;
 typedef struct pciehw_s pciehw_t;
 
 #define PCIEHW_NPORTS   8
-#define PCIEHW_NBUS     16
 #define PCIEHW_NDEVS    48
 #define PCIEHW_CFGSZ    1024
 #define PCIEHW_NROMSK   128
@@ -75,6 +74,7 @@ typedef struct pciehwdev_s {
     u_int8_t intpin;                    /* legacy int pin */
     u_int8_t stridesel;                 /* vfstride table entry selector */
     u_int8_t romsksel[PCIEHW_ROMSKSZ];  /* cfg read-only mask selectors */
+    u_int8_t cfgpmtf[PCIEHW_CFGHNDSZ];  /* cfg pmt flags */
     u_int8_t cfghnd[PCIEHW_CFGHNDSZ];   /* cfg indirect/notify handlers */
     pciehwbar_t bar[PCIEHW_NBAR];
     pciehwbar_t rombar;                 /* option rom bar */
@@ -85,6 +85,7 @@ typedef struct pciehw_port_s {
     u_int64_t indirect_cnt;             /* total count of indirect events */
     u_int64_t notify_cnt;               /* total count of notify events */
     u_int32_t notify_max;               /* largest pending notify events */
+    u_int64_t notspurious;
     u_int64_t notcfgrd;
     u_int64_t notcfgwr;
     u_int64_t notmemrd;
@@ -92,6 +93,7 @@ typedef struct pciehw_port_s {
     u_int64_t notiord;
     u_int64_t notiowr;
     u_int64_t notunknown;
+    u_int64_t indspurious;
     u_int64_t indcfgrd;
     u_int64_t indcfgwr;
     u_int64_t indmemrd;
@@ -147,6 +149,7 @@ typedef struct pciehw_mem_s {
     u_int8_t cfgcur[PCIEHW_NDEVS][PCIEHW_CFGSZ] __attribute__((aligned(4096)));
     u_int32_t notify_intr_dest[PCIEHW_NPORTS];   /* notify   intr dest */
     u_int32_t indirect_intr_dest[PCIEHW_NPORTS]; /* indirect intr dest */
+    u_int8_t zeros[0x1000];             /* page of zeros to back cfgspace */
     u_int32_t magic;                    /* PCIEHW_MAGIC when initialized */
     u_int32_t version;                  /* PCIEHW_VERSION when initialized */
 } pciehw_mem_t;
@@ -179,6 +182,7 @@ pciehwdev_t *pciehwdev_find_by_name(const char *name);
 
 int pciehw_cfg_init(void);
 int pciehw_cfg_finalize(pciehdev_t *pdev);
+int pciehw_cfg_finalize_done(pciehwdev_t *phwroot);
 int pciehwdev_cfgrd(pciehwdev_t *phwdev,
                     const u_int16_t offset,
                     const u_int8_t size,
@@ -222,6 +226,9 @@ void pciehw_romsk_init(void);
 int pciehw_romsk_load(pciehwdev_t *phwdev);
 void pciehw_romsk_unload(pciehwdev_t *phwdev);
 void pciehw_romsk_dbg(int argc, char *argv[]);
+
+#define VFSTRIDE_IDX_DEV        0x0
+#define VFSTRIDE_IDX_4K         0x1
 
 void pciehw_vfstride_init(void);
 int pciehw_vfstride_load(pciehwdev_t *phwdev);

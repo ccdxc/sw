@@ -160,17 +160,16 @@ pmt_set_cfg(pciehwdev_t *phwdev,
             const u_int16_t addr,
             const u_int16_t addrm,
             const u_int8_t romsksel,
-            const u_int8_t notify,
-            const u_int8_t indirect)
+            const u_int32_t pmtflags)
 {
     pmt_t pmt;
 
     pmt_cfg_enc(&pmt,
                 phwdev->port,
-                phwdev->bdf,
+                phwdev->bdf, 0xffff,
                 cfgpa, addr, addrm,
                 romsksel, phwdev->stridesel,
-                notify, indirect);
+                pmtflags);
     pmt_set(pmti, &pmt);
 }
 
@@ -291,21 +290,24 @@ pciehw_pmt_load_cfg(pciehwdev_t *phwdev)
 
     for (i = 0; i < PCIEHW_ROMSKSZ; i++) {
         const int romsk = phwdev->romsksel[i];
-        const int notify = phwdev->cfghnd[i] != 0;
-        if (romsk != ROMSK_RDONLY) {
+        const u_int32_t pmtf = phwdev->cfgpmtf[i];
+        if (romsk != ROMSK_RDONLY || pmtf != PMTF_NONE) {
             pmti = pmt_alloc(1);
             if (pmti < 0) {
                 pciesys_logerror("load_cfg: pmt_alloc failed i %d\n", i);
                 goto error_out;
             }
             pmt_set_owner(pmti, hwdevh);
-            pmt_set_cfg(phwdev, pmti, cfgpa, i << 2, 0xffff, romsk, notify, 0);
+            pmt_set_cfg(phwdev, pmti, cfgpa, i << 2, 0xffff, romsk, pmtf);
         }
     }
     /*
      * Catchall entry.  We add a read-write entry for all addresses,
      * but romsk=1 selects the read-only entry so effectively this
      * claims all read/write transactions but writes have no effect.
+     * We limit the range to PCIEHW_CFGSZ because that is all we have
+     * here in cfgpa.  For access to cfgspace above PCIEHW_CFGSZ a wildcard
+     * entry for all bdf's will catch it.
      */
     pmti = pmt_alloc(1);
     if (pmti < 0) {
@@ -313,7 +315,13 @@ pciehw_pmt_load_cfg(pciehwdev_t *phwdev)
         goto error_out;
     }
     pmt_set_owner(pmti, hwdevh);
-    pmt_set_cfg(phwdev, pmti, cfgpa, 0, 0, ROMSK_RDONLY, 0, 0);
+#if 1
+    pmt_set_cfg(phwdev, pmti, cfgpa, 0, 0,
+                ROMSK_RDONLY, PMTF_RW);
+#else
+    pmt_set_cfg(phwdev, pmti, cfgpa, 0, PCIEHW_CFGSZ - 1,
+                ROMSK_RDONLY, PMTF_RW);
+#endif
     return 0;
 
  error_out:
@@ -445,9 +453,9 @@ pmt_init(void)
  * debug
  */
 
-#define PMTF_BAR        0x01
-#define PMTF_CFG        0x02
-#define PMTF_RAW        0x04
+#define PMTT_BAR        0x01
+#define PMTT_CFG        0x02
+#define PMTT_RAW        0x04
 
 static int last_hdr_displayed;
 
@@ -460,7 +468,7 @@ pmt_show_cfg_entry_hdr(void)
 {
     pciesys_loginfo("%-4s %-2s %-3s %-2s %-9s %-6s "
                     "%-4s %-9s %-4s %-5s %-11s %-5s\n",
-                    "idx", "id", "typ", "rw", "p:bdf", "cfgreg",
+                    "idx", "id", "typ", "rw", "p:bb:dd.f", "cfgreg",
                     "vfid", "p:bdflim", "vfst", "romsk",
                     "address", "flags");
 }
@@ -474,9 +482,9 @@ pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
     const int rw = d->rw;
     const int rw_m = m->rw;
 
-    if (last_hdr_displayed != PMTF_CFG) {
+    if (last_hdr_displayed != PMTT_CFG) {
         pmt_show_cfg_entry_hdr();
-        last_hdr_displayed = PMTF_CFG;
+        last_hdr_displayed = PMTT_CFG;
     }
 
     pciesys_loginfo("%-4d %2d %-3s %c%c %1d:%-7s 0x%04x "
@@ -559,9 +567,9 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
     char vfs [8] = { '\0' };
     char prts[8] = { '\0' };
 
-    if (last_hdr_displayed != PMTF_BAR) {
+    if (last_hdr_displayed != PMTT_BAR) {
         pmt_show_bar_entry_hdr();
-        last_hdr_displayed = PMTF_BAR;
+        last_hdr_displayed = PMTT_BAR;
     }
 
     if (spmt->loaded) {
@@ -648,9 +656,9 @@ pmt_show_raw_entry(const int pmti,
     const pmt_tcam_t *tcam = &pmt->pmte.tcam;
     const u_int32_t *w = pmt->pmre.w;
 
-    if (last_hdr_displayed != PMTF_RAW) {
+    if (last_hdr_displayed != PMTT_RAW) {
         pmt_show_raw_entry_hdr();
-        last_hdr_displayed = PMTF_RAW;
+        last_hdr_displayed = PMTT_RAW;
     }
 
     pciesys_loginfo("%-4d %016" PRIx64 " %016" PRIx64 " %08x %08x %08x %08x\n",
@@ -669,8 +677,8 @@ pmt_show_entry(const int pmti, const pmt_t *pmt, const int flags)
 
     switch (cmn->type) {
     case PMT_TYPE_CFG:
-        if (flags & PMTF_CFG) {
-            if (flags & PMTF_RAW) {
+        if (flags & PMTT_CFG) {
+            if (flags & PMTT_RAW) {
                 pmt_show_raw_entry(pmti, pmt, &dm);
             } else {
                 pmt_show_cfg_entry(pmti, pmt, &dm);
@@ -679,8 +687,8 @@ pmt_show_entry(const int pmti, const pmt_t *pmt, const int flags)
         break;
     case PMT_TYPE_MEM:
     case PMT_TYPE_IO:
-        if (flags & PMTF_BAR) {
-            if (flags & PMTF_RAW) {
+        if (flags & PMTT_BAR) {
+            if (flags & PMTT_RAW) {
                 pmt_show_raw_entry(pmti, pmt, &dm);
             } else {
                 pmt_show_bar_entry(pmti, pmt, &dm);
@@ -719,20 +727,20 @@ pciehw_pmt_show(int argc, char *argv[])
     while ((opt = getopt(argc, argv, "bcr")) != -1) {
         switch (opt) {
         case 'b':
-            flags |= PMTF_BAR;
+            flags |= PMTT_BAR;
             break;
         case 'c':
-            flags |= PMTF_CFG;
+            flags |= PMTT_CFG;
             break;
         case 'r':
-            flags |= PMTF_RAW;
+            flags |= PMTT_RAW;
             break;
         default:
             return;
         }
     }
-    if ((flags & (PMTF_BAR | PMTF_CFG)) == 0) {
-        flags |= PMTF_BAR | PMTF_CFG;
+    if ((flags & (PMTT_BAR | PMTT_CFG)) == 0) {
+        flags |= PMTT_BAR | PMTT_CFG;
     }
 
     pmt_show(flags);

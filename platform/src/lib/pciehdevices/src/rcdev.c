@@ -34,7 +34,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
                 PMT_TYPE_MEM,
                 pbar.size,
                 pbar.size, /* prtsize */
-                PMT_BARF_RW);
+                PMTF_RW);
 
     prt_res_enc(&prt, pa, sz, PRT_RESF_NONE);
     pciehbarreg_add_prt(&preg, &prt);

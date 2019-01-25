@@ -262,10 +262,12 @@ handle_indirect(indirect_entry_t *ientry)
 
     switch (stlp->type) {
     case PCIE_STLP_CFGRD:
+    case PCIE_STLP_CFGRD1:
         pciehw_cfgrd_indirect(ientry, stlp);
         p->indcfgrd++;
         break;
     case PCIE_STLP_CFGWR:
+    case PCIE_STLP_CFGWR1:
         pciehw_cfgwr_indirect(ientry, stlp);
         p->indcfgwr++;
         break;
@@ -307,7 +309,10 @@ pciehw_indirect_intr(pciehw_port_t *p, const int port)
     indirect_entry_t *ientry = &indirect_entry[port];
     const int pending = read_pending_indirect_entry(port, ientry);
 
-    if (!pending) return -1;
+    if (!pending) {
+        p->indspurious++;
+        return -1;
+    }
 
     p->indirect_cnt++;
 
@@ -507,6 +512,7 @@ cmd_stats(int argc, char *argv[])
     pciesys_loginfo("port %d:\n", port);
     pciesys_loginfo("%-*s : 0x%02x\n", w, "secbus", p->secbus);
     pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indirect_cnt", p->indirect_cnt);
+    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indspurious", p->indspurious);
     pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indcfgrd", p->indcfgrd);
     pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indcfgwr", p->indcfgwr);
     pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indmemrd", p->indmemrd);
@@ -516,6 +522,7 @@ cmd_stats(int argc, char *argv[])
     pciesys_loginfo("%-*s : %"PRIu64"\n", w, "indunknown", p->indunknown);
 
     /* XXX need notify stats */
+    pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notspurious", p->notspurious);
     pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notcfgrd", p->notcfgrd);
     pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notcfgwr", p->notcfgwr);
     pciesys_loginfo("%-*s : %"PRIu64"\n", w, "notmemrd", p->notmemrd);

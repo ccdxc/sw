@@ -164,23 +164,25 @@ u_int64_t pmt_bar_getsize(const pmt_t *pmt);
 int pmt_bar_allows_rd(const pmt_t *pmt);
 int pmt_bar_allows_wr(const pmt_t *pmt);
 
+/* PMT flags for cfg/bar encoding */
+#define PMTF_NONE       0x00     /* no flags */
+#define PMTF_RD         0x01     /* read only */
+#define PMTF_WR         0x02     /* write only, e.g db */
+#define PMTF_RW         (PMTF_RD | PMTF_WR)
+#define PMTF_NOTIFY     0x04     /* copy to notify ring */
+#define PMTF_INDIRECT   0x08     /* handle by sw as indirect transaction */
+
 void
 pmt_cfg_enc(pmt_t *pmt,
             const u_int8_t port,
             const u_int16_t bdf,
+            const u_int16_t bdfm,
             const u_int64_t cfgpa,
             const u_int16_t addr,
             const u_int16_t addrm,
             const u_int8_t romsksel,
             const u_int8_t vfstridesel,
-            const u_int8_t notify,
-            const u_int8_t indirect);
-
-/* pmt bar flags */
-#define PMT_BARF_NONE   0x0     /* no flags */
-#define PMT_BARF_RD     0x1     /* read only */
-#define PMT_BARF_WR     0x2     /* write only, e.g db */
-#define PMT_BARF_RW     (PMT_BARF_RD | PMT_BARF_WR)
+            const u_int32_t pmtf);
 
 void
 pmt_bar_enc(pmt_t *pmt,
@@ -188,7 +190,7 @@ pmt_bar_enc(pmt_t *pmt,
             const u_int8_t type,
             const u_int64_t pmtsize,
             const u_int32_t prtsize,
-            const u_int32_t pmtflags);
+            const u_int32_t pmtf);
 
 void pmt_entry_enc(pmt_entry_t *pmte, const pmt_datamask_t *dm);
 void pmt_entry_dec(const pmt_entry_t *pmte, pmt_datamask_t *dm);

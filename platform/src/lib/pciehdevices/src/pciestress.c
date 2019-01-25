@@ -36,7 +36,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
                 PMT_TYPE_MEM,
                 pbar.size,
                 sz,     /* prtsize */
-                PMT_BARF_RW);
+                PMTF_RW);
     pmt_bar_setr_prt(&preg.pmt, 12, 2);
 
     /* direct access */
@@ -67,7 +67,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
                 PMT_TYPE_IO,
                 pbar.size,
                 0x20, /* prtsize */
-                PMT_BARF_RW);
+                PMTF_RW);
     pmt_bar_setr_prt(&preg.pmt, 5, 2);
 
     /* direct access */

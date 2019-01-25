@@ -1,3 +1,4 @@
 add eth -L 9 -i 68 -I 23
 finalize
+dbg pciehw pmt -c
 exit

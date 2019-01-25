@@ -1,2 +1,3 @@
 finalize
+dbg pciehw pmt -c
 exit

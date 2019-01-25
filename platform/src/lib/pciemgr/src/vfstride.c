@@ -36,6 +36,8 @@ vfstride_set(const int idx,
              const u_int8_t fshift,
              const u_int32_t addrmax)
 {
+    /* hw verifies addr <= addrmaxdw, so subtract 1 dw from addrmax here */
+    const u_int32_t addrmaxdw = (addrmax - 4) >> 2;
     union {
         struct {
             u_int32_t p:5;
@@ -51,9 +53,9 @@ vfstride_set(const int idx,
     e.b = bshift;
     e.d = dshift;
     e.f = fshift;
-    assert((addrmax >> 2) < (1 << 10));
     assert((addrmax & 0x3) == 0);
-    e.addrmaxdw = addrmax >> 2;
+    assert(addrmaxdw < (1 << 10));
+    e.addrmaxdw = addrmaxdw;
 
     pal_reg_wr32(vfstride_addr(idx), e.w);
 }
@@ -61,9 +63,7 @@ vfstride_set(const int idx,
 int
 pciehw_vfstride_load(pciehwdev_t *phwdev)
 {
-    /* XXX stub for now */
-    vfstride_set(0, 0, 0, 0, 0, 0x400);
-    phwdev->stridesel = 0;
+    phwdev->stridesel = VFSTRIDE_IDX_DEV;
     return 0;
 }
 
@@ -81,4 +81,8 @@ pciehw_vfstride_init(void)
     for (i = 0; i < VFSTRIDE_COUNT; i++) {
         pal_reg_wr32(vfstride_addr(i), 0);
     }
+
+    /* XXX hardcode these entries for now */
+    vfstride_set(VFSTRIDE_IDX_DEV, 0, 0, 0, 0, PCIEHW_CFGSZ);
+    vfstride_set(VFSTRIDE_IDX_4K,  0, 0, 0, 0, 0x1000);
 }

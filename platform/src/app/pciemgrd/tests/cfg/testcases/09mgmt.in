@@ -1,3 +1,4 @@
 add mgmt -L 12 -i 4 -I 13
 finalize
+dbg pciehw pmt -c
 exit

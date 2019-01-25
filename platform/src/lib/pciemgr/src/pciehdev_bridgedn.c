@@ -44,7 +44,7 @@ init_memtun_bar(const int port, pciehbars_t *pbars)
                 PMT_TYPE_MEM,
                 pbar.size,
                 pbar.size, /* prtsize */
-                PMT_BARF_RW);
+                PMTF_RW);
 
     prt_res_enc(&prt, memtun_pa, memtun_sz, PRT_RESF_PMVDIS);
     pciehbarreg_add_prt(&preg, &prt);

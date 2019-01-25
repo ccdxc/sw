@@ -136,13 +136,16 @@ pciehw_romsk_load(pciehwdev_t *phwdev)
     int i = 0;
 
     for (i = 0; i < PCIEHW_ROMSKSZ; i++) {
-        int index = pciehw_romsk_insert(cfgmskdw[i]);
-        if (index < 0) {
-            pciesys_logerror("romsk_insert failed for dev %s\n",
-                             pciehwdev_get_name(phwdev));
-            goto error_out;
+        /* if indirect, we handle in sw so don't need romsk entry */
+        if ((phwdev->cfgpmtf[i] & PMTF_INDIRECT) == 0) {
+            int index = pciehw_romsk_insert(cfgmskdw[i]);
+            if (index < 0) {
+                pciesys_logerror("romsk_insert failed for dev %s\n",
+                                 pciehwdev_get_name(phwdev));
+                goto error_out;
+            }
+            phwdev->romsksel[i] = index;
         }
-        phwdev->romsksel[i] = index;
     }
     return 0;
 

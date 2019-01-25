@@ -1,4 +1,5 @@
 add eth -L 4
 add eth -L 5
 finalize
+dbg pciehw pmt -c
 exit

@@ -1,0 +1,4 @@
+add eth -L 1000 -r 262144 -R 0x130a80000
+finalize
+dbg pciehw pmt -c
+exit

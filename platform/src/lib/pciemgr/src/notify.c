@@ -327,7 +327,10 @@ pciehw_notify_intr(const int port)
 
     notify_get_masked_pici(port, &pi, &ci, ring_mask);
 
-    if (ci == pi) return -1;
+    if (ci == pi) {
+        p->notspurious++;
+        return -1;
+    }
 
     pici_delta = notify_pici_delta(pi, ci);
 

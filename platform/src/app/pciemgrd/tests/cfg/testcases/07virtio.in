@@ -1,3 +1,4 @@
 add virtio -L 4
 finalize
+dbg pciehw pmt -c
 exit

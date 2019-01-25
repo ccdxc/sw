@@ -42,7 +42,7 @@ add_common_resource_bar(pciehbars_t *pbars,
                 PMT_TYPE_MEM,
                 0x4,    /* pmtsize */
                 0x4,    /* prtsize */
-                PMT_BARF_WR);
+                PMTF_WR);
     prt_res_enc(&prt, pres->devcmdpa, 0, PRT_RESF_PMVDIS);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
@@ -57,7 +57,7 @@ add_common_resource_bar(pciehbars_t *pbars,
                 PMT_TYPE_MEM,
                 0x2000, /* pmtsize */
                 0x1000, /* prtsize */
-                PMT_BARF_RW);
+                PMTF_RW);
     pmt_bar_setr_prt(&preg.pmt, 12, 1);
 
     /* +0x0000 Device Cmd Regs */
@@ -79,7 +79,7 @@ add_common_resource_bar(pciehbars_t *pbars,
                 PMT_TYPE_MEM,
                 0x8,    /* pmtsize */
                 0x8,    /* prtsize */
-                PMT_BARF_RD);
+                PMTF_RD);
     prt_res_enc(&prt,
                 intr_pba_addr(pres->lifb),
                 intr_pba_size(pres->intrc),
@@ -109,7 +109,7 @@ add_common_resource_bar(pciehbars_t *pbars,
                     PMT_TYPE_MEM,
                     pmtsize,
                     stride, /* prtsize */
-                    PMT_BARF_RW);
+                    PMTF_RW);
         pmt_bar_set_vfparams(&preg.pmt, vfbitb, vfbitc, 0, pres->intrc);
         prt_res_enc(&prt,
                     intr_drvcfg_addr(pres->intrb),
@@ -147,7 +147,7 @@ add_common_resource_bar(pciehbars_t *pbars,
                     PMT_TYPE_MEM,
                     pmtsize,
                     stride, /* prtsize */
-                    PMT_BARF_RW);
+                    PMTF_RW);
         pmt_bar_set_vfparams(&preg.pmt, vfbitb, vfbitc, 0, pres->intrc);
         prt_res_enc(&prt,
                     intr_msixcfg_addr(pres->intrb),
@@ -167,7 +167,7 @@ add_common_resource_bar(pciehbars_t *pbars,
                 PMT_TYPE_MEM,
                 0x8,    /* pmtsize */
                 0x8,    /* prtsize */
-                PMT_BARF_RD);
+                PMTF_RD);
     prt_res_enc(&prt,
                 intr_pba_addr(pres->lifb),
                 intr_pba_size(pres->intrc),
@@ -234,7 +234,8 @@ add_common_doorbell_bar(pciehbars_t *pbars,
                 PMT_TYPE_MEM,
                 pbar.size,       /* pmtsize */
                 npids2 * 0x1000, /* prtsize */
-                PMT_BARF_WR);
+                PMTF_WR);
+
     pmt_bar_set_qtype(&preg.pmt, 3, 0x7);
 
     /*
@@ -281,7 +282,7 @@ add_common_cmb_bar(pciehbars_t *pbars,
                     PMT_TYPE_MEM,
                     pbar.size,  /* pmtsize */
                     pbar.size,  /* prtsize */
-                    PMT_BARF_RW);
+                    PMTF_RW);
 
         prt_res_enc(&prt, pres->cmbpa, pres->cmbsz, PRT_RESF_PMVDIS);
         pciehbarreg_add_prt(&preg, &prt);
@@ -312,7 +313,7 @@ add_common_rom_bar(pciehbars_t *pbars,
                     PMT_TYPE_MEM,
                     pbar.size,  /* pmtsize */
                     pbar.size,  /* prtsize */
-                    PMT_BARF_RD);
+                    PMTF_RD);
 
         prt_res_enc(&prt, pres->rompa, pres->romsz, PRT_RESF_PMVDIS);
         pciehbarreg_add_prt(&preg, &prt);

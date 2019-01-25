@@ -28,10 +28,13 @@ pciehw_cfg_init()
 
 static void
 pciehw_set_cfghnd(pciehwdev_t *phwdev,
-                  const u_int16_t reg, const pciehw_cfghnd_t hnd)
+                  const u_int16_t reg,
+                  const u_int32_t pmtf,
+                  const pciehw_cfghnd_t hnd)
 {
     const u_int16_t regdw = reg >> 2;
     assert(regdw < PCIEHW_CFGHNDSZ);
+    phwdev->cfgpmtf[regdw] = pmtf;
     phwdev->cfghnd[regdw] = hnd;
 }
 
@@ -41,32 +44,47 @@ pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
     cfgspace_t cs;
     pciehwbar_t *phwbar;
     int i, msixcap, cfgoff;
+    int nbars_valid = 0;
 
-    pciehwdev_get_cfgspace(phwdev, &cs);
-
-    /* Command/Status register */
-    pciehw_set_cfghnd(phwdev, 0x4, PCIEHW_CFGHND_CMD);
-
+    /* Bars */
     cfgoff = 0x10;
     for (phwbar = phwdev->bar, i = 0; i < PCIEHW_NBAR; i++, phwbar++) {
         if (phwbar->valid) {
             const int barlen = phwbar->type == PCIEHWBARTYPE_MEM64 ? 8 : 4;
-            pciehw_set_cfghnd(phwdev, cfgoff, PCIEHW_CFGHND_BARS);
+            pciehw_set_cfghnd(phwdev, cfgoff,
+                              PMTF_WR | PMTF_INDIRECT,
+                              PCIEHW_CFGHND_BARS);
             if (barlen == 8) {
-                pciehw_set_cfghnd(phwdev, cfgoff + 4, PCIEHW_CFGHND_BARS);
+                pciehw_set_cfghnd(phwdev, cfgoff + 4,
+                                  PMTF_WR | PMTF_INDIRECT,
+                                  PCIEHW_CFGHND_BARS);
             }
             cfgoff += barlen;
+            nbars_valid++;
         }
     }
 
     if (phwdev->rombar.valid) {
-        pciehw_set_cfghnd(phwdev, PCI_ROM_ADDRESS, PCIEHW_CFGHND_ROMBAR);
+        /* Oprom Bar */
+        pciehw_set_cfghnd(phwdev, PCI_ROM_ADDRESS,
+                          PMTF_WR | PMTF_INDIRECT,
+                          PCIEHW_CFGHND_ROMBAR);
+        nbars_valid++;
     }
 
+    pciehwdev_get_cfgspace(phwdev, &cs);
     msixcap = cfgspace_findcap(&cs, PCI_CAP_ID_MSIX);
     if (msixcap) {
         /* MSIX message control */
-        pciehw_set_cfghnd(phwdev, msixcap, PCIEHW_CFGHND_MSIX);
+        pciehw_set_cfghnd(phwdev, msixcap,
+                          PMTF_WR | PMTF_INDIRECT, PCIEHW_CFGHND_MSIX);
+    }
+
+    /* only need to capture writes to Command if we have bars or intrs */
+    if (nbars_valid > 0 || phwdev->intrc > 0) {
+        /* Command/Status register */
+        pciehw_set_cfghnd(phwdev, 0x4,
+                          PMTF_WR | PMTF_INDIRECT, PCIEHW_CFGHND_CMD);
     }
 }
 
@@ -117,6 +135,43 @@ pciehw_cfg_finalize(pciehdev_t *pdev)
         pciesys_logerror("%s: pmt_load_cfg failed\n", pciehdev_get_name(pdev));
         return -1;
     }
+    return 0;
+}
+
+int
+pciehw_cfg_finalize_done(pciehwdev_t *phwroot)
+{
+    pciehw_mem_t *phwmem = pciehw_get_hwmem();
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    const pciehwdevh_t hwdevh = pciehwdev_geth(phwroot);
+    const u_int64_t zerospa = pal_mem_vtop(phwmem->zeros);
+    pciehw_spmt_t *spmt;
+    pmt_t pmt;
+    int pmti;
+
+    /* XXX XXX XXX make this work */
+    if (1) return 0;
+
+    pmti = pmt_alloc(1);
+    if (pmti < 0) {
+        pciesys_logerror("cfg_finalize_done: pmt_alloc failed\n");
+        return -1;
+    }
+    /*
+     * Add a global catchall entry for this port for cfgspace.
+     * XXX Could wildcard the port too.
+     */
+    phwroot->stridesel = VFSTRIDE_IDX_4K;
+    spmt = &pshmem->spmt[pmti];
+    spmt->owner = hwdevh;
+    pmt_cfg_enc(&pmt,
+                phwroot->port,
+                phwroot->bdf, 0, /* bdf: wildcard */
+                zerospa, 0, 0,
+                ROMSK_RDONLY,
+                VFSTRIDE_IDX_4K,
+                PMTF_RW);
+    pmt_set(pmti, &pmt);
     return 0;
 }
 
@@ -263,6 +318,7 @@ pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 static void
 pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
+    pciehdev_params_t *params = pciehw_get_params();
     pciehwbar_t *phwbar;
     cfgspace_t cs;
     int i, cfgoff;
@@ -293,8 +349,10 @@ pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
      * But we put this here to give us a chance to load the bars early
      * when the address arrives if force_bars_load is specified.
      */
-    cmd = cfgspace_readw(&cs, PCI_COMMAND);
-    pciehw_cfg_bars_enable(phwdev, cmd);
+    if (params->force_bars_load) {
+        cmd = cfgspace_readw(&cs, PCI_COMMAND);
+        pciehw_cfg_bars_enable(phwdev, cmd);
+    }
 }
 
 static void
@@ -382,14 +440,18 @@ pciehw_cfgrd_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
     pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
     u_int32_t val;
 
+    /*
+     * For indirect reads, let the handler run first,
+     * then we'll pick up the cfg value.  The handler
+     * has a chance to modify the data if desired.
+     */
+    pciehw_cfgrd_notify(phwdev, stlp, spmt);
     if (pciehwdev_cfgrd(phwdev, stlp->addr, stlp->size, &val) < 0) {
         ientry->cpl = PCIECPL_CA;
     } else {
         ientry->data[0] = val;
     }
     pciehw_indirect_complete(ientry);
-
-    pciehw_cfgrd_notify(phwdev, stlp, spmt);
 }
 
 void
@@ -401,10 +463,13 @@ pciehw_cfgwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
     const pciehwdevh_t hwdevh = spmt->owner;
     pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
 
+    /*
+     * For indirect writes, write the data first,
+     * then let the handler run with the updated data.
+     */
     if (pciehwdev_cfgwr(phwdev, stlp->addr, stlp->size, stlp->data) < 0) {
         ientry->cpl = PCIECPL_CA;
     }
-    pciehw_indirect_complete(ientry);
-
     pciehw_cfgwr_notify(phwdev, stlp, spmt);
+    pciehw_indirect_complete(ientry);
 }

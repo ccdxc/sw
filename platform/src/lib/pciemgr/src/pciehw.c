@@ -467,7 +467,7 @@ pciehw_param_ull(const char *name, const u_int64_t def)
 static void
 pciehw_init_params(pciehdev_params_t *p)
 {
-    p->force_bars_load = pciehw_param_ull("PCIE_FORCE_BARS_LOAD", 1);
+    p->force_bars_load = pciehw_param_ull("PCIE_FORCE_BARS_LOAD", 0);
 }
 
 int
@@ -719,6 +719,7 @@ pciehw_finalize_topology(pciehdev_t *proot)
     pciehwdev_t *phwroot = proot ? pciehw_finalize_dev(proot) : NULL;
     const u_int8_t port = pciehdev_get_port(proot);
 
+    pciehw_cfg_finalize_done(phwroot);
     pshmem->rooth[port] = pciehwdev_geth(phwroot);
     if (params->fake_bios_scan) {
         int nextbus = 1;
