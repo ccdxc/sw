@@ -97,8 +97,11 @@ static bool ionic_xxx_aq_dbell = true;
 module_param_named(ionic_rdma_xxx_aq_dbell, ionic_xxx_aq_dbell, bool, 0644);
 MODULE_PARM_DESC(ionic_rdma_xxx_aq_dbell, "XXX Enable ringing aq doorbell (to test handling of aq failure).");
 static int ionic_xxx_qid_skip = 512;
-module_param_named(ionic_rdma_xxx_qid_skip, ionic_xxx_qid_skip, int, 0644);
+module_param_named(ionic_rdma_xxx_qid_skip, ionic_xxx_qid_skip, int, 0444);
 MODULE_PARM_DESC(ionic_rdma_xxx_qid_skip, "XXX Skip every N'th qid");
+static bool ionic_xxx_fake_stats = false;
+module_param_named(ionic_rdma_xxx_fake_stats, ionic_xxx_fake_stats, bool, 0444);
+MODULE_PARM_DESC(ionic_rdma_xxx_fake_stats, "XXX Present fake hardware stats");
 /* XXX remove above section for release */
 
 bool ionic_dyndbg_enable;
@@ -109,11 +112,11 @@ static bool ionic_dbgfs_enable = true; /* XXX false for release */
 module_param_named(ionic_rdma_dbgfs_enable, ionic_dbgfs_enable, bool, 0444);
 MODULE_PARM_DESC(ionic_rdma_dbgfs_enable, "Expose resource info in debugfs.");
 
-static u16 ionic_aq_depth = 0x7ff;
+static u16 ionic_aq_depth = 0x3f;
 module_param_named(ionic_rdma_aq_depth, ionic_aq_depth, ushort, 0444);
 MODULE_PARM_DESC(ionic_rdma_aq_depth, "Min depth for admin queues.");
 
-static u16 ionic_eq_depth = 0xfff;
+static u16 ionic_eq_depth = 0x1ff;
 module_param_named(ionic_rdma_eq_depth, ionic_eq_depth, ushort, 0444);
 MODULE_PARM_DESC(ionic_rdma_eq_depth, "Min depth for event queues.");
 
@@ -877,8 +880,8 @@ static void ionic_admin_dwork(struct work_struct *ws)
 		pos = aq->q.cons;
 		ionic_admin_poll_locked(dev);
 		if (pos != aq->q.cons) {
-			dev_warn(&dev->ibdev.dev,
-				 "missed event for admin cq\n");
+			dev_dbg(&dev->ibdev.dev,
+				"missed event for admin cq\n");
 			progress = true;
 		}
 	}
@@ -887,8 +890,8 @@ static void ionic_admin_dwork(struct work_struct *ws)
 	if (progress)
 		return;
 
-	dev_warn(&dev->ibdev.dev, "no progress after %lums\n",
-		 jiffies_to_msecs(jiffies - dev->admin_stamp));
+	dev_dbg(&dev->ibdev.dev, "no progress after %lums\n",
+		jiffies_to_msecs(jiffies - dev->admin_stamp));
 
 	/* if no progress was made, try to poll again later, until timeout */
 	if (time_is_after_eq_jiffies(dev->admin_stamp + IONIC_ADMIN_TIMEOUT))
@@ -1072,7 +1075,8 @@ static int ionic_stats_hdrs_cmd(struct ionic_ibdev *dev,
 		if (dev->admin_opcodes > IONIC_V1_ADMIN_STATS_HDRS)
 			return ionic_v1_stats_cmd(dev, dma, len,
 						  IONIC_V1_ADMIN_STATS_HDRS);
-		/* XXX return -ENOSYS; */
+		if (!ionic_xxx_fake_stats)
+			return -ENOSYS;
 		/* XXX makeshift will be removed */
 		dma_sync_single_for_cpu(dev->hwdev, dma, len, DMA_FROM_DEVICE);
 		memcpy(xxx_buf, xxx_fake_hdrs, min(len, sizeof(xxx_fake_hdrs)));
@@ -1094,7 +1098,8 @@ static int ionic_stats_vals_cmd(struct ionic_ibdev *dev,
 		if (dev->admin_opcodes > IONIC_V1_ADMIN_STATS_VALS)
 			return ionic_v1_stats_cmd(dev, dma, len,
 						  IONIC_V1_ADMIN_STATS_VALS);
-		/* return -ENOSYS; */
+		if (!ionic_xxx_fake_stats)
+			return -ENOSYS;
 		/* XXX makeshift will be removed */
 		dma_sync_single_for_cpu(dev->hwdev, dma, len, DMA_FROM_DEVICE);
 		for (stat_i = 0; stat_i < stat_count; ++stat_i)
@@ -1175,6 +1180,8 @@ err_buf:
 	kfree(dev->stats_hdrs);
 	dev->stats_hdrs = NULL;
 err_hdrs:
+	dev->stats_count = 0;
+	dev->stats_size = 0;
 	return rc;
 }
 
