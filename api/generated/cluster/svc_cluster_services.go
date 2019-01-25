@@ -45,6 +45,7 @@ type ServiceClusterV1Client interface {
 	AutoUpdateNode(ctx context.Context, t *Node) (*Node, error)
 	AutoUpdateSmartNIC(ctx context.Context, t *SmartNIC) (*SmartNIC, error)
 	AutoUpdateTenant(ctx context.Context, t *Tenant) (*Tenant, error)
+	UpdateTLSConfig(ctx context.Context, t *UpdateTLSConfigRequest) (*Cluster, error)
 
 	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchClusterClient, error)
 	AutoWatchNode(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchNodeClient, error)
@@ -83,6 +84,7 @@ type ServiceClusterV1Server interface {
 	AutoUpdateNode(ctx context.Context, t Node) (Node, error)
 	AutoUpdateSmartNIC(ctx context.Context, t SmartNIC) (SmartNIC, error)
 	AutoUpdateTenant(ctx context.Context, t Tenant) (Tenant, error)
+	UpdateTLSConfig(ctx context.Context, t UpdateTLSConfigRequest) (Cluster, error)
 
 	AutoWatchCluster(in *api.ListWatchOptions, stream ClusterV1_AutoWatchClusterServer) error
 	AutoWatchNode(in *api.ListWatchOptions, stream ClusterV1_AutoWatchNodeServer) error

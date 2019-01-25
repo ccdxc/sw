@@ -3,6 +3,7 @@ package testutils
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -76,7 +77,13 @@ func Login(apiGW string, in *auth.PasswordCredential) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := http.DefaultClient
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
 	ctx := context.Background()
 	resp, err := client.Do(req.WithContext(ctx))
 	return resp, err

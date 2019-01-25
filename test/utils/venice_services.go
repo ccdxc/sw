@@ -97,7 +97,7 @@ func CleanupAuth(apiServerAddr string, enableLocalAuth, enableLdapAuth bool, cre
 
 // GetAuthorizationHeader helper function to login and get the authZ header from login context
 func GetAuthorizationHeader(apiGwAddr string, creds *auth.PasswordCredential) (string, error) {
-	ctx, err := authntestutils.NewLoggedInContext(context.Background(), fmt.Sprintf("http://%s", apiGwAddr), creds)
+	ctx, err := authntestutils.NewLoggedInContext(context.Background(), fmt.Sprintf("https://%s", apiGwAddr), creds)
 	if err != nil {
 		return "", err
 	}

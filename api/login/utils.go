@@ -2,6 +2,7 @@ package login
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -54,8 +55,8 @@ func GetTokenFromCookies(cookies []*http.Cookie) (string, error) {
 
 // UserLogin sends a login request to API Gateway and returns authenticated user and session token upon success
 func UserLogin(apiGW string, in *auth.PasswordCredential) (*auth.User, string, error) {
-	if !strings.HasPrefix(apiGW, "http") {
-		apiGW = "http://" + apiGW
+	if !strings.HasPrefix(apiGW, "https") {
+		apiGW = "https://" + apiGW
 	}
 	resp, err := login(apiGW, in)
 	if err != nil {
@@ -82,7 +83,13 @@ func login(apiGW string, in *auth.PasswordCredential) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := http.DefaultClient
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
 	ctx := context.Background()
 	resp, err := client.Do(req.WithContext(ctx))
 	return resp, err

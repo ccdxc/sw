@@ -51,6 +51,7 @@ type grpcServerClusterV1 struct {
 	AutoUpdateNodeHdlr        grpctransport.Handler
 	AutoUpdateSmartNICHdlr    grpctransport.Handler
 	AutoUpdateTenantHdlr      grpctransport.Handler
+	UpdateTLSConfigHdlr       grpctransport.Handler
 }
 
 // MakeGRPCServerClusterV1 creates a GRPC server for ClusterV1 service
@@ -241,6 +242,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqTenant,
 			EncodeGrpcRespTenant,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTenant", logger)))...,
+		),
+
+		UpdateTLSConfigHdlr: grpctransport.NewServer(
+			endpoints.UpdateTLSConfigEndpoint,
+			DecodeGrpcReqUpdateTLSConfigRequest,
+			EncodeGrpcRespCluster,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("UpdateTLSConfig", logger)))...,
 		),
 	}
 }
@@ -709,6 +717,24 @@ func decodeHTTPrespClusterV1AutoUpdateTenant(_ context.Context, r *http.Response
 		return nil, errorDecoder(r)
 	}
 	var resp Tenant
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) UpdateTLSConfig(ctx oldcontext.Context, req *UpdateTLSConfigRequest) (*Cluster, error) {
+	_, resp, err := s.UpdateTLSConfigHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1UpdateTLSConfig).V
+	return &r, resp.(respClusterV1UpdateTLSConfig).Err
+}
+
+func decodeHTTPrespClusterV1UpdateTLSConfig(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Cluster
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }

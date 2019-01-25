@@ -30,7 +30,7 @@ var (
 
 func veniceLogin() {
 	loginOnce.Do(func() {
-		cmdStr := veniceCmd + "--server http://localhost:" + tinfo.VenicePort + " " + "login -u " + tinfo.UserCred.Username + " -p " + tinfo.UserCred.Password
+		cmdStr := veniceCmd + "--server https://localhost:" + tinfo.VenicePort + " " + "login -u " + tinfo.UserCred.Username + " -p " + tinfo.UserCred.Password
 		cmdArgs := strings.Split(cmdStr, " ")
 		InvokeCLI(cmdArgs, false)
 	})
@@ -608,7 +608,7 @@ func TestLogout(t *testing.T) {
 }
 
 func veniceCLI(cmdStr string) string {
-	cmdStr = veniceCmd + "--server http://localhost:" + tinfo.VenicePort + " " + cmdStr
+	cmdStr = veniceCmd + "--server https://localhost:" + tinfo.VenicePort + " " + cmdStr
 	splitStrs := strings.Split(cmdStr, " ")
 	cmdArgs := []string{}
 	// remove empty words from splitStrs

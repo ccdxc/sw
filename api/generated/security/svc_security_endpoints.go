@@ -8,6 +8,7 @@ package security
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -2739,7 +2740,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchSecurityGroup(ctx context.Conte
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -2890,7 +2893,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchSGPolicy(ctx context.Context, o
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -3041,7 +3046,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchApp(ctx context.Context, option
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -3192,7 +3199,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchFirewallProfile(ctx context.Con
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -3343,7 +3352,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchCertificate(ctx context.Context
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -3478,7 +3489,9 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchTrafficEncryptionPolicy(ctx con
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -3515,26 +3528,38 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchTrafficEncryptionPolicy(ctx con
 
 // MakeSecurityV1RestClientEndpoints make REST client endpoints
 func MakeSecurityV1RestClientEndpoints(instance string) (EndpointsSecurityV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return EndpointsSecurityV1RestClient{
 		instance: instance,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 
 }
 
 // MakeSecurityV1StagedRestClientEndpoints makes staged REST client endpoints
 func MakeSecurityV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsSecurityV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return EndpointsSecurityV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 }

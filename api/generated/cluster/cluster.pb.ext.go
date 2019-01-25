@@ -7,6 +7,7 @@ Input file: cluster.proto
 package cluster
 
 import (
+	"context"
 	"errors"
 	fmt "fmt"
 
@@ -14,10 +15,10 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
-	validators "github.com/pensando/sw/venice/utils/apigen/validators"
-
 	"github.com/pensando/sw/venice/globals"
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/transformers/storage"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -27,6 +28,8 @@ var _ listerwatcher.WatcherClient
 
 var _ validators.DummyVar
 var validatorMapCluster = make(map[string]map[string][]func(string, interface{}) error)
+
+var storageTransformersMapCluster = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error)
 
 // MakeKey generates a KV store key for the object
 func (m *Cluster) MakeKey(prefix string) string {
@@ -64,6 +67,15 @@ func (m *Node) MakeKey(prefix string) string {
 func (m *Node) MakeURI(cat, ver, prefix string) string {
 	in := m
 	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/nodes/", in.Name)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *UpdateTLSConfigRequest) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "cluster", "/Singleton")
+}
+
+func (m *UpdateTLSConfigRequest) MakeURI(cat, ver, prefix string) string {
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/cluster")
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -542,6 +554,27 @@ func (m *StorageInfo) Defaults(ver string) bool {
 	return false
 }
 
+// Clone clones the object into into or creates one of into is nil
+func (m *UpdateTLSConfigRequest) Clone(into interface{}) (interface{}, error) {
+	var out *UpdateTLSConfigRequest
+	var ok bool
+	if into == nil {
+		out = &UpdateTLSConfigRequest{}
+	} else {
+		out, ok = into.(*UpdateTLSConfigRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *UpdateTLSConfigRequest) Defaults(ver string) bool {
+	return false
+}
+
 // Validators
 
 func (m *CPUInfo) Validate(ver, path string, ignoreStatus bool) []error {
@@ -749,7 +782,52 @@ func (m *StorageInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *UpdateTLSConfigRequest) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
 // Transformers
+
+func (m *Cluster) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+type storageClusterTransformer struct{}
+
+var StorageClusterTransformer storageClusterTransformer
+
+func (st *storageClusterTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(Cluster)
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storageClusterTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(Cluster)
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (m *ClusterSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if vs, ok := storageTransformersMapCluster["ClusterSpec"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
 
 func init() {
 	scheme := runtime.GetDefaultScheme()
@@ -758,6 +836,7 @@ func init() {
 		&ClusterAuthBootstrapRequest{},
 		&Host{},
 		&Node{},
+		&UpdateTLSConfigRequest{},
 	)
 
 	validatorMapCluster = make(map[string]map[string][]func(string, interface{}) error)
@@ -800,5 +879,27 @@ func init() {
 		}
 		return nil
 	})
+
+	{
+		ClusterSpecKeyTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapCluster["ClusterSpec"] = append(storageTransformersMapCluster["ClusterSpec"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*ClusterSpec)
+
+				if toStorage {
+					data, err = ClusterSpecKeyTx.TransformToStorage(ctx, []byte(m.Key))
+				} else {
+					data, err = ClusterSpecKeyTx.TransformFromStorage(ctx, []byte(m.Key))
+				}
+				m.Key = string(data)
+
+				return err
+			})
+	}
 
 }

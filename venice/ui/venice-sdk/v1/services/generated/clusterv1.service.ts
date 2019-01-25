@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IClusterCluster,IApiStatus,IClusterClusterAuthBootstrapRequest,IClusterHostList,IClusterHost,IClusterNodeList,IClusterNode,IClusterSmartNICList,IClusterSmartNIC,IClusterTenantList,IClusterTenant,IClusterAutoMsgClusterWatchHelper,IClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,IClusterAutoMsgSmartNICWatchHelper,IClusterAutoMsgTenantWatchHelper } from '../../models/generated/cluster';
+import { IClusterCluster,IApiStatus,IClusterClusterAuthBootstrapRequest,IClusterUpdateTLSConfigRequest,IClusterHostList,IClusterHost,IClusterNodeList,IClusterNode,IClusterSmartNICList,IClusterSmartNIC,IClusterTenantList,IClusterTenant,IClusterAutoMsgClusterWatchHelper,IClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,IClusterAutoMsgSmartNICWatchHelper,IClusterAutoMsgTenantWatchHelper } from '../../models/generated/cluster';
 
 @Injectable()
 export class Clusterv1Service extends AbstractService {
@@ -52,6 +52,14 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXPostCall(url, body, 'AuthBootstrapComplete') as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  public UpdateTLSConfig(body: IClusterUpdateTLSConfigRequest, stagingID: string = ""):Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/cluster/UpdateTLSConfig';
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPostCall(url, body, 'UpdateTLSConfig') as Observable<{body: IClusterCluster | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Host objects */

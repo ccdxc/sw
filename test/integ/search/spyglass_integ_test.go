@@ -4,6 +4,7 @@ package search
 
 import (
 	"context"
+	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"math/rand"
@@ -270,7 +271,7 @@ func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, 
 	urlQuery := url.QueryEscape(query)
 	t.Logf("Query: %s Encoded: %s Escaped: %s Mode: %s SortBy: %s",
 		query, u.String(), urlQuery, mode, sortBy)
-	str := fmt.Sprintf("http://%s/search/v1/query?QueryString=%s&From=%d&MaxResults=%d",
+	str := fmt.Sprintf("https://%s/search/v1/query?QueryString=%s&From=%d&MaxResults=%d",
 		tInfo.apiGwAddr, urlQuery, from, maxResults)
 	if mode != "" {
 		str += fmt.Sprintf("&Mode=%s", mode)
@@ -286,11 +287,11 @@ func getSearchURLWithParams(t *testing.T, query string, from, maxResults int32, 
 }
 
 func getSearchURL() string {
-	return fmt.Sprintf("http://%s/search/v1/query", tInfo.apiGwAddr)
+	return fmt.Sprintf("https://%s/search/v1/query", tInfo.apiGwAddr)
 }
 
 func getPolicySearchURL() string {
-	return fmt.Sprintf("http://%s/search/v1/policy-query", tInfo.apiGwAddr)
+	return fmt.Sprintf("https://%s/search/v1/policy-query", tInfo.apiGwAddr)
 }
 
 // TestSpyglass does e2e test for Spyglass search service
@@ -341,6 +342,7 @@ func TestSpyglass(t *testing.T) {
 		func() (bool, interface{}) {
 
 			restcl := netutils.NewHTTPClient()
+			restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 			restcl.SetHeader("Authorization", tInfo.authzHeader)
 			_, err = restcl.Req("GET", getSearchURLWithParams(t, "tesla", 0, 10, search.SearchRequest_Full.String(), "", []string{"tesla"}), nil, &resp)
 			if err != nil {
@@ -2055,6 +2057,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.mode, tc.sortBy, tc.query.Tenants)
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
+						restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
 						start := time.Now().UTC()
 						_, err = restcl.Req("GET", searchURL, nil, &resp)
@@ -2075,6 +2078,7 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 						searchURL = getSearchURL()
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
+						restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
 						start := time.Now().UTC()
 						_, err = restcl.Req(httpMethod, searchURL, &tc.query, &resp)
@@ -2679,6 +2683,7 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 					t.Logf("@@@ PolicySearch request [%s]: %+v\n", httpMethod, tc.request)
 					searchURL = getPolicySearchURL()
 					restcl := netutils.NewHTTPClient()
+					restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 					restcl.SetHeader("Authorization", tInfo.authzHeader)
 					start := time.Now().UTC()
 					_, err := restcl.Req(httpMethod, searchURL, &tc.request, &response)
@@ -3153,6 +3158,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 						searchURL = getSearchURLWithParams(t, tc.query.QueryString, tc.query.From, tc.query.MaxResults, tc.mode, tc.sortBy, tc.query.Tenants)
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
+						restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 						restcl.SetHeader("Authorization", tc.authzHeader)
 						start := time.Now().UTC()
 						_, err = restcl.Req("GET", searchURL, nil, &resp)
@@ -3173,6 +3179,7 @@ func testAuthzInSearch(t *testing.T, searchMethod SearchMethod) {
 						searchURL = getSearchURL()
 						resp = search.SearchResponse{}
 						restcl := netutils.NewHTTPClient()
+						restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 						restcl.SetHeader("Authorization", tInfo.authzHeader)
 						start := time.Now().UTC()
 						_, err = restcl.Req(httpMethod, searchURL, &tc.query, &resp)

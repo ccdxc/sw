@@ -142,6 +142,19 @@ func (mr *MockClusterV1ClusterInterfaceMockRecorder) AuthBootstrapComplete(ctx, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthBootstrapComplete", reflect.TypeOf((*MockClusterV1ClusterInterface)(nil).AuthBootstrapComplete), ctx, in)
 }
 
+// UpdateTLSConfig mocks base method
+func (m *MockClusterV1ClusterInterface) UpdateTLSConfig(ctx context.Context, in *cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error) {
+	ret := m.ctrl.Call(m, "UpdateTLSConfig", ctx, in)
+	ret0, _ := ret[0].(*cluster.Cluster)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateTLSConfig indicates an expected call of UpdateTLSConfig
+func (mr *MockClusterV1ClusterInterfaceMockRecorder) UpdateTLSConfig(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTLSConfig", reflect.TypeOf((*MockClusterV1ClusterInterface)(nil).UpdateTLSConfig), ctx, in)
+}
+
 // MockClusterV1NodeInterface is a mock of (cluster.ClusterV1NodeInterface)interface
 type MockClusterV1NodeInterface struct {
 	ctrl     *gomock.Controller

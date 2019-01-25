@@ -14,6 +14,7 @@ import (
 	"time"
 	"fmt"
 	"errors"
+	"crypto/tls"
 
 	"github.com/go-kit/kit/endpoint"
 	"google.golang.org/grpc"
@@ -492,7 +493,9 @@ func (r *Endpoints{{$svcname}}RestClient) AutoWatch{{.}}(ctx context.Context, op
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -555,27 +558,39 @@ func (r *Endpoints{{$svcname}}RestClient) {{$svcname}}{{.Name}}Endpoint(ctx cont
 
 // Make{{$svcname}}RestClientEndpoints make REST client endpoints
 func Make{{$svcname}}RestClientEndpoints(instance string) (Endpoints{{$svcname}}RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return Endpoints{{$svcname}}RestClient {
 		instance: instance,
-		client: http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+        },
 	}, nil
 
 }
 
 // Make{{$svcname}}StagedRestClientEndpoints makes staged REST client endpoints
 func Make{{$svcname}}StagedRestClientEndpoints(instance string, bufferId string) (Endpoints{{$svcname}}RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return Endpoints{{$svcname}}RestClient {
 		instance: instance,
 		bufferId: bufferId,
-		client: http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 }
 {{end}}

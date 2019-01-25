@@ -2,6 +2,7 @@ package apigwpkg
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -40,6 +41,7 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/audit"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
+	"github.com/pensando/sw/venice/utils/authn/cert"
 	authnmgr "github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/authz"
 	authzmgr "github.com/pensando/sw/venice/utils/authz/manager"
@@ -74,6 +76,7 @@ type apiGw struct {
 	bootstrapper    bootstrapper.Bootstrapper
 	rslver          resolver.Interface
 	auditor         audit.Auditor
+	keypair         cert.KeyPair
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
@@ -345,7 +348,16 @@ func (a *apiGw) Run(config apigw.Config) {
 	// Create the GRPC connection for the server.
 	s := grpc.NewServer()
 
-	ln, err := net.Listen("tcp", config.HTTPAddr)
+	if len(config.Resolvers) > 0 {
+		a.rslver = resolver.New(&resolver.Config{Name: globals.APIGw, Servers: config.Resolvers})
+	}
+	a.logger.Infof("Resolving via %v", config.Resolvers)
+
+	grpcaddr := globals.APIServer
+	grpcaddr = a.GetAPIServerAddr(grpcaddr)
+
+	a.keypair = cert.GetKeyPair(globals.APIGw, grpcaddr, a.rslver, a.logger)
+	ln, err := tls.Listen("tcp", config.HTTPAddr, a.keypair.TLSConfig())
 	if err != nil {
 		panic(fmt.Sprintf("could not start a listener on port %v", config.HTTPAddr))
 	}
@@ -353,10 +365,6 @@ func (a *apiGw) Run(config apigw.Config) {
 	a.runstate.addr = ln.Addr()
 	a.logger.Log("msg", "Started Listener", "Port", a.runstate.addr)
 
-	if len(config.Resolvers) > 0 {
-		a.rslver = resolver.New(&resolver.Config{Name: globals.APIGw, Servers: config.Resolvers})
-	}
-	a.logger.Infof("Resolving via %v", config.Resolvers)
 	// Let all the services complete registration. All services served by this
 	// gateway should have registered themselves via their init().
 	var wg sync.WaitGroup
@@ -436,8 +444,6 @@ Loop:
 	wg.Wait()
 
 	// create authentication manager
-	grpcaddr := globals.APIServer
-	grpcaddr = a.GetAPIServerAddr(grpcaddr)
 	a.authnMgr, err = authnmgr.NewAuthenticationManager(globals.APIGw, grpcaddr, a.rslver)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create authentication manager (%v)", err))
@@ -475,6 +481,7 @@ func (a *apiGw) Stop() {
 	a.authnMgr.Uninitialize()
 	a.authzMgr.Stop()
 	a.auditor.Shutdown()
+	a.keypair.Stop()
 	if a.rslver != nil {
 		a.rslver.Stop()
 	}

@@ -658,6 +658,29 @@ func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster
 	return ret.(*cluster.Tenant), err
 }
 
+func (a adapterClusterV1) UpdateTLSConfig(oldctx oldcontext.Context, t *cluster.UpdateTLSConfigRequest, options ...grpc.CallOption) (*cluster.Cluster, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("UpdateTLSConfig")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.UpdateTLSConfigRequest)
+		return a.service.UpdateTLSConfig(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.Cluster), err
+}
+
 func (a adapterClusterV1) AutoWatchSvcClusterV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchSvcClusterV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcClusterV1")
@@ -1052,6 +1075,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSmartNICWatchHelper", "cluster", apiserver.WatchOper)
 
 	e.svcProf["AutoWatchTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTenantWatchHelper", "cluster", apiserver.WatchOper)
+
+	e.svcProf["UpdateTLSConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiserver.CreateOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

@@ -43,7 +43,7 @@
         "fs": "0.0.2",
         "handlebars": "4.0.12",
         "lodash": "4.17.11",
-        "moment": "2.23.0",
+        "moment": "2.24.0",
         "path": "0.12.7"
       }
     },
@@ -154,9 +154,9 @@
       "integrity": "sha1-3j+YVD2/lggr5IrRoMfNqDYwHc8="
     },
     "moment": {
-      "version": "2.23.0",
-      "resolved": "https://registry.npmjs.org/moment/-/moment-2.23.0.tgz",
-      "integrity": "sha512-3IE39bHVqFbWWaPOMHZF98Q9c3LDKGTmypMiTM2QygGXXElkFWIH7GxfmlwmY2vwa+wmNsoYZmG2iusf1ZjJoA=="
+      "version": "2.24.0",
+      "resolved": "https://registry.npmjs.org/moment/-/moment-2.24.0.tgz",
+      "integrity": "sha512-bV7f+6l2QigeBBZSM/6yTNq4P2fNpSWj/0e7jQcy87A8e7o2nAfP/34/2ky5Vw4B9S446EtIhodAzkFCcR4dQg=="
     },
     "once": {
       "version": "1.4.0",

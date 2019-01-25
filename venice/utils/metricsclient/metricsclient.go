@@ -2,6 +2,7 @@ package metricsclient
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -54,11 +55,17 @@ type MetricsClient struct {
 // NewMetricsClient returns a new metrics client
 func NewMetricsClient(instance string) (*MetricsClient, error) {
 	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+		instance = "https://" + instance
 	}
 	return &MetricsClient{
 		instance: instance,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 }
 

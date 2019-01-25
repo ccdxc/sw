@@ -14,10 +14,10 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
+	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
-
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -841,6 +841,284 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 			}
 		}
 		out, ok, err := clusterHooks.setAuthBootstrapFlag(ctx, kvs, txn, clusterKey, "AuthBootstrapComplete", false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+	}
+}
+
+func TestPopulateExistingTLSConfig(t *testing.T) {
+	tests := []struct {
+		name     string
+		oper     apiserver.APIOperType
+		in       interface{}
+		existing *cluster.Cluster
+		out      interface{}
+		result   bool
+		err      error
+	}{
+		{
+			name: "invalid input object for populate TLS config in cluster",
+			oper: apiserver.UpdateOper,
+			in: struct {
+				Test string
+			}{"testing"},
+			out: struct {
+				Test string
+			}{"testing"},
+			result: false,
+			err:    fmt.Errorf("invalid input type"),
+		},
+		{
+			name: "populate existing certs and key",
+			oper: apiserver.UpdateOper,
+			in: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+			},
+			existing: &cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Spec: cluster.ClusterSpec{
+					Certs: "testcert",
+					Key:   "testkey",
+				},
+			},
+			out: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+				Spec: cluster.ClusterSpec{
+					Certs: "testcert",
+					Key:   "testkey",
+				},
+			},
+			result: true,
+			err:    nil,
+		},
+		{
+			name: "invalid operation type for populate TLS Config hook",
+			oper: apiserver.CreateOper,
+			in: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+			},
+			out: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+			},
+			result: false,
+			err:    fmt.Errorf("invalid input type"),
+		},
+		{
+			name: "missing cluster obj",
+			oper: apiserver.UpdateOper,
+			in: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+			},
+			existing: nil,
+			out: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+				ObjectMeta: api.ObjectMeta{
+					Name: "testCluster",
+				},
+			},
+			result: false,
+			err:    kvstore.NewKeyNotFoundError("/venice/config/cluster/cluster/Singleton", 0),
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	cluster := &cluster.Cluster{
+		TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+	}
+	clusterKey := cluster.MakeKey("cluster")
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		kvs.Delete(ctx, clusterKey, nil)
+		if test.existing != nil {
+			// encrypt private key as it is stored as secret
+			if err := test.existing.ApplyStorageTransformer(ctx, true); err != nil {
+				t.Fatalf("[%s] test failed, error encrypting password, Err: %v", test.name, err)
+			}
+
+			if err := kvs.Create(ctx, clusterKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with cluster, Err: %v", test.name, err)
+			}
+		}
+		out, ok, err := clusterHooks.populateExistingTLSConfig(ctx, kvs, txn, clusterKey, test.oper, false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+	}
+}
+
+func TestSetTLSConfig(t *testing.T) {
+	pemkey := `
+-----BEGIN EC PARAMETERS-----
+BgUrgQQAIw==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MIHcAgEBBEIBw19j4zd8aEMsCqBsGfrLT93ywnovsOEmTGkHnNZxQ+9U3HZvYEZA
+QMUobxlj891ioExvRwm7aY7r6Hjnb+lCkLqgBwYFK4EEACOhgYkDgYYABADqG0/0
+cp2+HjmqafBSgYonsrGboMHkLfT2J7YdGKZCCyebJMoDf6JBZxwcOKJ9mFj6wUy/
+x0bxRsNd/YdNH9uiQwBt7vHGUb1uyEniyoFPyoVQqn6mqdp2nY21OwkHcMQ6U6C1
+Uqvhc8wvGrVwYLlrIcGNcnZxEglGXJXTFwxQWSMuQQ==
+-----END EC PRIVATE KEY-----
+`
+	pemcert := `
+-----BEGIN CERTIFICATE-----
+MIIEyTCCArGgAwIBAgICEAEwDQYJKoZIhvcNAQELBQAwgcUxCzAJBgNVBAYTAlVT
+MQswCQYDVQQIDAJDQTERMA8GA1UEBwwIU2FuIEpvc2UxHzAdBgNVBAoMFlBlbnNh
+bmRvIFN5c3RlbXMsIEluYy4xLzAtBgNVBAsMJlBlbnNhbmRvIFN5c3RlbXMgQ2Vy
+dGlmaWNhdGUgQXV0aG9yaXR5MSEwHwYDVQQDDBhQZW5zYW5kbyBTeXN0ZW1zIFJv
+b3QgQ0ExITAfBgkqhkiG9w0BCQEWEnJvb3RjYUBwZW5zYW5kby5pbzAeFw0xNzA3
+MDMxNjI0MTZaFw0yNzA3MDExNjI0MTZaMIGoMQswCQYDVQQGEwJVUzELMAkGA1UE
+CAwCQ0ExHzAdBgNVBAoMFlBlbnNhbmRvIFN5c3RlbXMsIEluYy4xHzAdBgNVBAsM
+FlBlbnNhbmRvIE1hbnVmYWN0dXJpbmcxKDAmBgNVBAMMH1BlbnNhbmRvIE1hbnVm
+YWN0dXJpbmcgQ0EgKEVDQykxIDAeBgkqhkiG9w0BCQEWEW1mZ2NhQHBlbnNhbmRv
+LmlvMIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQA6htP9HKdvh45qmnwUoGKJ7Kx
+m6DB5C309ie2HRimQgsnmyTKA3+iQWccHDiifZhY+sFMv8dG8UbDXf2HTR/bokMA
+be7xxlG9bshJ4sqBT8qFUKp+pqnadp2NtTsJB3DEOlOgtVKr4XPMLxq1cGC5ayHB
+jXJ2cRIJRlyV0xcMUFkjLkGjZjBkMB0GA1UdDgQWBBRConmZyY4hbH77zIi43hiR
+oWs8hzAfBgNVHSMEGDAWgBQsUe4mAOz8wHrhlEoRonml+ZEXhTASBgNVHRMBAf8E
+CDAGAQH/AgEAMA4GA1UdDwEB/wQEAwIBhjANBgkqhkiG9w0BAQsFAAOCAgEALvFq
+ZT8vJiZVZSCFVH/h6jos4wLc5okfSBiJMgr74eqzqRM6BL8scr+YZuUx12Qq164t
+zDRereajvlf/A4AWeLgeazUYcLTRe97iQ+bhHbKZgv4Bh0Avpr+gNurEgG6ZzU4p
+R6zva9XuyQhi3f1shcAamSCCnAPUujMaNmqXxNC238JnM6zeMfEOZtyLrEFQeMwB
+jmT254ufpLJRV5cfTk3l4FIfpg75JVAR+A5c1VYlKHEUsQJu2OT9EsxPBJ8YnBsG
+JrnI647gViLUqjDB1fmJ/TYyvZ4YvXuuhLcl5srn4apMwWMMHuN5HLML9JTfJAKJ
+y/+0CHaeinAxgKZ4r+KOjW4bR6IlGgozR6azJLq9imN/aWGyL1f4YqgQ0LVa4w0t
+JwvgZy2CheVxdOAPn7UCXoU1GgbtoeAKPqpjpY+gp0qcW1xYph/2EIq9DQmp+V0B
+KsOZR+BfI9Kuef+FfKuwSX6LZ/rFofIH27jcEsakHt8cvg7oeyrNhgI5PnNrarnX
+UrTdh0MjOrAD8RM+oIwHusO3b16kbojjoXf0pYU1M6ZGzAJTSyj+XWe2a9pPH5Kg
+50YvoytRGiwjWcmMBouviBEc3FEWTQfaBt3zvDEHo+5myYsTaaZQ4rHA3NPjhXhH
+jkyfA7bgnrfYqr+pv2Y+319JpMCr6t+e+vLafbU=
+-----END CERTIFICATE-----
+`
+	tests := []struct {
+		name     string
+		in       interface{}
+		existing *cluster.Cluster
+		out      interface{}
+		result   bool
+		err      error
+	}{
+		{
+			name: "invalid input object",
+			in: struct {
+				Test string
+			}{"testing"},
+			out:    nil,
+			result: false,
+			err:    fmt.Errorf("invalid input type"),
+		},
+		{
+			name: "invalid certs",
+			in: cluster.UpdateTLSConfigRequest{
+				Certs: "invalidcert",
+				Key:   "invalidkey",
+			},
+			existing: &cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         "testCluster",
+					GenerationID: "1",
+				},
+			},
+			out:    nil,
+			result: false,
+			err:    errors.New("tls: failed to find any PEM data in certificate input"),
+		},
+		{
+			name: "valid TLS config update request",
+			in: cluster.UpdateTLSConfigRequest{
+				Certs: pemcert,
+				Key:   pemkey,
+			},
+			existing: &cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         "testCluster",
+					GenerationID: "1",
+				},
+			},
+			out: cluster.Cluster{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+				ObjectMeta: api.ObjectMeta{
+					Name:            "testCluster",
+					GenerationID:    "2",
+					ResourceVersion: "2",
+				},
+				Spec: cluster.ClusterSpec{
+					Certs: pemcert,
+				},
+			},
+			result: false,
+			err:    nil,
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	cluster := &cluster.Cluster{
+		TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testCluster",
+		},
+	}
+	clusterKey := cluster.MakeKey("cluster")
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		kvs.Delete(ctx, clusterKey, nil)
+		if test.existing != nil {
+			if err := kvs.Create(ctx, clusterKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with cluster, Err: %v", test.name, err)
+			}
+		}
+		out, ok, err := clusterHooks.setTLSConfig(ctx, kvs, txn, clusterKey, "UpdateTLSConfig", false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))

@@ -2,6 +2,7 @@ package audit
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -404,8 +405,9 @@ func benchmarkProcessEvents(nRules int, b *testing.B) {
 }
 
 func getEvent(ctx context.Context, apiGwAddr, eventID string, resp *auditapi.Event) error {
-	auditURL := fmt.Sprintf("http://%s/audit/v1/events/%s", apiGwAddr, eventID)
+	auditURL := fmt.Sprintf("https://%s/audit/v1/events/%s", apiGwAddr, eventID)
 	restcl := netutils.NewHTTPClient()
+	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	// get authz header
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {

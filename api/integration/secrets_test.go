@@ -67,10 +67,10 @@ func TestSecretsTransformer(t *testing.T) {
 	AssertOk(t, err, "cannot create ApiGw grpc client")
 
 	// REST Client -- should not see any secret
-	restClient, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
+	restClient, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
 	AssertOk(t, err, "cannot create REST client")
 	// create logged in context
-	ctx, err = authntestutils.NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+	ctx, err = authntestutils.NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
 	AssertOk(t, err, "cannot create logged in context")
 
 	fullCustomer := bookstore.Customer{

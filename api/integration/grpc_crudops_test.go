@@ -67,13 +67,13 @@ func TestCrudOps(t *testing.T) {
 	defer apicl.Close()
 
 	// REST Client
-	restcl, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
 	if err != nil {
 		t.Fatalf("cannot create REST client")
 	}
 	defer restcl.Close()
 	// create logged in context
-	ctx, err = NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
 	AssertOk(t, err, "cannot create logged in context")
 
 	// Create some objects for use
@@ -1363,13 +1363,13 @@ func TestStaging(t *testing.T) {
 	ctx := context.Background()
 
 	// REST Client
-	restcl, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
 	if err != nil {
 		t.Fatalf("cannot create REST client")
 	}
 	defer restcl.Close()
 
-	ctx, err = NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
 	AssertOk(t, err, "cannot create logged in context")
 
 	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
@@ -1394,7 +1394,7 @@ func TestStaging(t *testing.T) {
 	}
 
 	// Staging Client
-	stagecl, err := apiclient.NewStagedRestAPIClient("http://localhost:"+tinfo.apigwport, bufName)
+	stagecl, err := apiclient.NewStagedRestAPIClient("https://localhost:"+tinfo.apigwport, bufName)
 	if err != nil {
 		t.Fatalf("cannot create Staged REST client")
 	}
@@ -1983,7 +1983,7 @@ func TestStaging(t *testing.T) {
 		tinfo.cache = apisrvpkg.GetAPIServerCache()
 		restcl.Close()
 		apicl.Close()
-		restcl, err = apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
+		restcl, err = apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
 		if err != nil {
 			t.Fatalf("cannot create REST client")
 		}
@@ -1997,7 +1997,7 @@ func TestStaging(t *testing.T) {
 		defer apicl.Close()
 
 		AssertEventually(t, func() (bool, interface{}) {
-			ctx, err = NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+			ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
 			return err == nil, nil
 		}, "failed to get logged in context after restart", "10ms", "5s")
 
@@ -2052,13 +2052,13 @@ func TestStaging(t *testing.T) {
 func TestRestWatchers(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	// REST Client
-	restcl, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
 	if err != nil {
 		t.Fatalf("cannot create REST client")
 	}
 	defer restcl.Close()
 	// create logged in context
-	ctx, err = NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
 	AssertOk(t, err, "cannot create logged in context")
 
 	var watch1Mutex sync.Mutex
@@ -2224,7 +2224,7 @@ func TestSorting(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// REST Client
-	restcl, err := apiclient.NewRestAPIClient("http://localhost:" + tinfo.apigwport)
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
 	if err != nil {
 		t.Fatalf("cannot create REST client")
 	}
@@ -2237,7 +2237,7 @@ func TestSorting(t *testing.T) {
 	}
 	defer apicl.Close()
 	// create logged in context
-	ctx, err = NewLoggedInContext(ctx, "http://localhost:"+tinfo.apigwport, tinfo.userCred)
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
 	AssertOk(t, err, "cannot create logged in context")
 
 	bl, err := restcl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{})

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -476,8 +477,9 @@ func (tu *TestUtils) NewLoggedInContext(ctx context.Context) context.Context {
 
 // Search sends a search query to API Gateway
 func (tu *TestUtils) Search(ctx context.Context, query *search.SearchRequest, resp *search.SearchResponse) error {
-	searchURL := fmt.Sprintf("http://%s/search/v1/query", tu.APIGwAddr)
+	searchURL := fmt.Sprintf("https://%s/search/v1/query", tu.APIGwAddr)
 	restcl := netutils.NewHTTPClient()
+	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	// get authz header
 	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
 	if !ok {

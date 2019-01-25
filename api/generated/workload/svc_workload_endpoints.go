@@ -8,6 +8,7 @@ package workload
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -1095,7 +1096,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoWatchEndpoint(ctx context.Context, o
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -1246,7 +1249,9 @@ func (r *EndpointsWorkloadV1RestClient) AutoWatchWorkload(ctx context.Context, o
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -1283,26 +1288,38 @@ func (r *EndpointsWorkloadV1RestClient) AutoWatchWorkload(ctx context.Context, o
 
 // MakeWorkloadV1RestClientEndpoints make REST client endpoints
 func MakeWorkloadV1RestClientEndpoints(instance string) (EndpointsWorkloadV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return EndpointsWorkloadV1RestClient{
 		instance: instance,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 
 }
 
 // MakeWorkloadV1StagedRestClientEndpoints makes staged REST client endpoints
 func MakeWorkloadV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsWorkloadV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return EndpointsWorkloadV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 }

@@ -38,7 +38,7 @@ func TestLogin(t *testing.T) {
 	var statusCode int
 	AssertEventually(t, func() (bool, interface{}) {
 		var err error
-		resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), userCred)
+		resp, err = Login(fmt.Sprintf("https://%s", tinfo.apiGwAddr), userCred)
 		if err == nil {
 			statusCode = resp.StatusCode
 		}
@@ -124,7 +124,7 @@ func TestLoginFailures(t *testing.T) {
 		var statusCode int
 		AssertEventually(t, func() (bool, interface{}) {
 			var err error
-			resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), test.cred)
+			resp, err = Login(fmt.Sprintf("https://%s", tinfo.apiGwAddr), test.cred)
 			if err == nil {
 				statusCode = resp.StatusCode
 			}
@@ -228,10 +228,7 @@ func TestAuthPolicy(t *testing.T) {
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
 
-	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
-	if err != nil {
-		panic("error creating rest client")
-	}
+	restcl := tinfo.restcl
 
 	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context")
@@ -343,10 +340,7 @@ func TestUserStatus(t *testing.T) {
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
 
 	currtime := time.Now()
-	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
-	if err != nil {
-		panic("error creating rest client")
-	}
+	restcl := tinfo.restcl
 	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
 	AssertOk(t, err, "unable to get logged in context")
 	// test GET user
@@ -442,10 +436,7 @@ func TestLdapLogin(t *testing.T) {
 	}
 
 	currtime := time.Now()
-	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
-	if err != nil {
-		panic("error creating rest client")
-	}
+	restcl := tinfo.restcl
 	MustCreateRoleBinding(tinfo.apicl, "LdapAdminRoleBinding", testTenant, globals.AdminRole, nil, config.LdapUserGroupsDN)
 	defer MustDeleteRoleBinding(tinfo.apicl, "LdapAdminRoleBinding", testTenant)
 	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, ldapUserCred)
@@ -514,7 +505,7 @@ func TestUsernameConflict(t *testing.T) {
 	var statusCode int
 	AssertEventually(t, func() (bool, interface{}) {
 		var err error
-		resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), ldapUserCred)
+		resp, err = Login(fmt.Sprintf("https://%s", tinfo.apiGwAddr), ldapUserCred)
 		if err == nil {
 			statusCode = resp.StatusCode
 		}
@@ -524,7 +515,7 @@ func TestUsernameConflict(t *testing.T) {
 	// ldap login should succeed after local user is deleted
 	AssertEventually(t, func() (bool, interface{}) {
 		var err error
-		resp, err = Login(fmt.Sprintf("http://%s", tinfo.apiGwAddr), ldapUserCred)
+		resp, err = Login(fmt.Sprintf("https://%s", tinfo.apiGwAddr), ldapUserCred)
 		if err == nil {
 			statusCode = resp.StatusCode
 		}
@@ -663,10 +654,7 @@ func TestRadiusLogin(t *testing.T) {
 	}
 
 	currtime := time.Now()
-	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
-	if err != nil {
-		panic("error creating rest client")
-	}
+	restcl := tinfo.restcl
 	MustCreateRoleBinding(tinfo.apicl, "RadiusAdminRoleBinding", config.Tenant, globals.AdminRole, nil, config.UserGroups)
 	defer MustDeleteRoleBinding(tinfo.apicl, "RadiusAdminRoleBinding", config.Tenant)
 	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, radiusUserCred)

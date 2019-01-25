@@ -180,6 +180,20 @@
             "format": "boolean"
           },
           {
+            "name": "spec.certs",
+            "description": "Certs is the pem encoded certificate bundle used for API Gateway TLS.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.key",
+            "description": "Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "status.leader",
             "description": "Leader contains the node name of the cluster leader.",
             "in": "query",
@@ -395,6 +409,68 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterClusterAuthBootstrapRequest"
+            }
+          }
+        ],
+        "tags": [
+          "cluster/v1"
+        ]
+      }
+    },
+    "/configs/cluster/v1/cluster/UpdateTLSConfig": {
+      "post": {
+        "operationId": "UpdateTLSConfig",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clusterCluster"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterUpdateTLSConfigRequest"
             }
           }
         ],
@@ -3906,6 +3982,14 @@
           "type": "boolean",
           "format": "boolean",
           "description": "AutoAdmitNICs when enabled auto-admits NICs that are validated\ninto Venice Cluster. When it is disabled, NICs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster."
+        },
+        "certs": {
+          "type": "string",
+          "title": "Certs is the pem encoded certificate bundle used for API Gateway TLS"
+        },
+        "key": {
+          "type": "string",
+          "title": "Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA"
         }
       },
       "description": "ClusterSpec contains the configuration of the cluster."
@@ -4568,6 +4652,29 @@
     "clusterTenantStatus": {
       "type": "object",
       "title": "status part of tenant object"
+    },
+    "clusterUpdateTLSConfigRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "certs": {
+          "type": "string",
+          "title": "Certs is the pem encoded certificate bundle used for API Gateway TLS"
+        },
+        "key": {
+          "type": "string",
+          "title": "Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA"
+        }
+      },
+      "title": "UpdateTLSConfigRequest is to update certs and key for API Gateway TLS"
     },
     "googleprotobufAny": {
       "type": "object",

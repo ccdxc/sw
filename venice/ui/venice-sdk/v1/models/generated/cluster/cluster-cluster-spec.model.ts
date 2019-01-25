@@ -13,6 +13,8 @@ export interface IClusterClusterSpec {
     'virtual-ip'?: string;
     'ntp-servers'?: Array<string>;
     'auto-admit-nics'?: boolean;
+    'certs'?: string;
+    'key'?: string;
 }
 
 
@@ -30,6 +32,8 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     set to Pending state and it requires Manual approval to be admitted
     into the cluster. */
     'auto-admit-nics': boolean = null;
+    'certs': string = null;
+    'key': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'quorum-nodes': {
             description:  'QuorumNodes contains the list of hostnames for nodes configured to be quorum nodes in the cluster.',
@@ -46,6 +50,12 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
         'auto-admit-nics': {
             description:  'AutoAdmitNICs when enabled auto-admits NICs that are validated into Venice Cluster. When it is disabled, NICs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster.',
             type: 'boolean'
+        },
+        'certs': {
+            type: 'string'
+        },
+        'key': {
+            type: 'string'
         },
     }
 
@@ -110,6 +120,20 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
         } else {
             this['auto-admit-nics'] = null
         }
+        if (values && values['certs'] != null) {
+            this['certs'] = values['certs'];
+        } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('certs')) {
+            this['certs'] = ClusterClusterSpec.propInfo['certs'].default;
+        } else {
+            this['certs'] = null
+        }
+        if (values && values['key'] != null) {
+            this['key'] = values['key'];
+        } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('key')) {
+            this['key'] = ClusterClusterSpec.propInfo['key'].default;
+        } else {
+            this['key'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -121,6 +145,8 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
                 'virtual-ip': new FormControl(this['virtual-ip']),
                 'ntp-servers': new FormControl(this['ntp-servers']),
                 'auto-admit-nics': new FormControl(this['auto-admit-nics']),
+                'certs': new FormControl(this['certs']),
+                'key': new FormControl(this['key']),
             });
         }
         return this._formGroup;
@@ -136,6 +162,8 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
             this._formGroup.controls['virtual-ip'].setValue(this['virtual-ip']);
             this._formGroup.controls['ntp-servers'].setValue(this['ntp-servers']);
             this._formGroup.controls['auto-admit-nics'].setValue(this['auto-admit-nics']);
+            this._formGroup.controls['certs'].setValue(this['certs']);
+            this._formGroup.controls['key'].setValue(this['key']);
         }
     }
 }

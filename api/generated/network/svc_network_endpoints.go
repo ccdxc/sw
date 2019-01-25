@@ -8,6 +8,7 @@ package network
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -1516,7 +1517,9 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchNetwork(ctx context.Context, opt
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -1667,7 +1670,9 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchService(ctx context.Context, opt
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -1818,7 +1823,9 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchLbPolicy(ctx context.Context, op
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -1855,26 +1862,38 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchLbPolicy(ctx context.Context, op
 
 // MakeNetworkV1RestClientEndpoints make REST client endpoints
 func MakeNetworkV1RestClientEndpoints(instance string) (EndpointsNetworkV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return EndpointsNetworkV1RestClient{
 		instance: instance,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 
 }
 
 // MakeNetworkV1StagedRestClientEndpoints makes staged REST client endpoints
 func MakeNetworkV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsNetworkV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return EndpointsNetworkV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 }

@@ -146,13 +146,13 @@ func (ug *defaultAuthGetter) IsAuthBootstrapped() (bool, error) {
 	}
 	val, err := ug.cache.FindObject("Cluster", objMeta)
 	if err != nil {
-		log.Errorf("Cluster [%+v] not found, Err: %v", objMeta, err)
+		ug.logger.Errorf("Cluster [%+v] not found, Err: %v", objMeta, err)
 		return false, err
 	}
 
 	clusterObj, ok := val.(*cluster.Cluster)
 	if !ok {
-		log.Errorf("Invalid cluster type found in auth cache: %#v", clusterObj)
+		ug.logger.Errorf("Invalid cluster type found in auth cache: %#v", clusterObj)
 		ug.cache.DeleteObject(&cluster.Cluster{TypeMeta: api.TypeMeta{Kind: "Cluster"}, ObjectMeta: *objMeta})
 		return false, ErrInvalidObjectType
 	}

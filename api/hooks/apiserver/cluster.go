@@ -2,8 +2,10 @@ package impl
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
@@ -248,6 +250,102 @@ func (cl *clusterHooks) setAuthBootstrapFlag(ctx context.Context, kv kvstore.Int
 	return *cur, false, nil
 }
 
+// populateExistingTLSConfig is a pre-commit hook for cluster update operation to populate existing TLS certificate and key. It ignores certs and key passed in the cluster object.
+// User will need to use UpdateTLSConfig action on cluster object to update TLS config
+func (cl *clusterHooks) populateExistingTLSConfig(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+	cl.logger.DebugLog("method", "populateExistingTLSConfig", "msg", "API server hook called to populate TLS config in cluster object")
+	r, ok := i.(cluster.Cluster)
+	if !ok {
+		cl.logger.ErrorLog("method", "populateExistingTLSConfig", "msg", fmt.Sprintf("called for invalid object type [%#v]", i))
+		return i, false, errors.New("invalid input type")
+	}
+
+	switch oper {
+	case apiserver.UpdateOper:
+		cur := &cluster.Cluster{}
+		if err := kv.Get(ctx, key, cur); err != nil {
+			cl.logger.ErrorLog("method", "populateExistingTLSConfig",
+				"msg", fmt.Sprintf("error getting cluster with key [%s] in API server pre-commit hook for update cluster", key),
+				"error", err)
+			return r, false, err
+		}
+		r.Spec.Certs = cur.Spec.Certs
+		// decrypt key as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty key in that case
+		if err := cur.ApplyStorageTransformer(context.Background(), false); err != nil {
+			cl.logger.ErrorLog("method", "populateExistingTLSConfig", "msg", "error decrypting key field", "error", err)
+			return r, false, err
+		}
+		r.Spec.Key = cur.Spec.Key
+		// Add a comparator for CAS
+		cl.logger.InfoLog("method", "populateExistingTLSConfig", "msg", fmt.Sprintf("set the comparator version for [%s] as [%s]", key, cur.ResourceVersion))
+		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(key), "=", cur.ResourceVersion))
+		return r, true, nil
+	default:
+		cl.logger.ErrorLog("method", "populateExistingTLSConfig", "msg", fmt.Sprintf("API server hook to set TLS Config called for invalid API Operation [%s]", oper))
+		return i, false, errors.New("invalid input type")
+	}
+}
+
+// setTLSConfig is a pre-commit hook to set TLS config for API Gateway for UpdateTLSConfig action on cluster
+func (cl *clusterHooks) setTLSConfig(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	cl.logger.DebugLog("method", "setTLSConfig", "msg", "API server hook called to set TLS Config")
+	req, ok := i.(cluster.UpdateTLSConfigRequest)
+	if !ok {
+		cl.logger.ErrorLog("method", "setTLSConfig", "msg", fmt.Sprintf("API server hook to update TLS Config called for invalid object type [%#v]", i))
+		return nil, false, errors.New("invalid input type")
+	}
+	cur := &cluster.Cluster{}
+	if err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
+		clusterObj, ok := oldObj.(*cluster.Cluster)
+		if !ok {
+			return oldObj, errors.New("invalid input type")
+		}
+		// if only cert is being updated use existing key
+		// decrypt TLS key as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty key in that case
+		if err := clusterObj.ApplyStorageTransformer(context.Background(), false); err != nil {
+			cl.logger.ErrorLog("method", "setTLSConfig", "msg", "error decrypting TLS key field", "error", err)
+			return clusterObj, err
+		}
+		tlsKey := clusterObj.Spec.Key
+		// if key is also being updated
+		if req.Key != "" {
+			tlsKey = req.Key
+		}
+		_, err := tls.X509KeyPair([]byte(req.Certs), []byte(tlsKey))
+		if err != nil {
+			cl.logger.ErrorLog("method", "setTLSConfig", "msg", "error parsing cert and key", "error", err)
+			return oldObj, err
+		}
+		clusterObj.Spec.Certs = req.Certs
+		clusterObj.Spec.Key = tlsKey
+		// encrypt TLS key as it is stored as secret
+		if err := clusterObj.ApplyStorageTransformer(ctx, true); err != nil {
+			cl.logger.ErrorLog("method", "setTLSConfig", "msg", "error encrypting TLS key field", "error", err)
+			return clusterObj, err
+		}
+		genID, err := strconv.ParseInt(clusterObj.GenerationID, 10, 64)
+		if err != nil {
+			cl.logger.ErrorLog("method", "setTLSConfig", "msg", "error parsing generation ID", "error", err)
+			return clusterObj, err
+		}
+		clusterObj.GenerationID = fmt.Sprintf("%d", genID+1)
+		return clusterObj, nil
+	}); err != nil {
+		cl.logger.ErrorLog("method", "setTLSConfig", "msg", "error updating cert and key", "error", err)
+		return nil, false, err
+	}
+	// decrypt TLS key before returning. Create a copy as cur is pointing to an object in API server cache.
+	ret, err := cur.Clone(nil)
+	if err != nil {
+		cl.logger.ErrorLog("method", "setTLSConfig", "msg", "error creating a copy of cluster obj", "error", err)
+		return nil, false, err
+	}
+	cluster := ret.(*cluster.Cluster)
+	cluster.Spec.Key = ""
+	cl.logger.InfoLog("method", "setTLSConfig", "msg", "Cluster TLS Config has been updated")
+	return *cluster, false, nil
+}
+
 func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	r := clusterHooks{}
 	r.logger = logger.WithContext("Service", "ClusterHooks")
@@ -257,9 +355,11 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("Node", apiserver.CreateOper).GetRequestType().WithValidate(r.validateNodeConfig)
 	svc.GetCrudService("Node", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateNodeConfig)
 	svc.GetCrudService("Cluster", apiserver.CreateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).GetRequestType().WithValidate(r.validateClusterConfig)
-	svc.GetCrudService("Cluster", apiserver.UpdateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).GetRequestType().WithValidate(r.validateClusterConfig)
+	svc.GetCrudService("Cluster", apiserver.UpdateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).WithPreCommitHook(r.populateExistingTLSConfig).GetRequestType().WithValidate(r.validateClusterConfig)
 	// hook to set bootstrap flag
 	svc.GetMethod("AuthBootstrapComplete").WithPreCommitHook(r.setAuthBootstrapFlag)
+	// hook to implement update TLS Config action
+	svc.GetMethod("UpdateTLSConfig").WithPreCommitHook(r.setTLSConfig)
 	// register hook to create default roles
 	svc.GetCrudService("Tenant", apiserver.CreateOper).WithPreCommitHook(r.createDefaultRoles)
 	svc.GetCrudService("Tenant", apiserver.DeleteOper).WithPreCommitHook(r.deleteDefaultRoles)

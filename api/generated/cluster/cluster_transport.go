@@ -730,3 +730,37 @@ func EncodeGrpcRespStorageInfo(ctx context.Context, response interface{}) (inter
 func DecodeGrpcRespStorageInfo(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPUpdateTLSConfigRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPUpdateTLSConfigRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req UpdateTLSConfigRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqUpdateTLSConfigRequest encodes GRPC request
+func EncodeGrpcReqUpdateTLSConfigRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UpdateTLSConfigRequest)
+	return req, nil
+}
+
+// DecodeGrpcReqUpdateTLSConfigRequest decodes GRPC request
+func DecodeGrpcReqUpdateTLSConfigRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*UpdateTLSConfigRequest)
+	return req, nil
+}
+
+// EncodeGrpcRespUpdateTLSConfigRequest encodes GRC response
+func EncodeGrpcRespUpdateTLSConfigRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespUpdateTLSConfigRequest decodes GRPC response
+func DecodeGrpcRespUpdateTLSConfigRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

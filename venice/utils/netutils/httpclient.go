@@ -3,6 +3,7 @@ package netutils
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -33,6 +34,13 @@ func NewHTTPClient() *HTTPClient {
 // WithContext sets context of the client
 func (hc *HTTPClient) WithContext(ctx context.Context) {
 	hc.ctx = ctx
+}
+
+// WithTLSConfig sets TLS config of the client
+func (hc *HTTPClient) WithTLSConfig(config *tls.Config) {
+	hc.c.Transport = &http.Transport{
+		TLSClientConfig: config,
+	}
 }
 
 // SetHeader adds/updates a header field

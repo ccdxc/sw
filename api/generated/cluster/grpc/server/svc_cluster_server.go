@@ -73,6 +73,7 @@ type eClusterV1Endpoints struct {
 	fnAutoUpdateNode        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateSmartNIC    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateTenant      func(ctx context.Context, t interface{}) (interface{}, error)
+	fnUpdateTLSConfig       func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchCluster  func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchNode     func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
@@ -101,6 +102,10 @@ func (s *sclusterSvc_clusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 			err := kvs.ListFiltered(ctx, key, &into, *options)
 			if err != nil {
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				return nil, err
+			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
 				return nil, err
 			}
 			return into, nil
@@ -441,6 +446,11 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/tenants/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsClusterV1.fnUpdateTLSConfig = srv.AddMethod("UpdateTLSConfig",
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.UpdateTLSConfigRequest"], pkgMessages["cluster.Cluster"], "cluster", "UpdateTLSConfig")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster"), nil
+		}).HandleInvocation
+
 		s.endpointsClusterV1.fnAutoWatchCluster = pkgMessages["cluster.Cluster"].WatchFromKv
 
 		s.endpointsClusterV1.fnAutoWatchNode = pkgMessages["cluster.Node"].WatchFromKv
@@ -543,7 +553,14 @@ func (s *sclusterSvc_clusterBackend) regWatchersFunc(ctx context.Context, logger
 					}
 					in := cin.(*cluster.Cluster)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "cluster")
-
+					{
+						txin, err := cluster.StorageClusterTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to Cluster")
+						}
+						obj := txin.(cluster.Cluster)
+						in = &obj
+					}
 					strEvent := &cluster.AutoMsgClusterWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,
@@ -1208,6 +1225,14 @@ func (e *eClusterV1Endpoints) AutoUpdateTenant(ctx context.Context, t cluster.Te
 		return r.(cluster.Tenant), err
 	}
 	return cluster.Tenant{}, err
+
+}
+func (e *eClusterV1Endpoints) UpdateTLSConfig(ctx context.Context, t cluster.UpdateTLSConfigRequest) (cluster.Cluster, error) {
+	r, err := e.fnUpdateTLSConfig(ctx, t)
+	if err == nil {
+		return r.(cluster.Cluster), err
+	}
+	return cluster.Cluster{}, err
 
 }
 

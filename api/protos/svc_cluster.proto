@@ -58,6 +58,14 @@ service ClusterV1 {
      Response: "Cluster"
     };
 
+    // Action to update certs and key for API Gateway TLS.
+    option (venice.apiAction) = {
+     Object: "Cluster"
+     Action: "UpdateTLSConfig"
+     Request: "UpdateTLSConfigRequest"
+     Response: "Cluster"
+    };
+
     option (venice.apiRestService) = {
         Object: "Node"
         Method: ["put", "get", "delete", "post", "list", "watch"]

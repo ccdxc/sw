@@ -614,6 +614,11 @@ func (c *Cluster) AuthBootstrapComplete(ctx context.Context, in *cmd.ClusterAuth
 	return &c.DummyCluster, nil
 }
 
+// UpdateTLSConfig mocks setting TLS Config for API Gateway
+func (c *Cluster) UpdateTLSConfig(ctx context.Context, in *cmd.UpdateTLSConfigRequest) (*cmd.Cluster, error) {
+	return nil, errors.New("not implemented")
+}
+
 // APIClient mocks APIClient interface
 type APIClient struct {
 	DummyCluster Cluster

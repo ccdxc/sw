@@ -28,6 +28,7 @@ The following Messages are defined.
   SmartNICID
   StorageDeviceInfo
   StorageInfo
+  UpdateTLSConfigRequest
 
 The following Services and Methods are defined.
 

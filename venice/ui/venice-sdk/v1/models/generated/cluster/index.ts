@@ -58,4 +58,5 @@ export * from './cluster-tenant.model';
 export * from './cluster-tenant-list.model';
 export * from './cluster-tenant-spec.model';
 export * from './cluster-tenant-status.model';
+export * from './cluster-update-tls-config-request.model';
 export * from './googleprotobuf-any.model';

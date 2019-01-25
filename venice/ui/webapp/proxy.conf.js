@@ -1,10 +1,10 @@
 
-const URL = "192.168.69.189:10001"
+const URL = "10.7.100.108:10001"
 
 const PROXY_CONFIG =
   {
     "/login": {
-      "target": "http://" + URL + "/v1/login",
+      "target": "https://" + URL + "/v1/login",
         "secure": false,
           "pathRewrite": {
         "^/login": ""
@@ -13,7 +13,7 @@ const PROXY_CONFIG =
         "logLevel": "debug"
     },
    "/configs/**/watch/**/*": {
-      "target": "ws://" + URL + "/",
+      "target": "wss://" + URL + "/",
       "secure": false,
         "changeOrigin": false,
       "ws": true,
@@ -21,7 +21,7 @@ const PROXY_CONFIG =
       onProxyReq: (proxyReq, req, res) => req.setTimeout(0)
     },
     "/**/*": {
-      "target": "http://" + URL + "/",
+      "target": "https://" + URL + "/",
         "secure": false,
         "changeOrigin": false,
         "logLevel": "debug",

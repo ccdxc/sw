@@ -392,6 +392,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoUpdateTenantEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateTenant")(lAutoUpdateTenantEndpoint)
 	}
+	var lUpdateTLSConfigEndpoint endpoint.Endpoint
+	{
+		lUpdateTLSConfigEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"UpdateTLSConfig",
+			cluster.EncodeGrpcReqUpdateTLSConfigRequest,
+			cluster.DecodeGrpcRespCluster,
+			&cluster.Cluster{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lUpdateTLSConfigEndpoint = trace.ClientEndPoint("ClusterV1:UpdateTLSConfig")(lUpdateTLSConfigEndpoint)
+	}
 	return cluster.EndpointsClusterV1Client{
 		Client: cluster.NewClusterV1Client(conn),
 
@@ -421,6 +435,7 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoUpdateNodeEndpoint:        lAutoUpdateNodeEndpoint,
 		AutoUpdateSmartNICEndpoint:    lAutoUpdateSmartNICEndpoint,
 		AutoUpdateTenantEndpoint:      lAutoUpdateTenantEndpoint,
+		UpdateTLSConfigEndpoint:       lUpdateTLSConfigEndpoint,
 	}
 }
 
@@ -536,6 +551,15 @@ func (a *grpcObjClusterV1Cluster) AuthBootstrapComplete(ctx context.Context, in 
 	return a.client.AuthBootstrapComplete(nctx, in)
 }
 
+func (a *grpcObjClusterV1Cluster) UpdateTLSConfig(ctx context.Context, in *cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{UpdateTLSConfig UpdateTLSConfigRequest Cluster}", "oper", "UpdateTLSConfig")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.UpdateTLSConfig(nctx, in)
+}
+
 func (a *grpcObjClusterV1Cluster) Allowed(oper apiserver.APIOperType) bool {
 	return true
 }
@@ -620,6 +644,12 @@ func (a *restObjClusterV1Cluster) AuthBootstrapComplete(ctx context.Context, in 
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AuthBootstrapCompleteCluster(ctx, in)
+}
+func (a *restObjClusterV1Cluster) UpdateTLSConfig(ctx context.Context, in *cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.UpdateTLSConfigCluster(ctx, in)
 }
 
 type grpcObjClusterV1Node struct {

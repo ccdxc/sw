@@ -8,6 +8,7 @@ package monitoring
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -4373,7 +4374,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchEventPolicy(ctx context.Conte
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -4492,7 +4495,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchStatsPolicy(ctx context.Conte
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -4643,7 +4648,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchFwlogPolicy(ctx context.Conte
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -4794,7 +4801,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchFlowExportPolicy(ctx context.
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -4913,7 +4922,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchAlert(ctx context.Context, op
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -5064,7 +5075,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchAlertPolicy(ctx context.Conte
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -5215,7 +5228,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchAlertDestination(ctx context.
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -5366,7 +5381,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchMirrorSession(ctx context.Con
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -5517,7 +5534,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchTroubleshootingSession(ctx co
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -5652,7 +5671,9 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchTechSupportRequest(ctx contex
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -5689,26 +5710,38 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchTechSupportRequest(ctx contex
 
 // MakeMonitoringV1RestClientEndpoints make REST client endpoints
 func MakeMonitoringV1RestClientEndpoints(instance string) (EndpointsMonitoringV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return EndpointsMonitoringV1RestClient{
 		instance: instance,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 
 }
 
 // MakeMonitoringV1StagedRestClientEndpoints makes staged REST client endpoints
 func MakeMonitoringV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsMonitoringV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return EndpointsMonitoringV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 }

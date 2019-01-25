@@ -4,6 +4,7 @@ package events
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -15,7 +16,7 @@ import (
 	"time"
 
 	es "github.com/olivere/elastic"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
@@ -862,9 +863,10 @@ func TestEventsRESTEndpoints(t *testing.T) {
 		ti.logger.Infof("executing TC: %v, %v, %v", rr.name, rr.requestURI, rr.requestBody)
 		switch {
 		case "events" == rr.requestURI: // */events/
-			url := fmt.Sprintf("http://%s/events/v1/%s", apiGwAddr, rr.requestURI)
+			url := fmt.Sprintf("https://%s/events/v1/%s", apiGwAddr, rr.requestURI)
 			resp := evtsapi.EventList{}
 			httpClient := netutils.NewHTTPClient()
+			httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 			httpClient.SetHeader("Authorization", rr.authzHdr)
 
 			// both GET and POST should behave the same
@@ -892,7 +894,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					// make sure self-link works
 					selfLink := obtainedEvt.GetSelfLink()
 					evt := evtsapi.Event{}
-					statusCode, err := httpClient.Req("GET", fmt.Sprintf("http://%s/%s", apiGwAddr, selfLink), nil, &evt)
+					statusCode, err := httpClient.Req("GET", fmt.Sprintf("https://%s/%s", apiGwAddr, selfLink), nil, &evt)
 					Assert(t, err == nil && statusCode == http.StatusOK, "failed to get the event using self-link: %v, status: %v, err: %v", selfLink, statusCode, err)
 					Assert(t, evt.GetUUID() == obtainedEvt.GetUUID(), "obtained: %v, expected: %v", evt.GetUUID(), obtainedEvt.GetUUID())
 
@@ -904,9 +906,10 @@ func TestEventsRESTEndpoints(t *testing.T) {
 				}
 			}
 		case regexp.MustCompile("events/*").MatchString(rr.requestURI): // */events/{uuid}
-			url := fmt.Sprintf("http://%s/events/v1/%s", apiGwAddr, rr.requestURI)
+			url := fmt.Sprintf("https://%s/events/v1/%s", apiGwAddr, rr.requestURI)
 			resp := evtsapi.Event{}
 			httpClient := netutils.NewHTTPClient()
+			httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 			httpClient.SetHeader("Authorization", authzHeader)
 
 			AssertEventually(t,
@@ -924,7 +927,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			// make sure self-link works
 			selfLink := resp.GetSelfLink()
 			evt := evtsapi.Event{}
-			statusCode, err := httpClient.Req("GET", fmt.Sprintf("http://%s/%s", apiGwAddr, selfLink), nil, &evt)
+			statusCode, err := httpClient.Req("GET", fmt.Sprintf("https://%s/%s", apiGwAddr, selfLink), nil, &evt)
 			Assert(t, err == nil && statusCode == http.StatusOK, "failed to get the event using self-link: %v, status: %v, err: %v", selfLink, statusCode, err)
 			Assert(t, evt.GetUUID() == resp.GetUUID(), "obtained: %v, expected: %v", evt.GetUUID(), resp.GetUUID())
 		}
@@ -1202,10 +1205,11 @@ func TestEventsAlertEngine(t *testing.T) {
 	}
 
 	for _, at := range alertTests {
-		aURL := fmt.Sprintf("http://%s/configs/monitoring/v1/alerts/%s", apiGwAddr, at.alert.GetName())
-		apURL := fmt.Sprintf("http://%s/configs/monitoring/v1/alertPolicies/%s", apiGwAddr, at.alert.Status.Reason.GetPolicyID())
+		aURL := fmt.Sprintf("https://%s/configs/monitoring/v1/alerts/%s", apiGwAddr, at.alert.GetName())
+		apURL := fmt.Sprintf("https://%s/configs/monitoring/v1/alertPolicies/%s", apiGwAddr, at.alert.Status.Reason.GetPolicyID())
 
 		httpClient := netutils.NewHTTPClient()
+		httpClient.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 		httpClient.SetHeader("Authorization", authzHeader)
 
 		// check alert policy before update

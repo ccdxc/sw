@@ -8,6 +8,7 @@ package cluster
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -68,6 +69,7 @@ type EndpointsClusterV1Client struct {
 	AutoUpdateNodeEndpoint        endpoint.Endpoint
 	AutoUpdateSmartNICEndpoint    endpoint.Endpoint
 	AutoUpdateTenantEndpoint      endpoint.Endpoint
+	UpdateTLSConfigEndpoint       endpoint.Endpoint
 }
 
 // EndpointsClusterV1RestClient is the REST client
@@ -109,6 +111,7 @@ type EndpointsClusterV1RestClient struct {
 	AutoWatchSmartNICEndpoint     endpoint.Endpoint
 	AutoWatchSvcClusterV1Endpoint endpoint.Endpoint
 	AutoWatchTenantEndpoint       endpoint.Endpoint
+	UpdateTLSConfigEndpoint       endpoint.Endpoint
 }
 
 // MiddlewareClusterV1Server adds middle ware to the server
@@ -144,6 +147,7 @@ type EndpointsClusterV1Server struct {
 	AutoUpdateNodeEndpoint        endpoint.Endpoint
 	AutoUpdateSmartNICEndpoint    endpoint.Endpoint
 	AutoUpdateTenantEndpoint      endpoint.Endpoint
+	UpdateTLSConfigEndpoint       endpoint.Endpoint
 
 	watchHandlerCluster  func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerNode     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
@@ -513,6 +517,20 @@ func (e EndpointsClusterV1Client) AutoUpdateTenant(ctx context.Context, in *Tena
 
 type respClusterV1AutoUpdateTenant struct {
 	V   Tenant
+	Err error
+}
+
+// UpdateTLSConfig is endpoint for UpdateTLSConfig
+func (e EndpointsClusterV1Client) UpdateTLSConfig(ctx context.Context, in *UpdateTLSConfigRequest) (*Cluster, error) {
+	resp, err := e.UpdateTLSConfigEndpoint(ctx, in)
+	if err != nil {
+		return &Cluster{}, err
+	}
+	return resp.(*Cluster), nil
+}
+
+type respClusterV1UpdateTLSConfig struct {
+	V   Cluster
 	Err error
 }
 
@@ -1117,6 +1135,28 @@ func MakeClusterV1AutoUpdateTenantEndpoint(s ServiceClusterV1Server, logger log.
 	return trace.ServerEndpoint("ClusterV1:AutoUpdateTenant")(f)
 }
 
+// UpdateTLSConfig implementation on server Endpoint
+func (e EndpointsClusterV1Server) UpdateTLSConfig(ctx context.Context, in UpdateTLSConfigRequest) (Cluster, error) {
+	resp, err := e.UpdateTLSConfigEndpoint(ctx, in)
+	if err != nil {
+		return Cluster{}, err
+	}
+	return *resp.(*Cluster), nil
+}
+
+// MakeClusterV1UpdateTLSConfigEndpoint creates  UpdateTLSConfig endpoints for the service
+func MakeClusterV1UpdateTLSConfigEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*UpdateTLSConfigRequest)
+		v, err := s.UpdateTLSConfig(ctx, *req)
+		return respClusterV1UpdateTLSConfig{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:UpdateTLSConfig")(f)
+}
+
 func (e EndpointsClusterV1Server) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) error {
 	return e.svcWatchHandlerClusterV1(in, stream)
 }
@@ -1225,6 +1265,7 @@ func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) E
 		AutoUpdateNodeEndpoint:        MakeClusterV1AutoUpdateNodeEndpoint(s, logger),
 		AutoUpdateSmartNICEndpoint:    MakeClusterV1AutoUpdateSmartNICEndpoint(s, logger),
 		AutoUpdateTenantEndpoint:      MakeClusterV1AutoUpdateTenantEndpoint(s, logger),
+		UpdateTLSConfigEndpoint:       MakeClusterV1UpdateTLSConfigEndpoint(s, logger),
 
 		watchHandlerCluster:  MakeAutoWatchClusterEndpoint(s, logger),
 		watchHandlerNode:     MakeAutoWatchNodeEndpoint(s, logger),
@@ -1600,6 +1641,19 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateTenant(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTenant(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) UpdateTLSConfig(ctx context.Context, in *UpdateTLSConfigRequest) (resp *Cluster, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "UpdateTLSConfig", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.UpdateTLSConfig(ctx, in)
 	return
 }
 
@@ -2021,6 +2075,19 @@ func (m loggingClusterV1MiddlewareServer) AutoUpdateTenant(ctx context.Context, 
 	resp, err = m.next.AutoUpdateTenant(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) UpdateTLSConfig(ctx context.Context, in UpdateTLSConfigRequest) (resp Cluster, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "UpdateTLSConfig", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.UpdateTLSConfig(ctx, in)
+	return
+}
 
 func (m loggingClusterV1MiddlewareServer) AutoWatchSvcClusterV1(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSvcClusterV1Server) (err error) {
 	defer func(begin time.Time) {
@@ -2289,6 +2356,11 @@ func makeURIClusterV1AutoWatchTenantWatchOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/cluster/v1", "/watch/tenants")
 }
 
+//
+func makeURIClusterV1UpdateTLSConfigCreateOper(in *UpdateTLSConfigRequest) string {
+	return fmt.Sprint("/configs/cluster/v1", "/cluster/UpdateTLSConfig")
+}
+
 // AutoAddCluster CRUD method for Cluster
 func (r *EndpointsClusterV1RestClient) AutoAddCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
 	return nil, errors.New("not allowed")
@@ -2373,7 +2445,9 @@ func (r *EndpointsClusterV1RestClient) AutoWatchCluster(ctx context.Context, opt
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -2422,6 +2496,26 @@ func (r *EndpointsClusterV1RestClient) AuthBootstrapCompleteCluster(ctx context.
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
 	ret, err := decodeHTTPrespClusterV1AuthBootstrapComplete(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Cluster), err
+}
+
+func (r *EndpointsClusterV1RestClient) UpdateTLSConfigCluster(ctx context.Context, in *UpdateTLSConfigRequest) (*Cluster, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIClusterV1UpdateTLSConfigCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	ret, err := decodeHTTPrespClusterV1UpdateTLSConfig(ctx, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -2544,7 +2638,9 @@ func (r *EndpointsClusterV1RestClient) AutoWatchNode(ctx context.Context, option
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -2695,7 +2791,9 @@ func (r *EndpointsClusterV1RestClient) AutoWatchHost(ctx context.Context, option
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -2830,7 +2928,9 @@ func (r *EndpointsClusterV1RestClient) AutoWatchSmartNIC(ctx context.Context, op
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -2981,7 +3081,9 @@ func (r *EndpointsClusterV1RestClient) AutoWatchTenant(ctx context.Context, opti
 	}
 	header := http.Header{}
 	r.updateHTTPHeader(ctx, &header)
-	conn, hresp, err := websocket.DefaultDialer.Dial(path, header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
 	}
@@ -3018,26 +3120,38 @@ func (r *EndpointsClusterV1RestClient) AutoWatchTenant(ctx context.Context, opti
 
 // MakeClusterV1RestClientEndpoints make REST client endpoints
 func MakeClusterV1RestClientEndpoints(instance string) (EndpointsClusterV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return EndpointsClusterV1RestClient{
 		instance: instance,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 
 }
 
 // MakeClusterV1StagedRestClientEndpoints makes staged REST client endpoints
 func MakeClusterV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsClusterV1RestClient, error) {
-	if !strings.HasPrefix(instance, "http") {
-		instance = "http://" + instance
+	if !strings.HasPrefix(instance, "https") {
+		instance = "https://" + instance
 	}
 
 	return EndpointsClusterV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client:   http.DefaultClient,
+		client: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 	}, nil
 }

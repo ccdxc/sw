@@ -22,6 +22,20 @@ var CreateClusterFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "certs",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "key",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "ntp-servers",
 		Type:   "StringSlice",
 		Help:   "",

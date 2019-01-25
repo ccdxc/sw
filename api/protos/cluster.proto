@@ -67,6 +67,12 @@ message ClusterSpec {
     // set to Pending state and it requires Manual approval to be admitted
     // into the cluster.
     bool AutoAdmitNICs          = 4 [(gogoproto.jsontag) = "auto-admit-nics,omitempty"];
+
+    // Certs is the pem encoded certificate bundle used for API Gateway TLS
+    string Certs                = 5 [(gogoproto.jsontag) = "certs,omitempty"];
+
+    // Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA
+    string Key                  = 6 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "key,omitempty"];
 }
 
 // ClusterStatus contains the current state of the Cluster.
@@ -95,6 +101,25 @@ message ClusterAuthBootstrapRequest {
                             (gogoproto.nullable) = false,
                             (gogoproto.jsontag) = "meta,omitempty"];
     option (venice.objectPrefix) = {Singleton: "cluster"};
+}
+
+// UpdateTLSConfigRequest is to update certs and key for API Gateway TLS
+message UpdateTLSConfigRequest {
+    option (venice.objectPrefix) = {Singleton: "cluster"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Certs is the pem encoded certificate bundle used for API Gateway TLS
+    string Certs        = 3 [(gogoproto.jsontag) = "certs,omitempty"];
+
+    // Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA
+    string Key          = 4 [(gogoproto.jsontag) = "key,omitempty"];
 }
 
 //---------------------------------- NODE -------------------------------------------
