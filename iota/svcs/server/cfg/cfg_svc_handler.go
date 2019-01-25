@@ -156,7 +156,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		Spec: cluster.TenantSpec{},
 	}
 
-	_, response, err := common.HTTPPost(tenantURL, c.AuthToken, &tenant)
+	_, response, err := common.HTTPSPost(tenantURL, c.AuthToken, &tenant)
 	log.Infof("CFG SVC | INFO | Creating Tenant | Received Response Msg: %v", response)
 	if err != nil {
 		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to create a tenant. Received Response Msg: %v. Err: %v", response, err)
@@ -183,7 +183,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		},
 	}
 
-	_, response, err = common.HTTPPost(authPolicyURL, "", &authPolicy)
+	_, response, err = common.HTTPSPost(authPolicyURL, "", &authPolicy)
 	log.Infof("CFG SVC | INFO | Creating Authentication Policy | Received Response Msg: %v", response)
 	if err != nil {
 		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to create authentication policy. Received Response Msg: %v. Err: %v", response, err)
@@ -208,7 +208,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		},
 	}
 
-	_, response, err = common.HTTPPost(userURL, "", &adminUser)
+	_, response, err = common.HTTPSPost(userURL, "", &adminUser)
 	log.Infof("CFG SVC | INFO | Creating Admin User | Received Response Msg: %v", response)
 	if err != nil {
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
@@ -231,7 +231,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		},
 	}
 
-	_, response, err = common.HTTPPost(roleBindingURL, "", &adminRole)
+	_, response, err = common.HTTPSPost(roleBindingURL, "", &adminRole)
 	log.Infof("CFG SVC | INFO | Assigning Admin role | Received Response Msg: %v", response)
 	if err != nil {
 		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to assign admin role. Received Response Msg: %v. Err: %v", response, err)
@@ -246,7 +246,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		Tenant:   "default",
 	}
 
-	cookies, response, err := common.HTTPPost(loginURL, "", &login)
+	cookies, response, err := common.HTTPSPost(loginURL, "", &login)
 	log.Infof("CFG SVC | INFO | Logging in as admin | Received Response Msg: %v", response)
 	log.Infof("CFG SVC | INFO | Logging in as admin | Received Cookies. %v", cookies)
 
@@ -287,7 +287,7 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 			}
 
 			// ToDO Add Error checking and returns back. This is a hack to avoid 409s due to CMD auto creating host objects.
-			_, response, err := common.HTTPPost(hostURL, c.AuthToken, hostObj)
+			_, response, err := common.HTTPSPost(hostURL, c.AuthToken, hostObj)
 			if err != nil {
 				log.Errorf("CFG SVC | DEBUG | Failed to create host object. %v. URL: %v. Response: %v. Err: %v", hostObj, hostURL, response, err)
 				log.Errorf("CFG SVC | DEBUG | Using Auth Token: %v", c.AuthToken)
@@ -304,7 +304,7 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 				return req, nil
 			}
 
-			_, response, err := common.HTTPPost(workloadURL, c.AuthToken, workloadObj)
+			_, response, err := common.HTTPSPost(workloadURL, c.AuthToken, workloadObj)
 			if err != nil {
 				log.Errorf("CFG SVC | DEBUG | Failed to create host object. %v. URL: %v. Response: %v. Err: %v", workloadObj, hostURL, response, err)
 				log.Errorf("CFG SVC | DEBUG | Using Auth Token: %v", c.AuthToken)
@@ -321,7 +321,7 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 				return req, nil
 			}
 
-			_, response, err := common.HTTPPost(sgPolicyURL, c.AuthToken, sgPolicyObj)
+			_, response, err := common.HTTPSPost(sgPolicyURL, c.AuthToken, sgPolicyObj)
 			if err != nil {
 				log.Errorf("CFG SVC | DEBUG | Failed to create sg policy object. %v. URL: %v. Response: %v. Err: %v", sgPolicyObj, hostURL, response, err)
 				log.Errorf("CFG SVC | DEBUG | Using Auth Token: %v", c.AuthToken)

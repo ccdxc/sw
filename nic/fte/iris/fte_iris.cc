@@ -218,8 +218,7 @@ ctx_t::lookup_flow_objs()
         }
     } else {
         HAL_TRACE_INFO("fte: dest ep unknown");
-        if (!hal::is_forwarding_mode_host_pinned() &&
-                sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
+        if (sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
             ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
             dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
             if (dep_) {

@@ -18,7 +18,7 @@ import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.types_pb2 as types_pb2
 
 def GetNodePersonalityByNicType(nic_type):
-    if nic_type == 'pensando':
+    if nic_type in ['pensando', 'naples']:
         return topo_pb2.PERSONALITY_NAPLES
     elif nic_type == 'mellanox':
         return topo_pb2.PERSONALITY_MELLANOX
@@ -52,8 +52,9 @@ class Node(object):
         self.__data_intfs = [ "eth2", "eth3" ]
         self.__host_intfs = []
         self.__host_if_alloc_idx = 0
-        self.__esx_username = getattr(self.__inst, "EsxUsername", "")
-        self.__esx_password = getattr(self.__inst, "EsxPassword", "")
+        self.__tb_params = store.GetTestbed().GetProvisionParams()
+        self.__esx_username = getattr(self.__tb_params, "EsxUsername", "")
+        self.__esx_password = getattr(self.__tb_params, "EsxPassword", "")
         self.__esx_ctrl_vm_ip = getattr(self.__inst, "esx_ctrl_vm_ip", "")
 
         if self.IsWorkloadNode():
@@ -165,7 +166,7 @@ class Node(object):
                 if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
                 peer_msg = msg.venice_config.venice_peers.add()
                 peer_msg.host_name = n.Name()
-                peer_msg.ip_address = str(n.ControlIpAddress())
+                peer_msg.ip_address = str(n.MgmtIpAddress())
         else:
             if self.IsThirdParty():
                 msg.third_party_nic_config.nic_type = self.GetNicType()
@@ -181,7 +182,8 @@ class Node(object):
                     if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
                     msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
 
-                msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
+                #msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
+                msg.naples_config.naples_ip_address = self.__nic_int_mgmt_ip
 
                 msg.naples_config.naples_username = "root"
                 msg.naples_config.naples_password = "pen123"

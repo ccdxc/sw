@@ -56,9 +56,11 @@ class _Testbed:
         self.__bm_count = 0
         self.__vm_count = 0
         for instance in self.__tbspec.Instances:
-            self.__os = getattr(instance, "NodeOs", "linux")
             if instance.Type == "bm":
                 self.__bm_count += 1
+                if self.__os:
+                    assert(self.__os == getattr(instance, "NodeOs", "linux"))
+                self.__os = getattr(instance, "NodeOs", "linux")
             elif instance.Type == "vm":
                 self.__vm_count += 1
             else:
@@ -77,6 +79,11 @@ class _Testbed:
 
     def __read_testbed_json(self):
         self.__tbspec = parser.JsonParse(GlobalOptions.testbed_json)
+        for instance in self.__tbspec.Instances:
+            if hasattr(self.__tbspec.Provision.Vars, 'BmOs') and instance.Type == "bm":
+                instance.NodeOs = self.__tbspec.Provision.Vars.BmOs
+            if hasattr(self.__tbspec.Provision.Vars, 'VmOs') and instance.Type == "vm":
+                instance.NodeOs = self.__tbspec.Provision.Vars.VmOs
         return
 
     def __get_full_path(self, path):
@@ -103,13 +110,13 @@ class _Testbed:
             node_msg = msg.nodes.add()
             node_msg.type = topo_pb2.TESTBED_NODE_TYPE_SIM
             node_msg.ip_address = socket.gethostbyname(instance.NodeMgmtIP)
-            node_os = getattr(instance, 'NodeOs', None)
+            node_os = getattr(instance, 'NodeOs', 'linux')
             if node_os == "freebsd":
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_FREEBSD
             elif node_os == "esx":
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_ESX
-                node_msg.esx_username = instance.EsxUsername
-                node_msg.esx_password = instance.EsxPassword
+                node_msg.esx_username = self.__tbspec.Provision.Vars.EsxUsername
+                node_msg.esx_password = self.__tbspec.Provision.Vars.EsxPassword
             else:
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
         return msg
@@ -148,22 +155,27 @@ class _Testbed:
             if not hasattr(instance, "NicMgmtIP") or instance.NicMgmtIP is None or instance.NicMgmtIP == '':
                 instance.NicMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")
 
-            if self.__get_instance_nic_type(instance) == "pensando":
+            instance.NicIntMgmtIP = getattr(instance, "NicIntMgmtIP", "169.254.0.1")
+            if self.__get_instance_nic_type(instance) in ["pensando", "naples"]:
                 #if instance.NodeOs == "esx":
                 #    cmd.extend([ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ])
                 #else:
                 cmd.extend([ "%s/iota/scripts/boot_naples_v2.py" % GlobalOptions.topdir ])
                 cmd.extend(["--console-ip", instance.NicConsoleIP])
-                cmd.extend(["--mnic-ip", instance.NicMgmtIP])
+                cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])
                 cmd.extend(["--console-port", instance.NicConsolePort])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
-                cmd.extend(["--cimc-ip", instance.NodeCimcIP])
+                if getattr(instance,"NodeCimcIP", None) is None:
+                    #hack for now
+                    cmd.extend(["--cimc-ip", getattr(instance,"Name")])
+                else:
+                    cmd.extend(["--cimc-ip", getattr(instance,"NodeCimcIP", "1.2.3.4")])
                 cmd.extend(["--image", "%s/nic/naples_fw.tar" % GlobalOptions.topdir])
                 cmd.extend(["--mode", "%s" % api.GetNicMode()])
                 if instance.NodeOs == "esx":
                     cmd.extend(["--esx-script", ESX_CTRL_VM_BRINGUP_SCRIPT])
-                    cmd.extend(["--host-username", instance.EsxUsername])
-                    cmd.extend(["--host-password", instance.EsxPassword])
+                    cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername])
+                    cmd.extend(["--host-password", self.__tbspec.Provision.Vars.EsxPassword])
                 cmd.extend(["--drivers-pkg", "%s/platform/gen/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs)])
                 cmd.extend(["--gold-firmware-image", "%s/platform/goldfw/naples/naples_fw.tar" % (GlobalOptions.topdir)])
                 latest_gold_driver =  "%s/platform/hosttools/x86_64/%s/goldfw/latest/drivers-%s-eth.tar.xz" % (GlobalOptions.topdir, instance.NodeOs, instance.NodeOs)
@@ -186,15 +198,15 @@ class _Testbed:
                     logfile = "%s/%s-firmware-upgrade.log" % (GlobalOptions.logdir, instance.Name)
                     Logger.info("Updating Firmware on %s (logfile = %s)" % (instance.Name, logfile))
             else:
-                if GlobalOptions.skip_firmware_upgrade:
+                if GlobalOptions.skip_firmware_upgrade or instance.Type == "vm":
                     continue
                 cmd.extend([ "%s/iota/scripts/reboot_node.py" % GlobalOptions.topdir ])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
-                cmd.extend(["--cimc-ip", instance.NodeCimcIP])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
+                cmd.extend(["--cimc-ip", getattr(instance,"NodeCimcIP", "1.2.3.4")])
                 if instance.NodeOs == "esx":
-                    cmd.extend(["--host-username", instance.EsxUsername])
-                    cmd.extend(["--host-password", instance.EsxPassword])
+                    cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername])
+                    cmd.extend(["--host-password", self.__tbspec.Provision.Vars.EsxPassword])
                 logfile = "%s/%s-%s-reboot.log" % (GlobalOptions.logdir, self.curr_ts.Name(), instance.Name)
                 Logger.info("Rebooting Node %s (logfile = %s)" % (instance.Name, logfile))
 
@@ -271,6 +283,9 @@ class _Testbed:
             Logger.error("No Nodes available in Testbed.")
             sys.exit(1)
         return inst
+
+    def GetProvisionParams(self):
+        return self.__tbspec.Provision.Vars
 
     def GetDataVlans(self):
         return copy.deepcopy(self.__vlans)

@@ -7,7 +7,7 @@ import iota.test.iris.testcases.penctl.common as common
 
 
 def __penctl_exec(node):
-    return "penctl.linux" if api.GetNodeOs(node) == "linux" else "penctl.freebsd"
+    return "penctl.linux" if api.GetNodeOs(node) in ["linux", "esx"] else "penctl.freebsd"
 
 def __installPenCtl(node):
 

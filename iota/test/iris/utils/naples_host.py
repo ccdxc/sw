@@ -27,7 +27,9 @@ def GetHostInternalMgmtInterfaces(node):
                     #iface_name = None
                     iface_name = command.stdout
                     interface_names.append(iface_name.strip("\n"))
-
+    elif api.GetNodeOs(node) == "esx":
+        #For now hardcoding.
+        return ["eth1"]
     else:
         cmd = "pciconf -l | grep chip=0x10041dd8 | cut -d'@' -f1 | sed \"s/ion/ionic/g\""
         api.Trigger_AddHostCommand(req, node, cmd)

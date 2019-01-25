@@ -1,6 +1,7 @@
 package common
 
 import (
+        "crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -49,6 +50,58 @@ func MakeHTTPHandler(handlerFunc RestAPIFunc) http.HandlerFunc {
 	}
 }
 
+// HTTPSPost performs http POST operation
+func HTTPSPost(url, token string, req interface{}) ([]*http.Cookie, string, error) {
+	// Prepend URL
+	url = fmt.Sprintf("https://%s", url)
+
+        tr := &http.Transport{
+            TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+        }
+	client := &http.Client{Transport: tr}
+	// Convert the req to json
+	jsonStr, err := json.Marshal(req)
+	if err != nil {
+		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
+		return nil, "", err
+	}
+
+	request, err := http.NewRequest(http.MethodPost, url, strings.NewReader(string(jsonStr)))
+	if err != nil {
+		log.Errorf("Error during http POST. Err: %v", err)
+		return nil, "", err
+	}
+	request.Header.Set("Content-Type", "application/json")
+
+	if len(token) > 0 {
+		bearer := fmt.Sprintf("Bearer %s", token)
+		request.Header.Set("Authorization", bearer)
+	}
+
+	log.Info("Common | HTTP POST | Posting %v to %v", string(jsonStr), url)
+	log.Infof("HTTP HEADERS: %v", request.Header)
+	res, err := client.Do(request)
+	if err != nil {
+		log.Errorf("Error during http POST. Err: %v", err)
+		return nil, "", err
+	}
+
+	// Read the entire response
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Errorf("Error during ioutil readall. Err: %v", err)
+		return res.Cookies(), "", err
+	}
+	defer res.Body.Close()
+
+	response := string(body)
+
+	if res.StatusCode != http.StatusOK {
+		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+		return res.Cookies(), response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+	}
+	return res.Cookies(), response, nil
+}
 // HTTPPost performs http POST operation
 func HTTPPost(url, token string, req interface{}) ([]*http.Cookie, string, error) {
 	// Prepend URL

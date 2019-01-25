@@ -42,7 +42,7 @@ if  [[ $1 = "--install" ]]; then
 
     echo "Installation of VIB successful..."
 else
-    cd drivers/ionic_en/ && cp Makefile_6.5 Makefile && make
+    cd drivers/ionic_en/ && cp Makefile_6.5 Makefile && make && rm -rf .build
     echo "Building drivers successfull...."
 fi
 

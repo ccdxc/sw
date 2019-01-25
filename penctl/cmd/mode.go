@@ -48,14 +48,14 @@ func init() {
 	updateCmd.AddCommand(modeManagedCmd)
 	showCmd.AddCommand(modeManagedShowCmd)
 
-	modeManagedCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or hostnames")
-	modeManagedCmd.Flags().StringVarP(&mode, "management-mode", "o", "network", "host or network managed")
-	modeManagedCmd.Flags().StringVarP(&networkMode, "network-mode", "k", "oob", "oob or inband")
-	modeManagedCmd.Flags().StringVarP(&priMac, "primary-mac", "p", "", "Primary mac")
-	modeManagedCmd.Flags().StringVarP(&hostname, "hostname", "n", "", "Host name")
-	modeManagedCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
-	modeManagedCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
-	modeManagedCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
+	modeManagedCmd.Flags().StringSliceVarP(&controllers, "controllers", "", make([]string, 0), "List of controller IP addresses or hostnames")
+	modeManagedCmd.Flags().StringVarP(&mode, "management-mode", "", "network", "host or network managed")
+	modeManagedCmd.Flags().StringVarP(&networkMode, "network-mode", "", "oob", "oob or inband")
+	modeManagedCmd.Flags().StringVarP(&priMac, "primary-mac", "", "", "Primary mac")
+	modeManagedCmd.Flags().StringVarP(&hostname, "hostname", "", "", "Host name")
+	modeManagedCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "", "", "Management IP in CIDR format")
+	modeManagedCmd.Flags().StringVarP(&defaultGW, "default-gw", "", "", "Default GW for mgmt")
+	modeManagedCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "", make([]string, 0), "List of DNS servers")
 }
 
 func modeManagedCmdArgsValidator(cmd *cobra.Command, args []string) error {

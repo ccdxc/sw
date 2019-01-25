@@ -43,6 +43,7 @@ type IPClient struct {
 	doneEvent    chan bool
 	iface        string
 	ipaddress    string
+        gateway      string
 	networkMode  nmd.NetworkMode
 	mgmtVlan     uint32
 	controllers  []string
@@ -433,7 +434,19 @@ func (c *IPClient) doStaticIPConfig() error {
 	}
 
 	staticIPCommandString := staticIPCmdStr + c.ipaddress + " dev " + c.iface
-	return runCmd(staticIPCommandString)
+	if err := runCmd(staticIPCommandString); err != nil {
+            return err
+        }
+
+        if c.gateway != "" {
+            err = runCmd("ip route add default via " + c.gateway)
+            if err != nil {
+                    return err
+            }
+        }
+
+        //runCmd("usr/sbin/rdate 10.7.100.2")
+        return nil
 }
 
 func (c *IPClient) doDynamicIPConfig() error {
@@ -559,6 +572,7 @@ func (c *IPClient) Update(networkMode nmd.NetworkMode, ipconfig *cluster.IPConfi
 	c.networkMode = networkMode
 	if ipconfig != nil {
 		c.ipaddress = ipconfig.IPAddress
+                c.gateway = ipconfig.DefaultGW
 	}
 	c.mgmtVlan = mgmtVlan
 	c.hostname = hostname
