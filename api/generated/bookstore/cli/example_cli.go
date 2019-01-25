@@ -386,7 +386,31 @@ func restPutPublisher(hostname, token string, obj interface{}) error {
 }
 
 func restGetStore(hostname, tenant, token string, obj interface{}) error {
-	return fmt.Errorf("get operation not supported for Store object")
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*bookstore.Store); ok {
+		nv, err := restcl.BookstoreV1().Store().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*bookstore.StoreList); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.BookstoreV1().Store().Get(loginCtx, &objMeta)
+		if err != nil {
+			return err
+		}
+		v.Items = append(v.Items, nv)
+	}
+	return nil
+
 }
 
 func restDeleteStore(hostname, token string, obj interface{}) error {

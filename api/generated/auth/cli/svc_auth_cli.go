@@ -103,7 +103,31 @@ func restPutUser(hostname, token string, obj interface{}) error {
 }
 
 func restGetAuthenticationPolicy(hostname, tenant, token string, obj interface{}) error {
-	return fmt.Errorf("get operation not supported for AuthenticationPolicy object")
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*auth.AuthenticationPolicy); ok {
+		nv, err := restcl.AuthV1().AuthenticationPolicy().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*auth.AuthenticationPolicyList); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.AuthV1().AuthenticationPolicy().Get(loginCtx, &objMeta)
+		if err != nil {
+			return err
+		}
+		v.Items = append(v.Items, nv)
+	}
+	return nil
+
 }
 
 func restDeleteAuthenticationPolicy(hostname, token string, obj interface{}) error {

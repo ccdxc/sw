@@ -443,7 +443,31 @@ func restPutCertificate(hostname, token string, obj interface{}) error {
 }
 
 func restGetTrafficEncryptionPolicy(hostname, tenant, token string, obj interface{}) error {
-	return fmt.Errorf("get operation not supported for TrafficEncryptionPolicy object")
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*security.TrafficEncryptionPolicy); ok {
+		nv, err := restcl.SecurityV1().TrafficEncryptionPolicy().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*security.TrafficEncryptionPolicyList); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.SecurityV1().TrafficEncryptionPolicy().Get(loginCtx, &objMeta)
+		if err != nil {
+			return err
+		}
+		v.Items = append(v.Items, nv)
+	}
+	return nil
+
 }
 
 func restDeleteTrafficEncryptionPolicy(hostname, token string, obj interface{}) error {

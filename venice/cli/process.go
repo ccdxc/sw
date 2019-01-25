@@ -133,6 +133,7 @@ func patchCmd(c *cli.Context) {
 func readCmd(c *cli.Context) {
 	ctx := &context{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "read"); err != nil {
+		log.Debugf("Context: %+v\n", ctx)
 		fmt.Println(err)
 		return
 	}
@@ -150,6 +151,7 @@ func readCmd(c *cli.Context) {
 		log.Errorf("Error getting %s(s): %s", ctx.subcmd, err)
 		return
 	}
+	log.Debugf("\nGot obj %+v\nContext: %+v\n", objIf, ctx)
 
 	if ctx.dumpStruct {
 		dumpStructStdout(ctx.dumpYml, objIf)

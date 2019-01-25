@@ -54,7 +54,7 @@ func init() {
 {{if (hasExtension "venice.apiGrpcCrudService" .)}}{{$cruds := (getExtension "venice.apiGrpcCrudService" .)}}{{$svc := . }}{{range $cruds}}{{$objName := .}}
 
 func restGet{{$objName}}(hostname, tenant, token string, obj interface{}) error {
-	{{if and (isRestMethod $svc "AutoGet" .) (isRestMethod $svc "AutoList" .)}}
+	{{if or (isRestMethod $svc "AutoGet" .) (isRestMethod $svc "AutoList" .)}}
         restcl, err := apiclient.NewRestAPIClient(hostname)
         if err != nil {
                 return fmt.Errorf("cannot create REST client")
@@ -78,7 +78,15 @@ func restGet{{$objName}}(hostname, tenant, token string, obj interface{}) error 
                         return err
                 }
                 v.Items = nv
-        }{{end}}
+	}{{else if isRestMethod $svc "AutoGet" .}}
+	if v, ok := obj.(*{{$pkg}}.{{$objName}}List); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.{{$svcname}}().{{$objName}}().Get(loginCtx, &objMeta)
+                if err != nil {
+                        return err
+                }
+                v.Items = append(v.Items, nv)
+	}{{end}}
 	return nil
 	{{else}}return fmt.Errorf("get operation not supported for {{$objName}} object"){{end}}
 }
