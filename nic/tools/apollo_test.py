@@ -25,7 +25,7 @@ pkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
 
 urpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64, chksum=0) / \
-        UDP(sport=0x92BA, dport=6635, chksum=0) / MPLS(label=200, s=1) / \
+        UDP(sport=0xEE08, dport=6635, chksum=0) / MPLS(label=200, s=1) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 
