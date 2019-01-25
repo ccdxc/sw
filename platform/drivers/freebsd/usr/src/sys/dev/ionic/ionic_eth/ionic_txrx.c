@@ -799,13 +799,16 @@ ionic_get_header_size(struct txque *txq, struct mbuf *mb, uint16_t *eth_type,
 	return (0);
 }
 
+/*
+ * XXX: Combine TSO and non-TSO xmit functions.
+ */
 static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 {
 	struct txq_desc *desc;
 	struct txq_sg_desc *sg;
 	struct tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *txbuf;
-	struct mbuf *m = *m_headp;
+	struct mbuf *m;
 	bool offload = false;
 	int i, error, index, nsegs;
 	bus_dma_segment_t  seg[IONIC_MAX_TSO_SG_ENTRIES + 1]; /* Extra for the first segment. */
@@ -819,19 +822,17 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	sg = &txq->sg_ring[index];
 
 	bzero(desc, sizeof(*desc));
-	stats->pkts++;
-	stats->bytes += m->m_len;
 
-	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, m,
+	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, *m_headp,
 		seg, &nsegs, BUS_DMA_NOWAIT);
 	if (error == EFBIG) {
 		struct mbuf *newm;
 
 		stats->mbuf_defrag++;
-		newm = m_defrag(m, M_NOWAIT);
+		newm = m_defrag(*m_headp, M_NOWAIT);
 		if (newm == NULL) {
 			stats->mbuf_defrag_err++;
-			m_freem(m);
+			m_freem(*m_headp);
 			*m_headp = NULL;
 			IONIC_QUE_ERROR(txq, "failed to defrag mbuf\n");
 			return (ENOBUFS);
@@ -841,7 +842,7 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 			seg, &nsegs, BUS_DMA_NOWAIT);
 	}
 	if (error || (nsegs > IONIC_MAX_TSO_SG_ENTRIES)) {
-		m_freem(m);
+		m_freem(*m_headp);
 		*m_headp = NULL;
 		stats->dma_map_err++;
 		IONIC_QUE_ERROR(txq, "setting up dma map failed, segs %d/%d, error: %d\n",
@@ -859,7 +860,9 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 		return (ENOSPC);
 	}
 
+	m = *m_headp;
 	bus_dmamap_sync(txq->buf_tag, txbuf->dma_map, BUS_DMASYNC_PREWRITE);
+
 	txbuf->pa_addr = seg[0].ds_addr;
 	txbuf->m = m;
 	txbuf->timestamp = rdtsc();
@@ -901,6 +904,9 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 		stats->csum_offload++;
 	else
 		stats->no_csum_offload++;
+
+	stats->pkts++;
+	stats->bytes += m->m_len;
 
 	txq->head_index = (txq->head_index + 1) % txq->num_descs;
 
@@ -958,8 +964,8 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 
 static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 {
-	struct mbuf *m = *m_headp;
-	uint32_t mss = m->m_pkthdr.tso_segsz;
+	struct mbuf *m;
+	uint32_t mss;
 	struct tx_stats *stats = &txq->stats;
 	struct ionic_tx_buf *first_txbuf, *txbuf;
 	struct txq_desc *desc;
@@ -972,12 +978,13 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n",
 		txq->head_index, txq->tail_index);
 
-	if ((error = ionic_get_header_size(txq, m, &eth_type, &proto, &hdr_len))) {
+	/* XXX: once we have packet type, we don't need s/w parsing. */
+	if ((error = ionic_get_header_size(txq, *m_headp, &eth_type, &proto, &hdr_len))) {
 		IONIC_QUE_ERROR(txq, "mbuf packet discarded, type: %x proto: %x"
 			" hdr_len :%u\n", eth_type, proto, hdr_len);
-		ionic_dump_mbuf(m);
+		ionic_dump_mbuf(*m_headp);
 		stats->bad_ethtype++;
-		m_freem(m);
+		m_freem(*m_headp);
 		*m_headp = NULL;
 		return (error);
 	}
@@ -989,16 +996,16 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 	index = txq->head_index;
 	first_txbuf = &txq->txbuf[index];
 
-	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, first_txbuf->dma_map, m,
+	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, first_txbuf->dma_map, *m_headp,
 		seg, &nsegs, BUS_DMA_NOWAIT);
 	if (error == EFBIG) {
 		struct mbuf *newm;
 
 		stats->mbuf_defrag++;
-		newm = m_defrag(m, M_NOWAIT);
+		newm = m_defrag(*m_headp, M_NOWAIT);
 		if (newm == NULL) {
 			stats->mbuf_defrag_err++;
-			m_freem(m);
+			m_freem(*m_headp);
 			*m_headp = NULL;
 			IONIC_QUE_ERROR(txq, "mbuf_defrag returned NULL\n");
 			return (ENOBUFS);
@@ -1008,7 +1015,7 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 			seg, &nsegs, BUS_DMA_NOWAIT);
 	}
 	if (error || (nsegs > IONIC_MAX_TSO_SG_ENTRIES)) {
-		m_freem(m);
+		m_freem(*m_headp);
 		*m_headp = NULL;
 		stats->dma_map_err++;
 		IONIC_QUE_ERROR(txq, "setting up dma map failed, seg %d/%d , error: %d\n",
@@ -1025,6 +1032,9 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 			txq->head_index, txq->tail_index, nsegs);
 		return (ENOBUFS);
 	}
+
+	m = *m_headp;
+	mss = m->m_pkthdr.tso_segsz;
 
 	bus_dmamap_sync(txq->buf_tag, first_txbuf->dma_map, BUS_DMASYNC_PREWRITE);
 	stats->tso_max_size = max(stats->tso_max_size, m->m_pkthdr.len);

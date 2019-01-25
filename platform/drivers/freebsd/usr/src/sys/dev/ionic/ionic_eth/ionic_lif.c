@@ -558,7 +558,7 @@ void ionic_clear_rx_mode(struct net_device *netdev)
 {
 	struct lif *lif = netdev_priv(netdev);
 
-	IONIC_NETDEV_INFO(netdev, "Clearing rx mode %d\n");
+	IONIC_NETDEV_INFO(netdev, "Clearing rx mode %d\n", lif->rx_mode);
 
 	if (lif->rx_mode != 0) {
 		lif->rx_mode = 0;
@@ -704,7 +704,7 @@ int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 	}
 
 	IONIC_NETDEV_INFO(netdev, "Changed MTU %d > %d MBUF %d > %d\n",
-		if_getmtu(mtu), new_mtu, old_mbuf_size, lif->rx_mbuf_size);
+		if_getmtu(netdev), new_mtu, old_mbuf_size, lif->rx_mbuf_size);
 	if_setmtu(netdev, new_mtu);
 
 	return 0;
