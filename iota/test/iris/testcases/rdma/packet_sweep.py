@@ -59,6 +59,13 @@ def Trigger(tc):
         i = 1
         k = 2
 
+    s_port = 12340
+    e_port = s_port + tc.iterators.threads
+    if (tc.iterators.threads > 1):
+        client_bkg = True
+    else:
+        client_bkg = False
+
     while ((i < 2) and (i < k)):
         j = (i + 1) % 2
         w1 = tc.w[i]
@@ -70,12 +77,14 @@ def Trigger(tc):
         api.Logger.info("Starting ib_send_bw test from %s" % (tc.cmd_descr))
 
         # cmd for server
-        cmd = tc.iterators.command + " -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -a -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits"
-        api.Trigger_AddCommand(req, 
-                               w1.node_name, 
-                               w1.workload_name,
-                               tc.ib_prefix[i] + cmd,
-                               background = True, timeout=120)
+        for p in range(s_port, e_port):
+
+            cmd = tc.iterators.command + " -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -a -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + " -p {0}".format(p)
+            api.Trigger_AddCommand(req, 
+                                   w1.node_name, 
+                                   w1.workload_name,
+                                   tc.ib_prefix[i] + cmd,
+                                   background=True, timeout=120)
 
         # On Naples-Mellanox setups, with Mellanox as server, it takes a few seconds before the server
         # starts listening. So sleep for a few seconds before trying to start the client
@@ -86,11 +95,22 @@ def Trigger(tc):
                                cmd)
 
         # cmd for client
-        cmd = tc.iterators.command + " -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -a -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + w1.ip_address
-        api.Trigger_AddCommand(req, 
-                               w2.node_name, 
-                               w2.workload_name,
-                               tc.ib_prefix[j] + cmd, timeout=120)
+        for p in range(s_port, e_port):
+            cmd = tc.iterators.command + " -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -a -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + w1.ip_address + " -p {0}".format(p)
+            api.Trigger_AddCommand(req, 
+                                   w2.node_name, 
+                                   w2.workload_name,
+                                   tc.ib_prefix[j] + cmd, 
+                                   background=client_bkg, timeout=120)
+
+        if client_bkg:
+            # since the client is running in the background, sleep for 10 secs
+            # to allow the test to complete before verifying the result
+            cmd = 'sleep 10'
+            api.Trigger_AddCommand(req,
+                                   w1.node_name,
+                                   w1.workload_name,
+                                   cmd)
 
         i = i + 1
     # end while
@@ -113,6 +133,10 @@ def Verify(tc):
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             result = api.types.status.FAILURE
+
+        if api.Trigger_IsBackgroundCommand(cmd) and len(cmd.stderr) != 0:
+            result = api.types.status.FAILURE
+
     return result
 
 def Teardown(tc):

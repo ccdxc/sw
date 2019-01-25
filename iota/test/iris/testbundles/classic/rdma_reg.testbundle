@@ -48,6 +48,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8, 64]
+            threads  : [1]
             rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
             mtu      : [512, 1024, 2048, 4096]
@@ -60,9 +61,23 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [127]
+            threads  : [1]
             rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
             mtu      : [512, 1024, 2048, 4096]
+            transport: ['RC']
+            command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
+
+    -   name    : RC_TCPCM_Packet_Sweep_1KQPs
+        testcase: testcases.rdma.packet_sweep
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
+            mtu      : [4096]
             transport: ['RC']
             command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
 
@@ -72,6 +87,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1]
+            threads  : [1]
             rdma_cm  : [ 'yes']
             server   : [ 'yes', 'no']
             mtu      : [512, 1024, 2048, 4096]
@@ -84,6 +100,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1, 8, 64, 127]
+            threads  : [1]
             rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
             mtu      : [512, 1024, 2048, 4096]
@@ -96,6 +113,7 @@ testcases:
         iterators :
             type     : nested
             num_qp   : [1]
+            threads  : [1]
             rdma_cm  : [ 'yes']
             server   : [ 'yes', 'no']
             mtu      : [512, 1024, 2048, 4096]
