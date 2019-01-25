@@ -11,7 +11,7 @@ echo $PWD
 if  [[ $1 = "--install" ]]; then
     #Bourne shell does not have arrays, crude way to find if more than one vib exists
     i=0
-    for FILENAME in `(find -name \*.vib)`
+    for FILENAME in `(find drivers/ionic_en/build/vib/ -name \*.vib)`
     do
         i=$((i + 1))
         if [ $i -gt 1 ]; then
@@ -27,7 +27,7 @@ if  [[ $1 = "--install" ]]; then
     fi
 
 
-    vib=`(find -name \*.vib)`
+    vib=`(find drivers/ionic_en/build/vib/ -name \*.vib)`
     echo "Installing Ionic VIB echo $vib"
 
     set +e
