@@ -294,6 +294,41 @@ testcases:
         testcase: testcases.rdma.krping
         args    :
             type: remote_only
+        iterators :
+            type    : nested
+            server_inv: ['yes', 'no']
+            local_dma_lkey: ['yes', 'no']
+
+    -   name    : KRping_Sweep
+        testcase: testcases.rdma.krping
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            server_inv: ['yes']
+            local_dma_lkey: ['yes']
+#            size: [4096, 65536, 131072]
+
+#    -   name    : KRping_TxDepth
+#        testcase: testcases.rdma.krping
+#        args    :
+#            type: remote_only
+#        iterators :
+#            type    : nested
+#            server_inv: ['yes']
+#            local_dma_lkey: ['yes']
+#            txdepth: [256, 512, 1021]
+#            count: [5, 100, 2000, 10000]
+
+    -   name    : KRping_Fr
+        testcase: testcases.rdma.krping
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            fr: ['yes']
+#            txdepth: [512]
+            count: [1000]
 
     #=======================================
     # Teardown

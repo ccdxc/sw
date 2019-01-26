@@ -104,9 +104,9 @@ def Trigger(tc):
                                    background=client_bkg, timeout=120)
 
         if client_bkg:
-            # since the client is running in the background, sleep for 10 secs
+            # since the client is running in the background, sleep for 120 secs
             # to allow the test to complete before verifying the result
-            cmd = 'sleep 10'
+            cmd = 'sleep 120'
             api.Trigger_AddCommand(req,
                                    w1.node_name,
                                    w1.workload_name,

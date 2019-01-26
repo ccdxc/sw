@@ -16,7 +16,7 @@ testcases:
 
     -   name    : ping_oob_mnic0_intf
         testcase: testcases.mnic.ping_oob
-        ignore: False
+        ignore: True
         args    :
             mtu: 1500
         verifs:
