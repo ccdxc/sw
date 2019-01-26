@@ -40,12 +40,12 @@ req_tx_bktrack_sqcb2_process:
     bbeq           d.busy, 1, exit
 
     // Infinite retries if retry_ctr is set to 7
-    seq            c1, d.err_retry_ctr, 7 // Branch Delay Slot
-    tblsub.!c1     d.err_retry_ctr, 1
+    //seq            c1, d.err_retry_ctr, 7 // Branch Delay Slot
+    //tblsub.!c1     d.err_retry_ctr, 1
 
     // Check err_retry_ctr for NAK (seq error), implicit NAK 
-    seq            c1, d.err_retry_ctr, 0
-    bcf            [c1], err_completion
+    //seq            c1, d.err_retry_ctr, 0
+    //bcf            [c1], err_completion
 
     tblwr          d.busy, 1
     // Clear rnr_timeout. 
