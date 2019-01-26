@@ -13,6 +13,7 @@
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
+#include "nic/apollo/p4/include/defines.h"
 
 extern sdk_ret_t init_service_lif(void);
 
@@ -119,6 +120,50 @@ apollo_impl::key_tunneled_init_(void) {
     ret = apollo_impl_db()->key_tunneled_tbl()->insert(&key, &mask,
                                                        &data, (uint32_t *)&idx);
     return ret;
+}
+
+/**
+ * @brief    initialize egress drop stats table
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::egress_drop_stats_init_(void) {
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    initialize ingress drop stats table
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::ingress_drop_stats_init_(void) {
+    sdk_ret_t                      ret;
+    p4i_drop_stats_swkey_t         key = { 0 };
+    p4i_drop_stats_swkey_mask_t    key_mask = { 0 };
+    p4i_drop_stats_actiondata_t    data = { 0 };
+
+    for (uint32_t i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
+        key.control_metadata_p4i_drop_reason = ((uint32_t)1 << i);
+        key_mask.control_metadata_p4i_drop_reason_mask = 0xFFFFFFFF;
+        data.action_id = P4I_DROP_STATS_P4I_DROP_STATS_ID;
+        ret =
+            apollo_impl_db()->ingress_drop_stats_tbl()->insert_withid(&key,
+                                                                     &key_mask,
+                                                                     &data, i);
+        SDK_ASSERT(ret == SDK_RET_OK);
+    }
+    return ret;
+}
+
+/**
+ * @brief    initialize all the stats tables, where needed
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::stats_init_(void) {
+    ingress_drop_stats_init_();
+    egress_drop_stats_init_();
+    return SDK_RET_OK;
 }
 
 /**

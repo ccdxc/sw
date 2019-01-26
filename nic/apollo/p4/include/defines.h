@@ -53,6 +53,8 @@
 #define DROP_DST_SLOT_ID_MISS           5
 #define DROP_RVPATH_SRC_IP_MISMATCH     6
 #define DROP_RVPATH_VCN_MISMATCH        7
+#define P4I_DROP_REASON_MIN             DROP_SRC_MAC_ZERO
+#define P4I_DROP_REASON_MAX             DROP_RVPATH_VCN_MISMATCH
 
 /*****************************************************************************/
 /* flow role                                                                 */

@@ -56,9 +56,9 @@ namespace capri {
 #define TM_P4_RECIRC_QUEUE             23 /* Recirc queue in the P4 ports */
 
 #ifdef __cplusplus
-} // namespace capri
-} // namespace platform
-} // namespace sdk
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk
 #endif
 
 #endif
