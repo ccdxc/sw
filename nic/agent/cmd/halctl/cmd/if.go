@@ -552,15 +552,15 @@ func ifShowHeader() {
 	fmt.Printf("\n")
 	fmt.Printf("Id:    Interface ID         Handle: IF's handle\n")
 	fmt.Printf("Ifype: Interface type\n")
-	hdrLine := strings.Repeat("-", 30)
+	hdrLine := strings.Repeat("-", 42)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s\n",
+	fmt.Printf("%-22s%-10s%-10s\n",
 		"Id", "Handle", "IfType")
 	fmt.Println(hdrLine)
 }
 
 func ifShowOneResp(resp *halproto.InterfaceGetResponse) {
-	fmt.Printf("%-10d%-10d%-10s",
+	fmt.Printf("%-22d%-10d%-10s",
 		resp.GetSpec().GetKeyOrHandle().GetInterfaceId(),
 		resp.GetStatus().GetIfHandle(),
 		ifTypeToStr(resp.GetSpec().GetType()))

@@ -25,6 +25,8 @@
 
 #define LIF_NAME_LEN 32
 
+#define LIF_ID_INVALID      0xFFFFFFFF
+
 using intf::LifSpec;
 using intf::LifResponse;
 using intf::LifDeleteRequest;

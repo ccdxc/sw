@@ -3424,6 +3424,7 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
 {
     hal_ret_t  ret      = HAL_RET_OK;
     ep_t       *rtep_ep = NULL;
+    uint32_t   lif_id   = LIF_ID_INVALID;
 
     HAL_TRACE_DEBUG("Tunnelif create for id {}",
                     spec.key_or_handle().interface_id());
@@ -3457,6 +3458,13 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
     /* Validations for MPLSoUDP encap. Check if all addresses are v4 */
     if (hal_if->encap_type ==
          TNNL_ENC_TYPE::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
+        lif_id = g_hal_state->lif_name_id_map_find(if_tunnel_info.prop_mpls_info().lif_name());
+        if (lif_id == LIF_ID_INVALID) {
+            HAL_TRACE_ERR("LIF name not found");
+            ret = HAL_RET_IF_INFO_INVALID;
+            goto end;
+        }
+
         if ((!if_tunnel_info.prop_mpls_info().substrate_ip().v4_addr()) ||
             (!if_tunnel_info.prop_mpls_info().tunnel_dest_ip().v4_addr())) {
             HAL_TRACE_ERR("Substrate IP or Tun dest IP is not v4 type");
@@ -3532,6 +3540,7 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
         hal_if->source_gw.v4_addr = prefix.ipv4_subnet().address().v4_addr();
         MAC_UINT64_TO_ADDR(hal_if->gw_mac_da,
                            if_tunnel_info.prop_mpls_info().gw_mac_da());
+        hal_if->lif_id = lif_id;
     } else {
         ret = HAL_RET_IF_INFO_INVALID;
         HAL_TRACE_ERR("Unsupported encap type : {}", hal_if->encap_type);

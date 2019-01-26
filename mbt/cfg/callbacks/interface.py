@@ -19,9 +19,10 @@ num_uplink_ifs = 0
 max_uplink_ifs = 31
 if_id = [i for i in range(128,255)]
 uplink_if_id = []
+g_lif_names = []
 
 def PreCreateCb(data, req_spec, resp_spec):
-
+    global g_lif_names
     req_spec.request[0].key_or_handle.interface_id = random.choice(if_id)
     if_id.remove(req_spec.request[0].key_or_handle.interface_id)
 
@@ -55,6 +56,8 @@ def PreCreateCb(data, req_spec, resp_spec):
             GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_enic_info)
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_TUNNEL:
+        if (len(g_lif_names) == 0):
+            create_lif()
         req_spec.request[0].if_tunnel_info.encap_type = interface_pb2.IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS
         if (utils.mbt_v2()):
             GrpcReqRspMsg.static_generate_message(req_spec.request[0].if_tunnel_info.prop_mpls_info, ext_refs=ext_refs)
@@ -67,6 +70,8 @@ def PreCreateCb(data, req_spec, resp_spec):
         if req_spec.request[0].if_tunnel_info.prop_mpls_info.tunnel_dest_ip.ip_af == types_pb2.IP_AF_INET6:
             GrpcReqRspMsg.generate_ip_address(req_spec.request[0].if_tunnel_info.prop_mpls_info.tunnel_dest_ip, types_pb2.IP_AF_INET)
         req_spec.request[0].if_tunnel_info.prop_mpls_info.source_gw.prefix.ipv4_subnet.prefix_len = GrpcReqRspMsg.generate_ip_address(req_spec.request[0].if_tunnel_info.prop_mpls_info.source_gw.prefix.ipv4_subnet.address, types_pb2.IP_AF_INET)
+        name = random.choice(g_lif_names)
+        req_spec.request[0].if_tunnel_info.prop_mpls_info.lif_name = name[1]
 
     if req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK_PC or \
        req_spec.request[0].type == interface_pb2.IF_TYPE_UPLINK:
@@ -124,6 +129,19 @@ def create_and_get_l2seg_key():
     else:
         l2seg_key_type = getattr(kh_pb2, 'L2SegmentKeyHandle')
         return config_mgr.CreateConfigFromKeyType(l2seg_key_type)
+
+def create_lif():
+    if (utils.mbt_v2()):
+        constraints = None
+        ext_refs = {}
+        utils.create_config_from_kh('LifKeyHandle', constraints, ext_refs)
+    else:
+        key_type = getattr(kh_pb2, 'LifKeyHandle')
+        lif_object = config_mgr.GetExtRefObjectFromKey(config_mgr.CreateConfigFromKeyType(key_type))
+        msg = lif_object._msg_cache[config_mgr.ConfigObjectMeta.CREATE]
+        lif_name = [msg.request[0].key_or_handle.lif_id, msg.request[0].name] 
+        g_lif_names.append(lif_name)
+    return
 
 def PreUpdateCb(data, req_spec, resp_spec):
     if (utils.mbt_v2()):
@@ -201,6 +219,19 @@ def LifPreCreateCb(data, req_spec, resp_spec):
     req_spec.request[0].packet_filter.receive_all_multicast = False
     req_spec.request[0].rss.type = 0
     req_spec.request[0].hw_lif_id = 0
+
+def LifPostCreateCb(data, req_spec, resp_spec):
+    global g_lif_names
+    print("Reached Post Create CB")
+    lif_name = [req_spec.request[0].key_or_handle.lif_id, req_spec.request[0].name]
+    g_lif_names.append(lif_name)
+
+def LifPostDeleteCb(data, req_spec, resp_spec):
+    global g_lif_names
+    for i in range(len(g_lif_names)):
+        if g_lif_names[i][0] == req_spec.request[0].key_or_handle.lif_id:
+            del g_lif_names[i]
+            break
 
 def PostDeleteCb(data, req_spec, resp_spec):
     if_id.append(req_spec.request[0].key_or_handle.interface_id)

@@ -229,17 +229,18 @@ func lifShowSpecHeader() {
 	fmt.Printf("VStrip:      Vlan Strip Enable        VIns:        Vlan Insert Enable\n")
 	fmt.Printf("PUplink:     Pinned Uplink IF Id      RdmaEn:      RDMA Enable\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 70)
+	hdrLine := strings.Repeat("-", 85)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"Id", "PktFilter", "VStrip", "VIns", "PUplink", "RdmaEn")
+	fmt.Printf("%-10s%-20s%-10s%-10s%-10s%-14s%-10s\n",
+		"Id", "Name", "PktFilter", "VStrip", "VIns", "PUplink", "RdmaEn")
 	fmt.Println(hdrLine)
 }
 
 func lifShowSpecOneResp(resp *halproto.LifGetResponse) {
 	ifID := fmt.Sprintf("uplink-%d", resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId())
-	fmt.Printf("%-10d%-10s%-10v%-10v%-10s%-10v\n",
+	fmt.Printf("%-10d%-20s%-10s%-10v%-10v%-14s%-10v\n",
 		resp.GetSpec().GetKeyOrHandle().GetLifId(),
+		resp.GetSpec().GetName(),
 		pktfltrToStr(resp.GetSpec().GetPacketFilter()),
 		resp.GetSpec().GetVlanStripEn(),
 		resp.GetSpec().GetVlanInsertEn(),

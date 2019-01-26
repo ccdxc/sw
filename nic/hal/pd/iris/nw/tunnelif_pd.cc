@@ -9,6 +9,7 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "l2seg_pd.hpp"
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
+#include "nic/hal/pd/iris/lif/lif_pd.hpp"
 
 namespace hal {
 namespace pd {
@@ -294,7 +295,14 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
             goto fail_flag;
         // Program the VF properties table
-        ret = pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif, hal_if->if_id,
+        lif_t *lif = find_lif_by_id(hal_if->lif_id);
+        if (!lif) {
+            HAL_TRACE_ERR("LIF not found, lif_id: {}", hal_if->lif_id);
+            ret = HAL_RET_ERR;
+            goto fail_flag;
+        }
+        uint16_t vf_id = ((pd_lif_t *)(lif->pd_lif))->hw_lif_id;
+        ret = pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif, vf_id,
                                                 is_upgrade);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
             goto fail_flag;

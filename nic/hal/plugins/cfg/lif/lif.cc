@@ -916,6 +916,8 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
         rsp->mutable_rdma_data()->set_barmap_base_addr(rdma_lif_barmap_base_addr(hw_lif_id));
     }
 
+    // Add to map of lif name and PI ID
+    g_hal_state->lif_name_id_map_insert(lif->name, lif->lif_id);
     return ret;
 }
 
@@ -1152,7 +1154,7 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     dhl_entry_t           *dhl_entry  = NULL;
     lif_t                 *lif        = NULL, *lif_clone = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
-    // lif_update_app_ctxt_t *app_ctxt   = NULL;
+    lif_update_app_ctxt_t *app_ctxt   = NULL;
 
     if (cfg_ctxt == NULL) {
         HAL_TRACE_ERR("pi-lif{}:invalid cfg_ctxt", __FUNCTION__);
@@ -1162,7 +1164,7 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     lnode     = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
-    // app_ctxt  = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
+    app_ctxt  = (lif_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
 
     lif       = (lif_t *)dhl_entry->obj;
     lif_clone = (lif_t *)dhl_entry->cloned_obj;
@@ -1187,6 +1189,11 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
 
     HAL_TRACE_DEBUG("Printing IFs from clone:");
     lif_print_ifs(lif_clone);
+
+    if (app_ctxt->name_changed) {
+        g_hal_state->lif_name_id_map_delete(lif->name);
+        g_hal_state->lif_name_id_map_insert(lif_clone->name, lif_clone->lif_id);
+    }
 
     // Free PD
     pd::pd_lif_mem_free_args_init(&pd_lif_args);
@@ -1641,6 +1648,9 @@ lif_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // b. Remove object from handle id based hash table
     hal_handle_free(hal_handle);
+
+    // Remove lif name and lif id from map
+    g_hal_state->lif_name_id_map_delete(lif->name);
 
     // c. Free PI lif
     lif_cleanup(lif);
