@@ -73,14 +73,13 @@ testcases:
         args    :
             type: remote_only
 
-    # Disable this for now as its failing Intermittently
-    #-   name    : Rc_SendBw_Fml_16Sge
-    #    testcase: testcases.rdma.rc_send_bw_fml_16sge
-    #    iterators :
-    #        type    : simple
-    #        num_qp: [1, 2]
-    #    args    :
-    #        type: remote_only
+    -   name    : Rc_SendBw_Fml_16Sge
+        testcase: testcases.rdma.rc_send_bw_fml_16sge
+        iterators :
+            type    : simple
+            num_qp: [1, 2]
+        args    :
+            type: remote_only
 
     -   name    : Rc_SendBw_Only_Inline_TcpCm
         testcase: testcases.rdma.rc_send_bw_inline
@@ -118,14 +117,13 @@ testcases:
         args    :
             type: remote_only
 
-    # Disable this for now as its failing Intermittently
-    #-   name    : Rc_SendBw_Fml_16Sge_Bidir
-    #    testcase: testcases.rdma.rc_send_bw_fml_16sge_bidir
-    #    iterators :
-    #        type    : simple
-    #        num_qp: [1, 2]
-    #    args    :
-    #        type: remote_only
+    -   name    : Rc_SendBw_Fml_16Sge_Bidir
+        testcase: testcases.rdma.rc_send_bw_fml_16sge_bidir
+        iterators :
+            type    : simple
+            num_qp: [1, 2]
+        args    :
+            type: remote_only
 
     -   name    : Rc_SendLat_Only
         testcase: testcases.rdma.rc_send_lat
