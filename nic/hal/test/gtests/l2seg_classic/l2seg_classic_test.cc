@@ -183,7 +183,7 @@ TEST_F(l2seg_test, test2)
 
     hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
 
-    key.capri_intrinsic_lif = 0x23;
+    key.capri_intrinsic_lif = 0x21;
     key.vlan_tag_valid = 1;
     key.vlan_tag_vid = 2;
     inp_prop_tbl = hal::pd::g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
