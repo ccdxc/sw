@@ -148,7 +148,7 @@ create_mr:
     add         r3, d.{mr.va}.dx, r0
     phvwrpair   p.key.log_page_size, d.mr.page_size_log2, p.key.base_va, r3
     add         r3, d.{mr.length}.dx, r0
-    phvwr       p.key.len, r3[31:0]
+    phvwr       p.key.len, r3
 
     // pt_seg_size = HBM_NUM_PT_ENTRIES_PER_CACHE_LINE * lkey->hostmem_page_size
     sll         r4, HBM_NUM_PT_ENTRIES_PER_CACHE_LINE, d.mr.page_size_log2
