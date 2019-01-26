@@ -99,7 +99,6 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	ts.TestBedInfo.AllocatedVlans = vlans
 
 	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
-	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
 
 	// Run init
 	initTestBed := func(ctx context.Context) error {

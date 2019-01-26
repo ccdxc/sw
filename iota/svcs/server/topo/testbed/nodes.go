@@ -126,18 +126,46 @@ func (n *TestNode) GetNodeIP() (string, error) {
 //RestartNode Restart node
 func (n *TestNode) RestartNode() error {
 
-	runner := runner.NewRunner(n.SSHCfg)
-	addr := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
-	command := fmt.Sprintf("sudo shutdown -r now")
+	var command string
+	var addr, ip string
+	var err error
+	var sshCfg *ssh.ClientConfig
+	var nrunner *runner.Runner
 
-	runner.Run(addr, command, constants.RunCommandForeground)
+	if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
+		command = fmt.Sprintf("reboot && sleep 30")
+		sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
+		nrunner = runner.NewRunner(sshCfg)
+	} else {
+		addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
+		command = fmt.Sprintf("sudo shutdown -r now")
+		nrunner = runner.NewRunner(n.SSHCfg)
+
+	}
+
+	nrunner.Run(addr, command, constants.RunCommandForeground)
 
 	time.Sleep(3 * time.Second)
 
-	if err := n.waitForNodeUp(restartTimeout); err != nil {
+	if err = n.waitForNodeUp(restartTimeout); err != nil {
 		return err
 	}
 
+	if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		if err = n.initEsxNode(); err != nil {
+			log.Errorf("TOPO SVC | RestartNode | Init ESX node failed :  %v", err.Error())
+			return err
+		}
+	}
+
+	if ip, err = n.GetNodeIP(); err != nil {
+		log.Errorf("TOPO SVC | Restart node failed")
+		return fmt.Errorf("TOPO SVC | Failed to get Node IP")
+	}
+
+	n.Node.IpAddress = ip
+	addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
 	sshclient, err := ssh.Dial("tcp", addr, n.SSHCfg)
 	if sshclient == nil || err != nil {
 		log.Errorf("SSH connect to %v (%v) failed", n.Node.Name, n.Node.IpAddress)
@@ -146,7 +174,6 @@ func (n *TestNode) RestartNode() error {
 
 	//Give it some time for node to stabalize
 	time.Sleep(5 * time.Second)
-
 	n.SSHClient = sshclient
 
 	return nil

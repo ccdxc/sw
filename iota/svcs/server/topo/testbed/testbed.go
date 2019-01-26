@@ -92,6 +92,7 @@ func (n *TestNode) cleanupEsxNode() error {
 
 func (n *TestNode) initEsxNode() error {
 	var err error
+	var vmInfo *vmware.VMInfo
 
 	ctrlVMDir := constants.ControlVMImageDirectory + "/" + constants.EsxControlVMImage
 
@@ -101,11 +102,6 @@ func (n *TestNode) initEsxNode() error {
 		return err
 	}
 
-	err = host.DestoryVM(constants.EsxControlVMName)
-	if err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | Delete control node failed %v", err.Error())
-	}
-
 	vsname := constants.EsxIotaCtrlSwitch
 	vsspec := vmware.VswitchSpec{Name: vsname}
 	host.AddVswitch(vsspec)
@@ -113,12 +109,18 @@ func (n *TestNode) initEsxNode() error {
 	nws := []vmware.NWSpec{{Name: constants.EsxDefaultNetwork, Vlan: int32(constants.EsxDefaultNetworkVlan)}, {Name: constants.EsxVMNetwork, Vlan: int32(constants.EsxVMNetworkVlan)}}
 	host.AddNetworks(nws, vsspec)
 
-	vmInfo, err := host.DeployVM(constants.EsxControlVMName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
-
-	if err != nil {
-
-		log.Errorf("TOPO SVC | InitTestBed | Add control node failed %v", err.Error())
-		return err
+	if !host.VMExists(constants.EsxControlVMName) {
+		vmInfo, err = host.DeployVM(constants.EsxControlVMName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
+		if err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | Add control node failed %v", err.Error())
+			return err
+		}
+	} else {
+		vmInfo, err = host.BootVM(constants.EsxControlVMName)
+		if err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | Boot control node failed %v", err.Error())
+			return err
+		}
 	}
 
 	log.Println("Init ESX node complete with IP : %s", vmInfo.IP)

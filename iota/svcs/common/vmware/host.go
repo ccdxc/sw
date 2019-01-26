@@ -613,8 +613,8 @@ func (h *Host) reconfigureVM(vm *object.VirtualMachine, ncpus uint, memory uint)
 
 	task, err = vm.Reconfigure(h.context.context, types.VirtualMachineConfigSpec{
 		MemoryReservationLockedToMax: &t,
-		NumCPUs:                      int32(ncpus),
-		MemoryMB:                     bigMemory,
+		NumCPUs:  int32(ncpus),
+		MemoryMB: bigMemory,
 	})
 	if err != nil {
 		return err
@@ -707,6 +707,18 @@ func (h *Host) DeployVM(name string, ncpus uint, memory uint, networks []string,
 	}
 
 	return h.DeployVMOnDataStore(ds, name, ncpus, memory, networks, ovfDir)
+}
+
+func (h *Host) VMExists(name string) bool {
+
+	finder, _, err := h.client.finder()
+	if err != nil {
+		return false
+	}
+
+	_, err = finder.VirtualMachine(h.context.context, name)
+
+	return err == nil
 }
 
 func (h *Host) DestoryVM(name string) error {
