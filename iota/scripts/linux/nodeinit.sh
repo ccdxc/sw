@@ -11,6 +11,30 @@ done
 rm -f /root/.ssh/known_hosts
 chown vm:vm /pensando
 
+dhcp_disable() {
+    # Check if its centos
+    os_str=`awk -F= '/^NAME/{print $2}' /etc/os-release`
+    if [[ $os_str == *"Ubuntu"* ]]; then
+        echo "Ubuntu: No need to disable DHCP on Naples IFs"
+        exit 0
+    elif [[ $os_str == *"CentOS"* ]]; then
+        echo "CentOS: Explicitly disabling DHCP on Naples IFs"
+        declare -a ifs=(`systool -c net | grep "Class Device"  | tail -4 | head -3 | cut -d = -f 2 | cut -d \" -f 2`)
+        for i in  "${ifs[@]}"
+        do
+            echo "$i"
+            echo "DEVICE=$i" > /etc/sysconfig/network-scripts/ifcfg-$i
+            echo "BOOTPROTO=none" >> /etc/sysconfig/network-scripts/ifcfg-$i
+            echo "ONBOOT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$i
+        done
+        sudo service network restart
+        for i in  "${ifs[@]}"
+        do
+           ifconfig $i up
+        done
+    fi
+}
+
 if [ -n "$cleanup" ]; then
     rm -rf /pensando
     mkdir /pensando
@@ -35,6 +59,7 @@ else
     insmod drivers/eth/ionic/ionic.ko
     sleep 2
     intmgmt=`systool -c net | grep "Class Device"  | tail -2 | head -1 | cut -d = -f 2 | cut -d \" -f 2`
+    dhcp_disable
     ifconfig $intmgmt 169.254.0.2/24
     ping -c 5 169.254.0.1
 fi
