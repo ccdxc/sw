@@ -57,8 +57,44 @@ def Trigger(tc):
         krpfile = " /proc/krping "
     else:
         krpfile = " /dev/krping "
+
+    #parse different options
+    options = ""
+    if hasattr(tc.iterators, 'server_inv') and (tc.iterators.server_inv == 'yes'):
+        options = options + "server_inv,"
+
+    if hasattr(tc.iterators, 'local_dma_lkey') and (tc.iterators.local_dma_lkey == 'yes'):
+        options = options + "local_dma_lkey,"
         
-    cmd = "sudo echo -n 'server,port=9999,addr=" + w1.ip_address + ",verbose,validate,count=100 ' > " + krpfile
+    if hasattr(tc.iterators, 'txdepth'):
+        options = options + "txdepth={txdepth},".format(txdepth = tc.iterators.txdepth)  
+
+    if hasattr(tc.iterators, 'count'):
+        options = options + "count={count},".format(count = tc.iterators.count)  
+        count = tc.iterators.count
+    else:
+        #When test does not give count, limit to 100 otherwise its equivalent to infinite count
+        count = 100
+        options = options + "count={count},".format(count = count)  
+
+    if hasattr(tc.iterators, 'size'):
+        options = options + "size={size},".format(size = tc.iterators.size)  
+        size = tc.iterators.size
+    else:
+        size = 64 #default size
+
+    #'fr' is only issued on client
+    client_options = options
+    if hasattr(tc.iterators, 'fr') and (tc.iterators.fr == 'yes'):
+        client_options = client_options + "fr,"
+        fr_test = True
+    else:
+        fr_test = False
+
+    cmd = "sudo echo -n 'server,port=9999,addr={addr},verbose,validate,{opstr} ' > {kfile}".format(
+              addr = w1.ip_address,
+              opstr = options,
+              kfile = krpfile)
     api.Trigger_AddCommand(req, 
                            w1.node_name, 
                            w1.workload_name,
@@ -73,12 +109,34 @@ def Trigger(tc):
                            w1.workload_name,
                            cmd)
 
+    #default wait for 60seconds and 120secs if the count > 1000 or size > 32K 
+    wait_secs = 60
+    if size > 32000 or count > 1000:
+        wait_secs = 120
+
     # cmd for client
-    cmd = "sudo echo -n 'client,port=9999,addr=" + w1.ip_address + ",verbose,validate,count=100 ' > " + krpfile
+    cmd = "sudo echo -n 'client,port=9999,addr={addr},verbose,validate,{opstr} ' > {kfile}".format(
+              addr = w1.ip_address,
+              opstr = client_options,
+              kfile = krpfile)
     api.Trigger_AddCommand(req, 
                            w2.node_name, 
                            w2.workload_name,
-                           cmd)
+                           cmd, timeout = wait_secs)
+
+    # check that the test completed ok
+    #But check this only when count is less than 1000, beyond that with verbose, demsg will roll out
+    # Dont check for ping for FR test
+    if size <= 1000 and not fr_test:
+        cmd = "dmesg | tail -20 | grep rdma-ping-{count}:".format(count = count - 1)
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               cmd)
+        api.Trigger_AddCommand(req,
+                               w2.node_name,
+                               w2.workload_name,
+                               cmd)
 
     # trigger the request
     trig_resp = api.Trigger(req)
