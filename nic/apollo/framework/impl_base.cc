@@ -48,6 +48,7 @@ impl_base::init(asic_cfg_t *asic_cfg) {
 void
 impl_base::debug_dump(FILE *fp) {
     asic_impl_->debug_dump(fp);
+    pipeline_impl_->debug_dump(fp);
 }
 
 /**

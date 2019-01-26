@@ -240,6 +240,55 @@ apollo_impl::pipeline_init(void) {
     return SDK_RET_OK;
 }
 
+/**
+ * @brief    dump egress drop statistics
+ * @param[in] fp       file handle
+ */
+void
+apollo_impl::dump_egress_drop_stats_(FILE *fp) {
+}
+
+/**
+ * @brief    dump ingress drop statistics
+ * @param[in] fp       file handle
+ */
+void
+apollo_impl::dump_ingress_drop_stats_(FILE *fp) {
+    sdk_ret_t                      ret;
+    uint64_t                       pkts;
+    tcam                           *table;
+    p4i_drop_stats_swkey_t         key = { 0 };
+    p4i_drop_stats_swkey_mask_t    key_mask = { 0 };
+    p4i_drop_stats_actiondata_t    data = { 0 };
+
+    table = apollo_impl_db()->ingress_drop_stats_tbl();
+    for (uint32_t i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
+        ret = table->retrieve_from_hw(i, &key, &key_mask, &data);
+        if (ret == SDK_RET_OK) {
+            memcpy(&pkts,
+                   data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts,
+                   sizeof(data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts));
+            fprintf(fp,
+                    "    drop reason : 0x%x, drop mask : 0x%x, pkts : %lu\n",
+                    key.control_metadata_p4i_drop_reason,
+                    key_mask.control_metadata_p4i_drop_reason_mask, pkts);
+        }
+    }
+    fprintf(fp, "\n");
+}
+
+/**
+ * @brief    dump all the debug information to given file
+ * @param[in] fp    file handle
+ */
+void
+apollo_impl::debug_dump(FILE *fp) {
+    fprintf(fp, "Ingress drop statistics\n");
+    dump_ingress_drop_stats_(fp);
+    fprintf(fp, "Egress drop statistics\n");
+    dump_egress_drop_stats_(fp);
+}
+
 /** @} */    // end of OCI_PIPELINE_IMPL
 
 }    // namespace impl

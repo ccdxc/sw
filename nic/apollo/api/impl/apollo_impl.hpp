@@ -37,6 +37,12 @@ public:
      */
     virtual sdk_ret_t pipeline_init(void) override;
 
+    /**
+     * @brief    dump all the debug information to given file
+     * @param[in] fp    file handle
+     */
+    void debug_dump(FILE *fp);
+
 private:
     /**< constructor */
     apollo_impl() {}
@@ -86,6 +92,18 @@ private:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t table_init_(void);
+
+    /**
+     * @brief    dump ingress drop statistics
+     * @param[in] fp       file handle
+     */
+    void dump_ingress_drop_stats_(FILE *fp);
+
+    /**
+     * @brief    dump egress drop statistics
+     * @param[in] fp       file handle
+     */
+    void dump_egress_drop_stats_(FILE *fp);
 
 private:
     pipeline_cfg_t      pipeline_cfg_;
