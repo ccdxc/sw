@@ -19,8 +19,12 @@ import (
 	"github.com/ghodss/yaml"
 )
 
-func restPostForm(port string, url string, values map[string]io.Reader) ([]byte, error) {
-	url = "http://" + naplesIP + ":" + port + "/" + url
+func restPostForm(url string, values map[string]io.Reader) ([]byte, error) {
+	if ur, err := getNaplesURL(); err == nil {
+		url = ur + url
+	} else {
+		return nil, err
+	}
 
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
@@ -66,7 +70,7 @@ func restPostForm(port string, url string, values map[string]io.Reader) ([]byte,
 	return bodyBytes, nil
 }
 
-func restPost(v interface{}, port string, url string) error {
+func restPost(v interface{}, url string) error {
 	payloadBytes, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -82,7 +86,11 @@ func restPost(v interface{}, port string, url string) error {
 	}
 	body := bytes.NewReader(payloadBytes)
 
-	url = "http://" + naplesIP + ":" + port + "/" + url
+	if ur, err := getNaplesURL(); err == nil {
+		url = ur + url
+	} else {
+		return err
+	}
 	if verbose {
 		fmt.Println("URL: ", url)
 	}
@@ -104,11 +112,15 @@ func restPost(v interface{}, port string, url string) error {
 	return nil
 }
 
-func restGet(port string, url string) ([]byte, error) {
+func restGet(url string) ([]byte, error) {
 	if verbose {
 		fmt.Println("Doing GET request to naples")
 	}
-	url = "http://" + naplesIP + ":" + port + "/" + url
+	if ur, err := getNaplesURL(); err == nil {
+		url = ur + url
+	} else {
+		return nil, err
+	}
 	if verbose {
 		fmt.Println("URL: ", url)
 	}
@@ -161,13 +173,17 @@ func restGet(port string, url string) ([]byte, error) {
 	return bodyBytes, nil
 }
 
-func restGetWithBody(v interface{}, port string, url string) ([]byte, error) {
+func restGetWithBody(v interface{}, url string) ([]byte, error) {
 	payloadBytes, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
 	body := bytes.NewReader(payloadBytes)
-	url = "http://" + naplesIP + ":" + port + "/" + url
+	if ur, err := getNaplesURL(); err == nil {
+		url = ur + url
+	} else {
+		return nil, err
+	}
 	if verbose {
 		fmt.Println("URL: ", url)
 	}
@@ -220,11 +236,15 @@ func restGetWithBody(v interface{}, port string, url string) ([]byte, error) {
 	return bodyBytes, nil
 }
 
-func restGetResp(port string, url string) (*http.Response, error) {
+func restGetResp(url string) (*http.Response, error) {
 	if verbose {
 		fmt.Println("Doing GET request to naples")
 	}
-	url = "http://" + naplesIP + ":" + port + "/" + url
+	if ur, err := getNaplesURL(); err == nil {
+		url = ur + url
+	} else {
+		return nil, err
+	}
 	if verbose {
 		fmt.Println("URL: ", url)
 	}
@@ -255,11 +275,15 @@ func restGetResp(port string, url string) (*http.Response, error) {
 	return getResp, nil
 }
 
-func restDelete(port string, url string) ([]byte, error) {
+func restDelete(url string) ([]byte, error) {
 	if verbose {
 		fmt.Println("Doing DELETE request to naples")
 	}
-	url = "http://" + naplesIP + ":" + port + "/" + url
+	if ur, err := getNaplesURL(); err == nil {
+		url = ur + url
+	} else {
+		return nil, err
+	}
 	if verbose {
 		fmt.Println("URL: ", url)
 	}

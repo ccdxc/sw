@@ -71,7 +71,7 @@ func parseFiles(resp *http.Response) ([]string, error) {
 }
 
 func coreShowCmdHandler(cmd *cobra.Command, args []string) error {
-	resp, err := restGetResp(revProxyPort, "cores/v1/naples/")
+	resp, err := restGetResp("cores/v1/naples/")
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func coreShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 func coreDeleteCmdHandler(cmd *cobra.Command, args []string) error {
 	corefile := file
-	resp, err := restDelete(revProxyPort, "cores/v1/naples/"+corefile)
+	resp, err := restDelete("cores/v1/naples/" + corefile)
 	if err != nil {
 		fmt.Println(err)
 		return err

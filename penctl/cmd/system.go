@@ -55,7 +55,7 @@ func getSysMemCmdHandler(cmd *cobra.Command, args []string) error {
 		Opts:       strings.Join([]string{"-m"}, ""),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -76,7 +76,7 @@ func getProcMemInfoCmdHandler(cmd *cobra.Command, args []string) error {
 		Opts:       strings.Join([]string{"/proc/meminfo"}, ""),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -92,7 +92,7 @@ func getProcMemInfoCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func getSystemStatusCmdCmdHandler(cmd *cobra.Command, args []string) error {
-	resp, err := restGet(revProxyPort, "monitoring/v1/naples/logs/pensando/pciemgrd.log")
+	resp, err := restGet("monitoring/v1/naples/logs/pensando/pciemgrd.log")
 	if err != nil {
 		return err
 	}

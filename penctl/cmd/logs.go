@@ -48,7 +48,7 @@ func logsShowCmdHandler(cmd *cobra.Command, args []string) error {
 		moduleVal = "pciemgrd"
 	}
 	moduleVal += ".log"
-	resp, err := restGet(revProxyPort, "monitoring/v1/naples/logs/pensando/"+moduleVal)
+	resp, err := restGet("monitoring/v1/naples/logs/pensando/" + moduleVal)
 	if err != nil {
 		return err
 	}

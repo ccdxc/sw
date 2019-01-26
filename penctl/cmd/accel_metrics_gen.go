@@ -23,7 +23,7 @@ var accelhwringmetricsShowCmd = &cobra.Command{
 func accelhwringmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	bodyBytes, err := restGet(revProxyPort, "telemetry/v1/metrics/accelhwringmetrics/")
+	bodyBytes, err := restGet("telemetry/v1/metrics/accelhwringmetrics/")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -45,7 +45,7 @@ var accelseqqueuemetricsShowCmd = &cobra.Command{
 func accelseqqueuemetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	bodyBytes, err := restGet(revProxyPort, "telemetry/v1/metrics/accelseqqueuemetrics/")
+	bodyBytes, err := restGet("telemetry/v1/metrics/accelseqqueuemetrics/")
 	if err != nil {
 		fmt.Println(err)
 		return err

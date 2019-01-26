@@ -36,9 +36,9 @@ func genericmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	generickind = strings.ToLower(generickind) + "metrics"
 	var err error
 	if cmd.Flags().Changed("name") {
-		_, err = restGet(revProxyPort, "telemetry/v1/metrics/"+generickind+"/default/"+genericname+"/")
+		_, err = restGet("telemetry/v1/metrics/" + generickind + "/default/" + genericname + "/")
 	} else {
-		_, err = restGet(revProxyPort, "telemetry/v1/metrics/"+generickind+"/")
+		_, err = restGet("telemetry/v1/metrics/" + generickind + "/")
 	}
 	if err != nil {
 		fmt.Println(err)

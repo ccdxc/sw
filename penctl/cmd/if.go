@@ -71,7 +71,7 @@ func ifCreateCmdHandler(cmd *cobra.Command, args []string) {
 		Opts:       strings.Join(execCmd[1:], " "),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return

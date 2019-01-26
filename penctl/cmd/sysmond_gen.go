@@ -23,7 +23,7 @@ var asicpowermetricsShowCmd = &cobra.Command{
 func asicpowermetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	bodyBytes, err := restGet(revProxyPort, "telemetry/v1/metrics/asicpowermetrics/")
+	bodyBytes, err := restGet("telemetry/v1/metrics/asicpowermetrics/")
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -45,7 +45,7 @@ var asictemperaturemetricsShowCmd = &cobra.Command{
 func asictemperaturemetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	tabularFormat = false
 	jsonFormat = true
-	bodyBytes, err := restGet(revProxyPort, "telemetry/v1/metrics/asictemperaturemetrics/")
+	bodyBytes, err := restGet("telemetry/v1/metrics/asictemperaturemetrics/")
 	if err != nil {
 		fmt.Println(err)
 		return err

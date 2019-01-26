@@ -102,7 +102,7 @@ func qosClassShowCmdHandler(cmd *cobra.Command, args []string) {
 		Opts:       strings.Join(execCmd[1:], " "),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -135,7 +135,7 @@ func qosClassDeleteCmdHandler(cmd *cobra.Command, args []string) {
 		Opts:       strings.Join(execCmd[1:], " "),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -219,7 +219,7 @@ func handleQosClassCreateUpdate(cmd *cobra.Command, args []string, update bool) 
 		Opts:       strings.Join(execCmd[1:], " "),
 	}
 
-	resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
 		fmt.Println(err)
 		return

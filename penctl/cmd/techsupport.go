@@ -58,7 +58,7 @@ type NaplesCmds struct {
 
 func copyFileToDest(destDir string, url string, file string) error {
 	//fmt.Println("Copying file: " + file + " to: " + destDir)
-	resp, err := restGetResp(revProxyPort, url+file)
+	resp, err := restGetResp(url + file)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -109,7 +109,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	//Copy out core files from /data/core
 	coreDestDir := destDir + "/cores/"
 	createDestDir(coreDestDir)
-	resp, _ := restGetResp(revProxyPort, "cores/v1/naples/")
+	resp, _ := restGetResp("cores/v1/naples/")
 	retS, err := parseFiles(resp)
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	//Copy out events from /var/lib/pensando/events/events file
 	eventsDestDir := destDir + "/events/"
 	createDestDir(eventsDestDir)
-	evresp, _ := restGet(revProxyPort, "monitoring/v1/naples/events/events")
+	evresp, _ := restGet("monitoring/v1/naples/events/events")
 	file = eventsDestDir + "/" + "events"
 	out, err := os.Create(file)
 	if err != nil {
@@ -140,7 +140,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Fetching logs")
 	//Copy out log files from /var/log recursively
-	resp, _ = restGetResp(revProxyPort, "monitoring/v1/naples/logs/")
+	resp, _ = restGetResp("monitoring/v1/naples/logs/")
 	retS, err = parseFiles(resp)
 	if err != nil {
 		return err
@@ -152,7 +152,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 			napDir := file
 			logSubDestDir := logDestDir + napDir
 			createDestDir(logSubDestDir)
-			resp, _ = restGetResp(revProxyPort, "monitoring/v1/naples/logs/"+napDir)
+			resp, _ = restGetResp("monitoring/v1/naples/logs/" + napDir)
 			retSlice = nil
 			retS, err = parseFiles(resp)
 			if err != nil {
@@ -192,7 +192,7 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 			Executable: cmd[0],
 			Opts:       opts,
 		}
-		resp, err := restGetWithBody(v, revProxyPort, "cmd/v1/naples/")
+		resp, err := restGetWithBody(v, "cmd/v1/naples/")
 		if err != nil {
 			fmt.Println(err)
 		}
