@@ -240,6 +240,8 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
         MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_addr_1,
                                 (((impl::route_table_impl *)(route_table->impl()))->lpm_root_addr()),
                                 5);
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.slacl_addr_1,
+                                api::g_oci_state.mempartition()->start_addr("slacl"), 5);
         //vnic_by_vlan_data.local_vnic_by_vlan_tx_info.slacl_addr_1 =
             //subnet->policy_tree_root();
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 = epoch;
