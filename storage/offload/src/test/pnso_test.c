@@ -1059,7 +1059,7 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 			input_len = test_file_size(input_path);
 #endif
 			if (!input_len) {
-				PNSO_LOG_DEBUG("Invalid input file %s\n", input_path);
+				PNSO_LOG_ERROR("Invalid input file %s\n", input_path);
 				return EINVAL;
 			}
 		} else if (svc_chain->input.pattern[0]) {
@@ -2530,7 +2530,10 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			       testcase->node.idx);
 		return ENOMEM;
 	}
-	init_testcase_svc_chains(ctx);
+	err = init_testcase_svc_chains(ctx);
+	if (err != PNSO_OK) {
+		goto free_ctx;
+	}
 
 	ctx->vars[TEST_VAR_BLOCK_SIZE] = desc->init_params.block_size;
 	ctx->vars[TEST_VAR_ITER] = 0;
@@ -2708,6 +2711,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		 (unsigned long long) batch_completion_empty_count,
 		 (unsigned long long) rate_limit_loop_count);
 
+free_ctx:
 	PNSO_LOG_DEBUG("DEBUG: pnso_test_run_testcase freeing test context\n");
 	free_testcase_context(ctx);
 
