@@ -1725,7 +1725,9 @@ class capri_parser:
                         free_slots[oh.var_id] = False
                         ohi_used += 1
 
+            headers_in_path = set()
             for hdr in path:
+                headers_in_path.add(hdr.name)
                 if hdr not in self.ohi:
                     # header is in phv no ohi needed
                     continue
@@ -1781,6 +1783,38 @@ class capri_parser:
 
                 if slot_overflow:
                     break
+
+            # For deparse only headers, that alias to parsed header, capture their OHI
+            # information for deparser to build packet correctly. Aliasing is supported
+            # using write-only variables and by capturing header start and len in OHI.
+            # Aliasing and aliased header are expected to be in OHI.
+            for hdr in self.headers:
+                if hdr.name not in headers_in_path:
+                    if hdr not in self.ohi:
+                        continue
+                    fixed_ohi_id = self.ohi[hdr][0].id
+                    if fixed_ohi_id == -1:
+                        # check if this is globally allocated
+                        wr_only_ohi_name = hdr.name + '___start_off'
+                        if self.ohi[hdr][0].start == 0 and wr_only_ohi_name in self.wr_only_ohi:
+                            ohid = self.wr_only_ohi[wr_only_ohi_name]
+                            ncc_assert(ohid != None)
+                            self.logger.debug("%s:%s use global ohi slot %d" % \
+                                    (self.d.name, wr_only_ohi_name, ohid))
+                            self.ohi[hdr][0].id = ohid
+                            fixed_ohi_id = ohid
+                    for i,oh in enumerate(self.ohi[hdr]):
+                        if isinstance(oh.length, int):
+                            continue
+                        if oh.var_id == -1:
+                            # check if this is globally allocated
+                            wr_only_ohi_name = hdr.name + '___hdr_len'
+                            if wr_only_ohi_name in self.wr_only_ohi:
+                                ohid = self.wr_only_ohi[wr_only_ohi_name]
+                                self.logger.debug("%s:%s use global ohi slot %d" % \
+                                    (self.d.name, wr_only_ohi_name, ohid))
+                                ncc_assert(ohid != None)
+                                oh.var_id = ohid
 
             if ohi_used > max_ohi_used:
                 max_ohi_used = ohi_used
