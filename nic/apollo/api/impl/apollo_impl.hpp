@@ -64,7 +64,25 @@ private:
     sdk_ret_t key_tunneled_init_(void);
 
     /**
-     * @brief    program all datapath tables that require one time initialization
+     * @brief    initialize ingress drop stats table
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t ingress_drop_stats_init_(void);
+
+    /**
+     * @brief    initialize egress drop stats table
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t egress_drop_stats_init_(void);
+
+    /**
+     * @brief    initialize all the stats tables, where needed
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t stats_init_(void);
+
+    /**
+     * @brief    program all p4/p4+ tables that require one time initialization
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t table_init_(void);
