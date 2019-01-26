@@ -115,6 +115,7 @@ error_completion:
     phvwr          p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
                        ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_MEMORY_MGMT_ERR_OFFSET))
 
+    phvwr          CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, spec_cindex), K_SPEC_CINDEX
     b              load_frpmr_wb
     // Set error-disable-qp. 
     phvwr         CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1 //BD-slot

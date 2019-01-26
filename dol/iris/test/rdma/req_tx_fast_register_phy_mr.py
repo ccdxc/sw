@@ -94,13 +94,8 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that frpmr_reset_spec_cindex is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'sqcb0_frpmr_in_progress', 0):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'frpmr_in_progress', 0):
             return False
-
-        # verify that frpmr_dma_done is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'frpmr_dma_done', 0):
-            return False
-
 
         # validate cqcb pindex and color
         if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
@@ -221,9 +216,4 @@ def TestCaseTeardown(tc):
     kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, tc.pvtdata.l_key)
     kt_entry.data = tc.pvtdata.mr_kt_entry.data
     kt_entry.WriteWithDelay()
-
-    rs.lqp.sq.qstate.Read()
-    rs.lqp.sq.qstate.data.priv_oper_enable = 0;
-    rs.lqp.sq.qstate.WriteWithDelay()
-
     return
