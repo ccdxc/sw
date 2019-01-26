@@ -309,8 +309,10 @@ static pnso_error_t test_read_input(const char *path,
 
 static void free_buffer_ctx(struct buffer_context *buf_ctx)
 {
-	if (buf_ctx->buflist)
-		TEST_FREE(buf_ctx->buflist);
+	if (buf_ctx->va_buflist)
+		TEST_FREE(buf_ctx->va_buflist);
+	if (buf_ctx->pa_buflist)
+		TEST_FREE(buf_ctx->pa_buflist);
 	if (buf_ctx->buf.buf)
 		TEST_FREE((void *) buf_ctx->buf.buf);
 	memset(buf_ctx, 0, sizeof(*buf_ctx));
@@ -330,35 +332,63 @@ static pnso_error_t alloc_buffer_ctx(struct buffer_context *buf_ctx,
 		return EINVAL;
 	block_size = (total_bytes + count - 1) / count;
 
-	/* Allocate buflist */
-	buf_ctx->buflist = TEST_ALLOC(sizeof(struct pnso_buffer_list) +
-				      (sizeof(struct pnso_flat_buffer) * count));
-	if (!buf_ctx->buflist)
-		goto no_mem;
-	buf_ctx->buflist_alloc_count = count;
+	/* Allocate buflists if necessary */
+	if (count > buf_ctx->buflist_alloc_count) {
+		if (buf_ctx->va_buflist)
+			TEST_FREE(buf_ctx->va_buflist);
+		buf_ctx->va_buflist = TEST_ALLOC(sizeof(struct pnso_buffer_list) +
+						 (sizeof(struct pnso_flat_buffer) * count));
+		if (buf_ctx->pa_buflist)
+			TEST_FREE(buf_ctx->pa_buflist);
+		buf_ctx->pa_buflist = TEST_ALLOC(sizeof(struct pnso_buffer_list) +
+						 (sizeof(struct pnso_flat_buffer) * count));
+		if (!buf_ctx->va_buflist || !buf_ctx->pa_buflist) {
+			buf_ctx->buflist_alloc_count = 0;
+			goto no_mem;
+		}
 
-	/* Allocate buf data */
-	buf_ctx->buf.buf = (uint64_t) TEST_ALLOC_ALIGNED(alignment, count*block_size);
-	if (!buf_ctx->buf.buf)
-		goto no_mem;
-	buf_ctx->buf_alloc_sz = count*block_size;
+		buf_ctx->va_buflist->count = 0;
+		buf_ctx->pa_buflist->count = 0;
+		buf_ctx->buflist_alloc_count = count;
+	}
+
+	/* Allocate buf data if necessary */
+	if ((count*block_size) > buf_ctx->buf_alloc_sz) {
+		if (buf_ctx->buf.buf)
+			TEST_FREE((void *) buf_ctx->buf.buf);
+		buf_ctx->buf.buf = (uint64_t) TEST_ALLOC_ALIGNED(alignment,
+							count*block_size);
+		if (!buf_ctx->buf.buf) {
+			buf_ctx->buf_alloc_sz = 0;
+			goto no_mem;
+		}
+		buf_ctx->buf_alloc_sz = count*block_size;
+	}
 	if (poisin)
 		memset((void *) buf_ctx->buf.buf, POISIN_BYTE, count*block_size);
 
-	/* Point buflist to data */
-	buf_ctx->is_sgl_pa = false;
+	/* Point buflists to data */
 	buf_ctx->buf.len = total_bytes;
-	buf_ctx->buflist->count = count;
+	buf_ctx->va_buflist->count = count;
+	buf_ctx->pa_buflist->count = count;
 	for (i = 0; i < count; i++) {
-		buf_ctx->buflist->buffers[i].len = block_size;
-		buf_ctx->buflist->buffers[i].buf = buf_ctx->buf.buf + (block_size * i);
+		buf_ctx->va_buflist->buffers[i].len = block_size;
+		buf_ctx->va_buflist->buffers[i].buf =
+			buf_ctx->buf.buf + (block_size * i);
+		buf_ctx->pa_buflist->buffers[i].len = block_size;
+		buf_ctx->pa_buflist->buffers[i].buf =
+			osal_virt_to_phy((void *) buf_ctx->buf.buf +
+					 (block_size * i));
 	}
 
 	/* Adjust last block, in case total_bytes is not an even multiple */
 	if (block_size*count > total_bytes) {
-		buf_ctx->buflist->buffers[count-1].len = total_bytes -
+		buf_ctx->va_buflist->buffers[count-1].len = total_bytes -
+						(block_size*(count-1));
+		buf_ctx->pa_buflist->buffers[count-1].len = total_bytes -
 						(block_size*(count-1));
 	}
+
 	return PNSO_OK;
 
 no_mem:
@@ -754,59 +784,6 @@ static pnso_error_t update_file_node(struct test_file_table *table,
 	return err;
 }
 
-static void buffer_ctx_p2v(struct buffer_context *buf_ctx)
-{
-	if (buf_ctx->is_sgl_pa && buf_ctx->buflist) {
-		pbuf_convert_buffer_list_p2v(buf_ctx->buflist);
-		buf_ctx->is_sgl_pa = false;
-	}
-}
-
-static void buffer_ctx_v2p(struct buffer_context *buf_ctx)
-{
-	if (!buf_ctx->is_sgl_pa && buf_ctx->buflist) {
-		pbuf_convert_buffer_list_v2p(buf_ctx->buflist);
-		buf_ctx->is_sgl_pa = true;
-	}
-}
-
-static void request_ctx_p2v(struct request_context *req_ctx)
-{
-	size_t i;
-
-	if (!req_ctx)
-		return;
-
-	/* Normalize sgls from physical to virtual addresses */
-	buffer_ctx_p2v(&req_ctx->input);
-	for (i = 0; i < req_ctx->svc_res.num_services; i++) {
-		buffer_ctx_p2v(&req_ctx->outputs[i]);
-	}
-}
-
-static void request_ctx_v2p(struct request_context *req_ctx)
-{
-	size_t i;
-
-	if (!req_ctx)
-		return;
-
-  	/* Normalize sgls from virtual to physical addresses */
-	buffer_ctx_v2p(&req_ctx->input);
-	for (i = 0; i < req_ctx->svc_res.num_services; i++) {
-		buffer_ctx_v2p(&req_ctx->outputs[i]);
-	}
-}
-
-static void batch_ctx_p2v(struct batch_context *batch_ctx)
-{
-	size_t i;
-
-	for (i = 0; i < batch_ctx->req_count; i++) {
-		request_ctx_p2v(batch_ctx->req_ctxs[i]);
-	}
-}
-
 static uint32_t get_svc_status_data_len(const struct pnso_service_status *svc_status)
 {
 	uint32_t ret = 0;
@@ -846,6 +823,7 @@ static void output_results(struct request_context *req_ctx,
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
 	const struct test_testcase *testcase = test_ctx->testcase;
+	struct pnso_buffer_list *buflist;
 	uint32_t blk_sz = batch_ctx->desc->init_params.block_size;
 	char output_path[TEST_MAX_FULL_PATH_LEN] = "";
 
@@ -888,9 +866,12 @@ static void output_results(struct request_context *req_ctx,
 						&buflist.bl);
 				}
 			} else if (svc_status->u.dst.sgl) {
+				OSAL_ASSERT(svc_status->u.dst.sgl ==
+					    req_ctx->outputs[i].pa_buflist);
+				buflist = req_ctx->outputs[i].va_buflist;
 				file_size = get_svc_status_data_len(svc_status);
 				if (!testcase->turbo) {
-					checksum = compute_checksum(svc_status->u.dst.sgl,
+					checksum = compute_checksum(buflist,
 								    NULL, file_size);
 				}
 				if (svc->svc.svc_type == PNSO_SVC_TYPE_COMPRESS &&
@@ -899,8 +880,7 @@ static void output_results(struct request_context *req_ctx,
 					padded_size = roundup_len(file_size, blk_sz);
 					if (!testcase->turbo) {
 						padded_checksum = compute_checksum(
-							svc_status->u.dst.sgl,
-							NULL, padded_size);
+							buflist, NULL, padded_size);
 					}
 				}
 				err = update_file_node(
@@ -909,7 +889,7 @@ static void output_results(struct request_context *req_ctx,
 					file_size,
 					padded_checksum, padded_size,
 					blk_sz,
-					svc_status->u.dst.sgl);
+					buflist);
 			}
 			if (err != PNSO_OK) {
 				PNSO_LOG_ERROR("Cannot write data to %s\n",
@@ -997,9 +977,6 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 
 	PNSO_LOG_DEBUG("submitting request, mode %u\n",
 			(uint32_t) sync_mode);
-
-	/* Normalize sgls from virtual to physical addresses */
-	request_ctx_v2p(req_ctx);
 
 	switch (sync_mode) {
 	case SYNC_MODE_SYNC:
@@ -1121,13 +1098,13 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 			       test_ctx->desc->init_params.block_size,
 			       false);
 	if (err != PNSO_OK) {
-		PNSO_LOG_ERROR("Failed to allocate buffer_ctx with %u blocks, %u bytes\n",
+		PNSO_LOG_ERROR("Failed to allocate input buffer_ctx with %u blocks, %u bytes\n",
 			       block_count, input_len);
 		return err;
 	}
 
 	/* populate input buffer */
-	err = test_read_input(input_path, &svc_chain->input, input->buflist);
+	err = test_read_input(input_path, &svc_chain->input, input->va_buflist);
 	if (err != PNSO_OK) {
 		PNSO_LOG_ERROR("Failed to read input from %s\n", input_path);
 		return err;
@@ -1137,49 +1114,6 @@ static pnso_error_t init_input_context(struct buffer_context *input,
 	input->initialized = true;
 
 	return PNSO_OK;
-}
-
-static pnso_error_t init_req_input(struct request_context *req_ctx)
-{
-	struct buffer_context *chain_input = &req_ctx->chain_ctx->input;
-	struct buffer_context *buf_ctx = &req_ctx->input;
-	uint32_t i, count;
-
-	if (buf_ctx->initialized &&
-	    buf_ctx->svc_chain_idx == chain_input->svc_chain_idx) {
-		/* Already initialized */
-		return PNSO_OK;
-	}
-	buf_ctx->initialized = false;
-
-	/* Clone from chain */
-
-	/* Resize buflist if necessary */
-	count = chain_input->buflist_alloc_count;
-	if (count > buf_ctx->buflist_alloc_count) {
-		if (buf_ctx->buflist)
-			TEST_FREE(buf_ctx->buflist);
-		buf_ctx->buflist = TEST_ALLOC(sizeof(struct pnso_buffer_list) +
-					      (sizeof(struct pnso_flat_buffer) * count));
-		if (!buf_ctx->buflist)
-			goto no_mem;
-		buf_ctx->buflist_alloc_count = count;
-	}
-
-	/* Point buflist to chain data */
-	buf_ctx->is_sgl_pa = false;
-	buf_ctx->buf = chain_input->buf;
-	buf_ctx->buflist->count = count;
-	for (i = 0; i < count; i++) {
-		buf_ctx->buflist->buffers[i] = chain_input->buflist->buffers[i];
-	}
-	buf_ctx->svc_chain_idx = chain_input->svc_chain_idx;
-	buf_ctx->initialized = true;
-
-	return PNSO_OK;
-
-no_mem:
-	return ENOMEM;
 }
 
 static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
@@ -1194,14 +1128,10 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 	uint32_t input_len;
 	uint32_t i;
 
-	/* setup source buffers */
-	err = init_req_input(req_ctx);
-	if (err)
-		return err;
-	input_len = req_ctx->input.buf.len;
+	input_len = req_ctx->chain_ctx->input.buf.len;
 
 	/* setup request */
-	req_ctx->svc_req.sgl = req_ctx->input.buflist;
+	req_ctx->svc_req.sgl = req_ctx->chain_ctx->input.pa_buflist;
 	req_ctx->svc_req.num_services = svc_chain->num_services;
 	i = 0;
 	FOR_EACH_NODE(svc_chain->svcs) {
@@ -1282,7 +1212,7 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 						"Out of memory for output_buf\n");
 					return ENOMEM;
 				}
-				svc_status->u.dst.sgl = buf_ctx->buflist;
+				svc_status->u.dst.sgl = buf_ctx->pa_buflist;
 			}
 		}
 		i++;
@@ -1996,9 +1926,6 @@ static void free_req_context(struct request_context *ctx)
 	if (!ctx)
 		return;
 
-	if (ctx->input.buflist) {
-		TEST_FREE(ctx->input.buflist);
-	}
 	for (i = 0; i < PNSO_SVC_TYPE_MAX; i++) {
 		free_buffer_ctx(&ctx->outputs[i]);
 	}
@@ -2635,7 +2562,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			PNSO_LOG_DEBUG("DEBUG: batch completed, batch_count %llu\n",
 				(unsigned long long) batch_completion_count+1);
 			last_active_ts = osal_get_clock_nsec();
-			batch_ctx_p2v(batch_ctx);
+
 			/* process finished batch, and restore to freelist */
 			run_batch_validation(batch_ctx);
 			calculate_completion_stats(batch_ctx);
@@ -2942,14 +2869,14 @@ pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 				    sizeof(reason));
 			goto done;
 		}
-		err = test_fill_pattern(buf_ctxs[i].buflist, UNIT_TEST_BUFLIST_PATTERN,
+		err = test_fill_pattern(buf_ctxs[i].va_buflist, UNIT_TEST_BUFLIST_PATTERN,
 					strlen(UNIT_TEST_BUFLIST_PATTERN));
 		if (err) {
 			safe_strcpy(reason, "test_fill_pattern",
 				    sizeof(reason));
 			goto done;
 		}
-		if (0 != test_cmp_pattern(buf_ctxs[i].buflist, 0, UNIT_TEST_BUFLIST_SIZE,
+		if (0 != test_cmp_pattern(buf_ctxs[i].va_buflist, 0, UNIT_TEST_BUFLIST_SIZE,
 					  UNIT_TEST_BUFLIST_PATTERN,
 					  strlen(UNIT_TEST_BUFLIST_PATTERN))) {
 			err = EINVAL;
@@ -2958,7 +2885,7 @@ pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 			goto done;
 		}
 		if (i >= 1) {
-			if (0 != cmp_buflists(buf_ctxs[i-1].buflist, buf_ctxs[i].buflist,
+			if (0 != cmp_buflists(buf_ctxs[i-1].va_buflist, buf_ctxs[i].va_buflist,
 					      0, UNIT_TEST_BUFLIST_SIZE)) {
 				err = EINVAL;
 				safe_strcpy(reason, "cmp_buflists",

@@ -89,11 +89,11 @@ static inline uint32_t get_max_output_len_by_type(uint16_t svc_type,
 
 struct buffer_context {
 	bool initialized;
-	bool is_sgl_pa; /* physical addr or not */
 	uint32_t svc_chain_idx;
 	uint32_t buf_alloc_sz;
 	uint32_t buflist_alloc_count;
-	struct pnso_buffer_list *buflist;
+	struct pnso_buffer_list *va_buflist;
+	struct pnso_buffer_list *pa_buflist;
 	struct pnso_flat_buffer buf;
 };
 
@@ -110,7 +110,6 @@ struct request_context {
 	struct chain_context *chain_ctx;
 	uint64_t req_id;
 
-	struct buffer_context input; /* copied from chain */
 	struct buffer_context outputs[PNSO_SVC_TYPE_MAX];
 
 	/* MUST keep these 2 in order, due to zero-length array */
