@@ -16,7 +16,6 @@ extern "C" {
 
 /*
  * evutils provides a thin layer around libev.  evutils uses the default
- * libev event loop EV_DEFAULT to process file descriptor and timer events.
  *
  * Typical usage is like this:
  *
@@ -46,21 +45,67 @@ extern "C" {
 
 typedef void (evutil_cb_t)(void *cbarg);
 
-void evutil_add_fd(int fd, evutil_cb_t *rdcb, evutil_cb_t *wrcb, void *cbarg);
-void evutil_remove_fd(const int fd);
 void evutil_run(void);
 void evutil_stop(void);
 
+/*
+ * I/O: Runs after prepare handlers
+ */
+void evutil_add_fd(int fd, evutil_cb_t *rdcb, evutil_cb_t *wrcb, void *cbarg);
+void evutil_remove_fd(const int fd);
+
+/*
+ * Relative timers: Runs after I/O handlers
+ */
 typedef struct {
     ev_timer ev_timer;
     evutil_cb_t *cb;
     void *cbarg;
 } evutil_timer;
 
-void evutil_timer_start(evutil_timer *evu_timer, 
+void evutil_timer_start(evutil_timer *evu_timer,
                         evutil_cb_t *cb, void *arg,
                         ev_tstamp after, ev_tstamp repeat);
 void evutil_timer_stop(evutil_timer *evu_timer);
+
+/*
+ * Idle polling: Only runs when no-other higher priority watches are pending.
+ */
+typedef struct {
+    ev_idle ev_idle;
+    evutil_cb_t *cb;
+    void *cbarg;
+} evutil_idle;
+
+void evutil_add_idle(evutil_idle *evu_idle,
+                     evutil_cb_t *cb, void *arg);
+void evutil_remove_idle(evutil_idle *evu_idle);
+
+/*
+ * Prepare Polling: Runs after fork handlers
+ */
+typedef struct {
+    ev_prepare ev_prepare;
+    evutil_cb_t *cb;
+    void *cbarg;
+} evutil_prepare;
+
+void evutil_add_prepare(evutil_prepare *evu_prepare,
+                     evutil_cb_t *cb, void *arg);
+void evutil_remove_prepare(evutil_prepare *evu_prepare);
+
+/*
+ * Check Polling: Runs after idle handlers
+ */
+typedef struct {
+    ev_check ev_check;
+    evutil_cb_t *cb;
+    void *cbarg;
+} evutil_check;
+
+void evutil_add_check(evutil_check *evu_check,
+                     evutil_cb_t *cb, void *arg);
+void evutil_remove_check(evutil_check *evu_check);
 
 #ifdef __cplusplus
 }
