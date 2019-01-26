@@ -2,5 +2,6 @@
 include ${MKDEFS}/pre.mk
 MODULE_ARCH     := x86_64
 MODULE_TARGET   := test_strtoargv.bin
+MODULE_PIPELINE = iris gft
 MODULE_SOLIBS   := misc
 include ${MKDEFS}/post.mk

@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = shmmgr_test.gtest
+MODULE_PIPELINE = iris gft
 MODULE_SOLIBS   = shmmgr logger
 MODULE_LDLIBS   = rt
 MODULE_ARCH     = x86_64
