@@ -580,7 +580,10 @@ def GetCqeFlagVlan(tc, pkt):
     return 2
 
 def GetCqeFlagIpv4(tc, pkt):
-    return 4
+    if tc.config.rdmasession.IsIPV6:
+        return 0
+    else:
+        return 4
 
 def GetCqeFlagVlanIpv4(tc, pkt):
-    return 6
+    return GetCqeFlagVlan(tc, pkt) + GetCqeFlagIpv4(tc, pkt)

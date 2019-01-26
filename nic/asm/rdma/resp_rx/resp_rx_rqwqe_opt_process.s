@@ -33,6 +33,9 @@ struct rqwqe_base_t d;
 
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 #define K_REM_PYLD_BYTES CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
+#define K_SPEC_PSN CAPRI_KEY_RANGE(IN_TO_S_P, spec_psn_sbit0_ebit2, spec_psn_sbit19_ebit23)
+#define K_INV_R_KEY CAPRI_KEY_RANGE(IN_TO_S_P, inv_r_key_sbit0_ebit2, inv_r_key_sbit27_ebit31)
+#define K_EXT_HDR_DATA CAPRI_KEY_RANGE(IN_TO_S_P, ext_hdr_data_sbit0_ebit63, ext_hdr_data_sbit64_ebit68)
 
 %%
     .param  resp_rx_rqlkey_process
@@ -51,7 +54,7 @@ resp_rx_rqwqe_opt_process:
     // c1: num_sges == 2
 
     // curr_sge_offset = spec_psn << log_pmtu
-    add         TRANSFER_BYTES, r0, CAPRI_KEY_FIELD(IN_TO_S_P, spec_psn)
+    add         TRANSFER_BYTES, r0, K_SPEC_PSN
     sll         TRANSFER_BYTES, TRANSFER_BYTES, CAPRI_KEY_FIELD(IN_P, log_pmtu)
     // TRANSFER_BYTES now has the number of bytes transferred so far
 
@@ -198,12 +201,12 @@ loop_exit:
     CAPRI_SET_TABLE_1_VALID_C(!F_FIRST_PASS, 1) // BD Slot
 
     // pass the rkey to write back, since wb calls inv_rkey. Note that this s2s across multiple(two, 3 to 5) stages
-    phvwr       CAPRI_PHV_FIELD(INFO_WBCB1_P, inv_r_key), CAPRI_KEY_FIELD(IN_TO_S_P, inv_r_key)
+    phvwr       CAPRI_PHV_FIELD(INFO_WBCB1_P, inv_r_key), K_INV_R_KEY
 
     // if invalidate rkey is present, invoke it by loading appopriate
     // key entry, else load the same program as MPU only.
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, TMP)
-    add         TMP, r0, CAPRI_KEY_FIELD(IN_TO_S_P, inv_r_key)
+    add         TMP, r0, K_INV_R_KEY
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, TMP)
 
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_validate_process, KEY_ADDR)
@@ -211,7 +214,7 @@ loop_exit:
 skip_inv_rkey:
 
     ARE_ALL_FLAGS_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_UD|RESP_RX_FLAG_IMMDT)
-    phvwr.c2    p.cqe.recv.smac[31:0], CAPRI_KEY_FIELD(IN_TO_S_P, ext_hdr_data)
+    phvwr.c2    p.cqe.recv.smac[31:0], K_EXT_HDR_DATA
 
     phvwr.e     CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
     CAPRI_SET_FIELD2_C(TO_S_WB1_P, incr_c_index, 1, c1) // Exit Slot
