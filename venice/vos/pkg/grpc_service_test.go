@@ -76,7 +76,7 @@ func (f *mockBackend) StatObject(bucketName, objectName string, opts minioclient
 }
 
 func TestValidateNamespace(t *testing.T) {
-	good := []string{"images", "techsupport", "packetcapture"}
+	good := []string{"images", "techsupport"}
 	bad := []string{"invalid", " images", "tech-support"}
 	obj := &objstore.Object{}
 	mbackend := &mockBackend{}

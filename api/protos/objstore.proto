@@ -12,11 +12,10 @@ import "github.com/pensando/sw/api/meta.proto";
 enum Buckets {
     images          = 0;
     techsupport     = 1;
-    packetcapture   = 2;
 }
 
 message BucketSpec {
-    string Description = 1 [(gogoproto.jsontag) = "description"];
+    string Description = 1 [(gogoproto.jsontag) = "description,omitempty"];
 }
 
 message BucketStatus {
@@ -24,6 +23,8 @@ message BucketStatus {
     int32 TotalSize     = 2 [(gogoproto.jsontag) = "total-size"];
 }
 
+// Bucket is a collection of objects. Each bucket is scoped by the tenant. Default set of bucket types are defined
+//  by the Buckets enum above.
 message Bucket {
     api.TypeMeta T      = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O    = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
@@ -35,14 +36,19 @@ message Bucket {
 }
 
 message ObjectStatus {
+    // Size is the total size of the object
     int64 Size      = 1 [(gogoproto.jsontag) = "size"];
+    // Digest is a hash digest of the object content.
     string Digest   = 2 [(gogoproto.jsontag) = "digest"];
 }
 
 message ObjectSpec {
-    string ContentType = 1 [(gogoproto.jsontag) = "content-type"];
+    // Content-Type for the stored object. Can either be specified when uploading.
+    //  or the backend guesses one if possible.
+    string ContentType = 1 [(gogoproto.jsontag) = "content-type,omitempty"];
 }
 
+// Object is placed in a bucket determined by the Tenant and the Namespace in the ObjectMeta.
 message Object {
     api.TypeMeta T      = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O    = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
