@@ -23,7 +23,6 @@ struct req_tx_s0_t0_k k;
 #define TO_S2_SQWQE_P           to_s2_sqwqe_info
 #define TO_S3_SQSGE_P           to_s3_sqsge_info
 #define TO_S4_DCQCN_BIND_MW_P   to_s4_dcqcn_bind_mw_info
-#define TO_S4_FRPMR_LKEY_P      to_s4_frpmr_sqlkey_info
 #define TO_S1_DCQCN_BIND_MW_P   to_s1_dcqcn_bind_mw_info
 #define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
 #define TO_S7_STATS_INFO_P      to_s7_stats_info
@@ -112,7 +111,7 @@ process_send:
         CAPRI_SET_FIELD_C(r1, PHV_GLOBAL_COMMON_T, flags.req_tx._rexmit, 1, c1) // REQ_TX_FLAG_REXMIT
 
         bbeq           d.frpmr_in_progress, 1, frpmr
-
+                              
         // if (sqcb0_p->fence) goto fence
         seq            c3, d.fence, 1 // Branch Delay Slot
         bcf            [c3], fence
@@ -120,11 +119,11 @@ process_send:
         // if (sqcb0_p->in_progress) goto in_progress
         seq            c3, 1, d.in_progress // Branch Delay Slot
         bcf            [c3], in_progress
-
+        
         // Check if spec cindex is pointing to yet to be filled wqe
-        seq            c3, SPEC_SQ_C_INDEX, SQ_P_INDEX // BD-Slot
+        seq            c3, SPEC_SQ_C_INDEX, SQ_P_INDEX
         bcf            [c3], exit
-
+        
 poll_for_work:
 
         // header_template_addr is needed to load hdr_template_process in fast-path.
@@ -509,27 +508,20 @@ frpmr:
     // Reset spec_cindex and trigger dcqcn/sqcb_write_back/sqcb2_write_back to update cindex-copy everywhere.
     tblwr      SPEC_SQ_C_INDEX, SQ_C_INDEX
 
-    bbeq       d.frpmr_dma_done, 1, frpmr_second_pass
-    phvwrpair CAPRI_PHV_FIELD(TO_S4_FRPMR_LKEY_P, header_template_addr_or_pd), d.pd, \
-                  CAPRI_PHV_FIELD(TO_S4_FRPMR_LKEY_P, spec_cindex), SPEC_SQ_C_INDEX
-    phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
-    phvwr      CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1
-    phvwr      CAPRI_PHV_FIELD(TO_S2_SQWQE_P, fast_reg_rsvd_lkey_enable), d.priv_oper_enable 
-    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, d.curr_wqe_ptr)
-    
+    // Its ok to reset the flag here. cindex-copy update is not expected to fail!
+    tblwr      d.frpmr_in_progress, 0
 
-frpmr_second_pass:
-    tblwr         d.frpmr_map_count_completed, 0
+    phvwr      CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), SPEC_SQ_C_INDEX
     phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), SPEC_SQ_C_INDEX
 
     // Below flags are required to increment cindex and load sqcb2_write_back in stage-5.
-    phvwrpair  CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, last_pkt), 1 , CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1
+    phvwrpair  CAPRI_PHV_RANGE(SQCB_WRITE_BACK_P, first, last_pkt), 3 , CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, non_packet_wqe), 1
+    tblmincri  SPEC_SQ_C_INDEX, d.log_num_wqes, 1
     // congestion_mgmt_enable flag and header_template_addr to-stage3 info is already copied earlier in the program.
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dcqcn_enforce_process, r0)
 
     //Load dummy-sqpt to load sqwqe in stage 2. wqe is checked out to know lkey to load in stage4 for state update.
     phvwr     CAPRI_PHV_FIELD(SQCB_TO_WQE_P, frpmr_lkey_state_upd), 1
-    tblmincri SPEC_SQ_C_INDEX, d.log_num_wqes, 1
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_dummy_sqpt_process, d.curr_wqe_ptr)
 
 invalid_bktrack:
