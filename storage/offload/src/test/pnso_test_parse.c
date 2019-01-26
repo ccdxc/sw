@@ -67,7 +67,7 @@ static struct test_desc default_desc = {
 static struct test_testcase default_testcase = {
 	.node = { NODE_TESTCASE, 0, NULL, { NULL, NULL } },
 	.repeat = 1,
-	.batch_depth = 1,
+	.batch_depth = 0,
 	.batch_concurrency = 0,
 	.sync_mode = SYNC_MODE_SYNC,
 	.svc_chain_count = 0,
@@ -878,6 +878,7 @@ FUNC_SET_INT(test_set_idx, parent->idx, 1, UINT_MAX)
 
 FUNC_SET_STRING(test_set_svc_chain_name, ((struct test_svc_chain *)parent)->name,
 		TEST_MAX_NAME_LEN)
+FUNC_SET_INT(test_set_svc_chain_batch_weight, ((struct test_svc_chain *)parent)->batch_weight, 1, TEST_MAX_BATCH_DEPTH)
 FUNC_SET_INT(test_set_input_random, ((struct test_svc_chain *)parent)->input.random_seed, 0, UINT_MAX)
 FUNC_SET_INT(test_set_input_random_len, ((struct test_svc_chain *)parent)->input.random_len, 0, TEST_MAX_RANDOM_LEN)
 FUNC_SET_INT(test_set_input_offset, ((struct test_svc_chain *)parent)->input.offset, 1, UINT_MAX)
@@ -891,7 +892,7 @@ FUNC_SET_STRING(test_set_output_file, ((struct test_svc *)parent)->output_path, 
 
 FUNC_SET_INT(test_set_testcase_repeat, ((struct test_testcase *)parent)->repeat, 0, LLONG_MAX)
 FUNC_SET_INT(test_set_testcase_turbo, ((struct test_testcase *)parent)->turbo, 0, 1)
-FUNC_SET_INT(test_set_testcase_batch_depth, ((struct test_testcase *)parent)->batch_depth, 1, TEST_MAX_BATCH_DEPTH)
+FUNC_SET_INT(test_set_testcase_batch_depth, ((struct test_testcase *)parent)->batch_depth, 0, TEST_MAX_BATCH_DEPTH)
 FUNC_SET_INT(test_set_testcase_batch_concurrency, ((struct test_testcase *)parent)->batch_concurrency, 0, TEST_MAX_BATCH_CONCURRENCY)
 FUNC_SET_PARAM(test_set_testcase_sync_mode, ((struct test_testcase *)parent)->sync_mode,
 	       g_sync_mode_map, 0, 0, SYNC_MODE_MAX-1)
@@ -1701,10 +1702,11 @@ CHILD_NODE_DESC(crypto_keys_key, key1, NULL, test_set_key1_data, NULL) \
 CHILD_NODE_DESC(crypto_keys_key, key2, NULL, test_set_key2_data, NULL) \
 \
 CHILD_NODE_DESC(svc_chains, svc_chain, test_create_svc_chain, NULL, NULL) \
-CHILD_NODE_DESC(svc_chains_svc_chain, idx,   NULL, test_set_idx, NULL) \
-CHILD_NODE_DESC(svc_chains_svc_chain, name,  NULL, test_set_svc_chain_name, NULL) \
-CHILD_NODE_DESC(svc_chains_svc_chain, input, NULL, NULL, NULL) \
-CHILD_NODE_DESC(svc_chains_svc_chain, ops,   NULL, NULL, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain, idx,          NULL, test_set_idx, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain, name,         NULL, test_set_svc_chain_name, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain, batch_weight, NULL, test_set_svc_chain_batch_weight, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain, input,        NULL, NULL, NULL) \
+CHILD_NODE_DESC(svc_chains_svc_chain, ops,          NULL, NULL, NULL) \
 \
 CHILD_NODE_DESC(svc_chains_svc_chain_input, random,         NULL, test_set_input_random, NULL) \
 CHILD_NODE_DESC(svc_chains_svc_chain_input, random_len,     NULL, test_set_input_random_len, NULL) \
@@ -1783,6 +1785,7 @@ CHILD_NODE_DESC(tests_test_validations, data_len_compare, test_create_validation
 \
 CHILD_NODE_DESC(tests_test_validations_data_compare, idx,          NULL, test_set_idx, NULL) \
 CHILD_NODE_DESC(tests_test_validations_data_compare, type,         NULL, test_set_compare_type, NULL) \
+CHILD_NODE_DESC(tests_test_validations_data_compare, svc_chain,    NULL, test_set_validation_svc_chain, NULL) \
 CHILD_NODE_DESC(tests_test_validations_data_compare, file1,        NULL, test_set_validation_file1, NULL) \
 CHILD_NODE_DESC(tests_test_validations_data_compare, file2,        NULL, test_set_validation_file2, NULL) \
 CHILD_NODE_DESC(tests_test_validations_data_compare, pattern,      NULL, test_set_validation_pattern, NULL) \
@@ -1791,6 +1794,7 @@ CHILD_NODE_DESC(tests_test_validations_data_compare, len,          NULL, test_se
 \
 CHILD_NODE_DESC(tests_test_validations_size_compare, idx,          NULL, test_set_idx, NULL) \
 CHILD_NODE_DESC(tests_test_validations_size_compare, type,         NULL, test_set_compare_type, NULL) \
+CHILD_NODE_DESC(tests_test_validations_size_compare, svc_chain,    NULL, test_set_validation_svc_chain, NULL) \
 CHILD_NODE_DESC(tests_test_validations_size_compare, file1,        NULL, test_set_validation_file1, NULL) \
 CHILD_NODE_DESC(tests_test_validations_size_compare, file2,        NULL, test_set_validation_file2, NULL) \
 CHILD_NODE_DESC(tests_test_validations_size_compare, val,          NULL, test_set_validation_data_len, NULL) \

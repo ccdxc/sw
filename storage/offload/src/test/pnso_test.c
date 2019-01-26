@@ -309,8 +309,10 @@ static pnso_error_t test_read_input(const char *path,
 
 static void free_buffer_ctx(struct buffer_context *buf_ctx)
 {
-	if (buf_ctx->buflist)
-		TEST_FREE(buf_ctx->buflist);
+	if (buf_ctx->va_buflist)
+		TEST_FREE(buf_ctx->va_buflist);
+	if (buf_ctx->pa_buflist)
+		TEST_FREE(buf_ctx->pa_buflist);
 	if (buf_ctx->buf.buf)
 		TEST_FREE((void *) buf_ctx->buf.buf);
 	memset(buf_ctx, 0, sizeof(*buf_ctx));
@@ -330,14 +332,23 @@ static pnso_error_t alloc_buffer_ctx(struct buffer_context *buf_ctx,
 		return EINVAL;
 	block_size = (total_bytes + count - 1) / count;
 
-	/* Allocate buflist if necessary */
+	/* Allocate buflists if necessary */
 	if (count > buf_ctx->buflist_alloc_count) {
-		if (buf_ctx->buflist)
-			TEST_FREE(buf_ctx->buflist);
-		buf_ctx->buflist = TEST_ALLOC(sizeof(struct pnso_buffer_list) +
-					      (sizeof(struct pnso_flat_buffer) * count));
-		if (!buf_ctx->buflist)
+		if (buf_ctx->va_buflist)
+			TEST_FREE(buf_ctx->va_buflist);
+		buf_ctx->va_buflist = TEST_ALLOC(sizeof(struct pnso_buffer_list) +
+						 (sizeof(struct pnso_flat_buffer) * count));
+		if (buf_ctx->pa_buflist)
+			TEST_FREE(buf_ctx->pa_buflist);
+		buf_ctx->pa_buflist = TEST_ALLOC(sizeof(struct pnso_buffer_list) +
+						 (sizeof(struct pnso_flat_buffer) * count));
+		if (!buf_ctx->va_buflist || !buf_ctx->pa_buflist) {
+			buf_ctx->buflist_alloc_count = 0;
 			goto no_mem;
+		}
+
+		buf_ctx->va_buflist->count = 0;
+		buf_ctx->pa_buflist->count = 0;
 		buf_ctx->buflist_alloc_count = count;
 	}
 
@@ -345,28 +356,39 @@ static pnso_error_t alloc_buffer_ctx(struct buffer_context *buf_ctx,
 	if ((count*block_size) > buf_ctx->buf_alloc_sz) {
 		if (buf_ctx->buf.buf)
 			TEST_FREE((void *) buf_ctx->buf.buf);
-		buf_ctx->buf.buf = (uint64_t) TEST_ALLOC_ALIGNED(alignment, count*block_size);
-		if (!buf_ctx->buf.buf)
+		buf_ctx->buf.buf = (uint64_t) TEST_ALLOC_ALIGNED(alignment,
+							count*block_size);
+		if (!buf_ctx->buf.buf) {
+			buf_ctx->buf_alloc_sz = 0;
 			goto no_mem;
+		}
 		buf_ctx->buf_alloc_sz = count*block_size;
 	}
 	if (poisin)
 		memset((void *) buf_ctx->buf.buf, POISIN_BYTE, count*block_size);
 
-	/* Point buflist to data */
-	buf_ctx->is_sgl_pa = false;
+	/* Point buflists to data */
 	buf_ctx->buf.len = total_bytes;
-	buf_ctx->buflist->count = count;
+	buf_ctx->va_buflist->count = count;
+	buf_ctx->pa_buflist->count = count;
 	for (i = 0; i < count; i++) {
-		buf_ctx->buflist->buffers[i].len = block_size;
-		buf_ctx->buflist->buffers[i].buf = buf_ctx->buf.buf + (block_size * i);
+		buf_ctx->va_buflist->buffers[i].len = block_size;
+		buf_ctx->va_buflist->buffers[i].buf =
+			buf_ctx->buf.buf + (block_size * i);
+		buf_ctx->pa_buflist->buffers[i].len = block_size;
+		buf_ctx->pa_buflist->buffers[i].buf =
+			osal_virt_to_phy((void *) buf_ctx->buf.buf +
+					 (block_size * i));
 	}
 
 	/* Adjust last block, in case total_bytes is not an even multiple */
 	if (block_size*count > total_bytes) {
-		buf_ctx->buflist->buffers[count-1].len = total_bytes -
+		buf_ctx->va_buflist->buffers[count-1].len = total_bytes -
+						(block_size*(count-1));
+		buf_ctx->pa_buflist->buffers[count-1].len = total_bytes -
 						(block_size*(count-1));
 	}
+
 	return PNSO_OK;
 
 no_mem:
@@ -762,59 +784,6 @@ static pnso_error_t update_file_node(struct test_file_table *table,
 	return err;
 }
 
-static void buffer_ctx_p2v(struct buffer_context *buf_ctx)
-{
-	if (buf_ctx->is_sgl_pa && buf_ctx->buflist) {
-		pbuf_convert_buffer_list_p2v(buf_ctx->buflist);
-		buf_ctx->is_sgl_pa = false;
-	}
-}
-
-static void buffer_ctx_v2p(struct buffer_context *buf_ctx)
-{
-	if (!buf_ctx->is_sgl_pa && buf_ctx->buflist) {
-		pbuf_convert_buffer_list_v2p(buf_ctx->buflist);
-		buf_ctx->is_sgl_pa = true;
-	}
-}
-
-static void request_ctx_p2v(struct request_context *req_ctx)
-{
-	size_t i;
-
-	if (!req_ctx)
-		return;
-
-	/* Normalize sgls from physical to virtual addresses */
-	buffer_ctx_p2v(&req_ctx->input);
-	for (i = 0; i < req_ctx->svc_res.num_services; i++) {
-		buffer_ctx_p2v(&req_ctx->outputs[i]);
-	}
-}
-
-static void request_ctx_v2p(struct request_context *req_ctx)
-{
-	size_t i;
-
-	if (!req_ctx)
-		return;
-
-  	/* Normalize sgls from virtual to physical addresses */
-	buffer_ctx_v2p(&req_ctx->input);
-	for (i = 0; i < req_ctx->svc_res.num_services; i++) {
-		buffer_ctx_v2p(&req_ctx->outputs[i]);
-	}
-}
-
-static void batch_ctx_p2v(struct batch_context *batch_ctx)
-{
-	size_t i;
-
-	for (i = 0; i < batch_ctx->req_count; i++) {
-		request_ctx_p2v(batch_ctx->req_ctxs[i]);
-	}
-}
-
 static uint32_t get_svc_status_data_len(const struct pnso_service_status *svc_status)
 {
 	uint32_t ret = 0;
@@ -854,6 +823,7 @@ static void output_results(struct request_context *req_ctx,
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
 	const struct test_testcase *testcase = test_ctx->testcase;
+	struct pnso_buffer_list *buflist;
 	uint32_t blk_sz = batch_ctx->desc->init_params.block_size;
 	char output_path[TEST_MAX_FULL_PATH_LEN] = "";
 
@@ -896,9 +866,12 @@ static void output_results(struct request_context *req_ctx,
 						&buflist.bl);
 				}
 			} else if (svc_status->u.dst.sgl) {
+				OSAL_ASSERT(svc_status->u.dst.sgl ==
+					    req_ctx->outputs[i].pa_buflist);
+				buflist = req_ctx->outputs[i].va_buflist;
 				file_size = get_svc_status_data_len(svc_status);
 				if (!testcase->turbo) {
-					checksum = compute_checksum(svc_status->u.dst.sgl,
+					checksum = compute_checksum(buflist,
 								    NULL, file_size);
 				}
 				if (svc->svc.svc_type == PNSO_SVC_TYPE_COMPRESS &&
@@ -907,8 +880,7 @@ static void output_results(struct request_context *req_ctx,
 					padded_size = roundup_len(file_size, blk_sz);
 					if (!testcase->turbo) {
 						padded_checksum = compute_checksum(
-							svc_status->u.dst.sgl,
-							NULL, padded_size);
+							buflist, NULL, padded_size);
 					}
 				}
 				err = update_file_node(
@@ -917,7 +889,7 @@ static void output_results(struct request_context *req_ctx,
 					file_size,
 					padded_checksum, padded_size,
 					blk_sz,
-					svc_status->u.dst.sgl);
+					buflist);
 			}
 			if (err != PNSO_OK) {
 				PNSO_LOG_ERROR("Cannot write data to %s\n",
@@ -1006,9 +978,6 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 	PNSO_LOG_DEBUG("submitting request, mode %u\n",
 			(uint32_t) sync_mode);
 
-	/* Normalize sgls from virtual to physical addresses */
-	request_ctx_v2p(req_ctx);
-
 	switch (sync_mode) {
 	case SYNC_MODE_SYNC:
 		cb = NULL;
@@ -1053,10 +1022,10 @@ static pnso_error_t test_submit_request(struct request_context *req_ctx,
 	return rc;
 }
 
-static pnso_error_t init_input_context(struct request_context *req_ctx,
+static pnso_error_t init_input_context(struct buffer_context *input,
+				       struct testcase_context *test_ctx,
 				       const struct test_svc_chain *svc_chain)
 {
-	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	pnso_error_t err = PNSO_OK;
 	uint32_t input_len;
 	uint32_t min_block, max_block, block_count;
@@ -1065,17 +1034,11 @@ static pnso_error_t init_input_context(struct request_context *req_ctx,
 	//uint8_t *buf;
 	char input_path[TEST_MAX_FULL_PATH_LEN] = "";
 
-	/* don't re-initialize in turbo mode */
-	if (req_ctx->input.initialized &&
-	    req_ctx->input.svc_chain_idx == svc_chain->node.idx &&
-	    batch_ctx->test_ctx->testcase->turbo)
-		return PNSO_OK;
-
-	req_ctx->input.initialized = false;
+	OSAL_ASSERT(!input->initialized);
 
 	/* construct input filename */
 	if (svc_chain->input.pathname[0]) {
-		err = construct_filename(batch_ctx->desc, req_ctx->vars,
+		err = construct_filename(test_ctx->desc, test_ctx->vars,
 					 input_path, svc_chain->input.pathname);
 		if (err != PNSO_OK) {
 			return err;
@@ -1088,7 +1051,7 @@ static pnso_error_t init_input_context(struct request_context *req_ctx,
 		/* Try to infer the length, for user convenience */
 		if (input_path[0]) {
 			input_len = lookup_file_node_size(
-					batch_ctx->test_ctx->output_file_tbl,
+					test_ctx->output_file_tbl,
 					input_path);
 
 			/* TODO: separate file table for input files */
@@ -1096,13 +1059,13 @@ static pnso_error_t init_input_context(struct request_context *req_ctx,
 			input_len = test_file_size(input_path);
 #endif
 			if (!input_len) {
-				PNSO_LOG_DEBUG("Invalid input file %s\n", input_path);
+				PNSO_LOG_ERROR("Invalid input file %s\n", input_path);
 				return EINVAL;
 			}
 		} else if (svc_chain->input.pattern[0]) {
 			input_len = strlen(svc_chain->input.pattern);
 		} else {
-			input_len = batch_ctx->desc->init_params.block_size;
+			input_len = test_ctx->desc->init_params.block_size;
 		}
 	}
 
@@ -1111,10 +1074,10 @@ static pnso_error_t init_input_context(struct request_context *req_ctx,
 	max_block = svc_chain->input.max_block_size;
 	block_count = svc_chain->input.block_count;
 	if (!min_block) {
-		min_block = batch_ctx->desc->init_params.block_size;
+		min_block = test_ctx->desc->init_params.block_size;
 	}
 	if (!max_block) {
-		max_block = batch_ctx->desc->init_params.block_size;
+		max_block = test_ctx->desc->init_params.block_size;
 	}
 	if (max_block < min_block) {
 		max_block = min_block;
@@ -1131,44 +1094,44 @@ static pnso_error_t init_input_context(struct request_context *req_ctx,
 		return EINVAL;
 	}
 
-	err = alloc_buffer_ctx(&req_ctx->input, block_count, input_len,
-			       batch_ctx->desc->init_params.block_size,
+	err = alloc_buffer_ctx(input, block_count, input_len,
+			       test_ctx->desc->init_params.block_size,
 			       false);
-	if (err != PNSO_OK)
-		return err;
-
-	/* populate input buffer */
-	err = test_read_input(input_path, &svc_chain->input, req_ctx->input.buflist);
 	if (err != PNSO_OK) {
+		PNSO_LOG_ERROR("Failed to allocate input buffer_ctx with %u blocks, %u bytes\n",
+			       block_count, input_len);
 		return err;
 	}
 
-	req_ctx->input.svc_chain_idx = svc_chain->node.idx;
-	req_ctx->input.initialized = true;
+	/* populate input buffer */
+	err = test_read_input(input_path, &svc_chain->input, input->va_buflist);
+	if (err != PNSO_OK) {
+		PNSO_LOG_ERROR("Failed to read input from %s\n", input_path);
+		return err;
+	}
+
+	input->svc_chain_idx = svc_chain->node.idx;
+	input->initialized = true;
 
 	return PNSO_OK;
 }
 
 static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 					   const struct test_testcase *testcase,
-					   const struct test_svc_chain *svc_chain,
 					   uint32_t batch_iter,
 					   uint32_t batch_count)
 {
 	pnso_error_t err = PNSO_OK;
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
+	const struct test_svc_chain *svc_chain = req_ctx->chain_ctx->svc_chain;
 	struct test_node *node;
 	uint32_t input_len;
 	uint32_t i;
 
-	/* setup source buffers */
-	err = init_input_context(req_ctx, svc_chain);
-	if (err)
-		return err;
-	input_len = req_ctx->input.buf.len;
+	input_len = req_ctx->chain_ctx->input.buf.len;
 
 	/* setup request */
-	req_ctx->svc_req.sgl = req_ctx->input.buflist;
+	req_ctx->svc_req.sgl = req_ctx->chain_ctx->input.pa_buflist;
 	req_ctx->svc_req.num_services = svc_chain->num_services;
 	i = 0;
 	FOR_EACH_NODE(svc_chain->svcs) {
@@ -1249,7 +1212,7 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 						"Out of memory for output_buf\n");
 					return ENOMEM;
 				}
-				svc_status->u.dst.sgl = buf_ctx->buflist;
+				svc_status->u.dst.sgl = buf_ctx->pa_buflist;
 			}
 		}
 		i++;
@@ -1721,20 +1684,24 @@ done:
 static pnso_error_t run_req_validation(struct request_context *req_ctx)
 {
 	const struct test_testcase *testcase;
+	struct batch_context *batch_ctx;
 	struct test_node *node;
 
-	if (!req_ctx || !req_ctx->svc_chain)
+	if (!req_ctx || !req_ctx->chain_ctx)
 		return EINVAL;
 
-	testcase = req_ctx->batch_ctx->test_ctx->testcase;
+	batch_ctx = req_ctx->batch_ctx;
+	testcase = batch_ctx->test_ctx->testcase;
 
-	/* Output at least the first result of each worker */
-	if (req_ctx->batch_ctx->req_rc == PNSO_OK &&
+	/* Output at least the first result of each worker or chain */
+	if (batch_ctx->req_rc == PNSO_OK &&
 	    req_ctx->svc_res.err == PNSO_OK &&
 	    (!testcase->turbo ||
-	     req_ctx->batch_ctx->batch_id <
-	     req_ctx->batch_ctx->test_ctx->worker_count)) {
-		output_results(req_ctx, req_ctx->svc_chain);
+	     (batch_ctx->batch_id <
+	      batch_ctx->test_ctx->worker_count) ||
+	     (req_ctx->req_id <
+	      batch_ctx->test_ctx->chain_lb_table_count))) {
+		output_results(req_ctx, req_ctx->chain_ctx->svc_chain);
 	}
 
 	FOR_EACH_NODE(testcase->validations) {
@@ -1743,7 +1710,8 @@ static pnso_error_t run_req_validation(struct request_context *req_ctx)
 
 		if (!validation_is_per_req(validation) ||
 		    (validation->svc_chain_idx &&
-		     validation->svc_chain_idx != req_ctx->svc_chain->node.idx)) {
+		     validation->svc_chain_idx !=
+		     req_ctx->chain_ctx->svc_chain->node.idx)) {
 			continue;
 		}
 		switch (validation->type) {
@@ -1763,6 +1731,34 @@ static pnso_error_t run_req_validation(struct request_context *req_ctx)
 	return PNSO_OK;
 }
 
+static bool is_svc_chain_in_batch(struct batch_context *batch_ctx,
+				  uint32_t svc_chain_idx)
+{
+	struct request_context *req_ctx;
+	uint32_t req_count;
+	int i;
+
+	req_count = batch_ctx->req_count;
+
+	/* in single chain case, check just first req */
+	if (req_count && batch_ctx->test_ctx->chain_count == 1)
+		req_count = 1;
+
+	/* check each request */
+	for (i = 0; i < req_count; i++) {
+		req_ctx = batch_ctx->req_ctxs[i];
+		if (!req_ctx || !req_ctx->chain_ctx)
+			break;
+
+		if (req_ctx->chain_ctx->svc_chain->node.idx ==
+		    svc_chain_idx) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static pnso_error_t run_batch_validation(struct batch_context *batch_ctx)
 {
 	pnso_error_t err = PNSO_OK;
@@ -1780,17 +1776,23 @@ static pnso_error_t run_batch_validation(struct batch_context *batch_ctx)
 			break;
 	}
 
+	/* skip ALL file validations in turbo mode */
+	if (testcase->turbo)
+		return err;
+
 	/* run file validations */
 	FOR_EACH_NODE(testcase->validations) {
 		struct test_validation *validation =
 				(struct test_validation *) node;
 
-		if (!validation_is_per_req(validation)) {
-			if (testcase->turbo &&
-			    validation->type == VALIDATION_DATA_COMPARE)
-				continue;
-			run_data_validation(batch_ctx, testcase, validation);
+		if (validation_is_per_req(validation) ||
+		    (validation->svc_chain_idx &&
+		     !is_svc_chain_in_batch(batch_ctx,
+				validation->svc_chain_idx))) {
+			continue;
 		}
+
+		run_data_validation(batch_ctx, testcase, validation);
 	}
 
 	return err;
@@ -1798,28 +1800,31 @@ static pnso_error_t run_batch_validation(struct batch_context *batch_ctx)
 
 static void init_req_context(struct request_context *req_ctx,
 			     struct batch_context *batch_ctx,
-			     const struct test_svc_chain *svc_chain)
+			     struct chain_context *chain_ctx,
+			     uint64_t req_id)
 {
 	req_ctx->batch_ctx = batch_ctx;
-	req_ctx->svc_chain = svc_chain;
+	req_ctx->chain_ctx = chain_ctx;
+	req_ctx->req_id = req_id;
 	memset(&req_ctx->svc_req, 0, sizeof(req_ctx->svc_req));
 	memset(req_ctx->req_svcs, 0, sizeof(req_ctx->req_svcs));
 	memset(&req_ctx->svc_res, 0, sizeof(req_ctx->svc_res));
 	memset(req_ctx->res_statuses, 0, sizeof(req_ctx->res_statuses));
 	req_ctx->req_rc = 0;
 	copy_vars(batch_ctx->vars, req_ctx->vars);
-	req_ctx->vars[TEST_VAR_CHAIN] = svc_chain->node.idx;
+	req_ctx->vars[TEST_VAR_CHAIN] = chain_ctx->svc_chain->node.idx;
 }
 
 static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 {
 	pnso_error_t err = PNSO_OK;
-	struct test_node *node;
-	struct test_svc_chain *svc_chain;
+	const struct test_svc_chain *svc_chain;
+	struct chain_context *chain_ctx;
 	struct request_context *req_ctx = NULL;
 	struct worker_context *worker_ctx = batch_get_worker_ctx(batch_ctx);
-	const struct test_testcase *testcase = batch_ctx->test_ctx->testcase;
-	uint32_t i, chain_i, chain_idx;
+	struct testcase_context *test_ctx = batch_ctx->test_ctx;
+	const struct test_testcase *testcase = test_ctx->testcase;
+	uint32_t i, chain_i, lb_idx;
 
 	PNSO_LOG_DEBUG("enter run_testcase_batch ...\n");
 
@@ -1831,20 +1836,18 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 	batch_ctx->vars[TEST_VAR_ID] = testcase->node.idx;
 
 	/* Run each request, alternating svc_chain */
-	chain_i = batch_ctx->batch_id * testcase->batch_depth;
-	for (i = 0; i < batch_ctx->req_count; i++) {
+	lb_idx = batch_ctx->first_req_id % test_ctx->chain_lb_table_count;
+	for (i = 0; i < batch_ctx->req_count; i++, lb_idx++) {
 		/* get svc_chain */
-		chain_idx = testcase->svc_chains[chain_i %
-						 testcase->svc_chain_count];
-		NODE_FIND_ID(batch_ctx->desc->svc_chains, chain_idx);
-		svc_chain = (struct test_svc_chain *) node;
-		if (!svc_chain) {
+		chain_i = test_ctx->chain_lb_table[lb_idx % test_ctx->chain_lb_table_count];
+		chain_ctx = test_ctx->chain_ctxs[chain_i];
+		if (!chain_ctx) {
 			PNSO_LOG_ERROR("Svc_chain %u not found for testcase %u\n",
-				      testcase->svc_chains[chain_i], testcase->node.idx);
+				      chain_i, testcase->node.idx);
 			err = EINVAL;
 			goto error;
 		}
-		chain_i++;
+		svc_chain = chain_ctx->svc_chain;
 		batch_ctx->vars[TEST_VAR_CHAIN] = svc_chain->node.idx;
 
 		req_ctx = batch_ctx->req_ctxs[i];
@@ -1855,8 +1858,9 @@ static pnso_error_t run_testcase_batch(struct batch_context *batch_ctx)
 			err = EINVAL;
 			goto error;
 		}
-		init_req_context(req_ctx, batch_ctx, svc_chain);
-		err = run_testcase_svc_chain(req_ctx, testcase, svc_chain,
+		init_req_context(req_ctx, batch_ctx, chain_ctx,
+				 batch_ctx->first_req_id + i);
+		err = run_testcase_svc_chain(req_ctx, testcase,
 					     i, batch_ctx->req_count);
 		if (err != PNSO_OK) {
 			PNSO_LOG_INFO("Failed to submit request for req %u/%u, batch_id %u, worker_id %u\n",
@@ -1919,14 +1923,14 @@ static void free_req_context(struct request_context *ctx)
 {
 	uint32_t i;
 
-	free_buffer_ctx(&ctx->input);
+	if (!ctx)
+		return;
+
 	for (i = 0; i < PNSO_SVC_TYPE_MAX; i++) {
 		free_buffer_ctx(&ctx->outputs[i]);
 	}
 
-	if (ctx) {
-		TEST_FREE(ctx);
-	}
+	TEST_FREE(ctx);
 }
 
 static void free_batch_context(struct batch_context *ctx)
@@ -1937,7 +1941,7 @@ static void free_batch_context(struct batch_context *ctx)
 		return;
 	}
 
-	for (i = 0; i < ctx->req_count; i++) {
+	for (i = 0; i < ctx->max_req_count; i++) {
 		free_req_context(ctx->req_ctxs[i]);
 	}
 
@@ -1950,14 +1954,6 @@ static struct batch_context *alloc_batch_context(const struct test_desc *desc,
 	uint32_t i;
 	struct batch_context *ctx;
 	struct request_context *req_ctx;
-	const struct test_testcase *testcase = test_ctx->testcase;
-	uint32_t batch_depth = testcase->batch_depth;
-
-	if (batch_depth > TEST_MAX_BATCH_DEPTH) {
-		batch_depth = TEST_MAX_BATCH_DEPTH;
-	} else if (batch_depth < 1) {
-		batch_depth = 1;
-	}
 
 	ctx = (struct batch_context *) TEST_ALLOC(sizeof(*ctx));
 	if (!ctx)
@@ -1968,14 +1964,14 @@ static struct batch_context *alloc_batch_context(const struct test_desc *desc,
 	ctx->test_ctx = test_ctx;
 	osal_atomic_init(&ctx->cb_count, 0);
 
-	for (i = 0; i < batch_depth; i++) {
+	for (i = 0; i < test_ctx->max_batch_depth; i++) {
 		req_ctx = alloc_req_context();
 		if (!req_ctx) {
 			goto error;
 		}
 		req_ctx->batch_ctx = ctx;
 		ctx->req_ctxs[i] = req_ctx;
-		ctx->req_count = i+1;
+		ctx->max_req_count = i+1;
 	}
 
 	return ctx;
@@ -1987,11 +1983,15 @@ error:
 
 static void init_batch_context(struct batch_context *ctx,
 			       struct worker_context *work_ctx,
-			       uint32_t batch_id)
+			       uint32_t batch_id,
+			       uint64_t req_id, uint16_t req_count)
 {
+	OSAL_ASSERT(req_count && req_count <= ctx->max_req_count);
 	osal_atomic_set(&ctx->cb_count, 0);
 	ctx->worker_id = work_ctx->worker_id;
 	ctx->batch_id = batch_id;
+	ctx->first_req_id = req_id;
+	ctx->req_count = req_count;
 	ctx->req_rc = 0;
 	ctx->poll_fn = NULL;
 	ctx->poll_ctx = NULL;
@@ -2002,7 +2002,7 @@ static void init_batch_context(struct batch_context *ctx,
 	/* These were initialized during alloc */
 	OSAL_ASSERT(ctx->desc);
 	OSAL_ASSERT(ctx->test_ctx);
-	OSAL_ASSERT(ctx->req_count);
+	OSAL_ASSERT(ctx->max_req_count);
 }
 
 static int worker_loop(void *param)
@@ -2152,6 +2152,16 @@ error:
 	return NULL;
 }
 
+static void
+free_chain_context(struct chain_context *ctx)
+{
+	if (!ctx)
+		return;
+
+	free_buffer_ctx(&ctx->input);
+	TEST_FREE(ctx);
+}
+
 static void free_testcase_context(struct testcase_context *ctx)
 {
 	int i;
@@ -2159,6 +2169,11 @@ static void free_testcase_context(struct testcase_context *ctx)
 	if (!ctx)
 		return;
 
+	if (ctx->chain_lb_table)
+		TEST_FREE(ctx->chain_lb_table);
+	for (i = 0; i < ctx->chain_count; i++) {
+		free_chain_context(ctx->chain_ctxs[i]);
+	}
 	for (i = 0; i < ctx->worker_count; i++) {
 		free_worker_context(ctx->worker_ctxs[i]);
 	}
@@ -2175,7 +2190,7 @@ static uint16_t cpu_mask_to_core_count(uint64_t cpu_mask)
 
 	/* mask off invalid cores */
 	if (osal_get_core_count() < 64)
-		cpu_mask &= ((1 << osal_get_core_count()) - 1);
+		cpu_mask &= ((1ULL << osal_get_core_count()) - 1);
 
 	/* count bits */
 	while (cpu_mask) {
@@ -2195,28 +2210,74 @@ static uint16_t cpu_mask_to_core_count(uint64_t cpu_mask)
 	return max_core_count;
 }
 
-static void init_testcase_svc_chains(struct testcase_context *test_ctx)
+static pnso_error_t init_testcase_svc_chains(struct testcase_context *test_ctx)
 {
+	pnso_error_t err = PNSO_OK;
 	const struct test_testcase *testcase = test_ctx->testcase;
-	uint32_t chain_i, chain_idx;
-	struct test_node *node;
-	struct test_svc_chain *svc_chain;
+	uint32_t chain_i, lb_i;
+	struct chain_context *chain_ctx;
+	uint16_t weight;
 
-	for (chain_i = 0; chain_i < testcase->svc_chain_count; chain_i++) {
-		chain_idx = testcase->svc_chains[chain_i];
-		NODE_FIND_ID(test_ctx->desc->svc_chains, chain_idx);
-		svc_chain = (struct test_svc_chain *) node;
+	OSAL_ASSERT(testcase->svc_chain_count == test_ctx->chain_count);
 
-		if (!svc_chain->input.pattern[0] &&
-		    !svc_chain->input.pathname[0]) {
-			test_init_random(svc_chain->input.random_seed);
-			PNSO_LOG_DEBUG("Init testcase %u svc_chain %u with random seed %u\n",
-				       testcase->node.idx, chain_idx,
-				       svc_chain->input.random_seed);
+	for (chain_i = 0; chain_i < test_ctx->chain_count; chain_i++) {
+		chain_ctx = test_ctx->chain_ctxs[chain_i];
+
+		/* Initialize input buffer */
+		err = init_input_context(&chain_ctx->input, test_ctx,
+					 chain_ctx->svc_chain);
+		if (err != PNSO_OK) {
+			PNSO_LOG_ERROR("Failed to init input context, testcase %u svc_chain %u\n",
+				       testcase->node.idx, chain_ctx->svc_chain->node.idx);
+			goto done;
 		}
 	}
+
+	/* Initialize load balancing table for chains */
+	test_ctx->chain_lb_table_count = test_ctx->total_chain_weight;
+	test_ctx->chain_lb_table = TEST_ALLOC(sizeof(*test_ctx->chain_lb_table) *
+					      test_ctx->chain_lb_table_count);
+	if (!test_ctx->chain_lb_table) {
+		err = ENOMEM;
+		goto done;
+	}
+	chain_i = 0;
+	weight = test_ctx->chain_ctxs[0]->batch_weight;
+	for (lb_i = 0; lb_i < test_ctx->chain_lb_table_count; lb_i++) {
+		test_ctx->chain_lb_table[lb_i] = chain_i;
+
+		if (--weight == 0) {
+			/* rotate to next chain */
+			if (++chain_i >= test_ctx->chain_count) {
+				chain_i = 0; /* wrap */
+			}
+			weight = test_ctx->chain_ctxs[chain_i]->batch_weight;
+		}
+	}
+
+	PNSO_LOG_DEBUG("Init testcase %u with total_chain_weight %u\n",
+		       testcase->node.idx, test_ctx->total_chain_weight);
+done:
+	return err;
 }
 
+static struct chain_context *
+alloc_chain_context(struct testcase_context *test_ctx,
+		    const struct test_svc_chain *svc_chain)
+{
+	struct chain_context *ctx;
+
+	ctx = TEST_ALLOC(sizeof(*ctx));
+	if (!ctx)
+		return NULL;
+
+	memset(ctx, 0, sizeof(*ctx));
+	ctx->svc_chain = svc_chain;
+	ctx->batch_weight = svc_chain->batch_weight ?
+		svc_chain->batch_weight : 1;
+
+	return ctx;
+}
 
 static struct testcase_context *alloc_testcase_context(const struct test_desc *desc,
 						       const struct test_testcase *testcase)
@@ -2224,8 +2285,12 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 	struct testcase_context *test_ctx;
 	struct batch_context *batch_ctx;
 	struct worker_context *worker_ctx;
+	struct chain_context *chain_ctx;
+	struct test_node *node;
+	const struct test_svc_chain *svc_chain;
 	int i, core_id;
 	uint16_t max_core_count;
+	uint32_t chain_idx;
 	uint32_t worker_count = 0;
 
 	test_ctx = (struct testcase_context *) TEST_ALLOC(sizeof(*test_ctx));
@@ -2239,6 +2304,50 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 	osal_atomic_init(&test_ctx->stats_lock, 0);
 	test_ctx->output_file_tbl = test_get_output_file_table();
 
+	if (!testcase->svc_chain_count) {
+		PNSO_LOG_ERROR("Need at least 1 svc_chain to run testcase %u\n",
+			       testcase->node.idx);
+		goto error;
+	}
+
+	/* Allocate chain contexts */
+	test_ctx->max_chain_weight = 1;
+	test_ctx->min_chain_weight = 1;
+	for (i = 0; i < testcase->svc_chain_count; i++) {
+		chain_idx = testcase->svc_chains[i];
+		NODE_FIND_ID(test_ctx->desc->svc_chains, chain_idx);
+		svc_chain = (const struct test_svc_chain *) node;
+		if (!svc_chain) {
+			PNSO_LOG_ERROR("Unable to find svc_chain %u used by testcase %u\n",
+				       chain_idx, testcase->node.idx);
+			goto error;
+		}
+		chain_ctx = alloc_chain_context(test_ctx, svc_chain);
+		if (!chain_ctx) {
+			PNSO_LOG_ERROR("Failed to allocate chain_context for testcase %u\n",
+				       testcase->node.idx);
+			goto error;
+		}
+		test_ctx->chain_ctxs[i] = chain_ctx;
+		test_ctx->chain_count = i+1;
+
+		/* Sum all the batch_weights */
+		test_ctx->total_chain_weight += chain_ctx->batch_weight;
+		if (chain_ctx->batch_weight > test_ctx->max_chain_weight)
+			test_ctx->max_chain_weight = chain_ctx->batch_weight;
+		if (chain_ctx->batch_weight < test_ctx->min_chain_weight)
+			test_ctx->min_chain_weight = chain_ctx->batch_weight;
+	}
+	if (testcase->batch_depth) {
+		test_ctx->max_batch_depth = testcase->batch_depth;
+	} else {
+		test_ctx->max_batch_depth = test_ctx->max_chain_weight;
+		PNSO_LOG_INFO("Setting max_batch_depth to %u for testcase %u\n",
+			      test_ctx->max_batch_depth, testcase->node.idx);
+	}
+	OSAL_ASSERT(test_ctx->max_batch_depth);
+	OSAL_ASSERT(test_ctx->max_batch_depth <= TEST_MAX_BATCH_DEPTH);
+
 	max_core_count = cpu_mask_to_core_count(desc->cpu_mask);
 	if (!max_core_count) {
 		PNSO_LOG_ERROR("Cannot run testcase %u with 0 cores\n",
@@ -2250,7 +2359,7 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 	if (!test_ctx->batch_concurrency) {
 		/* Pick a sane value automatically */
 		test_ctx->batch_concurrency =
-			desc->init_params.per_core_qdepth / testcase->batch_depth;
+			desc->init_params.per_core_qdepth / test_ctx->max_batch_depth;
 		if (!test_ctx->batch_concurrency)
 			test_ctx->batch_concurrency = 1;
 		else if (test_ctx->batch_concurrency > TEST_MAX_BATCH_CONCURRENCY)
@@ -2288,12 +2397,15 @@ static struct testcase_context *alloc_testcase_context(const struct test_desc *d
 		test_ctx->worker_ctxs[worker_count++] = worker_ctx;
 		test_ctx->worker_count = worker_count;
 	}
+
 	PNSO_LOG_INFO("Allocated %u worker contexts for testcase %u\n",
 		      worker_count, testcase->node.idx);
 
 	return test_ctx;
 
 error:
+	PNSO_LOG_ERROR("Failed to allocate testcase context for testcase %u\n",
+		       testcase->node.idx);
 	free_testcase_context(test_ctx);
 	return NULL;
 }
@@ -2389,6 +2501,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	struct testcase_context *ctx;
 	struct worker_context *worker_ctx;
 	struct batch_context *batch_ctx;
+	struct chain_context *chain_ctx;
 	uint64_t batch_completion_count = 0;
 	uint64_t batch_completion_empty_count = 0;
 	uint64_t batch_submit_count = 0;
@@ -2404,6 +2517,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	uint64_t max_idle_time = 0;
 	uint64_t loop_count = 0;
 	uint32_t next_status_time;
+	uint32_t cur_batch_depth;
 	bool b_shutting_down = false;
 	int worker_id;
 
@@ -2416,7 +2530,10 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			       testcase->node.idx);
 		return ENOMEM;
 	}
-	init_testcase_svc_chains(ctx);
+	err = init_testcase_svc_chains(ctx);
+	if (err != PNSO_OK) {
+		goto free_ctx;
+	}
 
 	ctx->vars[TEST_VAR_BLOCK_SIZE] = desc->init_params.block_size;
 	ctx->vars[TEST_VAR_ITER] = 0;
@@ -2431,6 +2548,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	}
 
 	/* Submit batches to each worker thread in turn, until done */
+	cur_batch_depth = testcase->batch_depth;
 	worker_id = 0;
 	last_active_ts = osal_get_clock_nsec();
 	cur_ts = last_active_ts;
@@ -2447,15 +2565,15 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 			PNSO_LOG_DEBUG("DEBUG: batch completed, batch_count %llu\n",
 				(unsigned long long) batch_completion_count+1);
 			last_active_ts = osal_get_clock_nsec();
-			batch_ctx_p2v(batch_ctx);
+
 			/* process finished batch, and restore to freelist */
 			run_batch_validation(batch_ctx);
 			calculate_completion_stats(batch_ctx);
 			aggregate_testcase_stats(&ctx->stats, &batch_ctx->stats,
 					last_active_ts - ctx->start_time);
-			_worker_queue_enqueue(ctx->batch_ctx_freelist, batch_ctx);
 			batch_completion_count++;
-			req_completion_count += testcase->batch_depth;
+			req_completion_count += batch_ctx->req_count;
+			_worker_queue_enqueue(ctx->batch_ctx_freelist, batch_ctx);
 			worker_ctx->pending_batch_count--;
 		} else {
 			batch_completion_empty_count++;
@@ -2476,11 +2594,17 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 				PNSO_LOG_DEBUG("DEBUG: begin batch submission, worker %u, batch_count %llu\n",
 					       worker_id, (unsigned long long) batch_submit_count+1);
 				ctx->vars[TEST_VAR_ITER]++;
-				init_batch_context(batch_ctx, worker_ctx, batch_submit_count);
+				if (!testcase->batch_depth) {
+					/* dynamic batch depth, alternate chains */
+					chain_ctx = ctx->chain_ctxs[batch_submit_count % ctx->chain_count];
+					cur_batch_depth = chain_ctx->batch_weight;
+				}
+				init_batch_context(batch_ctx, worker_ctx, batch_submit_count,
+						   req_submit_count, cur_batch_depth);
 
 				if (worker_queue_enqueue(worker_ctx->submit_q, batch_ctx)) {
 					batch_submit_count++;
-					req_submit_count += testcase->batch_depth;
+					req_submit_count += cur_batch_depth;
 					last_active_ts = osal_get_clock_nsec();
 					worker_ctx->pending_batch_count++;
 				} else {
@@ -2558,10 +2682,10 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	osal_atomic_set(&g_testcase_active, 0);
 	PNSO_LOG_DEBUG("DEBUG: exiting testcase while loop\n");
 
-	if (err != ETIMEDOUT &&
-	    g_osal_log_level >= OSAL_LOG_LEVEL_INFO) {
-		print_testcase_ctx(ctx);
-	}
+	//if (err != ETIMEDOUT &&
+	//    g_osal_log_level >= OSAL_LOG_LEVEL_INFO) {
+	//	print_testcase_ctx(ctx);
+	//}
 
 	/* Final tally for stats */
 	elapsed_time = osal_get_clock_nsec() - ctx->start_time;
@@ -2587,6 +2711,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		 (unsigned long long) batch_completion_empty_count,
 		 (unsigned long long) rate_limit_loop_count);
 
+free_ctx:
 	PNSO_LOG_DEBUG("DEBUG: pnso_test_run_testcase freeing test context\n");
 	free_testcase_context(ctx);
 
@@ -2748,14 +2873,14 @@ pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 				    sizeof(reason));
 			goto done;
 		}
-		err = test_fill_pattern(buf_ctxs[i].buflist, UNIT_TEST_BUFLIST_PATTERN,
+		err = test_fill_pattern(buf_ctxs[i].va_buflist, UNIT_TEST_BUFLIST_PATTERN,
 					strlen(UNIT_TEST_BUFLIST_PATTERN));
 		if (err) {
 			safe_strcpy(reason, "test_fill_pattern",
 				    sizeof(reason));
 			goto done;
 		}
-		if (0 != test_cmp_pattern(buf_ctxs[i].buflist, 0, UNIT_TEST_BUFLIST_SIZE,
+		if (0 != test_cmp_pattern(buf_ctxs[i].va_buflist, 0, UNIT_TEST_BUFLIST_SIZE,
 					  UNIT_TEST_BUFLIST_PATTERN,
 					  strlen(UNIT_TEST_BUFLIST_PATTERN))) {
 			err = EINVAL;
@@ -2764,7 +2889,7 @@ pnso_error_t pnso_run_unit_tests(struct test_desc *desc)
 			goto done;
 		}
 		if (i >= 1) {
-			if (0 != cmp_buflists(buf_ctxs[i-1].buflist, buf_ctxs[i].buflist,
+			if (0 != cmp_buflists(buf_ctxs[i-1].va_buflist, buf_ctxs[i].va_buflist,
 					      0, UNIT_TEST_BUFLIST_SIZE)) {
 				err = EINVAL;
 				safe_strcpy(reason, "cmp_buflists",

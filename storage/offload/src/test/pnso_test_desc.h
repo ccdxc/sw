@@ -110,7 +110,6 @@ struct test_crypto_key {
 #define TEST_MAX_CORE_COUNT 32
 #define TEST_MAX_BATCH_CONCURRENCY 32
 #define TEST_MAX_BATCH_DEPTH 512
-#define TEST_MAX_RANDOM_LEN 4096
 
 enum {
 	FILE_FORMAT_RANDOM,
@@ -155,6 +154,7 @@ struct test_svc_chain {
 	char name[TEST_MAX_NAME_LEN];
 	struct test_input_desc input;
 	uint32_t num_services;
+	uint16_t batch_weight;
 	//struct pnso_service svcs[PNSO_SVC_TYPE_MAX];
 	struct test_node_list svcs;
 

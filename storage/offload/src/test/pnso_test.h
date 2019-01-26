@@ -19,6 +19,8 @@ extern "C"
 #define TEST_OUTPUT_FLAG_TINY   0x02
 #define TEST_OUTPUT_FLAG_JUMBO  0x04
 
+#define TEST_MAX_RANDOM_LEN 4096
+
 /* Full definition in pnso_test_parse.h */
 struct test_desc;
 
@@ -67,7 +69,6 @@ pnso_error_t test_write_file(const char *fname,
 pnso_error_t test_delete_file(const char *fname);
 void test_fill_buflist(struct pnso_buffer_list *buflist,
 		       const uint8_t *data, uint32_t data_len);
-void test_init_random(uint32_t seed);
 pnso_error_t test_fill_random(struct pnso_buffer_list *buflist, uint32_t seed, uint32_t random_len);
 int test_compare_files(const char *path1, const char *path2, uint32_t offset, uint32_t len);
 int test_compare_file_data(const char *path, uint32_t offset, uint32_t len,

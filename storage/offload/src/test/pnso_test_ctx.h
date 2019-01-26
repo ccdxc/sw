@@ -89,19 +89,27 @@ static inline uint32_t get_max_output_len_by_type(uint16_t svc_type,
 
 struct buffer_context {
 	bool initialized;
-	bool is_sgl_pa; /* physical addr or not */
 	uint32_t svc_chain_idx;
 	uint32_t buf_alloc_sz;
 	uint32_t buflist_alloc_count;
-	struct pnso_buffer_list *buflist;
+	struct pnso_buffer_list *va_buflist;
+	struct pnso_buffer_list *pa_buflist;
 	struct pnso_flat_buffer buf;
+};
+
+struct chain_context {
+	const struct test_svc_chain *svc_chain;
+	uint32_t batch_weight; /* cached and normalized from svc_chain */
+
+	/* Generate input buffer only once for each chain */
+	struct buffer_context input;
 };
 
 struct request_context {
 	struct batch_context *batch_ctx;
-	const struct test_svc_chain *svc_chain;
+	struct chain_context *chain_ctx;
+	uint64_t req_id;
 
-	struct buffer_context input;
 	struct buffer_context outputs[PNSO_SVC_TYPE_MAX];
 
 	/* MUST keep these 2 in order, due to zero-length array */
@@ -162,6 +170,7 @@ struct testcase_stats {
 struct batch_context {
 	const struct test_desc *desc;
 	struct testcase_context *test_ctx;
+	uint64_t first_req_id;
 	uint32_t batch_id;
 	uint32_t worker_id;
 	osal_atomic_int_t cb_count;
@@ -176,7 +185,8 @@ struct batch_context {
 	/* Initial values inherited from parent */
 	uint32_t vars[TEST_VAR_MAX];
 
-	uint32_t req_count;
+	uint16_t req_count;
+	uint16_t max_req_count;
 	struct request_context *req_ctxs[TEST_MAX_BATCH_DEPTH];
 };
 
@@ -310,6 +320,16 @@ struct testcase_context {
 	osal_atomic_int_t stats_lock;
 	struct testcase_stats stats;
 
+	uint32_t total_chain_weight; /* sum of svc_chain batch_weight */
+	uint16_t max_chain_weight;
+	uint16_t min_chain_weight;
+	uint32_t chain_count;
+	struct chain_context *chain_ctxs[MAX_SVC_CHAINS_PER_TESTCASE];
+
+	/* list of chain ids for weighted-round-robin */
+	uint32_t chain_lb_table_count;
+	uint32_t *chain_lb_table;
+
 	uint32_t worker_count;
 	struct worker_context *worker_ctxs[TEST_MAX_CORE_COUNT];
 
@@ -317,6 +337,7 @@ struct testcase_context {
 	 * testcase_context owns these batch contexts,
 	 * but they are distributed evenly between the worker_contexts
 	 */
+	uint16_t max_batch_depth;
 	uint32_t batch_concurrency;
 	struct worker_queue *batch_ctx_alloclist;
 	struct worker_queue *batch_ctx_freelist;
