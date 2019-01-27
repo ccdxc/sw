@@ -54,9 +54,9 @@ typedef struct capri_cfg_s {
 sdk_ret_t capri_load_config(char *pathname);
 sdk_ret_t capri_verify_config(char *config_dir);
 
-} // namespace capri
-} // namespace platform
-} // namespace sdk
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk
 
 using sdk::platform::capri::capri_cfg_t;
 using sdk::platform::capri::capri_asm_cfg_t;

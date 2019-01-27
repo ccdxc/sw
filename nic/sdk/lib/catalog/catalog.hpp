@@ -154,6 +154,16 @@ public:
                                    std::string path,
                                    std::string& child_str);
     static int port_num_to_qsfp_port(uint32_t port_num);
+    static std::string catalog_file(platform_type_t platform_type) {
+        if ((platform_type == platform_type_t::PLATFORM_TYPE_HW) ||
+            (platform_type == platform_type_t::PLATFORM_TYPE_HAPS) ||
+            (platform_type == platform_type_t::PLATFORM_TYPE_MOCK)) {
+            return "catalog_hw.json";
+        } else if (platform_type == platform_type_t::PLATFORM_TYPE_RTL) {
+            return "catalog_rtl.json";
+        }
+        return "catalog.json";
+    }
 
     catalog_t *catalog_db(void) { return &catalog_db_; }
     uint32_t num_uplink_ports(void) const { return catalog_db_.num_uplink_ports; }
@@ -171,32 +181,32 @@ public:
     }
 
     port_speed_t port_speed(uint32_t port);
-    uint32_t     num_lanes (uint32_t port);
+    uint32_t num_lanes (uint32_t port);
     port_type_t  port_type (uint32_t port);
-    bool         enabled   (uint32_t port);
-    uint32_t     mac_id    (uint32_t port, uint32_t lane);
-    uint32_t     mac_ch    (uint32_t port, uint32_t lane);
-    uint32_t     asic_port_to_mac_id (uint32_t asic, uint32_t asic_port);
-    uint32_t     asic_port_to_mac_ch (uint32_t asic, uint32_t asic_port);
-    uint32_t     sbus_addr (uint32_t port, uint32_t lane);
-    port_fec_type_t  port_fec_type (uint32_t port);
+    bool enabled(uint32_t port);
+    uint32_t mac_id(uint32_t port, uint32_t lane);
+    uint32_t mac_ch(uint32_t port, uint32_t lane);
+    uint32_t asic_port_to_mac_id(uint32_t asic, uint32_t asic_port);
+    uint32_t asic_port_to_mac_ch(uint32_t asic, uint32_t asic_port);
+    uint32_t sbus_addr(uint32_t port, uint32_t lane);
+    port_fec_type_t  port_fec_type(uint32_t port);
 
-    uint32_t     glbl_mode  (mac_mode_t mac_mode);
-    uint32_t     ch_mode    (mac_mode_t mac_mode, uint32_t ch);
+    uint32_t     glbl_mode(mac_mode_t mac_mode);
+    uint32_t     ch_mode(mac_mode_t mac_mode, uint32_t ch);
 
-    uint32_t     glbl_mode_mgmt (mac_mode_t mac_mode);
-    uint32_t     ch_mode_mgmt   (mac_mode_t mac_mode, uint32_t ch);
+    uint32_t     glbl_mode_mgmt(mac_mode_t mac_mode);
+    uint32_t     ch_mode_mgmt(mac_mode_t mac_mode, uint32_t ch);
 
-    port_type_t  port_type_fp   (uint32_t port);
-    uint32_t     num_lanes_fp   (uint32_t port);
-    uint32_t     breakout_modes (uint32_t port);
+    port_type_t  port_type_fp(uint32_t port);
+    uint32_t     num_lanes_fp(uint32_t port);
+    uint32_t     breakout_modes(uint32_t port);
 
-    uint32_t     jtag_id         (void) { return catalog_db_.serdes_jtag_id;  }
-    uint32_t     num_sbus_rings  (void) { return catalog_db_.num_sbus_rings;  }
-    uint32_t     sbm_clk_div     (void) { return catalog_db_.sbm_clk_div;     }
-    uint32_t     serdes_build_id (void) { return catalog_db_.serdes_build_id; }
-    uint32_t     serdes_rev_id   (void) { return catalog_db_.serdes_rev_id;   }
-    std::string  serdes_fw_file  (void) { return catalog_db_.serdes_fw_file;  }
+    uint32_t     jtag_id(void) { return catalog_db_.serdes_jtag_id;  }
+    uint32_t     num_sbus_rings(void) { return catalog_db_.num_sbus_rings;  }
+    uint32_t     sbm_clk_div(void) { return catalog_db_.sbm_clk_div;     }
+    uint32_t     serdes_build_id(void) { return catalog_db_.serdes_build_id; }
+    uint32_t     serdes_rev_id(void) { return catalog_db_.serdes_rev_id;   }
+    std::string  serdes_fw_file(void) { return catalog_db_.serdes_fw_file;  }
 
     uint8_t aacs_server_en(void) { return catalog_db_.aacs_info.server_en; }
     uint8_t aacs_connect(void)   { return catalog_db_.aacs_info.connect; }

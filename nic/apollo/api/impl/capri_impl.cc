@@ -9,8 +9,6 @@
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/apollo/api/impl/capri_impl.hpp"
-// TODO: vijay please cleanup this along with asicpd move to sdk
-#include "nic/hal/pd/asic_pd.hpp"
 
 namespace impl {
 
@@ -22,12 +20,10 @@ namespace impl {
 
 /*
  * @brief    initialize an instance of capri impl class
- * @param[in] asic_cfg    asic information
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::init_(asic_cfg_t *asic_cfg) {
-    asic_cfg_ = *asic_cfg;
+capri_impl::init_(void) {
     return SDK_RET_OK;
 }
 
@@ -43,7 +39,7 @@ capri_impl::factory(asic_cfg_t *asic_cfg) {
     impl = (capri_impl *)SDK_CALLOC(SDK_MEM_ALLOC_OCI_ASIC_IMPL,
                                     sizeof(capri_impl));
     new (impl) capri_impl();
-    if (impl->init_(asic_cfg) != SDK_RET_OK) {
+    if (impl->init_() != SDK_RET_OK) {
         impl->~capri_impl();
         SDK_FREE(SDK_MEM_ALLOC_OCI_ASIC_IMPL, impl);
         return NULL;
@@ -53,17 +49,21 @@ capri_impl::factory(asic_cfg_t *asic_cfg) {
 
 /**
  * @brief    init routine to initialize the asic
+ * @param[in] asic_cfg    asic information
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-capri_impl::asic_init(void) {
+capri_impl::asic_init(asic_cfg_t *asic_cfg) {
     sdk::lib::pal_ret_t    pal_ret;
     sdk_ret_t              ret;
 
-    pal_ret = sdk::lib::pal_init(asic_cfg_.platform);
+    pal_ret = sdk::lib::pal_init(asic_cfg->platform);
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
-    ret = sdk::asic::asic_init(&asic_cfg_);
+    ret = sdk::asic::asic_init(asic_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
+
+    /**< stash the config, in case we need it at later point in time */
+    asic_cfg_ = *asic_cfg;
     return SDK_RET_OK;
 }
 

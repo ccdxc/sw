@@ -35,9 +35,12 @@ public:
 
     /**
      * @brief    init routine to initialize the asic
+     * @param[in] asic_cfg    asic configuration information
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t asic_init(void) { return sdk::SDK_RET_ERR; }
+    virtual sdk_ret_t asic_init(asic_cfg_t *asic_cfg) {
+        return sdk::SDK_RET_ERR;
+    }
 
     /**
      * @brief    dump all the debug information to given file

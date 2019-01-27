@@ -60,8 +60,9 @@ oci_test_base::SetUpTestCase(char *cfg_file, bool enable_fte) {
     oci_init_params_t     init_params;
 
     memset(&init_params, 0, sizeof(init_params));
-    init_params.init_mode = OCI_INIT_MODE_FRESH_START;
+    init_params.init_mode = OCI_INIT_MODE_COLD_START;
     init_params.trace_cb = trace_cb;
+    init_params.pipeline = "apollo";
     init_params.cfg_file = std::string(cfg_file);
     oci_init(&init_params);
 }
