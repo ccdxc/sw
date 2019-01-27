@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
@@ -47,11 +48,14 @@ func main() {
 		"Description": "image with fixes",
 		"ReleaseDate": "May2018",
 	}
-	request, err := uploadFile("http://localhost:19000/objstore/v1/uploads/", metadata, "/tmp/test.img")
+	request, err := uploadFile("https://localhost:19000/objstore/v1/uploads/", metadata, "/tmp/test.img")
 	if err != nil {
 		log.Fatal(err)
 	}
-	client := &http.Client{}
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: transport}
 	resp, err := client.Do(request)
 	if err != nil {
 		log.Fatal(err)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"math/rand"
@@ -40,10 +41,11 @@ func uploadFile(ctx context.Context, filename string, metadata map[string]string
 	if err != nil {
 		return 0, errors.Wrap(err, "closing writer")
 	}
-	uri := fmt.Sprintf("http://%s/objstore/v1/uploads/", ts.tu.APIGwAddr)
+	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/", ts.tu.APIGwAddr)
 	req, err := http.NewRequest("POST", uri, body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	client := &http.Client{}
+	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := &http.Client{Transport: transport}
 	_, err = client.Do(req)
 	if err != nil {
 		return 0, errors.Wrap(err, "Sending req")
@@ -93,7 +95,8 @@ func statFile(ctx context.Context, filename string) (*objstore.Object, error) {
 		return nil, fmt.Errorf("no authorizaton header in context")
 	}
 	restcl.SetHeader("Authorization", authzHeader)
-	uri := fmt.Sprintf("http://%s/objstore/v1/images/objects/%s", ts.tu.APIGwAddr, filename)
+	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	uri := fmt.Sprintf("https://%s/objstore/v1/images/objects/%s", ts.tu.APIGwAddr, filename)
 	By(fmt.Sprintf("fetch stat for file [%s][%s]", filename, uri))
 	resp := &objstore.Object{}
 	_, err := restcl.Req("GET", uri, nil, &resp)
