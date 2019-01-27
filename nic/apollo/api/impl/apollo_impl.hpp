@@ -8,7 +8,9 @@
 #if !defined (__APOLLO_IMPL_HPP__)
 #define __APOLLO_IMPL_HPP__
 
+#include <vector>
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 
 namespace impl {
@@ -30,6 +32,24 @@ public:
      * @return    new instance of apollo pipeline impl or NULL, in case of error
      */
     static apollo_impl *factory(pipeline_cfg_t *pipeline_cfg);
+
+    /**
+     * @brief    initialize program configuration
+     * @param[in] init_params    initialization time parameters passed by app
+     * @param[in] asic_cfg       asic configuration to be populated with program
+     *                           information
+     */
+    virtual void program_config_init(oci_init_params_t *init_params,
+                                     asic_cfg_t *asic_cfg) override;
+
+    /**
+     * @brief    initialize asm configuration
+     * @param[in] init_params    initialization time parameters passed by app
+     * @param[in] asic_cfg       asic configuration to be populated with asm
+     *                           information
+     */
+    virtual void asm_config_init(oci_init_params_t *init_params,
+                                 asic_cfg_t *asic_cfg) override;
 
     /**
      * @brief    init routine to initialize the pipeline
@@ -104,6 +124,12 @@ private:
      * @param[in] fp       file handle
      */
     void dump_egress_drop_stats_(FILE *fp);
+
+    /*
+     * @brief    apollo specific mpu program sort function
+     * @param[in] program information
+     */
+    static void sort_mpu_programs_(std::vector<std::string>& programs);
 
 private:
     pipeline_cfg_t      pipeline_cfg_;

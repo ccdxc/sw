@@ -24,7 +24,7 @@
  */
 typedef enum oci_init_mode_e {
     OCI_INIT_MODE_NONE,                 /**< invalid mode */
-    OCI_INIT_MODE_FRESH_START,          /**< initialize from scratch, ignore
+    OCI_INIT_MODE_COLD_START,           /**< initialize from scratch, ignore
                                           any state if preserved previously */
     OCI_INIT_MODE_POST_UPGRADE,         /**< initialize using state preserved,
                                               if any */
@@ -36,6 +36,9 @@ typedef enum oci_init_mode_e {
 typedef struct oci_init_params_s {
     oci_init_mode_t           init_mode;   /**< mode of initialization */
     sdk_logger::trace_cb_t    trace_cb;    /**< callback for trace msgs */
+    std::string               pipeline;    /**< P4 program pipeline name
+                                                only "apollo" supported at this
+                                                time */
     std::string               cfg_file;    /**< absolute path to directory where
                                                 all config files are present,
                                                 files under <cfg_path>/pipeline/

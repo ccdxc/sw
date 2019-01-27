@@ -34,9 +34,10 @@ public:
 
     /**
      * @brief    init routine to initialize the asic
+     * @param[in] asic_cfg    asic configuration information
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    virtual sdk_ret_t asic_init(void) override;
+    virtual sdk_ret_t asic_init(asic_cfg_t *asic_cfg) override;
 
     /**
      * @brief    dump all the debug information to given file
@@ -51,10 +52,9 @@ private:
 
     /*
      * @brief    initialize an instance of capri impl class
-     * @param[in] asic_cfg    asic information
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t init_(asic_cfg_t *asic_cfg);
+    sdk_ret_t init_(void);
 
     /**
      * @brief    dump per TM port stats

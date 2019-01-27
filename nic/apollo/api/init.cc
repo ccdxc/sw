@@ -26,17 +26,15 @@ namespace api {
  * @{
  */
 
-#define JP4_PRGM        "p4_program"
-#define JRXDMA_PRGM     "rxdma_program"
-#define JTXDMA_PRGM     "txdma_program"
-
 /**
  * @brief    initialize all common global asic configuration parameters
+ * @param[in] params     initialization time parameters passed by application
  * @param[in] asic_cfg   pointer to asic configuration instance
  */
 static inline void
-asic_global_config_init (asic_cfg_t *asic_cfg)
+asic_global_config_init (oci_init_params_t *params, asic_cfg_t *asic_cfg)
 {
+    //asic_cfg->asic_type = api::g_oci_state.catalogue()->asic_type();
     asic_cfg->asic_type = sdk::platform::asic_type_t::SDK_ASIC_TYPE_CAPRI;
     asic_cfg->cfg_path = g_oci_state.cfg_path();
     asic_cfg->catalog =  g_oci_state.catalogue();
@@ -46,62 +44,8 @@ asic_global_config_init (asic_cfg_t *asic_cfg)
     asic_cfg->default_config_dir = "2x100_hbm";
     asic_cfg->platform = g_oci_state.platform_type();
     asic_cfg->admin_cos = 1;
-    asic_cfg->pgm_name = std::string("apollo");
+    asic_cfg->pgm_name = params->pipeline;
     asic_cfg->completion_func = NULL;
-}
-
-/**
- * @brief    initialize all the p4 program specific configuration parameters
- * @param[in] asic_cfg   pointer to asic configuration instance
- */
-static inline void
-asic_program_config_init (asic_cfg_t *asic_cfg)
-{
-    asic_cfg->num_pgm_cfgs = 3;
-    memset(asic_cfg->pgm_cfg, 0, sizeof(asic_cfg->pgm_cfg));
-    asic_cfg->pgm_cfg[0].path = std::string("p4_bin");
-    asic_cfg->pgm_cfg[1].path = std::string("rxdma_bin");
-    asic_cfg->pgm_cfg[2].path = std::string("txdma_bin");
-}
-
-/**
- * @brief    initialize all the asm specific configuration parameters
- * @param[in] asic_cfg   pointer to asic configuration instance
- */
-// TODO: @cruzj, we need to get apollo out of this, so this is generic and
-//       can be pushed down to impl_base::init() along with
-//       asic_program_config_init(), only asic_global_config_init() should
-//       remain here !!!
-static inline void
-asic_asm_config_init (asic_cfg_t *asic_cfg)
-{
-    asic_cfg->num_asm_cfgs = 3;
-    memset(asic_cfg->asm_cfg, 0, sizeof(asic_cfg->asm_cfg));
-    asic_cfg->asm_cfg[0].name = std::string("apollo_p4");
-    asic_cfg->asm_cfg[0].path = std::string("p4_asm");
-    asic_cfg->asm_cfg[0].base_addr = std::string(JP4_PRGM);
-
-    // TODO: this doesn't seem to fit any where, may be
-    //       just sort_mpu_programs should be in apollo_impl class
-    //asic_cfg->asm_cfg[0].sort_func = sort_mpu_programs;
-    asic_cfg->asm_cfg[1].name = std::string("apollo_rxdma");
-    asic_cfg->asm_cfg[1].path = std::string("rxdma_asm");
-    asic_cfg->asm_cfg[1].base_addr = std::string(JRXDMA_PRGM);
-    asic_cfg->asm_cfg[2].name = std::string("apollo_txdma");
-    asic_cfg->asm_cfg[2].path = std::string("txdma_asm");
-    asic_cfg->asm_cfg[2].base_addr = std::string(JTXDMA_PRGM);
-}
-
-/**
- * @brief    initialize all the asic configuration parameters
- * @param[in] asic_cfg   pointer to asic configuration instance
- */
-static inline void
-asic_config_init (asic_cfg_t *asic_cfg)
-{
-    asic_global_config_init(asic_cfg);
-    asic_program_config_init(asic_cfg);
-    asic_asm_config_init(asic_cfg);
 }
 
 /**
@@ -140,7 +84,7 @@ static void
 sig_handler (int sig, siginfo_t *info, void *ptr)
 {
     OCI_TRACE_DEBUG("Caught signal %d", sig);
-    debug::system_dump("hal.info");
+    debug::system_dump("/tmp/debug.info");
 }
 
 }    // namespace api
@@ -166,27 +110,19 @@ oci_init (oci_init_params_t *params)
     } else {
         api::g_oci_state.set_cfg_path(api::g_oci_state.cfg_path() + "/");
     }
-    ret = core::parse_global_config(params->cfg_file, &api::g_oci_state);
+    ret = core::parse_global_config(params->pipeline, params->cfg_file,
+                                    &api::g_oci_state);
     SDK_ASSERT(ret == SDK_RET_OK);
     api::g_oci_state.set_mpartition(sdk::platform::utils::mpartition::factory());
-    if ((api::g_oci_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) ||
-        (api::g_oci_state.platform_type() == platform_type_t::PLATFORM_TYPE_HAPS) ||
-        (api::g_oci_state.platform_type() == platform_type_t::PLATFORM_TYPE_MOCK)) {
-        api::g_oci_state.set_catalog(
-            catalog::factory(api::g_oci_state.cfg_path() + "catalog_hw.json"));
-    } else if (api::g_oci_state.platform_type() == platform_type_t::PLATFORM_TYPE_RTL) {
-        api::g_oci_state.set_catalog(
-            catalog::factory(api::g_oci_state.cfg_path() + "catalog_rtl.json"));
-    } else {
-        api::g_oci_state.set_catalog(
-            catalog::factory(api::g_oci_state.cfg_path() + "catalog.json"));
-    }
-    ret = core::parse_pipeline_config("apollo.json", &api::g_oci_state);
+    api::g_oci_state.set_catalog(
+        catalog::factory(api::g_oci_state.cfg_path() +
+                         catalog::catalog_file(api::g_oci_state.platform_type())));
+    ret = core::parse_pipeline_config(params->pipeline, &api::g_oci_state);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     /**< setup all asic specific config params */
-    api::asic_config_init(&asic_cfg);
-    SDK_ASSERT(impl_base::init(&asic_cfg) == SDK_RET_OK);
+    api::asic_global_config_init(params, &asic_cfg);
+    SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
 
     /**< spin all necessary threads in the system */
     core::thread_spawn(&api::g_oci_state);

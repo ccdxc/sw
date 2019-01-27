@@ -9,7 +9,9 @@
 #define __PIPELINE_IMPL_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/asic/asic.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
+#include "nic/apollo/include/api/oci_init.hpp"
 
 namespace impl {
 
@@ -35,6 +37,24 @@ public:
      * @return    new instance of pipeline impl or NULL, in case of error
      */
     static pipeline_impl_base *factory(pipeline_cfg_t *pipeline_cfg);
+
+    /**
+     * @brief    initialize program configuration
+     * @param[in] init_params    initialization time parameters passed by app
+     * @param[in] asic_cfg       asic configuration to be populated with program
+     *                           information
+     */
+    virtual void program_config_init(oci_init_params_t *init_params,
+                                     asic_cfg_t *asic_cfg) { }
+
+    /**
+     * @brief    initialize asm configuration
+     * @param[in] init_params    initialization time parameters passed by app
+     * @param[in] asic_cfg       asic configuration to be populated with asm
+     *                           information
+     */
+    virtual void asm_config_init(oci_init_params_t *init_params,
+                                 asic_cfg_t *asic_cfg) { }
 
     /**
      * @brief    init routine to initialize the pipeline

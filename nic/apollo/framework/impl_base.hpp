@@ -33,10 +33,11 @@ public:
 
     /**
      * @brief    one time init function that must be called during bring up
+     * @param[in]    params      initialization parameters passed by application
      * @param[in]    asic_cfg    asic configuration parameters
      * @return       SDK_RET_OK on success, failure status code on error
      */
-    static sdk_ret_t init(asic_cfg_t *asic_cfg);
+    static sdk_ret_t init(oci_init_params_t *params, asic_cfg_t *asic_cfg);
 
     /**
      * @brief    dump all the debug information to given file

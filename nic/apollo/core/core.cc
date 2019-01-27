@@ -17,7 +17,6 @@
 #include "nic/apollo/core/core.hpp"
 
 using boost::property_tree::ptree;
-using std::string;
 
 namespace core {
 
@@ -46,12 +45,12 @@ parse_cores_config (ptree &pt, oci_state *state)
 }
 
 sdk_ret_t
-parse_pipeline_config (const char *cfgfile, oci_state *state)
+parse_pipeline_config (string pipeline, oci_state *state)
 {
     ptree     pt;
     string    cfg_file;
 
-    cfg_file = state->cfg_path() + "apollo/" + string(cfgfile);
+    cfg_file = state->cfg_path() + pipeline + "/" + pipeline + ".json";
 
     /**< make sure cfg file exists */
     if (access(cfg_file.c_str(), R_OK) < 0) {
@@ -68,11 +67,11 @@ parse_pipeline_config (const char *cfgfile, oci_state *state)
 }
 
 sdk_ret_t
-parse_global_config (string cfg_file, oci_state *state)
+parse_global_config (string pipeline, string cfg_file, oci_state *state)
 {
     ptree     pt;
 
-    cfg_file = state->cfg_path() + "apollo/" + cfg_file;
+    cfg_file = state->cfg_path() + pipeline + "/" + cfg_file;
 
     /**< make sure global config file exists */
     if (access(cfg_file.c_str(), R_OK) < 0) {

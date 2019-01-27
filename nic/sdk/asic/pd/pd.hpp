@@ -11,8 +11,7 @@ namespace sdk {
 namespace asic {
 namespace pd {
 
-#define SDK_LOG_TABLE_WRITE 1
-// Set this macro with max coses supported
+// set this macro with max coses supported
 #define ASIC_NUM_MAX_COSES   16
 
 // TODO: please move this to sdk/lib/p4 later !!

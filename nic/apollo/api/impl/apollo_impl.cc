@@ -17,6 +17,10 @@
 
 extern sdk_ret_t init_service_lif(void);
 
+#define JP4_PRGM        "p4_program"
+#define JRXDMA_PRGM     "rxdma_program"
+#define JTXDMA_PRGM     "txdma_program"
+
 namespace impl {
 
 /**
@@ -25,7 +29,59 @@ namespace impl {
  * @{
  */
 
-/*
+/**
+ * @brief    helper class to sort p4/p4+ programs to maximize performance
+ */
+class sort_mpu_programs_compare {
+public:
+    bool operator() (std::string p1, std::string p2) {
+        std::map <std::string, p4pd_table_properties_t>::iterator it1, it2;
+
+        it1 = tbl_map_.find(p1);
+        it2 = tbl_map_.find(p2);
+        if ((it1 == tbl_map_.end()) || (it2 == tbl_map_.end())) {
+            return (p1 < p2);
+        }
+        p4pd_table_properties_t tbl_ctx1 = it1->second;
+        p4pd_table_properties_t tbl_ctx2 = it2->second;
+        if (tbl_ctx1.gress != tbl_ctx2.gress) {
+            return (tbl_ctx1.gress < tbl_ctx2.gress);
+        }
+        if (tbl_ctx1.stage != tbl_ctx2.stage) {
+            return (tbl_ctx1.stage < tbl_ctx2.stage);
+        }
+        return (tbl_ctx1.stage_tableid < tbl_ctx2.stage_tableid);
+    }
+
+    void add_table(std::string tbl_name, p4pd_table_properties_t tbl_ctx) {
+        std::pair <std::string, p4pd_table_properties_t> key_value;
+        key_value = std::make_pair(tbl_name.append(".bin"), tbl_ctx);
+        tbl_map_.insert(key_value);
+    }
+
+private:
+    std::map <std::string, p4pd_table_properties_t> tbl_map_;
+};
+
+/**
+ * @brief    apollo specific mpu program sort function
+ * @param[in] program information
+ */
+void
+apollo_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
+    sort_mpu_programs_compare sort_compare;
+
+    for (uint32_t tableid = p4pd_tableid_min_get();
+         tableid < p4pd_tableid_max_get(); tableid++) {
+        p4pd_table_properties_t tbl_ctx;
+        if (p4pd_table_properties_get(tableid, &tbl_ctx) != P4PD_FAIL) {
+            sort_compare.add_table(std::string(tbl_ctx.tablename), tbl_ctx);
+        }
+    }
+    sort(programs.begin(), programs.end(), sort_compare);
+}
+
+/**
  * @brief    initialize an instance of apollo impl class
  * @param[in] pipeline_cfg    pipeline information
  * @return    SDK_RET_OK on success, failure status code on error
@@ -54,6 +110,44 @@ apollo_impl::factory(pipeline_cfg_t *pipeline_cfg) {
         return NULL;
     }
     return impl;
+}
+
+/**
+ * @brief    initialize program configuration
+ * @param[in] init_params    initialization time parameters passed by app
+ * @param[in] asic_cfg       asic configuration to be populated
+ */
+void
+apollo_impl::program_config_init(oci_init_params_t *init_params,
+                                 asic_cfg_t *asic_cfg) {
+    asic_cfg->num_pgm_cfgs = 3;
+    memset(asic_cfg->pgm_cfg, 0, sizeof(asic_cfg->pgm_cfg));
+    asic_cfg->pgm_cfg[0].path = std::string("p4_bin");
+    asic_cfg->pgm_cfg[1].path = std::string("rxdma_bin");
+    asic_cfg->pgm_cfg[2].path = std::string("txdma_bin");
+}
+
+/**
+ * @brief    initialize asm configuration
+ * @param[in] init_params    initialization time parameters passed by app
+ * @param[in] asic_cfg       asic configuration to be populated
+ */
+void
+apollo_impl::asm_config_init(oci_init_params_t *init_params,
+                             asic_cfg_t *asic_cfg) {
+    asic_cfg->num_asm_cfgs = 3;
+    memset(asic_cfg->asm_cfg, 0, sizeof(asic_cfg->asm_cfg));
+    asic_cfg->asm_cfg[0].name = init_params->pipeline + "_p4";
+    asic_cfg->asm_cfg[0].path = std::string("p4_asm");
+    asic_cfg->asm_cfg[0].base_addr = std::string(JP4_PRGM);
+
+    asic_cfg->asm_cfg[0].sort_func = sort_mpu_programs_;
+    asic_cfg->asm_cfg[1].name = init_params->pipeline + "_rxdma";
+    asic_cfg->asm_cfg[1].path = std::string("rxdma_asm");
+    asic_cfg->asm_cfg[1].base_addr = std::string(JRXDMA_PRGM);
+    asic_cfg->asm_cfg[2].name = init_params->pipeline + "_txdma";
+    asic_cfg->asm_cfg[2].path = std::string("txdma_asm");
+    asic_cfg->asm_cfg[2].base_addr = std::string(JTXDMA_PRGM);
 }
 
 /**

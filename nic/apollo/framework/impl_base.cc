@@ -22,20 +22,31 @@ pipeline_impl_base *impl_base::pipeline_impl_  = NULL;
 
 /**
  * @brief    one time init function that must be called during bring up
+ * @param[in]    params      initialization parameters passed by application
  * @param[in]    asic_cfg    asic configuration parameters
  * @return       SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-impl_base::init(asic_cfg_t *asic_cfg) {
+impl_base::init(oci_init_params_t *params, asic_cfg_t *asic_cfg) {
     pipeline_cfg_t        pipeline_cfg;
 
+    /**< instanitiate asic implementaiton object */
     asic_impl_ = asic_impl_base::factory(asic_cfg);
     SDK_ASSERT(asic_impl_ != NULL);
-    asic_impl_->asic_init();
 
-    pipeline_cfg.name = "apollo";
+    /**< instanitiate pipeline implementaiton object */
+    pipeline_cfg.name = params->pipeline;
     pipeline_impl_ = pipeline_impl_base::factory(&pipeline_cfg);
     SDK_ASSERT(pipeline_impl_ != NULL);
+
+    /**< initialize program and asm specific configs */
+    pipeline_impl_->program_config_init(params, asic_cfg);
+    pipeline_impl_->asm_config_init(params, asic_cfg);
+
+    /**< perform asic initialization */
+    asic_impl_->asic_init(asic_cfg);
+
+    /**< followed by pipeline initialization */
     pipeline_impl_->pipeline_init();
 
     return SDK_RET_OK;
