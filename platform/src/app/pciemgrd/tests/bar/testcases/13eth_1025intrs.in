@@ -1,0 +1,14 @@
+add eth -L 4 -i 1025 -I 0
+add eth -L 4 -i 2048 -I 2048
+finalize
+dbg pciehw bar setaddr -d eth0 -b 0 0x111a0000
+dbg pciehw bar setaddr -d eth0 -b 2 0x222a0000
+dbg pciehw bar load -d eth0 -b 0
+dbg pciehw bar load -d eth0 -b 2
+dbg pciehw bar setaddr -d eth1 -b 0 0x111b0000
+dbg pciehw bar setaddr -d eth1 -b 2 0x222b0000
+dbg pciehw bar load -d eth1 -b 0
+dbg pciehw bar load -d eth1 -b 2
+dbg pciehw bar show
+dbg pciehw pmt -b
+dbg pciehw pmt -br

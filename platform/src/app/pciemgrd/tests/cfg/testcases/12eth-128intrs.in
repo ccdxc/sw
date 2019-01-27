@@ -1,0 +1,5 @@
+add eth -L 1111 -i 128
+add eth -L 1112 -i 129
+finalize
+dbg pciehw pmt -c
+exit
