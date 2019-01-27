@@ -1020,9 +1020,10 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 	chain_params->ccp_sgl_vec_addr = sonic_virt_to_phy((void *) sgl);
 
 	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
-	chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
-	chain_params->ccp_cmd.desc_dlen_update_en =
-		(svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) == 0;
+	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK)
+		chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
+	else
+		chain_params->ccp_cmd.desc_dlen_update_en = 1;
 
 	/*
 	 * hash/chksum executes multiple requests, one per block; hence,
