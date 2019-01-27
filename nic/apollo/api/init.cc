@@ -13,7 +13,7 @@
 #include "nic/apollo/include/api/oci_init.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
-#include "nic/apollo/core/oci_state.hpp"
+#include "nic/apollo/api/oci_state.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/api/debug.hpp"

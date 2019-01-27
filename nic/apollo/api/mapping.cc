@@ -8,7 +8,7 @@
 
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/mapping.hpp"
-#include "nic/apollo/core/oci_state.hpp"
+#include "nic/apollo/api/oci_state.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 

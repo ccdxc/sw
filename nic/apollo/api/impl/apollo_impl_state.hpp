@@ -11,7 +11,7 @@
 #include "nic/sdk/lib/table/tcam/tcam.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
 #include "nic/sdk/lib/table/tcam/tcam.hpp"
-#include "nic/apollo/core/oci_state.hpp"
+#include "nic/apollo/api/oci_state.hpp"
 
 namespace impl {
 

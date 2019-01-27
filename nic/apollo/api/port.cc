@@ -9,7 +9,7 @@
 #include "nic/sdk/linkmgr/port.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/core/oci_state.hpp"
+#include "nic/apollo/api/oci_state.hpp"
 
 namespace api {
 

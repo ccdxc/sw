@@ -10,7 +10,7 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/core/oci_state.hpp"
+#include "nic/apollo/api/oci_state.hpp"
 #include "nic/apollo/api/impl/tep_impl.hpp"
 #include "nic/apollo/api/impl/vnic_impl.hpp"
 #include "nic/apollo/api/impl/mapping_impl.hpp"
