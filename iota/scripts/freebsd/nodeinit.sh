@@ -31,6 +31,7 @@ else
     tar xf drivers-freebsd-eth.tar.xz
     cd drivers-freebsd-eth
     env OS_DIR=/usr/src ./build.sh
+    kldunload sys/modules/ionic/ionic.ko 2> /dev/null || rc=$?
     kldload sys/modules/ionic/ionic.ko
     sleep 2
     ifconfig ionic2 169.254.0.2/24
