@@ -16,7 +16,7 @@
 #include "nic/apollo/api/switchport.hpp"
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/vcn.hpp"
-#include "nic/apollo/api/subnet.hpp"
+#include "nic/apollo/api/subnet_state.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/route.hpp"

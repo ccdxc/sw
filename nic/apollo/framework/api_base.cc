@@ -6,7 +6,7 @@
  * @brief   base object definition for all API objects
  */
 
-#include "nic/apollo/core/oci_state.hpp"
+#include "nic/apollo/api/oci_state.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 

@@ -11,7 +11,7 @@
 
 #include <signal.h>
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/core/oci_state.hpp"
+#include "nic/apollo/api/oci_state.hpp"
 
 namespace core {
 

@@ -6,7 +6,7 @@
  * @brief   This file contains implementation of oci state class
  */
 
-#include "nic/apollo/core/oci_state.hpp"
+#include "nic/apollo/api/oci_state.hpp"
 
 namespace api {
 
