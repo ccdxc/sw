@@ -85,8 +85,14 @@ func (n *NMD) StartManagedMode() error {
 		case <-time.After(n.nicRegInterval):
 
 			// For the NIC in Naples Config, start the registration
+			var name string
 			mac := n.config.Spec.PrimaryMAC
-			name := mac
+
+			if len(mac) == 0 {
+				name = n.config.Spec.Hostname
+			} else {
+				name = fmt.Sprintf("%s-%s", n.config.Spec.Hostname, n.config.Spec.PrimaryMAC)
+			}
 
 			nicObj, _ := n.GetSmartNIC()
 
@@ -223,7 +229,8 @@ func (n *NMD) StartManagedMode() error {
 				case cmd.SmartNICStatus_UNKNOWN.String():
 
 					// Not an expected response
-					log.Fatalf("Unknown response, nic: %+v phase: %v", nicObj, resp)
+					log.Errorf("Unknown response, nic: %+v phase: %v", nicObj, resp)
+					return fmt.Errorf("nknown response, nic: %+v phase: %v", nicObj, resp)
 				}
 			}
 		}
