@@ -30,6 +30,7 @@ else
     cd /naples/
     tar xf drivers-linux-eth.tar.xz
     cd drivers-linux-eth
+    rmmod drivers/eth/ionic/ionic.ko 2> /dev/null || rc=$?
     ./setup_apt.sh
     ./build.sh
     insmod drivers/eth/ionic/ionic.ko
