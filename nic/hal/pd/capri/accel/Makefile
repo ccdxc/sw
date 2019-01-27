@@ -18,7 +18,7 @@ LCXXFLAGS = \
 			-I/usr/local/include \
 			-I../../../asic/capri/model/capsim-master/lib/libmpuobj/include \
 			-I../../../asic/capri/model/capsim-master/lib/libcapisa/include \
-			-I../../../model_sim/include \
+			-I../../../sdk/model_sim/include \
             -I../../../gen/common_rxdma_actions/include \
             -I../../../gen/common_txdma_actions/include \
 			-I../../../hal/pd \
@@ -31,7 +31,7 @@ LCXXFLAGS = \
 
 SLFLAGS = \
 		  -Wl,-rpath $(TOPDIR)/asic/capri/model/capsim-gen/lib $(TOPDIR)/asic/capri/model/capsim-gen/lib/libmpuobj.so $(TOPDIR)/asic/capri/model/capsim-gen/lib/libcapisa.so $(TOPDIR)/asic/capri/model/capsim-gen/lib/libisa.so \
-		  -L$(TOPDIR)/model_sim/build -L/usr/local/lib -L$(TOPDIR)/obj -lmodelclient -lzmq -lcapricsr
+		  -L$(TOPDIR)/sdk/model_sim/build -L/usr/local/lib -L$(TOPDIR)/obj -lmodelclient -lzmq -lcapricsr
 SOURCES = \
 		  accel_pd.cc \
 		  accel_rgroup.cc \

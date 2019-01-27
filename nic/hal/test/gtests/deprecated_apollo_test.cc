@@ -4,7 +4,7 @@
 
 #include <boost/crc.hpp>
 #include "boost/property_tree/json_parser.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "sdk/pal.hpp"
 #include "sdk/utils.hpp"
 #include "sdk/types.hpp"

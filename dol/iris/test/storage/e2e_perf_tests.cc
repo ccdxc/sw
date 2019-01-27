@@ -19,7 +19,7 @@
 #include "dol/iris/test/storage/rdma.hpp"
 #include "dol/iris/test/storage/xts.hpp"
 #include "nic/utils/host_mem/c_if.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "dol/iris/test/storage/tests.hpp"
 
 extern dp_mem_t *initiator_rcv_buf_va;

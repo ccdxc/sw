@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <byteswap.h>
 #include "nic/utils/host_mem/c_if.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "gflags/gflags.h"
 
 namespace tests {

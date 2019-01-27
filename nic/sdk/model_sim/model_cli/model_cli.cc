@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "nic/model_sim/include/buf_hdr.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "model_sim/include/buf_hdr.h"
+#include "model_sim/include/lib_model_client.h"
 
 void print_banner ()
 {

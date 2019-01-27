@@ -108,7 +108,7 @@ nic/sim/naples/print-cores.sh                                    /nic/tools/
 nic/build/x86_64/iris/bin/cap_model                              /nic/bin/
 nic/build/x86_64/iris/lib/libmodel_client.so                     /nic/lib/
 nic/build/x86_64/iris/bin/nic_infra_hntap                        /nic/bin/
-nic/model_sim/libs/*.so                                          /nic/lib/
+nic/sdk/model_sim/libs/*.so                                          /nic/lib/
 nic/hal/third-party/zmq/x86_64/libzmq.so                         /nic/lib/
 nic/build/iris/gen/datapath/p4/dbg_out/model_debug.json          /nic/conf/
 nic/build/x86_64/iris/bin/storage_test                           /nic/bin/

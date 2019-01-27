@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <byteswap.h>
 #include "chksum_decomp_chain.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 namespace tests {
 

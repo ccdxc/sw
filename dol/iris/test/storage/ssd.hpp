@@ -5,7 +5,7 @@
 #include <byteswap.h>
 #include "dol/iris/test/storage/ssd_core.hpp"
 #include "nic/utils/host_mem/c_if.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 namespace storage_test {
 

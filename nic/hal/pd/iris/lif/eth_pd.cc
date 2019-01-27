@@ -14,7 +14,7 @@
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 
 #include "platform/capri/capri_tbl_rw.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "nic/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"

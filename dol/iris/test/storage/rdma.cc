@@ -21,7 +21,7 @@
 #include "gen/proto/rdma.grpc.pb.h"
 #include "gen/proto/nwsec.grpc.pb.h"
 #include "nic/utils/host_mem/c_if.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/asic/capri/design/common/cap_addr_define.h"
 #include "nic/asic/capri/model/cap_txs/cap_txs_csr_define.h"
 

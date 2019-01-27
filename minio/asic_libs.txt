@@ -1,4 +1,4 @@
-nic/model_sim/libs/*
+nic/sdk/model_sim/libs/*
 nic/asic/capri/model/capsim-master/gen/x86_64/lib/*.so
 nic/asic/capri/model/capsim-master/gen/x86_64/lib/*.a
 nic/asic/capri/model/capsim-master/gen/x86_64/bin/*

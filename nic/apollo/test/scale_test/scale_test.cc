@@ -18,7 +18,7 @@
 #include "nic/apollo/include/api/oci_vnic.hpp"
 #include "nic/apollo/include/api/oci_mapping.hpp"
 #include "nic/sdk/platform/capri/capri_p4.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 using std::string;
 namespace pt = boost::property_tree;

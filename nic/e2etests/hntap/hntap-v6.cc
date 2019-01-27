@@ -18,13 +18,13 @@
 #include <net/route.h>
 #include <zmq.h>
 #include <assert.h>
-#include "nic/model_sim/include/buf_hdr.h"
+#include "nic/sdk/model_sim/include/buf_hdr.h"
 #include <sys/stat.h>
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
-#include "nic/model_sim/include/lib_model_client.h"
-#include "nic/model_sim/include/buf_hdr.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/buf_hdr.h"
 #include "nic/e2etests/driver/lib_driver.hpp"
 #include "nic/e2etests/hntap/dev.hpp"
 #include "nic/e2etests/lib/helpers.hpp"

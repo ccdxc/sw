@@ -11,6 +11,7 @@ paths = [
     '/nic/build/x86_64/gft/gen/proto/',
     '/mbt/',
     '/nic',
+    '/nic/sdk',
     '/dol/third_party/'
 ]
 

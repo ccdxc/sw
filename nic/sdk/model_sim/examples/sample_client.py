@@ -2,7 +2,7 @@ import zmq
 import os
 import sys
 #sys.path.insert(0, '../src')
-sys.path.insert(0, 'nic/model_sim/src')
+sys.path.insert(0, 'model_sim/src')
 import model_wrap
 import pdb
 

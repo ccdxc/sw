@@ -1,4 +1,4 @@
-INCS = -I../../nic/model_sim/include/
+INCS = -I../../nic/sdk/model_sim/include/
 
 all:
 	make mock_model

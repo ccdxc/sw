@@ -18,7 +18,7 @@
 #include "dol/iris/test/storage/rdma.hpp"
 #include "dol/iris/test/storage/xts.hpp"
 #include "dol/iris/test/storage/tests.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 
 const static uint32_t  kR2nWqeSize           = 64;

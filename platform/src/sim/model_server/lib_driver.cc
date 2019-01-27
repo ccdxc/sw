@@ -12,8 +12,8 @@
 #include "gen/proto/internal.grpc.pb.h"
 #include "gen/proto/rdma.grpc.pb.h"
 
-#include "nic/model_sim/include/buf_hdr.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/buf_hdr.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/utils/host_mem/host_mem.hpp"
 
 using grpc::Channel;

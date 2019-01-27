@@ -16,7 +16,7 @@
 #include "dol/iris/test/storage/queues.hpp"
 #include "dol/iris/test/storage/tests.hpp"
 #include "dol/iris/test/storage/rdma.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 
 DECLARE_uint64(nvme_scale_iters);

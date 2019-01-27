@@ -90,7 +90,7 @@ class debugCmd(Cmd):
                 print("Module Iris not found. Do 'make' in sw/nic directory, and run 'init_modules' command here to load missing modules.")
         if self.model_inited == False:
             all_initialized = False
-            model_path = self.nic_dir + '/model_sim/cli'
+            model_path = self.nic_dir + '/sdk/model_sim/cli'
             print model_path
             if os.path.isfile(model_path + '/model_cli.py'):
                 print("Module Model found!")
@@ -102,7 +102,7 @@ class debugCmd(Cmd):
                     debugCmd.do_model = classmethod(self.model)
 
                 except ImportError:
-                    print("Could not initialize Model. Do 'make' in sw/nic/model_sim/cli/ directory, and run 'init_modules' command here.")
+                    print("Could not initialize Model. Do 'make' in sw/nic/sdk/model_sim/cli/ directory, and run 'init_modules' command here.")
             else:
                 print("Module Model not found. Do 'make' in sw/nic directory, and run 'init_modules' command here to load missing modules.")
 

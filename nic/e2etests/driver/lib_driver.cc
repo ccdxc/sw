@@ -10,8 +10,8 @@
 #include "lib_driver.hpp"
 #include "nic/include/adminq.h"
 #include "nic/include/eth_common.h"
-#include "nic/model_sim/include/buf_hdr.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/buf_hdr.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/utils/host_mem/host_mem.hpp"
 #include "platform/utils/qstate_mgr.hpp"
 
