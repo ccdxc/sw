@@ -1,3 +1,4 @@
+
 #include "capri.h"
 #include "aq_tx.h"
 #include "aqcb.h"
@@ -42,7 +43,7 @@ rdma_aq_tx_aqcb_process:
         nop
 
         tblwr       d.busy, 1 //BD Slot
-        tblwr.f       d.ring_empty_sched_eval_done, 0 //BD Slot
+        tblwr.f     d.ring_empty_sched_eval_done, 0 //BD Slot
 
         //Default   values
         phvwr       p.common.p4_intr_global_debug_trace, d.debug
@@ -79,7 +80,8 @@ rdma_aq_tx_aqcb_process:
 
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_wqe_process, r3)
 
-        nop.e
+                
+        wrfence.e
         nop
     
     .brend
