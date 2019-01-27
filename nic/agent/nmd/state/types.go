@@ -12,13 +12,15 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
-	ipclient "github.com/pensando/sw/nic/agent/nmd/state/ipclient"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/emstore"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
+
+const nicRegistrationWaitTime = time.Duration(time.Minute * 5)
 
 // NMD is the Naples management daemon instance object
 type NMD struct {
@@ -36,7 +38,7 @@ type NMD struct {
 	config       nmd.Naples    // Naples config received via REST
 	nic          *cmd.SmartNIC // SmartNIC object
 	DelphiClient clientAPI.Client
-	IPClient     *ipclient.IPClient
+	IPClient     *IPClient
 
 	stopNICReg     chan bool     // channel to stop NIC registration
 	nicRegInterval time.Duration // time interval between nic registration in seconds
@@ -55,6 +57,8 @@ type NMD struct {
 	remoteCertsURL string                            // URL where local process cert request are forwarder
 	certsProxy     *certsproxy.CertsProxy            // the CertsProxy instance
 	tlsProvider    *tlsproviders.KeyMgrBasedProvider // TLS provider holding cluster keys
+	cmdRegURL      string                            // CMD Registration URL
+	cmdUpdateURL   string                            //CMD Update URL
 	// Rollout related stuff
 	completedOps  map[roprotos.SmartNICOpSpec]bool // the ops that were requested by spec and got completed
 	inProgressOps *roprotos.SmartNICOpSpec         // the ops thats currently in progress
@@ -166,11 +170,11 @@ func (n *NMD) CreateIPClient(delphiClient clientAPI.Client) {
 	n.Lock()
 	defer n.Unlock()
 
-	n.IPClient = ipclient.NewIPClient(delphiClient, 0, "", 0, "", nil)
+	n.IPClient = NewIPClient(n, delphiClient, 0, "", 0, "", nil)
 }
 
 // GetIPClient returns the handle to the ip client
-func (n *NMD) GetIPClient() *ipclient.IPClient {
+func (n *NMD) GetIPClient() *IPClient {
 	n.Lock()
 	defer n.Unlock()
 
@@ -179,13 +183,24 @@ func (n *NMD) GetIPClient() *ipclient.IPClient {
 
 // UpdateMgmtIP updates the management IP
 func (n *NMD) UpdateMgmtIP() error {
-	n.Lock()
-	defer n.Unlock()
+	log.Info("Update Mgmt IP Called.")
+	//n.Lock()
+	//defer n.Unlock()
 
-	if n.IPClient != nil {
-		err := n.IPClient.Update(n.config.Spec.NetworkMode, n.config.Spec.IPConfig.IPAddress, n.config.Spec.MgmtVlan, n.config.Spec.Hostname, n.config.Spec.Controllers)
-		return err
-	}
+	//// Start the control loop based on configured Mode
+	//if n.config.Spec.Mode == nmd.MgmtMode_HOST {
+	//	// Start in Classic Mode
+	//	if err := n.StartClassicMode(); err != nil {
+	//		log.Errorf("Error starting in classic mode, err: %+v", err)
+	//		return err
+	//	}
+	//}
 
-	return nil
+	//if n.IPClient != nil {
+	log.Infof("NaplesConfig: %v", n.config)
+	err := n.IPClient.Update(n.config.Spec.NetworkMode, n.config.Spec.IPConfig, n.config.Spec.MgmtVlan, n.config.Spec.Hostname, n.config.Spec.Controllers)
+	return err
+	//}
+
+	//return nil
 }

@@ -66,14 +66,12 @@ func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath string) 
 		if err != nil {
 			emdb.Close()
 			return nil, err
-
 		}
 		// We need to create an infra namespace at startup. This will create an infra vrf in the datapath
 		err = na.createInfraNamespace()
 		if err != nil {
 			emdb.Close()
 			return nil, err
-
 		}
 	}
 	err = na.GetUUID()

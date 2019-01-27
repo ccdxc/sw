@@ -1,23 +1,29 @@
-package platform
+package state
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
+	"github.com/pensando/sw/nic/agent/nmd/protos/halproto"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-const dhclientConfStr string = "request subnet-mask, broadcast-address, time-offset, routers, domain-name, domain-name-servers, host-name, netbios-name-servers, netbios-scope, vendor-encapsulated-options; send vendor-class-identifier \"Pensando\";"
+const dhclientConfStr string = "timeout 3600; request subnet-mask, broadcast-address, time-offset, routers, domain-name, domain-name-servers, host-name, netbios-name-servers, netbios-scope, vendor-encapsulated-options; send vendor-class-identifier \"Pensando\";"
 const dhclientHostnameStr string = " send host-name "
 const dhcpClientCmdStr string = "/sbin/dhclient -1 -nw -q -lf"
 const staticIPCmdStr string = "ip addr add "
@@ -38,6 +44,7 @@ type IPClient struct {
 	mgmtVlan     uint32
 	controllers  []string
 	hostname     string
+	nmdState     *NMD
 }
 
 func createDhclientConf(hostname string) error {
@@ -136,6 +143,8 @@ func readAndParseLease(leaseFile string) ([]string, error) {
 
 	leaseData := string(dat)
 
+	log.Infof("Found LEASE FILE: \n%s", leaseData)
+
 	// Remove "option" keyword
 	leaseDataClean := strings.Replace(leaseData, "option ", "", -1)
 
@@ -171,23 +180,109 @@ func readAndParseLease(leaseFile string) ([]string, error) {
 func (c *IPClient) updateNaplesStatus(controllers []string) error {
 	log.Infof("Found Controllers: %v", controllers)
 	var naplesMode delphiProto.NaplesStatus_Mode
+	var deviceSpec device.SystemSpec
+	var appStartSpec []byte
 
 	// Set up appropriate mode
 	switch c.networkMode {
 	case nmd.NetworkMode_INBAND:
 		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND
+		deviceSpec.FwdMode = device.ForwardingMode_FORWARDING_MODE_HOSTPIN
+		appStartSpec = []byte("hostpin")
 	case nmd.NetworkMode_OOB:
 		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_OOB
+		deviceSpec.FwdMode = device.ForwardingMode_FORWARDING_MODE_HOSTPIN
+		appStartSpec = []byte("hostpin")
 	default:
 		naplesMode = delphiProto.NaplesStatus_HOST_MANAGED
+		deviceSpec.FwdMode = device.ForwardingMode_FORWARDING_MODE_CLASSIC
+		appStartSpec = []byte("classic")
 	}
 
 	naplesStatus := delphiProto.NaplesStatus{
 		Controllers: controllers,
 		NaplesMode:  naplesMode,
 	}
+	c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
+	c.nmdState.cmdUpdateURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
+	c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 
-	if c.delphiClient != nil {
+	// TODO Check if update cmd and registration need to be triggered again if the naples is already admitted
+	if err := c.nmdState.cmd.UpdateCMDClient(controllers); err != nil {
+		log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
+		return err
+	}
+
+	// Start ManagedMode
+	if c.nmdState.config.Spec.Mode != nmd.MgmtMode_HOST {
+		// Stop classic mode control loop
+		// c.nmdState.StopClassicMode(false)
+		// Start the admission process
+		c.nmdState.Add(1)
+		go func() {
+			defer c.nmdState.Done()
+			c.nmdState.StartManagedMode()
+		}()
+		//wait for registration TODO Uncomment this section
+		//c.waitForRegistration()
+	}
+
+	// TODO Remove manual nic admitted state.
+	c.nmdState.config.Status.Phase = cluster.SmartNICStatus_ADMITTED
+
+	// Persist bolt db.
+	err := c.nmdState.store.Write(&c.nmdState.config)
+	if err != nil {
+		log.Errorf("Error persisting the naples config in Bolt DB, err: %+v", err)
+		return err
+	}
+
+	// Write HAL CFG FILE
+	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
+	if _, err := os.Stat(globals.NaplesModeConfigFile); os.IsNotExist(err) {
+		os.MkdirAll(path.Dir(globals.NaplesModeConfigFile), 0664)
+	}
+	data, err := json.MarshalIndent(deviceSpec, "", "  ")
+	if err != nil {
+		log.Errorf("Failed to marshal device spec. Err: %v", err)
+		return err
+	}
+	if err = ioutil.WriteFile(globals.NaplesModeConfigFile, data, 0444); err != nil {
+		log.Errorf("Failed to write the device spec to %s. Err: %v", globals.NaplesModeConfigFile, err)
+	}
+
+	// Update app-start.conf file. TODO Remove this workaround when all the processes are migrated to read from device.conf
+	appStartConfFilePath := fmt.Sprintf("%s/app-start.conf", path.Dir(globals.NaplesModeConfigFile))
+	if err = ioutil.WriteFile(appStartConfFilePath, appStartSpec, 0755); err != nil {
+		log.Errorf("Failed to write app start conf. Err: %v", err)
+	}
+
+	// Reflect reboot pending state only if the nic is admitted.
+	if c.nmdState.config.Status.Phase == cluster.SmartNICStatus_ADMITTED {
+		c.nmdState.config.Status.Controllers = controllers
+		if c.isDynamic && len(c.nmdState.config.Spec.Controllers) != 0 {
+			// In dynamic mode, the spec will be empty and on reboot we need to ensure that it doesn't have stale controllers picked up from boltdb
+			log.Info("Clearing out old controller IPs in spec.")
+			c.nmdState.config.Spec.Controllers = []string{}
+		}
+		if c.nmdState.config.Status.TransitionPhase == nmd.NaplesStatus_REBOOT_PENDING.String() {
+			// Previously it was set to reboot pending. We need to clear it
+			log.Infof("Clearing out previous reboot pending state.")
+			c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
+			naplesStatus.TransitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_DONE
+
+		} else {
+			log.Infof("Current Transition Phase is %v", c.nmdState.config.Status.TransitionPhase)
+			c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_REBOOT_PENDING.String()
+			naplesStatus.TransitionPhase = delphiProto.NaplesStatus_REBOOT_PENDING
+		}
+	} else {
+		c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String()
+		naplesStatus.TransitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_SENT
+	}
+
+	// Update corresponding delphi object and write to delphi db
+	if c.delphiClient != nil && c.nmdState.config.Status.Phase == cluster.SmartNICStatus_ADMITTED {
 		if err := c.delphiClient.SetObject(&naplesStatus); err != nil {
 			log.Errorf("Error writing the naples status object. Err: %v", err)
 			return err
@@ -196,6 +291,14 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 		log.Error("Delphi c uninitialized")
 		return errors.New("watch Lease Events failure. DelphiClient is nil")
 	}
+
+	// Persist bolt db.
+	err = c.nmdState.store.Write(&c.nmdState.config)
+	if err != nil {
+		log.Errorf("Error persisting the naples config in Bolt DB, err: %+v", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -217,6 +320,8 @@ func (c *IPClient) watchLeaseEvents() {
 					return
 				}
 			} else {
+				// Vendor specified attributes is nil
+				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
 				log.Infof("Controllers is nil.")
 			}
 
@@ -231,6 +336,12 @@ func (c *IPClient) watchLeaseEvents() {
 }
 
 func (c *IPClient) startDhclient() error {
+	// Update NMD Status
+	//c.nmdState.Lock()
+	log.Info("Starting DHClient")
+	c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_DHCP_SENT.String()
+	//c.nmdState.Unlock()
+
 	dynamicIPCommandString := getDhclientCommand(c.iface)
 	err := createDhclientConf(c.hostname)
 	if err != nil {
@@ -266,15 +377,17 @@ func (c *IPClient) startDhclient() error {
 }
 
 func (c *IPClient) doStaticIPConfig() error {
+	log.Infof("Static IP Config. Controllers: %v", c.controllers)
 	if c.controllers == nil {
-		return errors.New("No controller IP passed")
+		return errors.New("no controller IP passed")
 	}
+
+	c.isDynamic = false
 
 	err := c.updateNaplesStatus(c.controllers)
 	if err != nil {
 		return err
 	}
-	c.isDynamic = false
 
 	err = runCmd("ip addr flush dev " + c.iface)
 	if err != nil {
@@ -286,11 +399,14 @@ func (c *IPClient) doStaticIPConfig() error {
 }
 
 func (c *IPClient) doDynamicIPConfig() error {
+	log.Info("Starting dynamic ip config")
 	killDhclient()
 	return c.startDhclient()
 }
 
 func (c *IPClient) doOOB() error {
+	log.Info("Doing OOB")
+
 	c.iface = "oob_mnic0"
 	c.leaseFile = dhcpLeaseFile + c.iface
 	log.Infof("Doing OOB " + c.iface)
@@ -312,6 +428,8 @@ func (c *IPClient) doOOB() error {
 }
 
 func (c *IPClient) doInband() error {
+	log.Infof("Doing Inband. Client IP Addresses: %v. Mgmt VLAN: %v", c.ipaddress, c.mgmtVlan)
+
 	c.iface = "bond0"
 	c.leaseFile = dhcpLeaseFile + c.iface
 
@@ -342,7 +460,7 @@ func (c *IPClient) doInband() error {
 }
 
 // NewIPClient creates a new ipclient to do the IP configuration of Management port on Naples
-func NewIPClient(delphiClient clientAPI.Client, networkMode nmd.NetworkMode, ipaddress string, mgmtVlan uint32, hostname string, controllers []string) *IPClient {
+func NewIPClient(nmdState *NMD, delphiClient clientAPI.Client, networkMode nmd.NetworkMode, ipaddress string, mgmtVlan uint32, hostname string, controllers []string) *IPClient {
 	client := &IPClient{
 		delphiClient: delphiClient,
 		networkMode:  networkMode, // INBAND/OOB
@@ -350,6 +468,7 @@ func NewIPClient(delphiClient clientAPI.Client, networkMode nmd.NetworkMode, ipa
 		mgmtVlan:     mgmtVlan,
 		hostname:     hostname,
 		controllers:  controllers,
+		nmdState:     nmdState,
 	}
 
 	return client
@@ -357,20 +476,31 @@ func NewIPClient(delphiClient clientAPI.Client, networkMode nmd.NetworkMode, ipa
 
 // Start function starts the IPClient
 func (c *IPClient) Start() error {
-	if c.networkMode == nmd.NetworkMode_OOB {
-		// OOB
-		err := c.doOOB()
-		if err != nil {
-			return err
-		}
-	} else if c.networkMode == nmd.NetworkMode_INBAND {
-		// INBAND
-		err := c.doInband()
-		if err != nil {
-			return err
-		}
+	log.Info("IP Client Start called")
+	// Start REST Server. StartClassicMode is confusing. TODO Rename this method
+	if err := c.nmdState.StartClassicMode(); err != nil {
+		log.Errorf("Failed to start rest server. Err: %v", err)
+		return err
 	}
 
+	if c.networkMode == nmd.NetworkMode_OOB && c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
+		// OOB
+		log.Info("Got network mode OOB")
+
+		return c.doOOB()
+		//if err != nil {
+		//	return err
+		//} // Admission of Napl
+		//
+	} else if c.networkMode == nmd.NetworkMode_INBAND && c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
+		// INBAND
+		log.Info("Got network mode inband")
+		return c.doInband()
+		//if err != nil {
+		//	return err
+		//}
+		// Admission of Naples
+	}
 	return nil
 }
 
@@ -384,14 +514,41 @@ func (c *IPClient) Stop() {
 }
 
 // Update updates the management IPs
-func (c *IPClient) Update(networkMode nmd.NetworkMode, ipaddress string, mgmtVlan uint32, hostname string, controllers []string) error {
+func (c *IPClient) Update(networkMode nmd.NetworkMode, ipconfig *cluster.IPConfig, mgmtVlan uint32, hostname string, controllers []string) error {
+	log.Info("IP Client Update called")
 	c.Stop()
 
 	c.networkMode = networkMode
-	c.ipaddress = ipaddress
+	if ipconfig != nil {
+		c.ipaddress = ipconfig.IPAddress
+	}
 	c.mgmtVlan = mgmtVlan
 	c.hostname = hostname
 	c.controllers = controllers
-
 	return c.Start()
+}
+
+// waitForRegistration waits for a specific timeout to check if the nic has been admitted.
+// On a timeout, it doesn't stop nmd's control loop, but only updates the transition phase.
+func (c *IPClient) waitForRegistration() {
+	registrationDone := make(chan bool, 1)
+	ticker := time.NewTicker(time.Second * 10)
+	timeout := time.After(nicRegistrationWaitTime)
+
+	for {
+		select {
+		case <-ticker.C:
+			log.Info("Checking if the nic has been admitted")
+			if c.nmdState.config.Status.Phase == cluster.SmartNICStatus_ADMITTED {
+				registrationDone <- true
+			}
+		case <-registrationDone:
+			log.Info("Nic Registration completed")
+			return
+		case <-timeout:
+			log.Errorf("Failed to complete nic registration. Updating NaplesStatus")
+			c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_UNREACHABLE.String()
+			return
+		}
+	}
 }

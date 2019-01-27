@@ -177,6 +177,7 @@ nic/e2etests/go/agent/configs/golden                                /nic/conf/
 # nic/gen/common_rxdma_actions/cli/_common_rxdma_actions.so         /nic/cli/
 
 nic/tools/start-hal-haps.sh                                         /nic/tools/
+nic/tools/start-nmd.sh                                              /nic/tools/
 nic/tools/sysinit.sh                                                /nic/tools/
 nic/tools/syskill.sh                                                /nic/tools/
 nic/tools/sysreset.sh                                               /nic/tools/

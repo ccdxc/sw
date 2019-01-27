@@ -191,8 +191,8 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		defer ag.Unlock()
 		var controllers []string
 
-		for _, c := range obj.Controllers {
-			controllers = append(controllers, fmt.Sprintf("%s:%s", c, globals.CMDResolverPort))
+		for _, ip := range obj.Controllers {
+			controllers = append(controllers, fmt.Sprintf("%s:%s", ip, globals.CMDGRPCAuthPort))
 		}
 
 		log.Infof("Populating Venice Co-ordinates with %v", controllers)

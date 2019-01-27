@@ -87,6 +87,7 @@ var _ = BeforeSuite(func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			data, err := ioutil.ReadAll(resp.Body)
 			Expect(err).ShouldNot(HaveOccurred())
+			fmt.Println("Got Naples Response: ", string(data))
 			err = json.Unmarshal(data, &naples)
 			Expect(err).ShouldNot(HaveOccurred())
 			resp.Body.Close()
@@ -109,6 +110,12 @@ var _ = BeforeSuite(func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			// Switch to managed mode
 			naples.Spec.Mode = nmd.MgmtMode_NETWORK
+			naples.Spec.Controllers = []string{ts.tu.ClusterVIP}
+			naples.Spec.NetworkMode = nmd.NetworkMode_INBAND
+			// Ensure that a random static IP is given
+			naples.Spec.IPConfig = &cluster.IPConfig{
+				IPAddress: "1.2.3.4",
+			}
 			By(fmt.Sprintf("Switching Naples %+v to managed mode", naples))
 			out, err := json.Marshal(&naples)
 			Expect(err).ShouldNot(HaveOccurred())

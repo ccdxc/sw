@@ -50,6 +50,10 @@ func (ag *mockAgent) RegisterCMD(cmd state.CmdAPI) error {
 	return nil
 }
 
+func (ag *mockAgent) UnRegisterCMD() error {
+	return nil
+}
+
 func (ag *mockAgent) NaplesConfigHandler(req *http.Request) (interface{}, error) {
 	return nil, nil
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
 	"github.com/pensando/sw/nic/agent/nmd/rolloutif"
+
 	"github.com/pensando/sw/nic/agent/nmd/state"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/utils/log"
@@ -43,7 +44,7 @@ func NewAgent(platform state.PlatformAPI, upgmgr state.UpgMgrAPI,
 	resolverClient resolver.Interface) (*Agent, error) {
 
 	// create new NMD instance
-	nm, err := state.NewNMD(platform, upgmgr, nmdDbPath, hostName, macAddr, nmdListenURL, certsListenURL, cmdAuthCertsURL, mode, regInterval, updInterval)
+	nm, err := state.NewNMD(platform, upgmgr, nmdDbPath, hostName, macAddr, nmdListenURL, certsListenURL, cmdAuthCertsURL, cmdRegURL, cmdUpdURL, mode, regInterval, updInterval)
 	if err != nil {
 		log.Errorf("Error creating NMD. Err: %v", err)
 		return nil, err
@@ -92,6 +93,7 @@ func NewDelphiService() *DelphiService {
 func (d *DelphiService) OnMountComplete() {
 	log.Infof("OnMountComplete() done for %s", d.Name())
 	d.Agent.nmd.CreateIPClient(d.DelphiClient)
+	d.Agent.nmd.UpdateMgmtIP()
 }
 
 // Name returns the name of the delphi service.

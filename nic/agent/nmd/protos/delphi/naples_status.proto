@@ -10,7 +10,6 @@ import "delphi.proto";
 message NaplesStatus {
     option (delphi.update_event)            = true;
     option (delphi.singleton)               = true;
-    delphi.ObjectMeta               Meta    = 1;
 
     enum Mode {
         // ui-hint: None
@@ -26,25 +25,42 @@ message NaplesStatus {
         NETWORK_MANAGED_OOB     = 3;
     }
 
-    enum RegistrationPhase {
-        // ui-hint: Unknown
-        UNKNOWN      = 0; // Unknown status, initial state.
-        // ui-hint: Registering
-        REGISTERING  = 1; // NIC registration is in progress, set when Naples initiated registration
-        // ui-hint: Rejected
-        REJECTED     = 2; // NIC is rejected, due to invalid cert
-        // ui-hint: Pending
-        PENDING      = 3; // NIC is validated but waiting for manual approval
-        // ui-hint: Admitted
-        ADMITTED     = 4; // NIC is validated and admitted
+    enum Transition {
+        TRANSITION_NONE                     = 0;
+        DHCP_SENT                           = 1;
+        DHCP_DONE                           = 2;
+        DHCP_TIMEDOUT                       = 3;
+        MISSING_VENDOR_SPECIFIED_ATTRIBUTES = 4;
+        VENICE_REGISTRATION_SENT            = 5;
+        VENICE_REGISTRATION_DONE            = 6;
+        VENICE_UNREACHABLE                  = 7;
+        REBOOT_PENDING                      = 8;
     }
-    // Current phase of the NIC adapter in the system
-    RegistrationPhase    Phase      = 2;
 
+
+    delphi.ObjectMeta               Meta    = 1;
     // Resolved Controllers/Venice IPs
-    repeated string Controllers     = 3;
+    repeated string Controllers             = 3;
 
     // Naples management mode
-    Mode NaplesMode                 = 4;
+    Mode NaplesMode                         = 4;
+
+    Transition TransitionPhase              = 5;
+
+    //    enum RegistrationPhase {
+    //        // ui-hint: Unknown
+    //        UNKNOWN      = 0; // Unknown status, initial state.
+    //        // ui-hint: Registering
+    //        REGISTERING  = 1; // NIC registration is in progress, set when Naples initiated registration
+    //        // ui-hint: Rejected
+    //        REJECTED     = 2; // NIC is rejected, due to invalid cert
+    //        // ui-hint: Pending
+    //        PENDING      = 3; // NIC is validated but waiting for manual approval
+    //        // ui-hint: Admitted
+    //        ADMITTED     = 4; // NIC is validated and admitted
+    //    }
+
+    //    // Current phase of the NIC adapter in the system
+    //    RegistrationPhase    Phase      = 2;
 }
 

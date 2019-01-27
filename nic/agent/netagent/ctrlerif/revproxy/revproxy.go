@@ -100,7 +100,8 @@ func (s *Server) Stop() error {
 		ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancelFunc()
 		if err := s.httpServer.Shutdown(ctx); err != nil {
-			log.Fatalf("Could not shut Reverse Proxy Router. Err: %v", err)
+			log.Infof("Could not shut Reverse Proxy Router. Err: %v", err)
+			return err
 		}
 	}
 	return nil

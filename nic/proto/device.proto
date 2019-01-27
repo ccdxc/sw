@@ -5,8 +5,11 @@
 //------------------------------------------------------------------------------
 
 syntax = "proto3";
-import "delphi.proto";
+
 package device;
+
+import "delphi.proto";
+import "gogo.proto";
 
 //------------------------------------------------------------------------------
 // supported forwarding modes
@@ -38,6 +41,6 @@ message SystemSpec {
   option (delphi.update_event)         = true;
   option (delphi.singleton)            = true;
   delphi.ObjectMeta    Meta            = 1;    // common delphi meta
-  ForwardingMode       fwd_mode        = 2;    // forwarding mode
-  FeatureProfile       feature_profile = 3;  // feature profile
+  ForwardingMode       fwd_mode        = 2 [(gogoproto.jsontag) = "forwarding-mode,omitempty"];    // forwarding mode
+  FeatureProfile       feature_profile = 3 [(gogoproto.jsontag) = "feature-profile"]; // feature profile
 }

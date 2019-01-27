@@ -9,7 +9,6 @@ import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/protos/smartnic.proto";
-import "delphi.proto";
 
 
 // Naples config object
@@ -42,8 +41,9 @@ enum MgmtMode {
 
 // Network Connectivity Mode (only if network managed)
 enum NetworkMode {
-    OOB      = 0; // Out Of Band Network Management
-    INBAND   = 1; // Inband Network Management
+    NONE     = 0;
+    OOB      = 1; // Out Of Band Network Management
+    INBAND   = 2; // Inband Network Management
 }
 
 // NaplesSpec contains initial bootstrap configuration of the Naples I/O subsystem
@@ -57,7 +57,7 @@ message NaplesSpec {
     string Hostname                 = 2 [(gogoproto.jsontag) = "hostname,omitempty"];
 
     // IPConfig defines the static IP configuration. If not specified, DHCP will be attempted
-    cluster.IPConfig IPConfig               = 3 [(gogoproto.jsontag) = "ip-config,omitempty"];
+    cluster.IPConfig IPConfig       = 3 [(gogoproto.jsontag) = "ip-config,omitempty"];
 
     // Operational mode of the NIC
     MgmtMode Mode                   = 4 [(gogoproto.jsontag) = "mode"];
@@ -68,7 +68,7 @@ message NaplesSpec {
     // MgmtVlan defines the vlan to be used in network managed mode. The default of 0
     // implies OOB 1G mgmt port is used for management. A non 0 vlan switches the
     // management port to a vlan on data ports.
-    uint32 MgmtVlan                 = 6 [(gogoproto.jsontag) = "vlan,omitempty"];   
+    uint32 MgmtVlan                 = 6 [(gogoproto.jsontag) = "vlan,omitempty"];
 
     // Controllers contains the list of controller IPs or Hostnames
     repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
@@ -76,15 +76,25 @@ message NaplesSpec {
 
 // NaplesStatus contains current status of a Naples I/O subsystem
 message NaplesStatus {
-    option (delphi.update_event) = true;
-    option (delphi.singleton) = true;
-    delphi.ObjectMeta               Meta    = 1;
-
+    enum Transition {
+        NONE                                = 0;
+        DHCP_SENT                           = 1;
+        DHCP_DONE                           = 2;
+        DHCP_TIMEDOUT                       = 3;
+        MISSING_VENDOR_SPECIFIED_ATTRIBUTES = 4;
+        VENICE_REGISTRATION_SENT            = 5;
+        VENICE_REGISTRATION_DONE            = 6;
+        VENICE_UNREACHABLE                  = 7;
+        REBOOT_PENDING                      = 8;
+    }
     // Current phase of the NIC adapter in the system
-    cluster.SmartNICStatus.Phase    Phase   = 2 [(gogoproto.jsontag) = "phase,omitempty"];
+    cluster.SmartNICStatus.Phase    Phase   = 1 [(gogoproto.jsontag) = "phase,omitempty"];
 
     // Resolved Controllers/Venice IPs
-    repeated string Controllers             = 3 [(gogoproto.jsontag) = "controllers,omitempty"];
+    repeated string Controllers             = 2 [(gogoproto.jsontag) = "controllers,omitempty"];
+
+    string TransitionPhase                  = 3 [(gogoproto.jsontag) = "transition-phase,omitempty",
+                                                 (venice.check) = "StrEnum(NaplesStatus.Transition)"];
 }
 
 // NaplesCmdExecute contains information on what command to execute

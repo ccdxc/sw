@@ -32,4 +32,13 @@ const (
 
 	// InfluxConfigFile is used by Influx service
 	InfluxConfigFile = "/etc/pensando/" + Influx + "/influxdb.conf"
+
+	// NaplesModeConfigFile is where nmd writes mode information for other processes on naples to pickup. This is written on the penctl mode change trigger.
+	NaplesModeConfigFile = "/sysconfig/config0/device.conf"
+
+	// NmdDBPath is where nmd defaults to writing its db file. This needs to be in non tmpfs partition
+	NmdDBPath = "/sysconfig/config0/nmd.db"
+
+	// NetAgentDBPath is where netagent defaults to writing its db file. This needs to be in non tmpfs partition
+	NetAgentDBPath = "/sysconfig/config0/pen-netagent.db"
 )

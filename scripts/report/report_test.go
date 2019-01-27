@@ -264,7 +264,8 @@ func TestInvalidPackageName(t *testing.T) {
 	tgt := Target{
 		Name: testInvalidPkgName,
 	}
-	tgt.test()
+	var ignoredPackages []string
+	tgt.test(ignoredPackages)
 	AssertEquals(t, ErrTestFailed.Error(), tgt.Error, "expected the test to fail, it passed instead")
 }
 

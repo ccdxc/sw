@@ -90,7 +90,7 @@ const (
 	integTestCitadelURL = "localhost:9094"
 	integTestRolloutURL = "localhost:9095"
 
-	smartNICServerURL = "localhost:9199"
+	smartNICServerURL = "localhost:9002"
 	resolverURLs      = ":" + globals.CMDResolverPort
 	cmdAuthServer     = "localhost:9198"
 
@@ -99,7 +99,7 @@ const (
 	integTestTsmRestURL = "localhost:9501"
 
 	// default valules
-	numIntegTestAgents = 3
+	numIntegTestAgents = 1
 	agentDatapathKind  = "mock"
 
 	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
@@ -287,6 +287,15 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		if err != nil {
 			log.Fatalf("Error creating NMD. Err: %v", err)
 		}
+		// start NMDs rest server and
+		n := nmd.GetNMD()
+		n.CreateIPClient(nil)
+		//n.UpdateMgmtIP()
+		// Fake IPConfig
+		ipConfig := &cluster.IPConfig{
+			IPAddress: "1.2.3.4",
+		}
+		n.IPClient.Update(nmdproto.NetworkMode_INBAND, ipConfig, 0, hostID, []string{"localhost"})
 		it.nmds = append(it.nmds, nmd)
 	}
 
@@ -323,11 +332,6 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 				return false, nil
 			}
 
-			// Verify REST server is not up
-			if nm.GetRestServerStatus() == true {
-				log.Errorf("REST server is still up")
-				return false, nil
-			}
 			return true, nil
 		}, "Failed to verify mode is in Network Mode", string("10ms"), string("60s"))
 	}

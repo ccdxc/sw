@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certsproxy"
+	"github.com/pensando/sw/venice/utils/rpckit"
+
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
-	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
@@ -52,42 +53,8 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 	n.setNaplesConfig(cfg)
 	err := n.store.Write(&cfg)
 
-	// Handle mode change
-	if modeChanged {
-
-		// Handle the new mode
-		switch cfg.Spec.Mode {
-
-		case nmd.MgmtMode_HOST:
-			n.StopManagedMode()
-			n.StartClassicMode()
-
-		case nmd.MgmtMode_NETWORK:
-
-			// TODO : We need to stop rest server only
-			// after NIC registration succeeds. (either
-			// ADMITTED or PENDING for manual approval)
-			// Also some tests needs to be refactored
-			// before stopping the classic mode with
-			// flag=true to stop rest server, since the
-			// tests use the REST api to change mode from
-			// managed -> classic. Managed to classic mode
-			// change should be done by update SmartNIC object
-			// on Venice and NMD should react to it via watcher
-			// update.
-			n.StopClassicMode(false)
-
-			n.Add(1)
-			go func() {
-				defer n.Done()
-				n.StartManagedMode()
-			}()
-
-		}
-	}
 	log.Infof("NIC mode: %v change completed err: %v", n.config.Spec.Mode, err)
-	n.UpdateMgmtIP()
-
+	err = n.UpdateMgmtIP()
 	return err
 }
 
@@ -338,11 +305,13 @@ func (n *NMD) StopManagedMode() error {
 
 // StartClassicMode start the tasks required for classic mode
 func (n *NMD) StartClassicMode() error {
+	if !n.GetRestServerStatus() {
+		// Start RestServer
+		log.Infof("NIC in classic mode, mac: %v", n.config.Spec.PrimaryMAC)
+		return n.StartRestServer()
+	}
 
-	// Start RestServer
-	log.Infof("NIC in classic mode, mac: %v", n.config.Spec.PrimaryMAC)
-
-	return n.StartRestServer()
+	return nil
 }
 
 // StopClassicMode stops the ongoing tasks meant for classic mode

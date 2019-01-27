@@ -30,7 +30,7 @@
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "nmd",
-    "command": "/nic/bin/nmd -hostif lo",
+    "command": "/bin/sh /nic/tools/start-nmd.sh",
     "dependencies": ["delphi"],
     "flags": ["no_watchdog", "non_critical"]
 }, {

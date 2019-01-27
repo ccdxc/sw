@@ -30,11 +30,15 @@ type CmdAPI interface {
 
 	// WatchSmartNICUpdates starts a CMD watchers to receive SmartNIC objects updates
 	WatchSmartNICUpdates()
+
+	// UpdateCMDClient updates the cmd client with the new resolver URLs obtained as a part of dhcp discovery
+	UpdateCMDClient(resolvers []string) error
 }
 
 // NmdAPI is the API provided by NMD to CMD
 type NmdAPI interface {
 	RegisterCMD(cmd CmdAPI) error
+	UnRegisterCMD() error
 	GenClusterKeyPair() (*keymgr.KeyPair, error)
 	GetAgentID() string
 	GetSmartNIC() (*cluster.SmartNIC, error)

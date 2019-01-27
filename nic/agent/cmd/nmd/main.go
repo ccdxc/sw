@@ -7,6 +7,8 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -55,7 +57,7 @@ func main() {
 	var (
 		hostIf             = flag.String("hostif", "ntrunk0", "Host facing interface")
 		primaryMAC         = flag.String("primary-mac", "", "Primary MAC address")
-		nmdDbPath          = flag.String("nmddb", "/tmp/nmd.db", "NMD Database file")
+		nmdDbPath          = flag.String("nmddb", globals.NmdDBPath, "NMD Database file")
 		cmdRegistrationURL = flag.String("cmdregistration", ":"+globals.CMDSmartNICRegistrationAPIPort, "NIC Registration API server URL(s)")
 		cmdUpdatesURL      = flag.String("cmdupdates", ":"+globals.CMDSmartNICUpdatesPort, "NIC Updates server URL(s)")
 		cmdCertsURL        = flag.String("cmdcerts", ":"+globals.CMDAuthCertAPIPort, "CMD Certificates API URL(s)")
@@ -118,6 +120,11 @@ func main() {
 		macAddr = mac
 	}
 
+	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
+	if _, err := os.Stat(globals.NmdDBPath); os.IsNotExist(err) {
+		os.MkdirAll(path.Dir(globals.NmdDBPath), 0664)
+	}
+
 	// init resolver client
 	resolverClient := resolver.New(&resolver.Config{Name: "NMD", Servers: strings.Split(*res, ",")})
 
@@ -154,9 +161,9 @@ func main() {
 		}
 		dServ.DelphiClient = delphiClient
 
-		// mount objects
-		delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
-		log.Infof("Mounting naples status rw")
+		//// mount objects
+		//delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
+		//log.Infof("Mounting naples status rw")
 
 		// create a upgrade client
 		uc, err = upg.NewNaplesUpgradeClient(delphiClient)
@@ -185,6 +192,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}
+
+	// mount objects
+	delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
+	log.Infof("Mounting naples status rw")
 
 	if delphiClient != nil {
 		nm.DelphiClient = delphiClient

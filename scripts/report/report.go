@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -40,12 +41,15 @@ var (
 
 	retryTrackerInterval = 5 * time.Second
 	retryTrackerCount    = 5
+
+	covIgnoreFilePath = fmt.Sprintf("%s/src/github.com/pensando/sw/scripts/report/.coverignore", os.Getenv("GOPATH"))
 )
 
 // TestReport summarizes all the targets. We capture only the failed tests.
 type TestReport struct {
-	RunFailed bool
-	Results   []*Target
+	RunFailed       bool
+	Results         []*Target
+	IgnoredPackages []string
 }
 
 // Target holds test execution details.
@@ -63,6 +67,16 @@ func main() {
 	}
 
 	var t TestReport
+
+	// Read the .covignore file
+	f, _ := os.Open(covIgnoreFilePath)
+	defer f.Close()
+
+	s := bufio.NewScanner(f)
+	for s.Scan() {
+		t.IgnoredPackages = append(t.IgnoredPackages, s.Text())
+	}
+
 	for _, tgt := range os.Args[1:] {
 		p := Target{
 			Name: tgt,
@@ -117,7 +131,7 @@ func (t *TestReport) filterFailedTests() TestReport {
 
 func (t *TestReport) runCoverage() {
 	for _, tgt := range t.Results {
-		err := tgt.test()
+		err := tgt.test(t.IgnoredPackages)
 		if err != nil || tgt.Error != "" {
 			t.RunFailed = true
 		}
@@ -138,7 +152,7 @@ func (t *TestReport) testCoveragePass() {
 	}
 }
 
-func (tgt *Target) test() error {
+func (tgt *Target) test(ignoredPackages []string) error {
 	cmd := fmt.Sprintf(goTestCmd, os.Getenv("GOPATH"), tgt.Name)
 	start := time.Now()
 	defer func(tgt *Target) {
@@ -151,10 +165,24 @@ func (tgt *Target) test() error {
 	}
 
 	err = tgt.parseCmdOutput(out)
-	if tgt.Coverage < minCoverage && tgt.Error == "" {
-		tgt.Error = ErrTestCovFailed.Error()
+	if tgt.Error == "" {
+		isCovIgnored := tgt.checkCoverageIgnore(ignoredPackages)
+		if tgt.Coverage < minCoverage && !isCovIgnored {
+			tgt.Error = ErrTestCovFailed.Error()
+		}
+		return err
 	}
-	return err
+	return nil
+}
+
+func (tgt *Target) checkCoverageIgnore(ignoredPackages []string) (mustIgnore bool) {
+	for _, i := range ignoredPackages {
+		if tgt.Name == i {
+			mustIgnore = true
+			return
+		}
+	}
+	return
 }
 
 func (tgt *Target) parseCmdOutput(b []byte) error {

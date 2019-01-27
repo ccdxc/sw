@@ -269,6 +269,7 @@ func (client *CmdClient) Stop() {
 
 	client.closeUpdatesRPC()
 	client.closeRegistrationRPC()
+	log.Info("Stopped CMD Client")
 }
 
 func makeErrorResp(err error, str string, nic *cluster.SmartNIC) (grpc.RegisterNICResponse, error) {
@@ -393,4 +394,35 @@ func (client *CmdClient) UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.Smar
 // WatchSmartNICUpdates starts a CMD watchers to receive SmartNIC objects updates
 func (client *CmdClient) WatchSmartNICUpdates() {
 	go client.runSmartNICWatcher(client.watchCtx)
+}
+
+// UpdateCMDClient updates the cmd client with the resolver information obtained by DHCP
+func (client *CmdClient) UpdateCMDClient(resolverURLs []string) error {
+	client.Stop()
+	client.nmd.UnRegisterCMD()
+
+	var cmdResolverURL []string
+	// Ensure ResolverURLs are updated
+	for _, res := range resolverURLs {
+		cmdResolverURL = append(cmdResolverURL, fmt.Sprintf("%s:%s", res, globals.CMDGRPCAuthPort))
+	}
+
+	resolverClient := resolver.New(&resolver.Config{Name: "NMD", Servers: cmdResolverURL})
+
+	// TODO Move this to resolver client at least for cmdUpdatesURL
+	// Use the first resolverURL as registration and updatesURL
+
+	cmdRegistrationURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCUnauthPort)
+	cmdUpdatesURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCAuthPort)
+
+	newCMDClient, err := NewCmdClient(client.nmd, cmdRegistrationURL, cmdUpdatesURL, resolverClient)
+	if err != nil {
+		log.Errorf("Failed to update CMD Client. Err: %v", err)
+		return err
+	}
+	client = newCMDClient
+	client.resolverClient = resolverClient
+	log.Infof("Updated cmd client with newer cmd resolver URLs: %v", resolverURLs)
+
+	return nil
 }

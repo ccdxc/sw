@@ -33,7 +33,7 @@ import (
 
 // NewNMD returns a new NMD instance
 func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
-	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, mode string,
+	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, cmdRegURL, cmdUpdURL, mode string,
 	regInterval, updInterval time.Duration) (*NMD, error) {
 
 	var emdb emstore.Emstore
@@ -109,6 +109,8 @@ func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
 		listenURL:        listenURL,
 		certsListenURL:   certsListenURL,
 		remoteCertsURL:   remoteCertsURL,
+		cmdRegURL:        cmdRegURL,
+		cmdUpdateURL:     cmdUpdURL,
 		stopNICReg:       make(chan bool, 1),
 		stopNICUpd:       make(chan bool, 1),
 		config:           config,
@@ -133,19 +135,17 @@ func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
 		}
 	}
 
-	// Start the control loop based on configured Mode
-	if nm.config.Spec.Mode == nmd.MgmtMode_HOST {
-
-		// Start in Classic Mode
-		err = nm.StartClassicMode()
-		if err != nil {
-			log.Fatalf("Error starting in classic mode, err: %+v", err)
-		}
-	} else {
-
-		// Start in Managed Mode
-		go nm.StartManagedMode()
-	}
+	//// Start the control loop based on configured Mode
+	//if nm.config.Spec.Mode == nmd.MgmtMode_HOST {
+	//	// Start in Classic Mode
+	//	err = nm.StartClassicMode()
+	//	if err != nil {
+	//		log.Fatalf("Error starting in classic mode, err: %+v", err)
+	//	}
+	//}else {
+	//	// Start in Managed Mode
+	//	go nm.StartManagedMode()
+	//}
 
 	return &nm, nil
 }
@@ -153,8 +153,8 @@ func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
 // RegisterCMD registers a CMD object
 func (n *NMD) RegisterCMD(cmd CmdAPI) error {
 
-	n.Lock()
-	defer n.Unlock()
+	//n.Lock()
+	//defer n.Unlock()
 
 	// ensure two controller plugins dont register
 	if n.cmd != nil {
@@ -164,6 +164,15 @@ func (n *NMD) RegisterCMD(cmd CmdAPI) error {
 	// initialize cmd
 	n.cmd = cmd
 
+	return nil
+}
+
+// UnRegisterCMD ensures that nmd cleans up its old cmd information.
+func (n *NMD) UnRegisterCMD() error {
+	//n.Lock()
+	//defer n.Unlock()
+	log.Infof("Received UnRegisterCMD message.")
+	n.cmd = nil
 	return nil
 }
 
@@ -302,12 +311,6 @@ func unknownAction(w http.ResponseWriter, r *http.Request) {
 // StartRestServer creates a new HTTP server serving REST api
 func (n *NMD) StartRestServer() error {
 
-	// If RestServer is already running, return
-	if n.GetRestServerStatus() == true {
-		log.Warnf("REST server is already running")
-		return errors.New("REST server already running")
-	}
-
 	// if no URL was specified, just return (used during unit/integ tests)
 	if n.listenURL == "" {
 		log.Errorf("Empty listenURL for REST server")
@@ -351,11 +354,9 @@ func (n *NMD) StartRestServer() error {
 	}
 
 	// Init & create a http server
-	n.Lock()
 	n.listener = listener
 	n.httpServer = &http.Server{Addr: n.listenURL, Handler: router}
 	n.isRestSrvRunning = true
-	n.Unlock()
 
 	log.Infof("Started NMD Rest server at %s", n.GetListenURL())
 	os.Setenv("PATH", os.Getenv("PATH")+":/platform/bin:/nic/bin:/platform/tools:/nic/tools")

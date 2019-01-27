@@ -11,10 +11,10 @@ NIC_CONTAINER_VERSION:=1.32
 # get a shell with the dependencies image loaded, with the host filesystem mounted.
 ifeq ($(USER),)
 docker/shell:
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v /vol/builds:/vol/builds -v $(SW_DIR):/sw  -w /sw/nic pensando/nic bash
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -w /sw/nic pensando/nic bash
 else
 docker/shell: docker/build-shell-image
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v /vol/builds:/vol/builds -v $(SW_DIR):/sw  -w /sw/nic pensando/nic su -l $(CUR_USER)
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -w /sw/nic pensando/nic su -l $(CUR_USER)
 endif
 
 docker/build-shell-image: docker/install_box
@@ -28,7 +28,7 @@ t docker/jenkins-coverage: docker/build-runtime-image
 	docker run --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic su -l $(CUR_USER) -c 'HARDWARE_TESTBED=${HARDWARE_TESTBED_COPIED}  EXTRA_ARGS="${EXTRA_ARGS}" tools/coverage_script_full.sh'
 
 docker/coverage-shell: docker/build-runtime-image
-	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic  su -l $(CUR_USER)  
+	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -v /vol/builds:/vol/builds -v /home/asic/tools:/home/asic/tools -w /sw/nic pensando/nic  su -l $(CUR_USER)
 
 docker/e2e-sanity-build: docker/build-runtime-image
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw -w /sw/nic pensando/nic bash -c 'make'

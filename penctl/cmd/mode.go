@@ -94,7 +94,7 @@ func modeManagedCmdArgsValidator(cmd *cobra.Command, args []string) error {
 
 func modeManagedCmdHandler(cmd *cobra.Command, args []string) error {
 	modeVal := nmd.MgmtMode_HOST
-	if mode == "managed" {
+	if mode == "network" {
 		modeVal = nmd.MgmtMode_NETWORK
 	}
 
