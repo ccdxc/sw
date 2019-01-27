@@ -76,4 +76,4 @@ private:
 
 using api::subnet_state;
 
-#endif    /** __SUBNET_HPP__ */
+#endif    /** __SUBNET_STATE_HPP__ */
