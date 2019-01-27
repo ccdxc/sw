@@ -48,7 +48,7 @@ def Trigger(tc):
 
     for n in tc.nodes:
         if tc.os == 'linux':
-            api.Trigger_AddHostCommand(req, n, "tar xaf %s" % tc.pkgname_linux,
+            api.Trigger_AddHostCommand(req, n, "tar xmf %s" % tc.pkgname_linux,
                                    rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "cd drivers-linux && ./setup_apt.sh",
                                        rundir = 'rdma-drivers')
@@ -68,7 +68,7 @@ def Trigger(tc):
                                        rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "lsmod")
         else:
-            api.Trigger_AddHostCommand(req, n, "tar xJf %s" % tc.pkgname_freebsd,
+            api.Trigger_AddHostCommand(req, n, "tar xmf %s" % tc.pkgname_freebsd,
                                    rundir = 'rdma-drivers')
             api.Trigger_AddHostCommand(req, n, "cd drivers-freebsd && ./build.sh",
                                    rundir = 'rdma-drivers',
