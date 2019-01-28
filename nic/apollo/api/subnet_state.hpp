@@ -13,7 +13,6 @@
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/sdk/lib/indexer/indexer.hpp"
 #include "nic/sdk/lib/ht/ht.hpp"
-#include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/subnet.hpp"
 
 namespace api {
