@@ -41,7 +41,7 @@ state:
 
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CLEAR_STATS_CB)
     mfspr       r2, spr_tbladdr
-    add         r2, r2, 1, (3 + LOG_CB_UNIT_SIZE_BYTES)
+    add         r2, r2, CB3_OFFSET_BYTES
 
     DMA_PHV2MEM_SETUP(r6, c1, sqcb3, sqcb4, r2)
 
