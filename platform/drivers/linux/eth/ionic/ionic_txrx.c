@@ -718,14 +718,14 @@ static int ionic_tx(struct queue *q, struct sk_buff *skb)
 		return err;
 
 	skb_tx_timestamp(skb);
+	stats->pkts++;
+	stats->bytes += skb->len;
+
 #ifdef HAVE_SKB_XMIT_MORE
 	ionic_txq_post(q, !skb->xmit_more, ionic_tx_clean, skb);
 #else
 	ionic_txq_post(q, true, ionic_tx_clean, skb);
 #endif
-
-	stats->pkts++;
-	stats->bytes += skb->len;
 
 	return 0;
 }
