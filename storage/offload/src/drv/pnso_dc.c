@@ -17,11 +17,15 @@
 #include "pnso_seq.h"
 #include "pnso_utils.h"
 
-static inline void
-clear_dc_header_present(uint16_t flags, struct cpdc_desc *desc)
+static inline bool
+is_chksum_present_in_header_format(struct service_info *svc_info)
 {
-	if (!(flags & PNSO_DC_DFLAG_HEADER_PRESENT))
-		desc->u.cd_bits.cc_header_present = 0;
+	struct cp_header_format *hdr_fmt;
+
+	hdr_fmt = lookup_hdr_format(svc_info->hdr_fmt_idx, false);
+	OSAL_LOG_DEBUG("checksum is present in header format for decompression");
+
+	return hdr_fmt ? (hdr_fmt->chksum_len > 0) : false;
 }
 
 static int
@@ -38,7 +42,12 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 	desc->cd_dst = (uint64_t) sonic_virt_to_phy(svc_info->si_dst_sgl.sgl);
 
 	desc->u.cd_bits.cc_enabled = 1;
-	desc->u.cd_bits.cc_header_present = 1;
+
+	if (svc_info->si_desc_flags & PNSO_DC_DFLAG_HEADER_PRESENT) {
+		desc->u.cd_bits.cc_header_present = 1;
+		if (is_chksum_present_in_header_format(svc_info))
+			desc->u.cd_bits.cc_chksum_verify_enabled = 1;
+	}
 
 	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_dst_is_list = 1;
@@ -115,7 +124,6 @@ decompress_setup(struct service_info *svc_info,
 		OSAL_LOG_ERROR("cannot fill_dc_desc! err: %d", err);
 		goto out;
 	}
-	clear_dc_header_present(svc_info->si_desc_flags, dc_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);
 	if (err) {
@@ -286,20 +294,25 @@ decompress_write_result(struct service_info *svc_info)
 
 	if (status_desc->csd_err) {
 		svc_status->err = cpdc_convert_desc_error(status_desc->csd_err);
-		OSAL_LOG_ERROR("service failed! err: %d", err);
-		goto out;
+		OSAL_LOG_DEBUG("hw error reported! csd_err: %d err: %d",
+				status_desc->csd_err, svc_status->err);
+		goto pass_err;
 	}
 
-	svc_status->u.dst.data_len = cpdc_desc_data_len_get_eval(svc_info->si_type,
-					status_desc->csd_output_data_len);
+	svc_status->u.dst.data_len =
+		cpdc_desc_data_len_get_eval(svc_info->si_type,
+				status_desc->csd_output_data_len);
 	chn_service_deps_data_len_set(svc_info, svc_status->u.dst.data_len);
+
 	PAS_INC_NUM_DC_BYTES_OUT(svc_info->si_pcr,
 			svc_status->u.dst.data_len);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit! status/result update success!");
 	return err;
-
+pass_err:
+	OSAL_LOG_DEBUG("exit!");
+	return err;
 out:
 	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
