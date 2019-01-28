@@ -79,7 +79,7 @@ header_type seq_q_state_metrics2_t {
 
     // CAUTION: order of fields must match seq_kivec9_t
     len_updates         : 64;
-    integ_data0_writes  : 64;
+    cp_header_updates   : 64;
     pad                 : 384;
   }
 }
@@ -118,8 +118,7 @@ header_type seq_comp_status_desc0_t {
     barco_desc_size : 4;    // log2(descriptor size)
     barco_pndx_size : 3;    // log2(producer index size)
     barco_ring_size : 5;    // log2(ring_size)
-    barco_num_descs : 10;   // initial number of descriptors to xfer to Barco
-    hdr_chksum_offset:6;    // Offset to chksum field in CP header
+    barco_num_descs : 16;   // initial number of descriptors to xfer to Barco
     status_addr0    : 64;   // Address where compression status will be placed
     status_addr1    : 64;   // 2nd address where compression status will be placed
     intr_addr       : 64;   // Address where interrupt needs to be written
@@ -150,6 +149,7 @@ header_type seq_comp_status_desc1_t {
     pad_buf_addr    : 64;   // pad buffer address
     alt_buf_addr    : 64;   // Alternate source data buffer address for SGL PDMA in error condition
     data_len        : 16;   // Length of the compression data
+    hdr_version     : 16;
     pad_boundary_shift: 5;  // log2(padding boundray)
     stop_chain_on_error: 1; // 1 => don't ring next DB on error
     data_len_from_desc : 1; // 1 => Use data_len in the descriptor, 
@@ -165,6 +165,8 @@ header_type seq_comp_status_desc1_t {
     integ_data0_wr_en: 1;
     integ_data_null_en: 1;
     desc_dlen_update_en: 1; // 1 => update comp desc datain_len
+    hdr_version_wr_en: 1;
+    cp_hdr_update_en : 1;
   }
 }
 
@@ -215,8 +217,7 @@ header_type seq_xts_status_desc0_t {
     barco_desc_size : 4;    // log2(descriptor size)
     barco_pndx_size : 3;    // log2(producer index size)
     barco_ring_size : 5;    // log2(ring_size)
-    barco_num_descs : 10;   // log2(descriptor set size)
-    rsvd0           : 6;
+    barco_num_descs : 16;   // log2(descriptor set size)
     status_addr0    : 64;   // Address where HW crypto status was placed
     status_addr1    : 64;   // 2nd address where a copy of above status can be made
     intr_addr       : 64;   // Address where interrupt needs to be written
@@ -461,7 +462,6 @@ header_type seq_kivec3_t {
     last_blk_len        : 16;
     num_blks            : 5;
     sgl_tuple_no        : 2;
-    hdr_chksum_offset   : 6;
   }
 }
 
@@ -512,6 +512,8 @@ header_type seq_kivec5_t {
     integ_data0_wr_en   : 1;
     integ_data_null_en  : 1;
     desc_dlen_update_en : 1;
+    hdr_version_wr_en   : 1;
+    cp_hdr_update_wr_en : 1;
   }
 }
 
@@ -593,7 +595,7 @@ header_type seq_kivec9_t {
     // CAUTION: order of fields must match seq_q_state_metrics2_t
     metrics2_start     : 1;
     len_updates        : 1;
-    integ_data0_writes : 1;
+    cp_header_updates  : 1;
     metrics2_end       : 1;
   }
 }
@@ -659,7 +661,6 @@ header_type seq_kivec10_t {
   modify_field(scratch.last_blk_len, kivec.last_blk_len);               \
   modify_field(scratch.num_blks, kivec.num_blks);                       \
   modify_field(scratch.sgl_tuple_no, kivec.sgl_tuple_no);               \
-  modify_field(scratch.hdr_chksum_offset, kivec.hdr_chksum_offset);     \
 
 #define SEQ_KIVEC3XTS_USE(scratch, kivec)                               \
   modify_field(scratch.decr_buf_addr, kivec.decr_buf_addr);             \
@@ -695,6 +696,8 @@ header_type seq_kivec10_t {
   modify_field(scratch.integ_data0_wr_en, kivec.integ_data0_wr_en);     \
   modify_field(scratch.integ_data_null_en, kivec.integ_data_null_en);   \
   modify_field(scratch.desc_dlen_update_en, kivec.desc_dlen_update_en); \
+  modify_field(scratch.hdr_version_wr_en, kivec.hdr_version_wr_en); \
+  modify_field(scratch.cp_hdr_update_en, kivec.cp_hdr_update_en); \
 
 #define SEQ_KIVEC5XTS_USE(scratch, kivec)                               \
   modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
@@ -748,7 +751,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.metrics1_end, kivec.metrics1_end);               \
   modify_field(scratch.metrics2_start, kivec.metrics2_start);           \
   modify_field(scratch.len_updates, kivec.len_updates);                 \
-  modify_field(scratch.integ_data0_writes, kivec.integ_data0_writes);   \
+  modify_field(scratch.cp_header_updates, kivec.cp_header_updates);     \
   modify_field(scratch.metrics2_end, kivec.metrics2_end);               \
   
 #define SEQ_KIVEC10_USE(scratch, kivec)                                 \

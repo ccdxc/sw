@@ -27,8 +27,7 @@ struct seq_cpdc_push_spec {
 	uint64_t		desc_size	: 4;
 	uint64_t		pndx_size	: 3;
 	uint64_t		ring_size	: 5;
-	uint64_t		num_descs	: 10;
-	uint64_t		hdr_chksum_offset: 6;
+	uint64_t		num_descs	: 16;
 }  __attribute__((__packed__));
 
 struct seq_cpdc_options0 {
@@ -70,9 +69,11 @@ struct seq_cpdc_options1 {
 				sgl_pdma_en		: 1,
 				sgl_sparse_format_en	: 1,
 				sgl_pad_en		: 1;
-	uint8_t			desc_dlen_update_en	: 1,
+	uint8_t			cp_hdr_update_en	: 1,
+				hdr_version_wr_en	: 1,
+				desc_dlen_update_en	: 1,
 				integ_data_null_en	: 1,
-				rsvd0			: 6;
+				rsvd0			: 4;
 	uint8_t			rsvd1;
 } __attribute__((__packed__));
 
@@ -85,8 +86,8 @@ struct seq_cpdc_status_desc1 {
 	uint64_t		pad_buf_addr;
 	uint64_t		alt_buf_addr;
 	uint16_t		data_len;
+	uint16_t		hdr_version;
 	struct seq_cpdc_options1 options;
-	uint16_t		rsvd0;
 }  __attribute__((__packed__));
 
 static_assert(sizeof(struct seq_cpdc_status_desc1) == 64)
@@ -97,8 +98,7 @@ struct seq_crypto_push_spec {
 	uint64_t		desc_size	: 4;
 	uint64_t		pndx_size	: 3;
 	uint64_t		ring_size	: 5;
-	uint64_t		num_descs	: 10;
-	uint64_t		rsvd0		: 6;
+	uint64_t		num_descs	: 16;
 }  __attribute__((__packed__));
 
 struct seq_crypto_options0 {

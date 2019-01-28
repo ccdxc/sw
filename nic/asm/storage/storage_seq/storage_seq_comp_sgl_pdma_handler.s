@@ -49,28 +49,27 @@ storage_seq_comp_sgl_pdma_xfer:
 
 
     // Note: this function is a common entry point for both SGL PDMA xfer
-    // and integrity data write.
+    // and CP header update.
     
-    bbeq        SEQ_KIVEC5_INTEG_DATA0_WR_EN, 0, possible_sgl_pdma
+    bbeq        SEQ_KIVEC5_CP_HDR_UPDATE_EN, 0, possible_sgl_pdma
     seq         c3, SEQ_KIVEC5_INTEG_DATA_NULL_EN, 1    // delay slot
-    phvwr.c3	p.integ_data0_len, r0
+    phvwr.c3	p.comp_hdr_cksum, r0
     
-    add         r_comp_buf_addr, SEQ_KIVEC3_COMP_BUF_ADDR, \
-                SEQ_KIVEC3_HDR_CHKSUM_OFFSET
-    DMA_PHV2MEM_SETUP(integ_data0_len,
-                      integ_data0_len,
+    add         r_comp_buf_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0
+    DMA_PHV2MEM_SETUP(comp_hdr_cksum,
+                      comp_hdr_version,
                       r_comp_buf_addr, dma_p2m_18)
                       
-    // If r_comp_buf_addr were an HBM address then the integ_data write into
+    // If r_comp_buf_addr were an HBM address then the CP header write into
     // HBM would complete before the fenced DB ring.
     //
     // Otherwise, r_comp_buf_addr would be a host address and there could be
     // some pending mem2mem xfers into it so a fence would be needed to
-    // ensure they completed before writing the integ_data0. In addition,
+    // ensure they completed before writing the CP header. In addition,
     // the last op is DB/intr which must become a fence fence.
     seq        c4, r_comp_buf_addr[STORAGE_PHYS_ADDR_HOST_POS], 0
     bcf        [c4], possible_sgl_pdma
-    SEQ_METRICS_SET(integ_data0_writes)                 // delay slot
+    SEQ_METRICS_SET(cp_header_updates)                  // delay slot
     
     DMA_PHV2MEM_FENCE(dma_p2m_18)
     DMA_PHV2MEM_FENCE_FENCE(dma_p2m_19)

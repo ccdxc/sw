@@ -47,7 +47,7 @@ fill_chksum_desc(struct service_info *svc_info,
 	 * how chksum makes use of rmem status.
 	 */
 	err = svc_status_desc_addr_get(&svc_info->si_status_desc, block_no,
-			&aligned_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+			&aligned_addr, CPDC_STATUS_INTEG_CLEAR_SZ);
 	desc->cd_status_addr = aligned_addr;
 	if (err)
 		goto out;

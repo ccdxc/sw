@@ -200,11 +200,11 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 			chain_params->ccp_status_len);
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_data_len",
 			chain_params->ccp_data_len);
+	OSAL_LOG_DEBUG("%30s: %d", "ccp_hdr_version",
+			chain_params->ccp_hdr_version);
 
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_status_offset_0",
 			chain_params->ccp_status_offset_0);
-	OSAL_LOG_DEBUG("%30s: %d", "ccp_hdr_chksum_offset",
-			chain_params->ccp_hdr_chksum_offset);
 	OSAL_LOG_DEBUG("%30s: %d", "ccp_pad_boundary_shift",
 			chain_params->ccp_pad_boundary_shift);
 
@@ -243,6 +243,10 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 			cmd->integ_data_null_en);
 	OSAL_LOG_DEBUG("%30s: %d", "desc_dlen_update_en",
 			cmd->desc_dlen_update_en);
+	OSAL_LOG_DEBUG("%30s: %d", "hdr_version_wr_en",
+			cmd->hdr_version_wr_en);
+	OSAL_LOG_DEBUG("%30s: %d", "cp_hdr_update_en",
+			cmd->cp_hdr_update_en);
 }
 
 static void __attribute__((unused))
@@ -443,6 +447,7 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc0->intr_data = htonl(chain_params->ccp_intr_data);
 	desc0->status_len = htons(chain_params->ccp_status_len);
 	desc0->status_offset = chain_params->ccp_status_offset_0;
+	desc0->num_descs = htons(ring_spec->rs_num_descs);
 
 	if (cmd->ccpc_next_db_action_ring_push) {
 		desc0->next_db.addr = cpu_to_be64(ring_spec->rs_ring_addr);
@@ -450,12 +455,8 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 
 #ifdef HAVE_RING_TEMPLATES
 		/*
-		 * Use template here, and update the non-fixed fiels as follows
+		 * Use template here
 		 */
-		write_bit_fields(seq_status_desc, 208, 10,
-				ring_spec->rs_num_descs);
-		write_bit_fields(seq_status_desc, 218, 6,
-				chain_params->ccp_hdr_chksum_offset);
 #else
 		write_bit_fields(seq_status_desc, 128, 34,
 				ring_spec->rs_pndx_addr);
@@ -467,10 +468,6 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 				ring_spec->rs_pndx_size);
 		write_bit_fields(seq_status_desc, 203, 5,
 				ring_spec->rs_ring_size);
-		write_bit_fields(seq_status_desc, 208, 10,
-				ring_spec->rs_num_descs);
-                write_bit_fields(seq_status_desc, 218, 6,
-                                chain_params->ccp_hdr_chksum_offset);
 #endif
 	} else {
 		desc0->next_db.addr = cpu_to_be64(next_db_spec->nds_addr);
@@ -489,6 +486,7 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc1->pad_buf_addr = cpu_to_be64(chain_params->ccp_pad_buf_addr);
 	desc1->alt_buf_addr = cpu_to_be64(chain_params->ccp_alt_buf_addr);
 	desc1->data_len = htons(chain_params->ccp_data_len);
+	desc1->hdr_version = htons(chain_params->ccp_hdr_version);
 
 	desc1->options.blk_boundary_shift = chain_params->ccp_pad_boundary_shift;
 	desc1->options.stop_chain_on_error = cmd->ccpc_stop_chain_on_error;
@@ -504,6 +502,8 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc1->options.integ_data0_wr_en = cmd->integ_data0_wr_en;
 	desc1->options.integ_data_null_en = cmd->integ_data_null_en;
 	desc1->options.desc_dlen_update_en = cmd->desc_dlen_update_en;
+	desc1->options.hdr_version_wr_en = cmd->hdr_version_wr_en;
+	desc1->options.cp_hdr_update_en = cmd->cp_hdr_update_en;
 }
 
 static void
@@ -529,6 +529,7 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 	desc0->intr_data = htonl(chain_params->ccp_intr_data);
 	desc0->status_len = htons(chain_params->ccp_status_len);
 	desc0->status_offset = chain_params->ccp_status_offset_0;
+	desc0->num_descs = htons(ring_spec->rs_num_descs);
 
 	if (cmd->ccpc_next_db_action_ring_push) {
 		desc0->next_db.addr = cpu_to_be64(ring_spec->rs_ring_addr);
@@ -536,10 +537,8 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 
 #ifdef HAVE_RING_TEMPLATES
 		/*
-		 * Use template here, and update the non-fixed fiels as follows
+		 * Use template here
 		 */
-		write_bit_fields(seq_status_desc, 208, 10,
-				ring_spec->rs_num_descs);
 #else
 		write_bit_fields(seq_status_desc, 128, 34,
 				ring_spec->rs_pndx_addr);
@@ -551,8 +550,6 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 				ring_spec->rs_pndx_size);
 		write_bit_fields(seq_status_desc, 203, 5,
 				ring_spec->rs_ring_size);
-		write_bit_fields(seq_status_desc, 208, 10,
-				ring_spec->rs_num_descs);
 #endif
 	} else {
 		desc0->next_db.addr = cpu_to_be64(next_db_spec->nds_addr);
@@ -701,23 +698,25 @@ out:
 }
 
 static void
-hw_setup_cp_hdr_integ_data_wr(struct service_info *svc_info,
+hw_setup_cp_hdr_update(struct service_info *svc_info,
 		struct cpdc_desc *cp_desc,
 		struct cpdc_chain_params *chain_params)
 {
-	uint32_t chksum_offs;
 	uint32_t chksum_len;
 
-	if (chn_service_is_cp_hdr_insert_applic(svc_info) &&
-	    cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs, &chksum_len)) {
+	if (chn_service_is_cp_hdr_insert_applic(svc_info)) {
+		chain_params->ccp_cmd.integ_data0_wr_en =
+			cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_len) &&
+			(cpdc_desc_is_integ_data_wr_required(cp_desc) || (chksum_len == 0));
+                chain_params->ccp_cmd.integ_data_null_en = (chksum_len == 0);
 
-		if (cpdc_desc_is_integ_data_wr_required(cp_desc) ||
-		    (chksum_len == 0)) {
+		chain_params->ccp_hdr_version = cpdc_cp_hdr_version_info_get(svc_info);
+		chain_params->ccp_cmd.hdr_version_wr_en =
+			cpdc_cp_hdr_version_wr_required(chain_params->ccp_hdr_version);
 
-			chain_params->ccp_hdr_chksum_offset = chksum_offs;
-			chain_params->ccp_cmd.integ_data0_wr_en = 1;
-			chain_params->ccp_cmd.integ_data_null_en = (chksum_len == 0);
-		}
+		chain_params->ccp_cmd.cp_hdr_update_en =
+			chain_params->ccp_cmd.integ_data0_wr_en ||
+			chain_params->ccp_cmd.hdr_version_wr_en;
 	}
 }
 
@@ -811,7 +810,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 		chain_params->ccp_cmd.ccpc_stop_chain_on_error = 0;
 	}
 
-	hw_setup_cp_hdr_integ_data_wr(svc_info, cp_desc, chain_params);
+	hw_setup_cp_hdr_update(svc_info, cp_desc, chain_params);
 
 	OSAL_LOG_INFO("ring: %s index: %u src_desc: 0x" PRIx64 " status_desc: 0x" PRIx64 "",
 			ring->name, index, (uint64_t) cp_desc,
@@ -965,7 +964,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	if (err)
 		goto out;
 
-	hw_setup_cp_hdr_integ_data_wr(svc_info, cp_desc, chain_params);
+	hw_setup_cp_hdr_update(svc_info, cp_desc, chain_params);
 
 	chain_params->ccp_sgl_vec_addr = cp_desc->cd_dst;
 

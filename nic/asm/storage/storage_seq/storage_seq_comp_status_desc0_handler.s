@@ -40,7 +40,6 @@ storage_seq_comp_status_desc0_handler_start:
    PCI_SET_INTERRUPT_DATA()
    phvwr        p.{seq_kivec5_status_dma_en...seq_kivec5_next_db_action_barco_push}, \
    	        d.{status_dma_en...next_db_action_barco_push}
-   phvwr	p.seq_kivec3_hdr_chksum_offset, d.hdr_chksum_offset
    bbeq         d.next_db_en, 0, intr_check
    phvwr	p.seq_kivec10_intr_addr, d.intr_addr    // delay slot
 
@@ -55,9 +54,10 @@ storage_seq_comp_status_desc0_handler_start:
    // Note that d.next_db_addr in this case is really d.barco_ring_addr.
    // phvwrpair limits destination p[] to 64 bits per.
    phvwrpair	p.seq_kivec4_barco_ring_addr, d.next_db_addr[33:0], \
-                p.{seq_kivec4_barco_pndx_shadow_addr...seq_kivec4_barco_num_descs}, \
-                d.{barco_pndx_shadow_addr...barco_num_descs}
-   phvwr        p.seq_kivec4_barco_desc_addr, d.next_db_data
+                p.{seq_kivec4_barco_pndx_shadow_addr...seq_kivec4_barco_ring_size}, \
+                d.{barco_pndx_shadow_addr...barco_ring_size}
+   phvwrpair    p.seq_kivec4_barco_desc_addr, d.next_db_data, \
+                p.seq_kivec4_barco_num_descs, d.barco_num_descs[9:0]
 
 possible_status_dma:
 

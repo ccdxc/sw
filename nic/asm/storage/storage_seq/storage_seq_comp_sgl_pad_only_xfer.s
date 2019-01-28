@@ -29,22 +29,21 @@ struct phv_ p;
 
 storage_seq_comp_sgl_pad_only_xfer:
 
-    // Note: this function is a common entry point for both SGL pad-only xfer
-    // and integrity data write.
+    // Note: this function is a common entry point for both SGL PDMA xfer
+    // and CP header update.
     
-    bbeq        SEQ_KIVEC5_INTEG_DATA0_WR_EN, 0, possible_sgl_pad
+    bbeq        SEQ_KIVEC5_CP_HDR_UPDATE_EN, 0, possible_sgl_pad
     seq         c3, SEQ_KIVEC5_INTEG_DATA_NULL_EN, 1            // delay slot
     phvwr.c3	p.integ_data0_len, r0
     
-    // No fence needed for integ_data0 since any prior PDMA mem2mem
+    // No fence needed for CP header update since any prior PDMA mem2mem
     // would only be pad data xfer and, presumably, be outside of
-    // the integ_data0 area.
-    add         r_comp_buf_addr, SEQ_KIVEC3_COMP_BUF_ADDR, \
-                SEQ_KIVEC3_HDR_CHKSUM_OFFSET
-    DMA_PHV2MEM_SETUP(integ_data0_len,
-                      integ_data0_len,
+    // the CP header area.
+    add         r_comp_buf_addr, SEQ_KIVEC3_COMP_BUF_ADDR, r0
+    DMA_PHV2MEM_SETUP(comp_hdr_cksum,
+                      comp_hdr_version,
                       r_comp_buf_addr, dma_p2m_18)
-    SEQ_METRICS_SET(integ_data0_writes)
+    SEQ_METRICS_SET(cp_header_updates)
 
 possible_sgl_pad:    
     bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, exit
