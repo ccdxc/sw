@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -162,7 +163,13 @@ var ExecCmd = execCmd
 
 func getChildPids(ppid int) []int {
 	ret := []int{}
-	cmd := []string{"pstree", "-p", strconv.Itoa(ppid), "|", "perl", "-ne", "'print \"$1\\n\" while /\\((\\d+)\\)/g'"}
+	var cmd []string
+	switch runtime.GOOS {
+	case "freebsd":
+		cmd = []string{"pstree", strconv.Itoa(ppid), "|", `sed -r 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/'`}
+	default:
+		cmd = []string{"pstree", "-p", strconv.Itoa(ppid), "|", "perl", "-ne", "'print \"$1\\n\" while /\\((\\d+)\\)/g'"}
+	}
 	exitCode, stdoutStderr, err := Utils.Run(cmd, 0, false, true, nil)
 	if err == nil && exitCode == 0 {
 		pids := strings.Split(stdoutStderr, "\n")
