@@ -51,9 +51,8 @@ class SlabObject(base.ConfigObjectBase):
     def GetDMATableSlab(self):
         if (GlobalOptions.dryrun): return
         assert(self.address is not None)
-        if (len(self.phy_address) ==  1): return self.phy_address[0]
-
-        dma_mem_handle = resmgr.HostMemoryAllocator.get(len(self.phy_address) * 8)
+        # Allocating one host page size - page translation directory
+        dma_mem_handle = resmgr.HostMemoryAllocator.get(self.page_size)
         assert(dma_mem_handle != None)
         src_dma_phy_addr = resmgr.HostMemoryAllocator.v2p(dma_mem_handle.va)
 

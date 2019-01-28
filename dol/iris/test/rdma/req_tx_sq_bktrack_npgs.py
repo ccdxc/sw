@@ -116,7 +116,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that frpmr_reset_spec_cindex is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'sqcb0_frpmr_in_progress', 0):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'frpmr_in_progress', 0):
             return False
 
         # validate cqcb pindex and color

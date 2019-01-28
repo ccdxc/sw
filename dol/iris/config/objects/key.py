@@ -26,8 +26,8 @@ class KeyObject(base.ConfigObjectBase):
         self.rkey = self.lkey
         self.GID('KEY-%s' %(self.lkey))
         self.remote_access = remote_access
-        # Hardcoding to 3000. This will go in to num-entries-rsvd in key table during alloc_lkey
-        self.num_pt_entries = 3000
+        # Hardcoding to 10 for now. This will go in to num-entries-rsvd in key table during alloc_lkey
+        self.num_pt_entries = 10
         self.flags = self.GetAccessFlags()
         self.flags |= self.GetFuncFlags() << 8
 
