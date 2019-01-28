@@ -20,8 +20,12 @@ HOSTPATH=PATH="${NICDIR}/buildroot/output/host/bin:${NICDIR}/buildroot/output/ho
 LIBRARYPATH=LD_LIBRARY_PATH=${NICDIR}/buildroot/output/host/lib:$(LD_LIBRARY_PATH)
 FAKEROOTOPTS=-l ${NICDIR}/buildroot/output/host/lib/libfakeroot.so -f ${NICDIR}/buildroot/output/host/bin/faked
 
+.PHONY: fetch-buildroot-binaries
+fetch-buildroot-binaries: package
+	TOPDIR=${TOPDIR} ${TOPDIR}/nic/tools/fetch-buildroot.sh
+
 .PHONY: copy-overlay
-copy-overlay: package
+copy-overlay: fetch-buildroot-binaries
 	rsync -a --ignore-times --keep-dirlinks \
 		--chmod=u=rwX,go=rX --exclude .empty --exclude '*~' \
 		${TOPDIR}/fake_root_target/aarch64/ $(TARGET_DIR)/
