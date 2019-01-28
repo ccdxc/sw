@@ -9,6 +9,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/core/trace.hpp"
+#include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/oci_state.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"

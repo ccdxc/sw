@@ -6,6 +6,7 @@
  * @brief   subnet state handling
  */
 
+#include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/api/subnet_state.hpp"
 
 using namespace sdk;
