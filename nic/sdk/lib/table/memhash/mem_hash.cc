@@ -135,6 +135,14 @@ mem_hash::init_(mem_hash_factory_params_t *params) {
     SDK_TRACE_DEBUG("- num_hints:%d max_recircs:%d hash_poly:%d",
                     props_->num_hints, props_->max_recircs, props_->hash_poly);
 
+    p4pd_hwentry_query(props_->main_table_id, &props_->hw_key_len,
+                       NULL, &props_->hw_data_len);
+    SDK_TRACE_DEBUG("- key_len:%dB data_len:%dB ",
+                    props_->hw_key_len, props_->hw_data_len);
+
+    props_->hw_key_len = SDK_TABLE_BITS_TO_BYTES(props_->hw_key_len);
+    props_->hw_key_len = SDK_TABLE_ALIGN_TO_64B(props_->hw_key_len);
+
     return SDK_RET_OK;
 }
 
@@ -158,8 +166,6 @@ mem_hash::destroy(mem_hash *table) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash::genhash_(sdk_table_api_params_t *params) {
-    uint32_t hw_key_len = 0;
-    uint32_t hw_data_len = 0;
     p4pd_error_t p4pdret = P4PD_SUCCESS;
     uint32_t hash_32b = 0;
 
@@ -169,28 +175,17 @@ mem_hash::genhash_(sdk_table_api_params_t *params) {
     }
 
     memset(g_hw_key, 0, sizeof(g_hw_key));
-    p4pd_hwentry_query(props_->main_table_id, &hw_key_len,
-                       NULL, &hw_data_len);
- 
-    SDK_TRACE_DEBUG("Generating Hash: TableID=%d, KeyLength=%d, DataLength=%d",
-                    props_->main_table_id, hw_key_len, hw_data_len);
-    // round off to higher byte
-    hw_key_len = (hw_key_len >> 3) + ((hw_key_len & 0x7) ? 1 : 0);
-    if (hw_key_len * 8 > 512) {
-        if (hw_key_len % 64) {
-            hw_key_len +=  (64 - (hw_key_len % 64));
-        }
-    }
     
     SDK_TRACE_DEBUG("Generating Hash: TableID=%d, KeyLength=%d, DataLength=%d",
-                    props_->main_table_id, hw_key_len, hw_data_len);
+                    props_->main_table_id, props_->hw_key_len, props_->hw_data_len);
     p4pdret = p4pd_hwkey_hwmask_build(props_->main_table_id,
                                       params->key, NULL,
                                       g_hw_key, NULL);
     SDK_ASSERT(p4pdret == P4PD_SUCCESS);
     SDK_TRACE_DEBUG("HW Key: [%s]",
-                    mem_hash_utils_rawstr(g_hw_key, hw_key_len));
-    hash_32b = crc32gen_->compute_crc(g_hw_key, hw_key_len,
+                    mem_hash_utils_rawstr(g_hw_key, props_->hw_key_len));
+    hash_32b = crc32gen_->compute_crc(g_hw_key,
+                                      props_->hw_key_len,
                                       props_->hash_poly);
     params->hash_32b = hash_32b;
     params->hash_valid = true;

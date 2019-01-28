@@ -98,7 +98,8 @@ public:
 private:
     static uint32_t numctx_;
     static mem_hash_api_context* alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
-                                        uint32_t sw_appdata_len);
+                                        uint32_t sw_appdata_len,
+                                        uint32_t hw_key_len, uint32_t hw_data_len);
 public:
     // Operation
     api_op op;
@@ -121,11 +122,17 @@ public:
     // Derived fields from input
     uint32_t hash_msbits;
 
-    // Placeholders for HW read/write operations
+    // SW Key and Data
     bool sw_valid;
     uint8_t *sw_key;
     uint8_t *sw_data;
     uint8_t *sw_appdata;
+
+    // HW Key and Data
+    uint32_t hw_key_len;
+    uint32_t hw_data_len;
+    uint8_t *hw_key;
+    uint8_t *hw_data;
 
     // NOTE NOTE NOTE:
     // Some of the below fields are re-used by main table and hint table

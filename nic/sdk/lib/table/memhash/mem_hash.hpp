@@ -45,6 +45,8 @@ typedef struct mem_hash_properties_ {
     uint32_t num_hints;
     uint32_t key_len;
     uint32_t data_len;
+    uint32_t hw_key_len;
+    uint32_t hw_data_len;
     uint32_t max_recircs;
     uint32_t hash_poly;
     table_health_monitor_func_t health_monitor_func;
