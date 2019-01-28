@@ -1486,13 +1486,6 @@ ionic_lif_add_rxtstat(struct rxque *rxq, struct sysctl_ctx_list *ctx,
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_udp_ip6", CTLFLAG_RD,
 					 &rxstat->rss_udp_ip6, "RSS UDP/IPv6 packets");
 
-	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_ip6_ex", CTLFLAG_RD,
-					 &rxstat->rss_ip6_ex, "RSS IPv6 extension packets");
-	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_tcp_ip6_ex", CTLFLAG_RD,
-					 &rxstat->rss_tcp_ip6_ex, "RSS TCP/IPv6 extension packets");
-	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_udp_ip6_ex", CTLFLAG_RD,
-					 &rxstat->rss_udp_ip6_ex, "RSS UDP/IPv6 extension packets");
-
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_unknown", CTLFLAG_RD,
 					 &rxstat->rss_unknown, "RSS for unknown packets"); // XXX???
 }

@@ -83,9 +83,6 @@ struct rx_stats {
 	u64 rss_ip6;
 	u64 rss_tcp_ip6;
 	u64 rss_udp_ip6;
-	u64 rss_ip6_ex;
-	u64 rss_tcp_ip6_ex;
-	u64 rss_udp_ip6_ex;
 	u64 rss_unknown;
 };
 
