@@ -32,7 +32,7 @@
 
 #define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION	"Pensando Ethernet NIC Driver"
-#define DRV_VERSION		"0.2.0"
+#define DRV_VERSION		"0.5.0"
 
 #define SIZE_1K				1024
 #define IONIX_TX_MAX_DESC	(64 * SIZE_1K)
