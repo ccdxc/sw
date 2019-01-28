@@ -3,7 +3,7 @@
  *
  * @file    subnet_state.hpp
  *
- * @brief   subnet database maintenance
+ * @brief   subnet database handling
  */
 
 #if !defined (__SUBNET_STATE_HPP__)

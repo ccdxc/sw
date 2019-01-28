@@ -15,7 +15,7 @@
 namespace api {
 
 /**
- * @defgroup OCI_MAPPING_STATE - mapping state functionality
+ * @defgroup OCI_MAPPING_STATE - mapping state handling
  * @ingroup OCI_MAPPING
  * @{
  */

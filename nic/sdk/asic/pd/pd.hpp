@@ -102,6 +102,7 @@ sdk_ret_t asic_pd_hbm_bw_get(hbm_bw_samples_t *hbm_bw_samples);
 sdk_ret_t asic_pd_llc_setup(llc_counters_t *llc);
 sdk_ret_t asic_pd_llc_get(llc_counters_t *llc);
 sdk_ret_t asicpd_p4plus_recirc_init(void);
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk

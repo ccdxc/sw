@@ -3,7 +3,7 @@
  *
  * @file    subnet_state.cc
  *
- * @brief   subnet state maintenance
+ * @brief   subnet state handling
  */
 
 #include "nic/apollo/api/subnet_state.hpp"

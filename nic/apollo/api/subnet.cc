@@ -3,7 +3,7 @@
  *
  * @file    subnet.cc
  *
- * @brief   This file deals with subnet api handling
+ * @brief   subnet entry handling
  */
 
 #include "nic/sdk/include/sdk/base.hpp"

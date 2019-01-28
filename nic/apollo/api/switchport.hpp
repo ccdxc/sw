@@ -3,7 +3,7 @@
  *
  * @file    switchport.hpp
  *
- * @brief   APIs for switchport implementation
+ * @brief   switcthport entry handling
  */
 
 #if !defined (__SWITCHPORT_HPP__)

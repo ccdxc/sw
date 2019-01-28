@@ -3,7 +3,7 @@
  *
  * @file    subnet.hpp
  *
- * @brief   subnet entry maintenance
+ * @brief   subnet entry handlnig
  */
 
 #if !defined (__SUBNET_HPP__)

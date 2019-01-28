@@ -3,7 +3,7 @@
  *
  * @file    mapping.cc
  *
- * @brief   mapping entry maintenance
+ * @brief   mapping entry handling
  */
 
 #include "nic/apollo/core/mem.hpp"

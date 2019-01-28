@@ -3,7 +3,7 @@
  *
  * @file    switchport.cc
  *
- * @brief   This file deals with switchport api handling
+ * @brief   switchport entry handling
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
