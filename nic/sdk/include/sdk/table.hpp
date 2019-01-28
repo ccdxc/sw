@@ -9,6 +9,10 @@
 
 #include <stdint.h>
 
+#define SDK_TABLE_BITS_TO_BYTES(_b) (((_b) >> 3) + (((_b) & 0x7) ? 1 : 0))
+#define SDK_TABLE_ALIGN_TO_64B(_s) \
+        (((_s)*8) <= 512) ? (_s) : (((_s)%64) ? ((_s)+(64-((_s)%64))) : (_s))
+
 namespace sdk {
 namespace table {
 

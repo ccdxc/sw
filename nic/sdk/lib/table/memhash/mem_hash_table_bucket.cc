@@ -63,7 +63,7 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
-    p4pd_error_t pdret = 0;
+    p4pd_error_t p4pdret = 0;
 
     if (ctx->write_pending == false) {
         return SDK_RET_OK;
@@ -90,10 +90,15 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
                     ctx->table_id, ctx->table_index);
     PRINT_SW_DATA(ctx);
 
-    pdret = p4pd_entry_write(ctx->table_id, ctx->table_index,
-                             ctx->sw_key, NULL, ctx->sw_data);
-    if (pdret != P4PD_SUCCESS) {
-        SDK_TRACE_ERR("HW write failed: ret:%d", pdret);
+    p4pdret = p4pd_hwkey_hwmask_build(ctx->table_id,
+                                      ctx->sw_key, NULL,
+                                      ctx->hw_key, NULL);
+    SDK_ASSERT(p4pdret == P4PD_SUCCESS);
+
+    p4pdret = p4pd_entry_write(ctx->table_id, ctx->table_index,
+                               ctx->hw_key, NULL, ctx->sw_data);
+    if (p4pdret != P4PD_SUCCESS) {
+        SDK_TRACE_ERR("HW write failed: ret:%d", p4pdret);
         // Write failure is fatal
         SDK_ASSERT(0);
         return SDK_RET_HW_PROGRAM_ERR;

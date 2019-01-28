@@ -18,7 +18,8 @@ using sdk::table::mem_hash_properties_t;
 
 mem_hash_api_context* 
 mem_hash_api_context::alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
-                             uint32_t sw_appdata_len) {
+                             uint32_t sw_appdata_len,
+                             uint32_t hw_key_len, uint32_t hw_data_len) {
     mem_hash_api_context *ctx = NULL;
     void *mem = NULL;
 
@@ -32,18 +33,17 @@ mem_hash_api_context::alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
     ctx = new (mem) mem_hash_api_context();
     ctx->sw_key_len = sw_key_len;
     if (ctx->sw_key_len) {
-        ctx->sw_key = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_HWKEY, sw_key_len);
-    }
-
-    if (!ctx->sw_key) {
-        SDK_TRACE_ERR("failed to alloc sw_key:%p", ctx->sw_key);
-        destroy(ctx);
-        return NULL;
+        ctx->sw_key = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_SW_KEY, sw_key_len);
+        if (!ctx->sw_key) {
+            SDK_TRACE_ERR("failed to alloc sw_key:%p", ctx->sw_key);
+            destroy(ctx);
+            return NULL;
+        }
     }
 
     ctx->sw_data_len = sw_data_len;
     if (ctx->sw_data_len) {
-        ctx->sw_data = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_HWDATA, sw_data_len);
+        ctx->sw_data = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_SW_DATA, sw_data_len);
         if (!ctx->sw_data) {
             SDK_TRACE_ERR("failed to alloc sw_data:%p.", ctx->sw_data);
             destroy(ctx);
@@ -53,10 +53,30 @@ mem_hash_api_context::alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
 
     ctx->sw_appdata_len = sw_appdata_len;
     if (ctx->sw_appdata_len) {
-        ctx->sw_appdata = (uint8_t *)SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_HWAPPDATA, 
+        ctx->sw_appdata = (uint8_t *)SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_SW_APPDATA,
                                                sw_appdata_len);
         if (!ctx->sw_data) {
             SDK_TRACE_ERR("failed to alloc sw_appdata:%p.", ctx->sw_appdata);
+            destroy(ctx);
+            return NULL;
+        }
+    }
+
+    ctx->hw_key_len = hw_key_len;
+    if (ctx->hw_key_len) {
+        ctx->hw_key = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_HW_KEY, hw_key_len);
+        if (!ctx->hw_key) {
+            SDK_TRACE_ERR("failed to alloc hw_key:%p", ctx->hw_key);
+            destroy(ctx);
+            return NULL;
+        }
+    }
+
+    ctx->hw_data_len = hw_data_len;
+    if (ctx->hw_data_len) {
+        ctx->hw_data = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_HW_DATA, hw_data_len);
+        if (!ctx->hw_data) {
+            SDK_TRACE_ERR("failed to alloc sw_data:%p.", ctx->hw_data);
             destroy(ctx);
             return NULL;
         }
@@ -94,7 +114,8 @@ mem_hash_api_context::sw_data2str() {
 mem_hash_api_context*
 mem_hash_api_context::factory(mem_hash_api_context *pctx) {
     mem_hash_api_context *ctx = alloc_(pctx->sw_key_len, pctx->sw_data_len,
-                                       pctx->sw_appdata_len);
+                                       pctx->sw_appdata_len,
+                                       pctx->hw_key_len, pctx->hw_data_len);
     if (!ctx) {
         return NULL;
     }
@@ -139,7 +160,8 @@ mem_hash_api_context::factory(uint32_t op,
     appdata_len = p4pd_actiondata_appdata_size_get(props->main_table_id,
                                                    params->action_id);
     mem_hash_api_context *ctx = alloc_(props->key_len, props->data_len,
-                                       appdata_len);
+                                       appdata_len,
+                                       props->hw_key_len, props->hw_data_len);
     if (!ctx) {
         return NULL;
     }
@@ -175,14 +197,21 @@ void
 mem_hash_api_context::destroy(mem_hash_api_context* ctx) {
     SDK_TRACE_DEBUG("Destroying api context: %s", ctx->idstr());
     if (ctx->sw_key) {
-        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_HWKEY, ctx->sw_key);
+        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_SW_KEY, ctx->sw_key);
     }
     if (ctx->sw_data) {
-        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_HWDATA, ctx->sw_data);
+        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_SW_DATA, ctx->sw_data);
     }
     if (ctx->sw_appdata) {
-        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_HWAPPDATA, ctx->sw_appdata);
+        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_SW_APPDATA, ctx->sw_appdata);
     }
+    if (ctx->hw_key) {
+        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_SW_KEY, ctx->hw_key);
+    }
+    if (ctx->hw_data) {
+        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_SW_DATA, ctx->hw_data);
+    }
+
     SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_API_CTX, ctx);
 
     numctx_--;
