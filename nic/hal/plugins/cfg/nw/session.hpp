@@ -458,6 +458,7 @@ hal_ret_t session_delete (session::SessionDeleteRequest& spec,
                       session::SessionDeleteResponseMsg *rsp);
 void incr_global_session_tcp_rst_stats (void);
 void incr_global_session_icmp_error_stats (void);
+hal_ret_t session_handle_upgrade (void);
 
 }    // namespace hal
 

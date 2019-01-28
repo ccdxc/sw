@@ -1500,12 +1500,16 @@ typedef struct tcptkle_timer_ctx_ {
     dllist_ctxt_t       dllist_ctxt;
 } __PACK__ tcptkle_timer_ctx_t;
 
+#define BUILD_TCP_SEND_TIMESTAMP 0x01
+#define BUILD_TCP_SEND_RST       0x02
+#define BUILD_TCP_SEND_FIN       0x04
+ 
 static uint32_t
 build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
                   flow_state_t state,
                   pd::cpu_to_p4plus_header_t *cpu_header,
                   pd::p4plus_to_p4_header_t *p4plus_header,
-                  uint8_t *pkt, uint8_t send_tcp_ts=0, bool setrst=false)
+                  uint8_t *pkt, uint8_t flags)
 {
     vlan_header_t                           *vlan_hdr = NULL;
     ether_header_t                          *eth_hdr = NULL;
@@ -1518,6 +1522,9 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
     hal::flow_key_t                         key = flow->config.key;
     uint32_t                                offset = 0;
     tcp_ts_option_t                         *tcp_ts = NULL;
+    bool                                    send_tcp_ts = (flags & BUILD_TCP_SEND_TIMESTAMP);
+    bool                                    setrst = (flags & BUILD_TCP_SEND_RST);
+    bool                                    setfin = (flags & BUILD_TCP_SEND_FIN);
 
     if (!pkt) {
         return HAL_RET_INVALID_ARG;
@@ -1639,7 +1646,7 @@ build_tcp_packet (hal::flow_t *flow, hal_handle_t vrf_handle,
     tcp_hdr->psh = 0;
     tcp_hdr->rst = (setrst)?1:0;
     tcp_hdr->syn = 0;
-    tcp_hdr->fin = 0;
+    tcp_hdr->fin = (setfin)?1:0;
     tcp_hdr->window = state.tcp_win_sz;
     tcp_hdr->check = 0;    // let P4 datapath compute checksum
     tcp_hdr->urg_ptr = 0;
@@ -1836,6 +1843,7 @@ build_and_send_tcp_pkt (void *data)
     session_t                   *session = NULL;
     uint32_t                     sz = 0;
     bool                         send_ts = 0;
+    uint8_t                      flags = 0;
 
     session = hal::find_session_by_handle(ctxt->session_handle);
     if (session == NULL) {
@@ -1846,6 +1854,9 @@ build_and_send_tcp_pkt (void *data)
 
     // Set the timestamp option if needed
     send_ts = ctxt->session_state.tcp_ts_option;
+    if (send_ts)
+        flags |= BUILD_TCP_SEND_TIMESTAMP;   
+
 
     if (ctxt->num_tickles <= MAX_TCP_TICKLES) {
         /*
@@ -1856,7 +1867,7 @@ build_and_send_tcp_pkt (void *data)
              ctxt->aged_flow == SESSION_AGED_BOTH) && (session->rflow)) {
             sz = build_tcp_packet(session->rflow, session->vrf_handle,
                              ctxt->session_state.rflow_state, &cpu_header, &p4plus_header,
-                             pkt, send_ts);
+                             pkt, flags);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             SDK_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_tickles_sent, 1);
         }
@@ -1864,7 +1875,7 @@ build_and_send_tcp_pkt (void *data)
              ctxt->aged_flow == SESSION_AGED_BOTH)) {
             sz = build_tcp_packet(session->iflow, session->vrf_handle,
                              ctxt->session_state.iflow_state, &cpu_header, &p4plus_header, 
-                             pkt, send_ts);
+                             pkt, flags);
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
         }
@@ -1888,17 +1899,19 @@ build_and_send_tcp_pkt (void *data)
     // Send TCP RST to the flow if there is no response
     if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
         ctxt->aged_flow == SESSION_AGED_BOTH) {
+        flags |= BUILD_TCP_SEND_RST;
         sz = build_tcp_packet(session->iflow, session->vrf_handle,
                               ctxt->session_state.iflow_state, &cpu_header, &p4plus_header,
-                              pkt, send_ts, true);
+                              pkt, flags);
         fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
         SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
     }
     if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
         ctxt->aged_flow == SESSION_AGED_BOTH) {
+        flags |= BUILD_TCP_SEND_RST;
         sz = build_tcp_packet(session->rflow, session->vrf_handle,
                               ctxt->session_state.rflow_state, &cpu_header, &p4plus_header,
-                              pkt, send_ts, true);
+                              pkt, flags);
         fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
   
         SDK_ATOMIC_INC_UINT64(&session->rflow->stats.num_tcp_rst_sent, 1);
@@ -2582,6 +2595,7 @@ session_eval_matching_session (session_match_t  *match)
     session_delete_list(&session_list, true /*async:true*/);
     return HAL_RET_OK;
 }
+
 hal_ret_t
 system_fte_txrx_stats_get(SystemResponse *rsp)
 {
@@ -2704,6 +2718,125 @@ system_session_summary_get(SystemResponse *rsp)
     session_stats->set_num_icmp_error_sent(g_session_stats.num_icmp_error_sent);
     session_stats->set_num_connection_timeout_sessions(g_session_stats.num_cxnsetup_timeout);
     session_stats->set_num_session_create_errors(g_session_stats.num_session_create_err);
+
+    return HAL_RET_OK;
+}
+
+/*
+ * TCP FIN context used to send 
+ * out TCP FIN in case of Upgrade.
+ */
+typedef struct tcpfin_args_ {
+    hal_handle_t        session_handle;
+    session_state_t     session_state;
+    bool                local_src;
+    bool                local_dst;
+} __PACK__ tcpfin_args_t;
+
+/*
+ * Send out FIN on IFLOW and/or RFLOW if SEP or DEP is local
+ */
+void 
+session_send_tcp_fin (void *data) {
+    tcpfin_args_t               *tcpfin = (tcpfin_args_t *)data;
+    bool                        local_src = tcpfin->local_src;
+    bool                        local_dst = tcpfin->local_dst;
+    pd::cpu_to_p4plus_header_t  cpu_header;
+    pd::p4plus_to_p4_header_t   p4plus_header;
+    uint8_t                     flags = BUILD_TCP_SEND_FIN;
+    session_state_t             session_state = tcpfin->session_state;
+    uint8_t                     pkt[TCP_IPV4_DOT1Q_PKT_SZ];
+    uint32_t                    sz = 0;
+    session_t                  *session = NULL;
+
+    session = hal::find_session_by_handle(tcpfin->session_handle);
+    if (session == NULL) {
+        HAL_TRACE_ERR("Cant find the session for handle {} -- bailing", 
+                      tcpfin->session_handle);
+        return;
+    }
+
+    HAL_TRACE_DEBUG("Sending TCP FIN on: {}", session->hal_handle);
+    // Set the timestamp option if needed
+    if (session_state.tcp_ts_option)
+        flags |= BUILD_TCP_SEND_TIMESTAMP;
+
+    if (local_dst && 
+        session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) {
+        sz = build_tcp_packet(session->iflow, session->vrf_handle,
+                              session_state.iflow_state, &cpu_header, &p4plus_header,
+                              pkt, flags);
+        fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+    }
+
+    if (local_src && 
+        session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) {
+        sz = build_tcp_packet(session->rflow, session->vrf_handle,
+                              session_state.rflow_state, &cpu_header, &p4plus_header,
+                              pkt, flags);
+        fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+    }
+
+    HAL_FREE(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN, tcpfin);
+}
+
+/*
+ * Upgrade Handling -- Send TCP FIN to sessions with local EPs
+ */
+hal_ret_t
+session_handle_upgrade (void)
+{
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t             *session = (session_t *)entry;
+        ep_t                       *sep = NULL, *dep = NULL;
+        bool                        src_is_local = false, dst_is_local = false;
+        pd::pd_session_get_args_t   args;
+        hal_ret_t                   ret = HAL_RET_OK;
+        pd::pd_func_args_t          pd_func_args = {0};
+        tcpfin_args_t              *finargs = NULL;
+        
+        if (session->sep_handle != HAL_HANDLE_INVALID) 
+            sep = find_ep_by_handle(session->sep_handle);
+
+        if (session->dep_handle != HAL_HANDLE_INVALID)
+            dep = find_ep_by_handle(session->dep_handle);
+ 
+        src_is_local = (sep && (sep->ep_flags & EP_FLAGS_LOCAL));
+        dst_is_local = (dep && (dep->ep_flags & EP_FLAGS_LOCAL));
+
+        if (src_is_local || dst_is_local) {
+            finargs = (tcpfin_args_t *)HAL_CALLOC(
+                          HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN,
+                          sizeof(tcpfin_args_t));
+            SDK_ASSERT(finargs != NULL);
+
+            args.session = session;
+            args.session_state = &finargs->session_state;
+            pd_func_args.pd_session_get = &args;
+            ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, &pd_func_args);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to fetch session state for session {}",
+                              session->hal_handle);
+                return false;
+            }
+
+            finargs->session_handle = session->hal_handle;
+            finargs->local_src = src_is_local;
+            finargs->local_dst = dst_is_local; 
+            ret = fte::fte_softq_enqueue(session->fte_id,
+                                         session_send_tcp_fin,
+                                         (void *)finargs);
+            if (ret == HAL_RET_OK) {
+                HAL_TRACE_DEBUG("Successfully enqueued TCP FIN for {}",
+                                        session->hal_handle);
+            }
+        }
+         
+        return false;
+    };
+
+    HAL_TRACE_DEBUG("calling walk func");
+    g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, NULL);
 
     return HAL_RET_OK;
 }

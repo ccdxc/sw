@@ -106,6 +106,13 @@ var secProfDebugCmd = &cobra.Command{
 	Run:   fwSecProfDebugCmdHandler,
 }
 
+var testDebugCmd = &cobra.Command{
+	Use:    "test",
+	Short:  "test options",
+	Long:   "test options",
+	Hidden: true,
+}
+
 var platDebugCmd = &cobra.Command{
 	Use:   "platform",
 	Short: "set platform options",
@@ -117,6 +124,14 @@ var pbPlatDebugCmd = &cobra.Command{
 	Short: "set packet-buffer options",
 	Long:  "set packet-buffer options",
 	Run:   pbPlatDebugCmdHandler,
+}
+
+var testSendFinDebugCmd = &cobra.Command{
+	Use:    "send-fin",
+	Short:  "test sending FINs to local EPs",
+	Long:   "test sending FINs to local EPs",
+	Hidden: true,
+	Run:    testSendFinDebugCmdHandler,
 }
 
 var platLlcDebugCmd = &cobra.Command{
@@ -149,10 +164,12 @@ func init() {
 	debugCmd.AddCommand(debugCreateCmd)
 	debugCmd.AddCommand(debugUpdateCmd)
 	debugCmd.AddCommand(debugDeleteCmd)
+	debugCmd.AddCommand(testDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
 	showCmd.AddCommand(regShowCmd)
+	testDebugCmd.AddCommand(testSendFinDebugCmd)
 
 	// debug platform llc-cache-setup
 	platDebugCmd.AddCommand(platLlcDebugCmd)
@@ -878,4 +895,35 @@ func getConnTrack(resp *halproto.SecurityProfileGetResponse) string {
 	}
 
 	return "off"
+}
+
+func testSendFinDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewInternalClient(c.ClientConn)
+
+	req := &halproto.TestSendFinRequest{}
+
+	reqMsg := &halproto.TestSendFinRequestMsg{
+		Request: []*halproto.TestSendFinRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.TestSendFinReq(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("Test send FIN request failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+		}
+	}
 }

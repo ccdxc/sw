@@ -36,6 +36,7 @@ testbundles:
         # Relative paths from iota/test/iris/testbundles/
         - networking/connectivity.testbundle
         - networking/telemetry.testbundle
+        - networking/upgrade.testbundle
         - linktest/linktest.testbundle
         - aging/aging.testbundle
         - alg/alg.testbundle

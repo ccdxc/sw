@@ -1725,6 +1725,24 @@ func (mr *MockInternalClientMockRecorder) RawcCbGet(ctx, in interface{}, opts ..
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawcCbGet", reflect.TypeOf((*MockInternalClient)(nil).RawcCbGet), varargs...)
 }
 
+// TestSendFinReq mocks base method
+func (m *MockInternalClient) TestSendFinReq(ctx context.Context, in *TestSendFinRequestMsg, opts ...grpc.CallOption) (*TestSendFinResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "TestSendFinReq", varargs...)
+	ret0, _ := ret[0].(*TestSendFinResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TestSendFinReq indicates an expected call of TestSendFinReq
+func (mr *MockInternalClientMockRecorder) TestSendFinReq(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestSendFinReq", reflect.TypeOf((*MockInternalClient)(nil).TestSendFinReq), varargs...)
+}
+
 // MockInternalServer is a mock of InternalServer interface
 type MockInternalServer struct {
 	ctrl     *gomock.Controller
@@ -2422,6 +2440,19 @@ func (m *MockInternalServer) RawcCbGet(arg0 context.Context, arg1 *RawcCbGetRequ
 // RawcCbGet indicates an expected call of RawcCbGet
 func (mr *MockInternalServerMockRecorder) RawcCbGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RawcCbGet", reflect.TypeOf((*MockInternalServer)(nil).RawcCbGet), arg0, arg1)
+}
+
+// TestSendFinReq mocks base method
+func (m *MockInternalServer) TestSendFinReq(arg0 context.Context, arg1 *TestSendFinRequestMsg) (*TestSendFinResponseMsg, error) {
+	ret := m.ctrl.Call(m, "TestSendFinReq", arg0, arg1)
+	ret0, _ := ret[0].(*TestSendFinResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TestSendFinReq indicates an expected call of TestSendFinReq
+func (mr *MockInternalServerMockRecorder) TestSendFinReq(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestSendFinReq", reflect.TypeOf((*MockInternalServer)(nil).TestSendFinReq), arg0, arg1)
 }
 
 // MockSoftwarePhvClient is a mock of SoftwarePhvClient interface
