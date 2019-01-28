@@ -11,16 +11,16 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
-//#include "nic/sdk/platform/utils/program.hpp"
 #include "nic/sdk/platform/utils/mpartition.hpp"
+//#include "nic/sdk/platform/utils/program.hpp"
+//#include "nic/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/apollo/api/switchport_state.hpp"
 #include "nic/apollo/api/tep_state.hpp"
 #include "nic/apollo/api/vcn_state.hpp"
 #include "nic/apollo/api/subnet_state.hpp"
 #include "nic/apollo/api/vnic_state.hpp"
 #include "nic/apollo/api/mapping_state.hpp"
-#include "nic/apollo/api/route.hpp"
-//#include "nic/sdk/platform/capri/capri_lif_manager.hpp"
+#include "nic/apollo/api/route_state.hpp"
 
 using std::string;
 //using sdk::platform::capri::LIFManager;

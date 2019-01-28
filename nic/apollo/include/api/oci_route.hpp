@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/apollo/include/api/oci.hpp"
+#include "nic/apollo/include/api/oci_vcn.hpp"
 
 /**
  * @defgroup OCI_ROUTE - route specific API definitions
