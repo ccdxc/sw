@@ -3,7 +3,7 @@
  *
  * @file    switchport_state.cc
  *
- * @brief   switchport state maintenance
+ * @brief   switchport database handling
  */
 
 #include "nic/sdk/include/sdk/mem.hpp"

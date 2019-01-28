@@ -14,7 +14,7 @@
 //#include "nic/sdk/platform/utils/program.hpp"
 #include "nic/sdk/platform/utils/mpartition.hpp"
 #include "nic/apollo/api/switchport_state.hpp"
-#include "nic/apollo/api/tep.hpp"
+#include "nic/apollo/api/tep_state.hpp"
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet_state.hpp"
 #include "nic/apollo/api/vnic.hpp"

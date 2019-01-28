@@ -3,7 +3,7 @@
  *
  * @file    switchport_state.hpp
  *
- * @brief   switchport database maintenance
+ * @brief   switchport database handling
  */
 
 #if !defined (__SWITCHPORT_STATE_HPP__)

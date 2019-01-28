@@ -3,7 +3,7 @@
  *
  * @file    mapping.hpp
  *
- * @brief   mapping entry maintenance
+ * @brief   mapping entry handling
  */
 
 #if !defined (__MAPPING_HPP__)

@@ -3,7 +3,7 @@
  *
  * @file    mapping_state.cc
  *
- * @brief   mapping databse maintenance
+ * @brief   mapping databse handling
  */
 
 #include "nic/apollo/core/mem.hpp"
