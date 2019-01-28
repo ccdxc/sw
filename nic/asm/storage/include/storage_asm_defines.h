@@ -372,8 +372,8 @@
     k.{seq_kivec9_metrics2_start...seq_kivec9_metrics2_end}
 #define SEQ_KIVEC9_LEN_UPDATES                  \
     k.seq_kivec9_len_updates
-#define SEQ_KIVEC9_INTEG_DATA0_WRITES           \
-    k.seq_kivec9_integ_data0_writes
+#define SEQ_KIVEC9_CP_HEADER_UPDATES            \
+    k.seq_kivec9_cp_header_updates
 
 #define SEQ_KIVEC10_INTR_ADDR                   \
     k.seq_kivec10_intr_addr

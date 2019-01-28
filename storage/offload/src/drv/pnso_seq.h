@@ -69,11 +69,11 @@ struct seq_cpdc_options1 {
 				sgl_pdma_en		: 1,
 				sgl_sparse_format_en	: 1,
 				sgl_pad_en		: 1;
-	uint8_t			cp_hdr_update_en	: 1,
+	uint8_t			rsvd0                   : 4,
+				cp_hdr_update_en	: 1,
 				hdr_version_wr_en	: 1,
 				desc_dlen_update_en	: 1,
-				integ_data_null_en	: 1,
-				rsvd0			: 4;
+				integ_data_null_en	: 1;
 	uint8_t			rsvd1;
 } __attribute__((__packed__));
 

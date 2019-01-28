@@ -102,8 +102,8 @@ typedef struct {
              desc_vec_push_en     : 1,// barco_desc_addr points to a vector of descriptors to be pushed
              integ_data0_wr_en    : 1,// enable write of integ_data0 to comp_buf_addr
              integ_data_null_en   : 1,// copy zero to comp_buf_addr instead
-             desc_dlen_update_en  : 1;// enable update of CP desc datain_len field
-             hdr_version_wr_en    : 1;// enable update of CP header version field
+             desc_dlen_update_en  : 1,// enable update of CP desc datain_len field
+             hdr_version_wr_en    : 1,// enable update of CP header version field
              cp_hdr_update_en     : 1;// enable overall update of CP header
 } chain_params_comp_t;
 

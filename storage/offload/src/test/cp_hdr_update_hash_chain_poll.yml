@@ -11,7 +11,7 @@ cp_hdr_formats:
             type: algo
             offset: 6
             len: 2
-            val: 1
+            val: 0xbeef
 
 alias_group5:
   - alias: 'hash_algo=sha2_256'
@@ -64,3 +64,11 @@ tests:
             pattern: 0x00
             offset: 0
             len: 4
+# data_compare uses "byte pattern" so the values need to be arranged
+# in little endian format, hence 0xefbe (low order first).
+        - data_compare:
+            idx: 6
+            file1: '1_compressed.bin'
+            pattern: 0xefbe
+            offset: 6
+            len: 2

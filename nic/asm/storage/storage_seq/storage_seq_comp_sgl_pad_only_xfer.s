@@ -34,7 +34,7 @@ storage_seq_comp_sgl_pad_only_xfer:
     
     bbeq        SEQ_KIVEC5_CP_HDR_UPDATE_EN, 0, possible_sgl_pad
     seq         c3, SEQ_KIVEC5_INTEG_DATA_NULL_EN, 1            // delay slot
-    phvwr.c3	p.integ_data0_len, r0
+    phvwr.c3	p.comp_hdr_cksum, r0
     
     // No fence needed for CP header update since any prior PDMA mem2mem
     // would only be pad data xfer and, presumably, be outside of

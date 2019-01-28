@@ -513,7 +513,7 @@ header_type seq_kivec5_t {
     integ_data_null_en  : 1;
     desc_dlen_update_en : 1;
     hdr_version_wr_en   : 1;
-    cp_hdr_update_wr_en : 1;
+    cp_hdr_update_en    : 1;
   }
 }
 

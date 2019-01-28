@@ -100,7 +100,7 @@ sonic_rmem_pgid_to_iomem(uint32_t pgid)
 	uint64_t offset = sonic_rmem_pgid_to_offset(pgid);
 
 	OSAL_ASSERT(((uint64_t)sonic_rmem_base_iomem() &
-		(offset + PAGE_SIZE - 1)) == 0);
+		(PAGE_SIZE - 1)) == 0);
 	return sonic_rmem_base_iomem() + offset;
 }
 

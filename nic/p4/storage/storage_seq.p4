@@ -602,6 +602,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
  *****************************************************************************/
 
 //@pragma little_endian rsvd comp_buf_addr aol_src_vec_addr aol_dst_vec_addr data_len sgl_vec_addr pad_buf_addr alt_buf_addr
+@pragma little_endian hdr_version
 action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_dst_vec_addr, 
                                      sgl_vec_addr, pad_buf_addr, alt_buf_addr,
                                      data_len, hdr_version,
@@ -1249,12 +1250,12 @@ action seq_metrics1_commit(aol_pad_reqs, sgl_pad_reqs, sgl_pdma_xfers,
  *  seq_metrics2_commit : Update and commit metrics2 to qstate.
  *****************************************************************************/
 @pragma little_endian len_updates
-action seq_metrics2_commit(len_updates, integ_data0_writes) {
+action seq_metrics2_commit(len_updates, cp_header_updates) {
 			   
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC9_USE(seq_kivec9_scratch, seq_kivec9)
   
   modify_field(seq_metrics2.len_updates, len_updates);
-  modify_field(seq_metrics2.integ_data0_writes, integ_data0_writes);
+  modify_field(seq_metrics2.cp_header_updates, cp_header_updates);
 }
 

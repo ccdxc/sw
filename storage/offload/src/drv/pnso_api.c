@@ -113,7 +113,7 @@ pnso_register_compression_header_format(
 	/* Fill the entry */
 	format->fmt_idx = hdr_fmt_idx;
 	format->fmt = *cp_hdr_fmt;
-	format->chksum_len = sizeof(((struct pnso_compression_header *)0)->chksum);
+	format->chksum_len = 0;
 	format->pnso_algo = CPDC_COMPRESSION_TYPE_DFLT;
 
 	/* Find the total header length */

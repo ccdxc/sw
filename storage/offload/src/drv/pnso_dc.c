@@ -17,6 +17,13 @@
 #include "pnso_seq.h"
 #include "pnso_utils.h"
 
+static inline void
+clear_dc_header_present(uint16_t flags, struct cpdc_desc *desc)
+{
+	if (!(flags & PNSO_DC_DFLAG_HEADER_PRESENT))
+		desc->u.cd_bits.cc_header_present = 0;
+}
+
 static int
 fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 {
@@ -31,8 +38,7 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 	desc->cd_dst = (uint64_t) sonic_virt_to_phy(svc_info->si_dst_sgl.sgl);
 
 	desc->u.cd_bits.cc_enabled = 1;
-	desc->u.cd_bits.cc_header_present =
-                !!(svc_info->si_desc_flags & PNSO_DC_DFLAG_HEADER_PRESENT);
+	desc->u.cd_bits.cc_header_present = 1;
 
 	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_dst_is_list = 1;
@@ -109,6 +115,7 @@ decompress_setup(struct service_info *svc_info,
 		OSAL_LOG_ERROR("cannot fill_dc_desc! err: %d", err);
 		goto out;
 	}
+	clear_dc_header_present(svc_info->si_desc_flags, dc_desc);
 
 	err = cpdc_setup_seq_desc(svc_info, dc_desc, 0);
 	if (err) {

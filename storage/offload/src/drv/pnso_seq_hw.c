@@ -447,11 +447,11 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc0->intr_data = htonl(chain_params->ccp_intr_data);
 	desc0->status_len = htons(chain_params->ccp_status_len);
 	desc0->status_offset = chain_params->ccp_status_offset_0;
-	desc0->num_descs = htons(ring_spec->rs_num_descs);
 
 	if (cmd->ccpc_next_db_action_ring_push) {
 		desc0->next_db.addr = cpu_to_be64(ring_spec->rs_ring_addr);
 		desc0->next_db.data = cpu_to_be64(ring_spec->rs_desc_addr);
+                desc0->push.num_descs = htons(ring_spec->rs_num_descs);
 
 #ifdef HAVE_RING_TEMPLATES
 		/*
@@ -529,11 +529,11 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 	desc0->intr_data = htonl(chain_params->ccp_intr_data);
 	desc0->status_len = htons(chain_params->ccp_status_len);
 	desc0->status_offset = chain_params->ccp_status_offset_0;
-	desc0->num_descs = htons(ring_spec->rs_num_descs);
 
 	if (cmd->ccpc_next_db_action_ring_push) {
 		desc0->next_db.addr = cpu_to_be64(ring_spec->rs_ring_addr);
 		desc0->next_db.data = cpu_to_be64(ring_spec->rs_desc_addr);
+                desc0->push.num_descs = htons(ring_spec->rs_num_descs);
 
 #ifdef HAVE_RING_TEMPLATES
 		/*
