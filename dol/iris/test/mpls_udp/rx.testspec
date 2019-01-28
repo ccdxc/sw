@@ -3,12 +3,12 @@ selectors:
     src:
         tenant      : filter://any
         segment     : filter://native=True
-        endpoint    : filter://remote=False
+        endpoint    : filter://remote=True
         interface   : filter://any
     dst:
         tenant      : filter://any
         segment     : filter://any
-        endpoint    : filter://remote=True
+        endpoint    : filter://remote=False
         interface   : filter://any
     flow            : filter://any
     maxflows        : 1
@@ -19,22 +19,26 @@ packets:
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateByFlow
         headers     :
-            eth:
-                src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
             ipv4:
-                src     : 10.10.10.1
-                dst     : callback://mpls_udp/callbacks/GetIpv4DstAddress
+                src     : callback://mpls_udp/callbacks/GetInnerSrcIpv4Address
+                dst     : callback://mpls_udp/callbacks/GetInnerDstIpv4Address
                 ttl     : 64
                 options : callback://mpls_udp/callbacks/GetIpv4Options
+            ipv6:
+                src     : ref://testcase/config/flow/sip
+                dst     : ref://testcase/config/flow/dip
+                hlim    : 64
             udp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-                flags   : ack
             icmp:
+                code    : ref://testcase/config/flow/icmpcode
+                type    : ref://testcase/config/flow/icmptype
+                id      : ref://testcase/config/flow/icmpid
+            icmpv6:
                 code    : ref://testcase/config/flow/icmpcode
                 type    : ref://testcase/config/flow/icmptype
                 id      : ref://testcase/config/flow/icmpid
@@ -42,47 +46,58 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : PKT1
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      : callback://networking/packets/GetPacketEncaps
-        headers     :
-            tcp:
-                flags: ack
-
-    - packet:
-        id          : EXP_PKT
+        id          : PKT1 # Input Packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetMplsPacketEncaps
         headers     :
-            outereth    :
+            outereth:
                 src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : 00:00:00:00:30:39
+                dst     : ref://testcase/config/dst/endpoint/macaddr
             outeripv4:
                 src     : ref://testcase/config/flow/sip
-                dst     : callback://mpls_udp/callbacks/GetExpectedIpv4DstAddress
+                dst     : callback://mpls_udp/callbacks/GetOuterDstIpv4Address
                 tos     : 0
                 id      : 0
                 ttl     : 64
             outerudp:
                 dport   : 6635
-                chksum  : 0
             mpls:
-                label   : 54321
+                label   : callback://mpls_udp/callbacks/GetMplsLabel
+                exp     : 0
                 ttl     : 64
+
+    - packet:
+        id          : PKT2 # Expected Packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            tcp:
+                flags: ack
 
 buffers:
     - buffer:
-        id      : BUF1 # Input Buffer
+        id      : BUF1  # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
-           bind : True
-           size : ref://testcase/packets/id=PKT1/size
-           data : ref://testcase/packets/id=PKT1/rawbytes
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : BUF2  # Expected Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=PKT2/size
+            data  : ref://testcase/packets/id=PKT2/rawbytes
 
 descriptors:
     - descriptor:
         id      : DESC1 # Input Descriptor
-        template: ref://factory/templates/id=DESCR_ETH_TX
+        template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
             _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
@@ -90,26 +105,27 @@ descriptors:
 
     - descriptor:
         id      : DESC2 # Expected Descriptor
-        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            status     : 0x0
+            _buf  : ref://testcase/buffers/id=BUF2
+            len   : ref://testcase/buffers/id=BUF2/size
 
 trigger:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC1
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
 
-expect:
-    delay   : callback://networking/packets/GetExpectDelay
     packets:
         - packet:
-            #object  : ref://testcase/packets/id=EXP_PKT
-            object  : callback://mpls_udp/callbacks/GetExpectedPacket
+            object  : ref://testcase/packets/id=PKT1
+            #port    : callback://classic/callbacks/GetRxTriggerPorts
             port    : 1
 
+expect:
     descriptors:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
-            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
+
 
