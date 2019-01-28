@@ -9,6 +9,7 @@
 #if !defined (__API_CTXT_HPP__)
 #define __API_CTXT_HPP__
 
+#include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/api/switchport.hpp"
 #include "nic/apollo/api/tep.hpp"
