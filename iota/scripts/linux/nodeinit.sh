@@ -16,7 +16,7 @@ dhcp_disable() {
     os_str=`awk -F= '/^NAME/{print $2}' /etc/os-release`
     if [[ $os_str == *"Ubuntu"* ]]; then
         echo "Ubuntu: No need to disable DHCP on Naples IFs"
-        exit 0
+        return
     elif [[ $os_str == *"CentOS"* ]]; then
         echo "CentOS: Explicitly disabling DHCP on Naples IFs"
         declare -a ifs=(`systool -c net | grep "Class Device"  | tail -4 | head -3 | cut -d = -f 2 | cut -d \" -f 2`)
