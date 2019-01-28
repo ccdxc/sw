@@ -46,9 +46,6 @@ write_back:
     tblwr         d.current_sge_offset, K_CURRENT_SGE_OFFSET
     tblwr         d.curr_wqe_ptr, K_WQE_ADDR
     tblwr         d.fence, 0
-    tblwr         d.frpmr_in_progress, 0
-    tblwr         d.frpmr_dma_done, 0
-
     bbeq          CAPRI_KEY_FIELD(IN_P, poll_in_progress), 0, skip_poll_success
     seq           c1, CAPRI_KEY_FIELD(IN_P, last_pkt), 1 // Branch Delay Slot
     tblwr         d.poll_in_progress, 0

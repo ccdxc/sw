@@ -26,6 +26,9 @@ struct sqcb2_t d;
 .align
 req_tx_sqcb2_write_back_process:
 
+    //invoke stats_process for NPG case here
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
+
     // if speculative cindex matches cindex, then this wqe is being
     // processed in the right order and state update is allowed. Otherwise
     // discard and continue with speculation until speculative cindex
@@ -34,8 +37,6 @@ req_tx_sqcb2_write_back_process:
     seq            c1, K_SPEC_CINDEX, d.sq_cindex
     bcf            [!c1], spec_fail
     nop
-    //invoke stats_process for NPG case here
-    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
 
     phvwr          p.common.to_stage_6_to_stage_data, K_TO_S5_DATA
     SQCB0_ADDR_GET(r1)
