@@ -57,11 +57,18 @@ var ifShowStatusCmd = &cobra.Command{
 	Run:   ifShowStatusCmdHandler,
 }
 
-var ifCreateCmd = &cobra.Command{
+var ifUpdateCmd = &cobra.Command{
 	Use:   "interface",
 	Short: "Create interface",
 	Long:  "Create interface",
-	Run:   ifCreateCmdHandler,
+	Run:   ifUpdateCmdHandler,
+}
+
+var ifDeleteCmd = &cobra.Command{
+	Use:   "interface",
+	Short: "Delete interface",
+	Long:  "Delete interface",
+	Run:   ifDeleteCmdHandler,
 }
 
 func init() {
@@ -74,33 +81,84 @@ func init() {
 	ifShowSpecCmd.Flags().Uint64Var(&ifID, "id", 1, "Specify if-id")
 	ifShowStatusCmd.Flags().Uint64Var(&ifStatusID, "id", 1, "Specify if-id")
 
-	debugCreateCmd.AddCommand(ifCreateCmd)
-	ifCreateCmd.Flags().StringVar(&ifEncap, "encap", "", "Encap type (Ex: MPLSoUDP)")
-	ifCreateCmd.Flags().StringVar(&ifName, "name", "", "Interface name")
-	ifCreateCmd.Flags().StringVar(&ifSubIP, "substrate-ip", "", "Substrate IPv4 address")
-	ifCreateCmd.Flags().StringVar(&ifOverlayIP, "overlay-ip", "", "Specify overlay IPv4 address in comma separated list (Max of 2 supported). Ex: 1.2.3.4,2.3.4.5")
-	ifCreateCmd.Flags().StringVar(&ifMplsIn, "mpls-in", "", "Specify incoming MPLS label as comma separated list (Max 2 supported")
-	ifCreateCmd.Flags().Uint32Var(&ifMplsOut, "mpls-out", 0, "Specify outgoing MPLS label")
-	ifCreateCmd.Flags().StringVar(&ifTunnelDestIP, "tunnel-dest-ip", "", "Tunnel destination IPv4 address")
-	ifCreateCmd.Flags().StringVar(&ifSourceGw, "source-gw", "", "Specify source gateway. Must be IPv4 prefix as a.b.c.d/nn")
-	ifCreateCmd.Flags().StringVar(&ifGwMac, "gw-mac", "", "Specify gateway MAC address as aabb.ccdd.eeff")
-	ifCreateCmd.Flags().Uint32Var(&ifIngressBw, "ingress-bw", 0, "Specify ingress bandwidth in Kbytes/sec")
-	ifCreateCmd.Flags().Uint32Var(&ifEgressBw, "egress-bw", 0, "Specify egress bandwidth in Kbytes/sec")
+	debugDeleteCmd.AddCommand(ifDeleteCmd)
+	ifDeleteCmd.Flags().StringVar(&ifEncap, "encap", "", "Encap type (Ex: MPLSoUDP)")
+	ifDeleteCmd.Flags().StringVar(&ifName, "name", "", "Interface name")
+	ifDeleteCmd.MarkFlagRequired("encap")
+	ifDeleteCmd.MarkFlagRequired("name")
 
-	ifCreateCmd.MarkFlagRequired("encap")
-	ifCreateCmd.MarkFlagRequired("name")
-	ifCreateCmd.MarkFlagRequired("substrate-ip")
-	ifCreateCmd.MarkFlagRequired("overlay-ip")
-	ifCreateCmd.MarkFlagRequired("mpls-in")
-	ifCreateCmd.MarkFlagRequired("mpls-out")
-	ifCreateCmd.MarkFlagRequired("tunnel-dest-ip")
-	ifCreateCmd.MarkFlagRequired("source-gw")
-	ifCreateCmd.MarkFlagRequired("gw-mac")
-	ifCreateCmd.MarkFlagRequired("ingress-bw")
-	ifCreateCmd.MarkFlagRequired("egress-bw")
+	debugUpdateCmd.AddCommand(ifUpdateCmd)
+	ifUpdateCmd.Flags().StringVar(&ifEncap, "encap", "", "Encap type (Ex: MPLSoUDP)")
+	ifUpdateCmd.Flags().StringVar(&ifName, "name", "", "Interface name")
+	ifUpdateCmd.Flags().StringVar(&ifSubIP, "substrate-ip", "", "Substrate IPv4 address")
+	ifUpdateCmd.Flags().StringVar(&ifOverlayIP, "overlay-ip", "", "Specify overlay IPv4 address in comma separated list (Max of 2 supported). Ex: 1.2.3.4,2.3.4.5")
+	ifUpdateCmd.Flags().StringVar(&ifMplsIn, "mpls-in", "", "Specify incoming MPLS label as comma separated list (Max 2 supported")
+	ifUpdateCmd.Flags().Uint32Var(&ifMplsOut, "mpls-out", 0, "Specify outgoing MPLS label")
+	ifUpdateCmd.Flags().StringVar(&ifTunnelDestIP, "tunnel-dest-ip", "", "Tunnel destination IPv4 address")
+	ifUpdateCmd.Flags().StringVar(&ifSourceGw, "source-gw", "", "Specify source gateway. Must be IPv4 prefix as a.b.c.d/xx")
+	ifUpdateCmd.Flags().StringVar(&ifGwMac, "gw-mac", "", "Specify gateway MAC address as aabb.ccdd.eeff")
+	ifUpdateCmd.Flags().Uint32Var(&ifIngressBw, "ingress-bw", 0, "Specify ingress bandwidth in Kbytes/sec")
+	ifUpdateCmd.Flags().Uint32Var(&ifEgressBw, "egress-bw", 0, "Specify egress bandwidth in Kbytes/sec")
+
+	ifUpdateCmd.MarkFlagRequired("encap")
+	ifUpdateCmd.MarkFlagRequired("name")
+	ifUpdateCmd.MarkFlagRequired("substrate-ip")
+	ifUpdateCmd.MarkFlagRequired("overlay-ip")
+	ifUpdateCmd.MarkFlagRequired("mpls-in")
+	ifUpdateCmd.MarkFlagRequired("mpls-out")
+	ifUpdateCmd.MarkFlagRequired("tunnel-dest-ip")
+	ifUpdateCmd.MarkFlagRequired("source-gw")
+	ifUpdateCmd.MarkFlagRequired("gw-mac")
+	ifUpdateCmd.MarkFlagRequired("ingress-bw")
+	ifUpdateCmd.MarkFlagRequired("egress-bw")
 }
 
-func ifCreateCmdHandler(cmd *cobra.Command, args []string) {
+func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewInterfaceClient(c.ClientConn)
+
+	if strings.Compare(ifEncap, "MPLSoUDP") != 0 {
+		fmt.Printf("Invalid encap type specified\n")
+		return
+	}
+	intfID := Hash(ifName)
+
+	req := &halproto.InterfaceDeleteRequest{
+		KeyOrHandle: &halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: intfID,
+			},
+		},
+	}
+
+	ifDeleteReqMsg := &halproto.InterfaceDeleteRequestMsg{
+		Request: []*halproto.InterfaceDeleteRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.InterfaceDelete(context.Background(), ifDeleteReqMsg)
+	if err != nil {
+		fmt.Printf("Delete interface failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		fmt.Printf("Interface delete succeeded\n")
+	}
+}
+
+func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -261,7 +319,7 @@ func ifCreateCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.InterfaceCreate(context.Background(), ifCreateReqMsg)
 	if err != nil {
-		fmt.Printf("Creating interface failed. %v\n", err)
+		fmt.Printf("Updating interface failed. %v\n", err)
 		return
 	}
 
@@ -270,7 +328,7 @@ func ifCreateCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
-		fmt.Printf("Interface create succeeded. Interface ID is %d\n", intfID)
+		fmt.Printf("Interface update succeeded. Interface ID is %d\n", intfID)
 	}
 }
 
