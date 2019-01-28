@@ -105,3 +105,54 @@ def GetExpectedPacket(testcase):
         return ret_pkt
     return ret_pkt
 
+def GetOuterDstIpv4Address(testcase, packet):
+    try:
+        substrate = testcase.module.args.substrate
+        if substrate == 'invalid':
+            substrate = '40.40.40.40'
+    except:
+        substrate = '64.0.0.2'
+    return substrate
+
+def GetInnerSrcIpv4Address(testcase, packet):
+    try:
+        classe = testcase.module.args.classe
+        if classe == True:
+           addr = '240.1.1.1' 
+        else:
+           addr = '50.1.1.1' 
+    except:
+        # Default is classe
+        addr = '240.1.1.1'
+    return addr
+
+def GetInnerDstIpv4Address(testcase, packet):
+    try:
+        overlay = testcase.module.args.overlay
+        if overlay == 'ip1':
+            addr = '20.20.20.20'
+        elif overlay == 'ip2':
+            addr = '30.30.30.30'
+        else:
+            addr = '100.1.1.1'
+    except:
+        addr = '20.20.20.20'
+    return addr
+
+def GetMplsLabel(testcase, packet):
+    try:
+        mpls = testcase.module.args.label
+        if mpls == 'label1':
+            label = 12345
+        elif mpls == 'label2':
+            label = 67890
+        else:
+            label = 424242
+    except:
+        label = 12345
+    return label
+
+
+
+
+
