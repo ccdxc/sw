@@ -1606,12 +1606,12 @@ ionic_setup_hw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_dma_error", CTLFLAG_RD,
 		&stat->tx_dma_error, "");
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_disabled_drop", CTLFLAG_RD,
-		&stat->rx_queue_disabled_drop, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_empty_drop", CTLFLAG_RD,
-		&stat->rx_queue_empty_drop, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_scheduled", CTLFLAG_RD,
-		&stat->rx_queue_scheduled, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_disabled", CTLFLAG_RD,
+		&stat->rx_queue_disabled, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_empty", CTLFLAG_RD,
+		&stat->rx_queue_empty, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_error", CTLFLAG_RD,
+		&stat->rx_queue_error, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_desc_fetch_error", CTLFLAG_RD,
 		&stat->rx_desc_fetch_error, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_desc_data_error", CTLFLAG_RD,
@@ -1619,8 +1619,8 @@ ionic_setup_hw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_queue_disabled", CTLFLAG_RD,
 		&stat->tx_queue_disabled, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_queue_scheduled", CTLFLAG_RD,
-		&stat->tx_queue_scheduled, "");
+	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_queue_error", CTLFLAG_RD,
+		&stat->tx_queue_error, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_desc_fetch_error", CTLFLAG_RD,
 		&stat->tx_desc_fetch_error, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_desc_data_error", CTLFLAG_RD,

@@ -1510,9 +1510,9 @@ struct ionic_lif_stats {
 	uint64_t tx_dma_error;
 	uint64_t rsvd5;
 	//Rx Queue/Ring drops
-	uint64_t rx_queue_disabled_drop;
-	uint64_t rx_queue_empty_drop;
-	uint64_t rx_queue_scheduled;
+	uint64_t rx_queue_disabled;
+	uint64_t rx_queue_empty;
+	uint64_t rx_queue_error;
 	uint64_t rx_desc_fetch_error;
 	uint64_t rx_desc_data_error;
 	uint64_t rsvd6;
@@ -1520,7 +1520,7 @@ struct ionic_lif_stats {
 	uint64_t rsvd8;
 	//Tx Queue/Ring drops
 	uint64_t tx_queue_disabled;
-	uint64_t tx_queue_scheduled;
+	uint64_t tx_queue_error;
 	uint64_t tx_desc_fetch_error;
 	uint64_t tx_desc_data_error;
 	uint64_t rsvd9;

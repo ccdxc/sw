@@ -53,8 +53,6 @@ eth_tx_fetch_desc:
 
   sll             _r_ringsz, 1, d.{ring_size}.hx
 
-  SET_STAT(_r_stats, _C_TRUE, queue_scheduled)
-
   // Drop the PHV if we are speculating too far ahead
   sub             r7, d.{ci_fetch}.hx, d.{c_index0}.hx
   mincr           r7, d.{ring_size}.hx, 0
@@ -97,7 +95,7 @@ eth_tx_fetch_desc:
   seq             c4, _r_numtodo, 1
   cmov            _r_tblsz, c4, LG2_TX_DESC_SIZE, LG2_TX_DESC_SIZE + 2
 
-  SAVE_STATS(_r_stats)
+  // SAVE_STATS(_r_stats)
 
   // Setup Descriptor read for next stage
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
@@ -109,7 +107,7 @@ eth_tx_spurious_db:
   bcf             [c3], eth_tx_eval_db
   tblmincri.f     d.spurious_db_cnt, LG2_MAX_SPURIOUS_DB, 1
 
-  SAVE_STATS(_r_stats)
+  // SAVE_STATS(_r_stats)
 
   phvwri.e        p.p4_intr_global_drop, 1
   phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 0
@@ -120,13 +118,14 @@ eth_tx_eval_db:
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
   memwr.dx        _r_dbaddr, _r_dbval
 
-  SAVE_STATS(_r_stats)
+  // SAVE_STATS(_r_stats)
 
   phvwri.e        p.p4_intr_global_drop, 1
   phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 eth_tx_queue_disabled:
   SET_STAT(_r_stats, _C_TRUE, queue_disabled)
+
   SAVE_STATS(_r_stats)
 
   CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_CLEAR, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR

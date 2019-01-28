@@ -75,9 +75,9 @@
 #define STAT_broadcast_drop_bytes           12
 #define STAT_broadcast_drop_packets         13
 // queue & descriptor counters
-#define STAT_queue_disabled_drop            16
-#define STAT_queue_empty_drop               17
-#define STAT_queue_scheduled                18
+#define STAT_queue_disabled                 16
+#define STAT_queue_empty                    17
+#define STAT_queue_error                    18
 #define STAT_desc_fetch_error               19
 #define STAT_desc_data_error                20
 // DEBUG: operation counters

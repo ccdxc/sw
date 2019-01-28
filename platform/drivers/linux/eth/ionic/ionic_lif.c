@@ -426,10 +426,10 @@ static struct rtnl_link_stats64 *ionic_get_stats64(struct net_device *netdev,
 
 	ns->multicast = ls->rx_mcast_packets;
 
-	ns->rx_over_errors = ls->rx_queue_empty_drop;
+	ns->rx_over_errors = ls->rx_queue_empty;
 
 	ns->rx_missed_errors = ls->rx_dma_error +
-			       ls->rx_queue_disabled_drop +
+			       ls->rx_queue_disabled +
 			       ls->rx_desc_fetch_error +
 			       ls->rx_desc_data_error;
 

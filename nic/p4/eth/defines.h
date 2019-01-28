@@ -86,7 +86,8 @@
     modify_field(eth_tx_global_scratch.cq_entry, eth_tx_global.cq_entry); \
     modify_field(eth_tx_global_scratch.intr_enable, eth_tx_global.intr_enable); \
     modify_field(eth_tx_global_scratch.lif, eth_tx_global.lif); \
-    modify_field(eth_tx_global_scratch.stats, eth_tx_global.stats);
+    modify_field(eth_tx_global_scratch.stats, eth_tx_global.stats); \
+    modify_field(eth_tx_global_scratch.drop, eth_tx_global.drop);
 
 #define MODIFY_ETH_TX_T0_S2S \
     modify_field(eth_tx_t0_s2s_scratch.num_todo, eth_tx_t0_s2s.num_todo); \

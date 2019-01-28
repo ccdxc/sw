@@ -30,6 +30,10 @@
 #define ETH_DMA_CMD_START_FLIT      ((offsetof(p, dma_dma_cmd_type) / 512) + 1)
 #define ETH_DMA_CMD_START_INDEX     0
 
+// Completion error codes
+#define ETH_TX_DESC_ADDR_ERROR      1
+#define ETH_TX_DESC_DATA_ERROR      2
+
 /*
  * Stats Macros
  */
@@ -55,10 +59,10 @@
 
 // queue & descriptor error counters
 #define STAT_queue_disabled                 0
-#define STAT_queue_scheduled                1
+#define STAT_queue_error                    1
 #define STAT_desc_fetch_error               2
 #define STAT_desc_data_error                3
-// operation counters
+// DEBUG: operation counters
 #define STAT_oper_csum_hw                   8
 #define STAT_oper_csum_hw_inner             9
 #define STAT_oper_vlan_insert               10
@@ -72,9 +76,8 @@
 #define STAT_desc_opcode_csum_partial       18
 #define STAT_desc_opcode_csum_hw            19
 #define STAT_desc_opcode_tso                20
-// DEBUG: completion counters
-#define STAT_cqe                            24
-#define STAT_intr                           25
+#define STAT_cqe                            21
+#define STAT_intr                           22
 
 /*
  * Descriptor decode Macros

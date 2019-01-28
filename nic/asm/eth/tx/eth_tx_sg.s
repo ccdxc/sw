@@ -11,6 +11,7 @@ struct tx_table_s3_t1_eth_tx_sg_d d;
 
 #define   _r_addr       r1        // Current buffer/descriptor address
 #define   _r_num_sg     r2        // Remaining number of SG elements
+#define   _r_stats      r3        // Stats
 #define   _r_ptr        r5        // Current DMA byte offset in PHV
 #define   _r_index      r6        // Current DMA command index in PHV
 
@@ -21,6 +22,7 @@ struct tx_table_s3_t1_eth_tx_sg_d d;
 
 .align
 eth_tx_sg_start:
+  LOAD_STATS(_r_stats)
 
   bcf             [c2 | c3 | c7], eth_tx_sg_error
   nop
@@ -113,5 +115,25 @@ eth_tx_sg_done:   // We are done with SG
   phvwri.f        p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
 
 eth_tx_sg_error:
-  phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0
-  phvwri.f        p.p4_intr_global_drop, 1
+  SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
+
+  SAVE_STATS(_r_stats)
+
+  // Don't drop the phv, because, we have claimed the completion entry.
+  // Generate an error completion.
+  phvwr           p.eth_tx_global_cq_entry, 1
+  phvwr           p.eth_tx_cq_desc_status, ETH_TX_DESC_ADDR_ERROR
+  phvwr           p.eth_tx_global_drop, 1     // increment pkt drop counters
+
+  // Reset the DMA command stack to discard existing DMA commands.
+  phvwr           p.eth_tx_global_dma_cur_index, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
+
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, ((1 << 3) | 1)
+
+  // Launch eth_tx_completion stage
+  phvwri          p.common_te0_phv_table_pc, eth_tx_completion[38:6]
+  phvwri          p.common_te0_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY
+
+  // Launch eth_tx_stats action
+  phvwri.e        p.common_te3_phv_table_pc, eth_tx_stats[38:6]
+  phvwri.f        p.common_te3_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

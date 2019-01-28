@@ -165,6 +165,7 @@ header_type eth_tx_global_k {
         intr_enable : 1;    // generate an interrupt
         lif : 11;
         stats : 32;
+        drop : 1;
     }
 }
 

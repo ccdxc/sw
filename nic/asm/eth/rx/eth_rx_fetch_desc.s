@@ -25,13 +25,14 @@ struct rx_table_s2_t0_eth_rx_fetch_desc_d d;
 eth_rx_fetch_desc:
   LOAD_STATS(_r_stats)
 
+  bcf             [c2 | c3 | c7], eth_rx_queue_error
+  nop
+
   seq             _c_queue_disabled, d.enable, 0
   bcf             [_c_queue_disabled], eth_rx_queue_disabled
   seq             _c_queue_empty, d.p_index0, d.c_index0
-  bcf             [_c_queue_empty], eth_rx_queue_nobuf
+  bcf             [_c_queue_empty], eth_rx_queue_empty
   nop
-
-  SET_STAT(_r_stats, _C_TRUE, queue_scheduled)
 
   // Compute descriptor fetch address
   add             _r_desc_addr, d.{ring_base}.dx, d.{c_index0}.hx, LG2_RX_DESC_SIZE
@@ -66,13 +67,16 @@ eth_rx_fetch_desc:
   phvwr.e         p.eth_rx_t0_s2s_intr_assert_index, d.{intr_assert_index}.hx
   phvwri.f        p.eth_rx_t0_s2s_intr_assert_data, 0x01000000
 
-eth_rx_queue_nobuf:
+eth_rx_queue_error:
+  SET_STAT(_r_stats, _C_TRUE, queue_error)
+eth_rx_queue_empty:
+  SET_STAT(_r_stats, _c_queue_empty, queue_empty)
 eth_rx_queue_disabled:
-  SET_STAT(_r_stats, _c_queue_disabled, queue_disabled_drop)
-  SET_STAT(_r_stats, _c_queue_empty, queue_empty_drop)
+  SET_STAT(_r_stats, _c_queue_disabled, queue_disabled)
 
   SAVE_STATS(_r_stats)
 
+  phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
   phvwr           p.p4_intr_global_drop, 1
 
   // Launch eth_rx_stats action

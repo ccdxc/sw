@@ -25,12 +25,12 @@ struct rx_table_s3_t0_eth_rx_packet_d d;
 eth_rx:
     LOAD_STATS(_r_stats)
 
-    bcf             [c2 | c3 | c7], eth_rx_desc_addr_error
-    nop
-
     // Setup DMA CMD PTR
     phvwr           p.p4_rxdma_intr_dma_cmd_ptr, ETH_DMA_CMD_START_OFFSET
     addi            _r_index, r0, (ETH_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ETH_DMA_CMD_START_INDEX
+
+    bcf             [c2 | c3 | c7], eth_rx_desc_addr_error
+    nop
 
     // Packet length check
     add             _r_pktlen, r0, k.eth_rx_global_pkt_len
@@ -48,6 +48,7 @@ eth_rx:
 
 eth_rx_desc_addr_error:
     SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
+    phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
 
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
     DMA_SKIP_TO_EOP(_r_ptr, _C_FALSE)
@@ -58,6 +59,7 @@ eth_rx_desc_addr_error:
 
 eth_rx_desc_data_error:
     SET_STAT(_r_stats, _C_TRUE, desc_data_error)
+    phvwr           p.eth_rx_global_drop, 1     // increment pkt drop counters
 
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
     DMA_SKIP_TO_EOP(_r_ptr, _C_FALSE)

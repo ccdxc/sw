@@ -56,13 +56,11 @@ eth_rx_stats_incr_drop:
 
     ATOMIC_INC_VAL_2(_r_base, _r_offset, _r_addr, _r_val, k.eth_rx_global_pkt_len, 1)
 
-eth_rx_stats_incr_queue:
-    // Update queue & desc counters
-    addi            _r_offset, _r_lif_offset, LIF_STATS_RX_QUEUE_DISABLED_DROP_OFFSET
+    addi            _r_offset, _r_lif_offset, LIF_STATS_RX_QUEUE_DISABLED_OFFSET
     ATOMIC_INC_VAL_5(_r_base, _r_offset, _r_addr, _r_val,
-                    k.eth_rx_global_stats[STAT_queue_disabled_drop],
-                    k.eth_rx_global_stats[STAT_queue_empty_drop],
-                    k.eth_rx_global_stats[STAT_queue_scheduled],
+                    k.eth_rx_global_stats[STAT_queue_disabled],
+                    k.eth_rx_global_stats[STAT_queue_empty],
+                    k.eth_rx_global_stats[STAT_queue_error],
                     k.eth_rx_global_stats[STAT_desc_fetch_error],
                     k.eth_rx_global_stats[STAT_desc_data_error])
 

@@ -10,6 +10,7 @@ struct tx_table_s2_t0_k_ k;
 struct tx_table_s2_t0_eth_tx_commit_d d;
 
 #define  _r_num_desc        r1    // Number of descriptors processed
+#define  _r_stats           r2    // Stats
 #define  _r_dbval           r3    // Doorbell value
 #define  _r_dbaddr          r4    // Doorbell address
 #define  _r_cq_desc_addr    r5    // CQ descriptor address
@@ -20,9 +21,14 @@ struct tx_table_s2_t0_eth_tx_commit_d d;
 .param  eth_tx_start
 .param  eth_tx_sg_start
 .param  eth_tx_tso_start
+.param  eth_tx_stats
 
 .align
 eth_tx_commit:
+  LOAD_STATS(_r_stats)
+
+  bcf             [c2 | c3 | c7], eth_tx_commit_error
+  nop
 
   // Have the PHVs ahead of us caught up with their work?
   seq             c1, d.{c_index0}.hx, k.{eth_tx_to_s2_my_ci}.hx
@@ -134,6 +140,8 @@ eth_tx_commit_tso_sg:
   phvwri.f        p.common_te2_phv_table_pc, eth_tx_tso_start[38:6]
 
 eth_tx_commit_done:
+  // SAVE_STATS(_r_stats)
+
   // Eval doorbell when pi == ci
   seq             c3, d.{p_index0}.hx, d.{c_index0}.hx
   bcf             [c3], eth_tx_commit_eval_db
@@ -149,3 +157,16 @@ eth_tx_commit_eval_db:
 eth_tx_commit_abort:
   phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0
   phvwri.f        p.p4_intr_global_drop, 1
+
+eth_tx_commit_error:
+  SET_STAT(_r_stats, _C_TRUE, queue_error)
+
+  SAVE_STATS(_r_stats)
+
+  phvwr           p.eth_tx_global_drop, 1     // increment pkt drop counters
+  phvwr           p.p4_intr_global_drop, 1
+
+  // Launch eth_tx_stats action
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 1
+  phvwri.e        p.common_te3_phv_table_pc, eth_tx_stats[38:6]
+  phvwri.f        p.common_te3_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

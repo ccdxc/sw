@@ -12,6 +12,7 @@ struct tx_table_s1_t0_eth_tx_prep_d d;
 %%
 
 .param  eth_tx_commit
+.param  eth_tx_stats
 
 #define  _c_do_sg         c2  // SG
 #define  _c_do_tso        c3  // TSO
@@ -116,6 +117,13 @@ eth_tx_prep_done:
 
 eth_tx_prep_error:
   SET_STAT(_r_stats, _C_TRUE, desc_fetch_error)
+
   SAVE_STATS(_r_stats)
-  phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0
-  phvwri.f        p.p4_intr_global_drop, 1
+
+  phvwr           p.eth_tx_global_drop, 1     // increment pkt drop counters
+  phvwr           p.p4_intr_global_drop, 1
+
+  // Launch eth_tx_stats action
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, 1
+  phvwri.e        p.common_te3_phv_table_pc, eth_tx_stats[38:6]
+  phvwri.f        p.common_te3_phv_table_raw_table_size, CAPRI_RAW_TABLE_SIZE_MPU_ONLY

@@ -357,14 +357,14 @@ eth_stats(uint16_t lif)
     printf("tx_bcast_drop_packets       : %lu\n", stats.tx_bcast_drop_packets);
     printf("tx_dma_error                : %lu\n", stats.tx_dma_error);
 
-    printf("rx_queue_disabled_drop      : %lu\n", stats.rx_queue_disabled_drop);
-    printf("rx_queue_empty_drop         : %lu\n", stats.rx_queue_empty_drop);
-    printf("rx_queue_scheduled          : %lu\n", stats.rx_queue_scheduled);
+    printf("rx_queue_disabled           : %lu\n", stats.rx_queue_disabled);
+    printf("rx_queue_empty              : %lu\n", stats.rx_queue_empty);
+    printf("rx_queue_error              : %lu\n", stats.rx_queue_error);
     printf("rx_desc_fetch_error         : %lu\n", stats.rx_desc_fetch_error);
     printf("rx_desc_data_error          : %lu\n", stats.rx_desc_data_error);
 
     printf("tx_queue_disabled           : %lu\n", stats.tx_queue_disabled);
-    printf("tx_queue_scheduled          : %lu\n", stats.tx_queue_scheduled);
+    printf("tx_queue_error              : %lu\n", stats.tx_queue_error);
     printf("tx_desc_fetch_error         : %lu\n", stats.tx_desc_fetch_error);
     printf("tx_desc_data_error          : %lu\n", stats.tx_desc_data_error);
 
