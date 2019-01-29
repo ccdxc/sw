@@ -12,7 +12,7 @@
 #include "tests.hpp"
 #include "storage_seq_p4pd.hpp"
 #include "nic/utils/host_mem/c_if.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 namespace tests {
 

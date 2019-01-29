@@ -15,7 +15,7 @@
 #include "dol/iris/test/storage/ssd.hpp"
 #include "dol/iris/test/storage/nicmgr_if.hpp"
 #include "nic/utils/host_mem/c_if.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 
 // NOTE CAREFULLY: BEGIN: When adding queues please ensure, calc_total_queues() 

@@ -23,7 +23,7 @@
 #include "dol/iris/test/storage/compression_test.hpp"
 #include "dol/iris/test/storage/acc_scale_tests.hpp"
 #include "nic/utils/host_mem/c_if.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 namespace queues {
 void queues_shutdown();

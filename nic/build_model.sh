@@ -28,7 +28,7 @@ else
     echo "Invalid args. Use --coverage or --clean"
     exit
 fi
-$NIC_DIR/model_sim/cp_asic_bins.sh
+$NIC_DIR/sdk/model_sim/cp_asic_bins.sh
 cd $NIC_DIR/asic/capri/model/capsim-master
 make
 make ARCH=aarch64

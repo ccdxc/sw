@@ -12,7 +12,7 @@
 #include "dol/iris/test/storage/dp_mem.hpp"
 #include "dol/iris/test/storage/storage_seq_p4pd.hpp"
 #include "nic/utils/host_mem/c_if.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 uint32_t key128_desc_idx = 0;
 uint32_t key256_desc_idx = 0;

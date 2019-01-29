@@ -19,7 +19,7 @@ exclude folder ../e2etests/
 exclude folder ../build/
 exclude folder ../../dol/
 exclude folder ../delphi/
-exclude folder ../../model_sim/
+exclude folder ../../sdk/model_sim/
 exclude folder ../model_sim/
 exclude folder ../hal/test/
 exclude folder ../linkmgr/test/

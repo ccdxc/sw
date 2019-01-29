@@ -5,7 +5,7 @@ import os
 import sys
 import pdb
 
-sys.path.append('model_sim/src/')
+sys.path.append('nic/sdk/model_sim/src/')
 
 import model_wrap
 

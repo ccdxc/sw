@@ -2,6 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = crc_test
+MODULE_PIPELINE = iris gft
 MODULE_LDLIBS   = pthread
 MODULE_ARCH     = x86_64
 include ${MKDEFS}/post.mk

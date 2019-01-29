@@ -630,6 +630,20 @@ p4_dump_program_info (const char *cfg_path)
                     }
                 }
                 program.add_child("symbols", symbols);
+                symbols.clear();
+                for (int j = 0; j < (int)program_info[i].resolved_params.size(); j++) {
+                    pt::ptree    sym;
+                    symbol = program_info[i].resolved_params.get_byid(j);
+                    if ((symbol != NULL) && (symbol->type == MPUSYM_PARAM)) {
+                        sym.put("name", symbol->name.c_str());
+                        sym.put("addr", symbol->val);
+                        snprintf(numbuf, sizeof(numbuf), "0x%lx", symbol->val);
+                        sym.put("addr_hex", numbuf);
+                        symbols.push_back(std::make_pair("", sym));
+                        sym.clear();
+                    }
+                }
+                program.add_child("params", symbols);
                 programs.push_back(std::make_pair("", program));
                 program.clear();
                 symbols.clear();

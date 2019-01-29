@@ -1,8 +1,8 @@
 #! /bin/bash
 cd `dirname $0`
 MODEL_SIM_DIR=$PWD
-ASIC_SRC=$MODEL_SIM_DIR/../asic/
-ASIC_GEN=$MODEL_SIM_DIR/../asic_gen/
+ASIC_SRC=$MODEL_SIM_DIR/../../asic/
+ASIC_GEN=$MODEL_SIM_DIR/../../asic_gen/
 echo "ASIC_SRC = $ASIC_SRC"
 echo "ASIC_GEN = $ASIC_GEN"
 

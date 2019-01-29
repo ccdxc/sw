@@ -6,7 +6,7 @@ MODULE_TARGET   := platform_model_server.bin
 MODULE_PIPELINE := iris
 MODULE_SOLIBS   := pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp \
 		   cfgspace intrutils pal misc simlib simdev halproto
-MODULE_LDPATHS  := ${TOPDIR}/nic/model_sim/libs/
+MODULE_LDPATHS  := ${TOPDIR}/nic/sdk/model_sim/libs/
 MODULE_LDLIBS   := z model_cc capsim common_cc top_csr_compile sknobs \
                   asmsym mpuobj capisa isa Judy python2.7 zmq \
                   gmp gmpxx pthread dl util \

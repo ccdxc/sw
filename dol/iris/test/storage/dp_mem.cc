@@ -2,7 +2,7 @@
 #include "dol/iris/test/storage/hal_if.hpp"
 #include "dol/iris/test/storage/dp_mem.hpp"
 #include "nic/utils/host_mem/c_if.h"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 
 namespace dp_mem {
 

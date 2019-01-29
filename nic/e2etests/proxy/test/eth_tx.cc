@@ -9,9 +9,9 @@
 #include <iostream>
 #include <iomanip>
 
-#include "nic/model_sim/include/buf_hdr.h"
+#include "nic/sdk/model_sim/include/buf_hdr.h"
 #include "nic/e2etests/driver/lib_driver.hpp"
-#include "nic/model_sim/include/lib_model_client.h"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/e2etests/proxy/flows.hpp"
 
 

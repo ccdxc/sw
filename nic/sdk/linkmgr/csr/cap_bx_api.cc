@@ -1,4 +1,4 @@
-#include "nic/model_sim/include/sknobs.h"
+#include "model_sim/include/sknobs.h"
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"

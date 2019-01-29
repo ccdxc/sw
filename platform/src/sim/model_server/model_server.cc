@@ -11,12 +11,12 @@
 #include <queue>
 #include <signal.h>
 
-// #include "nic/model_sim/include/scapy_pkt_gen.h"
-#include "nic/model_sim/include/cap_env_base.h"
-#include "nic/model_sim/include/cpu.h"
-#include "nic/model_sim/include/HBM.h"
-#include "nic/model_sim/include/HOST_MEM.h"
-#include "nic/model_sim/include/buf_hdr.h"
+// #include "nic/sdk/model_sim/include/scapy_pkt_gen.h"
+#include "nic/sdk/model_sim/include/cap_env_base.h"
+#include "nic/sdk/model_sim/include/cpu.h"
+#include "nic/sdk/model_sim/include/HBM.h"
+#include "nic/sdk/model_sim/include/HOST_MEM.h"
+#include "nic/sdk/model_sim/include/buf_hdr.h"
 #include "nic/utils/host_mem/params.hpp"
 #include "zmq_wait.h"
 

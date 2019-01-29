@@ -15,7 +15,7 @@ MODULE_INCS     = ${TOPDIR}/nic/asic/capri/model/cap_top \
                   ${TOPDIR}/nic/asic/ip/verif/pcpp \
                   ${TOPDIR}/nic/asic/capri/verif/apis \
                   ${TOPDIR}/nic/sdk/include/sdk/asic/capri \
-                  ${TOPDIR}/nic/model_sim/include
+                  ${SDKDIR}/model_sim/include
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}
 MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}
 include ${MKDEFS}/post.mk
