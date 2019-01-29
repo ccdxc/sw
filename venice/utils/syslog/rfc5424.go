@@ -129,45 +129,45 @@ func (w *rfc5424) Close() error {
 
 // Emerg logs a message with severity LOG_EMERG
 func (w *rfc5424) Emerg(msg *Message) error {
-	return w.write(syslog.LOG_EMERG, msg.MsgID, msg.StructuredData, msg.Msg)
+	return w.writeAndRetry(syslog.LOG_EMERG, msg.MsgID, msg.StructuredData, msg.Msg)
 }
 
 // Alert logs a message with severity LOG_ALERT
 func (w *rfc5424) Alert(msg *Message) error {
-	return w.write(syslog.LOG_ALERT, msg.MsgID, msg.StructuredData, msg.Msg)
+	return w.writeAndRetry(syslog.LOG_ALERT, msg.MsgID, msg.StructuredData, msg.Msg)
 }
 
 // Crit logs a message with severity LOG_CRIT
 func (w *rfc5424) Crit(msg *Message) error {
-	return w.write(syslog.LOG_CRIT, msg.MsgID, msg.StructuredData, msg.Msg)
+	return w.writeAndRetry(syslog.LOG_CRIT, msg.MsgID, msg.StructuredData, msg.Msg)
 }
 
 // Err logs a message with severity LOG_ERR
 func (w *rfc5424) Err(msg *Message) error {
-	return w.write(syslog.LOG_ERR, msg.MsgID, msg.StructuredData, msg.Msg)
+	return w.writeAndRetry(syslog.LOG_ERR, msg.MsgID, msg.StructuredData, msg.Msg)
 }
 
 // Warning logs a message with severity LOG_WARNING
 func (w *rfc5424) Warning(msg *Message) error {
-	return w.write(syslog.LOG_WARNING, msg.MsgID, msg.StructuredData, msg.Msg)
+	return w.writeAndRetry(syslog.LOG_WARNING, msg.MsgID, msg.StructuredData, msg.Msg)
 }
 
 // Notice logs a message with severity LOG_NOTICE
 func (w *rfc5424) Notice(msg *Message) error {
-	return w.write(syslog.LOG_NOTICE, msg.MsgID, msg.StructuredData, msg.Msg)
+	return w.writeAndRetry(syslog.LOG_NOTICE, msg.MsgID, msg.StructuredData, msg.Msg)
 }
 
 // Info logs a message with severity LOG_INFO
 func (w *rfc5424) Info(msg *Message) error {
-	return w.write(syslog.LOG_INFO, msg.MsgID, msg.StructuredData, msg.Msg)
+	return w.writeAndRetry(syslog.LOG_INFO, msg.MsgID, msg.StructuredData, msg.Msg)
 }
 
 // Debug logs a message with severity LOG_DEBUG
 func (w *rfc5424) Debug(msg *Message) error {
-	return w.write(syslog.LOG_DEBUG, msg.MsgID, msg.StructuredData, msg.Msg)
+	return w.writeAndRetry(syslog.LOG_DEBUG, msg.MsgID, msg.StructuredData, msg.Msg)
 }
 
-func (w *rfc5424) write(severity syslog.Priority, msgID string, data StrData, msg string) error {
+func (w *rfc5424) writeAndRetry(severity syslog.Priority, msgID string, data StrData, msg string) error {
 	pr := (w.facility & 0xF8) | (severity & 0x07)
 	strCheck := func(s string) string {
 		if s == "" {
@@ -195,14 +195,16 @@ func (w *rfc5424) write(severity syslog.Priority, msgID string, data StrData, ms
 	w.Lock()
 	defer w.Unlock()
 
-	if w.conn == nil {
-		conn, err := w.connect()
-		if err != nil {
-			return err
+	var err error
+	if w.conn != nil { // write
+		if _, err = fmt.Fprint(w.conn, logMsg); err == nil {
+			return nil
 		}
-		w.conn = conn
 	}
-	_, err := fmt.Fprint(w.conn, logMsg)
 
+	if w.conn, err = w.connect(); err != nil { // retry
+		return err
+	}
+	_, err = fmt.Fprint(w.conn, logMsg)
 	return err
 }

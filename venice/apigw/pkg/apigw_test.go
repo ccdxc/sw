@@ -49,12 +49,14 @@ import (
 var (
 	hooksCalled int
 
+	logger = log.GetNewLogger(log.GetDefaultConfig("apigw_test"))
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "apigw_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 type testGwService struct {

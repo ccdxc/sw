@@ -19,7 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/utils/events"
-	"github.com/pensando/sw/venice/utils/events/writers"
+	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -50,7 +50,7 @@ var (
 	dedupInterval = 100 * time.Second
 	sendInterval  = 10 * time.Millisecond
 
-	writerChLen = 30
+	exporterChLen = 30
 
 	logger    = log.GetNewLogger(log.GetDefaultConfig("dispatcher-test"))
 	eventsDir = "/tmp"
@@ -68,13 +68,13 @@ func TestEventsDispatcher(t *testing.T) {
 	dispatcher.Start() // start the dispatcher again; NO-OP
 	defer dispatcher.Shutdown()
 
-	// create and start writer
-	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s", t.Name()), writerChLen, logger)
-	writerEventCh, offsetTracker, err := dispatcher.RegisterWriter(mockWriter)
-	AssertOk(t, err, "failed to register mock writer with the dispatcher")
-	mockWriter.Start(writerEventCh, offsetTracker)
-	defer mockWriter.Stop()
-	defer dispatcher.UnregisterWriter(mockWriter.Name())
+	// create and start exporter
+	mockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, err := dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+	mockExporter.Start(exporterEventCh, offsetTracker)
+	defer mockExporter.Stop()
+	defer dispatcher.UnregisterExporter(mockExporter.Name())
 
 	dispatcher.ProcessFailedEvents()
 
@@ -111,12 +111,12 @@ func TestEventsDispatcher(t *testing.T) {
 		}
 	}
 
-	// ensure the writer received all the events that're sent
+	// ensure the exporter received all the events that're sent
 	totalEvents := iterations * 10 // 10 iterations sent 10 events each
 
 	AssertEventually(t, func() (bool, interface{}) {
-		disconnected := mockWriter.GetEventsByType("TestNICDisconnected")
-		connected := mockWriter.GetEventsByType("TestNICConnected")
+		disconnected := mockExporter.GetEventsByType("TestNICDisconnected")
+		connected := mockExporter.GetEventsByType("TestNICConnected")
 		if totalEvents == disconnected && totalEvents == connected {
 			return true, nil
 		}
@@ -143,8 +143,8 @@ func TestEventsDispatcher(t *testing.T) {
 
 	// ensure the events are de-duped
 	AssertEventually(t, func() (bool, interface{}) {
-		disconnectedEvt := mockWriter.GetEventByUUID(NICDisconnectedEvtUUID)
-		connectedEvt := mockWriter.GetEventByUUID(NICConnectedEvtUUID)
+		disconnectedEvt := mockExporter.GetEventByUUID(NICDisconnectedEvtUUID)
+		connectedEvt := mockExporter.GetEventByUUID(NICConnectedEvtUUID)
 		if disconnectedEvt == nil || connectedEvt == nil {
 			return false, fmt.Sprintf("something wrong, couldn't find the expected event")
 		}
@@ -168,27 +168,27 @@ func TestEventsDispatcherShutdown(t *testing.T) {
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
-	// create and start mock writers
-	mockWriter1 := writers.NewMockWriter(fmt.Sprintf("mock1.%s", t.Name()), writerChLen, logger)
-	writerEventCh1, offsetTracker1, err := dispatcher.RegisterWriter(mockWriter1)
-	AssertOk(t, err, "failed to register mock writer with the dispatcher")
-	mockWriter1.Start(writerEventCh1, offsetTracker1)
-	defer mockWriter1.Stop()
-	defer dispatcher.UnregisterWriter(mockWriter1.Name())
+	// create and start mock exporters
+	mockExporter1 := exporters.NewMockExporter(fmt.Sprintf("mock1.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh1, offsetTracker1, err := dispatcher.RegisterExporter(mockExporter1)
+	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+	mockExporter1.Start(exporterEventCh1, offsetTracker1)
+	defer mockExporter1.Stop()
+	defer dispatcher.UnregisterExporter(mockExporter1.Name())
 
-	mockWriter2 := writers.NewMockWriter(fmt.Sprintf("mock2.%s", t.Name()), writerChLen, logger)
-	writerEventCh2, offsetTracker2, err := dispatcher.RegisterWriter(mockWriter2)
-	AssertOk(t, err, "failed to register mock writer with the dispatcher")
-	mockWriter2.Start(writerEventCh2, offsetTracker2)
-	defer mockWriter2.Stop()
-	defer dispatcher.UnregisterWriter(mockWriter2.Name())
+	mockExporter2 := exporters.NewMockExporter(fmt.Sprintf("mock2.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh2, offsetTracker2, err := dispatcher.RegisterExporter(mockExporter2)
+	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+	mockExporter2.Start(exporterEventCh2, offsetTracker2)
+	defer mockExporter2.Stop()
+	defer dispatcher.UnregisterExporter(mockExporter2.Name())
 
-	// flushes and closes the writers gracefully
+	// flushes and closes the exporters gracefully
 	dispatcher.Shutdown()
 
 	// no-op; they are already stopped during shutdown
-	mockWriter1.Stop()
-	mockWriter2.Stop()
+	mockExporter1.Stop()
+	mockExporter2.Stop()
 
 	// no-op
 	dispatcher.Shutdown()
@@ -208,13 +208,13 @@ func TestEventsDispatcherFlush(t *testing.T) {
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
-	// create and start writer
-	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s", t.Name()), writerChLen, logger)
-	writerEventCh, offsetTracker, err := dispatcher.RegisterWriter(mockWriter)
-	AssertOk(t, err, "failed to register mock writer with the dispatcher")
-	mockWriter.Start(writerEventCh, offsetTracker)
-	defer mockWriter.Stop()
-	defer dispatcher.UnregisterWriter(mockWriter.Name())
+	// create and start exporter
+	mockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, err := dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+	mockExporter.Start(exporterEventCh, offsetTracker)
+	defer mockExporter.Stop()
+	defer dispatcher.UnregisterExporter(mockExporter.Name())
 
 	// copy event and set type
 	event := *dummyEvt
@@ -241,20 +241,20 @@ func TestEventsDispatcherFlush(t *testing.T) {
 		AssertOk(t, dispatcher.Action(NICConnectedEvt), "failed to send event")
 	}
 
-	// writer would have not received any de-duped event because the active internal is not hit
-	temp := mockWriter.GetEventsByType("TestNICConnected")
+	// exporter would have not received any de-duped event because the active internal is not hit
+	temp := mockExporter.GetEventsByType("TestNICConnected")
 	Assert(t, temp == 0, "expected: 0 events, got:%v", temp)
 
-	temp = mockWriter.GetEventsByType("TestNICDisconnected")
+	temp = mockExporter.GetEventsByType("TestNICDisconnected")
 	Assert(t, temp == 0, "expected: 0 events, got:%v", temp)
 
-	// deduped events from the dispatcher will be flushed to all the writers
+	// deduped events from the dispatcher will be flushed to all the exporters
 	dispatcher.Shutdown()
 
-	// writer would have not received any de-duped event because the active internal is not hit
+	// exporter would have not received any de-duped event because the active internal is not hit
 	AssertEventually(t, func() (bool, interface{}) {
-		disconnected := mockWriter.GetEventsByType("TestNICDisconnected")
-		connected := mockWriter.GetEventsByType("TestNICConnected")
+		disconnected := mockExporter.GetEventsByType("TestNICDisconnected")
+		connected := mockExporter.GetEventsByType("TestNICConnected")
 
 		if disconnected == 100 && connected == 100 {
 			return true, nil
@@ -262,13 +262,13 @@ func TestEventsDispatcherFlush(t *testing.T) {
 
 		return false, fmt.Sprintf("expected 100 events for each type, got: (TestNICDisconnected %d, TestNICConnected %d)",
 			disconnected, connected)
-	}, "writer did not receive all the events or flush operation failed", string("5ms"), string("5s"))
+	}, "exporter did not receive all the events or flush operation failed", string("5ms"), string("5s"))
 
-	// thus the writers received the events before the dispatcher could hit active interval
+	// thus the exporters received the events before the dispatcher could hit active interval
 }
 
-// TestEventsDispatcherRegisterWriter tests dispatcher's register writer functionality
-func TestEventsDispatcherRegisterWriter(t *testing.T) {
+// TestEventsDispatcherRegisterExporter tests dispatcher's register exporter functionality
+func TestEventsDispatcherRegisterExporter(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
@@ -277,46 +277,46 @@ func TestEventsDispatcherRegisterWriter(t *testing.T) {
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
-	// create and start writer
-	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s", t.Name()), writerChLen, logger)
-	eventsCh, offsetTracker, err := dispatcher.RegisterWriter(mockWriter)
-	AssertOk(t, err, "failed to register writer")
-	mockWriter.Start(eventsCh, offsetTracker)
-	defer mockWriter.Stop()
+	// create and start exporter
+	mockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	eventsCh, offsetTracker, err := dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, err, "failed to register exporter")
+	mockExporter.Start(eventsCh, offsetTracker)
+	defer mockExporter.Stop()
 
-	_, _, err = dispatcher.RegisterWriter(mockWriter)
+	_, _, err = dispatcher.RegisterExporter(mockExporter)
 	Assert(t, strings.Contains(err.Error(), "name exists already"),
-		"expected failure; writer with the same name exists already")
+		"expected failure; exporter with the same name exists already")
 
-	mockWriter1 := writers.NewMockWriter(fmt.Sprintf("mock1.%s", t.Name()), writerChLen, logger)
-	eventsCh, offsetTracker, err = dispatcher.RegisterWriter(mockWriter1)
-	AssertOk(t, err, "failed to register writer")
-	mockWriter1.Start(eventsCh, offsetTracker)
-	defer mockWriter1.Stop()
+	mockExporter1 := exporters.NewMockExporter(fmt.Sprintf("mock1.%s", t.Name()), exporterChLen, logger)
+	eventsCh, offsetTracker, err = dispatcher.RegisterExporter(mockExporter1)
+	AssertOk(t, err, "failed to register exporter")
+	mockExporter1.Start(eventsCh, offsetTracker)
+	defer mockExporter1.Stop()
 
-	// dispatcher should not register any more writers
+	// dispatcher should not register any more exporters
 	dispatcher.Shutdown()
 
-	mockWriter2 := writers.NewMockWriter(fmt.Sprintf("mock2.%s", t.Name()), writerChLen, logger)
-	_, _, err = dispatcher.RegisterWriter(mockWriter2)
+	mockExporter2 := exporters.NewMockExporter(fmt.Sprintf("mock2.%s", t.Name()), exporterChLen, logger)
+	_, _, err = dispatcher.RegisterExporter(mockExporter2)
 	Assert(t, strings.Contains(err.Error(), "dispatcher stopped"),
 		"expected failure; stopped dispatcher should not accept register requests")
 }
 
-// TestEventsDispatcherWithSingleWriter tests the dispatcher with single writer.
-func TestEventsDispatcherWithSingleWriter(t *testing.T) {
+// TestEventsDispatcherWithSingleExporter tests the dispatcher with single exporter.
+func TestEventsDispatcherWithSingleExporter(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	testEventDispatcherWithWriters(t, 1, eventsStorePath)
+	testEventDispatcherWithExporters(t, 1, eventsStorePath)
 }
 
-// TestEventsDispatcherWithMultipleWriters tests the dispatcher with multiple writers.
-func TestEventsDispatcherWithMultipleWriters(t *testing.T) {
+// TestEventsDispatcherWithMultipleExporters tests the dispatcher with multiple exporters.
+func TestEventsDispatcherWithMultipleExporters(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	testEventDispatcherWithWriters(t, 10, eventsStorePath)
+	testEventDispatcherWithExporters(t, 10, eventsStorePath)
 }
 
 // TestEventsDispatcherWithSingleSource tests the dispatcher with single source
@@ -337,9 +337,9 @@ func TestEventsDispatcherWithMultipleSources(t *testing.T) {
 	testEventsDispatcherWithSources(t, 10, eventsStorePath)
 }
 
-// TestEventsDispatcherWithMultipleSourceAndWriters tests the dispatcher with multiple
-// writer and multiple sources.
-func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
+// TestEventsDispatcherWithMultipleSourceAndExporters tests the dispatcher with multiple
+// exporter and multiple sources.
+func TestEventsDispatcherWithMultipleSourceAndExporters(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
@@ -349,15 +349,15 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
-	numWriters := 3
+	numExporters := 3
 	numSources := 10
 
 	// copy event
 	event := *dummyEvt
 
-	// create wait groups for producers and writers
-	writerWG := new(sync.WaitGroup)
-	writerWG.Add(numWriters)
+	// create wait groups for producers and exporters
+	exporterWG := new(sync.WaitGroup)
+	exporterWG.Add(numExporters)
 
 	producerWG := new(sync.WaitGroup)
 	producerWG.Add(numSources + 1) // +1 for the main go routine spinning all the sources
@@ -365,30 +365,30 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 	// channel to stop the event source (producer)
 	stopSendingEvents := make(chan struct{}, numSources)
 
-	// create all the writers
-	mockWriters := make([]*writers.MockWriter, numWriters)
-	for i := 0; i < numWriters; i++ {
-		writer := writers.NewMockWriter(fmt.Sprintf("mock%d.%s", i, t.Name()), writerChLen, logger)
-		writerEventCh, offsetTracker, err := dispatcher.RegisterWriter(writer)
-		AssertOk(t, err, "failed to register mock writer with the dispatcher")
-		writer.Start(writerEventCh, offsetTracker)
-		mockWriters[i] = writer
+	// create all the exporters
+	mockExporters := make([]*exporters.MockExporter, numExporters)
+	for i := 0; i < numExporters; i++ {
+		exporter := exporters.NewMockExporter(fmt.Sprintf("mock%d.%s", i, t.Name()), exporterChLen, logger)
+		exporterEventCh, offsetTracker, err := dispatcher.RegisterExporter(exporter)
+		AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+		exporter.Start(exporterEventCh, offsetTracker)
+		mockExporters[i] = exporter
 	}
 
-	// monitor the writers to ensure they're receiving the events
-	// error from any writer will be captured in assertion.
-	for i := 0; i < numWriters; i++ {
-		go func(mockWriter *writers.MockWriter, dispatcher events.Dispatcher) {
-			defer writerWG.Done()
-			defer mockWriter.Stop()
-			defer dispatcher.UnregisterWriter(mockWriter.Name())
+	// monitor the exporters to ensure they're receiving the events
+	// error from any exporter will be captured in assertion.
+	for i := 0; i < numExporters; i++ {
+		go func(mockExporter *exporters.MockExporter, dispatcher events.Dispatcher) {
+			defer exporterWG.Done()
+			defer mockExporter.Stop()
+			defer dispatcher.UnregisterExporter(mockExporter.Name())
 
 			ticker := time.NewTicker(sendInterval + (10 * time.Millisecond))
 
 			totalEventsBySource := map[string]int{}
 
-			// check if the mock writer is receiving events from the dispatcher
-			// totalevents received by the writer from each source should increase after each iteration
+			// check if the mock exporter is receiving events from the dispatcher.
+			// total events received by the exporter from each source should increase after each iteration
 			// as the sources are continuously producing events.
 			for iterations := 0; iterations < 5; iterations++ {
 				select {
@@ -401,13 +401,13 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 						sourceKey := fmt.Sprintf("%v-%v", src.GetNodeName(), src.GetComponent())
 
 						AssertEventually(t, func() (bool, interface{}) {
-							temp := mockWriter.GetEventsBySourceAndType(src, "TestNICDisconnected") +
-								mockWriter.GetEventsBySourceAndType(src, "TestNICConnected")
+							temp := mockExporter.GetEventsBySourceAndType(src, "TestNICDisconnected") +
+								mockExporter.GetEventsBySourceAndType(src, "TestNICConnected")
 
 							// should be > than the previous iteration
 							if !(temp > totalEventsBySource[sourceKey]) {
-								return false, fmt.Sprintf("writer {%s}: expected totalEventsBySource: >%d, got: %d, source: %v",
-									mockWriter.Name(), totalEventsBySource[sourceKey], temp, src)
+								return false, fmt.Sprintf("exporter {%s}: expected totalEventsBySource: >%d, got: %d, source: %v",
+									mockExporter.Name(), totalEventsBySource[sourceKey], temp, src)
 							}
 							totalEventsBySource[sourceKey] = temp
 
@@ -416,7 +416,7 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 					}
 				}
 			}
-		}(mockWriters[i], dispatcher)
+		}(mockExporters[i], dispatcher)
 	}
 
 	// start writing from multiple sources
@@ -471,8 +471,8 @@ func TestEventsDispatcherWithMultipleSourceAndWriters(t *testing.T) {
 		producerWG.Done()
 	}()
 
-	// wait for all the writers to finish
-	writerWG.Wait()
+	// wait for all the exporters to finish
+	exporterWG.Wait()
 
 	close(stopSendingEvents)
 
@@ -489,13 +489,13 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
-	// create and start writer
-	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s", t.Name()), writerChLen, logger)
-	writerEventCh, offsetTracker, err := dispatcher.RegisterWriter(mockWriter)
-	AssertOk(t, err, "failed to register mock writer with the dispatcher")
-	mockWriter.Start(writerEventCh, offsetTracker)
-	defer mockWriter.Stop()
-	defer dispatcher.UnregisterWriter(mockWriter.Name())
+	// create and start exporter
+	mockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, err := dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+	mockExporter.Start(exporterEventCh, offsetTracker)
+	defer mockExporter.Stop()
+	defer dispatcher.UnregisterExporter(mockExporter.Name())
 
 	// copy event
 	event := *dummyEvt
@@ -548,10 +548,10 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 
 	wg.Wait()
 
-	// to make sure all the events are flushed to the writers
+	// to make sure all the events are flushed to the exporters
 	dispatcher.Shutdown()
 
-	// ensure the writer received all the events that're sent from each source
+	// ensure the exporter received all the events that're sent from each source
 	for s := 0; s < numSources; s++ {
 		src := &evtsapi.EventSource{
 			NodeName:  fmt.Sprintf("node-name%v", s),
@@ -562,8 +562,8 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 
 		// stop only after receiving all the events or timeout
 		AssertEventually(t, func() (bool, interface{}) {
-			disconnectedEvents := mockWriter.GetEventsBySourceAndType(src, "TestNICDisconnected")
-			connectedEvents := mockWriter.GetEventsBySourceAndType(src, "TestNICDisconnected")
+			disconnectedEvents := mockExporter.GetEventsBySourceAndType(src, "TestNICDisconnected")
+			connectedEvents := mockExporter.GetEventsBySourceAndType(src, "TestNICDisconnected")
 
 			// make sure atleast half the total events are reached before stopping
 			if (disconnectedEvents >= expected/2) && (connectedEvents >= expected/2) {
@@ -575,10 +575,10 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 	}
 }
 
-// testEventDispatcherWithWriters helper function to test dispatcher with varying
-// number of writers.
-func testEventDispatcherWithWriters(t *testing.T, numWriters int, eventsStorePath string) {
-	// dispatcher sends events to all the registered writers
+// testEventDispatcherWithExporters helper function to test dispatcher with varying
+// number of exporters.
+func testEventDispatcherWithExporters(t *testing.T, numExporters int, eventsStorePath string) {
+	// dispatcher sends events to all the registered exporter
 	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
@@ -587,57 +587,57 @@ func testEventDispatcherWithWriters(t *testing.T, numWriters int, eventsStorePat
 	// copy event
 	event := *dummyEvt
 
-	writerWG := new(sync.WaitGroup)
-	writerWG.Add(numWriters)
+	exporterWG := new(sync.WaitGroup)
+	exporterWG.Add(numExporters)
 
 	producerWG := new(sync.WaitGroup)
 	producerWG.Add(1)
 
 	stopSendingEvents := make(chan struct{}, 1)
 
-	// create all the writers
-	mockWriters := make([]*writers.MockWriter, numWriters)
-	for i := 0; i < numWriters; i++ {
-		writer := writers.NewMockWriter(fmt.Sprintf("mock%d.%s", i, t.Name()), writerChLen, logger)
-		writerEventCh, offsetTracker, err := dispatcher.RegisterWriter(writer)
-		AssertOk(t, err, "failed to register mock writer with the dispatcher")
-		writer.Start(writerEventCh, offsetTracker)
-		mockWriters[i] = writer
+	// create all the exporters
+	mockExporters := make([]*exporters.MockExporter, numExporters)
+	for i := 0; i < numExporters; i++ {
+		exporter := exporters.NewMockExporter(fmt.Sprintf("mock%d.%s", i, t.Name()), exporterChLen, logger)
+		exporterEventCh, offsetTracker, err := dispatcher.RegisterExporter(exporter)
+		AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+		exporter.Start(exporterEventCh, offsetTracker)
+		mockExporters[i] = exporter
 	}
 
-	// ensure all the writers receive the events
-	// any error from the writers will be captured in assertion.
-	for i := 0; i < numWriters; i++ {
-		go func(mockWriter *writers.MockWriter, dispatcher events.Dispatcher) {
-			defer writerWG.Done()
-			defer mockWriter.Stop()
-			defer dispatcher.UnregisterWriter(mockWriter.Name())
+	// ensure all the exporters receive the events
+	// any error from the exporters will be captured in assertion.
+	for i := 0; i < numExporters; i++ {
+		go func(mockExporter *exporters.MockExporter, dispatcher events.Dispatcher) {
+			defer exporterWG.Done()
+			defer mockExporter.Stop()
+			defer dispatcher.UnregisterExporter(mockExporter.Name())
 
 			ticker := time.NewTicker(sendInterval + (10 * time.Millisecond))
 
 			TestNICConnectedEvents := 0
 			TestNICDisconnectedEvents := 0
 
-			// check if the mock writer is receiving events from the dispatcher
+			// check if the mock exporter is receiving events from the dispatcher
 			// number of events received should keep increasing for every iteration
 			// as the producer is continuously generating events.
 			for iterations := 0; iterations < 5; iterations++ {
 				select {
 				case <-ticker.C:
 					AssertEventually(t, func() (bool, interface{}) {
-						// make sure the writer received these events
-						temp := mockWriter.GetEventsByType("TestNICConnected")
+						// make sure the exporter received these events
+						temp := mockExporter.GetEventsByType("TestNICConnected")
 						// should > than the earlier iteration
 						if !(temp > TestNICConnectedEvents) {
-							return false, fmt.Sprintf("writer {%s}: expected TestNICConnectedEvents: >%d, got: %d",
-								mockWriter.Name(), TestNICConnectedEvents, temp)
+							return false, fmt.Sprintf("exporter {%s}: expected TestNICConnectedEvents: >%d, got: %d",
+								mockExporter.Name(), TestNICConnectedEvents, temp)
 						}
 						TestNICConnectedEvents = temp
 
-						temp = mockWriter.GetEventsByType("TestNICDisconnected")
+						temp = mockExporter.GetEventsByType("TestNICDisconnected")
 						if !(temp > TestNICDisconnectedEvents) {
-							return false, fmt.Sprintf("writer {%s}: expected TestNICDisconnectedEvents: >%d, got: %d",
-								mockWriter.Name(), TestNICDisconnectedEvents, temp)
+							return false, fmt.Sprintf("exporter {%s}: expected TestNICDisconnectedEvents: >%d, got: %d",
+								mockExporter.Name(), TestNICDisconnectedEvents, temp)
 						}
 						TestNICDisconnectedEvents = temp
 
@@ -645,7 +645,7 @@ func testEventDispatcherWithWriters(t *testing.T, numWriters int, eventsStorePat
 					}, "did not receive all the events produced", string("5ms"), string("5s"))
 				}
 			}
-		}(mockWriters[i], dispatcher)
+		}(mockExporters[i], dispatcher)
 	}
 
 	// send some events to the dispatcher
@@ -681,8 +681,8 @@ func testEventDispatcherWithWriters(t *testing.T, numWriters int, eventsStorePat
 		}
 	}()
 
-	// wait for all the writers to finish
-	writerWG.Wait()
+	// wait for all the exporters to finish
+	exporterWG.Wait()
 
 	close(stopSendingEvents)
 
@@ -701,19 +701,19 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
-	// create and start writer
-	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s", t.Name()), writerChLen, logger)
-	writerEventCh, offsetTracker, err := dispatcher.RegisterWriter(mockWriter)
-	AssertOk(t, err, "failed to register mock writer with the dispatcher")
-	mockWriter.Start(writerEventCh, offsetTracker)
-	defer mockWriter.Stop()
-	defer dispatcher.UnregisterWriter(mockWriter.Name())
+	// create and start exporter
+	mockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, err := dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+	mockExporter.Start(exporterEventCh, offsetTracker)
+	defer mockExporter.Stop()
+	defer dispatcher.UnregisterExporter(mockExporter.Name())
 
 	// process failed events; this will be a NO-OP as there are no events recorded yet
 	dispatcher.ProcessFailedEvents()
 
-	// ensure the mock writer receive no events
-	Assert(t, mockWriter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockWriter.GetTotalEvents())
+	// ensure the mock exporter receive no events
+	Assert(t, mockExporter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockExporter.GetTotalEvents())
 
 	// send some events
 	evt := *dummyEvt
@@ -728,9 +728,9 @@ func TestEventsDispatcherRestart(t *testing.T) {
 		AssertOk(t, dispatcher.Action(evt), "failed to send event")
 	}
 
-	// ensure the mock writer received these events
+	// ensure the mock exporter received these events
 	AssertEventually(t, func() (bool, interface{}) {
-		totalEvents := mockWriter.GetTotalEvents()
+		totalEvents := mockExporter.GetTotalEvents()
 		if totalEvents == 100 {
 			return true, nil
 		}
@@ -746,16 +746,16 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
-	// create writers after a restart
-	mockWriter = writers.NewMockWriter(fmt.Sprintf("mock.%s", t.Name()), writerChLen, logger)
-	writerEventCh, offsetTracker, err = dispatcher.RegisterWriter(mockWriter)
-	AssertOk(t, err, "failed to register mock writer with the dispatcher")
-	mockWriter.Start(writerEventCh, offsetTracker)
-	defer mockWriter.Stop()
-	defer dispatcher.UnregisterWriter(mockWriter.Name())
+	// create exporter after a restart
+	mockExporter = exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, err = dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+	mockExporter.Start(exporterEventCh, offsetTracker)
+	defer mockExporter.Stop()
+	defer dispatcher.UnregisterExporter(mockExporter.Name())
 
-	// to test whether the events are replayed during restart; lets reset the offset in the writer's offset file
-	// open the offset file and update the offset. so that the dispatcher can replay events for this writer.
+	// to test whether the events are replayed during restart; lets reset the offset in the exporter's offset file
+	// open the offset file and update the offset. so that the dispatcher can replay events for this exporter.
 	fh, err := os.OpenFile(path.Join(eventsStorePath, "offset", fmt.Sprintf("mock.%s", t.Name())),
 		os.O_RDWR, 0) // open file in read write mode
 	AssertOk(t, err, "failed to open offset file")
@@ -767,13 +767,13 @@ func TestEventsDispatcherRestart(t *testing.T) {
 
 	fh.Truncate(1)
 
-	// ensure the writer received 0 events before processing the failed events (new writer)
-	Assert(t, mockWriter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockWriter.GetTotalEvents())
+	// ensure the exporter received 0 events before processing the failed events (new exporter)
+	Assert(t, mockExporter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockExporter.GetTotalEvents())
 
 	dispatcher.ProcessFailedEvents()
 
 	AssertEventually(t, func() (bool, interface{}) {
-		totalEvents := mockWriter.GetTotalEvents()
+		totalEvents := mockExporter.GetTotalEvents()
 		if totalEvents >= 100 {
 			return true, nil
 		}
@@ -795,9 +795,9 @@ func TestEventsDispatcherRestart(t *testing.T) {
 		AssertOk(t, dispatcher.Action(evt), "failed to send event")
 	}
 
-	// now, the writer should have replayed events + new events
+	// now, the exporter should have replayed events + new events
 	AssertEventually(t, func() (bool, interface{}) {
-		totalEvents := mockWriter.GetTotalEvents()
+		totalEvents := mockExporter.GetTotalEvents()
 		if totalEvents >= 110 {
 			return true, nil
 		}
@@ -806,7 +806,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	}, "did not receive all the events from the bookmark", string("5ms"), string("5s"))
 
 	AssertEventually(t, func() (bool, interface{}) {
-		numEvents := mockWriter.GetEventsByType("DUMMY2")
+		numEvents := mockExporter.GetEventsByType("DUMMY2")
 		if numEvents >= 10 {
 			return true, nil
 		}
@@ -826,16 +826,16 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
-	// create writer
-	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s", t.Name()), writerChLen, logger)
-	writerEventCh, offsetTracker, err := dispatcher.RegisterWriter(mockWriter)
-	AssertOk(t, err, "failed to register mock writer with the dispatcher")
-	mockWriter.Start(writerEventCh, offsetTracker)
-	defer mockWriter.Stop()
-	defer dispatcher.UnregisterWriter(mockWriter.Name())
+	// create exporter
+	mockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, err := dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+	mockExporter.Start(exporterEventCh, offsetTracker)
+	defer mockExporter.Stop()
+	defer dispatcher.UnregisterExporter(mockExporter.Name())
 
-	// ensure the mock writer received no events
-	Assert(t, mockWriter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockWriter.GetTotalEvents())
+	// ensure the mock exporter received no events
+	Assert(t, mockExporter.GetTotalEvents() == 0, "expected: 0 events, got: %v", mockExporter.GetTotalEvents())
 
 	// send some events
 	evt := *dummyEvt
@@ -853,7 +853,7 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	}
 
 	AssertEventually(t, func() (bool, interface{}) {
-		evt := mockWriter.GetEventByUUID(evtUUID)
+		evt := mockExporter.GetEventByUUID(evtUUID)
 		if evt != nil && evt.GetCount() == 100 {
 			return true, nil
 		}
@@ -861,8 +861,8 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 		return false, fmt.Sprintf("expected: 100 events, got: %v", evt)
 	}, "did not receive all the events from the dispatcher", string("5ms"), string("5s"))
 
-	// make sure there are no other events received by the writer
-	Assert(t, mockWriter.GetTotalEvents() == 100, "expected: 100 events, got: %v", mockWriter.GetTotalEvents())
+	// make sure there are no other events received by the exporter
+	Assert(t, mockExporter.GetTotalEvents() == 100, "expected: 100 events, got: %v", mockExporter.GetTotalEvents())
 
 	// sleep for a second; the existing events will be expired
 	time.Sleep(time.Second)
@@ -882,11 +882,11 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	}
 
 	// old UUID will remain with same event count as there should not be any updates to the expired event.
-	Assert(t, mockWriter.GetEventByUUID(evtUUID).GetCount() == 100, "expected no updates to the expired event")
+	Assert(t, mockExporter.GetEventByUUID(evtUUID).GetCount() == 100, "expected no updates to the expired event")
 
 	// now, the new UUID should have all the duplicates aggregated
 	AssertEventually(t, func() (bool, interface{}) {
-		evt := mockWriter.GetEventByUUID(newEvtUUID)
+		evt := mockExporter.GetEventByUUID(newEvtUUID)
 		if evt != nil && evt.GetCount() == 100 {
 			return true, nil
 		}
@@ -895,12 +895,12 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	}, "did not receive all the events from the dispatcher", string("5ms"), string("5s"))
 
 	// old + new events
-	Assert(t, mockWriter.GetTotalEvents() == 200, "expected: 200 events, got: %v", mockWriter.GetTotalEvents())
+	Assert(t, mockExporter.GetTotalEvents() == 200, "expected: 200 events, got: %v", mockExporter.GetTotalEvents())
 }
 
-// TestDispatcherWithDynamicWriterAndRestart tests the distribution of events to a new writer which got added
-// right before restart. The expectation is that the new writer should not receive any events that were previously recorded (before this writer's registraion).
-func TestDispatcherWithDynamicWriterAndRestart(t *testing.T) {
+// TestDispatcherWithDynamicExporterAndRestart tests the distribution of events to a new exporter which got added
+// right before restart. The expectation is that the new exporter should not receive any events that were previously recorded (before this exporter's registraion).
+func TestDispatcherWithDynamicExporterAndRestart(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
@@ -910,21 +910,21 @@ func TestDispatcherWithDynamicWriterAndRestart(t *testing.T) {
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
-	// create writer
-	var mockWriters []*writers.MockWriter
+	// create exporter
+	var mockExporters []*exporters.MockExporter
 	for i := 0; i < 3; i++ {
-		mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s.%v", t.Name(), i), writerChLen, logger)
-		writerEventCh, offsetTracker, dErr := dispatcher.RegisterWriter(mockWriter)
-		AssertOk(t, dErr, "failed to register mock writer with the dispatcher")
-		mockWriter.Start(writerEventCh, offsetTracker)
-		defer mockWriter.Stop()
-		defer dispatcher.UnregisterWriter(mockWriter.Name())
-		mockWriters = append(mockWriters, mockWriter)
+		mockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s.%v", t.Name(), i), exporterChLen, logger)
+		exporterEventCh, offsetTracker, dErr := dispatcher.RegisterExporter(mockExporter)
+		AssertOk(t, dErr, "failed to register mock exporter with the dispatcher")
+		mockExporter.Start(exporterEventCh, offsetTracker)
+		defer mockExporter.Stop()
+		defer dispatcher.UnregisterExporter(mockExporter.Name())
+		mockExporters = append(mockExporters, mockExporter)
 	}
 
-	// ensure the mock writers received no events
+	// ensure the mock exporters received no events
 	for i := 0; i < 3; i++ {
-		Assert(t, mockWriters[i].GetTotalEvents() == 0, "expected: 0 events, got: %v", mockWriters[i].GetTotalEvents())
+		Assert(t, mockExporters[i].GetTotalEvents() == 0, "expected: 0 events, got: %v", mockExporters[i].GetTotalEvents())
 	}
 
 	// send some events
@@ -944,7 +944,7 @@ func TestDispatcherWithDynamicWriterAndRestart(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 		AssertEventually(t, func() (bool, interface{}) {
-			evt := mockWriters[i].GetEventByUUID(evtUUID)
+			evt := mockExporters[i].GetEventByUUID(evtUUID)
 			if evt != nil && evt.GetCount() == 100 {
 				return true, nil
 			}
@@ -953,25 +953,25 @@ func TestDispatcherWithDynamicWriterAndRestart(t *testing.T) {
 		}, "did not receive all the events from the dispatcher", string("5ms"), string("5s"))
 	}
 
-	// add a new writer
-	newMockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s.new", t.Name()), writerChLen, logger)
-	writerEventCh, offsetTracker, err := dispatcher.RegisterWriter(newMockWriter)
-	AssertOk(t, err, "failed to register mock writer with the dispatcher")
-	newMockWriter.Start(writerEventCh, offsetTracker)
-	defer newMockWriter.Stop()
-	defer dispatcher.UnregisterWriter(newMockWriter.Name())
+	// add a new exporter
+	newMockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s.new", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, err := dispatcher.RegisterExporter(newMockExporter)
+	AssertOk(t, err, "failed to register mock exporter with the dispatcher")
+	newMockExporter.Start(exporterEventCh, offsetTracker)
+	defer newMockExporter.Stop()
+	defer dispatcher.UnregisterExporter(newMockExporter.Name())
 
 	// assume a failure/restart here and start processing failed events
 	dispatcher.ProcessFailedEvents()
 
 	time.Sleep(1 * time.Second)
 
-	// check the count of events on the new writer
-	Assert(t, newMockWriter.GetTotalEvents() == 0, "expected: 0 events, got: %v", newMockWriter.GetTotalEvents())
+	// check the count of events on the new exporter
+	Assert(t, newMockExporter.GetTotalEvents() == 0, "expected: 0 events, got: %v", newMockExporter.GetTotalEvents())
 
-	// check the old mock writers
+	// check the old mock exporters
 	for i := 0; i < 3; i++ {
-		Assert(t, mockWriters[i].GetTotalEvents() == 100, "expected: 100 events, got: %v", mockWriters[i].GetTotalEvents())
+		Assert(t, mockExporters[i].GetTotalEvents() == 100, "expected: 100 events, got: %v", mockExporters[i].GetTotalEvents())
 	}
 
 	// start recording some events and check the count
@@ -988,8 +988,8 @@ func TestDispatcherWithDynamicWriterAndRestart(t *testing.T) {
 		evt.ObjectMeta.UUID = uuid.New().String()
 	}
 
-	AssertEventually(t, func() (bool, interface{}) { // new writer should receive 100 events
-		evt := newMockWriter.GetEventByUUID(evtUUID)
+	AssertEventually(t, func() (bool, interface{}) { // new exporter should receive 100 events
+		evt := newMockExporter.GetEventByUUID(evtUUID)
 		if evt != nil && evt.GetCount() == 100 {
 			return true, nil
 		}
@@ -1010,13 +1010,13 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
 
-	// create mock writer
-	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s", t.Name()), writerChLen, logger)
-	writerEventCh, offsetTracker, dErr := dispatcher.RegisterWriter(mockWriter)
-	AssertOk(t, dErr, "failed to register mock writer with the dispatcher")
-	mockWriter.Start(writerEventCh, offsetTracker)
-	defer mockWriter.Stop()
-	defer dispatcher.UnregisterWriter(mockWriter.Name())
+	// create mock exporter
+	mockExporter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
+	exporterEventCh, offsetTracker, dErr := dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, dErr, "failed to register mock exporter with the dispatcher")
+	mockExporter.Start(exporterEventCh, offsetTracker)
+	defer mockExporter.Stop()
+	defer dispatcher.UnregisterExporter(mockExporter.Name())
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -1054,7 +1054,7 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 
 		case <-time.After(time.Until(expTime.Add(100 * time.Millisecond))): // after expiry + buffer(100ms)
 			t.Logf("prevCount is %d after expiration time", prevCount)
-			evt := mockWriter.GetEventByUUID(evtUUID)
+			evt := mockExporter.GetEventByUUID(evtUUID)
 			Assert(t, evt != nil, "new event is nil after expiry")
 
 			// it is a new event when the count is < prevCount
@@ -1066,7 +1066,7 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 			return
 
 		case <-time.After(15 * time.Millisecond): // after every batch interval
-			evt := mockWriter.GetEventByUUID(evtUUID)
+			evt := mockExporter.GetEventByUUID(evtUUID)
 			Assert(t, evt != nil, "unexpected, event is nil")
 			if evt.GetCount() >= prevCount { // event updates
 				prevCount = evt.GetCount()

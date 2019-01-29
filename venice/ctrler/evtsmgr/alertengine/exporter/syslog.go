@@ -62,7 +62,7 @@ func (s *syslogExport) Export(alert *monitoring.Alert) int {
 	return totalNotificationsSent
 }
 
-// Close closes the syslog writers which in turn terminates the underlying connection with syslog servers.
+// Close closes the syslog writer which in turn terminates the underlying connection with syslog servers.
 func (s *syslogExport) Close() {
 	s.Lock()
 	defer s.Unlock()

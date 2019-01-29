@@ -16,11 +16,11 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
-	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	certsrv "github.com/pensando/sw/venice/cmd/grpc/server/certificates/mock"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/utils"
@@ -53,15 +53,6 @@ const (
 	// test user
 	testUser     = "test"
 	testPassword = "pensando"
-)
-
-var (
-	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "integration_main_test"},
-		EvtTypes:      evtsapi.GetEventTypes(),
-		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
 )
 
 type tInfo struct {
@@ -126,6 +117,15 @@ func startSpyglass() finder.Interface {
 
 }
 func TestMain(m *testing.M) {
+	l := log.WithContext("module", "CrudOpsTest")
+
+	// create events recorder
+	_, _ = recorder.NewRecorder(&recorder.Config{
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "integration_main_test"},
+		EvtTypes:      evtsapi.GetEventTypes(),
+		BackupDir:     "/tmp",
+		SkipEvtsProxy: true}, l)
+
 	// TLS is needed for ApiServer to know who is making a request (ApiGw, controller, etc)
 
 	// instantiate a certificates server
@@ -148,7 +148,6 @@ func TestMain(m *testing.M) {
 
 	// Start the API server
 	apiserverAddress := ":0"
-	l := log.WithContext("module", "CrudOpsTest")
 	tinfo.l = l
 	scheme := runtime.GetDefaultScheme()
 	tinfo.apisrvConfig = apiserver.Config{

@@ -56,6 +56,7 @@ type recorderImpl struct {
 	eventsFile            *fileImpl              // events backup store
 	failedEventsForwarder *failedEventsForwarder // used to forward failed events to the proxy
 	started               bool                   // whether client has started
+	logger                log.Logger             // logger
 }
 
 // eventsProxy encapsulates all the proxy details including connection string
@@ -89,7 +90,7 @@ type Config struct {
 // NewRecorder creates and returns a recorder instance and instantiates the singleton object.
 // if `evtsproxyURL` is empty, it will it use local events proxy RPC port.
 // First recorder instance created in the process is same as the singleton recorder.
-func NewRecorder(config *Config) (events.Recorder, error) {
+func NewRecorder(config *Config, logger log.Logger) (events.Recorder, error) {
 	if config.Source == nil {
 		return nil, fmt.Errorf("missing event source")
 	}
@@ -124,10 +125,11 @@ func NewRecorder(config *Config) (events.Recorder, error) {
 			tick: time.NewTicker(2 * time.Second),
 			stop: make(chan struct{}),
 		},
+		logger: logger,
 	}
 
 	if config.SkipEvtsProxy {
-		log.Debug("skipping events proxy")
+		logger.Debugf("{%s} skipping events proxy", recorder.id)
 		recorder.eventsProxy.connectionAlive = false // all the writes will be sent to file
 	} else {
 		recorder.started = true
@@ -153,7 +155,7 @@ func (r *recorderImpl) StartExport() {
 // Event sources will call this to record an event.
 func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, message string, objRef interface{}) {
 	if err := r.validate(eventType, severity); err != nil {
-		log.Fatalf("validation failed [%s, %s], err: %v", eventType, severity, err)
+		r.logger.Fatalf("{%s} validation failed [%s, %s], err: %v", r.id, eventType, severity, err)
 	}
 
 	var objRefMeta *api.ObjectMeta
@@ -164,7 +166,7 @@ func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, m
 	if objRef != nil {
 		objRefMeta, err = runtime.GetObjectMeta(objRef)
 		if err != nil {
-			log.Fatalf("failed to get the object meta from reference object, err: %v", err)
+			r.logger.Fatalf("{%s} failed to get the object meta from reference object, err: %v", r.id, err)
 		}
 
 		objRefKind = objRef.(runtime.Object).GetObjectKind()
@@ -208,7 +210,7 @@ func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, m
 		// update tenant and namespace for tenant scoped object events; all the other events go to default tenant.
 		tenantScoped, err := runtime.GetDefaultScheme().IsTenantScoped(objRefKind)
 		if err != nil {
-			log.Errorf("failed to get scope for kind: %s, err: %v", objRefKind, err)
+			r.logger.Errorf("{%s} failed to get scope for kind: %s, err: %v", r.id, objRefKind, err)
 		}
 
 		if tenantScoped {
@@ -228,7 +230,7 @@ func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, m
 
 	// send the event to a file or proxy
 	if err := r.sendEvent(event); err != nil {
-		log.Fatalf("failed to record event %v, err: %v", event.GetUUID(), err)
+		r.logger.Fatalf("{%s} failed to record event %v, err: %v", r.id, event.GetUUID(), err)
 	}
 }
 
@@ -254,7 +256,7 @@ func (r *recorderImpl) sendEvent(event *evtsapi.Event) error {
 	defer r.eventsProxy.Unlock()
 
 	if !r.eventsProxy.connectionAlive {
-		log.Debug("connection to evtsproxy unavailable. so, writing to a file")
+		r.logger.Debugf("{%s} connection to evtsproxy unavailable. so, writing event {%s} to a file", r.id, events.MinifyEvent(event))
 		return r.writeToFile(event)
 	}
 
@@ -263,12 +265,15 @@ func (r *recorderImpl) sendEvent(event *evtsapi.Event) error {
 	defer cancel()
 
 	// forward the event to events proxy
+	// NOTE: it is possible that the event was written to elastic and context got cancelled before call returned.
+	// in such cases, we'll re-send the same event again and that will result in a duplicate.
 	if _, err := r.eventsProxy.client.ForwardEvent(ctx, event); err != nil {
+		r.logger.Errorf("{%s} failed to forward the event {%+v} to evtsproxy, err: %v", r.id, event, err)
 		r.eventsProxy.connectionAlive = false
 
 		// write event to the file
-		if err = r.writeToFile(event); err != nil {
-			return err
+		if wErr := r.writeToFile(event); wErr != nil {
+			return wErr
 		}
 
 		// try reconnecting with the proxy
@@ -293,12 +298,12 @@ func (r *recorderImpl) createEvtsProxyRPCClient() error {
 	for {
 		evtsProxyClient, err := rpckit.NewRPCClient(r.getID(), r.eventsProxy.url, rpckit.WithTLSProvider(nil))
 		if err != nil {
-			log.Errorf("error connecting to proxy server using URL: %v, err: %v", r.eventsProxy.url, err)
+			r.logger.Errorf("{%s} error connecting to proxy server using URL: %v, err: %v", r.id, r.eventsProxy.url, err)
 			time.Sleep(2 * time.Second)
 			continue
 		}
 
-		log.Info("events recorder connected to events proxy")
+		r.logger.Infof("{%s} events recorder connected to events proxy", r.id)
 
 		r.eventsProxy.Lock()
 		r.eventsProxy.rpcClient = evtsProxyClient
@@ -323,7 +328,7 @@ func (r *recorderImpl) getID() string {
 func (r *recorderImpl) reconnect() {
 	for {
 		if err := r.eventsProxy.rpcClient.Reconnect(); err != nil {
-			log.Debugf("failed to reconnect to events proxy, retrying.. err: %v", err)
+			r.logger.Debugf("{%s} failed to reconnect to events proxy, retrying.. err: %v", r.id, err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -331,14 +336,14 @@ func (r *recorderImpl) reconnect() {
 		// make sure the connection is stable
 		time.Sleep(10 * time.Millisecond)
 		if r.eventsProxy.rpcClient.ClientConn.GetState() != connectivity.Ready {
-			log.Errorf("connection not ready after 10ms")
+			r.logger.Errorf("{%s} connection not ready after 10ms", r.id)
 			continue
 		}
 
 		r.eventsProxy.Lock()
 		r.eventsProxy.client = evtsproxygrpc.NewEventsProxyAPIClient(r.eventsProxy.rpcClient.ClientConn)
 		r.eventsProxy.connectionAlive = true
-		log.Debug("reconnected with events proxy")
+		r.logger.Debugf("{%s} reconnected with events proxy", r.id)
 		r.eventsProxy.Unlock()
 		break
 	}
@@ -349,6 +354,7 @@ func (r *recorderImpl) reconnect() {
 
 // processFailedEvents helper function to process all the failed events
 func (r *recorderImpl) processFailedEvents() {
+	r.logger.Debugf("{%s} processing failed events (reading from the file)", r.id)
 	// make sure the previous thread (if there is) that is processing failed events
 	// is stopped, otherwise there will be 2 threads trying
 	// to re-send the failed events. As a result, there could be duplicates.
@@ -364,17 +370,18 @@ func (r *recorderImpl) processFailedEvents() {
 	defer r.failedEventsForwarder.Unlock()
 
 	if err := r.eventsFile.Rotate(); err != nil {
-		log.Errorf("failed to rotate recorder events file, err: %v", err)
+		r.logger.Errorf("{%s} failed to rotate recorder events file, err: %v", r.id, err)
 		return
 	}
 
 	// process the failed events from backed files
 	evts, filenames, err := r.eventsFile.GetEvents()
 	if err != nil {
-		log.Errorf("failed to get events file, err: %v", err)
+		r.logger.Errorf("{%s} failed to get events file, err: %v", r.id, err)
 		return
 	}
 
+	r.logger.Debugf("{%s} forwarding failed events (from the file) to evtsproxy: %v", r.id, events.Minify(evts))
 	// forward all the failed events to proxy
 	if err := r.forwardEvents(evts); err != nil {
 		return
@@ -394,7 +401,7 @@ func (r *recorderImpl) forwardEvents(evts []*evtsapi.Event) error {
 	_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &evtsapi.EventList{Items: evts})
 	r.eventsProxy.Unlock()
 	if err != nil {
-		log.Errorf("failed to re-send failed events, err: %v", err)
+		r.logger.Errorf("{%s} failed to re-send failed events, err: %v", r.id, err)
 	} else {
 		return nil
 	}
@@ -406,7 +413,7 @@ func (r *recorderImpl) forwardEvents(evts []*evtsapi.Event) error {
 			_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &evtsapi.EventList{Items: evts})
 			r.eventsProxy.Unlock()
 			if err != nil {
-				log.Errorf("failed to re-send failed events, err: %v", err)
+				r.logger.Errorf("{%s} failed to re-send failed events, err: %v", r.id, err)
 				continue
 			}
 

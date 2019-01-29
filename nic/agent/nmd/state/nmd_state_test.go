@@ -50,12 +50,14 @@ var (
 	// NIC to be rejected
 	nicKey3 = "6666.6666.6666"
 
+	logger = log.GetNewLogger(log.GetDefaultConfig("nmd_state_test"))
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nmd-state-test"},
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nmd_state_test"},
 		EvtTypes:      cmd.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 // Mock platform agent

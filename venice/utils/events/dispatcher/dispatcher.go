@@ -28,10 +28,10 @@ const (
 )
 
 // dispatcherImpl implements the `Dispatcher` interface. It is responsible for
-// dispatching events to all the registered writers.
+// dispatching events to all the registered exporters.
 type dispatcherImpl struct {
 	sync.Mutex                  // for protecting the dispatcher object
-	sendInterval  time.Duration // i.e, batch interval; events are sent to the writers in this interval
+	sendInterval  time.Duration // i.e, batch interval; events are sent to the exporters in this interval
 	dedupInterval time.Duration // events are de-duped for the given interval
 	logger        log.Logger    // logger
 
@@ -40,8 +40,8 @@ type dispatcherImpl struct {
 	dedupCache    *cache                 // in-memory cache to de-dup events
 	eventsBatcher *eventsBatcher         // batcher batches the list of events to be sent out in the next send (batch) interval
 
-	// any operation on writers (events distribution, registration, un-registration) should not stall the events pipeline
-	writers *eventWriters // event writers
+	// any operation on exporters (events distribution, registration, un-registration) should not stall the events pipeline
+	exporters *eventExporters // event exporters
 
 	start sync.Once // used for starting the dispatcher
 
@@ -51,18 +51,18 @@ type dispatcherImpl struct {
 	stopped  bool           // indicates whether the dispatcher is running or not
 }
 
-// upon registering the writer, each writers get a events channel to watch for
-// events. `eventWriters` maintains the list of registered writers.
-type eventWriters struct {
-	sync.Mutex                    // to protect the writers map without having to stall the events pipeline
-	list       map[string]*writer // map of writers with their name; writers are given a name during creation NewWriter(...).
+// upon registering the exporter, each exporter gets a events channel to watch for
+// events. `eventExporters` maintains the list of registered exporters.
+type eventExporters struct {
+	sync.Mutex                          // to protect the exporters map without having to stall the events pipeline
+	list       map[string]*evtsExporter // map of exporter with their name; exporters are given a name during creation NewExporter(...).
 }
 
-// writer ties the writer with it's associated channel receiving events and the offset tracker.
-type writer struct {
+// evtsExporter ties the exporter with it's associated channel receiving events and the offset tracker.
+type evtsExporter struct {
 	eventsCh      events.Chan
 	offsetTracker events.OffsetTracker
-	wr            events.Writer
+	wr            events.Exporter
 }
 
 // NewDispatcher creates a new dispatcher instance with the given send interval.
@@ -91,9 +91,9 @@ func NewDispatcher(dedupInterval, sendInterval time.Duration, eventsStorePath st
 		sendInterval:  sendInterval,
 		logger:        logger.WithContext("submodule", "events_dispatcher"),
 		dedupCache:    newDedupCache(dedupInterval),
-		eventsBatcher: newEventsBatcher(),
+		eventsBatcher: newEventsBatcher(logger),
 		eventsStore:   eventsStore,
-		writers:       &eventWriters{list: map[string]*writer{}},
+		exporters:     &eventExporters{list: map[string]*evtsExporter{}},
 		shutdown:      make(chan struct{}),
 	}
 
@@ -108,7 +108,7 @@ func (d *dispatcherImpl) Start() {
 
 		// start sending events from the cache
 		d.wg.Add(1)
-		go d.notifyWriters()
+		go d.notifyExporters()
 
 		d.logger.Info("started events dispatcher")
 	})
@@ -117,7 +117,7 @@ func (d *dispatcherImpl) Start() {
 // Action implements the action to be taken when the event reaches the dispatcher.
 // 1. Writes the events to persistent store.
 // 2. Add event to the de-dup cache.
-// 3. Add the de-duped event to the batch which will be sent to the writers.
+// 3. Add the de-duped event to the batch which will be sent to the exporters.
 func (d *dispatcherImpl) Action(event evtsapi.Event) error {
 	return d.addEvent(&event)
 }
@@ -153,131 +153,140 @@ func (d *dispatcherImpl) addEvent(event *evtsapi.Event) error {
 }
 
 // ProcessFailedEvents processes failed events; used to replay events during restarts based on the
-// bookmarked offset of each writer.
+// bookmarked offset of each exporter.
 func (d *dispatcherImpl) ProcessFailedEvents() {
 	d.Lock()
 	defer d.Unlock()
 
-	d.writers.Lock()
-	defer d.writers.Unlock()
+	d.exporters.Lock()
+	defer d.exporters.Unlock()
 
 	d.logger.Info("processing failed/pending events")
 
-	// get the current offset of the persistent store which will be bookmarked by the writers once the failed events are processed
+	// get the current offset of the persistent store which will be bookmarked by the exporters once the failed events are processed
 	currentEvtsOffset, err := d.eventsStore.GetCurrentOffset()
 	if err != nil {
 		d.logger.Errorf("couldn't get the current events file offset, err: %v", err)
 		return
 	}
 
-	// nothing in the events file to be sent to the writers
+	// nothing in the events file to be sent to the exporters
 	if currentEvtsOffset == 0 {
-		d.logger.Debugf("current events file offset is 0; nothing to be sent to the writers")
+		d.logger.Debugf("current events file offset is 0; nothing to be sent to the exporters")
 		return
 	}
 
-	for _, w := range d.writers.list {
-		writerName := w.wr.Name()
-		writerOffset, err := w.wr.GetLastProcessedOffset()
+	for _, w := range d.exporters.list {
+		exporterName := w.wr.Name()
+		exporterOffset, err := w.wr.GetLastProcessedOffset()
 		if err != nil {
-			d.logger.Errorf("cannot process failed/pending events; failed to get the bookmarked offset for writer {%s}, err: %v", writerName, err)
+			d.logger.Errorf("cannot process failed/pending events; failed to get the bookmarked offset for exporter {%s}, err: %v", exporterName, err)
 			continue
 		}
 
 		// get the list of events pending events from persistent store
-		evts, err := d.eventsStore.GetEventsFromOffset(writerOffset)
+		evts, err := d.eventsStore.GetEventsFromOffset(exporterOffset)
 		if err != nil {
-			d.logger.Errorf("cannot process failed/pending events; failed to get the events using offset {%v}", writerOffset)
+			d.logger.Errorf("cannot process failed/pending events; failed to get the events using offset {%v}", exporterOffset)
 			continue
 		}
 
 		if len(evts) > 0 {
+			d.logger.Infof("sending {%v} number of events to exporter {%s}, offset [%v...%v]", len(evts), exporterName, exporterOffset, currentEvtsOffset)
 			select {
 			case <-w.eventsCh.Stopped():
-				d.logger.Debugf("event receiver channel for writer {%s} stopped; cannot deliver events", writerName)
+				d.logger.Debugf("event receiver channel for exporter {%s} stopped; cannot deliver events", exporterName)
 			case w.eventsCh.Chan() <- newBatch(evts, currentEvtsOffset):
-				d.logger.Infof("sent failed/pending events to the writer {%s}", writerName)
+				d.logger.Infof("sent failed/pending events to the exporter {%s}", exporterName)
 			default: // to avoid blocking
-				d.logger.Debugf("could not send failed/pending events to the writer {%s}", writerName)
+				d.logger.Debugf("could not send failed/pending events to the exporter {%s}", exporterName)
 			}
+		} else {
+			d.logger.Debug("exporter in sync with the proxy; no backlog of events to be sent to the exporter {%s}", exporterName)
 		}
 	}
 }
 
-// RegisterWriter creates a watch channel and offset tracker for the caller and returns it.
+// RegisterExporter creates a watch channel and offset tracker for the caller and returns it.
 // the caller can watch the channel for events and once done, can stop the channel.
 // each channel maintains a name which is useful for stopping the watch. Offset tracker is used to
 // bookmark the offset.
-func (d *dispatcherImpl) RegisterWriter(w events.Writer) (events.Chan, events.OffsetTracker, error) {
+func (d *dispatcherImpl) RegisterExporter(w events.Exporter) (events.Chan, events.OffsetTracker, error) {
+	log.Debugf("registering exporter {%s}", w.Name())
 	d.Lock()
 	if d.stopped {
-		d.logger.Errorf("dispatcher stopped, cannot register writer: {%s}", w.Name())
+		d.logger.Errorf("dispatcher stopped, cannot register exporter: {%s}", w.Name())
 		d.Unlock()
-		return nil, nil, fmt.Errorf("dispatcher stopped, cannot register writers")
+		return nil, nil, fmt.Errorf("dispatcher stopped, cannot register exporter")
 	}
 	d.Unlock()
 
-	d.writers.Lock()
-	defer d.writers.Unlock()
+	d.exporters.Lock()
+	defer d.exporters.Unlock()
 
-	writerName := w.Name()
-	if _, ok := d.writers.list[writerName]; ok {
-		d.logger.Errorf("writer {%s} exists already", writerName)
-		return nil, nil, fmt.Errorf("writer with the given name exists already")
+	exporterName := w.Name()
+	if _, ok := d.exporters.list[exporterName]; ok {
+		d.logger.Errorf("exporter {%s} exists already", exporterName)
+		return nil, nil, fmt.Errorf("exporter with the given name exists already")
 	}
 
 	// to record and manage file offset
-	offsetTracker, err := newOffsetTracker(path.Join(d.eventsStore.GetStorePath(), "offset"), writerName)
+	offsetTracker, err := newOffsetTracker(path.Join(d.eventsStore.GetStorePath(), "offset"), exporterName)
 	if err != nil {
 		d.logger.Errorf("could not create offset tracker, err: %v", err)
-		return nil, nil, errors.Wrap(err, "failed to register writer")
+		return nil, nil, errors.Wrap(err, "failed to register exporter")
 	}
 
-	writerOffset, err := offsetTracker.GetOffset()
+	exporterOffset, err := offsetTracker.GetOffset()
 	if err != nil {
 		d.logger.Errorf("could not read from offset tracker, err: %v", err)
-		return nil, nil, errors.Wrap(err, "failed to register writer")
+		return nil, nil, errors.Wrap(err, "failed to register exporter")
 	}
 
-	// during restart, it is possible that the new writer could end up receiving more events than
-	// intended (ones that were generated before the writer registration). To avoid such issue, new writer
+	// during restart, it is possible that the new exporter could end up receiving more events than
+	// intended (ones that were generated before the exporter registration). To avoid such issue, new exporter
 	// is given the current events store offset. So, that it starts receiving events from now on(from current offset).
-	if writerOffset == 0 { // new writer
+	if exporterOffset == 0 { // new exporter
 		esCurrOffset, err := d.eventsStore.GetCurrentOffset()
 		if err != nil {
 			d.logger.Errorf("could not read current events store offset, err: %v", err)
-			return nil, nil, errors.Wrap(err, "failed to register writer")
+			return nil, nil, errors.Wrap(err, "failed to register exporter")
 		}
 
 		if err := offsetTracker.UpdateOffset(esCurrOffset); err != nil {
-			d.logger.Errorf("could not update the writer offset, err: %v", err)
-			return nil, nil, errors.Wrap(err, "failed to register writer")
+			d.logger.Errorf("could not update the exporter offset, err: %v", err)
+			return nil, nil, errors.Wrap(err, "failed to register exporter")
 		}
+
+		exporterOffset = esCurrOffset
+	} else {
+		d.logger.Errorf("exporter {%s} restarting from offset: %v", exporterName, exporterOffset)
 	}
 
 	e := newEventsChan(w.ChLen())
-	d.writers.list[writerName] = &writer{eventsCh: e, offsetTracker: offsetTracker, wr: w}
-	d.logger.Debugf("writer {%s} registered with the dispatcher successfully", writerName)
+	d.exporters.list[exporterName] = &evtsExporter{eventsCh: e, offsetTracker: offsetTracker, wr: w}
+	d.logger.Debugf("exporter {%s} registered with the dispatcher successfully, will start receiving events from offset: %v", exporterName, exporterOffset)
 
 	return e, offsetTracker, nil
 }
 
-// UnregisterWriter removes the writer identified by given name from the list of writers. As a result
+// UnregisterExporter removes the exporter identified by given name from the list of exporters. As a result
 // the channel associated with the given name will no more receive the events
 // from the dispatcher. And, offset tracker will be stopped as well.
-// call does nothing if the writer identified by given name is not found in the dispatcher's writer list.
-func (d *dispatcherImpl) UnregisterWriter(name string) {
-	d.writers.Lock()
-	if w, ok := d.writers.list[name]; ok {
-		delete(d.writers.list, name)
+// call does nothing if the exporter identified by given name is not found in the dispatcher's exporter list.
+func (d *dispatcherImpl) UnregisterExporter(name string) {
+	log.Debugf("unregistering exporter {%s}", name)
+	d.exporters.Lock()
+	if w, ok := d.exporters.list[name]; ok {
+		delete(d.exporters.list, name)
 		w.eventsCh.Stop()
-		d.logger.Debugf("writer {%s} unregistered from the dispatcher successfully", name)
+		d.logger.Debugf("exporter {%s} unregistered from the dispatcher successfully", name)
 	}
-	d.writers.Unlock()
+	d.exporters.Unlock()
 }
 
 // Shutdown sends shutdown signal to the notifier, flushes all the de-duped events to all
-// registered writers and closes all the writers.
+// registered exporters and closes all the exporters.
 func (d *dispatcherImpl) Shutdown() {
 	d.stop.Do(func() {
 		d.Lock()
@@ -288,8 +297,8 @@ func (d *dispatcherImpl) Shutdown() {
 		// wait for the notifier to complete
 		d.wg.Wait()
 
-		// process the pending events and send to writers
-		d.logger.Debug("flush the batched events to registered writers")
+		// process the pending events and send to exporters
+		d.logger.Debug("flush the batched events to registered exporters")
 		d.Lock()
 		evts := d.eventsBatcher.getEvents()
 		offset, err := d.eventsStore.GetCurrentOffset()
@@ -299,20 +308,50 @@ func (d *dispatcherImpl) Shutdown() {
 			d.distributeEvents(evts, offset)
 		}
 
+		// wait for a sec to let the exporters finish processing flushed events
+		var wg sync.WaitGroup
+		var maxRetries = 10
+		var retryDelay = 100 * time.Millisecond
+
+		d.exporters.Lock()
+		d.logger.Info("waiting (1s) for the exporters to finish processing flushed events")
+		for _, w := range d.exporters.list {
+			wg.Add(1)
+			go func(w *evtsExporter) {
+				defer wg.Done()
+				_, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+					exporterOffset, err := w.offsetTracker.GetOffset()
+					if err != nil {
+						return false, err
+					}
+					if exporterOffset == offset {
+						return true, nil
+					}
+					return false, fmt.Errorf("failed to flush events to exporter {%s}", w.wr.Name())
+				}, retryDelay, maxRetries)
+
+				if err != nil {
+					d.logger.Error(err)
+				}
+			}(w)
+		}
+		wg.Wait()
+		d.exporters.Unlock()
+
 		d.eventsStore.Close()
 		d.Unlock()
 
-		// close all the writers
-		d.closeAllWriters()
+		// close all the exporters
+		d.closeAllExporters()
 
-		d.logger.Debugf("dispatcher shutdown")
+		d.logger.Debugf("dispatcher shutdown, current events store offset {%v}", offset)
 	})
 }
 
-// notifyWriters is a daemon which processes the de-duped/cached events every send interval
-// and distributes it to all the writers. This daemon stops when it receives shutdown
+// notifyExporters is a daemon which processes the de-duped/cached events every send interval
+// and distributes it to all the exporters. This daemon stops when it receives shutdown
 // signal.
-func (d *dispatcherImpl) notifyWriters() {
+func (d *dispatcherImpl) notifyExporters() {
 	ticker := time.NewTicker(d.sendInterval)
 	defer d.wg.Done()
 
@@ -342,27 +381,27 @@ func (d *dispatcherImpl) notifyWriters() {
 	}
 }
 
-// distributeEvents helper function to distribute given event list and offset to all writers.
+// distributeEvents helper function to distribute given event list and offset to all exporters.
 func (d *dispatcherImpl) distributeEvents(evts []*evtsapi.Event, offset int64) {
 	if len(evts) == 0 {
 		return
 	}
 
-	d.writers.Lock()
-	defer d.writers.Unlock()
+	d.exporters.Lock()
+	defer d.exporters.Unlock()
 
 	resp := newBatch(evts, offset)
 	// notify all the watchers
-	for _, w := range d.writers.list {
+	for _, w := range d.exporters.list {
 		select {
 		case <-w.eventsCh.Stopped():
-			d.logger.Debugf("writer event channel {%s} stopped; cannot deliver events", w.wr.Name())
+			d.logger.Debugf("exporter event channel {%s} stopped; cannot deliver events", w.wr.Name())
 		case w.eventsCh.Chan() <- resp:
-			// slow writers will block this. So, it is highly recommended to set a large enough
+			// slow exporters will block this. So, it is highly recommended to set a large enough
 			// channel length for them.
 		default:
-			d.logger.Debugf("writer event channel {%s} failed to receive events", w.wr.Name())
-			// for non-blocking send; writer failing to receive the event for a any reason (channel full)
+			d.logger.Debugf("exporter event channel {%s} failed to receive events", w.wr.Name())
+			// for non-blocking send; exporter failing to receive the event for a any reason (channel full)
 			// will lose the event.
 		}
 	}
@@ -382,15 +421,15 @@ func (d *dispatcherImpl) writeToEventsStore(event *evtsapi.Event) error {
 	return nil
 }
 
-// dedupAndBatch dedups the given event and adds it to the batch to be sent to the writers.
+// dedupAndBatch dedups the given event and adds it to the batch to be sent to the exporters.
 func (d *dispatcherImpl) dedupAndBatch(hashKey string, event *evtsapi.Event) error {
 	evt := *event
 
 	// look for potential de-duplication
 	srcCache := d.getCacheByEventSource(event.GetSource())
 	if existingEvt, ok := srcCache.Get(hashKey); ok { // found, update the count of the existing event and timestamp
-		d.logger.Debugf("event {%s} found in cache, updating the counter and timestamp", event.GetSelfLink())
 		evt = existingEvt.(evtsapi.Event)
+		d.logger.Debugf("event {%s} found in cache, deduping with event {%s}", event.GetName(), evt.GetName())
 
 		// update count and timestamp
 		timestamp, _ := types.TimestampProto(time.Now())
@@ -406,19 +445,19 @@ func (d *dispatcherImpl) dedupAndBatch(hashKey string, event *evtsapi.Event) err
 	return nil
 }
 
-// closeAllWriters helper function to close all the writers
-func (d *dispatcherImpl) closeAllWriters() {
-	d.logger.Debug("closing all the registered writers")
-	d.writers.Lock()
-	defer d.writers.Unlock()
+// closeAllExporters helper function to close all the exporters
+func (d *dispatcherImpl) closeAllExporters() {
+	d.logger.Debug("closing all the registered exporters")
+	d.exporters.Lock()
+	defer d.exporters.Unlock()
 
-	for _, w := range d.writers.list {
-		delete(d.writers.list, w.wr.Name())
+	for _, w := range d.exporters.list {
+		delete(d.exporters.list, w.wr.Name())
 		w.eventsCh.Stop()
 	}
 
 	// efficient than deleting the elements one by one
-	d.writers.list = map[string]*writer{}
+	d.exporters.list = map[string]*evtsExporter{}
 }
 
 // getCacheByEventSource helper function that fetches the underlying cache of the given source.

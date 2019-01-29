@@ -12,7 +12,7 @@ import (
 // to the caller upon calling dispatcher's `RegisterWriter()`. The caller
 // can watch for events using the resultCh.
 type eventsChanImpl struct {
-	resultCh chan events.Batch // channel where the events and file offset are sent to the writers
+	resultCh chan events.Batch // channel where the events and file offset are sent to the exporters
 	stopped  chan struct{}     // used for closing the channel
 	stop     sync.Once         // used for closing the channel
 }

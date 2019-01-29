@@ -36,7 +36,7 @@ var (
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "evtsmgr_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 // adds the given service to mock resolver

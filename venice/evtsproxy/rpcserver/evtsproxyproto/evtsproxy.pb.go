@@ -48,8 +48,8 @@ const _ = grpc.SupportPackageIsVersion4
 
 type EventsProxyAPIClient interface {
 	// recorder will forward the event to proxy which will be channeled to the
-	// dispatcher where the event gets deduped and distributed to the writers
-	// (events manager, events exporter, etc.). event recorder connects only
+	// dispatcher where the event gets deduped and distributed to the exporters
+	// (venice events manager, third-party events exporter, etc.). event recorder connects only
 	// with proxy; proxy handles rest of the workflow.
 	ForwardEvent(ctx context.Context, in *events.Event, opts ...grpc.CallOption) (*api1.Empty, error)
 	// recorder can buffer events when the proxy is unavailable and send
@@ -87,8 +87,8 @@ func (c *eventsProxyAPIClient) ForwardEvents(ctx context.Context, in *events.Eve
 
 type EventsProxyAPIServer interface {
 	// recorder will forward the event to proxy which will be channeled to the
-	// dispatcher where the event gets deduped and distributed to the writers
-	// (events manager, events exporter, etc.). event recorder connects only
+	// dispatcher where the event gets deduped and distributed to the exporters
+	// (venice events manager, third-party events exporter, etc.). event recorder connects only
 	// with proxy; proxy handles rest of the workflow.
 	ForwardEvent(context.Context, *events.Event) (*api1.Empty, error)
 	// recorder can buffer events when the proxy is unavailable and send

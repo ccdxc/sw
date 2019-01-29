@@ -1,6 +1,6 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-package writers
+package exporters
 
 import (
 	"fmt"
@@ -38,7 +38,7 @@ var (
 
 // mock events channel implementation
 type mockEventChanImpl struct {
-	result  chan events.Batch // channel where the events are sent to the writers
+	result  chan events.Batch // channel where the events are sent to the exporters
 	stop    sync.Once
 	stopped chan struct{}
 }
@@ -55,7 +55,7 @@ func (e *mockEventChanImpl) Stop() {
 	})
 }
 
-// Chan returns the channel which transmits events to writer
+// Chan returns the channel which transmits events to exporter
 func (e *mockEventChanImpl) Chan() chan events.Batch {
 	return e.result
 }
@@ -81,7 +81,7 @@ func (e *mockBatch) GetOffset() int64 {
 	return e.offset
 }
 
-// newMockBatch creates a new chan response which will be sent out to writer
+// newMockBatch creates a new chan response which will be sent out to exporter
 func newMockBatch(events []*evtsapi.Event, offset int64) events.Batch {
 	return &mockBatch{events: events, offset: offset}
 }
@@ -114,9 +114,9 @@ func (e *mockOffsetTrackerImpl) Stop() error {
 	return nil
 }
 
-// TestMockEventsWriter tests mock writer
-func TestMockEventsWriter(t *testing.T) {
-	logger := log.GetNewLogger(log.GetDefaultConfig("mock_writer_test"))
+// TestMockEventsExporter tests mock exporter
+func TestMockEventsExporter(t *testing.T) {
+	logger := log.GetNewLogger(log.GetDefaultConfig("mock_exporter_test"))
 	mockEventsChan := &mockEventChanImpl{
 		result:  make(chan events.Batch, mockBufferLen),
 		stopped: make(chan struct{}),
@@ -124,13 +124,13 @@ func TestMockEventsWriter(t *testing.T) {
 
 	mockOffsetTracker := &mockOffsetTrackerImpl{}
 
-	// create writer
-	mockWriter := NewMockWriter("mock", mockBufferLen, logger)
-	mockWriter.Start(mockEventsChan, mockOffsetTracker)
-	defer mockWriter.Stop()
+	// create exporter
+	mockExporter := NewMockExporter("mock", mockBufferLen, logger)
+	mockExporter.Start(mockEventsChan, mockOffsetTracker)
+	defer mockExporter.Stop()
 
-	Assert(t, mockWriter.Name() == "mock", "expected `mock`")
-	Assert(t, mockWriter.ChLen() == mockBufferLen, "expected %d", mockBufferLen)
+	Assert(t, mockExporter.Name() == "mock", "expected `mock`")
+	Assert(t, mockExporter.ChLen() == mockBufferLen, "expected %d", mockBufferLen)
 
 	// send different events of same type (with the count = 1)
 	var evts []*evtsapi.Event
@@ -141,11 +141,11 @@ func TestMockEventsWriter(t *testing.T) {
 		evts = append(evts, &temp)
 	}
 
-	// send events to mock writer
+	// send events to mock exporter
 	mockEventsChan.result <- newMockBatch(evts, 0)
 
 	AssertEventually(t, func() (bool, interface{}) {
-		obtained := mockWriter.GetEventsByType("TEST")
+		obtained := mockExporter.GetEventsByType("TEST")
 		if obtained == 10 {
 			return true, nil
 		}
@@ -163,7 +163,7 @@ func TestMockEventsWriter(t *testing.T) {
 	mockEventsChan.result <- newMockBatch(evts, 0)
 
 	AssertEventually(t, func() (bool, interface{}) {
-		obtained := mockWriter.GetEventByUUID(temp.GetUUID())
+		obtained := mockExporter.GetEventByUUID(temp.GetUUID())
 		if obtained != nil && obtained.GetCount() == 10 {
 			return true, nil
 		}
@@ -202,8 +202,8 @@ func TestMockEventsWriter(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		src := &evtsapi.EventSource{Component: fmt.Sprintf("comp%d", i), NodeName: fmt.Sprintf("node%d", i)}
 		AssertEventually(t, func() (bool, interface{}) {
-			type1 := mockWriter.GetEventsBySourceAndType(src, evtType1)
-			type2 := mockWriter.GetEventsBySourceAndType(src, evtType1)
+			type1 := mockExporter.GetEventsBySourceAndType(src, evtType1)
+			type2 := mockExporter.GetEventsBySourceAndType(src, evtType1)
 			if type1 == 5 && type2 == 5 {
 				return true, nil
 			}
@@ -212,7 +212,7 @@ func TestMockEventsWriter(t *testing.T) {
 		}, "unexpected unique number of events", string("20ms"), string("2s"))
 	}
 
-	Assert(t, mockWriter.GetEventByUUID("xxx") == nil, "expected failure, get by dummy uuid succeeded")
-	Assert(t, mockWriter.GetEventsByType("xxx") == 0, "expected failure, get by dummy type succeeded")
-	Assert(t, mockWriter.GetEventsBySourceAndType(nil, "xxx") == 0, "expected failure, get by dummy source and type succeeded")
+	Assert(t, mockExporter.GetEventByUUID("xxx") == nil, "expected failure, get by dummy uuid succeeded")
+	Assert(t, mockExporter.GetEventsByType("xxx") == 0, "expected failure, get by dummy type succeeded")
+	Assert(t, mockExporter.GetEventsBySourceAndType(nil, "xxx") == 0, "expected failure, get by dummy source and type succeeded")
 }

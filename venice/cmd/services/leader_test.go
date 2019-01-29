@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pensando/sw/venice/utils/log"
+
 	"fmt"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
@@ -35,7 +37,7 @@ func setupTestCluster(t *testing.T, tmpDir string) (*integration.ClusterV3, kvst
 		Source:        &evtsapi.EventSource{NodeName: "test", Component: "cmd"},
 		EvtTypes:      cmd.GetEventTypes(),
 		BackupDir:     tmpDir,
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, log.GetNewLogger(log.GetDefaultConfig(t.Name())))
 	if err != nil {
 		t.Fatalf("Failed to create recorder, error: %v", err)
 	}

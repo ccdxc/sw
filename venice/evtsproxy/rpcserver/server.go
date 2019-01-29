@@ -50,7 +50,7 @@ func NewRPCServer(serverName, listenURL string, evtsDispatcher events.Dispatcher
 
 	// instantiate a events proxy handler which carries the implementation of the
 	// events proxy service
-	eph, err := NewEvtsProxyRPCHandler(evtsDispatcher)
+	eph, err := NewEvtsProxyRPCHandler(evtsDispatcher, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating rpc server")
 	}

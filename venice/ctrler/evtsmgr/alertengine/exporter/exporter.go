@@ -45,7 +45,6 @@ type AlertExporter struct {
 	apiClient    apiclient.Services    // API server client
 	logger       log.Logger            // logger
 	destinations map[string][]Exporter // map of destination names and it's respective list of exporters
-	wg           sync.WaitGroup        // to stop exporter
 	stop         chan struct{}         // to stop exporter
 	once         sync.Once             // to make stop idempotent
 }

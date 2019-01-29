@@ -14,12 +14,14 @@ import (
 // EvtsProxyRPCHandler handles all event proxy RPC calls
 type EvtsProxyRPCHandler struct {
 	dispatcher events.Dispatcher
+	logger     log.Logger
 }
 
 // NewEvtsProxyRPCHandler returns a events proxy RPC handler
-func NewEvtsProxyRPCHandler(evtsDispatcher events.Dispatcher) (*EvtsProxyRPCHandler, error) {
+func NewEvtsProxyRPCHandler(evtsDispatcher events.Dispatcher, logger log.Logger) (*EvtsProxyRPCHandler, error) {
 	return &EvtsProxyRPCHandler{
 		dispatcher: evtsDispatcher,
+		logger:     logger,
 	}, nil
 }
 
@@ -27,7 +29,7 @@ func NewEvtsProxyRPCHandler(evtsDispatcher events.Dispatcher) (*EvtsProxyRPCHand
 func (e *EvtsProxyRPCHandler) ForwardEvent(ctx context.Context, event *evtsapi.Event) (*api.Empty, error) {
 	err := e.dispatcher.Action(*event)
 	if err != nil {
-		log.Errorf("failed to forward event {%s} from the proxy, err: %v", event.GetUUID(), err)
+		e.logger.Errorf("failed to forward event {%s} from the proxy, err: %v", event.GetUUID(), err)
 	}
 
 	return &api.Empty{}, err
@@ -38,7 +40,7 @@ func (e *EvtsProxyRPCHandler) ForwardEvents(ctx context.Context, events *evtsapi
 	for _, event := range events.GetItems() {
 		temp := *event
 		if err := e.dispatcher.Action(temp); err != nil {
-			log.Errorf("failed to forward event {%s} from the proxy, err: %v", temp.GetUUID(), err)
+			e.logger.Errorf("failed to forward event {%s} from the proxy, err: %v", temp.GetUUID(), err)
 
 			// dispatcher could have been stopped; throw error so, that the caller retries.
 			// any failure here could result in duplicate events from the recorder
@@ -51,5 +53,5 @@ func (e *EvtsProxyRPCHandler) ForwardEvents(ctx context.Context, events *evtsapi
 
 // Stop stops/closes all the underlying connections with rest of venice components
 func (e *EvtsProxyRPCHandler) Stop() {
-	e.dispatcher.Shutdown() // closes all the event channels and offset trackers; as the writers the writers will be closed
+	e.dispatcher.Shutdown() // closes all the event channels and offset trackers; no more exports
 }

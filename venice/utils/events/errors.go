@@ -10,6 +10,7 @@ const (
 	ErrInvalidEventType
 	ErrInvalidSeverity
 	ErrMissingEventAttributes
+	ErrEmptyEventsFile
 )
 
 // error code map with the description
@@ -18,6 +19,7 @@ var errors = map[int]string{
 	ErrInvalidEventType:       "Invalid event type",
 	ErrInvalidSeverity:        "Invalid event severity",
 	ErrMissingEventAttributes: "Missing event attributes",
+	ErrEmptyEventsFile:        "Empty events file",
 }
 
 // Error represents the elastic error.
@@ -46,6 +48,15 @@ func NewError(errorCode int, cause string) *Error {
 func IsMissingEventAttributes(err error) bool {
 	if cErr, ok := err.(*Error); ok {
 		return cErr.Code == ErrMissingEventAttributes
+	}
+
+	return false
+}
+
+// IsEmptyEventsFile returns true if the error code is ErrEmptyEventsFile.
+func IsEmptyEventsFile(err error) bool {
+	if cErr, ok := err.(*Error); ok {
+		return cErr.Code == ErrEmptyEventsFile
 	}
 
 	return false

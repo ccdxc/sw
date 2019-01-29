@@ -12,16 +12,15 @@ import (
 	"time"
 
 	es "github.com/olivere/elastic"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apiserver"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
-	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
@@ -45,7 +44,7 @@ var (
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "events_integ_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, log.GetNewLogger(log.GetDefaultConfig("events_integ_test")))
 )
 
 // tInfo represents test info.
@@ -59,7 +58,7 @@ type tInfo struct {
 	apiServer           apiserver.Server             // venice API server
 	apiServerAddr       string                       // API server address
 	evtsMgr             *evtsmgr.EventsManager       // events manager to write events to elastic
-	evtsProxy           *evtsproxy.EventsProxy       // events proxy to receive and distribute events
+	evtProxyServices    *testutils.EvtProxyServices  // events proxy to receive and distribute events
 	proxyEventsStoreDir string                       // local events store directory
 	dedupInterval       time.Duration                // events dedup interval
 	batchInterval       time.Duration                // events batch interval
@@ -74,9 +73,10 @@ func (t *tInfo) setup(tst *testing.T) error {
 	var err error
 	logConfig := log.GetDefaultConfig("events_test")
 	logConfig.Format = log.JSONFmt
+	logConfig.Filter = log.AllowAllFilter
 	logConfig.Debug = true
 
-	t.logger = log.GetNewLogger(logConfig)
+	t.logger = log.GetNewLogger(logConfig).WithContext("t_name", tst.Name())
 	t.mockResolver = mockresolver.New()
 
 	// start certificate server
@@ -87,7 +87,7 @@ func (t *tInfo) setup(tst *testing.T) error {
 
 	t.signer, _, t.trustRoots, err = testutils.GetCAKit()
 	if err != nil {
-		log.Errorf("Error getting CA artifacts: %v", err)
+		t.logger.Errorf("Error getting CA artifacts: %v", err)
 		return err
 	}
 
@@ -101,20 +101,20 @@ func (t *tInfo) setup(tst *testing.T) error {
 
 	// start elasticsearch
 	if err = t.startElasticsearch(); err != nil {
-		log.Errorf("failed to start elasticsearch, err: %v", err)
+		t.logger.Errorf("failed to start elasticsearch, err: %v", err)
 		return err
 	}
 
 	// create elasticsearch client
 	if err = t.createElasticClient(); err != nil {
-		log.Errorf("failed to create elasticsearch client, err: %v", err)
+		t.logger.Errorf("failed to create elasticsearch client, err: %v", err)
 		return err
 	}
 
 	// start API server
 	t.apiServer, t.apiServerAddr, err = serviceutils.StartAPIServer(testURL, tst.Name(), t.logger)
 	if err != nil {
-		log.Errorf("failed to start API server, err: %v", err)
+		t.logger.Errorf("failed to start API server, err: %v", err)
 		return err
 	}
 	t.updateResolver(globals.APIServer, t.apiServerAddr)
@@ -122,19 +122,19 @@ func (t *tInfo) setup(tst *testing.T) error {
 	// start events manager
 	evtsMgr, evtsMgrURL, err := testutils.StartEvtsMgr(testURL, t.mockResolver, t.logger, t.esClient)
 	if err != nil {
-		log.Errorf("failed to start events manager, err: %v", err)
+		t.logger.Errorf("failed to start events manager, err: %v", err)
 		return err
 	}
 	t.evtsMgr = evtsMgr
 	t.updateResolver(globals.EvtsMgr, evtsMgrURL)
 
 	// start events proxy
-	evtsProxy, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(testURL, t.mockResolver, t.logger, t.dedupInterval, t.batchInterval)
+	evtProxyServices, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(testURL, t.mockResolver, t.logger, t.dedupInterval, t.batchInterval, "")
 	if err != nil {
-		log.Errorf("failed to start events proxy, err: %v", err)
+		t.logger.Errorf("failed to start events proxy, err: %v", err)
 		return err
 	}
-	t.evtsProxy = evtsProxy
+	t.evtProxyServices = evtProxyServices
 	t.proxyEventsStoreDir = tmpProxyDir
 	t.updateResolver(globals.EvtsProxy, evtsProxyURL)
 
@@ -157,7 +157,7 @@ func (t *tInfo) teardown() {
 	testutils.StopElasticsearch(t.elasticsearchName, t.elasticsearchDir)
 
 	t.evtsMgr.Stop()
-	t.evtsProxy.Stop()
+	t.evtProxyServices.Stop()
 	t.apiServer.Stop()
 	// stop certificate server
 	testutils.CleanupIntegTLSProvider()
@@ -212,11 +212,25 @@ func (t *tInfo) assertElasticTotalEvents(te *testing.T, query es.Query, exact bo
 			var totalEventsReceived int
 			var evt evtsapi.Event
 
-			resp, err := t.esClient.Search(context.Background(), elastic.GetIndex(globals.Events, globals.DefaultTenant), indexType, query, nil, 0, 10000, sortByField, sortAsc)
+			// total number of docs/events available (single events and de-duped events)
+
+			// 1. query single events, count = 1
+			singleEvents := es.NewBoolQuery()
+			singleEvents.Must(query, es.NewRangeQuery("count").Lte(1).Gt(0))
+			// count = 1
+			resp, err := t.esClient.Search(context.Background(), elastic.GetIndex(globals.Events, globals.DefaultTenant), indexType, singleEvents, nil, 0, 10, sortByField, sortAsc)
 			if err != nil {
 				return false, err
 			}
+			totalEventsReceived += int(resp.TotalHits())
 
+			// 2. query de-duped events, count>1
+			dedupedEvents := es.NewBoolQuery()
+			dedupedEvents.Must(query, es.NewRangeQuery("count").Gt(1))
+			resp, err = t.esClient.Search(context.Background(), elastic.GetIndex(globals.Events, globals.DefaultTenant), indexType, dedupedEvents, nil, 0, 10000, sortByField, sortAsc)
+			if err != nil {
+				return false, err
+			}
 			for _, hit := range resp.Hits.Hits {
 				_ = json.Unmarshal(*hit.Source, &evt)
 				totalEventsReceived += int(evt.GetCount())
@@ -233,7 +247,7 @@ func (t *tInfo) assertElasticTotalEvents(te *testing.T, query es.Query, exact bo
 			}
 
 			return true, nil
-		}, "couldn't get the expected number of total events", "20ms", timeout)
+		}, "couldn't get the expected number of total events", "100ms", timeout)
 }
 
 // assertElasticUniqueEvents helper function to assert events received by elastic with the total unique events sent.

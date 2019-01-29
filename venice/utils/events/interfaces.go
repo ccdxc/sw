@@ -6,13 +6,13 @@ import (
 	"github.com/pensando/sw/api/generated/events"
 )
 
-// from Venice, Events Recorder -> Events Proxy -> {Events Dispatcher -> Events Writers}
+// from Venice, Events Recorder -> Events Proxy -> {Events Dispatcher -> Events Exporters}
 //
-// Event dispatcher and writers are library modules that are shared between
+// Event dispatcher and exporters are library modules that are shared between
 // venice and NAPLES.
 //
 // Recorder calls are returned from the proxy. Further processing at the
-// dispatcher and the writers are asynchronous.
+// dispatcher and the exporters are asynchronous.
 
 // Recorder records events on behalf of the events sources.
 // This will carry the event source and list of supported event types.
@@ -26,45 +26,46 @@ type Recorder interface {
 	// Otherwise, it will be created under the default tenant `globals.DefaultTenant` and `globals.DefaultNamespace`.
 	//
 	// eventType should be one of the valid event type
-	// severity shoule be one of INFO, WARNING, CRITICAL
+	// severity should be one of INFO, WARNING, CRITICAL
 	// message is a free form text explaining the reason of the event
 	Event(eventType string, severity events.SeverityLevel, message string, objRef interface{})
+
 	// StartExport to start the client
 	StartExport()
 }
 
 // Dispatcher processes all the incoming events for any duplication to avoid
 // overwhelming the system with events.
-// 1. Dispatcher performs deduplication and batching. Dedup interval spans for a longer period than batch/send interval.
-// 2. Dispatcher batches the deduped events and distributes it to all the registered writers.
-// 3. Dispatcher maintains a dedup cache for each event source separtely.
+// 1. Dispatcher performs de-duplication and batching. De-dup interval spans for a longer period than batch/send interval.
+// 2. Dispatcher batches the de-duped events and distributes it to all the registered exporters.
+// 3. Dispatcher maintains a de-dup cache for each event source separately.
 // Events Proxy -> Events Dispatcher
 type Dispatcher interface {
-	// event writers or other processes can register themselves to get notified of
+	// event exporters or other processes can register themselves to get notified of
 	// the events.
-	RegisterWriter(Writer) (Chan, OffsetTracker, error)
+	RegisterExporter(Exporter) (Chan, OffsetTracker, error)
 
-	// removes the writer identified by given name from the list of registered writers.
-	UnregisterWriter(name string)
+	// removes the exporter identified by given name from the list of registered exporters.
+	UnregisterExporter(name string)
 
 	// start notifying the writers of the events
 	Start()
 
 	// dispatcher stops accepting any more events once shutdown is issued. And, it
 	// flushes all the pending(cached) events from the dispatcher to all the
-	// writers. This flushes all the sources and will be called during palnned maintence/upgrade.
+	// exporters. This flushes all the sources and will be called during planned maintenance/upgrade.
 	Shutdown()
 
 	// action to be performed by the proxy when an event is received from the recorder.
 	Action(event events.Event) error
 
-	// used to re-play failed events during restarts. Interally, it queries the bookmarked offset
-	// of each writer, reads and sends the events from that offset.
+	// used to re-play failed events during restarts. Internally, it queries the bookmarked offset
+	// of each exporter, reads and sends the events from that offset.
 	ProcessFailedEvents()
 }
 
 // Chan represents the channel that will be used by the dispatcher to send
-// events to the registered writers.
+// events to the registered exporters.
 type Chan interface {
 	// closes the channel gracefully
 	Stop()
@@ -75,12 +76,12 @@ type Chan interface {
 	// returns a channel which gets notified when the result channel stops
 	Stopped() <-chan struct{}
 
-	// returns the underlying channel which transmits events from dispatcher to writer
+	// returns the underlying channel which transmits events from dispatcher to exporter
 	Chan() chan Batch
 }
 
-// Batch represents the list of events and offset which is sent to the writers.
-// the writers can update the offset once the sent events are processed.
+// Batch represents the list of events and offset which is sent to the exporters.
+// the exporters can update the offset once the sent events are processed.
 type Batch interface {
 	// returns the list of events
 	GetEvents() []*events.Event
@@ -89,34 +90,34 @@ type Batch interface {
 	GetOffset() int64
 }
 
-// Writer - all the writers (venice, syslog, etc.) should implement the functions
-// defined here. Each writer maintains the offset which indicates the events till that
+// Exporter - all the exporters (venice, syslog, etc.) should implement the functions
+// defined here. Each exporter maintains the offset which indicates the events till that
 // point is successfully processed.
-type Writer interface {
-	// starts the writer(s) to process the events
+type Exporter interface {
+	// starts the exporter to process the events
 	Start(Chan, OffsetTracker)
 
-	// stop the writer; the writer will not receive any more events from the dispatcher once stopped
+	// stop the exporter; the exporter will not receive any more events from the dispatcher once stopped
 	Stop()
 
 	// writes list of events to the targeted destination
 	WriteEvents(events []*events.Event) error
 
-	// returns the name of the writer
+	// returns the name of the exporter
 	Name() string
 
 	// returns the length of the channel; this is used to set the channel length at the dispatcher
 	ChLen() int
 
 	// returns the last bookmarked offset i.e, the point till where it was successful
-	// when the proxy restarts, it starts processing events from this offset for this writer to avoid
+	// when the proxy restarts, it starts processing events from this offset for this exporter to avoid
 	// losing any event.
 	GetLastProcessedOffset() (int64, error)
 
 	// TODO Filters()
 }
 
-// OffsetTracker helper to help the writers update offset.
+// OffsetTracker helper to help the exporters update offset.
 type OffsetTracker interface {
 	// updates/bookmarks the offset to the given value
 	UpdateOffset(int64) error
@@ -131,7 +132,7 @@ type PersistentStore interface {
 	// writes the given data to persistent store
 	Write(data []byte) error
 
-	// returns the current offset of the persistent store; this is used by the writers to bookmark.
+	// returns the current offset of the persistent store; this is used by the exporters to bookmark.
 	GetCurrentOffset() (int64, error)
 
 	// returns the list of events starting from the given offset.

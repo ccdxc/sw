@@ -17,6 +17,35 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
+// CreateEventPolicyObj helper function to create event policy object with the given params.
+func CreateEventPolicyObj(tenant, namespace, name, format string, targets []*monitoring.ExportConfig,
+	syslogConfig *monitoring.SyslogExportConfig) *monitoring.EventPolicy {
+	creationTime, _ := types.TimestampProto(time.Now())
+
+	eventPolicyObj := &monitoring.EventPolicy{
+		TypeMeta: api.TypeMeta{Kind: "EventPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			UUID:      name,
+			Tenant:    tenant,
+			Namespace: namespace,
+			CreationTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *creationTime,
+			},
+		},
+		Spec: monitoring.EventPolicySpec{
+			Format:       format,
+			Targets:      targets,
+			SyslogConfig: syslogConfig,
+		},
+	}
+
+	return eventPolicyObj
+}
+
 // CreateEventObj helper function to create event object with the given params.
 func CreateEventObj(tenant, namespace, name, eType, severity, message string) *evtsapi.Event {
 	creationTime, _ := types.TimestampProto(time.Now())
@@ -41,7 +70,6 @@ func CreateEventObj(tenant, namespace, name, eType, severity, message string) *e
 			Message:  message,
 		},
 	}
-
 	return eventObj
 }
 

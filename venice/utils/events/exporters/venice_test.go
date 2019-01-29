@@ -1,6 +1,6 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-package writers
+package exporters
 
 import (
 	"context"
@@ -40,18 +40,18 @@ var (
 	sortByField = ""
 	sortAsc     = true
 
-	logger = log.GetNewLogger(log.GetDefaultConfig("venice_writer_test"))
-	mr     = mockresolver.New() // create mock resolver
+	vLogger = log.GetNewLogger(log.GetDefaultConfig("venice_exporter_test"))
+	mr      = mockresolver.New() // create mock resolver
 
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice_writer_test"},
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice_exporter_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, vLogger)
 )
 
-// This file tests venice writer using events manager -> mock elasticsearch
+// This file tests venice exporter using events manager -> mock elasticsearch
 
 // adds the given service to mock resolver
 func addMockService(mr *mockresolver.ResolverClient, serviceName, serviceURL string) {
@@ -67,15 +67,15 @@ func addMockService(mr *mockresolver.ResolverClient, serviceName, serviceURL str
 	})
 }
 
-// setup creates events manager service, venice writer and elastic client
-func setup(t *testing.T) (*mockes.ElasticServer, apiserver.Server, *evtsmgr.EventsManager,
-	events.Writer, elastic.ESClient) {
+// veniceExporterSetup creates events manager service, venice exporter and elastic client
+func veniceExporterSetup(t *testing.T) (*mockes.ElasticServer, apiserver.Server, *evtsmgr.EventsManager,
+	events.Exporter, elastic.ESClient) {
 	// create elastic mock server
 	ms := mockes.NewElasticServer()
 	ms.Start()
 
 	// start API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), vLogger)
 	AssertOk(t, err, "failed to start API server")
 
 	// update resolver
@@ -83,23 +83,23 @@ func setup(t *testing.T) (*mockes.ElasticServer, apiserver.Server, *evtsmgr.Even
 	addMockService(mr, globals.APIServer, apiServerURL)
 
 	// create elastic client; this is used to confirm the events have reached elasticsearch through events manager
-	elasticClient, err := elastic.NewClient(ms.GetElasticURL(), nil, logger)
+	elasticClient, err := elastic.NewClient(ms.GetElasticURL(), nil, vLogger)
 	AssertOk(t, err, "failed to create elastic client")
 
 	// run gRPC events manager server
-	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, testServerURL, mr, logger, evtsmgr.WithElasticClient(elasticClient))
+	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, testServerURL, mr, vLogger, evtsmgr.WithElasticClient(elasticClient))
 	AssertOk(t, err, "failed to run gRPC events manager server")
 
-	// create venice writer
-	veniceWriter, err := NewVeniceWriter("venice_writer", veniceBufferLen, evtsMgr.RPCServer.GetListenURL(), nil, logger)
-	AssertOk(t, err, "failed to create venice events writer")
+	// create venice exporter
+	veniceExporter, err := NewVeniceExporter("venice_exporter", veniceBufferLen, evtsMgr.RPCServer.GetListenURL(), nil, vLogger)
+	AssertOk(t, err, "failed to create venice events exporter")
 
-	return ms, apiServer, evtsMgr, veniceWriter, elasticClient
+	return ms, apiServer, evtsMgr, veniceExporter, elasticClient
 }
 
-// TestVeniceEventsWriter tests venice writer
-func TestVeniceEventsWriter(t *testing.T) {
-	mockElasticServer, apiServer, evtsMgrServer, veniceWriter, elasticClient := setup(t)
+// TestVeniceEventsExporter tests venice exporter
+func TestVeniceEventsExporter(t *testing.T) {
+	mockElasticServer, apiServer, evtsMgrServer, veniceExporter, elasticClient := veniceExporterSetup(t)
 	defer apiServer.Stop()
 	defer mockElasticServer.Stop()
 	defer evtsMgrServer.RPCServer.Stop()
@@ -112,17 +112,17 @@ func TestVeniceEventsWriter(t *testing.T) {
 
 	mockOffsetTracker := &mockOffsetTrackerImpl{}
 
-	// start the writer
-	veniceWriter.Start(mockEventsChan, mockOffsetTracker)
-	defer veniceWriter.Stop()
+	// start the exporter
+	veniceExporter.Start(mockEventsChan, mockOffsetTracker)
+	defer veniceExporter.Stop()
 
-	// send some events to the venice writer
+	// send some events to the venice exporter
 	for i := 0; i < 10; i++ {
 		temp := *dummyEvt
 		temp.EventAttributes.Type = "TEST-1"
 		temp.ObjectMeta.UUID = uuid.New().String()
 
-		// send events to mock writer
+		// send events to mock exporter
 		mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, 0)
 	}
 
@@ -149,7 +149,7 @@ func TestVeniceEventsWriter(t *testing.T) {
 		temp.EventAttributes.Type = "TEST-2"
 		temp.ObjectMeta.UUID = uuid.New().String()
 
-		// send events to mock writer
+		// send events to mock exporter
 		mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, 0)
 	}
 
@@ -198,9 +198,9 @@ func TestVeniceEventsWriter(t *testing.T) {
 		}, "failed to perform search on mock elastic server", "20ms", "4s")
 }
 
-// Te stVeniceWriterWithEvtsMgrRestart tests the venice writer with events manager restart
-func TestVeniceWriterWithEvtsMgrRestart(t *testing.T) {
-	mockElasticServer, apiServer, evtsMgrServer, veniceWriter, elasticClient := setup(t)
+// Te stVeniceExporterWithEvtsMgrRestart tests the venice exporter with events manager restart
+func TestVeniceExporterWithEvtsMgrRestart(t *testing.T) {
+	mockElasticServer, apiServer, evtsMgrServer, veniceExporter, elasticClient := veniceExporterSetup(t)
 	defer apiServer.Stop()
 	defer mockElasticServer.Stop()
 	defer evtsMgrServer.RPCServer.Stop()
@@ -213,16 +213,16 @@ func TestVeniceWriterWithEvtsMgrRestart(t *testing.T) {
 
 	mockOffsetTracker := &mockOffsetTrackerImpl{}
 
-	// start the writer
-	veniceWriter.Start(mockEventsChan, mockOffsetTracker)
-	defer veniceWriter.Stop()
+	// start the exporter
+	veniceExporter.Start(mockEventsChan, mockOffsetTracker)
+	defer veniceExporter.Stop()
 
 	wg := new(sync.WaitGroup)
 	wg.Add(2)
 	stopSendingEvents := make(chan struct{})
 	totalEventsSent := 0
 
-	// start sending events to the writer
+	// start sending events to the exporter
 	go func() {
 		defer wg.Done()
 		ticker := time.NewTicker(10 * time.Millisecond)
@@ -235,7 +235,7 @@ func TestVeniceWriterWithEvtsMgrRestart(t *testing.T) {
 				temp.EventAttributes.Type = t.Name()
 				temp.ObjectMeta.UUID = uuid.New().String()
 
-				// send events to mock writer
+				// send events to mock exporter
 				mockEventsChan.result <- newMockBatch([]*evtsapi.Event{&temp}, 0)
 				totalEventsSent++
 			}
@@ -253,12 +253,12 @@ func TestVeniceWriterWithEvtsMgrRestart(t *testing.T) {
 		evtsMgrServer.RPCServer.Stop()
 
 		// manager won't be able to accept any events for 2s; all the elastic writes will be denied
-		// and all the events will be buffered at the writer for this time
+		// and all the events will be buffered at the exporter for this time
 		time.Sleep(1 * time.Second)
 
-		// writers should be able to release all the holding events from the buffer
+		// exporters should be able to release all the holding events from the buffer
 		// run gRPC events manager server
-		evtsMgrServer, err = evtsmgr.NewEventsManager(globals.EvtsMgr, evtsMgrURL, mr, logger, evtsmgr.WithElasticClient(elasticClient))
+		evtsMgrServer, err = evtsmgr.NewEventsManager(globals.EvtsMgr, evtsMgrURL, mr, vLogger, evtsmgr.WithElasticClient(elasticClient))
 		if err != nil {
 			log.Errorf("failed to start events manager on URL: %s, err: %v", evtsMgrURL, err)
 			return

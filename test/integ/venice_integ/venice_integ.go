@@ -109,13 +109,15 @@ const (
 )
 
 var (
+	logger = log.GetNewLogger(log.GetDefaultConfig("venice_integ_test"))
+
 	evtType = append(evtsapi.GetEventTypes(), pencluster.GetEventTypes()...)
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice_integ_test"},
 		EvtTypes:      evtType,
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 // SuiteConfig determines the test suite configuration
@@ -692,7 +694,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
 	// logger
-	it.logger = log.GetNewLogger(log.GetDefaultConfig("venice-integ"))
+	it.logger = logger
 
 	// tls provider
 	err := testutils.SetupIntegTLSProvider()

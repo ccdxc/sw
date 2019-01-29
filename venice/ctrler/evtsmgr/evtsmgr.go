@@ -126,7 +126,7 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 	}
 
 	// create RPC server
-	em.RPCServer, err = rpcserver.NewRPCServer(serverName, serverURL, em.esClient, em.alertEngine)
+	em.RPCServer, err = rpcserver.NewRPCServer(serverName, serverURL, em.esClient, em.alertEngine, em.memDb)
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating RPC server")
 	}
@@ -230,7 +230,6 @@ func (em *EventsManager) processEvents(parentCtx context.Context) error {
 		em.logger.Errorf("failed to watch alert policy, err: %v", err)
 		return err
 	}
-
 	watchList[len(selCases)] = "alertPolicy"
 	selCases = append(selCases, reflect.SelectCase{
 		Dir:  reflect.SelectRecv,
@@ -242,7 +241,6 @@ func (em *EventsManager) processEvents(parentCtx context.Context) error {
 		em.logger.Errorf("failed to watch alerts, err: %v", err)
 		return err
 	}
-
 	watchList[len(selCases)] = "alert"
 	selCases = append(selCases, reflect.SelectCase{
 		Dir:  reflect.SelectRecv,
@@ -254,8 +252,18 @@ func (em *EventsManager) processEvents(parentCtx context.Context) error {
 		em.logger.Errorf("failed to watch alerts, err: %v", err)
 		return err
 	}
-
 	watchList[len(selCases)] = "alertDestination"
+	selCases = append(selCases, reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(watcher.EventChan())})
+
+	// watch event policy
+	watcher, err = em.apiClient.MonitoringV1().EventPolicy().Watch(ctx, opts)
+	if err != nil {
+		em.logger.Errorf("failed to watch alerts, err: %v", err)
+		return err
+	}
+	watchList[len(selCases)] = "eventPolicy"
 	selCases = append(selCases, reflect.SelectCase{
 		Dir:  reflect.SelectRecv,
 		Chan: reflect.ValueOf(watcher.EventChan())})
@@ -286,6 +294,8 @@ func (em *EventsManager) processEvents(parentCtx context.Context) error {
 			em.processAlert(event.Type, obj)
 		case *monitoring.AlertDestination:
 			em.processAlertDestination(event.Type, obj)
+		case *monitoring.EventPolicy:
+			em.processEventPolicy(event.Type, obj)
 		default:
 			em.logger.Errorf("invalid watch event type received from {%s}, %+v", watchList[id], event)
 			return fmt.Errorf("invalid watch event type")
@@ -338,5 +348,21 @@ func (em *EventsManager) processAlertDestination(eventType kvstore.WatchEventTyp
 	default:
 		em.logger.Errorf("invalid alert destination watch event, type %s policy %+v", eventType, alertDest)
 		return fmt.Errorf("invalid alert destination watch event")
+	}
+}
+
+// helper to process event policies
+func (em *EventsManager) processEventPolicy(eventType kvstore.WatchEventType, eventPolicy *monitoring.EventPolicy) error {
+	em.logger.Infof("processing event policy watch event: {%s} {%#v} ", eventType, eventPolicy)
+	switch eventType {
+	case kvstore.Created:
+		return em.memDb.AddObject(eventPolicy)
+	case kvstore.Updated:
+		return em.memDb.UpdateObject(eventPolicy)
+	case kvstore.Deleted:
+		return em.memDb.DeleteObject(eventPolicy)
+	default:
+		em.logger.Errorf("invalid event policy watch event, type %s policy %+v", eventType, eventPolicy)
+		return fmt.Errorf("invalid event policy watch event")
 	}
 }

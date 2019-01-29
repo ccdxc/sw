@@ -70,12 +70,14 @@ var (
 	mode        = flag.String("mode", "host", "Naples mode, host or network")
 	rpcTrace    = flag.Bool("rpc-trace", false, "Enable gRPC tracing")
 
+	logger = log.GetNewLogger(log.GetDefaultConfig("nic_admission_test"))
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nic_admission_test"},
 		EvtTypes:      append(pencluster.GetEventTypes(), evtsapi.GetEventTypes()...),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 type testInfo struct {

@@ -13,7 +13,10 @@ import (
 
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events/exporters"
+	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 )
 
 // main (command source) for events proxy
@@ -52,17 +55,9 @@ func main() {
 	logger := log.SetConfig(config)
 
 	// create events proxy
-	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, nil,
-		*dedupInterval, *batchInterval, *evtsStoreDir, logger)
-	if err != nil {
-		logger.Fatalf("error creating events proxy instance: %v", err)
-	}
-	if err := eps.RegisterEventsWriter(evtsproxy.Venice, *evtsMgrURL); err != nil {
-		log.Fatalf("failed to register venice writer with events proxy, err: %v", err)
-	}
-	eps.StartDispatch()
-
-	logger.Infof("%s is running {%+v}", globals.EvtsProxy, *eps)
+	eps, pMgr, pWatcher := createEvtsProxy(*listenURL, nil, *dedupInterval, *batchInterval,
+		*evtsStoreDir, *evtsMgrURL, logger)
+	logger.Infof("%s is running {%+v}", globals.EvtsProxy, eps)
 
 	// channel to receive signal
 	gracefulStop := make(chan os.Signal, 1)
@@ -71,10 +66,56 @@ func main() {
 	select {
 	case <-gracefulStop:
 		logger.Debug("got signal, exiting")
-		if err := eps.RPCServer.Stop(); err != nil {
-			logger.Errorf("failed to stop RPC server, err %v", err)
-		}
+		stopEvtsProxy(eps, pMgr, pWatcher, logger)
 	case <-eps.RPCServer.Done():
 		logger.Debug("server stopped serving, exiting")
+		stopEvtsProxy(eps, pMgr, pWatcher, logger)
 	}
+}
+
+// helper function to stop evtsproxy services (policy manager, watcher and rpc server)
+func stopEvtsProxy(eps *evtsproxy.EventsProxy, pMgr *policy.Manager, pWatcher *policy.Watcher, logger log.Logger) {
+	// stop policy watcher
+	pWatcher.Stop()
+
+	// stop policy manager
+	pMgr.Stop()
+
+	// stop evts proxy
+	if err := eps.RPCServer.Stop(); err != nil {
+		logger.Errorf("failed to stop RPC server, err %v", err)
+	}
+}
+
+// helper function to start evtsproxy services (policy manager, watcher and rpc server)
+func createEvtsProxy(listenURL string, resolverClient resolver.Interface, dedupInterval time.Duration,
+	batchInterval time.Duration, evtsStoreDir string, evtsMgrURL string, logger log.Logger) (
+	*evtsproxy.EventsProxy, *policy.Manager, *policy.Watcher) {
+
+	// create events proxy
+	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, listenURL, resolverClient, dedupInterval,
+		batchInterval, evtsStoreDir, logger)
+	if err != nil {
+		logger.Fatalf("error creating events proxy instance: %v", err)
+	}
+	if _, err := eps.RegisterEventsExporter(evtsproxy.Venice,
+		&exporters.VeniceExporterConfig{EvtsMgrURL: evtsMgrURL}); err != nil {
+		log.Fatalf("failed to register venice events exporter with events proxy, err: %v", err)
+	}
+
+	// start events policy manager
+	policyMgr, err := policy.NewManager(eps, logger)
+	if err != nil {
+		log.Fatalf("failed to create event policy manager, err: %v", err)
+	}
+
+	// start events policy watcher
+	policyWatcher, err := policy.NewWatcher(policyMgr, logger, policy.WithEventsMgrURL(evtsMgrURL))
+	if err != nil {
+		log.Fatalf("failed to create events policy watcher, err: %v", err)
+	}
+
+	eps.StartDispatch()
+
+	return eps, policyMgr, policyWatcher
 }

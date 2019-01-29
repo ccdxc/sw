@@ -14,7 +14,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// offsetTrackerImpl implements `OffsetTracker` interface. The writers can use this tracker to
+// offsetTrackerImpl implements `OffsetTracker` interface. The exporters can use this tracker to
 // update offset once they're done processing list of events. Each writer gets a unique file
 // to track the offset. The file gets updated with the new offset whenever the writer calls `UpdateOffset`.
 type offsetTrackerImpl struct {

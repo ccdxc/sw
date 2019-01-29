@@ -58,12 +58,14 @@ const (
 )
 
 var (
+	logger = log.WithContext("module", "cli")
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "cli"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 // Info struct defines mock server's context
@@ -106,13 +108,12 @@ func Start() *Info {
 
 	// Start the API server
 	apiserverAddress := ":0"
-	l := log.WithContext("module", "cli")
-	tinfo.l = l
+	tinfo.l = logger
 	scheme := runtime.GetDefaultScheme()
 	srvconfig := apiserver.Config{
 		GrpcServerPort: apiserverAddress,
 		DebugMode:      false,
-		Logger:         l,
+		Logger:         logger,
 		Version:        "v1",
 		Scheme:         scheme,
 		KVPoolSize:     1,
@@ -124,7 +125,7 @@ func Start() *Info {
 		GetOverlay: cache.GetOverlay,
 		IsDryRun:   cache.IsDryRun,
 	}
-	grpclog.SetLogger(l)
+	grpclog.SetLogger(logger)
 
 	// Start ApiServer
 	trace.Init("ApiServer")
@@ -145,7 +146,7 @@ func Start() *Info {
 	gwconfig := apigw.Config{
 		HTTPAddr:  ":0",
 		DebugMode: true,
-		Logger:    l,
+		Logger:    logger,
 		BackendOverride: map[string]string{
 			"pen-apiserver": "localhost:" + port,
 		},
@@ -156,7 +157,7 @@ func Start() *Info {
 			"audit",
 			"objstore",
 		},
-		Auditor: auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),
+		Auditor: auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), logger)),
 	}
 	tinfo.apigwsvc = apigwpkg.MustGetAPIGateway()
 	go tinfo.apigwsvc.Run(gwconfig)

@@ -183,13 +183,13 @@ func createSg(tenant, namespace, name string, selectors *labels.Selector) *secur
 }
 
 // helper function to record events
-func recordEvents(proxyURL, eventsDir string, eventCount int64) {
+func recordEvents(proxyURL, eventsDir string, eventCount int64, logger log.Logger) {
 	// create recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 		Source:       &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "search_integ_test"},
 		EvtTypes:     evtsapi.GetEventTypes(),
 		EvtsProxyURL: proxyURL,
-		BackupDir:    eventsDir})
+		BackupDir:    eventsDir}, logger)
 	if err != nil {
 		log.Fatalf("failed to create events recorder")
 	}

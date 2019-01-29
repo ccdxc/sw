@@ -25,12 +25,14 @@ import (
 )
 
 var (
+	logger = log.GetNewLogger(log.GetDefaultConfig("apiserver_test"))
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "apiserver_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 type testAPISrvBackend struct {

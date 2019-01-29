@@ -18,7 +18,7 @@ import (
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/dispatcher"
-	"github.com/pensando/sw/venice/utils/events/writers"
+	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -140,12 +140,12 @@ func TestEventsReaderWithDispatcher(t *testing.T) {
 	defer evtsD.Shutdown()
 
 	// create and start writer
-	mockWriter := writers.NewMockWriter(fmt.Sprintf("mock.%s", t.Name()), 30, logger)
-	writerEventCh, offsetTracker, err := evtsD.RegisterWriter(mockWriter)
+	mockWriter := exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), 30, logger)
+	writerEventCh, offsetTracker, err := evtsD.RegisterExporter(mockWriter)
 	AssertOk(t, err, "failed to register mock writer with the dispatcher")
 	mockWriter.Start(writerEventCh, offsetTracker)
 	defer mockWriter.Stop()
-	defer evtsD.UnregisterWriter(mockWriter.Name())
+	defer evtsD.UnregisterExporter(mockWriter.Name())
 
 	totalEventsSent := testEventsReader(t, evtsD, 0)
 	Assert(t, totalEventsSent > 0, "0 events sent?!! something went wrong")

@@ -94,7 +94,7 @@ func main() {
 	// create events recorder
 	if _, err := recorder.NewRecorder(&recorder.Config{
 		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIGw},
-		EvtTypes: evtsapi.GetEventTypes(), SkipEvtsProxy: *disableEvents}); err != nil {
+		EvtTypes: evtsapi.GetEventTypes(), SkipEvtsProxy: *disableEvents}, pl); err != nil {
 		pl.Fatalf("failed to create events recorder, err: %v", err)
 	}
 

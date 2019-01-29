@@ -1,6 +1,6 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
 
-package writers
+package exporters
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"time"
 
 	evtsapi "github.com/pensando/sw/api/generated/events"
-	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
+	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -22,15 +22,14 @@ import (
 
 var (
 	maxRetry = 60
-	pkgName  = "venice_events_writer"
 )
 
-// Proxy through dispatcher -> Venice Writer -> Events Manager -> Elasticsearch
+// Proxy through dispatcher -> Venice exporter -> Events Manager -> Elasticsearch
 
-// VeniceWriter represents the venice writer
-type VeniceWriter struct {
-	// writer details
-	name   string     // name of the writer
+// VeniceExporter represents the venice exporter
+type VeniceExporter struct {
+	// exporter details
+	name   string     // name of the exporter
 	chLen  int        // buffer or channel len
 	logger log.Logger // logger
 
@@ -41,10 +40,14 @@ type VeniceWriter struct {
 	eventsChan          events.Chan          // channel to receive
 	eventsOffsetTracker events.OffsetTracker // to track events file offset - bookmark indicating events till this point are processed successfully by this writer
 
-	// to stop the writer
-	stop     sync.Once      // for stopping the writer
-	wg       sync.WaitGroup // to wait for the workers to finish
-	shutdown chan struct{}  // to send shutdown signal to the writer
+	// context to use for any outgoing calls and to stop exporter go routines
+	ctx        context.Context
+	cancelFunc context.CancelFunc
+
+	// to stop the exporter
+	stop     sync.Once      // for stopping the exporter
+	wg       sync.WaitGroup // to wait for the worker to finish
+	shutdown chan struct{}  // to send shutdown signal to the exporter
 }
 
 // eventsMgr encapsulates all the events manager details including connection string
@@ -56,44 +59,45 @@ type eventsMgr struct {
 	resolverClient  resolver.Interface      // resolver
 	rpcClient       *rpckit.RPCClient       // RPC client to connect with events manager
 	client          emgrpc.EvtsMgrAPIClient // client to connect with events manager
-	ctx             context.Context         // context to use for events manager gRPC calls
 	connectionAlive bool                    // represents the connection status; alive or dead
 }
 
-// NewVeniceWriter creates a venice writer which sends events to events manager
-func NewVeniceWriter(name string, chLen int, evtsMgrURL string, resolverClient resolver.Interface,
-	logger log.Logger) (events.Writer, error) {
+// NewVeniceExporter creates a venice exporter which sends events to events manager
+func NewVeniceExporter(name string, chLen int, evtsMgrURL string, resolverClient resolver.Interface,
+	logger log.Logger) (events.Exporter, error) {
 	if utils.IsEmpty(name) || chLen <= 0 || logger == nil {
-		return nil, fmt.Errorf("writer name, channel length and logger is required")
+		return nil, fmt.Errorf("exporter name, channel length and logger is required")
 	}
 
 	if (!utils.IsEmpty(evtsMgrURL) && resolverClient != nil) || (utils.IsEmpty(evtsMgrURL) && resolverClient == nil) {
 		return nil, fmt.Errorf("provide either evtsMgrURL or resolverClient")
 	}
 
-	veniceWriter := &VeniceWriter{
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	veniceExporter := &VeniceExporter{
 		name:   name,
 		chLen:  chLen,
-		logger: logger.WithContext("submodule", pkgName),
+		logger: logger.WithContext("submodule", fmt.Sprintf("exporter.%s", name)),
 		eventsMgr: &eventsMgr{
 			url:            evtsMgrURL,
 			resolverClient: resolverClient,
-			ctx:            context.Background(),
 		},
-		shutdown: make(chan struct{}, 1),
+		ctx:        ctx,
+		cancelFunc: cancelFunc,
+		shutdown:   make(chan struct{}, 1),
 	}
 
 	// create events manager client
-	if err := veniceWriter.initEvtsMgrGrpcClient(maxRetry); err != nil {
-		veniceWriter.logger.Errorf("failed to create events manager client, err: %v", err)
+	if err := veniceExporter.initEvtsMgrGrpcClient(maxRetry); err != nil {
+		veniceExporter.logger.Errorf("failed to create events manager client, err: %v", err)
 		return nil, err
 	}
 
-	return veniceWriter, nil
+	return veniceExporter, nil
 }
 
 // Start start the daemon go routines
-func (v *VeniceWriter) Start(eventsCh events.Chan, offsetTracker events.OffsetTracker) {
+func (v *VeniceExporter) Start(eventsCh events.Chan, offsetTracker events.OffsetTracker) {
 	v.eventsChan = eventsCh
 	v.eventsOffsetTracker = offsetTracker
 
@@ -101,40 +105,47 @@ func (v *VeniceWriter) Start(eventsCh events.Chan, offsetTracker events.OffsetTr
 	v.wg.Add(1)
 	go v.receiveEvents()
 
-	v.logger.Info("started venice events writer")
+	v.logger.Info("started venice events exporter")
 }
 
-// Stop stops the writer
-func (v *VeniceWriter) Stop() {
-	v.logger.Infof("stopping the venice writer")
+// Stop stops the exporter
+func (v *VeniceExporter) Stop() {
+	v.logger.Infof("stopping venice events exporter")
 	v.stop.Do(func() {
 		if v.eventsChan != nil {
 			v.eventsChan.Stop()
 		}
 
-		// wait for the writer to finish
+		// cancel exporter context
+		v.cancelFunc()
+
+		// wait for the exporter to finish
 		close(v.shutdown)
+
 		v.wg.Wait()
 
 		// close events manager client
 		if v.eventsMgr.rpcClient != nil {
 			v.eventsMgr.rpcClient.Close()
 		}
+
+		fileOffset, _ := v.GetLastProcessedOffset()
+		v.logger.Debugf("exporter {%s} stopping at offset: %v", v.name, fileOffset)
 	})
 }
 
-// Name returns the name of the writer
-func (v *VeniceWriter) Name() string {
+// Name returns the name of the exporter
+func (v *VeniceExporter) Name() string {
 	return v.name
 }
 
 // ChLen returns the channel length; will be used to dispatcher to set channel len
-func (v *VeniceWriter) ChLen() int {
+func (v *VeniceExporter) ChLen() int {
 	return v.chLen
 }
 
 // WriteEvents writes list of events to the venice events manager service
-func (v *VeniceWriter) WriteEvents(events []*evtsapi.Event) error {
+func (v *VeniceExporter) WriteEvents(events []*evtsapi.Event) error {
 	v.eventsMgr.Lock()
 	if !v.eventsMgr.connectionAlive {
 		v.eventsMgr.Unlock()
@@ -143,7 +154,7 @@ func (v *VeniceWriter) WriteEvents(events []*evtsapi.Event) error {
 	v.eventsMgr.Unlock()
 
 	// send events to events manager
-	_, err := v.eventsMgr.client.SendEvents(v.eventsMgr.ctx, &evtsapi.EventList{Items: events})
+	_, err := v.eventsMgr.client.SendEvents(v.ctx, &evtsapi.EventList{Items: events})
 	if err == nil {
 		return nil
 	}
@@ -159,32 +170,39 @@ func (v *VeniceWriter) WriteEvents(events []*evtsapi.Event) error {
 	return err
 }
 
-// GetLastProcessedOffset returns the last bookmarked offset by this writer
-func (v *VeniceWriter) GetLastProcessedOffset() (int64, error) {
+// GetLastProcessedOffset returns the last bookmarked offset by this exporter
+func (v *VeniceExporter) GetLastProcessedOffset() (int64, error) {
 	return v.eventsOffsetTracker.GetOffset()
 }
 
 // startWorker watches the events using the event channel from dispatcher.
-func (v *VeniceWriter) receiveEvents() {
+func (v *VeniceExporter) receiveEvents() {
 	defer v.wg.Done()
 	for {
 		select {
 		// this channel will be closed once the evenChan receives the stop signal from
-		// this writer or when dispatcher shuts down.
+		// this exporter or when dispatcher shuts down.
 		case batch, ok := <-v.eventsChan.ResultChan():
 			if !ok { // channel closed
 				return
 			}
 
+			v.logger.Debugf("{exporter %s} received events: %v, offset: %v", v.name, events.Minify(batch.GetEvents()), batch.GetOffset())
+
 			// all the incoming batch of events needs to be processed in order to avoid losing track of events
 			for {
+				if err := v.ctx.Err(); err != nil {
+					v.logger.Debugf("{exporter %s} context closed, err: %v", v.name, err)
+					return
+				}
+
 				if err := v.WriteEvents(batch.GetEvents()); err != nil {
-					v.logger.Debugf("failed to send events to the events manager, retrying.. err: %v", err)
+					v.logger.Debugf("{exporter %s} failed to send events to the events manager, retrying.. err: %v", v.name, err)
 					time.Sleep(1 * time.Second)
 					continue
 				}
 
-				// successfully sent the event to events manager
+				// successfully sent the event(s) to events manager
 				v.eventsOffsetTracker.UpdateOffset(batch.GetOffset())
 				break
 			}
@@ -195,7 +213,7 @@ func (v *VeniceWriter) receiveEvents() {
 }
 
 // reconnect helper function to re-establish the connection with events manager
-func (v *VeniceWriter) reconnect() {
+func (v *VeniceExporter) reconnect() {
 	for {
 		if err := v.eventsMgr.rpcClient.Reconnect(); err != nil {
 			log.Debugf("failed to reconnect to events manager, retrying.. err: %v", err)
@@ -213,24 +231,26 @@ func (v *VeniceWriter) reconnect() {
 }
 
 // init creates events manager grpc client
-func (v *VeniceWriter) initEvtsMgrGrpcClient(maxRetries int) error {
+func (v *VeniceExporter) initEvtsMgrGrpcClient(maxRetries int) error {
 	var client interface{}
 	var err error
 
 	if !utils.IsEmpty(v.eventsMgr.url) {
 		log.Debug("creating events manager client using URL")
 		client, err = utils.ExecuteWithRetry(func() (interface{}, error) {
-			return rpckit.NewRPCClient(pkgName, v.eventsMgr.url, rpckit.WithRemoteServerName(globals.EvtsMgr))
+			return rpckit.NewRPCClient(fmt.Sprintf("exporter.%s", v.name), v.eventsMgr.url,
+				rpckit.WithRemoteServerName(globals.EvtsMgr))
 		}, 2*time.Second, maxRetries)
 	} else { // use resolver client
 		log.Debug("creating events manager client using resolver")
 		client, err = utils.ExecuteWithRetry(func() (interface{}, error) {
-			return rpckit.NewRPCClient(pkgName, globals.EvtsMgr, rpckit.WithBalancer(balancer.New(v.eventsMgr.resolverClient)), rpckit.WithRemoteServerName(globals.EvtsMgr))
+			return rpckit.NewRPCClient(fmt.Sprintf("exporter.%s", v.name), globals.EvtsMgr,
+				rpckit.WithBalancer(balancer.New(v.eventsMgr.resolverClient)), rpckit.WithRemoteServerName(globals.EvtsMgr))
 		}, 2*time.Second, maxRetries)
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to connect to {%s},err: %v", globals.EvtsMgr, err)
+		return fmt.Errorf("failed to connect to {%s}, err: %v", globals.EvtsMgr, err)
 	}
 
 	v.eventsMgr.rpcClient = client.(*rpckit.RPCClient)

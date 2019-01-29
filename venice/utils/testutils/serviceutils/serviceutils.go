@@ -66,6 +66,7 @@ func StartAPIServer(serverAddr, clusterName string, logger log.Logger) (apiserve
 
 // StartTCPServer starts the TCP server on given addr and sends the received messages to the channel.
 // the caller can use the channel to verify the received messages.
+// caller is responsible for closing the channel.
 func StartTCPServer(addr string) (net.Listener, chan string, error) {
 	receivedMessages := make(chan string, 100) // all the messages that are received at this server will be channeled here
 	ln, err := net.Listen("tcp", addr)
@@ -74,6 +75,7 @@ func StartTCPServer(addr string) (net.Listener, chan string, error) {
 		return nil, nil, err
 	}
 
+	// if there are multiple clients, all the received messages will be send to the same channel.
 	go func() {
 		defer close(receivedMessages)
 		for {
@@ -109,6 +111,7 @@ func StartTCPServer(addr string) (net.Listener, chan string, error) {
 
 // StartUDPServer starts the UDP server on given addr and sends the received messages to the channel.
 // the caller can use the channel to verify the received messages.
+// caller is responsible for closing the channel.
 func StartUDPServer(addr string) (net.PacketConn, chan string, error) {
 	receivedMessages := make(chan string, 100) // all the messages that are received at this server will be channeled here
 	pc, err := net.ListenPacket("udp", addr)
@@ -123,7 +126,7 @@ func StartUDPServer(addr string) (net.PacketConn, chan string, error) {
 			buf := make([]byte, 1024)
 			n, _, err := pc.ReadFrom(buf)
 			if err != nil {
-				continue
+				return
 			}
 
 			message := strings.TrimSpace(string(buf[:n]))

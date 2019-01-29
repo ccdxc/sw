@@ -6,7 +6,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine"
-	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/evtsmgrproto"
+	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
+	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -14,8 +15,9 @@ import (
 
 // RPCServer is the RPC server object with all event APIs
 type RPCServer struct {
-	handler *EvtsMgrRPCHandler
-	server  *rpckit.RPCServer // rpckit server instance
+	evtsMgrHandler    *EvtsMgrRPCHandler
+	evtsPolicyHandler *EventPolicyRPCHandler
+	server            *rpckit.RPCServer // rpckit server instance
 }
 
 // Done returns RPC server's error channel which will error out when the server is stopped
@@ -34,8 +36,9 @@ func (rs *RPCServer) GetListenURL() string {
 }
 
 // NewRPCServer creates a new instance of events RPC server
-func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient, alertEngine alertengine.Interface) (*RPCServer, error) {
-	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) || esclient == nil || alertEngine == nil {
+func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient, alertEngine alertengine.Interface,
+	memdb *memdb.MemDb) (*RPCServer, error) {
+	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) || esclient == nil || alertEngine == nil || memdb == nil {
 		return nil, errors.New("all parameters are required")
 	}
 
@@ -46,17 +49,24 @@ func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient, alert
 	}
 
 	// instantiate events handlers which carries the implementation of the service
-	eh, err := NewEvtsMgrRPCHandler(esclient, alertEngine)
+	evtsMgrHandler, err := NewEvtsMgrRPCHandler(esclient, alertEngine)
 	if err != nil {
-		return nil, errors.Wrap(err, "error certificates rpc server")
+		return nil, errors.Wrap(err, "error creating evtsmgr rpc server")
 	}
 
-	// register the server
-	emgrpc.RegisterEvtsMgrAPIServer(rpcServer.GrpcServer, eh)
+	evtsPolicyHandler, err := NewEventPolicyRPCHandler(memdb.Memdb)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating event policy rpc server")
+	}
+
+	// register the servers
+	emgrpc.RegisterEvtsMgrAPIServer(rpcServer.GrpcServer, evtsMgrHandler)
+	emgrpc.RegisterEventPolicyAPIServer(rpcServer.GrpcServer, evtsPolicyHandler)
 	rpcServer.Start()
 
 	return &RPCServer{
-		handler: eh,
-		server:  rpcServer,
+		evtsMgrHandler:    evtsMgrHandler,
+		evtsPolicyHandler: evtsPolicyHandler,
+		server:            rpcServer,
 	}, nil
 }

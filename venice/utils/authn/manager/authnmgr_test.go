@@ -40,7 +40,7 @@ var (
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "authnmgr_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 var apicl apiclient.Services

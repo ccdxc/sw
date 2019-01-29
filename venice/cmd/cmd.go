@@ -72,7 +72,7 @@ func main() {
 	if env.Recorder, err = recorder.NewRecorder(&recorder.Config{
 		SkipEvtsProxy: true,
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Cmd},
-		EvtTypes:      append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...)}); err != nil {
+		EvtTypes:      append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...)}, env.Logger); err != nil {
 		fmt.Printf("failed to create events recorder, err: %v", err)
 	}
 

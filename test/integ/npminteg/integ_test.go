@@ -65,13 +65,14 @@ var numAgents = flag.Int("agents", numIntegTestAgents, "Number of agents")
 var datapathKind = flag.String("datapath", agentDatapathKind, "Specify the datapath type. mock | hal")
 
 var (
+	logger  = log.GetNewLogger(log.GetDefaultConfig("npm-integ-test"))
 	evtType = append(evtsapi.GetEventTypes(), cluster.GetEventTypes()...)
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "npm_integ_test"},
 		EvtTypes:      evtType,
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 // Hook up gocheck into the "go test" runner.
@@ -99,9 +100,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
 
-	// create a logger
-	l := log.GetNewLogger(log.GetDefaultConfig("NpmIntegTest"))
-	it.logger = l
+	it.logger = logger
 
 	// Create a mock resolver
 	m := mock.NewResolverService()
@@ -127,7 +126,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	m.AddServiceInstance(&npmSi)
 
 	// start API server
-	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", l)
+	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", logger)
 	c.Assert(err, check.IsNil)
 
 	// populate the mock resolver with apiserver instance.
@@ -167,7 +166,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	time.Sleep(time.Millisecond * 100)
 
 	// create api server client
-	apicl, err := apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, l, rpckit.WithBalancer(balancer.New(rc)))
+	apicl, err := apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, logger, rpckit.WithBalancer(balancer.New(rc)))
 	if err != nil {
 		c.Fatalf("cannot create grpc client. Err: %v", err)
 	}

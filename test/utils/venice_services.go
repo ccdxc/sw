@@ -20,10 +20,13 @@ import (
 	scache "github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/audit"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/events/exporters"
+	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 
@@ -44,6 +47,34 @@ var (
 	// TestTenant test tenant
 	TestTenant = globals.DefaultTenant
 )
+
+// EvtProxyServices - events services that are running on each node
+type EvtProxyServices struct {
+	EvtsProxy     *evtsproxy.EventsProxy
+	PolicyMgr     *policy.Manager
+	PolicyWatcher *policy.Watcher
+}
+
+// Stop stops the events proxy services that're running
+func (e *EvtProxyServices) Stop() {
+	log.Info("stopping event proxy services")
+	if e != nil {
+		if e.EvtsProxy != nil {
+			e.EvtsProxy.Stop()
+		}
+		e.EvtsProxy = nil
+
+		if e.PolicyWatcher != nil {
+			e.PolicyWatcher.Stop()
+		}
+		e.PolicyWatcher = nil
+
+		if e.PolicyMgr != nil {
+			e.PolicyMgr.Stop()
+		}
+		e.PolicyMgr = nil
+	}
+}
 
 // SetupAuth setsup the authentication service
 func SetupAuth(apiServerAddr string, enableLocalAuth bool, ldapConf *auth.Ldap, radiusConf *auth.Radius, creds *auth.PasswordCredential, logger log.Logger) error {
@@ -227,17 +258,19 @@ func StartEvtsMgr(serverAddr string, mr resolver.Interface, logger log.Logger, e
 
 // StartEvtsProxy helper function to start events proxy
 func StartEvtsProxy(serverAddr string, mr resolver.Interface, logger log.Logger, dedupInterval,
-	batchInterval time.Duration) (*evtsproxy.EventsProxy, string, string, error) {
+	batchInterval time.Duration, proxyEventsStoreDir string) (*EvtProxyServices, string, string, error) {
 	log.Infof("starting events proxy")
+	var err error
 
 	if len(mr.GetURLs(globals.EvtsMgr)) == 0 {
 		return nil, "", "", fmt.Errorf("could not find evtsmgr URL")
 	}
 
-	proxyEventsStoreDir, err := ioutil.TempDir("", "")
-	if err != nil {
-		log.Errorf("failed to create temp events dir, err: %v", err)
-		return nil, "", "", err
+	if utils.IsEmpty(proxyEventsStoreDir) {
+		if proxyEventsStoreDir, err = ioutil.TempDir("", ""); err != nil {
+			log.Errorf("failed to create temp events dir, err: %v", err)
+			return nil, "", "", err
+		}
 	}
 
 	evtsProxy, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, serverAddr,
@@ -245,12 +278,26 @@ func StartEvtsProxy(serverAddr string, mr resolver.Interface, logger log.Logger,
 	if err != nil {
 		return nil, "", "", fmt.Errorf("failed start events proxy, err: %v", err)
 	}
-	if err := evtsProxy.RegisterEventsWriter(evtsproxy.Venice, mr.GetURLs(globals.EvtsMgr)[0]); err != nil {
+	if _, err := evtsProxy.RegisterEventsExporter(evtsproxy.Venice,
+		&exporters.VeniceExporterConfig{EvtsMgrURL: mr.GetURLs(globals.EvtsMgr)[0]}); err != nil {
 		return nil, "", "", fmt.Errorf("failed to register venice writer with events proxy")
 	}
+
+	// start events policy manager
+	policyMgr, err := policy.NewManager(evtsProxy, logger)
+	if err != nil {
+		log.Fatalf("failed to create event policy manager, err: %v", err)
+	}
+
+	// start events policy watcher
+	policyWatcher, err := policy.NewWatcher(policyMgr, logger, policy.WithEventsMgrURL(mr.GetURLs(globals.EvtsMgr)[0]))
+	if err != nil {
+		log.Fatalf("failed to create events policy watcher, err: %v", err)
+	}
+
 	evtsProxy.StartDispatch()
 
-	return evtsProxy, evtsProxy.RPCServer.GetListenURL(), proxyEventsStoreDir, nil
+	return &EvtProxyServices{evtsProxy, policyMgr, policyWatcher}, evtsProxy.RPCServer.GetListenURL(), proxyEventsStoreDir, nil
 }
 
 // helper function to parse the port from given address <ip:port>

@@ -17,9 +17,19 @@ import (
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
+
+// represents the list of event services (includes both network and host modes)
+type evtServices struct {
+	logger        log.Logger             // logger
+	eps           *evtsproxy.EventsProxy // events proxy server
+	policyWatcher *policy.Watcher        // policy watcher responsible for watching event policies from evtsmgr; will be nil in host mode
+	policyMgr     *policy.Manager        // responsible for creating/deleting syslog exporters for the incoming event policies
+	shmReader     *reader.Reader         // shared memory reader
+}
 
 // main (command source) for events proxy
 func main() {
@@ -65,37 +75,51 @@ func main() {
 			Servers: strings.Split(*resolverURLs, ",")})
 	}
 
-	// create events proxy
-	var result interface{}
-	var err error
-	for {
-		result, err = utils.ExecuteWithRetry(func() (interface{}, error) {
-			return evtsproxy.NewEventsProxy(globals.EvtsProxy, *listenURL, resolverClient, *dedupInterval, *batchInterval,
-				*evtsStoreDir, logger)
-		}, 2*time.Second, 30)
-		if err != nil {
-			logger.Fatalf("error creating events proxy instance: %v", err)
-		}
-		break
+	// start event services according to the mode
+	es := &evtServices{logger: logger}
+	es.start(*mode, *listenURL, *evtsStoreDir, resolverClient, *dedupInterval, *batchInterval, logger)
+	defer es.stop()
+
+	logger.Infof("%s is running {%+v}", globals.EvtsProxy, es.eps)
+
+	// channel to receive signal
+	gracefulStop := make(chan os.Signal, 1)
+	signal.Notify(gracefulStop, syscall.SIGTERM, syscall.SIGINT)
+
+	select {
+	case <-gracefulStop:
+		logger.Debug("got signal, exiting")
+		es.stop()
+	case <-es.eps.RPCServer.Done():
+		logger.Debug("server stopped serving, exiting")
+		es.stop()
+	}
+}
+
+// helper function to start services based on the given mode
+func (e *evtServices) start(mode, listenURL, evtsStoreDir string, resolverClient resolver.Interface, dedupInterval,
+	batchInterval time.Duration, logger log.Logger) {
+	switch mode {
+
+	// managed; start venice services and exporter
+	case "network":
+		e.eps, e.policyMgr, e.policyWatcher = startNetworkModeServices(listenURL, evtsStoreDir, resolverClient,
+			dedupInterval, batchInterval, logger)
+
+	// non-managed; start REST service
+	case "host":
+		e.eps = startHostModeServices(listenURL, evtsStoreDir, resolverClient,
+			dedupInterval, batchInterval, logger)
+
+	default:
+		logger.Fatalf("unsupported mode: %s", mode)
 	}
 
-	eps := result.(*evtsproxy.EventsProxy)
-	defer eps.Stop()
-
-	// handle different agent modes
-	handleModes(*mode, eps, logger)
-
-	// start dispatching events to its registered writers
-	eps.StartDispatch()
-
-	logger.Infof("%s is running {%+v}", globals.EvtsProxy, *eps)
-
 	// create shared memory events reader
-	shmEvtsReader := reader.NewReader(shm.GetSharedMemoryDirectory(), 50*time.Millisecond, eps.GetEventsDispatcher())
-	defer shmEvtsReader.Stop()
+	e.shmReader = reader.NewReader(shm.GetSharedMemoryDirectory(), 50*time.Millisecond, e.eps.GetEventsDispatcher())
 	go func() {
 		for {
-			err := shmEvtsReader.Start()
+			err := e.shmReader.Start()
 			if err == nil {
 				logger.Infof("shared memory events reader is running on dir: %s", shm.GetSharedMemoryDirectory())
 				return
@@ -105,40 +129,98 @@ func main() {
 			time.Sleep(1 * time.Second)
 		}
 	}()
+}
 
-	// channel to receive signal
-	gracefulStop := make(chan os.Signal, 1)
-	signal.Notify(gracefulStop, syscall.SIGTERM, syscall.SIGINT)
+// stop stops all the running services
+func (e *evtServices) stop() {
+	if e.shmReader != nil {
+		e.shmReader.Stop()
+		e.shmReader = nil
+	}
 
-	select {
-	case <-gracefulStop:
-		// stop shm reader
-		shmEvtsReader.Stop()
+	if e.policyWatcher != nil {
+		e.policyWatcher.Stop()
+		e.policyWatcher = nil
+	}
 
-		// stop evtsproxy RPC server
-		logger.Debug("got signal, exiting")
-		if err := eps.RPCServer.Stop(); err != nil {
-			logger.Errorf("failed to stop RPC server, err %v", err)
+	if e.policyMgr != nil {
+		e.policyMgr.Stop()
+		e.policyMgr = nil
+	}
+
+	if e.eps != nil {
+		if err := e.eps.RPCServer.Stop(); err != nil {
+			e.logger.Errorf("failed to stop RPC server, err %v", err)
 		}
-	case <-eps.RPCServer.Done():
-		shmEvtsReader.Stop()
-		logger.Debug("server stopped serving, exiting")
+		e.eps = nil
 	}
 }
 
-// helper function to support different modes of operation
-func handleModes(mode string, eps *evtsproxy.EventsProxy, logger log.Logger) {
-	switch mode {
-	case "network": // managed; start venice exporter
-		logger.Infof("initializing network mode")
-		if err := eps.RegisterEventsWriter(evtsproxy.Venice, nil); err != nil {
-			log.Fatalf("failed to register venice writer with events proxy, err: %v", err)
-		}
-	case "host": // non-managed; start REST service
-		logger.Infof("initializing host mode")
-		// TODO: implement REST
+// helper function to start network mode services
+func startNetworkModeServices(listenURL, evtsStoreDir string, resolverClient resolver.Interface, dedupInterval,
+	batchInterval time.Duration, logger log.Logger) (*evtsproxy.EventsProxy, *policy.Manager, *policy.Watcher) {
+	logger.Infof("initializing network mode")
 
-	default:
-		logger.Fatalf("unsupported mode: %s", mode)
+	// create events proxy
+	var result interface{}
+	var err error
+	for {
+		result, err = utils.ExecuteWithRetry(func() (interface{}, error) {
+			return evtsproxy.NewEventsProxy(globals.EvtsProxy, listenURL, resolverClient, dedupInterval, batchInterval,
+				evtsStoreDir, logger)
+		}, 2*time.Second, 30)
+		if err != nil {
+			logger.Fatalf("error creating events proxy instance: %v", err)
+		}
+		break
 	}
+
+	// register venice exporter (exports events to evtsmgr -> elastic)
+	eps := result.(*evtsproxy.EventsProxy)
+	if _, err := eps.RegisterEventsExporter(evtsproxy.Venice, nil); err != nil {
+		logger.Fatalf("failed to register venice events exporter with events proxy, err: %v", err)
+	}
+
+	// start events policy manager
+	policyMgr, err := policy.NewManager(eps, logger)
+	if err != nil {
+		log.Fatalf("failed to create event policy manager, err: %v", err)
+	}
+
+	// start events policy watcher
+	policyWatcher, err := policy.NewWatcher(policyMgr, logger, policy.WithResolverClient(resolverClient))
+	if err != nil {
+		log.Fatalf("failed to create events policy watcher, err: %v", err)
+	}
+
+	// start dispatching events to its registered exporters
+	eps.StartDispatch()
+
+	return eps, policyMgr, policyWatcher
+}
+
+// helper function to start host mode services
+func startHostModeServices(listenURL, evtsStoreDir string, resolverClient resolver.Interface, dedupInterval,
+	batchInterval time.Duration, logger log.Logger) *evtsproxy.EventsProxy {
+	logger.Infof("initializing host mode")
+
+	// create events proxy
+	var result interface{}
+	var err error
+	for {
+		result, err = utils.ExecuteWithRetry(func() (interface{}, error) {
+			return evtsproxy.NewEventsProxy(globals.EvtsProxy, listenURL, resolverClient, dedupInterval, batchInterval,
+				evtsStoreDir, logger)
+		}, 2*time.Second, 30)
+		if err != nil {
+			logger.Fatalf("error creating events proxy instance: %v", err)
+		}
+		break
+	}
+
+	eps := result.(*evtsproxy.EventsProxy)
+
+	// TODO: implement REST
+
+	return eps
 }

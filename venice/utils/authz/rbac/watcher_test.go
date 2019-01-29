@@ -33,7 +33,7 @@ var (
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "authz_rbac_watcher_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 func createWatcher(cache *userPermissionsCache, name, apiSrvAddr string) *watcher {

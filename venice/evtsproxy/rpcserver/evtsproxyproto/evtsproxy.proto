@@ -19,8 +19,8 @@ import "github.com/pensando/sw/api/common.proto";
 // events proxy gRPC API
 service EventsProxyAPI {
     // recorder will forward the event to proxy which will be channeled to the
-    // dispatcher where the event gets deduped and distributed to the writers
-    // (events manager, events exporter, etc.). event recorder connects only
+    // dispatcher where the event gets deduped and distributed to the exporters
+    // (venice events manager, third-party events exporter, etc.). event recorder connects only
     // with proxy; proxy handles rest of the workflow.
     rpc ForwardEvent (events.Event) returns (api.Empty) {};
 

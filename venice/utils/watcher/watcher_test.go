@@ -33,7 +33,7 @@ var (
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "watcher_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 func createAPIClient(apiSrvAddr string) apiclient.Services {

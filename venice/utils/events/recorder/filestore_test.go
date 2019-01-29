@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pensando/sw/venice/utils/events"
+
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
@@ -30,7 +32,7 @@ func TestFileStore(t *testing.T) {
 
 	// rotate a empty events file
 	err := eventsFile.Rotate()
-	AssertOk(t, err, "rotate failed on empty events file, err: %v", err)
+	Assert(t, events.IsEmptyEventsFile(err), "expected: empty file error, got: %v", err)
 
 	// write event to the file
 	evt := policygen.CreateEventObj(globals.DefaultTenant, globals.DefaultNamespace, "evt1", "DUMMY",

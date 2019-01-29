@@ -59,12 +59,14 @@ const (
 )
 
 var (
+	logger = log.WithContext("module", "CrudOpsTest")
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "smartnic_test"},
 		EvtTypes:      append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 type testInfo struct {
@@ -1273,13 +1275,12 @@ func testSetup() {
 
 	// Create api server
 	apiServerAddress := ":0"
-	l := log.WithContext("module", "CrudOpsTest")
-	tInfo.l = l
+	tInfo.l = logger
 	scheme := runtime.GetDefaultScheme()
 	srvConfig := apiserver.Config{
 		GrpcServerPort: apiServerAddress,
 		DebugMode:      false,
-		Logger:         l,
+		Logger:         logger,
 		Version:        "v1",
 		Scheme:         scheme,
 		Kvstore: store.Config{
@@ -1289,7 +1290,7 @@ func testSetup() {
 		GetOverlay: api_cache.GetOverlay,
 		IsDryRun:   api_cache.IsDryRun,
 	}
-	grpclog.SetLogger(l)
+	grpclog.SetLogger(logger)
 	tInfo.apiServer = apiserverpkg.MustGetAPIServer()
 	go tInfo.apiServer.Run(srvConfig)
 	tInfo.apiServer.WaitRunning()

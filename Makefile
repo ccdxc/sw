@@ -19,7 +19,7 @@ venice/ctrler/tsm/rpcserver/tsproto \
 venice/citadel/collector/rpcserver/metric venice/utils/runtime/test \
 venice/utils/apigen/annotations venice/orch \
 venice/cmd/grpc/server/certificates/certapi \
-venice/ctrler/evtsmgr/rpcserver/evtsmgrproto \
+venice/ctrler/evtsmgr/rpcserver/protos \
 venice/evtsproxy/rpcserver/evtsproxyproto \
 nic/agent/nmd/protos nic/agent/netagent/protos \
 venice/utils/authn/radius                      \

@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/events"
+
 	"github.com/pkg/errors"
 
 	evtsapi "github.com/pensando/sw/api/generated/events"
@@ -89,7 +91,7 @@ func (f *fileImpl) Rotate() error {
 		log.Debugf("failed to get the events file stat, err: %v", err)
 	} else if fInfo.Size() == 0 {
 		log.Debugf("empty events file, no rotation needed")
-		return nil
+		return events.NewError(events.ErrEmptyEventsFile, "")
 	}
 
 	log.Debugf("rotating events file")

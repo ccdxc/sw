@@ -32,12 +32,14 @@ const (
 )
 
 var (
+	logger = log.WithContext("module", "auth_integ_test")
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "auth_integ_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 type tInfo struct {
@@ -139,7 +141,7 @@ func TestMain(m *testing.M) {
 	l := log.GetNewLogger(config)
 	tinfo.l = l
 	tinfo.mockResolver = mockresolver.New()
-	grpclog.SetLogger(l)
+	grpclog.SetLogger(logger)
 
 	if err := tinfo.setup(); err != nil {
 		log.Fatalf("failed to setup test, err: %v", err)

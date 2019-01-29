@@ -15,10 +15,10 @@ import (
 
 	ptypes "github.com/gogo/protobuf/types"
 	grpcruntime "github.com/pensando/grpc-gateway/runtime"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 	grpccodes "google.golang.org/grpc/codes"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -36,9 +36,8 @@ import (
 	"github.com/pensando/sw/venice/apigw"
 	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/apiserver"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
-	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	pcache "github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/finder"
@@ -73,12 +72,14 @@ const (
 )
 
 var (
+	logger = log.GetNewLogger(log.GetDefaultConfig("spyglass_integ_test"))
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "search_integ_test"},
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "spyglass_integ_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, logger)
 )
 
 type SearchMethod uint8
@@ -105,7 +106,7 @@ type testInfo struct {
 	authzHeader       string
 	mockResolver      *mockresolver.ResolverClient
 	evtsMgr           *evtsmgr.EventsManager
-	evtsProxy         *evtsproxy.EventsProxy
+	evtProxyServices  *testutils.EvtProxyServices
 	tmpEventsDir      string
 	pcache            pcache.Interface
 	esClient          elastic.ESClient    // elastic client
@@ -191,12 +192,12 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 	tInfo.updateResolver(globals.EvtsMgr, evtsMgrURL)
 
 	// start evtsproxy
-	evtsProxy, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(":0", tInfo.mockResolver, tInfo.l, 10*time.Second, 100*time.Millisecond)
+	evtProxyServices, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(":0", tInfo.mockResolver, tInfo.l, 10*time.Second, 100*time.Millisecond, "")
 	if err != nil {
 		log.Errorf("failed to start events proxy, err: %v", err)
 		return err
 	}
-	tInfo.evtsProxy = evtsProxy
+	tInfo.evtProxyServices = evtProxyServices
 	tInfo.tmpEventsDir = tmpProxyDir
 	tInfo.updateResolver(globals.EvtsProxy, evtsProxyURL)
 
@@ -242,8 +243,8 @@ func (tInfo *testInfo) teardown() {
 	// stop evtsmgr
 	tInfo.evtsMgr.RPCServer.Stop()
 
-	// stop evtsproxy
-	tInfo.evtsProxy.RPCServer.Stop()
+	// stop evtproxy services
+	tInfo.evtProxyServices.Stop()
 
 	// delete the tmp events directory
 	os.RemoveAll(tInfo.tmpEventsDir)
@@ -307,8 +308,7 @@ func TestSpyglass(t *testing.T) {
 	var err error
 
 	tInfo.mockResolver = mockresolver.New()
-	logConfig := log.GetDefaultConfig("spyglass_integ_test")
-	tInfo.l = log.GetNewLogger(logConfig)
+	tInfo.l = logger
 
 	AssertOk(t, tInfo.setup(t), "failed to setup test")
 	defer tInfo.teardown()
@@ -319,7 +319,7 @@ func TestSpyglass(t *testing.T) {
 	go PolicyGenerator(ctx, tInfo.apiClient, objectCount)
 
 	// generate events
-	go recordEvents(tInfo.mockResolver.GetURLs(globals.EvtsProxy)[0], tInfo.tmpEventsDir, eventCount)
+	go recordEvents(tInfo.mockResolver.GetURLs(globals.EvtsProxy)[0], tInfo.tmpEventsDir, eventCount, logger)
 
 	// Validate the index operations counter
 	expectedCount := uint64(3*objectCount+int64(len(Tenants))) + sgPolicyCount

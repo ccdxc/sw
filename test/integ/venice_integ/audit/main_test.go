@@ -40,7 +40,7 @@ var (
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "auth_integ_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
-		SkipEvtsProxy: true})
+		SkipEvtsProxy: true}, log.GetNewLogger(log.GetDefaultConfig("audit_integ_test")))
 )
 
 // tInfo represents test info.

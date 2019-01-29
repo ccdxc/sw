@@ -86,8 +86,8 @@ func TestEvents(t *testing.T) {
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 		Source:       testEventSource,
 		EvtTypes:     testEventTypes,
-		EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
-		BackupDir:    recorderEventsDir})
+		EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+		BackupDir:    recorderEventsDir}, ti.logger)
 	AssertOk(t, err, "failed to create events recorder")
 
 	// send events  (recorder -> proxy -> dispatcher -> writer -> evtsmgr -> elastic)
@@ -174,8 +174,8 @@ func TestEventsProxyRestart(t *testing.T) {
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 				Source:       testEventSource,
 				EvtTypes:     testEventTypes,
-				EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
-				BackupDir:    recorderEventsDir})
+				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+				BackupDir:    recorderEventsDir}, ti.logger)
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -203,22 +203,22 @@ func TestEventsProxyRestart(t *testing.T) {
 
 	// restart events proxy
 	go func() {
-		proxyURL := ti.evtsProxy.RPCServer.GetListenURL()
+		proxyURL := ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL()
 
 		// try restarting events proxy multiple times and make sure the events pipeline is intact
-		// and the events are dlivered to elastic
+		// and the events are delivered to elastic
 		for i := 0; i < 3; i++ {
 			time.Sleep(1 * time.Second)
-			ti.evtsProxy.Stop()
+			ti.evtProxyServices.Stop()
 
 			// proxy won't be able to accept any events for 2s
 			time.Sleep(1 * time.Second)
-			evtsProxy, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval)
+			evtProxyServices, evtsProxyURL, tmpProxyDir, err := testutils.StartEvtsProxy(proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval, ti.proxyEventsStoreDir)
 			if err != nil {
 				log.Errorf("failed to start events proxy, err: %v", err)
 				continue
 			}
-			ti.evtsProxy = evtsProxy
+			ti.evtProxyServices = evtProxyServices
 			ti.proxyEventsStoreDir = tmpProxyDir
 			ti.updateResolver(globals.EvtsProxy, evtsProxyURL)
 		}
@@ -244,8 +244,8 @@ func TestEventsProxyRestart(t *testing.T) {
 	// total number of events received at elastic should match the total events sent
 	// query all the events received from this source.component
 	query := es.NewRegexpQuery("source.component.keyword", fmt.Sprintf("%v-.*", componentID))
-	ti.assertElasticUniqueEvents(t, query, false, 3*numRecorders, "60s") // minimum of (3 event types * numRecorders = unique events)
-	ti.assertElasticTotalEvents(t, query, false, totalEventsSent, "60s") // there can be duplicates because of proxy restarts; so check for received >= sent
+	ti.assertElasticUniqueEvents(t, query, false, 3*numRecorders, "120s") // minimum of (3 event types * numRecorders = unique events)
+	ti.assertElasticTotalEvents(t, query, false, totalEventsSent, "120s") // there can be duplicates because of proxy restarts; so check for received >= sent
 }
 
 // TestEventsMgrRestart tests the events flow with events manager restart
@@ -281,8 +281,8 @@ func TestEventsMgrRestart(t *testing.T) {
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 				Source:       testEventSource,
 				EvtTypes:     testEventTypes,
-				EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
-				BackupDir:    recorderEventsDir})
+				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+				BackupDir:    recorderEventsDir}, ti.logger)
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -298,7 +298,7 @@ func TestEventsMgrRestart(t *testing.T) {
 					evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test event - 2", nil)
+					evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_WARNING, "test event - 2", nil)
 					totalEventsSentBySrc[i]++
 
 					evtsRecorder.Event(eventType3, evtsapi.SeverityLevel_CRITICAL, "test event - 3", nil)
@@ -320,7 +320,7 @@ func TestEventsMgrRestart(t *testing.T) {
 			// and all the events will be buffered at the writer for this time
 			time.Sleep(1 * time.Second)
 
-			// writers should be able to release all the holding events from the buffer
+			// exporters should be able to release all the holding events from the buffer
 			evtsMgr, _, err := testutils.StartEvtsMgr(evtsMgrURL, ti.mockResolver, ti.logger, ti.esClient)
 			AssertOk(t, err, "failed to start events manager, err: %v", err)
 			ti.evtsMgr = evtsMgr
@@ -335,7 +335,7 @@ func TestEventsMgrRestart(t *testing.T) {
 
 	wg.Wait()
 
-	// total events sent by all the recorders
+	//total events sent by all the recorders
 	totalEventsSent := 0
 	for _, val := range totalEventsSentBySrc {
 		totalEventsSent += val
@@ -347,7 +347,7 @@ func TestEventsMgrRestart(t *testing.T) {
 	// query all the events received from this source.component
 	query := es.NewRegexpQuery("source.component.keyword", fmt.Sprintf("%v-.*", componentID))
 	ti.assertElasticUniqueEvents(t, query, true, 3*numRecorders, "60s")
-	ti.assertElasticTotalEvents(t, query, true, totalEventsSent, "60s")
+	ti.assertElasticTotalEvents(t, query, false, totalEventsSent, "60s")
 }
 
 // TestEventsRESTEndpoints tests GET /events and /events/{UUID} endpoint
@@ -440,8 +440,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 			Source:       testEventSource,
 			EvtTypes:     testEventTypes,
-			EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
-			BackupDir:    recorderEventsDir})
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
 		if err != nil {
 			log.Errorf("failed to create recorder")
 			return
@@ -1053,8 +1053,8 @@ func TestEventsAlertEngine(t *testing.T) {
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 			Source:       testEventSource,
 			EvtTypes:     testEventTypes,
-			EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
-			BackupDir:    recorderEventsDir})
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
 		if err != nil {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -1304,6 +1304,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 		})
 	alertDestBSDSyslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestBSDSyslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
+	defer apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestBSDSyslog.GetObjectMeta())
 
 	// alert destination - 2: RFC5424 style syslog export
 	alertDestRFC5424Syslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
@@ -1318,6 +1319,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 		})
 	alertDestRFC5424Syslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestRFC5424Syslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
+	defer apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
 
 	// policy - 1: convert CRITICAL events with occurrences > 10 to a CRITICAL alert and export it to the given alert dest
 	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events", []*fields.Requirement{
@@ -1326,6 +1328,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	}, []string{alertDestBSDSyslog.GetName(), alertDestRFC5424Syslog.GetName()})
 	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 
 	// policy - 2: convert WARNING events with occurrences = 10 to a WARNING alert and export it to the given alert dest
 	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_WARNING, "alerts from events", []*fields.Requirement{
@@ -1334,6 +1337,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	}, []string{alertDestBSDSyslog.GetName(), alertDestRFC5424Syslog.GetName()})
 	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy2.GetObjectMeta())
 
 	messages := map[chan string][]struct {
 		Substrs   []string                          // syslog message should contain all these strings
@@ -1466,6 +1470,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 		})
 	alertDestBSDSyslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestBSDSyslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
+	defer apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestBSDSyslog.GetObjectMeta())
 
 	// alert destination - 2: RFC5424 style syslog export
 	alertDestRFC5424Syslog := policygen.CreateAlertDestinationObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(),
@@ -1480,6 +1485,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 		})
 	alertDestRFC5424Syslog, err = apiClient.MonitoringV1().AlertDestination().Create(context.Background(), alertDestRFC5424Syslog)
 	AssertOk(t, err, "failed to add alert destination, err: %v", err)
+	defer apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
 
 	// convert CRITICAL events with occurrences > 10 to a CRITICAL alert and export it to the given alert dest
 	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events", []*fields.Requirement{
@@ -1488,6 +1494,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 	}, []string{alertDestBSDSyslog.GetName(), alertDestRFC5424Syslog.GetName()})
 	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 
 	messages := map[chan string][]struct {
 		Substrs   []string                          // syslog message should contain all these strings
@@ -1617,8 +1624,8 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 			Source:       testEventSource,
 			EvtTypes:     testEventTypes,
-			EvtsProxyURL: ti.evtsProxy.RPCServer.GetListenURL(),
-			BackupDir:    recorderEventsDir})
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
 		if err != nil {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -1645,10 +1652,17 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 	}()
 
 	for messageCh, expectedMessages := range messages {
-		// ensure all the alerts are exported to the given syslog(TCP) server in the respective format.
+		closeMsgCh := make(chan struct{})
+
+		// ensure all the alerts are exported to the given syslog(UDP/TCP) server in the respective format.
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
+
 			for {
 				select {
+				case <-closeMsgCh:
+					return
 				case msg, ok := <-messageCh:
 					if !ok {
 						return
@@ -1678,7 +1692,414 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 				defer m.Unlock()
 				return len(expectedMessages) == 0, nil
 			}, fmt.Sprintf("did not receive all the expected syslog messages, pending: %v", len(expectedMessages)), "20ms", "10s")
+
+		close(closeMsgCh)
 	}
 
 	wg.Wait()
+}
+
+// TestEventsExport tests events export with dummy UDP and TCP servers as syslog server
+func TestEventsExport(t *testing.T) {
+	// setup events pipeline to record and distribute events
+	ti := tInfo{}
+	AssertOk(t, ti.setup(t), "failed to setup test")
+	defer ti.teardown()
+
+	var wg sync.WaitGroup
+
+	// create API server client
+	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
+	AssertOk(t, err, "failed to create API server client, err: %v", err)
+	defer apiClient.Close()
+
+	// start UDP server to receive syslog messages
+	pConn1, receivedMsgsAtUDPServer1, err := serviceutils.StartUDPServer(":0")
+	AssertOk(t, err, "failed to start UDP server, err: %v", err)
+	defer pConn1.Close()
+	tmp1 := strings.Split(pConn1.LocalAddr().String(), ":")
+
+	// start TCP server - 1 to receive syslog messages
+	ln1, receivedMsgsAtTCPServer1, err := serviceutils.StartTCPServer(":0")
+	AssertOk(t, err, "failed to start TCP server, err: %v", err)
+	defer ln1.Close()
+	tmp2 := strings.Split(ln1.Addr().String(), ":")
+
+	// start TCP server - 2 to receive syslog messages
+	ln2, receivedMsgsAtTCPServer2, err := serviceutils.StartTCPServer(":0")
+	AssertOk(t, err, "failed to start TCP server, err: %v", err)
+	defer ln2.Close()
+	tmp3 := strings.Split(ln2.Addr().String(), ":")
+
+	// add event policy - 1
+	eventPolicy1 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-1",
+		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_BSD)],
+		[]*monitoring.ExportConfig{
+			{ // receivedMsgsAtUDPServer1
+				Destination: "127.0.0.1",
+				Transport:   fmt.Sprintf("udp/%s", tmp1[len(tmp1)-1]),
+			},
+			{ // receivedMsgsAtTCPServer1
+				Destination: "127.0.0.1",
+				Transport:   fmt.Sprintf("tcp/%s", tmp2[len(tmp2)-1]),
+			},
+		}, nil)
+	eventPolicy1, err = apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
+	AssertOk(t, err, "failed to create event policy, err: %v", err)
+	defer apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
+
+	// add event policy - 2
+	eventPolicy2 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-2",
+		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+		[]*monitoring.ExportConfig{
+			{ // receivedMsgsAtTCPServer2
+				Destination: "127.0.0.1",
+				Transport:   fmt.Sprintf("tcp/%s", tmp3[len(tmp3)-1]),
+			},
+		},
+		&monitoring.SyslogExportConfig{
+			FacilityOverride: monitoring.SyslogFacility_name[int32(monitoring.SyslogFacility_LOG_SYSLOG)],
+			Prefix:           CreateAlphabetString(5),
+		})
+	eventPolicy2, err = apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy2)
+	AssertOk(t, err, "failed to create event policy, err: %v", err)
+	defer apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy2.GetObjectMeta())
+
+	// to let the event policies reach the policy manager (api server -> evtsmgr -> policy watcher -> policy manager -> exporter)
+	time.Sleep(2 * time.Second)
+
+	messages := map[chan string][]struct {
+		Substrs   []string                          // syslog message should contain all these strings
+		MsgFormat monitoring.MonitoringExportFormat // BSD style message contains the JSON formatted alert; RFC contains <msgID, structured data, msg>
+	}{
+		// all the messages that are sent should be received at the syslog server
+		receivedMsgsAtUDPServer1: {
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+		},
+		receivedMsgsAtTCPServer1: {
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+		},
+		receivedMsgsAtTCPServer2: { // messages belonging to event policy - 2
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix(),
+					fmt.Sprintf("%d", (int32(monitoring.SyslogFacility_LOG_SYSLOG)&0xF8)|(int32(syslog.LogInfo)&0x07))},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+		},
+	}
+
+	testSyslogMessageDelivery(t, ti, messages)
+
+	// update event policy - 1; remove the existing target and add a new one
+	// start UDP server to receive syslog messages
+	pConn2, receivedMsgsAtUDPServer2, err := serviceutils.StartUDPServer(":0")
+	AssertOk(t, err, "failed to start UDP server, err: %v", err)
+	defer pConn2.Close()
+	tmp4 := strings.Split(pConn2.LocalAddr().String(), ":")
+
+	// add event policy - 1
+	eventPolicy1 = policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-1",
+		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+		[]*monitoring.ExportConfig{
+			{ // receivedMsgsAtUDPServer1
+				Destination: "127.0.0.1",
+				Transport:   fmt.Sprintf("udp/%s", tmp1[len(tmp1)-1]),
+			},
+			{ // receivedMsgsAtUDPServer2
+				Destination: "127.0.0.1",
+				Transport:   fmt.Sprintf("udp/%s", tmp4[len(tmp4)-1]),
+			},
+		}, nil)
+	eventPolicy1, err = apiClient.MonitoringV1().EventPolicy().Update(context.Background(), eventPolicy1)
+	AssertOk(t, err, "failed to create event policy, err: %v", err)
+	defer apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
+
+	// `receivedMsgsAtTCPServer1` should receive no more messages as it is removed from the policy '"ep-1"' (refer above);
+	// final should be the last message on this channel
+	wg.Add(1)
+	closeMsgCh := make(chan struct{})
+	go func() {
+		defer wg.Done()
+		time.Sleep(100 * time.Millisecond)
+		receivedMsgsAtTCPServer1 <- "final"
+
+		shouldNotReceiveAnymoreMsgs := false
+
+		for {
+			select {
+			case <-closeMsgCh:
+				return
+			case msg, ok := <-receivedMsgsAtTCPServer1:
+				if !ok {
+					return
+				}
+
+				if msg == "final" {
+					shouldNotReceiveAnymoreMsgs = true
+					continue
+				}
+
+				if shouldNotReceiveAnymoreMsgs {
+					t.Fatalf("syslog target is removed from the policy. so, should not receive any more messages on this channel "+
+						"but received: %v", msg)
+				} else {
+					log.Infof("receiving pending messages from syslog server: %v", msg)
+				}
+			}
+		}
+	}()
+
+	// we should stop seeing messages on the old channel `receivedMsgsAtTCPServer1`
+	// and start seeing messages on the new channel `receivedMsgsAtUDPServer2`
+	messages = map[chan string][]struct {
+		Substrs   []string                          // syslog message should contain all these strings
+		MsgFormat monitoring.MonitoringExportFormat // BSD style message contains the JSON formatted alert; RFC contains <msgID, structured data, msg>
+	}{
+		receivedMsgsAtUDPServer1: { // target - 1 of event policy - 1
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+		},
+		receivedMsgsAtUDPServer2: { // target - 2 of event policy - 2
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL)},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+		},
+		receivedMsgsAtTCPServer2: { // messages belonging to event policy - 2
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix(),
+					fmt.Sprintf("%d", (int32(monitoring.SyslogFacility_LOG_SYSLOG)&0xF8)|(int32(syslog.LogInfo)&0x07))},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+		},
+	}
+	testSyslogMessageDelivery(t, ti, messages)
+
+	close(closeMsgCh)
+
+	// to avoid - panic: send on closed channel
+	// this happens because the test completes before the dispatcher or evtsproxy is done sending all events.
+	// test has completed prior because we check for occurrence of each message but it is possible that the sender is
+	// sending in intervals which means there're are events coming in every batch interval. So, the TCP/UDP server gets
+	// closed while the dispatcher is trying to send events to it. Stopping all the evtsproxy related services before
+	// shutting down the TCP/UDP serer will solve the problem (there won't be anyone trying to send events anymore).
+	ti.evtProxyServices.Stop()
 }
