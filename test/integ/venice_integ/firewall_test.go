@@ -15,6 +15,9 @@ import (
 
 // TestNpmFirewallProfile tests firewall profile create/update/delete operations
 func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
+	if it.config.DatapathKind == "hal" {
+		c.Skip("Uncomment when deletes go through to HAL.")
+	}
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
