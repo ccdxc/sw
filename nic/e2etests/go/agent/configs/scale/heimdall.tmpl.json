@@ -1,0 +1,8 @@
+{
+  "network-start": "10.10.10.10/16",
+  "vlan-offset": 100,
+  "useg-vlan-offset": 200,
+  "firewall-policy-rules":["*", "tcp/80", "udp/53", "tcp/22", "tcp/443", "23/tcp", "udp/10000", "tcp/5000", "tcp/50054", "tcp/1000-2000"],
+  "alg-info":["ftp/tcp/20/20s", "tftp/udp/69/1m5s", "dns/udp/53/30ms", "ftp/tcp/4900/1h", "tftp/udp/5000/30m", "icmp/0/1/200ns", "icmp/3/13/500us"],
+  "flowmon-inteval": ["15s"]
+}

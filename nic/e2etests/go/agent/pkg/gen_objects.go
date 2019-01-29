@@ -237,7 +237,7 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 		return o, nil
 	}
 
-	subnets := libs.GenSubnets(o.Count)
+	subnets := libs.GenSubnetsFixed(o.Count)
 
 	// Networks need to refer to Namespaces
 	namespaceRef := objCache["Namespace"]
@@ -266,7 +266,7 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 		name = fmt.Sprintf("%s-%d", o.Name, i)
 
 		subnet := subnets[i]
-		_, gwIP, _ := libs.GenIPAddress(subnet, 4)
+		_, gwIP, _ := libs.GenIPAddress(subnet, 4, false)
 		nt := netproto.Network{
 			TypeMeta: api.TypeMeta{Kind: "Network"},
 			ObjectMeta: api.ObjectMeta{
@@ -346,7 +346,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 	for i := 0; i < networkRef.Count; i++ {
 		network := fmt.Sprintf("%s-%d", networkRef.Name, i)
 		subnet := networkCache[network]
-		ipAddrs, _, err := libs.GenIPAddress(subnet, endpointsPerNetwork)
+		ipAddrs, _, err := libs.GenIPAddress(subnet, endpointsPerNetwork, false)
 		if err != nil {
 			return nil, fmt.Errorf("could not generate %d EP IP Addresses from %v subnet EPs. %v", endpointsPerNetwork, subnet, err)
 		}
@@ -355,7 +355,7 @@ func (c *Config) generateEndpoints(o *Object, manifestFile string, sdevices []St
 
 	// Configure Tunnel EPs in Infra vrf
 	infraSubnet := networkCache["infra-nw"]
-	infraIPAddress, _, err := libs.GenIPAddress(infraSubnet, INFRA_EP_COUNT)
+	infraIPAddress, _, err := libs.GenIPAddress(infraSubnet, INFRA_EP_COUNT, false)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate %d EP IP Addresses from infra subnet %v EPs. %v", INFRA_EP_COUNT, infraSubnet, err)
 	}
@@ -663,7 +663,7 @@ func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error
 		namespace := fmt.Sprintf("%s-%d", namespaceRef.Name, i%namespaceRef.Count)
 		network := fmt.Sprintf("%s-%d", networkRef.Name, i%networkRef.Count)
 		subnet := networkCache[network]
-		addrs, _, err := libs.GenIPAddress(subnet, 8)
+		addrs, _, err := libs.GenIPAddress(subnet, 8, false)
 		if err != nil {
 			return nil, err
 		}
