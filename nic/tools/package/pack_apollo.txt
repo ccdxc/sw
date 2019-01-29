@@ -73,8 +73,8 @@ nic/build/$ARCH/$PIPELINE/bin/p4pasm_rxdma/                       /nic/conf/$PIP
 nic/build/$ARCH/$PIPELINE/pgm_bin/apollo_p4/                      /nic/conf/$PIPELINE/p4_bin/
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/p4_asm/
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json              /nic/conf/$PIPELINE/capri_p4_table_map.json
-nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_rxdma_actions/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_rxdma_table_map.json
-nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_txdma_actions/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_rxdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_rxdma_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_txdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
 nic/sdk/third-party/avago/build/$ARCH/bin/aapl                    /nic/bin/
 nic/sdk/third-party/avago/build/$ARCH/lib/aapl/C/libAAPL.so       /nic/lib/
 nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom               /nic/conf/fw/
