@@ -767,6 +767,8 @@ validate_service_result(struct pnso_service_result *svc_res)
 				svc_res->num_services);
 		if (err)
 			goto out;
+
+		svc_res->svc[i].err = PNSO_OK;
 	}
 
 	OSAL_LOG_DEBUG("exit!");
