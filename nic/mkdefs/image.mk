@@ -22,7 +22,11 @@ FAKEROOTOPTS=-l ${NICDIR}/buildroot/output/host/lib/libfakeroot.so -f ${NICDIR}/
 
 .PHONY: fetch-buildroot-binaries
 fetch-buildroot-binaries: package
+ifndef CUSTOM_BUILDROOT
 	TOPDIR=${TOPDIR} ${TOPDIR}/nic/tools/fetch-buildroot.sh
+else
+	echo "CUSTOM_BUILDROOT set, skipping buildroot refresh"
+endif
 
 .PHONY: copy-overlay
 copy-overlay: fetch-buildroot-binaries
