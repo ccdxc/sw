@@ -250,6 +250,10 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   revision = "fbae0281ffd546fa6d1959fec6075ac5da7fb577"
   name = "github.com/uber-go/zap"
 
+[[override]]
+  revision = "805b8bc09a50b1f1dc8bc0f8e9fbf32237aa333c"
+  name = "github.com/pensando/goexpect"
+
 [[constraint]]
   branch = "master"
   name = "golang.org/x/tools"

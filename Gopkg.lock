@@ -929,6 +929,14 @@
   version = "v1.1.14"
 
 [[projects]]
+  branch = "master"
+  digest = "1:5b66c432b11dc4996e583c298c03a3120c9f2e1c68d05b72adceff13595892c3"
+  name = "github.com/google/goterm"
+  packages = ["term"]
+  pruneopts = "NUT"
+  revision = "70e1c263818522aa1ecbdd34d7e143639d447ced"
+
+[[projects]]
   digest = "1:1bb197a3b5db4e06e00b7560f8e89836c486627f2a0338332ed37daa003d259e"
   name = "github.com/google/uuid"
   packages = ["."]
@@ -1605,6 +1613,13 @@
   pruneopts = "NUT"
   revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
   version = "v1.2.0"
+
+[[projects]]
+  digest = "1:7c04005149aad047f93fe43b38627d068dee005fa1bcb595fcf1d8b4f92c04a3"
+  name = "github.com/pensando/goexpect"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "805b8bc09a50b1f1dc8bc0f8e9fbf32237aa333c"
 
 [[projects]]
   branch = "master"
@@ -2642,6 +2657,7 @@
     "github.com/openzipkin/zipkin-go-opentracing",
     "github.com/openzipkin/zipkin-go-opentracing/thrift/gen-go/zipkincore",
     "github.com/patrickmn/go-cache",
+    "github.com/pensando/goexpect",
     "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway",
     "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor",
     "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins",
