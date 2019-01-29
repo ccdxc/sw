@@ -426,7 +426,7 @@ chksum_write_result(struct service_info *svc_info)
 	st_desc = status_desc;
 	for (i = 0; i < svc_info->si_num_tags; i++) {
 		memcpy(svc_status->u.chksum.tags[i].chksum,
-			&status_desc->csd_integrity_data,
+			&st_desc->csd_integrity_data,
 			PNSO_CHKSUM_TAG_LEN);
 
 		CPDC_PPRINT_STATUS_DESC(st_desc);
