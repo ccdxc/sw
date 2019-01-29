@@ -15,7 +15,7 @@ selectors:
         lqp         : filter://svc=0
         rqp         : filter://svc=0
 #    maxflows    : 1 
-#   maxrdmasessions     : 1 
+#    maxrdmasessions     : 1 
 
 packets:
    - packet:
@@ -25,10 +25,9 @@ packets:
         headers     :
             payload:
                 data    : pattern-random://0/255/1
-
    - packet:
         id          : IN_PKT_BASE    # Base for Input packet 
-        payloadsize : ref://testcase/packets/id=BASE_PKT/size
+        payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         headers     :
@@ -50,17 +49,15 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 10
+                opcode  : 12
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
-                a       : 1
-            reth: 
-                va      : callback://rdma/rdma/GetPAfromSLAB/slab_id=SLAB0000,offset=1024
-                dma_len : ref://testcase/packets/id=BASE_PKT/size
-                #r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
+            reth:
+                va      : callback://rdma/rdma/GetPAfromSLAB/slab_id=SLAB0000,offset=0
+                dma_len : 64
                 r_key   : callback://rdma/rdma/GetReservedLKey
             payload:
-                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                data    : None
 
    - packet:
         id          : IN_PKT    # Input packet 
@@ -85,7 +82,7 @@ packets:
 
    - packet:
         id          : EXP_PKT_BASE    # Expected Ack packet
-        payloadsize : 0
+        payloadsize : ref://testcase/packets/id=BASE_PKT/size
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
         headers     :
@@ -106,14 +103,15 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 17 # ACK
+                opcode  : 16 # RDMA READ Response Only
                 destqp  : ref://testcase/config/rdmasession/rqp/id
-                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0  #Resp should carry PSN from Req
             aeth:
                 syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
                 msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
             payload:
-                data    : None
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
 
    - packet:
         id          : EXP_PKT    # Expected Ack packet
@@ -139,25 +137,14 @@ packets:
 
 buffers:
     - buffer:
-        id      : XFER_BUF
-        template: ref://factory/templates/id=RDMA_XFER
-        fields:
-           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
-           offset  : 1024
-           size    : ref://testcase/packets/id=BASE_PKT/size
-
-    - buffer:
-        id      : EXP_BUF
+        id      : BUF
         template: ref://factory/templates/id=RDMA_BUFFER
         fields:
-           slab    : None
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0000
            offset  : 0
            segments:
-               - size    : ref://testcase/packets/id=BASE_PKT/size
+               - size    : 64
                  data    : ref://testcase/packets/id=BASE_PKT/rawbytes
-
-
-descriptors:
 
 trigger:
     packets:
@@ -166,11 +153,6 @@ trigger:
             port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
 expect:
-    descriptors:
-        - descriptor:
-            object : ref://testcase/buffers/id=EXP_BUF
-            ring   : ref://testcase/buffers/id=XFER_BUF
-
     packets:
         - packet:
             object  : ref://testcase/packets/id=EXP_PKT

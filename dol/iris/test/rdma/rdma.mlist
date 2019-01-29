@@ -827,6 +827,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_READ_ONLY_RSVD_KEY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_only_rsvd_key
+        spec    : resp_rx_read_only_rsvd_key.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RESP_RX_READ_FIRST_MID_LAST
         enable  : True
         package : test.rdma
@@ -867,6 +875,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_WRITE_ONLY_RSVD_KEY_ERR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_rsvd_key_err
+        spec    : resp_rx_write_only_rsvd_key_err.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_WRITE_ONLY_IMM
         enable  : True
         package : test.rdma
@@ -904,6 +920,14 @@ modules:
         package : test.rdma
         module  : resp_rx_write_first_mid_last_rsvd_key
         spec    : resp_rx_write_first_mid_last_rsvd_key.testspec
+        ignore  : False
+  
+    - module:
+        name    : RDMA_RX_WRITE_FIRST_MID_LAST_RSVD_KEY_ERR
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_first_mid_last_rsvd_key_err
+        spec    : resp_rx_write_first_mid_last_rsvd_key_err.testspec
         ignore  : False
   
     - module:

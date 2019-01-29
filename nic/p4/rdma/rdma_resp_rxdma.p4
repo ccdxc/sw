@@ -311,7 +311,8 @@ header_type resp_rx_rqcb_to_write_rkey_info_t {
         load_reth                        :    1;
         incr_c_index                     :    1;
         pad                              :    2;
-        rsvd                             :   12;
+        priv_oper_enable                 :    1;
+        rsvd                             :   11;
     }
 }
 
@@ -503,7 +504,8 @@ header_type resp_rx_rqcb_to_read_atomic_rkey_info_t {
         rsq_p_index                      :   16;
         skip_rsq_dbell                   :    1;
         read_or_atomic                   :    1;
-        pad                              :   14;
+        priv_oper_enable                 :    1;
+        pad                              :   13;
     }
 }
 
@@ -1376,6 +1378,7 @@ action resp_rx_atomic_resource_process () {
     modify_field(t1_s2s_rqcb_to_read_atomic_rkey_info_scr.rsq_p_index, t1_s2s_rqcb_to_read_atomic_rkey_info.rsq_p_index);
     modify_field(t1_s2s_rqcb_to_read_atomic_rkey_info_scr.skip_rsq_dbell, t1_s2s_rqcb_to_read_atomic_rkey_info.skip_rsq_dbell);
     modify_field(t1_s2s_rqcb_to_read_atomic_rkey_info_scr.read_or_atomic, t1_s2s_rqcb_to_read_atomic_rkey_info.read_or_atomic);
+    modify_field(t1_s2s_rqcb_to_read_atomic_rkey_info_scr.priv_oper_enable, t1_s2s_rqcb_to_read_atomic_rkey_info.priv_oper_enable);
     modify_field(t1_s2s_rqcb_to_read_atomic_rkey_info_scr.pad, t1_s2s_rqcb_to_read_atomic_rkey_info.pad);
 
 }
@@ -1737,6 +1740,7 @@ action resp_rx_write_dummy_process () {
     modify_field(t1_s2s_rqcb_to_write_rkey_info_scr.load_reth, t1_s2s_rqcb_to_write_rkey_info.load_reth);
     modify_field(t1_s2s_rqcb_to_write_rkey_info_scr.incr_c_index, t1_s2s_rqcb_to_write_rkey_info.incr_c_index);
     modify_field(t1_s2s_rqcb_to_write_rkey_info_scr.pad, t1_s2s_rqcb_to_write_rkey_info.pad);
+    modify_field(t1_s2s_rqcb_to_write_rkey_info_scr.priv_oper_enable, t1_s2s_rqcb_to_write_rkey_info.priv_oper_enable);
     modify_field(t1_s2s_rqcb_to_write_rkey_info_scr.rsvd, t1_s2s_rqcb_to_write_rkey_info.rsvd);
 
 }

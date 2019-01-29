@@ -206,9 +206,7 @@ invoke_dcqcn:
     add            r3,  r0, K_DCQCN_CB_ADDR // BD slot
 
 dcqcn_mpu_only:
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r3)
-    nop.e
-    nop
+    CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_dcqcn_enforce_process, r3)
 
 dcqcn:
     CAPRI_SET_FIELD2(TO_S4_P, packet_len, K_XFER_BYTES)
@@ -256,5 +254,6 @@ error_completion:
     CAPRI_SET_FIELD2(phv_global_common, _error_disable_qp, 1)
 
     phvwr       CAPRI_PHV_FIELD(TO_S7_P, last_syndrome), AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
-    phvwr.e     p.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
-    CAPRI_SET_FIELD2(TO_S5_P, ack_nak_process, 1) // Exit Slot
+    phvwr       p.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
+    b           dcqcn_mpu_only
+    CAPRI_SET_FIELD2(TO_S5_P, ack_nak_process, 1) // BD Slot

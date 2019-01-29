@@ -30,9 +30,11 @@ struct rdma_stage0_table_k k;
 resp_tx_rqcb_process:
 
     bcf             [c2 | c3 | c7], table_error
-    // are we in a state to process received packets ?
+    // are we in a state to process posted buffers?
     slt             c1, d.state, QP_STATE_INIT // BD Slot
-    bcf             [c1], state_fail
+
+    seq             c2, d.state, QP_STATE_ERR
+    bcf             [c1 | c2], state_fail
     nop             //BD Slot
 
     .brbegin
