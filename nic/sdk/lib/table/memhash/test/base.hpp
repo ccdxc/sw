@@ -18,7 +18,7 @@ using sdk::table::mem_hash;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
-using sdk::table::mem_hash_factory_params_t;
+using sdk::table::sdk_table_factory_params_t;
 
 #define MHTEST_CHECK_RETURN(_exp, _ret) if (!(_exp)) return (_ret)
 
@@ -42,7 +42,7 @@ protected:
     virtual ~MemHashGtestBase() {}
     
     virtual void SetUp() {
-        mem_hash_factory_params_t params = { 0 };
+        sdk_table_factory_params_t params = { 0 };
         
         params.table_id = MEM_HASH_P4TBL_ID_H5;
         params.num_hints = 5;

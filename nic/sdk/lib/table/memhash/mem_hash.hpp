@@ -27,15 +27,6 @@ using sdk::table::memhash::mem_hash_api_stats;
 using sdk::table::memhash::mem_hash_table_stats;
 using sdk::table::memhash::mem_hash_txn;
 
-typedef struct mem_hash_factory_params_ {
-    uint32_t table_id;
-    uint32_t num_hints;
-    uint32_t max_recircs;
-    table_health_monitor_func_t health_monitor_func;
-    key2str_t key2str;
-    appdata2str_t appdata2str;
-} mem_hash_factory_params_t;
-
 typedef struct mem_hash_properties_ {
     std::string name;
     uint32_t main_table_id;
@@ -49,7 +40,7 @@ typedef struct mem_hash_properties_ {
     uint32_t hw_data_len;
     uint32_t max_recircs;
     uint32_t hash_poly;
-    table_health_monitor_func_t health_monitor_func;
+    //table_health_monitor_func_t health_monitor_func;
     key2str_t key2str;
     appdata2str_t appdata2str;
 } mem_hash_properties_t;
@@ -65,13 +56,14 @@ private:
     sdk_spinlock_t slock_;
 
 private:
-    sdk_ret_t init_(mem_hash_factory_params_t *params);
+    sdk_ret_t init_(sdk_table_factory_params_t *params);
     sdk_ret_t genhash_(sdk_table_api_params_t *params);
-    sdk_ret_t create_api_context_(uint32_t op, sdk_table_api_params_t *params,
+    sdk_ret_t create_api_context_(sdk_table_api_op_t op,
+                                  sdk_table_api_params_t *params,
                                   void **retctx);
 
 public:
-    static mem_hash *factory(mem_hash_factory_params_t *params);
+    static mem_hash *factory(sdk_table_factory_params_t *params);
     static void destroy(mem_hash *memhash);
 
     mem_hash() {

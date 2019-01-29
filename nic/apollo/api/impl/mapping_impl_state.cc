@@ -14,7 +14,7 @@
 
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 
-using sdk::table::mem_hash_factory_params_t;
+using sdk::table::sdk_table_factory_params_t;
 
 namespace impl {
 
@@ -29,12 +29,12 @@ namespace impl {
  */
 mapping_impl_state::mapping_impl_state(oci_state *state) {
     p4pd_table_properties_t tinfo;
-    mem_hash_factory_params_t mhparams;
+    sdk_table_factory_params_t mhparams;
 
     /**< instantiate P4 tables for bookkeeping */
     bzero(&mhparams, sizeof(mhparams));
     mhparams.max_recircs = 8;
-    mhparams.health_monitor_func = NULL;
+    //mhparams.health_monitor_func = NULL;
 
     // Local IP Mapping table
     mhparams.table_id = P4TBL_ID_LOCAL_IP_MAPPING;

@@ -13,7 +13,7 @@
 #include "mem_hash_utils.hpp"
 #include "mem_hash_stats.hpp"
 
-using sdk::table::mem_hash_factory_params_t;
+using sdk::table::sdk_table_factory_params_t;
 using sdk::table::mem_hash_properties_t;
 
 mem_hash_api_context* 
@@ -165,7 +165,7 @@ mem_hash_api_context::factory(uint32_t op,
     if (!ctx) {
         return NULL;
     }
-    ctx->op = static_cast<mem_hash_api_context::api_op>(op);
+    ctx->op = static_cast<sdk::table::sdk_table_api_op_t>(op);
 
     // Copy the api params
     ctx->in_key = params->key;

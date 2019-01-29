@@ -53,7 +53,7 @@ uint32_t mem_hash_api_context::numctx_ = 0;
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
 mem_hash *
-mem_hash::factory(mem_hash_factory_params_t *params) {
+mem_hash::factory(sdk_table_factory_params_t *params) {
     void *mem = NULL;
     mem_hash *memhash = NULL;
     sdk_ret_t ret = SDK_RET_OK;
@@ -74,7 +74,7 @@ mem_hash::factory(mem_hash_factory_params_t *params) {
 }
 
 sdk_ret_t
-mem_hash::init_(mem_hash_factory_params_t *params) {
+mem_hash::init_(sdk_table_factory_params_t *params) {
     p4pd_error_t p4pdret;
     p4pd_table_properties_t tinfo, ctinfo;
 
@@ -87,7 +87,7 @@ mem_hash::init_(mem_hash_factory_params_t *params) {
     props_->main_table_id = params->table_id;
     props_->num_hints = params->num_hints;
     props_->max_recircs = params->max_recircs;
-    props_->health_monitor_func = params->health_monitor_func;
+    //props_->health_monitor_func = params->health_monitor_func;
     props_->key2str = params->key2str;
     props_->appdata2str = params->appdata2str;
 
@@ -197,7 +197,8 @@ mem_hash::genhash_(sdk_table_api_params_t *params) {
 // mem_hash: Create API context. This is used by all APIs
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash::create_api_context_(uint32_t op, sdk_table_api_params_t *params,
+mem_hash::create_api_context_(sdk_table_api_op_t op,
+                              sdk_table_api_params_t *params,
                               void **retctx) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
@@ -233,7 +234,7 @@ mem_hash::insert(sdk_table_api_params_t *params) {
     MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key && params->appdata);
 
-    ret = create_api_context_(mem_hash_api_context::API_INSERT,
+    ret = create_api_context_(sdk::table::SDK_TABLE_API_INSERT,
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("failed to create api context. ret:%d", ret);
@@ -263,7 +264,7 @@ mem_hash::update(sdk_table_api_params_t *params) {
     MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key && params->appdata);
 
-    ret = create_api_context_(mem_hash_api_context::API_UPDATE,
+    ret = create_api_context_(sdk::table::SDK_TABLE_API_UPDATE,
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("failed to create api context. ret:%d", ret);
@@ -296,7 +297,7 @@ mem_hash::remove(sdk_table_api_params_t *params) {
     MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key);
 
-    ret = create_api_context_(mem_hash_api_context::API_REMOVE,
+    ret = create_api_context_(sdk::table::SDK_TABLE_API_REMOVE,
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("failed to create api context. ret:%d", ret);
@@ -329,7 +330,7 @@ mem_hash::get(sdk_table_api_params_t *params) {
     MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key);
 
-    ret = create_api_context_(mem_hash_api_context::API_GET,
+    ret = create_api_context_(sdk::table::SDK_TABLE_API_GET,
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("failed to create api context. ret:%d", ret);
@@ -362,7 +363,7 @@ mem_hash::reserve(sdk_table_api_params_t *params) {
     MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key);
 
-    ret = create_api_context_(mem_hash_api_context::API_RESERVE,
+    ret = create_api_context_(sdk::table::SDK_TABLE_API_RESERVE,
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("failed to create api context. ret:%d", ret);
@@ -396,7 +397,7 @@ mem_hash::release(sdk_table_api_params_t *params) {
     MEM_HASH_API_BEGIN_();
     SDK_ASSERT(params->key && params->handle);
 
-    ret = create_api_context_(mem_hash_api_context::API_RELEASE,
+    ret = create_api_context_(sdk::table::SDK_TABLE_API_RELEASE,
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         SDK_TRACE_ERR("failed to create api context. ret:%d", ret);
