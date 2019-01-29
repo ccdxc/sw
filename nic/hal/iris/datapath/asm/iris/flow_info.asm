@@ -51,8 +51,8 @@ f_flow_info_thread_1:
 
   /* qid */
   seq           c1, d.u.flow_info_d.qid_en, 1
-  phvwrpair.c1  p.control_metadata_qid, d.u.flow_info_d.tunnel_vnid, \
-                    p.control_metadata_qtype, d.u.flow_info_d.qtype
+  phvwr.c1      p.control_metadata_qid, d.u.flow_info_d.tunnel_vnid
+  phvwr.c1      p.control_metadata_qtype, d.u.flow_info_d.qtype
 
   /* mirror session id and logging */
   phvwrpair     p.capri_intrinsic_tm_span_session, \

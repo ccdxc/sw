@@ -89,7 +89,7 @@ def GetExpectedIpv4DstAddress(testcase, packet):
         addr = '64.0.0.1'
     else:
         if opt == True:
-            addr = '12.12.12.12'
+            addr = '10.10.10.100'
         else:
             addr = '64.0.0.1'
     return addr
