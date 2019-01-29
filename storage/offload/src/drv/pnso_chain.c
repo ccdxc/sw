@@ -466,6 +466,30 @@ init_service_params(const struct pnso_service_request *svc_req,
 	return PNSO_OK;
 }
 
+static inline void
+get_seq_info_by_path(struct service_info *svc_info, accel_ring_id_t *ring_id,
+		uint16_t *qtype)
+{
+	if ((svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE) ||
+		(svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE)) {
+		if (svc_info->si_flags & CHAIN_SFLAG_TYPE_READ) {
+			*ring_id = ACCEL_RING_DC;
+			*qtype = SONIC_QTYPE_DC_SQ;
+		} else {
+			*ring_id = ACCEL_RING_CP;
+			*qtype = SONIC_QTYPE_CP_SQ;
+		}
+	} else {
+		if (svc_info->si_flags & CHAIN_SFLAG_TYPE_READ) {
+			*ring_id = ACCEL_RING_DC_HOT;
+			*qtype = SONIC_QTYPE_DC_SQ;
+		} else {
+			*ring_id = ACCEL_RING_CP_HOT;
+			*qtype = SONIC_QTYPE_CP_SQ;
+		}
+	}
+}
+
 static pnso_error_t
 init_service_info(enum pnso_service_type svc_type,
 		struct pnso_service_status *svc_status,
@@ -494,7 +518,8 @@ init_service_info(enum pnso_service_type svc_type,
 		break;
 	case PNSO_SVC_TYPE_COMPRESS:
 		svc_info->si_ops = cp_ops;
-		ring_id = ACCEL_RING_CP;
+		get_seq_info_by_path(svc_info, &ring_id,
+				&svc_info->si_seq_info.sqi_qtype);
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
@@ -504,7 +529,8 @@ init_service_info(enum pnso_service_type svc_type,
 		break;
 	case PNSO_SVC_TYPE_DECOMPRESS:
 		svc_info->si_ops = dc_ops;
-		ring_id = ACCEL_RING_DC;
+		get_seq_info_by_path(svc_info, &ring_id,
+				&svc_info->si_seq_info.sqi_qtype);
 		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
@@ -514,8 +540,8 @@ init_service_info(enum pnso_service_type svc_type,
 		break;
 	case PNSO_SVC_TYPE_HASH:
 		svc_info->si_ops = hash_ops;
-		ring_id = ACCEL_RING_CP_HOT;
-		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		get_seq_info_by_path(svc_info, &ring_id,
+				&svc_info->si_seq_info.sqi_qtype);
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
 		svc_info->si_desc_flags = svc_params->u.sp_hash_desc->flags;
@@ -523,10 +549,8 @@ init_service_info(enum pnso_service_type svc_type,
 		break;
 	case PNSO_SVC_TYPE_CHKSUM:
 		svc_info->si_ops = chksum_ops;
-		ring_id = ACCEL_RING_CP;
-		/* TODO-chain: rolling back to previous PR setting DCq failed */
-		// svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_DC_SQ;
-		svc_info->si_seq_info.sqi_qtype = SONIC_QTYPE_CP_SQ;
+		get_seq_info_by_path(svc_info, &ring_id,
+				&svc_info->si_seq_info.sqi_qtype);
 		svc_info->si_seq_info.sqi_status_qtype =
 			SONIC_QTYPE_CPDC_STATUS;
 		svc_info->si_desc_flags = svc_params->u.sp_chksum_desc->flags;
@@ -622,7 +646,20 @@ chn_destroy_chain(struct service_chain *chain)
 	OSAL_LOG_DEBUG("exit!");
 }
 
-/* TODO-poll/async: Revisit to collapse flags after async in-place */
+static inline void
+set_chain_type(const struct pnso_service_request *svc_req, uint16_t *flags)
+{
+	uint32_t i;
+
+	for (i = 0; i < svc_req->num_services; i++) {
+		if ((svc_req->svc[i].svc_type == PNSO_SVC_TYPE_DECOMPRESS) ||
+			(svc_req->svc[i].svc_type == PNSO_SVC_TYPE_DECRYPT)) {
+			*flags |= CHAIN_CFLAG_TYPE_READ;
+			return;
+		}
+	}
+}
+
 static inline void
 set_chain_mode(uint16_t mode_flags, uint16_t *flags)
 {
@@ -695,10 +732,13 @@ chn_create_chain(struct request_params *req_params)
 	chain->sc_res = res;
 
 	chain->sc_pcr = pcr;
+
 	if (req_params->rp_flags & REQUEST_RFLAG_TYPE_BATCH)
 		chain->sc_batch_info = req_params->rp_batch_info;
 
 	set_chain_mode(req_params->rp_flags, &chain->sc_flags);
+
+	set_chain_type(chain->sc_req, &chain->sc_flags);
 
 	if ((req_params->rp_flags & REQUEST_RFLAG_TYPE_CHAIN) &&
 			((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) ||
@@ -745,6 +785,9 @@ chn_create_chain(struct request_params *req_params)
 		if (!(svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE))
 			if (i+1 == chain->sc_num_services)
 				svc_info->si_flags |= CHAIN_SFLAG_LAST_SERVICE;
+
+		if (chain->sc_flags & CHAIN_CFLAG_TYPE_READ)
+			svc_info->si_flags |= CHAIN_SFLAG_TYPE_READ;
 
 		if (req_params->rp_flags & REQUEST_RFLAG_TYPE_BATCH) {
 			svc_info->si_flags |= CHAIN_SFLAG_IN_BATCH;

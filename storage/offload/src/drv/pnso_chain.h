@@ -73,6 +73,7 @@ extern "C" {
 #define CHAIN_SFLAG_MODE_ASYNC		(1 << 6)
 #define CHAIN_SFLAG_BYPASS_ONFAIL	(1 << 7)
 #define CHAIN_SFLAG_PER_BLOCK		(1 << 8)	/* for hash/chksum */
+#define CHAIN_SFLAG_TYPE_READ		(1 << 9)	/* for DC/Decrypt */
 
 /* chain flags */
 #define CHAIN_CFLAG_MODE_SYNC		(1 << 0)
@@ -82,6 +83,7 @@ extern "C" {
 #define CHAIN_CFLAG_IN_BATCH		(1 << 4)
 #define CHAIN_CFLAG_POLLED		(1 << 5)
 #define CHAIN_CFLAG_RANG_DB		(1 << 6)
+#define CHAIN_CFLAG_TYPE_READ		(1 << 7)	/* for DC/Decrypt */
 
 #ifdef NDEBUG
 #define PPRINT_CHAIN(c)
