@@ -40,7 +40,6 @@ switchport_entry::factory(oci_switchport_t *oci_switchport) {
             impl_base::factory(impl::IMPL_OBJ_ID_SWITCHPORT, oci_switchport);
         if (switchport->impl_ == NULL) {
             switchport_entry::destroy(switchport);
-            switchport_db()->switchport_free(switchport);
             return NULL;
         }
     }
@@ -60,6 +59,7 @@ switchport_entry::destroy(switchport_entry *switchport) {
         impl_base::destroy(impl::IMPL_OBJ_ID_SWITCHPORT, switchport->impl_);
     }
     switchport->~switchport_entry();
+    switchport_db()->switchport_free(switchport);
 }
 
 /**

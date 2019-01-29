@@ -14,6 +14,8 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/include/api/oci.hpp"
 
+using std::string;
+
 namespace api {
 
 /**
@@ -139,6 +141,12 @@ public:
 
     /**< @brief    clear hw dirty bit on this object */
     void clear_hw_dirty(void) { hw_dirty_ = false; }
+
+    /**< @brief    return true if this is 'stateless' object */
+    bool stateless(void) { return stateless_; }
+
+    /**< @brief    return string to uniquely identify obj (for debugging) */
+    virtual string tostr(void) const { return "api_base"; }
 
 protected:
     bool    in_dirty_list_;    /**< true if object is in the dirty list */

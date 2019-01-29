@@ -46,7 +46,6 @@ tep_entry::factory(oci_tep_t *oci_tep) {
         tep->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_TEP, oci_tep);
         if (tep->impl_ == NULL) {
             tep_entry::destroy(tep);
-            tep_db()->tep_free(tep);
             return NULL;
         }
     }
@@ -74,6 +73,7 @@ tep_entry::destroy(tep_entry *tep) {
     }
     tep->release_resources_();
     tep->~tep_entry();
+    tep_db()->tep_free(tep);
 }
 
 /**

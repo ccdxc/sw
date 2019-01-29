@@ -8,6 +8,7 @@
 
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/trace.hpp"
 
 namespace api {
 
@@ -69,7 +70,7 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
             api_obj->add_to_db();
         } else {
             /**
-             * this could be XXX-DEL-ADD/ADD-DEL-XXX-ADD kind of scenario in
+             * this could be XXX-DEL-ADD/ADD-XXX-DEL-XXX-ADD kind of scenario in
              * same batch, as we don't expect to see ADD-XXX-ADD (unless we want
              * to support idempotency)
              */
@@ -100,7 +101,11 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
                     SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
                 }
             } else {
-                /**< UPD-XXX-DEL-XXX-ADD scenario, re-init cloned obj's cfg */
+                /**
+                 * UPD-XXX-DEL-XXX-ADD scenario, re-init cloned obj's cfg (if
+                 * we update original obj, we may not be able to abort later)
+                 */
+                SDK_ASSERT(octxt.api_op == API_OP_UPDATE);
                 octxt.api_params = api_ctxt->api_params;
                 ret = octxt.cloned_obj->init_config(api_ctxt);
                 SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
@@ -109,11 +114,6 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
         break;
 
     case API_OP_DELETE:
-        /**
-         * find non-dirty object since we don't support add and delete in same
-         * batch as it doesn't make sense (may be it does from external
-         * controller point of view, if its batching periodically
-         */
         api_obj = api_base::find_obj(api_ctxt);
         if (api_obj) {
             if (api_obj->is_in_dirty_list()) {
@@ -235,7 +235,6 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          */
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         ret = api_obj->program_config(obj_ctxt);
-        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         break;
 
     case API_OP_DELETE:
@@ -248,7 +247,6 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          *       stage (by programming tables in stage 0, if needed)
          */
         ret = api_obj->cleanup_config(obj_ctxt);
-        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         break;
 
     case API_OP_UPDATE:
@@ -263,7 +261,6 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          */
         SDK_ASSERT(obj_ctxt->cloned_obj != NULL);
         ret = obj_ctxt->cloned_obj->update_config(api_obj, obj_ctxt);
-        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
         break;
 
     default:
@@ -281,7 +278,11 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
      */
     api_obj->set_hw_dirty();
 
-    return SDK_RET_OK;
+    if (ret != SDK_RET_OK) {
+        OCI_TRACE_ERR("Failed to process api op %u, obj %s",
+                      obj_ctxt->api_op, api_obj->tostring());
+    }
+    return ret;
 }
 
 /**
@@ -342,6 +343,7 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                                        obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         del_from_dirty_list_(api_obj);
+        api_obj->clear_hw_dirty();
         break;
 
     case API_OP_DELETE:
@@ -443,10 +445,9 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          * so far we did the following for the API_OP_CREATE:
          * 1. instantiated the object
          * 2. initialized config (in s/w)
-         * 3. set the dirty bit
-         * 4. added the object to the db(s)
-         * 5. programmed the h/w (if program_config_stage_() got to this object
-         *    in dirty list) before failing
+         * 3. added the object to the db(s)
+         * 4. programmed the h/w (if program_config_stage_() got to this object
+         *    in dirty list) before failing (i.e., set hw_dirty bit to true)
          * so, now we have to undo these actions
          */
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
@@ -539,7 +540,8 @@ api_engine::batch_begin(oci_batch_params_t *params) {
  */
 sdk_ret_t
 api_engine::batch_commit(void) {
-    sdk_ret_t     ret;
+    sdk_ret_t    ret;
+    api_base     *api_obj;
 
     /**
      * pre process the APIs by walking over the stashed API contexts to form
@@ -569,6 +571,7 @@ api_engine::batch_commit(void) {
     /**< clear all batch related info */
     batch_ctxt_.epoch = OCI_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;
+    /**< walk all API contexts and free the api params allocated */
     for (auto it = batch_ctxt_.api_ctxts.begin();
          it != batch_ctxt_.api_ctxts.end(); ++it) {
         if ((*it).api_params) {
@@ -576,6 +579,17 @@ api_engine::batch_commit(void) {
         }
     }
     batch_ctxt_.api_ctxts.clear();
+
+    /**< walk dirty object map/list & release all stateless object memory */
+    for (auto it = batch_ctxt_.dirty_obj_map.begin();
+         it != batch_ctxt_.dirty_obj_map.end(); ) {
+        api_obj = it->first;
+        if (api_obj->stateless()) {
+            // destroy this object as it is not needed anymore
+            api_obj->delay_delete();
+        }
+        batch_ctxt_.dirty_obj_map.erase(it++);
+    }
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
     return SDK_RET_OK;
@@ -588,6 +602,7 @@ api_engine::batch_commit(void) {
 sdk_ret_t
 api_engine::batch_abort(void) {
     sdk_ret_t                     ret;
+    api_base                      *api_obj;
     dirty_obj_list_t::iterator    next_it;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
@@ -610,6 +625,17 @@ api_engine::batch_abort(void) {
         }
     }
     batch_ctxt_.api_ctxts.clear();
+
+    /**< walk dirty object map/list & release all stateless object memory */
+    for (auto it = batch_ctxt_.dirty_obj_map.begin();
+         it != batch_ctxt_.dirty_obj_map.end(); ) {
+        api_obj = it->first;
+        if (api_obj->stateless()) {
+            // destroy this object as it is not needed anymore
+            api_obj->delay_delete();
+        }
+        batch_ctxt_.dirty_obj_map.erase(it++);
+    }
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
     return SDK_RET_OK;
@@ -618,7 +644,7 @@ api_engine::batch_abort(void) {
 /**< @brief    constructor */
 api_engine::api_engine() {
     api_params_slab_ =
-        slab::factory("api params", OCI_SLAB_ID_API_PARAMS,
+        slab::factory("api-params", OCI_SLAB_ID_API_PARAMS,
                       sizeof(api_params_t), 128, true, true, true, NULL);
 }
 
