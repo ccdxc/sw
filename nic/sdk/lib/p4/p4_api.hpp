@@ -259,8 +259,48 @@ uint64_t
 p4pd_index_to_hwindex_map(uint32_t   tableid,
                           void       *swkey);
 
+/* Install entry into P4-table (using sw keys).
+ *
+ * Arguments:
+ *
+ *  IN  : uint32_t tableid       : Table Id that identifies
+ *                                 P4 table. This id is obtained
+ *                                 from p4pd_table_id_enum.
+ *  IN  : uint32_t index         : Table index where entry is installed.
+ *                                 Caller of the API is expected to provide
+ *                                 this index based on placement decision made.
+ *                                 If tableid identifies hash lookup table,
+ *                                 then index is hash value computed using key
+ *                                 bits. If table id identifies ternary lookup
+ *                                 table, then index is priority or order
+ *                                 determining relative to other enties.
+ *                                 If table is index table, then index value
+ *                                 is same as the key used to lookup table.
+ *  IN  : uint8_t *swkey         : Software key to be installed into P4-table
+ *                                 Can be NULL if table id identifies index
+ *                                 based lookup table.
+ *  IN  : uint8_t *swkey_mask    : Key mask bits mask used in ternary matching.
+ *                                 This data structure is of same type as the Key.
+ *                                 Can be NULL if table id identifies
+ *                                 exact match table (hash based lookup) or
+ *                                 when table id identifies index based lookup
+ *                                 table.
+ *  IN  : void    *actiondata    : Action data associated with the key.
+ *                                 Action data structure generated per p4 table.
+ *                                 Refer to p4pd.h for structure details
+ *                                 Per p4 table action data structure should
+ *                                 provided as void* actiondata.
+ *
+ * Return Value:
+ *  pd_error_t                   : P4PD_SUCCESS / P4PD_FAIL
+ */
+p4pd_error_t p4pd_entry_install(uint32_t tableid,
+                                uint32_t index,
+                                void    *swkey,
+                                void    *swkey_mask,
+                                void    *actiondata);
 
-/* Install entry into P4-table.
+/* Install entry into P4-table (using hw keys).
  *
  * Arguments:
  *

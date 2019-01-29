@@ -32,7 +32,7 @@ using sdk::table::memhash::mem_hash_api_context;
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
-    p4pd_error_t pdret = 0;
+    p4pd_error_t p4pdret = 0;
 
     if (ctx->sw_valid) {
         return SDK_RET_OK;
@@ -43,9 +43,9 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
         SDK_ASSERT(ctx->table_index);
     }
 
-    pdret = p4pd_entry_read(ctx->table_id, ctx->table_index,
+    p4pdret = p4pd_entry_read(ctx->table_id, ctx->table_index,
                             ctx->sw_key, NULL, ctx->sw_data);
-    SDK_ASSERT_RETURN(pdret == P4PD_SUCCESS, SDK_RET_HW_READ_ERR);
+    SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_HW_READ_ERR);
 
     // Decode the appdata from sw_data
     get_sw_data_appdata_(ctx);
@@ -90,13 +90,8 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
                     ctx->table_id, ctx->table_index);
     PRINT_SW_DATA(ctx);
 
-    p4pdret = p4pd_hwkey_hwmask_build(ctx->table_id,
-                                      ctx->sw_key, NULL,
-                                      ctx->hw_key, NULL);
-    SDK_ASSERT(p4pdret == P4PD_SUCCESS);
-
-    p4pdret = p4pd_entry_write(ctx->table_id, ctx->table_index,
-                               ctx->hw_key, NULL, ctx->sw_data);
+    p4pdret = p4pd_entry_install(ctx->table_id, ctx->table_index,
+                                 ctx->sw_key, NULL, ctx->sw_data);
     if (p4pdret != P4PD_SUCCESS) {
         SDK_TRACE_ERR("HW write failed: ret:%d", p4pdret);
         // Write failure is fatal
