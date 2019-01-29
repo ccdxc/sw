@@ -62,9 +62,9 @@ def Trigger(tc):
     s_port = 12340
     e_port = s_port + tc.iterators.threads
     if (tc.iterators.threads > 1):
-        client_bkg = True
+        tc.client_bkg = True
     else:
-        client_bkg = False
+        tc.client_bkg = False
 
     while ((i < 2) and (i < k)):
         j = (i + 1) % 2
@@ -101,9 +101,9 @@ def Trigger(tc):
                                    w2.node_name, 
                                    w2.workload_name,
                                    tc.ib_prefix[j] + cmd, 
-                                   background=client_bkg, timeout=120)
+                                   background=tc.client_bkg, timeout=120)
 
-        if client_bkg:
+        if tc.client_bkg:
             # since the client is running in the background, sleep for 120 secs
             # to allow the test to complete before verifying the result
             cmd = 'sleep 120'
@@ -134,7 +134,12 @@ def Verify(tc):
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             result = api.types.status.FAILURE
 
-        if api.Trigger_IsBackgroundCommand(cmd) and len(cmd.stderr) != 0:
+        #Check stderr only when we start multiple threads, but we definately want to avoid
+        #stderr check for UD case as with -a it always generate following error - ignore such error
+        #      Max msg size in UD is MTU 4096 
+        #      Changing to this MTU 
+        #this needs change when multiple UD threads are started, or fix the Stderr message for UD
+        if tc.client_bkg and  api.Trigger_IsBackgroundCommand(cmd) and len(cmd.stderr) != 0:
             result = api.types.status.FAILURE
 
     return result
