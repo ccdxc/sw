@@ -102,6 +102,10 @@ func bashDefinitionObjCompleter(c *cli.Context) {
 	bashObjNameCompleter(c)
 }
 
+func bashMetricsCompleter(c *cli.Context) {
+	bashCompleter(c, readCommands, metricsFlags)
+}
+
 // bash completion for the specified sub-commands and cli flags
 func bashCompleter(c *cli.Context, cmds []cli.Command, flags []cli.Flag) {
 	if retStr, found := getLastFlagSuggestion(c, flags); found {

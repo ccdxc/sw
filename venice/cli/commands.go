@@ -59,6 +59,22 @@ var (
 
 	// terminating flags are special in the sense that if they are present, no other options are permitted after them
 	terminatingFlags = []cli.Flag{showDefinitionFlag, showExampleFlag, fileFlag}
+
+	// explicit commands are augmented to generated commands, to allow hand coding some specific cases
+	dbnameFlag           = cli.StringFlag{Name: "dbname", Usage: "Database Name - permissible values fwlog, objs (default object db)"}
+	colsFlag             = cli.StringFlag{Name: "cols", Usage: "Columns filters - case insensitive, comma separted e.g. \"--cols mem,cpu\", or \"--cols MemFree,MemTotal\""}
+	maxRowsFlag          = cli.IntFlag{Name: "maxrows", Value: 10, Usage: "Maximum number of rows to fetch/display"}
+	metricsFlags         = []cli.Flag{dbnameFlag, colsFlag, maxRowsFlag}
+	explicitReadCommands = []cli.Command{
+		{
+			Name:         "metrics",
+			Usage:        "metrics --dbname <dbname> <table-name>",
+			ArgsUsage:    "[table-name]",
+			Action:       metricsCmd,
+			BashComplete: bashMetricsCompleter,
+			Flags:        metricsFlags,
+		},
+	}
 )
 
 // Commands is the top level command hierarchy
@@ -257,23 +273,29 @@ func generateCommands() error {
 		}
 		definitionCommands = append(definitionCommands, oneCmd)
 	}
-	setSubCommands("create", createCommands)
-	setSubCommands("update", updateCommands)
-	setSubCommands("patch", patchCommands)
-	setSubCommands("edit", editCommands)
-	setSubCommands("read", readCommands)
-	setSubCommands("label", labelCommands)
-	setSubCommands("delete", deleteCommands)
-	setSubCommands("example", exampleCommands)
-	setSubCommands("definition", definitionCommands)
+	for _, oneCmd := range explicitReadCommands {
+		readCommands = append(readCommands, oneCmd)
+	}
+
+	appendSubCommands("create", createCommands)
+	appendSubCommands("update", updateCommands)
+	appendSubCommands("patch", patchCommands)
+	appendSubCommands("edit", editCommands)
+	appendSubCommands("read", readCommands)
+	appendSubCommands("label", labelCommands)
+	appendSubCommands("delete", deleteCommands)
+	appendSubCommands("example", exampleCommands)
+	appendSubCommands("definition", definitionCommands)
 
 	return nil
 }
 
-func setSubCommands(command string, subCommands []cli.Command) {
+func appendSubCommands(command string, subCommands []cli.Command) {
 	for idx := range Commands {
 		if Commands[idx].Name == command {
-			Commands[idx].Subcommands = subCommands
+			for _, cmd := range subCommands {
+				Commands[idx].Subcommands = append(Commands[idx].Subcommands, cmd)
+			}
 			return
 		}
 	}

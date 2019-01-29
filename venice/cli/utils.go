@@ -1,14 +1,23 @@
 package vcli
 
 import (
+	goContext "context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"sort"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/ghodss/yaml"
+
+	"github.com/pensando/sw/api"
+	mqclient "github.com/pensando/sw/api/generated/metrics_query"
+	loginctx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/metricsclient"
 )
 
 func dumpStructStdout(dumpYml bool, obj interface{}) {
@@ -66,13 +75,27 @@ func sortKeys(m map[string]bool) []string {
 
 // matchString return true if the name matches any from the specified list
 func matchString(names []string, name string) bool {
+	return matchStringInternal(names, name, false)
+}
+
+// case insensitive match of a sub string with in a list
+func matchSubString(names []string, name string) bool {
+	return matchStringInternal(names, name, true)
+}
+
+// matchStringInternal provides multiple variations of matching a substring in the specified list
+func matchStringInternal(names []string, name string, wildCard bool) bool {
 	// nil (unspecified) list of names matches everything
 	if len(names) == 0 {
 		return true
 	}
 
 	for _, n := range names {
-		if n == name {
+		if wildCard {
+			if strings.Contains(strings.ToLower(name), strings.ToLower(n)) {
+				return true
+			}
+		} else if n == name {
 			return true
 		}
 	}
@@ -215,4 +238,78 @@ func matchLines(out string, fields []string) bool {
 		}
 	}
 	return isMapFull(fmap)
+}
+
+// prints specified rows and columns in a metrics series
+func printSeries(ioWriter io.Writer, rows int, cols []string, series *metricsclient.ResultSeries) {
+	tw := tabwriter.NewWriter(ioWriter, 0, 2, 2, ' ', 0)
+	defer tw.Flush()
+
+	skip := make(map[int]bool)
+
+	// print the header from the column names
+	for colIdx, colName := range series.Columns {
+		skip[colIdx] = false
+		if colName != "time" && len(cols) > 0 && !matchSubString(cols, colName) {
+			skip[colIdx] = true
+			continue
+		}
+		fmt.Fprintf(tw, "%s", colName)
+
+		if colIdx < len(series.Columns)-1 {
+			fmt.Fprintf(tw, "\t")
+		}
+	}
+	fmt.Fprintf(tw, "\n")
+
+	for colIdx, colName := range series.Columns {
+		if skip[colIdx] {
+			continue
+		}
+		fmt.Fprintf(tw, "%s\t", getHdrUL(len(colName)))
+	}
+	fmt.Fprintf(tw, "\n")
+
+	// values themselves are a set of rows each indicating valu corresponding to the columns
+	for rowIdx, colValue := range series.Values {
+		if rows > 0 && rowIdx > rows {
+			return
+		}
+		for colIdx, colField := range colValue {
+			if skip[colIdx] {
+				continue
+			}
+			fmt.Fprintf(tw, "%v", colField)
+
+			if colIdx < len(colValue)-1 {
+				fmt.Fprintf(tw, "\t")
+			}
+		}
+		fmt.Fprintf(tw, "\n")
+	}
+	fmt.Fprintf(tw, "\n")
+}
+
+// metrisQuery polls backend for a given table name, using provided token
+func metricsQuery(server, tableName, token string) (*metricsclient.QueryResponse, error) {
+	mc, err := metricsclient.NewMetricsClient(server)
+	if err != nil {
+		return &metricsclient.QueryResponse{}, err
+	}
+
+	query := &mqclient.QueryList{
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+		Queries: []*mqclient.QuerySpec{
+			&mqclient.QuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: tableName,
+				},
+			},
+		},
+	}
+	loginCtx := loginctx.NewContextWithAuthzHeader(goContext.Background(), "Bearer "+token)
+	resp, err := mc.Query(loginCtx, query)
+
+	return resp, err
 }

@@ -486,6 +486,50 @@ func snapshotCmd(c *cli.Context) {
 	fmt.Printf("Successful - stored snapshot in '%s' directory\n", dirname)
 }
 
+// metricsCmd displays metrics corresponding to a measurement (aka table)
+// it can be specified with a database name optionally to qualify the table within a tenant
+func metricsCmd(c *cli.Context) {
+	if c.GlobalBool("debug") {
+		log.SetLevel(log.DebugLevel)
+	}
+	token := getLoginToken()
+	server := c.GlobalString("server")
+	tenant := defaultTenant
+	maxrows := c.Int("maxrows")
+	cols := []string{}
+	if c.String("cols") != "" {
+		cols = strings.Split(c.String("cols"), ",")
+	}
+
+	tableName := "node"
+	if len(c.Args()) > 0 {
+		tableName = c.Args()[0]
+	}
+	svcName, _, err := gen.GetInfo().FindSvcName(tableName)
+	if err != nil {
+		log.Debugf("Error finding svc name - %s", err)
+		fmt.Printf("unrecognized table: %s", tableName)
+		return
+	}
+	kind := strings.Split(svcName, ".")[1]
+
+	log.Debugf("server '%s', tenant '%s', cols = %s, maxrows = %v kind = %s \n", server, tenant, cols, maxrows, kind)
+
+	resp, err := metricsQuery(server, kind, token)
+	if err != nil {
+		fmt.Printf("Internal query error: %s", err)
+		return
+	}
+
+	for ridx, result := range resp.Results {
+		log.Debugf("Result %d", ridx)
+		for sidx, series := range result.Series {
+			log.Debugf("[%d] columns = %+v value %+v\n", sidx, series.Columns, series.Values)
+			printSeries(os.Stdout, maxrows, cols, series)
+		}
+	}
+}
+
 // DefaultVersion is the backend in image version for the CLI frontend
 // TODO: obtain the server version from the backend
 const DefaultVersion = "v0.1-alpha"

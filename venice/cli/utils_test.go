@@ -1,6 +1,7 @@
 package vcli
 
 import (
+	"bytes"
 	"encoding/json"
 	"reflect"
 	"regexp"
@@ -8,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/venice/utils/metricsclient"
 )
 
 func TestSliceToMap(t *testing.T) {
@@ -54,6 +56,17 @@ func TestMatchString(t *testing.T) {
 	}
 	if !matchString([]string{}, "two") {
 		t.Fatalf("unable to match empty match criteria")
+	}
+
+	matchSubStrings := []string{"usage", "memory"}
+	if !matchSubString(matchSubStrings, "CPUUsage") {
+		t.Fatalf("unable to find contained substring from the list")
+	}
+	if !matchSubString(matchSubStrings, "TotalMemory") {
+		t.Fatalf("unable to find contained substring from the list")
+	}
+	if matchSubString(matchSubStrings, "RxBytes") {
+		t.Fatalf("able to find contained substring from the list")
 	}
 }
 
@@ -252,4 +265,33 @@ func TestMatchLineFields(t *testing.T) {
 		t.Fatalf("able to match expected lines")
 	}
 
+}
+
+func TestPrintMetrics(t *testing.T) {
+	mem := make([]byte, 10000, 10000)
+	b := bytes.NewBuffer(mem)
+
+	series := &metricsclient.ResultSeries{
+		Columns: []string{"time", "CPUUsedPercent", "DiskFree", "DiskTotal"},
+		Values: [][]interface{}{
+			[]interface{}{"2019-01-28T08:17:53.162022171Z", "19.7", "33911", "38945", "5034"},
+			[]interface{}{"2019-01-28T08:18:03.199000923Z", "0", "33909", "38945", "5035"},
+			[]interface{}{"2019-01-28T08:18:13.214700016Z", "0", "33912", "38945", "5032"},
+			[]interface{}{"2019-01-28T08:18:23.222706563Z", "1.81", "33912", "38945", "5032"},
+			[]interface{}{"2019-01-28T08:18:33.229694889Z", "0", "33912", "38945", "5032"},
+			[]interface{}{"2019-01-28T08:18:43.237116035Z", "0", "33912", "38945", "5032"},
+			[]interface{}{"2019-01-28T08:18:53.24621946Z", "0", "33912", "38945", "5032"},
+			[]interface{}{"2019-01-28T08:19:03.252830807Z", "1.12", "33912", "38945", "5032"},
+			[]interface{}{"2019-01-28T08:19:13.261806661Z", "0.79", "33912", "38945", "5032"},
+			[]interface{}{"2019-01-28T08:19:23.269494761Z", "0.71", "33912", "38945", "5032"},
+			[]interface{}{"2019-01-28T08:19:33.276044028Z", "0", "33912", "38945", "5032"},
+		},
+	}
+
+	printSeries(b, 0, []string{}, series)
+
+	outString := string(b.Bytes())
+	if !strings.Contains(outString, "2019-01-28T08:18:43.237116035Z") {
+		t.Fatalf("unable to match output:\n\"\n%s\n\"\n", outString)
+	}
 }
