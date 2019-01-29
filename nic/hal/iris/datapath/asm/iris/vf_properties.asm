@@ -19,10 +19,10 @@ vf_properties:
     bbne            k.control_metadata_uplink, TRUE, vf_properties_host
 vf_properties_uplink:
     seq             c1, k.mpls_0_label, d.u.vf_properties_d.mpls_in1
-    seq.c1          c1, k.inner_ipv4_dstAddr, d.u.vf_properties_d.overlay_ip1
-    seq             c2, k.mpls_0_label, d.u.vf_properties_d.mpls_in2
-    seq.c2          c2, k.inner_ipv4_dstAddr, d.u.vf_properties_d.overlay_ip2
-    setcf           c1, [c1 | c2]
+    seq.!c1         c1, k.mpls_0_label, d.u.vf_properties_d.mpls_in2
+    seq             c2, k.inner_ipv4_dstAddr, d.u.vf_properties_d.overlay_ip1
+    seq.!c2         c2, k.inner_ipv4_dstAddr, d.u.vf_properties_d.overlay_ip2
+    setcf           c1, [c1 & c2]
     phvwr.!c1.e     p.control_metadata_drop_reason[DROP_VF_IP_LABEL_MISMATCH], 1
     phvwr.!c1       p.capri_intrinsic_drop, TRUE
     seq             c1, k.control_metadata_src_class_e, TRUE
