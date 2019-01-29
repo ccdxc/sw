@@ -57,6 +57,7 @@ validate_tunneled_packet:
   seq.!c1     c1, k.ethernet_dstAddr, r0
   seq.!c1     c1, k.ethernet_srcAddr, k.ethernet_dstAddr
   seq.!c1     c1, k.ethernet_srcAddr[40], 1
+  bbne        k.inner_ethernet_valid, TRUE, validate_tunneled_packet_ip
   sub         r1, r0, 1
   seq.!c1     c1, k.ethernet_srcAddr, r1[47:0]
   seq.!c1     c1, k.inner_ethernet_srcAddr, r0
@@ -64,6 +65,7 @@ validate_tunneled_packet:
   seq.!c1     c1, k.inner_ethernet_srcAddr, k.inner_ethernet_dstAddr
   seq.!c1     c1, k.inner_ethernet_srcAddr[40], 1
   seq.!c1     c1, k.inner_ethernet_srcAddr, r1[47:0]
+validate_tunneled_packet_ip:
   b.c1        malformed_packet
   seq         c1, k.inner_ipv4_valid, TRUE
   seq         c2, k.inner_ipv6_valid, TRUE

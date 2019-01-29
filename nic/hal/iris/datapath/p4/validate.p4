@@ -110,6 +110,8 @@ action validate_native_packet() {
          (ipv6.hopLimit == 0))) {
         malformed_packet();
     }
+
+    modify_field(scratch_metadata.size4, ipv4.ihl);
 }
 
 action validate_tunneled_packet() {
@@ -125,11 +127,12 @@ action validate_tunneled_packet() {
         (ethernet.srcAddr == 0xFFFFFFFFFFFF)) {
         malformed_packet();
     }
-    if ((inner_ethernet.srcAddr == 0) or
-        (inner_ethernet.dstAddr == 0) or
-        (inner_ethernet.srcAddr == inner_ethernet.dstAddr) or
-        ((inner_ethernet.srcAddr & 0x010000000000) == 0x010000000000) or
-        (inner_ethernet.srcAddr == 0xFFFFFFFFFFFF)) {
+    if ((inner_ethernet.valid == TRUE) and
+        ((inner_ethernet.srcAddr == 0) or
+         (inner_ethernet.dstAddr == 0) or
+         (inner_ethernet.srcAddr == inner_ethernet.dstAddr) or
+         ((inner_ethernet.srcAddr & 0x010000000000) == 0x010000000000) or
+         (inner_ethernet.srcAddr == 0xFFFFFFFFFFFF))) {
         malformed_packet();
     }
 
@@ -144,6 +147,8 @@ action validate_tunneled_packet() {
          (inner_ipv6.hopLimit == 0))) {
         malformed_packet();
     }
+
+    modify_field(scratch_metadata.size4, inner_ipv4.ihl);
 }
 
 action check_parser_errors() {

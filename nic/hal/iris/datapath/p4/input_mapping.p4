@@ -22,14 +22,20 @@ action tunneled_ipv4_packet(vf_id) {
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     modify_field(l3_metadata.ip_option_seen, l3_metadata.inner_ip_option_seen);
     modify_field(l3_metadata.ip_frag, l3_metadata.inner_ip_frag);
-    modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
-    modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
     modify_field(l4_metadata.tcp_data_len,
                  (inner_ipv4.totalLen - ((inner_ipv4.ihl + tcp.dataOffset) * 4)));
     if (roce_bth.valid == TRUE) {
         modify_field(flow_lkp_metadata.lkp_sport, 0);
     }
-    set_packet_type(inner_ethernet.dstAddr);
+    if (inner_ethernet.valid == TRUE) {
+        modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
+        modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
+        set_packet_type(inner_ethernet.dstAddr);
+    } else {
+        modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);
+        modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
+        set_packet_type(ethernet.dstAddr);
+    }
 
     modify_field(control_metadata.vf_id, vf_id);
     if ((inner_ipv4.srcAddr & 0xF0000000) == 0xF0000000) {
@@ -43,14 +49,20 @@ action tunneled_ipv6_packet(vf_id) {
     modify_field(flow_lkp_metadata.ip_ttl, inner_ipv6.hopLimit);
     modify_field(tunnel_metadata.tunnel_terminate, TRUE);
     modify_field(l3_metadata.ip_option_seen, l3_metadata.inner_ip_option_seen);
-    modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
-    modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
     modify_field(l4_metadata.tcp_data_len,
                  (inner_ipv6.payloadLen - (tcp.dataOffset) * 4));
     if (roce_bth.valid == TRUE) {
         modify_field(flow_lkp_metadata.lkp_sport, 0);
     }
-    set_packet_type(inner_ethernet.dstAddr);
+    if (inner_ethernet.valid == TRUE) {
+        modify_field(flow_lkp_metadata.lkp_srcMacAddr, inner_ethernet.srcAddr);
+        modify_field(flow_lkp_metadata.lkp_dstMacAddr, inner_ethernet.dstAddr);
+        set_packet_type(inner_ethernet.dstAddr);
+    } else {
+        modify_field(flow_lkp_metadata.lkp_srcMacAddr, ethernet.srcAddr);
+        modify_field(flow_lkp_metadata.lkp_dstMacAddr, ethernet.dstAddr);
+        set_packet_type(ethernet.dstAddr);
+    }
     modify_field(control_metadata.vf_id, vf_id);
 }
 

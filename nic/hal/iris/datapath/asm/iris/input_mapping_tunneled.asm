@@ -16,11 +16,15 @@ nop:
 
 .align
 tunneled_ipv4_packet:
+  seq           c1, k.inner_ethernet_valid, TRUE
+  cmov          r4, c1, k.inner_ethernet_srcAddr, k.ethernet_srcAddr
+  cmov          r5, c1, k.inner_ethernet_dstAddr, k.ethernet_dstAddr
+  seq           c2, r5[40], 0
   phvwr         p.control_metadata_vf_id, d.u.tunneled_ipv4_packet_d.vf_id
-  bbeq          k.inner_ethernet_dstAddr[40], 0, tunneled_ipv4_packet_common
+  bcf           [c2], tunneled_ipv4_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
-  seq           c2, k.inner_ethernet_dstAddr, r6[47:0]
+  seq           c2, r5[47:0], r6[47:0]
   cmov          r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr         p.flow_lkp_metadata_pkt_type, r7
 
@@ -33,13 +37,13 @@ tunneled_ipv4_packet_common:
   phvwrpair     p.flow_lkp_metadata_lkp_dst[31:0], k.inner_ipv4_dstAddr, \
                     p.flow_lkp_metadata_lkp_src[31:0], k.inner_ipv4_srcAddr
 
-  or            r1, k.inner_ipv4_flags, k.inner_ethernet_srcAddr, 3
+  or            r1, k.inner_ipv4_flags, r4[47:0], 3
   or            r1, r1, k.inner_ipv4_ihl, 51
   phvwr         p.{flow_lkp_metadata_ipv4_hlen, \
                    flow_lkp_metadata_lkp_srcMacAddr, \
                    flow_lkp_metadata_ipv4_flags}, r1
 
-  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
+  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, r5[47:0]
   phvwr         p.flow_lkp_metadata_ip_ttl, k.inner_ipv4_ttl
   phvwr         p.flow_lkp_metadata_ipv4_hlen, k.inner_ipv4_ihl
   phvwrpair     p.l3_metadata_ip_frag, k.l3_metadata_inner_ip_frag, \
@@ -53,11 +57,15 @@ tunneled_ipv4_packet_common:
 
 .align
 tunneled_ipv6_packet:
+  seq           c1, k.inner_ethernet_valid, TRUE
+  cmov          r4, c1, k.inner_ethernet_srcAddr, k.ethernet_srcAddr
+  cmov          r5, c1, k.inner_ethernet_dstAddr, k.ethernet_dstAddr
+  seq           c2, r5[40], 0
   phvwr         p.control_metadata_vf_id, d.u.tunneled_ipv6_packet_d.vf_id
-  bbeq          k.inner_ethernet_dstAddr[40], 0, tunneled_ipv6_packet_common
+  bcf           [c2], tunneled_ipv6_packet_common
   phvwr         p.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   xor           r6, -1, r0
-  seq           c2, k.inner_ethernet_dstAddr, r6[47:0]
+  seq           c2, r5[47:0], r6[47:0]
   cmov          r7, c2, PACKET_TYPE_BROADCAST, PACKET_TYPE_MULTICAST
   phvwr         p.flow_lkp_metadata_pkt_type, r7
 
@@ -71,8 +79,8 @@ tunneled_ipv6_packet_common:
   seq           c1, k.roce_bth_valid, TRUE
   phvwr.c1      p.flow_lkp_metadata_lkp_sport, r0
   phvwr         p.flow_lkp_metadata_lkp_proto, k.l3_metadata_inner_ipv6_ulp
-  phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, k.inner_ethernet_srcAddr
-  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, k.inner_ethernet_dstAddr
+  phvwr         p.flow_lkp_metadata_lkp_srcMacAddr, r4[47:0]
+  phvwr         p.flow_lkp_metadata_lkp_dstMacAddr, r5[47:0]
   phvwr.e       p.flow_lkp_metadata_ip_ttl, k.inner_ipv6_hopLimit
   phvwr.f       p.tunnel_metadata_tunnel_terminate, 1
 
