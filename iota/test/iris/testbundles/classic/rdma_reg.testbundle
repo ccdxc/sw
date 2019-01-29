@@ -130,7 +130,7 @@ testcases:
             server_inv: ['yes']
             local_dma_lkey: ['yes']
             size: [64,128,256,512,700,801,1024,2048,4096,8192,16384,32768,65536,131072]
-            count: [2000,10000]
+            count: [1000,1501]
 
     -   name    : KRping_Sweep_TxDepth_Count
         testcase: testcases.rdma.krping
@@ -142,7 +142,7 @@ testcases:
             local_dma_lkey: ['yes', 'no']
             size: [4096]
             txdepth: [256, 512, 1021]
-            count: [5,100,2000,10000]
+            count: [5,100,1500]
 
     #=======================================
     # Teardown
