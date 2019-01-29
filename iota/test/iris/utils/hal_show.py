@@ -20,7 +20,7 @@ def Getl2seg_vlan_mapping(naples_node):
     l2seg_vlan_dict = dict()
     resp, result = GetHALShowOutput(naples_node, "l2seg")
     if not result:
-        api.Logger.error("unknown response from Naples")
+        api.Logger.critical("unknown response from Naples")
         return l2seg_vlan_dict
     cmd = resp.commands[0]
 
@@ -39,7 +39,7 @@ def GetIfId_lif_mapping(naples_node):
     ifId_lif_dict = dict()
     resp, result = GetHALShowOutput(naples_node, "interface")
     if not result:
-        api.Logger.error("unknown response from Naples")
+        api.Logger.critical("unknown response from Naples")
         return ifId_lif_dict
     cmd = resp.commands[0]
 
@@ -53,7 +53,7 @@ def GetIfId_lif_mapping(naples_node):
                 lif_id = intfObj['spec']['ifinfo']['ifenicinfo']['lifkeyorhandle']['keyorhandle']['lifid']
                 ifId_lif_dict.update({if_id: lif_id})
             except:
-                api.Logger.info("UC TEST no lif_id for ", if_id)
+                api.Logger.warn("GetIfId_lif_mapping: no lif_id for interfaceID", if_id)
 
     return ifId_lif_dict
 
@@ -61,7 +61,7 @@ def GetLifId_intfName_mapping(naples_node):
     lifId_intfName_dict = dict()
     resp, result = GetHALShowOutput(naples_node, "lif")
     if not result:
-        api.Logger.error("unknown response from Naples")
+        api.Logger.critical("unknown response from Naples")
         return lifId_intfName_dict
     cmd = resp.commands[0]
 
@@ -72,6 +72,32 @@ def GetLifId_intfName_mapping(naples_node):
         if lifObj is not None:
             lifid = lifObj['spec']['keyorhandle']['keyorhandle']['lifid'] 
             intfName = lifObj['spec']['name']
+            #TODO: mnic interface names are appended with "/lif<lif_id>"
+            # eg., inb_mnic0/lif67
+            # so until that is fixed, temp hack to strip the "/lif<lif_id>" suffix
+            intfName = intfName.split("/")[0]
             lifId_intfName_dict.update({lifid: intfName})
 
     return lifId_intfName_dict
+
+def GetIntfName2LifId_mapping(naples_node):
+    intfName2lifId_dict = dict()
+    resp, result = GetHALShowOutput(naples_node, "lif")
+    if not result:
+        api.Logger.critical("unknown response from Naples")
+        return intfName2lifId_dict
+    cmd = resp.commands[0]
+
+    perLifOutput = cmd.stdout.split("---")
+    for lif in perLifOutput:
+        lifObj = yaml.load(lif)
+        if lifObj is not None:
+            lifid = lifObj['spec']['keyorhandle']['keyorhandle']['lifid']
+            intfName = lifObj['spec']['name']
+            #TODO: mnic interface names are appended with "/lif<lif_id>"
+            # eg., inb_mnic0/lif67
+            # so until that is fixed, temp hack to strip the "/lif<lif_id>" suffix
+            intfName = intfName.split("/")[0]
+            intfName2lifId_dict.update({intfName: lifid})
+
+    return intfName2lifId_dict

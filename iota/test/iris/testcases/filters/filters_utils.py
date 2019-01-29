@@ -5,6 +5,7 @@ import iota.test.iris.utils.hal_show as hal_show_utils
 import iota.test.iris.utils.host as host_utils
 import iota.test.iris.utils.naples as naples_utils
 import iota.test.iris.utils.naples_host as naples_host_utils
+from collections import defaultdict
 import yaml
 import re
 
@@ -18,23 +19,30 @@ def getInterfaceVlanID(node, intf, on_naples=False):
     return vlan
 
 def getParentIntf(host_intf_name):
+    parent_intf_name = host_intf_name.split("_")[0]
+    parent_intf_name = parent_intf_name.split(".")[0]
+    return parent_intf_name
+"""
+def getParentIntf(host_intf_name):
     intf_map_pattern = [['enp182s0\S*', 'enp182s0'], ['enp183s0\S*', 'enp183s0'], ['ionic1\S*', 'ionic1'], ['ionic2\S*', 'ionic2'], ['enp181s0\S*', 'enp181s0'], ['ionic0\S*', 'ionic0']]
     for pattern in intf_map_pattern:
         match = re.match(pattern[0], host_intf_name)
         if match:
             return pattern[1]
-    api.Logger.error("UC MAC : Failure - No parent intf found for ", host_intf_name)
+    api.Logger.critical("getParentIntf - No parent intf found for ", host_intf_name)
     return "NULL"
 
 def getNaplesView_of_Host_Intf(host_intf_name):
+    return host_intf_name
     #TODO: TEMP hack until 'PS-603' is resolved
-    intf_map_pattern = [['enp182s0\S*', 'eth1'], ['enp183s0', 'eth_mgmt0'], ['ionic1\S*', 'eth1'], ['ionic2', 'eth_mgmt0'], ['enp181s0\S*', 'eth0'], ['ionic0\S*', 'eth0']]
+    intf_map_pattern = [['enp182s0\S*', 'eth1'], ['enp183s0', 'eth_mgmt0'], ['ionic1\S*', 'eth1'], ['ionic2', 'eth_mgmt0'], ['enp181s0\S*', 'eth0'], ['ionic0\S*', 'eth0'], ['enp179s0f0\S*', 'eth0'], ['enp179s0f1\S*', 'eth1']]
     for pattern in intf_map_pattern:
         match = re.match(pattern[0], host_intf_name)
         if match:
             return pattern[1]
-    api.Logger.error("UC MAC : Failure - No pattern found for interface ", host_intf_name)
+    api.Logger.critical("getNaplesView_of_Host_Intf - No pattern found for interface ", host_intf_name)
     return "NULL"
+"""
 
 def getNaplesIntfMacAddrDict(naples_node):
     naples_intf_mac_dict = dict()
@@ -66,7 +74,7 @@ def changeIntfMacAddr(node, intf_mac_dict, on_naples=False, isRollback=False):
         else:
             cmd = host_utils.SetMACAddress(node, intf, mac_addr_str)
         if cmd.exit_code != 0:
-            api.Logger.error("changeIntfMacAddr failed ", node, intf, mac_addr_str)
+            api.Logger.critical("changeIntfMacAddr failed ", node, intf, mac_addr_str)
             api.PrintCommandResults(cmd)
             result = api.types.status.FAILURE
     return result
@@ -84,11 +92,12 @@ def getNaplesIntfEndPoints(naples_node, naples_intf_mac_dict):
 def getHostIntfEndPoints(naples_node, host_intf_mac_dict):
     host_ep_set = set()
     for intf, mac_addr_str in host_intf_mac_dict.items():
-        #TODO: To be removed once "#PS-603" is fixed
-        intf_name = getNaplesView_of_Host_Intf(intf)
+        #TODO: To be removed once "#PS-603" is fixed. should be parent_intf instead
+        #intf_name = getNaplesView_of_Host_Intf(intf)
+        parent_intf = getParentIntf(intf)
         intf_mac_addr = host_utils.GetMACAddress(naples_node, intf)
         vlan = getInterfaceVlanID(naples_node, intf)
-        host_ep = (vlan, intf_mac_addr, intf_name)
+        host_ep = (vlan, intf_mac_addr, parent_intf)
         host_ep_set.add(host_ep)
     
     return host_ep_set
@@ -97,13 +106,13 @@ def getWorkloadEndPoints(naples_node, wload_intf_mac_dict, wload_intf_vlan_map):
     wload_ep_set = set()
     #In case of classic, endpoint will be created for all mac, vlan pair for a LIF
     for intf, mac_addr_str in wload_intf_mac_dict.items():
-        #TODO: To be removed once "#PS-603" is fixed
-        intf_name = getNaplesView_of_Host_Intf(intf)
+        #TODO: To be removed once "#PS-603" is fixed. should be parent_intf instead
+        #intf_name = getNaplesView_of_Host_Intf(intf)
         intf_mac_addr = host_utils.GetMACAddress(naples_node, intf)
         parent_intf = getParentIntf(intf)
         vlan_set = wload_intf_vlan_map[parent_intf]
         for vlan in vlan_set:
-            wload_ep = (vlan, intf_mac_addr, intf_name)
+            wload_ep = (vlan, intf_mac_addr, parent_intf)
             wload_ep_set.add(wload_ep)
 
     return wload_ep_set
@@ -113,17 +122,17 @@ def getNaplesHALEndPoints(naples_node):
 
     resp, result = hal_show_utils.GetHALShowOutput(naples_node, "endpoint")
     if not result:
-        api.Logger.error("unknown response from Naples")
-        return endpoint_dict
+        api.Logger.critical("unknown response from Naples")
+        return hal_ep_set
 
     l2seg_vlan_dict = hal_show_utils.Getl2seg_vlan_mapping(naples_node)
-    #api.Logger.info("UC MAC filter : TEST l2seg_vlan ", l2seg_vlan_dict)
+    api.Logger.verbose("Getl2seg_vlan_mapping: l2seg_vlan ", l2seg_vlan_dict)
 
     ifId_lif_dict = hal_show_utils.GetIfId_lif_mapping(naples_node)
-    #api.Logger.info("UC MAC filter : TEST if_lif ", ifId_lif_dict)
+    api.Logger.verbose("GetIfId_lif_mapping: if_lif ", ifId_lif_dict)
 
     lifId_intfName_dict = hal_show_utils.GetLifId_intfName_mapping(naples_node)
-    #api.Logger.info("UC MAC filter : TEST lif_ifName ", lifId_intfName_dict)
+    api.Logger.verbose("GetLifId_intfName_mapping: lif_ifName ", lifId_intfName_dict)
 
     cmd = resp.commands[0]
     perEPOutput = cmd.stdout.split("---")
@@ -150,8 +159,8 @@ def getNaplesNodeandWorkloads():
 
     workload1 = pairs[0][0]
     workload2 = pairs[0][1]
-    api.Logger.info("workload1 : ", workload1.workload_name, workload1.node_name, workload1.uplink_vlan, id(workload1), workload1.interface, workload1.IsNaples())
-    api.Logger.info("workload2 : ", workload2.workload_name, workload2.node_name, workload2.uplink_vlan, id(workload2), workload2.interface, workload2.IsNaples())
+    api.Logger.verbose("workload1 : ", workload1.workload_name, workload1.node_name, workload1.uplink_vlan, id(workload1), workload1.interface, workload1.IsNaples())
+    api.Logger.verbose("workload2 : ", workload2.workload_name, workload2.node_name, workload2.uplink_vlan, id(workload2), workload2.interface, workload2.IsNaples())
 
     naples_node = ""
     skip_tc = False
@@ -168,16 +177,16 @@ def getNaplesNodeandWorkloads():
 
 def pingAllRemoteWloadPairs(workload_pairs, iterators):
     cmd_cookies = []
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     for pair in workload_pairs:
         w1 = pair[0]
         w2 = pair[1]
         if iterators.ipaf == 'ipv4':
-            cmd_cookie = "ping -c 10 -i 0.2 -s %d -S %s %s" %(iterators.pktsize, w1.ip_address, w2.ip_address)
-            api.Logger.info("Ping test cmd %s from %s(%s %s) --> %s(%s %s)" % (cmd_cookie, w1.workload_name, w1.ip_address, w1.interface, w2.workload_name, w2.ip_address, w2.interface))
+            cmd_cookie = "ping -c 5 -i 0.2 -W 2000 -s %d -S %s %s" %(iterators.pktsize, w1.ip_address, w2.ip_address)
+            api.Logger.verbose("Ping test cmd %s from %s(%s %s) --> %s(%s %s)" % (cmd_cookie, w1.workload_name, w1.ip_address, w1.interface, w2.workload_name, w2.ip_address, w2.interface))
         else:
-            cmd_cookie = "ping6 -c 10 -i 0.2 -s %d -S %s -I %s %s" %(iterators.pktsize, w1.ipv6_address, w1.interface, w2.ipv6_address)
-            api.Logger.info("Ping test cmd %s from %s(%s %s) --> %s(%s %s)" % (cmd_cookie, w1.workload_name, w1.ipv6_address, w1.interface, w2.workload_name, w2.ipv6_address, w2.interface))
+            cmd_cookie = "ping6 -c 5 -i 0.2 -s %d -S %s -I %s %s" %(iterators.pktsize, w1.ipv6_address, w1.interface, w2.ipv6_address)
+            api.Logger.verbose("Ping test cmd %s from %s(%s %s) --> %s(%s %s)" % (cmd_cookie, w1.workload_name, w1.ipv6_address, w1.interface, w2.workload_name, w2.ipv6_address, w2.interface))
         api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, cmd_cookie)
         cmd_cookies.append(cmd_cookie)
 
@@ -185,3 +194,51 @@ def pingAllRemoteWloadPairs(workload_pairs, iterators):
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
     return cmd_cookies, resp
+
+def verifyPktFilters(intf_pktfilter_list, intf_pktfilter_dict, bc=False, mc=False, pr=False):
+    result = True
+    for intf in intf_pktfilter_list:
+        if intf not in intf_pktfilter_dict:
+            # Interface not found in "halctl show lif"
+            result = False
+            api.Logger.error("Failure - verifyPktFilters failed ", intf)
+            continue
+        pktfilter = intf_pktfilter_dict[intf]
+        #pktfilter is list of packet filters in this order: [Broadcast, Multicast, Promiscuous]
+        if bc and not pktfilter[0]:
+            result = False
+            api.Logger.error("Failure - verifyBCPktFilters failed ", intf, pktfilter)
+        if mc and not pktfilter[1]:
+            result = False
+            api.Logger.error("Failure - verifyMCPktFilters failed ", intf, pktfilter)
+        if pr and not pktfilter[2]:
+            result = False
+            api.Logger.error("Failure - verifyPRPktFilters failed ", intf, pktfilter)
+
+    return result
+
+def getAllIntfPktFilter(naples_node):
+    intf_pktfilter_dict = defaultdict(list)
+    resp, result = hal_show_utils.GetHALShowOutput(naples_node, "lif")
+    if not result:
+        api.Logger.critical("unknown response from Naples")
+        return intf_pktfilter_dict, result
+    cmd = resp.commands[0]
+
+    perLifOutput = cmd.stdout.split("---")
+
+    for lif in perLifOutput:
+        lifObj = yaml.load(lif)
+        if lifObj is not None:
+            intfName = lifObj['spec']['name']
+            #TODO: mnic interface names are appended with "/lif<lif_id>"
+            # eg., inb_mnic0/lif67
+            # so until that is fixed, temp hack to strip the "/lif<lif_id>" suffix
+            intfName = intfName.split("/")[0]
+            bc = lifObj['spec']['packetfilter']['receivebroadcast']
+            mc = lifObj['spec']['packetfilter']['receiveallmulticast']
+            pr = lifObj['spec']['packetfilter']['receivepromiscuous']
+            pktfilter = [bc, mc, pr]
+            intf_pktfilter_dict[intfName] = pktfilter
+
+    return intf_pktfilter_dict, result

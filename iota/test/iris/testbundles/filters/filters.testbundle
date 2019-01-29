@@ -7,10 +7,21 @@ meta:
 testcases:
     -   name    : Unicast_MAC_Filter
         testcase: testcases.filters.unicast_mac_filter
-        disable : True
+        disable : False
         ignore  : True
         iterators :
             type       : nested
             mac_change : [ no, yes ]
             pktsize    : [ 128 ]
-            ipaf       : [ ipv6, ipv4 ]
+            ipaf       : [ ipv4 ]
+            #ipaf       : [ ipv6, ipv4 ]
+
+    -   name    : Broadcast_MAC_Filter
+        testcase: testcases.filters.broadcast_mac_filter
+        disable : False
+        ignore  : True
+
+    -   name    : Multicast_MAC_Filter
+        testcase: testcases.filters.multicast_mac_filter
+        disable : False
+        ignore  : True
