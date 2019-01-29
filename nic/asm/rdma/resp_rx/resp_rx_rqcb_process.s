@@ -209,7 +209,8 @@ process_write:
     // only first packet has reth header
     CAPRI_RESET_TABLE_1_ARG()
 
-    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, pad, CAPRI_APP_DATA_BTH_PAD)
+    phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_WRITE_P, pad), CAPRI_APP_DATA_BTH_PAD, \
+                CAPRI_PHV_FIELD(RQCB_TO_WRITE_P, priv_oper_enable), d.priv_oper_enable
 
     bcf [!c1], write_non_first_pkt
     CAPRI_SET_FIELD2_C(RQCB_TO_WRITE_P, load_reth, 1, !c1)  //BD Slot
@@ -447,6 +448,7 @@ process_write_only:
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_WRITE_P, va, len, CAPRI_RXDMA_RETH_VA_R_KEY_LEN)
     phvwrpair    CAPRI_PHV_FIELD(RQCB_TO_WRITE_P, remaining_payload_bytes), REM_PYLD_BYTES, \
                  CAPRI_PHV_FIELD(RQCB_TO_WRITE_P, pad), CAPRI_APP_DATA_BTH_PAD
+    CAPRI_SET_FIELD2(RQCB_TO_WRITE_P, priv_oper_enable, d.priv_oper_enable)
 
     bcf             [c7], write_only_immdt
     // load rqcb3
@@ -545,7 +547,8 @@ process_read_atomic:
     CAPRI_RESET_TABLE_1_ARG()
     phvwrpair   p.rsqwqe.read.r_key, CAPRI_RXDMA_RETH_R_KEY, p.rsqwqe.read.va, CAPRI_RXDMA_RETH_VA
     CAPRI_SET_FIELD_RANGE2(RQCB_TO_RD_ATOMIC_P, va, r_key, CAPRI_RXDMA_RETH_VA_R_KEY)
-    phvwr       CAPRI_PHV_FIELD(RQCB_TO_RD_ATOMIC_P, rsq_p_index), NEW_RSQ_P_INDEX
+    phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_RD_ATOMIC_P, rsq_p_index), NEW_RSQ_P_INDEX, \
+                CAPRI_PHV_FIELD(RQCB_TO_RD_ATOMIC_P, priv_oper_enable), d.priv_oper_enable
 
     bcf         [c6 | c5], process_atomic
     phvwr       p.rsqwqe.psn, d.e_psn   //BD Slot

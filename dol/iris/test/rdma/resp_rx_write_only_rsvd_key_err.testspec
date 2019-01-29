@@ -55,7 +55,7 @@ packets:
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
                 a       : 1
             reth: 
-                va      : callback://rdma/rdma/GetPAfromSLAB/slab_id=SLAB0000,offset=1024
+                va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=1024
                 dma_len : ref://testcase/packets/id=BASE_PKT/size
                 #r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
                 r_key   : callback://rdma/rdma/GetReservedLKey
@@ -84,7 +84,7 @@ packets:
                 prio    : 0
 
    - packet:
-        id          : EXP_PKT_BASE    # Expected Ack packet
+        id          : EXP_PKT_BASE    # Expected Nak packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
@@ -110,8 +110,8 @@ packets:
                 destqp  : ref://testcase/config/rdmasession/rqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
             aeth:
-                syndrome: callback://rdma/rdma/GetAckSyndrome/rqwqes=0
-                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=1
+                syndrome: callback://rdma/rdma/GetNakSyndrome/nak_code=2 #NAK_CODE_REM_ACC_ERR
+                msn     : callback://rdma/rdma/GetLastSuccessMsn/num_msgs=0
             payload:
                 data    : None
 
@@ -158,6 +158,16 @@ buffers:
 
 
 descriptors:
+    - descriptor:
+        id      : EXP_SQ_FLUSH_CQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
+        fields:
+            wrid   : 0
+            qid: ref://testcase/config/rdmasession/lqp/id
+            status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
+            error  : 1
+            type   : 3 #CQE_TYPE_SEND_NPG
 
 trigger:
     packets:
@@ -167,9 +177,15 @@ trigger:
 
 expect:
     descriptors:
+#       Disabling this expectation as no payload xfer would happen upon rkey validation failure.
+#       previously testcase might be passing due to 0xFF payload pattern.
+#        - descriptor:
+#            object : ref://testcase/buffers/id=EXP_BUF
+#            ring   : ref://testcase/buffers/id=XFER_BUF
+
         - descriptor:
-            object : ref://testcase/buffers/id=EXP_BUF
-            ring   : ref://testcase/buffers/id=XFER_BUF
+            object  : ref://testcase/descriptors/id=EXP_SQ_FLUSH_CQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
 
     packets:
         - packet:

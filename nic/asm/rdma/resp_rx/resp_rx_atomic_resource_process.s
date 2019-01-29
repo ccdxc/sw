@@ -30,6 +30,7 @@ struct resp_rx_s1_t1_k k;
 #define K_ATOMIC_RKEY_INFO_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit8_ebit63)
 #define K_LEN CAPRI_KEY_RANGE(IN_P, len_sbit0_ebit7, len_sbit24_ebit31)
 #define K_RSQ_PINDEX CAPRI_KEY_RANGE(IN_P, rsq_p_index_sbit0_ebit7, rsq_p_index_sbit8_ebit15)
+#define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_P, priv_oper_enable)
 
 %%
     .param  rdma_atomic_resource_addr
@@ -37,6 +38,7 @@ struct resp_rx_s1_t1_k k;
     .param  resp_rx_recirc_mpu_only_process
     .param  resp_rx_rqrkey_process
     .param  resp_rx_rqcb1_write_back_mpu_only_process
+    .param  resp_rx_rqrkey_rsvd_rkey_process
 
 .align
 resp_rx_atomic_resource_process:
@@ -155,8 +157,13 @@ loop_exit:
     add     R_KEY, r0, CAPRI_KEY_FIELD(IN_P, r_key)
 
     seq     c5, R_KEY, RDMA_RESERVED_LKEY_ID
-    phvwr.c5    CAPRI_PHV_FIELD(RKEY_INFO_P, rsvd_key_err), 1
+    // c5: rsvd key
+    bcf     [!c5], skip_priv_oper
+    seq.c5  c5, K_PRIV_OPER_ENABLE, 1 // BD Slot
+    // c5: rsvd key + priv oper enabled
+    phvwr.!c5   CAPRI_PHV_FIELD(RKEY_INFO_P, rsvd_key_err), 1
 
+skip_priv_oper:
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, R_KEY)
 
@@ -166,7 +173,8 @@ loop_exit:
     phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
 
     // invoke rqrkey 
-    CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_process, KEY_ADDR)
+    //CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_process, KEY_ADDR)
+    CAPRI_NEXT_TABLE1_READ_PC_C(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_rsvd_rkey_process, resp_rx_rqrkey_process, KEY_ADDR, c5)
 
     CAPRI_SETUP_DB_ADDR(DB_ADDR_BASE, DB_SET_PINDEX, DB_SCHED_WR_EVAL_RING, K_GLOBAL_LIF, K_GLOBAL_QTYPE, DB_ADDR)
     CAPRI_SETUP_DB_DATA(K_GLOBAL_QID, RSQ_RING_ID, K_RSQ_PINDEX, DB_DATA)

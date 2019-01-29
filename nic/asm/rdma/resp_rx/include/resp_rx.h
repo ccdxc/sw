@@ -468,7 +468,8 @@ struct resp_rx_rqcb_to_write_rkey_info_t {
     remaining_payload_bytes: 16;
     load_reth: 1;
     incr_c_index: 1;
-    rsvd: 14;
+    priv_oper_enable: 1;
+    rsvd: 13;
 };
 
 struct resp_rx_write_dummy_process_k_t {
@@ -486,7 +487,8 @@ struct resp_rx_rqcb_to_read_atomic_rkey_info_t {
     rsq_p_index: 16;
     skip_rsq_dbell: 1;
     read_or_atomic: 1;
-    pad: 14;
+    priv_oper_enable: 1;
+    pad: 13;
 };
 
 struct resp_rx_read_atomic_process_k_t {

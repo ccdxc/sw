@@ -35,6 +35,7 @@ struct resp_tx_s2_t0_k k;
 %%
     .param      resp_tx_rsqrkey_process
     .param      resp_tx_dcqcn_enforce_process
+    .param      resp_tx_rsqrkey_rsvd_rkey_process
 
 resp_tx_rsqwqe_process:
 
@@ -206,6 +207,9 @@ next:
 
     CAPRI_SET_FIELD2(RKEY_INFO_P, header_template_size, CAPRI_KEY_FIELD(IN_P, header_template_size))
 
+    add         r2, r0, d.read.r_key
+
+    seq         c5, r2, RDMA_RESERVED_LKEY_ID
     // for zero length read request, skip rkey and directly invoke dcqcn
     bcf         [c3], skip_rkey
 
@@ -213,11 +217,11 @@ next:
     
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET()) +
     // ((sge_p->l_key & KEY_INDEX_MASK) * sizeof(key_entry_t));
-    add         r2, r0, d.read.r_key
 
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, r2)
 
-    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsqrkey_process, KEY_ADDR)
+    //CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsqrkey_process, KEY_ADDR)
+    CAPRI_NEXT_TABLE0_READ_PC_C(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_tx_rsqrkey_rsvd_rkey_process, resp_tx_rsqrkey_process, KEY_ADDR, c5)
 
 exit:
     nop.e
@@ -227,7 +231,8 @@ skip_rkey:
 
     CAPRI_SET_FIELD2(RKEY_INFO_P, skip_rkey, 1)
     // invoke rkey program as mpu only
-    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_rsqrkey_process, r0)
+    //CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_rsqrkey_process, r0)
+    CAPRI_NEXT_TABLE0_READ_PC_CE(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_tx_rsqrkey_rsvd_rkey_process, resp_tx_rsqrkey_process, r0, c5)
 
 drop_phv:
     phvwr.e     p.common.p4_intr_global_drop, 1
