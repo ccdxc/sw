@@ -48,7 +48,7 @@ MODULE_LICENSE("Dual BSD/GPL");
 
 #define DRIVER_NAME "ionic_rdma"
 #define DRIVER_SHORTNAME "ionr"
-#define DRIVER_VERSION "0.2.0"
+#define DRIVER_VERSION "0.5.0"
 #define DRIVER_DESCRIPTION "Pensando RoCE HCA driver"
 #define DEVICE_DESCRIPTION "Pensando RoCE HCA"
 
