@@ -64,6 +64,10 @@ jobd/dol/networking: ${JOBD_PREREQS}
 jobd/dol/vxlan: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --topo vxlan --feature vxlan
 
+.PHONY: jobd/dol/mplsudp
+jobd/dol/mplsudp: ${JOBD_PREREQS}
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo mpls_udp --feature mpls_udp --classic
+
 .PHONY: jobd/dol/ipsg
 jobd/dol/ipsg: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --topo eth --feature ipsg

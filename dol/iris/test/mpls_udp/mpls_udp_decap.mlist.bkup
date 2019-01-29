@@ -1,37 +1,20 @@
-# Feature Test Modules List
-# Encap combinations
-# Options    Opt-type    Class-E    Expected (Encap)
-# F          -               F      MPLS encap (from config)
-# F          -               T      Drop
-#
-# T          valid           T      MPLS encap (from RR)
-# T          invalid         T      Drop
-# T          zero            T      Drop
-# T          mcast_start     T      Drop
-# T          mcast_end       T      Drop
-# T          mcast_middle    T      Drop
-#
-# T          valid           F      MPLS encap (from config)
-# T          invalid         F      MPLS encap (from config)
-# T          zero            F      MPLS encap (from config)
-# T          mcast_start     F      MPLS encap (from config)
-# T          mcast_end       F      MPLS encap (from config)
-# T          mcast_middle    F      MPLS encap (from config)
 feature:
     id          : mpls_udp
-    sub         : tx
+    sub         : rx
     package     : test.mpls_udp
     module      : mpls_udp
     enable      : True
-    ignore      : False
+    ignore      : True
 
 modules:
     - module:
-        name    : ENCAP
-        spec    : tx.testspec
+        name    : DECAP_INVALID_SUBSTRATE
+        spec    : rx.testspec
         args:
-            options : False
-            classe  : False
+            options     : False
+            classe      : False
+            substrate   : invalid
+            drop        : True
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -41,12 +24,13 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_CLASSE_NOOPT_DROP
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_NOOPT_OIP1_LABEL1
+        spec    : rx.testspec
         args:
-            options : False
-            classe  : True
-            drop    : True
+            options     : False
+            classe      : False
+            overlay     : ip1
+            mpls        : label1
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -56,28 +40,13 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_CLASSE_VALID
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_NOOPT_OIP2_LABEL2
+        spec    : rx.testspec
         args:
-            options : True
-            opttype : one_valid
-            classe  : True
-        iterate:
-            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
-              segment   : filter://native=True
-            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
-              segment   : filter://native=True
-            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
-              segment   : filter://native=True
-    
-    - module:
-        name    : ENCAP_OPT_CLASSE_INVALID_DROP
-        spec    : tx.testspec
-        args:
-            options : True
-            opttype : one_invalid
-            classe  : True
-            drop    : True
+            options     : False
+            classe      : False
+            overlay     : ip2
+            mpls        : label2
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -87,13 +56,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_CLASSE_ZERO_DROP
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_OPT_VALID_OIP1_LABEL1
+        spec    : rx.testspec
         args:
-            options : True
-            opttype : one_zero
-            classe  : True
-            drop    : True
+            options     : True
+            opttype     : one_valid
+            classe      : False
+            overlay     : ip1
+            mpls        : label1
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -103,13 +73,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_CLASSE_MCAST_START_DROP
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_OPT_VALID_OIP2_LABEL2
+        spec    : rx.testspec
         args:
-            options : True
-            opttype : one_mcast_start
-            classe  : True
-            drop    : True
+            options     : True
+            opttype     : one_valid
+            classe      : False
+            overlay     : ip2
+            mpls        : label2
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -119,13 +90,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_CLASSE_MCAST_END_DROP
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_OPT_INVALID_OIP1_LABEL1
+        spec    : rx.testspec
         args:
-            options : True
-            opttype : one_mcast_end
-            classe  : True
-            drop    : True
+            options     : True
+            opttype     : one_invalid
+            classe      : False
+            overlay     : ip1
+            mpls        : label1
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -135,13 +107,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_CLASSE_MCAST_MIDDLE_DROP
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_OPT_INVALID_OIP2_LABEL2
+        spec    : rx.testspec
         args:
-            options : True
-            opttype : one_mcast_middle
-            classe  : True
-            drop    : True
+            options     : True
+            opttype     : one_invalid
+            classe      : False
+            overlay     : ip2
+            mpls        : label2
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -151,27 +124,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_NO_CLASSE_VALID
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_OPT_ZERO_OIP1_LABEL1
+        spec    : rx.testspec
         args:
-            options : True
-            opttype : one_valid
-            classe  : False
-        iterate:
-            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
-              segment   : filter://native=True
-            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
-              segment   : filter://native=True
-            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
-              segment   : filter://native=True
-    
-    - module:
-        name    : ENCAP_OPT_NO_CLASSE_INVALID
-        spec    : tx.testspec
-        args:
-            options : True
-            opttype : one_invalid
-            classe  : False
+            options     : True
+            opttype     : one_zero
+            classe      : False
+            overlay     : ip1
+            mpls        : label1
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -181,12 +141,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_NO_CLASSE_ZERO
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_OPT_ZERO_OIP2_LABEL2
+        spec    : rx.testspec
         args:
-            options : True
-            opttype : one_zero
-            classe  : False
+            options     : True
+            opttype     : one_zero
+            classe      : False
+            overlay     : ip2
+            mpls        : label2
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -196,12 +158,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_NO_CLASSE_MCAST_START
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_OPT_MCAST_START_OIP1_LABEL1
+        spec    : rx.testspec
         args:
-            options : True
-            opttype : one_mcast_start
-            classe  : False
+            options     : True
+            opttype     : one_mcast_start
+            classe      : False
+            overlay     : ip1
+            mpls        : label1
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -211,12 +175,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_NO_CLASSE_MCAST_END
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_OPT_MCAST_START_OIP2_LABEL2
+        spec    : rx.testspec
         args:
-            options : True
-            opttype : one_mcast_end
-            classe  : False
+            options     : True
+            opttype     : one_mcast_start
+            classe      : False
+            overlay     : ip2
+            mpls        : label2
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -226,12 +192,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_NO_CLASSE_MCAST_MIDDLE
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_NOOPT_OIPINV_LABEL1_DROP
+        spec    : rx.testspec
         args:
-            options : True
-            opttype : one_mcast_middle
-            classe  : False
+            options     : False
+            classe      : False
+            overlay     : invalid
+            mpls        : label1
+            drop        : True
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -241,12 +209,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_CLASSE_TWO
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_NOOPT_OIP1_LABELINV_DROP
+        spec    : rx.testspec
         args:
-            options : True
-            classe  : True
-            opttype : ORCL,MTUPROBE
+            options     : False
+            classe      : False
+            overlay     : ip1
+            mpls        : invalid
+            drop        : True
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -256,12 +226,15 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_CLASSE_TWO_MULTI_EOL
-        spec    : tx.testspec
+        name    : DECAP_NOCLASSE_OPT_VALID_OIP_LABELINV_DROP
+        spec    : rx.testspec
         args:
-            options : True
-            classe  : True
-            opttype : ORCL,MTUPROBE,EOL,EOL,EOL
+            options     : True
+            opttype     : one_valid
+            classe      : False
+            overlay     : invalid
+            mpls        : invalid
+            drop        : True
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -271,12 +244,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_CLASSE_MIDDLE
-        spec    : tx.testspec
+        name    : DECAP_CLASSE_NOOPT_VALID_OIP1_LABEL1_DROP
+        spec    : rx.testspec
         args:
-            options : True
-            classe  : True
-            opttype : SECURITY,ORCL,MTUPROBE
+            options     : False
+            classe      : True
+            overlay     : ip1
+            mpls        : label1
+            drop        : True
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -286,12 +261,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_CLASSE_END
-        spec    : tx.testspec
+        name    : DECAP_CLASSE_OPT_VALID_OIP1_LABEL1
+        spec    : rx.testspec
         args:
-            options : True
-            classe  : True
-            opttype : SECURITY,MTUREPLY,ORCL
+            options     : True
+            opttype     : one_valid
+            classe      : True
+            overlay     : ip1
+            mpls        : label1
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -301,12 +278,14 @@ modules:
               segment   : filter://native=True
 
     - module:
-        name    : ENCAP_OPT_CLASSE_END_MULTI_EOL
-        spec    : tx.testspec
+        name    : DECAP_CLASSE_OPT_VALID_OIP2_LABEL2
+        spec    : rx.testspec
         args:
-            options : True
-            classe  : True
-            opttype : SECURITY,MTUREPLY,ORCL,EOL,EOL,EOL
+            options     : True
+            opttype     : one_valid
+            classe      : True
+            overlay     : ip2
+            mpls        : label2
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
@@ -315,3 +294,107 @@ modules:
             - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
               segment   : filter://native=True
 
+    - module:
+        name    : DECAP_CLASSE_OPT_VALID_OIP1_LABEL2
+        spec    : rx.testspec
+        args:
+            options     : True
+            opttype     : one_valid
+            classe      : True
+            overlay     : ip1
+            mpls        : label2
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : DECAP_CLASSE_OPT_END_MULTI_EOL_OIP2_LABEL1
+        spec    : rx.testspec
+        args:
+            options     : True
+            opttype     : SECURITY,MTUREPLY,ORCL,EOL,EOL,EOL
+            classe      : True
+            overlay     : ip2
+            mpls        : label1
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : DECAP_CLASSE_OPT_MIDDLE_OIP1_LABEL2
+        spec    : rx.testspec
+        args:
+            options     : True
+            opttype     : SECURITY,ORCL,MTUPROBE
+            classe      : True
+            overlay     : ip1
+            mpls        : label2
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : DECAP_CLASSE_OPT_INVALID_OIP1_LABEL1_DROP
+        spec    : rx.testspec
+        args:
+            options     : True
+            opttype     : one_invalid
+            classe      : True
+            overlay     : ip1
+            mpls        : label1
+            drop        : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : DECAP_CLASSE_OPT_ZERO_OIP1_LABEL1_DROP
+        spec    : rx.testspec
+        args:
+            options     : True
+            opttype     : one_zero
+            classe      : True
+            overlay     : ip1
+            mpls        : label1
+            drop        : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True
+
+    - module:
+        name    : DECAP_CLASSE_OPT_MCAST_END_OIP1_LABEL1_DROP
+        spec    : rx.testspec
+        args:
+            options     : True
+            opttype     : one_mcast_end
+            classe      : True
+            overlay     : ip2
+            mpls        : label2
+            drop        : True
+        iterate:
+            - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=TCP,label=NETWORKING
+              segment   : filter://native=True
+            - flow      : filter://type=IPV4,proto=ICMP,label=NETWORKING
+              segment   : filter://native=True

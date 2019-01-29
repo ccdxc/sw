@@ -160,6 +160,12 @@ targets:
     area:
     sub-area:
     feature:
+  dol/mplsudp:
+    commands: ["make", "jobd/dol/mplsudp"]
+    owners: ["email:vijasrin@pensando.io"]
+    area:
+    sub-area:
+    feature:
   dol/ipsg:
     commands: ["make", "jobd/dol/ipsg"]
     owners: ["email:statikon@pensando.io"]
