@@ -5693,6 +5693,10 @@
     },
     "authPasswordChangeRequest": {
       "type": "object",
+      "required": [
+        "old-password",
+        "new-password"
+      ],
       "properties": {
         "kind": {
           "type": "string"
@@ -5704,10 +5708,14 @@
           "$ref": "#/definitions/apiObjectMeta"
         },
         "old-password": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "description": "length of string should be at least 1\n"
         },
         "new-password": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "description": "length of string should be at least 1\n"
         }
       },
       "title": "PasswordChangeRequest is for user to change his password"

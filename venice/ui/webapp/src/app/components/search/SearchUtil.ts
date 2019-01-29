@@ -96,29 +96,12 @@ export class SearchUtil {
     }
   }
 
-  public static getKinds(): any[] {
-    const cats = this.getCategories();
-    let kinds = [];
-    cats.filter((cat) => {
-      const catKeys = Object.keys(CategoryMapping[cat]);
-      kinds = kinds.concat(catKeys);
-    });
-    kinds = kinds.sort();
-    return kinds;
-  }
-
-  public static getCategories(): any[] {
-    let cats = Object.keys(CategoryMapping);
-    cats = cats.sort();
-    return cats;
-  }
-
   public static isValidKind(kind: string): boolean {
-    return (SearchUtil.getKinds().indexOf(kind) > -1);
+    return (Utility.getKinds().indexOf(kind) > -1);
   }
 
   public static isValidCategory(kind: string): boolean {
-    return (SearchUtil.getCategories().indexOf(kind) > -1);
+    return (Utility.getCategories().indexOf(kind) > -1);
   }
 
   /**

@@ -9,32 +9,31 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
 import { PrimengModule } from '@app/lib/primeng.module';
-import { WidgetsModule } from 'web-app-framework';
 import { SharedModule } from '@app/components/shared/shared.module';
 
 import { AuthService } from '@app/services/generated/auth.service';
 
-import { NewuserComponent } from './newuser.component';
-import { NewroleComponent } from '../newrole/newrole.component';
+import { NewuserComponent } from '../newuser/newuser.component';
 import { NewrolebindingComponent } from '../newrolebinding/newrolebinding.component';
 import { UsersComponent } from '../users.component';
 import { MessageService } from 'primeng/primeng';
 import { StagingService } from '@app/services/generated/staging.service';
 
-describe('NewuserComponent', () => {
-  let component: NewuserComponent;
-  let fixture: ComponentFixture<NewuserComponent>;
+import { NewroleComponent } from './newrole.component';
+
+describe('NewroleComponent', () => {
+  let component: NewroleComponent;
+  let fixture: ComponentFixture<NewroleComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [NewuserComponent, UsersComponent, NewroleComponent, NewrolebindingComponent],
+      declarations: [NewroleComponent,  UsersComponent, NewuserComponent, NewrolebindingComponent],
       imports: [
         FormsModule,
         ReactiveFormsModule,
         NoopAnimationsModule,
         HttpClientTestingModule,
         PrimengModule,
-        WidgetsModule,
         MaterialdesignModule,
         RouterTestingModule,
         SharedModule
@@ -49,11 +48,11 @@ describe('NewuserComponent', () => {
         StagingService
       ]
     })
-      .compileComponents();
+    .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(NewuserComponent);
+    fixture = TestBed.createComponent(NewroleComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -1,38 +1,42 @@
 @import '~@angular/material/theming';
 
 /*********  Font Mixins  *********/
-@mixin primary-font($size:14px, $color: #676763, $weight: normal) {
+@mixin primary-font($size: 14px, $color: #676763, $weight: normal) {
   font-family: "Fira Sans Condensed";
   font-size: $size;
   font-weight: $weight;
   color: $color;
-} 
+}
 
-@mixin secondary-font($size:14px, $color: #676763, $weight: normal) {
+@mixin secondary-font($size: 14px, $color: #676763, $weight: normal) {
   font-family: "Roboto Condensed";
   font-size: $size;
   font-weight: $weight;
   color: $color;
-} 
+}
 
 /*********  Material design related overrides  *********/
 @mixin global-mat-toggle($toggleBar, $toggleThumb, $toggleBarChecked, $toggleThumbChecked) {
   &.mat-disabled {
     opacity: 0.4 !important;
   }
+
   .mat-slide-toggle-content {
-      @include primary-font();
+    @include primary-font();
   }
 
   &.mat-slide-toggle.mat-accent .mat-slide-toggle-bar {
     background-color: $toggleBar;
   }
+
   &.mat-slide-toggle.mat-accent .mat-slide-toggle-thumb {
     background-color: $toggleThumb;
   }
+
   &.mat-slide-toggle.mat-accent.mat-checked .mat-slide-toggle-bar {
     background-color: $toggleBarChecked;
   }
+
   &.mat-slide-toggle.mat-accent.mat-checked .mat-slide-toggle-thumb {
     background-color: $toggleThumbChecked;
   }
@@ -44,21 +48,22 @@
     width: $mat-radio-size !important;
     height: $mat-radio-size !important;
   }
+
   .mat-radio-button .mat-radio-ripple {
     visibility: hidden;
   }
-  
+
   // The outer circle for the radio, always present.
   .mat-radio-outer-circle {
     height: $mat-radio-size !important;
     width: $mat-radio-size !important;
   }
-  
+
   // The inner circle for the radio, shown when checked.
   .mat-radio-inner-circle {
     height: $mat-radio-size;
     width: $mat-radio-size;
-  
+
     .mat-radio-checked & {
       @include cdk-high-contrast {
         // Since we use a background color to render the circle, it won't be
@@ -77,6 +82,7 @@
   @include primary-font(14px);
   margin-left: 8px;
   margin-top: 7px;
+
   .mat-form-field-underline {
     background-color: rgb(221, 221, 221);
   }
@@ -100,11 +106,13 @@
     box-shadow: inset 0px 0px 0px 1px #dddddd;
   }
 
-  .mat-tab-label, .mat-tab-link {
+  .mat-tab-label,
+  .mat-tab-link {
     opacity: 1;
     @include primary-font(16px);
     border: 1px solid $header-border;
     border-left: none;
+
     &:not(.mat-tab-label-active):not(.mat-tab-disabled):hover {
       box-shadow: inset 0px -3px 0px 0px #dddddd;
     }
@@ -131,8 +139,9 @@
     border-top: none;
   }
 
-  .mat-tab-group, .mat-tab-nav-bar {
-    $highlightColor : #6ba0e5;
+  .mat-tab-group,
+  .mat-tab-nav-bar {
+    $highlightColor: #6ba0e5;
 
     // Set the foreground color of the tabs
     &.mat-primary {
@@ -159,11 +168,59 @@
   .mat-tab-link:not(.mat-tab-disabled):focus {
     background-color: white;
   }
+
   .mat-tab-label-active {
     opacity: 1;
     color: #6ba0e5;
     box-shadow: inset 0px 3px 0px 0px #6ba0e5;
     border-top: 1px solid #6ba0e5;
     border-bottom: 1px solid white;
+  }
+}
+/* The following rules customzie primeng widgets UI.  theme.scss includes this mixin.  Once it is stablized, we should move it to web-app-framework */
+@mixin penui-primeng-misc($theme) {
+  $matchColor: #6ba0e5;
+  $fontColor: currentColor;
+
+  .ui-chkbox-box.ui-state-active,
+  .ui-radiobutton-box.ui-state-active {
+    border: 1px solid #86a8d7;
+    background: #86a8d7;
+    color: #ffffff;
+  }
+
+  .ui-widget.ui-button,
+  .ui-button {
+    border: 1px solid #97b8df;
+    background: #97b8df;
+    margin-top: 1px;
+
+    &:hover {
+      background: #86a8d7;
+    }
+  }
+
+  .ui-state-highlight {
+    background: none !important;
+    color: currentColor !important;
+  }
+
+  .ui-picklist {
+    @include primary-font(16px);
+  }
+
+  .ui-picklist .ui-picklist-item.ui-state-highlight {
+    border-color: #86a8d7;
+    background-color: #86a8d7 !important;
+    color: #ffffff !important;
+  }
+
+  .ui-picklist .ui-picklist-filter-container .ui-picklist-filter-icon {
+    position: absolute;
+    top: 50%;
+    left: auto;
+    margin-top: -.6em;
+    right: 0.5em;
+    color: #1b1d1f;
   }
 }

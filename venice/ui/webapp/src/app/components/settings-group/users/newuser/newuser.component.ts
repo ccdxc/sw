@@ -1,14 +1,20 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, OnDestroy, OnChanges, ViewEncapsulation } from '@angular/core';
-import { Validators } from '@angular/forms';
+import { Validators, ValidationErrors } from '@angular/forms';
+import { Observable, forkJoin } from 'rxjs';
 
-import { UsersComponent } from '../users.component';
+import { UsersComponent, ACTIONTYPE } from '../users.component';
 import { ErrorStateMatcher } from '@angular/material';
 import { Animations } from '@app/animations';
-import { SelectItem, MessageService } from 'primeng/primeng';
+import { SelectItem } from 'primeng/primeng';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
+import { StagingService } from '@app/services/generated/staging.service';
 import { AuthRoleBinding, AuthUser } from '@sdk/v1/models/generated/auth';
 import { Utility } from '@app/common/Utility';
+import { StagingBuffer } from '@sdk/v1/models/generated/staging';
+import { AbstractControl, ValidatorFn } from '@angular/forms';
+
+import { required } from '@sdk/v1/models/generated/auth/validators.ts';
 
 
 @Component({
@@ -21,9 +27,10 @@ import { Utility } from '@app/common/Utility';
 export class NewuserComponent extends UsersComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
 
   newAuthUser: AuthUser;
-  selectedRolebindings: any[] = [];
+  selectedRolebindingsForUsers: AuthRoleBinding[] = [];
 
   @Input() authRoleBindings: AuthRoleBinding[] = [];
+  @Input() authUsers: AuthUser[] = [];
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
   @Input() rolebindingOptions: SelectItem[] = [];
@@ -34,22 +41,40 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
-    protected messageService: MessageService
+    protected stagingService: StagingService
   ) {
-    super(_controllerService, _authService, messageService);
+    super(_controllerService, _authService, stagingService);
   }
 
   ngOnInit() {
     this.newAuthUser = new AuthUser();
-    this.newAuthUser.$formGroup.get(['meta', 'name']).setValidators(Validators.required);
-    this.newAuthUser.$formGroup.get(['spec', 'fullname']).setValidators(Validators.required);
-    this.newAuthUser.$formGroup.get(['spec', 'password']).setValidators(Validators.required);
-    this.newAuthUser.$formGroup.get(['spec', 'type']).setValidators(Validators.required);
-    this.newAuthUser.$formGroup.get(['spec', 'email']).setValidators(Validators.required);
+    // set validation rules.  Angular does not have api to get existing validators. Thus, we reset all validators
+    // meta.nam is required and must be unique
+    this.newAuthUser.$formGroup.get(['meta', 'name']).setValidators([required, this.isUsernameValid(this.authUsers)]);
+    // spec.password is required.
+    this.newAuthUser.$formGroup.get(['spec', 'password']).setValidators([required]);
   }
 
   ngAfterViewInit() {
 
+  }
+
+  /**
+   * This is a customized validator function.
+   * We don't want new user name not duplicated with existing users.
+   *
+   * @param authUsers
+   */
+  isUsernameValid(authUsers: AuthUser[]): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors| null => {
+      if (this.isUserAlreadyExist(control.value, authUsers)) {
+        return { 'login-name': {
+            required: true,
+            message: 'Login name is required and must be unique'
+        } };
+      }
+      return null;
+    };
   }
 
   isErrorState(control) {
@@ -63,7 +88,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
 
   ngOnChanges() {
     this.populateRolebindingOptions();
-    this.selectedRolebindings.length = 0;
+    this.selectedRolebindingsForUsers.length = 0;
   }
 
   getClassName(): string {
@@ -72,16 +97,68 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
 
   addUser() {
     const newUser = this.newAuthUser.getFormGroupValues();
-    this._authService.AddUser(newUser).subscribe(
-      response => {
-        const createdUser: AuthUser = response.body as AuthUser;
+    if (this.isUserAlreadyExist(newUser.meta.name, this.authUsers)) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Can not create user',
+        detail: newUser.meta.name + ' already exist'
+      });
+      return;
+    }
+    this.addUser_with_staging();
+  }
 
-        this.invokeSuccessToaster('Creation Successful', 'Created user ' + newUser.meta.name);
-        this.handleAddUpdateUserRESTCallSuccess(createdUser);
+  /**
+   * create a user - UI will let admin to bind user to roles.  (Say  user “joe blow” is created, admin wants to bind “joeblow" operator role and support role)
+   *        create buffer
+   *        if (success)
+   *           add user
+   *           add “joeblow” to  operator_rolebinding.user[] list
+   *           add “joeblow” to  support_rolebinding.user[] list
+   *          if (success)
+   *             commit buffer
+   *           else
+   *             delete buffer
+   */
+ addUser_with_staging() {
+    const newUser = this.newAuthUser.getFormGroupValues();
+    this.createStagingBuffer().subscribe(
+      responseBuffer => {
+        const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
+        const buffername = createdBuffer.meta.name;
+        const observables: Observable<any>[] = [];
+        const username = newUser.meta.name;
+        observables.push(this._authService.AddUser(newUser, buffername));
+        this.selectedRolebindingsForUsers.forEach((rolebinding) => {
+          this.rolebindingUpdateMap[rolebinding.meta.name] = false;
+          const observabe = this.addUserToRolebindings(rolebinding, username, buffername);
+          if (observabe) {
+            observables.push(observabe);
+          }
+        });
+        forkJoin(observables).subscribe(results => {
+          const isAllOK = this.isForkjoinResultAllOK(results);
+          if (isAllOK) {
+            this.commitStagingBuffer(buffername).subscribe(
+              responseCommitBuffer => {
+                this.invokeSuccessToaster('Successful', ACTIONTYPE.CREATE + ' User ' + newUser.meta.name);
+                this.formClose.emit(true);
+              },
+              error => {
+                console.error('Fail to commit Buffer', error);
+                this.invokeRESTErrorToaster('Fail to commit buffer when adding user ' ,  error);
+              }
+            );
+          } else {
+            this.deleteStagingBuffer(buffername, 'Fail to add user');
+          }
+        });
       },
-      this.restErrorHandler('Create User Failed')
+      this.restErrorHandler('Fail to create commit buffer when adding user')
     );
   }
+
+
 
 
   /**
@@ -112,22 +189,19 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
   }
 
   onCancelAddUser($event) {
-    console.log(this.getClassName() + '.onCancelAddUser()');
     this.newAuthUser.$formGroup.reset();
-    this.selectedRolebindings.length = 0;
+    this.selectedRolebindingsForUsers.length = 0;
     this.formClose.emit(false);
   }
 
   onRolebindingChange($event) {
-    console.log(this.getClassName() + '.onRolebindingChange()');
-    this.selectedRolebindings = $event.value;
+    this.selectedRolebindingsForUsers = $event.value;
   }
 
   isAllInputsValidated() {
     const hasFormGroupError = Utility.getAllFormgroupErrors(this.newAuthUser.$formGroup);
-    const hasSelectedRole = (this.selectedRolebindings && this.selectedRolebindings.length > 0);
+    const hasSelectedRole = (this.selectedRolebindingsForUsers && this.selectedRolebindingsForUsers.length > 0);
     return (hasFormGroupError === null) && (hasSelectedRole);
   }
-
 
 }

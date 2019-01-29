@@ -22,6 +22,8 @@
   @include penui-primeng-inputtext($theme);
   @include penui-primeng-dropdown($theme);
   @include penui-primeng-multiselect($theme);
+
+  @include penui-primeng-misc($theme)
 }
 
 // Allows for styling of components that are outside attached to 

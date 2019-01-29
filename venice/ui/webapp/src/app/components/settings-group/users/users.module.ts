@@ -13,6 +13,8 @@ import { SharedModule } from '@app/components/shared//shared.module';
 
 import { AuthService } from '@app/services/generated/auth.service';
 import { NewuserComponent } from './newuser/newuser.component';
+import { NewroleComponent } from './newrole/newrole.component';
+import { NewrolebindingComponent } from './newrolebinding/newrolebinding.component';
 
 
 @NgModule({
@@ -28,7 +30,9 @@ import { NewuserComponent } from './newuser/newuser.component';
   ],
   declarations: [
     UsersComponent,
-    NewuserComponent
+    NewuserComponent,
+    NewroleComponent,
+    NewrolebindingComponent
   ],
   exports: [UsersComponent],
   entryComponents: [

@@ -1,0 +1,86 @@
+@import 'src/global-mixins';
+
+.newrolebinding {
+  border-bottom: 1px solid #eee;
+  padding: 10px 5px;
+  width: 100%;
+  margin-bottom: 5px;
+  font-family: 'Fira Sans Condensed' !important;
+  font-size: 14px;
+}
+
+.newrolebinding .newrolebinding-panel-rolegroup-header-add-property-label {
+  width: 120px;
+  margin: 5px;
+}
+
+.newrolebinding .newrolebinding-panel-rolegroup-header-add-property-label-role {
+  margin-right: 7px;
+}
+
+.newrolebinding .newrolebinding-input-item {
+  padding: 3px !important;
+  margin: 5px;
+  text-indent: 8px;
+}
+
+.newrolebinding-addnewuser {
+  width: 80px;
+}
+
+.newrolebinding-addnewuser-clear {
+  margin-right: 10px;
+}
+
+.newrolebinding-addnewuser-save {
+  margin-right: 0px;
+}
+
+.newrolebinding-addnewuser-save:disabled {
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  opacity: .25 !important;
+}
+
+.newrolebinding-rolebinding-select {
+  height: 28px !important;
+  padding-bottom: 0px !important;
+  margin-left: 5px;
+  margin-top: 5px;
+}
+
+.newrolebinding .newrolebinding-rolebinding-select.ui-multiselect .ui-multiselect-label {
+  padding: 3px 0px 0px 0px;
+}
+
+/**  */
+.newrolebinding .newrolw-permission {
+  margin: 5px;
+  padding: 5px;
+  border: 1px solid #f0f0f0;
+}
+
+.newrolebinding .ui-picklist .ui-picklist-filter-container {
+  padding: 0px;
+  border: 0px;
+}
+
+.newrolebinding .newrolebinding-pickList-username-label {
+  font-size: 14px;
+  float: right;
+  margin: 5px 5px 0 0;
+}
+
+/* The following css customzie p-picklist.  Hide the up-down button container and adjust UI */
+.newrolebinding .ui-picklist-source-controls,
+.newrolebinding .ui-picklist-target-controls {
+   display:none;
+}
+
+.newrolebinding .ui-picklist  {
+    margin-right:10px;
+}
+
+.newrolebinding .ui-picklist .ui-picklist-filter-container .ui-picklist-filter {
+    text-indent: 0.1em;
+}

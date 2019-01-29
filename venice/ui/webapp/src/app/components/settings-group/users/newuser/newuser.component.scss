@@ -7,8 +7,12 @@
     margin-bottom: 5px;
 }
 
+.newuser-panel-rolegroup-column {
+    max-width: 400px;
+}
+
 .newuser .newuser-panel-rolegroup-header-add-property-label{
-    width:120px;
+    width:150px;
     margin:5px;
 }
 
@@ -38,10 +42,11 @@
 .newuser-rolebinding-select{
    height:28px !important;
    padding-bottom: 0px !important;
-   margin-left: 5px;
+   margin-left: 0px;
    margin-top: 5px;
 }
 
 .newuser .newuser-rolebinding-select.ui-multiselect .ui-multiselect-label {    
     padding: 3px 0px 0px 0px; 
 }
+

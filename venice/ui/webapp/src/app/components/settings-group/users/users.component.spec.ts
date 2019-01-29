@@ -17,8 +17,11 @@ import { SharedModule } from '@app/components/shared/shared.module';
 import { AuthService } from '@app/services/generated/auth.service';
 
 import { NewuserComponent } from './newuser/newuser.component';
+import { NewroleComponent } from './newrole/newrole.component';
+import { NewrolebindingComponent } from './newrolebinding/newrolebinding.component';
 import { UsersComponent } from './users.component';
 import { MessageService } from 'primeng/primeng';
+import { StagingService } from '@app/services/generated/staging.service';
 
 describe('UsersComponent', () => {
   let component: UsersComponent;
@@ -26,7 +29,7 @@ describe('UsersComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [UsersComponent, NewuserComponent],
+      declarations: [UsersComponent, NewuserComponent, NewroleComponent, NewrolebindingComponent],
       imports: [
         FormsModule,
         ReactiveFormsModule,
@@ -45,7 +48,9 @@ describe('UsersComponent', () => {
         MatIconRegistry,
         MonitoringService,
         AuthService,
-        MessageService
+        MessageService,
+        StagingService
+
       ]
     })
       .compileComponents();

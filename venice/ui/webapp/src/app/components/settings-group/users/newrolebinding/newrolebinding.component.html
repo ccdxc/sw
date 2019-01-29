@@ -1,0 +1,40 @@
+<div class="newrolebinding" *ngIf="newAuthRolebinding" [formGroup]="newAuthRolebinding.$formGroup">
+  <div fxLayout="column">
+    <div fxLayout="row" formGroupName="meta">
+      <div class="newrolebinding-panel-rolegroup-header-add-property-label">Name:</div>
+      <div class="newrolebinding-panel-rolegroup-header-add-property-value">
+        <input *ngIf="!isEditMode()" fxFlex="200px" formControlName="name" class="newrolebinding-input-item newrolebinding-fullname"
+        app-errorTooltip spellcheck="false" type="text" pInputText placeholder="Rolebinding Name..." [ngClass]="isErrorState(newAuthRolebinding.$formGroup.get('metaname')) ? 'error' : ''">
+        <span *ngIf="isEditMode()" class="newrolebinding-input-item newrolebinding-fullname">{{newAuthRolebinding.meta.name}}</span>
+      </div>
+    </div>
+    <div fxLayout="row" formGroupName="spec">
+        <div class="newrolebinding-panel-rolegroup-header-add-property-label newrolebinding-panel-rolegroup-header-add-property-label-role">Role:</div>
+        <div class="newrolebinding-panel-rolegroup-header-add-property-value">
+           <p-dropdown [options]="sourceRoles" formControlName="role" *ngIf="!isEditMode()" placeholder="Select one" ></p-dropdown>
+            <span *ngIf="isEditMode()" class="newrolebinding-input-item newrolebinding-rolename">{{newAuthRolebinding.spec.role}}</span>
+        </div>
+      </div>
+    <div fxLayout="row" class="newrolebinding-panel-rolegroup-header-add-property-label">Users:</div>
+
+    <p-pickList [source]="sourceUsers" [target]="targetUsers" filterBy="name" sourceHeader="Available" targetHeader="Selected"
+      dragdrop="true" dragdropScope="cars" sourceFilterPlaceholder="Search by name" targetFilterPlaceholder="Search by name">
+      <ng-template let-user pTemplate="item">
+        <div class="ui-helper-clearfix">
+          <div class="newrolebinding-pickList-username-label">{{user.name}} </div>
+        </div>
+      </ng-template>
+    </p-pickList>
+  </div>
+  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
+      <div fxFlex="nogrow">
+        <button (click)="onCancelAddRolebinding($event)" tabindex="0" (keydown)="($event.which ==13)? onCancelAddRolebinding($event) : ''"
+          class="global-button-neutral newrolebinding-addnewuser newrolebinding-addnewuser-clear">Cancel</button>
+      </div>
+      <div fxFlex="nogrow">
+        <button (click)="onSaveAddRolebinding($event)" tabindex="0" (keydown)="($event.which ==13)? onSaveAddRolebinding($event) : ''"
+          class="global-button-primary newrolebinding-addnewuser newrolebinding-addnewuser-save" [disabled]="!isAllInputsValidated()">Save</button>
+      </div>
+    </div>
+
+</div>

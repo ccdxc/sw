@@ -9,6 +9,12 @@ import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
 
+
+
+import { IAuthAuthenticationPolicy, IApiStatus, IAuthRoleBindingList, IAuthRoleBinding,
+  IAuthRoleList, IAuthRole, IAuthUserList, IAuthUser, IAuthAutoMsgAuthenticationPolicyWatchHelper, IAuthAutoMsgRoleBindingWatchHelper, IAuthAutoMsgRoleWatchHelper, IAuthAutoMsgUserWatchHelper } from '@sdk/v1/models/generated/auth';
+
+
 @Injectable()
 export class AuthService extends Authv1Service {
   // Attributes used by generated services
@@ -61,4 +67,5 @@ export class AuthService extends Authv1Service {
   getTenant(): string {
     return Utility.getInstance().getTenant();
   }
+
 }

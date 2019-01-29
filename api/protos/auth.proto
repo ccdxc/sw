@@ -326,9 +326,9 @@ message PasswordChangeRequest {
 
     api.ObjectMeta O   = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
 
-    string OldPassword = 3 [(gogoproto.jsontag) = "old-password,omitempty"];
+    string OldPassword = 3 [(venice.check) = "StrLen(1, -1))", (gogoproto.jsontag) = "old-password,omitempty"];
 
-    string NewPassword = 4 [(gogoproto.jsontag) = "new-password,omitempty"];
+    string NewPassword = 4 [(venice.check) = "StrLen(1, -1))", (gogoproto.jsontag) = "new-password,omitempty"];
 
     option (venice.objectPrefix) = {Collection: "users", Path: "/{O.Tenant}"};
 }

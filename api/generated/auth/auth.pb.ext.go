@@ -339,7 +339,8 @@ func (m *PasswordChangeRequest) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *PasswordChangeRequest) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -897,6 +898,19 @@ func (m *Local) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *PasswordChangeRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapAuth["PasswordChangeRequest"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapAuth["PasswordChangeRequest"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -1251,6 +1265,31 @@ func init() {
 
 		if _, ok := LdapServerStatus_LdapResult_value[m.Result]; !ok {
 			return errors.New("LdapServerStatus.Result did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapAuth["PasswordChangeRequest"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAuth["PasswordChangeRequest"]["all"] = append(validatorMapAuth["PasswordChangeRequest"]["all"], func(path string, i interface{}) error {
+		m := i.(*PasswordChangeRequest)
+		args := make([]string, 0)
+		args = append(args, "1")
+		args = append(args, "-1")
+
+		if !validators.StrLen(m.NewPassword, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"NewPassword")
+		}
+		return nil
+	})
+
+	validatorMapAuth["PasswordChangeRequest"]["all"] = append(validatorMapAuth["PasswordChangeRequest"]["all"], func(path string, i interface{}) error {
+		m := i.(*PasswordChangeRequest)
+		args := make([]string, 0)
+		args = append(args, "1")
+		args = append(args, "-1")
+
+		if !validators.StrLen(m.OldPassword, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"OldPassword")
 		}
 		return nil
 	})

@@ -40,6 +40,10 @@
     color: #676763;
 }
 
+.usertemplate-div-card:hover {
+    background-color: #f0f0f0;
+}
+
 .usertemplate-div-card-icon-buttons-div {
     display: flex;
 }
@@ -61,10 +65,9 @@
 
 .usertemplate-div-card-icon,
 .usertemplate-div-card-icon-operation-button  {
-    color: #fff;
-    border: 1px solid #ccc;
+    color: #fff;   
     border-radius: 50%;
-    border: 1px solid;    
+    border: 1px solid transparent;    
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;    
@@ -124,7 +127,7 @@
     line-height: 19.0px;
 }
 
-.usertemplate-div-card-createdtime {   
+.usertemplate-div-card-createdtime, .usertemplate-div-card-item {   
    
     height: auto;
     width: auto;
@@ -139,6 +142,11 @@
     text-align: left;
     line-height: 14.0px;
 }
+
+.usertemplate-div-card-item-action {
+    margin-left:15px;
+}
+
 .usertemplate-div-card-icon-button {
     background-color: #d1cec7;
     color: #fff;
@@ -153,6 +161,8 @@
 .user-panel-div {
     min-width : 425px;
 }
+
+
 
 .user-panel-div:hover .usertemplate-div-card-icon-button{
     visibility:visible;
@@ -187,4 +197,21 @@
 
 .users .ui-multiselect-panel .ui-multiselect-item label {
     font-weight: 500;
+}
+
+.users .user-panel-role-permission {
+    margin:  5px;
+    padding: 5px;
+    border: 1px solid #f0f0f0;
+}
+
+.users .usertemplate-rolegroup-header-edit-label-oldpassword {
+    margin-right: 7px;
+}
+
+/* disable the save button */
+.users .usertemplate-div-card-icon-save-button:disabled {
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    opacity: .25 !important;
 }

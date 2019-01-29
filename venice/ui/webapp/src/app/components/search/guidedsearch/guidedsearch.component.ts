@@ -54,8 +54,8 @@ export class GuidesearchComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    this.categorySuggestions = SearchUtil.getCategories();
-    this.kindSuggestions = SearchUtil.getKinds();
+    this.categorySuggestions = Utility.getCategories();
+    this.kindSuggestions = Utility.getKinds();
     this.labelData = [
       {
         key: { label: 'text', value: 'text' },
@@ -196,7 +196,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
   // categories
   filterCategorySuggestions(event) {
     const query = event.query;
-    const cats = SearchUtil.getCategories();
+    const cats = Utility.getCategories();
     const suggestedCats = [];
     cats.filter((item) => {
       if (item.toLowerCase().indexOf(query.toLowerCase()) >= 0) {
@@ -212,7 +212,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
   }
 
   getAvailableCategories(): any[] {
-    const cats = SearchUtil.getCategories();
+    const cats = Utility.getCategories();
     const availableCategories = [];
     cats.filter((item) => {
       if (this.selectedCategories.indexOf(item) < 0) {
@@ -226,7 +226,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
 
   filterkindSuggestions(event) {
     const query = event.query;
-    const kinds = SearchUtil.getKinds();
+    const kinds = Utility.getKinds();
     const suggestedKinds = [];
     kinds.filter((item) => {
       if (item.toLowerCase().indexOf(query.toLowerCase()) >= 0) {
@@ -253,7 +253,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
         newKindList = newKindList.sort();
       }
     } else {
-      newKindList = SearchUtil.getKinds();
+      newKindList = Utility.getKinds();
     }
     const availableKinds = [];
     newKindList.filter((item) => {

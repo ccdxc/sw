@@ -13,8 +13,8 @@ export interface IAuthPasswordChangeRequest {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'old-password'?: string;
-    'new-password'?: string;
+    'old-password': string;
+    'new-password': string;
 }
 
 
@@ -22,7 +22,11 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
+    /** length of string should be at least 1
+     */
     'old-password': string = null;
+    /** length of string should be at least 1
+     */
     'new-password': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'kind': {
@@ -35,9 +39,11 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
             type: 'object'
         },
         'old-password': {
+            description:  'length of string should be at least 1 ',
             type: 'string'
         },
         'new-password': {
+            description:  'length of string should be at least 1 ',
             type: 'string'
         },
     }
@@ -117,8 +123,8 @@ export class AuthPasswordChangeRequest extends BaseModel implements IAuthPasswor
                 'kind': new FormControl(this['kind']),
                 'api-version': new FormControl(this['api-version']),
                 'meta': this['meta'].$formGroup,
-                'old-password': new FormControl(this['old-password']),
-                'new-password': new FormControl(this['new-password']),
+                'old-password': new FormControl(this['old-password'], [required, minLengthValidator(1), ]),
+                'new-password': new FormControl(this['new-password'], [required, minLengthValidator(1), ]),
             });
         }
         return this._formGroup;

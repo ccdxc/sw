@@ -1,7 +1,8 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
+import { Observable, forkJoin } from 'rxjs';
 
-import { SelectItem, MessageService } from 'primeng/primeng';
+import { SelectItem } from 'primeng/primeng';
 import { ErrorStateMatcher } from '@angular/material';
 
 import { BaseComponent } from '@app/components/base/base.component';
@@ -11,19 +12,44 @@ import { Utility } from '@app/common/Utility';
 import { UserDataReadyMap } from './';
 
 import { AuthService } from '@app/services/generated/auth.service';
+import { StagingService } from '@app/services/generated/staging.service';
 import {
   IApiStatus, IAuthRoleBindingList, AuthRoleBindingList,
   AuthRoleBinding, IAuthRoleList, AuthRole, IAuthUserList,
-  AuthUserList, AuthUser, AuthRoleList
+  AuthUserList, AuthUser, AuthRoleList , AuthPasswordChangeRequest
 } from '@sdk/v1/models/generated/auth';
+import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 
+export enum ACTIONTYPE {
+  CREATE = 'Create',
+  UPDATE = 'Update',
+  DELETE = 'Delete'
+}
+
+export interface AuthPolicyObject {
+  meta: {
+      name: string;
+  };
+}
 
 /**
- * User component allow end-user manage users.
+ * User-component allow end-user manage users, roles and role-binding.
+ * Venice user can pick USER/ROLE/ROLE-BINDING from toolbar menu
+ *
+ * I
+ * User
  * Adding new-user is in newuser.component.ts.   User is corresponding to AuthUser object. AuthUser.status should contain role information which is readonly.
  *
  * AuthUser, AuthRole, AuthRoleBinding (objects) are inter-related.  If assigning a role to user, AuthRoleBinding must update user-name to AuthRoleBinding.spec.users [..]
  * For example, adding "test" to admin-role,  AdminRole (AuthRoleBinding)..spec.users[ 'test' .. ]
+ *
+ * II
+ * Role
+ * users.component.html has Role list UI.  Included NewroleComponent handles role creation or update.
+ *
+ * III
+ * Role-binding
+ *
  *
  */
 
@@ -35,13 +61,29 @@ import {
   encapsulation: ViewEncapsulation.None,
 })
 export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
+
+  public static UI_PANEL_USER = 'user';
+  public static UI_PANEL_ROLE = 'role';
+  public static UI_PANEL_ROLEBINDING = 'rolebinding';
+
+  public static USER_ACTION_UPDATE = 'update';
+  public static USER_ACTION_CHANGEPWD = 'changepassword';
+  authPasswordChangeRequest: AuthPasswordChangeRequest = null; // This is for changing user password
+
   authusers: AuthUser[] = [];
   authRoles: AuthRole[] = [];
   authRoleBindings: AuthRoleBinding[] = [];
+
   selectedAuthUser: AuthUser = null;
+  selectedAuthRole: AuthRole = null;
+  selectedAuthRolebinding: AuthRoleBinding = null;
+
   protected rolebindingOptions: SelectItem[] = [];
-  protected selectedRolebindings: any[] = [];
+  protected selectedRolebindingsForUsers: AuthRoleBinding[] = [];
   protected rolebindingUpdateMap = {};
+
+  protected whichPanel = UsersComponent.UI_PANEL_USER;
+  selectedDropdown: any = UsersComponent.UI_PANEL_USER;
 
   dataReadyMap: UserDataReadyMap = {
     users: false,
@@ -50,6 +92,9 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   };
 
   isToShowAddUserPanel: boolean = false;
+  isToShowAddRolePanel: boolean = false;
+  isToShowAddRolebindingPanel: boolean = false;
+
 
 
   usericon: any = {
@@ -60,13 +105,16 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     url: '/assets/images/icons/auth/ico-authorizations.svg'
   };
 
+
+
   errorChecker = new ErrorStateMatcher();
+  userEditAction: string = UsersComponent.USER_ACTION_UPDATE ;
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
-    protected messageService: MessageService
+    protected stagingService: StagingService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService, null);  // we don't want to use messageService.
   }
 
   ngOnInit() {
@@ -83,10 +131,27 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           callback: () => { this.getData(); },
         }
       ],
-      breadcrumb: [{ label: 'Authentications', url: '' }, { label: 'Users', url: '' }]
+      breadcrumb: [{ label: 'RBAC Management', url: '' }],
+      dropdowns: [
+        {
+          callback: (event, sbutton) => {
+            this.onLayoutDropDownChange(sbutton);
+          },
+          options: [
+            { label: UsersComponent.UI_PANEL_USER, value: UsersComponent.UI_PANEL_USER },
+            { label: UsersComponent.UI_PANEL_ROLE, value: UsersComponent.UI_PANEL_ROLE },
+            { label: UsersComponent.UI_PANEL_ROLEBINDING, value: UsersComponent.UI_PANEL_ROLEBINDING }
+          ],
+          model: this.selectedDropdown,
+          placeholder: 'Select layout'
+        }
+      ]
     });
   }
 
+  onLayoutDropDownChange(sbutton: any) {
+    this.whichPanel = sbutton.model;
+  }
   /**
    * Component is about to exit
    */
@@ -120,7 +185,6 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   }
 
   combineData() {
-    console.log(this.getClassName() + '.combineData()');
     this.populateRolebindingOptions();
   }
 
@@ -129,7 +193,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
       this.rolebindingOptions.length = 0;
       this.authRoleBindings.forEach((rolebinding) => {
         const obj: SelectItem = {
-          label: rolebinding.meta.name,
+          label: rolebinding.meta.name, // rolebinding.meta.name, rolebinding.spec.role
           value: rolebinding
         };
         this.rolebindingOptions.push(obj);
@@ -227,10 +291,108 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   /**
    * This API serves html template
    * @param $event
-   * @param role
    */
   onAddUser($event) {
     this.isToShowAddUserPanel = true;
+  }
+  /**
+   * This API serves html template
+   * @param $event
+   */
+  onAddRole($event) {
+    this.isToShowAddRolePanel = true;
+    this.selectedAuthRole = null;
+  }
+
+  /**
+   * This API serves html template
+   * @param $event
+   */
+  onAddRoleBinding($event) {
+    this.isToShowAddRolebindingPanel = true;
+  }
+
+  /**
+   *
+   * @param $event
+   * @param user : AuthUser
+   */
+  onDeleteUser($event, user: AuthUser) {
+    this.onDeleteUser_with_staging($event, user);
+  }
+
+  /**
+   * Using staging buffer to delete user
+   * @param $event
+   * @param deletedUser
+   */
+  onDeleteUser_with_staging($event, deletedUser: AuthUser) {
+    const r = confirm('Please confirm to delete user:' + deletedUser.spec.fullname);
+    if (r === true) {
+      this.createStagingBuffer().subscribe(
+        responseBuffer => {
+          const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
+          const buffername = createdBuffer.meta.name;
+          const observables: Observable<any>[] = [];
+          observables.push(this._authService.DeleteUser(deletedUser.meta.name, buffername));
+          const username = deletedUser.meta.name;
+          this.authRoleBindings.forEach((rolebinding) => {
+            this.rolebindingUpdateMap[rolebinding.meta.name] = false;
+            const observable = this.removeUserFromRolebing(rolebinding, username, buffername);
+            if (observable != null) {
+              observables.push(observable);
+            }
+          });
+          forkJoin(observables).subscribe(results => {
+            const isAllOK = this.isForkjoinResultAllOK(results);
+            if (isAllOK) {
+              this.commitStagingBuffer(buffername).subscribe(
+                responseCommitBuffer => {
+                  this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' User ' + deletedUser.meta.name);
+                  this.creationUserFormClose(true);
+                },
+                error => {
+                  console.error('Fail to commit Buffer');
+                  this.invokeRESTErrorToaster('Fail to commit Buffer', error);
+                }
+              );
+              } else {
+                this.deleteStagingBuffer(buffername, 'Fail to delete user ' + deletedUser.meta.name);
+              }
+          });
+        },
+        error => {
+          this.invokeRESTErrorToaster('Create Buffer Failed When Deleting User ' + deletedUser.meta.name, error);
+        }
+      );
+    } else {
+      return;
+    }
+  }
+
+
+
+
+
+
+
+  deleteStagingBuffer(buffername: string, reason: string) {
+    this.stagingService.DeleteBuffer(buffername).subscribe(
+      response => {
+        this.invokeSuccessToaster('Successful delete buffer', 'Delete Buffer ' + buffername + '\n' + reason);
+      },
+      this.restErrorHandler('Delete Staging Buffer Failed')
+    );
+  }
+
+  commitStagingBuffer(buffername: string): Observable<any> {
+    const commitBufferBody: StagingCommitAction  = Utility.buildCommitBufferCommit(buffername);
+    return this.stagingService.Commit(buffername, commitBufferBody);
+  }
+
+  createStagingBuffer(): Observable<any> {
+    const stagingBuffer: StagingBuffer = Utility.buildCommitBuffer();
+    return this.stagingService.AddBuffer(stagingBuffer);
   }
 
   /**
@@ -238,16 +400,80 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * @param $event
    * @param role
    */
-  onDeleteUser($event, user: AuthUser) {
-    const r = confirm('Please confirm to delete user:' + user.spec.fullname);
+  onDeleteRole($event, role: AuthRole) {
+    const r = confirm('Please confirm to delete role:' + role.meta.name);
     if (r === true) {
-      this._authService.DeleteUser(user.meta.name).subscribe(
+      this.deleteRole_with_staging(role);
+    } else {
+      return;
+    }
+  }
+
+
+  /**
+   * Delete a row.  Say deleting roleA, we will also delete roleA-rolebinding
+   *
+   * delete a role (say roleA)
+	 *	 create buffer
+   *       delete roleA
+   *        delete the roleA-rolebinding
+	 *			if (success) {
+   *            commit buffer
+   *       else
+   *            delete buffer
+   *
+   *  @param deletedRole
+   *
+   */
+  deleteRole_with_staging(deletedRole: AuthRole) {
+    this.createStagingBuffer().subscribe(
+      responseBuffer => {
+        const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
+        const buffername = createdBuffer.meta.name;
+        const observables: Observable<any>[] = [];
+        observables.push(this._authService.DeleteRole(deletedRole.meta.name, buffername));
+        this.authRoleBindings.forEach( (rolebinding: AuthRoleBinding) => {
+          if (rolebinding.spec.role === deletedRole.meta.name) {
+            const observable = this._authService.DeleteRoleBinding(rolebinding.meta.name, buffername);
+            observables.push(observable);
+          }
+        });
+        forkJoin(observables).subscribe(results => {
+          const isAllOK = this.isForkjoinResultAllOK(results);
+          if (isAllOK) {
+          this.commitStagingBuffer(buffername).subscribe(
+            responseCommitBuffer => {
+              this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' Role ' + deletedRole.meta.name);
+              this.creationRoleFormClose(true);
+            },
+            this.restErrorHandler('Fail to commit buffer when deleting role ' )
+          );
+          } else {
+            this.deleteStagingBuffer(buffername, 'Fail to delete role ' + deletedRole.meta.name);
+          }
+        });
+      },
+      this.restErrorHandler('Create Buffer Failed When Deleting An Role ' )
+    );
+  }
+
+
+
+  /**
+   * Serves HTML template. User clicks Role-binding delete button
+   * @param $event
+   * @param rolebinding
+   */
+  onDeleteRoleBinding($event, rolebinding: AuthRoleBinding) {
+    const r = confirm('Please confirm to delete rolebinding:' + rolebinding.meta.name);
+    if (r === true) {
+      this._authService.DeleteRoleBinding(rolebinding.meta.name).subscribe(
         (data) => {
-          // refresh users list
-          this.invokeSuccessToaster('Delete Successful', 'Deleted user ' + user.meta.name);
-          this.getUsers();
+          // refresh roles list
+          this.invokeSuccessToaster('Delete Successful', 'Deleted relebinding ' + rolebinding.meta.name);
+          this.getData();
         },
-        this.restErrorHandler('Delete User Failed')
+        this.restErrorHandler('Delete Role-binding Failed')
       );
     } else {
       return;
@@ -257,12 +483,371 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   /**
    * This API serves html template
    * @param $event
+   * @param user
+   */
+  onEditUser(event, user: AuthUser) {
+    this.selectedAuthUser = user;
+    this.userEditAction = UsersComponent.USER_ACTION_UPDATE;
+    this.selectedRolebindingsForUsers.length = 0;
+    this.rolebindingOptions.forEach( (selectItem ) => {
+      for (let i = 0; user.status && user.status.roles && i < user.status.roles.length; i++) {
+          const rbName = user.status.roles[i];
+          if (rbName === selectItem.value.spec.role) {
+            this.selectedRolebindingsForUsers.push(selectItem.value);
+          }
+      }
+    });
+    this.selectedAuthUser.$formGroup.get(['meta', 'name']).disable();
+  }
+
+  /**
+   * This API serves html template
+   * @param $event
    * @param role
    */
-  onEditUser($event, user: AuthUser) {
-    this.selectedAuthUser = user;
-    // TODO: back-end should not require have password input when update user. 2018-09-20 note.
-    // this.selectedAuthUser.$formGroup.get(['spec', 'password']).setValidators(Validators.required);
+  onEditRole(event, role: AuthRole) {
+    this.selectedAuthRole = role;
+    this.isToShowAddRolePanel = true;
+  }
+
+  /**
+   * This API serves html template
+   * @param $event
+   * @param rolebinding
+   */
+  onEditRoleBinding($event, rolebinding: AuthRoleBinding) {
+    this.selectedAuthRolebinding = rolebinding;
+    this.isToShowAddRolebindingPanel = true;
+  }
+  /**
+   * This API serves html template
+   */
+  showEditUserButton(user: AuthUser): boolean {
+    const _ = Utility.getLodash();
+    const value = _.result(user, 'status.roles');
+    return (value && value.length > 0) || true;
+  }
+
+  /**
+   * This API serves html template
+   */
+  showEditRoleButton(role: AuthRole): boolean {
+    return true;
+  }
+
+  /**
+   * This API serves html template
+   */
+  showEditBindingRoleButton(rolebinding: AuthRoleBinding): boolean {
+    return true;
+  }
+
+  /**
+   * This API serves html template
+   */
+  showDeleteUserButton(user: AuthUser): boolean {
+    const _ = Utility.getLodash();
+    const value = _.result(user, 'status.roles');
+    const loginname = Utility.getInstance().getLoginName();
+    return ((value && value.length > 0) || true) && (user.meta.name !== loginname);
+  }
+
+  /**
+   * This API serves html template
+   */
+  showDeleteRoleBindingButton(rolebinding: AuthRoleBinding): boolean {
+    return (this.authRoleBindings && this.authRoleBindings.length > 1);
+  }
+
+  /**
+   * This API serves html template
+   */
+  showDeleteRoleButton(role: AuthRole): boolean {
+    return (this.authRoles && this.authRoles.length > 1);
+  }
+  /**
+   * This API serves html template.
+   * If it is a save-user operation, refresh data
+   */
+  creationUserFormClose(isSaveData: boolean) {
+    if (isSaveData) {
+      this.getData();
+    }
+    this.isToShowAddUserPanel = false;
+  }
+
+   /**
+   * This API serves html template.
+   * If it is a save-user operation, refresh data
+   */
+  creationRoleFormClose(isSaveData: boolean) {
+    if (isSaveData) {
+      this.getData();
+    }
+    this.selectedAuthRole = null;
+    this.isToShowAddRolePanel = false;
+  }
+
+   /**
+   * This API serves html template.
+   * If it is a save-user operation, refresh data
+   */
+  creationRoleBindingFormClose(isSaveData: boolean) {
+    if (isSaveData) {
+      this.getData();
+    }
+    this.selectedAuthRolebinding = null;
+    this.isToShowAddRolebindingPanel = false;
+  }
+  /**
+   * This API serves html template.
+   * Check if user is in edit-mode
+   */
+  isUserEditMode(user: AuthUser): boolean {
+    return (this.selectedAuthUser === user);
+  }
+
+  isRoleEditMode(role: AuthRole): boolean {
+    return (this.selectedAuthRole === role);
+  }
+
+  isRoleBindingEditMode(rolebinding: AuthRoleBinding): boolean {
+    return (this.selectedAuthRolebinding === rolebinding);
+  }
+
+  onCancelEditUser(event, user) {
+    this.selectedAuthUser = null;
+  }
+
+  onCancelEditRole(event, role: AuthRole) {
+    this.selectedAuthRole = null;
+  }
+
+  onSaveEditUser($event, user) {
+    if (!this.isSelectedAuthUserInputValid()) {
+      this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.');
+      return;
+    }
+    if (this.userEditAction === UsersComponent.USER_ACTION_UPDATE) {
+      this.updateUser_with_staging();
+    } else if (this.userEditAction === UsersComponent.USER_ACTION_CHANGEPWD) {
+      this.changeUserPassword();
+    }
+  }
+  /**
+   * This API serves HTML template
+   */
+  isSelectedAuthUserInputValid() {
+    let hasFormGroupError = null;
+    if (this.userEditAction === UsersComponent.USER_ACTION_UPDATE) {
+      hasFormGroupError = Utility.getAllFormgroupErrors(this.selectedAuthUser.$formGroup);
+    } else if (this.userEditAction === UsersComponent.USER_ACTION_CHANGEPWD) {
+      hasFormGroupError = Utility.getAllFormgroupErrors(this.authPasswordChangeRequest.$formGroup);
+    }
+    return (hasFormGroupError === null) ;
+  }
+
+  /**
+   * Invoke REST API to change user password
+   */
+  changeUserPassword () {
+    this._authService.PasswordChange (this.selectedAuthUser.meta.name, this.authPasswordChangeRequest.getFormGroupValues()).subscribe (
+      response => {
+        this.invokeSuccessToaster('Change password Successful', 'Change Password ' + this.selectedAuthUser.meta.name);
+        const updatedAuthUser: AuthUser = response.body as AuthUser;
+        this.selectedAuthUser = updatedAuthUser;
+        this.userEditAction = null;
+      },
+      this.restErrorHandler('Update User Failed')
+    );
+  }
+
+  onSaveEditRole(event, role) {
+    this.updateRole();
+  }
+
+  onRolebindingChange($event) {
+    this.selectedRolebindingsForUsers = $event.value;
+  }
+
+  /**
+   * Venice has role-bindings [rb1, rb2, rb3, rb4, rb5]
+   * User initially binds to [rb1, rb2, rb3]
+   * Update user to bind to [rb1, rb3, rb4]
+   * We will remove user from rb1, add user to rb4
+   */
+  updateUser_with_staging() {
+    const updateUser =  this.selectedAuthUser.getFormGroupValues();
+    updateUser.meta.name = this.selectedAuthUser.meta.name;  // sine we don't let change login name, we have to patch the meta.name
+    delete updateUser.status;  // remove status property
+    this.createStagingBuffer().subscribe(
+      responseBuffer => {
+        const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
+        const buffername = createdBuffer.meta.name;
+        const observables: Observable<any>[] = [];
+        const username = updateUser.meta.name;
+        observables.push(this._authService.UpdateUser(this.selectedAuthUser.meta.name, updateUser, buffername));
+        this.authRoleBindings.forEach( (rb) => {
+            const inRBlist = this.isUserAlreadyInRoleBinding(rb, username);
+            if ( inRBlist) {
+              let inSelectedRBList = false;
+              for (let i = 0; i < this.selectedRolebindingsForUsers.length; i++) {
+                  if (rb.meta.name === this.selectedRolebindingsForUsers[i].meta.name) {
+                    inSelectedRBList = true;
+                    break;
+                  }
+              }
+              if (!inSelectedRBList) {
+                const observable = this.removeUserFromRolebing(rb, username, buffername);
+                if (observable) {
+                  observables.push(observable);
+                }
+              }
+            }
+        });
+        this.selectedRolebindingsForUsers.forEach((rolebinding) => {
+          this.rolebindingUpdateMap[rolebinding.meta.name] = false;
+          const observabe = this.addUserToRolebindings(rolebinding, username, buffername);
+          if (observabe) {
+            observables.push(observabe);
+          }
+        });
+        forkJoin(observables).subscribe(results => {
+          const isAllOK = this.isForkjoinResultAllOK(results);
+          if (isAllOK) {
+            this.commitStagingBuffer(buffername).subscribe(
+              responseCommitBuffer => {
+                this.invokeSuccessToaster('Successful', ACTIONTYPE.UPDATE + ' User ' + updateUser.meta.name);
+                this.getData();
+               },
+              error => {
+                console.error('Fail to commit Buffer', error);
+                this.invokeRESTErrorToaster('Fail to commit buffer when updating user ' , error);
+              }
+            );
+          } else {
+            this.deleteStagingBuffer(buffername, 'Fail to add user');
+          }
+        });
+      },
+      this.restErrorHandler('Fail to create commit buffer when updating user')
+    );
+  }
+
+  /**
+   * Invoke server REST API to update user information without having to include password
+   */
+  updateUser_without_staging() {
+    this._authService.UpdateUser(this.selectedAuthUser.meta.name, this.selectedAuthUser.getFormGroupValues()).subscribe(
+      response => {
+        this.invokeSuccessToaster('Update Successful', 'Updated user ' + this.selectedAuthUser.meta.name);
+        const updatedAuthUser: AuthUser = response.body as AuthUser;
+        this.userEditAction = null;
+      },
+      this.restErrorHandler('Update User Failed')
+    );
+  }
+
+  /**
+   * Invoke server REST API to update auth-role
+   */
+  updateRole() {
+    // Updating role does not need commit-buffer.
+    this._authService.UpdateRole(this.selectedAuthRole.meta.name, this.selectedAuthRole.getFormGroupValues()).subscribe(
+      response => {
+        this.invokeSuccessToaster('Update Successful', 'Updated Role ' + this.selectedAuthUser.meta.name);
+        this.getData();
+      },
+      this.restErrorHandler('Update Role Failed')
+    );
+  }
+
+  /**
+   * When using forkjoin, we have to loop through the results to see if all results are successful
+   */
+  isForkjoinResultAllOK (results: any[]): boolean {
+    let isAllOK: boolean = true;
+    for (let i = 0; i < results.length; i++) {
+      if (results[i]['statusCode'] === 200) {
+        // debug here. Do nothing
+      } else {
+        isAllOK = false;
+        break;
+      }
+    }
+    return isAllOK;
+  }
+
+  /**
+   * Check if newUserName already exist.
+   * We have to pass in authUsers as newUser.component is using this API.
+   * @param newUsername
+   * @param authUsers
+   */
+  isUserAlreadyExist(newUsername: string, authUsers: AuthUser[]): boolean {
+    return this.isAuthPolicyObjectAlreadyExist(newUsername, authUsers);
+  }
+
+  /**
+   * heck if newRolename already exist.
+   * @param newRolename
+   * @param authRoles
+   */
+  isRoleAlreadyExist(newRolename: string, authRoles: AuthRole[]): boolean {
+    return this.isAuthPolicyObjectAlreadyExist(newRolename, authRoles);
+  }
+
+  /**
+   * Check if newRolebindignname already exist.
+   * @param newRolebindignname
+   * @param authRolebindings
+   */
+  isRoleBindingAlreadyExist(newRolebindignname: string, authRolebindings: AuthRoleBinding[]): boolean {
+    return this.isAuthPolicyObjectAlreadyExist(newRolebindignname, authRolebindings);
+  }
+
+  /**
+   * Helper function to check if want-to-new auth-policy object (user/role/role-binding) has unique name
+   * @param name
+   * @param authpolicyObjects
+   */
+  isAuthPolicyObjectAlreadyExist(name: string, authpolicyObjects: AuthPolicyObject[]): boolean {
+    const isIn = false;
+    for (let i = 0 ; i < authpolicyObjects.length; i++) {
+      const authObject = authpolicyObjects[i];
+      if (authObject.meta.name === name) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  isUserAlreadyInRoleBinding(rolebinding: AuthRoleBinding, username: string): boolean {
+    return (rolebinding.getFormGroupValues().spec.users.indexOf(username) >= 0);
+  }
+
+  addUserToRolebindings(rolebinding: AuthRoleBinding, username: string, buffername: string = ''): Observable<any> {
+    if (this.isUserAlreadyInRoleBinding(rolebinding, username)) {
+      return null; // Since username is already in rolebinding.users list, we will do nothing;
+    }
+    rolebinding.getFormGroupValues().spec.users.push(username);
+    return this._authService.UpdateRoleBinding(rolebinding.meta.name, rolebinding.getFormGroupValues(), buffername);
+  }
+
+  removeUserFromRolebing(rolebinding: AuthRoleBinding, username: string, buffername: string = ''): Observable<any> {
+    if (this.isUserAlreadyInRoleBinding(rolebinding, username)) {
+      const users = rolebinding.getFormGroupValues().spec.users;
+      const newuserList = [];
+      users.forEach((uname, i) => {
+        if (uname !== username) {
+          newuserList.push(uname);
+        }
+      });
+      rolebinding.getFormGroupValues().spec.users = newuserList;
+      return this._authService.UpdateRoleBinding(rolebinding.meta.name, rolebinding.getFormGroupValues(), buffername);
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -275,90 +860,17 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * This API serves html template
+   * Server HTML template. Venice-user/admin wants to change password
+   * @param $event
+   * @param user
    */
-  showDeleteButton(user: AuthUser) {
-    const _ = Utility.getLodash();
-    const value = _.result(user, 'status.roles');
-    const loginname = Utility.getInstance().getLoginName();
-    return ((value && value.length > 0) || true) && (user.meta.name !== loginname);
-  }
-
-  /**
-   * This API serves html template.
-   * If it is a save-user operation, refresh data
-   */
-  creationFormClose(isSaveData: boolean) {
-    if (isSaveData) {
-      this.getData();
-    }
-    this.isToShowAddUserPanel = false;
-  }
-
-  /**
-   * This API serves html template.
-   * Check if user is in edit-mode
-   */
-  isUserEditMode(user: AuthUser): boolean {
-    return (this.selectedAuthUser === user);
-  }
-
-  onCancelEditUser($event, user) {
-    this.selectedAuthUser = null;
-  }
-
-  onSaveEditUser($event, user) {
-    console.log(this.getClassName() + '.onSaveEditUser()', user);
-    this.updateUser();
-  }
-
-  onRolebindingChange($event) {
-    console.log(this.getClassName() + '.onRolebindingChange()');
-    this.selectedRolebindings = $event.value;
-  }
-
-  updateUser() {
-    this._authService.UpdateUser(this.selectedAuthUser.meta.name, this.selectedAuthUser.getFormGroupValues()).subscribe(
-      response => {
-        this.invokeSuccessToaster('Update Successful', 'Updated user ' + this.selectedAuthUser.meta.name);
-        const updatedAuthUser: AuthUser = response.body as AuthUser;
-        this.handleAddUpdateUserRESTCallSuccess(updatedAuthUser);
-      },
-      this.restErrorHandler('Update User Failed')
-    );
-  }
-
-  protected handleAddUpdateUserRESTCallSuccess(authUser: AuthUser) {
-    if (this.selectedRolebindings && this.selectedRolebindings.length > 0) {
-      this.rolebindingUpdateMap = {};
-      const username = authUser.meta.name;
-      this.selectedRolebindings.filter((rolebinding) => {
-        this.rolebindingUpdateMap[rolebinding.meta.name] = false;
-        this.addUserToRolebinding(rolebinding, username);
-      });
-    }
-  }
-
-  isUserAlreadyInRoleBinding(rolebinding: AuthRoleBinding, username: string): boolean {
-    return (rolebinding.getFormGroupValues().spec.users.indexOf(username) >= 0);
-  }
-
-  addUserToRolebinding(rolebinding: AuthRoleBinding, username: string) {
-    if (this.isUserAlreadyInRoleBinding(rolebinding, username)) {
-      return; // Since username is already in rolebinding.users list, we will do nothing;
-    }
-    rolebinding.getFormGroupValues().spec.users.push(username);
-    // TODO:
-    // We update to the rolebinding.getValues().
-    // rolebinding.spec.users.push(username); will not work
-    this._authService.UpdateRoleBinding(rolebinding.meta.name, rolebinding.getFormGroupValues()).subscribe(
-      response => {
-        this.invokeSuccessToaster('Update Successful', 'Updated role binding ' + rolebinding.meta.name);
-        const status = response.statusCode;
-        this.setDataReadyMap(rolebinding.meta.name, true);
-      },
-      this.restErrorHandler('Update Role Binding Failed')
-    );
+  onChangePassword($event, user: AuthUser) {
+    this.selectedAuthUser = user;
+    this.userEditAction = UsersComponent.USER_ACTION_CHANGEPWD;
+    this.authPasswordChangeRequest = new AuthPasswordChangeRequest();
+    const selectedUserData = this.selectedAuthUser.getFormGroupValues();
+    this.authPasswordChangeRequest.setValues(selectedUserData); // this will populate data.
+    // note: auth.proto set new/odd password validation rules.
   }
 
 }

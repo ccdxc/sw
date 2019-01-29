@@ -862,10 +862,10 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
   }
 
   private getCategories(): string[] {
-    return SearchUtil.getCategories();
+    return Utility.getCategories();
   }
   private getKinds(): string[] {
-    return SearchUtil.getKinds();
+    return Utility.getKinds();
   }
 
   protected setSearchInputString(text: string) {

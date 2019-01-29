@@ -1,0 +1,127 @@
+<div class="newrole" *ngIf="newAuthRole" [formGroup]="newAuthRole.$formGroup" fxLayout="row">
+  <div fxLayout="row wrap" fxLayoutAlign="start" class="newrole-panel-rolegroup-header-add-row">
+    <div fxLayout="column">
+      <div fxLayout="row" formGroupName="meta">
+        <div class="newrole-panel-rolegroup-header-add-property-label">Name:</div>
+        <div class="newrole-panel-rolegroup-header-add-property-value">
+          <input *ngIf="!isEditMode()" fxFlex="200px" formControlName="name" class="newrole-input-item newrole-fullname"
+            spellcheck="false" type="text" pInputText placeholder="Role Name..." [ngClass]="isErrorState(newAuthRole.$formGroup.get('metaname')) ? 'error' : ''" app-errorTooltip>
+          <span *ngIf="isEditMode()" class="newrole-input-item newrole-fullname">{{newAuthRole.meta.name}}</span>
+        </div>
+      </div>
+      <div fxLayout="row" class="newrole-panel-rolegroup-header-add-property-label">Permissions:</div>
+      <div fxFlex="grow" fxLayout="row wrap" class="newrole-permissions-div">
+        <ng-container *ngTemplateOutlet="permissons"></ng-container>
+      </div>
+    </div>
+  </div>
+  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
+    <div fxFlex="nogrow">
+      <button (click)="onCancelAddRole($event)" tabindex="0" (keydown)="($event.which ==13)? onCancelAddRole($event) : ''"
+        class="global-button-neutral newrole-addnewuser newrole-addnewuser-clear">Cancel</button>
+    </div>
+    <div fxFlex="nogrow">
+      <button (click)="onSaveAddRole($event)" tabindex="0" (keydown)="($event.which ==13)? onSaveAddRole($event) : ''"
+        class="global-button-primary newrole-addnewuser newrole-addnewuser-save" [disabled]="!isAllInputsValidated()">Save</button>
+    </div>
+  </div>
+</div>
+
+<ng-template #permissons>
+  <ng-container [formGroup]="newAuthRole.$formGroup">
+    <ng-container formArrayName="spec">
+      <ng-container formArrayName="permissions">
+        <div class="newrole-permissions" fxFlex="grow" fxLayout="row wrap">
+          <div fxLayout="row wrap">
+            <div class="newrolw-permission" [@slideInOut] *ngFor="let permission of newAuthRole.$formGroup.get(['spec','permissions']).controls; let index = index; let first = first"
+              [formGroupName]="index" fxFlex="noshrink" fxLayout="column">
+
+
+              <div fxFlex="noshrink" fxLayout="row" fxLayoutGap="10px">
+                <div fxLayout="column" fxLayoutAlign="none" class="newrole-group">
+                  <div class="newrolw-fieldtitle">Configurations: </div>
+
+                  <div fxFlex="auto" fxLayout="column">
+                    <div fxLayout="row">
+                      <!-- Field Title -->
+                      <div fxFlex="nogrow" fxLayout="column">
+                        <div class="newrole-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start start">
+                          <span>Tenant:</span>
+                        </div>
+                        <div class="newrole-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start start">
+                          <span>Group:</span>
+                        </div>
+                        <div class="newrole-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start start">
+                          <span>Kind:</span>
+                        </div>
+                        
+                        <div class="newrole-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start start">
+                          <!-- TODO: 2019-01-10 comment it out per back-end request for now
+                          <span>Namespace:</span>
+                           -->
+                        </div>
+                        
+                      </div>
+                      <!-- Field Values -->
+                      <div fxFlex fxLayout="column">
+                        <ng-container>
+                          <div fxFlex="30px" fxLayout="row" class="newrole-value">
+                            <input fxFlex="nogrow" formControlName="resource-tenant" class="newrole-host" spellcheck="false"
+                              type="text" pInputText placeholder="tenant...">
+                          </div>
+                          <div fxFlex="30px" fxLayout="row" class="newrole-value">
+                            
+                              <p-dropdown class="newrole-severity" fxFlex="170px" formControlName="resource-group" styleClass="newrole-font"
+                                  [options]="groupOptions" placeholder="group..." (onChange)="onGroupChange($event, permission, index)" ></p-dropdown>
+                          </div>
+                          <div fxFlex="30px" fxLayout="row" class="newrole-value">
+                          
+                              <p-dropdown class="newrole-severity" fxFlex="170px" formControlName="resource-kind" styleClass="newrole-font"
+                                  [options]="getKindOptions(permission)" placeholder="kind..."  (onChange)="onKindChange($event,permission)" ></p-dropdown>
+                          </div>
+                         <!-- TODO: 2019-01-10 comment it out per back-end request for now
+                           <div fxFlex="30px" fxLayout="row" class="newrole-value">
+                            <input fxFlex="nogrow" formControlName="resource-namespace" class="newrole-port" spellcheck="false"
+                              type="text" pInputText placeholder="namespace...">
+                          </div> -->
+                        </ng-container>
+                      </div>
+                    </div>
+                    <!--  TODO: 2019-01-17 comment it out per back-end request for now
+                      <div class="newrolw-fieldtitle"> Resource Names: </div>
+                      <div>
+                        <input fxFlex="nogrow" formControlName="resource-names" class="newrole-port" spellcheck="false"
+                          type="text" pInputText placeholder="resourece names...">
+                      </div> 
+                     -->
+                  </div>
+
+                </div>
+                <!-- Action column. Top do not add row below-->
+                <div fxLayout="column" fxLayoutAlign="start none" class="newrole-group">
+                  <div class="newrolw-fieldtitle">
+                    Actions:
+                  </div>
+                  <div>
+                    <p-listbox [options]="permissionOptions" formControlName="actions" multiple="multiple" checkbox="checkbox"
+                      optionLabel="label"></p-listbox>
+                  </div>
+                </div>
+              </div>
+
+              <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
+                <!-- <div fxFlex="20"></div> -->
+                <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end" >
+                  <span fxFlex="nogrow" (click)="addPermission()" title="Add permission" class="newrole-permission-button newrole-permission-button-add">+ AND</span>
+                  <mat-icon fxFlex="nogrow" [style.color]="'#767676'" *ngIf="newAuthRole.$formGroup.get(['spec','permissions']).length > 1"
+                    class="newrole-permission-button newrole-permission-button-remove" (click)="removePermission(index)" title="Remove permission">delete</mat-icon>
+                </div>
+              </div>
+              <!-- <div fxFlex="40px"></div> -->
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</ng-template>

@@ -10,9 +10,8 @@ import * as pluralize from 'pluralize';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
 import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
 import { HttpErrorResponse } from '@angular/common/http';
-
 import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
-
+import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 
 
 export class Utility {
@@ -695,8 +694,53 @@ export class Utility {
    * Follow
    *  pensando/sw/venice/ui/venice-sdk/v1/models/generated/category-mapping.model.ts
    */
+
+  public static getCategories(): any[] {
+    let cats = Object.keys(CategoryMapping);
+    cats = cats.sort();
+    return cats;
+  }
+
+  public static getKinds(): any[] {
+    const cats = Utility.getCategories();
+    let kinds = [];
+    cats.filter((cat) => {
+      const catKeys = Object.keys(CategoryMapping[cat]);
+      kinds = kinds.concat(catKeys);
+    });
+    kinds = kinds.sort();
+    return kinds;
+  }
+
+  /**
+   * see api/generated/apiclient/svcmanifest.json
+   * @param isValueToLowerCase
+   */
+  public static convertCategoriesToSelectItem(isValueToLowerCase: boolean = true): SelectItem[] {
+    const cats = this.getCategories();
+    return this.stringArrayToSelectItem(cats, isValueToLowerCase);
+  }
+
+  public static convertKindsToSelectItem(isValueToLowerCase: boolean = false): SelectItem[] {
+    const kinds = this.getKinds();
+    return this.stringArrayToSelectItem(kinds, isValueToLowerCase);
+  }
+
+  public static stringArrayToSelectItem (stringArray: string[], isValueToLowerCase: boolean = true): SelectItem[] {
+    const ret: SelectItem[] = [];
+    for (let i = 0; i < stringArray.length ; i ++ ) {
+        const value = stringArray[i];
+        ret.push({ label: value, value: isValueToLowerCase ? value.toLocaleLowerCase() : value});
+    }
+    return ret;
+  }
+
   public static getKindsByCategory(selectedCategory: string): any[] {
-    return Object.keys(CategoryMapping[selectedCategory]);
+    const obj = CategoryMapping[selectedCategory];
+    if (!obj) {
+      return [];
+    }
+    return Object.keys(obj);
   }
 
   /**
@@ -825,6 +869,32 @@ export class Utility {
 
   public static average(arr) {
     return arr.reduce((a, b) => a + b, 0) / arr.length;
+  }
+
+  public static buildCommitBuffer(): StagingBuffer {
+    const data = {
+      'kind': 'Buffer',
+      'meta': {
+        'name': Utility.s4() + Utility.s4(),
+        'tenant': Utility.getInstance().getTenant(),
+        'namespace': Utility.getInstance().getNamespace()
+      },
+      'spec': {}
+    };
+    return new StagingBuffer(data, false);
+  }
+
+  public static buildCommitBufferCommit(buffername: string): StagingCommitAction {
+    const data =  {
+      'kind': 'CommitAction',
+      'meta': {
+        'name': buffername,
+        'tenant': Utility.getInstance().getTenant(),
+        'namespace': Utility.getInstance().getNamespace()
+      },
+      'spec': {}
+    };
+    return new StagingCommitAction(data, false);
   }
 
   /**

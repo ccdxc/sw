@@ -1,0 +1,83 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newrole {
+    @include primary-font(16px);
+    border-bottom: 1px solid #eee;
+    padding: 10px 5px;
+    width: 100%;
+    margin-bottom: 5px;
+    font-size: 14px;
+    overflow: auto;
+}
+
+.newrole .newrole-panel-rolegroup-header-add-property-label{
+    width:120px;
+    margin:5px;
+}
+
+.newrole .newrole-input-item {
+    padding: 3px !important;
+    margin: 5px;
+    text-indent: 8px;
+}
+
+.newrole-addnewuser {
+    width:80px
+}
+.newrole-addnewuser-clear {
+    margin-right:10px;
+}
+
+.newrole-addnewuser-save {
+    margin-right:0px;
+}
+
+.newrole-addnewuser-save:disabled {
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+    opacity: .25 !important;
+}
+
+.newrole-rolebinding-select{
+   height:28px !important;
+   padding-bottom: 0px !important;
+   margin-left: 5px;
+   margin-top: 5px;
+}
+
+.newrole .newrole-rolebinding-select.ui-multiselect .ui-multiselect-label {    
+    padding: 3px 0px 0px 0px; 
+}
+
+.newrole .newrolw-permission {
+    margin:  5px;
+    padding: 5px;
+    border: 1px solid #f0f0f0;
+    height: auto;
+    width: auto;
+    max-width: 405px;
+}
+.newrole .newrole .newrole-fieldtitle {
+    margin: 0px 5px 2px 0px;
+}
+
+.newrole-value {
+    margin: 0px 0px 2px 0px;
+}
+
+
+.newrole .newrole-permissions-div {
+    height: auto;
+    display: inline-flex;
+}
+
+.newrole .newrole-permission-button {
+    cursor: pointer;
+} 
+
+.newrole .newrole-permission-button-add {
+    cursor: pointer;
+}
