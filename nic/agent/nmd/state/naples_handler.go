@@ -130,7 +130,7 @@ func (n *NMD) StartManagedMode() error {
 				nicObj.Spec.Controllers = n.config.Spec.Controllers
 				nicObj.Status.PrimaryMAC = mac
 				nicObj.Status.AdmissionPhase = cmd.SmartNICStatus_REGISTERING.String()
-                                nicObj.Status.SerialNum = "0x0123456789ABCDEFghijk"
+				nicObj.Status.SerialNum = "0x0123456789ABCDEFghijk"
 			} else {
 
 				// Construct new smartNIC object

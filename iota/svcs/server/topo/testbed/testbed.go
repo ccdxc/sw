@@ -3,6 +3,7 @@ package testbed
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,8 +13,10 @@ import (
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/copier"
 	"github.com/pensando/sw/iota/svcs/common/runner"
+	dataswitch "github.com/pensando/sw/iota/svcs/common/switch"
 	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pkg/errors"
 )
 
 func (n *TestNode) cleanupEsxNode() error {
@@ -274,12 +277,58 @@ func (n *TestNode) StartAgent(command string, cfg *ssh.ClientConfig) error {
 	return nil
 }
 
-// AllocateVLANS allocates vlans based on the switch port ID
-func AllocateVLANS(switchPortID uint32) (vlans []uint32, err error) {
+func clearSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string) error {
+	for _, port := range ports {
+		dataSwitch.UnsetTrunkMode(port)
+		dataSwitch.UnsetNativeVlan(port)
+		dataSwitch.UnsetNativeVlan(port)
+	}
+	return nil
+}
+
+func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string, nativeVlan int, vlanRange string) error {
+	for _, port := range ports {
+		if err := dataSwitch.SetTrunkMode(port); err != nil {
+			return errors.Wrap(err, "Setting switch trunk mode failed")
+		}
+		if err := dataSwitch.SetTrunkVlanRange(port, vlanRange); err != nil {
+			return errors.Wrap(err, "Setting Vlan trunk range failed")
+		}
+		//Native vlan not supported in naples for now.
+		//if err := dataSwitch.SetNativeVlan(port, nativeVlan); err != nil {
+		//	return errors.Wrap(err, "Setting switch trunk mode failed")
+		//}
+	}
+
+	return nil
+}
+
+// SetUpTestBedVLANS allocates vlans based on the switch port ID
+func SetUpTestBedVLANS(ds *iota.DataSwitch, switchPortID uint32) (vlans []uint32, err error) {
+
+	//ID 0 means, switch not used for now
+	if switchPortID == 0 {
+		return nil, nil
+	}
+	n3k := dataswitch.NewSwitch(dataswitch.N3KSwitchType, ds.GetIp(), ds.GetUsername(), ds.GetPassword())
+	if n3k == nil {
+		log.Errorf("TOPO SVC | InitTestBed | Switch not found %s", dataswitch.N3KSwitchType)
+		return nil, errors.New("Switch not found")
+	}
+
+	clearSwitchPortConfig(n3k, ds.GetPorts())
+
 	for i := switchPortID; i < switchPortID+constants.VlansPerTestBed; i++ {
 		vlans = append(vlans, i)
 	}
-	return
+
+	vlanRange := strconv.Itoa(int(switchPortID)) + "-" + strconv.Itoa(int(switchPortID+constants.VlansPerTestBed-1))
+	if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(switchPortID), vlanRange); err != nil {
+		return nil, errors.Wrap(err, "Configuring switch failed")
+
+	}
+
+	return vlans, nil
 }
 
 // InitSSHConfig establishes the SSH Config required for remote logging in of the nodes

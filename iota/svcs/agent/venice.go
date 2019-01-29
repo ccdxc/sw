@@ -81,12 +81,17 @@ func (venice *veniceNode) Init(in *iota.Node) (*iota.Node, error) {
 		veniceNodes = append(veniceNodes, venicePeerNode{hostname: node.GetHostName(),
 			ip: node.GetIpAddress()})
 	}
-	if err := venice.bringUpVenice(in.GetImage(), in.GetName(),
-		in.GetVeniceConfig().GetControlIntf(), in.GetVeniceConfig().GetControlIp(),
-		veniceNodes); err != nil {
-		venice.logger.Println("Venice bring up failed.")
-		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
 
+	if !in.Reload {
+		if err := venice.bringUpVenice(in.GetImage(), in.GetName(),
+			in.GetVeniceConfig().GetControlIntf(), in.GetVeniceConfig().GetControlIp(),
+			veniceNodes); err != nil {
+			venice.logger.Println("Venice bring up failed.")
+			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR}}, err
+
+		}
+	} else {
+		venice.logger.Println("Venice node being reloaded.")
 	}
 
 	venice.logger.Println("Venice bring script up successful.")

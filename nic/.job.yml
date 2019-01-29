@@ -494,76 +494,36 @@ warmd:
 
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
-  # vm only test case
-  e2e-test-vm:
-    commands: [ "sh", "-c", "cat /warmd.json; go run remote-ping-vm2vm.go types.go remote.go" ]
-    owners: ["email:jobd@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    clusters:
-      - image: build-1
-        count: 2
-        resources:
-          cpus: 1
-          memory: 2
-          pvt-networks:
-          - control-1
-          - control-2
-    provision:
-      username: vm
-      password: vm
-      vars:
-
-  # baremetal only test case
-  e2e-test-bm:
-    commands: [ "sh", "-c", "cat /warmd.json; go run remote-ping-bm2bm.go types.go remote.go" ]
-    owners: ["email:jobd@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    clusters:
-      # image name for baremetal server
-      - image: build-5
-        count: 2
-        resources:
-          # server-type could be server-a or server-d
-          server-type: server-a
-          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-          nic-type: naples
-    provision:
-      username: vm
-      password: vm
-      vars:
-
   # baremetal + vm test case
-  e2e-test-2bm-vm:
-    commands: [ "sh", "-c", "cat /warmd.json && sleep 30000000"]
-    owners: ["email:jobd@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    clusters:
-      - image: build-115
-        count: 1
-        resources:
-          cpus: 4
-          memory: 8
-          pvt-networks:
-          - control-1
-          - control-2
-      - image: build-4
-        count: 2
-        resources:
-          # server-type could be server-a or server-d
-          server-type: server-a
-          # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
-          nic-type: naples
-    provision:
-        username: vm
-        password: vm
-        vars:
-           BmOs: esx
-           VmOs: linux
-           EsxUsername: root
-           EsxPassword: Pen0trl!
+ #e2e-venice-2naples:
+ #  commands: ["make", "jobd/iota/venice-bm"]
+ #  owners: ["email:sudhiaithal@pensando.io"]
+ #  #commands: [ "sh", "-c", "cat /warmd.json && sleep 30000000"]
+ #  #owners: ["email:jobd@pensando.io"]
+ #  area:
+ #  sub-area:
+ #  feature:
+ #  clusters:
+ #    - image: build-115
+ #      count: 1
+ #      resources:
+ #        cpus: 4
+ #        memory: 8
+ #        pvt-networks:
+ #        - control-1
+ #        - control-2
+ #    - image: build-4
+ #      count: 2
+ #      resources:
+ #        # server-type could be server-a or server-d
+ #        server-type: server-a
+ #        # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+ #        nic-type: naples
+ #  provision:
+ #      username: vm
+ #      password: vm
+ #      vars:
+ #         BmOs: esx
+ #         VmOs: linux
+ #         EsxUsername: root
+ #         EsxPassword: Pen0trl!

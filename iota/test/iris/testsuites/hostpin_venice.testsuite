@@ -3,7 +3,8 @@ meta:
     description : Hybring  Test Suite
     mode        : hybrid
     cfgmode     : netagent
-    nicmode     : hostpin
+#Start in classic mode and do a switch.
+    nicmode     : classic
     enable      : True
     os          : [ esx ]
 
@@ -33,12 +34,7 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
-        - networking/connectivity.testbundle
-#        - alg/alg.testbundle
-#       #- firewall/policy.testbundle
-#       - mnic/mnic_hostpin.testbundle
-#       - mnic/mnic_hostpin_naples_only.testbundle
-        - cruds/cruds.testbundle
+        - networking/connectivity_venice.testbundle
 
     regression:
         - firewall/policy_scale.testbundle

@@ -80,9 +80,9 @@ class _Testbed:
     def __read_testbed_json(self):
         self.__tbspec = parser.JsonParse(GlobalOptions.testbed_json)
         for instance in self.__tbspec.Instances:
-            if hasattr(self.__tbspec.Provision.Vars, 'BmOs') and instance.Type == "bm":
+            if hasattr(self.__tbspec.Provision, "Vars") and hasattr(self.__tbspec.Provision.Vars, 'BmOs') and instance.Type == "bm":
                 instance.NodeOs = self.__tbspec.Provision.Vars.BmOs
-            if hasattr(self.__tbspec.Provision.Vars, 'VmOs') and instance.Type == "vm":
+            if hasattr(self.__tbspec.Provision, "Vars") and hasattr(self.__tbspec.Provision.Vars, 'VmOs') and instance.Type == "vm":
                 instance.NodeOs = self.__tbspec.Provision.Vars.VmOs
         return
 
@@ -119,6 +119,25 @@ class _Testbed:
                 node_msg.esx_password = self.__tbspec.Provision.Vars.EsxPassword
             else:
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
+
+            switch_ips = []
+            switch_usernames = []
+            switch_passwords = []
+            if instance.Type == "bm":
+                for nw in instance.DataNetworks:
+                    msg.data_switch.ports.append(nw.Name)
+                    switch_ips.append(nw.SwitchIP)
+                    switch_usernames.append(nw.SwitchUsername)
+                    switch_passwords.append(nw.SwitchPassword)
+                #Testbed ID is the last one.
+                msg.testbed_id = getattr(instance, "ID", 0)
+                #For now just 1 switch is supported on testbed.
+                assert(len(set(switch_ips)) == 1)
+                assert(len(set(switch_usernames)) == 1)
+                assert(len(set(switch_passwords)) == 1)
+                msg.data_switch.ip = switch_ips[0]
+                msg.data_switch.username = switch_usernames[0]
+                msg.data_switch.password = switch_passwords[0]
         return msg
 
     def __cleanup_testbed(self):
@@ -165,11 +184,7 @@ class _Testbed:
                 cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])
                 cmd.extend(["--console-port", instance.NicConsolePort])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
-                if getattr(instance,"NodeCimcIP", None) is None:
-                    #hack for now
-                    cmd.extend(["--cimc-ip", getattr(instance,"Name")])
-                else:
-                    cmd.extend(["--cimc-ip", getattr(instance,"NodeCimcIP", "1.2.3.4")])
+                cmd.extend(["--cimc-ip", instance.NodeCimcIP])
                 cmd.extend(["--image", "%s/nic/naples_fw.tar" % GlobalOptions.topdir])
                 cmd.extend(["--mode", "%s" % api.GetNicMode()])
                 if instance.NodeOs == "esx":
@@ -202,8 +217,8 @@ class _Testbed:
                     continue
                 cmd.extend([ "%s/iota/scripts/reboot_node.py" % GlobalOptions.topdir ])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
+                cmd.extend(["--cimc-ip", instance.NodeCimcIP])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
-                cmd.extend(["--cimc-ip", getattr(instance,"NodeCimcIP", "1.2.3.4")])
                 if instance.NodeOs == "esx":
                     cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername])
                     cmd.extend(["--host-password", self.__tbspec.Provision.Vars.EsxPassword])
@@ -264,6 +279,12 @@ class _Testbed:
         for instance,node in zip(self.__tbspec.Instances, resp.nodes):
             if getattr(instance, 'NodeOs', None) == "esx":
                 instance.esx_ctrl_vm_ip = node.esx_ctrl_node_ip_address
+        if resp.allocated_vlans:
+            tbvlans = []
+            for vlan in resp.allocated_vlans:
+                tbvlans.append(vlan)
+            self.__vlan_allocator = resmgr.TestbedVlanManager(tbvlans)
+
 
         return types.status.SUCCESS
 
@@ -285,7 +306,7 @@ class _Testbed:
         return inst
 
     def GetProvisionParams(self):
-        return self.__tbspec.Provision.Vars
+        return getattr(self.__tbspec.Provision, "Vars", None)
 
     def GetDataVlans(self):
         return copy.deepcopy(self.__vlans)

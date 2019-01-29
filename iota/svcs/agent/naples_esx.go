@@ -239,6 +239,22 @@ func (naples *esxHwNode) createNaplesDataSwitch() error {
 	return naples.host.AddVswitch(vsspec)
 }
 
+func (naples *esxHwNode) setUpNaplesMgmtIP() error {
+
+	cmd := []string{"ip", "link", "set", "dev", Common.EsxCtrlVMNaplesMgmtInterface, "up"}
+	if retCode, stdout, err := Utils.Run(cmd, 0, false, true, nil); retCode != 0 {
+		return errors.Wrap(err, stdout)
+	}
+
+	cmd = []string{"ip", "addr", "add", Common.CtrlVMNaplesInterfaceIP, "dev", Common.EsxCtrlVMNaplesMgmtInterface}
+	if retCode, stdout, err := Utils.Run(cmd, 0, false, true, nil); retCode != 0 {
+		return errors.Wrap(err, stdout)
+	}
+
+	naples.logger.Println("Setting complete for naples Mgmt IP")
+	return nil
+}
+
 func (naples *esxHwNode) setUpNaplesMgmtNetwork() error {
 
 	if err := naples.createNaplesMgmtSwitch(); err != nil {
@@ -258,11 +274,6 @@ func (naples *esxHwNode) setUpNaplesMgmtNetwork() error {
 	time.Sleep(2 * time.Second)
 
 	Utils.DisableDhcpOnInterface(Common.EsxCtrlVMNaplesMgmtInterface)
-
-	cmd := []string{"ip", "addr", "add", Common.CtrlVMNaplesInterfaceIP, "dev", Common.EsxCtrlVMNaplesMgmtInterface}
-	if retCode, stdout, err := Utils.Run(cmd, 0, false, true, nil); retCode != 0 {
-		return errors.Wrap(err, stdout)
-	}
 
 	naples.logger.Println("Setting up of naples management switch complete")
 	return nil
@@ -301,9 +312,12 @@ func (naples *esxHwNode) addNaplesEntity(in *iota.Node) error {
 	for _, entityEntry := range in.GetEntities() {
 		var wload Workload.Workload
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_NAPLES {
-			if err := naples.setUpNaplesMgmtNetwork(); err != nil {
-				return err
+			if !in.Reload {
+				if err := naples.setUpNaplesMgmtNetwork(); err != nil {
+					return err
+				}
 			}
+			naples.setUpNaplesMgmtIP()
 			/*It is like running in a vm as its accesible only by ssh */
 			wload = Workload.NewWorkload(Workload.WorkloadTypeRemote, entityEntry.GetName(), naples.name, naples.logger)
 			naples.naplesEntityKey = entityEntry.GetName()
@@ -427,11 +441,14 @@ func (naples *esxHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
 	}
 
-	err = naples.createNaplesDataSwitch()
-	if err != nil {
-		msg := "failed to create naples data switch"
-		naples.logger.Error(msg)
-		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+	if !in.Reload {
+		err = naples.createNaplesDataSwitch()
+		if err != nil {
+			msg := "failed to create naples data switch"
+			naples.logger.Error(msg)
+			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+		}
+
 	}
 
 	nodeUUID, err := naples.getHwUUID(in)

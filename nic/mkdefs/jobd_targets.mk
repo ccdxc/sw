@@ -296,3 +296,11 @@ jobd/iota/base: ${JOBD_PREREQS}
 	${MAKE} -C ${TOPDIR} venice-image
 	${MAKE} -j 1 -C ${GOPATH}/src/github.com/pensando/sw/iota
 	cd ${IOTADIR} && ./iota.py --testsuite venice --skip-firmware-upgrade
+
+.PHONY: jobd/iota/venice-bm
+jobd/iota/venice-bm: ${JOBD_PREREQS}
+	${MAKE} release
+	${MAKE} PLATFORM=hw ARCH=aarch64 firmware && make PLATFORM=hw ARCH=aarch64 package-drivers
+	${MAKE} -C ${TOPDIR} venice-image
+	${MAKE} -j 1 -C ${GOPATH}/src/github.com/pensando/sw/iota
+	cd ${IOTADIR} && ./iota.py  --testsuite hostpin_venice 

@@ -90,13 +90,15 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 		return req, nil
 	}
 
-	// Allocate VLANs for the test bed
-	if vlans, err = testbed.AllocateVLANS(ts.TestBedInfo.TestbedId); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | Could not allocate VLANS from the switchport id: %d, Err: %v", ts.TestBedInfo.TestbedId, err)
-		req.ApiResponse.ErrorMsg = fmt.Sprintf("could not allocate VLANS from the switchport id: %d. Err: %v", ts.TestBedInfo.TestbedId, err)
-		return req, nil
+	if ts.TestBedInfo.DataSwitch != nil && ts.TestBedInfo.TestbedId != 0 {
+		// Allocate VLANs for the test bed
+		if vlans, err = testbed.SetUpTestBedVLANS(ts.TestBedInfo.DataSwitch, ts.TestBedInfo.TestbedId); err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | Could not allocate VLANS from the switchport id: %d, Err: %v", ts.TestBedInfo.TestbedId, err)
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("could not allocate VLANS from the switchport id: %d. Err: %v", ts.TestBedInfo.TestbedId, err)
+			return req, nil
+		}
+		ts.TestBedInfo.AllocatedVlans = vlans
 	}
-	ts.TestBedInfo.AllocatedVlans = vlans
 
 	ts.SSHConfig = testbed.InitSSHConfig(ts.TestBedInfo.Username, ts.TestBedInfo.Password)
 

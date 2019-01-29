@@ -77,6 +77,10 @@ func (n *TestNode) waitForNodeUp(timeout time.Duration) error {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
+	//ESX node will take a little longer
+	if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		time.Sleep(60 * time.Second)
+	}
 	return nil
 }
 
@@ -132,14 +136,20 @@ func (n *TestNode) RestartNode() error {
 	var sshCfg *ssh.ClientConfig
 	var nrunner *runner.Runner
 
-	if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+	if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		//First shutdown control node
+		nrunner = runner.NewRunner(n.SSHCfg)
+		ip, _ = n.GetNodeIP()
+		addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
+		command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
+		nrunner.Run(addr, command, constants.RunCommandForeground)
 		addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
 		command = fmt.Sprintf("reboot && sleep 30")
 		sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
 		nrunner = runner.NewRunner(sshCfg)
 	} else {
 		addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
-		command = fmt.Sprintf("sudo shutdown -r now")
+		command = fmt.Sprintf("sudo sync && sudo shutdown -r now")
 		nrunner = runner.NewRunner(n.SSHCfg)
 
 	}
@@ -152,7 +162,7 @@ func (n *TestNode) RestartNode() error {
 		return err
 	}
 
-	if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+	if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 		if err = n.initEsxNode(); err != nil {
 			log.Errorf("TOPO SVC | RestartNode | Init ESX node failed :  %v", err.Error())
 			return err
@@ -185,7 +195,7 @@ func (n *TestNode) ReloadNode() error {
 
 	resp, err := n.AgentClient.SaveNode(context.Background(), n.Node)
 	n.RespNode = resp
-	log.Infof("TOPO SVC | DEBUG | SaveNode Agent . Received Response Msg: %v", resp)
+	log.Infof("TOPO SVC | DEBUG | SaveNode Agent %v(%v) Received Response Msg: %v", n.Node.GetName(), n.Node.IpAddress, resp)
 	if err != nil {
 		log.Errorf("Saving node %v failed. Err: %v", n.Node.Name, err)
 		return err

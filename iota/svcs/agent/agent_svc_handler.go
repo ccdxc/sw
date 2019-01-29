@@ -127,10 +127,10 @@ func (agent *Service) SaveNode(ctx context.Context, req *iota.Node) (*iota.Node,
 		wloadGob := wloadsGobFile(agent.node.NodeName())
 		msgs := [][]byte{}
 		for _, wloadMsg := range workloadMsgs {
-                        if wloadMsg == nil {
-                            continue
-                        }
-                        agent.logger.Printf(" Workload msg %v\n", wloadMsg)
+			if wloadMsg == nil {
+				continue
+			}
+			agent.logger.Printf(" Workload msg %v\n", wloadMsg)
 			msg, _ := wloadMsg.Marshal()
 			msgs = append(msgs, msg)
 		}
@@ -193,6 +193,7 @@ func (agent *Service) ReloadNode(ctx context.Context, req *iota.Node) (*iota.Nod
 
 	node.Unmarshal(rawmsg)
 
+	node.Reload = true
 	if resp, err := agent.AddNode(ctx, node); err != nil || resp.GetNodeStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		return resp, nil
 	}

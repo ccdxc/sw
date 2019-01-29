@@ -10,11 +10,11 @@ def Main(tc):
     generated_configs = api.GetVeniceConfigs()
 
     ip_index = 101
+    req = topo_svc.WorkloadMsg()
+    req.workload_op = topo_svc.ADD
     for cfg_object in generated_configs:
         obj = json.loads(cfg_object.Config)        
         if obj["kind"] != "Workload": continue
-        req = topo_svc.WorkloadMsg()
-        req.workload_op = topo_svc.ADD
         wl = req.workloads.add()
         wl.workload_name = obj["meta"]["name"]
         
@@ -31,5 +31,5 @@ def Main(tc):
         wl.workload_image = api.GetWorkloadImageForNode(wl.node_name)
         ip_index += 1
 
-        resp = api.AddWorkloads(req)
+    resp = api.AddWorkloads(req)
     return api.types.status.SUCCESS

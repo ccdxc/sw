@@ -53,8 +53,9 @@ class Node(object):
         self.__host_intfs = []
         self.__host_if_alloc_idx = 0
         self.__tb_params = store.GetTestbed().GetProvisionParams()
-        self.__esx_username = getattr(self.__tb_params, "EsxUsername", "")
-        self.__esx_password = getattr(self.__tb_params, "EsxPassword", "")
+        if self.__tb_params:
+            self.__esx_username = getattr(self.__tb_params, "EsxUsername", "")
+            self.__esx_password = getattr(self.__tb_params, "EsxPassword", "")
         self.__esx_ctrl_vm_ip = getattr(self.__inst, "esx_ctrl_vm_ip", "")
 
         if self.IsWorkloadNode():

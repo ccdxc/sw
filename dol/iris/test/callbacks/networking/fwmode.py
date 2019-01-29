@@ -4,7 +4,7 @@ def GetRxTriggerPorts(tc, args = None):
     assert(tc.config.src.endpoint.remote is True)
     if tc.pvtdata.scenario != 'RPF_FAILURE':
         if tc.config.src.tenant.IsHostPinned():
-            return tc.config.dst.endpoint.pinintf.ports
+            return tc.config.dst.endpoint.intf.pinnedif.ports
         return tc.config.src.endpoint.intf.ports
 
     # RPF Failure testcase.
@@ -15,7 +15,7 @@ def GetRxTriggerPorts(tc, args = None):
 def GetTxExpectedPorts(tc, args = None):
     assert(tc.config.dst.endpoint.remote is True)
     if tc.config.src.tenant.IsHostPinned():
-        return tc.config.src.endpoint.pinintf.ports
+        return tc.config.src.endpoint.intf.pinnedif.ports
     return tc.config.dst.endpoint.intf.ports
 
 def GetRxDstIpAddress(testcase, packet):

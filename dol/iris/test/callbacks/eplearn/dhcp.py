@@ -89,7 +89,7 @@ def GetDhcpServerIp(testcase, packet):
     
 def GetDhcpServerPort(testcase, args = None):
     if testcase.config.root.tenant.IsHostPinned():
-        return testcase.config.root.pinintf.ports
+        return testcase.config.root.intf.pinnedif.ports
     return testcase.pvtdata.dhcp_server.intf.ports
 
 def GetDhcpSeverPacketEncaps(testcase, packet):

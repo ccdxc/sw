@@ -21,7 +21,7 @@ packets:
         headers     :
             eth:
                 src     : ref://testcase/config/src/endpoint/macaddr
-                dst     : ref://testcase/config/dst/endpoint/macaddr
+                dst     : 00:22:22:22:22:22
             ipv4:
                 src     : ref://testcase/config/flow/sip
                 dst     : 4.3.2.1 #ref://testcase/config/flow/dip
@@ -54,7 +54,7 @@ packets:
         headers     :
             outereth    :
                 src     : ref://testcase/config/src/endpoint/intf/rmacaddr
-                dst     : ref://testcase/config/src/endpoint/intf/macaddr
+                dst     : 00:22:22:22:22:22
             outeripv4   :
                 src     : ref://testcase/config/src/endpoint/intf/rtep
                 dst     : ref://testcase/config/src/endpoint/intf/ltep

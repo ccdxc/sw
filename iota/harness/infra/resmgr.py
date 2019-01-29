@@ -135,6 +135,19 @@ class TestbedVlanAllocator(object):
     def Count(self):
         return self.__count
 
+class TestbedVlanManager(object):
+    def __init__(self, vlans):
+        self.__vlans = vlans
+        self.__pool = iter(self.__vlans)
+        self.__count = len(vlans)
+
+    def Alloc(self):
+        return next(self.__pool)
+
+    def Count(self):
+        return self.__count
+
+
 TESTBED_NUM_PORTS = 8000
 class TestbedPortAllocator():
     def __init__(self):

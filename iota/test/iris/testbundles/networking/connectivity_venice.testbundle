@@ -1,0 +1,39 @@
+meta:
+    name    : connectivity_venice
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    #targetcount : 35
+
+testcases:
+
+    -   name    : Ping_Local_Workloads
+        testcase: testcases.networking.ping
+        stress  : True
+        args    :
+            type: local_only
+        iterators :
+            type    : nested
+            pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            #ipaf    : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+
+    -   name    : Ping_Remote_Workloads
+        testcase: testcases.networking.ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : simple
+            pktsize : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            #ipaf    : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+
+    -   name    : Iperf_Remote_Workloads
+        testcase: testcases.networking.iperf
+        stress  : True
+        iterators:
+            type      : nested
+            proto     : [ udp, tcp ]
+            bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
+        args    :
+            type: remote_only
