@@ -24,16 +24,25 @@
 
 #define ASIC_TYPE_CAPRI			0
 
-int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
-		    unsigned int num_bars)
+int ionic_dev_setup(struct ionic *ionic)
 {
-	struct ionic_dev_bar *bar = &bars[0];
+	struct ionic_dev_bar *bar = ionic->bars;
+	unsigned int num_bars = ionic->num_bars;
+	struct ionic_dev *idev = &ionic->idev;
+	struct device *dev = ionic->dev;
 	u32 sig;
 
-	/* BAR0 resources */
+	/* BAR0: dev_cmd and interrupts */
 
-	if (num_bars < 1 || bar->len != BAR0_SIZE)
+	if (num_bars < 1) {
+		dev_info(dev, "No bars found, aborting\n");
 		return -EFAULT;
+	}
+	if (bar->len < BAR0_SIZE) {
+		dev_info(dev, "Resource bar size %lu too small, aborting\n",
+			 bar->len);
+		return -EFAULT;
+	}
 
 	idev->dev_cmd = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
 	idev->dev_cmd_db = bar->vaddr + BAR0_DEV_CMD_DB_OFFSET;
@@ -44,19 +53,24 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
 #endif
 
 	sig = ioread32(&idev->dev_cmd->signature);
-	if (sig != DEV_CMD_SIGNATURE)
+	if (sig != DEV_CMD_SIGNATURE) {
+		dev_info(dev, "Wrong Resource bar signature 0x%0x, aborting\n",
+			 sig);
 		return -EFAULT;
+	}
 
-	/* BAR1 resources */
+	/* BAR1: doorbells */
 
 	bar++;
-	if (num_bars < 2)
+	if (num_bars < 2) {
+		dev_info(dev, "Doorbell bar missing, aborting\n");
 		return -EFAULT;
+	}
 
 	idev->db_pages = bar->vaddr;
 	idev->phy_db_pages = bar->bus_addr;
 
-	/* BAR2 resources */
+	/* BAR2: optional controller memory mapping */
 
 	mutex_init(&idev->cmb_inuse_lock);
 

@@ -229,7 +229,7 @@ int ionic_setup(struct ionic *ionic)
 {
 	int err;
 
-	err = ionic_dev_setup(&ionic->idev, ionic->bars, ionic->num_bars);
+	err = ionic_dev_setup(ionic);
 	if (err)
 		return err;
 

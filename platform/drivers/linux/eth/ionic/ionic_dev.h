@@ -334,8 +334,8 @@ struct cq {
 	bool done_color;
 };
 
-int ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
-		    unsigned int num_bars);
+struct ionic;
+int ionic_dev_setup(struct ionic *ionic);
 
 union dev_cmd; //Need to remove it
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
