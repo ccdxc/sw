@@ -323,6 +323,11 @@ hal_ret_t
 pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif)
 {
     hal_ret_t            ret;
+    if_t                 *hal_if;
+    
+    hal_if = (if_t *) pd_tunnelif->pi_if;
+    SDK_ASSERT(hal_if != NULL);
+
     /* Deprogram input mapping native */
     ret = pd_tunnelif_del_inp_mapp_entries(pd_tunnelif,
                                            P4TBL_ID_INPUT_MAPPING_NATIVE);
@@ -331,6 +336,12 @@ pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif)
                                            P4TBL_ID_INPUT_MAPPING_TUNNELED);
     /* Deprogram tunnel rewrite table */
     ret = pd_tunnelif_depgm_tunnel_rewrite_tbl(pd_tunnelif);
+    
+    /* Deprogram VF properties table */
+    if (hal_if->encap_type ==
+           intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
+        ret = pd_tunnelif_depgm_vf_properties_tbl(pd_tunnelif);
+    }
     return ret;
 }
 
@@ -597,6 +608,36 @@ pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif_t *pd_tif, uint16_t vf_id,
         return ret;
     }
     pd_tif->vf_prop_idx = vf_id;
+    HAL_TRACE_DEBUG("Added vf_properties table entry idx: {}",
+                                                     pd_tif->vf_prop_idx);
+    return ret;
+}
+
+hal_ret_t
+pd_tunnelif_depgm_vf_properties_tbl(pd_tunnelif_t *pd_tif)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    sdk_ret_t                       sdk_ret;
+    directmap                       *dm;
+
+    dm = g_hal_state_pd->dm_table(P4TBL_ID_VF_PROPERTIES);
+    SDK_ASSERT(dm != NULL);
+    SDK_ASSERT(pd_tif != NULL);
+    
+    if (pd_tif->vf_prop_idx == INVALID_INDEXER_INDEX) {
+        HAL_TRACE_DEBUG("vf_properties table entry already deleted!");
+        return ret;
+    }
+    // delete the entry
+    sdk_ret = dm->remove(pd_tif->vf_prop_idx, NULL);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("VF properties table write failure, err : {}", ret);
+        return ret;
+    }
+    HAL_TRACE_DEBUG("Deleted vf_properties table entry idx: {}",
+                                                     pd_tif->vf_prop_idx);
+    pd_tif->vf_prop_idx = INVALID_INDEXER_INDEX;
     return ret;
 }
 
