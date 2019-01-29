@@ -109,10 +109,9 @@ def Trigger(tc):
                            w1.workload_name,
                            cmd)
 
-    #default wait for 60seconds and 120secs if the count > 1000 or size > 32K 
-    wait_secs = 60
-    if size > 32000 or count > 1000:
-        wait_secs = 120
+    #Right now on some setups its taking longer, so have 150secs timeout, that should address 2K count
+    #taking about 70secs for 1000 pkts on a very slow server, but one others its faster
+    wait_secs = 150
 
     # cmd for client
     cmd = "sudo echo -n 'client,port=9999,addr={addr},verbose,validate,{opstr} ' > {kfile}".format(
