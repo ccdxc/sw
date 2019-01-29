@@ -101,16 +101,17 @@ def Trigger(tc):
                                    w2.node_name, 
                                    w2.workload_name,
                                    tc.ib_prefix[j] + cmd, 
-                                   background=tc.client_bkg, timeout=120)
+                                   background=tc.client_bkg, timeout=125) #5 secs more than def test timeout=120
 
         if tc.client_bkg:
-            # since the client is running in the background, sleep for 120 secs
+            # since the client is running in the background, sleep for 130 secs
             # to allow the test to complete before verifying the result
-            cmd = 'sleep 120'
+            #override default timeout to 135 slightly above the test duration 130 secs
+            cmd = 'sleep 130'
             api.Trigger_AddCommand(req,
                                    w1.node_name,
                                    w1.workload_name,
-                                   cmd)
+                                   cmd, timeout = 135)
 
         i = i + 1
     # end while
