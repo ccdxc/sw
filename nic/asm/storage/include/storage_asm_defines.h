@@ -218,8 +218,6 @@
     k.seq_kivec3_num_blks
 #define SEQ_KIVEC3_SGL_TUPLE_NO                 \
     k.seq_kivec3_sgl_tuple_no
-#define SEQ_KIVEC3_HDR_CHKSUM_OFFSET            \
-    k.{seq_kivec3_hdr_chksum_offset_sbit0_ebit0...seq_kivec3_hdr_chksum_offset_sbit1_ebit5}
 
 #define SEQ_KIVEC3XTS_DECR_BUF_ADDR             \
     k.seq_kivec3xts_decr_buf_addr
@@ -281,6 +279,10 @@
     k.seq_kivec5_integ_data_null_en
 #define SEQ_KIVEC5_DESC_DLEN_UPDATE_EN          \
     k.seq_kivec5_desc_dlen_update_en
+#define SEQ_KIVEC5_HDR_VERSION_WR_EN            \
+    k.seq_kivec5_hdr_version_wr_en
+#define SEQ_KIVEC5_CP_HDR_UPDATE_EN             \
+    k.seq_kivec5_cp_hdr_update_en
 
 #define SEQ_KIVEC5XTS_SRC_QADDR                 \
     k.{seq_kivec5xts_src_qaddr_sbit0_ebit7...seq_kivec5xts_src_qaddr_sbit32_ebit33}
@@ -370,8 +372,8 @@
     k.{seq_kivec9_metrics2_start...seq_kivec9_metrics2_end}
 #define SEQ_KIVEC9_LEN_UPDATES                  \
     k.seq_kivec9_len_updates
-#define SEQ_KIVEC9_INTEG_DATA0_WRITES           \
-    k.seq_kivec9_integ_data0_writes
+#define SEQ_KIVEC9_CP_HEADER_UPDATES            \
+    k.seq_kivec9_cp_header_updates
 
 #define SEQ_KIVEC10_INTR_ADDR                   \
     k.seq_kivec10_intr_addr

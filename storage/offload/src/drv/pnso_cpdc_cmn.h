@@ -10,12 +10,13 @@
 #include "pnso_cpdc.h"
 #include "pnso_chain.h"
 
+#define CPDC_COMPRESSION_TYPE_DFLT      PNSO_COMPRESSION_TYPE_LZRW1A
+
 struct cp_header_format {
 	uint32_t fmt_idx;
 	uint32_t total_hdr_sz;
 	uint16_t flags;
 	uint16_t type_mask;
-	uint16_t chksum_offs;
 	uint16_t chksum_len;
 	enum pnso_compression_type pnso_algo;
 	uint8_t *static_hdr;
@@ -192,20 +193,32 @@ cpdc_cp_pad_cpl_addr_get(volatile struct cpdc_status_desc *status_desc)
 
 static inline bool
 cpdc_cp_hdr_chksum_info_get(const struct service_info *svc_info,
-			    uint32_t *ret_chksum_offs,
 			    uint32_t *ret_chksum_len)
 {
 	struct cp_header_format *hdr_fmt;
 
-	*ret_chksum_offs = 0;
-	*ret_chksum_len = 0;
+	*ret_chksum_len = sizeof(((struct pnso_compression_header *)0)->chksum);
 	hdr_fmt = lookup_hdr_format(svc_info->hdr_fmt_idx, false);
 	if (hdr_fmt) {
-		*ret_chksum_offs = hdr_fmt->chksum_offs;
 		*ret_chksum_len = hdr_fmt->chksum_len;
 		return true;
 	}
-        return false;
+	return false;
+}
+
+static inline uint32_t
+cpdc_cp_hdr_version_info_get(const struct service_info *svc_info)
+{
+	struct cp_header_format *hdr_fmt;
+
+	hdr_fmt = lookup_hdr_format(svc_info->hdr_fmt_idx, false);
+	return hdr_fmt ?  hdr_fmt->pnso_algo : CPDC_COMPRESSION_TYPE_DFLT;
+}
+
+static inline bool
+cpdc_cp_hdr_version_wr_required(uint32_t hdr_version)
+{
+	return (hdr_version != CPDC_COMPRESSION_TYPE_DFLT);
 }
 
 static inline bool

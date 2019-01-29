@@ -52,9 +52,10 @@ storage_tx_seq_xts_status_desc0_handler:
    // Note that d.next_db_addr in this case is really d.barco_ring_addr
    // phvwrpair limits destination p[] to 64 bits per.
    phvwrpair	p.seq_kivec4_barco_ring_addr, d.next_db_addr[33:0], \
-                p.{seq_kivec4_barco_pndx_shadow_addr...seq_kivec4_barco_num_descs}, \
-                d.{barco_pndx_shadow_addr...barco_num_descs}
-   phvwr        p.seq_kivec4_barco_desc_addr, d.next_db_data
+                p.{seq_kivec4_barco_pndx_shadow_addr...seq_kivec4_barco_ring_size}, \
+                d.{barco_pndx_shadow_addr...barco_ring_size}
+   phvwrpair    p.seq_kivec4_barco_desc_addr, d.next_db_data, \
+                p.seq_kivec4_barco_num_descs, d.barco_num_descs[9:0]
                 
 possible_status_dma:
 

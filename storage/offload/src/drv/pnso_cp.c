@@ -65,7 +65,7 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	desc->cd_threshold_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
 					threshold_len);
 	err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
-			&aligned_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+			&aligned_addr, CPDC_STATUS_PAD_CLEAR_SZ);
 	desc->cd_status_addr = aligned_addr;
 	if (err)
 		goto out;
@@ -372,8 +372,8 @@ compress_read_status(struct service_info *svc_info)
 	struct chain_sgl_pdma_tuple *tuple;
 	struct pnso_compression_header *cp_hdr = NULL;
 	uint32_t datain_len;
-	uint32_t chksum_offs;
 	uint32_t chksum_len;
+	uint32_t hdr_version;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -434,19 +434,21 @@ compress_read_status(struct service_info *svc_info)
 		 * intermediate RMEM destination buffer rather than to the host.
 		 * Hence, we ensure that the host buffer overwrite happens here.
 		 */
-		if (cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_offs, &chksum_len)) {
+		if (cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_len)) {
 			if (chksum_len) {
 				if (cpdc_desc_is_integ_data_wr_required(cp_desc)) {
-    					OSAL_ASSERT((chksum_len == sizeof(cp_hdr->chksum)) &&
-    						(chksum_offs == 
-    				 		offsetof(struct pnso_compression_header, chksum)));
-    					cp_hdr->chksum = (uint32_t)status_desc->csd_integrity_data;
+    					cp_hdr->chksum = 
+    					   (uint32_t)status_desc->csd_integrity_data;
 				}
 			} else
 				cp_hdr->chksum = 0;
 		}
 
-#ifdef SIMPLE_INTEG_DATA0_WR_VERIFY
+		hdr_version = cpdc_cp_hdr_version_info_get(svc_info);
+		if (cpdc_cp_hdr_version_wr_required(hdr_version))
+			cp_hdr->version = hdr_version;
+
+#ifdef SIMPLE_CP_HDR_UPDATE_VERIFY
 		if (chn_service_has_interm_blist(svc_info)) {
 			struct pnso_compression_header rmem_hdr;
 
@@ -457,6 +459,10 @@ compress_read_status(struct service_info *svc_info)
 			if (cp_hdr->chksum != rmem_hdr.chksum) {
 				OSAL_LOG_ERROR("cp_hdr chksum 0x%x != rmem chksum 0x%x",
 						cp_hdr->chksum, rmem_hdr.chksum);
+			}
+			if (cp_hdr->version != rmem_hdr.version) {
+				OSAL_LOG_ERROR("cp_hdr version 0x%x != rmem version 0x%x",
+						cp_hdr->version, rmem_hdr.version);
 			}
 		}
 #endif

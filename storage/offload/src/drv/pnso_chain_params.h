@@ -92,6 +92,8 @@ struct cpdc_chain_params_command {
 	uint32_t integ_data0_wr_en:1;
 	uint32_t integ_data_null_en:1;
 	uint32_t desc_dlen_update_en:1;
+	uint32_t hdr_version_wr_en:1;
+	uint32_t cp_hdr_update_en:1;
 };
 
 struct cpdc_chain_params {
@@ -115,9 +117,9 @@ struct cpdc_chain_params {
 
 	uint16_t ccp_status_len;
 	uint16_t ccp_data_len;
+	uint16_t ccp_hdr_version;
 
 	uint8_t ccp_status_offset_0;
-	uint8_t ccp_hdr_chksum_offset;
 	uint8_t ccp_pad_boundary_shift;
 
 	struct cpdc_chain_params_command ccp_cmd;

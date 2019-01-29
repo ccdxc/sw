@@ -215,7 +215,7 @@ hal_ret_t capri_barco_get_capabilities(types::BarcoRings ring_type,
  * Compression/decompression block register values
  */
 #define BARCO_CRYPTO_CP_CFG_GLB_SOFT_RESET          (1 << 30)
-#define BARCO_CRYPTO_CP_CFG_GLB_HDR_VER             0x00001234
+#define BARCO_CRYPTO_CP_CFG_GLB_HDR_VER             0x00000001
 #define BARCO_CRYPTO_CP_CFG_GLB_HDR_VER_MASK        0x0000ffff
 #define BARCO_CRYPTO_CP_UENG_LO_EN_ALL              0x0000ffff
 #define BARCO_CRYPTO_CP_UENG_HI_SHA_DATA_UNCOMP     (1 << (36 - 32))
@@ -234,7 +234,7 @@ hal_ret_t capri_barco_get_capabilities(types::BarcoRings ring_type,
         (((sz) & BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_MASK) << BARCO_CRYPTO_CP_DIST_DESC_HOTQ_SIZE_SHFT)
 
 #define BARCO_CRYPTO_DC_CFG_GLB_SOFT_RESET          (1 << 30)
-#define BARCO_CRYPTO_DC_CFG_GLB_HDR_VER             0x00001234
+#define BARCO_CRYPTO_DC_CFG_GLB_HDR_VER             0x00000001
 #define BARCO_CRYPTO_DC_CFG_GLB_HDR_VER_MASK        0x0000ffff
 #define BARCO_CRYPTO_DC_UENG_LO_EN_ALL              0x00000003
 #define BARCO_CRYPTO_DC_UENG_HI_SHA_DATA_UNCOMP     (1 << (36 - 32))

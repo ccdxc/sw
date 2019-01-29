@@ -76,8 +76,8 @@ typedef struct {
     uint32_t intr_data;		    // MSI-X Interrupt data
     uint16_t status_len;		// Length for status PDMA purposes
     uint16_t data_len;		    // Remaining data length of compression buffer
+    uint16_t hdr_version;           // CP header version
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
-    uint8_t  hdr_chksum_offset; // Offset to chksum field in CP header
     uint8_t  pad_boundary_shift;// log2(pad block length)
     uint32_t data_len_from_desc   :1,	// use desc data_len rather than output_data_len
              status_dma_en        :1,	// enable PDMA of status_addr0 to status_addr1
@@ -102,7 +102,9 @@ typedef struct {
              desc_vec_push_en     : 1,// barco_desc_addr points to a vector of descriptors to be pushed
              integ_data0_wr_en    : 1,// enable write of integ_data0 to comp_buf_addr
              integ_data_null_en   : 1,// copy zero to comp_buf_addr instead
-             desc_dlen_update_en  : 1;// enable update of CP desc datain_len field
+             desc_dlen_update_en  : 1,// enable update of CP desc datain_len field
+             hdr_version_wr_en    : 1,// enable update of CP header version field
+             cp_hdr_update_en     : 1;// enable overall update of CP header
 } chain_params_comp_t;
 
 /*

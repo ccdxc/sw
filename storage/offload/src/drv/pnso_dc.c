@@ -48,7 +48,7 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 	desc->cd_threshold_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
 							     dst_buf_len);
 	err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
-			&aligned_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+			&aligned_addr, CPDC_STATUS_INTEG_CLEAR_SZ);
 	desc->cd_status_addr = aligned_addr;
 	if (err)
 		goto out;

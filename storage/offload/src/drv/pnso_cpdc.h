@@ -204,7 +204,10 @@ struct cpdc_desc {
  * hash algorithm specified in 'cpdc_desc'.
  *
  */
-#define CPDC_STATUS_MIN_CLEAR_SZ	8
+#define CPDC_STATUS_MAX_CLEAR_SZ	sizeof(struct cpdc_status_desc)
+#define CPDC_STATUS_MIN_CLEAR_SZ	offsetof(struct cpdc_status_desc, csd_integrity_data)
+#define CPDC_STATUS_INTEG_CLEAR_SZ	offsetof(struct cpdc_status_desc, csd_sha)
+#define CPDC_STATUS_PAD_CLEAR_SZ	(offsetof(struct cpdc_status_desc, csd_sha) + 8)
 
 struct cpdc_status_desc {
 	uint16_t csd_rsvd:12;

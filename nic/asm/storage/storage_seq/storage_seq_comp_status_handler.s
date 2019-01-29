@@ -62,7 +62,7 @@ storage_seq_comp_status_handler:
     add         r_status, d.status, r0
     smeqh       c4, r_status, 0xf000, 0x8000
     bcf         [!c4], comp_error
-    phvwr	p.integ_data0_len, d.integ_data0        // delay slot
+    phvwr	p.comp_hdr_cksum, d.integ_data0        // delay slot
    
     // Note: output_data_len contains compressed data length plus header length.
     
@@ -71,6 +71,8 @@ storage_seq_comp_status_handler:
     seq	        c3, r_comp_data_len, r0
     add.c3      r_comp_data_len, 65536, r0
     phvwr	p.seq_kivec5_data_len, r_comp_data_len
+    sub         r_total_len, r_comp_data_len, SIZE_IN_BYTES(sizeof(struct seq_comp_hdr_t))
+    phvwr	p.comp_hdr_data_len, r_total_len.hx
    
     // Preliminary padding calculations:
     // r_num_blks = (r_comp_data_len + r_pad_boundary - 1) / r_pad_boundary)
@@ -232,8 +234,8 @@ endsw0:
     
 possible_sgl_pdma_xfer:
 
-    // PDMA compressed data and/or write integrity data to dest comp buffer
-    seq         c3, SEQ_KIVEC5_INTEG_DATA0_WR_EN, 0
+    // PDMA compressed data and/or update CP header to dest comp buffer
+    seq         c3, SEQ_KIVEC5_CP_HDR_UPDATE_EN, 0
     bbeq.c3     SEQ_KIVEC5_SGL_PDMA_EN, 0, possible_barco_push
     phvwr.!c6   p.seq_kivec3_pad_len, r0        // delay slot
     bbeq        SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 0, sgl_pdma_xfer_full
@@ -284,7 +286,7 @@ comp_error:
     // override doorbell to raising an interrupt if possible
     LOAD_TABLE_NO_LKUP_PC_IMM(1, storage_seq_comp_db_intr_override)
     b           all_dma_complete
-    nop
+    phvwr	p.comp_hdr_cksum, r0                    // delay slot
 
 possible_chain_alt_desc:
 
@@ -304,7 +306,7 @@ possible_sgl_pdma_alt_src:
     // source buffer address.
 
     bbeq        SEQ_KIVEC5_SGL_PDMA_ALT_SRC_ON_ERROR, 0, possible_barco_push
-    nop
+    phvwr	p.comp_hdr_cksum, r0                    // delay slot
     SEQ_METRICS_SET(alt_bufs_taken)
     b           sgl_pdma_xfer_full
     phvwri      p.seq_kivec8_alt_buf_addr_en, 1         // delay slot

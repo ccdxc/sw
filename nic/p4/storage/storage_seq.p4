@@ -119,7 +119,7 @@ metadata storage_capri_len32_t last_blk_len;
 @pragma dont_trim
 metadata storage_capri_len8_t null_byte;
 @pragma dont_trim
-metadata storage_capri_len32_t integ_data0;
+metadata seq_comp_hdr_t comp_hdr;
 @pragma dont_trim
 @pragma pa_align 512
 metadata barco_sgl_tuple2_pad_t barco_sgl_tuple2_pad;
@@ -514,7 +514,7 @@ action seq_barco_ring_pndx_read() {
 action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
                                      barco_pndx_addr, barco_pndx_shadow_addr,
                                      barco_desc_size, barco_pndx_size, barco_ring_size,
-                                     barco_num_descs, hdr_chksum_offset,
+                                     barco_num_descs,
                                      status_addr0, status_addr1,
                                      intr_addr, intr_data, status_len, 
 				     status_offset0, status_dma_en,
@@ -534,7 +534,6 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_comp_status_desc0_scratch.barco_pndx_size, barco_pndx_size);
   modify_field(seq_comp_status_desc0_scratch.barco_ring_size, barco_ring_size);
   modify_field(seq_comp_status_desc0_scratch.barco_num_descs, barco_num_descs);
-  modify_field(seq_comp_status_desc0_scratch.hdr_chksum_offset, hdr_chksum_offset);
   modify_field(seq_comp_status_desc0_scratch.status_addr0, status_addr0);
   modify_field(seq_comp_status_desc0_scratch.status_addr1, status_addr1);
   modify_field(seq_comp_status_desc0_scratch.intr_addr, intr_addr);
@@ -603,14 +602,17 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
  *****************************************************************************/
 
 //@pragma little_endian rsvd comp_buf_addr aol_src_vec_addr aol_dst_vec_addr data_len sgl_vec_addr pad_buf_addr alt_buf_addr
+@pragma little_endian hdr_version
 action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_dst_vec_addr, 
-                                     sgl_vec_addr, pad_buf_addr, alt_buf_addr, data_len,
+                                     sgl_vec_addr, pad_buf_addr, alt_buf_addr,
+                                     data_len, hdr_version,
                                      pad_boundary_shift, stop_chain_on_error,
                                      data_len_from_desc, aol_pad_en, sgl_pad_en,
                                      sgl_sparse_format_en, sgl_pdma_en, sgl_pdma_pad_only,
 				     sgl_pdma_alt_src_on_error, desc_vec_push_en,
 				     chain_alt_desc_on_error, integ_data0_wr_en,
-				     integ_data_null_en, desc_dlen_update_en) {
+				     integ_data_null_en, desc_dlen_update_en,
+				     hdr_version_wr_en, cp_hdr_update_en) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC5_USE(seq_kivec5_scratch, seq_kivec5)
@@ -624,6 +626,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_comp_status_desc1_scratch.pad_buf_addr, pad_buf_addr);
   modify_field(seq_comp_status_desc1_scratch.alt_buf_addr, alt_buf_addr);
   modify_field(seq_comp_status_desc1_scratch.data_len, data_len);
+  modify_field(seq_comp_status_desc1_scratch.hdr_version, hdr_version);
   modify_field(seq_comp_status_desc1_scratch.pad_boundary_shift, pad_boundary_shift);
   modify_field(seq_comp_status_desc1_scratch.stop_chain_on_error, stop_chain_on_error);
   modify_field(seq_comp_status_desc1_scratch.data_len_from_desc, data_len_from_desc);
@@ -638,6 +641,8 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_comp_status_desc1_scratch.integ_data0_wr_en, integ_data0_wr_en);
   modify_field(seq_comp_status_desc1_scratch.integ_data_null_en, integ_data_null_en);
   modify_field(seq_comp_status_desc1_scratch.desc_dlen_update_en, desc_dlen_update_en);
+  modify_field(seq_comp_status_desc1_scratch.hdr_version_wr_en, hdr_version_wr_en);
+  modify_field(seq_comp_status_desc1_scratch.cp_hdr_update_en, cp_hdr_update_en);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(seq_kivec5.pad_buf_addr, seq_comp_status_desc1_scratch.pad_buf_addr);
@@ -656,6 +661,8 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_kivec5.integ_data0_wr_en, seq_comp_status_desc1_scratch.integ_data0_wr_en);
   modify_field(seq_kivec5.integ_data_null_en, seq_comp_status_desc1_scratch.integ_data_null_en);
   modify_field(seq_kivec5.desc_dlen_update_en, seq_comp_status_desc1_scratch.desc_dlen_update_en);
+  modify_field(seq_kivec5.hdr_version_wr_en, seq_comp_status_desc1_scratch.hdr_version_wr_en);
+  modify_field(seq_kivec5.cp_hdr_update_en, seq_comp_status_desc1_scratch.cp_hdr_update_en);
   modify_field(seq_kivec8.alt_buf_addr, seq_comp_status_desc1_scratch.alt_buf_addr);
 }
 
@@ -920,7 +927,7 @@ action seq_comp_aol_pad_handler() {
 action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
                                     barco_pndx_addr, barco_pndx_shadow_addr,
                                     barco_desc_size, barco_pndx_size, barco_ring_size,
-                                    barco_num_descs, rsvd0,
+                                    barco_num_descs,
                                     status_addr0, status_addr1, 
                                     intr_addr, intr_data, status_len, 
 				    status_offset0, status_dma_en,
@@ -939,7 +946,6 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_xts_status_desc0_scratch.barco_pndx_size, barco_pndx_size);
   modify_field(seq_xts_status_desc0_scratch.barco_ring_size, barco_ring_size);
   modify_field(seq_xts_status_desc0_scratch.barco_num_descs, barco_num_descs);
-  modify_field(seq_xts_status_desc0_scratch.rsvd0, rsvd0);
   modify_field(seq_xts_status_desc0_scratch.status_addr0, status_addr0);
   modify_field(seq_xts_status_desc0_scratch.status_addr1, status_addr1);
   modify_field(seq_xts_status_desc0_scratch.intr_addr, intr_addr);
@@ -1244,12 +1250,12 @@ action seq_metrics1_commit(aol_pad_reqs, sgl_pad_reqs, sgl_pdma_xfers,
  *  seq_metrics2_commit : Update and commit metrics2 to qstate.
  *****************************************************************************/
 @pragma little_endian len_updates
-action seq_metrics2_commit(len_updates, integ_data0_writes) {
+action seq_metrics2_commit(len_updates, cp_header_updates) {
 			   
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC9_USE(seq_kivec9_scratch, seq_kivec9)
   
   modify_field(seq_metrics2.len_updates, len_updates);
-  modify_field(seq_metrics2.integ_data0_writes, integ_data0_writes);
+  modify_field(seq_metrics2.cp_header_updates, cp_header_updates);
 }
 

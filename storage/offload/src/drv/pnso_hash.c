@@ -51,7 +51,7 @@ fill_hash_desc(struct service_info *svc_info,
 		cpdc_desc_data_len_set_eval(PNSO_SVC_TYPE_HASH, buf_len);
 
 	err = svc_status_desc_addr_get(&svc_info->si_status_desc, block_no,
-			       &aligned_addr, CPDC_STATUS_MIN_CLEAR_SZ);
+			       &aligned_addr, CPDC_STATUS_MAX_CLEAR_SZ);
 	desc->cd_status_addr = aligned_addr;
 	desc->cd_status_data = CPDC_HASH_STATUS_DATA;
 
