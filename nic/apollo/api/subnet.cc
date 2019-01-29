@@ -65,6 +65,7 @@ void
 subnet_entry::destroy(subnet_entry *subnet) {
     subnet->release_resources_();
     subnet->~subnet_entry();
+    subnet_db()->subnet_free(subnet);
 }
 
 /**

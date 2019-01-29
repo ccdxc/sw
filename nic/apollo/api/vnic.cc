@@ -45,7 +45,6 @@ vnic_entry::factory(oci_vnic_t *oci_vnic) {
         vnic->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_VNIC, oci_vnic);
         if (vnic->impl_ == NULL) {
             vnic_entry::destroy(vnic);
-            vnic_db()->vnic_free(vnic);
             return NULL;
         }
     }
@@ -72,6 +71,7 @@ vnic_entry::destroy(vnic_entry *vnic) {
     }
     vnic->release_resources_();
     vnic->~vnic_entry();
+    vnic_db()->vnic_free(vnic);
 }
 
 /**

@@ -63,6 +63,7 @@ void
 vcn_entry::destroy(vcn_entry *vcn) {
     vcn->release_resources_();
     vcn->~vcn_entry();
+    vcn_db()->vcn_free(vcn);
 }
 
 /**

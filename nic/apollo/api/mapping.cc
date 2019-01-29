@@ -42,7 +42,6 @@ mapping_entry::factory(oci_mapping_t *oci_mapping) {
             impl_base::factory(impl::IMPL_OBJ_ID_MAPPING, oci_mapping);
         if (mapping->impl_ == NULL) {
             mapping_entry::destroy(mapping);
-            mapping_db()->mapping_free(mapping);
             return NULL;
         }
     }
@@ -67,6 +66,7 @@ mapping_entry::destroy(mapping_entry *mapping) {
     }
     mapping->release_resources_();
     mapping->~mapping_entry();
+    mapping_db()->mapping_free(mapping);
 }
 
 /**

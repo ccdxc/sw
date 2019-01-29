@@ -34,37 +34,30 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
     switch (slab_id) {
     case OCI_SLAB_ID_SWITCHPORT:
         switchport_entry::destroy((switchport_entry *)elem);
-        switchport_db()->switchport_free((switchport_entry *)elem);
         break;
 
     case OCI_SLAB_ID_TEP:
         tep_entry::destroy((tep_entry *)elem);
-        tep_db()->tep_free((tep_entry *)elem);
         break;
 
     case OCI_SLAB_ID_VCN:
         vcn_entry::destroy((vcn_entry *)elem);
-        vcn_db()->vcn_free((vcn_entry *)elem);
         break;
 
     case OCI_SLAB_ID_SUBNET:
         subnet_entry::destroy((subnet_entry *)elem);
-        subnet_db()->subnet_free((subnet_entry *)elem);
         break;
 
     case OCI_SLAB_ID_VNIC:
         vnic_entry::destroy((vnic_entry *)elem);
-        vnic_db()->vnic_free((vnic_entry *)elem);
         break;
 
     case OCI_SLAB_ID_MAPPING:
         mapping_entry::destroy((mapping_entry *)elem);
-        mapping_db()->mapping_free((mapping_entry *)elem);
         break;
 
     case OCI_SLAB_ID_ROUTE_TABLE:
         route_table::destroy((route_table *)elem);
-        route_table_db()->route_table_free((route_table *)elem);
         break;
 
     default:
@@ -99,11 +92,12 @@ delay_delete_to_slab (uint32_t slab_id, void *elem)
     if (sdk::lib::periodic_thread_is_running()) {
         timer_ctxt =
             sdk::lib::timer_schedule(slab_id, OCI_DELAY_DELETE_MSECS, elem,
-                                     (sdk::lib::twheel_cb_t)slab_delay_delete_cb,
-                                     false);
+                          (sdk::lib::twheel_cb_t)slab_delay_delete_cb, false);
         if (!timer_ctxt) {
             return sdk::SDK_RET_ERR;
         }
+    } else {
+        slab_delay_delete_cb(NULL, slab_id, elem);
     }
     return SDK_RET_OK;
 }

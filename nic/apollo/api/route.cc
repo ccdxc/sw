@@ -45,7 +45,6 @@ route_table::factory(oci_route_table_t *oci_route_table) {
                                            oci_route_table);
         if (rtable->impl_ == NULL) {
             route_table::destroy(rtable);
-            route_table_db()->route_table_free(rtable);
             return NULL;
         }
     }
@@ -72,6 +71,7 @@ route_table::destroy(route_table *rtable) {
     }
     rtable->release_resources_();
     rtable->~route_table();
+    route_table_db()->route_table_free(rtable);
 }
 
 /**
