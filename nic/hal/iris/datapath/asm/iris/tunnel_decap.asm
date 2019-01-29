@@ -26,7 +26,7 @@ remove_tunnel_hdrs:
   sub.c1      r1, r1, 4
 
   seq         c1, k.mpls_0_valid, TRUE
-  sub.c1      r1, r1, 4
+  add.c1      r1, r1, (14 - 8 - 4)
 
   phvwr       p.capri_p4_intrinsic_packet_len, r1
   .assert(offsetof(p, vxlan_valid) - offsetof(p, mpls_0_valid) == 3)
