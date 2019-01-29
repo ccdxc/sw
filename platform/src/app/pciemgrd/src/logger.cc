@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include "platform/src/lib/pciemgrutils/include/pciesys.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 
 #include "spdlog/spdlog.h"
 #include "pciemgrd_impl.hpp"

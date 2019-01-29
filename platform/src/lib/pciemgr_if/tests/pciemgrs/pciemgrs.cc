@@ -15,17 +15,17 @@
 #include <signal.h>
 #include <sys/types.h>
 
-#include "platform/src/lib/evutils/include/evutils.h"
-#include "platform/src/lib/pciehdevices/include/pciehdevices.h"
-#include "platform/src/lib/pciemgrutils/include/pmt.h"
-#include "platform/src/lib/pciemgrutils/include/pciehbar.h"
-#include "platform/src/lib/pciemgrutils/include/pciehbar_impl.h"
-#include "platform/src/lib/pciemgrutils/include/pciehcfg.h"
-#include "platform/src/lib/pciemgrutils/include/pciehcfg_impl.h"
-#include "platform/src/lib/pciemgrutils/include/pciehdev.h"
-#include "platform/src/lib/pciemgrutils/include/pciehdev_impl.h"
-#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
-#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
+#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+#include "nic/sdk/platform/pciemgrutils/include/pmt.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehbar.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehbar_impl.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehcfg.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehcfg_impl.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehdev.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehdev_impl.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/pciemgr_if/include/pmserver.h"
 

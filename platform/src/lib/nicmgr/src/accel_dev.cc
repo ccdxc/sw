@@ -24,7 +24,7 @@
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 
-#include "platform/src/lib/intrutils/include/intrutils.h"
+#include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 

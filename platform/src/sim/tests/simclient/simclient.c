@@ -11,7 +11,7 @@
 #include <sys/types.h>
 
 #include "platform/src/sim/libsimlib/include/simclient.h"
-#include "platform/src/lib/misc/include/bdf.h"
+#include "nic/sdk/platform/misc/include/bdf.h"
 
 static int simfd = -1;
 

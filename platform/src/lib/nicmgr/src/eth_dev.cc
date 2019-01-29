@@ -24,8 +24,8 @@
 #include "gen/proto/common/nicmgr_status_msgs.pb.h"
 #include "gen/proto/common/nicmgr_status_msgs.delphi.hpp"
 
-#include "platform/src/lib/misc/include/misc.h"
-#include "platform/src/lib/intrutils/include/intrutils.h"
+#include "nic/sdk/platform/misc/include/misc.h"
+#include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/hal_api/include/print.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"

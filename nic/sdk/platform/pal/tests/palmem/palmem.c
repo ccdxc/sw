@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <sys/param.h>
 
-#include "platform/src/lib/misc/include/misc.h"
+#include "nic/sdk/platform/misc/include/misc.h"
 #include "platform/pal/include/pal.h"
 
 static void

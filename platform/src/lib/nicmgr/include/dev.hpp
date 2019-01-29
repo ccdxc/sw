@@ -15,7 +15,7 @@
 
 #include "nic/sdk/lib/pal/pal.hpp"
 
-#include "platform/src/lib/evutils/include/evutils.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "platform/src/lib/hal_api/include/hal_common_client.hpp"
 #include "platform/src/lib/hal_api/include/hal_grpc_client.hpp"
 
@@ -74,10 +74,10 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #endif
 
 #ifdef __aarch64__
-#include "platform/src/lib/pciemgr/include/pciemgr.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #endif
-#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
-#include "platform/src/lib/pciehdevices/include/pciehdevices.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 
 
 /**

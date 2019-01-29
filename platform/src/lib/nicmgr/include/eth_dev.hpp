@@ -16,7 +16,7 @@
 #include "nic/sdk/lib/indexer/indexer.hpp"
 
 #include "platform/src/lib/hal_api/include/hal_types.hpp"
-#include "platform/src/lib/evutils/include/evutils.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "platform/src/lib/mnet/include/mnet.h"
 
 #include "dev.hpp"

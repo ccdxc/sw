@@ -9,14 +9,14 @@
 #include <unistd.h>
 #include <assert.h>
 
-#include "platform/src/lib/misc/include/misc.h"
-#include "platform/src/lib/evutils/include/evutils.h"
-#include "platform/src/lib/cfgspace/include/cfgspace.h"
-#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
-#include "platform/src/lib/pciemgrutils/include/pciehdev_impl.h"
-#include "platform/src/lib/pciemgrutils/include/pciehcfg_impl.h"
-#include "platform/src/lib/pciemgrutils/include/pciehbar_impl.h"
-#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/misc/include/misc.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
+#include "nic/sdk/platform/cfgspace/include/cfgspace.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehdev_impl.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehcfg_impl.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehbar_impl.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 
 #include "pciesvc.h"
 #include "pciemgr_if.hpp"

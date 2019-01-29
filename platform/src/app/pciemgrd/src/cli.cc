@@ -15,15 +15,15 @@
 #include <sys/time.h>
 #include <editline/readline.h>
 
-#include "platform/src/lib/misc/include/misc.h"
-#include "platform/src/lib/misc/include/bdf.h"
+#include "nic/sdk/platform/misc/include/misc.h"
+#include "nic/sdk/platform/misc/include/bdf.h"
 #include "nic/sdk/platform/pal/include/pal.h"
-#include "platform/src/lib/cfgspace/include/cfgspace.h"
-#include "platform/src/lib/pciehdevices/include/pciehdevices.h"
-#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
-#include "platform/src/lib/pciemgr/include/pciehw.h"
-#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
-#include "platform/src/lib/pcieport/include/pcieport.h"
+#include "nic/sdk/platform/cfgspace/include/cfgspace.h"
+#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/pcieport/include/pcieport.h"
 
 #include "pciemgrd_impl.hpp"
 

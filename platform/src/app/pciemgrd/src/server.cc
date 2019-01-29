@@ -9,13 +9,13 @@
 #include <unistd.h>
 #include <inttypes.h>
 
-#include "platform/src/lib/evutils/include/evutils.h"
-#include "platform/src/lib/pciemgr/include/pciemgr.h"
-#include "platform/src/lib/pcieport/include/pcieport.h"
-#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
-#include "platform/src/lib/pciemgrutils/include/pciehdev_impl.h"
-#include "platform/src/lib/pciemgrutils/include/pciehcfg_impl.h"
-#include "platform/src/lib/pciemgrutils/include/pciehbar_impl.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+#include "nic/sdk/platform/pcieport/include/pcieport.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehdev_impl.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehcfg_impl.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciehbar_impl.h"
 #include "platform/src/app/pciemgrd/src/pciemgrd_impl.hpp"
 #include "platform/src/lib/pciemgr_if/include/pmserver.h"
 

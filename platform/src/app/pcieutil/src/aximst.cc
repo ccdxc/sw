@@ -13,8 +13,8 @@
 #include "cap_pxb_c_hdr.h"
 
 #include "nic/sdk/platform/pal/include/pal.h"
-#include "platform/src/lib/pciemgr/include/pciehw.h"
-#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 
 #include "cmd.h"
 

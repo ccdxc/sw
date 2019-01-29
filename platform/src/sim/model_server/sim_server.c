@@ -15,8 +15,8 @@
 #include <assert.h>
 #include <sys/types.h>
 
-#include "platform/src/lib/pciemgr/include/pciehsvc.h"
-#include "platform/src/lib/misc/include/bdf.h"
+#include "nic/sdk/platform/pciemgr/include/pciehsvc.h"
+#include "nic/sdk/platform/misc/include/bdf.h"
 #include "platform/src/sim/libsimlib/include/simserver.h"
 #include "platform/src/sim/libsimdev/include/simdevices.h"
 

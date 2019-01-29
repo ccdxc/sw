@@ -10,10 +10,10 @@
 #include <inttypes.h>
 #include <sys/time.h>
 
-#include "platform/src/lib/misc/include/misc.h"
-#include "platform/src/lib/pciemgrutils/include/pciemgrutils.h"
-#include "platform/src/lib/pciemgr/include/pciehw.h"
-#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/misc/include/misc.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "nic/sdk/platform/pal/include/pal.h"
 
 #include "cap_top_csr_defines.h"

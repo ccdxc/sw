@@ -10,10 +10,10 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
-#include "platform/src/lib/pciemgrutils/include/pciesys.h"
-#include "platform/src/lib/pciehdevices/include/pciehdevices.h"
-#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
-#include "platform/src/lib/pcieport/include/pcieport.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/pcieport/include/pcieport.h"
 
 #include "pciemgrd_impl.hpp"
 

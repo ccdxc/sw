@@ -11,7 +11,7 @@
 #include "nic/sdk/linkmgr/linkmgr_types.hpp"
 
 #include "platform/src/lib/hal_api/include/hal_types.hpp"
-#include "platform/src/lib/evutils/include/evutils.h"
+#include "nic/sdk/platform/evutils/include/evutils.h"
 
 #include "dev.hpp"
 #include "hal_client.hpp"

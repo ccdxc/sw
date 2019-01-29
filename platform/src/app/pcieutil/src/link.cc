@@ -11,8 +11,8 @@
 #include <sys/time.h>
 
 #include "nic/sdk/platform/pal/include/pal.h"
-#include "platform/src/lib/pcieport/include/pcieport.h"
-#include "platform/src/lib/pcieport/include/portcfg.h"
+#include "nic/sdk/platform/pcieport/include/pcieport.h"
+#include "nic/sdk/platform/pcieport/include/portcfg.h"
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"

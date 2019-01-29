@@ -16,9 +16,9 @@
 
 #include "platform/include/common/pci_ids.h"
 #include "nic/sdk/platform/pal/include/pal.h"
-#include "platform/src/lib/pciemgr/include/pciemgr.h"
-#include "platform/src/lib/pciemgrutils/include/pciesys.h"
-#include "platform/src/lib/pcieport/include/pcieport.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "nic/sdk/platform/pcieport/include/pcieport.h"
 
 #include "pciemgrd_impl.hpp"
 

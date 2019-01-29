@@ -18,7 +18,7 @@
 #include "cap_wa_c_hdr.h"
 
 #include "nic/sdk/platform/fru/fru.hpp"
-#include "platform/src/lib/misc/include/maclib.h"
+#include "nic/sdk/platform/misc/include/maclib.h"
 
 #include "logger.hpp"
 

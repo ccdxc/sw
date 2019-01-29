@@ -9,8 +9,8 @@
 #include <getopt.h>
 #include <inttypes.h>
 
-#include "platform/src/lib/pciemgr/include/pciehw.h"
-#include "platform/src/lib/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "cmd.h"
 
 static void
