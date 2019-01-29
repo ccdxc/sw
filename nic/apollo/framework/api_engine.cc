@@ -296,7 +296,7 @@ api_engine::program_config_stage_(void) {
                       sdk::SDK_RET_INVALID_ARG);
 
     /**< walk over all the dirty objects and program hw, if any */
-    batch_ctxt_.stage = API_BATCH_STAGE_TABLE_UPDATE;
+    batch_ctxt_.stage = API_BATCH_STAGE_CONFIG_UPDATE;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ++it) {
         ret = program_config_(it->first, &it->second);
@@ -403,7 +403,7 @@ api_engine::activate_config_stage_(void) {
     sdk_ret_t                     ret;
     dirty_obj_list_t::iterator    next_it;
 
-    batch_ctxt_.stage = API_BATCH_STAGE_ACTIVATE_EPOCH;
+    batch_ctxt_.stage = API_BATCH_STAGE_CONFIG_ACTIVATE;
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
              it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
