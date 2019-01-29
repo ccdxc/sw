@@ -37,6 +37,7 @@ testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         - networking/connectivity.testbundle
+        - filters/filters.testbundle
         - multicast/multicast.testbundle
         - classic/rdma.testbundle
         - linktest/linktest.testbundle
