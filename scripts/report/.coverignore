@@ -2,3 +2,4 @@ github.com/pensando/sw/nic/agent/nmd/state
 github.com/pensando/sw/venice/cmd/grpc/server/smartnic
 github.com/pensando/sw/nic/agent/nmd/cmdif
 github.com/pensando/sw/scripts/report
+github.com/pensando/sw/venice/cmd/services

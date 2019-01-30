@@ -3,9 +3,11 @@ package debug
 import (
 	"context"
 	"encoding/json"
+	"expvar"
 	"fmt"
 	"net"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,7 +51,20 @@ func (ds *Debug) StartServer(dbgSockPath string) error {
 
 	os.MkdirAll(filepath.Dir(dbgSockPath), 0700)
 	router.HandleFunc(debugPath, ds.DebugHandler).Methods("GET")
+
+	router.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
+	router.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+	router.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+	router.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+	router.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
+	router.Handle("/debug/pprof/block", pprof.Handler("block"))
+	router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	router.Handle("/debug/pprof/mutex", pprof.Handler("mutex"))
+	router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	router.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	router.Handle("/debug/vars", expvar.Handler())
 	os.Remove(dbgSockPath)
+
 	l, err := net.Listen("unix", dbgSockPath)
 	if err != nil {
 		log.Errorf("failed to initialize debug, %s", err)
