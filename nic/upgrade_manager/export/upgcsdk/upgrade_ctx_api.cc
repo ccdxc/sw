@@ -10,44 +10,24 @@ namespace upgrade {
 
 using namespace std;
 
-delphi::error UpgCtxApi::UpgCtxGetTableVersion(string name, int &version, unordered_map<string, TableMeta>& table) {
-    if (name.empty()) {
-        return delphi::error("Table name is not set");
+delphi::error UpgCtxApi::UpgCtxGetUpgTableVersion (ImageInfo& imgInfo, UpgMeta meta, string &version) {
+    switch (meta) {
+        case NICMGRVER:
+            version = imgInfo.nicmgrVersion;
+            return delphi::error::OK();
+        case KERNELVER:
+            version = imgInfo.kernelVersion;
+            return delphi::error::OK();
     }
-    auto elem = table.find(name);
-    if (elem == table.end()) {
-        return delphi::error("Table not found");
-    }
-    version = elem->second.version;
-    return delphi::error::OK();
+    return delphi::error("Meta not found");
 }
 
-delphi::error UpgCtxApi::UpgCtxGetComponentVersion(string name, int &version, unordered_map<string, ComponentMeta>& comp) {
-    if (name.empty()) {
-        return delphi::error("Component name is not set");
-    }
-    auto elem = comp.find(name);
-    if (elem == comp.end()) {
-        return delphi::error("Component not found");
-    }
-    version = elem->second.version;
-    return delphi::error::OK();
+delphi::error UpgCtxApi::UpgCtxGetPreUpgTableVersion (UpgCtx &ctx, UpgMeta meta, string &version) {
+    return UpgCtxGetUpgTableVersion(ctx.preUpgMeta, meta, version);
 }
 
-delphi::error UpgCtxApi::UpgCtxGetPreUpgTableVersion (UpgCtx &ctx, string name, int &version) {
-    return UpgCtxGetTableVersion(name, version, ctx.preUpgTables);
-}
-
-delphi::error UpgCtxApi::UpgCtxGetPostUpgTableVersion (UpgCtx &ctx, string name, int &version) {
-    return UpgCtxGetTableVersion(name, version, ctx.postUpgTables);
-}
-
-delphi::error UpgCtxApi::UpgCtxGetPreUpgComponentVersion (UpgCtx &ctx, string name, int &version) {
-    return UpgCtxGetComponentVersion(name, version, ctx.preUpgComps);
-}
-
-delphi::error UpgCtxApi::UpgCtxGetPostUpgComponentVersion (UpgCtx &ctx, string name, int &version) {
-    return UpgCtxGetComponentVersion(name, version, ctx.postUpgComps);
+delphi::error UpgCtxApi::UpgCtxGetPostUpgTableVersion (UpgCtx &ctx, UpgMeta meta, string &version) {
+    return UpgCtxGetUpgTableVersion(ctx.postUpgMeta, meta, version);
 }
 
 bool UpgCtxApi::UpgCtxIsUpgTypeDisruptive(UpgCtx &ctx) {

@@ -8,59 +8,115 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-type table struct {
-	Version int    `json:"version"`
-	Name    string `json:"name"`
+type preUpgImgMeta struct {
+	Uboot struct {
+		Image struct {
+			BuildDate       string `json:"build_date"`
+			BuildUser       string `json:"build_user"`
+			BaseVersion     string `json:"base_version"`
+			SoftwareVersion string `json:"software_version"`
+			NicmgrVersion   string `json:"nicmgr_version"`
+		} `json:"image"`
+	} `json:"uboot"`
+	Mainfwa struct {
+		KernelFit struct {
+			BuildDate       string `json:"build_date"`
+			BuildUser       string `json:"build_user"`
+			BaseVersion     string `json:"base_version"`
+			SoftwareVersion string `json:"software_version"`
+			NicmgrVersion   string `json:"nicmgr_version"`
+		} `json:"kernel_fit"`
+		SystemImage struct {
+			BuildDate       string `json:"build_date"`
+			BuildUser       string `json:"build_user"`
+			BaseVersion     string `json:"base_version"`
+			SoftwareVersion string `json:"software_version"`
+			NicmgrVersion   string `json:"nicmgr_version"`
+		} `json:"system_image"`
+	} `json:"mainfwa"`
 }
 
-type component struct {
-	Version int    `json:"version"`
-	Name    string `json:"name"`
+type postUpgImgMeta struct {
+	MetadataVersion int    `json:"metadata_version"`
+	BuildDate       string `json:"build_date"`
+	BuildUser       string `json:"build_user"`
+	BaseVersion     string `json:"base_version"`
+	SoftwareVersion string `json:"software_version"`
+	NicmgrVersion   string `json:"nicmgr_version"`
+	Firmware        struct {
+		Boot struct {
+			Type  string `json:"type"`
+			Files struct {
+				Image struct {
+					Name   string `json:"name"`
+					Verify struct {
+						Algorithm string `json:"algorithm"`
+						Hash      string `json:"hash"`
+					} `json:"verify"`
+				} `json:"image"`
+			} `json:"files"`
+		} `json:"boot"`
+		Main struct {
+			Type  string `json:"type"`
+			Files struct {
+				KernelFit struct {
+					Name   string `json:"name"`
+					Verify struct {
+						Algorithm string `json:"algorithm"`
+						Hash      string `json:"hash"`
+					} `json:"verify"`
+				} `json:"kernel_fit"`
+				SystemImage struct {
+					Name   string `json:"name"`
+					Verify struct {
+						Algorithm string `json:"algorithm"`
+						Hash      string `json:"hash"`
+					} `json:"verify"`
+				} `json:"system_image"`
+			} `json:"files"`
+		} `json:"main"`
+	} `json:"firmware"`
 }
 
-type upgMeta struct {
-	Tables []table     `json:"tables"`
-	Comps  []component `json:"components"`
+func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
+	if isPreUpg {
+		preUpgJSONFile, err := os.Open("/sw/nic/upgrade_manager/meta/upgrade_metadata.json")
+		if err != nil {
+			log.Infof("Error %s", err)
+			return err
+		}
+		defer preUpgJSONFile.Close()
+		byteValue, _ := ioutil.ReadAll(preUpgJSONFile)
+
+		var preImgMeta preUpgImgMeta
+		err = json.Unmarshal(byteValue, &preImgMeta)
+		if err != nil {
+			log.Infof("Unable to unmarshal the json file %s", err)
+			return err
+		}
+		upgCtx.PreUpgMeta.NicmgrVersion = preImgMeta.Uboot.Image.NicmgrVersion
+	} else {
+		postUpgJSONFile, err := os.Open("/sw/nic/upgrade_manager/meta/MANIFEST.json")
+		if err != nil {
+			log.Infof("Error %s", err)
+			return err
+		}
+		defer postUpgJSONFile.Close()
+		byteValue, _ := ioutil.ReadAll(postUpgJSONFile)
+
+		var postImgMeta postUpgImgMeta
+		err = json.Unmarshal(byteValue, &postImgMeta)
+		if err != nil {
+			log.Infof("Unable to unmarshal the json file %s", err)
+			return err
+		}
+		upgCtx.PostUpgMeta.NicmgrVersion = postImgMeta.NicmgrVersion
+	}
+	return nil
 }
 
 func getUpgCtxFromMeta(upgCtx *UpgCtx) error {
-	jsonFile, err := os.Open("/sw/nic/upgrade_manager/meta/upgrade_metadata.json")
-	if err != nil {
-		log.Infof("Error %s", err)
-		return err
-	}
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-
-	var meta upgMeta
-	err = json.Unmarshal(byteValue, &meta)
-	if err != nil {
-		log.Infof("Unable to unmarshal the json file %s", err)
-		return err
-	}
-	log.Infof("Found %d tables in metadata.json file", len(meta.Tables))
-	if upgCtx.PreUpgTables == nil {
-		log.Info("PreUpgTables is not initialized. doing it now")
-		upgCtx.PreUpgTables = make(map[string]TableMeta)
-	}
-	if upgCtx.PreUpgComps == nil {
-		log.Info("PreUpgComps is not initialized. doing it now")
-		upgCtx.PreUpgComps = make(map[string]ComponentMeta)
-	}
-	for i := 0; i < len(meta.Tables); i++ {
-		log.Infof("version %d name %s", meta.Tables[i].Version, meta.Tables[i].Name)
-		upgCtx.PreUpgTables[meta.Tables[i].Name] = TableMeta{
-			meta.Tables[i].Version,
-			meta.Tables[i].Name,
-		}
-	}
-	log.Infof("comp len %d", len(meta.Comps))
-	for i := 0; i < len(meta.Comps); i++ {
-		log.Infof("version %d name %s", meta.Comps[i].Version, meta.Comps[i].Name)
-		upgCtx.PreUpgComps[meta.Comps[i].Name] = ComponentMeta{
-			meta.Comps[i].Version,
-			meta.Comps[i].Name,
-		}
-	}
+	getUpgCtxFromImgMeta(upgCtx, true)
+	getUpgCtxFromImgMeta(upgCtx, false)
 	return nil
 }

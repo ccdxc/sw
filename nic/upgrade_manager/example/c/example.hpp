@@ -46,26 +46,26 @@ public:
         UPG_LOG_DEBUG("UpgHandler ProcessQuiesce called for the SVC!");
 
         UPG_LOG_DEBUG("UpgType {}", upgCtx.upgType);
-        int version;
-        delphi::error err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, "SAMPLETABLE-1", version);
+        string version;
+        delphi::error err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, NICMGRVER, version);
         if (err != delphi::error::OK()) {
             UPG_LOG_DEBUG("Error from API {}", err.Error());
         }
-        UPG_LOG_DEBUG("Version for SAMPLETABLE-1 table is {}", version);
-        err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-10", version);
-        if (err != delphi::error::OK()) {
-            UPG_LOG_DEBUG("Error from API {}", err.Error());
-        }
+        UPG_LOG_DEBUG("Version for NICMGR table is {}", version);
 
-        err = UpgCtxApi::UpgCtxGetPreUpgComponentVersion(upgCtx, "SAMPLECOMPONENT-1", version);
+
+        err = UpgCtxApi::UpgCtxGetPostUpgTableVersion(upgCtx, NICMGRVER, version);
         if (err != delphi::error::OK()) {
             UPG_LOG_DEBUG("Error from API {}", err.Error());
         }
-        UPG_LOG_DEBUG("Version for SAMPLECOMPONENT-1 component is {}", version);
-        err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, "COMPONENT-10", version);
+        UPG_LOG_DEBUG("Version for Post NICMGR table is {}", version);
+
+        err = UpgCtxApi::UpgCtxGetPreUpgTableVersion(upgCtx, KERNELVER, version);
         if (err != delphi::error::OK()) {
             UPG_LOG_DEBUG("Error from API {}", err.Error());
         }
+        UPG_LOG_DEBUG("Version for kernel is {}", version);
+
         return resp;
     }
 

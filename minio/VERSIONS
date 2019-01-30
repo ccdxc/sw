@@ -7,7 +7,7 @@ storage_libs 0.0.1
 asic_libs 2aee5d8743f9e7889b6f0948d432b92d8f93bd24
 ncc_tools 2aee5d8743f9e7889b6f0948d432b92d8f93bd24
 pbc_config 2aee5d8743f9e7889b6f0948d432b92d8f93bd24
-upgrade 1.0.4
+upgrade 1.0.6
 iota 1.0.2
 host_tools 1.0.14
 delphi_lib 1.0.4

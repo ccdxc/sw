@@ -12,9 +12,16 @@ namespace upgrade {
 
 using namespace std;
 
+bool UpgPreStateHandler::ImageCompatCheck(UpgCtx &ctx) {
+    if (ctx.preUpgMeta.nicmgrVersion != ctx.postUpgMeta.nicmgrVersion) {
+        return false;
+    }
+    return true;
+}
+
 bool UpgPreStateHandler::PreCompatCheckHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPreStateHandler PrePre returning");
-    return true;
+    return ImageCompatCheck(ctx);
 }
 
 bool UpgPreStateHandler::PrePostRestartHandler(UpgCtx &ctx) {

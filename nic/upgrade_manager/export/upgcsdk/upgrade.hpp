@@ -13,6 +13,7 @@
 #include "upgrade_resp_reactor.hpp"
 #include "upgrade_ctx_api.hpp"
 #include "nic/upgrade_manager/include/c/upgrade_state_machine.hpp"
+#include "nic/upgrade_manager/include/c/upgrade_ctx.hpp"
  
 namespace upgrade {
 

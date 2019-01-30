@@ -19,6 +19,16 @@ const (
 	NonAgentRole SvcRole = 1
 )
 
+//CompVersion to fetch during upgrade
+type CompVersion int
+
+const (
+	//NICMGR version
+	NICMGR CompVersion = 0
+	//KERNEL version
+	KERNEL CompVersion = 1
+)
+
 type upgSdk struct {
 	svcName   string
 	svcRole   SvcRole
@@ -68,25 +78,20 @@ type AgentHandlers interface {
 	UpgPossible(upgCtx *UpgCtx)
 }
 
-//TableMeta is the actual table information
-type TableMeta struct {
-	Version int
-	Name    string
-}
-
-//ComponentMeta is the actual component information
-type ComponentMeta struct {
-	Version int
-	Name    string
+//ImgMeta is the meta from the current running image
+type ImgMeta struct {
+	BuildDate       string
+	BuildUser       string
+	BaseVersion     string
+	SoftwareVersion string
+	NicmgrVersion   string
 }
 
 //UpgCtx is the wrapper that holds all the information about the current upgrade
 type UpgCtx struct {
-	PreUpgTables  map[string]TableMeta
-	PostUpgTables map[string]TableMeta
-	PreUpgComps   map[string]ComponentMeta
-	PostUpgComps  map[string]ComponentMeta
-	upgType       upgrade.UpgType
+	PreUpgMeta  ImgMeta
+	PostUpgMeta ImgMeta
+	upgType     upgrade.UpgType
 }
 
 //UpgAppHandlers all upgrade applications to implement this

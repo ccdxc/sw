@@ -27,32 +27,16 @@ func (usmh *upgradeStateMachineHdlrsCtx) CompatCheckHandler(upgCtx *upggosdk.Upg
 	var hdlrResp upggosdk.HdlrResp
 	hdlrResp.Resp = upggosdk.Success
 	log.Infof("HandleStatePreUpgState called")
-	ver, err := upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, "SAMPLETABLE-1")
+	ver, err := upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, upggosdk.NICMGR)
 	if err != nil {
 		log.Infof("Error from API %s", err)
 	}
-	log.Infof("Version for SAMPLETABLE-1 table is %d", ver)
-	ver, err = upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, "TABLE-10")
+	log.Infof("Pre-Version for NICMGR is %s", ver)
+	ver, err = upggosdk.UpgCtxGetPostUpgTableVersion(upgCtx, upggosdk.NICMGR)
 	if err != nil {
 		log.Infof("Error from API %s", err)
 	}
-	ver, err = upggosdk.UpgCtxGetPreUpgTableVersion(upgCtx, "")
-	if err != nil {
-		log.Infof("Error from API %s", err)
-	}
-	ver, err = upggosdk.UpgCtxGetPreUpgComponentVersion(upgCtx, "COMPONENT-1")
-	if err != nil {
-		log.Infof("Error from API %s", err)
-	}
-	log.Infof("Version for SAMPLECOMPONENT-1 table is %d", ver)
-	ver, err = upggosdk.UpgCtxGetPreUpgComponentVersion(upgCtx, "COMPONENT-5")
-	if err != nil {
-		log.Infof("Error from API %s", err)
-	}
-	ver, err = upggosdk.UpgCtxGetPreUpgComponentVersion(upgCtx, "")
-	if err != nil {
-		log.Infof("Error from API %s", err)
-	}
+	log.Infof("Post-Version for NICMGR is %s", ver)
 	return hdlrResp
 }
 

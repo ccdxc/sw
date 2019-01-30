@@ -10,24 +10,26 @@ namespace upgrade {
 
 using namespace std;
 
-typedef struct TableMeta_ {
-    int       version;
-    string    name;
-} TableMeta;
-
-typedef struct ComponentMeta_ {
-    int       version;
-    string    name;
-} ComponentMeta;
+typedef struct ImageInfo_ {
+   string buildDate; 
+   string buildUser; 
+   string baseVersion; 
+   string softwareVersion; 
+   string nicmgrVersion; 
+   string kernelVersion; 
+} ImageInfo;
 
 typedef struct UpgCtx_ {
-    unordered_map<string, TableMeta>        preUpgTables;
-    unordered_map<string, TableMeta>        postUpgTables;
-    unordered_map<string, ComponentMeta>    preUpgComps;
-    unordered_map<string, ComponentMeta>    postUpgComps;
-    UpgType                                 upgType;
-    sysmgr::ClientPtr                       sysMgr;
+    ImageInfo                  preUpgMeta;
+    ImageInfo                  postUpgMeta;
+    UpgType                    upgType;
+    sysmgr::ClientPtr          sysMgr;
 } UpgCtx;
+
+typedef enum {
+    NICMGRVER,
+    KERNELVER
+} UpgMeta;
 
 }
 

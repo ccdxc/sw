@@ -12,15 +12,12 @@ using namespace std;
 class UpgCtxApi {
 public:
     UpgCtxApi() {}
-    static delphi::error UpgCtxGetPreUpgTableVersion (UpgCtx &ctx, string name, int &version);
-    static delphi::error UpgCtxGetPostUpgTableVersion (UpgCtx &ctx, string name, int &version);
-    static delphi::error UpgCtxGetPreUpgComponentVersion (UpgCtx &ctx, string name, int &version);
-    static delphi::error UpgCtxGetPostUpgComponentVersion (UpgCtx &ctx, string name, int &version);
+    static delphi::error UpgCtxGetPreUpgTableVersion (UpgCtx &ctx, UpgMeta meta, string &version);
+    static delphi::error UpgCtxGetPostUpgTableVersion (UpgCtx &ctx, UpgMeta meta, string &version);
     static bool UpgCtxIsUpgTypeDisruptive(UpgCtx &ctx);
     static bool UpgCtxIsUpgTypeNonDisruptive(UpgCtx &ctx);
 private:
-    static delphi::error UpgCtxGetTableVersion(string name, int &version, unordered_map<string, TableMeta> &table);
-    static delphi::error UpgCtxGetComponentVersion(string name, int &version, unordered_map<string, ComponentMeta> &comp);
+    static delphi::error UpgCtxGetUpgTableVersion (ImageInfo& imgInfo, UpgMeta meta, string &version);
 };
 typedef std::shared_ptr<UpgCtxApi> UpgCtxApiPtr;
 

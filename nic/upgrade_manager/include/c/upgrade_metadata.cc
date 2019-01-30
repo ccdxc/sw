@@ -9,41 +9,61 @@ namespace upgrade {
 using boost::property_tree::ptree;
 using namespace std;
 
-bool GetUpgCtxTablesFromMeta(UpgCtx& ctx,
-                             string metafile,
-                             unordered_map<string, TableMeta>& tables,
-                             unordered_map<string, ComponentMeta>& comps) {
+void myprint(ptree const& pt)
+{
+    using boost::property_tree::ptree;
+    ptree::const_iterator end = pt.end();
+    for (ptree::const_iterator it = pt.begin(); it != end; ++it) {
+        std::cout << it->first << ": " << it->second.get_value<std::string>() << std::endl;
+        myprint(it->second);
+    }
+}
+
+bool GetUpgCtxTablesFromMeta(string metafile,
+                             ImageInfo& meta,
+                             bool isVerFromCache) {
     ptree             root;
 
     std::ifstream json_cfg(metafile.c_str());
-    try {
-        read_json(json_cfg, root);
-        for (ptree::value_type table : root.get_child("tables")) {
-            TableMeta tableMeta;
-            memset(&tableMeta, 0, sizeof(TableMeta));
-            tableMeta.name = table.second.get<std::string>("name");
-            tableMeta.version = table.second.get<int>("version");
-            tables[tableMeta.name] = tableMeta;
+    memset(&meta, 0, sizeof(meta));
+    if (isVerFromCache) {
+        try {
+            read_json(json_cfg, root);
+            for (ptree::value_type sysimg : root.get_child("mainfwa.system_image")) {
+                if (!strcmp(sysimg.first.c_str(), "nicmgr_version")) {
+                    meta.nicmgrVersion = sysimg.second.get_value<std::string>();
+                }
+            }
+        } catch (std::exception const& e) {
+            UPG_LOG_DEBUG("Unable to parse upgrade_metadata.json {}", e.what());
+            return false;
         }
-        for (ptree::value_type comp : root.get_child("components")) {
-            ComponentMeta componentMeta;
-            memset(&componentMeta, 0, sizeof(componentMeta));
-            componentMeta.name = comp.second.get<std::string>("name");
-            componentMeta.version = comp.second.get<int>("version");
-            comps[componentMeta.name] = componentMeta;
+    } else {
+        try {
+            read_json(json_cfg, root);
+            for (ptree::value_type item : root) {
+                if (!strcmp(item.first.c_str(), "nicmgr_version")) {
+                    meta.nicmgrVersion = item.second.get_value<std::string>();;
+                }
+            }
+        } catch (std::exception const& e) {
+            UPG_LOG_DEBUG("Unable to parse upgrade_metadata.json {}", e.what());
+            return false;
         }
-    } catch (std::exception const& e) {
-        UPG_LOG_DEBUG("Unable to parse upgrade_metadata.json {}", e.what());
-        return false;
     }
+
     return true;
 }
 
 bool GetUpgCtxFromMeta(UpgCtx& ctx) {
-    string metafile = "/sw/nic/upgrade_manager/meta/upgrade_metadata.json";
     bool ret = true;
-    //TODO: Fill postUpgTable
-    ret = GetUpgCtxTablesFromMeta(ctx, metafile, ctx.preUpgTables, ctx.preUpgComps);
+
+    string premetafile = "/sw/nic/upgrade_manager/meta/upgrade_metadata.json";
+    ret = GetUpgCtxTablesFromMeta(premetafile, ctx.preUpgMeta, true);
+
+    string postmetafile = "/sw/nic/upgrade_manager/meta/MANIFEST.json";
+    ret = GetUpgCtxTablesFromMeta(postmetafile, ctx.postUpgMeta, false);
+
     return ret;
 }
 

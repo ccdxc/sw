@@ -30,6 +30,8 @@ public:
     bool PrePostHostDownHandler(UpgCtx &ctx);
     bool PrePostLinkUpHandler(UpgCtx &ctx);
     bool PreSaveStateHandler(UpgCtx &ctx);
+private:
+    bool ImageCompatCheck(UpgCtx &ctx);
 };
 typedef std::shared_ptr<UpgPreStateHandler> UpgPreStateHandlerPtr;
 
