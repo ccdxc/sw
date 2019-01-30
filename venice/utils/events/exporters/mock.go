@@ -106,7 +106,7 @@ func (m *MockExporter) WriteEvents(evts []*evtsapi.Event) error {
 
 		found := false
 		for _, uuid := range m.eventsBySourceAndType[sourceKey][evt.GetType()] {
-			if uuid == evtUUID { // exisiting UUID
+			if uuid == evtUUID { // existing UUID
 				found = true
 				break
 			}

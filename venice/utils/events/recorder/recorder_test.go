@@ -55,13 +55,13 @@ func createEventsProxy(t *testing.T, proxyURL, eventsStorePath string) (*epgrpc.
 	// create events dispatcher
 	evtsDispatcher, err := dispatcher.NewDispatcher(testDedupInterval, testSendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
-	evtsDispatcher.Start()
 
 	// create mock writer
 	mockWriter := exporters.NewMockExporter(fmt.Sprintf("mock-%s", t.Name()), mockBufferLen, logger)
 	writerEventCh, offsetTracker, err := evtsDispatcher.RegisterExporter(mockWriter)
 	AssertOk(t, err, "failed to register mock writer")
 	mockWriter.Start(writerEventCh, offsetTracker)
+	evtsDispatcher.Start()
 
 	// create grpc server
 	rpcServer, err := epgrpc.NewRPCServer(globals.EvtsProxy, proxyURL, evtsDispatcher, logger)
@@ -436,16 +436,19 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 	close(stopWorkers)
 	wg.Wait()
 
-	// let the mock writer receive all the events
-	time.Sleep(2 * time.Second)
-	atomic.AddUint64(&totalEventsReceived, uint64(mockWriter.GetTotalEvents()))
-
 	// check if all the events has been received by the mock writer
 	// It is expected to receive duplicates when the proxy restarts continuously because we
 	// may come across situations where the proxy might restart while it is half way
 	// processing the failed events from recorder. And the recorder will retry sending all of them once again.
-	Assert(t, totalEventsSent <= totalEventsReceived, "mock writer did not receive all the events recorded, expected: >=%d, got: %d",
-		totalEventsSent, totalEventsReceived)
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			totalReceived := totalEventsReceived + uint64(mockWriter.GetTotalEvents())
+			if totalReceived >= totalEventsSent {
+				return true, nil
+			}
+			return false, fmt.Sprintf("expected: >=%d, got: %d",
+				totalEventsSent, totalReceived)
+		}, "mock writer did not receive all the events recorded", "20ms", "6s")
 }
 
 func TestNewfile(t *testing.T) {
