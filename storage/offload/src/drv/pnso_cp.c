@@ -50,11 +50,9 @@ fill_cp_desc(struct service_info *svc_info, struct cpdc_desc *desc,
 	desc->u.cd_bits.cc_enabled = 1;
 	desc->u.cd_bits.cc_insert_header =
 		is_dflag_insert_header_enabled(svc_info->si_desc_flags);
-	/*
-	 * Default assumption for integrity algo is ADLER32
-	 */
-	desc->u.cd_bits.cc_integrity_type = CP_INTEGRITY_ADLER32;
-	desc->u.cd_bits.cc_chksum_adler = CP_CHKSUM_ADLER32;
+	desc->u.cd_bits.cc_integrity_type = CPDC_INTEGRITY_TYPE_DFLT;
+	desc->u.cd_bits.cc_integrity_src = CPDC_INTEGRITY_SRC_DFLT;
+	desc->u.cd_bits.cc_chksum_adler = CPDC_CHKSUM_TYPE_DFLT;
 
 	desc->u.cd_bits.cc_src_is_list = 1;
 	desc->u.cd_bits.cc_dst_is_list = 1;

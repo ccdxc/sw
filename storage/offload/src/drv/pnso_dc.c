@@ -45,6 +45,9 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 
 	if (svc_info->si_desc_flags & PNSO_DC_DFLAG_HEADER_PRESENT) {
 		desc->u.cd_bits.cc_header_present = 1;
+		desc->u.cd_bits.cc_integrity_type = CPDC_INTEGRITY_TYPE_DFLT;
+		desc->u.cd_bits.cc_integrity_src = CPDC_INTEGRITY_SRC_DFLT;
+		desc->u.cd_bits.cc_chksum_adler = CPDC_CHKSUM_TYPE_DFLT;
 		if (is_chksum_present_in_header_format(svc_info))
 			desc->u.cd_bits.cc_chksum_verify_enabled = 1;
 	}
