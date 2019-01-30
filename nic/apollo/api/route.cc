@@ -69,7 +69,7 @@ route_table::destroy(route_table *rtable) {
     if (rtable->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_ROUTE_TABLE, rtable->impl_);
     }
-    rtable->release_resources_();
+    rtable->release_resources();
     rtable->~route_table();
     route_table_db()->route_table_free(rtable);
 }
@@ -93,7 +93,7 @@ route_table::init_config(api_ctxt_t *api_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-route_table::reserve_resources_(void) {
+route_table::reserve_resources(void) {
     return impl_->reserve_resources(this);
 }
 
@@ -107,7 +107,7 @@ sdk_ret_t
 route_table::program_config(obj_ctxt_t *obj_ctxt) {
     sdk_ret_t            ret;
  
-    ret = reserve_resources_();
+    ret = reserve_resources();
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     OCI_TRACE_DEBUG("Programming route table %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
@@ -118,7 +118,7 @@ route_table::program_config(obj_ctxt_t *obj_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-route_table::release_resources_(void) {
+route_table::release_resources(void) {
     return impl_->release_resources(this);
 }
 

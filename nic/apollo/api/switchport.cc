@@ -78,6 +78,15 @@ switchport_entry::init_config(api_ctxt_t *api_ctxt) {
 }
 
 /**
+ * @brief    allocate h/w resources for this object
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+switchport_entry::reserve_resources(void) {
+    return SDK_RET_OK;
+}
+
+/**
  * @brief    program all h/w tables relevant to this object except stage 0
  *           table(s), if any, during creation of the object
  * @param[in] obj_ctxt    transient state associated with this API
@@ -87,6 +96,15 @@ sdk_ret_t
 switchport_entry::program_config(obj_ctxt_t *obj_ctxt) {
     OCI_TRACE_DEBUG("Programming switchport config");
     return impl_->program_hw(this, obj_ctxt);
+}
+
+/**
+ * @brief     free h/w resources used by this object, if any
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+switchport_entry::release_resources(void) {
+    return SDK_RET_OK;
 }
 
 /**

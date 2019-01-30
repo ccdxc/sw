@@ -61,7 +61,7 @@ vcn_entry::~vcn_entry() {
  */
 void
 vcn_entry::destroy(vcn_entry *vcn) {
-    vcn->release_resources_();
+    vcn->release_resources();
     vcn->~vcn_entry();
     vcn_db()->vcn_free(vcn);
 }
@@ -84,7 +84,7 @@ vcn_entry::init_config(api_ctxt_t *api_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::reserve_resources_(void) {
+vcn_entry::reserve_resources(void) {
     if (vcn_db()->vcn_idxr()->alloc((uint32_t *)&this->hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
@@ -107,7 +107,7 @@ vcn_entry::program_config(obj_ctxt_t *obj_ctxt) {
     oci_vcn_t *oci_vcn = &obj_ctxt->api_params->vcn_info;
     OCI_TRACE_DEBUG("Programming vcn %u, type %u, pfx %s", key_.id,
                     oci_vcn->type, ippfx2str(&oci_vcn->pfx));
-    return reserve_resources_();
+    return reserve_resources();
 }
 
 /**
@@ -115,7 +115,7 @@ vcn_entry::program_config(obj_ctxt_t *obj_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::release_resources_(void) {
+vcn_entry::release_resources(void) {
     if (hw_id_ != 0xFF) {
         vcn_db()->vcn_idxr()->free(hw_id_);
     }
