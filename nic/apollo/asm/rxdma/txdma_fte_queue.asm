@@ -36,7 +36,7 @@ pkt_enqueue:
     phvwr       p.dma_cmd_pkt2mem_dma_cmd_size, r1
     phvwr       p.dma_cmd_pkt2mem_dma_cmd_addr, r2
     phvwr       p.dma_cmd_pkt2mem_dma_cmd_eop, 0
-    phvwr       p.dma_cmd_pkt2mem_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
+    phvwr       p.{dma_cmd_pkt2mem_dma_cmd_cache...dma_cmd_pkt2mem_dma_cmd_type}, ( (1 << PKT2MEM_CACHE_ENABLE_SHIFT) | CAPRI_DMA_COMMAND_PKT_TO_MEM)
 
     // use Qid1 to ring door-bell. Qid0 is used as a completionQ between txdma and rxdma
     // this avoids contention on the same qstate0 addr from rxdma, txdma and DB hardware
