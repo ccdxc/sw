@@ -13,7 +13,7 @@ images:
     naples: nic/naples_fw.tar
 
 setup:
-    topology: test/iris/topologies/classic_baremetal/classic_macvlan_baremetal.topology
+    topology: test/iris/topologies/classic_macvlan_baremetal/classic_macvlan_baremetal.topology
     config  :
         - step : utils.naples_workloads
         - step : config.config_link_flap

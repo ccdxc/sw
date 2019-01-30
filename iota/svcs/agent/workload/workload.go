@@ -55,6 +55,10 @@ type Workload interface {
 	TearDown()
 }
 
+func isFreeBsd() bool {
+	return runtime.GOOS == "freebsd"
+}
+
 type workload interface {
 }
 
@@ -78,6 +82,7 @@ type remoteWorkload struct {
 
 type bareMetalWorkload struct {
 	workloadBase
+	subIF string
 }
 
 type bareMetalMacVlanWorkload struct {
@@ -101,8 +106,8 @@ func freebsdVlanIntf(name string, vlan int) string {
 	return name + "." + strconv.Itoa(vlan)
 }
 
-func macVlanIntf(name string) string {
-	return name + "_" + "macvlan"
+func macVlanIntf(name string, vlan int) string {
+	return name + "_" + "m" + strconv.Itoa(vlan)
 }
 
 func (app *workloadBase) Name() string {
@@ -364,7 +369,7 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 		vlanintf := ""
 		var addVlanCmd []string
 		var delVlanCmd []string
-		if runtime.GOOS == "freebsd" {
+		if isFreeBsd() {
 			vlanintf = freebsdVlanIntf(name, vlan)
 			delVlanCmd = []string{"ifconfig", vlanintf, "destroy"}
 			addVlanCmd = []string{"ifconfig", vlanintf, "create", "inet"}
@@ -383,7 +388,7 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 
 	if macAddress != "" {
 		var setMacAddrCmd []string
-		if runtime.GOOS != "freebsd" {
+		if isFreeBsd() {
 			//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
 			setMacAddrCmd = []string{"ifconfig", intfToAttach, "hw", "ether", macAddress}
 			if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
@@ -409,6 +414,7 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 		}
 	}
 
+	app.subIF = intfToAttach
 	return intfToAttach, nil
 }
 
@@ -422,13 +428,12 @@ func (app *bareMetalMacVlanWorkload) AddInterface(name string, macAddress string
 	macvlanintf := ""
 	var addVlanCmd []string
 	var delVlanCmd []string
-	if runtime.GOOS == "freebsd" {
+	if isFreeBsd() {
 		return "", errors.New("Mac vlan Not supported on freebsd")
-	} else {
-		macvlanintf = macVlanIntf(name)
-		delVlanCmd = []string{"ip", "link", "del", macvlanintf}
-		addVlanCmd = []string{"ip", "link", "add", "link", name, "name", macvlanintf, "type", "macvlan"}
 	}
+	macvlanintf = macVlanIntf(name, vlan)
+	delVlanCmd = []string{"ip", "link", "del", macvlanintf}
+	addVlanCmd = []string{"ip", "link", "add", "link", name, "name", macvlanintf, "type", "macvlan"}
 	Utils.Run(delVlanCmd, 0, false, false, nil)
 	if retCode, stdout, _ := Utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
 		return "", errors.Errorf("IP link failed to create mac vlan failed %s:%d, err :%s", name, vlan, stdout)
@@ -461,7 +466,27 @@ func (app *bareMetalMacVlanWorkload) AddInterface(name string, macAddress string
 		}
 	}
 
+	app.subIF = intfToAttach
+
 	return intfToAttach, nil
+}
+
+func (app *bareMetalWorkload) TearDown() {
+	var delVlanCmd []string
+
+	if app.subIF != "" {
+		if isFreeBsd() {
+			delVlanCmd = []string{"ifconfig", app.subIF, "destroy"}
+		} else {
+			delVlanCmd = []string{"ip", "link", "del", app.subIF}
+		}
+		app.logger.Info("Deleting subif %v\n", app.subIF)
+		Utils.Run(delVlanCmd, 0, false, false, nil)
+	} else {
+		app.logger.Info("No subif to delete")
+	}
+
+	app.subIF = ""
 }
 
 func (app *bareMetalWorkload) BringUp(args ...string) error {
