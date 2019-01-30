@@ -498,30 +498,6 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 	return string(stdoutStderr), nil
 }
 
-func naplesPkgVerify(pkgName string) (string, error) {
-	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
-		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -v"}, ""),
-	}
-	return naplesExecCmd(v)
-}
-
-func naplesPkgInstall(pkgName string) (string, error) {
-	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
-		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -i all"}, ""),
-	}
-	return naplesExecCmd(v)
-}
-
-func naplesSetBootImg() (string, error) {
-	v := &nmd.NaplesCmdExecute{
-		Executable: "/nic/tools/fwupdate",
-		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
-	}
-	return naplesExecCmd(v)
-}
-
 //NaplesCmdExecHandler is the REST handler to execute any binary on naples and return the output
 func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
 	req := nmd.NaplesCmdExecute{}
