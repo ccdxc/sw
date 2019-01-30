@@ -8,13 +8,13 @@ feature:
 
 modules:
     - module:
-        name    : DECAP_INVALID_SUBSTRATE
+        name    : INVALID_SUBSTRATEIP_NO_DECAP
         spec    : rx.testspec
         args:
             options     : False
             classe      : False
             substrate   : invalid
-            drop        : True
+            decap       : False
         iterate:
             - flow      : filter://type=IPV4,proto=UDP,label=NETWORKING
               segment   : filter://native=True
