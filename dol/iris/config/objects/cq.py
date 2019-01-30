@@ -56,7 +56,7 @@ class CqObject(base.ConfigObjectBase):
         self.id = cq_id
         self.GID("CQ%04d" % self.id)
         # Every 8 CQs share a EQ
-        self.eq_id = int((self.id + 7) / 8)
+        self.eq_id = int((self.id + 7) / 8) + 1
 
         if not self.remote:
             self.cq = self.lif.GetQ('RDMA_CQ', self.id)
