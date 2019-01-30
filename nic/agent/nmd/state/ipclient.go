@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -314,7 +316,7 @@ func (c *IPClient) watchLeaseEvents() {
 				return
 			}
 
-			if controllers != nil {
+			if controllers != nil && c.mustTriggerUpdate(controllers) {
 				err = c.updateNaplesStatus(controllers)
 				if err != nil {
 					return
@@ -551,4 +553,16 @@ func (c *IPClient) waitForRegistration() {
 			return
 		}
 	}
+}
+
+// mustTriggerUpdate checks if the controllers information has changed.
+func (c *IPClient) mustTriggerUpdate(controllers []string) (mustUpdate bool) {
+	if len(c.controllers) != len(controllers) {
+		mustUpdate = true
+		return
+	}
+	sort.Strings(controllers)
+	sort.Strings(c.controllers)
+	mustUpdate = !reflect.DeepEqual(controllers, c.controllers)
+	return
 }
