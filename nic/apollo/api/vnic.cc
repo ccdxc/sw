@@ -89,12 +89,12 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
 
 /**
  * @brief    allocate h/w resources for this object
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
-// 1. we don't need an indexer here if we can use directmap here to
-//    "reserve" an index
 sdk_ret_t
-vnic_entry::reserve_resources(void) {
+vnic_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this);
 }
 
@@ -106,11 +106,8 @@ vnic_entry::reserve_resources(void) {
  */
 sdk_ret_t
 vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t     ret;
     oci_vnic_t    *oci_vnic = &obj_ctxt->api_params->vnic_info;
 
-    ret = reserve_resources();
-    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     OCI_TRACE_DEBUG("Programming vnic %u, vcn %u, subnet %u, mac %s, vlan %u, "
                     "slot %u", key_.id, oci_vnic->vcn.id, oci_vnic->subnet.id,
                     macaddr2str(oci_vnic->mac_addr), oci_vnic->wire_vlan,

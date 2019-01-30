@@ -91,13 +91,12 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
 
 /**
  * @brief    allocate h/w resources for this object
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
-// TODO: 1. this should ideally go to impl class
-//       2. we don't need an indexer here if we can use directmap here to
-//          "reserve" an index
 sdk_ret_t
-tep_entry::reserve_resources(void) {
+tep_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this);
 }
 
@@ -112,10 +111,6 @@ tep_entry::reserve_resources(void) {
 //       plane & PMD APIs are ready, we will directly write to hw with fixed MAC
 sdk_ret_t
 tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t    ret;
-
-    ret = reserve_resources();
-    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     OCI_TRACE_DEBUG("Programming TEP %s", ipv4addr2str(key_.ip_addr));
     return impl_->program_hw(this, obj_ctxt);
 }

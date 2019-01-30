@@ -88,7 +88,7 @@ mapping_impl::reserve_resources(api_base *api_obj) {
     mapping_impl_db()->remote_vnic_mapping_rx_tbl()->reserve(key,
                                                              &remote_vnic_mapping_rx_idx_);
 #endif
-    return sdk::SDK_RET_INVALID_OP;
+    return SDK_RET_OK;
 }
 
 /**

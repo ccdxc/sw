@@ -41,6 +41,7 @@ api_engine::api_op_(api_op_t old_op, api_op_t new_op) {
 /**
  * @brief    process an API and form effected list of objs
  * @param[in] api_ctxt    transient state associated with this API
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
@@ -189,6 +190,7 @@ error:
 /**
  * @brief    walk over the API contexts collected in this batch and form a
  *           "dirty" list of objects that are effected by this batch commit
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::pre_process_stage_(void) {
@@ -211,11 +213,51 @@ error:
 }
 
 /**
+ * @brief    allocate any s/w & h/w resources for the given object and
+ *           operation
+ * @param[in] api_obj    API object being processed
+ * @param[in] obj_ctxt   transient information maintained to process the API
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t     ret;
+
+    switch (obj_ctxt->api_op) {
+    case API_OP_NONE:
+        return SDK_RET_OK;
+
+    case API_OP_CREATE:
+        ret = api_obj->reserve_resources(api_obj, obj_ctxt);
+        break;
+
+    case API_OP_DELETE:
+        /**< no additional resources needed for delete operation */
+        break;
+
+    case API_OP_UPDATE:
+        ret = obj_ctxt->cloned_obj->reserve_resources(api_obj, obj_ctxt);
+        break;
+
+    default:
+        return sdk::SDK_RET_INVALID_OP;
+        break;
+    }
+
+    if (ret != SDK_RET_OK) {
+        OCI_TRACE_ERR("Reserve resources stage failed for obj %s, op %u",
+                      api_obj->keystring(), obj_ctxt->api_op);
+    }
+    return ret;
+}
+
+/**
  * @brief    process given object from the dirty list by doing add/update of
  *           corresponding h/w entries, based on the accumulated configuration
  *           without activating the epoch
  * @param[in] api_obj    API object being processed
  * @param[in] obj_ctxt   transient information maintained to process the API
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
@@ -279,8 +321,8 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     api_obj->set_hw_dirty();
 
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Failed to process api op %u, obj %s",
-                      obj_ctxt->api_op, api_obj->tostring());
+        OCI_TRACE_ERR("Program config stage failed for obj %s, op %u",
+                      api_obj->keystring(), obj_ctxt->api_op);
     }
     return ret;
 }
@@ -288,6 +330,7 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 /**
  * @brief    allocate/free resources and program p4 tables, with the exception
  *           of stage 0 tables
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::program_config_stage_(void) {
@@ -296,13 +339,27 @@ api_engine::program_config_stage_(void) {
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                       sdk::SDK_RET_INVALID_ARG);
 
+    /**< walk over all the dirty objects and reserve resources, if needed */
+    batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
+    for (auto it = batch_ctxt_.dirty_obj_list.begin();
+         it != batch_ctxt_.dirty_obj_list.end(); ++it) {
+        ret = reserve_resources_(it->first, &it->second);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
+    }
+
     /**< walk over all the dirty objects and program hw, if any */
-    batch_ctxt_.stage = API_BATCH_STAGE_CONFIG_UPDATE;
+    batch_ctxt_.stage = API_BATCH_STAGE_PROGRAM_CONFIG;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ++it) {
         ret = program_config_(it->first, &it->second);
-        SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
     }
+
+    return SDK_RET_OK;
 
 error:
 
@@ -316,6 +373,7 @@ error:
  *           NOTE: NO failures MUST happen in this stage
  * @param[in] api_obj    API object being processed
  * @param[in] obj_ctxt   transient information maintained to process the API
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
@@ -398,7 +456,8 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 /**
  * @brief    program stage0 tables and activate the epoch in s/w & h/w
- * NOTE:     this is not expected to fail, so its a point of no return
+ *           NOTE: this is not expected to fail, so its a point of no return
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::activate_config_stage_(void) {
@@ -421,6 +480,7 @@ api_engine::activate_config_stage_(void) {
  *           are here
  * @param[in] api_obj    API object being processed
  * @param[in] obj_ctxt   transient information maintained to process the API
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
@@ -509,6 +569,7 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 /**
  * @brief    wrapper function for processing all API calls
  * @param[in] api_ctxt    API context carrying the config information
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::process_api(api_ctxt_t *api_ctxt) {
@@ -522,6 +583,7 @@ api_engine::process_api(api_ctxt_t *api_ctxt) {
 /**
  * @brief    handle batch begin by setting up per API batch context
  * @param[in] params batch specific parameters
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::batch_begin(oci_batch_params_t *params) {
@@ -537,6 +599,7 @@ api_engine::batch_begin(oci_batch_params_t *params) {
 /**
  * @brief    commit all the APIs in this batch, release any temporary
  *           state or resources like memory, per API context info etc.
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::batch_commit(void) {
@@ -598,6 +661,7 @@ api_engine::batch_commit(void) {
 /**
  * @brief    abort all the APIs in this batch, release any temporary
  *           state or resources like memory, per API context info etc.
+ * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::batch_abort(void) {

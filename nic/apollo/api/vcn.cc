@@ -81,10 +81,12 @@ vcn_entry::init_config(api_ctxt_t *api_ctxt) {
 
 /**
  * @brief    allocate h/w resources for this object
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vcn_entry::reserve_resources(void) {
+vcn_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (vcn_db()->vcn_idxr()->alloc((uint32_t *)&this->hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
@@ -107,7 +109,7 @@ vcn_entry::program_config(obj_ctxt_t *obj_ctxt) {
     oci_vcn_t *oci_vcn = &obj_ctxt->api_params->vcn_info;
     OCI_TRACE_DEBUG("Programming vcn %u, type %u, pfx %s", key_.id,
                     oci_vcn->type, ippfx2str(&oci_vcn->pfx));
-    return reserve_resources();
+    return SDK_RET_OK;
 }
 
 /**

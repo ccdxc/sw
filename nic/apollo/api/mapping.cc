@@ -79,13 +79,14 @@ mapping_entry::init_config(api_ctxt_t *api_ctxt) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    allocate h/w resources for this object
- * @return    SDK_RET_OK on success, failure status code on error
- */
-// TODO: this should ideally go to impl class
-sdk_ret_t
-mapping_entry::reserve_resources(void) {
+ /**
+  * @brief    allocate h/w resources for this object
+  * @param[in] orig_obj    old version of the unmodified object
+  * @param[in] obj_ctxt    transient state associated with this API
+  * @return    SDK_RET_OK on success, failure status code on error
+  */
+ sdk_ret_t
+mapping_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this);
 }
 
@@ -97,7 +98,6 @@ mapping_entry::reserve_resources(void) {
  */
 sdk_ret_t
 mapping_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    reserve_resources();
     return impl_->program_hw(this, obj_ctxt);
 }
 
