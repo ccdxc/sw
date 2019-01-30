@@ -58,8 +58,9 @@ func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rp
 	// create API server
 	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
 	AssertOk(t, err, "failed to start API server")
+	Assert(t, !utils.IsEmpty(apiServerURL), "empty API server URL")
 
-	// udpate mock resolver
+	// update mock resolver
 	mr.AddServiceInstance(&types.ServiceInstance{
 		TypeMeta: api.TypeMeta{
 			Kind: "ServiceInstance",

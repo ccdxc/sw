@@ -50,13 +50,16 @@ func StartAPIServer(serverAddr, clusterName string, logger log.Logger) (apiserve
 	go apiServer.Run(apiServerConfig)
 	apiServer.WaitRunning()
 
+	// get API server addr
 	apiServerAddr, err := apiServer.GetAddr()
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to get API server addr, err: %v", err)
+	if err != nil || utils.IsEmpty(apiServerAddr) {
+		return nil, "", fmt.Errorf("failed to get API server addr or empty addr , err: %v", err)
 	}
+
+	// get API server port
 	port, err := getPortFromAddr(apiServerAddr)
-	if err != nil {
-		return nil, "", err
+	if err != nil || utils.IsEmpty(port) {
+		return nil, "", fmt.Errorf("failed to get API server port or empty port, err: %v", err)
 	}
 
 	localAddr := fmt.Sprintf("localhost:%s", port)

@@ -284,7 +284,7 @@ func (a *alertEngineImpl) createAPIClient() (apiclient.Services, error) {
 			rpckit.WithBalancer(balancer.New(a.resolverClient)))
 	}, 2*time.Second, maxRetry)
 	if err != nil {
-		a.logger.Errorf("failed to create API client, err: %v", err)
+		a.logger.Errorf("failed to create API client {API server URLs from resolver: %v}, err: %v", a.resolverClient.GetURLs(globals.APIServer), err)
 		return nil, err
 	}
 
