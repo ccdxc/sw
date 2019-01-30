@@ -17,11 +17,9 @@ remote_vnic_mapping_tx_info:
 
     //hint1
     seq         c1, r1[31:21], d.remote_vnic_mapping_tx_info_d.hash1
-    or          r2, d.remote_vnic_mapping_tx_info_d.hint1_sbit9_ebit17, \
-                    d.remote_vnic_mapping_tx_info_d.hint1_sbit0_ebit8, 9
-    sne         c2, r2, r0
+    sne         c2, d.remote_vnic_mapping_tx_info_d.hint1, r0
     bcf         [c1&c2], remote_vnic_mapping_tx_hash_hit
-    add         r7, r7, r2
+    add         r7, r7, d.remote_vnic_mapping_tx_info_d.hint1
     //hint2
     seq         c1, r1[31:21], d.remote_vnic_mapping_tx_info_d.hash2
     sne         c2, d.remote_vnic_mapping_tx_info_d.hint2, r0
@@ -67,6 +65,10 @@ remote_vnic_mapping_tx_miss:
     nop
 
 remote_vnic_mapping_tx_hit:
+    phvwr       p.rewrite_metadata_dst_slot_id_valid, \
+                    d.remote_vnic_mapping_tx_info_d.dst_slot_id_valid
+    phvwr       p.rewrite_metadata_dst_slot_id, \
+                    d.remote_vnic_mapping_tx_info_d.dst_slot_id
     phvwr.e     p.txdma_to_p4e_header_nexthop_index, \
                     d.remote_vnic_mapping_tx_info_d.nexthop_index
     phvwr       p.egress_service_header_remote_vnic_mapping_tx_done, TRUE

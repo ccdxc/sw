@@ -47,6 +47,7 @@ header_type control_metadata_t {
 header_type rewrite_metadata_t {
     fields {
         encap_type              : 1;
+        dst_slot_id_valid       : 1;
         tep_index               : 10;
         dst_slot_id             : 20;
         mytep_ip                : 32;

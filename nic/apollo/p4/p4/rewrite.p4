@@ -3,7 +3,9 @@ action nexthop_info(tep_index, snat_required, encap_type,
     modify_field(rewrite_metadata.tep_index, tep_index);
     modify_field(nat_metadata.snat_required, snat_required);
     modify_field(rewrite_metadata.encap_type, encap_type);
-    modify_field(rewrite_metadata.dst_slot_id, dst_slot_id);
+    if (rewrite_metadata.dst_slot_id_valid == 0) {
+        modify_field(rewrite_metadata.dst_slot_id, dst_slot_id);
+    }
     modify_field(policer_metadata.traffic_class, traffic_class);
     // mytep_ip is a table constant
     modify_field(rewrite_metadata.mytep_ip, scratch_metadata.mytep_ip);
