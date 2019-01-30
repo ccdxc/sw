@@ -105,6 +105,27 @@ def GetExpectedPacket(testcase):
         return ret_pkt
     return ret_pkt
 
+def GetExpectedBufferSize(testcase, buff):
+    ret_buf = GetExpectedBuffer(testcase, buff)
+    try:
+        drop = testcase.module.args.drop
+        if drop == True:
+            return 0
+    except:
+        return ret_buf.size
+    return ret_buf.size
+
+def GetExpectedBuffer(testcase, desc):
+    try:
+        decap = testcase.module.args.decap
+        if decap == False:
+            ret_buff = testcase.buffers.Get('BUF3')
+        else:
+            ret_buff = testcase.buffers.Get('BUF2')
+    except:
+        ret_buff = testcase.buffers.Get('BUF2')
+    return ret_buff
+
 def GetOuterDstIpv4Address(testcase, packet):
     try:
         substrate = testcase.module.args.substrate
@@ -141,7 +162,7 @@ def GetInnerDstIpv4Address(testcase, packet):
 
 def GetMplsLabel(testcase, packet):
     try:
-        mpls = testcase.module.args.label
+        mpls = testcase.module.args.mpls
         if mpls == 'label1':
             label = 12345
         elif mpls == 'label2':

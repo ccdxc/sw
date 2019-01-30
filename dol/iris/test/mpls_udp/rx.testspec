@@ -94,6 +94,14 @@ buffers:
             size  : ref://testcase/packets/id=PKT2/size
             data  : ref://testcase/packets/id=PKT2/rawbytes
 
+    - buffer:
+        id      : BUF3  # Expected Buffer2
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=PKT1/size
+            data  : ref://testcase/packets/id=PKT1/rawbytes
+
 descriptors:
     - descriptor:
         id      : DESC1 # Input Descriptor
@@ -107,8 +115,9 @@ descriptors:
         id      : DESC2 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            _buf  : ref://testcase/buffers/id=BUF2
-            len   : ref://testcase/buffers/id=BUF2/size
+            #_buf  : ref://testcase/buffers/id=BUF2
+            _buf  : callback://mpls_udp/callbacks/GetExpectedBuffer
+            len   : callback://mpls_udp/callbacks/GetExpectedBufferSize
 
 trigger:
     descriptors:
@@ -119,7 +128,6 @@ trigger:
     packets:
         - packet:
             object  : ref://testcase/packets/id=PKT1
-            #port    : callback://classic/callbacks/GetRxTriggerPorts
             port    : 1
 
 expect:
@@ -127,5 +135,4 @@ expect:
         - descriptor:
             object  : ref://testcase/descriptors/id=DESC2
             ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
-
 
