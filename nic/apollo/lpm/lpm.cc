@@ -10,6 +10,7 @@
 #include <stack>
 #include "nic/apollo/lpm/lpm.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
+#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 
 using std::stack;
 
@@ -20,7 +21,7 @@ using std::stack;
 /**< LPM interval tree node */
 typedef struct lpm_inode_s {
     ip_addr_t    ipaddr;
-    uint16_t     nhid;
+    uint32_t     nhid;
 } lpm_inode_t;
 
 /**< LPM interval node table */
@@ -32,11 +33,11 @@ typedef struct lpm_itable_s {
 /**< temporary stack elements maintained while building the interval table */
 typedef struct itable_stack_elem_s {
     lpm_inode_t    interval;         /**< interval table node (to be emitted) */
-    uint16_t       fallback_nhid;    /**< fallback nexthop */
+    uint32_t       fallback_nhid;    /**< fallback nexthop */
 } itable_stack_elem_t;
 
 /**< each LPM table is 64 bytes (512 bits/flit) */
-#define LPM_TABLE_SIZE                 64    /**< same as CACHE_LINE_SIZE */
+#define LPM_TABLE_SIZE                 (CACHE_LINE_SIZE)
 /**
  * key size is 4 bytes for IPv4 and 8 bytes (assuming max prefix length of 64)
  * for IPv6
@@ -44,12 +45,17 @@ typedef struct itable_stack_elem_s {
 #define LPM_ENTRY_KEY_SIZE(ip_af)      (((ip_af) == IP_AF_IPV4) ? 4 : 8)
 
 /**
+ * data is next hop index
+ */
+#define LPM_ENTRY_DATA_SIZE(ip_af)     (LPM_NEXTHOP_SIZE)
+
+/**
  * number of keys per table is CACHE_LINE_SIZE/(sizeof(ipv4_addr_t) = 16 for
  * IPv4 and CACHE_LINE_SIZE/8 = 8 for IPv6 (assuming max prefix length of 64)
  * NOTE: this doesn't apply to last stage where each node also has 2 byte
  * nexthop
  */
-#define LPM_KEYS_PER_TABLE(ip_af)      (((ip_af) == IP_AF_IPV4) ? 16 : 8)
+#define LPM_KEYS_PER_TABLE(ip_af)      (((ip_af) == IP_AF_IPV4) ? 15 : 7)
 
 #define LPM_MAX_STAGES    8    /**< 8 stages can serve more than 1M v6 routes */
 
@@ -59,13 +65,13 @@ typedef struct itable_stack_elem_s {
  */
 
 typedef struct lpm_stage_info_s {
-    mem_addr_t    stage_addr;       /**< pointer to start of the stage tables */
     mem_addr_t    curr_table_addr;  /**< current table address */
-    uint32_t      curr_entry;       /**< current entry (key/key+nh) being populated */
-    uint32_t      curr_tbl;         /**< current table being populated */
+    uint32_t      curr_index;       /**< current entry (key/key+nh) being populated */
+    uint8_t       curr_table[LPM_TABLE_SIZE]; /**< current table being populated */
 } lpm_stage_info_t;
 
 typedef struct lpm_stage_meta_s {
+    uint8_t             af;
     uint32_t            key_sz;          /**< key size for the tree */
     uint32_t            keys_per_table;  /**< no. of keys per table is same in
                                               all stages except last stage */
@@ -90,9 +96,9 @@ static inline uint32_t
 lpm_stages (uint8_t ip_af, uint32_t num_routes)
 {
     if (ip_af == IP_AF_IPV4) {
-        return (uint32_t)ceil(log2f((double)(num_routes << 1))/4.0);
+        return (uint32_t)ceil(log2f((double)(num_routes << 1))/4.0); // 16-way tree
     } else {
-        return (uint32_t)ceil(log2f((double)(num_routes << 1))/2.0);
+        return (uint32_t)ceil(log2f((double)(num_routes << 1))/2.0); // 8-way tree
     }
 }
 
@@ -160,8 +166,7 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
     itable_stack_elem_t           elem, end;
     uint32_t                      num_intervals = 0;
 
-    /**< initialize the stack with highest prefix & invalid nh at the bottom */
-    end.fallback_nhid = LPM_NEXTHOP_INVALID;
+    /**< Create a stack elem with the highest prefix & invalid nh */
     end.interval.nhid = LPM_NEXTHOP_INVALID;
     end.interval.ipaddr.af = route_table->af;
     if (route_table->af == IP_AF_IPV4) {
@@ -171,6 +176,10 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
             end.interval.ipaddr.addr.v6_addr.addr32[i] = 0xFFFFFF;
         }
     }
+
+    /**< This elem would provide the catch all nh id. */
+    end.fallback_nhid = route_table->default_nhid;
+    /**< Push this elem to the stack */
     s.push(end);
 
     for (uint32_t i = 0; i < route_table->num_routes; i++) {
@@ -264,37 +273,251 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
     return SDK_RET_OK;
 }
 
+static inline sdk_ret_t
+lpm_write_table(mem_addr_t addr, uint32_t tableid, uint8_t action_id, void *actiondata)
+{
+    sdk_ret_t ret;
+    uint32_t  len;
+    uint8_t   packed_entry[LPM_TABLE_SIZE];
+    p4pd_apollo_txdma_raw_table_hwentry_query(tableid, action_id, &len);
+    p4pd_apollo_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    ret = asic_mem_write(addr, packed_entry, len >> 3, ASIC_WRITE_MODE_WRITE_THRU);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+lpm_ipv4_add_key_to_stage(lpm_stage_info_t *stage, lpm_inode_t *lpm_inode)
+{
+    auto table = (route_lpm_s0_actiondata_t *) stage->curr_table;
+    switch (stage->curr_index) {
+        case 0:
+            table->action_u.route_lpm_s0_route_lpm_s0.key0 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 1:
+            table->action_u.route_lpm_s0_route_lpm_s0.key1 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 2:
+            table->action_u.route_lpm_s0_route_lpm_s0.key2 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 3:
+            table->action_u.route_lpm_s0_route_lpm_s0.key3 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 4:
+            table->action_u.route_lpm_s0_route_lpm_s0.key4 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 5:
+            table->action_u.route_lpm_s0_route_lpm_s0.key5 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 6:
+            table->action_u.route_lpm_s0_route_lpm_s0.key6 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 7:
+            table->action_u.route_lpm_s0_route_lpm_s0.key7 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 8:
+            table->action_u.route_lpm_s0_route_lpm_s0.key8 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 9:
+            table->action_u.route_lpm_s0_route_lpm_s0.key9 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 10:
+            table->action_u.route_lpm_s0_route_lpm_s0.key10 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 11:
+            table->action_u.route_lpm_s0_route_lpm_s0.key11 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 12:
+            table->action_u.route_lpm_s0_route_lpm_s0.key12 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 13:
+            table->action_u.route_lpm_s0_route_lpm_s0.key13 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        case 14:
+            table->action_u.route_lpm_s0_route_lpm_s0.key14 = lpm_inode->ipaddr.addr.v4_addr;
+            break;
+        default:
+            break;
+    }
+
+    stage->curr_index++;
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+lpm_ipv4_set_default_data(lpm_stage_info_t *stage, uint32_t default_data)
+{
+    auto table = (route_lpm_s2_actiondata_t *) stage->curr_table;
+    table->action_u.route_lpm_s2_route_lpm_s2.data_ = (uint16_t)default_data;
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+lpm_ipv4_add_key_to_last_stage(lpm_stage_info_t *stage, lpm_inode_t *lpm_inode)
+{
+    auto table = (route_lpm_s2_actiondata_t *) stage->curr_table;
+    switch (stage->curr_index) {
+        case 0:
+            table->action_u.route_lpm_s2_route_lpm_s2.key0 = lpm_inode->ipaddr.addr.v4_addr;
+            table->action_u.route_lpm_s2_route_lpm_s2.data0 = lpm_inode->nhid;
+            break;
+        case 1:
+            table->action_u.route_lpm_s2_route_lpm_s2.key1 = lpm_inode->ipaddr.addr.v4_addr;
+            table->action_u.route_lpm_s2_route_lpm_s2.data1 = lpm_inode->nhid;
+            break;
+        case 2:
+            table->action_u.route_lpm_s2_route_lpm_s2.key2 = lpm_inode->ipaddr.addr.v4_addr;
+            table->action_u.route_lpm_s2_route_lpm_s2.data2 = lpm_inode->nhid;
+            break;
+        case 3:
+            table->action_u.route_lpm_s2_route_lpm_s2.key3 = lpm_inode->ipaddr.addr.v4_addr;
+            table->action_u.route_lpm_s2_route_lpm_s2.data3 = lpm_inode->nhid;
+            break;
+        case 4:
+            table->action_u.route_lpm_s2_route_lpm_s2.key4 = lpm_inode->ipaddr.addr.v4_addr;
+            table->action_u.route_lpm_s2_route_lpm_s2.data4 = lpm_inode->nhid;
+            break;
+        case 5:
+            table->action_u.route_lpm_s2_route_lpm_s2.key5 = lpm_inode->ipaddr.addr.v4_addr;
+            table->action_u.route_lpm_s2_route_lpm_s2.data5 = lpm_inode->nhid;
+            break;
+        case 6:
+            table->action_u.route_lpm_s2_route_lpm_s2.key6 = lpm_inode->ipaddr.addr.v4_addr;
+            table->action_u.route_lpm_s2_route_lpm_s2.data6 = lpm_inode->nhid;
+            break;
+        default:
+            break;
+    }
+
+    stage->curr_index++;
+    return SDK_RET_OK;
+}
+
+
+static inline sdk_ret_t
+lpm_add_key_to_stage(uint8_t af, lpm_stage_info_t *stage, lpm_inode_t *lpm_inode)
+{
+    switch (af) {
+        case IP_AF_IPV4:
+            lpm_ipv4_add_key_to_stage(stage, lpm_inode);
+            break;
+        default:
+            break;
+    }
+
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+lpm_write_stage_table(uint8_t af, lpm_stage_info_t *stage)
+{
+    switch (af) {
+        case IP_AF_IPV4:
+            lpm_write_table(stage->curr_table_addr,
+                            P4_APOLLO_TXDMA_TBL_ID_ROUTE_LPM_S0,
+                            ROUTE_LPM_S0_ROUTE_LPM_S0_ID,
+                            stage->curr_table);
+            break;
+        default:
+            break;
+    }
+
+    memset(stage->curr_table, 0xFF, LPM_TABLE_SIZE);
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+lpm_add_key_to_last_stage(uint8_t af, lpm_stage_info_t *stage, lpm_inode_t *lpm_inode)
+{
+    switch (af) {
+        case IP_AF_IPV4:
+            lpm_ipv4_add_key_to_last_stage(stage, lpm_inode);
+            break;
+        default:
+            break;
+    }
+
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+lpm_set_default_data(uint8_t af, lpm_stage_info_t *stage, uint32_t default_data)
+{
+    switch (af) {
+        case IP_AF_IPV4:
+            lpm_ipv4_set_default_data(stage, default_data);
+            break;
+        default:
+            break;
+    }
+
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+lpm_write_last_stage_table(uint8_t af, lpm_stage_info_t *stage)
+{
+    switch (af) {
+        case IP_AF_IPV4:
+            lpm_write_table(stage->curr_table_addr,
+                            P4_APOLLO_TXDMA_TBL_ID_ROUTE_LPM_S2,
+                            ROUTE_LPM_S2_ROUTE_LPM_S2_ID,
+                            stage->curr_table);
+            break;
+        default:
+            break;
+    }
+
+    memset(stage->curr_table, 0xFF, LPM_TABLE_SIZE);
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief    Flushes the partially filled tabled to HW at the end of processing.
+ * @param[in] smeta                  meta information for the stages
+ * @param[in] nstages                the number of stages
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+static sdk_ret_t
+lpm_flush_partial_tables (lpm_stage_meta_t *smeta, uint32_t nstages, uint32_t curr_default)
+{
+    for (uint32_t i = 0; i < (nstages-1); i++) {
+        lpm_write_stage_table(smeta->af, &smeta->stage_info[i]);
+    }
+
+    if (nstages > 0) {
+        /**< table is ready to write. set the default data */
+        lpm_set_default_data(smeta->af, &smeta->stage_info[nstages-1], curr_default);
+        /**< Write the table to HW memory */
+        lpm_write_last_stage_table(smeta->af, &smeta->stage_info[nstages-1]);
+
+    }
+    return SDK_RET_OK;
+}
+
 static inline void
 lpm_promote_route (lpm_inode_t *inode, uint32_t stage, lpm_stage_meta_t *smeta)
 {
     sdk_ret_t           ret;
-    mem_addr_t          addr;
     lpm_stage_info_t    *curr_stage;
 
-    SDK_ASSERT(stage < LPM_MAX_STAGES);
+    SDK_ASSERT(0 <= stage && stage < LPM_MAX_STAGES);
     curr_stage = &smeta->stage_info[stage];
-    if (curr_stage->curr_entry == smeta->keys_per_table) {
-        /**< we can't propogate up beyond stage 0 */
-        SDK_ASSERT(stage != 0);
+    if (curr_stage->curr_index == smeta->keys_per_table) {
+        /**< Flush current table to hw since its full */
+        ret = lpm_write_stage_table(smeta->af, curr_stage);
+        SDK_ASSERT(ret == SDK_RET_OK);
         /**< time to promote this to previous stage */
         lpm_promote_route(inode, stage - 1, smeta);
         /**< update this stage meta for next time */
-        curr_stage->curr_tbl++;
-        curr_stage->curr_table_addr =
-            curr_stage->stage_addr + (curr_stage->curr_tbl * LPM_TABLE_SIZE);
-        curr_stage->curr_entry = 0;
+        curr_stage->curr_index = 0;
+        curr_stage->curr_table_addr += LPM_TABLE_SIZE;
         return;
     }
 
     /**< we need to save this node in this stage */
-    addr = curr_stage->curr_table_addr + (curr_stage->curr_entry * smeta->key_sz);
-    ret = asic_mem_write(addr,
-              (inode->ipaddr.af == IP_AF_IPV4) ?
-                  (uint8_t *)&inode->ipaddr.addr.v4_addr :
-                  (uint8_t *)&inode->ipaddr.addr.v6_addr.addr64[0],
-                  smeta->key_sz, ASIC_WRITE_MODE_WRITE_THRU);
+    ret = lpm_add_key_to_stage(smeta->af, curr_stage, inode);
     SDK_ASSERT(ret == SDK_RET_OK);
-    curr_stage->curr_entry++;
 }
 
 /**
@@ -312,60 +535,54 @@ lpm_build_tree (route_table_t *route_table, lpm_itable_t *itable,
 {
     sdk_ret_t           ret;
     mem_addr_t          addr;
-    uint32_t            nstages, nkeys_per_table, entry_sz;
-    lpm_stage_info_t    *last_stage;
+    lpm_stage_info_t    *last_stage_info;
     lpm_stage_meta_t    smeta = { 0 };
+    uint32_t            nstages, nkeys_per_table;
+    uint32_t            curr_default = route_table->default_nhid;
 
-    nstages = lpm_stages(route_table->af, route_table->num_routes);
+    /**< compute the # of stages, required including the def route */
+    nstages = lpm_stages(route_table->af, route_table->max_routes);
     SDK_ASSERT(nstages <= LPM_MAX_STAGES);
 
     /**< initialize all the stage meta */
+    smeta.af = route_table->af;
     smeta.key_sz = LPM_ENTRY_KEY_SIZE(route_table->af);
     smeta.keys_per_table = LPM_KEYS_PER_TABLE(route_table->af);
     addr = lpm_tree_root_addr;
     for (uint32_t i = 0, ntables = 1; i < nstages; i++) {
-        smeta.stage_info[i].stage_addr = addr;
         smeta.stage_info[i].curr_table_addr = addr;
         addr += ntables * LPM_TABLE_SIZE;
-        ntables = smeta.keys_per_table * ntables;
+        ntables *= (smeta.keys_per_table + 1);
+        memset(smeta.stage_info[i].curr_table, 0xFF, LPM_TABLE_SIZE);
     }
     SDK_ASSERT(addr <= lpm_tree_root_addr + lpm_mem_size);
 
     /**< walk all the interval tree nodes & from the interval tree bottom up */
-    entry_sz = smeta.key_sz + LPM_NEXTHOP_SIZE;
-    // TODO: compute the number of keys per table in the last stage
-    //       fix it for now (this has to be some formula)
-    nkeys_per_table = (route_table->af == IP_AF_IPV4) ? 8 : 4;
-    last_stage = &smeta.stage_info[nstages-1];
+    nkeys_per_table = (uint32_t)LPM_KEYS_PER_TABLE(route_table->af) / 2;
+    last_stage_info = &smeta.stage_info[nstages-1];
     for (uint32_t i = 0; i < itable->num_intervals; i++) {
-        addr = last_stage->curr_table_addr +
-                   (last_stage->curr_entry * entry_sz);
-        ret =
-            asic_mem_write(addr,
-                (route_table->af == IP_AF_IPV4) ?
-                    (uint8_t *)&itable->nodes[i].ipaddr.addr.v4_addr :
-                    (uint8_t *)&itable->nodes[i].ipaddr.addr.v6_addr.addr64[0],
-                    smeta.key_sz, ASIC_WRITE_MODE_WRITE_THRU);
-        SDK_ASSERT(ret == SDK_RET_OK);
-        addr += smeta.key_sz;
-        ret = asic_mem_write(addr, (uint8_t *)&itable->nodes[i].nhid,
-                             LPM_NEXTHOP_SIZE, ASIC_WRITE_MODE_WRITE_THRU);
-        SDK_ASSERT(ret == SDK_RET_OK);
-        last_stage->curr_entry++;
-        if (last_stage->curr_entry == nkeys_per_table) {
-            i++;
-            if (i < itable->num_intervals) {
+        lpm_add_key_to_last_stage(smeta.af, last_stage_info, &itable->nodes[i]);
+
+        if (last_stage_info->curr_index == nkeys_per_table) {
+            /**< table is ready to write. set the default data */
+            lpm_set_default_data(smeta.af, last_stage_info, curr_default);
+            /**< Write the table to HW memory */
+            lpm_write_last_stage_table(smeta.af, last_stage_info);
+
+            if (++i < itable->num_intervals) {
                 /**< propogate this node to one of the previous stages */
                 lpm_promote_route(&itable->nodes[i], nstages - 2, &smeta);
-                last_stage->curr_tbl++;
-                last_stage->curr_table_addr =
-                    last_stage->stage_addr +
-                        (last_stage->curr_tbl * LPM_TABLE_SIZE);
-                last_stage->curr_entry = 0;
+                /**< default data comes from the most recently promoted entry */
+                curr_default = itable->nodes[i].nhid;
+                /**< update the table address  */
+                last_stage_info->curr_index = 0;
+                last_stage_info->curr_table_addr += LPM_TABLE_SIZE;
             }
         }
     }
 
+    ret = lpm_flush_partial_tables(&smeta, nstages, curr_default);
+    SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
 }
 
@@ -397,15 +614,15 @@ lpm_tree_create (route_table_t *route_table,
     /**< allocate memory for creating all interval tree nodes */
     //num_intervals = compute_intervals(route_table->num_routes);
     itable.nodes =
-        (lpm_inode_t *)malloc(sizeof(lpm_inode_t) *
-                              (route_table->num_routes << 1));
+            (lpm_inode_t *)malloc(sizeof(lpm_inode_t) *
+                                  (route_table->num_routes << 1));
     if (itable.nodes == NULL) {
         return sdk::SDK_RET_OOM;
     }
     ret = lpm_build_interval_table(route_table, &itable);
     SDK_ASSERT(ret == SDK_RET_OK);
-    lpm_build_tree(route_table, &itable, lpm_tree_root_addr, lpm_mem_size);
+    ret = lpm_build_tree(route_table, &itable, lpm_tree_root_addr, lpm_mem_size);
+    SDK_ASSERT(ret == SDK_RET_OK);
     free(itable.nodes);
-
     return SDK_RET_OK;
 }
