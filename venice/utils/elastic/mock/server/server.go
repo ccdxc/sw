@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	es "github.com/olivere/elastic"
 
+	"github.com/pensando/sw/venice/utils/log"
 	tu "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -26,6 +27,8 @@ type ElasticServer struct {
 
 	//map of indexes available with the docs indexed
 	indexes map[string]map[string][]byte
+
+	logger log.Logger
 }
 
 // MQuery (mock query) mimics the elastic's `RawStringQuery`
@@ -63,10 +66,11 @@ type ElasticHTTP struct {
 }
 
 // NewElasticServer returns the instance of elastic mock server
-func NewElasticServer() *ElasticServer {
+func NewElasticServer(logger log.Logger) *ElasticServer {
 	e := &ElasticServer{
-		ms:      tu.NewMockServer(),
+		ms:      tu.NewMockServer(logger),
 		indexes: make(map[string]map[string][]byte),
+		logger:  logger,
 	}
 
 	// all the required handlers for elastic mock server

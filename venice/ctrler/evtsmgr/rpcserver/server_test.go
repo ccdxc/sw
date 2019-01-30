@@ -48,15 +48,16 @@ var (
 
 // setup helper function creates RPC server and client instances
 func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rpckit.RPCClient, alertengine.Interface, *memdb.MemDb) {
+	logger := logger.WithContext("t_name", t.Name())
 	// create elastic mock server
-	ms := mock.NewElasticServer()
+	ms := mock.NewElasticServer(logger.WithContext("submodule", "elasticsearch-mock-server"))
 	ms.Start()
 
 	// create mock resolver
 	mr := mockresolver.New()
 
 	// create API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), logger.WithContext("submodule", globals.APIServer))
 	AssertOk(t, err, "failed to start API server")
 	Assert(t, !utils.IsEmpty(apiServerURL), "empty API server URL")
 
@@ -73,13 +74,13 @@ func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rp
 	})
 
 	// create elastic client
-	esClient, err := elastic.NewClient(ms.GetElasticURL(), nil, logger)
+	esClient, err := elastic.NewClient(ms.GetElasticURL(), nil, logger.WithContext("submodule", "elastic-client"))
 	AssertOk(t, err, "failed to create elastic client")
 
 	memDb := memdb.NewMemDb()
 
 	// create alert engine
-	alertEngine, err := alertengine.NewAlertEngine(memDb, logger, mr)
+	alertEngine, err := alertengine.NewAlertEngine(memDb, logger.WithContext("submodule", "alertengine"), mr)
 	AssertOk(t, err, "failed to create alert engine")
 
 	// create grpc server

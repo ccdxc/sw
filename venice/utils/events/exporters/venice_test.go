@@ -40,12 +40,12 @@ var (
 	sortByField = ""
 	sortAsc     = true
 
-	vLogger = log.GetNewLogger(log.GetDefaultConfig("venice_exporter_test"))
+	vLogger = log.GetNewLogger(log.GetDefaultConfig("venice-exporter-test"))
 	mr      = mockresolver.New() // create mock resolver
 
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice_exporter_test"},
+		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice-exporter-test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true}, vLogger)
@@ -70,12 +70,13 @@ func addMockService(mr *mockresolver.ResolverClient, serviceName, serviceURL str
 // veniceExporterSetup creates events manager service, venice exporter and elastic client
 func veniceExporterSetup(t *testing.T) (*mockes.ElasticServer, apiserver.Server, *evtsmgr.EventsManager,
 	events.Exporter, elastic.ESClient) {
+	vLogger = vLogger.WithContext("t_name", t.Name())
 	// create elastic mock server
-	ms := mockes.NewElasticServer()
+	ms := mockes.NewElasticServer(vLogger.WithContext("submodule", "elasticsearch-mock-server"))
 	ms.Start()
 
 	// start API server
-	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), vLogger)
+	apiServer, apiServerURL, err := serviceutils.StartAPIServer("", t.Name(), vLogger.WithContext("submodule", globals.APIServer))
 	AssertOk(t, err, "failed to start API server")
 
 	// update resolver
@@ -83,15 +84,15 @@ func veniceExporterSetup(t *testing.T) (*mockes.ElasticServer, apiserver.Server,
 	addMockService(mr, globals.APIServer, apiServerURL)
 
 	// create elastic client; this is used to confirm the events have reached elasticsearch through events manager
-	elasticClient, err := elastic.NewClient(ms.GetElasticURL(), nil, vLogger)
+	elasticClient, err := elastic.NewClient(ms.GetElasticURL(), nil, vLogger.WithContext("submodule", "elastic-client"))
 	AssertOk(t, err, "failed to create elastic client")
 
 	// run gRPC events manager server
-	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, testServerURL, mr, vLogger, evtsmgr.WithElasticClient(elasticClient))
+	evtsMgr, err := evtsmgr.NewEventsManager(globals.EvtsMgr, testServerURL, mr, vLogger.WithContext("submodule", globals.EvtsMgr), evtsmgr.WithElasticClient(elasticClient))
 	AssertOk(t, err, "failed to run gRPC events manager server")
 
 	// create venice exporter
-	veniceExporter, err := NewVeniceExporter("venice_exporter", veniceBufferLen, evtsMgr.RPCServer.GetListenURL(), nil, vLogger)
+	veniceExporter, err := NewVeniceExporter("venice-exporter", veniceBufferLen, evtsMgr.RPCServer.GetListenURL(), nil, vLogger.WithContext("submodule", "venice-exporter"))
 	AssertOk(t, err, "failed to create venice events exporter")
 
 	return ms, apiServer, evtsMgr, veniceExporter, elasticClient

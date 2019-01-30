@@ -69,7 +69,7 @@ func (tInfo *tInfo) setup() error {
 	}
 
 	// start mock elastic server
-	tinfo.esServer = esmock.NewElasticServer()
+	tinfo.esServer = esmock.NewElasticServer(tInfo.l.WithContext("submodule", "elasticsearch-mock-server"))
 	tinfo.esServer.Start()
 	si := &types.ServiceInstance{
 		TypeMeta: api.TypeMeta{

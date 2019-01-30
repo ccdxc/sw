@@ -21,18 +21,20 @@ type MockServer struct {
 	router            *mux.Router
 	wg                sync.WaitGroup
 	defaultStatusCode int // if set, this will be returned by default
+	logger            log.Logger
 }
 
 // NewMockServer returns instance of the mock server
-func NewMockServer() *MockServer {
+func NewMockServer(logger log.Logger) *MockServer {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		log.Fatalf("error starting mock server: %v", err)
+		logger.Fatalf("error starting mock server: %v", err)
 	}
 
 	return &MockServer{
 		router:   mux.NewRouter(),
 		listener: listener,
+		logger:   logger,
 	}
 }
 
@@ -80,9 +82,9 @@ func (m *MockServer) Start() {
 
 	m.wg.Add(1)
 	go func() {
-		log.Info("starting mock server")
+		m.logger.Info("starting mock server")
 		if err := m.server.Serve(m.listener); err != nil {
-			log.Errorf("stopped mock server: %v", err)
+			m.logger.Errorf("stopped mock server: %v", err)
 		}
 		m.wg.Done()
 	}()
@@ -90,7 +92,7 @@ func (m *MockServer) Start() {
 
 // Stop stops the mock server
 func (m *MockServer) Stop() {
-	log.Debug("received stop signal, shutting down the server")
+	m.logger.Debug("received stop signal, shutting down the server")
 	m.listener.Close()
 	m.server.Close()
 

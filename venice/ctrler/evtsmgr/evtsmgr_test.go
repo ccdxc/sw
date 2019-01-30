@@ -55,8 +55,9 @@ func addMockService(mr *mockresolver.ResolverClient, serviceName, serviceURL str
 
 // setup helper function creates mock elastic server and resolver
 func setup(t *testing.T) (*mockes.ElasticServer, *mockresolver.ResolverClient, apiserver.Server, error) {
+	logger = logger.WithContext("t_name", t.Name())
 	// create elastic mock server
-	ms := mockes.NewElasticServer()
+	ms := mockes.NewElasticServer(logger.WithContext("submodule", "elasticsearch-mock-server"))
 	ms.Start()
 
 	// create mock resolver

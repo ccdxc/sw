@@ -26,12 +26,14 @@ var (
 )
 
 func setup() {
-	elasticSrv = esmock.NewElasticServer()
-	elasticSrv.Start()
 	config := log.GetDefaultConfig("audit")
 	config.Filter = log.AllowAllFilter
 	//config.Format = log.JSONFmt
 	logger = log.GetNewLogger(config)
+
+	elasticSrv = esmock.NewElasticServer(logger.WithContext("submodule", "elasticsearch-mock-server"))
+	elasticSrv.Start()
+
 	rslvr = mockresolver.New()
 	// add mock elastic service to mock resolver
 	rslvr.AddServiceInstance(&types.ServiceInstance{

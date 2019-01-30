@@ -34,15 +34,16 @@ var (
 
 // TestMockElasticServer tests the elastic functionalities using mock server
 func TestMockElasticServer(t *testing.T) {
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name())).WithContext("t_name", t.Name())
+
 	// start mock elastic server
-	mes := NewElasticServer()
+	mes := NewElasticServer(logger)
 
 	mes.Start()
 	defer mes.Stop()
 
 	// create a new elastic client using the mock server address
-	client, err := elastic.NewClient(mes.GetElasticURL(), nil,
-		log.GetNewLogger(log.GetDefaultConfig("elasticsearch-mock-server")))
+	client, err := elastic.NewClient(mes.GetElasticURL(), nil, logger)
 	tu.AssertOk(t, err, "failed to create client")
 
 	ctx := context.Background()
@@ -142,8 +143,10 @@ func TestMockElasticServer(t *testing.T) {
 
 // TestMockElasticServerRestart tests the behavior of the client during elasticsearch restarts
 func TestMockElasticServerRestart(t *testing.T) {
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name())).WithContext("t_name", t.Name())
+
 	// start mock elastic server
-	mes := NewElasticServer()
+	mes := NewElasticServer(logger)
 	mes.Start()
 
 	// create mock resolver
@@ -164,7 +167,7 @@ func TestMockElasticServerRestart(t *testing.T) {
 	mr.AddServiceInstance(si)
 
 	// create a new elastic client using the mock server address
-	client, err := elastic.NewClient("", mr, log.GetNewLogger(log.GetDefaultConfig(t.Name())))
+	client, err := elastic.NewClient("", mr, logger)
 	tu.AssertOk(t, err, "failed to create client")
 
 	ctx := context.Background()
@@ -190,7 +193,7 @@ func TestMockElasticServerRestart(t *testing.T) {
 
 				time.Sleep(20 * time.Millisecond)
 
-				mes = NewElasticServer()
+				mes = NewElasticServer(logger)
 				mes.Start()
 
 				si.URL = mes.GetElasticURL()

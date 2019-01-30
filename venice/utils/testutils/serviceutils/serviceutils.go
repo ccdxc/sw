@@ -18,12 +18,12 @@ import (
 
 // StartAPIServer helper function to start API server
 func StartAPIServer(serverAddr, clusterName string, logger log.Logger) (apiserver.Server, string, error) {
-	log.Info("starting API server ...")
+	logger.Info("starting API server ...")
 	if utils.IsEmpty(serverAddr) {
 		// find an available port
 		apiServerListener := netutils.TestListenAddr{}
 		if err := apiServerListener.GetAvailablePort(); err != nil {
-			log.Errorf("could not find a port to run API server")
+			logger.Errorf("could not find a port to run API server")
 			return nil, "", err
 		}
 		serverAddr = apiServerListener.ListenURL.String()
@@ -63,7 +63,7 @@ func StartAPIServer(serverAddr, clusterName string, logger log.Logger) (apiserve
 	}
 
 	localAddr := fmt.Sprintf("localhost:%s", port)
-	log.Infof("API server running on %v", localAddr)
+	logger.Infof("API server running on %v", localAddr)
 	return apiServer, localAddr, nil
 }
 

@@ -80,7 +80,7 @@ func (i *MockTSDB) Setup() (string, error) {
 		return nil, nil
 	}
 
-	i.ms = tu.NewMockServer()
+	i.ms = tu.NewMockServer(log.GetNewLogger(log.GetDefaultConfig("mock-tsdb")))
 	i.ms.AddHandler("/write", "POST", n.MakeHTTPHandler(n.RestAPIFunc(testWriter)))
 	i.ms.AddHandler("/query", "POST", n.MakeHTTPHandler(n.RestAPIFunc(testCreateDB)))
 	go i.ms.Start()

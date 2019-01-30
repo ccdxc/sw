@@ -72,7 +72,7 @@ var tinfo tInfo
 func startSpyglass() finder.Interface {
 
 	// start mock elastic server
-	tinfo.esServer = esmock.NewElasticServer()
+	tinfo.esServer = esmock.NewElasticServer(tinfo.l.WithContext("submodule", "elasticsearch-mock-server"))
 	tinfo.esServer.Start()
 
 	// create mock resolver
