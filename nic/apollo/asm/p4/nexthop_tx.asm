@@ -12,7 +12,8 @@ nexthop_info:
     phvwr       p.rewrite_metadata_tep_index, d.nexthop_info_d.tep_index
     phvwr       p.nat_metadata_snat_required, d.nexthop_info_d.snat_required
     phvwr       p.rewrite_metadata_encap_type, d.nexthop_info_d.encap_type
-    phvwr       p.rewrite_metadata_dst_slot_id, d.nexthop_info_d.dst_slot_id
+    seq         c1, k.rewrite_metadata_dst_slot_id_valid, 0
+    phvwr.c1    p.rewrite_metadata_dst_slot_id, d.nexthop_info_d.dst_slot_id
     phvwr.e     p.policer_metadata_traffic_class, d.nexthop_info_d.traffic_class
     phvwr       p.rewrite_metadata_mytep_ip, r5
 

@@ -156,9 +156,10 @@ control local_ip_mapping {
 /******************************************************************************/
 /* IP mapping on TX direction                                                 */
 /******************************************************************************/
-@pragma capi appdatafields nexthop_index
+@pragma capi appdatafields nexthop_index dst_slot_id_valid dst_slot_id
 @pragma capi hwfields_access_api
 action remote_vnic_mapping_tx_info(entry_valid, nexthop_index,
+                                   dst_slot_id_valid, dst_slot_id,
                                    hash1, hint1, hash2, hint2, hash3, hint3,
                                    hash4, hint4, hash5, hint5, hash6, hint6,
                                    hash7, hint7, hash8, hint8,
@@ -167,6 +168,8 @@ action remote_vnic_mapping_tx_info(entry_valid, nexthop_index,
         // if hardware register indicates hit, take the results
         modify_field(egress_service_header.remote_vnic_mapping_tx_done, TRUE);
         modify_field(txdma_to_p4e_header.nexthop_index, nexthop_index);
+        modify_field(rewrite_metadata.dst_slot_id_valid, dst_slot_id_valid);
+        modify_field(rewrite_metadata.dst_slot_id, dst_slot_id);
 
         // if hardware register indicates miss, compare hashes with r1
         // (scratch_metadata.vnic_mapping_hash) and setup lookup in overflow
