@@ -23,12 +23,19 @@ make -j12 -C drivers || exit
 # build krping
 #
 
-# This krping will build on 4.15, but needs compat work for 4.9 and 4.19
-if [[ "$(uname -r)" == *4.15.0* ]] ; then
+# This krping will build on some kernel versions, but needs compat work
+case $(uname -r) in
+# Kernel versions known to work with this krping
+4.14.*|4.15.*)
 make -j12 -C krping || exit
-else
+;;
+# Kernel versions known incompatible with this krping: 4.9, 4.19, 4.20
+# default: skip building the krping module
+*)
 echo 'Skipping the build of krping module'
-fi
+;;
+esac
+
 
 #
 # build rdma-core
@@ -47,7 +54,7 @@ cd perftest
 
 if [ ! -a ./configure ] ; then ./autogen.sh ; fi
 
-CFLAGS="-I$DIR/rdma-core/build/include" \
+CFLAGS="-std=gnu99 -I$DIR/rdma-core/build/include" \
 LDFLAGS="-L$DIR/rdma-core/build/lib -Wl,-R$DIR/rdma-core/build/lib" \
 ./configure || exit
 
