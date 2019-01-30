@@ -51,12 +51,24 @@ public:
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
 
     /**
+     * @brief    allocate h/w resources for this object
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t reserve_resources(void) override;
+
+    /**
      * @brief    program all h/w tables relevant to this object except stage 0
      *           table(s), if any
      * @param[in] obj_ctxt    transient state associated with this API
      * @return   SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
+
+    /**
+     * @brief     free h/w resources used by this object, if any
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t release_resources(void) override;
 
     /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
@@ -158,18 +170,6 @@ private:
 
     /**< @brief    destructor */
     ~route_table();
-
-    /**
-     * @brief    allocate h/w resources for this object
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
-    sdk_ret_t reserve_resources_(void);
-
-    /**
-     * @brief     free h/w resources used by this object, if any
-     * @return    SDK_RET_OK on success, failure status code on error
-     */
-    sdk_ret_t release_resources_(void);
 
 private:
     oci_route_table_key_t    key_;        /**< route table key */

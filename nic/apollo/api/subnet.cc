@@ -63,7 +63,7 @@ subnet_entry::~subnet_entry() {
  */
 void
 subnet_entry::destroy(subnet_entry *subnet) {
-    subnet->release_resources_();
+    subnet->release_resources();
     subnet->~subnet_entry();
     subnet_db()->subnet_free(subnet);
 }
@@ -90,7 +90,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::reserve_resources_(void) {
+subnet_entry::reserve_resources(void) {
     if (subnet_db()->subnet_idxr()->alloc((uint32_t *)&this->hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
@@ -116,7 +116,7 @@ subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
                     ippfx2str(&oci_subnet->pfx), ipaddr2str(&oci_subnet->vr_ip),
                     macaddr2str(oci_subnet->vr_mac),
                     oci_subnet->route_table.id);
-    return reserve_resources_();
+    return reserve_resources();
 }
 
 /**
@@ -124,7 +124,7 @@ subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::release_resources_(void) {
+subnet_entry::release_resources(void) {
     if (hw_id_ != 0xFF) {
         subnet_db()->subnet_idxr()->free(hw_id_);
     }

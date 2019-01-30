@@ -69,7 +69,7 @@ vnic_entry::destroy(vnic_entry *vnic) {
     if (vnic->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_VNIC, vnic->impl_);
     }
-    vnic->release_resources_();
+    vnic->release_resources();
     vnic->~vnic_entry();
     vnic_db()->vnic_free(vnic);
 }
@@ -94,7 +94,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
 // 1. we don't need an indexer here if we can use directmap here to
 //    "reserve" an index
 sdk_ret_t
-vnic_entry::reserve_resources_(void) {
+vnic_entry::reserve_resources(void) {
     return impl_->reserve_resources(this);
 }
 
@@ -109,7 +109,7 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
     sdk_ret_t     ret;
     oci_vnic_t    *oci_vnic = &obj_ctxt->api_params->vnic_info;
 
-    ret = reserve_resources_();
+    ret = reserve_resources();
     SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     OCI_TRACE_DEBUG("Programming vnic %u, vcn %u, subnet %u, mac %s, vlan %u, "
                     "slot %u", key_.id, oci_vnic->vcn.id, oci_vnic->subnet.id,
@@ -123,7 +123,7 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-vnic_entry::release_resources_(void) {
+vnic_entry::release_resources(void) {
     return impl_->release_resources(this);
 }
 
