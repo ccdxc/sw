@@ -290,22 +290,33 @@ testcases:
             dcflags     : *DCFLAGS_WITH_HEADER_ZERO_PAD
 
     -   name    : CompressFail
-        testcase: testcases.storage.ymltest
+        testcase: testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : [ 2 ]
+            batch_depth : [ 1, 33 ]
+            mode        : *MODE_ITER_LIST_COMBO3
+            inputlen    : [ 8192 ]
         args    :
             dir     : *STORAGE_TEST_DIR
-            wait    : 1
+            wait    : '1.0'
             cfg     : [ 4k.yml, globals.yml ]
-            test    : cp_fail.yml
-            failtest: True
+            test    : *CP_FAIL_TEST_YML
 
     -   name    : DecompressFail
-        testcase: testcases.storage.ymltest
+        testcase: testcases.storage.ymltest2
+        enable      : False
+        iterators   :
+            type        : nested
+            cpus        : [ 2 ]
+            batch_depth : [ 1, 33 ]
+            mode        : *MODE_ITER_LIST_COMBO3
+            inputlen    : [ 8192 ]
         args    :
             dir     : *STORAGE_TEST_DIR
-            wait    : 1
+            wait    : '1.0'
             cfg     : [ 4k.yml, globals.yml ]
-            test    : dc_fail.yml
-            failtest: True
+            test    : *DC_FAIL_TEST_YML
 
     -   name        : Hash4K8KSha2_256
         testcase    : testcases.storage.ymltest2
