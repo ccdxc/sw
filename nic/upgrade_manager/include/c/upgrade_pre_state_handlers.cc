@@ -12,7 +12,19 @@ namespace upgrade {
 
 using namespace std;
 
+inline bool exists(const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
+}
+
 bool UpgPreStateHandler::ImageCompatCheck(UpgCtx &ctx) {
+    if (exists("/nic/tools/fwupdate")) {
+	string cmd = "/nic/tools/fwupdate -p /update/" + ctx.firmwarePkgName + " -v";
+        if (system (cmd.c_str()) != 0) {
+            UPG_LOG_INFO("Package verification failed");
+	    return false;
+        }
+    }
     if (ctx.preUpgMeta.nicmgrVersion != ctx.postUpgMeta.nicmgrVersion) {
         return false;
     }
@@ -35,6 +47,13 @@ bool UpgPreStateHandler::PreProcessQuiesceHandler(UpgCtx &ctx) {
 }
 
 bool UpgPreStateHandler::PreLinkDownHandler(UpgCtx &ctx) {
+    if (exists("/nic/tools/fwupdate")) {
+        string cmd = "/nic/tools/fwupdate -p /update/" + ctx.firmwarePkgName + " -i all";
+        if (system (cmd.c_str()) != 0) {
+            UPG_LOG_INFO("Package installation failed");
+	    return false;
+        }
+    }
     UPG_LOG_DEBUG("UpgPreStateHandler Link Down returning");
     return true;
 }
@@ -74,6 +93,18 @@ bool UpgPreStateHandler::PreDataplaneDowntimePhase4Handler(UpgCtx &ctx) {
 }
 
 bool UpgPreStateHandler::PreSuccessHandler(UpgCtx &ctx) {
+    if (exists("/nic/tools/fwupdate")) {
+        string cmd = "/nic/tools/fwupdate -s altfw";
+        if (system (cmd.c_str()) != 0) {
+            UPG_LOG_INFO("Setting boot variable failed");
+	    return false;
+        }
+        cmd = "rm -rf /update/" + ctx.firmwarePkgName;
+        if (system (cmd.c_str()) != 0) {
+            UPG_LOG_INFO("Unable to remove firmware: /update/%s" + ctx.firmwarePkgName);
+            return false;
+        }
+    }
     UPG_LOG_DEBUG("UpgPreStateHandler PreUpgSuccess returning");
     return true;
 }

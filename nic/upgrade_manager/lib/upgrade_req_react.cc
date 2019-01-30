@@ -231,6 +231,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
         return delphi::error("GetUpgCtxFromMeta failed");
     }
     ctx.upgType = req->upgreqtype();
+    ctx.firmwarePkgName = req->upgpkgname();
     ctx.sysMgr = sysMgr_;
     UpgReqStateType type = UpgStateCompatCheck;
     if (req->upgreqcmd() == IsUpgPossible) {
@@ -296,6 +297,10 @@ delphi::error UpgReqReact::StartUpgrade() {
             StateMachine = DisruptiveUpgradeStateMachine;
             upgReqStatus->set_upgreqtype(UpgTypeDisruptive);
         }
+        if (!InvokePreStateHandler(UpgStateCompatCheck)) {
+            UPG_LOG_DEBUG("PreState handler returned false");
+            return delphi::error("Compat check failed");
+        }
         UPG_LOG_DEBUG("Old value {}", upgReqStatus->upgreqstate());
         upgReqStatus->set_upgreqstate(UpgStateCompatCheck);
         sdk_->SetObject(upgReqStatus);
@@ -326,8 +331,9 @@ delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     }
     if (req->upgreqcmd() == UpgStart) {
         ctx.upgType = req->upgreqtype();
+        ctx.firmwarePkgName = req->upgpkgname();
         ctx.sysMgr = sysMgr_;
-        UPG_LOG_DEBUG("OnUpgReqCmd got upgType {}", ctx.upgType);
+        UPG_LOG_DEBUG("OnUpgReqCmd got upgType {} firmware {}", ctx.upgType, ctx.firmwarePkgName);
         UPG_LOG_INFO("Start Upgrade");
         return StartUpgrade();
     } else if (req->upgreqcmd() == UpgAbort) {

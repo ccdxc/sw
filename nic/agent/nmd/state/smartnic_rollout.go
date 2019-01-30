@@ -89,14 +89,16 @@ func (n *NMD) issueNextPendingOp() {
 	log.Debugf("Issuing %#v", *n.inProgressOps)
 	switch n.inProgressOps.Op {
 	case protos.SmartNICOp_SmartNICDisruptiveUpgrade:
-		err = n.upgmgr.StartDisruptiveUpgrade()
+		//TODO set the right downloaded image name
+		err = n.upgmgr.StartDisruptiveUpgrade("naples_fw.tar")
 
 		if err != nil {
 			log.Errorf("StartDisruptiveUpgrade returned %s", err)
 			return
 		}
 	case protos.SmartNICOp_SmartNICUpgOnNextHostReboot:
-		err = n.upgmgr.StartUpgOnNextHostReboot()
+		//TODO set the right downloaded image name
+		err = n.upgmgr.StartUpgOnNextHostReboot("naples_fw.tar")
 		if err != nil {
 			log.Errorf("StartDisruptiveUpgrade returned %s", err)
 			return

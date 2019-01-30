@@ -89,9 +89,10 @@ type ImgMeta struct {
 
 //UpgCtx is the wrapper that holds all the information about the current upgrade
 type UpgCtx struct {
-	PreUpgMeta  ImgMeta
-	PostUpgMeta ImgMeta
-	upgType     upgrade.UpgType
+	PreUpgMeta      ImgMeta
+	PostUpgMeta     ImgMeta
+	upgType         upgrade.UpgType
+	firmwarePkgName string
 }
 
 //UpgAppHandlers all upgrade applications to implement this
@@ -117,15 +118,15 @@ type UpgAppHandlers interface {
 
 // UpgSdk is the main Upgrade SDK API
 type UpgSdk interface {
-	StartDisruptiveUpgrade() error
-	StartNonDisruptiveUpgrade() error
+	StartDisruptiveUpgrade(firmwarePkgName string) error
+	StartNonDisruptiveUpgrade(firmwarePkgName string) error
 	AbortUpgrade() error
 	GetUpgradeStatus(retStr *[]string) error
 	SendAppRespSuccess() error
 	SendAppRespFail(str string) error
 	IsUpgradeInProgress() bool
-	CanPerformNonDisruptiveUpgrade() error
-	CanPerformDisruptiveUpgrade() error
+	CanPerformNonDisruptiveUpgrade(firmwarePkgName string) error
+	CanPerformDisruptiveUpgrade(firmwarePkgName string) error
 }
 
 func (u *upgSdk) IsUpgradeInProgress() bool {
@@ -199,15 +200,15 @@ func NewUpgSdk(name string, client clientApi.Client, role SvcRole, agentHdlrs Ag
 	return upggosdk, nil
 }
 
-func (u *upgSdk) StartDisruptiveUpgrade() error {
-	return u.startUpgrade(upgrade.UpgType_UpgTypeDisruptive)
+func (u *upgSdk) StartDisruptiveUpgrade(firmwarePkgName string) error {
+	return u.startUpgrade(upgrade.UpgType_UpgTypeDisruptive, firmwarePkgName)
 }
 
-func (u *upgSdk) StartNonDisruptiveUpgrade() error {
-	return u.startUpgrade(upgrade.UpgType_UpgTypeNonDisruptive)
+func (u *upgSdk) StartNonDisruptiveUpgrade(firmwarePkgName string) error {
+	return u.startUpgrade(upgrade.UpgType_UpgTypeNonDisruptive, firmwarePkgName)
 }
 
-func (u *upgSdk) startUpgrade(upgType upgrade.UpgType) error {
+func (u *upgSdk) startUpgrade(upgType upgrade.UpgType, firmwarePkgName string) error {
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
 	}
@@ -217,19 +218,20 @@ func (u *upgSdk) startUpgrade(upgType upgrade.UpgType) error {
 	}
 	upgreq.UpgReqCmd = upgrade.UpgReqType_UpgStart
 	upgreq.UpgReqType = upgType
+	upgreq.UpgPkgName = firmwarePkgName
 	u.sdkClient.SetObject(upgreq)
 	return nil
 }
 
-func (u *upgSdk) CanPerformDisruptiveUpgrade() error {
-	return u.canPerformUpgrade(upgrade.UpgType_UpgTypeDisruptive)
+func (u *upgSdk) CanPerformDisruptiveUpgrade(firmwarePkgName string) error {
+	return u.canPerformUpgrade(upgrade.UpgType_UpgTypeDisruptive, firmwarePkgName)
 }
 
-func (u *upgSdk) CanPerformNonDisruptiveUpgrade() error {
-	return u.canPerformUpgrade(upgrade.UpgType_UpgTypeNonDisruptive)
+func (u *upgSdk) CanPerformNonDisruptiveUpgrade(firmwarePkgName string) error {
+	return u.canPerformUpgrade(upgrade.UpgType_UpgTypeNonDisruptive, firmwarePkgName)
 }
 
-func (u *upgSdk) canPerformUpgrade(upgType upgrade.UpgType) error {
+func (u *upgSdk) canPerformUpgrade(upgType upgrade.UpgType, firmwarePkgName string) error {
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
 	}
@@ -239,6 +241,7 @@ func (u *upgSdk) canPerformUpgrade(upgType upgrade.UpgType) error {
 	}
 	upgreq.UpgReqCmd = upgrade.UpgReqType_IsUpgPossible
 	upgreq.UpgReqType = upgType
+	upgreq.UpgPkgName = firmwarePkgName
 	u.sdkClient.SetObject(upgreq)
 	return nil
 }

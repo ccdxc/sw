@@ -90,8 +90,8 @@ type RolloutAPI interface {
 type UpgMgrAPI interface {
 	RegisterNMD(NmdRolloutAPI) error
 
-	StartDisruptiveUpgrade() error
-	StartUpgOnNextHostReboot() error
+	StartDisruptiveUpgrade(firmwarePkgName string) error
+	StartUpgOnNextHostReboot(firmwarePkgName string) error
 	StartPreCheckDisruptive(version string) error
 	StartPreCheckForUpgOnNextHostReboot(version string) error
 }

@@ -40,6 +40,7 @@ TEST_F(UpgradeTest, UpgStateReqCreateTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
 
     usleep(1000 * 100);
@@ -82,6 +83,7 @@ TEST_F(UpgradeTest, UpgTypeNonDisruptiveTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
 
     usleep(1000 * 100);
@@ -126,6 +128,7 @@ TEST_F(UpgradeTest, UpgTypeDisruptiveTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
 
     usleep(1000 * 100);
@@ -170,6 +173,7 @@ TEST_F(UpgradeTest, StateMachineMoveToCompatCheckTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -218,6 +222,7 @@ TEST_F(UpgradeTest, CheckStateMachineWithNoAppRegistering) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -266,6 +271,7 @@ TEST_F(UpgradeTest, UpgradeNonDisruptiveStateMachineTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -373,6 +379,7 @@ TEST_F(UpgradeTest, UpgradeDisruptiveStateMachineTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -494,6 +501,7 @@ TEST_F(UpgradeTest, UpgradePossibleStateMachineTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(IsUpgPossible);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->IsUpgPossible()->Get(), 1) << "invalid default value for counter";
@@ -551,6 +559,7 @@ TEST_F(UpgradeTest, UpgradePossibleFailStateMachineTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(IsUpgPossible);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
 
@@ -615,6 +624,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoApps) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -769,6 +779,7 @@ TEST_F(UpgradeTest, StateMachineTestWithTwoAppsDisruptive) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -949,6 +960,7 @@ TEST_F(UpgradeTest, CleanupPostStateMachineTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -1066,6 +1078,7 @@ TEST_F(UpgradeTest, StateMachineAbortTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -1152,6 +1165,7 @@ TEST_F(UpgradeTest, StateMachineAbortTestDisruptive) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -1231,6 +1245,7 @@ TEST_F(UpgradeTest, StateMachineAppFailTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -1317,6 +1332,7 @@ TEST_F(UpgradeTest, StateMachineAppFailTestDisruptive) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -1395,6 +1411,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTest) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -1493,6 +1510,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoApps) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeNonDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->NonDisruptiveUpg()->Get(), 1) << "invalid default value for counter";
@@ -1619,6 +1637,7 @@ TEST_F(UpgradeTest, StateMachineAppFailStringTestWithTwoAppsDisruptive) {
     delphi::objects::UpgReqPtr req = make_shared<delphi::objects::UpgReq>();
     req->set_upgreqcmd(UpgStart);
     req->set_upgreqtype(UpgTypeDisruptive);
+    req->set_upgpkgname("naples_fw.tar");
     sdk_->QueueUpdate(req);
     usleep(1000 * 100);
     ASSERT_EQ(upgmetptr->DisruptiveUpg()->Get(), 1) << "invalid default value for counter";
