@@ -308,6 +308,12 @@ end1:
 
         // reset sched_eval_done 
         tblwr          d.ring_empty_sched_eval_done, 0 // Branch Delay Slot
+    
+        
+        seq            c1, d.frpmr_in_progress, 1
+        tblwr.c1       SPEC_SQ_C_INDEX, SQ_C_INDEX
+        tblwr.c1       d.frpmr_in_progress, 0
+
         seq            c1, d.dcqcn_rl_failure, 1
         tblwr.c1       SPEC_SQ_C_INDEX, SQ_C_INDEX
         tblwr.c1       d.dcqcn_rl_failure, 0
