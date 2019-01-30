@@ -632,9 +632,18 @@ DeviceManager::AdminQPoll(void *obj)
         } else {
             req_error = false;
             dev = devmgr->devices[req_desc.lif];
-            dev->AdminCmdHandler(req_desc.lif,
-                &req_desc.cmd, (void *)&req_data,
-                &resp_desc.comp, (void *)&resp_data);
+            if (dev->GetType() == ETH) {
+                Eth *eth_dev = (Eth *)dev;
+                eth_dev->AdminCmdHandler(req_desc.lif,
+                    &req_desc.cmd, (void *)&req_data,
+                    &resp_desc.comp, (void *)&resp_data);
+            }
+            if (dev->GetType() == ACCEL) {
+                Accel_PF *accel_dev = (Accel_PF *)dev;
+                accel_dev->AdminCmdHandler(req_desc.lif,
+                    &req_desc.cmd, (void *)&req_data,
+                    &resp_desc.comp, (void *)&resp_data);
+            }
         }
 
         // Ring doorbell to update the PI

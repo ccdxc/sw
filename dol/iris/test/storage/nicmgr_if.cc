@@ -354,7 +354,7 @@ nicmgr_if_push(dev_cmd_t& cmd)
 
     poll(cmd_done_poll);
     dev_cmd = (dev_cmd_regs_t *)nicmgr_devcmdpa_cmdcpl->read_thru();
-    if ((dev_cmd->cpl.status != DEVCMD_SUCCESS) || !dev_cmd->done) {
+    if ((dev_cmd->cpl.status != 0) || !dev_cmd->done) {
         printf("%s command %u failed status %u done %u\n", __FUNCTION__,
                dev_cmd->cmd.nop.opcode, dev_cmd->cpl.status, dev_cmd->done);
         return nullptr;

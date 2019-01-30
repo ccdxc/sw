@@ -93,6 +93,7 @@ enum status_code {
 	IONIC_RC_ERANGE		= 16,	/* Parameter out of range */
 	IONIC_RC_BAD_ADDR	= 17,	/* Descriptor contains a bad ptr */
 	IONIC_RC_DEV_CMD	= 18,	/* Device cmd attempted on AdminQ */
+	IONIC_RC_ERROR		= 29,	/* Generic error */
 
 	IONIC_RC_ERDMA		= 30,	/* Generic RDMA error */
 };

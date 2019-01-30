@@ -44,9 +44,9 @@ public:
         PdClient *pd_client);
 
     void DevcmdHandler();
-    enum DevcmdStatus CmdHandler(void *req, void *req_data,
+    enum status_code CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
-    enum DevcmdStatus AdminCmdHandler(uint64_t lif_id,
+    enum status_code AdminCmdHandler(uint64_t lif_id,
                                       void *req, void *req_data,
                                       void *resp, void *resp_data);
 
@@ -68,8 +68,9 @@ private:
     // HAL Info
     HalClient *hal;
     HalCommonClient *hal_common_client;
-    std::map<uint64_t, EthLif *> lif_map;
+    bool hal_status;
     // Resources
+    std::map<uint64_t, EthLif *> lif_map;
     int32_t lif_base;
     uint32_t intr_base;
     // Devcmd
@@ -96,11 +97,11 @@ private:
 
     /* Command Handlers */
     static void DevcmdPoll(void *obj);
-    enum DevcmdStatus _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data);
 
     const char *opcode_to_str(enum cmd_opcode opcode);
 };

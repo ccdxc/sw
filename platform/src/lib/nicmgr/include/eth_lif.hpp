@@ -67,12 +67,12 @@ public:
         PdClient *pd_client,
         eth_lif_res_t *res);
 
-    enum DevcmdStatus Init(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus Reset(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus AdminQInit(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code Init(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code Reset(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code AdminQInit(void *req, void *req_data, void *resp, void *resp_data);
 
     // Event Handlers
-    enum DevcmdStatus CmdHandler(void *req, void *req_data,
+    enum status_code CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
     void LinkEventHandler(port_status_t *evd);
     void HalEventHandler(bool status);
@@ -94,6 +94,8 @@ private:
     HalCommonClient *hal_common_client;
     hal_lif_info_t hal_lif_info_;
     const hal_lif_info_t *nicmgr_lif_info;
+    bool hal_status;
+    // LIF Info
     Lif *lif;
     eth_lif_res_t *res;
     uint8_t cosA, cosB;
@@ -129,26 +131,26 @@ private:
 
     /* AdminQ Commands */
     static void AdminQPoll(void *obj);
-    enum DevcmdStatus _CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdFeatures(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdQEnable(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdQDisable(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdSetMode(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdFeatures(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdQEnable(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdQDisable(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdSetMode(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data);
 
-    enum DevcmdStatus _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data);
-    enum DevcmdStatus _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data);
+    enum status_code _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);
 
     // Callbacks
     static void StatsUpdate(void *obj);

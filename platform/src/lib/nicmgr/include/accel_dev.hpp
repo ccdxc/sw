@@ -241,6 +241,17 @@ private:
 };
 
 /**
+ * Devcmd Status codes
+ */
+enum DevcmdStatus
+{
+    DEVCMD_SUCCESS,
+    DEVCMD_BUSY,
+    DEVCMD_ERROR,
+    DEVCMD_UNKNOWN,
+};
+
+/**
  * Accelerator PF Device
  */
 class Accel_PF : public Device {

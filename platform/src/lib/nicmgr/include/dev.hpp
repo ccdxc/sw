@@ -181,17 +181,6 @@ typedef struct dev_cmd_db_s {
 } dev_cmd_db_t;
 
 /**
- * Devcmd Status codes
- */
-enum DevcmdStatus
-{
-    DEVCMD_SUCCESS,
-    DEVCMD_BUSY,
-    DEVCMD_ERROR,
-    DEVCMD_UNKNOWN,
-};
-
-/**
  * Utils
  */
 void invalidate_rxdma_cacheline(uint64_t addr);
@@ -204,10 +193,6 @@ class PdClient;
  */
 class Device {
 public:
-    virtual enum DevcmdStatus AdminCmdHandler(
-        uint64_t lif_id,
-        void *req, void *req_data,
-        void *resp, void *resp_data) = 0;
     virtual void ThreadsWaitJoin(void) {}
     enum DeviceType GetType() { return type; }
     void SetType(enum DeviceType type) { this->type = type;}

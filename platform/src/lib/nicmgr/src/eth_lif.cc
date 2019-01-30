@@ -275,7 +275,7 @@ EthLif::EthLif(HalClient *hal_client,
     state = LIF_STATE_CREATED;
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 {
     uint64_t addr;
@@ -294,7 +294,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         lif = Lif::Factory(&hal_lif_info_);
         if (lif == NULL) {
             NIC_LOG_ERR("{}: Failed to create LIF", hal_lif_info_.name);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
 
         NIC_LOG_INFO("{}: created", hal_lif_info_.name);
@@ -305,7 +305,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
             NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
                         hal_lif_info_.name, spec->qos_group,
                         spec->uplink_port_num);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         // uint8_t coses = (((cosB & 0x0f) << 4) | (cosA & 0x0f));
 
@@ -328,7 +328,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.name, qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, p_index0),
                   (uint8_t *)(&rx_qstate) + offsetof(eth_rx_qstate_t, p_index0),
@@ -341,7 +341,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.name, qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         WRITE_MEM(addr + offsetof(eth_tx_qstate_t, p_index0),
                   (uint8_t *)(&tx_qstate) + offsetof(eth_tx_qstate_t, p_index0),
@@ -354,7 +354,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.name, qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         WRITE_MEM(addr + offsetof(admin_qstate_t, p_index0),
                   (uint8_t *)(&aq_qstate) + offsetof(admin_qstate_t, p_index0),
@@ -366,7 +366,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for SVC qid {}",
             hal_lif_info_.name, ETH_EDMAQ_ID);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     MEM_SET(notify_ring_base, 0, 4096 + (sizeof(union notifyq_comp) * ETH_NOTIFYQ_RING_SIZE), 0);
@@ -381,7 +381,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     uint8_t off;
     if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "edma_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: edma_stage0");
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     dq_qstate.pc_offset = off;
     dq_qstate.cos_sel = 0;
@@ -406,7 +406,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
     state = LIF_STATE_INITED;
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
 void
@@ -421,7 +421,7 @@ EthLif::FreeUpMacFilters()
         if (rs != indexer::SUCCESS) {
             NIC_LOG_ERR("Failed to free filter_id: {}, err: {}",
                           filter_id, rs);
-            // return (DEVCMD_ERROR);
+            // return (IONIC_RC_ERROR);
         }
         NIC_LOG_DEBUG("Freed filter_id: {}", filter_id);
         it = mac_addrs.erase(it);
@@ -440,7 +440,7 @@ EthLif::FreeUpVlanFilters()
         if (rs != indexer::SUCCESS) {
             NIC_LOG_ERR("Failed to free filter_id: {}, err: {}",
                           filter_id, rs);
-            // return (DEVCMD_ERROR);
+            // return (IONIC_RC_ERROR);
         }
         NIC_LOG_DEBUG("Freed filter_id: {}", filter_id);
         it = vlans.erase(it);
@@ -459,14 +459,14 @@ EthLif::FreeUpMacVlanFilters()
         if (rs != indexer::SUCCESS) {
             NIC_LOG_ERR("Failed to free filter_id: {}, err: {}",
                           filter_id, rs);
-            // return (DEVCMD_ERROR);
+            // return (IONIC_RC_ERROR);
         }
         NIC_LOG_DEBUG("Freed filter_id: {}", filter_id);
         it = mac_vlans.erase(it);
     }
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
 {
     NIC_LOG_DEBUG("{}: CMD_OPCODE_LIF_RESET", hal_lif_info_.name);
@@ -475,7 +475,12 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_WARN("{}: {} + RESET => {}", hal_lif_info_.name,
             lif_state_to_str(state),
             lif_state_to_str(state));
-        return (DEVCMD_SUCCESS);
+        return (IONIC_RC_SUCCESS);
+    }
+
+    if (!hal_status) {
+        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
+        return (IONIC_RC_EAGAIN);
     }
 
     state = LIF_STATE_RESETING;
@@ -487,10 +492,10 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
 
     state = LIF_STATE_RESET;
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -508,35 +513,35 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->index >= spec->adminq_count) {
         NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->intr_index >= spec->intr_count) {
         NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->ring_size < 2 || cmd->ring_size > 16) {
         NIC_LOG_ERR("{}: bad ring size {}", hal_lif_info_.name, cmd->ring_size);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_ADMIN, cmd->index);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
             hal_lif_info_.name, cmd->index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     uint8_t off;
     if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "adminq_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
@@ -571,16 +576,16 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     comp->qtype = ETH_QTYPE_ADMIN;
 
     NIC_LOG_DEBUG("{}: qid {} qtype {}", hal_lif_info_.name, comp->qid, comp->qtype);
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::CmdHandler(void *req, void *req_data,
     void *resp, void *resp_data)
 {
     union dev_cmd *cmd = (union dev_cmd *)req;
     union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
-    enum DevcmdStatus status;
+    enum status_code status;
 
     NIC_LOG_DEBUG("{}: Handling cmd: {}", hal_lif_info_.name,
         opcode_to_str((enum cmd_opcode)cmd->cmd.opcode));
@@ -625,7 +630,7 @@ EthLif::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_MTU_SET:
-        status = DEVCMD_SUCCESS;
+        status = IONIC_RC_SUCCESS;
         break;
 
     case CMD_OPCODE_RX_MODE_SET:
@@ -649,7 +654,7 @@ EthLif::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_DEBUG_Q_DUMP:
-        status = DEVCMD_SUCCESS;
+        status = IONIC_RC_SUCCESS;
         break;
 
     case CMD_OPCODE_RSS_HASH_SET:
@@ -661,27 +666,27 @@ EthLif::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_RDMA_RESET_LIF:
-        status = DEVCMD_SUCCESS;
+        status = IONIC_RC_SUCCESS;
         break;
 
     case CMD_OPCODE_RDMA_CREATE_EQ:
         status = _CmdRDMACreateEQ(req, req_data, resp, resp_data);
-        status = DEVCMD_SUCCESS;
+        status = IONIC_RC_SUCCESS;
         break;
 
     case CMD_OPCODE_RDMA_CREATE_CQ:
         status = _CmdRDMACreateCQ(req, req_data, resp, resp_data);
-        status = DEVCMD_SUCCESS;
+        status = IONIC_RC_SUCCESS;
         break;
 
     case CMD_OPCODE_RDMA_CREATE_ADMINQ:
         status = _CmdRDMACreateAdminQ(req, req_data, resp, resp_data);
-        status = DEVCMD_SUCCESS;
+        status = IONIC_RC_SUCCESS;
         break;
 
     default:
         NIC_LOG_ERR("{}: Unknown Opcode {}", hal_lif_info_.name, cmd->cmd.opcode);
-        status = DEVCMD_UNKNOWN;
+        status = IONIC_RC_EOPCODE;
         break;
     }
 
@@ -693,7 +698,7 @@ EthLif::CmdHandler(void *req, void *req_data,
     return (status);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -706,7 +711,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
@@ -714,7 +719,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.name, qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         READ_MEM(addr, (uint8_t *)(&rx_qstate), sizeof(rx_qstate), 0);
         NIC_LOG_DEBUG("{}: rxq{}: p_index0 {:#x} c_index0 {:#x} comp {:#x} intr {}",
@@ -728,7 +733,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.name, qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         READ_MEM(addr, (uint8_t *)(&tx_qstate), sizeof(tx_qstate), 0);
         NIC_LOG_DEBUG("{}: txq{}: p_index0 {:#x} c_index0 {:#x} comp {:#x} intr {}",
@@ -742,7 +747,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.name, qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         READ_MEM(addr, (uint8_t *)(&aq_state), sizeof(aq_state), 0);
         NIC_LOG_DEBUG("{}: adminq{}: p_index0 {:#x} c_index0 {:#x} comp {:#x} intr {}",
@@ -761,11 +766,11 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
             intr_st.drvcfg_mask_on_assert);
     }
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -786,35 +791,35 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->index >= spec->txq_count) {
         NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->intr_index >= spec->intr_count) {
         NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->ring_size < 2 || cmd->ring_size > 16) {
         NIC_LOG_ERR("{}: bad ring_size {}", hal_lif_info_.name, cmd->ring_size);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_TX, cmd->index);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
             hal_lif_info_.name, cmd->index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     uint8_t off;
     if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "eth_tx_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: eth_tx_stage0");
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
@@ -851,10 +856,10 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: qid {} qtype {}",
                  hal_lif_info_.name, comp->qid, comp->qtype);
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -874,35 +879,35 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->index >= spec->rxq_count) {
         NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->intr_index >= spec->intr_count) {
         NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->ring_size < 2 || cmd->ring_size > 16) {
         NIC_LOG_ERR("{}: bad ring_size {}", hal_lif_info_.name, cmd->ring_size);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_RX, cmd->index);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
             hal_lif_info_.name, cmd->index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     uint8_t off;
     if (pd->lm_->GetPCOffset("p4plus", "rxdma_stage0.bin", "eth_rx_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: rxdma_stage0.bin label: eth_rx_stage0");
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
@@ -934,10 +939,10 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: qid {} qtype {}",
                  hal_lif_info_.name, comp->qid, comp->qtype);
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -957,29 +962,29 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->index >= spec->eq_count) {
         NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->intr_index >= spec->intr_count) {
         NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->ring_size < 2 || cmd->ring_size > 16) {
         NIC_LOG_ERR("{}: bad ring_size {}", hal_lif_info_.name, cmd->ring_size);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, ETH_QTYPE_SVC, cmd->index);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for SVC qid {}",
             hal_lif_info_.name, cmd->index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     notify_ring_head = 0;
@@ -987,7 +992,7 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     uint8_t off;
     if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "notify_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to resolve program: txdma_stage0.bin label: notify_stage0");
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     qstate.pc_offset = off;
     qstate.cos_sel = 0;
@@ -1042,10 +1047,10 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_INFO("{}: qid {} qtype {}", hal_lif_info_.name,
         comp->qid, comp->qtype);
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct features_cmd *cmd = (struct features_cmd *)req;
@@ -1065,7 +1070,12 @@ EthLif::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (!hal_status) {
+        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
+        return (IONIC_RC_EAGAIN);
     }
 
     comp->status = 0;
@@ -1100,7 +1110,7 @@ EthLif::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
     if (ret != HAL_IRISC_RET_SUCCESS) {
         NIC_LOG_ERR("{}: Failed to update Vlan offload",
             hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     NIC_LOG_INFO("{}: vlan_strip {} vlan_insert {}", hal_lif_info_.name,
@@ -1108,10 +1118,10 @@ EthLif::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: supported {}", hal_lif_info_.name, comp->supported);
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct set_netdev_info_cmd *cmd = (struct set_netdev_info_cmd *)req;
@@ -1122,7 +1132,12 @@ EthLif::_CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (!hal_status) {
+        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
+        return (IONIC_RC_EAGAIN);
     }
 
     nd_name = std::string(cmd->nd_name);
@@ -1130,10 +1145,10 @@ EthLif::_CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data
 
     lif->UpdateName(nd_name);
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -1148,13 +1163,13 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->qtype >= 8) {
         NIC_LOG_ERR("{}: CMD_OPCODE_Q_ENABLE: bad qtype {}",
             hal_lif_info_.name, cmd->qtype);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     switch (cmd->qtype) {
@@ -1162,13 +1177,13 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
         if (cmd->qid >= spec->rxq_count) {
             NIC_LOG_ERR("{}: CMD_OPCODE_Q_ENABLE: bad qid {}",
             hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         rx_cfg.enable = 0x1;
         rx_cfg.host_queue = spec->host_dev;
@@ -1180,13 +1195,13 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
         if (cmd->qid >= spec->txq_count) {
             NIC_LOG_ERR("{}: CMD_OPCODE_Q_ENABLE: bad qid {}",
                    hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         tx_cfg.enable = 0x1;
         tx_cfg.host_queue = spec->host_dev;
@@ -1198,13 +1213,13 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
         if (cmd->qid >= spec->adminq_count) {
             NIC_LOG_ERR("{}: CMD_OPCODE_Q_ENABLE: bad qid {}",
                    hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         admin_cfg.enable = 0x1;
         admin_cfg.host_queue = spec->host_dev;
@@ -1213,14 +1228,14 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
         invalidate_txdma_cacheline(addr);
         break;
     default:
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
         break;
     }
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
 {
     int64_t addr;
@@ -1235,13 +1250,13 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->qtype >= 8) {
         NIC_LOG_ERR("{}: CMD_OPCODE_Q_DISABLE: bad qtype {}",
             hal_lif_info_.name, cmd->qtype);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     switch (cmd->qtype) {
@@ -1249,13 +1264,13 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
         if (cmd->qid >= spec->rxq_count) {
             NIC_LOG_ERR("{}: CMD_OPCODE_Q_ENABLE: bad qid {}",
                 hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for RX qid {}",
                 hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         rx_cfg.enable = 0x0;
         rx_cfg.host_queue = spec->host_dev;
@@ -1267,13 +1282,13 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
         if (cmd->qid >= spec->txq_count) {
             NIC_LOG_ERR("{}: CMD_OPCODE_Q_ENABLE: bad qid {}",
                    hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for TX qid {}",
                 hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         tx_cfg.enable = 0x0;
         tx_cfg.host_queue = spec->host_dev;
@@ -1285,13 +1300,13 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
         if (cmd->qid >= spec->adminq_count) {
             NIC_LOG_ERR("{}: CMD_OPCODE_Q_ENABLE: bad qid {}",
                    hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id, cmd->qtype, cmd->qid);
         if (addr < 0) {
             NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
                 hal_lif_info_.name, cmd->qid);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         admin_cfg.enable = 0x0;
         admin_cfg.host_queue = spec->host_dev;
@@ -1300,14 +1315,14 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
         invalidate_txdma_cacheline(addr);
         break;
     default:
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
         break;
     }
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdSetMode(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rx_mode_set_cmd *cmd = (struct rx_mode_set_cmd *)req;
@@ -1325,7 +1340,12 @@ EthLif::_CmdSetMode(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (!hal_status) {
+        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
+        return (IONIC_RC_EAGAIN);
     }
 
     bool broadcast = cmd->rx_mode & RX_MODE_F_BROADCAST;
@@ -1336,13 +1356,13 @@ EthLif::_CmdSetMode(void *req, void *req_data, void *resp, void *resp_data)
     if (ret != HAL_IRISC_RET_SUCCESS) {
         NIC_LOG_ERR("{}: Failed to update rx mode",
             hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
 {
     //int status;
@@ -1355,7 +1375,12 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (!hal_status) {
+        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
+        return (IONIC_RC_EAGAIN);
     }
 
     if (cmd->match == RX_FILTER_MATCH_MAC) {
@@ -1370,13 +1395,13 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
 
         if (ret != HAL_IRISC_RET_SUCCESS) {
             NIC_LOG_WARN("{}: Duplicate Add.", hal_lif_info_.name);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
 
         // Store filter
         if (fltr_allocator->alloc(&filter_id) != sdk::lib::indexer::SUCCESS) {
             NIC_LOG_ERR("Failed to allocate MAC address filter");
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         mac_addrs[filter_id] = mac_addr;
     } else if (cmd->match == RX_FILTER_MATCH_VLAN) {
@@ -1389,7 +1414,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         // Store filter
         if (fltr_allocator->alloc(&filter_id) != sdk::lib::indexer::SUCCESS) {
             NIC_LOG_ERR("Failed to allocate VLAN filter");
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         vlans[filter_id] = vlan;
     } else {
@@ -1405,7 +1430,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         // Store filter
         if (fltr_allocator->alloc(&filter_id) != sdk::lib::indexer::SUCCESS) {
             NIC_LOG_ERR("Failed to allocate VLAN filter");
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
         mac_vlans[filter_id] = std::make_tuple(mac_addr, vlan);
     }
@@ -1413,10 +1438,10 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
     comp->filter_id = filter_id;
     NIC_LOG_DEBUG("{}: filter_id {}",
                  hal_lif_info_.name, comp->filter_id);
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
 {
     //int status;
@@ -1428,7 +1453,12 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (!hal_status) {
+        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
+        return (IONIC_RC_EAGAIN);
     }
 
     if (mac_addrs.find(cmd->filter_id) != mac_addrs.end()) {
@@ -1454,21 +1484,21 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         mac_vlans.erase(cmd->filter_id);
     } else {
         NIC_LOG_ERR("Invalid filter id {}", cmd->filter_id);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     rs = fltr_allocator->free(cmd->filter_id);
     if (rs != indexer::SUCCESS) {
         NIC_LOG_ERR("Failed to free filter_id: {}, err: {}",
                       cmd->filter_id, rs);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     NIC_LOG_DEBUG("Freed filter_id: {}", cmd->filter_id);
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data)
 {
     uint64_t mac_addr;
@@ -1480,7 +1510,7 @@ EthLif::_CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     mac_addr = be64toh(spec->mac_addr) >> (8 * sizeof(spec->mac_addr) - 8 * sizeof(uint8_t[6]));
@@ -1489,10 +1519,10 @@ EthLif::_CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: station mac address {}", hal_lif_info_.name,
         macaddr2str(mac_addr));
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct stats_dump_cmd *cmd = (struct stats_dump_cmd *)req;
@@ -1502,12 +1532,12 @@ EthLif::_CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_dat
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (cmd->addr == 0) {
         NIC_LOG_ERR("{}: Stats region is not valid!", hal_lif_info_.name);
-        return (DEVCMD_SUCCESS);
+        return (IONIC_RC_SUCCESS);
     }
 
     host_stats_mem_addr = cmd->addr;
@@ -1518,10 +1548,10 @@ EthLif::_CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_dat
     // then check completion and restart timer
     evutil_timer_start(&stats_timer, &EthLif::StatsUpdate, this, 0.2, 0.0);
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data)
 {
     NIC_LOG_DEBUG("{}: CMD_OPCODE_STATS_DUMP_STOP: host_stats_mem_addr {:#x}",
@@ -1529,21 +1559,21 @@ EthLif::_CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     if (host_stats_mem_addr == 0) {
-        return (DEVCMD_SUCCESS);
+        return (IONIC_RC_SUCCESS);
     }
 
     host_stats_mem_addr = 0;
 
     evutil_timer_stop(&stats_timer);
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data)
 {
     int ret;
@@ -1552,7 +1582,7 @@ EthLif::_CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     rss_type = cmd->types;
@@ -1565,13 +1595,13 @@ EthLif::_CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data)
                               spec->rxq_count);
     if (ret != 0) {
         NIC_LOG_DEBUG("_CmdRssHashSet:{}: Unable to program hw for RSS HASH", ret);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
-    return DEVCMD_SUCCESS;
+    return IONIC_RC_SUCCESS;
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
 {
     int ret;
@@ -1580,7 +1610,7 @@ EthLif::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
 
     if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     memcpy(rss_indir, req_data, RSS_IND_TBL_SIZE);
@@ -1591,7 +1621,7 @@ EthLif::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
         if (((uint8_t *)req_data)[i] > spec->rxq_count) {
             NIC_LOG_ERR("{}: Invalid indirection table entry index %d qid %d",
                 i, ((uint8_t *)req_data)[i]);
-            return (DEVCMD_ERROR);
+            return (IONIC_RC_ERROR);
         }
     }
 
@@ -1599,16 +1629,16 @@ EthLif::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
                           spec->rxq_count);
     if (ret != 0) {
         NIC_LOG_ERR("_CmdRssIndirSet:{}: Unable to program hw for RSS INDIR", ret);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
 /*
  * RDMA Commands
  */
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd  *cmd = (struct rdma_queue_cmd  *) req;
@@ -1642,15 +1672,15 @@ EthLif::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for EQ qid {}",
                     lif_id, cmd->qid_ver);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     WRITE_MEM(addr, (uint8_t *)&eqcb, sizeof(eqcb), 0);
     invalidate_rxdma_cacheline(addr);
     invalidate_txdma_cacheline(addr);
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd *cmd = (struct rdma_queue_cmd *) req;
@@ -1705,7 +1735,7 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     ret = pd->lm_->GetPCOffset("p4plus", "rxdma_stage0.bin", "rdma_cq_rx_stage0", &offset);
     if (ret < 0) {
         NIC_LOG_ERR("Failed to get PC offset : {} for prog: {}, label: {}", ret, "rxdma_stage0.bin", "rdma_cq_rx_stage0");
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     cqcb.ring_header.pc = offset;
@@ -1721,7 +1751,7 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for CQ qid {}",
                     lif_id, cmd->qid_ver);
-        return DEVCMD_ERROR;
+        return IONIC_RC_ERROR;
     }
     WRITE_MEM(addr, (uint8_t *)&cqcb, sizeof(cqcb), 0);
 
@@ -1734,10 +1764,10 @@ EthLif::_CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data)
     invalidate_rxdma_cacheline(pt_table_addr);
     invalidate_txdma_cacheline(pt_table_addr);
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct rdma_queue_cmd  *cmd = (struct rdma_queue_cmd  *) req;
@@ -1767,7 +1797,7 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for CQ qid {}",
                     lif_id, cmd->cid);
-        return DEVCMD_ERROR;
+        return IONIC_RC_ERROR;
     }
     aqcb.aqcb0.cqcb_addr = addr;
 
@@ -1776,7 +1806,7 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
     ret = pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "rdma_aq_tx_stage0", &offset);
     if (ret < 0) {
         NIC_LOG_ERR("Failed to get PC offset : {} for prog: {}, label: {}", ret, "txdma_stage0.bin", "rdma_aq_tx_stage0");
-        return DEVCMD_ERROR;
+        return IONIC_RC_ERROR;
     }
 
     aqcb.aqcb0.ring_header.pc = offset;
@@ -1795,11 +1825,11 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for AQ qid {}",
                     lif_id, cmd->qid_ver);
-        return DEVCMD_ERROR;
+        return IONIC_RC_ERROR;
     }
     WRITE_MEM(addr, (uint8_t *)&aqcb, sizeof(aqcb), 0);
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
 /*
@@ -1809,6 +1839,8 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
 void
 EthLif::HalEventHandler(bool status)
 {
+    hal_status = status;
+
     if (!status) {
         return;
     }

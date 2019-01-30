@@ -377,7 +377,7 @@ Eth::DevcmdPoll(void *obj)
 void
 Eth::DevcmdHandler()
 {
-    enum DevcmdStatus status;
+    enum status_code status;
 
     NIC_HEADER_TRACE("Devcmd");
 
@@ -389,7 +389,7 @@ Eth::DevcmdHandler()
         NIC_LOG_ERR("{}: Devcmd done is set before processing command, opcode {}",
             spec->name,
             opcode_to_str((enum cmd_opcode)devcmd->cmd.cmd.opcode));
-        status = DEVCMD_ERROR;
+        status = IONIC_RC_ERROR;
         goto devcmd_done;
     }
 
@@ -397,14 +397,14 @@ Eth::DevcmdHandler()
         NIC_LOG_ERR("{}: Devcmd signature mismatch, opcode {}",
             spec->name,
             opcode_to_str((enum cmd_opcode)devcmd->cmd.cmd.opcode));
-        status = DEVCMD_ERROR;
+        status = IONIC_RC_ERROR;
         goto devcmd_done;
     }
 
     status = CmdHandler(&devcmd->cmd, &devcmd->data, &devcmd->comp, &devcmd->data);
 
     // write data
-    if (status == DEVCMD_SUCCESS) {
+    if (status == IONIC_RC_SUCCESS) {
         WRITE_MEM(devcmd_mem_addr + offsetof(struct dev_cmd_regs, data),
                   (uint8_t *)devcmd + offsetof(struct dev_cmd_regs, data),
                   sizeof(devcmd->data), 0);
@@ -439,17 +439,17 @@ Eth::opcode_to_str(enum cmd_opcode opcode)
         CASE(CMD_OPCODE_LIF_INIT);
         CASE(CMD_OPCODE_LIF_RESET);
         CASE(CMD_OPCODE_ADMINQ_INIT);
-        default: return "DEVCMD_UNKNOWN";
+        default: return "IONIC_RC_EOPCODE";
     }
 }
 
-enum DevcmdStatus
+enum status_code
 Eth::CmdHandler(void *req, void *req_data,
     void *resp, void *resp_data)
 {
     union dev_cmd *cmd = (union dev_cmd *)req;
     union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
-    enum DevcmdStatus status;
+    enum status_code status;
 
     NIC_LOG_DEBUG("{}: Handling cmd: {}", spec->name,
         opcode_to_str((enum cmd_opcode)cmd->cmd.opcode));
@@ -457,7 +457,7 @@ Eth::CmdHandler(void *req, void *req_data,
     switch (cmd->cmd.opcode) {
 
     case CMD_OPCODE_NOP:
-        status = DEVCMD_SUCCESS;
+        status = IONIC_RC_SUCCESS;
         break;
 
     case CMD_OPCODE_RESET:
@@ -484,7 +484,7 @@ Eth::CmdHandler(void *req, void *req_data,
         // FIXME: Remove Backwards compatibility
         status = AdminCmdHandler(lif_base, req, req_data, resp, resp_data);
         // NIC_LOG_ERR("{}: Unknown Opcode {}", spec->name, cmd->cmd.opcode);
-        // status = DEVCMD_UNKNOWN;
+        // status = IONIC_RC_EOPCODE;
         break;
     }
 
@@ -496,7 +496,7 @@ Eth::CmdHandler(void *req, void *req_data,
     return (status);
 }
 
-enum DevcmdStatus
+enum status_code
 Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
     union identity *rsp = (union identity *)resp_data;
@@ -611,13 +611,13 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
                  rsp->dev.rdma_cq_qtype.qtype, rsp->dev.rdma_cq_qtype.qid_count, rsp->dev.rdma_cq_qtype.qid_base,
                  rsp->dev.rdma_eq_qtype.qtype, rsp->dev.rdma_eq_qtype.qid_count, rsp->dev.rdma_eq_qtype.qid_base);
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 {
-    enum DevcmdStatus status;
+    enum status_code status;
     EthLif *eth_lif = NULL;
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_RESET", spec->name);
@@ -630,16 +630,16 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         eth_lif = it->second;
         status = eth_lif->Reset(req, req_data, resp, resp_data);
-        if (status != DEVCMD_SUCCESS) {
+        if (status != IONIC_RC_SUCCESS) {
             NIC_LOG_ERR("{}: Failed to reset lif", spec->name);
-            return (DEVCMD_ERROR);
+            return (status);
         }
     }
 
-    return (DEVCMD_SUCCESS);
+    return (IONIC_RC_SUCCESS);
 }
 
-enum DevcmdStatus
+enum status_code
 Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
@@ -648,22 +648,27 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_LIF_INIT: index {}", spec->name, cmd->index);
 
+    if (!hal_status) {
+        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
+        return (IONIC_RC_EAGAIN);
+    }
+
     if (cmd->index >= spec->lif_count) {
         NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     auto it = lif_map.find(lif_id);
     if (it == lif_map.cend()) {
         NIC_FUNC_ERR("{}: Unable to find lif {}", spec->name, lif_id);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     eth_lif = it->second;
 
     return eth_lif->Init(req, req_data, resp, resp_data);
 }
 
-enum DevcmdStatus
+enum status_code
 Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_reset_cmd *cmd = (struct lif_reset_cmd *)req;
@@ -672,22 +677,27 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_LIF_RESET: index {}", spec->name, cmd->index);
 
+    if (!hal_status) {
+        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
+        return (IONIC_RC_EAGAIN);
+    }
+
     if (cmd->index >= spec->lif_count) {
         NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     auto it = lif_map.find(lif_id);
     if (it == lif_map.cend()) {
         NIC_FUNC_ERR("{}: Unable to find lif {}", spec->name, lif_id);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     eth_lif = it->second;
 
     return eth_lif->Reset(req, req_data, resp, resp_data);
 }
 
-enum DevcmdStatus
+enum status_code
 Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct adminq_init_cmd *cmd = (struct adminq_init_cmd *)req;
@@ -698,20 +708,20 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (cmd->lif_index >= spec->lif_count) {
         NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->lif_index);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
 
     auto it = lif_map.find(lif_id);
     if (it == lif_map.cend()) {
         NIC_FUNC_ERR("{}: Unable to find lif {}", spec->name, lif_id);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     eth_lif = it->second;
 
     return eth_lif->AdminQInit(req, req_data, resp, resp_data);
 }
 
-enum DevcmdStatus
+enum status_code
 Eth::AdminCmdHandler(uint64_t lif_id,
     void *req, void *req_data,
     void *resp, void *resp_data)
@@ -721,7 +731,7 @@ Eth::AdminCmdHandler(uint64_t lif_id,
     auto it = lif_map.find(lif_id);
     if (it == lif_map.cend()) {
         NIC_FUNC_ERR("{}: Unable to find lif {}", spec->name, lif_id);
-        return (DEVCMD_ERROR);
+        return (IONIC_RC_ERROR);
     }
     eth_lif = it->second;
 
@@ -734,6 +744,8 @@ Eth::AdminCmdHandler(uint64_t lif_id,
 void
 Eth::HalEventHandler(bool status)
 {
+    hal_status = status;
+
     if (!status) {
         return;
     }
