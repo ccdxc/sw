@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "ng-high-memory": "node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng",
+    "build-prod": "npm run ng-high-memory -- build --prod",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build --prod",
-    "dev": "ng serve --proxy-config proxy.conf.js",
+    "dev": "npm run ng-high-memory -- serve",
     "test": "ng test",
     "lint": "ng lint",
     "svgo": "find ./dist/assets -name '*.svg' | xargs svgo",
