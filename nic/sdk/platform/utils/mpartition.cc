@@ -44,7 +44,8 @@ mpartition::region_init(shmmgr *mmgr)
 
         SDK_TRACE_DEBUG("region : %s, size : %u, element size : %u, "
                         "reset : %u, start : 0x%" PRIx64 ", end : 0x%"
-                        PRIx64 "", reg->mem_reg_name, reg->size, reg->reset,
+                        PRIx64 "", reg->mem_reg_name, reg->size,
+                        reg->elem_size, reg->reset,
                         addr(reg->start_offset),
                         addr(reg->start_offset + reg->size));
         reg++;
