@@ -3,6 +3,15 @@
 #include <inttypes.h>
 
 /*
+ * Memory write fence to ensure all pending writes are completed.
+ */
+#ifdef __aarch64__
+#define PAL_barrier()  asm volatile("dsb sy" ::: "memory")
+#else
+#define PAL_barrier()  do { } while (0)
+#endif
+
+/*
  * PAL memory read/write APIs.
  */
 void *pal_mem_map(const uint64_t pa, const size_t sz, uint32_t flags);

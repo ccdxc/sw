@@ -31,7 +31,8 @@ typedef struct {
     u_int32_t reg_trace_en:1;
     u_int32_t mem_trace_en:1;
     u_int32_t init_done:1;
-    int memfd; // "/dev/mem"
+    int memfd_nonccoh; // "/dev/capmem" non cached/non coherent
+    int memfd_ccoh; // "/dev/capmem" cached/coherent
 
     FILE *trfp;
     size_t nregions;

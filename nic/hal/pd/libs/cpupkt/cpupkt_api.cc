@@ -6,6 +6,7 @@
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 #include "platform/capri/capri_common.hpp"
+#include "platform/pal/include/pal_mem.h"
 
 namespace hal {
 namespace pd {
@@ -605,6 +606,12 @@ cpupkt_descr_free (cpupkt_hw_id_t descr_addr)
         return HAL_RET_HW_FAIL;
     }
 
+    /*
+     * Ensure the programming of the descriptor/senq-queue is completed with a
+     * memory barrier, before ringing the txdma doorbell.   
+     */   
+    PAL_barrier();
+
     // ring doorbell
     pd_cpupkt_program_send_ring_doorbell_args_t d_args = {0};
     d_args.dest_lif = SERVICE_LIF_GC;
@@ -936,6 +943,12 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
         qinst_info.ctr.tx_send_err++;
         goto cleanup;
     }
+
+    /*
+     * Ensure the programming of the descriptor/senq-queue is completed with a
+     * memory barrier, before ringing the txdma doorbell.   
+     */   
+    PAL_barrier();
 
     // Ring doorbell
     pd_cpupkt_program_send_ring_doorbell_args_t d_args;

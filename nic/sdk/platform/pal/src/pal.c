@@ -28,9 +28,14 @@ pal_get_data(void)
     pal_data_t *pd = &pal_data;
     if (!pd->memopen) {
 #ifdef __aarch64__
-        /* Making all accesses to /dev/mem UNCACHED for now */
-        pd->memfd = open("/dev/mem", O_RDWR | O_SYNC);
-        assert(pd->memfd >= 0);
+        /*
+         * We'll enable both cached/coherent and non-cached/non-coherent accesses
+         * using two different fd's with /dev/capmem.
+         */
+        pd->memfd_nonccoh = open("/dev/capmem", O_RDWR | O_SYNC);
+        assert(pd->memfd_nonccoh >= 0);
+        pd->memfd_ccoh = open("/dev/capmem", O_RDWR);
+        assert(pd->memfd_ccoh >= 0);
 #endif
 	pd->regions = NULL;
         pd->memopen = 1;
