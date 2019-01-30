@@ -12,6 +12,7 @@ import (
 )
 
 func (c *CfgGen) GenerateNetworks() error {
+	var cfg IOTAConfig
 	var networks []*netproto.Network
 	var networkManifest *pkg.Object
 	for _, o := range c.Config.Objects {
@@ -32,8 +33,14 @@ func (c *CfgGen) GenerateNetworks() error {
 	}
 
 	for i := 0; i < networkManifest.Count; i++ {
-		nsIdx := i % len(c.Namespaces)
-		namespace := c.Namespaces[nsIdx]
+		// Get the namespaces object
+		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
+		if !ok {
+			log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
+			return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
+		}
+		nsIdx := i % len(ns)
+		namespace := ns[nsIdx]
 		subnet := subnets[i]
 		addrs, gateway, err := libs.GenIPAddress(subnet, 0, true)
 		if err != nil {
@@ -59,6 +66,10 @@ func (c *CfgGen) GenerateNetworks() error {
 		}
 		networks = append(networks, &net)
 	}
-	c.Networks = networks
+	cfg.Type = "netagent"
+	cfg.ObjectKey = "meta.tenant/meta.namespace/meta.name"
+	cfg.RestEndpoint = "api/networks/"
+	cfg.Objects = networks
+	c.Networks = cfg
 	return nil
 }

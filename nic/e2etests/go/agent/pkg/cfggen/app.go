@@ -13,6 +13,7 @@ import (
 )
 
 func (c *CfgGen) GenerateALGs() error {
+	var cfg IOTAConfig
 	var apps []*netproto.App
 	var appManifest *pkg.Object
 	for _, o := range c.Config.Objects {
@@ -29,8 +30,14 @@ func (c *CfgGen) GenerateALGs() error {
 
 	for i := 0; i < appManifest.Count; i++ {
 		var app netproto.App
-		nsIdx := i % len(c.Namespaces)
-		namespace := c.Namespaces[nsIdx]
+		// Get the namespaces object
+		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
+		if !ok {
+			log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
+			return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
+		}
+		nsIdx := i % len(ns)
+		namespace := ns[nsIdx]
 		appType, proto, port, icmpCode, icmpType, idleTimeout, err := convertAppInfo(c.Template.ALGInfo[i%len(c.Template.ALGInfo)])
 		if err != nil {
 			return err
@@ -130,7 +137,11 @@ func (c *CfgGen) GenerateALGs() error {
 		}
 		apps = append(apps, &app)
 	}
-	c.Apps = apps
+	cfg.Type = "netagent"
+	cfg.ObjectKey = "meta.tenant/meta.namespace/meta.name"
+	cfg.RestEndpoint = "api/apps/"
+	cfg.Objects = apps
+	c.Apps = cfg
 	return nil
 }
 
