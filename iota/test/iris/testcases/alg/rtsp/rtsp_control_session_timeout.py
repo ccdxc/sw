@@ -40,7 +40,7 @@ def Trigger(tc):
                            "ip route add 224.0.0.0/4 dev %s"%(server.interface))
     tc.cmd_cookies.append("ip route server")
 
-    server_cmd = "cd rtspdir && vobStreamer small.vob"
+    server_cmd = "cd rtspdir && vobStreamer -p 2004 small.vob"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
                            server_cmd, background = True, timeout=300)
     tc.cmd_cookies.append("Run RTSP server")
@@ -50,7 +50,7 @@ def Trigger(tc):
     tc.cmd_cookies.append("ip route client")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "openRTSP rtsp://%s/vobStream" % (server.ip_address), timeout=300)
+                           "openRTSP rtsp://%s:2004/vobStream" % (server.ip_address), timeout=300)
     tc.cmd_cookies.append("Run RTSP client")
 
     ## Add Naples command validation

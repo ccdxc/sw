@@ -1,0 +1,11 @@
+meta:
+    name    : upgrade 
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+testcases:
+    -   name    : TCP_FIN_TO_LOCAL_EP
+        testcase: testcases.upgrade.tcp_fin
+        iterators :
+            type    : simple
+            eptype  : [local, remote]

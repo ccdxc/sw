@@ -13,6 +13,7 @@
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
 #include "nic/hal/plugins/proxy/proxy_plugin.hpp"
+#include "nic/hal/plugins/cfg/nw/session.hpp"
 
 using intf::Interface;
 using intf::LifSpec;
@@ -151,6 +152,13 @@ hal_ret_t quiesce_stop(const types::Empty &request,
 
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_STOP, &args);
     return ret;
+}
+
+hal_ret_t testsendfin_req(internal::TestSendFinRequest& req,
+                          internal::TestSendFinResponse *rsp)
+{
+    HAL_TRACE_DEBUG("Calling session upgrade");
+    return (session_handle_upgrade());
 }
 
 }    // namespace hal

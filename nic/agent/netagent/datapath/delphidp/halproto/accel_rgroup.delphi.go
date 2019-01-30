@@ -618,6 +618,10 @@ It has these top-level messages:
 	RawcCbStats
 	RawcCbGetResponse
 	RawcCbGetResponseMsg
+	TestSendFinRequestMsg
+	TestSendFinRequest
+	TestSendFinResponseMsg
+	TestSendFinResponse
 	Key
 	IpsecSAEncrypt
 	IpsecSADecrypt

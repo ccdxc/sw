@@ -94,6 +94,8 @@ service Internal {
   rpc RawcCbDelete (RawcCbDeleteRequestMsg) returns (RawcCbDeleteResponseMsg) {}
   rpc RawcCbGet (RawcCbGetRequestMsg) returns (RawcCbGetResponseMsg) {}
 
+  // Test send fin
+  rpc TestSendFinReq (TestSendFinRequestMsg) returns (TestSendFinResponseMsg) {}
 }
 
 message ProgramAddressReq {
@@ -1692,3 +1694,18 @@ message RawcCbGetResponseMsg {
   repeated RawcCbGetResponse    response = 1;    // batch get response
 }
 
+// Debug test to send FIN on local EPs
+message TestSendFinRequestMsg {
+  repeated TestSendFinRequest  request = 1;
+}
+
+message TestSendFinRequest {
+}
+
+message TestSendFinResponseMsg {
+  repeated TestSendFinResponse response = 1;
+}
+
+message TestSendFinResponse {
+  types.ApiStatus api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
