@@ -5079,7 +5079,7 @@ out:
 
 	if (likely(qp->sq.prod != qp->sq_old_prod)) {
 		/* ring cq doorbell just in time */
-		spend = (qp->sq.prod - qp->sq_old_prod) * qp->sq.mask;
+		spend = (qp->sq.prod - qp->sq_old_prod) & qp->sq.mask;
 		ionic_reserve_cq(dev, cq, spend);
 
 		qp->sq_old_prod = qp->sq.prod;
@@ -5152,7 +5152,7 @@ out:
 
 	if (likely(qp->rq.prod != qp->rq_old_prod)) {
 		/* ring cq doorbell just in time */
-		spend = (qp->rq.prod - qp->rq_old_prod) * qp->rq.mask;
+		spend = (qp->rq.prod - qp->rq_old_prod) & qp->rq.mask;
 		ionic_reserve_cq(dev, cq, spend);
 
 		qp->rq_old_prod = qp->rq.prod;
