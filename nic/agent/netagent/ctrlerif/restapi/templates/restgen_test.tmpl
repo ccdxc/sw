@@ -219,6 +219,7 @@ import (
                                                                     Name:   "test{{title .}}{{title $crudObject}}",
                                                                 },
                                                                 Spec: netproto.SecurityProfileSpec{
+                                                                    AttachNamespaces: []string{"default"},
                                                               			Timeouts: &netproto.Timeouts{
                                                               				SessionIdle: "10s",
                                                               				TCP: "1m",
@@ -1158,6 +1159,7 @@ import (
                                 Name: "test{{title .}}{{title $crudObject}}",
                             },
                             Spec:   netproto.SecurityProfileSpec{
+                                AttachNamespaces: []string{"default"},
                           			Timeouts: &netproto.Timeouts{
                           				SessionIdle: "10s",
                           				TCP: "1m",

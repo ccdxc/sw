@@ -24,6 +24,7 @@ func TestSecurityProfileCreateDelete(t *testing.T) {
 			Name:      "testSecurityProfile",
 		},
 		Spec: netproto.SecurityProfileSpec{
+			AttachNamespaces: []string{"default"},
 			Timeouts: &netproto.Timeouts{
 				SessionIdle:        "10s",
 				TCP:                "1m",
@@ -115,6 +116,42 @@ func TestSecurityProfileUpdate(t *testing.T) {
 }
 
 //--------------------- Corner Case Tests ---------------------//
+
+func TestSecurityProfileMissingAttachmentNamespaces(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// security profile
+	profile := netproto.SecurityProfile{
+		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSecurityProfile",
+		},
+		Spec: netproto.SecurityProfileSpec{
+			AttachNamespaces: []string{"non-existent-namespace"},
+			Timeouts: &netproto.Timeouts{
+				SessionIdle:        "10s",
+				TCP:                "1m",
+				TCPDrop:            "5s",
+				TCPConnectionSetup: "300ms",
+				TCPClose:           "1h",
+				Drop:               "30s",
+				UDP:                "5s",
+				UDPDrop:            "1s",
+				ICMP:               "100ms",
+				ICMPDrop:           "1h10m15s",
+			},
+		},
+	}
+
+	// create security profile
+	err := ag.CreateSecurityProfile(&profile)
+	Assert(t, err != nil, "Security Profile creation with invalid session idle time out must fail")
+}
 
 func TestSecurityProfileInvalidSessionIdleTimeOut(t *testing.T) {
 	// create netagent

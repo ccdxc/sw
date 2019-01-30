@@ -222,17 +222,17 @@ func (dp *DelphiDatapath) DeletePort(port *netproto.Port) error {
 }
 
 // CreateSecurityProfile creates security profile
-func (dp *DelphiDatapath) CreateSecurityProfile(profile *netproto.SecurityProfile, vrf *netproto.Namespace) error {
+func (dp *DelphiDatapath) CreateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error {
 	return nil
 }
 
 // UpdateSecurityProfile updates security profile
-func (dp *DelphiDatapath) UpdateSecurityProfile(profile *netproto.SecurityProfile) error {
+func (dp *DelphiDatapath) UpdateSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error {
 	return nil
 }
 
 // DeleteSecurityProfile deletes security profile
-func (dp *DelphiDatapath) DeleteSecurityProfile(profile *netproto.SecurityProfile, vrf *netproto.Namespace) error {
+func (dp *DelphiDatapath) DeleteSecurityProfile(profile *netproto.SecurityProfile, attachmentVrfs []*netproto.Namespace) error {
 	return nil
 }
 

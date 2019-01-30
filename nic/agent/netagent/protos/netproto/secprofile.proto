@@ -40,8 +40,10 @@ message SecurityProfile {
 
 // SecurityProfileSpec captures all the security profile configuration
 message SecurityProfileSpec {
+    // Namespaces the security profile is attached to
+    repeated string AttachNamespaces        = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-namespaces,omitempty"];
     // Timeouts for the security profile
-    Timeouts    Timeouts                    = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "timeouts,omitempty"];
+    Timeouts    Timeouts                    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "timeouts,omitempty"];
 }
 
 
