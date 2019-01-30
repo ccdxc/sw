@@ -64,12 +64,13 @@ def process_files(files, arch, pipeline):
     print "NEW files"
     print new_files
     return new_files
-        
+
 if args.target == 'sim':
     print ("Packaging for sim platform")
     arm_pkg     = 0
     objcopy_bin = 'objcopy'
     strip_bin   = 'strip'
+    arch = 'x86_64'
     output_dir  = pwd + '/fake_root_target/x86_64'
     if args.pipeline == 'apollo':
         files.append('nic/tools/package/pack_apollo.txt')
@@ -82,6 +83,7 @@ elif args.target == 'zebu':
     arm_pkg     = 0
     objcopy_bin = 'objcopy'
     strip_bin   = 'strip'
+    arch = 'x86_64'
     output_dir  = pwd + '/fake_root_target/x86_64'
     files.append('nic/tools/package/pack_zebu.txt')
 elif args.target == 'arm-dev':
@@ -99,6 +101,7 @@ elif args.target == 'host':
     objcopy_bin = 'objcopy'
     strip_bin   = 'strip'
     output_dir  = pwd + '/fake_root_target/x86_64'
+    arch = 'x86_64'
     tar_name    = 'host'
     files = []
     files.append('nic/tools/package/pack_host.txt')
@@ -124,8 +127,6 @@ else:
     else:
         files.append('nic/tools/package/pack_haps.txt')
     files.append('nic/tools/package/pack_debug.txt')
-        
-    
 
 if args.no_strip == True:
     strip_target = 0

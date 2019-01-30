@@ -7,6 +7,7 @@
  */
 
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
@@ -211,6 +212,7 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     oci_vnic_t                            *vnic_info;
     oci_route_table_key_t                 route_table_key;
     route_table                           *route_table;
+    mem_addr_t                            addr;
 
     vnic_info = &obj_ctxt->api_params->vnic_info;
     vcn = vcn_db()->vcn_find(&vnic_info->vcn);
@@ -237,11 +239,15 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
             vnic_info->rsc_pool_id;
         // TODO: do we need to enhance the vnic API here to take this ?
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group_2 = 0;
+        addr =
+            ((impl::route_table_impl *)(route_table->impl()))->lpm_root_addr();
+        OCI_TRACE_DEBUG("LPM root addr 0x%x\n", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_addr_1,
-                                (((impl::route_table_impl *)(route_table->impl()))->lpm_root_addr()),
-                                5);
+                                addr, 5);
+        addr = api::g_oci_state.mempartition()->start_addr("slacl");
+        OCI_TRACE_DEBUG("RFC root addr 0x%x\n", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.slacl_addr_1,
-                                api::g_oci_state.mempartition()->start_addr("slacl"), 5);
+                                addr, 5);
         //vnic_by_vlan_data.local_vnic_by_vlan_tx_info.slacl_addr_1 =
             //subnet->policy_tree_root();
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 = epoch;

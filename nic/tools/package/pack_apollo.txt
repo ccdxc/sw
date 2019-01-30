@@ -1,8 +1,8 @@
 nic/conf/init_bins                                                /nic/conf/init_bins/
-nic/conf/$PIPELINE/apollo.json                                    /nic/conf/$PIPELINE/apollo.json
-nic/conf/$PIPELINE/hal_hw.json                                    /nic/conf/$PIPELINE/hal_hw.json
-nic/conf/$PIPELINE/hbm_mem.json                                   /nic/conf/$PIPELINE/hbm_mem.json
-nic/conf/catalog_hw.json                                          /nic/conf/catalog_hw.json
+nic/conf/$PIPELINE/apollo.json                                    /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/hal_hw.json                                    /nic/conf/$PIPELINE/
+nic/conf/$PIPELINE/hbm_mem.json                                   /nic/conf/$PIPELINE/
+nic/conf/catalog_hw.json                                          /nic/conf/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE.so                /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_rxdma.so          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libp4pd_$PIPELINE_txdma.so          /nic/lib/
@@ -34,16 +34,11 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkplatformutils.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgr.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgrcsr.so                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmemhash.so                       /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdcommon.so                      /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libcore.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libbm_allocator.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libbitmap.so                        /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libtrace.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmtrack.so                        /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdcapri.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                    /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libasicpd.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkasicrw.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkasicpd.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpack_bytes.so                    /nic/lib/
@@ -55,14 +50,13 @@ nic/build/$ARCH/$PIPELINE/lib/libisa.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsknobs.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libev.so.4                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkp4loader.so                   /nic/lib/
-nic/hal/third-party/judy/$ARCH/lib/libJudy.so.1                   /nic/lib/   
+nic/hal/third-party/judy/$ARCH/lib/libJudy.so.1                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkxcvrdriver.so                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libociapi_impl.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libociapi.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libocicore.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libociframework.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblpmitree.so                      /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/liblpmitree.so.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/
 nic/build/$ARCH/$PIPELINE/bin/p4pasm/                             /nic/conf/$PIPELINE/p4plus_bin/
 nic/build/$ARCH/$PIPELINE/pgm_bin/                                /nic/conf/$PIPELINE/pgm_bin/
@@ -72,21 +66,23 @@ nic/build/$ARCH/$PIPELINE/pgm_bin/apollo_rxdma/                   /nic/conf/$PIP
 nic/build/$ARCH/$PIPELINE/bin/p4pasm_rxdma/                       /nic/conf/$PIPELINE/rxdma_asm/
 nic/build/$ARCH/$PIPELINE/pgm_bin/apollo_p4/                      /nic/conf/$PIPELINE/p4_bin/
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/p4_asm/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json              /nic/conf/$PIPELINE/capri_p4_table_map.json
-nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_rxdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_rxdma_table_map.json
-nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_txdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
 nic/sdk/third-party/avago/build/$ARCH/bin/aapl                    /nic/bin/
 nic/sdk/third-party/avago/build/$ARCH/lib/aapl/C/libAAPL.so       /nic/lib/
 nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom               /nic/conf/fw/
 nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin
 
+nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json         /nic/conf/$PIPELINE/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_rxdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_txdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/
+
 # test binaries and libraries
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_scale_test                /nic/bin/
 nic/apollo/test/scale_test/scale_cfg.json                         /nic/conf
-nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so /platform/lib/
-nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_without_main.so /platform/lib/
 nic/build/$ARCH/$PIPELINE/lib/libocitestutils.so                  /nic/lib/
+
+nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so              /platform/lib/
+nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_without_main.so /platform/lib/
 
 # memory monitoring scripts
 nic/tools/run_mem_check.sh                                        /nic/tools/
