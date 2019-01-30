@@ -49,3 +49,5 @@ nic/sdk/third-party/locale/*
 
 platform/src/third-party/lib/ncurses/include/*
 platform/src/third-party/lib/ncurses/aarch64/*
+
+nic/sdk/third-party/dpdk/*
