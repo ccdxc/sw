@@ -12,6 +12,7 @@ import (
 )
 
 func (c *CfgGen) GenerateEndpoints() error {
+	var cfg IOTAConfig
 	var endpoints []*netproto.Endpoint
 	var localEPManifest, remoteEPManifest *pkg.Object
 	for _, o := range c.Config.Objects {
@@ -37,10 +38,24 @@ func (c *CfgGen) GenerateEndpoints() error {
 
 	for i := 0; i < localEPManifest.Count; i++ {
 		var epIP string
-		nsIdx := i % len(c.Namespaces)
-		netIdx := i % len(c.Networks)
-		namespace := c.Namespaces[nsIdx]
-		network := c.Networks[netIdx]
+		// Get the namespaces object
+		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
+		if !ok {
+			log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
+			return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
+		}
+
+		// Get the networks object
+		nets, ok := c.Networks.Objects.([]*netproto.Network)
+		if !ok {
+			log.Errorf("Failed to cast the object %v to networks.", c.Networks.Objects)
+			return fmt.Errorf("failed to cast the object %v to networks", c.Networks.Objects)
+		}
+
+		nsIdx := i % len(ns)
+		netIdx := i % len(nets)
+		namespace := ns[nsIdx]
+		network := nets[netIdx]
 		epName := fmt.Sprintf("%s-%d", localEPManifest.Name, i)
 		// Generate local ep for every naples.
 		for _, nodeUUID := range c.NodeUUIDs {
@@ -74,11 +89,24 @@ func (c *CfgGen) GenerateEndpoints() error {
 
 	for i := 0; i < remoteEPCount; i++ {
 		var epIP string
+		// Get the namespaces object
+		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
+		if !ok {
+			log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
+			return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
+		}
 
-		nsIdx := i % len(c.Namespaces)
-		netIdx := i % len(c.Networks)
-		namespace := c.Namespaces[nsIdx]
-		network := c.Networks[netIdx]
+		// Get the networks object
+		nets, ok := c.Networks.Objects.([]*netproto.Network)
+		if !ok {
+			log.Errorf("Failed to cast the object %v to networks.", c.Networks.Objects)
+			return fmt.Errorf("failed to cast the object %v to networks", c.Networks.Objects)
+		}
+
+		nsIdx := i % len(ns)
+		netIdx := i % len(nets)
+		namespace := ns[nsIdx]
+		network := nets[netIdx]
 		epName := fmt.Sprintf("%s-%d", localEPManifest.Name, i)
 		// Pop elements here instead of maintaining a complex index
 		epIP, c.SubnetIPLUT[network.Name] = c.SubnetIPLUT[network.Name][0], c.SubnetIPLUT[network.Name][1:]
@@ -102,7 +130,10 @@ func (c *CfgGen) GenerateEndpoints() error {
 		c.EpCache[defaultRemoteUUIDName] = append(c.EpCache[defaultRemoteUUIDName], epIP)
 		endpoints = append(endpoints, &ep)
 	}
-	// Generate Local and Remote EP Pairs
-	c.Endpoints = endpoints
+	cfg.Type = "netagent"
+	cfg.ObjectKey = "meta.tenant/meta.namespace/meta.name"
+	cfg.RestEndpoint = "api/endpoints/"
+	cfg.Objects = endpoints
+	c.Endpoints = cfg
 	return nil
 }

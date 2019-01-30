@@ -13,6 +13,7 @@ import (
 )
 
 func (c *CfgGen) GenerateFlowMonitorRules() error {
+	var cfg IOTAConfig
 	var flowExportPolicies []*monitoring.FlowExportPolicy
 	var flowExportManifest, flowMonManifest *pkg.Object
 	for _, o := range c.Config.Objects {
@@ -33,8 +34,15 @@ func (c *CfgGen) GenerateFlowMonitorRules() error {
 	log.Infof("Generating %v Flow Export Policies with %v Flow Monitor Rules.", flowExportManifest.Count, rulesPerPolicy)
 
 	for i := 0; i < flowExportManifest.Count; i++ {
-		nsIdx := i % len(c.Namespaces)
-		namespace := c.Namespaces[nsIdx]
+		// Get the namespaces object
+		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
+		if !ok {
+			log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
+			return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
+		}
+
+		nsIdx := i % len(ns)
+		namespace := ns[nsIdx]
 		policyName := fmt.Sprintf("%s-%d", flowExportManifest.Name, i)
 
 		policyRules := c.generateFlowMonRules(rulesPerPolicy)[:rulesPerPolicy]
@@ -58,7 +66,11 @@ func (c *CfgGen) GenerateFlowMonitorRules() error {
 		}
 		flowExportPolicies = append(flowExportPolicies, &fe)
 	}
-	c.FlowExportPolicies = flowExportPolicies
+	cfg.Type = "netagent"
+	cfg.ObjectKey = "meta.tenant/meta.namespace/meta.name"
+	cfg.RestEndpoint = "api/telemetry/flowexports"
+	cfg.Objects = flowExportPolicies
+	c.FlowExportPolicies = cfg
 	return nil
 }
 
@@ -70,7 +82,12 @@ func (c *CfgGen) generateFlowMonRules(count int) (rules []monitoring.MatchRule) 
 		// Pick up from APP Object
 		if len(s.Dst.AppConfigs) == 0 {
 			appName := s.AppName
-			for _, a := range c.Apps {
+			// Get the apps object
+			apps, ok := c.Apps.Objects.([]*netproto.App)
+			if !ok {
+				log.Errorf("Failed to cast the object %v to apps.", c.Apps.Objects)
+			}
+			for _, a := range apps {
 				if a.Name == appName {
 					protoPorts = a.Spec.ProtoPorts
 				}
@@ -97,7 +114,12 @@ func (c *CfgGen) generateFlowMonRules(count int) (rules []monitoring.MatchRule) 
 
 func (c *CfgGen) generateExportConfigs(namespace string) (exportCfg []monitoring.ExportConfig) {
 	var dst string
-	for _, ep := range c.Endpoints {
+	// Get the endpoints object
+	eps, ok := c.Endpoints.Objects.([]*netproto.Endpoint)
+	if !ok {
+		log.Errorf("Failed to cast the object %v to endpoints.", c.Endpoints.Objects)
+	}
+	for _, ep := range eps {
 		if ep.Namespace == namespace && ep.Spec.NodeUUID == defaultRemoteUUIDName {
 			dst = ep.Spec.IPv4Address
 			break

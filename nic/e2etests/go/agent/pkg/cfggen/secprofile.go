@@ -11,6 +11,7 @@ import (
 )
 
 func (c *CfgGen) GenerateSecurityProfiles() error {
+	var cfg IOTAConfig
 	var secProfiles []*netproto.SecurityProfile
 	var secProfileManifest *pkg.Object
 	for _, o := range c.Config.Objects {
@@ -27,8 +28,14 @@ func (c *CfgGen) GenerateSecurityProfiles() error {
 	log.Infof("Generating %v Security Profiles.", secProfileManifest.Count)
 
 	for i := 0; i < secProfileManifest.Count; i++ {
-		nsIdx := i % len(c.Namespaces)
-		namespace := c.Namespaces[nsIdx]
+		// Get the namespaces object
+		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
+		if !ok {
+			log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
+			return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
+		}
+		nsIdx := i % len(ns)
+		namespace := ns[nsIdx]
 		profileName := fmt.Sprintf("%s-%d", secProfileManifest.Name, i)
 		p := netproto.SecurityProfile{
 			TypeMeta: api.TypeMeta{
@@ -43,6 +50,10 @@ func (c *CfgGen) GenerateSecurityProfiles() error {
 		}
 		secProfiles = append(secProfiles, &p)
 	}
-	c.SecurityProfiles = secProfiles
+	cfg.Type = "netagent"
+	cfg.ObjectKey = "meta.tenant/meta.namespace/meta.name"
+	cfg.RestEndpoint = "api/security/profiles/"
+	cfg.Objects = secProfiles
+	c.SecurityProfiles = cfg
 	return nil
 }

@@ -6,11 +6,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/pensando/sw/api/generated/monitoring"
-
 	"gopkg.in/yaml.v2"
 
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -18,20 +15,21 @@ import (
 const defaultRemoteUUIDName = "GWUUID"
 
 type CfgGen struct {
-	NodeUUIDs          []string
-	ManifestFile       string
-	Config             pkg.Config
-	Template           pkg.ConfigTemplate
-	Namespaces         []*netproto.Namespace
-	Networks           []*netproto.Network
-	Endpoints          []*netproto.Endpoint
-	SGPolicies         []*netproto.SGPolicy
-	Apps               []*netproto.App
-	FlowExportPolicies []*monitoring.FlowExportPolicy
-	SecurityProfiles   []*netproto.SecurityProfile
-	EpCache            map[string][]string
-	NodeEPLUT          map[string]NodeEPPairs
-	SubnetIPLUT        map[string][]string
+	NodeUUIDs                                                                               []string
+	ManifestFile                                                                            string
+	Config                                                                                  pkg.Config
+	Template                                                                                pkg.ConfigTemplate
+	Namespaces, Networks, Endpoints, Apps, SGPolicies, SecurityProfiles, FlowExportPolicies IOTAConfig
+	EpCache                                                                                 map[string][]string
+	NodeEPLUT                                                                               map[string]NodeEPPairs
+	SubnetIPLUT                                                                             map[string][]string
+}
+
+type IOTAConfig struct {
+	Type         string      `json:"type,omitempty"`
+	RestEndpoint string      `json:"rest-endpoint,omitempty"`
+	ObjectKey    string      `json:"object-key,omitempty"`
+	Objects      interface{} `json:"objects,omitempty"`
 }
 
 type NodeEPPairs struct {

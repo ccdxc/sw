@@ -14,6 +14,7 @@ import (
 )
 
 func (c *CfgGen) GenerateFirewallPolicies() error {
+	var cfg IOTAConfig
 	var sgPolicies []*netproto.SGPolicy
 
 	var sgPolicyManifest, sgRuleManifest *pkg.Object
@@ -39,8 +40,14 @@ func (c *CfgGen) GenerateFirewallPolicies() error {
 
 	for i := 0; i < sgPolicyManifest.Count; i++ {
 		sgPolicyName := fmt.Sprintf("%s-%d", sgPolicyManifest.Name, i)
-		nsIdx := i % len(c.Namespaces)
-		namespace := c.Namespaces[nsIdx]
+		// Get the namespaces object
+		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
+		if !ok {
+			log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
+			return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
+		}
+		nsIdx := i % len(ns)
+		namespace := ns[nsIdx]
 
 		// Generate Node EP Pairs in the current namespace
 		for _, nodeUUID := range c.NodeUUIDs {
@@ -65,13 +72,24 @@ func (c *CfgGen) GenerateFirewallPolicies() error {
 		}
 		sgPolicies = append(sgPolicies, &sgPolicy)
 	}
-	c.SGPolicies = sgPolicies
+
+	cfg.Type = "netagent"
+	cfg.ObjectKey = "meta.tenant/meta.namespace/meta.name"
+	cfg.RestEndpoint = "api/security/policies/"
+	cfg.Objects = sgPolicies
+	c.SGPolicies = cfg
 	return nil
 }
 
 func (c *CfgGen) GenerateEPPairs(namespace, nodeUUID string, count int) (epPairs NodeEPPairs) {
 	var localEPs, remoteEPs []string
-	for _, ep := range c.Endpoints {
+	// Get the endpoints object
+	eps, ok := c.Endpoints.Objects.([]*netproto.Endpoint)
+	if !ok {
+		log.Errorf("Failed to cast the object %v to endpoints.", c.Endpoints.Objects)
+	}
+
+	for _, ep := range eps {
 		if ep.Namespace == namespace {
 			if ep.Spec.NodeUUID == nodeUUID {
 				localEPs = append(localEPs, ep.Spec.IPv4Address)
@@ -139,6 +157,11 @@ func (c *CfgGen) getRemoteEPs(nodeUUID string) []string {
 func (c *CfgGen) generatePolicyRules(count int) (policyRules []netproto.PolicyRule) {
 	for j := 0; j < count; j++ {
 		for _, nodeUUID := range c.NodeUUIDs {
+			// Get the apps object
+			apps, ok := c.Apps.Objects.([]*netproto.App)
+			if !ok {
+				log.Errorf("Failed to cast the object %v to apps.", c.Apps.Objects)
+			}
 			var proto, port string
 			var localEPPair, remoteEPPair EPPair
 			localEPPairs := c.NodeEPLUT[nodeUUID].LocalEPPairs
@@ -156,7 +179,7 @@ func (c *CfgGen) generatePolicyRules(count int) (policyRules []netproto.PolicyRu
 				LocalEPPairs:  localEPPairs,
 				RemoteEPPairs: remoteEPPairs,
 			}
-			app := c.Apps[j%len(c.Apps)]
+			app := apps[j%len(apps)]
 			l4Match := c.Template.FirewallPolicyRules[j%len(c.Template.FirewallPolicyRules)]
 			components := strings.Split(l4Match, "/")
 
