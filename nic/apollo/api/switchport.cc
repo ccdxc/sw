@@ -79,10 +79,12 @@ switchport_entry::init_config(api_ctxt_t *api_ctxt) {
 
 /**
  * @brief    allocate h/w resources for this object
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-switchport_entry::reserve_resources(void) {
+switchport_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 

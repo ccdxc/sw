@@ -90,10 +90,12 @@ route_table::init_config(api_ctxt_t *api_ctxt) {
 
 /**
  * @brief    allocate h/w resources for this object
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-route_table::reserve_resources(void) {
+route_table::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this);
 }
 
@@ -105,10 +107,6 @@ route_table::reserve_resources(void) {
  */
 sdk_ret_t
 route_table::program_config(obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t            ret;
- 
-    ret = reserve_resources();
-    SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
     OCI_TRACE_DEBUG("Programming route table %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
 }

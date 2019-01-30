@@ -49,6 +49,7 @@ trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
     default:
         break;
     }
+    fflush(stdout);
     return 0;
 }
 

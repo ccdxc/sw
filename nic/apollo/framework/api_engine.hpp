@@ -32,13 +32,13 @@ namespace api {
  * @brief   processing stage of the APIs in a given batch
  */
 typedef enum api_batch_stage_e {
-    API_BATCH_STAGE_NONE,              /**< invalid stage */
-    API_BATCH_STAGE_INIT,              /**< initialization stage */
-    API_BATCH_STAGE_PRE_PROCESS,       /**< pre-processing stage */
-    API_BATCH_STAGE_RESERVE_RESOURCE,  /**< reserve resources, if any */
-    API_BATCH_STAGE_CONFIG_UPDATE,     /**< table programming stage */
-    API_BATCH_STAGE_CONFIG_ACTIVATE,   /**< epoch activation stage */
-    API_BATCH_STAGE_ABORT,             /**< abort stage */
+    API_BATCH_STAGE_NONE,                 /**< invalid stage */
+    API_BATCH_STAGE_INIT,                 /**< initialization stage */
+    API_BATCH_STAGE_PRE_PROCESS,          /**< pre-processing stage */
+    API_BATCH_STAGE_RESERVE_RESOURCES,    /**< reserve resources, if any */
+    API_BATCH_STAGE_PROGRAM_CONFIG,       /**< table programming stage */
+    API_BATCH_STAGE_CONFIG_ACTIVATE,      /**< epoch activation stage */
+    API_BATCH_STAGE_ABORT,                /**< abort stage */
 } api_batch_stage_t;
 
 /**
@@ -187,6 +187,15 @@ private:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t pre_process_stage_(void);
+
+    /**
+     * @brief    allocate any s/w & h/w resources for the given object and
+     *           operation
+     * @param[in] api_obj    API object being processed
+     * @param[in] obj_ctxt   transient information maintained to process the API
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
 
     /**
      * @brief    datapath table update stage

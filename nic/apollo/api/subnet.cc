@@ -87,10 +87,12 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
 
 /**
  * @brief    allocate h/w resources for this object
+ * @param[in] orig_obj    old version of the unmodified object
+ * @param[in] obj_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-subnet_entry::reserve_resources(void) {
+subnet_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     if (subnet_db()->subnet_idxr()->alloc((uint32_t *)&this->hw_id_) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
@@ -116,7 +118,7 @@ subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
                     ippfx2str(&oci_subnet->pfx), ipaddr2str(&oci_subnet->vr_ip),
                     macaddr2str(oci_subnet->vr_mac),
                     oci_subnet->route_table.id);
-    return reserve_resources();
+    return SDK_RET_OK;
 }
 
 /**
