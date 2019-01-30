@@ -47,7 +47,7 @@ cd perftest
 
 if [ ! -a ./configure ] ; then ./autogen.sh ; fi
 
-CFLAGS="-I$DIR/rdma-core/build/include" \
+CFLAGS="-std=gnu99 -I$DIR/rdma-core/build/include" \
 LDFLAGS="-L$DIR/rdma-core/build/lib -Wl,-R$DIR/rdma-core/build/lib" \
 ./configure || exit
 
