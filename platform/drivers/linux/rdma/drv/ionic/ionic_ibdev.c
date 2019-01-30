@@ -5471,7 +5471,8 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 
 	switch(code) {
 	case IONIC_V1_EQE_CQ_NOTIFY:
-		cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
+		if (cq->ibcq.comp_handler)
+			cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
 		goto out;
 
 	case IONIC_V1_EQE_CQ_ERR:
@@ -5484,7 +5485,8 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 		goto out;
 	}
 
-	cq->ibcq.event_handler(&ibev, cq->ibcq.cq_context);
+	if (cq->ibcq.event_handler)
+		cq->ibcq.event_handler(&ibev, cq->ibcq.cq_context);
 
 out:
 	rcu_read_unlock();
@@ -5525,7 +5527,8 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 			goto out;
 		}
 
-		qp->ibsrq.event_handler(&ibev, qp->ibsrq.srq_context);
+		if (qp->ibsrq.event_handler)
+			qp->ibsrq.event_handler(&ibev, qp->ibsrq.srq_context);
 	} else {
 		ibev.element.qp = &qp->ibqp;
 
@@ -5561,7 +5564,8 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 			goto out;
 		}
 
-		qp->ibqp.event_handler(&ibev, qp->ibqp.qp_context);
+		if (qp->ibqp.event_handler)
+			qp->ibqp.event_handler(&ibev, qp->ibqp.qp_context);
 	}
 
 
