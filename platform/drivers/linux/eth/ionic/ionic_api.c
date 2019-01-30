@@ -152,7 +152,7 @@ void ionic_api_kernel_dbpage(struct lif *lif, u32 __iomem **intr_ctrl,
 	*dbpage = (void __iomem *)lif->kern_dbpage;
 
 	/* XXX remove when rdma drops xxx_kdbid workaround */
-	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, 0);
+	dbpage_num = ionic_db_page_num(lif, 0);
 	*xxx_dbpage_phys = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);
 }
 EXPORT_SYMBOL_GPL(ionic_api_kernel_dbpage);
@@ -174,7 +174,7 @@ int ionic_api_get_dbid(struct lif *lif, u32 *dbid, phys_addr_t *addr)
 
 	mutex_unlock(&lif->dbid_inuse_lock);
 
-	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, id);
+	dbpage_num = ionic_db_page_num(lif, id);
 
 	*dbid = id;
 	*addr = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);

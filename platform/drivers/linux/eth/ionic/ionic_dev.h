@@ -14,6 +14,7 @@
 #define IONIC_MAX_TXRX_DESC	65536
 #define IONIC_MIN_TXRX_DESC	16
 #define IONIC_DEF_TXRX_DESC	4096
+#define IONIC_LIFS_MAX		1024
 
 #define BAR0_SIZE			0x8000
 
@@ -353,10 +354,10 @@ void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 
 char *ionic_dev_asic_name(u8 asic_type);
 struct doorbell __iomem *ionic_db_map(struct lif *lif, struct queue *q);
-int ionic_db_page_num(struct ionic_dev *idev, int lif_id, int pid);
+int ionic_db_page_num(struct lif *lif, int pid);
 
-int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
-		    unsigned long index);
+void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
+		     unsigned long index);
 void ionic_intr_mask_on_assertion(struct intr *intr);
 void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer);
@@ -372,7 +373,7 @@ unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
 			      ionic_cq_cb cb, void *cb_arg);
 
 int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
-		 unsigned int index, const char *base, unsigned int num_descs,
+		 unsigned int index, const char *name, unsigned int num_descs,
 		 size_t desc_size, size_t sg_desc_size, unsigned int pid);
 void ionic_q_map(struct queue *q, void *base, dma_addr_t base_pa);
 void ionic_q_sg_map(struct queue *q, void *base, dma_addr_t base_pa);

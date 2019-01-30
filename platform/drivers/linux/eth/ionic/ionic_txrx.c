@@ -79,15 +79,19 @@ static bool ionic_rx_copybreak(struct queue *q, struct desc_info *desc_info,
 static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 			   struct cq_info *cq_info, void *cb_arg)
 {
-	struct net_device *netdev = q->lif->netdev;
 	struct rxq_comp *comp = cq_info->cq_desc;
 	struct sk_buff *skb = cb_arg;
 	struct qcq *qcq = q_to_qcq(q);
 	struct rx_stats *stats = q_to_rx_stats(q);
-
+	struct net_device *netdev;
 #ifdef CSUM_DEBUG
 	__sum16 csum;
 #endif
+
+	if (is_master_lif(q->lif))
+		netdev = q->lif->netdev;
+	else
+		netdev = q->lif->upper_dev;
 
 	if (comp->status) {
 		// TODO record errors
@@ -116,7 +120,14 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 #ifdef CSUM_DEBUG
 	csum = ip_compute_csum(skb->data, skb->len);
 #endif
-	skb_record_rx_queue(skb, q->index);
+	if (is_master_lif(q->lif)) {
+		skb_record_rx_queue(skb, q->index);
+	} else {
+		struct lif *master_lif = q->lif->ionic->master_lif;
+		int qidx = master_lif->nxqs + q->lif->index - 1;
+
+		skb_record_rx_queue(skb, qidx);
+	}
 
 	if (netdev->features & NETIF_F_RXHASH) {
 		switch (comp->rss_type) {
@@ -743,14 +754,49 @@ static int ionic_tx_descs_needed(struct queue *q, struct sk_buff *skb)
 	return 1;
 }
 
+u16 ionic_select_queue(struct net_device *netdev, struct sk_buff *skb,
+			void *accel_priv, select_queue_fallback_t fallback)
+{
+	u16 index;
+
+	if (accel_priv) {
+		struct lif *lif = (struct lif *)accel_priv;
+		struct lif *master_lif = lif->ionic->master_lif;
+
+		index = master_lif->nxqs + lif->index - 1;
+	} else {
+		index = fallback(netdev, skb);
+	}
+
+	return index;
+}
+
 netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 {
 	u16 queue_index = skb_get_queue_mapping(skb);
 	struct lif *lif = netdev_priv(netdev);
-	struct queue *q = lif_to_txq(lif, queue_index);
-	struct tx_stats *stats = q_to_tx_stats(q);
+	struct tx_stats *stats;
+	struct queue *q;
 	int ndescs;
 	int err;
+
+	/* When supporting multi-lif for macvlan offload, the
+	 * queue array can posisbly be sparse, so we have to
+	 * watch out for the stack selecting a tx queue that
+	 * doesn't actually exist.  This shouldn't happen often
+	 * and we may need to rework our representation to
+	 * not have a sparse array.  This is a quick hack to
+	 * watch for issues.
+	 * TODO: rework to not let this case happen
+	 */
+	q = lif_to_txq(lif, queue_index);
+	if (!q) {
+		netdev_info(skb->dev, "%s: bad queue_index=%d\n",
+			    __func__, queue_index);
+		return -1;
+	}
+
+	stats = q_to_tx_stats(q);
 
 	ndescs = ionic_tx_descs_needed(q, skb);
 	if (ndescs < 0)

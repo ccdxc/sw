@@ -56,29 +56,35 @@ static const struct ionic_stat_desc ionic_dbg_napi_stats_desc[] = {
 #define IONIC_NUM_DBG_NAPI_STATS ARRAY_SIZE(ionic_dbg_napi_stats_desc)
 #endif
 
+#define MAX_Q(lif)   ((lif)->netdev->real_num_tx_queues)
+
 static void ionic_get_lif_stats(struct lif *lif, struct lif_sw_stats *stats)
 {
-	int q_num;
-	struct qcq *txqcq;
-	struct qcq *rxqcq;
 	struct tx_stats *tstats;
 	struct rx_stats *rstats;
+	struct qcq *txqcq;
+	struct qcq *rxqcq;
+	int q_num;
 
 	memset(stats, 0, sizeof(*stats));
 
-	for (q_num = 0; q_num < lif->nxqs; q_num++) {
+	for (q_num = 0; q_num < MAX_Q(lif); q_num++) {
 		txqcq = lif_to_txqcq(lif, q_num);
-		tstats = &txqcq->stats.tx;
-		stats->tx_packets += tstats->pkts;
-		stats->tx_bytes += tstats->bytes;
-		stats->tx_tso += tstats->tso;
+		if (txqcq) {
+			tstats = &txqcq->stats.tx;
+			stats->tx_packets += tstats->pkts;
+			stats->tx_bytes += tstats->bytes;
+			stats->tx_tso += tstats->tso;
+		}
 
 		rxqcq = lif_to_rxqcq(lif, q_num);
-		rstats = &rxqcq->stats.rx;
-		stats->rx_packets += rstats->pkts;
-		stats->rx_bytes += rstats->bytes;
-		stats->rx_csum_none += rstats->csum_none;
-		stats->rx_csum_complete += rstats->csum_complete;
+		if (rxqcq) {
+			rstats = &rxqcq->stats.rx;
+			stats->rx_packets += rstats->pkts;
+			stats->rx_bytes += rstats->bytes;
+			stats->rx_csum_none += rstats->csum_none;
+			stats->rx_csum_complete += rstats->csum_complete;
+		}
 	}
 }
 
@@ -90,15 +96,15 @@ static u64 ionic_sw_stats_get_count(struct lif *lif)
 	total += IONIC_NUM_LIF_STATS;
 
 	/* tx stats */
-	total += lif->nxqs * IONIC_NUM_TX_STATS;
+	total += MAX_Q(lif) * IONIC_NUM_TX_STATS;
 
 	/* rx stats */
-	total += lif->nxqs * IONIC_NUM_RX_STATS;
+	total += MAX_Q(lif) * IONIC_NUM_RX_STATS;
 
 #ifdef IONIC_DEBUG_STATS
 	if (test_bit(LIF_SW_DEBUG_STATS, lif->state)) {
 		/* tx debug stats */
-		total += lif->nxqs * (IONIC_NUM_DBG_CQ_STATS +
+		total += MAX_Q(lif) * (IONIC_NUM_DBG_CQ_STATS +
 				      IONIC_NUM_TX_Q_STATS +
 				      IONIC_NUM_DBG_INTR_STATS +
 				      IONIC_NUM_DBG_NAPI_STATS +
@@ -106,7 +112,7 @@ static u64 ionic_sw_stats_get_count(struct lif *lif)
 				      MAX_NUM_SG_CNTR);
 
 		/* rx debug stats */
-		total += lif->nxqs * (IONIC_NUM_DBG_CQ_STATS +
+		total += MAX_Q(lif) * (IONIC_NUM_DBG_CQ_STATS +
 				      IONIC_NUM_DBG_INTR_STATS +
 				      IONIC_NUM_DBG_NAPI_STATS +
 				      MAX_NUM_NAPI_CNTR);
@@ -124,7 +130,7 @@ static void ionic_sw_stats_get_strings(struct lif *lif, u8 **buf)
 			   ionic_lif_stats_desc[i].name);
 		*buf += ETH_GSTRING_LEN;
 	}
-	for (q_num = 0; q_num < lif->nxqs; q_num++) {
+	for (q_num = 0; q_num < MAX_Q(lif); q_num++) {
 		for (i = 0; i < IONIC_NUM_TX_STATS; i++) {
 			snprintf(*buf, ETH_GSTRING_LEN, "tx_%d_%s",
 				   q_num,
@@ -174,7 +180,7 @@ static void ionic_sw_stats_get_strings(struct lif *lif, u8 **buf)
 		}
 #endif
 	}
-	for (q_num = 0; q_num < lif->nxqs; q_num++) {
+	for (q_num = 0; q_num < MAX_Q(lif); q_num++) {
 		for (i = 0; i < IONIC_NUM_RX_STATS; i++) {
 			snprintf(*buf, ETH_GSTRING_LEN, "rx_%d_%s",
 				   q_num,
@@ -232,8 +238,29 @@ static void ionic_sw_stats_get_values(struct lif *lif, u64 **buf)
 		(*buf)++;
 	}
 
-	for (q_num = 0; q_num < lif->nxqs; q_num++) {
+	for (q_num = 0; q_num < MAX_Q(lif); q_num++) {
 		txqcq = lif_to_txqcq(lif, q_num);
+
+		/* With macvlan offload support, it is possible to
+		 * have some undefined queues in the txqcq list, so
+		 * skip over them.
+		 */
+		if (!txqcq) {
+			(*buf) += IONIC_NUM_TX_STATS;
+
+#ifdef IONIC_DEBUG_STATS
+			(*buf) += IONIC_NUM_TX_Q_STATS;
+			(*buf) += IONIC_NUM_DBG_CQ_STATS;
+			(*buf) += IONIC_NUM_DBG_INTR_STATS;
+			(*buf) += IONIC_NUM_DBG_NAPI_STATS;
+			(*buf) += MAX_NUM_NAPI_CNTR;
+			(*buf) += MAX_NUM_SG_CNTR;
+#endif
+
+			/* go on the the next queue */
+			continue;
+		}
+
 		for (i = 0; i < IONIC_NUM_TX_STATS; i++) {
 			**buf = IONIC_READ_STAT64(&txqcq->stats.tx,
 				   &ionic_tx_stats_desc[i]);
@@ -273,8 +300,27 @@ static void ionic_sw_stats_get_values(struct lif *lif, u64 **buf)
 #endif
 	}
 
-	for (q_num = 0; q_num < lif->nxqs; q_num++) {
+	for (q_num = 0; q_num < MAX_Q(lif); q_num++) {
 		rxqcq = lif_to_rxqcq(lif, q_num);
+
+		/* With macvlan offload support, it is possible to
+		 * have some undefined queues in the txqcq list, so
+		 * skip over them.
+		 */
+		if (!rxqcq) {
+			(*buf) += IONIC_NUM_RX_STATS;
+
+#ifdef IONIC_DEBUG_STATS
+			(*buf) += IONIC_NUM_DBG_CQ_STATS;
+			(*buf) += IONIC_NUM_DBG_INTR_STATS;
+			(*buf) += IONIC_NUM_DBG_NAPI_STATS;
+			(*buf) += MAX_NUM_NAPI_CNTR;
+#endif
+
+			/* go on the the next queue */
+			continue;
+		}
+
 		for (i = 0; i < IONIC_NUM_RX_STATS; i++) {
 			**buf = IONIC_READ_STAT64(&rxqcq->stats.rx,
 				   &ionic_rx_stats_desc[i]);

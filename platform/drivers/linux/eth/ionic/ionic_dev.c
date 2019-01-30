@@ -210,18 +210,16 @@ struct doorbell __iomem *ionic_db_map(struct lif *lif, struct queue *q)
 	return lif->kern_dbpage + q->qtype;
 }
 
-int ionic_db_page_num(struct ionic_dev *dev, int lif_id, int pid)
+int ionic_db_page_num(struct lif *lif, int pid)
 {
-	return lif_id * dev->ident->dev.ndbpgs_per_lif + pid;
+	return (lif->index * lif->dbid_count) + pid;
 }
 
-int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
+void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index)
 {
 	intr->index = index;
 	intr->ctrl = idev->intr_ctrl + index;
-
-	return 0;
 }
 
 void ionic_intr_mask_on_assertion(struct intr *intr)
@@ -346,7 +344,7 @@ unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
 }
 
 int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
-		 unsigned int index, const char *base, unsigned int num_descs,
+		 unsigned int index, const char *name, unsigned int num_descs,
 		 size_t desc_size, size_t sg_desc_size, unsigned int pid)
 {
 	struct desc_info *cur;
@@ -369,7 +367,7 @@ int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
 	q->head = q->tail = q->info;
 	q->pid = pid;
 
-	snprintf(q->name, sizeof(q->name), "%s%u", base, index);
+	snprintf(q->name, sizeof(q->name), "L%d-%s%u", lif->index, name, index);
 
 	cur = q->info;
 
@@ -419,8 +417,9 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 	q->head->cb_arg = cb_arg;
 	q->head = q->head->next;
 
-	dev_dbg(dev, "qname=%s qid=%d p_index=%d ringdb=%d q->db=0x%08llx\n",
-		q->name, q->qid, q->head->index, ring_doorbell, (u64)q->db);
+	dev_dbg(dev, "lif=%d qname=%s qid=%d p_index=%d ringdb=%d q->db=0x%08llx\n",
+		q->lif->index, q->name, q->qid, q->head->index,
+		ring_doorbell, virt_to_phys(q->db));
 	if (ring_doorbell) {
 		struct doorbell db = {
 			.qid_lo = q->qid,

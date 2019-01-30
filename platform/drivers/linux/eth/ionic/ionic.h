@@ -28,11 +28,14 @@ struct ionic {
 	union identity *ident;
 	dma_addr_t ident_pa;
 	struct list_head lifs;
+	struct lif *master_lif;
 	bool is_mgmt_nic;
 	unsigned int nnqs_per_lif;
 	unsigned int neqs_per_lif;
 	unsigned int ntxqs_per_lif;
 	unsigned int nrxqs_per_lif;
+	unsigned int nslaves;
+	DECLARE_BITMAP(lifbits, IONIC_LIFS_MAX);
 	unsigned int nintrs;
 	DECLARE_BITMAP(intrs, INTR_CTRL_REGS_MAX);
 #ifndef HAVE_PCI_IRQ_API

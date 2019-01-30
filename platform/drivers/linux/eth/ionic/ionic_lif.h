@@ -70,6 +70,7 @@ struct qcq {
 	} stats;
 	unsigned int flags;
 	struct dentry *dentry;
+	unsigned int master_slot;
 };
 
 #define q_to_qcq(q)		container_of(q, struct qcq, q)
@@ -129,6 +130,7 @@ struct lif {
 	char name[LIF_NAME_MAX_SZ];
 	struct list_head list;
 	struct net_device *netdev;
+	struct net_device *upper_dev;
 	DECLARE_BITMAP(state, LIF_STATE_SIZE);
 	struct ionic *ionic;
 	bool registered;
@@ -172,6 +174,7 @@ struct lif {
 #define lif_to_rxqcq(lif, i)	(lif->rxqcqs[i])
 #define lif_to_txq(lif, i)	(&lif_to_txqcq(lif, i)->q)
 #define lif_to_rxq(lif, i)	(&lif_to_txqcq(lif, i)->q)
+#define is_master_lif(lif)	((lif)->index == 0)
 
 int ionic_lifs_alloc(struct ionic *ionic);
 void ionic_lifs_free(struct ionic *ionic);
