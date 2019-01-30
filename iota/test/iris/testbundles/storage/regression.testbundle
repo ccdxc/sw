@@ -295,7 +295,7 @@ testcases:
             type        : nested
             cpus        : [ 2 ]
             batch_depth : [ 1, 33 ]
-            mode        : *MODE_ITER_LIST_COMBO3
+            mode        : *MODE_ITER_LIST
             inputlen    : [ 8192 ]
         args    :
             dir     : *STORAGE_TEST_DIR
@@ -310,7 +310,7 @@ testcases:
             type        : nested
             cpus        : [ 2 ]
             batch_depth : [ 1, 33 ]
-            mode        : *MODE_ITER_LIST_COMBO3
+            mode        : *MODE_ITER_LIST
             inputlen    : [ 8192 ]
         args    :
             dir     : *STORAGE_TEST_DIR
