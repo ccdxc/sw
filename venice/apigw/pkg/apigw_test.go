@@ -210,23 +210,44 @@ func TestCheckCORS(t *testing.T) {
 		expected int
 	}{
 		{
-			name:     "cross origin GET request",
+			name:     "cross origin GET request not TLS",
 			method:   "GET",
 			origin:   "http://test.com",
 			host:     "127.0.0.1",
 			expected: http.StatusOK,
 		},
 		{
-			name:     "cross origin POST request",
+			name:     "cross origin GET request",
+			method:   "GET",
+			origin:   "https://test.com",
+			host:     "127.0.0.1",
+			expected: http.StatusOK,
+		},
+		{
+			name:     "cross origin POST request not TLS",
 			method:   "POST",
 			origin:   "http://test.com",
 			host:     "127.0.0.1",
 			expected: http.StatusForbidden,
 		},
 		{
-			name:     "same origin POST request",
+			name:     "cross origin POST request",
+			method:   "POST",
+			origin:   "https://test.com",
+			host:     "127.0.0.1",
+			expected: http.StatusForbidden,
+		},
+		{
+			name:     "same origin POST request not TLS",
 			method:   "POST",
 			origin:   "http://127.0.0.1",
+			host:     "127.0.0.1",
+			expected: http.StatusForbidden,
+		},
+		{
+			name:     "same origin POST request",
+			method:   "POST",
+			origin:   "https://127.0.0.1",
 			host:     "127.0.0.1",
 			expected: http.StatusOK,
 		},

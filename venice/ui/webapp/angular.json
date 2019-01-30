@@ -76,7 +76,9 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "venice-ui:build"
+            "browserTarget": "venice-ui:build",
+            "sslKey": "server.key",
+            "sslCert": "server.crt"
           },
           "configurations": {
             "production": {

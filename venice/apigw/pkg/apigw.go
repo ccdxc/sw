@@ -223,7 +223,7 @@ func (a *apiGw) checkCORS(h http.Handler) http.Handler {
 				// if there is a proxy in front of API Gw
 				forwardedHost := r.Header.Get(apigw.XForwardedHostHeader)
 				// r.Host contains Host header from http request. It is compared against Origin header to check if request is same origin.
-				if origin != "http://"+forwardedHost && origin != "http://"+r.Host { //TODO: TLS should be enabled
+				if origin != "https://"+forwardedHost && origin != "https://"+r.Host {
 					w.WriteHeader(http.StatusForbidden)
 					a.logger.InfoLog("msg", "Denied CORS request", "Origin", origin, "Host", r.Host, apigw.XForwardedHostHeader, forwardedHost)
 					vErrors.SendUnauthorized(w, "CORS request not allowed")
