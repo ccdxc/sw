@@ -22,6 +22,14 @@
 #define STORAGE_SEQ_PGM_NAME_CRYPTO_STATUS1     "storage_seq_xts_status_desc1_handler.bin"
 
 
+/*
+ * Storage LIF rate limit bytes units scale (down) factor in bytes.
+ */
+#define STORAGE_SEQ_RL_UNITS_SCALE_DFLT         1024
+#define STORAGE_SEQ_RL_UNITS_SCALE_SHFT         10
+
+#ifndef __STORAGE_ASM_DEFINES_H__
+
 /**
  * storage_seq_qtype_t - Storage Sequencer qtype
  */
@@ -98,8 +106,7 @@ typedef struct storage_seq_qstate {
     uint8_t     desc1_next_pc_valid;
     storage_seq_qgroup_t qgroup;
     uint16_t    core_id;
-    uint8_t     rl_units_scale;
-    uint8_t     pad[22];
+    uint8_t     pad[23];
     uint8_t     eop_p2m_rsvd;   // reserved for PHV2MEM eop cmd cancel write
 
     storage_seq_qmetrics_t metrics;
@@ -121,5 +128,7 @@ typedef struct storage_seq_qstate {
 #define STORAGE_SEQ_CB_SIZE_SHFT                8       /* log2(STORAGE_SEQ_CB_SIZE) */
 
 static_assert (sizeof(storage_seq_qstate_t) == STORAGE_SEQ_CB_SIZE, "");
+
+#endif
 
 #endif    // __STORAGE_SEQ_COMMON_H__

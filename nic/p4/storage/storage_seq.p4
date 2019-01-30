@@ -426,8 +426,8 @@ action seq_q_state_pop(/*pc_offset, */rsvd, cosA, cosB, cos_sel, eval_last,
 
 action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_pndx_shadow_addr,
                                barco_ring_addr, barco_desc_size, barco_pndx_size, 
-			       barco_ring_size, barco_batch_mode, barco_batch_size,
-			       rl_units_scale, barco_data_len) {
+			       barco_ring_size, barco_batch_mode, barco_rate_limit_en,
+			       rsvd0, barco_batch_size, barco_data_len) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC4_USE(seq_kivec4_scratch, seq_kivec4)
@@ -441,8 +441,9 @@ action seq_barco_entry_handler(barco_desc_addr, barco_pndx_addr, barco_pndx_shad
   modify_field(seq_barco_entry_scratch.barco_pndx_size, barco_pndx_size);
   modify_field(seq_barco_entry_scratch.barco_ring_size, barco_ring_size);
   modify_field(seq_barco_entry_scratch.barco_batch_mode, barco_batch_mode);
+  modify_field(seq_barco_entry_scratch.barco_rate_limit_en, barco_rate_limit_en);
+  modify_field(seq_barco_entry_scratch.rsvd0, rsvd0);
   modify_field(seq_barco_entry_scratch.barco_batch_size, barco_batch_size);
-  modify_field(seq_barco_entry_scratch.rl_units_scale, rl_units_scale);
   modify_field(seq_barco_entry_scratch.barco_data_len, barco_data_len);
 
   // Update the K+I vector with the barco descriptor size to be used 
@@ -521,7 +522,8 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
                                      status_addr0, status_addr1,
                                      intr_addr, intr_data, status_len, 
 				     status_offset0, status_dma_en,
-                                     next_db_en, intr_en, next_db_action_barco_push) {
+                                     next_db_en, intr_en,
+				     next_db_action_barco_push, rate_limit_en) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC1_USE(seq_kivec1_scratch, seq_kivec1)
@@ -547,6 +549,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_comp_status_desc0_scratch.next_db_en, next_db_en);
   modify_field(seq_comp_status_desc0_scratch.intr_en, intr_en);
   modify_field(seq_comp_status_desc0_scratch.next_db_action_barco_push, next_db_action_barco_push);
+  modify_field(seq_comp_status_desc0_scratch.rate_limit_en, rate_limit_en);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(seq_kivec4.barco_ring_addr, seq_comp_status_desc0_scratch.next_db_addr);
@@ -559,6 +562,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_kivec5.next_db_en, seq_comp_status_desc0_scratch.next_db_en);
   modify_field(seq_kivec5.intr_en, seq_comp_status_desc0_scratch.intr_en);
   modify_field(seq_kivec5.next_db_action_barco_push, seq_comp_status_desc0_scratch.next_db_action_barco_push);
+  modify_field(seq_kivec5.rate_limit_en, seq_comp_status_desc0_scratch.rate_limit_en);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the SGL mem2mem DMA for ordering.
@@ -608,7 +612,7 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
 @pragma little_endian hdr_version
 action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_dst_vec_addr, 
                                      sgl_vec_addr, pad_buf_addr, alt_buf_addr,
-                                     data_len, hdr_version,
+                                     data_len, hdr_version, rsvd0,
                                      pad_boundary_shift, stop_chain_on_error,
                                      data_len_from_desc, aol_pad_en, sgl_pad_en,
                                      sgl_sparse_format_en, sgl_pdma_en, sgl_pdma_pad_only,
@@ -630,6 +634,7 @@ action seq_comp_status_desc1_handler(rsvd, comp_buf_addr, aol_src_vec_addr, aol_
   modify_field(seq_comp_status_desc1_scratch.alt_buf_addr, alt_buf_addr);
   modify_field(seq_comp_status_desc1_scratch.data_len, data_len);
   modify_field(seq_comp_status_desc1_scratch.hdr_version, hdr_version);
+  modify_field(seq_comp_status_desc1_scratch.rsvd0, rsvd0);
   modify_field(seq_comp_status_desc1_scratch.pad_boundary_shift, pad_boundary_shift);
   modify_field(seq_comp_status_desc1_scratch.stop_chain_on_error, stop_chain_on_error);
   modify_field(seq_comp_status_desc1_scratch.data_len_from_desc, data_len_from_desc);
@@ -934,7 +939,8 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
                                     status_addr0, status_addr1, 
                                     intr_addr, intr_data, status_len, 
 				    status_offset0, status_dma_en,
-                                    next_db_en, intr_en, next_db_action_barco_push) {
+                                    next_db_en, intr_en,
+				    next_db_action_barco_push, rate_limit_en) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC4_USE(seq_kivec4_scratch, seq_kivec4)
@@ -959,6 +965,7 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_xts_status_desc0_scratch.next_db_en, next_db_en);
   modify_field(seq_xts_status_desc0_scratch.intr_en, intr_en);
   modify_field(seq_xts_status_desc0_scratch.next_db_action_barco_push, next_db_action_barco_push);
+  modify_field(seq_xts_status_desc0_scratch.rate_limit_en, rate_limit_en);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(seq_kivec4.barco_ring_addr, seq_xts_status_desc0_scratch.next_db_addr);
@@ -972,6 +979,7 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_kivec5xts.next_db_en, seq_xts_status_desc0_scratch.next_db_en);
   modify_field(seq_kivec5xts.intr_en, seq_xts_status_desc0_scratch.intr_en);
   modify_field(seq_kivec5xts.next_db_action_barco_push, seq_xts_status_desc0_scratch.next_db_action_barco_push);
+  modify_field(seq_kivec5xts.rate_limit_en, seq_xts_status_desc0_scratch.rate_limit_en);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the SGL mem2mem DMA for ordering.
@@ -1252,13 +1260,14 @@ action seq_metrics1_commit(aol_pad_reqs, sgl_pad_reqs, sgl_pdma_xfers,
 /*****************************************************************************
  *  seq_metrics2_commit : Update and commit metrics2 to qstate.
  *****************************************************************************/
-@pragma little_endian len_updates
-action seq_metrics2_commit(len_updates, cp_header_updates) {
+@pragma little_endian len_updates cp_header_updates xfer_bytes
+action seq_metrics2_commit(len_updates, cp_header_updates, xfer_bytes) {
 			   
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC9_USE(seq_kivec9_scratch, seq_kivec9)
   
   modify_field(seq_metrics2.len_updates, len_updates);
   modify_field(seq_metrics2.cp_header_updates, cp_header_updates);
+  modify_field(seq_metrics2.xfer_bytes, xfer_bytes);
 }
 

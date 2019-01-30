@@ -85,6 +85,7 @@ pprint_seq_desc(const struct sequencer_desc *desc)
 	OSAL_LOG_DEBUG("%30s: %d", "sd_ring_size", desc->sd_ring_size);
 	OSAL_LOG_DEBUG("%30s: %d", "sd_batch_mode", desc->sd_batch_mode);
 	OSAL_LOG_DEBUG("%30s: %d", "sd_batch_size", desc->sd_batch_size);
+	OSAL_LOG_DEBUG("%30s: %d", "sd_rate_limit_en", desc->sd_rate_limit_en);
 }
 
 static void __attribute__((unused))
@@ -436,6 +437,10 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 
 	desc0 = (struct seq_cpdc_status_desc0 *)seq_status_desc;
 	desc1 = (struct seq_cpdc_status_desc1 *)(seq_status_desc + sizeof(*desc0));
+
+	/* use osal as static_assert is not available */
+	OSAL_ASSERT((sizeof(*desc0) == sizeof(*desc1)) && 
+		    (sizeof(*desc1) == (SONIC_SEQ_STATUS_Q_DESC_SIZE/2)));
 	ring_spec = &chain_params->ccp_ring_spec;
 	next_db_spec = &chain_params->ccp_next_db_spec;
 	cmd = &chain_params->ccp_cmd;
@@ -478,6 +483,7 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc0->options.next_db_en = cmd->ccpc_next_doorbell_en;
 	desc0->options.intr_en = cmd->ccpc_intr_en;
 	desc0->options.action_push = cmd->ccpc_next_db_action_ring_push;
+	desc0->options.rate_limit_en = cmd->rate_limit_en;
 
 	desc1->comp_buf_addr = cpu_to_be64(chain_params->ccp_comp_buf_addr);
 	desc1->aol_src_vec_addr = cpu_to_be64(chain_params->ccp_aol_src_vec_addr);
@@ -485,7 +491,7 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc1->sgl_vec_addr = cpu_to_be64(chain_params->ccp_sgl_vec_addr);
 	desc1->pad_buf_addr = cpu_to_be64(chain_params->ccp_pad_buf_addr);
 	desc1->alt_buf_addr = cpu_to_be64(chain_params->ccp_alt_buf_addr);
-	desc1->data_len = htons(chain_params->ccp_data_len);
+	desc1->data_len = htonl(chain_params->ccp_data_len);
 	desc1->hdr_version = htons(chain_params->ccp_hdr_version);
 
 	desc1->options.blk_boundary_shift = chain_params->ccp_pad_boundary_shift;
@@ -518,6 +524,10 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 
 	desc0 = (struct seq_crypto_status_desc0 *)seq_status_desc;
 	desc1 = (struct seq_crypto_status_desc1 *)(seq_status_desc + sizeof(*desc0));
+
+	/* use osal as static_assert is not available */
+	OSAL_ASSERT((sizeof(*desc0) == sizeof(*desc1)) && 
+		    (sizeof(*desc1) == (SONIC_SEQ_STATUS_Q_DESC_SIZE/2)));
 	ring_spec = &chain_params->ccp_ring_spec;
 	next_db_spec = &chain_params->ccp_next_db_spec;
 	cmd = &chain_params->ccp_cmd;
@@ -560,11 +570,12 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 	desc0->options.next_db_en = cmd->ccpc_next_doorbell_en;
 	desc0->options.intr_en = cmd->ccpc_intr_en;
 	desc0->options.action_push = cmd->ccpc_next_db_action_ring_push;
+	desc0->options.rate_limit_en = cmd->rate_limit_en;
 
 	desc1->comp_sgl_src_addr = cpu_to_be64(chain_params->ccp_comp_sgl_src_addr);
 	desc1->sgl_pdma_dst_addr = cpu_to_be64(chain_params->ccp_sgl_pdma_dst_addr);
 	desc1->crypto_buf_addr = cpu_to_be64(chain_params->ccp_crypto_buf_addr);
-	desc1->data_len = htons(chain_params->ccp_data_len);
+	desc1->data_len = htonl(chain_params->ccp_data_len);
 
 	desc1->options.blk_boundary_shift = chain_params->ccp_blk_boundary_shift;
 	desc1->options.stop_chain_on_error = cmd->ccpc_stop_chain_on_error;
@@ -631,6 +642,7 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 		(uint8_t) ilog2(ring->accel_ring.ring_pndx_size);
 	seq_desc->sd_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
 	seq_desc->sd_data_len = htonl(svc_info->si_seq_info.sqi_data_len);
+	seq_desc->sd_rate_limit_en = true;
 
 	if (svc_info->si_seq_info.sqi_batch_mode) {
 		seq_desc->sd_batch_mode = true;

@@ -417,6 +417,8 @@ setup_service_param_buffers(struct service_info *svc_info,
 		}
 	}
 
+	svc_info->si_seq_info.sqi_data_len = svc_info->si_src_blist.len;
+
 	/*
 	 * Pre-set the "service dependency" data length...As HW operation
 	 * progresses for the service, this data length may later get updated.
@@ -579,7 +581,6 @@ init_service_info(enum pnso_service_type svc_type,
 	svc_info->si_src_blist.blist = svc_params->sp_src_blist;
 	svc_info->si_src_blist.len =
 		pbuf_get_buffer_list_len(svc_params->sp_src_blist);
-	svc_info->si_seq_info.sqi_data_len = svc_info->si_src_blist.len;
 
 	svc_info->si_dst_blist.type = SERVICE_BUF_LIST_TYPE_DFLT;
 	svc_info->si_dst_blist.blist = svc_params->sp_dst_blist;

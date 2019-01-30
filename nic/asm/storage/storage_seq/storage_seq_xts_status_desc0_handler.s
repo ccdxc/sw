@@ -33,8 +33,8 @@ storage_tx_seq_xts_status_desc0_handler:
    // Note: if a compression error arises and status_dma_en is set,
    // interrupts (if set) will also be raised
    PCI_SET_INTERRUPT_DATA()
-   phvwr        p.{seq_kivec5xts_status_dma_en...seq_kivec5xts_next_db_action_barco_push}, \
-   	        d.{status_dma_en...next_db_action_barco_push}
+   phvwr        p.{seq_kivec5xts_status_dma_en...seq_kivec5xts_rate_limit_en}, \
+   	        d.{status_dma_en...rate_limit_en}
    bbeq         d.next_db_en, 0, intr_check
    phvwr	p.seq_kivec10_intr_addr, d.intr_addr    // delay slot
    

@@ -33,7 +33,9 @@ typedef struct {
     uint8_t     acc_desc_size;          // log2(accelerator descriptor size)
     uint8_t     acc_pndx_size;          // log2(accelerator producer index size)
     uint8_t     acc_ring_size;          // log2(accelerator ring size)
-    uint8_t     acc_batch_mode;         // acc_desc_addr is 1st descriptor of a batch
+    uint8_t     rsvd0             : 6,
+    uint8_t     acc_rate_limit_en : 1,
+    uint8_t     acc_batch_mode    : 1;         // acc_desc_addr is 1st descriptor of a batch
     uint16_t    acc_batch_size;         // number of batch descriptors
     uint16_t    filler0;
     uint64_t    filler1[3];

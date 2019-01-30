@@ -39,7 +39,8 @@ storage_seq_barco_entry_handler:
                 p.seq_kivec4_barco_num_descs, r_num_descs
    
    // Set number of bytes for rate limiting
-   SEQ_RATE_LIMIT_LOAD_SET(d.barco_data_len, d.rl_units_scale, c3)
+   SEQ_RATE_LIMIT_ENABLE_CHECK(d.barco_rate_limit_en, c3)
+   SEQ_RATE_LIMIT_LOAD_SET_c(c3, d.barco_data_len)
    
    DMA_PHV2MEM_SETUP_ADDR34(barco_doorbell_data_p_ndx, barco_doorbell_data_p_ndx,
                             d.barco_pndx_addr[33:0], dma_p2m_19)
@@ -48,6 +49,7 @@ storage_seq_barco_entry_handler:
                  dma_p2m_19_dma_cmd_eop,
                  p4_txdma_intr_dma_cmd_ptr)
    SEQ_METRICS_SET(next_db_rung)
+   SEQ_METRICS_VAL_SET(xfer_bytes, d.barco_data_len)
 
    // Advance to a common stage for executing table lock read to get the
    // Barco ring pindex.

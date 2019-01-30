@@ -912,7 +912,6 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     qstate.wring_base = htonll(wring_base);
     qstate.wring_size = htons(cmd->wring_size);
     qstate.entry_size = htons(cmd->entry_size);
-    qstate.rl_units_scale = cmd->???;
 
     if (desc0_pgm_name) {
         qstate.desc0_next_pc = htonl(desc0_pgm_pc >> 6);

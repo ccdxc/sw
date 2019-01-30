@@ -43,9 +43,9 @@ message AccelSeqQueueMetrics {
     delphi.Counter SeqDescsProcessed         = 4;     // SeqSQ descriptors processed
     delphi.Counter SeqDescsAborted           = 5;     // SeqSQ descriptors aborted
     delphi.Counter StatusPdmaXfers           = 6;     // Status PDMA transfers
-    delphi.Counter HwDescXfers               = 7;    // HW descriptor transfers
-    delphi.Counter HwBatchErrors             = 8;    // HW batch transfer errors
-    delphi.Counter HwOpErrors                = 9;    // HW operation errors
+    delphi.Counter HwDescXfers               = 7;     // HW descriptor transfers
+    delphi.Counter HwBatchErrors             = 8;     // HW batch transfer errors
+    delphi.Counter HwOpErrors                = 9;     // HW operation errors
     delphi.Counter AolPadReqs                = 10;    // AOL padding requests processed
     delphi.Counter SglPadReqs                = 11;    // SGL padding requests processed
     delphi.Counter SglPdmaXfers              = 12;    // SGL PDMA transfers taken
@@ -56,6 +56,7 @@ message AccelSeqQueueMetrics {
     delphi.Counter AltBufsTaken              = 17;    // Times an alternate source buffer were used
     delphi.Counter LenUpdateReqs             = 18;    // CP/DC length updates after decrypt
     delphi.Counter CpHeaderUpdates           = 19;    // CP header updates requested
+    delphi.Counter XferBytes                 = 20;    // Bytes transfered
 }
 
 message AccelHwRingKey {

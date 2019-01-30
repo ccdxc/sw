@@ -61,8 +61,8 @@ storage_seq_q_state_pop_start:
    bbeq         d.abort[0], 1, abort
    add          r_pi, r0, d.p_ndx       // delay slot     
    bbeq         d.enable[0], 0, drop_n_exit
-   phvwrpair	p.seq_kivec5_src_qaddr, STAGE0_KIVEC_QADDR,
-                p.seq_kivec5_rl_units_shift, d.rl_units_shift   // delay slot
+   phvwr	p.seq_kivec5_src_qaddr, STAGE0_KIVEC_QADDR      // delay slot
+   SEQ_RATE_LIMIT_CLR()
    
    // Set the table and program address for the next stage to process
    // the popped entry

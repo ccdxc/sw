@@ -24,7 +24,7 @@ storage_seq_comp_status_desc1_handler_start:
     // Relaunch metrics commit for table 1
     SEQ_METRICS0_TABLE1_COMMIT(SEQ_KIVEC5_SRC_QADDR)
 
-    phvwrpair	p.seq_kivec5_data_len, d.data_len, \
+    phvwrpair	p.seq_kivec5_data_len, d.data_len[17:0], \
                 p.{seq_kivec5_stop_chain_on_error...seq_kivec5_cp_hdr_update_en}, \
     	        d.{stop_chain_on_error...cp_hdr_update_en}
     phvwr	p.seq_kivec3_comp_buf_addr, d.comp_buf_addr

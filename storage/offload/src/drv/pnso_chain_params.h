@@ -42,10 +42,11 @@ struct sequencer_desc {
 	uint8_t sd_desc_size;
 	uint8_t sd_pndx_size;
 	uint8_t sd_ring_size;
-	uint8_t sd_batch_mode;
+	uint8_t rsvd0            : 6,
+		sd_rate_limit_en : 1,
+		sd_batch_mode    : 1;
 	uint16_t sd_batch_size;
-	uint8_t sd_rl_units_scale;
-	uint8_t sd_filler_0;
+	uint16_t sd_filler_0;
 	uint32_t sd_data_len;
 	uint32_t sd_filler_1;
 	uint64_t sd_filler_2[2];
@@ -97,6 +98,7 @@ struct cpdc_chain_params_command {
 	uint32_t desc_dlen_update_en:1;
 	uint32_t hdr_version_wr_en:1;
 	uint32_t cp_hdr_update_en:1;
+	uint32_t rate_limit_en:1;
 };
 
 struct cpdc_chain_params {
@@ -118,8 +120,8 @@ struct cpdc_chain_params {
 	uint64_t ccp_intr_addr;
 	uint32_t ccp_intr_data;
 
+	uint32_t ccp_data_len;
 	uint16_t ccp_status_len;
-	uint16_t ccp_data_len;
 	uint16_t ccp_hdr_version;
 
 	uint8_t ccp_status_offset_0;
@@ -129,18 +131,19 @@ struct cpdc_chain_params {
 };
 
 struct crypto_chain_params_command {
-	uint16_t ccpc_status_dma_en:1;
-	uint16_t ccpc_next_doorbell_en:1;
-	uint16_t ccpc_intr_en:1;
-	uint16_t ccpc_next_db_action_ring_push:1;
-	uint16_t ccpc_stop_chain_on_error:1;
-	uint16_t ccpc_comp_len_update_en:1;
-	uint16_t ccpc_comp_sgl_src_en:1;
-	uint16_t ccpc_comp_sgl_src_vec_en:1;
-	uint16_t ccpc_sgl_sparse_format_en:1;
-	uint16_t ccpc_sgl_pdma_en:1;
-	uint16_t ccpc_sgl_pdma_len_from_desc:1;
-	uint16_t ccpc_desc_vec_push_en:1;
+	uint32_t ccpc_status_dma_en:1;
+	uint32_t ccpc_next_doorbell_en:1;
+	uint32_t ccpc_intr_en:1;
+	uint32_t ccpc_next_db_action_ring_push:1;
+	uint32_t ccpc_stop_chain_on_error:1;
+	uint32_t ccpc_comp_len_update_en:1;
+	uint32_t ccpc_comp_sgl_src_en:1;
+	uint32_t ccpc_comp_sgl_src_vec_en:1;
+	uint32_t ccpc_sgl_sparse_format_en:1;
+	uint32_t ccpc_sgl_pdma_en:1;
+	uint32_t ccpc_sgl_pdma_len_from_desc:1;
+	uint32_t ccpc_desc_vec_push_en:1;
+	uint32_t rate_limit_en:1;
 };
 
 struct crypto_chain_params {
@@ -159,8 +162,8 @@ struct crypto_chain_params {
 	uint64_t ccp_intr_addr;
 	uint32_t ccp_intr_data;
 
+	uint32_t ccp_data_len;
 	uint16_t ccp_status_len;
-	uint16_t ccp_data_len;
 
 	uint8_t  ccp_status_offset_0;
 	uint8_t  ccp_blk_boundary_shift;

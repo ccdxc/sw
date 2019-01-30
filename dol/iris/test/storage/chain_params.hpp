@@ -74,8 +74,8 @@ typedef struct {
     uint64_t pad_buf_addr;	    // pad buffer address
     uint64_t intr_addr;		    // MSI-X Interrupt address
     uint32_t intr_data;		    // MSI-X Interrupt data
+    uint32_t data_len;		    // Remaining data length of compression buffer
     uint16_t status_len;		// Length for status PDMA purposes
-    uint16_t data_len;		    // Remaining data length of compression buffer
     uint16_t hdr_version;           // CP header version
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
     uint8_t  pad_boundary_shift;// log2(pad block length)
@@ -87,6 +87,7 @@ typedef struct {
              next_doorbell_en     :1,	// enable chain doorbell
              intr_en              :1,	// enable intr_data write to intr_pa
              next_db_action_barco_push:1,	// next_db action is actually a Barco push
+             rate_limit_en        :1, // enable rate limiting
              stop_chain_on_error  :1, // stop chaining on error
              chain_alt_desc_on_error:1,// chain with alternate set of descriptors on error
              aol_pad_en           :1, // enable AOL length padding
@@ -124,8 +125,8 @@ typedef struct {
     uint64_t sgl_pdma_dst_addr; // points to chain_sgl_pdma_t when sgl_pdma_en is set
     uint64_t intr_addr;		    // MSI-X Interrupt address
     uint32_t intr_data;		    // MSI-X Interrupt data
+    uint32_t data_len;		    // valid PDMA data length if sgl_pdma_len_from_desc is set
     uint16_t status_len;		// Length for PDMA purposes
-    uint16_t data_len;		    // valid PDMA data length if sgl_pdma_len_from_desc is set
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
     uint8_t  blk_boundary_shift;// log2(block size)
     uint16_t status_dma_en        :1,	// enable PDMA of status_addr0 to status_addr1
@@ -135,6 +136,7 @@ typedef struct {
              next_doorbell_en     :1,	// enable chain doorbell
              intr_en              :1,	// enable intr_data write to intr_pa
              next_db_action_barco_push:1,	// next_db action is actually a Barco push
+             rate_limit_en        :1, // enable rate limiting
              stop_chain_on_error  :1, // stop chaining on error
              comp_len_update_en   :1, // enable compression length update
              comp_sgl_src_en      :1, // source of (de)compression is in SGL format

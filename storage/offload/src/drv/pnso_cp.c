@@ -457,6 +457,10 @@ compress_read_status(struct service_info *svc_info)
 				OSAL_LOG_ERROR("cp_hdr chksum 0x%x != rmem chksum 0x%x",
 						cp_hdr->chksum, rmem_hdr.chksum);
 			}
+			if (cp_hdr->data_len != rmem_hdr.data_len) {
+				OSAL_LOG_ERROR("cp_hdr data_len %u != rmem data_len %u",
+						cp_hdr->data_len, rmem_hdr.data_len);
+			}
 			if (cp_hdr->version != rmem_hdr.version) {
 				OSAL_LOG_ERROR("cp_hdr version 0x%x != rmem version 0x%x",
 						cp_hdr->version, rmem_hdr.version);

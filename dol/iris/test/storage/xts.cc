@@ -629,6 +629,8 @@ XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
                                   chain_params.intr_en);
   STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, next_db_action_barco_push,
                                   chain_params.next_db_action_barco_push);
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, rate_limit_en, 
+                                  chain_params.rate_limit_en);
   STORAGE_SEQ_XS_DESC0_PACK(seq_status_desc->read(), desc0_action);
 
   // desc bytes 64-127

@@ -33,8 +33,7 @@ header_type seq_q_state_t {
     desc1_next_pc_valid: 8;
     qgroup          : 8;    // user assigned queue group
     core_id         : 16;   // user assigned host core ID
-    rl_units_scale  : 8;    // log2(units of data length) for rate limit scaling
-    pad             : 176;
+    pad             : 184;
                             // 
     // When canceling a doorbell push DMA command that is also the last (EOP)
     // in the DMA command set, NOP can't be used due to the EOP. The
@@ -81,7 +80,8 @@ header_type seq_q_state_metrics2_t {
     // CAUTION: order of fields must match seq_kivec9_t
     len_updates         : 64;
     cp_header_updates   : 64;
-    pad                 : 384;
+    xfer_bytes          : 64;
+    pad                 : 320;
   }
 }
 
@@ -103,7 +103,9 @@ header_type seq_barco_entry_t {
     barco_desc_size : 8;    // log2(size of the descriptor to push)
     barco_pndx_size : 8;    // log2(size of the ring producer index)
     barco_ring_size : 8;    // log2(ring_size)
-    barco_batch_mode: 8;    // when barco_batch_mode is set.(bit 0)
+    barco_batch_mode: 1;    // when barco_batch_mode is set.
+    barco_rate_limit_en: 1; // enable rate limiting
+    rsvd0           : 6;
     barco_batch_size: 16;   // barco_desc_addr is a vector of this many descriptors
     barco_data_len  : 32;   // data length in bytes
   }
@@ -134,13 +136,13 @@ header_type seq_comp_status_desc0_t {
                             //       as only one will be serviced
                             // Order of evaluation: 1. next_db_en 2. intr_en
     next_db_action_barco_push: 1; // 1 => next_db action is actually Barco push
+    rate_limit_en   : 1;    // enable rate limiting
   }
 }
 
 header_type seq_comp_status_desc1_t {
   fields {
-    rsvd            : 64;
-    comp_buf_addr   : 64;  // used as source (of compressed output) data for SGL PDMA transfer,
+    comp_buf_addr   : 64;   // used as source (of compressed output) data for SGL PDMA transfer,
                             // only works when output buffer is flat (all compressed blocks
                             // are contiguous)
     aol_src_vec_addr: 64;   // for compress-pad-encrypt: source AOL vector for encrypt
@@ -150,8 +152,9 @@ header_type seq_comp_status_desc1_t {
     sgl_vec_addr    : 64;   // SGL vector for padding operation
     pad_buf_addr    : 64;   // pad buffer address
     alt_buf_addr    : 64;   // Alternate source data buffer address for SGL PDMA in error condition
-    data_len        : 16;   // Length of the compression data
+    data_len        : 32;   // Length of the compression data
     hdr_version     : 16;
+    rsvd0           : 16;
     pad_boundary_shift: 5;  // log2(padding boundray)
     stop_chain_on_error: 1; // 1 => don't ring next DB on error
     data_len_from_desc : 1; // 1 => Use data_len in the descriptor, 
@@ -233,6 +236,7 @@ header_type seq_xts_status_desc0_t {
                             //       as only one will be serviced
                             // Order of evaluation: 1. next_db_en 2. intr_en
     next_db_action_barco_push: 1; // 1 => next_db action is actually Barco push
+    rate_limit_en   : 1;    // enable rate limiting
   }
 }
 
@@ -241,7 +245,7 @@ header_type seq_xts_status_desc1_t {
     comp_sgl_src_addr   : 64;// comp SGL source address
     sgl_pdma_dst_addr   : 64;// points to chain_sgl_pdma_t when sgl_pdma_en is set
     decr_buf_addr       : 64;// decrypt buffer address
-    data_len            : 16;// valid PDMA data length if sgl_pdma_len_from_desc is set
+    data_len            : 32;// valid PDMA data length if sgl_pdma_len_from_desc is set
     blk_boundary_shift  : 5; // log2(block boundary)
     stop_chain_on_error : 1; // 1 => don't ring next DB on error
     comp_len_update_en  : 1; // 1 => read length from cp_hdr and update comp desc/SGL
@@ -493,14 +497,14 @@ header_type seq_kivec4_t {
 header_type seq_kivec5_t {
   fields {
     src_qaddr           : 34;   // must be in same field position as seq_kivec5xts_t
-    rl_units_scale      : 5;    // must be in same field position as seq_kivec5xts_t
     pad_buf_addr        : 34;   // pad buffer in HBM
-    data_len            : 16;   // Length of compression data (either from descriptor or 
+    data_len            : 18;   // Length of compression data (either from descriptor or 
                                 // from the compression status)
     status_dma_en       : 1;    // 1 => DMA status, 0 => don't DMA status
     next_db_en          : 1;
     intr_en             : 1;
     next_db_action_barco_push: 1; // next_db action is actually Barco push
+    rate_limit_en       : 1;
     stop_chain_on_error : 1;
     data_len_from_desc  : 1;    // 1 => Use the data length in the descriptor, 
                                 // 0 => Use the data lenghth in the status
@@ -525,13 +529,13 @@ header_type seq_kivec5_t {
 header_type seq_kivec5xts_t {
   fields {
     src_qaddr           : 34;   // must be in same field position as seq_kivec5_t
-    rl_units_scale      : 5;    // must be in same field position as seq_kivec5_t
-    data_len            : 16;
+    data_len            : 32;
     blk_boundary_shift  : 5;
     status_dma_en       : 1;
     next_db_en          : 1;
     intr_en             : 1;
     next_db_action_barco_push: 1;
+    rate_limit_en       : 1;
     stop_chain_on_error : 1;
     comp_len_update_en  : 1;
     comp_sgl_src_en     : 1;
@@ -600,6 +604,7 @@ header_type seq_kivec9_t {
     metrics2_start     : 1;
     len_updates        : 1;
     cp_header_updates  : 1;
+    xfer_bytes         : 32;
     metrics2_end       : 1;
   }
 }
@@ -687,6 +692,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.next_db_en, kivec.next_db_en);                   \
   modify_field(scratch.intr_en, kivec.intr_en);                         \
   modify_field(scratch.next_db_action_barco_push, kivec.next_db_action_barco_push);\
+  modify_field(scratch.rate_limit_en, kivec.rate_limit_en);             \
   modify_field(scratch.stop_chain_on_error, kivec.stop_chain_on_error); \
   modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);   \
   modify_field(scratch.aol_pad_en, kivec.aol_pad_en);                   \
@@ -702,7 +708,6 @@ header_type seq_kivec10_t {
   modify_field(scratch.desc_dlen_update_en, kivec.desc_dlen_update_en); \
   modify_field(scratch.hdr_version_wr_en, kivec.hdr_version_wr_en); \
   modify_field(scratch.cp_hdr_update_en, kivec.cp_hdr_update_en); \
-  modify_field(scratch.rl_units_scale, kivec.rl_units_scale);           \
 
 #define SEQ_KIVEC5XTS_USE(scratch, kivec)                               \
   modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
@@ -712,6 +717,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.next_db_en, kivec.next_db_en);                   \
   modify_field(scratch.intr_en, kivec.intr_en);                         \
   modify_field(scratch.next_db_action_barco_push, kivec.next_db_action_barco_push);\
+  modify_field(scratch.rate_limit_en, kivec.rate_limit_en);             \
   modify_field(scratch.stop_chain_on_error, kivec.stop_chain_on_error); \
   modify_field(scratch.comp_len_update_en, kivec.comp_len_update_en);   \
   modify_field(scratch.comp_sgl_src_en, kivec.comp_sgl_src_en);         \
@@ -720,7 +726,6 @@ header_type seq_kivec10_t {
   modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
   modify_field(scratch.sgl_pdma_len_from_desc, kivec.sgl_pdma_len_from_desc);\
   modify_field(scratch.desc_vec_push_en, kivec.desc_vec_push_en);       \
-  modify_field(scratch.rl_units_scale, kivec.rl_units_scale);           \
 
 #define SEQ_KIVEC6_USE(scratch, kivec)                                  \
   modify_field(scratch.aol_src_vec_addr, kivec.aol_src_vec_addr);       \
@@ -758,6 +763,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.metrics2_start, kivec.metrics2_start);           \
   modify_field(scratch.len_updates, kivec.len_updates);                 \
   modify_field(scratch.cp_header_updates, kivec.cp_header_updates);     \
+  modify_field(scratch.xfer_bytes, kivec.xfer_bytes);                   \
   modify_field(scratch.metrics2_end, kivec.metrics2_end);               \
   
 #define SEQ_KIVEC10_USE(scratch, kivec)                                 \

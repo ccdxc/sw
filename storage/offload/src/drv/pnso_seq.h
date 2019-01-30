@@ -31,7 +31,8 @@ struct seq_cpdc_push_spec {
 }  __attribute__((__packed__));
 
 struct seq_cpdc_options0 {
-	uint8_t			rsvd0		: 4,
+	uint8_t			rsvd0		: 3,
+				rate_limit_en	: 1,
 				action_push	: 1,
 				intr_en		: 1,
 				next_db_en	: 1,
@@ -53,8 +54,6 @@ struct seq_cpdc_status_desc0 {
 	struct seq_cpdc_options0 options;
 	uint8_t			rsvd0;
 }  __attribute__((__packed__));
-
-static_assert(sizeof(struct seq_cpdc_status_desc0) == 64)
 
 struct seq_cpdc_options1 {
 	uint8_t			aol_pad_en		: 1,
@@ -78,19 +77,18 @@ struct seq_cpdc_options1 {
 } __attribute__((__packed__));
 
 struct seq_cpdc_status_desc1 {
-	uint64_t		rsvd1;
 	uint64_t		comp_buf_addr;
 	uint64_t		aol_src_vec_addr;
 	uint64_t		aol_dst_vec_addr;
 	uint64_t		sgl_vec_addr;
 	uint64_t		pad_buf_addr;
 	uint64_t		alt_buf_addr;
-	uint16_t		data_len;
+	uint32_t		data_len;
 	uint16_t		hdr_version;
+	uint16_t		rsvd0;
 	struct seq_cpdc_options1 options;
+	uint32_t		rsvd1;
 }  __attribute__((__packed__));
-
-static_assert(sizeof(struct seq_cpdc_status_desc1) == 64)
 
 struct seq_crypto_push_spec {
 	uint64_t		pndx_addr	: 34;
@@ -102,7 +100,8 @@ struct seq_crypto_push_spec {
 }  __attribute__((__packed__));
 
 struct seq_crypto_options0 {
-	uint8_t			rsvd0           : 4,
+	uint8_t			rsvd0           : 3,
+				rate_limit_en	: 1,
 				action_push	: 1,
 				intr_en		: 1,
 				next_db_en	: 1,
@@ -125,8 +124,6 @@ struct seq_crypto_status_desc0 {
 	uint8_t			rsvd0;
 }  __attribute__((__packed__));
 
-static_assert(sizeof(struct seq_crypto_status_desc0) == 64)
-
 struct seq_crypto_options1 {
 	uint8_t		        comp_sgl_src_en		: 1,
 				comp_len_update_en	: 1,
@@ -146,16 +143,13 @@ struct seq_crypto_status_desc1 {
 	uint64_t		comp_sgl_src_addr;
 	uint64_t		sgl_pdma_dst_addr;
 	uint64_t		crypto_buf_addr;
-	uint16_t		data_len;
+	uint32_t		data_len;
 	struct seq_crypto_options1 options;
-	uint16_t		rsvd0;
 	uint64_t		rsvd1;
 	uint64_t		rsvd2;
 	uint64_t		rsvd3;
 	uint64_t		rsvd4;
 }  __attribute__((__packed__));
-
-static_assert(sizeof(struct seq_crypto_status_desc1) == 64)
 
 void *seq_setup_desc(struct service_info *svc_info, const void *src_desc,
 		size_t desc_size);

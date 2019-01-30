@@ -168,7 +168,7 @@ possible_sgl_padding:
 switch0:    
   .brbegin
     br          r_sgl_tuple_no[1:0]
-    add         r_pad_buf_addr, SEQ_KIVEC5_PAD_BUF_ADDR, r0
+    add         r_pad_buf_addr, SEQ_KIVEC5_PAD_BUF_ADDR, r0     // delay slot
 
   .brcase BARCO_SGL_TUPLE0
 
@@ -265,7 +265,7 @@ sgl_pdma_xfer_full:
                                 storage_seq_comp_sgl_pdma_xfer)
 possible_barco_push:
 
-    // Use the newly calculated data length for rate limiting.
+    // Use the newly calculated data length for rate limiting, if applicable.
     // General algorithm is as follows:
     // - if next_db_action_barco_push
     //     rate_limit_set(pad_en ? data_len + pad_len : data_len)
@@ -273,7 +273,8 @@ possible_barco_push:
     //     rate_limit_set(pad_en ? data_len + pad_len : data_len)
     // - else if pdma_pad_only
     //     rate_limit_set(pad_len)
-    SEQ_RATE_LIMIT_DATA_LEN_LOAD(SEQ_KIVEC5_DATA_LEN)
+    SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5_RATE_LIMIT_EN, c3)
+    SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(c3, SEQ_KIVEC5_DATA_LEN)
     
     // If Barco ring push is applicable, execute table lock read
     // to get the current ring pindex. Note that this must be done
@@ -281,7 +282,7 @@ possible_barco_push:
     // which is stage 3.
     bbeq        SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 0, possible_pdma_rate_limit
     SEQ_RATE_LIMIT_DATA_LEN_ADD_c(c6, r_pad_len)        // delay slot
-    SEQ_RATE_LIMIT_SET(SEQ_KIVEC5_RL_UNITS_SCALE, c3)
+    SEQ_RATE_LIMIT_SET_c(c3)
 
     LOAD_TABLE_NO_LKUP_PC_IMM(0, storage_seq_barco_ring_pndx_read)
     
@@ -296,7 +297,7 @@ possible_pdma_rate_limit:
     bbeq        SEQ_KIVEC5_SGL_PDMA_EN, 0, all_dma_complete
     seq         c4, SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 1     // delay slot
     SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(c4, r_pad_len)
-    SEQ_RATE_LIMIT_SET(SEQ_KIVEC5_RL_UNITS_SCALE, c3)
+    SEQ_RATE_LIMIT_SET_c(c3)
     b           all_dma_complete
     nop
 

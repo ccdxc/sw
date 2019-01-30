@@ -7,10 +7,11 @@
  *                         in programs. GPRs r1..r5 can be used freely.
  *****************************************************************************/
 
-#ifndef STORAGE_ASM_DEFINES_H
-#define STORAGE_ASM_DEFINES_H
+#ifndef __STORAGE_ASM_DEFINES_H__
+#define __STORAGE_ASM_DEFINES_H__
 
 #include "storage_common_defines.h"
+#include "storage_seq_common.h"
 
 #ifndef BITS_PER_BYTE
 #define BITS_PER_BYTE                   8
@@ -283,8 +284,8 @@
     k.seq_kivec5_hdr_version_wr_en
 #define SEQ_KIVEC5_CP_HDR_UPDATE_EN             \
     k.seq_kivec5_cp_hdr_update_en
-#define SEQ_KIVEC5_RL_UNITS_SHIFT               \
-    k.seq_kivec5_rl_units_scale
+#define SEQ_KIVEC5_RATE_LIMIT_EN                \
+    k.seq_kivec5_rate_limit_en
 
 #define SEQ_KIVEC5XTS_SRC_QADDR                 \
     k.{seq_kivec5xts_src_qaddr_sbit0_ebit7...seq_kivec5xts_src_qaddr_sbit32_ebit33}
@@ -316,8 +317,8 @@
     k.seq_kivec5xts_sgl_pdma_len_from_desc
 #define SEQ_KIVEC5XTS_DESC_VEC_PUSH_EN          \
     k.seq_kivec5xts_desc_vec_push_en
-#define SEQ_KIVEC5XTS_RL_UNITS_SHIFT            \
-    k.seq_kivec5xts_rl_units_scale
+#define SEQ_KIVEC5XTE_RATE_LIMIT_EN             \
+    k.seq_kivec5xts_rate_limit_en
     
 #define SEQ_KIVEC6_AOL_SRC_VEC_ADDR             \
     k.seq_kivec6_aol_src_vec_addr
@@ -378,6 +379,8 @@
     k.seq_kivec9_len_updates
 #define SEQ_KIVEC9_CP_HEADER_UPDATES            \
     k.seq_kivec9_cp_header_updates
+#define SEQ_KIVEC9_XFER_BYTES                   \
+    k.seq_kivec9_xfer_bytes
 
 #define SEQ_KIVEC10_INTR_ADDR                   \
     k.seq_kivec10_intr_addr
@@ -1636,27 +1639,25 @@ _inner_label1:;                                                         \
  * Set HW Tx rate limiter, with scale factor given in _rl_units_scale.
  * Always program a non-zero rate after scaling.
  */
-#define SEQ_RATE_LIMIT_DATA_LEN_LOAD(_data_len)                         \
-    add     r_rl_len, _data_len, r0;                                    \
+#define SEQ_RATE_LIMIT_ENABLE_CHECK(_rate_limit_en, _cf)                \
+    seq     _cf, _rate_limit_en[0], 1;                                  \
 
 #define SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(_cf, _data_len)                  \
-    add._cf  r_rl_len, _data_len, r0;                                   \
-
-#define SEQ_RATE_LIMIT_DATA_LEN_ADD(_data_len)                          \
-    add     r_rl_len, r_rl_len, _data_len;                              \
+    add._cf r_rl_len, _data_len, STORAGE_SEQ_RL_UNITS_SCALE_DFLT - 1;   \
 
 #define SEQ_RATE_LIMIT_DATA_LEN_ADD_c(_cf, _data_len)                   \
-    add._cf     r_rl_len, r_rl_len, _data_len;                          \
+    add._cf r_rl_len, r_rl_len, _data_len;                              \
 
-#define SEQ_RATE_LIMIT_SET(_rl_units_scale, _cf)                        \
-    srl     r_rl_len, r_rl_len, _rl_units_scale;                        \
-    sne     _cf, r_rl_len, r0;                                          \
-    phvwr._cf  p.p4_intr_packet_len, r_rl_len;                          \
-    phvwr.!_cf p.p4_intr_packet_len, 1;                                 \
+#define SEQ_RATE_LIMIT_CLR()                                            \
+    phvwr   p.p4_intr_packet_len, r0;                                   \
 
-#define SEQ_RATE_LIMIT_LOAD_SET(_data_len, _rl_units_scale, _cf)        \
-    SEQ_RATE_LIMIT_DATA_LEN_LOAD(_data_len)                             \
-    SEQ_RATE_LIMIT_SET(_cf, _rl_units_scale)                            \
+#define SEQ_RATE_LIMIT_SET_c(_cf)                                       \
+    srl._cf r_rl_len, r_rl_len, STORAGE_SEQ_RL_UNITS_SCALE_SHFT;        \
+    phvwr._cf p.p4_intr_packet_len, r_rl_len;                           \
+
+#define SEQ_RATE_LIMIT_LOAD_SET_c(_cf, _data_len, _cf)                  \
+    SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(_cf, _data_len)                      \
+    SEQ_RATE_LIMIT_SET_c(_cf)                                           \
 
 /*
  * Compression SGL PDMA transfer length error
@@ -1694,4 +1695,4 @@ _inner_label1:;                                                         \
         nop;
 #endif
 
-#endif     // STORAGE_ASM_DEFINES_H
+#endif     // __STORAGE_ASM_DEFINES_H__
