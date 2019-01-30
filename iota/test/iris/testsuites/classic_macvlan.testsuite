@@ -1,0 +1,45 @@
+meta:
+    name        : classic_macvlan
+    description : Classic Macvlan NIC Testsuite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    os          : [ linux ]
+
+packages:
+    - iota.test.iris
+
+images:
+    naples: nic/naples_fw.tar
+
+setup:
+    topology: test/iris/topologies/classic_baremetal/classic_macvlan_baremetal.topology
+    config  :
+        - step : utils.naples_workloads
+        - step : config.config_link_flap
+        - step : config.netagent.hw_push_config
+        - step : testcases.drivers.install_iperf
+        - step : testcases.penctl.install
+
+common:
+    verifs:
+        -   step    : verif.utils.verify_links
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+    debugs:
+        -   step : verif.utils.collect_logs_and_cores
+
+    setup:
+        #-   step    : verif.utils.link_flap
+        #-   step    : verif.utils.del_add_config
+
+testbundles:
+    sanity:
+        # Relative paths from iota/test/iris/testbundles/
+        - networking/connectivity.testbundle
+
+    regression:
+        # Relative paths from iota/test/iris/testbundles/
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores

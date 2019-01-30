@@ -49,9 +49,10 @@ var (
 )
 
 var workloadTypeMap = map[iota.WorkloadType]string{
-	iota.WorkloadType_WORKLOAD_TYPE_CONTAINER:  Workload.WorkloadTypeContainer,
-	iota.WorkloadType_WORKLOAD_TYPE_VM:         Workload.WorkloadTypeESX,
-	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL: Workload.WorkloadTypeBareMetal,
+	iota.WorkloadType_WORKLOAD_TYPE_CONTAINER:           Workload.WorkloadTypeContainer,
+	iota.WorkloadType_WORKLOAD_TYPE_VM:                  Workload.WorkloadTypeESX,
+	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL:          Workload.WorkloadTypeBareMetal,
+	iota.WorkloadType_WORKLOAD_TYPE_BARE_METAL_MAC_VLAN: Workload.WorkloadTypeMacVlan,
 }
 
 var nodOSMap = map[iota.TestBedNodeOs]string{
@@ -1044,7 +1045,7 @@ func (dnode *dataNode) GetWorkloadMsgs() []*iota.Workload {
 	dnode.entityMap.Range(func(key interface{}, item interface{}) bool {
 		wl := item.(iotaWorkload)
 		wloadMsgs = append(wloadMsgs, wl.workloadMsg)
-                return true
+		return true
 	})
 
 	return wloadMsgs
