@@ -141,7 +141,7 @@ def GetInnerDstIpv4Address(testcase, packet):
 
 def GetMplsLabel(testcase, packet):
     try:
-        mpls = testcase.module.args.label
+        mpls = testcase.module.args.mpls
         if mpls == 'label1':
             label = 12345
         elif mpls == 'label2':

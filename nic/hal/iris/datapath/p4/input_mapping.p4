@@ -395,10 +395,10 @@ action vf_properties(overlay_ip1, overlay_ip2, mpls_in1, mpls_in2,
                  (1 << scratch_metadata.ipv4_prefix_len) - 1);
 
     if (control_metadata.uplink == TRUE) {
-        if (((mpls[0].label != scratch_metadata.mpls_label1) or
-             (inner_ipv4.dstAddr != scratch_metadata.overlay_ip1)) and
-            ((mpls[0].label != scratch_metadata.mpls_label2) or
-             (inner_ipv4.dstAddr != scratch_metadata.overlay_ip2))) {
+        if (((mpls[0].label != scratch_metadata.mpls_label1) and
+             (mpls[0].label != scratch_metadata.mpls_label2)) or
+             ((inner_ipv4.dstAddr != scratch_metadata.overlay_ip1) and
+              (inner_ipv4.dstAddr != scratch_metadata.overlay_ip2))) {
             modify_field(control_metadata.drop_reason,
                          DROP_VF_IP_LABEL_MISMATCH);
             drop_packet();
