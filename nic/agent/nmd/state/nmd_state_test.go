@@ -216,7 +216,7 @@ func (f *mockUpgAgent) RegisterNMD(n NmdRolloutAPI) error {
 	f.n = n
 	return nil
 }
-func (f *mockUpgAgent) StartDisruptiveUpgrade() error {
+func (f *mockUpgAgent) StartDisruptiveUpgrade(firmwarePkgName string) error {
 	if f.forceFail {
 		go f.n.UpgFailed(&[]string{"ForceFailDisruptive"})
 	} else {
@@ -224,7 +224,7 @@ func (f *mockUpgAgent) StartDisruptiveUpgrade() error {
 	}
 	return nil
 }
-func (f *mockUpgAgent) StartUpgOnNextHostReboot() error {
+func (f *mockUpgAgent) StartUpgOnNextHostReboot(firmwarePkgName string) error {
 	if f.forceFail {
 		go f.n.UpgFailed(&[]string{"ForceFailUpgOnNextHostReboot"})
 	} else {

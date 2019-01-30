@@ -169,7 +169,7 @@ func (u *upgradeCompletion) UpgSuccessful() {
 func (u *upgradeCompletion) UpgPossible(upgCtx *upggosdk.UpgCtx) {
 	log.Infof("UpgPossible got called")
 	//upg.StartNonDisruptiveUpgrade()
-	upg.StartDisruptiveUpgrade()
+	upg.StartDisruptiveUpgrade("naples_fw.tar")
 }
 
 func (u *upgradeCompletion) UpgNotPossible(upgCtx *upggosdk.UpgCtx, errStrList *[]string) {
@@ -270,7 +270,7 @@ func main() {
 
 	go c1.Run()
 
-	err = upg.CanPerformNonDisruptiveUpgrade()
+	err = upg.CanPerformDisruptiveUpgrade("naples_fw.tar")
 	//err = upg.StartNonDisruptiveUpgrade()
 	if err != nil {
 		log.Fatalf("Could not start upgrade because of %s", err)

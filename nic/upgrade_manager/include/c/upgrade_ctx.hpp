@@ -24,6 +24,7 @@ typedef struct UpgCtx_ {
     ImageInfo                  postUpgMeta;
     UpgType                    upgType;
     sysmgr::ClientPtr          sysMgr;
+    string                     firmwarePkgName;
 } UpgCtx;
 
 typedef enum {

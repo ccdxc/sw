@@ -50,18 +50,18 @@ func (u *NaplesUpgClient) RegisterNMD(nmd state.NmdRolloutAPI) error {
 }
 
 // StartUpgOnNextHostReboot using upgrade manager
-func (u *NaplesUpgClient) StartUpgOnNextHostReboot() error {
+func (u *NaplesUpgClient) StartUpgOnNextHostReboot(firmwarePkgName string) error {
 	if u.upgsdk != nil {
-		return u.upgsdk.StartNonDisruptiveUpgrade()
+		return u.upgsdk.StartNonDisruptiveUpgrade(firmwarePkgName)
 	}
 	go u.UpgSuccessful()
 	return nil
 }
 
 // StartDisruptiveUpgrade using upgrade manager
-func (u *NaplesUpgClient) StartDisruptiveUpgrade() error {
+func (u *NaplesUpgClient) StartDisruptiveUpgrade(firmwarePkgName string) error {
 	if u.upgsdk != nil {
-		return u.upgsdk.StartDisruptiveUpgrade()
+		return u.upgsdk.StartDisruptiveUpgrade(firmwarePkgName)
 	}
 
 	go u.UpgSuccessful()
@@ -71,7 +71,7 @@ func (u *NaplesUpgClient) StartDisruptiveUpgrade() error {
 // StartPreCheckDisruptive using upgrade manager
 func (u *NaplesUpgClient) StartPreCheckDisruptive(version string) error {
 	if u.upgsdk != nil {
-		return u.upgsdk.CanPerformDisruptiveUpgrade()
+		return u.upgsdk.CanPerformDisruptiveUpgrade("naples_fw.tar")
 	}
 	go u.UpgPossible(nil)
 	return nil
