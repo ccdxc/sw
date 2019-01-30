@@ -124,6 +124,12 @@ def GetExpectedBuffer(testcase, desc):
             ret_buff = testcase.buffers.Get('BUF2')
     except:
         ret_buff = testcase.buffers.Get('BUF2')
+    try:
+        drop = testcase.module.args.drop
+        if drop == True:
+            ret_buff = None
+    except:
+        ret_buff = ret_buff
     return ret_buff
 
 def GetOuterDstIpv4Address(testcase, packet):
