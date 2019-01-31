@@ -7,8 +7,8 @@
 #ifndef __PORT_LIST_HPP__
 #define __PORT_LIST_HPP__
 
+#include "nic/sdk/include/sdk/l4.hpp"
 #include "lib/list/list.hpp"
-#include "nic/include/l4.hpp"
 
 using sdk::lib::dllist_ctxt_t;
 

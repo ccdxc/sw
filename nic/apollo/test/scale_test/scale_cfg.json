@@ -32,7 +32,6 @@
             "vlan-start" : "1"
         },
         {
-            "_comment_" : "32 mapping per VNIC are created by default",
             "kind" : "mappings",
             "remotes" : "1",
             "locals" : "32",

@@ -36,6 +36,7 @@ typedef uint32_t  oci_epoch_t;
 typedef uint32_t  oci_slot_id_t;
 typedef uint32_t  oci_mapping_id_t;
 typedef uint32_t  oci_route_table_id_t;
+typedef uint32_t  oci_security_policy_id_t;
 
 /**
  * @}

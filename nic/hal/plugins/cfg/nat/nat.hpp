@@ -12,7 +12,7 @@
 #include "gen/proto/nat.pb.h"
 #include "gen/proto/kh.pb.h"
 #include "nic/sdk/include/sdk/ip.hpp"
-#include "nic/include/l4.hpp"
+#include "nic/sdk/include/sdk/l4.hpp"
 #include "nic/fte/acl/acl.hpp"
 #include "nic/hal/src/utils/addr_list.hpp"
 #include "pol.hpp"
