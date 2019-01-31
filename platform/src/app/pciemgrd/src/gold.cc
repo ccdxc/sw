@@ -12,6 +12,7 @@
 
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+#include "nic/sdk/platform/pciemgr/include/pciehw.h"
 #include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 
@@ -43,6 +44,8 @@ gold_loop(void)
     logger_init();
     pciesys_loginfo("pciemgrd started in gold mode\n");
 
+    pme->poll_port = 1;
+    pme->poll_dev = 1;
     pciemgrd_params(pme);
     if ((r = open_hostports()) < 0) {
         goto error_out;
@@ -62,6 +65,10 @@ gold_loop(void)
             pcieport_crs_off(port);
         }
     }
+
+    /* Poll mode for these events. */
+    pciehw_notify_poll_init();
+    pciehw_indirect_poll_init();
 
     pciesys_loginfo("pciemgrd ready\n");
     poll_enabled = 1;
