@@ -13,7 +13,7 @@
     /* c2 will be set if using epoch1, else will be reset */;                  \
     seq             c1, k.service_header_valid, TRUE;                          \
     seq.c1          c2, k.service_header_epoch, epoch1;                        \
-    slt.!c1         c2, epoch1, epoch2;                                        \
+    sle.!c1         c2, epoch2, epoch1;                                        \
     bcf             [!c2], __use_epoch2;                                       \
     phvwr           p.vnic_metadata_vcn_id, vcn_id;                            \
 __use_epoch1:;                                                                 \
