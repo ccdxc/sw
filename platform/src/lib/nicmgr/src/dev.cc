@@ -27,6 +27,8 @@
 #include "eth_dev.hpp"
 #include "accel_dev.hpp"
 
+#define MNIC_MAC_OFFSET 9 /* 0 - 7, 8: Host MACs + Host Management */
+
 namespace pt = boost::property_tree;
 
 DeviceManager *DeviceManager::instance;
@@ -322,6 +324,8 @@ DeviceManager::LoadConfig(string path)
 
     // Determine the base mac address
     uint64_t sys_mac_base = 0;
+    uint64_t host_mac_base = 0;
+    uint64_t mnic_mac_base = 0;
     uint64_t fru_mac = 0;
     uint64_t cfg_mac = 0;
     string mac_str;
@@ -351,8 +355,13 @@ DeviceManager::LoadConfig(string path)
         mac_from_str(&sys_mac_base, "00:de:ad:be:ef:00");
     }
 
+    host_mac_base = sys_mac_base;
+    mnic_mac_base = host_mac_base + MNIC_MAC_OFFSET;
+
     char sys_mac_str[32] = {0};
-    NIC_LOG_INFO("Base mac address {} {}", sys_mac_str, mac_to_str(&sys_mac_base, sys_mac_str, sizeof(sys_mac_str)));
+    NIC_LOG_INFO("Base mac address {}", mac_to_str(&sys_mac_base, sys_mac_str, sizeof(sys_mac_str)));
+    NIC_LOG_INFO("Host Base: {}", mac_to_str(&host_mac_base, sys_mac_str, sizeof(sys_mac_str)));
+    NIC_LOG_INFO("Mnic Base: {}",mac_to_str(&mnic_mac_base, sys_mac_str, sizeof(sys_mac_str)));
 
     // Create Network
     if (spec.get_child_optional("network")) {
@@ -387,7 +396,7 @@ DeviceManager::LoadConfig(string path)
             eth_spec->eq_count = val.get<uint64_t>("eq_count");
             eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
             eth_spec->intr_count = val.get<uint64_t>("intr_count");
-            eth_spec->mac_addr = sys_mac_base++;
+            eth_spec->mac_addr = mnic_mac_base++;
 
             if (val.get_optional<string>("network")) {
                 eth_spec->uplink_port_num = val.get<uint64_t>("network.uplink");
@@ -428,7 +437,7 @@ DeviceManager::LoadConfig(string path)
             eth_spec->eq_count = val.get<uint64_t>("eq_count");
             eth_spec->adminq_count = val.get<uint64_t>("adminq_count");
             eth_spec->intr_count = val.get<uint64_t>("intr_count");
-            eth_spec->mac_addr = sys_mac_base++;
+            eth_spec->mac_addr = host_mac_base++;
 
             if (val.get_optional<string>("rdma")) {
                 eth_spec->enable_rdma = true;
