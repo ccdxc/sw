@@ -10,7 +10,7 @@
 #include <ionic_if.h>
 
 #define IONIC_MIN_MTU		ETH_MIN_MTU
-#define IONIC_MAX_MTU		9200
+#define IONIC_MAX_MTU		9194
 #define IONIC_MAX_TXRX_DESC	65536
 #define IONIC_MIN_TXRX_DESC	16
 #define IONIC_DEF_TXRX_DESC	4096
