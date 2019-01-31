@@ -54,6 +54,7 @@ typedef struct port_args_s {
     port_fec_type_t       fec_type;                   // FEC type
     port_pause_type_t     pause;                      // mac pause
     cable_type_t          cable_type;                 // CU/Fiber cable type
+    bool                  auto_neg_cfg;               // user AutoNeg config
     bool                  auto_neg_enable;            // Enable AutoNeg
     bool                  mac_stats_reset;            // mac stats reset
     uint32_t              mac_id;                     // mac id associated with the port

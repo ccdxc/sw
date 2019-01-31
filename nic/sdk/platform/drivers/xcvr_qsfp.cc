@@ -94,18 +94,21 @@ qsfp_sprom_parse (int port, uint8_t *data)
         // 40G Active cable
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_AOC);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_40G);
         break;
 
     case 0x2:
         // 40GBASE-LR4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_LR4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_40G);
         break;
 
     case 0x4:
         // 40GBASE-SR4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_SR4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_40G);
         break;
 
     case 0x8:
@@ -115,6 +118,7 @@ qsfp_sprom_parse (int port, uint8_t *data)
                          AN_USER_CAP_40GBKR4 | AN_USER_CAP_40GBCR4,
                          false,
                          0);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_40G);
         break;
 
     default:
@@ -126,30 +130,35 @@ qsfp_sprom_parse (int port, uint8_t *data)
         // 100G AOC
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_AOC);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
         break;
 
     case 0x2:
         // 100GBASE-SR4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_SR4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
         break;
 
     case 0x3:
         // 100GBASE-LR4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_LR4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
         break;
 
     case 0x4:
         // 100GBASE-ER4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ER4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
         break;
 
     case 0x8:
         // 100G ACC
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ACC);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
         break;
 
     case 0xb:
@@ -159,12 +168,14 @@ qsfp_sprom_parse (int port, uint8_t *data)
                          AN_USER_CAP_100GBKR4 | AN_USER_CAP_100GBCR4,
                          true,
                          AN_FEC_REQ_25GB_RSFEC);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
         break;
 
     case 0x10:
         // 40GBASE-ER4
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_40GBASE_ER4);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_40G);
         break;
 
     case 0x17:
@@ -175,12 +186,14 @@ qsfp_sprom_parse (int port, uint8_t *data)
         // 100G AOC
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_AOC);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
         break;
 
     case 0x19:
         // 100G ACC
         xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_QSFP_100G_ACC);
         set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
         break;
 
     case 0x1A:
