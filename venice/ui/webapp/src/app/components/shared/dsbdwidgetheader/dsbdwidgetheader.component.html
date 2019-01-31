@@ -1,5 +1,5 @@
 <div fxFlex fxLayout="row" class="dsbd-widgetheader">
-    <div fxFlex="none" class="dsbd-widgetheader-mat-icon-container">
+    <div fxFlex="none" class="dsbd-widgetheader-mat-icon-container" (click)="$event.stopPropagation();">
         <mat-icon *ngIf="icon.svgIcon" [ngStyle]="_iconStyles" [svgIcon]="icon.svgIcon" 
                     [style.background-color]="iconFillColor" [style.color]="iconColor" [style.border]="'2px solid ' + iconFillColor" class="dsbd-widgetheader-icon">
         </mat-icon>
@@ -9,15 +9,15 @@
             {{icon.matIcon}}
         </mat-icon>
     </div>
-    <div fxFlex="none" class="dsbd-widgetheader-title">{{title}}</div>
+    <div fxFlex="none" class="dsbd-widgetheader-title" (click)="$event.stopPropagation();">{{title}}</div>
     <div fxFlex></div>
-    <div *ngIf="hasUpdateString" fxFlex="nogrow" fxLayout="column" class="dsbd-widgetheader-update-text">
+    <div *ngIf="hasUpdateString" fxFlex="nogrow" fxLayout="column" class="dsbd-widgetheader-update-text" (click)="$event.stopPropagation();">
         Last Updated: {{ lastUpdateTime | PrettyDate }}
     </div>    
-    <div *ngIf="!hasUpdateString && timeRange != null" fxFlex="nogrow" fxLayout="column" class="dsbd-widgetheader-update-text">
+    <div *ngIf="!hasUpdateString && timeRange != null" fxFlex="nogrow" fxLayout="column" class="dsbd-widgetheader-update-text" (click)="$event.stopPropagation();">
         {{ timeRange}}
     </div>    
-    <div fxFlex="36px" class="dsbd-widgetheader-info" *ngIf="menuItems.length>0">
+    <div fxFlex="36px" class="dsbd-widgetheader-info" *ngIf="menuItems.length>0" (click)="$event.stopPropagation();">
         <mat-icon class="dsbd-widgetheader-morevert" [matMenuTriggerFor]="menu" aria-label="Open basic menu">
             more_vert 
         </mat-icon>

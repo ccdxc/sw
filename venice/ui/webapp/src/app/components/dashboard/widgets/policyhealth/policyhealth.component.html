@@ -13,6 +13,7 @@
                 [timeRange]="'Past 24 hours'"
                 [cardState]="cardState"
                 [menuItems]="menuItems"
+                (click)="toggleFlip()"
                 >
   <div fxFlex="100%" fxLayout="row">
     <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="40%" fxLayout="row" fxLayoutAlign="space-between stretch" class="dsbdpolicyhealth-stats">
@@ -36,7 +37,7 @@
     <div fxFlex="autp" fxLayout="row" fxLayoutAlign="start start" class="dsbdpolicyhealth-stat" 
           [matTooltip]="statData.tooltip"
           [style.cursor]="statData.url != null ? 'pointer' : 'auto'" 
-          (click)="statData.onClick()"
+          (click)="statData.onClick != null ? statData.onClick() : ''"
           >
       <div fxFlex="85px" fxLayout="row" fxLayoutAlign="end stretch">
         <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='UP'" [style.color]="statData.statColor" fxFlex="none" class="dsbdpolicyhealth-stat-arrow">arrow_upward</mat-icon>
@@ -64,6 +65,7 @@
               [timeRange]="'Past 24 hours'"
               [cardState]="cardState"
               [menuItems]="menuItems"
+              (click)="toggleFlip()"
               >
   <app-linegraph [@fade] *ngIf="cardState === cardStates.READY" fxFlex="100%" fxLayout="row" class="dsbdpolicyhealth-card-back" [stats]="linegraphStats"></app-linegraph>
 </app-basecard>

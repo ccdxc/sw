@@ -52,7 +52,7 @@ export class BasecardComponent implements OnInit, OnChanges {
   @Input() statColor: string = '#77a746';
   @Input() backgroundIcon: Icon;
   @Input() icon: Icon;
-  @Input() lastUpdateTime;
+  @Input() lastUpdateTime: string;
   @Input() timeRange: string;
   // When set to true, card contents will fade into view
   @Input() cardState: CardStates = CardStates.LOADING;

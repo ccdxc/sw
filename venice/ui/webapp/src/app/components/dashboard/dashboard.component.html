@@ -1,6 +1,10 @@
 <div fxLayout="column" fxLayoutGap="10px">
   <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
-    <app-dsbdsystemcapacitywidget fxFlex="none" [cardState]="systemCapacity.cardState" [currentData]="currentData" [prevData]="prevData" [timeSeriesData]="timeSeriesData" [avgDayData]="avgDayData"></app-dsbdsystemcapacitywidget>
+    <app-dsbdsystemcapacitywidget fxFlex="none" 
+      [cardState]="systemCapacity.cardState" [currentData]="currentData" 
+      [prevData]="prevData" [timeSeriesData]="timeSeriesData" 
+      [avgDayData]="avgDayData" [lastUpdateTime]="lastUpdateTime">
+    </app-dsbdsystemcapacitywidget>
     <app-dsbdnapleswidget fxFlex="none"></app-dsbdnapleswidget>
   </div>
   <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">

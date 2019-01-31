@@ -65,7 +65,6 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
   data: ChartData;
 
   title = 'Cluster';
-  last_update: string = 'Last Updated: ' + Utility.getPastDate(3).toLocaleDateString();
   icon: Icon = {
     margin: {
       top: '8px',
@@ -203,7 +202,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
   @Input() timeSeriesData: IMetrics_queryQueryResult;
   @Input() avgDayData: IMetrics_queryQueryResult;
 
-  @Input() lastUpdateTime: string;
+  @Input() lastUpdateTime: string = '';
   @Input() timeRange: string;
   // When set to true, card contents will fade into view
   @Input() cardState: CardStates = CardStates.READY;
@@ -301,11 +300,16 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
         if (MetricsUtility.resultHasData(this.currentData)) {
           let index = this.currentData.series[0].columns.indexOf(fieldName);
           barGraph.percent = this.currentData.series[0].values[0][index];
-          index = this.prevData.series[0].columns.indexOf(fieldName);
-          const prev = this.prevData.series[0].values[0][index];
-          barGraph.arrowDirection = MetricsUtility.getStatArrowDirection(prev, barGraph.percent);
+          if (MetricsUtility.resultHasData(this.prevData)) {
+            index = this.prevData.series[0].columns.indexOf(fieldName);
+            const prev = this.prevData.series[0].values[0][index];
+            barGraph.arrowDirection = MetricsUtility.getStatArrowDirection(prev, barGraph.percent);
+          } else {
+            barGraph.arrowDirection = StatArrowDirection.HIDDEN;
+          }
         }
       });
+
 
       // Network handled separately as we have to add rx and tx
       // TimeSeries data
@@ -322,14 +326,18 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
         }
         this.networkGraphStat.lineGraphStat.data = data1;
 
-        const lastItem = data1[data1.length - 1];
-        const secondToLastItem = data1[data1.length - 2];
-        const thirdToLastItem = data1[data1.length - 3];
-        const currentRate = lastItem.y - secondToLastItem.y;
-        const previousRate = secondToLastItem.y - thirdToLastItem.y;
+        if (data1.length >= 2) {
+          const lastItem = data1[data1.length - 1];
+          const secondToLastItem = data1[data1.length - 2];
+          const currentRate = lastItem.y - secondToLastItem.y;
 
-        this.networkGraphStat.currentValue.value = Utility.formatBytes(currentRate, 2, 3);
-        this.networkGraphStat.currentValue.arrowDirection = MetricsUtility.getStatArrowDirection(previousRate, currentRate);
+          this.networkGraphStat.currentValue.value = Utility.formatBytes(currentRate, 2, 3);
+          if (data1.length >= 3) {
+            const thirdToLastItem = data1[data1.length - 3];
+            const previousRate = secondToLastItem.y - thirdToLastItem.y;
+            this.networkGraphStat.currentValue.arrowDirection = MetricsUtility.getStatArrowDirection(previousRate, currentRate);
+          }
+        }
       }
 
       // day average data

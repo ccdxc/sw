@@ -49,6 +49,11 @@ export class DsbdwidgetheaderComponent implements OnInit, OnDestroy, OnChanges {
       this.lastUpdateTime !== '';
   }
 
+  ngOnChanges() {
+    this.hasUpdateString = this.lastUpdateTime != null &&
+      this.lastUpdateTime !== '';
+  }
+
   _setIconStyles() {
     const styles = {
       'margin-top': this.icon.margin.top,
@@ -59,8 +64,4 @@ export class DsbdwidgetheaderComponent implements OnInit, OnDestroy, OnChanges {
 
   ngOnDestroy() {
   }
-
-  ngOnChanges() {
-  }
-
 }

@@ -58,6 +58,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   widgets: DashboardWidgetData[];
   pinnedWidgets: PinnedDashboardWidgetData[];
 
+  lastUpdateTime: string = "";
 
   timeSeriesData: IMetrics_queryQueryResult;
   currentData: IMetrics_queryQueryResult;
@@ -200,6 +201,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
           this.currentData = data.results[1];
           this.prevData = data.results[2];
           this.avgDayData = data.results[3];
+          this.lastUpdateTime = new Date().toISOString();
           this.enableSystemCapacityCard();
         }
       },

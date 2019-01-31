@@ -11,6 +11,7 @@
   svg {
     vertical-align: initial;
   }
+  z-index: 10;
 }
 
 .dsbd-widgetheader-title {
@@ -20,6 +21,7 @@
   font-stretch: condensed;
   text-align: left;
   color: #676763;
+  z-index: 10;
 }
 
 .dsbd-widgetheader-update-text {

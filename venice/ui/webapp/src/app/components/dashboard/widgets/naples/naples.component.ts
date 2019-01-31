@@ -1,6 +1,5 @@
 import { Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
-import { OnChanges } from '@angular/core/src/metadata/lifecycle_hooks';
-import { Router } from '@angular/router';
+import { OnChanges, OnDestroy } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { LineGraphStat } from '@app/components/shared/linegraph/linegraph.component';
@@ -8,6 +7,11 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ChartOptions } from 'chart.js';
 import { StatArrowDirection, CardStates, Stat } from '@app/components/shared/basecard/basecard.component';
 import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.component';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { ControllerService } from '@app/services/controller.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dsbdnapleswidget',
@@ -16,33 +20,38 @@ import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.compo
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class NaplesComponent implements OnInit, OnChanges {
+export class NaplesComponent implements OnInit, OnChanges, OnDestroy {
+  subscriptions: Subscription[] = [];
+  naples: ReadonlyArray<ClusterSmartNIC> = [];
+  // Used for processing the stream events
+  naplesEventUtility: HttpEventUtility<ClusterSmartNIC>;
+
   hasHover: boolean = false;
   cardStates = CardStates;
 
   title: string = 'Naples ';
   firstStat: Stat = {
-    value: '1,244',
+    value: '',
     description: 'TOTAL NAPLES',
-    arrowDirection: StatArrowDirection.UP,
+    arrowDirection: StatArrowDirection.HIDDEN,
     statColor: '#b592e3'
   };
   secondStat: Stat = {
-    value: '1,207',
+    value: '',
     description: 'ADMITTED',
-    arrowDirection: StatArrowDirection.UP,
+    arrowDirection: StatArrowDirection.HIDDEN,
     statColor: '#b592e3'
   };
   thirdStat: Stat = {
-    value: '13',
+    value: '',
     description: 'REJECTED',
-    arrowDirection: StatArrowDirection.UP,
+    arrowDirection: StatArrowDirection.HIDDEN,
     statColor: '#e57553'
   };
   fourthStat: Stat = {
-    value: '24',
+    value: '',
     description: 'PENDING',
-    arrowDirection: StatArrowDirection.UP,
+    arrowDirection: StatArrowDirection.HIDDEN,
     statColor: '#97b8df'
   };
 
@@ -199,7 +208,8 @@ export class NaplesComponent implements OnInit, OnChanges {
     }
   };
 
-  constructor(private router: Router) { }
+  constructor(private controllerService: ControllerService,
+    protected clusterService: ClusterService) { }
 
   toggleFlip() {
     this.flipState = FlipComponent.toggleState(this.flipState);
@@ -209,6 +219,7 @@ export class NaplesComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
+    this.getNaples()
     const chartData = [this.totalNaplesStat, this.rejectedNaplesStat, this.pendingNaplesStat];
     chartData.forEach((chart) => {
       const data = [];
@@ -217,6 +228,46 @@ export class NaplesComponent implements OnInit, OnChanges {
         data.push({ t: new Date(oneDayAgo.getTime() + (index * 30 * 60 * 1000)), y: Utility.getRandomInt(0, 20) });
       }
       chart.data = data;
+    });
+  }
+
+  getNaples() {
+    this.naplesEventUtility = new HttpEventUtility<ClusterSmartNIC>(ClusterSmartNIC);
+    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterSmartNIC>;
+    const subscription = this.clusterService.WatchSmartNIC().subscribe(
+      response => {
+        this.naplesEventUtility.processEvents(response);
+        this.calculateNaplesStatus()
+      },
+      this.controllerService.restErrorHandler('Failed to get NAPLES info')
+    );
+    this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
+  }
+
+  calculateNaplesStatus() {
+    let rejected = 0; let admitted = 0; let pending = 0;
+    this.naples.forEach((naple) => {
+      switch (naple.status["admission-phase"]) {
+        case ClusterSmartNICStatus_admission_phase.ADMITTED:
+          admitted += 1;
+          break;
+        case ClusterSmartNICStatus_admission_phase.REJECTED:
+          rejected += 1;
+          break;
+        case ClusterSmartNICStatus_admission_phase.PENDING:
+          pending += 1;
+          break;
+      }
+    })
+    this.firstStat.value = this.naples.length.toString()
+    this.secondStat.value = admitted.toString();
+    this.thirdStat.value = rejected.toString();
+    this.fourthStat.value = pending.toString();
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(subscription => {
+      subscription.unsubscribe();
     });
   }
 

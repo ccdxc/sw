@@ -13,6 +13,8 @@
                 [timeRange]="'Past 24 hours'"
                 [cardState]="cardState"
                 [menuItems]="menuItems"
+                [lastUpdateTime]="lastUpdateTime"
+                (click)="toggleFlip()"
                 >
   
   <ng-container *ngTemplateOutlet="background"></ng-container>
@@ -55,6 +57,8 @@
                 [timeRange]="'Past 24 hours'"
                 [cardState]="cardState"
                 [menuItems]="menuItems"
+                [lastUpdateTime]="lastUpdateTime"
+                (click)="toggleFlip()"
                 >
   <ng-container *ngTemplateOutlet="background"></ng-container>
   <div fxFlex="100%" fxLayout="row" fxLayoutAlign="end stretch">

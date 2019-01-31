@@ -827,7 +827,7 @@ export class Utility {
     return { x: x, y: y };
   }
 
-  public static transformToChartjsTimeSeries(data, xFieldIndex, yFieldIndex) {
+  public static transformToChartjsTimeSeries(data, xFieldIndex, yFieldIndex): { t: Date, y: any }[] {
     const retData = [];
     data.forEach((item) => {
       retData.push({ t: new Date(item[xFieldIndex]), y: item[yFieldIndex] });
@@ -947,7 +947,7 @@ export class Utility {
         return JSON.stringify(targetControl.errors);
       }
     }
-    return (defaultTooltip) ? defaultTooltip : (field) ? field : '' ;
+    return (defaultTooltip) ? defaultTooltip : (field) ? field : '';
   }
 
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()
