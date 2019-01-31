@@ -5,6 +5,7 @@
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/capri/capri_txs_scheduler.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/lib/utils/time_profile.hpp"
 
 using namespace sdk::platform::capri;
 
@@ -496,6 +497,7 @@ asicpd_hbm_table_entry_write (uint32_t tableid,
     p4pd_table_properties_t tbl_ctx;
     p4_table_mem_layout_t cap_tbl_info = {0};
 
+    time_profile_begin(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE);
     p4pd_global_table_properties_get(tableid, &tbl_ctx);
     sdk::asic::pd::asicpd_copy_capri_table_info(&cap_tbl_info,
                                                 &tbl_ctx.hbm_layout, &tbl_ctx);
@@ -522,7 +524,7 @@ asicpd_hbm_table_entry_write (uint32_t tableid,
                                             sizeof(buffer));
     SDK_TRACE_DEBUG("%s", buffer);
 #endif
-
+time_profile_end(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE);
     return ret;
 }
 
@@ -536,11 +538,13 @@ asicpd_hbm_table_entry_read (uint32_t tableid,
     p4pd_table_properties_t tbl_ctx;
     p4_table_mem_layout_t cap_tbl_info = {0};
 
+    time_profile_begin(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ);
     p4pd_global_table_properties_get(tableid, &tbl_ctx);
     sdk::asic::pd::asicpd_copy_capri_table_info(&cap_tbl_info,
                                                 &tbl_ctx.hbm_layout, &tbl_ctx);
     ret = capri_hbm_table_entry_read(tableid, index, hwentry,
                                      entry_size, cap_tbl_info);
+    time_profile_end(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ);
     return ret;
 }
 

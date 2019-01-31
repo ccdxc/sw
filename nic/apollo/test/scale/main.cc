@@ -28,6 +28,8 @@
 #include "nic/sdk/platform/capri/capri_p4.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 
+#include "nic/apollo/test/flow_test/flow_test.hpp"
+
 using std::string;
 namespace pt = boost::property_tree;
 
@@ -36,6 +38,7 @@ char *g_cfg_file = NULL;
 bool g_daemon_mode = false;
 ip_prefix_t g_vcn_ippfx = {0};
 oci_switchport_t g_swport = {0};
+flow_test *g_flow_test_obj;
 
 uint8_t g_snd_pkt1[] = {
     0x00, 0x00, 0xF1, 0xD0, 0xD1, 0xD0, 0x00, 0x00, 0x00, 0x40, 0x08,
@@ -126,8 +129,8 @@ protected:
 
 //----------------------------------------------------------------------------
 // create route tables
-//----------------------------------------------------------------------------
-static void
+//------------------------------------------------------------------------------
+static sdk_ret_t
 create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                      uint32_t num_routes, ip_prefix_t *tep_pfx,
                      ip_prefix_t *route_pfx)
@@ -136,6 +139,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     uint32_t tep_offset = 3;
     static uint32_t rtnum = 0;
     oci_route_table_t route_table;
+    sdk_ret_t rv = SDK_RET_OK;
 
     route_table.af = IP_AF_IPV4;
     route_table.routes =
@@ -160,16 +164,19 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
             route_table.routes[j].nh_type = OCI_NH_TYPE_REMOTE_TEP;
             route_table.routes[j].vcn_id = OCI_VCN_ID_INVALID;
         }
-        SDK_ASSERT(oci_route_table_create(&route_table) == SDK_RET_OK);
+        rv = oci_route_table_create(&route_table);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
     }
-    return;
+    return rv;
 }
 
 //----------------------------------------------------------------------------
 // 1. create 1 primary + 32 secondary IP for each of 1K local vnics
 // 2. create 1023 remote mappings per VCN
-//----------------------------------------------------------------------------
-static void
+//------------------------------------------------------------------------------
+static sdk_ret_t
 create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                  uint32_t num_vnics, uint32_t num_ip_per_vnic,
                  ip_prefix_t *teppfx, ip_prefix_t *natpfx,
@@ -208,7 +215,12 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                             natpfx->addr.addr.v4_addr + ip_offset++;
                     }
                     rv = oci_mapping_create(&oci_mapping);
-                    ASSERT_TRUE(rv == SDK_RET_OK);
+                    if (rv != SDK_RET_OK) {
+                        return rv;
+                    }
+
+                    g_flow_test_obj->add_local_ep(oci_mapping.key.vcn.id,
+                                         oci_mapping.key.ip_addr.addr.v4_addr);
                 }
                 vnic_key++;
             }
@@ -242,15 +254,21 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     (((((uint64_t)i & 0x7FF) << 22) | ((j & 0x7FF) << 11) |
                       ((num_vnics + k) & 0x7FF))));
                 rv = oci_mapping_create(&oci_mapping);
-                ASSERT_TRUE(rv == SDK_RET_OK);
+                if (rv != SDK_RET_OK) {
+                    return rv;
+                }
+
+                g_flow_test_obj->add_remote_ep(oci_mapping.key.vcn.id,
+                                     oci_mapping.key.ip_addr.addr.v4_addr);
             }
         }
     }
+    return SDK_RET_OK;
 }
 
-static void
-create_vnics (uint32_t num_vcns, uint32_t num_subnets, uint32_t num_vnics,
-              uint16_t vlan_start)
+static sdk_ret_t
+create_vnics (uint32_t num_vcns, uint32_t num_subnets,
+              uint32_t num_vnics, uint16_t vlan_start)
 {
     sdk_ret_t rv;
     oci_vnic_t oci_vnic;
@@ -273,16 +291,20 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets, uint32_t num_vnics,
                 oci_vnic.rsc_pool_id = 1;
                 oci_vnic.src_dst_check = false; //(k & 0x1);
                 rv = oci_vnic_create(&oci_vnic);
-                ASSERT_TRUE(rv == SDK_RET_OK);
+                if (rv != SDK_RET_OK) {
+                    return rv;
+                }
                 vnic_key++;
             }
         }
     }
+
+    return rv;
 }
 
 // VCN prefix is /8, subnet id is encoded in next 10 bits (making it /18 prefix)
 // leaving LSB 14 bits for VNIC IPs
-static void
+static sdk_ret_t
 create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
 {
     sdk_ret_t rv;
@@ -305,11 +327,14 @@ create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
                            (uint64_t)oci_subnet.vr_ip.addr.v4_addr);
         oci_subnet.route_table.id = route_table_id++;
         rv = oci_subnet_create(&oci_subnet);
-        ASSERT_TRUE(rv == SDK_RET_OK);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
     }
+    return SDK_RET_OK;
 }
 
-static void
+static sdk_ret_t
 create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
 {
     sdk_ret_t rv;
@@ -324,14 +349,20 @@ create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
         oci_vcn.pfx.len = 8; // fix this to /8
         oci_vcn.pfx.addr.addr.v4_addr &= 0xFF000000;
         rv = oci_vcn_create(&oci_vcn);
-        ASSERT_TRUE(rv == SDK_RET_OK);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
         for (uint32_t j = 1; j <= num_subnets; j++) {
-            create_subnets(i, j, &oci_vcn.pfx);
+            rv = create_subnets(i, j, &oci_vcn.pfx);
+            if (rv != SDK_RET_OK) {
+                return rv;
+            }
         }
     }
+    return SDK_RET_OK;
 }
 
-static void
+static sdk_ret_t
 create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
 {
     sdk_ret_t rv;
@@ -345,11 +376,14 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         oci_tep.key.ip_addr = ip_pfx->addr.addr.v4_addr + 2 + i;
         oci_tep.type = OCI_ENCAP_TYPE_VNIC;
         rv = oci_tep_create(&oci_tep);
-        ASSERT_TRUE(rv == SDK_RET_OK);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
     }
+    return SDK_RET_OK;
 }
 
-static void
+static sdk_ret_t
 create_switchport_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
 {
     sdk_ret_t rv;
@@ -358,11 +392,32 @@ create_switchport_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
     g_swport.switch_ip_addr = ipaddr;
     MAC_UINT64_TO_ADDR(g_swport.switch_mac_addr, macaddr);
     g_swport.gateway_ip_addr = gwip;
-    rv = oci_switchport_create(&g_swport);
-    ASSERT_TRUE(rv == SDK_RET_OK);
+    return oci_switchport_create(&g_swport);
 }
 
-static void
+static sdk_ret_t
+create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+
+    ret = g_flow_test_obj->create_flows(num_tcp, 6);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    ret = g_flow_test_obj->create_flows(num_udp, 17);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    ret = g_flow_test_obj->create_flows(num_icmp, 1);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
 create_objects (void)
 {
     uint32_t num_vcns = 0, num_subnets = 0, num_vnics = 0, num_teps = 0;
@@ -371,6 +426,10 @@ create_objects (void)
     pt::ptree json_pt;
     ip_prefix_t teppfx, natpfx, routepfx;
     string pfxstr;
+    sdk_ret_t ret = SDK_RET_OK;
+    uint32_t num_tcp, num_udp, num_icmp;
+    
+    g_flow_test_obj = new flow_test();
 
     // parse the config and create objects
     std::ifstream json_cfg(g_input_cfg_file);
@@ -389,8 +448,8 @@ create_objects (void)
                           &ipaddr);
                 inet_aton(obj.second.get<std::string>("gw-ip-addr").c_str(),
                           &gwip);
-                create_switchport_cfg(ntohl(ipaddr.s_addr), macaddr,
-                                      ntohl(gwip.s_addr));
+                ret = create_switchport_cfg(ntohl(ipaddr.s_addr), macaddr,
+                                            ntohl(gwip.s_addr));
             } else if (kind == "tep") {
                 num_teps = std::stol(obj.second.get<std::string>("count"));
                 if (num_teps <= 2) {
@@ -400,43 +459,52 @@ create_objects (void)
                 // reduce num_teps by 2, (MyTEP and GW-TEP)
                 num_teps -= 2;
                 pfxstr = obj.second.get<std::string>("prefix");
-                ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &teppfx) == 0);
-                create_teps(num_teps, &teppfx);
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &teppfx) == 0);
+                ret = create_teps(num_teps, &teppfx);
             } else if (kind == "route-table") {
                 num_routes = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix-start");
-                ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &routepfx) ==
-                            0);
-                create_route_tables(num_teps, 1024, 1, num_routes, &teppfx,
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &routepfx) == 0);
+                ret = create_route_tables(num_teps, 1024, 1, num_routes, &teppfx,
                                     &routepfx);
             } else if (kind == "vcn") {
                 num_vcns = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
-                ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &g_vcn_ippfx) ==
-                            0);
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_vcn_ippfx) == 0);
                 num_subnets = std::stol(obj.second.get<std::string>("subnets"));
-                create_vcns(num_vcns, &g_vcn_ippfx, num_subnets);
+                ret = create_vcns(num_vcns, &g_vcn_ippfx, num_subnets);
             } else if (kind == "vnic") {
                 num_vnics = std::stol(obj.second.get<std::string>("count"));
                 vlan_start =
                     std::stol(obj.second.get<std::string>("vlan-start"));
-                create_vnics(num_vcns, num_subnets, num_vnics, vlan_start);
+                ret = create_vnics(num_vcns, num_subnets, num_vnics, vlan_start);
             } else if (kind == "mappings") {
                 pfxstr = obj.second.get<std::string>("nat-prefix");
-                ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &natpfx) == 0);
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &natpfx) == 0);
                 num_remote_mappings =
                     std::stol(obj.second.get<std::string>("remotes"));
                 num_ip_per_vnic =
                     std::stol(obj.second.get<std::string>("locals"));
-                create_mappings(num_teps, num_vcns, num_subnets, num_vnics,
-                                num_ip_per_vnic, &teppfx, &natpfx,
-                                num_remote_mappings);
+                ret = create_mappings(num_teps, num_vcns, num_subnets, num_vnics,
+                                      num_ip_per_vnic, &teppfx, &natpfx,
+                                      num_remote_mappings);
+            } else if (kind == "flows") {
+                num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
+                num_udp = std::stol(obj.second.get<std::string>("num_udp"));
+                num_icmp = std::stol(obj.second.get<std::string>("num_icmp"));
+                ret = create_flows(num_tcp, num_udp, num_icmp);
+            }
+
+            if (ret != SDK_RET_OK) {
+                return ret;
             }
         }
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         exit(1);
     }
+
+    return ret;
 }
 
 #ifdef SIM
@@ -536,7 +604,8 @@ TEST_F(scale_test, scale_test_create)
     batch_params.epoch = 1;
     rv = oci_batch_start(&batch_params);
     ASSERT_TRUE(rv == SDK_RET_OK);
-    create_objects();
+    rv = create_objects();
+    ASSERT_TRUE(rv == SDK_RET_OK);
     rv = oci_batch_commit();
     ASSERT_TRUE(rv == SDK_RET_OK);
 

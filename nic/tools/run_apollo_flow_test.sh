@@ -19,13 +19,17 @@ if [[ "$1" ==  --coveragerun ]]; then
     export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
 fi
 
-function finish {
-   echo "===== Collecting logs ====="
-   ${NICDIR}/tools/savelogs.sh
-}
-trap finish EXIT
+#function finish {
+#   echo "===== Collecting logs ====="
+#   ${NICDIR}/tools/savelogs.sh
+#}
+#trap finish EXIT
 
+rm -rf core.*
 export PATH=${PATH}:${BUILD_DIR}/bin
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
-#valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
+#$GDB apollo_flow_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" $*
+$GDB apollo_flow_test -c hal.json $* > run.log; grep "flow_gtest" run.log
+#perf record apollo_flow_test -c hal.json $* > run.log; grep flow_gtest run.log
+#valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale_test/scale_cfg.json
 
+sed -n '/TimeProfileID/,$p' run.log

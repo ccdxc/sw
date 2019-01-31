@@ -13,77 +13,34 @@
 #include "mem_hash_utils.hpp"
 #include "mem_hash_stats.hpp"
 
+//#define MEM_HASH_API_CONTEXT_CALLOC
+
 using sdk::table::sdk_table_factory_params_t;
 using sdk::table::mem_hash_properties_t;
 
+mem_hash_api_context g_api_contexts[16];
+uint8_t g_api_ctx_iter;
+
 mem_hash_api_context* 
-mem_hash_api_context::alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
-                             uint32_t sw_appdata_len,
-                             uint32_t hw_key_len, uint32_t hw_data_len) {
+mem_hash_api_context::alloc_() {
     mem_hash_api_context *ctx = NULL;
     void *mem = NULL;
 
+#ifdef MEM_HASH_API_CONTEXT_CALLOC
     mem = (mem_hash_api_context *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_API_CTX,
                                               sizeof(mem_hash_api_context));
     if (!mem) {
-        SDK_TRACE_ERR("failed to alloc api context.");
+        MEMHASH_TRACE_ERR("failed to alloc api context.");
         return NULL;
     }
-
+#else
+    mem = &(g_api_contexts[g_api_ctx_iter++]);
+    memset(mem, 0, sizeof(mem_hash_api_context));
+#endif
     ctx = new (mem) mem_hash_api_context();
-    ctx->sw_key_len = sw_key_len;
-    if (ctx->sw_key_len) {
-        ctx->sw_key = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_SW_KEY, sw_key_len);
-        if (!ctx->sw_key) {
-            SDK_TRACE_ERR("failed to alloc sw_key:%p", ctx->sw_key);
-            destroy(ctx);
-            return NULL;
-        }
-    }
-
-    ctx->sw_data_len = sw_data_len;
-    if (ctx->sw_data_len) {
-        ctx->sw_data = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_SW_DATA, sw_data_len);
-        if (!ctx->sw_data) {
-            SDK_TRACE_ERR("failed to alloc sw_data:%p.", ctx->sw_data);
-            destroy(ctx);
-            return NULL;
-        }
-    }
-
-    ctx->sw_appdata_len = sw_appdata_len;
-    if (ctx->sw_appdata_len) {
-        ctx->sw_appdata = (uint8_t *)SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_SW_APPDATA,
-                                               sw_appdata_len);
-        if (!ctx->sw_data) {
-            SDK_TRACE_ERR("failed to alloc sw_appdata:%p.", ctx->sw_appdata);
-            destroy(ctx);
-            return NULL;
-        }
-    }
-
-    ctx->hw_key_len = hw_key_len;
-    if (ctx->hw_key_len) {
-        ctx->hw_key = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_HW_KEY, hw_key_len);
-        if (!ctx->hw_key) {
-            SDK_TRACE_ERR("failed to alloc hw_key:%p", ctx->hw_key);
-            destroy(ctx);
-            return NULL;
-        }
-    }
-
-    ctx->hw_data_len = hw_data_len;
-    if (ctx->hw_data_len) {
-        ctx->hw_data = (uint8_t *) SDK_CALLOC(SDK_MEM_ALLOC_MEM_HASH_HW_DATA, hw_data_len);
-        if (!ctx->hw_data) {
-            SDK_TRACE_ERR("failed to alloc sw_data:%p.", ctx->hw_data);
-            destroy(ctx);
-            return NULL;
-        }
-    }
 
     numctx_++;
-    SDK_TRACE_DEBUG("Number of API Contexts = %d", numctx_);
+    MEMHASH_TRACE_VERBOSE("Number of API Contexts = %d", numctx_);
     return ctx;
 }
 
@@ -113,13 +70,20 @@ mem_hash_api_context::sw_data2str() {
 
 mem_hash_api_context*
 mem_hash_api_context::factory(mem_hash_api_context *pctx) {
-    mem_hash_api_context *ctx = alloc_(pctx->sw_key_len, pctx->sw_data_len,
-                                       pctx->sw_appdata_len,
-                                       pctx->hw_key_len, pctx->hw_data_len);
+    mem_hash_api_context *ctx = alloc_();
     if (!ctx) {
         return NULL;
     }
+
+    ctx->sw_valid = false;
     ctx->op = pctx->op;
+
+    // Copy the lengths
+    ctx->sw_key_len = pctx->sw_key_len;
+    ctx->sw_data_len = pctx->sw_data_len;
+    ctx->sw_appdata_len = pctx->sw_appdata_len;
+    ctx->hw_key_len = pctx->hw_key_len;
+    ctx->hw_data_len = pctx->hw_data_len;
 
     // Copy the api params
     ctx->in_key = pctx->in_key;
@@ -159,13 +123,25 @@ mem_hash_api_context::factory(uint32_t op,
 
     appdata_len = p4pd_actiondata_appdata_size_get(props->main_table_id,
                                                    params->action_id);
-    mem_hash_api_context *ctx = alloc_(props->key_len, props->data_len,
-                                       appdata_len,
-                                       props->hw_key_len, props->hw_data_len);
+    SDK_ASSERT(appdata_len && appdata_len <= MEMHASH_MAX_SW_DATA_LEN);
+
+#ifndef MEM_HASH_API_CONTEXT_CALLOC
+    g_api_ctx_iter = 0;
+#endif
+
+    mem_hash_api_context *ctx = alloc_();
     if (!ctx) {
         return NULL;
     }
     ctx->op = static_cast<sdk::table::sdk_table_api_op_t>(op);
+    ctx->sw_valid = false;
+
+    // Copy the lengths
+    ctx->sw_key_len = props->key_len;
+    ctx->sw_data_len = props->data_len;
+    ctx->sw_appdata_len = appdata_len;
+    ctx->hw_key_len = props->hw_key_len;
+    ctx->hw_data_len = props->hw_data_len;
 
     // Copy the api params
     ctx->in_key = params->key;
@@ -195,47 +171,37 @@ mem_hash_api_context::factory(uint32_t op,
 
 void 
 mem_hash_api_context::destroy(mem_hash_api_context* ctx) {
-    SDK_TRACE_DEBUG("Destroying api context: %s", ctx->idstr());
-    if (ctx->sw_key) {
-        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_SW_KEY, ctx->sw_key);
-    }
-    if (ctx->sw_data) {
-        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_SW_DATA, ctx->sw_data);
-    }
-    if (ctx->sw_appdata) {
-        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_SW_APPDATA, ctx->sw_appdata);
-    }
-    if (ctx->hw_key) {
-        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_SW_KEY, ctx->hw_key);
-    }
-    if (ctx->hw_data) {
-        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_SW_DATA, ctx->hw_data);
-    }
-
+    MEMHASH_TRACE_VERBOSE("Destroying api context: %s", ctx->idstr());
+#ifdef MEM_HASH_API_CONTEXT_CALLOC
     SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_API_CTX, ctx);
+#endif
 
     numctx_--;
-    SDK_TRACE_DEBUG("Number of API Contexts = %d", numctx_);
+    MEMHASH_TRACE_VERBOSE("Number of API Contexts = %d", numctx_);
     return;
 }
 
 void
 mem_hash_api_context::print_handle() {
-    SDK_TRACE_DEBUG("- Handle: IsHint=%d Index=%d Hint=%d",
-                    handle->is_hint, handle->index, handle->hint);
+    MEMHASH_TRACE_DEBUG("- Handle: IsHint=%d Index=%d Hint=%d",
+                        handle->is_hint, handle->index, handle->hint);
 }
 
 void
 mem_hash_api_context::print_input() {
-    SDK_TRACE_DEBUG("- Key:[%s] Hash:[%#x]",
-        key2str ? key2str(in_key) :
-                  mem_hash_utils_rawstr(in_key, sw_key_len), in_hash_32b);
-    SDK_TRACE_DEBUG("- RawKey:[%s]",
-                    mem_hash_utils_rawstr(in_key, sw_key_len));
-    SDK_TRACE_DEBUG("- AppData:[%s]",
-        appdata2str ? appdata2str(in_appdata) :
-                      mem_hash_utils_rawstr(in_appdata, sw_appdata_len));
-    SDK_TRACE_DEBUG("- RawData:[%s]",
-                    mem_hash_utils_rawstr(in_appdata, sw_appdata_len));
+    if (key2str) {
+        MEMHASH_TRACE_DEBUG("- Key:[%s] Hash:[%#x]", key2str(in_key), in_hash_32b);
+    } else {
+        MEMHASH_TRACE_DEBUG("- RawKey:[%s]",
+                            mem_hash_utils_rawstr(in_key, sw_key_len));
+    }
+
+    if (appdata2str) {
+        MEMHASH_TRACE_DEBUG("- AppData:[%s]", appdata2str(in_appdata));
+    } else {
+        MEMHASH_TRACE_DEBUG("- RawData:[%s]",
+                            mem_hash_utils_rawstr(in_appdata, sw_appdata_len));
+    }
+
     print_handle();
 }

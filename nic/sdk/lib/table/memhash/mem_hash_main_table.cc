@@ -6,6 +6,7 @@
 
 #include "mem_hash_table.hpp"
 #include "mem_hash_api_context.hpp"
+#include "mem_hash_utils.hpp"
 
 using sdk::table::memhash::mem_hash_base_table;
 using sdk::table::memhash::mem_hash_main_table;
@@ -50,7 +51,7 @@ mem_hash_main_table::init_(mem_hash_properties_t *props) {
                                      props->main_table_size);
 
     num_hash_bits_ = 32 - num_table_index_bits_;
-    SDK_TRACE_DEBUG("MainTable: Created mem_hash_main_table "
+    MEMHASH_TRACE_DEBUG("MainTable: Created mem_hash_main_table "
                     "TableID:%d TableSize:%d NumTableIndexBits:%d NumHashBits:%d",
                     table_id_, table_size_, num_table_index_bits_, num_hash_bits_);
 
@@ -85,7 +86,7 @@ mem_hash_main_table::initctx_(mem_hash_api_context *ctx) {
     ctx->bucket = &buckets_[ctx->table_index];
     SDK_ASSERT(ctx->bucket);
 
-    SDK_TRACE_DEBUG("MainTable: TableID:%d Index:%d",
+    MEMHASH_TRACE_DEBUG("MainTable: TableID:%d Index:%d",
                     ctx->table_id, ctx->table_index);
 
     return static_cast<mem_hash_table_bucket*>(ctx->bucket)->read_(ctx);
@@ -102,11 +103,11 @@ mem_hash_main_table::insert_with_handle_(mem_hash_api_context *ctx) {
     if (ctx->handle->is_hint == 0) {
         // This handle is for the main table.
         // Write key and data to the hardware.
-        SDK_TRACE_DEBUG("writing to main table.");
+        MEMHASH_TRACE_DEBUG("writing to main table.");
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->insert_with_handle_(ctx);
     } else {
         ctx->hint = ctx->handle->hint;
-        SDK_TRACE_DEBUG("adding to hint table, hint=%d", ctx->hint);
+        MEMHASH_TRACE_DEBUG("adding to hint table, hint=%d", ctx->hint);
         ret = hint_table_->insert_(ctx);
     }
 
@@ -154,7 +155,7 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->write_(ctx);
         MEM_HASH_HANDLE_SET_INDEX(ctx, ctx->table_index);
     } else {
-        SDK_TRACE_DEBUG("MainTable: insert failed: ret:%d", ret);
+        MEMHASH_TRACE_ERR("MainTable: insert failed: ret:%d", ret);
     }
 
     return ret;
@@ -171,11 +172,11 @@ mem_hash_main_table::remove_with_handle_(mem_hash_api_context *ctx) {
     if (ctx->handle->is_hint == 0) {
         // This handle is for the main table.
         // Write key and data to the hardware.
-        SDK_TRACE_DEBUG("writing to main table.");
+        MEMHASH_TRACE_DEBUG("writing to main table.");
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->remove_with_handle_(ctx);
     } else {
         ctx->hint = ctx->handle->hint;
-        SDK_TRACE_DEBUG("removing from hint table, hint=%d", ctx->hint);
+        MEMHASH_TRACE_DEBUG("removing from hint table, hint=%d", ctx->hint);
         ret = hint_table_->remove_(ctx);
     }
 
@@ -208,14 +209,14 @@ mem_hash_main_table::remove_(mem_hash_api_context *ctx) {
         if (ctx->is_hint_valid()) {
             ret = hint_table_->defragment_(ctx);
             if (ret != SDK_RET_OK) {
-                SDK_TRACE_DEBUG("defragment_ failed, ret:%d", ret);
+                MEMHASH_TRACE_DEBUG("defragment_ failed, ret:%d", ret);
             }
         }
     } else {
         // We have a hint match, traverse the hints to remove the entry.
         ret = hint_table_->remove_(ctx);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_DEBUG("hint table remove_ failed, ret:%d", ret);
+            MEMHASH_TRACE_DEBUG("hint table remove_ failed, ret:%d", ret);
         }
     }
 
@@ -237,7 +238,7 @@ mem_hash_main_table::find_(mem_hash_api_context *ctx,
 
     ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->find_(ctx);
     if (ret != SDK_RET_OK) {
-         SDK_TRACE_DEBUG("find_ failed, ret:%d", ret);
+         MEMHASH_TRACE_DEBUG("find_ failed, ret:%d", ret);
          return ret;
     }
 
@@ -249,7 +250,7 @@ mem_hash_main_table::find_(mem_hash_api_context *ctx,
         // We have a hint match, traverse the hints to find a the entry.
         ret = hint_table_->find_(ctx, match_ctx);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_DEBUG("find_ failed, ret:%d", ret);
+            MEMHASH_TRACE_ERR("find_ failed, ret:%d", ret);
         }
     }
 
