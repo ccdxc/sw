@@ -85,7 +85,7 @@ struct doorbell {
 	u16 rsvd2;
 };
 
-#define INTR_CTRL_REGS_MAX	64
+#define INTR_CTRL_REGS_MAX	2048
 #define INTR_CTRL_COAL_MAX	0x3F
 
 /**

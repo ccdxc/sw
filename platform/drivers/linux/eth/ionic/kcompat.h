@@ -245,7 +245,7 @@ struct msix_entry {
 #ifndef BITS_TO_LONGS
 #define BITS_TO_LONGS(bits) (((bits)+BITS_PER_LONG-1)/BITS_PER_LONG)
 #endif
-#define DECLARE_BITMAP(name,bits) long name[BITS_TO_LONGS(bits)]
+#define DECLARE_BITMAP(name,bits) unsigned long name[BITS_TO_LONGS(bits)]
 #endif
 
 #ifndef VLAN_HLEN
