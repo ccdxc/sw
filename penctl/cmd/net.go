@@ -15,13 +15,9 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
-var naplesIP string
 var revProxyPort string
 var naplesURL string
-
-func getNaplesIPFromIntf(ifname string) (string, error) {
-	return "169.254.0.1", nil
-}
+var naplesIP string
 
 func getNaplesURL() (string, error) {
 	if verbose {
@@ -34,37 +30,17 @@ func getNaplesURL() (string, error) {
 }
 
 func pickNetwork(cmd *cobra.Command, args []string) error {
-	var err error
 	if val, ok := os.LookupEnv("NAPLES_URL"); ok {
-		if strings.HasSuffix(val, "/") {
+		for strings.HasSuffix(val, "/") {
 			val = val[:len(val)-1]
 		}
 		naplesURL = val
-	} else if cmd.Flags().Changed("ip") {
-		naplesIP = ip
-		err = nil
-		naplesURL = "http://" + naplesIP
-	} else if cmd.Flags().Changed("interface") {
-		naplesIP, err = getNaplesIPFromIntf(intf)
-		naplesURL = "http://" + naplesIP
-	} else if val, ok := os.LookupEnv("PENETHDEV"); !ok {
-		if verbose {
-			fmt.Println("PENETHDEV flag not set")
-		}
-		err = errors.New("naples unreachable. please set PENETHDEV variable or use -i/--interface flag")
+	} else if cmd.Flags().Changed("localhost") {
+		naplesURL = "http://127.0.0.1"
 	} else {
-		naplesIP, err = getNaplesIPFromIntf(val)
-		naplesURL = "http://" + naplesIP
+		return errors.New("naples unreachable. please set NAPLES_URL variable to http://<naples_ip>")
 	}
-	if cmd.Flags().Changed("localhost") {
-		naplesIP = "127.0.0.1"
-		naplesURL = "http://" + naplesIP
-	} else if err != nil {
-		if verbose {
-			fmt.Printf("Could not get a valid naplesIP: %s\n", err)
-		}
-		return err
-	}
+	naplesIP = strings.TrimPrefix(naplesURL, "http://")
 	revProxyPort = globals.RevProxyPort
 	naplesURL += ":" + revProxyPort + "/"
 	if verbose {

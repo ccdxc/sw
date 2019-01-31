@@ -1,6 +1,6 @@
-.. _penctl_create_interface:
+.. _penctl_update_interface:
 
-penctl create interface
+penctl update interface
 -----------------------
 
 Create interface
@@ -13,7 +13,7 @@ Create interface
 
 ::
 
-  penctl create interface [flags]
+  penctl update interface [flags]
 
 Options
 ~~~~~~~
@@ -38,14 +38,13 @@ Options inherited from parent commands
 
 ::
 
-  -i, --interface string   ethernet device of naples
-  -j, --json               display in json format
-  -t, --tabular            display in tabular format (default true)
-  -v, --version            display version of penctl
-  -y, --yaml               display in yaml format
+  -j, --json      display in json format
+  -t, --tabular   display in tabular format (default true)
+  -v, --version   display version of penctl
+  -y, --yaml      display in yaml format
 
 SEE ALSO
 ~~~~~~~~
 
-* `penctl create <penctl_create.rst>`_ 	 - Create Object
+* `penctl update <penctl_update.rst>`_ 	 - Update Object
 

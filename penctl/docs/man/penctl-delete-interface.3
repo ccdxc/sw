@@ -5,24 +5,31 @@
 
 .SH NAME
 .PP
-penctl\-show\-metrics\-sgeteinterr \- Show SgeteinterrMetrics from Naples
+penctl\-delete\-interface \- Delete interface
 
 
 .SH SYNOPSIS
 .PP
-\fBpenctl show metrics sgeteinterr [flags]\fP
+\fBpenctl delete interface [flags]\fP
 
 
 .SH DESCRIPTION
-.ti 0
-\l'\n(.lu'
+.PP
+Delete interface
 
-.SH Show SgeteinterrMetrics From Naples
 
 .SH OPTIONS
 .PP
+\fB\-\-encap\fP=""
+    Encap type (Ex: MPLSoUDP)
+
+.PP
 \fB\-h\fP, \fB\-\-help\fP[=false]
-    help for sgeteinterr
+    help for interface
+
+.PP
+\fB\-\-name\fP=""
+    Interface name
 
 
 .SH OPTIONS INHERITED FROM PARENT COMMANDS
@@ -45,4 +52,4 @@ penctl\-show\-metrics\-sgeteinterr \- Show SgeteinterrMetrics from Naples
 
 .SH SEE ALSO
 .PP
-\fBpenctl\-show\-metrics(3)\fP
+\fBpenctl\-delete(3)\fP

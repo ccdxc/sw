@@ -1,24 +1,22 @@
-## penctl list core-dumps
+## penctl delete interface
 
-Show core dumps from Naples
+Delete interface
 
 ### Synopsis
 
 
-
------------------------------
- Show Core Dumps From Naples 
------------------------------
-
+Delete interface
 
 ```
-penctl list core-dumps [flags]
+penctl delete interface [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for core-dumps
+      --encap string   Encap type (Ex: MPLSoUDP)
+  -h, --help           help for interface
+      --name string    Interface name
 ```
 
 ### Options inherited from parent commands
@@ -31,5 +29,5 @@ penctl list core-dumps [flags]
 ```
 
 ### SEE ALSO
-* [penctl list](penctl_list.md)	 - List Objects
+* [penctl delete](penctl_delete.md)	 - Delete Object
 

@@ -1,31 +1,28 @@
-.. _penctl_delete_core-dump:
+.. _penctl_delete_interface:
 
-penctl delete core-dump
+penctl delete interface
 -----------------------
 
-Delete a core dump from Naples
+Delete interface
 
 Synopsis
 ~~~~~~~~
 
 
-
---------------------------------
- Delete a Core Dump From Naples 
---------------------------------
-
+Delete interface
 
 ::
 
-  penctl delete core-dump [flags]
+  penctl delete interface [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -f, --file string   Core file to delete
-  -h, --help          help for core-dump
+      --encap string   Encap type (Ex: MPLSoUDP)
+  -h, --help           help for interface
+      --name string    Interface name
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
