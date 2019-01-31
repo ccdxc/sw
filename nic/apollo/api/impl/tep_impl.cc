@@ -112,7 +112,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = VNIC_ENCAP;
     }
     // TODO: fix this once p4/asm is fixed
-    nh_tx_data.action_u.nexthop_tx_nexthop_info.dst_slot_id = 0xAB;
+    //nh_tx_data.action_u.nexthop_tx_nexthop_info.dst_slot_id = 0xAB;
     ret = tep_impl_db()->nh_tx_tbl()->insert(&nh_tx_data, (uint32_t *)&nh_id_);
     SDK_ASSERT(ret == SDK_RET_OK);
 

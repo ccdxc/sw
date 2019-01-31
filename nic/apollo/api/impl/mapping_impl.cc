@@ -258,11 +258,13 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
     // TODO: ipv4 or ipv6 is not part of the key ? p4 needs to change
     memcpy(remote_vnic_mapping_tx_key.p4e_apollo_i2e_dst,
            mapping_info->key.ip_addr.addr.v6_addr.addr8, IP6_ADDR8_LEN);
-    // TODO: dst_slot_id should come from here, p4 needs to change
     remote_vnic_mapping_tx_data.nexthop_index = tep_impl_obj->nh_id();
+    remote_vnic_mapping_tx_data.dst_slot_id_valid = 1;
+    remote_vnic_mapping_tx_data.dst_slot_id = mapping_info->slot;
 
-    OCI_TRACE_DEBUG("TEP %s, vcn hw id %u, nh id %u", ipv4addr2str(mapping_info->tep.ip_addr),
-                    vcn->hw_id(), tep_impl_obj->nh_id());
+    OCI_TRACE_DEBUG("TEP %s, vcn hw id %u, slot %u, nh id %u",
+                    ipv4addr2str(mapping_info->tep.ip_addr),
+                    vcn->hw_id(), mapping_info->slot, tep_impl_obj->nh_id());
 
     api_params.key = &remote_vnic_mapping_tx_key;
     api_params.appdata = &remote_vnic_mapping_tx_data;
