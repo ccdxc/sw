@@ -17,6 +17,9 @@ docker/shell: docker/build-shell-image
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -w /sw/nic pensando/nic su -l $(CUR_USER)
 endif
 
+docker/background-shell: docker/build-shell-image
+	docker run -dit --rm --sysctl net.ipv6.conf.all.disable_ipv6=0 --privileged --name ${CONTAINER_NAME} -v /vol/builds:/vol/builds -v $(SW_DIR):/sw  -w /sw/nic pensando/nic su -l $(CUR_USER)
+
 docker/build-shell-image: docker/install_box
 	if [ "x${NO_PULL}" = "x" ]; then docker pull $(REGISTRY)/pensando/nic:${NIC_CONTAINER_VERSION}; fi
 	cd .. && BOX_INCLUDE_ENV="USER USER_UID USER_GID GROUP_NAME" USER_UID=$$(id -u) USER_GID=$$(id -g) GROUP_NAME=$$(id -gn) box -t pensando/nic nic/box.rb
