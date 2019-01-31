@@ -68,6 +68,7 @@ export GIT_COMMIT GIT_VERSION BUILD_DATE
 default:
 	$(MAKE) ws-tools
 	$(MAKE) pull-assets
+	$(MAKE) gen-clean
 	$(MAKE) gen
 	$(MAKE) checks
 	$(MAKE) build
