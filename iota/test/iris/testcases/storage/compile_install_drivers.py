@@ -55,6 +55,7 @@ def Trigger(tc):
         api.Trigger_AddHostCommand(req, n, "dmesg -c 2>&1 > /dev/null")
         api.Trigger_AddHostCommand(req, n, "cp sonic.ko %s" % api.GetHostToolsDir(), rundir = pnsodefs.PNSO_DRIVER_DIR)
         api.Trigger_AddHostCommand(req, n, "cp pencake.ko %s" % api.GetHostToolsDir(), rundir = pnsodefs.PNSO_DRIVER_DIR)
+        api.Trigger_AddHostCommand(req, n, "lspci -d 1dd8:")
         
         if tc.os == 'linux':
             api.Trigger_AddHostCommand(req, n, "rmmod pencake || true", rundir = pnsodefs.PNSO_DRIVER_DIR,
