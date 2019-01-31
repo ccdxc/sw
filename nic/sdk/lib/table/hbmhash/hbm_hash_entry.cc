@@ -477,8 +477,8 @@ HbmHashEntry::remove()
                 eff_spine_entry->program_table();
                 if (!eff_spine_entry->get_anchor_entry() &&
                         !eff_spine_entry->get_num_hgs()) {
-                SDK_TRACE_DEBUG("Current is last HG: Last Spine entry is removed."
-                                "Reprogram last prev. spine entry");
+                    SDK_TRACE_DEBUG("Current is last HG: Last Spine entry is removed."
+                                    "Reprogram last prev. spine entry");
                     fse_prev = eff_spine_entry->get_prev();
                     if (fse_prev) {
                         fse_prev->set_next(NULL);
@@ -549,6 +549,9 @@ HbmHashEntry::remove()
                 }
 
             }
+
+            // Hint group detaches from spine entry. So setting spine entry to NULL.
+            hint_group_->set_fs_entry(NULL);
         }
         // Re-program FHCT with 0s
         deprogram_table_non_anchor_entry();
