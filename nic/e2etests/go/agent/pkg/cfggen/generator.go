@@ -2,6 +2,7 @@ package cfggen
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -119,6 +120,14 @@ func (c *CfgGen) WriteJSON(outDir string) error {
 }
 
 func writeJSON(filePath string, obj interface{}) error {
+	cfg, ok := obj.(IOTAConfig)
+	if !ok {
+		return fmt.Errorf("failed to convert to IOTA Config. Obj: %v", obj)
+	}
+	if cfg.Objects == nil{
+		log.Debug("Nothing to write")
+		return nil
+	}
 	dat, err := json.MarshalIndent(obj, "", "  ")
 	if err != nil {
 		return err

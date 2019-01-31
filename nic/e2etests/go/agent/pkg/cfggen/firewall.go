@@ -2,6 +2,7 @@ package cfggen
 
 import (
 	"fmt"
+	"net"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -30,6 +31,8 @@ func (c *CfgGen) GenerateFirewallPolicies() error {
 
 	if sgPolicyManifest == nil || sgRuleManifest == nil {
 		log.Debug("SG Policy manifest missing.")
+		log.Info("Skipping SG Policy Generation")
+		return nil
 	}
 
 	rulesPerPolicy := sgRuleManifest.Count / sgPolicyManifest.Count
@@ -54,7 +57,7 @@ func (c *CfgGen) GenerateFirewallPolicies() error {
 			c.NodeEPLUT[nodeUUID] = c.GenerateEPPairs(namespace.Name, nodeUUID, sgRuleManifest.Count)
 		}
 
-		policyRules := c.generatePolicyRules(rulesPerPolicy)[:rulesPerPolicy]
+		policyRules := c.generatePolicyRules(namespace.Name, rulesPerPolicy)[:rulesPerPolicy]
 
 		sgPolicy := netproto.SGPolicy{
 			TypeMeta: api.TypeMeta{
@@ -93,7 +96,7 @@ func (c *CfgGen) GenerateEPPairs(namespace, nodeUUID string, count int) (epPairs
 		if ep.Namespace == namespace {
 			if ep.Spec.NodeUUID == nodeUUID {
 				localEPs = append(localEPs, ep.Spec.IPv4Address)
-			} else if ep.Spec.NodeUUID != defaultRemoteUUIDName {
+			} else {
 				remoteEPs = append(remoteEPs, ep.Spec.IPv4Address)
 			}
 		}
@@ -110,9 +113,11 @@ func (c *CfgGen) genEPPairs(localEPs, remoteEPs []string, count int) (epPairs []
 	if remoteEPs == nil {
 		combinations := libs.GenPairs(localEPs, count)
 		for _, c := range combinations {
+			sIP, _, _ := net.ParseCIDR(c[0])
+			dIP, _, _ := net.ParseCIDR(c[1])
 			epPair := EPPair{
-				SrcEP: c[0],
-				DstEP: c[1],
+				SrcEP: sIP.String(),
+				DstEP: dIP.String(),
 			}
 			epPairs = append(epPairs, epPair)
 		}
@@ -123,14 +128,18 @@ func (c *CfgGen) genEPPairs(localEPs, remoteEPs []string, count int) (epPairs []
 
 	for _, l := range localCombinations {
 		for _, r := range remoteCombinations {
+			sIP1, _, _ := net.ParseCIDR(l[0])
+			sIP2, _, _ := net.ParseCIDR(l[1])
+			dIP1, _, _ := net.ParseCIDR(r[0])
+			dIP2, _, _ := net.ParseCIDR(r[1])
 			epPair := []EPPair{
 				{
-					SrcEP: l[0],
-					DstEP: r[0],
+					SrcEP: sIP1.String(),
+					DstEP: dIP1.String(),
 				},
 				{
-					SrcEP: l[1],
-					DstEP: r[1],
+					SrcEP: sIP2.String(),
+					DstEP: dIP2.String(),
 				},
 			}
 			epPairs = append(epPairs, epPair...)
@@ -154,7 +163,7 @@ func (c *CfgGen) getRemoteEPs(nodeUUID string) []string {
 	return remoteEps
 }
 
-func (c *CfgGen) generatePolicyRules(count int) (policyRules []netproto.PolicyRule) {
+func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules []netproto.PolicyRule) {
 	for j := 0; j < count; j++ {
 		for _, nodeUUID := range c.NodeUUIDs {
 			// Get the apps object
@@ -162,12 +171,26 @@ func (c *CfgGen) generatePolicyRules(count int) (policyRules []netproto.PolicyRu
 			if !ok {
 				log.Errorf("Failed to cast the object %v to apps.", c.Apps.Objects)
 			}
-			var proto, port string
+
+			// ensure that the apps are in the same namespace as the policy
+			var curApps []*netproto.App
+			for _, a := range apps {
+				if a.Namespace == namespace {
+					curApps = append(curApps, a)
+				}
+			}
 			var localEPPair, remoteEPPair EPPair
+
+			//Pick a local and remote EP Pair for the rule
+			if len(c.NodeEPLUT[nodeUUID].LocalEPPairs) == 0 || len(c.NodeEPLUT[nodeUUID].RemoteEPPairs) == 0 {
+				c.NodeEPLUT[nodeUUID] = NodeEPPairs{
+					RemoteEPPairs: c.genEPPairs(c.EpCache[nodeUUID], c.EpCache[defaultRemoteUUIDName], count),
+				}
+			}
+
 			localEPPairs := c.NodeEPLUT[nodeUUID].LocalEPPairs
 			remoteEPPairs := c.NodeEPLUT[nodeUUID].RemoteEPPairs
 
-			//Pick a local and remote EP Pair for the rule
 			if len(c.NodeEPLUT[nodeUUID].LocalEPPairs) != 0 {
 				localEPPair, localEPPairs = localEPPairs[0], localEPPairs[1:]
 			} else {
@@ -179,24 +202,9 @@ func (c *CfgGen) generatePolicyRules(count int) (policyRules []netproto.PolicyRu
 				LocalEPPairs:  localEPPairs,
 				RemoteEPPairs: remoteEPPairs,
 			}
-			app := apps[j%len(apps)]
-			l4Match := c.Template.FirewallPolicyRules[j%len(c.Template.FirewallPolicyRules)]
-			components := strings.Split(l4Match, "/")
+			app := curApps[j%len(curApps)]
 
-			if components[0] == "*" {
-				proto = "any"
-			} else {
-				proto = components[0]
-				port = components[1]
-			}
-
-			appConfig := []*netproto.AppConfig{
-				{
-					Protocol: proto,
-					Port:     port,
-				},
-			}
-
+			appConfig := c.generateL4Match(j % len(c.Template.FirewallPolicyRules))
 			rules := []netproto.PolicyRule{
 				{
 					Action:  "PERMIT",
@@ -237,4 +245,35 @@ func (c *CfgGen) generatePolicyRules(count int) (policyRules []netproto.PolicyRu
 		}
 	}
 	return
+}
+
+
+func (c *CfgGen) generateL4Match(offset int) []*netproto.AppConfig{
+	var appConfigs []*netproto.AppConfig
+	matches := c.Template.FirewallPolicyRules[offset:]
+
+	if len(matches) < c.Template.L4MatchPerRule{
+		matches = append(matches, c.Template.FirewallPolicyRules[:offset]...)
+	}
+	matches = matches[:c.Template.L4MatchPerRule]
+
+	for _, l4Match := range matches {
+		var proto, port string
+		components := strings.Split(l4Match, "/")
+		if components[0] == "*" {
+			proto = "any"
+			port = "1-65535"
+		} else {
+			proto = components[0]
+			port = components[1]
+		}
+
+		appConfig := &netproto.AppConfig{
+			Protocol:proto,
+			Port: port,
+		}
+		appConfigs = append(appConfigs, appConfig)
+
+	}
+	return appConfigs
 }

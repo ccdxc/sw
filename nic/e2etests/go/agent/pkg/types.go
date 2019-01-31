@@ -39,6 +39,7 @@ type ConfigTemplate struct {
 	FirewallPolicyRules []string `json:"firewall-policy-rules,omitempty"`
 	ALGInfo             []string `json:"alg-info,omitempty"`
 	FlowMonInterval     string   `json:"flowmon-timeout,omitempty"`
+	L4MatchPerRule int `json:"l4match-per-rule,omitempty"`
 }
 
 func init() {

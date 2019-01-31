@@ -22,6 +22,8 @@ func (c *CfgGen) GenerateNamespaces() error {
 	}
 	if vrfManifest == nil {
 		log.Debug("Namespace Manifest missing.")
+		log.Info("Skipping Namespace Generation")
+		return nil
 	}
 
 	log.Infof("Generating %v VRFs.", vrfManifest.Count)
@@ -43,7 +45,7 @@ func (c *CfgGen) GenerateNamespaces() error {
 		vrfs = append(vrfs, &n)
 	}
 	cfg.Type = "netagent"
-	cfg.ObjectKey = "meta.tenant/meta.namespace/meta.name"
+	cfg.ObjectKey = "meta.tenant/meta.name"
 	cfg.RestEndpoint = "api/namespaces/"
 	cfg.Objects = vrfs
 	c.Namespaces = cfg

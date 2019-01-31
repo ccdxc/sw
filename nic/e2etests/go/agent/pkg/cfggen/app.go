@@ -24,6 +24,8 @@ func (c *CfgGen) GenerateALGs() error {
 	}
 	if appManifest == nil {
 		log.Debug("App Manifest missing.")
+		log.Info("Skipping App Generation")
+		return nil
 	}
 
 	log.Infof("Generating %v ALGs.", appManifest.Count)
