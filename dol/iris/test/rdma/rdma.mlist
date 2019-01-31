@@ -642,6 +642,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SQ_BKTRACK_FRPMR
+        enable  : True
+        package : test.rdma
+        module  : req_tx_sq_bktrack_frpmr
+        spec    : req_tx_sq_bktrack_frpmr.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_UD_SQ_DRAIN
         enable  : True
         package : test.rdma
