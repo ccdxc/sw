@@ -367,7 +367,7 @@ HbmHashEntry::remove()
                         program_table_non_anchor_entry(NULL);
 
                     // Un-program last_hbm_hash_entry
-                    last_hbm_hash_entry->deprogram_table_non_anchor_entry();
+                    last_hbm_hash_entry->deprogram_table_non_anchor_entry(eff_spine_entry);
                     // Free up FHCT index of last hbm_hash_entry
                     free_collision_index(last_fse, last_hbm_hash_entry->get_fhct_index());
                 } else {
@@ -383,7 +383,7 @@ HbmHashEntry::remove()
                         // Re-program last_fse
                         last_fse->program_table();
                         // Un-program last_hbm_hash_entry
-                        last_hbm_hash_entry->deprogram_table_non_anchor_entry();
+                        last_hbm_hash_entry->deprogram_table_non_anchor_entry(eff_spine_entry);
                         // Free up FHCT index of last hbm hash entry
                         free_collision_index(last_fse, last_hbm_hash_entry->get_fhct_index());
                     } else {
@@ -554,7 +554,7 @@ HbmHashEntry::remove()
             hint_group_->set_fs_entry(NULL);
         }
         // Re-program FHCT with 0s
-        deprogram_table_non_anchor_entry();
+        deprogram_table_non_anchor_entry(eff_spine_entry);
         // Free up hct_index_ from Indexer
         free_collision_index(eff_spine_entry, hct_index_);
     } else {
@@ -567,9 +567,9 @@ HbmHashEntry::remove()
         // Remove this from hg
         hint_group_->del_hbm_hash_entry(this);
         // Program the Prev. HBM Hash Entry in HG list
-        prev_fe->deprogram_table_non_anchor_entry();
+        prev_fe->deprogram_table_non_anchor_entry(prev_fe->get_eff_spine_entry());
         // Re-program FHCT with 0s
-        deprogram_table_non_anchor_entry();
+        deprogram_table_non_anchor_entry(eff_spine_entry);
         // Free up the FHCT Indexer
         free_collision_index(eff_spine_entry, hct_index_);
     }
@@ -762,7 +762,7 @@ HbmHashEntry::program_table_non_anchor_entry(HbmHashEntry *next_fe)
 // DeProgram Non-anchor entry
 // ---------------------------------------------------------------------------
 sdk_ret_t
-HbmHashEntry::deprogram_table_non_anchor_entry()
+HbmHashEntry::deprogram_table_non_anchor_entry(HbmHashSpineEntry *fse)
 {
     sdk_ret_t                       rs = SDK_RET_OK;
     p4pd_error_t                    pd_err = P4PD_SUCCESS;
@@ -772,12 +772,12 @@ HbmHashEntry::deprogram_table_non_anchor_entry()
 
     SDK_TRACE_DEBUG("Deprogram Coll. Table idx: %d", hct_index_);
 
-    entire_data_len = get_bucket()->get_hbm_hash()->
+    entire_data_len = fse->get_ht_entry()->get_hbm_hash()->
                       get_entire_data_len();
     swdata = SDK_CALLOC(SDK_MEM_ALLOC_ENTIRE_HBM_HASH_ENTRY_DATA,
                         entire_data_len);
 
-    coll_table_id = get_bucket()->get_hbm_hash()->get_collision_table_id();
+    coll_table_id = fse->get_ht_entry()->get_hbm_hash()->get_collision_table_id();
 
 
     // P4-API: Collision Table Write
