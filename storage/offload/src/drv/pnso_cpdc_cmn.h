@@ -224,7 +224,7 @@ cpdc_cp_hdr_version_wr_required(uint32_t hdr_version)
 static inline bool
 cpdc_desc_is_integ_data_wr_required(const struct cpdc_desc *desc)
 {
-	return desc->u.cd_bits.cc_integrity_type == CP_INTEGRITY_M_ADLER32;
+	return desc->u.cd_bits.cc_integrity_type == CPDC_INTEGRITY_M_ADLER32;
 }
 
 #endif /* __PNSO_CPDC_CMN_H__ */
