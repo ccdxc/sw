@@ -38,7 +38,7 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { AlerttableService } from '@app/services/alerttable.service';
-import { MetricsqueryService as MetricsqueryServiceGen } from '@app/services/generated/metricsquery.service';
+import { TelemetryqueryService as TelemetryqueryServiceGen } from '@app/services/generated/telemetryquery.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 
 // Pensando UI components
@@ -147,7 +147,7 @@ import { MissingpageComponent } from './widgets/missingpage/missingpage.componen
     WorkloadServiceGen,
     AuthServiceGen,
     StagingService,
-    MetricsqueryServiceGen,
+    TelemetryqueryServiceGen,
     MetricsqueryService,
 
     // Route Guards

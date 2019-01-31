@@ -151,7 +151,7 @@ func Start() *Info {
 			"pen-apiserver": "localhost:" + port,
 		},
 		SkipBackends: []string{
-			"metrics_query",
+			"telemetry_query",
 			"search",
 			"events",
 			"audit",

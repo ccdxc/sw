@@ -1,6 +1,5 @@
 import { Observable, Subscription, BehaviorSubject, timer } from 'rxjs';
 import { Utility } from '@app/common/Utility';
-import { Metrics_queryQueryResponse } from '@sdk/v1/models/metrics_query';
 
 /**
  * To allow for multiple components to perform polls with different bodies,

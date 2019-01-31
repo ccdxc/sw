@@ -1,0 +1,37 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package telemetry_query;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "telemetry_query.proto";
+
+// gRPC destination for this service
+option (venice.fileGrpcDest) = "pen-citadel";
+// fileApiServerBacked should be set to false to indicate that the set of services defined in this
+// file are not backed by the API server.
+option (venice.fileApiServerBacked) = false;
+option (venice.fileCategory) = "telemetry";
+
+// TelemetryQuery service API
+service TelemetryV1 {
+    option (venice.apiPrefix) = "";
+
+    // API Version.
+    option (venice.apiVersion) = "v1";
+
+    //  Metrics is the telemetry metrics query RPC, http://localhost:9000/telemetry/v1/metrics
+    rpc Metrics (MetricsQueryList) returns (MetricsQueryResponse) {
+        option (google.api.http) = {
+            post: "/metrics"
+            body: "*"
+            additional_bindings {
+                get: "/metrics"
+            }
+        };
+    }
+}

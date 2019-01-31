@@ -16,8 +16,6 @@ import (
 	_ "github.com/pensando/sw/api/generated/cluster/cli"
 	// blank import to pull in events service into cli utils
 	_ "github.com/pensando/sw/api/generated/events/cli"
-	// blank import to pull in metrics_query service into cli utils
-	_ "github.com/pensando/sw/api/generated/metrics_query/cli"
 	// blank import to pull in monitoring service into cli utils
 	_ "github.com/pensando/sw/api/generated/monitoring/cli"
 	// blank import to pull in network service into cli utils
@@ -32,6 +30,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/security/cli"
 	// blank import to pull in staging service into cli utils
 	_ "github.com/pensando/sw/api/generated/staging/cli"
+	// blank import to pull in telemetry_query service into cli utils
+	_ "github.com/pensando/sw/api/generated/telemetry_query/cli"
 	// blank import to pull in workload service into cli utils
 	_ "github.com/pensando/sw/api/generated/workload/cli"
 )

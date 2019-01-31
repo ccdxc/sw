@@ -7,10 +7,10 @@ import { HeroCardOptions } from '@app/components/shared/herocard/herocard.compon
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { MetricsPollingOptions, MetricsqueryService, MetricsPollingQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
+import { MetricsPollingOptions, MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { ClusterCluster, ClusterNode } from '@sdk/v1/models/generated/cluster';
-import { Metrics_queryQuerySpec } from '@sdk/v1/models/generated/metrics_query';
-import { IMetrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
+import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
+import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { MessageService } from 'primeng/primeng';
 import { Subscription } from 'rxjs';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
@@ -65,10 +65,10 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
 
   subscriptions: Subscription[] = [];
 
-  timeSeriesData: IMetrics_queryQueryResult;
-  avgData: IMetrics_queryQueryResult;
-  avgDayData: IMetrics_queryQueryResult;
-  maxObjData: IMetrics_queryQueryResult;
+  timeSeriesData: ITelemetry_queryMetricsQueryResult;
+  avgData: ITelemetry_queryMetricsQueryResult;
+  avgDayData: ITelemetry_queryMetricsQueryResult;
+  maxObjData: ITelemetry_queryMetricsQueryResult;
 
   telemetryKind: string = 'Node';
 
@@ -142,7 +142,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
    *  - Node using the most in the last 5 min
    */
   getMetrics() {
-    const queryList: MetricsPollingQueries = {
+    const queryList: TelemetryPollingMetricQueries = {
       queries: [],
       tenant: Utility.getInstance().getTenant()
     };
@@ -151,7 +151,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     queryList.queries.push(this.avgDayQuery());
     queryList.queries.push(this.maxNodeQuery());
     const sub = this.metricsqueryService.pollMetrics('clusterCards', queryList).subscribe(
-      (data: IMetrics_queryQueryResponse) => {
+      (data: ITelemetry_queryMetricsQueryResponse) => {
         if (data && data.results && data.results.length === 4) {
           this.timeSeriesData = data.results[0];
           this.avgData = data.results[1];
@@ -168,7 +168,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   }
 
   timeSeriesQuery(): MetricsPollingQuery {
-    const query: Metrics_queryQuerySpec = MetricsUtility.timeSeriesQuery(this.telemetryKind);
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.timeSeriesQuery(this.telemetryKind);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
       mergeFunction: MetricsUtility.timeSeriesQueryMerge
@@ -177,7 +177,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   }
 
   avgQuery(): MetricsPollingQuery {
-    const query: Metrics_queryQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind);
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
     };
@@ -186,7 +186,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   }
 
   avgDayQuery(): MetricsPollingQuery {
-    const query: Metrics_queryQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
     };
@@ -195,7 +195,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   }
 
   maxNodeQuery(): MetricsPollingQuery {
-    const query: Metrics_queryQuerySpec = MetricsUtility.maxObjQuery(this.telemetryKind);
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.maxObjQuery(this.telemetryKind);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.maxObjQueryUpdate,
       mergeFunction: MetricsUtility.maxObjQueryMerge

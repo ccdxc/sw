@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/pensando/sw/api/generated/workload"
-	"github.com/pensando/sw/venice/utils/metricsclient"
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
 func TestSliceToMap(t *testing.T) {
@@ -271,7 +271,7 @@ func TestPrintMetrics(t *testing.T) {
 	mem := make([]byte, 10000, 10000)
 	b := bytes.NewBuffer(mem)
 
-	series := &metricsclient.ResultSeries{
+	series := &telemetryclient.MetricsResultSeries{
 		Columns: []string{"time", "CPUUsedPercent", "DiskFree", "DiskTotal"},
 		Values: [][]interface{}{
 			[]interface{}{"2019-01-28T08:17:53.162022171Z", "19.7", "33911", "38945", "5034"},

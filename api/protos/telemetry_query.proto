@@ -1,0 +1,93 @@
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package telemetry_query;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/api/fields/selector.proto";
+import "github.com/pensando/sw/api/labels/selector.proto";
+
+// TSDBFunctionType specifies an operation to perform on metrics
+enum TsdbFunctionType {
+    NONE = 0; // none
+    MEAN = 1; // returns average of the fields
+    MAX  = 2; // returns maximum of the fields
+}
+
+// PaginationSpec specifies how many metrics instances to include
+// in the result.
+message PaginationSpec {
+    // Offset specifies the starting point
+    int32 Offset = 1 [(gogoproto.jsontag) = "offset,omitempty"];
+    // Count specifies the number of series to include
+    int32 Count = 2 [(gogoproto.jsontag) = "count,omitempty"];
+}
+
+// MetricsQuerySpec requires a structured body consisting of:
+//     -  Object Selector (selects one more more objects of same Kind)
+//     -  Time Range (for the time series)
+//     -  A set of Metric Specs
+//     -  A pagination spec
+message MetricsQuerySpec {
+    api.TypeMeta T            = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    // Name is the name of the API object.
+    string Name               = 2 [(gogoproto.jsontag) = "name,omitempty", (venice.check) = "StrLen(1, 100)"];
+    labels.Selector Selector  = 3 [(gogoproto.jsontag) = "selector,omitempty"];
+    // Fields select the metric fields to be included in the result
+    // Empty will include all fields, must contain at least one non-tag field
+    repeated string Fields    = 4 [(gogoproto.jsontag) = "fields,omitempty", (venice.check)="EmptyOrRegExp(name)"];
+    // Functions specify an operation function to be applied, example mean()/max()
+    string Function           = 5 [(gogoproto.jsontag) = "function,omitempty", (venice.check) = "StrEnum(TsdbFunctionType)"];
+    // StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z
+    api.Timestamp StartTime   = 6 [(gogoproto.jsontag) = "start-time,omitempty"];
+    // EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z
+    api.Timestamp EndTime     = 7 [(gogoproto.jsontag) = "end-time,omitempty"];
+    // GroupbyTime groups series based on the interval specified
+    string GroupbyTime        = 8 [(gogoproto.jsontag) = "group-by-time,omitempty", (venice.check)="EmptyOrDuration(0,0)"];
+    // GroupbyField groups series based on the field specified
+    string GroupbyField       = 9 [(gogoproto.jsontag) = "group-by-field,omitempty", (venice.check)="EmptyOrRegExp(name)"];
+    // PaginatioSpec specifies the number of series to include
+    PaginationSpec Pagination = 10 [(gogoproto.jsontag) = "pagination,omitempty"];
+}
+
+// MetricsQueryList contains a list of queries to execute
+message MetricsQueryList {
+    // Tenant for the request
+    string Tenant     = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
+    // Namespace for the request
+    string Namespace  = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
+    // List of queries to execute
+    repeated MetricsQuerySpec Queries = 3 [(gogoproto.jsontag) = "queries,omitempty"];
+}
+
+//
+message ResultSeries {
+    // Name of the series
+    string Name = 1 [(gogoproto.jsontag) = "name,omitempty"];
+    // Tags are the TSDB tags in the query response
+    map <string, string> Tags = 2 [(gogoproto.jsontag) = "tags,omitempty"];
+    // columns list all available fields in tsdb
+    repeated string Columns = 3 [(gogoproto.jsontag) = "columns,omitempty"];
+    // values contain field values received frpm tsdb, it is in the form of [][]interface{}
+    repeated api.InterfaceSlice Values = 4 [(gogoproto.jsontag) = "values"];
+}
+
+// MetricsQueryResult contains tsdb series from citadel query
+message MetricsQueryResult {
+    int32 StatementID = 1 [(gogoproto.jsontag) = "statement_id"];
+    repeated ResultSeries Series = 2 [(gogoproto.jsontag) = "series,omitempty"];
+}
+
+// MetricsQueryResponse is the response send out
+message MetricsQueryResponse {
+    // Tenant for the request
+    string Tenant     = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
+    // Namespace for the request
+    string Namespace  = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
+   repeated MetricsQueryResult Results = 3 [(gogoproto.jsontag) = "results,omitempty"];
+}

@@ -2,23 +2,23 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Utility } from '@app/common/Utility';
 import { ControllerService } from '@app/services/controller.service';
-import { MetricsqueryService as MetricsqueryGenService } from '@app/services/generated/metricsquery.service';
+import { TelemetryqueryService as TelemetryqueryServiceGen } from '@app/services/generated/telemetryquery.service';
 import { PollingInstance, PollUtility } from '@app/services/PollUtility';
-import { IMetrics_queryQuerySpec, Metrics_queryQuerySpec, Metrics_queryQueryList, Metrics_queryQueryResult, IMetrics_queryQueryList } from '@sdk/v1/models/generated/metrics_query';
+import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQueryList, Telemetry_queryMetricsQueryResult, ITelemetry_queryMetricsQueryList } from '@sdk/v1/models/generated/telemetry_query';
 
-import { IMetrics_queryQueryResponse, Metrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
+import { ITelemetry_queryMetricsQueryResponse, Telemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 
 export interface MetricsPollingOptions {
-  timeUpdater?: (body: IMetrics_queryQuerySpec) => void;
-  mergeFunction?: (curr: IMetrics_queryQueryResult, newData: IMetrics_queryQueryResult) => IMetrics_queryQueryResult;
+  timeUpdater?: (body: ITelemetry_queryMetricsQuerySpec) => void;
+  mergeFunction?: (curr: ITelemetry_queryMetricsQueryResult, newData: ITelemetry_queryMetricsQueryResult) => ITelemetry_queryMetricsQueryResult;
 }
 
 export interface MetricsPollingQuery {
-  query: IMetrics_queryQuerySpec;
+  query: ITelemetry_queryMetricsQuerySpec;
   pollingOptions?: MetricsPollingOptions;
 }
 
-export interface MetricsPollingQueries {
+export interface TelemetryPollingMetricQueries {
   queries: MetricsPollingQuery[];
   tenant: string;
 }
@@ -35,7 +35,7 @@ export interface MetricsPollingQueries {
  */
 
 @Injectable()
-export class MetricsqueryService extends MetricsqueryGenService {
+export class MetricsqueryService extends TelemetryqueryServiceGen {
   pollingUtility: PollUtility;
   // Metrics are reported every 30 seconds in the backend
   POLLING_INTERVAL = 30000;
@@ -56,37 +56,37 @@ export class MetricsqueryService extends MetricsqueryGenService {
    * function which will be called to modify the request body, and
    * mergeFunction which is called to merge the new data with the old
    */
-  pollMetrics(key: string, body: MetricsPollingQueries, pollingInterval = this.POLLING_INTERVAL) {
-    const poll: PollingInstance = this.pollingUtility.initiatePolling(key, body, true, pollingInterval, 0, new Metrics_queryQueryResponse());
+  pollMetrics(key: string, body: TelemetryPollingMetricQueries, pollingInterval = this.POLLING_INTERVAL) {
+    const poll: PollingInstance = this.pollingUtility.initiatePolling(key, body, true, pollingInterval, 0, new Telemetry_queryMetricsQueryResponse());
     return poll.handler;
   }
 
   /**
    * Called when the timer ticks to fetch data
    */
-  protected pollingFetchData(key, body: MetricsPollingQueries, useRealData): void {
+  protected pollingFetchData(key, body: TelemetryPollingMetricQueries, useRealData): void {
     const _ = Utility.getLodash();
 
-    const queries: Metrics_queryQuerySpec[] = [];
+    const queries: Telemetry_queryMetricsQuerySpec[] = [];
     const pollingOptions: MetricsPollingOptions[] = [];
     body.queries.forEach((query) => {
-      queries.push(new Metrics_queryQuerySpec(query.query));
+      queries.push(new Telemetry_queryMetricsQuerySpec(query.query));
       const pollOptions = query.pollingOptions || {};
       pollingOptions.push(pollOptions);
     });
-    const queryList = new Metrics_queryQueryList();
+    const queryList = new Telemetry_queryMetricsQueryList();
     queryList.queries = queries.map((q) => q.getModelValues());
-    this.PostQuery(queryList).subscribe(
+    this.PostMetrics(queryList).subscribe(
       (resp) => {
-        const respBody = new Metrics_queryQueryResponse(resp.body as any);
+        const respBody = new Telemetry_queryMetricsQueryResponse(resp.body as any);
         const poll = this.pollingUtility.pollingHandlerMap[key];
-        const pollBody: MetricsPollingQueries = poll.body;
+        const pollBody: TelemetryPollingMetricQueries = poll.body;
         if (poll == null) {
           return;
         }
         this.processData(respBody);
-        const currVal: IMetrics_queryQueryResponse = poll.handler.value;
-        const resValue: IMetrics_queryQueryResponse = _.cloneDeep(currVal);
+        const currVal: ITelemetry_queryMetricsQueryResponse = poll.handler.value;
+        const resValue: ITelemetry_queryMetricsQueryResponse = _.cloneDeep(currVal);
 
         respBody.results.forEach((r, i) => {
           const options = pollingOptions[i];
@@ -131,7 +131,7 @@ export class MetricsqueryService extends MetricsqueryGenService {
 
   // If a query requests data for a slice of time where there are
   // no entries, DB returns null values. We fitler these values out.
-  processData(data: IMetrics_queryQueryResponse) {
+  processData(data: ITelemetry_queryMetricsQueryResponse) {
     data.results.forEach((r) => {
       if (r.series == null) {
         return;

@@ -14,10 +14,10 @@ import (
 	"github.com/ghodss/yaml"
 
 	"github.com/pensando/sw/api"
-	mqclient "github.com/pensando/sw/api/generated/metrics_query"
+	tqclient "github.com/pensando/sw/api/generated/telemetry_query"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/metricsclient"
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
 func dumpStructStdout(dumpYml bool, obj interface{}) {
@@ -241,7 +241,7 @@ func matchLines(out string, fields []string) bool {
 }
 
 // prints specified rows and columns in a metrics series
-func printSeries(ioWriter io.Writer, rows int, cols []string, series *metricsclient.ResultSeries) {
+func printSeries(ioWriter io.Writer, rows int, cols []string, series *telemetryclient.MetricsResultSeries) {
 	tw := tabwriter.NewWriter(ioWriter, 0, 2, 2, ' ', 0)
 	defer tw.Flush()
 
@@ -291,17 +291,17 @@ func printSeries(ioWriter io.Writer, rows int, cols []string, series *metricscli
 }
 
 // metrisQuery polls backend for a given table name, using provided token
-func metricsQuery(server, tableName, token string) (*metricsclient.QueryResponse, error) {
-	mc, err := metricsclient.NewMetricsClient(server)
+func metricsQuery(server, tableName, token string) (*telemetryclient.MetricsQueryResponse, error) {
+	tc, err := telemetryclient.NewTelemetryClient(server)
 	if err != nil {
-		return &metricsclient.QueryResponse{}, err
+		return &telemetryclient.MetricsQueryResponse{}, err
 	}
 
-	query := &mqclient.QueryList{
+	metricQuery := &tqclient.MetricsQueryList{
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
-		Queries: []*mqclient.QuerySpec{
-			&mqclient.QuerySpec{
+		Queries: []*tqclient.MetricsQuerySpec{
+			&tqclient.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: tableName,
 				},
@@ -309,7 +309,7 @@ func metricsQuery(server, tableName, token string) (*metricsclient.QueryResponse
 		},
 	}
 	loginCtx := loginctx.NewContextWithAuthzHeader(goContext.Background(), "Bearer "+token)
-	resp, err := mc.Query(loginCtx, query)
+	resp, err := tc.Metrics(loginCtx, metricQuery)
 
 	return resp, err
 }

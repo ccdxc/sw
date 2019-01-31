@@ -197,7 +197,7 @@ func TestMain(m *testing.M) {
 			"pen-spyglass":  fdr.GetListenURL(),
 		},
 		SkipBackends: []string{
-			"metrics_query",
+			"telemetry_query",
 			"objstore",
 		},
 		Auditor: auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), l)),

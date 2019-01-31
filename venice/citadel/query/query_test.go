@@ -16,7 +16,7 @@ import (
 	"github.com/influxdata/influxdb/query"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/metrics_query"
+	"github.com/pensando/sw/api/generated/telemetry_query"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/citadel/broker/mock"
 	"github.com/pensando/sw/venice/utils/testutils"
@@ -25,18 +25,18 @@ import (
 
 var testServerURL = "localhost:0"
 
-func TestBuildCitadelQuery(t *testing.T) {
+func TestBuildMetricsCitadelQuery(t *testing.T) {
 	startTime := &api.Timestamp{}
 	startTime.Parse("2018-11-09T23:16:17Z")
 	endTime := &api.Timestamp{}
 	endTime.Parse("2018-11-09T23:22:17Z")
 	testQs := []struct {
-		qs   *metrics_query.QuerySpec
+		qs   *telemetry_query.MetricsQuerySpec
 		resp string
 		pass bool
 	}{
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -45,7 +45,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -55,7 +55,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -65,7 +65,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -76,7 +76,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -87,7 +87,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -98,7 +98,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -109,7 +109,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -128,7 +128,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -140,7 +140,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -151,7 +151,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
 				},
@@ -165,7 +165,7 @@ func TestBuildCitadelQuery(t *testing.T) {
 	}
 
 	for _, i := range testQs {
-		resp, err := buildCitadelQuery(i.qs)
+		resp, err := buildCitadelMetricsQuery(i.qs)
 		if i.pass {
 			testutils.AssertOk(t, err, fmt.Sprintf("failed to build query %+v", i.qs))
 			testutils.Assert(t, resp == i.resp, fmt.Sprintf("query didn't match, got:{%s} expected: {%s}", resp, i.resp))
@@ -181,7 +181,7 @@ func TestValidateQueryList(t *testing.T) {
 		broker:  nil,
 	}
 	testQs := []struct {
-		ql      *metrics_query.QueryList
+		ql      *telemetry_query.MetricsQueryList
 		errMsg  string
 		errCode codes.Code
 		pass    bool
@@ -193,15 +193,15 @@ func TestValidateQueryList(t *testing.T) {
 			pass:    false,
 		},
 		{
-			ql:      &metrics_query.QueryList{},
+			ql:      &telemetry_query.MetricsQueryList{},
 			errMsg:  "query required",
 			errCode: codes.InvalidArgument,
 			pass:    false,
 		},
 		{
-			ql: &metrics_query.QueryList{
-				Queries: []*metrics_query.QuerySpec{
-					&metrics_query.QuerySpec{
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
 						TypeMeta: api.TypeMeta{
 							Kind: "Node",
 						},
@@ -214,9 +214,9 @@ func TestValidateQueryList(t *testing.T) {
 			pass:    false,
 		},
 		{
-			ql: &metrics_query.QueryList{
-				Queries: []*metrics_query.QuerySpec{
-					&metrics_query.QuerySpec{
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
 						TypeMeta: api.TypeMeta{
 							Kind: "Node",
 						},
@@ -232,7 +232,7 @@ func TestValidateQueryList(t *testing.T) {
 	}
 
 	for _, i := range testQs {
-		err := q.validateQueryList(i.ql)
+		err := q.validateMetricsQueryList(i.ql)
 		if i.pass && err != nil {
 			t.Errorf("Expected error to be nil but was %v", err)
 		} else if !i.pass && err == nil {
@@ -259,7 +259,7 @@ func TestValidateQuerySpec(t *testing.T) {
 		broker:  nil,
 	}
 	testQs := []struct {
-		qs      *metrics_query.QuerySpec
+		qs      *telemetry_query.MetricsQuerySpec
 		errMsg  string
 		errCode codes.Code
 		pass    bool
@@ -271,13 +271,13 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    false,
 		},
 		{
-			qs:      &metrics_query.QuerySpec{},
+			qs:      &telemetry_query.MetricsQuerySpec{},
 			errMsg:  "kind required",
 			errCode: codes.InvalidArgument,
 			pass:    false,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "",
 				},
@@ -287,7 +287,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    false,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "invalid kind",
 				},
@@ -297,7 +297,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    false,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -309,7 +309,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    false,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -321,7 +321,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -332,7 +332,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    false,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -343,7 +343,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    false,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -355,7 +355,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -367,7 +367,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    false,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -378,7 +378,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -390,7 +390,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -402,7 +402,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -414,7 +414,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    false,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -428,7 +428,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    false,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -444,7 +444,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -460,7 +460,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -481,7 +481,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    false,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -503,7 +503,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
-			qs: &metrics_query.QuerySpec{
+			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
 				},
@@ -528,7 +528,7 @@ func TestValidateQuerySpec(t *testing.T) {
 	}
 
 	for _, i := range testQs {
-		err := q.validateQuerySpec(i.qs)
+		err := q.validateMetricsQuerySpec(i.qs)
 		if i.pass && err != nil {
 			t.Errorf("Expected error to be nil but was %v", err)
 		} else if !i.pass && err == nil {
@@ -549,7 +549,7 @@ func TestValidateQuerySpec(t *testing.T) {
 	}
 }
 
-func TestQuery(t *testing.T) {
+func TestMetricsQuery(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockBroker := mock.NewMockInf(mockCtrl)
@@ -569,17 +569,17 @@ func TestQuery(t *testing.T) {
 	}
 
 	testQs := []struct {
-		queryList    *metrics_query.QueryList
+		queryList    *telemetry_query.MetricsQueryList
 		citadelQuery string
 		errMsg       string
 		// If clusterCheckResponse is not nil, it will mock the given value
 		clusterCheckResponse *ClusterCheckResponse
 		// If executeQueryResponse is not nil, it will mock the given value
 		executeQueryResponse *ExecuteQueryResponse
-		queryResponse        *metrics_query.QueryResponse
+		queryResponse        *telemetry_query.MetricsQueryResponse
 	}{
 		{
-			queryList:            &metrics_query.QueryList{},
+			queryList:            &telemetry_query.MetricsQueryList{},
 			citadelQuery:         "",
 			errMsg:               "rpc error: code = InvalidArgument desc = query required",
 			clusterCheckResponse: nil,
@@ -587,10 +587,10 @@ func TestQuery(t *testing.T) {
 			queryResponse:        nil,
 		},
 		{
-			queryList: &metrics_query.QueryList{
+			queryList: &telemetry_query.MetricsQueryList{
 				Tenant: "test",
-				Queries: []*metrics_query.QuerySpec{
-					&metrics_query.QuerySpec{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
 						TypeMeta: api.TypeMeta{
 							Kind: "Node",
 						},
@@ -607,11 +607,11 @@ func TestQuery(t *testing.T) {
 			queryResponse:        nil,
 		},
 		{
-			queryList: &metrics_query.QueryList{
+			queryList: &telemetry_query.MetricsQueryList{
 				Tenant:    "testTenant",
 				Namespace: "testNamespace",
-				Queries: []*metrics_query.QuerySpec{
-					&metrics_query.QuerySpec{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
 						TypeMeta: api.TypeMeta{
 							Kind: "Node",
 						},
@@ -626,7 +626,7 @@ func TestQuery(t *testing.T) {
 						},
 						Function: "none",
 					},
-					&metrics_query.QuerySpec{
+					&telemetry_query.MetricsQuerySpec{
 						TypeMeta: api.TypeMeta{
 							Kind: "Node",
 						},
@@ -641,7 +641,7 @@ func TestQuery(t *testing.T) {
 						},
 						Function: "none",
 					},
-					&metrics_query.QuerySpec{
+					&telemetry_query.MetricsQuerySpec{
 						TypeMeta: api.TypeMeta{
 							Kind: "Node",
 						},
@@ -719,12 +719,12 @@ func TestQuery(t *testing.T) {
 				},
 				err: nil,
 			},
-			queryResponse: &metrics_query.QueryResponse{
-				Results: []*metrics_query.QueryResult{
-					&metrics_query.QueryResult{
+			queryResponse: &telemetry_query.MetricsQueryResponse{
+				Results: []*telemetry_query.MetricsQueryResult{
+					&telemetry_query.MetricsQueryResult{
 						StatementID: 0,
-						Series: []*metrics_query.ResultSeries{
-							&metrics_query.ResultSeries{
+						Series: []*telemetry_query.ResultSeries{
+							&telemetry_query.ResultSeries{
 								Name:    "test",
 								Tags:    nil,
 								Columns: []string{"time", "value"},
@@ -757,10 +757,10 @@ func TestQuery(t *testing.T) {
 							},
 						},
 					},
-					&metrics_query.QueryResult{
+					&telemetry_query.MetricsQueryResult{
 						StatementID: 1,
-						Series: []*metrics_query.ResultSeries{
-							&metrics_query.ResultSeries{
+						Series: []*telemetry_query.ResultSeries{
+							&telemetry_query.ResultSeries{
 								Name:    "test1",
 								Tags:    nil,
 								Columns: []string{"time", "value"},
@@ -793,10 +793,10 @@ func TestQuery(t *testing.T) {
 							},
 						},
 					},
-					&metrics_query.QueryResult{
+					&telemetry_query.MetricsQueryResult{
 						StatementID: 2,
-						Series: []*metrics_query.ResultSeries{
-							&metrics_query.ResultSeries{
+						Series: []*telemetry_query.ResultSeries{
+							&telemetry_query.ResultSeries{
 								Name:    "test2",
 								Tags:    nil,
 								Columns: []string{"time", "value"},
@@ -846,7 +846,7 @@ func TestQuery(t *testing.T) {
 			mockBroker.EXPECT().ExecuteQuery(ctx, i.queryList.Tenant, i.citadelQuery).Return(i.executeQueryResponse.qr, i.executeQueryResponse.err)
 		}
 
-		res, err := srv.Query(context.Background(), i.queryList)
+		res, err := srv.Metrics(context.Background(), i.queryList)
 		if i.errMsg == "" {
 			AssertOk(t, err, "Query returned unexpected error %v", err)
 		} else {

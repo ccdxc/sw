@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pensando/sw/api/generated/metrics_query"
+	"github.com/pensando/sw/api/generated/telemetry_query"
 )
 
 type influxSelect struct {
@@ -19,7 +19,7 @@ type influxSelect struct {
 }
 
 // InfluxQuery generates influxql queries based on the spec
-func InfluxQuery(qs *metrics_query.QuerySpec) ([]string, error) {
+func InfluxQuery(qs *telemetry_query.MetricsQuerySpec) ([]string, error) {
 	var is influxSelect
 
 	is.measurement = qs.Kind

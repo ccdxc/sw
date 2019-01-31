@@ -5,17 +5,17 @@ import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { MetricsUtility } from '@app/common/MetricsUtility';
-import { IMetrics_queryQueryResponse } from '@sdk/v1/models/metrics_query';
+import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
 import { ControllerService } from '@app/services/controller.service';
 import { ActivatedRoute } from '@angular/router';
 import { ClusterService } from '@app/services/generated/cluster.service';
-import { MetricsqueryService, MetricsPollingOptions, MetricsPollingQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
+import { MetricsqueryService, MetricsPollingOptions, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from 'primeng/primeng';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
-import { Metrics_queryQuerySpec, IMetrics_queryQuerySpec, Metrics_queryQuerySpec_function } from '@sdk/v1/models/generated/metrics_query';
-import { IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
+import { Telemetry_queryMetricsQuerySpec, ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
+import { ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 
@@ -70,10 +70,10 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     this.diskChartData
   ];
 
-  timeSeriesData: IMetrics_queryQueryResult;
-  avgData: IMetrics_queryQueryResult;
-  avgDayData: IMetrics_queryQueryResult;
-  clusterAvgData: IMetrics_queryQueryResult;
+  timeSeriesData: ITelemetry_queryMetricsQueryResult;
+  avgData: ITelemetry_queryMetricsQueryResult;
+  avgDayData: ITelemetry_queryMetricsQueryResult;
+  clusterAvgData: ITelemetry_queryMetricsQueryResult;
 
   telemetryKind: string = 'SmartNIC';
 
@@ -193,7 +193,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   startMetricPolls() {
-    const queryList: MetricsPollingQueries = {
+    const queryList: TelemetryPollingMetricQueries = {
       queries: [],
       tenant: Utility.getInstance().getTenant()
     };
@@ -202,7 +202,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     queryList.queries.push(this.avgDayQuery());
     queryList.queries.push(this.clusterAvgQuery());
     const sub = this.metricsqueryService.pollMetrics('naplesDetailCards', queryList).subscribe(
-      (data: IMetrics_queryQueryResponse) => {
+      (data: ITelemetry_queryMetricsQueryResponse) => {
         if (data && data.results && data.results.length === 4) {
           this.timeSeriesData = data.results[0];
           this.avgData = data.results[1];
@@ -219,7 +219,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   timeSeriesQuery(): MetricsPollingQuery {
-    const query: Metrics_queryQuerySpec =
+    const query: Telemetry_queryMetricsQuerySpec =
       MetricsUtility.timeSeriesQuery(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
@@ -230,7 +230,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   avgQuery(): MetricsPollingQuery {
-    const query: Metrics_queryQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind);
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
     };
@@ -239,7 +239,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   avgDayQuery(): MetricsPollingQuery {
-    const query: Metrics_queryQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
     };
@@ -248,10 +248,10 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   clusterAvgQuery(): MetricsPollingQuery {
-    const clusterAvgQuery: IMetrics_queryQuerySpec = {
+    const clusterAvgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': this.telemetryKind,
       name: null,
-      function: Metrics_queryQuerySpec_function.MEAN,
+      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -262,8 +262,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       'end-time': Utility.roundDownTime(5).toISOString() as any
     };
 
-    const query = new Metrics_queryQuerySpec(clusterAvgQuery);
-    const timeUpdate = (queryBody: IMetrics_queryQuerySpec) => {
+    const query = new Telemetry_queryMetricsQuerySpec(clusterAvgQuery);
+    const timeUpdate = (queryBody: ITelemetry_queryMetricsQuerySpec) => {
       queryBody['start-time'] = new Date(Utility.roundDownTime(5).getTime() - 1000 * 50 * 5).toISOString() as any,
         queryBody['end-time'] = Utility.roundDownTime(5).toISOString() as any;
     };

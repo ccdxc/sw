@@ -1,6 +1,6 @@
-import { IMetrics_queryQuerySpec, Metrics_queryQuerySpec_function, Metrics_queryQuerySpec, LabelsRequirement_operator, ILabelsSelector } from '@sdk/v1/models/generated/metrics_query';
+import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec, LabelsRequirement_operator, ILabelsSelector } from '@sdk/v1/models/generated/telemetry_query';
 import { Utility } from './Utility';
-import { IMetrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
+import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
@@ -109,12 +109,12 @@ export class MetricsUtility {
     }
   }
 
-  public static timeSeriesQuery(kind: string, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
-    const timeSeriesQuery: IMetrics_queryQuerySpec = {
+  public static timeSeriesQuery(kind: string, selector: ILabelsSelector = null): Telemetry_queryMetricsQuerySpec {
+    const timeSeriesQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Metrics_queryQuerySpec_function.MEAN,
+      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
       'group-by-time': '5m',
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
@@ -125,16 +125,16 @@ export class MetricsUtility {
       'end-time': Utility.roundDownTime(5).toISOString() as any,
     };
 
-    return new Metrics_queryQuerySpec(timeSeriesQuery);
+    return new Telemetry_queryMetricsQuerySpec(timeSeriesQuery);
   }
 
   // Since we are averaging over 5 min buckets, we always query from the last 5 min window increment
-  public static timeSeriesQueryUpdate(queryBody: IMetrics_queryQuerySpec) {
+  public static timeSeriesQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {
     queryBody['start-time'] = queryBody['end-time'];
     queryBody['end-time'] = Utility.roundDownTime(5).toISOString() as any;
   }
 
-  public static timeSeriesQueryMerge(currData: IMetrics_queryQueryResult, newData: IMetrics_queryQueryResult) {
+  public static timeSeriesQueryMerge(currData: ITelemetry_queryMetricsQueryResult, newData: ITelemetry_queryMetricsQueryResult) {
     // Drops any values that are older than 24 hours from the current time.
     // We then add on the newer values.
     const _ = Utility.getLodash();
@@ -162,12 +162,12 @@ export class MetricsUtility {
     return currData;
   }
 
-  public static pastFiveMinAverageQuery(kind: string, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
-    const avgQuery: IMetrics_queryQuerySpec = {
+  public static pastFiveMinAverageQuery(kind: string, selector: ILabelsSelector = null): Telemetry_queryMetricsQuerySpec {
+    const avgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Metrics_queryQuerySpec_function.MEAN,
+      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -176,20 +176,20 @@ export class MetricsUtility {
       'end-time': 'now()' as any,
     };
 
-    return new Metrics_queryQuerySpec(avgQuery);
+    return new Telemetry_queryMetricsQuerySpec(avgQuery);
   }
 
-  public static pastFiveMinQueryUpdate(queryBody: IMetrics_queryQuerySpec) {
+  public static pastFiveMinQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {
     queryBody['start-time'] = 'now() - 5m' as any;
     queryBody['end-time'] = 'now()' as any;
   }
 
-  public static intervalAverageQuery(kind: string, startTime, endTime, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
-    const avgQuery: IMetrics_queryQuerySpec = {
+  public static intervalAverageQuery(kind: string, startTime, endTime, selector: ILabelsSelector = null): Telemetry_queryMetricsQuerySpec {
+    const avgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Metrics_queryQuerySpec_function.MEAN,
+      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -198,23 +198,23 @@ export class MetricsUtility {
       'end-time': endTime
     };
 
-    return new Metrics_queryQuerySpec(avgQuery);
+    return new Telemetry_queryMetricsQuerySpec(avgQuery);
   }
 
   public static genIntervalAverageQueryUpdate(startTime, endTime) {
-    return (queryBody: IMetrics_queryQuerySpec) => {
+    return (queryBody: ITelemetry_queryMetricsQuerySpec) => {
       queryBody['start-time'] = startTime;
       queryBody['end-time'] = endTime;
     };
   }
 
 
-  public static pastDayAverageQuery(kind: string, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
-    const avgQuery: IMetrics_queryQuerySpec = {
+  public static pastDayAverageQuery(kind: string, selector: ILabelsSelector = null): Telemetry_queryMetricsQuerySpec {
+    const avgQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Metrics_queryQuerySpec_function.MEAN,
+      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -223,20 +223,20 @@ export class MetricsUtility {
       'end-time': 'now()' as any,
     };
 
-    return new Metrics_queryQuerySpec(avgQuery);
+    return new Telemetry_queryMetricsQuerySpec(avgQuery);
   }
 
-  public static pastDayAverageQueryUpdate(queryBody: IMetrics_queryQuerySpec) {
+  public static pastDayAverageQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {
     queryBody['start-time'] = 'now() - 24h' as any;
     queryBody['end-time'] = 'now()' as any;
   }
 
-  public static maxObjQuery(kind: string, selector: ILabelsSelector = null): Metrics_queryQuerySpec {
-    const maxNodeQuery: IMetrics_queryQuerySpec = {
+  public static maxObjQuery(kind: string, selector: ILabelsSelector = null): Telemetry_queryMetricsQuerySpec {
+    const maxNodeQuery: ITelemetry_queryMetricsQuerySpec = {
       'kind': kind,
       'name': null,
       'selector': selector,
-      function: Metrics_queryQuerySpec_function.MEAN,
+      function: Telemetry_queryMetricsQuerySpec_function.MEAN,
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
       // Instead we leave blank and get all fields
@@ -247,15 +247,15 @@ export class MetricsUtility {
       'start-time': new Date(Utility.roundDownTime(5).getTime() - 1000 * 50 * 5).toISOString() as any,
       'end-time': Utility.roundDownTime(5).toISOString() as any
     };
-    return new Metrics_queryQuerySpec(maxNodeQuery);
+    return new Telemetry_queryMetricsQuerySpec(maxNodeQuery);
   }
 
-  public static maxObjQueryUpdate(queryBody: IMetrics_queryQuerySpec) {
+  public static maxObjQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {
     queryBody['start-time'] = new Date(Utility.roundDownTime(5).getTime() - 1000 * 50 * 5).toISOString() as any,
       queryBody['end-time'] = Utility.roundDownTime(5).toISOString() as any;
   }
 
-  public static maxObjQueryMerge(currData: IMetrics_queryQueryResult, newData: IMetrics_queryQueryResult) {
+  public static maxObjQueryMerge(currData: ITelemetry_queryMetricsQueryResult, newData: ITelemetry_queryMetricsQueryResult) {
     // since we round down to get the last 5 min bucket, there's a chance
     // that we can back null data, since no new metrics have been reported.
     // Data should have been filtered in metricsquery services's processData
@@ -269,7 +269,7 @@ export class MetricsUtility {
   /**
    * Returns the name and avg of the node with the highest avg
    */
-  public static maxObjUtility(data: IMetrics_queryQueryResult, fieldName: string): { name: string, max: number } {
+  public static maxObjUtility(data: ITelemetry_queryMetricsQueryResult, fieldName: string): { name: string, max: number } {
     if (!MetricsUtility.resultHasData(data) || fieldName == null || fieldName === '') {
       return null;
     }
@@ -295,7 +295,7 @@ export class MetricsUtility {
     return maxObj;
   }
 
-  public static responseHasData(resp: IMetrics_queryQueryResponse) {
+  public static responseHasData(resp: ITelemetry_queryMetricsQueryResponse) {
     if (resp && resp.results &&
       resp.results.length !== 0 &&
       this.resultHasData(resp.results[0])) {
@@ -305,7 +305,7 @@ export class MetricsUtility {
     }
   }
 
-  public static resultHasData(resp: IMetrics_queryQueryResult) {
+  public static resultHasData(resp: ITelemetry_queryMetricsQueryResult) {
     if (resp && resp.series &&
       resp.series.length !== 0 &&
       resp.series[0].values &&

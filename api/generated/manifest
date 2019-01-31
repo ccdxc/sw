@@ -11,7 +11,6 @@ example.proto bookstore true
 export.proto monitoring true
 fwprofile.proto security true
 lb.proto network true
-metrics_query.proto metrics_query true
 mirror.proto monitoring true
 network.proto network true
 networkencryption.proto security true
@@ -28,7 +27,6 @@ svc_audit.proto audit false
 svc_auth.proto auth true
 svc_cluster.proto cluster true
 svc_events.proto events false
-svc_metrics_query.proto metrics_query false
 svc_monitoring.proto monitoring true
 svc_network.proto network true
 svc_objstore.proto objstore false
@@ -36,9 +34,11 @@ svc_rollout.proto rollout true
 svc_search.proto search false
 svc_security.proto security true
 svc_staging.proto staging true
+svc_telemetry_query.proto telemetry_query false
 svc_workload.proto workload true
 techsupport.proto monitoring true
 telemetry.proto monitoring true
+telemetry_query.proto telemetry_query true
 tenant.proto cluster true
 troubleshooting.proto monitoring true
 workload.proto workload true

@@ -4,7 +4,6 @@ true auth auth.proto svc_auth.proto
 true bookstore example.proto 
 true cluster cluster.proto networkinterface.proto smartnic.proto svc_cluster.proto tenant.proto 
 true events events.proto svc_events.proto 
-true metrics_query metrics_query.proto svc_metrics_query.proto 
 true monitoring alerts.proto eventpolicy.proto export.proto mirror.proto svc_monitoring.proto techsupport.proto telemetry.proto troubleshooting.proto 
 true network lb.proto network.proto service.proto svc_network.proto 
 true objstore objstore.proto svc_objstore.proto 
@@ -12,4 +11,5 @@ true rollout rollout.proto svc_rollout.proto
 true search search.proto svc_search.proto 
 true security app.proto fwprofile.proto networkencryption.proto securitygroup.proto sgpolicy.proto svc_security.proto x509.proto 
 true staging staging.proto svc_staging.proto 
+false telemetry_query svc_telemetry_query.proto telemetry_query.proto 
 true workload endpoint.proto svc_workload.proto workload.proto 

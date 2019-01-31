@@ -7,24 +7,24 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
-	metrics_query "github.com/pensando/sw/api/generated/metrics_query"
+	telemetry_query "github.com/pensando/sw/api/generated/telemetry_query"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/metricsclient"
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
 func testQueryingMetrics(kind string) {
 	// Create metric client
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
-	mc, err := metricsclient.NewMetricsClient(apiGwAddr)
+	tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
 	Expect(err).Should(BeNil())
 
 	Eventually(func() bool {
-		nodeQuery := &metrics_query.QueryList{
+		nodeQuery := &telemetry_query.MetricsQueryList{
 			Tenant:    globals.DefaultTenant,
 			Namespace: globals.DefaultNamespace,
-			Queries: []*metrics_query.QuerySpec{
-				&metrics_query.QuerySpec{
+			Queries: []*telemetry_query.MetricsQuerySpec{
+				&telemetry_query.MetricsQuerySpec{
 					TypeMeta: api.TypeMeta{
 						Kind: kind,
 					},
@@ -32,7 +32,7 @@ func testQueryingMetrics(kind string) {
 			},
 		}
 		ctx := ts.tu.NewLoggedInContext(context.Background())
-		res, err := mc.Query(ctx, nodeQuery)
+		res, err := tc.Metrics(ctx, nodeQuery)
 		if err != nil {
 			log.Infof("Query for %s returned err: %s", kind, err)
 			return false

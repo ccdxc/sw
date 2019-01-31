@@ -6,10 +6,10 @@ import { BaseComponent } from '@components/base/base.component';
 
 import { ControllerService } from '../../services/controller.service';
 import { MessageService } from 'primeng/primeng';
-import { MetricsqueryService, MetricsPollingQueries, MetricsPollingQuery, MetricsPollingOptions } from '@app/services/metricsquery.service';
-import { Metrics_queryQuerySpec } from '@sdk/v1/models/generated/metrics_query';
+import { MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery, MetricsPollingOptions } from '@app/services/metricsquery.service';
+import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 import { MetricsUtility } from '@app/common/MetricsUtility';
-import { IMetrics_queryQueryResponse, IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
+import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { CardStates } from '../shared/basecard/basecard.component';
 
 /**
@@ -60,10 +60,10 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
 
   lastUpdateTime: string = "";
 
-  timeSeriesData: IMetrics_queryQueryResult;
-  currentData: IMetrics_queryQueryResult;
-  prevData: IMetrics_queryQueryResult;
-  avgDayData: IMetrics_queryQueryResult;
+  timeSeriesData: ITelemetry_queryMetricsQueryResult;
+  currentData: ITelemetry_queryMetricsQueryResult;
+  prevData: ITelemetry_queryMetricsQueryResult;
+  avgDayData: ITelemetry_queryMetricsQueryResult;
 
   systemCapacity = {
     cardState: CardStates.LOADING
@@ -148,7 +148,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   }
 
   timeSeriesQuery(): MetricsPollingQuery {
-    const query: Metrics_queryQuerySpec = MetricsUtility.timeSeriesQuery('Node');
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.timeSeriesQuery('Node');
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
       mergeFunction: MetricsUtility.timeSeriesQueryMerge
@@ -157,7 +157,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   }
 
   currentQuery(): MetricsPollingQuery {
-    const query: Metrics_queryQuerySpec = MetricsUtility.pastFiveMinAverageQuery('Node');
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery('Node');
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
     };
@@ -169,7 +169,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   prevQuery(): MetricsPollingQuery {
     const start = 'now() - 10m';
     const end = 'now() - 5m';
-    const query: Metrics_queryQuerySpec = MetricsUtility.intervalAverageQuery('Node', start, end);
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.intervalAverageQuery('Node', start, end);
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.genIntervalAverageQueryUpdate(start, end),
     };
@@ -178,7 +178,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   }
 
   avgDayQuery(): MetricsPollingQuery {
-    const query: Metrics_queryQuerySpec = MetricsUtility.pastDayAverageQuery('Node');
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery('Node');
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
     };
@@ -186,7 +186,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   }
 
   getSystemCapacityMetrics() {
-    const queryList: MetricsPollingQueries = {
+    const queryList: TelemetryPollingMetricQueries = {
       queries: [],
       tenant: Utility.getInstance().getTenant()
     };
@@ -195,7 +195,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
     queryList.queries.push(this.prevQuery());
     queryList.queries.push(this.avgDayQuery());
     const sub = this.metricsqueryService.pollMetrics('dsbdCards', queryList).subscribe(
-      (data: IMetrics_queryQueryResponse) => {
+      (data: ITelemetry_queryMetricsQueryResponse) => {
         if (data && data.results && data.results.length === queryList.queries.length) {
           this.timeSeriesData = data.results[0];
           this.currentData = data.results[1];

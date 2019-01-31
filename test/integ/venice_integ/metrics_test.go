@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/pensando/sw/api/generated/metrics_query"
-	"github.com/pensando/sw/venice/utils/metricsclient"
+	"github.com/pensando/sw/api/generated/telemetry_query"
+	"github.com/pensando/sw/venice/utils/telemetryclient"
 
 	"github.com/pensando/sw/venice/globals"
 
@@ -59,17 +59,17 @@ func (it *veniceIntegSuite) TestMetrics(c *C) {
 
 	// query
 	apiGwAddr := "localhost:" + it.config.APIGatewayPort
-	mc, err := metricsclient.NewMetricsClient(apiGwAddr)
+	tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
 	AssertOk(c, err, "Error creating metrics client")
 
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error in logged in context")
 
 	AssertEventually(c, func() (bool, interface{}) {
-		nodeQuery := &metrics_query.QueryList{
+		nodeQuery := &telemetry_query.MetricsQueryList{
 			Tenant:    globals.DefaultTenant,
 			Namespace: globals.DefaultNamespace,
-			Queries: []*metrics_query.QuerySpec{
+			Queries: []*telemetry_query.MetricsQuerySpec{
 				{
 					TypeMeta: api.TypeMeta{
 						Kind: "LifMetrics",
@@ -78,7 +78,7 @@ func (it *veniceIntegSuite) TestMetrics(c *C) {
 			},
 		}
 
-		res, err := mc.Query(ctx, nodeQuery)
+		res, err := tc.Metrics(ctx, nodeQuery)
 		if err != nil {
 			return false, err
 		}

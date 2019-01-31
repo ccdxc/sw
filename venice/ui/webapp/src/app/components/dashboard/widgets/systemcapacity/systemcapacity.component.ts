@@ -5,7 +5,7 @@ import { Utility } from '@app/common/Utility';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
 import { LinegraphComponent, LineGraphStat } from '@app/components/shared/linegraph/linegraph.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { IMetrics_queryQueryResult } from '@sdk/v1/models/metrics_query';
+import { ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { Chart, ChartData } from 'chart.js';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { ClusterNode } from '@sdk/v1/models/generated/cluster';
@@ -197,10 +197,10 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
 
   themeColor: string = '#b592e3';
   statColor: string = '#77a746';
-  @Input() currentData: IMetrics_queryQueryResult;
-  @Input() prevData: IMetrics_queryQueryResult;
-  @Input() timeSeriesData: IMetrics_queryQueryResult;
-  @Input() avgDayData: IMetrics_queryQueryResult;
+  @Input() currentData: ITelemetry_queryMetricsQueryResult;
+  @Input() prevData: ITelemetry_queryMetricsQueryResult;
+  @Input() timeSeriesData: ITelemetry_queryMetricsQueryResult;
+  @Input() avgDayData: ITelemetry_queryMetricsQueryResult;
 
   @Input() lastUpdateTime: string = '';
   @Input() timeRange: string;

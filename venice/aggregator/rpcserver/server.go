@@ -6,7 +6,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/metrics_query"
+	"github.com/pensando/sw/api/generated/telemetry_query"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -36,9 +36,9 @@ func NewAggRPCSrv(listenURL string, mc *meta.Client) (*AggRPCSrv, error) {
 		metaClient: mc,
 		grpcSrv:    s,
 	}
-	metrics_query.RegisterMetricsV1Server(s.GrpcServer, srv)
+	telemetry_query.RegisterTelemetryV1Server(s.GrpcServer, srv)
 	s.Start()
-	log.Infof("Metrics_Query Aggregator RPC server started at %s", listenURL)
+	log.Infof("telemetry_query Aggregator RPC server started at %s", listenURL)
 	return srv, nil
 }
 
@@ -58,8 +58,8 @@ func (a *AggRPCSrv) Stop() {
 	<-a.grpcSrv.DoneCh
 }
 
-// Query implements the grpc method
-func (a *AggRPCSrv) Query(c context.Context, qs *metrics_query.QueryList) (*metrics_query.QueryResponse, error) {
+// Metrics implements the grpc method
+func (a *AggRPCSrv) Metrics(c context.Context, qs *telemetry_query.MetricsQueryList) (*telemetry_query.MetricsQueryResponse, error) {
 	/*
 		// based on the query spec, build an influx query.
 		iQuery, err := InfluxQuery(qs)
@@ -91,10 +91,10 @@ func (a *AggRPCSrv) Query(c context.Context, qs *metrics_query.QueryList) (*metr
 		}
 		closing := make(chan struct{})
 		results := qc.QueryExecutor.ExecuteQuery(q, opts, closing)
-		var qr metrics_query.QueryResponse
+		var qr telemetry_query.QueryResponse
 		for r := range results {
 			for _, row := range r.Series {
-				series := &metrics_query.ResultSeries{
+				series := &telemetry_query.ResultSeries{
 					Columns: row.Columns,
 					Rows:    getSeriesRows(row.Values),
 				}
@@ -108,17 +108,17 @@ func (a *AggRPCSrv) Query(c context.Context, qs *metrics_query.QueryList) (*metr
 
 }
 
-// AutoWatchSvcMetricsV1 is not implemented
-func (a *AggRPCSrv) AutoWatchSvcMetricsV1(lwo *api.ListWatchOptions, s metrics_query.MetricsV1_AutoWatchSvcMetricsV1Server) error {
+// AutoWatchSvcTelemetryV1 is not implemented
+func (a *AggRPCSrv) AutoWatchSvcTelemetryV1(lwo *api.ListWatchOptions, s telemetry_query.TelemetryV1_AutoWatchSvcTelemetryV1Server) error {
 	return fmt.Errorf("Not implemented")
 }
 
 /*
-func getSeriesRows(values [][]interface{}) []*metrics_query.Row {
-	var out []*metrics_query.Row
+func getSeriesRows(values [][]interface{}) []*telemetry_query.Row {
+	var out []*telemetry_query.Row
 
 	//for _, v := range values {
-	//	qrRow := metrics_query.Row{}
+	//	qrRow := telemetry_query.Row{}
 	//	for _, vv := range v {
 	//		qrRow.Values = append(qrRow.Values, fmt.Sprintf("%v", vv))
 	//	}
