@@ -288,7 +288,7 @@ dllist_ctxt_t *
 get_nw_list_for_security_group(uint32_t sg_id);
 
 bool
-securitypolicy_is_allow(vrf_id_t svrf_id, hal::ipv4_tuple *acl_key);
+securitypolicy_is_allow(vrf_id_t svrf_id, hal::ipv4_tuple *acl_key, session::FlowAction action);
 
 #define MAX_VERSION       1
 

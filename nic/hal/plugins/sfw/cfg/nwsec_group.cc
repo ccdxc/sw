@@ -1821,7 +1821,7 @@ securitypolicy_get (nwsec::SecurityPolicyGetRequest& req,
 }
 
 bool
-securitypolicy_is_allow (vrf_id_t svrf_id, hal::ipv4_tuple *acl_key)
+securitypolicy_is_allow (vrf_id_t svrf_id, hal::ipv4_tuple *acl_key, session::FlowAction action)
 {
     hal::nwsec_rule_t *nwsec_rule;
     hal_ret_t ret = HAL_RET_OK;
@@ -1844,7 +1844,7 @@ securitypolicy_is_allow (vrf_id_t svrf_id, hal::ipv4_tuple *acl_key)
             acl::ref_t *rc;
             rc = (acl::ref_t *) rule->data.userdata;
             nwsec_rule = (hal::nwsec_rule_t *)RULE_MATCH_USER_DATA(rc, nwsec_rule_t, ref_count);
-            if (nwsec_rule->fw_rule_action.sec_action != nwsec::SECURITY_RULE_ACTION_ALLOW) {
+            if (nwsec_rule->fw_rule_action.sec_action != (nwsec::SecurityAction)action) {
                 if (acl_ctx) {
                     acl_deref(acl_ctx);
                 }

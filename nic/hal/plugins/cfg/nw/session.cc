@@ -2553,6 +2553,34 @@ check_session_match (session_match_t *match, hal::session_t *session)
     // Extend this function to add more filter conditions
     return TRUE;
 }
+void
+extract_acl_key_from_flow_key(hal::ipv4_tuple &acl_key, hal::flow_key_t *key)
+{
+    if (key->flow_type == hal::FLOW_TYPE_V4) {
+        acl_key.ip_src = key->sip.v4_addr;
+        acl_key.ip_dst = key->dip.v4_addr;
+    }
+    acl_key.proto = key->proto;
+    switch(key->proto) {
+    case types::IPPROTO_ICMP:
+    case types::IPPROTO_ICMPV6:
+        acl_key.port_src = key->icmp_id;
+        acl_key.port_dst = ((key->icmp_type << 8) | key->icmp_code);
+        break;
+    case types::IPPROTO_ESP:
+        acl_key.port_src = key->spi >> 16 & 0xFFFF;
+        acl_key.port_dst = key->spi & 0xFFFF;
+        break;
+    case types::IPPROTO_TCP:
+    case types::IPPROTO_UDP:
+        acl_key.port_src = key->sport;
+        acl_key.port_dst = key->dport;
+        break;
+    default:
+        HAL_TRACE_DEBUG("proto not handled");
+    }
+
+}
 
 hal_ret_t
 session_eval_matching_session (session_match_t  *match)
@@ -2571,9 +2599,8 @@ session_eval_matching_session (session_match_t  *match)
             }
             hal::flow_key_t *key = &session->iflow->config.key;
             hal::ipv4_tuple acl_key = {};
-            //fte::extract_acl_key_from_flow_key(&acl_key, key);
-            //TODO (lseshan: taking lock for acl_ctx
-            bool allow = securitypolicy_is_allow(key->svrf_id, &acl_key);
+            extract_acl_key_from_flow_key(acl_key, key);
+            bool allow = securitypolicy_is_allow(key->svrf_id, &acl_key, (session::FlowAction)session->iflow->config.action);
             if (!allow) {
                 HAL_TRACE_DEBUG("add the handle {}", session->hal_handle);
                 list_entry->handle_id = session->hal_handle;
