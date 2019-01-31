@@ -7,6 +7,7 @@ import os
 import argparse
 import time
 import getpass
+import json
 
 def getPid():
     return os.getpid()
@@ -59,30 +60,12 @@ def sshToHost(host):
     cmd = 'ssh root@' + host
     ch = pexpect.spawn (cmd)
     ch.logfile = sys.stdout
-    ch.expect('Password: ')
+    ch.expect('[Pp]assword.*')
     sendCmd(ch, 'docker', '#')
     return ch
 
 def collect(ch, args):
-    # check if memtun is running on the host
-    op = sendCmd(ch, 'ps -ef | grep memtun | grep -v grep', '#')
-    if ("memtun 1.0.0.1" not in op):
-        logging.info("memtun is not running on the host\n")
-
-        # try to start memtun
-        logging.info("Starting memtun")
-        op = sendCmd(ch, '/tmp/memtun 1.0.0.1 &', '#')
-        time.sleep(5)
-
-        # check if memtun was started successfully
-        op = sendCmd(ch, 'ps -ef | grep memtun | grep -v grep', '#')
-        if ("memtun 1.0.0.1" not in op):
-            logging.info("ERROR: failed to start memtun on the host\n")
-            exit()
-    else:
-        logging.info("memtun is running on the host\n")
-
-    sendCmd(ch, 'ssh -o StrictHostKeyChecking=no root@1.0.0.2', 'root@1.0.0.2\'s password: ')
+    sendCmd(ch, 'ssh -o StrictHostKeyChecking=no root@169.254.0.1', '[Pp]assword.*')
     sendCmd(ch, 'pen123', '#')
 
     op = sendCmd(ch, 'ls -lrt /captrace.cfg', '#')
@@ -112,15 +95,11 @@ def collect(ch, args):
 
     op = sendCmd(ch, 'cat /captrace.cfg', '#')
 
-    #disable and reset
-    op = sendCmd(ch, '/platform/bin/captrace disable', '#')
+    # reset
     op = sendCmd(ch, '/platform/bin/captrace reset', '#')
 
     # configure
     op = sendCmd(ch, '/platform/bin/captrace conf /captrace.cfg', '#')
-
-    # enable
-    op = sendCmd(ch, '/platform/bin/captrace enable', '#')
 
     ret = raw_input('\nDo you want to dump captrace now? (y/n)?')
     if (ret != 'y' and ret != 'Y'):
@@ -132,11 +111,11 @@ def collect(ch, args):
     op = sendCmd(ch, '/platform/bin/captrace dump captrace.bin', '#')
         
     logging.info("Copying captrace.bin to {0}".format(args.host))
-    sendCmd(ch, 'scp -o StrictHostKeyChecking=no captrace.bin root@1.0.0.1:/tmp/', 'Password: ')
+    sendCmd(ch, 'scp -o StrictHostKeyChecking=no captrace.bin root@169.254.0.2:/tmp/', '[Pp]assword.*')
     sendCmd(ch, 'docker', '#')
 
     logging.info("Copying capri_loader.conf to {0}".format(args.host))
-    sendCmd(ch, 'scp -o StrictHostKeyChecking=no /capri_loader.conf root@1.0.0.1:/tmp/', 'Password: ')
+    sendCmd(ch, 'scp -o StrictHostKeyChecking=no /capri_loader.conf root@169.254.0.2:/tmp/', '[Pp]assword.*')
     sendCmd(ch, 'docker', '#')
 
     ch.close()
@@ -162,21 +141,71 @@ if __name__ == "__main__":
     else:
         logging.info("Collecting captrace on {0}. Please wait...\n".format(args.host))
 
-    logging.info("Checking if memtun is already present on {0}\n".format(args.host))
-    cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ls -lrt /tmp/memtun'
+        pwd = getPwd()
+        cfg = pwd + '/../conf/dev.json'
+        with open(cfg, 'r') as f:
+            dev_dict = json.load(f)
+
+        found = False
+        for dev in dev_dict:
+            if (dev["host"] == args.host):
+                logging.info(dev["host"])
+                found = True
+                break
+
+        if found is False:
+            logging.info("ERROR: device info not found in conf/dev.json. Please update and try again")
+            exit()
+
+    # check if host is running linux or freebsd
+    logging.info("Checking if {0} is running linux or freebsd\n".format(args.host))
+    cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t uname'
+    op = os.popen(cmd).read()
+
+    if ("Linux" in op):
+        hostOS = 'Linux'
+    elif ("FreeBSD" in op):
+        hostOS = 'FreeBSD'
+    else:
+        logging.info('Unknown OS type')
+        exit()
+
+    # verify that ping works between arm and host thru mnic intf
+    mnic_intf = dev['if2']
+    cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ping -c 5 169.254.0.1'
     ret = os.system(cmd)
     if (ret != 0):
-        # copy memtun to the host
-        logging.info("Copying memtun to {0}\n".format(args.host))
-        cmd = 'sshpass -p docker scp -o StrictHostKeyChecking=no /home/haps/memtun/memtun root@' + args.host + ':/tmp/'
+        logging.info("Ping failed between arm and host")
+
+        if hostOS == 'Linux':
+            cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ip addr add 169.254.0.2/24 dev ' + mnic_intf
+            ret = os.system(cmd)
+            if (ret != 0):
+                logging.info("ERROR: Failed to assign IP to MNIC interface")
+                exit()
+            cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ifconfig ' + mnic_intf + ' up'
+            ret = os.system(cmd)
+            if (ret != 0):
+                logging.info("ERROR: Failed to bring up MNIC interface")
+                exit()
+
+        elif hostOS == 'FreeBSD':
+            cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ifconfig ' + mnic_intf + ' 169.254.0.2/24 up'
+            ret = os.system(cmd)
+            if (ret != 0):
+                logging.info("ERROR: Failed to assign IP to and/or bring up MNIC interface")
+                exit()
+
+        logging.info("Configured MNIC interface {0}".format(mnic_intf))
+        # verify that ping works between arm and host thru mnic intf
+        cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ping -c 5 169.254.0.1'
         ret = os.system(cmd)
         if (ret != 0):
-            logging.info("ERROR: Failed to copy memtun to {0}".format(args.host))
+            logging.info("ERROR: Ping failed between arm and host")
             exit()
-        else:
-            logging.info("Copied memtun successfully to {0}".format(args.host))
+
     else:
-        logging.info("memtun is already present on {0}\n".format(args.host))
+        logging.info("ping successful through MNIC interface\n")
 
     ch = sshToHost(args.host)
 
@@ -200,13 +229,13 @@ if __name__ == "__main__":
         logging.info("ERROR: failed to copy capri_loader.conf from {0}".format(args.host))
         exit()
 
-    cmd = pwd + '/../../platform/src/app/captrace/captrace.py gen_syms'
+    cmd = pwd + '/../sdk/platform/mputrace/captrace.py gen_syms'
     ret = os.system(cmd)
     if (ret != 0):
         logging.info("ERROR: failed to generate captrace.syms")
         exit()
 
-    cmd = pwd + '/../../platform/src/app/captrace/captrace.py decode captrace.bin > captrace.decode'
+    cmd = pwd + '/../sdk/platform/mputrace/captrace.py decode captrace.bin > captrace.decode'
     ret = os.system(cmd)
     if (ret != 0):
         logging.info("ERROR: failed to decode captrace.bin")
@@ -221,7 +250,7 @@ if __name__ == "__main__":
             exit()
         else:
             fltr = raw_input('\nProvide the filter to be applied. e.g. mpu_processing_pkt_id_next=0xaf\n')
-            cmd = pwd + '/../../platform/src/app/captrace/captrace.py decode captrace.bin --fltr ' + fltr + ' > captrace.decode.filter'
+            cmd = pwd + '/../sdk/platform/mputrace/captrace.py decode captrace.bin --fltr ' + fltr + ' > captrace.decode.filter'
             logging.info(cmd)
             ret = os.system(cmd)
             if (ret != 0):

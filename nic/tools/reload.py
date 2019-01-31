@@ -105,24 +105,6 @@ def telnetToConsole(console, port):
     return tn
 
 def update(ch):
-    # check if memtun is running on the host
-    op = sendCmd(ch, 'ps -ef | grep memtun | grep -v grep', '#')
-    if ("memtun 1.0.0.1" not in op):
-        logging.info("memtun is not running on the host\n")
-
-        # try to start memtun
-        logging.info("Starting memtun")
-        op = sendCmd(ch, '/tmp/memtun 1.0.0.1 &', '#')
-        time.sleep(5)
-
-        # check if memtun was started successfully
-        op = sendCmd(ch, 'ps -ef | grep memtun | grep -v grep', '#')
-        if ("memtun 1.0.0.1" not in op):
-            logging.info("ERROR: failed to start memtun on the host\n")
-            exit()
-    else:
-        logging.info("memtun is running on the host\n")
-
     logging.info("Removing known_hosts")
     op = sendCmd(ch, 'rm /root/.ssh/known_hosts', '#')
 
@@ -133,54 +115,78 @@ def update(ch):
         exit()
 
     logging.info("Copying naples_fw.tar to naples\n")
-    sendCmd(ch, 'scp -o StrictHostKeyChecking=no /tmp/naples_fw.tar root@1.0.0.2:/tmp/', 'root@1.0.0.2\'s password: ')
+    sendCmd(ch, 'scp -o StrictHostKeyChecking=no /tmp/naples_fw.tar root@169.254.0.1:/tmp/', '[Pp]assword.*')
     sendCmd(ch, 'pen123', '#')
 
-    sendCmd(ch, 'ssh -o StrictHostKeyChecking=no root@1.0.0.2', 'root@1.0.0.2\'s password: ')
+    sendCmd(ch, 'ssh -o StrictHostKeyChecking=no root@169.254.0.1', '[Pp]assword.*')
     sendCmd(ch, 'pen123', '#')
 
     logging.info("Updating naples_fw.tar on naples\n")
-    op = sendCmd(ch, '/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar', '#', timeout=360)
+    op = sendCmd(ch, '/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar', '#', timeout=120)
     sendCmd(ch, 'exit', '#')
 
-def reset(ch, dev):
+def reset(ch, dev, hostOS):
     logging.info("Rebooting the host {0}\n".format(dev['host']))
     ch.sendline('reboot')
 
     logging.info("Waiting for the host to be back up...\n")
-    time.sleep(300)
+    time.sleep(30)
+    cmd = 'ping -c 5 ' + dev['host']
+    retry_cnt = 1
+    while (retry_cnt <= 50):
+        ret = os.system(cmd)
+        if (ret != 0):
+            logging.info("The host {0} is still not up. Retry cnt {1}".format(dev['host'], retry_cnt))
+            retry_cnt += 1
+        else:
+            logging.info("The host {0} is back up!".format(dev['host']))
+            break
+
     ch.close()
 
-    # copy memtun to the host    
-    logging.info("Copying memtun to {0}\n".format(dev['host']))
-    cmd = 'sshpass -p docker scp -o StrictHostKeyChecking=no /home/haps/memtun/memtun root@' + dev['host'] + ':/tmp/'
-    ret = os.system(cmd)
-    if (ret != 0):
-        logging.info("ERROR: Failed to copy memtun to {0}".format(dev['host']))
+    if (retry_cnt > 50):
+        logging.info("ERROR: Timeout. Host is not reachable after 50 retries")
         exit()
 
     # check if the drivers tar file is already present
-    drivers = pwd + '/../../platform/gen/drivers-linux.tar.xz'
-    cmd = 'ls -lrt ' + drivers
-    ret = os.system(cmd)
-    if (ret != 0):
-        logging.info("drivers tar file is not present in the workspace. Generating it")
-        cmd = pwd + '/../../platform/tools/drivers-linux.sh'
+    pwd = getPwd()
+    if hostOS == 'Linux':
+        drivers = pwd + '/../../platform/gen/drivers-linux.tar.xz'
+        cmd = 'ls -lrt ' + drivers
         ret = os.system(cmd)
         if (ret != 0):
-            logging.info("ERROR: Failed to get the drivers tar file")
-            exit()
+            logging.info("drivers tar file is not present in the workspace. Generating it")
+            cmd = pwd + '/../../platform/tools/drivers-linux.sh'
+            ret = os.system(cmd)
+            if (ret != 0):
+                logging.info("ERROR: Failed to get the drivers tar file")
+                exit()
 
+    elif hostOS == 'FreeBSD':
+        drivers = pwd + '/../../platform/gen/drivers-freebsd.tar.xz'
+        cmd = 'ls -lrt ' + drivers
+        ret = os.system(cmd)
+        if (ret != 0):
+            logging.info("drivers tar file is not present in the workspace. Generating it")
+            cmd = pwd + '../platform/tools/package-freebsd.sh'
+            ret = os.system(cmd)
+            if (ret != 0):
+                logging.info("ERROR: Failed to get the drivers tar file")
+                exit()
+
+    time.sleep(3)
     # copy the drivers to the host    
-    logging.info("Copying drivers-linux.tar.xz to {0}\n".format(dev['host']))
+    logging.info("Copying drivers tar file to {0}\n".format(dev['host']))
     cmd = 'sshpass -p docker scp -o StrictHostKeyChecking=no ' + drivers + ' root@' + dev['host'] + ':/tmp/'
+    logging.info(cmd)
     ret = os.system(cmd)
+    logging.info("ret is {0}".format(ret))
     if (ret != 0):
-        logging.info("ERROR: Failed to copy drivers-linux.tar.xz to {0}".format(dev['host']))
+        logging.info("ERROR: Failed to copy drivers tar file to {0}".format(dev['host']))
         exit()
 
     ch = sshToHost(dev['host'])
-    loadDrivers(ch, dev)
+    loadDrivers(ch, dev, hostOS)
     ch.logfile = None
     logging.info("\nReloaded naples successfully\n")
     exit()
@@ -191,69 +197,46 @@ def sshToHost(host):
     cmd = 'ssh root@' + host
     ch = pexpect.spawn (cmd)
     ch.logfile = sys.stdout
-    ch.expect('Password: ')
+    ch.expect('[Pp]assword.*')
     sendCmd(ch, 'docker', '#')
     return ch
 
-def loadDrivers(ch, dev):
-    logging.info("Starting memtun\n")
-    op = sendCmd(ch, '/tmp/memtun 1.0.0.1 &', '#')
-
+def loadDrivers(ch, dev, hostOS):
     logging.info("Installing drivers")
 
     # verify that the drivers tar file is present on the host
     sendCmd(ch, 'cd /tmp', '#')
-    op = sendCmd(ch, 'ls -lrt drivers-linux.tar.xz', '#')
-    if "No such file or directory" in op:
-        logging.info("ERROR: drivers-linux.tar.xz not found on the host")
-        exit()
 
-    sendCmd(ch, 'tar xaf drivers-linux.tar.xz', '#')
-    sendCmd(ch, 'cd drivers-linux', '#')
-    sendCmd(ch, './build.sh', '#', timeout=60)
-    sendCmd(ch, 'insmod drivers/eth/ionic/ionic.ko', '#')
-    sendCmd(ch, 'modprobe ib_uverbs', '#')
-    sendCmd(ch, 'insmod drivers/rdma/drv/ionic/ionic_rdma.ko', '#')
+    if hostOS == 'Linux':
+        op = sendCmd(ch, 'ls -lrt drivers-linux.tar.xz', '#')
+        if "No such file or directory" in op:
+            logging.info("ERROR: drivers tar file not found on the host")
+            exit()
 
-    logging.info("Bringing up interface {0}\n".format(dev['if0']))
-    cmd = 'ip addr add ' + dev['if0_ip'] + '/' + dev['if0_mask'] + ' dev ' + dev['if0']
-    op = sendCmd(ch, cmd, '#')
-    cmd = 'ifconfig ' + dev['if0'] + ' up'
-    op = sendCmd(ch, cmd, '#')
-    cmd = 'sudo ifconfig -s ' + dev['if0'] + ' mtu 8192'
-    op = sendCmd(ch, cmd, '#')
-    cmd = 'arp -s ' + dev['if0_peer_ip'] + ' ' + dev['if0_peer_mac']
-    op = sendCmd(ch, cmd, '#')
-    cmd = 'ping -c 5 ' + dev['if0_peer_ip']
-    op = sendCmd(ch, cmd, '#', timeout=20)
-    if "5 packets transmitted, 5 received" not in op:
-        logging.info("===========================================")
-        logging.info("ERROR: Packet loss with ping. Please check")
-        logging.info("===========================================")
-    else:
-        logging.info("Ping passed")
+        sendCmd(ch, 'tar xfm drivers-linux.tar.xz', '#')
+        sendCmd(ch, 'cd drivers-linux', '#')
+        sendCmd(ch, './build.sh', '#', timeout=60)
+        sendCmd(ch, 'insmod drivers/eth/ionic/ionic.ko', '#')
+        time.sleep(2)
+        sendCmd(ch, 'modprobe ib_uverbs', '#')
+        time.sleep(1)
+        sendCmd(ch, 'insmod drivers/rdma/drv/ionic/ionic_rdma.ko', '#')
+        time.sleep(1)
 
-    logging.info("Bringing up interface {0}\n".format(dev['if1']))
-    cmd = 'ip addr add ' + dev['if1_ip'] + '/' + dev['if1_mask'] + ' dev ' + dev['if1']
-    op = sendCmd(ch, cmd, '#')
-    cmd = 'ifconfig ' + dev['if1'] + ' up'
-    op = sendCmd(ch, cmd, '#')
-    cmd = 'sudo ifconfig -s ' + dev['if1'] + ' mtu 8192'
-    op = sendCmd(ch, cmd, '#')
-    cmd = 'arp -s ' + dev['if1_peer_ip'] + ' ' + dev['if1_peer_mac']
-    op = sendCmd(ch, cmd, '#')
-    cmd = 'ping -c 5 ' + dev['if1_peer_ip']
-    op = sendCmd(ch, cmd, '#', timeout=20)
-    if "5 packets transmitted, 5 received" not in op:
-        logging.info("===========================================")
-        logging.info("ERROR: Packet loss with ping. Please check")
-        logging.info("===========================================")
-    else:
-        logging.info("Ping passed")
+    elif hostOS == 'FreeBSD':
+        op = sendCmd(ch, 'ls -lrt drivers-freebsd.tar.xz', '#')
+        if "No such file or directory" in op:
+            logging.info("ERROR: drivers tar file not found on the host")
+            exit()
 
-    op = sendCmd(ch, 'modprobe ib_uverbs', '#')
-    logging.info("Loading RDMA driver\n")
-    op = sendCmd(ch, 'insmod /root/drivers-linux/drivers/rdma/drv/ionic/ionic_rdma.ko xxx_kdbid=1', '#')
+        sendCmd(ch, 'tar xfm drivers-freebsd.tar.xz', '#')
+        sendCmd(ch, 'cd drivers-freebsd', '#')
+        sendCmd(ch, './build.sh', '#', timeout=60)
+        time.sleep(30)
+        sendCmd(ch, 'kldload sys/modules/ionic/ionic.ko', '#')
+        time.sleep(10)
+        sendCmd(ch, 'kldload sys/modules/ionic_rdma/ionic_rdma.ko', '#')
+        time.sleep(1)
 
     return ch.before
 
@@ -277,12 +260,33 @@ if __name__ == "__main__":
         cfg = pwd + '/../conf/dev.json'
         with open(cfg, 'r') as f:
             dev_dict = json.load(f)
+        
+        found = False
         for dev in dev_dict:
             if (dev["host"] == args.host):
                 logging.info(dev["host"])
+                found = True
                 break
 
+        if found is False:
+            logging.info("ERROR: device info not found in conf/dev.json. Please update and try again")
+            exit()
+
+        # check if host is running linux or freebsd
+        logging.info("Checking if {0} is running linux or freebsd\n".format(args.host))
+        cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t uname'
+        op = os.popen(cmd).read()
+
+        if ("Linux" in op):
+            hostOS = 'Linux'
+        elif ("FreeBSD" in op):
+            hostOS = 'FreeBSD'
+        else:
+            logging.info('Unknown OS type')
+            exit()
+
     if (args.update == '1'):
+
         # verify that the image exists
         image = pwd + '/../naples_fw.tar'
         logging.info("Looking for naples_fw.tar in nic directory\n")
@@ -300,25 +304,45 @@ if __name__ == "__main__":
             logging.info("ERROR: Failed to copy naples_fw.tar to {0}".format(dev['host']))
             exit()
 
-        # check if memtun is already present on the host
-        logging.info("Checking if memtun is already present on {0}\n".format(args.host))
-        cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ls -lrt /tmp/memtun'
+        # verify that ping works between arm and host thru mnic intf
+        mnic_intf = dev['if2']
+        cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ping -c 5 169.254.0.1'
         ret = os.system(cmd)
         if (ret != 0):
-            # copy memtun to the host
-            logging.info("Copying memtun to {0}\n".format(args.host))
-            cmd = 'sshpass -p docker scp -o StrictHostKeyChecking=no /home/haps/memtun/memtun root@' + args.host + ':/tmp/'
+            logging.info("Ping failed between arm and host")
+
+            # try to setup MNIC interface
+            if hostOS == 'Linux':
+                cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ip addr add 169.254.0.2/24 dev ' + mnic_intf
+                ret = os.system(cmd)
+                if (ret != 0):
+                    logging.info("ERROR: Failed to assign IP to MNIC interface")
+                    exit()
+                cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ifconfig ' + mnic_intf + ' up'
+                ret = os.system(cmd)
+                if (ret != 0):
+                    logging.info("ERROR: Failed to bring up MNIC interface")
+                    exit()
+
+            elif hostOS == 'FreeBSD':
+                cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ifconfig ' + mnic_intf + ' 169.254.0.2/24 up'
+                ret = os.system(cmd)
+                if (ret != 0):
+                    logging.info("ERROR: Failed to assign IP to and/or bring up MNIC interface")
+                    exit()
+            logging.info("Configured MNIC interface {0}".format(mnic_intf))
+            # verify that ping works between arm and host thru mnic intf
+            cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ping -c 5 169.254.0.1'
             ret = os.system(cmd)
             if (ret != 0):
-                logging.info("ERROR: Failed to copy memtun to {0}".format(args.host))
+                logging.info("ERROR: Ping failed between arm and host")
                 exit()
-            else:
-                logging.info("Copied memtun successfully to {0}".format(args.host))
+
         else:
-            logging.info("memtun is already present on {0}\n".format(args.host))
+            logging.info("ping successful through MNIC interface\n")
 
     ch = sshToHost(args.host)
 
     if (args.update == '1'):
         update(ch)
-    reset(ch, dev)
+    reset(ch, dev, hostOS)

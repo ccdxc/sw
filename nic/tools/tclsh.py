@@ -7,9 +7,15 @@ import os
 import argparse
 import getpass
 import time
+import json
 
 def getPid():
     return os.getpid()
+
+def getPwd():
+    pwd = os.path.dirname(sys.argv[0])
+    pwd = os.path.abspath(pwd)
+    return pwd
 
 def getLogFileName():
     pid = getPid()
@@ -38,9 +44,14 @@ def initLogger():
 
     # Now, we can log to both the file and console
 
-def sendCmd(self, cmd, exp):
+def sendCmd(self, cmd, exp, **kwargs):
+    if "timeout" in kwargs:
+        timeout = kwargs["timeout"]
+    else:
+        timeout = 30
+
     self.sendline(cmd)
-    self.expect(exp)
+    self.expect(exp, timeout=timeout)
     return self.before
 
 def copyToHost(src, dest, host):
@@ -69,19 +80,79 @@ if __name__ == "__main__":
     else:
         print("Loading tclsh on {0}. Please wait...\n".format(args.host))
 
-    # check if memtun is already present on the host
-    logging.info("Checking if memtun is already present on {0}\n".format(args.host))
-    cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ls -lrt /tmp/memtun'
-    ret = os.system(cmd)
-    if (ret != 0):
-        copyToHost('/home/haps/memtun/memtun', '/tmp', args.host)
+        pwd = getPwd()
+        cfg = pwd + '/../conf/dev.json'
+        with open(cfg, 'r') as f:
+            dev_dict = json.load(f)
+        
+        found = False
+        for dev in dev_dict:
+            if (dev["host"] == args.host):
+                logging.info(dev["host"])
+                found = True
+                break
+
+        if found is False:
+            logging.info("ERROR: device info not found in conf/dev.json. Please update and try again")
+            exit()
+
+    # check if host is running linux or freebsd
+    logging.info("Checking if {0} is running linux or freebsd\n".format(args.host))
+    cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t uname'
+    op = os.popen(cmd).read()
+
+    if ("Linux" in op):
+        hostOS = 'Linux'
+    elif ("FreeBSD" in op):
+        hostOS = 'FreeBSD'
+    else:
+        logging.info('Unknown OS type')
+        exit()
 
     # check if tcl tar file is already present on the host
     logging.info("Checking if tcl tar file is already present on {0}\n".format(args.host))
     cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ls -lrt /tmp/nic.tar.gz'
     ret = os.system(cmd)
     if (ret != 0):
-        copyToHost('/home/sanshanb/util/nic.tar.gz', '/tmp', args.host)
+        copyToHost('/vol/asic_dump/kinjal/asic5/ip/cosim/diag/nic.tar.gz', '/tmp', args.host)
+
+    # verify that ping works between arm and host thru mnic intf
+    mnic_intf = dev['if2']
+    cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ping -c 5 169.254.0.1'
+    ret = os.system(cmd)
+    if (ret != 0):
+        logging.info("Ping failed between arm and host")
+
+        # try to setup MNIC interface
+        if hostOS == 'Linux':
+            cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ip addr add 169.254.0.2/24 dev ' + mnic_intf
+            ret = os.system(cmd)
+            if (ret != 0):
+                logging.info("ERROR: Failed to assign IP to MNIC interface")
+                exit()
+            cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ifconfig ' + mnic_intf + ' up'
+            ret = os.system(cmd)
+            if (ret != 0):
+                logging.info("ERROR: Failed to bring up MNIC interface")
+                exit()
+
+        elif hostOS == 'FreeBSD':
+            cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ifconfig ' + mnic_intf + ' 169.254.0.2/24 up'
+            ret = os.system(cmd)
+            if (ret != 0):
+                logging.info("ERROR: Failed to assign IP to and/or bring up MNIC interface")
+                exit()
+
+        logging.info("Configured MNIC interface {0}".format(mnic_intf))
+        # verify that ping works between arm and host thru mnic intf
+        cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ping -c 5 169.254.0.1'
+        ret = os.system(cmd)
+        if (ret != 0):
+            logging.info("ERROR: Ping failed between arm and host")
+            exit()
+
+    else:
+        logging.info("ping successful through MNIC interface\n")
 
     # ssh to host
     cmd = 'ssh root@' + args.host
@@ -90,43 +161,19 @@ if __name__ == "__main__":
     fout = open(fileName,'a')
     ch.logfile = fout
     ch.expect('[Pp]assword.*')
-    sendCmd(ch, 'docker', '#')
-
-    # check if memtun is running on the host
-    op = sendCmd(ch, 'ps -ef | grep memtun | grep -v grep', '#')
-    if ("memtun 1.0.0.1" not in op):
-        logging.info("memtun is not running on the host\n")
-
-        # try to start memtun
-        logging.info("Starting memtun. Please wait...")
-        op = sendCmd(ch, '/tmp/memtun 1.0.0.1 &', '#')
-        time.sleep(5)
-
-        # check if memtun was started successfully
-        op = sendCmd(ch, 'ps -ef | grep memtun | grep -v grep', '#')
-        if ("memtun 1.0.0.1" not in op):
-            logging.info("ERROR: failed to start memtun on the host\n")
-            exit()
-    else:
-        logging.info("memtun is running on the host\n")
+    op = sendCmd(ch, 'docker', '#')
 
     op = sendCmd(ch, 'rm /root/.ssh/known_hosts', '#')
 
-    sendCmd(ch, 'ssh -o StrictHostKeyChecking=no root@1.0.0.2', 'root@1.0.0.2\'s password: ')
+    sendCmd(ch, 'ssh -o StrictHostKeyChecking=no root@169.254.0.1', '[Pp]assword.*')
     sendCmd(ch, 'pen123', '#')
 
     op = sendCmd(ch, 'rm /root/.ssh/known_hosts', '#')
-    op = sendCmd(ch, 'ps -ef | grep memtun | grep -v grep', '#')
-    if ("/platform/bin/memtun" not in op):
-        logging.info("ERROR: memtun is not running on the NIC\n")
-        exit()
-    else:
-        logging.info("memtun is running on the NIC\n")
-
+    
     op = sendCmd(ch, 'ls -lrt /asic_tclsh/nic.tar.gz', '#')
     if ("No such file or directory" in op):
         logging.info("Copying nic.tar.gz\n")
-        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@1.0.0.1:/home/sanshanb/util/nic.tar.gz /', '[Pp]assword.*')
+        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/nic.tar.gz /', '[Pp]assword.*')
         sendCmd(ch, 'docker', '#')
         sendCmd(ch, 'mkdir /asic_tclsh', '#')
         sendCmd(ch, 'cd /asic_tclsh', '#')
