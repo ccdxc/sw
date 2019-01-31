@@ -8,6 +8,6 @@ cd /
 # start pciemgrd
 /nic/bin/pciemgrd-gold &
 # start memtun
-/platform/bin/memtun &
+/nic/bin/memtun &
 
 echo "Launched all applications ..."
