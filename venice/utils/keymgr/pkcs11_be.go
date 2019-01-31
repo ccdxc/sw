@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-// +build linux,!arm64
+// +build linux,!arm64,cgo
 
 package keymgr
 
