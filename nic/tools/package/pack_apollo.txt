@@ -81,6 +81,7 @@ nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_scale_test                /nic/bin/
 nic/apollo/test/scale_test/scale_cfg.json                         /nic/conf
 nic/build/$ARCH/$PIPELINE/lib/libocitestutils.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                       /nic/bin/
 
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so              /platform/lib/
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_without_main.so /platform/lib/
@@ -88,6 +89,7 @@ nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_with
 # memory monitoring scripts
 nic/tools/run_mem_check.sh                                        /nic/tools/
 nic/tools/sysupdate.sh                                            /nic/tools/
+nic/tools/apollo/sysinit.sh                                       /nic/tools/
 nic/tools/sysreset.sh                                             /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
 

@@ -60,6 +60,10 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
         route_table::destroy((route_table *)elem);
         break;
 
+    case OCI_SLAB_ID_SECURITY_POLICY:
+        security_policy::destroy((security_policy *)elem);
+        break;
+
     default:
         OCI_TRACE_ERR("Unknown slab id {}", slab_id);
         SDK_ASSERT(false);
