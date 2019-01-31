@@ -55,7 +55,7 @@ typedef struct oci_route_table_key_s {
  */
 typedef struct oci_route_table_s    oci_route_table_t;
 struct oci_route_table_s {
-    oci_route_table_key_t    key;          /**< route group key */
+    oci_route_table_key_t    key;          /**< route table key */
     uint8_t                  af;           /**< address family - IP_AF_IPV4 or
                                                 IP_AF_IPV6 */
     uint32_t                 num_routes;   /**< number of routes in the list */

@@ -50,7 +50,7 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return obj;
         break;
 
-    case OBJ_ID_SECURITY_RULES:
+    case OBJ_ID_SECURITY_POLICY:
         break;
 
     default:
@@ -116,7 +116,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         }
         break;
 
-    case OBJ_ID_SECURITY_RULES:
+    case OBJ_ID_SECURITY_POLICY:
         break;
 
     default:

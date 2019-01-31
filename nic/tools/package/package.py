@@ -156,14 +156,20 @@ for input_file in files:
         items[0] = items[0].replace("$ARCH", arch)
         items[0] = items[0].replace("$PIPELINE", args.pipeline)
         items[1] = items[1].replace("$PIPELINE", args.pipeline)
-        directory = output_dir + '/' + items[1]
+
+        output_file = output_dir + '/' + items[1]
+
         if items[1][-1] == '/':
-            if not os.path.exists(directory):
-                print ('Creating dir: ' + directory)
-                os.makedirs(directory)
+            directory = output_file
+        else:
+            directory = os.path.dirname(output_file)
+
+        if not os.path.exists(directory):
+            print ('Creating dir: ' + directory)
+            os.makedirs(directory)
 
         if (os.path.isdir(items[0])):
-            print('Copying dir: ' + items[0] + '/*  --> ' + directory) 
+            print('Copying dir: ' + items[0] + '/*  --> ' + directory)
             cmd = 'cp -rL ' + items[0] + '/* ' + directory
             call(cmd, shell=True)
         else:
@@ -171,7 +177,7 @@ for input_file in files:
                 if '.tar' in items[0]:
                     cmd = 'tar -xvf' + items[0] + ' -C ' + directory
                 else:
-                    cmd = 'cp ' + items[0] + ' ' + directory
+                    cmd = 'cp ' + items[0] + ' ' + output_file
                 print (cmd)
                 call(cmd, shell=True)
 

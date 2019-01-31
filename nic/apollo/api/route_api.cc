@@ -8,14 +8,7 @@
 
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
-#include "nic/apollo/api/route.hpp"
-
-/**
- * @defgroup OCI_ROUTE_TABLE - route table functionality
- * @ingroup OCI_ROUTE
- * @{
- */
-
+#include "nic/apollo/include/api/oci_route.hpp"
 /**
  * @defgroup OCI_ROUTE_TABLE_API - first level of route table API handling
  * @ingroup OCI_ROUTE

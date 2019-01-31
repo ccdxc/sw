@@ -11,31 +11,34 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api.hpp"
-#include "nic/apollo/api/switchport.hpp"
+#include "nic/apollo/api/switchport.hpp"   // TODO: why not just include oci_xxx here ?
 #include "nic/apollo/api/tep.hpp"
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/route.hpp"
+#include "nic/apollo/include/api/oci_security_policy.hpp"
 
 namespace api {
 
 /**< API specific parameters */
 typedef union api_params_u {
-    oci_switchport_t         switchport_info;
-    oci_tep_key_t            tep_key;
-    oci_tep_t                tep_info;
-    oci_vcn_key_t            vcn_key;
-    oci_vcn_t                vcn_info;
-    oci_subnet_key_t         subnet_key;
-    oci_subnet_t             subnet_info;
-    oci_vnic_key_t           vnic_key;
-    oci_vnic_t               vnic_info;
-    oci_mapping_key_t        mapping_key;
-    oci_mapping_t            mapping_info;
-    oci_route_table_key_t    route_table_key;
-    oci_route_table_t        route_table_info;
+    oci_switchport_t             switchport_info;
+    oci_tep_key_t                tep_key;
+    oci_tep_t                    tep_info;
+    oci_vcn_key_t                vcn_key;
+    oci_vcn_t                    vcn_info;
+    oci_subnet_key_t             subnet_key;
+    oci_subnet_t                 subnet_info;
+    oci_vnic_key_t               vnic_key;
+    oci_vnic_t                   vnic_info;
+    oci_mapping_key_t            mapping_key;
+    oci_mapping_t                mapping_info;
+    oci_route_table_key_t        route_table_key;
+    oci_route_table_t            route_table_info;
+    oci_security_policy_key_t    security_policy_key;
+    oci_security_policy_t        security_policy_info;
 } api_params_t;
 
 /**< @brief    per API context maintained by framework while processing */
