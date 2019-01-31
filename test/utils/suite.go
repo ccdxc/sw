@@ -24,7 +24,6 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
-	cmdclient "github.com/pensando/sw/api/generated/cluster/grpc/client"
 	"github.com/pensando/sw/api/generated/search"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/globals"
@@ -304,8 +303,11 @@ func (tu *TestUtils) Init() {
 	}
 	ginkgo.By("auth setup complete")
 
-	cmdClient := cmdclient.NewRestCrudClientClusterV1(tu.APIGwAddr)
-	clusterIf := cmdClient.Cluster()
+	cmdClient, err := apiclient.NewRestAPIClient(tu.APIGwAddr)
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("cannot create API Client err: %v", err))
+	}
+	clusterIf := cmdClient.ClusterV1().Cluster()
 	obj := api.ObjectMeta{Name: "testCluster"}
 	var cl *cluster.Cluster
 	gomega.Eventually(func() bool {

@@ -746,6 +746,7 @@ func (r *EndpointsStagingV1RestClient) AutoAddBuffer(ctx context.Context, in *Bu
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespStagingV1AutoAddBuffer(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -772,6 +773,7 @@ func (r *EndpointsStagingV1RestClient) AutoGetBuffer(ctx context.Context, in *Bu
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespStagingV1AutoGetBuffer(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -793,6 +795,7 @@ func (r *EndpointsStagingV1RestClient) AutoDeleteBuffer(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespStagingV1AutoDeleteBuffer(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -814,6 +817,7 @@ func (r *EndpointsStagingV1RestClient) AutoListBuffer(ctx context.Context, optio
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespStagingV1AutoListBuffer(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -882,6 +886,7 @@ func (r *EndpointsStagingV1RestClient) CommitBuffer(ctx context.Context, in *Com
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespStagingV1Commit(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -902,6 +907,7 @@ func (r *EndpointsStagingV1RestClient) ClearBuffer(ctx context.Context, in *Clea
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespStagingV1Clear(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -910,26 +916,20 @@ func (r *EndpointsStagingV1RestClient) ClearBuffer(ctx context.Context, in *Clea
 }
 
 // MakeStagingV1RestClientEndpoints make REST client endpoints
-func MakeStagingV1RestClientEndpoints(instance string) (EndpointsStagingV1RestClient, error) {
+func MakeStagingV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsStagingV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsStagingV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeStagingV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeStagingV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsStagingV1RestClient, error) {
+func MakeStagingV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsStagingV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -937,12 +937,6 @@ func MakeStagingV1StagedRestClientEndpoints(instance string, bufferId string) (E
 	return EndpointsStagingV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

@@ -1010,6 +1010,7 @@ func (r *EndpointsWorkloadV1RestClient) AutoAddEndpoint(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespWorkloadV1AutoAddEndpoint(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -1031,6 +1032,7 @@ func (r *EndpointsWorkloadV1RestClient) AutoUpdateEndpoint(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespWorkloadV1AutoUpdateEndpoint(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1052,6 +1054,7 @@ func (r *EndpointsWorkloadV1RestClient) AutoGetEndpoint(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespWorkloadV1AutoGetEndpoint(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1078,6 +1081,7 @@ func (r *EndpointsWorkloadV1RestClient) AutoListEndpoint(ctx context.Context, op
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespWorkloadV1AutoListEndpoint(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1147,6 +1151,7 @@ func (r *EndpointsWorkloadV1RestClient) AutoAddWorkload(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespWorkloadV1AutoAddWorkload(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -1168,6 +1173,7 @@ func (r *EndpointsWorkloadV1RestClient) AutoUpdateWorkload(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespWorkloadV1AutoUpdateWorkload(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1189,6 +1195,7 @@ func (r *EndpointsWorkloadV1RestClient) AutoGetWorkload(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespWorkloadV1AutoGetWorkload(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1210,6 +1217,7 @@ func (r *EndpointsWorkloadV1RestClient) AutoDeleteWorkload(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespWorkloadV1AutoDeleteWorkload(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1231,6 +1239,7 @@ func (r *EndpointsWorkloadV1RestClient) AutoListWorkload(ctx context.Context, op
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespWorkloadV1AutoListWorkload(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1287,26 +1296,20 @@ func (r *EndpointsWorkloadV1RestClient) AutoWatchWorkload(ctx context.Context, o
 }
 
 // MakeWorkloadV1RestClientEndpoints make REST client endpoints
-func MakeWorkloadV1RestClientEndpoints(instance string) (EndpointsWorkloadV1RestClient, error) {
+func MakeWorkloadV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsWorkloadV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsWorkloadV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeWorkloadV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeWorkloadV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsWorkloadV1RestClient, error) {
+func MakeWorkloadV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsWorkloadV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -1314,12 +1317,6 @@ func MakeWorkloadV1StagedRestClientEndpoints(instance string, bufferId string) (
 	return EndpointsWorkloadV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

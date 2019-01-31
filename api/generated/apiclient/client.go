@@ -3,6 +3,9 @@
 package apiclient
 
 import (
+	"crypto/tls"
+	"net/http"
+
 	auth "github.com/pensando/sw/api/generated/auth"
 	authClient "github.com/pensando/sw/api/generated/auth/grpc/client"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
@@ -157,8 +160,9 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 }
 
 type apiRestServerClient struct {
-	url    string
-	logger log.Logger
+	url           string
+	logger        log.Logger
+	httpTransport *http.Transport
 
 	aAuthV1       auth.AuthV1Interface
 	aBookstoreV1  bookstore.BookstoreV1Interface
@@ -174,6 +178,9 @@ type apiRestServerClient struct {
 
 // Close closes the client
 func (a *apiRestServerClient) Close() error {
+	if a.httpTransport != nil {
+		a.httpTransport.CloseIdleConnections()
+	}
 	return nil
 }
 
@@ -219,38 +226,56 @@ func (a *apiRestServerClient) WorkloadV1() workload.WorkloadV1Interface {
 
 // NewRestAPIClient returns a REST client
 func NewRestAPIClient(url string) (Services, error) {
+	ht := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	httpClient := &http.Client{
+		Transport: ht,
+	}
 	return &apiRestServerClient{
-		url:    url,
-		logger: log.WithContext("module", "RestAPIClient"),
+		url:           url,
+		logger:        log.WithContext("module", "RestAPIClient"),
+		httpTransport: ht,
 
-		aAuthV1:       authClient.NewRestCrudClientAuthV1(url),
-		aBookstoreV1:  bookstoreClient.NewRestCrudClientBookstoreV1(url),
-		aClusterV1:    clusterClient.NewRestCrudClientClusterV1(url),
-		aMonitoringV1: monitoringClient.NewRestCrudClientMonitoringV1(url),
-		aNetworkV1:    networkClient.NewRestCrudClientNetworkV1(url),
-		aObjstoreV1:   objstoreClient.NewRestCrudClientObjstoreV1(url),
-		aRolloutV1:    rolloutClient.NewRestCrudClientRolloutV1(url),
-		aSecurityV1:   securityClient.NewRestCrudClientSecurityV1(url),
-		aStagingV1:    stagingClient.NewRestCrudClientStagingV1(url),
-		aWorkloadV1:   workloadClient.NewRestCrudClientWorkloadV1(url),
+		aAuthV1:       authClient.NewRestCrudClientAuthV1(url, httpClient),
+		aBookstoreV1:  bookstoreClient.NewRestCrudClientBookstoreV1(url, httpClient),
+		aClusterV1:    clusterClient.NewRestCrudClientClusterV1(url, httpClient),
+		aMonitoringV1: monitoringClient.NewRestCrudClientMonitoringV1(url, httpClient),
+		aNetworkV1:    networkClient.NewRestCrudClientNetworkV1(url, httpClient),
+		aObjstoreV1:   objstoreClient.NewRestCrudClientObjstoreV1(url, httpClient),
+		aRolloutV1:    rolloutClient.NewRestCrudClientRolloutV1(url, httpClient),
+		aSecurityV1:   securityClient.NewRestCrudClientSecurityV1(url, httpClient),
+		aStagingV1:    stagingClient.NewRestCrudClientStagingV1(url, httpClient),
+		aWorkloadV1:   workloadClient.NewRestCrudClientWorkloadV1(url, httpClient),
 	}, nil
 }
 
 // NewStagedRestAPIClient returns a REST client
 func NewStagedRestAPIClient(url string, bufferId string) (Services, error) {
+	ht := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	httpClient := &http.Client{
+		Transport: ht,
+	}
 	return &apiRestServerClient{
-		url:    url,
-		logger: log.WithContext("module", "RestAPIClient"),
+		url:           url,
+		logger:        log.WithContext("module", "RestAPIClient"),
+		httpTransport: ht,
 
-		aAuthV1:       authClient.NewStagedRestCrudClientAuthV1(url, bufferId),
-		aBookstoreV1:  bookstoreClient.NewStagedRestCrudClientBookstoreV1(url, bufferId),
-		aClusterV1:    clusterClient.NewStagedRestCrudClientClusterV1(url, bufferId),
-		aMonitoringV1: monitoringClient.NewStagedRestCrudClientMonitoringV1(url, bufferId),
-		aNetworkV1:    networkClient.NewStagedRestCrudClientNetworkV1(url, bufferId),
-		aObjstoreV1:   objstoreClient.NewStagedRestCrudClientObjstoreV1(url, bufferId),
-		aRolloutV1:    rolloutClient.NewStagedRestCrudClientRolloutV1(url, bufferId),
-		aSecurityV1:   securityClient.NewStagedRestCrudClientSecurityV1(url, bufferId),
-		aStagingV1:    stagingClient.NewStagedRestCrudClientStagingV1(url, bufferId),
-		aWorkloadV1:   workloadClient.NewStagedRestCrudClientWorkloadV1(url, bufferId),
+		aAuthV1:       authClient.NewStagedRestCrudClientAuthV1(url, bufferId, httpClient),
+		aBookstoreV1:  bookstoreClient.NewStagedRestCrudClientBookstoreV1(url, bufferId, httpClient),
+		aClusterV1:    clusterClient.NewStagedRestCrudClientClusterV1(url, bufferId, httpClient),
+		aMonitoringV1: monitoringClient.NewStagedRestCrudClientMonitoringV1(url, bufferId, httpClient),
+		aNetworkV1:    networkClient.NewStagedRestCrudClientNetworkV1(url, bufferId, httpClient),
+		aObjstoreV1:   objstoreClient.NewStagedRestCrudClientObjstoreV1(url, bufferId, httpClient),
+		aRolloutV1:    rolloutClient.NewStagedRestCrudClientRolloutV1(url, bufferId, httpClient),
+		aSecurityV1:   securityClient.NewStagedRestCrudClientSecurityV1(url, bufferId, httpClient),
+		aStagingV1:    stagingClient.NewStagedRestCrudClientStagingV1(url, bufferId, httpClient),
+		aWorkloadV1:   workloadClient.NewStagedRestCrudClientWorkloadV1(url, bufferId, httpClient),
 	}, nil
 }

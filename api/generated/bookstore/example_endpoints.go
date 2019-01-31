@@ -2939,6 +2939,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoAddOrder(ctx context.Context, in *O
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoAddOrder(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -2960,6 +2961,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateOrder(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoUpdateOrder(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2981,6 +2983,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoGetOrder(ctx context.Context, in *O
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoGetOrder(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3002,6 +3005,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoDeleteOrder(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoDeleteOrder(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3023,6 +3027,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoListOrder(ctx context.Context, opti
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoListOrder(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3091,6 +3096,7 @@ func (r *EndpointsBookstoreV1RestClient) ApplydiscountOrder(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1Applydiscount(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3111,6 +3117,7 @@ func (r *EndpointsBookstoreV1RestClient) CleardiscountOrder(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1Cleardiscount(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3137,6 +3144,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateBook(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoUpdateBook(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3158,6 +3166,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoGetBook(ctx context.Context, in *Bo
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoGetBook(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3184,6 +3193,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoListBook(ctx context.Context, optio
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoListBook(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3252,6 +3262,7 @@ func (r *EndpointsBookstoreV1RestClient) RestockBook(ctx context.Context, in *Re
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1Restock(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3346,6 +3357,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoAddStore(ctx context.Context, in *S
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoAddStore(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -3367,6 +3379,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateStore(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoUpdateStore(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3388,6 +3401,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoGetStore(ctx context.Context, in *S
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoGetStore(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3409,6 +3423,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoDeleteStore(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoDeleteStore(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3482,6 +3497,7 @@ func (r *EndpointsBookstoreV1RestClient) AddOutageStore(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AddOutage(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3576,6 +3592,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoAddCustomer(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoAddCustomer(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -3597,6 +3614,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoUpdateCustomer(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoUpdateCustomer(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3618,6 +3636,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoGetCustomer(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoGetCustomer(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3639,6 +3658,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoDeleteCustomer(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoDeleteCustomer(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3660,6 +3680,7 @@ func (r *EndpointsBookstoreV1RestClient) AutoListCustomer(ctx context.Context, o
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespBookstoreV1AutoListCustomer(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3716,26 +3737,20 @@ func (r *EndpointsBookstoreV1RestClient) AutoWatchCustomer(ctx context.Context, 
 }
 
 // MakeBookstoreV1RestClientEndpoints make REST client endpoints
-func MakeBookstoreV1RestClientEndpoints(instance string) (EndpointsBookstoreV1RestClient, error) {
+func MakeBookstoreV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsBookstoreV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsBookstoreV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeBookstoreV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeBookstoreV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsBookstoreV1RestClient, error) {
+func MakeBookstoreV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsBookstoreV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -3743,12 +3758,6 @@ func MakeBookstoreV1StagedRestClientEndpoints(instance string, bufferId string) 
 	return EndpointsBookstoreV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

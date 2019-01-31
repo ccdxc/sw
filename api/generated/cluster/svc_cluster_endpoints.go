@@ -2380,6 +2380,7 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateCluster(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoUpdateCluster(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2401,6 +2402,7 @@ func (r *EndpointsClusterV1RestClient) AutoGetCluster(ctx context.Context, in *C
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoGetCluster(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2422,6 +2424,7 @@ func (r *EndpointsClusterV1RestClient) AutoDeleteCluster(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoDeleteCluster(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2495,6 +2498,7 @@ func (r *EndpointsClusterV1RestClient) AuthBootstrapCompleteCluster(ctx context.
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AuthBootstrapComplete(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2515,6 +2519,7 @@ func (r *EndpointsClusterV1RestClient) UpdateTLSConfigCluster(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1UpdateTLSConfig(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2536,6 +2541,7 @@ func (r *EndpointsClusterV1RestClient) AutoAddNode(ctx context.Context, in *Node
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoAddNode(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -2557,6 +2563,7 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateNode(ctx context.Context, in *N
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoUpdateNode(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2578,6 +2585,7 @@ func (r *EndpointsClusterV1RestClient) AutoGetNode(ctx context.Context, in *Node
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoGetNode(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2599,6 +2607,7 @@ func (r *EndpointsClusterV1RestClient) AutoDeleteNode(ctx context.Context, in *N
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoDeleteNode(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2620,6 +2629,7 @@ func (r *EndpointsClusterV1RestClient) AutoListNode(ctx context.Context, options
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoListNode(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2689,6 +2699,7 @@ func (r *EndpointsClusterV1RestClient) AutoAddHost(ctx context.Context, in *Host
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoAddHost(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -2710,6 +2721,7 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateHost(ctx context.Context, in *H
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoUpdateHost(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2731,6 +2743,7 @@ func (r *EndpointsClusterV1RestClient) AutoGetHost(ctx context.Context, in *Host
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoGetHost(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2752,6 +2765,7 @@ func (r *EndpointsClusterV1RestClient) AutoDeleteHost(ctx context.Context, in *H
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoDeleteHost(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2773,6 +2787,7 @@ func (r *EndpointsClusterV1RestClient) AutoListHost(ctx context.Context, options
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoListHost(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2847,6 +2862,7 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateSmartNIC(ctx context.Context, i
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoUpdateSmartNIC(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2868,6 +2884,7 @@ func (r *EndpointsClusterV1RestClient) AutoGetSmartNIC(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoGetSmartNIC(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2889,6 +2906,7 @@ func (r *EndpointsClusterV1RestClient) AutoDeleteSmartNIC(ctx context.Context, i
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoDeleteSmartNIC(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2910,6 +2928,7 @@ func (r *EndpointsClusterV1RestClient) AutoListSmartNIC(ctx context.Context, opt
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoListSmartNIC(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2979,6 +2998,7 @@ func (r *EndpointsClusterV1RestClient) AutoAddTenant(ctx context.Context, in *Te
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoAddTenant(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -3000,6 +3020,7 @@ func (r *EndpointsClusterV1RestClient) AutoUpdateTenant(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoUpdateTenant(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3021,6 +3042,7 @@ func (r *EndpointsClusterV1RestClient) AutoGetTenant(ctx context.Context, in *Te
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoGetTenant(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3042,6 +3064,7 @@ func (r *EndpointsClusterV1RestClient) AutoDeleteTenant(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoDeleteTenant(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3063,6 +3086,7 @@ func (r *EndpointsClusterV1RestClient) AutoListTenant(ctx context.Context, optio
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespClusterV1AutoListTenant(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3119,26 +3143,20 @@ func (r *EndpointsClusterV1RestClient) AutoWatchTenant(ctx context.Context, opti
 }
 
 // MakeClusterV1RestClientEndpoints make REST client endpoints
-func MakeClusterV1RestClientEndpoints(instance string) (EndpointsClusterV1RestClient, error) {
+func MakeClusterV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsClusterV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsClusterV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeClusterV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeClusterV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsClusterV1RestClient, error) {
+func MakeClusterV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsClusterV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -3146,12 +3164,6 @@ func MakeClusterV1StagedRestClientEndpoints(instance string, bufferId string) (E
 	return EndpointsClusterV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

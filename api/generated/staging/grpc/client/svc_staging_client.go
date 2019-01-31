@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	oldlog "log"
+	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -425,8 +426,8 @@ type crudRestClientStagingV1 struct {
 }
 
 // NewRestCrudClientStagingV1 creates a REST client for the service.
-func NewRestCrudClientStagingV1(url string) staging.StagingV1Interface {
-	endpoints, err := staging.MakeStagingV1RestClientEndpoints(url)
+func NewRestCrudClientStagingV1(url string, httpClient *http.Client) staging.StagingV1Interface {
+	endpoints, err := staging.MakeStagingV1RestClientEndpoints(url, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
@@ -437,8 +438,8 @@ func NewRestCrudClientStagingV1(url string) staging.StagingV1Interface {
 }
 
 // NewStagedRestCrudClientStagingV1 creates a REST client for the service.
-func NewStagedRestCrudClientStagingV1(url string, id string) staging.StagingV1Interface {
-	endpoints, err := staging.MakeStagingV1StagedRestClientEndpoints(url, id)
+func NewStagedRestCrudClientStagingV1(url string, id string, httpClient *http.Client) staging.StagingV1Interface {
+	endpoints, err := staging.MakeStagingV1StagedRestClientEndpoints(url, id, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}

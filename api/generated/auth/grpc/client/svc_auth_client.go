@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	oldlog "log"
+	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -1263,8 +1264,8 @@ type crudRestClientAuthV1 struct {
 }
 
 // NewRestCrudClientAuthV1 creates a REST client for the service.
-func NewRestCrudClientAuthV1(url string) auth.AuthV1Interface {
-	endpoints, err := auth.MakeAuthV1RestClientEndpoints(url)
+func NewRestCrudClientAuthV1(url string, httpClient *http.Client) auth.AuthV1Interface {
+	endpoints, err := auth.MakeAuthV1RestClientEndpoints(url, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
@@ -1278,8 +1279,8 @@ func NewRestCrudClientAuthV1(url string) auth.AuthV1Interface {
 }
 
 // NewStagedRestCrudClientAuthV1 creates a REST client for the service.
-func NewStagedRestCrudClientAuthV1(url string, id string) auth.AuthV1Interface {
-	endpoints, err := auth.MakeAuthV1StagedRestClientEndpoints(url, id)
+func NewStagedRestCrudClientAuthV1(url string, id string, httpClient *http.Client) auth.AuthV1Interface {
+	endpoints, err := auth.MakeAuthV1StagedRestClientEndpoints(url, id, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}

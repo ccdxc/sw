@@ -43,6 +43,9 @@ func uploadFile(ctx context.Context, filename string, metadata map[string]string
 	}
 	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/", ts.tu.APIGwAddr)
 	req, err := http.NewRequest("POST", uri, body)
+	if err != nil {
+		return 0, errors.Wrap(err, "http.newRequest failed")
+	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: transport}
@@ -130,6 +133,7 @@ var _ = Describe("Objstore Write and read test", func() {
 		wr, err := uploadFile(ctx, filename, metadata, buf)
 		Expect(err).Should(BeNil(), "Failed to upload file")
 		rhash, rd, err := downloadFile(filename)
+		Expect(err).Should(BeNil(), "Failed to download file")
 		Expect(hash).Should(Equal(rhash), "uploaded and downloaded hashes do not match")
 		Expect(rd).Should(Equal(wr), "size written does not match size read")
 		resp, err := statFile(ctx, filename)

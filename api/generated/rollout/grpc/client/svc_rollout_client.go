@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	oldlog "log"
+	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -360,8 +361,8 @@ type crudRestClientRolloutV1 struct {
 }
 
 // NewRestCrudClientRolloutV1 creates a REST client for the service.
-func NewRestCrudClientRolloutV1(url string) rollout.RolloutV1Interface {
-	endpoints, err := rollout.MakeRolloutV1RestClientEndpoints(url)
+func NewRestCrudClientRolloutV1(url string, httpClient *http.Client) rollout.RolloutV1Interface {
+	endpoints, err := rollout.MakeRolloutV1RestClientEndpoints(url, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
@@ -372,8 +373,8 @@ func NewRestCrudClientRolloutV1(url string) rollout.RolloutV1Interface {
 }
 
 // NewStagedRestCrudClientRolloutV1 creates a REST client for the service.
-func NewStagedRestCrudClientRolloutV1(url string, id string) rollout.RolloutV1Interface {
-	endpoints, err := rollout.MakeRolloutV1StagedRestClientEndpoints(url, id)
+func NewStagedRestCrudClientRolloutV1(url string, id string, httpClient *http.Client) rollout.RolloutV1Interface {
+	endpoints, err := rollout.MakeRolloutV1StagedRestClientEndpoints(url, id, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}

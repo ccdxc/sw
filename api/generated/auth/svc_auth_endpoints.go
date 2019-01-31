@@ -2109,6 +2109,7 @@ func (r *EndpointsAuthV1RestClient) AutoAddUser(ctx context.Context, in *User) (
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoAddUser(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -2130,6 +2131,7 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateUser(ctx context.Context, in *User
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoUpdateUser(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2151,6 +2153,7 @@ func (r *EndpointsAuthV1RestClient) AutoGetUser(ctx context.Context, in *User) (
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoGetUser(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2172,6 +2175,7 @@ func (r *EndpointsAuthV1RestClient) AutoDeleteUser(ctx context.Context, in *User
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoDeleteUser(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2193,6 +2197,7 @@ func (r *EndpointsAuthV1RestClient) AutoListUser(ctx context.Context, options *a
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoListUser(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2261,6 +2266,7 @@ func (r *EndpointsAuthV1RestClient) PasswordChangeUser(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1PasswordChange(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2281,6 +2287,7 @@ func (r *EndpointsAuthV1RestClient) PasswordResetUser(ctx context.Context, in *P
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1PasswordReset(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2302,6 +2309,7 @@ func (r *EndpointsAuthV1RestClient) AutoAddAuthenticationPolicy(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoAddAuthenticationPolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -2323,6 +2331,7 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateAuthenticationPolicy(ctx context.C
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoUpdateAuthenticationPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2344,6 +2353,7 @@ func (r *EndpointsAuthV1RestClient) AutoGetAuthenticationPolicy(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoGetAuthenticationPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2422,6 +2432,7 @@ func (r *EndpointsAuthV1RestClient) LdapConnectionCheckAuthenticationPolicy(ctx 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1LdapConnectionCheck(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2442,6 +2453,7 @@ func (r *EndpointsAuthV1RestClient) LdapBindCheckAuthenticationPolicy(ctx contex
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1LdapBindCheck(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2463,6 +2475,7 @@ func (r *EndpointsAuthV1RestClient) AutoAddRole(ctx context.Context, in *Role) (
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoAddRole(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -2484,6 +2497,7 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateRole(ctx context.Context, in *Role
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoUpdateRole(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2505,6 +2519,7 @@ func (r *EndpointsAuthV1RestClient) AutoGetRole(ctx context.Context, in *Role) (
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoGetRole(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2526,6 +2541,7 @@ func (r *EndpointsAuthV1RestClient) AutoDeleteRole(ctx context.Context, in *Role
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoDeleteRole(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2547,6 +2563,7 @@ func (r *EndpointsAuthV1RestClient) AutoListRole(ctx context.Context, options *a
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoListRole(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2616,6 +2633,7 @@ func (r *EndpointsAuthV1RestClient) AutoAddRoleBinding(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoAddRoleBinding(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -2637,6 +2655,7 @@ func (r *EndpointsAuthV1RestClient) AutoUpdateRoleBinding(ctx context.Context, i
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoUpdateRoleBinding(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2658,6 +2677,7 @@ func (r *EndpointsAuthV1RestClient) AutoGetRoleBinding(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoGetRoleBinding(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2679,6 +2699,7 @@ func (r *EndpointsAuthV1RestClient) AutoDeleteRoleBinding(ctx context.Context, i
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoDeleteRoleBinding(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2700,6 +2721,7 @@ func (r *EndpointsAuthV1RestClient) AutoListRoleBinding(ctx context.Context, opt
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1AutoListRoleBinding(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2756,26 +2778,20 @@ func (r *EndpointsAuthV1RestClient) AutoWatchRoleBinding(ctx context.Context, op
 }
 
 // MakeAuthV1RestClientEndpoints make REST client endpoints
-func MakeAuthV1RestClientEndpoints(instance string) (EndpointsAuthV1RestClient, error) {
+func MakeAuthV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsAuthV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsAuthV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeAuthV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeAuthV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsAuthV1RestClient, error) {
+func MakeAuthV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsAuthV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -2783,12 +2799,6 @@ func MakeAuthV1StagedRestClientEndpoints(instance string, bufferId string) (Endp
 	return EndpointsAuthV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

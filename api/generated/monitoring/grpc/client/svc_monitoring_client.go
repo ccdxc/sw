@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	oldlog "log"
+	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -2701,8 +2702,8 @@ type crudRestClientMonitoringV1 struct {
 }
 
 // NewRestCrudClientMonitoringV1 creates a REST client for the service.
-func NewRestCrudClientMonitoringV1(url string) monitoring.MonitoringV1Interface {
-	endpoints, err := monitoring.MakeMonitoringV1RestClientEndpoints(url)
+func NewRestCrudClientMonitoringV1(url string, httpClient *http.Client) monitoring.MonitoringV1Interface {
+	endpoints, err := monitoring.MakeMonitoringV1RestClientEndpoints(url, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
@@ -2722,8 +2723,8 @@ func NewRestCrudClientMonitoringV1(url string) monitoring.MonitoringV1Interface 
 }
 
 // NewStagedRestCrudClientMonitoringV1 creates a REST client for the service.
-func NewStagedRestCrudClientMonitoringV1(url string, id string) monitoring.MonitoringV1Interface {
-	endpoints, err := monitoring.MakeMonitoringV1StagedRestClientEndpoints(url, id)
+func NewStagedRestCrudClientMonitoringV1(url string, id string, httpClient *http.Client) monitoring.MonitoringV1Interface {
+	endpoints, err := monitoring.MakeMonitoringV1StagedRestClientEndpoints(url, id, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}

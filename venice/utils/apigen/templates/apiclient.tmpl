@@ -4,6 +4,8 @@ package apiclient
 
 {{$pkgs := (getSvcManifest "../generated/apiclient/svcmanifest.json")}}
 import (
+    "net/http"
+
     "github.com/pensando/sw/venice/utils/log"
     "github.com/pensando/sw/venice/utils/rpckit"{{range $key, $value := $pkgs}}
     {{$key}} "github.com/pensando/sw/api/generated/{{$key}}"
@@ -45,8 +47,8 @@ func (a *apiGrpcServerClient) {{$k}}() {{$pkgname}}.{{$k}}Interface {
 func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.Option) (Services, error) {
     client, err := rpckit.NewRPCClient(clientName, url, opts...)
     if err != nil {
-	logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "error", err)
-	return nil, err
+        logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "error", err)
+        return nil, err
     }
     return &apiGrpcServerClient{
         url: url,
@@ -60,12 +62,16 @@ func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.
 type apiRestServerClient struct {
     url string
     logger log.Logger
+    httpTransport *http.Transport
     {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}{{if (ne 0 (len $v.Messages))}}
     a{{$k}} {{$pkgname}}.{{$k}}Interface {{end}}{{end}}{{end}}
 }
 
 // Close closes the client
 func (a *apiRestServerClient) Close() error {
+    if a.httpTransport != nil {
+        a.httpTransport.CloseIdleConnections()
+    }
     return nil
 }
 
@@ -76,20 +82,38 @@ func (a *apiRestServerClient) {{$k}}() {{$pkgname}}.{{$k}}Interface {
 {{end}}{{end}}
 // NewRestAPIClient returns a REST client
 func NewRestAPIClient(url string) (Services, error) {
+    ht:= &http.Transport{
+            TLSClientConfig: &tls.Config{
+            InsecureSkipVerify: true,
+        },
+    }
+    httpClient:= &http.Client{
+            Transport: ht,
+    }
     return &apiRestServerClient{
         url: url,
         logger: log.WithContext("module", "RestAPIClient"),
+        httpTransport: ht,
         {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
-        a{{$k}}: {{$pkgname}}Client.NewRestCrudClient{{$k}}(url), {{end}}{{end}}
+        a{{$k}}: {{$pkgname}}Client.NewRestCrudClient{{$k}}(url, httpClient), {{end}}{{end}}
     }, nil
 }
 
 // NewStagedRestAPIClient returns a REST client
 func NewStagedRestAPIClient(url string, bufferId string) (Services, error) {
+    ht:= &http.Transport{
+            TLSClientConfig: &tls.Config{
+            InsecureSkipVerify: true,
+        },
+    }
+    httpClient:= &http.Client{
+        Transport: ht,
+    }
     return &apiRestServerClient{
         url: url,
         logger: log.WithContext("module", "RestAPIClient"),
+        httpTransport: ht,
         {{range $key, $value := $pkgs}}{{$pkgname := $key}}{{range $k, $v := $value.Svcs}}
-        a{{$k}}: {{$pkgname}}Client.NewStagedRestCrudClient{{$k}}(url, bufferId), {{end}}{{end}}
+        a{{$k}}: {{$pkgname}}Client.NewStagedRestCrudClient{{$k}}(url, bufferId, httpClient), {{end}}{{end}}
     }, nil
 }

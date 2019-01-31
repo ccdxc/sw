@@ -8,7 +8,6 @@ package events
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -290,26 +289,20 @@ func (r *EndpointsEventsV1RestClient) EventsV1GetEventsEndpoint(ctx context.Cont
 }
 
 // MakeEventsV1RestClientEndpoints make REST client endpoints
-func MakeEventsV1RestClientEndpoints(instance string) (EndpointsEventsV1RestClient, error) {
+func MakeEventsV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsEventsV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsEventsV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeEventsV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeEventsV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsEventsV1RestClient, error) {
+func MakeEventsV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsEventsV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -317,12 +310,6 @@ func MakeEventsV1StagedRestClientEndpoints(instance string, bufferId string) (En
 	return EndpointsEventsV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	oldlog "log"
+	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -1768,8 +1769,8 @@ type crudRestClientBookstoreV1 struct {
 }
 
 // NewRestCrudClientBookstoreV1 creates a REST client for the service.
-func NewRestCrudClientBookstoreV1(url string) bookstore.BookstoreV1Interface {
-	endpoints, err := bookstore.MakeBookstoreV1RestClientEndpoints(url)
+func NewRestCrudClientBookstoreV1(url string, httpClient *http.Client) bookstore.BookstoreV1Interface {
+	endpoints, err := bookstore.MakeBookstoreV1RestClientEndpoints(url, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
@@ -1785,8 +1786,8 @@ func NewRestCrudClientBookstoreV1(url string) bookstore.BookstoreV1Interface {
 }
 
 // NewStagedRestCrudClientBookstoreV1 creates a REST client for the service.
-func NewStagedRestCrudClientBookstoreV1(url string, id string) bookstore.BookstoreV1Interface {
-	endpoints, err := bookstore.MakeBookstoreV1StagedRestClientEndpoints(url, id)
+func NewStagedRestCrudClientBookstoreV1(url string, id string, httpClient *http.Client) bookstore.BookstoreV1Interface {
+	endpoints, err := bookstore.MakeBookstoreV1StagedRestClientEndpoints(url, id, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}

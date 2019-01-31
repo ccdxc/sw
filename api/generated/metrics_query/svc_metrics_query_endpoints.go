@@ -8,7 +8,6 @@ package metrics_query
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -220,26 +219,20 @@ func (r *EndpointsMetricsV1RestClient) MetricsV1QueryEndpoint(ctx context.Contex
 }
 
 // MakeMetricsV1RestClientEndpoints make REST client endpoints
-func MakeMetricsV1RestClientEndpoints(instance string) (EndpointsMetricsV1RestClient, error) {
+func MakeMetricsV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsMetricsV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsMetricsV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeMetricsV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeMetricsV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsMetricsV1RestClient, error) {
+func MakeMetricsV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsMetricsV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -247,12 +240,6 @@ func MakeMetricsV1StagedRestClientEndpoints(instance string, bufferId string) (E
 	return EndpointsMetricsV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

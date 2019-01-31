@@ -4272,6 +4272,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddEventPolicy(ctx context.Context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoAddEventPolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -4293,6 +4294,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateEventPolicy(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoUpdateEventPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4314,6 +4316,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetEventPolicy(ctx context.Context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoGetEventPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4335,6 +4338,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteEventPolicy(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoDeleteEventPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4356,6 +4360,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoListEventPolicy(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoListEventPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4430,6 +4435,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateStatsPolicy(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoUpdateStatsPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4451,6 +4457,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetStatsPolicy(ctx context.Context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoGetStatsPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4477,6 +4484,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoListStatsPolicy(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoListStatsPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4546,6 +4554,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddFwlogPolicy(ctx context.Context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoAddFwlogPolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -4567,6 +4576,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateFwlogPolicy(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoUpdateFwlogPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4588,6 +4598,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetFwlogPolicy(ctx context.Context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoGetFwlogPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4609,6 +4620,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteFwlogPolicy(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoDeleteFwlogPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4630,6 +4642,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoListFwlogPolicy(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoListFwlogPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4699,6 +4712,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddFlowExportPolicy(ctx context.Co
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoAddFlowExportPolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -4720,6 +4734,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateFlowExportPolicy(ctx context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoUpdateFlowExportPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4741,6 +4756,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetFlowExportPolicy(ctx context.Co
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoGetFlowExportPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4762,6 +4778,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteFlowExportPolicy(ctx context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoDeleteFlowExportPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4783,6 +4800,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoListFlowExportPolicy(ctx context.C
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoListFlowExportPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4857,6 +4875,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlert(ctx context.Context, i
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoUpdateAlert(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4878,6 +4897,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetAlert(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoGetAlert(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4904,6 +4924,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoListAlert(ctx context.Context, opt
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoListAlert(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -4973,6 +4994,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddAlertPolicy(ctx context.Context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoAddAlertPolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -4994,6 +5016,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlertPolicy(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoUpdateAlertPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5015,6 +5038,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetAlertPolicy(ctx context.Context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoGetAlertPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5036,6 +5060,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteAlertPolicy(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoDeleteAlertPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5057,6 +5082,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoListAlertPolicy(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoListAlertPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5126,6 +5152,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddAlertDestination(ctx context.Co
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoAddAlertDestination(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -5147,6 +5174,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateAlertDestination(ctx context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoUpdateAlertDestination(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5168,6 +5196,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetAlertDestination(ctx context.Co
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoGetAlertDestination(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5189,6 +5218,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteAlertDestination(ctx context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoDeleteAlertDestination(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5210,6 +5240,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoListAlertDestination(ctx context.C
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoListAlertDestination(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5279,6 +5310,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddMirrorSession(ctx context.Conte
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoAddMirrorSession(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -5300,6 +5332,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateMirrorSession(ctx context.Co
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoUpdateMirrorSession(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5321,6 +5354,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetMirrorSession(ctx context.Conte
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoGetMirrorSession(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5342,6 +5376,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteMirrorSession(ctx context.Co
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoDeleteMirrorSession(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5363,6 +5398,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoListMirrorSession(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoListMirrorSession(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5432,6 +5468,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddTroubleshootingSession(ctx cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoAddTroubleshootingSession(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -5453,6 +5490,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoUpdateTroubleshootingSession(ctx c
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoUpdateTroubleshootingSession(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5474,6 +5512,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetTroubleshootingSession(ctx cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoGetTroubleshootingSession(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5495,6 +5534,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteTroubleshootingSession(ctx c
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoDeleteTroubleshootingSession(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5516,6 +5556,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoListTroubleshootingSession(ctx con
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoListTroubleshootingSession(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5585,6 +5626,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoAddTechSupportRequest(ctx context.
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoAddTechSupportRequest(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -5611,6 +5653,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoGetTechSupportRequest(ctx context.
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoGetTechSupportRequest(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5632,6 +5675,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoDeleteTechSupportRequest(ctx conte
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoDeleteTechSupportRequest(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5653,6 +5697,7 @@ func (r *EndpointsMonitoringV1RestClient) AutoListTechSupportRequest(ctx context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespMonitoringV1AutoListTechSupportRequest(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -5709,26 +5754,20 @@ func (r *EndpointsMonitoringV1RestClient) AutoWatchTechSupportRequest(ctx contex
 }
 
 // MakeMonitoringV1RestClientEndpoints make REST client endpoints
-func MakeMonitoringV1RestClientEndpoints(instance string) (EndpointsMonitoringV1RestClient, error) {
+func MakeMonitoringV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsMonitoringV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsMonitoringV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeMonitoringV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeMonitoringV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsMonitoringV1RestClient, error) {
+func MakeMonitoringV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsMonitoringV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -5736,12 +5775,6 @@ func MakeMonitoringV1StagedRestClientEndpoints(instance string, bufferId string)
 	return EndpointsMonitoringV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

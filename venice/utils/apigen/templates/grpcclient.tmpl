@@ -331,8 +331,8 @@ type crudRestClient{{$srvname}} struct {
 }
 
 // NewRestCrudClient{{$srvname}} creates a REST client for the service.
-func NewRestCrudClient{{$srvname}}(url string) {{$pkgname}}.{{$srvname}}Interface {
-	endpoints, err := {{$pkgname}}.Make{{$srvname}}RestClientEndpoints(url)
+func NewRestCrudClient{{$srvname}}(url string, httpClient *http.Client) {{$pkgname}}.{{$srvname}}Interface {
+	endpoints, err := {{$pkgname}}.Make{{$srvname}}RestClientEndpoints(url, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
@@ -343,8 +343,8 @@ func NewRestCrudClient{{$srvname}}(url string) {{$pkgname}}.{{$srvname}}Interfac
 }
 
 // NewStagedRestCrudClient{{$srvname}} creates a REST client for the service.
-func NewStagedRestCrudClient{{$srvname}}(url string, id string) {{$pkgname}}.{{$srvname}}Interface {
-	endpoints, err := {{$pkgname}}.Make{{$srvname}}StagedRestClientEndpoints(url, id)
+func NewStagedRestCrudClient{{$srvname}}(url string, id string, httpClient *http.Client) {{$pkgname}}.{{$srvname}}Interface {
+	endpoints, err := {{$pkgname}}.Make{{$srvname}}StagedRestClientEndpoints(url, id, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}

@@ -2638,6 +2638,7 @@ func (r *EndpointsSecurityV1RestClient) AutoAddSecurityGroup(ctx context.Context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoAddSecurityGroup(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -2659,6 +2660,7 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateSecurityGroup(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoUpdateSecurityGroup(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2680,6 +2682,7 @@ func (r *EndpointsSecurityV1RestClient) AutoGetSecurityGroup(ctx context.Context
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoGetSecurityGroup(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2701,6 +2704,7 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteSecurityGroup(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoDeleteSecurityGroup(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2722,6 +2726,7 @@ func (r *EndpointsSecurityV1RestClient) AutoListSecurityGroup(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoListSecurityGroup(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2791,6 +2796,7 @@ func (r *EndpointsSecurityV1RestClient) AutoAddSGPolicy(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoAddSGPolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -2812,6 +2818,7 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateSGPolicy(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoUpdateSGPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2833,6 +2840,7 @@ func (r *EndpointsSecurityV1RestClient) AutoGetSGPolicy(ctx context.Context, in 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoGetSGPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2854,6 +2862,7 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteSGPolicy(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoDeleteSGPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2875,6 +2884,7 @@ func (r *EndpointsSecurityV1RestClient) AutoListSGPolicy(ctx context.Context, op
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoListSGPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2944,6 +2954,7 @@ func (r *EndpointsSecurityV1RestClient) AutoAddApp(ctx context.Context, in *App)
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoAddApp(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -2965,6 +2976,7 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateApp(ctx context.Context, in *A
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoUpdateApp(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -2986,6 +2998,7 @@ func (r *EndpointsSecurityV1RestClient) AutoGetApp(ctx context.Context, in *App)
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoGetApp(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3007,6 +3020,7 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteApp(ctx context.Context, in *A
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoDeleteApp(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3028,6 +3042,7 @@ func (r *EndpointsSecurityV1RestClient) AutoListApp(ctx context.Context, options
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoListApp(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3097,6 +3112,7 @@ func (r *EndpointsSecurityV1RestClient) AutoAddFirewallProfile(ctx context.Conte
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoAddFirewallProfile(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -3118,6 +3134,7 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateFirewallProfile(ctx context.Co
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoUpdateFirewallProfile(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3139,6 +3156,7 @@ func (r *EndpointsSecurityV1RestClient) AutoGetFirewallProfile(ctx context.Conte
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoGetFirewallProfile(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3160,6 +3178,7 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteFirewallProfile(ctx context.Co
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoDeleteFirewallProfile(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3181,6 +3200,7 @@ func (r *EndpointsSecurityV1RestClient) AutoListFirewallProfile(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoListFirewallProfile(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3250,6 +3270,7 @@ func (r *EndpointsSecurityV1RestClient) AutoAddCertificate(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoAddCertificate(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -3271,6 +3292,7 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateCertificate(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoUpdateCertificate(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3292,6 +3314,7 @@ func (r *EndpointsSecurityV1RestClient) AutoGetCertificate(ctx context.Context, 
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoGetCertificate(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3313,6 +3336,7 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteCertificate(ctx context.Contex
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoDeleteCertificate(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3334,6 +3358,7 @@ func (r *EndpointsSecurityV1RestClient) AutoListCertificate(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoListCertificate(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3403,6 +3428,7 @@ func (r *EndpointsSecurityV1RestClient) AutoAddTrafficEncryptionPolicy(ctx conte
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoAddTrafficEncryptionPolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -3424,6 +3450,7 @@ func (r *EndpointsSecurityV1RestClient) AutoUpdateTrafficEncryptionPolicy(ctx co
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoUpdateTrafficEncryptionPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3445,6 +3472,7 @@ func (r *EndpointsSecurityV1RestClient) AutoGetTrafficEncryptionPolicy(ctx conte
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoGetTrafficEncryptionPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3466,6 +3494,7 @@ func (r *EndpointsSecurityV1RestClient) AutoDeleteTrafficEncryptionPolicy(ctx co
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespSecurityV1AutoDeleteTrafficEncryptionPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -3527,26 +3556,20 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchTrafficEncryptionPolicy(ctx con
 }
 
 // MakeSecurityV1RestClientEndpoints make REST client endpoints
-func MakeSecurityV1RestClientEndpoints(instance string) (EndpointsSecurityV1RestClient, error) {
+func MakeSecurityV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsSecurityV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsSecurityV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeSecurityV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeSecurityV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsSecurityV1RestClient, error) {
+func MakeSecurityV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsSecurityV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -3554,12 +3577,6 @@ func MakeSecurityV1StagedRestClientEndpoints(instance string, bufferId string) (
 	return EndpointsSecurityV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

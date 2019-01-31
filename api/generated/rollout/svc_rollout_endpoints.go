@@ -601,6 +601,7 @@ func (r *EndpointsRolloutV1RestClient) AutoAddRollout(ctx context.Context, in *R
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespRolloutV1AutoAddRollout(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -622,6 +623,7 @@ func (r *EndpointsRolloutV1RestClient) AutoUpdateRollout(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespRolloutV1AutoUpdateRollout(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -643,6 +645,7 @@ func (r *EndpointsRolloutV1RestClient) AutoGetRollout(ctx context.Context, in *R
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespRolloutV1AutoGetRollout(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -664,6 +667,7 @@ func (r *EndpointsRolloutV1RestClient) AutoDeleteRollout(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespRolloutV1AutoDeleteRollout(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -685,6 +689,7 @@ func (r *EndpointsRolloutV1RestClient) AutoListRollout(ctx context.Context, opti
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespRolloutV1AutoListRollout(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -741,26 +746,20 @@ func (r *EndpointsRolloutV1RestClient) AutoWatchRollout(ctx context.Context, opt
 }
 
 // MakeRolloutV1RestClientEndpoints make REST client endpoints
-func MakeRolloutV1RestClientEndpoints(instance string) (EndpointsRolloutV1RestClient, error) {
+func MakeRolloutV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsRolloutV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsRolloutV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeRolloutV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeRolloutV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsRolloutV1RestClient, error) {
+func MakeRolloutV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsRolloutV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -768,12 +767,6 @@ func MakeRolloutV1StagedRestClientEndpoints(instance string, bufferId string) (E
 	return EndpointsRolloutV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

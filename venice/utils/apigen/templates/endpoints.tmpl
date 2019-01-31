@@ -381,6 +381,7 @@ func (r *Endpoints{{$svcname}}RestClient) AutoAdd{{.}}(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+    defer httpresp.Body.Close()
 	ret, err := decodeHTTPresp{{$svcname}}AutoAdd{{.}}(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -404,6 +405,7 @@ func (r *Endpoints{{$svcname}}RestClient) AutoUpdate{{.}}(ctx context.Context, i
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+    defer resp.Body.Close()
 	ret, err := decodeHTTPresp{{$svcname}}AutoUpdate{{.}}(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -427,6 +429,7 @@ func (r *Endpoints{{$svcname}}RestClient) AutoGet{{.}}(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+    defer resp.Body.Close()
 	ret, err := decodeHTTPresp{{$svcname}}AutoGet{{.}}(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -450,6 +453,7 @@ func (r *Endpoints{{$svcname}}RestClient) AutoDelete{{.}}(ctx context.Context, i
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+    defer resp.Body.Close()
 	ret, err := decodeHTTPresp{{$svcname}}AutoDelete{{.}}(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -473,6 +477,7 @@ func (r *Endpoints{{$svcname}}RestClient) AutoList{{.}}(ctx context.Context, opt
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+    defer resp.Body.Close()
 	ret, err := decodeHTTPresp{{$svcname}}AutoList{{.}}(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -543,6 +548,7 @@ func (r *Endpoints{{$svcname}}RestClient) {{.Name}}{{$crudop}}(ctx context.Conte
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+    defer resp.Body.Close()
 	ret, err := decodeHTTPresp{{$svcname}}{{.Name}}(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -557,26 +563,20 @@ func (r *Endpoints{{$svcname}}RestClient) {{$svcname}}{{.Name}}Endpoint(ctx cont
 {{end}}{{end}}
 
 // Make{{$svcname}}RestClientEndpoints make REST client endpoints
-func Make{{$svcname}}RestClientEndpoints(instance string) (Endpoints{{$svcname}}RestClient, error) {
+func Make{{$svcname}}RestClientEndpoints(instance string, httpClient *http.Client) (Endpoints{{$svcname}}RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return Endpoints{{$svcname}}RestClient {
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-        },
+		client: httpClient,
 	}, nil
 
 }
 
 // Make{{$svcname}}StagedRestClientEndpoints makes staged REST client endpoints
-func Make{{$svcname}}StagedRestClientEndpoints(instance string, bufferId string) (Endpoints{{$svcname}}RestClient, error) {
+func Make{{$svcname}}StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (Endpoints{{$svcname}}RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -584,13 +584,7 @@ func Make{{$svcname}}StagedRestClientEndpoints(instance string, bufferId string)
 	return Endpoints{{$svcname}}RestClient {
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client: httpClient,
 	}, nil
 }
 {{end}}

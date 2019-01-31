@@ -15,7 +15,7 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/globals"
 
-	netclient "github.com/pensando/sw/api/generated/network/grpc/client"
+	"github.com/pensando/sw/api/generated/apiclient"
 )
 
 var _ = Describe("baseline cluster health", func() {
@@ -46,8 +46,9 @@ var _ = Describe("Network object create delete throughput", func() {
 	)
 	BeforeEach(func() {
 		apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
-		networkClient := netclient.NewRestCrudClientNetworkV1(apiGwAddr)
-		netIf := networkClient.Network()
+		apiClient, err := apiclient.NewRestAPIClient(apiGwAddr)
+		Expect(err).ShouldNot(HaveOccurred())
+		netIf := apiClient.NetworkV1().Network()
 
 		createNetObjects = func() {
 			wg := sync.WaitGroup{}

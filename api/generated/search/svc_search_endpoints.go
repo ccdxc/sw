@@ -8,7 +8,6 @@ package search
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -290,26 +289,20 @@ func (r *EndpointsSearchV1RestClient) SearchV1QueryEndpoint(ctx context.Context,
 }
 
 // MakeSearchV1RestClientEndpoints make REST client endpoints
-func MakeSearchV1RestClientEndpoints(instance string) (EndpointsSearchV1RestClient, error) {
+func MakeSearchV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsSearchV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsSearchV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeSearchV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeSearchV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsSearchV1RestClient, error) {
+func MakeSearchV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsSearchV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -317,12 +310,6 @@ func MakeSearchV1StagedRestClientEndpoints(instance string, bufferId string) (En
 	return EndpointsSearchV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

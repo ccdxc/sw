@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	oldlog "log"
+	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -884,8 +885,8 @@ type crudRestClientNetworkV1 struct {
 }
 
 // NewRestCrudClientNetworkV1 creates a REST client for the service.
-func NewRestCrudClientNetworkV1(url string) network.NetworkV1Interface {
-	endpoints, err := network.MakeNetworkV1RestClientEndpoints(url)
+func NewRestCrudClientNetworkV1(url string, httpClient *http.Client) network.NetworkV1Interface {
+	endpoints, err := network.MakeNetworkV1RestClientEndpoints(url, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
@@ -898,8 +899,8 @@ func NewRestCrudClientNetworkV1(url string) network.NetworkV1Interface {
 }
 
 // NewStagedRestCrudClientNetworkV1 creates a REST client for the service.
-func NewStagedRestCrudClientNetworkV1(url string, id string) network.NetworkV1Interface {
-	endpoints, err := network.MakeNetworkV1StagedRestClientEndpoints(url, id)
+func NewStagedRestCrudClientNetworkV1(url string, id string, httpClient *http.Client) network.NetworkV1Interface {
+	endpoints, err := network.MakeNetworkV1StagedRestClientEndpoints(url, id, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}

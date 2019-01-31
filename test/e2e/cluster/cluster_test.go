@@ -18,7 +18,7 @@ import (
 	cmdprotos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 
-	cmdclient "github.com/pensando/sw/api/generated/cluster/grpc/client"
+	"github.com/pensando/sw/api/generated/apiclient"
 )
 
 var _ = Describe("cluster tests", func() {
@@ -40,10 +40,13 @@ var _ = Describe("cluster tests", func() {
 				Skip(fmt.Sprintf("Skipping failover test: %d quorum nodes found, need >= 2", ts.tu.NumQuorumNodes))
 			}
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
-			cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
-			clusterIf = cmdClient.Cluster()
+			apiClient, err := apiclient.NewRestAPIClient(apiGwAddr)
+			Expect(err).ShouldNot(HaveOccurred())
+			clusterIf = apiClient.ClusterV1().Cluster()
 			obj = api.ObjectMeta{Name: "testCluster"}
 			cl, err = clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
+			Expect(err).ShouldNot(HaveOccurred())
+
 		})
 
 		It("Pause the master", func() {
@@ -164,8 +167,9 @@ func validateCluster() {
 	}, 95, 1).Should(BeEmpty(), "All pods should be in Running state")
 
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
-	cmdClient := cmdclient.NewRestCrudClientClusterV1(apiGwAddr)
-	clusterIf := cmdClient.Cluster()
+	apiClient, err := apiclient.NewRestAPIClient(apiGwAddr)
+	Expect(err).ShouldNot(HaveOccurred())
+	clusterIf := apiClient.ClusterV1().Cluster()
 	obj := api.ObjectMeta{Name: "testCluster"}
 	cl, err := clusterIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
 

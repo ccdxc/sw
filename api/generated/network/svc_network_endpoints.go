@@ -1415,6 +1415,7 @@ func (r *EndpointsNetworkV1RestClient) AutoAddNetwork(ctx context.Context, in *N
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoAddNetwork(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -1436,6 +1437,7 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateNetwork(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoUpdateNetwork(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1457,6 +1459,7 @@ func (r *EndpointsNetworkV1RestClient) AutoGetNetwork(ctx context.Context, in *N
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoGetNetwork(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1478,6 +1481,7 @@ func (r *EndpointsNetworkV1RestClient) AutoDeleteNetwork(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoDeleteNetwork(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1499,6 +1503,7 @@ func (r *EndpointsNetworkV1RestClient) AutoListNetwork(ctx context.Context, opti
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoListNetwork(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1568,6 +1573,7 @@ func (r *EndpointsNetworkV1RestClient) AutoAddService(ctx context.Context, in *S
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoAddService(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -1589,6 +1595,7 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateService(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoUpdateService(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1610,6 +1617,7 @@ func (r *EndpointsNetworkV1RestClient) AutoGetService(ctx context.Context, in *S
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoGetService(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1631,6 +1639,7 @@ func (r *EndpointsNetworkV1RestClient) AutoDeleteService(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoDeleteService(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1652,6 +1661,7 @@ func (r *EndpointsNetworkV1RestClient) AutoListService(ctx context.Context, opti
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoListService(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1721,6 +1731,7 @@ func (r *EndpointsNetworkV1RestClient) AutoAddLbPolicy(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer httpresp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoAddLbPolicy(ctx, httpresp)
 	if err != nil {
 		return nil, err
@@ -1742,6 +1753,7 @@ func (r *EndpointsNetworkV1RestClient) AutoUpdateLbPolicy(ctx context.Context, i
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoUpdateLbPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1763,6 +1775,7 @@ func (r *EndpointsNetworkV1RestClient) AutoGetLbPolicy(ctx context.Context, in *
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoGetLbPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1784,6 +1797,7 @@ func (r *EndpointsNetworkV1RestClient) AutoDeleteLbPolicy(ctx context.Context, i
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoDeleteLbPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1805,6 +1819,7 @@ func (r *EndpointsNetworkV1RestClient) AutoListLbPolicy(ctx context.Context, opt
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespNetworkV1AutoListLbPolicy(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1861,26 +1876,20 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchLbPolicy(ctx context.Context, op
 }
 
 // MakeNetworkV1RestClientEndpoints make REST client endpoints
-func MakeNetworkV1RestClientEndpoints(instance string) (EndpointsNetworkV1RestClient, error) {
+func MakeNetworkV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsNetworkV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsNetworkV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeNetworkV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeNetworkV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsNetworkV1RestClient, error) {
+func MakeNetworkV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsNetworkV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -1888,12 +1897,6 @@ func MakeNetworkV1StagedRestClientEndpoints(instance string, bufferId string) (E
 	return EndpointsNetworkV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

@@ -1101,6 +1101,7 @@ func (r *EndpointsObjstoreV1RestClient) AutoGetObject(ctx context.Context, in *O
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespObjstoreV1AutoGetObject(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1122,6 +1123,7 @@ func (r *EndpointsObjstoreV1RestClient) AutoDeleteObject(ctx context.Context, in
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespObjstoreV1AutoDeleteObject(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1143,6 +1145,7 @@ func (r *EndpointsObjstoreV1RestClient) AutoListObject(ctx context.Context, opti
 	if err != nil {
 		return nil, fmt.Errorf("request failed (%s)", err)
 	}
+	defer resp.Body.Close()
 	ret, err := decodeHTTPrespObjstoreV1AutoListObject(ctx, resp)
 	if err != nil {
 		return nil, err
@@ -1199,26 +1202,20 @@ func (r *EndpointsObjstoreV1RestClient) AutoWatchObject(ctx context.Context, opt
 }
 
 // MakeObjstoreV1RestClientEndpoints make REST client endpoints
-func MakeObjstoreV1RestClientEndpoints(instance string) (EndpointsObjstoreV1RestClient, error) {
+func MakeObjstoreV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsObjstoreV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsObjstoreV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeObjstoreV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeObjstoreV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsObjstoreV1RestClient, error) {
+func MakeObjstoreV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsObjstoreV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -1226,12 +1223,6 @@ func MakeObjstoreV1StagedRestClientEndpoints(instance string, bufferId string) (
 	return EndpointsObjstoreV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }

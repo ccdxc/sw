@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	oldlog "log"
+	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -617,8 +618,8 @@ type crudRestClientObjstoreV1 struct {
 }
 
 // NewRestCrudClientObjstoreV1 creates a REST client for the service.
-func NewRestCrudClientObjstoreV1(url string) objstore.ObjstoreV1Interface {
-	endpoints, err := objstore.MakeObjstoreV1RestClientEndpoints(url)
+func NewRestCrudClientObjstoreV1(url string, httpClient *http.Client) objstore.ObjstoreV1Interface {
+	endpoints, err := objstore.MakeObjstoreV1RestClientEndpoints(url, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}
@@ -630,8 +631,8 @@ func NewRestCrudClientObjstoreV1(url string) objstore.ObjstoreV1Interface {
 }
 
 // NewStagedRestCrudClientObjstoreV1 creates a REST client for the service.
-func NewStagedRestCrudClientObjstoreV1(url string, id string) objstore.ObjstoreV1Interface {
-	endpoints, err := objstore.MakeObjstoreV1StagedRestClientEndpoints(url, id)
+func NewStagedRestCrudClientObjstoreV1(url string, id string, httpClient *http.Client) objstore.ObjstoreV1Interface {
+	endpoints, err := objstore.MakeObjstoreV1StagedRestClientEndpoints(url, id, httpClient)
 	if err != nil {
 		oldlog.Fatal("failed to create client")
 	}

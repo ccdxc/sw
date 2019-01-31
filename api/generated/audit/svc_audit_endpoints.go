@@ -8,7 +8,6 @@ package audit
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -220,26 +219,20 @@ func (r *EndpointsAuditV1RestClient) AuditV1GetEventEndpoint(ctx context.Context
 }
 
 // MakeAuditV1RestClientEndpoints make REST client endpoints
-func MakeAuditV1RestClientEndpoints(instance string) (EndpointsAuditV1RestClient, error) {
+func MakeAuditV1RestClientEndpoints(instance string, httpClient *http.Client) (EndpointsAuditV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
 
 	return EndpointsAuditV1RestClient{
 		instance: instance,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 
 }
 
 // MakeAuditV1StagedRestClientEndpoints makes staged REST client endpoints
-func MakeAuditV1StagedRestClientEndpoints(instance string, bufferId string) (EndpointsAuditV1RestClient, error) {
+func MakeAuditV1StagedRestClientEndpoints(instance string, bufferId string, httpClient *http.Client) (EndpointsAuditV1RestClient, error) {
 	if !strings.HasPrefix(instance, "https") {
 		instance = "https://" + instance
 	}
@@ -247,12 +240,6 @@ func MakeAuditV1StagedRestClientEndpoints(instance string, bufferId string) (End
 	return EndpointsAuditV1RestClient{
 		instance: instance,
 		bufferId: bufferId,
-		client: &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
-		},
+		client:   httpClient,
 	}, nil
 }
