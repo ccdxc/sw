@@ -11,13 +11,13 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api.hpp"
-#include "nic/apollo/api/switchport.hpp"   // TODO: why not just include oci_xxx here ?
-#include "nic/apollo/api/tep.hpp"
-#include "nic/apollo/api/vcn.hpp"
-#include "nic/apollo/api/subnet.hpp"
-#include "nic/apollo/api/vnic.hpp"
-#include "nic/apollo/api/mapping.hpp"
-#include "nic/apollo/api/route.hpp"
+#include "nic/apollo/include/api/oci_switchport.hpp"
+#include "nic/apollo/include/api/oci_tep.hpp"
+#include "nic/apollo/include//api/oci_vcn.hpp"
+#include "nic/apollo/include/api/oci_subnet.hpp"
+#include "nic/apollo/include/api/oci_vnic.hpp"
+#include "nic/apollo/include/api/oci_mapping.hpp"
+#include "nic/apollo/include/api/oci_route.hpp"
 #include "nic/apollo/include/api/oci_security_policy.hpp"
 
 namespace api {
