@@ -401,20 +401,6 @@ message NodeHealth {
     HealthCode health_code   = 2;
 }
 
-message DataSwitch {
-    // IP address of the switch
-    string ip = 1;
-
-    // Username of the switch
-    string username = 2;
-
-    // Password of the switch
-    string password = 3;
-
-    // switch ports used
-    repeated string ports = 4;
-}
-
 message TestBedMsg {
     // API Response
     IotaAPIResponse api_response        = 1;
@@ -442,9 +428,6 @@ message TestBedMsg {
 
     // Testbed ID
     uint32 testbed_id                   = 9;
-
-    // DataSwitch
-    DataSwitch data_switch              = 10;
 }
 
 enum TestBedNodeType {

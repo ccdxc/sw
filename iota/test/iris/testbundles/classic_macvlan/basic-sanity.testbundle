@@ -1,0 +1,9 @@
+meta:
+    name    : ionicdrv_macvlan
+    os      : [ linux ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 1418
+
+testcases:
+    -   name    : add_delete_traffic
+        testcase: testcases.macvlan.add_delete

@@ -318,7 +318,7 @@ def IsApiResponseOk(resp):
 
 
 # ================================
-# Wrappers for Workload add delete APIs
+# Wrappers for Workload bring up and teardown APIs
 # ================================
 def BringUpWorkloadsRequest():
     req = topo_svc.WorkloadMsg()
@@ -333,7 +333,7 @@ def TeardownWorkloadsRequest():
 def AddWorkloadTeardown(req, workload):
     assert(req.workload_op == topo_svc.DELETE)
     for wl in GetWorkloads():
-        if workload != wl.node_name:
+        if workload.workload_name != wl.workload_name:
             continue
         wl_msg = req.workloads.add()
         wl_msg.workload_name = wl.workload_name
@@ -342,7 +342,7 @@ def AddWorkloadTeardown(req, workload):
 def AddWorkloadBringUp(req, workload):
     assert(req.workload_op == topo_svc.ADD)
     for wl in GetWorkloads():
-        if workload != wl.node_name:
+        if workload.workload_name != wl.workload_name:
             continue
         wl_msg = req.workloads.add()
         wl_msg.ip_prefix = wl.ip_prefix
@@ -360,12 +360,14 @@ def AddWorkloadBringUp(req, workload):
         wl_msg.workload_image = wl.workload_image
 
 def Trigger_BringUpWorkloadsRequest(req):
+    assert(req.workload_op == topo_svc.ADD)
     resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
     if not IsApiResponseOk(resp):
         return types.status.FAILURE
     return types.status.SUCCESS
 
-def Trigger_TriggerWorkloadsRequest(req):
+def Trigger_TeardownWorkloadsRequest(req):
+    assert(req.workload_op == topo_svc.DELETE)
     resp = __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
     if not IsApiResponseOk(resp):
         return types.status.FAILURE

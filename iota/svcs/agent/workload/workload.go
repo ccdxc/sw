@@ -164,6 +164,12 @@ func (app *workloadBase) IsHealthy() bool {
 }
 
 func (app *workloadBase) TearDown() {
+
+	for cmdHandle := range app.bgCmds {
+		app.StopCommand(cmdHandle)
+	}
+
+	app.bgCmds = make(map[string]*Cmd.CommandInfo)
 }
 
 func (app *containerWorkload) BringUp(args ...string) error {
@@ -388,8 +394,8 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 
 	if macAddress != "" {
 		var setMacAddrCmd []string
-		if isFreeBsd() {
-			//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
+		if !isFreeBsd() {
+			//Mac address change only works on linux
 			setMacAddrCmd = []string{"ifconfig", intfToAttach, "hw", "ether", macAddress}
 			if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
 				return "", errors.Wrap(err, stdout)
@@ -474,6 +480,8 @@ func (app *bareMetalMacVlanWorkload) AddInterface(name string, macAddress string
 func (app *bareMetalWorkload) TearDown() {
 	var delVlanCmd []string
 
+	//Stop all bg cmds first
+	app.workloadBase.TearDown()
 	if app.subIF != "" {
 		if isFreeBsd() {
 			delVlanCmd = []string{"ifconfig", app.subIF, "destroy"}
@@ -526,6 +534,7 @@ func (app *bareMetalWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx
 
 	Cmd.StopExecCmd(cmdInfo)
 	time.Sleep(2 * time.Second)
+	delete(app.bgCmds, commandHandle)
 
 	return cmdInfo.Ctx, nil
 }
