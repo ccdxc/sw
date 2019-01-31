@@ -42,6 +42,7 @@ struct phv_ p;
  * Registers reuse, post padding application
  */
 #define r_rl_len                    r_last_blk_len   // rate limit length for SEQ_RATE_LIMIT_...()
+#define r_src_len                   r_last_sgl_p
 
 /*
  * Registers reuse, on compression error
@@ -241,7 +242,7 @@ possible_sgl_pdma_xfer:
 
     // PDMA compressed data and/or update CP header to dest comp buffer
     seq         c3, SEQ_KIVEC5_CP_HDR_UPDATE_EN, 0
-    bbeq.c3     SEQ_KIVEC5_SGL_PDMA_EN, 0, possible_barco_push
+    bbeq.c3     SEQ_KIVEC5_SGL_PDMA_EN, 0, possible_rate_limit
     phvwr.!c6   p.seq_kivec3_pad_len, r0        // delay slot
     bbeq        SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 0, sgl_pdma_xfer_full
     nop
@@ -254,7 +255,7 @@ possible_sgl_pdma_xfer:
     LOAD_TABLE2_FOR_ADDR_PC_IMM(r_last_sgl_p, 
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
                                 storage_seq_comp_sgl_pad_only_xfer)
-    b           possible_barco_push
+    b           possible_rate_limit
     nop
     
 sgl_pdma_xfer_full:
@@ -263,27 +264,44 @@ sgl_pdma_xfer_full:
     LOAD_TABLE1_FOR_ADDR_PC_IMM(SEQ_KIVEC2_SGL_PDMA_DST_ADDR, 
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
                                 storage_seq_comp_sgl_pdma_xfer)
-possible_barco_push:
+possible_rate_limit:
 
     // Use the newly calculated data length for rate limiting, if applicable.
     // General algorithm is as follows:
-    // - if next_db_action_barco_push
-    //     rate_limit_set(pad_en ? data_len + pad_len : data_len)
-    // - else if pdma_xfer_full
-    //     rate_limit_set(pad_en ? data_len + pad_len : data_len)
-    // - else if pdma_pad_only
-    //     rate_limit_set(pad_len)
-    SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5_RATE_LIMIT_EN, c3)
-    SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(c3, SEQ_KIVEC5_DATA_LEN)
+    // - if rate_limit_en
+    //       r_src_len = pad_en ? data_len + pad_len : data_len
+    //       r_rl_len = 0
+    //       - if rate_limit_src_en
+    //             r_rl_len = r_src_len
+    //       - if rate_limit_dst_en
+    //             if pdma_pad_only
+    //                 r_rl_len += pad_len;
+    //             else
+    //                 r_rl_len += r_src_len
+
+    add         r_src_len, SEQ_KIVEC5_DATA_LEN, r0
+    bbeq        SEQ_KIVEC5_RATE_LIMIT_EN, 0, possible_barco_push
+    add.c6      r_src_len, r_src_len, r_pad_len         // delay slot
+
+    SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5_RATE_LIMIT_SRC_EN, c3)
+    SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(c3, r_src_len)
+if1:    
+    bbeq        SEQ_KIVEC5_RATE_LIMIT_DST_EN, 0, endif1
+    SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, c4) // delay slot
+    SEQ_RATE_LIMIT_DATA_LEN_ADD_c(c4, r_pad_len)
+    SEQ_RATE_LIMIT_DATA_LEN_ADD_c(!c4, r_src_len)
+endif1:    
+    SEQ_RATE_LIMIT_SET_c(c0)
     
+possible_barco_push:
+
     // If Barco ring push is applicable, execute table lock read
     // to get the current ring pindex. Note that this must be done
     // in the same stage as storage_seq_barco_entry_handler()
     // which is stage 3.
-    bbeq        SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 0, possible_pdma_rate_limit
-    SEQ_RATE_LIMIT_DATA_LEN_ADD_c(c6, r_pad_len)        // delay slot
-    SEQ_RATE_LIMIT_SET_c(c3)
-
+    bbeq        SEQ_KIVEC5_NEXT_DB_ACTION_BARCO_PUSH, 0, all_dma_complete
+    nop
+    SEQ_METRICS_VAL_SET(seq_hw_bytes, r_src_len)
     LOAD_TABLE_NO_LKUP_PC_IMM(0, storage_seq_barco_ring_pndx_read)
     
 all_dma_complete:
@@ -292,15 +310,6 @@ all_dma_complete:
     DMA_PTR_SETUP_e(dma_p2m_0_dma_cmd_pad,
                     dma_p2m_19_dma_cmd_eop,
                     p4_txdma_intr_dma_cmd_ptr)
-possible_pdma_rate_limit:
-
-    bbeq        SEQ_KIVEC5_SGL_PDMA_EN, 0, all_dma_complete
-    seq         c4, SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 1     // delay slot
-    SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(c4, r_pad_len)
-    SEQ_RATE_LIMIT_SET_c(c3)
-    b           all_dma_complete
-    nop
-
 comp_error:
 
     // If next_db_en and !stop_chain_on_error then ring_db
@@ -318,11 +327,13 @@ possible_chain_alt_desc:
     // On compress error, possibly can still chain using an alternate set of
     // next-in-chain descriptors.
 
+    phvwr	p.seq_kivec5_data_len, r0
     bbeq        SEQ_KIVEC5_CHAIN_ALT_DESC_ON_ERROR, 0, possible_sgl_pdma_alt_src
     sll         r_alt_desc_addr, SEQ_KIVEC4_BARCO_NUM_DESCS, \
                 SEQ_KIVEC4_BARCO_DESC_SIZE      // delay slot
     add         r_alt_desc_addr, r_alt_desc_addr, SEQ_KIVEC4_BARCO_DESC_ADDR
     phvwr       p.seq_kivec4_barco_desc_addr, r_alt_desc_addr
+    phvwr	p.seq_kivec5_data_len, SEQ_KIVEC5_ALT_DATA_LEN
     SEQ_METRICS_SET(alt_descs_taken)
     
 possible_sgl_pdma_alt_src:
@@ -330,8 +341,9 @@ possible_sgl_pdma_alt_src:
     // On compress error, possibly can still do SGL PDMA using an alternate
     // source buffer address.
 
-    bbeq        SEQ_KIVEC5_SGL_PDMA_ALT_SRC_ON_ERROR, 0, possible_barco_push
+    bbeq        SEQ_KIVEC5_SGL_PDMA_ALT_SRC_ON_ERROR, 0, possible_rate_limit
     phvwr	p.comp_hdr_cksum, r0                    // delay slot
+    phvwr	p.seq_kivec5_data_len, SEQ_KIVEC5_ALT_DATA_LEN
     SEQ_METRICS_SET(alt_bufs_taken)
     b           sgl_pdma_xfer_full
     phvwri      p.seq_kivec8_alt_buf_addr_en, 1         // delay slot
@@ -344,6 +356,6 @@ pdma_pad_only_error:
    
    SEQ_METRICS_SET(sgl_pad_only_errs)
    SEQ_COMP_SGL_PDMA_PAD_ONLY_ERROR_TRAP()
-   b            possible_barco_push
+   b            possible_rate_limit
    nop
 

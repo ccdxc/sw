@@ -31,8 +31,10 @@ struct seq_cpdc_push_spec {
 }  __attribute__((__packed__));
 
 struct seq_cpdc_options0 {
-	uint8_t			rsvd0		: 3,
+	uint8_t			rsvd0		: 1,
 				rate_limit_en	: 1,
+				rate_limit_dst_en:1,
+				rate_limit_src_en:1,
 				action_push	: 1,
 				intr_en		: 1,
 				next_db_en	: 1,
@@ -87,7 +89,7 @@ struct seq_cpdc_status_desc1 {
 	uint16_t		hdr_version;
 	uint16_t		rsvd0;
 	struct seq_cpdc_options1 options;
-	uint32_t		rsvd1;
+	uint32_t		alt_data_len;
 }  __attribute__((__packed__));
 
 struct seq_crypto_push_spec {
@@ -100,8 +102,10 @@ struct seq_crypto_push_spec {
 }  __attribute__((__packed__));
 
 struct seq_crypto_options0 {
-	uint8_t			rsvd0           : 3,
+	uint8_t			rsvd0           : 1,
 				rate_limit_en	: 1,
+				rate_limit_dst_en:1,
+				rate_limit_src_en:1,
 				action_push	: 1,
 				intr_en		: 1,
 				next_db_en	: 1,

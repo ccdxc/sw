@@ -11,6 +11,7 @@
 
 #include "pnso_utils.h"
 #include "pnso_chain.h"
+#include "pnso_seq.h"
 
 pnso_error_t
 ring_spec_info_fill(struct sonic_accel_ring *ring,
@@ -573,6 +574,7 @@ svc_batch_seq_desc_setup(struct service_info *svc_info,
 {
 	struct service_batch_info *svc_batch_info;
 	struct batch_page_entry *page_entry;
+	struct service_rate_limit_en rl_en;
 	uint32_t batch_size, remaining;
 
 	svc_batch_info = &svc_info->si_batch_info;
@@ -585,9 +587,16 @@ svc_batch_seq_desc_setup(struct service_info *svc_info,
 	 */
 	if (chn_service_is_starter(svc_info)) {
 		page_entry = svc_batch_info->sbi_page_entry;
-		if (page_entry)
-			page_entry->bpe_data_len +=
-				svc_info->si_seq_info.sqi_data_len;
+		if (page_entry) {
+			page_entry->bpe_src_data_len +=
+				svc_info->si_seq_info.sqi_src_data_len;
+			page_entry->bpe_dst_data_len +=
+				svc_info->si_seq_info.sqi_dst_data_len;
+			svc_rate_limiting_en_eval(svc_info, &rl_en);
+			page_entry->bpe_rate_limit_src_en |= rl_en.rate_limit_src_en;
+			page_entry->bpe_rate_limit_dst_en |= rl_en.rate_limit_dst_en;
+			page_entry->bpe_rate_limit_en |= rl_en.rate_limit_en;
+		}
 	}
 
 	if (svc_batch_info->sbi_desc_idx != 0) {
@@ -641,7 +650,7 @@ svc_seq_desc_setup(struct service_info *svc_info,
 		if (!svc_info->si_seq_info.sqi_desc) {
 			err = EINVAL;
 			OSAL_LOG_DEBUG("failed to setup sequencer desc! num_tags: %d flags: %d err: %d",
-						num_tags, flags, err);
+						num_tags, svc_info->si_flags, err);
 			goto out;
 		}
 	}

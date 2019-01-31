@@ -42,14 +42,16 @@ struct sequencer_desc {
 	uint8_t sd_desc_size;
 	uint8_t sd_pndx_size;
 	uint8_t sd_ring_size;
-	uint8_t rsvd0            : 6,
-		sd_rate_limit_en : 1,
-		sd_batch_mode    : 1;
+	uint8_t rsvd0               : 4,
+		sd_rate_limit_en    : 1,
+		sd_rate_limit_dst_en: 1,
+		sd_rate_limit_src_en: 1,
+		sd_batch_mode       : 1;
 	uint16_t sd_batch_size;
 	uint16_t sd_filler_0;
-	uint32_t sd_data_len;
-	uint32_t sd_filler_1;
-	uint64_t sd_filler_2[2];
+	uint32_t sd_src_data_len;
+	uint32_t sd_dst_data_len;
+	uint64_t sd_filler_1[2];
 } __attribute__((packed));
 
 struct next_db_spec {
@@ -98,6 +100,8 @@ struct cpdc_chain_params_command {
 	uint32_t desc_dlen_update_en:1;
 	uint32_t hdr_version_wr_en:1;
 	uint32_t cp_hdr_update_en:1;
+	uint32_t rate_limit_src_en:1;
+	uint32_t rate_limit_dst_en:1;
 	uint32_t rate_limit_en:1;
 };
 
@@ -121,6 +125,7 @@ struct cpdc_chain_params {
 	uint32_t ccp_intr_data;
 
 	uint32_t ccp_data_len;
+	uint32_t ccp_alt_data_len;
 	uint16_t ccp_status_len;
 	uint16_t ccp_hdr_version;
 
@@ -143,6 +148,8 @@ struct crypto_chain_params_command {
 	uint32_t ccpc_sgl_pdma_en:1;
 	uint32_t ccpc_sgl_pdma_len_from_desc:1;
 	uint32_t ccpc_desc_vec_push_en:1;
+	uint32_t rate_limit_src_en:1;
+	uint32_t rate_limit_dst_en:1;
 	uint32_t rate_limit_en:1;
 };
 
@@ -185,6 +192,7 @@ struct chain_sgl_pdma {
 	struct chain_sgl_pdma_tuple tuple[4];
 	uint64_t                    pad[2];
 } __attribute__((packed));
+
 
 #ifdef __cplusplus
 }

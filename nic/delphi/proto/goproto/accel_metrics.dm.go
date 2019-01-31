@@ -61,6 +61,8 @@ type AccelSeqQueueMetrics struct {
 
 	CpHeaderUpdates metrics.Counter
 
+	SeqHwBytes metrics.Counter
+
 	// private state
 	metrics gometrics.Metrics
 }
@@ -108,6 +110,8 @@ func (mtr *AccelSeqQueueMetrics) Size() int {
 	sz += mtr.LenUpdateReqs.Size()
 
 	sz += mtr.CpHeaderUpdates.Size()
+
+	sz += mtr.SeqHwBytes.Size()
 
 	return sz
 }
@@ -171,6 +175,9 @@ func (mtr *AccelSeqQueueMetrics) Unmarshal() error {
 
 	mtr.CpHeaderUpdates = mtr.metrics.GetCounter(offset)
 	offset += mtr.CpHeaderUpdates.Size()
+
+	mtr.SeqHwBytes = mtr.metrics.GetCounter(offset)
+	offset += mtr.SeqHwBytes.Size()
 
 	return nil
 }
@@ -268,6 +275,11 @@ func (mtr *AccelSeqQueueMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.CpHeaderUpdates.Size()
+
+	if fldName == "SeqHwBytes" {
+		return offset
+	}
+	offset += mtr.SeqHwBytes.Size()
 
 	return offset
 }
@@ -377,6 +389,12 @@ func (mtr *AccelSeqQueueMetrics) SetLenUpdateReqs(val metrics.Counter) error {
 // SetCpHeaderUpdates sets cunter in shared memory
 func (mtr *AccelSeqQueueMetrics) SetCpHeaderUpdates(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("CpHeaderUpdates"))
+	return nil
+}
+
+// SetSeqHwBytes sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetSeqHwBytes(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SeqHwBytes"))
 	return nil
 }
 

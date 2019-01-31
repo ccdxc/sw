@@ -417,7 +417,8 @@ setup_service_param_buffers(struct service_info *svc_info,
 		}
 	}
 
-	svc_info->si_seq_info.sqi_data_len = svc_info->si_src_blist.len;
+	svc_info->si_seq_info.sqi_src_data_len = svc_info->si_src_blist.len;
+	svc_info->si_seq_info.sqi_dst_data_len = svc_info->si_dst_blist.len;
 
 	/*
 	 * Pre-set the "service dependency" data length...As HW operation

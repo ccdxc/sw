@@ -329,6 +329,13 @@ acc_ring_t::seq_desc_fill(dp_mem_t *seq_desc_container,
     seq_desc->acc_desc_size = (uint8_t)log2(desc_size);
     seq_desc->acc_pndx_size = (uint8_t)log2(pi_size);
     seq_desc->acc_ring_size = (uint8_t)log2(ring_size);
+
+    /*
+     * There's really no rate limiting in model but we'll enable all
+     * possible rate limiting modes to exersize P4+ code.
+     */
+    seq_desc->acc_rate_limit_src_en = true;
+    seq_desc->acc_rate_limit_dst_en = true;
     seq_desc->acc_rate_limit_en = true;
 }
 

@@ -169,7 +169,8 @@ struct sequencer_info {
 
 	void *sqi_desc;			/* sequencer descriptor */
 	uint8_t *sqi_status_desc;
-	uint32_t sqi_data_len;
+	uint32_t sqi_src_data_len;
+	uint32_t sqi_dst_data_len;
 
 	uint32_t sqi_hw_dflt_takes;
 	uint32_t sqi_hw_total_takes;
@@ -231,6 +232,12 @@ struct service_cpdc_sgl {
 struct service_crypto_aol {
 	struct crypto_aol  *aol;
 	enum mem_pool_type mpool_type;
+};
+
+struct service_rate_limit_en {
+	bool	rate_limit_src_en;
+	bool	rate_limit_dst_en;
+	bool	rate_limit_en;
 };
 
 struct service_info {
@@ -411,6 +418,12 @@ chn_service_has_interm_status(const struct service_info *svc_info)
 }
 
 static inline bool
+chn_service_has_sgl_pdma(const struct service_info *svc_info)
+{
+	return !!svc_info->si_sgl_pdma;
+}
+
+static inline bool
 chn_service_type_is_cp(const struct service_info *svc_info)
 {
 	return svc_info->si_type == PNSO_SVC_TYPE_COMPRESS;
@@ -502,6 +515,20 @@ chn_service_is_cp_hdr_insert_applic(const struct service_info *svc_info)
 {
 	return chn_service_type_is_cp(svc_info) &&
 	       (svc_info->si_desc_flags & PNSO_CP_DFLAG_INSERT_HEADER);
+}
+
+static inline bool
+chn_service_src_blist_is_host_present(const struct service_info *svc_info)
+{
+	return (svc_info->si_src_blist.type == SERVICE_BUF_LIST_TYPE_HOST) &&
+	       svc_info->si_src_blist.len;
+}
+
+static inline bool
+chn_service_dst_blist_is_host_present(const struct service_info *svc_info)
+{
+	return (svc_info->si_dst_blist.type == SERVICE_BUF_LIST_TYPE_HOST) &&
+	       svc_info->si_dst_blist.len;
 }
 
 uint32_t chn_service_deps_data_len_get(struct service_info *svc_info);

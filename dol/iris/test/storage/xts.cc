@@ -629,8 +629,13 @@ XtsCtx::desc_write_seq_xts_status(chain_params_xts_t& chain_params) {
                                   chain_params.intr_en);
   STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, next_db_action_barco_push,
                                   chain_params.next_db_action_barco_push);
-  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, rate_limit_en, 
-                                  chain_params.rate_limit_en);
+  /*
+   * There's really no rate limiting in model but we'll enable all
+   * possible rate limiting modes to exersize P4+ code.
+   */
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, rate_limit_en, 1);
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, rate_limit_src_en, 1);
+  STORAGE_SEQ_XS_DESC0_SCALAR_SET(desc0_action, rate_limit_dst_en, 1);
   STORAGE_SEQ_XS_DESC0_PACK(seq_status_desc->read(), desc0_action);
 
   // desc bytes 64-127

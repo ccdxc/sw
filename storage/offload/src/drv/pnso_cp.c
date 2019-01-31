@@ -232,6 +232,7 @@ static pnso_error_t
 compress_sub_chain_from_cpdc(struct service_info *svc_info,
 			     struct cpdc_chain_params *cpdc_chain)
 {
+        chain_rate_limiting_set_from_cpdc(svc_info, cpdc_chain);
 	cpdc_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	cpdc_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 
@@ -244,6 +245,7 @@ static pnso_error_t
 compress_sub_chain_from_crypto(struct service_info *svc_info,
 			       struct crypto_chain_params *crypto_chain)
 {
+        chain_rate_limiting_set_from_crypto(svc_info, crypto_chain);
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 

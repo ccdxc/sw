@@ -30,5 +30,5 @@ storage_seq_metrics2_commit:
     
     SEQ_METRICS_TBLADD_c(c3,   len_updates, SEQ_KIVEC9_LEN_UPDATES)
     SEQ_METRICS_TBLADD_c(c3,   cp_header_updates, SEQ_KIVEC9_CP_HEADER_UPDATES)
-    SEQ_METRICS_TBLADD_c_e(c3, xfer_bytes, SEQ_KIVEC9_XFER_BYTES)
+    SEQ_METRICS_TBLADD_c_e(c3, seq_hw_bytes, SEQ_KIVEC9_SEQ_HW_BYTES)
 

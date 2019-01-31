@@ -496,8 +496,13 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
                                     chain_params.intr_en);
     STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, next_db_action_barco_push,
                                     chain_params.next_db_action_barco_push);
-    STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, rate_limit_en, 
-                                    chain_params.rate_limit_en);
+    /*
+     * There's really no rate limiting in model but we'll enable all
+     * possible rate limiting modes to exersize P4+ code.
+     */
+    STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, rate_limit_en, 1);
+    STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, rate_limit_src_en, 1);
+    STORAGE_SEQ_CS_DESC0_SCALAR_SET(desc0_action, rate_limit_dst_en, 1);
     STORAGE_SEQ_CS_DESC0_PACK(seq_status_desc->read(), desc0_action);
 
 
@@ -516,6 +521,8 @@ seq_comp_status_desc_fill(chain_params_comp_t& chain_params)
                                    chain_params.alt_buf_addr);
     STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, data_len, 
                                     chain_params.data_len);
+    STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, alt_data_len, 
+                                    chain_params.alt_data_len);
     STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, pad_boundary_shift, 
                                     chain_params.pad_boundary_shift);
     STORAGE_SEQ_CS_DESC1_SCALAR_SET(desc1_action, stop_chain_on_error, 

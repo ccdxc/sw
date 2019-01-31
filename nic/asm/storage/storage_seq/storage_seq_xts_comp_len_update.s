@@ -25,7 +25,7 @@ struct phv_ p;
 /*
  * Registers reuse, pre calculations
  */
-#define r_rl_len                    r_blk_boundary  // rate limit length for SEQ_RATE_LIMIT_...()
+#define r_rl_len                    r_comp_desc_p   // rate limit length for SEQ_RATE_LIMIT_...()
  
 /*
  * Registers reuse, post calculations
@@ -54,9 +54,16 @@ storage_seq_xts_comp_len_update:
 
     // We're assuming that descriptors submission will follow in a later stage;
     // otherwise there would be no reason to have requested a length update.
-    SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5_RATE_LIMIT_EN, c3)
+
+    SEQ_METRICS_VAL_SET(seq_hw_bytes, r_data_len)
+if3:    
+    bbeq        SEQ_KIVEC5XTS_RATE_LIMIT_EN, 0, endif3
+    SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5XTS_RATE_LIMIT_SRC_EN, c3) // delay slot
     SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(c3, r_data_len)
-    SEQ_RATE_LIMIT_SET_c(c3)
+    SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5XTS_RATE_LIMIT_DST_EN, c4)
+    SEQ_RATE_LIMIT_DATA_LEN_ADD_c(c4, r_data_len)
+    SEQ_RATE_LIMIT_SET_c(c0)
+endif3:
 
     // Preliminary calculations:
     // r_num_blks = (r_data_len + r_blk_boundary - 1) / r_blk_boundary)

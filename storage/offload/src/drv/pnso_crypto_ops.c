@@ -306,7 +306,7 @@ crypto_chain(struct chain_entry *centry)
 			iblist = &svc_info->si_iblist;
 			crypto_chain->ccp_crypto_buf_addr =
 				iblist->blist.buffers[0].buf;
-			if (svc_info->si_sgl_pdma) {
+			if (chn_service_has_sgl_pdma(svc_info)) {
 				crypto_chain->ccp_sgl_pdma_dst_addr =
 					sonic_virt_to_phy(svc_info->si_sgl_pdma);
 				crypto_chain->ccp_cmd.ccpc_sgl_pdma_en = true;
@@ -378,6 +378,7 @@ crypto_sub_chain_from_cpdc(struct service_info *svc_info,
 	cpdc_chain->ccp_cmd.ccpc_aol_pad_en =
 		!!cpdc_chain->ccp_pad_buf_addr;
 
+        chain_rate_limiting_set_from_cpdc(svc_info, cpdc_chain);
 	if (cpdc_chain->ccp_cmd.ccpc_sgl_pdma_en)
 		cpdc_chain->ccp_sgl_vec_addr =
 			cpdc_chain->ccp_aol_dst_vec_addr;
@@ -402,6 +403,7 @@ crypto_sub_chain_from_crypto(struct service_info *svc_info,
 	/*
 	 * For testing purposes, it is possible to chain encrypt to decrypt.
 	 */
+        chain_rate_limiting_set_from_crypto(svc_info, crypto_chain);
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 

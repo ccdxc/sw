@@ -42,12 +42,12 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 	desc->cd_dst = (uint64_t) sonic_virt_to_phy(svc_info->si_dst_sgl.sgl);
 
 	desc->u.cd_bits.cc_enabled = 1;
+	desc->u.cd_bits.cc_integrity_type = CPDC_INTEGRITY_TYPE_DFLT;
+	desc->u.cd_bits.cc_integrity_src = CPDC_INTEGRITY_SRC_DFLT;
+	desc->u.cd_bits.cc_chksum_adler = CPDC_CHKSUM_TYPE_DFLT;
 
 	if (svc_info->si_desc_flags & PNSO_DC_DFLAG_HEADER_PRESENT) {
 		desc->u.cd_bits.cc_header_present = 1;
-		desc->u.cd_bits.cc_integrity_type = CPDC_INTEGRITY_TYPE_DFLT;
-		desc->u.cd_bits.cc_integrity_src = CPDC_INTEGRITY_SRC_DFLT;
-		desc->u.cd_bits.cc_chksum_adler = CPDC_CHKSUM_TYPE_DFLT;
 		if (is_chksum_present_in_header_format(svc_info))
 			desc->u.cd_bits.cc_chksum_verify_enabled = 1;
 	}
@@ -188,6 +188,7 @@ decompress_sub_chain_from_crypto(struct service_info *svc_info,
 		dc_desc->u.cd_bits.cc_src_is_list = true;
 		CPDC_PPRINT_DESC(dc_desc);
 	}
+        chain_rate_limiting_set_from_crypto(svc_info, crypto_chain);
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,

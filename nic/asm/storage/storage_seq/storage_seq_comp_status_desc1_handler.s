@@ -24,7 +24,7 @@ storage_seq_comp_status_desc1_handler_start:
     // Relaunch metrics commit for table 1
     SEQ_METRICS0_TABLE1_COMMIT(SEQ_KIVEC5_SRC_QADDR)
 
-    phvwrpair	p.seq_kivec5_data_len, d.data_len[17:0], \
+    phvwrpair	p.seq_kivec5_data_len, d.data_len[16:0], \
                 p.{seq_kivec5_stop_chain_on_error...seq_kivec5_cp_hdr_update_en}, \
     	        d.{stop_chain_on_error...cp_hdr_update_en}
     phvwr	p.seq_kivec3_comp_buf_addr, d.comp_buf_addr
@@ -63,5 +63,6 @@ else0:
                 p.seq_kivec2_sgl_vec_addr, d.sgl_vec_addr
 endif0:                
     
-    phvwr.e     p.seq_kivec5_pad_buf_addr, d.pad_buf_addr[33:0]
+    phvwrpair.e p.seq_kivec5_pad_buf_addr, d.pad_buf_addr[33:0], \
+                p.seq_kivec5_alt_data_len, d.alt_data_len[16:0]
     phvwr       p.seq_kivec8_alt_buf_addr, d.alt_buf_addr       // delay slot

@@ -176,6 +176,7 @@ chksum_chain(struct chain_entry *centry)
 	pnso_error_t			err = PNSO_OK;
 
 	if (chn_service_has_sub_chain(svc_info)) {
+		cpdc_chain->ccp_data_len = svc_info->si_src_blist.len;
 
 		/*
 		 * If chksum_setup() had created any rmem status, it would have
@@ -223,6 +224,7 @@ chksum_sub_chain_from_cpdc(struct service_info *svc_info,
 	sgl = (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) ?
 		svc_info->si_pb_sgl : svc_info->si_src_sgl.sgl;
 
+        chain_rate_limiting_set_from_cpdc(svc_info, cpdc_chain);
 	err = seq_setup_chksum_chain_params(cpdc_chain, svc_info, chksum_desc,
 			sgl, svc_info->si_num_tags);
 	if (err) {
@@ -245,6 +247,7 @@ static pnso_error_t
 chksum_sub_chain_from_crypto(struct service_info *svc_info,
 			     struct crypto_chain_params *crypto_chain)
 {
+        chain_rate_limiting_set_from_crypto(svc_info, crypto_chain);
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,

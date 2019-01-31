@@ -13,6 +13,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_chain_params.h"
 #include "sonic_dev.h"
+#include "sonic_api_int.h"
 
 #ifdef NDEBUG
 #define SGL_PDMA_PPRINT(d)
@@ -131,5 +132,57 @@ void pprint_chain_sgl_pdma(uint64_t sgl_pa);
 bool putil_is_bulk_desc_in_use(uint16_t flags);
 
 struct per_core_resource *putil_get_per_core_resource(void);
+
+static inline void
+svc_rate_limiting_en_eval(struct service_info *svc_info,
+			  struct service_rate_limit_en *rl_en)
+{
+	rl_en->rate_limit_src_en =
+		sonic_rate_limit_src_en_get() &&
+		chn_service_src_blist_is_host_present(svc_info);
+	rl_en->rate_limit_dst_en =
+		sonic_rate_limit_dst_en_get() &&
+		chn_service_dst_blist_is_host_present(svc_info);
+	rl_en->rate_limit_en =
+		rl_en->rate_limit_src_en || rl_en->rate_limit_dst_en;
+}
+
+static inline void
+chain_rate_limiting_en_eval(struct service_info *svc_info,
+			    struct service_rate_limit_en *rl_en)
+{
+	rl_en->rate_limit_src_en =
+		sonic_chain_rate_limit_src_en_get() &&
+		chn_service_src_blist_is_host_present(svc_info);
+	rl_en->rate_limit_dst_en =
+		sonic_chain_rate_limit_dst_en_get() &&
+		chn_service_dst_blist_is_host_present(svc_info);
+	rl_en->rate_limit_en =
+		rl_en->rate_limit_src_en || rl_en->rate_limit_dst_en;
+}
+
+static inline void
+chain_rate_limiting_set_from_cpdc(struct service_info *svc_info,
+				  struct cpdc_chain_params *cpdc_chain)
+{
+	struct service_rate_limit_en rl_en;
+
+	chain_rate_limiting_en_eval(svc_info, &rl_en);
+	cpdc_chain->ccp_cmd.rate_limit_src_en = rl_en.rate_limit_src_en;
+	cpdc_chain->ccp_cmd.rate_limit_dst_en = rl_en.rate_limit_dst_en;
+	cpdc_chain->ccp_cmd.rate_limit_en = rl_en.rate_limit_en;
+}
+
+static inline void
+chain_rate_limiting_set_from_crypto(struct service_info *svc_info,
+				    struct crypto_chain_params *crypto_chain)
+{
+	struct service_rate_limit_en rl_en;
+
+	chain_rate_limiting_en_eval(svc_info, &rl_en);
+	crypto_chain->ccp_cmd.rate_limit_src_en = rl_en.rate_limit_src_en;
+	crypto_chain->ccp_cmd.rate_limit_dst_en = rl_en.rate_limit_dst_en;
+	crypto_chain->ccp_cmd.rate_limit_en = rl_en.rate_limit_en;
+}
 
 #endif  /* __PNSO_UTILS_H__ */

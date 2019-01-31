@@ -37,7 +37,12 @@ struct batch_page {
 		struct pnso_service_request *bpe_req;
 		struct pnso_service_result *bpe_res;
 		struct service_chain *bpe_chain;
-		uint32_t bpe_data_len;
+		uint32_t bpe_src_data_len;
+		uint32_t bpe_dst_data_len;
+		uint8_t bpe_rate_limit_src_en : 1,
+			bpe_rate_limit_dst_en : 1,
+			bpe_rate_limit_en     : 1,
+			bpe_rsvd              : 5;
 	} bp_entries[MAX_PAGE_ENTRIES];
 };
 

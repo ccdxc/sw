@@ -75,6 +75,7 @@ typedef struct {
     uint64_t intr_addr;		    // MSI-X Interrupt address
     uint32_t intr_data;		    // MSI-X Interrupt data
     uint32_t data_len;		    // Remaining data length of compression buffer
+    uint32_t alt_data_len;	    // Alternate data length of (uncompressed) buffer
     uint16_t status_len;		// Length for status PDMA purposes
     uint16_t hdr_version;           // CP header version
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA

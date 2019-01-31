@@ -190,6 +190,7 @@ hash_sub_chain_from_cpdc(struct service_info *svc_info,
 	sgl = (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) ?
 		svc_info->si_pb_sgl : svc_info->si_src_sgl.sgl;
 
+        chain_rate_limiting_set_from_cpdc(svc_info, cpdc_chain);
 	err = seq_setup_hash_chain_params(cpdc_chain, svc_info, hash_desc,
 			sgl, svc_info->si_num_tags);
 	if (err) {

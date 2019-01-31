@@ -243,7 +243,9 @@
 #define SEQ_KIVEC5_SRC_QADDR                    \
     k.{seq_kivec5_src_qaddr_sbit0_ebit7...seq_kivec5_src_qaddr_sbit32_ebit33}
 #define SEQ_KIVEC5_DATA_LEN                     \
-    k.{seq_kivec5_data_len_sbit0_ebit3...seq_kivec5_data_len_sbit12_ebit15}
+    k.{seq_kivec5_data_len_sbit0_ebit3...seq_kivec5_data_len_sbit12_ebit16}
+#define SEQ_KIVEC5_ALT_DATA_LEN                 \
+    k.{seq_kivec5_alt_data_len_sbit0_ebit2...seq_kivec5_alt_data_len_sbit11_ebit16}
 #define SEQ_KIVEC5_PAD_BUF_ADDR                  \
     k.{seq_kivec5_pad_buf_addr_sbit0_ebit5...seq_kivec5_pad_buf_addr_sbit30_ebit33}
 #define SEQ_KIVEC5_STATUS_DMA_EN                \
@@ -286,11 +288,15 @@
     k.seq_kivec5_cp_hdr_update_en
 #define SEQ_KIVEC5_RATE_LIMIT_EN                \
     k.seq_kivec5_rate_limit_en
+#define SEQ_KIVEC5_RATE_LIMIT_SRC_EN            \
+    k.seq_kivec5_rate_limit_src_en
+#define SEQ_KIVEC5_RATE_LIMIT_DST_EN            \
+    k.seq_kivec5_rate_limit_dst_en
 
 #define SEQ_KIVEC5XTS_SRC_QADDR                 \
     k.{seq_kivec5xts_src_qaddr_sbit0_ebit7...seq_kivec5xts_src_qaddr_sbit32_ebit33}
 #define SEQ_KIVEC5XTS_DATA_LEN                  \
-    k.{seq_kivec5xts_data_len_sbit0_ebit5...seq_kivec5xts_data_len_sbit14_ebit15}
+    k.{seq_kivec5xts_data_len_sbit0_ebit5...seq_kivec5xts_data_len_sbit30_ebit31}
 #define SEQ_KIVEC5XTS_BLK_BOUNDARY_SHIFT        \
     k.seq_kivec5xts_blk_boundary_shift
 #define SEQ_KIVEC5XTS_STATUS_DMA_EN             \
@@ -317,8 +323,12 @@
     k.seq_kivec5xts_sgl_pdma_len_from_desc
 #define SEQ_KIVEC5XTS_DESC_VEC_PUSH_EN          \
     k.seq_kivec5xts_desc_vec_push_en
-#define SEQ_KIVEC5XTE_RATE_LIMIT_EN             \
+#define SEQ_KIVEC5XTS_RATE_LIMIT_EN             \
     k.seq_kivec5xts_rate_limit_en
+#define SEQ_KIVEC5XTS_RATE_LIMIT_SRC_EN         \
+    k.seq_kivec5xts_rate_limit_src_en
+#define SEQ_KIVEC5XTS_RATE_LIMIT_DST_EN         \
+    k.seq_kivec5xts_rate_limit_dst_en
     
 #define SEQ_KIVEC6_AOL_SRC_VEC_ADDR             \
     k.seq_kivec6_aol_src_vec_addr
@@ -379,8 +389,8 @@
     k.seq_kivec9_len_updates
 #define SEQ_KIVEC9_CP_HEADER_UPDATES            \
     k.seq_kivec9_cp_header_updates
-#define SEQ_KIVEC9_XFER_BYTES                   \
-    k.seq_kivec9_xfer_bytes
+#define SEQ_KIVEC9_SEQ_HW_BYTES                 \
+    k.{seq_kivec9_seq_hw_bytes_sbit0_ebit2...seq_kivec9_seq_hw_bytes_sbit27_ebit31}
 
 #define SEQ_KIVEC10_INTR_ADDR                   \
     k.seq_kivec10_intr_addr
@@ -1644,6 +1654,7 @@ _inner_label1:;                                                         \
 
 #define SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(_cf, _data_len)                  \
     add._cf r_rl_len, _data_len, STORAGE_SEQ_RL_UNITS_SCALE_DFLT - 1;   \
+    add.!_cf r_rl_len, r0, r0;                                          \
 
 #define SEQ_RATE_LIMIT_DATA_LEN_ADD_c(_cf, _data_len)                   \
     add._cf r_rl_len, r_rl_len, _data_len;                              \
@@ -1655,7 +1666,7 @@ _inner_label1:;                                                         \
     srl._cf r_rl_len, r_rl_len, STORAGE_SEQ_RL_UNITS_SCALE_SHFT;        \
     phvwr._cf p.p4_intr_packet_len, r_rl_len;                           \
 
-#define SEQ_RATE_LIMIT_LOAD_SET_c(_cf, _data_len, _cf)                  \
+#define SEQ_RATE_LIMIT_LOAD_SET_c(_cf, _data_len)                       \
     SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(_cf, _data_len)                      \
     SEQ_RATE_LIMIT_SET_c(_cf)                                           \
 
