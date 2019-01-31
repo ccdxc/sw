@@ -20,6 +20,9 @@
  * @{
  */
 
+#define OCI_MAX_SECURITY_POLICY                  1024
+#define OCI_MAX_RULES_PER_SECURITY_POLICY        1024
+
 /**
  * @brief rule direction
  */

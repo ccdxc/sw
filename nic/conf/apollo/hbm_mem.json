@@ -37,7 +37,7 @@
         },
         {
             "name": "remote_vnic_mapping_rx",
-            "size": "65536K",
+            "size": "131072K",
             "cache": "p4ig",
             "reset": true
         },
@@ -55,7 +55,7 @@
         },
         {
             "name": "remote_vnic_mapping_tx",
-            "size": "65536K",
+            "size": "131072K",
             "cache": "p4eg",
             "reset": true
         },
