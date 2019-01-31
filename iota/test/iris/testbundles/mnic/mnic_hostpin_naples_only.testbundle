@@ -2,11 +2,12 @@ meta:
     name    : mnichostpin_naples
     os      : [ linux ]
     nics    : [ pensando ]
-    targetcount : 2
+    targetcount : 1
 
 testcases:
     -   name    : ping_inb_mnic0_intf
         testcase: testcases.mnic.ping_inb0
+        disable : True
         ignore: False
         args    :
             mtu: 1500
@@ -16,6 +17,17 @@ testcases:
 
     -   name    : ping_inb_mnic1_intf
         testcase: testcases.mnic.ping_inb1
+        disable : True
+        ignore: False
+        args    :
+            mtu: 1500
+        verifs:
+            #-   step    : verif.operstate.verify_stats_agent
+            #-   step    : verif.operstate.verify_stats_hw
+
+    -   name    : ping_bond0_intf
+        testcase: testcases.mnic.ping_bond0
+        disable : False
         ignore: False
         args    :
             mtu: 1500
