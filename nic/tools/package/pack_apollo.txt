@@ -79,7 +79,7 @@ nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_txdma/p4pd/capri_p4_table_map.json
 # test binaries and libraries
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_scale_test                /nic/bin/
-nic/apollo/test/scale_test/scale_cfg.json                         /nic/conf
+nic/apollo/test/scale/scale_cfg.json                              /nic/conf
 nic/build/$ARCH/$PIPELINE/lib/libocitestutils.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                       /nic/bin/
 

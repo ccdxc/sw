@@ -1,3 +1,13 @@
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This file contains the basic apollo pipeline test case
+///
+//----------------------------------------------------------------------------
+
 #include <stdio.h>
 #include <map>
 #include <iostream>
@@ -26,24 +36,24 @@
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 
-#define ROUTE_LPM_MEM_SIZE  (64 + (16*64) + (16*16*64))
-#define SLACL_LPM_MEM_SIZE  \
-    (SLACL_SPORT_TABLE_SIZE + SLACL_IPV4_TABLE_SIZE + \
+#define ROUTE_LPM_MEM_SIZE (64 + (16 * 64) + (16 * 16 * 64))
+#define SLACL_LPM_MEM_SIZE                                                     \
+    (SLACL_SPORT_TABLE_SIZE + SLACL_IPV4_TABLE_SIZE +                          \
      SLACL_PROTO_DPORT_TABLE_SIZE)
 
 using boost::property_tree::ptree;
 using namespace sdk::platform::utils;
 using namespace sdk::platform::capri;
 
-#define JRXDMA_PRGM     "rxdma_program"
-#define JTXDMA_PRGM     "txdma_program"
-#define JLIFQSTATE      "lif2qstate_map"
-#define JPKTBUFFER      "rxdma_to_txdma_buf"
-#define JSLACLBASE      "slacl"
-#define JLPMV4BASE      "lpm_v4"
-#define JFLOWSTATSBASE  "flow_stats"
+#define JRXDMA_PRGM "rxdma_program"
+#define JTXDMA_PRGM "txdma_program"
+#define JLIFQSTATE "lif2qstate_map"
+#define JPKTBUFFER "rxdma_to_txdma_buf"
+#define JSLACLBASE "slacl"
+#define JLPMV4BASE "lpm_v4"
+#define JFLOWSTATSBASE "flow_stats"
 
-typedef struct __attribute__((__packed__)) lif_qstate_  {
+typedef struct __attribute__((__packed__)) lif_qstate_ {
     uint64_t pc : 8;
     uint64_t rsvd : 8;
     uint64_t cos_a : 4;
@@ -65,10 +75,10 @@ typedef struct __attribute__((__packed__)) lif_qstate_  {
     uint64_t ring0_size : 16;
     uint64_t ring1_size : 16;
 
-    uint8_t  pad[(512-320)/8];
+    uint8_t pad[(512 - 320) / 8];
 } lif_qstate_t;
 
-typedef struct __attribute__((__packed__)) txdma_qstate_  {
+typedef struct __attribute__((__packed__)) txdma_qstate_ {
     uint64_t pc : 8;
     uint64_t rsvd : 8;
     uint64_t cos_a : 4;
@@ -86,90 +96,70 @@ typedef struct __attribute__((__packed__)) txdma_qstate_  {
     uint64_t ring_base : 64;
     uint64_t rxdma_cindex_addr : 64;
 
-    uint8_t  pad[(512-256)/8];
+    uint8_t pad[(512 - 256) / 8];
 } txdma_qstate_t;
 
 uint8_t g_snd_pkt1[] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1,
-    0xC2, 0xC3, 0xC4, 0xC5, 0x81, 0x00, 0x00, 0x64,
-    0x08, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
-    0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0B, 0x0B,
-    0x01, 0x01, 0x0A, 0x0A, 0x01, 0x01, 0x12, 0x34,
-    0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2, 0xB4,
-    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
-    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
-    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
-    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
-    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
-    0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
-    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1, 0xC2, 0xC3, 0xC4,
+    0xC5, 0x81, 0x00, 0x00, 0x64, 0x08, 0x00, 0x45, 0x00, 0x00, 0x5C,
+    0x00, 0x01, 0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0B, 0x0B, 0x01,
+    0x01, 0x0A, 0x0A, 0x01, 0x01, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2,
+    0xB4, 0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73,
+    0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
+    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F,
+    0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
 };
 
 uint8_t g_rcv_pkt1[] = {
-    0x00, 0x12, 0x34, 0x56, 0x78, 0x90, 0x00, 0xAA,
-    0xBB, 0xCC, 0xDD, 0xEE, 0x08, 0x00, 0x45, 0x00,
-    0x00, 0x7C, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
-    0x00, 0x00, 0x64, 0x65, 0x66, 0x67, 0x0C, 0x0C,
-    0x01, 0x01, 0xEE, 0x08, 0x19, 0xEB, 0x00, 0x68,
-    0x00, 0x00, 0x00, 0x0C, 0x81, 0x00, 0x45, 0x00,
-    0x00, 0x5C, 0x00, 0x01, 0x00, 0x00, 0x40, 0x06,
-    0x63, 0x85, 0x0B, 0x0B, 0x01, 0x01, 0x0A, 0x0A,
-    0x01, 0x01, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x02,
-    0x20, 0x00, 0xF2, 0xB4, 0x00, 0x00, 0x61, 0x62,
-    0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A,
-    0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72,
-    0x73, 0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
-    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
-    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70,
-    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A,
-    0x78, 0x79,
+    0x00, 0x12, 0x34, 0x56, 0x78, 0x90, 0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE,
+    0x08, 0x00, 0x45, 0x00, 0x00, 0x7C, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
+    0x00, 0x00, 0x64, 0x65, 0x66, 0x67, 0x0C, 0x0C, 0x01, 0x01, 0xEE, 0x08,
+    0x19, 0xEB, 0x00, 0x68, 0x00, 0x00, 0x00, 0x0C, 0x81, 0x00, 0x45, 0x00,
+    0x00, 0x5C, 0x00, 0x01, 0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0B, 0x0B,
+    0x01, 0x01, 0x0A, 0x0A, 0x01, 0x01, 0x12, 0x34, 0x56, 0x78, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2, 0xB4,
+    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A,
+    0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
+    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
+    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
 };
 
 uint8_t g_snd_pkt2[] = {
-    0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x00, 0x12,
-    0x34, 0x56, 0x78, 0x90, 0x08, 0x00, 0x45, 0x00,
-    0x00, 0x7C, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
-    0xA2, 0x98, 0x0C, 0x0C, 0x01, 0x01, 0x64, 0x65,
-    0x66, 0x67, 0x0C, 0x0D, 0x19, 0xEB, 0x00, 0x68,
-    0xB5, 0x7D, 0x12, 0x34, 0x51, 0x00, 0x45, 0x00,
-    0x00, 0x5C, 0x00, 0x01, 0x00, 0x00, 0x40, 0x06,
-    0x63, 0x85, 0x0A, 0x0A, 0x01, 0x01, 0x0B, 0x0B,
-    0x01, 0x01, 0x56, 0x78, 0x12, 0x34, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x02,
-    0x20, 0x00, 0xF2, 0xB4, 0x00, 0x00, 0x61, 0x62,
-    0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A,
-    0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72,
-    0x73, 0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
-    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
-    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70,
-    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A,
-    0x78, 0x79,
+    0x00, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x00, 0x12, 0x34, 0x56, 0x78, 0x90,
+    0x08, 0x00, 0x45, 0x00, 0x00, 0x7C, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
+    0xA2, 0x98, 0x0C, 0x0C, 0x01, 0x01, 0x64, 0x65, 0x66, 0x67, 0x0C, 0x0D,
+    0x19, 0xEB, 0x00, 0x68, 0xB5, 0x7D, 0x12, 0x34, 0x51, 0x00, 0x45, 0x00,
+    0x00, 0x5C, 0x00, 0x01, 0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0A, 0x0A,
+    0x01, 0x01, 0x0B, 0x0B, 0x01, 0x01, 0x56, 0x78, 0x12, 0x34, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2, 0xB4,
+    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A,
+    0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
+    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
+    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
 };
 
 uint8_t g_rcv_pkt2[] = {
-    0x00, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0x00, 0x01,
-    0x02, 0x03, 0x04, 0x05, 0x81, 0x00, 0x00, 0x64,
-    0x08, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
-    0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0A, 0x0A,
-    0x01, 0x01, 0x0B, 0x0B, 0x01, 0x01, 0x56, 0x78,
-    0x12, 0x34, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2, 0xB4,
-    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
-    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
-    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
-    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
-    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
-    0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
-    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+    0x00, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0x00, 0x01, 0x02, 0x03, 0x04,
+    0x05, 0x81, 0x00, 0x00, 0x64, 0x08, 0x00, 0x45, 0x00, 0x00, 0x5C,
+    0x00, 0x01, 0x00, 0x00, 0x40, 0x06, 0x63, 0x85, 0x0A, 0x0A, 0x01,
+    0x01, 0x0B, 0x0B, 0x01, 0x01, 0x56, 0x78, 0x12, 0x34, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF2,
+    0xB4, 0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73,
+    0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
+    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F,
+    0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
 };
 
 uint64_t g_layer1_smac = 0x00C1C2C3C4C5ULL;
 uint64_t g_layer1_dmac = 0x000102030405ULL;
 uint32_t g_layer1_sip = 0x0B0B0101;
 uint32_t g_layer1_dip = 0x0A0A0101;
-uint8_t  g_layer1_proto = 0x6;
+uint8_t g_layer1_proto = 0x6;
 uint16_t g_layer1_sport = 0x1234;
 uint16_t g_layer1_dport = 0x5678;
 
@@ -190,9 +180,9 @@ uint16_t g_slacl_proto_dport_class_id = 0xAA;
 uint16_t g_slacl_p1_class_id = 0x2BB;
 
 class sort_mpu_programs_compare {
-  public:
-    bool operator() (std::string p1, std::string p2) {
-        std::map <std::string, p4pd_table_properties_t>::iterator it1, it2;
+public:
+    bool operator()(std::string p1, std::string p2) {
+        std::map<std::string, p4pd_table_properties_t>::iterator it1, it2;
         it1 = tbl_map.find(p1);
         it2 = tbl_map.find(p2);
         if ((it1 == tbl_map.end()) || (it2 == tbl_map.end())) {
@@ -209,16 +199,18 @@ class sort_mpu_programs_compare {
         return (tbl_ctx1.stage_tableid < tbl_ctx2.stage_tableid);
     }
     void add_table(std::string tbl_name, p4pd_table_properties_t tbl_ctx) {
-        std::pair <std::string, p4pd_table_properties_t> key_value;
+        std::pair<std::string, p4pd_table_properties_t> key_value;
         key_value = std::make_pair(tbl_name.append(".bin"), tbl_ctx);
         tbl_map.insert(key_value);
     }
-  private:
-    std::map <std::string, p4pd_table_properties_t> tbl_map;
+
+private:
+    std::map<std::string, p4pd_table_properties_t> tbl_map;
 };
 
 static void
-sort_mpu_programs(std::vector <std::string> &programs) {
+sort_mpu_programs (std::vector<std::string> &programs)
+{
     sort_mpu_programs_compare sort_compare;
     for (uint32_t tableid = p4pd_tableid_min_get();
          tableid < p4pd_tableid_max_get(); tableid++) {
@@ -231,22 +223,23 @@ sort_mpu_programs(std::vector <std::string> &programs) {
 }
 
 static void
-init_service_lif() {
-    LIFQState qstate = { 0 };
+init_service_lif ()
+{
+    LIFQState qstate = {0};
     qstate.lif_id = APOLLO_SERVICE_LIF;
     qstate.hbm_address = get_mem_addr(JLIFQSTATE);
     qstate.params_in.type[0].entries = 1;
     qstate.params_in.type[0].size = 1; // 64B
     push_qstate_to_capri(&qstate, 0);
 
-    lif_qstate_t lif_qstate = { 0 };
+    lif_qstate_t lif_qstate = {0};
     lif_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
     lif_qstate.ring0_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
     lif_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
                  sizeof(lif_qstate));
 
-    txdma_qstate_t txdma_qstate = { 0 };
+    txdma_qstate_t txdma_qstate = {0};
     txdma_qstate.rxdma_cindex_addr =
         qstate.hbm_address + offsetof(lif_qstate_t, sw_cindex);
     txdma_qstate.ring_base = get_mem_addr(JPKTBUFFER);
@@ -257,7 +250,8 @@ init_service_lif() {
 }
 
 static uint8_t *
-memrev(uint8_t *block, size_t elnum) {
+memrev (uint8_t *block, size_t elnum)
+{
     uint8_t *s, *t, tmp;
 
     for (s = block, t = s + (elnum - 1); s < t; s++, t--) {
@@ -271,8 +265,8 @@ memrev(uint8_t *block, size_t elnum) {
 static int
 sdk_trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 {
-    char       logbuf[1024];
-    va_list    args;
+    char logbuf[1024];
+    va_list args;
 
     switch (trace_level) {
     case sdk::lib::SDK_TRACE_LEVEL_NONE:
@@ -306,12 +300,13 @@ sdk_trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 }
 
 static uint32_t
-generate_hash_(void *key, uint32_t key_len, uint32_t crc_init_val) {
+generate_hash_ (void *key, uint32_t key_len, uint32_t crc_init_val)
+{
     boost::crc_basic<32> *crc_hash;
     uint32_t hash_val = 0x0;
 
-    crc_hash = new boost::crc_basic<32>(0x04C11DB7, crc_init_val,
-                                        0x00000000, false, false);
+    crc_hash = new boost::crc_basic<32>(0x04C11DB7, crc_init_val, 0x00000000,
+                                        false, false);
     crc_hash->process_bytes(key, key_len);
     hash_val = crc_hash->checksum();
     delete crc_hash;
@@ -319,15 +314,16 @@ generate_hash_(void *key, uint32_t key_len, uint32_t crc_init_val) {
 }
 
 static void
-entry_write(uint32_t tbl_id, uint32_t index, void *key, void *mask,
-            void *data, bool hash_table, uint32_t table_size) {
+entry_write (uint32_t tbl_id, uint32_t index, void *key, void *mask, void *data,
+             bool hash_table, uint32_t table_size)
+{
     if (key || mask) {
         // prepare entry and write hardware
         uint32_t hwkey_len = 0;
         uint32_t hwmask_len = 0;
         uint32_t hwdata_len = 0;
-        uint8_t  *hwkey = NULL;
-        uint8_t  *hwmask = NULL;
+        uint8_t *hwkey = NULL;
+        uint8_t *hwmask = NULL;
         p4pd_hwentry_query(tbl_id, &hwkey_len, &hwmask_len, &hwdata_len);
         hwkey_len = (hwkey_len >> 3) + ((hwkey_len & 0x7) ? 1 : 0);
         hwmask_len = (hwmask_len >> 3) + ((hwmask_len & 0x7) ? 1 : 0);
@@ -342,15 +338,16 @@ entry_write(uint32_t tbl_id, uint32_t index, void *key, void *mask,
             index &= table_size - 1;
         }
         p4pd_entry_write(tbl_id, index, hwkey, hwmask, data);
-        delete [] hwkey;
-        delete [] hwmask;
+        delete[] hwkey;
+        delete[] hwmask;
     } else {
         p4pd_entry_write(tbl_id, index, NULL, NULL, data);
     }
 }
 
 static void
-key_native_init(void) {
+key_native_init (void)
+{
     key_native_swkey_t key;
     key_native_swkey_mask_t mask;
     key_native_actiondata_t data;
@@ -378,7 +375,8 @@ key_native_init(void) {
 }
 
 static void
-key_tunneled_init(void) {
+key_tunneled_init (void)
+{
     key_tunneled_swkey_t key;
     key_tunneled_swkey_mask_t mask;
     key_tunneled_actiondata_t data;
@@ -406,7 +404,8 @@ key_tunneled_init(void) {
 }
 
 static void
-vnic_tx_init() {
+vnic_tx_init ()
+{
     local_vnic_by_vlan_tx_actiondata_t data;
     local_vnic_by_vlan_tx_local_vnic_info_tx_t *local_vnic_info =
         &data.action_u.local_vnic_by_vlan_tx_local_vnic_info_tx;
@@ -436,7 +435,8 @@ vnic_tx_init() {
 }
 
 static void
-vnic_rx_init() {
+vnic_rx_init ()
+{
     local_vnic_by_slot_rx_swkey_t key;
     local_vnic_by_slot_rx_actiondata_t data;
     local_vnic_by_slot_rx_local_vnic_info_rx_t *local_vnic_info =
@@ -461,7 +461,8 @@ vnic_rx_init() {
 }
 
 static void
-egress_vnic_info_init() {
+egress_vnic_info_init ()
+{
     egress_local_vnic_info_rx_actiondata_t data;
     egress_local_vnic_info_rx_egress_local_vnic_info_rx_t *local_vnic_info =
         &data.action_u.egress_local_vnic_info_rx_egress_local_vnic_info_rx;
@@ -479,14 +480,16 @@ egress_vnic_info_init() {
 }
 
 static void
-vnic_init(void) {
+vnic_init (void)
+{
     vnic_tx_init();
     vnic_rx_init();
     egress_vnic_info_init();
 }
 
 static void
-mappings_init(void) {
+mappings_init (void)
+{
     local_ip_mapping_swkey_t key;
     local_ip_mapping_actiondata_t data;
     local_ip_mapping_local_ip_mapping_info_t *mapping_info =
@@ -504,7 +507,8 @@ mappings_init(void) {
 }
 
 static void
-flow_tx_hash_init() {
+flow_tx_hash_init ()
+{
     flow_swkey_t key;
     flow_actiondata_t data;
     flow_flow_hash_t *flow_hash_info = &data.action_u.flow_flow_hash;
@@ -527,10 +531,10 @@ flow_tx_hash_init() {
 }
 
 static void
-flow_tx_info_init() {
+flow_tx_info_init ()
+{
     flow_info_actiondata_t data;
-    flow_info_flow_info_t *flow_info =
-        &data.action_u.flow_info_flow_info;
+    flow_info_flow_info_t *flow_info = &data.action_u.flow_info_flow_info;
     uint32_t tbl_id = P4TBL_ID_FLOW_INFO;
     uint64_t flow_stats_addr;
 
@@ -545,7 +549,8 @@ flow_tx_info_init() {
 }
 
 static void
-flow_rx_hash_init() {
+flow_rx_hash_init ()
+{
     flow_swkey_t key;
     flow_actiondata_t data;
     flow_flow_hash_t *flow_hash_info = &data.action_u.flow_flow_hash;
@@ -568,25 +573,26 @@ flow_rx_hash_init() {
 }
 
 static void
-flow_rx_info_init() {
+flow_rx_info_init ()
+{
     flow_info_actiondata_t data;
-    flow_info_flow_info_t *flow_info =
-        &data.action_u.flow_info_flow_info;
+    flow_info_flow_info_t *flow_info = &data.action_u.flow_info_flow_info;
     uint32_t tbl_id = P4TBL_ID_FLOW_INFO;
     uint64_t flow_stats_addr;
 
     memset(&data, 0, sizeof(data));
     data.action_id = FLOW_INFO_FLOW_INFO_ID;
-    flow_stats_addr = get_mem_addr(JFLOWSTATSBASE) + (g_flow_index+1) * 64;
+    flow_stats_addr = get_mem_addr(JFLOWSTATSBASE) + (g_flow_index + 1) * 64;
     flow_stats_addr -= ((uint64_t)1 << 31);
     memcpy(flow_info->flow_stats_addr, &flow_stats_addr,
            sizeof(flow_info->flow_stats_addr));
 
-    entry_write(tbl_id, g_flow_index+1, NULL, NULL, &data, false, 0);
+    entry_write(tbl_id, g_flow_index + 1, NULL, NULL, &data, false, 0);
 }
 
 static void
-flow_init(void) {
+flow_init (void)
+{
     flow_tx_hash_init();
     flow_tx_info_init();
     flow_rx_hash_init();
@@ -594,7 +600,8 @@ flow_init(void) {
 }
 
 static void
-nexthop_tx_init(void) {
+nexthop_tx_init (void)
+{
     nexthop_tx_actiondata_t data;
     nexthop_tx_nexthop_info_t *nexthop_info =
         &data.action_u.nexthop_tx_nexthop_info;
@@ -613,10 +620,10 @@ nexthop_tx_init(void) {
 }
 
 static void
-tep_tx_init(bool is_udp_tunnel) {
+tep_tx_init (bool is_udp_tunnel)
+{
     tep_tx_actiondata_t data;
-    tep_tx_gre_tep_tx_t *tep_info =
-        &data.action_u.tep_tx_gre_tep_tx;
+    tep_tx_gre_tep_tx_t *tep_info = &data.action_u.tep_tx_gre_tep_tx;
     uint32_t tbl_id = P4TBL_ID_TEP_TX;
     uint32_t index;
 
@@ -638,12 +645,13 @@ tep_tx_init(bool is_udp_tunnel) {
 }
 
 static void
-rewrite_init(void) {
+rewrite_init (void)
+{
 
     uint64_t mytep_ip = 0x64656667; // 100.101.102.103
     uint64_t mytep_mac = 0x00AABBCCDDEE;
 
-    // Program the table constants
+    // program the table constants
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                                                  mytep_ip);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX, mytep_ip);
@@ -654,23 +662,27 @@ rewrite_init(void) {
 }
 
 static void
-trie_mem_init(void) {
+trie_mem_init (void)
+{
     uint64_t data[8];
 
     memset(data, 0xFF, sizeof(data));
     uint64_t lpm_hbm_addr = get_mem_addr(JLPMV4BASE);
     for (uint32_t i = 0; i < ROUTE_LPM_MEM_SIZE; i += sizeof(data)) {
-        sdk::asic::asic_mem_write(lpm_hbm_addr+i, (uint8_t*)data, sizeof(data));
+        sdk::asic::asic_mem_write(lpm_hbm_addr + i, (uint8_t *)data,
+                                  sizeof(data));
     }
 
     uint64_t slacl_hbm_addr = get_mem_addr(JSLACLBASE);
     for (uint32_t i = 0; i < SLACL_LPM_MEM_SIZE; i += sizeof(data)) {
-        sdk::asic::asic_mem_write(slacl_hbm_addr+i, (uint8_t*)data, sizeof(data));
+        sdk::asic::asic_mem_write(slacl_hbm_addr + i, (uint8_t *)data,
+                                  sizeof(data));
     }
 }
 
 static void
-route_init (void) {
+route_init (void)
+{
     uint64_t data;
     uint64_t lpm_base_addr = get_mem_addr(JLPMV4BASE);
     uint16_t offset = 64 + (16 * 64);
@@ -678,11 +690,13 @@ route_init (void) {
     data = 0xFFFF;
     data |= ((uint64_t)htonl((g_layer1_dip & 0xFFFF0000))) << 16;
     data |= ((uint64_t)htons(g_nexthop_index)) << 48;
-    sdk::asic::asic_mem_write(lpm_base_addr+offset, (uint8_t*)&data, sizeof(data));
+    sdk::asic::asic_mem_write(lpm_base_addr + offset, (uint8_t *)&data,
+                              sizeof(data));
 }
 
 static void
-slacl_init (void) {
+slacl_init (void)
+{
     uint64_t data;
     uint8_t c_data[64];
     uint16_t start_bit;
@@ -703,22 +717,24 @@ slacl_init (void) {
     data = 0xFFFF;
     data |= ((uint64_t)htonl((g_layer1_dip & 0xFFFF0000))) << 16;
     data |= ((uint64_t)htons(g_slacl_ip_class_id)) << 48;
-    sdk::asic::asic_mem_write(slacl_ip_addr, (uint8_t*)&data, sizeof(data));
+    sdk::asic::asic_mem_write(slacl_ip_addr, (uint8_t *)&data, sizeof(data));
 
     data = -1;
     data &= ~((uint64_t)0xFFFF);
     data |= ((uint64_t)htons(g_slacl_sport_class_id));
-    sdk::asic::asic_mem_write(slacl_sport_addr, (uint8_t*)&data, sizeof(data));
+    sdk::asic::asic_mem_write(slacl_sport_addr, (uint8_t *)&data, sizeof(data));
 
     data = -1;
     data &= ~(((uint64_t)0xFFFFFFFFFFULL) << 16);
     data |= ((uint64_t)htons(g_slacl_proto_dport_class_id)) << 40;
-    sdk::asic::asic_mem_write(slacl_proto_dport_addr, (uint8_t*)&data, sizeof(data));
+    sdk::asic::asic_mem_write(slacl_proto_dport_addr, (uint8_t *)&data,
+                              sizeof(data));
 
     data = -1;
     data &= ~(((uint64_t)0xFFFFFFFFFFULL) << 16);
     data |= ((uint64_t)htons(g_slacl_proto_dport_class_id)) << 40;
-    sdk::asic::asic_mem_write(slacl_proto_dport_addr, (uint8_t*)&data, sizeof(data));
+    sdk::asic::asic_mem_write(slacl_proto_dport_addr, (uint8_t *)&data,
+                              sizeof(data));
 
     start_bit =
         (((g_slacl_ip_class_id | (g_slacl_sport_class_id << 10)) % 51) * 10);
@@ -737,40 +753,38 @@ slacl_init (void) {
 }
 
 class apollo_test : public ::testing::Test {
-  protected:
+protected:
     apollo_test() {}
     virtual ~apollo_test() {}
     virtual void SetUp() {}
     virtual void TearDown() {}
 };
 
-TEST_F(apollo_test, test1) {
+TEST_F(apollo_test, test1)
+{
     int ret = 0;
     char *default_config_dir = NULL;
     asic_cfg_t cfg;
     sdk::lib::catalog *catalog;
 
-    p4pd_cfg_t p4pd_cfg = {
-        .table_map_cfg_file  = "apollo/capri_p4_table_map.json",
-        .p4pd_pgm_name       = "apollo_p4",
-        .p4pd_rxdma_pgm_name = "apollo_rxdma",
-        .p4pd_txdma_pgm_name = "apollo_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-    p4pd_cfg_t p4pd_rxdma_cfg = {
-        .table_map_cfg_file  = "apollo/capri_rxdma_table_map.json",
-        .p4pd_pgm_name       = "apollo_p4",
-        .p4pd_rxdma_pgm_name = "apollo_rxdma",
-        .p4pd_txdma_pgm_name = "apollo_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
-    p4pd_cfg_t p4pd_txdma_cfg = {
-        .table_map_cfg_file  = "apollo/capri_txdma_table_map.json",
-        .p4pd_pgm_name       = "apollo_p4",
-        .p4pd_rxdma_pgm_name = "apollo_rxdma",
-        .p4pd_txdma_pgm_name = "apollo_txdma",
-        .cfg_path = std::getenv("HAL_CONFIG_PATH")
-    };
+    p4pd_cfg_t p4pd_cfg = {.table_map_cfg_file =
+                               "apollo/capri_p4_table_map.json",
+                           .p4pd_pgm_name = "apollo_p4",
+                           .p4pd_rxdma_pgm_name = "apollo_rxdma",
+                           .p4pd_txdma_pgm_name = "apollo_txdma",
+                           .cfg_path = std::getenv("HAL_CONFIG_PATH")};
+    p4pd_cfg_t p4pd_rxdma_cfg = {.table_map_cfg_file =
+                                     "apollo/capri_rxdma_table_map.json",
+                                 .p4pd_pgm_name = "apollo_p4",
+                                 .p4pd_rxdma_pgm_name = "apollo_rxdma",
+                                 .p4pd_txdma_pgm_name = "apollo_txdma",
+                                 .cfg_path = std::getenv("HAL_CONFIG_PATH")};
+    p4pd_cfg_t p4pd_txdma_cfg = {.table_map_cfg_file =
+                                     "apollo/capri_txdma_table_map.json",
+                                 .p4pd_pgm_name = "apollo_p4",
+                                 .p4pd_rxdma_pgm_name = "apollo_rxdma",
+                                 .p4pd_txdma_pgm_name = "apollo_txdma",
+                                 .cfg_path = std::getenv("HAL_CONFIG_PATH")};
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
 #if SIM
@@ -799,7 +813,8 @@ TEST_F(apollo_test, test1) {
     std::ifstream json_cfg(cfg.cfg_path + hal_conf_file);
     ptree hal_conf;
     read_json(json_cfg, hal_conf);
-    cfg.loader_info_file = hal_conf.get<std::string>("asic.loader_info_file").c_str();
+    cfg.loader_info_file =
+        hal_conf.get<std::string>("asic.loader_info_file").c_str();
 
     default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
     if (default_config_dir) {
@@ -912,14 +927,14 @@ TEST_F(apollo_test, test1) {
         memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
         std::cout << "Testing Host to Switch" << std::endl;
         for (i = 0; i < tcscale; i++) {
-            testcase_begin(tcid, i+1);
+            testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(opkt == epkt);
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
-            testcase_end(tcid, i+1);
+            testcase_end(tcid, i + 1);
         }
     }
 
@@ -931,21 +946,23 @@ TEST_F(apollo_test, test1) {
         memcpy(epkt.data(), g_rcv_pkt2, sizeof(g_rcv_pkt2));
         std::cout << "Testing Switch to Host" << std::endl;
         for (i = 0; i < tcscale; i++) {
-            testcase_begin(tcid, i+1);
+            testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_1);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(opkt == epkt);
                 EXPECT_TRUE(port == TM_PORT_UPLINK_0);
             }
-            testcase_end(tcid, i+1);
+            testcase_end(tcid, i + 1);
         }
     }
     exit_simulation();
 #endif
 }
 
-int main(int argc, char **argv) {
+int
+main (int argc, char **argv)
+{
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
