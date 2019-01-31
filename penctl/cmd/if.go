@@ -97,7 +97,7 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
-	halctlStr := "/nic/bin/halctl debug create interface --encap " + ifEncap + " --substrate-ip " + ifSubIP + " --overlay-ip " + ifOverlayIP + " --mpls-in " + ifMplsIn + " --mpls-out " + fmt.Sprint(ifMplsOut) + " --tunnel-dest-ip " + ifTunnelDestIP + " --source-gw " + ifSourceGw + " --gw-mac " + ifGwMac + " --ingress-bw " + fmt.Sprint(ifIngressBw) + " --egress-bw " + fmt.Sprint(ifEgressBw) + " --name " + ifName
+	halctlStr := "/nic/bin/halctl debug update interface --encap " + ifEncap + " --substrate-ip " + ifSubIP + " --overlay-ip " + ifOverlayIP + " --mpls-in " + ifMplsIn + " --mpls-out " + fmt.Sprint(ifMplsOut) + " --tunnel-dest-ip " + ifTunnelDestIP + " --source-gw " + ifSourceGw + " --gw-mac " + ifGwMac + " --ingress-bw " + fmt.Sprint(ifIngressBw) + " --egress-bw " + fmt.Sprint(ifEgressBw) + " --name " + ifName
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{

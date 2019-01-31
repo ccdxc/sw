@@ -136,13 +136,13 @@ class TunnelObject(base.ConfigObjectBase):
             req_spec.if_tunnel_info.gre_info.destination.v4_addr = self.remote_ep.ipaddrs[0].getnum()
         elif self.encap_type == "MPLS_UDP":
             #import pdb; pdb.set_trace()
-            # Substrate IP (DIPo incoming)
+            # Substrate IP (DIPo incoming decap)/(SIPo outgoing encap)
             req_spec.key_or_handle.interface_id = 3
             req_spec.if_tunnel_info.encap_type = haldefs.interface.IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS
             req_spec.if_tunnel_info.prop_mpls_info.substrate_ip.ip_af = haldefs.common.IP_AF_INET
             req_spec.if_tunnel_info.prop_mpls_info.substrate_ip.v4_addr = self.ltep.getnum() # 64.0.0.2
             
-            # Tunnel dest IP (DIPo outgoing)
+            # Tunnel dest IP (DIPo outgoing encap)
             req_spec.if_tunnel_info.prop_mpls_info.tunnel_dest_ip.ip_af = haldefs.common.IP_AF_INET
             req_spec.if_tunnel_info.prop_mpls_info.tunnel_dest_ip.v4_addr = self.rtep.getnum() # 64.0.0.1
             
