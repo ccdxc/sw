@@ -28,16 +28,17 @@ testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         - networking/connectivity.testbundle
-#        - networking/telemetry.testbundle
+        - networking/upgrade.testbundle
+        - networking/telemetry.testbundle
         - linktest/linktest.testbundle
-#        - aging/aging.testbundle
-#        - alg/alg.testbundle
 #       - firewall/policy.testbundle
+        - aging/aging.testbundle
+        - alg/alg.testbundle
         - firewall/conntrack.testbundle
         - firewall/normalization.testbundle
-#        - linktest/linktest.testbundle
-#       - mnic/mnic_hostpin.testbundle
-#       - mnic/mnic_hostpin_naples_only.testbundle
+        - linktest/linktest.testbundle
+        - mnic/mnic_hostpin.testbundle
+        - mnic/mnic_hostpin_naples_only.testbundle
         - cruds/cruds.testbundle
 
     regression:

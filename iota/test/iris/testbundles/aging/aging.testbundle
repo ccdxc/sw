@@ -75,7 +75,7 @@ testcases:
         iterators:
             type      : nested 
             proto     : [ udp, tcp ]
-            timeout   : [10s, 15s, 70s]
+            timeout   : [15s, 20s, 70s]
         args    :
             type: local_only
 

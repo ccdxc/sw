@@ -37,9 +37,9 @@ def SetupDNSServer(server, stop=False):
 
     if (stop == True):
         api.Trigger_AddCommand(req, node, workload,
-                           "systemctl stop named")
+                           "sudo systemctl stop named")
         api.Trigger_AddCommand(req, node, workload,
-                           "systemctl disable named")
+                           "sudo systemctl disable named")
     else:
         zonefile = dir_path + '/' + "example.com.zone"
         api.Logger.info("fullpath %s" % (zonefile))
@@ -53,15 +53,15 @@ def SetupDNSServer(server, stop=False):
             return None
 
         api.Trigger_AddCommand(req, node, workload,
-                           "yes | cp dnsdir/named.conf /etc/")
+                           "yes | sudo cp dnsdir/named.conf /etc/")
         api.Trigger_AddCommand(req, node, workload,
                            "ex -s -c \'%s/192.168.100.102/%s/g|x\' /etc/named.conf"%("%s", server.ip_address))
         api.Trigger_AddCommand(req, node, workload,
-                           "yes | cp dnsdir/example.com.zone /var/named/")
+                           "yes | sudo cp dnsdir/example.com.zone /var/named/")
         api.Trigger_AddCommand(req, node, workload,
-                           "systemctl start named")
+                           "sudo systemctl start named")
         api.Trigger_AddCommand(req, node, workload,
-                           "systemctl enable named")
+                           "sudo systemctl enable named")
 
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)

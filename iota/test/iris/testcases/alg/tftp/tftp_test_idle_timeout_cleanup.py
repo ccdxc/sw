@@ -28,20 +28,20 @@ def Trigger(tc):
     #tc.cmd_cookies.append("clear session")
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                              "cat tftpdir/tftp_server.txt | grep \"I am the server\"")
+                              "sh -c 'cat tftpdir/tftp_server.txt | grep \'I am the server\' '")
     tc.cmd_cookies.append("Before file transfer client")
 
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                          "cat /var/lib/tftpboot/tftp_client.txt | grep \"I am the client\"")
+                          "sh -c 'cat /var/lib/tftpboot/tftp_client.txt | grep \'I am the client\' '")
     tc.cmd_cookies.append("Before file transfer server")
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "cd tftpdir && tftp -v %s -c put tftp_client.txt" % server.ip_address)
+                           "sh -c 'cd tftpdir && tftp -v %s -c put tftp_client.txt'" % server.ip_address)
     tc.cmd_cookies.append("TFTP put Server: %s(%s) <--> Client: %s(%s)" %\
                            (server.workload_name, server.ip_address, client.workload_name, client.ip_address))
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "cd tftpdir && tftp -v %s -c get tftp_server.txt" % server.ip_address)
+                           "sh -c 'cd tftpdir && tftp -v %s -c get tftp_server.txt'" % server.ip_address)
     tc.cmd_cookies.append("TFTP get Server: %s(%s) <--> Client: %s(%s)" %\
                            (server.workload_name, server.ip_address, client.workload_name, client.ip_address))
 
@@ -63,11 +63,11 @@ def Trigger(tc):
     #tc.cmd_cookies.append("After idle time show flow-gate")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "cat tftpdir/tftp_server.txt | grep \"I am the server\"")
+                           "sh -c 'cat tftpdir/tftp_server.txt | grep \'I am the server\' ' ")
     tc.cmd_cookies.append("After get")
 
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                          "cat /var/lib/tftpboot/tftp_client.txt | grep \"I am the client\"")
+                          "sh -c 'cat /var/lib/tftpboot/tftp_client.txt | grep \'I am the client\' ' ")
     tc.cmd_cookies.append("After put")
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)

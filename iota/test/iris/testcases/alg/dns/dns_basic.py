@@ -19,15 +19,27 @@ def Trigger(tc):
        else:
           client, server = pairs[0]
 
+    SetupDNSServer(server)
+
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
     api.Logger.info("Starting DNS test from %s" % (tc.cmd_descr))
 
-    SetupDNSServer(server)
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
+                           "sudo systemctl start named")
+    tc.cmd_cookies.append("Start Named")
+
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
+                           "sudo systemctl enable named")
+    tc.cmd_cookies.append("Enable Named")
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "echo \"nameserver %s\" | tee -a /etc/resolv.conf"%(server.ip_address))
+                        "sudo rm /etc/resolv.conf")
+    tc.cmd_cookies.append("Remove resolv.conf")
+
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
+                           "sudo echo \'nameserver %s\' | sudo tee -a /etc/resolv.conf"%(server.ip_address))
     tc.cmd_cookies.append("Setup resolv conf")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,

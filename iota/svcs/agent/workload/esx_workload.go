@@ -195,7 +195,10 @@ func (vm *vmESXWorkload) RunCommand(cmd []string, dir string, timeout uint32, ba
 		return cmdInfo.Ctx, "", nil
 	}
 
-	cmdInfo, _ := Cmd.StartSSHBgCommand(vm.sshHandle, runCmd, true)
+	cmdInfo, err := Cmd.StartSSHBgCommand(vm.sshHandle, runCmd, true)
+	if err != nil {
+		return &Cmd.CommandCtx{ExitCode: 1, Stderr: err.Error()}, "", nil
+	}
 	handleKey := vm.genBgCmdHandle()
 	vm.bgCmds[handleKey] = cmdInfo
 

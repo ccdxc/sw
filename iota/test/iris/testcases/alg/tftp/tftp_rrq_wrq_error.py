@@ -30,11 +30,11 @@ def Trigger(tc):
        SetupTFTPClient(w2)
 
        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                           "cat /var/lib/tftpboot/tftp_client.txt | grep \"I am the client\"")
+                           "sh -c 'cat /var/lib/tftpboot/tftp_client.txt | sudo grep \'I am the client\' ' ")
        tc.cmd_cookies.append("Before file transfer server")
 
        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
-                           "cd tftpdir && atftp  -p -l tftp_client.txt -r tftp_client.txt --trace %s" % w1.ip_address)
+                           "sh -c 'cd tftpdir && sudo atftp  -p -l tftp_client.txt -r tftp_client.txt --trace %s'" % w1.ip_address)
        tc.cmd_cookies.append("TFTP put Server: %s(%s) <--> Client: %s(%s)" %\
                            (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address))
 
@@ -47,7 +47,7 @@ def Trigger(tc):
        #tc.cmd_cookies.append("show flow-gate")
  
        api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                           "cat /var/lib/tftpboot/tftp_client.txt | grep \"I am the client\"")
+                           "sh -c 'cat /var/lib/tftpboot/tftp_client.txt | sudo grep \'I am the client\' ' ")
        tc.cmd_cookies.append("After put")
        trig_resp[resp] = api.Trigger(req)
        term_resp[resp] = api.Trigger_TerminateAllCommands(trig_resp[resp])

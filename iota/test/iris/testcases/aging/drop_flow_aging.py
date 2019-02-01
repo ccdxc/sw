@@ -4,6 +4,8 @@ import iota.harness.api as api
 from iota.test.iris.testcases.aging.aging_utils import *
 import pdb
 
+GRACE_TIME = 5
+
 def Setup(tc):
     return api.types.status.SUCCESS
 
@@ -52,6 +54,7 @@ def Trigger(tc):
     tc.config_update_fail = 0
     if (timeout != timetoseconds(tc.iterators.timeout)):
         tc.config_update_fail = 1
+    timeout += GRACE_TIME
 
     cmd_cookie = "iperf -s"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
@@ -100,17 +103,14 @@ def Verify(tc):
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             #This is expected so dont set failure for this case
-            if tc.cmd_cookies[cookie_idx].find("After aging") != -1 and cmd.stdout == '':
+            if tc.cmd_cookies[cookie_idx].find("After aging") != -1 or \
+               tc.cmd_cookies[cookie_idx].find("Before aging") != -1:
                result = api.types.status.SUCCESS
             else:
                result = api.types.status.FAILURE
         if tc.cmd_cookies[cookie_idx].find("clear session") != -1:
            if cmd.stdout != '':
               result = api.types.status.FAILURE
-        elif tc.cmd_cookies[cookie_idx].find("Before aging") != -1:
-           #Session were not established ?
-           if cmd.stdout.find("") == -1:
-               result = api.types.status.FAILURE
         elif tc.cmd_cookies[cookie_idx].find("After aging") != -1:
            #Check if sessions were aged
            if cmd.stdout.find(grep_cmd) != -1:
