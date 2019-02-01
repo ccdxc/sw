@@ -23,16 +23,17 @@ var apiEventTypeMap = map[memdb.EventType]api.EventType{
 // EventPolicyRPCHandler is the event policy RPC handler
 type EventPolicyRPCHandler struct {
 	policyDb *memdb.Memdb
+	logger   log.Logger
 }
 
 // NewEventPolicyRPCHandler returns a event policy RPC server
-func NewEventPolicyRPCHandler(memDb *memdb.Memdb) (*EventPolicyRPCHandler, error) {
-	return &EventPolicyRPCHandler{policyDb: memDb}, nil
+func NewEventPolicyRPCHandler(memDb *memdb.Memdb, logger log.Logger) (*EventPolicyRPCHandler, error) {
+	return &EventPolicyRPCHandler{policyDb: memDb, logger: logger}, nil
 }
 
 // WatchEventPolicy watches the event policy objects on mem DB
 func (e *EventPolicyRPCHandler) WatchEventPolicy(in *api.ObjectMeta, stream emgrpc.EventPolicyAPI_WatchEventPolicyServer) error {
-	rpcLogger.Infof("watch event policy from [%v]", in.Name)
+	e.logger.Infof("watch event policy from [%v]", in.Name)
 
 	// watch for changes
 	watchChan := make(chan memdb.Event, memdb.WatchLen)
@@ -52,11 +53,11 @@ func (e *EventPolicyRPCHandler) WatchEventPolicy(in *api.ObjectMeta, stream emgr
 			}
 			if err := stream.Send(&emgrpc.EventPolicyEvent{EventType: api.EventType_CreateEvent,
 				Policy: eventPolicy}); err != nil {
-				rpcLogger.Errorf("failed to send event policy to %s, error %s", in.GetName(), err)
+				e.logger.Errorf("failed to send event policy to %s, error %s", in.GetName(), err)
 				return err
 			}
 		} else {
-			rpcLogger.Errorf("invalid event policy object from list %+v", obj)
+			e.logger.Errorf("invalid event policy object from list %+v", obj)
 			return fmt.Errorf("invalid event policy object from list")
 		}
 	}
@@ -68,13 +69,13 @@ func (e *EventPolicyRPCHandler) WatchEventPolicy(in *api.ObjectMeta, stream emgr
 		select {
 		case event, ok := <-watchChan:
 			if !ok {
-				rpcLogger.Errorf("[%s] error received from", in.GetName())
+				e.logger.Errorf("[%s] error received from", in.GetName())
 				return fmt.Errorf("invalid event from watch channel")
 			}
 
 			policy, ok := event.Obj.(*monitoring.EventPolicy)
 			if !ok {
-				rpcLogger.Errorf("event policy watch error received from [%s]", in.GetName())
+				e.logger.Errorf("event policy watch error received from [%s]", in.GetName())
 				return fmt.Errorf("watch error")
 			}
 
@@ -87,11 +88,11 @@ func (e *EventPolicyRPCHandler) WatchEventPolicy(in *api.ObjectMeta, stream emgr
 			}
 			if err := stream.Send(&emgrpc.EventPolicyEvent{EventType: apiEventTypeMap[event.EventType],
 				Policy: eventPolicy}); err != nil {
-				rpcLogger.Errorf("failed to send event policy to %s, error %s", in.GetName(), err)
+				e.logger.Errorf("failed to send event policy to %s, error %s", in.GetName(), err)
 				return err
 			}
 		case <-ctx.Done():
-			rpcLogger.Errorf("context canceled from %v, error:%s", in.GetName(), ctx.Err())
+			e.logger.Errorf("context canceled from %v, error:%s", in.GetName(), ctx.Err())
 			return fmt.Errorf("context cancelled")
 		}
 	}

@@ -3,6 +3,7 @@ package alertengine
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -279,9 +280,10 @@ func (a *alertEngineImpl) updateAlertPolicy(meta *api.ObjectMeta, incrementTotal
 
 // createAPIClient helper function to create API server client.
 func (a *alertEngineImpl) createAPIClient() (apiclient.Services, error) {
+	logger := a.logger.WithContext("pkg", fmt.Sprintf("%s-%s", globals.EvtsMgr, "alert-engine-api-client"))
 	client, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-		return apiclient.NewGrpcAPIClient(globals.EvtsMgr, globals.APIServer, a.logger.WithContext("pkg", "evtsmgr-alert-engine"),
-			rpckit.WithBalancer(balancer.New(a.resolverClient)))
+		return apiclient.NewGrpcAPIClient(globals.EvtsMgr, globals.APIServer, logger,
+			rpckit.WithBalancer(balancer.New(a.resolverClient)), rpckit.WithLogger(logger))
 	}, 2*time.Second, maxRetry)
 	if err != nil {
 		a.logger.Errorf("failed to create API client {API server URLs from resolver: %v}, err: %v", a.resolverClient.GetURLs(globals.APIServer), err)

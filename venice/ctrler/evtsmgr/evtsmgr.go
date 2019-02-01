@@ -126,7 +126,7 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 	}
 
 	// create RPC server
-	em.RPCServer, err = rpcserver.NewRPCServer(serverName, serverURL, em.esClient, em.alertEngine, em.memDb)
+	em.RPCServer, err = rpcserver.NewRPCServer(serverName, serverURL, em.esClient, em.alertEngine, em.memDb, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating RPC server")
 	}
@@ -188,13 +188,14 @@ func (em *EventsManager) createEventsElasticTemplate(esClient elastic.ESClient) 
 // watchAPIServerEvents handles alert policy and alert events
 func (em *EventsManager) watchAPIServerEvents(parentCtx context.Context, resolverClient resolver.Interface) error {
 	defer em.wg.Done()
+	logger := em.logger.WithContext("pkg", fmt.Sprintf("%s-%s", globals.EvtsMgr, "api-client"))
 	for {
 		ctx, cancel := context.WithCancel(parentCtx)
 		defer cancel()
 
 		client, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-			return apiclient.NewGrpcAPIClient(globals.EvtsMgr, globals.APIServer, em.logger.WithContext("pkg", "evtsmgr-api-client"),
-				rpckit.WithBalancer(balancer.New(resolverClient)))
+			return apiclient.NewGrpcAPIClient(globals.EvtsMgr, globals.APIServer, logger,
+				rpckit.WithBalancer(balancer.New(resolverClient)), rpckit.WithLogger(logger))
 		}, 2*time.Second, maxRetries)
 		if err != nil {
 			em.logger.Errorf("failed to create API client, err: %v", err)

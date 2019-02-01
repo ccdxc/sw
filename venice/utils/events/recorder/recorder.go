@@ -113,7 +113,7 @@ func NewRecorder(config *Config, logger log.Logger) (events.Recorder, error) {
 	}
 
 	recorder := &recorderImpl{
-		id:          fmt.Sprintf("%s-%s", config.Source.GetNodeName(), config.Source.GetComponent()),
+		id:          fmt.Sprintf("recorder-{%s:%s}", config.Source.GetNodeName(), config.Source.GetComponent()),
 		eventSource: config.Source,
 		eventTypes:  constructEventTypesMap(config.EvtTypes),
 		eventsProxy: &eventsProxy{

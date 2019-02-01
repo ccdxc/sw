@@ -27,13 +27,15 @@ var (
 type EvtsMgrRPCHandler struct {
 	esClient    elastic.ESClient
 	alertEngine alertengine.Interface
+	logger      log.Logger
 }
 
 // NewEvtsMgrRPCHandler returns a events RPC handler
-func NewEvtsMgrRPCHandler(client elastic.ESClient, alertEngine alertengine.Interface) (*EvtsMgrRPCHandler, error) {
+func NewEvtsMgrRPCHandler(client elastic.ESClient, alertEngine alertengine.Interface, logger log.Logger) (*EvtsMgrRPCHandler, error) {
 	evtsMgrRPCHandler := &EvtsMgrRPCHandler{
 		esClient:    client,
 		alertEngine: alertEngine,
+		logger:      logger,
 	}
 
 	return evtsMgrRPCHandler, nil
@@ -55,7 +57,7 @@ func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *evtsapi.E
 		if err := e.esClient.Index(ctx,
 			elastic.GetIndex(globals.Events, event.GetTenant()),
 			indexType, event.GetUUID(), event); err != nil {
-			log.Errorf("error sending event to elastic, err: %v", err)
+			e.logger.Errorf("error sending event to elastic, err: %v", err)
 			return nil, errors.Wrap(err, "error sending event to elastic")
 		}
 	} else {
@@ -72,10 +74,10 @@ func (e *EvtsMgrRPCHandler) SendEvents(ctx context.Context, eventList *evtsapi.E
 		}
 
 		if bulkResp, err := e.esClient.Bulk(ctx, requests); err != nil {
-			log.Errorf("error sending bulk events to elastic, err: %v", err)
+			e.logger.Errorf("error sending bulk events to elastic, err: %v", err)
 			return nil, errors.Wrap(err, "error sending events to elastic")
 		} else if len(bulkResp.Failed()) > 0 {
-			log.Errorf("bulk operation failed on elastic")
+			e.logger.Errorf("bulk operation failed on elastic")
 			return nil, errors.New("bulk operation failed on elastic")
 		}
 	}

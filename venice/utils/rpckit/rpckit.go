@@ -62,6 +62,7 @@ type options struct {
 	customTLSProvider bool              // a flag that indicates that user has explicitly passed in a TLS provider
 	balancer          grpc.Balancer     // Load balance RPCs between available servers (client option)
 	remoteServerName  string            // The name of the server that client is connecting to (client option)
+	logger            log.Logger
 }
 
 // RPCServer contains RPC server state
@@ -152,6 +153,13 @@ func WithRemoteServerName(name string) Option {
 	}
 }
 
+// WithLogger passes the custom logger for RPC server and client
+func WithLogger(logger log.Logger) Option {
+	return func(o *options) {
+		o.logger = logger
+	}
+}
+
 func defaultOptions(mysvcName, role string) *options {
 	return &options{
 		stats:        newStatsMiddleware(mysvcName, role),
@@ -179,28 +187,9 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, error) {
 	var server *grpc.Server
 
-	// some error checking
-	if listenURL == "" {
-		log.Errorf("Requires a URL to listen")
-		return nil, errors.New("Requires a URL to listen")
-	}
-
-	// Start a listener
-	lis, err := net.Listen("tcp", listenURL)
-	if err != nil {
-		log.Errorf("failed to listen to %s: Err %v", listenURL, err)
-		return nil, err
-	}
-	// If started with ":0", listenURL needs to be updated.
-	listenURL = lis.Addr().String()
-
-	lis = tcpKeepAliveListener{lis.(*net.TCPListener)}
-
 	// Create the RPC server instance with default values
 	rpcServer := &RPCServer{
 		mysvcName: mysvcName,
-		listenURL: listenURL,
-		listener:  ListenWrapper(lis),
 		DoneCh:    make(chan error, 2),
 		options:   *defaultOptions(mysvcName, RoleServer),
 	}
@@ -211,6 +200,26 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 			o(&rpcServer.options)
 		}
 	}
+
+	if rpcServer.options.logger == nil {
+		rpcServer.logger = log.WithContext("server", mysvcName)
+	}
+
+	// some error checking
+	if listenURL == "" {
+		rpcServer.logger.Errorf("Requires a URL to listen")
+		return nil, errors.New("Requires a URL to listen")
+	}
+
+	// Start a listener
+	lis, err := net.Listen("tcp", listenURL)
+	if err != nil {
+		rpcServer.logger.Errorf("failed to listen to %s: Err %v", listenURL, err)
+		return nil, err
+	}
+	// If started with ":0", listenURL needs to be updated.
+	rpcServer.listenURL = lis.Addr().String()
+	rpcServer.listener = ListenWrapper(tcpKeepAliveListener{lis.(*net.TCPListener)})
 
 	// add default middlewares
 	if rpcServer.enableStats {
@@ -240,19 +249,19 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 	if rpcServer.options.customTLSProvider == false {
 		tlsProvider, err := GetDefaultTLSProvider(mysvcName)
 		if err != nil {
-			log.Errorf("Failed to instantiate TLS provider. Server name: %s, Err %v", mysvcName, err)
+			rpcServer.logger.Errorf("Failed to instantiate TLS provider. Server name: %s, Err %v", mysvcName, err)
 			rpcServer.Stop()
 			return nil, err
 		}
 		rpcServer.tlsProvider = tlsProvider
 	}
-	log.Infof("Creating new server, name: %v listenURL: %v, TLS: %v", mysvcName, listenURL, rpcServer.tlsProvider != nil)
+	rpcServer.logger.Infof("Creating new server, name: %v listenURL: %v, TLS: %v", mysvcName, listenURL, rpcServer.tlsProvider != nil)
 
 	// get TLS options
 	if rpcServer.tlsProvider != nil {
 		tlsOptions, err := rpcServer.tlsProvider.GetServerOptions(mysvcName)
 		if err != nil {
-			log.Errorf("Failed to retrieve server TLS options. Server name: %s, Err %v", mysvcName, err)
+			rpcServer.logger.Errorf("Failed to retrieve server TLS options. Server name: %s, Err %v", mysvcName, err)
 			rpcServer.Stop()
 			return nil, err
 		}
@@ -262,7 +271,7 @@ func NewRPCServer(mysvcName, listenURL string, opts ...Option) (*RPCServer, erro
 	// save the grpc server instance
 	server = grpc.NewServer(grpcOpts...)
 	if server == nil {
-		log.Errorf("Error creating grpc server")
+		rpcServer.logger.Errorf("Error creating grpc server")
 		rpcServer.Stop()
 		return nil, fmt.Errorf("Error creating grpc server")
 	}
@@ -282,7 +291,7 @@ func (srv *RPCServer) Stop() error {
 
 	// stop the server
 	if srv.GrpcServer != nil {
-		log.Infof("Stopping grpc server %s listening on %s", srv.mysvcName, srv.listenURL)
+		srv.logger.Infof("Stopping grpc server %s listening on %s", srv.mysvcName, srv.listenURL)
 		srv.GrpcServer.Stop()
 		srv.GrpcServer = nil
 	}
@@ -305,7 +314,7 @@ func (srv *RPCServer) run() {
 		grpcServer := srv.GrpcServer
 		listener := srv.listener
 		if grpcServer != nil && listener != nil {
-			log.Infof("gRpc server %s Listening on %s", srv.mysvcName, srv.listenURL)
+			srv.logger.Infof("gRpc server %s Listening on %s", srv.mysvcName, srv.listenURL)
 			srv.Unlock()
 			srv.DoneCh <- grpcServer.Serve(listener)
 			return
@@ -340,17 +349,10 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, error) {
 	grpcOpts := make([]grpc.DialOption, 0)
 
-	// some error checking
-	if remoteURL == "" {
-		log.Errorf("Requires a remote URL to dial")
-		return nil, errors.New("Requires a remote URL to dial")
-	}
-
 	// create RPC client instance
 	rpcClient := &RPCClient{
 		nodeuuid:  factory.nodeuuid,
 		mysvcName: mysvcName,
-		remoteURL: remoteURL,
 		options:   *defaultOptions(mysvcName, RoleClient),
 	}
 
@@ -360,6 +362,17 @@ func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts 
 			o(&rpcClient.options)
 		}
 	}
+
+	if rpcClient.options.logger == nil {
+		rpcClient.logger = log.WithContext("client", mysvcName)
+	}
+
+	// some error checking
+	if remoteURL == "" {
+		rpcClient.logger.Errorf("Requires a remote URL to dial")
+		return nil, errors.New("Requires a remote URL to dial")
+	}
+	rpcClient.remoteURL = remoteURL
 
 	serviceTarget := false // need for a balancer.
 	_, _, err := net.SplitHostPort(remoteURL)
@@ -394,18 +407,18 @@ func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts 
 	if rpcClient.options.customTLSProvider == false {
 		tlsProvider, err := GetDefaultTLSProvider(mysvcName)
 		if err != nil {
-			log.Errorf("Failed to instantiate TLS provider. Service name: %s, remote URL: %v, Err: %v", mysvcName, remoteURL, err)
+			rpcClient.logger.Errorf("Failed to instantiate TLS provider. Service name: %s, remote URL: %v, Err: %v", mysvcName, remoteURL, err)
 			return nil, err
 		}
 		rpcClient.tlsProvider = tlsProvider
 	}
-	log.Infof("Service %v connecting to remoteURL: %v, TLS: %v", mysvcName, remoteURL, rpcClient.tlsProvider != nil)
+	rpcClient.logger.Infof("Service %v connecting to remoteURL: %v, TLS: %v", mysvcName, remoteURL, rpcClient.tlsProvider != nil)
 
 	// Get credentials
 	if rpcClient.tlsProvider != nil {
 		tlsOpt, terr := rpcClient.tlsProvider.GetDialOptions(serverName)
 		if terr != nil {
-			log.Errorf("Failed to get dial options for server %v. Err: %v", mysvcName, terr)
+			rpcClient.logger.Errorf("Failed to get dial options for server %v. Err: %v", mysvcName, terr)
 			return nil, err
 		}
 		grpcOpts = append(grpcOpts, tlsOpt)
@@ -432,13 +445,13 @@ func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts 
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(remoteURL, grpcOpts...)
 	if err != nil {
-		log.Errorf("Service %v could not connect to service %s, URL: %v, err: %v", mysvcName, serverName, remoteURL, err)
+		rpcClient.logger.Errorf("Service %v could not connect to service %s, URL: %v, err: %v", mysvcName, serverName, remoteURL, err)
 		return nil, err
 	}
 
 	rpcClient.ClientConn = conn
 
-	log.Infof("Client %s Connected to %s at %s", mysvcName, serverName, remoteURL)
+	rpcClient.logger.Infof("Client %s Connected to %s at %s", mysvcName, serverName, remoteURL)
 
 	return rpcClient, nil
 }
@@ -451,7 +464,7 @@ func (c *RPCClient) Reconnect() error {
 	if c.ClientConn != nil {
 		err := c.ClientConn.Close()
 		if err != nil {
-			log.Warnf("Error closing old connection during reconnect. Err: %v", err)
+			c.logger.Warnf("Error closing old connection during reconnect. Err: %v", err)
 		}
 		c.ClientConn = nil
 	}
@@ -461,7 +474,7 @@ func (c *RPCClient) Reconnect() error {
 	if c.tlsProvider != nil {
 		opts, err = c.tlsProvider.GetDialOptions(c.options.remoteServerName)
 		if err != nil {
-			log.Errorf("Failed to get dial options for server %v. Err: %v", c.remoteURL, err)
+			c.logger.Errorf("Failed to get dial options for server %v. Err: %v", c.remoteURL, err)
 			return err
 		}
 	} else {
@@ -474,7 +487,7 @@ func (c *RPCClient) Reconnect() error {
 		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(c)),
 		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(c)))
 	if err != nil {
-		log.Errorf("could not connect to %s. Err: %v", c.remoteURL, err)
+		c.logger.Errorf("could not connect to %s. Err: %v", c.remoteURL, err)
 		return err
 	}
 

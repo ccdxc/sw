@@ -1153,13 +1153,14 @@ func TestEventsAlertEngine(t *testing.T) {
 	// make sure the policy status got updated
 	expectedAlertStatus := []struct {
 		policyMeta         *api.ObjectMeta
-		totalHits          int32
+		minTotalHits       int32
+		maxTotalHits       int32
 		openAlerts         int32
 		acknowledgedAlerts int32
 	}{
-		{policyMeta: alertPolicy1.GetObjectMeta(), totalHits: 8, openAlerts: 4, acknowledgedAlerts: 0},
-		{policyMeta: alertPolicy2.GetObjectMeta(), totalHits: 8, openAlerts: 4, acknowledgedAlerts: 0},
-		{policyMeta: alertPolicy3.GetObjectMeta(), totalHits: 0, openAlerts: 0, acknowledgedAlerts: 0}, // no reqs so, there should be no alerts
+		{policyMeta: alertPolicy1.GetObjectMeta(), minTotalHits: 4, maxTotalHits: 8, openAlerts: 4, acknowledgedAlerts: 0},
+		{policyMeta: alertPolicy2.GetObjectMeta(), minTotalHits: 4, maxTotalHits: 8, openAlerts: 4, acknowledgedAlerts: 0},
+		{policyMeta: alertPolicy3.GetObjectMeta(), minTotalHits: 0, maxTotalHits: 0, openAlerts: 0, acknowledgedAlerts: 0}, // no reqs so, there should be no alerts
 	}
 	for _, as := range expectedAlertStatus {
 		AssertEventually(t, func() (bool, interface{}) {
@@ -1169,8 +1170,8 @@ func TestEventsAlertEngine(t *testing.T) {
 				return false, fmt.Sprintf(":%v, err: %v", as.policyMeta.GetName(), err)
 			}
 
-			if res.Status.GetTotalHits() != as.totalHits {
-				return false, fmt.Sprintf("total hits on policy %v expected: %v, obtained: %v", res.GetObjectMeta().GetName(), as.totalHits, res.Status.GetTotalHits())
+			if (res.Status.GetTotalHits() < as.minTotalHits) || (res.Status.GetTotalHits() > as.maxTotalHits) {
+				return false, fmt.Sprintf("total hits on policy %v expected total hits to be between (%v, %v) obtained: %v", res.GetObjectMeta().GetName(), as.minTotalHits, as.maxTotalHits, res.Status.GetTotalHits())
 			}
 
 			if as.openAlerts != res.Status.GetOpenAlerts() {
@@ -1333,7 +1334,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	// policy - 2: convert WARNING events with occurrences = 10 to a WARNING alert and export it to the given alert dest
 	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_WARNING, "alerts from events", []*fields.Requirement{
 		{Key: "severity", Operator: "equals", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)]}},
-		{Key: "count", Operator: "equals", Values: []string{"10"}},
+		{Key: "count", Operator: "gte", Values: []string{"10"}},
 	}, []string{alertDestBSDSyslog.GetName(), alertDestRFC5424Syslog.GetName()})
 	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
@@ -1690,8 +1691,11 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 			func() (bool, interface{}) {
 				m.Lock()
 				defer m.Unlock()
-				return len(expectedMessages) == 0, nil
-			}, fmt.Sprintf("did not receive all the expected syslog messages, pending: %v", len(expectedMessages)), "20ms", "10s")
+				if len(expectedMessages) != 0 {
+					return false, fmt.Sprintf("pending: %v", len(expectedMessages))
+				}
+				return true, nil
+			}, "did not receive all the expected syslog messages", "20ms", "10s")
 
 		close(closeMsgCh)
 	}

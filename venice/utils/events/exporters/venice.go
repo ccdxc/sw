@@ -77,7 +77,7 @@ func NewVeniceExporter(name string, chLen int, evtsMgrURL string, resolverClient
 	veniceExporter := &VeniceExporter{
 		name:   name,
 		chLen:  chLen,
-		logger: logger.WithContext("submodule", fmt.Sprintf("exporter.%s", name)),
+		logger: logger.WithContext("pkg", name),
 		eventsMgr: &eventsMgr{
 			url:            evtsMgrURL,
 			resolverClient: resolverClient,
@@ -236,16 +236,16 @@ func (v *VeniceExporter) initEvtsMgrGrpcClient(maxRetries int) error {
 	var err error
 
 	if !utils.IsEmpty(v.eventsMgr.url) {
-		log.Debug("creating events manager client using URL")
+		v.logger.Debugf("creating events manager client using URL: {%v}", v.eventsMgr.url)
 		client, err = utils.ExecuteWithRetry(func() (interface{}, error) {
-			return rpckit.NewRPCClient(fmt.Sprintf("exporter.%s", v.name), v.eventsMgr.url,
-				rpckit.WithRemoteServerName(globals.EvtsMgr))
+			return rpckit.NewRPCClient(v.name, v.eventsMgr.url, rpckit.WithRemoteServerName(globals.EvtsMgr),
+				rpckit.WithLogger(v.logger))
 		}, 2*time.Second, maxRetries)
 	} else { // use resolver client
-		log.Debug("creating events manager client using resolver")
+		v.logger.Debug("creating events manager client using resolver")
 		client, err = utils.ExecuteWithRetry(func() (interface{}, error) {
-			return rpckit.NewRPCClient(fmt.Sprintf("exporter.%s", v.name), globals.EvtsMgr,
-				rpckit.WithBalancer(balancer.New(v.eventsMgr.resolverClient)), rpckit.WithRemoteServerName(globals.EvtsMgr))
+			return rpckit.NewRPCClient(v.name, globals.EvtsMgr, rpckit.WithBalancer(balancer.New(v.eventsMgr.resolverClient)),
+				rpckit.WithRemoteServerName(globals.EvtsMgr), rpckit.WithLogger(v.logger))
 		}, 2*time.Second, maxRetries)
 	}
 

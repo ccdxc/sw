@@ -204,8 +204,8 @@ func (a *apiSrv) CreateOverlay(tenant, name, base string) (apiintf.CacheInterfac
 	return nil, errors.New("cache not found")
 }
 
-// Run is the eventloop for the API server. Registrations for all the registered services
-//  are completed and a grpc listerner is started to serve the registered services.
+// Run is the event loop for the API server. Registrations for all the registered services
+//  are completed and a grpc listener is started to serve the registered services.
 func (a *apiSrv) Run(config apiserver.Config) {
 	var ctx context.Context
 	var err error
@@ -248,6 +248,9 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		opts = append(opts, rpckit.WithTracerEnabled(false))
 		opts = append(opts, rpckit.WithLoggerEnabled(false))
 		opts = append(opts, rpckit.WithStatsEnabled(false))
+	}
+	if config.Logger != nil {
+		opts = append(opts, rpckit.WithLogger(config.Logger))
 	}
 	// Create the GRPC connection for the server.
 	var s *rpckit.RPCServer

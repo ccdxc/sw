@@ -10,6 +10,7 @@ import (
 	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -37,24 +38,24 @@ func (rs *RPCServer) GetListenURL() string {
 
 // NewRPCServer creates a new instance of events RPC server
 func NewRPCServer(serverName, listenURL string, esclient elastic.ESClient, alertEngine alertengine.Interface,
-	memdb *memdb.MemDb) (*RPCServer, error) {
-	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) || esclient == nil || alertEngine == nil || memdb == nil {
+	memdb *memdb.MemDb, logger log.Logger) (*RPCServer, error) {
+	if utils.IsEmpty(serverName) || utils.IsEmpty(listenURL) || esclient == nil || alertEngine == nil || memdb == nil || logger == nil {
 		return nil, errors.New("all parameters are required")
 	}
 
 	// create a RPC server
-	rpcServer, err := rpckit.NewRPCServer(serverName, listenURL)
+	rpcServer, err := rpckit.NewRPCServer(serverName, listenURL, rpckit.WithLogger(logger))
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating rpc server")
 	}
 
 	// instantiate events handlers which carries the implementation of the service
-	evtsMgrHandler, err := NewEvtsMgrRPCHandler(esclient, alertEngine)
+	evtsMgrHandler, err := NewEvtsMgrRPCHandler(esclient, alertEngine, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating evtsmgr rpc server")
 	}
 
-	evtsPolicyHandler, err := NewEventPolicyRPCHandler(memdb.Memdb)
+	evtsPolicyHandler, err := NewEventPolicyRPCHandler(memdb.Memdb, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating event policy rpc server")
 	}

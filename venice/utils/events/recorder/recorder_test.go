@@ -68,7 +68,7 @@ func createEventsProxy(t *testing.T, proxyURL, eventsStorePath string) (*epgrpc.
 	AssertOk(t, err, "failed to create rpc server")
 
 	// create grpc client
-	rpcClient, err := rpckit.NewRPCClient(globals.EvtsProxy, rpcServer.GetListenURL())
+	rpcClient, err := rpckit.NewRPCClient(globals.EvtsProxy, rpcServer.GetListenURL(), rpckit.WithLogger(logger))
 	AssertOk(t, err, "failed to create rpc client")
 
 	return rpcServer, rpcClient, mockWriter

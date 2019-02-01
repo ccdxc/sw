@@ -47,7 +47,8 @@ var (
 )
 
 // setup helper function creates RPC server and client instances
-func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rpckit.RPCClient, alertengine.Interface, *memdb.MemDb) {
+func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rpckit.RPCClient, alertengine.Interface,
+	*memdb.MemDb, log.Logger) {
 	logger := logger.WithContext("t_name", t.Name())
 	// create elastic mock server
 	ms := mock.NewElasticServer(logger.WithContext("submodule", "elasticsearch-mock-server"))
@@ -84,20 +85,20 @@ func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rp
 	AssertOk(t, err, "failed to create alert engine")
 
 	// create grpc server
-	evtsRPCServer, err := NewRPCServer(globals.EvtsMgr, testServerURL, esClient, alertEngine, memDb)
+	evtsRPCServer, err := NewRPCServer(globals.EvtsMgr, testServerURL, esClient, alertEngine, memDb, logger)
 	AssertOk(t, err, "failed to create rpc server")
 	testServerURL := evtsRPCServer.GetListenURL()
 
 	// create grpc client
-	evtsRPCClient, err := rpckit.NewRPCClient(globals.EvtsMgr, testServerURL)
+	evtsRPCClient, err := rpckit.NewRPCClient(globals.EvtsMgr, testServerURL, rpckit.WithLogger(logger))
 	AssertOk(t, err, "failed to create rpc client")
 
-	return ms, apiServer, evtsRPCServer, evtsRPCClient, alertEngine, memDb
+	return ms, apiServer, evtsRPCServer, evtsRPCClient, alertEngine, memDb, logger
 }
 
 // TestEvtsMgrRPCServer tests events manager server
 func TestEvtsMgrRPCServer(t *testing.T) {
-	mockElasticServer, apiServer, rpcServer, rpcClient, _, _ := setup(t)
+	mockElasticServer, apiServer, rpcServer, rpcClient, _, _, _ := setup(t)
 	defer apiServer.Stop()
 	defer rpcServer.Stop()
 	defer rpcClient.ClientConn.Close()
@@ -161,9 +162,12 @@ func TestEvtsMgrRPCServer(t *testing.T) {
 
 // TestEvtsMgrRPCServerShutdown tests the graceful shutdown
 func TestEvtsMgrRPCServerShutdown(t *testing.T) {
-	mockElasticServer, apiServer, rpcServer, rpcClient, _, _ := setup(t)
+	mockElasticServer, apiServer, rpcServer, rpcClient, _, _, logger := setup(t)
 
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func(mockElasticServer *mock.ElasticServer, apiServer apiserver.Server, rpcServer *RPCServer, rpcClient *rpckit.RPCClient) {
+		defer wg.Done()
 		// buffer to have `Done()` called before the stopping the server
 		time.Sleep(60)
 		rpcClient.ClientConn.Close()
@@ -172,15 +176,16 @@ func TestEvtsMgrRPCServerShutdown(t *testing.T) {
 		apiServer.Stop()
 	}(mockElasticServer, apiServer, rpcServer, rpcClient)
 
-	log.Info("waiting for the shutdown signal")
+	logger.Info("waiting for the shutdown signal")
 	<-rpcServer.Done()
-	log.Infof("server stopped, exiting")
+	logger.Infof("server stopped, exiting")
+	wg.Wait()
 	return
 }
 
 // TestEvtsMgrRPCServerInstantiation tests the RPC server instantiation cases
 func TestEvtsMgrRPCServerInstantiation(t *testing.T) {
-	mockElasticServer, apiServer, rpcServer, rpcClient, alertEngine, policyDb := setup(t)
+	mockElasticServer, apiServer, rpcServer, rpcClient, alertEngine, policyDb, logger := setup(t)
 	defer apiServer.Stop()
 	defer rpcServer.Stop()
 	defer rpcClient.ClientConn.Close()
@@ -189,33 +194,37 @@ func TestEvtsMgrRPCServerInstantiation(t *testing.T) {
 	esClient := &elastic.Client{}
 
 	// empty listenURL name
-	_, err := NewRPCServer(t.Name(), "", esClient, nil, policyDb)
+	_, err := NewRPCServer(t.Name(), "", esClient, nil, policyDb, logger)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 
 	// empty server name
-	_, err = NewRPCServer("", testServerURL, esClient, nil, policyDb)
+	_, err = NewRPCServer("", testServerURL, esClient, nil, policyDb, logger)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 
 	// nil elastic client
-	_, err = NewRPCServer(t.Name(), testServerURL, nil, nil, policyDb)
+	_, err = NewRPCServer(t.Name(), testServerURL, nil, nil, policyDb, logger)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 
 	// nil alert engine
-	_, err = NewRPCServer(t.Name(), testServerURL, esClient, nil, policyDb)
+	_, err = NewRPCServer(t.Name(), testServerURL, esClient, nil, policyDb, logger)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 
 	// empty mem db
-	_, err = NewRPCServer(t.Name(), testServerURL, esClient, alertEngine, nil)
+	_, err = NewRPCServer(t.Name(), testServerURL, esClient, alertEngine, nil, logger)
 	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 
 	// invalid listen-url
-	_, err = NewRPCServer(t.Name(), "invalid-url", esClient, alertEngine, policyDb)
+	_, err = NewRPCServer(t.Name(), "invalid-url", esClient, alertEngine, policyDb, logger)
 	Assert(t, err != nil && strings.Contains(err.Error(), "error creating rpc server"), "expected failure, RPCServer init succeeded")
+
+	// nil logger
+	_, err = NewRPCServer(t.Name(), testServerURL, esClient, alertEngine, policyDb, nil)
+	Assert(t, err != nil && strings.Contains(err.Error(), "all parameters are required"), "expected failure, RPCServer init succeeded")
 }
 
 // TestEventPolicyWatcher tests the events policy watcher
 func TestEventPolicyWatcher(t *testing.T) {
-	mockElasticServer, apiServer, rpcServer, rpcClient, _, policyDb := setup(t)
+	mockElasticServer, apiServer, rpcServer, rpcClient, _, policyDb, logger := setup(t)
 	defer apiServer.Stop()
 	defer rpcServer.Stop()
 	defer rpcClient.ClientConn.Close()
@@ -237,7 +246,7 @@ func TestEventPolicyWatcher(t *testing.T) {
 			if err != nil {
 				break
 			}
-			log.Infof("got event policy watch event {%v}: %v", evt.EventType, evt.Policy)
+			logger.Infof("got event policy watch event {%v}: %v", evt.EventType, evt.Policy)
 			totalPoliciesReceived++
 			if totalPoliciesReceived == numPolicies {
 				return
