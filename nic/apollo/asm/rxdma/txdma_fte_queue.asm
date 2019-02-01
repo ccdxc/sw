@@ -35,7 +35,6 @@ pkt_enqueue:
                      APOLLO_I2E_HDR_SZ)
     phvwr       p.dma_cmd_pkt2mem_dma_cmd_size, r1
     phvwr       p.dma_cmd_pkt2mem_dma_cmd_addr, r2
-    phvwr       p.dma_cmd_pkt2mem_dma_cmd_eop, 0
     phvwr       p.{dma_cmd_pkt2mem_dma_cmd_cache...dma_cmd_pkt2mem_dma_cmd_type}, ( (1 << PKT2MEM_CACHE_ENABLE_SHIFT) | CAPRI_DMA_COMMAND_PKT_TO_MEM)
 
     // use Qid1 to ring door-bell. Qid0 is used as a completionQ between txdma and rxdma
