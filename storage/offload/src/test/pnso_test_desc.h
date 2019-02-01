@@ -185,6 +185,12 @@ enum {
 	VALIDATION_TYPE_MAX
 };
 
+static inline bool validation_is_per_req(uint16_t type)
+{
+	return (type == VALIDATION_RETCODE_COMPARE) ||
+		(type == VALIDATION_DATA_LEN_COMPARE);
+}
+
 enum {
 	COMPARE_TYPE_EQ, /* default */
 	COMPARE_TYPE_NE,
@@ -255,7 +261,8 @@ struct test_testcase {
 	uint16_t sync_mode;
 	uint32_t svc_chain_count;
 	uint32_t svc_chains[MAX_SVC_CHAINS_PER_TESTCASE];
-	struct test_node_list validations;
+	struct test_node_list req_validations;
+	struct test_node_list batch_validations;
 };
 
 #define TEST_ALIAS_MAX_NAME_LEN 32
