@@ -36,11 +36,25 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
-        #- networking/connectivity.testbundle
         - classic_macvlan/basic-sanity.testbundle
+        - networking/connectivity.testbundle
+        - filters/filters.testbundle
+        - multicast/multicast.testbundle
+        - linktest/linktest.testbundle
+        - mnic/mnic_classic.testbundle
+        - linktest/linktest.testbundle
+        #- classic/driver-features-int_mgmt-sanity.testbundle
+        - linktest/linktest.testbundle
+        - classic/driver-features-oob-1g-sanity.testbundle
+        - linktest/linktest.testbundle
+        - classic/driver-features-sanity.testbundle
+        - linktest/linktest.testbundle
+        - penctl/penctl_classic.testbundle
+        - post_diag/post_diag.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
+        - classic/driver-features.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores
