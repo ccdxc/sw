@@ -5,8 +5,8 @@
  *
  * @brief   security policy implementation state
  */
-#if !defined (__SECURITY_POLICY_STATE_HPP__)
-#define __SECURITY_POLICY_STATEHPP__
+#if !defined (__SECURITY_POLICY_STATE_IMPL_HPP__)
+#define __SECURITY_POLICY_IMPL_STATE_HPP__
 
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"

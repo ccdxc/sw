@@ -42,7 +42,7 @@ route_table_impl::factory(oci_route_table_t *oci_route_table) {
 
 /**
  * @brief    release all the s/w state associated with the given
- *           route table instance, if any, and free the memory
+ *           route table impl instance, if any, and free the memory
  * @param[in] impl route table impl instance to be freed
  */
 void
@@ -57,7 +57,7 @@ route_table_impl::destroy(route_table_impl *impl) {
  */
 sdk_ret_t
 route_table_impl::reserve_resources(api_base *api_obj) {
-    uint32_t      lpm_block_id;
+    uint32_t    lpm_block_id;
 
     /**< allocate free lpm slab for this route table */
     if (route_table_impl_db()->route_table_idxr()->alloc(&lpm_block_id) !=
