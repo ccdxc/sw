@@ -439,7 +439,7 @@ Eth::opcode_to_str(enum cmd_opcode opcode)
         CASE(CMD_OPCODE_LIF_INIT);
         CASE(CMD_OPCODE_LIF_RESET);
         CASE(CMD_OPCODE_ADMINQ_INIT);
-        default: return "IONIC_RC_EOPCODE";
+        default: return "DEVCMD_UNKNOWN";
     }
 }
 

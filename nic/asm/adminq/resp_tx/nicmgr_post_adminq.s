@@ -62,7 +62,7 @@ nicmgr_post_adminq_completion:
 
   // DMA adminq completion
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_HOST_PHV2MEM_LIF(_r_ptr, !c2, _r_cq_desc_addr, CAPRI_PHV_START_OFFSET(adminq_comp_desc_status), CAPRI_PHV_END_OFFSET(adminq_comp_desc_rsvd2), k.nicmgr_t0_s2s_lif, r7)
+  DMA_PHV2MEM_LIF(_r_ptr, !c2, d.host_queue, _r_cq_desc_addr, CAPRI_PHV_START_OFFSET(adminq_comp_desc_status), CAPRI_PHV_END_OFFSET(adminq_comp_desc_rsvd2), k.nicmgr_t0_s2s_lif, r7)
   DMA_CMD_NEXT(_r_index)
 
   bcf             [!c2], nicmgr_post_adminq_done

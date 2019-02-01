@@ -1641,6 +1641,7 @@ static int ionic_lif_rss_setup(struct lif *lif)
 	err = ionic_rss_ind_tbl_set(lif, NULL);
 	if (err)
 		goto err_out_free;
+
 	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key);
 	if (err)
 		goto err_out_free;

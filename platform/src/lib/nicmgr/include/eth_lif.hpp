@@ -21,6 +21,9 @@ enum EthQtype {
     ETH_QTYPE_SVC = 7,
 };
 
+#define BIT_MASK(n)                     ((1ULL << n) - 1)
+#define HOST_ADDR(lif, addr)            ((1ULL << 63) | (lif << 52) | (addr))
+
 #define LG2_LIF_STATS_SIZE              10
 #define LIF_STATS_SIZE                  (1 << LG2_LIF_STATS_SIZE)
 
@@ -117,6 +120,7 @@ private:
     uint16_t edma_exp_color;
     uint64_t edma_ring_base;
     uint64_t edma_comp_base;
+    uint64_t edma_buf_base;
     // RSS config
     uint16_t rss_type;
     uint8_t  rss_key[RSS_HASH_KEY_SIZE]; // 40B
