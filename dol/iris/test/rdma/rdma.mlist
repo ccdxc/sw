@@ -859,6 +859,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_RX_READ_FML_RSVD_KEY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_fml_rsvd_key
+        spec    : resp_rx_read_fml_rsvd_key.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_WRITE_ONLY
         enable  : True
         package : test.rdma
