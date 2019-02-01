@@ -32,6 +32,7 @@ const staticIPCmdStr string = "ip addr add "
 const dhcpLeaseFile string = "/tmp/dhclient.lease"
 const dhclientPidFile string = "/tmp/dhclient.pid"
 const dhclientConfPath string = "/etc/dhcp/dhclient.conf"
+const rebootPendingPath string = "/tmp/.reboot_needed"
 
 // IPClient helps to set the IP address of the management interfaces
 type IPClient struct {
@@ -47,6 +48,34 @@ type IPClient struct {
 	controllers  []string
 	hostname     string
 	nmdState     *NMD
+}
+
+func createRebootTmpFile() error {
+	f, err := os.Create(rebootPendingPath)
+	defer f.Close()
+
+	log.Infof("Creating reboot temp file.")
+	return err
+}
+
+func checkRebootTmpExist() bool {
+	log.Infof("Check if reboot tmp file exists.")
+	_, err := os.Stat(rebootPendingPath)
+	if err == nil {
+		return true
+	}
+	return false
+}
+
+func getFileSize(fileName string) int64 {
+	fst, err := os.Stat(fileName)
+
+	if err == nil {
+		log.Infof("Get file size [%v]", fst.Size())
+		return fst.Size()
+	}
+
+	return 0
 }
 
 func createDhclientConf(hostname string) error {
@@ -267,16 +296,19 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 			log.Info("Clearing out old controller IPs in spec.")
 			c.nmdState.config.Spec.Controllers = []string{}
 		}
-		if c.nmdState.config.Status.TransitionPhase == nmd.NaplesStatus_REBOOT_PENDING.String() {
-			// Previously it was set to reboot pending. We need to clear it
-			log.Infof("Clearing out previous reboot pending state.")
-			c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
-			naplesStatus.TransitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_DONE
 
-		} else {
-			log.Infof("Current Transition Phase is %v", c.nmdState.config.Status.TransitionPhase)
-			c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_REBOOT_PENDING.String()
-			naplesStatus.TransitionPhase = delphiProto.NaplesStatus_REBOOT_PENDING
+		if !checkRebootTmpExist() {
+			if c.nmdState.config.Status.TransitionPhase == nmd.NaplesStatus_REBOOT_PENDING.String() {
+				// Previously it was set to reboot pending. We need to clear it
+				log.Infof("Clearing out previous reboot pending state.")
+				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
+				naplesStatus.TransitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_DONE
+			} else if c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String() {
+				log.Infof("Current Transition Phase is %v", c.nmdState.config.Status.TransitionPhase)
+				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_REBOOT_PENDING.String()
+				naplesStatus.TransitionPhase = delphiProto.NaplesStatus_REBOOT_PENDING
+				createRebootTmpFile()
+			}
 		}
 	} else {
 		c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String()
@@ -310,23 +342,25 @@ func (c *IPClient) watchLeaseEvents() {
 		// watch for events
 		case event := <-c.watcher.Events:
 			log.Infof("EVENT! %#v\n", event)
-			controllers, err := readAndParseLease(c.leaseFile)
 
-			if err != nil {
-				return
-			}
+			if event.Op&fsnotify.Write == fsnotify.Write && getFileSize(c.leaseFile) > 0 {
+				controllers, err := readAndParseLease(c.leaseFile)
 
-			if controllers != nil && c.mustTriggerUpdate(controllers) {
-				err = c.updateNaplesStatus(controllers)
 				if err != nil {
 					return
 				}
-			} else {
-				// Vendor specified attributes is nil
-				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
-				log.Infof("Controllers is nil.")
-			}
 
+				if controllers != nil && c.mustTriggerUpdate(controllers) {
+					err = c.updateNaplesStatus(controllers)
+					if err != nil {
+						return
+					}
+				} else {
+					// Vendor specified attributes is nil
+					c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
+					log.Infof("Controllers is nil.")
+				}
+			}
 		// watch for errors
 		case <-c.watcher.Errors:
 			return
@@ -340,8 +374,10 @@ func (c *IPClient) watchLeaseEvents() {
 func (c *IPClient) startDhclient() error {
 	// Update NMD Status
 	//c.nmdState.Lock()
-	log.Info("Starting DHClient")
-	c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_DHCP_SENT.String()
+	log.Infof("Starting DHClient current Transition phase is %v", c.nmdState.config.Status.TransitionPhase)
+	if c.nmdState.config.Status.TransitionPhase == "" {
+		c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_DHCP_SENT.String()
+	}
 	//c.nmdState.Unlock()
 
 	dynamicIPCommandString := getDhclientCommand(c.iface)
