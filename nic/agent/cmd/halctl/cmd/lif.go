@@ -237,10 +237,17 @@ func lifShowSpecHeader() {
 }
 
 func lifShowSpecOneResp(resp *halproto.LifGetResponse) {
-	ifID := fmt.Sprintf("uplink-%d", resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId())
+	ifID := resp.GetSpec().GetPinnedUplinkIfKeyHandle().GetInterfaceId()
+	ifIDStr := ""
+	if ifID >= 128 {
+		ifID -= 128
+		ifIDStr = fmt.Sprintf("uplink-%d", ifID)
+	} else {
+		ifIDStr = "-"
+	}
 	fmt.Printf("%-10d%-20s%-10s%-10v%-10v%-14s%-10v\n",
 		resp.GetSpec().GetKeyOrHandle().GetLifId(),
-		resp.GetSpec().GetName(),
+		strings.ToLower(resp.GetSpec().GetName()),
 		pktfltrToStr(resp.GetSpec().GetPacketFilter()),
 		resp.GetSpec().GetVlanStripEn(),
 		resp.GetSpec().GetVlanInsertEn(),
