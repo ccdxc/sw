@@ -17,6 +17,7 @@
 #include "nic/apollo/api/impl/vnic_impl_state.hpp"
 #include "nic/apollo/api/impl/mapping_impl_state.hpp"
 #include "nic/apollo/api/impl/route_impl_state.hpp"
+#include "nic/apollo/api/impl/security_policy_impl_state.hpp"
 
 namespace impl {
 
@@ -44,13 +45,17 @@ public:
     vnic_impl_state *vnic_impl_db(void) { return vnic_impl_db_; }
     mapping_impl_state *mapping_impl_db(void) { return mapping_impl_db_; }
     route_table_impl_state *route_table_impl_db(void) { return route_table_impl_db_; }
+    security_policy_impl_state *security_policy_impl_db(void) {
+        return security_policy_impl_db_;
+    }
 
 private:
-    apollo_impl_state         *apollo_impl_db_;
-    tep_impl_state            *tep_impl_db_;
-    vnic_impl_state           *vnic_impl_db_;
-    mapping_impl_state        *mapping_impl_db_;
-    route_table_impl_state    *route_table_impl_db_;
+    apollo_impl_state             *apollo_impl_db_;
+    tep_impl_state                *tep_impl_db_;
+    vnic_impl_state               *vnic_impl_db_;
+    mapping_impl_state            *mapping_impl_db_;
+    route_table_impl_state        *route_table_impl_db_;
+    security_policy_impl_state    *security_policy_impl_db_;
 };
 extern oci_impl_state g_oci_impl_state;
 
@@ -82,6 +87,12 @@ static inline route_table_impl_state *
 route_table_impl_db (void)
 {
     return g_oci_impl_state.route_table_impl_db();
+}
+
+static inline security_policy_impl_state *
+security_policy_impl_db(void)
+{
+    return g_oci_impl_state.security_policy_impl_db();
 }
 
 /** * @} */    // end of OCI_IMPL_STATE

@@ -86,11 +86,11 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
             route_table.routes[j].prefix.len = 24;
             route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
             route_table.routes[j].prefix.addr.addr.v4_addr =
-                (route_pfx->addr.addr.v4_addr & 0xFF000000) | (j << 16);
+                (route_pfx->addr.addr.v4_addr & 0xFF000000) | (j << 8);
             route_table.routes[j].nh_ip.af = IP_AF_IPV4;
             route_table.routes[j].nh_ip.addr.v4_addr =
                 tep_pfx->addr.addr.v4_addr + tep_offset++;
-            tep_offset %= num_teps;
+            tep_offset %= num_teps + 2;
             if (tep_offset == 0) {
                 // skip MyTEP and gateway IPs
                 tep_offset += 3;
@@ -222,9 +222,9 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
 static void
 create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
 {
-    sdk_ret_t       rv;
-    oci_subnet_t    oci_subnet;
-    uint32_t        route_table_id = 1;
+    sdk_ret_t          rv;
+    oci_subnet_t       oci_subnet;
+    static uint32_t    route_table_id = 1;
 
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&oci_subnet, 0, sizeof(oci_subnet));

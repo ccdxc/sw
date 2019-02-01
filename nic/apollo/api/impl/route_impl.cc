@@ -42,7 +42,7 @@ route_table_impl::factory(oci_route_table_t *oci_route_table) {
 
 /**
  * @brief    release all the s/w state associated with the given
- *           route table instance, if any, and free the memory
+ *           route table impl instance, if any, and free the memory
  * @param[in] impl route table impl instance to be freed
  */
 void
@@ -57,7 +57,7 @@ route_table_impl::destroy(route_table_impl *impl) {
  */
 sdk_ret_t
 route_table_impl::reserve_resources(api_base *api_obj) {
-    uint32_t      lpm_block_id;
+    uint32_t    lpm_block_id;
 
     /**< allocate free lpm slab for this route table */
     if (route_table_impl_db()->route_table_idxr()->alloc(&lpm_block_id) !=
@@ -120,6 +120,11 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         tep = tep_db()->tep_find(&tep_key);
         SDK_ASSERT(tep != NULL);
         rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
+        OCI_TRACE_DEBUG("Processing route table %u, route %s -> nh %u, TEP %s",
+                        route_table_info->key.id,
+                        ippfx2str(&rtable->routes[i].prefix),
+                        rtable->routes[i].nhid,
+                        ipv4addr2str(tep->ip()));
     }
     ret = lpm_tree_create(rtable, lpm_root_addr_,
                           route_table_impl_db()->lpm_table_size());
