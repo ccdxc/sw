@@ -113,6 +113,13 @@ var _ = Describe("cluster tests", func() {
 			}, 20, 2).Should(BeTrue(), "Services except filebeat,pen-kubeapiserver should be same after leader change")
 
 			validateCluster()
+
+			// Since we just switched over the cluster, the connections to old master node are dropped.
+			// Hence create new client for use in further tests
+			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
+			ts.restSvc, err = apiclient.NewRestAPIClient(apiGwAddr)
+			Expect(err).ShouldNot(HaveOccurred())
+
 		})
 	})
 })
