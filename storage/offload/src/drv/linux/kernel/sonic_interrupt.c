@@ -112,24 +112,31 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 		   struct sonic_work_data *work, int *used_count)
 {
 	struct sonic_db_data *db_data;
-	uint32_t id, first_id;
+	uint32_t id, first_id, wrap_size;
 	uint32_t loop_count = 0;
 	uint32_t fired;
 	uint64_t usr_data;
 	int found = 0;
 	int found_zero_data = 0;
 	unsigned long irqflags;
+	bool b_wrapped = false;
 
 	spin_lock_irqsave(&evl->inuse_lock, irqflags);
 	first_id = evl->next_used_evid;
-	while (loop_count < budget) {
+	wrap_size = evl->size_ev_bmp;
+	while (!found || loop_count < budget) {
 		loop_count++;
-		id = find_next_bit(evl->inuse_evid_bmp, evl->size_ev_bmp,
+
+		id = find_next_bit(evl->inuse_evid_bmp, wrap_size,
 				   evl->next_used_evid);
-		if (id >= evl->size_ev_bmp) {
+		if (id >= wrap_size) {
+			if (b_wrapped)
+				break; /* deja vu */
 			id = find_first_bit(evl->inuse_evid_bmp, first_id);
 			if (id >= first_id)
 				break;
+			wrap_size = first_id;
+			b_wrapped = true;
 		}
 		evl->next_used_evid = id + 1;
 		db_data = sonic_intr_db_primed_usr_data_get(evl, id, &usr_data);
