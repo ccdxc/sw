@@ -99,6 +99,18 @@ SDK_DEFINE_ENUM(tm_port_type_e, TM_PORT_TYPES)
 SDK_DEFINE_ENUM(tm_hbm_fifo_type_e, TM_HBM_FIFO_TYPES)
 #undef TM_HBM_FIFO_TYPES
 
+typedef struct qos_profile_s {
+    bool sw_init_enable;
+    bool sw_cfg_write_enable;
+    uint32_t jumbo_mtu;
+    uint32_t num_uplink_qs;
+    uint32_t num_p4ig_qs;
+    uint32_t num_p4eg_qs;
+    uint32_t num_dma_qs;
+    uint32_t num_p4_high_perf_qs;
+    int32_t  p4_high_perf_qs[2];
+} qos_profile_t;
+
 static inline bool
 capri_tm_q_valid (tm_q_t tm_q)
 {

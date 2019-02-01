@@ -324,65 +324,8 @@
 
     "qos" :
     {
-        "profile" :
-        {
-            "sw_init_enable" : true,
-            "sw_cfg_write_enable" : true,
-            "jumbo_mtu" : 9216,
-            "num_uplink_qs" : 8,
-            "num_p4ig_qs" : 25,
-            "num_p4eg_qs" : 27,
-            "num_dma_qs" : 16,
-            "p4_high_perf_qs" : [0, 24]
-        },
         "configs" :
         {
-            "qos_class" :
-            {
-                "request" :
-                [
-                    {
-                        "key_or_handle" : { "qos_group" : "DEFAULT" },
-                        "mtu" : 9216,
-                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
-                    },
-                    {
-                        "key_or_handle" : { "qos_group" : "CONTROL" },
-                        "mtu" : 9216,
-                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
-                    },
-                    {
-                        "key_or_handle" : { "qos_group" : "SPAN" },
-                        "mtu" : 9216,
-                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
-                    },
-                    {
-                        "key_or_handle" : { "qos_group" : "INTERNAL_RX_PROXY_NO_DROP" },
-                        "mtu" : 9216,
-                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
-                    },
-                    {
-                        "key_or_handle" : { "qos_group" : "INTERNAL_RX_PROXY_DROP" },
-                        "mtu" : 9216,
-                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
-                    },
-                    {
-                        "key_or_handle" : { "qos_group" : "INTERNAL_TX_PROXY_NO_DROP" },
-                        "mtu" : 9216,
-                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
-                    },
-                    {
-                        "key_or_handle" : { "qos_group" : "INTERNAL_TX_PROXY_DROP" },
-                        "mtu" : 9216,
-                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
-                    },
-                    {
-                        "key_or_handle" : { "qos_group" : "INTERNAL_CPU_COPY" },
-                        "mtu" : 9216,
-                        "sched" : { "dwrr" : { "bw_percentage" : 50 } }
-                    }
-                ]
-            },
             "copp" :
             {
                 "request" :

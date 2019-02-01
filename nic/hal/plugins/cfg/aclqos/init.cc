@@ -44,28 +44,28 @@ svc_reg (ServerBuilder *server_builder, hal::hal_feature_set_t feature_set)
 static hal_ret_t
 hal_qos_config_init (hal_cfg_t *hal_cfg)
 {
-    hal_ret_t          ret = HAL_RET_OK;
-    sdk_ret_t          sdk_ret;
-    QosClassRequestMsg qos_class_request;
+    hal_ret_t          ret     = HAL_RET_OK;
+    sdk_ret_t          sdk_ret = SDK_RET_OK;
     QosClassResponse   qos_class_rsp;
     CoppRequestMsg     copp_request;
     CoppResponse       copp_rsp;
+    int                max_default_qos_class = 8;
+    QosClassSpec       spec;
+
+    kh::QosGroup qos_group[max_default_qos_class] = {
+                            kh::QosGroup::DEFAULT,
+                            kh::QosGroup::CONTROL,
+                            kh::QosGroup::SPAN,
+                            kh::QosGroup::INTERNAL_RX_PROXY_NO_DROP,
+                            kh::QosGroup::INTERNAL_RX_PROXY_DROP,
+                            kh::QosGroup::INTERNAL_TX_PROXY_NO_DROP,
+                            kh::QosGroup::INTERNAL_TX_PROXY_DROP,
+                            kh::QosGroup::INTERNAL_CPU_COPY };
 
     hal::hal_cfg_db_open(CFG_OP_WRITE);
 
     // Qos class
-    std::string qos_class_configs;
     std::string copp_configs;
-
-    sdk_ret = sdk::lib::catalog::get_child_str(hal_cfg->catalog_file,
-                                               "qos.configs.qos_class",
-                                               qos_class_configs);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Error getting qos_class configs from catalog: ret {}",
-                      ret);
-        goto end;
-    }
 
     sdk_ret = sdk::lib::catalog::get_child_str(hal_cfg->catalog_file,
                                                "qos.configs.copp",
@@ -76,10 +76,12 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
         goto end;
     }
 
-    google::protobuf::util::JsonStringToMessage(qos_class_configs,
-                                                &qos_class_request);
-    for (int i = 0; i < qos_class_request.request_size(); i++) {
-        auto spec = qos_class_request.request(i);
+    for (int i = 0; i < max_default_qos_class; i++) {
+
+        spec.mutable_key_or_handle()->set_qos_group(qos_group[i]);
+        spec.set_mtu(9216);
+        spec.mutable_sched()->mutable_dwrr()->set_bw_percentage(50);
+
         ret = qosclass_create(spec, &qos_class_rsp);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS)) {
             HAL_TRACE_ERR("Error  creating qos class ret: {}",

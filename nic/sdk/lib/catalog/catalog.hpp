@@ -91,18 +91,6 @@ typedef struct catalog_asic_s {
     catalog_asic_port_t ports[MAX_ASIC_PORTS];
 } catalog_asic_t;
 
-typedef struct qos_profile_s {
-    bool sw_init_enable;
-    bool sw_cfg_write_enable;
-    uint32_t jumbo_mtu;
-    uint32_t num_uplink_qs;
-    uint32_t num_p4ig_qs;
-    uint32_t num_p4eg_qs;
-    uint32_t num_dma_qs;
-    int32_t  *p4_high_perf_qs;
-    uint32_t num_p4_high_perf_qs;
-} qos_profile_t;
-
 typedef struct aacs_info_s {
     uint8_t                  server_en;                         // enable aacs server
     uint8_t                  connect;                           // connect to aacs server
@@ -123,7 +111,6 @@ typedef struct catalog_s {
     catalog_asic_t           asics[MAX_ASICS];                  // per asic information
     catalog_uplink_port_t    uplink_ports[MAX_UPLINK_PORTS];    // per port information
     catalog_fp_port_t        fp_ports[MAX_FP_PORTS];            // per port information
-    qos_profile_t            qos_profile;                       // qos asic profile
     mac_profile_t            mac_profiles[MAC_MODE_MAX];        // MAC profiles
     mac_profile_t            mgmt_mac_profiles[MAC_MODE_MAX];   // MGMT MAC profiles
 
@@ -233,9 +220,6 @@ public:
 
     uint64_t cores_mask (void) const { return catalog_db_.cores_mask; }
 
-    const qos_profile_t* qos_profile(void) { return &catalog_db_.qos_profile; }
-    bool qos_sw_init_enabled(void) { return catalog_db_.qos_profile.sw_init_enable; }
-
 private:
     catalog_t    catalog_db_;   // whole catalog database
 
@@ -280,9 +264,6 @@ private:
     port_breakout_mode_t parse_breakout_mode(std::string);
 
     catalog_uplink_port_t *uplink_port(uint32_t port);
-
-    // populate qos asic profile
-    sdk_ret_t populate_qos_profile(ptree &prop_tree);
 
     sdk_ret_t populate_mac_profile(mac_profile_t *mac_profile,
                                    std::string   str,

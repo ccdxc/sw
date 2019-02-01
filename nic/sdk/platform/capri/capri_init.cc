@@ -35,7 +35,7 @@ class capri_state_pd *g_capri_state_pd;
 /* capri_default_config_init
  * Load any bin files needed for initializing default configs
  */
-static sdk_ret_t
+sdk_ret_t
 capri_default_config_init (capri_cfg_t *cfg)
 {
     sdk_ret_t   ret = SDK_RET_OK;
@@ -58,7 +58,7 @@ capri_default_config_init (capri_cfg_t *cfg)
 
         ret = capri_load_config((char *)full_path.c_str());
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "Error loading init phase {} binaries ret {}",
+                                "Error loading init phase %d binaries ret %d",
                                 i, ret);
 
         // Now do any polling for init complete for this phase
@@ -445,15 +445,9 @@ capri_init (capri_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Capri TM ASIC init failure, err : %d", ret);
 
-    if (!cfg->catalog->qos_sw_init_enabled()) {
-        ret = capri_default_config_init(cfg);
-        SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                        "Capri default config init failure, err : %d", ret);
-    }
-
     ret = capri_txs_scheduler_init(cfg->admin_cos, cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                            "Capri scheduler init failure, err : %d", ret);
+                             "Capri scheduler init failure, err : %d", ret);
 
     // Call PXB/PCIE init only in MODEL and RTL simulation
     // This will be done by PCIe manager for the actual chip
