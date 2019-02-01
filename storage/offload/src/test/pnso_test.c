@@ -502,6 +502,8 @@ static int cmp_buflists(const struct pnso_buffer_list *buflist1,
 			cmp_len = buf1->len - offset1;
 			if (cmp_len > (buf2->len - offset2))
 				cmp_len = buf2->len - offset2;
+			if (cmp_len > (len - total_len))
+				cmp_len = len - total_len;
 			if (cmp_len) {
 				ret = memcmp((void*)buf1->buf+offset1,
 					     (void*)buf2->buf+offset2,
@@ -569,7 +571,7 @@ static int cmp_file_node_data(struct test_node_file *fnode1, struct test_node_fi
 	return ret;
 }
 
-static void pprint_file_node(struct test_node_file *fnode)
+static void pprint_file_node(struct test_node_file *fnode, uint32_t offset)
 {
 	struct test_node_file fnode_dup;
 	char hexstr[129] = "";
@@ -579,11 +581,15 @@ static void pprint_file_node(struct test_node_file *fnode)
 
 	osal_atomic_lock(&fnode->lock);
 	fnode_dup = *fnode;
-	safe_bintohex(hexstr, 128, fnode->data, fnode->file_size);
+	if (offset < fnode->file_size) {
+		safe_bintohex(hexstr, 128, fnode->data+offset,
+			      fnode->file_size-offset);
+	}
 	osal_atomic_unlock(&fnode->lock);
 
-	OSAL_LOG_DEBUG("File node: name %s, size %u, padded_size %u, data:\n",
-		       fnode_dup.filename, fnode_dup.file_size, fnode_dup.padded_size);
+	OSAL_LOG_DEBUG("File node: name %s, size %u, padded_size %u, data[%u]:\n",
+		       fnode_dup.filename, fnode_dup.file_size,
+		       fnode_dup.padded_size, offset);
 	OSAL_LOG_DEBUG("0x%s\n", hexstr);
 }
 
@@ -1541,7 +1547,7 @@ static pnso_error_t run_data_validation(struct batch_context *ctx,
 						       pat, pat_len);
 				osal_atomic_unlock(&fnode1->lock);
 				if (cmp) {
-					pprint_file_node(fnode1);
+					pprint_file_node(fnode1, offset);
 				}
 			} else {
 				cmp = -1;
@@ -1597,22 +1603,33 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 					   struct test_validation *validation)
 {
 	pnso_error_t err = PNSO_OK;
-	size_t i;
+	uint32_t i;
 	int cmp = 0;
 	struct batch_context *batch_ctx = req_ctx->batch_ctx;
 	struct testcase_context *test_ctx = batch_ctx->test_ctx;
 
 	cmp = (int) batch_ctx->req_rc - (int) validation->req_retcode;
 	if (cmp != 0 || batch_ctx->req_rc != PNSO_OK) {
+		if (validation->req_retcode)
+			PNSO_LOG_DEBUG("Testcase %u expected req_retcode %u, got %u\n",
+				testcase->node.idx, validation->req_retcode,
+				batch_ctx->req_rc);
 		goto done;
 	}
 
 	cmp = (int) req_ctx->svc_res.err - (int) validation->retcode;
 	if (cmp != 0) {
+		if (validation->retcode)
+			PNSO_LOG_DEBUG("Testcase %u expected retcode %u, got %u\n",
+				testcase->node.idx, validation->retcode,
+				req_ctx->svc_res.err);
 		goto done;
 	}
 
 	if (req_ctx->svc_res.num_services < validation->svc_count) {
+		PNSO_LOG_DEBUG("Testcase %u expected num_services %u, got %u\n",
+			testcase->node.idx, validation->svc_count,
+			req_ctx->svc_res.num_services);
 		err = EINVAL;
 		goto done;
 	}
@@ -1621,6 +1638,11 @@ static pnso_error_t run_retcode_validation(struct request_context *req_ctx,
 		cmp = (int) req_ctx->svc_res.svc[i].err -
 			(int) validation->svc_retcodes[i];
 		if (cmp != 0) {
+			if (validation->svc_retcodes[i])
+				PNSO_LOG_DEBUG("Testcase %u expected svc_retcode[%u] %u, got %u\n",
+					       testcase->node.idx, i,
+					       validation->svc_retcodes[i],
+					       req_ctx->svc_res.svc[i].err);
 			break;
 		}
 	}
