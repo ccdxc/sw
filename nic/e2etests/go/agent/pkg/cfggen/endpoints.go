@@ -26,6 +26,8 @@ func (c *CfgGen) GenerateEndpoints() error {
 
 	if localEPManifest == nil || remoteEPManifest == nil {
 		log.Debug("Endpoint Manifest missing. Local: %v, Remote: %v", localEPManifest, remoteEPManifest)
+		log.Info("Skipping Endpoints Generation")
+		return nil
 	}
 
 	log.Infof("Generating %v Local Endpoints.", localEPManifest.Count)
@@ -37,6 +39,7 @@ func (c *CfgGen) GenerateEndpoints() error {
 	}
 
 	for i := 0; i < localEPManifest.Count; i++ {
+		var curNetworks []*netproto.Network
 		var epIP string
 		// Get the namespaces object
 		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
@@ -44,6 +47,8 @@ func (c *CfgGen) GenerateEndpoints() error {
 			log.Errorf("Failed to cast the object %v to namespaces.", c.Namespaces.Objects)
 			return fmt.Errorf("failed to cast the object %v to namespaces", c.Namespaces.Objects)
 		}
+		nsIdx := i % len(ns)
+		namespace := ns[nsIdx]
 
 		// Get the networks object
 		nets, ok := c.Networks.Objects.([]*netproto.Network)
@@ -52,16 +57,26 @@ func (c *CfgGen) GenerateEndpoints() error {
 			return fmt.Errorf("failed to cast the object %v to networks", c.Networks.Objects)
 		}
 
-		nsIdx := i % len(ns)
-		netIdx := i % len(nets)
-		namespace := ns[nsIdx]
-		network := nets[netIdx]
-		epName := fmt.Sprintf("%s-%d", localEPManifest.Name, i)
+		for _, n := range nets {
+			if n.Namespace == namespace.Name {
+				curNetworks = append(curNetworks, n)
+			}
+		}
+
+		netIdx := i % len(curNetworks)
+
+		network := curNetworks[netIdx]
 		// Generate local ep for every naples.
-		for _, nodeUUID := range c.NodeUUIDs {
+		for idx, nodeUUID := range c.NodeUUIDs {
 			nodeUUID := nodeUUID
+			var epMac string
 			// Pop elements here instead of maintaining a complex index
 			epIP, c.SubnetIPLUT[network.Name] = c.SubnetIPLUT[network.Name][0], c.SubnetIPLUT[network.Name][1:]
+			epIP = fmt.Sprintf("%s/32", epIP)
+
+			epMac, macAddrs = macAddrs[0], macAddrs[1:]
+			epName := fmt.Sprintf("%s-%d-node-%d", localEPManifest.Name, i, idx)
+
 			ep := netproto.Endpoint{
 				TypeMeta: api.TypeMeta{
 					Kind: "Endpoint",
@@ -74,7 +89,7 @@ func (c *CfgGen) GenerateEndpoints() error {
 				Spec: netproto.EndpointSpec{
 					NetworkName: network.Name,
 					UsegVlan:    c.Template.USegVlanOffset + uint32(i),
-					MacAddress:  macAddrs[i],
+					MacAddress:  epMac,
 					IPv4Address: epIP,
 					NodeUUID:    nodeUUID,
 				},
@@ -88,7 +103,8 @@ func (c *CfgGen) GenerateEndpoints() error {
 	remoteEPCount := remoteEPManifest.Count - (len(c.NodeUUIDs)-1)*localEPManifest.Count
 
 	for i := 0; i < remoteEPCount; i++ {
-		var epIP string
+		var epIP, epMac string
+		var curNetworks []*netproto.Network
 		// Get the namespaces object
 		ns, ok := c.Namespaces.Objects.([]*netproto.Namespace)
 		if !ok {
@@ -104,12 +120,20 @@ func (c *CfgGen) GenerateEndpoints() error {
 		}
 
 		nsIdx := i % len(ns)
-		netIdx := i % len(nets)
 		namespace := ns[nsIdx]
-		network := nets[netIdx]
-		epName := fmt.Sprintf("%s-%d", localEPManifest.Name, i)
+		for _, n := range nets {
+			if n.Namespace == namespace.Name {
+				curNetworks = append(curNetworks, n)
+			}
+		}
+		netIdx := i % len(curNetworks)
+		network := curNetworks[netIdx]
+		epName := fmt.Sprintf("%s-%d", remoteEPManifest.Name, i)
 		// Pop elements here instead of maintaining a complex index
 		epIP, c.SubnetIPLUT[network.Name] = c.SubnetIPLUT[network.Name][0], c.SubnetIPLUT[network.Name][1:]
+		epIP = fmt.Sprintf("%s/32", epIP)
+
+		epMac, macAddrs = macAddrs[0], macAddrs[1:]
 
 		ep := netproto.Endpoint{
 			TypeMeta: api.TypeMeta{
@@ -122,7 +146,7 @@ func (c *CfgGen) GenerateEndpoints() error {
 			},
 			Spec: netproto.EndpointSpec{
 				NetworkName: network.Name,
-				MacAddress:  macAddrs[i],
+				MacAddress:  epMac,
 				IPv4Address: epIP,
 				NodeUUID:    defaultRemoteUUIDName,
 			},

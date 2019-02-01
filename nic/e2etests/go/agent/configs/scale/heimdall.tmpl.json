@@ -2,7 +2,15 @@
   "network-start": "10.10.10.10/16",
   "vlan-offset": 100,
   "useg-vlan-offset": 200,
-  "firewall-policy-rules":["*", "tcp/80", "udp/53", "tcp/22", "tcp/443", "23/tcp", "udp/10000", "tcp/5000", "tcp/50054", "tcp/1000-2000"],
+  "firewall-policy-rules":[ "*", "tcp/80", "udp/53", "tcp/22",
+                            "tcp/443", "tcp/23", "udp/10000",
+                            "tcp/5000", "tcp/50054", "tcp/2000",
+                            "tcp/8888", "udp/8008", "tcp/10090",
+                            "udp/13337", "tcp/1337", "udp/10000",
+                            "tcp/10000", "tcp/50000", "tcp/9002",
+                            "tcp/9007", "tcp/9009", "tcp/10001",
+                            "udp/14000", "udp/11000", "udp/7849"],
+  "l4match-per-rule": 20,
   "alg-info":["ftp/tcp/20/20s", "tftp/udp/69/1m5s", "dns/udp/53/30ms", "ftp/tcp/4900/1h", "tftp/udp/5000/30m", "icmp/0/1/200ns", "icmp/3/13/500us"],
   "flowmon-inteval": ["15s"]
 }

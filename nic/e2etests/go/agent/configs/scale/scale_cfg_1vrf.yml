@@ -28,11 +28,11 @@ objects:
   rest-endpoint: "/api/security/policies/"
 - kind: SGRule
   count: 58000
-- kind: SecurityProfile
-  name: scale-sec-profile
-  count: 16
-- kind: FlowExportPolicy
-  name: scale-flow-mon
-  count: 1
-- kind: FlowMonitorRule
-  count: 1000
+#- kind: SecurityProfile
+#  name: scale-sec-profile
+#  count: 16
+#- kind: FlowExportPolicy
+#  name: scale-flow-mon
+#  count: 1
+#- kind: FlowMonitorRule
+#  count: 1000

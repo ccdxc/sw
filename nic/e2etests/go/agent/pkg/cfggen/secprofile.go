@@ -23,6 +23,8 @@ func (c *CfgGen) GenerateSecurityProfiles() error {
 	}
 	if secProfileManifest == nil {
 		log.Debug("Security Profile Manifest missing.")
+		log.Info("Skipping Security Profile Generation")
+		return nil
 	}
 
 	log.Infof("Generating %v Security Profiles.", secProfileManifest.Count)

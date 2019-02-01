@@ -28,6 +28,8 @@ func (c *CfgGen) GenerateFlowMonitorRules() error {
 	}
 	if flowExportManifest == nil || flowMonManifest == nil {
 		log.Debug("Flow Export Manifest missing.")
+		log.Info("Skipping Flow Export Policy Generation")
+		return nil
 	}
 
 	rulesPerPolicy := flowMonManifest.Count / flowExportManifest.Count
@@ -45,7 +47,7 @@ func (c *CfgGen) GenerateFlowMonitorRules() error {
 		namespace := ns[nsIdx]
 		policyName := fmt.Sprintf("%s-%d", flowExportManifest.Name, i)
 
-		policyRules := c.generateFlowMonRules(rulesPerPolicy)[:rulesPerPolicy]
+		policyRules := c.generateFlowMonRules(namespace.Name, rulesPerPolicy)[:rulesPerPolicy]
 		exportConfigs := c.generateExportConfigs(namespace.Name)
 
 		fe := monitoring.FlowExportPolicy{
@@ -74,8 +76,8 @@ func (c *CfgGen) GenerateFlowMonitorRules() error {
 	return nil
 }
 
-func (c *CfgGen) generateFlowMonRules(count int) (rules []monitoring.MatchRule) {
-	sgpRules := c.generatePolicyRules(count)
+func (c *CfgGen) generateFlowMonRules(namespace string, count int) (rules []monitoring.MatchRule) {
+	sgpRules := c.generatePolicyRules(namespace, count)
 
 	for _, s := range sgpRules {
 		var protoPorts []string

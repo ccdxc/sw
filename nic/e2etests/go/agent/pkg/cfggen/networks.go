@@ -23,6 +23,8 @@ func (c *CfgGen) GenerateNetworks() error {
 	}
 	if networkManifest == nil {
 		log.Debug("Network Manifest missing.")
+		log.Info("Skipping Network Generation")
+		return nil
 	}
 
 	log.Infof("Generating %v networks.", networkManifest.Count)
@@ -51,7 +53,7 @@ func (c *CfgGen) GenerateNetworks() error {
 		c.SubnetIPLUT[networkName] = addrs
 		net := netproto.Network{
 			TypeMeta: api.TypeMeta{
-				Kind: "Namespace",
+				Kind: "Network",
 			},
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    "default",
