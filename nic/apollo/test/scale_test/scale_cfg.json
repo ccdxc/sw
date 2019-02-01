@@ -33,7 +33,7 @@
         },
         {
             "kind" : "mappings",
-            "remotes" : "1",
+            "remotes" : "1024",
             "locals" : "32",
             "nat-prefix" : "3.0.0.0/8"
         }

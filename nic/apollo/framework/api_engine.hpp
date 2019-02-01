@@ -222,11 +222,14 @@ private:
 
     /**
      * @brief    del given api object from dirty list of the API batch
+     * @param[in] it         iterator position of api obj to be deleted
      * @param[in] api_obj    API object being processed
      */
-    void del_from_dirty_list_(api_base *api_obj) {
-        batch_ctxt_.dirty_obj_list.remove(
-            std::make_pair(api_obj, batch_ctxt_.dirty_obj_map[api_obj]));
+    void del_from_dirty_list_(dirty_obj_list_t::iterator it,
+                              api_base *api_obj) {
+        batch_ctxt_.dirty_obj_list.erase(it);
+        //batch_ctxt_.dirty_obj_list.remove(
+            //std::make_pair(api_obj, batch_ctxt_.dirty_obj_map[api_obj]));
         batch_ctxt_.dirty_obj_map.erase(api_obj);
         api_obj->clear_in_dirty_list();
     }

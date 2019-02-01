@@ -198,6 +198,7 @@ api_engine::pre_process_stage_(void) {
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
                       sdk::SDK_RET_INVALID_ARG);
+    OCI_TRACE_DEBUG("API context vector size %u", batch_ctxt_.api_ctxts.size());
     batch_ctxt_.stage = API_BATCH_STAGE_PRE_PROCESS;
     for (auto it = batch_ctxt_.api_ctxts.begin();
          it != batch_ctxt_.api_ctxts.end(); ++it) {
@@ -339,6 +340,9 @@ api_engine::program_config_stage_(void) {
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                       sdk::SDK_RET_INVALID_ARG);
 
+    OCI_TRACE_DEBUG("Dirty object list size %u, Dirty object map size %u",
+                    batch_ctxt_.dirty_obj_list.size(),
+                    batch_ctxt_.dirty_obj_map.size());
     /**< walk over all the dirty objects and reserve resources, if needed */
     batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
@@ -349,6 +353,9 @@ api_engine::program_config_stage_(void) {
         }
     }
 
+    OCI_TRACE_DEBUG("Dirty object list size %u, Dirty object map size %u",
+                    batch_ctxt_.dirty_obj_list.size(),
+                    batch_ctxt_.dirty_obj_map.size());
     /**< walk over all the dirty objects and program hw, if any */
     batch_ctxt_.stage = API_BATCH_STAGE_PROGRAM_CONFIG;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
@@ -388,7 +395,6 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         api_obj->del_from_db();
         api_obj->delay_delete();
-        del_from_dirty_list_(api_obj);
         break;
 
     case API_OP_CREATE:
@@ -400,7 +406,6 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         ret = api_obj->activate_config(batch_ctxt_.epoch, API_OP_CREATE,
                                        obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
-        del_from_dirty_list_(api_obj);
         api_obj->clear_hw_dirty();
         break;
 
@@ -423,7 +428,6 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         if (obj_ctxt->cloned_obj) {
             obj_ctxt->cloned_obj->delay_delete();
         }
-        del_from_dirty_list_(api_obj);
         break;
 
     case API_OP_UPDATE:
@@ -438,7 +442,6 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         ret = obj_ctxt->cloned_obj->activate_config(batch_ctxt_.epoch,
                                                     API_OP_UPDATE, obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
-        del_from_dirty_list_(api_obj);
         /**
          * enqueue the current (i.e., old) object for delay deletion, note that
          * the current obj is already deleted from the s/w db and swapped with
@@ -464,12 +467,16 @@ api_engine::activate_config_stage_(void) {
     sdk_ret_t                     ret;
     dirty_obj_list_t::iterator    next_it;
 
+    OCI_TRACE_DEBUG("Dirty object list size %u, Dirty object map size %u",
+                    batch_ctxt_.dirty_obj_list.size(),
+                    batch_ctxt_.dirty_obj_map.size());
     batch_ctxt_.stage = API_BATCH_STAGE_CONFIG_ACTIVATE;
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
              it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
         ret = activate_config_(it->first, &it->second);
         SDK_ASSERT(ret == SDK_RET_OK);
+        del_from_dirty_list_(it, it->first);
     }
     return SDK_RET_OK;
 }
@@ -495,7 +502,6 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          * db(s) and delay delete the slab object
          */
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
-        del_from_dirty_list_(api_obj);
         api_obj->del_from_db();
         api_obj->delay_delete();
         break;
@@ -511,7 +517,6 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          * so, now we have to undo these actions
          */
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
-        del_from_dirty_list_(api_obj);
         if (api_obj->is_hw_dirty()) {
             api_obj->cleanup_config(obj_ctxt);
             api_obj->clear_hw_dirty();
@@ -529,7 +534,6 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          * 4. called set_hw_dirty()
          * so, now we have to undo these actions
          */
-        del_from_dirty_list_(api_obj);
         if (api_obj->is_hw_dirty()) {
             api_obj->program_config(obj_ctxt);  // TODO: don't see a need for this !!
             api_obj->clear_hw_dirty();
@@ -549,7 +553,6 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          * 5. called set_hw_dirty() on original object
          * so, now we have to undo these actions
          */
-        del_from_dirty_list_(api_obj);
         if (api_obj->is_hw_dirty()) {
             obj_ctxt->cloned_obj->cleanup_config(obj_ctxt);
             // api_obj->program_config(obj_ctxt);
@@ -631,6 +634,7 @@ api_engine::batch_commit(void) {
         return ret;
     }
 
+    OCI_TRACE_DEBUG("API context vector size %u", batch_ctxt_.api_ctxts.size());
     /**< clear all batch related info */
     batch_ctxt_.epoch = OCI_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;
@@ -642,8 +646,12 @@ api_engine::batch_commit(void) {
         }
     }
     batch_ctxt_.api_ctxts.clear();
+    OCI_TRACE_DEBUG("API context vector size %u", batch_ctxt_.api_ctxts.size());
 
     /**< walk dirty object map/list & release all stateless object memory */
+    OCI_TRACE_DEBUG("Dirty object list size %u, Dirty object map size %u",
+                    batch_ctxt_.dirty_obj_list.size(),
+                    batch_ctxt_.dirty_obj_map.size());
     for (auto it = batch_ctxt_.dirty_obj_map.begin();
          it != batch_ctxt_.dirty_obj_map.end(); ) {
         api_obj = it->first;
@@ -672,11 +680,12 @@ api_engine::batch_abort(void) {
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
                       sdk::SDK_RET_INVALID_ARG);
 
-    for (auto it = batch_ctxt_.dirty_obj_map.begin(), next_it = it;
-         it != batch_ctxt_.dirty_obj_map.end(); it = next_it) {
+    for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
+         it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
         ret = rollback_config_(it->first, &it->second);
         SDK_ASSERT(ret == SDK_RET_OK);
+        del_from_dirty_list_(it, it->first);
     }
 
     // clear all batch related info
@@ -691,14 +700,14 @@ api_engine::batch_abort(void) {
     batch_ctxt_.api_ctxts.clear();
 
     /**< walk dirty object map/list & release all stateless object memory */
-    for (auto it = batch_ctxt_.dirty_obj_map.begin();
-         it != batch_ctxt_.dirty_obj_map.end(); ) {
+    for (auto it = batch_ctxt_.dirty_obj_list.begin();
+         it != batch_ctxt_.dirty_obj_list.end(); ) {
         api_obj = it->first;
         if (api_obj->stateless()) {
             // destroy this object as it is not needed anymore
             api_obj->delay_delete();
         }
-        batch_ctxt_.dirty_obj_map.erase(it++);
+        batch_ctxt_.dirty_obj_list.erase(it++);
     }
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
