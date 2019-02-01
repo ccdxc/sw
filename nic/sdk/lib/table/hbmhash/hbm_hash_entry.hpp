@@ -68,7 +68,7 @@ public:
     HbmHashTableEntry *get_bucket();
     HbmHashSpineEntry *get_eff_spine_entry();
     sdk_ret_t program_table_non_anchor_entry(HbmHashEntry *next_fe);
-    sdk_ret_t deprogram_table_non_anchor_entry();
+    sdk_ret_t deprogram_table_non_anchor_entry(HbmHashSpineEntry *fse);
     sdk_ret_t form_hw_key(uint32_t table_id, void *hwkey);
     sdk_ret_t entry_trace(uint32_t table_id, uint32_t index,
                           void *data);

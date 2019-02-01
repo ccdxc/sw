@@ -509,12 +509,12 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
 
     // check if flow table entry exists
     bucket_index = fetch_hbm_hash_table_bits_(hash_val);
-    SDK_TRACE_DEBUG("hash_val:#x, hbm_hash_table_index:%d",
+    SDK_TRACE_DEBUG("hash_val:%#x, hbm_hash_table_index:%#x",
                     hash_val, bucket_index);
     bucket = retrieve_bucket(bucket_index);
     if (bucket) {
         // flow table entry already exists
-        SDK_TRACE_DEBUG("Bucket exist ...");
+        SDK_TRACE_DEBUG("Bucket exists ...");
         rs = bucket->insert(entry);
         // TODO: No need to send flow coll return status
         if (rs == SDK_RET_OK) {
@@ -524,7 +524,7 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
 
     } else {
         // flow table entry doesnt exist
-        SDK_TRACE_DEBUG("New Bucket ...");
+        SDK_TRACE_DEBUG("New FT Entry ...");
         bucket = HbmHashTableEntry::factory(bucket_index, this);
         rs = bucket->insert(entry);
 
@@ -543,9 +543,15 @@ HbmHash::insert_with_hash(void *key, void *data, uint32_t *index, uint32_t hash_
         insert_entry(fe_idx, entry);
         entry->set_global_index(fe_idx);
         *index = fe_idx;
+
+        if (entry->get_recircs() >= 2) {
+            char            buff[4096] = {0};
+            entry->entry_to_str(buff, 4096);
+            SDK_TRACE_ERR("Recirc count >= 2, flow key : {}", buff);
+        }
     } else {
         // insert failed
-        SDK_TRACE_DEBUG("Insert FAIL ...");
+        SDK_TRACE_DEBUG("Insert FAIL ...rs: %d", rs);
 
         // delete flow entry
         // delete entry;
