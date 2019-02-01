@@ -1,6 +1,6 @@
 #!/usr/bin/tcsh
 
-setenv ASIC_SRC "$WORKSPACE/src/github.com/pensando/sw/nic/asic"
+setenv ASIC_SRC "$WORKSPACE/src/github.com/pensando/sw/nic/sdk/third-party/asic"
 setenv ASIC_GEN "$WORKSPACE/src/github.com/pensando/sw/nic/asic_gen"
 rm -rf $ASIC_GEN
 mkdir -p $ASIC_GEN

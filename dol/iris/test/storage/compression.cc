@@ -11,8 +11,8 @@
 #include "comp_hash_chain.hpp"
 #include "chksum_decomp_chain.hpp"
 #include "storage_seq_p4pd.hpp"
-#include "nic/asic/capri/design/common/cap_addr_define.h"
-#include "nic/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
+#include "third-party/asic/capri/design/common/cap_addr_define.h"
+#include "third-party/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
 
 #ifdef NDEBUG
 #undef NDEBUG

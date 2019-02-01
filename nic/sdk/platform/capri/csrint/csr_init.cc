@@ -9,8 +9,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "nic/sdk/platform/capri/csr/asicrw_if.hpp"
-#include "nic/asic/capri/model/utils/cap_csr_py_if.h"
-#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 
 namespace sdk {
 namespace platform {

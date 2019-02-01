@@ -10,7 +10,5 @@ MODULE_PIPELINE := iris gft
 MODULE_INCS     := ${MODULE_SRC_DIR}/../include \
                     ${BLD_PROTOGEN_DIR}/ \
                     ${BLD_P4GEN_DIR}/common_rxdma_actions/include/ \
-                    ${BLD_P4GEN_DIR}/common_txdma_actions/include/ \
-                    ${TOPDIR}/nic/asic/capri/model/cap_top \
-                    ${TOPDIR}/nic/asic/capri/model/cap_top/csr_defines
+                    ${BLD_P4GEN_DIR}/common_txdma_actions/include/
 include ${MKDEFS}/post.mk

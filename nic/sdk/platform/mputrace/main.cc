@@ -11,7 +11,7 @@
 
 #include "platform/mputrace/mputrace.hpp"
 #include "platform/capri/csr/asicrw_if.hpp"
-#include "nic/asic/capri/model/utils/cap_csr_py_if.h"
+#include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
 #include "platform/capri/csrint/csr_init.hpp"
 // TODO check if we need to get it from a common location
 #include "gen/platform/mem_regions.hpp"

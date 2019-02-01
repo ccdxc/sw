@@ -34,36 +34,36 @@ export NIC_CSR_FLAGS := -Wno-unused-function -Wno-unused-variable \
     -Wno-sign-compare -Wno-maybe-uninitialized -Wno-uninitialized \
     -Wno-unused-but-set-variable -fno-asynchronous-unwind-tables
 
-export NIC_CSR_INCS := ${TOPDIR}/nic/asic/capri/model/cap_top \
-    ${TOPDIR}/nic/asic/capri/model/utils \
-    ${TOPDIR}/nic/asic/capri/model/cap_prd \
-    ${TOPDIR}/nic/asic/capri/model/cap_ptd \
-    ${TOPDIR}/nic/asic/capri/model/cap_psp \
-    ${TOPDIR}/nic/asic/capri/model/cap_ppa \
-    ${TOPDIR}/nic/asic/capri/model/cap_te \
-    ${TOPDIR}/nic/asic/capri/model/cap_mpu \
-    ${TOPDIR}/nic/asic/capri/model/cap_pic \
-    ${TOPDIR}/nic/asic/capri/model/cap_pcie \
-    ${TOPDIR}/nic/asic/capri/model/cap_npv \
-    ${TOPDIR}/nic/asic/capri/model/cap_txs \
-    ${TOPDIR}/nic/asic/capri/model/cap_pb \
-    ${TOPDIR}/nic/asic/capri/model/cap_wa \
-    ${TOPDIR}/nic/asic/capri/model/cap_ms \
-    ${TOPDIR}/nic/asic/capri/model/cap_em \
-    ${TOPDIR}/nic/asic/capri/model/cap_mc \
-    ${TOPDIR}/nic/asic/capri/model/cap_he \
-    ${TOPDIR}/nic/asic/capri/model/cap_dpa \
-    ${TOPDIR}/nic/asic/capri/model/cap_sema \
-    ${TOPDIR}/nic/asic/capri/model/cap_intr \
-    ${TOPDIR}/nic/asic/capri/model/cap_mx \
-    ${TOPDIR}/nic/asic/capri/model/cap_bx \
-    ${TOPDIR}/nic/asic/capri/model/cap_ap \
-    ${TOPDIR}/nic/asic/capri/model/cap_he/readonly \
-    ${TOPDIR}/nic/asic/ip/verif/pcpp \
-    ${TOPDIR}/nic/asic/capri/design/common/gen \
-    ${TOPDIR}/nic/asic/capri/verif/apis \
-    ${TOPDIR}/nic/sdk/model_sim/include \
-	${TOPDIR}/nic/asic/capri/model/cap_top/csr_defines
+export NIC_CSR_INCS := ${SDKDIR}/third-party/asic/capri/model/cap_top \
+    ${SDKDIR}/third-party/asic/capri/model/utils \
+    ${SDKDIR}/third-party/asic/capri/model/cap_prd \
+    ${SDKDIR}/third-party/asic/capri/model/cap_ptd \
+    ${SDKDIR}/third-party/asic/capri/model/cap_psp \
+    ${SDKDIR}/third-party/asic/capri/model/cap_ppa \
+    ${SDKDIR}/third-party/asic/capri/model/cap_te \
+    ${SDKDIR}/third-party/asic/capri/model/cap_mpu \
+    ${SDKDIR}/third-party/asic/capri/model/cap_pic \
+    ${SDKDIR}/third-party/asic/capri/model/cap_pcie \
+    ${SDKDIR}/third-party/asic/capri/model/cap_npv \
+    ${SDKDIR}/third-party/asic/capri/model/cap_txs \
+    ${SDKDIR}/third-party/asic/capri/model/cap_pb \
+    ${SDKDIR}/third-party/asic/capri/model/cap_wa \
+    ${SDKDIR}/third-party/asic/capri/model/cap_ms \
+    ${SDKDIR}/third-party/asic/capri/model/cap_em \
+    ${SDKDIR}/third-party/asic/capri/model/cap_mc \
+    ${SDKDIR}/third-party/asic/capri/model/cap_he \
+    ${SDKDIR}/third-party/asic/capri/model/cap_dpa \
+    ${SDKDIR}/third-party/asic/capri/model/cap_sema \
+    ${SDKDIR}/third-party/asic/capri/model/cap_intr \
+    ${SDKDIR}/third-party/asic/capri/model/cap_mx \
+    ${SDKDIR}/third-party/asic/capri/model/cap_bx \
+    ${SDKDIR}/third-party/asic/capri/model/cap_ap \
+    ${SDKDIR}/third-party/asic/capri/model/cap_he/readonly \
+    ${SDKDIR}/third-party/asic/ip/verif/pcpp \
+    ${SDKDIR}/third-party/asic/capri/design/common/gen \
+    ${SDKDIR}/third-party/asic/capri/verif/apis \
+    ${SDKDIR}/model_sim/include \
+    ${SDKDIR}/third-party/asic/capri/model/cap_top/csr_defines
 
 export NIC_COMMON_LDLIBS_x86_64     := zmq
 export NIC_COMMON_LDLIBS_aarch64    :=

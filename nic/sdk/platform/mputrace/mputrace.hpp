@@ -12,7 +12,7 @@
 #ifndef __MPU_TRACE_HPP__
 #define __MPU_TRACE_HPP__
 
-#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "include/sdk/types.hpp"
 #include "lib/pal/pal.hpp"
 

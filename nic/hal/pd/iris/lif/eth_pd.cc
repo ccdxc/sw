@@ -15,8 +15,8 @@
 
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
-#include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
-#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 
 namespace hal {

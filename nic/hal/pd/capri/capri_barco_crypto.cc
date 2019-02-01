@@ -5,7 +5,7 @@
 #include <iomanip>
 /* Barco Crypto initialization support */
 #include "nic/hal/src/internal/crypto_apis.hpp"
-#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"

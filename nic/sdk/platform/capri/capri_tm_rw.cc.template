@@ -24,11 +24,11 @@
 #include "lib/bitmap/bitmap.hpp"
 #include "gen/platform/mem_regions.hpp"
 
-#include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
-#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
-#include "nic/asic/capri/model/cap_pb/cap_pbc_csr.h"
-#include "nic/asic/capri/verif/apis/cap_pb_api.h"
-#include "nic/asic/capri/model/cap_pb/cap_pbc_decoders.h"
+#include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
+#include "third-party/asic/capri/model/cap_pb/cap_pbc_csr.h"
+#include "third-party/asic/capri/verif/apis/cap_pb_api.h"
+#include "third-party/asic/capri/model/cap_pb/cap_pbc_decoders.h"
 
 namespace sdk {
 namespace platform {

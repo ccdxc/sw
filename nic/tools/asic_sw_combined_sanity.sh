@@ -11,7 +11,9 @@ make pull-assets
 #git apply --reject /home/vikasd/patches/vasanth_pbc_csr.diff
 
 # Build the ASIC with ToT
-cd $WORKSPACE/src/github.com/pensando/sw/nic/asic
+rm -rf $WORKSPACE/src/github.com/pensando/sw/nic/sdk/third-party/asic
+cd $WORKSPACE/src/github.com/pensando/sw/nic/sdk/third-party
+git clone git@github.com:pensando/asic.git
 git fetch origin master
 git checkout FETCH_HEAD
 sha=`git rev-parse --short HEAD`
