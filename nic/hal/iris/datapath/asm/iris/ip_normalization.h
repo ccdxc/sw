@@ -158,6 +158,7 @@ lb_ipv4_norm_invalid_length:
   sub         r3, r1, r2
   phvwr       p.capri_deparser_len_trunc_pkt_len, r3
   phvwr       p.capri_deparser_len_trunc, 1
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
   b           lb_ipv4_norm_ttl
   phvwr       p.capri_intrinsic_payload, 0
 
@@ -289,6 +290,7 @@ lb_ipv6_norm_invalid_length:
   sub         r3, r1, r2
   phvwr       p.capri_deparser_len_trunc_pkt_len, r3
   phvwr       p.capri_deparser_len_trunc, 1
+  phvwr       p.capri_p4_intrinsic_packet_len, r1
   b           lb_ipv6_norm_hop_limit
   phvwr       p.capri_intrinsic_payload, 0
 
