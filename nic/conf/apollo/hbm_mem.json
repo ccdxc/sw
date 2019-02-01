@@ -1,5 +1,54 @@
 {
     "regions": [
+         {
+            "_comment" : "cache coherent",
+            "name": "cpu-dr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-pr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-descriptor",
+            "size": "2048K",
+            "cc": "true"
+
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-page",
+            "size": "32768K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "arq-rx",
+            "size": "256K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "ascq",
+            "size": "256K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "asq",
+            "size": "256K",
+            "cc"     : "true"
+        },
+        {
+            "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
+            "name" : "unused cache coherent",
+            "size" : "29696K",
+            "cc"      : "true"
+        },
         {
             "_comment" : "memtun address is hardcoded to HBM base + 64MB(above cc regions)",
              "name": "memtun",
@@ -37,7 +86,7 @@
         },
         {
             "name": "remote_vnic_mapping_rx",
-            "size": "65536K",
+            "size": "131072K",
             "cache": "p4ig",
             "reset": true
         },
@@ -55,7 +104,7 @@
         },
         {
             "name": "remote_vnic_mapping_tx",
-            "size": "65536K",
+            "size": "131072K",
             "cache": "p4eg",
             "reset": true
         },
