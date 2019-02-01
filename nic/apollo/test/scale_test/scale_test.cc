@@ -74,6 +74,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
 {
     uint32_t             ntables = num_vcns * num_subnets;
     uint32_t             tep_offset = 3;
+    static               uint32_t rtnum = 0;
     oci_route_table_t    route_table;
 
     route_table.af = IP_AF_IPV4;
@@ -86,11 +87,11 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
             route_table.routes[j].prefix.len = 24;
             route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
             route_table.routes[j].prefix.addr.addr.v4_addr =
-                (route_pfx->addr.addr.v4_addr & 0xFF000000) | (j << 8);
+                ((0xC << 28) | (rtnum++ << 8));
             route_table.routes[j].nh_ip.af = IP_AF_IPV4;
             route_table.routes[j].nh_ip.addr.v4_addr =
                 tep_pfx->addr.addr.v4_addr + tep_offset++;
-            tep_offset %= num_teps + 2;
+            tep_offset %= num_teps;
             if (tep_offset == 0) {
                 // skip MyTEP and gateway IPs
                 tep_offset += 3;
@@ -136,8 +137,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     oci_mapping.slot = vnic_key;
                     oci_mapping.tep.ip_addr = g_swport.switch_ip_addr;
                     MAC_UINT64_TO_ADDR(oci_mapping.overlay_mac,
-                                       (((((uint64_t)i & 0x3FF) << 20) |
-                                         ((j & 0x3FF) << 10) | (k & 0x3FF))));
+                                       (((((uint64_t)i & 0x7FF) << 22) |
+                                         ((j & 0x7FF) << 11) | (k & 0x7FF))));
                     oci_mapping.vnic.id = vnic_key;
                     if (natpfx) {
                         oci_mapping.public_ip_valid = true;
@@ -175,9 +176,9 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     tep_offset += 3;
                 }
                 MAC_UINT64_TO_ADDR(oci_mapping.overlay_mac,
-                                   (((((uint64_t)i & 0x3FF) << 20) |
-                                     ((j & 0x3FF) << 10) |
-                                     ((num_vnics + k) & 0x3FF))));
+                                   (((((uint64_t)i & 0x7FF) << 22) |
+                                     ((j & 0x7FF) << 11) |
+                                     ((num_vnics + k) & 0x7FF))));
                 rv = oci_mapping_create(&oci_mapping);
                 ASSERT_TRUE(rv == SDK_RET_OK);
             }
@@ -205,8 +206,8 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
                 oci_vnic.wire_vlan = vlan_start + vnic_key - 1;
                 oci_vnic.slot = vnic_key;
                 MAC_UINT64_TO_ADDR(oci_vnic.mac_addr,
-                                   (((((uint64_t)i & 0x3FF) << 20) |
-                                     ((j & 0x3FF) << 10) | (k & 0x3FF))));
+                                   (((((uint64_t)i & 0x7FF) << 22) |
+                                     ((j & 0x7FF) << 11) | (k & 0x7FF))));
                 oci_vnic.rsc_pool_id = 1;
                 oci_vnic.src_dst_check = false; //(k & 0x1);
                 rv = oci_vnic_create(&oci_vnic);
@@ -327,6 +328,12 @@ create_objects (void)
                                       ntohl(gwip.s_addr));
             } else if (kind == "tep") {
                 num_teps = std::stol(obj.second.get<std::string>("count"));
+                if (num_teps <= 2) {
+                    printf("No. of TEPs must be greater than 2\n");
+                    exit(1);
+                }
+                // reduce num_teps by 2, (MyTEP and GW-TEP)
+                num_teps -= 2;
                 pfxstr = obj.second.get<std::string>("prefix");
                 ASSERT_TRUE(str2ipv4pfx((char *)pfxstr.c_str(), &teppfx) == 0);
                 create_teps(num_teps, &teppfx);
