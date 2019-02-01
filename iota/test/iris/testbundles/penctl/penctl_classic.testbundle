@@ -2,7 +2,7 @@ meta:
     name    : penctl
     os      : [ linux, freebsd ]
     nics    : [ pensando, mellanox, intel ]
-    targetcount : 40
+    targetcount : 40 
 
 testcases:
     -   name: ACCEL_METRICS
@@ -31,10 +31,8 @@ testcases:
     -   name    : CHECK_FIRMWARE
         testcase: testcases.penctl.firmware
 
-    # Disabling this test for now, as it re-configures 
-    # interfaces which is breaking rdma_reg in regressions
-    #-   name    : CHECK_METRICS
-    #    testcase: testcases.penctl.lif_metrics
+    -   name    : CHECK_METRICS
+        testcase: testcases.penctl.lif_metrics
 
     -   name    : CHECK_EXECUTE
         testcase: testcases.penctl.execute
@@ -70,3 +68,109 @@ testcases:
                       "show running-firmware", "show startup-firmware", "show system-memory-usage",
                       "show firmware-install", "show tech-support"
                      ]
+
+    -   name    : MODE_UPDATE_INBAND_STATIC
+        disable : True
+        testcase: testcases.penctl.mode_inb_static
+
+    -   name    : MODE_UPDATE_INBAND_STATIC_LOOP
+        testcase: testcases.penctl.mode_inb_static_loop
+
+    -   name    : MODE_UPDATE_INBAND_STATIC_REBOOT
+        disable : True
+        testcase: testcases.penctl.mode_inb_static_reboot
+
+    -   name    : MODE_UPDATE_INBAND_DYNAMIC
+        disable : True
+        testcase: testcases.penctl.mode_inb_dynamic
+
+    -   name    : MODE_UPDATE_INBAND_DYNAMIC_LOOP
+        disable : True
+        testcase: testcases.penctl.mode_inb_dynamic_loop
+
+    -   name    : MODE_UPDATE_INBAND_DYNAMIC_REBOOT
+        disable : True
+        testcase: testcases.penctl.mode_inb_dynamic_reboot
+
+    -   name    : INBAND_DYNAMIC_LEASE_RENEWAL
+        disable : True
+        testcase: testcases.penctl.mode_inb_dynamic_lease_renewal
+
+    -   name    : INBAND_DYNAMIC_REBOOT_KILL_DHCP
+        disable : True
+        testcase: testcases.penctl.mode_inb_dynamic_reboot_kill_dhcp
+
+    -   name    : INBAND_DYNAMIC_REBOOT_EMPTY_VENDOR
+        disable : True
+        testcase: testcases.penctl.mode_inb_dynamic_empty_vendor
+
+    -   name    : INBAND_DYNAMIC_REBOOT_ALL_NEW_VENDOR
+        disable : True
+        testcase: testcases.penctl.mode_inb_dynamic_loop_all_new
+
+    -   name    : INBAND_DYNAMIC_REBOOT_PARTIAL_NEW_VENDOR
+        disable : True
+        testcase: testcases.penctl.mode_inb_dynamic_reboot_partial_new
+
+    -   name    : INBAND_DYNAMIC_REBOOT_LOOP_CHECK_MODE
+        disable : True
+        testcase: testcases.penctl.mode_inb_dynamic_reboot_loop_mode
+
+    -   name    : INBAND_DYNAMIC_LOOP_CHECK_NO_DHCP
+        disable : True
+        testcase: testcases.penctl.mode_inb_dynamic_no_dhcp
+
+    -   name    : COMMON
+        disable : True
+        testcase: testcases.penctl.test_common
+
+    -   name    : MODE_UPDATE_OOB_STATIC
+        disable : True
+        testcase: testcases.penctl.mode_oob_static
+
+    -   name    : MODE_UPDATE_OOB_STATIC_LOOP
+        testcase: testcases.penctl.mode_oob_static_loop
+
+    -   name    : MODE_UPDATE_OOB_STATIC_REBOOT
+        disable : True
+        testcase: testcases.penctl.mode_oob_static_reboot
+
+    -   name    : MODE_UPDATE_OOB_DYNAMIC
+        disable : True
+        testcase: testcases.penctl.mode_oob_dynamic
+
+    -   name    : MODE_UPDATE_OOB_DYNAMIC_LOOP
+        disable : True
+        testcase: testcases.penctl.mode_oob_dynamic_loop
+
+    -   name    : MODE_UPDATE_OOB_DYNAMIC_REBOOT
+        disable : True
+        testcase: testcases.penctl.mode_oob_dynamic_reboot
+
+    -   name    : OOB_DYNAMIC_LEASE_RENEWAL
+        disable : True
+        testcase: testcases.penctl.mode_oob_dynamic_lease_renewal
+
+    -   name    : OOB_DYNAMIC_REBOOT_KILL_DHCP
+        disable : True
+        testcase: testcases.penctl.mode_oob_dynamic_reboot_kill_dhcp
+
+    -   name    : OOB_DYNAMIC_REBOOT_EMPTY_VENDOR
+        disable : True
+        testcase: testcases.penctl.mode_oob_dynamic_empty_vendor
+
+    -   name    : OOB_DYNAMIC_REBOOT_ALL_NEW_VENDOR
+        disable : True
+        testcase: testcases.penctl.mode_oob_dynamic_loop_all_new
+
+    -   name    : OOB_DYNAMIC_REBOOT_PARTIAL_NEW_VENDOR
+        disable : True
+        testcase: testcases.penctl.mode_oob_dynamic_reboot_partial_new
+
+    -   name    : OOB_DYNAMIC_REBOOT_LOOP_CHECK_MODE
+        disable : True
+        testcase: testcases.penctl.mode_oob_dynamic_reboot_loop_mode
+
+    -   name    : OOB_DYNAMIC_LOOP_CHECK_NO_DHCP
+        disable : True
+        testcase: testcases.penctl.mode_oob_dynamic_no_dhcp

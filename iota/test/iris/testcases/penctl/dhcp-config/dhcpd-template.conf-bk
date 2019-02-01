@@ -1,0 +1,20 @@
+set vendor-string = option vendor-class-identifier;
+option space pensando;
+option pensando.wlc code 241 = array of ip-address;
+#option local-encapsulation code 43 = encapsulate pensando;
+#option pensando.wlc 10.7.3.6, 10.7.3.2;
+
+# A slightly different configuration for an internal subnet.
+subnet 10.5.5.0 netmask 255.255.255.0 {
+  range 10.5.5.3 10.5.5.254;
+  option routers 10.5.5.1;
+  option subnet-mask 255.255.255.0;
+  option broadcast-address 10.5.5.255;
+  default-lease-time 600;
+  max-lease-time 7200;
+  class "PensandoClass" {
+    match if option vendor-class-identifier = "Pensando";
+    vendor-option-space pensando;
+    option pensando.wlc 10.20.30.40;
+  }
+}
