@@ -41,7 +41,7 @@
                 ".c",
                 ".cc"
             ],
-            "build_cmd": "/home/asic/tools/eda/bullseye/bin/cov01 -1 && export PATH=$PATH:/home/asic/tools/eda/bullseye/bin &&  make COVERAGE=1 V=1 && /home/asic/tools/eda/bullseye/bin/cov01 -0",
+            "build_cmd": "make COVERAGE=1 V=1",
             "clean_cmd": "make clean && (find ../bazel-out/k8-fastbuild/bin -name '*.gcda'  -type f -delete || :)",
             "remove_files": [
                "/usr/include/*",
