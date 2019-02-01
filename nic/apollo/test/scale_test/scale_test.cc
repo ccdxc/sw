@@ -91,7 +91,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
             route_table.routes[j].nh_ip.af = IP_AF_IPV4;
             route_table.routes[j].nh_ip.addr.v4_addr =
                 tep_pfx->addr.addr.v4_addr + tep_offset++;
-            tep_offset %= num_teps;
+            tep_offset %= num_teps + 3;
             if (tep_offset == 0) {
                 // skip MyTEP and gateway IPs
                 tep_offset += 3;
