@@ -183,6 +183,7 @@ nic/tools/syskill.sh                                                /nic/tools/
 nic/tools/sysreset.sh                                               /nic/tools/
 nic/tools/sysupdate.sh                                              /nic/tools/
 nic/tools/fwupdate                                                  /nic/tools/
+nic/tools/switch_rootfs.sh                                          /nic/tools/
 nic/agent/cmd/halctl/halctl_ext/bash_completion/halctl_bash_complete.sh /nic/tools/
 nic/agent/cmd/halctl/halctl_ext/bash_completion/halctl_bash_complete.sh /etc/bash_completion.d/
 nic/tools/.bashrc                                                   /root/

@@ -280,7 +280,7 @@ get_root_mount_uuid()
 {
     local devid partno dev s
 
-    devid=`grep '/dev/root' $R/proc/1/mountinfo | awk '{ print $3 }'`
+    devid=`grep '/ro ' $R/proc/1/mountinfo | grep 'squashfs' | awk '{ print $3 }'`
     if [ -z "$devid" ]; then
         fatal "get_root_mount_uuid: can't find root mountinfo"
     fi
