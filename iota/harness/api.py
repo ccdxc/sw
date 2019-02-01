@@ -316,6 +316,64 @@ def IsApiResponseOk(resp):
     if resp.api_response.api_status != types_pb2.API_STATUS_OK: return False
     return True
 
+
+# ================================
+# Wrappers for Workload bring up and teardown APIs
+# ================================
+def BringUpWorkloadsRequest():
+    req = topo_svc.WorkloadMsg()
+    req.workload_op = topo_svc.ADD
+    return req
+
+def TeardownWorkloadsRequest():
+    req = topo_svc.WorkloadMsg()
+    req.workload_op = topo_svc.DELETE
+    return req
+
+def AddWorkloadTeardown(req, workload):
+    assert(req.workload_op == topo_svc.DELETE)
+    for wl in GetWorkloads():
+        if workload.workload_name != wl.workload_name:
+            continue
+        wl_msg = req.workloads.add()
+        wl_msg.workload_name = wl.workload_name
+        wl_msg.node_name = wl.node_name
+
+def AddWorkloadBringUp(req, workload):
+    assert(req.workload_op == topo_svc.ADD)
+    for wl in GetWorkloads():
+        if workload.workload_name != wl.workload_name:
+            continue
+        wl_msg = req.workloads.add()
+        wl_msg.ip_prefix = wl.ip_prefix
+        wl_msg.ipv6_prefix = wl.ipv6_prefix
+        wl_msg.mac_address = wl.mac_address
+        wl_msg.encap_vlan = wl.encap_vlan
+        wl_msg.uplink_vlan = wl.uplink_vlan
+        wl_msg.workload_name = wl.workload_name
+        wl_msg.node_name = wl.node_name
+        wl_msg.pinned_port = wl.pinned_port
+        wl_msg.interface_type = wl.interface_type
+        wl_msg.interface = wl.parent_interface
+        wl_msg.parent_interface = wl.parent_interface
+        wl_msg.workload_type = wl.workload_type
+        wl_msg.workload_image = wl.workload_image
+
+def Trigger_BringUpWorkloadsRequest(req):
+    assert(req.workload_op == topo_svc.ADD)
+    resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
+    if not IsApiResponseOk(resp):
+        return types.status.FAILURE
+    return types.status.SUCCESS
+
+def Trigger_TeardownWorkloadsRequest(req):
+    assert(req.workload_op == topo_svc.DELETE)
+    resp = __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
+    if not IsApiResponseOk(resp):
+        return types.status.FAILURE
+    return types.status.SUCCESS
+
+
 # ================================
 # Wrappers for Trigger APIs
 # ================================

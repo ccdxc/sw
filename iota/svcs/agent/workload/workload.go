@@ -30,6 +30,9 @@ const (
 
 	//WorkloadTypeESX vm workload
 	WorkloadTypeESX = "esx-vm"
+
+	//WorkloadTypeMacVlan  macvlan workload
+	WorkloadTypeMacVlan = "mac-vlan"
 )
 
 var (
@@ -50,6 +53,10 @@ type Workload interface {
 	IsHealthy() bool
 	SendArpProbe(ip string, intf string, vlan int) error
 	TearDown()
+}
+
+func isFreeBsd() bool {
+	return runtime.GOOS == "freebsd"
 }
 
 type workload interface {
@@ -75,6 +82,11 @@ type remoteWorkload struct {
 
 type bareMetalWorkload struct {
 	workloadBase
+	subIF string
+}
+
+type bareMetalMacVlanWorkload struct {
+	bareMetalWorkload
 }
 
 type vmWorkload struct {
@@ -92,6 +104,10 @@ func vlanIntf(name string, vlan int) string {
 
 func freebsdVlanIntf(name string, vlan int) string {
 	return name + "." + strconv.Itoa(vlan)
+}
+
+func macVlanIntf(name string, vlan int) string {
+	return name + "_" + "m" + strconv.Itoa(vlan)
 }
 
 func (app *workloadBase) Name() string {
@@ -148,6 +164,12 @@ func (app *workloadBase) IsHealthy() bool {
 }
 
 func (app *workloadBase) TearDown() {
+
+	for cmdHandle := range app.bgCmds {
+		app.StopCommand(cmdHandle)
+	}
+
+	app.bgCmds = make(map[string]*Cmd.CommandInfo)
 }
 
 func (app *containerWorkload) BringUp(args ...string) error {
@@ -353,7 +375,7 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 		vlanintf := ""
 		var addVlanCmd []string
 		var delVlanCmd []string
-		if runtime.GOOS == "freebsd" {
+		if isFreeBsd() {
 			vlanintf = freebsdVlanIntf(name, vlan)
 			delVlanCmd = []string{"ifconfig", vlanintf, "destroy"}
 			addVlanCmd = []string{"ifconfig", vlanintf, "create", "inet"}
@@ -372,8 +394,8 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 
 	if macAddress != "" {
 		var setMacAddrCmd []string
-		if runtime.GOOS != "freebsd" {
-			//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
+		if !isFreeBsd() {
+			//Mac address change only works on linux
 			setMacAddrCmd = []string{"ifconfig", intfToAttach, "hw", "ether", macAddress}
 			if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
 				return "", errors.Wrap(err, stdout)
@@ -398,7 +420,81 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 		}
 	}
 
+	app.subIF = intfToAttach
 	return intfToAttach, nil
+}
+
+func (app *bareMetalMacVlanWorkload) AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+
+	ifconfigCmd := []string{"ifconfig", name, "up"}
+	if retCode, stdout, _ := Utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
+		return "", errors.Errorf("Could not bring up parent interface %s : %s", name, stdout)
+	}
+
+	macvlanintf := ""
+	var addVlanCmd []string
+	var delVlanCmd []string
+	if isFreeBsd() {
+		return "", errors.New("Mac vlan Not supported on freebsd")
+	}
+	macvlanintf = macVlanIntf(name, vlan)
+	delVlanCmd = []string{"ip", "link", "del", macvlanintf}
+	addVlanCmd = []string{"ip", "link", "add", "link", name, "name", macvlanintf, "type", "macvlan"}
+	Utils.Run(delVlanCmd, 0, false, false, nil)
+	if retCode, stdout, _ := Utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
+		return "", errors.Errorf("IP link failed to create mac vlan failed %s:%d, err :%s", name, vlan, stdout)
+	}
+
+	intfToAttach := macvlanintf
+
+	if macAddress != "" {
+		var setMacAddrCmd []string
+		setMacAddrCmd = []string{"ifconfig", intfToAttach, "hw", "ether", macAddress}
+		if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
+			return "", errors.Wrap(err, stdout)
+		}
+	}
+
+	if ipaddress != "" {
+		cmd := []string{"ifconfig", intfToAttach, ipaddress}
+		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+			return "", errors.Wrap(err, stdout)
+		}
+	}
+
+	if ipv6address != "" {
+		//unset ipv6 address first
+		cmd := []string{"ifconfig", intfToAttach, "inet6", "del", ipv6address}
+		Utils.Run(cmd, 0, false, false, nil)
+		cmd = []string{"ifconfig", intfToAttach, "inet6", "add", ipv6address}
+		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+			return "", errors.Wrap(err, stdout)
+		}
+	}
+
+	app.subIF = intfToAttach
+
+	return intfToAttach, nil
+}
+
+func (app *bareMetalWorkload) TearDown() {
+	var delVlanCmd []string
+
+	//Stop all bg cmds first
+	app.workloadBase.TearDown()
+	if app.subIF != "" {
+		if isFreeBsd() {
+			delVlanCmd = []string{"ifconfig", app.subIF, "destroy"}
+		} else {
+			delVlanCmd = []string{"ip", "link", "del", app.subIF}
+		}
+		app.logger.Info("Deleting subif %v\n", app.subIF)
+		Utils.Run(delVlanCmd, 0, false, false, nil)
+	} else {
+		app.logger.Info("No subif to delete")
+	}
+
+	app.subIF = ""
 }
 
 func (app *bareMetalWorkload) BringUp(args ...string) error {
@@ -438,6 +534,7 @@ func (app *bareMetalWorkload) StopCommand(commandHandle string) (*Cmd.CommandCtx
 
 	Cmd.StopExecCmd(cmdInfo)
 	time.Sleep(2 * time.Second)
+	delete(app.bgCmds, commandHandle)
 
 	return cmdInfo.Ctx, nil
 }
@@ -590,6 +687,10 @@ func newBareMetalWorkload(name string, parent string, logger *log.Logger) Worklo
 	return &bareMetalWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
 }
 
+func newBareMetalMacVlanWorkload(name string, parent string, logger *log.Logger) Workload {
+	return &bareMetalMacVlanWorkload{bareMetalWorkload: bareMetalWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}}
+}
+
 func newVMWorkload(name string, parent string, logger *log.Logger) Workload {
 	return &vmWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}
 }
@@ -604,6 +705,7 @@ var iotaWorkloads = map[string]func(name string, parent string, logger *log.Logg
 	WorkloadTypeESX:       newVMESXWorkload,
 	WorkloadTypeBareMetal: newBareMetalWorkload,
 	WorkloadTypeRemote:    newRemoteWorkload,
+	WorkloadTypeMacVlan:   newBareMetalMacVlanWorkload,
 }
 
 //NewWorkload creates a workload
