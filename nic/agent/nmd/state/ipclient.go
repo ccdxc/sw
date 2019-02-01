@@ -235,11 +235,11 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 		NaplesMode:  naplesMode,
 	}
 	c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
-	c.nmdState.cmdUpdateURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
+	c.nmdState.cmdUpdURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 	c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 
 	// TODO Check if update cmd and registration need to be triggered again if the naples is already admitted
-	if err := c.nmdState.cmd.UpdateCMDClient(controllers); err != nil {
+	if err := c.nmdState.UpdateCMDClient(controllers); err != nil {
 		log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
 		return err
 	}

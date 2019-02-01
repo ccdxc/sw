@@ -19,7 +19,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/nic/agent/nmd/state"
+	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
@@ -46,11 +46,15 @@ func createMockAgent(name string) *mockAgent {
 		nicDeleted: make(map[string]*cmd.SmartNIC),
 	}
 }
-func (ag *mockAgent) RegisterCMD(cmd state.CmdAPI) error {
+func (ag *mockAgent) RegisterCMD(cmd nmdapi.CmdAPI) error {
 	return nil
 }
 
 func (ag *mockAgent) UnRegisterCMD() error {
+	return nil
+}
+
+func (ag *mockAgent) UpdateCMDClient(resolvers []string) error {
 	return nil
 }
 
@@ -60,6 +64,10 @@ func (ag *mockAgent) NaplesConfigHandler(req *http.Request) (interface{}, error)
 
 func (ag *mockAgent) GetAgentID() string {
 	return "mockAgent_" + ag.name
+}
+
+func (ag *mockAgent) GetPrimaryMAC() string {
+	return ag.nic.GetName()
 }
 
 func (ag *mockAgent) CreateSmartNIC(n *cmd.SmartNIC) error {
@@ -202,6 +210,9 @@ func (srv *mockRPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequ
 func (srv *mockRPCServer) WatchNICs(meta *api.ObjectMeta, stream grpc.SmartNICUpdates_WatchNICsServer) error {
 	// walk local db and send stream resp
 	for _, nic := range srv.nicdb {
+		if nic.GetName() != meta.GetName() {
+			continue
+		}
 		// watch event
 		watchEvt := grpc.SmartNICEvent{
 			EventType: api.EventType_CreateEvent,

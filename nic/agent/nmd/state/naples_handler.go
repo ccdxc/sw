@@ -7,14 +7,15 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/certsproxy"
-	"github.com/pensando/sw/venice/utils/rpckit"
-
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/nic/agent/nmd/cmdif"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/nic/agent/nmd/rolloutif"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
@@ -60,6 +61,27 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 
 // StartManagedMode starts the tasks required for managed mode
 func (n *NMD) StartManagedMode() error {
+	if n.cmd == nil {
+		// create the CMD client
+		cmdClient, err := cmdif.NewCmdClient(n, n.cmdRegURL, n.cmdUpdURL, n.resolverClient)
+		if err != nil {
+			log.Errorf("Error creating CMD client. Err: %v", err)
+			return err
+		}
+		log.Infof("CMD client {%+v} is running", cmdClient)
+		// CMD client sets n.cmd when it's ready
+	}
+
+	if n.rollout == nil {
+		roClient, err := rolloutif.NewRoClient(n, n.resolverClient)
+		if err != nil {
+			log.Errorf("Error creating Rollout Controller client. Err: %v", err)
+			return err
+		}
+		log.Infof("Rollout client {%+v} is running", roClient)
+		n.rollout = roClient
+	}
+
 	// Set Registration in progress flag
 	log.Infof("NIC in managed mode, mac: %v", n.config.Spec.PrimaryMAC)
 	n.setRegStatus(true)
@@ -193,6 +215,7 @@ func (n *NMD) StartManagedMode() error {
 					// and move on to next stage
 					log.Infof("NIC admitted into cluster, mac: %s", mac)
 					n.setRegStatus(false)
+					n.nicRegInterval = n.nicRegInitInterval
 
 					err = n.setClusterCredentials(resp)
 					if err != nil {
@@ -227,10 +250,8 @@ func (n *NMD) StartManagedMode() error {
 					return nil
 
 				case cmd.SmartNICStatus_UNKNOWN.String():
-
 					// Not an expected response
 					log.Errorf("Unknown response, nic: %+v phase: %v", nicObj, resp)
-					return fmt.Errorf("nknown response, nic: %+v phase: %v", nicObj, resp)
 				}
 			}
 		}
@@ -292,14 +313,30 @@ func (n *NMD) StopManagedMode() error {
 		n.certsProxy.Stop()
 		n.certsProxy = nil
 	}
+
 	// stop ongoing NIC registration, if any
-	close(n.stopNICReg)
+	if n.GetRegStatus() {
+		n.stopNICReg <- true
+	}
+
 	// stop ongoing NIC updates, if any
-	close(n.stopNICUpd)
+	if n.GetUpdStatus() {
+		n.stopNICUpd <- true
+	}
 
 	// Wait for goroutines launched in managed mode
 	// to complete
 	n.Wait()
+
+	if n.cmd != nil {
+		n.cmd.Stop()
+		n.cmd = nil
+	}
+
+	if n.rollout != nil {
+		n.rollout.Stop()
+		n.rollout = nil
+	}
 
 	// release TLS provider resources
 	if n.tlsProvider != nil {

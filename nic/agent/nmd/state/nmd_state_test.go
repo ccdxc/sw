@@ -23,17 +23,18 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // Test params
@@ -52,6 +53,12 @@ var (
 
 	logger = log.GetNewLogger(log.GetDefaultConfig("nmd_state_test"))
 
+	// NIC registration interval
+	nicRegInterval = time.Second
+
+	// NIC update interval
+	nicUpdInterval = 100 * time.Millisecond
+
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nmd_state_test"},
@@ -67,7 +74,7 @@ type mockAgent struct {
 }
 
 // RegisterNMD registers NMD with PlatformAgent
-func (m *mockAgent) RegisterNMD(nmd NmdPlatformAPI) error {
+func (m *mockAgent) RegisterNMD(nmd nmdapi.NmdPlatformAPI) error {
 	return nil
 }
 
@@ -111,11 +118,9 @@ func (m *mockAgent) GetPlatformSigner(nic *cmd.SmartNIC) (crypto.Signer, error) 
 
 type mockCtrler struct {
 	sync.Mutex
-	nicDB map[string]*cmd.SmartNIC
-}
-
-func (m *mockCtrler) UpdateCMDClient(resolvers []string) error {
-	return nil
+	nicDB                     map[string]*cmd.SmartNIC
+	numUpdateSmartNICReqCalls int
+	smartNICWatcherRunning    bool
 }
 
 func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, error) {
@@ -181,18 +186,39 @@ func (m *mockCtrler) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICRes
 func (m *mockCtrler) UpdateSmartNICReq(nic *cmd.SmartNIC) (*cmd.SmartNIC, error) {
 	m.Lock()
 	defer m.Unlock()
-
+	m.numUpdateSmartNICReqCalls++
 	key := objectKey(nic.ObjectMeta)
 	m.nicDB[key] = nic
 	return nic, nil
 }
 
 func (m *mockCtrler) WatchSmartNICUpdates() {
+	m.Lock()
+	defer m.Unlock()
+	m.smartNICWatcherRunning = true
+}
+
+func (m *mockCtrler) Stop() {
+	m.Lock()
+	defer m.Unlock()
+	m.smartNICWatcherRunning = false
+	m.numUpdateSmartNICReqCalls = 0
+}
+
+func (m *mockCtrler) IsSmartNICWatcherRunning() bool {
+	return m.smartNICWatcherRunning
+}
+
+func (m *mockCtrler) GetNumUpdateSmartNICReqCalls() int {
+	m.Lock()
+	defer m.Unlock()
+	return m.numUpdateSmartNICReqCalls
 }
 
 type mockRolloutCtrler struct {
 	sync.Mutex
-	status []roprotos.SmartNICOpStatus
+	status                 []roprotos.SmartNICOpStatus
+	smartNICWatcherRunning bool
 }
 
 func (f *mockRolloutCtrler) UpdateSmartNICRolloutStatus(status *roprotos.SmartNICRolloutStatusUpdate) error {
@@ -202,17 +228,30 @@ func (f *mockRolloutCtrler) UpdateSmartNICRolloutStatus(status *roprotos.SmartNI
 }
 
 func (f *mockRolloutCtrler) WatchSmartNICRolloutUpdates() error {
+	f.Lock()
+	defer f.Unlock()
+	f.smartNICWatcherRunning = true
 	return nil
 }
+
 func (f *mockRolloutCtrler) Stop() {
+	f.Lock()
+	defer f.Unlock()
+	f.smartNICWatcherRunning = false
+}
+
+func (f *mockRolloutCtrler) IsSmartNICWatcherRunning() bool {
+	f.Lock()
+	defer f.Unlock()
+	return f.smartNICWatcherRunning
 }
 
 type mockUpgAgent struct {
-	n         NmdRolloutAPI
+	n         nmdapi.NmdRolloutAPI
 	forceFail bool
 }
 
-func (f *mockUpgAgent) RegisterNMD(n NmdRolloutAPI) error {
+func (f *mockUpgAgent) RegisterNMD(n nmdapi.NmdRolloutAPI) error {
 	f.n = n
 	return nil
 }
@@ -265,26 +304,27 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 	// create new NMD
 	nm, err := NewNMD(ag,
 		upgAgt,
+		nil, // no resolver
 		dbPath,
 		nodeID,
 		nodeID,
 		"localhost:0",
 		"", // no local certs endpoint
 		"", // no remote certs endpoint
-		"",
-		"",
+		"", // no cmd registration endpoint
+		"", // no cmd updates endpoint
 		mode,
-		globals.NicRegIntvl*time.Second,
-		globals.NicUpdIntvl*time.Second)
+		nicRegInterval,
+		nicUpdInterval,
+		WithCMDAPI(ct),
+		WithRolloutAPI(roC))
+
 	if err != nil {
 		log.Errorf("Error creating NMD. Err: %v", err)
 		return nil, nil, nil, nil, nil
 	}
 	Assert(t, nm.GetAgentID() == nodeID, "Failed to match nodeUUID", nm)
 
-	// fake CMD intf
-	nm.RegisterCMD(ct)
-	nm.RegisterROCtrlClient(roC)
 	// Ensure the NMD's rest server is started
 	nm.CreateIPClient(nil)
 	err = nm.UpdateMgmtIP()
@@ -465,11 +505,13 @@ func TestNaplesRestartHostMode(t *testing.T) {
 
 func TestNaplesNetworkMode(t *testing.T) {
 	t.Skip("Temporarily disabled. TODO. More investigation needed")
+	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
 	// Start NMD in network mode
-	nm, _, _, _, _ := createNMD(t, emDBPath, "network", nicKey1)
+	nm, _, cm, _, ro := createNMD(t, emDBPath, "network", nicKey1)
 	defer stopNMD(t, nm, true)
 	Assert(t, (nm != nil), "Failed to start NMD in network mode", nm)
 
@@ -496,21 +538,89 @@ func TestNaplesNetworkMode(t *testing.T) {
 			return false, nil
 		}
 
-		// Verify update task
-		if nm.GetUpdStatus() == false {
-			log.Errorf("Update NIC is not in progress")
-			return false, nil
-		}
-
 		// Verify rest server status
 		if nm.GetRestServerStatus() == true {
 			log.Errorf("REST server is still up")
 			return false, nil
 		}
 
+		// Verify registration status
+		if nm.GetRegStatus() == true {
+			log.Errorf("Registration is still in progress")
+			return false, nil
+		}
+
+		// Verify update task
+		if nm.GetUpdStatus() == false {
+			log.Errorf("Update NIC is not in progress")
+			return false, nil
+		}
+
+		// Verify watcher is active
+		if nm.GetCMDSmartNICWatcherStatus() == false {
+			log.Errorf("CMD SmartNIC watcher is not active")
+			return false, nil
+		}
+
+		// Verify watcher is active
+		if nm.GetRoSmartNICWatcherStatus() == false {
+			log.Errorf("Rollout SmartNIC watcher is not active")
+			return false, nil
+		}
+
 		return true, nil
 	}
-	AssertEventually(t, f1, "Failed to verify network Mode", string("10ms"), string("30s"))
+	AssertEventually(t, f1, "Failed to verify network Mode", string("50ms"), string("30s"))
+
+	// Verify updates are sent
+	f2 := func() (bool, interface{}) {
+		if cm.GetNumUpdateSmartNICReqCalls() < 3 {
+			log.Errorf("Received %d update calls, want 3", cm.GetNumUpdateSmartNICReqCalls())
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f2, "Failed to verify network Mode", string("500ms"), string("30s"))
+
+	// Simulate de-admit re-admit
+	nic, err := nm.GetSmartNIC()
+	AssertOk(t, err, "NIC not found in nicDB")
+	nic.Status.AdmissionPhase = cmd.SmartNICStatus_PENDING.String()
+	nm.StopManagedMode()
+	nm.RegisterCMD(cm)
+	nm.RegisterROCtrlClient(ro)
+	nm.StartManagedMode()
+
+	f3 := func() (bool, interface{}) {
+		nic, err := nm.GetSmartNIC()
+		AssertOk(t, err, "NIC not found in nicDB")
+
+		// Verify NIC admission
+		if nic.Status.AdmissionPhase != cmd.SmartNICStatus_ADMITTED.String() {
+			log.Errorf("NIC is not admitted")
+			return false, nil
+		}
+
+		// Verify update task
+		if nm.GetUpdStatus() == false {
+			log.Errorf("Update NIC is not in progress")
+			return false, nil
+		}
+
+		// Verify CMD watcher is active
+		if nm.GetCMDSmartNICWatcherStatus() == false {
+			log.Errorf("CMD SmartNIC watcher is not active")
+			return false, nil
+		}
+
+		// Verify Rollout watcher is active
+		if nm.GetRoSmartNICWatcherStatus() == false {
+			log.Errorf("Rollout SmartNIC watcher is not active")
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f3, "Failed to verify network Mode", string("50ms"), string("30s"))
 }
 
 // TestNaplesModeTransitions tests the mode transition

@@ -631,7 +631,9 @@ func (s *RPCServer) ListSmartNICs(ctx context.Context, sel *api.ObjectMeta) ([]*
 
 	// walk all smartnics and add it to the list
 	for _, nic := range nics {
-		niclist = append(niclist, nic.SmartNIC)
+		if sel.GetName() == nic.GetName() {
+			niclist = append(niclist, nic.SmartNIC)
+		}
 	}
 
 	return niclist, nil
@@ -677,6 +679,16 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 				return errors.New("Error reading from channel")
 			}
 
+			// convert to smartnic object
+			nic, err := cache.SmartNICStateFromObj(evt.Obj)
+			if err != nil {
+				return err
+			}
+
+			if sel.GetName() != nic.GetName() {
+				continue
+			}
+
 			// get event type from memdb event
 			var etype api.EventType
 			switch evt.EventType {
@@ -686,12 +698,6 @@ func (s *RPCServer) WatchNICs(sel *api.ObjectMeta, stream grpc.SmartNICUpdates_W
 				etype = api.EventType_UpdateEvent
 			case memdb.DeleteEvent:
 				etype = api.EventType_DeleteEvent
-			}
-
-			// convert to smartnic object
-			nic, err := cache.SmartNICStateFromObj(evt.Obj)
-			if err != nil {
-				return err
 			}
 
 			nic.Lock()

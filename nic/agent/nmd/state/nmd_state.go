@@ -20,6 +20,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
+	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
+	"github.com/pensando/sw/nic/agent/nmd/cmdif"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
@@ -28,13 +30,33 @@ import (
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
 
+// NewNMDOption is a functional option type that allows dependency injection in NMD constructor
+// This is mostly intended for testing, as in the normal code flow dependencies are instantiated
+// based on mode
+type NewNMDOption func(*NMD)
+
+// WithCMDAPI returns a functional option used to pass a CMD API implementation to NewNMD
+func WithCMDAPI(cmd nmdapi.CmdAPI) NewNMDOption {
+	return func(nmd *NMD) {
+		nmd.cmd = cmd
+	}
+}
+
+// WithRolloutAPI returns a functional option used to pass a Rollout API implementation to NewNMD
+func WithRolloutAPI(ro nmdapi.RolloutCtrlAPI) NewNMDOption {
+	return func(nmd *NMD) {
+		nmd.rollout = ro
+	}
+}
+
 // NewNMD returns a new NMD instance
-func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
+func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient resolver.Interface,
 	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, cmdRegURL, cmdUpdURL, mode string,
-	regInterval, updInterval time.Duration) (*NMD, error) {
+	regInterval, updInterval time.Duration, opts ...NewNMDOption) (*NMD, error) {
 
 	var emdb emstore.Emstore
 	var err error
@@ -95,26 +117,32 @@ func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
 
 	// create NMD object
 	nm := NMD{
-		store:            emdb,
-		nodeUUID:         nodeUUID,
-		macAddr:          macAddr,
-		platform:         platform,
-		upgmgr:           upgmgr,
-		nic:              nil,
-		nicRegInterval:   regInterval,
-		isRegOngoing:     false,
-		nicUpdInterval:   updInterval,
-		isUpdOngoing:     false,
-		isRestSrvRunning: false,
-		listenURL:        listenURL,
-		certsListenURL:   certsListenURL,
-		remoteCertsURL:   remoteCertsURL,
-		cmdRegURL:        cmdRegURL,
-		cmdUpdateURL:     cmdUpdURL,
-		stopNICReg:       make(chan bool, 1),
-		stopNICUpd:       make(chan bool, 1),
-		config:           config,
-		completedOps:     make(map[roprotos.SmartNICOpSpec]bool),
+		store:              emdb,
+		nodeUUID:           nodeUUID,
+		macAddr:            macAddr,
+		platform:           platform,
+		upgmgr:             upgmgr,
+		resolverClient:     resolverClient,
+		nic:                nil,
+		nicRegInitInterval: regInterval,
+		nicRegInterval:     regInterval,
+		isRegOngoing:       false,
+		nicUpdInterval:     updInterval,
+		isUpdOngoing:       false,
+		isRestSrvRunning:   false,
+		listenURL:          listenURL,
+		certsListenURL:     certsListenURL,
+		remoteCertsURL:     remoteCertsURL,
+		cmdRegURL:          cmdRegURL,
+		cmdUpdURL:          cmdUpdURL,
+		stopNICReg:         make(chan bool, 1),
+		stopNICUpd:         make(chan bool, 1),
+		config:             config,
+		completedOps:       make(map[roprotos.SmartNICOpSpec]bool),
+	}
+
+	for _, o := range opts {
+		o(&nm)
 	}
 
 	// register NMD with the platform agent
@@ -151,7 +179,7 @@ func NewNMD(platform PlatformAPI, upgmgr UpgMgrAPI,
 }
 
 // RegisterCMD registers a CMD object
-func (n *NMD) RegisterCMD(cmd CmdAPI) error {
+func (n *NMD) RegisterCMD(cmd nmdapi.CmdAPI) error {
 
 	//n.Lock()
 	//defer n.Unlock()
@@ -173,6 +201,38 @@ func (n *NMD) UnRegisterCMD() error {
 	//defer n.Unlock()
 	log.Infof("Received UnRegisterCMD message.")
 	n.cmd = nil
+	return nil
+}
+
+// UpdateCMDClient updates the cmd client with the resolver information obtained by DHCP
+func (n *NMD) UpdateCMDClient(resolverURLs []string) error {
+	if n.cmd != nil {
+		n.cmd.Stop()
+		n.UnRegisterCMD()
+	}
+
+	var cmdResolverURL []string
+	// Ensure ResolverURLs are updated
+	for _, res := range resolverURLs {
+		cmdResolverURL = append(cmdResolverURL, fmt.Sprintf("%s:%s", res, globals.CMDGRPCAuthPort))
+	}
+
+	resolverClient := resolver.New(&resolver.Config{Name: "NMD", Servers: cmdResolverURL})
+
+	// TODO Move this to resolver client at least for cmdUpdatesURL
+	// Use the first resolverURL as registration and updatesURL
+
+	cmdRegistrationURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCUnauthPort)
+	cmdUpdatesURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCAuthPort)
+
+	newCMDClient, err := cmdif.NewCmdClient(n, cmdRegistrationURL, cmdUpdatesURL, resolverClient)
+	if err != nil {
+		log.Errorf("Failed to update CMD Client. Err: %v", err)
+		return err
+	}
+	n.cmd = newCMDClient
+	log.Infof("Updated cmd client with newer cmd resolver URLs: %v", resolverURLs)
+
 	return nil
 }
 
@@ -460,7 +520,7 @@ func (n *NMD) setClusterCredentials(resp *grpc.NICAdmissionResponse) error {
 }
 
 // RegisterROCtrlClient registers client of RolloutController to NMD
-func (n *NMD) RegisterROCtrlClient(rollout RolloutCtrlAPI) error {
+func (n *NMD) RegisterROCtrlClient(rollout nmdapi.RolloutCtrlAPI) error {
 
 	n.Lock()
 	defer n.Unlock()

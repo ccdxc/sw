@@ -7,14 +7,14 @@ import (
 	"sync"
 
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/nic/agent/nmd/state"
+	"github.com/pensando/sw/nic/agent/nmd/api"
 )
 
 // NaplesPlatformAgent is the mock platform for testing purposes
 type NaplesPlatformAgent struct {
-	nmd         state.NmdPlatformAPI // NMD server instance
-	certificate []byte               // Factory certificate
-	key         crypto.Signer        // private key for factory certificate
+	nmd         api.NmdPlatformAPI // NMD server instance
+	certificate []byte             // Factory certificate
+	key         crypto.Signer      // private key for factory certificate
 	sync.Mutex
 }
 
@@ -26,7 +26,7 @@ func NewNaplesPlatformAgent() (*NaplesPlatformAgent, error) {
 }
 
 // RegisterNMD sets the agent for this platform
-func (np *NaplesPlatformAgent) RegisterNMD(nmd state.NmdPlatformAPI) error {
+func (np *NaplesPlatformAgent) RegisterNMD(nmd api.NmdPlatformAPI) error {
 	// store the nmd instance
 	np.Lock()
 	defer np.Unlock()

@@ -12,7 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/nic/agent/nmd/state"
+	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -34,16 +34,17 @@ type CmdClient struct {
 	sync.Mutex     // Lock for CmdClient
 	sync.WaitGroup // wait group to wait on all go routines to exit
 
-	cmdRegistrationURL    string             // CMD endpoint for the NIC registration API
-	cmdUpdatesURL         string             // CMD endpoint for NIC watches and updates
-	resolverClient        resolver.Interface // resolver Interface
-	registrationRPCClient *rpckit.RPCClient  // RPC client for NIC registration API
-	updatesRPCClient      *rpckit.RPCClient  // RPC client for NIC watches and updates
-	nmd                   state.NmdAPI       // NMD instance
-	watchCtx              context.Context    // ctx for object watch
-	watchCancel           context.CancelFunc // cancel for object watch
-	debugStats            *debugStats.Stats
-	startTime             time.Time
+	cmdRegistrationURL     string             // CMD endpoint for the NIC registration API
+	cmdUpdatesURL          string             // CMD endpoint for NIC watches and updates
+	resolverClient         resolver.Interface // resolver Interface
+	registrationRPCClient  *rpckit.RPCClient  // RPC client for NIC registration API
+	updatesRPCClient       *rpckit.RPCClient  // RPC client for NIC watches and updates
+	nmd                    nmdapi.NmdAPI      // NMD instance
+	watchCtx               context.Context    // ctx for object watch
+	watchCancel            context.CancelFunc // cancel for object watch
+	debugStats             *debugStats.Stats
+	startTime              time.Time
+	smartNICWatcherRunning bool
 }
 
 // objectKey returns object key from object meta
@@ -52,10 +53,7 @@ func objectKey(meta api.ObjectMeta) string {
 }
 
 // NewCmdClient creates an CMD client object
-func NewCmdClient(nmd state.NmdAPI, cmdRegistrationURL, cmdUpdatesURL string, resolverClient resolver.Interface) (*CmdClient, error) {
-
-	// watch contexts
-	watchCtx, watchCancel := context.WithCancel(context.Background())
+func NewCmdClient(nmd nmdapi.NmdAPI, cmdRegistrationURL, cmdUpdatesURL string, resolverClient resolver.Interface) (*CmdClient, error) {
 
 	// create CmdClient object
 	client := CmdClient{
@@ -63,8 +61,6 @@ func NewCmdClient(nmd state.NmdAPI, cmdRegistrationURL, cmdUpdatesURL string, re
 		cmdUpdatesURL:      cmdUpdatesURL,
 		resolverClient:     resolverClient,
 		nmd:                nmd,
-		watchCtx:           watchCtx,
-		watchCancel:        watchCancel,
 		startTime:          time.Now(),
 	}
 
@@ -150,7 +146,7 @@ func (client *CmdClient) getAgentName() string {
 }
 
 // runSmartNICWatcher runs smartNIC watcher loop
-func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
+func (client *CmdClient) runSmartNICWatcher() {
 	// setup wait group
 	client.Add(1)
 	defer client.Done()
@@ -163,7 +159,7 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 			err := client.initUpdatesRPC()
 			if err != nil {
 				if client.watchCtx.Err() == context.Canceled {
-					log.Info("Context Cancelled, exiting smartNIC watcher")
+					log.Infof("Context Cancelled, exiting smartNIC watcher %+v", client)
 					return
 				}
 				time.Sleep(time.Second)
@@ -171,12 +167,12 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 			}
 		}
 
+		id := client.nmd.GetPrimaryMAC()
+
 		// Start the watch on SmartNIC object
-		// TODO : Set the filter to watch only for local NIC's MAC
-		//        The local NIC's MAC is obtained as part REST API
-		//        configuration for naples when it is set to managed mode
+		log.Infof("Starting watch for SmartNIC %s", id)
 		smartNICRPCClient := grpc.NewSmartNICUpdatesClient(client.getUpdatesRPCClient().ClientConn)
-		stream, err := smartNICRPCClient.WatchNICs(ctx, &api.ObjectMeta{})
+		stream, err := smartNICRPCClient.WatchNICs(client.watchCtx, &api.ObjectMeta{Name: id})
 		if err != nil {
 			log.Errorf("Error watching smartNIC: Err: %v watchCtx.Err: %v",
 				err, client.watchCtx.Err())
@@ -214,12 +210,11 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 
 			log.Infof("CMDIF: Got nic watch event: {%+v} type: %v", evt.Nic, evt.EventType)
 
-			// Ignore events for non-local NIC
-			// In managed mode, client.nmd.nic holds the initial configuration obtained
-			// from REST API. GetSmartNIC() returns this initial config object.
-			nic, err := client.nmd.GetSmartNIC()
-			if err != nil || nic == nil || evt.Nic.Name != nic.GetName() {
-				log.Debugf("Ignoring non-local nics, local-nic: %+v, rcvd-nic: %+v", nic, evt.Nic)
+			// Ignore events for non-local NIC.
+			// This should not happen, as CMD should only send notifications for the SmartNIC object
+			// managed by this agent
+			if evt.Nic.Name != id {
+				log.Errorf("Notification received for non-local SmartNIC (%s): %+v:", id, evt)
 				continue
 			}
 
@@ -262,10 +257,16 @@ func (client *CmdClient) runSmartNICWatcher(ctx context.Context) {
 
 // Stop stops CmdClient  and all watching go routines
 func (client *CmdClient) Stop() {
-
 	log.Infof("Stopping Client: %+v", client)
-	client.watchCancel()
+	if client.watchCancel != nil {
+		client.watchCancel()
+	}
 	client.Wait()
+
+	client.Lock()
+	client.watchCtx, client.watchCancel = nil, nil
+	client.smartNICWatcherRunning = false
+	client.Unlock()
 
 	client.closeUpdatesRPC()
 	client.closeRegistrationRPC()
@@ -393,36 +394,16 @@ func (client *CmdClient) UpdateSmartNICReq(nic *cluster.SmartNIC) (*cluster.Smar
 
 // WatchSmartNICUpdates starts a CMD watchers to receive SmartNIC objects updates
 func (client *CmdClient) WatchSmartNICUpdates() {
-	go client.runSmartNICWatcher(client.watchCtx)
+	client.Lock()
+	defer client.Unlock()
+	client.watchCtx, client.watchCancel = context.WithCancel(context.Background())
+	client.smartNICWatcherRunning = true
+	go client.runSmartNICWatcher()
 }
 
-// UpdateCMDClient updates the cmd client with the resolver information obtained by DHCP
-func (client *CmdClient) UpdateCMDClient(resolverURLs []string) error {
-	client.Stop()
-	client.nmd.UnRegisterCMD()
-
-	var cmdResolverURL []string
-	// Ensure ResolverURLs are updated
-	for _, res := range resolverURLs {
-		cmdResolverURL = append(cmdResolverURL, fmt.Sprintf("%s:%s", res, globals.CMDGRPCAuthPort))
-	}
-
-	resolverClient := resolver.New(&resolver.Config{Name: "NMD", Servers: cmdResolverURL})
-
-	// TODO Move this to resolver client at least for cmdUpdatesURL
-	// Use the first resolverURL as registration and updatesURL
-
-	cmdRegistrationURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCUnauthPort)
-	cmdUpdatesURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCAuthPort)
-
-	newCMDClient, err := NewCmdClient(client.nmd, cmdRegistrationURL, cmdUpdatesURL, resolverClient)
-	if err != nil {
-		log.Errorf("Failed to update CMD Client. Err: %v", err)
-		return err
-	}
-	client = newCMDClient
-	client.resolverClient = resolverClient
-	log.Infof("Updated cmd client with newer cmd resolver URLs: %v", resolverURLs)
-
-	return nil
+// IsSmartNICWatcherRunning returns true if the client has an active watch on CMD for SmartNIC objects
+func (client *CmdClient) IsSmartNICWatcherRunning() bool {
+	client.Lock()
+	defer client.Unlock()
+	return client.smartNICWatcherRunning
 }

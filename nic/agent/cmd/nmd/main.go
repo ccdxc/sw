@@ -16,9 +16,9 @@ import (
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/nmd"
+	"github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
-	"github.com/pensando/sw/nic/agent/nmd/state"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
@@ -151,7 +151,7 @@ func main() {
 	}
 
 	var delphiClient clientAPI.Client
-	var uc state.UpgMgrAPI
+	var uc api.UpgMgrAPI
 	var dServ *nmd.DelphiService
 	if !*standalone {
 		dServ = nmd.NewDelphiService()

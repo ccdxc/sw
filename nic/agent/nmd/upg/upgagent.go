@@ -5,7 +5,7 @@ package upg
 import (
 	"sync"
 
-	"github.com/pensando/sw/nic/agent/nmd/state"
+	"github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/venice/utils/log"
 
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
@@ -18,9 +18,9 @@ const upgAgentIntegration = false
 type NaplesUpgClient struct {
 	sync.Mutex
 
-	nmd       state.NmdRolloutAPI // NMD server instance
-	delphiSDK clientAPI.Client    // handle to delphi
-	upgsdk    upggosdk.UpgSdk     // handle to upgrade manager interaction
+	nmd       api.NmdRolloutAPI // NMD server instance
+	delphiSDK clientAPI.Client  // handle to delphi
+	upgsdk    upggosdk.UpgSdk   // handle to upgrade manager interaction
 }
 
 // NewNaplesUpgradeClient returns a new mock upgrade agent
@@ -44,7 +44,7 @@ func NewNaplesUpgradeClient(delphiSDK clientAPI.Client) (*NaplesUpgClient, error
 }
 
 // RegisterNMD for further use
-func (u *NaplesUpgClient) RegisterNMD(nmd state.NmdRolloutAPI) error {
+func (u *NaplesUpgClient) RegisterNMD(nmd api.NmdRolloutAPI) error {
 	u.nmd = nmd
 	return nil
 }

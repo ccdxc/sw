@@ -1,6 +1,6 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
-package state
+package api
 
 import (
 	"crypto"
@@ -31,16 +31,21 @@ type CmdAPI interface {
 	// WatchSmartNICUpdates starts a CMD watchers to receive SmartNIC objects updates
 	WatchSmartNICUpdates()
 
-	// UpdateCMDClient updates the cmd client with the new resolver URLs obtained as a part of dhcp discovery
-	UpdateCMDClient(resolvers []string) error
+	// Stop stops the CMD watchers and releases all resources
+	Stop()
+
+	// IsSmartNICWatcherRunning returns true if there is active SmartNIC watch on CMD
+	IsSmartNICWatcherRunning() bool
 }
 
 // NmdAPI is the API provided by NMD to CMD
 type NmdAPI interface {
 	RegisterCMD(cmd CmdAPI) error
 	UnRegisterCMD() error
+	UpdateCMDClient(resolvers []string) error
 	GenClusterKeyPair() (*keymgr.KeyPair, error)
 	GetAgentID() string
+	GetPrimaryMAC() string
 	GetSmartNIC() (*cluster.SmartNIC, error)
 	SetSmartNIC(*cluster.SmartNIC) error
 	CreateSmartNIC(nic *cluster.SmartNIC) error
@@ -113,4 +118,6 @@ type RolloutCtrlAPI interface {
 	UpdateSmartNICRolloutStatus(status *protos.SmartNICRolloutStatusUpdate) error
 	// Stop the watcher, client and free up any resources
 	Stop()
+	// IsSmartNICWatcherRunning returns true if there is active SmartNIC watch on CMD
+	IsSmartNICWatcherRunning() bool
 }

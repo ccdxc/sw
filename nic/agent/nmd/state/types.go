@@ -11,12 +11,14 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
 
@@ -27,22 +29,26 @@ type NMD struct {
 	sync.Mutex     // Lock for NMD object
 	sync.WaitGroup // Wait group
 
-	store    emstore.Emstore // Embedded DB
-	nodeUUID string          // Node's UUID
-	macAddr  string          // Primary MAC addr
-	cmd      CmdAPI          // CMD API object
-	platform PlatformAPI     // Platform Agent object
-	rollout  RolloutCtrlAPI  // Rollout API Object
-	upgmgr   UpgMgrAPI       // Upgrade Manager API
+	store          emstore.Emstore       // Embedded DB
+	nodeUUID       string                // Node's UUID
+	macAddr        string                // Primary MAC addr
+	cmdRegURL      string                // The URL for the CMD registration API
+	cmdUpdURL      string                // The URL for the CMD NIC update API
+	cmd            nmdapi.CmdAPI         // CMD API object
+	platform       nmdapi.PlatformAPI    // Platform Agent object
+	rollout        nmdapi.RolloutCtrlAPI // Rollout API Object
+	upgmgr         nmdapi.UpgMgrAPI      // Upgrade Manager API
+	resolverClient resolver.Interface    // Resolver client instance
 
 	config       nmd.Naples    // Naples config received via REST
 	nic          *cmd.SmartNIC // SmartNIC object
 	DelphiClient clientAPI.Client
 	IPClient     *IPClient
 
-	stopNICReg     chan bool     // channel to stop NIC registration
-	nicRegInterval time.Duration // time interval between nic registration in seconds
-	isRegOngoing   bool          // status of ongoing nic registration task
+	stopNICReg         chan bool     // channel to stop NIC registration
+	nicRegInitInterval time.Duration // the initial time interval between nic registration in seconds
+	nicRegInterval     time.Duration // time interval between nic registration in seconds. Gets adjusted dynamically with exponential backoff
+	isRegOngoing       bool          // status of ongoing nic registration task
 
 	stopNICUpd     chan bool     // channel to stop NIC update
 	nicUpdInterval time.Duration // time interval between nic updates in seconds
@@ -57,8 +63,6 @@ type NMD struct {
 	remoteCertsURL string                            // URL where local process cert request are forwarder
 	certsProxy     *certsproxy.CertsProxy            // the CertsProxy instance
 	tlsProvider    *tlsproviders.KeyMgrBasedProvider // TLS provider holding cluster keys
-	cmdRegURL      string                            // CMD Registration URL
-	cmdUpdateURL   string                            //CMD Update URL
 	// Rollout related stuff
 	completedOps  map[roprotos.SmartNICOpSpec]bool // the ops that were requested by spec and got completed
 	inProgressOps *roprotos.SmartNICOpSpec         // the ops thats currently in progress
@@ -203,4 +207,14 @@ func (n *NMD) UpdateMgmtIP() error {
 	//}
 
 	//return nil
+}
+
+// GetCMDSmartNICWatcherStatus returns true if the NMD CMD interface has an active watch
+func (n *NMD) GetCMDSmartNICWatcherStatus() bool {
+	return n.cmd != nil && n.cmd.IsSmartNICWatcherRunning()
+}
+
+// GetRoSmartNICWatcherStatus returns true if the NMD rollout interface has an active watch
+func (n *NMD) GetRoSmartNICWatcherStatus() bool {
+	return n.rollout != nil && n.rollout.IsSmartNICWatcherRunning()
 }

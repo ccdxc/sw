@@ -65,9 +65,40 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 
 	log.Infof("SmartNIC update, mac: %s", nic.ObjectMeta.Name)
 
+	// get current state from db
+	oldNic, err := n.GetSmartNIC()
+	if err != nil {
+		log.Errorf("Error retrieving state for nic %+v: %v", nic, err)
+	}
+
 	// update nic in the DB
 	n.SetSmartNIC(nic)
-	err := n.store.Write(nic)
+	err = n.store.Write(nic)
+	if err != nil {
+		log.Errorf("Error updating NMD state %+v: %v", nic, err)
+	}
+
+	if nic.Status.AdmissionPhase == cmd.SmartNICStatus_PENDING.String() &&
+		oldNic != nil && oldNic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() {
+		log.Infof("SmartNIC %s has been de-admitted from cluster", nic.ObjectMeta.Name)
+		// NIC has been de-admitted by user. Stop and restart managed mode.
+		// This will stop health updates and start registration attempts.
+		go func() {
+			// this will spawn a goroutine that will wait for cleanup to finish and then restart managaed mode
+			// it has to be done in a separate goroutine because this code is executing in the context of the
+			// watcher and the watcher has to terminate for the cleanup to be complete
+			err = n.StopManagedMode()
+			if err != nil {
+				log.Errorf("Error stopping NIC managed mode: %v", err)
+			}
+			n.Add(1)
+			defer n.Done()
+			err = n.StartManagedMode()
+			if err != nil {
+				log.Errorf("Error starting NIC managed mode: %v", err)
+			}
+		}()
+	}
 
 	return err
 }

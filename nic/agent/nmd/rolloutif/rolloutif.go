@@ -9,7 +9,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/nmd/state"
+	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -27,19 +27,20 @@ type RoClient struct {
 	watchCancel       context.CancelFunc // cancel for object watch
 	resolverClient    resolver.Interface // resolver Interface
 	rpcClient         *rpckit.RPCClient  // RPC client for NIC watches and updates
-	nmd               state.RolloutAPI
+	nmd               nmdapi.RolloutAPI
 	smartNICRPCClient protos.SmartNICRolloutApiClient
 	statusUpdateChan  chan protos.SmartNICRolloutStatusUpdate
 	stopped           bool
+	watcherRunning    bool
 }
 
 // NewRoClient creates an Rollout client object implementing RolloutAPI API
-func NewRoClient(nmd state.RolloutAPI, resolverClient resolver.Interface) (state.RolloutCtrlAPI, error) {
+func NewRoClient(nmd nmdapi.RolloutAPI, resolverClient resolver.Interface) (nmdapi.RolloutCtrlAPI, error) {
 	return newRoClient(nmd, resolverClient)
 }
 
 // newRoClient creates an Rollout client object implementing RolloutAPI API
-func newRoClient(nmd state.RolloutAPI, resolverClient resolver.Interface) (*RoClient, error) {
+func newRoClient(nmd nmdapi.RolloutAPI, resolverClient resolver.Interface) (*RoClient, error) {
 
 	// watch contexts
 	watchCtx, watchCancel := context.WithCancel(context.Background())
@@ -66,8 +67,11 @@ func newRoClient(nmd state.RolloutAPI, resolverClient resolver.Interface) (*RoCl
 
 // WatchSmartNICRolloutUpdates sets up the watch
 func (client *RoClient) WatchSmartNICRolloutUpdates() error {
+	client.Lock()
+	defer client.Unlock()
 	client.Add(1)
 	// start watching objects
+	client.watcherRunning = true
 	go client.runSmartNICRolloutWatcher(client.watchCtx)
 	return nil
 }
@@ -154,11 +158,19 @@ func (client *RoClient) Stop() {
 	client.Lock()
 	client.stopped = true
 	client.watchCancel()
+	client.watcherRunning = false
 	close(client.statusUpdateChan)
 	client.Unlock()
 
 	client.Wait()
 	client.closeGRPCClient()
+}
+
+// IsSmartNICWatcherRunning returns true if the client has an active watch on the rollout controller
+func (client *RoClient) IsSmartNICWatcherRunning() bool {
+	client.Lock()
+	defer client.Unlock()
+	return client.watcherRunning
 }
 
 // runSmartNICWatcher runs smartNIC watcher loop
