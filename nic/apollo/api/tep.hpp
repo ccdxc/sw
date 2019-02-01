@@ -164,6 +164,12 @@ public:
     }
 
     /**
+     * @brief     return TEP IPv4 address
+     * @return    IPv4 address of the TEP
+     */
+    ipv4_addr_t ip(void) const { return key_.ip_addr; }
+
+    /**
      * @brief     return impl instance of this tep object
      * @return    impl instance of the tep object
      */

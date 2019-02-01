@@ -120,6 +120,11 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         tep = tep_db()->tep_find(&tep_key);
         SDK_ASSERT(tep != NULL);
         rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
+        OCI_TRACE_DEBUG("Processing route table %u, route %s -> nh %u, TEP %s",
+                        route_table_info->key.id,
+                        ippfx2str(&rtable->routes[i].prefix),
+                        rtable->routes[i].nhid,
+                        ipv4addr2str(tep->ip()));
     }
     ret = lpm_tree_create(rtable, lpm_root_addr_,
                           route_table_impl_db()->lpm_table_size());
