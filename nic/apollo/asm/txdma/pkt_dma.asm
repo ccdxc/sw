@@ -31,7 +31,7 @@ pkt_dma:
 
     // mem2pkt has an implicit fence. all subsequent dma is blocked
     // update the rxdma copy of cindex once every 16 pkts
-    seq         c1, k.txdma_control_cindex[3:0], 0
+    seq         c1, k.txdma_control_cindex[5:0], 0
     // 2 phvwr
     CAPRI_DMA_CMD_PHV2MEM_SETUP_COND(rxdma_ci_update_dma_cmd, \
                                 k.{txdma_control_rxdma_cindex_addr_sbit0_ebit31... \
