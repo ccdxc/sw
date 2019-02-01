@@ -39,4 +39,10 @@ export class AppPage {
     }
   }
 
+  async verifyInVenice() {
+    const EC = protractor.ExpectedConditions;
+    const appShellComponent = element(by.css('.app-shell-container'));
+    expect(await appShellComponent.isPresent()).toBeGreaterThan(0);  // VeniceUI should be in logged-in stage.
+  }
+
 }

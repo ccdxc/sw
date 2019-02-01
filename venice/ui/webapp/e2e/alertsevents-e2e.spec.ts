@@ -18,20 +18,16 @@ describe('venice-ui alertsevents', () => {
     browser.waitForAngularEnabled(false);
     const until = protractor.ExpectedConditions;
     await browser.wait(until.presenceOf(element(by.css('.app-shell-container'))), 10000, 'Element taking too long to appear in the DOM');
-    await browser.wait(until.urlContains('/cluster/cluster'), 10000);
     done();
   });
 
   afterEach(async (done) => {
     try {
       await appPage.reset();
+      done();
     } catch (error) {
-      // We perform two page refreshes to clean state for the next test
-      await browser.refresh();
-      await browser.refresh();
       fail('Failed during cleanup: ' + error);
     }
-    done();
   });
 
   it('should have events in the table', async () => {

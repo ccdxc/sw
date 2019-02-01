@@ -4,21 +4,28 @@
 const { SpecReporter } = require('jasmine-spec-reporter');
 const tsConfig = require("./e2e/tsconfig.e2e.json");
 
-const E2E_BASE_URL = process.env['E2E_BASE_URL'] || 'http://localhost:4200/';
+const E2E_BASE_URL = process.env['E2E_BASE_URL'] || 'https://localhost:4200/';
 const DISABLE_FOCUS_TESTS = process.env['DISABLE_FOCUS_TESTS'] || 'false';
 exports.config = {
   allScriptsTimeout: 11000,
   specs: [
     './e2e/**/*.spec.ts'
   ],
+  suites: {
+    login: './e2e/login-e2e.spec.ts',
+    search: './e2e/search-e2e.spec.ts',
+    route: './e2e/routing-e2e.spec.ts',
+    all: './e2e/**/*e2e.spec.ts'
+  },
   capabilities: {
     browserName: 'chrome',
-
+    //binary: process.env.CHROME_BIN,
     chromeOptions: {
-      args: ["--headless", "--disable-gpu", "--window-size=1200,900"]  
+        args: ["--headless",  "--no-sandbox", "--disable-gpu", "--window-size=1200,900"]  
       // The following allowes watching the e2e test run and is helpful for debugging
-      // args: ["--window-size=1200,900"]
+       // args: ["--window-size=1200,900"]
     },
+    //  loggingPrefs: {driver: 'ALL', server: 'ALL', browser: 'ALL'}
   },
   // Disabling so that we can use native async/await
   // Using async/await causes control flow to become unstable

@@ -24,9 +24,11 @@ export class LoginPage {
   async verifyPage() {
     const EC = protractor.ExpectedConditions;
     const loginComponent = element(by.css('app-login'));
-    await browser.wait(EC.urlContains('/login'), 10000, 'url did not contain /login');
+    await browser.wait(EC.urlContains('/login'), 10000, 'login.spec.verifyPage() - url did not contain /login');
     expect(await loginComponent.isPresent()).toBeTruthy('login component was not present');
   }
+
+
 
   async verifyFailedLogin() {
     const EC = protractor.ExpectedConditions;

@@ -205,6 +205,7 @@ ui-container-helper:
 	cat venice/ui/webapp/package.json | jq 'del(.dependencies."web-app-framework")' > tools/docker-files/ui-container/webapp/package.json
 	@cd tools/docker-files/ui-container; docker build --squash -t ${REGISTRY_URL}/${UI_BUILD_CONTAINER} .
 
+
 # running as 'make container-compile UI_FRAMEWORK=1' will also force the UI-framework compilation
 container-compile:
 	@mkdir -p ${PWD}/bin/cbin
@@ -343,7 +344,9 @@ e2e-api:
 	docker exec -it node0 sh -c 'E2E_TEST=1 CGO_LDFLAGS_ALLOW="-I/usr/share/libtool" go test -v ./test/e2e/api -configFile=/import/src/github.com/pensando/sw/${E2E_CONFIG}'
 
 e2e-ui:
-	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g)  --rm -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=http://192.168.30.10:9000" -w /import/src/github.com/pensando/sw/venice/ui/webapp ${REGISTRY_URL}/${UI_BUILD_CONTAINER} ng e2e -s=false
+	docker run --privileged  -it -l pens --network pen-dind-net --user $(shell id -u):$(shell id -g) -v ${PWD}:/import/src/github.com/pensando/sw -e "E2E_BASE_URL=https://192.168.30.10:9000" -w /import/src/github.com/pensando/sw/venice/ui/webapp ${REGISTRY_URL}/${UI_BUILD_CONTAINER} /bin/bash -c "npm run webdriver-update-ci ; ng e2e --configuration=e2e-ci  --webdriverUpdate=false --suite=all| tee  /import/src/github.com/pensando/sw/e2e-ui.log" 
+
+	
 
 # Target to run venice e2e a dind environment. Uses real HAL as Agent Datapath and starts HAL with model
 e2e-sanities:

@@ -14,7 +14,8 @@
     "svgo": "find ./dist/assets -name '*.svg' | xargs svgo",
     "e2e": "export DISABLE_FOCUS_TESTS='true' && ng e2e -s=false",
     "e2e-dev": "export DISABLE_FOCUS_TESTS='false' && ng e2e -s=false --proxy-config proxy.conf.js",
-    "replaceShrinkwrap": "sed -i.bak 's/http:/https:/g' npm-shrinkwrap.json && rm npm-shrinkwrap.json.bak"
+    "replaceShrinkwrap": "sed -i.bak 's/http:/https:/g' npm-shrinkwrap.json && rm npm-shrinkwrap.json.bak",
+    "webdriver-update-ci": "webdriver-manager update --standalone false --gecko false --versions.chrome 2.44"
   },
   "private": true,
   "dependencies": {

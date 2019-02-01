@@ -16,15 +16,13 @@ describe('venice-ui Login', () => {
     try {
       await appPage.reset();
     } catch (error) {
-      // We perform two page refreshes to clean state for the next test
-      await browser.refresh();
-      await browser.refresh();
       fail('Failed during cleanup: ' + error);
     }
     done();
   });
 
   it('should display login page and go to homepage', async () => {
+
     await loginPage.navigateTo();
     // Should route to login
     await loginPage.verifyPage();
@@ -49,6 +47,7 @@ describe('venice-ui Login', () => {
   });
 
   it('should go to login page on refresh', async () => {
+    await appPage.reset();
     // initial login
     await loginPage.navigateTo();
     await loginPage.verifyPage();
@@ -64,7 +63,7 @@ describe('venice-ui Login', () => {
 
     // Refresh the page and go back to login
     await browser.refresh();
-    await loginPage.verifyPage();
+    await appPage.verifyInVenice();  // Previously we call - loginPage.verifyPage();  As we change login logic, new we just want to verify we are in Venice.
 
   });
 

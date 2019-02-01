@@ -34,6 +34,8 @@ export class Alertsevents {
       const colVals = await element.all(by.css('.ui-table-scrollable-body-table tbody tr:nth-of-type(' + index + ') td'));
       for (let colIndex = 0; colIndex < colVals.length; colIndex++) {
         const colVal: ElementFinder = colVals[colIndex];
+        const colText = await colVal.getText();
+        // to debug -- console.log('row: ' + index  + ' column: ' + colIndex + ' value:' + colText);
         if (colIndex === 2) {
           // Severity column
           // Icon should be present
@@ -44,7 +46,11 @@ export class Alertsevents {
           const actualSeverityText = await colVal.element(by.css('div')).getText();
           expect(severityValues).toContain(actualSeverityText, 'severity value was not one of the ui hint values');
         } else {
-          expect(await colVal.getText()).not.toBe('');
+          if (colIndex < (colVals.length - 1) ) {
+            expect(colText).not.toBe('');
+          } else {
+            expect(colText).toBe(''); // last column contains action icons
+          }
         }
       }
     }
