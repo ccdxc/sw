@@ -250,6 +250,66 @@ end:
 }
 
 // ----------------------------------------------------------------------------
+// Program LIF policers
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_tunnelif_update_lif_policers (pd_tunnelif_t *pd_tunnelif,
+                                 bool reset)
+{
+    hal_ret_t   ret;
+    if_t        *hal_if;
+    pd_lif_t    *pd_lif;
+    lif_t       *pi_lif;
+    int         burst_size;        
+    
+    hal_if = (if_t *) pd_tunnelif->pi_if;
+    SDK_ASSERT(hal_if != NULL);
+
+    // Program the VF properties table
+    pi_lif = find_lif_by_id(hal_if->lif_id);
+    if (!pi_lif) {
+        HAL_TRACE_ERR("LIF not found, lif_id: {}", hal_if->lif_id);
+        ret = HAL_RET_ERR;
+        goto fail_flag;
+    }
+    pd_lif = (pd_lif_t *) pi_lif->pd_lif;
+    SDK_ASSERT(pd_lif);
+    
+    // Burst is 10 times the MTU
+    burst_size = 1500 * 10;
+    // Program the LIF RX policer
+    pi_lif->qos_info.rx_policer.type = POLICER_TYPE_BPS;
+    if (reset) {
+        pi_lif->qos_info.rx_policer.rate = 0;
+        pi_lif->qos_info.rx_policer.burst = 0;
+    } else {
+        pi_lif->qos_info.rx_policer.rate = hal_if->ingress_bw * 1000;
+        pi_lif->qos_info.rx_policer.burst = burst_size;
+    }
+    ret = lif_pd_rx_policer_program_hw(pd_lif, true);
+    if (ret != HAL_RET_OK)
+        goto fail_flag;
+    
+    // Program the LIF TX policer
+    pi_lif->qos_info.tx_policer.type = POLICER_TYPE_BPS;
+    if (reset) {
+        pi_lif->qos_info.tx_policer.rate = 0;
+        pi_lif->qos_info.tx_policer.burst = 0;
+    } else {
+        pi_lif->qos_info.tx_policer.rate = hal_if->egress_bw * 1000;
+        pi_lif->qos_info.tx_policer.burst = burst_size;
+    }
+    ret = lif_pd_tx_policer_program_hw(pd_lif, true);
+    if (ret != HAL_RET_OK)
+        goto fail_flag;
+    return HAL_RET_OK;
+
+fail_flag:
+    HAL_TRACE_ERR("Unable to program policers for LIF: ret: {}", ret);
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Program HW
 // ----------------------------------------------------------------------------
 hal_ret_t
@@ -257,6 +317,7 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
 {
     hal_ret_t            ret;
     if_t                 *hal_if;
+    pd_lif_t             *pd_lif;
 
     hal_if = (if_t *) pd_tunnelif->pi_if;
     SDK_ASSERT(hal_if != NULL);
@@ -301,17 +362,25 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
             ret = HAL_RET_ERR;
             goto fail_flag;
         }
-        uint16_t vf_id = ((pd_lif_t *)(lif->pd_lif))->hw_lif_id;
+        pd_lif = (pd_lif_t *) lif->pd_lif;
+        SDK_ASSERT(pd_lif);
+        uint16_t vf_id = pd_lif->hw_lif_id;
         ret = pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif, vf_id,
                                                 is_upgrade);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
             goto fail_flag;
+        
+        // Program LIF policers
+        ret = pd_tunnelif_update_lif_policers(pd_tunnelif, false);
+        if (ret != HAL_RET_OK)
+            goto fail_flag;
+        
     }
 
     return HAL_RET_OK;
 
 fail_flag:
-    HAL_TRACE_ERR("unable to program hw");
+    HAL_TRACE_ERR("Unable to program Tunnel interface: ret: {}", ret);
     return ret;
     // return (pd_tunnelif_deprogram_hw(pd_tunnelif));
 }
@@ -341,6 +410,7 @@ pd_tunnelif_deprogram_hw(pd_tunnelif_t *pd_tunnelif)
     if (hal_if->encap_type ==
            intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
         ret = pd_tunnelif_depgm_vf_properties_tbl(pd_tunnelif);
+        ret = pd_tunnelif_update_lif_policers(pd_tunnelif, true);
     }
     return ret;
 }
