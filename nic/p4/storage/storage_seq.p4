@@ -529,8 +529,8 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
                                      intr_addr, intr_data, status_len, 
 				     status_offset0, status_dma_en,
                                      next_db_en, intr_en,
-				     next_db_action_barco_push, rate_limit_en,
-				     rate_limit_src_en, rate_limit_dst_en) {
+				     next_db_action_barco_push, rate_limit_src_en,
+				     rate_limit_dst_en, rate_limit_en) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC1_USE(seq_kivec1_scratch, seq_kivec1)
@@ -556,9 +556,9 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_comp_status_desc0_scratch.next_db_en, next_db_en);
   modify_field(seq_comp_status_desc0_scratch.intr_en, intr_en);
   modify_field(seq_comp_status_desc0_scratch.next_db_action_barco_push, next_db_action_barco_push);
-  modify_field(seq_comp_status_desc0_scratch.rate_limit_en, rate_limit_en);
   modify_field(seq_comp_status_desc0_scratch.rate_limit_src_en, rate_limit_src_en);
   modify_field(seq_comp_status_desc0_scratch.rate_limit_dst_en, rate_limit_dst_en);
+  modify_field(seq_comp_status_desc0_scratch.rate_limit_en, rate_limit_en);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(seq_kivec4.barco_ring_addr, seq_comp_status_desc0_scratch.next_db_addr);
@@ -571,9 +571,9 @@ action seq_comp_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_kivec5.next_db_en, seq_comp_status_desc0_scratch.next_db_en);
   modify_field(seq_kivec5.intr_en, seq_comp_status_desc0_scratch.intr_en);
   modify_field(seq_kivec5.next_db_action_barco_push, seq_comp_status_desc0_scratch.next_db_action_barco_push);
-  modify_field(seq_kivec5.rate_limit_en, seq_comp_status_desc0_scratch.rate_limit_en);
   modify_field(seq_kivec5.rate_limit_src_en, seq_comp_status_desc0_scratch.rate_limit_src_en);
   modify_field(seq_kivec5.rate_limit_dst_en, seq_comp_status_desc0_scratch.rate_limit_dst_en);
+  modify_field(seq_kivec5.rate_limit_en, seq_comp_status_desc0_scratch.rate_limit_en);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the SGL mem2mem DMA for ordering.
@@ -954,8 +954,8 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
                                     intr_addr, intr_data, status_len, 
 				    status_offset0, status_dma_en,
                                     next_db_en, intr_en,
-				    next_db_action_barco_push, rate_limit_en,
-				    rate_limit_src_en, rate_limit_dst_en) {
+				    next_db_action_barco_push, rate_limit_src_en,
+				    rate_limit_dst_en, rate_limit_en) {
 
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC4_USE(seq_kivec4_scratch, seq_kivec4)
@@ -980,9 +980,9 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_xts_status_desc0_scratch.next_db_en, next_db_en);
   modify_field(seq_xts_status_desc0_scratch.intr_en, intr_en);
   modify_field(seq_xts_status_desc0_scratch.next_db_action_barco_push, next_db_action_barco_push);
-  modify_field(seq_xts_status_desc0_scratch.rate_limit_en, rate_limit_en);
   modify_field(seq_xts_status_desc0_scratch.rate_limit_src_en, rate_limit_src_en);
   modify_field(seq_xts_status_desc0_scratch.rate_limit_dst_en, rate_limit_dst_en);
+  modify_field(seq_xts_status_desc0_scratch.rate_limit_en, rate_limit_en);
 
   // Store the various parts of the descriptor in the K+I vectors for later use
   modify_field(seq_kivec4.barco_ring_addr, seq_xts_status_desc0_scratch.next_db_addr);
@@ -996,9 +996,9 @@ action seq_xts_status_desc0_handler(next_db_addr, next_db_data,
   modify_field(seq_kivec5xts.next_db_en, seq_xts_status_desc0_scratch.next_db_en);
   modify_field(seq_kivec5xts.intr_en, seq_xts_status_desc0_scratch.intr_en);
   modify_field(seq_kivec5xts.next_db_action_barco_push, seq_xts_status_desc0_scratch.next_db_action_barco_push);
-  modify_field(seq_kivec5xts.rate_limit_en, seq_xts_status_desc0_scratch.rate_limit_en);
   modify_field(seq_kivec5xts.rate_limit_src_en, seq_xts_status_desc0_scratch.rate_limit_src_en);
   modify_field(seq_kivec5xts.rate_limit_dst_en, seq_xts_status_desc0_scratch.rate_limit_dst_en);
+  modify_field(seq_kivec5xts.rate_limit_en, seq_xts_status_desc0_scratch.rate_limit_en);
 
   // Setup the doorbell to be rung if the doorbell enabled is set.
   // Fence with the SGL mem2mem DMA for ordering.

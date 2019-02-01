@@ -332,7 +332,7 @@ acc_ring_t::seq_desc_fill(dp_mem_t *seq_desc_container,
 
     /*
      * There's really no rate limiting in model but we'll enable all
-     * possible rate limiting modes to exersize P4+ code.
+     * possible rate limiting modes to exercise P4+ code.
      */
     seq_desc->acc_rate_limit_src_en = true;
     seq_desc->acc_rate_limit_dst_en = true;

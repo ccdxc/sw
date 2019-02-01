@@ -20,7 +20,7 @@ struct request_params {
 	uint16_t rp_flags;	/* mode/type flags (rflags) */
 
 	struct batch_info *rp_batch_info;
-	struct batch_page_entry *rp_page_entry;
+	struct batch_page *rp_page;
 	uint16_t rp_batch_index;
 
 	struct pnso_service_request *rp_svc_req;

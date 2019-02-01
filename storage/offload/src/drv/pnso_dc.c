@@ -188,7 +188,7 @@ decompress_sub_chain_from_crypto(struct service_info *svc_info,
 		dc_desc->u.cd_bits.cc_src_is_list = true;
 		CPDC_PPRINT_DESC(dc_desc);
 	}
-        chain_rate_limiting_set_from_crypto(svc_info, crypto_chain);
+        svc_rate_limit_control_eval(svc_info, &crypto_chain->ccp_rl_control);
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,

@@ -50,6 +50,11 @@ struct phv_ p;
 #define r_alt_desc_addr             r_pad_boundary   // alternate descriptor address
 #define r_src_qaddr                 r_last_sgl_p     // qstate address
  
+/*
+ * Local vars (due to registers shortage)
+ */
+#define l_data_len                  d.integ_data1
+ 
 %%
     .param storage_seq_barco_ring_pndx_read
     .param storage_seq_comp_aol_pad_handler
@@ -77,6 +82,7 @@ storage_seq_comp_status_handler:
     seq	        c3, r_comp_data_len, r0
     add.c3      r_comp_data_len, 65536, r0
     phvwr	p.seq_kivec5_data_len, r_comp_data_len
+    tblwr.l	l_data_len, r_comp_data_len
     sub         r_total_len, r_comp_data_len, SIZE_IN_BYTES(sizeof(struct seq_comp_hdr_t))
     phvwr	p.comp_hdr_data_len, r_total_len.hx
    
@@ -279,7 +285,7 @@ possible_rate_limit:
     //             else
     //                 r_rl_len += r_src_len
 
-    add         r_src_len, SEQ_KIVEC5_DATA_LEN, r0
+    add         r_src_len, l_data_len, r0
     bbeq        SEQ_KIVEC5_RATE_LIMIT_EN, 0, possible_barco_push
     add.c6      r_src_len, r_src_len, r_pad_len         // delay slot
 
@@ -327,13 +333,13 @@ possible_chain_alt_desc:
     // On compress error, possibly can still chain using an alternate set of
     // next-in-chain descriptors.
 
-    phvwr	p.seq_kivec5_data_len, r0
+    tblwr.l	l_data_len, r0
     bbeq        SEQ_KIVEC5_CHAIN_ALT_DESC_ON_ERROR, 0, possible_sgl_pdma_alt_src
     sll         r_alt_desc_addr, SEQ_KIVEC4_BARCO_NUM_DESCS, \
                 SEQ_KIVEC4_BARCO_DESC_SIZE      // delay slot
     add         r_alt_desc_addr, r_alt_desc_addr, SEQ_KIVEC4_BARCO_DESC_ADDR
     phvwr       p.seq_kivec4_barco_desc_addr, r_alt_desc_addr
-    phvwr	p.seq_kivec5_data_len, SEQ_KIVEC5_ALT_DATA_LEN
+    tblwr.l	l_data_len, SEQ_KIVEC5_ALT_DATA_LEN
     SEQ_METRICS_SET(alt_descs_taken)
     
 possible_sgl_pdma_alt_src:
@@ -343,7 +349,7 @@ possible_sgl_pdma_alt_src:
 
     bbeq        SEQ_KIVEC5_SGL_PDMA_ALT_SRC_ON_ERROR, 0, possible_rate_limit
     phvwr	p.comp_hdr_cksum, r0                    // delay slot
-    phvwr	p.seq_kivec5_data_len, SEQ_KIVEC5_ALT_DATA_LEN
+    tblwr.l	l_data_len, SEQ_KIVEC5_ALT_DATA_LEN
     SEQ_METRICS_SET(alt_bufs_taken)
     b           sgl_pdma_xfer_full
     phvwri      p.seq_kivec8_alt_buf_addr_en, 1         // delay slot

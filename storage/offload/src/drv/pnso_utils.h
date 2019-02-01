@@ -134,55 +134,17 @@ bool putil_is_bulk_desc_in_use(uint16_t flags);
 struct per_core_resource *putil_get_per_core_resource(void);
 
 static inline void
-svc_rate_limiting_en_eval(struct service_info *svc_info,
-			  struct service_rate_limit_en *rl_en)
+svc_rate_limit_control_eval(struct service_info *svc_info,
+			    struct rate_limit_control *rl)
 {
-	rl_en->rate_limit_src_en =
+	rl->rate_limit_src_en =
 		sonic_rate_limit_src_en_get() &&
 		chn_service_src_blist_is_host_present(svc_info);
-	rl_en->rate_limit_dst_en =
+	rl->rate_limit_dst_en =
 		sonic_rate_limit_dst_en_get() &&
 		chn_service_dst_blist_is_host_present(svc_info);
-	rl_en->rate_limit_en =
-		rl_en->rate_limit_src_en || rl_en->rate_limit_dst_en;
-}
-
-static inline void
-chain_rate_limiting_en_eval(struct service_info *svc_info,
-			    struct service_rate_limit_en *rl_en)
-{
-	rl_en->rate_limit_src_en =
-		sonic_chain_rate_limit_src_en_get() &&
-		chn_service_src_blist_is_host_present(svc_info);
-	rl_en->rate_limit_dst_en =
-		sonic_chain_rate_limit_dst_en_get() &&
-		chn_service_dst_blist_is_host_present(svc_info);
-	rl_en->rate_limit_en =
-		rl_en->rate_limit_src_en || rl_en->rate_limit_dst_en;
-}
-
-static inline void
-chain_rate_limiting_set_from_cpdc(struct service_info *svc_info,
-				  struct cpdc_chain_params *cpdc_chain)
-{
-	struct service_rate_limit_en rl_en;
-
-	chain_rate_limiting_en_eval(svc_info, &rl_en);
-	cpdc_chain->ccp_cmd.rate_limit_src_en = rl_en.rate_limit_src_en;
-	cpdc_chain->ccp_cmd.rate_limit_dst_en = rl_en.rate_limit_dst_en;
-	cpdc_chain->ccp_cmd.rate_limit_en = rl_en.rate_limit_en;
-}
-
-static inline void
-chain_rate_limiting_set_from_crypto(struct service_info *svc_info,
-				    struct crypto_chain_params *crypto_chain)
-{
-	struct service_rate_limit_en rl_en;
-
-	chain_rate_limiting_en_eval(svc_info, &rl_en);
-	crypto_chain->ccp_cmd.rate_limit_src_en = rl_en.rate_limit_src_en;
-	crypto_chain->ccp_cmd.rate_limit_dst_en = rl_en.rate_limit_dst_en;
-	crypto_chain->ccp_cmd.rate_limit_en = rl_en.rate_limit_en;
+	rl->rate_limit_en =
+		rl->rate_limit_src_en || rl->rate_limit_dst_en;
 }
 
 #endif  /* __PNSO_UTILS_H__ */

@@ -12,6 +12,10 @@
 extern "C" {
 #endif
 
+#ifndef small_bool
+#define small_bool	uint8_t
+#endif
+
 /**
  * struct sequencer_desc: represents the descriptor of the sequencer.
  * @sd_desc_addr: specifies the accelerator descriptor address.
@@ -100,9 +104,12 @@ struct cpdc_chain_params_command {
 	uint32_t desc_dlen_update_en:1;
 	uint32_t hdr_version_wr_en:1;
 	uint32_t cp_hdr_update_en:1;
-	uint32_t rate_limit_src_en:1;
-	uint32_t rate_limit_dst_en:1;
-	uint32_t rate_limit_en:1;
+};
+
+struct rate_limit_control {
+	small_bool	rate_limit_src_en;
+	small_bool	rate_limit_dst_en;
+	small_bool	rate_limit_en;
 };
 
 struct cpdc_chain_params {
@@ -133,6 +140,7 @@ struct cpdc_chain_params {
 	uint8_t ccp_pad_boundary_shift;
 
 	struct cpdc_chain_params_command ccp_cmd;
+	struct rate_limit_control ccp_rl_control;
 };
 
 struct crypto_chain_params_command {
@@ -148,9 +156,6 @@ struct crypto_chain_params_command {
 	uint32_t ccpc_sgl_pdma_en:1;
 	uint32_t ccpc_sgl_pdma_len_from_desc:1;
 	uint32_t ccpc_desc_vec_push_en:1;
-	uint32_t rate_limit_src_en:1;
-	uint32_t rate_limit_dst_en:1;
-	uint32_t rate_limit_en:1;
 };
 
 struct crypto_chain_params {
@@ -176,6 +181,7 @@ struct crypto_chain_params {
 	uint8_t  ccp_blk_boundary_shift;
 
 	struct crypto_chain_params_command ccp_cmd;
+	struct rate_limit_control ccp_rl_control;
 };
 
 /*

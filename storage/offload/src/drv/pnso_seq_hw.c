@@ -251,11 +251,11 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 	OSAL_LOG_DEBUG("%30s: %d", "cp_hdr_update_en",
 			cmd->cp_hdr_update_en);
 	OSAL_LOG_DEBUG("%30s: %d", "rate_limit_src_en",
-			cmd->rate_limit_src_en);
+			chain_params->ccp_rl_control.rate_limit_src_en);
 	OSAL_LOG_DEBUG("%30s: %d", "rate_limit_dst_en",
-			cmd->rate_limit_dst_en);
+			chain_params->ccp_rl_control.rate_limit_dst_en);
 	OSAL_LOG_DEBUG("%30s: %d", "rate_limit_en",
-			cmd->rate_limit_en);
+			chain_params->ccp_rl_control.rate_limit_en);
 }
 
 static void __attribute__((unused))
@@ -358,11 +358,11 @@ pprint_crypto_chain_params(const struct crypto_chain_params *chain_params)
 	OSAL_LOG_DEBUG("%30s: %d", "ccpc_desc_vec_push_en",
 			cmd->ccpc_desc_vec_push_en);
 	OSAL_LOG_DEBUG("%30s: %d", "rate_limit_src_en",
-			cmd->rate_limit_src_en);
+			chain_params->ccp_rl_control.rate_limit_src_en);
 	OSAL_LOG_DEBUG("%30s: %d", "rate_limit_dst_en",
-			cmd->rate_limit_dst_en);
+			chain_params->ccp_rl_control.rate_limit_dst_en);
 	OSAL_LOG_DEBUG("%30s: %d", "rate_limit_en",
-			cmd->rate_limit_en);
+			chain_params->ccp_rl_control.rate_limit_en);
 }
 
 static void
@@ -497,9 +497,9 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc0->options.next_db_en = cmd->ccpc_next_doorbell_en;
 	desc0->options.intr_en = cmd->ccpc_intr_en;
 	desc0->options.action_push = cmd->ccpc_next_db_action_ring_push;
-	desc0->options.rate_limit_en = cmd->rate_limit_en;
-	desc0->options.rate_limit_src_en = cmd->rate_limit_src_en;
-	desc0->options.rate_limit_dst_en = cmd->rate_limit_dst_en;
+	desc0->options.rate_limit_en = chain_params->ccp_rl_control.rate_limit_en;
+	desc0->options.rate_limit_src_en = chain_params->ccp_rl_control.rate_limit_src_en;
+	desc0->options.rate_limit_dst_en = chain_params->ccp_rl_control.rate_limit_dst_en;
 
 	desc1->comp_buf_addr = cpu_to_be64(chain_params->ccp_comp_buf_addr);
 	desc1->aol_src_vec_addr = cpu_to_be64(chain_params->ccp_aol_src_vec_addr);
@@ -587,9 +587,9 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 	desc0->options.next_db_en = cmd->ccpc_next_doorbell_en;
 	desc0->options.intr_en = cmd->ccpc_intr_en;
 	desc0->options.action_push = cmd->ccpc_next_db_action_ring_push;
-	desc0->options.rate_limit_en = cmd->rate_limit_en;
-	desc0->options.rate_limit_src_en = cmd->rate_limit_src_en;
-	desc0->options.rate_limit_dst_en = cmd->rate_limit_dst_en;
+	desc0->options.rate_limit_en = chain_params->ccp_rl_control.rate_limit_en;
+	desc0->options.rate_limit_src_en = chain_params->ccp_rl_control.rate_limit_src_en;
+	desc0->options.rate_limit_dst_en = chain_params->ccp_rl_control.rate_limit_dst_en;
 
 	desc1->comp_sgl_src_addr = cpu_to_be64(chain_params->ccp_comp_sgl_src_addr);
 	desc1->sgl_pdma_dst_addr = cpu_to_be64(chain_params->ccp_sgl_pdma_dst_addr);
@@ -615,7 +615,7 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 	struct sonic_accel_ring *ring;
 	struct lif *lif;
 	struct sequencer_desc *seq_desc;
-	struct service_rate_limit_en rl_en;
+	struct rate_limit_control rl;
 	uint32_t index;
 	uint16_t qtype;
 
@@ -663,10 +663,10 @@ hw_setup_desc(struct service_info *svc_info, const void *src_desc,
 	seq_desc->sd_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
 	seq_desc->sd_src_data_len = htonl(svc_info->si_seq_info.sqi_src_data_len);
 	seq_desc->sd_dst_data_len = htonl(svc_info->si_seq_info.sqi_dst_data_len);
-	svc_rate_limiting_en_eval(svc_info, &rl_en);
-	seq_desc->sd_rate_limit_src_en = rl_en.rate_limit_src_en;
-	seq_desc->sd_rate_limit_dst_en = rl_en.rate_limit_dst_en;
-	seq_desc->sd_rate_limit_en = rl_en.rate_limit_en;
+	svc_rate_limit_control_eval(svc_info, &rl);
+	seq_desc->sd_rate_limit_src_en = rl.rate_limit_src_en;
+	seq_desc->sd_rate_limit_dst_en = rl.rate_limit_dst_en;
+	seq_desc->sd_rate_limit_en = rl.rate_limit_en;
 
 	if (svc_info->si_seq_info.sqi_batch_mode) {
 		seq_desc->sd_batch_mode = true;
@@ -717,7 +717,7 @@ hw_cleanup_desc(struct service_info *svc_info)
 static void
 hw_ring_db(struct service_info *svc_info)
 {
-	struct batch_page_entry *page_entry;
+	struct batch_page *page;
 	struct queue *seq_q;
 	struct sequencer_desc *seq_desc;
 
@@ -734,15 +734,18 @@ hw_ring_db(struct service_info *svc_info)
 	 * If db is being rung for a batch page, update descriptor data size
 	 * to the total data size represented by the page.
 	 */
-	page_entry = svc_info->si_batch_info.sbi_page_entry;
-	if (page_entry) {
+	page = svc_info->si_batch_info.sbi_page;
+	if (page) {
 		seq_desc = svc_info->si_seq_info.sqi_desc;
 		OSAL_ASSERT(seq_desc);
-		seq_desc->sd_src_data_len = htonl(page_entry->bpe_src_data_len);
-		seq_desc->sd_dst_data_len = htonl(page_entry->bpe_dst_data_len);
-		seq_desc->sd_rate_limit_src_en = page_entry->bpe_rate_limit_src_en;
-		seq_desc->sd_rate_limit_dst_en = page_entry->bpe_rate_limit_dst_en;
-		seq_desc->sd_rate_limit_en = page_entry->bpe_rate_limit_en;
+		seq_desc->sd_src_data_len = htonl(page->bp_src_data_len);
+		seq_desc->sd_dst_data_len = htonl(page->bp_dst_data_len);
+		seq_desc->sd_rate_limit_src_en =
+			page->bp_rl_control.rate_limit_src_en;
+		seq_desc->sd_rate_limit_dst_en =
+			page->bp_rl_control.rate_limit_dst_en;
+		seq_desc->sd_rate_limit_en =
+			page->bp_rl_control.rate_limit_en;
 	}
 
 	sonic_q_ringdb(seq_q, svc_info->si_seq_info.sqi_index);

@@ -346,12 +346,13 @@ chn_read_write_result(struct service_chain *chain)
 
 static void
 init_service_batch_params(struct batch_info *batch_info,
-		struct batch_page_entry *page_entry,
+		struct batch_page *page,
 		uint16_t batch_request_idx, struct service_info *svc_info)
 {
 	struct service_batch_info *svc_batch_info = &svc_info->si_batch_info;
 	uint16_t bulk_desc_idx, desc_idx;
 
+	svc_batch_info->sbi_page = page;
 	if (!((svc_info->si_flags & CHAIN_SFLAG_LONE_SERVICE) ||
 			(svc_info->si_flags & CHAIN_SFLAG_FIRST_SERVICE)))
 		return;
@@ -359,7 +360,6 @@ init_service_batch_params(struct batch_info *batch_info,
 	bulk_desc_idx = batch_request_idx / MAX_PAGE_ENTRIES;
 	desc_idx = batch_request_idx % MAX_PAGE_ENTRIES;
 
-	svc_batch_info->sbi_page_entry = page_entry;
 	svc_batch_info->sbi_num_entries = batch_info->bi_num_entries;
 	svc_batch_info->sbi_bulk_desc_idx = bulk_desc_idx;
 	svc_batch_info->sbi_desc_idx = desc_idx;
@@ -798,7 +798,7 @@ chn_create_chain(struct request_params *req_params)
 			svc_info->si_flags |= CHAIN_SFLAG_IN_BATCH;
 
 			init_service_batch_params(req_params->rp_batch_info,
-					req_params->rp_page_entry,
+					req_params->rp_page,
 					req_params->rp_batch_index, svc_info);
 		}
 

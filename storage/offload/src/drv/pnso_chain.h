@@ -179,7 +179,7 @@ struct sequencer_info {
 };
 
 struct service_batch_info {
-	struct batch_page_entry *sbi_page_entry;
+	struct batch_page *sbi_page;
 	uint16_t sbi_num_entries;	/* total # of requests */
 	uint16_t sbi_bulk_desc_idx;	/* index within batch info descs */
 	uint16_t sbi_desc_idx;	/* index within bulk desc */
@@ -232,12 +232,6 @@ struct service_cpdc_sgl {
 struct service_crypto_aol {
 	struct crypto_aol  *aol;
 	enum mem_pool_type mpool_type;
-};
-
-struct service_rate_limit_en {
-	bool	rate_limit_src_en;
-	bool	rate_limit_dst_en;
-	bool	rate_limit_en;
 };
 
 struct service_info {

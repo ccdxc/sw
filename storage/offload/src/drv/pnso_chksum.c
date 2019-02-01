@@ -224,7 +224,7 @@ chksum_sub_chain_from_cpdc(struct service_info *svc_info,
 	sgl = (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) ?
 		svc_info->si_pb_sgl : svc_info->si_src_sgl.sgl;
 
-        chain_rate_limiting_set_from_cpdc(svc_info, cpdc_chain);
+        svc_rate_limit_control_eval(svc_info, &cpdc_chain->ccp_rl_control);
 	err = seq_setup_chksum_chain_params(cpdc_chain, svc_info, chksum_desc,
 			sgl, svc_info->si_num_tags);
 	if (err) {
@@ -247,7 +247,7 @@ static pnso_error_t
 chksum_sub_chain_from_crypto(struct service_info *svc_info,
 			     struct crypto_chain_params *crypto_chain)
 {
-        chain_rate_limiting_set_from_crypto(svc_info, crypto_chain);
+        svc_rate_limit_control_eval(svc_info, &crypto_chain->ccp_rl_control);
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,

@@ -12,6 +12,7 @@ extern "C" {
 
 #include "pnso_req.h"
 #include "pnso_mpool.h"
+#include "pnso_chain_params.h"
 
 #define MAX_PAGE_ENTRIES_SHIFT_BITS	(4)	/* 16 entries per page */
 #define MAX_PAGE_ENTRIES		(1 << MAX_PAGE_ENTRIES_SHIFT_BITS)
@@ -33,16 +34,13 @@ struct batch_page_tags {
 
 struct batch_page {
 	struct batch_page_tags bp_tags;
+	uint32_t bp_src_data_len;
+	uint32_t bp_dst_data_len;
+	struct rate_limit_control bp_rl_control;
 	struct batch_page_entry {
 		struct pnso_service_request *bpe_req;
 		struct pnso_service_result *bpe_res;
 		struct service_chain *bpe_chain;
-		uint32_t bpe_src_data_len;
-		uint32_t bpe_dst_data_len;
-		uint8_t bpe_rate_limit_src_en : 1,
-			bpe_rate_limit_dst_en : 1,
-			bpe_rate_limit_en     : 1,
-			bpe_rsvd              : 5;
 	} bp_entries[MAX_PAGE_ENTRIES];
 };
 

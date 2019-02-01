@@ -88,6 +88,8 @@ typedef struct {
              next_doorbell_en     :1,	// enable chain doorbell
              intr_en              :1,	// enable intr_data write to intr_pa
              next_db_action_barco_push:1,	// next_db action is actually a Barco push
+             rate_limit_src_en    :1,
+             rate_limit_dst_en    :1,
              rate_limit_en        :1, // enable rate limiting
              stop_chain_on_error  :1, // stop chaining on error
              chain_alt_desc_on_error:1,// chain with alternate set of descriptors on error
@@ -130,13 +132,15 @@ typedef struct {
     uint16_t status_len;		// Length for PDMA purposes
     uint8_t  status_offset0;    // Offset to add to status_addr0 before PDMA
     uint8_t  blk_boundary_shift;// log2(block size)
-    uint16_t status_dma_en        :1,	// enable PDMA of status_addr0 to status_addr1
+    uint32_t status_dma_en        :1,	// enable PDMA of status_addr0 to status_addr1
     // NOTE: intr_en and next_doorbell_en can be enabled together.
     // When XTS succeeds, Order of evaluation: 1. next_doorbell_en 2. intr_en.
     // When XTS fails and stop_chain_on_error is set, intr_en will be honored
              next_doorbell_en     :1,	// enable chain doorbell
              intr_en              :1,	// enable intr_data write to intr_pa
              next_db_action_barco_push:1,	// next_db action is actually a Barco push
+             rate_limit_src_en    :1,
+             rate_limit_dst_en    :1,
              rate_limit_en        :1, // enable rate limiting
              stop_chain_on_error  :1, // stop chaining on error
              comp_len_update_en   :1, // enable compression length update

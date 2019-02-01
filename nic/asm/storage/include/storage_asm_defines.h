@@ -1647,7 +1647,6 @@ _inner_label1:;                                                         \
 
 /*
  * Set HW Tx rate limiter, with scale factor given in _rl_units_scale.
- * Always program a non-zero rate after scaling.
  */
 #define SEQ_RATE_LIMIT_ENABLE_CHECK(_rate_limit_en, _cf)                \
     seq     _cf, _rate_limit_en[0], 1;                                  \

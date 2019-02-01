@@ -378,7 +378,7 @@ crypto_sub_chain_from_cpdc(struct service_info *svc_info,
 	cpdc_chain->ccp_cmd.ccpc_aol_pad_en =
 		!!cpdc_chain->ccp_pad_buf_addr;
 
-        chain_rate_limiting_set_from_cpdc(svc_info, cpdc_chain);
+        svc_rate_limit_control_eval(svc_info, &cpdc_chain->ccp_rl_control);
 	if (cpdc_chain->ccp_cmd.ccpc_sgl_pdma_en)
 		cpdc_chain->ccp_sgl_vec_addr =
 			cpdc_chain->ccp_aol_dst_vec_addr;
@@ -403,7 +403,7 @@ crypto_sub_chain_from_crypto(struct service_info *svc_info,
 	/*
 	 * For testing purposes, it is possible to chain encrypt to decrypt.
 	 */
-        chain_rate_limiting_set_from_crypto(svc_info, crypto_chain);
+        svc_rate_limit_control_eval(svc_info, &crypto_chain->ccp_rl_control);
 	crypto_chain->ccp_cmd.ccpc_next_doorbell_en = true;
 	crypto_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
 

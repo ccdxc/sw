@@ -559,7 +559,7 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 
 		req_params->rp_svc_req = page_entry->bpe_req;
 		req_params->rp_svc_res = page_entry->bpe_res;
-		req_params->rp_page_entry = page_entry;
+		req_params->rp_page = batch_page;
 		req_params->rp_batch_index = idx;
 
 		chain = chn_create_chain(req_params);

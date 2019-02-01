@@ -573,12 +573,11 @@ svc_batch_seq_desc_setup(struct service_info *svc_info,
 			 uint32_t desc_size)
 {
 	struct service_batch_info *svc_batch_info;
-	struct batch_page_entry *page_entry;
-	struct service_rate_limit_en rl_en;
+	struct batch_page *page;
 	uint32_t batch_size, remaining;
+        struct rate_limit_control rl;
 
 	svc_batch_info = &svc_info->si_batch_info;
-	OSAL_ASSERT(svc_batch_info->sbi_num_entries);
 
 	/*
 	 * Calculate cumulative data length for all starter services
@@ -586,16 +585,19 @@ svc_batch_seq_desc_setup(struct service_info *svc_info,
 	 * chain_params data_len.
 	 */
 	if (chn_service_is_starter(svc_info)) {
-		page_entry = svc_batch_info->sbi_page_entry;
-		if (page_entry) {
-			page_entry->bpe_src_data_len +=
+		page = svc_batch_info->sbi_page;
+		if (page) {
+			page->bp_src_data_len +=
 				svc_info->si_seq_info.sqi_src_data_len;
-			page_entry->bpe_dst_data_len +=
+			page->bp_dst_data_len +=
 				svc_info->si_seq_info.sqi_dst_data_len;
-			svc_rate_limiting_en_eval(svc_info, &rl_en);
-			page_entry->bpe_rate_limit_src_en |= rl_en.rate_limit_src_en;
-			page_entry->bpe_rate_limit_dst_en |= rl_en.rate_limit_dst_en;
-			page_entry->bpe_rate_limit_en |= rl_en.rate_limit_en;
+			svc_rate_limit_control_eval(svc_info, &rl);
+			page->bp_rl_control.rate_limit_src_en |=
+				rl.rate_limit_src_en;
+			page->bp_rl_control.rate_limit_dst_en |=
+				rl.rate_limit_dst_en;
+			page->bp_rl_control.rate_limit_en |=
+				rl.rate_limit_en;
 		}
 	}
 
@@ -604,6 +606,7 @@ svc_batch_seq_desc_setup(struct service_info *svc_info,
 		return PNSO_OK;
 	}
 
+	OSAL_ASSERT(svc_batch_info->sbi_num_entries);
 	remaining = svc_batch_info->sbi_num_entries -
 		(svc_batch_info->sbi_bulk_desc_idx * MAX_PAGE_ENTRIES);
 	batch_size = (remaining / MAX_PAGE_ENTRIES) ? MAX_PAGE_ENTRIES :
