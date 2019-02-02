@@ -84,10 +84,11 @@ type RPCClientFactory struct {
 
 // RPCClient contains RPC client definitions
 type RPCClient struct {
-	ClientConn *grpc.ClientConn // gRPC connection
-	nodeuuid   string           // the uuid of the naples
-	mysvcName  string           // my service name
-	remoteURL  string           // URL we are connecting to
+	ClientConn  *grpc.ClientConn // gRPC connection
+	nodeuuid    string           // the uuid of the naples
+	mysvcName   string           // my service name
+	remoteURL   string           // URL we are connecting to
+	useBalancer bool             // Does the client user a resolver
 	options
 }
 
@@ -347,8 +348,6 @@ func NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, erro
 //             At this time, the balancer is explicitly passed. At a later
 //             time, there will be an implicit balancer created.
 func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts ...Option) (*RPCClient, error) {
-	grpcOpts := make([]grpc.DialOption, 0)
-
 	// create RPC client instance
 	rpcClient := &RPCClient{
 		nodeuuid:  factory.nodeuuid,
@@ -374,7 +373,7 @@ func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts 
 	}
 	rpcClient.remoteURL = remoteURL
 
-	serviceTarget := false // need for a balancer.
+	rpcClient.useBalancer = false // need for a balancer.
 	_, _, err := net.SplitHostPort(remoteURL)
 	if err != nil {
 		// Not a URL, must provide a balancer.
@@ -382,7 +381,7 @@ func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts 
 		if rpcClient.balancer == nil {
 			return nil, fmt.Errorf("Requires a balancer to resolve %v", remoteURL)
 		}
-		serviceTarget = true
+		rpcClient.useBalancer = true
 	}
 
 	// set remoteServerName to remoteURL if it was not provided
@@ -413,34 +412,10 @@ func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts 
 		rpcClient.tlsProvider = tlsProvider
 	}
 	rpcClient.logger.Infof("Service %v connecting to remoteURL: %v, TLS: %v", mysvcName, remoteURL, rpcClient.tlsProvider != nil)
-
-	// Get credentials
-	if rpcClient.tlsProvider != nil {
-		tlsOpt, terr := rpcClient.tlsProvider.GetDialOptions(serverName)
-		if terr != nil {
-			rpcClient.logger.Errorf("Failed to get dial options for server %v. Err: %v", mysvcName, terr)
-			return nil, err
-		}
-		grpcOpts = append(grpcOpts, tlsOpt)
-	} else {
-		grpcOpts = append(grpcOpts, grpc.WithInsecure())
+	grpcOpts, err := rpcClient.getDialOpts()
+	if err != nil {
+		return nil, err
 	}
-
-	// For service targets, use the balancer.
-	if serviceTarget {
-		grpcOpts = append(grpcOpts, grpc.WithBalancer(rpcClient.balancer))
-	}
-
-	if rpcClient.maxMsgSize != 0 {
-		grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(rpcClient.maxMsgSize), grpc.MaxCallSendMsgSize(rpcClient.maxMsgSize)))
-	} else {
-		grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(defaultMaxMsgSize), grpc.MaxCallSendMsgSize(defaultMaxMsgSize)))
-	}
-
-	grpcOpts = append(grpcOpts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),
-		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: clientKeepaliveTime}),
-		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(rpcClient)),
-		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(rpcClient)))
 
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(remoteURL, grpcOpts...)
@@ -456,10 +431,36 @@ func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts 
 	return rpcClient, nil
 }
 
+func (c *RPCClient) getDialOpts() ([]grpc.DialOption, error) {
+	grpcOpts := make([]grpc.DialOption, 0)
+	// Get credentials
+	if c.tlsProvider != nil {
+		tlsOpt, terr := c.tlsProvider.GetDialOptions(c.options.remoteServerName)
+		if terr != nil {
+			c.logger.Errorf("Failed to get dial options for server %v. Err: %v", c.mysvcName, terr)
+			return nil, terr
+		}
+		grpcOpts = append(grpcOpts, tlsOpt)
+	} else {
+		grpcOpts = append(grpcOpts, grpc.WithInsecure())
+	}
+	if c.useBalancer {
+		grpcOpts = append(grpcOpts, grpc.WithBalancer(c.balancer))
+	}
+	if c.maxMsgSize != 0 {
+		grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(c.maxMsgSize), grpc.MaxCallSendMsgSize(c.maxMsgSize)))
+	} else {
+		grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(defaultMaxMsgSize), grpc.MaxCallSendMsgSize(defaultMaxMsgSize)))
+	}
+	grpcOpts = append(grpcOpts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: clientKeepaliveTime}),
+		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(c)),
+		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(c)))
+	return grpcOpts, nil
+}
+
 // Reconnect connects back to the remote URL
 func (c *RPCClient) Reconnect() error {
-	var opts grpc.DialOption
-
 	// close old connection
 	if c.ClientConn != nil {
 		err := c.ClientConn.Close()
@@ -469,23 +470,13 @@ func (c *RPCClient) Reconnect() error {
 		c.ClientConn = nil
 	}
 
-	var err error
-	// Get credentials
-	if c.tlsProvider != nil {
-		opts, err = c.tlsProvider.GetDialOptions(c.options.remoteServerName)
-		if err != nil {
-			c.logger.Errorf("Failed to get dial options for server %v. Err: %v", c.remoteURL, err)
-			return err
-		}
-	} else {
-		opts = grpc.WithInsecure()
+	grpcOpts, err := c.getDialOpts()
+	if err != nil {
+		return err
 	}
 
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(c.remoteURL, opts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),
-		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: clientKeepaliveTime}),
-		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(c)),
-		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(c)))
+	conn, err := grpc.Dial(c.remoteURL, grpcOpts...)
 	if err != nil {
 		c.logger.Errorf("could not connect to %s. Err: %v", c.remoteURL, err)
 		return err
