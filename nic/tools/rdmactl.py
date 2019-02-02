@@ -1164,6 +1164,92 @@ def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
 
     return binascii.unhexlify(hex_str)
 
+def getLif(tn, devname):
+    cmd = 'halctl show lif | grep ' + devname + ' | cut -d \' \' -f 1\n'
+    tn.write(cmd)
+    op = tn.expect(['#'], timeout=5)
+    op_list = op[2].split('\n')
+    return op_list[1].rstrip()
+
+def getQBaseAddr(tn, lif, type):
+
+    # start capview
+    cmd = 'capview\n'
+    tn.write(cmd)
+    op = tn.expect(['>'], timeout=5)
+
+    # read lif_qstate
+    cmd = 'read pr_psp_dhs_lif_qstate_map_entry[' + lif + ']\n'
+    tn.write(cmd)
+    op = tn.expect(['>'], timeout=5)
+    op_list = op[2].split('\n')
+
+    while(True):
+        if "Fields:" in op_list[0]:
+            break
+        else:
+            op_list.pop(0)
+
+    m = re.search('qstate_base:.*(0x.*)', op_list[-3])
+    base_addr = int(m.group(1), 16) << 12
+
+    for i in range(0, 4):
+        start = 13 + (2*i)
+
+        # find the size
+        m = re.search('size.*(0x.*)', op_list[start])
+        size = 32 * (1 << int(m.group(1), 16))
+
+        # find the length
+        m = re.search('length.*(0x.*)', op_list[start+1])
+        length = 1 << int(m.group(1), 16)
+
+        # type 0: sq_base_addr
+        if (type == 0):
+            if (i > 0):
+                base_addr += (size * length)
+
+        elif (type == 1):
+            base_addr += (size * length)
+
+    # simulate Ctrl-D to quit capview
+    time.sleep(1)
+    tn.write('\x04\r\n')
+    op = tn.expect(['#'], timeout=5)
+    return hex(base_addr)
+
+def getLifFromLog(tn, devname):
+
+    cmd = 'grep -r rdma_lif /var/log/nicmgr.log | grep rq_base | cut -d \' \' -f 5\n'
+    tn.write(cmd)
+    op = tn.expect(['#'], timeout=5)
+    op_list = op[2].split('\n')
+
+    if (len(op_list) == 2):
+        print("ERROR: Failed to get LIF index from the NIC")
+        exit()
+
+    if devname == 'eth0':
+        m = re.search('lif-(.*):', op_list[1])
+    elif devname == 'eth1':
+        m = re.search('lif-(.*):', op_list[2])
+
+    return m.group(1)
+
+def getQBaseAddrFromLog(tn, lif, type):
+
+    if type == 0:
+        base_type = 'sq_base'
+    else:
+        base_type = 'rq_base'
+
+    cmd = 'grep -r rdma_lif /var/log/nicmgr.log | grep lif-' + lif + ' | grep ' + base_type + ' | cut -d \' \' -f 7\n'
+    # get SQ/RQ base address
+    tn.write(cmd)
+    op = tn.expect(['#'], timeout=5)
+    m = re.search('(0x.*)', op[2])
+
+    return m.group(1).rstrip()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dmesg', help='parse dmesg and parse rdma adminq wqes/cqes', action='store_true', default=False)
@@ -1200,8 +1286,26 @@ grp.add_argument('--aq_debug_disable', help='Disable AQ captrace', type=int, met
 
 args = parser.parse_args()
 
+# Error checks
+if args.host is not None:
+    if args.offline is False or \
+       args.DEVNAME is None:
+
+        print("ERROR: Offline mode mandatory options: --host, --offline, --DEVNAME")
+        exit()
+
+
+if args.offline is True:
+    if args.host is None or \
+       args.DEVNAME is None:
+
+        print("ERROR: Offline mode mandatory options: --host, --offline, --DEVNAME")
+        exit()
+
 # offline debug
-if args.host is not None and args.offline is True:
+if args.host is not None and \
+   args.offline is True and \
+   args.DEVNAME is not None:
 
     # throw an error for unsupported options
     if args.cqcb is not None or \
@@ -1215,6 +1319,12 @@ if args.host is not None and args.offline is True:
        args.q_state is not None:
 
         print("ERROR: This option is not yet supported in offline mode")
+        exit()
+
+    if args.DEVNAME != 'eth0' and \
+       args.DEVNAME != 'eth1':
+
+        print("ERROR: offline mode supports following DEVNAMES - eth0 and eth1")
         exit()
 
     pwd = getPwd()
@@ -1236,84 +1346,78 @@ if args.host is not None and args.offline is True:
     port_num = int(int(port) + 2000)
     tn = telnetToConsole(console, port_num)
 
+    lif = getLif(tn, args.DEVNAME)
+
     # get SQ base address
-    tn.write('grep -r rdma_lif /var/log/nicmgr.log | grep sq_base | cut -d \' \' -f 7\n')
-    op = tn.expect(['#'], timeout=5)
-    op_list = op[2].split('\n')
-    if (len(op_list) == 2):
-        print("ERROR: Failed to get sq_base_address from the NIC")
-        exit()
-    sq_base_addr_lif0 = op_list[1].rstrip()
-    sq_base_addr_lif1 = op_list[2].rstrip()
-    #print(sq_base_addr_lif0)
+    sq_base_addr = getQBaseAddr(tn, lif, 0)
 
     # get RQ base address
-    tn.write('grep -r rdma_lif /var/log/nicmgr.log | grep rq_base | cut -d \' \' -f 7\n')
-    op = tn.expect(['#'], timeout=5)
-    op_list = op[2].split('\n')
-    if (len(op_list) == 2):
-        print("ERROR: Failed to get rq_base_address from the NIC")
-        exit()
-    rq_base_addr_lif0 = op_list[1].rstrip()
-    rq_base_addr_lif1 = op_list[2].rstrip()
-    #print(rq_base_addr_lif0)
+    rq_base_addr = getQBaseAddr(tn, lif, 1)
+
+    tn.close()
+    # clear line
+    clearLine(console, port)
+    time.sleep(1)
+    tn = telnetToConsole(console, port_num)
+    #print(sq_base_addr)
+    #print(rq_base_addr)
 
     # calculate the offset for specified CB
     if args.rqcb0 is not None: 
         qid = args.rqcb0 
-        addr = int(rq_base_addr_lif0, 16) 
+        addr = int(rq_base_addr, 16)
         offset = 0
     elif args.rqcb1 is not None: 
         qid = args.rqcb1 
-        addr = int(rq_base_addr_lif0, 16) 
+        addr = int(rq_base_addr, 16)
         offset = 64
     elif args.rqcb2 is not None: 
         qid = args.rqcb2 
-        addr = int(rq_base_addr_lif0, 16) 
+        addr = int(rq_base_addr, 16)
         offset = 128
     elif args.rqcb3 is not None: 
         qid = args.rqcb3 
-        addr = int(rq_base_addr_lif0, 16) 
+        addr = int(rq_base_addr, 16)
         offset = 192
     elif args.resp_tx_stats is not None: 
         qid = args.resp_tx_stats
-        addr = int(rq_base_addr_lif0, 16)
+        addr = int(rq_base_addr, 16)
         offset = 256
     elif args.resp_rx_stats is not None: 
         qid = args.resp_rx_stats
-        addr = int(rq_base_addr_lif0, 16)
+        addr = int(rq_base_addr, 16)
         offset = 320
     elif args.sqcb0 is not None: 
         qid = args.sqcb0
-        addr = int(sq_base_addr_lif0, 16)
+        addr = int(sq_base_addr, 16)
         offset = 0
     elif args.sqcb1 is not None: 
         qid = args.sqcb1
-        addr = int(sq_base_addr_lif0, 16)
+        addr = int(sq_base_addr, 16)
         offset = 64
     elif args.sqcb2 is not None: 
         qid = args.sqcb2
-        addr = int(sq_base_addr_lif0, 16)
+        addr = int(sq_base_addr, 16)
         offset = 128
     elif args.sqcb3 is not None: 
         qid = args.sqcb3
-        addr = int(sq_base_addr_lif0, 16)
+        addr = int(sq_base_addr, 16)
         offset = 192
     elif args.req_tx_stats is not None: 
         qid = args.req_tx_stats
-        addr = int(sq_base_addr_lif0, 16)
+        addr = int(sq_base_addr, 16)
         offset = 256
     elif args.req_rx_stats is not None: 
         qid = args.req_rx_stats
-        addr = int(sq_base_addr_lif0, 16)
+        addr = int(sq_base_addr, 16)
         offset = 320
     elif args.rsq is not None: 
         qid = args.rsq
-        addr = int(rq_base_addr_lif0, 16)
+        addr = int(rq_base_addr, 16)
         offset = 64
     elif args.rrq is not None: 
         qid = args.rrq
-        addr = int(sq_base_addr_lif0, 16)
+        addr = int(sq_base_addr, 16)
         offset = 64
 
     offset += int(512*qid)
