@@ -121,7 +121,7 @@ class _Testbed:
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
 
             #If Vlan base not set, ask topo server to allocate.
-            if not getattr(instance, "TestbedVlanBase", None):
+            if not getattr(self.__tbspec, "TestbedVlanBase", None):
                 switch_ips = []
                 switch_usernames = []
                 switch_passwords = []
