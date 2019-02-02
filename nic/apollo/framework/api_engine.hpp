@@ -148,6 +148,27 @@ private:
     api_op_t api_op_(api_op_t curr_op, api_op_t new_op);
 
     /**
+     * @brief    pre-process create operation and form effected list of objs
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t pre_process_create_(api_ctxt_t *api_ctxt);
+
+    /**
+     * @brief    pre-process delete operation and form effected list of objs
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t pre_process_delete_(api_ctxt_t *api_ctxt);
+
+    /**
+     * @brief    pre-process update operation and form effected list of objs
+     * @param[in] api_ctxt    transient state associated with this API
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t pre_process_update_(api_ctxt_t *api_ctxt);
+
+    /**
      * @brief    process an API and form effected list of objs
      * @param[in] api_ctxt    transient state associated with this API
      */
