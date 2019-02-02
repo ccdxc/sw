@@ -111,7 +111,6 @@ tep_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 //       plane & PMD APIs are ready, we will directly write to hw with fixed MAC
 sdk_ret_t
 tep_entry::program_config(obj_ctxt_t *obj_ctxt) {
-    OCI_TRACE_DEBUG("Programming TEP %s", ipv4addr2str(key_.ip_addr));
     return impl_->program_hw(this, obj_ctxt);
 }
 
