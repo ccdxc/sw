@@ -251,7 +251,7 @@ func lifShowSpecOneResp(resp *halproto.LifGetResponse) {
 		pktfltrToStr(resp.GetSpec().GetPacketFilter()),
 		resp.GetSpec().GetVlanStripEn(),
 		resp.GetSpec().GetVlanInsertEn(),
-		ifID,
+		ifIDStr,
 		resp.GetSpec().GetEnableRdma())
 }
 

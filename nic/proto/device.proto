@@ -25,9 +25,9 @@ enum ForwardingMode {
 // supported feature profiles
 //------------------------------------------------------------------------------
 enum FeatureProfile {
-  FEATURE_PROFILE_NONE                = 0;
-  FEATURE_PROFILE_CLASSIC_DEFAULT     = 1;  // default classic mode profile with 2 host devices
-  FEATURE_PROFILE_CLASSIC_DEV_SCALE   = 2;  // scaled up classic mode w.r.t devices
+  FEATURE_PROFILE_NONE                  = 0;
+  FEATURE_PROFILE_CLASSIC_DEFAULT       = 1;  // default classic mode profile with 2 host devices
+  FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE = 2;  // scaled up classic mode w.r.t devices
 }
 
 //------------------------------------------------------------------------------
