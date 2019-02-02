@@ -120,24 +120,26 @@ class _Testbed:
             else:
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
 
-            switch_ips = []
-            switch_usernames = []
-            switch_passwords = []
-            if instance.Type == "bm":
-                for nw in instance.DataNetworks:
-                    msg.data_switch.ports.append(nw.Name)
-                    switch_ips.append(nw.SwitchIP)
-                    switch_usernames.append(nw.SwitchUsername)
-                    switch_passwords.append(nw.SwitchPassword)
-                #Testbed ID is the last one.
-                msg.testbed_id = getattr(instance, "ID", 0)
-                #For now just 1 switch is supported on testbed.
-                assert(len(set(switch_ips)) == 1)
-                assert(len(set(switch_usernames)) == 1)
-                assert(len(set(switch_passwords)) == 1)
-                msg.data_switch.ip = switch_ips[0]
-                msg.data_switch.username = switch_usernames[0]
-                msg.data_switch.password = switch_passwords[0]
+            #If Vlan base not set, ask topo server to allocate.
+            if not getattr(instance, "TestbedVlanBase", None):
+                switch_ips = []
+                switch_usernames = []
+                switch_passwords = []
+                if instance.Type == "bm":
+                    for nw in instance.DataNetworks:
+                        msg.data_switch.ports.append(nw.Name)
+                        switch_ips.append(nw.SwitchIP)
+                        switch_usernames.append(nw.SwitchUsername)
+                        switch_passwords.append(nw.SwitchPassword)
+                    #Testbed ID is the last one.
+                    msg.testbed_id = getattr(instance, "ID", 0)
+                    #For now just 1 switch is supported on testbed.
+                    assert(len(set(switch_ips)) == 1)
+                    assert(len(set(switch_usernames)) == 1)
+                    assert(len(set(switch_passwords)) == 1)
+                    msg.data_switch.ip = switch_ips[0]
+                    msg.data_switch.username = switch_usernames[0]
+                    msg.data_switch.password = switch_passwords[0]
         return msg
 
     def __cleanup_testbed(self):
