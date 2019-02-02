@@ -27,7 +27,7 @@ objects:
   count: 1
   rest-endpoint: "/api/security/policies/"
 - kind: SGRule
-  count: 58000
+  count: 20000
 #- kind: SecurityProfile
 #  name: scale-sec-profile
 #  count: 16

@@ -124,7 +124,7 @@ func writeJSON(filePath string, obj interface{}) error {
 	if !ok {
 		return fmt.Errorf("failed to convert to IOTA Config. Obj: %v", obj)
 	}
-	if cfg.Objects == nil{
+	if cfg.Objects == nil {
 		log.Debug("Nothing to write")
 		return nil
 	}
