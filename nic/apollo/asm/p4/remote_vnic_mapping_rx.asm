@@ -65,7 +65,7 @@ remote_vnic_mapping_rx_miss:
     nop
 
 remote_vnic_mapping_rx_hit:
-    sne         c1, k.vnic_metadata_vcn_id, \
+    seq         c1, k.vnic_metadata_vcn_id, \
                     d.remote_vnic_mapping_rx_info_d.vcn_id
     or          r1, d.remote_vnic_mapping_rx_info_d.overlay_mac_sbit5_ebit47, \
                     d.remote_vnic_mapping_rx_info_d.overlay_mac_sbit0_ebit4, 43

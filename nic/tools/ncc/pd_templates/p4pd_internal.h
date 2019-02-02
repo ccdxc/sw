@@ -322,7 +322,8 @@ typedef struct __attribute__((__packed__)) ${table}_swkey_mask_bitfield {
 //::                    if len(actionfldlist):
 typedef struct __attribute__((__packed__)) __${table}_${actionname}_bitfield {
 //::                    total_bits = sum([fldwidth for (_, fldwidth) in actionfldlist])
-//::                    byte_align_pad = 8 - (total_bits % 8)
+//::			byte_align_pad = 0
+//::                    if (total_bits % 8) > 0: byte_align_pad = 8 - (total_bits % 8)
 //::                    if byte_align_pad > 0:
     uint64_t _${actionname}_pad : ${byte_align_pad};
 //::                    #endif
