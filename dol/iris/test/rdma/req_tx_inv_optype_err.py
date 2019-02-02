@@ -65,6 +65,14 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
             return False
 
+        # verify qp_err_disable is set
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_qp_err_disabled', 1):
+            return False
+
+        # verify qp_err_dis_inv_optype is set
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'qp_err_dis_inv_optype', 1):
+            return False
+
         # validate cqcb pindex and color
         #if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
         #    return False

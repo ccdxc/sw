@@ -33,10 +33,10 @@ def TestCaseVerify(tc):
 def TestCaseStepVerify(tc, step):
     if (GlobalOptions.dryrun): return True
     logger.info("RDMA TestCaseVerify() Implementation.")
+    PopulatePostQStates(tc)
     rs = tc.config.rdmasession
     rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
-    tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
 
     if step.step_id == 0:
 
@@ -108,11 +108,23 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
 
+        # verify qp_err_disable is set
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'rx_qp_err_disabled', 1):
+            return False
+
+        # verify qp_err_dis_rrqwqe_remote_acc_err_rcvd is set
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'qp_err_dis_rrqwqe_remote_acc_err_rcvd', 1):
+            return False
+
         if not ValidateCQCompletions(tc, 1, 1):
             return False
         ############     SKIP EQ VALIDATIONS #################
         #if not ValidateEQChecks(tc):
         #    return False
+
+        # verify that state is now moved to ERR (2)
+        if not VerifyErrQState(tc):
+            return False
 
     elif step.step_id == 2:
 

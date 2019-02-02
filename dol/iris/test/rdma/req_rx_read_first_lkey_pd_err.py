@@ -127,6 +127,14 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
 
+        # verify qp_err_disable is set
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'rx_qp_err_disabled', 1):
+            return False
+
+        # verify qp_err_dis_rrqlkey_pd_mismatch is set
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'qp_err_dis_rrqlkey_pd_mismatch', 1):
+            return False
+
         #if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC'):
         #    return False
 

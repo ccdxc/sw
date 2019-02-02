@@ -89,6 +89,14 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
             return False
 
+        # verify qp_err_disable is set
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'tx_qp_err_disabled', 1):
+            return False
+
+        # verify qp_err_dis_inv_lkey_pd_mismatch is set
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'qp_err_dis_inv_lkey_pd_mismatch', 1):
+            return False
+
         # There will be two completions. One in sq_cq for actual error and another in
         # rq_cq for flush error
         if not ValidateCQCompletions(tc, 1, 1):
