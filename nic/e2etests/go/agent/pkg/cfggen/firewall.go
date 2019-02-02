@@ -202,6 +202,14 @@ func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules [
 				LocalEPPairs:  localEPPairs,
 				RemoteEPPairs: remoteEPPairs,
 			}
+			// Reserve additional remote IP Addresses for rules
+			var extraIPs []string
+			for len(extraIPs) < c.Template.IPAddressesPerRule-1 {
+				var epPair EPPair
+				epPair, remoteEPPairs = remoteEPPairs[0], remoteEPPairs[1:]
+				extraIPs = append(extraIPs, epPair.SrcEP, epPair.DstEP)
+			}
+			extraIPs = extraIPs[:c.Template.IPAddressesPerRule-1]
 			app := curApps[j%len(curApps)]
 
 			appConfig := c.generateL4Match(j % len(c.Template.FirewallPolicyRules))
@@ -210,19 +218,19 @@ func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules [
 					Action:  "PERMIT",
 					AppName: app.Name,
 					Src: &netproto.MatchSelector{
-						Addresses: []string{localEPPair.SrcEP},
+						Addresses: convertIPAddresses(localEPPair.SrcEP, extraIPs),
 					},
 					Dst: &netproto.MatchSelector{
-						Addresses: []string{localEPPair.DstEP},
+						Addresses: convertIPAddresses(localEPPair.DstEP, extraIPs),
 					},
 				},
 				{
 					Action: "PERMIT",
 					Src: &netproto.MatchSelector{
-						Addresses: []string{localEPPair.SrcEP},
+						Addresses: convertIPAddresses(localEPPair.SrcEP, extraIPs),
 					},
 					Dst: &netproto.MatchSelector{
-						Addresses:  []string{localEPPair.DstEP},
+						Addresses:  convertIPAddresses(localEPPair.DstEP, extraIPs),
 						AppConfigs: appConfig,
 					},
 				},
@@ -230,10 +238,10 @@ func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules [
 					Action:  "DENY",
 					AppName: app.Name,
 					Src: &netproto.MatchSelector{
-						Addresses: []string{remoteEPPair.SrcEP},
+						Addresses: convertIPAddresses(remoteEPPair.SrcEP, extraIPs),
 					},
 					Dst: &netproto.MatchSelector{
-						Addresses: []string{remoteEPPair.DstEP},
+						Addresses: convertIPAddresses(remoteEPPair.DstEP, extraIPs),
 					},
 				},
 			}
@@ -247,12 +255,11 @@ func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules [
 	return
 }
 
-
-func (c *CfgGen) generateL4Match(offset int) []*netproto.AppConfig{
+func (c *CfgGen) generateL4Match(offset int) []*netproto.AppConfig {
 	var appConfigs []*netproto.AppConfig
 	matches := c.Template.FirewallPolicyRules[offset:]
 
-	if len(matches) < c.Template.L4MatchPerRule{
+	if len(matches) < c.Template.L4MatchPerRule {
 		matches = append(matches, c.Template.FirewallPolicyRules[:offset]...)
 	}
 	matches = matches[:c.Template.L4MatchPerRule]
@@ -269,11 +276,17 @@ func (c *CfgGen) generateL4Match(offset int) []*netproto.AppConfig{
 		}
 
 		appConfig := &netproto.AppConfig{
-			Protocol:proto,
-			Port: port,
+			Protocol: proto,
+			Port:     port,
 		}
 		appConfigs = append(appConfigs, appConfig)
 
 	}
 	return appConfigs
+}
+
+func convertIPAddresses(baseIP string, extraIPs []string) (ipAddresses []string) {
+	ipAddresses = append(ipAddresses, baseIP)
+	ipAddresses = append(ipAddresses, extraIPs...)
+	return
 }
