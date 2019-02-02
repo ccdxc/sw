@@ -116,8 +116,9 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     ret = tep_impl_db()->nh_tx_tbl()->insert(&nh_tx_data, (uint32_t *)&nh_id_);
     SDK_ASSERT(ret == SDK_RET_OK);
 
-    OCI_TRACE_DEBUG("Programmed TEP, hw id %u, nh id %u", hw_id_, nh_id_);
-
+    OCI_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nh id",
+                    ipv4addr2str(tep_info->key.ip_addr),
+                    0x0E0D0A0B0200, hw_id_, nh_id_);
     return ret;
 }
 
