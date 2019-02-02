@@ -41,14 +41,12 @@ security_policy::factory(oci_security_policy_t *oci_security_policy) {
     policy = security_policy_db()->security_policy_alloc();
     if (policy) {
         new (policy) security_policy();
-#if 0
         policy->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_SECURITY_POLICY,
                                            oci_security_policy);
         if (policy->impl_ == NULL) {
             security_policy::destroy(policy);
             return NULL;
         }
-#endif
     }
     return policy;
 }
@@ -68,11 +66,9 @@ security_policy::~security_policy() {
  */
 void
 security_policy::destroy(security_policy *policy) {
-#if 0
     if (policy->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_SECURITY_POLICY, policy->impl_);
     }
-#endif
     policy->release_resources();
     policy->~security_policy();
     security_policy_db()->security_policy_free(policy);
@@ -183,8 +179,7 @@ security_policy::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 security_policy::add_to_db(void) {
     return security_policy_db()->security_policy_ht()->insert_with_key(&key_,
-                                                                       this,
-                                                                       &ht_ctxt_);
+                                                           this, &ht_ctxt_);
 }
 
 /**

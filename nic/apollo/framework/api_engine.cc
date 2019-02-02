@@ -39,151 +39,190 @@ api_engine::api_op_(api_op_t old_op, api_op_t new_op) {
 }
 
 /**
+ * @brief    pre-process create operation and form effected list of objs
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
+    sdk_ret_t     ret;
+    obj_ctxt_t    obj_ctxt;
+    api_base      *api_obj;
+
+    api_obj = api_base::find_obj(api_ctxt);
+    if (api_obj == NULL) {
+        /**< instantiate a new object */
+        api_obj = api_base::factory(api_ctxt);
+        if (unlikely(api_obj == NULL)) {
+            batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+            return SDK_RET_ERR;
+        }
+        /**< add it to dirty object list */
+        obj_ctxt.api_op = API_OP_CREATE;
+        obj_ctxt.api_params = api_ctxt->api_params;
+        add_to_dirty_list_(api_obj, obj_ctxt);
+        /**< initialize the object with the given config */
+        ret = api_obj->init_config(api_ctxt);
+        SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        api_obj->add_to_db();
+    } else {
+        /**
+         * this could be XXX-DEL-ADD/ADD-XXX-DEL-XXX-ADD kind of scenario in
+         * same batch, as we don't expect to see ADD-XXX-ADD (unless we want
+         * to support idempotency)
+         */
+        SDK_ASSERT(api_obj->is_in_dirty_list() == true);
+        obj_ctxt_t& octxt = batch_ctxt_.dirty_obj_map.find(api_obj)->second;
+        SDK_ASSERT((octxt.api_op == API_OP_NONE) ||
+                   (octxt.api_op == API_OP_DELETE));
+        octxt.api_op = api_op_(octxt.api_op, API_OP_CREATE);
+        SDK_ASSERT(octxt.api_op != API_OP_INVALID);
+
+        /**< update the config, by cloning the object, if needed */
+        if (octxt.cloned_obj == NULL) {
+            /**
+             * XXX-DEL-ADD or ADD-XXX-DEL-XXX-ADD scenarios, we need to
+             * differentiate between these two
+             */
+            if (octxt.api_op == API_OP_UPDATE) {
+                /**< XXX-DEL-ADD scenario, clone & re-init cfg */
+                octxt.api_params = api_ctxt->api_params;
+                octxt.cloned_obj = api_obj->clone();
+                ret = octxt.cloned_obj->init_config(api_ctxt);
+                SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+            } else {
+                /**< ADD-XXX-DEL-XXX-ADD scenario, re-init same object */
+                SDK_ASSERT(octxt.api_op == API_OP_CREATE);
+                octxt.api_params = api_ctxt->api_params;
+                ret = api_obj->init_config(api_ctxt);
+                SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+            }
+        } else {
+            /**
+             * UPD-XXX-DEL-XXX-ADD scenario, re-init cloned obj's cfg (if
+             * we update original obj, we may not be able to abort later)
+             */
+            SDK_ASSERT(octxt.api_op == API_OP_UPDATE);
+            octxt.api_params = api_ctxt->api_params;
+            ret = octxt.cloned_obj->init_config(api_ctxt);
+            SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        }
+    }
+    return ret;
+}
+
+/**
+ * @brief    pre-process delete operation and form effected list of objs
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+api_engine::pre_process_delete_(api_ctxt_t *api_ctxt) {
+    obj_ctxt_t    obj_ctxt;
+    api_base      *api_obj;
+
+    api_obj = api_base::find_obj(api_ctxt);
+    if (api_obj) {
+        if (api_obj->is_in_dirty_list()) {
+            /**
+             * note that we could have cloned_obj as non-NULL in this case
+             * (e.g., UPD-XXX-DEL), but that doesn't matter here
+             */
+            batch_ctxt_.dirty_obj_map[api_obj].api_op =
+                api_op_(batch_ctxt_.dirty_obj_map[api_obj].api_op,
+                        API_OP_DELETE);
+            SDK_ASSERT(batch_ctxt_.dirty_obj_map[api_obj].api_op !=
+                       API_OP_INVALID);
+        } else {
+            /**< add the object to dirty list */
+            obj_ctxt.api_op = API_OP_DELETE;
+            add_to_dirty_list_(api_obj, obj_ctxt);
+        }
+    } else {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+   return SDK_RET_OK;
+}
+
+/**
+ * @brief    pre-process update operation and form effected list of objs
+ * @param[in] api_ctxt    transient state associated with this API
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
+    sdk_ret_t     ret;
+    obj_ctxt_t    obj_ctxt;
+    api_base      *api_obj;
+
+    api_obj = api_base::find_obj(api_ctxt);
+    if (api_obj) {
+        if (api_obj->is_in_dirty_list()) {
+            obj_ctxt_t& octxt =
+                batch_ctxt_.dirty_obj_map.find(api_obj)->second;
+            octxt.api_op = api_op_(octxt.api_op, API_OP_UPDATE);
+            SDK_ASSERT(octxt.api_op != API_OP_INVALID);
+            if (octxt.cloned_obj == NULL) {
+                /**
+                 * XXX-ADD-XXX-UPD in same batch, no need to clone yet, just
+                 * re-init the object with new config
+                 */
+                octxt.api_params = api_ctxt->api_params;
+                ret = api_obj->init_config(api_ctxt);
+                SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+            } else {
+                /**< XXX-UPD-XXX-UPD scenario, update the cloned obj */
+                octxt.api_params = api_ctxt->api_params;
+                ret = octxt.cloned_obj->init_config(api_ctxt);
+                SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+            }
+        } else {
+            obj_ctxt.api_op = API_OP_UPDATE;
+            obj_ctxt.cloned_obj = api_obj->clone();
+            obj_ctxt.api_params = api_ctxt->api_params;
+            add_to_dirty_list_(api_obj, obj_ctxt);
+            ret = obj_ctxt.cloned_obj->init_config(api_ctxt);
+            SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
+        }
+    } else {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+    return SDK_RET_OK;
+}
+
+/**
  * @brief    process an API and form effected list of objs
  * @param[in] api_ctxt    transient state associated with this API
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
 api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
-    sdk_ret_t       ret = SDK_RET_OK;
-    obj_ctxt_t      obj_ctxt;
-    api_base        *api_obj;
+    sdk_ret_t     ret = SDK_RET_OK;
+    obj_ctxt_t    obj_ctxt;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                       sdk::SDK_RET_INVALID_OP);
     switch (api_ctxt->api_op) {
     case API_OP_CREATE:
-        api_obj = api_base::find_obj(api_ctxt);
-        if (api_obj == NULL) {
-            /**< instantiate a new object */
-            api_obj = api_base::factory(api_ctxt);
-            if (unlikely(api_obj == NULL)) {
-                batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
-                return sdk::SDK_RET_ERR;
-            }
-            /**< add it to dirty object list */
-            obj_ctxt.api_op = API_OP_CREATE;
-            obj_ctxt.api_params = api_ctxt->api_params;
-            add_to_dirty_list_(api_obj, obj_ctxt);
-            /**< initialize the object with the given config */
-            ret = api_obj->init_config(api_ctxt);
-            SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
-            api_obj->add_to_db();
-        } else {
-            /**
-             * this could be XXX-DEL-ADD/ADD-XXX-DEL-XXX-ADD kind of scenario in
-             * same batch, as we don't expect to see ADD-XXX-ADD (unless we want
-             * to support idempotency)
-             */
-            SDK_ASSERT(api_obj->is_in_dirty_list() == true);
-            obj_ctxt_t& octxt = batch_ctxt_.dirty_obj_map.find(api_obj)->second;
-            SDK_ASSERT((octxt.api_op == API_OP_NONE) ||
-                       (octxt.api_op == API_OP_DELETE));
-            octxt.api_op = api_op_(octxt.api_op, API_OP_CREATE);
-            SDK_ASSERT(octxt.api_op != API_OP_INVALID);
-
-            /**< update the config, by cloning the object, if needed */
-            if (octxt.cloned_obj == NULL) {
-                /**
-                 * XXX-DEL-ADD or ADD-XXX-DEL-XXX-ADD scenarios, we need to
-                 * differentiate between these two
-                 */
-                if (octxt.api_op == API_OP_UPDATE) {
-                    /**< XXX-DEL-ADD scenario, clone & re-init cfg */
-                    octxt.api_params = api_ctxt->api_params;
-                    octxt.cloned_obj = api_obj->clone();
-                    ret = octxt.cloned_obj->init_config(api_ctxt);
-                    SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
-                } else {
-                    /**< ADD-XXX-DEL-XXX-ADD scenario, re-init same object */
-                    SDK_ASSERT(octxt.api_op == API_OP_CREATE);
-                    octxt.api_params = api_ctxt->api_params;
-                    ret = api_obj->init_config(api_ctxt);
-                    SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
-                }
-            } else {
-                /**
-                 * UPD-XXX-DEL-XXX-ADD scenario, re-init cloned obj's cfg (if
-                 * we update original obj, we may not be able to abort later)
-                 */
-                SDK_ASSERT(octxt.api_op == API_OP_UPDATE);
-                octxt.api_params = api_ctxt->api_params;
-                ret = octxt.cloned_obj->init_config(api_ctxt);
-                SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
-            }
-        }
+        ret = pre_process_create_(api_ctxt);
         break;
 
     case API_OP_DELETE:
-        api_obj = api_base::find_obj(api_ctxt);
-        if (api_obj) {
-            if (api_obj->is_in_dirty_list()) {
-                /**
-                 * note that we could have cloned_obj as non-NULL in this case
-                 * (e.g., UPD-XXX-DEL), but that doesn't matter here
-                 */
-                batch_ctxt_.dirty_obj_map[api_obj].api_op =
-                    api_op_(batch_ctxt_.dirty_obj_map[api_obj].api_op,
-                            API_OP_DELETE);
-                SDK_ASSERT(batch_ctxt_.dirty_obj_map[api_obj].api_op !=
-                           API_OP_INVALID);
-            } else {
-                /**< add the object to dirty list */
-                obj_ctxt.api_op = API_OP_DELETE;
-                add_to_dirty_list_(api_obj, obj_ctxt);
-            }
-        } else {
-            ret = sdk::SDK_RET_ENTRY_NOT_FOUND;
-            goto error;
-        }
+        ret = pre_process_delete_(api_ctxt);
         break;
 
     case API_OP_UPDATE:
-        api_obj = api_base::find_obj(api_ctxt);
-        if (api_obj) {
-            if (api_obj->is_in_dirty_list()) {
-                obj_ctxt_t& octxt =
-                    batch_ctxt_.dirty_obj_map.find(api_obj)->second;
-                octxt.api_op = api_op_(octxt.api_op, API_OP_UPDATE);
-                SDK_ASSERT(octxt.api_op != API_OP_INVALID);
-                if (octxt.cloned_obj == NULL) {
-                    /**
-                     * XXX-ADD-XXX-UPD in same batch, no need to clone yet, just
-                     * re-init the object with new config
-                     */
-                    octxt.api_params = api_ctxt->api_params;
-                    ret = api_obj->init_config(api_ctxt);
-                    SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
-                } else {
-                    /**< XXX-UPD-XXX-UPD scenario, update the cloned obj */
-                    octxt.api_params = api_ctxt->api_params;
-                    ret = octxt.cloned_obj->init_config(api_ctxt);
-                    SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
-                }
-            } else {
-                obj_ctxt.api_op = API_OP_UPDATE;
-                obj_ctxt.cloned_obj = api_obj->clone();
-                obj_ctxt.api_params = api_ctxt->api_params;
-                add_to_dirty_list_(api_obj, obj_ctxt);
-                ret = obj_ctxt.cloned_obj->init_config(api_ctxt);
-                SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
-            }
-        } else {
-            ret = sdk::SDK_RET_ENTRY_NOT_FOUND;
-            goto error;
-        }
+        ret = pre_process_update_(api_ctxt);
         break;
 
     default:
         ret = sdk::SDK_RET_INVALID_OP;
-        goto error;
+        break;
     }
 
-    return SDK_RET_OK;
-
-error:
-
-    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+    if (ret != SDK_RET_OK) {
+        batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+    }
     return ret;
 }
 
