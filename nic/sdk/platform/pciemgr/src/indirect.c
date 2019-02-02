@@ -214,6 +214,15 @@ pciehw_indirect_complete(indirect_entry_t *ientry)
     const u_int64_t pa = ientry->info.direct_addr;
     const size_t sz = ientry->info.direct_size;
 
+    /*
+     * This indirect transaction was handled by software.
+     * We might have written some memory that will be read
+     * by subsequent direct transactions handled in hw.
+     * Insert barrier here to be sure all memory writes have
+     * landed so hw will always see that data we wrote.
+     */
+    PAL_barrier();
+
     if (sz < 4 && (pa & 0x3)) {
         /*
          * If sub-dword read, shift return data to the correct
