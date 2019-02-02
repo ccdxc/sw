@@ -152,16 +152,22 @@ class EntityManagement:
     def WaitForSsh(self, port = 22):
         print("Waiting for IP:%s to be up." % self.ipaddr)
         for retry in range(150):
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            ret = sock.connect_ex(('%s' % self.ipaddr, port))
-            sock.settimeout(1)
-            if ret == 0:
+            if self.IsHostSshUP():
                 return
-            else:
-                time.sleep(5)
-        print("Host not up. Ret:%d" % ret)
+            time.sleep(5)
+        print("Host not up")
         sys.exit(1)
         return
+
+    def IsHostSshUP(self, port = 22):
+        print("Waiting for IP:%s to be up." % self.ipaddr)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        ret = sock.connect_ex(('%s' % self.ipaddr, port))
+        sock.settimeout(1)
+        if ret == 0:
+            return True
+        print("Host not up. Ret:%d" % ret)
+        return False
 
     def RunSshCmd(self, command, ignore_failure = False):
         date_command = "%s %s \"date\"" % (self.ssh_pfx, self.ssh_host)
@@ -239,6 +245,8 @@ class NaplesManagement(EntityManagement):
         if goldfw:
             self.SendlineExpect("fwupdate -s goldfw", "#")
 
+        #clean up db that was setup by previous
+        self.SendlineExpect("rm -rf /sysconfig/config0/*.db", "#")
         self.SendlineExpect("mkdir -p /sysconfig/config0", "#")
         self.SendlineExpect("mount /dev/mmcblk0p6 /sysconfig/config0", "#")
         if mode:
@@ -540,7 +548,8 @@ class EsxHostManagement(HostManagement):
         stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("find  /opt/vmware/  -type d  -name   nativeddk-6.5*")
         exit_status = stdout.channel.recv_exit_status()
         outlines=stdout.readlines()
-        if exit_status != 0 or len(outlines) != 1:
+        print ("Native DDK dir out ", outlines)
+        if len(outlines) != 1:
             print ("Invalid output when discovering native ddk", outlines)
             sys.exit(1)
         dst_dir = outlines[0].strip("\n") + "/src/" + os.path.basename(tmp_driver) + "_dir"
@@ -596,23 +605,30 @@ def Main():
     global naples
     naples = NaplesManagement()
 
-    # Reset the setup:
-    # If the previous run left it in bad state, we may not get ssh or console.
-    if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
-        #First do a reset as naples may be in screwed up state.
-        IpmiReset()
-        time.sleep(10)
-        naples.Connect()
-        naples.InitForUpgrade(goldfw = True)
-        #Do a reset again as old fw might lock up host boot
-        IpmiReset()
-
     global host
     host = HostManagement(GlobalOptions.host_ip)
     if GlobalOptions.os == 'esx':
         host = EsxHostManagement(GlobalOptions.host_ip)
     else:
         host = HostManagement(GlobalOptions.host_ip)
+
+    # Reset the setup:
+    # If the previous run left it in bad state, we may not get ssh or console.
+    if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
+        #First do a reset as naples may be in screwed up state.
+        try:
+            naples.Connect()
+            if not host.IsHostSshUP():
+                raise Exception("Host not up.")
+        except:
+            #Do Reset only if we can't connect to naples.
+            IpmiReset()
+            time.sleep(10)
+            naples.Connect()
+            naples.InitForUpgrade(goldfw = True)
+            #Do a reset again as old fw might lock up host boot
+            IpmiReset()
+
 
     host.WaitForSsh()
 
