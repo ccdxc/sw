@@ -1025,6 +1025,7 @@ pciehw_poll(void)
 void *
 pciehw_memset(void *s, int c, size_t n)
 {
+#ifdef DEVICEMEM_WAR
     if (((uintptr_t)s & 0x3) == 0 && (n & 0x3) == 0) {
         volatile u_int32_t *p;
         int i;
@@ -1047,11 +1048,15 @@ pciehw_memset(void *s, int c, size_t n)
     }
 
     return s;
+#else
+    return memset(s, c, n);
+#endif
 }
 
 void *
 pciehw_memcpy(void *dst, const void *src, size_t n)
 {
+#ifdef DEVICEMEM_WAR
     volatile u_int8_t *d = dst;
     const u_int8_t *s = src;
     int i;
@@ -1060,4 +1065,7 @@ pciehw_memcpy(void *dst, const void *src, size_t n)
         *d++ = *s++;
     }
     return dst;
+#else
+    return memcpy(dst, src, n);
+#endif
 }

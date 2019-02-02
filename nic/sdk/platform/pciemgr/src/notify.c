@@ -335,7 +335,7 @@ pciehw_notify_intr(const int port)
          i != endidx;
          i = notify_ring_inc(i, 1, ring_mask)) {
 
-#if 1
+#ifdef DEVICEMEM_WAR
         notify_entry_t nentry;
 
         /* XXX avoid an alignment crash on "io mem" */
