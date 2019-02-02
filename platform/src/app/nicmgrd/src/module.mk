@@ -12,7 +12,7 @@ MODULE_SOLIBS   := nicmgr nicmgr_sysmgr nicmgr_upgrade hal_api mnet \
                     sdkcapri_csrint sdkcapri_asicrw_if \
                     sdkasicpd pdcapri pdcommon hal_mock \
                     sdkp4 sdkp4utils p4pd_common_p4plus_rxdma sdkxcvrdriver \
-                    p4pd_common_p4plus_txdma p4pd_${PIPELINE} \
+                    sdkfru p4pd_common_p4plus_txdma p4pd_${PIPELINE} \
                     asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}}
 MODULE_LDLIBS   := crypto ${NIC_COMMON_LDLIBS} \
                     ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

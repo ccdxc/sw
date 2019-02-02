@@ -13,6 +13,7 @@
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
 #include "cap_wa_c_hdr.h"
+#include "cap_ms_c_hdr.h"
 
 #include "nic/include/base.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
@@ -26,6 +27,7 @@
 
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
+#include "nic/sdk/platform/fru/fru.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/hal_api/include/print.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
@@ -504,12 +506,17 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_IDENTIFY", spec->name);
 
-    // TODO: Get these from hw
-    rsp->dev.asic_type = 0x00;
-    rsp->dev.asic_rev = 0xA0;
-    sprintf((char *)&rsp->dev.serial_num, "naples");
-    // TODO: Get this from sw
-    sprintf((char *)&rsp->dev.fw_version, "v0.0.1");
+    const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
+                                        CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
+    rsp->dev.asic_type = sta_ver & 0xf;
+    rsp->dev.asic_rev  = (sta_ver >> 4) & 0xfff;
+
+    std::string sn;
+    readKey(SERIALNUMBER_KEY, sn);
+    strncpy0(rsp->dev.serial_num, sn.c_str(), sizeof(rsp->dev.serial_num));
+
+    strncpy0(rsp->dev.fw_version, SW_VERSION, sizeof(rsp->dev.fw_version));
+
     rsp->dev.nlifs = spec->lif_count;
     rsp->dev.nintrs = spec->intr_count;
     rsp->dev.ndbpgs_per_lif = MAX(spec->rdma_pid_count, 1);

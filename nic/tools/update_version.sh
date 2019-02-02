@@ -14,4 +14,4 @@ version=`git describe --dirty --always`
 buildtime=`date`
 
 echo "Version       : $version" > $VERFILE 
-echo "Build TIme    : $buildtime" >> $VERFILE
+echo "Build Time    : $buildtime" >> $VERFILE
