@@ -71,7 +71,8 @@ static struct test_testcase default_testcase = {
 	.batch_concurrency = 0,
 	.sync_mode = SYNC_MODE_SYNC,
 	.svc_chain_count = 0,
-	.validations = { NULL, NULL },
+	.req_validations = { NULL, NULL },
+	.batch_validations = { NULL, NULL },
 };
 
 /* service defaults */
@@ -180,7 +181,10 @@ static void free_validation(struct test_validation *validation)
 static void free_testcase(struct test_testcase *testcase)
 {
 	struct test_node *node, *next_node;
-	FOR_EACH_NODE_SAFE(testcase->validations) {
+	FOR_EACH_NODE_SAFE(testcase->req_validations) {
+		free_validation((struct test_validation *) node);
+	}
+	FOR_EACH_NODE_SAFE(testcase->batch_validations) {
 		free_validation((struct test_validation *) node);
 	}
 	TEST_FREE(testcase);
@@ -385,7 +389,10 @@ static void dump_testcase(struct test_testcase *testcase)
 	PNSO_LOG("    Service chains %s\n", svc_chain_str);
 
 	PNSO_LOG("    Validations:\n");
-	FOR_EACH_NODE(testcase->validations) {
+	FOR_EACH_NODE(testcase->req_validations) {
+		dump_validation((struct test_validation *) node);
+	}
+	FOR_EACH_NODE(testcase->batch_validations) {
 		dump_validation((struct test_validation *) node);
 	}
 }
@@ -1583,7 +1590,11 @@ static pnso_error_t test_create_validation(struct test_desc *root,
 	validation->type = (uint16_t)(uint64_t)opaque;
 	construct_validation_name(validation);
 
-	test_node_insert(&testcase->validations, &validation->node);
+	if (validation_is_per_req(validation->type)) {
+		test_node_insert(&testcase->req_validations, &validation->node);
+	} else {
+		test_node_insert(&testcase->batch_validations, &validation->node);
+	}
 	validation->node.parent = *parent;
 	*parent = &validation->node;
 
@@ -2257,9 +2268,12 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 	uint32_t max_len = 64 + TEST_MAX_NAME_LEN + stat_count*(32 + TEST_MAX_STAT_NAME_LEN);
 	char *dst;
 
-	if (output_validations)
+	if (output_validations) {
 		max_len += TEST_MAX_VALIDATION_STAT_LEN *
-				test_count_nodes(&testcase->validations);
+				test_count_nodes(&testcase->req_validations);
+		max_len += TEST_MAX_VALIDATION_STAT_LEN *
+				test_count_nodes(&testcase->batch_validations);
+	}
 
 	dst = TEST_ALLOC(max_len);
 	if (!dst)
@@ -2291,12 +2305,19 @@ pnso_error_t pnso_test_stats_to_yaml(const struct test_testcase *testcase,
 	if (len >= max_len-1)
 		goto nomem;
 
-	if (output_validations && testcase->validations.head) {
+	if (output_validations &&
+	    (testcase->req_validations.head ||
+	     testcase->batch_validations.head)) {
 		struct test_node *node;
 
 		len += safe_strcpy(dst+len, "  },\n", max_len-len);
 		len += safe_strcpy(dst+len, "  \"validations\": [\n", max_len-len);
-		FOR_EACH_NODE(testcase->validations) {
+		FOR_EACH_NODE(testcase->req_validations) {
+			if (len+TEST_MAX_VALIDATION_STAT_LEN >= max_len-1)
+				goto nomem;
+			len += validation_stats_to_yaml((const struct test_validation *)(node), dst+len);
+		}
+		FOR_EACH_NODE(testcase->batch_validations) {
 			if (len+TEST_MAX_VALIDATION_STAT_LEN >= max_len-1)
 				goto nomem;
 			len += validation_stats_to_yaml((const struct test_validation *)(node), dst+len);

@@ -101,14 +101,16 @@ struct chain_context {
 	const struct test_svc_chain *svc_chain;
 	uint32_t batch_weight; /* cached and normalized from svc_chain */
 
-	/* Generate input buffer only once for each chain */
-	struct buffer_context input;
+	uint32_t input_count;
+	struct buffer_context *inputs;
 };
 
 struct request_context {
 	struct batch_context *batch_ctx;
-	struct chain_context *chain_ctx;
+	const struct test_svc_chain *svc_chain;
 	uint64_t req_id;
+
+	struct buffer_context *input; /* reference from chain_context */
 
 	struct buffer_context outputs[PNSO_SVC_TYPE_MAX];
 
