@@ -2437,8 +2437,9 @@ int ionic_lifs_size(struct ionic *ionic)
 	unsigned int ntxqs_per_lif = ident->dev.tx_qtype.qid_count;
 	unsigned int nrxqs_per_lif = ident->dev.rx_qtype.qid_count;
 	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
-	unsigned int nxqs;
+	unsigned int min_intrs;
 	unsigned int nslaves;
+	unsigned int nxqs;
 	int err;
 
 	/* first make sure ntx == nrx and limit by number of CPUs */
@@ -2461,15 +2462,24 @@ try_again:
 	 *    whatever's left is for RDMA queues
 	 */
 	nintrs = 1 + 1 + nxqs + (nslaves * 2) + neqs_per_lif;
+	min_intrs = 3;  /* adminq + notifyq + 1 TxRx queue pair */
 
 	if (nintrs > dev_nintrs)
 		goto try_fewer;
 
 	err = ionic_bus_alloc_irq_vectors(ionic, nintrs);
-	if (err < 0 && err != -ENOSPC)
+	if (err < 0 && err != -ENOSPC) {
+		dev_err(ionic->dev, "Can't get intrs from OS: %d\n", err);
 		return err;
+	}
 	if (err == -ENOSPC)
 		goto try_fewer;
+	if (err < min_intrs) {
+		dev_err(ionic->dev, "Can't get minimum %d intrs from OS: %d\n",
+			min_intrs, err);
+		return -ENOSPC;
+	}
+
 	if (err != nintrs) {
 		ionic_bus_free_irq_vectors(ionic);
 		goto try_fewer;
