@@ -316,22 +316,22 @@ def RunPenctlOnHost(n, cmd):
     return cmd_resp.stdout
 
 def SetNaplesModeInband_Static(n, controllerip, mgmtip):
-    cmd = "update mode --hostname IOTATEST_INB --mgmt-ip {} -c {} -k inband".format(mgmtip, controllerip)
+    cmd = "update mode --hostname IOTATEST_INB --mgmt-ip {} --management-mode network --controllers {} --network-mode inband".format(mgmtip, controllerip)
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeInband_Dynamic(n):
     api.Logger.info("Setting Naples network mode to Inband Dynamic.")
-    cmd = "update mode --hostname IOTATEST_INB -o network -k inband"
+    cmd = "update mode --hostname IOTATEST_INB --management-mode network --network-mode inband"
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeOOB_Static(n, controllerip, mgmtip):
     api.Logger.info("Setting Naples OOB network management IP statically for {}.".format(n))
-    cmd = "update mode --hostname IOTATEST_OOB -o network --mgmt-ip {} -c {} -k oob".format(mgmtip, controllerip)
+    cmd = "update mode --hostname IOTATEST_OOB --mgmt-ip {} --management-mode network --controllers {} --network-mode oob".format(mgmtip, controllerip)
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeOOB_Dynamic(n):
     api.Logger.info("Setting Naples network mode to OOB Dynamic.")
-    cmd = "update mode --hostname IOTATEST_OOB -k oob"
+    cmd = "update mode --hostname IOTATEST_OOB --management-mode network --network-mode inband"
     return RunPenctlOnHost(n, cmd)
 
 def PenctlGetMode(n):
@@ -475,6 +475,12 @@ def DelphictlGetNetworkMode(n):
 
 def DelphictlGetControllers(n):
     naples_status = GetDelphictlNapleStatusJson(n)
+
+def DeleteNMDDb(n):
+    api.Logger.info("Deleting NMD DB.")
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/nmd.db")
+    resp = api.Trigger(req)
 
 def ResetNMDState(n):
     api.Logger.info("Resetting NMD State.")

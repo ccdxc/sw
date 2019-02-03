@@ -33,4 +33,6 @@ def Verify(tc):
     return api.types.status.SUCCESS
 
 def Teardown(tc):
+    for n in tc.Nodes:
+        common.DeleteNMDDb(n)
     return api.types.status.SUCCESS
