@@ -48,7 +48,11 @@ enum NetworkMode {
 
 // NaplesSpec contains initial bootstrap configuration of the Naples I/O subsystem
 message NaplesSpec {
-
+    enum FeatureProfile {
+        NONE                    = 0;
+        CLASSIC_DEFAULT         = 1;  // default classic mode profile with 2 host devices
+        CLASSIC_ETH_DEV_SCALE   = 2;  // scaled up classic mode w.r.t devices
+    }
 
     // PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC
     string PrimaryMAC               = 1 [(gogoproto.jsontag) = "primary-mac,omitempty"];
@@ -72,6 +76,8 @@ message NaplesSpec {
 
     // Controllers contains the list of controller IPs or Hostnames
     repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
+
+    FeatureProfile Profile          = 8 [(gogoproto.jsontag) = "feature-profile,omitempty"];
 }
 
 // NaplesStatus contains current status of a Naples I/O subsystem
