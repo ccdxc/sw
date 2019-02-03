@@ -899,6 +899,48 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		netif_set_real_num_rx_queues(lower_dev, max);
 	}
 
+	/* WARNING - UGLY HACK */
+	/* This is to work around a bug in versions of the macvlan
+	 * driver prior to v4.18, where macvlan_open() doesn't call
+	 * macvlan_hash_add() in the case of an offload macvlan.  This
+	 * results in vlan->hlist not being initialized and eventually
+	 * causing NULL pointer violations.
+	 * The code below is hijacked from the macvlan driver, since
+	 * it is defined static and unaccessible.
+	 */
+	{
+#define MACVLAN_HASH_SIZE	(1<<MACVLAN_HASH_BITS)
+#define MACVLAN_HASH_BITS	8
+		struct macvlan_port {
+			struct net_device	*dev;
+			struct hlist_head	vlan_hash[MACVLAN_HASH_SIZE];
+			struct list_head	vlans;
+			struct sk_buff_head	bc_queue;
+			struct work_struct	bc_work;
+			u32			flags;
+			int			count;
+			struct hlist_head	vlan_source_hash[MACVLAN_HASH_SIZE];
+			DECLARE_BITMAP(mc_filter, MACVLAN_MC_FILTER_SZ);
+			unsigned char           perm_addr[ETH_ALEN];
+		};
+
+		struct macvlan_dev *vlan = netdev_priv(upper_dev);
+		struct macvlan_port *port = (void *)vlan->port;
+		const unsigned char *addr = vlan->dev->dev_addr;
+		//u32 idx = macvlan_eth_hash(addr);
+		u32 idx;
+		u64 value = get_unaligned((u64 *)addr);
+
+		/* only want 6 bytes */
+#ifdef __BIG_ENDIAN
+		value >>= 16;
+#else
+		value <<= 16;
+#endif
+		idx = hash_64(value, MACVLAN_HASH_BITS);
+		hlist_add_head_rcu(&vlan->hlist, &port->vlan_hash[idx]);
+	}
+
 	return lif;
 
 err_out_deinit_slave:
