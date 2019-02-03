@@ -47,7 +47,7 @@
                         <div *ngFor="let entry of getEntries(selectedKind)" class="searchresult-button-category-kind-entry">
                             <div class="searchresult-button-category-kind-entry-div">
                                 <div class="searchresult-button-category-kind-entry-kind">{{entry.object.kind}}</div>
-                                <div>
+                                <div *ngIf="entry.object.meta['self-link']">
                                     <a *ngIf="isSelflinkHasUIpage(category, entry)"  class="searchresult-button-category-kind-entry-link" (click)="onSearchResultEntryClick($event,category, entry)">{{entry.object.meta['self-link']}}</a>
                                     <span *ngIf="!isSelflinkHasUIpage(category, entry)" class="searchresult-button-category-kind-entry-label-text">{{entry.object.meta['self-link']}}</span>
                                 </div>
@@ -73,6 +73,16 @@
                                         </div>
                                     </div>
                                 </div>
+                                <!-- in case it is an Event object, we display more information -->
+                                <div *ngIf="entry.object.kind=='AuditEvent'">
+                                        <div *ngFor="let eventKey of getEventKeys(entry)">
+                                            <div class="searchresult-button-category-kind-entry-label" *ngIf="displayAuditEventKey(eventKey)">
+                                                <span class="searchresult-button-category-kind-entry-label-text">{{eventKey}}:
+                                                </span>
+                                                {{displayAuditEventValue(entry.object, eventKey)}}
+                                            </div>
+                                        </div>
+                                    </div>
                             </div>
                             <hr />
                         </div>

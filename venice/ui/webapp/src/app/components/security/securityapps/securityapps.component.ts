@@ -8,6 +8,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { SecurityApp } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
+import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrender.component';
 
 
 import { Subscription } from 'rxjs';
@@ -25,6 +26,7 @@ import { MessageService } from 'primeng/primeng';
  */
 export class SecurityappsComponent extends BaseComponent implements OnInit, OnDestroy {
   @ViewChild('securityappsTable') securityappsTable: Table;
+  @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
 
   securityappsEventUtility: HttpEventUtility<SecurityApp>;
 
@@ -41,7 +43,7 @@ export class SecurityappsComponent extends BaseComponent implements OnInit, OnDe
     url: '/assets/images/icons/security/ico-app-black.svg',
   };
   cols: any[] = [
-    { field: 'meta.name', header: 'Name', class: 'securityapps-column-date', sortable: true },
+    { field: 'meta.name', header: 'Name', class: 'securityapps-column-metaname', sortable: true },
     { field: 'spec.alg.type', header: 'ALG Type', class: 'securityapps-column-host-name', sortable: false },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'securityapps-column-date', sortable: true },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'securityapps-column-date', sortable: true },
@@ -123,6 +125,7 @@ export class SecurityappsComponent extends BaseComponent implements OnInit, OnDe
   onSecurityAppsTableRowClick(event, rowData: any) {
     this.selectedSecurityApp = rowData;
     this.securityappsTable.toggleRow(rowData, event);
+    this.lazyRenderWrapper.resizeTable(); // This is necessary to properly show expanded row.
     return false;
   }
 

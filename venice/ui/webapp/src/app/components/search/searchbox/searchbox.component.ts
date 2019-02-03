@@ -162,18 +162,6 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
   }
 
   /**
-   * This a utility function.
-   * @param value
-   *
-   * It handles cases like:
-   * in:cluster and hello, world is:wonder
-   */
-  protected parseInput(value: string): any {
-    const inputstr = SearchUtil.formatInputString(value);
-    return SearchUtil.compileSearchInputString(inputstr).list;
-  }
-
-  /**
    * This API build suggestion when user clicks on search input-box
    * @param event
    */
@@ -405,9 +393,8 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     }
     fieldRequirementIndexes.forEach((index) => {
       const obj = list[index];
-      const isEvent = payload.query['kinds'] != null &&
-        payload.query['kinds'].length === 1 &&
-        payload.query['kinds'][0] === 'Event';
+      const isEvent = payload.query['kinds'] != null && payload.query['kinds'].length === 1 && SearchUtil.isKindInSpecialEventList(payload.query['kinds'][0]);
+        // checking if (payload.query['kinds'][0] === 'Event' || payload.query['kinds'][0] === 'AuditEvent') ;
       payload.query['fields'] = {
         'requirements': this.buildFieldsPayload(obj, isEvent)
       };
@@ -461,40 +448,20 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
   }
 
   private buildFieldsPayload(obj, isEvent = false): any {
-    return this.buildFieldsLabelsPayloadHelper(obj, true, isEvent);
+    return SearchUtil.buildSearchFieldsLabelsPayloadHelper(obj, true, isEvent);
   }
 
   private buildLabelsPayload(obj): any {
-    return this.buildFieldsLabelsPayloadHelper(obj, false);
-  }
-
-  buildFieldsLabelsPayloadHelper(obj: any, isField: boolean, isEvent = false): any {
-    const output = [];
-    const values = obj.value.split(',');
-    let prevExp: SearchExpression = null;
-    // support case like "has:name=~Liz,test,tenant=default"
-    for (let i = 0; i < values.length; i++) {
-      const exprStr = values[i];
-      const expr = this.buildExpression(exprStr, isField, isEvent);
-      if (expr) {
-        output.push(expr);
-        prevExp = expr;
-      } else {
-        if (prevExp) {
-          prevExp.values.push(exprStr);
-        }
-      }
-    }
-    return output;
+    return SearchUtil.buildSearchFieldsLabelsPayloadHelper(obj, false);
   }
 
   /**
    * Build expression for searching "field" and "label".
    */
-  buildExpression(inputString: string, isField: boolean, isEvent = false): SearchExpression {
+  /* buildSearchExpression(inputString: string, isField: boolean, isEvent = false): SearchExpression {
     const searchExpression = SearchUtil.parseToExpression(inputString, isField, isEvent);
     return searchExpression;
-  }
+  } */
 
 
   /**
@@ -582,7 +549,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     if (Utility.isEmpty(inputString)) {
       return outputString; // do nothing
     }
-    const grammarList = this.parseInput(inputString);
+    const grammarList = SearchUtil.parseSearchInputString(inputString);
     if (this.shouldRunTextSearch(inputString)) {
       return outputString;
     } else {
@@ -626,7 +593,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    * @param inputSearchString
    */
   private shouldRunTextSearch(inputSearchString: string): boolean {
-    const grammarList = this.parseInput(inputSearchString);
+    const grammarList = SearchUtil.parseSearchInputString(inputSearchString);
     if (grammarList.length === 0 || !SearchUtil.isSearchInputStartsWithGrammarTag(inputSearchString)) {
       return true;
     } else {
@@ -712,7 +679,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
       this.setSearchInputString(grammarTag + ':' + selectedOption);
       return;
     }
-    const grammarlist = this.parseInput(searched);
+    const grammarlist = SearchUtil.parseSearchInputString(searched);
     if (grammarlist.length === 0) {
       this.setSearchInputString(this.getSearchInputString() + ' ' + grammarTag + ':' + selectedOption);
     }
@@ -889,63 +856,16 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    * Then we run invoke Search REST API to get search-result
    */
   onInvokeGuidedSearch(guidedSearchCriteria: GuidedSearchCriteria) {
-    const searchInputString = this.getSearchInputStringFromGuidedSearchCriteria(guidedSearchCriteria);
+    const searchInputString = SearchUtil.getSearchInputStringFromGuidedSearchCriteria(guidedSearchCriteria);
     if (Utility.isEmpty(searchInputString)) {
       return;
     }
-    const grammarList = this.parseInput(searchInputString);
+    const grammarList = SearchUtil.parseSearchInputString(searchInputString);
     const payload = this.buildComplexSearchPayload(grammarList, searchInputString);
 
     this.setSearchInputString(searchInputString);
-    const searchSearchRequest = new SearchSearchRequest(payload);
+    const searchSearchRequest = new SearchSearchRequest(payload, false);  // we don't to fill default values. So set the second parameter as false;
     this._callSearchRESTAPI(searchSearchRequest, searchInputString, false);
   }
 
-  private getSearchInputStringFromGuidedSearchCriteria(guidedSearchCriteria: GuidedSearchCriteria): string {
-    const inStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IN] && guidedSearchCriteria[SearchsuggestionTypes.OP_IN].length > 0) ? SearchsuggestionTypes.OP_IN + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IN].join(',') : '';
-    const isStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IS] && guidedSearchCriteria[SearchsuggestionTypes.OP_IS].length > 0) ? SearchsuggestionTypes.OP_IS + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IS].join(',') : '';
-    const hasStr = this.getHasStringFromGuidedSearchSpec(guidedSearchCriteria);
-    const tagStr = this.getTagStringFromGuidedSearchSpec(guidedSearchCriteria);
-    const list = [inStr, isStr, hasStr, tagStr];
-    const searchInputString = list.join(' ').trim();
-    return searchInputString;
-  }
-
-  /**
-   * extract out the 'has' configs
-   */
-  private getHasStringFromGuidedSearchSpec(guidedsearchCriteria: any): any {
-    const list = [];
-    const type = SearchsuggestionTypes.OP_HAS;
-    const hasSpecList = guidedsearchCriteria[type];
-    if (!hasSpecList) {
-      return '';
-    }
-    hasSpecList.filter((repeaterValueItem) => {
-      if (!Utility.isEmpty(repeaterValueItem.keyFormControl) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
-        const str = repeaterValueItem.keyFormControl + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
-        list.push(str);
-      }
-    });
-    return (list.length > 0) ? type + ':' + list.join(',') : '';
-  }
-
-  /**
-   * extract out the 'tag' configs
-   */
-  private getTagStringFromGuidedSearchSpec(guidedsearchCriteria: any): any {
-    const list = [];
-    const type = SearchsuggestionTypes.OP_TAG;
-    const tagSpecList = guidedsearchCriteria[type];
-    if (!tagSpecList) {
-      return '';
-    }
-    tagSpecList.filter((repeaterValueItem) => {
-      if (!Utility.isEmpty(repeaterValueItem.keytextFormName) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
-        const str = repeaterValueItem.keytextFormName + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
-        list.push(str);
-      }
-    });
-    return (list.length > 0) ? type + ':' + list.join(',') : '';
-  }
 }

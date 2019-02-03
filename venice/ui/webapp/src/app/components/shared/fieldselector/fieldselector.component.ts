@@ -129,8 +129,8 @@ export class FieldselectorComponent implements OnInit, OnChanges {
       const newPrefix = _.cloneDeep(prefix);
       newPrefix.push(key);
       const currentPath = newPrefix.join('.');
-      if (modelData[key] instanceof Object) {
-        // Has nested object
+      if (modelData[key] instanceof Object && !Array.isArray(modelData[key] )) {
+        // Has nested object and it is not an array.  (FieldSelector on AuthUser, status.authenticators=['local']. We don't want to traverse to "local" layer)
         const nestedFieldData = this.getFieldDataHelper(kind, modelData[key], newPrefix);
         returnData = returnData.concat(nestedFieldData);
       } else {

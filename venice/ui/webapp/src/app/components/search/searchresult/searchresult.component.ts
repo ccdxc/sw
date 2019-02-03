@@ -8,6 +8,7 @@ import { SearchResultPayload } from '@app/components/search';
 
 import { SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
+import { AuditEvent } from '@sdk/v1/models/generated/audit';
 import { MessageService } from 'primeng/primeng';
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface' ;
 import { Router } from '@angular/router';
@@ -294,6 +295,10 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     return wantedKeys;
   }
 
+  /**
+   * This API serves HTML template.  It shows event.
+   * @param eventKey
+   */
   displayEventValue(event, eventValue): string {
     const value = Utility.getObjectValueByPropertyPath(new EventsEvent(event), eventValue);
     if (typeof value === 'string') {
@@ -303,6 +308,29 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
       return this.getObjectValues(new EventsEvent(event)[eventValue]);
     }
     return JSON.stringify(value);
+  }
+
+   /**
+   * This API serves HTML template.  It shows audit-event
+   * @param eventKey
+   */
+  displayAuditEventValue(event, eventValue): string {
+    const value = Utility.getObjectValueByPropertyPath(new AuditEvent(event), eventValue);
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (value instanceof Object) {
+      return this.getObjectValues(new AuditEvent(event)[eventValue]);
+    }
+    return JSON.stringify(value);
+  }
+
+  /**
+   * This API serves HTML template.  It controls whether to show an audit-event property
+   * @param eventKey
+   */
+  displayAuditEventKey(eventKey): boolean {
+    return (eventKey !== 'response-object') &&  (eventKey !== 'request-object');
   }
 
   private getObjectValues(eventValue: any): string {

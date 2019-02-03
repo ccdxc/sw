@@ -25,6 +25,15 @@ const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'auditevents',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/auditevents/auditevents.module#AuditeventsModule'
+      }
+    ]
+  }
 ];
 
 @NgModule({

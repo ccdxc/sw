@@ -1,7 +1,7 @@
 import { SearchInputTypeValue, SearchSpec, SearchExpression, SearchModelField } from '@app/components/search';
 import { Utility } from '@app/common/Utility';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
-import { SearchSuggestion, CompileSearchInputStringResult, SearchGrammarItem, SearchsuggestionTypes, SearchInputErrors, ExamineCategoryOrKindResult , GuidedSearchCriteria} from './';
+import { SearchSuggestion, CompileSearchInputStringResult, SearchGrammarItem, SearchsuggestionTypes, SearchInputErrors, ExamineCategoryOrKindResult, GuidedSearchCriteria } from './';
 
 export class SearchUtil {
   public static LAST_SEARCH_DATA = 'last_search_data';
@@ -21,11 +21,13 @@ export class SearchUtil {
 
   public static META_ATTRIBUTES = ['name', 'tenant', 'generation-id', 'resource-version', 'uuid', 'creation-time', 'mod-time', 'namespace', 'self-link'];
 
+  public static SPECIAL_EVENT_KINDS = ['Event', 'AuditEvent'];
+
   // For the backend, equal expects only one value, while in can support multiple
   // The UI hides this distinction and shows equal, but allows user to select multiple if they wish to.
   public static stringOperators = [
     { label: 'equals', value: 'in' },
-    { label: 'not equals', value: 'not in' },
+    { label: 'not equals', value: 'notEquals' },
   ];
 
   public static numberOperators = [
@@ -48,17 +50,26 @@ export class SearchUtil {
    *  label is for guided-search repeater operator
    *  searchoperator is for search REST API request JSON
    *  description is for tooltip
+   *
+   *  Cases (type in - invoke search.  type in - open guided search)
+   *   is:AuditEvent has:action=login
+   *   is:AuditEvent has:action==login
+   *   is:AuditEvent has:action!=login
+   *   is:AuditEvent has:action=~login
+   *   is:AuditEvent has:action!~login
+   *
+   *   guided search criteria can be reformat to search string expression (see convertSearchSpecOperator(..) API)
    */
   public static SEARCH_FIELD_OPERATORS = [
     { 'operator': '>=', 'label': 'gte', 'description': 'greater than or equal', 'searchoperator': 'gte' },
     { 'operator': '<=', 'label': 'lte', 'description': 'less than or equal', 'searchoperator': 'lte' },
-    { 'operator': '=', 'label': 'equals', 'description': 'equal', 'searchoperator': 'equals' },
-    { 'operator': '==', 'label': 'equals', 'description': 'equal', 'searchoperator': 'equals' },
-    { 'operator': '!=', 'label': 'not equals', 'description': 'not equal', 'searchoperator': 'not equals' },
+    { 'operator': '=', 'label': 'equals', 'description': 'equal', 'searchoperator': 'in' },
+    { 'operator': '==', 'label': 'equals', 'description': 'equal', 'searchoperator': 'in' },
+    { 'operator': '!=', 'label': 'not equals', 'description': 'notEquals', 'searchoperator': 'notEquals' },
     { 'operator': '>', 'label': 'gt', 'description': 'greater than', 'searchoperator': 'gt' },
     { 'operator': '<', 'label': 'lt', 'description': 'less than', 'searchoperator': 'lt' },
     { 'operator': '=~', 'label': 'in', 'description': 'contains', 'searchoperator': 'in' },
-    { 'operator': '!~', 'label': 'not in', 'description': 'not contains', 'searchoperator': 'not in' }
+    { 'operator': '!~', 'label': 'not in', 'description': 'not contains', 'searchoperator': 'notEquals' }
   ];
 
   public static SEARCH_GRAMMAR_TAGS = {
@@ -94,6 +105,19 @@ export class SearchUtil {
       default:
         return '';
     }
+  }
+
+  public static isKindInSpecialEventList(kind: string): boolean {
+    return this.SPECIAL_EVENT_KINDS.includes(kind);
+  }
+
+  public static isKindListContainSpecialEvent(kinds: string[]): boolean {
+    for (let i = 0; i < kinds.length; i++) {
+      if (this.isKindInSpecialEventList(kinds[i])) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public static isValidKind(kind: string): boolean {
@@ -240,12 +264,12 @@ export class SearchUtil {
           searchSpec[strs[0]] = (searchSpec[strs[0]] === undefined) ? strs[1] : searchSpec[strs[0]] + ',' + strs[1];
         } else {
           if (this.hasOperatorInString(listStr)) {
-              // case like  is:SmartNIC has:meta.name=~44:44:44:44:00:02
-              searchGrammarItem.type = strs[0];
-              const idx = listStr.indexOf(':'); // has: <- ":"
-              const strs2 = listStr.substr(idx + 1); // get meta.name=~44:44:44:44:00:02
-              outputArray.push(searchGrammarItem);
-              searchSpec[strs[0]] = (searchSpec[strs[0]] === undefined) ? strs2 : searchSpec[strs[0]] + ',' + strs2;
+            // case like  is:SmartNIC has:meta.name=~44:44:44:44:00:02
+            searchGrammarItem.type = strs[0];
+            const idx = listStr.indexOf(':'); // has: <- ":"
+            const strs2 = listStr.substr(idx + 1); // get meta.name=~44:44:44:44:00:02
+            outputArray.push(searchGrammarItem);
+            searchSpec[strs[0]] = (searchSpec[strs[0]] === undefined) ? strs2 : searchSpec[strs[0]] + ',' + strs2;
           } else {
             texts.push(listStr);
           }
@@ -695,7 +719,87 @@ export class SearchUtil {
     return false;
   }
 
-  public static isGuidedSearchCriteriaEmpty( obj: GuidedSearchCriteria): boolean {
-     return (!obj.in || obj.in.length === 0) && (!obj.is || obj.is.length === 0)  && (!obj.tag || obj.tag.length === 0) && (!obj.has || obj.has.length === 0 );
+  public static isGuidedSearchCriteriaEmpty(obj: GuidedSearchCriteria): boolean {
+    return (!obj.in || obj.in.length === 0) && (!obj.is || obj.is.length === 0) && (!obj.tag || obj.tag.length === 0) && (!obj.has || obj.has.length === 0);
+  }
+
+  /**
+   * extract out the 'has' configs
+   */
+  public static getHasStringFromGuidedSearchSpec(guidedsearchCriteria: any): any {
+    const list = [];
+    const type = SearchsuggestionTypes.OP_HAS;
+    const hasSpecList = guidedsearchCriteria[type];
+    if (!hasSpecList) {
+      return '';
+    }
+    hasSpecList.filter((repeaterValueItem) => {
+      if (!Utility.isEmpty(repeaterValueItem.keyFormControl) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
+        const str = repeaterValueItem.keyFormControl + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
+        list.push(str);
+      }
+    });
+    return (list.length > 0) ? type + ':' + list.join(',') : '';
+  }
+
+  /**
+   * extract out the 'tag' configs
+   */
+  public static getTagStringFromGuidedSearchSpec(guidedsearchCriteria: any): any {
+    const list = [];
+    const type = SearchsuggestionTypes.OP_TAG;
+    const tagSpecList = guidedsearchCriteria[type];
+    if (!tagSpecList) {
+      return '';
+    }
+    tagSpecList.filter((repeaterValueItem) => {
+      if (!Utility.isEmpty(repeaterValueItem.keytextFormName) && !Utility.isEmpty(repeaterValueItem.operatorFormControl) && !Utility.isEmpty(repeaterValueItem.valueFormControl)) {
+        const str = repeaterValueItem.keytextFormName + SearchUtil.convertSearchSpecOperator(repeaterValueItem.operatorFormControl) + repeaterValueItem.valueFormControl;
+        list.push(str);
+      }
+    });
+    return (list.length > 0) ? type + ':' + list.join(',') : '';
+  }
+
+  public static getSearchInputStringFromGuidedSearchCriteria(guidedSearchCriteria: GuidedSearchCriteria): string {
+    const inStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IN] && guidedSearchCriteria[SearchsuggestionTypes.OP_IN].length > 0) ? SearchsuggestionTypes.OP_IN + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IN].join(',') : '';
+    const isStr = (guidedSearchCriteria[SearchsuggestionTypes.OP_IS] && guidedSearchCriteria[SearchsuggestionTypes.OP_IS].length > 0) ? SearchsuggestionTypes.OP_IS + ':' + guidedSearchCriteria[SearchsuggestionTypes.OP_IS].join(',') : '';
+    const hasStr = SearchUtil.getHasStringFromGuidedSearchSpec(guidedSearchCriteria);
+    const tagStr = SearchUtil.getTagStringFromGuidedSearchSpec(guidedSearchCriteria);
+    const list = [inStr, isStr, hasStr, tagStr];
+    const searchInputString = list.join(' ').trim();
+    return searchInputString;
+  }
+
+  /**
+   * This a utility function.
+   * @param value
+   *
+   * It handles cases like:
+   * in:cluster and hello, world is:wonder
+   */
+  public static parseSearchInputString(value: string): any {
+    const inputstr = SearchUtil.formatInputString(value);
+    return SearchUtil.compileSearchInputString(inputstr).list;
+  }
+
+  public static buildSearchFieldsLabelsPayloadHelper(obj: any, isField: boolean, isEvent = false): any {
+    const output = [];
+    const values = obj.value.split(',');
+    let prevExp: SearchExpression = null;
+    // support case like "has:name=~Liz,test,tenant=default"
+    for (let i = 0; i < values.length; i++) {
+      const exprStr = values[i];
+      const expr = SearchUtil.parseToExpression(exprStr, isField, isEvent);
+      if (expr) {
+        output.push(expr);
+        prevExp = expr;
+      } else {
+        if (prevExp) {
+          prevExp.values.push(exprStr);
+        }
+      }
+    }
+    return output;
   }
 }

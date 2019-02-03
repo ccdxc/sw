@@ -131,8 +131,7 @@ export class GuidesearchComponent implements OnInit, OnChanges {
     if (isValues) {
       this.selectedKinds = this.populateHelper_Kind(isValues);
     }
-
-    const isEvent = this.selectedKinds.includes('Event');
+    const isEvent = SearchUtil.isKindListContainSpecialEvent(this.selectedKinds);
     const hasValues = this.parseExpressionList(inputConfig.has, true, isEvent);
     const tagValues = this.parseExpressionList(inputConfig.tag, false);
 

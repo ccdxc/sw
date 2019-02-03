@@ -35,7 +35,7 @@ export class Utility {
    * In dev enviorment, we proxy all requests to the server specified in proxy.conf.js
    */
   static getRESTAPIServerAndPort(): string {
-    return window.location.protocol + '//' + window.location.hostname + ':' + window.location.port
+    return window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
   }
 
   static getDocURL(): string {

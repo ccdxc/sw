@@ -1,29 +1,26 @@
 
 @import 'src/global-mixins';
 
-.securityapps {    
+.auditevents {    
   @include primary-font();
 }
 
 
-.securityapps-detail-div {
+.auditevents-detail-div {
   padding:10px;
   width:100%;
   max-height: 250px;
   overflow: auto;
 }
 
-.securityapps-column-date {
-  width: 15%;
+.auditevents-column-common {
+    width: 8%;
 }
-
-.securityapps-column-metaname {
-  width: 15%;
-  color: #007bff;
+.auditevents-column-common.auditevents-column-who {
+    width: 5%;
+    color: #007bff;
 }
-
-
-.securityapps-rowexpand-tr {
+.auditevents-rowexpand-tr {
   height: 0px !important;
   // text-top interferes with the animation
   vertical-align: top !important;
@@ -32,7 +29,7 @@
   }
 }
 
-.securityapps-rowhighlight {
+.auditevents-rowhighlight {
   > td {
     z-index: 20; // Needs to be higher than .evenalertpolicies-overlay z-index
     position: relative; // needed for z-index to take effect
@@ -40,3 +37,10 @@
   }
 }
 
+.auditevents-searchbutton-clear{
+  margin-right:10px;
+}
+
+.auditevents .mat-expansion-panel-body {
+  padding: 5px 10px 8px;
+}

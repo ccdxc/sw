@@ -29,10 +29,7 @@
       <ng-template pTemplate="body" let-rowData let-expanded="expanded">
         <tr>
 
-          <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
-            <div *ngSwitchCase="'meta.name'">
-              <a href="#" (click)="onSecurityAppsTableRowClick($event, rowData)">{{rowData.meta.name}}</a>
-            </div>
+          <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class" (click)="onSecurityAppsTableRowClick($event, rowData)" title="Click to expand or collapse row">
             <div *ngSwitchCase="'meta.mod-time'">
               {{rowData.meta['mod-time'] | PrettyDate }}
             </div>

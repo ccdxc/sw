@@ -226,6 +226,7 @@
 
   .global-primeng-table-lazyload {
     @extend %primeng-table;
+    height:100%;
     .ui-table {
       .ui-table-tbody > tr {
         // fixes issue where table would have a height 1px
@@ -235,6 +236,8 @@
       }
     }
   }
+
+
 
   .global-column-date {
     width: 10%;

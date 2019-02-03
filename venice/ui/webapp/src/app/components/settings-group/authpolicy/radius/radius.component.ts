@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, OnChanges, SimpleChanges, AfterContentInit } from '@angular/core';
-import { Validators } from '@angular/forms';
+import { required } from '@sdk/v1/models/generated/auth/validators.ts';
 import { AuthpolicybaseComponent } from '@app/components/settings-group/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
 import { IAuthRadius, AuthRadius, AuthRadiusServer } from '@sdk/v1/models/generated/auth';
@@ -75,9 +75,9 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   }
 
   private setValidatorOnServerControl(control: AbstractControl) {
-    control.get('url').setValidators(Validators.required);
-    control.get('secret').setValidators(Validators.required);
-    control.get('auth-method').setValidators(Validators.required);
+    control.get('url').setValidators(required);
+    control.get('secret').setValidators(required);
+    control.get('auth-method').setValidators(required);
   }
 
 

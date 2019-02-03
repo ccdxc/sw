@@ -397,6 +397,14 @@ export class ControllerService {
     });
   }
 
+  invokeInfoToaster(summary, detail) {
+    this.messageService.add({
+      severity: 'info',
+      summary: summary,
+      detail: detail
+    });
+  }
+
   invokeRESTErrorToaster(summary, error) {
     const errorMsg = error.body != null ? error.body.message : '';
     this.invokeErrorToaster(summary, errorMsg);
