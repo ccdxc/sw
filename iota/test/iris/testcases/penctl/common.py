@@ -316,22 +316,22 @@ def RunPenctlOnHost(n, cmd):
     return cmd_resp.stdout
 
 def SetNaplesModeInband_Static(n, controllerip, mgmtip):
-    cmd = "update mode --hostname IOTATEST_INB --mgmt-ip {} --management-mode network --controllers {} --network-mode inband --feature-profile default".format(mgmtip, controllerip)
+    cmd = "update mode --hostname IOTATEST_INB --mgmt-ip {} --management-mode network --controllers {} --network-mode inband".format(mgmtip, controllerip)
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeInband_Dynamic(n):
     api.Logger.info("Setting Naples network mode to Inband Dynamic.")
-    cmd = "update mode --hostname IOTATEST_INB --management-mode network --network-mode inband --feature-profile default"
+    cmd = "update mode --hostname IOTATEST_INB --management-mode network --network-mode inband"
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeOOB_Static(n, controllerip, mgmtip):
     api.Logger.info("Setting Naples OOB network management IP statically for {}.".format(n))
-    cmd = "update mode --hostname IOTATEST_OOB --mgmt-ip {} --management-mode network --controllers {} --network-mode oob --feature-profile default".format(mgmtip, controllerip)
+    cmd = "update mode --hostname IOTATEST_OOB --mgmt-ip {} --management-mode network --controllers {} --network-mode oob".format(mgmtip, controllerip)
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeOOB_Dynamic(n):
     api.Logger.info("Setting Naples network mode to OOB Dynamic.")
-    cmd = "update mode --hostname IOTATEST_OOB --management-mode network --network-mode inband --feature-profile default"
+    cmd = "update mode --hostname IOTATEST_OOB --management-mode network --network-mode inband"
     return RunPenctlOnHost(n, cmd)
 
 def PenctlGetMode(n):
