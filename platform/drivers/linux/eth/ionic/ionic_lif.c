@@ -2009,6 +2009,8 @@ static int ionic_set_features(struct lif *lif)
 	netdev->features |= netdev->hw_features;
 	netdev->vlan_features |= netdev->features;
 
+	netdev->priv_flags |= IFF_UNICAST_FLT;
+
 	return 0;
 }
 
