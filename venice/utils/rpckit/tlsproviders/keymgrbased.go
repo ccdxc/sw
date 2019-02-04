@@ -113,32 +113,48 @@ func (p *KeyMgrBasedProvider) GetTrustRoots() (*x509.CertPool, error) {
 	return nil, nil
 }
 
-// GetServerOptions returns server options to be passed to grpc.NewServer()
-func (p *KeyMgrBasedProvider) GetServerOptions(serverName string) (grpc.ServerOption, error) {
+// getClientTLSConfig is an utility function that returns TLS config for use with a client
+func (p *KeyMgrBasedProvider) getClientTLSConfig(serverName string) (*tls.Config, error) {
+	tlsCertificate, trustRoots, err := p.getTLSNamedCredentialsOrDefault(kmbClientBaseID)
+	if err != nil {
+		log.Errorf("Error in getTLSNamedCredentialsOrDefault(): %v", err)
+		return nil, err
+	}
+	if tlsCertificate == nil {
+		return nil, fmt.Errorf("No client certificate found and no default set, serverName: %s", serverName)
+	}
+	return getTLSClientConfig(serverName, tlsCertificate, trustRoots), nil
+}
+
+// getServerTLSConfig is an utility function that returns TLS config for use in a server
+func (p *KeyMgrBasedProvider) getServerTLSConfig(serverName string) (*tls.Config, error) {
 	tlsCertificate, trustRoots, err := p.getTLSNamedCredentialsOrDefault(serverName)
 	if err != nil {
-		log.Errorf("Error in GetServerOptions for server %s: %v", serverName, err)
+		log.Errorf("Error in getTLSNamedCredentialsOrDefault for server %s: %v", serverName, err)
 		return nil, err
 	}
 	if tlsCertificate == nil {
 		log.Errorf("No certificate found for server %s and no default set", serverName)
 		return nil, fmt.Errorf("No certificate found for server %s and no default set", serverName)
 	}
-	tlsConfig := getTLSServerConfig(serverName, tlsCertificate, trustRoots)
+	return getTLSServerConfig(serverName, tlsCertificate, trustRoots), nil
+}
+
+// GetServerOptions returns server options to be passed to grpc.NewServer()
+func (p *KeyMgrBasedProvider) GetServerOptions(serverName string) (grpc.ServerOption, error) {
+	tlsConfig, err := p.getServerTLSConfig(serverName)
+	if err != nil {
+		return nil, err
+	}
 	return grpc.Creds(credentials.NewTLS(tlsConfig)), nil
 }
 
 // GetDialOptions returns dial options to be passed to grpc.Dial()
 func (p *KeyMgrBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, error) {
-	tlsCertificate, trustRoots, err := p.getTLSNamedCredentialsOrDefault(kmbClientBaseID)
+	tlsConfig, err := p.getClientTLSConfig(serverName)
 	if err != nil {
-		log.Errorf("Error in GetDialOptions(): %v", err)
 		return nil, err
 	}
-	if tlsCertificate == nil {
-		return nil, fmt.Errorf("No client certificate found and no default set, serverName: %s", serverName)
-	}
-	tlsConfig := getTLSClientConfig(serverName, tlsCertificate, trustRoots)
 	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
 }
 
@@ -183,6 +199,16 @@ func (p *KeyMgrBasedProvider) SetCaTrustChain(certs []*x509.Certificate) error {
 // SetTrustRoots sets the trust roots to be used when validating a peer certificate
 func (p *KeyMgrBasedProvider) SetTrustRoots(certs []*x509.Certificate) error {
 	return p.keyMgr.UpdateObject(keymgr.NewCertificateBundleObject(kmbTrustRootsID, certs))
+}
+
+// GetServerTLSConfig returns TLS config for use on a server
+func (p *KeyMgrBasedProvider) GetServerTLSConfig(serverName string) (*tls.Config, error) {
+	return p.getServerTLSConfig(serverName)
+}
+
+// GetClientTLSConfig returns TLS config for use by a client
+func (p *KeyMgrBasedProvider) GetClientTLSConfig(serverName string) (*tls.Config, error) {
+	return p.getClientTLSConfig(serverName)
 }
 
 // Close closes the client.

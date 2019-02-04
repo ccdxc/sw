@@ -82,7 +82,7 @@ var typesMapObjstore = map[string]*api.Struct{
 		},
 	},
 	"objstore.Object": &api.Struct{
-		Kind: "Object", APIGroup: "objstore", Scopes: []string{"Cluster"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Object{}) },
+		Kind: "Object", APIGroup: "objstore", Scopes: []string{"Tenant"}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Object{}) },
 		Fields: map[string]api.Field{
 			"TypeMeta": api.Field{Name: "TypeMeta", CLITag: api.CLIInfo{ID: "T", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: true, FromInline: false, KeyType: "", Type: "api.TypeMeta"},
 

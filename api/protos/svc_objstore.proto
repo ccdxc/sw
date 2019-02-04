@@ -26,7 +26,7 @@ service ObjstoreV1 {
     };
 
     option (venice.proxyPrefix) = {
-      Path:         "/uploads/"
+      Path:         "/uploads/images/"
       PathPrefix:   "/apis/v1"
       Backend:      "pen-vos-http"
     };

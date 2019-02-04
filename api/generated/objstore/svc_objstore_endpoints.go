@@ -949,7 +949,7 @@ func makeURIObjstoreV1AutoDeleteBucketDeleteOper(in *Bucket) string {
 
 //
 func makeURIObjstoreV1AutoDeleteObjectDeleteOper(in *Object) string {
-	return fmt.Sprint("/objstore/v1", "/", in.Namespace, "/objects/", in.Name)
+	return fmt.Sprint("/objstore/v1", "/tenant/", in.Tenant, "/", in.Namespace, "/objects/", in.Name)
 }
 
 //
@@ -960,7 +960,7 @@ func makeURIObjstoreV1AutoGetBucketGetOper(in *Bucket) string {
 
 //
 func makeURIObjstoreV1AutoGetObjectGetOper(in *Object) string {
-	return fmt.Sprint("/objstore/v1", "/", in.Namespace, "/objects/", in.Name)
+	return fmt.Sprint("/objstore/v1", "/tenant/", in.Tenant, "/", in.Namespace, "/objects/", in.Name)
 }
 
 //
@@ -971,7 +971,7 @@ func makeURIObjstoreV1AutoListBucketListOper(in *api.ListWatchOptions) string {
 
 //
 func makeURIObjstoreV1AutoListObjectListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/objstore/v1", "/", in.Namespace, "/objects")
+	return fmt.Sprint("/objstore/v1", "/tenant/", in.Tenant, "/", in.Namespace, "/objects")
 }
 
 //

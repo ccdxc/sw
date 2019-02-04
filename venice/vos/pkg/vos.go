@@ -14,6 +14,8 @@ import (
 	minio "github.com/minio/minio/cmd"
 	"github.com/pkg/errors"
 
+	"github.com/pensando/sw/venice/utils/rpckit"
+
 	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -63,6 +65,9 @@ func createBuckets(client backendClient) error {
 }
 
 // New creaate an instance of obj store
+//  This starts Minio server and starts a HTTP server handling multipart forms used or
+//  uploading files to the object store and a gRPC frontend that frontends all other operations
+//  for the objectstore.
 func New(ctx context.Context, args []string) error {
 	os.Setenv("MINIO_ACCESS_KEY", minioKey)
 	os.Setenv("MINIO_SECRET_KEY", minioSecret)
@@ -79,6 +84,18 @@ func New(ctx context.Context, args []string) error {
 		log.Errorf("Failed to create client (%s)", err)
 		return errors.Wrap(err, "Failed to create Client")
 	}
+	tlsp, err := rpckit.GetDefaultTLSProvider(globals.Vos)
+	if err != nil {
+		log.Errorf("failed to get tls provider (%s)", err)
+		return errors.Wrap(err, "failed GetDefaultTLSProvider()")
+	}
+	tlsc, err := tlsp.GetServerTLSConfig(globals.Vos)
+	if err != nil {
+		log.Errorf("failed to get tls config (%s)", err)
+		return errors.Wrap(err, "failed GetDefaultTLSProvider()")
+	}
+	tlsc.ServerName = globals.Vos
+
 	defTr := http.DefaultTransport.(*http.Transport)
 	defTr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	client.SetCustomTransport(defTr)
@@ -98,7 +115,7 @@ func New(ctx context.Context, args []string) error {
 		return errors.Wrap(err, "create buckets")
 	}
 	grpcBackend.start(ctx)
-	httpBackend.start(ctx)
+	httpBackend.start(ctx, globals.VosHTTPPort, tlsc)
 	log.Infof("Initialization complete")
 	<-ctx.Done()
 	return nil

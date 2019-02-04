@@ -5,6 +5,8 @@
 package rpckit
 
 import (
+	"crypto/tls"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -20,5 +22,7 @@ type Middleware interface {
 type TLSProvider interface {
 	GetServerOptions(serverName string) (grpc.ServerOption, error)
 	GetDialOptions(serverName string) (grpc.DialOption, error)
+	GetServerTLSConfig(serverName string) (*tls.Config, error)
+	GetClientTLSConfig(serverName string) (*tls.Config, error)
 	Close()
 }

@@ -119,6 +119,10 @@ func TestKeyMgrBasedProviderConfig(t *testing.T) {
 	Assert(t, err != nil, "GetServerOptions did not return error as expected")
 	_, err = p.GetDialOptions("any")
 	Assert(t, err != nil, "GetDialOptions did not return error as expected")
+	_, err = p.GetServerTLSConfig("any")
+	Assert(t, err != nil, "GetServerTLSConfig did not return error as expected")
+	_, err = p.GetClientTLSConfig("any")
+	Assert(t, err != nil, "GetClientTLSConfig did not return error as expected")
 
 	// Program default credentials and verify that they are used for both client and server
 	defaultKey, defaultCert := setDefaultCredentials(t, p, caKey1, caCert1)
@@ -129,6 +133,10 @@ func TestKeyMgrBasedProviderConfig(t *testing.T) {
 	AssertOk(t, err, "GetServerOptions failed unexpectedly")
 	_, err = p.GetDialOptions("any") // servername does not matter
 	AssertOk(t, err, "GetDialOptions failed unexpectedly")
+	_, err = p.GetServerTLSConfig("any")
+	AssertOk(t, err, "GetServerTLSConfig failed unexpectedly")
+	_, err = p.GetClientTLSConfig("any") // servername does not matter
+	AssertOk(t, err, "GetClientTLSConfig failed unexpectedly")
 
 	// Generate server-specific keys inside the provider and program certs
 	srv1Key, srv1Cert := setServerCredentials(t, p, "srv1", caKey1, caCert1)

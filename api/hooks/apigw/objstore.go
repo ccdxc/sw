@@ -20,7 +20,7 @@ func (b *objstoreHooks) skipAuthN(ctx context.Context, in interface{}) (retCtx c
 func registerObjstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	r := objstoreHooks{logger: l}
 
-	prof, err := svc.GetProxyServiceProfile("/uploads")
+	prof, err := svc.GetProxyServiceProfile("/uploads/images")
 	if err != nil {
 		return err
 	}

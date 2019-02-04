@@ -41,7 +41,7 @@ func uploadFile(ctx context.Context, filename string, metadata map[string]string
 	if err != nil {
 		return 0, errors.Wrap(err, "closing writer")
 	}
-	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/", ts.tu.APIGwAddr)
+	uri := fmt.Sprintf("https://%s/objstore/v1/uploads/images/", ts.tu.APIGwAddr)
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {
 		return 0, errors.Wrap(err, "http.newRequest failed")

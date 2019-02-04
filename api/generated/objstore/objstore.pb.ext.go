@@ -35,12 +35,12 @@ func (m *Bucket) MakeURI(cat, ver, prefix string) string {
 
 // MakeKey generates a KV store key for the object
 func (m *Object) MakeKey(prefix string) string {
-	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "objects/", m.Namespace, "/", m.Name)
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "objects/", m.Tenant, "/", m.Namespace, "/", m.Name)
 }
 
 func (m *Object) MakeURI(cat, ver, prefix string) string {
 	in := m
-	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/", in.Namespace, "/objects/", in.Name)
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/", in.Namespace, "/objects/", in.Name)
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -127,7 +127,7 @@ func (m *Object) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *Object) Defaults(ver string) bool {
 	m.Kind = "Object"
-	m.Tenant, m.Namespace = "", ""
+	m.Tenant, m.Namespace = "default", "default"
 	return false
 }
 
@@ -208,9 +208,6 @@ func (m *Object) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		ret = m.ObjectMeta.Validate(ver, path+dlmtr+"ObjectMeta", ignoreStatus)
-	}
-	if m.Tenant != "" {
-		ret = append(ret, errors.New("Tenant not allowed for Object"))
 	}
 	return ret
 }

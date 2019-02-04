@@ -363,8 +363,8 @@ func (p *CMDBasedProvider) GetServerOptions(serverName string) (grpc.ServerOptio
 	return grpc.Creds(credentials.NewTLS(tlsConfig)), nil
 }
 
-// GetDialOptions returns dial options to be passed to grpc.Dial()
-func (p *CMDBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, error) {
+// getClientTLSConfig is an utility function that returns TLS config for use with a client
+func (p *CMDBasedProvider) getClientTLSConfig(serverName string) (*tls.Config, error) {
 	// Golang 1.8.3 and subsequent support a GetClientCertificate option to allow a client to
 	// pick a certificate based on the server's certificate request. However, with gRPC this
 	// doesn't work, because gRPC currently copies tls.Config structures using a naive,
@@ -388,8 +388,30 @@ func (p *CMDBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, e
 		p.clientCertificate = cert
 	}
 
-	tlsConfig := getTLSClientConfig(serverName, p.clientCertificate, p.trustRoots)
+	return getTLSClientConfig(serverName, p.clientCertificate, p.trustRoots), nil
+}
+
+// GetDialOptions returns dial options to be passed to grpc.Dial()
+func (p *CMDBasedProvider) GetDialOptions(serverName string) (grpc.DialOption, error) {
+	tlsConfig, err := p.getClientTLSConfig(serverName)
+	if err != nil {
+		return nil, err
+	}
 	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
+}
+
+// GetClientTLSConfig returns TLS config for use on a client
+func (p *CMDBasedProvider) GetClientTLSConfig(serverName string) (*tls.Config, error) {
+	return p.getClientTLSConfig(serverName)
+}
+
+// GetServerTLSConfig returns TLS config for use on a server
+func (p *CMDBasedProvider) GetServerTLSConfig(serverName string) (*tls.Config, error) {
+	tlsConfig := getTLSServerConfig(serverName, nil, p.trustRoots)
+	// Set callback to be invoked whenever a new connection is established
+	// This enables certificate rotation
+	tlsConfig.GetCertificate = p.getServerCertificate
+	return tlsConfig, nil
 }
 
 // Close closes the client.

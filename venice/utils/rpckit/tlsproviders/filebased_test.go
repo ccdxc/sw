@@ -33,4 +33,8 @@ func TestFileBasedProviderInit(t *testing.T) {
 	AssertOk(t, err, "Error getting server options")
 	_, err = okProvider.GetDialOptions("testServer")
 	AssertOk(t, err, "Error getting dial options")
+	_, err = okProvider.GetServerTLSConfig("testServer")
+	AssertOk(t, err, "Error getting Server TLS options")
+	_, err = okProvider.GetClientTLSConfig("testServer")
+	AssertOk(t, err, "Error getting Client TLS options")
 }

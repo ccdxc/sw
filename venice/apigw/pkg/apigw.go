@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -950,7 +950,7 @@ func NewRProxyHandler(path, trim, prefix, destination string, svcProf apigw.Serv
 		if _, _, err := net.SplitHostPort(destination); err != nil {
 			ret.useResolver = true
 		} else {
-			// specified as host:port add "http://" by default
+			// specified as host:port add "https://" by default
 			durl, err = url.Parse("https://" + destination + path)
 			if err != nil {
 				return nil, err
@@ -960,16 +960,27 @@ func NewRProxyHandler(path, trim, prefix, destination string, svcProf apigw.Serv
 
 	ret.apiGw = MustGetAPIGateway().(*apiGw)
 	ret.proxy = httputil.NewSingleHostReverseProxy(durl)
+	tlsp, err := rpckit.GetDefaultTLSProvider(globals.APIGw)
+	if err != nil {
+		return nil, errors.Wrap(err, "GetDefaultTLSProvider")
+	}
+	log.Infof("tlsp is [%v]/[%p]", destination, tlsp)
 	if ret.useResolver {
 		ret.proxy.Director = ret.director
-		tlsp, _ := rpckit.GetDefaultTLSProvider(destination)
-		if tlsp != nil {
-			ret.scheme = "https://"
-		} else {
-			ret.scheme = "http://"
+	}
+	if tlsp != nil {
+		tr := http.DefaultTransport.(*http.Transport)
+		tr.TLSClientConfig, err = tlsp.GetClientTLSConfig(destination)
+		if err != nil {
+			return nil, errors.Wrap(err, "GetClientTLSConfig")
 		}
+		tr.TLSClientConfig.ServerName = destination
+		ret.proxy.Transport = tr
+		ret.scheme = "https://"
+	} else {
 		ret.scheme = "http://"
 	}
+
 	log.Infof("created proxy handler with [%v][%v][%v][%v]", ret.path, ret.trim, ret.prefix, destination)
 	ret.rnd = rand.New(rand.NewSource(int64(time.Now().Nanosecond())))
 	return ret, nil

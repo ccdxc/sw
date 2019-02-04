@@ -2,6 +2,7 @@ package vos
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"mime/multipart"
 	"net/http"
@@ -14,6 +15,16 @@ import (
 
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+func TestNewHandler(t *testing.T) {
+	h, err := newHTTPHandler(nil)
+	AssertOk(t, err, "newHTTPHandler returned error")
+	Assert(t, h != nil, "handler is nil")
+	ctx, cancel := context.WithCancel(context.Background())
+	// should start the server and return
+	h.start(ctx, "0", nil)
+	cancel()
+}
 
 func createUploadReq(uri string, params map[string]string, pname, fname, method string, content []byte) (*http.Request, error) {
 	body := &bytes.Buffer{}

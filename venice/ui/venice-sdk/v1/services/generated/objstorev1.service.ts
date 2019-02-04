@@ -21,14 +21,16 @@ export class Objstorev1Service extends AbstractService {
 
   /** List Object objects */
   public ListObject(O_Namespace, queryParam: any = null):Observable<{body: IObjstoreObjectList | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/objstore/v1/{O.Namespace}/objects';
+    let url = this['baseUrlAndPort'] + '/objstore/v1/tenant/{O.Tenant}/{O.Namespace}/objects';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Namespace}', O_Namespace);
     return this.invokeAJAXGetCall(url, queryParam, 'ListObject') as Observable<{body: IObjstoreObjectList | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Object object */
   public GetObject(O_Namespace,O_Name, queryParam: any = null):Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/objstore/v1/{O.Namespace}/objects/{O.Name}';
+    let url = this['baseUrlAndPort'] + '/objstore/v1/tenant/{O.Tenant}/{O.Namespace}/objects/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Namespace}', O_Namespace);
     url = url.replace('{O.Name}', O_Name);
     return this.invokeAJAXGetCall(url, queryParam, 'GetObject') as Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}>;
@@ -36,10 +38,34 @@ export class Objstorev1Service extends AbstractService {
   
   /** Delete Object object */
   public DeleteObject(O_Namespace,O_Name):Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/objstore/v1/{O.Namespace}/objects/{O.Name}';
+    let url = this['baseUrlAndPort'] + '/objstore/v1/tenant/{O.Tenant}/{O.Namespace}/objects/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Namespace}', O_Namespace);
     url = url.replace('{O.Name}', O_Name);
     return this.invokeAJAXDeleteCall(url, 'DeleteObject') as Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** List Object objects */
+  public ListObject_1(O_Namespace, queryParam: any = null):Observable<{body: IObjstoreObjectList | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/objstore/v1/{O.Namespace}/objects';
+    url = url.replace('{O.Namespace}', O_Namespace);
+    return this.invokeAJAXGetCall(url, queryParam, 'ListObject_1') as Observable<{body: IObjstoreObjectList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Get Object object */
+  public GetObject_1(O_Namespace,O_Name, queryParam: any = null):Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/objstore/v1/{O.Namespace}/objects/{O.Name}';
+    url = url.replace('{O.Namespace}', O_Namespace);
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXGetCall(url, queryParam, 'GetObject_1') as Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Delete Object object */
+  public DeleteObject_1(O_Namespace,O_Name):Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/objstore/v1/{O.Namespace}/objects/{O.Name}';
+    url = url.replace('{O.Namespace}', O_Namespace);
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXDeleteCall(url, 'DeleteObject_1') as Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}>;
   }
   
 }

@@ -48,7 +48,7 @@ func main() {
 		"Description": "image with fixes",
 		"ReleaseDate": "May2018",
 	}
-	request, err := uploadFile("https://localhost:19000/objstore/v1/uploads/", metadata, "/tmp/test.img")
+	request, err := uploadFile("https://localhost:19000/objstore/v1/uploads/images/", metadata, "/tmp/test.img")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -222,7 +222,9 @@ func (a adapterObjstoreV1) AutoListObject(oldctx oldcontext.Context, t *api.List
 		return nil, errors.New("unknown service profile")
 	}
 
-	t.Tenant = ""
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
 	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "ObjectList", t.Tenant, t.Namespace, "", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
@@ -403,7 +405,6 @@ func (a adapterObjstoreV1) AutoWatchObject(oldctx oldcontext.Context, in *api.Li
 		return nil, errors.New("unknown service profile")
 	}
 
-	in.Tenant = ""
 	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Object", in.Tenant, in.Namespace, ""
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -462,7 +463,7 @@ func (e *sObjstoreV1GwService) setupSvcProfile() {
 	e.svcProf["AutoGetObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Object", "", apiserver.GetOper)
 
 	e.svcProf["AutoListObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ObjectList", "", apiserver.ListOper)
-	e.svcProf["_RProxy_"+"/"+"uploads"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
+	e.svcProf["_RProxy_"+"/"+"uploads/images"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -523,17 +524,17 @@ func (e *sObjstoreV1GwService) CompleteRegistration(ctx context.Context,
 		logger.ErrorLog("msg", "failed to register swagger spec", "service", "objstore.ObjstoreV1", "error", err)
 	}
 	{
-		name := "_RProxy_" + "/" + "uploads"
+		name := "_RProxy_" + "/" + "uploads/images"
 		svcProf, err := e.GetServiceProfile(name)
 		if err != nil {
 			logger.Fatalf("failed to get service profile for [%s](%s)", name, err)
 		}
 
-		rproxy, err := apigwpkg.NewRProxyHandler("uploads", "/objstore/v1/", "/apis/v1", "pen-vos-http", svcProf)
+		rproxy, err := apigwpkg.NewRProxyHandler("uploads/images", "/objstore/v1/", "/apis/v1", "pen-vos-http", svcProf)
 		if err != nil {
 			logger.Fatalf("failed to get proxy handler for [%s](%s)", name, err)
 		}
-		m.Handle("/objstore/v1/uploads/", rproxy)
+		m.Handle("/objstore/v1/uploads/images/", rproxy)
 	}
 	wg.Add(1)
 	go func() {

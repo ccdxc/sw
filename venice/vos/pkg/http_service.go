@@ -2,8 +2,10 @@ package vos
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -19,30 +21,53 @@ import (
 
 const (
 	apiPrefix  = "/apis/v1"
-	uploadPath = "/uploads/"
+	uploadPath = "/uploads/images/"
 )
 
 type httpHandler struct {
-	client backendClient
-	server *martini.ClassicMartini
+	client  backendClient
+	handler *martini.ClassicMartini
+	server  http.Server
 }
 
 func newHTTPHandler(client backendClient) (*httpHandler, error) {
 	log.InfoLog("msgs", "creating new HTTP backend", "port", globals.VosGRPcPort)
 	mux := martini.Classic()
-	return &httpHandler{client: client, server: mux}, nil
+	return &httpHandler{client: client, handler: mux}, nil
 }
 
-func (h *httpHandler) start(ctx context.Context) {
+func (h *httpHandler) start(ctx context.Context, port string, config *tls.Config) {
 	log.InfoLog("msg", "starting HTTP listener")
-	h.server.Post(apiPrefix+uploadPath, h.uploadHandler)
+	h.handler.Post(apiPrefix+uploadPath, h.uploadHandler)
 	log.InfoLog("msg", "adding path", "path", apiPrefix+uploadPath)
 	done := make(chan error)
+	var ln net.Listener
+	var err error
+	if config != nil {
+		ln, err = tls.Listen("tcp", ":"+port, config)
+		if err != nil {
+			panic("failed to start VOS HTTP server")
+		}
+	} else {
+		ln, err = net.Listen("tcp", ":"+port)
+		if err != nil {
+			panic("failed to start VOS HTTP server")
+		}
+	}
+
+	h.server = http.Server{
+		TLSConfig: config,
+		Handler:   h.handler,
+	}
 	go func() {
 		close(done)
-		h.server.RunOnAddr(":" + globals.VosHTTPPort)
+		h.server.Serve(ln)
 	}()
 	<-done
+	go func() {
+		<-ctx.Done()
+		h.server.Close()
+	}()
 }
 
 // ClusterCreateHandler handles the REST call for cluster creation.

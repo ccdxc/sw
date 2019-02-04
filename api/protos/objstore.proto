@@ -52,7 +52,7 @@ message ObjectSpec {
 message Object {
     api.TypeMeta T      = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
     api.ObjectMeta O    = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];
-    option (venice.objectPrefix) = {Collection: "objects", Path: "/{O.Namespace}"};
+    option (venice.objectPrefix) = {Collection: "objects", Path: "/{O.Tenant}/{O.Namespace}"};
 
     ObjectSpec      Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec"];
     ObjectStatus    Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status"];
