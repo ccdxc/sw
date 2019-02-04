@@ -10,8 +10,8 @@
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
-#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
-#include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
+#include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "platform/capri/capri_quiesce.hpp"
 #include "platform/capri/capri_qstate.hpp"
 

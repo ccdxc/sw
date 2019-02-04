@@ -78,7 +78,7 @@ NAME_MEMRGNS    := "[MEMRGNS ]"
 COMMON_CMD_NCC              := ${TOPDIR}/nic/tools/ncc/capri-ncc.py
 COMMON_NCC_OPTS             :=
 
-COMMON_CMD_CAPAS            := ${TOPDIR}/nic/asic/capri/model/capsim-gen/bin/capas
+COMMON_CMD_CAPAS            := ${SDKDIR}/third-party/asic/capri/model/capsim-gen/bin/capas
 COMMON_CAPAS_OPTS           := -t
 ifeq ($(PLATFORM),haps)
     COMMON_CAPAS_OPTS       += -DHAPS

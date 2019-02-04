@@ -14,8 +14,8 @@
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "platform/utils/mpartition.hpp"
 
-#include "nic/asic/capri/model/cap_top/cap_top_csr_defines.h"
-#include "nic/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
+#include "third-party/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
 
 /* Supply these for ionic_if.h */
 #define BIT(n)                  (1 << n)

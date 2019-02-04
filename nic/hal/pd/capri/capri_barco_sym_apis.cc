@@ -7,7 +7,7 @@
 #include "nic/hal/pd/capri/capri_barco_rings.hpp"
 #include "nic/hal/pd/capri/capri_barco_sym_apis.hpp"
 #include "nic/hal/pd/capri/capri_barco_asym_apis.hpp"
-#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 
 namespace hal {
 namespace pd {

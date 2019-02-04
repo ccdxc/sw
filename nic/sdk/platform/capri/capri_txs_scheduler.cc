@@ -13,12 +13,12 @@
 #include "platform/utils/mpartition.hpp"
 #include "gen/platform/mem_regions.hpp"
 
-#include "nic/asic/capri/model/cap_psp/cap_psp_csr.h"
-#include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
-#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
-#include "nic/asic/capri/model/cap_txs/cap_txs_csr.h"
-#include "nic/asic/capri/verif/apis/cap_txs_api.h"
-#include "nic/asic/capri/model/cap_wa/cap_wa_csr.h"
+#include "third-party/asic/capri/model/cap_psp/cap_psp_csr.h"
+#include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
+#include "third-party/asic/capri/model/cap_txs/cap_txs_csr.h"
+#include "third-party/asic/capri/verif/apis/cap_txs_api.h"
+#include "third-party/asic/capri/model/cap_wa/cap_wa_csr.h"
 
 namespace sdk {
 namespace platform {

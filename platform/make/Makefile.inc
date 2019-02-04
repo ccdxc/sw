@@ -159,7 +159,7 @@ BUILD_OS := $(shell uname)
 #
 # Set ASIC_ROOT for access to asic header files
 #
-ASIC_ROOT := $(TOPDIR)/../nic/asic
+ASIC_ROOT := $(TOPDIR)/../nic/sdk/third-party/asic
 
 # ================
 

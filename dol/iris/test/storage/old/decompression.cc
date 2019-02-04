@@ -3,8 +3,8 @@
 #include "dol/test/storage/compression_test.hpp"
 #include "dol/test/storage/utils.hpp"
 #include "dol/test/storage/tests.hpp"
-#include "nic/asic/capri/design/common/cap_addr_define.h"
-#include "nic/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
+#include "third-party/asic/capri/design/common/cap_addr_define.h"
+#include "third-party/asic/capri/model/cap_he/readonly/cap_hens_csr_define.h"
 
 #include <assert.h>
 #include <stdint.h>

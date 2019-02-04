@@ -3,7 +3,7 @@
  */
 
 #include "sysmond.h"
-#include "nic/asic/capri/verif/apis/cap_nwl_sbus_api.h"
+#include "third-party/asic/capri/verif/apis/cap_nwl_sbus_api.h"
 #include "nic/sdk/platform/sensor/sensor.hpp"
 
 static delphi::objects::asictemperaturemetrics_t    asictemp;

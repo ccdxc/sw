@@ -19,13 +19,13 @@
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 
-#include "nic/asic/capri/model/utils/cap_blk_reg_model.h"
-#include "nic/asic/capri/model/cap_top/cap_top_csr.h"
-#include "nic/asic/capri/model/cap_ptd/cap_pt_csr.h"
-#include "nic/asic/capri/model/cap_prd/cap_pr_csr.h"
-#include "nic/asic/capri/model/cap_ppa/cap_ppa_csr.h"
-#include "nic/asic/capri/model/cap_dpa/cap_dpr_csr.h"
-#include "nic/asic/capri/model/cap_dpa/cap_dpp_csr.h"
+#include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
+#include "third-party/asic/capri/model/cap_ptd/cap_pt_csr.h"
+#include "third-party/asic/capri/model/cap_prd/cap_pr_csr.h"
+#include "third-party/asic/capri/model/cap_ppa/cap_ppa_csr.h"
+#include "third-party/asic/capri/model/cap_dpa/cap_dpr_csr.h"
+#include "third-party/asic/capri/model/cap_dpa/cap_dpp_csr.h"
 
 namespace hal {
 namespace pd {

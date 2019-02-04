@@ -1,8 +1,8 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 #include "temp_sensor_test.h"
 #include "platform/sensor/sensor.hpp"
-#include "nic/asic/capri/verif/apis/cap_nwl_sbus_api.h"
-#include "nic/asic/capri/verif/apis/cap_sbus_api.h"
+#include "third-party/asic/capri/verif/apis/cap_nwl_sbus_api.h"
+#include "third-party/asic/capri/verif/apis/cap_sbus_api.h"
 
 namespace sdk {
 namespace platform {
