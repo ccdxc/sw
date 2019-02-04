@@ -45,7 +45,6 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 	if cfg.Spec.Profile != nmd.NaplesSpec_NONE {
 		n.UpdateFeatureProfile(cfg.Spec.Profile)
 		log.Infof("NIC mode: %v feature profile: %v", n.config.Spec.Mode, cfg.Spec.Profile)
-		return nil
 	}
 
 	// Detect if there is a mode change
