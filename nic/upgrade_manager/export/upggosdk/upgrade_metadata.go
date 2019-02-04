@@ -15,7 +15,8 @@ type preUpgImgMeta struct {
 			BuildUser       string `json:"build_user"`
 			BaseVersion     string `json:"base_version"`
 			SoftwareVersion string `json:"software_version"`
-			NicmgrVersion   string `json:"nicmgr_version"`
+			NicmgrVersion   string `json:"nicmgr_compat_version"`
+			KernelVersion   string `json:"kernel_compat_version"`
 		} `json:"image"`
 	} `json:"uboot"`
 	Mainfwa struct {
@@ -24,14 +25,16 @@ type preUpgImgMeta struct {
 			BuildUser       string `json:"build_user"`
 			BaseVersion     string `json:"base_version"`
 			SoftwareVersion string `json:"software_version"`
-			NicmgrVersion   string `json:"nicmgr_version"`
+			NicmgrVersion   string `json:"nicmgr_compat_version"`
+			KernelVersion   string `json:"kernel_compat_version"`
 		} `json:"kernel_fit"`
 		SystemImage struct {
 			BuildDate       string `json:"build_date"`
 			BuildUser       string `json:"build_user"`
 			BaseVersion     string `json:"base_version"`
 			SoftwareVersion string `json:"software_version"`
-			NicmgrVersion   string `json:"nicmgr_version"`
+			NicmgrVersion   string `json:"nicmgr_compat_version"`
+			KernelVersion   string `json:"kernel_compat_version"`
 		} `json:"system_image"`
 	} `json:"mainfwa"`
 }
@@ -42,7 +45,8 @@ type postUpgImgMeta struct {
 	BuildUser       string `json:"build_user"`
 	BaseVersion     string `json:"base_version"`
 	SoftwareVersion string `json:"software_version"`
-	NicmgrVersion   string `json:"nicmgr_version"`
+	NicmgrVersion   string `json:"nicmgr_compat_version"`
+	KernelVersion   string `json:"kernel_compat_version"`
 	Firmware        struct {
 		Boot struct {
 			Type  string `json:"type"`
@@ -95,6 +99,7 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 			return err
 		}
 		upgCtx.PreUpgMeta.NicmgrVersion = preImgMeta.Uboot.Image.NicmgrVersion
+		upgCtx.PreUpgMeta.KernelVersion = preImgMeta.Uboot.Image.KernelVersion
 	} else {
 		postUpgJSONFile, err := os.Open("/sw/nic/upgrade_manager/meta/MANIFEST.json")
 		if err != nil {
@@ -111,6 +116,7 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 			return err
 		}
 		upgCtx.PostUpgMeta.NicmgrVersion = postImgMeta.NicmgrVersion
+		upgCtx.PostUpgMeta.KernelVersion = postImgMeta.KernelVersion
 	}
 	return nil
 }

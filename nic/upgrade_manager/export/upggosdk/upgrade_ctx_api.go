@@ -13,8 +13,7 @@ func UpgCtxGetPreUpgTableVersion(ctx *UpgCtx, meta CompVersion) (string, error) 
 	case NICMGR:
 		return ctx.PreUpgMeta.NicmgrVersion, nil
 	case KERNEL:
-		// TODO
-		return ctx.PreUpgMeta.NicmgrVersion, nil
+		return ctx.PreUpgMeta.KernelVersion, nil
 	}
 	return "", errors.New("Version not found")
 }
@@ -26,8 +25,7 @@ func UpgCtxGetPostUpgTableVersion(ctx *UpgCtx, meta CompVersion) (string, error)
 	case NICMGR:
 		return ctx.PostUpgMeta.NicmgrVersion, nil
 	case KERNEL:
-		// TODO
-		return ctx.PostUpgMeta.NicmgrVersion, nil
+		return ctx.PostUpgMeta.KernelVersion, nil
 	}
 	return "", errors.New("Version not found")
 }

@@ -25,7 +25,8 @@ bool UpgPreStateHandler::ImageCompatCheck(UpgCtx &ctx) {
 	    return false;
         }
     }
-    if (ctx.preUpgMeta.nicmgrVersion != ctx.postUpgMeta.nicmgrVersion) {
+    if ((ctx.preUpgMeta.nicmgrVersion != ctx.postUpgMeta.nicmgrVersion) ||
+        (ctx.preUpgMeta.kernelVersion != ctx.postUpgMeta.kernelVersion)) {
         return false;
     }
     return true;

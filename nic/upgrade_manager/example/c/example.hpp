@@ -53,7 +53,6 @@ public:
         }
         UPG_LOG_DEBUG("Version for NICMGR table is {}", version);
 
-
         err = UpgCtxApi::UpgCtxGetPostUpgTableVersion(upgCtx, NICMGRVER, version);
         if (err != delphi::error::OK()) {
             UPG_LOG_DEBUG("Error from API {}", err.Error());
@@ -64,7 +63,13 @@ public:
         if (err != delphi::error::OK()) {
             UPG_LOG_DEBUG("Error from API {}", err.Error());
         }
-        UPG_LOG_DEBUG("Version for kernel is {}", version);
+        UPG_LOG_DEBUG("Version for KERNEL table is {}", version);
+
+        err = UpgCtxApi::UpgCtxGetPostUpgTableVersion(upgCtx, KERNELVER, version);
+        if (err != delphi::error::OK()) {
+            UPG_LOG_DEBUG("Error from API {}", err.Error());
+        }
+        UPG_LOG_DEBUG("Version for Post KERNEL table is {}", version);
 
         return resp;
     }

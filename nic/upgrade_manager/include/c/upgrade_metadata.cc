@@ -59,8 +59,10 @@ bool GetUpgCtxTablesFromMeta(string metafile,
         try {
             read_json(json_cfg, root);
             for (ptree::value_type sysimg : root.get_child("mainfwa.system_image")) {
-                if (!strcmp(sysimg.first.c_str(), "nicmgr_version")) {
+                if (!strcmp(sysimg.first.c_str(), "nicmgr_compat_version")) {
                     meta.nicmgrVersion = sysimg.second.get_value<string>();
+                } else if (!strcmp(sysimg.first.c_str(), "kernel_compat_version")) {
+                    meta.kernelVersion = sysimg.second.get_value<string>();
                 }
             }
         } catch (exception const& e) {
@@ -71,8 +73,10 @@ bool GetUpgCtxTablesFromMeta(string metafile,
         try {
             read_json(json_cfg, root);
             for (ptree::value_type item : root) {
-                if (!strcmp(item.first.c_str(), "nicmgr_version")) {
+                if (!strcmp(item.first.c_str(), "nicmgr_compat_version")) {
                     meta.nicmgrVersion = item.second.get_value<string>();;
+                } else if (!strcmp(item.first.c_str(), "kernel_compat_version")) {
+                    meta.kernelVersion = item.second.get_value<string>();;
                 }
             }
         } catch (exception const& e) {

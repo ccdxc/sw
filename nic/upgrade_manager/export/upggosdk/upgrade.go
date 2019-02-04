@@ -85,6 +85,7 @@ type ImgMeta struct {
 	BaseVersion     string
 	SoftwareVersion string
 	NicmgrVersion   string
+	KernelVersion   string
 }
 
 //UpgCtx is the wrapper that holds all the information about the current upgrade
