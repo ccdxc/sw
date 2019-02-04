@@ -59,7 +59,7 @@ typedef struct rule_l4_match_s {
  */
 typedef struct rule_match_s {
     uint8_t             ip_proto;    /**< IP protocol */
-    ip_prefix_t         ip;          /**< IP prefix */
+    ip_prefix_t         ip_pfx;      /**< IP prefix */
     rule_l4_match_t     l4_match;    /**< Layer4 match */
 } __PACK__ rule_match_t;
 

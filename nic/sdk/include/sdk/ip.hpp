@@ -462,12 +462,17 @@ ip_prefix_ip_next (ip_prefix_t *pfx, ip_addr_t *ipaddr)
     ip_prefix_ip_high(pfx, ipaddr);
     // now add 1 to it
     if (ipaddr->af == IP_AF_IPV4) {
-        ipaddr->addr.v4_addr += 1;
+        if (likely(ipaddr->addr.v4_addr != 0xFFFFFFFF)) {
+            ipaddr->addr.v4_addr += 1;
+        }
     } else if (ipaddr->af == IP_AF_IPV6) {
-        for (uint8_t i = 0; i < IP6_ADDR8_LEN; i++) {
-            // keep adding one until there is no rollover
-            if ((++(ipaddr->addr.v6_addr.addr8[i]))) {
-                break;
+        if (likely((ipaddr->addr.v6_addr.addr64[0] != ((uint64_t)-1)) &&
+                   (ipaddr->addr.v6_addr.addr64[0] != ((uint64_t)-1)))) {
+            for (uint8_t i = 0; i < IP6_ADDR8_LEN; i++) {
+                // keep adding one until there is no rollover
+                if ((++(ipaddr->addr.v6_addr.addr8[i]))) {
+                    break;
+                }
             }
         }
     }
