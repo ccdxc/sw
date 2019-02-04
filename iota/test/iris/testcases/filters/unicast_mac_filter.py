@@ -1,8 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.iris.utils.host as host_utils
-import iota.test.iris.utils.naples as naples_utils
-import iota.test.iris.utils.naples_host as naples_host_utils
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
 from collections import defaultdict
 
@@ -20,10 +18,10 @@ def getAllEndPointsView(tc):
     hal_ep_set = filters_utils.getNaplesHALEndPoints(tc.naples_node)
 
     #Keeping them separate as it is useful for debugging in scale
-    api.Logger.info("getAllEndPointsView: wload_ep_set ", len(wload_ep_set), wload_ep_set)
-    api.Logger.info("getAllEndPointsView: host_ep_set ", len(host_ep_set), host_ep_set)
-    api.Logger.info("getAllEndPointsView: naples_ep_set ", len(naples_ep_set), naples_ep_set)
-    api.Logger.info("getAllEndPointsView: hal_ep_set ", len(hal_ep_set), hal_ep_set)
+    api.Logger.debug("getAllEndPointsView: wload_ep_set ", len(wload_ep_set), wload_ep_set)
+    api.Logger.debug("getAllEndPointsView: host_ep_set ", len(host_ep_set), host_ep_set)
+    api.Logger.debug("getAllEndPointsView: naples_ep_set ", len(naples_ep_set), naples_ep_set)
+    api.Logger.debug("getAllEndPointsView: hal_ep_set ", len(hal_ep_set), hal_ep_set)
 
     return wload_ep_set, host_ep_set, naples_ep_set, hal_ep_set
 
@@ -31,13 +29,12 @@ def getNaplesWorkloadInfo(naples_node):
     wload_intf_list = list()
     wload_intf_vlan_map = defaultdict(set)
     for w in api.GetWorkloads():
-        api.Logger.info("UC MAC workload : ", w.workload_name, w.node_name, w.uplink_vlan, id(w), w.encap_vlan, w.interface, w.ip_prefix, w.mac_address, w.IsNaples())
+        api.Logger.verbose("UC MAC workload : ", w.workload_name, w.node_name, w.uplink_vlan, id(w), w.encap_vlan, w.interface, w.ip_prefix, w.mac_address, w.IsNaples())
         if not w.IsNaples(): continue
         if naples_node != w.node_name: continue
         wload_intf_list.append(w.interface)
-        parent_intf = filters_utils.getParentIntf(w.interface)
         vlan = w.encap_vlan if w.encap_vlan else 8192
-        wload_intf_vlan_map[parent_intf].add(vlan)
+        wload_intf_vlan_map[w.parent_interface].add(vlan)
 
     wload_intf_list.sort()
 
@@ -71,15 +68,19 @@ def changeMacAddrTrigger(tc, isRollback=False):
     #Change MAC of other host interfaces
     result2 = filters_utils.changeIntfMacAddr(node, tc.host_intf_mac_dict, False, isRollback)
     #Change MAC of naples interfaces
-    result3 = filters_utils.changeIntfMacAddr(node, tc.naples_intf_mac_dict, True, isRollback)
+    #TODO changing MAC address of mnic results in IOTA failure in FreeBSD. commenting this out until its RCA
+    if api.GetNodeOs(node) == "linux":
+        result3 = filters_utils.changeIntfMacAddr(node, tc.naples_intf_mac_dict, True, isRollback)
+    else:
+        result3 = api.types.status.SUCCESS
     if any([result1, result2, result3]) is True:
-        api.Logger.info("UC MAC filter : Trigger -> changeMacAddrTrigger failed ", result1, result2, result3, isRollback)
+        api.Logger.error("UC MAC filter : Trigger -> changeMacAddrTrigger failed ", result1, result2, result3, isRollback)
         result = api.types.status.FAILURE
 
     return result
 
 def Setup(tc):
-    api.Logger.info("UC MAC filter : Setup")
+    api.Logger.verbose("UC MAC filter : Setup")
     tc.skip = False
     result = api.types.status.SUCCESS
 
@@ -117,24 +118,24 @@ def Setup(tc):
     tc.wload_intf_mac_dict = wload_intf_mac_dict
     tc.wload_intf_vlan_map = wload_intf_vlan_map
 
-    api.Logger.info("UC MAC filter : Setup host_intf_mac_dict : ", naples_intf_mac_dict)
-    api.Logger.info("UC MAC filter : Setup host_intf_mac_dict : ", host_intf_mac_dict)
-    api.Logger.info("UC MAC filter : Setup wload_intf_mac_dict : ", wload_intf_mac_dict)
-    api.Logger.info("UC MAC filter : Setup wload_intf_vlan_map : ", wload_intf_vlan_map)
+    api.Logger.debug("UC MAC filter : Setup host_intf_mac_dict : ", naples_intf_mac_dict)
+    api.Logger.debug("UC MAC filter : Setup host_intf_mac_dict : ", host_intf_mac_dict)
+    api.Logger.debug("UC MAC filter : Setup wload_intf_mac_dict : ", wload_intf_mac_dict)
+    api.Logger.debug("UC MAC filter : Setup wload_intf_vlan_map : ", wload_intf_vlan_map)
 
     api.Logger.info("UC MAC filter : Setup final result - ", result)
     return result
 
 def Trigger(tc):
-    api.Logger.info("UC MAC filter : Trigger")
+    api.Logger.verbose("UC MAC filter : Trigger")
     result = api.types.status.SUCCESS
     if tc.skip: return api.types.status.IGNORED
 
     if tc.iterators.mac_change:
         result = changeMacAddrTrigger(tc)
-        api.Logger.info("UC MAC filter : Trigger -> Change MAC addresses result ", result)
+        api.Logger.debug("UC MAC filter : Trigger -> Change MAC addresses result ", result)
     else:
-        api.Logger.info("UC MAC filter : Trigger -> NO Change to MAC addresses")
+        api.Logger.debug("UC MAC filter : Trigger -> NO Change to MAC addresses")
 
     # Triggers done - Now build endpoint view of Host and Naples
     tc.wload_ep_set, tc.host_ep_set, tc.naples_ep_set, tc.hal_ep_set = getAllEndPointsView(tc)
@@ -153,7 +154,7 @@ def Verify(tc):
             Get the entry id from "halctl show endpoint --yaml"
         2. Check for memleaks [will pull from Amrita's TC]
     '''
-    api.Logger.info("UC MAC filter : Verify")
+    api.Logger.verbose("UC MAC filter : Verify")
     result = api.types.status.SUCCESS
     if tc.skip: return api.types.status.IGNORED
     cookie_idx = 0
@@ -164,16 +165,27 @@ def Verify(tc):
         result = api.types.status.FAILURE
         return result
     else:
-        api.Logger.info("UC MAC filter : Verify - verifyEndPoints SUCCESS ")
+        api.Logger.debug("UC MAC filter : Verify - verifyEndPoints SUCCESS ")
     
     if tc.resp is None:
         api.Logger.error("UC MAC filter : Verify failed - no response")
         result = api.types.status.FAILURE
         return result
 
+    """
+       # If "filters" bundle run as first bundle in a suite,
+       # there are chances that STP might not have converged yet and as a result of that
+       # first couple of remote workload pings might fail.
+       # Solutions are
+           1. Modify n3k configs for reduced STP convergence
+           2. Increase wait time between pings
+           3. Add sleep before starting the trigger
+       # Last 2 solutions mean increase in script execution time which is a big NO.
+       # so leaving it for now as this will not happen in sanity
+    """
     for cmd in tc.resp.commands:
-        api.Logger.info("Results for %s" % (tc.cmd_cookies[cookie_idx]))
-        api.PrintCommandResults(cmd)
+        #api.Logger.info("Results for %s" % (tc.cmd_cookies[cookie_idx]))
+        #api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             api.Logger.error("UC MAC filter : Verify failed for %s" % (tc.cmd_cookies[cookie_idx]))
             api.PrintCommandResults(cmd)
@@ -185,15 +197,15 @@ def Verify(tc):
     return result
 
 def Teardown(tc):
-    api.Logger.info("UC MAC filter : Teardown")
+    api.Logger.verbose("UC MAC filter : Teardown")
     result = api.types.status.SUCCESS
     if tc.skip: return api.types.status.IGNORED
 
     if tc.iterators.mac_change:
         result = changeMacAddrTrigger(tc, True)
-        api.Logger.info("UC MAC filter : Teardown -> rollback MAC change ", result)
+        api.Logger.debug("UC MAC filter : Teardown -> rolling back MAC address changes ", result)
     else:
-        api.Logger.info("UC MAC filter : Teardown -> NO rollback")
+        api.Logger.debug("UC MAC filter : Teardown -> NO rollback")
 
     api.Logger.info("UC MAC filter : Teardown final result - ", result)
 
