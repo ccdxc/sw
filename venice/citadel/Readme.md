@@ -132,6 +132,16 @@ curl -sG 'http://localhost:7086/query?pretty=true' --data-urlencode "db=mydb" --
 
 # Information about the cluster
 curl -s http://node1:7086/info | python -mjson.tool
+
+# show measurements
+curl -d "q=show measurements" -d "db=default" localhost:7086/cmd | python -m json.tool
+
+# show series
+curl -d "q=show series" -d "db=default" localhost:7086/cmd | python -m json.tool
+
+# show tag keys
+curl -d "q=show tag keys" -d "db=default" localhost:7086/cmd | python -m json.tool
+
 ```
 
 ## Experimental Features
