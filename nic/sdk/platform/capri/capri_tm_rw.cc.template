@@ -870,7 +870,7 @@ capri_tm_uplink_oq_update(tm_port_t port,
                 cpp_helper.set_slc(xoff2oq_map_val, xoff_cos, oq*3, ((oq+1)*3)-1);
 
                 // TODO: write to disable xoff by default
-                // pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
 
                 pbc_csr.port_${p}.cfg_mac_xoff.read();
                 xoff_enable_val = pbc_csr.port_${p}.cfg_mac_xoff.enable().convert_to<uint32_t>();
