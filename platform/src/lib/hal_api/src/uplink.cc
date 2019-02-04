@@ -73,7 +73,7 @@ Uplink::GetUplink(uint32_t port_num)
     return uplink_db[port_num];
 }
 
-void
+hal_irisc_ret_t
 Uplink::CreateVrf()
 {
     if (!hal) {
@@ -83,17 +83,28 @@ Uplink::CreateVrf()
     // In both Classic and hostpin modes, every uplink will get a VRF.
     vrf_ = HalVrf::Factory(IsOOB() ? types::VRF_TYPE_OOB_MANAGEMENT : types::VRF_TYPE_INBAND_MANAGEMENT,
                            this);
+    if (vrf_ == NULL) {
+        return HAL_IRISC_RET_FAIL;
+    }
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 Uplink::CreateVrfs()
 {
-    Uplink *uplink = NULL;
+    hal_irisc_ret_t     ret = HAL_IRISC_RET_SUCCESS;
+    Uplink              *uplink = NULL;
     for (auto it = uplink_db.cbegin(); it != uplink_db.cend(); it++) {
         uplink = (Uplink *)(it->second);
+        ret = uplink->CreateVrf();
+        if (ret != HAL_IRISC_RET_SUCCESS) {
+            NIC_LOG_ERR("Failed creating VRF for uplink: {}", uplink->GetId());
+            goto end;
+        }
         NIC_LOG_DEBUG("Creating VRF for uplink: {}", uplink->GetId());
-        uplink->CreateVrf();
     }
+end:
+    return ret;
 }
 
 int

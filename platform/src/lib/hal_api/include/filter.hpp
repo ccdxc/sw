@@ -31,14 +31,16 @@ public:
   static MacVlanFilter *Factory(Lif *lif,
                                 mac_t mac, vlan_t vlan,
                                 filter_type_t type = kh::FILTER_LIF_MAC_VLAN);
-  static void Destroy(MacVlanFilter *filter);
+  static hal_irisc_ret_t Destroy(MacVlanFilter *filter);
+  hal_irisc_ret_t MacVlanFilterCreate();
+  hal_irisc_ret_t MacVlanFilterDelete();
 
 private:
     MacVlanFilter(
         Lif *lif,
         mac_t mac, vlan_t vlan,
         filter_type_t type);
-    ~MacVlanFilter();
+    ~MacVlanFilter() {};
 
     filter_type_t _type;
     mac_t _mac;
@@ -48,7 +50,6 @@ private:
     HalEndpoint *ep;
     HalMulticast *mcast;
 
-    uint64_t handle;
     endpoint::FilterSpec spec;
 
 

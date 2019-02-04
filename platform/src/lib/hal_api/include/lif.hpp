@@ -22,13 +22,13 @@ public:
     static void Destroy(Lif *lif);
 
     hal_irisc_ret_t AddMac(mac_t mac, bool re_add = false);
-    hal_irisc_ret_t DelMac(mac_t mac, bool update_db = true);
+    hal_irisc_ret_t DelMac(mac_t mac, bool update_db = true, bool add_failure = false);
 
     hal_irisc_ret_t AddVlan(vlan_t vlan);
-    hal_irisc_ret_t DelVlan(vlan_t vlan, bool update_db = true);
+    hal_irisc_ret_t DelVlan(vlan_t vlan, bool update_db = true, bool add_failure = false);
 
     hal_irisc_ret_t AddMacVlan(mac_t mac, vlan_t vlan);
-    hal_irisc_ret_t DelMacVlan(mac_t mac, vlan_t vlan, bool update_db = true);
+    hal_irisc_ret_t DelMacVlan(mac_t mac, vlan_t vlan, bool update_db = true, bool add_failure = false);
 
     hal_irisc_ret_t UpdateVlanOffload(bool vlan_strip, bool vlan_insert);
     hal_irisc_ret_t UpdateReceiveMode(bool broadcast, bool all_multicast,
@@ -100,12 +100,12 @@ private:
     void TriggerHalUpdate();
     void PopulateRequest(intf::LifRequestMsg &req_msg,
                          intf::LifSpec **req_ptr);
-    void CreateMacVlanFilter(mac_t mac, vlan_t vlan);
-    void DeleteMacVlanFilter(mac_t mac, vlan_t vlan);
-    void CreateMacFilter(mac_t mac);
-    void DeleteMacFilter(mac_t mac);
-    void CreateVlanFilter(vlan_t vlan);
-    void DeleteVlanFilter(vlan_t vlan);
+    hal_irisc_ret_t CreateMacVlanFilter(mac_t mac, vlan_t vlan);
+    hal_irisc_ret_t DeleteMacVlanFilter(mac_t mac, vlan_t vlan);
+    hal_irisc_ret_t CreateMacFilter(mac_t mac);
+    hal_irisc_ret_t DeleteMacFilter(mac_t mac);
+    hal_irisc_ret_t CreateVlanFilter(vlan_t vlan);
+    hal_irisc_ret_t DeleteVlanFilter(vlan_t vlan);
 
     hal_irisc_ret_t UpdateVlanStripEn(bool vlan_strip_en);
     hal_irisc_ret_t UpdateVlanInsertEn(bool vlan_insert_en);

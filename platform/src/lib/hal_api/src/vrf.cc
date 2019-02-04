@@ -4,6 +4,7 @@
 
 #include "nic/include/globals.hpp"
 #include "vrf.hpp"
+#include "uplink.hpp"
 
 using namespace std;
 
@@ -13,21 +14,52 @@ sdk::lib::indexer *HalVrf::allocator = sdk::lib::indexer::factory(HalVrf::max_vr
 HalVrf *
 HalVrf::Factory(types::VrfType type, Uplink *uplink)
 {
-    HalVrf *vrf = new HalVrf(type, uplink);
+    hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    HalVrf          *vrf = new HalVrf(type, uplink);
 
+    ret = vrf->HalVrfCreate();
+    if (ret != HAL_IRISC_RET_SUCCESS) {
+        NIC_LOG_DEBUG("VrfCreate failed. ret: {}", ret);
+        goto end;
+    }
+
+end:
+    if (ret != HAL_IRISC_RET_SUCCESS) {
+        if (vrf) {
+            delete vrf;
+            vrf = NULL;
+        }
+    }
     return vrf;
 }
 
-void
+hal_irisc_ret_t
 HalVrf::Destroy(HalVrf *vrf)
 {
-    if (vrf) {
-        vrf->~HalVrf();
+    hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    ret = vrf->HalVrfDelete();
+    if (ret != HAL_IRISC_RET_SUCCESS) {
+        NIC_LOG_CRIT("FATAL:Vrf Delete failed. ret: {}", ret);
+        goto end;
     }
+    delete vrf;
+
+end:
+    return ret;
 }
 
 HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
 {
+    NIC_LOG_DEBUG("HalVrf create uplink: {}", uplink->GetId());
+
+    this->type = type;
+    this->uplink = uplink;
+}
+
+hal_irisc_ret_t
+HalVrf::HalVrfCreate()
+{
+    hal_irisc_ret_t             ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext         context;
     grpc::Status                status;
 
@@ -37,12 +69,9 @@ HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
     vrf::VrfResponseMsg         rsp_msg;
 
     if (allocator->alloc(&id) != sdk::lib::indexer::SUCCESS) {
-        NIC_LOG_ERR("Failed to allocate VRF");
-        return;
+        NIC_LOG_ERR("Failed to allocate VRF. Resource exhaustion");
+        return HAL_IRISC_RET_FAIL;
     }
-
-    this->type = type;
-    this->uplink = uplink;
 
     id += NICMGR_VRF_ID_MIN;
 
@@ -52,33 +81,39 @@ HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
     req->mutable_key_or_handle()->set_vrf_id(id);
     req->set_vrf_type(type);
 
-    // status = hal->vrf_stub_->HalVrfCreate(&context, req_msg, &rsp_msg);
     status = hal->vrf_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            handle = rsp.vrf_status().key_or_handle().vrf_handle();
-            NIC_LOG_DEBUG("HalVrf Create: id: {}, handle: {}", id, handle);
-            cout << "[INFO] VRF create succeeded,"
-                 << " id = " << id << " handle = " << handle
-                 << endl;
+            NIC_LOG_DEBUG("HalVrf Create: id: {}", id);
         } else if (rsp.api_status() == types::API_STATUS_EXISTS_ALREADY) {
             NIC_LOG_ERR("VRF already exists with id: {}", id);
-            allocator->free(id);
-            id = 0;  // TODO: HAL should return this
-            handle = rsp.vrf_status().key_or_handle().vrf_handle();
+            ret = HAL_IRISC_RET_FAIL;
+            goto end;
         } else {
-            cout << "[ERROR] " << __FUNCTION__ << ": Status = " << rsp.api_status() << endl;
-            throw ("Failed to create VRF");
+            NIC_LOG_ERR("Failed to create Vrf for id:{}. err: {}",
+                        id, rsp.api_status());
+            ret = HAL_IRISC_RET_FAIL;
+            goto end;
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__ << ": Status = " << status.error_code() << ":" << status.error_message() << endl;
-        throw ("Failed to create VRF");
+        NIC_LOG_ERR("Failed to create Vrf for id:{}. err: {}:{}",
+                    id, status.error_code(), status.error_message());
+        ret = HAL_IRISC_RET_FAIL;
+        goto end;
     }
+
+end:
+    if (ret != HAL_IRISC_RET_SUCCESS) {
+        allocator->free(id);
+    }
+    return ret;
 }
 
-HalVrf::~HalVrf()
+hal_irisc_ret_t
+HalVrf::HalVrfDelete()
 {
+    hal_irisc_ret_t                 ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext             context;
     grpc::Status                    status;
 
@@ -90,43 +125,33 @@ HalVrf::~HalVrf()
     NIC_LOG_DEBUG("HalVrf delete id: {}", id);
 
     req = req_msg.add_request();
-    if (id == 0) {
-        req->mutable_key_or_handle()->set_vrf_id(id);
-    } else {
-        req->mutable_key_or_handle()->set_vrf_handle(handle);
-    }
+    req->mutable_key_or_handle()->set_vrf_id(id);
 
-    // status = hal->vrf_stub_->HalVrfDelete(&context, req_msg, &rsp_msg);
     status = hal->vrf_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() != types::API_STATUS_OK) {
-            cerr << "[ERROR] " << __FUNCTION__
-                 << " id = " << id << " handle = " << handle
-                 << ", Status = " << rsp.api_status()
-                 << endl;
+            NIC_LOG_ERR("Failed to delete Vrf for id: {}. err: {}",
+                          id, rsp.api_status());
+            ret = HAL_IRISC_RET_FAIL;
+            goto end;
         } else {
-            allocator->free(id);
-            cout << "[INFO] HalVrf delete succeeded,"
-                 << " id = " << id << " handle = " << handle
-                 << endl;
+            NIC_LOG_DEBUG("Deleted Vrf id: {}", id);
         }
     } else {
-        cout << "[ERROR] " << __FUNCTION__
-            << " id = " << id << " handle = " << handle
-            << ": Status = " << status.error_code() << ":" << status.error_message()
-            << endl;
+        NIC_LOG_ERR("Failed to delete Vrf for id: {}. err: {}:{}",
+                      id, status.error_code(), status.error_message());
+        ret = HAL_IRISC_RET_FAIL;
+        goto end;
     }
+
+    allocator->free(id);
+end:
+    return ret;
 }
 
 uint64_t
 HalVrf::GetId()
 {
     return id;
-}
-
-uint64_t
-HalVrf::GetHandle()
-{
-    return handle;
 }

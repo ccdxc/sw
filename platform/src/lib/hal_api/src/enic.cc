@@ -14,22 +14,53 @@ sdk::lib::indexer *Enic::allocator = sdk::lib::indexer::factory(Enic::max_enics,
 Enic *
 Enic::Factory(Lif *ethlif)
 {
+    hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
     Enic *enic = new Enic(ethlif);
 
+    ret = enic->HalEnicCreate();
+    if (ret != HAL_IRISC_RET_SUCCESS) {
+        NIC_LOG_DEBUG("Enic Create failed. ret: {}", ret);
+        goto end;
+    }
+
+end:
+    if (ret != HAL_IRISC_RET_SUCCESS) {
+        if (enic) {
+            delete enic;
+            enic = NULL;
+        }
+    }
     return enic;
 }
 
-void
+hal_irisc_ret_t
 Enic::Destroy(Enic *enic)
 {
-    if (enic) {
-        enic->~Enic();
+    hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    ret = enic->HalEnicDelete();
+    if (ret != HAL_IRISC_RET_SUCCESS) {
+        NIC_LOG_CRIT("FATAL:Enic Delete failed. ret: {}", ret);
+        goto end;
     }
+    delete enic;
+
+end:
+    return ret;
 }
 
 // Classic ENIC constructor
 Enic::Enic(Lif *ethlif)
 {
+    NIC_LOG_DEBUG("Enic create for lif: {}", ethlif->GetId());
+
+    this->ethlif = ethlif;
+}
+
+// Classic ENIC constructor
+hal_irisc_ret_t
+Enic::HalEnicCreate()
+{
+    hal_irisc_ret_t                 ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext             context;
     grpc::Status                    status;
 
@@ -40,13 +71,11 @@ Enic::Enic(Lif *ethlif)
 
     if (allocator->alloc(&id) != sdk::lib::indexer::SUCCESS) {
         NIC_LOG_ERR("Failed to allocate ENIC. Resource exhaustion");
-        return;
+        return HAL_IRISC_RET_FAIL;
     }
 
     id += HAL_NON_RSVD_IF_OFFSET;
     NIC_LOG_DEBUG("Enic create id: {}", id);
-
-    this->ethlif = ethlif;
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_interface_id(id);
@@ -64,22 +93,31 @@ Enic::Enic(Lif *ethlif)
         if (rsp.api_status() == types::API_STATUS_OK) {
             handle = rsp.status().if_handle();
             NIC_LOG_DEBUG("Created Enic id: {} for Lif: {} handle: {}",
-                            id, ethlif->GetId(), handle);
+                          id, ethlif->GetId(), handle);
         } else {
             NIC_LOG_ERR("Failed to create Enic for Lif: {}. err: {}",
-                          ethlif->GetId(), rsp.api_status());
+                        ethlif->GetId(), rsp.api_status());
+            ret = HAL_IRISC_RET_FAIL;
+            goto end;
         }
     } else {
         NIC_LOG_ERR("Failed to create Enic for Lif: {}. err: {}:{}",
-                      ethlif->GetId(), status.error_code(), status.error_message());
+                    ethlif->GetId(), status.error_code(), status.error_message());
+        ret = HAL_IRISC_RET_FAIL;
+        goto end;
     }
 
     // Store spec
     spec.CopyFrom(*req);
+
+end:
+    return ret;
 }
 
-Enic::~Enic()
+hal_irisc_ret_t
+Enic::HalEnicDelete()
 {
+    hal_irisc_ret_t                       ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext                   context;
     grpc::Status                          status;
 
@@ -101,16 +139,21 @@ Enic::~Enic()
         } else {
             NIC_LOG_ERR("Failed to delete Enic for id: {}. err: {}",
                           id, rsp.api_status());
+            ret = HAL_IRISC_RET_FAIL;
         }
     } else {
         NIC_LOG_ERR("Failed to delete Enic for id: {}. err: {}:{}",
                       id, status.error_code(), status.error_message());
+        ret = HAL_IRISC_RET_FAIL;
     }
+
+    return ret;
 }
 
-void
+hal_irisc_ret_t
 Enic::TriggerHalUpdate()
 {
+    hal_irisc_ret_t                 ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext             context;
     grpc::Status                    status;
 
@@ -145,19 +188,27 @@ Enic::TriggerHalUpdate()
                             id, handle);
         } else {
             NIC_LOG_ERR("Failed to update Enic: err: {}", rsp.api_status());
+            ret = HAL_IRISC_RET_FAIL;
+            goto end;
         }
     } else {
         NIC_LOG_ERR("Failed to update Enic: err: {}, err_msg: {}",
                       status.error_code(),
                       status.error_message());
+        ret = HAL_IRISC_RET_FAIL;
+        goto end;
     }
+
+end:
+    return ret;
 }
 
-void
+hal_irisc_ret_t
 Enic::AddVlan(vlan_t vlan)
 {
+    hal_irisc_ret_t                            ret = HAL_IRISC_RET_SUCCESS;
     std::map<vlan_t, l2seg_info_t *>::iterator it;
-    l2seg_info_t *l2seg_info;
+    l2seg_info_t                               *l2seg_info;
 
     HalL2Segment *l2seg = HalL2Segment::Lookup(ethlif->GetVrf(), vlan);
     if (!l2seg) {
@@ -180,7 +231,7 @@ Enic::AddVlan(vlan_t vlan)
                            it->second->l2seg->GetId(),
                            vlan);
             it->second->filter_ref_cnt++;
-            return;
+            goto end;
         }
 
         // Allocate l2seg info
@@ -192,12 +243,20 @@ Enic::AddVlan(vlan_t vlan)
         l2seg_refs[vlan] = l2seg_info;
 
         // Sends update to Hal
-        TriggerHalUpdate();
+        ret = TriggerHalUpdate();
+        if (ret != HAL_IRISC_RET_SUCCESS) {
+            NIC_LOG_ERR("Unable to add vlan to Enic. ret: {}", ret);
+            // Cleaning up
+            DelVlan(vlan, true /* skip_hal */);
+        }
     }
+
+end:
+    return ret;
 }
 
 void
-Enic::DelVlan(vlan_t vlan)
+Enic::DelVlan(vlan_t vlan, bool skip_hal)
 {
     std::map<vlan_t, l2seg_info_t *>::iterator it;
     l2seg_info_t *l2seg_info;
@@ -222,8 +281,10 @@ Enic::DelVlan(vlan_t vlan)
             // Del vlan from the map
             l2seg_refs.erase(vlan);
 
-            // Sends update to Hal
-            TriggerHalUpdate();
+            if (!skip_hal) {
+                // Sends update to Hal
+                TriggerHalUpdate();
+            }
 
             // Delete L2seg
             HalL2Segment::Destroy(l2seg);

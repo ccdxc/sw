@@ -14,11 +14,11 @@ class Uplink : public HalObject
 public:
   static Uplink *Factory(uplink_id_t id, uint32_t port_num, bool is_oob = false);
   static void Destroy(Uplink *uplink);
-  static void CreateVrfs();
+  static hal_irisc_ret_t CreateVrfs();
   static Uplink *GetUplink(uint32_t port_num);
 
   int UpdateHalWithNativeL2seg(uint32_t native_l2seg_id);
-  void CreateVrf();
+  hal_irisc_ret_t CreateVrf();
 
   // Get APIs
   uint32_t GetId();

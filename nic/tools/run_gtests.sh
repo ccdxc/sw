@@ -82,6 +82,9 @@ ${CMD_OPTS} fte_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/fte_test.xml"
 ${CMD_OPTS} agent_api_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/agent_api_test.xml"
 ${CMD_OPTS} events_queue_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/events_queue_test.xml"
 ${CMD_OPTS} events_recorder_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/events_recorder_test.xml"
+# Nicmgr hal_api test
+HAL_API_PRELOAD=${BUILD_DIR}/lib/hal_api_mock.so
+LD_PRELOAD=${HAL_API_PRELOAD} hal_api_filter_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/hal_api_filter_test.xml"
 
 bitmap_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/bitmap_test.xml"
 host_mem_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/host_mem_test.xml"
