@@ -1,27 +1,29 @@
-/**
- * Copyright (c) 2018 Pensando Systems, Inc.
- *
- * @file    base class for all gtests
- * @brief   OCI base test class provides init and teardown routines
- *          common to all tests
- */
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// This file contains the base class implementation of test classes
+///
+//----------------------------------------------------------------------------
 
 #include <stdarg.h>
-#include "oci_test_base.hpp"
+#include "base.hpp"
 #include "nic/apollo/include/api/oci.hpp"
 #include "nic/apollo/include/api/oci_init.hpp"
 
-/**  @brief    callback invoked for debug traces
- *   NOTE: this is sample implementation, hence doesn't check whether
- *         user enabled traces at what level, it always prints the traces
- *         but with a simple header prepended that tells what level the
- *         trace is spwed at ... in reality, you call your favorite logger here
- */
+/// Callback invoked for debug traces
+///
+/// This is sample implementation, hence doesn't check whether
+//  user enabled traces at what level, it always prints the traces
+/// but with a simple header prepended that tells what level the
+/// trace is spwed at ... in reality, you call your favorite logger here
 static int
 trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 {
-    char       logbuf[1024];
-    va_list    args;
+    char logbuf[1024];
+    va_list args;
 
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
@@ -44,7 +46,7 @@ trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
         fprintf(stdout, "[D] %s\n", logbuf);
         break;
     case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
-        //fprintf(stdout, "[V] %s\n", logbuf);
+        // fprintf(stdout, "[V] %s\n", logbuf);
         break;
     default:
         break;
@@ -53,12 +55,12 @@ trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
     return 0;
 }
 
-/**  @brief    called at the beginning of all test cases in this class,
- *             initialize OCI HAL
- */
+/// Called at the beginning of all test cases in this class,
+/// initialize OCI HAL
 void
-oci_test_base::SetUpTestCase(char *cfg_file, bool enable_fte) {
-    oci_init_params_t     init_params;
+oci_test_base::SetUpTestCase(char *cfg_file, bool enable_fte)
+{
+    oci_init_params_t init_params;
 
     memset(&init_params, 0, sizeof(init_params));
     init_params.init_mode = OCI_INIT_MODE_COLD_START;
@@ -68,10 +70,10 @@ oci_test_base::SetUpTestCase(char *cfg_file, bool enable_fte) {
     oci_init(&init_params);
 }
 
-/**  @brief    called at the end of all test cases in this class,
- *             cleanup OCI HAL and quit
- */
+/// Called at the end of all test cases in this class,
+/// cleanup OCI HAL and quit
 void
-oci_test_base::TearDownTestCase(void) {
-    //oci_teardown();
+oci_test_base::TearDownTestCase(void)
+{
+    // oci_teardown();
 }
