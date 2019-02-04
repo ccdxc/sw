@@ -268,6 +268,12 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
                 UPG_LOG_DEBUG("pre-state handler function returned false");
                 type = UpgStateFailed;
                 SetAppRespFail();
+                AppendAppRespFailStr("Compat Check Failed");
+                upgMgrResp_->UpgradeFinish(UpgRespFail, appRespFailStrList_);
+                ResetAppResp();
+                upgPassed_ = false;
+                upgAborted_ = false;
+                return delphi::error::OK();
             }
         }
         RETURN_IF_FAILED(createUpgStateReq(type, req->upgreqtype()));
@@ -284,6 +290,7 @@ delphi::error UpgReqReact::OnUpgReqDelete(delphi::objects::UpgReqPtr req) {
         UPG_LOG_DEBUG("Deleting Upgrade Request Status");
         sdk_->DeleteObject(upgReqStatus);
     }
+    DeleteUpgMgrResp();
     return delphi::error::OK();
 }
 
