@@ -542,6 +542,29 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 
 	case kvstore.Updated:
 
+		if nic.Spec.Admit == false && nic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() {
+			log.Infof("De-admitting NIC: %+v", nic)
+			// NIC has been de-admitted by user. Reset status, as it is no longer part of the cluster, and
+			// change phase to pending. NIC will try to register again and if user sets admit=true it will
+			// be re-admitted
+			nic.Status = cmd.SmartNICStatus{
+				AdmissionPhase: cmd.SmartNICStatus_PENDING.String(),
+			}
+			// update cache so that agent gets notified right away,
+			// even if we fail to propagate the update back to ApiServer
+			err := env.StateMgr.UpdateSmartNIC(nic)
+			if err != nil {
+				log.Errorf("Error updating smartnic {%+v} in StateMgr. Err: %v", nic, err)
+			}
+			// update ApiServer
+			apiClient := m.cfgWatcherSvc.APIClient()
+			_, err = apiClient.SmartNIC().Update(context.Background(), nic)
+			if err != nil {
+				log.Errorf("Error updating smartnic {%+v} in ApiServer. Err: %v", nic, err)
+			}
+			return
+		}
+
 		err := env.StateMgr.UpdateSmartNIC(nic)
 		if err != nil {
 			log.Errorf("Error updating smartnic {%+v}. Err: %v", nic, err)

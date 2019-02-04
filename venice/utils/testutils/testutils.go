@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"runtime/debug"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -107,6 +108,7 @@ func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string)
 				str, _ := json.Marshal(v)
 				msg2 = ": " + string(str)
 			}
+			debug.PrintStack()
 			tb.Fatalf("\033[31m%s:%d: "+msg+msg2+"\033[39m\n\n",
 				append([]interface{}{filepath.Base(file), line})...)
 		case <-time.After(pollInterval):
