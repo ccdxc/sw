@@ -134,6 +134,12 @@ static int ionic_lif_open(struct lif *lif)
 			goto err_out;
 	}
 
+	if (!is_master_lif(lif) && lif->upper_dev &&
+	    netif_running(lif->ionic->master_lif->netdev)) {
+		netif_carrier_on(lif->upper_dev);
+		netif_tx_wake_all_queues(lif->upper_dev);
+
+	}
 	set_bit(LIF_UP, lif->state);
 
 	return 0;
@@ -927,7 +933,6 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		struct macvlan_dev *vlan = netdev_priv(upper_dev);
 		struct macvlan_port *port = (void *)vlan->port;
 		const unsigned char *addr = vlan->dev->dev_addr;
-		//u32 idx = macvlan_eth_hash(addr);
 		u32 idx;
 		u64 value = get_unaligned((u64 *)addr);
 
@@ -956,6 +961,7 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 	struct lif *master_lif = netdev_priv(lower_dev);
 	struct lif *lif = priv;
 	unsigned long index = lif->index;
+	struct macvlan_dev *vlan = netdev_priv(lif->upper_dev);
 
 	netdev_info(lower_dev, "%s: %s\n", __func__, lif->name);
 	ionic_lif_stop(lif);
@@ -973,6 +979,21 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 
 		netif_set_real_num_tx_queues(lower_dev, max);
 		netif_set_real_num_rx_queues(lower_dev, max);
+	}
+
+	/* WARNING - UGLY HACK part deux */
+	/* This is to work around a bug in versions of the macvlan
+	 * driver prior to v4.18, where macvlan_stop() doesn't call
+	 * macvlan_hash_del() in the case of an offload macvlan.  This
+	 * results in vlan->hlist not being cleaned up and eventually
+	 * causing havoc.
+	 * The code below is hijacked from the macvlan driver, since
+	 * it is defined static and unaccessible.
+	 */
+//static void macvlan_hash_del(struct macvlan_dev *vlan, bool sync)
+	{
+		hlist_del_rcu(&vlan->hlist);
+		synchronize_rcu();
 	}
 }
 
