@@ -73,8 +73,6 @@ default:
 	$(MAKE) checks
 	$(MAKE) build
 	$(MAKE) unit-test-cover
-	$(MAKE) container-compile
-	$(MAKE) fixtures
 
 # ws-tools installs all the binaries needed to generate, lint and build go sources
 ws-tools:

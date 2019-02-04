@@ -42,8 +42,8 @@ const (
 	// max retry delay between request retries
 	maxRetryInterval = 500 * time.Millisecond
 
-	// request gets cancelled after 10s
-	contextDeadline = 10 * time.Second
+	// request gets cancelled after 60s
+	contextDeadline = 60 * time.Second
 )
 
 type request func() (interface{}, error)

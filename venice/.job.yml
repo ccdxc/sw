@@ -3,13 +3,19 @@ version: 2.0
 targets:
   venice:
     commands: [ "bash", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make && ./tools/scripts/check-local-files.sh" ]
-    owners: ["email:ravi@pensando.io"]
+    owners: ["email:venice-dev@pensando.io"]
     area:
     sub-area:
     feature:
   dep-checks:
     commands: ["bash", "-c", "cd /go/src/github.com/pensando/sw && make ws-tools && dep check" ]
-    owners: ["email:abhi@pensando.io"]
+    owners: ["email:venice-dev@pensando.io"]
+    area:
+    sub-area:
+    feature:
+  venice-image:
+    commands: [ "bash", "-c", "pwd && ls -l && cd /go/src/github.com/pensando/sw && make venice-image && ./tools/scripts/check-local-files.sh" ]
+    owners: ["email:venice-dev@pensando.io"]
     area:
     sub-area:
     feature:
