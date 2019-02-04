@@ -106,6 +106,7 @@ class TestBundle:
     def __execute_testcases(self):
         result = types.status.SUCCESS
         for tc in self.__testcases:
+            api.CurrentTestcase = tc
             ret = tc.Main()
             if ret != types.status.SUCCESS:
                 result = ret

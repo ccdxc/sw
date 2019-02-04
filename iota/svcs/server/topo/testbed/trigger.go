@@ -19,8 +19,8 @@ func (n *TestNode) Trigger(index int) error {
 	}
 
 	if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		log.Errorf("Adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
-		return fmt.Errorf("adding workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
+		log.Errorf("Running trigger on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
+		return fmt.Errorf("Running trigger on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
 	}
 
 	n.TriggerResp[index] = resp

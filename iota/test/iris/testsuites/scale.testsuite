@@ -1,5 +1,5 @@
 meta:
-    name        : hostpin
+    name        : hostpin_scale
     description : Hardware Test Suite
     mode        : hardware
     cfgmode     : netagent
@@ -35,7 +35,7 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
-        - networking/connectivity.testbundle
+        - networking/connectivity_scale.testbundle
 
     regression:
         - firewall/policy_scale.testbundle

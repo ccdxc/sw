@@ -96,6 +96,7 @@ type vmWorkload struct {
 type containerWorkload struct {
 	workloadBase
 	containerHandle *Utils.Container
+	subIF           string
 }
 
 func vlanIntf(name string, vlan int) string {
@@ -279,6 +280,7 @@ func (app *containerWorkload) AddInterface(name string, macAddress string, ipadd
 		}
 	}
 
+	app.subIF = intfToAttach
 	return intfToAttach, nil
 }
 
@@ -345,6 +347,8 @@ func (app *containerWorkload) IsHealthy() bool {
 
 func (app *containerWorkload) TearDown() {
 	if app.containerHandle != nil {
+		delIntfCmd := []string{"ip", "link", "del", app.subIF}
+		app.RunCommand(delIntfCmd, "", 0, false, false)
 		app.containerHandle.Stop()
 	}
 }

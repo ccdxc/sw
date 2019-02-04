@@ -353,7 +353,8 @@ class Testcase:
         for nodename in api.GetWorkloadNodeHostnames():
             api.Trigger_AddHostCommand(req, nodename, command)
         for wl in api.GetWorkloads():
-            api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, command)
+            if api.IsWorkloadRunning(wl.workload_name):
+                api.Trigger_AddCommand(req, wl.node_name, wl.workload_name, command)
         resp = api.Trigger(req)
         if not api.Trigger_IsSuccess(resp):
             Logger.error("Failed to create destination directory %s" % newdir)
@@ -387,6 +388,9 @@ class Testcase:
                 result = status
         return result
 
+    def MakeTestcaseDirectory(self):
+        instance_id = self.__get_instance_id(self.__iterid)
+        self.__mk_testcase_directory(instance_id)
 
     def __execute(self):
         final_result = types.status.SUCCESS
