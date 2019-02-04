@@ -220,8 +220,6 @@ void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
 	};
 
 	KASSERT(intr->ctrl, ("%s intr->ctrl is NULL", intr->name));
-	IONIC_INFO("%s Intr credits: %d\n", intr->name, intr->ctrl->int_credits);
-
 	iowrite32(*(u32 *)intr_to_credits(&ctrl),
 		  intr_to_credits(intr->ctrl));
 }
@@ -231,10 +229,6 @@ void ionic_intr_mask(struct intr *intr, bool mask)
 	struct intr_ctrl ctrl = {
 		.mask = mask ? 1 : 0,
 	};
-
-	IONIC_INFO("%s index: %d vector: %d credit: %d %s\n",
-		intr->name, intr->index, intr->vector, intr->ctrl->int_credits,
-		mask ? "masked" : "unmasked");
 
 	iowrite32(*(u32 *)intr_to_mask(&ctrl),
 		  intr_to_mask(intr->ctrl));
