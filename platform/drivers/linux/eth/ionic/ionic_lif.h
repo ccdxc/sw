@@ -168,6 +168,7 @@ struct lif {
 	u32 notifyblock_sz;
 	struct notify_block *notifyblock;
 	dma_addr_t notifyblock_pa;
+	struct work_struct tx_timeout_work;
 };
 
 #define lif_to_txqcq(lif, i)	(lif->txqcqs[i])

@@ -755,9 +755,9 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 	return err;
 }
 
-static void ionic_tx_timeout(struct net_device *netdev)
+static void ionic_tx_timeout_work(struct work_struct *ws)
 {
-	struct lif *lif = netdev_priv(netdev);
+	struct lif *lif = container_of(ws, struct lif, tx_timeout_work);
 	struct ionic_dev *idev = &lif->ionic->idev;
 
 	ionic_dev_cmd_hang_notify(idev);
@@ -765,6 +765,13 @@ static void ionic_tx_timeout(struct net_device *netdev)
 
 	// TODO implement reset and re-init queues and so on
 	// TODO to get interface back on its feet
+}
+
+static void ionic_tx_timeout(struct net_device *netdev)
+{
+	struct lif *lif = netdev_priv(netdev);
+
+	schedule_work(&lif->tx_timeout_work);
 }
 
 static int ionic_vlan_rx_add_vid(struct net_device *netdev, __be16 proto,
@@ -2255,6 +2262,8 @@ static int ionic_lif_init(struct lif *lif)
 
 	lif->api_private = NULL;
 	set_bit(LIF_INITED, lif->state);
+
+	INIT_WORK(&lif->tx_timeout_work, ionic_tx_timeout_work);
 	return 0;
 
 err_out_notifyq_deinit:
@@ -2447,6 +2456,7 @@ void ionic_lifs_unregister(struct ionic *ionic)
 		if (lif->registered) {
 			unregister_netdev(lif->netdev);
 			lif->registered = false;
+			cancel_work_sync(&lif->tx_timeout_work);
 		}
 	}
 }
