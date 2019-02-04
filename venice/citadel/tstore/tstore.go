@@ -216,11 +216,36 @@ func (ts *Tstore) ExecuteQuery(q, database string) (<-chan *query.Result, error)
 
 	// execute the query
 	ret := ts.queryExecutor.ExecuteQuery(pq, query.ExecutionOptions{
-		Database:  database,
-		ChunkSize: 0,
+		Database:   database,
+		ChunkSize:  0,
+		Authorizer: &tstoreAuth{},
 	}, make(chan struct{}))
 
 	return ret, nil
+}
+
+// tstoreAuth is the Authorizer in tstore to avoid failure in imem.go:987 where iterator expects valid Authorizer
+type tstoreAuth struct {
+}
+
+// AuthorizeDatabase indicates whether the given Privilege is authorized on the database with the given name.
+func (ta *tstoreAuth) AuthorizeDatabase(p influxql.Privilege, name string) bool {
+	return true
+}
+
+// AuthorizeQuery returns an error if the query cannot be executed
+func (ta *tstoreAuth) AuthorizeQuery(database string, query *influxql.Query) error {
+	return nil
+}
+
+// AuthorizeSeriesRead determines if a series is authorized for reading
+func (ta *tstoreAuth) AuthorizeSeriesRead(database string, measurement []byte, tags models.Tags) bool {
+	return true
+}
+
+// AuthorizeSeriesWrite determines if a series is authorized for writing
+func (ta *tstoreAuth) AuthorizeSeriesWrite(database string, measurement []byte, tags models.Tags) bool {
+	return true
 }
 
 // Close closes the tstore

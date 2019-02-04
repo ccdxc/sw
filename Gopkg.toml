@@ -334,3 +334,8 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
 [[constraint]]
   name = "github.com/fatih/structs"
   version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/imdario/mergo"
+  version = "0.3.7"
+

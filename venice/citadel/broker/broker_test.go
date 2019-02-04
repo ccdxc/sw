@@ -90,6 +90,8 @@ func TestBrokerTstoreBasic(t *testing.T) {
 	err = brokers[0].CreateDatabase(context.Background(), "db0")
 	AssertOk(t, err, "Error creating database")
 
+	schema := map[string]map[string]bool{}
+
 	// write some points
 	for idx := 0; idx < numNodes; idx++ {
 		// create some points
@@ -101,6 +103,12 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		// write the points
 		err = brokers[idx].WritePoints(context.Background(), "db0", points)
 		AssertOk(t, err, "Error writing points")
+
+		// store schema
+		schema[fmt.Sprintf("cpu%d", idx)] = map[string]bool{
+			"host": true,
+			"svc":  true,
+		}
 	}
 
 	// read the points back
@@ -109,7 +117,88 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		AssertOk(t, err, "Error executing query")
 		restr, _ := json.Marshal(results)
 		log.Infof("Got result: %v", string(restr))
+
+		// test show commands
+
+		// SHOW TAG KEYS
+		results, err = brokers[idx].ExecuteShowCmd(context.Background(), "db0", fmt.Sprintf("SHOW TAG KEYS"))
+		AssertOk(t, err, "Error executing show command")
+		Assert(t, len(results) == 1, "invalid number of results %+v", results)
+		AssertOk(t, results[0].Err, "error in show command results %+v", results[0])
+		Assert(t, len(results[0].Series) == len(schema), "invalid series in show command %+v", results[0].Series)
+		for _, series := range results[0].Series {
+			sc, ok := schema[series.Name]
+			Assert(t, ok, "failed to find %s in %+v", series.Name, schema)
+			Assert(t, len(series.Values) == len(sc), "expected %+v, got %+v", sc, series.Values)
+			for _, k := range series.Values {
+				Assert(t, len(k) == 1, "invalid number of values %+v", k)
+				s, ok := k[0].(string)
+				Assert(t, ok, "invalid values type %+v", k)
+				_, ok = sc[s]
+				Assert(t, ok, "%s not found in schema values type %+v", s)
+			}
+			Assert(t, len(series.Columns) == 1 && series.Columns[0] == "tagKey", "invalid column %s", series.Columns)
+		}
+		restr, err = json.Marshal(results)
+		AssertOk(t, err, "Error to marshal show command results")
+
+		// SHOW MEASUREMENTS
+		results, err = brokers[idx].ExecuteShowCmd(context.Background(), "db0", fmt.Sprintf("SHOW MEASUREMENTS"))
+		AssertOk(t, err, "Error executing show command")
+		Assert(t, len(results) == 1, "invalid number of results %+v", results)
+		AssertOk(t, results[0].Err, "error in show command results %+v", results[0])
+		Assert(t, len(results[0].Series) == 1, "invalid series in show command %+v", results[0].Series)
+
+		s := results[0].Series[0]
+		Assert(t, len(s.Values) == len(schema), "expected %+v, got %+v", schema[s.Name], s.Values)
+
+		for _, k := range s.Values {
+			Assert(t, len(k) == 1, "invalid number of values %+v", k)
+			s, ok := k[0].(string)
+			Assert(t, ok, "invalid value type %+v", k)
+			_, ok = schema[s]
+			Assert(t, ok, "%s not found in schema value type %+v", s)
+		}
+		Assert(t, len(s.Columns) == 1 && s.Columns[0] == "name", "invalid column %s", s.Columns)
+
+		restr, err = json.Marshal(results)
+		AssertOk(t, err, "Error to marshal show command results")
+
+		// SHOW SERIES
+		results, err = brokers[idx].ExecuteShowCmd(context.Background(), "db0", fmt.Sprintf("SHOW SERIES"))
+		AssertOk(t, err, "Error executing show command")
+		Assert(t, len(results) == 1, "invalid number of results %+v", results)
+		AssertOk(t, results[0].Err, "error in show command results %+v", results[0])
+		Assert(t, len(results[0].Series) == 1, "invalid series in show command %+v", results[0].Series)
+
+		s = results[0].Series[0]
+		Assert(t, len(s.Values) == len(schema)*2, "invalid values, got %+v", s.Values)
+		Assert(t, len(s.Columns) == 1 && s.Columns[0] == "key", "invalid column %s", s.Columns)
+		restr, err = json.Marshal(results)
+		AssertOk(t, err, "Error to marshal show command results")
+
+		// SHOW FIELD KEYS
+		results, err = brokers[idx].ExecuteShowCmd(context.Background(), "db0", fmt.Sprintf("SHOW FIELD KEYS"))
+		AssertOk(t, err, "Error executing show command")
+		Assert(t, len(results) == 1, "invalid number of results %+v", results)
+		AssertOk(t, results[0].Err, "error in show command results %+v", results[0])
+		Assert(t, len(results[0].Series) == len(schema), "invalid series in show command %+v", results[0].Series)
+
+		for _, s = range results[0].Series {
+			Assert(t, len(s.Values) == 2, "invalid values, got %+v", s.Values)
+			Assert(t, len(s.Columns) == 2, "invalid column %+v", s.Columns)
+		}
+		restr, err = json.Marshal(results)
+		AssertOk(t, err, "Error to marshal show command results")
 	}
+
+	// Test errors in show command
+	_, err = brokers[0].ExecuteShowCmd(context.Background(), "", fmt.Sprintf("SHOW SERIES"))
+	Assert(t, err != nil, "query didin't fail for invalid db")
+	_, err = brokers[0].ExecuteShowCmd(context.Background(), "db0", fmt.Sprintf("SERIES"))
+	Assert(t, err != nil, "query didin't fail for invalid command")
+	_, err = brokers[0].ExecuteShowCmd(context.Background(), "db0", fmt.Sprintf("SHOW DATABASES"))
+	Assert(t, err != nil, "query didin't fail for invalid command")
 
 	// Perform query with multiple statements
 	queries := make([]string, 0)

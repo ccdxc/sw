@@ -6,7 +6,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
+
+	"github.com/imdario/mergo"
 
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
@@ -303,4 +307,96 @@ func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string)
 // WriteLines writes influx line protocol
 func (br *Broker) WriteLines(ctx context.Context, database string, lines []string) error {
 	return nil
+}
+
+// ExecuteShowCmd executes a show command on data nodes
+func (br *Broker) ExecuteShowCmd(ctx context.Context, database string, qry string) ([]*query.Result, error) {
+	if database == "" {
+		return nil, fmt.Errorf("database name is requird")
+	}
+
+	if !strings.HasPrefix(qry, "SHOW") {
+		return nil, fmt.Errorf("invalid show command")
+	}
+
+	// parse the query
+	pq, err := influxql.ParseQuery(qry)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(pq.Statements) != 1 {
+		return nil, fmt.Errorf("invalid show command %+v", pq)
+	}
+
+	stmt := pq.Statements[0]
+
+	// handle only these commands
+	switch stmt.(type) {
+	case *influxql.ShowSeriesStatement:
+	case *influxql.ShowMeasurementsStatement:
+	case *influxql.ShowFieldKeysStatement:
+	case *influxql.ShowTagKeysStatement:
+	case *influxql.ShowTagValuesStatement:
+	default:
+		return nil, fmt.Errorf("invalid show command %s", stmt.String())
+	}
+
+	// get the cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return nil, errors.New("Shard map is empty")
+	}
+
+	// todo: use channel for async query
+	var result query.Result
+	for _, shard := range cl.ShardMap.Shards {
+		resp, err := br.queryShard(ctx, shard, database, stmt.String())
+		if err != nil {
+			log.Errorf("shard [%d] Error during ExecuteQuery rpc call. Err: %v", shard.ShardID, err)
+			return nil, err
+		}
+
+		// show series: {Name: Tags:map[] Columns:[key] Values:[[SmartNIC,Kind=SmartNIC,Name=f6:0b:59:5f:ec:a3,reporterID=Node-venice]] Partial:false}
+		// show measurements {Name:measurements Tags:map[] Columns:[name] Values:[[SmartNIC]] Partial:false}
+		// show field keys {Name:SmartNIC Tags:map[] Columns:[fieldKey fieldType] Values:[[CPUUsedPercent float] [DiskFree float] [DiskTotal float] [DiskUsed float] [DiskUsedPercent float] [InterfaceName string] [InterfaceRxBytes float] [InterfaceTxBytes float] [MemAvailable float] [MemFree float] [MemTotal float] [MemUsed float] [MemUsedPercent float]] Partial:false}
+		// show tag keys {Name:Node Tags:map[] Columns:[tagKey] Values:[[Kind] [Name] [reporterID]] Partial:false}
+
+		// parse the response
+		for _, rs := range resp.Result {
+			rslt := query.Result{}
+			err := rslt.UnmarshalJSON(rs.Data)
+
+			if err != nil {
+				return nil, fmt.Errorf("shard [%d] unmarshal error: %s", shard.ShardID, err)
+			}
+
+			if rslt.Err != nil {
+				return nil, fmt.Errorf("shard [%d] query returned error: %s", shard.ShardID, rslt.Err)
+			}
+
+			// merge fields
+			if err := mergo.Merge(&result, rslt, mergo.WithAppendSlice); err != nil {
+				return nil, fmt.Errorf("shard [%d] failed to merge results %s", shard.ShardID, err)
+			}
+		}
+	}
+
+	// merge rows having the same name
+	valMap := map[string]*models.Row{}
+	for _, s := range result.Series {
+		if val, ok := valMap[s.Name]; ok {
+			// todo: remove duplicates when sharding scheme changes
+			val.Values = append(val.Values, s.Values...)
+		} else {
+			valMap[s.Name] = s
+		}
+	}
+
+	series := models.Rows{}
+	for _, r := range valMap {
+		series = append(series, r)
+	}
+	result.Series = series
+	return []*query.Result{&result}, nil
 }
