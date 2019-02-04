@@ -36,6 +36,12 @@
             "remotes" : "1024",
             "locals" : "32",
             "nat-prefix" : "3.0.0.0/8"
+        },
+        {
+            "kind" : "flows",
+            "num_tcp": "1024",
+            "num_udp": "1024",
+            "num_icmp": "1024"
         }
     ]
 }

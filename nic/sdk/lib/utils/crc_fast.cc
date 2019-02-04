@@ -1,6 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "crc_fast.hpp"
+#include "time_profile.hpp"
 #include "include/sdk/mem.hpp"
 
 namespace sdk {
@@ -133,13 +134,15 @@ crcFast::compute_crc(uint8_t const message[], int nBytes, uint8_t poly_index)
 {
     uint8_t data;
     crc remainder = 0;
-
+    
+    time_profile_begin(sdk::utils::time_profile::COMPUTE_CRC);
     // Divide the message by the polynomial, a byte at a time.
     for (int byte = 0; byte < nBytes; ++byte) {
         data = message[byte] ^ (remainder >> (WIDTH - 8));
         remainder = crcTable_[poly_index][data] ^ (remainder << 8);
     }
 
+    time_profile_end(sdk::utils::time_profile::COMPUTE_CRC);
     // The final remainder is the CRC.
     return (remainder);
 

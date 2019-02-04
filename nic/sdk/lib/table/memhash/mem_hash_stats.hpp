@@ -8,6 +8,8 @@
 #include "include/sdk/table.hpp"
 #include <string>
 
+#include "mem_hash_utils.hpp"
+
 using namespace std;
 
 namespace sdk {
@@ -53,7 +55,7 @@ public:
     }
 
     sdk_ret_t insert(sdk_ret_t status) {
-        SDK_TRACE_DEBUG("Updating insert stats, ret:%d", status);
+        MEMHASH_TRACE_VERBOSE("Updating insert stats, ret:%d", status);
         if (status == SDK_RET_OK) {
             insert_++;
         } else if (status == SDK_RET_ENTRY_EXISTS) {
@@ -65,7 +67,7 @@ public:
     }
 
     sdk_ret_t update(sdk_ret_t status) {
-        SDK_TRACE_DEBUG("Updating update stats, ret:%d", status);
+        MEMHASH_TRACE_VERBOSE("Updating update stats, ret:%d", status);
         if (status == SDK_RET_OK) {
             update_++;
         } else {
@@ -75,7 +77,7 @@ public:
     }
 
     sdk_ret_t remove(sdk_ret_t status) {
-        SDK_TRACE_DEBUG("Updating remove stats, ret:%d", status);
+        MEMHASH_TRACE_VERBOSE("Updating remove stats, ret:%d", status);
         if (status == SDK_RET_OK) {
             remove_++;
         } else if (status == SDK_RET_ENTRY_NOT_FOUND) {
@@ -87,7 +89,7 @@ public:
     }
 
     sdk_ret_t reserve(sdk_ret_t status) {
-        SDK_TRACE_DEBUG("Updating reserve stats, ret:%d", status);
+        MEMHASH_TRACE_VERBOSE("Updating reserve stats, ret:%d", status);
         if (status == SDK_RET_OK) {
             reserve_++;
         } else {
@@ -97,7 +99,7 @@ public:
     }
 
     sdk_ret_t release(sdk_ret_t status) {
-        SDK_TRACE_DEBUG("Updating release stats, ret:%d", status);
+        MEMHASH_TRACE_VERBOSE("Updating release stats, ret:%d", status);
         if (status == SDK_RET_OK) {
             release_++;
         } else {
@@ -107,7 +109,7 @@ public:
     }
 
     sdk_ret_t get(sdk_ret_t status) {
-        SDK_TRACE_DEBUG("Updating get stats, ret:%d", status);
+        MEMHASH_TRACE_VERBOSE("Updating get stats, ret:%d", status);
         if (status == SDK_RET_OK) {
             get_++;
         } else {

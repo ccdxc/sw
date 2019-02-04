@@ -28,7 +28,8 @@ mem_hash_base_table::init_(uint32_t id, uint32_t size) {
         return SDK_RET_OOM;
     }
 
-    buckets_ = (mem_hash_table_bucket *) new(mem) mem_hash_table_bucket[table_size_];
+    //buckets_ = (mem_hash_table_bucket *) new(mem) mem_hash_table_bucket[table_size_];
+    buckets_ = (mem_hash_table_bucket *)mem;
     return SDK_RET_OK;
 }
 

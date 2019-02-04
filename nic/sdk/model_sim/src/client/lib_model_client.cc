@@ -26,7 +26,7 @@ const char* __write_verify_enable = getenv("CAPRI_WRITE_VERIFY_ENABLE");
 std::mutex g_zmq_mutex;
 
 uint64_t __mock_mem_base = 0xC0000000ul;
-uint64_t __mock_mem_size = 4294967295ul;
+uint64_t __mock_mem_size = 8589934592ull;
 uint8_t *__mock_mem;
 
 int mock_memory_init()

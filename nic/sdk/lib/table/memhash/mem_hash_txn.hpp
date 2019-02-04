@@ -8,6 +8,8 @@
 #include "include/sdk/table.hpp"
 #include <string>
 
+#include "mem_hash_utils.hpp"
+
 using namespace std;
 
 namespace sdk {
@@ -34,12 +36,12 @@ public:
 
     sdk_ret_t start() {
         if (valid_) {
-            SDK_TRACE_ERR("transaction already in progress");
+            MEMHASH_TRACE_ERR("transaction already in progress");
             return SDK_RET_TXN_EXISTS;
         }
 
         if (reserved_count_ != 0) {
-            SDK_TRACE_ERR("previous transaction is incomplete");
+            MEMHASH_TRACE_ERR("previous transaction is incomplete");
             return SDK_RET_TXN_INCOMPLETE;
         }
 
@@ -50,12 +52,12 @@ public:
 
     sdk_ret_t end() {
         if (valid_ == false) {
-            SDK_TRACE_ERR("transaction not started");
+            MEMHASH_TRACE_ERR("transaction not started");
             return SDK_RET_TXN_NOT_FOUND;
         }
 
         if (reserved_count_ != 0) {
-            SDK_TRACE_ERR("trying to end incomplete transaction");
+            MEMHASH_TRACE_ERR("trying to end incomplete transaction");
             return SDK_RET_TXN_INCOMPLETE;
         }
         valid_ = false;
@@ -65,14 +67,14 @@ public:
 
     sdk_ret_t reserve() {
         reserved_count_++;
-        SDK_TRACE_DEBUG("txn: reserved count = %d", reserved_count_);
+        MEMHASH_TRACE_DEBUG("txn: reserved count = %d", reserved_count_);
         return SDK_RET_OK;
     }
 
     sdk_ret_t release() {
         SDK_ASSERT(reserved_count_);
         reserved_count_--;
-        SDK_TRACE_DEBUG("txn: reserved count = %d", reserved_count_);
+        MEMHASH_TRACE_DEBUG("txn: reserved count = %d", reserved_count_);
         return SDK_RET_OK;
     }
 

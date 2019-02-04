@@ -207,6 +207,18 @@ p4pd_entry_write (unsigned int table_id, unsigned int index, unsigned char *hwke
     return 0;
 }
 
+p4pd_error_t
+p4pd_entry_install(uint32_t tableid,
+                   uint32_t index,
+                   void    *swkey,
+                   void    *swkey_mask,
+                   void    *actiondata)
+{
+    return p4pd_entry_write(tableid, index,
+                            (unsigned char *)swkey,
+                            (unsigned char *)swkey_mask, actiondata);
+}
+
 int 
 p4pd_entry_read(uint32_t table_id, uint32_t index, void *swkey,
                 void *swkey_mask, void *actiondata)
@@ -274,6 +286,8 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     props->actiondata_struct_size = sizeinfo->dsize;
     props->hash_type = 0;
     props->tabledepth = sizeinfo->tsize;
+    props->hbm_layout.entry_width = 64;
+
     
     if (table_id == MEM_HASH_P4TBL_ID_H5) {
         props->has_oflow_table = 1;
@@ -284,6 +298,11 @@ p4pd_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
     }
 
     return 0;
+}
+p4pd_error_t
+p4pd_global_table_properties_get (uint32_t table_id, p4pd_table_properties_t *props)
+{
+    return p4pd_table_properties_get(table_id, props);
 }
 
 // ===================== NEW FUNCTIONS =======================

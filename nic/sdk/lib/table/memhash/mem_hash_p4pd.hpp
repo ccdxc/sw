@@ -52,4 +52,25 @@ mem_hash_p4pd_appdata_set(mem_hash_api_context *ctx, void *appdata);
 p4pd_error_t
 mem_hash_p4pd_appdata_get(mem_hash_api_context *ctx, void *appdata);
 
+p4pd_error_t 
+mem_hash_p4pd_entry_read(uint32_t tableid, uint32_t index,
+                         void *swkey, void *swkey_mask,
+                         void *actiondata);
+
+p4pd_error_t 
+mem_hash_p4pd_entry_install(uint32_t tableid, uint32_t index,
+                            void *swkey, void *swkey_mask,
+                            void *actiondata);
+
+p4pd_error_t
+mem_hash_p4pd_hwkey_hwmask_build(uint32_t tableid, void *swkey,
+                                 void *swkey_mask, uint8_t *hw_key,
+                                 uint8_t *hw_key_y);
+
+void
+mem_hash_p4pd_stats_reset();
+
+void
+mem_hash_p4pd_stats_print();
+
 #endif

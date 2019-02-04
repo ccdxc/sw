@@ -68,6 +68,7 @@
 #include "gen/p4gen/${hdrdir}/include/${p4prog}p4pd.h"
 #include "nic/sdk/lib/p4/p4_utils.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/lib/utils/time_profile.hpp"
 
 char ${prefix}_tbl_names[__P4${caps_p4prog}TBL_ID_TBLMAX][P4${caps_p4prog}TBL_NAME_MAX_LEN];
 uint16_t ${prefix}_tbl_swkey_size[__P4${caps_p4prog}TBL_ID_TBLMAX];
@@ -476,6 +477,7 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 {
     uint8_t trit_x, trit_y, k, m;
     uint32_t key_len = 0;
+    time_profile_begin(sdk::utils::time_profile::P4PD_HWKEY_HWMASK_BUILD); 
 //::                # Do not include Action-PC in hwkey. action-pc will be
 //::                # prepended when combining key, action-data
     /*
@@ -907,7 +909,7 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
     key_len += 1;
 
 //::                #endfor
-
+    time_profile_end(sdk::utils::time_profile::P4PD_HWKEY_HWMASK_BUILD);
     return (key_len);
 }
 //::            elif pddict['tables'][table]['type'] != 'Index' and pddict['tables'][table]['type'] != 'Mpu':
@@ -3356,10 +3358,14 @@ ${api_prefix}_entry_install(uint32_t tableid,
 {
     uint8_t  hwkey[P4PD_MAX_PHV_LEN] = {0};
     uint8_t  hwkey_mask[P4PD_MAX_PHV_LEN] = {0};
+    p4pd_error_t ret = P4PD_SUCCESS;
 
+    time_profile_begin(sdk::utils::time_profile::P4PD_ENTRY_INSTALL); 
     ${api_prefix}_hwkey_hwmask_build(tableid, swkey, swkey_mask, hwkey, hwkey_mask);
-    return ${api_prefix}_entry_write_with_datamask(tableid, index, hwkey,
-                                                   hwkey_mask, actiondata, NULL);
+    ret = ${api_prefix}_entry_write_with_datamask(tableid, index, hwkey,
+                                                  hwkey_mask, actiondata, NULL);
+    time_profile_end(sdk::utils::time_profile::P4PD_ENTRY_INSTALL);
+    return ret;
 }
 
 /* Read P4 table hardware entry.
@@ -3405,6 +3411,8 @@ ${api_prefix}_entry_read(uint32_t   tableid,
                          void       *swkey_mask,
                          void       *actiondata)
 {
+    p4pd_error_t ret = P4PD_SUCCESS;
+    time_profile_begin(sdk::utils::time_profile::P4PD_ENTRY_READ);
     switch (tableid) {
 //::        for table, tid in tabledict.items():
 //::            if pddict['tables'][table]['is_toeplitz_hash'] or pddict['tables'][table]['is_raw']:
@@ -3421,16 +3429,16 @@ ${api_prefix}_entry_read(uint32_t   tableid,
         case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-            return (${table}_entry_read(tableid, index,
+            ret = (${table}_entry_read(tableid, index,
                             (${table}_actiondata_t*) actiondata));
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
-            return (${table}_entry_read(tableid, index,
+            ret = (${table}_entry_read(tableid, index,
                             (${table}_swkey_t *)swkey,
                             (${table}_actiondata_t*)actiondata));
 //::            #endif
 //::            if pddict['tables'][table]['type'] == 'Ternary':
-            return (${table}_entry_read(tableid, index,
+            ret = (${table}_entry_read(tableid, index,
                             (${table}_swkey_t*)swkey,
                             (${table}_swkey_mask_t*)swkey_mask,
                             (${table}_actiondata_t*) actiondata));
@@ -3440,10 +3448,11 @@ ${api_prefix}_entry_read(uint32_t   tableid,
 //::        #endfor
         default:
             // Invalid tableid
-            return (P4PD_FAIL);
+            ret = (P4PD_FAIL);
         break;
     }
-    return (P4PD_SUCCESS);
+    time_profile_end(sdk::utils::time_profile::P4PD_ENTRY_READ);
+    return (ret);
 }
 
 

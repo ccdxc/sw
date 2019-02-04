@@ -137,6 +137,11 @@
             "cache": "p4ig"
         },
         {
+            "name": "flow_ohash",
+            "size": "262144K",
+            "cache": "p4ig"
+        },
+        {
             "name": "flow_info",
             "size": "524288K",
             "cache": "p4ig"

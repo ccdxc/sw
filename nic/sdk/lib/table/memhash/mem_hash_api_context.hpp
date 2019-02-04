@@ -11,6 +11,12 @@
 #include "mem_hash.hpp"
 #include "mem_hash_stats.hpp"
 #include "mem_hash_txn.hpp"
+#include "mem_hash_utils.hpp"
+
+#define MEMHASH_MAX_SW_KEY_LEN 128
+#define MEMHASH_MAX_SW_DATA_LEN 128
+#define MEMHASH_MAX_HW_KEY_LEN 64
+#define MEMHASH_MAX_HW_DATA_LEN 64
 
 using sdk::table::sdk_table_factory_params_t;
 using sdk::table::mem_hash_properties_t;
@@ -57,7 +63,7 @@ typedef union mem_hash_handle_ {
         ((_hint) = mem_hash_api_context::hint_index::HINT_INDEX_INVALID)
 
 #define PRINT_API_CTX(_name, _ctx) {\
-    SDK_TRACE_DEBUG("%s: %s, [%s]", _name, (_ctx)->idstr(), (_ctx)->metastr()); \
+    MEMHASH_TRACE_DEBUG("%s: %s, [%s]", _name, (_ctx)->idstr(), (_ctx)->metastr()); \
 }
 
 class mem_hash_api_context {
@@ -87,9 +93,7 @@ public:
 
 private:
     static uint32_t numctx_;
-    static mem_hash_api_context* alloc_(uint32_t sw_key_len, uint32_t sw_data_len,
-                                        uint32_t sw_appdata_len,
-                                        uint32_t hw_key_len, uint32_t hw_data_len);
+    static mem_hash_api_context* alloc_();
 public:
     // Operation
     sdk_table_api_op_t op;
@@ -114,15 +118,15 @@ public:
 
     // SW Key and Data
     bool sw_valid;
-    uint8_t *sw_key;
-    uint8_t *sw_data;
-    uint8_t *sw_appdata;
+    uint8_t sw_key[MEMHASH_MAX_SW_KEY_LEN];
+    uint8_t sw_data[MEMHASH_MAX_SW_DATA_LEN];
+    uint8_t sw_appdata[MEMHASH_MAX_SW_DATA_LEN];
 
     // HW Key and Data
     uint32_t hw_key_len;
     uint32_t hw_data_len;
-    uint8_t *hw_key;
-    uint8_t *hw_data;
+    uint8_t hw_key[MEMHASH_MAX_HW_KEY_LEN];
+    uint8_t hw_data[MEMHASH_MAX_HW_DATA_LEN];
 
     // NOTE NOTE NOTE:
     // Some of the below fields are re-used by main table and hint table
