@@ -1,10 +1,7 @@
 #! /bin/bash
 
 set -e
-TOOLS_DIR=`dirname $0`
-ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
-export WS_TOP="/sw"
-export NICDIR=`dirname $ABS_TOOLS_DIR`
+export NICDIR=`pwd`
 export HAL_LOG_DIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export CAPRI_MOCK_MODE=1
@@ -26,6 +23,13 @@ function finish {
 trap finish EXIT
 
 export PATH=${PATH}:${BUILD_DIR}/bin
+echo $PATH
+# gtests
+#$GDB apollo_swithcport_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_switchport_test.xml"
+$GDB apollo_vcn_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vcn_test.xml"
+$GDB apollo_subnet_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_subnet_test.xml"
+#$GDB apollo_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vnic_test.xml"
+#$GDB apollo_tep_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_tep_test.xml"
+#$GDB apollo_mappings_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vnic_test.xml"
 $GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
-

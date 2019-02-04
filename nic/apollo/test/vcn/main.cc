@@ -13,7 +13,7 @@
 #include <gtest/gtest.h>
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vcn.hpp"
-//#include "nic/apollo/include/api/oci_vcn.hpp"
+#include "nic/apollo/include/api/oci_batch.hpp"
 
 using std::cout;
 using std::cerr;
@@ -49,7 +49,15 @@ protected:
 /// \brief Create a VCN
 ///
 /// Detailed description
-TEST_F(vcn, vcn_create) { vcn_util::create(1, "10/8"); }
+TEST_F(vcn, vcn_create)
+{
+    oci_batch_params_t batch_params = {0};
+
+    batch_params.epoch = 1;
+    ASSERT_TRUE(oci_batch_start(&batch_params) == SDK_RET_OK);
+    vcn_util::create(1, "10/8");
+    ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
+}
 
 /// \brief Delete a VCN
 ///
@@ -78,9 +86,11 @@ vcn_test_options_parse (int argc, char **argv)
                                 {"help", no_argument, NULL, 'h'},
                                 {0, 0, 0, 0}};
 
-    while ((oc = getopt_long(argc, argv, ":hc", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
+            api_test::g_cfg_file = optarg;
+            break;
         default: // ignore all other options
             break;
         }
