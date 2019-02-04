@@ -1,0 +1,18 @@
+meta:
+    name    : connectivity_scale
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+    #targetcount : 35
+
+testcases:
+    -   name    : Ping_Local_Workloads
+        testcase: testcases.networking.ping_scale
+        stress  : True
+        args    :
+            type: local_only
+        iterators :
+            type    : nested
+            pktsize : [  128 ] 
+            #ipaf    : [ ipv4 ]
+            ipaf    : [ ipv4 ]
+

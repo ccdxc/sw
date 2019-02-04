@@ -351,7 +351,7 @@ def __add_workloads(target_node = None):
         assert(0)
 
     if len(req.workloads):
-        resp = api.AddWorkloads(req)
+        resp = api.AddWorkloads(req, skip_bringup=api.IsConfigOnly())
         if resp is None:
             sys.exit(1)
 
@@ -466,8 +466,8 @@ def Main(step):
     if api.GetNicMode() != 'classic':
         netagent_api.PushBaseConfig()
 
-    if not api.IsConfigOnly():
-        __add_workloads()
+
+    __add_workloads()
     return api.types.status.SUCCESS
 
 if __name__ == '__main__':

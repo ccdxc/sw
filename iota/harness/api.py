@@ -94,10 +94,16 @@ def ReloadNodes(req):
     Logger.debug("Reloading Nodes:")
     return __rpc(req, gl_topo_svc_stub.ReloadNodes)
 
-def AddWorkloads(req, skip_store=False):
+def AddWorkloads(req, skip_store=False, skip_bringup=False):
+    assert(not (skip_store and skip_bringup))
     global gl_topo_svc_stub
     Logger.debug("Add Workloads:")
-    resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
+    resp = None
+    if skip_bringup:
+        Logger.debug("Skipping workload bring up.")
+        resp = req
+    else:
+        resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
     if IsApiResponseOk(resp):
         if not skip_store:
             store.AddWorkloads(resp)
