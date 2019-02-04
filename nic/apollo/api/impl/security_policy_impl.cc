@@ -94,6 +94,12 @@ security_policy_impl::release_resources(api_base *api_obj) {
  */
 sdk_ret_t
 security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t                ret;
+    oci_security_policy_t    *policy;
+
+    policy = &obj_ctxt->api_params->security_policy_info;
+    SDK_ASSERT_RETURN((policy->num_rules > 0),
+                      sdk::SDK_RET_INVALID_ARG);
     return SDK_RET_OK;
 }
 

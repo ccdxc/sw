@@ -113,7 +113,8 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     SDK_ASSERT_RETURN((rtable != NULL), sdk::SDK_RET_OOM);
 
     rtable->af = route_table_info->af;
-    rtable->default_nhid = 255; // HACK Alert! Remove this when default NH is available
+    // TODO: HACK Alert! Remove this when default NH is available
+    rtable->default_nhid = 255;
     rtable->max_routes = OCI_MAX_ROUTE_PER_TABLE;
     rtable->num_routes = route_table_info->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {

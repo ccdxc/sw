@@ -5,6 +5,7 @@
  *
  * @brief   LPM library
  */
+
 #if !defined (__LPM_HPP__)
 #define __LPM_HPP__
 
