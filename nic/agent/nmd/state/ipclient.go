@@ -376,10 +376,12 @@ func (c *IPClient) startDhclient() error {
 	// Update NMD Status
 	//c.nmdState.Lock()
 	log.Infof("Starting DHClient current Transition phase is %v", c.nmdState.config.Status.TransitionPhase)
-	if c.nmdState.config.Status.TransitionPhase == "" {
+	if (c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_REBOOT_PENDING.String()) || (c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()) {
 		c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_DHCP_SENT.String()
 	}
 	//c.nmdState.Unlock()
+	// Kill previous dhclient, if any
+	killDhclient()
 
 	dynamicIPCommandString := getDhclientCommand(c.iface)
 	err := createDhclientConf(c.hostname)
@@ -451,7 +453,6 @@ func (c *IPClient) doStaticIPConfig() error {
 
 func (c *IPClient) doDynamicIPConfig() error {
 	log.Info("Starting dynamic ip config")
-	killDhclient()
 	return c.startDhclient()
 }
 
