@@ -107,6 +107,9 @@ func getRunningPod(serviceName string) string {
 
 	getPodsOut := ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl get pods  -l name=%s -o json", serviceName))
 	json.Unmarshal([]byte(getPodsOut), &kubeGetPodsOut)
+	if len(kubeGetPodsOut.Items) == 0 {
+		By(fmt.Sprintf("ts=%s no pods found for service {%s}", time.Now().String(), serviceName))
+	}
 
 	for _, pod := range kubeGetPodsOut.Items {
 		if pod.Status.Phase == "Running" {
@@ -123,10 +126,11 @@ func getRunningPod(serviceName string) string {
 					By(fmt.Sprintf("ts=%s selected pod {%s} running on {%s}", time.Now().String(), pod.Metadata.Name, pod.Spec.NodeName))
 					return pod.Metadata.Name
 				}
+				By(fmt.Sprintf("ts=%s found a pod instance for service {%s} on the node {%s} but it is not READY", time.Now().String(), pod.Metadata.Name, pod.Spec.NodeName))
 			}
 		}
 	}
 
-	By(fmt.Sprintf("ts=%s no pod instance found for service {%s}", time.Now().String(), serviceName))
+	By(fmt.Sprintf("ts=%s no pod instance found for service {%s} on a READY state node", time.Now().String(), serviceName))
 	return ""
 }
