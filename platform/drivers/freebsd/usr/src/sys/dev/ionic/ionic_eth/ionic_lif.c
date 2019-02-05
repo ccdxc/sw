@@ -233,16 +233,20 @@ int ionic_stop(struct net_device *netdev)
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
+		IONIC_RX_LOCK(rxq);
 		ionic_rxq_disable(rxq);
 		ionic_intr_mask(&rxq->intr, true);
+		IONIC_RX_UNLOCK(rxq);
 	}
 
 	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
+		IONIC_TX_LOCK(txq);
 		ionic_txq_disable(txq);
 #ifdef IONIC_SEPERATE_TX_INTR
 		ionic_intr_mask(&txq->intr, true);
 #endif
+		IONIC_TX_UNLOCK(txq);
 	}
 
 	for (i = 0; i < lif->nrxqs; i++) {
@@ -1506,7 +1510,6 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	struct device *dev = ionic->dev;
 	struct lif *lif;
 	int err, dbpage_num;
-	char name[16];
 
 	lif = malloc(sizeof(*lif), M_IONIC, M_NOWAIT | M_ZERO);
 	if (!lif) {
@@ -1540,8 +1543,7 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		return (err);
 	}
 
-	snprintf(name, sizeof(name), "adwq%d", index);
-	lif->adminq_wq = create_workqueue(name);
+	lif->adminq_wq = create_workqueue(lif->name);
 
 	mutex_init(&lif->dbid_inuse_lock);
 	lif->dbid_count = lif->ionic->ident->dev.ndbpgs_per_lif;
@@ -2505,7 +2507,7 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 {
 	struct lif* lif = ifp->if_softc;
 
-	IONIC_CORE_LOCK(lif);
+	IONIC_NOTIFYQ_LOCK(lif);
 	ionic_read_notify_block(lif);
 
 	ifmr->ifm_status = IFM_AVALID;
@@ -2515,7 +2517,7 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 	ionic_open_or_stop(lif);
 
 	if (!lif->link_up) {
-		IONIC_CORE_UNLOCK(lif);
+		IONIC_NOTIFYQ_UNLOCK(lif);
 		return;
 	}
 
@@ -2543,7 +2545,7 @@ ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr)
 		break;
 	}
 
-	IONIC_CORE_UNLOCK(lif);
+	IONIC_NOTIFYQ_UNLOCK(lif);
 }
 
 static int
