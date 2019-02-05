@@ -83,8 +83,9 @@ func TestContainerConfigFile(t *testing.T) {
 	}
 
 	imageConfig := ImageConfig{
-		ImageMap:     map[string]string{"testName": "testImage"},
-		UpgradeOrder: []string{"testName", "testName2"},
+		ImageMap:                map[string]string{"testName": "testImage"},
+		UpgradeOrder:            []string{"testName", "testName2"},
+		SupportedNaplesVersions: map[string][]string{"naples1": {"ver1", "ver2", "ver3"}},
 	}
 	var content []byte
 	if content, err = json.Marshal(imageConfig); err != nil {
@@ -108,6 +109,11 @@ func TestContainerConfigFile(t *testing.T) {
 	upgOrder := GetUpgradeOrder()
 	if reflect.DeepEqual(upgOrder, imageConfig.UpgradeOrder) != true {
 		t.Fatalf("got %v instead of %v ", upgOrder, imageConfig.UpgradeOrder)
+	}
+
+	naplesVer := GetSupportedNaplesVersions()
+	if naplesVer["naples1"][0] != "ver1" {
+		t.Fatalf("got %v instead of ver1 ", naplesVer["naples1"][0])
 	}
 
 }

@@ -176,6 +176,10 @@ message NICAdmissionResponse {
 
   // Additional root certificates to trust
   certapi.TrustRoots TrustRoots = 5 [(gogoproto.jsontag) = "trustRoots,omitempty"];
+
+  // Registration response may also contain a smartnic version to rollout to if non-empty.
+  string RolloutVersion       = 6 [(gogoproto.jsontag) = "rolloutVersion,omitempty"];
+
 }
 
 // NIC Registration request (CMD --> NMD)

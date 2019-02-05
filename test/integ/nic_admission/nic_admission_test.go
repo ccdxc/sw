@@ -107,6 +107,9 @@ var tInfo testInfo
 func (t testInfo) APIClient() pencluster.ClusterV1Interface {
 	return t.apiClient.ClusterV1()
 }
+func (t testInfo) CheckNICVersionForAdmission(nicSku string, nicVersion string) (string, string) {
+	return "", ""
+}
 
 func getSmartNICMAC(index int) string {
 	return fmt.Sprintf("44:44:44:44:%02x:%02x", index/256, index%256)
@@ -158,7 +161,8 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 		smartnic.HealthWatchInterval,
 		smartnic.DeadInterval,
 		globals.NmdRESTPort,
-		cmdenv.StateMgr)
+		cmdenv.StateMgr,
+		tInfo)
 
 	if err != nil {
 		fmt.Printf("Error creating Smart NIC server: %v", err)
@@ -172,6 +176,10 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 	rs := mock.NewResolverService()
 	resolverHandler := service.NewRPCHandler(rs)
 	resolverServer, err := rpckit.NewRPCServer(globals.Cmd, *resolverURL, rpckit.WithTracerEnabled(true))
+	if err != nil {
+		fmt.Printf("Error creating ResolverServer RPC-server: %v", err)
+		return nil, nil, err
+	}
 	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
 	resolverServer.Start()
 	tInfo.resolverServer = resolverServer

@@ -81,6 +81,10 @@ func (t testInfo) APIClient() cmd.ClusterV1Interface {
 	return t.apiClient.ClusterV1()
 }
 
+func (t testInfo) CheckNICVersionForAdmission(nicSku string, nicVersion string) (string, string) {
+	return "", ""
+}
+
 func getNodeID(index int) string {
 	return fmt.Sprintf("44.44.44.44.%02x.%02x", index/256, index%256)
 }
@@ -113,7 +117,8 @@ func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 		healthInterval,
 		deadtimeInterval,
 		getRESTPort(1),
-		cmdenv.StateMgr)
+		cmdenv.StateMgr,
+		tInfo)
 	if err != nil {
 		fmt.Printf("Error creating SmartNIC RPC server: %v", err)
 		return nil, err

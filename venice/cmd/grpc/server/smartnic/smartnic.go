@@ -83,6 +83,8 @@ type RPCServer struct {
 
 	// reference to state manager
 	stateMgr *cache.Statemgr
+
+	versionChecker NICAdmissionVersionChecker // checks version of NIC for admission
 }
 
 // APIClientGetter is an interface that returns an API Client.
@@ -90,8 +92,13 @@ type APIClientGetter interface {
 	APIClient() cluster.ClusterV1Interface
 }
 
+// NICAdmissionVersionChecker is an interface that checks whether the nicVersion for the given SKU is allowed for admission
+type NICAdmissionVersionChecker interface {
+	CheckNICVersionForAdmission(nicSku string, nicVersion string) (string, string)
+}
+
 // NewRPCServer returns a SmartNIC RPC server object
-func NewRPCServer(clientGetter APIClientGetter, healthInvl, deadInvl time.Duration, restPort string, stateMgr *cache.Statemgr) (*RPCServer, error) {
+func NewRPCServer(clientGetter APIClientGetter, healthInvl, deadInvl time.Duration, restPort string, stateMgr *cache.Statemgr, nicVersionChecker NICAdmissionVersionChecker) (*RPCServer, error) {
 	if clientGetter == nil {
 		return nil, fmt.Errorf("Client getter is nil")
 	}
@@ -102,6 +109,7 @@ func NewRPCServer(clientGetter APIClientGetter, healthInvl, deadInvl time.Durati
 		RestPort:         restPort,
 		RetryNicDB:       make(map[string]*cluster.SmartNIC),
 		stateMgr:         stateMgr,
+		versionChecker:   nicVersionChecker,
 	}, nil
 }
 
@@ -175,6 +183,9 @@ func validateNICPlatformCert(cert *x509.Certificate, nic *cluster.SmartNIC) erro
 	n, err := fmt.Sscanf(cert.Subject.SerialNumber, platformSerialNumberFormat, &pid, &sn)
 	if n != 2 {
 		return fmt.Errorf("Invalid PID/SN: %s", cert.Subject.SerialNumber)
+	}
+	if err != nil {
+		return fmt.Errorf("Invalid PID/SN: %s. Error: %v", cert.Subject.SerialNumber, err)
 	}
 
 	if sn != nic.Status.SerialNum {
@@ -578,6 +589,14 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			}
 			okResp.AdmissionResponse.CaTrustChain = cmdcertutils.GetCaTrustChain(env.CertMgr)
 			okResp.AdmissionResponse.TrustRoots = cmdcertutils.GetTrustRoots(env.CertMgr)
+		}
+
+		status, version := s.versionChecker.CheckNICVersionForAdmission(nic.Status.GetSmartNICSku(), nic.Status.GetSmartNICVersion())
+		if status != "" {
+			log.Infof("NIC %s with SKU %s and version %s is requested to rollout to version %s", name, nic.Status.GetSmartNICSku(), nic.Status.GetSmartNICVersion(), version)
+			okResp.AdmissionResponse.Phase = cluster.SmartNICStatus_PENDING.String()
+			okResp.AdmissionResponse.Reason = status
+			okResp.AdmissionResponse.RolloutVersion = version
 		}
 
 		return okResp, nil

@@ -156,6 +156,12 @@ message SmartNICStatus {
 
     // Network Interfaces
     repeated string Interfaces              = 7 [(gogoproto.jsontag) = "interfaces,omitempty"];
+
+    // SmartNIC Version 
+    string SmartNICVersion                  = 8 [(gogoproto.jsontag) = "smartNicVersion,omitempty"];
+
+    // SmartNIC SKU
+    string SmartNICSku                      = 9 [(gogoproto.jsontag) = "smartNicSku,omitempty"];
 }
 
 // SmartNICCondition describes the state of a SmartNIC at a certain point.

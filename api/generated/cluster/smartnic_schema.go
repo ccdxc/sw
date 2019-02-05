@@ -108,6 +108,8 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"resource-version":     api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":            api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"serial-num":           api.CLIInfo{Path: "Status.SerialNum", Skip: false, Insert: "", Help: ""},
+			"smartNicSku":          api.CLIInfo{Path: "Status.SmartNICSku", Skip: false, Insert: "", Help: ""},
+			"smartNicVersion":      api.CLIInfo{Path: "Status.SmartNICVersion", Skip: false, Insert: "", Help: ""},
 			"status":               api.CLIInfo{Path: "Status.Conditions[].Status", Skip: false, Insert: "", Help: ""},
 			"tenant":               api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"type":                 api.CLIInfo{Path: "Status.Conditions[].Type", Skip: false, Insert: "", Help: ""},
@@ -178,6 +180,10 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"SystemInfo": api.Field{Name: "SystemInfo", CLITag: api.CLIInfo{ID: "system-info", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "system-info", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "cluster.SmartNICInfo"},
 
 			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"SmartNICVersion": api.Field{Name: "SmartNICVersion", CLITag: api.CLIInfo{ID: "smartNicVersion", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smartNicVersion", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"SmartNICSku": api.Field{Name: "SmartNICSku", CLITag: api.CLIInfo{ID: "smartNicSku", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smartNicSku", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

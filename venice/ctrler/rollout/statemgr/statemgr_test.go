@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
@@ -12,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -231,6 +233,7 @@ func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op
 	sros, err := stateMgr.ListSmartNICRollouts()
 	AssertOk(t, err, "Error Listing SmartNICRollouts")
 	for _, vro := range sros {
+		log.Debugf("SmartNICRollout Object: %v", vro)
 		if vro.Name != snic {
 			continue
 		}
@@ -243,6 +246,7 @@ func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op
 		if !found {
 			return false, "op not found in spec"
 		}
+		log.Debugf("Verify Rollout Object OpStatus %v", spew.Sdump(vro.status[op]))
 		if vro.status[op].OpStatus != "" {
 			return false, "Status also present"
 		}
@@ -261,6 +265,7 @@ func addSmartNICResponseFilter(t *testing.T, stateMgr *Statemgr, snic string, op
 			OpStatus: newOpStatus,
 		}
 		vro.UpdateSmartNICRolloutStatus(&status)
+		log.Debugf("Update Rollout Object OpStatus %v", spew.Sdump(vro.status[op]))
 		return true, vro
 
 	}

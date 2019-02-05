@@ -1998,6 +1998,20 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "status.smartNicVersion",
+            "description": "SmartNIC Version.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status.smartNicSku",
+            "description": "SmartNIC SKU.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4555,6 +4569,14 @@
             "type": "string"
           },
           "title": "Network Interfaces"
+        },
+        "smartNicVersion": {
+          "type": "string",
+          "title": "SmartNIC Version"
+        },
+        "smartNicSku": {
+          "type": "string",
+          "title": "SmartNIC SKU"
         }
       },
       "title": "SmartNICStatus contains current status of a SmartNIC"

@@ -99,6 +99,7 @@ for i in dynamic_images:
 
 # the datastructure that will be written to the file
 imageConfig = {}
+merged_dict = {}
 imageConfig['imageMap'] = imageMap
 
 # the order in which the services get upgraded. For now fill up with some random order.
@@ -128,8 +129,12 @@ installInfo['LoadAndInstall'].append(InstallationItem(install_type="inline-scrip
 
 with open("bin/venice-install.json", 'w') as f:
     json.dump(installInfo, f, indent=True, sort_keys=True, cls=MyEncoder)
+
+with open("tools/scripts/compatibleVersions.json", 'r') as f:
+    compatibleVersions = json.loads(f.read())
+    merged_dict = {key: value for (key,value) in (imageConfig.items() + compatibleVersions.items())}
 with open("tools/docker-files/install/target/etc/pensando/shared/common/venice.json", 'w') as f:
-    json.dump(imageConfig, f, indent=True, sort_keys=True)
+    json.dump(merged_dict, f, indent=True, sort_keys=True)
 with open("tools/docker-files/install/target/etc/pensando/shared/common/venice.conf", 'w') as f:
     for  k, v in systemdNameMap.items():
         f.write("{}='{}'\n".format(k, imageMap[v]))

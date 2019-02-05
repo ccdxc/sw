@@ -22,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/rolloutclient"
 	"github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/utils"
+	rolloututils "github.com/pensando/sw/venice/ctrler/rollout/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -417,7 +418,8 @@ func RegisterSmartNICRegistrationServer(smgr *cache.Statemgr) {
 			smartnic.HealthWatchInterval,
 			smartnic.DeadInterval,
 			globals.NmdRESTPort,
-			smgr)
+			smgr,
+			rolloututils.VersionChecker{})
 		if err != nil {
 			time.Sleep(apiClientWaitTimeMsec * time.Millisecond)
 			continue

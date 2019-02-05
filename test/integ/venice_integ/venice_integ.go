@@ -200,9 +200,11 @@ func NewVeniceIntegSuite(cfg SuiteConfig) VeniceSuite {
 func (it *veniceIntegSuite) APIClient() pencluster.ClusterV1Interface {
 	return it.apisrvClient.ClusterV1()
 }
+func (it *veniceIntegSuite) CheckNICVersionForAdmission(nicSku string, nicVersion string) (string, string) {
+	return "", ""
+}
 
 func (it *veniceIntegSuite) launchCMDServer() {
-
 	// create an RPC server for SmartNIC service
 	rpcServer, err := rpckit.NewRPCServer("smartNIC", smartNICServerURL, rpckit.WithTLSProvider(nil))
 	if err != nil {
@@ -220,7 +222,8 @@ func (it *veniceIntegSuite) launchCMDServer() {
 		smartnic.HealthWatchInterval,
 		smartnic.DeadInterval,
 		globals.NmdRESTPort,
-		cache.NewStatemgr())
+		cache.NewStatemgr(),
+		it)
 
 	if err != nil {
 		log.Fatalf("Error creating Smart NIC server: %v", err)

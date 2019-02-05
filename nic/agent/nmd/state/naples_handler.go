@@ -155,9 +155,11 @@ func (n *NMD) StartManagedMode() error {
 					},
 					// TODO: get these from platform
 					Status: cmd.SmartNICStatus{
-						AdmissionPhase: cmd.SmartNICStatus_REGISTERING.String(),
-						SerialNum:      "0x0123456789ABCDEFghijk",
-						PrimaryMAC:     mac,
+						AdmissionPhase:  cmd.SmartNICStatus_REGISTERING.String(),
+						SerialNum:       "0x0123456789ABCDEFghijk",
+						PrimaryMAC:      mac,
+						SmartNICVersion: "ver1",
+						SmartNICSku:     "naples1",
 					},
 				}
 			}

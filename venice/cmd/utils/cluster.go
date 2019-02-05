@@ -86,8 +86,9 @@ type ContainerInfo struct {
 
 // ImageConfig is created by Installer containing info about various images and other dynamic info about image
 type ImageConfig struct {
-	ImageMap     map[string]string `json:"imageMap,omitempty"`
-	UpgradeOrder []string          `json:"upgradeOrder,omitempty"`
+	ImageMap                map[string]string   `json:"imageMap,omitempty"`
+	UpgradeOrder            []string            `json:"upgradeOrder,omitempty"`
+	SupportedNaplesVersions map[string][]string `json:"supportedNaplesVersions,omitempty"`
 }
 
 func readImageConfigFile(imageConfig *ImageConfig) error {
@@ -126,4 +127,11 @@ func GetUpgradeOrder() []string {
 	var imageConfig ImageConfig
 	readImageConfigFile(&imageConfig)
 	return imageConfig.UpgradeOrder
+}
+
+// GetSupportedNaplesVersions reads config file and returns the compatible naples versions
+func GetSupportedNaplesVersions() map[string][]string {
+	var imageConfig ImageConfig
+	readImageConfigFile(&imageConfig)
+	return imageConfig.SupportedNaplesVersions
 }

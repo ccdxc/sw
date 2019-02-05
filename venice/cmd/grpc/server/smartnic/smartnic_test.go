@@ -16,18 +16,18 @@ import (
 
 	"google.golang.org/grpc/grpclog"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
 	api_cache "github.com/pensando/sw/api/cache"
 	apicache "github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
-	nmd "github.com/pensando/sw/nic/agent/nmd"
+	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	proto "github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	cmdapi "github.com/pensando/sw/venice/cmd/apiclient"
 	"github.com/pensando/sw/venice/cmd/cache"
@@ -41,7 +41,7 @@ import (
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/events/recorder"
-	store "github.com/pensando/sw/venice/utils/kvstore/store"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -94,6 +94,10 @@ func isErrorResponse(r *grpc.RegisterNICResponse) bool {
 	return phase == cmd.SmartNICStatus_REJECTED.String() || phase == cmd.SmartNICStatus_UNKNOWN.String()
 }
 
+func (t testInfo) CheckNICVersionForAdmission(nicSku string, nicVersion string) (string, string) {
+	return "", ""
+}
+
 // runRPCServer creates a smartNIC server for SmartNIC service.
 func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, error) {
 	var err error
@@ -131,7 +135,7 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 	cmdenv.UnauthRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer, err = NewRPCServer(tInfo, healthInterval, deadtimeInterval, getRESTPort(1), cmdenv.StateMgr)
+	tInfo.smartNICServer, err = NewRPCServer(tInfo, healthInterval, deadtimeInterval, getRESTPort(1), cmdenv.StateMgr, tInfo)
 	if err != nil {
 		fmt.Printf("Error creating SmartNIC RPC server: %v", err)
 		return nil, err
@@ -507,7 +511,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 
 	// Pre-create some Hosts to simulate the case of prior
 	// Host creation by Orchestrator (VC-hub)
-	for ii, _ := range testCases {
+	for ii := range testCases {
 		host := &cmd.Host{
 			ObjectMeta: api.ObjectMeta{
 				Name: testCases[ii].hostName,
@@ -787,22 +791,22 @@ func TestRegisterSmartNICProtocolErrors(t *testing.T) {
 	smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
 
 	invalidAdmReqs := []grpc.RegisterNICRequest{
-		grpc.RegisterNICRequest{},
-		grpc.RegisterNICRequest{
+		{},
+		{
 			AdmissionRequest: &grpc.NICAdmissionRequest{
 				Nic:                    cmd.SmartNIC{},
 				Cert:                   cert,
 				ClusterCertSignRequest: csr.Raw,
 			},
 		},
-		grpc.RegisterNICRequest{
+		{
 			AdmissionRequest: &grpc.NICAdmissionRequest{
 				Nic:                    nic,
 				Cert:                   nil,
 				ClusterCertSignRequest: csr.Raw,
 			},
 		},
-		grpc.RegisterNICRequest{
+		{
 			AdmissionRequest: &grpc.NICAdmissionRequest{
 				Nic:                    nic,
 				Cert:                   cert,
@@ -817,6 +821,7 @@ func TestRegisterSmartNICProtocolErrors(t *testing.T) {
 		err = stream.Send(&req)
 		AssertOk(t, err, "Error sending request")
 		resp, err := stream.Recv()
+		AssertOk(t, err, "Error receiving response")
 		Assert(t, resp.AuthenticationRequest == nil, "Authentication request despite invalid admission request %v: %v", i, resp)
 		Assert(t, isErrorResponse(resp), fmt.Sprintf("No error with invalid request %v: %v", i, resp))
 		verifySmartNICObj(t, nicName, false, "")
@@ -824,14 +829,14 @@ func TestRegisterSmartNICProtocolErrors(t *testing.T) {
 
 	// now test protocols errors in Phase 2
 	invalidChallengeResp := []grpc.RegisterNICRequest{
-		grpc.RegisterNICRequest{},
-		grpc.RegisterNICRequest{
+		{},
+		{
 			AuthenticationResponse: nil,
 		},
-		grpc.RegisterNICRequest{
+		{
 			AuthenticationResponse: &grpc.AuthenticationResponse{},
 		},
-		grpc.RegisterNICRequest{
+		{
 			AuthenticationResponse: &grpc.AuthenticationResponse{
 				ChallengeResponse: []byte("invalid"),
 			},
