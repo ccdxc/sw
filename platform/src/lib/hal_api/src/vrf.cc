@@ -50,8 +50,6 @@ end:
 
 HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
 {
-    NIC_LOG_DEBUG("HalVrf create uplink: {}", uplink->GetId());
-
     this->type = type;
     this->uplink = uplink;
 }
