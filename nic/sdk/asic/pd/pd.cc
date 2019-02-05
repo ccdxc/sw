@@ -503,6 +503,7 @@ asicpd_hbm_table_entry_write (uint32_t tableid,
                                                 &tbl_ctx.hbm_layout, &tbl_ctx);
     ret = capri_hbm_table_entry_write(tableid, index, hwentry,
                                       entry_size, cap_tbl_info);
+
     uint64_t    entry_addr = (index * cap_tbl_info.entry_width);
     ret |= capri_hbm_table_entry_cache_invalidate(tbl_ctx.gress == P4_GRESS_INGRESS,
                                                   entry_addr, cap_tbl_info);

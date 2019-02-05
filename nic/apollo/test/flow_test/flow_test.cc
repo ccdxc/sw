@@ -189,6 +189,50 @@ TEST_F(flow_gtest, DISABLED_p4pd_actiondata_appdata_get) {
     }
 }
 
+static void
+flow_test_time_profile_print() {
+    printf("TABLE_LIB_MEMHASH_INSERT        = %09ld\n", 
+           time_profile_total(sdk::utils::time_profile::TABLE_LIB_MEMHASH_INSERT) -
+           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_READ) -
+           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_INSTALL) -
+           time_profile_total(sdk::utils::time_profile::COMPUTE_CRC));
+    printf("COMPUTE_CRC                     = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::COMPUTE_CRC));
+    printf("P4PD_HWKEY_HWMASK_BUILD         = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::P4PD_HWKEY_HWMASK_BUILD));
+    printf("P4PD_ENTRY_READ                 = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_READ) - 
+           time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ));
+    printf("ASICPD_HBM_TABLE_ENTRY_READ     = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ) -
+           time_profile_total(sdk::utils::time_profile::ASIC_MEM_READ));
+    printf("ASIC_MEM_READ                   = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::ASIC_MEM_READ) -
+           time_profile_total(sdk::utils::time_profile::PAL_MEM_RD));
+    printf("PAL_MEM_RD                      = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::PAL_MEM_RD));
+    printf("P4PD_ENTRY_INSTALL              = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_INSTALL) - 
+           time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE));
+    printf("ASICPD_HBM_TABLE_ENTRY_WRITE    = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE) -
+           time_profile_total(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE) -
+           time_profile_total(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE));
+    printf("CAPRI_HBM_TABLE_ENTRY_WRITE     = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE) -
+           time_profile_total(sdk::utils::time_profile::ASIC_MEM_WRITE));
+    printf("CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE));
+    printf("ASIC_MEM_WRITE                  = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::ASIC_MEM_WRITE) -
+           time_profile_total(sdk::utils::time_profile::PAL_MEM_WR));
+    printf("PAL_MEM_WR                      = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::PAL_MEM_WR));
+    printf("PAL_REG_WRITE                   = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::PAL_REG_WRITE));
+    printf("PAL_REG_READ                    = %09ld\n",
+           time_profile_total(sdk::utils::time_profile::PAL_REG_READ));
+}
 
 // print help message showing usage of HAL
 static void inline
@@ -233,6 +277,7 @@ main (int argc, char **argv)
 
     ::testing::InitGoogleTest(&argc, argv);
     ret = RUN_ALL_TESTS();
-    time_profile_print();
+
+    flow_test_time_profile_print();
     return ret;
 }
