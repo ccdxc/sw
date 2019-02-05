@@ -47,19 +47,19 @@ MODULE_PARM_DESC(log_level, "logging level: 0=EMERG,1=ALERT,2=CRIT,3=ERR,4=WARN(
 
 bool sonic_rate_limit_src_en = true;
 module_param(sonic_rate_limit_src_en, bool, 0444);
-MODULE_PARM_DESC(rate_limit_src_en, "Source rate limiting enable (default=true)");
+MODULE_PARM_DESC(sonic_rate_limit_src_en, "Source rate limiting enable (default=true)");
 
 bool sonic_rate_limit_dst_en = false;
 module_param(sonic_rate_limit_dst_en, bool, 0444);
-MODULE_PARM_DESC(rate_limit_dst_en, "Destination rate limiting enable (default=false)");
+MODULE_PARM_DESC(sonic_rate_limit_dst_en, "Destination rate limiting enable (default=false)");
 
 bool sonic_chain_rate_limit_src_en = true;
 module_param(sonic_chain_rate_limit_src_en, bool, 0444);
-MODULE_PARM_DESC(chain_rate_limit_src_en, "Chaining source rate limiting enable (default=true)");
+MODULE_PARM_DESC(sonic_chain_rate_limit_src_en, "Chaining source rate limiting enable (default=true)");
 
 bool sonic_chain_rate_limit_dst_en = false;
 module_param(sonic_chain_rate_limit_dst_en, bool, 0444);
-MODULE_PARM_DESC(chain_rate_limit_dst_en, "Chaining destination rate limiting enable (default=false)");
+MODULE_PARM_DESC(sonic_chain_rate_limit_dst_en, "Chaining destination rate limiting enable (default=false)");
 
 int body(void);
 
