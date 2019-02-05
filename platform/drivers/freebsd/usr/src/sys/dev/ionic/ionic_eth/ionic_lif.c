@@ -351,7 +351,6 @@ static irqreturn_t ionic_adminq_isr(int irq, void *data)
 
 static int _ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 {
-	struct rx_filter *f;
 	int err;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
@@ -361,58 +360,52 @@ static int _ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 		},
 	};
 
-	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
-	f = ionic_rx_filter_by_addr(lif, addr);
-	if (f != NULL) {
-		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
-		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "duplicate address\n");
-		return EINVAL;
-	}
-
 	memcpy(ctx.cmd.rx_filter_add.mac.addr, addr, ETH_ALEN);
 
+	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "Debug: Pushing add: ");
+
 	err = ionic_adminq_post_wait(lif, &ctx);
-	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "rx_filter add (filter id %d), err: %d",
-		    ctx.comp.rx_filter_add.filter_id, err);
-	if (err) {
-		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+	if (err)
 		return err;
-	}
 
-	err = ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
-	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "rx_filter add (filter id %d)",
+		    ctx.comp.rx_filter_add.filter_id);
 
-	return err;
+	return ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
 }
 
 static int _ionic_lif_addr_del(struct lif *lif, const u8 *addr)
 {
-	struct rx_filter *f;
-	int err;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_del = {
 			.opcode = CMD_OPCODE_RX_FILTER_DEL,
 		},
 	};
+	struct rx_filter *f;
+	int err;
 
-	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
+	//IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 
 	f = ionic_rx_filter_by_addr(lif, addr);
 	if (!f) {
-		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+	//	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 		IONIC_NETDEV_ERROR(lif->netdev, "Failed to delete filter. Not created\n");
 		return ENOENT;
 	}
 
 	ctx.cmd.rx_filter_del.filter_id = f->filter_id;
 	ionic_rx_filter_free(lif, f);
-	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+	//IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
-	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "rx_filter delete (filter id: %d), err: %d",
-						   ctx.cmd.rx_filter_del.filter_id, err);
-	return err;
+	if (err)
+		return err;
+
+	IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "Debug: Pushing del (filter id: %d): ",
+						   ctx.cmd.rx_filter_del.filter_id);
+
+	return 0;
 }
 
 static void ionic_lif_addr_work(struct work_struct *work)
@@ -602,7 +595,8 @@ void ionic_set_multi(struct lif* lif)
 		bcopy(LLADDR((struct sockaddr_dl *) ifma->ifma_addr),
 		    mc_addr.addr, ETHER_ADDR_LEN);
 
-		IONIC_NETDEV_ADDR_INFO(lif->netdev, mc_addr.addr, "MC list[%d]: ", mcnt);
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, mc_addr.addr, "Debug: New MC: ");
+
 		/*
 		 * Check if addr is present.
 		 *  - Yes: Mark is as visited
@@ -624,12 +618,10 @@ void ionic_set_multi(struct lif* lif)
 	 */
 	j = 0;
 	for (i = 0 ; i < lif->num_mc_addrs; i++) {
-		IONIC_NETDEV_ADDR_INFO(lif->netdev, lif->mc_addrs[i].addr, "current[%d]", i);
-		f = ionic_rx_filter_by_addr(lif, lif->mc_addrs[i].addr);
-		if (f == NULL)
-			continue;
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, lif->mc_addrs[i].addr, "Debug: Curr MC: ");
+			f = ionic_rx_filter_by_addr(lif, lif->mc_addrs[i].addr);
 		if (!f->visited) {
-			IONIC_NETDEV_ADDR_INFO(lif->netdev, lif->mc_addrs[i].addr, "deleting");
+			IONIC_NETDEV_ADDR_INFO(lif->netdev, lif->mc_addrs[i].addr, "Debug: Del MC: ");
 			ionic_addr_del(ifp, lif->mc_addrs[i].addr);
 		} else {
 			bcopy(lif->mc_addrs[i].addr, lif->mc_addrs[j++].addr,
@@ -645,7 +637,7 @@ void ionic_set_multi(struct lif* lif)
 	 *  - else: STOP
 	 */
 	for (i = 0; i < num_new_mc_addrs && lif->num_mc_addrs < max_maddrs; i++) {
-		IONIC_NETDEV_ADDR_INFO(lif->netdev, new_mc_addrs[i].addr, "program");
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, new_mc_addrs[i].addr, "Debug: Add MC: ");
 		ionic_addr_add(ifp, new_mc_addrs[i].addr);
 		bcopy(new_mc_addrs[i].addr,
 			  lif->mc_addrs[lif->num_mc_addrs++].addr,
