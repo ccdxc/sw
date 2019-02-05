@@ -890,8 +890,10 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		    index, upper_dev->name);
 
 	lif = ionic_lif_alloc(ionic, index);
-	if (IS_ERR(lif))
+	if (IS_ERR(lif)) {
+		ionic_slave_free(ionic, index);
 		return NULL;
+	}
 
 	lif->upper_dev = upper_dev;
 	err = ionic_lif_init(lif);
@@ -965,6 +967,7 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 err_out_deinit_slave:
 	ionic_lif_deinit(lif);
 err_out_free_slave:
+	list_del(&lif->list);
 	ionic_lif_free(lif);
 
 	return NULL;
