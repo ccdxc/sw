@@ -106,6 +106,8 @@ func modeManagedCmdHandler(cmd *cobra.Command, args []string) error {
 		} else {
 			return fmt.Errorf("Invalid network mode '%s', must be 'oob' for out of band or 'inband' for inband network management", networkMode)
 		}
+	} else if modeVal == nmd.MgmtMode_HOST {
+		networkModeVal = nmd.NetworkMode_NONE
 	}
 
 	featureVal := naplesGetCfg.Spec.Profile
@@ -124,6 +126,8 @@ func modeManagedCmdHandler(cmd *cobra.Command, args []string) error {
 		default:
 			return fmt.Errorf("Not valid feature profile")
 		}
+	} else if modeVal == nmd.MgmtMode_NETWORK {
+		featureVal = nmd.NaplesSpec_NONE
 	}
 
 	if cmd.Flags().Changed("controllers") {
