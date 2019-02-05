@@ -970,12 +970,21 @@ func NewRProxyHandler(path, trim, prefix, destination string, svcProf apigw.Serv
 	}
 	if tlsp != nil {
 		tr := http.DefaultTransport.(*http.Transport)
-		tr.TLSClientConfig, err = tlsp.GetClientTLSConfig(destination)
+		// make a transport with values copied over from DefaultTransport
+		trCopy := &http.Transport{
+			Proxy:                 tr.Proxy,
+			DialContext:           tr.DialContext,
+			MaxIdleConns:          tr.MaxIdleConns,
+			IdleConnTimeout:       tr.IdleConnTimeout,
+			TLSHandshakeTimeout:   tr.TLSHandshakeTimeout,
+			ExpectContinueTimeout: tr.ExpectContinueTimeout,
+		}
+		trCopy.TLSClientConfig, err = tlsp.GetClientTLSConfig(destination)
 		if err != nil {
 			return nil, errors.Wrap(err, "GetClientTLSConfig")
 		}
-		tr.TLSClientConfig.ServerName = destination
-		ret.proxy.Transport = tr
+		trCopy.TLSClientConfig.ServerName = destination
+		ret.proxy.Transport = trCopy
 		ret.scheme = "https://"
 	} else {
 		ret.scheme = "http://"

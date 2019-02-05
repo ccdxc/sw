@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"mime/multipart"
 	"net/http"
@@ -49,9 +50,15 @@ func uploadFile(ctx context.Context, filename string, metadata map[string]string
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: transport}
-	_, err = client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return 0, errors.Wrap(err, "Sending req")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		By(fmt.Sprintf("Did not get a success on upload [%v]", string(body)))
+		return 0, fmt.Errorf("failed to get upload [%v][%v]", resp.Status, string(body))
 	}
 	return written, nil
 }
