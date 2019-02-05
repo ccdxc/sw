@@ -558,6 +558,7 @@ func (c *IPClient) Start() error {
 
 // Stop function stops IPClient's goroutines
 func (c *IPClient) Stop() {
+	os.Remove(rebootPendingPath)
 	if c.isDynamic {
 		killDhclient()
 		c.doneEvent <- true
