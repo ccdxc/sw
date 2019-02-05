@@ -5800,18 +5800,6 @@ class capri_table_mapper:
 
     def map_tcam_tables(self, region):
         self.memory['tcam'][region]['space'] = [[0 for x in range(self.memory['tcam'][region]['width'])] for y in range(self.memory['tcam'][region]['depth'])]
-
-        for i in range(len(self.tables['tcam'][region])):
-            for j in range(i+1, len(self.tables['tcam'][region])):
-                if self.tables['tcam'][region][i]['depth'] < self.tables['tcam'][region][j]['depth']:
-                    temp = self.tables['tcam'][region][i]
-                    self.tables['tcam'][region][i] = self.tables['tcam'][region][j]
-                    self.tables['tcam'][region][j] = temp
-                elif self.tables['tcam'][region][i]['depth'] == self.tables['tcam'][region][j]['depth'] and \
-                     self.tables['tcam'][region][i]['width'] < self.tables['tcam'][region][j]['width']:
-                    temp = self.tables['tcam'][region][i]
-                    self.tables['tcam'][region][i] = self.tables['tcam'][region][j]
-                    self.tables['tcam'][region][j] = temp
         return
 
     def map_sram_tables(self, region):
