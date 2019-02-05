@@ -1000,7 +1000,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     sdk_ret_t                               sdk_ret;
     input_properties_swkey_t                key;
     input_properties_otcam_swkey_mask_t     *key_mask = NULL;
-    input_properties_actiondata_t             data;
+    input_properties_actiondata_t           data;
     if_t                                    *hal_if = (if_t *)pd_enicif->pi_if;
     if_t                                    *uplink = NULL;
     lif_t                                   *lif = NULL;
@@ -1014,6 +1014,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
 
+#if 0
     // Temporary change to use overflow tcam till we figure out on how
     // to avoid using tunnel_vnid and tunnel_type as key in
     // input_properties table for classic_nic mode.
@@ -1032,6 +1033,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
         // key_mask->vlan_tag_valid_mask = 0xFF;
         // key_mask->p4plus_to_p4_insert_vlan_tag_mask = 0xFF;
     }
+#endif
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     SDK_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
@@ -1134,7 +1136,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     if (oper == TABLE_OPER_INSERT) {
         // Insert
         sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx,
-                                   key_mask, direct_to_otcam);
+                                       key_mask, direct_to_otcam);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("classic: unable to program for "
