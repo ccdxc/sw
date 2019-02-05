@@ -219,39 +219,48 @@ static int ionic_lif_stop(struct lif *lif)
 		ndev = lif->upper_dev;
 	else
 		ndev = lif->netdev;
+
 	netif_tx_stop_all_queues(ndev);
 	netif_tx_disable(ndev);
 	netif_carrier_off(ndev);
 
 	for (i = 0; i < lif->nxqs; i++) {
-		if (lif->txqcqs[i]) {
-			err = ionic_qcq_disable(lif->txqcqs[i]);
-			if (err)
-				break;
-			ionic_lif_qcq_deinit(lif, lif->txqcqs[i]);
-		}
-
 		if (lif->rxqcqs[i]) {
 			err = ionic_qcq_disable(lif->rxqcqs[i]);
 			if (err)
 				break;
-			ionic_rx_flush(&lif->rxqcqs[i]->cq);
-			ionic_lif_qcq_deinit(lif, lif->rxqcqs[i]);
+		}
+		if (lif->txqcqs[i]) {
+			err = ionic_qcq_disable(lif->txqcqs[i]);
+			if (err)
+				break;
 		}
 	}
 
 	ionic_lif_rss_teardown(lif);
 
 	for (i = 0; i < lif->nxqs; i++) {
-		if (lif->rxqcqs[i])
-			ionic_rx_empty(&lif->rxqcqs[i]->q);
-		ionic_qcq_free(lif, lif->rxqcqs[i]);
+		if (lif->txqcqs[i]) {
+			ionic_tx_flush(&lif->txqcqs[i]->cq);
+			ionic_lif_qcq_deinit(lif, lif->txqcqs[i]);
+		}
+		if (lif->rxqcqs[i]) {
+			ionic_rx_flush(&lif->rxqcqs[i]->cq);
+			ionic_lif_qcq_deinit(lif, lif->rxqcqs[i]);
+		}
 	}
+
+	for (i = 0; i < lif->nxqs; i++) {
+		if (lif->txqcqs[i])
+			ionic_qcq_free(lif, lif->txqcqs[i]);
+		if (lif->rxqcqs[i]) {
+			ionic_rx_empty(&lif->rxqcqs[i]->q);
+			ionic_qcq_free(lif, lif->rxqcqs[i]);
+		}
+	}
+
 	devm_kfree(lif->ionic->dev, lif->rxqcqs);
 	lif->rxqcqs = NULL;
-
-	for (i = 0; i < lif->nxqs; i++)
-		ionic_qcq_free(lif, lif->txqcqs[i]);
 	devm_kfree(lif->ionic->dev, lif->txqcqs);
 	lif->txqcqs = NULL;
 

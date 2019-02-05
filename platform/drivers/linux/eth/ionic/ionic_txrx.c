@@ -178,6 +178,16 @@ static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info)
 	return true;
 }
 
+void ionic_rx_flush(struct cq *cq)
+{
+	unsigned int work_done;
+
+	work_done = ionic_cq_service(cq, -1, ionic_rx_service, NULL, NULL);
+
+	if (work_done > 0)
+		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
+}
+
 static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info)
 {
 	struct txq_comp *comp = cq_info->cq_desc;
@@ -188,6 +198,16 @@ static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info)
 	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
 
 	return true;
+}
+
+void ionic_tx_flush(struct cq *cq)
+{
+	unsigned int work_done;
+
+	work_done = ionic_cq_service(cq, -1, ionic_tx_service, NULL, NULL);
+
+	if (work_done > 0)
+		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
 }
 
 static struct sk_buff *ionic_rx_skb_alloc(struct queue *q, unsigned int len,
@@ -303,16 +323,6 @@ void ionic_rx_empty(struct queue *q)
 
 		cur = cur->next;
 	}
-}
-
-void ionic_rx_flush(struct cq *cq)
-{
-	unsigned int work_done;
-
-	work_done = ionic_cq_service(cq, -1, ionic_rx_service, NULL, NULL);
-
-	if (work_done > 0)
-		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
 }
 
 int ionic_rx_napi(struct napi_struct *napi, int budget)
