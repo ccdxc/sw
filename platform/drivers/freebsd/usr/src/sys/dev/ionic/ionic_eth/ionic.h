@@ -90,7 +90,7 @@ MALLOC_DECLARE(M_IONIC);
 /* Print the MAC address. */
 #ifdef __FreeBSD__
 #define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...) 			\
-		IONIC_NETDEV_INFO(dev, fmt " MAC:%6D\n", ##__VA_ARGS__, (addr), ":")
+		IONIC_NETDEV_DEBUG(dev, fmt " MAC: %6D\n", ##__VA_ARGS__, (addr), ":")
 #else
 #define IONIC_NETDEV_ADDR_INFO(dev, addr, fmt, ...) 			\
 		IONIC_NETDEV_INFO(dev, fmt " %pM\n", ##__VA_ARGS__, (addr))
