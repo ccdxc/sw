@@ -114,7 +114,7 @@ TEST_F(filter_test, test2)
 
     lif1->AddVlan(2);
 
-    lif1->AddVlan(3);
+    ret = lif1->AddVlan(3);
     ASSERT_TRUE(ret == HAL_IRISC_RET_FAIL);
 }
 
