@@ -39,6 +39,7 @@ var rootCmd = &cobra.Command{
 	Long:              "\n--------------------------\n Pensando Management CLIs \n--------------------------\n",
 	PersistentPreRunE: cliPreRunInit,
 	DisableAutoGenTag: true,
+	SilenceUsage:      true,
 	Run: func(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Changed("version") {
 			printPenctlVer()
@@ -77,7 +78,7 @@ func init() {
 	}
 	log.SetConfig(logConfig)
 
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "log", "z", false, "debug output")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false, "display penctl debug log")
 	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "display version of penctl")
 	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml format")
 	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", false, "display in json format")
@@ -85,7 +86,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock mode to localhost")
 
 	rootCmd.PersistentFlags().MarkHidden("localhost")
-	rootCmd.PersistentFlags().MarkHidden("log")
 
 	// TODO generate this file only for linux/etc
 	// rootCmd.GenBashCompletionFile("penctl.sh")

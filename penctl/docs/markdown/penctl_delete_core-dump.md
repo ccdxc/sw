@@ -27,6 +27,7 @@ penctl delete core-dump [flags]
 ```
   -j, --json      display in json format
   -t, --tabular   display in tabular format (default true)
+      --verbose   display penctl debug log
   -v, --version   display version of penctl
   -y, --yaml      display in yaml format
 ```

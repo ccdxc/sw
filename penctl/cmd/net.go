@@ -43,9 +43,6 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 	naplesIP = strings.TrimPrefix(naplesURL, "http://")
 	revProxyPort = globals.RevProxyPort
 	naplesURL += ":" + revProxyPort + "/"
-	if verbose {
-		fmt.Println("TODO: Namespace stuff here")
-	}
 	return nil
 }
 

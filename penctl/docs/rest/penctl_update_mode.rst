@@ -27,6 +27,7 @@ Options
   -c, --controllers stringSlice   List of controller IP addresses or hostnames
   -g, --default-gw string         Default GW for mgmt
   -d, --dns-servers stringSlice   List of DNS servers
+  -f, --feature-profile string    default or eth-dev-scale
   -h, --help                      help for mode
   -n, --hostname string           Host name
   -o, --management-mode string    host or network managed (default "network")
@@ -41,6 +42,7 @@ Options inherited from parent commands
 
   -j, --json      display in json format
   -t, --tabular   display in tabular format (default true)
+      --verbose   display penctl debug log
   -v, --version   display version of penctl
   -y, --yaml      display in yaml format
 
