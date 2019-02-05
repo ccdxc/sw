@@ -2107,3 +2107,106 @@ func TestEventsExport(t *testing.T) {
 	// shutting down the TCP/UDP serer will solve the problem (there won't be anyone trying to send events anymore).
 	ti.evtProxyServices.Stop()
 }
+
+// TestEventsExportWithSyslogReconnect tests the events export with TCP syslog server
+// it starts with non-existent syslog server (internally, the code tries to reconnect)
+// meantime, bring up the syslog server and ensure it starts receiving syslog messages.
+func TestEventsExportWithSyslogReconnect(t *testing.T) {
+	// setup events pipeline to record and distribute events
+	ti := tInfo{}
+	AssertOk(t, ti.setup(t), "failed to setup test")
+	defer ti.teardown()
+
+	var wg sync.WaitGroup
+	stopGoRoutines := make(chan struct{})
+
+	// create API server client
+	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
+	AssertOk(t, err, "failed to create API server client, err: %v", err)
+	defer apiClient.Close()
+
+	// add event policy - 1
+	eventPolicy1 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-6",
+		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
+		[]*monitoring.ExportConfig{
+			{ // receivedMsgsAtTCPServer1
+				Destination: "127.0.0.1",
+				Transport:   fmt.Sprintf("tcp/%s", "45000"),
+			},
+		}, nil)
+	eventPolicy1, err = apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
+	AssertOk(t, err, "failed to create event policy, err: %v", err)
+	defer apiClient.MonitoringV1().EventPolicy().Delete(context.Background(), eventPolicy1.GetObjectMeta())
+
+	// syslog will try reconnecting during this time
+	time.Sleep(1 * time.Second)
+
+	// start TCP server - 1 to receive syslog messages
+	ln1, receiveMsgsAtTCPServer, err := serviceutils.StartTCPServer("127.0.0.1:45000")
+	AssertOk(t, err, "failed to start TCP server, err: %v", err)
+	defer ln1.Close()
+
+	// record events
+	wg.Add(1)
+	count := 0
+	go func() {
+		defer wg.Done()
+		recorderEventsDir, err := ioutil.TempDir("", t.Name())
+		AssertOk(t, err, "failed to create recorder events directory")
+		defer os.RemoveAll(recorderEventsDir)
+
+		testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: uuid.NewV4().String()}
+		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+			Source:       testEventSource,
+			EvtTypes:     testEventTypes,
+			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:    recorderEventsDir}, ti.logger)
+		if err != nil {
+			log.Errorf("failed to create recorder, err: %v", err)
+			return
+		}
+
+		for {
+			count++
+			select {
+			case <-stopGoRoutines:
+				return
+			case <-time.After(100 * time.Millisecond):
+				evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("message-%d", count), nil)
+			}
+		}
+	}()
+
+	// receive messages from the syslog server
+	wg.Add(1)
+	receivedMsgs := 0
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-stopGoRoutines:
+				return
+			case msg, ok := <-receiveMsgsAtTCPServer:
+				if !ok {
+					return
+				}
+				if !syslog.ValidateSyslogMessage(monitoring.MonitoringExportFormat_SYSLOG_RFC5424, msg) {
+					log.Fatalf("invalid message format, expected: RFC5424, got: %v", msg)
+				}
+				receivedMsgs++
+			}
+		}
+	}()
+
+	// ensure the syslog server receives
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			if receivedMsgs == count {
+				return true, nil
+			}
+			return true, fmt.Sprintf("expected: %d messages to be received on the TCP syslog server, got: %d", count, receivedMsgs)
+		}, "syslog server did not receive the expected messages", "20ms", "2s")
+
+	close(stopGoRoutines)
+	wg.Wait()
+}

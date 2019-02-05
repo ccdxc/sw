@@ -27,8 +27,8 @@ type SyslogExporter struct {
 	chLen  int        // buffer or channel len
 	logger log.Logger // logger
 
-	// writers connecting to different syslog servers/targets
-	writers []syslog.Writer
+	// list of syslog writers
+	writers *writers
 
 	// to receive events from the proxy (dispatcher)
 	eventsChan          events.Chan          // channel to receive
@@ -44,8 +44,16 @@ type SyslogExporter struct {
 	shutdown chan struct{}  // to send shutdown signal to the exporter
 }
 
+// represents the list of syslog writers belongs to this exporter
+type writers struct {
+	sync.Mutex
+
+	// ws connecting to different syslog servers/targets
+	ws []syslog.Writer
+}
+
 // NewSyslogExporter creates a syslog exporter which sends events to different syslog servers/targets.
-func NewSyslogExporter(name string, chLen int, writers []syslog.Writer,
+func NewSyslogExporter(name string, chLen int, syslogWriters []syslog.Writer,
 	logger log.Logger) (events.Exporter, error) {
 	if utils.IsEmpty(name) || chLen <= 0 || logger == nil {
 		return nil, fmt.Errorf("exporter name, channel length and logger is required")
@@ -56,7 +64,7 @@ func NewSyslogExporter(name string, chLen int, writers []syslog.Writer,
 		name:       name,
 		chLen:      chLen,
 		logger:     logger.WithContext("submodule", fmt.Sprintf("exporter.%s", name)),
-		writers:    writers,
+		writers:    &writers{ws: syslogWriters},
 		shutdown:   make(chan struct{}, 1),
 		ctx:        ctx,
 		cancelFunc: cancelFunc,
@@ -91,13 +99,27 @@ func (s *SyslogExporter) Stop() {
 
 		s.wg.Wait()
 
-		for _, writer := range s.writers {
+		s.writers.Lock()
+		for _, writer := range s.writers.ws {
 			writer.Close()
 		}
+		s.writers.Unlock()
 
 		fileOffset, _ := s.GetLastProcessedOffset()
 		s.logger.Debugf("exporter {%s} stopping at offset: %v", s.name, fileOffset)
 	})
+}
+
+// AddWriter adds given writer to syslog exporter
+func (s *SyslogExporter) AddWriter(writer interface{}) {
+	syslogWriter, ok := writer.(syslog.Writer)
+	if !ok {
+		s.logger.Errorf("invalid writer: %v", writer)
+		return
+	}
+	s.writers.Lock()
+	s.writers.ws = append(s.writers.ws, syslogWriter)
+	s.writers.Unlock()
 }
 
 // Name returns the name of the exporter
@@ -115,7 +137,8 @@ func (s *SyslogExporter) WriteEvents(evts []*evtsapi.Event) error {
 	var err error
 	for _, evt := range evts {
 		sMsg := s.GenerateSyslogMessage(evt)
-		for _, writer := range s.writers {
+		s.writers.Lock()
+		for _, writer := range s.writers.ws {
 			switch evtsapi.SeverityLevel(evtsapi.SeverityLevel_value[evt.GetSeverity()]) {
 			case evtsapi.SeverityLevel_INFO:
 				err = writer.Info(sMsg)
@@ -129,6 +152,7 @@ func (s *SyslogExporter) WriteEvents(evts []*evtsapi.Event) error {
 				s.logger.Errorf("{exporter %s} failed to write syslog message: %v, err: %v", s.name, sMsg, err)
 			}
 		}
+		s.writers.Unlock()
 	}
 
 	return err

@@ -134,6 +134,10 @@ func (v *VeniceExporter) Stop() {
 	})
 }
 
+// AddWriter adds the given writer to venice exporter
+func (v *VeniceExporter) AddWriter(writer interface{}) {
+}
+
 // Name returns the name of the exporter
 func (v *VeniceExporter) Name() string {
 	return v.name

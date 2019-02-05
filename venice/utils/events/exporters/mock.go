@@ -72,6 +72,10 @@ func (m *MockExporter) Stop() {
 	m.wg.Wait()
 }
 
+// AddWriter adds
+func (m *MockExporter) AddWriter(writer interface{}) {
+}
+
 // Name returns the name of the mock exporter
 func (m *MockExporter) Name() string {
 	return m.name

@@ -114,6 +114,9 @@ type Exporter interface {
 	// losing any event.
 	GetLastProcessedOffset() (int64, error)
 
+	// adds the given writer to exporter
+	AddWriter(interface{})
+
 	// TODO Filters()
 }
 

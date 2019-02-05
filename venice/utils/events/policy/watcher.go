@@ -175,7 +175,7 @@ func (w *Watcher) watchEventPolicy(ctx context.Context) error {
 			case api.EventType_UpdateEvent:
 				w.policyMgr.Update(evt.Policy)
 			case api.EventType_DeleteEvent:
-				w.policyMgr.Create(evt.Policy)
+				w.policyMgr.Delete(evt.Policy)
 			}
 		}
 	}
