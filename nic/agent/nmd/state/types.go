@@ -193,27 +193,24 @@ func (n *NMD) GetIPClient() *IPClient {
 // UpdateFeatureProfile updates feature profile
 func (n *NMD) UpdateFeatureProfile(profile nmd.NaplesSpec_FeatureProfile) error {
 	var deviceSpec device.SystemSpec
-
+	var err error
 	deviceSpec.FwdMode = device.ForwardingMode_FORWARDING_MODE_CLASSIC
 	if profile == nmd.NaplesSpec_CLASSIC_ETH_DEV_SCALE {
 		deviceSpec.FeatureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE
-	} else if profile == nmd.NaplesSpec_CLASSIC_DEFAULT {
-		deviceSpec.FeatureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_DEFAULT
-	} else if profile == nmd.NaplesSpec_NONE {
-		deviceSpec.FeatureProfile = device.FeatureProfile_FEATURE_PROFILE_NONE
-	}
-
-	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
-	if _, err := os.Stat(globals.NaplesModeConfigFile); os.IsNotExist(err) {
-		os.MkdirAll(path.Dir(globals.NaplesModeConfigFile), 0664)
-	}
-	data, err := json.MarshalIndent(deviceSpec, "", "  ")
-	if err != nil {
-		log.Errorf("Failed to marshal device spec. Err: %v", err)
-		return err
-	}
-	if err = ioutil.WriteFile(globals.NaplesModeConfigFile, data, 0444); err != nil {
-		log.Errorf("Failed to write feature profile to %s. Err: %v", globals.NaplesModeConfigFile, err)
+		// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
+		if _, err := os.Stat(globals.NaplesModeConfigFile); os.IsNotExist(err) {
+			os.MkdirAll(path.Dir(globals.NaplesModeConfigFile), 0664)
+		}
+		data, err := json.MarshalIndent(deviceSpec, "", "  ")
+		if err != nil {
+			log.Errorf("Failed to marshal device spec. Err: %v", err)
+			return err
+		}
+		if err = ioutil.WriteFile(globals.NaplesModeConfigFile, data, 0444); err != nil {
+			log.Errorf("Failed to write feature profile to %s. Err: %v", globals.NaplesModeConfigFile, err)
+		}
+	} else {
+		err = os.Remove(globals.NaplesModeConfigFile)
 	}
 
 	return err
