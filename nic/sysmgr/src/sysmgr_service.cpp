@@ -14,8 +14,11 @@
 
 using namespace std;
 
-SysmgrService::SysmgrService(delphi::SdkPtr sdk, string name, shared_ptr<Pipe<pid_t> > started_pids_pipe, 
-    shared_ptr<Pipe<int32_t> > delphi_message_pipe, shared_ptr<Pipe<pid_t> > heartbeat_pipe)
+SysmgrService::SysmgrService(delphi::SdkPtr sdk, string name,
+    shared_ptr<Pipe<pid_t> > started_pids_pipe, 
+    shared_ptr<Pipe<int32_t> > delphi_message_pipe,
+    shared_ptr<Pipe<pid_t> > heartbeat_pipe,
+    shared_ptr<Pipe<int> > shutdown_pipe)
 {
     this->sdk = sdk;
     this->name = name;
@@ -23,14 +26,17 @@ SysmgrService::SysmgrService(delphi::SdkPtr sdk, string name, shared_ptr<Pipe<pi
 
     serviceStatusReactor = make_shared<SysmgrServiceStatusReactor>(started_pids_pipe);
     heartbeatReactor = make_shared<DelphiClientStatusReactor>(heartbeat_pipe);
+    shutdownReactor = make_shared<ShutdownRequestReactor>(shutdown_pipe);
 
     delphi::objects::SysmgrProcessStatus::Mount(this->sdk, delphi::ReadWriteMode);
     delphi::objects::SysmgrSystemStatus::Mount(this->sdk, delphi::ReadWriteMode);
     delphi::objects::SysmgrServiceStatus::Mount(this->sdk, delphi::ReadMode);
     delphi::objects::DelphiClientStatus::Mount(this->sdk, delphi::ReadMode);
+    delphi::objects::SysmgrShutdownReq::Mount(this->sdk, delphi::ReadMode);
     
     delphi::objects::SysmgrServiceStatus::Watch(this->sdk, serviceStatusReactor);
     delphi::objects::DelphiClientStatus::Watch(this->sdk, heartbeatReactor);
+    delphi::objects::SysmgrShutdownReq::Watch(this->sdk, shutdownReactor);
 }
 
 void SysmgrService::OnMountComplete()

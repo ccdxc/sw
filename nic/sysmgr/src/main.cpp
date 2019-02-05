@@ -43,6 +43,7 @@ static auto started_pids = make_shared<Pipe<pid_t>>();
 static auto delphi_messages = make_shared<Pipe<int32_t>>();
 static auto heartbeats = make_shared<Pipe<pid_t>>();
 static auto quit_pipe = make_shared<Pipe<int>>();
+static auto reload_pipe = make_shared<Pipe<int>>();
 
 const pid_t mypid = getpid();
 string log_location = "/var/log/sysmgr";
@@ -156,6 +157,14 @@ pid_t launch(const string &name, const string &command)
     return pid;
 }
 
+void switch_root()
+{
+    kill(-mypid, SIGTERM);
+    execlp("/nic/tools/switch_rootfs.sh", "altfw", NULL);
+    fprintf(stderr, "Switch root failed");
+    exit(-1);
+}
+
 void sigchld_handler(int sig)
 {
     pid_t pid;
@@ -197,7 +206,12 @@ void wait_for_events(Scheduler &scheduler, int epollfd, int sleep)
     logger->debug("Number of events: {}", fds);
     for (int i = 0; i < fds; i++)
     {
-        if (events[i].data.fd == died_pids->raw_fd())
+	if (events[i].data.fd == reload_pipe->raw_fd())
+	{
+	    logger->info("Reloading...");
+	    switch_root();
+	}
+        else if (events[i].data.fd == died_pids->raw_fd())
         {
             logger->info("died_pids event");
             died_pid_t dp;
@@ -288,6 +302,7 @@ void loop(Scheduler &scheduler, shared_ptr<SysmgrService> delphi_svc)
     epollfd_register(epollfd, delphi_messages->raw_fd());
     epollfd_register(epollfd, heartbeats->raw_fd());
     epollfd_register(epollfd, quit_pipe->raw_fd());
+    epollfd_register(epollfd, reload_pipe->raw_fd());
 
     for (;;)
     {
@@ -316,7 +331,6 @@ void loop(Scheduler &scheduler, shared_ptr<SysmgrService> delphi_svc)
         }
     }
 }
-
 
 void *delphi_thread_run(void *ctx)
 {
@@ -352,7 +366,8 @@ int main(int argc, char *argv[])
     // The delphi client
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
     shared_ptr<SysmgrService> svc = make_shared<SysmgrService>(sdk,
-        "SystemManager", started_pids, delphi_messages, heartbeats);
+        "SystemManager", started_pids, delphi_messages, heartbeats,
+	reload_pipe);
     sdk->RegisterService(svc);
     logger = penlog::logger_init(sdk, "sysmgr");
 

@@ -6,8 +6,8 @@ import "delphi.proto";
 
 message SysmgrShutdownReq {
     option (delphi.update_event) = true;
-    option (delphi.singleton)    = true;
     delphi.ObjectMeta      Meta  = 1;
+    string                 Key   = 2;
 }
 
 message SysmgrShutdownStatus {

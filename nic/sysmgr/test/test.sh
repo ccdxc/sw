@@ -57,3 +57,5 @@ runtest 10s test-exit-code.json "example2 -> Exited normally with code: 12" \
 
 runtest 60s test-critical-watchdog.json "Expired watchdog process: example2" \
         "sysmgr: Fault"
+
+runtest 60s test-switch-root.json "Reloading..."

@@ -1,0 +1,11 @@
+[{
+    "name": "delphi",
+    "command": "/sw/nic/build/x86_64/iris/bin/delphi_hub",
+    "dependencies": [],
+    "flags": ["no_watchdog"]
+},{
+    "name": "example2",
+    "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example2 --reboot",
+    "dependencies": [],
+    "flags": ["no_watchdog", "non_critical"]
+}]

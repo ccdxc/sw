@@ -11,6 +11,7 @@
 
 #include "delphi_client_status_reactor.hpp"
 #include "sysmgr_service_status_reactor.hpp"
+#include "shutdown_request_reactor.hpp"
 
 #include "scheduler.hpp"
 
@@ -25,10 +26,12 @@ class SysmgrService : public delphi::Service,
     string name;
     shared_ptr<SysmgrServiceStatusReactor> serviceStatusReactor;
     shared_ptr<DelphiClientStatusReactor> heartbeatReactor;
+    shared_ptr<ShutdownRequestReactor> shutdownReactor;
     shared_ptr<Pipe<int32_t> > delphi_message_pipe;
   public:
     SysmgrService(delphi::SdkPtr sdk, string name, shared_ptr<Pipe<pid_t>> started_pids_pipe, 
-        shared_ptr<Pipe<int32_t> > delphi_message_pipe, shared_ptr<Pipe<pid_t> > heartbeat_pipe);
+        shared_ptr<Pipe<int32_t> > delphi_message_pipe, shared_ptr<Pipe<pid_t> > heartbeat_pipe,
+	shared_ptr<Pipe<int> > shutdown_pipe);
     void set_system_fault();
     virtual void OnMountComplete();
     virtual void service_status_changed(const string &name, pid_t pid,
