@@ -22,9 +22,11 @@ DEFAULT_COMMAND_TIMEOUT = 30
 
 HOST_NAPLES_DIR         = "/naples"
 
+running_workloads = {}
 gl_iota_svc_channel = None
 gl_topo_svc_stub = None
 gl_cfg_svc_stub = None
+CurrentTestcase = None
 
 topdir = os.path.dirname(sys.argv[0])
 topdir = os.path.abspath(topdir)
@@ -94,22 +96,51 @@ def ReloadNodes(req):
     Logger.debug("Reloading Nodes:")
     return __rpc(req, gl_topo_svc_stub.ReloadNodes)
 
-def AddWorkloads(req, skip_store=False):
-    global gl_topo_svc_stub
-    Logger.debug("Add Workloads:")
+def IsWorkloadRunning(wl):
+    return wl in running_workloads
+
+def __bringup_workloads(req):
     resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
     if IsApiResponseOk(resp):
-        if not skip_store:
-            store.AddWorkloads(resp)
+        #make testcase directory for new workloads
+        for wlmsg in req.workloads:
+            running_workloads[wlmsg.workload_name] = True
+        if CurrentTestcase:
+            cur_dir = GetCurrentDirectory()
+            ChangeDirectory("")
+            CurrentTestcase.MakeTestcaseDirectory()
+            ChangeDirectory(cur_dir)
+        return resp, types.status.SUCCESS
+    return None, types.status.FAILURE
+
+def __teardown_workloads(req):
+    resp = __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
+    for wlmsg in req.workloads:
+        del running_workloads[wlmsg.workload_name]
+    if IsApiResponseOk(resp):
+        return resp, types.status.SUCCESS
+    return None, types.status.FAILURE
+
+def AddWorkloads(req, skip_store=False, skip_bringup=False):
+    assert(not (skip_store and skip_bringup))
+    global gl_topo_svc_stub
+    Logger.debug("Add Workloads:")
+    resp = None
+    if not skip_bringup:
+        resp, _ = __bringup_workloads(req)
+    else:
+        Logger.debug("Skipping workload bring up.")
+        resp = req
+    if not skip_store:
+        store.AddWorkloads(resp)
     return resp
 
 def DeleteWorkloads(req, skip_store=False):
     global gl_topo_svc_stub
     Logger.debug("Delete Workloads:")
-    resp = __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
-    if IsApiResponseOk(resp):
-        if not skip_store:
-            store.DeleteWorkloads(req)
+    resp, _ = __teardown_workloads(req)
+    if not skip_store:
+        store.DeleteWorkloads(req)
     return resp
 
 def GetWorkloads():
@@ -335,6 +366,11 @@ def AddWorkloadTeardown(req, workload):
     for wl in GetWorkloads():
         if workload.workload_name != wl.workload_name:
             continue
+        for wreq in req.workloads:
+            #Check if it is already added.
+            if wreq.workload_name == workload.workload_name:
+                return
+        assert(IsWorkloadRunning(workload.workload_name))
         wl_msg = req.workloads.add()
         wl_msg.workload_name = wl.workload_name
         wl_msg.node_name = wl.node_name
@@ -344,6 +380,11 @@ def AddWorkloadBringUp(req, workload):
     for wl in GetWorkloads():
         if workload.workload_name != wl.workload_name:
             continue
+        for wreq in req.workloads:
+            #Check if it is already added.
+            if wreq.workload_name == workload.workload_name:
+                return
+        assert(not IsWorkloadRunning(workload.workload_name))
         wl_msg = req.workloads.add()
         wl_msg.ip_prefix = wl.ip_prefix
         wl_msg.ipv6_prefix = wl.ipv6_prefix
@@ -361,18 +402,13 @@ def AddWorkloadBringUp(req, workload):
 
 def Trigger_BringUpWorkloadsRequest(req):
     assert(req.workload_op == topo_svc.ADD)
-    resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
-    if not IsApiResponseOk(resp):
-        return types.status.FAILURE
-    return types.status.SUCCESS
+    resp, ret = __bringup_workloads(req)
+    return ret
 
 def Trigger_TeardownWorkloadsRequest(req):
     assert(req.workload_op == topo_svc.DELETE)
-    resp = __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
-    if not IsApiResponseOk(resp):
-        return types.status.FAILURE
-    return types.status.SUCCESS
-
+    resp, ret = __teardown_workloads(req)
+    return ret
 
 # ================================
 # Wrappers for Trigger APIs
