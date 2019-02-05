@@ -1,0 +1,9 @@
+---
+version: 2.0
+targets:
+  apollo/gtest:
+    commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtest"]
+    owners: ["email:jcruz@pensando.io"]
+    area:
+    sub-area:
+    feature:

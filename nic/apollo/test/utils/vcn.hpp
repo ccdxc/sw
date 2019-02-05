@@ -22,7 +22,7 @@ public:
     /// \brief Create VCN
     ///
     /// \param vnc_id VCN id
-    /// \param pfxstr VCN prefix in string
+    /// \param pfxstr VCN prefix in string form
     /// \param vcn_type VCN type
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error

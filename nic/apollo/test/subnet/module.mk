@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = apollo_vcn_test.gtest
+MODULE_TARGET   = apollo_subnet_test.gtest
 MODULE_PIPELINE = apollo
 MODULE_SOLIBS   = pal ociframework ocicore ociapi ociapi_impl ocitestutils \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \

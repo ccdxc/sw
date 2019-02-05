@@ -5,7 +5,6 @@
 ///
 /// \file
 /// This file contains the vcn test utility routines implementation
-/// This file contains the vcn utility routines for testing
 ///
 //----------------------------------------------------------------------------
 
@@ -26,8 +25,6 @@ vcn_util::create(oci_vcn_id_t vcn_id, std::string pfxstr,
     oci_vcn.type = vcn_type;
     oci_vcn.key.id = vcn_id;
     oci_vcn.pfx = ip_pfx;
-    oci_vcn.pfx.len = 8; // fix this to /8
-    oci_vcn.pfx.addr.addr.v4_addr &= 0xFF000000;
     return (oci_vcn_create(&oci_vcn));
 }
 
