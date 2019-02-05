@@ -2,37 +2,58 @@
 
 unmount_fs()
 {
-        echo "Upgrade Failed !!!"
+    echo "Upgrade Failed !!!"
 
-        umount /new/rw
-        umount /new/mnt
-        umount /new
+    umount /new/rw
+    umount /new/mnt
+    umount /new
 }
 
 usage()
 {
-	echo "Usage: ./switch_rootfs.sh <Image_name>"
-	echo "e.g. ./switch_rootfs.sh mainfwb"
+    echo "Usage: ./switch_rootfs.sh altfw"
 }
 
 mainfwa_partuuid=d4e53be5-7dc1-4199-914c-48edfea92c5e
 mainfwb_partuuid=e2fd6d28-3300-4979-8062-b8ab599f3898
 
 if [ $# -eq 0 ]; then
-	echo "No argument provided"
-	usage
-	exit 1
+    echo "No argument provided"
+    usage
+    exit 1
 fi
 
-if [ "$1" == "mainfwa" ]; then
-	partuuid=$mainfwa_partuuid
-elif [ "$1" == "mainfwb" ]; then
-	partuuid=$mainfwb_partuuid
+if [ "$1" == "altfw" ]; then
+    echo "Changing the rootfs to altfw"
 else
-	echo "Illegal fw name($1) provided"
-	usage
-	exit 1
+    echo "Invalid arg: $1"
+    usage
+    exit 1
 fi
+
+cur_image=`fwupdate -r`
+
+if [ $cur_image == "mainfwa" ]; then
+    new_image="mainfwb"
+elif [ $cur_image == "mainfwb" ]; then
+    new_image="mainfwa"
+else
+    echo "Cannot swith_rootfs to altfw from $cur_image"
+    echo "switch_rootfs failed!!!"
+    exit 1
+fi
+
+if [ $new_image == "mainfwa" ]; then
+    partuuid=$mainfwa_partuuid
+elif [ $new_image == "mainfwb" ]; then
+    partuuid=$mainfwb_partuuid
+else
+    echo "Illegal fw name($1) provided"
+    usage
+    exit 1
+fi
+
+echo "Switching filesystem from $cur_image to $new_image"
 
 mkdir -p /new
 mount PARTUUID=$partuuid /new
@@ -75,6 +96,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+ifconfig bond0 down
 rmmod mnet ionic_mnic
 
 kill -QUIT 1
