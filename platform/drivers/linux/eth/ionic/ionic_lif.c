@@ -2455,8 +2455,8 @@ void ionic_lifs_unregister(struct ionic *ionic)
 		lif = list_entry(cur, struct lif, list);
 		if (lif->registered) {
 			unregister_netdev(lif->netdev);
-			lif->registered = false;
 			cancel_work_sync(&lif->tx_timeout_work);
+			lif->registered = false;
 		}
 	}
 }
