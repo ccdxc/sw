@@ -558,6 +558,51 @@ func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 	return string(stdoutStderr), nil
 }
 
+func naplesPkgVerify(pkgName string) (string, error) {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/fwupdate",
+		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -v"}, ""),
+	}
+	return naplesExecCmd(v)
+}
+
+func naplesPkgInstall(pkgName string) (string, error) {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/fwupdate",
+		Opts:       strings.Join([]string{"-p ", "/update/" + pkgName, " -i all"}, ""),
+	}
+	return naplesExecCmd(v)
+}
+
+func naplesSetBootImg() (string, error) {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "/nic/tools/fwupdate",
+		Opts:       strings.Join([]string{"-s ", "altfw"}, ""),
+	}
+	return naplesExecCmd(v)
+}
+
+func naplesDelBootImg(pkgName string) (string, error) {
+	v := &nmd.NaplesCmdExecute{
+		Executable: "rm",
+		Opts:       strings.Join([]string{"-rf ", "/update/" + pkgName}, ""),
+	}
+	return naplesExecCmd(v)
+}
+
+func naplesHostDisruptiveUpgrade(pkgName string) (string, error) {
+	if resp, err := naplesPkgInstall(pkgName); err != nil {
+		return resp, err
+	}
+	if resp, err := naplesSetBootImg(); err != nil {
+		return resp, err
+	}
+	if resp, err := naplesDelBootImg(pkgName); err != nil {
+		return resp, err
+	}
+	return "", nil
+}
+
 //NaplesCmdExecHandler is the REST handler to execute any binary on naples and return the output
 func NaplesCmdExecHandler(r *http.Request) (interface{}, error) {
 	req := nmd.NaplesCmdExecute{}
