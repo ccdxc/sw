@@ -14,8 +14,6 @@ import (
 	"golang.org/x/net/context"
 	"gopkg.in/check.v1"
 
-	"github.com/pensando/sw/venice/utils/tsdb"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
@@ -694,8 +692,6 @@ func (it *veniceIntegSuite) loggedInCtx() (context.Context, error) {
 }
 
 func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
-
 	// logger
 	it.logger = logger
 

@@ -20,8 +20,8 @@ import (
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	"github.com/pensando/sw/venice/utils/ntsdb"
 	"github.com/pensando/sw/venice/utils/syslog"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 const maxRetry = 5
@@ -32,7 +32,7 @@ type PolicyState struct {
 	emstore         emstore.Emstore
 	netAgentURL     string
 	fwLogCollectors sync.Map
-	fwTable         ntsdb.Obj
+	fwTable         tsdb.Obj
 	hostName        string
 	appName         string
 	wg              sync.WaitGroup
@@ -61,7 +61,7 @@ func NewTpAgent(ctx context.Context, agentPort string) (*PolicyState, error) {
 
 	//todo: handle host mode
 
-	fwTable, err := ntsdb.NewObj("firewall", map[string]string{}, nil, &ntsdb.ObjOpts{})
+	fwTable, err := tsdb.NewObj("firewall", map[string]string{}, nil, &tsdb.ObjOpts{})
 	if err != nil {
 		return nil, err
 	}
@@ -567,12 +567,12 @@ func (s *PolicyState) ProcessFWEvent(ev *ipcproto.FWEvent, ts time.Time) {
 		ts = time.Unix(0, unixnano)
 	}
 
-	point := &ntsdb.Point{
+	point := &tsdb.Point{
 		Tags:   map[string]string{"src": ipSrc, "dest": ipDest, "dPort": dPort, "ipProt": ipProt, "action": action, "direction": dir, "rule-id": ruleID},
 		Fields: map[string]interface{}{"sPort": int64(ev.GetSport())},
 	}
 
-	s.fwTable.Points([]*ntsdb.Point{point}, ts)
+	s.fwTable.Points([]*tsdb.Point{point}, ts)
 
 	// set src/dest vrf
 	vrfList := map[uint64]bool{

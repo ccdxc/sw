@@ -1,4 +1,4 @@
-package ntsdb
+package tsdb
 
 import (
 	"encoding/json"
@@ -81,7 +81,7 @@ type LocalMetric struct {
 //     /<table-name>/attribute-name	- specific obj, specific attribute
 func LocalMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	if !IsInitialized() {
-		json.NewEncoder(w).Encode("ntsdb is not initialized")
+		json.NewEncoder(w).Encode("tsdb is not initialized")
 		return
 	}
 	skipObjFn := func(tableName string, obj *iObj) bool {

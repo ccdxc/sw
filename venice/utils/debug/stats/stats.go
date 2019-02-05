@@ -23,8 +23,9 @@ type tsdbMetadata struct {
 type Stats struct {
 	tsdb             bool
 	tsdbPushDuration time.Duration
+	tsdbKeys         map[string]string
 	debugs           *expvar.Map
-	tableObj         tsdb.TableObj
+	tableObj         tsdb.Obj
 	tsdbCloseCh      chan bool
 	closeAckCh       chan bool
 }
@@ -95,11 +96,12 @@ func (sf *StatFactory) Build() *Stats {
 	mutex.Unlock()
 
 	if sf.tsdb {
-		tsdbMeta := tsdbMetadata{Kind: sf.kind, Name: sf.name}
 		var err error
-		s.tableObj, err = tsdb.NewTableObj(tsdbMeta, tsdb.Config{})
+
+		s.tsdbKeys = map[string]string{"Kind": sf.kind, "Name": sf.name}
+		s.tableObj, err = tsdb.NewObj("objStats", s.tsdbKeys, nil, &tsdb.ObjOpts{})
 		if err != nil {
-			log.Fatalf("tsdb.NewTableObj with %+v gave error %#v", tsdbMeta, err)
+			log.Fatalf("tsdb.NewTableObj with %+v gave error %#v", s.tsdbKeys, err)
 		}
 		if sf.tsdbPushDuration != 0 {
 			go s.startTsdbTimer(sf.tsdbPushDuration)
@@ -145,23 +147,23 @@ func Clear() {
 	}
 }
 func (st *Stats) sendPoints() {
-	point := tsdb.Point{Tags: st.tableObj.Tags()}
-	point.Fields = make(map[string]interface{})
+	fields := make(map[string]interface{})
 	st.debugs.Do(func(kv expvar.KeyValue) {
 		switch kv.Value.(type) {
 		case *expvar.Int:
 			v := kv.Value.(*expvar.Int)
-			point.Fields[kv.Key] = v.Value()
+			fields[kv.Key] = v.Value()
 		case *expvar.Float:
 			v := kv.Value.(*expvar.Float)
-			point.Fields[kv.Key] = v.Value()
+			fields[kv.Key] = v.Value()
 		case *expvar.String:
 			v := kv.Value.(*expvar.String)
-			point.Fields[kv.Key] = v.Value()
+			fields[kv.Key] = v.Value()
 		}
 	})
-	if len(point.Fields) > 0 {
-		st.tableObj.AddPoints([]tsdb.Point{point})
+	if len(fields) > 0 {
+		tsdbPoint := tsdb.Point{Tags: st.tsdbKeys, Fields: fields}
+		st.tableObj.Points([]*tsdb.Point{&tsdbPoint}, time.Now())
 	}
 }
 

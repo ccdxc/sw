@@ -44,6 +44,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	rmock "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -1319,7 +1320,11 @@ func testSetup() {
 
 	// Disable open trace
 	ventrace.DisableOpenTrace()
-	tsdb.Init(tsdb.DummyTransmitter{}, tsdb.Options{})
+
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: "smart-nic-test", ResolverClient: &rmock.ResolverClient{}})
+	defer cancel()
 
 	// Create api server
 	apiServerAddress := ":0"

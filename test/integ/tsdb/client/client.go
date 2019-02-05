@@ -7,7 +7,7 @@ import (
 
 	"github.com/pensando/sw/test/integ/tsdb/collector"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ntsdb"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 const (
@@ -32,7 +32,7 @@ func NewSuite(url string, testName, dbName string) *Suite {
 
 	// setup client
 	_, ts.cancelFunc = context.WithCancel(context.Background())
-	ntsdb.Init(context.Background(), &ntsdb.Opts{ClientName: testName,
+	tsdb.Init(context.Background(), &tsdb.Opts{ClientName: testName,
 		Collector:               cs.CollectorURL(),
 		SendInterval:            testSendInterval,
 		ConnectionRetryInterval: testConnectionRetryInterval,
@@ -48,7 +48,7 @@ func NewSuite(url string, testName, dbName string) *Suite {
 func (ts *Suite) TearDown() {
 	ts.cs.TearDown()
 	ts.cancelFunc()
-	ntsdb.Cleanup()
+	tsdb.Cleanup()
 }
 
 func validate(ts *Suite, dbName, measName string, tt *collectorinteg.TimeTable) (bool, error) {

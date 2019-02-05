@@ -51,6 +51,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
+	rmock "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -279,7 +280,10 @@ func stopNMD(t *testing.T, i *nmdInfo) {
 
 func TestCreateNMDs(t *testing.T) {
 	t.Skip("Temporarily disabled. TODO. More investigation needed")
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &rmock.ResolverClient{}})
+	defer cancel()
 
 	for i := 1; i <= *numNaples; {
 
@@ -555,7 +559,9 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 // Changes are posted to CMD which in turn propagates them to the agent.
 func TestNICReadmit(t *testing.T) {
 	t.Skip("Temporarily disabled. TODO. More investigation needed")
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &rmock.ResolverClient{}})
+	defer cancel()
 
 	i := 0
 	host := getHost(i)

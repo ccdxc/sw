@@ -24,10 +24,10 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	tsdb "github.com/pensando/sw/venice/utils/ntsdb"
 	"github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/syslog"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // to mock netagent

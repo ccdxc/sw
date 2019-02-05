@@ -1,4 +1,4 @@
-package ntsdb
+package tsdb
 
 import (
 	"fmt"
@@ -10,8 +10,8 @@ import (
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/tsdb/metrics"
 )
 
 // establishConn connects to citadel instances over grpc and load balancer

@@ -11,6 +11,8 @@ import (
 	. "gopkg.in/check.v1"
 	check "gopkg.in/check.v1"
 
+	"golang.org/x/net/context"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -30,6 +32,7 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	rmock "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
@@ -98,7 +101,10 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 		log.Fatalf("Error setting up TLS provider: %v", err)
 	}
 
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: "NpmIntegTestSuite", ResolverClient: &rmock.ResolverClient{}})
+	defer cancel()
 
 	it.logger = logger
 

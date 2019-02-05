@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -255,7 +256,11 @@ func (srv *mockRPCServer) Stop() {
 }
 
 func TestCmdClient(t *testing.T) {
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
 	// create a mock rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
@@ -299,7 +304,10 @@ func TestCmdClient(t *testing.T) {
 }
 
 func TestCmdClientWatch(t *testing.T) {
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
 
 	// create a fake rpc server
 	srv := createRPCServer(t)
@@ -351,7 +359,10 @@ func TestCmdClientWatch(t *testing.T) {
 }
 
 func TestCmdClientErrorHandling(t *testing.T) {
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
 
 	// create a mock rpc server
 	srv := createRPCServer(t)

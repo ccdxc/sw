@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -939,7 +940,12 @@ func (srv *fakeRPCServer) WatchApps(sel *api.ObjectMeta, stream netproto.AppApi_
 }
 
 func TestNpmclient(t *testing.T) {
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
 	// create a fake rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
@@ -984,7 +990,11 @@ func TestNpmclient(t *testing.T) {
 }
 
 func TestNpmClientWatch(t *testing.T) {
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
 	// create a fake rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
@@ -1075,7 +1085,11 @@ func TestNpmClientWatch(t *testing.T) {
 }
 
 func TestSecurityGroupWatch(t *testing.T) {
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
 	// create a fake rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
@@ -1121,7 +1135,11 @@ func TestSecurityGroupWatch(t *testing.T) {
 }
 
 func TestSecurityPolicyWatch(t *testing.T) {
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
 	// create a fake rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
@@ -1168,7 +1186,11 @@ func TestSecurityPolicyWatch(t *testing.T) {
 }
 
 func TestSecurityProfileWatch(t *testing.T) {
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
 	// create a fake rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)
@@ -1216,7 +1238,11 @@ func TestSecurityProfileWatch(t *testing.T) {
 }
 
 func TestAppWatch(t *testing.T) {
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	// Init tsdb
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
 	// create a fake rpc server
 	srv := createRPCServer(t)
 	Assert(t, (srv != nil), "Error creating rpc server", srv)

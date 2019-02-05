@@ -3,656 +3,580 @@ package tsdb
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"math"
+	"net"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/types"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/balancer"
-	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
-	// channelBuffer stores intermediate data structures before they are
-	// transmitted over the network by sender thread
-	channelBuffer       = 4000
-	defaultDBName       = "pensandodb"
-	defaultSendInterval = 2 * time.Second
+	defaultRanges                  = 10
+	defaultSendInterval            = 10 * time.Second
+	defaultConnectionRetryInterval = 100 * time.Millisecond
 )
 
-// Options define configurable/operational parameters for transmitter interaction
-type Options struct {
-	ClientName     string             // ClientName for connection to Collector
-	ResolverClient resolver.Interface // Resolver for getting the whereabouts of collector
-	Collector      string             // name of custom collector if not using the defaults
-	DBName         string             // DBName in the influx to use if not using the defaults
-	SendInterval   time.Duration      // custom send interval if not using the defaults
-	// TBD: reconnection period
-	// TBD: should any parameters be promoted up to global level from a table?
+// global information is maintained per client during Init time
+type globalInfo struct {
+	opts        Opts                   // user options
+	sync.Mutex                         // global lock
+	wg          sync.WaitGroup         // waitgroup for threads
+	rpcClient   *rpckit.RPCClient      // rpc connection to collector
+	mc          metric.MetricApiClient // metric client object (to write points)
+	context     context.Context        // global context (used for cancellation)
+	objs        map[string]*iObj       // cache for various objs
+	deletedObjs []*iObj                // deleted list of objs
+	httpServer  *http.Server           // local http server
+	listener    net.Listener           // listener used by http server
+	cancelFunc  context.CancelFunc     // cancel function to initiate internal cleanup
 }
 
-// Transmitter interface allows sending points (push) to a transmitter
-// (or a set of transmitter)
-type Transmitter interface {
-	SendPoints(dbName string, points []Point) error
-	Init(opts Options) error
-	Update(opts Options) error
+var global *globalInfo
+
+// Opts define global options for tsdb package initialization
+type Opts struct {
+	ClientName              string             // name provided to collector
+	ResolverClient          resolver.Interface // resolver for getting the whereabouts of collector
+	Collector               string             // resolvable name of collector; system default is picked up if nil
+	DBName                  string             // backend database name
+	ConnectionRetryInterval time.Duration      // sleep period between connection retries
+	SendInterval            time.Duration      // push interval, system default is picked up if zero
+	LocalPort               int                // port to start local server on
+	StartLocalServer        bool               // whether to start a local server or not
 }
 
-// Table interface allows adding points in the table and deletion of the table
-type Table interface {
-	AddPoints(name string, points []Point) error
-	Delete() error
+// Init initializes the tsdb package; must be called before any other tsdb apis can be used
+func Init(ctx context.Context, opts *Opts) {
+	if global != nil {
+		global.opts.SendInterval = opts.SendInterval
+		global.opts.ConnectionRetryInterval = opts.ConnectionRetryInterval
+		return
+	}
+	global = &globalInfo{}
+	global.opts = *opts
+	if opts.SendInterval == 0 {
+		opts.SendInterval = defaultSendInterval
+	}
+	if opts.ConnectionRetryInterval == 0 {
+		opts.ConnectionRetryInterval = defaultConnectionRetryInterval
+	}
+
+	global.objs = make(map[string]*iObj)
+	global.context, global.cancelFunc = context.WithCancel(ctx)
+
+	go periodicTransmit()
+	global.wg.Add(1)
+	go startLocalRESTServer(global)
 }
 
-// TableObj is a named object on a table to which points are added and deleted
-type TableObj interface {
-	AddObjPoint(obj interface{}) error
-	Delete() error
-	AddPoints(points []Point) error
-	Tags() map[string]string
+// IsInitialized returns whether tsdb has been initialized
+func IsInitialized() bool {
+	return global != nil
 }
 
-// Config specifies a table's attributes
-type Config struct {
-	// Precision is the write precision of the points. Permitted values are 'ns', 'us',
-	// 'ms', or 's' for nano seconds, micro seconds, milli seconds or seconds. Defaults to 'ms'
-	Precision string
+// Cleanup pushes all pending metrics and frees up resources allocated to the tsdb client
+func Cleanup() {
+	if global == nil {
+		return
+	}
 
-	// Reliable flag indicates whether the table needs stats to be never dropped
-	Reliable bool
+	// flush any metrics that are not yet pushed out
+	sendAllObjs()
+
+	// cancel the context to stop any running go threads
+	global.cancelFunc()
+	global.wg.Wait() // Wait for startLocalRESTServer call to complete ; Also wait for periodic timer Thread to exit
+	stopLocalRESTServer()
+
+	global = nil
 }
 
-// Point is an instance of a record within a table
-type Point struct {
-	// Tags are opaque strings associated with the point
-	// Later used for searching points with specific tags
-	Tags map[string]string
-
-	// Fields are the values specified by the user against the series name
-	// Field value can be of any type e.g. string, counter, boolean, etc.
-	Fields map[string]interface{}
-
-	// time could be filled in by the caller (esp if the points were batched and cached
-	// if time is zero it is filled in by the api when a point is written
-	Time time.Time
+// Obj represents a series within a measurement
+type Obj interface {
+	Delete()
+	Counter(field string) api.Counter
+	Gauge(field string) api.Gauge
+	PrecisionGauge(field string) api.PrecisionGauge
+	String(field string) api.String
+	Bool(field string) api.Bool
+	Histogram(field string) api.Histogram
+	Summary(field string) api.Summary
+	Points(points []*Point, ts time.Time) error
+	AtomicBegin(ts time.Time)
+	AtomicEnd()
+	Push()
 }
 
-// Field Types: Counter, Increment, Gauge, Flag, or String defines the type of data
-// associated with the field. Usually it can be any primitive type, but defining the
-// specific types allows the interpretation of the fields accordingly
+// ObjOpts specifies options for a specific obj
+type ObjOpts struct {
+	Local     bool
+	Precision time.Duration
+}
 
-// Counter is an signed integer metric that is expected to continuously increase over time
-//	This is NOT unsigned because influx does not support uint64
-type Counter int64
-
-// Increment is an  integer metric that is reported in increments
-// Using this time is dependent on how data transmission is happening
-type Increment int64
-
-// Gauge is an integer value that can go up and down on a scale
-type Gauge float64
-
-// Flag is a boolean that can be turned on or off
-type Flag bool
-
-// String is an arbitrary sized string that is measured against a field
-type String string
-
-// table represents a transmission of records (aka set of Points)
-// All records within a table have same tag-keys and field names, while their values differ
-// Each record represents a time series with multiple entries sampled at different times
-type table struct {
+// implementation of Obj interface
+type iObj struct {
 	sync.Mutex
-
-	// name is a unique table identifier by the caller
-	// The uniqueness is needed among various databases from a caller
-	name string
-
-	// desired configuration for the table
-	config Config
-
-	// object time series stats that are part of this table
-	objs map[string]*tableObj
-
-	// table statistics
-	addPointCalls uint64
-	totalPoints   uint64
+	tableName    string
+	opts         ObjOpts
+	keys         map[string]string
+	fields       map[string]interface{}
+	ts           time.Time
+	metricPoints []*metric.MetricPoint
+	atomic       bool
+	dirty        bool
 }
 
-// tableObj is an object that is defined in a table, an object is an
-// instantiation of an kind of an object
-type tableObj struct {
-	// name of the table object e.g. 'tenant-foo.namespace-bar.obj-gunk'
-	name string
-
-	// tags are the cached field values for a specified object
-	// used only for Obj routines
-	tags map[string]string
-
-	// reference to the table
-	tbl *table
-}
-
-// Init initializes the transmitter interface
-func Init(tsmt Transmitter, options Options) error {
-	if gctx != nil {
-		return fmt.Errorf("client already initialized")
+// NewObj creates a metric object that can be used to record arbitrary keys/fields
+func NewObj(tableName string, keys map[string]string, metrics interface{}, opts *ObjOpts) (Obj, error) {
+	if strings.HasPrefix(tableName, "obj-") {
+		return nil, fmt.Errorf("Obj Name starting with 'obj-' is reserved for internal objs")
 	}
 
-	if err := tsmt.Init(options); err != nil {
-		return err
-	}
-	gctx = &globalContext{tsmt: tsmt,
-		txChan: make(chan interface{}, channelBuffer),
-		tables: make(map[string]*table)}
-	gctx.Add(1)
-	go startTransmitter()
+	global.Lock()
+	defer global.Unlock()
 
-	return nil
-}
-
-// Close and free any resources created in Init
-func Close() {
-	if gctx != nil {
-		close(gctx.txChan)
-		gctx.Wait()
-		gctx = nil
-	}
-}
-
-// MUST be called with gctx.Lock held
-func newTable(name string, config Config) (Table, error) {
-	if _, ok := gctx.tables[name]; ok {
-		return nil, fmt.Errorf("table '%s' already exists", name)
-	}
-	tbl := &table{name: name, config: config}
-	gctx.tables[name] = tbl
-
-	return tbl, nil
-}
-
-// NewTable returns a table to the user, on which Points would be added
-func NewTable(name string, config Config) (Table, error) {
-
-	if name == "" {
-		return nil, fmt.Errorf("invalid configuration params")
-	}
-	if gctx == nil {
-		return nil, fmt.Errorf("Uninitialized client")
-	}
-	gctx.Lock()
-	defer gctx.Unlock()
-	return newTable(name, config)
-}
-
-// AddPoints adds elements to the time series on the specified table
-// Table initialization is one time operation where as adding points to it done
-// as many times as desired
-func (tbl *table) AddPoints(name string, points []Point) error {
-	tbl.Lock()
-	defer tbl.Unlock()
-
-	if gtbl, ok := gctx.tables[tbl.name]; !ok || gtbl != tbl {
-		return fmt.Errorf("table '%s' is deleted or moved", name)
+	// objName is uniquely determind from the set of keys
+	// if the keys overlap, then object is considered existing
+	// and an existing value is returned
+	objName := tableName
+	if len(keys) > 0 {
+		objName = getObjName(keys)
 	}
 
-	tbl.addPointCalls++
-	timeNow := time.Now()
-	for idx := range points {
-		tbl.totalPoints++
-		if points[idx].Time.IsZero() {
-			points[idx].Time = timeNow
-		}
+	obj, ok := global.objs[objName]
+	if ok {
+		return obj, nil
 	}
 
-	// TBD: do we make a copy of the objects; copying decreases performances but can be thread-safe
-	gctx.Lock()
-	gctx.txChan <- tbl.name
-	gctx.txChan <- points
-	gctx.Unlock()
-
-	return nil
-}
-
-// Delete deletes the table in the backend, user will no longer be able to add Points to the table
-// after this call
-func (tbl *table) Delete() error {
-	gctx.Lock()
-	if tbl != nil {
-		delete(gctx.tables, tbl.name)
-	}
-	gctx.Unlock()
-
-	return nil
-}
-
-// NewTableObj creates an object specific table, returns ObjectTable on which ObjectPoints can be added
-func NewTableObj(obj interface{}, config Config) (TableObj, error) {
-	refCtx := &ref.RfCtx{GetSubObj: ref.NilSubObj}
-	kvs := make(map[string]ref.FInfo)
-	ref.GetKvs(obj, refCtx, kvs)
-
-	v, ok := kvs["Kind"]
-	if !ok || v.ValueStr[0] == "" {
-		return nil, fmt.Errorf("error finding object kind: kvs = %+v", kvs)
+	obj = &iObj{}
+	obj.tableName = tableName
+	obj.fields = make(map[string]interface{})
+	obj.keys = keys
+	if len(obj.keys) == 0 {
+		obj.keys = map[string]string{"name": tableName}
 	}
 
-	gctx.Lock()
-	tbl, ok := gctx.tables[v.ValueStr[0]]
-	if !ok {
-		t, err := newTable(v.ValueStr[0], config)
-		if err != nil {
-			gctx.Unlock()
-			return nil, err
-		}
-		tbl = t.(*table)
-		tbl.objs = make(map[string]*tableObj)
-	}
-	gctx.Unlock()
-
-	tbl.Lock()
-	defer tbl.Unlock()
-	tblObj := &tableObj{tbl: tbl, tags: make(map[string]string)}
-
-	if err := fillKeys(kvs, tblObj.tags); err != nil {
+	// if metrics are provided during this object creation, fill the fields based on
+	// supplied metrics structure
+	if err := fillFields(obj, metrics); err != nil {
 		return nil, err
 	}
-	tblObj.name = ""
-	for _, tagVal := range tblObj.tags {
-		tblObj.name += tagVal + "."
+
+	if opts != nil {
+		obj.opts = *opts
 	}
-	tblObj.name = strings.TrimSuffix(tblObj.name, ".")
-	tbl.objs[tblObj.name] = tblObj
-
-	return tblObj, nil
-}
-
-// Deletes a specific object within a table
-func (tblObj *tableObj) Delete() error {
-	tbl := tblObj.tbl
-
-	tbl.Lock()
-	defer tbl.Unlock()
-
-	delete(tbl.objs, tblObj.name)
-
-	return nil
-}
-
-// AddObjPoint adds a point in time series for an object
-func (tblObj *tableObj) AddObjPoint(obj interface{}) error {
-	refCtx := &ref.RfCtx{GetSubObj: ref.NilSubObj}
-	kvs := make(map[string]ref.FInfo)
-	ref.GetKvs(obj, refCtx, kvs)
-
-	point := Point{Tags: tblObj.tags}
-	point.Fields = make(map[string]interface{})
-	if err := fillFields(kvs, point.Fields); err != nil {
-		return err
-	}
-	return tblObj.tbl.AddPoints(tblObj.name, []Point{point})
-}
-func (tblObj *tableObj) Tags() map[string]string {
-	return tblObj.tags
-}
-func (tblObj *tableObj) AddPoints(points []Point) error {
-	return tblObj.tbl.AddPoints(tblObj.name, points)
-}
-
-type oneFloat struct {
-	Kind string
-	api.ObjectMeta
-}
-
-// LogField to send a single point to tsdb
-func LogField(kind string, objectMeta api.ObjectMeta, fieldName string, value interface{}) {
-	to := &oneFloat{
-		Kind:       kind,
-		ObjectMeta: objectMeta,
+	if obj.opts.Precision == 0 {
+		obj.opts.Precision = time.Millisecond
 	}
 
-	tblObj, err := NewTableObj(&to, Config{})
-	if err == nil {
-		point := Point{Tags: tblObj.Tags(), Fields: make(map[string]interface{})}
-		point.Fields[fieldName] = value
-		tblObj.AddPoints([]Point{point})
-		tblObj.Delete()
+	// every object is added to global object's hash based on object's name
+	global.objs[objName] = obj
+
+	return obj, nil
+}
+
+// NewVeniceObj creates a metric object for the specified venice object and its metrics
+func NewVeniceObj(obj interface{}, metrics interface{}, opts *ObjOpts) (Obj, error) {
+	if metrics == nil {
+		return nil, fmt.Errorf("metrics object missing")
 	}
+
+	keys := make(map[string]string)
+	tableName, err := getKeys(obj, keys)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewObj(tableName, keys, metrics, opts)
 }
 
-// global runtime information maintained on per process basis
-type globalContext struct {
-	sync.Mutex
-	sync.WaitGroup
-
-	// Transmitter is an interface to communicate with a transmitter entity
-	tsmt Transmitter
-
-	// txChan is the channel where all message from caller are sent to the sender thread
-	txChan chan interface{}
-
-	// list of all tables maintained by the system
-	tables map[string]*table
+// Delete cleans up resources associated with the obj
+func (obj *iObj) Delete() {
+	global.Lock()
+	defer global.Unlock()
+	global.deletedObjs = append(global.deletedObjs, obj)
+	objName := getObjName(obj.keys)
+	delete(global.objs, objName)
 }
 
-var gctx *globalContext
+// AtomicBegin marks the start of atomic update on a set of metrics
+func (obj *iObj) AtomicBegin(ts time.Time) {
+	obj.Lock()
+	defer obj.Unlock()
+	if ts.IsZero() {
+		ts = time.Now()
+	}
+	obj.ts = ts
+	obj.atomic = true
+}
 
-// startTransmitter function receives the objects over tx channel and sends the data over the
-// network to transmitter(s)
-func startTransmitter() {
+// AtomicEnd marks the end of an atomic update
+func (obj *iObj) AtomicEnd() {
+	obj.Lock()
+	defer obj.Unlock()
+	obj.atomic = false
+	obj.dirty = true
+}
 
-	defer gctx.Done()
-	for {
-		select {
-		case v, ok := <-gctx.txChan:
-			if !ok {
-				log.Errorf("txChan closed. Returning from transmitter goroutine")
-				return
-			}
-			// first comes the table name, then points
-			tblName, ok := v.(string)
-			if !ok {
-				log.Errorf("Invalid objects received over the channel")
-				continue
-			}
+// Counter
+type iCounter struct {
+	name  string
+	obj   *iObj
+	value int64
+}
 
-			// next read the points for the table
-			v, ok = <-gctx.txChan
-			if !ok {
-				log.Errorf("Error reading points, closing channel")
-				return
-			}
+// Add increments the counter by the specified value
+func (c *iCounter) Add(inc int64) {
+	obj := c.obj
+	obj.Lock()
+	defer obj.Unlock()
 
-			points, ok := v.([]Point)
-			if !ok {
-				log.Errorf("Invalid objects received over the channel")
-				continue
-			}
-			if err := gctx.tsmt.SendPoints(tblName, points); err != nil {
-				log.Errorf("error posting points")
-			}
+	c.value += inc
+	obj.dirty = true
+}
+
+// Sub decrements the counter by the specified value
+func (c *iCounter) Sub(inc int64) {
+	obj := c.obj
+	obj.Lock()
+	defer obj.Unlock()
+
+	c.value -= inc
+	obj.dirty = true
+}
+
+// Set sets the counter value to a specified value
+func (c *iCounter) Set(val int64) {
+	obj := c.obj
+	obj.Lock()
+	defer obj.Unlock()
+
+	c.value = val
+	obj.dirty = true
+}
+
+// Add increments the counter by one
+func (c *iCounter) Inc() {
+	obj := c.obj
+	obj.Lock()
+	defer obj.Unlock()
+
+	c.value++
+	obj.dirty = true
+}
+
+// Dec decrements the counter by one
+func (c *iCounter) Dec() {
+	obj := c.obj
+	obj.Lock()
+	defer obj.Unlock()
+
+	c.value--
+	obj.dirty = true
+}
+
+// Counter function creates and returns a new counter metric
+func (obj *iObj) Counter(name string) api.Counter {
+	obj.Lock()
+	defer obj.Unlock()
+
+	c, ok := obj.fields[name].(*iCounter)
+	if !ok {
+		c = &iCounter{name: name, obj: obj}
+		obj.fields[name] = c
+	}
+	return c
+}
+
+// Gauge - a bounded float value
+type iGauge struct {
+	name  string
+	obj   *iObj
+	value float64
+}
+
+// Set registers a value of a guage
+func (g *iGauge) Set(val float64) {
+	obj := g.obj
+
+	obj.Lock()
+	defer obj.Unlock()
+
+	g.value = val
+	obj.dirty = true
+}
+
+// PrecisionGauge creates a gauge metric
+func (obj *iObj) Gauge(name string) api.Gauge {
+	obj.Lock()
+	defer obj.Unlock()
+
+	g, ok := obj.fields[name].(*iGauge)
+	if !ok {
+		g = &iGauge{name: name, obj: obj}
+		obj.fields[name] = g
+	}
+	return g
+}
+
+// PrecisionGauge - is gauge allowing a point with a timestamp for every value
+type iPrecisionGauge struct {
+	name  string
+	obj   *iObj
+	value float64
+}
+
+// Set registers a value of a guage
+func (g *iPrecisionGauge) Set(val float64, ts time.Time) {
+	obj := g.obj
+
+	obj.Lock()
+	defer obj.Unlock()
+
+	if ts.IsZero() {
+		ts = time.Now()
+	}
+
+	createNewMetricPoint(obj, ts)
+
+	g.value = val
+	if !obj.atomic {
+		obj.ts = ts
+	}
+	obj.dirty = true
+}
+
+// PrecisionGauge creates a gauge metric
+func (obj *iObj) PrecisionGauge(name string) api.PrecisionGauge {
+	obj.Lock()
+	defer obj.Unlock()
+
+	g, ok := obj.fields[name].(*iPrecisionGauge)
+	if !ok {
+		g = &iPrecisionGauge{name: name, obj: obj}
+		obj.fields[name] = g
+	}
+	return g
+}
+
+// Bool
+type iBool struct {
+	name  string
+	obj   *iObj
+	value bool
+}
+
+// Set registers a value of a bool
+func (b *iBool) Set(val bool, ts time.Time) {
+	obj := b.obj
+	obj.Lock()
+	defer obj.Unlock()
+
+	// if the value hasn't change, avoid updating timestamp
+	if b.value == val {
+		return
+	}
+
+	if ts.IsZero() {
+		ts = time.Now()
+	}
+
+	createNewMetricPoint(obj, ts)
+
+	b.value = val
+	if !obj.atomic {
+		obj.ts = ts
+	}
+	obj.dirty = true
+}
+
+// Bool creates a boolean metric
+func (obj *iObj) Bool(name string) api.Bool {
+	obj.Lock()
+	defer obj.Unlock()
+
+	b, ok := obj.fields[name].(*iBool)
+	if !ok {
+		b = &iBool{name: name, obj: obj}
+		obj.fields[name] = b
+	}
+	return b
+}
+
+// String
+type iString struct {
+	name  string
+	obj   *iObj
+	value string
+}
+
+// Set registers a value of a bool
+func (s *iString) Set(val string, ts time.Time) {
+	obj := s.obj
+	obj.Lock()
+	defer obj.Unlock()
+
+	// if the value hasn't change, avoid updating timestamp
+	if s.value == val {
+		return
+	}
+
+	if ts.IsZero() {
+		ts = time.Now()
+	}
+
+	createNewMetricPoint(obj, ts)
+
+	s.value = val
+	if !obj.atomic {
+		obj.ts = ts
+	}
+	obj.dirty = true
+}
+
+// String creates a string metric
+func (obj *iObj) String(name string) api.String {
+	obj.Lock()
+	defer obj.Unlock()
+
+	s, ok := obj.fields[name].(*iString)
+	if !ok {
+		s = &iString{name: name, obj: obj}
+		obj.fields[name] = s
+	}
+	return s
+}
+
+// Histogram
+type iHistogram struct {
+	name   string
+	obj    *iObj
+	ranges []int64
+	values map[int64]int64
+}
+
+// SetRanges allows user to specify ranges for a histogram metric
+func (h *iHistogram) SetRanges(ranges []int64) api.Histogram {
+	if len(ranges) == 0 || len(ranges) >= 24 {
+		panic(fmt.Sprintf("invalid range length: %+v", ranges))
+	}
+	for i := 0; i < len(ranges)-1; i++ {
+		if ranges[i] >= ranges[i+1] {
+			panic(fmt.Sprintf("non increasing range values: %+v", ranges))
 		}
 	}
+	h.setHistogramRange(ranges)
+
+	return h
 }
 
-func fillKeys(kvs map[string]ref.FInfo, tags map[string]string) error {
-	keyNames := []string{"Name", "Namespace", "Tenant"}
-	for _, key := range keyNames {
-		if v, ok := kvs[key]; ok {
-			if v.ValueStr[0] != "" {
-				tags[key] = v.ValueStr[0]
-			}
+// setHistogramRange is internal routine to update the histogram ranges
+// from default or user specified
+func (h *iHistogram) setHistogramRange(ranges []int64) {
+	length := len(ranges)
+	h.ranges = make([]int64, length+1)
+	copy(h.ranges[0:length], ranges)
+	h.ranges[length] = math.MaxInt64
+
+	h.values = make(map[int64]int64, len(h.ranges))
+	for i := 0; i < len(h.ranges); i++ {
+		key := h.ranges[i]
+		h.values[key] = 0
+	}
+}
+
+// Histogram creates metric that represent a distribution
+func (obj *iObj) Histogram(name string) api.Histogram {
+	obj.Lock()
+	defer obj.Unlock()
+
+	h, ok := obj.fields[name].(*iHistogram)
+	if !ok {
+		ranges := make([]int64, defaultRanges)
+		h = &iHistogram{name: name, obj: obj}
+		for i := 0; i < defaultRanges; i++ {
+			ranges[i] = (int64)(math.Exp2((float64)(2 * (i + 1))))
 		}
+		obj.fields[name] = h
+		h.setHistogramRange(ranges)
 	}
-
-	if len(tags) == 0 {
-		return fmt.Errorf("keys not found")
-	}
-
-	return nil
-
+	return h
 }
 
-func fillFields(kvs map[string]ref.FInfo, fields map[string]interface{}) error {
-	// TBD: deletion of skipNames can be avoided if caller passes just the spec
-	skipNames := []string{"Kind", "UUID", "ResourceVersion", "Name", "Namespace", "Tenant", "Labels", "Nanos", "Seconds"}
-	for _, key := range skipNames {
-		delete(kvs, key)
-	}
+// AddSample adds a new sample to a distribution
+func (h *iHistogram) AddSample(value int64) {
+	obj := h.obj
+	obj.Lock()
+	defer obj.Unlock()
 
-	for key, v := range kvs {
-		if v.ValueStr[0] == "" {
-			continue
-		}
-		switch v.TypeStr {
-		case "string":
-			fields[key] = v.ValueStr[0]
-		case "int64", "int32":
-			intVal, _ := strconv.ParseInt(v.ValueStr[0], 10, 64)
-			fields[key] = intVal
-		case "uint64", "uint32":
-			uintVal, _ := strconv.ParseUint(v.ValueStr[0], 10, 64)
-			fields[key] = uintVal
-		case "float32", "float64":
-			floatVal, _ := strconv.ParseFloat(v.ValueStr[0], 64)
-			fields[key] = floatVal
-		case "bool":
-			flag := false
-			if v.ValueStr[0] == "true" {
-				flag = true
-			}
-			fields[key] = flag
-		default:
-			return fmt.Errorf("unrecognized type %+v", v.TypeStr)
-		}
-	}
-
-	return nil
-}
-
-// DummyTransmitter is a dummy transmitter which just prints to stdout
-type DummyTransmitter struct {
-}
-
-// Init is a dummy routine
-func (c DummyTransmitter) Init(opts Options) error {
-	return nil
-}
-
-// Update is a dummy routine
-func (c DummyTransmitter) Update(opts Options) error {
-	return nil
-}
-
-// SendPoints send points
-func (c DummyTransmitter) SendPoints(dbName string, points []Point) error {
-	return nil
-}
-
-// BatchTransmitter is a transmitter which sends events to collector running on venice
-//  by batching them for sendInterval
-type BatchTransmitter struct {
-	dbName       string
-	sendInterval time.Duration
-	rpcClient    *rpckit.RPCClient
-	mc           metric.MetricApiClient
-	metricBundle *metric.MetricBundle
-	metrics      []*metric.MetricPoint
-	sync.Mutex
-	context context.Context
-}
-
-// NewBatchTransmitter returns a new instance of BatchTransmitter
-func NewBatchTransmitter(ctx context.Context) *BatchTransmitter {
-	return &BatchTransmitter{
-		dbName:       defaultDBName,
-		sendInterval: defaultSendInterval,
-		metricBundle: &metric.MetricBundle{},
-		context:      ctx,
-	}
-}
-
-// Init sets up the rpc client
-func (c *BatchTransmitter) Init(opts Options) error {
-
-	if opts.SendInterval != 0 {
-		c.sendInterval = opts.SendInterval
-	}
-	if opts.DBName != "" {
-		c.dbName = opts.DBName
-	}
-	collector := globals.Citadel
-	if opts.Collector != "" {
-		collector = opts.Collector
-	}
-
-	rpckitOpts := make([]rpckit.Option, 0)
-	if opts.ResolverClient != nil {
-		rpckitOpts = append(rpckitOpts, rpckit.WithBalancer(balancer.New(opts.ResolverClient)))
-	}
-	rpckitOpts = append(rpckitOpts, rpckit.WithLoggerEnabled(false))
-	go c.waitForClientConn(opts.ClientName, collector, rpckitOpts)
-
-	return nil
-}
-func (c *BatchTransmitter) waitForClientConn(clientName, collector string, rpckitOpts []rpckit.Option) {
-	var err error
-	for {
-		c.rpcClient, err = rpckit.NewRPCClient(clientName, collector, rpckitOpts...)
-		if err == nil {
+	idx := 0
+	for i := 0; i < len(h.ranges); i++ {
+		if value < h.ranges[i] {
+			idx = i
 			break
 		}
-
-		select {
-		case <-time.After(c.sendInterval):
-		case <-c.context.Done():
-			log.Infof("returning from BatchTransmitter before establishing rpcclient conn as context completed")
-			return
-		}
 	}
-	c.mc = metric.NewMetricApiClient(c.rpcClient.ClientConn)
-	c.metricBundle.DbName = c.dbName
-	c.metricBundle.Reporter = clientName
-	go c.sendPoints()
+	key := h.ranges[idx]
+	h.values[key]++
+
+	obj.dirty = true
 }
 
-// Update is a dummy routine
-func (c *BatchTransmitter) Update(opts Options) error {
+// Summary
+type iSummary struct {
+	name       string
+	obj        *iObj
+	totalCount int64
+	totalValue float64
+}
+
+// Summary creates a metric that tracks averages
+func (obj *iObj) Summary(name string) api.Summary {
+	obj.Lock()
+	defer obj.Unlock()
+
+	s, ok := obj.fields[name].(*iSummary)
+	if !ok {
+		s = &iSummary{name: name, obj: obj}
+		obj.fields[name] = s
+	}
+	return s
+}
+
+// AddSample adds a new sample to a distribution
+func (s *iSummary) AddSample(value float64) {
+	obj := s.obj
+	obj.Lock()
+	defer obj.Unlock()
+
+	s.totalCount++
+	s.totalValue += value
+
+	obj.dirty = true
+}
+
+// Point contains tags and fields, used to add multiple points
+type Point struct {
+	Tags   map[string]string
+	Fields map[string]interface{}
+}
+
+// Points add multiple points in tsdb client
+func (obj *iObj) Points(points []*Point, ts time.Time) error {
+	if ts.IsZero() {
+		ts = time.Now()
+	}
+
+	for _, v := range points {
+		createNewMetricPointFromKeysFields(obj, v.Tags, v.Fields, ts)
+	}
+	obj.dirty = true
+
 	return nil
-}
-func xformFields(p *Point) map[string]*metric.Field {
-	res := make(map[string]*metric.Field)
-	for k, v := range p.Fields {
-		switch v.(type) {
-		case int64:
-			val := v.(int64)
-			res[k] = &metric.Field{
-				F: &metric.Field_Int64{
-					Int64: int64(val),
-				},
-			}
-		case Counter:
-			val := v.(Counter)
-			res[k] = &metric.Field{
-				F: &metric.Field_Int64{
-					Int64: int64(val),
-				},
-			}
-		case float64:
-			val := v.(float64)
-			res[k] = &metric.Field{
-				F: &metric.Field_Float64{
-					Float64: float64(val),
-				},
-			}
-
-		case Gauge:
-			val := v.(Gauge)
-			res[k] = &metric.Field{
-				F: &metric.Field_Float64{
-					Float64: float64(val),
-				},
-			}
-		case string:
-			val := v.(string)
-			res[k] = &metric.Field{
-				F: &metric.Field_String_{
-					String_: val,
-				},
-			}
-
-		case String:
-			val := v.(String)
-			res[k] = &metric.Field{
-				F: &metric.Field_String_{
-					String_: string(val),
-				},
-			}
-		case bool:
-			val := v.(bool)
-			res[k] = &metric.Field{
-				F: &metric.Field_Bool{
-					Bool: bool(val),
-				},
-			}
-		case Flag:
-			val := v.(Flag)
-			res[k] = &metric.Field{
-				F: &metric.Field_Bool{
-					Bool: bool(val),
-				},
-			}
-		default:
-			log.Infof("tsdb.xformFields: Ignoring unknown type %s\n", v)
-
-		}
-	}
-	return res
-}
-
-func (c *BatchTransmitter) sendPoints() {
-	for {
-		select {
-		case <-time.After(c.sendInterval):
-			c.Lock()
-			c.metricBundle.Metrics = c.metrics
-			c.metrics = nil
-			c.Unlock()
-			if len(c.metricBundle.Metrics) == 0 {
-				continue
-			}
-			_, err := c.mc.WriteMetrics(c.context, c.metricBundle)
-			if err != nil {
-				log.Errorf("sendPoints : WriteMetrics failed with err: %s", err)
-			}
-		case <-c.context.Done():
-			log.Infof("returning from BatchTransmitter as context completed")
-			return
-		}
-	}
-}
-
-// SendPoints send points
-func (c *BatchTransmitter) SendPoints(dbName string, points []Point) error {
-	var err error
-	tt, _ := types.TimestampProto(time.Now())
-
-	for _, p := range points {
-		f := xformFields(&p)
-		if len(f) == 0 {
-			continue
-		}
-
-		var t *types.Timestamp
-		if p.Time.IsZero() {
-			t = tt
-		} else {
-			t, err = types.TimestampProto(p.Time)
-			if err != nil {
-				t = tt
-			}
-		}
-
-		mp := &metric.MetricPoint{
-			Name:   dbName,
-			Tags:   p.Tags,
-			Fields: f,
-			When: &api.Timestamp{
-				Timestamp: *t,
-			},
-		}
-		c.Lock()
-		c.metrics = append(c.metrics, mp)
-		c.Unlock()
-	}
-	return err
 }

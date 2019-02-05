@@ -4,6 +4,7 @@ package state
 
 import (
 	"bytes"
+	"context"
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -33,6 +34,7 @@ import (
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	"github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -505,7 +507,9 @@ func TestNaplesRestartHostMode(t *testing.T) {
 
 func TestNaplesNetworkMode(t *testing.T) {
 	t.Skip("Temporarily disabled. TODO. More investigation needed")
-	tsdb.Init(&tsdb.DummyTransmitter{}, tsdb.Options{})
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
 
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)

@@ -16,7 +16,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ntsdb"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // SocketInfoFunction is the function signature the caller needs to pass into debug socket
@@ -29,7 +29,7 @@ var debugMetricsPath = "/debugMetrics"
 type Debug struct {
 	srv            *http.Server
 	socketInfoFunc SocketInfoFunction
-	MetricObj      ntsdb.Obj
+	MetricObj      tsdb.Obj
 }
 
 // New creates a new instance of Debug
@@ -41,7 +41,7 @@ func New(socketInfoFunc SocketInfoFunction) *Debug {
 
 func debugMetricsHandler(w http.ResponseWriter, r *http.Request) {
 	r.URL.Path = strings.Replace(r.URL.Path, debugMetricsPath, "", 1)
-	ntsdb.LocalMetricsHandler(w, r)
+	tsdb.LocalMetricsHandler(w, r)
 }
 
 // StartServer starts the socket listener
@@ -94,10 +94,10 @@ func (ds *Debug) DebugHandler(w http.ResponseWriter, r *http.Request) {
 
 // BuildMetricObj initializes the metric table
 func (ds *Debug) BuildMetricObj(tableName string, keyTags map[string]string) error {
-	if !ntsdb.IsInitialized() {
-		return fmt.Errorf("ntsdb is not initialized")
+	if !tsdb.IsInitialized() {
+		return fmt.Errorf("tsdb is not initialized")
 	}
-	metricObj, err := ntsdb.NewObj(tableName, keyTags, nil, &ntsdb.ObjOpts{Local: true})
+	metricObj, err := tsdb.NewObj(tableName, keyTags, nil, &tsdb.ObjOpts{Local: true})
 	if err != nil {
 		return err
 	}

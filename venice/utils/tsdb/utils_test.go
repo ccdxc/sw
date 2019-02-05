@@ -1,4 +1,4 @@
-package ntsdb
+package tsdb
 
 import (
 	"testing"

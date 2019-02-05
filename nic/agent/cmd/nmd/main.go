@@ -128,26 +128,29 @@ func main() {
 	// init resolver client
 	resolverClient := resolver.New(&resolver.Config{Name: "NMD", Servers: strings.Split(*res, ",")})
 
-	/// init tsdb
-	opt := tsdb.Options{
-		ClientName:     "netagent_" + macAddr.String(),
-		ResolverClient: resolverClient,
+	// If host name is not configured, use the MAC-addr of the host interface
+	host := *hostName
+	if host == "" {
+		host = macAddr.String()
 	}
-	err := tsdb.Init(tsdb.NewBatchTransmitter(context.TODO()), opt)
-	if err != nil {
-		log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
+
+	// initialize netagent's tsdb client
+	opts := &tsdb.Opts{
+		ClientName:              "nmd_" + host,
+		ResolverClient:          resolverClient,
+		Collector:               globals.Collector,
+		DBName:                  "default",
+		SendInterval:            time.Duration(30) * time.Second,
+		ConnectionRetryInterval: 100 * time.Millisecond,
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, opts)
+	defer cancel()
 
 	// create a platform agent
 	pa, err := platform.NewNaplesPlatformAgent()
 	if err != nil {
 		log.Fatalf("Error creating platform agent. Err: %v", err)
-	}
-
-	// If hose name is not configured, use the MAC-addr of the host interface
-	host := *hostName
-	if host == "" {
-		host = macAddr.String()
 	}
 
 	var delphiClient clientAPI.Client

@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/ntsdb"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 var socketInfo = map[string]string{
@@ -69,12 +69,12 @@ func TestDebugMetrics(t *testing.T) {
 	dbgSock := "test.sock"
 	debugSocket := New(socketInfoFunction)
 	err := debugSocket.BuildMetricObj("debugTable", nil)
-	Assert(t, err != nil, "building table before ntsdb init should have failed")
+	Assert(t, err != nil, "building table before tsdb init should have failed")
 
 	err = debugSocket.StartServer(dbgSock)
 	AssertOk(t, err, "Failed to start debug socket")
 
-	ntsdb.Init(context.Background(), &ntsdb.Opts{})
+	tsdb.Init(context.Background(), &tsdb.Opts{})
 
 	err = debugSocket.BuildMetricObj("debugTable", nil)
 	AssertOk(t, err, "Failed to build metrics table")
@@ -89,7 +89,7 @@ func TestDebugMetrics(t *testing.T) {
 	table.Gauge("mem_in_use").Set(102)
 	table.String("version").Set("v0.1", time.Time{})
 
-	lms := []ntsdb.LocalMetric{}
+	lms := []tsdb.LocalMetric{}
 	client := createSocketClient(dbgSock)
 
 	AssertEventually(t, func() (bool, interface{}) {
@@ -122,7 +122,7 @@ func TestDebugMetrics(t *testing.T) {
 	Assert(t, lms[0].Attributes["version"] == "v0.1", fmt.Sprintf("invalid lms attributes %+v", lms))
 
 	// Server is running by now, so we don't need an assert eventually
-	lms = []ntsdb.LocalMetric{}
+	lms = []tsdb.LocalMetric{}
 	resp, err := client.Get("http://localhost/debugMetrics/debugTable/rx_ep_create_msg")
 	AssertOk(t, err, "GET request failed")
 	defer resp.Body.Close()

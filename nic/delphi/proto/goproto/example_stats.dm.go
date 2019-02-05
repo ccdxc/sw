@@ -7,7 +7,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/delphi/gosdk/gometrics"
-	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
+	"github.com/pensando/sw/venice/utils/tsdb/metrics"
 )
 
 type ExampleMetrics struct {

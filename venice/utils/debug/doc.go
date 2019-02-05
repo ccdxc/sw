@@ -24,9 +24,9 @@ package debug
 //
 // 		r.HandleFunc("/debug", dbg.DebugHandler).Methods("GET")
 //
-// For collecting local metrics, the module must have first initialized ntsdb:
+// For collecting local metrics, the module must have first initialized tsdb:
 //
-// 		ntsdb.Init(ctx, opts)
+// 		tsdb.Init(ctx, opts)
 //
 // then build the metric obj
 //
@@ -36,4 +36,4 @@ package debug
 //
 //		dbg.MetricObj
 //
-// Collected metrics are aviailable on the local server being run by ntsdb
+// Collected metrics are aviailable on the local server being run by tsdb

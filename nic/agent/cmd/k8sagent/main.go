@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
@@ -63,14 +64,18 @@ func main() {
 	}
 	resolverClient := resolver.New(&resolver.Config{Name: "netagent", Servers: strings.Split(*resolverURLs, ",")})
 
-	opt := tsdb.Options{
-		ClientName:     "netagent_" + macAddr.String(),
-		ResolverClient: resolverClient,
+	// initialize netagent's tsdb client
+	opts := &tsdb.Opts{
+		ClientName:              "cmd_" + macAddr.String(),
+		ResolverClient:          resolverClient,
+		Collector:               globals.Collector,
+		DBName:                  "default",
+		SendInterval:            time.Duration(30) * time.Second,
+		ConnectionRetryInterval: 100 * time.Millisecond,
 	}
-	err = tsdb.Init(tsdb.NewBatchTransmitter(context.TODO()), opt)
-	if err != nil {
-		log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
-	}
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, opts)
+	defer cancel()
 
 	// create the new NetAgent
 	ag, err := netagent.NewAgent("mock", *agentDbPath, *npmURL, resolverClient, state.AgentMode_MANAGED)

@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/nic/delphi/proto/goproto"
 	_ "github.com/pensando/sw/nic/utils/ntranslate/sysmond"
 	"github.com/pensando/sw/venice/utils/log"
-	tsdb "github.com/pensando/sw/venice/utils/ntsdb"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // addAsicPowerMetricsAPIRoutes adds routes for AsicPowerMetrics

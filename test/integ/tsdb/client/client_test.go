@@ -8,8 +8,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/test/integ/tsdb/collector"
-	"github.com/pensando/sw/venice/utils/ntsdb"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 func TestObjAPI(t *testing.T) {
@@ -26,7 +26,7 @@ func TestObjAPI(t *testing.T) {
 	Assert(t, len(res[0].Series) == 0, "Expected empty result")
 
 	// push metrics
-	table, err := ntsdb.NewObj(measName, map[string]string{}, nil, nil)
+	table, err := tsdb.NewObj(measName, map[string]string{}, nil, nil)
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -60,7 +60,7 @@ func TestPointsPrecision(t *testing.T) {
 	defer ts.TearDown()
 
 	// create tsdb table (change the precision between metrics)
-	table, err := ntsdb.NewObj(measName, map[string]string{}, nil, &ntsdb.ObjOpts{Precision: 3 * time.Millisecond})
+	table, err := tsdb.NewObj(measName, map[string]string{}, nil, &tsdb.ObjOpts{Precision: 3 * time.Millisecond})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 
@@ -117,7 +117,7 @@ func TestRegression(t *testing.T) {
 	ep.ObjectMeta.Name = "ep1"
 	epm := &endpointMetric{}
 
-	table, err := ntsdb.NewVeniceObj(ep, epm, &ntsdb.ObjOpts{})
+	table, err := tsdb.NewVeniceObj(ep, epm, &tsdb.ObjOpts{})
 	AssertOk(t, err, "unable to create table")
 	defer table.Delete()
 	epm.RxPacketSize.SetRanges([]int64{10, 100, 1000, 10000})
@@ -190,7 +190,7 @@ func TestVeniceObjAPI(t *testing.T) {
 	ep.TypeMeta.Kind = t.Name()
 	ep.ObjectMeta.Tenant = testTenant
 	ep.ObjectMeta.Name = "ep1"
-	obj, err := ntsdb.NewVeniceObj(ep, &ep.epm, &ntsdb.ObjOpts{})
+	obj, err := tsdb.NewVeniceObj(ep, &ep.epm, &tsdb.ObjOpts{})
 	AssertOk(t, err, "unable to create table")
 
 	ts1 := time.Now()

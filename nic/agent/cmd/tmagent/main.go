@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	tsdb "github.com/pensando/sw/venice/utils/ntsdb"
+	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"github.com/pensando/sw/nic/agent/tmagent/state"
 	"github.com/pensando/sw/nic/agent/tpa/ctrlerif"
@@ -147,7 +147,7 @@ func main() {
 	rc := resolver.New(cfg)
 
 	opts := &tsdb.Opts{
-		ClientName:              macAddr.String(),
+		ClientName:              "tpmagent_" + macAddr.String(),
 		ResolverClient:          rc,
 		Collector:               globals.Collector,
 		DBName:                  "default",
@@ -158,13 +158,13 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	// Init the TSDB
 	tsdb.Init(ctx, opts)
+	defer cancel()
 
 	tmAgent.tpCtrler, err = state.NewTpAgent(ctx, globals.AgentRESTPort)
 	if err != nil {
 		log.Fatalf("failed to init tmagent state, err: %v", err)
 	}
 	defer tmAgent.tpCtrler.Close()
-	defer cancel()
 
 	tmAgent.restServer, err = restapi.NewRestServer(ctx, *restURL)
 	if err != nil {

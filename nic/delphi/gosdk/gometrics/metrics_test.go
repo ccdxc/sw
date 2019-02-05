@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	. "github.com/pensando/sw/venice/utils/testutils"
-	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
+	"github.com/pensando/sw/venice/utils/tsdb/metrics"
 )
 
 type TestMetrics struct {

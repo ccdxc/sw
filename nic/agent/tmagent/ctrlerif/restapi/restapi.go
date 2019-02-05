@@ -16,7 +16,7 @@ import (
 
 	"github.com/pensando/sw/api"
 
-	tsdb "github.com/pensando/sw/venice/utils/ntsdb"
+	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"github.com/gorilla/mux"
 

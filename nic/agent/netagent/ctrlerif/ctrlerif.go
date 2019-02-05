@@ -436,6 +436,13 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context, ch chan<- netpro
 	client.waitGrp.Add(1)
 	defer client.waitGrp.Done()
 
+	keyTags := map[string]string{"node": "naples", "module": client.getAgentName(), "kind": "network"}
+	tsdbObj, err := tsdb.NewObj("diags", keyTags, nil, nil)
+	if err != nil {
+		log.Errorf("unable to create tsdb object, keys %+v", keyTags)
+		return
+	}
+
 	for {
 		// create a grpc client
 		rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
@@ -484,7 +491,7 @@ func (client *NpmClient) runNetworkWatcher(ctx context.Context, ch chan<- netpro
 			if err == nil && client.startTime.Before(t) && evt.EventType != api.EventType_DeleteEvent {
 				latency := time.Since(t)
 				if latency >= 0 {
-					tsdb.LogField("latency", evt.Network.ObjectMeta, "net_latency", float64(latency))
+					tsdbObj.Gauge("net_latency").Set(float64(latency))
 				}
 			}
 

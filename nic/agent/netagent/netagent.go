@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
@@ -199,15 +200,18 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 
 		ag.ResolverClient = resolver.New(&resolver.Config{Name: globals.Netagent, Servers: controllers})
 
-		opt := tsdb.Options{
-			ClientName:     globals.Netagent,
-			ResolverClient: ag.ResolverClient,
+		// initialize netagent's tsdb client
+		tsdbOpts := &tsdb.Opts{
+			ClientName:              globals.Netagent + ag.NetworkAgent.NodeUUID,
+			ResolverClient:          ag.ResolverClient,
+			Collector:               globals.Collector,
+			DBName:                  "default",
+			SendInterval:            time.Duration(30) * time.Second,
+			ConnectionRetryInterval: 100 * time.Millisecond,
 		}
-
-		err := tsdb.Init(tsdb.NewBatchTransmitter(context.TODO()), opt)
-		if err != nil {
-			log.Errorf("Error initializing the tsdb transmitter. Err: %v", err)
-		}
+		ctx, cancel := context.WithCancel(context.Background())
+		tsdb.Init(ctx, tsdbOpts)
+		defer cancel()
 
 		// Lock netagent state
 		ag.NetworkAgent.Lock()

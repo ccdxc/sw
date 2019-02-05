@@ -6,13 +6,13 @@ import (
 	"encoding/binary"
 
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ntsdb/metrics"
+	"github.com/pensando/sw/venice/utils/tsdb/metrics"
 )
 
 // Metrics is the interface all meterics objects have to implement
 type Metrics interface {
-	GetKey() []byte                      // returns the key for the metrics
-	String() string                      // return json string
+	GetKey() []byte                              // returns the key for the metrics
+	String() string                              // return json string
 	GetCounter(offset int) metrics.Counter       // get a counter attribute
 	GetGauge(offset int) metrics.Gauge           // get gauge attribute
 	SetCounter(cntr metrics.Counter, offset int) // set counter value

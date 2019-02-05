@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
@@ -89,16 +90,6 @@ func main() {
 		agMode = protos.AgentMode_MANAGED
 		// TODO Remove this once e2e is migrated to IOTA
 		resolverClient = resolver.New(&resolver.Config{Name: globals.Netagent, Servers: strings.Split(*resolverURLs, ",")})
-		opt := tsdb.Options{
-			ClientName:     "naples-netagent",
-			ResolverClient: resolverClient,
-		}
-
-		err = tsdb.Init(tsdb.NewBatchTransmitter(context.TODO()), opt)
-		if err != nil {
-			log.Infof("Error initializing the tsdb transmitter. Err: %v", err)
-		}
-
 	} else {
 		agMode = protos.AgentMode_CLASSIC
 	}
@@ -118,6 +109,19 @@ func main() {
 			log.Errorf("Error creating NPM client. Err: %v", err)
 		}
 		ag.NpmClient = npmClient
+
+		// initialize netagent's tsdb client
+		opts := &tsdb.Opts{
+			ClientName:              globals.Netagent + ag.NetworkAgent.NodeUUID,
+			ResolverClient:          resolverClient,
+			Collector:               globals.Collector,
+			DBName:                  "default",
+			SendInterval:            time.Duration(30) * time.Second,
+			ConnectionRetryInterval: 100 * time.Millisecond,
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		tsdb.Init(ctx, opts)
+		defer cancel()
 	}
 	// create the new Troublehshooting agent
 	var tsdp tstypes.TsDatapathAPI

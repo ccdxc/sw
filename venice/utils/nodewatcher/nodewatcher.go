@@ -16,9 +16,9 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	tsdb "github.com/pensando/sw/venice/utils/ntsdb"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 const (
