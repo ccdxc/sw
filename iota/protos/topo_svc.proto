@@ -319,9 +319,11 @@ enum TriggerOp {
 }
 
 enum TriggerMode {
-    MODE_NONE           = 0;
-    TRIGGER_SERIAL      = 1;
-    TRIGGER_PARALLEL    = 2;
+    MODE_NONE                 = 0;
+    TRIGGER_SERIAL            = 1;
+    TRIGGER_PARALLEL          = 2;
+    //Run commands on node in parallel.
+    TRIGGER_NODE_PARALLEL     = 3;
 }
 
 

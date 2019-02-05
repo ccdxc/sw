@@ -657,7 +657,8 @@ func (ts *TopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*
 
 	}
 
-	if req.GetTriggerMode() == iota.TriggerMode_TRIGGER_PARALLEL {
+	if req.GetTriggerMode() == iota.TriggerMode_TRIGGER_PARALLEL ||
+		req.GetTriggerMode() == iota.TriggerMode_TRIGGER_NODE_PARALLEL {
 		return ts.runParallelTrigger(ctx, req)
 	}
 

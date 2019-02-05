@@ -582,7 +582,7 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 		return &iota.TriggerMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: err.Error()}}, nil
 	}
 
-	for _, cmd := range in.Commands {
+	runCommand := func(cmd *iota.Command) error {
 		var err error
 		var cmdKey string
 		var cmdResp *Cmd.CommandCtx
@@ -620,6 +620,23 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 			cmd.Stdout = ""
 			cmd.Stderr = "Stdout/Stderr output limit Exceeded."
 			cmd.ExitCode = 127
+		}
+		return nil
+	}
+
+	if in.GetTriggerMode() == iota.TriggerMode_TRIGGER_NODE_PARALLEL {
+		pool, _ := errgroup.WithContext(context.Background())
+		for _, cmd := range in.Commands {
+			cmd := cmd
+			pool.Go(func() error {
+				runCommand(cmd)
+				return nil
+			})
+		}
+		pool.Wait()
+	} else {
+		for _, cmd := range in.Commands {
+			runCommand(cmd)
 		}
 	}
 
