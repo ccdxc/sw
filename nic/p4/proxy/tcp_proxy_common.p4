@@ -67,12 +67,13 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         sesq_ci_addr                    : HBM_ADDRESS_WIDTH     ;\
         gc_base                         : 64                    ;\
         last_ack                        : 32                    ;\
-        stretch_ack_cnt                 : 32                    ;\
+        partial_pkt_ack_cnt             : 32                    ;\
         tx_ring_pi                      : 16                    ;\
         last_snd_wnd                    : 16                    ;\
         tx_rst_sent                     : 1                     ;\
 
 #define TCB_XMIT_SHARED_STATE \
+        window_full_cnt                 : 32                    ;\
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
         initial_window                  : 32                    ;\
         snd_wscale                      : 8                     ;\
@@ -107,13 +108,13 @@ retx_snd_una,\
 sesq_ci_addr,\
 gc_base,\
 last_ack,\
-stretch_ack_cnt,\
+partial_pkt_ack_cnt,\
 tx_ring_pi,\
 last_snd_wnd,\
 tx_rst_sent
 
 #define XMIT_SHARED_PARAMS \
-snd_nxt, initial_window, snd_wscale,\
+window_full_cnt, snd_nxt, initial_window, snd_wscale,\
 xmit_cursor_addr, sesq_tx_ci,\
 xmit_offset, xmit_len,\
 packets_out, sacked_out, retrans_out, lost_out,\
@@ -130,12 +131,13 @@ quick_acks_decr
     modify_field(retx_d.sesq_ci_addr, sesq_ci_addr); \
     modify_field(retx_d.gc_base, gc_base); \
     modify_field(retx_d.last_ack, last_ack); \
-    modify_field(retx_d.stretch_ack_cnt, stretch_ack_cnt); \
+    modify_field(retx_d.partial_pkt_ack_cnt, partial_pkt_ack_cnt); \
     modify_field(retx_d.tx_ring_pi, tx_ring_pi); \
     modify_field(retx_d.last_snd_wnd, last_snd_wnd); \
     modify_field(retx_d.tx_rst_sent, tx_rst_sent); \
 
 #define GENERATE_XMIT_SHARED_D \
+    modify_field(xmit_d.window_full_cnt, window_full_cnt); \
     modify_field(xmit_d.snd_nxt, snd_nxt); \
     modify_field(xmit_d.initial_window, initial_window); \
     modify_field(xmit_d.snd_wscale, snd_wscale); \

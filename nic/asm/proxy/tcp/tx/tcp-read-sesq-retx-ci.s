@@ -35,6 +35,7 @@ tcp_tx_sesq_read_retx_ci_stage1_start:
         phvwr.!c1       p.t0_s2s_clean_retx_len1, d.len1
 
         b.c1            read_asesq_ci_end
+        nop
         blti            r4, CAPRI_HBM_BASE, tcp_tx_read_sesq_ci_fatal_error
 
         sub             r4, d.{descr2_addr}, NIC_DESC_ENTRY_0_OFFSET

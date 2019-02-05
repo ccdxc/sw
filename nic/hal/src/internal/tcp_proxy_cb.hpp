@@ -75,6 +75,17 @@ typedef struct tcpcb_s {
     uint32_t              snd_wscale;
     uint32_t              rcv_wscale;
     uint32_t              rcv_wnd;
+    bool                  delay_ack;
+    uint32_t              ato;
+    uint32_t              ato_deadline;
+    uint32_t              rto_deadline;
+    uint32_t              idle_deadline;
+    uint32_t              snd_ssthresh;
+    uint32_t              cc_algo;
+    uint32_t              snd_recover;
+    uint32_t              cc_flags;
+    uint32_t              initial_window;
+    uint32_t              abc_l_var;
 
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
@@ -129,18 +140,8 @@ typedef struct tcpcb_s {
     uint32_t              packets_out;
     uint32_t              rto_pi;
     uint32_t              tx_ring_pi;
-    uint32_t              stretch_ack_cnt;
-    bool                  delay_ack;
-    uint32_t              ato;
-    uint32_t              ato_deadline;
-    uint32_t              rto_deadline;
-    uint32_t              idle_deadline;
-    uint32_t              snd_ssthresh;
-    uint32_t              cc_algo;
-    uint32_t              snd_recover;
-    uint32_t              cc_flags;
-    uint32_t              initial_window;
-    uint32_t              abc_l_var;
+    uint32_t              partial_pkt_ack_cnt;
+    uint32_t              window_full_cnt;
 
     // PD state
     void                  *pd;                     // all PD specific state

@@ -1081,7 +1081,7 @@ p4pd_get_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd)
     // The following are used for DOL tests only
     tcpcb_pd->tcpcb->retx_snd_una = ntohl(data.retx_snd_una);
     tcpcb_pd->tcpcb->tx_ring_pi = ntohs(data.tx_ring_pi);
-    tcpcb_pd->tcpcb->stretch_ack_cnt = ntohl(data.stretch_ack_cnt);
+    tcpcb_pd->tcpcb->partial_pkt_ack_cnt = ntohl(data.partial_pkt_ack_cnt);
 
     return HAL_RET_OK;
 }
@@ -1104,6 +1104,7 @@ p4pd_get_tcp_tx_xmit_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->rto_backoff = data.rto_backoff;
     tcpcb_pd->tcpcb->snd_wscale = data.snd_wscale;
     tcpcb_pd->tcpcb->initial_window = ntohl(data.initial_window);
+    tcpcb_pd->tcpcb->window_full_cnt = ntohl(data.window_full_cnt);
 
     HAL_TRACE_DEBUG("TCPCB packets_out: {}", tcpcb_pd->tcpcb->packets_out);
 

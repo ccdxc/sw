@@ -529,11 +529,12 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_packets_out(rtcpcb.packets_out);
     rsp->mutable_stats()->set_sesq_tx_ci(rtcpcb.sesq_tx_ci);
     rsp->mutable_stats()->set_tx_ring_pi(rtcpcb.tx_ring_pi);
-    rsp->mutable_stats()->set_stretch_ack_cnt(rtcpcb.stretch_ack_cnt);
+    rsp->mutable_stats()->set_partial_pkt_ack_cnt(rtcpcb.partial_pkt_ack_cnt);
     rsp->mutable_stats()->set_rto_deadline(rtcpcb.rto_deadline);
     rsp->mutable_stats()->set_ato_deadline(rtcpcb.ato_deadline);
     rsp->mutable_stats()->set_idle_deadline(rtcpcb.idle_deadline);
     rsp->mutable_stats()->set_cc_flags(rtcpcb.cc_flags);
+    rsp->mutable_stats()->set_window_full_cnt(rtcpcb.window_full_cnt);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
@@ -596,8 +597,8 @@ tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
                   pd_tcp_global_stats_get_args.invalid_sesq_descr);
     rsp->mutable_global_stats()->set_invalid_retx_sesq_descr(
                   pd_tcp_global_stats_get_args.invalid_retx_sesq_descr);
-    rsp->mutable_global_stats()->set_stretch_ack(
-                  pd_tcp_global_stats_get_args.stretch_ack);
+    rsp->mutable_global_stats()->set_partial_pkt_ack(
+                  pd_tcp_global_stats_get_args.partial_pkt_ack);
     rsp->mutable_global_stats()->set_retx_nop_schedule(
                   pd_tcp_global_stats_get_args.retx_nop_schedule);
     rsp->mutable_global_stats()->set_gc_full(

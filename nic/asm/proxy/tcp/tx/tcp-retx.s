@@ -25,6 +25,7 @@ struct s3_t0_tcp_tx_retx_d d;
 
 tcp_retx_process_start:
     bbeq            k.common_phv_pending_ack_send, 1, tcp_retx_ack_send
+    nop
     bbeq            k.common_phv_pending_idle, 1, tcp_retx_idle
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
                         tcp_xmit_process_start,

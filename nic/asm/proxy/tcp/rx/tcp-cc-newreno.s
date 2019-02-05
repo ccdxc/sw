@@ -33,6 +33,7 @@ tcp_cc_new_reno:
     seq             c2, k.to_s4_cc_ack_signal, TCP_CC_ACK_SIGNAL
     seq             c3, d.cc_flags, 0
     bcf             [c1 & c2 & c3], tcp_cc_new_reno_ack_recvd
+    nop
 
     /*
      * Exit fast_recovery

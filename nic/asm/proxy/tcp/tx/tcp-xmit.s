@@ -37,10 +37,13 @@ tcp_xmit_process_start:
 
     seq             c1, k.t0_s2s_state, TCP_RST
     bcf             [c1 & !c_snd_una], tcp_tx_end_program_and_drop
+    nop
 
     bcf             [c_snd_una], tcp_tx_xmit_snd_una_update
+    nop
 
     bbeq            k.common_phv_pending_rto, 1, tcp_tx_retransmit
+    nop
 
     bbeq            k.common_phv_pending_fast_retx, 1, rearm_rto
 
@@ -214,6 +217,7 @@ tcp_tx_retransmit:
     tbladd          d.rto_backoff, 1
 
 tcp_tx_no_window:
+    tbladd          d.window_full_cnt, 1
     add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_TX_CI_OFFSET
     // Bail out, but remember the current ci in stage 0 CB
     tblwr           d.no_window, 1

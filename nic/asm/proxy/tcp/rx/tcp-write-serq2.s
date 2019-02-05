@@ -86,6 +86,7 @@ dma_cmd_ring_tcp_tx_doorbell:
     bcf         [c1 & c2], rx2tx_send_ack_and_clean_retx_ring
     nop
     b.c1        rx2tx_send_ack_ring
+    nop
     b.c2        rx2tx_clean_retx_ring
     nop
 rx2tx_send_ack_ring:

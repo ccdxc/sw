@@ -299,12 +299,8 @@ pending_rx2tx_clean_asesq:
     sub             r3, d.{sesq_base}.wx, CAPRI_SESQ_RING_SLOTS, NIC_SESQ_ENTRY_SIZE_SHIFT
     add             r3, r3, d.asesq_retx_ci, NIC_SESQ_ENTRY_SIZE_SHIFT
 
-    // pkts to free = min(ci-retx_ci, distance to end of asesq ring)
-    sub             r1, d.{ci_4}.hx, d.asesq_retx_ci
-    sub             r2, CAPRI_ASESQ_RING_SLOTS, d.asesq_retx_ci
-    slt             c1, r2, r1[CAPRI_ASESQ_RING_SLOTS_SHIFT-1:0]
-    add.c1          r1, r0, r2
-    phvwr           p.t0_s2s_clean_retx_num_retx_pkts, r1[CAPRI_ASESQ_RING_SLOTS_SHIFT-1:0]
+    // pkts to free = 1, don't batch asesq free
+    phvwr           p.t0_s2s_clean_retx_num_retx_pkts, 1
 
     phvwri          p.common_phv_pending_asesq, 1
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, tcp_tx_sesq_read_retx_ci_stage1_start,
@@ -321,8 +317,13 @@ pending_rx2tx_clean_sesq:
      */
     phvwr           p.to_s3_sesq_retx_ci, d.sesq_retx_ci
 
-    // pkts to free = min(ci-retx_ci, distance to end of sesq ring)
-    sub             r1, d.{ci_0}.hx, d.sesq_retx_ci
+    // if tx_ci is invalid
+    //      pkts to free = min(ci-retx_ci, distance to end of sesq ring)
+    // else
+    //      pkts to free = min(tx_ci-retx_ci, distance to end of sesq ring)
+    seq             c1, d.sesq_tx_ci, TCP_TX_INVALID_SESQ_TX_CI
+    sub.c1          r1, d.{ci_0}.hx, d.sesq_retx_ci
+    sub.!c1         r1, d.sesq_tx_ci, d.sesq_retx_ci
     sub             r2, CAPRI_SESQ_RING_SLOTS, d.sesq_retx_ci
     slt             c1, r2, r1[CAPRI_SESQ_RING_SLOTS_SHIFT-1:0]
     add.c1          r1, r0, r2
@@ -445,7 +446,7 @@ tcp_tx_ft_expired:
     tblssub.!c4     d.ato_deadline, 1
     seq             c3, d.idle_deadline, 1
     tblssub         d.idle_deadline, 1
-    tbladd.f        d.{ci_2}.hx, 1
+    tblwr.f         d.{ci_2}.hx, d.{pi_2}.hx
 
     // Ring doorbell to clear scheduler if necessary
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
@@ -489,7 +490,7 @@ tcp_tx_del_ack_timer_expired:
     nop
 
 tcp_tx_stop_perpetual_timer_and_exit:
-    tbladd          d.{ci_2}.hx, 1
+    tblwr           d.{ci_2}.hx, d.{pi_2}.hx
     tblwr.f         d.perpetual_timer_started, 0
     // Ring doorbell to clear scheduler if necessary
     addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, 0, LIF_TCP)
