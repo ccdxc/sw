@@ -1,4 +1,4 @@
-import { browser, by, element, protractor, WebElement } from 'protractor';
+import { browser, by, element, protractor, WebElement, ElementFinder } from 'protractor';
 import { LoginPage } from './login.po';
 import { By } from 'selenium-webdriver';
 
@@ -43,6 +43,33 @@ export class AppPage {
     const EC = protractor.ExpectedConditions;
     const appShellComponent = element(by.css('.app-shell-container'));
     expect(await appShellComponent.isPresent()).toBeGreaterThan(0);  // VeniceUI should be in logged-in stage.
+  }
+
+  /**
+   * This is a common API to verify table has content. Every table cell is not empty
+   */
+  async verifyTableHasContents() {
+    const EC = protractor.ExpectedConditions;
+    await browser.wait(element(by.css('.ui-table-scrollable-body-table tbody tr td')).isPresent(), 5000);
+    // Let rendering finish
+    await browser.sleep(1000);
+    const rows = await element.all(by.css('.ui-table-scrollable-body-table tbody tr'));
+    let limit = rows.length;
+    // Limiting to first 10 events due to the maount of time it takes
+    // to check each row
+    if (limit > 10) {
+      limit = 10;
+    }
+    for (let index = 0; index < limit; index++) {
+      // We re select the element to avoid our reference being stale
+      const colVals = await element.all(by.css('.ui-table-scrollable-body-table tbody tr:nth-of-type(' + index + ') td'));
+      for (let colIndex = 0; colIndex < colVals.length; colIndex++) {
+        const colVal: ElementFinder = colVals[colIndex];
+        const colText = await colVal.getText();
+        // to debug -- console.log('row: ' + index  + ' column: ' + colIndex + ' value:' + colText);
+        expect(colText).not.toBe('');
+      }
+    }
   }
 
 }
