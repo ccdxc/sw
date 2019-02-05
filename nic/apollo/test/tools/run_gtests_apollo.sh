@@ -23,7 +23,7 @@ function finish {
 trap finish EXIT
 
 export PATH=${PATH}:${BUILD_DIR}/bin
-echo $PATH
+
 # gtests
 #$GDB apollo_swithcport_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_switchport_test.xml"
 $GDB apollo_vcn_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vcn_test.xml"

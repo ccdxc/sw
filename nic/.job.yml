@@ -336,14 +336,6 @@ targets:
     sub-area:
     feature:
 
-  # ====================== Apollo2 Tests ===========================
-  apollo/gtest:
-    commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtest"]
-    owners: ["email:jcruz@pensando.io"]
-    area:
-    sub-area:
-    feature:
-
   # ====================== E2E DOL Tests ===========================
   #dol/e2e/tlsproxy:
   # commands: ["make", "jobd/dol/e2e/tlsproxy"]

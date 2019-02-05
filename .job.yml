@@ -12,6 +12,7 @@ image:
 rebase: true
 references:
   - nic
+  - nic/apollo
   - dol
   - venice
   - api
@@ -31,6 +32,7 @@ dependencies:
   test: platform
   nic: platform
   platform: nic
+  nic/apollo: nic
   dol: nic
   dol/test/networking : nic
   nic/agent: venice
