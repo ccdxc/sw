@@ -1021,8 +1021,15 @@ static const struct net_device_ops ionic_netdev_ops = {
         .ndo_tx_timeout         = ionic_tx_timeout,
         .ndo_vlan_rx_add_vid    = ionic_vlan_rx_add_vid,
         .ndo_vlan_rx_kill_vid   = ionic_vlan_rx_kill_vid,
+
+#ifdef HAVE_RHEL7_NET_DEVICE_OPS_EXT
+	.extended.ndo_dfwd_add_station = ionic_dfwd_add_station,
+	.extended.ndo_dfwd_del_station = ionic_dfwd_del_station,
+#else
 	.ndo_dfwd_add_station	= ionic_dfwd_add_station,
 	.ndo_dfwd_del_station	= ionic_dfwd_del_station,
+#endif
+
 #ifdef HAVE_RHEL7_NET_DEVICE_OPS_EXT
 /* RHEL7 requires this to be defined to enable extended ops.  RHEL7 uses the
  * function get_ndo_ext to retrieve offsets for extended fields from with the
