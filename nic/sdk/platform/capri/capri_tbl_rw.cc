@@ -8,6 +8,7 @@
 #include "platform/capri/capri_common.hpp"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/lib/utils/time_profile.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/capri/csrint/csr_init.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
@@ -1535,12 +1536,14 @@ capri_hbm_table_entry_write (uint32_t tableid,
                              uint16_t entry_size,
                              p4_table_mem_layout_t &tbl_info)
 {
+    time_profile_begin(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE);
     assert((entry_size >> 3) <= tbl_info.entry_width);
     assert(index < tbl_info.tabledepth);
     uint64_t entry_start_addr = (index * tbl_info.entry_width);
 
     sdk::asic::asic_mem_write(get_mem_addr(tbl_info.tablename) + entry_start_addr,
                               hwentry, (entry_size >> 3));
+    time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE);
     return CAPRI_OK;
 }
 
@@ -1549,6 +1552,7 @@ capri_hbm_table_entry_cache_invalidate (bool ingress,
                                         uint64_t entry_addr,
                                         p4_table_mem_layout_t &tbl_info)
 {
+    time_profile_begin(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
     cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     if (ingress) {
@@ -1562,7 +1566,7 @@ capri_hbm_table_entry_cache_invalidate (bool ingress,
         pics_csr.picc.dhs_cache_invalidate.entry.addr((get_mem_addr(tbl_info.tablename) + entry_addr) >> 6);
         pics_csr.picc.dhs_cache_invalidate.entry.write();
     }
-
+    time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
     return CAPRI_OK;
 }
 

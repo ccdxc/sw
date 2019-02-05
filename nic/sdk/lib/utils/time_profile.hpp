@@ -11,9 +11,9 @@ namespace sdk {
 namespace utils {
 namespace time_profile {
 
-//#define RUSAGE_PROFILING_ENABLE
+//#define TIME_PROFILING_ENABLE
 
-#ifdef RUSAGE_PROFILING_ENABLE
+#ifdef TIME_PROFILING_ENABLE
 
 class time_profile_info {
 private:
@@ -32,14 +32,20 @@ public:
 
 #define ENUM_ENTRY_LIST(ENUM_ENTRY) \
         ENUM_ENTRY(TABLE_LIB_MEMHASH_INSERT) \
-        ENUM_ENTRY(P4PD_ENTRY_READ) \
-        ENUM_ENTRY(P4PD_ENTRY_INSTALL) \
         ENUM_ENTRY(P4PD_HWKEY_HWMASK_BUILD) \
+        ENUM_ENTRY(P4PD_ENTRY_READ) \
         ENUM_ENTRY(ASICPD_HBM_TABLE_ENTRY_READ) \
-        ENUM_ENTRY(ASICPD_HBM_TABLE_ENTRY_WRITE) \
-        ENUM_ENTRY(COMPUTE_CRC) \
+        ENUM_ENTRY(ASIC_MEM_READ) \
         ENUM_ENTRY(PAL_MEM_RD) \
+        ENUM_ENTRY(PAL_REG_READ) \
+        ENUM_ENTRY(P4PD_ENTRY_INSTALL) \
+        ENUM_ENTRY(ASICPD_HBM_TABLE_ENTRY_WRITE) \
+        ENUM_ENTRY(CAPRI_HBM_TABLE_ENTRY_WRITE) \
+        ENUM_ENTRY(CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE) \
+        ENUM_ENTRY(ASIC_MEM_WRITE) \
         ENUM_ENTRY(PAL_MEM_WR) \
+        ENUM_ENTRY(PAL_REG_WRITE) \
+        ENUM_ENTRY(COMPUTE_CRC) \
         ENUM_ENTRY(TIME_PROFILE_ID_MAX)
 
 #define GENERATE_ENUM(ENUM) ENUM,
@@ -49,31 +55,22 @@ typedef enum time_profile_id_s {
     ENUM_ENTRY_LIST(GENERATE_ENUM)
 } time_profile_id_t;
 
-#if 0
-typedef enum time_profile_id_s {
-    TABLE_LIB_MEMHASH_INSERT,
-    P4PD_ENTRY_READ,
-    P4PD_ENTRY_INSTALL,
-    P4PD_HWKEY_BUILD,
-    P4PD_ASICPD_HBM_ENTRY_READ,
-    P4PD_ASICPD_HBM_ENTRY_WRITE,
-    TIME_PROFILE_ID_MAX,
-} time_profile_id_t;
-#endif
-
 extern time_profile_info time_profile_db[];
 
 void print();
 
 #define time_profile_begin(_id) \
-        sdk::utils::time_profile::time_profile_db[_id].start();
+        sdk::utils::time_profile::time_profile_db[_id].start()
 #define time_profile_end(_id) \
-        sdk::utils::time_profile::time_profile_db[_id].stop();
+        sdk::utils::time_profile::time_profile_db[_id].stop()
+#define time_profile_total(_id) \
+        sdk::utils::time_profile::time_profile_db[_id].total()
 #define time_profile_print() \
         sdk::utils::time_profile::print();
 #else
 #define time_profile_begin(_id)
 #define time_profile_end(_id)
+#define time_profile_total(_id) 0lu
 #define time_profile_print()
 #endif
 
