@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 # This is a temporary fix till we fix the asset with new directory strucutre.
 check_asic_asset()
@@ -28,8 +28,18 @@ then
     exit 0
 fi
 
-echo "pulling assets"
+echo "Deleting any stale files"
+for fname in $(find minio -name '*.txt') 
+do
+  while IFS='' read -r f || [[ -n "$f" ]]; do
+    # We use this expresion to remove any trailing "/*"
+    # so that /sw/nic/buildroot/output/*
+    # becomes /sw/nic/buildroot/output
+    rm -rf $(echo "$f" | sed -e 's/\/\*\s*$//')
+  done < $fname
+done
 
+echo "pulling assets"
 for fname in $(find minio -name '*.txt') 
 do
   name=$(basename $fname .txt)
