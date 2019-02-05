@@ -20,6 +20,7 @@ struct pd_enicif_s {
     uint32_t    inp_prop_mac_vlan_idx_upl;      // Pkts from Uplink
     uint32_t    enic_lport_id;                  // lport
     uint32_t    inp_prop_native_l2seg_clsc;     // Classic mode, pkts from host
+    uint32_t    inp_prop_native_l2seg_pri_clsc; // Classic mode, pkts from host with priority tag
 
     // pi ptr
     void        *pi_if;
@@ -59,10 +60,11 @@ pd_enicif_init (pd_enicif_t *enicif)
     }
 
     // Set here if you want to initialize any fields
-    enicif->inp_prop_mac_vlan_idx_host = INVALID_INDEXER_INDEX;
-    enicif->inp_prop_mac_vlan_idx_upl  = INVALID_INDEXER_INDEX;
-    enicif->enic_lport_id              = INVALID_INDEXER_INDEX;
-    enicif->inp_prop_native_l2seg_clsc = INVALID_INDEXER_INDEX;
+    enicif->inp_prop_mac_vlan_idx_host     = INVALID_INDEXER_INDEX;
+    enicif->inp_prop_mac_vlan_idx_upl      = INVALID_INDEXER_INDEX;
+    enicif->enic_lport_id                  = INVALID_INDEXER_INDEX;
+    enicif->inp_prop_native_l2seg_clsc     = INVALID_INDEXER_INDEX;
+    enicif->inp_prop_native_l2seg_pri_clsc = INVALID_INDEXER_INDEX;
 
     return enicif;
 }
