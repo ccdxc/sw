@@ -18,18 +18,6 @@ using std::stack;
 #define LPM_NEXTHOP_INVALID            -1
 #define LPM_NEXTHOP_SIZE                2    /**< 2 byte nexthop */
 
-/**< lpm interval tree node */
-typedef struct lpm_inode_s {
-    ip_addr_t    ipaddr;
-    uint32_t     nhid;
-} lpm_inode_t;
-
-/**< lpm interval node table */
-typedef struct lpm_itable_s {
-    uint32_t       num_intervals;    /**< number of entries in interval table */
-    lpm_inode_t    *nodes;           /**< interval table nodes */
-} lpm_itable_t;
-
 /**< temporary stack elements maintained while building the interval table */
 typedef struct itable_stack_elem_s {
     lpm_inode_t    interval;         /**< interval table node (to be emitted) */
@@ -39,15 +27,22 @@ typedef struct itable_stack_elem_s {
 /**< each LPM table is 64 bytes (512 bits/flit) */
 #define LPM_TABLE_SIZE                 (CACHE_LINE_SIZE)
 /**
- * key size is 4 bytes for IPv4 and 8 bytes (assuming max prefix length of 64)
- * for IPv6
+ * key size is 4 bytes for IPv4, 8 bytes (assuming max prefix length of 64)
+ * for IPv6, 2 bytes for port tree and 4 bytes for proto-port tree
  */
-#define LPM_ENTRY_KEY_SIZE(ip_af)      (((ip_af) == IP_AF_IPV4) ? 4 : 8)
-
-/**
- * data is next hop index
- */
-#define LPM_ENTRY_DATA_SIZE(ip_af)     (LPM_NEXTHOP_SIZE)
+static inline uint32_t
+lpm_entry_key_size (itree_type_t tree_type)
+{
+    if ((tree_type == ITREE_TYPE_IPV4) ||
+        (tree_type == ITREE_TYPE_PROTO_PORT)) {
+        return 4;
+    } else if (tree_type == ITREE_TYPE_PORT) {
+        return 2;
+    } else if (tree_type == ITREE_TYPE_IPV6) {
+        return 8;
+    }
+    return 0;
+}
 
 /**
  * number of keys per table is CACHE_LINE_SIZE/(sizeof(ipv4_addr_t) = 16 for
@@ -55,7 +50,19 @@ typedef struct itable_stack_elem_s {
  * NOTE: this doesn't apply to last stage where each node also has 2 byte
  * nexthop
  */
-#define LPM_KEYS_PER_TABLE(ip_af)      (((ip_af) == IP_AF_IPV4) ? 15 : 7)
+static inline uint32_t
+lpm_keys_per_table (itree_type_t tree_type)
+{
+    if ((tree_type == ITREE_TYPE_IPV4) ||
+        (tree_type == ITREE_TYPE_PROTO_PORT)) {
+        return 15;
+    } else if (tree_type == ITREE_TYPE_PORT) {
+        return 31;
+    } else if (tree_type == ITREE_TYPE_IPV6) {
+        return 7;
+    }
+    return 0;
+}
 
 #define LPM_MAX_STAGES    8    /**< 8 stages can serve more than 1M v6 routes */
 
@@ -70,7 +77,7 @@ typedef struct lpm_stage_info_s {
 } lpm_stage_info_t;
 
 typedef struct lpm_stage_meta_s {
-    uint8_t             af;
+    itree_type_t        tree_type;       /**< type of the tree being built */
     uint32_t            key_sz;          /**< key size for the tree */
     uint32_t            keys_per_table;  /**< no. of keys per table is same in
                                               all stages except last stage */
@@ -81,6 +88,7 @@ typedef struct lpm_stage_meta_s {
 /**
  * @brief    compute the number of stages needed for LPM lookup given the
  *           route table scale
+ * @param[in]    tree_type     type of the tree being built
  * @param[in]    num_routes    number of routes in the route table
  * @return       number of lookup stages (aka. depth of the interval tree)
  *
@@ -92,10 +100,16 @@ typedef struct lpm_stage_meta_s {
  *     log4(2 * num_routes)
  */
 static inline uint32_t
-lpm_stages (uint8_t ip_af, uint32_t num_routes)
+lpm_stages (itree_type_t tree_type, uint32_t num_routes)
 {
-    if (ip_af == IP_AF_IPV4) {
+    if (tree_type == ITREE_TYPE_IPV4) {
         return (uint32_t)ceil(log2f((double)(num_routes << 1))/4.0); // 16-way tree
+    } else if (tree_type == ITREE_TYPE_PORT) {
+        // TODO
+        SDK_ASSERT(0);
+    } else if (tree_type == ITREE_TYPE_PROTO_PORT) {
+        // TODO
+        SDK_ASSERT(0);
     } else {
         return (uint32_t)ceil(log2f((double)(num_routes << 1))/2.0); // 8-way tree
     }
@@ -107,10 +121,11 @@ lpm_stages (uint8_t ip_af, uint32_t num_routes)
  *           lengths
  * @param[in]    r1    pointer to 1st route
  * @param[in]    r2    pointer to 2nd route
+ * @param[in]    ctxt  opaque context
  * @return  -1, 0, 1 based on the comparison result
  */
 static int
-route_compare_cb (const void *route1, const void *route2)
+route_compare_cb (const void *route1, const void *route2, void *ctxt)
 {
     route_t    *r1 = (route_t *)route1;
     route_t    *r2 = (route_t *)route2;
@@ -422,11 +437,11 @@ lpm_ipv4_add_key_to_last_stage (lpm_stage_info_t *stage, lpm_inode_t *lpm_inode)
 
 
 static inline sdk_ret_t
-lpm_add_key_to_stage (uint8_t af, lpm_stage_info_t *stage,
+lpm_add_key_to_stage (itree_type_t tree_type, lpm_stage_info_t *stage,
                       lpm_inode_t *lpm_inode)
 {
-    switch (af) {
-    case IP_AF_IPV4:
+    switch (tree_type) {
+    case ITREE_TYPE_IPV4:
         lpm_ipv4_add_key_to_stage(stage, lpm_inode);
         break;
     default:
@@ -437,10 +452,10 @@ lpm_add_key_to_stage (uint8_t af, lpm_stage_info_t *stage,
 }
 
 static inline sdk_ret_t
-lpm_write_stage_table (uint8_t af, lpm_stage_info_t *stage)
+lpm_write_stage_table (itree_type_t tree_type, lpm_stage_info_t *stage)
 {
-    switch (af) {
-    case IP_AF_IPV4:
+    switch (tree_type) {
+    case ITREE_TYPE_IPV4:
         lpm_write_table(stage->curr_table_addr,
                         P4_APOLLO_TXDMA_TBL_ID_ROUTE_LPM_S0,
                         ROUTE_LPM_S0_ROUTE_LPM_S0_ID,
@@ -454,11 +469,11 @@ lpm_write_stage_table (uint8_t af, lpm_stage_info_t *stage)
 }
 
 static inline sdk_ret_t
-lpm_add_key_to_last_stage (uint8_t af, lpm_stage_info_t *stage,
+lpm_add_key_to_last_stage (itree_type_t tree_type, lpm_stage_info_t *stage,
                            lpm_inode_t *lpm_inode)
 {
-    switch (af) {
-    case IP_AF_IPV4:
+    switch (tree_type) {
+    case ITREE_TYPE_IPV4:
         lpm_ipv4_add_key_to_last_stage(stage, lpm_inode);
         break;
     default:
@@ -482,10 +497,10 @@ lpm_set_default_data (uint8_t af, lpm_stage_info_t *stage,
 }
 
 static inline sdk_ret_t
-lpm_write_last_stage_table (uint8_t af, lpm_stage_info_t *stage)
+lpm_write_last_stage_table (itree_type_t tree_type, lpm_stage_info_t *stage)
 {
-    switch (af) {
-    case IP_AF_IPV4:
+    switch (tree_type) {
+    case ITREE_TYPE_IPV4:
         lpm_write_table(stage->curr_table_addr,
                         P4_APOLLO_TXDMA_TBL_ID_ROUTE_LPM_S2,
                         ROUTE_LPM_S2_ROUTE_LPM_S2_ID,
@@ -509,15 +524,16 @@ lpm_flush_partial_tables (lpm_stage_meta_t *smeta, uint32_t nstages,
                           uint32_t curr_default)
 {
     for (uint32_t i = 0; i < (nstages-1); i++) {
-        lpm_write_stage_table(smeta->af, &smeta->stage_info[i]);
+        lpm_write_stage_table(smeta->tree_type, &smeta->stage_info[i]);
     }
 
     if (nstages > 0) {
         /**< table is ready to write. set the default data */
-        lpm_set_default_data(smeta->af, &smeta->stage_info[nstages-1],
+        lpm_set_default_data(smeta->tree_type, &smeta->stage_info[nstages - 1],
                              curr_default);
         /**< Write the table to HW memory */
-        lpm_write_last_stage_table(smeta->af, &smeta->stage_info[nstages-1]);
+        lpm_write_last_stage_table(smeta->tree_type,
+                                   &smeta->stage_info[nstages - 1]);
 
     }
     return SDK_RET_OK;
@@ -532,8 +548,8 @@ lpm_promote_route (lpm_inode_t *inode, uint32_t stage, lpm_stage_meta_t *smeta)
     SDK_ASSERT(0 <= stage && stage < LPM_MAX_STAGES);
     curr_stage = &smeta->stage_info[stage];
     if (curr_stage->curr_index == smeta->keys_per_table) {
-        /**< Flush current table to hw since its full */
-        ret = lpm_write_stage_table(smeta->af, curr_stage);
+        /**< flush current table to hw since its full */
+        ret = lpm_write_stage_table(smeta->tree_type, curr_stage);
         SDK_ASSERT(ret == SDK_RET_OK);
         /**< time to promote this to previous stage */
         lpm_promote_route(inode, stage - 1, smeta);
@@ -544,38 +560,41 @@ lpm_promote_route (lpm_inode_t *inode, uint32_t stage, lpm_stage_meta_t *smeta)
     }
 
     /**< we need to save this node in this stage */
-    ret = lpm_add_key_to_stage(smeta->af, curr_stage, inode);
+    ret = lpm_add_key_to_stage(smeta->tree_type, curr_stage, inode);
     SDK_ASSERT(ret == SDK_RET_OK);
 }
 
 /**
  * @brief    build LPM tree based on the interval node table
  * @param[in] itable                interval node table
+ * @param[in] default_nh            default nexthop id
+ * @param[in] max_routes            max routes supported per route table
  * @param[in] num_intervals         number of intervals in the interval table
  * @param[in] lpm_tree_root_addr    pointer to the memory address at which tree
  *                                  should be built
  * @param[in] lpm_mem_size          size of LPM memory block
  * @return    SDK_RET_OK on success, failure status code on error
  */
-static inline sdk_ret_t
-lpm_build_tree (route_table_t *route_table, lpm_itable_t *itable,
+sdk_ret_t
+lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
                 mem_addr_t lpm_tree_root_addr, uint32_t lpm_mem_size)
 {
     sdk_ret_t           ret;
     mem_addr_t          addr;
     lpm_stage_info_t    *last_stage_info;
-    lpm_stage_meta_t    smeta = { 0 };
+    lpm_stage_meta_t    smeta;
     uint32_t            nstages, nkeys_per_table;
-    uint32_t            curr_default = route_table->default_nhid;
+    uint32_t            curr_default = default_nh;
 
     /**< compute the # of stages, required including the def route */
-    nstages = lpm_stages(route_table->af, route_table->max_routes);
+    nstages = lpm_stages(itable->tree_type, max_routes);
     SDK_ASSERT(nstages <= LPM_MAX_STAGES);
 
     /**< initialize all the stage meta */
-    smeta.af = route_table->af;
-    smeta.key_sz = LPM_ENTRY_KEY_SIZE(route_table->af);
-    smeta.keys_per_table = LPM_KEYS_PER_TABLE(route_table->af);
+    memset(&smeta, 0, sizeof(smeta));
+    smeta.tree_type = itable->tree_type;
+    smeta.key_sz = lpm_entry_key_size(itable->tree_type);
+    smeta.keys_per_table = lpm_keys_per_table(itable->tree_type);
     addr = lpm_tree_root_addr;
     for (uint32_t i = 0, ntables = 1; i < nstages; i++) {
         smeta.stage_info[i].curr_table_addr = addr;
@@ -585,17 +604,23 @@ lpm_build_tree (route_table_t *route_table, lpm_itable_t *itable,
     }
     SDK_ASSERT(addr <= lpm_tree_root_addr + lpm_mem_size);
 
-    /**< walk all the interval tree nodes & from the interval tree bottom up */
-    nkeys_per_table = (uint32_t)LPM_KEYS_PER_TABLE(route_table->af) / 2;
+    /**
+     * walk all the interval tree nodes & from the interval tree bottom up,
+     * last stage has half as many keys as other stages, so divide
+     * lpm_keys_per_table() by 2
+     */
+    nkeys_per_table = lpm_keys_per_table(itable->tree_type) << 1;
     last_stage_info = &smeta.stage_info[nstages-1];
     for (uint32_t i = 0; i < itable->num_intervals; i++) {
-        lpm_add_key_to_last_stage(smeta.af, last_stage_info, &itable->nodes[i]);
+        lpm_add_key_to_last_stage(smeta.tree_type, last_stage_info,
+                                  &itable->nodes[i]);
 
         if (last_stage_info->curr_index == nkeys_per_table) {
             /**< table is ready to write. set the default data */
-            lpm_set_default_data(smeta.af, last_stage_info, curr_default);
+            lpm_set_default_data(smeta.tree_type, last_stage_info,
+                                 curr_default);
             /**< Write the table to HW memory */
-            lpm_write_last_stage_table(smeta.af, last_stage_info);
+            lpm_write_last_stage_table(smeta.tree_type, last_stage_info);
 
             if (++i < itable->num_intervals) {
                 /**< propogate this node to one of the previous stages */
@@ -608,7 +633,6 @@ lpm_build_tree (route_table_t *route_table, lpm_itable_t *itable,
             }
         }
     }
-
     ret = lpm_flush_partial_tables(&smeta, nstages, curr_default);
     SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
@@ -631,30 +655,38 @@ lpm_tree_create (route_table_t *route_table,
                  mem_addr_t lpm_tree_root_addr, uint32_t lpm_mem_size)
 {
     sdk_ret_t       ret;
-    lpm_itable_t    itable = { 0 };
+    lpm_itable_t    itable;
 
-    if (unlikely(route_table->num_routes == 0)) {
+    if (unlikely((route_table->num_routes == 0) ||
+                 ((route_table->af != IP_AF_IPV4) &&
+                  (route_table->af != IP_AF_IPV6)))) {
         return sdk::SDK_RET_INVALID_ARG;
     }
 
     /**< sort the given route table */
-    qsort(route_table->routes, route_table->num_routes,
-          sizeof(route_t), route_compare_cb);
+    qsort_r(route_table->routes, route_table->num_routes,
+            sizeof(route_t), route_compare_cb, route_table);
 
     /**< allocate memory for creating all interval tree nodes */
-    //num_intervals = compute_intervals(route_table->num_routes);
+    memset(&itable, 0, sizeof(itable));
     itable.nodes =
             (lpm_inode_t *)malloc(sizeof(lpm_inode_t) *
                                   (route_table->num_routes << 1));
     if (itable.nodes == NULL) {
         return sdk::SDK_RET_OOM;
     }
+    if (route_table->af == IP_AF_IPV4) {
+        itable.tree_type = ITREE_TYPE_IPV4;
+    } else {
+        itable.tree_type = ITREE_TYPE_IPV6;
+    }
     ret = lpm_build_interval_table(route_table, &itable);
     if (unlikely(ret != SDK_RET_OK)) {
         goto cleanup;
     }
-    ret = lpm_build_tree(route_table, &itable,
-                         lpm_tree_root_addr, lpm_mem_size);
+    ret = lpm_build_tree(&itable, route_table->default_nhid,
+                         route_table->max_routes, lpm_tree_root_addr,
+                         lpm_mem_size);
 
 cleanup:
 

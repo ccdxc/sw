@@ -13,21 +13,44 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 
+/**< LPM  interval tree type */
+typedef enum itree_type_e {
+    ITREE_TYPE_NONE,          /**< invalid tree type */
+    ITREE_TYPE_IPV4,          /**< IPv4 route interval tree */
+    ITREE_TYPE_IPV6,          /**< IPv6 route interval tree */
+    ITREE_TYPE_PORT,          /**< tree with port as key */
+    ITREE_TYPE_PROTO_PORT,    /**< tree with protocol + port as key */
+} itree_type_t;
+
 typedef struct route_s {
     ip_prefix_t    prefix;    /**< IP prefix */
     uint32_t       nhid;      /**< nexthop index */
 } route_t;
 
 typedef struct route_table_s {
-    uint8_t     af;            /**< address family */
-    uint32_t    default_nhid;  /**< NH Id for the default route */
-    uint32_t    max_routes;    /**< max size of table */
-    uint32_t    num_routes;    /**< number of routes */
-    route_t     routes[0];     /**< route list */
+    uint8_t         af;            /**< address family */
+    uint32_t        default_nhid;  /**< NH Id for the default route */
+    uint32_t        max_routes;    /**< max size of table */
+    uint32_t        num_routes;    /**< number of routes */
+    route_t         routes[0];     /**< route list */
 } route_table_t;
+
+/**< lpm interval tree node */
+typedef struct lpm_inode_s {
+    ip_addr_t    ipaddr;
+    uint32_t     nhid;
+} lpm_inode_t;
+
+/**< lpm interval node table */
+typedef struct lpm_itable_s {
+    itree_type_t    tree_type;      /** type of the interval tree */
+    uint32_t        num_intervals;  /**< number of entries in interval table */
+    lpm_inode_t     *nodes;         /**< interval table nodes */
+} lpm_itable_t;
 
 /**
  * @brief    build interval tree based LPM tree at the given memory address
+ *           based on the given route table
  * @param[in] route_table      pointer to the route configuration
  * @param[in] lpm_tree_root    pointer to the memory address at which tree
  *                             should be built
@@ -41,5 +64,21 @@ typedef struct route_table_s {
 sdk_ret_t lpm_tree_create(route_table_t *route_table,
                           mem_addr_t lpm_tree_root_addr,
                           uint32_t lpm_mem_size);
+
+/**
+ * @brief    build interval tree based LPM tree at the given memory address
+ *           based on the given interval table
+ * @param[in] route_table      pointer to the route configuration
+ * @param[in] lpm_tree_root    pointer to the memory address at which tree
+ *                             should be built
+ * @param[in] lpm_mem_size     LPM memory block size provided (for error
+ *                             detection)
+ * @return    SDK_RET_OK on success, failure status code on error
+ *
+ * NOTE: route_table will be modified internally as the library does
+ *       in-place sorting on the given routing table
+ */
+sdk_ret_t lpm_build_tree(lpm_itable_t *itable, mem_addr_t lpm_tree_root_addr,
+                         uint32_t lpm_mem_size);
 
 #endif    /** __LPM_HPP__ */
