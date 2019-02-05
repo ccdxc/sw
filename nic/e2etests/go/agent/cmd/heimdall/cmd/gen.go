@@ -62,6 +62,16 @@ var genCmd = &cobra.Command{
 			return err
 		}
 
+		if err := c.GenerateTunnels(); err != nil {
+			log.Errorf("Failed to generate tunnels. Err: %v", err)
+			return err
+		}
+
+		if err := c.GenerateMirrorSessions(); err != nil {
+			log.Errorf("Failed to generate mirror sessions. Err: %v", err)
+			return err
+		}
+
 		// Persist the generated JSONs.
 		if err := c.WriteJSON(outDir); err != nil {
 			log.Errorf("Failed to write generated JSONs. Err: %v", err)

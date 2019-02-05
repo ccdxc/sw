@@ -16,14 +16,16 @@ import (
 const defaultRemoteUUIDName = "GWUUID"
 
 type CfgGen struct {
-	NodeUUIDs                                                                               []string
-	ManifestFile                                                                            string
-	Config                                                                                  pkg.Config
-	Template                                                                                pkg.ConfigTemplate
-	Namespaces, Networks, Endpoints, Apps, SGPolicies, SecurityProfiles, FlowExportPolicies IOTAConfig
-	EpCache                                                                                 map[string][]string
-	NodeEPLUT                                                                               map[string]NodeEPPairs
-	SubnetIPLUT                                                                             map[string][]string
+	NodeUUIDs    []string
+	ManifestFile string
+	Config       pkg.Config
+	Template     pkg.ConfigTemplate
+	Namespaces, Networks, Endpoints,
+	Apps, SGPolicies, SecurityProfiles,
+	FlowExportPolicies, Tunnels, MirrorSessions IOTAConfig
+	EpCache     map[string][]string
+	NodeEPLUT   map[string]NodeEPPairs
+	SubnetIPLUT map[string][]string
 }
 
 type IOTAConfig struct {
@@ -111,7 +113,17 @@ func (c *CfgGen) WriteJSON(outDir string) error {
 		return err
 	}
 
-	if err := writeJSON(path.Join(outDir, "flowmon.json"), c.FlowExportPolicies); err != nil {
+	if err := writeJSON(path.Join(outDir, "fepolicies.json"), c.FlowExportPolicies); err != nil {
+		log.Errorf("Failed to write JSON. Err: %v", err)
+		return err
+	}
+
+	if err := writeJSON(path.Join(outDir, "tunnels.json"), c.Tunnels); err != nil {
+		log.Errorf("Failed to write JSON. Err: %v", err)
+		return err
+	}
+
+	if err := writeJSON(path.Join(outDir, "mirrors.json"), c.MirrorSessions); err != nil {
 		log.Errorf("Failed to write JSON. Err: %v", err)
 		return err
 	}
@@ -125,7 +137,7 @@ func writeJSON(filePath string, obj interface{}) error {
 		return fmt.Errorf("failed to convert to IOTA Config. Obj: %v", obj)
 	}
 	if cfg.Objects == nil {
-		log.Debug("Nothing to write")
+		log.Error("Nothing to write")
 		return nil
 	}
 	dat, err := json.MarshalIndent(obj, "", "  ")
