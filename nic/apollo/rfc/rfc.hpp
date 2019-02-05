@@ -3,7 +3,7 @@
  *
  * @file    rfc.hpp
  *
- * @brief   Recursive Flow Classficiation (RFC) library
+ * @brief   external APIs for Recursive Flow Classficiation (RFC) library
  */
 
 #if !defined (__RFC_HPP__)

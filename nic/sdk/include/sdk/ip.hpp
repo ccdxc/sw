@@ -328,7 +328,6 @@ static inline std::ostream& operator<<(std::ostream& os, const ipv6_addr_t& ip)
            ((ipaddr1)->addr.v6_addr.addr64[0] >                                \
             (ipaddr2)->addr.v6_addr.addr64[0]))) ? true : false)
 
-
 static inline bool
 ip_addr_is_zero (const ip_addr_t *addr)
 {
