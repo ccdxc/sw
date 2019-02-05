@@ -29,8 +29,7 @@ const (
 	kmbKeyIDSuffix  = "-key"
 )
 
-// KeyMgrBasedProvider is a TLS Provider which generates private keys locally and retrieves
-// corresponding certificates from the Cluster Management Daemon (CMD)
+// KeyMgrBasedProvider is a TLS Provider which uses keys and certificates stored in a KeyMgr instance
 type KeyMgrBasedProvider struct {
 	// the KeyMgr instance used to generate and store keys and certificates
 	keyMgr *keymgr.KeyMgr

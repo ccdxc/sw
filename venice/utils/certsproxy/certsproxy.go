@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/x509"
 	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -30,6 +31,24 @@ type CertsProxy struct {
 	rpcClientOptions []rpckit.Option
 }
 
+var (
+	connRetryInterval = 500 * time.Millisecond
+	connMaxRetries    = 5
+)
+
+// Open a connection to CMD Endpoint with retries
+func (c *CertsProxy) getRPCClient() (*rpckit.RPCClient, error) {
+	for i := 0; i <= connMaxRetries; i++ {
+		rpcClient, err := rpckit.NewRPCClient("certsproxy", c.remoteURL, c.rpcClientOptions...)
+		if err == nil {
+			return rpcClient, nil
+		}
+		log.Infof("Failed to open CMD Connection to: %v, result: %v, retrying in %v", c.remoteURL, err, connRetryInterval)
+		time.Sleep(connRetryInterval)
+	}
+	return nil, fmt.Errorf("Error opening CMD connection")
+}
+
 // SignCertificateRequest checks a CSR submitted by a client, signs it and returns a certificate
 func (c *CertsProxy) SignCertificateRequest(ctx context.Context, req *certapi.CertificateSignReq) (*certapi.CertificateSignResp, error) {
 	csr, err := x509.ParseCertificateRequest(req.GetCsr())
@@ -42,18 +61,23 @@ func (c *CertsProxy) SignCertificateRequest(ctx context.Context, req *certapi.Ce
 		log.Errorf("Received CSR with invalid signature, error: %v", err)
 		return &certapi.CertificateSignResp{}, fmt.Errorf("CSR has invalid signature: %v", err)
 	}
-	rpcClient, err := rpckit.NewRPCClient("certsproxy", c.remoteURL, c.rpcClientOptions...)
+	rpcClient, err := c.getRPCClient()
 	if err != nil {
 		return &certapi.CertificateSignResp{}, fmt.Errorf("Unable to connect to remote server: %v", err)
 	}
 	defer rpcClient.Close()
 	cmdClient := certapi.NewCertificatesClient(rpcClient.ClientConn)
-	return cmdClient.SignCertificateRequest(ctx, &certapi.CertificateSignReq{Csr: csr.Raw})
+	result, err := cmdClient.SignCertificateRequest(ctx, &certapi.CertificateSignReq{Csr: csr.Raw})
+	if err != nil {
+		log.Errorf("Remote server returned RPC error: %v", err)
+		return &certapi.CertificateSignResp{}, fmt.Errorf("Remote server returned RPC error: %v", err)
+	}
+	return result, nil
 }
 
 // GetCaTrustChain returns the trust chain from the CA certificate to the root of trust
 func (c *CertsProxy) GetCaTrustChain(ctx context.Context, empty *certapi.Empty) (*certapi.CaTrustChain, error) {
-	rpcClient, err := rpckit.NewRPCClient("certsproxy", c.remoteURL, c.rpcClientOptions...)
+	rpcClient, err := c.getRPCClient()
 	if err != nil {
 		return &certapi.CaTrustChain{}, fmt.Errorf("Unable to connect to remote server: %v", err)
 	}
@@ -64,7 +88,7 @@ func (c *CertsProxy) GetCaTrustChain(ctx context.Context, empty *certapi.Empty) 
 
 // GetTrustRoots returns the trust roots that should be used by client when verifying trust chains
 func (c *CertsProxy) GetTrustRoots(ctx context.Context, empty *certapi.Empty) (*certapi.TrustRoots, error) {
-	rpcClient, err := rpckit.NewRPCClient("certsproxy", c.remoteURL, c.rpcClientOptions...)
+	rpcClient, err := c.getRPCClient()
 	if err != nil {
 		return &certapi.TrustRoots{}, fmt.Errorf("Unable to connect to remote server: %v", err)
 	}

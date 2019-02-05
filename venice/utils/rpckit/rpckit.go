@@ -437,7 +437,7 @@ func (c *RPCClient) getDialOpts() ([]grpc.DialOption, error) {
 	if c.tlsProvider != nil {
 		tlsOpt, terr := c.tlsProvider.GetDialOptions(c.options.remoteServerName)
 		if terr != nil {
-			c.logger.Errorf("Failed to get dial options for server %v. Err: %v", c.mysvcName, terr)
+			c.logger.Errorf("Service %v failed to get dial options for remoteURL %v. Err: %v", c.mysvcName, c.options.remoteServerName, terr)
 			return nil, terr
 		}
 		grpcOpts = append(grpcOpts, tlsOpt)

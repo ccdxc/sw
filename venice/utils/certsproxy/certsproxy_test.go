@@ -108,6 +108,8 @@ func TestProxy(t *testing.T) {
 		fmt.Sprintf("Unexpected number of failed RPC calls. Have: %d, Want: %d", certsSrv.GetRPCErrorCount(), 0))
 
 	// NEGATIVE TEST -- remote server is down, all calls should fail
+	// disable retries to speed up test
+	connMaxRetries = 0
 	certsSrv.Stop()
 	trustRootsResp, err = client.GetTrustRoots(context.Background(), &certapi.Empty{})
 	Assert(t, err != nil, "RPC did not fail with remote server unavailable")
