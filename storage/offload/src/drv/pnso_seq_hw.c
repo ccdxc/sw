@@ -994,16 +994,11 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 {
 	pnso_error_t err = EINVAL;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
-
-	struct sequencer_info *seq_info;
 	struct ring_spec *ring_spec;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	ring_spec = &chain_params->ccp_ring_spec;
-
-	seq_info = &svc_info->si_seq_info;
-	PPRINT_SEQUENCER_INFO(seq_info);
 
 	ring_spec->rs_ring_addr = ring->accel_ring.ring_base_pa;
 	ring_spec->rs_pndx_addr = ring->accel_ring.ring_pndx_pa;
@@ -1030,8 +1025,6 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 	 *
 	 */
 	chain_params->ccp_cmd.ccpc_desc_vec_push_en = 1;
-
-	PPRINT_SEQUENCER_INFO(seq_info);
 
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("exit!");

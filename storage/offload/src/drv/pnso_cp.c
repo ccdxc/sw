@@ -307,7 +307,6 @@ compress_poll(struct service_info *svc_info)
 	if (err)
 		goto out;
 
-
 	/*
 	 * compression is done, however, bail-out only if service is not lone
 	 * and if cp/pad is not requested
