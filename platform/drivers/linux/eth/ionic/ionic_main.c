@@ -146,8 +146,9 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	return work_done;
 }
 
-static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
+static int ionic_dev_cmd_wait(struct ionic *ionic, unsigned long max_wait)
 {
+	struct ionic_dev *idev = &ionic->idev;
 	unsigned long time;
 	signed long wait;
 	int done;
@@ -163,7 +164,8 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 		done = ionic_dev_cmd_done(idev);
 #ifdef HAPS
 		if (done)
-			pr_debug("DEVCMD %s (%d) done took %ld secs (%ld jiffies)\n",
+			dev_dbg(ionic->dev,
+				 "DEVCMD %s (%d) done took %ld secs (%ld jiffies)\n",
 				 ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
 				 idev->dev_cmd->cmd.cmd.opcode,
 				 (jiffies + max_wait - time)/HZ,
@@ -178,11 +180,10 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 
 	} while (time_after(time, jiffies));
 
-#ifdef HAPS
-	pr_debug("DEVCMD %d timeout after %ld secs\n",
-		 idev->dev_cmd->cmd.cmd.opcode,
-		 max_wait/HZ);
-#endif
+	dev_warn(ionic->dev, "DEVCMD %s %d timeout after %ld secs\n",
+		 ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
+		 idev->dev_cmd->cmd.cmd.opcode, max_wait/HZ);
+
 	return -ETIMEDOUT;
 }
 
@@ -199,14 +200,14 @@ static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
 	return -EIO;
 }
 
-int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
+int ionic_dev_cmd_wait_check(struct ionic *ionic, unsigned long max_wait)
 {
 	int err;
 
-	err = ionic_dev_cmd_wait(idev, max_wait);
+	err = ionic_dev_cmd_wait(ionic, max_wait);
 	if (err)
 		return err;
-	return ionic_dev_cmd_check_error(idev);
+	return ionic_dev_cmd_check_error(&ionic->idev);
 }
 
 int ionic_set_dma_mask(struct ionic *ionic)
@@ -270,7 +271,7 @@ int ionic_identify(struct ionic *ionic)
 
 	ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
 
-	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	err = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
 	if (err)
 		goto err_out_unmap;
 
@@ -306,7 +307,7 @@ int ionic_reset(struct ionic *ionic)
 	struct ionic_dev *idev = &ionic->idev;
 
 	ionic_dev_cmd_reset(idev);
-	return ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	return ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
 }
 
 static int __init ionic_init_module(void)

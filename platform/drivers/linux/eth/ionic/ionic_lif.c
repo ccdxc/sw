@@ -768,7 +768,7 @@ static void ionic_tx_timeout_work(struct work_struct *ws)
 	struct ionic_dev *idev = &lif->ionic->idev;
 
 	ionic_dev_cmd_hang_notify(idev);
-	ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
 
 	// TODO implement reset and re-init queues and so on
 	// TODO to get interface back on its feet
@@ -921,6 +921,9 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		netif_set_real_num_rx_queues(lower_dev, max);
 	}
 
+	netdev_info(lower_dev, "%s: %s %s\n",
+		    __func__, lif->name, lif->upper_dev->name);
+
 	/* WARNING - UGLY HACK */
 	/* This is to work around a bug in versions of the macvlan
 	 * driver prior to v4.18, where macvlan_open() doesn't call
@@ -980,7 +983,8 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 	unsigned long index = lif->index;
 	struct macvlan_dev *vlan = netdev_priv(lif->upper_dev);
 
-	netdev_info(lower_dev, "%s: %s\n", __func__, lif->name);
+	netdev_info(lower_dev, "%s: %s %s\n",
+		    __func__, lif->name, lif->upper_dev->name);
 	ionic_lif_stop(lif);
 	ionic_lif_deinit(lif);
 
@@ -1575,7 +1579,7 @@ static void ionic_lif_reset(struct lif *lif)
 	struct ionic_dev *idev = &lif->ionic->idev;
 
 	ionic_dev_cmd_lif_reset(idev, lif->index);
-	ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
 }
 
 static void ionic_lif_free(struct lif *lif)
@@ -1842,7 +1846,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	int err;
 
 	ionic_dev_cmd_adminq_init(idev, q, 0, lif->index, qcq->intr.index);
-	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	err = ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
 	if (err)
 		return err;
 
@@ -1858,6 +1862,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 
 	err = ionic_request_irq(lif, qcq);
 	if (err) {
+		netdev_warn(lif->netdev, "adminq irq request failed: %d\n", err);
 		netif_napi_del(napi);
 		return err;
 	}
@@ -1913,6 +1918,7 @@ int ionic_lif_notifyq_init(struct lif *lif)
 
 	err = ionic_request_irq(lif, qcq);
 	if (err) {
+		netdev_warn(lif->netdev, "notifyq irq request failed: %d\n", err);
 		netif_napi_del(napi);
 		return err;
 	}
@@ -2243,11 +2249,13 @@ static int ionic_lif_init(struct lif *lif)
 	int err;
 
 	err = ionic_debugfs_add_lif(lif);
-	if (err)
+	if (err) {
+		netdev_info(lif->netdev, "lif debugfs add failed: %d\n", err);
 		return err;
+	}
 
 	ionic_dev_cmd_lif_init(idev, lif->index);
-	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	err = ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
 	if (err)
 		return err;
 
