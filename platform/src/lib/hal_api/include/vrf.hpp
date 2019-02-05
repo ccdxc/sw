@@ -7,6 +7,7 @@
 #include "lib/indexer/indexer.hpp"
 
 #include "hal.hpp"
+#include "hal_types.hpp"
 #include "gen/proto/types.pb.h"
 
 class Uplink;
@@ -15,8 +16,10 @@ class HalVrf : public HalObject
 {
 public:
   static HalVrf *Factory(types::VrfType type = types::VRF_TYPE_CUSTOMER, Uplink *uplink = NULL);
-  static void Destroy(HalVrf *vrf);
+  static hal_irisc_ret_t Destroy(HalVrf *vrf);
 
+  hal_irisc_ret_t HalVrfCreate();
+  hal_irisc_ret_t HalVrfDelete();
 
   uint64_t GetId();
   uint64_t GetHandle();
@@ -26,10 +29,9 @@ public:
 
 private:
   HalVrf(types::VrfType type = types::VRF_TYPE_CUSTOMER, Uplink *uplink = NULL);
-  ~HalVrf();
+  ~HalVrf() {};
 
   uint32_t id;
-  uint64_t handle;
   types::VrfType type;
   Uplink *uplink;
 

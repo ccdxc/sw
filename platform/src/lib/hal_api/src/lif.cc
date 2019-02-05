@@ -226,11 +226,12 @@ Lif::~Lif()
 hal_irisc_ret_t
 Lif::AddMac(mac_t mac, bool re_add)
 {
-    mac_vlan_t mac_vlan;
-    bool       skip_registration = false;
+    hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    mac_vlan_t      mac_vlan;
+    bool            skip_registration = false;
 
     api_trace("Adding Mac Filter");
-    NIC_LOG_DEBUG("Adding Mac filter: {}", macaddr2str(mac));
+    NIC_LOG_DEBUG("Mac filter: {}", macaddr2str(mac));
 
     // re_add
     // - True: Has to exist and should not be counted against max limit
@@ -265,7 +266,13 @@ Lif::AddMac(mac_t mac, bool re_add)
                     mac_vlan = make_tuple(mac, *vlan_it);
                     if (mac_vlan_table_.find(mac_vlan) == mac_vlan_table_.end()) {
                         // No (MacVlan) filter. Creating (Mac, Vlan)
-                        CreateMacVlanFilter(mac, *vlan_it);
+                        ret = CreateMacVlanFilter(mac, *vlan_it);
+                        if (ret != HAL_IRISC_RET_SUCCESS) {
+                            NIC_LOG_ERR("lif:{}: Adding mac:{} failed for vlan: {}. Cleaning up this mac.",
+                                        GetHwLifId(), macaddr2str(mac), *vlan_it);
+                            DelMac(mac, false /* update_db */, true /* add failure */);
+                            goto end;
+                        }
                     } else {
                         NIC_LOG_DEBUG("(Mac,Vlan) filter present. No-op");
                     }
@@ -283,11 +290,13 @@ Lif::AddMac(mac_t mac, bool re_add)
         NIC_LOG_WARN("Mac already registered: {}", macaddr2str(mac));
         return HAL_IRISC_DUP_ADDR_ADD;
     }
-    return HAL_IRISC_RET_SUCCESS;
+
+end:
+    return ret;
 }
 
 hal_irisc_ret_t
-Lif::DelMac(mac_t mac, bool update_db)
+Lif::DelMac(mac_t mac, bool update_db, bool add_failure)
 {
     mac_vlan_t mac_vlan_key, mac_key, vlan_key;
     bool skipped_registration = false;
@@ -296,7 +305,7 @@ Lif::DelMac(mac_t mac, bool update_db)
     NIC_LOG_DEBUG("Deleting Mac filter: {}", macaddr2str(mac));
 
     mac_key = make_tuple(mac, 0);
-    if (mac_table_.find(mac) != mac_table_.end()) {
+    if (add_failure || mac_table_.find(mac) != mac_table_.end()) {
         if (IsClassicForwarding()) {
 
             if (is_multicast(mac)) {
@@ -339,7 +348,8 @@ Lif::DelMac(mac_t mac, bool update_db)
 hal_irisc_ret_t
 Lif::AddVlan(vlan_t vlan)
 {
-    mac_vlan_t mac_vlan;
+    hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    mac_vlan_t      mac_vlan;
 
     api_trace("Adding Vlan Filter");
     NIC_LOG_DEBUG("Adding Vlan filter: {}", vlan);
@@ -373,7 +383,13 @@ Lif::AddVlan(vlan_t vlan)
                 mac_vlan = make_tuple(*it, vlan);
                 if (mac_vlan_table_.find(mac_vlan) == mac_vlan_table_.end()) {
                     // No (MacVlan) filter. Creating (Mac, Vlan)
-                    CreateMacVlanFilter(*it, vlan);
+                    ret = CreateMacVlanFilter(*it, vlan);
+                    if (ret != HAL_IRISC_RET_SUCCESS) {
+                        NIC_LOG_ERR("lif:{}: Adding vlan:{} failed for mac: {}. Cleaning up this vlan.",
+                                    GetHwLifId(), vlan, macaddr2str(*it));
+                        DelVlan(vlan, false /* update_db */, true /* add failure */);
+                        goto end;
+                    }
                 } else {
                     NIC_LOG_DEBUG("(Mac,Vlan) filter present. No-op");
                 }
@@ -387,11 +403,12 @@ Lif::AddVlan(vlan_t vlan)
     } else {
         NIC_LOG_WARN("Vlan already registered: {}", vlan);
     }
-    return HAL_IRISC_RET_SUCCESS;
+end:
+    return ret;
 }
 
 hal_irisc_ret_t
-Lif::DelVlan(vlan_t vlan, bool update_db)
+Lif::DelVlan(vlan_t vlan, bool update_db, bool add_failure)
 {
     mac_vlan_t mac_vlan_key;
 
@@ -402,7 +419,7 @@ Lif::DelVlan(vlan_t vlan, bool update_db)
         return HAL_IRISC_RET_SUCCESS;
     }
 
-    if (vlan_table_.find(vlan) != vlan_table_.end()) {
+    if (add_failure || vlan_table_.find(vlan) != vlan_table_.end()) {
         if (IsClassicForwarding()) {
             for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
                 if (is_multicast(*it) && IsReceiveAllMulticast()) {
@@ -439,7 +456,8 @@ Lif::DelVlan(vlan_t vlan, bool update_db)
 hal_irisc_ret_t
 Lif::AddMacVlan(mac_t mac, vlan_t vlan)
 {
-    mac_vlan_t key(mac, vlan);
+    hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    mac_vlan_t      key(mac, vlan);
 
     api_trace("Adding (Mac,Vlan) Filter");
     NIC_LOG_DEBUG("Adding (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
@@ -456,7 +474,13 @@ Lif::AddMacVlan(mac_t mac, vlan_t vlan)
             // Check if mac filter and vlan filter is present
             if (mac_table_.find(mac) == mac_table_.end() ||
                 vlan_table_.find(vlan) == vlan_table_.end()) {
-                CreateMacVlanFilter(mac, vlan);
+                ret = CreateMacVlanFilter(mac, vlan);
+                if (ret != HAL_IRISC_RET_SUCCESS) {
+                    NIC_LOG_ERR("lif:{}: Adding mac:{} vlan: {} failed Cleaning up this (mac,vlan).",
+                                GetHwLifId(), macaddr2str(mac), vlan);
+                    DelMacVlan(mac, vlan, false /* update_db */, true /* add failure */);
+                    goto end;
+                }
             } else {
                 NIC_LOG_DEBUG("Mac filter and Vlan filter preset. "
                                 "No-op for (Mac,Vlan) filter");
@@ -470,11 +494,12 @@ Lif::AddMacVlan(mac_t mac, vlan_t vlan)
     } else {
         NIC_LOG_WARN("Mac-Vlan already registered: {}", mac);
     }
-    return HAL_IRISC_RET_SUCCESS;
+end:
+    return ret;
 }
 
 hal_irisc_ret_t
-Lif::DelMacVlan(mac_t mac, vlan_t vlan, bool update_db)
+Lif::DelMacVlan(mac_t mac, vlan_t vlan, bool update_db, bool add_failure)
 {
     mac_vlan_t mac_vlan_key;
 
@@ -482,7 +507,7 @@ Lif::DelMacVlan(mac_t mac, vlan_t vlan, bool update_db)
     NIC_LOG_DEBUG("Deleting (Mac,Vlan) mac: {}, filter: {}", macaddr2str(mac), vlan);
 
     mac_vlan_key = make_tuple(mac, vlan);
-    if (mac_vlan_table_.find(mac_vlan_key) != mac_vlan_table_.end()) {
+    if (add_failure || mac_vlan_table_.find(mac_vlan_key) != mac_vlan_table_.end()) {
         if (IsClassicForwarding()) {
             if (mac_table_.find(mac) == mac_table_.end() ||
                  vlan_table_.find(vlan) == vlan_table_.end()) {
@@ -698,11 +723,14 @@ Lif::UpdateName(std::string name)
     return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 Lif::CreateMacVlanFilter(mac_t mac, vlan_t vlan)
 {
-    mac_vlan_filter_t key;
-    filter_type_t type;
+
+    hal_irisc_ret_t     ret = HAL_IRISC_RET_SUCCESS;
+    mac_vlan_filter_t   key;
+    filter_type_t       type;
+    MacVlanFilter       *filter = NULL;
 
     if (!mac && !vlan) {
         type = kh::FILTER_LIF;
@@ -711,10 +739,19 @@ Lif::CreateMacVlanFilter(mac_t mac, vlan_t vlan)
     }
 
     key = make_tuple(type, mac, vlan);
-    mac_vlan_filter_table[key] = MacVlanFilter::Factory(this, mac, vlan, type);
+    filter = MacVlanFilter::Factory(this, mac, vlan, type);
+    if (filter == NULL) {
+        NIC_LOG_DEBUG("CreateMacVlanFilter failed.");
+        ret = HAL_IRISC_RET_FAIL;
+        goto end;
+    } else {
+        mac_vlan_filter_table[key] = filter;
+    }
+end:
+    return ret;
 }
 
-void
+hal_irisc_ret_t
 Lif::DeleteMacVlanFilter(mac_t mac, vlan_t vlan)
 {
     std::map<mac_vlan_filter_t, MacVlanFilter*>::iterator it;
@@ -729,23 +766,26 @@ Lif::DeleteMacVlanFilter(mac_t mac, vlan_t vlan)
 
     key = make_tuple(type, mac, vlan);
     it = mac_vlan_filter_table.find(key);
-    MacVlanFilter *filter = it->second;
-
-    mac_vlan_filter_table.erase(it);
-    MacVlanFilter::Destroy(filter);
+    if (it != mac_vlan_filter_table.end()) {
+        MacVlanFilter *filter = it->second;
+        mac_vlan_filter_table.erase(it);
+        MacVlanFilter::Destroy(filter);
+    }
+    return HAL_IRISC_RET_SUCCESS;
 }
 
 // Should be called only in case of smart.
-void
+hal_irisc_ret_t
 Lif::CreateMacFilter(mac_t mac)
 {
     mac_vlan_filter_t key(kh::FILTER_LIF_MAC, mac, 0);
 
     mac_vlan_filter_table[key] = MacVlanFilter::Factory(this, mac, 0,
                                                         kh::FILTER_LIF_MAC);
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 Lif::DeleteMacFilter(mac_t mac)
 {
     std::map<mac_vlan_filter_t, MacVlanFilter*>::iterator it;
@@ -756,19 +796,22 @@ Lif::DeleteMacFilter(mac_t mac)
 
     mac_vlan_filter_table.erase(it);
     MacVlanFilter::Destroy(filter);
+
+    return HAL_IRISC_RET_SUCCESS;
 }
 
 // Should be called only in case of smart.
-void
+hal_irisc_ret_t
 Lif::CreateVlanFilter(vlan_t vlan)
 {
     mac_vlan_filter_t key(kh::FILTER_LIF_VLAN, 0, vlan);
 
     mac_vlan_filter_table[key] = MacVlanFilter::Factory(this, 0, vlan,
                                                         kh::FILTER_LIF_VLAN);
+    return HAL_IRISC_RET_SUCCESS;
 }
 
-void
+hal_irisc_ret_t
 Lif::DeleteVlanFilter(vlan_t vlan)
 {
     std::map<mac_vlan_filter_t, MacVlanFilter*>::iterator it;
@@ -779,6 +822,7 @@ Lif::DeleteVlanFilter(vlan_t vlan)
 
     mac_vlan_filter_table.erase(it);
     MacVlanFilter::Destroy(filter);
+    return HAL_IRISC_RET_SUCCESS;
 }
 
 void

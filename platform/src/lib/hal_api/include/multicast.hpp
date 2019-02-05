@@ -21,7 +21,11 @@ class HalMulticast : public HalObject
 {
 public:
     static HalMulticast *Factory(HalL2Segment *l2seg, mac_t mac);
-    static void Destroy(HalMulticast *mcast);
+    static hal_irisc_ret_t Destroy(HalMulticast *mcast);
+
+    hal_irisc_ret_t HalMulticastCreate();
+    hal_irisc_ret_t HalMulticastDelete();
+
 
     static HalMulticast *GetInstance(HalL2Segment *l2seg, mac_t mac);
 
@@ -37,7 +41,7 @@ public:
 
 private:
     HalMulticast(HalL2Segment *l2seg,mac_t mac);
-    ~HalMulticast();
+    ~HalMulticast() {};
 
     HalL2Segment *l2seg;
     mac_t mac;

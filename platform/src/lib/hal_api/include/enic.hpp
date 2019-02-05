@@ -25,13 +25,17 @@ class Enic : public HalObject
 {
 public:
     static Enic *Factory(Lif *ethlif);
-    static void Destroy(Enic *enic);
+    static hal_irisc_ret_t Destroy(Enic *enic);
+
+    hal_irisc_ret_t HalEnicCreate();
+    hal_irisc_ret_t HalEnicDelete();
+
 
     // Classic ENIC APIs only
-    void AddVlan(vlan_t vlan);
-    void DelVlan(vlan_t vlan);
+    hal_irisc_ret_t AddVlan(vlan_t vlan);
+    void DelVlan(vlan_t vlan, bool skip_vlan = false);
 
-    ~Enic();
+    ~Enic() {};
 
     uint64_t GetId();
     uint64_t GetHandle();
@@ -54,7 +58,7 @@ private:
     static sdk::lib::indexer *allocator;
     static constexpr uint32_t max_enics = 4096;
 
-    void TriggerHalUpdate();
+    hal_irisc_ret_t TriggerHalUpdate();
 };
 
 #endif /* __ENIC_HPP__ */

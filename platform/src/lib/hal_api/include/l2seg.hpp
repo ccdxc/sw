@@ -22,7 +22,10 @@ class HalL2Segment : public HalObject
 {
 public:
     static HalL2Segment *Factory(HalVrf *vrf, uint16_t vlan);
-    static void Destroy(HalL2Segment *l2seg);
+    static hal_irisc_ret_t Destroy(HalL2Segment *l2seg);
+
+    hal_irisc_ret_t HalL2SegmentCreate();
+    hal_irisc_ret_t HalL2SegmentDelete();
 
     static HalL2Segment *Lookup(HalVrf *vrf, uint16_t vlan);
 
@@ -38,7 +41,7 @@ public:
 
 private:
   HalL2Segment(HalVrf *vrf, uint16_t vlan_id);
-  ~HalL2Segment();
+  ~HalL2Segment() {};
   void TriggerHalUpdate();
 
   uint32_t id;

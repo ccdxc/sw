@@ -5,7 +5,13 @@
 #include "platform/src/lib/hal_api/include/uplink.hpp"
 #include "platform/src/lib/hal_api/include/lif.hpp"
 #include "platform/src/lib/hal_api/include/hal_types.hpp"
+#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "delphic.hpp"
 
+pciemgr *pciemgr;
+namespace nicmgr {
+shared_ptr<NicMgrService> g_nicmgr_svc;
+}
 using namespace std;
 
 class filter_test : public ::testing::Test {
@@ -26,10 +32,161 @@ protected:
 
   // Will be called at the beginning of all test cases in this class
   static void SetUpTestCase() {
+
+      HalGRPCClient::Factory(FWD_MODE_CLASSIC);
+
+      // Create Uplinks
+      Uplink *up1 = Uplink::Factory(128, 1);
+      Uplink *up2 = Uplink::Factory(128, 2);
+
+      NIC_LOG_DEBUG("Creating VRFs for uplinks");
+      Uplink::CreateVrfs();
   }
 
 };
 
+// ----------------------------------------------------------------------------
+// Filter test
+// ----------------------------------------------------------------------------
+TEST_F(filter_test, test1)
+{
+    hal_irisc_ret_t ret;
+    hal_lif_info_t info = {0};
+    mac_t mac1 = 0x000102030405;
+
+    // Create Lif
+    // Create Lifs
+    info.hw_lif_id = 1;
+    info.pinned_uplink_port_num = 1;
+    info.is_management = false;
+    info.receive_promiscuous = true;
+    info.max_vlan_filters = 10;
+    info.max_mac_filters = 10;
+    info.max_mac_vlan_filters = 10;
+    Lif *lif1 = Lif::Factory(&info);
+
+    // Add Mac filter
+    lif1->AddMac(mac1++);
+    lif1->AddMac(mac1++);
+    lif1->AddMac(mac1++);
+
+    // Add Vlan filter.
+    // - Create L2seg
+    // - Add L2seg on Enic
+    // - Create EP
+    lif1->AddVlan(1);
+
+    lif1->AddVlan(2);
+
+    ret = lif1->AddVlan(3);
+    ASSERT_TRUE(ret == HAL_IRISC_RET_FAIL);
+
+}
+
+// Multicast filter
+TEST_F(filter_test, test2)
+{
+    hal_irisc_ret_t ret;
+    hal_lif_info_t info = {0};
+    mac_t mac1 = 0x01005E010101;
+
+    // Create Lif
+    // Create Lifs
+    info.hw_lif_id = 2;
+    info.pinned_uplink_port_num = 2;
+    info.is_management = false;
+    info.receive_promiscuous = true;
+    info.max_vlan_filters = 10;
+    info.max_mac_filters = 10;
+    info.max_mac_vlan_filters = 10;
+    Lif *lif1 = Lif::Factory(&info);
+
+    // Add Mac filter
+    lif1->AddMac(mac1++);
+    lif1->AddMac(mac1++);
+    lif1->AddMac(mac1++);
+
+    // Add Vlan filter.
+    // - Create L2seg
+    // - Add L2seg on Enic
+    // - Create EP
+    lif1->AddVlan(1);
+
+    lif1->AddVlan(2);
+
+    ret = lif1->AddVlan(3);
+    ASSERT_TRUE(ret == HAL_IRISC_RET_FAIL);
+}
+
+// ----------------------------------------------------------------------------
+// Add Mac failure
+// ----------------------------------------------------------------------------
+TEST_F(filter_test, test3)
+{
+    hal_irisc_ret_t ret;
+    hal_lif_info_t info = {0};
+    mac_t mac1 = 0x000202030405;
+
+    // Create Lif
+    // Create Lifs
+    info.hw_lif_id = 3;
+    info.pinned_uplink_port_num = 1;
+    info.is_management = false;
+    info.receive_promiscuous = true;
+    info.max_vlan_filters = 10;
+    info.max_mac_filters = 10;
+    info.max_mac_vlan_filters = 10;
+    Lif *lif1 = Lif::Factory(&info);
+
+    lif1->AddMac(mac1++);
+    lif1->AddMac(mac1++);
+    lif1->AddMac(mac1++);
+
+    lif1->AddVlan(31);
+    lif1->AddVlan(32);
+    lif1->AddVlan(33);
+    lif1->AddMac(mac1++);
+    lif1->AddMac(mac1++);
+    ret = lif1->AddMac(mac1++);
+    ASSERT_TRUE(ret == HAL_IRISC_RET_FAIL);
+
+}
+
+// ----------------------------------------------------------------------------
+// Add McastMac failure
+// ----------------------------------------------------------------------------
+TEST_F(filter_test, test4)
+{
+    hal_irisc_ret_t ret;
+    hal_lif_info_t info = {0};
+    mac_t mac1 = 0x01015E010101;
+
+    // Create Lif
+    // Create Lifs
+    info.hw_lif_id = 4;
+    info.pinned_uplink_port_num = 1;
+    info.is_management = false;
+    info.receive_promiscuous = true;
+    info.max_vlan_filters = 10;
+    info.max_mac_filters = 10;
+    info.max_mac_vlan_filters = 10;
+    Lif *lif1 = Lif::Factory(&info);
+
+    lif1->AddMac(mac1++);
+    lif1->AddMac(mac1++);
+    lif1->AddMac(mac1++);
+
+    lif1->AddVlan(41);
+    lif1->AddVlan(42);
+    lif1->AddVlan(43);
+    lif1->AddMac(mac1++);
+    lif1->AddMac(mac1++);
+    ret = lif1->AddMac(mac1++);
+    ASSERT_TRUE(ret == HAL_IRISC_RET_FAIL);
+
+}
+
+#if 0
 // ----------------------------------------------------------------------------
 // Filter test
 // ----------------------------------------------------------------------------
@@ -251,8 +408,11 @@ TEST_F(filter_test, test2)
 
     // HalGRPCClient::Destroy(client);
 }
+#endif
 
 int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    ::testing::InitGoogleTest(&argc, argv);
+
+    utils::logger::init();
+    return RUN_ALL_TESTS();
 }
