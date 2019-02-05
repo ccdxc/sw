@@ -49,7 +49,7 @@ using namespace sdk::platform::capri;
 #define JTXDMA_PRGM "txdma_program"
 #define JLIFQSTATE "lif2qstate_map"
 #define JPKTBUFFER "rxdma_to_txdma_buf"
-#define JSLACLBASE "slacl"
+#define JSLACLV4BASE "slacl_v4"
 #define JLPMV4BASE "lpm_v4"
 #define JFLOWSTATSBASE "flow_stats"
 
@@ -420,7 +420,7 @@ vnic_tx_init ()
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check = true;
     memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);
-    slacl_hbm_addr = get_mem_addr(JSLACLBASE);
+    slacl_hbm_addr = get_mem_addr(JSLACLV4BASE);
     memcpy(local_vnic_info->slacl_addr_1, &slacl_hbm_addr,
            sizeof(local_vnic_info->slacl_addr_1));
     memcpy(local_vnic_info->slacl_addr_2, &slacl_hbm_addr,
@@ -450,7 +450,7 @@ vnic_rx_init ()
     data.action_id = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check = true;
-    slacl_hbm_addr = get_mem_addr(JSLACLBASE);
+    slacl_hbm_addr = get_mem_addr(JSLACLV4BASE);
     memcpy(local_vnic_info->slacl_addr_1, &slacl_hbm_addr,
            sizeof(local_vnic_info->slacl_addr_1));
     memcpy(local_vnic_info->slacl_addr_2, &slacl_hbm_addr,
@@ -673,7 +673,7 @@ trie_mem_init (void)
                                   sizeof(data));
     }
 
-    uint64_t slacl_hbm_addr = get_mem_addr(JSLACLBASE);
+    uint64_t slacl_hbm_addr = get_mem_addr(JSLACLV4BASE);
     for (uint32_t i = 0; i < SLACL_LPM_MEM_SIZE; i += sizeof(data)) {
         sdk::asic::asic_mem_write(slacl_hbm_addr + i, (uint8_t *)data,
                                   sizeof(data));
@@ -700,7 +700,7 @@ slacl_init (void)
     uint64_t data;
     uint8_t c_data[64];
     uint16_t start_bit;
-    uint64_t slacl_base_addr = get_mem_addr(JSLACLBASE);
+    uint64_t slacl_base_addr = get_mem_addr(JSLACLV4BASE);
 
     uint64_t slacl_ip_addr =
         slacl_base_addr + SLACL_IPV4_TABLE_OFFSET + (64 + (16 * 64));
