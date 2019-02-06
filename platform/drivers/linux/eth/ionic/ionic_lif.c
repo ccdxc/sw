@@ -293,7 +293,7 @@ static bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info)
 
 static int ionic_adminq_napi(struct napi_struct *napi, int budget)
 {
-	return ionic_napi(napi, budget, ionic_adminq_service, NULL);
+	return ionic_napi(napi, budget, ionic_adminq_service, NULL, NULL);
 }
 
 static void ionic_link_status_check(struct lif *lif)
@@ -404,7 +404,7 @@ static int ionic_notifyq_napi(struct napi_struct *napi, int budget)
 	void *reg;
 	u32 val;
 
-	napi_return = ionic_napi(napi, budget, ionic_notifyq_cb, NULL);
+	napi_return = ionic_napi(napi, budget, ionic_notifyq_cb, NULL, NULL);
 
 	/* if we ran out of budget, there are more events
 	 * to process and napi will reschedule us soon

@@ -125,13 +125,13 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 }
 
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
-	       void *cb_arg)
+	       ionic_cq_done_cb done_cb, void *done_arg)
 {
 	struct qcq *qcq = napi_to_qcq(napi);
 	struct cq *cq = &qcq->cq;
 	unsigned int work_done;
 
-	work_done = ionic_cq_service(cq, budget, cb, cb_arg);
+	work_done = ionic_cq_service(cq, budget, cb, done_cb, done_arg);
 	if (work_done > 0)
 		ionic_intr_return_credits(cq->bound_intr, work_done,
 					  false, true);

@@ -368,8 +368,10 @@ int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 void ionic_cq_map(struct cq *cq, void *base, dma_addr_t base_pa);
 void ionic_cq_bind(struct cq *cq, struct queue *q);
 typedef bool (*ionic_cq_cb)(struct cq *cq, struct cq_info *cq_info);
+typedef void (*ionic_cq_done_cb)(void *done_arg);
 unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
-			      ionic_cq_cb cb, void *cb_arg);
+			      ionic_cq_cb cb, ionic_cq_done_cb done_cb,
+			      void *done_arg);
 
 int ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
 		 unsigned int index, const char *name, unsigned int num_descs,

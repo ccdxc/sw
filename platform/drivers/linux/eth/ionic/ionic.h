@@ -56,7 +56,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 			   bool timeout);
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
-	       void *cb_arg);
+	       ionic_cq_done_cb done_cb, void *done_arg);
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
 int ionic_set_dma_mask(struct ionic *ionic);
 int ionic_setup(struct ionic *ionic);

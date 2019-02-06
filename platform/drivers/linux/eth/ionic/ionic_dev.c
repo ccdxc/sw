@@ -323,7 +323,8 @@ void ionic_cq_bind(struct cq *cq, struct queue *q)
 }
 
 unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
-			      ionic_cq_cb cb, void *cb_arg)
+			      ionic_cq_cb cb, ionic_cq_done_cb done_cb,
+			      void *done_arg)
 {
 	unsigned int work_done = 0;
 
@@ -339,6 +340,9 @@ unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
 		if (++work_done == work_to_do)
 			break;
 	}
+
+	if (work_done && done_cb)
+		done_cb(done_arg);
 
 	return work_done;
 }
