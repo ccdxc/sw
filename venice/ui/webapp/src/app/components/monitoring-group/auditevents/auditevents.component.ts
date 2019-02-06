@@ -74,8 +74,23 @@ export class AuditeventsComponent extends BaseComponent implements OnInit, OnDes
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'AuditeventsComponent', 'state': Eventtypes.COMPONENT_INIT });
     this.populateFieldSelector();
     this.getAllAuditevents();
+    this.setToolbarItems();
+  }
+
+  private setToolbarItems() {
     this._controllerService.setToolbarData({
-      buttons: [],
+      buttons: [
+        {
+          cssClass: 'global-button-primary auditevents-toolbar-button',
+          text: 'Export',
+          callback: () => { this.exportTableData(); },
+        },
+        {
+          cssClass: 'global-button-primary auditevents-toolbar-button',
+          text: 'Refresh',
+          callback: () => { this.refreshData(); },
+        }
+      ],
       breadcrumb: [{ label: 'Audit Events', url: Utility.getBaseUIUrl() + 'monitoring/auditevents' }]
     });
   }
@@ -86,6 +101,10 @@ export class AuditeventsComponent extends BaseComponent implements OnInit, OnDes
     });
     this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'AuditeventsComponent', 'state': Eventtypes.COMPONENT_DESTROY });
 
+  }
+
+  exportTableData() {
+    this.auditeventsTable.exportCSV();
   }
 
   populateFieldSelector() {
@@ -255,6 +274,10 @@ export class AuditeventsComponent extends BaseComponent implements OnInit, OnDes
    * @param $event
    */
   onCancelAuditSearch($event) {
+    this.refreshData();
+  }
+
+  refreshData() {
     this.auditeventSearchExpansionPanel.expanded = false;
     this.getAllAuditevents();
     this._controllerService.invokeInfoToaster('Infomation', 'Cleared search criteria, audit-events refreshed.');

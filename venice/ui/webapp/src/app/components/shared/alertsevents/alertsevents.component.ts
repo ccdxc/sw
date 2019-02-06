@@ -214,7 +214,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     if (this.selector != null) {
       this.eventsPostBody = {
         'field-selector': this.selector.eventSelector,
-        "sort-order": ApiListWatchOptions_sort_order.None
+        'sort-order': ApiListWatchOptions_sort_order.None
       };
       this.alertQuery = {
         'field-selector': this.selector.alertSelector

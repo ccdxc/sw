@@ -2,6 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AlertlistComponent } from './alertlist.component';
 import { AlertlistitemComponent } from './alertlistitem.component';
+import { SharedModule } from '@app/components/shared//shared.module';
 
 describe('AlertlistComponent', () => {
   let component: AlertlistComponent;
@@ -12,7 +13,11 @@ describe('AlertlistComponent', () => {
       declarations: [
         AlertlistComponent,
         AlertlistitemComponent
-      ]
+      ],
+      imports: [
+        // Other modules...
+        SharedModule
+      ],
     })
       .compileComponents();
   }));

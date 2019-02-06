@@ -24,6 +24,11 @@ import { AlertlistModule } from '@app/components/alertlist';
 import { LoginModule } from './components/login/login.module';
 import { ToolbarComponent } from './widgets/toolbar/toolbar.component';
 
+import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
+
+
 /* ---------------------------------------------------
     Third-party libraries
 ----------------------------------------------------- */
@@ -80,6 +85,7 @@ describe('AppcontentComponent', () => {
         ControllerService,
         AlerttableService,
         AuthService,
+        MonitoringService,
         LogService,
         LogPublishersService,
         Store,

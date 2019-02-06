@@ -11,12 +11,15 @@ import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Store } from '@ngrx/store';
 import { map, takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { CommonComponent } from './common.component';
 import { Utility } from './common/Utility';
 import { selectorSettings } from './components/settings-group';
 import { Eventtypes } from './enum/eventtypes.enum';
 import { ControllerService } from './services/controller.service';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 
 
 /**
@@ -43,13 +46,19 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   protected isSideNavExpanded = true;
 
-  // alerts
-  alerts = [];
-  alertNumbers = 0;
+  subscriptions: Subscription[] = [];
 
+  
   // idling
   showIdleWarning = false;
   idleDialogRef: any;
+
+  // alerts related variables
+   alertsEventUtility: HttpEventUtility<MonitoringAlert>;
+   alertSubscription: Subscription;
+   alerts: ReadonlyArray<MonitoringAlert> = [];
+   alertNumbers = 0;
+   alertQuery = {};
 
   protected sidenavmenu: any = [
     {
@@ -82,7 +91,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     private store: Store<any>,
     private idle: Idle,
     public dialog: MatDialog,
-    protected uiconfigsService: UIConfigsService
+    protected uiconfigsService: UIConfigsService,
+    protected monitoringService: MonitoringService,
   ) {
     super();
   }
@@ -416,19 +426,22 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
   /**
    * Call server to fetch all alerts to populate RHS alert-list
    */
-  getAlerts() {
-    const payload = '';
-    this._alerttableSerivce.getAlertList(payload).subscribe(
-      data => {
-        this.alerts = data;
+   getAlerts() {
+    // this.filteredAlerts = [];
+    this.alertsEventUtility = new HttpEventUtility<MonitoringAlert>(MonitoringAlert);
+    // this.alerts = this.alertsEventUtility.array;
+    if (this.alertSubscription) {
+      this.alertSubscription.unsubscribe();
+    }
+    this.alertSubscription = this.monitoringService.WatchAlert(this.alertQuery).subscribe(
+      response => {
+        this.alertsEventUtility.processEvents(response);
+        this.alerts = this.alertsEventUtility.array;
         this.alertNumbers = this.alerts.length;
       },
-      err => {
-        this.successMessage = '';
-        this.errorMessage = 'Failed to get items! ' + err;
-        this.error(err);
-      }
+      this._controllerService.restErrorHandler('Failed to get Alerts')
     );
+    this.subscriptions.push(this.alertSubscription);
   }
 
   /**

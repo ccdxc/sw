@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, ViewEncapsulation } from '@angular/core';
 
 import { Utility } from '../../common/Utility';
+import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
+
 
 /**
  * This component shows up in VeniceUI right-hand-side navigation panel when user click on "alert" toolbar icon
@@ -17,19 +19,20 @@ import { Utility } from '../../common/Utility';
   encapsulation: ViewEncapsulation.None
 })
 export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
-  @Input() data: Array<any>;
+  @Input() data: ReadonlyArray<MonitoringAlert> = [];
   @Output() expandAllAlertsClick: EventEmitter<any> = new EventEmitter();
 
+  // match MonitoringAlertStatus_severity
   alertnumber = {
-    total: 0,
-    critical: 0,
-    warning: 0,
-    info: 0
+    TOTAL: 0,
+    CRITICAL: 0,
+    WARNING: 0,
+    INFO: 0
   };
 
   protected menuIndicatorCSS = {};
   protected alerts = [];
-  protected currentAlertFilterType = 'total';
+  protected currentAlertFilterType = 'TOTAL';
 
   constructor() { }
 
@@ -52,16 +55,23 @@ export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
   ngOnChanges() {
     if (this.data && Array.isArray(this.data)) {
       this.alerts = this.data;
-      this.alertnumber = Utility.computeAlertNumbers(this.alerts);
+      this.computeAlertNumbers();
     }
+  }
+
+  public computeAlertNumbers( ) {
+    this.alertnumber.TOTAL = this.alerts.length;
+      this.alerts.forEach(alert => {
+        this.alertnumber[alert.status.severity] += 1;
+      });
   }
 
   isToShowThisAlert(alert): boolean {
     const alertType = this.currentAlertFilterType;
-    if (alertType === 'total') {
+    if (alertType === 'TOTAL') {
       return true;
     } else {
-      return (alert.severity === alertType);
+      return (alert.status.severity === alertType);
     }
   }
 

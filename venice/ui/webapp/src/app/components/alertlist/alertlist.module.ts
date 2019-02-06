@@ -4,10 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { AlertlistComponent } from './alertlist.component';
 import { AlertlistitemComponent } from './alertlistitem.component';
 
+import { SharedModule } from '@app/components/shared//shared.module';
+
 @NgModule({
   imports: [
     CommonModule,
-    FormsModule
+    FormsModule,
+    SharedModule
   ],
   declarations: [AlertlistComponent, AlertlistitemComponent],
   exports: [AlertlistComponent, AlertlistitemComponent]

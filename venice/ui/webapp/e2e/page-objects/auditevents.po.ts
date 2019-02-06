@@ -16,6 +16,5 @@ export class Auditevents {
         await browser.wait(EC.and(urlEC, componentEC));
     }
 
-    
 
 }

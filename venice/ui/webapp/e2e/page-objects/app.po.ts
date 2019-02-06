@@ -72,4 +72,13 @@ export class AppPage {
     }
   }
 
+  async getTableRowLength () {
+    const EC = protractor.ExpectedConditions;
+    await browser.wait(element(by.css('.ui-table-scrollable-body-table tbody tr td')).isPresent(), 5000);
+    // Let rendering finish
+    await browser.sleep(1000);
+    const rows = await element.all(by.css('.ui-table-scrollable-body-table tbody tr'));
+    return rows.length;
+  }
+
 }

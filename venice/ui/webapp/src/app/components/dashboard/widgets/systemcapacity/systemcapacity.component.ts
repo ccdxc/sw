@@ -81,6 +81,11 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
         this.toggleFlip();
       }
     },
+    {
+      text: 'Export', onClick: () => {
+        this.export();
+      }
+    }
   ];
   flipState: FlipState = FlipState.front;
 
@@ -274,6 +279,27 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
     // to be ready in the dom.
     this.viewInitialized = true;
     this.setupData();
+  }
+
+  export() {
+    const exportObj = {
+      urls: {
+        nodes: Utility.getBaseUIUrl + 'telemetry/v1/metrics',
+        naples: Utility.getBaseUIUrl + '/configs/cluster/v1/watch/smartnics',
+        metrics: Utility.getBaseUIUrl + 'telemetry/v1/metrics'
+      },
+      data: {
+        nodes: this.nodes,
+      },
+      stats: {
+        currentData: this.currentData,
+        timeSeriesData: this.timeSeriesData,
+        avgDayData: this.avgDayData
+      }
+    };
+    const fieldName = 'systemcapacity-dataset.json';
+    Utility.exportContent(JSON.stringify(exportObj, null, 2), 'text/json;charset=utf-8;', fieldName);
+    Utility.getInstance().getControllerService().invokeInfoToaster('Data exported', 'Please find ' + fieldName + ' in your donwload folder');
   }
 
   setupData() {
@@ -476,7 +502,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
    * it won't be clipped by the size of the canvas.
    */
   createCustomTooltip(chartTooltipId) {
-    return function(tooltip) {
+    return function (tooltip) {
       // This function will be called in the context of the chart
       const chartThis: any = this;
       // Tooltip Element

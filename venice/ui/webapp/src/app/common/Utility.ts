@@ -68,20 +68,7 @@ export class Utility {
     return hash2Obj;
   }
 
-  public static computeAlertNumbers(alerts) {
-    return {
-      total: alerts.length,
-      critical: alerts.filter((alert) => {
-        return alert.severity === 'critical';
-      }).length,
-      warning: alerts.filter((alert) => {
-        return alert.severity === 'warning';
-      }).length,
-      info: alerts.filter((alert) => {
-        return alert.severity === 'info';
-      }).length
-    };
-  }
+
 
   static getRandomInt(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -123,7 +110,7 @@ export class Utility {
   }
 
   static getMacAddress(): string {
-    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function() {
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function () {
       return '0123456789ABCDEF'.charAt(Math.floor(Math.random() * 16));
     });
   }
@@ -245,7 +232,7 @@ export class Utility {
 
   // encode(decode) html text into html entity
   static decodeHtmlEntity(str: string) {
-    return str.replace(/&#(\d+);/g, function(match, dec) {
+    return str.replace(/&#(\d+);/g, function (match, dec) {
       return String.fromCharCode(dec);
     });
   }
@@ -259,7 +246,7 @@ export class Utility {
   }
 
   static escape(s): any {
-    return s.replace(/[&"<>]/g, function(c) {
+    return s.replace(/[&"<>]/g, function (c) {
       return {
         '&': '&amp;',
         '"': '&quot;',
@@ -608,14 +595,14 @@ export class Utility {
   public static stringInject(str, data): string {
     if (typeof str === 'string' && (data instanceof Array)) {
 
-      return str.replace(/({\d})/g, function(i) {
+      return str.replace(/({\d})/g, function (i) {
         return data[i.replace(/{/, '').replace(/}/, '')];
       });
     } else if (typeof str === 'string' && (data instanceof Object)) {
 
       for (const key in data) {
         if (data.hasOwnProperty(key)) {
-          return str.replace(/({([^}]+)})/g, function(i) {
+          return str.replace(/({([^}]+)})/g, function (i) {
             i.replace(/{/, '').replace(/}/, '');
             if (!data[key]) {
               return i;
@@ -726,11 +713,11 @@ export class Utility {
     return this.stringArrayToSelectItem(kinds, isValueToLowerCase);
   }
 
-  public static stringArrayToSelectItem (stringArray: string[], isValueToLowerCase: boolean = true): SelectItem[] {
+  public static stringArrayToSelectItem(stringArray: string[], isValueToLowerCase: boolean = true): SelectItem[] {
     const ret: SelectItem[] = [];
-    for (let i = 0; i < stringArray.length ; i ++ ) {
-        const value = stringArray[i];
-        ret.push({ label: value, value: isValueToLowerCase ? value.toLocaleLowerCase() : value});
+    for (let i = 0; i < stringArray.length; i++) {
+      const value = stringArray[i];
+      ret.push({ label: value, value: isValueToLowerCase ? value.toLocaleLowerCase() : value });
     }
     return ret;
   }
@@ -885,7 +872,7 @@ export class Utility {
   }
 
   public static buildCommitBufferCommit(buffername: string): StagingCommitAction {
-    const data =  {
+    const data = {
       'kind': 'CommitAction',
       'meta': {
         'name': buffername,
@@ -948,6 +935,35 @@ export class Utility {
       }
     }
     return (defaultTooltip) ? defaultTooltip : (field) ? field : '';
+  }
+
+  /**
+   *
+   * @param content (like csv string.  You can )
+   * @type: 'text/csv;charset=utf-8;'
+   * @param exportFilename (like table.csv)
+   */
+  public static exportContent(content: any, type: string, exportFilename: string, ) {
+    const blob = new Blob([content], {
+      type: type
+    });
+
+    if (window.navigator.msSaveOrOpenBlob) {
+      navigator.msSaveOrOpenBlob(blob, exportFilename);
+    } else {
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      if (link.download !== undefined) {
+        link.setAttribute('href', URL.createObjectURL(blob));
+        link.setAttribute('download', exportFilename);  // this.exportFilename + '.csv');
+        link.click();
+      } else {
+        content = 'data:text/csv;charset=utf-8,' + content;
+        window.open(encodeURI(content));
+      }
+      document.body.removeChild(link);
+    }
   }
 
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()

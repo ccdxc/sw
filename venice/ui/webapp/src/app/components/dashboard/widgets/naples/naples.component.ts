@@ -125,6 +125,11 @@ export class NaplesComponent implements OnInit, OnChanges, OnDestroy {
         this.toggleFlip();
       }
     },
+    {
+      text: 'Export', onClick: () => {
+        this.export();
+      }
+    }
   ];
 
 
@@ -215,11 +220,23 @@ export class NaplesComponent implements OnInit, OnChanges, OnDestroy {
     this.flipState = FlipComponent.toggleState(this.flipState);
   }
 
+  export () {
+    const exportObj = {
+        naples: this.naples,
+        admitted: this.secondStat.value ,
+        rejected: this.thirdStat.value ,
+        pending: this.fourthStat.value
+    };
+    const fieldName = 'naples-dataset.json';
+    Utility.exportContent(JSON.stringify(exportObj, null, 2), 'text/json;charset=utf-8;', fieldName);
+    Utility.getInstance().getControllerService().invokeInfoToaster('Data exported', 'Please find ' + fieldName + ' in your donwload folder');
+  }
+
   ngOnChanges(changes) {
   }
 
   ngOnInit() {
-    this.getNaples()
+    this.getNaples();
     const chartData = [this.totalNaplesStat, this.rejectedNaplesStat, this.pendingNaplesStat];
     chartData.forEach((chart) => {
       const data = [];
@@ -237,7 +254,7 @@ export class NaplesComponent implements OnInit, OnChanges, OnDestroy {
     const subscription = this.clusterService.WatchSmartNIC().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
-        this.calculateNaplesStatus()
+        this.calculateNaplesStatus();
       },
       this.controllerService.restErrorHandler('Failed to get NAPLES info')
     );
@@ -247,7 +264,7 @@ export class NaplesComponent implements OnInit, OnChanges, OnDestroy {
   calculateNaplesStatus() {
     let rejected = 0; let admitted = 0; let pending = 0;
     this.naples.forEach((naple) => {
-      switch (naple.status["admission-phase"]) {
+      switch (naple.status['admission-phase']) {
         case ClusterSmartNICStatus_admission_phase.ADMITTED:
           admitted += 1;
           break;
@@ -258,8 +275,8 @@ export class NaplesComponent implements OnInit, OnChanges, OnDestroy {
           pending += 1;
           break;
       }
-    })
-    this.firstStat.value = this.naples.length.toString()
+    });
+    this.firstStat.value = this.naples.length.toString();
     this.secondStat.value = admitted.toString();
     this.thirdStat.value = rejected.toString();
     this.fourthStat.value = pending.toString();
