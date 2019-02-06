@@ -26,7 +26,7 @@ from capri_pa import capri_field as capri_field
 from capri_output import _get_output_name as _get_output_name
 from capri_output import capri_p4pd_create_swig_makefile as capri_p4pd_create_swig_makefile
 from capri_output import capri_p4pd_create_swig_makefile_click as capri_p4pd_create_swig_makefile_click
-from capri_output import capri_p4pd_create_bazel_build as capri_p4pd_create_bazel_build
+#from capri_output import capri_p4pd_create_bazel_build as capri_p4pd_create_bazel_build
 from capri_output import capri_p4pd_create_swig_custom_hdr as capri_p4pd_create_swig_custom_hdr
 from capri_output import capri_p4pd_create_swig_interface as capri_p4pd_create_swig_interface
 from capri_output import capri_p4pd_create_swig_main as capri_p4pd_create_swig_main
@@ -1569,7 +1569,7 @@ class capri_p4pd:
 
     def generate_swig(self):
         capri_p4pd_create_swig_interface(self.be)
-        capri_p4pd_create_bazel_build(self.be)
+        #capri_p4pd_create_bazel_build(self.be)
         capri_p4pd_create_swig_custom_hdr(self.be)
 
 def capri_p4pd_code_generate(capri_be):

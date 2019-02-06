@@ -4336,7 +4336,7 @@ void
         of.write(content_str)
         of.close()
 
-
+"""
 def capri_p4pd_create_bazel_build(be):
 
     name = be.prog_name
@@ -4384,6 +4384,7 @@ def capri_p4pd_create_bazel_build(be):
         of.write(content_str)
         of.close()
     os.chmod(out_file, 0o755)
+"""
 
 def capri_p4pd_create_swig_interface(be):
 
