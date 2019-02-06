@@ -24,8 +24,8 @@ if [ -r $SYSCONFIG/sysuuid ]; then
 fi
 
 export CONFIG_FILE=""
-if [ -r $SYSCONFIG/nicmgrd.json ]; then
-    CONFIG_FILE=`jq -r '.profile.device' $SYSCONFIG/nicmgrd.json`
+if [ -r $SYSCONFIG/device.conf ]; then
+    CONFIG_FILE=`jq '."feature-profile"' $SYSCONFIG/device.conf`
 else
     if [[ "$FWD_MODE" != "classic" ]]; then
         CONFIG_FILE="$NICMGR_CONFIG_PATH/eth_smart.json"
