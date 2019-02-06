@@ -11,6 +11,11 @@ namespace upgrade {
 
 using namespace std;
 
+inline bool exists(const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
+}
+
 bool UpgPostStateHandler::PostCompatCheckHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostCompatCheck returning");
     return true;
@@ -93,7 +98,9 @@ bool UpgPostStateHandler::PostPostLinkUpHandler(UpgCtx &ctx) {
 
 bool UpgPostStateHandler::PostSaveStateHandler(UpgCtx &ctx) {
     UPG_LOG_DEBUG("UpgPostStateHandler PostSaveState returning");
-    ctx.sysMgr->restart_system();
+    if (exists("/nic/tools/fwupdate")) {
+        ctx.sysMgr->restart_system();
+    }
     return true;
 }
 } // namespace upgrade
