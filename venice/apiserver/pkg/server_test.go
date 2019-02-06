@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -251,6 +252,52 @@ func TestRunApiSrv(t *testing.T) {
 	}
 	// Replenish the pool before exiting
 	t.Logf("replenish kv pool %d \n", config.KVPoolSize)
+	for i := 0; i < singletonAPISrv.config.KVPoolSize; i++ {
+		singletonAPISrv.addKvConnToPool()
+	}
+}
+
+func TestStartStop(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestApiServer")
+	l := log.GetNewLogger(logConfig)
+	config := apisrv.Config{
+		GrpcServerPort: ":0",
+		DebugMode:      true,
+		Logger:         l,
+		Version:        "v1",
+		Scheme:         runtime.NewScheme(),
+		Kvstore: store.Config{
+			Type:  store.KVStoreTypeMemkv,
+			Codec: runtime.NewJSONCodec(runtime.NewScheme()),
+		},
+		KVPoolSize: 1,
+	}
+
+	_ = MustGetAPIServer()
+	a := &singletonAPISrv
+	a.runstate.running = false
+
+	iterCount := 200
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		for i := 0; i < iterCount; i++ {
+			go a.Run(config)
+			a.WaitRunning()
+			a.Stop()
+		}
+		wg.Done()
+	}()
+	go func() {
+		for i := 0; i < iterCount; i++ {
+			go a.Run(config)
+			a.WaitRunning()
+			a.Stop()
+		}
+		wg.Done()
+	}()
+	wg.Wait()
+	// Replenish the pool before exiting
 	for i := 0; i < singletonAPISrv.config.KVPoolSize; i++ {
 		singletonAPISrv.addKvConnToPool()
 	}

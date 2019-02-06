@@ -107,16 +107,6 @@ func initAPIServer() {
 	singletonAPISrv.activeWatches = safelist.New()
 }
 
-// reinitAPIServer performs needed initialization on reinit.
-func reinitAPIServer() {
-	defer singletonAPISrv.Unlock()
-	singletonAPISrv.Lock()
-	singletonAPISrv.services = make(map[string]apiserver.Service)
-	singletonAPISrv.messages = make(map[string]apiserver.Message)
-	singletonAPISrv.doneCh = make(chan error)
-	singletonAPISrv.activeWatches = safelist.New()
-}
-
 // MustGetAPIServer returns the singleton instance. If it is not already
 //  initialized, it initializes the singleton.
 func MustGetAPIServer() apiserver.Server {
@@ -216,6 +206,14 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		defer cancel()
 	}
 	a.Lock()
+	a.runstate.cond.L.Lock()
+	if a.runstate.running {
+		a.Logger.Infof("API server is already running")
+		a.runstate.cond.L.Unlock()
+		a.Unlock()
+		return
+	}
+	a.runstate.cond.L.Unlock()
 	a.Logger = config.Logger
 	a.version = config.Version
 	a.config = config
@@ -301,37 +299,34 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	}
 	a.apiCache.Restore()
 	a.Logger.Log("msg", "added Kvstore connections to pool", "count", poolSize, "len", len(a.kvPool))
-	a.Unlock()
 	a.runstate.cond.L.Lock()
 	a.Logger.Log("Grpc Listen Start", a.runstate.addr)
 	a.runstate.running = true
 	s.Start()
 	a.runstate.cond.L.Unlock()
 	a.runstate.cond.Broadcast()
+	a.Unlock()
 	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.APIServer, utils.GetHostname()), nil)
 
 	select {
 	case donemsg := <-a.doneCh:
 		config.Logger.Log("exit", "Done", "msg", donemsg)
 		s.Stop()
+		a.cleanup()
 		close(a.doneCh)
 	case donemsg := <-s.DoneCh:
 		config.Logger.Log("exit", "gRPC Server", "msg", donemsg)
+		a.cleanup()
 	}
 }
 
-func (a *apiSrv) Stop() {
-	a.Logger.Log("msg", "STOP Called")
+// cleanup closes and releases resources used by the api server.
+func (a *apiSrv) cleanup() {
 	a.runstate.cond.L.Lock()
 	a.runstate.running = false
 	a.runstate.cond.L.Unlock()
-	a.doneCh <- errors.New("Stop called by user")
-	for {
-		if _, ok := <-a.doneCh; !ok {
-			a.Logger.Log("msg", "closing")
-			break
-		}
-	}
+	a.runstate.cond.Broadcast()
+
 	// Cleanup any remaining Watchers
 	fn := func(i interface{}) {
 		ctx := i.(context.Context)
@@ -347,12 +342,40 @@ func (a *apiSrv) Stop() {
 	a.kvPoolsize = 0
 	a.kvPool = []kvstore.Interface{}
 	a.nextKvMutex.Unlock()
-	// Let all the services cleanup.
-	for name, svc := range a.svcmap {
+}
+
+// reinit performs needed initialization in preparation for a restart.
+func (a *apiSrv) reinit() {
+	for name, svc := range singletonAPISrv.svcmap {
 		svc.Reset()
-		a.Logger.Log("msg", "Reset complete", "backend", name)
+		singletonAPISrv.Logger.Log("msg", "Reset complete", "backend", name)
 	}
-	reinitAPIServer()
+	singletonAPISrv.services = make(map[string]apiserver.Service)
+	singletonAPISrv.messages = make(map[string]apiserver.Message)
+	singletonAPISrv.doneCh = make(chan error)
+	singletonAPISrv.activeWatches = safelist.New()
+}
+
+// Stop sends a stop signal to the API server
+func (a *apiSrv) Stop() {
+	a.Logger.Log("msg", "STOP Called")
+	defer a.Unlock()
+	a.Lock()
+	a.runstate.cond.L.Lock()
+	if !a.runstate.running {
+		a.Logger.Infof("API server is already stopped")
+		a.runstate.cond.L.Unlock()
+		return
+	}
+	a.runstate.cond.L.Unlock()
+	a.doneCh <- errors.New("Stop called by user")
+	for {
+		if _, ok := <-a.doneCh; !ok {
+			a.Logger.Log("msg", "closing")
+			break
+		}
+	}
+	a.reinit()
 }
 
 func (a *apiSrv) WaitRunning() {
