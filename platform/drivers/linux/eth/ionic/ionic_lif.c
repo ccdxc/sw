@@ -2479,11 +2479,12 @@ int ionic_lifs_size(struct ionic *ionic)
 	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
 	unsigned int min_intrs;
 	unsigned int nslaves;
-	unsigned int nxqs;
+	unsigned int nxqs, neqs;
 	int err;
 
 	nxqs = min(ntxqs_per_lif, nrxqs_per_lif);
 	nxqs = min(nxqs, num_online_cpus());
+	neqs = min(neqs_per_lif, num_online_cpus());
 
 	nslaves = nlifs - 1;
 
@@ -2495,7 +2496,7 @@ try_again:
 	 *    2 for each slave lif: 1 adminq, 1 TxRx queuepair
 	 *    whatever's left is for RDMA queues
 	 */
-	nintrs = 1 + 1 + nxqs + (nslaves * 2) + neqs_per_lif;
+	nintrs = 1 + 1 + nxqs + (nslaves * 2) + neqs;
 	min_intrs = 3;  /* adminq + notifyq + 1 TxRx queue pair */
 
 	if (nintrs > dev_nintrs)
@@ -2520,7 +2521,7 @@ try_again:
 	}
 
 	ionic->nnqs_per_lif = nnqs_per_lif;
-	ionic->neqs_per_lif = neqs_per_lif;
+	ionic->neqs_per_lif = neqs;
 	ionic->ntxqs_per_lif = nxqs;
 	ionic->nrxqs_per_lif = nxqs;
 	ionic->nintrs = nintrs;
@@ -2533,8 +2534,8 @@ try_fewer:
 		--nnqs_per_lif;
 		goto try_again;
 	}
-	if (neqs_per_lif > 1) {
-		--neqs_per_lif;
+	if (neqs > 1) {
+		--neqs;
 		goto try_again;
 	}
 	if (nslaves) {
