@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/api/fields"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
 )
 
@@ -38,7 +39,9 @@ var _ = Describe("alert test", func() {
 
 		// stop pen-ntp daemon service
 		podName := getRunningPod("pen-ntp")
-		Expect(podName).ShouldNot(BeEmpty())
+		if utils.IsEmpty(podName) {
+			Skip("no running pod found for service {pen-ntp} on a READY node")
+		}
 		ts.tu.LocalCommandOutput(fmt.Sprintf("kubectl delete pod %s", podName))
 
 		// ensure the respective alert got generated
@@ -55,7 +58,7 @@ var _ = Describe("alert test", func() {
 				}
 			}
 			return false
-		}, 30, 1).Should(BeTrue(), "could not find the expected alert")
+		}, 90, 1).Should(BeTrue(), "could not find the expected alert")
 
 		// ensure alert policy status is updated
 		Eventually(func() error {
@@ -126,8 +129,8 @@ func getRunningPod(serviceName string) string {
 					By(fmt.Sprintf("ts=%s selected pod {%s} running on {%s}", time.Now().String(), pod.Metadata.Name, pod.Spec.NodeName))
 					return pod.Metadata.Name
 				}
-				By(fmt.Sprintf("ts=%s found a pod instance for service {%s} on the node {%s} but it is not READY", time.Now().String(), pod.Metadata.Name, pod.Spec.NodeName))
 			}
+			By(fmt.Sprintf("ts=%s found a pod instance for service {%s} on the node {%s} but it is not READY", time.Now().String(), pod.Metadata.Name, pod.Spec.NodeName))
 		}
 	}
 
