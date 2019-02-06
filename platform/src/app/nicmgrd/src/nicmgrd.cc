@@ -15,8 +15,11 @@
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
+#include "gen/proto/device.pb.h"
 
 #include "delphic.hpp"
+
+#define MAX_STRING_BUFF_SIZE   100
 
 using namespace std;
 
@@ -97,11 +100,20 @@ int main(int argc, char *argv[])
 {
     int opt;
     sighandler_t osigusr1;
-
+    char str[MAX_STRING_BUFF_SIZE];
+    
+    memset(str, 0, MAX_STRING_BUFF_SIZE);
     while ((opt = getopt(argc, argv, "c:sp:")) != -1) {
         switch (opt) {
         case 'c':
+            snprintf(str, MAX_STRING_BUFF_SIZE, "%d",
+                          device::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE);
             config_file = string(optarg);
+            if (config_file.compare(str) == 0) {
+                /* Eth dev scale profile */
+                std::string scale_config("/platform/etc/nicmgrd/eth_scale.json");
+                config_file.swap(scale_config);
+            }
             break;
         case 's':
             fwd_mode = FWD_MODE_SMART_NIC;
@@ -130,6 +142,7 @@ int main(int argc, char *argv[])
         cerr << "Please specify a config file" << endl;
         exit(1);
     }
+    cout << "Using config file: " << config_file << endl;
     osigusr1 = signal(SIGUSR1, sigusr1_handler);
     // install atexit() handler
     atexit(atexit_handler);
