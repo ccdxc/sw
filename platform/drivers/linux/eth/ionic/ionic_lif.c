@@ -767,8 +767,10 @@ static void ionic_tx_timeout_work(struct work_struct *ws)
 	struct lif *lif = container_of(ws, struct lif, tx_timeout_work);
 	struct ionic_dev *idev = &lif->ionic->idev;
 
+	mutex_lock(&lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_hang_notify(idev);
 	ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
+	mutex_unlock(&lif->ionic->dev_cmd_lock);
 
 	// TODO implement reset and re-init queues and so on
 	// TODO to get interface back on its feet
@@ -1578,8 +1580,10 @@ static void ionic_lif_reset(struct lif *lif)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
 
+	mutex_lock(&lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_lif_reset(idev, lif->index);
 	ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
+	mutex_unlock(&lif->ionic->dev_cmd_lock);
 }
 
 static void ionic_lif_free(struct lif *lif)
@@ -1845,12 +1849,14 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	struct adminq_init_comp comp;
 	int err;
 
+	mutex_lock(&lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_adminq_init(idev, q, 0, lif->index, qcq->intr.index);
 	err = ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
+	ionic_dev_cmd_comp(idev, &comp);
+	mutex_unlock(&lif->ionic->dev_cmd_lock);
 	if (err)
 		return err;
 
-	ionic_dev_cmd_comp(idev, &comp);
 	q->qid = comp.qid;
 	q->qtype = comp.qtype;
 	q->db = ionic_db_map(lif, q);
@@ -2254,8 +2260,10 @@ static int ionic_lif_init(struct lif *lif)
 		return err;
 	}
 
+	mutex_lock(&lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_lif_init(idev, lif->index);
 	err = ionic_dev_cmd_wait_check(lif->ionic, HZ * devcmd_timeout);
+	mutex_unlock(&lif->ionic->dev_cmd_lock);
 	if (err)
 		return err;
 

@@ -167,6 +167,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	ionic->pdev = pdev;
 	pci_set_drvdata(pdev, ionic);
 	ionic->dev = dev;
+	mutex_init(&ionic->dev_cmd_lock);
 
 	ionic->is_mgmt_nic =
 		ent->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
@@ -275,6 +276,7 @@ err_out_disable_device:
 	pci_disable_device(pdev);
 err_out_debugfs_del_dev:
 	ionic_debugfs_del_dev(ionic);
+	mutex_destroy(&ionic->dev_cmd_lock);
 	pci_set_drvdata(pdev, NULL);
 
 	return err;
@@ -296,9 +298,11 @@ static void ionic_remove(struct pci_dev *pdev)
 		pci_disable_sriov(pdev);
 		pci_disable_device(pdev);
 		ionic_debugfs_del_dev(ionic);
-	}
 
-	dev_info(ionic->dev, "removed\n");
+		mutex_destroy(&ionic->dev_cmd_lock);
+		
+		dev_info(ionic->dev, "removed\n");
+	}
 }
 
 static int ionic_sriov_configure(struct pci_dev *pdev, int numvfs)

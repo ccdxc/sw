@@ -269,9 +269,10 @@ int ionic_identify(struct ionic *ionic)
 		iowrite32(idev->ident->words[i], &ident->words[i]);
 #endif
 
+	mutex_lock(&ionic->dev_cmd_lock);
 	ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
-
 	err = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
+	mutex_unlock(&ionic->dev_cmd_lock);
 	if (err)
 		goto err_out_unmap;
 
@@ -305,9 +306,14 @@ void ionic_forget_identity(struct ionic *ionic)
 int ionic_reset(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
+	int err;
 
+	mutex_lock(&ionic->dev_cmd_lock);
 	ionic_dev_cmd_reset(idev);
-	return ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
+	err = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
+	mutex_unlock(&ionic->dev_cmd_lock);
+
+	return err;
 }
 
 static int __init ionic_init_module(void)

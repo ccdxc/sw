@@ -22,6 +22,7 @@ struct ionic {
 	struct platform_device *pfdev;
 	struct device *dev;
 	struct ionic_dev idev;
+	struct mutex dev_cmd_lock;
 	struct dentry *dentry;
 	struct ionic_dev_bar bars[IONIC_BARS_MAX];
 	unsigned int num_bars;
