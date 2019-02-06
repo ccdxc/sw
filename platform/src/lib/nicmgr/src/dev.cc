@@ -126,19 +126,15 @@ invalidate_txdma_cacheline(uint64_t addr)
 void
 DeviceManager::SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client)
 {
-    Device *dev = NULL;
-    Eth *eth_dev = NULL;
-    Accel_PF *accel_dev = NULL;
-
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
-        dev = (Device *)(it->second);
+        Device *dev = *it;
         if (dev->GetType() == ETH) {
-            eth_dev = (Eth *)dev;
+            Eth *eth_dev = (Eth *)dev;
             eth_dev->SetHalClient(hal_client, hal_cmn_client);
             eth_dev->HalEventHandler(true);
         }
         if (dev->GetType() == ACCEL) {
-            accel_dev = (Accel_PF *)dev;
+            Accel_PF *accel_dev = (Accel_PF *)dev;
             accel_dev->SetHalClient(hal_client, hal_cmn_client);
             accel_dev->HalEventHandler(true);
         }
@@ -530,7 +526,7 @@ DeviceManager::LoadConfig(string path)
 Device *
 DeviceManager::GetDevice(uint64_t id)
 {
-    return devices[id];
+    return lif_map[id];
 }
 
 Device *
@@ -549,14 +545,16 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
     case ETH:
         eth_dev = new Eth(hal, hal_common_client, dev_spec, &hal_lif_info_, pd);
         eth_dev->SetType(type);
+        devices.push_back(eth_dev);
         for (uint32_t lif = 0; lif < eth_dev->GetHalLifCount(); lif++) {
-            devices[eth_dev->GetHalLifInfo()->hw_lif_id + lif] = (Device *)eth_dev;
+            lif_map[eth_dev->GetHalLifInfo()->hw_lif_id + lif] = (Device *)eth_dev;
         }
         return (Device *)eth_dev;
     case ACCEL:
         accel_dev = new Accel_PF(hal, dev_spec, &hal_lif_info_, pd);
         accel_dev->SetType(type);
-        devices[accel_dev->GetHalLifInfo()->hw_lif_id] = (Device *)accel_dev;
+        devices.push_back(accel_dev);
+        lif_map[accel_dev->GetHalLifInfo()->hw_lif_id] = (Device *)accel_dev;
         return (Device *)accel_dev;
     case NVME:
         NIC_LOG_ERR("Unsupported Device Type NVME");
@@ -579,7 +577,7 @@ DeviceManager::LinkEventHandler(port_status_t *evd)
 
     NIC_HEADER_TRACE("Link Event");
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
-        dev = it->second;
+        dev = *it;
         if (dev->GetType() == ETH) {
             eth_dev = (Eth*) dev;
             eth_dev->LinkEventHandler(evd);
@@ -639,13 +637,13 @@ DeviceManager::AdminQPoll(void *obj)
                req_desc_addr);
 
         // Process devcmd
-        if (devmgr->devices.find(req_desc.lif) == devmgr->devices.cend()) {
+        if (devmgr->lif_map.find(req_desc.lif) == devmgr->lif_map.cend()) {
             req_error = true;
             NIC_LOG_ERR("Invalid AdminQ request! lif {} qtype {} qid {}",
                 req_desc.lif, req_desc.qtype, req_desc.qid);
         } else {
             req_error = false;
-            dev = devmgr->devices[req_desc.lif];
+            dev = devmgr->lif_map[req_desc.lif];
             if (dev->GetType() == ETH) {
                 Eth *eth_dev = (Eth *)dev;
                 eth_dev->AdminCmdHandler(req_desc.lif,
@@ -782,7 +780,7 @@ DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
 
     DumpQstateInfo(lifs);
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
-        Device *dev = it->second;
+        Device *dev = *it;
         if (dev->GetType() == ETH) {
             Eth *eth_dev = (Eth *) dev;
             eth_dev->GenerateQstateInfoJson(lifs);
@@ -798,7 +796,9 @@ void
 DeviceManager::ThreadsWaitJoin(void)
 {
     for (auto it = devices.cbegin(); it != devices.cend(); it++) {
-        Device *dev = it->second;
-        dev->ThreadsWaitJoin();
+        Device *dev = *it;
+        if (dev->GetType() == ACCEL) {
+            dev->ThreadsWaitJoin();
+        }
     }
 }

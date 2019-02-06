@@ -6,6 +6,8 @@
 #define __DEV_HPP__
 
 #include <string>
+#include <map>
+#include <vector>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
@@ -227,7 +229,8 @@ private:
     static DeviceManager *instance;
 
     boost::property_tree::ptree spec;
-    std::map<uint64_t, Device*> devices; // lif -> device
+    std::map<uint64_t, Device*> lif_map; // lif -> device
+    std::vector<Device*> devices;
 
     // Service Lif Info
     hal_lif_info_t hal_lif_info_;
