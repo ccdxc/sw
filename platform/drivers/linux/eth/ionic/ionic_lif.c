@@ -279,8 +279,7 @@ int ionic_stop(struct net_device *netdev)
 	return ionic_lif_stop(lif);
 }
 
-static bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info,
-				 void *cb_arg)
+static bool ionic_adminq_service(struct cq *cq, struct cq_info *cq_info)
 {
 	struct admin_comp *comp = cq_info->cq_desc;
 
@@ -334,8 +333,7 @@ static void ionic_link_status_check(struct lif *lif)
 	 */
 }
 
-static bool ionic_notifyq_cb(struct cq *cq, struct cq_info *cq_info,
-			     void *cb_arg)
+static bool ionic_notifyq_cb(struct cq *cq, struct cq_info *cq_info)
 {
 	union notifyq_comp *comp = cq_info->cq_desc;
 	struct net_device *netdev;

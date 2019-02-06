@@ -330,7 +330,7 @@ unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
 	if (work_to_do == 0)
 		return 0;
 
-	while (cb(cq, cq->tail, cb_arg)) {
+	while (cb(cq, cq->tail)) {
 		if (cq->tail->last)
 			cq->done_color = !cq->done_color;
 		cq->tail = cq->tail->next;

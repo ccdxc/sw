@@ -166,8 +166,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	napi_gro_receive(&qcq->napi, skb);
 }
 
-static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info,
-			     void *cb_arg)
+static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info)
 {
 	struct rxq_comp *comp = cq_info->cq_desc;
 
@@ -179,8 +178,7 @@ static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info,
 	return true;
 }
 
-static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info,
-			     void *cb_arg)
+static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info)
 {
 	struct txq_comp *comp = cq_info->cq_desc;
 
