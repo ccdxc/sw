@@ -23,9 +23,9 @@ testcases:
         disable : False
         iterators :
             type               : nested
-            tx_ring_size       : [ 1024, 8192 ]
-            mtu                : [ '1500', '8192']
-            pktsize            : [ 128, 8192]
+            tx_ring_size       : [ 1024, 2048, 4096, 8192 ]
+            mtu                : [ '1500', '2048', '4098', '8192']
+            pktsize            : [ 128, 1024, 2048, 8192]
             proto              : [ 'udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
@@ -38,9 +38,9 @@ testcases:
         disable : False
         iterators :
             type               : nested
-            rx_ring_size       : [ 1024, 8192 ]
-            mtu                : [ '1500', '8192']
-            pktsize            : [ 128, 8192]
+            rx_ring_size       : [ 1024, 2048, 4096, 8192 ]
+            mtu                : [ '1500', '2048', '4098', '8192']
+            pktsize            : [ 128, 1024, 2048, 8192]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
@@ -52,9 +52,9 @@ testcases:
         disable : False
         iterators :
             type               : nested
-            tx_queue_size      : [ 1, 16]
-            mtu                : [ '1500', '8192']
-            pktsize            : [ 128, 8192]
+            tx_queue_size      : [ 1, 2, 4, 8, 16]
+            mtu                : [ '1500', '2048', '4098', '8192']
+            pktsize            : [ 128, 1024, 2048, 8192]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
@@ -66,9 +66,9 @@ testcases:
         disable : False
         iterators :
             type               : nested
-            rx_queue_size      : [ 1, 16]
-            mtu                : [ '1500', '8192']
-            pktsize            : [ 128, 8192]
+            rx_queue_size      : [ 1, 2, 4, 8, 16]
+            mtu                : [ '1500', '2048', '4098', '8192']
+            pktsize            : [ 128, 1024, 2048, 8192]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
@@ -81,8 +81,8 @@ testcases:
         iterators :
             type               : nested
             tx_check_sum       : [ 'off', 'on']
-            pktsize            : [64, 8192]
-            pktsize            : [ 128, 8192]
+            pktsize            : [64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            pktsize            : [ 128, 1024, 2048, 8192]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
@@ -95,8 +95,8 @@ testcases:
         iterators :
             type               : nested
             rx_check_sum       : [ 'off', 'on']
-            mtu                : [ '1500', '8192']
-            pktsize            : [ 128, 8192]
+            mtu                : [ '1500', '2048', '4098', '8192']
+            pktsize            : [ 128, 1024, 2048, 8192]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
@@ -108,14 +108,14 @@ testcases:
         disable : False
         iterators :
             type               : nested
-            mtu                : [ '1500', '8192']
+            mtu                : [ '1500', '2048', '4098', '8192']
             tso_offload        : [ 'off', 'on']
             #Sg seems to be on for TSO testing.
             sg_offload         : [ 'on']
             #TSO requires rx and tx cheksum
             rx_check_sum       : [ 'on']
             tx_check_sum       : [ 'on']
-            pktsize            : [ 128, 8192]
+            pktsize            : [ 128, 1024, 2048, 8192]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :
@@ -127,11 +127,11 @@ testcases:
         disable : False
         iterators :
             type               : nested
-            mtu                : [ '1500', '8192']
+            mtu                : [ '1500', '2048', '4098', '8192']
             filter_mcast       : [ 'off', 'on']
             filter_all_mcast   : [ 'off', 'on']
             filter_promiscuous : [ 'off', 'on']
-            pktsize            : [ 128, 8192]
+            pktsize            : [ 128, 1024, 2048, 8192]
             proto              : ['udp', 'tcp']
             ipproto            : [ 'v4']
         args    :

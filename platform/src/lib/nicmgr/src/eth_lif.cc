@@ -1422,7 +1422,8 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         ret = lif->AddMac(mac_addr);
 
         if (ret != HAL_IRISC_RET_SUCCESS) {
-            NIC_LOG_WARN("{}: Duplicate Add.", hal_lif_info_.name);
+            NIC_LOG_WARN("{}: Failed Add Mac:{} ret: {}",
+                         hal_lif_info_.name, macaddr2str(mac_addr), ret);
             return (IONIC_RC_ERROR);
         }
 
@@ -1437,7 +1438,11 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
 
         NIC_LOG_DEBUG("{}: Add RX_FILTER_MATCH_VLAN vlan {}",
                       hal_lif_info_.name, vlan);
-        lif->AddVlan(vlan);
+        ret = lif->AddVlan(vlan);
+        if (ret != HAL_IRISC_RET_SUCCESS) {
+            NIC_LOG_WARN("{}: Failed Add Vlan:{}. ret: {}", hal_lif_info_.name, vlan, ret);
+            return (IONIC_RC_ERROR);
+        }
 
         // Store filter
         if (fltr_allocator->alloc(&filter_id) != sdk::lib::indexer::SUCCESS) {
@@ -1453,7 +1458,12 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Add RX_FILTER_MATCH_MAC_VLAN mac {} vlan {}",
                       hal_lif_info_.name, macaddr2str(mac_addr), vlan);
 
-        lif->AddMacVlan(mac_addr, vlan);
+        ret = lif->AddMacVlan(mac_addr, vlan);
+        if (ret != HAL_IRISC_RET_SUCCESS) {
+            NIC_LOG_WARN("{}: Failed Add Mac-Vlan:{}-{}. ret: {}", hal_lif_info_.name,
+                         macaddr2str(mac_addr), vlan, ret);
+            return (IONIC_RC_ERROR);
+        }
 
         // Store filter
         if (fltr_allocator->alloc(&filter_id) != sdk::lib::indexer::SUCCESS) {
