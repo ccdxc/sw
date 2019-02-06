@@ -1251,12 +1251,39 @@ def getQBaseAddrFromLog(tn, lif, type):
 
     return m.group(1).rstrip()
 
+def getCbData(tn, addr, offset):
+
+    # dump 64 bytes
+    addr = str(hex(addr + offset))
+    #print(addr)
+    cmd = '/platform/bin/eth_dbgtool memrd ' + addr + ' 64\n'
+    tn.write(cmd)
+    op = tn.expect(['#'], timeout=5)
+    op_list = op[2].split('\n')
+    data = ''
+    for i in range(1, 5):
+        line = op_list[i].split(' ')
+        for j in range(2, 18):
+            data += line[j]
+    #print(data)
+
+    # format the data
+    cb_str = data.decode("hex")
+    return cb_str
+
+def printQpHeader(qid):
+
+    print("QP num: {0}".format(qid))
+    print("==============")
+    return
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--dmesg', help='parse dmesg and parse rdma adminq wqes/cqes', action='store_true', default=False)
 parser.add_argument('--dmesg_file', help='parse dmesg from file and parse rdma adminq wqes/cqes')
 parser.add_argument('--DEVNAME', help='prints info for given rdma device')
 parser.add_argument('--offline', help='prints rdma per queue state through the console when the host is not accessible', action='store_true', default=False)
 parser.add_argument('--host', help='name of the host where Naples is present', type=str)
+parser.add_argument('--num_qps', help='number of QPs', type=int)
 grp = parser.add_mutually_exclusive_group()
 grp.add_argument('--sqcb0', help='prints sqcb0 state given qid', type=int, metavar='qid')
 grp.add_argument('--sqcb1', help='prints sqcb1 state given qid', type=int, metavar='qid')
@@ -1314,9 +1341,7 @@ if args.host is not None and \
        args.aqcb1 is not None or \
        args.kt_entry is not None or \
        args.pt_entry is not None or \
-       args.lif_stats is True or \
-       args.q_stats is not None or \
-       args.q_state is not None:
+       args.lif_stats is True:
 
         print("ERROR: This option is not yet supported in offline mode")
         exit()
@@ -1362,178 +1387,262 @@ if args.host is not None and \
     #print(sq_base_addr)
     #print(rq_base_addr)
 
-    # calculate the offset for specified CB
-    if args.rqcb0 is not None: 
-        qid = args.rqcb0 
-        addr = int(rq_base_addr, 16)
-        offset = 0
-    elif args.rqcb1 is not None: 
-        qid = args.rqcb1 
-        addr = int(rq_base_addr, 16)
-        offset = 64
-    elif args.rqcb2 is not None: 
-        qid = args.rqcb2 
-        addr = int(rq_base_addr, 16)
-        offset = 128
-    elif args.rqcb3 is not None: 
-        qid = args.rqcb3 
-        addr = int(rq_base_addr, 16)
-        offset = 192
-    elif args.resp_tx_stats is not None: 
-        qid = args.resp_tx_stats
-        addr = int(rq_base_addr, 16)
-        offset = 256
-    elif args.resp_rx_stats is not None: 
-        qid = args.resp_rx_stats
-        addr = int(rq_base_addr, 16)
-        offset = 320
-    elif args.sqcb0 is not None: 
-        qid = args.sqcb0
-        addr = int(sq_base_addr, 16)
-        offset = 0
-    elif args.sqcb1 is not None: 
-        qid = args.sqcb1
-        addr = int(sq_base_addr, 16)
-        offset = 64
-    elif args.sqcb2 is not None: 
-        qid = args.sqcb2
-        addr = int(sq_base_addr, 16)
-        offset = 128
-    elif args.sqcb3 is not None: 
-        qid = args.sqcb3
-        addr = int(sq_base_addr, 16)
-        offset = 192
-    elif args.req_tx_stats is not None: 
-        qid = args.req_tx_stats
-        addr = int(sq_base_addr, 16)
-        offset = 256
-    elif args.req_rx_stats is not None: 
-        qid = args.req_rx_stats
-        addr = int(sq_base_addr, 16)
-        offset = 320
-    elif args.rsq is not None: 
-        qid = args.rsq
-        addr = int(rq_base_addr, 16)
-        offset = 64
-    elif args.rrq is not None: 
-        qid = args.rrq
-        addr = int(sq_base_addr, 16)
-        offset = 64
+    if args.num_qps is None:
+        n_qp = 1
+    else:
+        n_qp = int(args.num_qps)
 
-    offset += int(512*qid)
-    #print(offset)
+    for i in range(0, n_qp):
 
-    # dump 64 bytes
-    addr = str(hex(addr + offset))
-    #print(addr)
-    cmd = '/platform/bin/eth_dbgtool memrd ' + addr + ' 64\n'
-    tn.write(cmd)
-    op = tn.expect(['#'], timeout=5)
-    op_list = op[2].split('\n')
-    data = ''
-    for i in range(1, 5):
-        line = op_list[i].split(' ')
-        for j in range(2, 18):
-            data += line[j]
-    #print(data)
+        # calculate the offset for specified CB
+        if args.rqcb0 is not None:
+            qid = int(args.rqcb0) + i
+            printQpHeader(qid)
+            addr = int(rq_base_addr, 16)
+            offset = 0 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRQCB0state(cb_str).show()
 
-    # format the data
-    cb_str = data.decode("hex")
+        elif args.rqcb1 is not None:
+            qid = int(args.rqcb1) + i
+            printQpHeader(qid)
+            addr = int(rq_base_addr, 16)
+            offset = 64 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRQCB1state(cb_str).show()
 
-    # print
-    if args.rqcb0 is not None: RdmaRQCB0state(cb_str).show()
-    elif args.rqcb1 is not None: RdmaRQCB1state(cb_str).show()
-    elif args.rqcb2 is not None: RdmaRQCB2state(cb_str).show()
-    elif args.rqcb3 is not None: RdmaRQCB3state(cb_str).show()
-    elif args.resp_tx_stats is not None: RdmaRespTxStats(cb_str).show()
-    elif args.resp_rx_stats is not None: RdmaRespRxStats(cb_str).show()
-    elif args.sqcb0 is not None: RdmaSQCB0state(cb_str).show()
-    elif args.sqcb1 is not None: RdmaSQCB1state(cb_str).show()
-    elif args.sqcb2 is not None: RdmaSQCB2state(cb_str).show()
-    elif args.sqcb3 is not None: RdmaSQCB3state(cb_str).show()
-    elif args.req_tx_stats is not None: RdmaReqTxStats(cb_str).show()
-    elif args.req_rx_stats is not None: RdmaReqRxStats(cb_str).show()
-    elif args.rsq is not None: 
+        elif args.rqcb2 is not None:
+            qid = int(args.rqcb2) + i
+            printQpHeader(qid)
+            addr = int(rq_base_addr, 16)
+            offset = 128 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRQCB2state(cb_str).show()
 
-        buff = str(RdmaRQCB1state(cb_str).show(dump=True))
+        elif args.rqcb3 is not None:
+            qid = int(args.rqcb3) + i
+            printQpHeader(qid)
+            addr = int(rq_base_addr, 16)
+            offset = 192 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRQCB3state(cb_str).show()
 
-        # get the rsq_base_addr from rqcb1
-        m = re.search('rsq_base_addr/q_key= (.*)', buff)
-        rsq_base_addr = str(hex(int(m.group(1), 16) << 3))
+        elif args.resp_tx_stats is not None:
+            qid = int(args.resp_tx_stats) + i
+            printQpHeader(qid)
+            addr = int(rq_base_addr, 16)
+            offset = 256 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRespTxStats(cb_str).show()
 
-        # dump all 32 rsq entries
-        # ideally we should read log_rsq_size to figure out the depth of RSQ
-        # but destroy QP overwrites this with 0 since it is in the same
-        # byte as cb1_state. so if it is 0, we assume default RSQ size of 32
-        m = re.search('log_rsq_size= (.*)', buff)
-        rsq_size = 1 << (int(m.group(1), 16))
-        if (rsq_size == 1):
-            rsq_size = 32
+        elif args.resp_rx_stats is not None:
+            qid = int(args.resp_rx_stats) + i
+            printQpHeader(qid)
+            addr = int(rq_base_addr, 16)
+            offset = 320 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRespRxStats(cb_str).show()
 
-        for k in range(0, rsq_size):
-            print("RSQ entry: {0}".format(k))
-            print("==============")
-            addr = hex(int(rsq_base_addr, 16) + int(32*k))
-            cmd = '/platform/bin/eth_dbgtool memrd ' + addr + ' 32\n'
-            tn.write(cmd)
-            op = tn.expect(['#'], timeout=5)
-            op_list = op[2].split('\n')
-            data = ''
-            for i in range(1, 3):
-                line = op_list[i].split(' ')
-                for j in range(2, 18):
-                    data += line[j]
-            cb_str = data.decode("hex")
+        elif args.sqcb0 is not None:
+            qid = int(args.sqcb0) + i
+            printQpHeader(qid)
+            addr = int(sq_base_addr, 16)
+            offset = 0 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaSQCB0state(cb_str).show()
 
-            # check if read or atomic and decode accordingly
-            if (k == 0):
-                buff = RdmaRsqReadstate(cb_str).show(dump=True)
-                m = re.search('read_or_atomic= (.*)', buff)
-                rd_or_atomic = m.group(1)
+        elif args.sqcb1 is not None:
+            qid = int(args.sqcb1) + i
+            printQpHeader(qid)
+            addr = int(sq_base_addr, 16)
+            offset = 64 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaSQCB1state(cb_str).show()
 
-            if (rd_or_atomic == '0'):
-                RdmaRsqReadstate(cb_str).show()
-            else:
-                RdmaRsqAtomicstate(cb_str).show()
+        elif args.sqcb2 is not None:
+            qid = int(args.sqcb2) + i
+            printQpHeader(qid)
+            addr = int(sq_base_addr, 16)
+            offset = 128 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaSQCB2state(cb_str).show()
 
-    elif args.rrq is not None:
+        elif args.sqcb3 is not None:
+            qid = int(args.sqcb3) + i
+            printQpHeader(qid)
+            addr = int(sq_base_addr, 16)
+            offset = 192 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaSQCB3state(cb_str).show()
 
-        buff = str(RdmaSQCB1state(cb_str).show(dump=True))
+        elif args.req_tx_stats is not None:
+            qid = int(args.req_tx_stats) + i
+            printQpHeader(qid)
+            addr = int(sq_base_addr, 16)
+            offset = 256 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaReqTxStats(cb_str).show()
 
-        # get rrq_base_addr from sqcb1
-        m = re.search('sqcb1_rrq_base_addr= (.*)', buff)
-        rrq_base_addr = str(hex(int(m.group(1), 16) << 3))
+        elif args.req_rx_stats is not None:
+            qid = int(args.req_rx_stats) + i
+            printQpHeader(qid)
+            addr = int(sq_base_addr, 16)
+            offset = 320 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaReqRxStats(cb_str).show()
 
-        # get log_rrq_size from sqcb1
-        m = re.search('sqcb1_log_rrq_size= (.*)', buff)
-        rrq_size = 1 << int(m.group(1), 16)
+        elif args.q_state is not None:
+            qid = int(args.q_state) + i
+            printQpHeader(qid)
+            # RQCB0
+            addr = int(rq_base_addr, 16)
+            offset = 0 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRQCB0state(cb_str).show()
+            # RQCB1
+            offset = 64 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRQCB1state(cb_str).show()
+            # RQCB2
+            offset = 128 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRQCB2state(cb_str).show()
+            # RQCB3
+            offset = 192 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRQCB3state(cb_str).show()
+            # SQCB0
+            addr = int(sq_base_addr, 16)
+            offset = 0 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaSQCB0state(cb_str).show()
+            # SQCB1
+            offset = 64 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaSQCB1state(cb_str).show()
+            # SQCB2
+            offset = 128 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaSQCB2state(cb_str).show()
+            # SQCB3
+            offset = 192 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaSQCB3state(cb_str).show()
 
-        # dump all rrq entries
-        for k in range(0, rrq_size):
-            print("RRQ entry: {0}".format(k))
-            print("==============")
-            addr = hex(int(rrq_base_addr, 16) + int(32*k))
-            cmd = '/platform/bin/eth_dbgtool memrd ' + addr + ' 32\n'
-            tn.write(cmd)
-            op = tn.expect(['#'], timeout=5)
-            op_list = op[2].split('\n')
-            data = ''
-            for i in range(1, 3):
-                line = op_list[i].split(' ')
-                for j in range(2, 18):
-                    data += line[j]
-            cb_str = data.decode("hex")
+        elif args.q_stats is not None:
+            qid = int(args.q_stats) + i
+            printQpHeader(qid)
+            # RespTxStats
+            addr = int(rq_base_addr, 16)
+            offset = 256 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRespTxStats(cb_str).show()
+            # RespRxStats
+            offset = 320 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaRespRxStats(cb_str).show()
+            # ReqTxStats
+            addr = int(sq_base_addr, 16)
+            offset = 256 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaReqTxStats(cb_str).show()
+            # ReqRxStats
+            offset = 320 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+            RdmaReqRxStats(cb_str).show()
 
-            # check if read or atomic and decode accordingly
-            if (k == 0):
-                buff = RdmaRrqReadstate(cb_str).show(dump=True)
-                m = re.search('read_rsp_or_atomic= (.*)', buff)
-                rd_or_atomic = m.group(1)
+        elif args.rsq is not None: 
+            qid = int(args.rsq) + i
+            printQpHeader(qid)
+            addr = int(rq_base_addr, 16)
+            offset = 64 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
 
-            if (rd_or_atomic == '0'):
-                RdmaRrqReadstate(cb_str).show()
-            else:
-                RdmaRrqAtomicstate(cb_str).show()
+            buff = str(RdmaRQCB1state(cb_str).show(dump=True))
+
+            # get the rsq_base_addr from rqcb1
+            m = re.search('rsq_base_addr/q_key= (.*)', buff)
+            rsq_base_addr = str(hex(int(m.group(1), 16) << 3))
+
+            # dump all 32 rsq entries
+            # ideally we should read log_rsq_size to figure out the depth of RSQ
+            # but destroy QP overwrites this with 0 since it is in the same
+            # byte as cb1_state. so if it is 0, we assume default RSQ size of 32
+            m = re.search('log_rsq_size= (.*)', buff)
+            rsq_size = 1 << (int(m.group(1), 16))
+            if (rsq_size == 1):
+                rsq_size = 32
+
+            for k in range(0, rsq_size):
+                print("RSQ entry: {0}".format(k))
+                print("==============")
+                addr = hex(int(rsq_base_addr, 16) + int(32*k))
+                cmd = '/platform/bin/eth_dbgtool memrd ' + addr + ' 32\n'
+                tn.write(cmd)
+                op = tn.expect(['#'], timeout=5)
+                op_list = op[2].split('\n')
+                data = ''
+                for i in range(1, 3):
+                    line = op_list[i].split(' ')
+                    for j in range(2, 18):
+                        data += line[j]
+                cb_str = data.decode("hex")
+
+                # check if read or atomic and decode accordingly
+                if (k == 0):
+                    buff = RdmaRsqReadstate(cb_str).show(dump=True)
+                    m = re.search('read_or_atomic= (.*)', buff)
+                    rd_or_atomic = m.group(1)
+
+                if (rd_or_atomic == '0'):
+                    RdmaRsqReadstate(cb_str).show()
+                else:
+                    RdmaRsqAtomicstate(cb_str).show()
+
+        elif args.rrq is not None: 
+            qid = int(args.rrq) + i
+            printQpHeader(qid)
+            addr = int(sq_base_addr, 16)
+            offset = 64 + int(512*qid)
+            cb_str = getCbData(tn, addr, offset)
+
+            buff = str(RdmaSQCB1state(cb_str).show(dump=True))
+
+            # get rrq_base_addr from sqcb1
+            m = re.search('sqcb1_rrq_base_addr= (.*)', buff)
+            rrq_base_addr = str(hex(int(m.group(1), 16) << 3))
+
+            # get log_rrq_size from sqcb1
+            m = re.search('sqcb1_log_rrq_size= (.*)', buff)
+            rrq_size = 1 << int(m.group(1), 16)
+
+            # dump all rrq entries
+            for k in range(0, rrq_size):
+                print("RRQ entry: {0}".format(k))
+                print("==============")
+                addr = hex(int(rrq_base_addr, 16) + int(32*k))
+                cmd = '/platform/bin/eth_dbgtool memrd ' + addr + ' 32\n'
+                tn.write(cmd)
+                op = tn.expect(['#'], timeout=5)
+                op_list = op[2].split('\n')
+                data = ''
+                for i in range(1, 3):
+                    line = op_list[i].split(' ')
+                    for j in range(2, 18):
+                        data += line[j]
+                cb_str = data.decode("hex")
+
+                # check if read or atomic and decode accordingly
+                if (k == 0):
+                    buff = RdmaRrqReadstate(cb_str).show(dump=True)
+                    m = re.search('read_rsp_or_atomic= (.*)', buff)
+                    rd_or_atomic = m.group(1)
+
+                if (rd_or_atomic == '0'):
+                    RdmaRrqReadstate(cb_str).show()
+                else:
+                    RdmaRrqAtomicstate(cb_str).show()
+
     # clear line
     clearLine(console, port)
 
