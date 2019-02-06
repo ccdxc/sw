@@ -5,6 +5,7 @@ package tstore
 import (
 	"io"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/influxdata/influxdb/coordinator"
@@ -182,8 +183,9 @@ func (ts *Tstore) RestoreShardInfo(sinfo *tproto.SyncShardInfoMsg) error {
 // BackupChunk backs up a specific chunk
 func (ts *Tstore) BackupChunk(chunkID uint64, w io.Writer) error {
 	var err error
+	i := 0
 	// retry backup few times if compaction is in progress
-	for i := 0; i < numBackupRetries; i++ {
+	for i < numBackupRetries {
 		err = ts.tsdb.BackupShard(chunkID, time.Unix(0, 0), w)
 		if err == nil {
 			return nil
@@ -191,6 +193,13 @@ func (ts *Tstore) BackupChunk(chunkID uint64, w io.Writer) error {
 
 		// retry after a small delay
 		time.Sleep(time.Millisecond * 10)
+
+		// retry on "snapshots disabled" errror
+		if strings.Contains(err.Error(), "snapshots") {
+			log.Infof("retrying backup, err: %s", err)
+			continue
+		}
+		i++
 	}
 
 	return err

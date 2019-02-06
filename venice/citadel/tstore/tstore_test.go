@@ -104,6 +104,72 @@ func TestTstoreBasic(t *testing.T) {
 	AssertOk(t, err, "Error deleting database")
 }
 
+func TestTstoreBackupRetry(t *testing.T) {
+	// create a temp dir
+	path, err := ioutil.TempDir("", "tstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	// create a new tstore
+	ts, err := NewTstore(path)
+	AssertOk(t, err, "Error creating tstore")
+	defer ts.Close()
+
+	// create the database
+	err = ts.CreateDatabase("db1", nil)
+	AssertOk(t, err, "Error creatung the database")
+
+	// parse some points
+	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
+		"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"
+	points, err := models.ParsePointsWithPrecision([]byte(data), time.Time{}, "n")
+	AssertOk(t, err, "Error parsing points")
+
+	// write the points
+	err = ts.WritePoints("db1", points)
+	AssertOk(t, err, "Error writing points")
+
+	// execute a query and verify the results
+	ch, err := ts.ExecuteQuery("SELECT * FROM cpu", "db1")
+	AssertOk(t, err, "Error executing the query")
+	rslt := ReadAllResults(ch)
+	Assert(t, len(rslt) == 1, "got invalid number of results", rslt)
+	Assert(t, len(rslt[0].Series) == 1, "got invalid number of series", rslt[0].Series)
+	Assert(t, len(rslt[0].Series[0].Values) == 2, "got invalid number of values", rslt[0].Series[0].Values)
+
+	// get shard info
+	var sinfo tproto.SyncShardInfoMsg
+	err = ts.GetShardInfo(&sinfo)
+	AssertOk(t, err, "Error getting shard info")
+	jstr, _ := json.MarshalIndent(sinfo, "", "  ")
+	log.Infof("Got shard info: %s", jstr)
+
+	// disable compaction
+	for _, s := range ts.tsdb.Shards(ts.tsdb.ShardIDs()) {
+		s.SetCompactionsEnabled(false)
+	}
+
+	for _, chunkInfo := range sinfo.Chunks {
+		var buf bytes.Buffer
+
+		// test backup ops
+		err = ts.tsdb.BackupShard(chunkInfo.ChunkID, time.Unix(0, 0), &buf)
+		Assert(t, err != nil, "backup didn't fail during compaction")
+
+		// enable after a sec
+		time.AfterFunc(time.Second, func() {
+			for _, s := range ts.tsdb.Shards(ts.tsdb.ShardIDs()) {
+				s.SetCompactionsEnabled(true)
+			}
+		})
+
+		// backup chunk, blocks until compaction is enabled
+		err = ts.BackupChunk(chunkInfo.ChunkID, &buf)
+		AssertOk(t, err, "backup failed")
+		break
+	}
+}
+
 func TestTstoreBackupRestore(t *testing.T) {
 	// create a temp dir
 	path, err := ioutil.TempDir("", "tstore-")
