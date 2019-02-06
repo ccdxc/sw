@@ -365,7 +365,7 @@ DeviceManager::LoadConfig(string path)
      * Mnic Ifs: ......mnic_mac_base>
      */
     host_mac_base = sys_mac_base;
-    mnic_mac_base = host_mac_base + num_macs;
+    mnic_mac_base = host_mac_base + num_macs - 1;
 
     char sys_mac_str[32] = {0};
     NIC_LOG_INFO("Number of Macs: {}", num_macs);
