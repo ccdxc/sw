@@ -273,6 +273,9 @@ pd_enicif_upd_native_l2seg_clsc_change(pd_if_update_args_t *args)
     ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_enicif->
                                             inp_prop_native_l2seg_clsc);
 
+    ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_enicif->
+                                            inp_prop_native_l2seg_pri_clsc);
+
     if (args->new_native_l2seg_clsc != HAL_HANDLE_INVALID) {
         // Install new native l2seg input prop entry
         native_l2seg = l2seg_lookup_by_handle(args->new_native_l2seg_clsc);
@@ -558,7 +561,20 @@ pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
                           ret);
             goto end;
         }
+        pd_enicif->inp_prop_native_l2seg_clsc = INVALID_INDEXER_INDEX;
+    }
 
+    if (pd_enicif->inp_prop_native_l2seg_pri_clsc != INVALID_INDEXER_INDEX) {
+        ret = pd_enicif_pd_depgm_inp_prop_l2seg(pd_enicif->
+                                                inp_prop_native_l2seg_pri_clsc);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to deprogram input properties for "
+                          "native l2seg at index:{}  ret:{}",
+                          pd_enicif->inp_prop_native_l2seg_pri_clsc,
+                          ret);
+            goto end;
+        }
+        pd_enicif->inp_prop_native_l2seg_pri_clsc = INVALID_INDEXER_INDEX;
     }
 
     // De programming non-native input properties. Classic
@@ -1000,13 +1016,14 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     sdk_ret_t                               sdk_ret;
     input_properties_swkey_t                key;
     input_properties_otcam_swkey_mask_t     *key_mask = NULL;
-    input_properties_actiondata_t             data;
+    input_properties_actiondata_t           data;
     if_t                                    *hal_if = (if_t *)pd_enicif->pi_if;
     if_t                                    *uplink = NULL;
     lif_t                                   *lif = NULL;
     pd_l2seg_t                              *l2seg_pd;
     sdk_hash                                *inp_prop_tbl = NULL;
     uint32_t                                hash_idx = INVALID_INDEXER_INDEX;
+    uint32_t                                hash_idx_pri = INVALID_INDEXER_INDEX;
     bool                                    direct_to_otcam = false;
     bool                                    vlan_insert_en = false;
     bool                                    key_changed = false;
@@ -1014,6 +1031,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
 
+#if 0
     // Temporary change to use overflow tcam till we figure out on how
     // to avoid using tunnel_vnid and tunnel_type as key in
     // input_properties table for classic_nic mode.
@@ -1032,6 +1050,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
         // key_mask->vlan_tag_valid_mask = 0xFF;
         // key_mask->p4plus_to_p4_insert_vlan_tag_mask = 0xFF;
     }
+#endif
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     SDK_ASSERT_RETURN((inp_prop_tbl != NULL), HAL_RET_ERR);
@@ -1068,6 +1087,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
 
     // Key
     key.capri_intrinsic_lif = if_get_hw_lif_id(hal_if);
+#if 0
     if (!is_l2seg_native_on_enicif_classic(hal_if, l2seg)) {
         if (lif_args && lif_args->vlan_insert_en_changed) {
             vlan_insert_en = lif_args->vlan_insert_en;
@@ -1081,6 +1101,22 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
         } else {
             key.vlan_tag_valid = 1;
         }
+        key.vlan_tag_vid = l2seg_get_wire_encap_val(l2seg);
+    }
+#endif
+    if (lif_args && lif_args->vlan_insert_en_changed) {
+        vlan_insert_en = lif_args->vlan_insert_en;
+        key_changed = true;
+    } else {
+        vlan_insert_en = lif->vlan_insert_en;
+    }
+    if (vlan_insert_en) {
+        // vlan tag is in sideband
+        key.p4plus_to_p4_insert_vlan_tag = 1;
+    } else {
+        key.vlan_tag_valid = 1;
+    }
+    if (!is_l2seg_native_on_enicif_classic(hal_if, l2seg)) {
         key.vlan_tag_vid = l2seg_get_wire_encap_val(l2seg);
     }
 
@@ -1134,7 +1170,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     if (oper == TABLE_OPER_INSERT) {
         // Insert
         sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx,
-                                   key_mask, direct_to_otcam);
+                                       key_mask, direct_to_otcam);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("classic: unable to program for "
@@ -1153,6 +1189,26 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
             if_l2seg->inp_prop_idx = hash_idx;
         } else {
             // Native l2seg
+            pd_enicif->inp_prop_native_l2seg_pri_clsc = hash_idx;
+            hash_idx = INVALID_INDEXER_INDEX;
+            // Insert for native l2seg without priority tag
+            key.p4plus_to_p4_insert_vlan_tag = 0;
+            key.vlan_tag_valid = 0;
+            // Insert
+            sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx,
+                                           key_mask, direct_to_otcam);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("classic: unable to program non-priority entry for "
+                              "(l2seg, upif): ({}, {})",
+                              hal::l2seg_get_l2seg_id(l2seg),
+                              if_get_if_id(hal_if));
+                goto end;
+            } else {
+                HAL_TRACE_DEBUG("classic: Programmed non-priority entry "
+                                "table:input_properties index:{} ",
+                                hash_idx);
+            }
             pd_enicif->inp_prop_native_l2seg_clsc = hash_idx;
         }
     } else {
@@ -1162,6 +1218,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
         } else {
             // No if_l2seg for native case
             hash_idx = pd_enicif->inp_prop_native_l2seg_clsc;
+            hash_idx_pri = pd_enicif->inp_prop_native_l2seg_pri_clsc;
         }
 
         // If its an update and key changes, we have to remove and add the entry
@@ -1172,6 +1229,14 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
                 HAL_TRACE_ERR("Unable to remove input props entry at: {}",
                               hash_idx);
                 goto end;
+            }
+            if (hash_idx_pri != INVALID_INDEXER_INDEX) {
+                ret = pd_enicif_pd_depgm_inp_prop_l2seg(hash_idx_pri);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("Unable to remove input props entry at: {}",
+                                  hash_idx_pri);
+                    goto end;
+                }
             }
 
             // Install new entry
@@ -1194,6 +1259,26 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
                 if_l2seg->inp_prop_idx = hash_idx;
             } else {
                 // Native l2seg
+                pd_enicif->inp_prop_native_l2seg_pri_clsc = hash_idx;
+                hash_idx = INVALID_INDEXER_INDEX;
+                // Insert for native l2seg without priority tag
+                key.p4plus_to_p4_insert_vlan_tag = 0;
+                key.vlan_tag_valid = 0;
+                // Insert
+                sdk_ret = inp_prop_tbl->insert(&key, &data, &hash_idx,
+                                               key_mask, direct_to_otcam);
+                ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("classic: unable to program non-priority entry for "
+                                  "(l2seg, upif): ({}, {})",
+                                  hal::l2seg_get_l2seg_id(l2seg),
+                                  if_get_if_id(hal_if));
+                    goto end;
+                } else {
+                    HAL_TRACE_DEBUG("classic: Programmed non-priority entry "
+                                    "table:input_properties index:{} ",
+                                    hash_idx);
+                }
                 pd_enicif->inp_prop_native_l2seg_clsc = hash_idx;
             }
 
@@ -1211,6 +1296,21 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
                 HAL_TRACE_DEBUG("classic: reprogrammed "
                                 "table:input_properties index:{} ",
                                 hash_idx);
+            }
+            if (hash_idx_pri != INVALID_INDEXER_INDEX) {
+                sdk_ret = inp_prop_tbl->update(hash_idx_pri, &data);
+                ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("classic: unable to reprogram for "
+                                  "(l2seg, upif): ({}, {})",
+                                  hal::l2seg_get_l2seg_id(l2seg),
+                                  if_get_if_id(hal_if));
+                    goto end;
+                } else {
+                    HAL_TRACE_DEBUG("classic: reprogrammed "
+                                    "table:input_properties index:{} ",
+                                    hash_idx_pri);
+                }
             }
         }
     }
