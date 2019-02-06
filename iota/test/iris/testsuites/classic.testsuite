@@ -20,6 +20,7 @@ setup:
         - step : config.netagent.hw_push_config
         - step : testcases.drivers.install_iperf
         - step : testcases.penctl.install
+        - step : testcases.naples_upgrade.install
 
 common:
     verifs:
@@ -51,6 +52,7 @@ testbundles:
         - linktest/linktest.testbundle
         - storage/storage.testbundle
         - penctl/penctl_classic.testbundle
+        - naples_upgrade/naples_upgrade_classic.testbundle
         - post_diag/post_diag.testbundle
 
     regression:

@@ -1,0 +1,11 @@
+meta:
+    name    : naples_upgrade
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox, intel ]
+    targetcount : 1
+
+testcases:
+    -   name: DISRUPTIVE_UPGRADE
+        disable : True
+        ignore      : True
+        testcase    : testcases.naples_upgrade.disruptive_upgrade
