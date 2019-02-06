@@ -15,6 +15,7 @@
 #define MAX_NUM_NAPI_CNTR	(NAPI_POLL_WEIGHT + 1)
 #define GET_SG_CNTR_IDX(num_sg_elems)	(num_sg_elems)
 #define MAX_NUM_SG_CNTR		(IONIC_TX_MAX_SG_ELEMS + 1)
+#define IONIC_RX_COPYBREAK_DEFAULT		256
 
 struct tx_stats {
 	u64 dma_map_err;
@@ -147,6 +148,7 @@ struct lif {
 	unsigned int nxqs;
 	unsigned int ntxq_descs;
 	unsigned int nrxq_descs;
+	u32 rx_copybreak;
 	unsigned int rx_mode;
 	u32 hw_features;
 	struct ionic_lif_stats *lif_stats;

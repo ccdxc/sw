@@ -13,8 +13,8 @@
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
 #define DRV_VERSION		"0.5.0"
 
-extern unsigned int ntxqs;
-extern unsigned int nrxqs;
+
+extern unsigned int rx_copybreak;
 extern unsigned int devcmd_timeout;
 
 struct ionic {

@@ -432,10 +432,44 @@ static int ionic_set_priv_flags(struct net_device *netdev, u32 priv_flags)
 	return 0;
 }
 
+static int ionic_set_tunable(struct net_device *dev,
+	const struct ethtool_tunable *tuna, const void *data)
+{
+	struct lif *lif = netdev_priv(dev);
+	u32 val;
+
+	switch (tuna->id) {
+	case ETHTOOL_RX_COPYBREAK:
+		val = *(u32 *)data;
+		lif->rx_copybreak = *(u32 *)data;
+		break;
+	default:
+		return -EOPNOTSUPP;
+	}
+
+	return 0;
+}
+
+static int ionic_get_tunable(struct net_device *dev,
+	const struct ethtool_tunable *tuna, void *data)
+{
+	struct lif *lif = netdev_priv(dev);
+
+	switch (tuna->id) {
+	case ETHTOOL_RX_COPYBREAK:
+		*(u32 *)data = lif->rx_copybreak;
+		break;
+	default:
+		return -EOPNOTSUPP;
+	}
+
+	return 0;
+}
+
 static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_drvinfo		= ionic_get_drvinfo,
 	.get_link		= ethtool_op_get_link,
-	.get_link_ksettings     = ionic_get_link_ksettings,
+	.get_link_ksettings	= ionic_get_link_ksettings,
 	.get_coalesce		= ionic_get_coalesce,
 	.set_coalesce		= ionic_set_coalesce,
 	.get_ringparam		= ionic_get_ringparam,
@@ -445,12 +479,14 @@ static const struct ethtool_ops ionic_ethtool_ops = {
 	.get_ethtool_stats	= ionic_get_stats,
 	.get_sset_count		= ionic_get_sset_count,
 	.get_rxnfc		= ionic_get_rxnfc,
-	.get_rxfh_indir_size    = ionic_get_rxfh_indir_size,
+	.get_rxfh_indir_size	= ionic_get_rxfh_indir_size,
 	.get_rxfh_key_size	= ionic_get_rxfh_key_size,
 	.get_rxfh		= ionic_get_rxfh,
 	.set_rxfh		= ionic_set_rxfh,
 	.get_priv_flags		= ionic_get_priv_flags,
 	.set_priv_flags		= ionic_set_priv_flags,
+	.get_tunable		= ionic_get_tunable,
+	.set_tunable		= ionic_set_tunable,
 };
 
 void ionic_ethtool_set_ops(struct net_device *netdev)

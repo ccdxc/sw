@@ -49,10 +49,7 @@ static bool ionic_rx_copybreak(struct queue *q, struct desc_info *desc_info,
 	struct rxq_comp *comp = cq_info->cq_desc;
 	struct sk_buff *new_skb;
 
-	// TODO: Make this tunable from ethtool
-#define IONIC_RX_COPYBREAK_DEFAULT		256
-
-	if (comp->len > IONIC_RX_COPYBREAK_DEFAULT) {
+	if (comp->len > q->lif->rx_copybreak) {
 		dma_unmap_single(dev, (dma_addr_t)desc->addr,
 				 desc->len, DMA_FROM_DEVICE);
 		return false;

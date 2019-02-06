@@ -2267,6 +2267,8 @@ static int ionic_lif_init(struct lif *lif)
 	if (err)
 		goto err_out_notifyq_deinit;
 
+	lif->rx_copybreak = rx_copybreak;
+
 	lif->api_private = NULL;
 	set_bit(LIF_INITED, lif->state);
 
@@ -2481,12 +2483,6 @@ int ionic_lifs_size(struct ionic *ionic)
 	unsigned int nslaves;
 	unsigned int nxqs;
 	int err;
-
-	/* first make sure ntx == nrx and limit by number of CPUs */
-	if (ntxqs > 0)
-		ntxqs_per_lif = min(ntxqs_per_lif, ntxqs);
-	if (nrxqs > 0)
-		nrxqs_per_lif = min(nrxqs_per_lif, nrxqs);
 
 	nxqs = min(ntxqs_per_lif, nrxqs_per_lif);
 	nxqs = min(nxqs, num_online_cpus());

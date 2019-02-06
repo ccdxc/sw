@@ -16,12 +16,10 @@ MODULE_AUTHOR("Pensando Systems, Inc");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION);
 
-unsigned int ntxqs;
-unsigned int nrxqs;
-module_param(ntxqs, uint, 0);
-module_param(nrxqs, uint, 0);
-MODULE_PARM_DESC(ntxqs, "Hard set the number of Tx queues per LIF");
-MODULE_PARM_DESC(nrxqs, "Hard set the number of Rx queues per LIF");
+unsigned int rx_copybreak = IONIC_RX_COPYBREAK_DEFAULT;
+module_param(rx_copybreak, uint, 0);
+MODULE_PARM_DESC(rx_copybreak,
+	"Maximum size of packet that is copied to a bounce buffer on RX");
 
 unsigned int devcmd_timeout = 30;
 module_param(devcmd_timeout, uint, 0);
