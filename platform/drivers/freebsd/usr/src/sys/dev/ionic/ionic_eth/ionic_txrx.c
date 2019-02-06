@@ -483,7 +483,6 @@ int ionic_setup_rx_intr(struct rxque* rxq)
 {
 	int err, bind_cpu;
 	struct lif* lif = rxq->lif;
-	char namebuf[16];
 #ifdef RSS
 	cpuset_t        cpu_mask;
 
@@ -494,9 +493,8 @@ int ionic_setup_rx_intr(struct rxque* rxq)
 #endif
 
 	TASK_INIT(&rxq->task, 0, ionic_rx_task_handler, rxq);
-	snprintf(namebuf, sizeof(namebuf), "task-%s", rxq->name);
-	rxq->taskq = taskqueue_create(namebuf, M_NOWAIT,
-		taskqueue_thread_enqueue, &rxq->taskq);
+    	rxq->taskq = taskqueue_create(rxq->intr.name, M_NOWAIT,
+	    taskqueue_thread_enqueue, &rxq->taskq);
 
 #ifdef RSS
     err = taskqueue_start_threads_cpuset(&rxq->taskq, 1, PI_NET, &cpu_mask,
@@ -612,7 +610,6 @@ int ionic_setup_tx_intr(struct txque* txq)
 {
 	int err, bind_cpu;
 	struct lif* lif = txq->lif;
-	char namebuf[16];
 #ifdef RSS
 	cpuset_t        cpu_mask;
 
@@ -623,9 +620,8 @@ int ionic_setup_tx_intr(struct txque* txq)
 #endif
 
 	TASK_INIT(&txq->task, 0, ionic_tx_task_handler, txq);
-	snprintf(namebuf, sizeof(namebuf), "task-%s", txq->name);
-	txq->taskq = taskqueue_create(namebuf, M_NOWAIT,
-		taskqueue_thread_enqueue, &txq->taskq);
+    txq->taskq = taskqueue_create(txq->name, M_NOWAIT,
+	    taskqueue_thread_enqueue, &txq->taskq);
 
 #ifdef RSS
     err = taskqueue_start_threads_cpuset(&txq->taskq, 1, PI_NET, &cpu_mask,
