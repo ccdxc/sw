@@ -1,15 +1,15 @@
 /**
  * Copyright (c) 2019 Pensando Systems, Inc.
  *
- * @file    security_policy.cc
+ * @file    policy.cc
  *
- * @brief   security policy handling
+ * @brief   policy handling
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
-#include "nic/apollo/api/security_policy.hpp"
+#include "nic/apollo/api/policy.hpp"
 #include "nic/apollo/api/oci_state.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -17,42 +17,46 @@
 namespace api {
 
 /**
- * @defgroup OCI_SECURITY_POLICY - security policy functionality
- * @ingroup OCI_SECURITY_POLICY
+ * @defgroup OCI_POLICY - security policy functionality
+ * @ingroup OCI_POLICY
  * @{
  */
 
 /**< @brief    constructor */
-security_policy::security_policy() {
+policy::policy() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
 }
 
 /**
  * @brief    factory method to allocate & initialize a security policy instance
- * @param[in] oci_security_policy    security policy information
+ * @param[in] oci_policy    security policy information
  * @return    new instance of security policy or NULL, in case of error
  */
-security_policy *
-security_policy::factory(oci_security_policy_t *oci_security_policy) {
-    security_policy    *policy;
+policy *
+policy::factory(oci_policy_t *oci_policy) {
+    policy    *new_policy;
 
+    if (oci_policy->policy_type != POLICY_TYPE_FIREWALL) {
+        /**< we don't support any other policy type currently */
+        return NULL;
+    }
     /**< create security policy instance with defaults, if any */
-    policy = security_policy_db()->security_policy_alloc();
-    if (policy) {
-        new (policy) security_policy();
-        policy->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_SECURITY_POLICY,
-                                           oci_security_policy);
-        if (policy->impl_ == NULL) {
-            security_policy::destroy(policy);
+    new_policy = policy_db()->policy_alloc();
+    if (new_policy) {
+        new (new_policy) policy();
+        new_policy->impl_ = impl_base::factory(impl::IMPL_OBJ_ID_SECURITY_POLICY,
+                                               oci_policy);
+        if (new_policy->impl_ == NULL) {
+            policy::destroy(new_policy);
             return NULL;
         }
     }
-    return policy;
+    return new_policy;
 }
 
 /**< @brief    destructor */
-security_policy::~security_policy() {
+policy::~policy() {
     // TODO: fix me
     //SDK_SPINLOCK_DESTROY(&slock_);
 }
@@ -65,13 +69,13 @@ security_policy::~security_policy() {
  *       impl->cleanup_hw() before calling this
  */
 void
-security_policy::destroy(security_policy *policy) {
+policy::destroy(policy *policy) {
     if (policy->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_SECURITY_POLICY, policy->impl_);
     }
     policy->release_resources();
-    policy->~security_policy();
-    security_policy_db()->security_policy_free(policy);
+    policy->~policy();
+    policy_db()->policy_free(policy);
 }
 
 /**
@@ -80,12 +84,12 @@ security_policy::destroy(security_policy *policy) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy::init_config(api_ctxt_t *api_ctxt) {
-    oci_security_policy_t    *oci_security_policy;
+policy::init_config(api_ctxt_t *api_ctxt) {
+    oci_policy_t    *oci_policy;
     
-    oci_security_policy = &api_ctxt->api_params->security_policy_info;
-    memcpy(&this->key_, &oci_security_policy->key,
-           sizeof(oci_security_policy_key_t));
+    oci_policy = &api_ctxt->api_params->policy_info;
+    memcpy(&this->key_, &oci_policy->key,
+           sizeof(oci_policy_key_t));
     return SDK_RET_OK;
 }
 
@@ -96,7 +100,7 @@ security_policy::init_config(api_ctxt_t *api_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+policy::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this);
 }
 
@@ -107,7 +111,7 @@ security_policy::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy::program_config(obj_ctxt_t *obj_ctxt) {
+policy::program_config(obj_ctxt_t *obj_ctxt) {
     OCI_TRACE_DEBUG("Programming security policy %u", key_.id);
     return impl_->program_hw(this, obj_ctxt);
 }
@@ -117,7 +121,7 @@ security_policy::program_config(obj_ctxt_t *obj_ctxt) {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy::release_resources(void) {
+policy::release_resources(void) {
     return impl_->release_resources(this);
 }
 
@@ -128,7 +132,7 @@ security_policy::release_resources(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy::cleanup_config(obj_ctxt_t *obj_ctxt) {
+policy::cleanup_config(obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
@@ -140,7 +144,7 @@ security_policy::cleanup_config(obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+policy::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     //return impl_->update_hw();
     return sdk::SDK_RET_INVALID_OP;
 }
@@ -154,7 +158,7 @@ security_policy::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy::activate_config(oci_epoch_t epoch, api_op_t api_op,
+policy::activate_config(oci_epoch_t epoch, api_op_t api_op,
                             obj_ctxt_t *obj_ctxt) {
     OCI_TRACE_DEBUG("Activating security policy %u config", key_.id);
     return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
@@ -168,7 +172,7 @@ security_policy::activate_config(oci_epoch_t epoch, api_op_t api_op,
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+policy::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
@@ -177,8 +181,8 @@ security_policy::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy::add_to_db(void) {
-    return security_policy_db()->security_policy_ht()->insert_with_key(&key_,
+policy::add_to_db(void) {
+    return policy_db()->policy_ht()->insert_with_key(&key_,
                                                            this, &ht_ctxt_);
 }
 
@@ -187,8 +191,8 @@ security_policy::add_to_db(void) {
  * @return   SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-security_policy::del_from_db(void) {
-    security_policy_db()->security_policy_ht()->remove(&key_);
+policy::del_from_db(void) {
+    policy_db()->policy_ht()->remove(&key_);
     return SDK_RET_OK;
 }
 
@@ -196,9 +200,9 @@ security_policy::del_from_db(void) {
  * @brief    initiate delay deletion of this object
  */
 sdk_ret_t
-security_policy::delay_delete(void) {
-    return delay_delete_to_slab(OCI_SLAB_ID_SECURITY_POLICY, this);
+policy::delay_delete(void) {
+    return delay_delete_to_slab(OCI_SLAB_ID_POLICY, this);
 }
-/** @} */    // end of OCI_SECURITY_POLICY
+/** @} */    // end of OCI_POLICY
 
 }    // namespace api

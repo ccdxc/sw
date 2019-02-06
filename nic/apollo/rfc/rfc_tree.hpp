@@ -41,7 +41,7 @@ typedef struct inode_s {
 /**< interval node table */
 typedef struct itable_s {
     uint32_t    num_nodes;    /**< number of entries in interval table */
-    inode_t     *nodes;       /**< interval table nodes */
+    inode_t     *nodes;       /**< number of interval table nodes allocated */
 } __PACK__ itable_t;
 
 #define RFC_MAX_EQ_CLASSES        1024

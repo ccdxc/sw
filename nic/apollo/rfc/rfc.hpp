@@ -13,35 +13,18 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/l4.hpp"
-#include "nic/apollo/include/api/oci_security_policy.hpp"
+#include "nic/apollo/include/api/oci_policy.hpp"
 
 namespace rfc {
 
-/**< type of the policy */
-enum {
-    POLICY_TYPE_NONE     = 0,
-    POLICY_TYPE_FIREWALL = 1,
-};
-
-/**< rule action */ 
-typedef struct rule_action_s {
-    union {
-        security_rule_action_t    fw_action;
-    };
-} rule_action_t;
-
-/**< generic rule definition */
-typedef struct rule_s {
-    rule_match_t     match;
-    rule_action_t    action;
-} rule_t;
-
 /**< policy is list of rules */
 typedef struct policy_s {
-    uint8_t     af;           /**< address family */
-    uint32_t    max_rules;    /**< max size of policy table */
-    uint32_t    num_rules;    /**< number of rules */
-    rule_t      rules[0];     /**< rule list */
+    policy_type_t    policy_type;    /**< type of the policy */
+    uint8_t          af;             /**< address family */
+    rule_dir_t       direction;      /**< policy enforcement direction */
+    uint32_t         max_rules;      /**< max size of policy table */
+    uint32_t         num_rules;      /**< number of rules */
+    rule_t           *rules;         /**< rule list */
 } policy_t;
 
 /**
@@ -54,8 +37,8 @@ typedef struct policy_s {
  *                             detection)
  * @return    SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t rfc_create(policy_t *policy, mem_addr_t rfc_tree_root_addr,
-                     uint32_t rfc_mem_size);
+sdk_ret_t rfc_policy_create(policy_t *policy, mem_addr_t rfc_tree_root_addr,
+                            uint32_t rfc_mem_size);
 
 }    // namespace rfc
 

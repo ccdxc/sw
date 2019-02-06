@@ -26,6 +26,7 @@ typedef struct itable_stack_elem_s {
 
 /**< each LPM table is 64 bytes (512 bits/flit) */
 #define LPM_TABLE_SIZE                 (CACHE_LINE_SIZE)
+
 /**
  * key size is 4 bytes for IPv4, 8 bytes (assuming max prefix length of 64)
  * for IPv6, 2 bytes for port tree and 4 bytes for proto-port tree
@@ -92,24 +93,23 @@ typedef struct lpm_stage_meta_s {
  * @param[in]    num_routes    number of routes in the route table
  * @return       number of lookup stages (aka. depth of the interval tree)
  *
- * The computation is done as follows for IPv4:
+ * The computation is done as follows for IPv4 (or <protocol, port> tree):
  *     log16(2 * num_routes) = log16(num_routes << 1) =
  *     log2(num_routes << 1)/log2(16) = log2(num_routes << 1)/4
- *     div by 4 is accomplished by right shift as we need to round up at the end
- * and for IPv6:
+ * for IPv6:
  *     log4(2 * num_routes)
+ * for port tree:
+ *     log32(2 * num_routs)
+ *
  */
 static inline uint32_t
 lpm_stages (itree_type_t tree_type, uint32_t num_routes)
 {
-    if (tree_type == ITREE_TYPE_IPV4) {
+    if ((tree_type == ITREE_TYPE_IPV4) ||
+        (tree_type == ITREE_TYPE_PROTO_PORT)) {
         return (uint32_t)ceil(log2f((double)(num_routes << 1))/4.0); // 16-way tree
     } else if (tree_type == ITREE_TYPE_PORT) {
-        // TODO
-        SDK_ASSERT(0);
-    } else if (tree_type == ITREE_TYPE_PROTO_PORT) {
-        // TODO
-        SDK_ASSERT(0);
+        return (uint32_t)ceil(log2f((double)(num_routes << 1))/5.0); // 32-way tree
     } else {
         return (uint32_t)ceil(log2f((double)(num_routes << 1))/2.0); // 8-way tree
     }
@@ -445,6 +445,7 @@ lpm_add_key_to_stage (itree_type_t tree_type, lpm_stage_info_t *stage,
         lpm_ipv4_add_key_to_stage(stage, lpm_inode);
         break;
     default:
+        SDK_ASSERT(0);
         break;
     }
 
@@ -569,7 +570,6 @@ lpm_promote_route (lpm_inode_t *inode, uint32_t stage, lpm_stage_meta_t *smeta)
  * @param[in] itable                interval node table
  * @param[in] default_nh            default nexthop id
  * @param[in] max_routes            max routes supported per route table
- * @param[in] num_intervals         number of intervals in the interval table
  * @param[in] lpm_tree_root_addr    pointer to the memory address at which tree
  *                                  should be built
  * @param[in] lpm_mem_size          size of LPM memory block

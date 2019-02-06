@@ -1,37 +1,37 @@
 /**
  * Copyright (c) 2019 Pensando Systems, Inc.
  *
- * @file    security_policy.hpp
+ * @file    policy.hpp
  *
- * @brief   security policy handling
+ * @brief   policy handling
  */
 
-#if !defined (__SECURITY_POLICY_HPP__)
-#define __SECURITY_POLICY_HPP__
+#if !defined (__POLICY_HPP__)
+#define __POLICY_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_security_policy.hpp"
+#include "nic/apollo/include/api/oci_policy.hpp"
 
 namespace api {
 
 /**
- * @defgroup OCI_SECURITY_POLICY - security policy functionality
+ * @defgroup OCI_POLICY - security policy functionality
  */
 
 /**
  * @brief   security policy 
  */
-class security_policy : public api_base {
+class policy : public api_base {
 public:
     /**
      * @brief    factory method to allocate & initialize a security policy
      *           instance
-     * @param[in] oci_security_policy    security policy information
+     * @param[in] oci_policy    security policy information
      * @return    new instance of security policy or NULL, in case of error
      */
-    static security_policy *factory(oci_security_policy_t *oci_security_policy);
+    static policy *factory(oci_policy_t *oci_policy);
 
     /**
      * @brief    release all the s/w state associate with the given security
@@ -40,7 +40,7 @@ public:
      * NOTE: h/w entries should have been cleaned up (by calling
      *       impl->cleanup_hw() before calling this
      */
-    static void destroy(security_policy *policy);
+    static void destroy(policy *policy);
 
     /**
      * @brief     initialize security policy instance with the given config
@@ -133,8 +133,8 @@ public:
      * @param[in] entry    pointer to security policy instance
      * @return    pointer to the security policy instance's key
      */
-    static void *security_policy_key_func_get(void *entry) {
-        security_policy *table = (security_policy *)entry;
+    static void *policy_key_func_get(void *entry) {
+        policy *table = (policy *)entry;
         return (void *)&(table->key_);
     }
 
@@ -144,10 +144,10 @@ public:
      * @param[in] ht_size    hash table size
      * @return    hash value
      */
-    static uint32_t security_policy_hash_func_compute(void *key,
+    static uint32_t policy_hash_func_compute(void *key,
                                                       uint32_t ht_size) {
         return hash_algo::fnv_hash(key,
-                                   sizeof(oci_security_policy_key_t)) % ht_size;
+                                   sizeof(oci_policy_key_t)) % ht_size;
     }
 
     /**
@@ -156,9 +156,9 @@ public:
      * @param[in] key2    pointer to security policy's key
      * @return    0 if keys are same or else non-zero value
      */
-    static bool security_policy_key_func_compare(void *key1, void *key2) {
+    static bool policy_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(oci_security_policy_key_t))) {
+        if (!memcmp(key1, key2, sizeof(oci_policy_key_t))) {
             return true;
         }
         return false;
@@ -172,21 +172,21 @@ public:
 
 private:
     /**< @brief    constructor */
-    security_policy();
+    policy();
 
     /**< @brief    destructor */
-    ~security_policy();
+    ~policy();
 
 private:
-    oci_security_policy_key_t    key_;        /**< security policy key */
+    oci_policy_key_t    key_;        /**< security policy key */
     ht_ctxt_t                    ht_ctxt_;    /**< hash table context */
     impl_base                    *impl_;      /**< impl object instance */
 } __PACK__;
 
-/** @} */    // end of OCI_ROUTE_TABLE
+/** @} */    // end of OCI_POLICY
 
 }    // namespace api
 
-using api::security_policy;
+using api::policy;
 
-#endif    /** __SECURITY_POLICY_HPP__ */
+#endif    /** __POLICY_HPP__ */

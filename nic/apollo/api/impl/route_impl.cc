@@ -110,8 +110,9 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             SDK_MALLOC(OCI_MEM_ALLOC_ROUTE_TABLE,
                        sizeof(route_table_t) +
                            (route_table_info->num_routes * sizeof(route_t)));
-    SDK_ASSERT_RETURN((rtable != NULL), sdk::SDK_RET_OOM);
-
+    if (rtable == NULL) {
+        return sdk::SDK_RET_OOM;
+    }
     rtable->af = route_table_info->af;
     // TODO: HACK Alert! Remove this when default NH is available
     rtable->default_nhid = 255;

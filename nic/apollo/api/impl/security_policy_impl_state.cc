@@ -6,7 +6,7 @@
  * @brief   This file contains security policy datapath database handling
  */
 
-#include "nic/apollo/include/api/oci_security_policy.hpp"
+#include "nic/apollo/include/api/oci_policy.hpp"
 #include "nic/apollo/api/impl/security_policy_impl_state.hpp"
 
 namespace impl {
@@ -31,9 +31,9 @@ security_policy_impl_state::security_policy_impl_state(oci_state *state) {
         indexer::factory(OCI_MAX_RULES_PER_SECURITY_POLICY + 1);
     SDK_ASSERT(security_policy_idxr_ != NULL);
     security_policy_region_addr_ =
-        state->mempartition()->start_addr("slacl");
+        state->mempartition()->start_addr("slacl_v4");
     security_policy_table_size_ =
-        state->mempartition()->element_size("slacl");
+        state->mempartition()->element_size("slacl_v4");
 }
 
 /**

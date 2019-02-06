@@ -11,7 +11,7 @@
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/include/api/oci_security_policy.hpp"
+#include "nic/apollo/include/api/oci_policy.hpp"
 
 namespace impl {
 
@@ -29,10 +29,10 @@ public:
     /**
      * @brief    factory method to allocate & initialize
      *           security policy impl instance
-     * @param[in] oci_security_policy    security policy information
+     * @param[in] oci_policy    security policy information
      * @return    new instance of security policy or NULL, in case of error
      */
-    static security_policy_impl *factory(oci_security_policy_t *oci_security_policy);
+    static security_policy_impl *factory(oci_policy_t *oci_policy);
 
     /**
      * @brief    release all the s/w state associated with the given

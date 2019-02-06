@@ -50,7 +50,8 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return obj;
         break;
 
-    case OBJ_ID_SECURITY_POLICY:
+    case OBJ_ID_POLICY:
+        obj = policy::factory(&api_ctxt->api_params->policy_info);
         break;
 
     default:
@@ -116,7 +117,12 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         }
         break;
 
-    case OBJ_ID_SECURITY_POLICY:
+    case OBJ_ID_POLICY:
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            obj = policy_db()->policy_find(&api_ctxt->api_params->policy_key);
+        } else {
+            obj = policy_db()->policy_find(&api_ctxt->api_params->policy_info.key);
+        }
         break;
 
     default:
