@@ -14,7 +14,8 @@
 
 namespace rfc {
 
-sdk_ret_t rfc_build_lpm_trees(policy_t *policy, rfc_trees_t *rfc_trees);
+sdk_ret_t rfc_build_lpm_trees(policy_t *policy, rfc_trees_t *rfc_trees,
+                              mem_addr_t rfc_tree_root_addr, uint32_t mem_size);
 
 }    // namespace rfc
 

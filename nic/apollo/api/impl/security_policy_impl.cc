@@ -9,9 +9,10 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
-#include "nic/apollo/api/security_policy.hpp"
+#include "nic/apollo/api/policy.hpp"
 #include "nic/apollo/api/impl/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
+#include "nic/apollo/rfc/rfc.hpp"
 
 namespace impl {
 
@@ -27,7 +28,7 @@ namespace impl {
  * @return    new instance of security policy or NULL, in case of error
  */
 security_policy_impl *
-security_policy_impl::factory(oci_security_policy_t *oci_security_policy) {
+security_policy_impl::factory(oci_policy_t *oci_policy) {
     security_policy_impl    *impl;
 
     // TODO: move to slab later
@@ -94,13 +95,26 @@ security_policy_impl::release_resources(api_base *api_obj) {
  */
 sdk_ret_t
 security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t                ret;
-    oci_security_policy_t    *policy;
+    sdk_ret_t       ret;
+    oci_policy_t    *policy_info;
+    rfc::policy_t   policy;
 
-    policy = &obj_ctxt->api_params->security_policy_info;
-    SDK_ASSERT_RETURN((policy->num_rules > 0),
-                      sdk::SDK_RET_INVALID_ARG);
-    return SDK_RET_OK;
+    policy_info = &obj_ctxt->api_params->policy_info;
+    SDK_ASSERT_RETURN((policy_info->num_rules > 0), sdk::SDK_RET_INVALID_ARG);
+
+    memset(&policy, 0, sizeof(policy));
+    policy.policy_type = policy_info->policy_type;
+    policy.af = policy_info->af;
+    policy.direction = policy_info->direction;
+    policy.max_rules = OCI_MAX_RULES_PER_SECURITY_POLICY;
+    policy.num_rules = policy_info->num_rules;
+    policy.rules = policy_info->rules;
+    rfc_policy_create(&policy, security_policy_root_addr_,
+                      security_policy_impl_db()->security_policy_table_size());
+    if (ret != SDK_RET_OK) {
+        OCI_TRACE_ERR("Failed to build RFC policy table, err : %u", ret);
+    }
+    return ret;
 }
 
 /**

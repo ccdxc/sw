@@ -21,7 +21,7 @@
 #include "nic/apollo/api/vnic_state.hpp"
 #include "nic/apollo/api/mapping_state.hpp"
 #include "nic/apollo/api/route_state.hpp"
-#include "nic/apollo/api/security_policy_state.hpp"
+#include "nic/apollo/api/policy_state.hpp"
 
 using std::string;
 //using sdk::platform::capri::LIFManager;
@@ -72,27 +72,27 @@ public:
     vnic_state *vnic_db(void) { return &vnic_db_ ; }
     mapping_state *mapping_db(void) { return &mapping_db_; }
     route_table_state *route_table_db(void) { return &route_table_db_; }
-    security_policy_state *security_policy_db(void) { return &security_poicy_db_; }
+    policy_state *policy_db(void) { return &poicy_db_; }
 
 private:
-    string                   cfg_path_;
-    catalog                  *catalog_;
-    mpartition               *mpartition_;
-    //program_info           *pginfo_;
-    //LIFManager             *lm_;
-    platform_type_t          platform_type_;
-    uint64_t                 control_cores_mask_;
-    uint16_t                 num_control_cores_;
-    uint64_t                 data_cores_mask_;
-    uint16_t                 num_data_cores_;
-    switchport_state         switchport_db_;
-    tep_state                tep_db_;
-    vcn_state                vcn_db_;
-    subnet_state             subnet_db_;
-    vnic_state               vnic_db_;
-    mapping_state            mapping_db_;
-    route_table_state        route_table_db_;
-    security_policy_state    security_poicy_db_;
+    string               cfg_path_;
+    catalog              *catalog_;
+    mpartition           *mpartition_;
+    //program_info       *pginfo_;
+    //LIFManager         *lm_;
+    platform_type_t      platform_type_;
+    uint64_t             control_cores_mask_;
+    uint16_t             num_control_cores_;
+    uint64_t             data_cores_mask_;
+    uint16_t             num_data_cores_;
+    switchport_state     switchport_db_;
+    tep_state            tep_db_;
+    vcn_state            vcn_db_;
+    subnet_state         subnet_db_;
+    vnic_state           vnic_db_;
+    mapping_state        mapping_db_;
+    route_table_state    route_table_db_;
+    policy_state         poicy_db_;
 };
 extern oci_state g_oci_state;
 
@@ -144,10 +144,10 @@ route_table_db (void)
     return api::g_oci_state.route_table_db();
 }
 
-static inline security_policy_state *
-security_policy_db (void)
+static inline policy_state *
+policy_db (void)
 {
-    return api::g_oci_state.security_policy_db();
+    return api::g_oci_state.policy_db();
 }
 
 #endif    /** __OCI_STATE_HPP__ */

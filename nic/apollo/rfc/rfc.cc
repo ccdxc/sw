@@ -41,11 +41,12 @@ rfc_build_itables (policy_t *policy, rfc_trees_t *rfc_trees)
     proto_port_inode = &proto_port_itable->nodes[0];
     for (rule_num = 0; rule_num < policy->num_rules; rule_num++) {
         rule = &policy->rules[rule_num];
-        itable_add_address_inodes(rule_num, addr_inode, &rule->match.ip_pfx);
+        itable_add_address_inodes(rule_num, addr_inode,
+                                  &rule->match.l3_match.ip_pfx);
         itable_add_port_inodes(rule_num, port_inode,
                                &rule->match.l4_match.sport_range);
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
-                                     rule->match.ip_proto,
+                                     rule->match.l3_match.ip_proto,
                                      &rule->match.l4_match.dport_range);
         addr_inode++;
         port_inode++;
@@ -229,13 +230,13 @@ rfc_compute_classes (policy_t *policy, rfc_trees_t *rfc_trees)
  * @param[in] policy           pointer to the policy
  * @param[in] rfc_tree_root    pointer to the memory address at which tree
  *                             should be built
- * @param[in] rfc_mem_size     RFC memory block size provided (for error
+ * @param[in] mem_size         memory block size provided (for error
  *                             detection)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-rfc_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
-            uint32_t rfc_mem_size)
+rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
+                   uint32_t mem_size)
 {
     sdk_ret_t      ret;
     rfc_trees_t    rfc_trees = { 0 };
@@ -260,7 +261,7 @@ rfc_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
     rfc_compute_classes(policy, &rfc_trees);
 
     /**< build LPM trees for phase 0 of RFC */
-    rfc_build_lpm_trees(policy, &rfc_trees);
+    rfc_build_lpm_trees(policy, &rfc_trees, rfc_tree_root_addr, mem_size);
 
     /**< build equivalence class index tables for subsequent phases of RFC */
     //rfc_build_eqtables(policy, &rfc_trees);
