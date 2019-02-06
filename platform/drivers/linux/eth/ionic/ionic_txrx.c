@@ -258,6 +258,11 @@ void ionic_rx_fill(struct queue *q)
 	}
 }
 
+static void ionic_rx_fill_cb(void *arg)
+{
+	ionic_rx_fill(arg);
+}
+
 void ionic_rx_refill(struct queue *q)
 {
 	struct net_device *netdev = q->lif->netdev;
@@ -316,15 +321,11 @@ int ionic_rx_napi(struct napi_struct *napi, int budget)
 	unsigned int qi = rxcq->bound_q->index;
 	struct lif *lif = rxcq->bound_q->lif;
 	struct cq *txcq = &lif->txqcqs[qi]->cq;
-	unsigned int work_done;
 
 	ionic_cq_service(txcq, -1, ionic_tx_service, NULL, NULL);
 
-	work_done = ionic_napi(napi, budget, ionic_rx_service, NULL, NULL);
-
-	ionic_rx_fill(rxcq->bound_q);
-
-	return work_done;
+	return ionic_napi(napi, budget, ionic_rx_service,
+			  ionic_rx_fill_cb, rxcq->bound_q);
 }
 
 static dma_addr_t ionic_tx_map_single(struct queue *q, void *data, size_t len)
