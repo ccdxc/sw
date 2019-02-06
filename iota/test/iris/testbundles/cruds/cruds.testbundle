@@ -7,6 +7,7 @@ meta:
 testcases:
     -   name    : DeleteConfig
         testcase: testcases.config.add_delete
+        enable  : False
         args    :
             op: delete
     -   name    : Crud

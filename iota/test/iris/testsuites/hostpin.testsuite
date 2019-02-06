@@ -49,6 +49,7 @@ testbundles:
         - cruds/cruds.testbundle
         - penctl/penctl_hostpin.testbundle
         - post_diag/post_diag.testbundle
+        - tcp_proxy/tcp_proxy.testbundle
 
     regression:
         - firewall/policy_scale.testbundle

@@ -1,9 +1,8 @@
 meta:
     name    : tcp_proxy 
-    os      : [ linux ]
+    os      : [ linux, esx ]
     nics    : [ pensando, mellanox, intel, broadcom ]
     targetcount : 35
-   # os      : [ linux ]
 
 testcases:
     -   name    : iperf_thru_tcp_proxy

@@ -2,6 +2,7 @@
 import time
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as netagent_cfg_api
+import iota.test.iris.testcases.aging.aging_utils as aging_utils
 
 def Setup(tc):
     api.Logger.info("tcp_proxy iperf SETUP")
@@ -25,6 +26,18 @@ def Trigger(tc):
         api.Logger.error("Unable to fetch newly pushed objects")
         return api.types.status.FAILURE
 
+    # Disable connection tracking so we don't age tcp flows or trap
+    # FIN etc.
+    aging_utils.update_field("enable-connection-tracking", False)
+
+    # disabling connection tracking doesn't have agent support yet.
+    # Workaround is to increase tcp timeouts for now
+    aging_utils.update_timeout("tcp-timeout", "10000s")
+    aging_utils.update_timeout("tcp-half-close", "10000s")
+    aging_utils.update_timeout("tcp-close", "10000s")
+    aging_utils.update_timeout("tcp-connection-setup", "10000s")
+    aging_utils.update_timeout("tcp-drop", "10000s")
+
     pairs = api.GetRemoteWorkloadPairs()
     w1 = pairs[0][0]
     w2 = pairs[0][1]
@@ -32,17 +45,11 @@ def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     if w2.IsNaples():
-        cmd_cookie = "hal cfg to Reset Default Security Profile on %s" % (w2.node_name)
-        api.Trigger_AddNaplesCommand(req, w2.node_name, "LD_LIBRARY_PATH=/nic/lib:/platform/lib /nic/bin/hal_test def_sec_prof_reset")
-        tc.cmd_cookies.append(cmd_cookie)
         cmd_cookie = "tcp proxy sessions on %s BEFORE running iperf traffic" % (w2.node_name)
         api.Trigger_AddNaplesCommand(req, w2.node_name, "/nic/bin/halctl show tcp-proxy session")
         tc.cmd_cookies.append(cmd_cookie)
 
     if w1.IsNaples():
-        cmd_cookie = "hal cfg to Reset Default Security Profile on %s" % (w1.node_name)
-        api.Trigger_AddNaplesCommand(req, w1.node_name, "LD_LIBRARY_PATH=/nic/lib:/platform/lib /nic/bin/hal_test def_sec_prof_reset")
-        tc.cmd_cookies.append(cmd_cookie)
         cmd_cookie = "tcp proxy sessions on %s BEFORE running iperf traffic" % (w1.node_name)
         api.Trigger_AddNaplesCommand(req, w1.node_name, "/nic/bin/halctl show tcp-proxy session")
         tc.cmd_cookies.append(cmd_cookie)
