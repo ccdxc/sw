@@ -464,18 +464,42 @@ bool ionic_q_has_space(struct queue *q, unsigned int want)
 	return ionic_q_space_avail(q) >= want;
 }
 
+static bool ionic_q_is_posted(struct queue *q, unsigned int pos)
+{
+	unsigned int mask, tail, head;
+
+	mask = q->num_descs - 1;
+	tail = q->tail->index;
+	head = q->head->index;
+
+	return ((pos - tail) & mask) < ((head - tail) & mask);
+}
+
 void ionic_q_service(struct queue *q, struct cq_info *cq_info,
 		     unsigned int stop_index)
 {
 	struct desc_info *desc_info;
+	void *cb_arg;
+	desc_cb cb;
+
+	/* stop index must be for a descriptor that is net yet completed */
+	if (unlikely(!ionic_q_is_posted(q, stop_index))) {
+		pr_err("ionic stop is not posted %s stop %u tail %u head %u\n",
+		       q->name, stop_index, q->tail->index, q->head->index);
+		//return;
+	}
 
 	do {
 		desc_info = q->tail;
-		if (desc_info->cb)
-			desc_info->cb(q, desc_info, cq_info,
-				      desc_info->cb_arg);
+		q->tail = desc_info->next;
+
+		cb = desc_info->cb;
+		cb_arg = desc_info->cb_arg;
+
 		desc_info->cb = NULL;
 		desc_info->cb_arg = NULL;
-		q->tail = q->tail->next;
+
+		if (cb)
+			cb(q, desc_info, cq_info, cb_arg);
 	} while (desc_info->index != stop_index);
 }

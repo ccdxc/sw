@@ -8,7 +8,6 @@ void ionic_rx_refill(struct queue *q);
 void ionic_rx_fill(struct queue *q);
 void ionic_rx_empty(struct queue *q);
 void ionic_rx_flush(struct cq *cq);
-int ionic_tx_napi(struct napi_struct *napi, int budget);
 int ionic_rx_napi(struct napi_struct *napi, int budget);
 u16 ionic_select_queue(struct net_device *dev, struct sk_buff *skb,
 			void *accel_priv, select_queue_fallback_t fallback);

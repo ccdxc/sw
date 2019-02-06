@@ -323,11 +323,11 @@ int ionic_rx_napi(struct napi_struct *napi, int budget)
 	struct cq *txcq = &lif->txqcqs[qi]->cq;
 	unsigned int work_done;
 
+	ionic_cq_service(txcq, -1, ionic_tx_service, NULL);
+
 	work_done = ionic_napi(napi, budget, ionic_rx_service, NULL);
 
 	ionic_rx_fill(rxcq->bound_q);
-
-	ionic_cq_service(txcq, -1, ionic_tx_service, NULL);
 
 	return work_done;
 }
@@ -394,11 +394,6 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 		dev_kfree_skb_any(skb);
 		stats->clean++;
 	}
-}
-
-int ionic_tx_napi(struct napi_struct *napi, int budget)
-{
-	return ionic_napi(napi, budget, ionic_tx_service, NULL);
 }
 
 static void ionic_tx_tcp_inner_pseudo_csum(struct sk_buff *skb)
