@@ -253,6 +253,9 @@ class NaplesManagement(EntityManagement):
             self.SendlineExpect("echo %s > /sysconfig/config0/app-start.conf && sync" % GlobalOptions.mode, "#")
         if uuid:
             self.SendlineExpect("echo %s > /sysconfig/config0/sysuuid" % GlobalOptions.uuid, "#")
+        
+        if goldfw:
+            self.SendlineExpect("rm -f /sysconfig/config0/device.conf", "#")
 
         self.SendlineExpect("umount /sysconfig/config0", "#")
         self.SendlineExpect("rm -rf /data/log && sync", "#")
