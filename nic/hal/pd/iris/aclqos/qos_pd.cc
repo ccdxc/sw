@@ -514,7 +514,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
     return HAL_RET_OK;
 }
 
-static hal_ret_t
+hal_ret_t
 qos_class_pd_program_scheduler (pd_qos_class_t *pd_qos_class)
 {
     hal_ret_t            ret = HAL_RET_OK;
@@ -663,6 +663,7 @@ qos_class_pd_program_hw (pd_qos_class_t *pd_qos_class)
         return ret;
     }
 
+#if 0
     ret = qos_class_pd_program_scheduler(pd_qos_class);
     if (ret != HAL_RET_OK) {
         // TODO: What to do in case of hw programming error ?
@@ -671,6 +672,7 @@ qos_class_pd_program_hw (pd_qos_class_t *pd_qos_class)
                       qos_class->key, ret);
         return ret;
     }
+#endif
 
     ret = qos_class_pd_program_qos_table(pd_qos_class);
     if (ret != HAL_RET_OK) {
@@ -1067,6 +1069,7 @@ pd_qos_class_update (pd_func_args_t *pd_func_args)
         }
     }
 
+#if 0
     if (args->scheduler_changed) {
         ret = qos_class_pd_program_scheduler(pd_qos_class);
         if (ret != HAL_RET_OK) {
@@ -1076,6 +1079,7 @@ pd_qos_class_update (pd_func_args_t *pd_func_args)
             return ret;
         }
     }
+#endif
 
     if (args->marking_changed) {
         ret = qos_class_pd_program_qos_table(pd_qos_class);

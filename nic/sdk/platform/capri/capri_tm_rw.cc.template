@@ -2128,6 +2128,406 @@ capri_tm_port_program_defaults (void)
     return sdk::SDK_RET_OK;
 }
 
+static
+void cap_pb_cfg_sched_node(int chip_id, int inst_id, int level,
+                           int oport, int queue_node, int quota)
+{
+    cap_pbc_csr_t & pbc_csr =
+                    CAP_BLK_REG_MODEL_ACCESS(cap_pbc_csr_t, chip_id, inst_id);
+
+    if(level < 1 || level > 3) {
+        SDK_TRACE_ERR("Invalid level: %d", level);
+        return;
+    }
+
+    int max_queues = 32;
+    if(level == 1) {
+        max_queues = 32;
+    } else if(level == 2) {
+        max_queues = 16;
+    } else {
+        max_queues = 4;
+    }
+
+    SDK_TRACE_DEBUG("level: %d, oport: %d, queue_node: %d, quota: %d",
+                    level, oport, queue_node, quota);
+
+    pbc_csr.cfg_sched.enable_wrr(1);
+    pbc_csr.cfg_sched.dhs_selection( (level-1)*2 );
+    pbc_csr.cfg_sched.write();
+
+    pbc_csr.cfg_dhs_mem.address(oport*max_queues + queue_node);
+    pbc_csr.cfg_dhs_mem.write();
+
+    pbc_csr.dhs_sched.entry[0].command(1);   //1: overwrite quota and credits
+    pbc_csr.dhs_sched.entry[0].current_credit(quota);
+    pbc_csr.dhs_sched.entry[0].quota(quota);
+    pbc_csr.dhs_sched.entry[0].write();
+}
+
+static sdk_ret_t
+cap_pb_cfg_sched(int chip_id, int inst_id, int is_random)
+{
+    cap_pbc_csr_t & pbc_csr =
+                CAP_BLK_REG_MODEL_ACCESS(cap_pbc_csr_t, chip_id, inst_id);
+
+    unsigned int clk_period = 833;
+    unsigned int bus_width  = 512;
+
+    unsigned int l1_sched_dwrr_unit;
+    unsigned int l1_node[12][32];
+    unsigned int l1_is_strict[12][32];
+    unsigned int l1_priority_bypass_timer[12][32];
+    unsigned int l1_wt_rate[12][32];
+    float l1_dwrr_ratio[12][32];
+    unsigned int l1_sp_rate_mbps[12][32];
+
+    unsigned int l1_per_node_tot_wt[12][16];
+    unsigned int l1_per_node_tot_dwrr_inputs[12][16];
+    unsigned int l2_node[12][16];
+    unsigned int l2_is_strict[12][16];
+    unsigned int l2_priority_bypass_timer[12][16];
+    unsigned int l2_wt_rate[12][16];
+    float l2_dwrr_ratio[12][16];
+    unsigned int l2_sp_rate_mbps[12][16];
+
+    unsigned int l2_per_node_tot_wt[12][4];
+    unsigned int l2_per_node_tot_dwrr_inputs[12][4];
+
+    unsigned int l3_node[12][4];
+    unsigned int l3_is_strict[12][4];
+    unsigned int l3_priority_bypass_timer[12][4];
+    unsigned int l3_wt_rate[12][4];
+    float l3_dwrr_ratio[12][4];
+    unsigned int l3_sp_rate_mbps[12][4];
+
+    unsigned int l3_per_node_tot_wt[12][1];
+    unsigned int l3_per_node_tot_dwrr_inputs[12][1];
+    int cfg_quota;
+
+    l1_sched_dwrr_unit = 10000;
+
+    unsigned long long sched_timer = 5000;
+    pbc_csr.cfg_sched.timer(sched_timer);
+    pbc_csr.cfg_sched.write();
+
+    // Configuration for L1 scheduler
+    for(int p_idx=0; p_idx<12; p_idx++) {
+        for(int node_idx=0; node_idx<16; node_idx++) {
+            l1_per_node_tot_wt[p_idx][node_idx]          = 0;
+            l1_per_node_tot_dwrr_inputs[p_idx][node_idx] = 0;
+        }
+
+        for(int q_idx=0; q_idx<32; q_idx++) {
+            if(is_random) {
+            } else {
+                l1_node[p_idx][q_idx]                   = 0;
+                l1_is_strict[p_idx][q_idx]              = 0;
+                l1_priority_bypass_timer[p_idx][q_idx]  = 0;
+                l1_wt_rate[p_idx][q_idx]                = 1;
+                l1_sp_rate_mbps[p_idx][q_idx]           = 0;
+            }
+
+            if(l1_is_strict[p_idx][q_idx] == 0) {
+                l1_per_node_tot_wt[p_idx][l1_node[p_idx][q_idx]] +=
+                                                    l1_wt_rate[p_idx][q_idx];
+                l1_per_node_tot_dwrr_inputs[p_idx][l1_node[p_idx][q_idx]]
+                                    += (l1_wt_rate[p_idx][q_idx] == 0) ? 0 : 1;
+            }
+        }
+
+        for(int q_idx=0; q_idx<32; q_idx++) {
+            if(l1_is_strict[p_idx][q_idx] == 0 &&
+                                        l1_wt_rate[p_idx][q_idx] != 0) {
+                l1_dwrr_ratio[p_idx][q_idx] = (l1_wt_rate[p_idx][q_idx] * 100.0)/
+                            (l1_per_node_tot_wt[p_idx][l1_node[p_idx][q_idx]]);
+            } else {
+                l1_dwrr_ratio[p_idx][q_idx] = 0;
+            }
+
+            if(l1_is_strict[p_idx][q_idx] == 0) {
+                l1_sp_rate_mbps[p_idx][q_idx] = 0;
+            }
+
+            if(l1_dwrr_ratio[p_idx][q_idx] != 0) {
+                cfg_quota = (l1_dwrr_ratio[p_idx][q_idx] * l1_sched_dwrr_unit *
+                    l1_per_node_tot_dwrr_inputs[p_idx][l1_node[p_idx][q_idx]]);
+
+                cap_pb_cfg_sched_node(
+                                    chip_id, inst_id, 1, p_idx, q_idx, cfg_quota);
+            } else if(l1_is_strict[p_idx][q_idx] != 0) {
+                if(l1_priority_bypass_timer[p_idx][q_idx] != 0) {
+                    cfg_quota = 10 + ( sched_timer % 1000 );
+                } else {
+                    cfg_quota = ((l1_sp_rate_mbps[p_idx][q_idx] *
+                                (unsigned long long) 64 * sched_timer)/
+                                (clk_period*bus_width));
+                }
+
+                cap_pb_cfg_sched_node(
+                                chip_id, inst_id, 1, p_idx, q_idx, cfg_quota);
+            }
+        }
+    } //for port
+
+    //Configuration for L2 scheduler
+    for(int p_idx=0; p_idx<12; p_idx++) {
+        for(int node_idx=0; node_idx<4; node_idx++) {
+            l2_per_node_tot_wt[p_idx][node_idx]          = 0;
+            l2_per_node_tot_dwrr_inputs[p_idx][node_idx] = 0;
+        }
+
+        for(int node_idx=0; node_idx<16; node_idx++) {
+            if(is_random) {
+            } else {
+                l2_node[p_idx][node_idx]                  = 0;
+                l2_is_strict[p_idx][node_idx]             = 0;
+                l2_priority_bypass_timer[p_idx][node_idx] = 0;
+                l2_wt_rate[p_idx][node_idx]               = 1;
+                l2_sp_rate_mbps[p_idx][node_idx]          = 0;
+            }
+
+            if(l2_is_strict[p_idx][node_idx] == 0) {
+                l2_per_node_tot_wt[p_idx][l2_node[p_idx][node_idx]] +=
+                                            l2_wt_rate[p_idx][node_idx];
+                l2_per_node_tot_dwrr_inputs[p_idx][l2_node[p_idx][node_idx]] +=
+                                (l2_wt_rate[p_idx][node_idx] == 0) ? 0 :
+                                l1_per_node_tot_dwrr_inputs[p_idx][node_idx];
+            }
+        }
+
+        for(int node_idx=0; node_idx<16; node_idx++) {
+            if(l2_is_strict[p_idx][node_idx] == 0 &&
+                           l2_wt_rate[p_idx][node_idx] != 0) {
+                l2_dwrr_ratio[p_idx][node_idx] =
+                        (l2_wt_rate[p_idx][node_idx] * 100.0)/
+                        (l2_per_node_tot_wt[p_idx][l2_node[p_idx][node_idx]]);
+            } else {
+                l2_dwrr_ratio[p_idx][node_idx] = 0;
+            }
+
+            if(l2_is_strict[p_idx][node_idx] == 0) {
+                l2_sp_rate_mbps[p_idx][node_idx] = 0;
+            }
+
+            if(l2_dwrr_ratio[p_idx][node_idx] != 0) {
+                cfg_quota  = (l2_dwrr_ratio[p_idx][node_idx] *
+                              l1_sched_dwrr_unit *
+                              l2_per_node_tot_dwrr_inputs
+                                            [p_idx][l2_node[p_idx][node_idx]]);
+
+                cap_pb_cfg_sched_node(
+                            chip_id, inst_id, 2, p_idx, node_idx, cfg_quota);
+            } else if(l2_is_strict[p_idx][node_idx] != 0) {
+                if(l2_priority_bypass_timer[p_idx][node_idx] != 0) {
+                    cfg_quota = 10 + ( sched_timer % 1000 );
+                } else {
+                    cfg_quota = ((l2_sp_rate_mbps[p_idx][node_idx] *
+                                 (unsigned long long) 64 * sched_timer) /
+                                 (clk_period*bus_width));
+                }
+
+                cap_pb_cfg_sched_node(
+                            chip_id, inst_id, 2, p_idx, node_idx, cfg_quota);
+            }
+        }
+    } //for port
+
+    //Configuration for L3 scheduler
+    for(int p_idx=9; p_idx<12; p_idx++) {
+        for(int node_idx=0; node_idx<1; node_idx++) {
+            l3_per_node_tot_wt[p_idx][node_idx]          = 0;
+            l3_per_node_tot_dwrr_inputs[p_idx][node_idx] = 0;
+        }
+
+        for(int node_idx=0; node_idx<4; node_idx++) {
+            if(is_random) {
+            } else {
+                l3_node[p_idx][node_idx]                  = 0;
+                l3_is_strict[p_idx][node_idx]             = 0;
+                l3_priority_bypass_timer[p_idx][node_idx] = 0;
+                l3_wt_rate[p_idx][node_idx]               = 1;
+                l3_sp_rate_mbps[p_idx][node_idx]          = 0;
+            }
+
+            if(l3_is_strict[p_idx][node_idx] == 0) {
+                l3_per_node_tot_wt[p_idx][l3_node[p_idx][node_idx]] +=
+                                                l3_wt_rate[p_idx][node_idx];
+
+                l3_per_node_tot_dwrr_inputs[p_idx][l3_node[p_idx][node_idx]] +=
+                                    (l3_wt_rate[p_idx][node_idx] == 0) ? 0 :
+                                    l2_per_node_tot_dwrr_inputs[p_idx][node_idx];
+            }
+        }
+
+        for(int node_idx=0; node_idx<4; node_idx++) {
+            if(l3_is_strict[p_idx][node_idx] == 0 &&
+                                            l3_wt_rate[p_idx][node_idx] != 0) {
+                l3_dwrr_ratio[p_idx][node_idx] =
+                        (l3_wt_rate[p_idx][node_idx] * 100.0) /
+                        (l3_per_node_tot_wt[p_idx][l3_node[p_idx][node_idx]]);
+            } else {
+                l3_dwrr_ratio[p_idx][node_idx] = 0;
+            }
+
+            if(l3_is_strict[p_idx][node_idx] == 0) {
+                l3_sp_rate_mbps[p_idx][node_idx] = 0;
+            }
+
+            if(l3_dwrr_ratio[p_idx][node_idx] != 0) {
+                cfg_quota  = (l3_dwrr_ratio[p_idx][node_idx] *
+                              l1_sched_dwrr_unit *
+                              l3_per_node_tot_dwrr_inputs
+                                        [p_idx][l3_node[p_idx][node_idx]]);
+
+                cap_pb_cfg_sched_node(
+                            chip_id, inst_id, 3, p_idx, node_idx, cfg_quota);
+            } else if(l3_is_strict[p_idx][node_idx] != 0) {
+                if(l3_priority_bypass_timer[p_idx][node_idx] != 0) {
+                    cfg_quota = 10 + ( sched_timer % 1000 );
+                } else {
+                    cfg_quota = ((l3_sp_rate_mbps[p_idx][node_idx] *
+                                64 * sched_timer) / (clk_period*bus_width));
+                }
+                cap_pb_cfg_sched_node(
+                            chip_id, inst_id, 3, p_idx, node_idx, cfg_quota);
+            }
+        }
+    } //for port
+
+//::
+//:: for p in range(TM_PORTS):
+//::
+    pbc_csr.port_${p}.cfg_oq_arb_l1_selection.all(0);
+
+    for (int q_idx = 0; q_idx < 32; ++q_idx) {
+//::
+//::     for node in range(16):
+//::
+        if (l1_node[${p}][q_idx] == ${node}) {
+            pbc_csr.port_${p}.cfg_oq_arb_l1_selection.node_${node}(
+                pbc_csr.port_${p}.cfg_oq_arb_l1_selection.node_${node}().
+                                        convert_to<int>() | 1 << q_idx);
+        }
+
+//::
+//::     #endfor
+//::
+        pbc_csr.port_${p}.cfg_oq_arb_l1_strict.all(0);
+
+        if(l1_is_strict[${p}][q_idx] == 1) {
+            pbc_csr.port_${p}.cfg_oq_arb_l1_strict.priority(
+                    pbc_csr.port_${p}.cfg_oq_arb_l1_strict.priority().
+                    convert_to<int>() | 1 << q_idx);
+        }
+
+        pbc_csr.port_${p}.cfg_oq_arb_l1_selection.write();
+        pbc_csr.port_${p}.cfg_oq_arb_l1_strict.write();
+    }
+
+//::
+//:: #endfor
+//::
+
+//::
+//:: for p in range(TM_PORTS):
+//::
+    pbc_csr.port_${p}.cfg_oq_arb_l2_selection.all(0);
+
+    for (int l1_node_idx = 0; l1_node_idx < 16; ++l1_node_idx) {
+//::
+//::     for node in range(4):
+//::
+        if (l2_node[${p}][l1_node_idx] == ${node}) {
+            pbc_csr.port_${p}.cfg_oq_arb_l2_selection.node_${node}(
+                pbc_csr.port_${p}.cfg_oq_arb_l2_selection.node_${node}().
+                                        convert_to<int>() | 1 << l1_node_idx);
+        }
+
+//::
+//::     #endfor
+//::
+        pbc_csr.port_${p}.cfg_oq_arb_l2_strict.all(0);
+
+        if(l2_is_strict[${p}][l1_node_idx] == 1) {
+            pbc_csr.port_${p}.cfg_oq_arb_l2_strict.priority(
+                    pbc_csr.port_${p}.cfg_oq_arb_l2_strict.priority().
+                    convert_to<int>() | 1 << l1_node_idx);
+        }
+
+        pbc_csr.port_${p}.cfg_oq_arb_l2_selection.write();
+        pbc_csr.port_${p}.cfg_oq_arb_l2_strict.write();
+    }
+
+//::
+//:: #endfor
+//::
+    // pbc_csr.port_9.cfg_oq_arb_l3_selection.all(0);
+    // for(int l2_node_idx=0; l2_node_idx<4; l2_node_idx++) {
+    //   if(l3_node[9][l2_node_idx] == 0) {
+    //     pbc_csr.port_9.cfg_oq_arb_l3_selection.node_0(pbc_csr.port_9.cfg_oq_arb_l3_selection.node_0().convert_to<int>() | 1 << l2_node_idx);
+    //   }
+    // }
+    // pbc_csr.port_9.cfg_oq_arb_l3_selection.write();
+
+    pbc_csr.port_9.cfg_oq_arb_l3_strict.all(0);
+
+    for(int l2_node_idx=0; l2_node_idx<4; l2_node_idx++) {
+        if(l3_is_strict[9][l2_node_idx] == 1) {
+            pbc_csr.port_9.cfg_oq_arb_l3_strict.priority(pbc_csr.port_9.cfg_oq_arb_l3_strict.priority().convert_to<int>() | 1 << l2_node_idx);
+        }
+    }
+
+    pbc_csr.port_9.cfg_oq_arb_l3_strict.write();
+
+    // pbc_csr.port_10.cfg_oq_arb_l3_selection.all(0);
+    // for(int l2_node_idx=0; l2_node_idx<4; l2_node_idx++) {
+    //   if(l3_node[10][l2_node_idx] == 0) {
+    //     pbc_csr.port_10.cfg_oq_arb_l3_selection.node_0(pbc_csr.port_10.cfg_oq_arb_l3_selection.node_0().convert_to<int>() | 1 << l2_node_idx);
+    //   }
+    // }
+    // pbc_csr.port_10.cfg_oq_arb_l3_selection.write();
+
+    pbc_csr.port_10.cfg_oq_arb_l3_strict.all(0);
+
+    for(int l2_node_idx=0; l2_node_idx<4; l2_node_idx++) {
+        if(l3_is_strict[10][l2_node_idx] == 1) {
+            pbc_csr.port_10.cfg_oq_arb_l3_strict.priority(pbc_csr.port_10.cfg_oq_arb_l3_strict.priority().convert_to<int>() | 1 << l2_node_idx);
+        }
+        if(l3_priority_bypass_timer [10][l2_node_idx] == 1) {
+            pbc_csr.port_10.cfg_oq_arb_l3_strict.priority_bypass_timer(pbc_csr.port_10.cfg_oq_arb_l3_strict.priority_bypass_timer().convert_to<int>() | 1 << l2_node_idx);
+        }
+    }
+
+    pbc_csr.port_10.cfg_oq_arb_l3_strict.write();
+
+    // pbc_csr.port_11.cfg_oq_arb_l3_selection.all(0);
+    // for(int l2_node_idx=0; l2_node_idx<4; l2_node_idx++) {
+    //   if(l3_node[11][l2_node_idx] == 0) {
+    //     pbc_csr.port_11.cfg_oq_arb_l3_selection.node_0(pbc_csr.port_11.cfg_oq_arb_l3_selection.node_0().convert_to<int>() | 1 << l2_node_idx);
+    //   }
+    // }
+    // pbc_csr.port_11.cfg_oq_arb_l3_selection.write();
+
+    pbc_csr.port_11.cfg_oq_arb_l3_strict.all(0);
+
+    for(int l2_node_idx=0; l2_node_idx<4; l2_node_idx++) {
+        if(l3_is_strict[11][l2_node_idx] == 1) {
+            pbc_csr.port_11.cfg_oq_arb_l3_strict.priority(pbc_csr.port_11.cfg_oq_arb_l3_strict.priority().convert_to<int>() | 1 << l2_node_idx);
+        }
+        if(l3_priority_bypass_timer [11][l2_node_idx] == 1) {
+            pbc_csr.port_11.cfg_oq_arb_l3_strict.priority_bypass_timer(pbc_csr.port_11.cfg_oq_arb_l3_strict.priority_bypass_timer().convert_to<int>() | 1 << l2_node_idx);
+        }
+    }
+
+    pbc_csr.port_11.cfg_oq_arb_l3_strict.write();
+
+    // read to flush writes
+    pbc_csr.cfg_island_control.read();
+
+    return SDK_RET_OK;
+}
+
 static sdk_ret_t
 capri_tm_init_pbc (capri_tm_buf_cfg_t *buf_cfg)
 {
@@ -2142,6 +2542,12 @@ capri_tm_init_pbc (capri_tm_buf_cfg_t *buf_cfg)
     ret = capri_tm_port_program_defaults();
     if (ret != sdk::SDK_RET_OK) {
         SDK_TRACE_ERR("Error programming port defaults %d", ret);
+        return ret;
+    }
+
+    ret = cap_pb_cfg_sched(0, 0, 0);
+    if (ret != sdk::SDK_RET_OK) {
+        SDK_TRACE_ERR("Error programming scheduler defaults %d", ret);
         return ret;
     }
 
@@ -2438,7 +2844,6 @@ capri_tm_global_init (void)
 
     sched_timer = CAPRI_TM_CLOCK_SPEED_MHZ * CAPRI_TM_SCHEDULER_RATE_REFRESH_INTERVAL_US;
     pbc_csr.cfg_sched.read();
-    pbc_csr.cfg_sched.enable_wrr(0);
     pbc_csr.cfg_sched.timer(sched_timer);
 
     // Write all the registers
