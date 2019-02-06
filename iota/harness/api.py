@@ -419,6 +419,14 @@ def Trigger_CreateExecuteCommandsRequest(serial = True):
     req.trigger_mode = topo_svc.TRIGGER_SERIAL if serial else topo_svc.TRIGGER_PARALLEL
     return req
 
+#Run all commands in parallel irrespetive of which node it is running
+def Trigger_CreateAllParallelCommandsRequest():
+    req = topo_svc.TriggerMsg()
+    req.trigger_op = topo_svc.EXEC_CMDS
+    req.trigger_mode = topo_svc.TRIGGER_NODE_PARALLEL
+    return req
+
+
 def Trigger_AddCommand(req, node_name, entity_name, command,
                        background = False, rundir = "",
                        timeout = DEFAULT_COMMAND_TIMEOUT):

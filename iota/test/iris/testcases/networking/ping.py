@@ -24,7 +24,7 @@ def Setup(tc):
 
 def Trigger(tc):
     if tc.skip: return api.types.status.SUCCESS
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    req = api.Trigger_CreateAllParallelCommandsRequest()
     tc.cmd_cookies = []
 
     for pair in tc.workload_pairs:
@@ -45,7 +45,7 @@ def Trigger(tc):
 
     tc.resp = api.Trigger(req)
 
-    req2 = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    req2 = api.Trigger_CreateAllParallelCommandsRequest()
     for w in api.GetWorkloads():
         api.Trigger_AddCommand(req2, w.node_name, w.workload_name,
                                "ls /root/ > %s_ls.out" % w.workload_name)
