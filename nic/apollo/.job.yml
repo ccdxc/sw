@@ -7,3 +7,13 @@ targets:
     area:
     sub-area:
     feature:
+
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/nic"
+rebase: true
+logfiles:
+  - /sw/nic/nic_apollo_sanity_logs.tar.gz
