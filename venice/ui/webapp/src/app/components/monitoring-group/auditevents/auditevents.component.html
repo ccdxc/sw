@@ -40,7 +40,7 @@
 <ng-template #DataTable>
   <app-lazyrender [data]="auditEvents" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
     <p-table #auditeventsTable class="global-primeng-table-lazyload" [columns]="cols" dataKey="meta.name" [responsive]="true" 
-      sortField="meta.mod-time" [sortOrder]='-1' [resizableColumns]="true" rowExpandMode="single"  >
+      sortField="meta.mod-time" [sortOrder]='-1' [resizableColumns]="true" rowExpandMode="single" exportFilename="Venice-auditevents" >
       <!-- Table Caption -->
       <ng-template pTemplate="caption">
         <app-tableheader title="Audit Events" [total]="auditEvents.length"  width="250px">

@@ -112,6 +112,7 @@ export class AuditeventsComponent extends BaseComponent implements OnInit, OnDes
 
   exportTableData() {
     this.auditeventsTable.exportCSV();
+    this._controllerService.invokeInfoToaster('File Exported', this.auditeventsTable.exportFilename + '.csv');
   }
 
   toCSVJSON () {
