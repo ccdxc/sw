@@ -89,7 +89,13 @@ export class AuditeventsComponent extends BaseComponent implements OnInit, OnDes
           cssClass: 'global-button-primary auditevents-toolbar-button',
           text: 'Refresh',
           callback: () => { this.refreshData(); },
-        }
+        },
+        /*  This block is experimental. debug to "toCSVJSON"
+        {
+          cssClass: 'global-button-primary auditevents-toolbar-button',
+          text: 'To CSV/JSON',
+          callback: () => { this.toCSVJSON(); },
+        } */
       ],
       breadcrumb: [{ label: 'Audit Events', url: Utility.getBaseUIUrl() + 'monitoring/auditevents' }]
     });
@@ -105,6 +111,13 @@ export class AuditeventsComponent extends BaseComponent implements OnInit, OnDes
 
   exportTableData() {
     this.auditeventsTable.exportCSV();
+  }
+
+  toCSVJSON () {
+    const csv = Utility.extractTableContentToCSV(this.auditeventsTable);
+    console.log('csv\n', csv);
+    const json = Utility.extractTableContentToJSON(this.auditeventsTable);
+    console.log('json\n', json);
   }
 
   populateFieldSelector() {

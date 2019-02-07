@@ -12,7 +12,7 @@ import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
-
+import { Table } from 'primeng/table';
 
 export class Utility {
 
@@ -938,7 +938,7 @@ export class Utility {
   }
 
   /**
-   *
+   * This API export data. Exported data will be downloaded to user machine.
    * @param content (like csv string.  You can )
    * @type: 'text/csv;charset=utf-8;'
    * @param exportFilename (like table.csv)
@@ -965,6 +965,115 @@ export class Utility {
       document.body.removeChild(link);
     }
   }
+
+  /**
+   * This API extract table data to JSON 
+   * For example:
+   * const json = Utility.extractTableContentToJSON(this.auditeventsTable);
+   * console.log('json\n', json);
+   * @param table - primeng table
+   * @param options - json object {selectionOnly: boolean}
+   */
+  public static extractTableContentToJSON(table: Table, options?: any, ): any[] {
+    let data = table.filteredValue || table.value;
+    const output = [];
+    const headers: string[] = [];
+    if (options && options.selectionOnly) {
+      data = table.selection || [];
+    }
+    // headers
+    for (let i = 0; i < table.columns.length; i++) {
+      const column = table.columns[i];
+      if (column.exportable !== false && column.field) {
+        headers.push( (column.header || column.field));
+      }
+    }
+    // body
+    data.forEach((record, i) => {
+      const rec = {};
+      for (let j = 0; j < table.columns.length; j++) {
+        const column = table.columns[j];
+        if (column.exportable !== false && column.field) {
+          let cellData = table.objectUtils.resolveFieldData(record, column.field);
+          if (cellData != null) {
+            if (table.exportFunction) {
+              cellData = table.exportFunction({
+                data: cellData,
+                field: column.field
+              });
+            } else {
+              cellData = String(cellData).replace(/"/g, '""');
+            }
+          } else {
+            cellData = '';
+          }
+          if (!Utility.isEmpty(headers[j])) {
+            rec[headers[j]] = cellData;
+          }
+        }
+      }
+      output.push(rec);
+    });
+    return output;
+  }
+
+  /**
+   * This API extract table data to CVS
+   *  For example:
+   *  const csv = Utility.extractTableContentToCSV(this.auditeventsTable);
+   *  console.log('csv\n', csv);
+   *
+   *  @param table is a primeNG Table object
+   *  @param options (It looks like {selectionOnly: boolean})
+   */
+  public static extractTableContentToCSV(table: Table, options?: any, ): string {
+    let data = table.filteredValue || table.value;
+    let csv = '\ufeff';
+
+    if (options && options.selectionOnly) {
+      data = table.selection || [];
+    }
+    // headers
+    for (let i = 0; i < table.columns.length; i++) {
+      const column = table.columns[i];
+      if (column.exportable !== false && column.field) {
+        csv += '"' + (column.header || column.field) + '"';
+        if (i < (table.columns.length - 1)) {
+          csv += table.csvSeparator;
+        }
+      }
+    }
+    // body
+    data.forEach((record, i) => {
+      csv += '\n';
+      for (let j = 0; j < table.columns.length; j++) {
+        const column = table.columns[j];
+        if (column.exportable !== false && column.field) {
+          let cellData = table.objectUtils.resolveFieldData(record, column.field);
+          if (cellData != null) {
+            if (table.exportFunction) {
+              cellData = table.exportFunction({
+                data: cellData,
+                field: column.field
+              });
+            } else {
+              cellData = String(cellData).replace(/"/g, '""');
+            }
+          } else {
+            cellData = '';
+          }
+          csv += '"' + cellData + '"';
+          if (j < (table.columns.length - 1)) {
+            csv += table.csvSeparator;
+          }
+        }
+      }
+    });
+    return csv;
+  }
+
+
+
 
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()
 
