@@ -15,7 +15,6 @@
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
-#include "gen/proto/device.pb.h"
 
 #include "delphic.hpp"
 
@@ -100,20 +99,11 @@ int main(int argc, char *argv[])
 {
     int opt;
     sighandler_t osigusr1;
-    char str[MAX_STRING_BUFF_SIZE];
     
-    memset(str, 0, MAX_STRING_BUFF_SIZE);
     while ((opt = getopt(argc, argv, "c:sp:")) != -1) {
         switch (opt) {
         case 'c':
-            snprintf(str, MAX_STRING_BUFF_SIZE, "%d",
-                          device::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE);
-            config_file = string(optarg);
-            if (config_file.compare(str) == 0) {
-                /* Eth dev scale profile */
-                std::string scale_config("/platform/etc/nicmgrd/eth_scale.json");
-                config_file.swap(scale_config);
-            }
+            config_file = DeviceManager::ParseDeviceConf(string(optarg));
             break;
         case 's':
             fwd_mode = FWD_MODE_SMART_NIC;
