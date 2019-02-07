@@ -48,7 +48,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   subscriptions: Subscription[] = [];
 
-  
+
   // idling
   showIdleWarning = false;
   idleDialogRef: any;
@@ -58,7 +58,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
    alertSubscription: Subscription;
    alerts: ReadonlyArray<MonitoringAlert> = [];
    alertNumbers = 0;
-   alertQuery = {};
+   alertQuery = {
+    'field-selector': 'status.resolved=null'
+  };
 
   protected sidenavmenu: any = [
     {
@@ -429,7 +431,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
    getAlerts() {
     // this.filteredAlerts = [];
     this.alertsEventUtility = new HttpEventUtility<MonitoringAlert>(MonitoringAlert);
-    // this.alerts = this.alertsEventUtility.array;
     if (this.alertSubscription) {
       this.alertSubscription.unsubscribe();
     }

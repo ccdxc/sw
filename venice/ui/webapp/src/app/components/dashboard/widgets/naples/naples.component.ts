@@ -229,7 +229,7 @@ export class NaplesComponent implements OnInit, OnChanges, OnDestroy {
     };
     const fieldName = 'naples-dataset.json';
     Utility.exportContent(JSON.stringify(exportObj, null, 2), 'text/json;charset=utf-8;', fieldName);
-    Utility.getInstance().getControllerService().invokeInfoToaster('Data exported', 'Please find ' + fieldName + ' in your donwload folder');
+    Utility.getInstance().getControllerService().invokeInfoToaster('Data exported', 'Please find ' + fieldName + ' in your download folder');
   }
 
   ngOnChanges(changes) {

@@ -956,7 +956,7 @@ export class Utility {
       document.body.appendChild(link);
       if (link.download !== undefined) {
         link.setAttribute('href', URL.createObjectURL(blob));
-        link.setAttribute('download', exportFilename);  // this.exportFilename + '.csv');
+        link.setAttribute('download', exportFilename);
         link.click();
       } else {
         content = 'data:text/csv;charset=utf-8,' + content;

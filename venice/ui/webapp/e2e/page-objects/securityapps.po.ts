@@ -10,9 +10,9 @@ export class SecurityApps {
 
     async verifyPage() {
         const EC = protractor.ExpectedConditions;
-        const alertseventsPageComponent = element(by.css('app-securityapps'));
+        const securityappsPageComponent = element(by.css('app-securityapps'));
         const urlEC = EC.urlContains('/security/securityapps');
-        const componentEC = EC.presenceOf(alertseventsPageComponent);
+        const componentEC = EC.presenceOf(securityappsPageComponent);
         await browser.wait(EC.and(urlEC, componentEC));
     }
 

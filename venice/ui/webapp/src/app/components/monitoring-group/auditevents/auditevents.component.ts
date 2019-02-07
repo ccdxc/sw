@@ -82,12 +82,12 @@ export class AuditeventsComponent extends BaseComponent implements OnInit, OnDes
       buttons: [
         {
           cssClass: 'global-button-primary auditevents-toolbar-button',
-          text: 'Export',
+          text: 'EXPORT',
           callback: () => { this.exportTableData(); },
         },
         {
           cssClass: 'global-button-primary auditevents-toolbar-button',
-          text: 'Refresh',
+          text: 'REFRESH',
           callback: () => { this.refreshData(); },
         },
         /*  This block is experimental. debug to "toCSVJSON"
