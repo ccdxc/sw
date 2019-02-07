@@ -26,9 +26,21 @@ make -j12 -C drivers || exit
 # This krping will build on some kernel versions, but needs compat work
 case $(uname -r) in
 # Kernel versions known to work with this krping
+
+# CentOS / RHEL 7
+*.el7.*)
+RHEL_MINOR=$(awk '/RHEL_MINOR/ { print $3 };' /lib/modules/$(uname -r)/build/include/generated/uapi/linux/version.h)
+if (($RHEL_MINOR < 6)) ; then
+patch -f -p1 < "$DIR/patches/0001-krping-rhel-7.3.patch"
+fi
+make -j12 -C krping || exit
+;;
+
+# Vanilla / Ubuntu / Oracle
 4.14.*|4.15.*)
 make -j12 -C krping || exit
 ;;
+
 # Kernel versions known incompatible with this krping: 4.9, 4.19, 4.20
 # default: skip building the krping module
 *)

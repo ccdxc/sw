@@ -4412,7 +4412,9 @@ static int ionic_query_qp(struct ib_qp *ibqp, struct ib_qp_attr *attr,
 	init_attr->qp_type = ibqp->qp_type;
 	init_attr->create_flags = 0;
 	init_attr->port_num = 0;
+#ifdef HAVE_QP_RWQ_IND_TBL
 	init_attr->rwq_ind_tbl = ibqp->rwq_ind_tbl;
+#endif
 #ifdef HAVE_QP_INIT_SRC_QPN
 	init_attr->source_qpn = 0;
 #endif

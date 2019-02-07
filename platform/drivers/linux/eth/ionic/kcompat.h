@@ -6179,4 +6179,9 @@ static inline int _kc_macvlan_release_l2fw_offload(struct net_device *dev)
 #define HAVE_TCF_EXTS_FOR_EACH_ACTION
 #endif /* 4.19.0 */
 
+/* XXX fix kcompat when admin commands to support link ag are added */
+#if (RHEL_RELEASE_CODE && RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(7,6))
+#define DISABLE_LINK_AG_SUPPORT
+#endif
+
 #endif /* _KCOMPAT_H_ */

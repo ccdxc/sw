@@ -2350,6 +2350,7 @@ static void ionic_lif_notify_work(struct work_struct *ws)
 {
 }
 
+#ifndef DISABLE_LINK_AG_SUPPORT
 #ifdef NETDEV_CHANGEUPPER
 static void ionic_lif_changeupper(struct ionic *ionic, struct lif *lif,
 				  struct netdev_notifier_changeupper_info *info)
@@ -2396,7 +2397,8 @@ static void ionic_lif_changelowerstate(struct ionic *ionic, struct lif *lif,
 	dev_dbg(ionic->dev, "link up %d enable %d\n",
 		lower_info->link_up, lower_info->tx_enabled);
 }
-
+#endif /* NETDEV_CHANGELOWERSTATE */
+#endif /* DISABLE_LINK_AG_SUPPORT */
 
 static void ionic_lif_set_netdev_info(struct lif *lif)
 {
@@ -2422,7 +2424,6 @@ static void ionic_lif_set_netdev_info(struct lif *lif)
 
 	ionic_adminq_post_wait(lif, &ctx);
 }
-#endif /* NETDEV_CHANGELOWERSTATE */
 
 struct lif *ionic_netdev_lif(struct net_device *netdev)
 {
@@ -2443,6 +2444,7 @@ static int ionic_lif_notify(struct notifier_block *nb,
 		return NOTIFY_DONE;
 
 	switch (event) {
+#ifndef DISABLE_LINK_AG_SUPPORT
 #ifdef NETDEV_CHANGEUPPER
 	case NETDEV_CHANGEUPPER:
 		ionic_lif_changeupper(ionic, lif, info);
@@ -2456,6 +2458,7 @@ static int ionic_lif_notify(struct notifier_block *nb,
 		ionic_lif_set_netdev_info(lif);
 		break;
 #endif
+#endif /* DISABLE_LINK_AG_SUPPORT */
 	default:
 		return NOTIFY_DONE;
 	}
