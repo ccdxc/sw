@@ -49,7 +49,6 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	cmdauth "github.com/pensando/sw/venice/cmd/grpc/server/auth"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
-	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
@@ -88,9 +87,8 @@ const (
 	integTestCitadelURL = "localhost:9094"
 	integTestRolloutURL = "localhost:9095"
 
-	smartNICServerURL = "localhost:9002"
-	resolverURLs      = ":" + globals.CMDResolverPort
-	cmdAuthServer     = "localhost:9198"
+	smartNICServerURL = "localhost:" + globals.CMDSmartNICRegistrationAPIPort
+	cmdAuthServer     = "localhost:" + globals.CMDGRPCAuthPort
 
 	// TS Controller
 	integTestTsmURL     = "localhost:9500"
@@ -155,7 +153,6 @@ type veniceIntegSuite struct {
 	restClient          apiclient.Services
 	apisrvClient        apiclient.Services
 	vcHub               vchSuite
-	resolverSrv         *rpckit.RPCServer
 	resolverClient      resolver.Interface
 	userCred            *auth.PasswordCredential
 	tmpFiles            []string
@@ -340,17 +337,9 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 	}
 }
 
-func (it *veniceIntegSuite) startResolver() {
+func (it *veniceIntegSuite) createResolver() {
 	// Now create a mock resolver
 	m := mock.NewResolverService()
-	resolverHandler := service.NewRPCHandler(m)
-	resolverServer, err := rpckit.NewRPCServer(globals.Cmd, "localhost:0", rpckit.WithTracerEnabled(true))
-	if err != nil {
-		log.Fatalf("Error creating resolver server. Err: %v", err)
-	}
-	types.RegisterServiceAPIServer(resolverServer.GrpcServer, resolverHandler)
-	resolverServer.Start()
-	it.resolverSrv = resolverServer
 	it.mockResolver = m
 
 	// populate the mock resolver with apiserver instance.
@@ -701,9 +690,11 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 		c.Fatalf("Error setting up TLS provider: %v", err)
 	}
 
-	// start resolver
-	it.startResolver()
-	rc := resolver.New(&resolver.Config{Name: "venice_integ_rslvr", Servers: []string{it.resolverSrv.GetListenURL()}})
+	// Create resolver. Resolver uses the CMD Auth server, so it will start when RunAuthServer is invoked()
+	it.createResolver()
+	cmdenv.ResolverService = it.mockResolver
+
+	rc := resolver.New(&resolver.Config{Name: "venice_integ_rslvr", Servers: []string{"localhost:" + globals.CMDResolverPort}})
 	it.resolverClient = rc
 
 	// start evts proxy
@@ -757,7 +748,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	// logConf.Filter = log.AllowAllFilter
 	l = log.GetNewLogger(logConf)
 	svcs := map[string]string{globals.APIServer: it.apiSrvAddr, globals.Spyglass: it.fdrAddr}
-	it.apiGw, it.apiGwAddr, err = testutils.StartAPIGateway(fmt.Sprintf(":%s", it.config.APIGatewayPort), it.config.APIGatewaySkipAuth, svcs, it.disabledServices, []string{it.resolverSrv.GetListenURL()}, l)
+	it.apiGw, it.apiGwAddr, err = testutils.StartAPIGateway(fmt.Sprintf(":%s", it.config.APIGatewayPort), it.config.APIGatewaySkipAuth, svcs, it.disabledServices, []string{"localhost:" + globals.CMDResolverPort}, l)
 	c.Assert(err, check.IsNil)
 
 	// start agents
@@ -885,7 +876,6 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	it.apiSrv.Stop()
 	it.apiSrv = nil
 	it.resolverClient.Stop()
-	it.resolverSrv.Stop()
 	it.apisrvClient.Close()
 	it.eps.RPCServer.Stop()
 
