@@ -224,6 +224,7 @@ public:
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
     int GenerateQstateInfoJson(std::string qstate_info_file);
     void ThreadsWaitJoin(void);
+    static string ParseDeviceConf(string input_arg);
 
 private:
     static DeviceManager *instance;

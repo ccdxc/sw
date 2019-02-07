@@ -25,13 +25,9 @@ fi
 
 export CONFIG_FILE=""
 if [ -r $SYSCONFIG/device.conf ]; then
-    CONFIG_FILE=`jq '."feature-profile"' $SYSCONFIG/device.conf`
+    CONFIG_FILE="$SYSCONFIG/device.conf"
 else
-    if [[ "$FWD_MODE" != "classic" ]]; then
-        CONFIG_FILE="$NICMGR_CONFIG_PATH/eth_smart.json"
-    else
-        CONFIG_FILE="$NICMGR_CONFIG_PATH/device.json"
-    fi
+    CONFIG_FILE="none"
 fi
 
 export MODE_FLAG=""

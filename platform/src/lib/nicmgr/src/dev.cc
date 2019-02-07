@@ -26,6 +26,7 @@
 #include "pd_client.hpp"
 #include "eth_dev.hpp"
 #include "accel_dev.hpp"
+#include "gen/proto/device.pb.h"
 
 namespace pt = boost::property_tree;
 
@@ -304,6 +305,46 @@ DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mo
     hal_lif_info_.enable_rdma = false;
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
     NIC_LOG_DEBUG("nicmgr hw_lif_id: {}", hal_lif_info_.hw_lif_id);
+}
+
+string
+DeviceManager::ParseDeviceConf(string filename)
+{
+    boost::property_tree::ptree spec;
+    
+    cout << "Parsing Device conf, input: " << filename << endl;
+    if (filename.compare("none") == 0) {
+        /* No device.conf file. Classic default mode */
+        return string("/platform/etc/nicmgrd/device.json");
+    }
+    
+    /* Parse the input device.conf json file */
+    boost::property_tree::read_json(filename, spec);
+    int fw_mode = spec.get<int>("forwarding-mode");
+    int feature_profile = spec.get<int>("feature-profile");
+    cout << "fw_mode: " <<
+        device::ForwardingMode_Name(device::ForwardingMode(fw_mode)) << endl;
+    cout << "feature_profile: " <<
+        device::FeatureProfile_Name(device::FeatureProfile(feature_profile)) << endl;
+    
+    if ((fw_mode == device::FORWARDING_MODE_HOSTPIN) ||
+        (fw_mode == device::FORWARDING_MODE_SWITCH)) {
+        return string("/platform/etc/nicmgrd/eth_smart.json");
+    } else if (fw_mode == device::FORWARDING_MODE_CLASSIC) {
+        if (feature_profile == device::FEATURE_PROFILE_CLASSIC_DEFAULT) {
+            return string("/platform/etc/nicmgrd/device.json");
+        } else if (feature_profile == device::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {
+            return string("/platform/etc/nicmgrd/eth_scale.json");
+        } else {
+            cout << "Profile is none! Return classic default" << endl;
+            return string("/platform/etc/nicmgrd/device.json");
+        }
+    } else {
+        cout << "Unknown mode, returning classic default" << endl;
+        return string("/platform/etc/nicmgrd/device.json");
+    }
+    
+    return string("");
 }
 
 int
