@@ -12,10 +12,6 @@
 extern "C" {
 #endif
 
-#ifndef small_bool
-#define small_bool	uint8_t
-#endif
-
 /**
  * struct sequencer_desc: represents the descriptor of the sequencer.
  * @sd_desc_addr: specifies the accelerator descriptor address.
@@ -107,9 +103,9 @@ struct cpdc_chain_params_command {
 };
 
 struct rate_limit_control {
-	small_bool	rate_limit_src_en;
-	small_bool	rate_limit_dst_en;
-	small_bool	rate_limit_en;
+	uint8_t	rate_limit_src_en;
+	uint8_t	rate_limit_dst_en;
+	uint8_t	rate_limit_en;
 };
 
 struct cpdc_chain_params {

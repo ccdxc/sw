@@ -12,10 +12,10 @@
 #include "osal_atomic.h"
 
 struct per_core_resource;
-extern bool sonic_rate_limit_src_en;
-extern bool sonic_rate_limit_dst_en;
-extern bool sonic_chain_rate_limit_src_en;
-extern bool sonic_chain_rate_limit_dst_en;
+extern bool rate_limit_src_en;
+extern bool rate_limit_dst_en;
+extern bool chain_rate_limit_src_en;
+extern bool chain_rate_limit_dst_en;
 
 
 #define SONIC_INTR_FIRE_DATA32		0x95969798
@@ -36,25 +36,25 @@ sonic_rmem_addr_valid(uint64_t addr)
 static inline bool
 sonic_rate_limit_src_en_get(void)
 {
-	return sonic_rate_limit_src_en;
+	return rate_limit_src_en;
 }
 
 static inline bool
 sonic_rate_limit_dst_en_get(void)
 {
-	return sonic_rate_limit_dst_en;
+	return rate_limit_dst_en;
 }
 
 static inline bool
 sonic_chain_rate_limit_src_en_get(void)
 {
-	return sonic_chain_rate_limit_src_en;
+	return chain_rate_limit_src_en;
 }
 
 static inline bool
 sonic_chain_rate_limit_dst_en_get(void)
 {
-	return sonic_chain_rate_limit_dst_en;
+	return chain_rate_limit_dst_en;
 }
 
 uint32_t sonic_rmem_total_pages_get(void);

@@ -587,17 +587,18 @@ svc_batch_seq_desc_setup(struct service_info *svc_info,
 	if (chn_service_is_starter(svc_info)) {
 		page = svc_batch_info->sbi_page;
 		if (page) {
-			page->bp_src_data_len +=
-				svc_info->si_seq_info.sqi_src_data_len;
-			page->bp_dst_data_len +=
-				svc_info->si_seq_info.sqi_dst_data_len;
 			svc_rate_limit_control_eval(svc_info, &rl);
-			page->bp_rl_control.rate_limit_src_en |=
-				rl.rate_limit_src_en;
-			page->bp_rl_control.rate_limit_dst_en |=
-				rl.rate_limit_dst_en;
-			page->bp_rl_control.rate_limit_en |=
-				rl.rate_limit_en;
+			if (rl.rate_limit_src_en) {
+				page->bp_src_data_len +=
+					svc_info->si_seq_info.sqi_src_data_len;
+				page->bp_rl_control.rate_limit_src_en = true;
+			}
+			if (rl.rate_limit_dst_en) {
+				page->bp_dst_data_len +=
+					svc_info->si_seq_info.sqi_dst_data_len;
+				page->bp_rl_control.rate_limit_dst_en = true;
+			}
+			page->bp_rl_control.rate_limit_en |= rl.rate_limit_en;
 		}
 	}
 

@@ -18,4 +18,6 @@
 #define OSAL_ASSERT(x) BUG_ON(!(x))
 #endif
 
+#define OSAL_STATIC_ASSERT(x) BUILD_BUG_ON(!(x))
+
 #endif	/* __OSAL_ASSERT_H__ */

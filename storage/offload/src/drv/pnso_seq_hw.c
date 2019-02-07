@@ -452,9 +452,8 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc0 = (struct seq_cpdc_status_desc0 *)seq_status_desc;
 	desc1 = (struct seq_cpdc_status_desc1 *)(seq_status_desc + sizeof(*desc0));
 
-	/* use osal as static_assert is not available */
-	OSAL_ASSERT((sizeof(*desc0) == sizeof(*desc1)) && 
-		    (sizeof(*desc1) == (SONIC_SEQ_STATUS_Q_DESC_SIZE/2)));
+	OSAL_STATIC_ASSERT((sizeof(*desc0) == sizeof(*desc1)) && 
+			   (sizeof(*desc1) == (SONIC_SEQ_STATUS_Q_DESC_SIZE/2)));
 	ring_spec = &chain_params->ccp_ring_spec;
 	next_db_spec = &chain_params->ccp_next_db_spec;
 	cmd = &chain_params->ccp_cmd;
@@ -542,9 +541,8 @@ fill_crypto_seq_status_desc(struct crypto_chain_params *chain_params,
 	desc0 = (struct seq_crypto_status_desc0 *)seq_status_desc;
 	desc1 = (struct seq_crypto_status_desc1 *)(seq_status_desc + sizeof(*desc0));
 
-	/* use osal as static_assert is not available */
-	OSAL_ASSERT((sizeof(*desc0) == sizeof(*desc1)) && 
-		    (sizeof(*desc1) == (SONIC_SEQ_STATUS_Q_DESC_SIZE/2)));
+	OSAL_STATIC_ASSERT((sizeof(*desc0) == sizeof(*desc1)) && 
+			    (sizeof(*desc1) == (SONIC_SEQ_STATUS_Q_DESC_SIZE/2)));
 	ring_spec = &chain_params->ccp_ring_spec;
 	next_db_spec = &chain_params->ccp_next_db_spec;
 	cmd = &chain_params->ccp_cmd;
