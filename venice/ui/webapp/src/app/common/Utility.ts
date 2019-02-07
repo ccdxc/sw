@@ -967,7 +967,7 @@ export class Utility {
   }
 
   /**
-   * This API extract table data to JSON 
+   * This API extract table data to JSON
    * For example:
    * const json = Utility.extractTableContentToJSON(this.auditeventsTable);
    * console.log('json\n', json);
@@ -985,7 +985,7 @@ export class Utility {
     for (let i = 0; i < table.columns.length; i++) {
       const column = table.columns[i];
       if (column.exportable !== false && column.field) {
-        headers.push( (column.header || column.field));
+        headers.push((column.header || column.field));
       }
     }
     // body
@@ -1072,6 +1072,35 @@ export class Utility {
     return csv;
   }
 
+  /**
+   * This API convert csv string to an array of json object
+   * For example
+   * const csv = Utility.extractTableContentToCSV(this.auditeventsTable);
+   * console.log('csv\n', csv);
+   * const csv2json = Utility.csvToObjectArray(csv);
+   * console.log('csv2json\n', csv2json);
+   *
+   * @param csvString
+   */
+  public static csvToObjectArray(csvString: string): any[] {
+    const csvRowArray = csvString.split(/\n/);
+    const headerCellArray = this.trimQuotes(csvRowArray.shift().split(','));
+    const objectArray = [];
+
+    while (csvRowArray.length) {
+      const rowCellArray = this.trimQuotes(csvRowArray.shift().split(','));
+      const rowObject = _.zipObject(headerCellArray, rowCellArray);
+      objectArray.push(rowObject);
+    }
+    return objectArray;
+  }
+
+  public static trimQuotes(stringArray: string[]) {
+    for (let i = 0; i < stringArray.length; i++) {
+      stringArray[i] = _.trim(stringArray[i], '"');
+    }
+    return stringArray;
+  }
 
 
 
