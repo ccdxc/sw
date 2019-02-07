@@ -376,7 +376,7 @@ func (c *IPClient) startDhclient() error {
 	// Update NMD Status
 	//c.nmdState.Lock()
 	log.Infof("Starting DHClient current Transition phase is %v", c.nmdState.config.Status.TransitionPhase)
-	if (c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_REBOOT_PENDING.String()) || (c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()) {
+	if (c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_REBOOT_PENDING.String()) && (c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()) {
 		c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_DHCP_SENT.String()
 	}
 	//c.nmdState.Unlock()
