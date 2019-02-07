@@ -58,9 +58,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
    alertSubscription: Subscription;
    alerts: ReadonlyArray<MonitoringAlert> = [];
    alertNumbers = 0;
-   alertQuery = {
-    'field-selector': 'status.resolved=null'
-  };
+   alertQuery = {'field-selector': 'spec.state=OPEN' };  // this will get alterts that are neither acknownleged nor resovled.
 
   protected sidenavmenu: any = [
     {
