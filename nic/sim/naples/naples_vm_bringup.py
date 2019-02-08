@@ -21,15 +21,21 @@ _DOCKER_API_CLIENT = docker.APIClient(base_url='unix://var/run/docker.sock')
 
 
 AGENT_PORT = 9007
+REST_PORT = 8888
 SIM_PORT =   777
 NAPLES_DATA_DIR = os.environ.get("NAPLES_DATA_DIR") or "/var/run/naples/"
+NAPLES_HOME = os.environ.get("NAPLES_HOME") or "/pensando/iota/"
+NAPLES_LOGS = NAPLES_HOME + "/varlog"
+NAPLES_SYSCONF = NAPLES_HOME + "/sysconfig"
 NAPLES_OVERLAY_CONFIG_DIR = "/home/vagrant/configs/config_vxlan_overlay"
 NAPLES_IPSEC_CONFIG_DIR = "/home/vagrant/configs/config_ipsec"
 NAPLES_TCP_PROXY_CONFIG_DIR = "/home/vagrant/configs/config_tcp_proxy"
 
 DEF_NAPLES_SIM_NAME = "naples-sim"
 NAPLES_VOLUME_MOUNTS = {
-    NAPLES_DATA_DIR: {'bind': '/naples/data', 'mode': 'rw'}
+    NAPLES_DATA_DIR: {'bind': '/naples/data', 'mode': 'rw'},
+    NAPLES_LOGS: {'bind': '/var/log', 'mode': 'rw'},
+    NAPLES_SYSCONF: {'bind': '/sysconfig/config0', 'mode': 'rw'}
 }
 
 
@@ -41,7 +47,8 @@ HNTAP_TEMP_CFG_FILE   = "/tmp/hntap-cfg.json"
 
 NAPLES_PORT_MAPS = {
     str(AGENT_PORT) + '/tcp': AGENT_PORT,
-    str(SIM_PORT) + '/tcp':SIM_PORT
+    str(SIM_PORT) + '/tcp':SIM_PORT,
+    str(REST_PORT) + '/tcp':REST_PORT
 }
 
 NAPLES_ENV = {"SMART_NIC_MODE" : "1"}
@@ -58,6 +65,8 @@ _APP_IMAGES = [
 
 _NAPLES_DIRECTORIES = [
     NAPLES_DATA_DIR,
+    NAPLES_LOGS,
+    NAPLES_SYSCONF,
     NAPLES_OVERLAY_CONFIG_DIR,
     NAPLES_IPSEC_CONFIG_DIR,
     NAPLES_TCP_PROXY_CONFIG_DIR
@@ -310,14 +319,16 @@ def __setup_ovs_data_network(args):
 
 
 def __wait_for_line_log(log_file, line_match):
-    log2 = open(log_file, "r")
     loop = 1
     while loop == 1:
-        for line in log2.readlines():
-            if line_match in line:
-                log2.close()
-                return
-
+        if os.path.exists(log_file):
+            log2 = open(log_file, "r")
+            for line in log2.readlines():
+                if line_match in line:
+                    log2.close()
+                    return
+        else:
+            time.sleep(5)
 
 def __bringdown_naples_container(args):
     try:
@@ -342,7 +353,7 @@ def __bringup_naples_container(args):
         print "Trying to pull naples image..."
         __pull_naples_image()
     naples_sim_log_file = NAPLES_DATA_DIR + "/logs/start-naples.log"
-    agent_log_file = NAPLES_DATA_DIR + "/logs/agent.log"
+    agent_log_file = NAPLES_LOGS + "/pensando/pen-netagent.log"
 
     def __wait_for_naples_sim_to_be_up():
         __wait_for_line_log(naples_sim_log_file, "NAPLES services/processes up and running")

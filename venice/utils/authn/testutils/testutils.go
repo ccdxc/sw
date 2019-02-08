@@ -112,7 +112,7 @@ func NewLoggedInContext(ctx context.Context, apiGW string, in *auth.PasswordCred
 		}
 		log.Errorf("unable to get logged in context (%v)", err)
 		return false, nil
-	}) {
+	}, "1s", "100s") {
 		return nctx, err
 	}
 

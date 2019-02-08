@@ -152,8 +152,14 @@ func (ag *Agent) OnMountComplete() {
 	ag.SysmgrClient.InitDone()
 
 	ag.Lock()
-	defer ag.Unlock()
 	ag.mountComplete = true
+	ag.Unlock()
+
+	// walk naples status object
+	nslist := delphiProto.NaplesStatusList(ag.DelphiClient)
+	for _, ns := range nslist {
+		ag.handleVeniceCoordinates(ns)
+	}
 }
 
 // Name returns the name of the service

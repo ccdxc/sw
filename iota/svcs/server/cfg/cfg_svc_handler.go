@@ -7,17 +7,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pensando/sw/api/generated/security"
-
-	"github.com/pensando/sw/api/generated/workload"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/workload"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/venice/utils/log"
 )
+
+// max number of times to retry venice cluster init
+const maxClusterInitRetry = 10
 
 // ConfigService implements config service API
 type ConfigService struct {
@@ -41,6 +42,7 @@ func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMs
 	log.Infof("CFG SVC | DEBUG | MakeCluster. Received Request Msg: %v", req)
 	defer log.Infof("CFG SVC | DEBUG | MakeCluster Returned: %v", req)
 	var clusterObj cluster.Cluster
+	var response string
 
 	err := json.Unmarshal([]byte(req.Config), &clusterObj)
 	if err != nil {
@@ -49,9 +51,17 @@ func (c *ConfigService) MakeCluster(ctx context.Context, req *iota.MakeClusterMs
 
 	log.Infof("CFG SVC | DEBUG | MakeCluster. Received cluster obj, %v", clusterObj)
 
-	_, response, err := common.HTTPPost(req.Endpoint, "", &clusterObj)
-	log.Infof("CFG SVC | DEBUG | MakeCluster. Received REST Response Msg: %v", response)
+	// retry cluster init few times
+	for i := 0; i < maxClusterInitRetry; i++ {
+		_, response, err = common.HTTPPost(req.Endpoint, "", &clusterObj)
+		log.Infof("CFG SVC | DEBUG | MakeCluster. Received REST Response Msg: %v, err: %v", response, err)
+		if err == nil {
+			break
+		}
 
+		// sleep for a second and retry again
+		time.Sleep(time.Second)
+	}
 	if err != nil {
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("server returned an error while making a cluster. Response: %v,  Err: %v", response, err)

@@ -9,7 +9,7 @@ CACHEMOUNT :=
 endif
 
 # Lists excluded patterns to "go list"
-EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|gometrics|vchub"
+EXCLUDE_PATTERNS := "generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|gometrics|vchub|buildroot"
 
 # Lists venice venice protos and all things auto generated.
 TO_GEN := api api/labels api/fields venice/cmd/types/protos venice/cmd/grpc \
@@ -368,19 +368,17 @@ e2e-telemetry:
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
 
-e2e-naples: pull-assets
-	$(MAKE) -C nic all
-	$(MAKE) -C platform sim
-	$(MAKE) -C nic package
+e2e-naples: 
+	$(MAKE) ws-tools
+	$(MAKE) pull-assets
+	$(MAKE) -C nic
 	$(MAKE) -C nic release
 	rm -rf nic.tar
 
-e2e-venice:
-	$(MAKE) container-compile
-	$(MAKE) install
-
-e2e-iota: e2e-naples e2e-venice
+e2e-iota: e2e-naples
+	$(MAKE) venice-image
 	$(MAKE) -C iota
+	$(MAKE) -C iota/test/venice
 
 # venice emulator
 palazzo:

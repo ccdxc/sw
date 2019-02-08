@@ -108,6 +108,8 @@ if [ $WITH_QEMU == 1 ]; then
 else
     echo "Running Capri model WITHOUT Qemu"
     $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > /dev/null 2>&1 &
+    # $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 > $LOG_DIR/model.log 2>&1 &
+    # $NIC_DIR/bin/cap_model +PLOG_MAX_QUIT_COUNT=0 +plog=info +model_debug=$HAL_CONFIG_PATH/iris/model_debug.json > $LOG_DIR/model.log 2>&1 &
     PID=`ps -eaf | grep cap_model | grep -v grep | awk '{print $2}'`
 fi
 
@@ -118,15 +120,8 @@ else
     echo "CAPRI model started, pid is $PID"
 fi
 
-echo "Starting HAL ..."
-$NIC_DIR/bin/hal -c hal.json > hal_run.log 2>&1 &
-PID=`ps -eaf | grep hal | grep -v grep | awk '{print $2}'`
-if [[ "" ==  "$PID" ]]; then
-    echo "Failed to start HAL"
-    #exit $?
-else
-    echo "HAL started, pid is $PID"
-fi
+echo "Starting sysmgr ..."
+$NIC_DIR/bin/sysmgr $NIC_DIR/conf/sysmgr.json &
 
 # wait for HAL to open gRPC port before spawning agent(s)
 HAL_WAIT_TIMEOUT=1
@@ -154,23 +149,9 @@ if [ "$i" -eq "$MAX_RETRIES" ]; then
     exit 1
 fi
 
-if [ $WITH_QEMU == 1 ]; then
-    echo "Starting real nicmgr...."
-    LD_LIBRARY_PATH=$NICMGR_LIBRARY_PATH $PLATFORM_DIR/bin/nicmgrd -s -c $NICMGR_CONFIG_PATH/eth-smart.json > $LOG_DIR/nicmgr.log 2>&1 &
-    [[ $? -ne 0 ]] && echo "Failed to start NICMGR!" && exit 1
-    echo "NICMGR WAIT BEGIN: `date +%x_%H:%M:%S:%N`"
-    while [ 1 ]
-    do
-        OUTPUT="$(grep  "Polling enabled" $LOG_DIR/nicmgr.log 2>&1)"
-        if [[  ! -z "$OUTPUT" ]]; then
-            break
-        fi
-        sleep 3
-    done
-    echo "NICMGR UP: `date +%x_%H:%M:%S:%N`"
-else
-# start NIC manager and allow it to create uplinks
-    echo "Starting nicmgr ..."
+if [ $WITH_QEMU != 1 ]; then
+# start fake NIC manager and allow it to create uplinks
+    echo "Starting fake nicmgr ..."
     "$NIC_DIR"/bin/fake_nic_mgr
     if [ $? -ne 0 ]; then
         echo "Failed to start nic mgr"
@@ -196,19 +177,8 @@ else
     echo "hntap service started, pid is $PID"
 fi
 
-echo "Starting netagent ..."
-"$NIC_DIR"/bin/netagent -logtofile $LOG_DIR/agent.log -resolver-urls "$CMD_URL":"$CMD_RESOLVER_PORT" $NPM_URL $MANAGED_MODE -datapath hal -disabletsa &
-
-if [[ $NETAGENT_CTRL_INTF != "lo" ]]; then
-    echo "Starting nmd ..."
-    "$NIC_DIR"/bin/nmd  -cmdregistration "$CMD_URL":"$CMD_GRPC_UNAUTH_PORT" -cmdupdates "$CMD_URL":"$CMD_RESOLVER_PORT" -cmdcerts "$CMD_URL":"$CMD_RESOLVER_PORT" -hostif eth1 --log-to-file $LOG_DIR/nmd.log -resolver "$CMD_URL":"$CMD_RESOLVER_PORT" -mode network -hostname $NMD_HOSTNAME &
-fi
-
-echo "Starting delphi hub ..."
-"$NIC_DIR"/bin/delphi_hub > $LOG_DIR/delphi_hub.log 2>&1 &
-
 echo "NAPLES services/processes up and running ..."
-# keep the container running
 while :; do
       sleep 300
 done
+exit 0

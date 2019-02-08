@@ -1,0 +1,36 @@
+[{
+    "name": "delphi",
+    "command": "/naples/nic/bin/delphi_hub",
+    "dependencies": [],
+    "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "hal",
+    "command": "/naples/nic/bin/hal -c hal.json",
+    "dependencies": ["delphi"],
+    "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "netagent",
+    "command": "/naples/nic/bin/netagent -datapath hal",
+    "dependencies": ["delphi", "hal"],
+    "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "nmd",
+    "command": "/naples/nic/bin/nmd -hostif lo -standalone=false -mode network",
+    "dependencies": ["delphi"],
+    "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "tmagent",
+    "command": "/naples/nic/bin/tmagent -hostif lo",
+    "dependencies": ["delphi", "hal"],
+    "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "nevtsproxy",
+    "command": "/naples/nic/bin/nevtsproxy",
+    "dependencies": ["delphi",  "hal"],
+    "flags": ["no_watchdog", "non_critical"]
+}, {
+    "name": "upgrade",
+    "command": "/naples/nic/bin/upgrade",
+    "dependencies": ["delphi"],
+    "flags": ["no_watchdog", "non_critical"]
+}]

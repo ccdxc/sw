@@ -149,6 +149,8 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 			req.Nodes[index].EsxCtrlNodeIpAddress = node.Node.IpAddress
 		}
 	}
+
+	log.Infof("Init testbed successful")
 	ts.TestBedInfo.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return ts.TestBedInfo, nil
 }
@@ -297,8 +299,17 @@ func (ts *TopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	log.Infof("TOPO SVC | DEBUG | GetNodes. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | GetNodes Returned: %v", req)
 
-	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-	return req, nil
+	resp := iota.NodeMsg{
+		ApiResponse: &iota.IotaAPIResponse{
+			ApiStatus: iota.APIResponseType_API_STATUS_OK,
+		},
+	}
+
+	for _, node := range ts.ProvisionedNodes {
+		resp.Nodes = append(resp.Nodes, node.Node)
+	}
+
+	return &resp, nil
 }
 
 // SaveNode save node personality for reboot
@@ -669,7 +680,11 @@ func (ts *TopologyService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*
 func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.NodeMsg) (*iota.ClusterHealthMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | CheckClusterHealth. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | CheckClusterHealth Returned: %v", req)
-	resp := &iota.ClusterHealthMsg{}
+
+	resp := &iota.ClusterHealthMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+	}
+
 	for _, reqNode := range req.Nodes {
 		if node, ok := ts.ProvisionedNodes[reqNode.Name]; ok {
 			nodeHealth := &iota.NodeHealth{NodeName: reqNode.Name}

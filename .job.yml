@@ -27,6 +27,7 @@ references:
 #  - test/ci_targets/e2etelemetry
   - storage/offload
   - iota
+  - iota/test/venice
 dependencies:
   test: nic
   test: platform

@@ -1,2 +1,14 @@
 bazel-cache/
 .git
+bin
+nic/build
+nic/asic
+nic/hal
+nic/buildroot
+nic/model_sim
+nic/*.tar
+nic/third-party
+iota/bin
+platform
+fake_root_target
+dol

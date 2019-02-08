@@ -137,6 +137,8 @@ var (
 		`sudo docker system prune -f`,
 		`sudo rm /etc/hosts`,
 		`sudo pkill iota*`,
+		`sudo pkill bootstrap`,
+		`sudo pkill python`,
 		`sudo rm -rf /pensando/iota*`,
 		`sudo docker ps`,
 		`sudo docker rmi -f \$(docker images -aq)`,

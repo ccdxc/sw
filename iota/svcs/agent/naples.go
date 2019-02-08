@@ -12,10 +12,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"golang.org/x/sync/errgroup"
-	"gopkg.in/yaml.v2"
-
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
+	yaml "gopkg.in/yaml.v2"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
@@ -383,10 +382,10 @@ func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workl
 		wload.MoveInterface(in.GetInterface())
 	}
 
-	resp := in
+	resp := *in
 	resp.WorkloadStatus = apiSuccess
 	resp.Interface = intf
-	return resp, nil
+	return &resp, nil
 }
 
 func (dnode *dataNode) setupWorkload(wload Workload.Workload, in *iota.Workload) (*iota.Workload, error) {

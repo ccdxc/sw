@@ -198,11 +198,11 @@ func main() {
 		log.Fatalf("Error creating NMD. Err: %v", err)
 	}
 
-	// mount objects
-	delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
-	log.Infof("Mounting naples status rw")
-
 	if delphiClient != nil {
+		// mount objects
+		delphiProto.NaplesStatusMount(delphiClient, delphi.MountMode_ReadWriteMode)
+		log.Infof("Mounting naples status rw")
+
 		nm.DelphiClient = delphiClient
 		dServ.Agent = nm
 		go delphiClient.Run()

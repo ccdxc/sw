@@ -127,7 +127,7 @@ func HTTPPost(url, token string, req interface{}) ([]*http.Cookie, string, error
 		request.Header.Set("Authorization", bearer)
 	}
 
-	log.Info("Common | HTTP POST | Posting %v to %v", string(jsonStr), url)
+	log.Infof("Common | HTTP POST | Posting %v to %v", string(jsonStr), url)
 	log.Infof("HTTP HEADERS: %v", request.Header)
 	res, err := client.Do(request)
 	if err != nil {

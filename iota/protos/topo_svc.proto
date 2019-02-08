@@ -238,7 +238,6 @@ message VeniceConfig {
 
     // Peers to add host name entries.
     repeated VenicePeer venice_peers  = 3;
-
 }
 
 
