@@ -59,12 +59,13 @@ bool GetUpgCtxTablesFromMeta(string metafile,
     if (isVerFromCache) {
         try {
             read_json(json_cfg, root);
-            string img = "mainfwa";
+            string img = "mainfwa.system_image";
             if (exists("/nic/tools/fwupdate")) {
-                img = exec("/nic/tools/fwupdate -r");
+                if (exec("/nic/tools/fwupdate -r") == "mainfwb")
+                   img = "mainfwb.system_image";
             }
             UPG_LOG_DEBUG("image {}", img);
-            for (ptree::value_type sysimg : root.get_child(img + ".system_image")) {
+            for (ptree::value_type sysimg : root.get_child(img)) {
                 if (!strcmp(sysimg.first.c_str(), "nicmgr_compat_version")) {
                     meta.nicmgrVersion = sysimg.second.get_value<string>();
                     UPG_LOG_DEBUG("running nicmgr version: {}", meta.nicmgrVersion);
@@ -74,7 +75,7 @@ bool GetUpgCtxTablesFromMeta(string metafile,
                 }
             }
         } catch (exception const& e) {
-            UPG_LOG_DEBUG("Unable to parse upgrade_metadata.json {}", e.what());
+            UPG_LOG_DEBUG("PreMeta Unable to parse {} {}", metafile, e.what());
             return false;
         }
     } else {
@@ -90,7 +91,7 @@ bool GetUpgCtxTablesFromMeta(string metafile,
                 }
             }
         } catch (exception const& e) {
-            UPG_LOG_DEBUG("Unable to parse upgrade_metadata.json {}", e.what());
+            UPG_LOG_DEBUG("PostMeta Unable to parse {} {}", metafile, e.what());
             return false;
         }
     }
