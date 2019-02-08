@@ -17,7 +17,7 @@
 #include "pcietlp.h"
 
 typedef struct pcietlp_info_s {
-    int error:1;
+    unsigned int error:1;
     char error_str[80];
 } pcietlp_info_t;
 

@@ -77,7 +77,7 @@ pciehwdev_get_name(const pciehwdev_t *phwdev)
     return phwdev->name;
 }
 
-const u_int16_t
+u_int16_t
 pciehwdev_get_bdf(const pciehwdev_t *phwdev)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
@@ -289,7 +289,7 @@ pciehw_memmap_shmem(const pciehdev_initmode_t initmode)
      * or $HOME/.pciemgr_data on x86_64.
      */
     if (env) {
-        strncpy(path, env, sizeof(path));
+        strncpy0(path, env, sizeof(path));
         pciesys_loginfo("PCIEMGR_DATA override %s\n", path);
     } else {
 #ifdef __aarch64__
@@ -717,7 +717,7 @@ pciehw_finalize_topology(pciehdev_t *proot)
     pciehdev_params_t *params = &phw->params;
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     pciehwdev_t *phwroot = proot ? pciehw_finalize_dev(proot) : NULL;
-    const u_int8_t port = pciehdev_get_port(proot);
+    const u_int8_t port = proot ? pciehdev_get_port(proot) : 0;
 
     pciehw_cfg_finalize_done(phwroot);
     pshmem->rooth[port] = pciehwdev_geth(phwroot);

@@ -166,7 +166,7 @@ int
 pciehdev_addchild(pciehdev_t *pdev, pciehdev_t *pchild)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
-    const u_int8_t port = pdev->port;
+    const u_int8_t port = pdev ? pdev->port : 0;
     pciehdev_portinfo_t *pi = &pdevdata->portinfo[port];
     pciehdev_t **ppdev;
 

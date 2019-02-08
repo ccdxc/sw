@@ -276,8 +276,8 @@ func (c *client) updateSubtree(op delphi.ObjectOperation, kind string,
 func (c *client) updateSubtrees(objlist []*delphi_messenger.ObjectData, triggerEvents bool) {
 	for _, obj := range objlist {
 		factory := clientApi.Factories[obj.Meta.Kind]
-		log.Infof("DELPHIDEBUG: Factory: %v", factory)
-		log.Infof("DELPHIDEBUG: Obj: %v", obj)
+		log.Infof("Delphi: Factory: %v", factory)
+		log.Infof("Delphi: Obj: %v", obj)
 		baseObj, err := factory(c, obj.Data)
 		oldObj := c.GetObject(obj.Meta.Kind, obj.Meta.Key)
 		if err != nil {
@@ -289,7 +289,13 @@ func (c *client) updateSubtrees(objlist []*delphi_messenger.ObjectData, triggerE
 			if triggerEvents {
 				rl := c.watchers[obj.GetMeta().GetKind()]
 				if rl != nil {
+					start := time.Now()
 					baseObj.TriggerEvent(c, oldObj, obj.GetOp(), rl)
+					duration := time.Since(start)
+					log.Infof("Delphi: Reactor took: %v", duration)
+					if duration.Seconds() > .100 {
+						log.Errorf("Delphi: Reactor took more than 100ms")
+					}
 				}
 			}
 		}

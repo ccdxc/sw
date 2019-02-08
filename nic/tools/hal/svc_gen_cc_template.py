@@ -170,17 +170,13 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
 //::             if file_name_prefix in session_file and 'Get' in method[0]:
     if (nreqs == 0) {
         //HAL_TRACE_DEBUG("Rcvd Session Get All Request");
-        hal::hal_cfg_db_open(hal::CFG_OP_READ);
         hal::session_get_all(rsp);
-        hal::hal_cfg_db_close();
         return Status::OK;
     }
 //::             elif file_name_prefix in session_file and 'Delete' in method[0]:
     if (nreqs == 0) {
         //HAL_TRACE_DEBUG("Rcvd Session Delete All Request");
-        hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
         hal::session_delete_all(rsp);
-        hal::hal_cfg_db_close();
         return Status::OK;
     }
 //::             else:
@@ -196,22 +192,17 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
     for (i = 0; i < nreqs; i++) {
         auto request = req->request(i);
 //::
-//::             if repeated_field == True:
+//::             if repeated_field == True and not (file_name_prefix in session_file and 'Delete' in method[0]):
 //::
         auto response = rsp->add_response();
-//::                if file_name_prefix in session_file and 'Get' not in method[0]:
+//::                if file_name_prefix in session_file and 'Create' in method[0]:
         fte::${hal_name}(request, response);
 //::                else:
         hal::${hal_name}(request, response);
 //::                #endif
 //::             else:
 //::
-//::                if file_name_prefix in session_file and 'Get' not in method[0]:
-        fte::${hal_name}(request, response);
-//::                else:
         hal::${hal_name}(request, rsp);
-//::                #endif
-//::
 //::             #endif
 //::
     }

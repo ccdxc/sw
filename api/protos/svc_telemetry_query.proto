@@ -34,4 +34,14 @@ service TelemetryV1 {
             }
         };
     }
+    //  Fwlogs is the telemetry fwlog query RPC, http://localhost:9000/telemetry/v1/fwlogs
+    rpc Fwlogs (FwlogsQueryList) returns (FwlogsQueryResponse) {
+        option (google.api.http) = {
+            post: "/fwlogs"
+            body: "*"
+            additional_bindings {
+                get: "/fwlogs"
+            }
+        };
+    }
 }

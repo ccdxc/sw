@@ -16,6 +16,64 @@
     "application/json"
   ],
   "paths": {
+    "/telemetry/v1/fwlogs": {
+      "get": {
+        "summary": "Fwlogs is the telemetry fwlog query RPC, http://localhost:9000/telemetry/v1/fwlogs",
+        "operationId": "GetFwlogs_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetry_queryFwlogsQueryResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "tenant",
+            "description": "Tenant for the request.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "Namespace for the request.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "telemetry_query/v1"
+        ]
+      },
+      "post": {
+        "summary": "Fwlogs is the telemetry fwlog query RPC, http://localhost:9000/telemetry/v1/fwlogs",
+        "operationId": "PostFwlogs",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/telemetry_queryFwlogsQueryResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/telemetry_queryFwlogsQueryList"
+            }
+          }
+        ],
+        "tags": [
+          "telemetry_query/v1"
+        ]
+      }
+    },
     "/telemetry/v1/metrics": {
       "get": {
         "summary": "Metrics is the telemetry metrics query RPC, http://localhost:9000/telemetry/v1/metrics",
@@ -435,6 +493,264 @@
       },
       "description": "Selector is used to select objects by labels. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
     },
+    "telemetry_queryFwlog": {
+      "type": "object",
+      "required": [
+        "action",
+        "direction"
+      ],
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "title": "Tenant"
+        },
+        "src": {
+          "type": "string",
+          "title": "Source IP,"
+        },
+        "dest": {
+          "type": "string",
+          "title": "Destination IP"
+        },
+        "src-port": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Source Port"
+        },
+        "dest-port": {
+          "type": "integer",
+          "format": "int64",
+          "title": "Destination Port"
+        },
+        "protocol": {
+          "type": "string",
+          "title": "Protocol,"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "ALLOW",
+            "DENY",
+            "REJECT"
+          ],
+          "default": "ALLOW",
+          "x-ui-hints": {
+            "ALLOW": "Allow",
+            "DENY": "Deny",
+            "REJECT": "Reject"
+          },
+          "title": "Action"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "FROM_HOST",
+            "FROM_UPLINK"
+          ],
+          "default": "FROM_HOST",
+          "x-ui-hints": {
+            "FROM_HOST": "From Host",
+            "FROM_UPLINK": "From Uplink"
+          },
+          "title": "Flow Direction"
+        },
+        "rule-id": {
+          "type": "string",
+          "title": "Rule ID"
+        },
+        "policy-name": {
+          "type": "string",
+          "title": "policy name"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Time the log was created"
+        }
+      }
+    },
+    "telemetry_queryFwlogsQueryList": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "title": "Tenant for the request"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "Namespace for the request"
+        },
+        "queries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/telemetry_queryFwlogsQuerySpec"
+          },
+          "title": "List of queries to execute"
+        }
+      },
+      "title": "FwlogsQueryList contains a list of queries to execute"
+    },
+    "telemetry_queryFwlogsQueryResponse": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "title": "Tenant for the request"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "Namespace for the request"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/telemetry_queryFwlogsQueryResult"
+          }
+        }
+      },
+      "title": "FwlogsQueryResponse is the response for Fwlogs Query"
+    },
+    "telemetry_queryFwlogsQueryResult": {
+      "type": "object",
+      "properties": {
+        "statement_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/telemetry_queryFwlog"
+          }
+        }
+      },
+      "title": "FwlogsQueryResult contains fwlogs returned from a fwlogQuery"
+    },
+    "telemetry_queryFwlogsQuerySpec": {
+      "type": "object",
+      "required": [
+        "source-ips",
+        "dest-ips",
+        "source-ports",
+        "dest-ports",
+        "actions",
+        "directions"
+      ],
+      "properties": {
+        "source-ips": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": "10.1.1.1, ff02::5 ",
+          "description": "should be a valid v4 or v6 IP address\n",
+          "title": "OR of sources IPs to be matched"
+        },
+        "dest-ips": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": "10.1.1.1, ff02::5 ",
+          "description": "should be a valid v4 or v6 IP address\n",
+          "title": "OR of dest IPs to be matched"
+        },
+        "source-ports": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "maximum": 65535,
+          "description": "value should be between 0 and 65535\n",
+          "title": "OR of source ports to be matched"
+        },
+        "dest-ports": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "maximum": 65535,
+          "description": "value should be between 0 and 65535\n",
+          "title": "OR of dest ports to be matched"
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OR of protocols to be matched"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "enum": [
+            "ALL",
+            "ACTION_ALLOW",
+            "ACTION_DENY",
+            "ACTION_REJECT"
+          ],
+          "default": "ALL",
+          "x-ui-hints": {
+            "ACTION_ALLOW": "Allow",
+            "ACTION_DENY": "Deny",
+            "ACTION_REJECT": "Reject",
+            "ALL": "All"
+          },
+          "title": "OR of actions to be matched"
+        },
+        "directions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "enum": [
+            "DIRECTION_ALL",
+            "DIRECTION_FROM_HOST",
+            "DIRECTION_FROM_UPLINK"
+          ],
+          "default": "DIRECTION_ALL",
+          "x-ui-hints": {
+            "DIRECTION_ALL": "All",
+            "DIRECTION_FROM_HOST": "From Host",
+            "DIRECTION_FROM_UPLINK": "From Uplink"
+          },
+          "title": "OR of directions to be matched"
+        },
+        "rule-ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OR of ruleID to be matched"
+        },
+        "policy-names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "OR of policy names to be matched"
+        },
+        "start-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z"
+        },
+        "end-time": {
+          "type": "string",
+          "format": "date-time",
+          "title": "EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z"
+        },
+        "pagination": {
+          "$ref": "#/definitions/telemetry_queryPaginationSpec",
+          "title": "PaginationSpec specifies the number of series to include"
+        }
+      },
+      "title": "FwlogsQuerySpec allows selecting logs by all attributes\nAll fields are ANDed together"
+    },
     "telemetry_queryMetricsQueryList": {
       "type": "object",
       "properties": {
@@ -474,7 +790,7 @@
           }
         }
       },
-      "title": "MetricsQueryResponse is the response send out"
+      "title": "MetricsQueryResponse is the response for Metrics Query"
     },
     "telemetry_queryMetricsQueryResult": {
       "type": "object",
@@ -490,7 +806,7 @@
           }
         }
       },
-      "title": "MetricsQueryResult contains tsdb series from citadel query"
+      "title": "MetricsQueryResult contains tsdb series from a metrics query"
     },
     "telemetry_queryMetricsQuerySpec": {
       "type": "object",
@@ -557,7 +873,7 @@
         },
         "pagination": {
           "$ref": "#/definitions/telemetry_queryPaginationSpec",
-          "title": "PaginatioSpec specifies the number of series to include"
+          "title": "PaginationSpec specifies the number of series to include"
         }
       },
       "title": "MetricsQuerySpec requires a structured body consisting of:\n    -  Object Selector (selects one more more objects of same Kind)\n    -  Time Range (for the time series)\n    -  A set of Metric Specs\n    -  A pagination spec"

@@ -389,7 +389,7 @@ func Setup(m *testing.M) {
 	pl := log.SetConfig(logConfig)
 
 	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
+	recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "nic_config_test"},
 		EvtTypes:      append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...),
 		BackupDir:     "/tmp",

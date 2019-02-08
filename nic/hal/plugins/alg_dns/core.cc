@@ -9,9 +9,12 @@
 
 #define MAX_DNS_DOMAINNAME_LEN 256
 #define MAX_DNS_LABEL_LEN      63
+#define MAX_DNS_MSG_LEN        8192
 #define DNS_ALG_RFLOW_TIMEOUT  (30 * TIME_MSECS_PER_MIN) // 30 mins
 #define DNS_HEADER_LENGTH      12 // bytes
 #define DNS_OPCODE_SHIFT       3
+#define DNS_HEADER_OPCODE_LEN  2
+#define DNS_HEADER_RR_LEN      6
 
 namespace hal {
 namespace plugins {
@@ -29,7 +32,7 @@ typedef struct dns_question {
 
 static void incr_parse_error (l4_alg_status_t *sess)
 {
-    SDK_ATOMIC_INC_UINT32(&((dns_info_t *)sess->info)->parse_errors, 1);
+    SDK_ATOMIC_INC_UINT32(&(((dns_info_t *)sess->info)->parse_errors), 1);
 }
 
 /*
@@ -113,7 +116,7 @@ void dns_rflow_timeout_cb (void *timer, uint32_t timer_id, void *ctxt) {
     session_t    *session = NULL;
 
     session = hal::find_session_by_handle(sess_hdl);
-    if (session == NULL) {
+    if (session != NULL) {
         /* Post a force delete on timer expiry */
         session_delete_async(session, true);
     }
@@ -126,6 +129,7 @@ static void dns_completion_hdlr (fte::ctx_t& ctx, bool status) {
     l4_alg_status_t     *l4_sess = (l4_alg_status_t *)alg_status(\
                              ctx.feature_session_state(FTE_FEATURE_ALG_DNS));
     dns_info_t          *dns_info = (dns_info_t *)l4_sess->info;
+    sfw_info_t          *sfw_info = sfw::sfw_feature_state(ctx);
 
     SDK_ASSERT(l4_sess != NULL);
 
@@ -137,7 +141,8 @@ static void dns_completion_hdlr (fte::ctx_t& ctx, bool status) {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
 
         dns_info->timer = sdk::lib::timer_schedule(DNS_ALG_SESS_TIMER_ID, 
-                                  DNS_ALG_RFLOW_TIMEOUT, (void *)l4_sess->sess_hdl, 
+                                  sfw_info->alg_opts.opt.dns_opts.query_response_timeout, 
+                                  (void *)l4_sess->sess_hdl, 
                                   dns_rflow_timeout_cb, false);
         if (!dns_info->timer) {
             HAL_TRACE_ERR("Failed to start timer for dns session with key: {}"\
@@ -194,11 +199,13 @@ static hal_ret_t read_rr_name(const uint8_t * packet, uint32_t * packet_p,
     // name that is infinitely long. Return an error in that case.
     // We use the len of the packet as the limit, because it shouldn't 
     // be possible for the name to be that long.
-    if (steps >= 2*len || pos >= len) return HAL_RET_INVALID_ARG;
+    //if (steps >= 2*len || pos >= len) return HAL_RET_INVALID_ARG;
 
     name_len++;
 
+    HAL_TRACE_DEBUG("Name len: {}", name_len);
     if (name_len > MAX_DNS_DOMAINNAME_LEN) {
+        HAL_TRACE_ERR("Domain name > 255 bytes");
         return HAL_RET_NOT_SUPPORTED;
     }
     pos = *packet_p;
@@ -221,7 +228,7 @@ static hal_ret_t read_rr_name(const uint8_t * packet, uint32_t * packet_p,
                 next = pos;
             } else {
                 // Add a period except for the first time.
-                if (i != 0) name[i++] = '.';
+                if (i != 0) name[i++] = '.'; 
                 next = pos + packet[pos] + 1;
                 pos++;
             }
@@ -256,21 +263,30 @@ static hal_ret_t parse_dns_questions(sfw_info_t *sfw_info, uint8_t *pkt,
     uint16_t     i;
     char        *label = NULL;
     hal_ret_t    ret = HAL_RET_OK;
-    char        *name = NULL;
+    char         *name = NULL;
+    uint32_t     name_offset = *offset;
 
+    HAL_TRACE_DEBUG("Parsing DNS question drop_large_domain: {} drop_long_label: {} count: {} offset: {}",
+                    sfw_info->alg_opts.opt.dns_opts.drop_large_domain_name_packets,
+                    sfw_info->alg_opts.opt.dns_opts.drop_long_label_packets, count, *offset);
     for (i=0; i < count; i++) {
         name = current.name;
         ret = read_rr_name(pkt, offset, start_offset, len, name);
         if (ret != HAL_RET_OK) {
-            if (sfw_info->alg_opts.opt.dns_opts.drop_large_domain_name_packets)
-                HAL_TRACE_ERR("Domain name > 255 bytes -- dropping packet");
-
-            return ret;
+            if ((ret == HAL_RET_NOT_SUPPORTED &&
+                 (sfw_info->alg_opts.opt.dns_opts.drop_large_domain_name_packets)) ||
+                (ret == HAL_RET_INVALID_ARG)) { 
+                 return ret; 
+            }
+            ret = HAL_RET_OK;
         }
+
+        name = (char *)&pkt[name_offset];
         label = std::strtok(name,".");
         while (label != NULL)
         {
-            if (std::strlen(label) > MAX_DNS_LABEL_LEN && 
+            HAL_TRACE_DEBUG("Label: {} Label length: {}", label, std::strlen(label));
+            if ((std::strlen(label) > MAX_DNS_LABEL_LEN) && 
                 sfw_info->alg_opts.opt.dns_opts.drop_long_label_packets) {
                 HAL_TRACE_ERR("Label len > 63 bytes -- dropping packet");
                 return HAL_RET_NOT_SUPPORTED;
@@ -289,6 +305,9 @@ static hal_ret_t parse_dns_packet (fte::ctx_t& ctx, uint16_t *dns_id)
     sfw_info_t    *sfw_info = sfw::sfw_feature_state(ctx);
     uint32_t       payload_offset = ctx.cpu_rxhdr()->payload_offset;
     uint8_t        opcode = 0;
+    uint16_t       questions = 0;
+
+    HAL_TRACE_DEBUG("Parsing DNS Packet");
 
     // Payload offset from CPU header
     offset = payload_offset;
@@ -309,32 +328,40 @@ static hal_ret_t parse_dns_packet (fte::ctx_t& ctx, uint16_t *dns_id)
     }
 
     *dns_id = __pack_uint16(pkt, &offset);
-    opcode = (pkt[offset]>>DNS_OPCODE_SHIFT);
-    if (opcode) { // Not a query packet 
+
+    opcode = pkt[offset];
+    if ((opcode >> DNS_OPCODE_SHIFT)) { // Not a query packet 
         HAL_TRACE_ERR("Not a Query packet -- dropping");
         // Increment errors
         return HAL_RET_NOT_SUPPORTED;
     }
 
+    // Move the offset to read # of questions
+    offset = offset + DNS_HEADER_OPCODE_LEN;
+    HAL_TRACE_DEBUG("Offset: {}", offset);
+
     // Check for number of questions
-    if (pkt[offset+2] > 1 && 
+    questions = __pack_uint16(pkt, &offset);
+    if (questions > 1 && 
         sfw_info->alg_opts.opt.dns_opts.drop_multi_question_packets) {
         HAL_TRACE_ERR("Question count more than 1 -- dropping");
         // Increment errors
         return HAL_RET_NOT_SUPPORTED;
     }
 
-    ques_offset = payload_offset + 12;
-    return (parse_dns_questions(sfw_info, ctx.pkt(), pkt[offset+2], &ques_offset, 
+    ques_offset = offset + DNS_HEADER_RR_LEN; 
+    HAL_TRACE_DEBUG("Question offset: {}", ques_offset);
+    return (parse_dns_questions(sfw_info, ctx.pkt(), questions, &ques_offset, 
                               payload_offset, ctx.pkt_len()));
 }
 
-void get_dnsid_pkt (fte::ctx_t& ctx, l4_alg_status_t *sess)
+bool get_dnsid_pkt (fte::ctx_t& ctx, l4_alg_status_t *sess)
 {
     const uint8_t          *pkt = ctx.pkt();
     uint32_t                offset = 0;
     dns_info_t             *dns_info = (dns_info_t *)sess->info;
     uint16_t                dnsid = 0;
+    uint8_t                 opcode = 0;
 
     // Payload offset from CPU header
     offset = ctx.cpu_rxhdr()->payload_offset;
@@ -342,18 +369,26 @@ void get_dnsid_pkt (fte::ctx_t& ctx, l4_alg_status_t *sess)
         HAL_TRACE_ERR("Packet len: {} is less than payload offset: {}", \
                       ctx.pkt_len(),  offset);
         incr_parse_error(sess);
-        return;
+        return false;
     }
+
     // Fetch 2-byte opcode
     dnsid = __pack_uint16(pkt, &offset);
     HAL_TRACE_DEBUG("Received DNS id:{}", dnsid);
+
+    // Not a response ? dont cleanup session yet!
+    opcode = (pkt[offset]>>DNS_OPCODE_SHIFT);
+    if (!opcode) 
+        return false;
+
     if (dns_info->dnsid != dnsid) {
         HAL_TRACE_ERR("DNS ID received {} doesnt match the query {}", \
                       dnsid, dns_info->dnsid);
         incr_parse_error(sess);
+        return false;
     }
 
-    return;
+    return true;
 }
 
 /*
@@ -371,15 +406,14 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
     fte::flow_update_t               flowupd;
 
     sfw_info = sfw::sfw_feature_state(ctx);
-    if (ctx.protobuf_request() ||
-        ctx.role() == hal::FLOW_ROLE_RESPONDER) {
+    if (ctx.protobuf_request()) {
         return fte::PIPELINE_CONTINUE;
     }
 
     alg_state = ctx.feature_session_state();
-    if (alg_state != NULL) {
+    if (alg_state != NULL && ctx.role() != hal::FLOW_ROLE_RESPONDER) {
         /* Session already exists - DNS response packet */
-        l4_sess = (l4_alg_status_t *) alg_status(alg_state);
+        l4_sess = (l4_alg_status_t *)alg_status(alg_state);
         if (!l4_sess) {
             HAL_TRACE_DEBUG("DNS ALG - L4 session is NULL");
             return fte::PIPELINE_CONTINUE;
@@ -393,59 +427,71 @@ fte::pipeline_action_t alg_dns_exec (fte::ctx_t &ctx)
         SDK_ASSERT(dns_info);
 
         /* Get the DNS id in the packet */
-        get_dnsid_pkt(ctx, l4_sess);
+        bool response = get_dnsid_pkt(ctx, l4_sess);
+      
+        /* Cleanup if the response is seen */ 
+        if (response == true) { 
+            if (dns_info->timer)
+                //sdk::lib::timer_delete(dns_info->timer);
+                dns_info->timer = NULL;
 
-        if (dns_info->timer)
-            sdk::lib::timer_delete(dns_info->timer);
+            dns_info->response_rcvd = response;
 
-        dns_info->response_rcvd = false;
-
-        /* Now that we have seen a DNS response cleanup the session */
-        session_delete_in_fte(ctx.session()->hal_handle);
-    } else if (sfw_info->alg_proto == nwsec::APP_SVC_DNS) {
-        /* New DNS session */
-        /* Alloc APP session */
-        HAL_TRACE_DEBUG("DNS ALG - Got new session");
-        ret = g_dns_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
-        SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
-        /* Alloc L4 session */
-        ret = g_dns_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
-        SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
-        l4_sess->alg = nwsec::APP_SVC_DNS;
-        /* Allocate dns info to store the dllist head */
-        dns_info = (dns_info_t *)g_dns_state->alg_info_slab()->alloc();
-        SDK_ASSERT_RETURN((dns_info != NULL), fte::PIPELINE_CONTINUE);
-        /* Store the head node in L4 session info */
-        l4_sess->info = (void *)dns_info;
-        l4_sess->isCtrl = true;
-
-        /* Parse DNS packet and get dns id */
-        ret = parse_dns_packet(ctx, &dnsid);
-        if (ret == HAL_RET_NOT_SUPPORTED) {
-            ctx.set_drop();
-            HAL_TRACE_ERR("Dropping DNS ALG packet");
-            return fte::PIPELINE_END;
-        } else if (ret == HAL_RET_INVALID_ARG) {
-            HAL_TRACE_ERR("Parsing errors found");
-            incr_parse_error(l4_sess);
-            return fte::PIPELINE_CONTINUE;
+            /* Now that we have seen a DNS response cleanup the session */
+            session_delete_in_fte(ctx.session()->hal_handle);
         }
+    } else if (sfw_info->alg_proto == nwsec::APP_SVC_DNS) {
+        if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
+            /* Parse DNS packet and get dns id */
+            ret = parse_dns_packet(ctx, &dnsid);
+            if (ret == HAL_RET_NOT_SUPPORTED) {
+                ctx.set_drop();
+                HAL_TRACE_ERR("Dropping DNS ALG packet");
+                return fte::PIPELINE_END;
+            } else if (ret == HAL_RET_INVALID_ARG) {
+                HAL_TRACE_ERR("Parsing errors found");
+                return fte::PIPELINE_CONTINUE;
+            }
 
-        dns_info->dnsid = dnsid;
-        dns_info->response_rcvd = false;
+            /* New DNS session */
+            /* Alloc APP session */
+            HAL_TRACE_DEBUG("DNS ALG - Got new session");
+            ret = g_dns_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
+            SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
+            /* Alloc L4 session */
+            ret = g_dns_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
+            SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
+            l4_sess->alg = nwsec::APP_SVC_DNS;
+            /* Allocate dns info to store the dllist head */
+            dns_info = (dns_info_t *)g_dns_state->alg_info_slab()->alloc();
+            SDK_ASSERT_RETURN((dns_info != NULL), fte::PIPELINE_CONTINUE);
+            /* Store the head node in L4 session info */
+            l4_sess->info = (void *)dns_info;
+            l4_sess->isCtrl = true;
+            l4_sess->idle_timeout = sfw_info->idle_timeout;
+            dns_info->dnsid = dnsid;
+            dns_info->response_rcvd = false;
 
-        /* Update the flow to receive Mcast copy */
-        flowupd.type = fte::FLOWUPD_MCAST_COPY;
-        flowupd.mcast_info.mcast_en = 1;
-        flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
-        flowupd.mcast_info.proxy_mcast_ptr = 0;
-        ret = ctx.update_flow(flowupd);
+            /* Update the flow to receive Mcast copy */
+            flowupd.type = fte::FLOWUPD_MCAST_COPY;
+            flowupd.mcast_info.mcast_en = 1;
+            flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
+            flowupd.mcast_info.proxy_mcast_ptr = 0;
+            ret = ctx.update_flow(flowupd);
 
-        /*
-         * Register Feature session state & completion handler
-         */
-        ctx.register_completion_handler(dns_completion_hdlr);
-        ctx.register_feature_session_state(&l4_sess->fte_feature_state);
+            /*
+             * Register Feature session state & completion handler
+             */
+            ctx.register_completion_handler(dns_completion_hdlr);
+            ctx.register_feature_session_state(&l4_sess->fte_feature_state);
+        } else if (ctx.feature_session_state() != NULL) {
+            /* Update the flow to receive Mcast copy */
+            flowupd.type = fte::FLOWUPD_MCAST_COPY;
+            flowupd.mcast_info.mcast_en = 1;
+            flowupd.mcast_info.mcast_ptr = P4_NW_MCAST_INDEX_FLOW_REL_COPY;
+            flowupd.mcast_info.proxy_mcast_ptr = 0;
+            ret = ctx.update_flow(flowupd);
+        }
     }
     return fte::PIPELINE_CONTINUE;
 }

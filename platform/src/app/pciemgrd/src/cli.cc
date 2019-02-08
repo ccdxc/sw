@@ -215,13 +215,13 @@ cmd_add(int argc, char *argv[])
 
     getopt_reset(4, 2);
     while ((opt = getopt(argc, argv,
-                         "b:B:c:C:d:D:I:i:l:L:n:p:P:r:R:")) != -1) {
+                         "b:B:c:C:d:D:fI:i:l:L:n:p:P:r:R:")) != -1) {
         switch (opt) {
         case 'b':
-            r.debugbar[bi].barpa = strtoull(optarg, NULL, 0);
+            r.debugbar[bi].barpa = strtoull_ext(optarg);
             break;
         case 'B':
-            r.debugbar[bi].barsz = strtoull(optarg, NULL, 0);
+            r.debugbar[bi].barsz = strtoull_ext(optarg);
             bi++;       /* -B barsz comes last per bar */
             break;
         case 'c':
@@ -235,6 +235,9 @@ cmd_add(int argc, char *argv[])
             break;
         case 'D':
             r.devcmddbpa = strtoull(optarg, NULL, 0);
+            break;
+        case 'f':
+            r.debugbar[bi].prefetch = 1;
             break;
         case 'i':
             r.intrc = strtoul(optarg, NULL, 0);

@@ -143,7 +143,7 @@ prt_updvec_enc(const u_int8_t upd[8])
     int i;
 
     for (i = 0; i < 8; i++) {
-        updvec |= upd[i] << (i * 5);
+        updvec |= (u_int64_t)upd[i] << (i * 5);
     }
     return updvec;
 }

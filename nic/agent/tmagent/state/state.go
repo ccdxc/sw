@@ -61,7 +61,7 @@ func NewTpAgent(ctx context.Context, agentPort string) (*PolicyState, error) {
 
 	//todo: handle host mode
 
-	fwTable, err := tsdb.NewObj("firewall", map[string]string{}, nil, &tsdb.ObjOpts{})
+	fwTable, err := tsdb.NewObj("Fwlogs", map[string]string{}, nil, &tsdb.ObjOpts{})
 	if err != nil {
 		return nil, err
 	}
@@ -557,9 +557,10 @@ func (s *PolicyState) ProcessFWEvent(ev *ipcproto.FWEvent, ts time.Time) {
 	ipSrc := netutils.IPv4Uint32ToString(ev.GetSipv4())
 	ipDest := netutils.IPv4Uint32ToString(ev.GetDipv4())
 	dPort := fmt.Sprintf("%v", ev.GetDport())
+	sPort := fmt.Sprintf("%v", ev.GetSport())
 	ipProt := fmt.Sprintf("%v", ev.GetIpProt())
-	action := fmt.Sprintf("%v", ev.GetFwaction())
-	dir := fmt.Sprintf("%v", ev.GetDirection())
+	action := fmt.Sprintf("%v", ev.GetFwaction().String())
+	dir := fmt.Sprintf("%v", ipcproto.FlowDirection_name[int32(ev.GetDirection())])
 	ruleID := fmt.Sprintf("%v", ev.GetRuleId())
 	unixnano := ev.GetTimestamp()
 	if unixnano != 0 {
@@ -568,8 +569,8 @@ func (s *PolicyState) ProcessFWEvent(ev *ipcproto.FWEvent, ts time.Time) {
 	}
 
 	point := &tsdb.Point{
-		Tags:   map[string]string{"src": ipSrc, "dest": ipDest, "dPort": dPort, "ipProt": ipProt, "action": action, "direction": dir, "rule-id": ruleID},
-		Fields: map[string]interface{}{"sPort": int64(ev.GetSport())},
+		Tags:   map[string]string{"src": ipSrc, "dest": ipDest, "src-port": sPort, "dest-port": dPort, "protocol": ipProt, "action": action, "direction": dir, "rule-id": ruleID},
+		Fields: map[string]interface{}{"flowAction": int64(ev.GetFlowaction())},
 	}
 
 	s.fwTable.Points([]*tsdb.Point{point}, ts)

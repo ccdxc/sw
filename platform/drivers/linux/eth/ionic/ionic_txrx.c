@@ -157,6 +157,11 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 		stats->csum_none++;
 	}
 
+	if (comp->csum_tcp_bad ||
+	    comp->csum_udp_bad ||
+	    comp->csum_ip_bad)
+		stats->csum_error++;
+
 	if (netdev->features & NETIF_F_HW_VLAN_CTAG_RX) {
 		if (comp->V)
 			__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q),
@@ -395,7 +400,7 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 		if (unlikely(__netif_subqueue_stopped(q->lif->netdev,
 			   queue_index))) {
 			netif_wake_subqueue(q->lif->netdev, queue_index);
-			stats->wake++;
+			q->wake++;
 		}
 		dev_kfree_skb_any(skb);
 		stats->clean++;
@@ -776,7 +781,6 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 {
 	u16 queue_index = skb_get_queue_mapping(skb);
 	struct lif *lif = netdev_priv(netdev);
-	struct tx_stats *stats;
 	struct queue *q;
 	int ndescs;
 	int err;
@@ -797,21 +801,19 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 		return -1;
 	}
 
-	stats = q_to_tx_stats(q);
-
 	ndescs = ionic_tx_descs_needed(q, skb);
 	if (ndescs < 0)
 		goto err_out_drop;
 
 	if (!ionic_q_has_space(q, ndescs)) {
 		netif_stop_subqueue(netdev, queue_index);
-		stats->stop++;
+		q->stop++;
 
 		/* Might race with ionic_tx_clean, check again */
 		smp_rmb();
 		if (ionic_q_has_space(q, ndescs)) {
 			netif_wake_subqueue(netdev, queue_index);
-			stats->wake++;
+			q->wake++;
 		} else {
 			return NETDEV_TX_BUSY;
 		}
@@ -828,7 +830,7 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 	return NETDEV_TX_OK;
 
 err_out_drop:
-	stats->drop++;
+	q->drop++;
 	dev_kfree_skb(skb);
 	return NETDEV_TX_OK;
 }

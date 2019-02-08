@@ -1,8 +1,17 @@
 #! /usr/bin/python3
 import time
 from iota.test.iris.testcases.alg.ftp.ftp_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
+import pdb
+
+TCP_TICKLE_GAP = 15
+NUM_TICKLES = 5
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def Setup(tc):
+    update_app('ftp', tc.iterators.timeout)
+    update_sgpolicy('ftp')
     return api.types.status.SUCCESS
 
 def SetupFTPClient(node, workload, server, mode):
@@ -36,9 +45,9 @@ def SetupFTPClient(node, workload, server, mode):
 def Cleanup(server, client):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
-                           "rm -rf ftpdir/ftp_*")
+                           "rm -rf ftpdir")
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "rm -rf ftpdir/ftp_*")
+                           "rm -rf ftpdir")
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
                            "rm -rf /home/admin/ftp")
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
@@ -54,6 +63,13 @@ def Trigger(tc):
     w1 = pairs[0][0]
     w2 = pairs[0][1]
     tc.cmd_cookies = []
+    timeout = timetoseconds(tc.iterators.timeout)
+
+    naples = w1
+    if not w1.IsNaples():
+       naples = w2
+       if not w2.IsNaples():
+          return api.types.status.FAILURE
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
@@ -62,6 +78,14 @@ def Trigger(tc):
 
     SetupFTPServer(w1.node_name, w1.workload_name)
     SetupFTPClient(w2.node_name, w2.workload_name, w1, tc.iterators.mode)
+
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl clear session")
+    tc.cmd_cookies.append("clear session")
+
+    api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, 
+                           "tcpdump -i {} -nn > out.txt".format(w1.interface), background=True)
+    tc.cmd_cookies.append("tcpdump");
 
     api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            "cat ftpdir/ftp_server.txt | grep \"I am FTP server\"")
@@ -76,6 +100,9 @@ def Trigger(tc):
     tc.cmd_cookies.append("Run FTP")
 
     ## Add Naples command validation
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg ftp")
+    tc.cmd_cookies.append("show session FTP established")
  
     api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            "cat ftpdir/ftp_server.txt | grep \"I am FTP server\"")
@@ -85,9 +112,21 @@ def Trigger(tc):
                            "cat /home/admin/ftp/ftp_client.txt | grep \"I am FTP client\"")
     tc.cmd_cookies.append("After put on server")
 
+    # Get the timeout
+    timeout += get_timeout('tcp-close') + (TCP_TICKLE_GAP * NUM_TICKLES)
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "sleep %s"%(timeout), timeout=300)
+    tc.cmd_cookies.append("sleep")
+
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg ftp --yaml")
+    tc.cmd_cookies.append("After timeout show session")
+
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+
+    api.CopyFromWorkload(w1.node_name, w1.workload_name, ['out.txt'], dir_path)
 
     Cleanup(w1, w2)
     return api.types.status.SUCCESS
@@ -102,10 +141,15 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            if tc.cmd_cookies[cookie_idx].find("Before") != -1:
+            if tc.cmd_cookies[cookie_idx].find("Before") != -1 or \
+               tc.cmd_cookies[cookie_idx].find("After timeout") != -1:
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
+        if tc.cmd_cookies[cookie_idx].find("After timeout") != -1 and \
+           cmd.stdout != '':
+           result = api.types.status.FAILURE
+       
         cookie_idx += 1
 
     return result

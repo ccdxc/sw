@@ -1,8 +1,13 @@
 #! /usr/bin/python3
 import os
 from iota.test.iris.testcases.alg.tftp.tftp_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
+
+GRACE_TIME=5
 
 def Setup(tc):
+    update_app('tftp', tc.iterators.timeout)
+    update_sgpolicy('tftp')
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -23,9 +28,9 @@ def Trigger(tc):
     SetupTFTPClient(client)
 
     ## Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                            "/nic/bin/halctl clear session")
-    #tc.cmd_cookies.append("clear session")
+    api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+                                "/nic/bin/halctl clear session")
+    tc.cmd_cookies.append("clear session")
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                               "sh -c 'cat tftpdir/tftp_server.txt | grep \'I am the server\' '")
@@ -46,21 +51,18 @@ def Trigger(tc):
                            (server.workload_name, server.ip_address, client.workload_name, client.ip_address))
 
     ## Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                            "/nic/bin/halctl show session --alg tftp | grep UDP")
-    #tc.cmd_cookies.append("Before cleanup show session TFTP established")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                        "/nic/bin/halctl show nwsec flow-gate | grep TFTP")
-    #tc.cmd_cookies.append("Before cleanup show flow-gate")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                            "sleep 60")
-    #tc.cmd_cookies.append("sleep")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                            "/nic/bin/halctl show session --alg tftp | grep UDP")
-    #tc.cmd_cookies.append("After idle time show session TFTP")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                        "/nic/bin/halctl show nwsec flow-gate | grep TFTP")
-    #tc.cmd_cookies.append("After idle time show flow-gate")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --yaml")
+    tc.cmd_cookies.append("show session yaml")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg tftp | grep UDP")
+    tc.cmd_cookies.append("Before cleanup show session TFTP established")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "sleep %s"%(timetoseconds(tc.iterators.timeout) + GRACE_TIME))
+    tc.cmd_cookies.append("sleep")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg tftp | grep UDP")
+    tc.cmd_cookies.append("After idle time show session TFTP")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                            "sh -c 'cat tftpdir/tftp_server.txt | grep \'I am the server\' ' ")
@@ -83,13 +85,11 @@ def Verify(tc):
         api.Logger.info("Results for %s" % (tc.cmd_cookies[cookie_idx]))
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-           if tc.cmd_cookies[cookie_idx].find("Before file") != -1:
+           if tc.cmd_cookies[cookie_idx].find("Before file") != -1 or \
+              tc.cmd_cookies[cookie_idx].find("After idle time") != -1:
                result = api.types.status.SUCCESS
            else:
                result = api.types.status.FAILURE
-        if tc.cmd_cookies[cookie_idx].find("Before file") != -1 and \
-            cmd.exit_code == 0:
-            result = api.types.status.FAILURE
         if tc.cmd_cookies[cookie_idx].find("Before cleanup") != -1 and \
             cmd.stdout == '':
             result = api.types.status.FAILURE

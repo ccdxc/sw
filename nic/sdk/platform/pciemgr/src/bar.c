@@ -398,7 +398,7 @@ bar_show_prts(const int pmti, const pmt_t *pmt, const prt_t *prt)
                     "SIZE", "BAR ADDR", "CAPRI ADDR");
     }
     for (prti = prtb, i = 0; i < prtc; i++, prti++) {
-        const u_int64_t baroff = i * prtsize;
+        const u_int64_t baroff = (const u_int64_t)i * prtsize;
         bar_show_prt(pmti, prti, baraddr + baroff);
     }
 }
@@ -699,7 +699,7 @@ bar_show_dev(pciehwdev_t *phwdev)
         }
     }
     if (phwdev->rombar.valid) {
-        bar_show_bar("rom", phwbar);
+        bar_show_bar("rom", &phwdev->rombar);
     }
     if (header) pciesys_loginfo("\n");
 }

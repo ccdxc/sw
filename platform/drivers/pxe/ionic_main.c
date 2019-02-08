@@ -53,13 +53,13 @@ static inline u32 ilog2(u32 mem)
 	return (fls(mem) - 1);
 }
 
-static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
+static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_seconds)
 {
 	unsigned long wait;
 	int done;
 
-	// Wait for dev cmd to complete...but no more than max_wait
-	for (wait = 0; wait < max_wait; wait++) {
+	// Wait for dev cmd to complete...but no more than max_seconds
+	for (wait = 0; wait < max_seconds; wait++) {
 		done = ionic_dev_cmd_done(idev);
 		if (done)
 			return 0;
@@ -74,22 +74,14 @@ static int ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 
 static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
 {
-	u8 status;
-
-	status = ionic_dev_cmd_status(idev);
-	switch (status) {
-	case 0:
-		return 0;
-	}
-
-	return -EIO;
+	return ionic_dev_cmd_status(idev);
 }
 
-int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
+int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_seconds)
 {
 	int err;
 
-	err = ionic_dev_cmd_wait(idev, max_wait);
+	err = ionic_dev_cmd_wait(idev, max_seconds);
 	if (err) {
 		return err;
 	}
@@ -107,28 +99,50 @@ bool ionic_dev_cmd_done(struct ionic_dev *idev)
 	return readl(&idev->dev_cmd->done) & DEV_CMD_DONE;
 }
 
-void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
+int ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd, unsigned long max_seconds)
 {
 	unsigned int i;
+	unsigned long retry;
+	int err;
+	struct ionic *ionic = container_of(idev, struct ionic, idev);
 
-	for (i = 0; i < ARRAY_SIZE(cmd->words); i++) {
-		writel(cmd->words[i], &idev->dev_cmd->cmd.words[i]);
+	for (retry = 0; retry < RETRY_COUNT; retry++) {
+		// Send the devcmd
+		for (i = 0; i < ARRAY_SIZE(cmd->words); i++) {
+			writel(cmd->words[i], &idev->dev_cmd->cmd.words[i]);
+		}
+
+		writel(0, &idev->dev_cmd->done);
+		writel(1, &idev->dev_cmd_db->v);
+
+		// Check the status
+		err = ionic_dev_cmd_wait_check(idev, max_seconds);
+		if (err == IONIC_RC_EAGAIN) {
+			printf("%x:%x %x:%x:%x - NIC is initializing\n",
+				   ionic->pdev->vendor, ionic->pdev->device,
+				   PCI_BUS(ionic->pdev->busdevfn),
+				   PCI_SLOT(ionic->pdev->busdevfn),
+				   PCI_FUNC(ionic->pdev->busdevfn));
+			// Delay
+			mdelay(1000);
+			continue;
+		} else {
+			return err;
+		}
 	}
-
-	writel(0, &idev->dev_cmd->done);
-	writel(1, &idev->dev_cmd_db->v);
+	return -EIO;
 }
 
-void ionic_dev_cmd_reset(struct ionic_dev *idev)
+int ionic_dev_cmd_reset(struct ionic_dev *idev, unsigned long max_seconds)
 {
 	union dev_cmd cmd = {
 		.reset.opcode = CMD_OPCODE_RESET,
 	};
 
-	ionic_dev_cmd_go(idev, &cmd);
+	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
 }
 
-void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr)
+int ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr, unsigned long max_seconds)
 {
 	union dev_cmd cmd = {
 		.identify.opcode = CMD_OPCODE_IDENTIFY,
@@ -136,7 +150,7 @@ void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr)
 		.identify.addr = addr,
 	};
 
-	ionic_dev_cmd_go(idev, &cmd);
+	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
 }
 
 char *ionic_dev_asic_name(u8 asic_type)
@@ -149,14 +163,14 @@ char *ionic_dev_asic_name(u8 asic_type)
 	}
 }
 
-void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index)
+int ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index, unsigned long max_seconds)
 {
 	union dev_cmd cmd = {
 		.lif_init.opcode = CMD_OPCODE_LIF_INIT,
 		.lif_init.index = index,
 	};
 
-	ionic_dev_cmd_go(idev, &cmd);
+	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
 }
 
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
@@ -168,8 +182,8 @@ void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
 		comp->words[i] = readl(&idev->dev_cmd->comp.words[i]);
 }
 
-void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
-							   unsigned int lif_index)
+int ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
+					   unsigned int lif_index, unsigned long max_seconds)
 {
 	union dev_cmd cmd = {
 		.adminq_init.opcode = CMD_OPCODE_ADMINQ_INIT,
@@ -181,7 +195,7 @@ void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 		.adminq_init.ring_base = adminq->base_pa,
 	};
 
-	ionic_dev_cmd_go(idev, &cmd);
+	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
 }
 
 /**
@@ -279,9 +293,7 @@ int ionic_identify(struct ionic *ionic)
 	for (i = 0; i < 512; i++)
 		writel(idev->ident->words[i], &ident->words[i]);
 
-	ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
-
-	err = ionic_dev_cmd_wait_check(idev, devcmd_timeout);
+	err = ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa, devcmd_timeout);
 	if (err)
 		goto err_free_identify;
 
@@ -673,8 +685,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	struct adminq_init_comp comp;
 	int err;
 
-	ionic_dev_cmd_adminq_init(idev, q, lif->index);
-	err = ionic_dev_cmd_wait_check(idev, devcmd_timeout);
+	err = ionic_dev_cmd_adminq_init(idev, q, lif->index, devcmd_timeout);
 	if (err) {
 		DBG2("%s :: lif adminq initiation failed\n", __FUNCTION__);
 		return err;
@@ -954,8 +965,7 @@ int ionic_lif_init(struct net_device *netdev)
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err;
 
-	ionic_dev_cmd_lif_init(idev, lif->index);
-	err = ionic_dev_cmd_wait_check(idev, devcmd_timeout);
+	err = ionic_dev_cmd_lif_init(idev, lif->index, devcmd_timeout);
 	if (err) {
 		DBG2("%s:: lif initiation failed\n", __FUNCTION__);
 		return err;

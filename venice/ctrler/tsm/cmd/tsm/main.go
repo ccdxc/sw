@@ -52,11 +52,13 @@ func main() {
 	logger := log.SetConfig(logConfig)
 
 	// create events recorder
-	if _, err := recorder.NewRecorder(&recorder.Config{
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Tsm},
-		EvtTypes: evtsapi.GetEventTypes()}, logger); err != nil {
+		EvtTypes: evtsapi.GetEventTypes()}, logger)
+	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}
+	defer evtsRecorder.Close()
 
 	// create a dummy channel to wait forver
 	waitCh := make(chan bool)

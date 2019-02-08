@@ -272,6 +272,7 @@ func convertALG(app *netproto.App) (*halproto.AppData, error) {
 	if algSpec.DNS != nil {
 		appData.Alg = halproto.ALGName_APP_SVC_DNS
 		var queryRespTimeout uint32
+		var maxMsgLength uint32
 		if len(algSpec.DNS.QueryResponseTimeout) > 0 {
 			dur, err := time.ParseDuration(algSpec.DNS.QueryResponseTimeout)
 			if err != nil {
@@ -282,11 +283,17 @@ func convertALG(app *netproto.App) (*halproto.AppData, error) {
 			queryRespTimeout = constants.DefaultTimeout
 		}
 
+		if algSpec.DNS.MaxMessageLength > 0 {
+			maxMsgLength = algSpec.DNS.MaxMessageLength
+		} else {
+			maxMsgLength = constants.DefaultDNSMaxMessageLength
+		}
+
 		appData.AppOptions = &halproto.AppData_DnsOptionInfo{
 			DnsOptionInfo: &halproto.AppData_DNSOptions{
 				DropMultiQuestionPackets:   algSpec.DNS.DropMultiQuestionPackets,
 				DropLargeDomainNamePackets: algSpec.DNS.DropLargeDomainPackets,
-				MaxMsgLength:               algSpec.DNS.MaxMessageLength,
+				MaxMsgLength:               maxMsgLength,
 				QueryResponseTimeout:       queryRespTimeout,
 				DropLongLabelPackets:       algSpec.DNS.DropLongLabelPackets,
 				DropMultizonePackets:       algSpec.DNS.DropMultiZonePackets,

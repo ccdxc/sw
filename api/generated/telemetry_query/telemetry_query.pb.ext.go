@@ -28,6 +28,150 @@ var _ validators.DummyVar
 var validatorMapTelemetry_query = make(map[string]map[string][]func(string, interface{}) error)
 
 // Clone clones the object into into or creates one of into is nil
+func (m *Fwlog) Clone(into interface{}) (interface{}, error) {
+	var out *Fwlog
+	var ok bool
+	if into == nil {
+		out = &Fwlog{}
+	} else {
+		out, ok = into.(*Fwlog)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Fwlog) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Action = "ALLOW"
+		m.Direction = "FROM_HOST"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *FwlogsQueryList) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogsQueryList
+	var ok bool
+	if into == nil {
+		out = &FwlogsQueryList{}
+	} else {
+		out, ok = into.(*FwlogsQueryList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FwlogsQueryList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Queries {
+		if m.Queries[k] != nil {
+			i := m.Queries[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *FwlogsQueryResponse) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogsQueryResponse
+	var ok bool
+	if into == nil {
+		out = &FwlogsQueryResponse{}
+	} else {
+		out, ok = into.(*FwlogsQueryResponse)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FwlogsQueryResponse) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Results {
+		if m.Results[k] != nil {
+			i := m.Results[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *FwlogsQueryResult) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogsQueryResult
+	var ok bool
+	if into == nil {
+		out = &FwlogsQueryResult{}
+	} else {
+		out, ok = into.(*FwlogsQueryResult)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FwlogsQueryResult) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Logs {
+		if m.Logs[k] != nil {
+			i := m.Logs[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *FwlogsQuerySpec) Clone(into interface{}) (interface{}, error) {
+	var out *FwlogsQuerySpec
+	var ok bool
+	if into == nil {
+		out = &FwlogsQuerySpec{}
+	} else {
+		out, ok = into.(*FwlogsQuerySpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *FwlogsQuerySpec) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		for k := range m.Actions {
+			m.Actions[k] = "ALL"
+		}
+		for k := range m.Directions {
+			m.Directions[k] = "DIRECTION_ALL"
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *MetricsQueryList) Clone(into interface{}) (interface{}, error) {
 	var out *MetricsQueryList
 	var ok bool
@@ -168,6 +312,87 @@ func (m *ResultSeries) Defaults(ver string) bool {
 
 // Validators
 
+func (m *Fwlog) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if vs, ok := validatorMapTelemetry_query["Fwlog"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapTelemetry_query["Fwlog"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *FwlogsQueryList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Queries {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sQueries[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *FwlogsQueryResponse) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Results {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sResults[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *FwlogsQueryResult) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Logs {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sLogs[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *FwlogsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if vs, ok := validatorMapTelemetry_query["FwlogsQuerySpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapTelemetry_query["FwlogsQuerySpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
 func (m *MetricsQueryList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Queries {
@@ -238,6 +463,98 @@ func init() {
 	scheme.AddKnownTypes()
 
 	validatorMapTelemetry_query = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapTelemetry_query["Fwlog"] = make(map[string][]func(string, interface{}) error)
+	validatorMapTelemetry_query["Fwlog"]["all"] = append(validatorMapTelemetry_query["Fwlog"]["all"], func(path string, i interface{}) error {
+		m := i.(*Fwlog)
+
+		if _, ok := FwlogActions_value[m.Action]; !ok {
+			return errors.New("Fwlog.Action did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapTelemetry_query["Fwlog"]["all"] = append(validatorMapTelemetry_query["Fwlog"]["all"], func(path string, i interface{}) error {
+		m := i.(*Fwlog)
+
+		if _, ok := FwlogDirections_value[m.Direction]; !ok {
+			return errors.New("Fwlog.Direction did not match allowed strings")
+		}
+		return nil
+	})
+
+	validatorMapTelemetry_query["FwlogsQuerySpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapTelemetry_query["FwlogsQuerySpec"]["all"] = append(validatorMapTelemetry_query["FwlogsQuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwlogsQuerySpec)
+
+		for k, v := range m.Actions {
+			if _, ok := FwlogActionFilters_value[v]; !ok {
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Actions", k)
+			}
+		}
+		return nil
+	})
+
+	validatorMapTelemetry_query["FwlogsQuerySpec"]["all"] = append(validatorMapTelemetry_query["FwlogsQuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwlogsQuerySpec)
+		for k, v := range m.DestIPs {
+			if !validators.IPAddr(v) {
+				return fmt.Errorf("%v[%v] validation failed", path+"."+"DestIPs", k)
+			}
+		}
+
+		return nil
+	})
+
+	validatorMapTelemetry_query["FwlogsQuerySpec"]["all"] = append(validatorMapTelemetry_query["FwlogsQuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwlogsQuerySpec)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "65535")
+
+		for _, v := range m.DestPorts {
+			if !validators.IntRange(v, args) {
+				return fmt.Errorf("%v failed validation", path+"."+"DestPorts")
+			}
+		}
+		return nil
+	})
+
+	validatorMapTelemetry_query["FwlogsQuerySpec"]["all"] = append(validatorMapTelemetry_query["FwlogsQuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwlogsQuerySpec)
+
+		for k, v := range m.Directions {
+			if _, ok := FwlogDirectionsFilters_value[v]; !ok {
+				return fmt.Errorf("%v[%v] did not match allowed strings", path+"."+"Directions", k)
+			}
+		}
+		return nil
+	})
+
+	validatorMapTelemetry_query["FwlogsQuerySpec"]["all"] = append(validatorMapTelemetry_query["FwlogsQuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwlogsQuerySpec)
+		for k, v := range m.SourceIPs {
+			if !validators.IPAddr(v) {
+				return fmt.Errorf("%v[%v] validation failed", path+"."+"SourceIPs", k)
+			}
+		}
+
+		return nil
+	})
+
+	validatorMapTelemetry_query["FwlogsQuerySpec"]["all"] = append(validatorMapTelemetry_query["FwlogsQuerySpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FwlogsQuerySpec)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "65535")
+
+		for _, v := range m.SourcePorts {
+			if !validators.IntRange(v, args) {
+				return fmt.Errorf("%v failed validation", path+"."+"SourcePorts")
+			}
+		}
+		return nil
+	})
 
 	validatorMapTelemetry_query["MetricsQuerySpec"] = make(map[string][]func(string, interface{}) error)
 	validatorMapTelemetry_query["MetricsQuerySpec"]["all"] = append(validatorMapTelemetry_query["MetricsQuerySpec"]["all"], func(path string, i interface{}) error {

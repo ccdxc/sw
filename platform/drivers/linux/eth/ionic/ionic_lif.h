@@ -22,10 +22,7 @@ struct tx_stats {
 	u64 pkts;
 	u64 bytes;
 	u64 clean;
-	u64 drop;
 	u64 linearize;
-	u64 stop;
-	u64 wake;
 	u64 no_csum;
 	u64 csum;
 	u64 crc32_csum;
@@ -41,6 +38,7 @@ struct rx_stats {
 	u64 bytes;
 	u64 csum_none;
 	u64 csum_complete;
+	u64 csum_error;
 	u64 buffers_posted;
 };
 
@@ -108,12 +106,11 @@ struct lif_sw_stats {
 	u64 rx_packets;
 	u64 rx_bytes;
 	u64 tx_tso;
+	u64 tx_no_csum;
+	u64 tx_csum;
 	u64 rx_csum_none;
-	u64 rx_csum_unnecessary;
 	u64 rx_csum_complete;
-	u64 rx_csum_tcp_bad;
-	u64 rx_csum_udp_bad;
-	u64 rx_csum_ip_bad;
+	u64 rx_csum_error;
 };
 
 enum lif_state_flags {

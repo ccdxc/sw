@@ -188,6 +188,7 @@ typedef struct l4_alg_status {
     nwsec::ALGName                  alg;                       // ALG applied on this L4-session
     bool                            isCtrl;                    // Is this a control session
     hal_handle_t                    sess_hdl;                  // Back pointer to L4-session
+    uint32_t                        idle_timeout;              // Timeout for the app
     void                           *info;                      // Per-ALG L4 session oper_status/info
     app_session_t                  *app_session;               // Back pointer to app session this L4 session is part of
     tcp_buffer_t                   *tcpbuf[DIR_MAX];           // pointer to TCP buffer for reassembly

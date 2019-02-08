@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"golang.org/x/net/context"
 	. "gopkg.in/check.v1"
@@ -38,6 +39,9 @@ func TestVeniceInteg(t *testing.T) {
 
 	// integ test suite
 	var sts = &veniceIntegSuite{config: cfg}
+
+	// set timeout values
+	SetDefaultIntervals(time.Millisecond*500, time.Second*60)
 
 	var _ = Suite(sts)
 	TestingT(t)
@@ -226,12 +230,10 @@ func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		_, err := it.getStatsPolicy(tenantName)
 		return err != nil, nil
-
-	}, "failed to get stats policy")
+	}, "stats policy still found after deleting tenant", "500ms", it.pollTimeout())
 
 	AssertEventually(c, func() (bool, interface{}) {
 		_, err := it.getFwlogPolicy(tenantName)
 		return err != nil, nil
-
-	}, "failed to delete fwlog policy")
+	}, "fwlog policy still found after deleting tenant", "500ms", it.pollTimeout())
 }

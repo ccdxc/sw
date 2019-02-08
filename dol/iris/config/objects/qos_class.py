@@ -79,6 +79,7 @@ class QosClassObject(base.ConfigObjectBase):
 
         if self.UplinkCmapNeeded():
             req_spec.class_map.dot1q_pcp = self.cmap_dot1q_pcp
+            req_spec.class_map.type = haldefs.qos.QOS_CLASS_MAP_TYPE_PCP
 
         req_spec.marking.dot1q_pcp_rewrite_en = self.spec.marking.dot1q_pcp_en
         req_spec.marking.dot1q_pcp = self.spec.marking.dot1q_pcp

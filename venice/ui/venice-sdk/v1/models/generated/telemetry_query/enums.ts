@@ -25,6 +25,30 @@ export enum LabelsRequirement_operator {
     'notIn' = "notIn",
 }
 
+export enum Telemetry_queryFwlog_action {
+    'ALLOW' = "ALLOW",
+    'DENY' = "DENY",
+    'REJECT' = "REJECT",
+}
+
+export enum Telemetry_queryFwlog_direction {
+    'FROM_HOST' = "FROM_HOST",
+    'FROM_UPLINK' = "FROM_UPLINK",
+}
+
+export enum Telemetry_queryFwlogsQuerySpec_actions {
+    'ALL' = "ALL",
+    'ACTION_ALLOW' = "ACTION_ALLOW",
+    'ACTION_DENY' = "ACTION_DENY",
+    'ACTION_REJECT' = "ACTION_REJECT",
+}
+
+export enum Telemetry_queryFwlogsQuerySpec_directions {
+    'DIRECTION_ALL' = "DIRECTION_ALL",
+    'DIRECTION_FROM_HOST' = "DIRECTION_FROM_HOST",
+    'DIRECTION_FROM_UPLINK' = "DIRECTION_FROM_UPLINK",
+}
+
 export enum Telemetry_queryMetricsQuerySpec_function {
     'NONE' = "NONE",
     'MEAN' = "MEAN",
@@ -47,6 +71,30 @@ export enum ApiListWatchOptions_sort_order_uihint {
 export enum LabelsRequirement_operator_uihint {
     'notEquals' = "not equals",
     'notIn' = "not in",
+}
+
+export enum Telemetry_queryFwlog_action_uihint {
+    'ALLOW' = "Allow",
+    'DENY' = "Deny",
+    'REJECT' = "Reject",
+}
+
+export enum Telemetry_queryFwlog_direction_uihint {
+    'FROM_HOST' = "From Host",
+    'FROM_UPLINK' = "From Uplink",
+}
+
+export enum Telemetry_queryFwlogsQuerySpec_actions_uihint {
+    'ACTION_ALLOW' = "Allow",
+    'ACTION_DENY' = "Deny",
+    'ACTION_REJECT' = "Reject",
+    'ALL' = "All",
+}
+
+export enum Telemetry_queryFwlogsQuerySpec_directions_uihint {
+    'DIRECTION_ALL' = "All",
+    'DIRECTION_FROM_HOST' = "From Host",
+    'DIRECTION_FROM_UPLINK' = "From Uplink",
 }
 
 
@@ -82,8 +130,16 @@ export class AllEnums {
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     LabelsRequirement_operator = LabelsRequirement_operator;
+    Telemetry_queryFwlog_action = Telemetry_queryFwlog_action;
+    Telemetry_queryFwlog_direction = Telemetry_queryFwlog_direction;
+    Telemetry_queryFwlogsQuerySpec_actions = Telemetry_queryFwlogsQuerySpec_actions;
+    Telemetry_queryFwlogsQuerySpec_directions = Telemetry_queryFwlogsQuerySpec_directions;
     Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;
+    Telemetry_queryFwlog_action_uihint = Telemetry_queryFwlog_action_uihint;
+    Telemetry_queryFwlog_direction_uihint = Telemetry_queryFwlog_direction_uihint;
+    Telemetry_queryFwlogsQuerySpec_actions_uihint = Telemetry_queryFwlogsQuerySpec_actions_uihint;
+    Telemetry_queryFwlogsQuerySpec_directions_uihint = Telemetry_queryFwlogsQuerySpec_directions_uihint;
 }

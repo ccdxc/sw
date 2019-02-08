@@ -51,7 +51,7 @@ message MetricsQuerySpec {
     string GroupbyTime        = 8 [(gogoproto.jsontag) = "group-by-time,omitempty", (venice.check)="EmptyOrDuration(0,0)"];
     // GroupbyField groups series based on the field specified
     string GroupbyField       = 9 [(gogoproto.jsontag) = "group-by-field,omitempty", (venice.check)="EmptyOrRegExp(name)"];
-    // PaginatioSpec specifies the number of series to include
+    // PaginationSpec specifies the number of series to include
     PaginationSpec Pagination = 10 [(gogoproto.jsontag) = "pagination,omitempty"];
 }
 
@@ -63,6 +63,106 @@ message MetricsQueryList {
     string Namespace  = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
     // List of queries to execute
     repeated MetricsQuerySpec Queries = 3 [(gogoproto.jsontag) = "queries,omitempty"];
+}
+
+enum FwlogActions {
+    // ui-hint: Allow
+    ALLOW = 0;
+    // ui-hint: Deny
+    DENY = 1;
+    // ui-hint: Reject
+    REJECT = 2;
+}
+
+enum FwlogActionFilters {
+    // ui-hint: All
+    ALL = 0;
+    // ui-hint: Allow
+    ACTION_ALLOW = 1;
+    // ui-hint: Deny
+    ACTION_DENY= 2;
+    // ui-hint: Reject
+    ACTION_REJECT = 3;
+}
+
+enum FwlogDirections {
+    // ui-hint: From Host
+    FROM_HOST = 0;
+    // ui-hint: From Uplink
+    FROM_UPLINK = 1;
+}
+
+enum FwlogDirectionsFilters {
+    // ui-hint: All
+    DIRECTION_ALL = 0;
+    // ui-hint: From Host
+    DIRECTION_FROM_HOST = 1;
+    // ui-hint: From Uplink
+    DIRECTION_FROM_UPLINK = 2;
+}
+
+message Fwlog {
+    // Tenant
+    string Tenant = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
+    // Source IP, 
+    string Src = 2 [(gogoproto.jsontag) = "src,omitempty"];
+    // Destination IP
+    string Dest = 3 [(gogoproto.jsontag) = "dest,omitempty"];
+    // Source Port
+    uint32 SrcPort = 4 [(gogoproto.jsontag) = "src-port,omitempty"];
+    // Destination Port
+    uint32 DestPort = 5 [(gogoproto.jsontag) = "dest-port,omitempty"];
+    // Protocol, 
+    string Protocol = 6 [(gogoproto.jsontag) = "protocol,omitempty"];
+    // Action 
+    string Action = 7 [(gogoproto.jsontag) = "action,omitempty", (venice.check)="StrEnum(FwlogActions)"];
+    // Flow Direction
+    string Direction = 8 [(gogoproto.jsontag) = "direction,omitempty", (venice.check)="StrEnum(FwlogDirections)"];
+    // Rule ID
+    string RuleID = 9 [(gogoproto.jsontag) = "rule-id,omitempty"];
+    //policy name
+    string PolicyName = 10 [(gogoproto.jsontag) = "policy-name,omitempty"];
+    // Time the log was created
+    api.Timestamp Timestamp = 11 [(gogoproto.jsontag) = "timestamp,omitempty"];
+}
+
+// FwlogsQuerySpec allows selecting logs by all attributes
+// All fields are ANDed together
+message FwlogsQuerySpec {
+    // OR of sources IPs to be matched
+    repeated string SourceIPs = 1 [(gogoproto.jsontag) = "source-ips,omitempty", (venice.check)="IPAddr()"];
+    // OR of dest IPs to be matched
+    repeated string DestIPs = 2 [(gogoproto.jsontag) = "dest-ips,omitempty", (venice.check)="IPAddr()"];
+    // OR of source ports to be matched
+    repeated uint32 SourcePorts = 3 [(gogoproto.jsontag) = "source-ports,omitempty", (venice.check)="IntRange(0, 65535)"];
+    // OR of dest ports to be matched
+    repeated uint32 DestPorts = 4 [(gogoproto.jsontag) = "dest-ports,omitempty", (venice.check)="IntRange(0, 65535)"];
+    // OR of protocols to be matched
+    repeated string Protocols = 5 [(gogoproto.jsontag) = "protocols,omitempty"];
+    // OR of actions to be matched
+    repeated string Actions = 6 [(gogoproto.jsontag) = "actions,omitempty", (venice.check)="StrEnum(FwlogActionFilters)"];
+    // OR of directions to be matched
+    repeated string Directions = 7 [(gogoproto.jsontag) = "directions,omitempty", (venice.check)="StrEnum(FwlogDirectionsFilters)"];
+    // OR of ruleID to be matched
+    repeated string RuleIDs = 8 [(gogoproto.jsontag) = "rule-ids,omitempty"];
+    // OR of policy names to be matched
+    repeated string PolicyNames = 9 [(gogoproto.jsontag) = "policy-names,omitempty"];
+    // StartTime selects all logs with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z
+    api.Timestamp StartTime   = 10 [(gogoproto.jsontag) = "start-time,omitempty"];
+    // EndTime selects all logs with timestamp less than the EndTime, example 2018-09-18T00:12:00Z
+    api.Timestamp EndTime     = 11 [(gogoproto.jsontag) = "end-time,omitempty"];
+    // PaginationSpec specifies the number of series to include
+    PaginationSpec Pagination = 12 [(gogoproto.jsontag) = "pagination,omitempty"];
+}
+
+// FwlogsQueryList contains a list of queries to execute
+message FwlogsQueryList {
+    // Tenant for the request
+    string Tenant     = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
+    // Namespace for the request
+    string Namespace  = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
+    // List of queries to execute
+    repeated FwlogsQuerySpec Queries = 3 [(gogoproto.jsontag) = "queries,omitempty"];
 }
 
 //
@@ -77,17 +177,32 @@ message ResultSeries {
     repeated api.InterfaceSlice Values = 4 [(gogoproto.jsontag) = "values"];
 }
 
-// MetricsQueryResult contains tsdb series from citadel query
+// MetricsQueryResult contains tsdb series from a metrics query
 message MetricsQueryResult {
     int32 StatementID = 1 [(gogoproto.jsontag) = "statement_id"];
     repeated ResultSeries Series = 2 [(gogoproto.jsontag) = "series,omitempty"];
 }
 
-// MetricsQueryResponse is the response send out
+// MetricsQueryResponse is the response for Metrics Query
 message MetricsQueryResponse {
     // Tenant for the request
     string Tenant     = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
     // Namespace for the request
     string Namespace  = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
    repeated MetricsQueryResult Results = 3 [(gogoproto.jsontag) = "results,omitempty"];
+}
+
+// FwlogsQueryResult contains fwlogs returned from a fwlogQuery
+message FwlogsQueryResult {
+    int32 StatementID = 1 [(gogoproto.jsontag) = "statement_id"];
+    repeated Fwlog Logs = 2 [(gogoproto.jsontag) = "logs,omitempty"];
+}
+
+// FwlogsQueryResponse is the response for Fwlogs Query
+message FwlogsQueryResponse {
+    // Tenant for the request
+    string Tenant     = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
+    // Namespace for the request
+    string Namespace  = 2 [(gogoproto.jsontag) = "namespace,omitempty"];
+   repeated FwlogsQueryResult Results = 3 [(gogoproto.jsontag) = "results,omitempty"];
 }

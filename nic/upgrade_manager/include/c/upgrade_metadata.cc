@@ -31,6 +31,7 @@ void mkfile (string result, const char* file) {
 }
 
 string exec(const char* cmd) {
+    UPG_LOG_DEBUG("Executing {}", cmd);
     array<char, 128> buffer;
     string result;
     unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
@@ -97,7 +98,7 @@ bool GetUpgCtxFromMeta(UpgCtx& ctx) {
         mkfile(result, premetafile.c_str());
         ret = GetUpgCtxTablesFromMeta(premetafile, ctx.preUpgMeta, true);
 
-        string postmetacmd = "tar xvO /update/" + ctx.firmwarePkgName;
+        string postmetacmd = "/bin/tar xfO /update/naples_fw.tar MANIFEST";// + ctx.firmwarePkgName + " MANIFEST";
         result = exec(postmetacmd.c_str());
         string postmetafile = "/tmp/upg_meta.json";
         mkfile(result, postmetafile.c_str());

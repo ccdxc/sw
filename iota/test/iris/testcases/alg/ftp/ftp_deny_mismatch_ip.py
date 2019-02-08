@@ -3,10 +3,12 @@ import os
 import time
 import pdb
 from iota.test.iris.testcases.alg.ftp.ftp_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def Setup(tc):
+    update_sgpolicy('ftp')
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -56,13 +58,12 @@ def Trigger(tc):
     tc.cmd_cookies.append("Run FTP PUT")
 
     ## Add Naples command validation
-    #sleep for tcp timeout
-    #api.Trigger_AddCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show session --alg ftp")
-    #tc.cmd_cookies.append("show session")
-    #api.Trigger_AddCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show security flow-gate")
-    #tc.cmd_cookies.append("show security flow-gate")
+    api.Trigger_AddCommand(req, naples.node_name, naples.workload_name,
+                           "halctl show session --alg ftp")
+    tc.cmd_cookies.append("show session")
+    api.Trigger_AddCommand(req, naples.node_name, naples.workload_name,
+                           "halctl show security flow-gate")
+    tc.cmd_cookies.append("show security flow-gate")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                            "cat /home/admin/ftp/ftp_server.txt | grep \"I am FTP server\"")
@@ -99,9 +100,9 @@ def Verify(tc):
              cmd.exit_code == 0):
             result = api.types.status.FAILURE
         #Check if everything is cleaned up
-        #if ((tc.cmd_cookies[cookie_idx].find("show security flow gate") != -1) and
-        #    (cmd.stdout != '')):
-        #    result = api.types.status.FAILURE
+        if ((tc.cmd_cookies[cookie_idx].find("show security flow gate") != -1) and
+            (cmd.stdout != '')):
+            result = api.types.status.FAILURE
         cookie_idx += 1
 
     return result

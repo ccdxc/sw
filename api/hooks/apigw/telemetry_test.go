@@ -55,6 +55,31 @@ func TestTelemetryOperationsHook(t *testing.T) {
 			err: false,
 		},
 		{
+			name: "fwlogs query operations hook test with no tenant",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			in: &telemetry_query.FwlogsQueryList{},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResource("testTenant",
+					"", auth.Permission_FwlogsQuery.String(),
+					"", ""),
+					auth.Permission_Read.String()),
+			},
+			out: &telemetry_query.FwlogsQueryList{Tenant: "testTenant"},
+			err: false,
+		},
+		{
 			name: "metrics query operations hook test with different tenant than user's",
 			user: &auth.User{
 				TypeMeta: api.TypeMeta{Kind: "User"},
@@ -77,6 +102,31 @@ func TestTelemetryOperationsHook(t *testing.T) {
 					auth.Permission_Read.String()),
 			},
 			out: &telemetry_query.MetricsQueryList{Tenant: "differentTenant"},
+			err: false,
+		},
+		{
+			name: "fwlogs query operations hook test with different tenant than user's",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			in: &telemetry_query.FwlogsQueryList{Tenant: "differentTenant"},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResource("differentTenant",
+					"", auth.Permission_FwlogsQuery.String(),
+					"", ""),
+					auth.Permission_Read.String()),
+			},
+			out: &telemetry_query.FwlogsQueryList{Tenant: "differentTenant"},
 			err: false,
 		},
 		{
@@ -177,7 +227,7 @@ func TestTelemetryHooksRegistration(t *testing.T) {
 	err := registerTelemetryHooks(svc, l)
 	AssertOk(t, err, "apigw telemetry hook registration failed")
 
-	methods := []string{"Metrics"}
+	methods := []string{"Metrics", "Fwlogs"}
 	for _, method := range methods {
 		prof, err := svc.GetServiceProfile(method)
 		AssertOk(t, err, fmt.Sprintf("error getting service profile for method [%s]", method))

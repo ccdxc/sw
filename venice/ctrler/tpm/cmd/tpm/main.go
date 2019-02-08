@@ -57,11 +57,13 @@ func main() {
 	logger := log.SetConfig(logConfig)
 
 	// create events recorder
-	if _, err := recorder.NewRecorder(&recorder.Config{
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Tpm},
-		EvtTypes: evtsapi.GetEventTypes()}, logger); err != nil {
+		EvtTypes: evtsapi.GetEventTypes()}, logger)
+	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}
+	defer evtsRecorder.Close()
 
 	log.Infof("starting telemetry controller with args : {%+v}", os.Args)
 	nsClient := resolver.New(&resolver.Config{Name: pkgName, Servers: strings.Split(*nsURLs, ",")})

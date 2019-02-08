@@ -36,7 +36,7 @@ prt_show_res_entry(const int prti, prt_t *prt)
 {
     const prt_res_t *r = &prt->res;
 
-    printf("%-4d %-4s %4ld 0x%09" PRIx64 " %-4s %c%c%c%c\n",
+    printf("%-4d %-4s %4lu 0x%09" PRIx64 " %-4s %c%c%c%c\n",
            prti,
            prt_type_str(r->type),
            r->vfstride,
@@ -103,7 +103,7 @@ prt_show_db_entry(const int prti, prt_t *prt, const int raw)
 {
     const prt_db_t *r = &prt->db;
 
-    printf("%-4d %-4s %4ld %4ld %1ld:%-2ld %1ld:%-2ld %c%c%c   %-31s\n",
+    printf("%-4d %-4s %4lu %4lu %1lu:%-2lu %1lu:%-2lu %c%c%c   %-31s\n",
            prti,
            prt_type_str(r->type),
            r->vfstride,

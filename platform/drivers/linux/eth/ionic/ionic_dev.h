@@ -308,6 +308,9 @@ struct queue {
 	unsigned int qid;
 	unsigned int qtype;
 	u64 dbell_count;
+	u64 drop;
+	u64 stop;
+	u64 wake;
 };
 
 #define INTR_INDEX_NOT_ASSIGNED		(-1)

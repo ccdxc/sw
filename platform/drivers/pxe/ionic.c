@@ -44,8 +44,7 @@ static int ionic_reset(struct ionic *ionic)
 
 	struct ionic_dev *idev = &ionic->idev;
 
-	ionic_dev_cmd_reset(idev);
-	return ionic_dev_cmd_wait_check(idev, devcmd_timeout);
+	return ionic_dev_cmd_reset(idev, devcmd_timeout);
 }
 
 /******************************************************************************
@@ -67,8 +66,6 @@ static int ionic_check_link ( struct net_device *netdev ) {
 	link_up = ionic->ionic_lif->notifyblock->link_status;
 	if(link_up) {
 		netdev_link_up ( netdev );
-		DBGC(ionic, "link up with speed %dMBPS\n",
-			 ionic->ionic_lif->notifyblock->link_speed);
 	} else {
 		netdev_link_down ( netdev );
 	}
@@ -289,8 +286,8 @@ static int ionic_probe(struct pci_device *pci)
 	pci_set_drvdata(pci, netdev);
 	netdev->dev = &pci->dev;
 	memset(ionic, 0, sizeof(*ionic));
-	printf("Waiting for the Nic to start\n");
-	sleep ( 30 );
+
+	ionic->pdev = pci;
 	// Fix up PCI device
 	adjust_pci_device(pci);
 

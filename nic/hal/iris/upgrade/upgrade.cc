@@ -29,6 +29,7 @@ upgrade_handler::CompatCheckHandler(UpgCtx& upgCtx)
 HdlrResp
 upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
 {
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
     hal_ret_t    ret;
 
     HAL_TRACE_DEBUG("[upgrade] Handling link down msg ...");
@@ -85,9 +86,8 @@ upgrade_handler::PostRestartHandler(UpgCtx& upgCtx)
 HdlrResp
 upgrade_handler::LinkUpHandler(UpgCtx& upgCtx)
 {
-    HdlrResp resp = {};
     HAL_TRACE_DEBUG("[upgrade] Handling link up msg ...");
-    return resp;
+    return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
 //------------------------------------------------------------------------------

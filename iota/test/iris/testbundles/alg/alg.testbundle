@@ -2,7 +2,7 @@ meta:
     name    : alg 
     nics    : [ pensando, intel, mellanox, broadcom ]
     os      : [ linux, esx ]
-    targetcount : 80
+    targetcount : 65 
 
 testcases:
     -   name    : TFTP_RRQ_WRQ
@@ -32,9 +32,12 @@ testcases:
 
     -   name    : TFTP_TEST_IDLE_TIMEOUT_CLEANUP
         testcase: testcases.alg.tftp.tftp_test_idle_timeout_cleanup
+        iterators:
+            type    : simple
+            timeout : [10s, 20s]
         args    :
             type: local_only
-
+        
     -   name    : TFTP_TEST_UNKNOWN_OPCODE
         testcase: testcases.alg.tftp.tftp_unknown_opcode
         args    :
@@ -43,21 +46,22 @@ testcases:
     -   name    : TFTP_TEST_NON_STANDARD_PORT
         testcase: testcases.alg.tftp.tftp_nonstandard_port
         args    :
-            type: local_only
+           type: local_only
 
     -   name     : FTP_GET_PUT
         testcase : testcases.alg.ftp.ftp_basic
         iterators:
-            type : simple
-            mode : [ active, passive ]
+           type   : nested
+           mode   : [ active, passive ]
+           timeout: [ 10s, 20s ]
         args     :
-            type : local_only
+           type : local_only
 
     -   name    : FTP_TEST_MEMLEAK
         testcase: testcases.alg.ftp.ftp_test_memleak
         args    :
             type: local_only
-            count: 15
+            count: 10 
 
     -   name     : FTP_EPSV
         testcase : testcases.alg.ftp.ftp_epsv
@@ -114,6 +118,15 @@ testcases:
         args    :
             type: local_only
 
+    -   name    : RTSP_TEST_MEMLEAK
+        testcase: testcases.alg.rtsp.rtsp_test_memleak
+        args    :
+            type: local_only
+            count: 10
+
+    -   name    : ADD_SG_POLICY
+        testcase: testcases.alg.add_config
+
     -   name    : SUNRPC_BASIC
         testcase: testcases.alg.sunrpc.sunrpc_basic
         args    :
@@ -158,6 +171,7 @@ testcases:
         testcase: testcases.alg.dns.dns_test_memleak
         args    :
             type: local_only
+            count: 10
 
     -   name    : DNS_DROP_LONG_DOMAIN_NAME
         testcase: testcases.alg.dns.dns_drop_long_domain_name
@@ -184,12 +198,28 @@ testcases:
         args    :
             type: local_only
 
-    -   name    : DNS_ALLOW_LONG_LABEL 
-        testcase: testcases.alg.dns.dns_allow_long_label
+    #-   name    : DNS_ALLOW_LONG_LABEL 
+    #    testcase: testcases.alg.dns.dns_allow_long_label
+    #    args    :
+    #        type: local_only
+
+    #-   name    : DNS_TEST_QUERYTIMEOUT
+    #    testcase: testcases.alg.dns.dns_test_querytimeout
+    #    args    :
+    #        type: local_only
+    #    iterators:
+    #        type   : simple
+    #        timeout : [30s, 15s]
+
+    -   name    : DNS_DROP_MAX_MSG_LENGTH
+        testcase: testcases.alg.dns.dns_drop_max_message_length
         args    :
             type: local_only
 
-    -   name    : DNS_TEST_QUERYTIMEOUT
-        testcase: testcases.alg.dns.dns_test_querytimeout
+    -   name    : DNS_ALLOW_MAX_MESSAGE_LENGTH
+        testcase: testcases.alg.dns.dns_allow_max_message_length
         args    :
             type: local_only
+
+    -   name    : ADD_SG_POLICY
+        testcase: testcases.alg.add_config

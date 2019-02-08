@@ -26,6 +26,7 @@ var _ api.ObjectMeta
 type grpcServerTelemetryV1 struct {
 	Endpoints EndpointsTelemetryV1Server
 
+	FwlogsHdlr  grpctransport.Handler
 	MetricsHdlr grpctransport.Handler
 }
 
@@ -37,6 +38,13 @@ func MakeGRPCServerTelemetryV1(ctx context.Context, endpoints EndpointsTelemetry
 	}
 	return &grpcServerTelemetryV1{
 		Endpoints: endpoints,
+		FwlogsHdlr: grpctransport.NewServer(
+			endpoints.FwlogsEndpoint,
+			DecodeGrpcReqFwlogsQueryList,
+			EncodeGrpcRespFwlogsQueryResponse,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Fwlogs", logger)))...,
+		),
+
 		MetricsHdlr: grpctransport.NewServer(
 			endpoints.MetricsEndpoint,
 			DecodeGrpcReqMetricsQueryList,
@@ -44,6 +52,24 @@ func MakeGRPCServerTelemetryV1(ctx context.Context, endpoints EndpointsTelemetry
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("Metrics", logger)))...,
 		),
 	}
+}
+
+func (s *grpcServerTelemetryV1) Fwlogs(ctx oldcontext.Context, req *FwlogsQueryList) (*FwlogsQueryResponse, error) {
+	_, resp, err := s.FwlogsHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respTelemetryV1Fwlogs).V
+	return &r, resp.(respTelemetryV1Fwlogs).Err
+}
+
+func decodeHTTPrespTelemetryV1Fwlogs(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp FwlogsQueryResponse
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
 }
 
 func (s *grpcServerTelemetryV1) Metrics(ctx oldcontext.Context, req *MetricsQueryList) (*MetricsQueryResponse, error) {

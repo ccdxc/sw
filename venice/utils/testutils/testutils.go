@@ -30,6 +30,15 @@ type TBApi interface {
 	Logf(format string, args ...interface{})
 }
 
+var defaultPollInterval = time.Millisecond * 10
+var defaultTimeoutInterval = time.Second * 10
+
+// SetDefaultIntervals sets the default timeouts
+func SetDefaultIntervals(pintvl, timeout time.Duration) {
+	defaultPollInterval = pintvl
+	defaultTimeoutInterval = timeout
+}
+
 // Assert fails the test if the condition is false.
 func Assert(tb TBApi, condition bool, msg string, v ...interface{}) {
 	if !condition {
@@ -72,8 +81,8 @@ func AssertOneOf(tb TBApi, act string, exp []string) {
 // intervals are pollInterval followed by timeoutInterval in time.ParseDuration() format
 func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string) {
 	var err error
-	pollInterval := time.Millisecond * 10
-	timeoutInterval := time.Second * 10
+	var pollInterval = defaultPollInterval
+	var timeoutInterval = defaultTimeoutInterval
 
 	// parse intervals
 	if len(intervals) > 0 {
@@ -125,8 +134,8 @@ func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string)
 // followed by timeoutInterval in time.ParseDuration() format.
 func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...string) {
 	var err error
-	pollInterval := time.Millisecond * 10
-	timeoutInterval := time.Second * 10
+	pollInterval := defaultPollInterval
+	timeoutInterval := defaultTimeoutInterval
 
 	// parse intervals
 	if len(intervals) > 0 {
@@ -184,8 +193,8 @@ func AssertConsistently(tb TBApi, eval Evaluator, msg string, intervals ...strin
 // returns true if desired state is reached
 func CheckEventually(eval Evaluator, intervals ...string) bool {
 	var err error
-	pollInterval := time.Millisecond * 10
-	timeoutInterval := time.Second * 10
+	pollInterval := defaultPollInterval
+	timeoutInterval := defaultTimeoutInterval
 
 	// parse intervals
 	if len(intervals) > 0 {

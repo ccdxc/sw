@@ -49,15 +49,17 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 
 	// Check if ProtoPorts need to be parsed from the app object
 	if ruleIDAppLUT != nil && ruleID != nil {
-		obj, ok := ruleIDAppLUT.Load(ruleID)
+		obj, ok := ruleIDAppLUT.Load(*ruleID)
 		// Rule has a corresponding ALG information
 		if ok {
 			app, ok := obj.(*netproto.App)
 			if !ok {
-				log.Errorf("failed to cast App object. %v", obj)
+				log.Infof("failed to cast App object. %v", obj)
 				return nil, fmt.Errorf("failed to cast App object. %v", obj)
 			}
 			appProtoPorts = app.Spec.ProtoPorts
+		} else {
+			log.Infof("ruleIDApp NOT found for rule %d", *ruleID)
 		}
 	}
 

@@ -78,6 +78,8 @@ typedef u64 dma_addr_t;
 #define devcmd_timeout 30
 #define DEV_CMD_DONE 0x00000001
 
+#define RETRY_COUNT 30
+
 #define ASIC_TYPE_CAPRI 0
 
 // Q flags
@@ -394,7 +396,7 @@ struct ionic_dev
 /** An ionic network card */
 struct ionic
 {
-	struct pci_dev *pdev;
+	struct pci_device *pdev;
 	struct platform_device *pfdev;
 	struct device *dev;
 	struct ionic_dev idev;
@@ -429,15 +431,15 @@ void ionic_poll_tx(struct net_device *netdev);
 bool ionic_q_has_space(struct queue *q, unsigned int want);
 
 //helper functions from ionic_main
-int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
-void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index);
+int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_seconds);
+int ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index, unsigned long max_seconds);
 char *ionic_dev_asic_name(u8 asic_type);
-void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
-void ionic_dev_cmd_reset(struct ionic_dev *idev);
+int ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd, unsigned long max_seconds);
+int ionic_dev_cmd_reset(struct ionic_dev *idev, unsigned long max_seconds);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
-void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
-							   unsigned int lif_index);
+int ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
+				unsigned int lif_index, unsigned long max_seconds);
 unsigned int ionic_q_space_avail(struct queue *q);
 #endif /* _IONIC_H */

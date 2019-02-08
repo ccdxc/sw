@@ -76,7 +76,7 @@ pciehbars_delete(pciehbars_t *pbars)
 void
 pciehbars_add_bar(pciehbars_t *pbars, const pciehbar_t *pnewbar)
 {
-    assert(pnewbar->cfgidx >= 0 && pnewbar->cfgidx < PCIEHBAR_NBARS);
+    assert(pnewbar->cfgidx < PCIEHBAR_NBARS);
     pbars->bars[pnewbar->cfgidx] = *pnewbar;
 }
 

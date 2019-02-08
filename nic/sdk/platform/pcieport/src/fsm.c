@@ -13,6 +13,7 @@
 #include <sys/time.h>
 
 #include "nic/sdk/platform/pal/include/pal.h"
+#include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "portcfg.h"
 #include "pcieport.h"
@@ -83,9 +84,9 @@ pcieport_fault(pcieport_t *p, const char *fmt, ...)
 static void
 pcieport_clear_fault(pcieport_t *p)
 {
-    if (p->fault_reason) {
+    if (p->fault_reason[0] != '\0') {
         const size_t bufsz = sizeof(p->last_fault_reason);
-        strncpy(p->last_fault_reason, p->fault_reason, bufsz);
+        strncpy0(p->last_fault_reason, p->fault_reason, bufsz);
         p->fault_reason[0] = '\0';
     }
 }

@@ -96,11 +96,14 @@ message NaplesStatus {
     // Current phase of the NIC adapter in the system
     cluster.SmartNICStatus.Phase    Phase   = 1 [(gogoproto.jsontag) = "phase,omitempty"];
 
-    // Resolved Controllers/Venice IPs
-    repeated string Controllers             = 2 [(gogoproto.jsontag) = "controllers,omitempty"];
+    cluster.IPConfig IPConfig       	    = 2 [(gogoproto.jsontag) = "ip-config"];
 
-    string TransitionPhase                  = 3 [(gogoproto.jsontag) = "transition-phase,omitempty",
+    // Resolved Controllers/Venice IPs
+    repeated string Controllers             = 3 [(gogoproto.jsontag) = "controllers,omitempty"];
+
+    string TransitionPhase                  = 4 [(gogoproto.jsontag) = "transition-phase,omitempty",
                                                  (venice.check) = "StrEnum(NaplesStatus.Transition)"];
+
 }
 
 // NaplesCmdExecute contains information on what command to execute

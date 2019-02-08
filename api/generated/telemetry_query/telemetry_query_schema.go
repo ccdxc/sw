@@ -15,6 +15,88 @@ import (
 
 var typesMapTelemetry_query = map[string]*api.Struct{
 
+	"telemetry_query.Fwlog": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Fwlog{}) },
+		Fields: map[string]api.Field{
+			"Tenant": api.Field{Name: "Tenant", CLITag: api.CLIInfo{ID: "tenant", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Src": api.Field{Name: "Src", CLITag: api.CLIInfo{ID: "src", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "src", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Dest": api.Field{Name: "Dest", CLITag: api.CLIInfo{ID: "dest", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dest", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"SrcPort": api.Field{Name: "SrcPort", CLITag: api.CLIInfo{ID: "src-port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "src-port", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"DestPort": api.Field{Name: "DestPort", CLITag: api.CLIInfo{ID: "dest-port", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dest-port", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"Protocol": api.Field{Name: "Protocol", CLITag: api.CLIInfo{ID: "protocol", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocol", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Action": api.Field{Name: "Action", CLITag: api.CLIInfo{ID: "action", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "action", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Direction": api.Field{Name: "Direction", CLITag: api.CLIInfo{ID: "direction", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "direction", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"RuleID": api.Field{Name: "RuleID", CLITag: api.CLIInfo{ID: "rule-id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rule-id", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"PolicyName": api.Field{Name: "PolicyName", CLITag: api.CLIInfo{ID: "policy-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "policy-name", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Timestamp": api.Field{Name: "Timestamp", CLITag: api.CLIInfo{ID: "timestamp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "timestamp", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+		},
+	},
+	"telemetry_query.FwlogsQueryList": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogsQueryList{}) },
+		Fields: map[string]api.Field{
+			"Tenant": api.Field{Name: "Tenant", CLITag: api.CLIInfo{ID: "tenant", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Namespace": api.Field{Name: "Namespace", CLITag: api.CLIInfo{ID: "namespace", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "namespace", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Queries": api.Field{Name: "Queries", CLITag: api.CLIInfo{ID: "queries", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "queries", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "telemetry_query.FwlogsQuerySpec"},
+		},
+	},
+	"telemetry_query.FwlogsQueryResponse": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogsQueryResponse{}) },
+		Fields: map[string]api.Field{
+			"Tenant": api.Field{Name: "Tenant", CLITag: api.CLIInfo{ID: "tenant", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tenant", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Namespace": api.Field{Name: "Namespace", CLITag: api.CLIInfo{ID: "namespace", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "namespace", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Results": api.Field{Name: "Results", CLITag: api.CLIInfo{ID: "results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "results", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "telemetry_query.FwlogsQueryResult"},
+		},
+	},
+	"telemetry_query.FwlogsQueryResult": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogsQueryResult{}) },
+		Fields: map[string]api.Field{
+			"StatementID": api.Field{Name: "StatementID", CLITag: api.CLIInfo{ID: "statement_id", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "statement_id", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"Logs": api.Field{Name: "Logs", CLITag: api.CLIInfo{ID: "logs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "logs", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "telemetry_query.Fwlog"},
+		},
+	},
+	"telemetry_query.FwlogsQuerySpec": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(FwlogsQuerySpec{}) },
+		Fields: map[string]api.Field{
+			"SourceIPs": api.Field{Name: "SourceIPs", CLITag: api.CLIInfo{ID: "source-ips", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source-ips", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"DestIPs": api.Field{Name: "DestIPs", CLITag: api.CLIInfo{ID: "dest-ips", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dest-ips", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"SourcePorts": api.Field{Name: "SourcePorts", CLITag: api.CLIInfo{ID: "source-ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source-ports", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"DestPorts": api.Field{Name: "DestPorts", CLITag: api.CLIInfo{ID: "dest-ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "dest-ports", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"Protocols": api.Field{Name: "Protocols", CLITag: api.CLIInfo{ID: "protocols", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "protocols", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Actions": api.Field{Name: "Actions", CLITag: api.CLIInfo{ID: "actions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "actions", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Directions": api.Field{Name: "Directions", CLITag: api.CLIInfo{ID: "directions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "directions", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"RuleIDs": api.Field{Name: "RuleIDs", CLITag: api.CLIInfo{ID: "rule-ids", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rule-ids", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"PolicyNames": api.Field{Name: "PolicyNames", CLITag: api.CLIInfo{ID: "policy-names", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "policy-names", Pointer: false, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"StartTime": api.Field{Name: "StartTime", CLITag: api.CLIInfo{ID: "start-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "start-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+
+			"EndTime": api.Field{Name: "EndTime", CLITag: api.CLIInfo{ID: "end-time", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "end-time", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+
+			"Pagination": api.Field{Name: "Pagination", CLITag: api.CLIInfo{ID: "pagination", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "pagination", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "telemetry_query.PaginationSpec"},
+		},
+	},
 	"telemetry_query.MetricsQueryList": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(MetricsQueryList{}) },
 		Fields: map[string]api.Field{

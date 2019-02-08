@@ -3,8 +3,10 @@ import os
 import time
 import iota.harness.api as api
 from iota.test.iris.testcases.alg.sunrpc.sunrpc_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
 
 def Setup(tc):
+    update_sgpolicy(None, True)
     return api.types.status.SUCCESS
 
 def Trigger(tc):

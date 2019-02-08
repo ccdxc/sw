@@ -103,6 +103,9 @@ func (f *fileImpl) Rotate() error {
 		return err
 	}
 
+	// close the old file handler (the file is now moved to *.bak/)
+	f.handler.Close()
+
 	// create new events file and handler
 	f.handler, err = os.OpenFile(f.evtsFilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
 	if err != nil {
@@ -136,6 +139,7 @@ func (f *fileImpl) GetEvents() ([]*evtsapi.Event, []string, error) {
 		evtsFile, err := os.Open(fp) // open file for reading
 		if err != nil {
 			log.Errorf("failed to open events file {%s}, err: %v", fp, err)
+			evtsFile.Close()
 			return nil, nil, err
 		}
 
@@ -150,6 +154,7 @@ func (f *fileImpl) GetEvents() ([]*evtsapi.Event, []string, error) {
 
 			evts = append(evts, temp)
 		}
+		evtsFile.Close()
 
 		// update absolute file path
 		filenames[i] = fp
@@ -164,5 +169,12 @@ func (f *fileImpl) DeleteBackupFiles(filenames []string) {
 		if err := os.Remove(fp); err != nil {
 			log.Errorf("failed to delete file %s, err: %v", fp, err)
 		}
+	}
+}
+
+// Close closes the underlying events file handler
+func (f *fileImpl) Close() {
+	if f.handler != nil {
+		f.handler.Close()
 	}
 }

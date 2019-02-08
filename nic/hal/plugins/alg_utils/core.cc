@@ -341,6 +341,7 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
         if (exp_flow && !exp_flow->entry.deleting) {
             if (enable_timer) {
                 if (entry->timer) {
+                    // TBD Dont delete
                     timer_ctxt = (exp_flow_timer_cb_t *)\
                                              delete_expected_flow_timer(entry);
                 } else {
@@ -475,7 +476,6 @@ void alg_state::move_expflow_to_l4sess(app_session_t *app_sess,
     dllist_del(&exp_flow->exp_flow_lentry);
     dllist_reset(&exp_flow->l4_sess_lentry);
     dllist_add(&app_sess->l4_sess_lhead, &exp_flow->l4_sess_lentry);
-    exp_flow->alg = nwsec::APP_SVC_NONE;
     SDK_SPINLOCK_UNLOCK(&app_sess->slock);
 }
 

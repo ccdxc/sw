@@ -2333,7 +2333,8 @@ schedule_tcp_close_timer (session_t *session)
 
     // Delete the previous timers if any and start a new one
     if (session->tcp_cxntrack_timer != NULL) {
-        sdk::lib::timer_delete(session->tcp_cxntrack_timer);
+        // Let the library delete it
+        //sdk::lib::timer_delete(session->tcp_cxntrack_timer);
         session->tcp_cxntrack_timer = NULL;
     }
 
@@ -2424,7 +2425,8 @@ schedule_tcp_half_closed_timer (session_t *session)
 
     // Delete the previous timers if any and start a new one
     if (session->tcp_cxntrack_timer != NULL) {
-        sdk::lib::timer_delete(session->tcp_cxntrack_timer);
+        // Let the library delete it
+        //sdk::lib::timer_delete(session->tcp_cxntrack_timer);
         session->tcp_cxntrack_timer = NULL;
     }
 
@@ -2481,8 +2483,8 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     session->tcp_cxntrack_timer = NULL;
 
-    if (state.iflow_state.state != session::FLOW_TCP_STATE_ESTABLISHED ||
-        state.rflow_state.state != session::FLOW_TCP_STATE_ESTABLISHED) {
+    if (state.iflow_state.state < session::FLOW_TCP_STATE_ESTABLISHED ||
+        state.rflow_state.state < session::FLOW_TCP_STATE_ESTABLISHED) {
         // session is not in established state yet.
         // Cleanup the session
         SDK_ATOMIC_INC_UINT64(&g_session_stats.num_cxnsetup_timeout, 1);

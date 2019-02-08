@@ -12,6 +12,7 @@ The following Services and Methods are defined.
 
  Service: TelemetryV1
    AutoWatchSvcTelemetryV1
+   Fwlogs
    Metrics
 
 */

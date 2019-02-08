@@ -30,7 +30,7 @@ const std::string FTE_FEATURE_ALG_TFTP("pensando.io/alg_tftp:alg_tftp");
 /*
  * Forward declarations
  */
-typedef union tftp_info_ tftp_info_t;
+typedef struct tftp_info_ tftp_info_t;
 
 /*
  * Function prototypes
@@ -42,20 +42,17 @@ void tftpinfo_cleanup_hdlr(l4_alg_status_t *l4_sess);
 typedef hal_ret_t (*tftp_cb_t)(fte::ctx_t& ctx, l4_alg_status_t *exp_flow);
 fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx);
 fte::pipeline_action_t alg_tftp_session_get_cb(fte::ctx_t &ctx);
+hal_ret_t process_tftp(fte::ctx_t& ctx, l4_alg_status_t *l4_sess);
 
 /*
  * Data Structures
  */
-typedef union tftp_info_ {
-    struct {  /* Expected flow info */
-        uint8_t   tftpop;
-        tftp_cb_t callback;
-        bool      skip_sfw;
-    } __PACK__;
-    struct {  /* Session info */
-        uint32_t  unknown_opcode;
-        uint32_t  parse_errors;
-    } __PACK__;
+typedef struct tftp_info_ {
+    uint32_t  unknown_opcode;
+    uint32_t  parse_errors;
+    tftp_cb_t callback;
+    bool      skip_sfw;
+    uint16_t   tftpop;
 } tftp_info_t;
 
 }  // namespace alg_tftp

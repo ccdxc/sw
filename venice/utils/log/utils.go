@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"sync"
 	"syscall"
 
 	kitlog "github.com/go-kit/kit/log"
@@ -146,18 +147,23 @@ func getFilterOption(filter FilterType) kitlevel.Option {
 	return kitlevel.AllowInfo()
 }
 
+// set SetTraceDebug once. if called again, its a no-op
+var traceOnce sync.Once
+
 // SetTraceDebug enables trace debug
 // Enable tracedumping with SIGQUIT or ^\
 // Will dump stacktrace for all go routines and continue execution
 func SetTraceDebug() {
-	go func() {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGQUIT)
-		buf := make([]byte, 1<<20)
-		for {
-			<-sigs
-			stacklen := runtime.Stack(buf, true)
-			fmt.Printf("=== received SIGQUIT ===\n*** goroutine dump *** \n%s\n*** end\n", buf[:stacklen])
-		}
-	}()
+	traceOnce.Do(func() {
+		go func() {
+			sigs := make(chan os.Signal, 1)
+			signal.Notify(sigs, syscall.SIGQUIT)
+			buf := make([]byte, 1<<20)
+			for {
+				<-sigs
+				stacklen := runtime.Stack(buf, true)
+				fmt.Printf("=== received SIGQUIT ===\n*** goroutine dump *** \n%s\n*** end\n", buf[:stacklen])
+			}
+		}()
+	})
 }

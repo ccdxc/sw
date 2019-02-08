@@ -29,6 +29,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	. "github.com/pensando/sw/venice/utils/authn/testutils"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -89,6 +90,7 @@ func TestEvents(t *testing.T) {
 		EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 		BackupDir:    recorderEventsDir}, ti.logger)
 	AssertOk(t, err, "failed to create events recorder")
+	defer evtsRecorder.Close()
 
 	// send events  (recorder -> proxy -> dispatcher -> writer -> evtsmgr -> elastic)
 	evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
@@ -153,6 +155,9 @@ func TestEventsProxyRestart(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
+	var recorders []events.Recorder
+	defer closeRecorders(recorders)
+
 	numRecorders := 3
 
 	stopEventRecorders := make(chan struct{})
@@ -180,6 +185,7 @@ func TestEventsProxyRestart(t *testing.T) {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
 			}
+			recorders = append(recorders, evtsRecorder)
 
 			ticker := time.NewTicker(10 * time.Millisecond)
 			for {
@@ -260,6 +266,9 @@ func TestEventsMgrRestart(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
+	var recorders []events.Recorder
+	defer closeRecorders(recorders)
+
 	numRecorders := 3
 
 	stopEventRecorders := make(chan struct{})
@@ -287,6 +296,7 @@ func TestEventsMgrRestart(t *testing.T) {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
 			}
+			recorders = append(recorders, evtsRecorder)
 
 			ticker := time.NewTicker(10 * time.Millisecond)
 			for {
@@ -361,6 +371,9 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	ti := tInfo{}
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
+
+	var recorders []events.Recorder
+	defer closeRecorders(recorders)
 
 	// start spyglass (backend service for events)
 	fdrTemp, fdrAddr, err := testutils.StartSpyglass("finder", "", ti.mockResolver, nil, ti.logger, ti.esClient)
@@ -446,6 +459,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			log.Errorf("failed to create recorder")
 			return
 		}
+		recorders = append(recorders, evtsRecorder)
 
 		// record events
 		for _, evt := range recordEvents {
@@ -945,6 +959,9 @@ func TestEventsAlertEngine(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
+	var recorders []events.Recorder
+	defer closeRecorders(recorders)
+
 	// create API server client
 	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
 	AssertOk(t, err, "failed to create API server client, err: %v", err)
@@ -1059,6 +1076,7 @@ func TestEventsAlertEngine(t *testing.T) {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
 		}
+		recorders = append(recorders, evtsRecorder)
 
 		// record events
 		for i := range recordEvents {
@@ -1580,6 +1598,9 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 	Substrs   []string
 	MsgFormat monitoring.MonitoringExportFormat
 }) {
+	var recorders []events.Recorder
+	defer closeRecorders(recorders)
+
 	var m sync.Mutex
 	wg := new(sync.WaitGroup)
 	wg.Add(1) // events recorder
@@ -1631,6 +1652,7 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
 		}
+		recorders = append(recorders, evtsRecorder)
 
 		// record events
 		for i := range recordEvents {
@@ -2117,6 +2139,9 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 	AssertOk(t, ti.setup(t), "failed to setup test")
 	defer ti.teardown()
 
+	var recorders []events.Recorder
+	defer closeRecorders(recorders)
+
 	var wg sync.WaitGroup
 	stopGoRoutines := make(chan struct{})
 
@@ -2165,6 +2190,7 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
 		}
+		recorders = append(recorders, evtsRecorder)
 
 		for {
 			count++
@@ -2209,4 +2235,11 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 
 	close(stopGoRoutines)
 	wg.Wait()
+}
+
+// closes all the given recorders
+func closeRecorders(recorders []events.Recorder) {
+	for _, r := range recorders {
+		r.Close()
+	}
 }

@@ -88,9 +88,9 @@ session_delete_in_fte (hal_handle_t session_handle, bool force_delete)
         return  HAL_RET_HANDLE_INVALID;
     }
 
-    HAL_TRACE_DEBUG("fte:: Received session Delete for session id {} in Vrf id {}",
+    HAL_TRACE_DEBUG("fte:: Received session Delete for session id {} in Vrf id {} force_delete: {}",
                     session->hal_handle,
-                    (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id);
+                    (hal::vrf_lookup_by_handle(session->vrf_handle))->vrf_id, force_delete);
 
     HAL_TRACE_DEBUG("num features: {} feature state size: {}", num_features, fstate_size);
 
@@ -250,7 +250,7 @@ session_delete (SessionDeleteRequest& spec, SessionDeleteResponse *rsp)
         goto end;
     }
 
-    ret = session_delete(session);
+    ret = session_delete(session, true);
 
 end:
     rsp->set_api_status(hal::hal_prepare_rsp(ret));

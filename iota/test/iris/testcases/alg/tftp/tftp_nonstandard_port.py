@@ -1,6 +1,8 @@
 #! /usr/bin/python3
 import time
 from iota.test.iris.testcases.alg.tftp.tftp_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
+import pdb
 
 def Setup(tc):
     return api.types.status.SUCCESS
@@ -16,6 +18,8 @@ def Trigger(tc):
        naples = client
        if not client.IsNaples():
           return api.types.status.FAILURE
+
+    update_sgpolicy('tftp_nonstandard_port')
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
@@ -36,17 +40,14 @@ def Trigger(tc):
                            (server.workload_name, server.ip_address, client.workload_name, client.ip_address))
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                         "sh -c 'cd tftpdir && tftp -v %s -c get tftp_server.txt'" % server.ip_address)
+                         "sh -c 'cd tftpdir && atftp -g -l tftp_server.txt -r tftp_server.txt %s %s'" % (server.ip_address, TFTP_NONSTD_PORT))
     tc.cmd_cookies.append("TFTP get Server: %s(%s) <--> Client: %s(%s)" %\
                            (server.workload_name, server.ip_address, client.workload_name, client.ip_address))
 
     ## Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                            "/nic/bin/halctl show session --alg tftp | grep UDP")
-    #tc.cmd_cookies.append("show session TFTP established")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                        "/nic/bin/halctl show nwsec flow-gate | grep TFTP")
-    #tc.cmd_cookies.append("show flow-gate")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg tftp | grep UDP")
+    tc.cmd_cookies.append("show session TFTP established")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                           "sh -c 'cat tftpdir/tftp_server.txt | grep \'I am the server\' ' ")
@@ -73,8 +74,7 @@ def Verify(tc):
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
-        if (tc.cmd_cookies[cookie_idx].find("show session TFTP") != -1 or \
-            tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1) and \
+        if tc.cmd_cookies[cookie_idx].find("show session TFTP") != -1 and \
             cmd.stdout == '':
             result = api.types.status.FAILURE
         cookie_idx += 1

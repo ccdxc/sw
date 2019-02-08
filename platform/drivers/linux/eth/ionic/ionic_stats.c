@@ -13,8 +13,11 @@ static const struct ionic_stat_desc ionic_lif_stats_desc[] = {
 	IONIC_LIF_STAT_DESC(rx_packets),
 	IONIC_LIF_STAT_DESC(rx_bytes),
 	IONIC_LIF_STAT_DESC(tx_tso),
+	IONIC_LIF_STAT_DESC(tx_no_csum),
+	IONIC_LIF_STAT_DESC(tx_csum),
 	IONIC_LIF_STAT_DESC(rx_csum_none),
 	IONIC_LIF_STAT_DESC(rx_csum_complete),
+	IONIC_LIF_STAT_DESC(rx_csum_error),
 };
 
 static const struct ionic_stat_desc ionic_tx_stats_desc[] = {
@@ -28,9 +31,9 @@ static const struct ionic_stat_desc ionic_rx_stats_desc[] = {
 };
 
 static const struct ionic_stat_desc ionic_txq_stats_desc[] = {
-	IONIC_TX_STAT_DESC(stop),
-	IONIC_TX_STAT_DESC(wake),
-	IONIC_TX_STAT_DESC(drop),
+	IONIC_TX_Q_STAT_DESC(stop),
+	IONIC_TX_Q_STAT_DESC(wake),
+	IONIC_TX_Q_STAT_DESC(drop),
 	IONIC_TX_Q_STAT_DESC(dbell_count),
 };
 
@@ -75,6 +78,8 @@ static void ionic_get_lif_stats(struct lif *lif, struct lif_sw_stats *stats)
 			stats->tx_packets += tstats->pkts;
 			stats->tx_bytes += tstats->bytes;
 			stats->tx_tso += tstats->tso;
+			stats->tx_no_csum += tstats->no_csum;
+			stats->tx_csum += tstats->csum;
 		}
 
 		rxqcq = lif_to_rxqcq(lif, q_num);
@@ -84,6 +89,7 @@ static void ionic_get_lif_stats(struct lif *lif, struct lif_sw_stats *stats)
 			stats->rx_bytes += rstats->bytes;
 			stats->rx_csum_none += rstats->csum_none;
 			stats->rx_csum_complete += rstats->csum_complete;
+			stats->rx_csum_error += rstats->csum_error;
 		}
 	}
 }

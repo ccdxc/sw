@@ -33,6 +33,7 @@ typedef struct pciehdevice_resources_s {
     struct {
         u_int64_t barpa;        /* bar physical address */
         u_int64_t barsz;        /* bar size */
+        u_int32_t prefetch;     /* bar prefetch enable */
     } debugbar[3];              /* debug vnic bar config */
 } pciehdevice_resources_t;
 

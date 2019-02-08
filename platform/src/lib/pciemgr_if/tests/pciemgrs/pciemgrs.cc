@@ -257,6 +257,8 @@ do_dev_add(pmmsg_t *m)
 
 #if 0
     pciehdev_add(pdev);
+#else
+    pciehdev_delete(pdev);
 #endif
     return;
 

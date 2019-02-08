@@ -25,12 +25,12 @@ enum SmartNICOp {
 }
 
 message SmartNICOpSpec {
-  SmartNICOp Op  = 1;
-  string Version   = 2;
+  SmartNICOp Op  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = "op,omitempty"];
+  string Version   = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = "ver,omitempty"];
 }
 
 message SmartNICRolloutSpec {
-  repeated SmartNICOpSpec Ops = 1;
+  repeated SmartNICOpSpec Ops = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag)  = "ops,omitempty"];
 }
 
 enum AllowedStatus {

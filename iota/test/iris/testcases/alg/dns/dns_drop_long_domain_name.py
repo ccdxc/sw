@@ -1,7 +1,13 @@
 #! /usr/bin/python3
 from iota.test.iris.testcases.alg.dns.dns_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
+import re
+import os
+import pdb
 
 def Setup(tc):
+    update_app('dns', '30s', 'drop_large_domain_packets', 'True') 
+    update_sgpolicy('dns')
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -33,27 +39,47 @@ def Trigger(tc):
     SetupDNSServer(server)
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
+                           "tcpdump -i {} -w dns.pcap".format(client.interface), background=True)
+    tc.cmd_cookies.append("tcpdump client")
+
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name, 
+                           "tcpdump -i {} > out.txt".format(server.interface), background=True)
+    tc.cmd_cookies.append("tcpdump")
+
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                            "sudo echo \'nameserver %s\' | sudo tee -a /etc/resolv.conf"%(server.ip_address))
     tc.cmd_cookies.append("Setup resolv conf")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "cd dnsdir && chmod +x dnsscapy.py && ./dnsscapy.py")
+                           "sh -c 'cd dnsdir && chmod +x dnsscapy.py && ./dnsscapy.py'")
     tc.cmd_cookies.append("Query DNS server") 
 
     ## Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name,
-    #            "/nic/bin/halctl show session --alg dns | grep UDP")
-    #tc.cmd_cookies.append("Show session")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                "/nic/bin/halctl show session --alg dns --yaml")
+    tc.cmd_cookies.append("Show session")
  
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+
+    GetTcpdumpData(server)
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
+
+    tcpdump = dir_path + '/' + "out.txt"
+    found = False
+    for line in open(tcpdump, 'r'):
+        if re.search(LARGE_DOMAIN_NAME, line):
+            found = True
+
+    os.remove(tcpdump)
+    if found == True:
+       return api.types.status.FAILURE 
 
     result = api.types.status.SUCCESS
     api.Logger.info("Results for %s" % (tc.cmd_descr))

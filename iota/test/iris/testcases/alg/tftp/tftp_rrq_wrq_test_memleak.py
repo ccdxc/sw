@@ -1,6 +1,8 @@
 #! /usr/bin/python3
 import os
 from iota.test.iris.testcases.alg.tftp.tftp_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
+import pdb
 
 def Setup(tc):
     return api.types.status.SUCCESS
@@ -11,18 +13,9 @@ def Trigger(tc):
     tc.resp = []
     trig_resp = [None]*len(tc.workload_pairs)
     term_resp = [None]*len(tc.workload_pairs)
-
-    #req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "/nic/bin/halctl show system memory slab | grep ftp")
-    #tc.cmd_cookies.append("Memory stats before")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                            "/nic/bin/halctl clear session --alg tftp")
-    #tc.cmd_cookies.append("clear session")
-    #trig_resp = api.Trigger(req)
-    #term_resp = api.Trigger_TerminateAllCommands(trig_resp)
-    #tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
-
+    tc.memleak = 0
+   
+    update_sgpolicy('tftp')
     resp = 0
     for pair in tc.workload_pairs:
        w1 = pair[0]
@@ -34,11 +27,26 @@ def Trigger(tc):
            if not w2.IsNaples():
                continue
 
-       req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
        SetupTFTPServer(w1)
        SetupTFTPClient(w2)
+       memreq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+       api.Trigger_AddNaplesCommand(memreq, naples.node_name,
+                              "/nic/bin/halctl clear session")
+       api.Trigger_AddNaplesCommand(memreq, naples.node_name,
+                        "/nic/bin/halctl show system memory slab --yaml")
+       mem_trig_resp = api.Trigger(memreq)
+       cmd = mem_trig_resp.commands[-1]
+       for command in mem_trig_resp.commands:
+           api.PrintCommandResults(command)
+       meminfo = get_meminfo(cmd, 'tftp')
+       for info in meminfo:
+          if (info['inuse'] != 0 or info['allocs'] != info['frees']):
+              tc.memleak = 1
+       mem_term_resp = api.Trigger_TerminateAllCommands(mem_trig_resp)
+       mem_resp = api.Trigger_AggregateCommandsResponse(mem_trig_resp, mem_term_resp)
 
+       req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                               "sh -c 'cat tftpdir/tftp_server.txt | grep \'I am the server\' ' ")
        tc.cmd_cookies.append("Before file transfer client")
@@ -58,15 +66,15 @@ def Trigger(tc):
                            (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address))
 
        ## Add Naples command validation
-       #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-       #                            "/nic/bin/halctl show session --alg tftp | grep UDP")
-       #tc.cmd_cookies.append("show session TFTP established")
-       #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-       #                        "/nic/bin/halctl show nwsec flow-gate | grep TFTP")
-       #tc.cmd_cookies.append("show flow-gate")
-       #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-       #                            "/nic/bin/halctl clear session --alg tftp")
-       #tc.cmd_cookies.append("clear session")
+       api.Trigger_AddNaplesCommand(req, naples.node_name, 
+                                   "/nic/bin/halctl show session --alg tftp | grep UDP")
+       tc.cmd_cookies.append("show session TFTP established")
+       api.Trigger_AddNaplesCommand(req, naples.node_name,
+                               "/nic/bin/halctl show nwsec flow-gate | grep TFTP")
+       tc.cmd_cookies.append("show flow-gate")
+       api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                   "/nic/bin/halctl clear session --alg tftp")
+       tc.cmd_cookies.append("clear session")
  
        api.Trigger_AddCommand(req, w2.node_name, w2.workload_name,
                            "sh -c 'cat tftpdir/tftp_server.txt | sudo grep \'I am the server\' ' ")
@@ -81,34 +89,44 @@ def Trigger(tc):
        Cleanup(w1, w2)
        resp += 1
 
-    #req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                       "/nic/bin/halctl show system memory slab | grep ftp")
-    #tc.cmd_cookies.append("Memory stats After")
-    #trig_resp = api.Trigger(req)
-    #term_resp = api.Trigger_TerminateAllCommands(trig_resp)
-    #tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+       memreq = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+       api.Trigger_AddNaplesCommand(memreq, naples.node_name, 
+                           "/nic/bin/halctl show system memory slab --yaml")
+       mem_trig_resp = api.Trigger(memreq)
+       cmd = mem_trig_resp.commands[-1]
+       for command in mem_trig_resp.commands:
+           api.PrintCommandResults(command)
+       meminfo_after = get_meminfo(cmd, 'tftp')
+       for idx in range(0, len(meminfo)):
+          if (meminfo[idx]['inuse'] != meminfo_after[idx]['inuse'] or \
+              meminfo_after[idx]['allocs'] != meminfo_after[idx]['frees']):
+              tc.memleak = 1
+       mem_term_resp = api.Trigger_TerminateAllCommands(mem_trig_resp)
+       mem_resp = api.Trigger_AggregateCommandsResponse(mem_trig_resp, mem_term_resp)
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
     result = api.types.status.SUCCESS
     cookie_idx = 0
+
+    if tc.memleak == 1:
+       api.Logger.info("Memleak failure detected")
+       return api.types.status.FAILURE
+
     for resp in tc.resp:
         for cmd in resp.commands:
             api.Logger.info("Results for %s" % (tc.cmd_cookies[cookie_idx]))
             api.PrintCommandResults(cmd)
             if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-                if tc.cmd_cookies[cookie_idx].find("Before") != -1:
+                if tc.cmd_cookies[cookie_idx].find("Before") != -1 or \
+                   tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1:
                     result = api.types.status.SUCCESS
                 else:
                     result = api.types.status.FAILURE
-            if (tc.cmd_cookies[cookie_idx].find("show session TFTP") != -1 or \
-                tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1 or \
-                tc.cmd_cookies[cookie_idx].find("clear session") != -1) and \
-                cmd.stdout == '':
-                result = api.types.status.FAILURE
-            #Add memleak validation
+            if tc.cmd_cookies[cookie_idx].find("show session TFTP") != -1 and \
+               cmd.stdout == '':
+               result = api.types.status.FAILURE
             cookie_idx += 1
     return result
 

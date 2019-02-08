@@ -183,7 +183,7 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 	// Recompute hash
 	for i, r := range sgp.Spec.Rules {
 		ruleHash := generateHash(&r)
-		sgp.Spec.Rules[i].ID = generateHash(&r)
+		sgp.Spec.Rules[i].ID = ruleHash
 		if len(r.AppName) > 0 {
 			meta := api.ObjectMeta{
 				Tenant:    sgp.Tenant,

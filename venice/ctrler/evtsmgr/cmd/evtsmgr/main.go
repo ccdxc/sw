@@ -75,11 +75,13 @@ func main() {
 	logger := log.SetConfig(config)
 
 	// create events recorder
-	if _, err := recorder.NewRecorder(&recorder.Config{
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.EvtsMgr},
-		EvtTypes: evtsapi.GetEventTypes()}, logger); err != nil {
+		EvtTypes: evtsapi.GetEventTypes()}, logger)
+	if err != nil {
 		logger.Fatalf("failed to create events recorder, err: %v", err)
 	}
+	defer evtsRecorder.Close()
 
 	// create resolver client
 	resolverClient := resolver.New(&resolver.Config{

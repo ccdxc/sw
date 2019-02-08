@@ -51,3 +51,4 @@ platform/src/third-party/lib/ncurses/include/*
 platform/src/third-party/lib/ncurses/aarch64/*
 
 nic/sdk/third-party/dpdk/*
+nic/sdk/third-party/asic/*

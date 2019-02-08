@@ -2,7 +2,7 @@ import glob
 import json
 import iota.harness.api as api
 import iota.test.iris.config.infra.main as cfg_main
-
+import pdb
 
 def AddOneConfig(config):
     cfgObjects = (json.load(open(config)))

@@ -670,14 +670,47 @@ func (it *veniceIntegSuite) startAgent() {
 func (it *veniceIntegSuite) pollTimeout() string {
 	if it.config.DatapathKind == "hal" {
 		// higher timeout when running on real HAL
-		return fmt.Sprintf("%ds", 30+(it.config.NumHosts))
+		return fmt.Sprintf("%ds", 150+(it.config.NumHosts))
 	}
 
-	return fmt.Sprintf("%ds", 10+(it.config.NumHosts))
+	return fmt.Sprintf("%ds", 60+(it.config.NumHosts))
 }
 
 func (it *veniceIntegSuite) loggedInCtx() (context.Context, error) {
 	return authntestutils.NewLoggedInContext(context.Background(), fmt.Sprintf("localhost:%s", it.config.APIGatewayPort), it.userCred)
+}
+
+func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
+	// verify smartnics are all admitted
+	tutils.AssertEventually(c, func() (bool, interface{}) {
+		ctx, err := it.loggedInCtx()
+		if err != nil {
+			return false, err
+		}
+		snicList, err := it.apisrvClient.ClusterV1().SmartNIC().List(ctx, &api.ListWatchOptions{})
+		if err != nil {
+			return false, err
+		}
+		if len(snicList) < len(it.agents) {
+			return false, snicList
+		}
+		for _, snic := range snicList {
+			if snic.Status.AdmissionPhase != "ADMITTED" {
+				return false, snicList
+			}
+		}
+
+		return true, nil
+	}, "Smartnics are not yet admitted", "1s", it.pollTimeout())
+
+	// verify agents are all connected
+	for _, ag := range it.agents {
+		tutils.AssertEventually(c, func() (bool, interface{}) {
+			return ag.IsNpmClientConnected(), nil
+		}, "agents are not connected to NPM", "1s", it.pollTimeout())
+	}
+
+	log.Infof("All Naples are connected")
 }
 
 func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
@@ -805,10 +838,18 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	c.Assert(err, check.IsNil)
 
 	it.vcHub.SetUp(c, it.config.NumHosts)
+
+	// wait for naples to connect to Venice
+	it.verifyNaplesConnected(c)
+	time.Sleep(time.Second * 2)
+	log.Infof("============================= Setup done ==========================")
 }
 
 func (it *veniceIntegSuite) SetUpTest(c *check.C) {
 	log.Infof("============================= %s starting ==========================", c.TestName())
+
+	// verify all naples are connected
+	it.verifyNaplesConnected(c)
 }
 
 func (it *veniceIntegSuite) TearDownTest(c *check.C) {
@@ -820,6 +861,7 @@ func (it *veniceIntegSuite) TearDownTest(c *check.C) {
 }
 
 func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
+	log.Infof("============================= Tearing down Setup ==========================")
 	// stop delphi hub
 	it.hub.Stop()
 	// stop the agents

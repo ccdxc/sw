@@ -7,7 +7,7 @@ include ${MKINFRA}/config_${ARCH}.mk
 # find csrPerlAPI.pm in $SEMIFORE_HOME/lib
 export SEMIFORE_HOME = .
 
-ASICROOT        := ${CURDIR}/../../../../../nic/sdk/third-party/asic
+ASICROOT        := ${SDKDIR}/third-party/asic
 PMFILES         := $(wildcard ${ASICROOT}/capri/verif/common/csr_gen/*.pm)
 MODULE_BIN_DIR  := ${BLD_OUT_DIR}/capviewdb_submake/
 

@@ -1,7 +1,10 @@
 #! /usr/bin/python3
 from iota.test.iris.testcases.alg.dns.dns_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
+import pdb
 
 def Setup(tc):
+    update_sgpolicy('dns')
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -48,7 +51,7 @@ def Trigger(tc):
 
     ## Add Naples command validation
     api.Trigger_AddNaplesCommand(req, naples.node_name,
-                "/nic/bin/halctl show session --dstport 53 --dstip {}".format(server.ip_address))
+                      "/nic/bin/halctl show session --dstport 53 --dstip {} --yaml".format(server.ip_address))
     tc.cmd_cookies.append("Find session")
  
     trig_resp = api.Trigger(req)
@@ -72,6 +75,9 @@ def Verify(tc):
              else:
                  result = api.types.status.FAILURE
         #Add a stricter check for session being gone
+        if tc.cmd_cookies[cookie_idx].find("Find session") != -1 and \
+           cmd.stdout != '':
+           result = api.types.status.FAILURE
         cookie_idx += 1
 
     return result

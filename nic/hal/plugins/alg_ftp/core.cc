@@ -105,6 +105,7 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
         } else if ((ctx.session()->iflow->state >= session::FLOW_TCP_STATE_FIN_RCVD) ||
                    (ctx.session()->rflow &&
                     (ctx.session()->rflow->state >= session::FLOW_TCP_STATE_FIN_RCVD))) {
+            l4_alg_status_t   *ctrl_l4_sess = g_ftp_state->get_ctrl_l4sess(app_sess);
             /*
              * We received FIN/RST on the control session
              * and we have data sessions hanging. We cannot
@@ -112,6 +113,10 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
              */
             HAL_TRACE_DEBUG("Received FIN/RST when data session is active - bailing");
             ctx.set_feature_status(HAL_RET_INVALID_CTRL_SESSION_OP);
+            // Mark this entry for deletion so we cleanup
+            // when we clean up the data sessions
+            if (ctrl_l4_sess)
+                ctrl_l4_sess->entry.deleting = true;
             return fte::PIPELINE_END;
         } else {
             /*
@@ -129,13 +134,37 @@ fte::pipeline_action_t alg_ftp_session_delete_cb(fte::ctx_t &ctx) {
      */
     g_ftp_state->cleanup_l4_sess(l4_sess);
     if (ctx.force_delete() && dllist_empty(&app_sess->exp_flow_lhead) &&
-        dllist_empty(&app_sess->exp_flow_lhead)) {
+        dllist_count(&app_sess->l4_sess_lhead)) {
         /*
          * If this was the last session hanging and there is no
          * HAL session for control session. This is the right time
          * to clean it
          */
         g_ftp_state->cleanup_app_session(l4_sess->app_session);
+    } else if (dllist_empty(&app_sess->exp_flow_lhead) && 
+               dllist_count(&app_sess->l4_sess_lhead) == 1) {
+        l4_alg_status_t   *ctrl_l4_sess = (l4_alg_status_t *)dllist_entry(\
+                  app_sess->l4_sess_lhead.next, l4_alg_status_t, l4_sess_lentry);
+        /*
+         * There are cases when the FIN is received back to back and control
+         * session ends up processing it first. In those cases, we reject control
+         * session cleanup. To clean up stale sessions, we check if this is the
+         * single hanging session and attempt clean it up if the state is BIDIR_FIN_RCVD.
+         */
+        if (ctrl_l4_sess != NULL && ctrl_l4_sess->isCtrl == true && 
+            ctrl_l4_sess->entry.deleting == true) {
+            hal::session_t *session = hal::find_session_by_handle(ctrl_l4_sess->sess_hdl);
+
+            if (session != NULL && 
+                session->iflow->state == session::FLOW_TCP_STATE_BIDIR_FIN_RCVD) {
+                if (session->fte_id == fte::fte_id()) {
+                    session_delete_in_fte(session->hal_handle);
+                } else {
+                    fte::session_delete_async(session);
+                }
+            }
+        }
+            
     }
 
     return fte::PIPELINE_CONTINUE;
@@ -460,6 +489,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     ftp_info = (ftp_info_t *)entry->info;
     if (entry->isCtrl != true && sfw_info != NULL) {
         sfw_info->skip_sfw = ftp_info->skip_sfw;
+        sfw_info->idle_timeout = entry->idle_timeout;
     }
     ctx.set_feature_name(FTE_FEATURE_ALG_FTP.c_str());
     ctx.register_feature_session_state(&entry->fte_feature_state);
@@ -505,7 +535,7 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
     exp_flow->entry.handler = expected_flow_handler;
     exp_flow->isCtrl = false;
     exp_flow->alg = l4_sess->alg;
-    exp_flow->sess_hdl = l4_sess->sess_hdl;
+    exp_flow->idle_timeout = l4_sess->idle_timeout;
     data_ftp_info = (ftp_info_t *)g_ftp_state->alg_info_slab()->alloc();
     SDK_ASSERT(data_ftp_info != NULL);
 
@@ -652,7 +682,7 @@ static void ftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
                                ctx.feature_session_state(FTE_FEATURE_ALG_FTP));
 
     if (!status) {
-        if (l4_sess && l4_sess->isCtrl == TRUE) {
+        if (l4_sess && l4_sess->isCtrl == true) {
             g_ftp_state->cleanup_app_session(l4_sess->app_session);
         }
     } else {
@@ -705,6 +735,7 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
             SDK_ASSERT_RETURN((ftp_info != NULL), fte::PIPELINE_CONTINUE);
             l4_sess->isCtrl = TRUE;
             l4_sess->info = ftp_info;
+            l4_sess->idle_timeout = sfw_info->idle_timeout;
             ftp_info->state = FTP_INIT;
             ftp_info->callback = __parse_ftp_req;
             ftp_info->sip = ctx.key().dip;

@@ -32,7 +32,8 @@
                         "port": "59379"
                      }
                   ]
-               }
+               },
+               "app-name": ""
          },
          {
                "action": "PERMIT",
@@ -49,44 +50,6 @@
                      {
                         "protocol": "udp",
                         "port": "59739"
-                     }
-                  ]
-               }
-         },
-         {
-               "action": "PERMIT",
-               "source": {
-                  "addresses": [
-                     "192.168.100.101"
-                  ]
-               },
-               "destination": {
-                  "addresses": [
-                     "192.168.100.102"
-                  ],
-                  "app-configs": [
-                     {
-                        "protocol": "udp",
-                        "port": "69"
-                     }
-                  ]
-               }
-         },
-         {
-               "action": "PERMIT",
-               "source": {
-                  "addresses": [
-                     "192.168.100.102"
-                  ]
-               },
-               "destination": {
-                  "addresses": [
-                     "192.168.100.101"
-                  ],
-                  "app-configs": [
-                     {
-                        "protocol": "udp",
-                        "port": "69"
                      }
                   ]
                }

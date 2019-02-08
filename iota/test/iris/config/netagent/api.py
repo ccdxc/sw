@@ -126,6 +126,12 @@ def AddSecurityProfiles():
 def DeleteSecurityProfiles():
     return DeleteConfigObjects(cfg_api.QueryConfigs(kind='SecurityProfile'))
 
+def AddApps():
+    return PushConfigObjects(cfg_api.QueryConfigs(kind='App'))
+
+def DeleteApps():
+    return DeleteConfigObjects(cfg_api.QueryConfigs(kind='App'))
+
 
 def PortUp():
     port_objects = cfg_api.QueryConfigs(kind='Port')
@@ -167,6 +173,8 @@ def PushBaseConfig():
     objects = QueryConfigs(kind='Endpoint')
     UpdateNodeUuidEndpoints(objects)
     PushConfigObjects(objects, ignore_error=True)
+    objects = QueryConfigs(kind='App')
+    PushConfigObjects(objects, ignore_error=True)
     objects = QueryConfigs(kind='SGPolicy')
     PushConfigObjects(objects, ignore_error=True)
     objects = QueryConfigs(kind='SecurityProfile')
@@ -180,6 +188,8 @@ def DeleteBaseConfig():
     objects = QueryConfigs(kind='SecurityProfile')
     DeleteConfigObjects(objects, ignore_error=True)
     objects = QueryConfigs(kind='SGPolicy')
+    DeleteConfigObjects(objects, ignore_error=True)
+    objects = QueryConfigs(kind='App')
     DeleteConfigObjects(objects, ignore_error=True)
     objects = QueryConfigs(kind='Endpoint')
     DeleteConfigObjects(objects, ignore_error=True)

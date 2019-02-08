@@ -224,6 +224,8 @@ message Permission {
         MetricsQuery     = 3; // ui-hint: MetricsQuery
         // Audit events
         AuditEvent       = 4; // ui-hint: AuditEvent
+        // Fwlogs
+        FwlogsQuery      = 5; // ui-hint: FwlogsQuery
     }
 
     // ActionType is an action on a resource that a permission allows

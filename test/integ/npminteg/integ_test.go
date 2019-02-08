@@ -64,7 +64,7 @@ type integTestSuite struct {
 }
 
 // test args
-var numAgents = flag.Int("agents", numIntegTestAgents, "Number of agents")
+var numHosts = flag.Int("hosts", numIntegTestAgents, "Number of agents")
 var datapathKind = flag.String("datapath", agentDatapathKind, "Specify the datapath type. mock | hal")
 
 var (
@@ -83,6 +83,9 @@ func TestNpmInteg(t *testing.T) {
 	// integ test suite
 	var sts = &integTestSuite{}
 
+	// set timeout values
+	SetDefaultIntervals(time.Millisecond*500, time.Second*60)
+
 	var _ = Suite(sts)
 	TestingT(t)
 }
@@ -93,7 +96,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	it.hub.Start()
 
 	// test parameters
-	it.numAgents = *numAgents
+	it.numAgents = *numHosts
 	it.datapathKind = datapath.Kind(*datapathKind)
 
 	err := testutils.SetupIntegTLSProvider()
@@ -157,7 +160,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	it.ctrler = ctrler
 	it.resolverClient = rc
 
-	log.Infof("Creating %d/%d agents", it.numAgents, *numAgents)
+	log.Infof("Creating %d/%d agents", it.numAgents, *numHosts)
 
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
@@ -177,6 +180,15 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 		c.Fatalf("cannot create grpc client. Err: %v", err)
 	}
 	it.apisrvClient = apicl
+
+	// verify agents are all connected
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			return ag.nagent.IsNpmClientConnected(), nil
+		}, "agents are not connected to NPM", "1s", it.pollTimeout())
+	}
+	time.Sleep(time.Second * 2)
+
 }
 
 func (it *integTestSuite) SetUpTest(c *C) {

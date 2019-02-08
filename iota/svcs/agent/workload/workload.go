@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
@@ -286,6 +287,12 @@ func (app *containerWorkload) AddInterface(name string, macAddress string, ipadd
 
 func (app *containerWorkload) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
 
+	fixUtf := func(r rune) rune {
+		if r == utf8.RuneError {
+			return -1
+		}
+		return r
+	}
 	cmdCtx := &Cmd.CommandCtx{}
 	containerCmdHandle, err := app.containerHandle.SetUpCommand(cmd, dir, background, shell)
 	if err != nil {
@@ -295,8 +302,8 @@ func (app *containerWorkload) RunCommand(cmd []string, dir string, timeout uint3
 	if !background {
 		cmdResp, _ := app.containerHandle.RunCommand(containerCmdHandle, timeout)
 		cmdCtx.Done = true
-		cmdCtx.Stdout = cmdResp.Stdout
-		cmdCtx.Stderr = cmdResp.Stderr
+		cmdCtx.Stdout = strings.Map(fixUtf, cmdResp.Stdout)
+		cmdCtx.Stderr = strings.Map(fixUtf, cmdResp.Stderr)
 		cmdCtx.ExitCode = cmdResp.RetCode
 		cmdCtx.TimedOut = cmdResp.Timedout
 		return cmdCtx, "", nil
@@ -306,8 +313,8 @@ func (app *containerWorkload) RunCommand(cmd []string, dir string, timeout uint3
 		cmdResp, _ := app.containerHandle.RunCommand(containerCmdHandle, 0)
 		cmdCtx.Done = true
 		cmdCtx.ExitCode = cmdResp.RetCode
-		cmdCtx.Stdout = cmdResp.Stdout
-		cmdCtx.Stderr = cmdResp.Stderr
+		cmdCtx.Stdout = strings.Map(fixUtf, cmdResp.Stdout)
+		cmdCtx.Stderr = strings.Map(fixUtf, cmdResp.Stderr)
 	}(cmdCtx)
 
 	handleKey := app.genBgCmdHandle()

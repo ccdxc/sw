@@ -120,11 +120,12 @@ func TestMain(m *testing.M) {
 	l := log.WithContext("module", "CrudOpsTest")
 
 	// create events recorder
-	_, _ = recorder.NewRecorder(&recorder.Config{
+	r, _ := recorder.NewRecorder(&recorder.Config{
 		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "integration_main_test"},
 		EvtTypes:      evtsapi.GetEventTypes(),
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true}, l)
+	defer r.Close()
 
 	// TLS is needed for ApiServer to know who is making a request (ApiGw, controller, etc)
 

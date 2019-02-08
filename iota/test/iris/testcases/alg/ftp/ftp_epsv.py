@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import time
 from iota.test.iris.testcases.alg.ftp.ftp_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
 
 def Setup(tc):
     return api.types.status.SUCCESS
@@ -54,11 +55,18 @@ def Trigger(tc):
     client = pairs[0][1]
     tc.cmd_cookies = []
 
+    naples = server
+    if not server.IsNaples():
+       naples = client
+       if not client.IsNaples():
+          return api.types.status.FAILURE
+
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
     api.Logger.info("Starting FTP test from %s" % (tc.cmd_descr))
 
+    update_sgpolicy('ftp')
     SetupFTPServer(server.node_name, server.workload_name)
     SetupFTPClient(client.node_name, client.workload_name)
 
@@ -79,6 +87,9 @@ def Trigger(tc):
     tc.cmd_cookies.append("Run FTP PUT")
 
     ## Add Naples command validation
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg ftp")
+    tc.cmd_cookies.append("show session FTP established")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                            "cat ftpdir/ftp_server.txt | grep \"I am FTP server\"")

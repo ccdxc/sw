@@ -15,14 +15,14 @@ using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::sfw;
 
 static void incr_parse_error(l4_alg_status_t *sess) {
-    SDK_ATOMIC_INC_UINT32(&((tftp_info_t *)sess->info)->parse_errors, 1);
+    SDK_ATOMIC_INC_UINT32(&(((tftp_info_t *)sess->info)->parse_errors), 1);
 }
 
 /*
  * APP Session delete handler
  */
 static void incr_unknown_opcode(l4_alg_status_t *sess) {
-    SDK_ATOMIC_INC_UINT32(&((tftp_info_t *)sess->info)->unknown_opcode, 1);
+    SDK_ATOMIC_INC_UINT32(&(((tftp_info_t *)sess->info)->unknown_opcode), 1);
 }
 
 /*
@@ -46,7 +46,7 @@ fte::pipeline_action_t alg_tftp_session_get_cb(fte::ctx_t &ctx) {
 
     sess_resp->mutable_status()->set_alg(nwsec::APP_SVC_TFTP);
         
-    if (l4_sess->isCtrl == TRUE) {
+    if (l4_sess->isCtrl == true) {
         tftp_info_t *info = ((tftp_info_t *)l4_sess->info);
         if (info) {
             sess_resp->mutable_status()->mutable_tftp_info()->\
@@ -84,7 +84,7 @@ fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
         return fte::PIPELINE_CONTINUE;
 
     app_sess = l4_sess->app_session;
-    if (l4_sess->isCtrl == TRUE) {
+    if (l4_sess->isCtrl == true) {
         if (ctx.force_delete() == true || (dllist_empty(&app_sess->exp_flow_lhead)\
               && dllist_count(&app_sess->l4_sess_lhead) == 1 &&
             ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
@@ -110,10 +110,12 @@ fte::pipeline_action_t alg_tftp_session_delete_cb(fte::ctx_t &ctx) {
      * Cleanup the data session that is getting timed out
      */
     g_tftp_state->cleanup_l4_sess(l4_sess);
+    HAL_TRACE_DEBUG("Cleaning up L4 session for tftp session: {}", ctx.session()->hal_handle);
     if (dllist_empty(&app_sess->exp_flow_lhead) &&
         dllist_count(&app_sess->l4_sess_lhead) == 1 &&
         ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
                    l4_alg_status_t, l4_sess_lentry))->sess_hdl == HAL_HANDLE_INVALID) {
+         HAL_TRACE_DEBUG("Posting cleanup app session for : {}", ctx.session()->hal_handle);
         /*
          * If this was the last session hanging and there is no
          * HAL session for control session. This is the right time
@@ -146,8 +148,9 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
 
     entry = (l4_alg_status_t *)wentry;
     tftp_info = (tftp_info_t *)entry->info;
-    if (entry->isCtrl != TRUE) {
+    if (entry->isCtrl != true) {
         sfw_info->skip_sfw = tftp_info->skip_sfw;
+        sfw_info->idle_timeout = entry->idle_timeout;
         HAL_TRACE_DEBUG("Expected flow handler - skip sfw {}", sfw_info->skip_sfw);
     }
     ctx.set_feature_name(FTE_FEATURE_ALG_TFTP.c_str());
@@ -172,13 +175,13 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
     SDK_ASSERT(l4_sess != NULL);
 
     if (!status) {
-        if (l4_sess && l4_sess->isCtrl == TRUE) {
+        if (l4_sess && l4_sess->isCtrl == true) {
             g_tftp_state->cleanup_app_session(l4_sess->app_session);
         }
     } else {
         HAL_TRACE_DEBUG("In TFTP Completion handler ctrl");
         l4_sess->sess_hdl = ctx.session()->hal_handle;
-        if (l4_sess->isCtrl == TRUE) { /* Control session */
+        if (l4_sess->isCtrl == true) { /* Control session */
             // Set the responder flow key & mark sport as 0
             key = ctx.get_key(hal::FLOW_ROLE_RESPONDER);
             key.sport = 0;
@@ -190,11 +193,14 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
             SDK_ASSERT(ret == HAL_RET_OK);
             exp_flow->entry.handler = expected_flow_handler;
             exp_flow->alg = nwsec::APP_SVC_TFTP;
-            exp_flow->info = l4_sess->info;
+            tftp_info = (tftp_info_t *)g_tftp_state->alg_info_slab()->alloc();
+            tftp_info->skip_sfw = true;
+            tftp_info->callback = process_tftp;
+            tftp_info->tftpop = ((tftp_info_t *)l4_sess->info)->tftpop;
+            exp_flow->info = tftp_info;
+            exp_flow->idle_timeout = l4_sess->idle_timeout; 
             exp_flow->sess_hdl = l4_sess->sess_hdl;
             HAL_TRACE_DEBUG("Setting expected flow {:p}", (void *)exp_flow);
-            l4_sess->info = (tftp_info_t *)g_tftp_state->alg_info_slab()->alloc();
-            SDK_ASSERT(l4_sess->info != NULL);
         } else { /* Data session */
             /*
              * Data session flow has been installed sucessfully
@@ -274,10 +280,15 @@ hal_ret_t process_tftp(fte::ctx_t& ctx, l4_alg_status_t *exp_flow) {
     return ret;
 }
 
-hal_ret_t process_tftp_first_packet(fte::ctx_t& ctx, uint16_t *tftpop) {
+hal_ret_t process_tftp_first_packet(fte::ctx_t& ctx, l4_alg_status_t *l4_sess) {
     hal_ret_t               ret = HAL_RET_OK;
     const uint8_t          *pkt = ctx.pkt();
     uint32_t                offset = 0;
+    tftp_info_t            *tftp_info = NULL;
+
+    SDK_ASSERT(l4_sess != NULL);
+    tftp_info = (tftp_info_t *)l4_sess->info;
+    SDK_ASSERT(tftp_info != NULL);
 
     // Payload offset from CPU header
     offset = ctx.cpu_rxhdr()->payload_offset;
@@ -286,23 +297,26 @@ hal_ret_t process_tftp_first_packet(fte::ctx_t& ctx, uint16_t *tftpop) {
         // Should we drop the packet at this point ?
         HAL_TRACE_ERR("Packet len: {} is less than payload offset: {}", \
                       ctx.pkt_len(),  offset);
-        return HAL_RET_INVALID_ARG;
+        incr_parse_error(l4_sess);
+        return ret;
     }
 
     // Fetch 2-byte opcode
-    *tftpop = __pack_uint16(pkt, &offset);
+    tftp_info->tftpop = __pack_uint16(pkt, &offset);
 
     // Only act on it if there is a known opcode
-    if (*tftpop != TFTP_RRQ && *tftpop != TFTP_WRQ) {
+    if (tftp_info->tftpop != TFTP_RRQ && tftp_info->tftpop != TFTP_WRQ) {
         HAL_TRACE_DEBUG("Unknown Opcode -- parse error");
-        return HAL_RET_INVALID_OP;
+        incr_parse_error(l4_sess);
+        return ret;
     }
 
-    HAL_TRACE_DEBUG("Received Opcode:{}", (*tftpop==TFTP_RRQ)?"TFTP_RRQ":"TFTP_WRQ");
+    HAL_TRACE_DEBUG("Received Opcode:{}", (tftp_info->tftpop==TFTP_RRQ)?"TFTP_RRQ":"TFTP_WRQ");
 
     // Set Rflow to be invalid and ALG proto state
     // We want the flow miss to happen on Rflow
     ctx.set_valid_rflow(false);
+    ctx.register_completion_handler(tftp_completion_hdlr);
 
     return ret;
 }
@@ -315,7 +329,6 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
     app_session_t                 *app_sess = NULL;
     l4_alg_status_t               *l4_sess = NULL;
     tftp_info_t                   *tftp_info = NULL;
-    uint16_t                       tftpop = 0;
     sfw_info_t                    *sfw_info = (sfw_info_t*)\
                                   ctx.feature_state(FTE_FEATURE_SFW);
     fte::feature_session_state_t  *alg_state = NULL;
@@ -329,31 +342,25 @@ fte::pipeline_action_t alg_tftp_exec(fte::ctx_t &ctx) {
     if (sfw_info->alg_proto == nwsec::APP_SVC_TFTP &&
         (!ctx.existing_session())) {
         HAL_TRACE_DEBUG("Alg Proto TFTP is set");
+        /*
+         * Alloc APP session, EXP flow and TFTP info
+         */
+        ret = g_tftp_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
+        SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
+        ret = g_tftp_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
+        SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
+        l4_sess->alg = nwsec::APP_SVC_TFTP;
+        tftp_info = (tftp_info_t *)g_tftp_state->alg_info_slab()->alloc();
+        SDK_ASSERT_RETURN((tftp_info != NULL), fte::PIPELINE_CONTINUE);
+        l4_sess->isCtrl = true;
+        l4_sess->info = tftp_info;
+        l4_sess->idle_timeout = sfw_info->idle_timeout;
+        process_tftp_first_packet(ctx, l4_sess);
 
-        ret = process_tftp_first_packet(ctx, &tftpop);
-        if (ret == HAL_RET_OK) {
-            /*
-             * Alloc APP session, EXP flow and TFTP info
-             */
-            ret = g_tftp_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
-            SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
-            ret = g_tftp_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
-            SDK_ASSERT_RETURN((ret == HAL_RET_OK), fte::PIPELINE_CONTINUE);
-            l4_sess->alg = nwsec::APP_SVC_TFTP;
-            tftp_info = (tftp_info_t *)g_tftp_state->alg_info_slab()->alloc();
-            SDK_ASSERT_RETURN((tftp_info != NULL), fte::PIPELINE_CONTINUE);
-            l4_sess->isCtrl = TRUE;
-            l4_sess->info = tftp_info;
-            tftp_info->tftpop = tftpop;
-            tftp_info->callback = process_tftp;
-            tftp_info->skip_sfw = TRUE;
-
-            /*
-             * Register Feature session state & completion handler
-             */
-            ctx.register_completion_handler(tftp_completion_hdlr);
-            ctx.register_feature_session_state(&l4_sess->fte_feature_state);
-        }
+        /*
+         * Register Feature session state
+         */
+        ctx.register_feature_session_state(&l4_sess->fte_feature_state);
     } else if (alg_state != NULL) {
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
         if (l4_sess != NULL && l4_sess->alg == nwsec::APP_SVC_TFTP) {

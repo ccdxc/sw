@@ -175,7 +175,7 @@ func (q *Server) Metrics(c context.Context, ql *telemetry_query.MetricsQueryList
 	}
 
 	if err := q.broker.ClusterCheck(); err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	queryString := strings.Join(queries, "; ")
 

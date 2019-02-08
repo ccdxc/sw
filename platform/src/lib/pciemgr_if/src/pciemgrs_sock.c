@@ -27,15 +27,15 @@ typedef struct pmsclient_s {
     int fd;
     struct sockaddr_in addr;
     socklen_t addrlen;
-    int connected:1;
+    unsigned int connected:1;
 } pmsclient_t;
 
 typedef struct pmserver_s {
     int fd;
     pciemgrs_handler_t *handler;
-    int open:1;
-    int sync_writes:1;
-    int unix_socket:1;
+    unsigned int open:1;
+    unsigned int sync_writes:1;
+    unsigned int unix_socket:1;
     char unix_socket_path[265];
     pmsclient_t clients[NCLIENTS];
 } pmserver_t;
@@ -123,6 +123,7 @@ client_msg_cb(void *arg)
     /* in case handler needs to know client context */
     m->hdr.tag = pmsc;
     if (pms->handler) pms->handler(m);
+    else pciemgr_msgfree(m);
 }
 
 static void

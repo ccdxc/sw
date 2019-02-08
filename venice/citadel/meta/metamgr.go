@@ -24,15 +24,15 @@ import (
 // MetadataMgr is the metadata manager instance
 type MetadataMgr struct {
 	sync.Mutex
-	waitGrp        sync.WaitGroup               // wait group to wait on all go routines to exit
-	clusterType    string                       // type of the cluster
-	nodeUUID       string                       // my id
-	kvs            kvstore.Interface            // kvstore client
-	cluster        TscaleCluster                // metadata cluster state
-	nodes          map[string]*TscaleNodeInfo   // list of all nodes
-	rpcClients     map[string]*rpckit.RPCClient // rpc connections
-	rebalnceCancel context.CancelFunc           // stop rebalance thread
-	cfg            ClusterConfig                // cluster config
+	waitGrp        sync.WaitGroup             // wait group to wait on all go routines to exit
+	clusterType    string                     // type of the cluster
+	nodeUUID       string                     // my id
+	kvs            kvstore.Interface          // kvstore client
+	cluster        TscaleCluster              // metadata cluster state
+	nodes          map[string]*TscaleNodeInfo // list of all nodes
+	rpcClients     sync.Map                   // rpc connections, map[string]*rpckit.RPCClient
+	rebalnceCancel context.CancelFunc         // stop rebalance thread
+	cfg            ClusterConfig              // cluster config
 }
 
 // DefaultRPCTimeout is the default RPC call timeout
@@ -51,7 +51,7 @@ func NewMetadataMgr(clusterType, nodeUUID string, kvs kvstore.Interface, cfg *Cl
 			NodeMap:    make(map[string]*NodeState),
 		},
 		nodes:      make(map[string]*TscaleNodeInfo),
-		rpcClients: make(map[string]*rpckit.RPCClient),
+		rpcClients: sync.Map{},
 		cfg:        *cfg,
 	}
 
@@ -80,9 +80,12 @@ func (md *MetadataMgr) Stop() error {
 	md.waitGrp.Wait()
 
 	// close the rpc clients
-	for _, rc := range md.rpcClients {
-		rc.Close()
-	}
+	md.rpcClients.Range(func(k, v interface{}) bool {
+		if rc, ok := v.(*rpckit.RPCClient); ok {
+			rc.Close()
+		}
+		return true
+	})
 
 	return nil
 }
@@ -349,7 +352,7 @@ func (md *MetadataMgr) delNode(node *TscaleNodeInfo) error {
 	}
 
 	// remove rpc client
-	delete(md.rpcClients, node.NodeUUID)
+	md.rpcClients.Delete(node.NodeUUID)
 
 	// update cluster
 	return md.updateCluster()
@@ -382,9 +385,12 @@ func (md *MetadataMgr) updateCluster() error {
 func (md *MetadataMgr) getRPCClient(nodeUUID string) (*grpc.ClientConn, error) {
 	// see if we already have an rpc client for this node
 	// FIXME: we should check if rpc client is still connected and retry
-	rclient, ok := md.rpcClients[nodeUUID]
-	if ok && rclient.ClientConn != nil {
-		return rclient.ClientConn, nil
+	if v, ok := md.rpcClients.Load(nodeUUID); ok {
+		if rclient, ok := v.(*rpckit.RPCClient); ok {
+			if rclient.ClientConn != nil {
+				return rclient.ClientConn, nil
+			}
+		}
 	}
 
 	// get node info for primary shard
@@ -395,14 +401,14 @@ func (md *MetadataMgr) getRPCClient(nodeUUID string) (*grpc.ClientConn, error) {
 	}
 
 	// dial the connection
-	rclient, err = rpckit.NewRPCClient(fmt.Sprintf("metanode-%s", md.nodeUUID), node.NodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithRemoteServerName(globals.Citadel))
+	rclient, err := rpckit.NewRPCClient(fmt.Sprintf("metanode-%s", md.nodeUUID), node.NodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithRemoteServerName(globals.Citadel))
 	if err != nil {
 		log.Errorf("Error connecting to rpc server %s. err: %v", node.NodeURL, err)
 		return nil, err
 	}
 
 	// save the rpc client for future use
-	md.rpcClients[node.NodeUUID] = rclient
+	md.rpcClients.Store(node.NodeUUID, rclient)
 
 	return rclient.ClientConn, nil
 }

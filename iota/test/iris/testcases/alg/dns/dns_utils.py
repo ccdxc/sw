@@ -3,7 +3,15 @@ import os
 import time
 import iota.harness.api as api
 
+LARGE_DOMAIN_NAME = 'Isthisabigenoughdomainnameforareallllllyyyyybigdomainserver.howtoconstructadomainname.thatislargerthanthemaximumdomainnamesize.doesntseemlikeaneasydeal.isthisbigenoughforareallllllyyyybigggggdomainname.thenamedoesntcrossthemaximumsize.atalllookslikeaa.com'
+LONG_LABEL = 'Isthisabigenoughdomainnameforareallllllyyyyybigdomainserverahowtoconstructadomainname'
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
+
+def GetTcpdumpData(node):
+    resp = api.CopyFromWorkload(node.node_name, node.workload_name, ['out.txt'], dir_path)
+    if resp is None:
+       return None
 
 def SetupDNSClient(client, server, qtype="NONE"):
     node = client.node_name
@@ -13,14 +21,16 @@ def SetupDNSClient(client, server, qtype="NONE"):
     f = open(dnsscapy, "w")
     f.write("#! /usr/bin/python3\n")
     f.write("from scapy.all import *\n")
+    f.write("import codecs\n")
     f.write("ip=IP(src=\"%s\", dst=\"%s\")\n"%(client.ip_address,server.ip_address))
     if qtype == "LARGE_DOMAIN_NAME":
-        f.write("dnspkt=UDP(sport=53333,dport=53)/DNS(rd=1, qd=DNSQR(qname='Isthisabigenoughdomainnameforareallllllyyyyybigdomainserver.howtoconstructadomainname.thatislargerthanthemaximumdomainnamesize.doesntseemlikeaneasydeal.isthisbigenoughforareallllllyyyybigggggdomainname.thenamedoesntcrossthemaximumsize.atalllookslikeaa.com'))\n")
+        f.write("dnspkt=UDP(sport=53333,dport=53)/DNS(rd=1, qd=DNSQR(qname=\'%s\'))\n"%(LARGE_DOMAIN_NAME))
     elif qtype == "LONG_LABEL":
-        f.write("dnspkt=UDP(sport=53333,dport=53)/DNS(rd=1, qd=DNSQR(qname='Isthisabigenoughdomainnameforareallllllyyyyybigdomainservera.howtoconstructadomainname.thatislargerthanthemaximumdomainnamesize.doesntseemlikeaneasydeal.isthisbigenoughforareallllllyyyybigggggdomainname.thenamedoesntcrossthemaximumsize.atalllookslike.com'))\n")
+        f.write("data=\'0000010000010000000000003b49737468697361626967656e6f756768646f6d61696e6e616d65666f72617265616c6c6c6c6c6c7979797979626967646f6d61696e736572766572686f77746f636f6e73747275637461646f6d61696e6e616d65197468617469736c61726765727468616e7468656d6178696d756d646f6d61696e6e616d6573697a6518646f65736e74736503636f6d0000010001\'\n")
+        f.write("dnspkt=UDP(sport=53333,dport=53)/codecs.decode(data, 'hex')\n")
     elif qtype == "MULTI_QUESTION":
         f.write("dnspkt=UDP(sport=53333,dport=53)/DNS(rd=2,qd=DNSQR(qname='www.thepacketgeek.com')/DNSQR(qname='test3.example.com'))\n")
-    f.write("send(ip/dnspkt)\n")
+    f.write("sendp(Ether(src=\"%s\", dst=\"%s\")/ip/dnspkt, iface=\"%s\")\n"%(client.mac_address, server.mac_address, client.interface))
     f.close()
 
     resp = api.CopyToWorkload(node, workload, [dnsscapy], 'dnsdir')

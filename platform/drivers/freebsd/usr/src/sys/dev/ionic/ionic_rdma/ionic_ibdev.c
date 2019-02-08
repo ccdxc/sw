@@ -1435,7 +1435,6 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 			ctx->fallback = req.fallback > 0;
 			if (!ctx->fallback)
 				goto err_dbid;
-			rc = -1;
 		}
 	}
 	if (ctx->fallback)
@@ -3954,6 +3953,12 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	if (rc)
 		goto err_qp;
 
+	if (attr->qp_type == IB_QPT_SMI ||
+	    attr->qp_type > IB_QPT_UD) {
+		rc = -EINVAL;
+		goto err_qp;
+	}
+
 	qp = kzalloc(sizeof(*qp), GFP_KERNEL);
 	if (!qp) {
 		rc = -ENOMEM;
@@ -3968,16 +3973,6 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	spin_lock_init(&qp->sq_lock);
 	spin_lock_init(&qp->rq_lock);
-
-	if (attr->qp_type == IB_QPT_SMI) {
-		rc = -EINVAL;
-		goto err_qp;
-	}
-
-	if (attr->qp_type > IB_QPT_UD) {
-		rc = -EINVAL;
-		goto err_qp;
-	}
 
 	if (attr->qp_type == IB_QPT_GSI)
 		rc = ionic_get_gsi_qpid(dev, &qp->qpid);
@@ -5101,6 +5096,11 @@ static int ionic_post_recv_common(struct ionic_ibdev *dev,
 	}
 
 out:
+	if (!cq) {
+		spin_unlock_irqrestore(&qp->rq_lock, irqflags);
+		goto out_unlocked;
+	}
+
 	/* irq remains saved here, not restored/saved again */
 	if (!spin_trylock(&cq->lock)) {
 		spin_unlock(&qp->rq_lock);
@@ -5130,6 +5130,7 @@ out:
 	spin_unlock(&qp->rq_lock);
 	spin_unlock_irqrestore(&cq->lock, irqflags);
 
+out_unlocked:
 	*bad = wr;
 	return rc;
 }

@@ -19,6 +19,7 @@ var _ api.ObjectMeta
 type ServiceTelemetryV1Client interface {
 	AutoWatchSvcTelemetryV1(ctx context.Context, in *api.ListWatchOptions) (TelemetryV1_AutoWatchSvcTelemetryV1Client, error)
 
+	Fwlogs(ctx context.Context, t *FwlogsQueryList) (*FwlogsQueryResponse, error)
 	Metrics(ctx context.Context, t *MetricsQueryList) (*MetricsQueryResponse, error)
 }
 
@@ -26,5 +27,6 @@ type ServiceTelemetryV1Client interface {
 type ServiceTelemetryV1Server interface {
 	AutoWatchSvcTelemetryV1(in *api.ListWatchOptions, stream TelemetryV1_AutoWatchSvcTelemetryV1Server) error
 
+	Fwlogs(ctx context.Context, t FwlogsQueryList) (FwlogsQueryResponse, error)
 	Metrics(ctx context.Context, t MetricsQueryList) (MetricsQueryResponse, error)
 }

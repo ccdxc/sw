@@ -161,7 +161,6 @@ fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
         fn(data);
     }
 
-    SDK_ASSERT_RETURN(t_inst == NULL, HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN(fte_id < hal::MAX_FTE_THREADS, HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN(fn, HAL_RET_INVALID_ARG);
 

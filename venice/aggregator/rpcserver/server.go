@@ -58,6 +58,11 @@ func (a *AggRPCSrv) Stop() {
 	<-a.grpcSrv.DoneCh
 }
 
+// Fwlogs implements the grpc method
+func (a *AggRPCSrv) Fwlogs(c context.Context, qs *telemetry_query.FwlogsQueryList) (*telemetry_query.FwlogsQueryResponse, error) {
+	return nil, nil
+}
+
 // Metrics implements the grpc method
 func (a *AggRPCSrv) Metrics(c context.Context, qs *telemetry_query.MetricsQueryList) (*telemetry_query.MetricsQueryResponse, error) {
 	/*

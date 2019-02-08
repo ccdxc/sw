@@ -51,7 +51,8 @@ var (
 )
 
 // createEventsProxy helper function that creates events proxy RPC server and client
-func createEventsProxy(t *testing.T, proxyURL, eventsStorePath string) (*epgrpc.RPCServer, *rpckit.RPCClient, *exporters.MockExporter) {
+func createEventsProxy(t *testing.T, proxyURL, eventsStorePath string) (*epgrpc.RPCServer,
+	events.Dispatcher, *rpckit.RPCClient, *exporters.MockExporter) {
 	// create events dispatcher
 	evtsDispatcher, err := dispatcher.NewDispatcher(testDedupInterval, testSendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
@@ -71,7 +72,7 @@ func createEventsProxy(t *testing.T, proxyURL, eventsStorePath string) (*epgrpc.
 	rpcClient, err := rpckit.NewRPCClient(globals.EvtsProxy, rpcServer.GetListenURL(), rpckit.WithLogger(logger))
 	AssertOk(t, err, "failed to create rpc client")
 
-	return rpcServer, rpcClient, mockWriter
+	return rpcServer, evtsDispatcher, rpcClient, mockWriter
 }
 
 // TestEventsRecorder tests the events recorder (record event)
@@ -80,8 +81,9 @@ func TestEventsRecorder(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath)
 
 	// run events proxy server
-	rpcServer, rpcClient, _ := createEventsProxy(t, testServerURL, eventsStorePath)
+	rpcServer, evtsDispatcher, rpcClient, _ := createEventsProxy(t, testServerURL, eventsStorePath)
 	defer rpcServer.Stop()
+	defer evtsDispatcher.Shutdown()
 	defer rpcClient.ClientConn.Close()
 
 	// create recorder events directory
@@ -95,11 +97,12 @@ func TestEventsRecorder(t *testing.T) {
 
 	// create recorder
 	evtsRecorder, err := NewRecorder(&Config{
-		Source:       &evtsapi.EventSource{NodeName: "test-node", Component: "test-component"},
+		Source:       &evtsapi.EventSource{NodeName: "test-node", Component: "test-component" + t.Name()},
 		EvtTypes:     testEventTypes,
 		EvtsProxyURL: rpcServer.GetListenURL(),
 		BackupDir:    recorderEventsDir}, logger)
 	AssertOk(t, err, "failed to create events recorder")
+	defer evtsRecorder.Close()
 
 	evtsRecorder.Event(TestNICDisconnected, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
 	evtsRecorder.Event(TestNICConnected, evtsapi.SeverityLevel_INFO, "test event - 2", nil)
@@ -145,8 +148,9 @@ func TestInvalidEventInputs(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath)
 
 	// run events proxy server
-	rpcServer, rpcClient, _ := createEventsProxy(t, testServerURL, eventsStorePath)
+	rpcServer, evtsDispatcher, rpcClient, _ := createEventsProxy(t, testServerURL, eventsStorePath)
 	defer rpcServer.Stop()
+	defer evtsDispatcher.Shutdown()
 	defer rpcClient.ClientConn.Close()
 
 	// create recorder events directory
@@ -160,11 +164,12 @@ func TestInvalidEventInputs(t *testing.T) {
 
 	// create recorder
 	evtsRecorder, err := NewRecorder(&Config{
-		Source:       &evtsapi.EventSource{NodeName: "test-node", Component: "test-component"},
+		Source:       &evtsapi.EventSource{NodeName: "test-node", Component: "test-component-" + t.Name()},
 		EvtTypes:     testEventTypes,
 		EvtsProxyURL: rpcServer.GetListenURL(),
 		BackupDir:    recorderEventsDir}, logger)
 	AssertOk(t, err, "failed to create events recorder")
+	defer evtsRecorder.Close()
 
 	// send events using multiple workers and check if things are still intact
 	wg := new(sync.WaitGroup)
@@ -210,6 +215,7 @@ func TestEventRecorderInstantiation(t *testing.T) {
 		EvtsProxyURL: testServerURL, BackupDir: "/tmp", SkipEvtsProxy: true}, logger)
 	r.StartExport()
 	AssertOk(t, err, "expected success, event recorder instantiation failed")
+	r.Close()
 }
 
 // TestRecorderWithProxyRestart tests the events with events proxy restart
@@ -222,7 +228,7 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 	AssertOk(t, err, "failed to create recorder events directory")
 	defer os.RemoveAll(recorderEventsDir)
 
-	proxyRPCServer, proxyRPCClient, _ := createEventsProxy(t, testServerURL, eventsStorePath)
+	proxyRPCServer, evtsDispatcher, proxyRPCClient, _ := createEventsProxy(t, testServerURL, eventsStorePath)
 	defer proxyRPCServer.Stop()
 	defer proxyRPCClient.ClientConn.Close()
 
@@ -245,6 +251,7 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
 		}
+		defer evtsRecorder.Close()
 
 		ticker := time.NewTicker(10 * time.Millisecond)
 		for {
@@ -277,15 +284,17 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 	Assert(t, totalEventsSentAfterStop > totalEventsSentBeforeStop, "recorder wasn't running when proxy went disconnected")
 	// reset the counter
 	atomic.StoreUint64(&totalEventsSent, 0)
+	evtsDispatcher.Shutdown() // shutdown the existing dispatcher
 	os.RemoveAll(eventsStorePath)
 
 	// create events dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(testDedupInterval, testSendInterval, eventsStorePath, logger)
+	evtsDispatcher, err = dispatcher.NewDispatcher(testDedupInterval, testSendInterval, eventsStorePath, logger)
 	if err != nil {
 		log.Errorf("failed to create events dispatcher, err: %v", err)
 		return
 	}
 	evtsDispatcher.Start()
+	defer evtsDispatcher.Shutdown()
 
 	proxyRPCServer, err = epgrpc.NewRPCServer(globals.EvtsProxy, proxyURL, evtsDispatcher, logger)
 	if err != nil {
@@ -318,6 +327,7 @@ func TestRecorderFileBackup(t *testing.T) {
 		EvtTypes:  testEventTypes,
 		BackupDir: recorderEventsDir}, logger)
 	AssertOk(t, err, "failed to create recorder")
+	defer evtsRecorder.Close()
 
 	stopEventRecorder := make(chan struct{})
 	wg := new(sync.WaitGroup)
@@ -375,8 +385,9 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 	AssertOk(t, err, "failed to create recorder events directory")
 	defer os.RemoveAll(recorderEventsDir)
 
-	proxyRPCServer, proxyRPCClient, mockWriter := createEventsProxy(t, testServerURL, eventsStorePath)
+	proxyRPCServer, evtsDispatcher, proxyRPCClient, mockWriter := createEventsProxy(t, testServerURL, eventsStorePath)
 	defer proxyRPCServer.Stop()
+	defer evtsDispatcher.Shutdown()
 	defer proxyRPCClient.ClientConn.Close()
 	defer mockWriter.Stop()
 
@@ -391,6 +402,7 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 		EvtsProxyURL: proxyRPCServer.GetListenURL(),
 		BackupDir:    recorderEventsDir}, logger)
 	AssertOk(t, err, "failed to create recorder")
+	defer evtsRecorder.Close()
 
 	// record events
 	var totalEventsSent uint64
@@ -426,7 +438,7 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 				proxyRPCServer.Stop()
 				time.Sleep(20 * time.Millisecond)
 				atomic.AddUint64(&totalEventsReceived, uint64(mockWriter.GetTotalEvents()))
-				proxyRPCServer, proxyRPCClient, mockWriter = createEventsProxy(t, proxyURL, eventsStorePath)
+				proxyRPCServer, evtsDispatcher, proxyRPCClient, mockWriter = createEventsProxy(t, proxyURL, eventsStorePath)
 			}
 		}
 	}()
@@ -446,7 +458,7 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 			if totalReceived >= totalEventsSent {
 				return true, nil
 			}
-			return false, fmt.Sprintf("expected: >=%d, got: %d",
+			return false, fmt.Sprintf("expected: > = %d, got: %d",
 				totalEventsSent, totalReceived)
 		}, "mock writer did not receive all the events recorded", "20ms", "6s")
 }

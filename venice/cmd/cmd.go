@@ -75,6 +75,7 @@ func main() {
 		EvtTypes:      append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...)}, env.Logger); err != nil {
 		fmt.Printf("failed to create events recorder, err: %v", err)
 	}
+	defer env.Recorder.Close()
 
 	env.RegistryURL = *registryURL
 	env.Scheme = runtime.NewScheme()

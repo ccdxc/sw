@@ -47,7 +47,7 @@ def Trigger(tc):
     tc.cmd_cookies1.append("start server");
 
     #Step 2: Start TCPDUMP in background
-    api.Trigger_AddCommand(req, server.node_name, server.workload_name, "tcpdump -i {} > out.txt".format(server.interface), background=True)
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name, "tcpdump -i {} -nn > out.txt".format(server.interface), background=True)
     tc.cmd_cookies1.append("tcpdump");
 
     #Step 3: Start Hping with SYN set

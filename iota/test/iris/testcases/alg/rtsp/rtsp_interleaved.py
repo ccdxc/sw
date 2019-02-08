@@ -2,8 +2,10 @@
 import os
 import time
 import iota.harness.api as api
+from iota.test.iris.testcases.alg.alg_utils import *
 
 def Setup(tc):
+    update_sgpolicy('rtsp')
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -30,6 +32,10 @@ def Trigger(tc):
     if resp is None:
        return api.types.status.FAILURE
 
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl clear session --alg rtsp")
+    tc.cmd_cookies.append("show clear session")
+
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                            "ls -al | grep video")
     tc.cmd_cookies.append("Before RTSP")
@@ -44,12 +50,12 @@ def Trigger(tc):
     tc.cmd_cookies.append("Run RTSP client")
 
     ## Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                            "/nic/bin/halctl show session --alg rtsp | grep ESTABLISHED")
-    #tc.cmd_cookies.append("show session RTSP established")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                        "/nic/bin/halctl show nwsec flow-gate | grep RTSP")
-    #tc.cmd_cookies.append("show flow-gate") 
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg rtsp")
+    tc.cmd_cookies.append("show session RTSP established")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                            "/nic/bin/halctl show nwsec flow-gate")
+    tc.cmd_cookies.append("show flow-gate") 
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                            "ls -al | grep video")
@@ -71,13 +77,13 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            if tc.cmd_cookies[cookie_idx].find("Before") != -1:
+            if tc.cmd_cookies[cookie_idx].find("Before") != -1 or \
+               tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1:
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
-        if (tc.cmd_cookies[cookie_idx].find("show session FTP") != -1 or \
-            tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1) and \
-            cmd.stdout == '':
+        if tc.cmd_cookies[cookie_idx].find("show session FTP") != -1 and \
+           cmd.stdout == '':
             result = api.types.status.FAILURE
         cookie_idx += 1       
     return result

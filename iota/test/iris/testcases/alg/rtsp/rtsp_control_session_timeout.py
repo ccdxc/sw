@@ -6,6 +6,8 @@ from iota.test.iris.testcases.alg.alg_utils import *
 import pdb
 
 def Setup(tc):
+    update_app('rtsp_nonstandard_port', '10s')
+    update_sgpolicy('rtsp_nonstandard_port') 
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -13,6 +15,7 @@ def Trigger(tc):
     server = pairs[0][0]
     client = pairs[0][1]
     tc.cmd_cookies = []
+    tc.controlageout_fail = 0
 
     naples = server
     if not server.IsNaples():
@@ -54,24 +57,29 @@ def Trigger(tc):
     tc.cmd_cookies.append("Run RTSP client")
 
     ## Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                            "/nic/bin/halctl show session --alg rtsp --proto 6 | grep ESTABLISHED")
-    #tc.cmd_cookies.append("show session RTSP established")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                        "/nic/bin/halctl show nwsec flow-gate | grep RTSP")
-    #tc.cmd_cookies.append("show flow-gate") 
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                          "sleep 60")
-    #tc.cmd_cookies.append("sleep")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                            "/nic/bin/halctl show session --alg rtsp --proto 6 | grep ESTABLISHED")
-    #tc.cmd_cookies.append("check age out")
-
-    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "ls -al | grep video")
-    tc.cmd_cookies.append("After RTSP")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg rtsp --yaml")
+    tc.cmd_cookies.append("show session RTSP established")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                              "sleep 30")
+    tc.cmd_cookies.append("sleep")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show session --alg rtsp --yaml")
+    tc.cmd_cookies.append("show yaml")
 
     trig_resp = api.Trigger(req)
+    control_seen = 0 
+    data_seen = 0
+    cmd = trig_resp.commands[-1]
+    api.PrintCommandResults(cmd)
+    alginfo = get_alginfo(cmd, APP_SVC_RTSP)
+    for info in alginfo:
+       if info['rtspinfo']['iscontrol'] == True:
+          control_seen = 1
+       if info['rtspinfo']['iscontrol'] == False:
+          data_seen = 1
+    if control_seen == 0 and data_seen == 1: tc.controlageout_fail = 1
+
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
     return api.types.status.SUCCESS
@@ -80,13 +88,18 @@ def Verify(tc):
     if tc.resp is None:
         return api.types.status.FAILURE
 
+    if tc.controlageout_fail == 1:
+        api.Logger.info("CONTROLE AGED OUT")
+        return api.types.status.FAILURE
+
     result = api.types.status.SUCCESS
     cookie_idx = 0
     api.Logger.info("Results for %s" % (tc.cmd_descr))
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            if tc.cmd_cookies[cookie_idx].find("Run RTSP client") != -1:
+            if tc.cmd_cookies[cookie_idx].find("Run RTSP client") != -1 or \
+               tc.cmd_cookies[cookie_idx].find("ip route server") != -1:
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE

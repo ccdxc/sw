@@ -85,9 +85,9 @@ aximst_addr(const unsigned int port,
     assert(entry < AXIMST_ENTRIES_PER_PORT);
 
     return (AXIMST_BASE + 
-            (idx * AXIMST_STRIDE) +
-            (port * AXIMST_PORT_STRIDE) +
-            (entry * AXIMST_ENTRY_STRIDE));
+            ((u_int64_t)idx * AXIMST_STRIDE) +
+            ((u_int64_t)port * AXIMST_PORT_STRIDE) +
+            ((u_int64_t)entry * AXIMST_ENTRY_STRIDE));
 }
 
 static void

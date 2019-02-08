@@ -10,6 +10,9 @@ using qos::QosClassStatusEpd;
 namespace hal {
 namespace pd {
 
+#define QOS_QUEUE_DEFAULT 0
+#define QOS_COS_DEFAULT   0
+
 typedef struct pd_qos_iq_s {
     bool valid;
     tm_q_t iq;
@@ -378,6 +381,7 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     bool                       has_pcp = false;
     bool                       has_dscp = false;
     tm_q_t                     iq;
+    uint32_t                   dot1q_pcp = 0;
     tm_uplink_input_dscp_map_t dscp_map = {0};
 
     iq = pd_qos_class->uplink.iq;
@@ -387,28 +391,37 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
 
     has_dscp = (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) ||
                 (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
+
     has_pcp = (qos_class->cmap.type == QOS_CMAP_TYPE_PCP) ||
                 (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
- 
+
     SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
                sizeof(dscp_map.ip_dscp));
+
     memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
            sizeof(qos_class->cmap.ip_dscp));
-    dscp_map.dot1q_pcp = qos_class->cmap.dot1q_pcp;
+
+    if (has_pcp) {
+        dot1q_pcp = qos_class->cmap.dot1q_pcp;
+    } else {
+        dot1q_pcp = qos_class->pfc.pfc_cos;
+    }
+
+    dscp_map.dot1q_pcp = dot1q_pcp;
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        if (has_pcp) {
-            sdk_ret = capri_tm_uplink_input_map_update(port,
-                                                   qos_class->cmap.dot1q_pcp,
-                                                   iq);
-            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error programming the uplink map for "
-                              "Qos-class {} on port {} ret {}",
-                              qos_class->key, port, ret);
-                return ret;
-            }
+        sdk_ret = capri_tm_uplink_input_map_update(
+                                               port,
+                                               dot1q_pcp,
+                                               iq);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the uplink map for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
         }
+
         if (has_dscp) {
             sdk_ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -663,6 +676,170 @@ qos_class_pd_program_hw (pd_qos_class_t *pd_qos_class)
     if (ret != HAL_RET_OK) {
         // TODO: What to do in case of hw programming error ?
         HAL_TRACE_ERR("Error programming the qos table for "
+                      "Qos-class {} ret {}",
+                      qos_class->key, ret);
+        return ret;
+    }
+
+    return HAL_RET_OK;
+}
+
+static hal_ret_t
+qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
+{
+    // Program the dscp, dot1q to iq map
+    hal_ret_t                  ret = HAL_RET_OK;
+    sdk_ret_t                  sdk_ret;
+    tm_port_t                  port;
+    qos_class_t                *qos_class = pd_qos_class->pi_qos_class;
+    bool                       has_pcp = false;
+    bool                       has_dscp = false;
+    tm_q_t                     iq;
+    uint32_t                   dot1q_pcp = 0;
+    tm_uplink_input_dscp_map_t dscp_map = {0};
+
+    // reset the default Q to 0
+    iq = QOS_QUEUE_DEFAULT;
+    if (!capri_tm_q_valid(iq)) {
+        return HAL_RET_OK;
+    }
+
+    has_dscp = (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) ||
+                (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
+
+    SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
+               sizeof(dscp_map.ip_dscp));
+    memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
+           sizeof(qos_class->cmap.ip_dscp));
+
+    if (has_pcp) {
+        dot1q_pcp = qos_class->cmap.dot1q_pcp;
+    } else {
+        dot1q_pcp = qos_class->pfc.pfc_cos;
+    }
+
+    // program the default COS for dscp map
+    dscp_map.dot1q_pcp = QOS_COS_DEFAULT;
+
+    for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+        sdk_ret = capri_tm_uplink_input_map_update(
+                                               port,
+                                               dot1q_pcp,
+                                               iq);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error deprogramming the uplink map for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
+
+        if (has_dscp) {
+            sdk_ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Error deprogramming the uplink dscp map for "
+                              "Qos-class {} on port {} ret {}",
+                              qos_class->key, port, ret);
+                return ret;
+            }
+        }
+    }
+
+    return HAL_RET_OK;
+}
+
+#define QOS_ACTION(_arg) d.action_u.qos_qos._arg
+static hal_ret_t
+qos_class_pd_deprogram_qos_table (pd_qos_class_t *pd_qos_class)
+{
+    hal_ret_t      ret = HAL_RET_OK;
+    sdk_ret_t      sdk_ret;
+    qos_class_t    *qos_class = pd_qos_class->pi_qos_class;
+    directmap      *qos_tbl = NULL;
+    qos_actiondata_t d = {0};
+    uint32_t       qos_class_id;
+
+    qos_tbl = g_hal_state_pd->dm_table(P4TBL_ID_QOS);
+    SDK_ASSERT_RETURN(qos_tbl != NULL, HAL_RET_ERR);
+
+    for (unsigned i = 0; i < SDK_ARRAY_SIZE(pd_qos_class->p4_ig_q); i++) {
+        if (!capri_tm_q_valid(pd_qos_class->p4_ig_q[i])) {
+            continue;
+        }
+        qos_class_id = pd_qos_class->p4_ig_q[i];
+
+        memset(&d, 0, sizeof(d));
+
+        sdk_ret = qos_tbl->update(qos_class_id, &d);
+
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("qos table write failure, qos-class {}, "
+                          "qos-class-id {} ret {}",
+                          qos_class->key, qos_class_id, ret);
+            return ret;
+        }
+
+        HAL_TRACE_DEBUG("qos table qos-class {} qos-class-id {} deprogrammed ",
+                        qos_class->key, qos_class_id);
+    }
+    return ret;
+}
+#undef QOS_ACTION
+
+// ----------------------------------------------------------------------------
+// DeProgram HW
+// ----------------------------------------------------------------------------
+static hal_ret_t
+qos_class_pd_deprogram_hw (pd_qos_class_t *pd_qos_class)
+{
+    hal_ret_t            ret = HAL_RET_OK;
+    qos_class_t          *qos_class = pd_qos_class->pi_qos_class;
+
+    // TODO no need to update the iq params since the packets wont
+    // arrive in that Q?
+#if 0
+    ret = qos_class_pd_program_uplink_iq_params(pd_qos_class);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error deprogramming uplink iq params for "
+                      "Qos-class {} ret {}",
+                      qos_class->key, ret);
+        return ret;
+    }
+#endif
+
+    ret = qos_class_pd_deprogram_uplink_iq_map(pd_qos_class);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error deprogramming uplink iq map for "
+                      "Qos-class {} ret {}",
+                      qos_class->key, ret);
+        return ret;
+    }
+
+#if 0
+    ret = qos_class_pd_program_uplink_xoff(pd_qos_class);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error deprogramming uplink oq xoff for "
+                      "Qos-class {} ret {}",
+                      qos_class->key, ret);
+        return ret;
+    }
+
+    ret = qos_class_pd_program_scheduler(pd_qos_class);
+    if (ret != HAL_RET_OK) {
+        // TODO: What to do in case of hw programming error ?
+        HAL_TRACE_ERR("Error deprogramming the p4 ports for "
+                      "Qos-class {} ret {}",
+                      qos_class->key, ret);
+        return ret;
+    }
+#endif
+
+    ret = qos_class_pd_deprogram_qos_table(pd_qos_class);
+    if (ret != HAL_RET_OK) {
+        // TODO: What to do in case of hw programming error ?
+        HAL_TRACE_ERR("Error deprogramming the qos table for "
                       "Qos-class {} ret {}",
                       qos_class->key, ret);
         return ret;
@@ -931,6 +1108,7 @@ pd_qos_class_delete (pd_func_args_t *pd_func_args)
     qos_class_pd = (pd_qos_class_t *)args->qos_class->pd;
 
     // TODO: deprogram hw
+    qos_class_pd_deprogram_hw(qos_class_pd);
 
     // free up the resource and memory
     ret = qos_class_pd_cleanup(qos_class_pd);

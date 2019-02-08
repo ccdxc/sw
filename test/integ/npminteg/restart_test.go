@@ -97,7 +97,7 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr != nil), nil
-	}, "Network still found in NPM", "10ms", it.pollTimeout())
+	}, "Network still found in NPM", "100ms", it.pollTimeout())
 
 	// verify network is removed from all agents
 	for _, ag := range it.agents {

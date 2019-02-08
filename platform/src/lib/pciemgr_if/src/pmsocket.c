@@ -112,7 +112,8 @@ socket_un(const char *path, struct sockaddr_un *a)
     if (s < 0) return -1;
 
     a->sun_family = AF_UNIX;
-    strncpy(a->sun_path, path, sizeof(a->sun_path));
+    strncpy(a->sun_path, path, sizeof(a->sun_path) - 1);
+    a->sun_path[sizeof(a->sun_path) - 1] = '\0';
     return s;
 }
 

@@ -52,7 +52,7 @@ fte::pipeline_action_t alg_rpc_session_get_cb(fte::ctx_t &ctx) {
 
     sess_resp->mutable_status()->set_alg(l4_sess->alg);
 
-    if (l4_sess->isCtrl == TRUE) {
+    if (l4_sess->isCtrl == true) {
         rpc_info_t *info = ((rpc_info_t *)l4_sess->info);
         if (info) {
             sess_resp->mutable_status()->mutable_rpc_info()->\
@@ -108,7 +108,7 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
         return fte::PIPELINE_CONTINUE;
 
     app_sess = l4_sess->app_session;
-    if (l4_sess->isCtrl == TRUE) {
+    if (l4_sess->isCtrl == true) {
         if (ctx.force_delete() == true|| (dllist_empty(&app_sess->exp_flow_lhead)\
              && dllist_count(&app_sess->l4_sess_lhead) == 1 &&
             ((l4_alg_status_t *)dllist_entry(app_sess->l4_sess_lhead.next,\
@@ -191,6 +191,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     rpc_info = (rpc_info_t *)entry->info;
     if (entry->isCtrl != TRUE) {
         sfw_info->skip_sfw = rpc_info->skip_sfw;
+        sfw_info->idle_timeout = entry->idle_timeout;
         HAL_TRACE_DEBUG("Expected flow handler - skip sfw {}", sfw_info->skip_sfw);
     }
     ctx.set_feature_name(FTE_FEATURE_ALG_RPC.c_str());
@@ -235,6 +236,7 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
     SDK_ASSERT(ret == HAL_RET_OK);
     exp_flow->entry.handler = expected_flow_handler;
     exp_flow->alg = l4_sess->alg;
+    exp_flow->idle_timeout = l4_sess->idle_timeout;
     exp_flow->info = g_rpc_state->alg_info_slab()->alloc();
     SDK_ASSERT(exp_flow->info != NULL);
     exp_flow_info = (rpc_info_t *)exp_flow->info;

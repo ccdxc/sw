@@ -21,6 +21,8 @@ import (
 const (
 	// ConfigURL is URL to configure a nic in classic mode
 	ConfigURL = "/api/v1/naples/"
+	// RolloutURL is URL to configure SmartNICRollout object
+	RolloutURL = "/api/v1/naples/rollout/"
 	// MonitoringURL is URL to fetch logs and other diags from nic in classic mode
 	MonitoringURL = "/monitoring/v1/naples/"
 	// CoresURL is URL to fetch cores from nic in classic mode

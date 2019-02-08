@@ -20,8 +20,8 @@
 
 typedef struct pmclient_s {
     int s;
-    int open:1;
-    int sync_writes:1;
+    unsigned int open:1;
+    unsigned int sync_writes:1;
 } pmclient_t;
 
 static pmclient_t pmclient;

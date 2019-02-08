@@ -48,7 +48,7 @@ typedef struct dns_info_ {
     uint32_t        parse_errors;
     void           *timer;
     bool            response_rcvd;
-} __PACK__ dns_info_t;
+} dns_info_t;
 
 }  // namespace alg_dns
 }  // namespace plugins

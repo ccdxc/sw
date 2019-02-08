@@ -1,8 +1,9 @@
 #! /usr/bin/python3
 import os
 import iota.harness.api as api
+import pdb
 
-TFTP_NONSTD_PORT = 2069
+TFTP_NONSTD_PORT = 2088
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -29,6 +30,10 @@ def SetupTFTPServer(server, non_standard_port=False):
                            "systemctl stop tftp")
         api.Trigger_AddCommand(req, node, workload,
                            "/usr/sbin/in.tftpd -s /var/lib/tftpboot -l --address %s:%s"%(server.ip_address, TFTP_NONSTD_PORT))
+        api.Trigger_AddCommand(req, node, workload,
+                         "touch /var/lib/tftpboot/tftp_client.txt")
+        api.Trigger_AddCommand(req, node, workload,
+                           "chmod 666 /var/lib/tftpboot/tftp_client.txt")
     else:
         api.Trigger_AddCommand(req, node, workload,
                            "systemctl start tftp")

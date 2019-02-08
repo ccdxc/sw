@@ -68,4 +68,9 @@ const (
 
 	// TCPRSTWithDataAction is set to none by default
 	TCPRSTWithDataAction = halproto.NormalizationAction_NORM_ACTION_DROP
+
+	//--------------------------- Default ALG Option ---------------------------
+
+	// DefaultDNSMaxMessageLength is set to 8192 by default
+	DefaultDNSMaxMessageLength = 8192
 )

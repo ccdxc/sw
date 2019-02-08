@@ -49,6 +49,25 @@ type adapterTelemetryV1 struct {
 	gw      apigw.APIGateway
 }
 
+func (a adapterTelemetryV1) Fwlogs(oldctx oldcontext.Context, t *telemetry_query.FwlogsQueryList, options ...grpc.CallOption) (*telemetry_query.FwlogsQueryResponse, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("Fwlogs")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*telemetry_query.FwlogsQueryList)
+		return a.service.Fwlogs(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*telemetry_query.FwlogsQueryResponse), err
+}
+
 func (a adapterTelemetryV1) Metrics(oldctx oldcontext.Context, t *telemetry_query.MetricsQueryList, options ...grpc.CallOption) (*telemetry_query.MetricsQueryResponse, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -76,6 +95,8 @@ func (e *sTelemetryV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["Fwlogs"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
 
 	e.svcProf["Metrics"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
 }

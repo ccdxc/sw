@@ -10,9 +10,10 @@ check_asic_asset()
     mv nic/model_sim/libs/* nic/sdk/model_sim/libs
     rm -rf nic/model_sim
   fi
+
   if [ -d nic/asic ] ; then
     cd nic
-    files=$(find ./asic -type f)
+    files=$(find ./asic -name "*.so" | grep 'capri')
     for f in $files ; do
       cp --parents -u $f ./sdk/third-party
     done

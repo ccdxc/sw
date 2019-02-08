@@ -195,6 +195,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
             match_rslt->log = nwsec_rule->fw_rule_action.log_action;
             match_rslt->sfw_action = nwsec_rule->fw_rule_action.sec_action;
             match_rslt->rule_id = nwsec_rule->rule_id;
+            match_rslt->idle_timeout = nwsec_rule->fw_rule_action.idle_timeout;
         }
     } else {
         HAL_TRACE_DEBUG("sfw::net_sfw_check_security_policy rule lookup failed ret={}", ret);
@@ -333,11 +334,12 @@ sfw_exec(ctx_t& ctx)
         if (expected_flow) {
             HAL_TRACE_DEBUG("Found expected alg flow - invoking handler...");
             ret = expected_flow->handler(ctx, expected_flow);
-            // reset the feature name back to sfw
-            // (expected_flow_handler might have changed the name)
-            // TODO(goli) instead set the feature name to the feature that installed
-            // the expected flow prior to calling handler, so that handler
-            // doen't need to do it
+            flow_update_t flowupd = {type: FLOWUPD_AGING_INFO};
+            flowupd.aging_info.idle_timeout = sfw_info->idle_timeout;
+            ret = ctx.update_flow(flowupd);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to update aging action");
+            }
             ctx.set_feature_name(FTE_FEATURE_SFW.c_str());
             sfw_info->sfw_done = true;
         }
@@ -411,6 +413,7 @@ std::ostream& operator<<(std::ostream& os, const net_sfw_match_result_t& val) {
     os << " ,alg=" << val.alg;
     os << " ,log=" << val.log;
     os << " ,sfw_action=" << val.sfw_action;
+    os << " ,idle_timeout=" << val.idle_timeout;
     return os << "}";
 }
 

@@ -32,6 +32,9 @@ type Recorder interface {
 
 	// StartExport to start the client
 	StartExport()
+
+	// Close the recorder
+	Close()
 }
 
 // Dispatcher processes all the incoming events for any duplication to avoid

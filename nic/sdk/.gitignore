@@ -13,4 +13,5 @@ build
 third-party/avago/fw
 third-party/locale
 third-party/dpdk
+third-party/asic
 platform/capri/capri_tm_rw.cc

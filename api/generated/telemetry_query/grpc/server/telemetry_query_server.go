@@ -35,6 +35,11 @@ func (s *stelemetry_queryTelemetry_queryBackend) regMsgsFunc(l log.Logger, schem
 	l.Infof("registering message for stelemetry_queryTelemetry_queryBackend")
 	s.Messages = map[string]apiserver.Message{
 
+		"telemetry_query.Fwlog":                apisrvpkg.NewMessage("telemetry_query.Fwlog"),
+		"telemetry_query.FwlogsQueryList":      apisrvpkg.NewMessage("telemetry_query.FwlogsQueryList"),
+		"telemetry_query.FwlogsQueryResponse":  apisrvpkg.NewMessage("telemetry_query.FwlogsQueryResponse"),
+		"telemetry_query.FwlogsQueryResult":    apisrvpkg.NewMessage("telemetry_query.FwlogsQueryResult"),
+		"telemetry_query.FwlogsQuerySpec":      apisrvpkg.NewMessage("telemetry_query.FwlogsQuerySpec"),
 		"telemetry_query.MetricsQueryList":     apisrvpkg.NewMessage("telemetry_query.MetricsQueryList"),
 		"telemetry_query.MetricsQueryResponse": apisrvpkg.NewMessage("telemetry_query.MetricsQueryResponse"),
 		"telemetry_query.MetricsQueryResult":   apisrvpkg.NewMessage("telemetry_query.MetricsQueryResult"),

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -278,11 +279,13 @@ func TestStartStop(t *testing.T) {
 	a.runstate.running = false
 
 	iterCount := 200
+	var runCount uint32
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
 		for i := 0; i < iterCount; i++ {
 			go a.Run(config)
+			atomic.AddUint32(&runCount, 1)
 			a.WaitRunning()
 			a.Stop()
 		}
@@ -291,11 +294,28 @@ func TestStartStop(t *testing.T) {
 	go func() {
 		for i := 0; i < iterCount; i++ {
 			go a.Run(config)
+			atomic.AddUint32(&runCount, 1)
 			a.WaitRunning()
 			a.Stop()
 		}
 		wg.Done()
 	}()
+
+	// Wait for the iterations to complete. We wait for both the go routines
+	//  to enter each iteration. The last iteration could possibly block in
+	//  WaitRunning depending on where stop was called, hence we use cond.Broadcast
+	//  to give unblock it. There is an extremely tiny possibility that Broadcast is
+	//  called before WaitRunning. Hence we sleep a second before calling.
+	var readCount uint32
+	for {
+		readCount = atomic.LoadUint32(&runCount)
+		if readCount >= uint32(iterCount*2) {
+			time.Sleep(time.Second)
+			a.runstate.cond.Broadcast()
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	wg.Wait()
 	// Replenish the pool before exiting
 	for i := 0; i < singletonAPISrv.config.KVPoolSize; i++ {

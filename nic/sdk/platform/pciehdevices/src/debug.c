@@ -56,6 +56,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
             pbar.type = PCIEHBARTYPE_MEM64;
             pbar.size = roundup_power2(sz);
             pbar.cfgidx = i * 2;
+            pbar.prefetch = pres->debugbar[i].prefetch;
 
             memset(&preg, 0, sizeof(preg));
             pmt_bar_enc(&preg.pmt,

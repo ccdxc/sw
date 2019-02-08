@@ -89,11 +89,17 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
         } else if ((ctx.session()->iflow->state >= session::FLOW_TCP_STATE_FIN_RCVD) ||
                    (ctx.session()->rflow &&
                     (ctx.session()->rflow->state >= session::FLOW_TCP_STATE_FIN_RCVD))) {
+            alg_utils::l4_alg_status_t   *ctrl_l4_sess = g_rtsp_state->get_ctrl_l4sess(app_sess);
+
             /*
              * We have received FIN/RST on control session and RTSP sessions are active
              */
             HAL_TRACE_DEBUG("Received FIN/RST while RTSP sessions are active");
             ctx.set_feature_status(HAL_RET_INVALID_CTRL_SESSION_OP);
+            // Mark this entry for deletion so we cleanup
+            // when we clean up the data sessions
+            if (ctrl_l4_sess)
+                ctrl_l4_sess->entry.deleting = true; 
             return fte::PIPELINE_END;
         } else {
             /*
@@ -111,13 +117,37 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
      */
     g_rtsp_state->cleanup_l4_sess(l4_sess);
     if (ctx.force_delete() && lib::dllist_empty(&app_sess->exp_flow_lhead) &&
-        lib::dllist_empty(&app_sess->exp_flow_lhead)) {
+        lib::dllist_empty(&app_sess->l4_sess_lhead)) {
         /*
          * If this was the last session hanging and there are no
          * expected flows or L4 sessions go ahead and clean up the
          * app session
          */
         g_rtsp_state->cleanup_app_session(l4_sess->app_session);
+    } else if (dllist_empty(&app_sess->exp_flow_lhead) &&
+               dllist_count(&app_sess->l4_sess_lhead) == 1) {
+        alg_utils::l4_alg_status_t   *ctrl_l4_sess = (alg_utils::l4_alg_status_t *)dllist_entry(\
+                     app_sess->l4_sess_lhead.next, alg_utils::l4_alg_status_t, l4_sess_lentry);
+        /*
+         * There are cases when the FIN is received back to back and control
+         * session ends up processing it first. In those cases, we reject control
+         * session cleanup. To clean up stale sessions, we check if this is the
+         * single hanging session and attempt clean it up if the state is BIDIR_FIN_RCVD.
+         */
+        if (ctrl_l4_sess != NULL && ctrl_l4_sess->isCtrl == true &&
+            ctrl_l4_sess->entry.deleting == true) {
+            hal::session_t *session = hal::find_session_by_handle(ctrl_l4_sess->sess_hdl);
+
+            if (session != NULL &&
+                session->iflow->state == session::FLOW_TCP_STATE_BIDIR_FIN_RCVD) {
+                if (session->fte_id == fte::fte_id()) {
+                    session_delete_in_fte(session->hal_handle);
+                } else {
+                    fte::session_delete_async(session);
+                }
+            }
+        }
+
     }
 
     return fte::PIPELINE_CONTINUE;
@@ -136,6 +166,7 @@ void rtsp_app_sess_cleanup_hdlr(alg_utils::app_session_t *app_sess) {
     }
 
     if (app_sess->oper != NULL) {
+        HAL_TRACE_DEBUG("Freeing Slab pointer {:p}", (void *)app_sess->oper);
         g_rtsp_state->alg_info_slab()->free((rtsp_session_t *)app_sess->oper);
     }
 }
@@ -170,7 +201,8 @@ expected_flow_handler(fte::ctx_t &ctx, alg_utils::expected_flow_t *entry)
     ctx.flow_log()->parent_session_id = exp_flow->sess_hdl;
 
     // skip firewall check
-    sfw_info->skip_sfw = TRUE;
+    sfw_info->skip_sfw = true;
+    sfw_info->idle_timeout = ((alg_utils::l4_alg_status_t *)entry)->idle_timeout;
 
     return ret;
 }
@@ -179,7 +211,8 @@ expected_flow_handler(fte::ctx_t &ctx, alg_utils::expected_flow_t *entry)
  * Adds expected flows for all the src/dst port pairs in the transport spec
  */
 static inline hal_ret_t
-add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess, rtsp_transport_t *spec)
+add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess, 
+                   alg_utils::l4_alg_status_t *l4_sess, rtsp_transport_t *spec)
 {
     hal_ret_t ret;
     alg_utils::l4_alg_status_t *exp_flow = NULL;
@@ -210,7 +243,8 @@ add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess, rtsp_tra
         exp_flow->isCtrl = false;
         exp_flow->alg =  nwsec::APP_SVC_RTSP;
         exp_flow->info = rtsp_sess;
-        exp_flow->sess_hdl = (ctx.session())?ctx.session()->hal_handle:HAL_HANDLE_INVALID;
+        exp_flow->sess_hdl = HAL_HANDLE_INVALID;
+        
     }
 
     return HAL_RET_OK;
@@ -276,7 +310,7 @@ process_req_message(fte::ctx_t& ctx, alg_utils::app_session_t *app_sess,
  */
 static inline hal_ret_t
 process_resp_message(fte::ctx_t& ctx, alg_utils::app_session_t *app_sess,
-                    rtsp_msg_t *msg)
+                     alg_utils::l4_alg_status_t *l4_sess, rtsp_msg_t *msg)
 {
     hal_ret_t ret = HAL_RET_OK;
 
@@ -312,7 +346,7 @@ process_resp_message(fte::ctx_t& ctx, alg_utils::app_session_t *app_sess,
             spec->server_ip.addr = ctx.key().sip;
         }
 
-        ret = add_expected_flows(ctx, app_sess, spec);
+        ret = add_expected_flows(ctx, app_sess, l4_sess, spec);
         if (ret != HAL_RET_OK) {
             ERR("failed to add expected flow ret={}", ret);
             return ret;
@@ -361,7 +395,7 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
             ret =  process_req_message(*ctx, app_sess, &msg);
             break;
         case RTSP_MSG_RESPONSE:
-            ret =  process_resp_message(*ctx, app_sess, &msg);
+            ret =  process_resp_message(*ctx, app_sess, l4_sess, &msg);
             break;
         }
         if (ret != HAL_RET_OK) {
@@ -387,6 +421,7 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         }
     } else {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
+        HAL_TRACE_DEBUG("RTSP Completion handler iscontrol session: {}", l4_sess->isCtrl);
         if (l4_sess->isCtrl) {
             if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
                 // Set up TCP buffer for RFLOW
@@ -420,6 +455,7 @@ rtsp_new_control_session(fte::ctx_t &ctx)
     alg_utils::app_session_t   *app_sess;
     alg_utils::l4_alg_status_t *l4_sess;
     fte::flow_update_t          flowupd = {};
+    sfw::sfw_info_t            *sfw_info = NULL;
 
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
         rtsp_session_key_t sess_key = {};
@@ -440,6 +476,8 @@ rtsp_new_control_session(fte::ctx_t &ctx)
         l4_sess->isCtrl = true;
         l4_sess->info = app_sess->oper;
         l4_sess->alg = nwsec::APP_SVC_RTSP;
+        sfw_info = sfw::sfw_feature_state(ctx);
+        l4_sess->idle_timeout = sfw_info->idle_timeout;
 
         if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
             //Setup TCP buffer for IFLOW

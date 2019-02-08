@@ -25,7 +25,7 @@ nicmgr_upg_hndlr::nicmgr_upg_hndlr()
 HdlrResp
 nicmgr_upg_hndlr::CompatCheckHandler(UpgCtx& upgCtx)
 {
-    HdlrResp resp = {};
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     return resp;
 }
 
@@ -39,7 +39,7 @@ nicmgr_upg_hndlr::ProcessQuiesceHandler(UpgCtx& upgCtx) {
 HdlrResp
 nicmgr_upg_hndlr::LinkDownHandler(UpgCtx& upgCtx)
 {
-    HdlrResp resp = {};
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     return resp;
 }
 
@@ -53,7 +53,7 @@ nicmgr_upg_hndlr::PostHostDownHandler(UpgCtx& upgCtx) {
 HdlrResp
 nicmgr_upg_hndlr::PostRestartHandler(UpgCtx& upgCtx)
 {
-    HdlrResp resp = {};
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     return resp;
 }
 
@@ -61,7 +61,7 @@ nicmgr_upg_hndlr::PostRestartHandler(UpgCtx& upgCtx)
 HdlrResp
 nicmgr_upg_hndlr::LinkUpHandler(UpgCtx& upgCtx)
 {
-    HdlrResp resp = {};
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     return resp;
 }
 

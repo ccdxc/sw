@@ -23,6 +23,20 @@ var _ kvstore.Interface
 // NewTelemetryV1 sets up a new client for TelemetryV1
 func NewTelemetryV1(conn *grpc.ClientConn, logger log.Logger) telemetry_query.ServiceTelemetryV1Client {
 
+	var lFwlogsEndpoint endpoint.Endpoint
+	{
+		lFwlogsEndpoint = grpctransport.NewClient(
+			conn,
+			"telemetry_query.TelemetryV1",
+			"Fwlogs",
+			telemetry_query.EncodeGrpcReqFwlogsQueryList,
+			telemetry_query.DecodeGrpcRespFwlogsQueryResponse,
+			&telemetry_query.FwlogsQueryResponse{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lFwlogsEndpoint = trace.ClientEndPoint("TelemetryV1:Fwlogs")(lFwlogsEndpoint)
+	}
 	var lMetricsEndpoint endpoint.Endpoint
 	{
 		lMetricsEndpoint = grpctransport.NewClient(
@@ -40,6 +54,7 @@ func NewTelemetryV1(conn *grpc.ClientConn, logger log.Logger) telemetry_query.Se
 	return telemetry_query.EndpointsTelemetryV1Client{
 		Client: telemetry_query.NewTelemetryV1Client(conn),
 
+		FwlogsEndpoint:  lFwlogsEndpoint,
 		MetricsEndpoint: lMetricsEndpoint,
 	}
 }

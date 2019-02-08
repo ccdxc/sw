@@ -52,11 +52,14 @@ type recorderImpl struct {
 	id                    string                 // id (unique key) of the recorder
 	eventSource           *evtsapi.EventSource   // all the events generated using this recorder will carry this source
 	eventTypes            map[string]struct{}    // eventTypes provide a function to validate the given event type
+	skipEvtsProxy         bool                   // use local store for events; skip sending events to evtsproxy
 	eventsProxy           *eventsProxy           // event proxy
 	eventsFile            *fileImpl              // events backup store
 	failedEventsForwarder *failedEventsForwarder // used to forward failed events to the proxy
-	started               bool                   // whether client has started
 	logger                log.Logger             // logger
+	close                 sync.Once              // to close the recorder
+	shutdown              chan struct{}          // to send shutdown signal to the daemon go routines (i.e. event distribution)
+	wg                    sync.WaitGroup         // used to wait for the graceful shutdown of daemon go routines
 }
 
 // eventsProxy encapsulates all the proxy details including connection string
@@ -68,14 +71,13 @@ type eventsProxy struct {
 	rpcClient       *rpckit.RPCClient                  // RPC client for events proxy
 	client          evtsproxygrpc.EventsProxyAPIClient // events proxy client connection
 	connectionAlive bool                               // represents the connection status; alive or dead
+	started         bool                               // whether client has started
 }
 
 // failedEventsForwarder helps to forward failed events to the proxy
 type failedEventsForwarder struct {
 	sync.Mutex
-	tick *time.Ticker  // failed call to the proxy will be retried as per this ticker
-	stop chan struct{} // to stop any outstanding process that is processing the failed events
-	wg   sync.WaitGroup
+	tick *time.Ticker // failed call to the proxy will be retried as per this ticker
 }
 
 // Config represents the recorder configuration
@@ -123,17 +125,18 @@ func NewRecorder(config *Config, logger log.Logger) (events.Recorder, error) {
 		eventsFile: eventsFile,
 		failedEventsForwarder: &failedEventsForwarder{
 			tick: time.NewTicker(2 * time.Second),
-			stop: make(chan struct{}),
 		},
-		logger: logger,
+		skipEvtsProxy: config.SkipEvtsProxy,
+		logger:        logger,
+		shutdown:      make(chan struct{}),
 	}
 
 	if config.SkipEvtsProxy {
 		logger.Debugf("{%s} skipping events proxy", recorder.id)
-		recorder.eventsProxy.connectionAlive = false // all the writes will be sent to file
 	} else {
-		recorder.started = true
+		recorder.wg.Add(1)
 		go recorder.createEvtsProxyRPCClient() // create events proxy client
+		recorder.eventsProxy.started = true
 	}
 
 	once.Do(func() {
@@ -143,11 +146,26 @@ func NewRecorder(config *Config, logger log.Logger) (events.Recorder, error) {
 	return recorder, nil
 }
 
+// StartExport starts exporting events to evtsproxy
 func (r *recorderImpl) StartExport() {
-	if !r.started {
-		r.started = true
-		go r.createEvtsProxyRPCClient() // create events proxy client
+	if r.skipEvtsProxy {
+		r.skipEvtsProxy = false
 	}
+
+	if !r.eventsProxy.started {
+		r.wg.Add(1)
+		go r.createEvtsProxyRPCClient() // create events proxy client
+		r.eventsProxy.started = true
+	}
+}
+
+// Close closes the recorder
+func (r *recorderImpl) Close() {
+	r.close.Do(func() {
+		r.eventsFile.Close()
+		close(r.shutdown)
+		r.wg.Wait()
+	})
 }
 
 // Event records the event by creating a event using the given type, severity, message, etc.
@@ -255,7 +273,7 @@ func (r *recorderImpl) sendEvent(event *evtsapi.Event) error {
 	r.eventsProxy.Lock()
 	defer r.eventsProxy.Unlock()
 
-	if !r.eventsProxy.connectionAlive {
+	if r.skipEvtsProxy || !r.eventsProxy.connectionAlive {
 		r.logger.Debugf("{%s} connection to evtsproxy unavailable. so, writing event {%s} to a file", r.id, events.MinifyEvent(event))
 		return r.writeToFile(event)
 	}
@@ -277,6 +295,7 @@ func (r *recorderImpl) sendEvent(event *evtsapi.Event) error {
 		}
 
 		// try reconnecting with the proxy
+		r.wg.Add(1)
 		go r.reconnect()
 	}
 
@@ -294,29 +313,33 @@ func (r *recorderImpl) writeToFile(event *evtsapi.Event) error {
 }
 
 // createEvtsProxyRPCClient helper function to create the events proxy RPC client.
-func (r *recorderImpl) createEvtsProxyRPCClient() error {
+func (r *recorderImpl) createEvtsProxyRPCClient() {
+	defer r.wg.Done()
 	for {
-		evtsProxyClient, err := rpckit.NewRPCClient(r.getID(), r.eventsProxy.url, rpckit.WithTLSProvider(nil))
-		if err != nil {
-			r.logger.Errorf("{%s} error connecting to proxy server using URL: %v, err: %v", r.id, r.eventsProxy.url, err)
-			time.Sleep(2 * time.Second)
-			continue
+		select {
+		case <-r.shutdown:
+			r.logger.Error("received shutdown signal, closing {createEvtsProxyRPCClient}")
+			return
+		case <-time.After(2 * time.Second):
+			evtsProxyClient, err := rpckit.NewRPCClient(r.getID(), r.eventsProxy.url, rpckit.WithTLSProvider(nil))
+			if err != nil {
+				r.logger.Errorf("{%s} error connecting to proxy server using URL: %v, err: %v", r.id, r.eventsProxy.url, err)
+				continue
+			}
+
+			r.logger.Infof("{%s} events recorder connected to events proxy", r.id)
+
+			r.eventsProxy.Lock()
+			r.eventsProxy.rpcClient = evtsProxyClient
+			r.eventsProxy.client = evtsproxygrpc.NewEventsProxyAPIClient(r.eventsProxy.rpcClient.ClientConn)
+			r.eventsProxy.connectionAlive = true
+			r.eventsProxy.Unlock()
+
+			// start processing the failed events
+			r.processFailedEvents()
+			return
 		}
-
-		r.logger.Infof("{%s} events recorder connected to events proxy", r.id)
-
-		r.eventsProxy.Lock()
-		r.eventsProxy.rpcClient = evtsProxyClient
-		r.eventsProxy.client = evtsproxygrpc.NewEventsProxyAPIClient(r.eventsProxy.rpcClient.ClientConn)
-		r.eventsProxy.connectionAlive = true
-		r.eventsProxy.Unlock()
-		break
 	}
-
-	// start processing the failed events
-	r.processFailedEvents()
-
-	return nil
 }
 
 // getID the unique ID of this recorder.
@@ -326,49 +349,47 @@ func (r *recorderImpl) getID() string {
 
 // reconnect helper function to re-establish the connection with events proxy
 func (r *recorderImpl) reconnect() {
+	defer r.wg.Done()
 	for {
-		if err := r.eventsProxy.rpcClient.Reconnect(); err != nil {
-			r.logger.Debugf("{%s} failed to reconnect to events proxy, retrying.. err: %v", r.id, err)
-			time.Sleep(1 * time.Second)
-			continue
-		}
+		select {
+		case <-r.shutdown:
+			r.logger.Error("received shutdown signal, closing {reconnect}")
+			return
+		case <-time.After(1 * time.Second):
+			if err := r.eventsProxy.rpcClient.Reconnect(); err != nil {
+				r.logger.Debugf("{%s} failed to reconnect to events proxy, retrying.. err: %v", r.id, err)
+				continue
+			}
 
-		// make sure the connection is stable
-		time.Sleep(10 * time.Millisecond)
-		if r.eventsProxy.rpcClient.ClientConn.GetState() != connectivity.Ready {
-			r.logger.Errorf("{%s} connection not ready after 10ms", r.id)
-			continue
-		}
+			// make sure the connection is stable
+			time.Sleep(10 * time.Millisecond)
+			if r.eventsProxy.rpcClient.ClientConn.GetState() != connectivity.Ready {
+				r.logger.Errorf("{%s} connection not ready after 10ms", r.id)
+				continue
+			}
 
-		r.eventsProxy.Lock()
-		r.eventsProxy.client = evtsproxygrpc.NewEventsProxyAPIClient(r.eventsProxy.rpcClient.ClientConn)
-		r.eventsProxy.connectionAlive = true
-		r.logger.Debugf("{%s} reconnected with events proxy", r.id)
-		r.eventsProxy.Unlock()
-		break
+			r.eventsProxy.Lock()
+			r.eventsProxy.client = evtsproxygrpc.NewEventsProxyAPIClient(r.eventsProxy.rpcClient.ClientConn)
+			r.eventsProxy.connectionAlive = true
+			r.logger.Debugf("{%s} reconnected with events proxy", r.id)
+			r.eventsProxy.Unlock()
+
+			// start processing the failed events
+			r.processFailedEvents()
+			return
+		}
 	}
-
-	// start processing the failed events
-	r.processFailedEvents()
 }
 
 // processFailedEvents helper function to process all the failed events
 func (r *recorderImpl) processFailedEvents() {
-	r.logger.Debugf("{%s} processing failed events (reading from the file)", r.id)
-	// make sure the previous thread (if there is) that is processing failed events
-	// is stopped, otherwise there will be 2 threads trying
-	// to re-send the failed events. As a result, there could be duplicates.
-	select {
-	case r.failedEventsForwarder.stop <- struct{}{}:
-	default: // no receiver
-		break
-	}
-	r.failedEventsForwarder.wg.Wait()
-
 	// this will make sure that there will be only thread processing failed events at any point
 	r.failedEventsForwarder.Lock()
 	defer r.failedEventsForwarder.Unlock()
 
+	r.logger.Debugf("{%s} processing failed events (reading from the file)", r.id)
+
+	// rotate moves the file *.bak/ and does the further processing (read and send to evtsproxy) on it.
 	if err := r.eventsFile.Rotate(); err != nil {
 		r.logger.Errorf("{%s} failed to rotate recorder events file, err: %v", r.id, err)
 		return
@@ -381,9 +402,10 @@ func (r *recorderImpl) processFailedEvents() {
 		return
 	}
 
-	r.logger.Debugf("{%s} forwarding failed events (from the file) to evtsproxy: %v", r.id, events.Minify(evts))
 	// forward all the failed events to proxy
+	r.logger.Debugf("{%s} forwarding failed events (from the file) to evtsproxy: %v", r.id, events.Minify(evts))
 	if err := r.forwardEvents(evts); err != nil {
+		r.logger.Errorf("failed to re-send events, err: %v", err)
 		return
 	}
 
@@ -394,32 +416,31 @@ func (r *recorderImpl) processFailedEvents() {
 // forwardEvents helper function to forward given list of events to the proxy.
 // it will be retried until success or stop
 func (r *recorderImpl) forwardEvents(evts []*evtsapi.Event) error {
-	r.failedEventsForwarder.wg.Add(1)
-	defer r.failedEventsForwarder.wg.Done()
-
 	r.eventsProxy.Lock()
 	_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &evtsapi.EventList{Items: evts})
 	r.eventsProxy.Unlock()
-	if err != nil {
-		r.logger.Errorf("{%s} failed to re-send failed events, err: %v", r.id, err)
-	} else {
+	if err == nil {
 		return nil
 	}
 
+	r.logger.Errorf("{%s} failed to re-send failed events, err: %v, retrying...", r.id, err)
+
 	for {
 		select {
+		case <-r.shutdown:
+			return fmt.Errorf("received shutdown signal, closing {forwardEvents}")
+		case <-time.After(60 * time.Second):
+			return fmt.Errorf("timed out after 60s")
 		case <-r.failedEventsForwarder.tick.C:
 			r.eventsProxy.Lock()
 			_, err := r.eventsProxy.client.ForwardEvents(r.eventsProxy.ctx, &evtsapi.EventList{Items: evts})
 			r.eventsProxy.Unlock()
 			if err != nil {
-				r.logger.Errorf("{%s} failed to re-send failed events, err: %v", r.id, err)
+				r.logger.Errorf("{%s} failed to re-send failed events, err: %v, retrying...", r.id, err)
 				continue
 			}
 
 			return nil // events are sent successfully
-		case <-r.failedEventsForwarder.stop:
-			return fmt.Errorf("failed to re-send failed events")
 		}
 	}
 }

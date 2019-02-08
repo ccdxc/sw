@@ -2059,12 +2059,15 @@ static int ionic_set_features(struct lif *lif)
 	if (lif->hw_features & ETH_HW_TSO_UDP_CSUM)
 		netdev->hw_enc_features |= NETIF_F_GSO_UDP_TUNNEL_CSUM;
 
-	if (lif->ionic->nslaves)
-		netdev->hw_features |= NETIF_F_HW_L2FW_DOFFLOAD;
-
 	netdev->hw_features |= netdev->hw_enc_features;
 	netdev->features |= netdev->hw_features;
 	netdev->vlan_features |= netdev->features;
+
+	/* Leave L2FW_OFFLOAD out of netdev->features so it will
+	 * be disabled by default, but the user can enable later.
+	 */
+	if (lif->ionic->nslaves)
+		netdev->hw_features |= NETIF_F_HW_L2FW_DOFFLOAD;
 
 	netdev->priv_flags |= IFF_UNICAST_FLT;
 

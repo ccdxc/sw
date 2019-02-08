@@ -150,7 +150,7 @@ std::string get_filename(char *path, char *name, pid_t pid)
 
     strftime(timestring, PATH_MAX, "%Y%m%d%H%M%S", gmtime(&current_time));
     
-    snprintf(filename, PATH_MAX, "%s/core.%s.%i.%s.gz", path, name, pid, timestring);
+    snprintf(filename, PATH_MAX, "%s/core_%s_%i_%s.gz", path, name, pid, timestring);
 
     return std::string(filename);
 }

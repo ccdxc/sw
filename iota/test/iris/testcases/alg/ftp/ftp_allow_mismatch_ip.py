@@ -3,8 +3,10 @@ import os
 import time
 import pdb
 from iota.test.iris.testcases.alg.ftp.ftp_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
 
 def Setup(tc):
+    update_sgpolicy('ftp_allow_mismatch')
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -33,7 +35,7 @@ def Trigger(tc):
     SetupFTPClient(client.node_name, client.workload_name)
     SetupFTPMediator(mediator.node_name, mediator.workload_name)
 
-    api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
                            "/nic/bin/halctl clear session")
     tc.cmd_cookies.append("clear session")
 
@@ -54,13 +56,12 @@ def Trigger(tc):
     tc.cmd_cookies.append("Run FTP PUT")
 
     # Add Naples command validation
-    #sleep for tcp timeout
-    #api.Trigger_AddCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show session --alg ftp")
-    #tc.cmd_cookies.append("show session")
-    #api.Trigger_AddCommand(req, naples.node_name, naples.workload_name,
-    #                       "halctl show security flow-gate")
-    #tc.cmd_cookies.append("show security flow-gate")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show session --alg ftp")
+    tc.cmd_cookies.append("show session")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                           "/nic/bin/halctl show nwsec flow-gate")
+    tc.cmd_cookies.append("show security flow-gate")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
                            "cat /home/admin/ftp/ftp_server.txt | grep \"I am FTP server\"")

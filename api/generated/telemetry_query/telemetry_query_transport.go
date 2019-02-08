@@ -17,6 +17,176 @@ import (
 // Dummy definitions to suppress nonused warnings
 var _ api.ObjectMeta
 
+func encodeHTTPFwlog(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwlog(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Fwlog
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwlog encodes GRPC request
+func EncodeGrpcReqFwlog(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Fwlog)
+	return req, nil
+}
+
+// DecodeGrpcReqFwlog decodes GRPC request
+func DecodeGrpcReqFwlog(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Fwlog)
+	return req, nil
+}
+
+// EncodeGrpcRespFwlog encodes GRC response
+func EncodeGrpcRespFwlog(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwlog decodes GRPC response
+func DecodeGrpcRespFwlog(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPFwlogsQueryList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwlogsQueryList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogsQueryList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwlogsQueryList encodes GRPC request
+func EncodeGrpcReqFwlogsQueryList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogsQueryList)
+	return req, nil
+}
+
+// DecodeGrpcReqFwlogsQueryList decodes GRPC request
+func DecodeGrpcReqFwlogsQueryList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogsQueryList)
+	return req, nil
+}
+
+// EncodeGrpcRespFwlogsQueryList encodes GRC response
+func EncodeGrpcRespFwlogsQueryList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwlogsQueryList decodes GRPC response
+func DecodeGrpcRespFwlogsQueryList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPFwlogsQueryResponse(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwlogsQueryResponse(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogsQueryResponse
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwlogsQueryResponse encodes GRPC request
+func EncodeGrpcReqFwlogsQueryResponse(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogsQueryResponse)
+	return req, nil
+}
+
+// DecodeGrpcReqFwlogsQueryResponse decodes GRPC request
+func DecodeGrpcReqFwlogsQueryResponse(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogsQueryResponse)
+	return req, nil
+}
+
+// EncodeGrpcRespFwlogsQueryResponse encodes GRC response
+func EncodeGrpcRespFwlogsQueryResponse(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwlogsQueryResponse decodes GRPC response
+func DecodeGrpcRespFwlogsQueryResponse(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPFwlogsQueryResult(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwlogsQueryResult(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogsQueryResult
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwlogsQueryResult encodes GRPC request
+func EncodeGrpcReqFwlogsQueryResult(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogsQueryResult)
+	return req, nil
+}
+
+// DecodeGrpcReqFwlogsQueryResult decodes GRPC request
+func DecodeGrpcReqFwlogsQueryResult(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogsQueryResult)
+	return req, nil
+}
+
+// EncodeGrpcRespFwlogsQueryResult encodes GRC response
+func EncodeGrpcRespFwlogsQueryResult(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwlogsQueryResult decodes GRPC response
+func DecodeGrpcRespFwlogsQueryResult(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPFwlogsQuerySpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPFwlogsQuerySpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req FwlogsQuerySpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqFwlogsQuerySpec encodes GRPC request
+func EncodeGrpcReqFwlogsQuerySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogsQuerySpec)
+	return req, nil
+}
+
+// DecodeGrpcReqFwlogsQuerySpec decodes GRPC request
+func DecodeGrpcReqFwlogsQuerySpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*FwlogsQuerySpec)
+	return req, nil
+}
+
+// EncodeGrpcRespFwlogsQuerySpec encodes GRC response
+func EncodeGrpcRespFwlogsQuerySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespFwlogsQuerySpec decodes GRPC response
+func DecodeGrpcRespFwlogsQuerySpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPMetricsQueryList(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

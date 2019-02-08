@@ -1,7 +1,13 @@
 #! /usr/bin/python3
 from iota.test.iris.testcases.alg.dns.dns_utils import *
+from iota.test.iris.testcases.alg.alg_utils import *
+import re
+import os
+import pdb
 
 def Setup(tc):
+    update_app('dns', '30s', 'query_response_timeout', '%s'%(tc.iterators.timeout), True)
+    update_sgpolicy('dns')
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -19,10 +25,16 @@ def Trigger(tc):
        else:
           client, server = pairs[0]
 
+    SetupDNSClient(client, server, qtype="LARGE_DOMAIN_NAME")
+
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\
                    (server.workload_name, server.ip_address, client.workload_name, client.ip_address)
     api.Logger.info("Starting DNS test from %s" % (tc.cmd_descr))
+
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                "/nic/bin/halctl clear session")
+    tc.cmd_cookies.append("clear session")
 
     SetupDNSServer(server, stop=True)
 
@@ -35,11 +47,13 @@ def Trigger(tc):
     tc.cmd_cookies.append("Query DNS server") 
 
     ## Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name,
-    #                "sleep 30")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name,
-    #            "/nic/bin/halctl show session --alg dns | grep UDP")
-    #tc.cmd_cookies.append("Show session")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                    "sleep %s"%timetoseconds(tc.iterators.timeout))
+    tc.cmd_cookies.append("sleep")
+
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                "/nic/bin/halctl show session --alg dns --yaml")
+    tc.cmd_cookies.append("Show session")
  
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
@@ -65,7 +79,6 @@ def Verify(tc):
         if tc.cmd_cookies[cookie_idx].find("Show session") != -1 and \
             cmd.stdout != '':
             result = api.types.status.FAILURE
-        #Add a stricter check for session being gone
         cookie_idx += 1
 
     return result

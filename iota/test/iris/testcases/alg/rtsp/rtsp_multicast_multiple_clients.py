@@ -6,6 +6,7 @@ from iota.test.iris.testcases.alg.alg_utils import *
 import pdb
 
 def Setup(tc):
+    update_sgpolicy('rtsp_nonstandard_port')
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -39,22 +40,22 @@ def Trigger(tc):
                            "ls -al | grep video")
     tc.cmd_cookies.append("Before RTSP")
 
-    server_cmd = "cd rtspdir && vobStreamer -p 2000 small.vob"
+    server_cmd = "cd rtspdir && vobStreamer -p 2004 small.vob"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
                            server_cmd, background = True)
     tc.cmd_cookies.append("Run RTSP server")
    
     api.Trigger_AddCommand(req, client1.node_name, client1.workload_name,
-                           "openRTSP rtsp://%s:2000/vobStream" % server.ip_address)
+                           "openRTSP rtsp://%s:2004/vobStream" % server.ip_address)
     tc.cmd_cookies.append("Run RTSP client1")
 
     ## Add Naples command validation
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                            "/nic/bin/halctl show session --alg rtsp | grep ESTABLISHED")
-    #tc.cmd_cookies.append("show session RTSP established")
-    #api.Trigger_AddNaplesCommand(req, naples.node_name, naples.workload_name,
-    #                        "/nic/bin/halctl show nwsec flow-gate | grep RTSP")
-    #tc.cmd_cookies.append("show flow-gate") 
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                                "/nic/bin/halctl show session --alg rtsp")
+    tc.cmd_cookies.append("show session RTSP established")
+    api.Trigger_AddNaplesCommand(req, naples.node_name,
+                            "/nic/bin/halctl show nwsec flow-gate | grep RTSP")
+    tc.cmd_cookies.append("show flow-gate") 
 
     api.Trigger_AddCommand(req, client1.node_name, client1.workload_name,
                            "ls -al | grep video")
@@ -104,13 +105,13 @@ def Verify(tc):
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             if (tc.cmd_cookies[cookie_idx].find("Run RTSP client") != -1 or \
-                tc.cmd_cookies[cookie_idx].find("Before RTSP") != -1):
+                tc.cmd_cookies[cookie_idx].find("Before RTSP") != -1 or \
+                tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1):
                 result = api.types.status.SUCCESS
             else:
                 result = api.types.status.FAILURE
-        if (tc.cmd_cookies[cookie_idx].find("show session RTSP") != -1 or \
-            tc.cmd_cookies[cookie_idx].find("show flow-gate") != -1) and \
-            cmd.stdout == '':
+        if tc.cmd_cookies[cookie_idx].find("show session RTSP") != -1 and \
+           cmd.stdout == '':
             result = api.types.status.FAILURE
         cookie_idx += 1       
     for cmd in tc.resp2.commands:

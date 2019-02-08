@@ -209,11 +209,39 @@ func readAndParseLease(leaseFile string) ([]string, error) {
 	return nil, nil
 }
 
-func (c *IPClient) updateNaplesStatus(controllers []string) error {
+func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) error {
 	log.Infof("Found Controllers: %v", controllers)
 	var naplesMode delphiProto.NaplesStatus_Mode
 	var deviceSpec device.SystemSpec
 	var appStartSpec []byte
+
+	if ipaddress == "" {
+		log.Errorf("IP Address is empty. Cannot proceed.")
+		return errors.New("ipaddress is empty")
+	}
+
+	if c.nmdState.config.Status.IPConfig == nil {
+		c.nmdState.config.Status.IPConfig = &cluster.IPConfig{
+			IPAddress:  "",
+			DefaultGW:  "",
+			DNSServers: nil,
+		}
+	}
+
+	c.nmdState.config.Status.IPConfig.IPAddress = ipaddress
+
+	if controllers == nil {
+		// Vendor specified attributes is nil
+		c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
+		log.Errorf("Controllers is nil. Bailing from Naples Status Update")
+		return nil
+	}
+
+	// For Static configuration case, we assume that the user knows what they are doing.
+	if c.isDynamic && !c.mustTriggerUpdate(controllers) {
+		log.Errorf("Cannot trigger update as controllers break security gurantees. Bailing from Naples Status Update.")
+		return nil
+	}
 
 	// Set up appropriate mode
 	switch c.networkMode {
@@ -351,15 +379,10 @@ func (c *IPClient) watchLeaseEvents() {
 					return
 				}
 
-				if controllers != nil && c.mustTriggerUpdate(controllers) {
-					err = c.updateNaplesStatus(controllers)
-					if err != nil {
-						return
-					}
-				} else {
-					// Vendor specified attributes is nil
-					c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
-					log.Infof("Controllers is nil.")
+				// Replace 1.1.1.1 with a parsed value
+				err = c.updateNaplesStatus(controllers, "1.1.1.1")
+				if err != nil {
+					return
 				}
 			}
 		// watch for errors
@@ -425,7 +448,7 @@ func (c *IPClient) doStaticIPConfig() error {
 
 	c.isDynamic = false
 
-	err := c.updateNaplesStatus(c.controllers)
+	err := c.updateNaplesStatus(c.controllers, c.ipaddress)
 	if err != nil {
 		return err
 	}

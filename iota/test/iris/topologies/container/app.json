@@ -1,0 +1,150 @@
+{
+    "type" : "netagent",
+    "rest-endpoint" : "api/apps/",
+    "object-key" : "meta.tenant/meta.namespace/meta.name",
+    "objects": [
+    {
+      "kind": "App",
+      "meta": {
+        "name": "tftp",
+        "tenant": "default",
+        "namespace": "default",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "proto-ports"     : ["udp/69"],
+        "alg-type"        : "tftp",
+        "alg"             : { "tftp" : {} },
+        "app-idle-timeout": "30s"
+      },
+      "status": {}
+    },
+    {
+      "kind": "App",
+      "meta": {
+        "name": "tftp_nonstandard_port",
+        "tenant": "default",
+        "namespace": "default",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "proto-ports"     : ["udp/2088"],
+        "alg-type"        : "tftp",
+        "alg"             : { "tftp" : {} },
+        "app-idle-timeout": "30s"
+      },
+      "status": {}
+    },
+    {
+      "kind": "App",
+      "meta": {
+        "name": "ftp",
+        "tenant": "default",
+        "namespace": "default",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "proto-ports"     : ["tcp/21"],
+        "alg-type"        : "ftp",
+        "alg"             : { "ftp" : { "allow-mismatch-ip-addresses": false } },
+        "app-idle-timeout": "90s"
+      },
+      "status": {}
+    },
+    {
+      "kind": "App",
+      "meta": {
+        "name": "ftp_allow_mismatch",
+        "tenant": "default",
+        "namespace": "default",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "proto-ports"     : ["tcp/21"],
+        "alg-type"        : "ftp",
+        "alg"             : { "ftp" : { "allow-mismatch-ip-addresses": true } },
+        "app-idle-timeout": "100s"
+      },
+      "status": {}
+    },
+    {
+      "kind": "App",
+      "meta": {
+        "name": "ftp_nonstandard_port",
+        "tenant": "default",
+        "namespace": "default",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "proto-ports"     : ["tcp/2300"],
+        "alg-type"        : "ftp",
+        "alg"             : { "ftp" : { "allow-mismatch-ip-addresses": true } },
+        "app-idle-timeout": "100s"
+      },
+      "status": {}
+    },
+    {
+      "kind": "App",
+      "meta": {
+        "name": "rtsp",
+        "tenant": "default",
+        "namespace": "default",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "proto-ports"     : ["tcp/554"],
+        "alg-type"        : "rtsp",
+        "alg"             : { "rtsp" : {} },
+        "app-idle-timeout": "100s"
+      },
+      "status": {}
+    },
+    {
+      "kind": "App",
+      "meta": {
+        "name": "rtsp_nonstandard_port",
+        "tenant": "default",
+        "namespace": "default",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "proto-ports"     : ["tcp/2004"],
+        "alg-type"        : "rtsp",
+        "alg"             : { "rtsp" : {} },
+        "app-idle-timeout": "100s"
+      },
+      "status": {}
+    },
+    {
+      "kind": "App",
+      "meta": {
+        "name": "dns",
+        "tenant": "default",
+        "namespace": "default",
+        "creation-time": "1970-01-01T00:00:00Z",
+        "mod-time": "1970-01-01T00:00:00Z"
+      },
+      "spec": {
+        "proto-ports"     : ["udp/53"],
+        "alg-type"        : "dns",
+        "alg"             : { "dns" : { 
+                                       "drop-multi-question-packets": false, 
+                                       "drop-large-domain-packets": false,
+                                       "drop-long-label-packets": false,
+                                       "drop-multi-zone-packets": false,
+                                       "max-msg-length": 0,
+                                       "query-response-timeout": "30s"
+                                      } },
+        "app-idle-timeout": "100s"
+      },
+      "status": {}
+    }
+    ]
+}

@@ -419,6 +419,9 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 	debugfs_create_u32("pid", 0400, q_dentry, &q->pid);
 	debugfs_create_u32("qid", 0400, q_dentry, &q->qid);
 	debugfs_create_u32("qtype", 0400, q_dentry, &q->qtype);
+	debugfs_create_u64("drop", 0400, q_dentry, &q->drop);
+	debugfs_create_u64("stop", 0400, q_dentry, &q->stop);
+	debugfs_create_u64("wake", 0400, q_dentry, &q->wake);
 
 	debugfs_create_file("tail", 0400, q_dentry, q, &q_tail_fops);
 	debugfs_create_file("head", 0400, q_dentry, q, &q_head_fops);
@@ -453,12 +456,8 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 				   &qcq->stats.tx.bytes);
 		debugfs_create_u64("clean", 0400, stats_dentry,
 				   &qcq->stats.tx.clean);
-		debugfs_create_u64("drop", 0400, stats_dentry,
-				   &qcq->stats.tx.drop);
 		debugfs_create_u64("linearize", 0400, stats_dentry,
 				   &qcq->stats.tx.linearize);
-		debugfs_create_u64("stop", 0400, stats_dentry,
-				   &qcq->stats.tx.stop);
 		debugfs_create_u64("no_csum", 0400, stats_dentry,
 				   &qcq->stats.tx.no_csum);
 		debugfs_create_u64("csum", 0400, stats_dentry,
@@ -478,10 +477,18 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 
 		debugfs_create_u64("dma_map_err", 0400, stats_dentry,
 				   &qcq->stats.rx.dma_map_err);
+		debugfs_create_u64("alloc_err", 0400, stats_dentry,
+				   &qcq->stats.rx.alloc_err);
 		debugfs_create_u64("pkts", 0400, stats_dentry,
 				   &qcq->stats.rx.pkts);
 		debugfs_create_u64("bytes", 0400, stats_dentry,
 				   &qcq->stats.rx.bytes);
+		debugfs_create_u64("csum_none", 0400, stats_dentry,
+				   &qcq->stats.rx.csum_none);
+		debugfs_create_u64("csum_complete", 0400, stats_dentry,
+				   &qcq->stats.rx.csum_complete);
+		debugfs_create_u64("csum_error", 0400, stats_dentry,
+				   &qcq->stats.rx.csum_error);
 	}
 
 	cq_dentry = debugfs_create_dir("cq", qcq_dentry);

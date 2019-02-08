@@ -289,6 +289,35 @@ func (n *NMD) NaplesConfigHandler(r *http.Request) (interface{}, error) {
 	return resp, nil
 }
 
+// NaplesRolloutHandler is the REST handler for Naples Config POST operation
+func (n *NMD) NaplesRolloutHandler(r *http.Request) (interface{}, error) {
+	snicRollout := roprotos.SmartNICRollout{}
+	resp := NaplesConfigResp{}
+	content, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Errorf("Failed to read request: %v", err)
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+
+	if err = json.Unmarshal(content, &snicRollout); err != nil {
+		log.Errorf("Unmarshal err %s", content)
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+
+	log.Infof("Naples Rollout Config Request: %+v", snicRollout)
+	err = n.CreateUpdateSmartNICRollout(&snicRollout)
+
+	if err != nil {
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+	log.Infof("Naples Rollout Config Response: %+v", resp)
+
+	return resp, nil
+}
+
 // NaplesFileUploadHandler is the REST handler for Naples File Upload POST operation
 func NaplesFileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	// parse and validate file and post parameters
@@ -381,6 +410,7 @@ func (n *NMD) StartRestServer() error {
 	router := mux.NewRouter()
 	t1 := router.Methods("POST").Subrouter()
 	t1.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesConfigHandler))
+	t1.HandleFunc(RolloutURL, httputils.MakeHTTPHandler(n.NaplesRolloutHandler))
 	t1.HandleFunc(UpdateURL, NaplesFileUploadHandler)
 
 	t2 := router.Methods("GET").Subrouter()
@@ -455,6 +485,11 @@ func (n *NMD) StopRestServer(shutdown bool) error {
 // GetNMDUrl returns the REST URL
 func (n *NMD) GetNMDUrl() string {
 	return "http://" + n.GetListenURL() + ConfigURL
+}
+
+// GetNMDRolloutURL returns the REST URL
+func (n *NMD) GetNMDRolloutURL() string {
+	return "http://" + n.GetListenURL() + RolloutURL
 }
 
 // GetNMDCmdExecURL returns the REST URL

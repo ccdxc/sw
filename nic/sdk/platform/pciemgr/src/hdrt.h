@@ -27,11 +27,12 @@ typedef struct {
     u_int64_t attr0_wr  :1;
     u_int64_t ats_at_wr :1;
     u_int64_t ats_at_rd :1;
-    u_int64_t tc        :1;
+    u_int64_t tc        :3;
     u_int64_t ln_wr     :1;
     u_int64_t ln_rd     :1;
-    u_int64_t rsrv      :1;
+    u_int64_t rsrv      :13;
     u_int64_t ecc       :8;
+    u_int64_t _pad      :16;
 } __attribute__((packed)) hdrt_t;
 
 void pciehw_hdrt_init(void);

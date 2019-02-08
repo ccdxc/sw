@@ -7,7 +7,6 @@ meta:
 testcases:
     -   name    : Ping_Mirror_Policy
         testcase: testcases.telemetry.ping_mirror_policy
-        ignore  : True
         enable  : True
         args    :
             type: remote_only
