@@ -443,7 +443,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
          // We are watching alerts. So when there are new alerts coming in, we display a toaster.
         if (this.alertNumbers > 0 && this.alertNumbers < this.alerts.length) {
           const diff = this.alerts.length - this.alertNumbers;
-          this._controllerService.invokeInfoToaster('Alert', diff + 'new alerts arrived');
+          const alertMsg = (diff === 1) ? diff + 'new alert arrived' : diff + 'new alerts arrived';
+          this._controllerService.invokeInfoToaster('Alert', alertMsg);
         }
         this.alertNumbers = this.alerts.length;
       },
