@@ -42,6 +42,20 @@ def GetVlanID(node, interface):
         vlan_id="0"
     return int(vlan_id)
 
+def GetMcastMACAddress(node, interface):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip maddr show " + interface + " | grep link | cut -d' ' -f3"
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "netstat -f link -aI " + interface + " | grep -o -E '([[:xdigit:]]{2}:){5}[[:xdigit:]]{2}'"
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    mcastMAC_list = list(filter(None, resp.commands[0].stdout.strip("\n").split("\n")))
+    if api.GetNodeOs(node) == "freebsd":
+        #TODO check if first MAC is unicast MAC and then pop instead of a blind pop?
+        mcastMAC_list.pop(0)
+    return mcastMAC_list
+
 def GetMACAddress(node, interface):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     if api.GetNodeOs(node) == "linux":

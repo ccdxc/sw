@@ -10,21 +10,15 @@ import operator
 __ARPING_COUNT = 8
 
 def GetNaplesEthHostInterfaces(node):
-    #TODO: need a proper API from infra to return only interfaces of ETH_HOST type
-    """
-    host_intfs = set(api.GetNaplesHostInterfaces(node))
-    eth_mgmt_intfs = set(['ionic2', 'enp183s0'])
-    eth_host_intfs = list(host_intfs - eth_mgmt_intfs)
-    """
-    eth_host_intfs = sorted(list(api.GetNaplesHostInterfaces(node)))
-    #remove last element to remove ETH_HOST_MGMT intf as we are only interested in ETH_HOST
-    eth_host_intfs.pop()
+    #Get only ETH_HOST interfaces
+    eth_host_intfs = list(api.GetNaplesHostInterfaces(node))
+    api.Logger.verbose("BC MAC filter : Setup eth_host_intfs : ", eth_host_intfs)
     return eth_host_intfs
 
 def getInterfaceList(naples_node):
     intf_pktfilter_list= list()
     naples_intf_list = naples_host_utils.getNaplesInterfaces(naples_node)
-    host_intf_list = list(api.GetNaplesHostInterfaces(naples_node))
+    host_intf_list = filters_utils.GetNaplesHostInterfacesList(naples_node)
 
     intf_pktfilter_list = naples_intf_list + host_intf_list
 

@@ -48,17 +48,7 @@ def verifyEndPoints(tc):
 
     # HAL's view of endpoints = Union of workload + Host + Naples Intf 
     host_view = wload_ep_view | host_ep_view | naples_ep_view
-    #Get the symmetric difference between the two views
-    diff = host_view ^ hal_ep_view
-
-    if len(diff) == 0:
-        result = True
-    else:
-        # If there is a difference in view, then mark the TC failed.
-        result = False
-        api.Logger.error("UC MAC : Failure - verifyEndPoints failed ", len(diff), diff)
-
-    return result
+    return filters_utils.verifyEndpoints(host_view, hal_ep_view)
 
 def changeMacAddrTrigger(tc, isRollback=False):
     result = api.types.status.SUCCESS
@@ -105,7 +95,8 @@ def Setup(tc):
 
     host_intf_mac_dict = dict()
     #Get MAC address of all the interfaces on the host of Naples (except the workload interfaces)
-    host_intf_list = list(api.GetNaplesHostInterfaces(naples_node))
+    host_intf_list = filters_utils.GetNaplesHostInterfacesList(naples_node)
+    api.Logger.verbose("UC MAC filter : Setup host_intf_list : ", host_intf_list)
     for intf in host_intf_list:
         if intf not in wload_intf_mac_dict:
             intf_mac_addr = host_utils.GetMACAddress(naples_node, intf)
@@ -118,7 +109,7 @@ def Setup(tc):
     tc.wload_intf_mac_dict = wload_intf_mac_dict
     tc.wload_intf_vlan_map = wload_intf_vlan_map
 
-    api.Logger.debug("UC MAC filter : Setup host_intf_mac_dict : ", naples_intf_mac_dict)
+    api.Logger.debug("UC MAC filter : Setup naples_intf_mac_dict : ", naples_intf_mac_dict)
     api.Logger.debug("UC MAC filter : Setup host_intf_mac_dict : ", host_intf_mac_dict)
     api.Logger.debug("UC MAC filter : Setup wload_intf_mac_dict : ", wload_intf_mac_dict)
     api.Logger.debug("UC MAC filter : Setup wload_intf_vlan_map : ", wload_intf_vlan_map)
@@ -153,6 +144,7 @@ def Verify(tc):
             halctl show table dump --entry-id 1840 --table-id 4
             Get the entry id from "halctl show endpoint --yaml"
         2. Check for memleaks [will pull from Amrita's TC]
+            2.1 "halctl show system memory slab | grep ep"
     '''
     api.Logger.verbose("UC MAC filter : Verify")
     result = api.types.status.SUCCESS

@@ -51,6 +51,14 @@ def GetVlanID(node, interface):
         vlan_id="0"
     return int(vlan_id)
 
+def GetMcastMACAddress(node, interface):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "ip maddr show " + interface + " | grep link | cut -d' ' -f3"
+    api.Trigger_AddNaplesCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    mcastMAC_list = list(filter(None, resp.commands[0].stdout.strip("\n").split("\r")))
+    return mcastMAC_list
+
 def SetMACAddress(node, interface, mac_addr):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     cmd = "ip link set dev " + interface + " address " + mac_addr

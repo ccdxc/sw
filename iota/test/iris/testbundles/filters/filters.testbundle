@@ -8,7 +8,7 @@ testcases:
     -   name    : Unicast_MAC_Filter
         testcase: testcases.filters.unicast_mac_filter
         disable : False
-        ignore  : True
+        ignore  : False
         iterators :
             type       : nested
             mac_change : [ no, yes ]
@@ -19,9 +19,9 @@ testcases:
     -   name    : Broadcast_MAC_Filter
         testcase: testcases.filters.broadcast_mac_filter
         disable : False
-        ignore  : True
+        ignore  : False
 
     -   name    : Multicast_MAC_Filter
         testcase: testcases.filters.multicast_mac_filter
         disable : False
-        ignore  : True
+        ignore  : False
