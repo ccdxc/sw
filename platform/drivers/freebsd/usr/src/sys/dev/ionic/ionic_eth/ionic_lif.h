@@ -301,7 +301,7 @@ struct lif {
 
 	struct sysctl_oid *sysctl_ifnet;
 	struct sysctl_ctx_list sysctl_ctx;
-	struct mtx mtx;
+	struct sx sx;
 
 	struct rx_filters rx_filters;
 
@@ -331,11 +331,11 @@ struct lif {
 };
 
 /* lif lock. */
-#define IONIC_CORE_LOCK_INIT(x) 	mtx_init(&(x)->mtx, (x)->name, NULL, MTX_DEF)
-#define IONIC_CORE_LOCK_DESTROY(x)	mtx_destroy(&(x)->tx_mtx)
-#define IONIC_CORE_LOCK(x)		mtx_lock(&(x)->mtx)
-#define IONIC_CORE_UNLOCK(x)		mtx_unlock(&(x)->mtx)
-#define IONIC_CORE_LOCK_OWNED(x)	mtx_owned(&(x)->mtx)
+#define IONIC_CORE_LOCK_INIT(x)		sx_init(&(x)->sx, (x)->name)
+#define IONIC_CORE_LOCK_DESTROY(x)	sx_destroy(&(x)->sx)
+#define IONIC_CORE_LOCK(x)		sx_xlock(&(x)->sx)
+#define IONIC_CORE_UNLOCK(x)		sx_xunlock(&(x)->sx)
+#define IONIC_CORE_LOCK_OWNED(x)	sx_xlocked(&(x)->sx)
 
 #define IONIC_ADMIN_LOCK_INIT(x) 	mtx_init(&(x)->mtx, (x)->mtx_name, NULL, MTX_DEF)
 #define IONIC_ADMIN_LOCK_DESTROY(x)	mtx_destroy(&(x)->mtx)
@@ -396,7 +396,7 @@ int ionic_change_mtu(struct net_device *netdev, int new_mtu);
 void ionic_set_rx_mode(struct net_device *netdev);
 void ionic_clear_rx_mode(struct net_device *netdev);
 
-void ionic_set_multi(struct lif* lif);
+int ionic_set_multi(struct lif* lif);
 
 int ionic_set_mac(struct net_device *netdev);
 

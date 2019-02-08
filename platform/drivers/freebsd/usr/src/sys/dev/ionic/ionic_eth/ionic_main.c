@@ -78,7 +78,7 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 	if (ctx->comp.comp.status || timeout) {
 		IONIC_NETDEV_ERROR(netdev, "(%d) %s failed: %d %s\n", ctx->cmd.cmd.opcode,
 			name, ctx->comp.comp.status, timeout ? "(timeout)" : "");
-		return EIO;
+		return ctx->comp.comp.status;
 	}
 
 	IONIC_NETDEV_INFO(netdev, "(%d) %s done\n", ctx->cmd.cmd.opcode,

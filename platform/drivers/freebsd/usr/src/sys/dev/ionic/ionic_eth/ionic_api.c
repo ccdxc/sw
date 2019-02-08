@@ -366,7 +366,8 @@ static int ionic_api_do_adminq(struct lif* lif, struct ionic_admin_ctx *ctx)
 
 	if (!ionic_adminq_avail(adminq, 1)) {
 		err = ENOSPC;
-		IONIC_QUE_ERROR(adminq, "adminq is hung!\n");
+		IONIC_QUE_ERROR(adminq, "adminq is hung!, head: %d tail: %d\n",
+			adminq->head_index, adminq->tail_index);
 		IONIC_ADMIN_UNLOCK(adminq);
 		return (err);
 	}

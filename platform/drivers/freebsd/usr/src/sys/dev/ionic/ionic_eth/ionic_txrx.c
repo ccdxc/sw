@@ -58,6 +58,8 @@
 #include <netinet/in_rss.h>
 #endif
 
+#define QUEUE_NAME_LEN 32
+
 MALLOC_DEFINE(M_IONIC, "ionic", "Pensando IONIC Ethernet adapter");
 static int ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data);
 static SYSCTL_NODE(_hw, OID_AUTO, ionic, CTLFLAG_RD, 0,
@@ -79,7 +81,7 @@ TUNABLE_INT("hw.ionic.enable_msix", &ionic_enable_msix);
 SYSCTL_INT(_hw_ionic, OID_AUTO, enable_msix, CTLFLAG_RWTUN,
     &ionic_enable_msix, 0, "Enable MSI/X");
 
-int ionic_use_adminq = 0;
+int ionic_use_adminq = 1;
 TUNABLE_INT("hw.ionic.use_adminq", &ionic_use_adminq);
 SYSCTL_INT(_hw_ionic, OID_AUTO, use_adminq, CTLFLAG_RDTUN,
     &ionic_use_adminq, 0, "Enable adminQ");
@@ -483,6 +485,7 @@ int ionic_setup_rx_intr(struct rxque* rxq)
 {
 	int err, bind_cpu;
 	struct lif* lif = rxq->lif;
+	char namebuf[16];
 #ifdef RSS
 	cpuset_t        cpu_mask;
 
@@ -493,8 +496,9 @@ int ionic_setup_rx_intr(struct rxque* rxq)
 #endif
 
 	TASK_INIT(&rxq->task, 0, ionic_rx_task_handler, rxq);
-    	rxq->taskq = taskqueue_create(rxq->intr.name, M_NOWAIT,
-	    taskqueue_thread_enqueue, &rxq->taskq);
+	snprintf(namebuf, sizeof(namebuf), "task-%s", rxq->name);
+	rxq->taskq = taskqueue_create(namebuf, M_NOWAIT,
+		taskqueue_thread_enqueue, &rxq->taskq);
 
 #ifdef RSS
     err = taskqueue_start_threads_cpuset(&rxq->taskq, 1, PI_NET, &cpu_mask,
@@ -610,6 +614,7 @@ int ionic_setup_tx_intr(struct txque* txq)
 {
 	int err, bind_cpu;
 	struct lif* lif = txq->lif;
+	char namebuf[16];
 #ifdef RSS
 	cpuset_t        cpu_mask;
 
@@ -620,8 +625,9 @@ int ionic_setup_tx_intr(struct txque* txq)
 #endif
 
 	TASK_INIT(&txq->task, 0, ionic_tx_task_handler, txq);
-    txq->taskq = taskqueue_create(txq->name, M_NOWAIT,
-	    taskqueue_thread_enqueue, &txq->taskq);
+	snprintf(namebuf, sizeof(namebuf), "task-%s", txq->name);
+	txq->taskq = taskqueue_create(namebuf, M_NOWAIT,
+		taskqueue_thread_enqueue, &txq->taskq);
 
 #ifdef RSS
     err = taskqueue_start_threads_cpuset(&txq->taskq, 1, PI_NET, &cpu_mask,
@@ -1654,7 +1660,6 @@ ionic_setup_hw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 		&stat->rx_rdma_ecn_packets, "");
 }
 
-#define QUEUE_NAME_LEN 32
 static void
 ionic_notifyq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 		struct sysctl_oid_list *child)
@@ -1868,7 +1873,9 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 	case SIOCGIFMEDIA:
 	case SIOCGIFXMEDIA:
 		IONIC_NETDEV_INFO(ifp, "ioctl: SIOCxIFMEDIA (Get/Set Interface Media)\n");
-		error = ifmedia_ioctl(ifp, ifr, &lif->media, command);
+		if (lif->registered) {
+			error = ifmedia_ioctl(ifp, ifr, &lif->media, command);
+		}
 		break;
 
 	case SIOCSIFCAP:
@@ -1995,9 +2002,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 	case SIOCDELMULTI:
 		IONIC_NETDEV_INFO(ifp, "ioctl: %s (Add/Del Multicast Filter)\n",
 			(command == SIOCADDMULTI) ? "SIOCADDMULTI" : "SIOCDELMULTI");
-		IONIC_CORE_LOCK(lif);
-		ionic_set_multi(lif);
-		IONIC_CORE_UNLOCK(lif);
+		error =  ionic_set_multi(lif);
 		break;
 
 	case SIOCSIFADDR:

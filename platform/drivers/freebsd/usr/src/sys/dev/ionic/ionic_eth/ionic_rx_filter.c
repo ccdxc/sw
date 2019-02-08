@@ -75,11 +75,13 @@ void ionic_rx_filters_deinit(struct lif *lif)
 	struct rx_filter *f;
 	unsigned int i;
 
+	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 	for (i = 0; i < RX_FILTER_HLISTS; i++) {
 		head = &lif->rx_filters.by_id[i];
 		hlist_for_each_entry_safe(f, tmp, head, by_id)
 			ionic_rx_filter_free(lif, f);
 	}
+	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 }
 
 int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
@@ -92,6 +94,7 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 	if (!f)
 		return ENOMEM;
 
+	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 	f->flow_id = flow_id;
 	f->filter_id = ctx->comp.rx_filter_add.filter_id;
 	f->rxq_index = rxq_index;
@@ -112,10 +115,10 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 		key = f->cmd.mac_vlan.vlan & RX_FILTER_HLISTS_MASK;
 		break;
 	default:
+		free(f, M_IONIC);
+		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 		return ENOTSUPP;
 	}
-
-//	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 
 	head = &lif->rx_filters.by_hash[key];
 	hlist_add_head(&f->by_hash, head);
@@ -123,8 +126,7 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 	key = f->filter_id & RX_FILTER_HLISTS_MASK;
 	head = &lif->rx_filters.by_id[key];
 	hlist_add_head(&f->by_id, head);
-
-//	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
+	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 
 	return 0;
 }
@@ -133,30 +135,34 @@ struct rx_filter *ionic_rx_filter_by_vlan(struct lif *lif, u16 vid)
 {
 	unsigned int key = vid & RX_FILTER_HLISTS_MASK;
 	struct hlist_head *head = &lif->rx_filters.by_hash[key];
-	struct rx_filter *f;
+	struct rx_filter *f = NULL;
 
+	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 	hlist_for_each_entry(f, head, by_hash) {
 		if (f->cmd.match != RX_FILTER_MATCH_VLAN)
 			continue;
 		if (f->cmd.vlan.vlan == vid)
-			return f;
+			break;
 	}
+	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 
-	return NULL;
+	return f;
 }
 
 struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
 {
 	unsigned int key = *(const u32 *)addr & RX_FILTER_HLISTS_MASK;
 	struct hlist_head *head = &lif->rx_filters.by_hash[key];
-	struct rx_filter *f;
+	struct rx_filter *f = NULL;
 
+	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 	hlist_for_each_entry(f, head, by_hash) {
 		if (f->cmd.match != RX_FILTER_MATCH_MAC)
 			continue;
 		if (memcmp(addr, f->cmd.mac.addr, ETH_ALEN) == 0)
-			return f;
+			break;
 	}
+	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 
-	return NULL;
+	return f;
 }
