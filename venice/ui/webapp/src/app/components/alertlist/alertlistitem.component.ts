@@ -98,7 +98,8 @@ export class AlertlistitemComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   onAlertItemClick($event) {
-    this.alert.check = !this.alert.check;
+    // comment this line out for now as we are not updating alert in alertlist panel. 
+    // this.alert.check = !this.alert.check;
     this.alertClick.emit(this.alert);
   }
 

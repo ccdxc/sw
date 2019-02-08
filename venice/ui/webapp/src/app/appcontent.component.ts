@@ -19,7 +19,7 @@ import { Eventtypes } from './enum/eventtypes.enum';
 import { ControllerService } from './services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
+import { MonitoringAlert, MonitoringAuditInfo, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 
 
 /**
@@ -58,7 +58,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
    alertSubscription: Subscription;
    alerts: ReadonlyArray<MonitoringAlert> = [];
    alertNumbers = 0;
-   alertQuery = {'field-selector': 'spec.state=OPEN' };  // this will get alterts that are neither acknownleged nor resovled.
+
+   alertQuery = {};
 
   protected sidenavmenu: any = [
     {
@@ -435,8 +436,11 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.alertSubscription = this.monitoringService.WatchAlert(this.alertQuery).subscribe(
       response => {
         this.alertsEventUtility.processEvents(response);
-        this.alerts = this.alertsEventUtility.array;
-        // We are watching alerts. So when there are new alerts coming in, we display a toaster.
+        // this.alertQuery is empty. So we will get all alerts. We only need the alerts that are in open state. Alert table can update alerts. This will reflect the changes of alerts.
+        this.alerts = this.alertsEventUtility.array.filter( (alert: MonitoringAlert) => {
+          return (!this.isAlertAcknownledged(alert) && !this.isAlertResolved(alert));
+        } );
+         // We are watching alerts. So when there are new alerts coming in, we display a toaster.
         if (this.alertNumbers > 0 && this.alertNumbers < this.alerts.length) {
           const diff = this.alerts.length - this.alertNumbers;
           this._controllerService.invokeInfoToaster('Alert', diff + 'new alerts arrived');
@@ -446,6 +450,14 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
       this._controllerService.restErrorHandler('Failed to get Alerts')
     );
     this.subscriptions.push(this.alertSubscription);
+  }
+
+  isAlertResolved(alert: MonitoringAlert): boolean {
+    return (alert.status.resolved.user !== null && alert.status.resolved.time !== null);
+  }
+
+  isAlertAcknownledged(alert: MonitoringAlert): boolean  {
+    return (alert.status.acknowledged.user !== null && alert.status.acknowledged.time !== null);
   }
 
   /**
