@@ -39,7 +39,7 @@ testcases:
 
     -   name    : UplinkIntf_TX_QUEUE_SIZE
         testcase: testcases.drivers.features
-        disable : False
+        disable : True
         iterators :
             type               : nested
             tx_queue_size      : [ 4 ]
@@ -55,7 +55,7 @@ testcases:
 
     -   name    : UplinkIntf_RX_QUEUE_SIZE
         testcase: testcases.drivers.features
-        disable : False
+        disable : True
         iterators :
             type               : nested
             rx_queue_size      : [ 4]
