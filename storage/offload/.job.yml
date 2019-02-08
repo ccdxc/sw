@@ -95,6 +95,3 @@ warmd:
     password: vm
    # additional vars to pass to ansible.
     vars:
-
-logfiles:
-  - /tmp/ClusterLogs
