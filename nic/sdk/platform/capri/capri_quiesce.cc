@@ -1,6 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "platform/capri/capri_quiesce.hpp"
+#include "platform/capri/capri_state.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "third-party/asic/capri/verif/apis/cap_quiesce_api.h"
 
@@ -56,7 +57,7 @@ capri_quiesce_stop(void) {
 sdk_ret_t
 capri_quiesce_init(void) {
     sdk_ret_t           ret = SDK_RET_OK;
-	cap_top_csr_t       &top_csr= CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+	cap_top_csr_t       &top_csr= g_capri_state_pd->cap_top();
 
     //SDK_TRACE_DEBUG("{}: Port10: {:x}", __FUNCTION__, top_csr.pb.pbc.port_10.dhs_oq_flow_control.get_depth_entry());
     //SDK_TRACE_DEBUG("{}: Port11: {:x}", __FUNCTION__, top_csr.pb.pbc.port_11.dhs_oq_flow_control.get_depth_entry());

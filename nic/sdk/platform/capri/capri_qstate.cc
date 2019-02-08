@@ -3,6 +3,7 @@
 // Functions related to Capri LIF 2 Qstate programming.
 
 #include "platform/capri/capri_lif_manager.hpp"
+#include "platform/capri/capri_state.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 
@@ -97,7 +98,7 @@ int clear_qstate_mem(uint64_t base_addr, uint32_t size) {
 
 
 void push_qstate_to_capri(LIFQState *qstate, int cos) {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
     if (!qstate->params_in.dont_zero_memory) {
         clear_qstate_mem(qstate->hbm_address, qstate->allocation_size);
@@ -111,7 +112,7 @@ void push_qstate_to_capri(LIFQState *qstate, int cos) {
 }
 
 void clear_qstate(LIFQState *qstate) {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
     auto *wa_entry = &cap0.db.wa.dhs_lif_qstate_map.entry[qstate->lif_id];
     clear_qstate_entry(wa_entry);
@@ -122,7 +123,7 @@ void clear_qstate(LIFQState *qstate) {
 }
 
 void read_lif_params_from_capri(LIFQState *qstate) {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     uint32_t is_valid = 0;
 
     auto *psp_entry = &cap0.pt.pt.psp.dhs_lif_qstate_map.entry[qstate->lif_id];

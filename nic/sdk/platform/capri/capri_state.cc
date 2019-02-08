@@ -1,9 +1,11 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include "include/sdk/base.hpp"
+#include "platform/capri/csrint/csr_init.hpp"
 #include "platform/capri/capri_cfg.hpp"
 #include "platform/capri/capri_state.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
+#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 
 namespace sdk {
 namespace platform {
@@ -32,12 +34,16 @@ capri_state_pd::~capri_state_pd()
 bool
 capri_state_pd::init(capri_cfg_t *cfg)
 {
-    // BMAllocator based bmp range allocator to manage txs scheduler mapping
-    txs_scheduler_map_idxr_ = 
-                    new sdk::lib::BMAllocator(CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES);
-    SDK_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
-    mempartition_ = cfg->mempartition;
-    cfg_path_ = cfg->cfg_path;
+    if (cfg) {
+        // BMAllocator based bmp range allocator to manage txs scheduler mapping
+        txs_scheduler_map_idxr_ = 
+                        new sdk::lib::BMAllocator(CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES);
+        SDK_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
+        mempartition_ = cfg->mempartition;
+        cfg_path_ = cfg->cfg_path;
+    }
+
+    cap_top_ = &CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
 
     return true;
 }
@@ -57,6 +63,17 @@ capri_state_pd::factory(capri_cfg_t *cfg)
         return NULL;
     }
     return state;
+}
+
+sdk_ret_t
+capri_state_pd_init(capri_cfg_t *cfg)
+{
+    sdk::platform::capri::csr_init();
+
+    g_capri_state_pd = sdk::platform::capri::capri_state_pd::factory(cfg);
+    SDK_ASSERT_TRACE_RETURN((g_capri_state_pd != NULL), SDK_RET_INVALID_ARG,
+                            "Failed to instantiate Capri PD");
+    return SDK_RET_OK;
 }
 
 }    // namespace capri

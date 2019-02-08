@@ -32,6 +32,7 @@ class TestBundle:
         self.__stats_total = 0
         self.__stats_target = 0
         self.__load_bundle()
+        self.result = types.status.FAILURE
         return
 
     def Name(self):

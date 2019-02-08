@@ -8,7 +8,7 @@
 
 #include "time_profile.hpp"
 
-#ifdef RUSAGE_PROFILING_ENABLE
+#ifdef PERF
 namespace sdk {
 namespace utils {
 namespace time_profile {

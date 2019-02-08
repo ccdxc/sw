@@ -5,6 +5,7 @@ uname=`uname -s`
 if [ x$uname == xLinux ]
 then
   find -type f -and -regex '.*/.*\.\(c\|cpp\|cc\|h\|hpp\|p4\|s\|asm\|proto\|spec\)$' > cscope.files
+  find ../platform/ -type f -and -regex '.*/.*\.\(c\|cpp\|cc\|h\|hpp\|p4\|s\|asm\|proto\|spec\)$' >> cscope.files
 elif [ x$uname == xDarwin ]
 then
   find . -name '*.c' 2> /dev/null > cscope.files

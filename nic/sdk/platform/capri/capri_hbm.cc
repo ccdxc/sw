@@ -388,7 +388,7 @@ capri_hbm_cache_regions_init (void)
 uint64_t
 capri_hbm_timestamp_get (void)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
 
     pbc_csr.hbm.sta_hbm_timestamp.read();
@@ -399,7 +399,7 @@ capri_hbm_timestamp_get (void)
 sdk_ret_t
 capri_tpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pics_csr_t &pics_csr = cap0.tpc.pics;
 
     pics_csr.sta_axi_bw_mon_rd_bandwidth.read();
@@ -415,7 +415,7 @@ capri_tpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 sdk_ret_t
 capri_tpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pics_csr_t &pics_csr = cap0.tpc.pics;
 
     pics_csr.sta_axi_bw_mon_wr_bandwidth.read();
@@ -431,7 +431,7 @@ capri_tpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 sdk_ret_t
 capri_rpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pics_csr_t &pics_csr = cap0.rpc.pics;
 
     pics_csr.sta_axi_bw_mon_rd_bandwidth.read();
@@ -447,7 +447,7 @@ capri_rpc_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 sdk_ret_t
 capri_rpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pics_csr_t &pics_csr = cap0.rpc.pics;
 
     pics_csr.sta_axi_bw_mon_wr_bandwidth.read();
@@ -463,7 +463,7 @@ capri_rpc_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 sdk_ret_t
 capri_ms_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_ms_csr_t &ms_csr = cap0.ms.ms;
 
     ms_csr.sta_axi_bw_mon_rd_bandwidth.read();
@@ -477,7 +477,7 @@ capri_ms_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 sdk_ret_t
 capri_ms_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_ms_csr_t &ms_csr = cap0.ms.ms;
 
     ms_csr.sta_axi_bw_mon_wr_bandwidth.read();
@@ -491,7 +491,7 @@ capri_ms_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 sdk_ret_t
 capri_pxb_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pxb_csr_t &pxb_csr = cap0.pxb.pxb;
 
     pxb_csr.sta_axi_bw_mon_rd_bandwidth.read();
@@ -505,7 +505,7 @@ capri_pxb_bw_mon_rd_get (uint64_t *maxv, uint64_t *avrg)
 sdk_ret_t
 capri_pxb_bw_mon_wr_get (uint64_t *maxv, uint64_t *avrg)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pxb_csr_t &pxb_csr = cap0.pxb.pxb;
 
     pxb_csr.sta_axi_bw_mon_wr_bandwidth.read();
@@ -550,7 +550,7 @@ capri_freq_get (void)
 static inline uint64_t
 capri_pb_axi_read_cnt (void)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
 
     pbc_csr.hbm.cnt_hbm_axi_rpl.read();
@@ -565,7 +565,7 @@ capri_pb_axi_read_cnt (void)
 static sdk_ret_t
 capri_clear_hbm_bw (int val)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
 
     cap_pics_csr_t &pics_csr = cap0.tpc.pics;
     pics_csr.cfg_axi_bw_mon.read();
@@ -593,7 +593,7 @@ capri_clear_hbm_bw (int val)
 static sdk_ret_t
 capri_set_hbm_bw_window (uint32_t val)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
 
     cap_pics_csr_t &pics_csr = cap0.tpc.pics;
     pics_csr.cfg_axi_bw_mon.read();

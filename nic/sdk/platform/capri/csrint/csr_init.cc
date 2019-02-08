@@ -19,6 +19,12 @@ namespace capri {
 void
 csr_init ()
 {
+    static bool csr_init_done = false;
+
+    if (csr_init_done) {
+        return;
+    }
+
     // Register for hal cpu interface
     auto cpu_if = new cpu_hal_if("cpu", "all");
     cpu::access()->add_if("cpu_if", cpu_if);
@@ -30,6 +36,8 @@ csr_init ()
     cap0_ptr->init(0);
     CAP_BLK_REG_MODEL_REGISTER(cap_top_csr_t, 0, 0, cap0_ptr);
     register_chip_inst("cap0", 0, 0);
+    csr_init_done = true;
+    return;
 }
 
 } // end namespace capri

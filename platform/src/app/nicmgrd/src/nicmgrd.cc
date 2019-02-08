@@ -11,6 +11,7 @@
 #include <getopt.h>
 #include <sys/time.h>
 
+#include "nic/sdk/platform/capri/capri_state.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
@@ -139,8 +140,13 @@ int main(int argc, char *argv[])
 
     // instantiate the logger
     utils::logger::init();
+    
     // initialize sdk logger
     sdk_init();
+    
+    // initialize capri_state_pd
+    sdk::platform::capri::capri_state_pd_init(NULL);
+
     if (platform_is_hw(platform)) {
         nicmgr::delphi_init();
     }

@@ -31,8 +31,8 @@ uint32_t
 capri_get_coreclk_freq(platform_type_t platform_type)
 {
 
-    cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
-    cap_ms_csr_t        &ms_csr = cap0.ms.ms;
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_ms_csr_t &ms_csr = cap0.ms.ms;
 
     static const uint32_t core_freq[] = {
         CORECLK_FREQ_ASIC_00, CORECLK_FREQ_ASIC_01,
@@ -52,7 +52,7 @@ void
 capri_txs_timer_init_hsh_depth (uint32_t key_lines)
 {
     uint64_t timer_key_hbm_base_addr;
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
 
     timer_key_hbm_base_addr =
@@ -73,7 +73,7 @@ capri_txs_timer_init_hsh_depth (uint32_t key_lines)
 static void
 capri_txs_timer_init_pre (uint32_t key_lines, capri_cfg_t *capri_cfg)
 {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
 
     // Set timer_hsh_depth to actual value + 1
@@ -106,7 +106,7 @@ capri_txs_timer_init_pre (uint32_t key_lines, capri_cfg_t *capri_cfg)
 static void
 capri_txs_timer_init_post (uint32_t key_lines, capri_cfg_t *capri_cfg)
 {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
     uint32_t capri_coreclk_freq;
 
@@ -159,7 +159,7 @@ sdk_ret_t
 capri_txs_scheduler_init (uint32_t admin_cos, capri_cfg_t *capri_cfg)
 {
 
-    cap_top_csr_t       &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t       &cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t       &txs_csr = cap0.txs.txs;
     cap_psp_csr_t       &psp_pt_csr = cap0.pt.pt.psp, &psp_pr_csr = cap0.pr.pr.psp;
     uint64_t            txs_sched_hbm_base_addr;
@@ -305,7 +305,7 @@ sdk_ret_t
 capri_txs_scheduler_lif_params_update(uint32_t hw_lif_id, capri_txs_sched_lif_params_t *txs_hw_params)
 {
 
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t &txs_csr = cap0.txs.txs;
     uint32_t      i = 0, j = 0, table_offset = 0, num_cos_val = 0, lif_cos_index = 0;
     uint16_t      lif_cos_bmp = 0x0;
@@ -359,7 +359,7 @@ sdk_ret_t
 capri_txs_policer_lif_params_update (uint32_t hw_lif_id,
                             capri_txs_policer_lif_params_t *txs_hw_params)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t &txs_csr = cap0.txs.txs;
 
     if ((hw_lif_id >= CAPRI_TXS_MAX_TABLE_ENTRIES) ||
@@ -419,7 +419,7 @@ capri_txs_scheduler_tx_dealloc (uint32_t alloc_offset, uint32_t alloc_units)
 sdk_ret_t
 capri_txs_scheduler_stats_get (capri_txs_scheduler_stats_t *scheduler_stats)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t &txs_csr = cap0.txs.txs;
     uint16_t xon_status;
 

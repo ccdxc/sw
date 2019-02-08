@@ -7,6 +7,7 @@
 
 #include "include/sdk/base.hpp"
 #include "platform/capri/capri_pxb_pcie.hpp"
+#include "platform/capri/capri_state.hpp"
 
 #include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
@@ -19,7 +20,7 @@ namespace capri {
 sdk_ret_t
 capri_pxb_pcie_init ()
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pxb_csr_t &pxb_csr = cap0.pxb.pxb;
 
     SDK_TRACE_DEBUG("CAPRI-PXB::%s: Initializing LIF state for all of %d LIFs",
@@ -49,7 +50,7 @@ capri_pxb_pcie_init ()
 sdk_ret_t
 capri_pxb_cfg_lif_bdf (uint32_t lif, uint16_t bdf)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pxb_csr_t &pxb_csr = cap0.pxb.pxb;
 
     SDK_TRACE_DEBUG("CAPRI-PXB::%s: Configuring LIF %u with BDF %u",

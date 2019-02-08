@@ -10,10 +10,11 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/time_profile.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
-#include "platform/capri/csrint/csr_init.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
+#include "platform/capri/capri_state.hpp"
+#include "platform/capri/csrint/csr_init.hpp"
 #include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
@@ -182,7 +183,7 @@ capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
                             uint64_t capri_table_asm_base)
 {
     /* Program table base address into capri TE */
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
     assert(stage_tableid < 16);
     SDK_TRACE_DEBUG("====Stage: %d Tbl_id: %u, Stg_Tbl_id %u, Tbl base: 0x%lx==",
@@ -231,7 +232,7 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
     }
 
     /* Program table base address into capri TE */
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     if (pipe == P4_PIPELINE_INGRESS) {
         cap_te_csr_t &te_csr = cap0.sgi.te[stage];
         te_csr.cfg_table_property[stage_tableid].read();
@@ -285,7 +286,7 @@ capri_program_p4plus_sram_table_mpu_pc (int tableid, int stage_tbl_id,
     cap_te_csr_t *te_csr = NULL;
     bool pipe_rxdma = false;
 
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
 
     if ((uint32_t)tableid >= p4pd_rxdma_tableid_min_get() &&
         (uint32_t)tableid < p4pd_rxdma_tableid_max_get()) {
@@ -334,7 +335,7 @@ capri_toeplitz_init (int stage, int stage_tableid)
     int tbl_id;
     uint64_t pc;
     uint64_t tbl_base;
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_te_csr_t *te_csr = NULL;
 
     if (sdk::p4::p4_program_to_base_addr((char *) CAPRI_P4PLUS_HANDLE,
@@ -402,7 +403,7 @@ capri_p4plus_table_init (platform_type_t platform_type,
                          int stage_txdma_act, int stage_tableid_txdma_act,
                          int stage_txdma_act_ext, int stage_tableid_txdma_act_ext)
 {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_te_csr_t *te_csr = NULL;
     uint64_t capri_action_p4plus_asm_base;
 
@@ -521,7 +522,7 @@ capri_p4plus_table_init (platform_type_t platform_type,
 void
 capri_p4plus_recirc_init (void)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
 
     // RxDMA
     cap0.pr.pr.psp.cfg_profile.read();
@@ -540,7 +541,7 @@ void
 capri_timer_init_helper (uint32_t key_lines)
 {
     uint64_t timer_key_hbm_base_addr;
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     cap_txs_csr_t *txs_csr = &cap0.txs.txs;
 
     timer_key_hbm_base_addr = get_mem_addr(MEM_REGION_TIMERS_NAME);
@@ -603,7 +604,7 @@ capri_timer_init (void)
 static void
 capri_p4p_stage_id_init (void)
 {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap0.rpc.pics.cfg_stage_id.all(0x688FAC);
     cap0.rpc.pics.cfg_stage_id.write();
     cap0.tpc.pics.cfg_stage_id.all(0x688FAC);
@@ -614,7 +615,7 @@ static inline bool
 p4plus_invalidate_cache_aligned(uint64_t addr, uint32_t size_in_bytes,
         p4plus_cache_action_t action)
 {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
     assert ((addr & ~CACHE_LINE_SIZE_MASK) == addr);
 
@@ -657,7 +658,7 @@ p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
 
 void
 capri_deparser_init(int tm_port_ingress, int tm_port_egress) {
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cpp_int recirc_rw_bm = 0;
     // Ingress deparser is indexed with 1
     cap0.dpr.dpr[1].cfg_global_2.read();
@@ -681,7 +682,7 @@ static void
 capri_mpu_icache_invalidate (void)
 {
     int i;
-    cap_top_csr_t &cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     for (i = 0; i < CAPRI_P4_NUM_STAGES; i++) {
         cap0.sgi.mpu[i].icache.read();
         cap0.sgi.mpu[i].icache.invalidate(1);
@@ -817,7 +818,6 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     if (ret != CAPRI_OK) {
         return ret;
     }
-    sdk::platform::capri::csr_init();
 
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();
@@ -835,17 +835,17 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     return (CAPRI_OK);
 }
 
-int
-capri_p4plus_table_rw_init (void)
-{
-    // !!!!!!
-    // Before making this call, it is expected that
-    // in HAL init sequence, p4pd_init() is already called..
-    // !!!!!!
-    capri_p4plus_shadow_init();
-    sdk::platform::capri::csr_init();
+int    
+capri_p4plus_table_rw_init (void)    
+{    
+    // !!!!!!    
+    // Before making this call, it is expected that    
+    // in HAL init sequence, p4pd_init() is already called..    
+    // !!!!!!    
+    capri_p4plus_shadow_init();    
+    sdk::platform::capri::csr_init();    
 
-    return (CAPRI_OK);
+     return (CAPRI_OK);    
 }
 
 uint8_t
@@ -931,7 +931,7 @@ capri_sram_entry_details_get (uint32_t index,
 cap_pics_csr_t *
 capri_global_pics_get (uint32_t tableid)
 {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     if ((tableid >= p4pd_tableid_min_get()) &&
         (tableid <= p4pd_tableid_max_get())) {
         return &cap0.ssi.pics;
@@ -1035,7 +1035,7 @@ capri_table_entry_write (uint32_t tableid,
         }
     }
 
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     // Push to HW/Capri from entry_start_block to block
     pu_cpp_int<128> sram_block_data;
     pu_cpp_int<128> sram_block_datamask;
@@ -1181,7 +1181,7 @@ capri_table_hw_entry_read (uint32_t tableid,
     int copy_bits = tbl_info.entry_width_bits;
     uint8_t *_hwentry = (uint8_t*)hwentry;
     uint8_t  byte, to_copy;
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     // read from HW/Capri from entry_start_block to block
     cpp_int sram_block_data;
     uint8_t temp[16];
@@ -1345,7 +1345,7 @@ capri_tcam_table_entry_write (uint32_t tableid,
         }
     }
 
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     // Push to HW/Capri from entry_start_block to block
     pu_cpp_int<128> tcam_block_data_x;
     pu_cpp_int<128> tcam_block_data_y;
@@ -1477,7 +1477,7 @@ capri_tcam_table_hw_entry_read (uint32_t tableid,
     uint8_t *_trit_x = (uint8_t*)trit_x;
     uint8_t *_trit_y = (uint8_t*)trit_y;
 
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     // Push to HW/Capri from entry_start_block to block
     cpp_int tcam_block_data_x;
     cpp_int tcam_block_data_y;
@@ -1553,7 +1553,7 @@ capri_hbm_table_entry_cache_invalidate (bool ingress,
                                         p4_table_mem_layout_t &tbl_info)
 {
     time_profile_begin(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
 
     if (ingress) {
         cap_pics_csr_t & pics_csr = cap0.ssi.pics;
@@ -1591,7 +1591,7 @@ int
 capri_table_constant_write (uint64_t val, uint32_t stage,
                             uint32_t stage_tableid, bool ingress)
 {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     if (ingress) {
         cap_te_csr_t &te_csr = cap0.sgi.te[stage];
         te_csr.cfg_table_mpu_const[stage_tableid].value(val);
@@ -1608,7 +1608,7 @@ int
 capri_table_constant_read (uint64_t *val, uint32_t stage,
                            int stage_tableid, bool ingress)
 {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
     if (ingress) {
         cap_te_csr_t &te_csr = cap0.sgi.te[stage];
         te_csr.cfg_table_mpu_const[stage_tableid].read();

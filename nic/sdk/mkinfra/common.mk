@@ -19,14 +19,14 @@ COMMON_GXX_FLAGS        := -fstack-protector \
                            -MD
 ifeq ($(PLATFORM),haps)
     COMMON_GXX_FLAGS        += -DHAPS
-endif
-
-ifeq ($(PLATFORM),hw)
+else ifeq ($(PLATFORM),hw)
     COMMON_GXX_FLAGS        += -DHW
+else ifeq ($(PLATFORM),sim)
+    COMMON_GXX_FLAGS        += -DSIM
 endif
 
-ifeq ($(PLATFORM),sim)
-    COMMON_GXX_FLAGS        += -DSIM
+ifeq ($(PERF),1)
+    COMMON_GXX_FLAGS        += -DPERF
 endif
 
 COMMON_GPP_FLAGS        := ${COMMON_GXX_FLAGS} --std=c++11

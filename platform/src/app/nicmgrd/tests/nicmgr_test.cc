@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <stdio.h>
 
+#include "nic/sdk/platform/capri/capri_state.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
@@ -99,8 +100,10 @@ create_uplinks()
 void
 nicmgr_init()
 {
+    // initialize capri_state_pd
+    sdk::platform::capri::capri_state_pd_init(NULL);
+    
     // DeviceManager *devmgr;
-
     if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
         devmgr =
             new DeviceManager("../platform/src/app/nicmgrd/etc/device.json",

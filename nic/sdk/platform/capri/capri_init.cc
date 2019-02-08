@@ -23,7 +23,7 @@
 #include "third-party/asic/capri/verif/apis/cap_ptd_api.h"
 #include "third-party/asic/capri/verif/apis/cap_stg_api.h"
 #include "third-party/asic/capri/verif/apis/cap_wa_api.h"
-#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
+//#include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "third-party/asic/capri/model/cap_prd/cap_prd_csr.h"
 #include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
 
@@ -219,7 +219,7 @@ capri_cache_init (capri_cfg_t *cfg)
 static sdk_ret_t
 capri_prd_init()
 {
-    cap_top_csr_t & cap0 = CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pr_csr_t &pr_csr = cap0.pr.pr;
 
     pr_csr.prd.cfg_ctrl.read();
@@ -420,9 +420,9 @@ capri_init (capri_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((cfg != NULL), SDK_RET_INVALID_ARG, "Invalid cfg");
     SDK_TRACE_DEBUG("Initializing Capri");
 
-    g_capri_state_pd = sdk::platform::capri::capri_state_pd::factory(cfg);
-    SDK_ASSERT_TRACE_RETURN((g_capri_state_pd != NULL), SDK_RET_INVALID_ARG,
-                            "Failed to instantiate Capri PD");
+    ret = sdk::platform::capri::capri_state_pd_init(cfg);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "capri_state_pd_init failure, err : %d", ret);
 
     if (capri_table_rw_init(cfg) != CAPRI_OK) {
         return SDK_RET_ERR;

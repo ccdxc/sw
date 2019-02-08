@@ -528,6 +528,9 @@ class Testcase:
                 utils.LogException(Logger)
                 Logger.error("EXCEPTION: Aborting Testcase Execution.")
                 self.status = types.status.ERROR
+                if self.__ignored:
+                    Logger.error("IGNORE: testcase in ignore mode, ignoring exception.")
+                    self.status = types.status.SUCCESS
             self.__timer.Stop()
             Logger.info("Testcase %s FINAL RESULT = %d" % (self.Name(), self.status))
         else:

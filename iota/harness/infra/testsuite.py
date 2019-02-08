@@ -125,6 +125,7 @@ class TestSuite:
             return types.status.SUCCESS
         for s in self.__spec.setup.config:
             Logger.debug("Resolving config step: %s" % s.step)
+            s.name = s.step
             s.step = loader.Import(s.step, self.__spec.packages)
         return types.status.SUCCESS
 
@@ -140,6 +141,7 @@ class TestSuite:
 
     def __setup_config(self):
         for s in self.__spec.setup.config:
+            Logger.info("Starting Setup config step: %s" % s.name);
             status = loader.RunCallback(s.step, 'Main', True, None)
             if status != types.status.SUCCESS:
                 return status
