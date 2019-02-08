@@ -428,7 +428,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
    * Call server to fetch all alerts to populate RHS alert-list
    */
    getAlerts() {
-    // this.filteredAlerts = [];
     this.alertsEventUtility = new HttpEventUtility<MonitoringAlert>(MonitoringAlert);
     if (this.alertSubscription) {
       this.alertSubscription.unsubscribe();
@@ -438,12 +437,12 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         this.alertsEventUtility.processEvents(response);
         // this.alertQuery is empty. So we will get all alerts. We only need the alerts that are in open state. Alert table can update alerts. This will reflect the changes of alerts.
         this.alerts = this.alertsEventUtility.array.filter( (alert: MonitoringAlert) => {
-          return (!this.isAlertAcknownledged(alert) && !this.isAlertResolved(alert));
+          return (this.isAlertInOpenState(alert));
         } );
          // We are watching alerts. So when there are new alerts coming in, we display a toaster.
         if (this.alertNumbers > 0 && this.alertNumbers < this.alerts.length) {
           const diff = this.alerts.length - this.alertNumbers;
-          const alertMsg = (diff === 1) ? diff + 'new alert arrived' : diff + 'new alerts arrived';
+          const alertMsg = (diff === 1) ? diff + ' new alert arrived' : diff + 'new alerts arrived';
           this._controllerService.invokeInfoToaster('Alert', alertMsg);
         }
         this.alertNumbers = this.alerts.length;
@@ -453,14 +452,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.subscriptions.push(this.alertSubscription);
   }
 
-  isAlertResolved(alert: MonitoringAlert): boolean {
-    return (alert.status.resolved.user !== null && alert.status.resolved.time !== null);
+  isAlertInOpenState(alert: MonitoringAlert): boolean {
+    return (alert.spec.state === 'OPEN');
   }
-
-  isAlertAcknownledged(alert: MonitoringAlert): boolean  {
-    return (alert.status.acknowledged.user !== null && alert.status.acknowledged.time !== null);
-  }
-
   /**
    * This API serves html template
    * It response to user request of expanding all alerts (in RHS alert-list panel)
