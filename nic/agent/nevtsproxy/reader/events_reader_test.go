@@ -9,10 +9,9 @@ import (
 	"testing"
 	"time"
 
+	google_protobuf1 "github.com/gogo/protobuf/types"
 	"github.com/golang/protobuf/proto"
 	"github.com/satori/go.uuid"
-
-	google_protobuf1 "github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
@@ -21,6 +20,10 @@ import (
 	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
+)
+
+var (
+	evtsRdrlogger = log.GetNewLogger(log.GetDefaultConfig("events-reader-test"))
 )
 
 // TestEventsReaderBasic ensures the event read from shared memory is what was written to it.
@@ -74,6 +77,7 @@ func TestEventsReaderBasic(t *testing.T) {
 
 	// ensure there is no error
 	Assert(t, ipcR.ErrCount == 0, "expected 0 err count, got: %d", ipcR.ErrCount)
+	Assert(t, ipcR.NumPendingEvents() == 0, "expected 0 pending events, got: %d", ipcR.NumPendingEvents())
 }
 
 // TestEventsReaderReceiveInvalidObjectType
@@ -121,13 +125,15 @@ func TestEventsReaderReceiveInvalidObjectType(t *testing.T) {
 // TestEventsReader tests the events reader by sending some events to shared memory and
 // reading it off from the shared memory.
 func TestEventsReader(t *testing.T) {
-	totalEventsSent := testEventsReader(t, nil, 2)
+	tLogger := evtsRdrlogger.WithContext("t_name", t.Name())
+	totalEventsSent := testEventsReader(t, nil, tLogger, 2)
 	Assert(t, totalEventsSent > 0, "0 events sent?!! something went wrong")
 }
 
 // TestEventsReaderWithDispatcher tests the events reader by sending some events to shared memory
 // and reading it off from the shared memory. Also, ensures the events were dispatched using the dispatcher.
 func TestEventsReaderWithDispatcher(t *testing.T) {
+	tLogger := evtsRdrlogger.WithContext("t_name", t.Name())
 	dir, err := ioutil.TempDir("", "dispatcher")
 	AssertOk(t, err, "failed to create temp dir")
 
@@ -147,7 +153,7 @@ func TestEventsReaderWithDispatcher(t *testing.T) {
 	defer mockWriter.Stop()
 	defer evtsD.UnregisterExporter(mockWriter.Name())
 
-	totalEventsSent := testEventsReader(t, evtsD, 0)
+	totalEventsSent := testEventsReader(t, evtsD, tLogger, 0)
 	Assert(t, totalEventsSent > 0, "0 events sent?!! something went wrong")
 
 	// ensure the mock writer received all the events through events dispatcher
@@ -163,7 +169,7 @@ func TestEventsReaderWithDispatcher(t *testing.T) {
 
 // testEventsReader helper function to read and write some events and return
 // the total number of events sent.
-func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, wantedErrors int) uint64 {
+func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, logger log.Logger, wantedErrors int) uint64 {
 	dir, err := ioutil.TempDir("", "shm")
 	AssertOk(t, err, "failed to create temp dir")
 	defer os.RemoveAll(dir)
@@ -185,7 +191,7 @@ func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, wantedErro
 	go func() {
 		defer wg.Done()
 
-		eRdr := startEventReader(shmName, evtsDipsatcher)
+		eRdr := startEventReader(shmName, evtsDipsatcher, logger)
 		Assert(t, eRdr != nil, "failed to start reader")
 		defer eRdr.Stop()
 
@@ -213,12 +219,12 @@ func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, wantedErro
 // helper function to start the reader
 // - start events reader to read events from given shmName
 // - spin off a go routine to start receiving events
-func startEventReader(shmName string, evtsDispatcher events.Dispatcher) *EvtReader {
+func startEventReader(shmName string, evtsDispatcher events.Dispatcher, logger log.Logger) *EvtReader {
 	var evtsReader *EvtReader
 	var err error
 
 	for i := 0; i < 10; i++ {
-		if evtsReader, err = NewEventReader(shmName, 50*time.Millisecond, WithEventsDispatcher(evtsDispatcher)); err == nil {
+		if evtsReader, err = NewEventReader(shmName, 50*time.Millisecond, logger, WithEventsDispatcher(evtsDispatcher)); err == nil {
 			break
 		}
 		log.Errorf("failed to open shared memory, retrying..")

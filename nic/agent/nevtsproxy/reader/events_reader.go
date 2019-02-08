@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ntranslate"
 	// to register key/handles with protobuf; this is needed to convert any to protobuf message
 	_ "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 )
@@ -33,6 +34,8 @@ type EvtReader struct {
 	sm             *shm.SharedMem
 	ipcR           *shm.IPCReader
 	evtsDispatcher events.Dispatcher
+	translator     *ntranslate.Translator
+	logger         log.Logger
 }
 
 // WithEventsDispatcher passes a custom events dispatcher to dispatch events
@@ -45,19 +48,21 @@ func WithEventsDispatcher(evtsDispatcher events.Dispatcher) Option {
 // NewEventReader creates a new events reader
 // - Open shared memory identified by the given name (path) and get the IPC instance from shared memory.
 // - Use events dispatcher to dispatch events if given.
-func NewEventReader(path string, pollDelay time.Duration, opts ...Option) (*EvtReader, error) {
+func NewEventReader(path string, pollDelay time.Duration, logger log.Logger, opts ...Option) (*EvtReader, error) {
 	sm, err := shm.OpenSharedMem(path)
 	if err != nil {
-		log.Errorf("failed to open shared memory, err: %v", err)
+		logger.Errorf("failed to open shared memory, err: %v", err)
 		return nil, err
 	}
 
 	ipc := sm.GetIPCInstance()
 
 	eRdr := &EvtReader{
-		filePath: path,
-		sm:       sm,
-		ipcR:     shm.NewIPCReader(ipc, pollDelay),
+		filePath:   path,
+		sm:         sm,
+		ipcR:       shm.NewIPCReader(ipc, pollDelay),
+		translator: ntranslate.MustGetTranslator(),
+		logger:     logger,
 	}
 
 	for _, opt := range opts {
@@ -76,7 +81,7 @@ func (r *EvtReader) Start() {
 
 // Stop stops the reader
 func (r *EvtReader) Stop() {
-	log.Infof("received stop, closing reader for shm %s", r.filePath)
+	r.logger.Infof("received stop, closing reader for shm %s", r.filePath)
 	r.ipcR.Stop()
 }
 
@@ -88,6 +93,11 @@ func (r *EvtReader) TotalEventsRead() uint64 {
 // TotalErrCount returns the total error count observed at this reader so far
 func (r *EvtReader) TotalErrCount() uint64 {
 	return r.ipcR.ErrCount
+}
+
+// NumPendingEvents returns the total number of pending events to be read from the shared memory
+func (r *EvtReader) NumPendingEvents() int {
+	return r.ipcR.NumPendingEvents()
 }
 
 // message handler to be used by the readers to handle received messages
@@ -102,19 +112,33 @@ func (r *EvtReader) handler(msg interface{}) error {
 	vEvt := convertToVeniceEvent(nEvt)
 
 	// convert nEvt.ObjectKey to api.ObjectMeta
-	// TODO: update tenant, namespace and object ref (object key to venice name conversion)
 	if nEvt.ObjectKey != nil {
 		dAny := &types.DynamicAny{}
 		err := types.UnmarshalAny(nEvt.ObjectKey, dAny)
 		if err != nil {
-			log.Errorf("failed to unmarshal object key, err: %v", err)
+			r.logger.Errorf("failed to unmarshal object key, err: %v", err)
 			return err
+		}
+		// key := dAny.Message.(*halproto.VrfKeyHandle) -> way to convert dynamic any to specific key types
+		messageName, err := types.AnyMessageName(nEvt.ObjectKey) // kh.VrfKeyHandle
+		if meta := r.translator.GetObjectMeta(messageName, dAny); meta != nil {
+			// override event's tenant and namespace
+			vEvt.ObjectMeta.Tenant = meta.GetTenant()
+			vEvt.ObjectMeta.Namespace = meta.GetNamespace()
+
+			// update object ref
+			vEvt.EventAttributes.ObjectRef = &api.ObjectRef{
+				Tenant:    meta.GetTenant(),
+				Namespace: meta.GetNamespace(),
+				Name:      meta.GetName(),
+				// TODO: update kind, URI
+			}
 		}
 	}
 
 	if r.evtsDispatcher != nil { // dispatch events using the events dispatcher (to venice, syslog, etc..)
 		if err := r.evtsDispatcher.Action(*vEvt); err != nil {
-			log.Errorf("failed to forward event {%s} from the proxy, err: %v", vEvt.GetUUID(), err)
+			r.logger.Errorf("failed to forward event {%s} from the proxy, err: %v", vEvt.GetUUID(), err)
 			return err
 		}
 	}

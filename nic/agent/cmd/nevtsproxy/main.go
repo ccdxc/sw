@@ -116,7 +116,7 @@ func (e *evtServices) start(mode, listenURL, evtsStoreDir string, resolverClient
 	}
 
 	// create shared memory events reader
-	e.shmReader = reader.NewReader(shm.GetSharedMemoryDirectory(), 50*time.Millisecond, e.eps.GetEventsDispatcher())
+	e.shmReader = reader.NewReader(shm.GetSharedMemoryDirectory(), 50*time.Millisecond, e.eps.GetEventsDispatcher(), logger)
 	go func() {
 		for {
 			err := e.shmReader.Start()

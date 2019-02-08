@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	google_protobuf1 "github.com/gogo/protobuf/types"
 	"github.com/golang/protobuf/proto"
 	"github.com/satori/go.uuid"
 
@@ -21,10 +22,15 @@ import (
 
 // NOTE: this test will not work with -race as the writers and reader are working on a single shared memory, there will be race.
 
+var (
+	rdrLogger = log.GetNewLogger(log.GetDefaultConfig("events-reader-test"))
+)
+
 // TestReader tests the reader by creating multiple shm writers
 // and let the reader handle the rest (file watcher should create event readers
 // and receive events). It also ensures readers and writers are in sync.
 func TestReader(t *testing.T) {
+	tLogger := rdrLogger.WithContext("t_name", t.Name())
 	dir, err := ioutil.TempDir("", "shm")
 	AssertOk(t, err, "failed to create temp dir")
 	defer os.RemoveAll(dir)
@@ -35,7 +41,7 @@ func TestReader(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		rdr = NewReader(dir, 10*time.Millisecond, nil)
+		rdr = NewReader(dir, 10*time.Millisecond, nil, tLogger)
 		err := rdr.Start()
 		AssertOk(t, err, "failed start file watcher, err: %v", err)
 	}()
@@ -50,6 +56,9 @@ func TestReader(t *testing.T) {
 
 	shmSize := 1024
 	totalBuffers := (uint32(shmSize)-shm.GetSharedConstant("IPC_OVH_SIZE"))/shm.GetSharedConstant("SHM_BUF_SIZE") - 1
+
+	halKey, err := google_protobuf1.MarshalAny(&halproto.VrfKeyHandle{KeyOrHandle: &halproto.VrfKeyHandle_VrfId{VrfId: 1001}})
+	AssertOk(t, err, "failed to marshal vrf key to any, err: %v", err)
 
 	// spin up multiple writers; each writer will create a shm of it's own and start writing events.
 	for i := 0; i < numWriters; i++ {
@@ -73,6 +82,7 @@ func TestReader(t *testing.T) {
 						Type:      "DUMMY",
 						Component: "shm-reader-test",
 						Message:   "test-msg",
+						ObjectKey: halKey,
 					}
 
 					msgSize := hEvt.Size()
@@ -128,14 +138,15 @@ func TestReader(t *testing.T) {
 
 // TestReaderInstantiation tests reader instantiation
 func TestReaderInstantiation(t *testing.T) {
-	rdr := NewReader("/invalid", time.Second, nil)
+	tLogger := rdrLogger.WithContext("t_name", t.Name())
+	rdr := NewReader("/invalid", time.Second, nil, tLogger)
 	err := rdr.Start()
 	Assert(t, strings.Contains(err.Error(), "no such file or directory"), "expected failure, init succeeded")
 
 	dir, err := ioutil.TempDir("", "shm")
 	AssertOk(t, err, "failed to create temp dir")
 
-	rdr = NewReader(dir, time.Second, nil)
+	rdr = NewReader(dir, time.Second, nil, tLogger)
 	err = rdr.Start()
 	AssertOk(t, err, "failed to start file watcher, err: %v", err)
 

@@ -37,9 +37,9 @@ protected:
 
 // basic events recorder test
 // - test recording events using the recorder library.
-TEST_F(events_recorder_test, basic) {
-    const char* component  = "test-c";
-    const char* shm_name   = "/events_recorder_test_basic";
+TEST_F(events_recorder_test, test_basic) {
+    const char* component  = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+    const char* shm_name   = "/events_recorder_test_basic.events";
     int shm_size           = 512; // 512 bytes
     int max_events_allowed = ((shm_size - IPC_OVH_SIZE)/SHM_BUF_SIZE) - 1;
 
@@ -52,7 +52,9 @@ TEST_F(events_recorder_test, basic) {
 
     // record some events
     for (int index = 1; index <= max_events_allowed; index++) {
-        ASSERT_EQ(recorder->event(events::INFO, example_event_types::EVENT_TYPE1, "Vrf",  kh::VrfKeyHandle(), "test event message"), 0);
+        kh::VrfKeyHandle key;
+        key.set_vrf_id(index);
+        ASSERT_EQ(recorder->event(events::INFO, example_event_types::EVENT_TYPE1, "Vrf",  key, "test event message - %d ", index), 0);
         usleep(1000 * 10); // 10ms
     }
 
@@ -70,9 +72,9 @@ TEST_F(events_recorder_test, basic) {
 // test messages/events written and read were intact
 // - write event `evt`.
 // - read event and verify it matches `evt`.
-TEST_F(events_recorder_test, verify_rw) {
-    const char* component  = "test-c";
-    const char* shm_name   = "/events_recorder_test_verify_rw";
+TEST_F(events_recorder_test, test_verify_rw) {
+    const char* component  = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+    const char* shm_name   = "/events_recorder_test_verify_rw.events";
     int shm_size           = 512; // 512 bytes
 
     // initialize events recorder
@@ -190,9 +192,9 @@ void* read_from_shm(void *args) {
 // - write multiple events.
 // - spin off a pthread and let it read events from shared memory.
 // - ensure all the events sent were read by the reader.
-TEST_F(events_recorder_test, multiple_events) {
-    const char* component = "test-c";
-    const char* shm_name  = "/events_recorder_test_multiple_events";
+TEST_F(events_recorder_test, test_multiple_rws) {
+    const char* component  = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+    const char* shm_name  = "/events_recorder_test_multiple_rws.events";
     int shm_size          = 1024; // 1024 bytes
     int total_events      = 100;
 

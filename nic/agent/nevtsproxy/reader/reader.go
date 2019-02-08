@@ -31,16 +31,19 @@ type Reader struct {
 	fileWatcher    *fsnotify.Watcher     // file watcher that watches file create events on `dir`
 	evtsDispatcher events.Dispatcher     // events dispatcher to be used by the readers to dispatch events
 	stop           sync.Once             // to stop the reader
+	logger         log.Logger            // logger
+	wg             sync.WaitGroup        // for the file watchers
 }
 
 // NewReader creates a new shm events reader
 // - it creates a file watcher on the given dir to watch file(shm) create events/
-func NewReader(dir string, pollDelay time.Duration, evtsDispatcher events.Dispatcher) *Reader {
+func NewReader(dir string, pollDelay time.Duration, evtsDispatcher events.Dispatcher, logger log.Logger) *Reader {
 	rdr := &Reader{
 		dir:            dir,
 		pollDelay:      pollDelay,
 		evtReaders:     map[string]*EvtReader{},
 		evtsDispatcher: evtsDispatcher,
+		logger:         logger,
 	}
 
 	return rdr
@@ -53,13 +56,13 @@ func (r *Reader) Start() error {
 
 	for i := 0; i < retryCount; i++ {
 		if fileWatcher, err = fsnotify.NewWatcher(); err != nil {
-			log.Debugf("failed to create file watcher, err: %v, retrying...", err)
+			r.logger.Debugf("failed to create file watcher, err: %v, retrying...", err)
 			time.Sleep(1 * time.Second)
 			continue
 		}
 
 		if err = fileWatcher.Add(r.dir); err != nil {
-			log.Debugf("failed to add {%s} to the file watcher, err: %v, retrying...", r.dir, err)
+			r.logger.Debugf("failed to add {%s} to the file watcher, err: %v, retrying...", r.dir, err)
 			fileWatcher.Close()
 			time.Sleep(1 * time.Second)
 			continue
@@ -71,6 +74,7 @@ func (r *Reader) Start() error {
 	// start reader on the existing "*.events" files
 	r.startReaderOnExistingFiles()
 
+	r.wg.Add(1)
 	if r.fileWatcher != nil {
 		go r.watchFileEvents()
 	}
@@ -88,6 +92,7 @@ func (r *Reader) Stop() {
 			eRdr.Stop()
 		}
 
+		r.wg.Wait()
 	})
 }
 
@@ -98,19 +103,20 @@ func (r *Reader) GetEventReaders() map[string]*EvtReader {
 
 // watchFileEvents helper function to watch file events
 func (r *Reader) watchFileEvents() {
+	defer r.wg.Done()
 	for {
 		select {
 		case event, ok := <-r.fileWatcher.Events:
 			if !ok { // when the watcher is closed (during Stop())
+				r.logger.Debug("exiting file watcher...")
 				return
 			}
 
 			// on file create event, start reader on those file that end with ".events"
 			if event.Op == fsnotify.Create {
-				// TODO: add retry
 				fs, err := os.Stat(event.Name)
 				if err != nil {
-					log.Errorf("failed to get stats for %s, err: %v", event.Name, err)
+					r.logger.Errorf("failed to get stats for %s, err: %v", event.Name, err)
 					continue
 				}
 
@@ -123,7 +129,7 @@ func (r *Reader) watchFileEvents() {
 				return
 			}
 
-			log.Errorf("received error from file watcher, err: %v", err)
+			r.logger.Errorf("received error from file watcher, err: %v", err)
 		}
 	}
 }
@@ -131,11 +137,11 @@ func (r *Reader) watchFileEvents() {
 // startReaderOnExistingFiles helper function to start readers on the existing event files that
 // were created before initializing the file watcher.
 func (r *Reader) startReaderOnExistingFiles() {
-	log.Infof("starting reader on existing event files on dir {%s}", r.dir)
+	r.logger.Infof("starting reader on existing event files on dir {%s}", r.dir)
 
 	files, err := ioutil.ReadDir(r.dir)
 	if err != nil {
-		log.Errorf("failed to read list of files from directory {%s}, err: %v", r.dir, err)
+		r.logger.Errorf("failed to read list of files from directory {%s}, err: %v", r.dir, err)
 		return
 	}
 
@@ -149,28 +155,32 @@ func (r *Reader) startReaderOnExistingFiles() {
 // startEvtsReader helper function to start events reader to reader events
 // from the given shared memory file (shmPath)
 func (r *Reader) startEvtsReader(shmPath string) {
-	if _, ok := r.evtReaders[shmPath]; ok {
-		log.Debugf("reader already exists for %s", shmPath)
-		return
+	if existingRdr, ok := r.evtReaders[shmPath]; ok {
+		r.logger.Debugf("reader already exists for {%s}; restarting the reader..", shmPath)
+		if numPendingEvts := existingRdr.NumPendingEvents(); numPendingEvts != 0 {
+			r.logger.Debugf("pending events to be read from the existing reader for {%s}: %v", shmPath, numPendingEvts)
+			time.Sleep(2 * time.Second)
+		}
+		existingRdr.Stop()
 	}
 
-	eRdr, err := NewEventReader(shmPath, r.pollDelay, WithEventsDispatcher(r.evtsDispatcher))
+	eRdr, err := NewEventReader(shmPath, r.pollDelay, r.logger, WithEventsDispatcher(r.evtsDispatcher))
 	if err != nil {
-		log.Errorf("failed to create reader for shm: %s, err: %v", shmPath, err)
+		r.logger.Errorf("failed to create reader for shm: %s, err: %v", shmPath, err)
 		return
 	}
 
 	eRdr.Start()
 
 	r.evtReaders[shmPath] = eRdr
-	log.Infof("successfully created reader for %s", shmPath)
+	r.logger.Infof("successfully created reader for %s", shmPath)
 }
 
 // return true if the filename ends with ".events". Otherwise, false.
 func (r *Reader) isEventsFile(filename string) bool {
-	ok, err := regexp.MatchString("^*.events$", filename)
+	ok, err := regexp.MatchString("^*\\.events$", filename)
 	if err != nil {
-		log.Errorf("failed to match the file name with pattern {^*.events$}, err: %v", err)
+		r.logger.Errorf("failed to match the file name with pattern {^*\\.events$}, err: %v", err)
 		return false
 	}
 

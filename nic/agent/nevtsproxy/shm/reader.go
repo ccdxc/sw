@@ -33,6 +33,7 @@ type IPCReader struct {
 	stopCh    chan struct{}  // to stop the reader
 	wg        sync.WaitGroup // to stop the go routine receiving message form shm in intervals
 	pollDelay time.Duration  // poll interval
+	once      sync.Once
 }
 
 // NewIPCReader returns the new IPC reader
@@ -46,8 +47,10 @@ func NewIPCReader(ipc *IPC, pollDelay time.Duration) *IPCReader {
 
 // Stop stops the go routine receiving messages
 func (r *IPCReader) Stop() {
-	close(r.stopCh)
-	r.wg.Wait()
+	r.once.Do(func() {
+		close(r.stopCh)
+		r.wg.Wait()
+	})
 }
 
 // Receive processes the messages received on IPC channel
@@ -83,6 +86,13 @@ func (r *IPCReader) receiveMessage(objType interface{}, handler MessageHandler) 
 	}
 
 	binary.LittleEndian.PutUint32(r.Base[r.ReadIndex:], ro)
+}
+
+// NumPendingEvents number of pending events yet to be read from the shared memory
+func (r *IPCReader) NumPendingEvents() int {
+	ro := binary.LittleEndian.Uint32(r.Base[r.ReadIndex:])
+	wo := binary.LittleEndian.Uint32(r.Base[r.WriteIndex:])
+	return int((wo + r.NumBuffers - ro) % r.NumBuffers)
 }
 
 // helper function to process the received message

@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include "nic/utils/ipc/ipc.hpp"
 #include "nic/utils/events/queue/queue.hpp"
 #include <pthread.h>
@@ -10,6 +11,9 @@
 // events_recorder sets up shared memory for use by the events recorder
 events_queue* events_queue::init(const char* name, int size, int buff_size, Logger logger)
 {
+    // delete any existing shared memory with the same name
+    shm_unlink(name);
+
     // create shared memory
     shm *shm_ = shm::setup_shm(name, size, SHM_INSTANCES, buff_size, logger);
     if (!shm_) {
