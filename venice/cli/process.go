@@ -4,6 +4,7 @@ package vcli
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -36,7 +37,7 @@ func updateCmd(c *cli.Context) {
 
 // createCmdInternal handles create and update
 func createCmdInternal(c *cli.Context, cmd string) {
-	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx := &cliContext{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, cmd); err != nil {
 		log.Fatalf("error processing global flags: %s", err)
 		return
@@ -92,7 +93,7 @@ func createCmdInternal(c *cli.Context, cmd string) {
 
 // patchCmd patches updates one or more fields in an object
 func patchCmd(c *cli.Context) {
-	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx := &cliContext{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "patch"); err != nil {
 		log.Fatalf("error processing global flags: %s", err)
 		return
@@ -131,7 +132,7 @@ func patchCmd(c *cli.Context) {
 // readCmd is the function that gets called for any read operation, it gets an object or a list of
 // objects; if there are multiple objects, it would show them in a tabulated form
 func readCmd(c *cli.Context) {
-	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx := &cliContext{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "read"); err != nil {
 		log.Debugf("Context: %+v\n", ctx)
 		fmt.Println(err)
@@ -202,7 +203,7 @@ func readCmd(c *cli.Context) {
 
 // deleteCmd is called for all verbs that perform delete on an object; it invokes REST delete APIs in turn
 func deleteCmd(c *cli.Context) {
-	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx := &cliContext{cli: c, tenant: defaultTenant}
 
 	if err := processGlobalFlags(ctx, "delete"); err != nil {
 		return
@@ -227,7 +228,7 @@ func deleteCmd(c *cli.Context) {
 // editCmd allows using an editor to create or modify an object
 // if object name is not specified then a sample object is picked up from example template
 func editCmd(c *cli.Context) {
-	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx := &cliContext{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "edit"); err != nil {
 		return
 	}
@@ -289,7 +290,7 @@ func updateMetaLabel(objm *api.ObjectMeta, newLabels map[string]string) error {
 
 // labelcmd performs label update on any object; this is invoked when label verb is invoked for any object
 func labelCmd(c *cli.Context) {
-	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx := &cliContext{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "read"); err != nil {
 		return
 	}
@@ -333,7 +334,7 @@ func treeCmd(c *cli.Context) {
 // exampleCmd is called when example verb is specified for any object
 // this command shows an example of a specific operation on an object
 func exampleCmd(c *cli.Context) {
-	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx := &cliContext{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "example"); err != nil {
 		return
 	}
@@ -343,7 +344,7 @@ func exampleCmd(c *cli.Context) {
 
 // definitionCmd shows object definition
 func definitionCmd(c *cli.Context) {
-	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx := &cliContext{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "example"); err != nil {
 		return
 	}
@@ -362,7 +363,7 @@ func logoutCmd(c *cli.Context) {
 // $HOME/.pensando/token
 func loginCmd(c *cli.Context) {
 	clearToken()
-	ctx := &context{cli: c, tenant: defaultTenant}
+	ctx := &cliContext{cli: c, tenant: defaultTenant}
 	if err := processGlobalFlags(ctx, "login"); err != nil {
 		log.Fatalf("error processing flags: %s", err)
 		return
@@ -389,7 +390,7 @@ func loginCmd(c *cli.Context) {
 		password = string(pBytes)
 	}
 
-	_, token, err := login.UserLogin(ctx.server, &auth.PasswordCredential{
+	_, token, err := login.UserLogin(context.TODO(), ctx.server, &auth.PasswordCredential{
 		Username: loginUser,
 		Password: string(password),
 		Tenant:   defaultTenant,
@@ -404,7 +405,7 @@ func loginCmd(c *cli.Context) {
 // snapshotCmd takes the snapshot (inventory) of all objects, removes their
 // operational/changeable state, which can then be played back into the system sometime later
 func snapshotCmd(c *cli.Context) {
-	ctx := &context{cli: c, token: getLoginToken(), server: c.GlobalString("server"), tenant: defaultTenant}
+	ctx := &cliContext{cli: c, token: getLoginToken(), server: c.GlobalString("server"), tenant: defaultTenant}
 
 	subCmds := c.Args()
 	if len(subCmds) == 0 {
@@ -423,7 +424,7 @@ func snapshotCmd(c *cli.Context) {
 
 	if c.Bool("restore") {
 		if err := processGlobalFlags(ctx, "create"); err != nil {
-			log.Fatalf("unable to create new context")
+			log.Fatalf("unable to create new cliContext")
 		}
 		processFiles(ctx, dirname)
 		return
@@ -437,7 +438,7 @@ func snapshotCmd(c *cli.Context) {
 	for _, subcmd := range subCmds {
 		ctx.subcmd = subcmd
 		if err := populateGenCtx(ctx); err != nil {
-			fmt.Printf("error populating generated context: %s", err)
+			fmt.Printf("error populating generated cliContext: %s", err)
 			continue
 		}
 

@@ -15,7 +15,7 @@ import (
 
 // processFiles takes a list of comma separated file/url/directory names
 // and invokes routine to process one file/url/directory at a time
-func processFiles(ctx *context, fileArg string) {
+func processFiles(ctx *cliContext, fileArg string) {
 	if len(fileArg) == 0 {
 		fmt.Printf("Null file name")
 		return
@@ -42,7 +42,7 @@ func processFiles(ctx *context, fileArg string) {
 }
 
 // processDir process a file or directory
-func processDir(ctx *context, filename, kind string) error {
+func processDir(ctx *cliContext, filename, kind string) error {
 	fstat, err := os.Stat(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -75,7 +75,7 @@ func processDir(ctx *context, filename, kind string) error {
 }
 
 // processURL creates/updates objects (json/yml) on a http URL
-func processURL(ctx *context, url, kind string) error {
+func processURL(ctx *cliContext, url, kind string) error {
 	inp, err := netutils.HTTPGetRaw(url)
 	if err != nil {
 		return fmt.Errorf("Error fetching URL %s: %s", url, err)
@@ -88,7 +88,7 @@ func processURL(ctx *context, url, kind string) error {
 }
 
 // processFile reads one file and creates/udpates objects present in a file
-func processFile(ctx *context, filename, kind string) error {
+func processFile(ctx *cliContext, filename, kind string) error {
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		fmt.Printf("Error reading file contents: %s", err)
@@ -103,7 +103,7 @@ func processFile(ctx *context, filename, kind string) error {
 
 // processRecs processes one or multiple records present in a json or yml file
 // each record is treated independently i.e. can be of different kind
-func processRecs(ctx *context, inp, kind string) error {
+func processRecs(ctx *cliContext, inp, kind string) error {
 	isJSON := isJSON(inp)
 	for recBegin := 0; ; {
 		recBytes := ""
@@ -124,7 +124,7 @@ func processRecs(ctx *context, inp, kind string) error {
 }
 
 // processRec creates an object from multiple records that were obtained from a file
-func processRec(ctx *context, inp, kind string) error {
+func processRec(ctx *cliContext, inp, kind string) error {
 	typeMeta := &api.TypeMeta{}
 
 	if err := json.Unmarshal([]byte(inp), typeMeta); err != nil {
@@ -143,7 +143,7 @@ func processRec(ctx *context, inp, kind string) error {
 	return nil
 }
 
-func editFromFile(ctx *context, filename string) error {
+func editFromFile(ctx *cliContext, filename string) error {
 	if filename == "" {
 		return fmt.Errorf("invalid filename %s", filename)
 	}

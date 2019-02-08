@@ -9,7 +9,7 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
-func restDelete(ctx *context) error {
+func restDelete(ctx *cliContext) error {
 	objName := ctx.names[0]
 	hostName := ctx.cli.GlobalString("server")
 	log.Debugf("put object: %s/%s", hostName, objName)

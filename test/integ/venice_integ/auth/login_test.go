@@ -813,6 +813,6 @@ func TestPasswordReset(t *testing.T) {
 	user, err = tinfo.restcl.AuthV1().User().PasswordReset(ctx, &auth.PasswordResetRequest{})
 	Assert(t, err != nil, "should not be able to reset password with empty password reset request")
 	userCred.Password = testPassword
-	_, _, err = login.UserLogin(tinfo.apiGwAddr, userCred)
+	_, _, err = login.UserLogin(context.TODO(), tinfo.apiGwAddr, userCred)
 	Assert(t, err != nil, "shouldn't be able to get login with old password")
 }

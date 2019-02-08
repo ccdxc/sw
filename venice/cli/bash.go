@@ -141,15 +141,15 @@ func bashCompleter(c *cli.Context, cmds []cli.Command, flags []cli.Flag) {
 // provides names of objects fetching their values from the backend
 func bashObjNameCompleter(c *cli.Context) {
 
-	ctx := func(c *cli.Context, cmd string) *context {
-		ctx := &context{cli: c, tenant: defaultTenant}
+	ctx := func(c *cli.Context, cmd string) *cliContext {
+		ctx := &cliContext{cli: c, tenant: defaultTenant}
 		ctx.cmd = cmd
 		ctx.subcmd = c.Command.Name
 		ctx.server = getLoginServer()
 		ctx.token = getLoginToken()
 
 		if err := populateGenCtx(ctx); err != nil {
-			fmt.Printf("error populating generated context (subcmd %s): %s", ctx.subcmd, err)
+			fmt.Printf("error populating generated cliContext (subcmd %s): %s", ctx.subcmd, err)
 			return nil
 		}
 

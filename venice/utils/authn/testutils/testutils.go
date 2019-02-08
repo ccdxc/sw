@@ -10,12 +10,14 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/login"
+	loginCtx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/testutils"
 )
@@ -95,9 +97,18 @@ func NewLoggedInContext(ctx context.Context, apiGW string, in *auth.PasswordCred
 	var err error
 	var nctx context.Context
 	if testutils.CheckEventually(func() (bool, interface{}) {
-		nctx, err = login.NewLoggedInContext(ctx, apiGW, in)
+		// When doing operations, we want to keep retrying every 2 seconds till we succeed (or)
+		// till the calling context is Done
+		tctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
+		nctx, err = login.NewLoggedInContext(tctx, apiGW, in)
 		if err == nil {
-			return true, nil
+			// nctx is based on tctx which is short-lived. copy token from it for a new context based on user provided context
+			token, ok := loginCtx.AuthzHeaderFromContext(nctx)
+			if ok {
+				nctx = loginCtx.NewContextWithAuthzHeader(ctx, token)
+				return true, nil
+			}
 		}
 		log.Errorf("unable to get logged in context (%v)", err)
 		return false, nil

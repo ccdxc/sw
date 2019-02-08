@@ -30,7 +30,7 @@ const (
 // NewLoggedInContext authenticates user and returns a new context derived from given context with Authorization header set to JWT.
 // Returns nil in case of error.
 func NewLoggedInContext(ctx context.Context, apiGW string, cred *auth.PasswordCredential) (context.Context, error) {
-	_, token, err := UserLogin(apiGW, cred)
+	_, token, err := UserLogin(ctx, apiGW, cred)
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +54,11 @@ func GetTokenFromCookies(cookies []*http.Cookie) (string, error) {
 }
 
 // UserLogin sends a login request to API Gateway and returns authenticated user and session token upon success
-func UserLogin(apiGW string, in *auth.PasswordCredential) (*auth.User, string, error) {
+func UserLogin(ctx context.Context, apiGW string, in *auth.PasswordCredential) (*auth.User, string, error) {
 	if !strings.HasPrefix(apiGW, "https") {
 		apiGW = "https://" + apiGW
 	}
-	resp, err := login(apiGW, in)
+	resp, err := login(ctx, apiGW, in)
 	if err != nil {
 		return nil, "", err
 	}
@@ -78,7 +78,7 @@ func UserLogin(apiGW string, in *auth.PasswordCredential) (*auth.User, string, e
 }
 
 // login sends a login request to API Gateway and returns a *http.Response
-func login(apiGW string, in *auth.PasswordCredential) (*http.Response, error) {
+func login(ctx context.Context, apiGW string, in *auth.PasswordCredential) (*http.Response, error) {
 	req, err := netutils.CreateHTTPRequest(apiGW, in, "POST", LoginURLPath)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,6 @@ func login(apiGW string, in *auth.PasswordCredential) (*http.Response, error) {
 			},
 		},
 	}
-	ctx := context.Background()
 	resp, err := client.Do(req.WithContext(ctx))
 	return resp, err
 }

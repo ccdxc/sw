@@ -9,7 +9,7 @@ import (
 )
 
 func TestWriteObjStructMap(t *testing.T) {
-	ctx := &context{subcmd: "workload"}
+	ctx := &cliContext{subcmd: "workload"}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}
@@ -39,7 +39,7 @@ func TestWriteObjStructMap(t *testing.T) {
 }
 
 func TestWriteObjStructSlice(t *testing.T) {
-	ctx := &context{subcmd: "sgpolicy"}
+	ctx := &cliContext{subcmd: "sgpolicy"}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}
@@ -74,14 +74,14 @@ func TestWriteObjStructSlice(t *testing.T) {
 }
 
 func TestWalkStruct(t *testing.T) {
-	ctx := &context{subcmd: "workload"}
+	ctx := &cliContext{subcmd: "workload"}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}
 
 	walkStruct(ctx.structInfo, 0)
 
-	ctx = &context{subcmd: "sgpolicy"}
+	ctx = &cliContext{subcmd: "sgpolicy"}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}

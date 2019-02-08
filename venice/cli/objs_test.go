@@ -12,7 +12,7 @@ import (
 )
 
 func TestWriteObj(t *testing.T) {
-	ctx := &context{subcmd: "network", tenant: "default", names: []string{"net52"}, labels: map[string]string{"rack": "two", "internal": "true"}}
+	ctx := &cliContext{subcmd: "network", tenant: "default", names: []string{"net52"}, labels: map[string]string{"rack": "two", "internal": "true"}}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}
@@ -35,7 +35,7 @@ func TestWriteObj(t *testing.T) {
 }
 
 func TestPatchObj(t *testing.T) {
-	ctx := &context{subcmd: "network", tenant: "default", names: []string{"net55"}, labels: map[string]string{"rack": "two", "internal": "true"}}
+	ctx := &cliContext{subcmd: "network", tenant: "default", names: []string{"net55"}, labels: map[string]string{"rack": "two", "internal": "true"}}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}
@@ -67,7 +67,7 @@ func TestPatchObj(t *testing.T) {
 }
 
 func TestGetKvs(t *testing.T) {
-	ctx := &context{subcmd: "workload"}
+	ctx := &cliContext{subcmd: "workload"}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}
@@ -108,7 +108,7 @@ func TestGetKvs(t *testing.T) {
 }
 
 func TestGetKvsSmartNIC(t *testing.T) {
-	ctx := &context{subcmd: "smartnic"}
+	ctx := &cliContext{subcmd: "smartnic"}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}
@@ -147,7 +147,7 @@ func TestGetKvsSmartNIC(t *testing.T) {
 }
 
 func TestGetNumItems(t *testing.T) {
-	wObjList := &workload.WorkloadList{TypeMeta: api.TypeMeta{Kind: "workload"}, Items: []*workload.Workload{&workload.Workload{}, &workload.Workload{}, &workload.Workload{}}}
+	wObjList := &workload.WorkloadList{TypeMeta: api.TypeMeta{Kind: "workload"}, Items: []*workload.Workload{{}, {}, {}}}
 
 	if numItems := getListNumItems(wObjList); numItems != 3 {
 		t.Fatalf("found invalid #items from a list %d", numItems)
@@ -163,7 +163,7 @@ func TestGetNumItems(t *testing.T) {
 }
 
 func TestGetAllKvs(t *testing.T) {
-	ctx := &context{subcmd: "workload"}
+	ctx := &cliContext{subcmd: "workload"}
 	if err := populateGenCtx(ctx); err != nil {
 		t.Fatalf("unable to populate gen info - %s", err)
 	}

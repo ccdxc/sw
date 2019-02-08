@@ -336,7 +336,7 @@ func convertFlags(genFlags []gen.CliFlag) []cli.Flag {
 }
 
 // Generic utils used by command handlers
-func getKvsFromCliCtx(ctx *context) (map[string]cliField, error) {
+func getKvsFromCliCtx(ctx *cliContext) (map[string]cliField, error) {
 	c := ctx.cli
 
 	kvs := make(map[string]cliField)
@@ -386,9 +386,9 @@ func getKvsFromCliCtx(ctx *context) (map[string]cliField, error) {
 
 // processGlobalFlags processes the common/generic flags for all the commands
 // this is usually one of the first functions called from various command handlers
-// it saves the context in the supplied context structure, which is used later during
+// it saves the cliContext in the supplied cliContext structure, which is used later during
 // the calling chain of functions
-func processGlobalFlags(ctx *context, cmd string) error {
+func processGlobalFlags(ctx *cliContext, cmd string) error {
 	var err error
 
 	c := ctx.cli
@@ -406,7 +406,7 @@ func processGlobalFlags(ctx *context, cmd string) error {
 	ctx.token = getLoginToken()
 
 	if err := populateGenCtx(ctx); cmd != "login" && cmd != "snapshot" && err != nil {
-		return fmt.Errorf("error populating generated context: %s", err)
+		return fmt.Errorf("error populating generated cliContext: %s", err)
 	}
 
 	if cmd != "" && c.Bool("example") {

@@ -114,7 +114,7 @@ func matchRe(re *regexp.Regexp, objName string) bool {
 
 // findRe returns true if the object matches any of the specified match labels
 func matchLabel(matchLabels map[string]string, objLabels map[string]string) bool {
-	// nil (unspecfied) context label matches everything
+	// nil (unspecfied) cliContext label matches everything
 	if matchLabels == nil || len(matchLabels) == 0 {
 		return true
 	}
@@ -301,7 +301,7 @@ func metricsQuery(server, tableName, token string) (*telemetryclient.MetricsQuer
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
 		Queries: []*tqclient.MetricsQuerySpec{
-			&tqclient.MetricsQuerySpec{
+			{
 				TypeMeta: api.TypeMeta{
 					Kind: tableName,
 				},

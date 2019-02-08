@@ -621,7 +621,7 @@ func veniceCLI(cmdStr string) string {
 	fmt.Printf(">>> issuing cmd: '%s'\n", cmdStr)
 
 	logInitOnce.Do(func() {
-		// InvokeCLI below changes the os.Stdout temporarily to a os.Pipe() and calls backend server functions in martini context and reverts back.
+		// InvokeCLI below changes the os.Stdout temporarily to a os.Pipe() and calls backend server functions in martini cliContext and reverts back.
 		// These backend server functions can call log().
 		// If the defaultLogger.LogToStdout is true, then on the first invocation of Log(), the current os.Stdout is Dup2 to os.Stderr
 		//	In such a case, its possible that the pipe is duplicated instead of real os.Stdout. Hence one end of pipe is always open

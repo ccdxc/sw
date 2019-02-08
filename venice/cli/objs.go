@@ -18,9 +18,9 @@ type cliField struct {
 	sskip   bool
 }
 
-// populateGenCtx pre-populates context structure with functions names that are called
+// populateGenCtx pre-populates cliContext structure with functions names that are called
 // through out command processing. service is workload.Workload that is derived from the subcommand
-func populateGenCtx(ctx *context) error {
+func populateGenCtx(ctx *cliContext) error {
 	ctx.genInfo = gen.GetInfo()
 	svcName, svcListName, err := ctx.genInfo.FindSvcName(ctx.subcmd)
 	if err != nil {
@@ -68,25 +68,25 @@ func populateGenCtx(ctx *context) error {
 }
 
 // getNewObj returns an empty object; type of an object is returned based on ctx populatation
-func getNewObj(ctx *context) interface{} {
+func getNewObj(ctx *cliContext) interface{} {
 	objValue := reflect.New(ctx.structInfo.GetTypeFn())
 	return objValue.Interface()
 }
 
 // getNewObjList returns an empty object list; type of an object is returned based on ctx populatation
-func getNewObjList(ctx *context) interface{} {
+func getNewObjList(ctx *cliContext) interface{} {
 	objValue := reflect.New(ctx.listStructInfo.GetTypeFn())
 	return objValue.Interface()
 }
 
 // removeObjOper empties out the operational fields of an object;
 // useful when saved configuration is replayed that may contain some read-only fields
-func removeObjOper(ctx *context, obj interface{}) error {
+func removeObjOper(ctx *cliContext, obj interface{}) error {
 	return ctx.removeObjOperFunc(obj)
 }
 
 // createObjFromBytes creates an object from json/yml bytes of data
-func createObjFromBytes(ctx *context, inp string) error {
+func createObjFromBytes(ctx *cliContext, inp string) error {
 	obj := getNewObj(ctx)
 
 	if err := json.Unmarshal([]byte(inp), obj); err != nil {
@@ -125,7 +125,7 @@ func updateLabel(obj interface{}, newLabels map[string]string) error {
 }
 
 // writeObj populates the provided structure with cli fields
-func writeObj(ctx *context, obj interface{}, specKvs map[string]cliField) error {
+func writeObj(ctx *cliContext, obj interface{}, specKvs map[string]cliField) error {
 	objValue := reflect.ValueOf(obj)
 	if objValue.Kind() == reflect.Ptr {
 		objValue = reflect.Indirect(objValue)
@@ -150,7 +150,7 @@ func writeObj(ctx *context, obj interface{}, specKvs map[string]cliField) error 
 }
 
 // write cli fields from kvs map into the supplied object
-func writeObjValue(ctx *context, obj reflect.Value, kvs map[string]cliField) error {
+func writeObjValue(ctx *cliContext, obj reflect.Value, kvs map[string]cliField) error {
 
 	svcName, _, err := ctx.genInfo.FindSvcName(ctx.subcmd)
 	if err != nil {
@@ -185,7 +185,7 @@ func writeObjValue(ctx *context, obj reflect.Value, kvs map[string]cliField) err
 //  - valid object meta map (key = field-name, value = bool which is true the field that is valid in any objects in the objList)
 //  - valid object spec/status map (key = field-name, value = bool which is true the field that is valid in any objects in the objList)
 //  valid object values are used to skip the display of empty fields for better width utilization
-func getAllKvs(ctx *context, numItems int, objList interface{}) ([]map[string]cliField, []map[string]cliField, map[string]bool, map[string]bool) {
+func getAllKvs(ctx *cliContext, numItems int, objList interface{}) ([]map[string]cliField, []map[string]cliField, map[string]bool, map[string]bool) {
 	objmKvs := []map[string]cliField{}
 	specKvs := []map[string]cliField{}
 	objmValidKvs := make(map[string]bool)
@@ -239,7 +239,7 @@ func getObjMetaKvs(obj interface{}, kvs map[string]cliField) {
 }
 
 // getKvs gets the cli key-value fields (in a map) from the provided object
-func getKvs(ctx *context, obj interface{}, field string, kvs map[string]cliField) {
+func getKvs(ctx *cliContext, obj interface{}, field string, kvs map[string]cliField) {
 	// user specified to parse only a subfield of an object
 	if field != "" {
 		obj = getObjField(obj, field)
@@ -267,7 +267,7 @@ func getKvs(ctx *context, obj interface{}, field string, kvs map[string]cliField
 }
 
 // skipObj returns true if obj does not match the filter criteria
-func skipObj(ctx *context, meta *api.ObjectMeta) bool {
+func skipObj(ctx *cliContext, meta *api.ObjectMeta) bool {
 	if matchRe(ctx.re, meta.Name) && matchLabel(ctx.labels, meta.Labels) && matchString(ctx.names, meta.Name) {
 		return false
 	}
@@ -277,7 +277,7 @@ func skipObj(ctx *context, meta *api.ObjectMeta) bool {
 // getFilteredNames, fetches all names and filter out the ones
 // that do not meet the specified match criteria; this is used by
 // BashCompleter functions for dynamic command completion
-func getFilteredNames(ctx *context) []string {
+func getFilteredNames(ctx *cliContext) []string {
 	names := []string{}
 	objList := getNewObjList(ctx)
 	err := ctx.restGetFunc(ctx.server, ctx.tenant, ctx.token, objList)
@@ -313,7 +313,7 @@ func getHdrUL(len int) string {
 }
 
 // getLineHeader returns one line of the header (field names with underlines) for multi-line read output
-func getLineHeader(ctx *context, objmValidKvs, specValidKvs map[string]bool) []byte {
+func getLineHeader(ctx *cliContext, objmValidKvs, specValidKvs map[string]bool) []byte {
 	hdrNames := ""
 	hdrUL := ""
 	if _, ok := objmValidKvs["name"]; ok {
@@ -338,7 +338,7 @@ func getLineHeader(ctx *context, objmValidKvs, specValidKvs map[string]bool) []b
 }
 
 // getLineData returns one line of the summary line in multi-line read output
-func getLineData(ctx *context, specIdx *int, objmKvs, specKvs map[string]cliField, objmValidKvs, specValidKvs map[string]bool) ([]byte, bool) {
+func getLineData(ctx *cliContext, specIdx *int, objmKvs, specKvs map[string]cliField, objmValidKvs, specValidKvs map[string]bool) ([]byte, bool) {
 	more := false
 	objLine := ""
 	if fi, ok := objmKvs["name"]; ok && objmValidKvs["name"] {

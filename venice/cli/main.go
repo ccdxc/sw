@@ -43,9 +43,9 @@ import (
 // - add help tour
 // - auth (user login, etc.)
 
-// context structure is internal to CLI module that is passed along various functions
-// to keep the context about a specific CLI command; it stores digested information
-type context struct {
+// cliContext structure is internal to CLI module that is passed along various functions
+// to keep the cliContext about a specific CLI command; it stores digested information
+type cliContext struct {
 	cli               *cli.Context
 	tenant            string
 	cmd               string
