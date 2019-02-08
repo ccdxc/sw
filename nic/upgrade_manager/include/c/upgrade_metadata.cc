@@ -59,11 +59,18 @@ bool GetUpgCtxTablesFromMeta(string metafile,
     if (isVerFromCache) {
         try {
             read_json(json_cfg, root);
-            for (ptree::value_type sysimg : root.get_child("mainfwa.system_image")) {
+            string img = "mainfwa";
+            if (exists("/nic/tools/fwupdate")) {
+                img = exec("/nic/tools/fwupdate -r");
+            }
+            UPG_LOG_DEBUG("image {}", img);
+            for (ptree::value_type sysimg : root.get_child(img + ".system_image")) {
                 if (!strcmp(sysimg.first.c_str(), "nicmgr_compat_version")) {
                     meta.nicmgrVersion = sysimg.second.get_value<string>();
+                    UPG_LOG_DEBUG("running nicmgr version: {}", meta.nicmgrVersion);
                 } else if (!strcmp(sysimg.first.c_str(), "kernel_compat_version")) {
                     meta.kernelVersion = sysimg.second.get_value<string>();
+                    UPG_LOG_DEBUG("running kernel version: {}", meta.kernelVersion);
                 }
             }
         } catch (exception const& e) {
@@ -76,8 +83,10 @@ bool GetUpgCtxTablesFromMeta(string metafile,
             for (ptree::value_type item : root) {
                 if (!strcmp(item.first.c_str(), "nicmgr_compat_version")) {
                     meta.nicmgrVersion = item.second.get_value<string>();;
+                    UPG_LOG_DEBUG("upgrade nicmgr version: {}", meta.nicmgrVersion);
                 } else if (!strcmp(item.first.c_str(), "kernel_compat_version")) {
                     meta.kernelVersion = item.second.get_value<string>();;
+                    UPG_LOG_DEBUG("upgrade kernel version: {}", meta.kernelVersion);
                 }
             }
         } catch (exception const& e) {
