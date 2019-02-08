@@ -111,6 +111,7 @@ hal_ret_t pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif_t *pd_tunnelif,
                                                  bool is_upgrade = false);
 hal_ret_t pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
                                                    int tunnel_type,
+                                                   uint16_t vf_id,
                                                    bool is_upgrade = false);
 hal_ret_t pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif_t *pd_tif,
                                             uint16_t vf_id,

@@ -338,24 +338,11 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
         // Program Input mapping tunneled table
         ret = pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif,
                                                        INGRESS_TUNNEL_TYPE_VXLAN,
-                                                       is_upgrade);
+                                                       0, is_upgrade);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
             goto fail_flag;
     } else if (hal_if->encap_type ==
             intf::IfTunnelEncapType::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
-        // Program Input mapping native table
-        ret = pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif,
-                                                     INGRESS_TUNNEL_TYPE_MPLS_L3VPN,
-                                                     is_upgrade);
-        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
-            goto fail_flag;
-        // Program Input mapping tunneled table
-        ret = pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif,
-                                                       INGRESS_TUNNEL_TYPE_MPLS_L3VPN,
-                                                       is_upgrade);
-        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
-            goto fail_flag;
-        // Program the VF properties table
         lif_t *lif = find_lif_by_id(hal_if->lif_id);
         if (!lif) {
             HAL_TRACE_ERR("LIF not found, lif_id: {}", hal_if->lif_id);
@@ -365,6 +352,20 @@ pd_tunnelif_program_hw(pd_tunnelif_t *pd_tunnelif, bool is_upgrade)
         pd_lif = (pd_lif_t *) lif->pd_lif;
         SDK_ASSERT(pd_lif);
         uint16_t vf_id = pd_lif->hw_lif_id;
+        HAL_TRACE_DEBUG("Got vf_id: {}", vf_id);
+        // Program Input mapping native table
+        ret = pd_tunnelif_pgm_inp_mapping_native_tbl(pd_tunnelif,
+                                                     INGRESS_TUNNEL_TYPE_MPLS_L3VPN,
+                                                     is_upgrade);
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
+            goto fail_flag;
+        // Program Input mapping tunneled table
+        ret = pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif,
+                                                       INGRESS_TUNNEL_TYPE_MPLS_L3VPN,
+                                                       vf_id, is_upgrade);
+        if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
+            goto fail_flag;
+        // Program the VF properties table
         ret = pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif, vf_id,
                                                 is_upgrade);
         if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
@@ -579,6 +580,7 @@ fail_flag:
 hal_ret_t
 pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
                                          int tunnel_type,
+                                         uint16_t vf_id,
                                          bool is_upgrade)
 {
     hal_ret_t                            ret;
@@ -610,7 +612,7 @@ pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
                                INPUT_MAPPING_TUNNELED_TUNNELED_IPV4_PACKET_ID,
                                P4TBL_ID_INPUT_MAPPING_TUNNELED,
                                &pd_tunnelif->imt_idx[0],
-                               is_upgrade, pi_if->if_id);
+                               is_upgrade, vf_id);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
     /* Entry 2 */
@@ -619,7 +621,7 @@ pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
                                INPUT_MAPPING_TUNNELED_TUNNELED_IPV6_PACKET_ID,
                                P4TBL_ID_INPUT_MAPPING_TUNNELED,
                                &pd_tunnelif->imt_idx[1],
-                               is_upgrade, pi_if->if_id);
+                               is_upgrade, vf_id);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
     /* Entry 3 */
@@ -628,7 +630,7 @@ pd_tunnelif_pgm_inp_mapping_tunneled_tbl(pd_tunnelif_t *pd_tunnelif,
                                INPUT_MAPPING_TUNNELED_TUNNELED_NON_IP_PACKET_ID,
                                P4TBL_ID_INPUT_MAPPING_TUNNELED,
                                &pd_tunnelif->imt_idx[2],
-                               is_upgrade, pi_if->if_id);
+                               is_upgrade, vf_id);
     if ((ret != HAL_RET_OK) && (ret != HAL_RET_ENTRY_EXISTS))
         goto fail_flag;
 
