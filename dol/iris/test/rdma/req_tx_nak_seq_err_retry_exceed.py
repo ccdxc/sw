@@ -32,8 +32,6 @@ def TestCaseSetup(tc):
     tc.pvtdata.read_dma_len = 64
     tc.pvtdata.read_va = 0x0102030405060708
 
-    tc.pvtdata.test_timer = 1
-
     # Read CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
@@ -41,23 +39,6 @@ def TestCaseSetup(tc):
 
 def TestCaseTrigger(tc):
     logger.info("RDMA TestCaseTrigger() Implementation.")
-    return
-
-def TestCaseStepTrigger(tc, step):
-    logger.info("RDMA TestCaseStepTrigger() Implementation with step_id: %d" % (step.step_id))
-    if (GlobalOptions.dryrun): return True
-    if step.step_id == 0:
-        if tc.pvtdata.test_timer:
-            logger.info("RDMA TestCaseStepTrigger() - Setting the system time for FAST_TIMER to 0")
-            timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
-            timer.Step(0)
-
-    if step.step_id == 2:
-        if tc.pvtdata.test_timer:
-            logger.info("RDMA TestCaseStepTrigger() - Fast Forwarding the system time by by 200 ticks for FAST_TIMER wheel")
-            timer = tc.infra_data.ConfigStore.objects.db['FAST_TIMER']
-            timer.Step(200)
-
     return
 
 def TestCaseVerify(tc):
@@ -72,7 +53,6 @@ def TestCaseStepVerify(tc, step):
     rs.lqp.sq.qstate.Read()
     ring0_mask = (rs.lqp.num_sq_wqes - 1)
     ring4_mask = (rs.lqp.num_rrq_wqes - 1)
-    tc.pvtdata.sq_post_qstate = rs.lqp.sq.qstate.data
 
     if step.step_id == 0:
         # verify that tx_psn is incremented by 7
@@ -108,29 +88,19 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldMaskModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'p_index4', ring4_mask, 1):
             return False
 
-         #verify err_retry_cntr is set to err_retry_count
+        #verify err_retry_cntr is set to err_retry_count
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'err_retry_count', tc.pvtdata.sq_post_qstate, 'err_retry_ctr'):
             return False
 
-         #verify rnr_retry_cntr is set to rnr_retry_count
+        #verify rnr_retry_cntr is set to rnr_retry_count
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'rnr_retry_count', tc.pvtdata.sq_post_qstate, 'rnr_retry_ctr'):
             return False
 
-         #verify rnr_timeout is not set
+        #verify rnr_timeout is not set
         if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rnr_timeout', 0):
             return False
 
     elif step.step_id == 1:
-        msn = tc.pvtdata.sq_pre_qstate.ssn - 3
-        # verify that msn matches the first message's ssn
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'msn', msn):
-            return False
-
-        rexmit_psn = tc.pvtdata.sq_pre_qstate.tx_psn - 4
-        # verify that rexmit_psn is incremented by 3
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rexmit_psn', rexmit_psn):
-            return False
-
         # verify that token_id is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'token_id', 1):
             return False
@@ -139,84 +109,55 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
 
+        # verify that msn is incremented by 1
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'msn', 1):
+            return False
+
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'credits', tc.pvtdata.sq_post_qstate, 'credits'):
             return False
 
-        # verify err_retry_cntr is not modified
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'err_retry_count', tc.pvtdata.sq_post_qstate, 'err_retry_ctr'):
+        # verify that rexmit_psn is incremented by 3
+        if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'rexmit_psn', 3):
             return False
 
-        # verify rnr_retry_cntr is not modified
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'rnr_retry_count', tc.pvtdata.sq_post_qstate, 'rnr_retry_ctr'):
+        # verify err_retry_cntr is still set to 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'err_retry_ctr', 0):
             return False
 
-        # verify rnr_timeout is set
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rnr_timeout', 5):
+        # verify rnr_retry_cntr is still set to 0
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rnr_retry_ctr', 0):
             return False
 
-        # validate cqcb pindex and color
-        if not ValidateReqRxCQChecks(tc, 'EXP_CQ_DESC1'):
+        # verify rnr_timeout is not set
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'rnr_timeout', 0):
             return False
 
-    elif step.step_id == 2:
-        # verify that p_index of rrq is bktracked
+        # verify that p_index of rrq is not incremented
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index4', tc.pvtdata.sq_post_qstate, 'p_index4'):
             return False
 
-        # verify that c_index of rrq is unchanged
+        # verify that c_index of rrq is not incremented
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index4', tc.pvtdata.sq_post_qstate, 'c_index4'):
-            return False
-
-        # verify rexmit_psn is unchanged
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'rexmit_psn', tc.pvtdata.sq_post_qstate, 'rexmit_psn'):
-            return False
-
-        # verify that busy is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 1):
-            return False
-
-        # verify that in_progress is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'in_progress', 0):
-            return False
-
-        # verify that tx_psn is unchanged
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'tx_psn', tc.pvtdata.sq_post_qstate, 'tx_psn'):
             return False
 
         # verify that SQ p_index is not modified
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'p_index0', tc.pvtdata.sq_post_qstate, 'p_index0'):
             return False
 
-        # verify that SQ c_index is unchanged
+        # verify that SQ c_index is not modified
         if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'c_index0', tc.pvtdata.sq_post_qstate, 'c_index0'):
             return False
 
-        # verify err_retry_cntr is unchanged
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_pre_qstate, 'err_retry_ctr', tc.pvtdata.sq_post_qstate, 'err_retry_ctr'):
-            return False
-
-        # verify rnr_retry_cntr is unchanged
-        if not VerifyFieldsEqual(tc, tc.pvtdata.sq_post_qstate, 'rnr_retry_ctr', tc.pvtdata.sq_post_qstate, 'rnr_retry_ctr'):
-            return False
-
-        # verify qp_err_disable is set
-        #if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'qp_err_disabled', 1):
-        #    return False
-
-        # verify qp_err_dis_rnr_retry_exceed is set
-        #if not VerifyFieldModify(tc, tc.pvtdata.sq_pre_qstate, tc.pvtdata.sq_post_qstate, 'qp_err_dis_rnr_retry_exceed', 1):
-        #    return False
-
         # There will be two completions. One in sq_cq for actual error and another in
         # rq_cq for flush error
-        if not ValidateCQCompletions(tc, 1, 1):
+        if not ValidateCQCompletions(tc, 2, 1):
             return False
 
         # verify that state is now moved to ERR (2)
         if not VerifyErrQState(tc):
             return False
 
-    elif step.step_id == 3:
+    elif step.step_id == 2:
 
         if not ValidatePostSyncCQChecks(tc):
             return False
@@ -229,7 +170,5 @@ def TestCaseStepVerify(tc, step):
 
 def TestCaseTeardown(tc):
     logger.info("RDMA TestCaseTeardown() Implementation.")
-    if (GlobalOptions.dryrun): return
-
     ResetErrQState(tc)
     return

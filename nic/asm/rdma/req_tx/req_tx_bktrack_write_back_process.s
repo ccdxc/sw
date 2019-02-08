@@ -63,6 +63,14 @@ exit:
      CAPRI_SET_TABLE_0_VALID(0)
 
 error_disable_exit:
+#if !(defined (HAPS) || defined (HW))
+    /*
+     *  Empty bktrack ring  to satisfy model. Ideally, on error disabling
+     *  we should just exit and be in the same state which caused the error.
+     */
+    tblwr          SQ_BKTRACK_C_INDEX, SQ_BKTRACK_P_INDEX
+#endif
+
     // DMA commands for generating error-completion to RxDMA
     phvwr          p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK
     add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
@@ -86,7 +94,7 @@ bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_6
     bcf           [!c1], end
 
-    CAPRI_GET_TABLE_1_K(req_tx_phv_t, r7) // Branch Delay Slot
+    CAPRI_GET_TABLE_0_K(req_tx_phv_t, r7) // Branch Delay Slot
     CAPRI_NEXT_TABLE_I_READ_SET_SIZE_E(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS)
 
 end:

@@ -1,5 +1,6 @@
 #include "req_tx.h"
 #include "sqcb.h"
+#include "nic/p4/common/defines.h"
 
 struct req_tx_phv_t p;
 struct req_tx_s1_t0_k k;
@@ -15,6 +16,7 @@ struct sqcb2_t d;
 #define TO_S6_BT_P to_s6_bt_info
 
 #define TO_S7_BT_WB_P to_s7_bt_wb_info
+#define TO_S7_STATS_P to_s7_stats_info
 
 #define IN_P t0_s2s_sqcb0_to_sqcb2_info
 #define IN_TO_S_P to_s1_bt_info
@@ -34,19 +36,38 @@ struct sqcb2_t d;
     .param req_tx_bktrack_sqsge_process
     .param req_tx_bktrack_sqpt_process
     .param req_tx_bktrack_write_back_process
+    .param req_tx_stats_process
 
 .align
 req_tx_bktrack_sqcb2_process:
     bbeq           d.busy, 1, exit
+    CAPRI_RESET_TABLE_0_ARG() // Branch Delay Slot
+
+    bbeq           CAPRI_KEY_FIELD(IN_P, bktrack_in_progress), 1, trigger_bktrack
+
+    seq            c1, d.rnr_timeout, 0 // Branch Delay Slot
+    bcf            [c1], check_err_retry
+
+check_rnr_retry:
+    // Check rnr_retry_ctr for RN
+    seq            c1, d.rnr_retry_ctr, 0 // Branch Delay Slot
+    bcf            [c1], rnr_retry_err
 
     // Infinite retries if retry_ctr is set to 7
-    //seq            c1, d.err_retry_ctr, 7 // Branch Delay Slot
-    //tblsub.!c1     d.err_retry_ctr, 1
+    seq            c1, d.rnr_retry_ctr, 7 // Branch Delay Slot
+    b              trigger_bktrack
+    tblsub.!c1     d.rnr_retry_ctr, 1 // Branch Delay Slot
 
-    // Check err_retry_ctr for NAK (seq error), implicit NAK 
-    //seq            c1, d.err_retry_ctr, 0
-    //bcf            [c1], err_completion
+check_err_retry:
+    // Check err_retry_ctr for retransmit timeout
+    seq            c1, d.err_retry_ctr, 0 // Branch Delay Slot
+    bcf            [c1], local_ack_retry_err
 
+    // Infinite retries if retry_ctr is set to 7
+    seq            c1, d.err_retry_ctr, 7 // Branch Delay Slot
+    tblsub.!c1     d.err_retry_ctr, 1
+
+trigger_bktrack:
     tblwr          d.busy, 1
     // Clear rnr_timeout. 
     // SQ ring will drop all speculations and not make progress when RNR timer is running. Clearing it here after
@@ -58,8 +79,6 @@ req_tx_bktrack_sqcb2_process:
     phvwrpair CAPRI_PHV_FIELD(TO_S4_BT_P, rexmit_psn), d.rexmit_psn, \
               CAPRI_PHV_FIELD(TO_S5_BT_P, rexmit_psn), d.rexmit_psn
     phvwr CAPRI_PHV_FIELD(TO_S6_BT_P, rexmit_psn), d.rexmit_psn
-
-    CAPRI_RESET_TABLE_0_ARG()
 
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_c_index), K_SQ_C_INDEX, \
               CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_p_index_or_imm_data1_or_inv_key1), K_SQ_P_INDEX
@@ -122,12 +141,31 @@ bktrack_sqpt:
 
     CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_sqpt_process, r3)
 
-err_completion:
-    phvwr.e   p.common.p4_intr_global_drop, 1
-    CAPRI_SET_TABLE_0_VALID(0)
+rnr_retry_err:
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_dis_rnr_retry_exceed), 1
+    b              trigger_wb_stats
+    phvwrpair      p.{rdma_feedback.completion.status, rdma_feedback.completion.error,rdma_feedback.completion.err_qp_instantly}, \
+                     ((CQ_STATUS_RNR_RETRY_EXCEEDED << 2) | (1 << 1) | 1), \
+                   p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                     ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_RETRY_EXCEED_ERR_OFFSET)) // Branch Delay Slot
+
+local_ack_retry_err:
+    phvwr          CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp), 1
+    phvwrpair      CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_disabled), 1, \
+                   CAPRI_PHV_FIELD(TO_S7_STATS_P, qp_err_dis_err_retry_exceed), 1
+    phvwrpair      p.{rdma_feedback.completion.status, rdma_feedback.completion.error,rdma_feedback.completion.err_qp_instantly}, \
+                     ((CQ_STATUS_RETRY_EXCEEDED << 2) | (1 << 1) | 1), \
+                   p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
+                     ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_RETRY_EXCEED_ERR_OFFSET))
+
+trigger_wb_stats:
+    SQCB0_ADDR_GET(r1)
+    CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_bktrack_write_back_process, r1)
+    CAPRI_NEXT_TABLE3_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_stats_process, r0)
 
 exit:
     SQCB0_ADDR_GET(r1)
-    CAPRI_RESET_TABLE_0_ARG()
     phvwr          CAPRI_PHV_FIELD(SQCB_WRITE_BACK_P, drop_phv), 1
-    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, req_tx_bktrack_write_back_process, r1)
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_tx_bktrack_write_back_process, r1)

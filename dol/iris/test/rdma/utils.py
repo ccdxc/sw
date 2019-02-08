@@ -206,6 +206,8 @@ def ResetErrQState(tc):
     rs.lqp.sq.qstate.data.sqcb5_recirc_bth_opcode = 0
     rs.lqp.sq.qstate.data.sqcb5_recirc_reason = 0
     rs.lqp.sq.qstate.data.sqcb5_max_recirc_cnt_err = 0
+    rs.lqp.sq.qstate.data.sqcb0_bktrack_in_progress = 0
+    rs.lqp.sq.qstate.data.sqcb1_bktrack_in_progress = 0
     rs.lqp.sq.qstate.WriteWithDelay()
 
     #Reset Rq

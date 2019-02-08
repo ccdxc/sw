@@ -48,6 +48,12 @@ req_tx_bktrack_sqcb2_write_back_process:
      tblwr         d.rrq_pindex, 0
      tblwr         d.sq_cindex, K_SQ_C_INDEX
 
+     // Clear rnr_timeout.
+     // SQ ring will drop all speculations and not make progress when RNR timer
+     // is running. Clearing it here after RNR timer expires and triggers
+     // bktrack.
+     tblwr          d.rnr_timeout, 0
+
      // Update tx_psn, ssn and lsn in sqcb1 for RXDMA
      SQCB1_ADDR_GET(r1)
      add            r2, FIELD_OFFSET(sqcb1_t, tx_psn), r1

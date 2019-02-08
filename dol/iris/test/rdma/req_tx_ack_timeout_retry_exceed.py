@@ -121,7 +121,7 @@ def TestCaseStepVerify(tc, step):
             return False
 
         # verify that busy is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 0):
+        if not VerifyFieldAbsolute(tc, tc.pvtdata.sq_post_qstate, 'busy', 1):
             return False
 
         # verify that in_progress is 0
