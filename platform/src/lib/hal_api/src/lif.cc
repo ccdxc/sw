@@ -718,7 +718,7 @@ Lif::UpdateVlanInsertEn(bool vlan_insert_en)
 hal_irisc_ret_t
 Lif::UpdateName(std::string name)
 {
-    info_.name = name;
+    strcpy(info_.name, name.c_str());
     TriggerHalUpdate();
     return HAL_IRISC_RET_SUCCESS;
 }

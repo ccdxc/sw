@@ -299,7 +299,7 @@ DeviceManager::DeviceManager(std::string config_file, enum ForwardingMode fwd_mo
     NIC_HEADER_TRACE("Admin Lif creation");
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
     hw_lif_id = pd->lm_->LIFRangeAlloc(-1, 1);
-    hal_lif_info_.name = "admin";
+    strcpy(hal_lif_info_.name, "admin");
     hal_lif_info_.hw_lif_id = hw_lif_id;
     hal_lif_info_.pinned_uplink_port_num = 0;
     hal_lif_info_.enable_rdma = false;
@@ -311,13 +311,13 @@ string
 DeviceManager::ParseDeviceConf(string filename)
 {
     boost::property_tree::ptree spec;
-    
+
     cout << "Parsing Device conf, input: " << filename << endl;
     if (filename.compare("none") == 0) {
         /* No device.conf file. Classic default mode */
         return string("/platform/etc/nicmgrd/device.json");
     }
-    
+
     /* Parse the input device.conf json file */
     boost::property_tree::read_json(filename, spec);
     int fw_mode = spec.get<int>("forwarding-mode");
@@ -326,7 +326,7 @@ DeviceManager::ParseDeviceConf(string filename)
         device::ForwardingMode_Name(device::ForwardingMode(fw_mode)) << endl;
     cout << "feature_profile: " <<
         device::FeatureProfile_Name(device::FeatureProfile(feature_profile)) << endl;
-    
+
     if ((fw_mode == device::FORWARDING_MODE_HOSTPIN) ||
         (fw_mode == device::FORWARDING_MODE_SWITCH)) {
         return string("/platform/etc/nicmgrd/eth_smart.json");
@@ -343,7 +343,7 @@ DeviceManager::ParseDeviceConf(string filename)
         cout << "Unknown mode, returning classic default" << endl;
         return string("/platform/etc/nicmgrd/device.json");
     }
-    
+
     return string("");
 }
 

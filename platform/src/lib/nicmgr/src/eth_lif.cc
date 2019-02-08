@@ -133,7 +133,8 @@ EthLif::EthLif(HalClient *hal_client,
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_t));
     hal_lif_info_.hw_lif_id = res->lif_id;
-    hal_lif_info_.name = spec->name + std::string("/lif") + std::to_string(res->lif_id);
+    std::string lif_name = spec->name + std::string("/lif") + std::to_string(res->lif_id);
+    strcpy(hal_lif_info_.name, lif_name.c_str());
     hal_lif_info_.type = ConvertDevTypeToLifType(spec->eth_type);
     hal_lif_info_.pinned_uplink_port_num = spec->uplink_port_num;
     hal_lif_info_.enable_rdma = spec->enable_rdma;
@@ -597,7 +598,7 @@ EthLif::CmdHandler(void *req, void *req_data,
 {
     union dev_cmd *cmd = (union dev_cmd *)req;
     union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
-    enum status_code status;
+    enum status_code status = IONIC_RC_SUCCESS;
 
     NIC_LOG_DEBUG("{}: Handling cmd: {}", hal_lif_info_.name,
         opcode_to_str((enum cmd_opcode)cmd->cmd.opcode));
@@ -1167,7 +1168,8 @@ EthLif::_CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data
         return (IONIC_RC_EAGAIN);
     }
 
-    hal_lif_info_.name = cmd->nd_name;
+    strcpy(hal_lif_info_.name, cmd->nd_name);
+
     nd_name = cmd->nd_name;
     dev_name = cmd->dev_name;
 

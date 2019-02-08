@@ -283,7 +283,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
     hal_lif_info_.hw_lif_id = lif_base;
-    hal_lif_info_.name = spec->name;
+    strcpy(hal_lif_info_.name, spec->name.c_str());
     hal_lif_info_.type = types::LIF_TYPE_NONE;
     hal_lif_info_.pinned_uplink_port_num = 0;
     hal_lif_info_.enable_rdma = false;
@@ -339,7 +339,7 @@ Accel_PF::DelphiDeviceInit(void)
     int64_t                             addr;
 
     if (g_nicmgr_svc) {
-        delphi_qinfo_thread = 
+        delphi_qinfo_thread =
             new AccelWorkThread(spec->name + "_qinfo",
                                 ACCEL_DEV_CONTROL_CORES_MASK,
                                 this, seq_queue_info_publish_thread);

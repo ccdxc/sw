@@ -41,7 +41,7 @@ typedef struct hal_queue_info_s {
 
 typedef struct hal_lif_info_s {
     uint64_t hw_lif_id;
-    std::string name;
+    char name[256];
     types::LifType type;
     uint32_t pinned_uplink_port_num;
     bool is_management;
