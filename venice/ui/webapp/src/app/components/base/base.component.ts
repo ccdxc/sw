@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormGroup } from '@angular/forms';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { MessageService, SortEvent } from 'primeng/components/common/api';
+import { SortEvent } from 'primeng/components/common/api';
 import { CommonComponent } from '../../common.component';
 import { ControllerService } from '../../services/controller.service';
 import { Utility } from '@app/common/Utility';
@@ -20,7 +20,6 @@ export class BaseComponent extends CommonComponent implements OnInit {
   private _interval: any;
 
   constructor(protected _controllerService: ControllerService,
-    protected messageService: MessageService,
     protected uiconfigsService: UIConfigsService = null) {
     super();
   }

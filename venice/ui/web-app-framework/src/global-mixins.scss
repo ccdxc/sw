@@ -32,20 +32,20 @@
 
     &.error:hover, 
     &.error:focus,
-    &.ng-dirty.ng-invalid:hover,
-    &.ng-dirty.ng-invalid:focus {
+    &.ng-touched.ng-dirty.ng-invalid:hover,
+    &.ng-touched.ng-dirty.ng-invalid:focus {
       border-radius: 2px;
       background-color: #ffffff !important;
       border: solid 1px $errorColor !important;
     }
 
     &.error:focus,
-    &.ng-dirty.ng-invalid:focus {
+    &.ng-touched.ng-dirty.ng-invalid:focus {
       box-shadow: inset 5px 0 0 0 $errorColor !important;
     }
 
     &.error,
-    &.ng-dirty.ng-invalid {
+    &.ng-touched.ng-dirty.ng-invalid {
     //   box-shadow: inset 5px 0 0 0 $errorColor !important;
       border-radius: 2px;
       background-color: #ffffff !important;

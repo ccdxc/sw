@@ -6,7 +6,6 @@ import { BaseComponent } from '@app/components/base/base.component';
 import { IMonitoringAlertDestination, IMonitoringAlertPolicy, IApiStatus, MonitoringAlertPolicy, MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Subscription } from 'rxjs';
-import { MessageService } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
 
 @Component({
@@ -30,9 +29,8 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
 
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   ngOnInit() {

@@ -67,7 +67,7 @@
         <ng-template pTemplate="caption">
           <app-tableheader title="Policy Rules" [total]="sgPolicyRules.length" [icon]="policyIcon">
             <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center" >
-              Find Rule by: 
+              Search for a flow: 
               <mat-form-field fxFlex="nogrow" floatLabel="never">
                 <input matInput (keyup)="keyUpInput($event)" [formControl]="sourceIpFormControl" placeholder="Source IP" maxlength="15" autocomplete="off">
               </mat-form-field>

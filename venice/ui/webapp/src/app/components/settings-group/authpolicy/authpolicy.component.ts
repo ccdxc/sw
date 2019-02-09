@@ -8,7 +8,6 @@ import { AuthPolicyUtil } from '@app/components/settings-group/authpolicy/AuthPo
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
 import { AuthAuthenticationPolicy, AuthLdap, IApiStatus, IAuthAuthenticationPolicy, AuthAuthenticators_authenticator_order, AuthRadius } from '@sdk/v1/models/generated/auth';
-import { MessageService } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 
@@ -43,9 +42,8 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   ngOnInit() {

@@ -1,15 +1,17 @@
-<div fxLayout="column" class="fwlogpolicies-widget">
-    <app-newfwlogpolicy [@slideInOut] (formClose)="creationFormClose()" fxFlex="none" *ngIf="creatingMode"></app-newfwlogpolicy>
-    <div fxFlex class="fwlogpolicies-tablecontainer">
-      <ng-container *ngTemplateOutlet="Header"></ng-container>
-      <ng-container *ngTemplateOutlet="Table"></ng-container>
-      <div *ngIf="creatingMode || showEditingForm" class="fwlogpolicies-overlay"></div>
-    </div>
-</div>
+<app-pagebody [icon]="bodyIcon" header="Firewall Log Policies">
+  <div fxLayout="column" class="fwlogpolicies-widget">
+      <app-newfwlogpolicy [@slideInOut] (formClose)="creationFormClose()" fxFlex="none" *ngIf="creatingMode"></app-newfwlogpolicy>
+      <div fxFlex class="fwlogpolicies-tablecontainer">
+        <ng-container *ngTemplateOutlet="Header"></ng-container>
+        <ng-container *ngTemplateOutlet="Table"></ng-container>
+        <div *ngIf="creatingMode || showEditingForm" class="fwlogpolicies-overlay"></div>
+      </div>
+  </div>
+</app-pagebody>
 
 <!-- TABLE HEADER -->
 <ng-template #Header>
-  <app-tableheader title="Firewall Log Policies" [total]="policies.length" [icon]="headerIcon" width="250px">
+  <app-tableheader title="Firewall Log Policies" [total]="displayedPolicies.length" [icon]="headerIcon" width="250px">
   </app-tableheader>
 </ng-template>
 
@@ -44,7 +46,7 @@
          </tr>
        </ng-template>
        <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
-         <tr class="fwlogpolicies-rowexpand-tr">
+         <tr class="global-rowexpand fwlogpolicies-rowexpand-tr">
               <td [attr.colspan]="columns.length + 1">
                 <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="showEditingForm" class="fwlogpolicies-rowexpand">
                   <app-newfwlogpolicy [policyData]="rowData" [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-newfwlogpolicy>

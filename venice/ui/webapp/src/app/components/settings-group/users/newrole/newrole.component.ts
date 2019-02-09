@@ -35,7 +35,6 @@ import { StagingBuffer, IStagingBuffer } from '@sdk/v1/models/generated/staging'
 })
 export class NewroleComponent extends UsersComponent implements OnInit, OnDestroy, OnChanges {
 
-  errorChecker = new ErrorStateMatcher();
   newAuthRole: AuthRole;
 
   @Input() selectedAuthRole: AuthRole;
@@ -82,12 +81,14 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   }
 
   isRolenameValid(authRoles: AuthRole[]): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors| null => {
+    return (control: AbstractControl): ValidationErrors | null => {
       if (this.isRoleAlreadyExist(control.value, authRoles)) {
-        return { 'role-name': {
+        return {
+          'role-name': {
             required: true,
             message: 'Role name is required and must be unique'
-        } };
+          }
+        };
       }
       return null;
     };
@@ -141,10 +142,6 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     return (this.selectedAuthRole) ? true : false;
   }
 
-
-  isErrorState(control) {
-    return this.errorChecker.isErrorState(control, null);
-  }
 
   /**
    * override super.api()
@@ -226,7 +223,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
               responseRoleBinding => {
                 this.commitStagingBuffer(buffername).subscribe(
                   responseCommitBuffer => {
-                    this.invokeSuccessToaster('Creation Successful', 'Created Role ' + newRole.meta.name + ' , And Role-binding ' + newRolebinding.meta.name );
+                    this.invokeSuccessToaster('Creation Successful', 'Created Role ' + newRole.meta.name + ' , And Role-binding ' + newRolebinding.meta.name);
                     this.formClose.emit(true);
                   }
                 );

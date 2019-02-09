@@ -7,15 +7,13 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
-import { TelemetryComponent } from './telemetry.component';
 import { FwlogpoliciesComponent } from './fwlogpolicies/fwlogpolicies.component';
-import { TelemetryRoutingModule } from './telemetry.route';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { WidgetsModule } from 'web-app-framework';
-import { FlowexportComponent } from './flowexport/flowexport.component';
-import { NewflowexportComponent } from './flowexport/newflowexport/newflowexport.component';
 import { NewfwlogpolicyComponent } from './fwlogpolicies/newfwlogpolicy/newfwlogpolicy.component';
 import { MonitoringGroupModule } from '../monitoring-group.module';
+import { FwlogsRoutingModule } from './fwlogs.route';
+import { FwlogsComponent } from './fwlogs.component';
 
 
 
@@ -31,16 +29,12 @@ import { MonitoringGroupModule } from '../monitoring-group.module';
     WidgetsModule,
 
 
-    TelemetryRoutingModule,
+    FwlogsRoutingModule,
     SharedModule,
     MonitoringGroupModule
   ],
   declarations: [
-    TelemetryComponent,
-    FwlogpoliciesComponent,
-    FlowexportComponent,
-    NewflowexportComponent,
-    NewfwlogpolicyComponent,
+    FwlogsComponent,
   ]
 })
-export class TelemetryModule { }
+export class FwlogsModule { }

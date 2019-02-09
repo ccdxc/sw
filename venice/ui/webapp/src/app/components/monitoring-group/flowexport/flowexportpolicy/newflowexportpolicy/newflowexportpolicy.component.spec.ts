@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NewflowexportComponent } from './newflowexport.component';
+import { NewflowexportpolicyComponent } from './newflowexportpolicy.component';
 import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -16,12 +16,12 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 
 describe('NewflowexportComponent', () => {
-  let component: NewflowexportComponent;
-  let fixture: ComponentFixture<NewflowexportComponent>;
+  let component: NewflowexportpolicyComponent;
+  let fixture: ComponentFixture<NewflowexportpolicyComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [NewflowexportComponent],
+      declarations: [NewflowexportpolicyComponent],
       imports: [
         MonitoringGroupModule,
         SharedModule,
@@ -44,7 +44,7 @@ describe('NewflowexportComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(NewflowexportComponent);
+    fixture = TestBed.createComponent(NewflowexportpolicyComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

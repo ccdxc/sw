@@ -9,7 +9,7 @@
 
 <!-- TABLE HEADER -->
 <ng-template #Header>
-  <app-tableheader title="Destinations" [total]="count" [icon]="headerIcon" width="250px">
+  <app-tableheader title="Destinations" [total]="destinations.length" [icon]="headerIcon" width="250px">
     <div class="destinations-search" fxFlex="fxFlex" fxLayoutAlign="start center" >
       Find destination by: 
       <mat-form-field fxFlex="nogrow" floatLabel="never">
@@ -50,7 +50,7 @@
          </tr>
        </ng-template>
        <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
-         <tr class="destinations-rowexpand-tr">
+         <tr class="global-rowexpand destinations-rowexpand-tr">
               <td [attr.colspan]="columns.length + 1">
                 <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="showEditingForm" class="destinations-rowexpand">
                   <app-newdestination [destinationData]="rowData"  [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-newdestination>

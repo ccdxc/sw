@@ -1,4 +1,5 @@
 import { Rule, PortRule, IPRule } from '@app/models/frontend/shared/rule.interface';
+import { AbstractControl, ValidationErrors } from '@angular/forms';
 
 
 export class IPUtility {
@@ -54,6 +55,13 @@ export class IPUtility {
       return false;
     }
     return true;
+  }
+
+  public static isValidIPValidator(control: AbstractControl): ValidationErrors | null {
+    if (control.value == null || control.value.length === 0) {
+      return null
+    }
+    return !IPUtility.isValidIP(control.value) ? { validIP: { message: "Must be a valid IP" } } : null;
   }
 
   /**

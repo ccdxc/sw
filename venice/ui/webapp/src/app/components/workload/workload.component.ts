@@ -12,7 +12,6 @@ import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs';
 import { BaseComponent } from '../base/base.component';
-import { MessageService } from 'primeng/primeng';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
@@ -96,9 +95,8 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected dialog: MatDialog,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   ngOnInit() {

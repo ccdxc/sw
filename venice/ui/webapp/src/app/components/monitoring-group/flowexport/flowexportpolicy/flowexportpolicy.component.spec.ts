@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FlowexportComponent } from './flowexport.component';
+import { FlowexportpolicyComponent } from './flowexportpolicy.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -16,16 +16,16 @@ import { MatIconRegistry } from '@angular/material';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from 'primeng/primeng';
 import { MonitoringGroupModule } from '../../monitoring-group.module';
-import { NewflowexportComponent } from './newflowexport/newflowexport.component';
+import { NewflowexportpolicyComponent } from './newflowexportpolicy/newflowexportpolicy.component';
 
 
-describe('FlowexportComponent', () => {
-  let component: FlowexportComponent;
-  let fixture: ComponentFixture<FlowexportComponent>;
+describe('FlowexportpolicyComponent', () => {
+  let component: FlowexportpolicyComponent;
+  let fixture: ComponentFixture<FlowexportpolicyComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [FlowexportComponent, NewflowexportComponent],
+      declarations: [FlowexportpolicyComponent, NewflowexportpolicyComponent],
       imports: [
         FormsModule,
         ReactiveFormsModule,
@@ -51,7 +51,7 @@ describe('FlowexportComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(FlowexportComponent);
+    fixture = TestBed.createComponent(FlowexportpolicyComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

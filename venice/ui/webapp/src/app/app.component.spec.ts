@@ -37,7 +37,6 @@ import { AlerttableService } from '@app/services/alerttable.service';
 import { SearchComponent } from '@app/components/search/search/search.component';
 import { SearchboxComponent } from '@app/components/search/searchbox/searchbox.component';
 import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
-import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
 import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MessageService } from 'primeng/primeng';

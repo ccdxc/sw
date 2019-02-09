@@ -18,27 +18,23 @@ import { LogService } from '@app/services/logging/log.service';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
-import { TelemetryComponent } from './telemetry.component';
-import { FwlogpoliciesComponent } from './fwlogpolicies/fwlogpolicies.component';
-import { NewflowexportComponent } from './flowexport/newflowexport/newflowexport.component';
-import { NewfwlogpolicyComponent } from './fwlogpolicies/newfwlogpolicy/newfwlogpolicy.component';
-import { FlowexportComponent } from './flowexport/flowexport.component';
+import { FlowexportComponent } from './flowexport.component';
+import { NewflowexportpolicyComponent } from './flowexportpolicy/newflowexportpolicy/newflowexportpolicy.component';
+import { FlowexportpolicyComponent } from './flowexportpolicy/flowexportpolicy.component';
 import { MessageService } from 'primeng/primeng';
 import { MonitoringGroupModule } from '../monitoring-group.module';
 
 
-describe('TelemetryComponent', () => {
-  let component: TelemetryComponent;
-  let fixture: ComponentFixture<TelemetryComponent>;
+describe('FlowexportComponent', () => {
+  let component: FlowexportComponent;
+  let fixture: ComponentFixture<FlowexportComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [
-        TelemetryComponent,
-        FwlogpoliciesComponent,
-        NewfwlogpolicyComponent,
         FlowexportComponent,
-        NewflowexportComponent,
+        FlowexportpolicyComponent,
+        NewflowexportpolicyComponent,
       ],
       imports: [
         FormsModule,
@@ -65,7 +61,7 @@ describe('TelemetryComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TelemetryComponent);
+    fixture = TestBed.createComponent(FlowexportComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

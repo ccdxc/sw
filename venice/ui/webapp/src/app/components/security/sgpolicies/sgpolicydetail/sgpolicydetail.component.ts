@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild, ViewEncapsulation, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewEncapsulation, OnDestroy, AfterViewInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
@@ -16,7 +16,6 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
 import { ISecuritySGRule, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
-import { MessageService } from 'primeng/primeng';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -135,14 +134,12 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   showMissingScreen: boolean;
 
   constructor(protected _controllerService: ControllerService,
-    private elRef: ElementRef,
     protected securityService: SecurityService,
     protected searchService: SearchService,
     private _route: ActivatedRoute,
     protected uiconfigsService: UIConfigsService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService, uiconfigsService);
+    super(_controllerService, uiconfigsService);
   }
 
 
@@ -251,10 +248,8 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   showSearchButton(): boolean {
     const sourceIP = this.sourceIpFormControl.value;
     const destIP = this.destIpFormControl.value;
-    const port = this.portFormControl.value;
-    return (sourceIP != null && sourceIP.length > 0) ||
-      (destIP != null && destIP.length > 0) ||
-      (port != null && port.length > 0);
+    return (sourceIP != null && sourceIP.length > 0) &&
+      (destIP != null && destIP.length > 0);
   }
 
   clearSearch() {

@@ -8,7 +8,6 @@ import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
 import { actionChangeTheme, selectorSettings } from '../settings.reducer';
-import { MessageService } from 'primeng/primeng';
 
 @Component({
   selector: 'app-settings',
@@ -29,8 +28,8 @@ export class SettingsComponent extends BaseComponent implements OnInit, OnDestro
     { value: 'BLACK-THEME', label: 'Black' }
   ];
 
-  constructor(private store: Store<any>, protected _controllerService: ControllerService, messageService: MessageService) {
-    super(_controllerService, messageService);
+  constructor(private store: Store<any>, protected _controllerService: ControllerService) {
+    super(_controllerService);
     store
       .select(selectorSettings)
       .pipe(takeUntil(this.unsubscribe$))

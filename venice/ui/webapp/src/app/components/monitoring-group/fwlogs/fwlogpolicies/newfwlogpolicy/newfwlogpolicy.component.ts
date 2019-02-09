@@ -1,16 +1,16 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, ViewChild } from '@angular/core';
 import { Validators } from '@angular/forms';
-import { ErrorStateMatcher } from '@angular/material';
 import { Animations } from '@app/animations';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringFwlogPolicy, MonitoringFwlogPolicy, MonitoringFwlogPolicySpec } from '@sdk/v1/models/generated/monitoring';
-import { MessageService, SelectItem } from 'primeng/primeng';
+import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
 import { Utility } from '@app/common/Utility';
+import { required } from '@sdk/v1/models/generated/events';
 
 @Component({
   selector: 'app-newfwlogpolicy',
@@ -32,13 +32,10 @@ export class NewfwlogpolicyComponent extends BaseComponent implements OnInit, Af
 
   oldButtons: ToolbarButton[] = [];
 
-  errorChecker = new ErrorStateMatcher();
-
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   ngOnInit() {
@@ -53,12 +50,8 @@ export class NewfwlogpolicyComponent extends BaseComponent implements OnInit, Af
       this.newPolicy.$formGroup.get(['meta', 'name']).disable();
     } else {
       // Name field can't be blank
-      this.newPolicy.$formGroup.get(['meta', 'name']).setValidators(Validators.required);
+      this.newPolicy.$formGroup.get(['meta', 'name']).setValidators(required);
     }
-  }
-
-  isErrorState(control) {
-    return this.errorChecker.isErrorState(control, null);
   }
 
   ngAfterViewInit() {

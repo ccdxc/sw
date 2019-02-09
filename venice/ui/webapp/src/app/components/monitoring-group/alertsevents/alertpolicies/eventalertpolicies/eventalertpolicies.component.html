@@ -9,7 +9,7 @@
 
 <!-- TABLE HEADER -->
 <ng-template #Header>
-  <app-tableheader title="Event Alert Policies" [total]="count" [icon]="headerIcon" width="250px">
+  <app-tableheader title="Event Alert Policies" [total]="eventAlertPolicies.length" [icon]="headerIcon" width="250px">
     <div class="eventalertpolicies-search" fxFlex="fxFlex" fxLayoutAlign="start center" >
       Find Policy by: 
       <mat-form-field fxFlex="nogrow" floatLabel="never">
@@ -65,7 +65,7 @@
          </tr>
        </ng-template>
        <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
-         <tr class="eventalertpolicies-rowexpand-tr">
+         <tr class="global-rowexpand  eventalertpolicies-rowexpand-tr">
               <td [attr.colspan]="columns.length + 1">
                 <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="showEditingForm" class="eventalertpolicies-rowexpand">
                   <app-neweventalertpolicy [policyData]="rowData" [destinations]="destinations" [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-neweventalertpolicy>

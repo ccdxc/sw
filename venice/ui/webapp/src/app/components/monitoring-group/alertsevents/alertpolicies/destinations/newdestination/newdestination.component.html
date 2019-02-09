@@ -7,7 +7,7 @@
       <div fxFlex="nogrow" fxLayout="column">
         <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newdestination-row">
           <!-- First row-->
-          <input fxFlex="300px" formControlName="name" class="newdestination-name" spellcheck="false" type="text" pInputText placeholder="Unique Destination Name...">
+          <input fxFlex="300px" formControlName="name" class="newdestination-name" app-errorTooltip spellcheck="false" type="text" pInputText placeholder="Unique Destination Name...">
           <!-- Commented out as it still isn't decided whether there will be a description -->
           <!-- <input fxFlex class="newdestination-description" spellcheck="false" type="text"  pInputText  placeholder="Brief Description (optional)..."> -->
 
@@ -88,10 +88,10 @@
                       <!-- Field Values -->
                       <div fxFlex fxLayout="column">
                         <div fxFlex="30px" fxLayout="row" class="newdestination-value">
-                          <input fxFlex="nogrow" formControlName="host" class="newdestination-host" spellcheck="false" type="text" pInputText placeholder="">
+                          <input fxFlex="nogrow" formControlName="host" app-errorTooltip class="newdestination-host" spellcheck="false" type="text" pInputText placeholder="">
                         </div>
                         <div fxFlex="30px" fxLayout="row" class="newdestination-value">
-                          <input fxFlex="nogrow" formControlName="port" class="newdestination-port" spellcheck="false" type="text" pInputText placeholder="">
+                          <input fxFlex="nogrow" app-errorTooltip formControlName="port" class="newdestination-port" spellcheck="false" type="text" pInputText placeholder="">
                         </div>
                       </div>
 
@@ -111,7 +111,7 @@
                           <p-dropdown fxFlex="nogrow" class="newdestination-version" formControlName="version" styleClass="newdestination-font" [options]="versionOptions"></p-dropdown>
                         </div>
                         <div fxFlex="30px" fxLayout="row" class="newdestination-value">
-                          <input fxFlex="nogrow" formControlName="community-or-user" class="newdestination-usertype" spellcheck="false" type="text"
+                          <input fxFlex="nogrow" app-errorTooltip formControlName="community-or-user" class="newdestination-usertype" spellcheck="false" type="text"
                             pInputText placeholder="">
                         </div>
                       </div>
@@ -139,7 +139,7 @@
                           <p-dropdown fxFlex="nogrow" class="newdestination-authalgo" formControlName="algo" styleClass="newdestination-font" [options]="authAlgoOptions"></p-dropdown>
                         </div>
                         <div fxFlex="30px" fxLayout="row" class="newdestination-value">
-                          <input fxFlex="nogrow" formControlName="password" class="newdestination-authpassword" spellcheck="false" type="text" pInputText
+                          <input fxFlex="nogrow" app-errorTooltip formControlName="password" class="newdestination-authpassword" spellcheck="false" type="text" pInputText
                             placeholder="">
                         </div>
                       </div>
@@ -166,7 +166,7 @@
                           <p-dropdown fxFlex="nogrow" class="newdestination-encryptalgo" formControlName="algo" styleClass="newdestination-font" [options]="encryptAlgoOptions"></p-dropdown>
                         </div>
                         <div fxFlex="30px" fxLayout="row" class="newdestination-value">
-                          <input fxFlex="nogrow" formControlName="password" class="newdestination-encryptpassword" spellcheck="false" type="text" pInputText
+                          <input fxFlex="nogrow" formControlName="password" class="newdestination-encryptpassword" spellcheck="false" type="password" pInputText
                             placeholder="">
                         </div>
                         <div fxFlex="30px">

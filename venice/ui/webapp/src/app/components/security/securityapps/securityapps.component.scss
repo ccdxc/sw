@@ -14,12 +14,16 @@
 }
 
 .securityapps-column-date {
-  width: 15%;
+  width: 20%;
 }
 
 .securityapps-column-metaname {
-  width: 15%;
+  width: 30%;
   color: #007bff;
+}
+
+.securityapps-column-host-name {
+  width: 30%
 }
 
 
@@ -28,6 +32,7 @@
   // text-top interferes with the animation
   vertical-align: top !important;
   > td {
+    width: 100%;
     padding: 0px !important; // Padding interferes with animation on the rowexpands exit
   }
 }

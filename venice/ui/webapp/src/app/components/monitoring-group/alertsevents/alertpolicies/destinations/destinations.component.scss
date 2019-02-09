@@ -32,13 +32,21 @@
   }
 }
 
-.destinations-column-notifications-sent {
-  width: 300px;
+.destinations-column-name {
+  width: 30%
 }
 
-// This column header also includes the action items column so we add an extra 100 px
+.destinations-column-syslog {
+  width: 40%
+}
+
+.destinations-column-notifications-sent {
+  width: 30%;
+}
+
+// This column header also includes the action items column so we add an extra 5%
 th.destinations-column-notifications-sent {
-  width: 400px !important;
+  width: 35%;
 }
 
 .destinations-rowexpand {

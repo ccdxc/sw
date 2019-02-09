@@ -9,12 +9,11 @@ import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { EventsEvent_severity_uihint } from '@sdk/v1/models/generated/events';
-import { IApiStatus, SecuritySGPolicy } from '@sdk/v1/models/generated/security';
+import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
 
 
 import { Subscription } from 'rxjs';
-import { MessageService } from 'primeng/primeng';
 
 @Component({
   selector: 'app-sgpolicies',
@@ -43,8 +42,8 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
   // All columns are set as not sortable as it isn't currently supported
   cols: any[] = [
     { field: 'meta.name', header: 'SG Policy Name', class: 'sgpolicies-column-name', sortable: true },
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'global-column-date', sortable: true },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'global-column-date', sortable: true },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'sgpolicies-column-date', sortable: true },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'sgpolicies-column-date', sortable: true },
   ];
 
   bodyIcon = {
@@ -66,9 +65,8 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected securityService: SecurityService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   ngOnInit() {

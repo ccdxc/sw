@@ -2,7 +2,6 @@ import { Component, OnInit, ViewEncapsulation, OnDestroy } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { MessageService } from 'primeng/primeng';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
 
@@ -20,8 +19,8 @@ export class AlertseventspageComponent extends BaseComponent implements OnInit, 
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
-    protected messageService: MessageService) {
-    super(_controllerService, messageService);
+  ) {
+    super(_controllerService);
   }
 
   ngOnInit() {

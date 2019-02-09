@@ -5,7 +5,7 @@
                 <div class="newuser-panel-rolegroup-header-add-property-label">Full Name:</div>
                 <div class="newuser-panel-rolegroup-header-add-property-value">
                     <input fxFlex="200px" formControlName="fullname" class="newuser-input-item newuser-fullname" spellcheck="false" type="text"
-                        pInputText placeholder="Full Name..." [ngClass]="isErrorState(newAuthUser.$formGroup.get('spec.fullname')) ? 'error' : ''"
+                        pInputText placeholder="Full Name..." 
                         app-errorTooltip>
                 </div>
             </div>
@@ -13,7 +13,7 @@
                 <div class="newuser-panel-rolegroup-header-add-property-label">Email:</div>
                 <div class="newuser-panel-rolegroup-header-add-property-value ">
                     <input fxFlex="200px" formControlName="email" class="newuser-input-item newuser-email" spellcheck="false" type="email" pInputText
-                        placeholder="Email" [ngClass]="isErrorState(newAuthUser.$formGroup.get('spec.email')) ? 'error' : ''"
+                        placeholder="Email"
                         app-errorTooltip>
                 </div>
             </div>
@@ -23,7 +23,7 @@
                 <div class="newuser-panel-rolegroup-header-add-property-label">Login Name:</div>
                 <div class="newuser-panel-rolegroup-header-add-property-value">
                     <input fxFlex="200px" formControlName="name" class="newuser-input-item newuser-loginname" spellcheck="false" type="text"
-                        pInputText placeholder="Login Name..." [ngClass]="isErrorState(newAuthUser.$formGroup.get('meta.name')) ? 'error' : ''" 
+                        pInputText placeholder="Login Name..."
                         app-errorTooltip>
                 </div>
             </div>
@@ -31,7 +31,7 @@
                 <div class="newuser-panel-rolegroup-header-add-property-label">Password:</div>
                 <div class="newuser-panel-rolegroup-header-add-property-value">
                     <input fxFlex="200px" formControlName="password" class="newuser-input-item newuser-Password" 
-                        [ngClass]="isErrorState(newAuthUser.$formGroup.get('spec.password')) ? 'error' : ''" spellcheck="false" type="password"
+                        spellcheck="false" type="password"
                         pInputText placeholder="Password..."  app-errorTooltip>
                 </div>
             </div>

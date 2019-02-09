@@ -1,17 +1,17 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, ViewChild } from '@angular/core';
 import { FormArray, Validators } from '@angular/forms';
-import { ErrorStateMatcher } from '@angular/material';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringAlertDestination, MonitoringAlertDestination, MonitoringAuthConfig, MonitoringPrivacyConfig, MonitoringSNMPTrapServer, MonitoringSyslogExport } from '@sdk/v1/models/generated/monitoring';
-import { SelectItem, MessageService } from 'primeng/primeng';
+import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { BaseComponent } from '@app/components/base/base.component';
 import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
+import { required } from '@sdk/v1/models/generated/events';
 
 @Component({
   selector: 'app-newdestination',
@@ -44,13 +44,10 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
 
   oldButtons: ToolbarButton[] = [];
 
-  errorChecker = new ErrorStateMatcher();
-
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
 
@@ -66,7 +63,7 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
       this.newDestination.$formGroup.get(['meta', 'name']).disable();
     } else {
       // Name field can't be blank
-      this.newDestination.$formGroup.get(['meta', 'name']).setValidators(Validators.required);
+      this.newDestination.$formGroup.get(['meta', 'name']).setValidators(required);
     }
   }
 

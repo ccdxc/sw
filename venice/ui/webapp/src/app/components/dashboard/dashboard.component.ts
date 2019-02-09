@@ -5,7 +5,6 @@ import { DashboardWidgetData, PinnedDashboardWidgetData } from '@app/models/fron
 import { BaseComponent } from '@components/base/base.component';
 
 import { ControllerService } from '../../services/controller.service';
-import { MessageService } from 'primeng/primeng';
 import { MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery, MetricsPollingOptions } from '@app/services/metricsquery.service';
 import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 import { MetricsUtility } from '@app/common/MetricsUtility';
@@ -58,7 +57,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   widgets: DashboardWidgetData[];
   pinnedWidgets: PinnedDashboardWidgetData[];
 
-  lastUpdateTime: string = "";
+  lastUpdateTime: string = '';
 
   timeSeriesData: ITelemetry_queryMetricsQueryResult;
   currentData: ITelemetry_queryMetricsQueryResult;
@@ -72,10 +71,9 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   @ViewChildren('pinnedGridster') pinnedGridster: QueryList<any>;
 
   constructor(protected _controllerService: ControllerService,
-    protected messageService: MessageService,
     protected metricsqueryService: MetricsqueryService,
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   /**

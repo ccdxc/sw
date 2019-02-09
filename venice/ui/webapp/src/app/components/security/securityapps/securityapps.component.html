@@ -43,7 +43,7 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="rowexpansion" let-rowData let-columns="cols">
-        <tr  *ngIf="selectedSecurityApp" class="securityapps-rowexpand-tr">
+        <tr  *ngIf="selectedSecurityApp" class="global-rowexpand  securityapps-rowexpand-tr">
           <td [attr.colspan]="cols.length ">
             <div class="securityapps-detail-div securityapps-rowexpand">
               <pre>{{displaySecurityApp()}}</pre>

@@ -9,8 +9,7 @@ import { SearchResultPayload } from '@app/components/search';
 import { SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
 import { AuditEvent } from '@sdk/v1/models/generated/audit';
-import { MessageService } from 'primeng/primeng';
-import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface' ;
+import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 import { Router } from '@angular/router';
 
 /**
@@ -47,10 +46,9 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   _started = false;
 
   constructor(protected _controllerService: ControllerService,
-    protected messageService: MessageService,
     protected router: Router
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   getClassName(): string {
@@ -79,7 +77,7 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   }
 
   private buildToolbarData(): ToolbarData {
-    const toolbarData: ToolbarData =    {
+    const toolbarData: ToolbarData = {
       breadcrumb: [{ label: 'Search Results', url: '' }]
     };
     // add a dropdown in toolbar if there are search-result data.
@@ -310,10 +308,10 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     return JSON.stringify(value);
   }
 
-   /**
-   * This API serves HTML template.  It shows audit-event
-   * @param eventKey
-   */
+  /**
+  * This API serves HTML template.  It shows audit-event
+  * @param eventKey
+  */
   displayAuditEventValue(event, eventValue): string {
     const value = Utility.getObjectValueByPropertyPath(new AuditEvent(event), eventValue);
     if (typeof value === 'string') {
@@ -330,7 +328,7 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
    * @param eventKey
    */
   displayAuditEventKey(eventKey): boolean {
-    return (eventKey !== 'response-object') &&  (eventKey !== 'request-object');
+    return (eventKey !== 'response-object') && (eventKey !== 'request-object');
   }
 
   private getObjectValues(eventValue: any): string {

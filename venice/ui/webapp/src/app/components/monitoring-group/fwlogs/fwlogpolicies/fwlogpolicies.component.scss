@@ -34,20 +34,25 @@
 }
 
 .fwlogpolicies-column-action {
-  width: 100px !important;
+  width: 5%;
 }
 
 .fwlogpolicies-column-name {
   width: 20%;
 }
 
-.fwlogpolicies-column-targets {
-  width: 300px;
+.fwlogpolicies-column-filter {
+  width: 40%;
 }
 
-// This column also includes the action items so we add an extra 100 px
+
+.fwlogpolicies-column-targets {
+  width: 35%;
+}
+
+// This column also includes the action items so we add an extra 5%
 th.fwlogpolicies-column-targets {
-  width: 400px !important;
+  width: 40%;
 }
 
 .fwlogpolicies-rowexpand {

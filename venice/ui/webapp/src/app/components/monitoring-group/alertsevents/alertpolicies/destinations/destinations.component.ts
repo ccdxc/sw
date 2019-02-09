@@ -8,7 +8,6 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IMonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 import { Table } from 'primeng/table';
 import { TabcontentComponent } from 'web-app-framework';
-import { MessageService } from 'primeng/primeng';
 
 
 @Component({
@@ -31,9 +30,8 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
   };
   globalFilterFields: string[] = ['meta.name', 'spec.email-list'];
 
-  destinations: IMonitoringAlertDestination[];
+  destinations: IMonitoringAlertDestination[] = [];
   selectedDestinationPolicy: IMonitoringAlertDestination;
-  count: number;
   arrayDiffers: IterableDiffer<IMonitoringAlertDestination>;
   expandedRowData: IMonitoringAlertDestination;
 
@@ -63,7 +61,7 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
     protected _iterableDiffers: IterableDiffers,
     private cdr: ChangeDetectorRef,
     protected _monitoringService: MonitoringService,
-    protected messageService: MessageService) {
+  ) {
     super();
     this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
@@ -113,13 +111,11 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
      * editing on a row entry
      */
     const _ = Utility.getLodash();
-    const items = _.cloneDeep(this.destinationData);
-    this.destinations = items;
-    if (items != null) {
-      this.count = items.length;
-    } else {
-      this.count = 0;
+    let items = _.cloneDeep(this.destinationData);
+    if (items == null) {
+      items = [];
     }
+    this.destinations = items;
   }
 
   /**
@@ -225,11 +221,11 @@ export class DestinationpolicyComponent extends TabcontentComponent implements O
     }
     const sub = this._monitoringService.DeleteAlertDestination(destination.meta.name).subscribe(
       (response) => {
-        this.messageService.add({ severity: 'success', summary: 'Delete Successful', detail: 'Deleted destination' + destination.meta.name });
+        this._controllerService.invokeSuccessToaster('Delete Successful', 'Deleted destination' + destination.meta.name);
       },
       (error) => {
         const errorMsg = error.body != null ? error.body.message : '';
-        this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: errorMsg });
+        this._controllerService.invokeErrorToaster('Delete Failed', errorMsg);
       }
     );
     this.subscriptions.push(sub);

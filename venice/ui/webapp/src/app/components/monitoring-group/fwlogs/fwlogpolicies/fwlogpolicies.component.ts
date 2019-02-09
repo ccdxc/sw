@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, DoCheck, Input, IterableDiffer, IterableDiffers, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, DoCheck, Input, IterableDiffer, IterableDiffers, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
@@ -6,10 +6,8 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { MonitoringFwlogPolicy } from '@sdk/v1/models/generated/monitoring';
-import { MessageService } from 'primeng/primeng';
+import { MonitoringFwlogPolicy, IMonitoringFwlogPolicy } from '@sdk/v1/models/generated/monitoring';
 import { Table } from 'primeng/table';
-import { TabcontentComponent } from 'web-app-framework';
 
 @Component({
   selector: 'app-fwlogpolicies',
@@ -18,11 +16,21 @@ import { TabcontentComponent } from 'web-app-framework';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class FwlogpoliciesComponent extends TabcontentComponent implements OnInit, OnChanges, OnDestroy, DoCheck {
-  @Input() policies: ReadonlyArray<MonitoringFwlogPolicy> = [];
-
+export class FwlogpoliciesComponent implements OnInit, OnDestroy, DoCheck {
   @ViewChild('policiesTable') policytable: Table;
   subscriptions = [];
+
+  fwlogPolicies: ReadonlyArray<IMonitoringFwlogPolicy> = [];
+
+  fwlogPoliciesEventUtility: HttpEventUtility<MonitoringFwlogPolicy>;
+
+  bodyIcon: any = {
+    margin: {
+      top: '9px',
+      left: '8px'
+    },
+    url: '/assets/images/icons/monitoring/icon-firewall-policy-black.svg'
+  };
 
   headerIcon: Icon = {
     margin: {
@@ -57,15 +65,13 @@ export class FwlogpoliciesComponent extends TabcontentComponent implements OnIni
     protected _iterableDiffers: IterableDiffers,
     private cdr: ChangeDetectorRef,
     protected _monitoringService: MonitoringService,
-    protected messageService: MessageService) {
-    super();
+  ) {
     this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
 
   ngOnInit() {
-    if (this.isActiveTab) {
-      this.setDefaultToolbar();
-    }
+    this.setDefaultToolbar();
+    this.getFwlogPolicies();
     this.setTableData();
   }
 
@@ -78,10 +84,22 @@ export class FwlogpoliciesComponent extends TabcontentComponent implements OnIni
         callback: () => { this.createNewPolicy(); }
       },
       ],
-      breadcrumb: [{ label: 'Telemetry Policies', url: Utility.getBaseUIUrl() + 'monitoring/telemetry' },
-      { label: 'Fwlog Export Policies', url: Utility.getBaseUIUrl() + 'monitoring/telemetry' }
+      breadcrumb: [{ label: 'Firewall Logs', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs' },
+      { label: 'Firewall Log Policies', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs/fwlogpolicies' }
       ]
     });
+  }
+
+  getFwlogPolicies() {
+    this.fwlogPoliciesEventUtility = new HttpEventUtility<MonitoringFwlogPolicy>(MonitoringFwlogPolicy);
+    this.fwlogPolicies = this.fwlogPoliciesEventUtility.array;
+    const subscription = this._monitoringService.WatchFwlogPolicy().subscribe(
+      (response) => {
+        this.fwlogPoliciesEventUtility.processEvents(response);
+      },
+      this._controllerService.restErrorHandler('Failed to get Firewall Log Policies')
+    );
+    this.subscriptions.push(subscription);
   }
 
   setTableData() {
@@ -92,7 +110,11 @@ export class FwlogpoliciesComponent extends TabcontentComponent implements OnIni
      * editing on a row entry
      */
     const _ = Utility.getLodash();
-    const policies = _.cloneDeep(this.policies);
+    const policies = _.cloneDeep(this.fwlogPolicies);
+    if (policies == null) {
+      this.displayedPolicies = [];
+      return;
+    }
     this.displayedPolicies = policies;
   }
 
@@ -100,7 +122,6 @@ export class FwlogpoliciesComponent extends TabcontentComponent implements OnIni
     // If a row is expanded, we shouldnt be able to open a create new policy form
     if (!this.isInEditMode()) {
       this.creatingMode = true;
-      this.editMode.emit(true);
     }
   }
 
@@ -111,20 +132,13 @@ export class FwlogpoliciesComponent extends TabcontentComponent implements OnIni
    * (see trackBy function) instead of checking every object field.
    */
   ngDoCheck() {
-    const changes = this.arrayDiffers.diff(this.policies);
+    const changes = this.arrayDiffers.diff(this.fwlogPolicies as Array<any>);
     if (changes) {
       if (this.isInEditMode()) {
         this.hasNewData = true;
       } else {
         this.setTableData();
       }
-    }
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    // We only set the toolbar if we are becoming the active tab,
-    if (changes.isActiveTab != null && this.isActiveTab) {
-      this.setDefaultToolbar();
     }
   }
 
@@ -190,7 +204,6 @@ export class FwlogpoliciesComponent extends TabcontentComponent implements OnIni
 
   creationFormClose() {
     this.creatingMode = false;
-    this.editMode.emit(false);
   }
 
   isInEditMode() {

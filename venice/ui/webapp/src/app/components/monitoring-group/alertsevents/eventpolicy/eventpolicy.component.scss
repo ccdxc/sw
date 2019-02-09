@@ -17,10 +17,6 @@
     padding-right: 10px;
 }
 
-.fwlogpolicies-column-name {
-  width: 20%;
-}
-
 .eventpolicy-rowexpand {
   overflow: hidden;
   z-index: 20; // Needs to be higher than .evenalertpolicies-overlay z-index
@@ -37,16 +33,16 @@
 }
 
 .eventpolicy-column-name {
-  width: 20%;
+  width: 45%;
 }
 
 .eventpolicy-column-targets {
-  width: 300px;
+  width: 30%
 }
 
-// This column also includes the action items so we add an extra 100 px
+// This column also includes the action items so we add an extra 5%
 th.eventpolicy-column-targets {
-  width: 400px !important;
+  width: 35%
 }
 
 .eventpolicy-rowhighlight {

@@ -4,7 +4,7 @@
       <div class="newrolebinding-panel-rolegroup-header-add-property-label">Name:</div>
       <div class="newrolebinding-panel-rolegroup-header-add-property-value">
         <input *ngIf="!isEditMode()" fxFlex="200px" formControlName="name" class="newrolebinding-input-item newrolebinding-fullname"
-        app-errorTooltip spellcheck="false" type="text" pInputText placeholder="Rolebinding Name..." [ngClass]="isErrorState(newAuthRolebinding.$formGroup.get('metaname')) ? 'error' : ''">
+        app-errorTooltip spellcheck="false" type="text" pInputText placeholder="Rolebinding Name...">
         <span *ngIf="isEditMode()" class="newrolebinding-input-item newrolebinding-fullname">{{newAuthRolebinding.meta.name}}</span>
       </div>
     </div>

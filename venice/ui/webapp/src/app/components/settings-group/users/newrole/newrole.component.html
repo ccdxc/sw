@@ -5,7 +5,7 @@
         <div class="newrole-panel-rolegroup-header-add-property-label">Name:</div>
         <div class="newrole-panel-rolegroup-header-add-property-value">
           <input *ngIf="!isEditMode()" fxFlex="200px" formControlName="name" class="newrole-input-item newrole-fullname"
-            spellcheck="false" type="text" pInputText placeholder="Role Name..." [ngClass]="isErrorState(newAuthRole.$formGroup.get('metaname')) ? 'error' : ''" app-errorTooltip>
+            spellcheck="false" type="text" pInputText placeholder="Role Name..." app-errorTooltip>
           <span *ngIf="isEditMode()" class="newrole-input-item newrole-fullname">{{newAuthRole.meta.name}}</span>
         </div>
       </div>

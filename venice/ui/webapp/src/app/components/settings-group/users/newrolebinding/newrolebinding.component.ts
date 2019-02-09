@@ -7,7 +7,7 @@ import { Animations } from '@app/animations';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
 import { StagingService } from '@app/services/generated/staging.service';
-import { AuthRoleBinding, AuthUser, AuthRole} from '@sdk/v1/models/generated/auth';
+import { AuthRoleBinding, AuthUser, AuthRole } from '@sdk/v1/models/generated/auth';
 import { Utility } from '@app/common/Utility';
 
 
@@ -33,7 +33,6 @@ export interface RolebindingUISelectItem {
 })
 export class NewrolebindingComponent extends UsersComponent implements OnInit, OnDestroy, OnChanges {
 
-  errorChecker = new ErrorStateMatcher();
   newAuthRolebinding: AuthRoleBinding;
 
   // define data structures for UI
@@ -74,25 +73,27 @@ export class NewrolebindingComponent extends UsersComponent implements OnInit, O
   ngOnDestroy() { }
 
   setupData() {
-        if (this.isEditMode()) {
-          this.newAuthRolebinding =  this.getRoleFromSelectedRoleBinding();
-        } else {
-          this.newAuthRolebinding = new AuthRoleBinding();
-          this.newAuthRolebinding.$formGroup.get(['meta', 'name']).setValidators([required, this.isRolebindingnameValid(this.veniceRolebindings)]);
+    if (this.isEditMode()) {
+      this.newAuthRolebinding = this.getRoleFromSelectedRoleBinding();
+    } else {
+      this.newAuthRolebinding = new AuthRoleBinding();
+      this.newAuthRolebinding.$formGroup.get(['meta', 'name']).setValidators([required, this.isRolebindingnameValid(this.veniceRolebindings)]);
 
-          const users = this.newAuthRolebinding.$formGroup.get(['spec', 'users']) as FormArray;
-          this.onUsersAvailable();
-          this.onRolesAvailable();
-        }
+      const users = this.newAuthRolebinding.$formGroup.get(['spec', 'users']) as FormArray;
+      this.onUsersAvailable();
+      this.onRolesAvailable();
+    }
   }
 
   isRolebindingnameValid(authRolebindings: AuthRoleBinding[]): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors| null => {
+    return (control: AbstractControl): ValidationErrors | null => {
       if (this.isRoleBindingAlreadyExist(control.value, authRolebindings)) {
-        return { 'rolebinding-name': {
+        return {
+          'rolebinding-name': {
             required: true,
             message: 'Rolebinding name is required and must be unique'
-        } };
+          }
+        };
       }
       return null;
     };
@@ -101,27 +102,27 @@ export class NewrolebindingComponent extends UsersComponent implements OnInit, O
   onUsersAvailable() {
     if (this.veniceUsers) {
       this.sourceUsers.length = 0;
-      this.veniceUsers.forEach (authUser => {
+      this.veniceUsers.forEach(authUser => {
         this.sourceUsers.push(
           {
-            name : authUser.meta.name,
-            label : authUser.meta.name,
-            value : authUser.meta.name
+            name: authUser.meta.name,
+            label: authUser.meta.name,
+            value: authUser.meta.name
           }
         );
       });
     }
   }
 
-  onRolesAvailable () {
+  onRolesAvailable() {
     if (this.veniceRoles) {
       this.sourceRoles.length = 0;
-      this.veniceRoles.forEach (authRole => {
+      this.veniceRoles.forEach(authRole => {
         this.sourceRoles.push(
           {
-            name : authRole.meta.name,
-            label : authRole.meta.name,
-            value : authRole.meta.name
+            name: authRole.meta.name,
+            label: authRole.meta.name,
+            value: authRole.meta.name
           }
         );
       });
@@ -136,20 +137,20 @@ export class NewrolebindingComponent extends UsersComponent implements OnInit, O
     const roleBindingData = this.selectedAuthRolebinding.getFormGroupValues();
     // build targetUser list for picklist
     this.targetUsers.length = 0;
-    roleBindingData.spec.users.forEach( username => {
+    roleBindingData.spec.users.forEach(username => {
       this.targetUsers.push(
         {
-          name : username,
-          label : username,
-          value : username
+          name: username,
+          label: username,
+          value: username
         }
       );
     });
     // get all users first
-    this.onUsersAvailable() ;
+    this.onUsersAvailable();
     // compute available users for picklist
     const avalUsers = this.sourceUsers.filter(user => {
-      return ( roleBindingData.spec.users.indexOf(user.name) < 0);
+      return (roleBindingData.spec.users.indexOf(user.name) < 0);
     });
     this.sourceUsers = avalUsers;
     return new AuthRoleBinding(roleBindingData);
@@ -161,13 +162,6 @@ export class NewrolebindingComponent extends UsersComponent implements OnInit, O
   isAllInputsValidated() {
     const hasFormGroupError = Utility.getAllFormgroupErrors(this.newAuthRolebinding.$formGroup);
     return (hasFormGroupError === null);
-  }
-
-  /**
-   * This API serves HTML template
-   */
-  isErrorState(control) {
-    return this.errorChecker.isErrorState(control, null);
   }
 
   /**

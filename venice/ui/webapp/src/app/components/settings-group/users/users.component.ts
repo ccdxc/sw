@@ -16,7 +16,7 @@ import { StagingService } from '@app/services/generated/staging.service';
 import {
   IApiStatus, IAuthRoleBindingList, AuthRoleBindingList,
   AuthRoleBinding, IAuthRoleList, AuthRole, IAuthUserList,
-  AuthUserList, AuthUser, AuthRoleList , AuthPasswordChangeRequest
+  AuthUserList, AuthUser, AuthRoleList, AuthPasswordChangeRequest
 } from '@sdk/v1/models/generated/auth';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 
@@ -28,7 +28,7 @@ export enum ACTIONTYPE {
 
 export interface AuthPolicyObject {
   meta: {
-      name: string;
+    name: string;
   };
 }
 
@@ -106,9 +106,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   };
 
 
-
-  errorChecker = new ErrorStateMatcher();
-  userEditAction: string = UsersComponent.USER_ACTION_UPDATE ;
+  userEditAction: string = UsersComponent.USER_ACTION_UPDATE;
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,
@@ -356,9 +354,9 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
                   this.invokeRESTErrorToaster('Fail to commit Buffer', error);
                 }
               );
-              } else {
-                this.deleteStagingBuffer(buffername, 'Fail to delete user ' + deletedUser.meta.name);
-              }
+            } else {
+              this.deleteStagingBuffer(buffername, 'Fail to delete user ' + deletedUser.meta.name);
+            }
           });
         },
         error => {
@@ -386,7 +384,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   }
 
   commitStagingBuffer(buffername: string): Observable<any> {
-    const commitBufferBody: StagingCommitAction  = Utility.buildCommitBufferCommit(buffername);
+    const commitBufferBody: StagingCommitAction = Utility.buildCommitBufferCommit(buffername);
     return this.stagingService.Commit(buffername, commitBufferBody);
   }
 
@@ -432,7 +430,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
         const buffername = createdBuffer.meta.name;
         const observables: Observable<any>[] = [];
         observables.push(this._authService.DeleteRole(deletedRole.meta.name, buffername));
-        this.authRoleBindings.forEach( (rolebinding: AuthRoleBinding) => {
+        this.authRoleBindings.forEach((rolebinding: AuthRoleBinding) => {
           if (rolebinding.spec.role === deletedRole.meta.name) {
             const observable = this._authService.DeleteRoleBinding(rolebinding.meta.name, buffername);
             observables.push(observable);
@@ -441,19 +439,19 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
         forkJoin(observables).subscribe(results => {
           const isAllOK = this.isForkjoinResultAllOK(results);
           if (isAllOK) {
-          this.commitStagingBuffer(buffername).subscribe(
-            responseCommitBuffer => {
-              this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' Role ' + deletedRole.meta.name);
-              this.creationRoleFormClose(true);
-            },
-            this.restErrorHandler('Fail to commit buffer when deleting role ' )
-          );
+            this.commitStagingBuffer(buffername).subscribe(
+              responseCommitBuffer => {
+                this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' Role ' + deletedRole.meta.name);
+                this.creationRoleFormClose(true);
+              },
+              this.restErrorHandler('Fail to commit buffer when deleting role ')
+            );
           } else {
             this.deleteStagingBuffer(buffername, 'Fail to delete role ' + deletedRole.meta.name);
           }
         });
       },
-      this.restErrorHandler('Create Buffer Failed When Deleting An Role ' )
+      this.restErrorHandler('Create Buffer Failed When Deleting An Role ')
     );
   }
 
@@ -489,12 +487,12 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this.selectedAuthUser = user;
     this.userEditAction = UsersComponent.USER_ACTION_UPDATE;
     this.selectedRolebindingsForUsers.length = 0;
-    this.rolebindingOptions.forEach( (selectItem ) => {
+    this.rolebindingOptions.forEach((selectItem) => {
       for (let i = 0; user.status && user.status.roles && i < user.status.roles.length; i++) {
-          const rbName = user.status.roles[i];
-          if (rbName === selectItem.value.spec.role) {
-            this.selectedRolebindingsForUsers.push(selectItem.value);
-          }
+        const rbName = user.status.roles[i];
+        if (rbName === selectItem.value.spec.role) {
+          this.selectedRolebindingsForUsers.push(selectItem.value);
+        }
       }
     });
     this.selectedAuthUser.$formGroup.get(['meta', 'name']).disable();
@@ -576,10 +574,10 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this.isToShowAddUserPanel = false;
   }
 
-   /**
-   * This API serves html template.
-   * If it is a save-user operation, refresh data
-   */
+  /**
+  * This API serves html template.
+  * If it is a save-user operation, refresh data
+  */
   creationRoleFormClose(isSaveData: boolean) {
     if (isSaveData) {
       this.getData();
@@ -588,10 +586,10 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this.isToShowAddRolePanel = false;
   }
 
-   /**
-   * This API serves html template.
-   * If it is a save-user operation, refresh data
-   */
+  /**
+  * This API serves html template.
+  * If it is a save-user operation, refresh data
+  */
   creationRoleBindingFormClose(isSaveData: boolean) {
     if (isSaveData) {
       this.getData();
@@ -644,14 +642,14 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     } else if (this.userEditAction === UsersComponent.USER_ACTION_CHANGEPWD) {
       hasFormGroupError = Utility.getAllFormgroupErrors(this.authPasswordChangeRequest.$formGroup);
     }
-    return (hasFormGroupError === null) ;
+    return (hasFormGroupError === null);
   }
 
   /**
    * Invoke REST API to change user password
    */
-  changeUserPassword () {
-    this._authService.PasswordChange (this.selectedAuthUser.meta.name, this.authPasswordChangeRequest.getFormGroupValues()).subscribe (
+  changeUserPassword() {
+    this._authService.PasswordChange(this.selectedAuthUser.meta.name, this.authPasswordChangeRequest.getFormGroupValues()).subscribe(
       response => {
         this.invokeSuccessToaster('Change password Successful', 'Change Password ' + this.selectedAuthUser.meta.name);
         const updatedAuthUser: AuthUser = response.body as AuthUser;
@@ -677,7 +675,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * We will remove user from rb1, add user to rb4
    */
   updateUser_with_staging() {
-    const updateUser =  this.selectedAuthUser.getFormGroupValues();
+    const updateUser = this.selectedAuthUser.getFormGroupValues();
     updateUser.meta.name = this.selectedAuthUser.meta.name;  // sine we don't let change login name, we have to patch the meta.name
     delete updateUser.status;  // remove status property
     this.createStagingBuffer().subscribe(
@@ -687,23 +685,23 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
         const observables: Observable<any>[] = [];
         const username = updateUser.meta.name;
         observables.push(this._authService.UpdateUser(this.selectedAuthUser.meta.name, updateUser, buffername));
-        this.authRoleBindings.forEach( (rb) => {
-            const inRBlist = this.isUserAlreadyInRoleBinding(rb, username);
-            if ( inRBlist) {
-              let inSelectedRBList = false;
-              for (let i = 0; i < this.selectedRolebindingsForUsers.length; i++) {
-                  if (rb.meta.name === this.selectedRolebindingsForUsers[i].meta.name) {
-                    inSelectedRBList = true;
-                    break;
-                  }
-              }
-              if (!inSelectedRBList) {
-                const observable = this.removeUserFromRolebing(rb, username, buffername);
-                if (observable) {
-                  observables.push(observable);
-                }
+        this.authRoleBindings.forEach((rb) => {
+          const inRBlist = this.isUserAlreadyInRoleBinding(rb, username);
+          if (inRBlist) {
+            let inSelectedRBList = false;
+            for (let i = 0; i < this.selectedRolebindingsForUsers.length; i++) {
+              if (rb.meta.name === this.selectedRolebindingsForUsers[i].meta.name) {
+                inSelectedRBList = true;
+                break;
               }
             }
+            if (!inSelectedRBList) {
+              const observable = this.removeUserFromRolebing(rb, username, buffername);
+              if (observable) {
+                observables.push(observable);
+              }
+            }
+          }
         });
         this.selectedRolebindingsForUsers.forEach((rolebinding) => {
           this.rolebindingUpdateMap[rolebinding.meta.name] = false;
@@ -719,10 +717,10 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
               responseCommitBuffer => {
                 this.invokeSuccessToaster('Successful', ACTIONTYPE.UPDATE + ' User ' + updateUser.meta.name);
                 this.getData();
-               },
+              },
               error => {
                 console.error('Fail to commit Buffer', error);
-                this.invokeRESTErrorToaster('Fail to commit buffer when updating user ' , error);
+                this.invokeRESTErrorToaster('Fail to commit buffer when updating user ', error);
               }
             );
           } else {
@@ -765,7 +763,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   /**
    * When using forkjoin, we have to loop through the results to see if all results are successful
    */
-  isForkjoinResultAllOK (results: any[]): boolean {
+  isForkjoinResultAllOK(results: any[]): boolean {
     let isAllOK: boolean = true;
     for (let i = 0; i < results.length; i++) {
       if (results[i]['statusCode'] === 200) {
@@ -813,7 +811,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    */
   isAuthPolicyObjectAlreadyExist(name: string, authpolicyObjects: AuthPolicyObject[]): boolean {
     const isIn = false;
-    for (let i = 0 ; i < authpolicyObjects.length; i++) {
+    for (let i = 0; i < authpolicyObjects.length; i++) {
       const authObject = authpolicyObjects[i];
       if (authObject.meta.name === name) {
         return true;

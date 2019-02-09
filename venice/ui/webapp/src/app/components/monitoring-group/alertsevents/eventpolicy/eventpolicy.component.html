@@ -50,7 +50,7 @@
 </tr>
 </ng-template>
 <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
-<tr class="eventpolicy-rowexpand-tr">
+<tr class="global-rowexpand  eventpolicy-rowexpand-tr">
      <td [attr.colspan]="columns.length + 1">
        <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete($event)" *ngIf="showEditingForm" class="eventpolicy-rowexpand">
          <app-neweventpolicy [policyData]="rowData" [isInline]="true" (formClose)="onUpdateRecord($event, rowData)"></app-neweventpolicy>

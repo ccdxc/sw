@@ -1,0 +1,61 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+.fwlogs {
+  @include primary-font();
+}
+
+.fwlogs-multiselect {
+  @include primary-font();
+  text-align: left !important;
+}
+
+.fwlogs-search {
+  border-bottom: 1px solid #dddddd;
+}
+
+.fwlogs-column-ip {
+  width: 17%
+}
+
+.fwlogs-column-port {
+  width: 10%
+}
+
+.fwlogs-column {
+  width: 12%
+}
+
+.fwlogs-button {
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: 0px 10px
+}
+
+.fwlogs-button-search {
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: 3px 10px
+}
+
+.fwlogs-multiselect,
+.fwlogs-input {
+  width: 155px;
+  @include primary-font();
+}
+
+.fwlogs-inputport{
+  width: 100px;
+  @include primary-font();
+}
+
+.fwlogs-value {
+  margin: $vertical-gutter $horizontal-gutter;
+  @include primary-font();
+}
+
+.fwlogs-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+  @include primary-font();
+}

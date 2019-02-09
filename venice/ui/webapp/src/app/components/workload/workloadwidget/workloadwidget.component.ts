@@ -9,7 +9,6 @@ import { Subscription } from 'rxjs';
 
 import { PinPayload } from '@app/models/frontend/shared/pinpayload.interface';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { MessageService } from 'primeng/primeng';
 
 @Component({
   selector: 'app-workloadwidget',
@@ -52,8 +51,8 @@ export class WorkloadwidgetComponent extends BaseComponent implements OnInit, On
   @Output() workloadWidgetClick: EventEmitter<any> = new EventEmitter();
   constructor(private _workloadService: WorkloadService,
     protected _controllerService: ControllerService,
-    protected messageService: MessageService) {
-    super(_controllerService, messageService);
+  ) {
+    super(_controllerService);
   }
 
   ngOnInit() {

@@ -194,7 +194,6 @@
                     Password:</div>
                 <div class="usertemplate-rolegroup-header-add-property-value">
                     <input fxFlex="200px" formControlName="old-password" class="user-edit-input-item user-edit-Password"
-                        [ngClass]="errorChecker.isErrorState(authPasswordChangeRequest.$formGroup.get('spec.password')) ? 'error' : ''"
                         spellcheck="false" type="password" pInputText placeholder="Password..." app-errorTooltip>
                 </div>
             </div>
@@ -203,7 +202,6 @@
                     Password:</div>
                 <div class="usertemplate-rolegroup-header-add-property-value">
                     <input fxFlex="200px" formControlName="new-password" class="user-edit-input-item user-edit-Password"
-                        [ngClass]="errorChecker.isErrorState(authPasswordChangeRequest.$formGroup.get('spec.password')) ? 'error' : ''"
                         spellcheck="false" type="password" pInputText placeholder="Password..." app-errorTooltip>
                 </div>
             </div>
@@ -220,7 +218,6 @@
                     <div class="usertemplate-rolegroup-header-edit-label">Login Name:</div>
                     <div class="usertemplate-rolegroup-header-add-property-value">
                         <input fxFlex="200px" formControlName="name" class="user-edit-input-item user-edit-Password"
-                            [ngClass]="errorChecker.isErrorState(selectedAuthUser.$formGroup.get('spec.password')) ? 'error' : ''"
                             spellcheck="false" type="text" pInputText placeholder="Login Name..." >
                     </div>
                 </div>
@@ -228,7 +225,6 @@
                     <div class="usertemplate-rolegroup-header-edit-label">Full Name:</div>
                     <div class="usertemplate-rolegroup-header-add-property-value">
                         <input fxFlex="200px" formControlName="fullname" class="user-edit-input-item user-edit-Password"
-                            [ngClass]="errorChecker.isErrorState(selectedAuthUser.$formGroup.get('spec.password')) ? 'error' : ''"
                             spellcheck="false" type="text" pInputText placeholder="Full Name...">
                     </div>
                 </div>
@@ -236,7 +232,6 @@
                     <div class="usertemplate-rolegroup-header-edit-label">Email:</div>
                     <div class="usertemplate-rolegroup-header-add-property-value">
                         <input fxFlex="200px" formControlName="email" class="user-edit-input-item user-edit-Password"
-                            [ngClass]="errorChecker.isErrorState(selectedAuthUser.$formGroup.get('spec.password')) ? 'error' : ''"
                             spellcheck="false" type="text" pInputText placeholder="Email">
                     </div>
                 </div>

@@ -1,0 +1,126 @@
+<app-pagebody class="fwlogs" header="Firewall Logs" [icon]="bodyIcon">
+    <div style="height:100%">
+      <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+    </div>
+  
+  </app-pagebody>
+  
+  <ng-template #DataTable>
+    <app-lazyrender [data]="fwlogs" [rows]="28" [virtualRowHeight]="36">
+      <p-table #fwlogsTable class="global-primeng-table-lazyload" [columns]="cols" compareSelectionBy="equals" [responsive]="true" 
+        sortField="timestamp" [sortOrder]='-1' [loading]="loading" [resizableColumns]="true" exportFilename="Venice-fwlogs"  >
+        <!-- Table Caption -->
+        <ng-template pTemplate="caption">
+          <div fxFlex="auto" fxLayout="column">
+            <div xFlex="auto" fxLayout="column" class="fwlogs-search">
+              <ng-container *ngTemplateOutlet="search"></ng-container>
+
+            </div>
+            <app-tableheader fxFlex="auto" title="Firewall Logs" [total]="fwlogs.length" [icon]="headerIcon">
+  
+          </app-tableheader>
+          </div>
+        </ng-template>
+        <!-- Table Header -->
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th *ngFor="let col of cols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
+              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
+            </th>
+          </tr>
+        </ng-template>
+        <!-- Table Body -->
+        <ng-template pTemplate="body" let-rowData>
+          <tr >
+            <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class">
+             
+              <ng-container *ngSwitchCase="'timestamp'">
+                {{rowData.timestamp | PrettyDate }}
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                {{displayColumn(rowData, col)}}
+              </ng-container>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-lazyrender>
+  </ng-template>
+
+
+<ng-template #search>
+  <div fxFlex="10px"></div>
+  <div fxFlex="noshrink" fxLayout="row wrap"
+      [formGroup]="query.$formGroup" 
+      fxLayoutAlign="center stretch">
+    <div fxFlex="nogrow" fxLayout="column">
+      <div fxFlex="10px"></div>
+      <div class="fwlogs-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+        <span>GET LOGS BY:</span>
+      </div>
+    </div> 
+    <div fxFlex="nogrow" fxLayout="column">
+      <div fxFlex="10px"></div>
+      <div class="fwlogs-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+        <span>Source:</span>
+      </div>
+      <div class="fwlogs-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+        <span>Dest:</span>
+      </div>
+    </div> 
+    <div fxFlex="nogrow" fxLayout="column">
+        <div fxFlex="10px"></div>
+        <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
+          <input app-errorTooltip fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"
+                  formControlName="source-ips" pInputText placeholder="10.1.1.1, 10.1.1.2">
+        </div>
+        <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
+          <input app-errorTooltip fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text"          formControlName="dest-ips" pInputText placeholder="10.1.1.1, 10.1.1.2">
+        </div>
+    </div> 
+    <div fxFlex="nogrow" fxLayout="column">
+        <div fxFlex="10px"></div>
+        <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
+          <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow" class="fwlogs-inputport" spellcheck="false"
+              formControlName="source-ports" type="text" pInputText
+            placeholder="Ports">
+        </div>
+        <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
+          <input matTooltip="Ports are comma separated. Ex 8000, 8001" fxFlex="nogrow" class="fwlogs-inputport" spellcheck="false" 
+                formControlName="dest-ports" type="text" pInputText
+            placeholder="Ports">
+        </div>
+    </div> 
+
+    <div fxFlex="nogrow" fxLayout="column">
+      <div fxFlex="10px"></div>
+      <div class="fwlogs-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+        <span>Protocol:</span>
+      </div>
+      <div class="fwlogs-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+        <span>Action:</span>
+      </div>
+    </div> 
+    <div fxFlex="nogrow" fxLayout="column">
+      <div fxFlex="10px"></div>
+      <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
+        <input fxFlex="nogrow" class="fwlogs-input" spellcheck="false" type="text" 
+              formControlName="protocols" pInputText placeholder="TCP, UDP">
+      </div>
+      <div fxFlex="30px" fxLayout="row" class="fwlogs-value">
+          <p-multiSelect class="fwlogs-multiselect"
+          formControlName="actions" appendTo="body" styleClass="fwlogs-font"
+          [filter]="false"
+          defaultLabel="All" 
+          [options]="actionOptions"></p-multiSelect>
+      </div>
+    </div> 
+    <div fxFlex="40px"></div>
+    <div fxFlex="nogrow" fxLayout="column">
+      <div fxFlex="10px"></div>
+      <span fxFlex="nogrow" (click)="getFwlogs()"  tabindex="0"  (keydown)="($event.which ==13)? getFwlogs() : ''"  class="global-button-primary fwlogs-button-search">SEARCH</span>
+      <span fxFlex="nogrow" (click)="clearSearch()"  tabindex="0"  (keydown)="($event.which ==13)? clearSearch() : ''"  class="global-button-neutral fwlogs-button-search">CLEAR</span>
+    </div>
+  </div>
+  <div fxFlex="20px"></div>
+</ng-template>

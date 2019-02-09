@@ -328,12 +328,12 @@ describe('SgpolicydetailComponent', () => {
     };
 
     sgPolicyObserver = new BehaviorSubject({
-        events: [
-          {
-            type: 'Created',
-            object: sgPolicy1
-          }
-        ]
+      events: [
+        {
+          type: 'Created',
+          object: sgPolicy1
+        }
+      ]
     });
     sgPolicyWatchSpy = spyOn(securityService, 'WatchSGPolicy').and.returnValue(
       sgPolicyObserver
@@ -433,6 +433,14 @@ describe('SgpolicydetailComponent', () => {
     const portInput = getPortInput();
     testingUtility.setText(sourceIPInput, '192');
 
+    // The search and cancel buttons shouldnt appear
+    searchButton = getSearchButton();
+    searchClearButton = getSearchClearButton();
+    expect(searchButton).toBeNull();
+    expect(searchClearButton).toBeNull();
+
+    const destIPInput = getDestIpInput();
+    testingUtility.setText(destIPInput, '10.1.1.1');
 
     // The search and cancel buttons should appear
     searchButton = getSearchButton();
@@ -467,19 +475,11 @@ describe('SgpolicydetailComponent', () => {
     testingUtility.sendClick(searchClearButton);
     expect(sourceIPInput.nativeElement.value).toBe('');
 
-    // Should allow port only search
+    // Shouldn't allow port only search
     testingUtility.setText(sourceIPInput, '');
     testingUtility.setText(portInput, 'tcp/88');
     searchButton = getSearchButton();
-    expect(searchButton).toBeTruthy();
-
-    // Click the search button should invoke a search
-    testingUtility.sendClick(searchButton);
-    expect(service.PostPolicyQuery).toHaveBeenCalledTimes(1);
-    const req = querySpy.calls.first().args[0];
-    expect(req['from-ip-address']).toBe('any');
-    expect(req['to-ip-address']).toBe('any');
-    expect(req.app).toBe('tcp/88');
+    expect(searchButton).toBeNull();
   });
 
 

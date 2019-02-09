@@ -10,8 +10,6 @@ import { ControllerService } from '@app/services/controller.service';
 import { ActivatedRoute } from '@angular/router';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { MetricsqueryService, MetricsPollingOptions, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { MessageService } from 'primeng/primeng';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
 import { Telemetry_queryMetricsQuerySpec, ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
@@ -83,10 +81,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     private _route: ActivatedRoute,
     protected clusterService: ClusterService,
     protected metricsqueryService: MetricsqueryService,
-    protected uiconfigService: UIConfigsService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService, uiconfigService);
+    super(_controllerService, null);
   }
 
   ngOnInit() {

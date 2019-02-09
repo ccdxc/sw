@@ -21,24 +21,15 @@
 }
 
 .alertsevents-column-event {
-  width: 150px !important;
+  width: 8%;
 }
 
 .alertsevents-column-source {
-  width: 150px !important;
-}
-
-.alerts-column-source {
-  width: 150px !important;
-}
-
-// Plus 100px for the action column that it will also contain
-th.alerts-column-source {
-  width: 250px !important;
+  width: 7%;
 }
 
 .alertsevents-column-count {
-  width: 80px !important;
+  width: 5%;
 }
 
 .alertsevents-icon {
@@ -72,25 +63,33 @@ app-shared-alertsevents {
   display: inline-flex;
 }
 
+.alerts-column-source {
+  width: 10%
+}
+
+// Plus 100px for the action column that it will also contain
+th.alerts-column-source {
+  width: 15%
+}
 
 .alertsevents-column-date {
-  width: 12%;
+  width: 15%; // two cols use this
 }
 
 .alertsevents-column-name {
   width: 20%;
 }
 
-.alertsevents-column-action {
-  width: 100px !important;
+.alertsevents-column-message{
+  width: 40%;
 }
 
 .alertsevents-column-severity {
-  width: 150px !important;
+  width:10%;
 }
 
 .alertsevents-column-state {
-  width: 100px !important;
+  width:5%;
 }
 
 .alertsevents-header-div {

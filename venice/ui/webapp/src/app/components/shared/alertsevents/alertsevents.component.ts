@@ -19,7 +19,6 @@ import { Table } from 'primeng/table';
 
 import { Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { MessageService } from 'primeng/primeng';
 
 export interface AlertsEventsSelector {
   alertSelector: string;
@@ -78,7 +77,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // This are the events that will be displayed
   filteredEvents: IEventsEvent[] = [];
 
-  eventsPostBody: IApiListWatchOptions = { "sort-order": ApiListWatchOptions_sort_order.None };
+  eventsPostBody: IApiListWatchOptions = { 'sort-order': ApiListWatchOptions_sort_order.None };
 
   // All columns are set as not sortable as it isn't currently supported
   // TODO: Support sorting columns
@@ -88,8 +87,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     { field: 'severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false },
     { field: 'type', header: 'Type', class: 'alertsevents-column-event', sortable: true },
     { field: 'message', header: 'Message', class: 'alertsevents-column-message', sortable: false },
-    { field: 'source', header: 'Source Node & Component', class: 'alertsevents-column-source', sortable: false },
     { field: 'count', header: 'Count', class: 'alertsevents-column-count', sortable: false },
+    { field: 'source', header: 'Source Node & Component', class: 'alertsevents-column-source', sortable: false },
   ];
 
   // Will hold mapping from severity types to counts
@@ -164,9 +163,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     protected searchService: SearchService,
     protected eventsService: EventsService,
     protected monitoringService: MonitoringService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   ngOnInit() {

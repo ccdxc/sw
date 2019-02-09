@@ -1,6 +1,5 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Validators } from '@angular/forms';
-import { ErrorStateMatcher } from '@angular/material';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
@@ -9,8 +8,9 @@ import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec } from '@sdk/v1/models/generated/monitoring';
-import { MessageService, SelectItem } from 'primeng/primeng';
+import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
+import { required } from '@sdk/v1/models/generated/auth';
 
 @Component({
   selector: 'app-neweventalertpolicy',
@@ -34,14 +34,10 @@ export class NeweventalertpolicyComponent extends BaseComponent implements OnIni
 
   oldButtons: ToolbarButton[] = [];
 
-  errorChecker = new ErrorStateMatcher();
-
-
   constructor(protected _controllerService: ControllerService,
     protected _monitoringService: MonitoringService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   ngOnInit() {
@@ -58,7 +54,7 @@ export class NeweventalertpolicyComponent extends BaseComponent implements OnIni
       this.newPolicy.$formGroup.get(['meta', 'name']).disable();
     } else {
       // Name field can't be blank
-      this.newPolicy.$formGroup.get(['meta', 'name']).setValidators(Validators.required);
+      this.newPolicy.$formGroup.get(['meta', 'name']).setValidators(required);
     }
     this.newPolicy.$formGroup.get(['spec', 'resource']).setValue('Event');
 
@@ -69,10 +65,6 @@ export class NeweventalertpolicyComponent extends BaseComponent implements OnIni
         value: destination.meta.name,
       });
     });
-  }
-
-  isErrorState(control) {
-    return this.errorChecker.isErrorState(control, null);
   }
 
   ngAfterViewInit() {

@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { ActivatedRoute } from '@angular/router';
-import { MessageService } from 'primeng/primeng';
 import { ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
@@ -96,9 +95,8 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
     protected clusterService: ClusterService,
     protected metricsqueryService: MetricsqueryService,
     protected uiconfigService: UIConfigsService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService, uiconfigService);
+    super(_controllerService, uiconfigService);
   }
 
   ngOnInit() {

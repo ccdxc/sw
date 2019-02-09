@@ -14,6 +14,7 @@ import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import { Table } from 'primeng/table';
 
+
 export class Utility {
 
   static instance: Utility;
@@ -110,7 +111,7 @@ export class Utility {
   }
 
   static getMacAddress(): string {
-    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function () {
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g, function() {
       return '0123456789ABCDEF'.charAt(Math.floor(Math.random() * 16));
     });
   }
@@ -232,7 +233,7 @@ export class Utility {
 
   // encode(decode) html text into html entity
   static decodeHtmlEntity(str: string) {
-    return str.replace(/&#(\d+);/g, function (match, dec) {
+    return str.replace(/&#(\d+);/g, function(match, dec) {
       return String.fromCharCode(dec);
     });
   }
@@ -246,7 +247,7 @@ export class Utility {
   }
 
   static escape(s): any {
-    return s.replace(/[&"<>]/g, function (c) {
+    return s.replace(/[&"<>]/g, function(c) {
       return {
         '&': '&amp;',
         '"': '&quot;',
@@ -595,14 +596,14 @@ export class Utility {
   public static stringInject(str, data): string {
     if (typeof str === 'string' && (data instanceof Array)) {
 
-      return str.replace(/({\d})/g, function (i) {
+      return str.replace(/({\d})/g, function(i) {
         return data[i.replace(/{/, '').replace(/}/, '')];
       });
     } else if (typeof str === 'string' && (data instanceof Object)) {
 
       for (const key in data) {
         if (data.hasOwnProperty(key)) {
-          return str.replace(/({([^}]+)})/g, function (i) {
+          return str.replace(/({([^}]+)})/g, function(i) {
             i.replace(/{/, '').replace(/}/, '');
             if (!data[key]) {
               return i;
@@ -666,12 +667,14 @@ export class Utility {
     return propInfo;
   }
 
-  public static convertEnumToSelectItem(enumVal: object): SelectItem[] {
+  public static convertEnumToSelectItem(enumVal: object, skipVals = []): SelectItem[] {
     const ret: SelectItem[] = [];
     for (const key in enumVal) {
       if (enumVal.hasOwnProperty(key)) {
-        const value = enumVal[key];
-        ret.push({ label: value, value: key });
+        if (!skipVals.includes(key)) {
+          const value = enumVal[key];
+          ret.push({ label: value, value: key });
+        }
       }
     }
     return ret;
@@ -922,7 +925,7 @@ export class Utility {
    * This API generate tooltip message for form control based on validation result.
    * For example
    * 1. In authpolicy radius.server.secret field, secret validation rule is "required && minlen >= 1"
-   * Utililty.getControlTooltip (server,'secret', 'please enter secret, min-len >=5' ); // see html to, 'server' is the control 
+   * Utililty.getControlTooltip (server,'secret', 'please enter secret, min-len >=5' ); // see html to, 'server' is the control
    *
    * 2. In authpolicy ladp.base-password  field
    * Utililty.getControlTooltip (server, null, 'please enter password, min-len >=8' );

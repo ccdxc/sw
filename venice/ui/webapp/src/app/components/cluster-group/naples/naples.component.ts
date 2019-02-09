@@ -10,7 +10,6 @@ import { ClusterService } from '@app/services/generated/cluster.service';
 import { MetricsPollingOptions, MetricsqueryService, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
 import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
-import { MessageService } from 'primeng/primeng';
 import { Table } from 'primeng/table';
 import { Subscription } from 'rxjs';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
@@ -79,9 +78,8 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
   constructor(private clusterService: ClusterService,
     protected controllerService: ControllerService,
     protected metricsqueryService: MetricsqueryService,
-    protected messageService: MessageService
   ) {
-    super(controllerService, messageService);
+    super(controllerService);
   }
 
   ngOnInit() {

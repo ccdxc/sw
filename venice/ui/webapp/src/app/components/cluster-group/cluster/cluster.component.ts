@@ -11,7 +11,6 @@ import { MetricsPollingOptions, MetricsqueryService, TelemetryPollingMetricQueri
 import { ClusterCluster, ClusterNode } from '@sdk/v1/models/generated/cluster';
 import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
-import { MessageService } from 'primeng/primeng';
 import { Subscription } from 'rxjs';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 
@@ -75,10 +74,9 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   constructor(
     private _clusterService: ClusterService,
     protected _controllerService: ControllerService,
-    protected messageService: MessageService,
     protected metricsqueryService: MetricsqueryService,
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   ngOnInit() {

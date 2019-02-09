@@ -94,11 +94,11 @@ export class AlertlistitemComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   getAlertItemIconTooltip(): string {
-    return  'Alert policy ' + this.alert.status.reason['alert-policy-id'] + ' reports ' + this.alert.status.message;
+    return 'Alert policy ' + this.alert.status.reason['alert-policy-id'] + ' reports ' + this.alert.status.message;
   }
 
   onAlertItemClick($event) {
-    // comment this line out for now as we are not updating alert in alertlist panel. 
+    // comment this line out for now as we are not updating alert in alertlist panel.
     // this.alert.check = !this.alert.check;
     this.alertClick.emit(this.alert);
   }

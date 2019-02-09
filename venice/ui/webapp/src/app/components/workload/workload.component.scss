@@ -57,18 +57,23 @@ $table-headercontentheight: 25px;
 }
 
 .workload-column-date {
-    width: 12%;
-}
-
-.workload-column-labels {
-    width: 20%;
-}
-
-.workload-column-host-name {
     width: 10%;
 }
 
+.workload-column-labels {
+    width: 30%;
+}
+
+.workload-column-host-name {
+    width: 15%;
+}
+
+.workload-column-interfaces {
+    width: 20%;
+}
+
 .workload-column-interfaces-data {
+    width: 20%;
     div {
         height: 25px;
     }

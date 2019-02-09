@@ -43,7 +43,7 @@
 }
 
 .eventalertpolicies-column-action {
-  width: 100px !important;
+  width: 5%;
 }
 
 .eventalertpolicies-column-name {
@@ -51,7 +51,15 @@
 }
 
 .eventalertpolicies-column-severity {
-  width: 150px !important;
+  width: 15%;
+}
+
+.eventalertpolicies-column-destination {
+  width: 5%;
+}
+
+.eventalertpolicies-column-requirements {
+  width: 20%;
 }
 
 .eventalertpolicies-column-totalhits,
@@ -60,12 +68,12 @@
 }
 
 .eventalertpolicies-column-acknowledgedalerts {
-  width: 100px;
+  width: 10%;
 }
 
-// This column also includes the action items so we add an extra 100 px
+// This column also includes the action items so we add an extra 5%
 th.eventalertpolicies-column-acknowledgedalerts {
-  width: 200px !important;
+  width: 15%
 }
 
 .eventalertpolicies-rowexpand {

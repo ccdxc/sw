@@ -2,23 +2,21 @@ import { Component, OnInit, ViewEncapsulation, ViewChild, ChangeDetectorRef, Inp
 import { Animations } from '@app/animations';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { MessageService } from 'primeng/primeng';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { Utility } from '@app/common/Utility';
 import { MonitoringFlowExportPolicy, IMonitoringMatchRule } from '@sdk/v1/models/generated/monitoring';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Table } from 'primeng/table';
-import { TabcontentComponent } from 'web-app-framework';
 
 @Component({
-  selector: 'app-flowexport',
-  templateUrl: './flowexport.component.html',
-  styleUrls: ['./flowexport.component.scss'],
+  selector: 'app-flowexportpolicy',
+  templateUrl: './flowexportpolicy.component.html',
+  styleUrls: ['./flowexportpolicy.component.scss'],
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class FlowexportComponent extends TabcontentComponent implements OnInit, OnChanges, OnDestroy, DoCheck {
+export class FlowexportpolicyComponent implements OnInit, OnDestroy, DoCheck {
   @Input() policies: ReadonlyArray<MonitoringFlowExportPolicy> = [];
   @ViewChild('policiesTable') policytable: Table;
   subscriptions = [];
@@ -47,38 +45,35 @@ export class FlowexportComponent extends TabcontentComponent implements OnInit, 
   shouldEnableButtons: boolean = true;
 
   cols: any[] = [
-    { field: 'meta.name', header: 'Targets', class: 'flowexport-column-name', sortable: false },
-    { field: 'spec.match-rules', header: 'Match Rules', class: 'destinations-column-name', sortable: false },
-    { field: 'spec.exports', header: 'Targets', class: 'flowexport-column-targets', sortable: false, isLast: true },
+    { field: 'meta.name', header: 'Targets', class: 'flowexportpolicy-column-name', sortable: false },
+    { field: 'spec.match-rules', header: 'Match Rules', class: 'flowexportpolicy-column-match-rules', sortable: false },
+    { field: 'spec.exports', header: 'Targets', class: 'flowexportpolicy-column-targets', sortable: false, isLast: true },
   ];
 
   constructor(protected _controllerService: ControllerService,
     protected _iterableDiffers: IterableDiffers,
     private cdr: ChangeDetectorRef,
     protected _monitoringService: MonitoringService,
-    protected messageService: MessageService) {
-    super();
+  ) {
     this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
 
   ngOnInit() {
-    if (this.isActiveTab) {
-      this.setDefaultToolbar();
-    }
+    this.setDefaultToolbar();
     this.setTableData();
   }
 
   setDefaultToolbar() {
     this._controllerService.setToolbarData({
       buttons: [{
-        cssClass: 'global-button-primary flowexport-button',
+        cssClass: 'global-button-primary flowexportpolicy-button',
         text: 'ADD FlOW EXPORT',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewPolicy(); }
       },
       ],
-      breadcrumb: [{ label: 'Telemetry Policies', url: Utility.getBaseUIUrl() + 'monitoring/telemetry' },
-      { label: 'Flow Export Policies', url: Utility.getBaseUIUrl() + 'monitoring/telemetry' }
+      breadcrumb: [
+        { label: 'Flow Export Policies', url: Utility.getBaseUIUrl() + 'monitoring/flowexport' }
       ]
     });
   }
@@ -92,6 +87,10 @@ export class FlowexportComponent extends TabcontentComponent implements OnInit, 
      */
     const _ = Utility.getLodash();
     const policies = _.cloneDeep(this.policies);
+    if (policies == null) {
+      this.displayedPolicies = [];
+      return;
+    }
     this.displayedPolicies = policies;
   }
 
@@ -99,7 +98,6 @@ export class FlowexportComponent extends TabcontentComponent implements OnInit, 
     // If a row is expanded, we shouldnt be able to open a create new policy form
     if (!this.isInEditMode()) {
       this.creatingMode = true;
-      this.editMode.emit(true);
     }
   }
 
@@ -117,13 +115,6 @@ export class FlowexportComponent extends TabcontentComponent implements OnInit, 
       } else {
         this.setTableData();
       }
-    }
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    // We only set the toolbar if we are becoming the active tab,
-    if (changes.isActiveTab != null && this.isActiveTab) {
-      this.setDefaultToolbar();
     }
   }
 
@@ -189,7 +180,6 @@ export class FlowexportComponent extends TabcontentComponent implements OnInit, 
 
   creationFormClose() {
     this.creatingMode = false;
-    this.editMode.emit(false);
   }
 
   isInEditMode() {

@@ -3,7 +3,6 @@ import { Validators, ValidationErrors } from '@angular/forms';
 import { Observable, forkJoin } from 'rxjs';
 
 import { UsersComponent, ACTIONTYPE } from '../users.component';
-import { ErrorStateMatcher } from '@angular/material';
 import { Animations } from '@app/animations';
 import { SelectItem } from 'primeng/primeng';
 import { ControllerService } from '@app/services/controller.service';
@@ -35,8 +34,6 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
 
   @Input() rolebindingOptions: SelectItem[] = [];
 
-  errorChecker = new ErrorStateMatcher();
-
   protected rolebindingUpdateMap = {};
 
   constructor(protected _controllerService: ControllerService,
@@ -66,19 +63,17 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
    * @param authUsers
    */
   isUsernameValid(authUsers: AuthUser[]): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors| null => {
+    return (control: AbstractControl): ValidationErrors | null => {
       if (this.isUserAlreadyExist(control.value, authUsers)) {
-        return { 'login-name': {
+        return {
+          'login-name': {
             required: true,
             message: 'Login name is required and must be unique'
-        } };
+          }
+        };
       }
       return null;
     };
-  }
-
-  isErrorState(control) {
-    return this.errorChecker.isErrorState(control, null);
   }
 
   /**
@@ -98,11 +93,8 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
   addUser() {
     const newUser = this.newAuthUser.getFormGroupValues();
     if (this.isUserAlreadyExist(newUser.meta.name, this.authUsers)) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Can not create user',
-        detail: newUser.meta.name + ' already exist'
-      });
+      this._controllerService.invokeErrorToaster('Can not create user',
+        newUser.meta.name + ' already exist');
       return;
     }
     this.addUser_with_staging();
@@ -120,7 +112,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
    *           else
    *             delete buffer
    */
- addUser_with_staging() {
+  addUser_with_staging() {
     const newUser = this.newAuthUser.getFormGroupValues();
     this.createStagingBuffer().subscribe(
       responseBuffer => {
@@ -146,7 +138,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
               },
               error => {
                 console.error('Fail to commit Buffer', error);
-                this.invokeRESTErrorToaster('Fail to commit buffer when adding user ' ,  error);
+                this.invokeRESTErrorToaster('Fail to commit buffer when adding user ', error);
               }
             );
           } else {

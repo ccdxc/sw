@@ -9,7 +9,6 @@ import { TabcontentComponent } from 'web-app-framework';
 import { MonitoringAlertPolicy, FieldsRequirement_operator, MonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicySpec_severity_uihint, IApiStatus } from '@sdk/v1/models/generated/monitoring';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
-import { MessageService } from 'primeng/primeng';
 
 
 @Component({
@@ -33,9 +32,8 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
   globalFilterFields: string[] = ['meta.name', 'spec.destinations', 'spec.severity'];
   severityEnum = MonitoringAlertPolicySpec_severity_uihint;
 
-  eventAlertPolicies: any;
+  eventAlertPolicies: MonitoringAlertPolicy[] = [];
   selectedEventAlertPolicies: any;
-  count: number;
   expandedRowData: any;
   arrayDiffers: IterableDiffer<IMonitoringAlertPolicy>;
 
@@ -67,7 +65,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     protected _iterableDiffers: IterableDiffers,
     private cdr: ChangeDetectorRef,
     protected _monitoringService: MonitoringService,
-    protected messageService: MessageService) {
+  ) {
     super();
     this.arrayDiffers = _iterableDiffers.find([]).create(HttpEventUtility.trackBy);
   }
@@ -117,13 +115,11 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
      * editing on a row entry
      */
     const _ = Utility.getLodash();
-    const items = _.cloneDeep(this.policies);
-    this.eventAlertPolicies = items;
-    if (items != null) {
-      this.count = items.length;
-    } else {
-      this.count = 0;
+    let items = _.cloneDeep(this.policies);
+    if (items == null) {
+      items = [];
     }
+    this.eventAlertPolicies = items;
   }
 
   /**
@@ -291,7 +287,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     }
     const sub = this._monitoringService.DeleteAlertPolicy(eventalertpolicy.meta.name).subscribe(
       (response) => {
-        this.messageService.add({ severity: 'success', summary: 'Delete Successful', detail: 'Deleted policy ' + eventalertpolicy.meta.name });
+        this._controllerService.invokeSuccessToaster('Delete Successful', 'Deleted policy ' + eventalertpolicy.meta.name);
       },
       (error) => {
         if (error.body instanceof Error) {
@@ -300,7 +296,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
           console.error('Monitoring service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
         }
         const errorMsg = error.body != null ? error.body.message : '';
-        this.messageService.add({ severity: 'error', summary: 'Delete Failed', detail: errorMsg });
+        this._controllerService.invokeErrorToaster('Delete Failed', errorMsg);
       }
     );
     this.subscriptions.push(sub);

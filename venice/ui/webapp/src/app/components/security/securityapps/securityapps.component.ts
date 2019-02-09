@@ -12,7 +12,6 @@ import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrende
 
 
 import { Subscription } from 'rxjs';
-import { MessageService } from 'primeng/primeng';
 
 @Component({
   selector: 'app-securityapps',
@@ -52,9 +51,8 @@ export class SecurityappsComponent extends BaseComponent implements OnInit, OnDe
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected securityService: SecurityService,
-    protected messageService: MessageService
   ) {
-    super(_controllerService, messageService);
+    super(_controllerService);
   }
 
   ngOnInit() {

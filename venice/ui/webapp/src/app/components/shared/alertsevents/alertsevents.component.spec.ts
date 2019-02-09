@@ -120,7 +120,7 @@ describe('AlertseventsComponent', () => {
   });
 
   it('should have events in the table', async(() => {
-    expect(eventsService.pollEvents).toHaveBeenCalledWith('alertsevents', { "sort-order": ApiListWatchOptions_sort_order.None });
+    expect(eventsService.pollEvents).toHaveBeenCalledWith('alertsevents', { 'sort-order': ApiListWatchOptions_sort_order.None });
     // Switch to the events tab
     const tabs = fixture.debugElement.queryAll(By.css('.mat-tab-label'));
     expect(tabs.length).toBe(2);

@@ -39,7 +39,7 @@
 
 <ng-template #DataTable>
   <app-lazyrender [data]="auditEvents" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
-    <p-table #auditeventsTable class="global-primeng-table-lazyload" [columns]="cols" dataKey="meta.name" [responsive]="true" 
+    <p-table #auditeventsTable class="global-primeng-table-lazyload" [columns]="cols" dataKey="meta.uuid" [responsive]="true" 
       sortField="meta.mod-time" [sortOrder]='-1' [resizableColumns]="true" rowExpandMode="single" exportFilename="Venice-auditevents" >
       <!-- Table Caption -->
       <ng-template pTemplate="caption">
@@ -59,9 +59,9 @@
         <tr >
           <td *ngFor="let col of cols" [ngSwitch]="col.field" [class]="col.class" (click)="onAuditeventsTableRowClick($event, rowData)" title="Click to expand or collapse row">
            
-            <div *ngSwitchCase="'meta.mod-time'">
+            <ng-container *ngSwitchCase="'meta.mod-time'">
               {{rowData.meta['mod-time'] | PrettyDate }}
-            </div>
+            </ng-container>
             <ng-container *ngSwitchDefault>
               {{displayColumn(rowData, col)}}
             </ng-container>
@@ -69,7 +69,7 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="rowexpansion" let-rowData let-columns="cols">
-        <tr *ngIf="selectedAuditEvent" class="auditevents-rowexpand-tr">
+        <tr *ngIf="selectedAuditEvent" class="global-rowexpand  auditevents-rowexpand-tr">
           <td [attr.colspan]="cols.length ">
             <div class="auditevents-detail-div auditevents-rowexpand">
               <pre>{{displayAuditEvent()}}</pre>

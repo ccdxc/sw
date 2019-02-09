@@ -1,6 +1,6 @@
 @import 'src/global-mixins';
 
-.flowexport-overlay {
+.flowexportpolicy-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -10,53 +10,57 @@
   z-index:10;
 }
 
-.flowexport-tablecontainer {
+.flowexportpolicy-tablecontainer {
   position: relative;
 }
 
-.flowexport-widget {
+.flowexportpolicy-widget {
   @include primary-font();
 }
 
-.flowexport-button {
+.flowexportpolicy-button {
     padding-left: 10px;
     padding-right: 10px;
 }
 
-.flowexport-icon {
+.flowexportpolicy-icon {
   position: absolute;
   top: 8px;
   font-size: 18px;
 }
 
-.flowexport-column-action-div {
+.flowexportpolicy-column-action-div {
   display: inline-flex;
 }
 
-.flowexport-column-action {
-  width: 100px !important;
+.flowexportpolicy-column-action {
+  width: 5%;
 }
 
-.flowexport-column-name {
-  width: 20%;
+.flowexportpolicy-column-name {
+  width: 25%;
 }
 
-.flowexport-column-targets {
-  width: 300px;
+.flowexportpolicy-column-match-rules {
+  width: 40%;
 }
 
-// This column also includes the action items so we add an extra 100 px
-th.flowexport-column-targets {
-  width: 400px !important;
+.flowexportpolicy-column-targets {
+  width: 35%;
 }
 
-.flowexport-rowexpand {
+// This column also includes the action items so we add an extra 5%
+th.flowexportpolicy-column-targets {
+  width: 40%;
+}
+
+.flowexportpolicy-rowexpand {
   overflow: hidden;
   z-index: 20; // Needs to be higher than .evenalertpolicies-overlay z-index
   position: relative; // needed for z-index to take effect
 }
 
-.flowexport-rowexpand-tr {
+.flowexportpolicy-rowexpand-tr {
   height: 0px !important;
   // text-top interferes with the animation
   vertical-align: top !important;
@@ -65,7 +69,7 @@ th.flowexport-column-targets {
   }
 }
 
-.flowexport-rowhighlight {
+.flowexportpolicy-rowhighlight {
   > td {
     z-index: 20; // Needs to be higher than .evenalertpolicies-overlay z-index
     position: relative; // needed for z-index to take effect

@@ -17,11 +17,20 @@ const routes: Routes = [
     ]
   },
   {
-    path: 'telemetry',
+    path: 'flowexport',
     children: [
       {
         path: '',
-        loadChildren: '@app/components/monitoring-group/telemetry/telemetry.module#TelemetryModule'
+        loadChildren: '@app/components/monitoring-group/flowexport/flowexport.module#FlowexportModule'
+      }
+    ]
+  },
+  {
+    path: 'fwlogs',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/fwlogs/fwlogs.module#FwlogsModule'
       }
     ]
   },

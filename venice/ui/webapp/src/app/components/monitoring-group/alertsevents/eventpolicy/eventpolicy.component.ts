@@ -3,7 +3,6 @@ import { Animations } from '@app/animations';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { MessageService } from 'primeng/primeng';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { Utility } from '@app/common/Utility';
 import { MonitoringEventPolicy, FieldsRequirement, FieldsRequirement_operator } from '@sdk/v1/models/generated/monitoring';
@@ -58,15 +57,15 @@ export class EventpolicyComponent extends BaseComponent implements OnInit, OnDes
 
   cols: any[] = [
     { field: 'meta.name', header: 'Name', class: 'eventpolicy-column-name', sortable: true },
-    { field: 'spec.selector', header: 'Filters', class: 'destinations-column-name', sortable: false },
+    { field: 'spec.selector', header: 'Filters', class: 'eventpolicy-column-name', sortable: false },
     { field: 'spec.targets', header: 'Targets', class: 'eventpolicy-column-targets', sortable: false, isLast: true },
   ];
 
   constructor(protected _controllerService: ControllerService,
     private cdr: ChangeDetectorRef,
     protected _monitoringService: MonitoringService,
-    protected messageService: MessageService) {
-    super(_controllerService, messageService);
+  ) {
+    super(_controllerService);
   }
 
   ngOnInit() {
@@ -113,6 +112,10 @@ export class EventpolicyComponent extends BaseComponent implements OnInit, OnDes
     }
     const _ = Utility.getLodash();
     const policies = _.cloneDeep(this.policies);
+    if (policies == null) {
+      this.displayedPolicies = [];
+      return;
+    }
     this.displayedPolicies = policies;
   }
 
