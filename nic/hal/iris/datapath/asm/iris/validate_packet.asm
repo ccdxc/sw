@@ -9,15 +9,14 @@ struct phv_              p;
 %%
 
 validate_packet:
-  K_DBG_WR(0x90)
-  DBG_WR(0x98, 0x98)
   seq         c1, k.capri_p4_intrinsic_parser_err, TRUE
   balcf       r7, [c1], f_check_parser_errors
+  seq         c1, k.control_metadata_nic_mode, NIC_MODE_SMART
+  nop.!c1.e
   seq         c1, k.tunnel_metadata_tunnel_terminate, TRUE
   bcf         [c1], validate_tunneled_packet
 
 validate_native_packet:
-  DBG_WR(0x99, 0x99)
   seq         c1, k.ethernet_srcAddr, r0
   seq.!c1     c1, k.ethernet_dstAddr, r0
   seq.!c1     c1, k.ethernet_srcAddr, k.ethernet_dstAddr
@@ -52,7 +51,6 @@ validate_native_packet:
   .csend
 
 validate_tunneled_packet:
-  DBG_WR(0x9a, 0x9a)
   seq         c1, k.ethernet_srcAddr, r0
   seq.!c1     c1, k.ethernet_dstAddr, r0
   seq.!c1     c1, k.ethernet_srcAddr, k.ethernet_dstAddr
@@ -94,7 +92,6 @@ validate_tunneled_packet_ip:
   .csend
 
 f_check_parser_errors:
-  DBG_WR(0x9b, k.capri_p4_intrinsic_len_err)
   // do not use c1 register in this function
   bbeq        k.control_metadata_uplink, TRUE, check_parser_errors_uplink
   seq         c2, k.capri_p4_intrinsic_len_err, 0
@@ -114,7 +111,6 @@ check_parser_errors_uplink:
   nop
 
 malformed_packet:
-  DBG_WR(0x9c, 0x9c)
   phvwr.e     p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
 

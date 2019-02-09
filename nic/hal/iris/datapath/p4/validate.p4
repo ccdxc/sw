@@ -182,10 +182,12 @@ action check_parser_errors() {
 }
 
 action validate_packet() {
-    if (tunnel_metadata.tunnel_terminate == TRUE) {
-        validate_tunneled_packet();
-    } else {
-        validate_native_packet();
+    if (control_metadata.nic_mode == NIC_MODE_SMART) {
+        if (tunnel_metadata.tunnel_terminate == TRUE) {
+            validate_tunneled_packet();
+        } else {
+            validate_native_packet();
+        }
     }
     check_parser_errors();
 }
