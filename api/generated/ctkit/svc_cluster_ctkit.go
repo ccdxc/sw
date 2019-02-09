@@ -217,7 +217,9 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 			wt, werr := apicl.ClusterV1().Cluster().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -531,7 +533,9 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 			wt, werr := apicl.ClusterV1().Node().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -845,7 +849,9 @@ func (ct *ctrlerCtx) runHostWatcher() {
 			wt, werr := apicl.ClusterV1().Host().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -1159,7 +1165,9 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 			wt, werr := apicl.ClusterV1().SmartNIC().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -1473,7 +1481,9 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 			wt, werr := apicl.ClusterV1().Tenant().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt

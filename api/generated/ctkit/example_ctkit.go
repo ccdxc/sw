@@ -217,7 +217,9 @@ func (ct *ctrlerCtx) runOrderWatcher() {
 			wt, werr := apicl.BookstoreV1().Order().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -531,7 +533,9 @@ func (ct *ctrlerCtx) runBookWatcher() {
 			wt, werr := apicl.BookstoreV1().Book().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -845,7 +849,9 @@ func (ct *ctrlerCtx) runPublisherWatcher() {
 			wt, werr := apicl.BookstoreV1().Publisher().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -1159,7 +1165,9 @@ func (ct *ctrlerCtx) runStoreWatcher() {
 			wt, werr := apicl.BookstoreV1().Store().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -1473,7 +1481,9 @@ func (ct *ctrlerCtx) runCouponWatcher() {
 			wt, werr := apicl.BookstoreV1().Coupon().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -1787,7 +1797,9 @@ func (ct *ctrlerCtx) runCustomerWatcher() {
 			wt, werr := apicl.BookstoreV1().Customer().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt

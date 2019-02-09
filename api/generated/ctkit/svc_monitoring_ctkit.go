@@ -217,7 +217,9 @@ func (ct *ctrlerCtx) runEventPolicyWatcher() {
 			wt, werr := apicl.MonitoringV1().EventPolicy().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -531,7 +533,9 @@ func (ct *ctrlerCtx) runStatsPolicyWatcher() {
 			wt, werr := apicl.MonitoringV1().StatsPolicy().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -845,7 +849,9 @@ func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 			wt, werr := apicl.MonitoringV1().FwlogPolicy().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -1159,7 +1165,9 @@ func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 			wt, werr := apicl.MonitoringV1().FlowExportPolicy().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -1473,7 +1481,9 @@ func (ct *ctrlerCtx) runAlertWatcher() {
 			wt, werr := apicl.MonitoringV1().Alert().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -1787,7 +1797,9 @@ func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 			wt, werr := apicl.MonitoringV1().AlertPolicy().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -2101,7 +2113,9 @@ func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 			wt, werr := apicl.MonitoringV1().AlertDestination().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -2415,7 +2429,9 @@ func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 			wt, werr := apicl.MonitoringV1().MirrorSession().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -2729,7 +2745,9 @@ func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 			wt, werr := apicl.MonitoringV1().TroubleshootingSession().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -3043,7 +3061,9 @@ func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 			wt, werr := apicl.MonitoringV1().TechSupportRequest().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt

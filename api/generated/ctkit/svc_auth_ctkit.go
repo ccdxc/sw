@@ -217,7 +217,9 @@ func (ct *ctrlerCtx) runUserWatcher() {
 			wt, werr := apicl.AuthV1().User().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -531,7 +533,9 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 			wt, werr := apicl.AuthV1().AuthenticationPolicy().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -845,7 +849,9 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 			wt, werr := apicl.AuthV1().Role().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -1159,7 +1165,9 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 			wt, werr := apicl.AuthV1().RoleBinding().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt

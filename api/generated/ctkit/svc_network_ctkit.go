@@ -217,7 +217,9 @@ func (ct *ctrlerCtx) runNetworkWatcher() {
 			wt, werr := apicl.NetworkV1().Network().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -531,7 +533,9 @@ func (ct *ctrlerCtx) runServiceWatcher() {
 			wt, werr := apicl.NetworkV1().Service().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt
@@ -845,7 +849,9 @@ func (ct *ctrlerCtx) runLbPolicyWatcher() {
 			wt, werr := apicl.NetworkV1().LbPolicy().Watch(ctx, &opts)
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
-				return
+				// wait for a second and retry connecting to api server
+				time.Sleep(time.Second)
+				continue
 			}
 			ct.Lock()
 			ct.watchers[kind] = wt

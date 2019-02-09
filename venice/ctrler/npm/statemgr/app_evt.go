@@ -72,24 +72,30 @@ func convertApp(aps *AppState) *netproto.App {
 
 	switch aps.App.Spec.ALG.Type {
 	case "ICMP":
-		ictype, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Type)
-		icode, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Code)
+		if aps.App.Spec.ALG.Icmp != nil {
+			ictype, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Type)
+			icode, _ := strconv.Atoi(aps.App.Spec.ALG.Icmp.Code)
 
-		app.Spec.ALG.ICMP = &netproto.ICMP{
-			Type: uint32(ictype),
-			Code: uint32(icode),
+			app.Spec.ALG.ICMP = &netproto.ICMP{
+				Type: uint32(ictype),
+				Code: uint32(icode),
+			}
 		}
 	case "DNS":
-		app.Spec.ALG.DNS = &netproto.DNS{
-			DropMultiQuestionPackets: aps.App.Spec.ALG.Dns.DropMultiQuestionPackets,
-			DropLargeDomainPackets:   aps.App.Spec.ALG.Dns.DropLargeDomainNamePackets,
-			DropLongLabelPackets:     aps.App.Spec.ALG.Dns.DropLongLabelPackets,
-			MaxMessageLength:         aps.App.Spec.ALG.Dns.MaxMessageLength,
-			QueryResponseTimeout:     aps.App.Spec.ALG.Dns.QueryResponseTimeout,
+		if aps.App.Spec.ALG.Dns != nil {
+			app.Spec.ALG.DNS = &netproto.DNS{
+				DropMultiQuestionPackets: aps.App.Spec.ALG.Dns.DropMultiQuestionPackets,
+				DropLargeDomainPackets:   aps.App.Spec.ALG.Dns.DropLargeDomainNamePackets,
+				DropLongLabelPackets:     aps.App.Spec.ALG.Dns.DropLongLabelPackets,
+				MaxMessageLength:         aps.App.Spec.ALG.Dns.MaxMessageLength,
+				QueryResponseTimeout:     aps.App.Spec.ALG.Dns.QueryResponseTimeout,
+			}
 		}
 	case "FTP":
-		app.Spec.ALG.FTP = &netproto.FTP{
-			AllowMismatchIPAddresses: aps.App.Spec.ALG.Ftp.AllowMismatchIPAddress,
+		if aps.App.Spec.ALG.Ftp != nil {
+			app.Spec.ALG.FTP = &netproto.FTP{
+				AllowMismatchIPAddresses: aps.App.Spec.ALG.Ftp.AllowMismatchIPAddress,
+			}
 		}
 	case "SunRPC":
 		for _, sunrpc := range aps.App.Spec.ALG.Sunrpc {
