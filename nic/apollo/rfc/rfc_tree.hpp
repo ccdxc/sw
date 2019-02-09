@@ -48,25 +48,40 @@ typedef struct itable_s {
 typedef unordered_map<rte_bitmap *, uint16_t,
                       rte_bitmap_hasher,
                       rte_bitmap_equal_to>    cbm_map_t;
-typedef struct rfc_tree_s {
-    itable_t      itable;
-    uint32_t      num_intervals;
+
+/**< generic RFC table thats used in all phases */
+typedef struct rfc_table_s {
     uint16_t      num_classes;
     cbm_map_t     cbm_map;
     rte_bitmap    *cbm_table[RFC_MAX_EQ_CLASSES];
+} rfc_table_t;
+
+/**< RFC tree table thats used in all phases */
+typedef struct rfc_tree_s {
+    itable_t       itable;
+    uint32_t       num_intervals;
+    rfc_table_t    rfc_table;
 } rfc_tree_t;
 
-typedef struct rfc_trees_s {
+typedef struct rfc_ctxt_s {
+    /**< phase 0 information */
     rfc_tree_t    pfx_tree;       /**< RFC tree for prefix */
     rfc_tree_t    port_tree;      /**< RFC tree for port */
     rfc_tree_t    proto_port_tree;/**< RFC tree for protocol-port */
+
+    /**< phase 1 information */
+    rfc_table_t   p1_table;       /**< phase 1 RFC table */
+
+    /**< phase 2 information */
+    rfc_table_t   p2_table;       /**< phase 2 RF table */
+
     rte_bitmap    *cbm;           /**< RFC class bitmap instance used as
                                        scratch pad */
     size_t        cbm_size;       /**< size of class-bit-map (CBM) */
-} rfc_trees_t;
+} rfc_ctxt_t;
 
-void rfc_trees_destroy(rfc_trees_t *rfc_trees);
-sdk_ret_t rfc_trees_init(rfc_trees_t *rfc_trees, policy_t *policy);
+void rfc_ctxt_destroy(rfc_ctxt_t *rfc_ctxt);
+sdk_ret_t rfc_ctxt_init(rfc_ctxt_t *rfc_ctxt, policy_t *policy);
 void itable_add_address_inodes(uint32_t rule, inode_t *addr_inode,
                                ip_prefix_t *pfx);
 void itable_add_port_inodes(uint32_t rule, inode_t *port_inode,

@@ -1,7 +1,9 @@
 #define SLACL_SPORT_TABLE_SIZE          2112        // 64+(32*64)
 #define SLACL_IPV4_TABLE_SIZE           17472       // 64+(16*64)+(16*16*64)
 #define SLACL_PROTO_DPORT_TABLE_SIZE    17472       // 64+(16*64)+(16*16*64)
+#define SLACL_P1_TABLE_NUM_ENTRIES      (1 << 17)   // (2^10 * 2^7)
 #define SLACL_P1_TABLE_SIZE             164544      // round64((1<<17)*(64/51))
+#define SLACL_P2_TABLE_NUM_ENTRIES      (1 << 18)   // (2^10 * 2^8)
 #define SLACL_P2_TABLE_SIZE             65536       // ((1 << 18)*2)/8
 
 #define SLACL_SPORT_TABLE_OFFSET        0

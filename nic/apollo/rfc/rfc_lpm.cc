@@ -7,7 +7,7 @@
  */
 
 #include "nic/apollo/lpm/lpm.hpp"
-#include "nic/apollo/rfc/rfc_lpm.hpp"
+#include "nic/apollo/rfc/rfc_utils.hpp"
 #include "nic/apollo/rfc/rfc_tree.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/p4/include/slacl_defines.h"
@@ -57,6 +57,17 @@ tree_base_addr_size (mem_addr_t rfc_block_base_addr, itree_type_t tree_type,
     return SDK_RET_OK;
 }
 
+/**
+ * @brief        build phase 0 LPM tree for given RFC tree
+ * @param[in] lpm_itbable    LPM interval table containing all the intervals
+ *                           corresponding to the RFC tree
+ * @param[in] rfc_tree       RFC prefix/port/proto-port tree
+ * @param[in] tree_base_addr base address where the LPM interval tree will be
+ *                           written in memory
+ * @param[in] mem_size       size of the memory block reserved for this LPM
+ * @param[in] max_rules      max. number of rules supported per policy
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
 static inline sdk_ret_t
 rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
                     mem_addr_t tree_base_addr, uint32_t mem_size,
@@ -76,7 +87,7 @@ rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
         }
         lpm_itable->nodes[i].data = itable->nodes[i].rfc.class_id;
     }
-    ret = lpm_build_tree(lpm_itable, rfc_tree->num_classes - 1,
+    ret = lpm_build_tree(lpm_itable, rfc_tree->rfc_table.num_classes - 1,
                          max_rules, tree_base_addr, mem_size);
     if (ret != SDK_RET_OK) {
         OCI_TRACE_ERR("Failed to build RFC tree type %u, err : %u",
@@ -85,8 +96,18 @@ rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
     return ret;
 }
 
+/**
+ * @brief        for given RFC context, build all the phase 0 LPM trees
+ * @param[in] policy    user defined policy
+ * @param[in] rfc_ctxt  RFC context carrying all the intermediate state
+ * @param[in] rfc_tree_root_addr    address in memory to write the entire
+ *                                  RFC policy
+ * @param[in] mem_sz                size of the memory address reserved
+ *                                  for this RFC policy
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
 sdk_ret_t
-rfc_build_lpm_trees (policy_t *policy, rfc_trees_t *rfc_trees,
+rfc_build_lpm_trees (policy_t *policy, rfc_ctxt_t *rfc_ctxt,
                      mem_addr_t rfc_tree_root_addr, uint32_t mem_sz)
 {
     sdk_ret_t       ret;
@@ -94,9 +115,9 @@ rfc_build_lpm_trees (policy_t *policy, rfc_trees_t *rfc_trees,
     uint32_t        max_intervals, tree_size;
     mem_addr_t      tree_base_addr;
 
-    max_intervals = MAX(rfc_trees->pfx_tree.num_intervals,
-                        rfc_trees->port_tree.num_intervals);
-    max_intervals = MAX(rfc_trees->proto_port_tree.num_intervals,
+    max_intervals = MAX(rfc_ctxt->pfx_tree.num_intervals,
+                        rfc_ctxt->port_tree.num_intervals);
+    max_intervals = MAX(rfc_ctxt->proto_port_tree.num_intervals,
                         max_intervals);
 
     /**
@@ -112,10 +133,10 @@ rfc_build_lpm_trees (policy_t *policy, rfc_trees_t *rfc_trees,
     /**< build LPM tree for the prefix portion of the rules */
     itable.tree_type =
         (policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4 : ITREE_TYPE_IPV6;
-    itable.num_intervals = rfc_trees->pfx_tree.num_intervals;
+    itable.num_intervals = rfc_ctxt->pfx_tree.num_intervals;
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);
-    ret = rfc_build_lpm_tree(&itable, &rfc_trees->pfx_tree,
+    ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->pfx_tree,
                              tree_base_addr, tree_size, policy->max_rules);
     if (ret != SDK_RET_OK) {
         goto cleanup;
@@ -123,10 +144,10 @@ rfc_build_lpm_trees (policy_t *policy, rfc_trees_t *rfc_trees,
 
     /**< build LPM tree for the port match portion of the rules */
     itable.tree_type = ITREE_TYPE_PORT;
-    itable.num_intervals = rfc_trees->port_tree.num_intervals;
+    itable.num_intervals = rfc_ctxt->port_tree.num_intervals;
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);
-    ret = rfc_build_lpm_tree(&itable, &rfc_trees->port_tree,
+    ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->port_tree,
                              tree_base_addr, tree_size, policy->max_rules);
     if (ret != SDK_RET_OK) {
         goto cleanup;
@@ -134,10 +155,10 @@ rfc_build_lpm_trees (policy_t *policy, rfc_trees_t *rfc_trees,
 
     /**< build LPM tree for the (protocol, port) match portion of the rules */
     itable.tree_type = ITREE_TYPE_PROTO_PORT;
-    itable.num_intervals = rfc_trees->proto_port_tree.num_intervals;
+    itable.num_intervals = rfc_ctxt->proto_port_tree.num_intervals;
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);
-    ret = rfc_build_lpm_tree(&itable, &rfc_trees->port_tree,
+    ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->port_tree,
                              tree_base_addr, tree_size, policy->max_rules);
     if (ret != SDK_RET_OK) {
         goto cleanup;

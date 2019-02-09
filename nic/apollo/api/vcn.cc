@@ -48,7 +48,6 @@ vcn_entry::factory(oci_vcn_t *oci_vcn) {
 
 /**< @brief    destructor */
 vcn_entry::~vcn_entry() {
-    // TODO: fix me
     //SDK_SPINLOCK_DESTROY(&slock_);
 }
 

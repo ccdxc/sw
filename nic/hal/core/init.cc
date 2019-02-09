@@ -556,7 +556,7 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg)
      */
 
 #if !defined(APOLLO) && !defined(HELLO)
-    // Enable linkmgr only for sim/mock
+    // enable linkmgr only for sim/mock
     if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM ||
         hal_cfg->platform == platform_type_t::PLATFORM_TYPE_MOCK ||
         hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) {

@@ -71,56 +71,64 @@ itable_add_proto_port_inodes (uint32_t rule, inode_t *proto_port_inode,
 }
 
 void
-rfc_trees_destroy (rfc_trees_t *rfc_trees)
+rfc_ctxt_destroy (rfc_ctxt_t *rfc_ctxt)
 {
-    if (rfc_trees->pfx_tree.itable.nodes) {
-        free(rfc_trees->pfx_tree.itable.nodes);
+    if (rfc_ctxt->pfx_tree.itable.nodes) {
+        free(rfc_ctxt->pfx_tree.itable.nodes);
     }
-    if (rfc_trees->port_tree.itable.nodes) {
-        free(rfc_trees->port_tree.itable.nodes);
+    if (rfc_ctxt->port_tree.itable.nodes) {
+        free(rfc_ctxt->port_tree.itable.nodes);
     }
-    if (rfc_trees->proto_port_tree.itable.nodes) {
-        free(rfc_trees->proto_port_tree.itable.nodes);
+    if (rfc_ctxt->proto_port_tree.itable.nodes) {
+        free(rfc_ctxt->proto_port_tree.itable.nodes);
     }
-    if (rfc_trees->cbm) {
-        free(rfc_trees->cbm);
+    if (rfc_ctxt->cbm) {
+        free(rfc_ctxt->cbm);
     }
 }
 
 sdk_ret_t
-rfc_trees_init (rfc_trees_t *rfc_trees, policy_t *policy)
+rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy)
 {
     uint8_t     *bits;
     uint32_t    num_nodes = (policy->num_rules << 1) + 1;
 
-    rfc_trees->pfx_tree.itable.nodes =
+    memset(rfc_ctxt, 0, sizeof(rfc_ctxt_t));
+    rfc_ctxt->pfx_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
-    if (rfc_trees->pfx_tree.itable.nodes == NULL) {
+    if (rfc_ctxt->pfx_tree.itable.nodes == NULL) {
         return sdk::SDK_RET_OOM;
     }
+    new (&rfc_ctxt->pfx_tree.rfc_table.cbm_map) cbm_map_t();
 
-    rfc_trees->port_tree.itable.nodes =
+    rfc_ctxt->port_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
-    if (rfc_trees->port_tree.itable.nodes == NULL) {
+    if (rfc_ctxt->port_tree.itable.nodes == NULL) {
         goto cleanup;
     }
+    new (&rfc_ctxt->port_tree.rfc_table.cbm_map) cbm_map_t();
 
-    rfc_trees->proto_port_tree.itable.nodes =
+    rfc_ctxt->proto_port_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
-    if (rfc_trees->proto_port_tree.itable.nodes == NULL) {
+    if (rfc_ctxt->proto_port_tree.itable.nodes == NULL) {
         goto cleanup;
     }
-    rfc_trees->cbm_size = rte_bitmap_get_memory_footprint(policy->max_rules);
-    bits = (uint8_t *)calloc(1, RTE_CACHE_LINE_ROUNDUP(rfc_trees->cbm_size));
+    new (&rfc_ctxt->proto_port_tree.rfc_table.cbm_map) cbm_map_t();
+
+    new (&rfc_ctxt->p1_table.cbm_map) cbm_map_t();
+    new (&rfc_ctxt->p2_table.cbm_map) cbm_map_t();
+
+    rfc_ctxt->cbm_size = rte_bitmap_get_memory_footprint(policy->max_rules);
+    bits = (uint8_t *)calloc(1, RTE_CACHE_LINE_ROUNDUP(rfc_ctxt->cbm_size));
     if (bits) {
-        rfc_trees->cbm = rte_bitmap_init(policy->max_rules, bits,
-                                         rfc_trees->cbm_size);
+        rfc_ctxt->cbm = rte_bitmap_init(policy->max_rules, bits,
+                                         rfc_ctxt->cbm_size);
     }
     return SDK_RET_OK;
 
 cleanup:
 
-    rfc_trees_destroy(rfc_trees);
+    rfc_ctxt_destroy(rfc_ctxt);
     return sdk::SDK_RET_OOM;
 }
 
