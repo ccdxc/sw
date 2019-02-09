@@ -438,6 +438,13 @@ pbuf_pprint_buffer_list(const struct pnso_buffer_list *buf_list)
 		OSAL_LOG_INFO("#%2d: flat_buf: 0x" PRIx64 " len: %d buf: %c%c%c%c\n",
 				i, (uint64_t)flat_buf, flat_buf->len,
 				p[0], p[1], p[2], p[3]);
+
+		/*
+		 * note: break here is intentional to emit just 0th fbuf.
+		 * if needed, for all items in the buf_list, comment out
+		 * the break.
+		 *
+		 */
 		break;
 	}
 }

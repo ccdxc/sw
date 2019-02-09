@@ -56,7 +56,7 @@ osal_log_init(const enum osal_log_level level, const char* prefix)
 	g_osal_log_enabled = true;
 	g_osal_log_level = level;
 	prog_id = getpid();
-	strncpy(g_osal_log_prefix, prefix, PREFIX_STR_LEN);
+	strncpy(g_osal_log_prefix, prefix, PREFIX_STR_LEN-1);
 
 	return err;
 }

@@ -21,7 +21,7 @@ osal_log_init(const enum osal_log_level level, const char* prefix)
 		return -EINVAL;
 
 	g_osal_log_level = level;
-	strncpy(g_osal_log_prefix, prefix, PREFIX_STR_LEN);
+	strncpy(g_osal_log_prefix, prefix, PREFIX_STR_LEN-1);
 	return PNSO_OK;
 }
 

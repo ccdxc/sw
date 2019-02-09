@@ -337,9 +337,9 @@ mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
 	err = PNSO_OK;
 	return err;
 out:
-	OSAL_LOG_ERROR("failed to allocate pool!  mpool_type: %s num_objects: %d vec_elem_size: %d align_size: %d",
+	OSAL_LOG_ERROR("failed to allocate pool!  mpool_type: %s num_objects: %d num_vec_elems %d object_size: %d align_size: %d",
 			mpool_get_type_str(mpool_type), num_objects,
-			mpool->mp_config.mpc_vec_elem_size, align_size);
+			num_vec_elems, object_size, align_size);
 	if (mpool)
 		mpool_destroy(&mpool);
 	return err;
