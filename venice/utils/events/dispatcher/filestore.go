@@ -8,10 +8,13 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	memcache "github.com/pensando/sw/venice/utils/cache"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -94,18 +97,37 @@ func (f *fileImpl) GetEventsFromOffset(offset int64) ([]*evtsapi.Event, error) {
 		return nil, err
 	}
 
+	dedupCache := memcache.New(memcache.NoExpiration, 0, nil)
+	defer dedupCache.Flush() // delete all the items from the cache
+
 	// scan through each event
-	evts := []*evtsapi.Event{}
 	scanner := bufio.NewScanner(evtsFile)
 	for scanner.Scan() {
 		evtStr := strings.TrimSpace(scanner.Text())
-		temp := &evtsapi.Event{}
+		temp := evtsapi.Event{}
 		if err := json.Unmarshal([]byte(evtStr), temp); err != nil {
 			log.Debugf("failed to unmarshal the read event, err: %v", err)
 			continue
 		}
 
-		evts = append(evts, temp)
+		hashKey := events.GetEventKey(&temp)
+		if existingEvt, ok := dedupCache.Get(hashKey); ok {
+			temp = existingEvt.(evtsapi.Event)
+			// update count and timestamp
+			timestamp, _ := types.TimestampProto(time.Now())
+			temp.EventAttributes.Count++
+			temp.ObjectMeta.ModTime.Timestamp = *timestamp
+		}
+		dedupCache.Add(hashKey, temp)
+	}
+
+	var evts []*evtsapi.Event
+	for _, evt := range dedupCache.Items() {
+		temp, ok := evt.(evtsapi.Event)
+		if !ok {
+			continue
+		}
+		evts = append(evts, &temp)
 	}
 
 	log.Debugf("events from offset {%v}: %v", offset, evts)

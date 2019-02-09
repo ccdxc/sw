@@ -274,7 +274,6 @@ func (r *recorderImpl) sendEvent(event *evtsapi.Event) error {
 	defer r.eventsProxy.Unlock()
 
 	if r.skipEvtsProxy || !r.eventsProxy.connectionAlive {
-		r.logger.Debugf("{%s} connection to evtsproxy unavailable. so, writing event {%s} to a file", r.id, events.MinifyEvent(event))
 		return r.writeToFile(event)
 	}
 
@@ -289,6 +288,7 @@ func (r *recorderImpl) sendEvent(event *evtsapi.Event) error {
 		r.logger.Errorf("{%s} failed to forward the event {%+v} to evtsproxy, err: %v", r.id, event, err)
 		r.eventsProxy.connectionAlive = false
 
+		r.logger.Debugf("{%s} connection to evtsproxy unavailable. will start writing events to a file", r.id)
 		// write event to the file
 		if wErr := r.writeToFile(event); wErr != nil {
 			return wErr
