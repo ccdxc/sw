@@ -2455,6 +2455,48 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
                             &hal_if->gre_source);
             ip_addr_to_spec(gre_info->mutable_destination(),
                             &hal_if->gre_dest);
+        } else if (hal_if->encap_type == intf::IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS) {
+            auto mpls_info = tunnel_if_info->mutable_prop_mpls_info();
+
+            auto substrate_ip = mpls_info->mutable_substrate_ip();
+            substrate_ip->set_ip_af(types::IP_AF_INET);
+            substrate_ip->set_v4_addr(hal_if->substrate_ip);
+
+            for (int i = 0; i < hal_if->num_overlay_ip; i ++) {
+                auto overlay_ip = mpls_info->add_overlay_ip();
+                overlay_ip->set_ip_af(types::IP_AF_INET);
+                overlay_ip->set_v4_addr(hal_if->overlay_ip[i]);
+            }
+
+            auto tunnel_dest_ip = mpls_info->mutable_tunnel_dest_ip();
+            tunnel_dest_ip->set_ip_af(types::IP_AF_INET);
+            tunnel_dest_ip->set_v4_addr(hal_if->tun_dst_ip);
+
+            auto source_gw_prefix = mpls_info->mutable_source_gw()->mutable_prefix()->mutable_ipv4_subnet();
+            auto source_gw_address = source_gw_prefix->mutable_address();
+            source_gw_address->set_ip_af(types::IP_AF_INET);
+            source_gw_address->set_v4_addr(hal_if->source_gw.v4_addr);
+            source_gw_prefix->set_prefix_len(hal_if->source_gw.len);
+
+            mpls_info->set_gw_mac_da(MAC_TO_UINT64(hal_if->gw_mac_da));
+
+            for (int i = 0; i < hal_if->num_mpls_if; i ++) {
+                auto mpls_if = mpls_info->add_mpls_if();
+                mpls_if->set_label(hal_if->mpls_if[i].label);
+                mpls_if->set_exp(hal_if->mpls_if[i].exp);
+                mpls_if->set_ttl(hal_if->mpls_if[i].ttl);
+            }
+
+            auto mpls_tag = mpls_info->mutable_mpls_tag();
+            mpls_tag->set_label(hal_if->mpls_tag.label);
+            mpls_tag->set_exp(hal_if->mpls_tag.exp);
+            mpls_tag->set_ttl(hal_if->mpls_tag.ttl);
+
+            mpls_info->set_ingress_bw(hal_if->ingress_bw);
+            mpls_info->set_egress_bw(hal_if->egress_bw);
+
+            auto lif = find_lif_by_id(hal_if->lif_id);
+            mpls_info->set_lif_name(lif->name);
         }
     }
         break;

@@ -7,3 +7,7 @@ meta:
 testcases:
     -   name    : add_delete_traffic
         testcase: testcases.macvlan.add_delete
+
+    -   name    : create_tunnel_intf
+        testcase: testcases.macvlan.encap
+        enable  : False

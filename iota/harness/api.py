@@ -507,8 +507,8 @@ def IsApiResponseOk(resp):
 __gl_rundir = None
 def ChangeDirectory(rundir):
     global __gl_rundir
-    Logger.debug("Changing Directory to %s" % rundir)
     __gl_rundir = rundir
+    if rundir: Logger.debug("Changing Directory to %s" % rundir)
     return types.status.SUCCESS
 
 def GetCurrentDirectory():

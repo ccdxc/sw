@@ -27,6 +27,7 @@ class InterfaceType:
 def GetHostMgmtInterfaces(node):
     intfs = []
     intf = host_utils.GetHostMgmtInterface(node)
+    api.Logger.debug("HostMgmtInterface for node:%s interface:%s " % (node, intf))
     intfObj = Interface(node, intf, InterfaceType.HOST_MGMT, api.GetNodeOs(node))
     intfs.append(intfObj)
     return intfs
@@ -34,6 +35,7 @@ def GetHostMgmtInterfaces(node):
 def GetHostInterfaces(node):
     intfs = []
     for intf in api.GetWorkloadNodeHostInterfaces(node):
+        api.Logger.debug("HostInterface for node:%s interface:%s " % (node, intf))
         intfObj = Interface(node, intf, InterfaceType.HOST, api.GetNodeOs(node))
         intfs.append(intfObj)
     return intfs
@@ -43,6 +45,7 @@ def GetHostInternalMgmtInterfaces(node):
     for intf in naples_host.GetHostInternalMgmtInterfaces(node):
         intfObj = Interface(node, intf, InterfaceType.HOST_INTERNAL, api.GetNodeOs(node))
         intfs.append(intfObj)
+    api.Logger.debug("HostInternalMgmtInterfaces for node: ", node, intfs)
     return intfs
 
 def GetNaplesInternalMgmtInterfaces(node):
@@ -52,6 +55,7 @@ def GetNaplesInternalMgmtInterfaces(node):
     for intf in naples_host.GetNaplesInternalMgmtInterfaces(node):
         intfObj = Interface(node, intf, InterfaceType.NAPLES_INT_MGMT, 'linux')
         intfs.append(intfObj)
+    api.Logger.debug("NaplesInternalMgmtInterfaces for node: ", node, intfs)
     return intfs
 
 def GetNaplesOobInterfaces(node):
@@ -61,6 +65,7 @@ def GetNaplesOobInterfaces(node):
     for intf in naples_host.GetNaplesOobInterfaces(node):
         intfObj = Interface(node, intf, InterfaceType.NAPLES_OOB_1G, 'linux')
         intfs.append(intfObj)
+    api.Logger.debug("NaplesOobInterfaces for node: ", node, intfs)
     return intfs
 
 def GetNaplesInbandInterfaces(node):
@@ -70,6 +75,7 @@ def GetNaplesInbandInterfaces(node):
     for intf in naples_host.GetNaplesInbandInterfaces(node):
         intfObj = Interface(node, intf, InterfaceType.NAPLES_IB_100G, 'linux')
         intfs.append(intfObj)
+    api.Logger.debug("NaplesInbandInterfaces for node: ", node, intfs)
     return intfs
 
 
@@ -207,6 +213,7 @@ def AddMgmtWorkloads(node_if_info):
     for intf in node_if_info.HostMgmtIntfs():
         ip = intf.GetIP()
         if not ip:
+            api.Logger.error("No ipaddress found for interface ", intf.Name())
             return api.types.status.FAILURE
         wl = NaplesWorkload(__MGMT_WORKLOAD_TYPE, intf)
         wl.skip_node_push = True
@@ -259,11 +266,15 @@ def AddNaplesWorkloads(node_if_info):
 def Main(tc):
     nodes = api.GetWorkloadNodeHostnames()
     for node in nodes:
+        api.Logger.debug("Creating NodeInterface for node: %s" % node)
         node_if_info = GetNodeInterface(node)
+        api.Logger.debug("Adding MgmtWorkloads for node: %s" % node)
         ret = AddMgmtWorkloads(node_if_info)
         if ret != api.types.status.SUCCESS:
+            api.Logger.debug("Failed to add MgmtWorkloads for node: %s" % node)
             return api.types.status.FAILURE
         if api.IsNaplesNode(node):
+            api.Logger.debug("Adding NaplesWorkloads for node: %s" % node)
             AddNaplesWorkloads(node_if_info)
     return api.types.status.SUCCESS
 

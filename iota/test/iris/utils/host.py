@@ -1,4 +1,5 @@
 import iota.harness.api as api
+import pdb
 
 def GetHostMgmtInterface(node):
 
@@ -12,6 +13,7 @@ def GetHostMgmtInterface(node):
         api.Trigger_AddHostCommand(req, node, cmd)
         resp = api.Trigger(req)
         #ToDo Change after fixing debug knob
+	
         mgmt_intf = resp.commands[1].stdout.strip().split("\n")
         return mgmt_intf[0]
     elif api.GetNodeOs(node) == "freebsd":

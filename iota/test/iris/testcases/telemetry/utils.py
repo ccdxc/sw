@@ -19,6 +19,17 @@ def GetTargetVerifJsons(feature, proto):
 def ReadJson(filename):
     return api.parser.JsonParse(filename)
 
+def GetTcpDumpCmd(intf, protocol = None, port = 0):
+    cmd = "tcpdump -nni %s " % intf
+
+    if protocol != None:
+        cmd = cmd + " %s" % protocol
+
+    if port != 0:
+        cmd = cmd + " port %d" % port
+
+    return cmd
+
 def GetHping3Cmd(protocol, destination_ip, destination_port):
     if protocol == 'tcp':
         cmd = "hping3 -S -p {} -c 1 {}".format(int(destination_port), destination_ip)
@@ -27,6 +38,16 @@ def GetHping3Cmd(protocol, destination_ip, destination_port):
     else:
         cmd = "hping3 --{} -c 1 {}".format(protocol.lower(), destination_ip)
         
+    return cmd
+
+def GetNpingCmd(protocol, destination_ip, destination_port):
+    if protocol == 'tcp':
+        cmd = "nping --tcp -p {} -c 1 {}".format(int(destination_port), destination_ip)
+    elif protocol == 'udp':
+        cmd = "nping --udp -p {} -c 1 {}".format(int(destination_port), destination_ip)
+    else:
+        cmd = "nping --{} -c 1 {}".format(protocol.lower(), destination_ip)
+
     return cmd
 
 def GetVerifJsonFromPolicyJson(policy_json):

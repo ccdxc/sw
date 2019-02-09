@@ -174,7 +174,6 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	var tunnelDestIP uint32
 	var mplsOut halproto.MplsTag
 	var sourceGWPrefix uint32
-	var sourceGWPrefixStr string
 	var sourceGWPrefixLen uint32
 	var gwMac uint64
 	var intfID uint64
@@ -224,16 +223,18 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	gwMac = uint64(mac[0])<<40 | uint64(mac[1])<<32 | uint64(mac[2])<<24 | uint64(mac[3])<<16 | uint64(mac[4])<<8 | uint64(mac[5])
 
-	fmt.Sscanf(ifSourceGw, "%s/%d", &sourceGWPrefixStr, &sourceGWPrefixLen)
-	if len(strings.Split(sourceGWPrefixStr, ".")) != 4 {
+	sourceGwStr := strings.Split(ifSourceGw, "/")
+	if len(strings.Split(sourceGwStr[0], ".")) != 4 {
 		fmt.Printf("Invalid source gateway prefix specified\n")
 		return
 	}
+
+	fmt.Sscanf(sourceGwStr[1], "%d", &sourceGWPrefixLen)
 	if sourceGWPrefixLen < 0 || sourceGWPrefixLen > 32 {
 		fmt.Printf("Invalid source gateway prefix specified\n")
 		return
 	}
-	sourceGWPrefix = IPAddrStrtoUint32(sourceGWPrefixStr)
+	sourceGWPrefix = IPAddrStrtoUint32(sourceGwStr[0])
 
 	mplsOut.Label = ifMplsOut
 	mplsOut.Exp = 0

@@ -141,9 +141,11 @@ class TestSuite:
 
     def __setup_config(self):
         for s in self.__spec.setup.config:
-            Logger.info("Starting Setup config step: %s" % s.name);
+            # Reset the running directory before every step
+            api.ChangeDirectory(None)
             status = loader.RunCallback(s.step, 'Main', True, None)
             if status != types.status.SUCCESS:
+                Logger.error("ERROR: Failed to run config step", s.step)
                 return status
         return types.status.SUCCESS
 
