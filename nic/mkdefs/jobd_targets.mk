@@ -290,17 +290,24 @@ jobd/nicmgr/gtest: ${JOBD_PREREQS}
 jobd/nicmgr/gtest_classic: ${JOBD_PREREQS}
 	./run.py --nicmgr_gtest --classic
 
-.PHONY: jobd/iota/base
-jobd/iota/base: ${JOBD_PREREQS}
+.PHONY: jobd/naples-sim
+jobd/naples-sim: ${JOBD_PREREQS}
 	${MAKE} release
+
+.PHONY: jobd/firmware
+jobd/firmware:
+	${MAKE} PLATFORM=hw ARCH=aarch64 firmware && make PLATFORM=hw ARCH=aarch64 package-drivers
+
+.PHONY: jobd/venice-image
+jobd/venice-image:
 	${MAKE} -C ${TOPDIR} venice-image
-	${MAKE} -j 1 -C ${GOPATH}/src/github.com/pensando/sw/iota
-	cd ${IOTADIR} && ./iota.py --testsuite venice --skip-firmware-upgrade
 
 .PHONY: jobd/iota/venice-bm
-jobd/iota/venice-bm: ${JOBD_PREREQS}
-	${MAKE} release
-	${MAKE} PLATFORM=hw ARCH=aarch64 firmware && make PLATFORM=hw ARCH=aarch64 package-drivers
-	${MAKE} -C ${TOPDIR} venice-image
+jobd/iota/venice-bm:jobd/firmware jobd/venice-image
 	${MAKE} -j 1 -C ${GOPATH}/src/github.com/pensando/sw/iota
-	cd ${IOTADIR} && ./iota.py  --testsuite hostpin_venice 
+	cd ${IOTADIR} && ./iota.py  --testsuite hostpin_venice
+
+.PHONY: jobd/iota/venice-sim
+jobd/iota/venice-sim:jobd/naples-sim jobd/venice-image
+	${MAKE} -j 1 -C ${GOPATH}/src/github.com/pensando/sw/iota
+	cd ${IOTADIR} && ./iota.py --testsuite venice --skip-firmware-upgrade

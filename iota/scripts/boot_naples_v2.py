@@ -82,7 +82,7 @@ parser.add_argument('--esx-bld-vm-username', dest='esx_bld_vm_username',
 parser.add_argument('--esx-bld-vm-password', dest='esx_bld_vm_password',
                     default="vmware", help='esx build vm password')
 parser.add_argument('--esx-bld-vm', dest='esx_bld_vm',
-                    default="esx-vib-wb1", help='esx build vm')
+                    default="esx-vib-wb1.pensando.io", help='esx build vm')
 
 
 

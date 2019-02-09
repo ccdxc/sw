@@ -28,7 +28,7 @@ type ConfigService struct {
 	Workloads   []*workload.Workload
 	Hosts       []*cluster.Host
 	SGPolicies  []*security.SGPolicy
-        Apps        []*security.App
+	Apps        []*security.App
 }
 
 // NewConfigServiceHandler returns an instance of config service
@@ -281,7 +281,7 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 	workloadURL := fmt.Sprintf("%s/configs/workload/v1/workloads", c.CfgState.Endpoints[0])
 	hostURL := fmt.Sprintf("%s/configs/cluster/v1/hosts", c.CfgState.Endpoints[0])
 	sgPolicyURL := fmt.Sprintf("%s/configs/security/v1/sgpolicies", c.CfgState.Endpoints[0])
-        appURL := fmt.Sprintf("%s/configs/security/v1/apps", c.CfgState.Endpoints[0])
+	appURL := fmt.Sprintf("%s/configs/security/v1/apps", c.CfgState.Endpoints[0])
 	for _, cfg := range req.Configs {
 		var object interface{}
 		jsonBytes := []byte(cfg.Config)
@@ -341,23 +341,23 @@ func (c *ConfigService) PushConfig(ctx context.Context, req *iota.ConfigMsg) (*i
 				req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create sg policy object. %v. URL: %v. Response: %v. Err: %v", sgPolicyObj, hostURL, response, err)
 				return req, nil
 			}
-                case "app":
-                        var appObj security.App
-                        err := json.Unmarshal(jsonBytes, &appObj)
-                        if err != nil {
-                                log.Errorf("CFG SVC | DEBUG | PushConfig. Could not unmarshal %v into a workload object. Err: %v", cfg.Config, err)
-                                req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-                                return req, nil
-                        }
+		case "app":
+			var appObj security.App
+			err := json.Unmarshal(jsonBytes, &appObj)
+			if err != nil {
+				log.Errorf("CFG SVC | DEBUG | PushConfig. Could not unmarshal %v into a workload object. Err: %v", cfg.Config, err)
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+				return req, nil
+			}
 
-                        _, response, err := common.HTTPPost(appURL, c.AuthToken, appObj)
-                        if err != nil {
-                                log.Errorf("CFG SVC | DEBUG | Failed to create app object. %v. URL: %v. Response: %v. Err: %v", appObj, hostURL, response, err)
-                                log.Errorf("CFG SVC | DEBUG | Using Auth Token: %v", c.AuthToken)
-                                req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-                                req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create app object. %v. URL: %v. Response: %v. Err: %v", appObj, hostURL, response, err)
-                                return req, nil
-                        }
+			_, response, err := common.HTTPSPost(appURL, c.AuthToken, appObj)
+			if err != nil {
+				log.Errorf("CFG SVC | DEBUG | Failed to create app object. %v. URL: %v. Response: %v. Err: %v", appObj, hostURL, response, err)
+				log.Errorf("CFG SVC | DEBUG | Using Auth Token: %v", c.AuthToken)
+				req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+				req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to create app object. %v. URL: %v. Response: %v. Err: %v", appObj, hostURL, response, err)
+				return req, nil
+			}
 		default:
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("Invalid Object Type: %v", m["kind"])
@@ -387,7 +387,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 	var iotaCfgObjects []*iota.ConfigObject
 	var workloads []*workload.Workload
 	var sgPolicies []*security.SGPolicy
-        var apps []*security.App
+	var apps []*security.App
 	var hosts []*cluster.Host
 	var macAddresses []string
 	vlan1 := c.CfgState.Vlans[0]
@@ -466,29 +466,35 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 			},
 		},
 	}
-        k, _ := json.Marshal(&sgp)
-        fmt.Println("RHAEGON: ", string(k))
-        sgPolicies = append(sgPolicies, &sgp)
+	k, _ := json.Marshal(&sgp)
+	fmt.Println("RHAEGON: ", string(k))
+	sgPolicies = append(sgPolicies, &sgp)
 
-        app := security.App{
-                TypeMeta: api.TypeMeta{Kind: "App"},
-                ObjectMeta: api.ObjectMeta{
-                        Tenant:    "default",
-                        Namespace: "default",
-                        Name:      "default-app",
-                },
-                Spec: security.AppSpec{
-                        ProtoPorts: []security.ProtoPort{},
-                        ALG: &security.ALG{ }, 
-                        Timeout: "none",
-                },
-        }
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default-app",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{},
+			Timeout:    "5m",
+			ALG: &security.ALG{
+				Type: "ICMP",
+				Icmp: &security.Icmp{
+					Type: "1",
+					Code: "2",
+				},
+			},
+		},
+	}
 	apps = append(apps, &app)
 
 	c.Workloads = workloads
 	c.Hosts = hosts
 	c.SGPolicies = sgPolicies
-        c.Apps = apps
+	c.Apps = apps
 
 	b, _ := json.MarshalIndent(c.Workloads, "", "   ")
 	log.Infof("CFG SVC | Gen Workloads: %v", string(b))
@@ -515,15 +521,15 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 
 	}
 
-        // Append Apps
-        for _, s := range apps {
-                b, _ := json.Marshal(s)
-                cfg := iota.ConfigObject{
-                        Method: iota.CfgMethodType_CFG_METHOD_CREATE,
-                        Config: string(b),
-                }
-                iotaCfgObjects = append(iotaCfgObjects, &cfg)
-        }
+	// Append Apps
+	for _, s := range apps {
+		b, _ := json.Marshal(s)
+		cfg := iota.ConfigObject{
+			Method: iota.CfgMethodType_CFG_METHOD_CREATE,
+			Config: string(b),
+		}
+		iotaCfgObjects = append(iotaCfgObjects, &cfg)
+	}
 
 	// Append SGPolicies
 	for _, s := range sgPolicies {

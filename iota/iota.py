@@ -44,6 +44,8 @@ def MoveOldLogs():
     os.system("mv %s/iota/iota_sanity_logs.tar.gz %s/" % (glopts.GlobalOptions.topdir, oldlogdir))
 
 def InitLogger():
+    logdir = '%s/iota/logs' % (glopts.GlobalOptions.topdir)
+    os.system("mkdir -p %s" % logdir)
     if glopts.GlobalOptions.debug:
         Logger.SetLoggingLevel(types.loglevel.DEBUG)
     elif glopts.GlobalOptions.verbose:

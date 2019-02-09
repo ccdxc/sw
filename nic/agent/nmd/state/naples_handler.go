@@ -121,6 +121,8 @@ func (n *NMD) StartManagedMode() error {
 
 			if len(mac) == 0 {
 				name = n.config.Spec.Hostname
+			} else if len(n.config.Spec.Hostname) == 0 {
+				name = fmt.Sprintf("%s", n.config.Spec.PrimaryMAC)
 			} else {
 				name = fmt.Sprintf("%s-%s", n.config.Spec.Hostname, n.config.Spec.PrimaryMAC)
 			}

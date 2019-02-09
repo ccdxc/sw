@@ -260,7 +260,7 @@ class _Testbed:
     def __init_testbed(self):
         self.__tbid = getattr(self.__tbspec, 'TestbedID', 1)
         self.__vlan_base = getattr(self.__tbspec, 'TestbedVlanBase', 1)
-        self.__instpool = iter(self.__tbspec.Instances)
+        self.__instpool = self.__tbspec.Instances
         self.__vlan_allocator = resmgr.TestbedVlanAllocator(self.__vlan_base, api.GetNicMode())
         self.__recover_testbed()
         if GlobalOptions.dryrun:
@@ -299,13 +299,14 @@ class _Testbed:
         status = self.__init_testbed()
         return status
 
-    def AllocateInstance(self):
-        try:
-            inst = next(self.__instpool)
-        except:
-            Logger.error("No Nodes available in Testbed.")
+    def AllocateInstance(self, type):
+        for instance in self.__instpool:
+            if instance.Type == type:
+                self.__instpool.remove(instance)
+                return instance
+        else:
+            Logger.error("No Nodes available in Testbed of type : %s" % type)
             sys.exit(1)
-        return inst
 
     def GetProvisionParams(self):
         return getattr(self.__tbspec.Provision, "Vars", None)

@@ -32,19 +32,24 @@ def GetNodePersonalityByNicType(nic_type):
         return None
 
 
+def GetNodeType(role):
+    if role in ['PERSONALITY_NAPLES_SIM', 'PERSONALITY_VENICE']:
+        return "vm"
+    return "bm"
 
 class Node(object):
     def __init__(self, spec):
         self.__spec = spec
         self.__name = spec.name
-        self.__inst = store.GetTestbed().AllocateInstance()
+        self.__node_type = GetNodeType(spec.role)
+        self.__inst = store.GetTestbed().AllocateInstance(self.__node_type)
+        self.__role = self.__get_instance_role(spec.role)
 
         self.__ip_address = self.__inst.NodeMgmtIP
         self.__os = getattr(self.__inst, "NodeOs", "linux")
         self.__nic_mgmt_ip = getattr(self.__inst, "NicMgmtIP", None)
         self.__nic_int_mgmt_ip = getattr(self.__inst, "NicIntMgmtIP", "169.254.0.1")
 
-        self.__role = self.__get_instance_role(spec.role)
 
         self.__control_ip = resmgr.ControlIpAllocator.Alloc()
         self.__control_intf = "eth1"
@@ -72,7 +77,9 @@ class Node(object):
         nic_type = self.__inst.Resource.NICType
         role = GetNodePersonalityByNicType(nic_type)
         if role == None:
-            Logger.error("Unknown NIC Type : %s" % nic_type)
+            os.system("cp /warmd.json '%s/iota/logs" % GlobalOptions.topdir)
+            os.system("cat /warmd.json")
+            Logger.error("Unknown NIC Type : %s %s" % (nic_type, role))
             sys.exit(1)
         return role
 
