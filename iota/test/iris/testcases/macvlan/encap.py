@@ -57,7 +57,7 @@ def Trigger(tc):
 
         #Configure MPLSoUDP interface
         api.Logger.info("Configure MPLSoUDP intf using Penctl")
-        penctl_cmd = "update interface --name %s --gw-mac %s --substrate-ip %s --overlay-ip %s --mpls-in 100 --tunnel-dest-ip %s --mpls-out 200 --source-gw %s/%d --ingress-bw 1000 --egress-bw 1000 --encap MPLSoUDP" % (master.interface, master.mac_address, master.ip_address, master.ip_address, peer.ip_address, gw_prefix_str, 8)
+        penctl_cmd = "update interface --name %s --gw-mac %s --substrate-ip %s --overlay-ip %s --mpls-in 100 --tunnel-dest-ip %s --mpls-out 200 --source-gw %s/%d --ingress-bw 1000 --egress-bw 1000 --encap MPLSoUDP" % (master.interface, peer.mac_address, master.ip_address, master.ip_address, peer.ip_address, gw_prefix_str, 8)
         common.AddPenctlCommand(req, master.node_name, penctl_cmd)
         tc.cmd_cookies.append("penctl create tunnel")
 
