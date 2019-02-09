@@ -4248,8 +4248,7 @@ func makeURIMonitoringV1AutoWatchSvcMonitoringV1WatchOper(in *api.ListWatchOptio
 
 //
 func makeURIMonitoringV1AutoWatchTechSupportRequestWatchOper(in *api.ListWatchOptions) string {
-	return ""
-
+	return fmt.Sprint("/configs/monitoring/v1", "/watch/techsupport")
 }
 
 //

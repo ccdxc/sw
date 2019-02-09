@@ -2564,7 +2564,7 @@ func (a *restObjMonitoringV1TechSupportRequest) Allowed(oper apiserver.APIOperTy
 	case apiserver.ListOper:
 		return true
 	case apiserver.WatchOper:
-		return false
+		return true
 	default:
 		return false
 	}

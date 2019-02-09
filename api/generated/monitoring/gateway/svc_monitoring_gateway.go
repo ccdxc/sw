@@ -1973,6 +1973,8 @@ func (e *sMonitoringV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchMirrorSession"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgMirrorSessionWatchHelper", "monitoring", apiserver.WatchOper)
 
 	e.svcProf["AutoWatchStatsPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgStatsPolicyWatchHelper", "monitoring", apiserver.WatchOper)
+
+	e.svcProf["AutoWatchTechSupportRequest"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTechSupportRequestWatchHelper", "monitoring", apiserver.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
