@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthUserSpec_type,  AuthUserSpec_type_uihint  } from './enums';
@@ -105,10 +105,10 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'fullname': new FormControl(this['fullname']),
-                'email': new FormControl(this['email']),
-                'password': new FormControl(this['password']),
-                'type': new FormControl(this['type'], [required, enumValidator(AuthUserSpec_type), ]),
+                'fullname': CustomFormControl(new FormControl(this['fullname']), AuthUserSpec.propInfo['fullname'].description),
+                'email': CustomFormControl(new FormControl(this['email']), AuthUserSpec.propInfo['email'].description),
+                'password': CustomFormControl(new FormControl(this['password']), AuthUserSpec.propInfo['password'].description),
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(AuthUserSpec_type), ]), AuthUserSpec.propInfo['type'].description),
             });
         }
         return this._formGroup;

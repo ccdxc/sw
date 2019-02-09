@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterNodeCondition_type,  ClusterNodeCondition_type_uihint  } from './enums';
@@ -122,11 +122,11 @@ export class ClusterNodeCondition extends BaseModel implements IClusterNodeCondi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type'], [required, enumValidator(ClusterNodeCondition_type), ]),
-                'status': new FormControl(this['status'], [required, enumValidator(ClusterNodeCondition_status), ]),
-                'last-transition-time': new FormControl(this['last-transition-time']),
-                'reason': new FormControl(this['reason']),
-                'message': new FormControl(this['message']),
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(ClusterNodeCondition_type), ]), ClusterNodeCondition.propInfo['type'].description),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(ClusterNodeCondition_status), ]), ClusterNodeCondition.propInfo['status'].description),
+                'last-transition-time': CustomFormControl(new FormControl(this['last-transition-time']), ClusterNodeCondition.propInfo['last-transition-time'].description),
+                'reason': CustomFormControl(new FormControl(this['reason']), ClusterNodeCondition.propInfo['reason'].description),
+                'message': CustomFormControl(new FormControl(this['message']), ClusterNodeCondition.propInfo['message'].description),
             });
         }
         return this._formGroup;

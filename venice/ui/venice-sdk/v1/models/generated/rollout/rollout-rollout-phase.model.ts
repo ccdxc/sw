@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { RolloutRolloutPhase_phase,  RolloutRolloutPhase_phase_uihint  } from './enums';
@@ -134,12 +134,12 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': new FormControl(this['name']),
-                'phase': new FormControl(this['phase'], [required, enumValidator(RolloutRolloutPhase_phase), ]),
-                'start-time': new FormControl(this['start-time']),
-                'end-time': new FormControl(this['end-time']),
-                'reason': new FormControl(this['reason']),
-                'message': new FormControl(this['message']),
+                'name': CustomFormControl(new FormControl(this['name']), RolloutRolloutPhase.propInfo['name'].description),
+                'phase': CustomFormControl(new FormControl(this['phase'], [required, enumValidator(RolloutRolloutPhase_phase), ]), RolloutRolloutPhase.propInfo['phase'].description),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), RolloutRolloutPhase.propInfo['start-time'].description),
+                'end-time': CustomFormControl(new FormControl(this['end-time']), RolloutRolloutPhase.propInfo['end-time'].description),
+                'reason': CustomFormControl(new FormControl(this['reason']), RolloutRolloutPhase.propInfo['reason'].description),
+                'message': CustomFormControl(new FormControl(this['message']), RolloutRolloutPhase.propInfo['message'].description),
             });
         }
         return this._formGroup;

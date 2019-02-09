@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -165,15 +165,15 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
-                'api-version': new FormControl(this['api-version']),
+                'kind': CustomFormControl(new FormControl(this['kind']), EventsEvent.propInfo['kind'].description),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), EventsEvent.propInfo['api-version'].description),
                 'meta': this['meta'].$formGroup,
-                'severity': new FormControl(this['severity'], [enumValidator(EventsEvent_severity), ]),
-                'type': new FormControl(this['type']),
-                'message': new FormControl(this['message']),
+                'severity': CustomFormControl(new FormControl(this['severity'], [enumValidator(EventsEvent_severity), ]), EventsEvent.propInfo['severity'].description),
+                'type': CustomFormControl(new FormControl(this['type']), EventsEvent.propInfo['type'].description),
+                'message': CustomFormControl(new FormControl(this['message']), EventsEvent.propInfo['message'].description),
                 'object-ref': this['object-ref'].$formGroup,
                 'source': this['source'].$formGroup,
-                'count': new FormControl(this['count']),
+                'count': CustomFormControl(new FormControl(this['count']), EventsEvent.propInfo['count'].description),
             });
         }
         return this._formGroup;

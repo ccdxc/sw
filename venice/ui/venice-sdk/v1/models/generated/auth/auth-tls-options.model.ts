@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -110,10 +110,10 @@ export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'start-tls': new FormControl(this['start-tls']),
-                'skip-server-cert-verification': new FormControl(this['skip-server-cert-verification']),
-                'server-name': new FormControl(this['server-name']),
-                'trusted-certs': new FormControl(this['trusted-certs']),
+                'start-tls': CustomFormControl(new FormControl(this['start-tls']), AuthTLSOptions.propInfo['start-tls'].description),
+                'skip-server-cert-verification': CustomFormControl(new FormControl(this['skip-server-cert-verification']), AuthTLSOptions.propInfo['skip-server-cert-verification'].description),
+                'server-name': CustomFormControl(new FormControl(this['server-name']), AuthTLSOptions.propInfo['server-name'].description),
+                'trusted-certs': CustomFormControl(new FormControl(this['trusted-certs']), AuthTLSOptions.propInfo['trusted-certs'].description),
             });
         }
         return this._formGroup;

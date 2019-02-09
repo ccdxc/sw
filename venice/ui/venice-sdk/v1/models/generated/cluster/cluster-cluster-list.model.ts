@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiListMeta, IApiListMeta } from './api-list-meta.model';
@@ -102,8 +102,8 @@ export class ClusterClusterList extends BaseModel implements IClusterClusterList
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
-                'api-version': new FormControl(this['api-version']),
+                'kind': CustomFormControl(new FormControl(this['kind']), ClusterClusterList.propInfo['kind'].description),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterClusterList.propInfo['api-version'].description),
                 'list-meta': this['list-meta'].$formGroup,
                 'items': new FormArray([]),
             });

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -197,16 +197,16 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': new FormControl(this['name']),
-                'tenant': new FormControl(this['tenant']),
-                'namespace': new FormControl(this['namespace']),
-                'generation-id': new FormControl(this['generation-id']),
-                'resource-version': new FormControl(this['resource-version']),
-                'uuid': new FormControl(this['uuid']),
-                'labels': new FormControl(this['labels']),
-                'creation-time': new FormControl(this['creation-time']),
-                'mod-time': new FormControl(this['mod-time']),
-                'self-link': new FormControl(this['self-link']),
+                'name': CustomFormControl(new FormControl(this['name']), ApiObjectMeta.propInfo['name'].description),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), ApiObjectMeta.propInfo['tenant'].description),
+                'namespace': CustomFormControl(new FormControl(this['namespace']), ApiObjectMeta.propInfo['namespace'].description),
+                'generation-id': CustomFormControl(new FormControl(this['generation-id']), ApiObjectMeta.propInfo['generation-id'].description),
+                'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiObjectMeta.propInfo['resource-version'].description),
+                'uuid': CustomFormControl(new FormControl(this['uuid']), ApiObjectMeta.propInfo['uuid'].description),
+                'labels': CustomFormControl(new FormControl(this['labels']), ApiObjectMeta.propInfo['labels'].description),
+                'creation-time': CustomFormControl(new FormControl(this['creation-time']), ApiObjectMeta.propInfo['creation-time'].description),
+                'mod-time': CustomFormControl(new FormControl(this['mod-time']), ApiObjectMeta.propInfo['mod-time'].description),
+                'self-link': CustomFormControl(new FormControl(this['self-link']), ApiObjectMeta.propInfo['self-link'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityTLSProtocolSpec, ISecurityTLSProtocolSpec } from './security-tls-protocol-spec.model';
@@ -102,10 +102,10 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'mode': new FormControl(this['mode']),
+                'mode': CustomFormControl(new FormControl(this['mode']), SecurityTrafficEncryptionPolicySpec.propInfo['mode'].description),
                 'tls': this['tls'].$formGroup,
                 'ipsec': this['ipsec'].$formGroup,
-                'key-rotation-interval-secs': new FormControl(this['key-rotation-interval-secs']),
+                'key-rotation-interval-secs': CustomFormControl(new FormControl(this['key-rotation-interval-secs']), SecurityTrafficEncryptionPolicySpec.propInfo['key-rotation-interval-secs'].description),
             });
         }
         return this._formGroup;

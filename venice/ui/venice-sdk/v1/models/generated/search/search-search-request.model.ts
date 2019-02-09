@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchSearchRequest_mode,  } from './enums';
@@ -163,13 +163,13 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'query-string': new FormControl(this['query-string'], [maxLengthValidator(256), ]),
-                'from': new FormControl(this['from'], [required, maxValueValidator(1023), ]),
-                'max-results': new FormControl(this['max-results'], [required, maxValueValidator(8192), ]),
-                'sort-by': new FormControl(this['sort-by'], [maxLengthValidator(256), ]),
-                'mode': new FormControl(this['mode'], [required, enumValidator(SearchSearchRequest_mode), ]),
+                'query-string': CustomFormControl(new FormControl(this['query-string'], [maxLengthValidator(256), ]), SearchSearchRequest.propInfo['query-string'].description),
+                'from': CustomFormControl(new FormControl(this['from'], [required, maxValueValidator(1023), ]), SearchSearchRequest.propInfo['from'].description),
+                'max-results': CustomFormControl(new FormControl(this['max-results'], [required, maxValueValidator(8192), ]), SearchSearchRequest.propInfo['max-results'].description),
+                'sort-by': CustomFormControl(new FormControl(this['sort-by'], [maxLengthValidator(256), ]), SearchSearchRequest.propInfo['sort-by'].description),
+                'mode': CustomFormControl(new FormControl(this['mode'], [required, enumValidator(SearchSearchRequest_mode), ]), SearchSearchRequest.propInfo['mode'].description),
                 'query': this['query'].$formGroup,
-                'tenants': new FormControl(this['tenants']),
+                'tenants': CustomFormControl(new FormControl(this['tenants']), SearchSearchRequest.propInfo['tenants'].description),
             });
         }
         return this._formGroup;

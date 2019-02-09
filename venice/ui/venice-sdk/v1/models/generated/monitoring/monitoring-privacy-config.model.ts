@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringPrivacyConfig_algo,  } from './enums';
@@ -83,8 +83,8 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'algo': new FormControl(this['algo'], [required, enumValidator(MonitoringPrivacyConfig_algo), ]),
-                'password': new FormControl(this['password']),
+                'algo': CustomFormControl(new FormControl(this['algo'], [required, enumValidator(MonitoringPrivacyConfig_algo), ]), MonitoringPrivacyConfig.propInfo['algo'].description),
+                'password': CustomFormControl(new FormControl(this['password']), MonitoringPrivacyConfig.propInfo['password'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthAuthenticators_authenticator_order,  AuthAuthenticators_authenticator_order_uihint  } from './enums';
@@ -106,7 +106,7 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'authenticator-order': new FormControl(this['authenticator-order']),
+                'authenticator-order': CustomFormControl(new FormControl(this['authenticator-order']), AuthAuthenticators.propInfo['authenticator-order'].description),
                 'ldap': this['ldap'].$formGroup,
                 'local': this['local'].$formGroup,
                 'radius': this['radius'].$formGroup,

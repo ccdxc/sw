@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterMemInfo_type,  } from './enums';
@@ -81,8 +81,8 @@ export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type'], [required, enumValidator(ClusterMemInfo_type), ]),
-                'size': new FormControl(this['size']),
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(ClusterMemInfo_type), ]), ClusterMemInfo.propInfo['type'].description),
+                'size': CustomFormControl(new FormControl(this['size']), ClusterMemInfo.propInfo['size'].description),
             });
         }
         return this._formGroup;

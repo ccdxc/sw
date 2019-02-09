@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -84,8 +84,8 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ports': new FormControl(this['ports']),
-                'applications': new FormControl(this['applications']),
+                'ports': CustomFormControl(new FormControl(this['ports']), MonitoringAppProtoSelector.propInfo['ports'].description),
+                'applications': CustomFormControl(new FormControl(this['applications']), MonitoringAppProtoSelector.propInfo['applications'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -128,12 +128,12 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'leader': new FormControl(this['leader']),
-                'last-leader-transition-time': new FormControl(this['last-leader-transition-time']),
-                'build-version': new FormControl(this['build-version']),
-                'vcs-commit': new FormControl(this['vcs-commit']),
-                'build-date': new FormControl(this['build-date']),
-                'auth-bootstrapped': new FormControl(this['auth-bootstrapped']),
+                'leader': CustomFormControl(new FormControl(this['leader']), ClusterClusterStatus.propInfo['leader'].description),
+                'last-leader-transition-time': CustomFormControl(new FormControl(this['last-leader-transition-time']), ClusterClusterStatus.propInfo['last-leader-transition-time'].description),
+                'build-version': CustomFormControl(new FormControl(this['build-version']), ClusterClusterStatus.propInfo['build-version'].description),
+                'vcs-commit': CustomFormControl(new FormControl(this['vcs-commit']), ClusterClusterStatus.propInfo['vcs-commit'].description),
+                'build-date': CustomFormControl(new FormControl(this['build-date']), ClusterClusterStatus.propInfo['build-date'].description),
+                'auth-bootstrapped': CustomFormControl(new FormControl(this['auth-bootstrapped']), ClusterClusterStatus.propInfo['auth-bootstrapped'].description),
             });
         }
         return this._formGroup;

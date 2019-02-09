@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringSyslogExportConfig_facility_override,  MonitoringSyslogExportConfig_facility_override_uihint  } from './enums';
@@ -81,8 +81,8 @@ export class MonitoringSyslogExportConfig extends BaseModel implements IMonitori
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'facility-override': new FormControl(this['facility-override'], [required, enumValidator(MonitoringSyslogExportConfig_facility_override), ]),
-                'prefix': new FormControl(this['prefix']),
+                'facility-override': CustomFormControl(new FormControl(this['facility-override'], [required, enumValidator(MonitoringSyslogExportConfig_facility_override), ]), MonitoringSyslogExportConfig.propInfo['facility-override'].description),
+                'prefix': CustomFormControl(new FormControl(this['prefix']), MonitoringSyslogExportConfig.propInfo['prefix'].description),
             });
         }
         return this._formGroup;

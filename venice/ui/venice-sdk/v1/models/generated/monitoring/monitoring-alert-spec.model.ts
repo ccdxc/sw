@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertSpec_state,  MonitoringAlertSpec_state_uihint  } from './enums';
@@ -69,7 +69,7 @@ export class MonitoringAlertSpec extends BaseModel implements IMonitoringAlertSp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'state': new FormControl(this['state'], [required, enumValidator(MonitoringAlertSpec_state), ]),
+                'state': CustomFormControl(new FormControl(this['state'], [required, enumValidator(MonitoringAlertSpec_state), ]), MonitoringAlertSpec.propInfo['state'].description),
             });
         }
         return this._formGroup;

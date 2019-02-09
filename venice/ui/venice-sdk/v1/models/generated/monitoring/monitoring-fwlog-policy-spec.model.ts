@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringExportConfig, IMonitoringExportConfig } from './monitoring-export-config.model';
@@ -110,8 +110,8 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'targets': new FormArray([]),
-                'format': new FormControl(this['format'], [required, enumValidator(MonitoringFwlogPolicySpec_format), ]),
-                'filter': new FormControl(this['filter']),
+                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringFwlogPolicySpec_format), ]), MonitoringFwlogPolicySpec.propInfo['format'].description),
+                'filter': CustomFormControl(new FormControl(this['filter']), MonitoringFwlogPolicySpec.propInfo['filter'].description),
                 'config': this['config'].$formGroup,
             });
             // generate FormArray control elements

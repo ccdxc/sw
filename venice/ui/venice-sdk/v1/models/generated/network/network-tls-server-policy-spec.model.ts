@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkTLSServerPolicySpec_client_authentication,  } from './enums';
@@ -128,10 +128,10 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tls-server-certificates': new FormControl(this['tls-server-certificates']),
-                'client-authentication': new FormControl(this['client-authentication'], [required, enumValidator(NetworkTLSServerPolicySpec_client_authentication), ]),
-                'tls-server-trust-roots': new FormControl(this['tls-server-trust-roots']),
-                'tls-server-allowed-peer-id': new FormControl(this['tls-server-allowed-peer-id']),
+                'tls-server-certificates': CustomFormControl(new FormControl(this['tls-server-certificates']), NetworkTLSServerPolicySpec.propInfo['tls-server-certificates'].description),
+                'client-authentication': CustomFormControl(new FormControl(this['client-authentication'], [required, enumValidator(NetworkTLSServerPolicySpec_client_authentication), ]), NetworkTLSServerPolicySpec.propInfo['client-authentication'].description),
+                'tls-server-trust-roots': CustomFormControl(new FormControl(this['tls-server-trust-roots']), NetworkTLSServerPolicySpec.propInfo['tls-server-trust-roots'].description),
+                'tls-server-allowed-peer-id': CustomFormControl(new FormControl(this['tls-server-allowed-peer-id']), NetworkTLSServerPolicySpec.propInfo['tls-server-allowed-peer-id'].description),
             });
         }
         return this._formGroup;

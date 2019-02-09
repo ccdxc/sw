@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsRequirement_operator,  LabelsRequirement_operator_uihint  } from './enums';
@@ -102,9 +102,9 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'key': new FormControl(this['key']),
-                'operator': new FormControl(this['operator'], [required, enumValidator(LabelsRequirement_operator), ]),
-                'values': new FormControl(this['values']),
+                'key': CustomFormControl(new FormControl(this['key']), LabelsRequirement.propInfo['key'].description),
+                'operator': CustomFormControl(new FormControl(this['operator'], [required, enumValidator(LabelsRequirement_operator), ]), LabelsRequirement.propInfo['operator'].description),
+                'values': CustomFormControl(new FormControl(this['values']), LabelsRequirement.propInfo['values'].description),
             });
         }
         return this._formGroup;

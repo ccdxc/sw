@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRadiusServerStatus_result,  } from './enums';
@@ -93,8 +93,8 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'result': new FormControl(this['result'], [required, enumValidator(AuthRadiusServerStatus_result), ]),
-                'message': new FormControl(this['message']),
+                'result': CustomFormControl(new FormControl(this['result'], [required, enumValidator(AuthRadiusServerStatus_result), ]), AuthRadiusServerStatus.propInfo['result'].description),
+                'message': CustomFormControl(new FormControl(this['message']), AuthRadiusServerStatus.propInfo['message'].description),
                 'server': this['server'].$formGroup,
             });
         }

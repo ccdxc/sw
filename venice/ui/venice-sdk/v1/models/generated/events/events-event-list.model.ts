@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { EventsEvent, IEventsEvent } from './events-event.model';
@@ -102,9 +102,9 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
-                'api-version': new FormControl(this['api-version']),
-                'resource-version': new FormControl(this['resource-version']),
+                'kind': CustomFormControl(new FormControl(this['kind']), EventsEventList.propInfo['kind'].description),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), EventsEventList.propInfo['api-version'].description),
+                'resource-version': CustomFormControl(new FormControl(this['resource-version']), EventsEventList.propInfo['resource-version'].description),
                 'items': new FormArray([]),
             });
             // generate FormArray control elements

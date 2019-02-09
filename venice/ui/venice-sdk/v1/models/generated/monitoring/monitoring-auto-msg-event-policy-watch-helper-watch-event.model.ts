@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringEventPolicy, IMonitoringEventPolicy } from './monitoring-event-policy.model';
@@ -78,7 +78,7 @@ export class MonitoringAutoMsgEventPolicyWatchHelperWatchEvent extends BaseModel
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type']),
+                'type': CustomFormControl(new FormControl(this['type']), MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.propInfo['type'].description),
                 'object': this['object'].$formGroup,
             });
         }

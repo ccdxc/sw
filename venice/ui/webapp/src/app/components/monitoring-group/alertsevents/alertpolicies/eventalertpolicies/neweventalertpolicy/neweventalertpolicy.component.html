@@ -36,7 +36,7 @@
               </div>
               <div fxFlex fxLayout="column">
                 <div fxFlex="nogrow" fxLayout="row" fxLayoutAlgin="start">
-                  <p-dropdown class="neweventalertpolicy-severity" fxFlex="200px" formControlName="severity" styleClass="neweventalertpolicy-font"
+                  <p-dropdown class="neweventalertpolicy-severity" fxFlex="200px" app-errorTooltip formControlName="severity" styleClass="neweventalertpolicy-font"
                                   [options]="alertOptions"></p-dropdown>
                   <div fxFlex="30px" fxLayout="row" fxLayoutAlign="center center">
                     <mat-icon fxFlex="none" *ngIf="newPolicy.$formGroup.value.spec.severity?.toLowerCase() === 'critical'" class="global-alert-critical-icon">error</mat-icon>
@@ -47,7 +47,8 @@
                 </div>
                 <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start">
                   <p-multiSelect class="neweventalertpolicy-destinations" fxFlex="300px" 
-                                  formControlName="destinations" appendTo="body" styleClass="neweventalertpolicy-font"
+                                  formControlName="destinations" 
+                                  app-errorTooltip appendTo="body" styleClass="neweventalertpolicy-font"
                                   [filter]="false" 
                                   [options]="destinationOptions"></p-multiSelect>
 

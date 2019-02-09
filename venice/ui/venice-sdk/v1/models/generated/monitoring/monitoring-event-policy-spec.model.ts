@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringEventPolicySpec_format,  MonitoringEventPolicySpec_format_uihint  } from './enums';
@@ -105,7 +105,7 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'format': new FormControl(this['format'], [required, enumValidator(MonitoringEventPolicySpec_format), ]),
+                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringEventPolicySpec_format), ]), MonitoringEventPolicySpec.propInfo['format'].description),
                 'selector': this['selector'].$formGroup,
                 'targets': new FormArray([]),
                 'config': this['config'].$formGroup,

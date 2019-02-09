@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -78,8 +78,8 @@ export class StagingItemId extends BaseModel implements IStagingItemId {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'uri': new FormControl(this['uri']),
-                'method': new FormControl(this['method']),
+                'uri': CustomFormControl(new FormControl(this['uri']), StagingItemId.propInfo['uri'].description),
+                'method': CustomFormControl(new FormControl(this['method']), StagingItemId.propInfo['method'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterNodeStatus_phase,  ClusterNodeStatus_phase_uihint  } from './enums';
@@ -97,8 +97,8 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'phase': new FormControl(this['phase'], [required, enumValidator(ClusterNodeStatus_phase), ]),
-                'quorum': new FormControl(this['quorum']),
+                'phase': CustomFormControl(new FormControl(this['phase'], [required, enumValidator(ClusterNodeStatus_phase), ]), ClusterNodeStatus.propInfo['phase'].description),
+                'quorum': CustomFormControl(new FormControl(this['quorum']), ClusterNodeStatus.propInfo['quorum'].description),
                 'conditions': new FormArray([]),
             });
             // generate FormArray control elements

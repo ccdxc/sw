@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { StagingClearActionStatus_status,  } from './enums';
@@ -81,8 +81,8 @@ export class StagingClearActionStatus extends BaseModel implements IStagingClear
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'status': new FormControl(this['status'], [required, enumValidator(StagingClearActionStatus_status), ]),
-                'reason': new FormControl(this['reason']),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(StagingClearActionStatus_status), ]), StagingClearActionStatus.propInfo['status'].description),
+                'reason': CustomFormControl(new FormControl(this['reason']), StagingClearActionStatus.propInfo['reason'].description),
             });
         }
         return this._formGroup;

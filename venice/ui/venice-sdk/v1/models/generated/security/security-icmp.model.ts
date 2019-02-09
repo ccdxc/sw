@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -78,8 +78,8 @@ export class SecurityIcmp extends BaseModel implements ISecurityIcmp {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type']),
-                'code': new FormControl(this['code']),
+                'type': CustomFormControl(new FormControl(this['type']), SecurityIcmp.propInfo['type'].description),
+                'code': CustomFormControl(new FormControl(this['code']), SecurityIcmp.propInfo['code'].description),
             });
         }
         return this._formGroup;

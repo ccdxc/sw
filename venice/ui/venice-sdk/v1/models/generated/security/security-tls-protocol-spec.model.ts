@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -78,8 +78,8 @@ export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSPr
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'version': new FormControl(this['version']),
-                'cipher-suite': new FormControl(this['cipher-suite']),
+                'version': CustomFormControl(new FormControl(this['version']), SecurityTLSProtocolSpec.propInfo['version'].description),
+                'cipher-suite': CustomFormControl(new FormControl(this['cipher-suite']), SecurityTLSProtocolSpec.propInfo['cipher-suite'].description),
             });
         }
         return this._formGroup;

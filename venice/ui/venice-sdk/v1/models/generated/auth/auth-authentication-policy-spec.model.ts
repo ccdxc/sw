@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthAuthenticators, IAuthAuthenticators } from './auth-authenticators.model';
@@ -96,8 +96,8 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'authenticators': this['authenticators'].$formGroup,
-                'secret': new FormControl(this['secret']),
-                'token-expiry': new FormControl(this['token-expiry'], [required, ]),
+                'secret': CustomFormControl(new FormControl(this['secret']), AuthAuthenticationPolicySpec.propInfo['secret'].description),
+                'token-expiry': CustomFormControl(new FormControl(this['token-expiry'], [required, ]), AuthAuthenticationPolicySpec.propInfo['token-expiry'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorStartConditions, IMonitoringMirrorStartConditions } from './monitoring-mirror-start-conditions.model';
@@ -130,12 +130,12 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'packet-size': new FormControl(this['packet-size']),
+                'packet-size': CustomFormControl(new FormControl(this['packet-size']), MonitoringMirrorSessionSpec.propInfo['packet-size'].description),
                 'start-condition': this['start-condition'].$formGroup,
                 'stop-condition': this['stop-condition'].$formGroup,
                 'collectors': new FormArray([]),
                 'match-rules': new FormArray([]),
-                'packet-filters': new FormControl(this['packet-filters']),
+                'packet-filters': CustomFormControl(new FormControl(this['packet-filters']), MonitoringMirrorSessionSpec.propInfo['packet-filters'].description),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringMirrorCollector>('collectors', this['collectors'], MonitoringMirrorCollector);

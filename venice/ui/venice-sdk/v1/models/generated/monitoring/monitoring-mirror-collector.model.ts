@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorCollector_type,  MonitoringMirrorCollector_type_uihint  } from './enums';
@@ -81,7 +81,7 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type'], [required, enumValidator(MonitoringMirrorCollector_type), ]),
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(MonitoringMirrorCollector_type), ]), MonitoringMirrorCollector.propInfo['type'].description),
                 'export-config': this['export-config'].$formGroup,
             });
         }

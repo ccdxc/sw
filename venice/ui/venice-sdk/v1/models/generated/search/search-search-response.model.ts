@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchError, ISearchError } from './search-error.model';
@@ -138,9 +138,9 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'total-hits': new FormControl(this['total-hits']),
-                'actual-hits': new FormControl(this['actual-hits']),
-                'time-taken-msecs': new FormControl(this['time-taken-msecs']),
+                'total-hits': CustomFormControl(new FormControl(this['total-hits']), SearchSearchResponse.propInfo['total-hits'].description),
+                'actual-hits': CustomFormControl(new FormControl(this['actual-hits']), SearchSearchResponse.propInfo['actual-hits'].description),
+                'time-taken-msecs': CustomFormControl(new FormControl(this['time-taken-msecs']), SearchSearchResponse.propInfo['time-taken-msecs'].description),
                 'error': this['error'].$formGroup,
                 'entries': new FormArray([]),
                 'preview-entries': this['preview-entries'].$formGroup,

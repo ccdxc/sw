@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -67,7 +67,7 @@ export class NetworkServiceStatus extends BaseModel implements INetworkServiceSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workloads': new FormControl(this['workloads']),
+                'workloads': CustomFormControl(new FormControl(this['workloads']), NetworkServiceStatus.propInfo['workloads'].description),
             });
         }
         return this._formGroup;

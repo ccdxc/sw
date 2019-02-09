@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -66,7 +66,7 @@ export class SearchKindAggregation extends BaseModel implements ISearchKindAggre
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kinds': new FormControl(this['kinds']),
+                'kinds': CustomFormControl(new FormControl(this['kinds']), SearchKindAggregation.propInfo['kinds'].description),
             });
         }
         return this._formGroup;

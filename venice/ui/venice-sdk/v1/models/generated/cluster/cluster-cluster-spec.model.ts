@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -141,12 +141,12 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'quorum-nodes': new FormControl(this['quorum-nodes']),
-                'virtual-ip': new FormControl(this['virtual-ip']),
-                'ntp-servers': new FormControl(this['ntp-servers']),
-                'auto-admit-nics': new FormControl(this['auto-admit-nics']),
-                'certs': new FormControl(this['certs']),
-                'key': new FormControl(this['key']),
+                'quorum-nodes': CustomFormControl(new FormControl(this['quorum-nodes']), ClusterClusterSpec.propInfo['quorum-nodes'].description),
+                'virtual-ip': CustomFormControl(new FormControl(this['virtual-ip']), ClusterClusterSpec.propInfo['virtual-ip'].description),
+                'ntp-servers': CustomFormControl(new FormControl(this['ntp-servers']), ClusterClusterSpec.propInfo['ntp-servers'].description),
+                'auto-admit-nics': CustomFormControl(new FormControl(this['auto-admit-nics']), ClusterClusterSpec.propInfo['auto-admit-nics'].description),
+                'certs': CustomFormControl(new FormControl(this['certs']), ClusterClusterSpec.propInfo['certs'].description),
+                'key': CustomFormControl(new FormControl(this['key']), ClusterClusterSpec.propInfo['key'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -82,8 +82,8 @@ export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'program-uuid': new FormControl(this['program-uuid']),
-                'timeout': new FormControl(this['timeout']),
+                'program-uuid': CustomFormControl(new FormControl(this['program-uuid']), SecurityMsrpc.propInfo['program-uuid'].description),
+                'timeout': CustomFormControl(new FormControl(this['timeout']), SecurityMsrpc.propInfo['timeout'].description),
             });
         }
         return this._formGroup;

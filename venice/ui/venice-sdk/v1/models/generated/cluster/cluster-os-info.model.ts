@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -102,10 +102,10 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type']),
-                'kernel-relase': new FormControl(this['kernel-relase']),
-                'kernel-version': new FormControl(this['kernel-version']),
-                'processor': new FormControl(this['processor']),
+                'type': CustomFormControl(new FormControl(this['type']), ClusterOsInfo.propInfo['type'].description),
+                'kernel-relase': CustomFormControl(new FormControl(this['kernel-relase']), ClusterOsInfo.propInfo['kernel-relase'].description),
+                'kernel-version': CustomFormControl(new FormControl(this['kernel-version']), ClusterOsInfo.propInfo['kernel-version'].description),
+                'processor': CustomFormControl(new FormControl(this['processor']), ClusterOsInfo.propInfo['processor'].description),
             });
         }
         return this._formGroup;

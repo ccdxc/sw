@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringSNMPTrapServer_version,  } from './enums';
@@ -140,10 +140,10 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'host': new FormControl(this['host']),
-                'port': new FormControl(this['port']),
-                'version': new FormControl(this['version'], [required, enumValidator(MonitoringSNMPTrapServer_version), ]),
-                'community-or-user': new FormControl(this['community-or-user']),
+                'host': CustomFormControl(new FormControl(this['host']), MonitoringSNMPTrapServer.propInfo['host'].description),
+                'port': CustomFormControl(new FormControl(this['port']), MonitoringSNMPTrapServer.propInfo['port'].description),
+                'version': CustomFormControl(new FormControl(this['version'], [required, enumValidator(MonitoringSNMPTrapServer_version), ]), MonitoringSNMPTrapServer.propInfo['version'].description),
+                'community-or-user': CustomFormControl(new FormControl(this['community-or-user']), MonitoringSNMPTrapServer.propInfo['community-or-user'].description),
                 'auth-config': this['auth-config'].$formGroup,
                 'privacy-config': this['privacy-config'].$formGroup,
             });

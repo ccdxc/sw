@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiListWatchOptions_sort_order,  ApiListWatchOptions_sort_order_uihint  } from './enums';
@@ -258,22 +258,22 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': new FormControl(this['name']),
-                'tenant': new FormControl(this['tenant']),
-                'namespace': new FormControl(this['namespace']),
-                'generation-id': new FormControl(this['generation-id']),
-                'resource-version': new FormControl(this['resource-version']),
-                'uuid': new FormControl(this['uuid']),
-                'labels': new FormControl(this['labels']),
-                'creation-time': new FormControl(this['creation-time']),
-                'mod-time': new FormControl(this['mod-time']),
-                'self-link': new FormControl(this['self-link']),
-                'label-selector': new FormControl(this['label-selector']),
-                'field-selector': new FormControl(this['field-selector']),
-                'field-change-selector': new FormControl(this['field-change-selector']),
-                'from': new FormControl(this['from']),
-                'max-results': new FormControl(this['max-results']),
-                'sort-order': new FormControl(this['sort-order'], [required, enumValidator(ApiListWatchOptions_sort_order), ]),
+                'name': CustomFormControl(new FormControl(this['name']), ApiListWatchOptions.propInfo['name'].description),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), ApiListWatchOptions.propInfo['tenant'].description),
+                'namespace': CustomFormControl(new FormControl(this['namespace']), ApiListWatchOptions.propInfo['namespace'].description),
+                'generation-id': CustomFormControl(new FormControl(this['generation-id']), ApiListWatchOptions.propInfo['generation-id'].description),
+                'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiListWatchOptions.propInfo['resource-version'].description),
+                'uuid': CustomFormControl(new FormControl(this['uuid']), ApiListWatchOptions.propInfo['uuid'].description),
+                'labels': CustomFormControl(new FormControl(this['labels']), ApiListWatchOptions.propInfo['labels'].description),
+                'creation-time': CustomFormControl(new FormControl(this['creation-time']), ApiListWatchOptions.propInfo['creation-time'].description),
+                'mod-time': CustomFormControl(new FormControl(this['mod-time']), ApiListWatchOptions.propInfo['mod-time'].description),
+                'self-link': CustomFormControl(new FormControl(this['self-link']), ApiListWatchOptions.propInfo['self-link'].description),
+                'label-selector': CustomFormControl(new FormControl(this['label-selector']), ApiListWatchOptions.propInfo['label-selector'].description),
+                'field-selector': CustomFormControl(new FormControl(this['field-selector']), ApiListWatchOptions.propInfo['field-selector'].description),
+                'field-change-selector': CustomFormControl(new FormControl(this['field-change-selector']), ApiListWatchOptions.propInfo['field-change-selector'].description),
+                'from': CustomFormControl(new FormControl(this['from']), ApiListWatchOptions.propInfo['from'].description),
+                'max-results': CustomFormControl(new FormControl(this['max-results']), ApiListWatchOptions.propInfo['max-results'].description),
+                'sort-order': CustomFormControl(new FormControl(this['sort-order'], [required, enumValidator(ApiListWatchOptions_sort_order), ]), ApiListWatchOptions.propInfo['sort-order'].description),
             });
         }
         return this._formGroup;

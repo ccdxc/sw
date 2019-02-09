@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { StagingCommitActionStatus_status,  } from './enums';
@@ -81,8 +81,8 @@ export class StagingCommitActionStatus extends BaseModel implements IStagingComm
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'status': new FormControl(this['status'], [required, enumValidator(StagingCommitActionStatus_status), ]),
-                'reason': new FormControl(this['reason']),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(StagingCommitActionStatus_status), ]), StagingCommitActionStatus.propInfo['status'].description),
+                'reason': CustomFormControl(new FormControl(this['reason']), StagingCommitActionStatus.propInfo['reason'].description),
             });
         }
         return this._formGroup;

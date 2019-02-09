@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterHost, IClusterHost } from './cluster-host.model';
@@ -78,7 +78,7 @@ export class ClusterAutoMsgHostWatchHelperWatchEvent extends BaseModel implement
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type']),
+                'type': CustomFormControl(new FormControl(this['type']), ClusterAutoMsgHostWatchHelperWatchEvent.propInfo['type'].description),
                 'object': this['object'].$formGroup,
             });
         }

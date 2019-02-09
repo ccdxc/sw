@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -67,7 +67,7 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'admitted-smart-nics': new FormControl(this['admitted-smart-nics']),
+                'admitted-smart-nics': CustomFormControl(new FormControl(this['admitted-smart-nics']), ClusterHostStatus.propInfo['admitted-smart-nics'].description),
             });
         }
         return this._formGroup;

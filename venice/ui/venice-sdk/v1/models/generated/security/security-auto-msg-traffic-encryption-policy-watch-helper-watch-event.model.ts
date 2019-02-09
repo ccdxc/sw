@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityTrafficEncryptionPolicy, ISecurityTrafficEncryptionPolicy } from './security-traffic-encryption-policy.model';
@@ -78,7 +78,7 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent extends
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type']),
+                'type': CustomFormControl(new FormControl(this['type']), SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.propInfo['type'].description),
                 'object': this['object'].$formGroup,
             });
         }

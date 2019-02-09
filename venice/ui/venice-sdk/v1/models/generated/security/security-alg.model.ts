@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityALG_type,  } from './enums';
@@ -129,7 +129,7 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type'], [required, enumValidator(SecurityALG_type), ]),
+                'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(SecurityALG_type), ]), SecurityALG.propInfo['type'].description),
                 'icmp': this['icmp'].$formGroup,
                 'dns': this['dns'].$formGroup,
                 'ftp': this['ftp'].$formGroup,

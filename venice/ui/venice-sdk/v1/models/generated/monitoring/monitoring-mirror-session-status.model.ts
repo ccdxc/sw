@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMirrorSessionStatus_oper_state,  MonitoringMirrorSessionStatus_oper_state_uihint  } from './enums';
@@ -93,9 +93,9 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'oper-state': new FormControl(this['oper-state'], [required, enumValidator(MonitoringMirrorSessionStatus_oper_state), ]),
-                'pcap-file-url': new FormControl(this['pcap-file-url']),
-                'started-at': new FormControl(this['started-at']),
+                'oper-state': CustomFormControl(new FormControl(this['oper-state'], [required, enumValidator(MonitoringMirrorSessionStatus_oper_state), ]), MonitoringMirrorSessionStatus.propInfo['oper-state'].description),
+                'pcap-file-url': CustomFormControl(new FormControl(this['pcap-file-url']), MonitoringMirrorSessionStatus.propInfo['pcap-file-url'].description),
+                'started-at': CustomFormControl(new FormControl(this['started-at']), MonitoringMirrorSessionStatus.propInfo['started-at'].description),
             });
         }
         return this._formGroup;

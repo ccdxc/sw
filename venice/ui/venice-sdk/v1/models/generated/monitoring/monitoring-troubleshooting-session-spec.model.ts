@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMatchRule, IMonitoringMatchRule } from './monitoring-match-rule.model';
@@ -104,8 +104,8 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
             this._formGroup = new FormGroup({
                 'flow-selector': this['flow-selector'].$formGroup,
                 'time-window': this['time-window'].$formGroup,
-                'repeat-every': new FormControl(this['repeat-every']),
-                'enable-mirroring': new FormControl(this['enable-mirroring']),
+                'repeat-every': CustomFormControl(new FormControl(this['repeat-every']), MonitoringTroubleshootingSessionSpec.propInfo['repeat-every'].description),
+                'enable-mirroring': CustomFormControl(new FormControl(this['enable-mirroring']), MonitoringTroubleshootingSessionSpec.propInfo['enable-mirroring'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
@@ -200,16 +200,16 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
-                'api-version': new FormControl(this['api-version']),
-                'name': new FormControl(this['name'], [required, minLengthValidator(1), maxLengthValidator(100), ]),
+                'kind': CustomFormControl(new FormControl(this['kind']), Telemetry_queryMetricsQuerySpec.propInfo['kind'].description),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), Telemetry_queryMetricsQuerySpec.propInfo['api-version'].description),
+                'name': CustomFormControl(new FormControl(this['name'], [required, minLengthValidator(1), maxLengthValidator(100), ]), Telemetry_queryMetricsQuerySpec.propInfo['name'].description),
                 'selector': this['selector'].$formGroup,
-                'fields': new FormControl(this['fields']),
-                'function': new FormControl(this['function'], [required, enumValidator(Telemetry_queryMetricsQuerySpec_function), ]),
-                'start-time': new FormControl(this['start-time']),
-                'end-time': new FormControl(this['end-time']),
-                'group-by-time': new FormControl(this['group-by-time']),
-                'group-by-field': new FormControl(this['group-by-field'], [patternValidator('^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, ., :'), ]),
+                'fields': CustomFormControl(new FormControl(this['fields']), Telemetry_queryMetricsQuerySpec.propInfo['fields'].description),
+                'function': CustomFormControl(new FormControl(this['function'], [required, enumValidator(Telemetry_queryMetricsQuerySpec_function), ]), Telemetry_queryMetricsQuerySpec.propInfo['function'].description),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), Telemetry_queryMetricsQuerySpec.propInfo['start-time'].description),
+                'end-time': CustomFormControl(new FormControl(this['end-time']), Telemetry_queryMetricsQuerySpec.propInfo['end-time'].description),
+                'group-by-time': CustomFormControl(new FormControl(this['group-by-time']), Telemetry_queryMetricsQuerySpec.propInfo['group-by-time'].description),
+                'group-by-field': CustomFormControl(new FormControl(this['group-by-field'], [patternValidator('^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, ., :'), ]), Telemetry_queryMetricsQuerySpec.propInfo['group-by-field'].description),
                 'pagination': this['pagination'].$formGroup,
             });
         }

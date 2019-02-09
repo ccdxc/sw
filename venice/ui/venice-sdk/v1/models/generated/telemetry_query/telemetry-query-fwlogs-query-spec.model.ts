@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Telemetry_queryFwlogsQuerySpec_actions,  Telemetry_queryFwlogsQuerySpec_actions_uihint  } from './enums';
@@ -227,17 +227,17 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'source-ips': new FormControl(this['source-ips']),
-                'dest-ips': new FormControl(this['dest-ips']),
-                'source-ports': new FormControl(this['source-ports']),
-                'dest-ports': new FormControl(this['dest-ports']),
-                'protocols': new FormControl(this['protocols']),
-                'actions': new FormControl(this['actions']),
-                'directions': new FormControl(this['directions']),
-                'rule-ids': new FormControl(this['rule-ids']),
-                'policy-names': new FormControl(this['policy-names']),
-                'start-time': new FormControl(this['start-time']),
-                'end-time': new FormControl(this['end-time']),
+                'source-ips': CustomFormControl(new FormControl(this['source-ips']), Telemetry_queryFwlogsQuerySpec.propInfo['source-ips'].description),
+                'dest-ips': CustomFormControl(new FormControl(this['dest-ips']), Telemetry_queryFwlogsQuerySpec.propInfo['dest-ips'].description),
+                'source-ports': CustomFormControl(new FormControl(this['source-ports']), Telemetry_queryFwlogsQuerySpec.propInfo['source-ports'].description),
+                'dest-ports': CustomFormControl(new FormControl(this['dest-ports']), Telemetry_queryFwlogsQuerySpec.propInfo['dest-ports'].description),
+                'protocols': CustomFormControl(new FormControl(this['protocols']), Telemetry_queryFwlogsQuerySpec.propInfo['protocols'].description),
+                'actions': CustomFormControl(new FormControl(this['actions']), Telemetry_queryFwlogsQuerySpec.propInfo['actions'].description),
+                'directions': CustomFormControl(new FormControl(this['directions']), Telemetry_queryFwlogsQuerySpec.propInfo['directions'].description),
+                'rule-ids': CustomFormControl(new FormControl(this['rule-ids']), Telemetry_queryFwlogsQuerySpec.propInfo['rule-ids'].description),
+                'policy-names': CustomFormControl(new FormControl(this['policy-names']), Telemetry_queryFwlogsQuerySpec.propInfo['policy-names'].description),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), Telemetry_queryFwlogsQuerySpec.propInfo['start-time'].description),
+                'end-time': CustomFormControl(new FormControl(this['end-time']), Telemetry_queryFwlogsQuerySpec.propInfo['end-time'].description),
                 'pagination': this['pagination'].$formGroup,
             });
         }

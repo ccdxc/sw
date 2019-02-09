@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -93,9 +93,9 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'endpoints': new FormControl(this['endpoints']),
-                'ip-addresses': new FormControl(this['ip-addresses']),
-                'mac-addresses': new FormControl(this['mac-addresses']),
+                'endpoints': CustomFormControl(new FormControl(this['endpoints']), MonitoringMatchSelector.propInfo['endpoints'].description),
+                'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), MonitoringMatchSelector.propInfo['ip-addresses'].description),
+                'mac-addresses': CustomFormControl(new FormControl(this['mac-addresses']), MonitoringMatchSelector.propInfo['mac-addresses'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -82,8 +82,8 @@ export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'program-id': new FormControl(this['program-id']),
-                'timeout': new FormControl(this['timeout']),
+                'program-id': CustomFormControl(new FormControl(this['program-id']), SecuritySunrpc.propInfo['program-id'].description),
+                'timeout': CustomFormControl(new FormControl(this['timeout']), SecuritySunrpc.propInfo['timeout'].description),
             });
         }
         return this._formGroup;

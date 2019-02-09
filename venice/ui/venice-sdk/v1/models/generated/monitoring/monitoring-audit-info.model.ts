@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -82,8 +82,8 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'user': new FormControl(this['user']),
-                'time': new FormControl(this['time']),
+                'user': CustomFormControl(new FormControl(this['user']), MonitoringAuditInfo.propInfo['user'].description),
+                'time': CustomFormControl(new FormControl(this['time']), MonitoringAuditInfo.propInfo['time'].description),
             });
         }
         return this._formGroup;

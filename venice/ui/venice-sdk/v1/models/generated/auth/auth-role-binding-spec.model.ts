@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -92,9 +92,9 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'users': new FormControl(this['users']),
-                'user-groups': new FormControl(this['user-groups']),
-                'role': new FormControl(this['role']),
+                'users': CustomFormControl(new FormControl(this['users']), AuthRoleBindingSpec.propInfo['users'].description),
+                'user-groups': CustomFormControl(new FormControl(this['user-groups']), AuthRoleBindingSpec.propInfo['user-groups'].description),
+                'role': CustomFormControl(new FormControl(this['role']), AuthRoleBindingSpec.propInfo['role'].description),
             });
         }
         return this._formGroup;

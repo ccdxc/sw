@@ -38,7 +38,7 @@
       </div>
       <div fxFlex="nogrow" fxLayout="column">
         <div fxFlex="30px" fxLayout="row" class="syslog-value">
-            <p-dropdown fxFlex="nogrow" class="syslog-override" formControlName="facility-override" styleClass="syslog-font" [options]="syslogOverrideOptions"></p-dropdown>
+            <p-dropdown fxFlex="nogrow" class="syslog-override" app-errorTooltip formControlName="facility-override" styleClass="syslog-font" [options]="syslogOverrideOptions"></p-dropdown>
         </div>
       </div>
 
@@ -49,7 +49,7 @@
       </div>
       <div fxFlex="nogrow" fxLayout="column">
         <div fxFlex="30px" fxLayout="row" class="syslog-value">
-          <input formControlName="prefix" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputText
+          <input app-errorTooltip formControlName="prefix" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputText
             placeholder="">
         </div>
       </div>
@@ -58,7 +58,7 @@
       <div class="syslog-fieldtitle" fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center">
         <span>Format:</span>
       </div>
-      <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px" class="syslog-format" formControlName="format">
+      <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px" class="syslog-format" app-errorTooltip formControlName="format">
         <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true" class="" *ngFor="let option of formatOptions"
           [value]="option.value">
           {{option.label}}
@@ -89,7 +89,7 @@
             placeholder="IP address/URL...">
           </div>
           <div fxFlex="30px" fxLayout="row" class="syslog-value">
-            <input formControlName="transport" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputText
+            <input formControlName="transport" app-errorTooltip fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputText
               placeholder="protocol/port...">
           </div>
       </div> 
@@ -102,7 +102,7 @@
     <div fxFlex="30px" class="syslog-fieldtitle">CREDENTIALS</div>
     <div fxFlex="auto" fxLayout="row">
       
-      <mat-radio-group fxFlex="nogrow" fxLayout="column" fxLayoutGap="5px" class="syslog-fieldtitle syslog-credential-radio" formControlName="auth-type">
+      <mat-radio-group fxFlex="nogrow" fxLayout="column" fxLayoutGap="5px" class="syslog-fieldtitle syslog-credential-radio" app-errorTooltip formControlName="auth-type">
         <mat-radio-button fxFlex="none" color="primary" [disableRipple]="true" class="" *ngFor="let option of syslogCredentialOptions"
           [value]="option.value" >
           {{option.label}}
@@ -126,11 +126,11 @@
           <!-- Field Values -->
           <div fxFlex="nogrow" fxLayout="column">
             <div fxFlex="30px" fxLayout="row" class="syslog-value">
-              <input formControlName="username" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputText
+              <input app-errorTooltip formControlName="username" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputText
                 placeholder="">
             </div>
             <div fxFlex="30px" fxLayout="row" class="syslog-value">
-              <input formControlName="password" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="password" pInputText
+              <input app-errorTooltip formControlName="password" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="password" pInputText
                 placeholder="">
             </div>
           </div>
@@ -147,7 +147,7 @@
           <!-- Field Values -->
           <div fxFlex="nogrow" fxLayout="column">
             <div fxFlex="30px" fxLayout="row" class="syslog-value">
-              <input formControlName="bearer-token" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputText
+              <input app-errorTooltip formControlName="bearer-token" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputText
                 placeholder="">
             </div>
           </div>
@@ -164,7 +164,7 @@
           <!-- Field Values -->
           <div fxFlex="nogrow" fxLayout="column">
             <div fxFlex="120px" fxLayout="row" class="syslog-value">
-              <textarea formControlName="cert-data" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text"
+              <textarea app-errorTooltip formControlName="cert-data" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text"
                 pInputTextarea placeholder=""></textarea>
             </div>
           </div>
@@ -180,7 +180,7 @@
           <!-- Field Values -->
           <div fxFlex="nogrow" fxLayout="column">
             <div fxFlex="120px" fxLayout="row" class="syslog-value">
-              <textarea formControlName="key-data" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputTextarea
+              <textarea app-errorTooltip formControlName="key-data" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputTextarea
                 placeholder=""></textarea>
             </div>
           </div>
@@ -196,7 +196,7 @@
           <!-- Field Values -->
           <div fxFlex="nogrow" fxLayout="column">
             <div fxFlex="120px" fxLayout="row" class="syslog-value">
-              <textarea formControlName="ca-data" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputTextarea
+              <textarea app-errorTooltip formControlName="ca-data" fxFlex="nogrow" class="syslog-input" spellcheck="false" type="text" pInputTextarea
                 placeholder=""></textarea>
             </div>
           </div>

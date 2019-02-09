@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -273,23 +273,23 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
-                'api-version': new FormControl(this['api-version']),
+                'kind': CustomFormControl(new FormControl(this['kind']), AuditEvent.propInfo['kind'].description),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), AuditEvent.propInfo['api-version'].description),
                 'meta': this['meta'].$formGroup,
-                'stage': new FormControl(this['stage'], [enumValidator(AuditEvent_stage), ]),
-                'level': new FormControl(this['level'], [enumValidator(AuditEvent_level), ]),
+                'stage': CustomFormControl(new FormControl(this['stage'], [enumValidator(AuditEvent_stage), ]), AuditEvent.propInfo['stage'].description),
+                'level': CustomFormControl(new FormControl(this['level'], [enumValidator(AuditEvent_level), ]), AuditEvent.propInfo['level'].description),
                 'user': this['user'].$formGroup,
-                'client-ips': new FormControl(this['client-ips']),
+                'client-ips': CustomFormControl(new FormControl(this['client-ips']), AuditEvent.propInfo['client-ips'].description),
                 'resource': this['resource'].$formGroup,
-                'action': new FormControl(this['action']),
-                'outcome': new FormControl(this['outcome'], [enumValidator(AuditEvent_outcome), ]),
-                'request-uri': new FormControl(this['request-uri']),
-                'request-object': new FormControl(this['request-object']),
-                'response-object': new FormControl(this['response-object']),
-                'gateway-node': new FormControl(this['gateway-node']),
-                'gateway-ip': new FormControl(this['gateway-ip']),
-                'service-name': new FormControl(this['service-name']),
-                'data': new FormControl(this['data']),
+                'action': CustomFormControl(new FormControl(this['action']), AuditEvent.propInfo['action'].description),
+                'outcome': CustomFormControl(new FormControl(this['outcome'], [enumValidator(AuditEvent_outcome), ]), AuditEvent.propInfo['outcome'].description),
+                'request-uri': CustomFormControl(new FormControl(this['request-uri']), AuditEvent.propInfo['request-uri'].description),
+                'request-object': CustomFormControl(new FormControl(this['request-object']), AuditEvent.propInfo['request-object'].description),
+                'response-object': CustomFormControl(new FormControl(this['response-object']), AuditEvent.propInfo['response-object'].description),
+                'gateway-node': CustomFormControl(new FormControl(this['gateway-node']), AuditEvent.propInfo['gateway-node'].description),
+                'gateway-ip': CustomFormControl(new FormControl(this['gateway-ip']), AuditEvent.propInfo['gateway-ip'].description),
+                'service-name': CustomFormControl(new FormControl(this['service-name']), AuditEvent.propInfo['service-name'].description),
+                'data': CustomFormControl(new FormControl(this['data']), AuditEvent.propInfo['data'].description),
             });
         }
         return this._formGroup;

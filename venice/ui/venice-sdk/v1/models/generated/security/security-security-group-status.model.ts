@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -80,8 +80,8 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workloads': new FormControl(this['workloads']),
-                'Policies': new FormControl(this['Policies']),
+                'workloads': CustomFormControl(new FormControl(this['workloads']), SecuritySecurityGroupStatus.propInfo['workloads'].description),
+                'Policies': CustomFormControl(new FormControl(this['Policies']), SecuritySecurityGroupStatus.propInfo['Policies'].description),
             });
         }
         return this._formGroup;

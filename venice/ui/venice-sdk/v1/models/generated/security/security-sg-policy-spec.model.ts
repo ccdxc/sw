@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
@@ -91,8 +91,8 @@ export class SecuritySGPolicySpec extends BaseModel implements ISecuritySGPolicy
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'attach-groups': new FormControl(this['attach-groups']),
-                'attach-tenant': new FormControl(this['attach-tenant']),
+                'attach-groups': CustomFormControl(new FormControl(this['attach-groups']), SecuritySGPolicySpec.propInfo['attach-groups'].description),
+                'attach-tenant': CustomFormControl(new FormControl(this['attach-tenant']), SecuritySGPolicySpec.propInfo['attach-tenant'].description),
                 'rules': new FormArray([]),
             });
             // generate FormArray control elements

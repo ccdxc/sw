@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthPermission_actions,  AuthPermission_actions_uihint  } from './enums';
@@ -145,12 +145,12 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'resource-tenant': new FormControl(this['resource-tenant']),
-                'resource-group': new FormControl(this['resource-group']),
-                'resource-kind': new FormControl(this['resource-kind']),
-                'resource-namespace': new FormControl(this['resource-namespace']),
-                'resource-names': new FormControl(this['resource-names']),
-                'actions': new FormControl(this['actions']),
+                'resource-tenant': CustomFormControl(new FormControl(this['resource-tenant']), AuthPermission.propInfo['resource-tenant'].description),
+                'resource-group': CustomFormControl(new FormControl(this['resource-group']), AuthPermission.propInfo['resource-group'].description),
+                'resource-kind': CustomFormControl(new FormControl(this['resource-kind']), AuthPermission.propInfo['resource-kind'].description),
+                'resource-namespace': CustomFormControl(new FormControl(this['resource-namespace']), AuthPermission.propInfo['resource-namespace'].description),
+                'resource-names': CustomFormControl(new FormControl(this['resource-names']), AuthPermission.propInfo['resource-names'].description),
+                'actions': CustomFormControl(new FormControl(this['actions']), AuthPermission.propInfo['actions'].description),
             });
         }
         return this._formGroup;

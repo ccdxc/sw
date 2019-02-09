@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -78,8 +78,8 @@ export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemet
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'offset': new FormControl(this['offset']),
-                'count': new FormControl(this['count']),
+                'offset': CustomFormControl(new FormControl(this['offset']), Telemetry_queryPaginationSpec.propInfo['offset'].description),
+                'count': CustomFormControl(new FormControl(this['count']), Telemetry_queryPaginationSpec.propInfo['count'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthUser, IAuthUser } from './auth-user.model';
@@ -78,7 +78,7 @@ export class AuthAutoMsgUserWatchHelperWatchEvent extends BaseModel implements I
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type']),
+                'type': CustomFormControl(new FormControl(this['type']), AuthAutoMsgUserWatchHelperWatchEvent.propInfo['type'].description),
                 'object': this['object'].$formGroup,
             });
         }

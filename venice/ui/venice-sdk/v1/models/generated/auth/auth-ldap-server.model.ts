@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthTLSOptions, IAuthTLSOptions } from './auth-tls-options.model';
@@ -78,7 +78,7 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'url': new FormControl(this['url']),
+                'url': CustomFormControl(new FormControl(this['url']), AuthLdapServer.propInfo['url'].description),
                 'tls-options': this['tls-options'].$formGroup,
             });
         }

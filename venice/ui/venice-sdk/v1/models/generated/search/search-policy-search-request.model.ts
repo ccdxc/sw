@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -163,14 +163,14 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tenant': new FormControl(this['tenant']),
-                'namespace': new FormControl(this['namespace']),
-                'sg-policy': new FormControl(this['sg-policy']),
-                'app': new FormControl(this['app']),
-                'from-ip-address': new FormControl(this['from-ip-address']),
-                'to-ip-address': new FormControl(this['to-ip-address']),
-                'from-security-group': new FormControl(this['from-security-group']),
-                'to-security-group': new FormControl(this['to-security-group']),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), SearchPolicySearchRequest.propInfo['tenant'].description),
+                'namespace': CustomFormControl(new FormControl(this['namespace']), SearchPolicySearchRequest.propInfo['namespace'].description),
+                'sg-policy': CustomFormControl(new FormControl(this['sg-policy']), SearchPolicySearchRequest.propInfo['sg-policy'].description),
+                'app': CustomFormControl(new FormControl(this['app']), SearchPolicySearchRequest.propInfo['app'].description),
+                'from-ip-address': CustomFormControl(new FormControl(this['from-ip-address']), SearchPolicySearchRequest.propInfo['from-ip-address'].description),
+                'to-ip-address': CustomFormControl(new FormControl(this['to-ip-address']), SearchPolicySearchRequest.propInfo['to-ip-address'].description),
+                'from-security-group': CustomFormControl(new FormControl(this['from-security-group']), SearchPolicySearchRequest.propInfo['from-security-group'].description),
+                'to-security-group': CustomFormControl(new FormControl(this['to-security-group']), SearchPolicySearchRequest.propInfo['to-security-group'].description),
             });
         }
         return this._formGroup;

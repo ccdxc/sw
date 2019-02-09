@@ -49,7 +49,6 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
   }
 
   ngOnInit() {
-    this.tooltipClass = 'global-error-tooltip';
   }
 
   // Overriding from MatTooltip
@@ -57,8 +56,8 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
     if (!this.control) {
       return;
     }
-    const msgs = [];
-    if (this.control.invalid && this.control.dirty) {
+    if (this.control.touched && this.control.invalid && this.control.dirty) {
+      const msgs = [];
       for (const key in this.control.errors) {
         if (this.control.errors.hasOwnProperty(key)) {
           const error = this.control.errors[key];
@@ -67,7 +66,14 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
           }
         }
       }
+      this.tooltipClass = 'global-error-tooltip';
+      return msgs.join('\n');
     }
-    return msgs.join('\n');
+
+    const customControl: any = this.control.control;
+    if (customControl != null && customControl.description != null) {
+      this.tooltipClass = 'global-info-tooltip';
+      return customControl.description;
+    }
   }
 }

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -114,11 +114,11 @@ export class ClusterUpdateTLSConfigRequest extends BaseModel implements ICluster
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
-                'api-version': new FormControl(this['api-version']),
+                'kind': CustomFormControl(new FormControl(this['kind']), ClusterUpdateTLSConfigRequest.propInfo['kind'].description),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), ClusterUpdateTLSConfigRequest.propInfo['api-version'].description),
                 'meta': this['meta'].$formGroup,
-                'certs': new FormControl(this['certs']),
-                'key': new FormControl(this['key']),
+                'certs': CustomFormControl(new FormControl(this['certs']), ClusterUpdateTLSConfigRequest.propInfo['certs'].description),
+                'key': CustomFormControl(new FormControl(this['key']), ClusterUpdateTLSConfigRequest.propInfo['key'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthLdapAttributeMapping, IAuthLdapAttributeMapping } from './auth-ldap-attribute-mapping.model';
@@ -126,10 +126,10 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'enabled': new FormControl(this['enabled']),
-                'base-dn': new FormControl(this['base-dn']),
-                'bind-dn': new FormControl(this['bind-dn']),
-                'bind-password': new FormControl(this['bind-password']),
+                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthLdap.propInfo['enabled'].description),
+                'base-dn': CustomFormControl(new FormControl(this['base-dn']), AuthLdap.propInfo['base-dn'].description),
+                'bind-dn': CustomFormControl(new FormControl(this['bind-dn']), AuthLdap.propInfo['bind-dn'].description),
+                'bind-password': CustomFormControl(new FormControl(this['bind-password']), AuthLdap.propInfo['bind-password'].description),
                 'attribute-mapping': this['attribute-mapping'].$formGroup,
                 'servers': new FormArray([]),
             });

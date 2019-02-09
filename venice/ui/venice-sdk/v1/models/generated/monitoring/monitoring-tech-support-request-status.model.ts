@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTechSupportRequestStatus_status,  } from './enums';
@@ -105,10 +105,10 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'instance-id': new FormControl(this['instance-id']),
-                'status': new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportRequestStatus_status), ]),
-                'ctrlr-node-results': new FormControl(this['ctrlr-node-results']),
-                'smartnic-node-results': new FormControl(this['smartnic-node-results']),
+                'instance-id': CustomFormControl(new FormControl(this['instance-id']), MonitoringTechSupportRequestStatus.propInfo['instance-id'].description),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportRequestStatus_status), ]), MonitoringTechSupportRequestStatus.propInfo['status'].description),
+                'ctrlr-node-results': CustomFormControl(new FormControl(this['ctrlr-node-results']), MonitoringTechSupportRequestStatus.propInfo['ctrlr-node-results'].description),
+                'smartnic-node-results': CustomFormControl(new FormControl(this['smartnic-node-results']), MonitoringTechSupportRequestStatus.propInfo['smartnic-node-results'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringExternalCred, IMonitoringExternalCred } from './monitoring-external-cred.model';
@@ -97,8 +97,8 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'destination': new FormControl(this['destination'], [required, minLengthValidator(1), maxLengthValidator(2048), ]),
-                'transport': new FormControl(this['transport'], [required, ]),
+                'destination': CustomFormControl(new FormControl(this['destination'], [required, minLengthValidator(1), maxLengthValidator(2048), ]), MonitoringExportConfig.propInfo['destination'].description),
+                'transport': CustomFormControl(new FormControl(this['transport'], [required, ]), MonitoringExportConfig.propInfo['transport'].description),
                 'credentials': this['credentials'].$formGroup,
             });
         }

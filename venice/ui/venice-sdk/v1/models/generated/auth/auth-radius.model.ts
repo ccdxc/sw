@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRadiusServer, IAuthRadiusServer } from './auth-radius-server.model';
@@ -90,8 +90,8 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'enabled': new FormControl(this['enabled']),
-                'nas-id': new FormControl(this['nas-id']),
+                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthRadius.propInfo['enabled'].description),
+                'nas-id': CustomFormControl(new FormControl(this['nas-id']), AuthRadius.propInfo['nas-id'].description),
                 'servers': new FormArray([]),
             });
             // generate FormArray control elements

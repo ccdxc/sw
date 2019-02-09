@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { StagingBufferStatus_validation_result,  StagingBufferStatus_validation_result_uihint  } from './enums';
@@ -93,7 +93,7 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'validation-result': new FormControl(this['validation-result'], [required, enumValidator(StagingBufferStatus_validation_result), ]),
+                'validation-result': CustomFormControl(new FormControl(this['validation-result'], [required, enumValidator(StagingBufferStatus_validation_result), ]), StagingBufferStatus.propInfo['validation-result'].description),
                 'errors': new FormArray([]),
                 'items': new FormArray([]),
             });

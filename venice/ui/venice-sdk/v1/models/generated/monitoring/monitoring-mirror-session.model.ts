@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
@@ -114,8 +114,8 @@ export class MonitoringMirrorSession extends BaseModel implements IMonitoringMir
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': new FormControl(this['kind']),
-                'api-version': new FormControl(this['api-version']),
+                'kind': CustomFormControl(new FormControl(this['kind']), MonitoringMirrorSession.propInfo['kind'].description),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), MonitoringMirrorSession.propInfo['api-version'].description),
                 'meta': this['meta'].$formGroup,
                 'mirror-session-spec': this['mirror-session-spec'].$formGroup,
                 'status': this['status'].$formGroup,

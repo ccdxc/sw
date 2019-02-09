@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -110,9 +110,9 @@ export class NetworkTLSClientPolicySpec extends BaseModel implements INetworkTLS
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tls-client-certificates-selector': new FormControl(this['tls-client-certificates-selector']),
-                'tls-client-trust-roots': new FormControl(this['tls-client-trust-roots']),
-                'tls-client-allowed-peer-id': new FormControl(this['tls-client-allowed-peer-id']),
+                'tls-client-certificates-selector': CustomFormControl(new FormControl(this['tls-client-certificates-selector']), NetworkTLSClientPolicySpec.propInfo['tls-client-certificates-selector'].description),
+                'tls-client-trust-roots': CustomFormControl(new FormControl(this['tls-client-trust-roots']), NetworkTLSClientPolicySpec.propInfo['tls-client-trust-roots'].description),
+                'tls-client-allowed-peer-id': CustomFormControl(new FormControl(this['tls-client-allowed-peer-id']), NetworkTLSClientPolicySpec.propInfo['tls-client-allowed-peer-id'].description),
             });
         }
         return this._formGroup;

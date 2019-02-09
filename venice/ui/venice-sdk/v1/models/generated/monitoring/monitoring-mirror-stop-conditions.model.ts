@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -83,8 +83,8 @@ export class MonitoringMirrorStopConditions extends BaseModel implements IMonito
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'max-packets': new FormControl(this['max-packets']),
-                'expiry-duration': new FormControl(this['expiry-duration'], [required, ]),
+                'max-packets': CustomFormControl(new FormControl(this['max-packets']), MonitoringMirrorStopConditions.propInfo['max-packets'].description),
+                'expiry-duration': CustomFormControl(new FormControl(this['expiry-duration'], [required, ]), MonitoringMirrorStopConditions.propInfo['expiry-duration'].description),
             });
         }
         return this._formGroup;

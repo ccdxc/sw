@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -91,9 +91,9 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ip-address': new FormControl(this['ip-address']),
-                'default-gw': new FormControl(this['default-gw']),
-                'dns-servers': new FormControl(this['dns-servers']),
+                'ip-address': CustomFormControl(new FormControl(this['ip-address']), ClusterIPConfig.propInfo['ip-address'].description),
+                'default-gw': CustomFormControl(new FormControl(this['default-gw']), ClusterIPConfig.propInfo['default-gw'].description),
+                'dns-servers': CustomFormControl(new FormControl(this['dns-servers']), ClusterIPConfig.propInfo['dns-servers'].description),
             });
         }
         return this._formGroup;

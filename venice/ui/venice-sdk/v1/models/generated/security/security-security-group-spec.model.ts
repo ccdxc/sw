@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
@@ -93,8 +93,8 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'workload-selector': this['workload-selector'].$formGroup,
-                'service-labels': new FormControl(this['service-labels']),
-                'match-prefixes': new FormControl(this['match-prefixes']),
+                'service-labels': CustomFormControl(new FormControl(this['service-labels']), SecuritySecurityGroupSpec.propInfo['service-labels'].description),
+                'match-prefixes': CustomFormControl(new FormControl(this['match-prefixes']), SecuritySecurityGroupSpec.propInfo['match-prefixes'].description),
             });
         }
         return this._formGroup;

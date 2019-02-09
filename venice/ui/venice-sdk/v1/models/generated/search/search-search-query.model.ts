@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SearchTextRequirement, ISearchTextRequirement } from './search-text-requirement.model';
@@ -129,8 +129,8 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'texts': new FormArray([]),
-                'categories': new FormControl(this['categories']),
-                'kinds': new FormControl(this['kinds']),
+                'categories': CustomFormControl(new FormControl(this['categories']), SearchSearchQuery.propInfo['categories'].description),
+                'kinds': CustomFormControl(new FormControl(this['kinds']), SearchSearchQuery.propInfo['kinds'].description),
                 'fields': this['fields'].$formGroup,
                 'labels': this['labels'].$formGroup,
             });

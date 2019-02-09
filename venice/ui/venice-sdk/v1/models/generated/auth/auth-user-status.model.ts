@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthUserStatus_authenticators,  AuthUserStatus_authenticators_uihint  } from './enums';
@@ -108,10 +108,10 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'roles': new FormControl(this['roles']),
-                'user-groups': new FormControl(this['user-groups']),
-                'last-successful-login': new FormControl(this['last-successful-login']),
-                'authenticators': new FormControl(this['authenticators']),
+                'roles': CustomFormControl(new FormControl(this['roles']), AuthUserStatus.propInfo['roles'].description),
+                'user-groups': CustomFormControl(new FormControl(this['user-groups']), AuthUserStatus.propInfo['user-groups'].description),
+                'last-successful-login': CustomFormControl(new FormControl(this['last-successful-login']), AuthUserStatus.propInfo['last-successful-login'].description),
+                'authenticators': CustomFormControl(new FormControl(this['authenticators']), AuthUserStatus.propInfo['authenticators'].description),
             });
         }
         return this._formGroup;

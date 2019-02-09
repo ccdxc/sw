@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -109,10 +109,10 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'mac-address': new FormControl(this['mac-address']),
-                'micro-seg-vlan': new FormControl(this['micro-seg-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]),
-                'external-vlan': new FormControl(this['external-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]),
-                'ip-addresses': new FormControl(this['ip-addresses']),
+                'mac-address': CustomFormControl(new FormControl(this['mac-address']), WorkloadWorkloadIntfSpec.propInfo['mac-address'].description),
+                'micro-seg-vlan': CustomFormControl(new FormControl(this['micro-seg-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['micro-seg-vlan'].description),
+                'external-vlan': CustomFormControl(new FormControl(this['external-vlan'], [required, minValueValidator(1), maxValueValidator(4095), ]), WorkloadWorkloadIntfSpec.propInfo['external-vlan'].description),
+                'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), WorkloadWorkloadIntfSpec.propInfo['ip-addresses'].description),
             });
         }
         return this._formGroup;

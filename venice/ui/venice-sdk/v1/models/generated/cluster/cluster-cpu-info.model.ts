@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -102,10 +102,10 @@ export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'speed': new FormControl(this['speed']),
-                'num-sockets': new FormControl(this['num-sockets']),
-                'num-cores': new FormControl(this['num-cores']),
-                'num-threads': new FormControl(this['num-threads']),
+                'speed': CustomFormControl(new FormControl(this['speed']), ClusterCPUInfo.propInfo['speed'].description),
+                'num-sockets': CustomFormControl(new FormControl(this['num-sockets']), ClusterCPUInfo.propInfo['num-sockets'].description),
+                'num-cores': CustomFormControl(new FormControl(this['num-cores']), ClusterCPUInfo.propInfo['num-cores'].description),
+                'num-threads': CustomFormControl(new FormControl(this['num-threads']), ClusterCPUInfo.propInfo['num-threads'].description),
             });
         }
         return this._formGroup;

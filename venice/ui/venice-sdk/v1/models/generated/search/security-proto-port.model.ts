@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -80,8 +80,8 @@ export class SecurityProtoPort extends BaseModel implements ISecurityProtoPort {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'protocol': new FormControl(this['protocol']),
-                'ports': new FormControl(this['ports']),
+                'protocol': CustomFormControl(new FormControl(this['protocol']), SecurityProtoPort.propInfo['protocol'].description),
+                'ports': CustomFormControl(new FormControl(this['ports']), SecurityProtoPort.propInfo['ports'].description),
             });
         }
         return this._formGroup;

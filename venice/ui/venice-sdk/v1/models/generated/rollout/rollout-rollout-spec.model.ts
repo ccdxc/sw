@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { RolloutRolloutSpec_strategy,  RolloutRolloutSpec_strategy_uihint  } from './enums';
@@ -203,17 +203,17 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'version': new FormControl(this['version']),
-                'scheduled-start-time': new FormControl(this['scheduled-start-time']),
-                'duration': new FormControl(this['duration']),
-                'strategy': new FormControl(this['strategy'], [required, enumValidator(RolloutRolloutSpec_strategy), ]),
-                'max-parallel': new FormControl(this['max-parallel']),
-                'max-nic-failures-before-abort': new FormControl(this['max-nic-failures-before-abort']),
+                'version': CustomFormControl(new FormControl(this['version']), RolloutRolloutSpec.propInfo['version'].description),
+                'scheduled-start-time': CustomFormControl(new FormControl(this['scheduled-start-time']), RolloutRolloutSpec.propInfo['scheduled-start-time'].description),
+                'duration': CustomFormControl(new FormControl(this['duration']), RolloutRolloutSpec.propInfo['duration'].description),
+                'strategy': CustomFormControl(new FormControl(this['strategy'], [required, enumValidator(RolloutRolloutSpec_strategy), ]), RolloutRolloutSpec.propInfo['strategy'].description),
+                'max-parallel': CustomFormControl(new FormControl(this['max-parallel']), RolloutRolloutSpec.propInfo['max-parallel'].description),
+                'max-nic-failures-before-abort': CustomFormControl(new FormControl(this['max-nic-failures-before-abort']), RolloutRolloutSpec.propInfo['max-nic-failures-before-abort'].description),
                 'order-constraints': new FormArray([]),
-                'suspend': new FormControl(this['suspend']),
-                'smartnics-only': new FormControl(this['smartnics-only']),
-                'smartnic-must-match-constraint': new FormControl(this['smartnic-must-match-constraint']),
-                'upgrade-type': new FormControl(this['upgrade-type'], [required, enumValidator(RolloutRolloutSpec_upgrade_type), ]),
+                'suspend': CustomFormControl(new FormControl(this['suspend']), RolloutRolloutSpec.propInfo['suspend'].description),
+                'smartnics-only': CustomFormControl(new FormControl(this['smartnics-only']), RolloutRolloutSpec.propInfo['smartnics-only'].description),
+                'smartnic-must-match-constraint': CustomFormControl(new FormControl(this['smartnic-must-match-constraint']), RolloutRolloutSpec.propInfo['smartnic-must-match-constraint'].description),
+                'upgrade-type': CustomFormControl(new FormControl(this['upgrade-type'], [required, enumValidator(RolloutRolloutSpec_upgrade_type), ]), RolloutRolloutSpec.propInfo['upgrade-type'].description),
             });
             // generate FormArray control elements
             this.fillFormArray<LabelsSelector>('order-constraints', this['order-constraints'], LabelsSelector);

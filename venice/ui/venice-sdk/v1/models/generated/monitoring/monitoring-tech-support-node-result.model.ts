@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTechSupportNodeResult_status,  } from './enums';
@@ -105,10 +105,10 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'start-time': new FormControl(this['start-time']),
-                'end-time': new FormControl(this['end-time']),
-                'status': new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportNodeResult_status), ]),
-                'uri': new FormControl(this['uri']),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), MonitoringTechSupportNodeResult.propInfo['start-time'].description),
+                'end-time': CustomFormControl(new FormControl(this['end-time']), MonitoringTechSupportNodeResult.propInfo['end-time'].description),
+                'status': CustomFormControl(new FormControl(this['status'], [required, enumValidator(MonitoringTechSupportNodeResult_status), ]), MonitoringTechSupportNodeResult.propInfo['status'].description),
+                'uri': CustomFormControl(new FormControl(this['uri']), MonitoringTechSupportNodeResult.propInfo['uri'].description),
             });
         }
         return this._formGroup;

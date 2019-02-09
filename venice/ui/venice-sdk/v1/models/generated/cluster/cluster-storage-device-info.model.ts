@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -102,10 +102,10 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'serial-num': new FormControl(this['serial-num']),
-                'type': new FormControl(this['type']),
-                'vendor': new FormControl(this['vendor']),
-                'capacity': new FormControl(this['capacity']),
+                'serial-num': CustomFormControl(new FormControl(this['serial-num']), ClusterStorageDeviceInfo.propInfo['serial-num'].description),
+                'type': CustomFormControl(new FormControl(this['type']), ClusterStorageDeviceInfo.propInfo['type'].description),
+                'vendor': CustomFormControl(new FormControl(this['vendor']), ClusterStorageDeviceInfo.propInfo['vendor'].description),
+                'capacity': CustomFormControl(new FormControl(this['capacity']), ClusterStorageDeviceInfo.propInfo['capacity'].description),
             });
         }
         return this._formGroup;

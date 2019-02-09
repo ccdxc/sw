@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -82,8 +82,8 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'component': new FormControl(this['component']),
-                'node-name': new FormControl(this['node-name']),
+                'component': CustomFormControl(new FormControl(this['component']), EventsEventSource.propInfo['component'].description),
+                'node-name': CustomFormControl(new FormControl(this['node-name']), EventsEventSource.propInfo['node-name'].description),
             });
         }
         return this._formGroup;

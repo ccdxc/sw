@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -78,8 +78,8 @@ export class ObjstoreBucketStatus extends BaseModel implements IObjstoreBucketSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'num-objects': new FormControl(this['num-objects']),
-                'total-size': new FormControl(this['total-size']),
+                'num-objects': CustomFormControl(new FormControl(this['num-objects']), ObjstoreBucketStatus.propInfo['num-objects'].description),
+                'total-size': CustomFormControl(new FormControl(this['total-size']), ObjstoreBucketStatus.propInfo['total-size'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiInterfaceSlice, IApiInterfaceSlice } from './api-interface-slice.model';
@@ -114,10 +114,10 @@ export class ApiInterface extends BaseModel implements IApiInterface {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'Str': new FormControl(this['Str']),
-                'Int64': new FormControl(this['Int64']),
-                'Bool': new FormControl(this['Bool']),
-                'Float': new FormControl(this['Float']),
+                'Str': CustomFormControl(new FormControl(this['Str']), ApiInterface.propInfo['Str'].description),
+                'Int64': CustomFormControl(new FormControl(this['Int64']), ApiInterface.propInfo['Int64'].description),
+                'Bool': CustomFormControl(new FormControl(this['Bool']), ApiInterface.propInfo['Bool'].description),
+                'Float': CustomFormControl(new FormControl(this['Float']), ApiInterface.propInfo['Float'].description),
                 'Interfaces': this['Interfaces'].$formGroup,
             });
         }

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -91,9 +91,9 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'uri': new FormControl(this['uri']),
-                'method': new FormControl(this['method']),
-                'error': new FormControl(this['error']),
+                'uri': CustomFormControl(new FormControl(this['uri']), StagingValidationError.propInfo['uri'].description),
+                'method': CustomFormControl(new FormControl(this['method']), StagingValidationError.propInfo['method'].description),
+                'error': CustomFormControl(new FormControl(this['error']), StagingValidationError.propInfo['error'].description),
             });
         }
         return this._formGroup;

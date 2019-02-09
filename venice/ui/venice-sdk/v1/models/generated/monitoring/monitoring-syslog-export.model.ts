@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringSyslogExport_format,  MonitoringSyslogExport_format_uihint  } from './enums';
@@ -93,7 +93,7 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'format': new FormControl(this['format'], [required, enumValidator(MonitoringSyslogExport_format), ]),
+                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringSyslogExport_format), ]), MonitoringSyslogExport.propInfo['format'].description),
                 'targets': new FormArray([]),
                 'config': this['config'].$formGroup,
             });

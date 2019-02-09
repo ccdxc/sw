@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthRadiusServer_auth_method,  } from './enums';
@@ -105,10 +105,10 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'url': new FormControl(this['url']),
-                'secret': new FormControl(this['secret']),
-                'auth-method': new FormControl(this['auth-method'], [required, enumValidator(AuthRadiusServer_auth_method), ]),
-                'trusted-certs': new FormControl(this['trusted-certs']),
+                'url': CustomFormControl(new FormControl(this['url']), AuthRadiusServer.propInfo['url'].description),
+                'secret': CustomFormControl(new FormControl(this['secret']), AuthRadiusServer.propInfo['secret'].description),
+                'auth-method': CustomFormControl(new FormControl(this['auth-method'], [required, enumValidator(AuthRadiusServer_auth_method), ]), AuthRadiusServer.propInfo['auth-method'].description),
+                'trusted-certs': CustomFormControl(new FormControl(this['trusted-certs']), AuthRadiusServer.propInfo['trusted-certs'].description),
             });
         }
         return this._formGroup;

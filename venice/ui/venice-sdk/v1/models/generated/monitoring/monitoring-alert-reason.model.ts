@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringMatchedRequirement, IMonitoringMatchedRequirement } from './monitoring-matched-requirement.model';
@@ -79,7 +79,7 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'matched-requirements': new FormArray([]),
-                'alert-policy-id': new FormControl(this['alert-policy-id']),
+                'alert-policy-id': CustomFormControl(new FormControl(this['alert-policy-id']), MonitoringAlertReason.propInfo['alert-policy-id'].description),
             });
             // generate FormArray control elements
             this.fillFormArray<MonitoringMatchedRequirement>('matched-requirements', this['matched-requirements'], MonitoringMatchedRequirement);

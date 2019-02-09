@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { WorkloadWorkloadIntfSpec, IWorkloadWorkloadIntfSpec } from './workload-workload-intf-spec.model';
@@ -82,7 +82,7 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'host-name': new FormControl(this['host-name'], [required, ]),
+                'host-name': CustomFormControl(new FormControl(this['host-name'], [required, ]), WorkloadWorkloadSpec.propInfo['host-name'].description),
                 'interfaces': new FormArray([]),
             });
             // generate FormArray control elements

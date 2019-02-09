@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { WorkloadEndpoint, IWorkloadEndpoint } from './workload-endpoint.model';
@@ -78,7 +78,7 @@ export class WorkloadAutoMsgEndpointWatchHelperWatchEvent extends BaseModel impl
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type']),
+                'type': CustomFormControl(new FormControl(this['type']), WorkloadAutoMsgEndpointWatchHelperWatchEvent.propInfo['type'].description),
                 'object': this['object'].$formGroup,
             });
         }

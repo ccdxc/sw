@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -69,7 +69,7 @@ export class ObjstoreObjectSpec extends BaseModel implements IObjstoreObjectSpec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'content-type': new FormControl(this['content-type']),
+                'content-type': CustomFormControl(new FormControl(this['content-type']), ObjstoreObjectSpec.propInfo['content-type'].description),
             });
         }
         return this._formGroup;

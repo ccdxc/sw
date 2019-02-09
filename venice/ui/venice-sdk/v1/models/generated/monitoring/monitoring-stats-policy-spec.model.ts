@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -90,8 +90,8 @@ export class MonitoringStatsPolicySpec extends BaseModel implements IMonitoringS
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'retention-time': new FormControl(this['retention-time'], [required, ]),
-                'downsample-retention-time': new FormControl(this['downsample-retention-time'], [required, ]),
+                'retention-time': CustomFormControl(new FormControl(this['retention-time'], [required, ]), MonitoringStatsPolicySpec.propInfo['retention-time'].description),
+                'downsample-retention-time': CustomFormControl(new FormControl(this['downsample-retention-time'], [required, ]), MonitoringStatsPolicySpec.propInfo['downsample-retention-time'].description),
             });
         }
         return this._formGroup;

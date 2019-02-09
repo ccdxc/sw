@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAuthConfig_algo,  } from './enums';
@@ -83,8 +83,8 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'algo': new FormControl(this['algo'], [required, enumValidator(MonitoringAuthConfig_algo), ]),
-                'password': new FormControl(this['password']),
+                'algo': CustomFormControl(new FormControl(this['algo'], [required, enumValidator(MonitoringAuthConfig_algo), ]), MonitoringAuthConfig.propInfo['algo'].description),
+                'password': CustomFormControl(new FormControl(this['password']), MonitoringAuthConfig.propInfo['password'].description),
             });
         }
         return this._formGroup;

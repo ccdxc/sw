@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -124,11 +124,11 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tenant': new FormControl(this['tenant']),
-                'namespace': new FormControl(this['namespace']),
-                'kind': new FormControl(this['kind']),
-                'name': new FormControl(this['name']),
-                'uri': new FormControl(this['uri']),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), ApiObjectRef.propInfo['tenant'].description),
+                'namespace': CustomFormControl(new FormControl(this['namespace']), ApiObjectRef.propInfo['namespace'].description),
+                'kind': CustomFormControl(new FormControl(this['kind']), ApiObjectRef.propInfo['kind'].description),
+                'name': CustomFormControl(new FormControl(this['name']), ApiObjectRef.propInfo['name'].description),
+                'uri': CustomFormControl(new FormControl(this['uri']), ApiObjectRef.propInfo['uri'].description),
             });
         }
         return this._formGroup;

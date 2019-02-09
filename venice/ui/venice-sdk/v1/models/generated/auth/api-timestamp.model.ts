@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -78,8 +78,8 @@ export class ApiTimestamp extends BaseModel implements IApiTimestamp {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'seconds': new FormControl(this['seconds']),
-                'nanos': new FormControl(this['nanos']),
+                'seconds': CustomFormControl(new FormControl(this['seconds']), ApiTimestamp.propInfo['seconds'].description),
+                'nanos': CustomFormControl(new FormControl(this['nanos']), ApiTimestamp.propInfo['nanos'].description),
             });
         }
         return this._formGroup;

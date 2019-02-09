@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringExternalCred_auth_type,  MonitoringExternalCred_auth_type_uihint  } from './enums';
@@ -145,13 +145,13 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'auth-type': new FormControl(this['auth-type'], [required, enumValidator(MonitoringExternalCred_auth_type), ]),
-                'username': new FormControl(this['username']),
-                'password': new FormControl(this['password']),
-                'bearer-token': new FormControl(this['bearer-token']),
-                'cert-data': new FormControl(this['cert-data']),
-                'key-data': new FormControl(this['key-data']),
-                'ca-data': new FormControl(this['ca-data']),
+                'auth-type': CustomFormControl(new FormControl(this['auth-type'], [required, enumValidator(MonitoringExternalCred_auth_type), ]), MonitoringExternalCred.propInfo['auth-type'].description),
+                'username': CustomFormControl(new FormControl(this['username']), MonitoringExternalCred.propInfo['username'].description),
+                'password': CustomFormControl(new FormControl(this['password']), MonitoringExternalCred.propInfo['password'].description),
+                'bearer-token': CustomFormControl(new FormControl(this['bearer-token']), MonitoringExternalCred.propInfo['bearer-token'].description),
+                'cert-data': CustomFormControl(new FormControl(this['cert-data']), MonitoringExternalCred.propInfo['cert-data'].description),
+                'key-data': CustomFormControl(new FormControl(this['key-data']), MonitoringExternalCred.propInfo['key-data'].description),
+                'ca-data': CustomFormControl(new FormControl(this['ca-data']), MonitoringExternalCred.propInfo['ca-data'].description),
             });
         }
         return this._formGroup;

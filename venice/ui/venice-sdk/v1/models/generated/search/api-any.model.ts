@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -78,8 +78,8 @@ export class ApiAny extends BaseModel implements IApiAny {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type_url': new FormControl(this['type_url']),
-                'value': new FormControl(this['value']),
+                'type_url': CustomFormControl(new FormControl(this['type_url']), ApiAny.propInfo['type_url'].description),
+                'value': CustomFormControl(new FormControl(this['value']), ApiAny.propInfo['value'].description),
             });
         }
         return this._formGroup;

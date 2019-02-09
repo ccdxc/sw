@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -90,9 +90,9 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'total-hits': new FormControl(this['total-hits']),
-                'open-alerts': new FormControl(this['open-alerts']),
-                'acknowledged-alerts': new FormControl(this['acknowledged-alerts']),
+                'total-hits': CustomFormControl(new FormControl(this['total-hits']), MonitoringAlertPolicyStatus.propInfo['total-hits'].description),
+                'open-alerts': CustomFormControl(new FormControl(this['open-alerts']), MonitoringAlertPolicyStatus.propInfo['open-alerts'].description),
+                'acknowledged-alerts': CustomFormControl(new FormControl(this['acknowledged-alerts']), MonitoringAlertPolicyStatus.propInfo['acknowledged-alerts'].description),
             });
         }
         return this._formGroup;

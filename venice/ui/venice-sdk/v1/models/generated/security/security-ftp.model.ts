@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -66,7 +66,7 @@ export class SecurityFtp extends BaseModel implements ISecurityFtp {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'allow-mismatch-ip-address': new FormControl(this['allow-mismatch-ip-address']),
+                'allow-mismatch-ip-address': CustomFormControl(new FormControl(this['allow-mismatch-ip-address']), SecurityFtp.propInfo['allow-mismatch-ip-address'].description),
             });
         }
         return this._formGroup;

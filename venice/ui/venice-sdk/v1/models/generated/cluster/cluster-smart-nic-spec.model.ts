@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ClusterIPConfig, IClusterIPConfig } from './cluster-ip-config.model';
@@ -148,13 +148,13 @@ export class ClusterSmartNICSpec extends BaseModel implements IClusterSmartNICSp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'admit': new FormControl(this['admit']),
-                'hostname': new FormControl(this['hostname']),
+                'admit': CustomFormControl(new FormControl(this['admit']), ClusterSmartNICSpec.propInfo['admit'].description),
+                'hostname': CustomFormControl(new FormControl(this['hostname']), ClusterSmartNICSpec.propInfo['hostname'].description),
                 'ip-config': this['ip-config'].$formGroup,
-                'mgmt-mode': new FormControl(this['mgmt-mode'], [required, enumValidator(ClusterSmartNICSpec_mgmt_mode), ]),
-                'network-mode': new FormControl(this['network-mode'], [required, enumValidator(ClusterSmartNICSpec_network_mode), ]),
-                'mgmt-vlan': new FormControl(this['mgmt-vlan'], [required, maxValueValidator(4095), ]),
-                'controllers': new FormControl(this['controllers']),
+                'mgmt-mode': CustomFormControl(new FormControl(this['mgmt-mode'], [required, enumValidator(ClusterSmartNICSpec_mgmt_mode), ]), ClusterSmartNICSpec.propInfo['mgmt-mode'].description),
+                'network-mode': CustomFormControl(new FormControl(this['network-mode'], [required, enumValidator(ClusterSmartNICSpec_network_mode), ]), ClusterSmartNICSpec.propInfo['network-mode'].description),
+                'mgmt-vlan': CustomFormControl(new FormControl(this['mgmt-vlan'], [required, maxValueValidator(4095), ]), ClusterSmartNICSpec.propInfo['mgmt-vlan'].description),
+                'controllers': CustomFormControl(new FormControl(this['controllers']), ClusterSmartNICSpec.propInfo['controllers'].description),
             });
         }
         return this._formGroup;

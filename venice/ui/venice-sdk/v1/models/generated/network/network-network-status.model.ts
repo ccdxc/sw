@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -79,8 +79,8 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workloads': new FormControl(this['workloads']),
-                'allocated-ipv4-addrs': new FormControl(this['allocated-ipv4-addrs']),
+                'workloads': CustomFormControl(new FormControl(this['workloads']), NetworkNetworkStatus.propInfo['workloads'].description),
+                'allocated-ipv4-addrs': CustomFormControl(new FormControl(this['allocated-ipv4-addrs']), NetworkNetworkStatus.propInfo['allocated-ipv4-addrs'].description),
             });
         }
         return this._formGroup;

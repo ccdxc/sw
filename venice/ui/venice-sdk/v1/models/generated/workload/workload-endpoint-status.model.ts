@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -223,20 +223,20 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workload-name': new FormControl(this['workload-name']),
-                'network': new FormControl(this['network']),
-                'homing-host-addr': new FormControl(this['homing-host-addr']),
-                'homing-host-name': new FormControl(this['homing-host-name']),
-                'ipv4-address': new FormControl(this['ipv4-address']),
-                'ipv4-gateway': new FormControl(this['ipv4-gateway']),
-                'ipv6-address': new FormControl(this['ipv6-address']),
-                'ipv6-gateway': new FormControl(this['ipv6-gateway']),
-                'mac-address': new FormControl(this['mac-address']),
-                'node-uuid': new FormControl(this['node-uuid']),
-                'EndpointState': new FormControl(this['EndpointState']),
-                'SecurityGroups': new FormControl(this['SecurityGroups']),
-                'micro-segment-vlan': new FormControl(this['micro-segment-vlan']),
-                'workload-attributes': new FormControl(this['workload-attributes']),
+                'workload-name': CustomFormControl(new FormControl(this['workload-name']), WorkloadEndpointStatus.propInfo['workload-name'].description),
+                'network': CustomFormControl(new FormControl(this['network']), WorkloadEndpointStatus.propInfo['network'].description),
+                'homing-host-addr': CustomFormControl(new FormControl(this['homing-host-addr']), WorkloadEndpointStatus.propInfo['homing-host-addr'].description),
+                'homing-host-name': CustomFormControl(new FormControl(this['homing-host-name']), WorkloadEndpointStatus.propInfo['homing-host-name'].description),
+                'ipv4-address': CustomFormControl(new FormControl(this['ipv4-address']), WorkloadEndpointStatus.propInfo['ipv4-address'].description),
+                'ipv4-gateway': CustomFormControl(new FormControl(this['ipv4-gateway']), WorkloadEndpointStatus.propInfo['ipv4-gateway'].description),
+                'ipv6-address': CustomFormControl(new FormControl(this['ipv6-address']), WorkloadEndpointStatus.propInfo['ipv6-address'].description),
+                'ipv6-gateway': CustomFormControl(new FormControl(this['ipv6-gateway']), WorkloadEndpointStatus.propInfo['ipv6-gateway'].description),
+                'mac-address': CustomFormControl(new FormControl(this['mac-address']), WorkloadEndpointStatus.propInfo['mac-address'].description),
+                'node-uuid': CustomFormControl(new FormControl(this['node-uuid']), WorkloadEndpointStatus.propInfo['node-uuid'].description),
+                'EndpointState': CustomFormControl(new FormControl(this['EndpointState']), WorkloadEndpointStatus.propInfo['EndpointState'].description),
+                'SecurityGroups': CustomFormControl(new FormControl(this['SecurityGroups']), WorkloadEndpointStatus.propInfo['SecurityGroups'].description),
+                'micro-segment-vlan': CustomFormControl(new FormControl(this['micro-segment-vlan']), WorkloadEndpointStatus.propInfo['micro-segment-vlan'].description),
+                'workload-attributes': CustomFormControl(new FormControl(this['workload-attributes']), WorkloadEndpointStatus.propInfo['workload-attributes'].description),
             });
         }
         return this._formGroup;

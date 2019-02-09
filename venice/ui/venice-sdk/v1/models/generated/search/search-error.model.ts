@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -78,8 +78,8 @@ export class SearchError extends BaseModel implements ISearchError {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type']),
-                'reason': new FormControl(this['reason']),
+                'type': CustomFormControl(new FormControl(this['type']), SearchError.propInfo['type'].description),
+                'reason': CustomFormControl(new FormControl(this['reason']), SearchError.propInfo['reason'].description),
             });
         }
         return this._formGroup;

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -104,10 +104,10 @@ export class SecuritySGPolicyPropagationStatus extends BaseModel implements ISec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'generation-id': new FormControl(this['generation-id']),
-                'updated': new FormControl(this['updated']),
-                'pending': new FormControl(this['pending']),
-                'min-version': new FormControl(this['min-version']),
+                'generation-id': CustomFormControl(new FormControl(this['generation-id']), SecuritySGPolicyPropagationStatus.propInfo['generation-id'].description),
+                'updated': CustomFormControl(new FormControl(this['updated']), SecuritySGPolicyPropagationStatus.propInfo['updated'].description),
+                'pending': CustomFormControl(new FormControl(this['pending']), SecuritySGPolicyPropagationStatus.propInfo['pending'].description),
+                'min-version': CustomFormControl(new FormControl(this['min-version']), SecuritySGPolicyPropagationStatus.propInfo['min-version'].description),
             });
         }
         return this._formGroup;

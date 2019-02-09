@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -138,13 +138,13 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'user': new FormControl(this['user']),
-                'user-object-class': new FormControl(this['user-object-class']),
-                'tenant': new FormControl(this['tenant']),
-                'group': new FormControl(this['group']),
-                'group-object-class': new FormControl(this['group-object-class']),
-                'email': new FormControl(this['email']),
-                'fullname': new FormControl(this['fullname']),
+                'user': CustomFormControl(new FormControl(this['user']), AuthLdapAttributeMapping.propInfo['user'].description),
+                'user-object-class': CustomFormControl(new FormControl(this['user-object-class']), AuthLdapAttributeMapping.propInfo['user-object-class'].description),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), AuthLdapAttributeMapping.propInfo['tenant'].description),
+                'group': CustomFormControl(new FormControl(this['group']), AuthLdapAttributeMapping.propInfo['group'].description),
+                'group-object-class': CustomFormControl(new FormControl(this['group-object-class']), AuthLdapAttributeMapping.propInfo['group-object-class'].description),
+                'email': CustomFormControl(new FormControl(this['email']), AuthLdapAttributeMapping.propInfo['email'].description),
+                'fullname': CustomFormControl(new FormControl(this['fullname']), AuthLdapAttributeMapping.propInfo['fullname'].description),
             });
         }
         return this._formGroup;

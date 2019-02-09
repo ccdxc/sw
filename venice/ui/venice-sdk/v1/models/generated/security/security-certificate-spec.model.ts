@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityCertificateSpec_usages,  } from './enums';
@@ -118,10 +118,10 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'description': new FormControl(this['description']),
-                'usages': new FormControl(this['usages']),
-                'body': new FormControl(this['body']),
-                'trust-chain': new FormControl(this['trust-chain']),
+                'description': CustomFormControl(new FormControl(this['description']), SecurityCertificateSpec.propInfo['description'].description),
+                'usages': CustomFormControl(new FormControl(this['usages']), SecurityCertificateSpec.propInfo['usages'].description),
+                'body': CustomFormControl(new FormControl(this['body']), SecurityCertificateSpec.propInfo['body'].description),
+                'trust-chain': CustomFormControl(new FormControl(this['trust-chain']), SecurityCertificateSpec.propInfo['trust-chain'].description),
             });
         }
         return this._formGroup;

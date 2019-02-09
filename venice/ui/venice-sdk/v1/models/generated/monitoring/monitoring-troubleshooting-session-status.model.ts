@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTroubleshootingSessionStatus_state,  MonitoringTroubleshootingSessionStatus_state_uihint  } from './enums';
@@ -81,7 +81,7 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'state': new FormControl(this['state'], [required, enumValidator(MonitoringTroubleshootingSessionStatus_state), ]),
+                'state': CustomFormControl(new FormControl(this['state'], [required, enumValidator(MonitoringTroubleshootingSessionStatus_state), ]), MonitoringTroubleshootingSessionStatus.propInfo['state'].description),
                 'troubleshooting-results': new FormArray([]),
             });
             // generate FormArray control elements

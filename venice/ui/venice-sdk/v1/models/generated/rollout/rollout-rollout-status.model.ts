@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { RolloutRolloutPhase, IRolloutRolloutPhase } from './rollout-rollout-phase.model';
@@ -157,11 +157,11 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
                 'controller-nodes-status': new FormArray([]),
                 'controller-services-status': new FormArray([]),
                 'smartnics-status': new FormArray([]),
-                'state': new FormControl(this['state'], [required, enumValidator(RolloutRolloutStatus_state), ]),
-                'completion-percent': new FormControl(this['completion-percent']),
-                'start-time': new FormControl(this['start-time']),
-                'end-time': new FormControl(this['end-time']),
-                'prev-version': new FormControl(this['prev-version']),
+                'state': CustomFormControl(new FormControl(this['state'], [required, enumValidator(RolloutRolloutStatus_state), ]), RolloutRolloutStatus.propInfo['state'].description),
+                'completion-percent': CustomFormControl(new FormControl(this['completion-percent']), RolloutRolloutStatus.propInfo['completion-percent'].description),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), RolloutRolloutStatus.propInfo['start-time'].description),
+                'end-time': CustomFormControl(new FormControl(this['end-time']), RolloutRolloutStatus.propInfo['end-time'].description),
+                'prev-version': CustomFormControl(new FormControl(this['prev-version']), RolloutRolloutStatus.propInfo['prev-version'].description),
             });
             // generate FormArray control elements
             this.fillFormArray<RolloutRolloutPhase>('controller-nodes-status', this['controller-nodes-status'], RolloutRolloutPhase);

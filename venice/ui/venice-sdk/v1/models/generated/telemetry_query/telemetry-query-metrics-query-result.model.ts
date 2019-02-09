@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Telemetry_queryResultSeries, ITelemetry_queryResultSeries } from './telemetry-query-result-series.model';
@@ -78,7 +78,7 @@ export class Telemetry_queryMetricsQueryResult extends BaseModel implements ITel
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'statement_id': new FormControl(this['statement_id']),
+                'statement_id': CustomFormControl(new FormControl(this['statement_id']), Telemetry_queryMetricsQueryResult.propInfo['statement_id'].description),
                 'series': new FormArray([]),
             });
             // generate FormArray control elements

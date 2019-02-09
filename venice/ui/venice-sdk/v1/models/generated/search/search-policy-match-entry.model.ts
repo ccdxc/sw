@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
@@ -79,7 +79,7 @@ export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMa
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'rule': this['rule'].$formGroup,
-                'index': new FormControl(this['index']),
+                'index': CustomFormControl(new FormControl(this['index']), SearchPolicyMatchEntry.propInfo['index'].description),
             });
         }
         return this._formGroup;

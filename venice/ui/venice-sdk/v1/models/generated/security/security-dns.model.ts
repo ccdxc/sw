@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -114,11 +114,11 @@ export class SecurityDns extends BaseModel implements ISecurityDns {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'drop-multi-question-packets': new FormControl(this['drop-multi-question-packets']),
-                'drop-large-domain-name-packets': new FormControl(this['drop-large-domain-name-packets']),
-                'drop-long-label-packets': new FormControl(this['drop-long-label-packets']),
-                'max-message-length': new FormControl(this['max-message-length']),
-                'query-response-timeout': new FormControl(this['query-response-timeout']),
+                'drop-multi-question-packets': CustomFormControl(new FormControl(this['drop-multi-question-packets']), SecurityDns.propInfo['drop-multi-question-packets'].description),
+                'drop-large-domain-name-packets': CustomFormControl(new FormControl(this['drop-large-domain-name-packets']), SecurityDns.propInfo['drop-large-domain-name-packets'].description),
+                'drop-long-label-packets': CustomFormControl(new FormControl(this['drop-long-label-packets']), SecurityDns.propInfo['drop-long-label-packets'].description),
+                'max-message-length': CustomFormControl(new FormControl(this['max-message-length']), SecurityDns.propInfo['max-message-length'].description),
+                'query-response-timeout': CustomFormControl(new FormControl(this['query-response-timeout']), SecurityDns.propInfo['query-response-timeout'].description),
             });
         }
         return this._formGroup;

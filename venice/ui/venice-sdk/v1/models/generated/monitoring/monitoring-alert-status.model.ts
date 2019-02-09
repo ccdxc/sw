@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertStatus_severity,  MonitoringAlertStatus_severity_uihint  } from './enums';
@@ -155,11 +155,11 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'severity': new FormControl(this['severity'], [required, enumValidator(MonitoringAlertStatus_severity), ]),
+                'severity': CustomFormControl(new FormControl(this['severity'], [required, enumValidator(MonitoringAlertStatus_severity), ]), MonitoringAlertStatus.propInfo['severity'].description),
                 'source': this['source'].$formGroup,
-                'event-uri': new FormControl(this['event-uri']),
+                'event-uri': CustomFormControl(new FormControl(this['event-uri']), MonitoringAlertStatus.propInfo['event-uri'].description),
                 'object-ref': this['object-ref'].$formGroup,
-                'message': new FormControl(this['message']),
+                'message': CustomFormControl(new FormControl(this['message']), MonitoringAlertStatus.propInfo['message'].description),
                 'reason': this['reason'].$formGroup,
                 'acknowledged': this['acknowledged'].$formGroup,
                 'resolved': this['resolved'].$formGroup,

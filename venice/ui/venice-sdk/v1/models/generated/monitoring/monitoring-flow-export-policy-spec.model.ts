@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringFlowExportPolicySpec_format,  } from './enums';
@@ -112,8 +112,8 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'interval': new FormControl(this['interval'], [required, ]),
-                'format': new FormControl(this['format'], [required, enumValidator(MonitoringFlowExportPolicySpec_format), ]),
+                'interval': CustomFormControl(new FormControl(this['interval'], [required, ]), MonitoringFlowExportPolicySpec.propInfo['interval'].description),
+                'format': CustomFormControl(new FormControl(this['format'], [required, enumValidator(MonitoringFlowExportPolicySpec_format), ]), MonitoringFlowExportPolicySpec.propInfo['format'].description),
                 'match-rules': new FormArray([]),
                 'exports': new FormArray([]),
             });

@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -80,8 +80,8 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'start-time': new FormControl(this['start-time']),
-                'stop-time': new FormControl(this['stop-time']),
+                'start-time': CustomFormControl(new FormControl(this['start-time']), MonitoringTimeWindow.propInfo['start-time'].description),
+                'stop-time': CustomFormControl(new FormControl(this['stop-time']), MonitoringTimeWindow.propInfo['stop-time'].description),
             });
         }
         return this._formGroup;

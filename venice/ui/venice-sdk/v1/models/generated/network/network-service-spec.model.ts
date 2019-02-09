@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkTLSServerPolicySpec, INetworkTLSServerPolicySpec } from './network-tls-server-policy-spec.model';
@@ -127,10 +127,10 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'workload-labels': new FormControl(this['workload-labels']),
-                'virtual-ip': new FormControl(this['virtual-ip']),
-                'ports': new FormControl(this['ports']),
-                'lb-policy': new FormControl(this['lb-policy']),
+                'workload-labels': CustomFormControl(new FormControl(this['workload-labels']), NetworkServiceSpec.propInfo['workload-labels'].description),
+                'virtual-ip': CustomFormControl(new FormControl(this['virtual-ip']), NetworkServiceSpec.propInfo['virtual-ip'].description),
+                'ports': CustomFormControl(new FormControl(this['ports']), NetworkServiceSpec.propInfo['ports'].description),
+                'lb-policy': CustomFormControl(new FormControl(this['lb-policy']), NetworkServiceSpec.propInfo['lb-policy'].description),
                 'tls-server-policy': this['tls-server-policy'].$formGroup,
                 'tls-client-policy': this['tls-client-policy'].$formGroup,
             });

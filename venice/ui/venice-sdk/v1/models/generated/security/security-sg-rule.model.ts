@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityProtoPort, ISecurityProtoPort } from './security-proto-port.model';
@@ -146,13 +146,13 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'apps': new FormControl(this['apps']),
+                'apps': CustomFormControl(new FormControl(this['apps']), SecuritySGRule.propInfo['apps'].description),
                 'proto-ports': new FormArray([]),
-                'action': new FormControl(this['action'], [required, enumValidator(SecuritySGRule_action), ]),
-                'from-ip-addresses': new FormControl(this['from-ip-addresses']),
-                'to-ip-addresses': new FormControl(this['to-ip-addresses']),
-                'from-security-groups': new FormControl(this['from-security-groups']),
-                'to-security-groups': new FormControl(this['to-security-groups']),
+                'action': CustomFormControl(new FormControl(this['action'], [required, enumValidator(SecuritySGRule_action), ]), SecuritySGRule.propInfo['action'].description),
+                'from-ip-addresses': CustomFormControl(new FormControl(this['from-ip-addresses']), SecuritySGRule.propInfo['from-ip-addresses'].description),
+                'to-ip-addresses': CustomFormControl(new FormControl(this['to-ip-addresses']), SecuritySGRule.propInfo['to-ip-addresses'].description),
+                'from-security-groups': CustomFormControl(new FormControl(this['from-security-groups']), SecuritySGRule.propInfo['from-security-groups'].description),
+                'to-security-groups': CustomFormControl(new FormControl(this['to-security-groups']), SecuritySGRule.propInfo['to-security-groups'].description),
             });
             // generate FormArray control elements
             this.fillFormArray<SecurityProtoPort>('proto-ports', this['proto-ports'], SecurityProtoPort);

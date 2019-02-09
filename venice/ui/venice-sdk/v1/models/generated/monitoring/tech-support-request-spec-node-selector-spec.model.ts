@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
@@ -79,7 +79,7 @@ export class TechSupportRequestSpecNodeSelectorSpec extends BaseModel implements
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'names': new FormControl(this['names']),
+                'names': CustomFormControl(new FormControl(this['names']), TechSupportRequestSpecNodeSelectorSpec.propInfo['names'].description),
                 'labels': this['labels'].$formGroup,
             });
         }

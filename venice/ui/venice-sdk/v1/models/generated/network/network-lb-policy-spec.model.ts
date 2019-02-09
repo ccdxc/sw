@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { NetworkHealthCheckSpec, INetworkHealthCheckSpec } from './network-health-check-spec.model';
@@ -102,9 +102,9 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'type': new FormControl(this['type']),
-                'algorithm': new FormControl(this['algorithm']),
-                'session-affinity': new FormControl(this['session-affinity']),
+                'type': CustomFormControl(new FormControl(this['type']), NetworkLbPolicySpec.propInfo['type'].description),
+                'algorithm': CustomFormControl(new FormControl(this['algorithm']), NetworkLbPolicySpec.propInfo['algorithm'].description),
+                'session-affinity': CustomFormControl(new FormControl(this['session-affinity']), NetworkLbPolicySpec.propInfo['session-affinity'].description),
                 'health-check': this['health-check'].$formGroup,
             });
         }

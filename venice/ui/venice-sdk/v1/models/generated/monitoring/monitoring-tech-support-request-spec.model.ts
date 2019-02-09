@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
@@ -92,7 +92,7 @@ export class MonitoringTechSupportRequestSpec extends BaseModel implements IMoni
             this._formGroup = new FormGroup({
                 'collection-selector': this['collection-selector'].$formGroup,
                 'node-selector': this['node-selector'].$formGroup,
-                'verbosity': new FormControl(this['verbosity']),
+                'verbosity': CustomFormControl(new FormControl(this['verbosity']), MonitoringTechSupportRequestSpec.propInfo['verbosity'].description),
             });
         }
         return this._formGroup;

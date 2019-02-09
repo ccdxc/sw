@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { EventsEventAttributes_severity,  EventsEventAttributes_severity_uihint  } from './enums';
@@ -129,12 +129,12 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'severity': new FormControl(this['severity'], [required, enumValidator(EventsEventAttributes_severity), ]),
-                'type': new FormControl(this['type']),
-                'message': new FormControl(this['message']),
+                'severity': CustomFormControl(new FormControl(this['severity'], [required, enumValidator(EventsEventAttributes_severity), ]), EventsEventAttributes.propInfo['severity'].description),
+                'type': CustomFormControl(new FormControl(this['type']), EventsEventAttributes.propInfo['type'].description),
+                'message': CustomFormControl(new FormControl(this['message']), EventsEventAttributes.propInfo['message'].description),
                 'object-ref': this['object-ref'].$formGroup,
                 'source': this['source'].$formGroup,
-                'count': new FormControl(this['count']),
+                'count': CustomFormControl(new FormControl(this['count']), EventsEventAttributes.propInfo['count'].description),
             });
         }
         return this._formGroup;

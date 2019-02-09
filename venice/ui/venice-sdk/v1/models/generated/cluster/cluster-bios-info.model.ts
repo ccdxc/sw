@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -102,10 +102,10 @@ export class ClusterBiosInfo extends BaseModel implements IClusterBiosInfo {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'vendor': new FormControl(this['vendor']),
-                'version': new FormControl(this['version']),
-                'fw-major-ver': new FormControl(this['fw-major-ver']),
-                'fw-minor-ver': new FormControl(this['fw-minor-ver']),
+                'vendor': CustomFormControl(new FormControl(this['vendor']), ClusterBiosInfo.propInfo['vendor'].description),
+                'version': CustomFormControl(new FormControl(this['version']), ClusterBiosInfo.propInfo['version'].description),
+                'fw-major-ver': CustomFormControl(new FormControl(this['fw-major-ver']), ClusterBiosInfo.propInfo['fw-major-ver'].description),
+                'fw-minor-ver': CustomFormControl(new FormControl(this['fw-minor-ver']), ClusterBiosInfo.propInfo['fw-minor-ver'].description),
             });
         }
         return this._formGroup;

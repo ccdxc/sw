@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringTimeWindow, IMonitoringTimeWindow } from './monitoring-time-window.model';
@@ -79,7 +79,7 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'time-window': this['time-window'].$formGroup,
-                'report-url': new FormControl(this['report-url']),
+                'report-url': CustomFormControl(new FormControl(this['report-url']), MonitoringTsResult.propInfo['report-url'].description),
             });
         }
         return this._formGroup;

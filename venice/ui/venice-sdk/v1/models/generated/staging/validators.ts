@@ -137,3 +137,8 @@ export const patternValidator = (pattern: string|RegExp, message: string): Valid
                                  }};
     };
   }
+
+  export const CustomFormControl = (formControl, desc) => {
+      formControl.description = desc
+      return formControl
+  }

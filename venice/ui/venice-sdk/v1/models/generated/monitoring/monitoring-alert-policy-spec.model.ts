@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { MonitoringAlertPolicySpec_severity,  MonitoringAlertPolicySpec_severity_uihint  } from './enums';
@@ -182,15 +182,15 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'resource': new FormControl(this['resource']),
-                'severity': new FormControl(this['severity'], [required, enumValidator(MonitoringAlertPolicySpec_severity), ]),
-                'message': new FormControl(this['message']),
+                'resource': CustomFormControl(new FormControl(this['resource']), MonitoringAlertPolicySpec.propInfo['resource'].description),
+                'severity': CustomFormControl(new FormControl(this['severity'], [required, enumValidator(MonitoringAlertPolicySpec_severity), ]), MonitoringAlertPolicySpec.propInfo['severity'].description),
+                'message': CustomFormControl(new FormControl(this['message']), MonitoringAlertPolicySpec.propInfo['message'].description),
                 'requirements': new FormArray([]),
-                'persistence-duration': new FormControl(this['persistence-duration']),
-                'clear-duration': new FormControl(this['clear-duration']),
-                'enable': new FormControl(this['enable']),
-                'auto-resolve': new FormControl(this['auto-resolve']),
-                'destinations': new FormControl(this['destinations']),
+                'persistence-duration': CustomFormControl(new FormControl(this['persistence-duration']), MonitoringAlertPolicySpec.propInfo['persistence-duration'].description),
+                'clear-duration': CustomFormControl(new FormControl(this['clear-duration']), MonitoringAlertPolicySpec.propInfo['clear-duration'].description),
+                'enable': CustomFormControl(new FormControl(this['enable']), MonitoringAlertPolicySpec.propInfo['enable'].description),
+                'auto-resolve': CustomFormControl(new FormControl(this['auto-resolve']), MonitoringAlertPolicySpec.propInfo['auto-resolve'].description),
+                'destinations': CustomFormControl(new FormControl(this['destinations']), MonitoringAlertPolicySpec.propInfo['destinations'].description),
             });
             // generate FormArray control elements
             this.fillFormArray<FieldsRequirement>('requirements', this['requirements'], FieldsRequirement);

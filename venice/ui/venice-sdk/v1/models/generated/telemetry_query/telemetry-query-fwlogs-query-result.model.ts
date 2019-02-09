@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Telemetry_queryFwlog, ITelemetry_queryFwlog } from './telemetry-query-fwlog.model';
@@ -78,7 +78,7 @@ export class Telemetry_queryFwlogsQueryResult extends BaseModel implements ITele
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'statement_id': new FormControl(this['statement_id']),
+                'statement_id': CustomFormControl(new FormControl(this['statement_id']), Telemetry_queryFwlogsQueryResult.propInfo['statement_id'].description),
                 'logs': new FormArray([]),
             });
             // generate FormArray control elements

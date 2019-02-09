@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -78,8 +78,8 @@ export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPs
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'encryption-transform': new FormControl(this['encryption-transform']),
-                'integrity-transform': new FormControl(this['integrity-transform']),
+                'encryption-transform': CustomFormControl(new FormControl(this['encryption-transform']), SecurityIPsecProtocolSpec.propInfo['encryption-transform'].description),
+                'integrity-transform': CustomFormControl(new FormControl(this['integrity-transform']), SecurityIPsecProtocolSpec.propInfo['integrity-transform'].description),
             });
         }
         return this._formGroup;

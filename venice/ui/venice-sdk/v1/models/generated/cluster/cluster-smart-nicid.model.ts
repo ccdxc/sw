@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 
@@ -78,8 +78,8 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': new FormControl(this['name']),
-                'mac-address': new FormControl(this['mac-address']),
+                'name': CustomFormControl(new FormControl(this['name']), ClusterSmartNICID.propInfo['name'].description),
+                'mac-address': CustomFormControl(new FormControl(this['mac-address']), ClusterSmartNICID.propInfo['mac-address'].description),
             });
         }
         return this._formGroup;

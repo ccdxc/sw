@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { SecurityProtoPort, ISecurityProtoPort } from './security-proto-port.model';
@@ -94,7 +94,7 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'proto-ports': new FormArray([]),
-                'timeout': new FormControl(this['timeout']),
+                'timeout': CustomFormControl(new FormControl(this['timeout']), SecurityAppSpec.propInfo['timeout'].description),
                 'alg': this['alg'].$formGroup,
             });
             // generate FormArray control elements

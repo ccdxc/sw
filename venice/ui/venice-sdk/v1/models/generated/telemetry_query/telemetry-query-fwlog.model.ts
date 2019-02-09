@@ -4,7 +4,7 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator } from './validators';
+import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl } from './validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { Telemetry_queryFwlog_action,  Telemetry_queryFwlog_action_uihint  } from './enums';
@@ -192,17 +192,17 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'tenant': new FormControl(this['tenant']),
-                'src': new FormControl(this['src']),
-                'dest': new FormControl(this['dest']),
-                'src-port': new FormControl(this['src-port']),
-                'dest-port': new FormControl(this['dest-port']),
-                'protocol': new FormControl(this['protocol']),
-                'action': new FormControl(this['action'], [required, enumValidator(Telemetry_queryFwlog_action), ]),
-                'direction': new FormControl(this['direction'], [required, enumValidator(Telemetry_queryFwlog_direction), ]),
-                'rule-id': new FormControl(this['rule-id']),
-                'policy-name': new FormControl(this['policy-name']),
-                'timestamp': new FormControl(this['timestamp']),
+                'tenant': CustomFormControl(new FormControl(this['tenant']), Telemetry_queryFwlog.propInfo['tenant'].description),
+                'src': CustomFormControl(new FormControl(this['src']), Telemetry_queryFwlog.propInfo['src'].description),
+                'dest': CustomFormControl(new FormControl(this['dest']), Telemetry_queryFwlog.propInfo['dest'].description),
+                'src-port': CustomFormControl(new FormControl(this['src-port']), Telemetry_queryFwlog.propInfo['src-port'].description),
+                'dest-port': CustomFormControl(new FormControl(this['dest-port']), Telemetry_queryFwlog.propInfo['dest-port'].description),
+                'protocol': CustomFormControl(new FormControl(this['protocol']), Telemetry_queryFwlog.propInfo['protocol'].description),
+                'action': CustomFormControl(new FormControl(this['action'], [required, enumValidator(Telemetry_queryFwlog_action), ]), Telemetry_queryFwlog.propInfo['action'].description),
+                'direction': CustomFormControl(new FormControl(this['direction'], [required, enumValidator(Telemetry_queryFwlog_direction), ]), Telemetry_queryFwlog.propInfo['direction'].description),
+                'rule-id': CustomFormControl(new FormControl(this['rule-id']), Telemetry_queryFwlog.propInfo['rule-id'].description),
+                'policy-name': CustomFormControl(new FormControl(this['policy-name']), Telemetry_queryFwlog.propInfo['policy-name'].description),
+                'timestamp': CustomFormControl(new FormControl(this['timestamp']), Telemetry_queryFwlog.propInfo['timestamp'].description),
             });
         }
         return this._formGroup;
