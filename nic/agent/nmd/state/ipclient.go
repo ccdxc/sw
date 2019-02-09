@@ -586,6 +586,7 @@ func (c *IPClient) Stop() {
 		killDhclient()
 		c.doneEvent <- true
 		c.watcher.Close()
+		c.isDynamic = false
 	}
 }
 
