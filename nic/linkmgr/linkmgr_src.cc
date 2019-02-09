@@ -198,13 +198,14 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 
     HAL_TRACE_DEBUG("port: {}, xcvr_port: {}, xcvr_event_port: {}, "
                     "xcvr_state: {}, user_admin: {}, admin: {}, "
-                    "AN_cfg: {}, AN_enable: {}",
+                    "AN_cfg: {}, AN_enable: {}, num_lanes_cfg: {}",
                     port_args.port_num, xcvr_port, xcvr_event_info->port_num,
                     static_cast<uint32_t>(xcvr_event_info->state),
                     static_cast<uint32_t>(port_args.user_admin_state),
                     static_cast<uint32_t>(port_args.admin_state),
                     port_args.auto_neg_cfg,
-                    port_args.auto_neg_enable);
+                    port_args.auto_neg_enable,
+                    port_args.num_lanes_cfg);
 
     if (xcvr_port == -1 || xcvr_port != (int)xcvr_event_info->port_num) {
         return false;
@@ -231,6 +232,9 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 
         // set AN based on user configured value
         port_args.auto_neg_enable = port_args.auto_neg_cfg;
+
+        // set num_lanes based on user configured value
+        port_args.num_lanes = port_args.num_lanes_cfg;
 
         // update port_args based on the xcvr state
         sdk::linkmgr::port_args_set_by_xcvr_state(&port_args);
@@ -598,6 +602,10 @@ port_create (port_args_t *port_args, hal_handle_t *hal_handle)
     // during xcvr insert/remove events
     port_args->auto_neg_cfg     = port_args->auto_neg_enable;
 
+    // store user configured num_lanes in another variable to be used
+    // during xcvr insert/remove events
+    port_args->num_lanes_cfg    = port_args->num_lanes;
+
     // update port_args based on the xcvr state
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
 
@@ -817,6 +825,10 @@ port_update (port_args_t *port_args)
     // store user configured AN in another variable to be used
     // during xcvr insert/remove events
     port_args->auto_neg_cfg     = port_args->auto_neg_enable;
+
+    // store user configured num_lanes in another variable to be used
+    // during xcvr insert/remove events
+    port_args->num_lanes_cfg    = port_args->num_lanes;
 
     // update port_args based on the xcvr state
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);

@@ -86,6 +86,11 @@ public:
     uint32_t num_lanes(void) const { return this->num_lanes_; }
     void set_num_lanes(uint32_t num_lanes) { this->num_lanes_ = num_lanes; }
 
+    uint32_t num_lanes_cfg(void) const { return this->num_lanes_cfg_; }
+    void set_num_lanes_cfg(uint32_t num_lanes_cfg) {
+        this->num_lanes_cfg_ = num_lanes_cfg;
+    }
+
     port_fec_type_t fec_type(void) const { return this->fec_type_; }
     void set_fec_type(port_fec_type_t fec_type) { this->fec_type_ = fec_type; }
 
@@ -320,6 +325,7 @@ private:
     uint32_t              mac_id_;                    // mac instance for this port
     uint32_t              mac_ch_;                    // mac channel within mac instance
     uint32_t              num_lanes_;                 // number of lanes for this port
+    uint32_t              num_lanes_cfg_;             // user configured number of lanes for this port
     uint32_t              mtu_;                       // number of lanes for this port
     uint32_t              debounce_time_;             // Debounce time in ms
     uint32_t              bringup_timer_val_;         // current bringup timer value

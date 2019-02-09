@@ -268,6 +268,7 @@ public:
         spec->set_pause(port_info->pause);
         spec->set_mac_id(port_info->mac_id);
         spec->set_mac_ch(port_info->mac_ch);
+        spec->set_auto_neg_enable(port_info->an_enable);
 
         status = port_stub_->PortCreate(&context, req_msg, &rsp_msg);
         if (status.ok()) {

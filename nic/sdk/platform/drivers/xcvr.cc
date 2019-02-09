@@ -119,6 +119,7 @@ xcvr_send_notification (int port) {
     if (g_xcvr_notify_cb) {
         switch (xcvr_state(port)) {
         case xcvr_state_t::XCVR_SPROM_READ:
+            // TODO populate correct PID
             xcvr_event_info.pid = xcvr_pid_t::XCVR_PID_QSFP_100G_CR4;
             break;
 

@@ -59,6 +59,7 @@ typedef struct port_args_s {
     bool                  mac_stats_reset;            // mac stats reset
     uint32_t              mac_id;                     // mac id associated with the port
     uint32_t              mac_ch;                     // mac channel associated with port
+    uint32_t              num_lanes_cfg;              // user configured number of lanes for the port
     uint32_t              num_lanes;                  // number of lanes for the port
     uint32_t              debounce_time;              // Debounce time in ms
     uint32_t              mtu;                        // mtu

@@ -12,8 +12,6 @@ namespace platform {
 inline sdk_ret_t
 sfp_sprom_parse (int port, uint8_t *data)
 {
-    sdk_ret_t sdk_ret = SDK_RET_OK;
-
     // SFF 8472
 
     if (data[SFP_OFFSET_LENGTH_CU] != 0) {
@@ -47,13 +45,14 @@ sfp_sprom_parse (int port, uint8_t *data)
             set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
             xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
         }
-
-        return sdk_ret;
     }
 
     switch (data[SFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES]) {
     case 0x1:
         // 25GAUI C2M AOC - BER 5x10^(-5)
+        xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_25GBASE_AOC);
+        set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_25G);
         break;
 
     case 0x2:

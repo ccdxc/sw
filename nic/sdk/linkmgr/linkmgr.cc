@@ -674,25 +674,45 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
                               port_args->port_an_args->fec_request,
                               port_args->cable_type);
 
-            switch (port_args->cable_type) {
-            case cable_type_t::CABLE_TYPE_FIBER:
-                if (port_args->auto_neg_enable == true) {
+            // If AN=true and
+            // (1) fiber cable is inserted OR
+            // (2) QSA is inserted,
+            // set the speed, fec, num_lanes based on cable
+            if (port_args->auto_neg_enable == true) {
+                if ((port_args->cable_type == cable_type_t::CABLE_TYPE_FIBER) ||
+                    (sdk::platform::xcvr_type(xcvr_port-1) ==
+                                            xcvr_type_t::XCVR_TYPE_SFP)) {
                     port_args->auto_neg_enable = false;
                     port_args->port_speed =
-                                sdk::platform::cable_speed(xcvr_port-1);
+                        sdk::platform::cable_speed(xcvr_port-1);
 
-                    // TODO force FEC for 100G/40G
-                    if (port_args->port_speed == port_speed_t::PORT_SPEED_100G) {
-                        port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
-                    } else if (port_args->port_speed == port_speed_t::PORT_SPEED_40G) {
-                        port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+                    // TODO FEC assumed based on cable speed
+                    switch (port_args->port_speed) {
+                        case port_speed_t::PORT_SPEED_100G:
+                            port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_RS;
+                            port_args->num_lanes = 4;
+                            break;
+
+                        case port_speed_t::PORT_SPEED_40G:
+                            port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+                            port_args->num_lanes = 4;
+                            break;
+
+                        case port_speed_t::PORT_SPEED_25G:
+                            port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_FC;
+                            port_args->num_lanes = 1;
+                            break;
+
+                        case port_speed_t::PORT_SPEED_10G:
+                            port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+                            port_args->num_lanes = 1;
+                            break;
+
+                        default:
+                            port_args->fec_type = port_fec_type_t::PORT_FEC_TYPE_NONE;
+                            break;
                     }
                 }
-                break;
-
-            default:
-                // port_args->auto_neg_enable = true;
-                break;
             }
         } else {
             port_args->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
@@ -717,7 +737,12 @@ validate_port_create (port_args_t *args)
         return false;
     }
 
-    return validate_speed_lanes(args->port_speed, args->num_lanes);
+    // validate speed against num_lanes only if AN=false
+    if (args->auto_neg_enable == false) {
+        return validate_speed_lanes(args->port_speed, args->num_lanes);
+    }
+
+    return true;
 }
 
 static void
@@ -764,6 +789,9 @@ port_create (port_args_t *args)
 
     // store the user configured AN
     port_p->set_auto_neg_cfg(args->auto_neg_cfg);
+
+    // store the user configured num_lanes
+    port_p->set_num_lanes_cfg(args->num_lanes_cfg);
 
     port_p->set_mac_fns(&mac_fns);
     port_p->set_serdes_fns(&serdes_fns);
@@ -814,13 +842,21 @@ validate_port_update (port *port_p, port_args_t *args)
         return false;
     }
 
+    // TODO skip num_lanes check to support auto speed set for QSA
+#if 0
     if (args->num_lanes != port_p->num_lanes()) {
         SDK_TRACE_ERR("num_lanes update not supported for port: %d",
                         args->port_num);
         return false;
     }
+#endif
 
-    return validate_speed_lanes (args->port_speed, port_p->num_lanes());
+    // validate speed against num_lanes only if AN=false
+    if (args->auto_neg_enable == false) {
+        return validate_speed_lanes(args->port_speed, args->num_lanes);
+    }
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -916,6 +952,21 @@ port_update (void *pd_p, port_args_t *args)
         SDK_TRACE_DEBUG("AN cfg updated. new: %d, old: %d",
                         args->auto_neg_cfg, port_p->auto_neg_cfg());
         port_p->set_auto_neg_cfg(args->auto_neg_cfg);
+        configured = true;
+    }
+
+    // TODO update num_lanes to support auto speed set for QSA
+    if (args->num_lanes != port_p->num_lanes()) {
+        SDK_TRACE_DEBUG("num_lanes updated. new: %d, old: %d",
+                        args->num_lanes, port_p->num_lanes());
+        port_p->set_num_lanes(args->num_lanes);
+        configured = true;
+    }
+
+    if (args->num_lanes_cfg != port_p->num_lanes_cfg()) {
+        SDK_TRACE_DEBUG("num_lanes_cfg updated. new: %d, old: %d",
+                        args->num_lanes_cfg, port_p->num_lanes_cfg());
+        port_p->set_num_lanes_cfg(args->num_lanes_cfg);
         configured = true;
     }
 
@@ -1024,6 +1075,7 @@ port_get (void *pd_p, port_args_t *args)
     args->auto_neg_enable  = port_p->auto_neg_enable();
     args->auto_neg_cfg     = port_p->auto_neg_cfg();
     args->user_admin_state = port_p->user_admin_state();
+    args->num_lanes_cfg    = port_p->num_lanes_cfg();
     args->pause       = port_p->pause();
     args->link_sm     = port_p->port_link_sm();
     args->loopback_mode = port_p->loopback_mode();
