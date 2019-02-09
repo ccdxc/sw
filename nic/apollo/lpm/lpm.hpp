@@ -42,7 +42,7 @@ typedef struct lpm_inode_s {
         uint16_t     port;
         uint32_t     key32;
     };
-    uint32_t     nhid;
+    uint32_t         data;
 } lpm_inode_t;
 
 /**< lpm interval node table */

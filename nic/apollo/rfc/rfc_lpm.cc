@@ -74,7 +74,7 @@ rfc_build_lpm_tree (lpm_itable_t *lpm_itable, rfc_tree_t *rfc_tree,
         } else if (lpm_itable->tree_type == ITREE_TYPE_PROTO_PORT) {
             lpm_itable->nodes[i].key32 = itable->nodes[i].key32;
         }
-        lpm_itable->nodes[i].nhid = itable->nodes[i].rfc.class_id;
+        lpm_itable->nodes[i].data = itable->nodes[i].rfc.class_id;
     }
     ret = lpm_build_tree(lpm_itable, rfc_tree->num_classes - 1,
                          max_rules, tree_base_addr, mem_size);
