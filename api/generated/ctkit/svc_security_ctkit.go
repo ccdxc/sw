@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -207,7 +208,7 @@ func (ct *ctrlerCtx) runSecurityGroupWatcher() {
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(ct.balancer))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
@@ -218,6 +219,7 @@ func (ct *ctrlerCtx) runSecurityGroupWatcher() {
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
+				apicl.Close()
 				time.Sleep(time.Second)
 				continue
 			}
@@ -523,7 +525,7 @@ func (ct *ctrlerCtx) runSGPolicyWatcher() {
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(ct.balancer))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
@@ -534,6 +536,7 @@ func (ct *ctrlerCtx) runSGPolicyWatcher() {
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
+				apicl.Close()
 				time.Sleep(time.Second)
 				continue
 			}
@@ -839,7 +842,7 @@ func (ct *ctrlerCtx) runAppWatcher() {
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(ct.balancer))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
@@ -850,6 +853,7 @@ func (ct *ctrlerCtx) runAppWatcher() {
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
+				apicl.Close()
 				time.Sleep(time.Second)
 				continue
 			}
@@ -1155,7 +1159,7 @@ func (ct *ctrlerCtx) runFirewallProfileWatcher() {
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(ct.balancer))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
@@ -1166,6 +1170,7 @@ func (ct *ctrlerCtx) runFirewallProfileWatcher() {
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
+				apicl.Close()
 				time.Sleep(time.Second)
 				continue
 			}
@@ -1471,7 +1476,7 @@ func (ct *ctrlerCtx) runCertificateWatcher() {
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(ct.balancer))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
@@ -1482,6 +1487,7 @@ func (ct *ctrlerCtx) runCertificateWatcher() {
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
+				apicl.Close()
 				time.Sleep(time.Second)
 				continue
 			}
@@ -1787,7 +1793,7 @@ func (ct *ctrlerCtx) runTrafficEncryptionPolicyWatcher() {
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(ct.balancer))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
@@ -1798,6 +1804,7 @@ func (ct *ctrlerCtx) runTrafficEncryptionPolicyWatcher() {
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
+				apicl.Close()
 				time.Sleep(time.Second)
 				continue
 			}

@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/staging"
+	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
@@ -207,7 +208,7 @@ func (ct *ctrlerCtx) runBufferWatcher() {
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(ct.balancer))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
@@ -218,6 +219,7 @@ func (ct *ctrlerCtx) runBufferWatcher() {
 			if werr != nil {
 				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
+				apicl.Close()
 				time.Sleep(time.Second)
 				continue
 			}
