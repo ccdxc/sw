@@ -18,7 +18,7 @@ testcases:
 
     -   name    : Broadcast_MAC_Filter
         testcase: testcases.filters.broadcast_mac_filter
-        disable : False
+        disable : True
         ignore  : False
 
     -   name    : Multicast_MAC_Filter
