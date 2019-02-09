@@ -104,21 +104,22 @@ func (f *fileImpl) GetEventsFromOffset(offset int64) ([]*evtsapi.Event, error) {
 	scanner := bufio.NewScanner(evtsFile)
 	for scanner.Scan() {
 		evtStr := strings.TrimSpace(scanner.Text())
-		temp := evtsapi.Event{}
+		temp := &evtsapi.Event{}
 		if err := json.Unmarshal([]byte(evtStr), temp); err != nil {
 			log.Debugf("failed to unmarshal the read event, err: %v", err)
 			continue
 		}
 
-		hashKey := events.GetEventKey(&temp)
+		evt := *temp
+		hashKey := events.GetEventKey(temp)
 		if existingEvt, ok := dedupCache.Get(hashKey); ok {
-			temp = existingEvt.(evtsapi.Event)
+			evt = existingEvt.(evtsapi.Event)
 			// update count and timestamp
 			timestamp, _ := types.TimestampProto(time.Now())
-			temp.EventAttributes.Count++
-			temp.ObjectMeta.ModTime.Timestamp = *timestamp
+			evt.EventAttributes.Count++
+			evt.ObjectMeta.ModTime.Timestamp = *timestamp
 		}
-		dedupCache.Add(hashKey, temp)
+		dedupCache.Add(hashKey, evt)
 	}
 
 	var evts []*evtsapi.Event
