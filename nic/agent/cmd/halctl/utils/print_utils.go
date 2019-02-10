@@ -67,6 +67,8 @@ func TnnlEncTypeToStr(encType halproto.IfTunnelEncapType) string {
 		return "Vxlan"
 	case halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_GRE:
 		return "Gre"
+	case halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS:
+		return "MplsoUdp"
 	default:
 		return "Invalid"
 	}

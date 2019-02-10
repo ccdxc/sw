@@ -41,7 +41,32 @@ var ifDeleteCmd = &cobra.Command{
 	Run:   ifDeleteCmdHandler,
 }
 
+var ifShowCmd = &cobra.Command{
+	Use:   "interface",
+	Short: "Show interface",
+	Long:  "Show interface",
+	Run:   ifShowCmdHandler,
+}
+
+var tunnelShowCmd = &cobra.Command{
+	Use:   "tunnel",
+	Short: "Show tunnel interface",
+	Long:  "Show tunnel interface",
+	Run:   ifTunnelShowCmdHandler,
+}
+
+var mplsoudpShowCmd = &cobra.Command{
+	Use:   "mplsoudp",
+	Short: "Show MPLSoUDP tunnel interface",
+	Long:  "Show MPLSoUDP tunnel interface",
+	Run:   mplsoudpShowCmdHandler,
+}
+
 func init() {
+	showCmd.AddCommand(ifShowCmd)
+	ifShowCmd.AddCommand(tunnelShowCmd)
+	tunnelShowCmd.AddCommand(mplsoudpShowCmd)
+
 	deleteCmd.AddCommand(ifDeleteCmd)
 	ifDeleteCmd.Flags().StringVar(&ifEncap, "encap", "", "Encap type (Ex: MPLSoUDP)")
 	ifDeleteCmd.Flags().StringVar(&ifName, "name", "", "Interface name")
@@ -73,6 +98,46 @@ func init() {
 	ifUpdateCmd.MarkFlagRequired("gw-mac")
 	ifUpdateCmd.MarkFlagRequired("ingress-bw")
 	ifUpdateCmd.MarkFlagRequired("egress-bw")
+}
+
+func handleIfShowCmd(intf bool, tunnel bool, mpls bool) {
+	halctlStr := ""
+	if intf == true {
+		halctlStr = "/nic/bin/halctl show interface"
+	} else if tunnel == true {
+		halctlStr = "/nic/bin/halctl show interface tunnel"
+	} else if mpls == true {
+		halctlStr = "/nic/bin/halctl show interface tunnel mplsoudp"
+	}
+
+	execCmd := strings.Fields(halctlStr)
+	v := &nmd.NaplesCmdExecute{
+		Executable: execCmd[0],
+		Opts:       strings.Join(execCmd[1:], " "),
+	}
+
+	resp, err := restGetWithBody(v, "cmd/v1/naples/")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if len(resp) > 3 {
+		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
+		fmt.Printf("%s", s)
+	}
+}
+
+func ifShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleIfShowCmd(true, false, false)
+}
+
+func ifTunnelShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleIfShowCmd(false, true, false)
+}
+
+func mplsoudpShowCmdHandler(cmd *cobra.Command, args []string) {
+	handleIfShowCmd(false, false, true)
 }
 
 func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {

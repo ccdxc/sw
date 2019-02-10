@@ -29,6 +29,13 @@ var tunnelShowCmd = &cobra.Command{
 	Run:   tunnelShowCmdHandler,
 }
 
+var mplsoudpShowCmd = &cobra.Command{
+	Use:   "mplsoudp",
+	Short: "Show MPLSoUDP tunnel interface information",
+	Long:  "Show MPLSoUDP tunnel interface information",
+	Run:   mplsoudpShowCmdHandler,
+}
+
 var tunnelSpecShowCmd = &cobra.Command{
 	Use:   "spec",
 	Short: "show spec information about tunnel interface",
@@ -47,12 +54,13 @@ func init() {
 	ifShowCmd.AddCommand(tunnelShowCmd)
 	tunnelShowCmd.AddCommand(tunnelSpecShowCmd)
 	tunnelShowCmd.AddCommand(tunnelStatusShowCmd)
+	tunnelShowCmd.AddCommand(mplsoudpShowCmd)
 
-	tunnelShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	tunnelShowCmd.Flags().Uint64Var(&tunnelID, "id", 1, "Specify if-id")
+	tunnelShowCmd.PersistentFlags().Bool("yaml", false, "Output in yaml")
+	tunnelShowCmd.PersistentFlags().Uint64Var(&tunnelID, "id", 1, "Specify if-id")
 }
 
-func handleTunnelShowCmd(cmd *cobra.Command, spec bool, status bool) {
+func handleTunnelShowCmd(cmd *cobra.Command, spec bool, status bool, mplsoudp bool) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -93,6 +101,8 @@ func handleTunnelShowCmd(cmd *cobra.Command, spec bool, status bool) {
 		tunnelShowHeader()
 	} else if status == true {
 		tunnelShowStatusHeader()
+	} else if mplsoudp == true {
+		mplsoudpShowHeader()
 	}
 
 	// Print IFs
@@ -105,13 +115,15 @@ func handleTunnelShowCmd(cmd *cobra.Command, spec bool, status bool) {
 			tunnelShowOneResp(resp)
 		} else if status == true {
 			tunnelShowStatusOneResp(resp)
+		} else if mplsoudp == true {
+			mplsoudpShowOneResp(resp)
 		}
 	}
 }
 
-func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
+func mplsoudpShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("yaml") {
-		tunnelDetailShowCmdHandler(cmd, args)
+		tunnelDetailShowCmdHandler(cmd, args, true)
 		return
 	}
 
@@ -120,7 +132,21 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	handleTunnelShowCmd(cmd, true, false)
+	handleTunnelShowCmd(cmd, false, false, true)
+}
+
+func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
+	if cmd.Flags().Changed("yaml") {
+		tunnelDetailShowCmdHandler(cmd, args, false)
+		return
+	}
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	handleTunnelShowCmd(cmd, true, false, false)
 }
 
 func tunnelShowStatusCmdHandler(cmd *cobra.Command, args []string) {
@@ -129,10 +155,10 @@ func tunnelShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	handleTunnelShowCmd(cmd, false, true)
+	handleTunnelShowCmd(cmd, false, true, false)
 }
 
-func tunnelDetailShowCmdHandler(cmd *cobra.Command, args []string) {
+func tunnelDetailShowCmdHandler(cmd *cobra.Command, args []string, mplsoudp bool) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -179,11 +205,71 @@ func tunnelDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
 			continue
 		}
+		if resp.GetSpec().GetType() != halproto.IfType_IF_TYPE_TUNNEL {
+			continue
+		}
+		if mplsoudp == true {
+			if resp.GetSpec().GetIfTunnelInfo().GetEncapType() != halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS {
+				continue
+			}
+		}
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		fmt.Println(string(b))
 		fmt.Println("---")
 	}
+}
+
+func mplsoudpShowHeader() {
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 198)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-20s%-10s%-16s%-32s%-14s%-16s%-12s%-20s%-10s%-10s%-18s%-20s\n",
+		"Id", "EncType", "SubstrateIP", "OverlayIP", "InMplsTag", "TunnelDestIP",
+		"OutMplsTag", "SourceGW", "IngressBW", "EgressBW", "GWMacDA", "LifName")
+	fmt.Println(hdrLine)
+}
+
+func mplsoudpShowOneResp(resp *halproto.InterfaceGetResponse) {
+	ifType := resp.GetSpec().GetType()
+	if ifType != halproto.IfType_IF_TYPE_TUNNEL {
+		return
+	}
+	encType := resp.GetSpec().GetIfTunnelInfo().GetEncapType()
+	if encType != halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS {
+		return
+	}
+	ifID := resp.GetSpec().GetKeyOrHandle().GetInterfaceId()
+	mpls := resp.GetSpec().GetIfTunnelInfo().GetPropMplsInfo()
+	subIP := utils.IPAddrToStr(mpls.GetSubstrateIp())
+	overlayIP := mpls.GetOverlayIp()
+	index := 0
+	overlayStr := ""
+	for index < len(overlayIP) {
+		overlayStr += utils.IPAddrToStr(overlayIP[index])
+		index++
+		if index < len(overlayIP) {
+			overlayStr += ","
+		}
+	}
+	mplsTag := mpls.GetMplsIf()
+	index = 0
+	inMpls := ""
+	for index < len(mplsTag) {
+		inMpls += fmt.Sprintf("%d", mplsTag[index].GetLabel())
+		index++
+		if index < len(mplsTag) {
+			inMpls += ","
+		}
+	}
+	outMpls := mpls.GetMplsTag().GetLabel()
+	tunnelDestIP := utils.IPAddrToStr(mpls.GetTunnelDestIp())
+	sourceGW := utils.IPAddrToStr(mpls.GetSourceGw().GetPrefix().GetIpv4Subnet().GetAddress()) + "/" + fmt.Sprintf("%d", mpls.GetSourceGw().GetPrefix().GetIpv4Subnet().GetPrefixLen())
+	gwMac := utils.MactoStr(mpls.GetGwMacDa())
+
+	fmt.Printf("%-20d%-10s%-16s%-32s%-14s%-16s%-12d%-20s%-10d%-10d%-18s%-20s\n",
+		ifID, utils.TnnlEncTypeToStr(encType), subIP, overlayStr, inMpls, tunnelDestIP, outMpls,
+		sourceGW, mpls.GetIngressBw(), mpls.GetEgressBw(), gwMac, mpls.GetLifName())
 }
 
 func tunnelShowHeader() {
@@ -192,9 +278,9 @@ func tunnelShowHeader() {
 	fmt.Printf("LTep:     Local Tep IP                RTep:     Remote TEP IP\n")
 	fmt.Printf("VrfId:    Vrf ID\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 50)
+	hdrLine := strings.Repeat("-", 67)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s\n",
+	fmt.Printf("%-27s%-10s%-10s%-10s%-10s\n",
 		"Id", "EncType", "LTep", "RTep", "VrfId")
 	fmt.Println(hdrLine)
 }
@@ -206,17 +292,19 @@ func tunnelShowOneResp(resp *halproto.InterfaceGetResponse) {
 	}
 	encType := resp.GetSpec().GetIfTunnelInfo().GetEncapType()
 	ifID := fmt.Sprintf("tunnel-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
-	fmt.Printf("%-10s%-10s",
+	fmt.Printf("%-27s%-10s",
 		ifID,
 		utils.TnnlEncTypeToStr(encType))
 	if encType == halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_VXLAN {
 		fmt.Printf("%-10s%-10s",
 			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetLocalTep()),
 			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetVxlanInfo().GetRemoteTep()))
-	} else {
+	} else if encType == halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_GRE {
 		fmt.Printf("%-10s%-10s",
 			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetSource()),
 			utils.IPAddrToStr(resp.GetSpec().GetIfTunnelInfo().GetGreInfo().GetDestination()))
+	} else if encType == halproto.IfTunnelEncapType_IF_TUNNEL_ENCAP_TYPE_PROPRIETARY_MPLS {
+		fmt.Printf("%-10s%-10s", "-", "-")
 	}
 	fmt.Printf("%-10d\n",
 		resp.GetSpec().GetIfTunnelInfo().GetVrfKeyHandle().GetVrfId())
