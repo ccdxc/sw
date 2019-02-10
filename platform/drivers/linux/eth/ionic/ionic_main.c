@@ -25,6 +25,56 @@ unsigned int devcmd_timeout = 30;
 module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
 
+static const char *ionic_error_to_str(enum status_code code)
+{
+	switch (code) {
+	case IONIC_RC_SUCCESS:
+		return "IONIC_RC_SUCCESS";
+	case IONIC_RC_EVERSION:
+		return "IONIC_RC_EVERSION";
+	case IONIC_RC_EOPCODE:
+		return "IONIC_RC_EOPCODE";
+	case IONIC_RC_EIO:
+		return "IONIC_RC_EIO";
+	case IONIC_RC_EPERM:
+		return "IONIC_RC_EPERM";
+	case IONIC_RC_EQID:
+		return "IONIC_RC_EQID";
+	case IONIC_RC_EQTYPE:
+		return "IONIC_RC_EQTYPE";
+	case IONIC_RC_ENOENT:
+		return "IONIC_RC_ENOENT";
+	case IONIC_RC_EINTR:
+		return "IONIC_RC_EINTR";
+	case IONIC_RC_EAGAIN:
+		return "IONIC_RC_EAGAIN";
+	case IONIC_RC_ENOMEM:
+		return "IONIC_RC_ENOMEM";
+	case IONIC_RC_EFAULT:
+		return "IONIC_RC_EFAULT";
+	case IONIC_RC_EBUSY:
+		return "IONIC_RC_EBUSY";
+	case IONIC_RC_EEXIST:
+		return "IONIC_RC_EEXIST";
+	case IONIC_RC_EINVAL:
+		return "IONIC_RC_EINVAL";
+	case IONIC_RC_ENOSPC:
+		return "IONIC_RC_ENOSPC";
+	case IONIC_RC_ERANGE:
+		return "IONIC_RC_ERANGE";
+	case IONIC_RC_BAD_ADDR:
+		return "IONIC_RC_BAD_ADDR";
+	case IONIC_RC_DEV_CMD:
+		return "IONIC_RC_DEV_CMD";
+	case IONIC_RC_ERROR:
+		return "IONIC_RC_ERROR";
+	case IONIC_RC_ERDMA:
+		return "IONIC_RC_ERDMA";
+	default:
+		return "IONIC_RC_UNKNOWN";
+	}
+}
+
 static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 {
 	switch (opcode) {
@@ -146,68 +196,55 @@ int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
 	return work_done;
 }
 
-static int ionic_dev_cmd_wait(struct ionic *ionic, unsigned long max_wait)
+int ionic_dev_cmd_wait(struct ionic *ionic, unsigned long max_seconds)
 {
 	struct ionic_dev *idev = &ionic->idev;
-	unsigned long time;
-	signed long wait;
+	unsigned long max_wait, start_time, duration;
 	int done;
+	int err;
 
 	WARN_ON(in_interrupt());
 
-	/* Wait for dev cmd to complete...but no more than max_wait
+	/* Wait for dev cmd to complete, retrying if we get EAGAIN,
+	 * but don't wait any longer than max_seconds.
 	 */
-
-	time = jiffies + max_wait;
+	max_wait = jiffies + (max_seconds * HZ);
+try_again:
+	start_time = jiffies;
 	do {
-
 		done = ionic_dev_cmd_done(idev);
-#ifdef HAPS
 		if (done)
-			dev_dbg(ionic->dev,
-				 "DEVCMD %s (%d) done took %ld secs (%ld jiffies)\n",
-				 ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
-				 idev->dev_cmd->cmd.cmd.opcode,
-				 (jiffies + max_wait - time)/HZ,
-				 jiffies + max_wait - time);
-#endif
-		if (done)
-			return 0;
+			break;
+		msleep(10);
+	} while (!done && time_before(jiffies, max_wait));
+	duration = jiffies - start_time;
 
-		wait = schedule_timeout_interruptible(HZ / 10);
-		if (wait > 0)
-			return -EINTR;
-
-	} while (time_after(time, jiffies));
-
-	dev_warn(ionic->dev, "DEVCMD %s %d timeout after %ld secs\n",
+	dev_dbg(ionic->dev,
+		 "DEVCMD %s (%d) done took %ld secs (%ld jiffies)\n",
 		 ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
-		 idev->dev_cmd->cmd.cmd.opcode, max_wait/HZ);
+		 idev->dev_cmd->cmd.cmd.opcode,
+		 duration/HZ, duration);
 
-	return -ETIMEDOUT;
-}
-
-static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
-{
-	u8 status;
-
-	status = ionic_dev_cmd_status(idev);
-	switch (status) {
-	case 0:
-		return 0;
+	if (!done && time_after(jiffies, max_wait)) {
+		dev_warn(ionic->dev, "DEVCMD %s (%d) timeout after %ld secs\n",
+			 ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
+			 idev->dev_cmd->cmd.cmd.opcode, max_seconds);
+		return -ETIMEDOUT;
 	}
 
-	return -EIO;
-}
+	err = ionic_dev_cmd_status(&ionic->idev);
+	if (err == IONIC_RC_EAGAIN) {
+		msleep(1000);
+		goto try_again;
+	}
 
-int ionic_dev_cmd_wait_check(struct ionic *ionic, unsigned long max_wait)
-{
-	int err;
+	if (err) {
+		dev_err(ionic->dev, "DEV_CMD error, %s (%d) failed\n",
+			ionic_error_to_str(err), err);
+		return -EIO;
+	}
 
-	err = ionic_dev_cmd_wait(ionic, max_wait);
-	if (err)
-		return err;
-	return ionic_dev_cmd_check_error(&ionic->idev);
+	return 0;
 }
 
 int ionic_set_dma_mask(struct ionic *ionic)
@@ -271,7 +308,7 @@ int ionic_identify(struct ionic *ionic)
 
 	mutex_lock(&ionic->dev_cmd_lock);
 	ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
-	err = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	mutex_unlock(&ionic->dev_cmd_lock);
 	if (err)
 		goto err_out_unmap;
@@ -310,7 +347,7 @@ int ionic_reset(struct ionic *ionic)
 
 	mutex_lock(&ionic->dev_cmd_lock);
 	ionic_dev_cmd_reset(idev);
-	err = ionic_dev_cmd_wait_check(ionic, HZ * devcmd_timeout);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	mutex_unlock(&ionic->dev_cmd_lock);
 
 	return err;
