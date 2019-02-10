@@ -2543,11 +2543,6 @@ try_again:
 	}
 	if (err == -ENOSPC)
 		goto try_fewer;
-	if (err < min_intrs) {
-		dev_err(ionic->dev, "Can't get minimum %d intrs from OS: %d\n",
-			min_intrs, err);
-		return -ENOSPC;
-	}
 
 	if (err != nintrs) {
 		ionic_bus_free_irq_vectors(ionic);
@@ -2580,5 +2575,6 @@ try_fewer:
 		--nxqs;
 		goto try_again;
 	}
+	dev_err(ionic->dev, "Can't get minimum %d intrs from OS\n", min_intrs);
 	return -ENOSPC;
 }

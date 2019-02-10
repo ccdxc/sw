@@ -85,10 +85,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	__sum16 csum;
 #endif
 
-	if (is_master_lif(q->lif))
-		netdev = q->lif->netdev;
-	else
-		netdev = q->lif->upper_dev;
+	netdev = q->lif->netdev;
 
 	if (comp->status) {
 		// TODO record errors
