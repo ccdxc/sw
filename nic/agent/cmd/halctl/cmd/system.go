@@ -1031,6 +1031,12 @@ func dropReasonToString(reasons *halproto.DropReasons) string {
 	if reasons.GetDropSrcLifMismatch() {
 		return "Drop Src Lif Mismatch"
 	}
+	if reasons.GetDropVfIpLabelMismatch() {
+		return "Drop Vf IP Label Mismatch"
+	}
+	if reasons.GetDropVfBadRrDstIp() {
+		return "Drop Vf Bad RR Dst IP"
+	}
 	return "Invalid"
 }
 

@@ -145,7 +145,7 @@ pd_drop_stats_get (pd_func_args_t *pd_func_args)
     DropStatsEntry          *stats_entry = NULL;
 
     HAL_TRACE_DEBUG("Querying drop stats");
-    for (int i = 0; i < DROP_STATS_TABLE_SIZE; i++) {
+    for (int i = 0; i < (DROP_MAX + 1); i++) {
         stats_entry = rsp->mutable_stats()->mutable_drop_stats()->
             add_drop_entries();
         pd_system_populate_drop_stats(stats_entry, i);
@@ -432,6 +432,10 @@ pd_system_decode (drop_stats_swkey *key, drop_stats_swkey_mask *key_mask,
             drop_reason & (1 << DROP_PARSER_LEN_ERR));
     stats_entry->mutable_reasons()->set_drop_hardware_error(
             drop_reason & (1 << DROP_HARDWARE_ERR));
+    stats_entry->mutable_reasons()->set_drop_vf_ip_label_mismatch(
+            drop_reason & (1 << DROP_VF_IP_LABEL_MISMATCH));
+    stats_entry->mutable_reasons()->set_drop_vf_bad_rr_dst_ip(
+            drop_reason & (1 << DROP_VF_BAD_RR_DST_IP));
 
     uint64_t drop_stats_pkts = 0;
     memcpy(&drop_stats_pkts,
