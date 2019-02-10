@@ -52,6 +52,11 @@ def Trigger(tc):
     else:
         transport_opt = " "
 
+    if hasattr(tc.iterators, 'size'):
+        size_opt  =  " -s {size} ".format(size = tc.iterators.size)
+    else:
+        size_opt  =  " -a "
+
     if tc.iterators.server == 'yes':
         i = 0
         k = 1
@@ -79,7 +84,7 @@ def Trigger(tc):
         # cmd for server
         for p in range(s_port, e_port):
 
-            cmd = tc.iterators.command + " -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + " -a -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + " -p {0}".format(p)
+            cmd = tc.iterators.command + " -d " + tc.devices[i] + " -n 10 -F -x " + tc.gid[i] + size_opt + " -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + " -p {0}".format(p)
             api.Trigger_AddCommand(req, 
                                    w1.node_name, 
                                    w1.workload_name,
@@ -96,7 +101,7 @@ def Trigger(tc):
 
         # cmd for client
         for p in range(s_port, e_port):
-            cmd = tc.iterators.command + " -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + " -a -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + w1.ip_address + " -p {0}".format(p)
+            cmd = tc.iterators.command + " -d " + tc.devices[j] + " -n 10 -F -x " + tc.gid[j] + size_opt + " -q " + str(tc.iterators.num_qp) + " -m " + str(tc.iterators.mtu) + cm_opt + transport_opt + " --report_gbits " + w1.ip_address + " -p {0}".format(p)
             api.Trigger_AddCommand(req, 
                                    w2.node_name, 
                                    w2.workload_name,

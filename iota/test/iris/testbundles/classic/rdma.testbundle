@@ -66,10 +66,18 @@ testcases:
             type: remote_only
 
     -   name    : Rc_SendBw_Fml_Pad
-        testcase: testcases.rdma.rc_send_bw_fml_pad
+        testcase: testcases.rdma.packet_sweep
+        stress  : True
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type     : nested
+            num_qp   : [1, 2]
+            threads  : [1]
+            rdma_cm  : [ 'no']
+            server   : [ 'yes', 'no']
+            mtu      : [4096]
+            size     : [12601]
+            transport: ['RC']
+            command  : ['ib_send_bw']
         args    :
             type: remote_only
 
