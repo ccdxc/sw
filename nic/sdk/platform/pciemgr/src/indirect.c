@@ -338,12 +338,12 @@ pciehw_indirect_init(void)
 int
 pciehw_indirect_poll(void)
 {
-    pciehw_mem_t *phwmem = pciehw_get_hwmem();
-    int port;
+    int port, pending;
 
     for (port = 0; port < PCIEHW_NPORTS; port++) {
-        if (phwmem->indirect_intr_dest[port] != 0) {
-            phwmem->indirect_intr_dest[port] = 0;
+        read_ind_info(port, NULL, &pending);
+
+        if (pending) {
             pciehw_indirect_intr(port);
         }
     }

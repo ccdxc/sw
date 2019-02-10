@@ -11,6 +11,7 @@
 #include <sys/time.h>
 
 #include "nic/sdk/platform/pal/include/pal.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 #include "nic/sdk/platform/pcieport/include/portcfg.h"
 

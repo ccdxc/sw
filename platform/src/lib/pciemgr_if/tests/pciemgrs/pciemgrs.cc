@@ -25,7 +25,7 @@
 #include "nic/sdk/platform/pciemgrutils/include/pciehdev.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciehdev_impl.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/pciemgr_if/include/pmserver.h"
 

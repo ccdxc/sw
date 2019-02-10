@@ -23,8 +23,6 @@
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/cfgspace/include/cfgspace.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 
 #include "pciehw_impl.h"
 
@@ -50,7 +48,7 @@ pciehw_get_shmem(void)
     return phw->pcieshmem;
 }
 
-pciehdev_params_t *
+pciemgr_params_t *
 pciehw_get_params(void)
 {
     pciehw_t *phw = pciehw_get();
@@ -238,7 +236,7 @@ pciehw_event_buschg(const int port, const u_int8_t secbus)
 }
 
 static int
-pciehw_memmap_hwmem(const pciehdev_initmode_t initmode)
+pciehw_memmap_hwmem(const pciemgr_initmode_t initmode)
 {
     pciehw_t *phw = pciehw_get();
     const char *pciehw_addr_env = getenv("PCIEHW_ADDR");
@@ -275,7 +273,7 @@ pciehw_memunmap_hwmem(void)
 }
 
 static int
-pciehw_memmap_shmem(const pciehdev_initmode_t initmode)
+pciehw_memmap_shmem(const pciemgr_initmode_t initmode)
 {
     pciehw_t *phw = pciehw_get();
     char *env = getenv("PCIEMGR_DATA");
@@ -298,6 +296,14 @@ pciehw_memmap_shmem(const pciehdev_initmode_t initmode)
         env = getenv("HOME");
         snprintf(path, sizeof(path), "%s/.pciemgr_data", env ? env : "");
 #endif
+    }
+
+    /*
+     * If FORCE_INIT, just rm the datafile and we'll behave as if
+     * there was no saved state.
+     */
+    if (initmode == FORCE_INIT) {
+        (void)unlink(path);
     }
 
     oflags = O_RDWR;
@@ -325,7 +331,7 @@ pciehw_memunmap_shmem(void)
 }
 
 static int
-pciehw_memmap(const pciehdev_initmode_t initmode)
+pciehw_memmap(const pciemgr_initmode_t initmode)
 {
     int r;
 
@@ -376,7 +382,7 @@ pciehw_meminit(void)
 }
 
 static int
-pciehw_memopen(const pciehdev_initmode_t initmode)
+pciehw_memopen(const pciemgr_initmode_t initmode)
 {
     pciehw_mem_t *phwmem;
     pciehw_shmem_t *pshmem;
@@ -390,30 +396,48 @@ pciehw_memopen(const pciehdev_initmode_t initmode)
     phwmem = pciehw_get_hwmem();
     pshmem = pciehw_get_shmem();
 
-    if (initmode == FORCE_INIT) {
-#if 0
-        pciesys_loginfo("memopen: force init magic %x version %d\n",
-                        PCIEHW_MAGIC, PCIEHW_VERSION);
-#endif
+    if (pshmem->magic == 0 && pshmem->version == 0) {
+        /* Uninitialized state, initialize here (unless INHERIT_ONLY) */
+        if (initmode == INHERIT_ONLY) {
+            /*
+             * This case is not reached.
+             * If INHERIT_ONLY and the mmap'd file is not there
+             * we'll fail at pciehw_memmap() above, but we'll handled
+             * it here for completeness.
+             */
+            pciesys_logerror("memopen: inherit_only but no shmem\n");
+            pciehw_memunmap();
+            return -1;
+        }
         pciehw_meminit();
+#ifdef __aarch64__
+        pciesys_loginfo("memopen: init magic %x/%x version %d/%d\n",
+                        phwmem->magic, pshmem->magic,
+                        phwmem->version, pshmem->version);
+#endif
+    } else if (initmode == FORCE_INIT) {
+        pciehw_meminit();
+#ifdef __aarch64__
+        pciesys_loginfo("memopen: force init magic %x/%x version %d/%d\n",
+                        phwmem->magic, pshmem->magic,
+                        phwmem->version, pshmem->version);
+#endif
     } else if (phwmem->magic != PCIEHW_MAGIC || 
                pshmem->magic != PCIEHW_MAGIC ||
                phwmem->version != PCIEHW_VERSION ||
                pshmem->version != PCIEHW_VERSION) {
-
         if (initmode == INHERIT_ONLY) {
             pciesys_logerror("memopen: bad magic %x/%x (want %x) "
                              "version %d/%d (want %d)\n",
                              phwmem->magic, pshmem->magic, PCIEHW_MAGIC,
                              phwmem->version, pshmem->version, PCIEHW_VERSION);
+            pciehw_memunmap();
             return -1;
         }
-
         pciesys_logwarn("memopen: reinit bad magic %x/%x (want %x) "
                         "version %d/%d (want %d)\n",
                         phwmem->magic, pshmem->magic, PCIEHW_MAGIC,
                         phwmem->version, pshmem->version, PCIEHW_VERSION);
-
         pciehw_meminit();
     } else {
         /* don't log anything here, pcieutil uses this mode */
@@ -465,13 +489,13 @@ pciehw_param_ull(const char *name, const u_int64_t def)
 }
 
 static void
-pciehw_init_params(pciehdev_params_t *p)
+pciehw_init_params(pciemgr_params_t *p)
 {
     p->force_bars_load = pciehw_param_ull("PCIE_FORCE_BARS_LOAD", 0);
 }
 
 int
-pciehw_open(pciehdev_params_t *params)
+pciehw_open(pciemgr_params_t *params)
 {
     pciehw_t *phw = pciehw_get();
     pciehw_shmem_t *pshmem;
@@ -714,7 +738,7 @@ void
 pciehw_finalize_topology(pciehdev_t *proot)
 {
     pciehw_t *phw = pciehw_get();
-    pciehdev_params_t *params = &phw->params;
+    pciemgr_params_t *params = &phw->params;
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     pciehwdev_t *phwroot = proot ? pciehw_finalize_dev(proot) : NULL;
     const u_int8_t port = proot ? pciehdev_get_port(proot) : 0;

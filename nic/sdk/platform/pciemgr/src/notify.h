@@ -16,7 +16,7 @@ typedef struct notify_entry_s {
 
 #define NOTIFY_ENTRYSZ          sizeof(notify_entry_t)
 #define NOTIFY_NENTRIES         0x4000  /* power of 2 */
-#define NOTIFYSZ                (NOTIFY_NENTRIES * NOTIFY_ENTRYSZ)
+#define PCIEHW_NOTIFYSZ         (NOTIFY_NENTRIES * NOTIFY_ENTRYSZ)
 
 struct pciehw_s;
 typedef struct pciehw_s pciehw_t;

@@ -215,7 +215,8 @@ static void
 pciehw_notify(pciehw_port_t *p, notify_entry_t *nentry)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    const u_int32_t pmti = nentry->info.pmti;
+    const tlpauxinfo_t *info = &nentry->info;
+    const u_int32_t pmti = info->pmti;
     const pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
     const pciehwdevh_t hwdevh = spmt->owner;
     pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
@@ -238,39 +239,39 @@ pciehw_notify(pciehw_port_t *p, notify_entry_t *nentry)
     }
 
     /*
-     * If info.pmt_hit means we hit an entry we installed
+     * If info->pmt_hit means we hit an entry we installed
      * in the PMT for a reason.  Go process the transaction.
      *
-     * If !info.pmt then perhaps this is an exception or error.
+     * If !info->pmt then perhaps this is an exception or error.
      */
-    if (nentry->info.pmt_hit) {
+    if (info->pmt_hit) {
         switch (stlp->type) {
         case PCIE_STLP_CFGRD:
         case PCIE_STLP_CFGRD1:
-            pciehw_cfgrd_notify(phwdev, stlp, spmt);
+            pciehw_cfgrd_notify(phwdev, stlp, info, spmt);
             p->notcfgrd++;
             break;
         case PCIE_STLP_CFGWR:
         case PCIE_STLP_CFGWR1:
-            pciehw_cfgwr_notify(phwdev, stlp, spmt);
+            pciehw_cfgwr_notify(phwdev, stlp, info, spmt);
             p->notcfgwr++;
             break;
         case PCIE_STLP_MEMRD:
         case PCIE_STLP_MEMRD64:
-            pciehw_barrd_notify(phwdev, stlp, spmt);
+            pciehw_barrd_notify(phwdev, stlp, info, spmt);
             p->notmemrd++;
             break;
         case PCIE_STLP_MEMWR:
         case PCIE_STLP_MEMWR64:
-            pciehw_barwr_notify(phwdev, stlp, spmt);
+            pciehw_barwr_notify(phwdev, stlp, info, spmt);
             p->notmemwr++;
             break;
         case PCIE_STLP_IORD:
-            pciehw_barrd_notify(phwdev, stlp, spmt);
+            pciehw_barrd_notify(phwdev, stlp, info, spmt);
             p->notiord++;
             break;
         case PCIE_STLP_IOWR:
-            pciehw_barwr_notify(phwdev, stlp, spmt);
+            pciehw_barwr_notify(phwdev, stlp, info, spmt);
             p->notiowr++;
             break;
         default:
@@ -368,12 +369,13 @@ pciehw_notify_intr_init(const int port, u_int64_t msgaddr, u_int32_t msgdata)
 int
 pciehw_notify_poll(void)
 {
-    pciehw_mem_t *phwmem = pciehw_get_hwmem();
-    int port;
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    const u_int32_t ring_mask = pshmem->notify_ring_mask;
+    int port, pi, ci;
 
     for (port = 0; port < PCIEHW_NPORTS; port++) {
-        if (phwmem->notify_intr_dest[port] != 0) {
-            phwmem->notify_intr_dest[port] = 0;
+        notify_get_masked_pici(port, &pi, &ci, ring_mask);
+        if (ci != pi) {
             pciehw_notify_intr(port);
         }
     }
@@ -392,7 +394,8 @@ pciehw_notify_poll_init(void)
     const u_int64_t msgaddr = pal_mem_vtop(&phwmem->notify_intr_dest[0]);
     const u_int32_t msgdata = 1;
 
-    return req_int_init(notify_int_addr(), "notify_intr", port, msgaddr, msgdata);
+    return req_int_init(notify_int_addr(), "notify_intr", port,
+                        msgaddr, msgdata);
 }
 
 /******************************************************************

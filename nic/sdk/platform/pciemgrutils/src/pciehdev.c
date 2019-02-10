@@ -62,18 +62,6 @@ pciehdev_delete(pciehdev_t *pdev)
 }
 
 void
-pciehdev_set_priv(pciehdev_t *pdev, void *priv)
-{
-    pdev->priv = priv;
-}
-
-void *
-pciehdev_get_priv(pciehdev_t *pdev)
-{
-    return pdev->priv;
-}
-
-void
 pciehdev_set_cfg(pciehdev_t *pdev, pciehcfg_t *pcfg)
 {
     pdev->pcfg = pcfg;

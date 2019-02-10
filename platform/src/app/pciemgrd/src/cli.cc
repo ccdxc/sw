@@ -22,8 +22,7 @@
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/evutils/include/evutils.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 
 #include "pciemgrd_impl.hpp"
@@ -554,6 +553,14 @@ cmd_quit(int argc, char *argv[])
     cmd_exit(argc, argv);
 }
 
+#ifndef PCIEMGRD_GOLD
+static void
+cmd_upgrade_save(int argc, char *argv[])
+{
+    upgrade_state_save();
+}
+#endif /* PCIEMGRD_GOLD */
+
 static void cmd_help(int argc, char *argv[]);
 static void cmd_dbg(int argc, char *argv[]);
 
@@ -582,6 +589,9 @@ static cmd_t cmdtab[] = {
     CMDENT(dbg, "invoke debug interface", ""),
     CMDENT(exit, "exit program", ""),
     CMDENT(quit, "exit program", ""),
+#ifndef PCIEMGRD_GOLD
+    CMDENT(upgrade_save, "upgrade save state", ""),
+#endif /* PCIEMGRD_GOLD */
     { NULL, NULL }
 };
 
@@ -697,11 +707,13 @@ cli_loop(void)
      * In interactive mode, pre-initialize all the active ports
      * to save the user some typing.
      */
-    for (port = 0; port < PCIEPORT_NPORTS; port++) {
-        if (pme->enabled_ports & (1 << port)) {
-            if ((r = pciehdev_initialize(port)) < 0) {
-                printf("pciehdev_initialize %d failed: %d\n", port, r);
-                goto close_dev_error_out;
+    if (pme->params.initmode == FORCE_INIT) {
+        for (port = 0; port < PCIEPORT_NPORTS; port++) {
+            if (pme->enabled_ports & (1 << port)) {
+                if ((r = pciehdev_initialize(port)) < 0) {
+                    printf("pciehdev_initialize %d failed: %d\n", port, r);
+                    goto close_dev_error_out;
+                }
             }
         }
     }

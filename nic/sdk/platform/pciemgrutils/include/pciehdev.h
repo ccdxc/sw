@@ -25,9 +25,6 @@ pciehdev_t *pciehdev_new(const char *name,
                          const pciehdevice_resources_t *pres);
 void pciehdev_delete(pciehdev_t *pdev);
 
-void pciehdev_set_priv(pciehdev_t *pdev, void *priv);
-void *pciehdev_get_priv(pciehdev_t *pdev);
-
 void pciehdev_set_cfg(pciehdev_t *pdev, pciehcfg_t *pcfg);
 pciehcfg_t *pciehdev_get_cfg(pciehdev_t *pdev);
 

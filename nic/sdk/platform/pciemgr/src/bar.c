@@ -187,6 +187,7 @@ static void
 pciehw_barrw_notify(const pciehdev_event_t evtype,
                     pciehwdev_t *phwdev,
                     const pcie_stlp_t *stlp,
+                    const tlpauxinfo_t *info,
                     const pciehw_spmt_t *spmt)
 {
     pciehdev_eventdata_t evd;
@@ -195,12 +196,13 @@ pciehw_barrw_notify(const pciehdev_event_t evtype,
     memset(&evd, 0, sizeof(evd));
     evd.evtype = evtype;
     evd.port = phwdev->port; /* XXX port in, rather than derive from phwdev? */
-    evd.pdev = phwdev->pdev;
+    evd.lif = phwdev->lifb;
     memrw = &evd.memrw_notify;
     memrw->baraddr = stlp->addr;
     memrw->cfgidx = spmt->cfgidx;
     memrw->baroffset = stlp->addr - pmt_bar_getaddr(&spmt->pmt);
     memrw->size = stlp->size;
+    memrw->localpa = info->direct_addr;
     memrw->data = stlp->data; /* data, if write */
     pciehw_event(phwdev, &evd);
 }
@@ -208,17 +210,19 @@ pciehw_barrw_notify(const pciehdev_event_t evtype,
 void
 pciehw_barrd_notify(pciehwdev_t *phwdev,
                     const pcie_stlp_t *stlp,
+                    const tlpauxinfo_t *info,
                     const pciehw_spmt_t *spmt)
 {
-    pciehw_barrw_notify(PCIEHDEV_EV_MEMRD_NOTIFY, phwdev, stlp, spmt);
+    pciehw_barrw_notify(PCIEHDEV_EV_MEMRD_NOTIFY, phwdev, stlp, info, spmt);
 }
 
 void
 pciehw_barwr_notify(pciehwdev_t *phwdev,
                     const pcie_stlp_t *stlp,
+                    const tlpauxinfo_t *info,
                     const pciehw_spmt_t *spmt)
 {
-    pciehw_barrw_notify(PCIEHDEV_EV_MEMWR_NOTIFY, phwdev, stlp, spmt);
+    pciehw_barrw_notify(PCIEHDEV_EV_MEMWR_NOTIFY, phwdev, stlp, info, spmt);
 }
 
 void

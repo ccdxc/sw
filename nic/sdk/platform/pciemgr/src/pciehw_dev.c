@@ -17,7 +17,6 @@
 #include "nic/sdk/platform/pciemgr/include/pciehw.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciehdev_impl.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 #include "pciehw_impl.h"
 
 #define NPORTS 8
@@ -30,7 +29,7 @@ typedef struct pciehdev_portinfo_s {
 } pciehdev_portinfo_t;
 
 typedef struct pciehdev_data_s {
-    pciehdev_params_t params;
+    pciemgr_params_t params;
     pciehdev_evhandler_t evhandler;
     pciehdev_portinfo_t portinfo[NPORTS];
 } pciehdev_data_t;
@@ -46,7 +45,7 @@ pciehdev_get_data(void)
 /******************************************************************/
 
 int
-pciehdev_open(pciehdev_params_t *params)
+pciehdev_open(pciemgr_params_t *params)
 {
     pciehdev_data_t *pdevdata = pciehdev_get_data();
     int r = pciehw_open(params);

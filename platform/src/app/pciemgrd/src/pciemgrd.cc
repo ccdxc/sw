@@ -17,8 +17,8 @@
 #include "platform/include/common/pci_ids.h"
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/evutils/include/evutils.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 
 #include "pciemgrd_impl.hpp"
@@ -29,7 +29,7 @@ static void
 usage(void)
 {
     fprintf(stderr,
-"Usage: pciemgrd [-dFinv][-e <enabled_ports>[-b <first_bus_num>]\n"
+"Usage: pciemgrd [-dFinrv][-e <enabled_ports>[-b <first_bus_num>]\n"
 "                [-I <inherit-mode>][-P gen<G>x<W>][-R 0|1]\n"
 "                [-V subvendorid][-D subdeviceid]\n"
 "    -b <first_bus_num> set first bus used to <first_bus_num>\n"
@@ -39,6 +39,7 @@ usage(void)
 "    -i                 interactive mode\n"
 "    -I <inherit-mode>  inherit or re-initialize hw/shmem\n"
 "    -P gen<G>x<W>      spec devices as pcie gen <G>, lane width <W>\n"
+"    -r                 restart after upgrade\n"
 "    -R <0|1>           reboot_on_hostdn=<0|1>\n"
 "    -V subvendorid     default subsystem vendor id\n"
 "    -D subdeviceid     default subsystem device id\n");
@@ -120,7 +121,7 @@ int
 open_hostports(void)
 {
     pciemgrenv_t *pme = pciemgrenv_get();
-    pciehdev_params_t *p = &pme->params;
+    pciemgr_params_t *p = &pme->params;
     int r, port;
 
     /*
@@ -129,7 +130,7 @@ open_hostports(void)
     r = 0;
     for (port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->enabled_ports & (1 << port)) {
-            if ((r = pcieport_open(port)) < 0) {
+            if ((r = pcieport_open(port, p->initmode)) < 0) {
                 pciesys_logerror("pcieport_open %d failed: %d\n", port, r);
                 goto error_out;
             }
@@ -270,13 +271,22 @@ pciemgrd_params(pciemgrenv_t *pme)
                                             pme->enabled_ports);
     pme->poll_port = pciemgrd_param_ull("PCIE_POLL_PORT", pme->poll_port);
     pme->poll_dev = pciemgrd_param_ull("PCIE_POLL_DEV", pme->poll_dev);
+
+#ifndef PCIEMGRD_GOLD
+    if (pme->params.restart) {
+        if (upgrade_state_restore() < 0) {
+            pciesys_logerror("restore failed, forcing full init\n");
+            pme->params.initmode = FORCE_INIT;
+        }
+    }
+#endif /* PCIEMGRD_GOLD */
 }
 
 int
 main(int argc, char *argv[])
 {
     pciemgrenv_t *pme = pciemgrenv_get();
-    pciehdev_params_t *p = &pme->params;
+    pciemgr_params_t *p = &pme->params;
     int r, opt;
 
     pme->interactive = 1;
@@ -287,10 +297,12 @@ main(int argc, char *argv[])
     p->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
 
     /*
+     * For aarch64 we can inherit a system in case we get restarted on
+     * a running system (mostly for testing).
      * For x86_64 we want to FORCE_INIT to reinitialize hw/shmem on startup.
      */
 #ifdef __aarch64__
-    p->initmode = FORCE_INIT;
+    p->initmode = INHERIT_OK;
 #else
     p->initmode = FORCE_INIT;
 #endif
@@ -312,7 +324,7 @@ main(int argc, char *argv[])
     pme->enabled_ports = pal_is_asic() ? 0x1 : 0x5;
     pme->poll_port = 1;
     pme->poll_dev = 0;
-    while ((opt = getopt(argc, argv, "b:Cde:FGiI:P:V:D:R:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:Cde:FGiI:P:V:D:rR:")) != -1) {
         switch (opt) {
         case 'b':
             p->first_bus = strtoul(optarg, NULL, 0);
@@ -352,6 +364,10 @@ main(int argc, char *argv[])
                 printf("bad pcie spec: want gen%%dx%%d, got %s\n", optarg);
                 exit(1);
             }
+            break;
+        case 'r':
+            p->restart = 1;
+            p->initmode = INHERIT_OK;
             break;
         case 'R':
             pme->reboot_on_hostdn = strtoul(optarg, NULL, 0);

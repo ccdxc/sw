@@ -212,6 +212,7 @@ stlp_overlap(const pcie_stlp_t *stlp,
 void
 pciehw_cfgrd_notify(pciehwdev_t *phwdev,
                     const pcie_stlp_t *stlp,
+                    const tlpauxinfo_t *info,
                     const pciehw_spmt_t *spmt)
 {
 }
@@ -318,7 +319,7 @@ pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 static void
 pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
-    pciehdev_params_t *params = pciehw_get_params();
+    pciemgr_params_t *params = pciehw_get_params();
     pciehwbar_t *phwbar;
     cfgspace_t cs;
     int i, cfgoff;
@@ -403,6 +404,7 @@ pciehw_cfgwr_msix(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 void
 pciehw_cfgwr_notify(pciehwdev_t *phwdev,
                     const pcie_stlp_t *stlp,
+                    const tlpauxinfo_t *info,
                     const pciehw_spmt_t *spmt)
 {
     const u_int16_t reg = stlp->addr;
@@ -434,7 +436,8 @@ void
 pciehw_cfgrd_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    const u_int32_t pmti = ientry->info.pmti;
+    const tlpauxinfo_t *info = &ientry->info;
+    const u_int32_t pmti = info->pmti;
     const pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
     const pciehwdevh_t hwdevh = spmt->owner;
     pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
@@ -445,7 +448,7 @@ pciehw_cfgrd_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
      * then we'll pick up the cfg value.  The handler
      * has a chance to modify the data if desired.
      */
-    pciehw_cfgrd_notify(phwdev, stlp, spmt);
+    pciehw_cfgrd_notify(phwdev, stlp, info, spmt);
     if (pciehwdev_cfgrd(phwdev, stlp->addr, stlp->size, &val) < 0) {
         ientry->cpl = PCIECPL_CA;
     } else {
@@ -458,7 +461,8 @@ void
 pciehw_cfgwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    const u_int32_t pmti = ientry->info.pmti;
+    const tlpauxinfo_t *info = &ientry->info;
+    const u_int32_t pmti = info->pmti;
     const pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
     const pciehwdevh_t hwdevh = spmt->owner;
     pciehwdev_t *phwdev = pciehwdev_get(hwdevh);
@@ -470,6 +474,6 @@ pciehw_cfgwr_indirect(indirect_entry_t *ientry, const pcie_stlp_t *stlp)
     if (pciehwdev_cfgwr(phwdev, stlp->addr, stlp->size, stlp->data) < 0) {
         ientry->cpl = PCIECPL_CA;
     }
-    pciehw_cfgwr_notify(phwdev, stlp, spmt);
+    pciehw_cfgwr_notify(phwdev, stlp, info, spmt);
     pciehw_indirect_complete(ientry);
 }

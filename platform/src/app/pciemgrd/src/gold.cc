@@ -12,8 +12,7 @@
 
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 
 #include "pciemgrd_impl.hpp"

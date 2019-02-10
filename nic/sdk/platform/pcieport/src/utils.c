@@ -11,6 +11,7 @@
 #include <inttypes.h>
 
 #include "nic/sdk/platform/pal/include/pal.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 

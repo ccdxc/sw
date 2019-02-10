@@ -316,7 +316,6 @@ Accel_PF::CreateHostDevice()
         NIC_LOG_ERR("{}: Failed to create PCI device", spec->name);
         return false;
     }
-    pciehdev_set_priv(pdev, (void *)this);
 
     // Add device to PCI topology
     if (pciemgr) {

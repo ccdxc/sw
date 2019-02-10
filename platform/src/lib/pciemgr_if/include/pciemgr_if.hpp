@@ -24,10 +24,10 @@ public:
         evhandler(void) {}
         virtual ~evhandler(void) {}
         virtual void memrd(const int port,
-                           pciehdev_t *pdev,
+                           const uint32_t lif,
                            const pciehdev_memrw_notify_t *n) {};
         virtual void memwr(const int port,
-                           pciehdev_t *pdev,
+                           const uint32_t lif,
                            const pciehdev_memrw_notify_t *n) {};
         virtual void hostup(const int port) {};
         virtual void hostdn(const int port) {};

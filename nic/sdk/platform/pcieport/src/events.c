@@ -13,6 +13,7 @@
 
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 

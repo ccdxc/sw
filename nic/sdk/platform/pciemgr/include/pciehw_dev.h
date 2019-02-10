@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #ifndef __PCIEHW_DEV_H__
@@ -21,30 +21,6 @@ typedef struct pciehbars_s pciehbars_t;
 struct pciehdevice_resources_s;
 typedef struct pciehdevice_resources_s pciehdevice_resources_t;
 
-typedef enum pciehdev_initmode_e {
-    INHERIT_ONLY,               /* passive clients: pcieutil, debug, etc */
-    INHERIT_OK,                 /* pciemgrd restart */
-    FORCE_INIT,                 /* pciemgrd must init */
-} pciehdev_initmode_t;
-
-typedef struct pciehdev_params_s {
-    u_int8_t cap_gen;           /* default GenX capability (1,2,3,4) */
-    u_int8_t cap_width;         /* xX lane width (1,2,4,8,16) */
-    u_int16_t vendorid;         /* default vendorid */
-    u_int16_t subvendorid;      /* default subvendorid */
-    u_int16_t subdeviceid;      /* default subdeviceid */
-    u_int8_t first_bus;         /* first bus number for virtual devices bdf */
-    pciehdev_initmode_t initmode; /* how to initialize hw,mem/shmem */
-    u_int32_t fake_bios_scan:1; /* scan finalized topology, assign bus #'s */
-    u_int32_t noexttag:1;       /* no extended tags capable */
-    u_int32_t noexttag_en:1;    /* no extended tags enabled */
-    u_int32_t nomsixcap:1;      /* no msix cap */
-    u_int32_t sris:1;           /* enable spread spectrum clk */
-    u_int32_t compliance:1;     /* compliance test mode */
-    u_int32_t strict_crs:1;     /* enable crs=1 at open */
-    u_int32_t force_bars_load:1;/* force bars to load early */
-} pciehdev_params_t;
-
 typedef enum pciehdev_event_e {
     PCIEHDEV_EV_NONE,
     PCIEHDEV_EV_MEMRD_NOTIFY,
@@ -56,13 +32,14 @@ typedef struct pciehdev_memrw_notify_s {
     u_int64_t baroffset;        /* bar-local offset */
     u_int8_t cfgidx;            /* bar cfgidx */
     u_int32_t size;             /* i/o size */
+    u_int64_t localpa;          /* local physical address */
     u_int64_t data;             /* data, if write */
 } pciehdev_memrw_notify_t;
 
 typedef struct pciehdev_eventdata_s {
     pciehdev_event_t evtype;    /* PCIEHDEV_EV_* */
     u_int8_t port;              /* PCIe port */
-    pciehdev_t *pdev;           /* pdev device if device event */
+    u_int32_t lif;              /* lif if event for a lif */
     union {
         pciehdev_memrw_notify_t memrw_notify;   /* EV_MEMRD/WR_NOTIFY */
     };
@@ -70,7 +47,7 @@ typedef struct pciehdev_eventdata_s {
 
 typedef void (*pciehdev_evhandler_t)(const pciehdev_eventdata_t *evdata);
 
-int pciehdev_open(pciehdev_params_t *params);
+int pciehdev_open(pciemgr_params_t *params);
 void pciehdev_close(void);
 
 pciehdev_t *pciehdev_bridgeup_new(void);

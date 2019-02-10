@@ -284,22 +284,7 @@ dev_evhandler(const pciehdev_eventdata_t *evd)
     m->hdr.msgtype = PMMSG_EVENT;
 
     char *mp = (char *)&m->event + sizeof(pmmsg_event_t);
-
-    //
-    // If this event comes with a pdev, extract the client's pdev
-    // that was stashed in pdev->priv for just this purpose.
-    // This will map to the client's pdev in the domain on the other
-    // end of the socket.
-    //
-    if (evd->pdev) {
-        pciehdev_eventdata_t levd;
-        levd = *evd;
-        pciehdev_t *client_pdev = (pciehdev_t *)pciehdev_get_priv(evd->pdev);
-        levd.pdev = client_pdev;
-        memcpy(mp, &levd, sizeof(pciehdev_eventdata_t));
-    } else {
-        memcpy(mp, evd, sizeof(pciehdev_eventdata_t));
-    }
+    memcpy(mp, evd, sizeof(pciehdev_eventdata_t));
 
     // msg complete - send it
     pciemgrs_msgsend(m);

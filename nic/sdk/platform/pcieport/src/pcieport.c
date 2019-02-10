@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -9,16 +9,84 @@
 #include <errno.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <fcntl.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 
 #include "platform/include/common/pci_ids.h"
+#include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
-pcieport_info_t pcieport_info;
+pcieport_info_t *pcieport_info;
+
+static pcieport_info_t *
+pcieport_info_map(pciemgr_initmode_t initmode)
+{
+    pcieport_info_t *pi;
+    char path[PATH_MAX];
+    char *env;
+    int oflags;
+
+    /*
+     * Find the default path, either from $PCIEPORT_DATA
+     * or /var/run/pcieport_data on ARM,
+     * or $HOME/.pcieport_data on x86_64.
+     */
+    env = getenv("PCIEPORT_DATA");
+    if (env) {
+        strncpy(path, env, sizeof(path));
+        pciesys_loginfo("PCIEPORT_DATA override %s\n", path);
+    } else {
+#ifdef __aarch64__
+        strncpy(path, "/var/run/pcieport_data", sizeof(path));
+#else
+        env = getenv("HOME");
+        snprintf(path, sizeof(path), "%s/.pcieport_data", env ? env : "");
+#endif
+    }
+
+    /*
+     * If FORCE_INIT, just rm the datafile and we'll behave as if
+     * there was no saved state.
+     */
+    if (initmode == FORCE_INIT) {
+        (void)unlink(path);
+    }
+
+    oflags = O_RDWR;
+    if (initmode == INHERIT_OK || initmode == FORCE_INIT) {
+        oflags |= O_CREAT;
+    }
+    pi = mapfile(path, sizeof(pcieport_info_t), oflags);
+    if (pi == NULL) {
+        pciesys_logerror("%s: %s\n", path, strerror(errno));
+        return NULL;
+    }
+    return pi;
+}
+
+static void
+pcieport_info_unmap(void)
+{
+    munmap(pcieport_info, sizeof(pcieport_info_t));
+    pcieport_info = NULL;
+}
+
+pcieport_info_t *
+pcieport_info_get_or_map(pciemgr_initmode_t initmode)
+{
+    if (pcieport_info == NULL) {
+        pcieport_info = pcieport_info_map(initmode);
+    }
+    return pcieport_info;
+}
+
 
 static pcieport_t *
 pcieport_get(const int port)
@@ -33,17 +101,32 @@ pcieport_get(const int port)
 }
 
 int
-pcieport_open(const int port)
+pcieport_open(const int port, pciemgr_initmode_t initmode)
 {
-    pcieport_info_t *pi = pcieport_info_get();
+    pcieport_info_t *pi = pcieport_info_get_or_map(initmode);
     pcieport_t *p;
 
+    if (pi == NULL) {
+        return -ENOENT;
+    }
+    if (pcieport_onetime_init(pi, initmode) < 0) {
+        return -EIO;
+    }
     if (port < 0 || port >= PCIEPORT_NPORTS) {
         pciesys_logerror("pcieport_open port %d out of range\n", port);
         return -EBADF;
     }
     p = &pi->pcieport[port];
     if (p->open) {
+        if (
+#ifdef __aarch64__
+            pi->inherited_init &&
+#endif /* __aarch64__ */
+            (initmode == INHERIT_ONLY || initmode == INHERIT_OK)) {
+            pciesys_logdebug("pcieport_open port %d inherited open\n", port);
+            return 0;
+        }
+        pciesys_logerror("pcieport_open port %d already open\n", port);
         return -EBUSY;
     }
     p->port = port;
@@ -62,6 +145,7 @@ pcieport_close(const int port)
     if (p && p->open) {
         p->open = 0;
     }
+    if (0) pcieport_info_unmap();
 }
 
 static int
@@ -171,13 +255,27 @@ pcieport_default_cap(pcieport_t *p, int *gen, int *width)
 }
 
 int
-pcieport_hostconfig(const int port, const pciehdev_params_t *params)
+pcieport_hostconfig(const int port, const pciemgr_params_t *params)
 {
     pcieport_t *p = pcieport_get(port);
     int r, default_gen, default_width;
 
     if (p == NULL) {
         return -EBADF;
+    }
+
+    if (p->config) {
+        if (!p->host) {
+            pciesys_logerror("pcieport_hostconfig port %d "
+                             "configured but not host\n", port);
+            return -EBUSY;
+        }
+        if (params->initmode == INHERIT_ONLY ||
+            params->initmode == INHERIT_OK) {
+            pciesys_logdebug("pcieport_hostconfig port %d "
+                             "inherited host config\n", port);
+            return 0;
+        }
     }
 
     pcieport_default_cap(p, &default_gen, &default_width);
@@ -223,9 +321,6 @@ pcieport_hostconfig(const int port, const pciehdev_params_t *params)
     case 16: p->lanemask = 0xffff << (p->port << 4); break;
     }
 
-    if (pcieport_onetime_init() < 0) {
-        return -EIO;
-    }
     if (pcieport_onetime_portinit(p) < 0) {
         return -EFAULT;
     }
@@ -251,8 +346,10 @@ pcieport_crs_off(const int port)
 #ifdef __aarch64__
     pciesys_loginfo("port%d: crs_off\n", port);
 #endif
-    p->crs = 0;
-    pcieport_set_crs(p, p->crs);
+    if (p->crs) {
+        p->crs = 0;
+        pcieport_set_crs(p, p->crs);
+    }
     return 0;
 }
 
@@ -300,17 +397,17 @@ cmd_port(int argc, char *argv[])
     LOG("%-*s: %d\n", w, "event", p->event);
     LOG("%-*s: %s\n", w, "fault_reason", p->fault_reason);
     LOG("%-*s: %s\n", w, "last_fault_reason", p->last_fault_reason);
-    LOG("%-*s: %"PRIu64"\n", w, "hostup", p->hostup);
-    LOG("%-*s: %"PRIu64"\n", w, "phypolllast", p->phypolllast);
-    LOG("%-*s: %"PRIu64"\n", w, "phypollmax", p->phypollmax);
-    LOG("%-*s: %"PRIu64"\n", w, "phypollperstn", p->phypollperstn);
-    LOG("%-*s: %"PRIu64"\n", w, "phypollfail", p->phypollfail);
-    LOG("%-*s: %"PRIu64"\n", w, "gatepolllast", p->gatepolllast);
-    LOG("%-*s: %"PRIu64"\n", w, "gatepollmax", p->gatepollmax);
-    LOG("%-*s: %"PRIu64"\n", w, "markerpolllast", p->markerpolllast);
-    LOG("%-*s: %"PRIu64"\n", w, "markerpollmax", p->markerpollmax);
-    LOG("%-*s: %"PRIu64"\n", w, "axipendpolllast",p->axipendpolllast);
-    LOG("%-*s: %"PRIu64"\n", w, "axipendpollmax", p->axipendpollmax);
+    LOG("%-*s: %" PRIu64 "\n", w, "hostup", p->hostup);
+    LOG("%-*s: %" PRIu64 "\n", w, "phypolllast", p->phypolllast);
+    LOG("%-*s: %" PRIu64 "\n", w, "phypollmax", p->phypollmax);
+    LOG("%-*s: %" PRIu64 "\n", w, "phypollperstn", p->phypollperstn);
+    LOG("%-*s: %" PRIu64 "\n", w, "phypollfail", p->phypollfail);
+    LOG("%-*s: %" PRIu64 "\n", w, "gatepolllast", p->gatepolllast);
+    LOG("%-*s: %" PRIu64 "\n", w, "gatepollmax", p->gatepollmax);
+    LOG("%-*s: %" PRIu64 "\n", w, "markerpolllast", p->markerpolllast);
+    LOG("%-*s: %" PRIu64 "\n", w, "markerpollmax", p->markerpollmax);
+    LOG("%-*s: %" PRIu64 "\n", w, "axipendpolllast",p->axipendpolllast);
+    LOG("%-*s: %" PRIu64 "\n", w, "axipendpollmax", p->axipendpollmax);
 #undef LOG
 }
 

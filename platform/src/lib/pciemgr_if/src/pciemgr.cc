@@ -12,11 +12,11 @@
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/cfgspace/include/cfgspace.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciehdev_impl.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciehcfg_impl.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciehbar_impl.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 
 #include "pciesvc.h"
 #include "pciemgr_if.hpp"
@@ -121,14 +121,7 @@ pciemgr::add_device(pciehdev_t *pdev)
     mp = (char *)&m->dev_add + sizeof(pmmsg_dev_add_t);
 
     // pciehdev_t
-    // Make a local copy of the pdev struct so we can assign
-    // our own private tag, using the callers pdev as our tag.
-    // We can get the tag from the pdev associated with events
-    // so we can link the event back to our caller's pdev.
-    pciehdev_t lpdev;
-    lpdev = *pdev;
-    pciehdev_set_priv(&lpdev, pdev);
-    memcpy(mp, &lpdev, sizeof(pciehdev_t));
+    memcpy(mp, pdev, sizeof(pciehdev_t));
     mp += sizeof(pciehdev_t);
 
     // pciehcfg_t
@@ -214,10 +207,10 @@ pciemgr::handle_event(const pciehdev_eventdata_t *evd)
 {
     switch (evd->evtype) {
     case PCIEHDEV_EV_MEMRD_NOTIFY:
-        evhandlercb.memrd(evd->port, evd->pdev, &evd->memrw_notify);
+        evhandlercb.memrd(evd->port, evd->lif, &evd->memrw_notify);
         break;
     case PCIEHDEV_EV_MEMWR_NOTIFY:
-        evhandlercb.memwr(evd->port, evd->pdev, &evd->memrw_notify);
+        evhandlercb.memwr(evd->port, evd->lif, &evd->memrw_notify);
         break;
     default:
         break;

@@ -401,7 +401,7 @@ pciehw_pmt_unload_bar(pciehwbar_t *phwbar)
 void
 pciehw_pmt_enable_bar(pciehwbar_t *phwbar, const int on)
 {
-    pciehdev_params_t *params = pciehw_get_params();
+    pciemgr_params_t *params = pciehw_get_params();
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     const u_int32_t pmti = phwbar->pmtb;
     pciehw_spmt_t *spmt = &pshmem->spmt[pmti];

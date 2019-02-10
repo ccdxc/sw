@@ -12,6 +12,7 @@
 
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "pcieport.h"
 #include "pcieport_impl.h"
 
@@ -121,22 +122,35 @@ pcieport_param_ull(const char *name, const u_int64_t def)
 }
 
 int
-pcieport_onetime_init(void)
+pcieport_onetime_init(pcieport_info_t *pi, pciemgr_initmode_t initmode)
 {
-    pcieport_info_t *pi = pcieport_info_get();
+    /* first check that version matches what we expect */
+    if (pi->version && pi->version != PCIEPORT_VERSION) {
+        /* inherit-only, but we can't inherit this version */
+        if (initmode == INHERIT_ONLY) {
+            pciesys_logerror("pcieport: version mismatch %d (want %d)\n",
+                             pi->version, PCIEPORT_VERSION);
+            return -1;
+        }
+        /* reset so we re-init everything */
+        pciesys_logwarn("pcieport: version mismatch %d (want %d), resetting\n",
+                         pi->version, PCIEPORT_VERSION);
+        memset(pi, 0, sizeof(*pi));
+    }
 
+    /* if already initialized, no more to do */
     if (pi->init) {
-        /* already initialized */
         return 0;
     }
 
+    pi->version = PCIEPORT_VERSION;
     pi->serdes_init_always = pcieport_param_ull("PCIE_SERDES_INIT_ALWAYS", 0);
 
     if (pcieport_already_init()) {
         pciesys_loginfo("pcieport: inherited init\n");
         pi->init = 1;
         pi->serdes_init = 1;
-        pi->already_init = 1;
+        pi->inherited_init = 1;
         return 0;
     }
 #ifdef __aarch64__
@@ -172,7 +186,7 @@ pcieport_onetime_portinit(pcieport_t *p)
      * This is a sign we should acquire the current state
      * of this port to initialize the state machine.
      */
-    if (pi->already_init) {
+    if (pi->inherited_init) {
         pcieport_intr_init(p);
     }
     p->init = 1;

@@ -12,7 +12,6 @@ typedef struct pciehbars_s pciehbars_t;
 
 typedef struct pciehdev_s {
     char name[32];
-    void *priv;
     u_int32_t pf:1;                     /* sriov pf */
     u_int32_t vf:1;                     /* sriov vf */
     u_int32_t fn0:1;                    /* multifunction dev, function 0 */

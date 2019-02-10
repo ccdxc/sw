@@ -69,7 +69,7 @@ cmd_construct(int argc, char *argv[])
 {
     pciehmgrtest_t *pmgrt = pciehmgrtest_get();
     pciehdev_t *pdev;
-    pciehdev_params_t devparams;
+    pciemgr_params_t devparams;
     int opt;
     char *type;
 
