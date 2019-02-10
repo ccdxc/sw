@@ -20,6 +20,8 @@ typedef enum itree_type_e {
     ITREE_TYPE_IPV6,          /**< IPv6 route interval tree */
     ITREE_TYPE_PORT,          /**< tree with port as key */
     ITREE_TYPE_PROTO_PORT,    /**< tree with protocol + port as key */
+    ITREE_TYPE_IPV4_ACL,      /**< IPv4 ACL interval tree */
+    ITREE_TYPE_MAX,          /**< invalid tree type */
 } itree_type_t;
 
 typedef struct route_s {

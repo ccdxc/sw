@@ -10,6 +10,10 @@
 #include <stack>
 #include "nic/apollo/lpm/lpm.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
+#include "nic/apollo/lpm/lpm_sport.hpp"
+#include "nic/apollo/lpm/lpm_ipv4_acl.hpp"
+#include "nic/apollo/lpm/lpm_ipv4_route.hpp"
+#include "nic/apollo/lpm/lpm_proto_dport.hpp"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 #include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
 
@@ -26,7 +30,7 @@ typedef struct itable_stack_elem_s {
 } itable_stack_elem_t;
 
 /**< each LPM table is 64 bytes (512 bits/flit) */
-#define LPM_TABLE_SIZE                 (CACHE_LINE_SIZE)
+#define LPM_TABLE_SIZE         (CACHE_LINE_SIZE)
 
 /**
  * key size is 4 bytes for IPv4, 8 bytes (assuming max prefix length of 64)
@@ -35,11 +39,14 @@ typedef struct itable_stack_elem_s {
 static inline uint32_t
 lpm_entry_key_size (itree_type_t tree_type)
 {
-    if ((tree_type == ITREE_TYPE_IPV4) ||
-        (tree_type == ITREE_TYPE_PROTO_PORT)) {
-        return 4;
+    if (tree_type == ITREE_TYPE_IPV4) {
+        return lpm_ipv4_route_key_size();
+    } else if (tree_type == ITREE_TYPE_PROTO_PORT) {
+        return lpm_proto_dport_key_size();
     } else if (tree_type == ITREE_TYPE_PORT) {
-        return 2;
+        return lpm_sport_key_size();
+    } else if (tree_type == ITREE_TYPE_IPV4_ACL) {
+        return lpm_ipv4_acl_key_size();
     } else if (tree_type == ITREE_TYPE_IPV6) {
         return 8;
     }
@@ -55,11 +62,14 @@ lpm_entry_key_size (itree_type_t tree_type)
 static inline uint32_t
 lpm_keys_per_table (itree_type_t tree_type)
 {
-    if ((tree_type == ITREE_TYPE_IPV4) ||
-        (tree_type == ITREE_TYPE_PROTO_PORT)) {
-        return 15;
+    if (tree_type == ITREE_TYPE_IPV4) {
+        return ((LPM_TABLE_SIZE / lpm_ipv4_route_key_size()) - 1);
+    } else if (tree_type == ITREE_TYPE_PROTO_PORT) {
+        return ((LPM_TABLE_SIZE / lpm_proto_dport_key_size()) - 1);
     } else if (tree_type == ITREE_TYPE_PORT) {
-        return 31;
+        return ((LPM_TABLE_SIZE / lpm_sport_key_size()) - 1);
+    } else if (tree_type == ITREE_TYPE_IPV4_ACL) {
+        return ((LPM_TABLE_SIZE / lpm_ipv4_acl_key_size()) - 1);
     } else if (tree_type == ITREE_TYPE_IPV6) {
         return 7;
     }
@@ -94,39 +104,30 @@ typedef struct lpm_stage_meta_s {
  * @param[in]    num_intrvls   number of intervals in the interval table
  * @return       number of lookup stages (aka. depth of the interval tree)
  *
- * The computation is done as follows for IPv4 (or <protocol, port> tree):
- *     The last stage gives an 8-way decision. The other stages each give
- *     a 16-way decision.
- *     #stages = 1 + log16(num_intrvls/8.0)
- *             = 1 + log2(num_intrvls/8.0)/log2(16)
- *             = 1 + log2(num_intrvls/8.0)/4.0
  * for IPv6:
  *     The last stage gives an 4-way decision. The other stages each give
  *     a 8-way decision.
  *     #stages = 1 + log8(num_intrvls/4.0)
  *             = 1 + log2(num_intrvls/4.0)/log2(8)
  *             = 1 + log2(num_intrvls/4.0)/3.0
- * for port tree:
- *     The last stage gives an 16-way decision. The other stages each give
- *     a 32-way decision.
- *     #stages = 1 + log32(num_intrvls/16.0)
- *             = 1 + log2(num_intrvls/16.0)/log2(32)
- *             = 1 + log2(num_intrvls/16.0)/5.0
  */
 static inline uint32_t
 lpm_stages (itree_type_t tree_type, uint32_t num_intrvls)
 {
-    if ((tree_type == ITREE_TYPE_IPV4) ||
-        (tree_type == ITREE_TYPE_PROTO_PORT)) {
-        // 1 * 8-way last stage, plus (n-1) * 16-way stages
-        return (1 + ((uint32_t)ceil(log2f((float)(num_intrvls/8.0))/4.0)));
+    if (tree_type == ITREE_TYPE_IPV4) {
+        return lpm_ipv4_route_stages(num_intrvls);
+    } else if (tree_type == ITREE_TYPE_PROTO_PORT) {
+        return lpm_proto_dport_stages(num_intrvls);
     } else if (tree_type == ITREE_TYPE_PORT) {
-        // 1 * 16-way last stage, plus (n-1) * 32-way stages
-        return (1 + ((uint32_t)ceil(log2f((float)(num_intrvls/16.0))/5.0)));
-    } else {
+        return lpm_sport_stages(num_intrvls);
+    } else if (tree_type == ITREE_TYPE_IPV4_ACL) {
+        return lpm_ipv4_acl_stages(num_intrvls);
+    } else if (tree_type == ITREE_TYPE_IPV6) {
         // 1 * 4-way last stage, plus (n-1) * 8-way stages
         return (1 + ((uint32_t)ceil(log2f((float)(num_intrvls/4.0))/3.0)));
     }
+
+    return 0;
 }
 
 /**
@@ -302,7 +303,7 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
     return SDK_RET_OK;
 }
 
-static inline sdk_ret_t
+sdk_ret_t
 lpm_write_txdma_table (mem_addr_t addr, uint32_t tableid,
                        uint8_t action_id, void *actiondata)
 {
@@ -318,7 +319,7 @@ lpm_write_txdma_table (mem_addr_t addr, uint32_t tableid,
     return SDK_RET_OK;
 }
 
-static inline sdk_ret_t
+sdk_ret_t
 lpm_write_rxdma_table (mem_addr_t addr, uint32_t tableid,
                        uint8_t action_id, void *actiondata)
 {
@@ -335,551 +336,36 @@ lpm_write_rxdma_table (mem_addr_t addr, uint32_t tableid,
 }
 
 static inline sdk_ret_t
-lpm_ipv4_add_key_to_stage (lpm_stage_info_t *stage, lpm_inode_t *lpm_inode)
-{
-    auto table = (route_lpm_s0_actiondata_t *)stage->curr_table;
-
-    switch (stage->curr_index) {
-    case 0:
-        table->action_u.route_lpm_s0_route_lpm_s0.key0 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 1:
-        table->action_u.route_lpm_s0_route_lpm_s0.key1 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 2:
-        table->action_u.route_lpm_s0_route_lpm_s0.key2 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 3:
-        table->action_u.route_lpm_s0_route_lpm_s0.key3 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 4:
-        table->action_u.route_lpm_s0_route_lpm_s0.key4 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 5:
-        table->action_u.route_lpm_s0_route_lpm_s0.key5 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 6:
-        table->action_u.route_lpm_s0_route_lpm_s0.key6 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 7:
-        table->action_u.route_lpm_s0_route_lpm_s0.key7 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 8:
-        table->action_u.route_lpm_s0_route_lpm_s0.key8 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 9:
-        table->action_u.route_lpm_s0_route_lpm_s0.key9 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 10:
-        table->action_u.route_lpm_s0_route_lpm_s0.key10 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 11:
-        table->action_u.route_lpm_s0_route_lpm_s0.key11 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 12:
-        table->action_u.route_lpm_s0_route_lpm_s0.key12 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 13:
-        table->action_u.route_lpm_s0_route_lpm_s0.key13 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    case 14:
-        table->action_u.route_lpm_s0_route_lpm_s0.key14 =
-                lpm_inode->ipaddr.addr.v4_addr;
-        break;
-    default:
-        break;
-    }
-
-    stage->curr_index++;
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-lpm_proto_dport_add_key_to_stage (lpm_stage_info_t *stage,
-                                  lpm_inode_t *lpm_inode)
-{
-    auto table = (slacl_proto_dport_lpm_s0_actiondata_t *)stage->curr_table;
-
-    switch (stage->curr_index) {
-    case 0:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key0 =
-                lpm_inode->key32;
-        break;
-    case 1:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key1 =
-                lpm_inode->key32;
-        break;
-    case 2:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key2 =
-                lpm_inode->key32;
-        break;
-    case 3:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key3 =
-                lpm_inode->key32;
-        break;
-    case 4:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key4 =
-                lpm_inode->key32;
-        break;
-    case 5:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key5 =
-                lpm_inode->key32;
-        break;
-    case 6:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key6 =
-                lpm_inode->key32;
-        break;
-    case 7:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key7 =
-                lpm_inode->key32;
-        break;
-    case 8:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key8 =
-                lpm_inode->key32;
-        break;
-    case 9:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key9 =
-                lpm_inode->key32;
-        break;
-    case 10:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key10 =
-                lpm_inode->key32;
-        break;
-    case 11:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key11 =
-                lpm_inode->key32;
-        break;
-    case 12:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key12 =
-                lpm_inode->key32;
-        break;
-    case 13:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key13 =
-                lpm_inode->key32;
-        break;
-    case 14:
-        table->action_u.slacl_proto_dport_lpm_s0_slacl_proto_dport_lpm_s0.key14 =
-                lpm_inode->key32;
-        break;
-    default:
-        break;
-    }
-
-    stage->curr_index++;
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-lpm_sport_add_key_to_stage (lpm_stage_info_t *stage, lpm_inode_t *lpm_inode)
-{
-    auto table = (slacl_sport_lpm_s0_actiondata_t *)stage->curr_table;
-
-    switch (stage->curr_index) {
-    case 0:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key0 =
-                lpm_inode->port;
-        break;
-    case 1:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key1 =
-                lpm_inode->port;
-        break;
-    case 2:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key2 =
-                lpm_inode->port;
-        break;
-    case 3:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key3 =
-                lpm_inode->port;
-        break;
-    case 4:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key4 =
-                lpm_inode->port;
-        break;
-    case 5:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key5 =
-                lpm_inode->port;
-        break;
-    case 6:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key6 =
-                lpm_inode->port;
-        break;
-    case 7:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key7 =
-                lpm_inode->port;
-        break;
-    case 8:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key8 =
-                lpm_inode->port;
-        break;
-    case 9:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key9 =
-                lpm_inode->port;
-        break;
-    case 10:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key10 =
-                lpm_inode->port;
-        break;
-    case 11:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key11 =
-                lpm_inode->port;
-        break;
-    case 12:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key12 =
-                lpm_inode->port;
-        break;
-    case 13:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key13 =
-                lpm_inode->port;
-        break;
-    case 14:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key14 =
-                lpm_inode->port;
-        break;
-    case 15:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key15 =
-                lpm_inode->port;
-        break;
-    case 16:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key16 =
-                lpm_inode->port;
-        break;
-    case 17:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key17 =
-                lpm_inode->port;
-        break;
-    case 18:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key18 =
-                lpm_inode->port;
-        break;
-    case 19:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key19 =
-                lpm_inode->port;
-        break;
-    case 20:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key20 =
-                lpm_inode->port;
-        break;
-    case 21:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key21 =
-                lpm_inode->port;
-        break;
-    case 22:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key22 =
-                lpm_inode->port;
-        break;
-    case 23:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key23 =
-                lpm_inode->port;
-        break;
-    case 24:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key24 =
-                lpm_inode->port;
-        break;
-    case 25:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key25 =
-                lpm_inode->port;
-        break;
-    case 26:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key26 =
-                lpm_inode->port;
-        break;
-    case 27:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key27 =
-                lpm_inode->port;
-        break;
-    case 28:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key28 =
-                lpm_inode->port;
-        break;
-    case 29:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key29 =
-                lpm_inode->port;
-        break;
-    case 30:
-        table->action_u.slacl_sport_lpm_s0_slacl_sport_lpm_s0.key30 =
-                lpm_inode->port;
-        break;
-    default:
-        break;
-    }
-
-    stage->curr_index++;
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-lpm_ipv4_set_default_data (lpm_stage_info_t *stage, uint32_t default_data)
-{
-    auto table = (route_lpm_s2_actiondata_t *)stage->curr_table;
-
-    table->action_u.route_lpm_s2_route_lpm_s2.data_ = (uint16_t)default_data;
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-lpm_proto_dport_set_default_data (lpm_stage_info_t *stage, uint32_t default_data)
-{
-    auto table = (slacl_proto_dport_lpm_s2_actiondata_t *) stage->curr_table;
-    table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.data_ =
-            (uint16_t)default_data;
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-lpm_sport_set_default_data (lpm_stage_info_t *stage, uint32_t default_data)
-{
-    auto table = (slacl_sport_lpm_s1_actiondata_t *) stage->curr_table;
-    table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data0 = (uint16_t)default_data;
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-lpm_ipv4_add_key_to_last_stage (lpm_stage_info_t *stage, lpm_inode_t *lpm_inode)
-{
-    auto table = (route_lpm_s2_actiondata_t *)stage->curr_table;
-
-    switch (stage->curr_index) {
-        case 0:
-            table->action_u.route_lpm_s2_route_lpm_s2.key0 =
-                    lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.route_lpm_s2_route_lpm_s2.data0 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 1:
-            table->action_u.route_lpm_s2_route_lpm_s2.key1 =
-                    lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.route_lpm_s2_route_lpm_s2.data1 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 2:
-            table->action_u.route_lpm_s2_route_lpm_s2.key2 =
-                    lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.route_lpm_s2_route_lpm_s2.data2 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 3:
-            table->action_u.route_lpm_s2_route_lpm_s2.key3 =
-                    lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.route_lpm_s2_route_lpm_s2.data3 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 4:
-            table->action_u.route_lpm_s2_route_lpm_s2.key4 =
-                    lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.route_lpm_s2_route_lpm_s2.data4 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 5:
-            table->action_u.route_lpm_s2_route_lpm_s2.key5 =
-                    lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.route_lpm_s2_route_lpm_s2.data5 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 6:
-            table->action_u.route_lpm_s2_route_lpm_s2.key6 =
-                    lpm_inode->ipaddr.addr.v4_addr;
-            table->action_u.route_lpm_s2_route_lpm_s2.data6 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        default:
-            break;
-    }
-    stage->curr_index++;
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-lpm_proto_dport_add_key_to_last_stage (lpm_stage_info_t *stage, lpm_inode_t *lpm_inode)
-{
-    auto table = (slacl_proto_dport_lpm_s2_actiondata_t *)stage->curr_table;
-
-    switch (stage->curr_index) {
-        case 0:
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.key0 =
-                    lpm_inode->key32;
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.data0 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 1:
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.key1 =
-                    lpm_inode->key32;
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.data1 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 2:
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.key2 =
-                    lpm_inode->key32;
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.data2 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 3:
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.key3 =
-                    lpm_inode->key32;
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.data3 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 4:
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.key4 =
-                    lpm_inode->key32;
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.data4 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 5:
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.key5 =
-                    lpm_inode->key32;
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.data5 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        case 6:
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.key6 =
-                    lpm_inode->key32;
-            table->action_u.slacl_proto_dport_lpm_s2_slacl_proto_dport_lpm_s2.data6 =
-                    (uint16_t)lpm_inode->data;
-            break;
-        default:
-            break;
-    }
-    stage->curr_index++;
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
-lpm_sport_add_key_to_last_stage (lpm_stage_info_t *stage,
-                                 lpm_inode_t *lpm_inode)
-{
-    auto table = (slacl_sport_lpm_s1_actiondata_t *)stage->curr_table;
-
-    switch (stage->curr_index) {
-    case 0:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key0 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data1 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 1:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key1 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data2 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 2:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key2 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data3 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 3:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key3 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data4 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 4:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key4 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data5 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 5:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key5 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data6 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 6:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key6 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data7 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 7:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key7 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data8 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 8:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key8 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data9 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 9:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key9 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data10 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 10:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key10 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data11 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 11:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key11 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data12 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 12:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key12 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data13 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 13:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key13 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data14 =
-                (uint16_t)lpm_inode->data;
-        break;
-    case 14:
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.key14 =
-                lpm_inode->port;
-        table->action_u.slacl_sport_lpm_s1_slacl_sport_lpm_s1.data15 =
-                (uint16_t)lpm_inode->data;
-        break;
-    default:
-        break;
-    }
-    stage->curr_index++;
-    return SDK_RET_OK;
-}
-
-static inline sdk_ret_t
 lpm_add_key_to_stage (itree_type_t tree_type, lpm_stage_info_t *stage,
                       lpm_inode_t *lpm_inode)
 {
     switch (tree_type) {
     case ITREE_TYPE_IPV4:
-        lpm_ipv4_add_key_to_stage(stage, lpm_inode);
+        lpm_ipv4_route_add_key_to_stage(stage->curr_table,
+                                        stage->curr_index,
+                                        lpm_inode);
         break;
     case ITREE_TYPE_PORT:
-        lpm_sport_add_key_to_stage(stage, lpm_inode);
+        lpm_sport_add_key_to_stage(stage->curr_table,
+                                   stage->curr_index,
+                                   lpm_inode);
         break;
     case ITREE_TYPE_PROTO_PORT:
-        lpm_proto_dport_add_key_to_stage(stage, lpm_inode);
+        lpm_proto_dport_add_key_to_stage(stage->curr_table,
+                                         stage->curr_index,
+                                         lpm_inode);
+        break;
+    case ITREE_TYPE_IPV4_ACL:
+        lpm_ipv4_acl_add_key_to_stage(stage->curr_table,
+                                      stage->curr_index,
+                                      lpm_inode);
         break;
     default:
         SDK_ASSERT(0);
         break;
     }
 
+    stage->curr_index++;
     return SDK_RET_OK;
 }
 
@@ -888,22 +374,20 @@ lpm_write_stage_table (itree_type_t tree_type, lpm_stage_info_t *stage)
 {
     switch (tree_type) {
     case ITREE_TYPE_IPV4:
-        lpm_write_txdma_table(stage->curr_table_addr,
-                              P4_APOLLO_TXDMA_TBL_ID_ROUTE_LPM_S0,
-                              ROUTE_LPM_S0_ROUTE_LPM_S0_ID,
-                              stage->curr_table);
+        lpm_ipv4_route_write_stage_table(stage->curr_table_addr,
+                                         stage->curr_table);
         break;
     case ITREE_TYPE_PORT:
-        lpm_write_rxdma_table(stage->curr_table_addr,
-                              P4_APOLLO_RXDMA_TBL_ID_SLACL_SPORT_LPM_S0,
-                              SLACL_SPORT_LPM_S0_SLACL_SPORT_LPM_S0_ID,
-                              stage->curr_table);
+        lpm_sport_write_stage_table(stage->curr_table_addr,
+                                    stage->curr_table);
         break;
     case ITREE_TYPE_PROTO_PORT:
-        lpm_write_rxdma_table(stage->curr_table_addr,
-                              P4_APOLLO_RXDMA_TBL_ID_SLACL_PROTO_DPORT_LPM_S0,
-                              SLACL_PROTO_DPORT_LPM_S0_SLACL_PROTO_DPORT_LPM_S0_ID,
-                              stage->curr_table);
+        lpm_proto_dport_write_stage_table(stage->curr_table_addr,
+                                          stage->curr_table);
+        break;
+    case ITREE_TYPE_IPV4_ACL:
+        lpm_ipv4_acl_write_stage_table(stage->curr_table_addr,
+                                       stage->curr_table);
         break;
     default:
         SDK_ASSERT(0);
@@ -919,18 +403,30 @@ lpm_add_key_to_last_stage (itree_type_t tree_type, lpm_stage_info_t *stage,
 {
     switch (tree_type) {
     case ITREE_TYPE_IPV4:
-        lpm_ipv4_add_key_to_last_stage(stage, lpm_inode);
+        lpm_ipv4_route_add_key_to_last_stage(stage->curr_table,
+                                       stage->curr_index,
+                                       lpm_inode);
         break;
     case ITREE_TYPE_PORT:
-        lpm_sport_add_key_to_last_stage(stage, lpm_inode);
+        lpm_sport_add_key_to_last_stage(stage->curr_table,
+                                        stage->curr_index,
+                                        lpm_inode);
         break;
     case ITREE_TYPE_PROTO_PORT:
-        lpm_proto_dport_add_key_to_last_stage(stage, lpm_inode);
+        lpm_proto_dport_add_key_to_last_stage(stage->curr_table,
+                                              stage->curr_index,
+                                              lpm_inode);
         break;
+    case ITREE_TYPE_IPV4_ACL:
+        lpm_ipv4_acl_add_key_to_last_stage(stage->curr_table,
+                                           stage->curr_index,
+                                           lpm_inode);
     default:
         SDK_ASSERT(0);
         break;
     }
+
+    stage->curr_index++;
     return SDK_RET_OK;
 }
 
@@ -940,18 +436,22 @@ lpm_set_default_data (itree_type_t tree_type, lpm_stage_info_t *stage,
 {
     switch (tree_type) {
     case ITREE_TYPE_IPV4:
-        lpm_ipv4_set_default_data(stage, default_data);
+        lpm_ipv4_route_set_default_data(stage->curr_table, default_data);
         break;
     case ITREE_TYPE_PORT:
-        lpm_sport_set_default_data(stage, default_data);
+        lpm_sport_set_default_data(stage->curr_table, default_data);
         break;
     case ITREE_TYPE_PROTO_PORT:
-        lpm_proto_dport_set_default_data(stage, default_data);
+        lpm_proto_dport_set_default_data(stage->curr_table, default_data);
+        break;
+    case ITREE_TYPE_IPV4_ACL:
+        lpm_ipv4_acl_set_default_data(stage->curr_table, default_data);
         break;
     default:
         SDK_ASSERT(0);
         break;
     }
+
     return SDK_RET_OK;
 }
 
@@ -960,22 +460,20 @@ lpm_write_last_stage_table (itree_type_t tree_type, lpm_stage_info_t *stage)
 {
     switch (tree_type) {
     case ITREE_TYPE_IPV4:
-        lpm_write_txdma_table(stage->curr_table_addr,
-                              P4_APOLLO_TXDMA_TBL_ID_ROUTE_LPM_S2,
-                              ROUTE_LPM_S2_ROUTE_LPM_S2_ID,
-                              stage->curr_table);
+        lpm_ipv4_route_write_last_stage_table(stage->curr_table_addr,
+                                              stage->curr_table);
         break;
     case ITREE_TYPE_PORT:
-        lpm_write_rxdma_table(stage->curr_table_addr,
-                              P4_APOLLO_RXDMA_TBL_ID_SLACL_SPORT_LPM_S1,
-                              SLACL_SPORT_LPM_S1_SLACL_SPORT_LPM_S1_ID,
-                              stage->curr_table);
+        lpm_sport_write_last_stage_table(stage->curr_table_addr,
+                                         stage->curr_table);
         break;
     case ITREE_TYPE_PROTO_PORT:
-        lpm_write_rxdma_table(stage->curr_table_addr,
-                              P4_APOLLO_RXDMA_TBL_ID_SLACL_PROTO_DPORT_LPM_S2,
-                              SLACL_PROTO_DPORT_LPM_S2_SLACL_PROTO_DPORT_LPM_S2_ID,
-                              stage->curr_table);
+        lpm_proto_dport_write_last_stage_table(stage->curr_table_addr,
+                                               stage->curr_table);
+        break;
+    case ITREE_TYPE_IPV4_ACL:
+        lpm_ipv4_acl_write_last_stage_table(stage->curr_table_addr,
+                                            stage->curr_table);
         break;
     default:
         SDK_ASSERT(0);
@@ -1164,4 +662,980 @@ lpm_tree_create (route_table_t *route_table,
 cleanup:
     free(itable.nodes);
     return ret;
+}
+
+
+
+
+
+
+
+
+
+/* Move the following in to their appropriate SLACL file */
+
+inline sdk_ret_t
+slacl_ip_sport_p1_pack (uint8_t *bytes, uint32_t idx, uint16_t data)
+{
+    auto table = (slacl_ip_sport_p1_actiondata_t *)bytes;
+
+    switch (idx) {
+    case 0:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id00 = data;
+        break;
+    case 1:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id01 = data;
+        break;
+    case 2:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id02 = data;
+        break;
+    case 3:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id03 = data;
+        break;
+    case 4:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id04 = data;
+        break;
+    case 5:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id05 = data;
+        break;
+    case 6:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id06 = data;
+        break;
+    case 7:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id07 = data;
+        break;
+    case 8:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id08 = data;
+        break;
+    case 9:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id09 = data;
+        break;
+    case 10:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id10 = data;
+        break;
+    case 11:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id11 = data;
+        break;
+    case 12:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id12 = data;
+        break;
+    case 13:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id13 = data;
+        break;
+    case 14:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id14 = data;
+        break;
+    case 15:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id15 = data;
+        break;
+    case 16:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id16 = data;
+        break;
+    case 17:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id17 = data;
+        break;
+    case 18:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id18 = data;
+        break;
+    case 19:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id19 = data;
+        break;
+    case 20:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id20 = data;
+        break;
+    case 21:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id21 = data;
+        break;
+    case 22:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id22 = data;
+        break;
+    case 23:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id23 = data;
+        break;
+    case 24:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id24 = data;
+        break;
+    case 25:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id25 = data;
+        break;
+    case 26:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id26 = data;
+        break;
+    case 27:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id27 = data;
+        break;
+    case 28:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id28 = data;
+        break;
+    case 29:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id29 = data;
+        break;
+    case 30:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id30 = data;
+        break;
+    case 31:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id31 = data;
+        break;
+    case 32:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id32 = data;
+        break;
+    case 33:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id33 = data;
+        break;
+    case 34:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id34 = data;
+        break;
+    case 35:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id35 = data;
+        break;
+    case 36:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id36 = data;
+        break;
+    case 37:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id37 = data;
+        break;
+    case 38:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id38 = data;
+        break;
+    case 39:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id39 = data;
+        break;
+    case 40:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id40 = data;
+        break;
+    case 41:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id41 = data;
+        break;
+    case 42:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id42 = data;
+        break;
+    case 43:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id43 = data;
+        break;
+    case 44:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id44 = data;
+        break;
+    case 45:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id45 = data;
+        break;
+    case 46:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id46 = data;
+        break;
+    case 47:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id47 = data;
+        break;
+    case 48:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id48 = data;
+        break;
+    case 49:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id49 = data;
+        break;
+    case 50:
+        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id50 = data;
+        break;
+    default:
+        break;
+    }
+
+    return SDK_RET_OK;
+}
+
+inline sdk_ret_t
+slacl_ip_sport_p1_write_stage_table (mem_addr_t addr, uint8_t *bytes)
+{
+return lpm_write_rxdma_table(addr,
+                             P4_APOLLO_RXDMA_TBL_ID_SLACL_IP_SPORT_P1,
+                             SLACL_IP_SPORT_P1_SLACL_IP_SPORT_P1_ID,
+                             bytes);
+}
+
+inline sdk_ret_t
+slacl_p2_pack (uint8_t *bytes, uint32_t idx, uint8_t data)
+{
+    auto table = (slacl_p2_actiondata_t *)bytes;
+
+    switch (idx) {
+    case 0:
+        table->action_u.slacl_p2_slacl_p2.id000 = data;
+        break;
+    case 1:
+        table->action_u.slacl_p2_slacl_p2.id001 = data;
+        break;
+    case 2:
+        table->action_u.slacl_p2_slacl_p2.id002 = data;
+        break;
+    case 3:
+        table->action_u.slacl_p2_slacl_p2.id003 = data;
+        break;
+    case 4:
+        table->action_u.slacl_p2_slacl_p2.id004 = data;
+        break;
+    case 5:
+        table->action_u.slacl_p2_slacl_p2.id005 = data;
+        break;
+    case 6:
+        table->action_u.slacl_p2_slacl_p2.id006 = data;
+        break;
+    case 7:
+        table->action_u.slacl_p2_slacl_p2.id007 = data;
+        break;
+    case 8:
+        table->action_u.slacl_p2_slacl_p2.id008 = data;
+        break;
+    case 9:
+        table->action_u.slacl_p2_slacl_p2.id009 = data;
+        break;
+    case 10:
+        table->action_u.slacl_p2_slacl_p2.id010 = data;
+        break;
+    case 11:
+        table->action_u.slacl_p2_slacl_p2.id011 = data;
+        break;
+    case 12:
+        table->action_u.slacl_p2_slacl_p2.id012 = data;
+        break;
+    case 13:
+        table->action_u.slacl_p2_slacl_p2.id013 = data;
+        break;
+    case 14:
+        table->action_u.slacl_p2_slacl_p2.id014 = data;
+        break;
+    case 15:
+        table->action_u.slacl_p2_slacl_p2.id015 = data;
+        break;
+    case 16:
+        table->action_u.slacl_p2_slacl_p2.id016 = data;
+        break;
+    case 17:
+        table->action_u.slacl_p2_slacl_p2.id017 = data;
+        break;
+    case 18:
+        table->action_u.slacl_p2_slacl_p2.id018 = data;
+        break;
+    case 19:
+        table->action_u.slacl_p2_slacl_p2.id019 = data;
+        break;
+    case 20:
+        table->action_u.slacl_p2_slacl_p2.id020 = data;
+        break;
+    case 21:
+        table->action_u.slacl_p2_slacl_p2.id021 = data;
+        break;
+    case 22:
+        table->action_u.slacl_p2_slacl_p2.id022 = data;
+        break;
+    case 23:
+        table->action_u.slacl_p2_slacl_p2.id023 = data;
+        break;
+    case 24:
+        table->action_u.slacl_p2_slacl_p2.id024 = data;
+        break;
+    case 25:
+        table->action_u.slacl_p2_slacl_p2.id025 = data;
+        break;
+    case 26:
+        table->action_u.slacl_p2_slacl_p2.id026 = data;
+        break;
+    case 27:
+        table->action_u.slacl_p2_slacl_p2.id027 = data;
+        break;
+    case 28:
+        table->action_u.slacl_p2_slacl_p2.id028 = data;
+        break;
+    case 29:
+        table->action_u.slacl_p2_slacl_p2.id029 = data;
+        break;
+    case 30:
+        table->action_u.slacl_p2_slacl_p2.id030 = data;
+        break;
+    case 31:
+        table->action_u.slacl_p2_slacl_p2.id031 = data;
+        break;
+    case 32:
+        table->action_u.slacl_p2_slacl_p2.id032 = data;
+        break;
+    case 33:
+        table->action_u.slacl_p2_slacl_p2.id033 = data;
+        break;
+    case 34:
+        table->action_u.slacl_p2_slacl_p2.id034 = data;
+        break;
+    case 35:
+        table->action_u.slacl_p2_slacl_p2.id035 = data;
+        break;
+    case 36:
+        table->action_u.slacl_p2_slacl_p2.id036 = data;
+        break;
+    case 37:
+        table->action_u.slacl_p2_slacl_p2.id037 = data;
+        break;
+    case 38:
+        table->action_u.slacl_p2_slacl_p2.id038 = data;
+        break;
+    case 39:
+        table->action_u.slacl_p2_slacl_p2.id039 = data;
+        break;
+    case 40:
+        table->action_u.slacl_p2_slacl_p2.id040 = data;
+        break;
+    case 41:
+        table->action_u.slacl_p2_slacl_p2.id041 = data;
+        break;
+    case 42:
+        table->action_u.slacl_p2_slacl_p2.id042 = data;
+        break;
+    case 43:
+        table->action_u.slacl_p2_slacl_p2.id043 = data;
+        break;
+    case 44:
+        table->action_u.slacl_p2_slacl_p2.id044 = data;
+        break;
+    case 45:
+        table->action_u.slacl_p2_slacl_p2.id045 = data;
+        break;
+    case 46:
+        table->action_u.slacl_p2_slacl_p2.id046 = data;
+        break;
+    case 47:
+        table->action_u.slacl_p2_slacl_p2.id047 = data;
+        break;
+    case 48:
+        table->action_u.slacl_p2_slacl_p2.id048 = data;
+        break;
+    case 49:
+        table->action_u.slacl_p2_slacl_p2.id049 = data;
+        break;
+    case 50:
+        table->action_u.slacl_p2_slacl_p2.id050 = data;
+        break;
+    case 51:
+        table->action_u.slacl_p2_slacl_p2.id051 = data;
+        break;
+    case 52:
+        table->action_u.slacl_p2_slacl_p2.id052 = data;
+        break;
+    case 53:
+        table->action_u.slacl_p2_slacl_p2.id053 = data;
+        break;
+    case 54:
+        table->action_u.slacl_p2_slacl_p2.id054 = data;
+        break;
+    case 55:
+        table->action_u.slacl_p2_slacl_p2.id055 = data;
+        break;
+    case 56:
+        table->action_u.slacl_p2_slacl_p2.id056 = data;
+        break;
+    case 57:
+        table->action_u.slacl_p2_slacl_p2.id057 = data;
+        break;
+    case 58:
+        table->action_u.slacl_p2_slacl_p2.id058 = data;
+        break;
+    case 59:
+        table->action_u.slacl_p2_slacl_p2.id059 = data;
+        break;
+    case 60:
+        table->action_u.slacl_p2_slacl_p2.id060 = data;
+        break;
+    case 61:
+        table->action_u.slacl_p2_slacl_p2.id061 = data;
+        break;
+    case 62:
+        table->action_u.slacl_p2_slacl_p2.id062 = data;
+        break;
+    case 63:
+        table->action_u.slacl_p2_slacl_p2.id063 = data;
+        break;
+    case 64:
+        table->action_u.slacl_p2_slacl_p2.id064 = data;
+        break;
+    case 65:
+        table->action_u.slacl_p2_slacl_p2.id065 = data;
+        break;
+    case 66:
+        table->action_u.slacl_p2_slacl_p2.id066 = data;
+        break;
+    case 67:
+        table->action_u.slacl_p2_slacl_p2.id067 = data;
+        break;
+    case 68:
+        table->action_u.slacl_p2_slacl_p2.id068 = data;
+        break;
+    case 69:
+        table->action_u.slacl_p2_slacl_p2.id069 = data;
+        break;
+    case 70:
+        table->action_u.slacl_p2_slacl_p2.id070 = data;
+        break;
+    case 71:
+        table->action_u.slacl_p2_slacl_p2.id071 = data;
+        break;
+    case 72:
+        table->action_u.slacl_p2_slacl_p2.id072 = data;
+        break;
+    case 73:
+        table->action_u.slacl_p2_slacl_p2.id073 = data;
+        break;
+    case 74:
+        table->action_u.slacl_p2_slacl_p2.id074 = data;
+        break;
+    case 75:
+        table->action_u.slacl_p2_slacl_p2.id075 = data;
+        break;
+    case 76:
+        table->action_u.slacl_p2_slacl_p2.id076 = data;
+        break;
+    case 77:
+        table->action_u.slacl_p2_slacl_p2.id077 = data;
+        break;
+    case 78:
+        table->action_u.slacl_p2_slacl_p2.id078 = data;
+        break;
+    case 79:
+        table->action_u.slacl_p2_slacl_p2.id079 = data;
+        break;
+    case 80:
+        table->action_u.slacl_p2_slacl_p2.id080 = data;
+        break;
+    case 81:
+        table->action_u.slacl_p2_slacl_p2.id081 = data;
+        break;
+    case 82:
+        table->action_u.slacl_p2_slacl_p2.id082 = data;
+        break;
+    case 83:
+        table->action_u.slacl_p2_slacl_p2.id083 = data;
+        break;
+    case 84:
+        table->action_u.slacl_p2_slacl_p2.id084 = data;
+        break;
+    case 85:
+        table->action_u.slacl_p2_slacl_p2.id085 = data;
+        break;
+    case 86:
+        table->action_u.slacl_p2_slacl_p2.id086 = data;
+        break;
+    case 87:
+        table->action_u.slacl_p2_slacl_p2.id087 = data;
+        break;
+    case 88:
+        table->action_u.slacl_p2_slacl_p2.id088 = data;
+        break;
+    case 89:
+        table->action_u.slacl_p2_slacl_p2.id089 = data;
+        break;
+    case 90:
+        table->action_u.slacl_p2_slacl_p2.id090 = data;
+        break;
+    case 91:
+        table->action_u.slacl_p2_slacl_p2.id091 = data;
+        break;
+    case 92:
+        table->action_u.slacl_p2_slacl_p2.id092 = data;
+        break;
+    case 93:
+        table->action_u.slacl_p2_slacl_p2.id093 = data;
+        break;
+    case 94:
+        table->action_u.slacl_p2_slacl_p2.id094 = data;
+        break;
+    case 95:
+        table->action_u.slacl_p2_slacl_p2.id095 = data;
+        break;
+    case 96:
+        table->action_u.slacl_p2_slacl_p2.id096 = data;
+        break;
+    case 97:
+        table->action_u.slacl_p2_slacl_p2.id097 = data;
+        break;
+    case 98:
+        table->action_u.slacl_p2_slacl_p2.id098 = data;
+        break;
+    case 99:
+        table->action_u.slacl_p2_slacl_p2.id099 = data;
+        break;
+    case 100:
+        table->action_u.slacl_p2_slacl_p2.id100 = data;
+        break;
+    case 101:
+        table->action_u.slacl_p2_slacl_p2.id101 = data;
+        break;
+    case 102:
+        table->action_u.slacl_p2_slacl_p2.id102 = data;
+        break;
+    case 103:
+        table->action_u.slacl_p2_slacl_p2.id103 = data;
+        break;
+    case 104:
+        table->action_u.slacl_p2_slacl_p2.id104 = data;
+        break;
+    case 105:
+        table->action_u.slacl_p2_slacl_p2.id105 = data;
+        break;
+    case 106:
+        table->action_u.slacl_p2_slacl_p2.id106 = data;
+        break;
+    case 107:
+        table->action_u.slacl_p2_slacl_p2.id107 = data;
+        break;
+    case 108:
+        table->action_u.slacl_p2_slacl_p2.id108 = data;
+        break;
+    case 109:
+        table->action_u.slacl_p2_slacl_p2.id109 = data;
+        break;
+    case 110:
+        table->action_u.slacl_p2_slacl_p2.id110 = data;
+        break;
+    case 111:
+        table->action_u.slacl_p2_slacl_p2.id111 = data;
+        break;
+    case 112:
+        table->action_u.slacl_p2_slacl_p2.id112 = data;
+        break;
+    case 113:
+        table->action_u.slacl_p2_slacl_p2.id113 = data;
+        break;
+    case 114:
+        table->action_u.slacl_p2_slacl_p2.id114 = data;
+        break;
+    case 115:
+        table->action_u.slacl_p2_slacl_p2.id115 = data;
+        break;
+    case 116:
+        table->action_u.slacl_p2_slacl_p2.id116 = data;
+        break;
+    case 117:
+        table->action_u.slacl_p2_slacl_p2.id117 = data;
+        break;
+    case 118:
+        table->action_u.slacl_p2_slacl_p2.id118 = data;
+        break;
+    case 119:
+        table->action_u.slacl_p2_slacl_p2.id119 = data;
+        break;
+    case 120:
+        table->action_u.slacl_p2_slacl_p2.id120 = data;
+        break;
+    case 121:
+        table->action_u.slacl_p2_slacl_p2.id121 = data;
+        break;
+    case 122:
+        table->action_u.slacl_p2_slacl_p2.id122 = data;
+        break;
+    case 123:
+        table->action_u.slacl_p2_slacl_p2.id123 = data;
+        break;
+    case 124:
+        table->action_u.slacl_p2_slacl_p2.id124 = data;
+        break;
+    case 125:
+        table->action_u.slacl_p2_slacl_p2.id125 = data;
+        break;
+    case 126:
+        table->action_u.slacl_p2_slacl_p2.id126 = data;
+        break;
+    case 127:
+        table->action_u.slacl_p2_slacl_p2.id127 = data;
+        break;
+    case 128:
+        table->action_u.slacl_p2_slacl_p2.id128 = data;
+        break;
+    case 129:
+        table->action_u.slacl_p2_slacl_p2.id129 = data;
+        break;
+    case 130:
+        table->action_u.slacl_p2_slacl_p2.id130 = data;
+        break;
+    case 131:
+        table->action_u.slacl_p2_slacl_p2.id131 = data;
+        break;
+    case 132:
+        table->action_u.slacl_p2_slacl_p2.id132 = data;
+        break;
+    case 133:
+        table->action_u.slacl_p2_slacl_p2.id133 = data;
+        break;
+    case 134:
+        table->action_u.slacl_p2_slacl_p2.id134 = data;
+        break;
+    case 135:
+        table->action_u.slacl_p2_slacl_p2.id135 = data;
+        break;
+    case 136:
+        table->action_u.slacl_p2_slacl_p2.id136 = data;
+        break;
+    case 137:
+        table->action_u.slacl_p2_slacl_p2.id137 = data;
+        break;
+    case 138:
+        table->action_u.slacl_p2_slacl_p2.id138 = data;
+        break;
+    case 139:
+        table->action_u.slacl_p2_slacl_p2.id139 = data;
+        break;
+    case 140:
+        table->action_u.slacl_p2_slacl_p2.id140 = data;
+        break;
+    case 141:
+        table->action_u.slacl_p2_slacl_p2.id141 = data;
+        break;
+    case 142:
+        table->action_u.slacl_p2_slacl_p2.id142 = data;
+        break;
+    case 143:
+        table->action_u.slacl_p2_slacl_p2.id143 = data;
+        break;
+    case 144:
+        table->action_u.slacl_p2_slacl_p2.id144 = data;
+        break;
+    case 145:
+        table->action_u.slacl_p2_slacl_p2.id145 = data;
+        break;
+    case 146:
+        table->action_u.slacl_p2_slacl_p2.id146 = data;
+        break;
+    case 147:
+        table->action_u.slacl_p2_slacl_p2.id147 = data;
+        break;
+    case 148:
+        table->action_u.slacl_p2_slacl_p2.id148 = data;
+        break;
+    case 149:
+        table->action_u.slacl_p2_slacl_p2.id149 = data;
+        break;
+    case 150:
+        table->action_u.slacl_p2_slacl_p2.id150 = data;
+        break;
+    case 151:
+        table->action_u.slacl_p2_slacl_p2.id151 = data;
+        break;
+    case 152:
+        table->action_u.slacl_p2_slacl_p2.id152 = data;
+        break;
+    case 153:
+        table->action_u.slacl_p2_slacl_p2.id153 = data;
+        break;
+    case 154:
+        table->action_u.slacl_p2_slacl_p2.id154 = data;
+        break;
+    case 155:
+        table->action_u.slacl_p2_slacl_p2.id155 = data;
+        break;
+    case 156:
+        table->action_u.slacl_p2_slacl_p2.id156 = data;
+        break;
+    case 157:
+        table->action_u.slacl_p2_slacl_p2.id157 = data;
+        break;
+    case 158:
+        table->action_u.slacl_p2_slacl_p2.id158 = data;
+        break;
+    case 159:
+        table->action_u.slacl_p2_slacl_p2.id159 = data;
+        break;
+    case 160:
+        table->action_u.slacl_p2_slacl_p2.id160 = data;
+        break;
+    case 161:
+        table->action_u.slacl_p2_slacl_p2.id161 = data;
+        break;
+    case 162:
+        table->action_u.slacl_p2_slacl_p2.id162 = data;
+        break;
+    case 163:
+        table->action_u.slacl_p2_slacl_p2.id163 = data;
+        break;
+    case 164:
+        table->action_u.slacl_p2_slacl_p2.id164 = data;
+        break;
+    case 165:
+        table->action_u.slacl_p2_slacl_p2.id165 = data;
+        break;
+    case 166:
+        table->action_u.slacl_p2_slacl_p2.id166 = data;
+        break;
+    case 167:
+        table->action_u.slacl_p2_slacl_p2.id167 = data;
+        break;
+    case 168:
+        table->action_u.slacl_p2_slacl_p2.id168 = data;
+        break;
+    case 169:
+        table->action_u.slacl_p2_slacl_p2.id169 = data;
+        break;
+    case 170:
+        table->action_u.slacl_p2_slacl_p2.id170 = data;
+        break;
+    case 171:
+        table->action_u.slacl_p2_slacl_p2.id171 = data;
+        break;
+    case 172:
+        table->action_u.slacl_p2_slacl_p2.id172 = data;
+        break;
+    case 173:
+        table->action_u.slacl_p2_slacl_p2.id173 = data;
+        break;
+    case 174:
+        table->action_u.slacl_p2_slacl_p2.id174 = data;
+        break;
+    case 175:
+        table->action_u.slacl_p2_slacl_p2.id175 = data;
+        break;
+    case 176:
+        table->action_u.slacl_p2_slacl_p2.id176 = data;
+        break;
+    case 177:
+        table->action_u.slacl_p2_slacl_p2.id177 = data;
+        break;
+    case 178:
+        table->action_u.slacl_p2_slacl_p2.id178 = data;
+        break;
+    case 179:
+        table->action_u.slacl_p2_slacl_p2.id179 = data;
+        break;
+    case 180:
+        table->action_u.slacl_p2_slacl_p2.id180 = data;
+        break;
+    case 181:
+        table->action_u.slacl_p2_slacl_p2.id181 = data;
+        break;
+    case 182:
+        table->action_u.slacl_p2_slacl_p2.id182 = data;
+        break;
+    case 183:
+        table->action_u.slacl_p2_slacl_p2.id183 = data;
+        break;
+    case 184:
+        table->action_u.slacl_p2_slacl_p2.id184 = data;
+        break;
+    case 185:
+        table->action_u.slacl_p2_slacl_p2.id185 = data;
+        break;
+    case 186:
+        table->action_u.slacl_p2_slacl_p2.id186 = data;
+        break;
+    case 187:
+        table->action_u.slacl_p2_slacl_p2.id187 = data;
+        break;
+    case 188:
+        table->action_u.slacl_p2_slacl_p2.id188 = data;
+        break;
+    case 189:
+        table->action_u.slacl_p2_slacl_p2.id189 = data;
+        break;
+    case 190:
+        table->action_u.slacl_p2_slacl_p2.id190 = data;
+        break;
+    case 191:
+        table->action_u.slacl_p2_slacl_p2.id191 = data;
+        break;
+    case 192:
+        table->action_u.slacl_p2_slacl_p2.id192 = data;
+        break;
+    case 193:
+        table->action_u.slacl_p2_slacl_p2.id193 = data;
+        break;
+    case 194:
+        table->action_u.slacl_p2_slacl_p2.id194 = data;
+        break;
+    case 195:
+        table->action_u.slacl_p2_slacl_p2.id195 = data;
+        break;
+    case 196:
+        table->action_u.slacl_p2_slacl_p2.id196 = data;
+        break;
+    case 197:
+        table->action_u.slacl_p2_slacl_p2.id197 = data;
+        break;
+    case 198:
+        table->action_u.slacl_p2_slacl_p2.id198 = data;
+        break;
+    case 199:
+        table->action_u.slacl_p2_slacl_p2.id199 = data;
+        break;
+    case 200:
+        table->action_u.slacl_p2_slacl_p2.id200 = data;
+        break;
+    case 201:
+        table->action_u.slacl_p2_slacl_p2.id201 = data;
+        break;
+    case 202:
+        table->action_u.slacl_p2_slacl_p2.id202 = data;
+        break;
+    case 203:
+        table->action_u.slacl_p2_slacl_p2.id203 = data;
+        break;
+    case 204:
+        table->action_u.slacl_p2_slacl_p2.id204 = data;
+        break;
+    case 205:
+        table->action_u.slacl_p2_slacl_p2.id205 = data;
+        break;
+    case 206:
+        table->action_u.slacl_p2_slacl_p2.id206 = data;
+        break;
+    case 207:
+        table->action_u.slacl_p2_slacl_p2.id207 = data;
+        break;
+    case 208:
+        table->action_u.slacl_p2_slacl_p2.id208 = data;
+        break;
+    case 209:
+        table->action_u.slacl_p2_slacl_p2.id209 = data;
+        break;
+    case 210:
+        table->action_u.slacl_p2_slacl_p2.id210 = data;
+        break;
+    case 211:
+        table->action_u.slacl_p2_slacl_p2.id211 = data;
+        break;
+    case 212:
+        table->action_u.slacl_p2_slacl_p2.id212 = data;
+        break;
+    case 213:
+        table->action_u.slacl_p2_slacl_p2.id213 = data;
+        break;
+    case 214:
+        table->action_u.slacl_p2_slacl_p2.id214 = data;
+        break;
+    case 215:
+        table->action_u.slacl_p2_slacl_p2.id215 = data;
+        break;
+    case 216:
+        table->action_u.slacl_p2_slacl_p2.id216 = data;
+        break;
+    case 217:
+        table->action_u.slacl_p2_slacl_p2.id217 = data;
+        break;
+    case 218:
+        table->action_u.slacl_p2_slacl_p2.id218 = data;
+        break;
+    case 219:
+        table->action_u.slacl_p2_slacl_p2.id219 = data;
+        break;
+    case 220:
+        table->action_u.slacl_p2_slacl_p2.id220 = data;
+        break;
+    case 221:
+        table->action_u.slacl_p2_slacl_p2.id221 = data;
+        break;
+    case 222:
+        table->action_u.slacl_p2_slacl_p2.id222 = data;
+        break;
+    case 223:
+        table->action_u.slacl_p2_slacl_p2.id223 = data;
+        break;
+    case 224:
+        table->action_u.slacl_p2_slacl_p2.id224 = data;
+        break;
+    case 225:
+        table->action_u.slacl_p2_slacl_p2.id225 = data;
+        break;
+    case 226:
+        table->action_u.slacl_p2_slacl_p2.id226 = data;
+        break;
+    case 227:
+        table->action_u.slacl_p2_slacl_p2.id227 = data;
+        break;
+    case 228:
+        table->action_u.slacl_p2_slacl_p2.id228 = data;
+        break;
+    case 229:
+        table->action_u.slacl_p2_slacl_p2.id229 = data;
+        break;
+    case 230:
+        table->action_u.slacl_p2_slacl_p2.id230 = data;
+        break;
+    case 231:
+        table->action_u.slacl_p2_slacl_p2.id231 = data;
+        break;
+    case 232:
+        table->action_u.slacl_p2_slacl_p2.id232 = data;
+        break;
+    case 233:
+        table->action_u.slacl_p2_slacl_p2.id233 = data;
+        break;
+    case 234:
+        table->action_u.slacl_p2_slacl_p2.id234 = data;
+        break;
+    case 235:
+        table->action_u.slacl_p2_slacl_p2.id235 = data;
+        break;
+    case 236:
+        table->action_u.slacl_p2_slacl_p2.id236 = data;
+        break;
+    case 237:
+        table->action_u.slacl_p2_slacl_p2.id237 = data;
+        break;
+    case 238:
+        table->action_u.slacl_p2_slacl_p2.id238 = data;
+        break;
+    case 239:
+        table->action_u.slacl_p2_slacl_p2.id239 = data;
+        break;
+    case 240:
+        table->action_u.slacl_p2_slacl_p2.id240 = data;
+        break;
+    case 241:
+        table->action_u.slacl_p2_slacl_p2.id241 = data;
+        break;
+    case 242:
+        table->action_u.slacl_p2_slacl_p2.id242 = data;
+        break;
+    case 243:
+        table->action_u.slacl_p2_slacl_p2.id243 = data;
+        break;
+    case 244:
+        table->action_u.slacl_p2_slacl_p2.id244 = data;
+        break;
+    case 245:
+        table->action_u.slacl_p2_slacl_p2.id245 = data;
+        break;
+    case 246:
+        table->action_u.slacl_p2_slacl_p2.id246 = data;
+        break;
+    case 247:
+        table->action_u.slacl_p2_slacl_p2.id247 = data;
+        break;
+    case 248:
+        table->action_u.slacl_p2_slacl_p2.id248 = data;
+        break;
+    case 249:
+        table->action_u.slacl_p2_slacl_p2.id249 = data;
+        break;
+    case 250:
+        table->action_u.slacl_p2_slacl_p2.id250 = data;
+        break;
+    case 251:
+        table->action_u.slacl_p2_slacl_p2.id251 = data;
+        break;
+    case 252:
+        table->action_u.slacl_p2_slacl_p2.id252 = data;
+        break;
+    case 253:
+        table->action_u.slacl_p2_slacl_p2.id253 = data;
+        break;
+    case 254:
+        table->action_u.slacl_p2_slacl_p2.id254 = data;
+        break;
+    case 255:
+        table->action_u.slacl_p2_slacl_p2.id255 = data;
+        break;
+
+    default:
+        break;
+    }
+
+    return SDK_RET_OK;
+}
+
+inline sdk_ret_t
+slacl_p2_write_stage_table (mem_addr_t addr, uint8_t *bytes)
+{
+    return lpm_write_rxdma_table(addr,
+                                 P4_APOLLO_RXDMA_TBL_ID_SLACL_P2,
+                                 SLACL_P2_SLACL_P2_ID,
+                                 bytes);
 }

@@ -10,7 +10,7 @@ struct slacl_p2_d           d;
 
 slacl_p2:
     add             r7, r0, k.slacl_metadata_proto_dport_class_id, 1
-    tblrdp.e        r1, r7, 0, 2
+    tblrdp.e        r1, r7, 0, 1
     phvwr           p.p4_to_rxdma_header_slacl_result, r1
 
 /*****************************************************************************/

@@ -12,7 +12,7 @@ slacl_ip_sport_p1:
     mod             r7, k.{slacl_metadata_ip_sport_class_id_sbit0_ebit0, \
                            slacl_metadata_ip_sport_class_id_sbit1_ebit16}, 51
     mul             r7, r7, 10
-    tblrdp.e        r1, r7, 0, 10
+    tblrdp.e        r1, r7, 0, 9
     phvwr           p.slacl_metadata_p1_class_id, r1
 
 /*****************************************************************************/
