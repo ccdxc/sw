@@ -159,8 +159,9 @@ pid_t launch(const string &name, const string &command)
 
 void switch_root()
 {
-    kill(-mypid, SIGTERM);
-    execlp("/nic/tools/switch_rootfs.sh", "altfw", NULL);
+    //kill(-mypid, SIGTERM);
+    int ret = execlp("/nic/tools/switch_rootfs.sh", "/nic/tools/switch_rootfs.sh", "altfw", NULL);
+    printf("execlp return value %d", ret);
     fprintf(stderr, "Switch root failed");
     exit(-1);
 }

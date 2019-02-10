@@ -31,7 +31,7 @@ else
     exit 1
 fi
 
-cur_image=`fwupdate -r`
+cur_image=`/nic/tools/fwupdate -r`
 
 if [ $cur_image == "mainfwa" ]; then
     new_image="mainfwb"
