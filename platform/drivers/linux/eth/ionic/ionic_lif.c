@@ -920,7 +920,6 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 		int max = lower_dev->real_num_tx_queues + 1;
 
 		netif_set_real_num_tx_queues(lower_dev, max);
-		netif_set_real_num_rx_queues(lower_dev, max);
 	}
 
 	netdev_info(lower_dev, "%s: %s %s\n",
@@ -972,7 +971,6 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 err_out_deinit_slave:
 	ionic_lif_deinit(lif);
 err_out_free_slave:
-	list_del(&lif->list);
 	ionic_lif_free(lif);
 
 	return NULL;
@@ -989,9 +987,6 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 		    __func__, lif->name, lif->upper_dev->name);
 	ionic_lif_stop(lif);
 	ionic_lif_deinit(lif);
-
-	list_del(&lif->list);
-	lif->upper_dev = NULL;
 	ionic_lif_free(lif);
 
 	/* if this was the highest slot, we can decrement
@@ -1001,7 +996,6 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 		int max = lower_dev->real_num_tx_queues - 1;
 
 		netif_set_real_num_tx_queues(lower_dev, max);
-		netif_set_real_num_rx_queues(lower_dev, max);
 	}
 
 	/* WARNING - UGLY HACK part deux */
@@ -1613,10 +1607,13 @@ static void ionic_lif_free(struct lif *lif)
 
 	ionic_debugfs_del_lif(lif);
 
+	list_del(&lif->list);
+
 	if (is_master_lif(lif)) {
 		free_netdev(lif->netdev);
 	} else {
 		ionic_slave_free(lif->ionic, lif->index);
+		memset(lif, 0, sizeof(*lif));
 		kfree(lif);
 	}
 }
@@ -1628,7 +1625,6 @@ void ionic_lifs_free(struct ionic *ionic)
 
 	list_for_each_safe(cur, tmp, &ionic->lifs) {
 		lif = list_entry(cur, struct lif, list);
-		list_del(&lif->list);
 
 		ionic_lif_free(lif);
 	}
@@ -2483,23 +2479,17 @@ int ionic_lifs_register(struct ionic *ionic)
 
 void ionic_lifs_unregister(struct ionic *ionic)
 {
-	struct list_head *cur, *tmp;
-	struct lif *lif;
-
 	if (ionic->nb.notifier_call) {
 		unregister_netdevice_notifier(&ionic->nb);
 		cancel_work_sync(&ionic->nb_work);
 		ionic->nb.notifier_call = NULL;
 	}
 
-	list_for_each_safe(cur, tmp, &ionic->lifs) {
-		lif = list_entry(cur, struct lif, list);
-		if (lif->registered) {
-			unregister_netdev(lif->netdev);
-			cancel_work_sync(&lif->tx_timeout_work);
-			lif->registered = false;
-		}
-	}
+	/* There is only one lif every registered in the
+	 * current model, so don't bother searching the
+	 * ionic->lif for candidates to unregister
+	 */
+	unregister_netdev(ionic->master_lif->netdev);
 }
 
 int ionic_lifs_size(struct ionic *ionic)

@@ -114,14 +114,8 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 #ifdef CSUM_DEBUG
 	csum = ip_compute_csum(skb->data, skb->len);
 #endif
-	if (is_master_lif(q->lif)) {
+	if (is_master_lif(q->lif))
 		skb_record_rx_queue(skb, q->index);
-	} else {
-		struct lif *master_lif = q->lif->ionic->master_lif;
-		int qidx = master_lif->nxqs + q->lif->index - 1;
-
-		skb_record_rx_queue(skb, qidx);
-	}
 
 	if (netdev->features & NETIF_F_RXHASH) {
 		switch (comp->rss_type) {
@@ -791,11 +785,13 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 	 * watch for issues.
 	 * TODO: rework to not let this case happen
 	 */
-	q = lif_to_txq(lif, queue_index);
+	q = NULL;
+	if (lif->txqcqs[queue_index])
+		q = lif_to_txq(lif, queue_index);
 	if (!q) {
 		netdev_info(skb->dev, "%s: bad queue_index=%d\n",
 			    __func__, queue_index);
-		return -1;
+		return NETDEV_TX_BUSY;
 	}
 
 	ndescs = ionic_tx_descs_needed(q, skb);
