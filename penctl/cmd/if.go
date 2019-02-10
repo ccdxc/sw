@@ -79,13 +79,13 @@ func init() {
 	ifUpdateCmd.Flags().StringVar(&ifName, "name", "", "Interface name")
 	ifUpdateCmd.Flags().StringVar(&ifSubIP, "substrate-ip", "", "Substrate IPv4 address")
 	ifUpdateCmd.Flags().StringVar(&ifOverlayIP, "overlay-ip", "", "Specify overlay IPv4 address in comma separated list (Max of 2 supported). Ex: 1.2.3.4,2.3.4.5")
-	ifUpdateCmd.Flags().StringVar(&ifMplsIn, "mpls-in", "", "Specify incoming MPLS label as comma separated list (Max 2 supported")
+	ifUpdateCmd.Flags().StringVar(&ifMplsIn, "mpls-in", "", "Specify incoming MPLS label as comma separated list (Max of 2 supported)")
 	ifUpdateCmd.Flags().Uint32Var(&ifMplsOut, "mpls-out", 0, "Specify outgoing MPLS label")
 	ifUpdateCmd.Flags().StringVar(&ifTunnelDestIP, "tunnel-dest-ip", "", "Tunnel destination IPv4 address")
 	ifUpdateCmd.Flags().StringVar(&ifSourceGw, "source-gw", "", "Specify source gateway. Must be IPv4 prefix as a.b.c.d/nn")
 	ifUpdateCmd.Flags().StringVar(&ifGwMac, "gw-mac", "", "Specify gateway MAC address as aabb.ccdd.eeff")
-	ifUpdateCmd.Flags().Uint32Var(&ifIngressBw, "ingress-bw", 0, "Specify ingress bandwidth in Kbytes/sec")
-	ifUpdateCmd.Flags().Uint32Var(&ifEgressBw, "egress-bw", 0, "Specify egress bandwidth in Kbytes/sec")
+	ifUpdateCmd.Flags().Uint32Var(&ifIngressBw, "ingress-bw", 0, "Specify ingress bandwidth in KBytes/sec <0-12500 KBytes/sec>. 0 means no policer")
+	ifUpdateCmd.Flags().Uint32Var(&ifEgressBw, "egress-bw", 0, "Specify egress bandwidth in KBytes/sec <0-12500 KBytes/sec>. 0 means no policer")
 
 	ifUpdateCmd.MarkFlagRequired("encap")
 	ifUpdateCmd.MarkFlagRequired("name")
@@ -162,6 +162,16 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
+	if ifIngressBw > 12500 {
+		fmt.Printf("Invalid ingress BW. Valid range is 0-12500 KBytes/sec\n")
+		return
+	}
+
+	if ifEgressBw > 12500 {
+		fmt.Printf("Invalid egress BW. Valid range is 0-12500 KBytes/sec\n")
+		return
+	}
+
 	halctlStr := "/nic/bin/halctl debug update interface --encap " + ifEncap + " --substrate-ip " + ifSubIP + " --overlay-ip " + ifOverlayIP + " --mpls-in " + ifMplsIn + " --mpls-out " + fmt.Sprint(ifMplsOut) + " --tunnel-dest-ip " + ifTunnelDestIP + " --source-gw " + ifSourceGw + " --gw-mac " + ifGwMac + " --ingress-bw " + fmt.Sprint(ifIngressBw) + " --egress-bw " + fmt.Sprint(ifEgressBw) + " --name " + ifName
 
 	execCmd := strings.Fields(halctlStr)
