@@ -37,6 +37,12 @@ def GetSMac (tc, pkt):
 def GetDMac (tc, pkt):
     return "00:ee:ff:00:00:03"
 
+def GetRMac (tc, pkt):
+    return "00:cc:00:00:00:04"
+
+def GetOuterDMac (tc, pkt):
+    return "00:ee:ff:00:00:09"
+
 def GetEncapVlan (tc, pkt):
     return 2
 

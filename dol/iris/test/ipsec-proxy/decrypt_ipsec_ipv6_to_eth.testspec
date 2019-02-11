@@ -74,15 +74,15 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
-                src     : callback://ipsec/ipsec/GetSMac
-                dst     : callback://ipsec/ipsec/GetDMac
+                src     : callback://ipsec/ipsec/GetRMac
+                dst     : callback://ipsec/ipsec/GetOuterDMac
             qtag:
                 vlan    : 4
                 prio    : 0
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
-                hlim    : 64
+                hlim    : 63
             tcp:
                 sport   : 44445
                 dport   : 44444

@@ -322,7 +322,7 @@ pd_collector_create(pd_func_args_t *pd_func_args)
     d->ipfix_hdr.iphdr.ttl = 64;
     // Total len will be updated correctly in the P4 datapath
     d->ipfix_hdr.iphdr.tot_len = htons(0xFFFF);
-    d->ipfix_hdr.udphdr.sport = htons(32007);
+    d->ipfix_hdr.udphdr.sport = htons(UDP_SRC_PORT_TELEMETRY);
     d->ipfix_hdr.udphdr.dport = htons(cfg->dport);
     d->template_id = cfg->template_id;
     d->export_intvl = cfg->export_intvl;

@@ -62,6 +62,7 @@
 #define UDP_PORT_GENV                  6081
 #define UDP_PORT_NATT                  4500
 #define UDP_PORT_MPLS                  6635
+#define UDP_SRC_PORT_TELEMETRY         32007
 
 /*****************************************************************************/
 /* UDP option types (kind)                                                   */

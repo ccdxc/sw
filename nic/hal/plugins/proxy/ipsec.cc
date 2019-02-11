@@ -331,6 +331,7 @@ ipsec_process_post_decrypt_flow(fte::ctx_t&ctx)
     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
     flowupd.lkp_info.vrf_hwid = vrf_args.lkup_id;
     HAL_TRACE_DEBUG("Got vrf-hw-id as {:#x}", flowupd.lkp_info.vrf_hwid);
+    ctx.set_l3_tunnel_flow(TRUE);
     ret = ctx.update_flow(flowupd);
     ctx.set_feature_status(ret);
     HAL_TRACE_DEBUG("Reverse Flow params: vrf {} action {}", ipsec_info->vrf, ipsec_info->action);
@@ -432,7 +433,8 @@ ipsec_exec_pkt(fte::ctx_t&ctx)
             return (ipsec_process_uplink_esp_flow(ctx));
         } // Encrypted ESP packet from Uplink 
         // Decrypted packeted from Barco
-        if ((ctx.get_key().proto != IP_PROTO_IPSEC_ESP) && 
+        if ((ctx.get_key().proto != IP_PROTO_IPSEC_ESP) &&
+            (ctx.get_key().sport != UDP_SRC_PORT_TELEMETRY) && 
             (ctx.cpu_rxhdr()->src_lif == IPSEC_ARM_LIF)) {
             return ipsec_process_post_decrypt_flow(ctx);
         } // Post Encrypted ESP packet from Barco
