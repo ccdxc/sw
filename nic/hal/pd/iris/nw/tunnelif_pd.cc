@@ -286,6 +286,9 @@ pd_tunnelif_update_lif_policers (pd_tunnelif_t *pd_tunnelif,
         pi_lif->qos_info.rx_policer.rate = hal_if->ingress_bw * 1000;
         pi_lif->qos_info.rx_policer.burst = burst_size;
     }
+    HAL_TRACE_DEBUG("RX policer rate: {} burst: {}",
+                            pi_lif->qos_info.rx_policer.rate,
+                            pi_lif->qos_info.rx_policer.burst);
     ret = lif_pd_rx_policer_program_hw(pd_lif, true);
     if (ret != HAL_RET_OK)
         goto fail_flag;
@@ -299,6 +302,9 @@ pd_tunnelif_update_lif_policers (pd_tunnelif_t *pd_tunnelif,
         pi_lif->qos_info.tx_policer.rate = hal_if->egress_bw * 1000;
         pi_lif->qos_info.tx_policer.burst = burst_size;
     }
+    HAL_TRACE_DEBUG("TX policer rate: {} burst: {}",
+                            pi_lif->qos_info.tx_policer.rate,
+                            pi_lif->qos_info.tx_policer.burst);
     ret = lif_pd_tx_policer_program_hw(pd_lif, true);
     if (ret != HAL_RET_OK)
         goto fail_flag;

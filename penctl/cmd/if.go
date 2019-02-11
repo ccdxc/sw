@@ -84,8 +84,8 @@ func init() {
 	ifUpdateCmd.Flags().StringVar(&ifTunnelDestIP, "tunnel-dest-ip", "", "Tunnel destination IPv4 address")
 	ifUpdateCmd.Flags().StringVar(&ifSourceGw, "source-gw", "", "Specify source gateway. Must be IPv4 prefix as a.b.c.d/nn")
 	ifUpdateCmd.Flags().StringVar(&ifGwMac, "gw-mac", "", "Specify gateway MAC address as aabb.ccdd.eeff")
-	ifUpdateCmd.Flags().Uint32Var(&ifIngressBw, "ingress-bw", 0, "Specify ingress bandwidth in KBytes/sec <0-12500 KBytes/sec>. 0 means no policer")
-	ifUpdateCmd.Flags().Uint32Var(&ifEgressBw, "egress-bw", 0, "Specify egress bandwidth in KBytes/sec <0-12500 KBytes/sec>. 0 means no policer")
+	ifUpdateCmd.Flags().Uint32Var(&ifIngressBw, "ingress-bw", 0, "Specify ingress bandwidth in KBytes/sec <0-12500000 KBytes/sec>. 0 means no policer")
+	ifUpdateCmd.Flags().Uint32Var(&ifEgressBw, "egress-bw", 0, "Specify egress bandwidth in KBytes/sec <0-12500000 KBytes/sec>. 0 means no policer")
 
 	ifUpdateCmd.MarkFlagRequired("encap")
 	ifUpdateCmd.MarkFlagRequired("name")
@@ -162,13 +162,13 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
-	if ifIngressBw > 12500 {
-		fmt.Printf("Invalid ingress BW. Valid range is 0-12500 KBytes/sec\n")
+	if ifIngressBw > 12500000 {
+		fmt.Printf("Invalid ingress BW. Valid range is 0-12500000 KBytes/sec\n")
 		return
 	}
 
-	if ifEgressBw > 12500 {
-		fmt.Printf("Invalid egress BW. Valid range is 0-12500 KBytes/sec\n")
+	if ifEgressBw > 12500000 {
+		fmt.Printf("Invalid egress BW. Valid range is 0-12500000 KBytes/sec\n")
 		return
 	}
 
