@@ -328,7 +328,7 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 	Assert(t, nm.GetAgentID() == nodeID, "Failed to match nodeUUID", nm)
 
 	// Ensure the NMD's rest server is started
-	nm.CreateIPClient(nil)
+	nm.CreateMockIPClient(nil)
 	err = nm.UpdateMgmtIP()
 
 	return nm, ag, ct, upgAgt, roC
@@ -474,8 +474,6 @@ func TestNaplesDefaultHostMode(t *testing.T) {
 }
 
 func TestNaplesRestartHostMode(t *testing.T) {
-	t.Skip("Temporarily disabled. TODO. More investigation needed")
-
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
@@ -630,8 +628,14 @@ func TestNaplesNetworkMode(t *testing.T) {
 // TestNaplesModeTransitions tests the mode transition
 // host -> network -> host
 func TestNaplesModeTransitions(t *testing.T) {
-
 	t.Skip("Temporarily disabled. TODO. More investigation needed")
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
+	// Cleanup any prior DB file
+	os.Remove(emDBPath)
+
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
@@ -728,6 +732,10 @@ func TestNaplesModeTransitions(t *testing.T) {
 func TestNaplesNetworkModeManualApproval(t *testing.T) {
 	t.Skip("Temporarily disabled. TODO. More investigation needed")
 
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
@@ -744,9 +752,13 @@ func TestNaplesNetworkModeManualApproval(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:       nmd.MgmtMode_NETWORK,
-			PrimaryMAC: nicKey2,
-			Hostname:   nicKey2,
+			Mode:        nmd.MgmtMode_NETWORK,
+			PrimaryMAC:  nicKey2,
+			Hostname:    nicKey2,
+			Controllers: []string{"localhost"},
+			IPConfig: &cmd.IPConfig{
+				IPAddress: "10.10.10.10/24",
+			},
 		},
 	}
 
@@ -797,6 +809,12 @@ func TestNaplesNetworkModeManualApproval(t *testing.T) {
 func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 
 	t.Skip("Temporarily disabled. TODO. More investigation needed")
+
+	t.Skip("Temporarily disabled. TODO. More investigation needed")
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
+
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
 
@@ -813,9 +831,13 @@ func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:       nmd.MgmtMode_NETWORK,
-			PrimaryMAC: nicKey3,
-			Hostname:   nicKey3,
+			Mode:        nmd.MgmtMode_NETWORK,
+			PrimaryMAC:  nicKey3,
+			Hostname:    nicKey3,
+			Controllers: []string{"localhost"},
+			IPConfig: &cmd.IPConfig{
+				IPAddress: "10.10.10.10/24",
+			},
 		},
 	}
 
@@ -869,6 +891,9 @@ func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 }
 
 func TestNaplesRestartNetworkMode(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &mock.ResolverClient{}})
+	defer cancel()
 
 	// Cleanup any prior DB file
 	os.Remove(emDBPath)
@@ -885,9 +910,13 @@ func TestNaplesRestartNetworkMode(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:       nmd.MgmtMode_NETWORK,
-			PrimaryMAC: nicKey1,
-			Hostname:   nicKey1,
+			Mode:        nmd.MgmtMode_NETWORK,
+			PrimaryMAC:  nicKey1,
+			Controllers: []string{"localhost"},
+			Hostname:    nicKey1,
+			IPConfig: &cmd.IPConfig{
+				IPAddress: "10.10.10.10/24",
+			},
 		},
 	}
 

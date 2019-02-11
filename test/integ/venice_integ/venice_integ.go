@@ -289,7 +289,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		}
 		// start NMDs rest server and
 		n := nmd.GetNMD()
-		n.CreateIPClient(nil)
+		n.CreateMockIPClient(nil)
 		//n.UpdateMgmtIP()
 		// Fake IPConfig
 		ipConfig := &cluster.IPConfig{

@@ -60,7 +60,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 	log.Infof("Modechange: %v old-mode: %v", modeChanged, config.Spec.Mode)
 
 	// Update nic config in the DB
-	n.setNaplesConfig(cfg)
+	n.setNaplesConfigSpec(cfg.Spec)
 	err := n.store.Write(&cfg)
 
 	log.Infof("NIC mode: %v change completed err: %v", n.config.Spec.Mode, err)

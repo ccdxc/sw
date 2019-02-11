@@ -13,7 +13,6 @@ import "github.com/pensando/sw/api/protos/smartnic.proto";
 
 // Naples config object
 message Naples {
-
     option (venice.objectPrefix) = {Collection: "config"};
 
     api.TypeMeta T      = 1 [(gogoproto.embed) = true,
@@ -64,10 +63,12 @@ message NaplesSpec {
     cluster.IPConfig IPConfig       = 3 [(gogoproto.jsontag) = "ip-config,omitempty"];
 
     // Operational mode of the NIC
-    MgmtMode Mode                   = 4 [(gogoproto.jsontag) = "mode"];
+    MgmtMode Mode                           = 4 [(gogoproto.jsontag) = "mode",
+                                                 (venice.check) = "StrEnum(Naples.MgmtMode)"];
 
     // Operational mode of the NIC
-    NetworkMode NetworkMode         = 5 [(gogoproto.jsontag) = "network-mode"];
+    NetworkMode NetworkMode                 = 5 [(gogoproto.jsontag) = "network-mode",
+                                                 (venice.check) = "StrEnum(Naples.NetworkMode)"];
 
     // MgmtVlan defines the vlan to be used in network managed mode. The default of 0
     // implies OOB 1G mgmt port is used for management. A non 0 vlan switches the
@@ -94,7 +95,8 @@ message NaplesStatus {
         REBOOT_PENDING                      = 8;
     }
     // Current phase of the NIC adapter in the system
-    cluster.SmartNICStatus.Phase    Phase   = 1 [(gogoproto.jsontag) = "phase,omitempty"];
+    cluster.SmartNICStatus.Phase    Phase   = 1 [(gogoproto.jsontag) = "phase,omitempty",
+					        (venice.check) = "StrEnum(cluster.SmartNICStatus.Phase)"];
 
     cluster.IPConfig IPConfig       	    = 2 [(gogoproto.jsontag) = "ip-config"];
 
@@ -103,7 +105,14 @@ message NaplesStatus {
 
     string TransitionPhase                  = 4 [(gogoproto.jsontag) = "transition-phase,omitempty",
                                                  (venice.check) = "StrEnum(NaplesStatus.Transition)"];
+    // Operational mode of the NIC
+    string Mode                   	    = 5 [(gogoproto.jsontag) = "mode",
+                                                 (venice.check) = "StrEnum(Naples.MgmtMode)"];
 
+    // Operational mode of the NIC
+    string NetworkMode                      = 6 [(gogoproto.jsontag) = "network-mode",
+                                                 (venice.check) = "StrEnum(Naples.NetworkMode)"];
+    
 }
 
 // NaplesCmdExecute contains information on what command to execute

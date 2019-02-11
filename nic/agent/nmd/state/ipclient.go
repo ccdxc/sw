@@ -36,19 +36,20 @@ const rebootPendingPath string = "/tmp/.reboot_needed"
 
 // IPClient helps to set the IP address of the management interfaces
 type IPClient struct {
-	delphiClient clientAPI.Client
-	leaseFile    string
-	isDynamic    bool
-	watcher      *fsnotify.Watcher
-	doneEvent    chan bool
-	iface        string
-	ipaddress    string
-	gateway      string
-	networkMode  nmd.NetworkMode
-	mgmtVlan     uint32
-	controllers  []string
-	hostname     string
-	nmdState     *NMD
+	delphiClient   clientAPI.Client
+	leaseFile      string
+	isDynamic      bool
+	watcher        *fsnotify.Watcher
+	stopLeaseWatch chan bool
+	iface          string
+	ipaddress      string
+	gateway        string
+	networkMode    nmd.NetworkMode
+	mgmtVlan       uint32
+	controllers    []string
+	hostname       string
+	nmdState       *NMD
+	isMock         bool
 }
 
 func createRebootTmpFile() error {
@@ -209,16 +210,61 @@ func readAndParseLease(leaseFile string) ([]string, error) {
 	return nil, nil
 }
 
+func (c *IPClient) updateDelphiNaplesObject(naplesMode delphiProto.NaplesStatus_Mode) error {
+	var transitionPhase delphiProto.NaplesStatus_Transition
+
+	switch c.nmdState.config.Status.TransitionPhase {
+	case nmd.NaplesStatus_DHCP_SENT.String():
+		transitionPhase = delphiProto.NaplesStatus_DHCP_SENT
+	case nmd.NaplesStatus_DHCP_DONE.String():
+		transitionPhase = delphiProto.NaplesStatus_DHCP_DONE
+	case nmd.NaplesStatus_DHCP_TIMEDOUT.String():
+		transitionPhase = delphiProto.NaplesStatus_DHCP_TIMEDOUT
+	case nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String():
+		transitionPhase = delphiProto.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES
+	case nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String():
+		transitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_SENT
+	case nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String():
+		transitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_DONE
+	case nmd.NaplesStatus_VENICE_UNREACHABLE.String():
+		transitionPhase = delphiProto.NaplesStatus_VENICE_UNREACHABLE
+	case nmd.NaplesStatus_REBOOT_PENDING.String():
+		transitionPhase = delphiProto.NaplesStatus_REBOOT_PENDING
+	default:
+		transitionPhase = 0
+	}
+
+	naplesStatus := delphiProto.NaplesStatus{
+		Controllers:     c.nmdState.config.Status.Controllers,
+		NaplesMode:      naplesMode,
+		TransitionPhase: transitionPhase,
+	}
+
+	// Update corresponding delphi object and write to delphi db
+	if c.delphiClient != nil && c.nmdState.config.Status.Phase == cluster.SmartNICStatus_ADMITTED {
+		if err := c.delphiClient.SetObject(&naplesStatus); err != nil {
+			log.Errorf("Error writing the naples status object. Err: %v", err)
+			return err
+		}
+	} else {
+		log.Error("Delphi c uninitialized")
+		return errors.New("delphiClient is nil")
+	}
+
+	return nil
+}
+
+// updateNaplesStatus does the heavy lifting of mode change.
+// This function has many side-effects -
+// 1. Creates the /tmp/.reboot_pending file
+// 2. Updates and triggers Delphi Naples Status object
+// 3. Triggers Naples Admission to Venice cluster using the controller IPs made available
+// 4. Stops/Starts REST server to NMD
 func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) error {
 	log.Infof("Found Controllers: %v", controllers)
 	var naplesMode delphiProto.NaplesStatus_Mode
 	var deviceSpec device.SystemSpec
 	var appStartSpec []byte
-
-	if ipaddress == "" {
-		log.Errorf("IP Address is empty. Cannot proceed.")
-		return errors.New("ipaddress is empty")
-	}
 
 	if c.nmdState.config.Status.IPConfig == nil {
 		c.nmdState.config.Status.IPConfig = &cluster.IPConfig{
@@ -230,18 +276,20 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 
 	c.nmdState.config.Status.IPConfig.IPAddress = ipaddress
 
-	if controllers == nil {
-		// Vendor specified attributes is nil
-		c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
-		log.Errorf("Controllers is nil. Bailing from Naples Status Update")
-		return nil
-	}
-
 	// For Static configuration case, we assume that the user knows what they are doing.
 	if c.isDynamic && !c.mustTriggerUpdate(controllers) {
 		log.Errorf("Cannot trigger update as controllers break security gurantees. Bailing from Naples Status Update.")
 		return nil
 	}
+
+	// TODO : Reenable these lines
+	// Disable any updates to Naples Admission once Naples has been admitted into a Venice Cluster.
+	// if c.nmdState.config.Status.Phase == cluster.SmartNICStatus_ADMITTED {
+	//		log.Infof("Naples already addmitted into Venice Cluster.")
+	//	return errors.New("Cannot change Naples mode as Naples is already admitted into the cluster.")
+	//}
+
+	log.Infof("Updating Naples Status. Current %v", c.nmdState.config.Status)
 
 	// Set up appropriate mode
 	switch c.networkMode {
@@ -259,43 +307,93 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 		appStartSpec = []byte("classic")
 	}
 
-	naplesStatus := delphiProto.NaplesStatus{
-		Controllers: controllers,
-		NaplesMode:  naplesMode,
-	}
-	c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
-	c.nmdState.cmdUpdURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
-	c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
+	if c.nmdState.config.Status.Mode == nmd.MgmtMode_NETWORK.String() {
+		log.Info("Currently Naples is Network Managed")
+		if c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
+			log.Info("Moving Naples to Network managed mode. Updating CMD Client.")
+			c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
+			c.nmdState.cmdUpdURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
+			c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 
-	// TODO Check if update cmd and registration need to be triggered again if the naples is already admitted
-	if err := c.nmdState.UpdateCMDClient(controllers); err != nil {
-		log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
-		return err
-	}
+			go func() {
+				err := c.nmdState.StopManagedMode()
+				if err != nil {
+					log.Errorf("Error stopping NIC managed mode: %v", err)
+				}
+				c.nmdState.Add(1)
+				defer c.nmdState.Done()
 
-	// Start ManagedMode
-	if c.nmdState.config.Spec.Mode != nmd.MgmtMode_HOST {
-		// Stop classic mode control loop
-		// c.nmdState.StopClassicMode(false)
-		// Start the admission process
-		c.nmdState.Add(1)
-		go func() {
-			defer c.nmdState.Done()
-			c.nmdState.StartManagedMode()
-		}()
-		//wait for registration TODO Uncomment this section
-		//c.waitForRegistration()
+				if err := c.nmdState.UpdateCMDClient(controllers); err != nil {
+					log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
+				}
+
+				err = c.nmdState.StartManagedMode()
+				if err != nil {
+					log.Errorf("Error starting NIC managed mode: %v", err)
+				}
+			}()
+		} else if c.nmdState.config.Spec.Mode == nmd.MgmtMode_HOST {
+			log.Info("Moving Naples to Host managed mode.")
+			go func() {
+				err := c.nmdState.StopManagedMode()
+				if err != nil {
+					log.Errorf("Error stopping NIC managed mode: %v", err)
+				}
+
+				err = c.nmdState.StartClassicMode()
+				if err != nil {
+					log.Errorf("Classic mode start failed. Err: %v", err)
+				}
+			}()
+		} else {
+			log.Errorf("Unknown Management Mode in Spec. Bailing from Mode Change")
+			return errors.New("unknown Management Mode in Spec. Bailing from Mode Change")
+		}
+	} else {
+		log.Info("Currently Naples is Host Managed")
+		if c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
+			// Stop classic mode control loop
+			// TODO : Uncomment the line below. Currently we do not want to stop REST Server.
+			// c.nmdState.StopClassicMode(false)
+			log.Info("Moving Naples to Network managed mode.")
+			c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
+			c.nmdState.cmdUpdURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
+			c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
+
+			if err := c.nmdState.UpdateCMDClient(controllers); err != nil {
+				log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
+				return err
+			}
+
+			// Start the admission process
+			c.nmdState.Add(1)
+			go func() {
+				defer c.nmdState.Done()
+				c.nmdState.StartManagedMode()
+			}()
+
+			// wait for registration
+			// TODO : Uncomment this section
+			// c.waitForRegistration()
+		} else {
+			log.Info("Starting NMD REST server.")
+
+			err := c.nmdState.StartClassicMode()
+			if err != nil {
+				log.Errorf("Classic mode start failed. Err: %v", err)
+			}
+		}
 	}
 
 	// TODO Remove manual nic admitted state.
 	c.nmdState.config.Status.Phase = cluster.SmartNICStatus_ADMITTED
 
 	// Persist bolt db.
-	err := c.nmdState.store.Write(&c.nmdState.config)
-	if err != nil {
-		log.Errorf("Error persisting the naples config in Bolt DB, err: %+v", err)
-		return err
-	}
+	// err := c.nmdState.store.Write(&c.nmdState.config)
+	// if err != nil {
+	//	log.Errorf("Error persisting the naples config in Bolt DB, err: %+v", err)
+	//	return err
+	//}
 
 	// Write HAL CFG FILE
 	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
@@ -331,28 +429,21 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 				// Previously it was set to reboot pending. We need to clear it
 				log.Infof("Clearing out previous reboot pending state.")
 				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String()
-				naplesStatus.TransitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_DONE
 			} else if c.nmdState.config.Status.TransitionPhase != nmd.NaplesStatus_VENICE_REGISTRATION_DONE.String() {
 				log.Infof("Current Transition Phase is %v", c.nmdState.config.Status.TransitionPhase)
 				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_REBOOT_PENDING.String()
-				naplesStatus.TransitionPhase = delphiProto.NaplesStatus_REBOOT_PENDING
 				createRebootTmpFile()
 			}
 		}
 	} else {
 		c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String()
-		naplesStatus.TransitionPhase = delphiProto.NaplesStatus_VENICE_REGISTRATION_SENT
 	}
 
-	// Update corresponding delphi object and write to delphi db
-	if c.delphiClient != nil && c.nmdState.config.Status.Phase == cluster.SmartNICStatus_ADMITTED {
-		if err := c.delphiClient.SetObject(&naplesStatus); err != nil {
-			log.Errorf("Error writing the naples status object. Err: %v", err)
-			return err
-		}
-	} else {
-		log.Error("Delphi c uninitialized")
-		return errors.New("watch Lease Events failure. DelphiClient is nil")
+	// Update Naples Status Delphi Object
+	err = c.updateDelphiNaplesObject(naplesMode)
+	if !c.isMock && err != nil {
+		log.Errorf("Error updating Delphi NaplesStatus object. Err: %v", err)
+		return err
 	}
 
 	// Persist bolt db.
@@ -379,6 +470,12 @@ func (c *IPClient) watchLeaseEvents() {
 					return
 				}
 
+				if controllers == nil {
+					// Vendor specified attributes is nil
+					c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
+					log.Errorf("Controllers is nil.")
+				}
+
 				// Replace 1.1.1.1 with a parsed value
 				err = c.updateNaplesStatus(controllers, "1.1.1.1")
 				if err != nil {
@@ -389,7 +486,7 @@ func (c *IPClient) watchLeaseEvents() {
 		case <-c.watcher.Errors:
 			return
 
-		case <-c.doneEvent:
+		case <-c.stopLeaseWatch:
 			return
 		}
 	}
@@ -422,7 +519,7 @@ func (c *IPClient) startDhclient() error {
 		return err
 	}
 
-	c.doneEvent = make(chan bool)
+	c.stopLeaseWatch = make(chan bool)
 	go c.watchLeaseEvents()
 
 	// out of the box fsnotify can watch a single file, or a single directory
@@ -432,12 +529,25 @@ func (c *IPClient) startDhclient() error {
 
 	err = runCmd(dynamicIPCommandString)
 	if err != nil {
-		c.doneEvent <- true
+		c.stopLeaseWatch <- true
 		c.watcher.Close()
 		return err
 	}
 
 	return nil
+}
+
+func (c *IPClient) interfaceExists(ifc string) bool {
+	log.Infof("Checking if %v exists", ifc)
+	cmd := fmt.Sprintf("ethtool %v", ifc)
+	err := runCmd(cmd)
+
+	if err != nil {
+		log.Errorf("Issues with interface %v", ifc)
+		return false
+	}
+
+	return true
 }
 
 func (c *IPClient) doStaticIPConfig() error {
@@ -448,12 +558,7 @@ func (c *IPClient) doStaticIPConfig() error {
 
 	c.isDynamic = false
 
-	err := c.updateNaplesStatus(c.controllers, c.ipaddress)
-	if err != nil {
-		return err
-	}
-
-	err = runCmd("ip addr flush dev " + c.iface)
+	err := runCmd("ip addr flush dev " + c.iface)
 	if err != nil {
 		return err
 	}
@@ -470,12 +575,19 @@ func (c *IPClient) doStaticIPConfig() error {
 		}
 	}
 
+	// Update Naples Status only once all the Static IP configuration has completed.
+	err = c.updateNaplesStatus(c.controllers, c.ipaddress)
+	if err != nil {
+		return err
+	}
+
 	//runCmd("usr/sbin/rdate 10.7.100.2")
 	return nil
 }
 
 func (c *IPClient) doDynamicIPConfig() error {
 	log.Info("Starting dynamic ip config")
+	c.isDynamic = true
 	return c.startDhclient()
 }
 
@@ -485,6 +597,7 @@ func (c *IPClient) doOOB() error {
 	c.iface = "oob_mnic0"
 	c.leaseFile = dhcpLeaseFile + c.iface
 	log.Infof("Doing OOB " + c.iface)
+	c.nmdState.config.Status.NetworkMode = nmd.NetworkMode_OOB.String()
 
 	if c.ipaddress != "" {
 		err := c.doStaticIPConfig()
@@ -492,7 +605,7 @@ func (c *IPClient) doOOB() error {
 			return err
 		}
 	} else {
-		c.isDynamic = true
+
 		err := c.doDynamicIPConfig()
 		if err != nil {
 			return err
@@ -517,6 +630,7 @@ func (c *IPClient) doInband() error {
 
 		c.iface = "bond0." + fmt.Sprint(c.mgmtVlan)
 	}
+	c.nmdState.config.Status.NetworkMode = nmd.NetworkMode_INBAND.String()
 
 	if c.ipaddress != "" {
 		err := c.doStaticIPConfig()
@@ -524,7 +638,6 @@ func (c *IPClient) doInband() error {
 			return err
 		}
 	} else {
-		c.isDynamic = true
 		err := c.doDynamicIPConfig()
 		if err != nil {
 			return err
@@ -534,8 +647,10 @@ func (c *IPClient) doInband() error {
 	return nil
 }
 
+//TODO : Remove the long list of parameters passed here, and use nmdState instead
+
 // NewIPClient creates a new ipclient to do the IP configuration of Management port on Naples
-func NewIPClient(nmdState *NMD, delphiClient clientAPI.Client, networkMode nmd.NetworkMode, ipaddress string, mgmtVlan uint32, hostname string, controllers []string) *IPClient {
+func NewIPClient(isMock bool, nmdState *NMD, delphiClient clientAPI.Client, networkMode nmd.NetworkMode, ipaddress string, mgmtVlan uint32, hostname string, controllers []string) *IPClient {
 	client := &IPClient{
 		delphiClient: delphiClient,
 		networkMode:  networkMode, // INBAND/OOB
@@ -544,6 +659,7 @@ func NewIPClient(nmdState *NMD, delphiClient clientAPI.Client, networkMode nmd.N
 		hostname:     hostname,
 		controllers:  controllers,
 		nmdState:     nmdState,
+		isMock:       isMock,
 	}
 
 	return client
@@ -558,10 +674,22 @@ func (c *IPClient) Start() error {
 		return err
 	}
 
+	// TODO : Find a better way to express this.
+	if !c.isMock && !c.interfaceExists("bond0") && !c.interfaceExists("oob_mnic0") {
+		log.Errorf("Interfaces don't exist. Automatically setting IPClient to run in Mock mode.")
+		c.isMock = true
+	}
+
+	if c.isMock {
+		// Update Naples Status will error out if either controllers or ipaddress passed in Spec is nil.
+		// This would mean, no DHCP configuration mode will be supported right now.
+		// DHCP configuration mode can be added to mock mode in future.
+		log.Info("IPClient in MOCK Mode. Calling Update Naples Status directly.")
+		return c.updateNaplesStatus(c.controllers, c.ipaddress)
+	}
+
 	if c.networkMode == nmd.NetworkMode_OOB && c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
 		// OOB
-		log.Info("Got network mode OOB")
-
 		return c.doOOB()
 		//if err != nil {
 		//	return err
@@ -570,6 +698,7 @@ func (c *IPClient) Start() error {
 	} else if c.networkMode == nmd.NetworkMode_INBAND && c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
 		// INBAND
 		log.Info("Got network mode inband")
+
 		return c.doInband()
 		//if err != nil {
 		//	return err
@@ -581,10 +710,18 @@ func (c *IPClient) Start() error {
 
 // Stop function stops IPClient's goroutines
 func (c *IPClient) Stop() {
-	os.Remove(rebootPendingPath)
+	if _, err := os.Stat(rebootPendingPath); err == nil {
+		// We will hit this codepath if we are reconfiguring Mode before effecting rebooting Naples
+		os.Remove(rebootPendingPath)
+		c.nmdState.config.Status.TransitionPhase = ""
+		c.nmdState.config.Status.Controllers = []string{}
+
+		// Should we de-admit at this point?
+	}
+
 	if c.isDynamic {
 		killDhclient()
-		c.doneEvent <- true
+		c.stopLeaseWatch <- true
 		c.watcher.Close()
 		c.isDynamic = false
 	}

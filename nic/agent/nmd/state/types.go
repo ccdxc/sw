@@ -4,6 +4,7 @@ package state
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -138,6 +139,13 @@ func (n *NMD) setNaplesConfig(cfg nmd.Naples) {
 	n.config = cfg
 }
 
+func (n *NMD) setNaplesConfigSpec(cfgSpec nmd.NaplesSpec) {
+	n.Lock()
+	defer n.Unlock()
+
+	n.config.Spec = cfgSpec
+}
+
 // GetNaplesConfig returns the current naples config received via REST
 func (n *NMD) GetNaplesConfig() nmd.Naples {
 	n.Lock()
@@ -179,7 +187,15 @@ func (n *NMD) CreateIPClient(delphiClient clientAPI.Client) {
 	n.Lock()
 	defer n.Unlock()
 
-	n.IPClient = NewIPClient(n, delphiClient, 0, "", 0, "", nil)
+	n.IPClient = NewIPClient(false, n, delphiClient, 0, "", 0, "", nil)
+}
+
+// CreateMockIPClient creates IPClient in Mock mode to run in venice integ environment
+func (n *NMD) CreateMockIPClient(delphiClient clientAPI.Client) {
+	n.Lock()
+	defer n.Unlock()
+
+	n.IPClient = NewIPClient(true, n, delphiClient, 0, "", 0, "", nil)
 }
 
 // GetIPClient returns the handle to the ip client
@@ -248,4 +264,18 @@ func (n *NMD) GetCMDSmartNICWatcherStatus() bool {
 // GetRoSmartNICWatcherStatus returns true if the NMD rollout interface has an active watch
 func (n *NMD) GetRoSmartNICWatcherStatus() bool {
 	return n.rollout != nil && n.rollout.IsSmartNICWatcherRunning()
+}
+
+// UpdateCurrentManagementMode fixes the currently active Management mode
+func (n *NMD) UpdateCurrentManagementMode() {
+	appStartConfFilePath := fmt.Sprintf("%s/app-start.conf", path.Dir(globals.NaplesModeConfigFile))
+	if appStartSpec, err := ioutil.ReadFile(appStartConfFilePath); err != nil {
+		n.config.Status.Mode = nmd.MgmtMode_HOST.String()
+	} else {
+		if string(appStartSpec) == "classic" {
+			n.config.Status.Mode = nmd.MgmtMode_HOST.String()
+		} else {
+			n.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
+		}
+	}
 }

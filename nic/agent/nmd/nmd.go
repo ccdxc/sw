@@ -52,6 +52,13 @@ func NewAgent(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI,
 	return &ag, nil
 }
 
+// StandaloneStart starts or stops host/network management when
+func (ag *Agent) StandaloneStart() {
+	log.Infof("NMD start management")
+	ag.nmd.CreateMockIPClient(nil)
+	ag.nmd.UpdateMgmtIP()
+}
+
 // DelphiService struct helps to convert NMD into a Delphi Service
 type DelphiService struct {
 	DelphiClient clientAPI.Client
@@ -66,6 +73,7 @@ func NewDelphiService() *DelphiService {
 // OnMountComplete is the function which is called by Delphi when the mounting of Service objects is completed.
 func (d *DelphiService) OnMountComplete() {
 	log.Infof("OnMountComplete() done for %s", d.Name())
+	d.Agent.nmd.UpdateCurrentManagementMode()
 	d.Agent.nmd.CreateIPClient(d.DelphiClient)
 	d.Agent.nmd.UpdateMgmtIP()
 }

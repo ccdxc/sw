@@ -180,9 +180,8 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 
 // RegisterCMD registers a CMD object
 func (n *NMD) RegisterCMD(cmd nmdapi.CmdAPI) error {
-
-	//n.Lock()
-	//defer n.Unlock()
+	n.Lock()
+	defer n.Unlock()
 
 	// ensure two controller plugins dont register
 	if n.cmd != nil {
@@ -197,8 +196,8 @@ func (n *NMD) RegisterCMD(cmd nmdapi.CmdAPI) error {
 
 // UnRegisterCMD ensures that nmd cleans up its old cmd information.
 func (n *NMD) UnRegisterCMD() error {
-	//n.Lock()
-	//defer n.Unlock()
+	n.Lock()
+	defer n.Unlock()
 	log.Infof("Received UnRegisterCMD message.")
 	n.cmd = nil
 	return nil

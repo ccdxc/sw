@@ -15,7 +15,7 @@ namespace sdk {
 namespace platform {
 namespace capri {
 
-void csr_init(void);
+void csr_init (void);
 
 } // end namespace capri
 } // end namespace platform

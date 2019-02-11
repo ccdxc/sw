@@ -262,7 +262,7 @@ func createNMD(t *testing.T, dbPath, priMac, restURL, mgmtMode string) (*nmdInfo
 	}
 	// Ensure the NMD's rest server is started
 	nmdHandle := ag.GetNMD()
-	nmdHandle.CreateIPClient(nil)
+	nmdHandle.CreateMockIPClient(nil)
 	nmdHandle.UpdateMgmtIP()
 
 	return ni, err

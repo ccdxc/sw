@@ -206,6 +206,8 @@ func main() {
 		nm.DelphiClient = delphiClient
 		dServ.Agent = nm
 		go delphiClient.Run()
+	} else {
+		nm.StandaloneStart()
 	}
 
 	log.Infof("%s is running {%+v}", globals.Nmd, nm)
