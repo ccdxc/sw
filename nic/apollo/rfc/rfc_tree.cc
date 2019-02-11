@@ -70,18 +70,31 @@ itable_add_proto_port_inodes (uint32_t rule, inode_t *proto_port_inode,
     proto_port_inode->rfc.pad = 0;
 }
 
+static inline void
+rfc_table_destroy (rfc_table_t *rfc_table)
+{
+    rfc_table->cbm_map.clear();
+    for (uint32_t i = 0; i < rfc_table->num_classes; i++) {
+        free(rfc_table->cbm_table[i]);
+    }
+}
+
+static inline void
+rfc_tree_destroy (rfc_tree_t *rfc_tree)
+{
+    if (rfc_tree->itable.nodes) {
+        free(rfc_tree->itable.nodes);
+    }
+    rfc_table_destroy(&rfc_tree->rfc_table);
+}
+
 void
 rfc_ctxt_destroy (rfc_ctxt_t *rfc_ctxt)
 {
-    if (rfc_ctxt->pfx_tree.itable.nodes) {
-        free(rfc_ctxt->pfx_tree.itable.nodes);
-    }
-    if (rfc_ctxt->port_tree.itable.nodes) {
-        free(rfc_ctxt->port_tree.itable.nodes);
-    }
-    if (rfc_ctxt->proto_port_tree.itable.nodes) {
-        free(rfc_ctxt->proto_port_tree.itable.nodes);
-    }
+    rfc_tree_destroy(&rfc_ctxt->pfx_tree);
+    rfc_tree_destroy(&rfc_ctxt->port_tree);
+    rfc_tree_destroy(&rfc_ctxt->proto_port_tree);
+    rfc_table_destroy(&rfc_ctxt->p1_table);
     if (rfc_ctxt->cbm) {
         free(rfc_ctxt->cbm);
     }
@@ -114,12 +127,10 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy)
         goto cleanup;
     }
     new (&rfc_ctxt->proto_port_tree.rfc_table.cbm_map) cbm_map_t();
-
     new (&rfc_ctxt->p1_table.cbm_map) cbm_map_t();
-    new (&rfc_ctxt->p2_table.cbm_map) cbm_map_t();
-
-    rfc_ctxt->cbm_size = rte_bitmap_get_memory_footprint(policy->max_rules);
-    bits = (uint8_t *)calloc(1, RTE_CACHE_LINE_ROUNDUP(rfc_ctxt->cbm_size));
+    rfc_ctxt->cbm_size =
+        RTE_CACHE_LINE_ROUNDUP(rte_bitmap_get_memory_footprint(policy->max_rules));
+    bits = (uint8_t *)malloc(rfc_ctxt->cbm_size);
     if (bits) {
         rfc_ctxt->cbm = rte_bitmap_init(policy->max_rules, bits,
                                          rfc_ctxt->cbm_size);

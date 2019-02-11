@@ -40,6 +40,16 @@ uint16_t rfc_compute_class_id(policy_t *policy, rfc_table_t *rfc_table,
  */
 sdk_ret_t rfc_sort_itables(rfc_ctxt_t *rfc_ctxt, policy_t *policy);
 
+/**
+ * @brief    given the class bitmap tables of phase0 & phase1, compute class
+ *           bitmap table(s) of RFC phase 2, and set the results bits
+ * @param[in] policy      user specified policy
+ * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
+ *                        information processed until now
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t rfc_build_eqtables(policy_t *policy, rfc_ctxt_t *rfc_ctxt);
+
 }    // namespace rfc
 
 #endif    /** __RFC_UTILS_HPP__ */

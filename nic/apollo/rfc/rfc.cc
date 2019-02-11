@@ -179,9 +179,13 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
     /**< build LPM trees for phase 0 of RFC */
     rfc_build_lpm_trees(policy, &rfc_ctxt, rfc_tree_root_addr, mem_size);
 
-    /**< build equivalence class index tables for subsequent phases of RFC */
-    //rfc_build_eqtables(policy, &rfc_ctxt);
+    /**
+     * build equivalence class index tables and result tables for subsequent
+     * phases of RFC
+     */
+    rfc_build_eqtables(policy, &rfc_ctxt);
 
+    /**< free all the temporary state */
     rfc_ctxt_destroy(&rfc_ctxt);
 
     return ret;

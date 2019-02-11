@@ -68,13 +68,7 @@ typedef struct rfc_ctxt_s {
     rfc_tree_t    pfx_tree;       /**< RFC tree for prefix */
     rfc_tree_t    port_tree;      /**< RFC tree for port */
     rfc_tree_t    proto_port_tree;/**< RFC tree for protocol-port */
-
-    /**< phase 1 information */
     rfc_table_t   p1_table;       /**< phase 1 RFC table */
-
-    /**< phase 2 information */
-    rfc_table_t   p2_table;       /**< phase 2 RF table */
-
     rte_bitmap    *cbm;           /**< RFC class bitmap instance used as
                                        scratch pad */
     size_t        cbm_size;       /**< size of class-bit-map (CBM) */

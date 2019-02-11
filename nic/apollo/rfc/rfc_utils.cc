@@ -105,7 +105,7 @@ rfc_compute_class_id (policy_t *policy, rfc_table_t *rfc_table,
     }
     class_id = rfc_table->num_classes++;
     SDK_ASSERT(class_id < RFC_MAX_EQ_CLASSES);
-    bits = (uint8_t *)calloc(1, RTE_CACHE_LINE_ROUNDUP(cbm_size));
+    bits = (uint8_t *)malloc(cbm_size);
     cbm_new = rte_bitmap_init(policy->max_rules, bits, cbm_size);
     rte_bitmap_or(cbm, cbm_new, cbm_new);
     rfc_table->cbm_table[class_id] = cbm_new;
