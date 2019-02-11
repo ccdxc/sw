@@ -322,6 +322,8 @@ struct intr {
 	unsigned int vector;
 	struct intr_ctrl __iomem *ctrl;
 	u64 rearm_count;
+	unsigned int cpu;
+	cpumask_t affinity_mask;
 };
 
 struct cq {

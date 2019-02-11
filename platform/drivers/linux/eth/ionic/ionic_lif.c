@@ -5,6 +5,7 @@
 #include <linux/etherdevice.h>
 #include <linux/interrupt.h>
 #include <linux/pci.h>
+#include <linux/cpumask.h>
 
 #include "ionic.h"
 #include "ionic_bus.h"
@@ -92,21 +93,44 @@ static int ionic_qcq_enable(struct qcq *qcq)
 			.qtype = q->qtype,
 		},
 	};
-	int err;
 
 	dev_dbg(dev, "q_enable.qid %d q_enable.qtype %d\n",
 		ctx.cmd.q_enable.qid, ctx.cmd.q_enable.qtype);
 
-	err = ionic_adminq_post_wait(lif, &ctx);
-	if (err)
-		return err;
-
 	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
+		irq_set_affinity_hint(qcq->intr.vector, &qcq->intr.affinity_mask);
 		napi_enable(&qcq->napi);
 		ionic_intr_mask(&qcq->intr, false);
 	}
 
-	return 0;
+	return ionic_adminq_post_wait(lif, &ctx);
+}
+
+static int ionic_qcq_disable(struct qcq *qcq)
+{
+	struct queue *q = &qcq->q;
+	struct lif *lif = q->lif;
+	struct device *dev = lif->ionic->dev;
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.q_disable = {
+			.opcode = CMD_OPCODE_Q_DISABLE,
+			.qid = q->qid,
+			.qtype = q->qtype,
+		},
+	};
+
+	dev_dbg(dev, "q_disable.qid %d q_disable.qtype %d\n",
+		ctx.cmd.q_disable.qid, ctx.cmd.q_disable.qtype);
+
+	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
+		ionic_intr_mask(&qcq->intr, true);
+		synchronize_irq(qcq->intr.vector);
+		irq_set_affinity_hint(qcq->intr.vector, NULL);
+		napi_disable(&qcq->napi);
+	}
+
+	return ionic_adminq_post_wait(lif, &ctx);
 }
 
 static int ionic_lif_open(struct lif *lif)
@@ -175,32 +199,6 @@ int ionic_open(struct net_device *netdev)
 	return 0;
 }
 
-static int ionic_qcq_disable(struct qcq *qcq)
-{
-	struct queue *q = &qcq->q;
-	struct lif *lif = q->lif;
-	struct device *dev = lif->ionic->dev;
-	struct ionic_admin_ctx ctx = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
-		.cmd.q_disable = {
-			.opcode = CMD_OPCODE_Q_DISABLE,
-			.qid = q->qid,
-			.qtype = q->qtype,
-		},
-	};
-
-	dev_dbg(dev, "q_disable.qid %d q_disable.qtype %d\n",
-		ctx.cmd.q_disable.qid, ctx.cmd.q_disable.qtype);
-
-	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
-		ionic_intr_mask(&qcq->intr, true);
-		synchronize_irq(qcq->intr.vector);
-		napi_disable(&qcq->napi);
-	}
-
-	return ionic_adminq_post_wait(lif, &ctx);
-}
-
 static int ionic_lif_stop(struct lif *lif)
 {
 	struct net_device *ndev;
@@ -220,9 +218,10 @@ static int ionic_lif_stop(struct lif *lif)
 	else
 		ndev = lif->netdev;
 
+	/* carrier off before disabling queues to avoid watchdog timeout */
+	netif_carrier_off(ndev);
 	netif_tx_stop_all_queues(ndev);
 	netif_tx_disable(ndev);
-	netif_carrier_off(ndev);
 
 	for (i = 0; i < lif->nxqs; i++) {
 		if (lif->rxqcqs[i]) {
@@ -330,11 +329,12 @@ static void ionic_link_status_check(struct lif *lif)
 		if (test_bit(LIF_UP, lif->state))
 			netif_tx_wake_all_queues(lif->netdev);
 	} else {
+		/* carrier off before disabling queues to avoid watchdog timeout */
+		netif_carrier_off(netdev);
 		if (test_bit(LIF_UP, lif->state))
 			netif_tx_stop_all_queues(netdev);
 
 		netdev_info(netdev, "Link down\n");
-		netif_carrier_off(netdev);
 	}
 
 	/* TODO: Propagate link status to other lifs on
@@ -747,6 +747,11 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 	bool running;
 	int err;
 
+	if (new_mtu < IONIC_MIN_MTU || new_mtu > IONIC_MAX_MTU) {
+		netdev_err(netdev, "Invalid MTU %d\n", new_mtu);
+		return -EINVAL;
+	}
+
 	running = netif_running(netdev);
 
 	if (running)
@@ -1121,7 +1126,6 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 	void *q_base, *cq_base, *sg_base;
 	dma_addr_t q_base_pa, cq_base_pa, sg_base_pa;
 	int err;
-
 	*qcq = NULL;
 
 	total_size = ALIGN(q_size, PAGE_SIZE) + ALIGN(cq_size, PAGE_SIZE);
@@ -1164,6 +1168,11 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 		}
 		new->intr.vector = err;
 		ionic_intr_mask_on_assertion(&new->intr);
+
+		new->intr.cpu = new->intr.index % num_online_cpus();
+		if (cpu_online(new->intr.cpu)) {
+			cpumask_set_cpu(new->intr.cpu, &new->intr.affinity_mask);
+		}
 	} else {
 		new->intr.index = INTR_INDEX_NOT_ASSIGNED;
 	}
