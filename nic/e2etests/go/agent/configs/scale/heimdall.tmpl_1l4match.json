@@ -13,5 +13,5 @@
   "l4match-per-rule": 1,
   "ip-addresses-per-rule": 10,
   "alg-info":["ftp/tcp/20/20s", "tftp/udp/69/1m5s", "dns/udp/53/30ms", "ftp/tcp/4900/1h", "tftp/udp/5000/30m", "icmp/0/1/200ns", "icmp/3/13/500us"],
-  "flowmon-inteval": ["15s"]
+  "flowmon-interval": "15s"
 }
