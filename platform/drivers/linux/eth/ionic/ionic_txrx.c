@@ -760,11 +760,15 @@ u16 ionic_select_queue(struct net_device *netdev, struct sk_buff *skb,
 {
 	u16 index;
 
-	if (accel_priv) {
-		struct lif *lif = (struct lif *)accel_priv;
-		struct lif *master_lif = lif->ionic->master_lif;
-
-		index = master_lif->nxqs + lif->index - 1;
+	if (netdev->features & NETIF_F_HW_L2FW_DOFFLOAD) {
+		if (accel_priv) {
+			struct lif *lif = (struct lif *)accel_priv;
+			struct lif *master_lif = lif->ionic->master_lif;
+			index = master_lif->nxqs + lif->index - 1;
+		} else {
+			struct lif *lif = (struct lif *)netdev_priv(netdev);
+			index = lif->index;
+		}
 	} else {
 		index = fallback(netdev, skb);
 	}
