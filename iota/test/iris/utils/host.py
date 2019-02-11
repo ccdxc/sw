@@ -87,3 +87,57 @@ def SetMACAddress(node, interface, mac_addr):
     api.Trigger_AddHostCommand(req, node, cmd)
     resp = api.Trigger(req)
     return resp.commands[0]
+
+def EnablePromiscuous(node, interface):
+    result = api.types.status.SUCCESS
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip link set dev " + interface + " promisc on"
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "ifconfig " + interface + " promisc"
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        result = api.types.status.FAILURE
+    return result
+
+def DisablePromiscuous(node, interface):
+    result = api.types.status.SUCCESS
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip link set dev " + interface + " promisc off"
+    elif api.GetNodeOs(node) == "freebsd":
+        cmd = "ifconfig " + interface + " -promisc"
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        result = api.types.status.FAILURE
+    return result
+
+def EnableAllmulti(node, interface):
+    result = api.types.status.SUCCESS
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip link set dev " + interface + " allmulticast on"
+    else:
+        # FreeBSD doesn't allow you to change allmulti setting from userspace
+        assert(0)
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        result = api.types.status.FAILURE
+    return result
+
+def DisableAllmulti(node, interface):
+    result = api.types.status.SUCCESS
+    if api.GetNodeOs(node) == "linux":
+        cmd = "ip link set dev " + interface + " allmulticast off"
+    else:
+        # FreeBSD doesn't allow you to change allmulti setting from userspace
+        assert(0)
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        result = api.types.status.FAILURE
+    return result

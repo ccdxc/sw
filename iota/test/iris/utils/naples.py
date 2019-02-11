@@ -73,3 +73,44 @@ def GetMACAddress(node, interface):
     resp = api.Trigger(req)
     intf_mac_addr = resp.commands[0].stdout.strip("\n\r")
     return intf_mac_addr
+
+def EnablePromiscuous(node, interface):
+    result = api.types.status.SUCCESS
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "ip link set dev " + interface + " promisc on"
+    api.Trigger_AddNaplesCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        result = api.types.status.FAILURE
+    return result
+
+def DisablePromiscuous(node, interface):
+    result = api.types.status.SUCCESS
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "ip link set dev " + interface + " promisc off"
+    api.Trigger_AddNaplesCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        result = api.types.status.FAILURE
+    return result
+
+def EnableAllmulti(node, interface):
+    result = api.types.status.SUCCESS
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "ip link set dev " + interface + " allmulticast on"
+    api.Trigger_AddNaplesCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        result = api.types.status.FAILURE
+    return result
+
+def DisableAllmulti(node, interface):
+    result = api.types.status.SUCCESS
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "ip link set dev " + interface + " allmulticast off"
+    api.Trigger_AddNaplesCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp.commands[0].exit_code != 0:
+        result = api.types.status.FAILURE
+    return result
+ 
