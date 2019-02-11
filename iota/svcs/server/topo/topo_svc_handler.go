@@ -92,9 +92,9 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 
 	if ts.TestBedInfo.DataSwitch != nil && ts.TestBedInfo.TestbedId != 0 {
 		// Allocate VLANs for the test bed
-		if vlans, err = testbed.SetUpTestBedVLANS(ts.TestBedInfo.DataSwitch, ts.TestBedInfo.TestbedId); err != nil {
-			log.Errorf("TOPO SVC | InitTestBed | Could not allocate VLANS from the switchport id: %d, Err: %v", ts.TestBedInfo.TestbedId, err)
-			req.ApiResponse.ErrorMsg = fmt.Sprintf("could not allocate VLANS from the switchport id: %d. Err: %v", ts.TestBedInfo.TestbedId, err)
+		if vlans, err = testbed.SetUpTestbedSwitch(ts.TestBedInfo.DataSwitch, ts.TestBedInfo.TestbedId); err != nil {
+			log.Errorf("TOPO SVC | InitTestBed | Could not initialize switch id: %d, Err: %v", ts.TestBedInfo.TestbedId, err)
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Switch configuration failed %d. Err: %v", ts.TestBedInfo.TestbedId, err)
 			return req, nil
 		}
 		ts.TestBedInfo.AllocatedVlans = vlans

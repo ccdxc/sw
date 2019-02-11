@@ -67,4 +67,33 @@ def Main(step):
             api.Logger.error("Mode switch failed on node : {}".format(cmd.node_name))
             result = api.types.status.FAILURE
 
+    #Verify Agent in right mode.
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+    for n in api.GetNaplesHostnames():
+        cmd = "curl localhost:9007/api/system/info/"
+        api.Trigger_AddNaplesCommand(req, n, cmd)
+
+    resp = api.Trigger(req)
+    venice_urls =[]
+    for ip in api.GetVeniceMgmtIpAddresses():
+        venice_urls.append(ip + ":9009")
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0:
+            api.Logger.error("Agent system get failed : {}".format(cmd.node_name))
+            result = api.types.status.FAILURE
+        out = None
+        try:
+            out = json.loads(cmd.stdout)
+        except:
+            api.Logger.error("Agent System get out failed {}".format(cmd.stdout))
+            return api.types.status.FAILURE
+        if out["naples-mode"] != "NETWORK_MANAGED_OOB":
+            api.Logger.error("Agent not in correct mode: {} {} ".format(cmd.node_name, out["naples-mode"]))
+            return api.types.status.FAILURE
+        if set(out["controller-ips"]) != set(venice_urls):
+            api.Logger.error("Agent controller IPs don't match: {} {}".format(venice_urls, out["controller-ips"]))
+            return api.types.status.FAILURE
+
+
     return api.types.status.SUCCESS

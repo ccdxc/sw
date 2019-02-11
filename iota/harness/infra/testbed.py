@@ -278,6 +278,9 @@ class _Testbed:
         if resp is None:
             Logger.error("Failed to initialize testbed: ")
             return types.status.FAILURE
+        if not api.IsApiResponseOk(resp):
+            Logger.error("Failed to initialize testbed: ")
+            return types.status.FAILURE
         for instance,node in zip(self.__tbspec.Instances, resp.nodes):
             if getattr(instance, 'NodeOs', None) == "esx":
                 instance.esx_ctrl_vm_ip = node.esx_ctrl_node_ip_address
