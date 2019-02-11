@@ -188,6 +188,9 @@ if_t *pd_enicif_get_pinned_uplink_for_inp_props(if_t *hal_if,
                                                 pd_if_update_args_t *if_args,
                                                 pd_if_lif_update_args_t *lif_args);
 bool pd_enicif_has_lif(if_t *hal_if, pd_if_update_args_t *if_args);
+hal_ret_t pd_enicif_update_num_prom(pd_enicif_t *pd_enicif,
+                                    dllist_ctxt_t *add_l2seg_list,
+                                    dllist_ctxt_t *del_l2seg_list);
 }   // namespace pd
 }   // namespace hal
 #endif    // __HAL_PD_ENICIF_HPP__

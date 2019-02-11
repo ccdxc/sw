@@ -842,6 +842,7 @@ TEST_F(enicif_test, test5)
 
     // Create a lif
     lif_spec.mutable_key_or_handle()->set_lif_id(51);
+    lif_spec.mutable_packet_filter()->set_receive_promiscuous(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::lif_create(lif_spec, &lif_rsp, NULL);
     hal::hal_cfg_db_close();
@@ -863,6 +864,7 @@ TEST_F(enicif_test, test5)
     l2seg_spec.mutable_key_or_handle()->set_segment_id(502);
     l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
     l2seg_spec.mutable_wire_encap()->set_encap_value(502);
+    l2seg_spec.add_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 50);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::l2segment_create(l2seg_spec, &l2seg_rsp);
     hal::hal_cfg_db_close();
@@ -876,10 +878,23 @@ TEST_F(enicif_test, test5)
     if_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
     auto l2kh = if_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
     l2kh->set_segment_id(501);
-    auto l2kh1 = if_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
-    l2kh1->set_segment_id(502);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Update classic enic
+    if_spec.Clear();
+    if_spec.set_type(intf::IF_TYPE_ENIC);
+    if_spec.mutable_if_enic_info()->mutable_lif_key_or_handle()->set_lif_id(51);
+    if_spec.mutable_key_or_handle()->set_interface_id(IF_ID_OFFSET + 51);
+    if_spec.mutable_if_enic_info()->set_enic_type(intf::IF_ENIC_TYPE_CLASSIC);
+    auto l2kh1 = if_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+    l2kh1->set_segment_id(501);
+    auto l2kh2 = if_spec.mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle();
+    l2kh2->set_segment_id(502);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_update(if_spec, &if_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
 

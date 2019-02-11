@@ -710,7 +710,7 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
     l2seg_t                                 *infra_pi_l2seg = NULL;
     input_properties_swkey_t                key;
     input_properties_otcam_swkey_mask_t     *key_mask = NULL;
-    input_properties_actiondata_t             data;
+    input_properties_actiondata_t           data;
     bool                                    direct_to_otcam = false;
 
     memset(&key, 0, sizeof(key));

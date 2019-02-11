@@ -301,6 +301,16 @@ pd_enicif_upd_l2seg_clsc_change(pd_if_update_args_t *args)
 
     HAL_TRACE_DEBUG("l2seg-list change: ");
 
+    // Update the number of promiscuous lifs in newly added l2segs.
+    ret = pd_enicif_update_num_prom(pd_enicif,
+                                    args->add_l2seg_clsclist,
+                                    args->del_l2seg_clsclist);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to update number of prom lifs in newly added "
+                      "l2segs. ret: {}", ret);
+        goto end;
+    }
+
     // Allocated PD State for new IP entries
     ret = pd_enicif_alloc_pd_l2seg_entries(args->add_l2seg_clsclist);
     if (ret != HAL_RET_OK) {
@@ -870,6 +880,35 @@ is_l2seg_native_on_enicif_classic(if_t *hal_if, l2seg_t *l2seg)
     }
 
     return is_native;
+}
+
+hal_ret_t
+pd_enicif_update_num_prom(pd_enicif_t *pd_enicif,
+                          dllist_ctxt_t *add_l2seg_list,
+                          dllist_ctxt_t *del_l2seg_list)
+{
+    if_t                 *hal_if = (if_t *)pd_enicif->pi_if;
+    lif_t                *lif = if_get_lif(hal_if);;
+    if_l2seg_entry_t     *pi_l2seg_entry = NULL;
+    dllist_ctxt_t        *lnode = NULL;
+    l2seg_t              *l2seg = NULL;
+    pd_l2seg_t           *pd_l2seg = NULL;
+
+    if (lif->packet_filters.receive_promiscuous) {
+        dllist_for_each(lnode, add_l2seg_list) {
+            pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
+            l2seg = l2seg_lookup_by_handle(pi_l2seg_entry->l2seg_handle);
+            pd_l2seg = (pd_l2seg_t *)l2seg->pd;
+            pd_l2seg_update_prom_lifs(pd_l2seg, hal_if, true /* inc */, false);
+        }
+        dllist_for_each(lnode, del_l2seg_list) {
+            pi_l2seg_entry = dllist_entry(lnode, if_l2seg_entry_t, lentry);
+            l2seg = l2seg_lookup_by_handle(pi_l2seg_entry->l2seg_handle);
+            pd_l2seg = (pd_l2seg_t *)l2seg->pd;
+            pd_l2seg_update_prom_lifs(pd_l2seg, hal_if, false /* inc */, false);
+        }
+    }
+    return HAL_RET_OK;
 }
 
 // ----------------------------------------------------------------------------
