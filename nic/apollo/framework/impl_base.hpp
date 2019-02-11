@@ -125,6 +125,16 @@ public:
         return sdk::SDK_RET_INVALID_OP;
     }
 
+    /**
+     * @brief    return asic impl class instance
+     */
+    static asic_impl_base *asic_impl(void) { return asic_impl_; }
+
+    /**
+     * @brief    return pipeline impl class instance
+     */
+    static pipeline_impl_base *pipeline_impl(void) { return pipeline_impl_; }
+
 private:
     static asic_impl_base        *asic_impl_;
     static pipeline_impl_base    *pipeline_impl_;

@@ -286,7 +286,7 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     if (ret != SDK_RET_OK) {
         OCI_TRACE_ERR("Reserve resources stage failed for obj %s, op %u",
-                      api_obj->keystring(), obj_ctxt->api_op);
+                      api_obj->key2str(), obj_ctxt->api_op);
     }
     return ret;
 }
@@ -362,7 +362,7 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     if (ret != SDK_RET_OK) {
         OCI_TRACE_ERR("Program config stage failed for obj %s, op %u",
-                      api_obj->keystring(), obj_ctxt->api_op);
+                      api_obj->key2str(), obj_ctxt->api_op);
     }
     return ret;
 }

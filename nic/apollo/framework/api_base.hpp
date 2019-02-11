@@ -164,7 +164,10 @@ public:
     /**< @brief    return true if this is 'stateless' object */
     bool stateless(void) { return stateless_; }
 
-    /**< @brief    return string to uniquely identify obj (for debugging) */
+    /**< @brief    return stringified key of the object (for debugging) */
+    virtual string key2str(void) const { return "api_base_key"; }
+
+    /**< @brief    return stringified contents of the obj (for debugging) */
     virtual string tostr(void) const { return "api_base"; }
 
 protected:

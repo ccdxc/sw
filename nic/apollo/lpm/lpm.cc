@@ -9,13 +9,10 @@
 #include <math.h>
 #include <stack>
 #include "nic/apollo/lpm/lpm.hpp"
-#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/apollo/lpm/lpm_sport.hpp"
 #include "nic/apollo/lpm/lpm_ipv4_acl.hpp"
 #include "nic/apollo/lpm/lpm_ipv4_route.hpp"
 #include "nic/apollo/lpm/lpm_proto_dport.hpp"
-#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
-#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
 
 using std::stack;
 
@@ -300,38 +297,6 @@ lpm_build_interval_table (route_table_t *route_table, lpm_itable_t *itable)
         s.pop();
     }
     itable->num_intervals = num_intervals;
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-lpm_write_txdma_table (mem_addr_t addr, uint32_t tableid,
-                       uint8_t action_id, void *actiondata)
-{
-    sdk_ret_t ret;
-    uint32_t  len;
-    uint8_t   packed_entry[LPM_TABLE_SIZE];
-
-    p4pd_apollo_txdma_raw_table_hwentry_query(tableid, action_id, &len);
-    p4pd_apollo_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
-    ret = asic_mem_write(addr, packed_entry, len >> 3,
-                         ASIC_WRITE_MODE_WRITE_THRU);
-    SDK_ASSERT(ret == SDK_RET_OK);
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-lpm_write_rxdma_table (mem_addr_t addr, uint32_t tableid,
-                       uint8_t action_id, void *actiondata)
-{
-    sdk_ret_t ret;
-    uint32_t  len;
-    uint8_t   packed_entry[LPM_TABLE_SIZE];
-
-    p4pd_apollo_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
-    p4pd_apollo_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
-    ret = asic_mem_write(addr, packed_entry, len >> 3,
-                         ASIC_WRITE_MODE_WRITE_THRU);
-    SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
 }
 
@@ -672,182 +637,8 @@ cleanup:
 
 
 
+#if 0
 /* Move the following in to their appropriate SLACL file */
-
-inline sdk_ret_t
-slacl_ip_sport_p1_pack (uint8_t *bytes, uint32_t idx, uint16_t data)
-{
-    auto table = (slacl_ip_sport_p1_actiondata_t *)bytes;
-
-    switch (idx) {
-    case 0:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id00 = data;
-        break;
-    case 1:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id01 = data;
-        break;
-    case 2:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id02 = data;
-        break;
-    case 3:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id03 = data;
-        break;
-    case 4:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id04 = data;
-        break;
-    case 5:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id05 = data;
-        break;
-    case 6:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id06 = data;
-        break;
-    case 7:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id07 = data;
-        break;
-    case 8:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id08 = data;
-        break;
-    case 9:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id09 = data;
-        break;
-    case 10:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id10 = data;
-        break;
-    case 11:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id11 = data;
-        break;
-    case 12:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id12 = data;
-        break;
-    case 13:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id13 = data;
-        break;
-    case 14:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id14 = data;
-        break;
-    case 15:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id15 = data;
-        break;
-    case 16:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id16 = data;
-        break;
-    case 17:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id17 = data;
-        break;
-    case 18:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id18 = data;
-        break;
-    case 19:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id19 = data;
-        break;
-    case 20:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id20 = data;
-        break;
-    case 21:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id21 = data;
-        break;
-    case 22:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id22 = data;
-        break;
-    case 23:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id23 = data;
-        break;
-    case 24:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id24 = data;
-        break;
-    case 25:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id25 = data;
-        break;
-    case 26:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id26 = data;
-        break;
-    case 27:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id27 = data;
-        break;
-    case 28:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id28 = data;
-        break;
-    case 29:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id29 = data;
-        break;
-    case 30:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id30 = data;
-        break;
-    case 31:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id31 = data;
-        break;
-    case 32:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id32 = data;
-        break;
-    case 33:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id33 = data;
-        break;
-    case 34:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id34 = data;
-        break;
-    case 35:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id35 = data;
-        break;
-    case 36:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id36 = data;
-        break;
-    case 37:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id37 = data;
-        break;
-    case 38:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id38 = data;
-        break;
-    case 39:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id39 = data;
-        break;
-    case 40:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id40 = data;
-        break;
-    case 41:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id41 = data;
-        break;
-    case 42:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id42 = data;
-        break;
-    case 43:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id43 = data;
-        break;
-    case 44:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id44 = data;
-        break;
-    case 45:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id45 = data;
-        break;
-    case 46:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id46 = data;
-        break;
-    case 47:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id47 = data;
-        break;
-    case 48:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id48 = data;
-        break;
-    case 49:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id49 = data;
-        break;
-    case 50:
-        table->action_u.slacl_ip_sport_p1_slacl_ip_sport_p1.id50 = data;
-        break;
-    default:
-        break;
-    }
-
-    return SDK_RET_OK;
-}
-
-inline sdk_ret_t
-slacl_ip_sport_p1_write_stage_table (mem_addr_t addr, uint8_t *bytes)
-{
-return lpm_write_rxdma_table(addr,
-                             P4_APOLLO_RXDMA_TBL_ID_SLACL_IP_SPORT_P1,
-                             SLACL_IP_SPORT_P1_SLACL_IP_SPORT_P1_ID,
-                             bytes);
-}
 
 inline sdk_ret_t
 slacl_p2_pack (uint8_t *bytes, uint32_t idx, uint8_t data)
@@ -1639,3 +1430,4 @@ slacl_p2_write_stage_table (mem_addr_t addr, uint8_t *bytes)
                                  SLACL_P2_SLACL_P2_ID,
                                  bytes);
 }
+#endif

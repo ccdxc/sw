@@ -63,6 +63,34 @@ public:
     virtual sdk_ret_t pipeline_init(void) { return sdk::SDK_RET_ERR; }
 
     /**
+     * @brief    generic API to write to rxdma tables
+     * @param[in]    addr         memory address to write the data to
+     * @param[in]    tableid      table id
+     * @param[in]    action_id    action id to write
+     * @param[in]    action_data  action data to write
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
+                                           uint8_t action_id,
+                                           void *actiondata) {
+        return SDK_RET_ERR;
+    }
+
+    /**
+     * @brief    generic API to write to txdma tables
+     * @param[in]    addr         memory address to write the data to
+     * @param[in]    tableid      table id
+     * @param[in]    action_id    action id to write
+     * @param[in]    action_data  action data to write
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
+                                           uint8_t action_id,
+                                           void *actiondata) {
+        return SDK_RET_ERR;
+    }
+
+    /**
      * @brief    dump all the debug information to given file
      * @param[in] fp    file handle
      */

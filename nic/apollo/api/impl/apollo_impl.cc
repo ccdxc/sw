@@ -9,11 +9,14 @@
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/apollo/api/impl/apollo_impl.hpp"
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
-#include "nic/sdk/asic/pd/pd.hpp"
-#include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/apollo/p4/include/defines.h"
+#include "gen/p4gen/apollo/include/p4pd.h"
+#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
+#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 
 extern sdk_ret_t init_service_lif(void);
 
@@ -381,6 +384,46 @@ apollo_impl::debug_dump(FILE *fp) {
     dump_ingress_drop_stats_(fp);
     fprintf(fp, "Egress drop statistics\n");
     dump_egress_drop_stats_(fp);
+}
+
+/**
+ * @brief    generic API to write to rxdma tables
+ * @param[in]    addr         memory address to write the data to
+ * @param[in]    tableid      table id
+ * @param[in]    action_id    action id to write
+ * @param[in]    action_data  action data to write
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
+                                  uint8_t action_id, void *actiondata) {
+    uint32_t     len;
+    uint8_t      packed_entry[CACHE_LINE_SIZE];
+
+    p4pd_apollo_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
+    p4pd_apollo_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    return asic_mem_write(addr, packed_entry, len >> 3,
+                          ASIC_WRITE_MODE_WRITE_THRU);
+}
+
+/**
+ * @brief    generic API to write to txdma tables
+ * @param[in]    addr         memory address to write the data to
+ * @param[in]    tableid      table id
+ * @param[in]    action_id    action id to write
+ * @param[in]    action_data  action data to write
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
+                                  uint8_t action_id, void *actiondata) {
+    uint32_t     len;
+    uint8_t      packed_entry[CACHE_LINE_SIZE];
+
+    p4pd_apollo_txdma_raw_table_hwentry_query(tableid, action_id, &len);
+    p4pd_apollo_txdma_entry_pack(tableid, action_id, actiondata, packed_entry);
+    return asic_mem_write(addr, packed_entry, len >> 3,
+                          ASIC_WRITE_MODE_WRITE_THRU);
 }
 
 /** @} */    // end of OCI_PIPELINE_IMPL
