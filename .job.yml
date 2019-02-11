@@ -35,7 +35,6 @@ dependencies:
   nic: platform
   nic: test/venice_naples_e2e
   platform: nic
-  nic/apollo: nic
   platform: test/venice_naples_e2e
   venice: test/venice_naples_e2e
   iota: test/venice_naples_e2e
