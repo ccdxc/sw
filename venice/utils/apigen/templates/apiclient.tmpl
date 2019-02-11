@@ -7,6 +7,7 @@ import (
     "net/http"
 
     "github.com/pensando/sw/venice/utils/log"
+    "github.com/pensando/sw/venice/utils/netutils"
     "github.com/pensando/sw/venice/utils/rpckit"{{range $key, $value := $pkgs}}
     {{$key}} "github.com/pensando/sw/api/generated/{{$key}}"
     {{$key}}Client "github.com/pensando/sw/api/generated/{{$key}}/grpc/client"{{end}}
@@ -82,10 +83,9 @@ func (a *apiRestServerClient) {{$k}}() {{$pkgname}}.{{$k}}Interface {
 {{end}}{{end}}
 // NewRestAPIClient returns a REST client
 func NewRestAPIClient(url string) (Services, error) {
-    ht:= &http.Transport{
-            TLSClientConfig: &tls.Config{
-            InsecureSkipVerify: true,
-        },
+    ht := netutils.CopyHTTPDefaultTransport()
+    ht.TLSClientConfig = &tls.Config{
+        InsecureSkipVerify: true,
     }
     httpClient:= &http.Client{
             Transport: ht,
@@ -101,10 +101,9 @@ func NewRestAPIClient(url string) (Services, error) {
 
 // NewStagedRestAPIClient returns a REST client
 func NewStagedRestAPIClient(url string, bufferId string) (Services, error) {
-    ht:= &http.Transport{
-            TLSClientConfig: &tls.Config{
-            InsecureSkipVerify: true,
-        },
+    ht := netutils.CopyHTTPDefaultTransport()
+    ht.TLSClientConfig = &tls.Config{
+        InsecureSkipVerify: true,
     }
     httpClient:= &http.Client{
         Transport: ht,

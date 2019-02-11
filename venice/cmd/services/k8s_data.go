@@ -266,7 +266,7 @@ var k8sModules = map[string]protos.Module{
 					EnvVars: map[string]string{
 						//"cluster.name":           "pen-elasticcluster",
 						//"xpack.security.enabled": "false",
-						"ES_JAVA_OPTS": "-Xms256m -Xmx256m",
+						"ES_JAVA_OPTS": "-Xms9g -Xmx9g",
 					},
 					Services: []protos.ModuleSpec_Submodule_Service{
 						{

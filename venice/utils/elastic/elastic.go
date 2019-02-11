@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
 
@@ -129,10 +130,12 @@ func NewClient(elasticURL string, resolverClient resolver.Interface, logger log.
 func NewAuthenticatedClient(elasticURL string, resolverClient resolver.Interface, logger log.Logger) (ESClient, error) {
 	tlsConfig, err := certs.LoadTLSCredentials(globals.ElasticClientAuthDir)
 	if err != nil {
-		return nil, fmt.Errorf("Error accessing client credentials: %v", err)
+		return nil, fmt.Errorf("error accessing client credentials: %v", err)
 	}
 	tlsConfig.ServerName = globals.ElasticSearch + "-https"
-	transport := &http.Transport{TLSClientConfig: tlsConfig}
+	transport := netutils.CopyHTTPDefaultTransport()
+	transport.MaxIdleConnsPerHost = 300
+	transport.TLSClientConfig = tlsConfig
 	client := &http.Client{Transport: transport}
 	return NewClient(elasticURL, resolverClient, logger, WithHTTPClient(client))
 }

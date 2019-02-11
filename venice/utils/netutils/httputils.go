@@ -286,3 +286,17 @@ func CreateHTTPRequest(instance string, in interface{}, method, path string) (*h
 	}
 	return req, nil
 }
+
+// CopyHTTPDefaultTransport creates a http.Transport from http.DefaultTransport
+func CopyHTTPDefaultTransport() *http.Transport {
+	ht := &http.Transport{}
+	dt := http.DefaultTransport.(*http.Transport)
+	ht.Proxy = dt.Proxy
+	ht.DialContext = dt.DialContext
+	ht.MaxIdleConns = dt.MaxIdleConns
+	ht.IdleConnTimeout = dt.IdleConnTimeout
+	ht.TLSHandshakeTimeout = dt.TLSHandshakeTimeout
+	ht.ExpectContinueTimeout = dt.ExpectContinueTimeout
+	ht.MaxIdleConnsPerHost = dt.MaxIdleConnsPerHost
+	return ht
+}

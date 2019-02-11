@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn"
 	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/password"
@@ -45,7 +46,7 @@ type defaultAuthGetter struct {
 }
 
 func (ug *defaultAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
-	objMeta := &api.ObjectMeta{Tenant: tenant, Name: name}
+	objMeta := &api.ObjectMeta{Tenant: tenant, Name: name, Namespace: globals.DefaultNamespace}
 	val, err := ug.cache.FindObject("User", objMeta)
 	if err != nil {
 		ug.logger.Errorf("User [%+v] not found in AuthGetter cache, Err: %v", objMeta, err)

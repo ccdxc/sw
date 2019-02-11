@@ -187,16 +187,18 @@ func (a *apiGw) preflightHandler(w http.ResponseWriter, r *http.Request) {
 
 func (a *apiGw) tracerMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		operationName := "http"
+		req := r
+		if a.devmode {
+			operationName := "http"
 
-		span := opentracing.StartSpan(operationName)
-		otext.HTTPMethod.Set(span, r.Method)
-		otext.HTTPUrl.Set(span, r.URL.String())
-		ctx := opentracing.ContextWithSpan(r.Context(), span)
-		req := r.WithContext(ctx)
-
+			span := opentracing.StartSpan(operationName)
+			defer span.Finish()
+			otext.HTTPMethod.Set(span, r.Method)
+			otext.HTTPUrl.Set(span, r.URL.String())
+			ctx := opentracing.ContextWithSpan(r.Context(), span)
+			req = r.WithContext(ctx)
+		}
 		h.ServeHTTP(w, req)
-		span.Finish()
 		return
 	})
 }

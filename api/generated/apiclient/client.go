@@ -27,6 +27,7 @@ import (
 	workload "github.com/pensando/sw/api/generated/workload"
 	workloadClient "github.com/pensando/sw/api/generated/workload/grpc/client"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -226,10 +227,9 @@ func (a *apiRestServerClient) WorkloadV1() workload.WorkloadV1Interface {
 
 // NewRestAPIClient returns a REST client
 func NewRestAPIClient(url string) (Services, error) {
-	ht := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
+	ht := netutils.CopyHTTPDefaultTransport()
+	ht.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true,
 	}
 	httpClient := &http.Client{
 		Transport: ht,
@@ -254,10 +254,9 @@ func NewRestAPIClient(url string) (Services, error) {
 
 // NewStagedRestAPIClient returns a REST client
 func NewStagedRestAPIClient(url string, bufferId string) (Services, error) {
-	ht := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
+	ht := netutils.CopyHTTPDefaultTransport()
+	ht.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true,
 	}
 	httpClient := &http.Client{
 		Transport: ht,

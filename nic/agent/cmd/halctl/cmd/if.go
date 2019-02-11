@@ -236,7 +236,7 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	sourceGWPrefix = IPAddrStrtoUint32(sourceGwStr[0])
 
-	if ifIngressBw > 12500000{
+	if ifIngressBw > 12500000 {
 		fmt.Printf("Invalid ingress BW. Valid range is 0-12500000 KBytes/sec\n")
 		return
 	}

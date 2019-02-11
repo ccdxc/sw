@@ -54,7 +54,7 @@ func main() {
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.APIGw)), "redirect logs to file")
 		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:port>")
-		devmode         = flag.Bool("devmode", true, "Development mode where tracing options are enabled")
+		devmode         = flag.Bool("devmode", false, "Development mode where tracing options are enabled")
 		override        = flag.String("override", "", "backend override map eg: 'pen-apiserver=localhost:5000,pen-search=localhost:5005'")
 		skip            = flag.String("skip", "", "comma seperated list of services to skip initializing eg: 'search,events'")
 		skipauth        = flag.Bool("skipauth", false, "skip authentication")
@@ -73,7 +73,7 @@ func main() {
 		logConfig := &log.Config{
 			Module:      globals.APIGw,
 			Format:      log.JSONFmt,
-			Filter:      log.AllowAllFilter,
+			Filter:      log.AllowInfoFilter,
 			Debug:       *debugflag,
 			CtxSelector: log.ContextAll,
 			LogToStdout: *logToStdoutFlag,
@@ -84,6 +84,9 @@ func main() {
 				MaxBackups: 3,  // TODO: These needs to be part of Service Config Object
 				MaxAge:     7,  // TODO: These needs to be part of Service Config Object
 			},
+		}
+		if *debugflag {
+			logConfig.Filter = log.AllowAllFilter
 		}
 		pl = log.SetConfig(logConfig)
 
@@ -117,7 +120,9 @@ func main() {
 		config.SkipAuth = *skipauth
 		config.SkipAuthz = *skipauthz
 	}
-	trace.Init(globals.APIGw)
+	if config.DevMode {
+		trace.Init(globals.APIGw)
+	}
 	pl.Log("msg", "Starting Run")
 
 	gw := apigwpkg.MustGetAPIGateway()
