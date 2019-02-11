@@ -430,12 +430,14 @@ class Testcase:
                 if verify_result != types.status.SUCCESS:
                     Logger.error("Common verifs failed.")
                     result = verify_result
-
                 iter_data.SetStatus(result)
-                debug_result = self.__run_common_debugs(iter_data);
-                if debug_result != types.status.SUCCESS:
-                    Logger.error("Common verifs failed.")
-                    result = debug_result
+
+                #If the tests have failed, lets run debug actions.
+                if result != types.status.SUCCESS:
+                    debug_result = self.__run_common_debugs(iter_data);
+                    if debug_result != types.status.SUCCESS:
+                        Logger.error("Common debugs failed.")
+                        result = debug_result
 
                 teardown_result = loader.RunCallback(self.__tc, 'Teardown', False, iter_data)
                 if teardown_result != types.status.SUCCESS:

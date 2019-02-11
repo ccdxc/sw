@@ -72,9 +72,15 @@ def AddWorkloads(req):
         __gl_workloads[wl.workload_name] = wl
     return
 
-def GetWorkloads():
+def GetWorkloads(node = None):
     global __gl_workloads
-    return __gl_workloads.values()
+    if node == None:
+        return __gl_workloads.values()
+    workloads = []
+    for wl in  __gl_workloads.values():
+        if wl.node_name == node:
+            workloads.append(wl)
+    return workloads
 
 def AddSplWorkload(type, wl):
     if wl.workload_name in __gl_workloads:

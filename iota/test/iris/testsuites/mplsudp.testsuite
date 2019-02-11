@@ -1,0 +1,61 @@
+meta:
+    name        : mplsudp
+    description : MPLSoUDP Testsuite
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    os          : [ linux ]
+    nic         : [ pensando ]
+
+packages:
+    - iota.test.iris
+
+images:
+    naples: nic/naples_fw.tar
+
+setup:
+    topology: test/iris/topologies/mplsudp/mplsudp.topology
+    config  :
+        - step : testcases.penctl.install
+        - step : testcases.penctl.eth_dev_scale_mode
+        - step : utils.reboot_all
+        - step : utils.enable_l2_fwd_offload
+        #- step : utils.naples_workloads
+        - step : config.config_link_flap
+        - step : config.netagent.hw_push_config
+        - step : testcases.drivers.install_iperf
+        - step : config.mplsudp.create_tunnels
+
+common:
+    verifs:
+        #-   step    : verif.utils.verify_cores
+        #-   step    : verif.utils.verify_topology_health
+    debugs:
+        -   step : verif.utils.verify_links
+        -   step : verif.utils.collect_logs_and_cores
+
+    setup:
+        #-   step    : verif.utils.link_flap
+        #-   step    : verif.utils.del_add_config
+
+testbundles:
+    sanity:
+        # Relative paths from iota/test/iris/testbundles/
+        - mplsudp/mplsudp.testbundle
+        #- networking/connectivity.testbundle
+        #- filters/filters.testbundle
+        #- multicast/multicast.testbundle
+        #- mnic/mnic_classic.testbundle
+        #- classic/driver-features-int_mgmt-sanity.testbundle
+        #- classic/driver-features-oob-1g-sanity.testbundle
+        #- linktest/linktest.testbundle
+        #- classic/driver-features-sanity.testbundle
+        #- penctl/penctl_classic.testbundle
+        #- post_diag/post_diag.testbundle
+
+    regression:
+        # Relative paths from iota/test/iris/testbundles/
+        #- classic/driver-features.testbundle
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores

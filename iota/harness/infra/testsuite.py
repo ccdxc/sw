@@ -142,6 +142,7 @@ class TestSuite:
     def __setup_config(self):
         for s in self.__spec.setup.config:
             # Reset the running directory before every step
+            Logger.info("Starting Config Step: ", s.step)
             api.ChangeDirectory(None)
             status = loader.RunCallback(s.step, 'Main', True, None)
             if status != types.status.SUCCESS:
