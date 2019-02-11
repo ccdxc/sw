@@ -221,10 +221,12 @@ rfc_p1_action_data_flush (mem_addr_t addr,
 sdk_ret_t
 rfc_compute_p1_eq_class_tables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
 {
-    //uint16_t      class_id;
-    uint32_t      num_entries;
-    rfc_tree_t    *rfc_tree1, *rfc_tree2;
-    rte_bitmap    *cbm = rfc_ctxt->cbm;
+    uint16_t                          class_id, entry_num = 0;
+    uint32_t                          num_entries;
+    rfc_tree_t                        *rfc_tree1, *rfc_tree2;
+    rte_bitmap                        *cbm = rfc_ctxt->cbm;
+    slacl_ip_sport_p1_actiondata_t    action_data;
+    mem_addr_t                        addr = SLACL_P1_TABLE_OFFSET;
     
     rfc_tree1 = &rfc_ctxt->pfx_tree;
     rfc_tree2 = &rfc_ctxt->port_tree;
@@ -236,14 +238,27 @@ rfc_compute_p1_eq_class_tables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
         return SDK_RET_ERR;
     }
 
-    /**< do cross product of bitmaps and pick unique bmaps */
+    /**< do cross product of bitmaps, assign RFC phase 1 table class ids */
     for (uint32_t i = 0; i < rfc_tree1->rfc_table.num_classes; i++) {
         for (uint32_t j = 0; j < rfc_tree2->rfc_table.num_classes; j++) {
             rte_bitmap_and(rfc_tree1->rfc_table.cbm_table[i],
                            rfc_tree2->rfc_table.cbm_table[j], cbm);
-            (void)rfc_compute_class_id(policy, &rfc_ctxt->p1_table,
-                                 cbm, rfc_ctxt->cbm_size);
+            class_id = rfc_compute_class_id(policy, &rfc_ctxt->p1_table,
+                                            cbm, rfc_ctxt->cbm_size);
+            rfc_p1_class_id_pack(&action_data, entry_num, class_id);
+            entry_num++;
+            if (entry_num == 51) {
+                /**< write full entry to the table */
+                rfc_p1_action_data_flush(addr, &action_data);
+                entry_num = 0;
+                addr += CACHE_LINE_SIZE;
+            }
         }
+    }
+
+    /**< write partially filled cache line, if any, at the end */
+    if (entry_num) {
+        rfc_p1_action_data_flush(addr, &action_data);
     }
     return SDK_RET_OK;
 }

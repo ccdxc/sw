@@ -458,15 +458,15 @@ static sdk_ret_t
 lpm_flush_partial_tables (lpm_stage_meta_t *smeta, uint32_t nstages,
                           uint32_t curr_default)
 {
-    for (uint32_t i = 0; i < (nstages-1); i++) {
+    for (uint32_t i = 0; i < (nstages - 1); i++) {
         lpm_write_stage_table(smeta->tree_type, &smeta->stage_info[i]);
     }
 
     if (nstages > 0) {
-        /**< table is ready to write. set the default data */
+        /**< table is ready to write, set the default data */
         lpm_set_default_data(smeta->tree_type, &smeta->stage_info[nstages - 1],
                              curr_default);
-        /**< Write the table to HW memory */
+        /**< write the table to memory */
         lpm_write_last_stage_table(smeta->tree_type,
                                    &smeta->stage_info[nstages - 1]);
 
