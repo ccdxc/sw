@@ -10,6 +10,7 @@
 #include "nic/sysmgr/lib/sysmgr_client.hpp"
 
 using namespace std;
+using namespace upgrade;
 
 static shared_ptr<PciemgrService> delphic;
 
@@ -29,6 +30,7 @@ PciemgrService::PciemgrService()
   this->delphi = make_shared<delphi::Sdk>();
   this->name = SERVICE_NAME;
   this->sysmgr = sysmgr::CreateClient(this->delphi, SERVICE_NAME);
+  this->upgsdk = make_shared<UpgSdk>(this->delphi, make_shared<PciemgrSvcHandler>(), this->name, NON_AGENT, nullptr);
 }
 
 void PciemgrService::RegisterService()
@@ -45,3 +47,5 @@ void PciemgrService::OnMountComplete()
     // notify sysmgr that init is done
     this->sysmgr->init_done();
 }
+
+
