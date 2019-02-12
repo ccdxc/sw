@@ -11,8 +11,6 @@ struct phv_              p;
 validate_packet:
   seq         c1, k.capri_p4_intrinsic_parser_err, TRUE
   balcf       r7, [c1], f_check_parser_errors
-  seq         c1, k.control_metadata_nic_mode, NIC_MODE_SMART
-  nop.!c1.e
   seq         c1, k.tunnel_metadata_tunnel_terminate, TRUE
   bcf         [c1], validate_tunneled_packet
 
@@ -35,13 +33,11 @@ validate_native_packet:
   nop
   .cscase 1
   sne         c1, k.ipv4_version, 4
-  seq.!c1     c1, k.ipv4_ttl, 0
   nop.!c1.e
   phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
   .cscase 2
   sne         c1, k.ipv6_version, 6
-  seq.!c1     c1, k.ipv6_hopLimit, 0
   nop.!c1.e
   phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
@@ -76,13 +72,11 @@ validate_tunneled_packet_ip:
   nop
   .cscase 1
   sne         c1, k.inner_ipv4_version, 4
-  seq.!c1     c1, k.inner_ipv4_ttl, 0
   nop.!c1.e
   phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1
   .cscase 2
   sne        c1, k.inner_ipv6_version, 6
-  seq.!c1    c1, k.inner_ipv6_hopLimit, 0
   nop.!c1.e
   phvwr.c1.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
   phvwr       p.capri_intrinsic_drop, 1

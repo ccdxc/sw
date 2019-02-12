@@ -1150,6 +1150,13 @@ action ip_normalization_checks() {
         (flow_lkp_metadata.lkp_type != FLOW_KEY_LOOKUP_TYPE_IPV6)) {
         // Return
     }
+
+    // If TTL = 0, drop the packet
+    if (flow_lkp_metadata.ip_ttl == 0) {
+        malformed_packet();
+        // Return
+    }
+
     if (tunnel_metadata.tunnel_terminate == TRUE) {
         // Act on inner fields otherwise outer fields
     }
@@ -1275,7 +1282,7 @@ action ip_normalization_checks() {
     // 8 bytes for vxlan Header
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_DROP) and
         (tunnel_metadata.tunnel_terminate == TRUE) and
-        (((vlan_tag.valid == TRUE) and 
+        (((vlan_tag.valid == TRUE) and
           (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
          ((vlan_tag.valid == FALSE) and
           (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
@@ -1287,7 +1294,7 @@ action ip_normalization_checks() {
     // TBD - Check
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
         (tunnel_metadata.tunnel_terminate == TRUE) and
-        (((vlan_tag.valid == TRUE) and 
+        (((vlan_tag.valid == TRUE) and
           (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
          ((vlan_tag.valid == FALSE) and
           (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
@@ -1296,7 +1303,7 @@ action ip_normalization_checks() {
     // Vlan untagged packet
     if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
         (tunnel_metadata.tunnel_terminate == TRUE) and
-        (((vlan_tag.valid == TRUE) and 
+        (((vlan_tag.valid == TRUE) and
           (capri_p4_intrinsic.packet_len > (ipv4.ihl + 18 + 8 + 8 + inner_ipv4.totalLen))) or
          ((vlan_tag.valid == FALSE) and
           (capri_p4_intrinsic.packet_len > (ipv4.ihl + 14 + 8 + 8 + inner_ipv4.totalLen))))) {
@@ -1324,7 +1331,7 @@ action ip_normalization_checks() {
         // For V6 Packet we will do the following normalization checks
         // 1. Normalize Hop Limit
         // 2. IPv6 Extension header strip.
-        // 3. Normalize Payload Length 
+        // 3. Normalize Payload Length
         //    The size of the payload in octets, including any extension headers.
         //    The length is set to zero when a Hop-by-Hop extension header carries
         //    a Jumbo Payload option. So we have to check zero payload length as
@@ -1353,7 +1360,7 @@ action ip_normalization_checks() {
             // 1. IPv6 payload length in packet
             // 2. capri_p4_intrinsic.packet_len needs to be reduced.
             subtract(ipv6.payloadLen, ipv6.payloadLen, l3_metadata.ipv6_options_len);
-            subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 
+            subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len,
                       l3_metadata.ipv6_options_len);
         }
         if ((l4_metadata.ip_options_action == NORMALIZATION_ACTION_EDIT) and
@@ -1369,7 +1376,7 @@ action ip_normalization_checks() {
             // 3. Outer IP packet Length
             // 4. capri_p4_intrinsic.packet_len needs to be reduced.
             subtract(inner_ipv6.payloadLen, inner_ipv6.payloadLen, l3_metadata.inner_ipv6_options_len);
-            subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len, 
+            subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.packet_len,
                       l3_metadata.inner_ipv6_options_len);
             subtract(udp.len, udp.len, l3_metadata.inner_ipv6_options_len);
             subtract(ipv4.totalLen, ipv4.totalLen, l3_metadata.inner_ipv6_options_len);

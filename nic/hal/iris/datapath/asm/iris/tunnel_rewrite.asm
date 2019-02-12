@@ -81,6 +81,8 @@ encap_mpls_udp:
   or          r5, r0, k.capri_p4_intrinsic_packet_len
   add         r7, r5, -2
   // ethernet header
+  seq         c1, d.u.encap_mpls_udp_d.mac_sa, r0
+  phvwr.!c1   p.ethernet_srcAddr, d.u.encap_mpls_udp_d.mac_sa
   phvwr       p.ethernet_dstAddr, d.u.encap_mpls_udp_d.mac_da
   // udp header
   add         r1, r0, k.rewrite_metadata_entropy_hash, 48

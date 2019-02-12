@@ -100,14 +100,12 @@ action validate_native_packet() {
     }
 
     if ((ipv4.valid == TRUE) and
-        ((ipv4.version != 4) or
-         (ipv4.ttl == 0))) {
+        (ipv4.version != 4)) {
         malformed_packet();
     }
 
     if ((ipv6.valid == TRUE) and
-        ((ipv6.version != 6) or
-         (ipv6.hopLimit == 0))) {
+        (ipv6.version != 6)) {
         malformed_packet();
     }
 
@@ -137,14 +135,12 @@ action validate_tunneled_packet() {
     }
 
     if ((inner_ipv4.valid == TRUE) and
-        ((inner_ipv4.version != 4) or
-         (inner_ipv4.ttl == 0))) {
+        (inner_ipv4.version != 4)) {
         malformed_packet();
     }
 
     if ((inner_ipv6.valid == TRUE) and
-        ((inner_ipv6.version != 6) or
-         (inner_ipv6.hopLimit == 0))) {
+        (inner_ipv6.version != 6)) {
         malformed_packet();
     }
 
@@ -182,12 +178,10 @@ action check_parser_errors() {
 }
 
 action validate_packet() {
-    if (control_metadata.nic_mode == NIC_MODE_SMART) {
-        if (tunnel_metadata.tunnel_terminate == TRUE) {
-            validate_tunneled_packet();
-        } else {
-            validate_native_packet();
-        }
+    if (tunnel_metadata.tunnel_terminate == TRUE) {
+        validate_tunneled_packet();
+    } else {
+        validate_native_packet();
     }
     check_parser_errors();
 }

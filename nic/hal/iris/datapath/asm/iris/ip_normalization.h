@@ -17,6 +17,9 @@ ip_normalization:
 
 // c2 has vlan_tag_valid
 lb_ipv4_normalizaiton_optimal:
+  seq         c3, k.flow_lkp_metadata_ip_ttl, r0
+  phvwr.c3.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
+  phvwr.c3    p.capri_intrinsic_drop, 1
   smneb       c1, k.flow_lkp_metadata_ipv4_flags, (IP_FLAGS_RSVD_MASK | IP_FLAGS_DF_MASK), 0
   slt.!c1     c1, 5, k.flow_lkp_metadata_ipv4_hlen
   add.c2      r1, k.ipv4_totalLen, 18 // c2 has vlan_tag_valid to TRUE
@@ -32,6 +35,9 @@ lb_ipv4_normalizaiton_optimal:
 // c1 has ipv6_options_blob_valid == TRUE
 // c2 has vlan_tag_valid
 lb_ipv6_normalization_optimal:
+  seq         c3, k.flow_lkp_metadata_ip_ttl, r0
+  phvwr.c3.e  p.control_metadata_drop_reason[DROP_MALFORMED_PKT], 1
+  phvwr.c3    p.capri_intrinsic_drop, 1
   add.c2      r1, k.ipv6_payloadLen, 58 // c2 has vlan_tag_valid to TRUE
   add.!c2     r1, k.ipv6_payloadLen, 54
   slt.!c1     c1, r1, k.capri_p4_intrinsic_packet_len

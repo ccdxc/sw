@@ -260,7 +260,9 @@ action encap_mpls_udp(mac_sa, mac_da, ip_sa, ip_da, ip_type,
     modify_field(mpls[0].bos, 1);
     modify_field(mpls[0].ttl, 64);
 
-    modify_field(ethernet.srcAddr, mac_sa);
+    if (mac_sa != 0) {
+        modify_field(ethernet.srcAddr, mac_sa);
+    }
     modify_field(ethernet.dstAddr, mac_da);
     modify_field(udp.srcPort, rewrite_metadata.entropy_hash);
     modify_field(udp.dstPort, UDP_PORT_MPLS);

@@ -50,6 +50,8 @@ tunneled_ipv4_packet_common:
                      p.l3_metadata_ip_option_seen, k.l3_metadata_inner_ip_option_seen
   seq           c1, k.inner_ipv4_srcAddr[31:28], 0xF
   phvwr.c1      p.control_metadata_src_class_e, TRUE
+  seq           c1, k.tunnel_metadata_tunnel_type, INGRESS_TUNNEL_TYPE_MPLS_L3VPN
+  phvwr.c1      p.{tunnel_metadata_tunnel_type,tunnel_metadata_tunnel_vni}, r0
   seq           c1, k.roce_bth_valid, TRUE
   phvwr.c1      p.flow_lkp_metadata_lkp_sport, r0
   phvwr.e       p.flow_lkp_metadata_lkp_proto, k.inner_ipv4_protocol

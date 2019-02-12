@@ -34,9 +34,13 @@ vf_properties_uplink:
     sll             r1, r1, r2
     and             r2, k.control_metadata_record_route_inner_dst_ip, r1
     sne.!c1         c1, r2[31:0], d.u.vf_properties_d.gw_prefix
-    nop.!c1.e
     phvwr.c1.e      p.control_metadata_drop_reason[DROP_VF_BAD_RR_DST_IP], 1
-    phvwr           p.capri_intrinsic_drop, TRUE
+    phvwr.c1        p.capri_intrinsic_drop, TRUE
+    seq             c1, d.u.vf_properties_d.vf_mac, r0
+    phvwr.!c1       p.ethernet_dstAddr, d.u.vf_properties_d.vf_mac
+    nop.e
+    phvwr.!c1       p.flow_lkp_metadata_lkp_dstMacAddr, \
+                        d.u.vf_properties_d.vf_mac
 
 vf_properties_host:
     phvwr           p.tunnel_metadata_tunnel_originate, \

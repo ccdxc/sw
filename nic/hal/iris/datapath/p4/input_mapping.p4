@@ -41,6 +41,10 @@ action tunneled_ipv4_packet(vf_id) {
     if ((inner_ipv4.srcAddr & 0xF0000000) == 0xF0000000) {
         modify_field(control_metadata.src_class_e, TRUE);
     }
+    if (tunnel_metadata.tunnel_type == INGRESS_TUNNEL_TYPE_MPLS_L3VPN) {
+        modify_field(tunnel_metadata.tunnel_type, 0);
+        modify_field(tunnel_metadata.tunnel_vni, 0);
+    }
 }
 
 action tunneled_ipv6_packet(vf_id) {
@@ -383,7 +387,7 @@ table input_properties_mac_vlan {
 }
 
 action vf_properties(overlay_ip1, overlay_ip2, mpls_in1, mpls_in2,
-                     gw_prefix, gw_prefix_len, tunnel_originate,
+                     gw_prefix, gw_prefix_len, vf_mac, tunnel_originate,
                      tunnel_rewrite_index, mpls_out) {
     modify_field(scratch_metadata.overlay_ip1, overlay_ip1);
     modify_field(scratch_metadata.overlay_ip2, overlay_ip2);
@@ -411,6 +415,10 @@ action vf_properties(overlay_ip1, overlay_ip2, mpls_in1, mpls_in2,
                 modify_field(control_metadata.drop_reason, DROP_VF_BAD_RR_DST_IP);
                 drop_packet();
             }
+        }
+        if (vf_mac != 0) {
+            modify_field(ethernet.dstAddr, vf_mac);
+            modify_field(flow_lkp_metadata.lkp_dstMacAddr, vf_mac);
         }
     } else {
         if (tunnel_originate == TRUE) {
