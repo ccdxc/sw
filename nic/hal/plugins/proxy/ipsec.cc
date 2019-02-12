@@ -213,7 +213,7 @@ ipsec_process_initiator_plain_flow(fte::ctx_t&ctx)
     args.pi_lif = lif;
     pd_func_args.pd_lif_get_lport_id = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_GET_LPORTID, &pd_func_args);
-    HAL_TRACE_DEBUG("ipsec: Got lport as {} for lif {}", args.lport_id, 1004);
+    HAL_TRACE_DEBUG("ipsec: Got lport as {} for lif {}", args.lport_id, IPSEC_ARM_LIF);
 
     if (rule) {
         acl::ref_t *user_ref = get_rule_data((acl_rule_t *) rule);
