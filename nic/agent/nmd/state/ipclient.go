@@ -770,12 +770,12 @@ func (c *IPClient) waitForRegistration() {
 
 // mustTriggerUpdate checks if the controllers information has changed.
 func (c *IPClient) mustTriggerUpdate(controllers []string) (mustUpdate bool) {
-	if len(c.controllers) != len(controllers) {
+	if len(c.nmdState.config.Status.Controllers) != len(controllers) {
 		mustUpdate = true
 		return
 	}
 	sort.Strings(controllers)
-	sort.Strings(c.controllers)
-	mustUpdate = !reflect.DeepEqual(controllers, c.controllers)
+	sort.Strings(c.nmdState.config.Status.Controllers)
+	mustUpdate = !reflect.DeepEqual(controllers, c.nmdState.config.Status.Controllers)
 	return
 }
