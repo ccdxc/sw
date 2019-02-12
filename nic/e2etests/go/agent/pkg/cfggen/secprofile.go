@@ -48,7 +48,9 @@ func (c *CfgGen) GenerateSecurityProfiles() error {
 				Namespace: namespace.Name,
 				Name:      profileName,
 			},
-			Spec: netproto.SecurityProfileSpec{},
+			Spec: netproto.SecurityProfileSpec{
+				AttachNamespaces: []string{namespace.Name},
+			},
 		}
 		secProfiles = append(secProfiles, &p)
 	}

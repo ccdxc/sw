@@ -2,13 +2,13 @@ package cfggen
 
 import (
 	"fmt"
-
-	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	"net"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 )
 
@@ -123,7 +123,8 @@ func (c *CfgGen) generateExportConfigs(namespace string) (exportCfg []monitoring
 	}
 	for _, ep := range eps {
 		if ep.Namespace == namespace && ep.Spec.NodeUUID == defaultRemoteUUIDName {
-			dst = ep.Spec.IPv4Address
+			ipAddr, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
+			dst = ipAddr.String()
 			break
 		}
 	}
