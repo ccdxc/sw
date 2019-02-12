@@ -20,12 +20,15 @@ def get_owner(filename):
     if filename in gl_owner_db:
         return gl_owner_db[filename]
 
-    result = subprocess.run([ "git", "log", "--format=%an", "%s" % filename], stdout=subprocess.PIPE)
-    stdout = result.stdout.decode('utf-8')
-    # Use the name of the creator of the file as the owner.
-    owner_full_name = stdout.split('\n')[-2]
-    owner = owner_full_name.split(' ')[0]
-    gl_owner_db[filename] = owner
+    try:
+        result = subprocess.run([ "git", "log", "--format=%an", "%s" % filename], stdout=subprocess.PIPE)
+        stdout = result.stdout.decode('utf-8')
+        # Use the name of the creator of the file as the owner.
+        owner_full_name = stdout.split('\n')[-2]
+        owner = owner_full_name.split(' ')[0]
+        gl_owner_db[filename] = owner
+    except:
+        owner = "NA"
     return owner
 
 class SetupStep:

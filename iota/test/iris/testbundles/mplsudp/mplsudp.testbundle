@@ -4,7 +4,7 @@ meta:
     nics    : [ pensando ] # Always requires Naples<->Naples setups
 
 testcases:
-    -   name    : ping
+    -   name    : Ping
         testcase: testcases.mplsudp.ping
         stress  : True
         iterators:
@@ -12,10 +12,30 @@ testcases:
             pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192]
             ipaf    : [ ipv4 ]
 
-    -   name    : iperf
+    -   name    : Iperf
         testcase: testcases.mplsudp.iperf
         stress  : True
         iterators:
             type      : nested
             proto     : [ udp, tcp ]
             bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
+
+    -   name    : DeleteAddTunnels
+        testcase: testcases.mplsudp.deladd
+
+    -   name    : Ping
+        testcase: testcases.mplsudp.ping
+        stress  : True
+        iterators:
+            type    : nested
+            pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            ipaf    : [ ipv4 ]
+
+    -   name    : Iperf
+        testcase: testcases.mplsudp.iperf
+        stress  : True
+        iterators:
+            type      : nested
+            proto     : [ udp, tcp ]
+            bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
+

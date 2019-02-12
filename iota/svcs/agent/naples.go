@@ -377,6 +377,20 @@ func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workl
 		intf = attachedIntf
 	}
 
+    var err = wload.AddSecondaryIpv4Addresses(intf, in.GetSecIpPrefix())
+    if err != nil {
+        msg := fmt.Sprintf("Error Adding Secondary IPv4 addresses %s : %s", in.GetWorkloadName(), err.Error())
+        resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+        return resp, err
+    }
+
+    err = wload.AddSecondaryIpv6Addresses(intf, in.GetSecIpv6Prefix())
+    if err != nil {
+        msg := fmt.Sprintf("Error Adding Secondary IPv6 addresses %s : %s", in.GetWorkloadName(), err.Error())
+        resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+        return resp, err
+    }
+
 	/* For SRIOV case, move the parent interface inside the workload so that it is not shared */
 	if in.GetInterfaceType() == iota.InterfaceType_INTERFACE_TYPE_SRIOV {
 		wload.MoveInterface(in.GetInterface())

@@ -1,15 +1,16 @@
 #! /usr/bin/python3
 import time
 import iota.harness.api as api
+import iota.test.iris.config.mplsudp.tunnel as tunnel
 
 def Setup(tc):
-    tc.tunnels = api.GetTestsuiteAttr("TUNNELS_MPLSUDP")
+    tc.tunnels = tunnel.GetTunnels()
     return api.types.status.SUCCESS
 
 def Trigger(tc):
     for tunnel in tc.tunnels:
-        w1 = tunnel.w1
-        w2 = tunnel.w2
+        w1 = tunnel.ltep
+        w2 = tunnel.rtep
 
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
         tc.cmd_descr = "Server: %s(%s) <--> Client: %s(%s)" %\

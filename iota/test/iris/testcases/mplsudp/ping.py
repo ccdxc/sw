@@ -1,11 +1,10 @@
 #! /usr/bin/python3
 import pdb
-
 import iota.harness.api as api
-import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
+import iota.test.iris.config.mplsudp.tunnel as tunnel
 
 def Setup(tc):
-    tc.tunnels = api.GetTestsuiteAttr("TUNNELS_MPLSUDP")
+    tc.tunnels = tunnel.GetTunnels()
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -13,8 +12,8 @@ def Trigger(tc):
     tc.cmd_cookies = []
 
     for tunnel in tc.tunnels:
-        w1 = tunnel.w1
-        w2 = tunnel.w2
+        w1 = tunnel.ltep
+        w2 = tunnel.rtep
 
         cmd_cookie = "%s(%s) --> %s(%s)" %\
                      (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)

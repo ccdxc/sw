@@ -157,12 +157,25 @@ def __add_config_classic_workloads(req, target_node = None):
     subnet_allocator = {}
     ipv4_subnet_allocator = {}
     ipv6_subnet_allocator = {}
+    sec_ipv4_subnet_allocator = {}
+    sec_ipv6_subnet_allocator = {}
     for k,net in network_specs.items():
         if net.ipv4.enable:
             ipv4_subnet_allocator[net.name] = resmgr.IpAddressStep(net.ipv4.ipam_base.split('/')[0], # 10.255.0.0/16 \
                                                                    str(ipaddress.IPv4Address(1 << int(net.ipv4.ipam_base.split('/')[1]))))
+            sec_ipv4_subnet_allocator[net.name] = []
+            for ipb in getattr(net.ipv4, "secondary_ipam_base", []):
+                s = ipaddress.IPv4Network(ipb)
+                sec_ipv4_subnet_allocator[net.name].append(s.subnets(new_prefix=net.ipv4.prefix_length))
+
+        if net.ipv6.enable:
             ipv6_subnet_allocator[net.name] = resmgr.Ipv6AddressStep(net.ipv6.ipam_base.split('/')[0], # 2000::/48 \
                                                                    str(ipaddress.IPv6Address(1 << int(net.ipv6.ipam_base.split('/')[1]))))
+            sec_ipv6_subnet_allocator[net.name] = []
+            for ipb in getattr(net.ipv6, "secondary_ipam_base", []):
+                s = ipaddress.IPv6Network(ipb)
+                sec_ipv6_subnet_allocator[net.name].append(s.subnets(new_prefix=net.ipv6.prefix_length))
+
     mac_allocator = resmgr.MacAddressStep("00AA.0000.0001", "0000.0000.0001")
     # Using up first vlan for native
     api.Testbed_AllocateVlan()
@@ -209,6 +222,8 @@ def __add_config_classic_workloads(req, target_node = None):
     nw_specs = {} # ith subif -> nw_spec
     ipv4_allocators = {} # ith subif -> ipv4_allocator
     ipv6_allocators = {} # ith subif  -> ipv6_allocator
+    sec_ipv4_allocators = {} # ith subif -> ipv4_allocator
+    sec_ipv6_allocators = {} # ith subif  -> ipv6_allocator
     vlans = {} # ith subif -> vlan
     for workload in spec.instances.workloads:
         wl = workload.workload
@@ -227,9 +242,21 @@ def __add_config_classic_workloads(req, target_node = None):
                     ipv4_subnet = ipv4_subnet_allocator[nw_spec.name].Alloc()
                     ipv4_allocators[i] = resmgr.IpAddressStep(ipv4_subnet, "0.0.0.1")
                     ipv4_allocators[i].Alloc() # To skip 0 ip
+                    
                     ipv6_subnet = ipv6_subnet_allocator[nw_spec.name].Alloc()
                     ipv6_allocators[i] = resmgr.Ipv6AddressStep(ipv6_subnet, "0::1")
                     ipv6_allocators[i].Alloc() # To skip 0 ip
+                    
+                    sec_ipv4_allocators[i] = []
+                    for s in sec_ipv4_subnet_allocator[nw_spec.name]:
+                        sec_ipv4_subnet = next(s)
+                        sec_ipv4_allocators[i].append(sec_ipv4_subnet.hosts())
+        
+                    sec_ipv6_allocators[i] = []
+                    for s in sec_ipv6_subnet_allocator[nw_spec.name]:
+                        sec_ipv6_subnet = next(s)
+                        sec_ipv6_allocators[i].append(sec_ipv6_subnet.hosts())
+
                     vlans[i] = api.Testbed_AllocateVlan()
                 intf = wl.interfaces[i % len(wl.interfaces)]
                 nw_spec = nw_specs[i]
@@ -253,7 +280,10 @@ def __add_config_classic_workloads(req, target_node = None):
                 wl_msg.parent_interface = node_intf
                 wl_msg.workload_type = api.GetWorkloadTypeForNode(wl.node)
                 wl_msg.workload_image = api.GetWorkloadImageForNode(wl.node)
-
+                for a in sec_ipv4_allocators[i]:
+                    wl_msg.sec_ip_prefix.append(str(next(a))+"/"+str(nw_spec.ipv4.prefix_length))
+                for a in sec_ipv6_allocators[i]:
+                    wl_msg.sec_ipv6_prefix.append(str(next(a))+"/"+str(nw_spec.ipv6.prefix_length))
 
 '''
 def __add_config_classic_workloads(req, target_node = None):

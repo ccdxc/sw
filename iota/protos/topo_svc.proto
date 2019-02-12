@@ -309,6 +309,12 @@ message Workload {
 
     // Workload Status
     IotaAPIResponse workload_status         = 14;
+
+    // Secondary IPv4 addresses
+    repeated string sec_ip_prefix           = 15;
+
+    // Secondary IPv6 addresses
+    repeated string sec_ipv6_prefix         = 16;
 }
 
 enum TriggerOp {

@@ -2,4 +2,4 @@
 import iota.test.iris.config.mplsudp.tunnel as tunnel
 
 def Main(tc):
-    return tunnel.GetTunnelManager().CreateTunnels()
+    return tunnel.Init()
