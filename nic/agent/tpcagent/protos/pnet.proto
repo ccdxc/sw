@@ -8,8 +8,8 @@ syntax = "proto3";
 package tpc;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "meta.proto";
-import "types.proto";
+import "api/meta.proto";
+import "api/types.proto";
 
 // PNet type
 enum PNetType {
