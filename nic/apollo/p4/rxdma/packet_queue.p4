@@ -11,7 +11,7 @@ action pkt_enqueue(PKTQ_QSTATE) {
     PKTQ_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_qstate_txdma_fte_q);
 
     // k-vector
-    modify_field(scratch_metadata.slacl_result, p4_to_rxdma_header.slacl_result);
+    modify_field(scratch_metadata.sacl_result, p4_to_rxdma_header.sacl_result);
     modify_field(scratch_metadata.qid, capri_rxdma_intr.qid);
     modify_field(scratch_metadata.dma_size, (capri_p4_intr.packet_len +
                                              APOLLO_PREDICATE_HDR_SZ +
@@ -19,7 +19,7 @@ action pkt_enqueue(PKTQ_QSTATE) {
                                              APOLLO_I2E_HDR_SZ));
 
     // Ring0 goes to TxDMA and Ring1 goes to FTE
-    // choose the ring based on slacl_result
+    // choose the ring based on sacl_result
     // check if the selected ring is full
     // increment pindex for the ring
     // compute the packet buffer address and dma desc+pkt to the packet buffer
@@ -38,7 +38,7 @@ table txdma_fte_queue {
     reads {
         // P4 pipeline must provide (LIF, Qtype, Qid)
         // TxDMA and FTE are two rings of the same Q (if it is allowed), if not
-        // slacl action will compute and set qstate_addr for appropriate Q
+        // sacl action will compute and set qstate_addr for appropriate Q
         capri_rxdma_intr.qstate_addr : exact;
     }
     actions {
@@ -123,7 +123,7 @@ control pkt_enqueue {
         apply(toeplitz_seed);
         apply(rx_cpu_hash);
     }
-    if (p4_to_rxdma_header.slacl_result == 0x00) {
+    if (p4_to_rxdma_header.sacl_result == 0x00) {
         // drop
     } else {
         // enqueue to FTE or TxDMA ring based on SF bit (I)

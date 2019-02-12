@@ -23,11 +23,15 @@ local_vnic_info_rx:
                                d.local_vnic_info_rx_d.skip_src_dst_check,
                                d.local_vnic_info_rx_d.resource_group_1,
                                0,
-                               d.local_vnic_info_rx_d.slacl_addr_1,
+                               0,
+                               d.local_vnic_info_rx_d.sacl_v4addr_1,
+                               d.local_vnic_info_rx_d.sacl_v6addr_1,
                                d.local_vnic_info_rx_d.epoch1,
                                r1,
                                0,
-                               d.local_vnic_info_rx_d.slacl_addr_2,
+                               0,
+                               d.local_vnic_info_rx_d.sacl_v4addr_2,
+                               d.local_vnic_info_rx_d.sacl_v6addr_2,
                                d.local_vnic_info_rx_d.epoch2)
 
 local_vnic_info_rx_dipo_miss:

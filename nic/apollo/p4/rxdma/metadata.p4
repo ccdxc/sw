@@ -1,7 +1,7 @@
 #include "../../../p4/common-p4+/capri_dma_cmd.p4"
 #include "../../../p4/common-p4+/capri_doorbell.p4"
 
-header_type slacl_metadata_t {
+header_type sacl_metadata_t {
     fields {
         pad0                        : 6;
         sport_table_addr            : 34;
@@ -35,7 +35,7 @@ header_type scratch_metadata_t {
         class_id8       : 8;
         qid             : 24;
         dma_size        : 16;
-        slacl_result    : 2;
+        sacl_result     : 2;
         pad2            : 2;
         data510         : 510;
         data512         : 512;
@@ -122,7 +122,7 @@ metadata p4_to_arm_header_t p4_to_arm_header;
 metadata p4_to_rxdma_header_t p4_to_rxdma_header;
 
 @pragma dont_trim
-metadata slacl_metadata_t       slacl_metadata;
+metadata sacl_metadata_t       sacl_metadata;
 
 @pragma dont_trim
 @pragma scratch_metadata

@@ -41,6 +41,8 @@ header_type control_metadata_t {
         direction                           : 1;
         p4i_drop_reason                     : 32;
         p4e_drop_reason                     : 32;
+        sacl_v6addr                         : 40;
+        lpm_v6addr                          : 40;
     }
 }
 

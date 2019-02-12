@@ -157,10 +157,10 @@ header_type predicate_header_t {
 header_type p4_to_rxdma_header_t {
     fields {
         udp_flow_lkp_continue   : 1;
-        slacl_bypass            : 1;
-        slacl_result            : 2;    // (sf,sl) encoded value
+        sacl_bypass             : 1;
+        sacl_result             : 2;    // (sf,sl) encoded value
         udp_flow_lkp_result     : 2;
-        slacl_base_addr         : 34;
+        sacl_base_addr          : 34;
         local_vnic_tag          : 16;
 
         udp_flow_hash_lkp       : 1;    // Must never be set

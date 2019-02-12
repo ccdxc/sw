@@ -10,7 +10,7 @@
 #include "nic/apollo/rfc/rfc_utils.hpp"
 #include "nic/apollo/rfc/rfc_tree.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/p4/include/slacl_defines.h"
+#include "nic/apollo/p4/include/sacl_defines.h"
 
 namespace rfc {
 
@@ -36,18 +36,18 @@ tree_base_addr_size (mem_addr_t rfc_block_base_addr, itree_type_t tree_type,
 {
     switch (tree_type) {
     case ITREE_TYPE_IPV4:
-        *tree_base_addr = rfc_block_base_addr + SLACL_IPV4_TABLE_OFFSET;
-        *tree_size = SLACL_IPV4_TABLE_SIZE;
+        *tree_base_addr = rfc_block_base_addr + SACL_IPV4_TABLE_OFFSET;
+        *tree_size = SACL_IPV4_TABLE_SIZE;
         break;
 
     case ITREE_TYPE_PORT:
-        *tree_base_addr = rfc_block_base_addr + SLACL_SPORT_TABLE_OFFSET;
-        *tree_size = SLACL_SPORT_TABLE_SIZE;
+        *tree_base_addr = rfc_block_base_addr + SACL_SPORT_TABLE_OFFSET;
+        *tree_size = SACL_SPORT_TABLE_SIZE;
         break;
 
     case ITREE_TYPE_PROTO_PORT:
-        *tree_base_addr = rfc_block_base_addr + SLACL_PROTO_DPORT_TABLE_OFFSET;
-        *tree_size = SLACL_PROTO_DPORT_TABLE_SIZE;
+        *tree_base_addr = rfc_block_base_addr + SACL_PROTO_DPORT_TABLE_OFFSET;
+        *tree_size = SACL_PROTO_DPORT_TABLE_SIZE;
         break;
 
     default:

@@ -134,7 +134,7 @@
             "cache": "p4plus-txdma"
         },
         {
-            "name": "slacl_v4",
+            "name": "sacl_v4",
             "size": "264M",
             "element_size": "264K",
             "cache": "p4plus-rxdma"

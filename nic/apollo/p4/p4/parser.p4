@@ -421,23 +421,6 @@ parser deparse_egress {
     extract(p4e_apollo_i2e);
 
     // layer 0
-    /*
-     * Control the egress deparsing according to the below order
-     * Tx Traffic:
-     *     The pkts will be extracted to eth_1, ctag_1, ip_1, tcp
-     *     Remove the eth_1 and ctag_1 header
-     *     Add eth_0, ip_0, gre_0, mpls_src_0 and mpls_dst_0 header.
-     *     So outgoing traffic will have
-     *       eth_0, ip_0, gre_0, mpls_src_0, mpls_dst_0, ip_1, tcp
-     *
-     * Rx Traffic:
-     *     The pkts will be extracted to eth_1, ip_1, gre_1, mpls, ip_2, tcp
-     *     Remove the eth_1, ip_1, gre_1, mpls headers
-     *     Add eth_0, ctag_0 header.
-     *     So outgoing traffic will have
-     *       eth_0, ctag_0, ip_2, tcp
-     *
-     */
     extract(ethernet_0);
     extract(ctag_0);
     extract(ipv4_0);

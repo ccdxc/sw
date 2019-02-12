@@ -1,9 +1,9 @@
-#include "../include/slacl_defines.h"
-#include "slacl_ipv4.p4"
-#include "slacl_sport.p4"
-#include "slacl_proto_dport.p4"
+#include "../include/sacl_defines.h"
+#include "sacl_ipv4.p4"
+#include "sacl_sport.p4"
+#include "sacl_proto_dport.p4"
 
-action slacl_ip_sport_p1(pad, id50,
+action sacl_ip_sport_p1(pad, id50,
                          id49, id48, id47, id46, id45, id44, id43, id42, id41, id40,
                          id39, id38, id37, id36, id35, id34, id33, id32, id31, id30,
                          id29, id28, id27, id26, id25, id24, id23, id22, id21, id20,
@@ -12,8 +12,8 @@ action slacl_ip_sport_p1(pad, id50,
                          )
 {
     modify_field(scratch_metadata.pad2, pad);
-    modify_field(slacl_metadata.p1_class_id,
-                 (0 /*data510*/ >> ((slacl_metadata.ip_sport_class_id % 51) * 10)));
+    modify_field(sacl_metadata.p1_class_id,
+                 (0 /*data510*/ >> ((sacl_metadata.ip_sport_class_id % 51) * 10)));
 
     modify_field(scratch_metadata.class_id10, id00);
     modify_field(scratch_metadata.class_id10, id01);
@@ -68,7 +68,7 @@ action slacl_ip_sport_p1(pad, id50,
     modify_field(scratch_metadata.class_id10, id50);
 }
 
-action slacl_p2(id255, id254, id253, id252, id251, id250,
+action sacl_p2(id255, id254, id253, id252, id251, id250,
                 id249, id248, id247, id246, id245, id244, id243, id242, id241, id240,
                 id239, id238, id237, id236, id235, id234, id233, id232, id231, id230,
                 id229, id228, id227, id226, id225, id224, id223, id222, id221, id220,
@@ -96,8 +96,8 @@ action slacl_p2(id255, id254, id253, id252, id251, id250,
                 id009, id008, id007, id006, id005, id004, id003, id002, id001, id000
                )
 {
-    modify_field(p4_to_rxdma_header.slacl_result,
-                 (0 /*data*/ >> (slacl_metadata.proto_dport_class_id * 2)));
+    modify_field(p4_to_rxdma_header.sacl_result,
+                 (0 /*data*/ >> (sacl_metadata.proto_dport_class_id * 2)));
 
     modify_field(scratch_metadata.pad2, id000);
     modify_field(scratch_metadata.pad2, id001);
@@ -360,29 +360,29 @@ action slacl_p2(id255, id254, id253, id252, id251, id250,
 @pragma stage 4
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_ip_sport_p1 {
+table sacl_ip_sport_p1 {
     reads {
-        slacl_metadata.p1_table_addr : exact;
+        sacl_metadata.p1_table_addr : exact;
     }
     actions {
-        slacl_ip_sport_p1;
+        sacl_ip_sport_p1;
     }
 }
 
 @pragma stage 6
 @pragma hbm_table
 @pragma raw_index_table
-table slacl_p2 {
+table sacl_p2 {
     reads {
-        slacl_metadata.p2_table_addr : exact;
+        sacl_metadata.p2_table_addr : exact;
     }
     actions {
-        slacl_p2;
+        sacl_p2;
     }
 }
 
-control slacl {
-    if (p4_to_rxdma_header.slacl_bypass == FALSE) {
+control sacl {
+    if (p4_to_rxdma_header.sacl_bypass == FALSE) {
         /* This assumes we're supporting
          * 256 sport ranges - 512 nodes in LPM tree, outputs 7 bit class-id
          *                    32*16 entries packed in 2 level LPM
@@ -399,15 +399,15 @@ control slacl {
          * Combine 8 bit prot+dport-class-id and 10 bit phase 1 class-id to
          * yield 2 bit result
          */
-        apply(slacl_sport_lpm_s0);
-        apply(slacl_sport_lpm_s1);
-        apply(slacl_ipv4_lpm_s0);
-        apply(slacl_ipv4_lpm_s1);
-        apply(slacl_ipv4_lpm_s2);
-        apply(slacl_proto_dport_lpm_s0);
-        apply(slacl_proto_dport_lpm_s1);
-        apply(slacl_proto_dport_lpm_s2);
-        apply(slacl_ip_sport_p1);
-        apply(slacl_p2);
+        apply(sacl_sport_lpm_s0);
+        apply(sacl_sport_lpm_s1);
+        apply(sacl_ipv4_lpm_s0);
+        apply(sacl_ipv4_lpm_s1);
+        apply(sacl_ipv4_lpm_s2);
+        apply(sacl_proto_dport_lpm_s0);
+        apply(sacl_proto_dport_lpm_s1);
+        apply(sacl_proto_dport_lpm_s2);
+        apply(sacl_ip_sport_p1);
+        apply(sacl_p2);
     }
 }

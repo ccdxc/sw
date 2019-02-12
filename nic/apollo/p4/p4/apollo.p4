@@ -2,7 +2,7 @@
 
 #include "../include/defines.h"
 #include "../include/table_sizes.h"
-#include "../include/slacl_defines.h"
+#include "../include/sacl_defines.h"
 #include "../include/headers.p4"
 
 #include "parser.p4"
@@ -28,12 +28,14 @@ action drop_packet() {
     modify_field(capri_intrinsic.drop, TRUE);
 }
 
-action slacl_init(base_addr) {
-    modify_field(p4_to_rxdma_header.slacl_base_addr, base_addr);
+action sacl_init(base_v4addr, base_v6addr) {
+    modify_field(p4_to_rxdma_header.sacl_base_addr, base_v4addr);
+    modify_field(control_metadata.sacl_v6addr, base_v6addr);
 }
 
-action lpm_init(base_addr) {
-    modify_field(p4_to_txdma_header.lpm_addr, base_addr);
+action lpm_init(base_v4addr, base_v6addr) {
+    modify_field(p4_to_txdma_header.lpm_addr, base_v4addr);
+    modify_field(control_metadata.lpm_v6addr, base_v6addr);
 }
 
 /*****************************************************************************/

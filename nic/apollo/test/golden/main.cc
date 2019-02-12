@@ -32,14 +32,14 @@
 #include "nic/hal/pd/globalpd/gpd_utils.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "nic/apollo/p4/include/table_sizes.h"
-#include "nic/apollo/p4/include/slacl_defines.h"
+#include "nic/apollo/p4/include/sacl_defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 
 #define ROUTE_LPM_MEM_SIZE (64 + (16 * 64) + (16 * 16 * 64))
-#define SLACL_LPM_MEM_SIZE                                                     \
-    (SLACL_SPORT_TABLE_SIZE + SLACL_IPV4_TABLE_SIZE +                          \
-     SLACL_PROTO_DPORT_TABLE_SIZE)
+#define SACL_LPM_MEM_SIZE                                                     \
+    (SACL_SPORT_TABLE_SIZE + SACL_IPV4_TABLE_SIZE +                          \
+     SACL_PROTO_DPORT_TABLE_SIZE)
 
 using boost::property_tree::ptree;
 using namespace sdk::platform::utils;
@@ -49,7 +49,7 @@ using namespace sdk::platform::capri;
 #define JTXDMA_PRGM "txdma_program"
 #define JLIFQSTATE "lif2qstate_map"
 #define JPKTBUFFER "rxdma_to_txdma_buf"
-#define JSLACLV4BASE "slacl_v4"
+#define JSACLV4BASE "sacl_v4"
 #define JLPMV4BASE "lpm_v4"
 #define JFLOWSTATSBASE "flow_stats"
 
@@ -174,10 +174,10 @@ uint32_t g_gw_slot_id = 200;
 uint32_t g_gw_dip = 0x0C0C0101;
 uint64_t g_gw_dmac = 0x001234567890;
 
-uint16_t g_slacl_ip_class_id = 0x355;
-uint16_t g_slacl_sport_class_id = 0x59;
-uint16_t g_slacl_proto_dport_class_id = 0xAA;
-uint16_t g_slacl_p1_class_id = 0x2BB;
+uint16_t g_sacl_ip_class_id = 0x355;
+uint16_t g_sacl_sport_class_id = 0x59;
+uint16_t g_sacl_proto_dport_class_id = 0xAA;
+uint16_t g_sacl_p1_class_id = 0x2BB;
 
 class sort_mpu_programs_compare {
 public:
@@ -409,7 +409,7 @@ vnic_tx_init ()
     local_vnic_by_vlan_tx_actiondata_t data;
     local_vnic_by_vlan_tx_local_vnic_info_tx_t *local_vnic_info =
         &data.action_u.local_vnic_by_vlan_tx_local_vnic_info_tx;
-    uint64_t slacl_hbm_addr;
+    uint64_t sacl_hbm_addr;
     uint64_t lpm_hbm_addr;
     uint32_t tbl_id = P4TBL_ID_LOCAL_VNIC_BY_VLAN_TX;
     uint32_t index;
@@ -420,16 +420,16 @@ vnic_tx_init ()
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check = true;
     memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);
-    slacl_hbm_addr = get_mem_addr(JSLACLV4BASE);
-    memcpy(local_vnic_info->slacl_addr_1, &slacl_hbm_addr,
-           sizeof(local_vnic_info->slacl_addr_1));
-    memcpy(local_vnic_info->slacl_addr_2, &slacl_hbm_addr,
-           sizeof(local_vnic_info->slacl_addr_2));
+    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    memcpy(local_vnic_info->sacl_v4addr_1, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr_1));
+    memcpy(local_vnic_info->sacl_v4addr_2, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr_2));
     lpm_hbm_addr = get_mem_addr(JLPMV4BASE);
-    memcpy(local_vnic_info->lpm_addr_1, &lpm_hbm_addr,
-           sizeof(local_vnic_info->lpm_addr_1));
-    memcpy(local_vnic_info->lpm_addr_2, &lpm_hbm_addr,
-           sizeof(local_vnic_info->lpm_addr_2));
+    memcpy(local_vnic_info->lpm_v4addr_1, &lpm_hbm_addr,
+           sizeof(local_vnic_info->lpm_v4addr_1));
+    memcpy(local_vnic_info->lpm_v4addr_2, &lpm_hbm_addr,
+           sizeof(local_vnic_info->lpm_v4addr_2));
 
     entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
 }
@@ -441,7 +441,7 @@ vnic_rx_init ()
     local_vnic_by_slot_rx_actiondata_t data;
     local_vnic_by_slot_rx_local_vnic_info_rx_t *local_vnic_info =
         &data.action_u.local_vnic_by_slot_rx_local_vnic_info_rx;
-    uint64_t slacl_hbm_addr;
+    uint64_t sacl_hbm_addr;
     uint32_t tbl_id = P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX;
 
     memset(&key, 0, sizeof(key));
@@ -450,11 +450,11 @@ vnic_rx_init ()
     data.action_id = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
     local_vnic_info->skip_src_dst_check = true;
-    slacl_hbm_addr = get_mem_addr(JSLACLV4BASE);
-    memcpy(local_vnic_info->slacl_addr_1, &slacl_hbm_addr,
-           sizeof(local_vnic_info->slacl_addr_1));
-    memcpy(local_vnic_info->slacl_addr_2, &slacl_hbm_addr,
-           sizeof(local_vnic_info->slacl_addr_2));
+    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    memcpy(local_vnic_info->sacl_v4addr_1, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr_1));
+    memcpy(local_vnic_info->sacl_v4addr_2, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr_2));
 
     entry_write(tbl_id, 0, &key, NULL, &data, true,
                 LOCAL_VNIC_BY_SLOT_TABLE_SIZE);
@@ -673,9 +673,9 @@ trie_mem_init (void)
                                   sizeof(data));
     }
 
-    uint64_t slacl_hbm_addr = get_mem_addr(JSLACLV4BASE);
-    for (uint32_t i = 0; i < SLACL_LPM_MEM_SIZE; i += sizeof(data)) {
-        sdk::asic::asic_mem_write(slacl_hbm_addr + i, (uint8_t *)data,
+    uint64_t sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    for (uint32_t i = 0; i < SACL_LPM_MEM_SIZE; i += sizeof(data)) {
+        sdk::asic::asic_mem_write(sacl_hbm_addr + i, (uint8_t *)data,
                                   sizeof(data));
     }
 }
@@ -695,61 +695,61 @@ route_init (void)
 }
 
 static void
-slacl_init (void)
+sacl_init (void)
 {
     uint64_t data;
     uint8_t c_data[64];
     uint16_t start_bit;
-    uint64_t slacl_base_addr = get_mem_addr(JSLACLV4BASE);
+    uint64_t sacl_base_addr = get_mem_addr(JSACLV4BASE);
 
-    uint64_t slacl_ip_addr =
-        slacl_base_addr + SLACL_IPV4_TABLE_OFFSET + (64 + (16 * 64));
-    uint64_t slacl_sport_addr =
-        slacl_base_addr + SLACL_SPORT_TABLE_OFFSET + (64);
-    uint64_t slacl_proto_dport_addr =
-        slacl_base_addr + SLACL_PROTO_DPORT_TABLE_OFFSET + (64 + (16 * 64));
-    uint64_t slacl_p1_addr =
-        slacl_base_addr + SLACL_P1_TABLE_OFFSET +
-        (((g_slacl_ip_class_id | (g_slacl_sport_class_id << 10)) / 51) * 64);
-    uint64_t slacl_p2_addr =
-        slacl_base_addr + SLACL_P2_TABLE_OFFSET + (g_slacl_p1_class_id << 8);
+    uint64_t sacl_ip_addr =
+        sacl_base_addr + SACL_IPV4_TABLE_OFFSET + (64 + (16 * 64));
+    uint64_t sacl_sport_addr =
+        sacl_base_addr + SACL_SPORT_TABLE_OFFSET + (64);
+    uint64_t sacl_proto_dport_addr =
+        sacl_base_addr + SACL_PROTO_DPORT_TABLE_OFFSET + (64 + (16 * 64));
+    uint64_t sacl_p1_addr =
+        sacl_base_addr + SACL_P1_TABLE_OFFSET +
+        (((g_sacl_ip_class_id | (g_sacl_sport_class_id << 10)) / 51) * 64);
+    uint64_t sacl_p2_addr =
+        sacl_base_addr + SACL_P2_TABLE_OFFSET + (g_sacl_p1_class_id << 8);
 
     data = 0xFFFF;
     data |= ((uint64_t)htonl((g_layer1_dip & 0xFFFF0000))) << 16;
-    data |= ((uint64_t)htons(g_slacl_ip_class_id)) << 48;
-    sdk::asic::asic_mem_write(slacl_ip_addr, (uint8_t *)&data, sizeof(data));
+    data |= ((uint64_t)htons(g_sacl_ip_class_id)) << 48;
+    sdk::asic::asic_mem_write(sacl_ip_addr, (uint8_t *)&data, sizeof(data));
 
     data = -1;
     data &= ~((uint64_t)0xFFFF);
-    data |= ((uint64_t)htons(g_slacl_sport_class_id));
-    sdk::asic::asic_mem_write(slacl_sport_addr, (uint8_t *)&data, sizeof(data));
+    data |= ((uint64_t)htons(g_sacl_sport_class_id));
+    sdk::asic::asic_mem_write(sacl_sport_addr, (uint8_t *)&data, sizeof(data));
 
     data = -1;
     data &= ~(((uint64_t)0xFFFFFFFFFFULL) << 16);
-    data |= ((uint64_t)htons(g_slacl_proto_dport_class_id)) << 40;
-    sdk::asic::asic_mem_write(slacl_proto_dport_addr, (uint8_t *)&data,
+    data |= ((uint64_t)htons(g_sacl_proto_dport_class_id)) << 40;
+    sdk::asic::asic_mem_write(sacl_proto_dport_addr, (uint8_t *)&data,
                               sizeof(data));
 
     data = -1;
     data &= ~(((uint64_t)0xFFFFFFFFFFULL) << 16);
-    data |= ((uint64_t)htons(g_slacl_proto_dport_class_id)) << 40;
-    sdk::asic::asic_mem_write(slacl_proto_dport_addr, (uint8_t *)&data,
+    data |= ((uint64_t)htons(g_sacl_proto_dport_class_id)) << 40;
+    sdk::asic::asic_mem_write(sacl_proto_dport_addr, (uint8_t *)&data,
                               sizeof(data));
 
     start_bit =
-        (((g_slacl_ip_class_id | (g_slacl_sport_class_id << 10)) % 51) * 10);
-    sdk::asic::asic_mem_read(slacl_p1_addr, c_data, 64);
+        (((g_sacl_ip_class_id | (g_sacl_sport_class_id << 10)) % 51) * 10);
+    sdk::asic::asic_mem_read(sacl_p1_addr, c_data, 64);
     memrev(c_data, 64);
-    hal::utils::pack_bytes_pack(c_data, start_bit, 10, g_slacl_p1_class_id);
+    hal::utils::pack_bytes_pack(c_data, start_bit, 10, g_sacl_p1_class_id);
     memrev(c_data, 64);
-    sdk::asic::asic_mem_write(slacl_p1_addr, c_data, 64);
+    sdk::asic::asic_mem_write(sacl_p1_addr, c_data, 64);
 
-    start_bit = (g_slacl_proto_dport_class_id << 1);
-    sdk::asic::asic_mem_read(slacl_p2_addr, c_data, 64);
+    start_bit = (g_sacl_proto_dport_class_id << 1);
+    sdk::asic::asic_mem_read(sacl_p2_addr, c_data, 64);
     memrev(c_data, 64);
     hal::utils::pack_bytes_pack(c_data, start_bit, 2, 1);
     memrev(c_data, 64);
-    sdk::asic::asic_mem_write(slacl_p2_addr, c_data, 64);
+    sdk::asic::asic_mem_write(sacl_p2_addr, c_data, 64);
 }
 
 class apollo_test : public ::testing::Test {
@@ -898,7 +898,7 @@ TEST_F(apollo_test, test1)
     flow_init();
     rewrite_init();
     route_init();
-    slacl_init();
+    sacl_init();
 
 #ifdef SIM
     uint32_t port = 0;

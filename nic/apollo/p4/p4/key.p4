@@ -112,6 +112,11 @@ action init_config() {
                  CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
     }
     modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    if (key_metadata.ktype == KEY_TYPE_IPV6) {
+        modify_field(p4_to_rxdma_header.sacl_base_addr,
+                     control_metadata.sacl_v6addr);
+        modify_field(p4_to_txdma_header.lpm_addr, control_metadata.lpm_v6addr);
+    }
 }
 
 @pragma stage 1

@@ -19,12 +19,16 @@ local_vnic_info_tx:
                                d.local_vnic_info_tx_d.vcn_id,
                                d.local_vnic_info_tx_d.skip_src_dst_check,
                                d.local_vnic_info_tx_d.resource_group_1,
-                               d.local_vnic_info_tx_d.lpm_addr_1,
-                               d.local_vnic_info_tx_d.slacl_addr_1,
+                               d.local_vnic_info_tx_d.lpm_v4addr_1,
+                               d.local_vnic_info_tx_d.lpm_v6addr_1,
+                               d.local_vnic_info_tx_d.sacl_v4addr_1,
+                               d.local_vnic_info_tx_d.sacl_v6addr_1,
                                d.local_vnic_info_tx_d.epoch1,
                                d.local_vnic_info_tx_d.resource_group_2,
-                               d.local_vnic_info_tx_d.lpm_addr_2,
-                               d.local_vnic_info_tx_d.slacl_addr_2,
+                               d.local_vnic_info_tx_d.lpm_v4addr_2,
+                               d.local_vnic_info_tx_d.lpm_v6addr_2,
+                               d.local_vnic_info_tx_d.sacl_v4addr_2,
+                               d.local_vnic_info_tx_d.sacl_v6addr_2,
                                d.local_vnic_info_tx_d.epoch2)
 
 local_vnic_info_tx_src_mac_error:

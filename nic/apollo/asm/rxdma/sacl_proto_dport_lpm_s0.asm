@@ -3,16 +3,16 @@
 #include "ingress.h"
 
 struct phv_                         p;
-struct slacl_proto_dport_lpm_s0_k   k;
-struct slacl_proto_dport_lpm_s0_d   d;
+struct sacl_proto_dport_lpm_s0_k    k;
+struct sacl_proto_dport_lpm_s0_d    d;
 
-#define prog_name           slacl_proto_dport_lpm_s0
-#define keys(a)             d.slacl_proto_dport_lpm_s0_d.key ## a
-#define key                 k.slacl_metadata_proto_dport
-#define next_addr           p.slacl_metadata_proto_dport_table_addr
-#define s2_offset           p.slacl_metadata_proto_dport_lpm_s2_offset
-#define curr_addr           k.{slacl_metadata_proto_dport_table_addr_sbit0_ebit1,\
-                                slacl_metadata_proto_dport_table_addr_sbit2_ebit33}
+#define prog_name           sacl_proto_dport_lpm_s0
+#define keys(a)             d.sacl_proto_dport_lpm_s0_d.key ## a
+#define key                 k.sacl_metadata_proto_dport
+#define next_addr           p.sacl_metadata_proto_dport_table_addr
+#define s2_offset           p.sacl_metadata_proto_dport_lpm_s2_offset
+#define curr_addr           k.{sacl_metadata_proto_dport_table_addr_sbit0_ebit1,\
+                                sacl_metadata_proto_dport_table_addr_sbit2_ebit33}
 
 #define LPM_KEY_SIZE        3
 #define LPM_DATA_SIZE       2
@@ -27,6 +27,6 @@ struct slacl_proto_dport_lpm_s0_d   d;
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-slacl_proto_dport_lpm_s0_error:
+sacl_proto_dport_lpm_s0_error:
     phvwr.e         p.capri_intr_drop, 1
     nop

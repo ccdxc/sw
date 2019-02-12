@@ -3,8 +3,10 @@
 /******************************************************************************/
 action local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
                               resource_group_1, resource_group_2,
-                              lpm_addr_1, lpm_addr_2,
-                              slacl_addr_1, slacl_addr_2, epoch1, epoch2) {
+                              lpm_v4addr_1, lpm_v4addr_2,
+                              lpm_v6addr_1, lpm_v6addr_2,
+                              sacl_v4addr_1, sacl_v4addr_2,
+                              sacl_v6addr_1, sacl_v6addr_2, epoch1, epoch2) {
     modify_field(scratch_metadata.local_vnic_tag, local_vnic_tag);
     modify_field(vnic_metadata.local_vnic_tag, scratch_metadata.local_vnic_tag);
     modify_field(scratch_metadata.vcn_id, vcn_id);
@@ -25,20 +27,23 @@ action local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
     }
     if (scratch_metadata.use_epoch1 == TRUE) {
         modify_field(policer_metadata.resource_group, resource_group_1);
-        lpm_init(lpm_addr_1);
-        slacl_init(slacl_addr_1);
+        lpm_init(lpm_v4addr_1, lpm_v6addr_1);
+        sacl_init(sacl_v4addr_1, sacl_v6addr_1);
         modify_field(service_header.epoch, epoch1);
     } else {
         modify_field(policer_metadata.resource_group, resource_group_2);
-        lpm_init(lpm_addr_2);
-        slacl_init(slacl_addr_2);
+        lpm_init(lpm_v4addr_2, lpm_v6addr_2);
+        sacl_init(sacl_v4addr_2, sacl_v6addr_2);
         modify_field(service_header.epoch, epoch2);
     }
 }
 
 action local_vnic_info_tx(local_vnic_tag, vcn_id, skip_src_dst_check,
                           resource_group_1, resource_group_2,
-                          lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
+                          lpm_v4addr_1, lpm_v4addr_2,
+                          lpm_v6addr_1, lpm_v6addr_2,
+                          sacl_v4addr_1, sacl_v4addr_2,
+                          sacl_v6addr_1, sacl_v6addr_2,
                           epoch1, epoch2, overlay_mac, src_slot_id) {
     // validate source mac
     if (ethernet_1.srcAddr == 0) {
@@ -54,8 +59,9 @@ action local_vnic_info_tx(local_vnic_tag, vcn_id, skip_src_dst_check,
     modify_field(p4i_apollo_i2e.src_slot_id, src_slot_id);
     local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
                            resource_group_1, resource_group_2,
-                           lpm_addr_1, lpm_addr_2, slacl_addr_1, slacl_addr_2,
-                           epoch1, epoch2);
+                           lpm_v4addr_1, lpm_v4addr_2, lpm_v6addr_1,
+                           lpm_v6addr_2, sacl_v4addr_1, sacl_v4addr_2,
+                           sacl_v6addr_1, sacl_v6addr_2, epoch1, epoch2);
 
     // scratch metadata
     modify_field(scratch_metadata.overlay_mac, overlay_mac);
@@ -63,7 +69,8 @@ action local_vnic_info_tx(local_vnic_tag, vcn_id, skip_src_dst_check,
 
 action local_vnic_info_rx(local_vnic_tag, vcn_id, skip_src_dst_check,
                           resource_group_1, resource_group_2,
-                          slacl_addr_1, slacl_addr_2, epoch1, epoch2) {
+                          sacl_v4addr_1, sacl_v4addr_2,
+                          sacl_v6addr_1, sacl_v6addr_2, epoch1, epoch2) {
     // if c1 indicate miss, drop
     //  modify_field(control_metadata.p4i_drop_reason,
     //               1 << DROP_DST_SLOT_ID_MISS);
@@ -78,7 +85,8 @@ action local_vnic_info_rx(local_vnic_tag, vcn_id, skip_src_dst_check,
     modify_field(vnic_metadata.src_slot_id, mpls_src.label);
     local_vnic_info_common(local_vnic_tag, vcn_id, skip_src_dst_check,
                            resource_group_1, resource_group_2,
-                           0, 0, slacl_addr_1, slacl_addr_2, epoch1, epoch2);
+                           0, 0, 0, 0, sacl_v4addr_1, sacl_v4addr_2,
+                           sacl_v6addr_1, sacl_v6addr_2, epoch1, epoch2);
 }
 
 @pragma stage 0

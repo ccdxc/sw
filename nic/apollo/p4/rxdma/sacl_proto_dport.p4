@@ -1,5 +1,5 @@
 /*****************************************************************************/
-/* Stateless ACL protocol + destination port lookup                          */
+/* Security ACL protocol + destination port lookup                           */
 /*****************************************************************************/
 
 #define LPM_KEY_SIZE        3
@@ -10,22 +10,22 @@
 #define s0_stage            3
 #define s1_stage            4
 #define s2_stage            5
-#define s0_name             slacl_proto_dport_lpm_s0
-#define s1_name             slacl_proto_dport_lpm_s1
-#define s2_name             slacl_proto_dport_lpm_s2
-#define s2_name_ext         slacl_proto_dport_lpm_s2_ext
+#define s0_name             sacl_proto_dport_lpm_s0
+#define s1_name             sacl_proto_dport_lpm_s1
+#define s2_name             sacl_proto_dport_lpm_s2
+#define s2_name_ext         sacl_proto_dport_lpm_s2_ext
 #define key_field           scratch_metadata.proto_dport
 #define res_field           scratch_metadata.class_id16
-#define key                 slacl_metadata.proto_dport
-#define next_addr           slacl_metadata.proto_dport_table_addr
-#define s2_offset           slacl_metadata.proto_dport_lpm_s2_offset
-#define base_addr           slacl_metadata.proto_dport_table_addr
-#define result              slacl_metadata.proto_dport_class_id
+#define key                 sacl_metadata.proto_dport
+#define next_addr           sacl_metadata.proto_dport_table_addr
+#define s2_offset           sacl_metadata.proto_dport_lpm_s2_offset
+#define base_addr           sacl_metadata.proto_dport_table_addr
+#define result              sacl_metadata.proto_dport_class_id
 
-action slacl_proto_dport_lpm_s2_ext() {
-    modify_field(slacl_metadata.p2_table_addr,
-                 p4_to_rxdma_header.slacl_base_addr + SLACL_P2_TABLE_OFFSET +
-                 (slacl_metadata.p1_class_id << 8));
+action sacl_proto_dport_lpm_s2_ext() {
+    modify_field(sacl_metadata.p2_table_addr,
+                 p4_to_rxdma_header.sacl_base_addr + SACL_P2_TABLE_OFFSET +
+                 (sacl_metadata.p1_class_id << 8));
 }
 
 #include "../include/lpm.h"

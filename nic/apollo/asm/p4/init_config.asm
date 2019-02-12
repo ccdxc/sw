@@ -17,6 +17,10 @@ init_config:
     phvwr           p.control_metadata_flow_ohash_lkp, r1
 
 service_header_done:
+    seq             c1, k.key_metadata_ktype, KEY_TYPE_IPV6
+    phvwr.c1        p.p4_to_txdma_header_lpm_addr, k.control_metadata_lpm_v6addr
+    phvwr.c1        p.p4_to_rxdma_header_sacl_base_addr, \
+                        k.control_metadata_sacl_v6addr
     add             r1, r0, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5,\
                                capri_p4_intrinsic_frame_size_sbit6_ebit13}
     seq             c1, k.capri_intrinsic_tm_iport, TM_PORT_DMA

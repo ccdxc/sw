@@ -3,21 +3,23 @@
 #include "ingress.h"
 
 struct phv_                 p;
-struct slacl_p2_k           k;
-struct slacl_p2_d           d;
+struct sacl_ip_sport_p1_k   k;
+struct sacl_ip_sport_p1_d   d;
 
 %%
 
-slacl_p2:
-    add             r7, r0, k.slacl_metadata_proto_dport_class_id, 1
-    tblrdp.e        r1, r7, 0, 1
-    phvwr           p.p4_to_rxdma_header_slacl_result, r1
+sacl_ip_sport_p1:
+    mod             r7, k.{sacl_metadata_ip_sport_class_id_sbit0_ebit0, \
+                           sacl_metadata_ip_sport_class_id_sbit1_ebit16}, 51
+    mul             r7, r7, 10
+    tblrdp.e        r1, r7, 0, 9
+    phvwr           p.sacl_metadata_p1_class_id, r1
 
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-slacl_p2_error:
+sacl_ip_sport_p1_error:
     phvwr.e         p.capri_intr_drop, 1
     nop
