@@ -75,6 +75,9 @@ const (
 	// PenCtlLogDir direcory
 	PenCtlLogDir = "/var/log"
 
+	//ObflLogDir directory
+	ObflLogDir = "/obfl"
+
 	// Events directory
 	EventsDir = "/var/lib/pensando/events"
 

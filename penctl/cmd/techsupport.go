@@ -86,6 +86,39 @@ func createDestDir(destDir string) {
 	}
 }
 
+func getLogs(subDir string, url string) error {
+	//Copy out log files from /var/log recursively
+	resp, _ := restGetResp(url)
+	retS, err := parseFiles(resp)
+	if err != nil {
+		return err
+	}
+	logDestDir := destDir + "/" + subDir + "/"
+	createDestDir(logDestDir)
+	for _, file = range retS {
+		if strings.HasSuffix(file, "/") {
+			napDir := file
+			logSubDestDir := logDestDir + napDir
+			createDestDir(logSubDestDir)
+			resp, _ = restGetResp(url + napDir)
+			retSlice = nil
+			retS, err = parseFiles(resp)
+			if err != nil {
+				return err
+			}
+			for _, subfile := range retS {
+				fmt.Printf(".")
+				copyFileToDest(logSubDestDir, "monitoring/v1/naples/logs/"+napDir, subfile)
+			}
+			retSlice = nil
+		} else {
+			fmt.Printf(".")
+			copyFileToDest(logDestDir, url, file)
+		}
+	}
+	return nil
+}
+
 func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	timeStr := time.Now().Format(time.UnixDate)
 	timeStr = strings.Replace(timeStr, " ", "-", -1)
@@ -139,34 +172,13 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	fmt.Printf("\nEvents fetched\n")
 
 	fmt.Printf("Fetching logs")
-	//Copy out log files from /var/log recursively
-	resp, _ = restGetResp("monitoring/v1/naples/logs/")
-	retS, err = parseFiles(resp)
+	err = getLogs("logs", "monitoring/v1/naples/logs/")
 	if err != nil {
 		return err
 	}
-	logDestDir := destDir + "/logs/"
-	createDestDir(logDestDir)
-	for _, file = range retS {
-		if strings.HasSuffix(file, "/") {
-			napDir := file
-			logSubDestDir := logDestDir + napDir
-			createDestDir(logSubDestDir)
-			resp, _ = restGetResp("monitoring/v1/naples/logs/" + napDir)
-			retSlice = nil
-			retS, err = parseFiles(resp)
-			if err != nil {
-				return err
-			}
-			for _, subfile := range retS {
-				fmt.Printf(".")
-				copyFileToDest(logSubDestDir, "monitoring/v1/naples/logs/"+napDir, subfile)
-			}
-			retSlice = nil
-		} else {
-			fmt.Printf(".")
-			copyFileToDest(logDestDir, "monitoring/v1/naples/logs/", file)
-		}
+	err = getLogs("obfl", "monitoring/v1/naples/obfl/")
+	if err != nil {
+		return err
 	}
 	fmt.Printf("\nLogs fetched\n")
 
