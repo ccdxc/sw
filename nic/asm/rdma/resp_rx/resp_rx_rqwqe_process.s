@@ -441,5 +441,10 @@ table_error:
 
     CAPRI_SET_TABLE_0_VALID(0)
 
+    //Generate DMA command to skip to payload end if non-zero payload
+    seq         c1, REM_PYLD_BYTES, 0
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
+    DMA_SKIP_CMD_SETUP_C(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/, !c1)
+
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
