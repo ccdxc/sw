@@ -304,12 +304,6 @@ hash_poll(struct service_info *svc_info)
 }
 
 static pnso_error_t
-hash_read_status(struct service_info *svc_info)
-{
-	return PNSO_OK;
-}
-
-static pnso_error_t
 hash_write_result(struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
@@ -431,7 +425,6 @@ struct service_ops hash_ops = {
 	.disable_interrupt = hash_disable_interrupt,
 	.ring_db = hash_ring_db,
 	.poll = hash_poll,
-	.read_status = hash_read_status,
 	.write_result = hash_write_result,
 	.teardown = hash_teardown
 };

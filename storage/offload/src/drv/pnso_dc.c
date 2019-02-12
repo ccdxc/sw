@@ -59,6 +59,7 @@ fill_dc_desc(struct service_info *svc_info, struct cpdc_desc *desc)
 							  src_buf_len);
 	desc->cd_threshold_len = cpdc_desc_data_len_set_eval(svc_info->si_type,
 							     dst_buf_len);
+
 	err = svc_status_desc_addr_get(&svc_info->si_status_desc, 0,
 			&aligned_addr, CPDC_STATUS_INTEG_CLEAR_SZ);
 	desc->cd_status_addr = aligned_addr;
@@ -241,36 +242,11 @@ decompress_poll(struct service_info *svc_info)
 }
 
 static pnso_error_t
-decompress_read_status(struct service_info *svc_info)
-{
-	pnso_error_t err;
-	struct cpdc_desc *dc_desc;
-	struct cpdc_status_desc *status_desc;
-
-	OSAL_LOG_DEBUG("enter ...");
-
-	OSAL_ASSERT(svc_info);
-
-	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
-
-	err = cpdc_common_read_status(dc_desc, status_desc);
-	if (err)
-		goto out;
-
-	OSAL_LOG_DEBUG("exit! status verification success!");
-	return err;
-
-out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
-	return err;
-}
-
-static pnso_error_t
 decompress_write_result(struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	struct pnso_service_status *svc_status;
+	struct cpdc_desc *dc_desc;
 	struct cpdc_status_desc *status_desc;
 
 	OSAL_LOG_DEBUG("enter ...");
@@ -284,6 +260,7 @@ decompress_write_result(struct service_info *svc_info)
 		goto out;
 	}
 
+	dc_desc = (struct cpdc_desc *) svc_info->si_desc;
 	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 	if (!status_desc) {
 		OSAL_LOG_ERROR("invalid dc status desc! err: %d", err);
@@ -295,6 +272,11 @@ decompress_write_result(struct service_info *svc_info)
 		OSAL_LOG_ERROR("valid bit not set! err: %d", err);
 		goto out;
 	}
+
+	if (status_desc->csd_partial_data != dc_desc->cd_status_data)
+		OSAL_LOG_DEBUG("partial data mismatch, expected %u received: %u err: %d",
+				dc_desc->cd_status_data,
+				status_desc->csd_partial_data, err);
 
 	if (status_desc->csd_err) {
 		svc_status->err = cpdc_convert_desc_error(status_desc->csd_err);
@@ -363,7 +345,6 @@ struct service_ops dc_ops = {
 	.disable_interrupt = decompress_disable_interrupt,
 	.ring_db = decompress_ring_db,
 	.poll = decompress_poll,
-	.read_status = decompress_read_status,
 	.write_result = decompress_write_result,
 	.teardown = decompress_teardown
 };

@@ -48,9 +48,6 @@ pnso_error_t cpdc_common_chain(struct chain_entry *centry);
 pnso_error_t cpdc_poll(const struct service_info *svc_info,
 		struct cpdc_status_desc *status_desc);
 
-pnso_error_t cpdc_common_read_status(struct cpdc_desc *desc,
-		struct cpdc_status_desc *status_desc);
-
 void cpdc_pprint_desc(const struct cpdc_desc *desc);
 
 void cpdc_pprint_status_desc(const struct cpdc_status_desc *status_desc);

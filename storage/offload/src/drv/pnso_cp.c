@@ -17,6 +17,65 @@
 #include "pnso_seq.h"
 #include "pnso_utils.h"
 
+static inline void __attribute__((unused))
+verify_cp_header_update(struct service_info *svc_info,
+		struct pnso_compression_header *cp_hdr)
+{
+	struct pnso_compression_header rmem_hdr;
+
+	if (chn_service_has_interm_blist(svc_info)) {
+		rmem_hdr.chksum = (uint32_t)~0;
+		sonic_rmem_read(&rmem_hdr, 
+				svc_info->si_iblist.blist.buffers[0].buf,
+				sizeof(rmem_hdr));
+
+		if (cp_hdr->chksum != rmem_hdr.chksum)
+			OSAL_LOG_ERROR("cp_hdr chksum 0x%x != rmem chksum 0x%x",
+					cp_hdr->chksum, rmem_hdr.chksum);
+
+		if (cp_hdr->data_len != rmem_hdr.data_len)
+			OSAL_LOG_ERROR("cp_hdr data_len %u != rmem data_len %u",
+					cp_hdr->data_len, rmem_hdr.data_len);
+
+		if (cp_hdr->version != rmem_hdr.version)
+			OSAL_LOG_ERROR("cp_hdr version 0x%x != rmem version 0x%x",
+					cp_hdr->version, rmem_hdr.version);
+	}
+}
+
+static inline struct pnso_compression_header *
+get_cp_header(struct service_info *svc_info)
+{
+	struct cpdc_sgl	*dst_sgl;
+	struct chain_sgl_pdma_tuple *tuple;
+	struct pnso_compression_header *cp_hdr = NULL;
+
+	/*
+	 * Go through some hoops to find the dst buffer where the cp_hdr
+	 * was written: when RMEM was the destination, the original host
+	 * dst, if any, could be obtained from the SGL pdma descriptor.
+	 * When RMEM was not used, the host dst, if any, would be in
+	 * si_dst_blist.
+	 */
+	dst_sgl = svc_info->si_dst_sgl.sgl;
+	if (svc_info->si_sgl_pdma) {
+		tuple = &svc_info->si_sgl_pdma->tuple[0];
+		if (tuple->len >= sizeof(*cp_hdr))
+			cp_hdr = sonic_phy_to_virt(tuple->addr);
+	} else if (svc_info->si_dst_blist.type ==
+			SERVICE_BUF_LIST_TYPE_HOST) {
+		if (dst_sgl->cs_len_0 >= sizeof(*cp_hdr))
+			cp_hdr = (struct pnso_compression_header *)
+				sonic_phy_to_virt(dst_sgl->cs_addr_0);
+	}
+
+	OSAL_LOG_DEBUG("dst_sgl=0x" PRIx64 ", cs_addr_0=0x" PRIx64 ", cp_hdr-0x" PRIx64 "\n",
+		       (uint64_t) dst_sgl, (uint64_t) dst_sgl->cs_addr_0,
+		       (uint64_t) cp_hdr);
+
+	return cp_hdr;
+}
+
 static inline bool
 is_dflag_zero_pad_enabled(uint16_t flags)
 {
@@ -362,165 +421,33 @@ out:
 }
 
 static pnso_error_t
-compress_read_status(struct service_info *svc_info)
+compress_write_result(struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
 	struct cpdc_desc *cp_desc;
+	struct pnso_service_status *svc_status;
 	struct cpdc_status_desc *status_desc;
-	struct cpdc_sgl	*dst_sgl;
-	struct chain_sgl_pdma_tuple *tuple;
 	struct pnso_compression_header *cp_hdr = NULL;
-	uint32_t datain_len;
-	uint32_t chksum_len;
-	uint32_t hdr_version;
+	uint32_t datain_len, chksum_len, hdr_version;
 
 	OSAL_LOG_DEBUG("enter ...");
 
 	OSAL_ASSERT(svc_info);
-
-	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
 
 	OSAL_LOG_DEBUG("sbi_num_entries: %d sbi_bulk_desc_idx: %d sbi_desc_idx: %d",
 			svc_info->si_batch_info.sbi_num_entries,
 			svc_info->si_batch_info.sbi_bulk_desc_idx,
 			svc_info->si_batch_info.sbi_desc_idx);
 
-	err = cpdc_common_read_status(cp_desc, status_desc);
-	if (err) {
-		/* propagate error code; for perf, keep log level higher */
-		OSAL_LOG_DEBUG("cp operation failed! err: %d", err);
-		goto pass_err;
-	}
-
-	if (chn_service_is_cp_hdr_insert_applic(svc_info)) {
-
-		/*
-		 * Go through some hoops to find the dst buffer where the cp_hdr
-                 * was written: when RMEM was the destination, the original host
-                 * dst, if any, could be obtained from the SGL pdma descriptor.
-                 * When RMEM was not used, the host dst, if any, would be in
-                 * si_dst_blist.
-		 */
-		dst_sgl = svc_info->si_dst_sgl.sgl;
-		if (svc_info->si_sgl_pdma) {
-			tuple = &svc_info->si_sgl_pdma->tuple[0];
-			if (tuple->len >= sizeof(*cp_hdr))
-				cp_hdr = sonic_phy_to_virt(tuple->addr);
-		} else if (svc_info->si_dst_blist.type ==
-				SERVICE_BUF_LIST_TYPE_HOST) {
-			if (dst_sgl->cs_len_0 >= sizeof(*cp_hdr))
-				cp_hdr = (struct pnso_compression_header *)
-					sonic_phy_to_virt(dst_sgl->cs_addr_0);
-		}
-
-		if (!cp_hdr) {
-			OSAL_LOG_DEBUG("skip cp header checks");
-			goto done;
-		}
-
-		OSAL_LOG_DEBUG("compress_read_status: dst_sgl=0x" PRIx64 ", cs_addr_0=0x" PRIx64 ", cp_hdr-0x" PRIx64 "\n",
-			       (uint64_t) dst_sgl,
-			       (uint64_t) dst_sgl->cs_addr_0,
-			       (uint64_t) cp_hdr);
-		/* TODO-cp: verify hard-coded CP version, etc. */
-
-		/*
-		 * When a chksum field is present in cp_hdr, overwrite it with
-		 * integ_data from the status desc (due to a HW constraint).
-		 * Note that in chaining case, even though P4+ chainer (if requested)
-		 * would also have done the copy, it might have done so only to the
-		 * intermediate RMEM destination buffer rather than to the host.
-		 * Hence, we ensure that the host buffer overwrite happens here.
-		 */
-		if (cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_len)) {
-			if (chksum_len) {
-				if (cpdc_desc_is_integ_data_wr_required(cp_desc)) {
-    					cp_hdr->chksum = 
-    					   (uint32_t)status_desc->csd_integrity_data;
-				}
-			} else
-				cp_hdr->chksum = 0;
-		}
-
-		hdr_version = cpdc_cp_hdr_version_info_get(svc_info);
-		if (cpdc_cp_hdr_version_wr_required(hdr_version))
-			cp_hdr->version = hdr_version;
-
-#ifdef SIMPLE_CP_HDR_UPDATE_VERIFY
-		if (chn_service_has_interm_blist(svc_info)) {
-			struct pnso_compression_header rmem_hdr;
-
-			rmem_hdr.chksum = (uint32_t)~0;
-			sonic_rmem_read(&rmem_hdr, 
-					svc_info->si_iblist.blist.buffers[0].buf,
-					sizeof(rmem_hdr));
-			if (cp_hdr->chksum != rmem_hdr.chksum) {
-				OSAL_LOG_ERROR("cp_hdr chksum 0x%x != rmem chksum 0x%x",
-						cp_hdr->chksum, rmem_hdr.chksum);
-			}
-			if (cp_hdr->data_len != rmem_hdr.data_len) {
-				OSAL_LOG_ERROR("cp_hdr data_len %u != rmem data_len %u",
-						cp_hdr->data_len, rmem_hdr.data_len);
-			}
-			if (cp_hdr->version != rmem_hdr.version) {
-				OSAL_LOG_ERROR("cp_hdr version 0x%x != rmem version 0x%x",
-						cp_hdr->version, rmem_hdr.version);
-			}
-		}
-#endif
-		datain_len = cp_desc->cd_datain_len == 0 ?
-			MAX_CPDC_SRC_BUF_LEN : cp_desc->cd_datain_len;
-		if ((cp_hdr->data_len == 0) ||
-				(cp_hdr->data_len > datain_len)) {
-			err = EINVAL;
-			OSAL_LOG_ERROR("invalid data len! datain_len: %u hdr_len: %u err: %d",
-					datain_len, cp_hdr->data_len, err);
-			goto out;
-		}
-
-		if (status_desc->csd_output_data_len != (cp_hdr->data_len +
-				 sizeof(struct pnso_compression_header))) {
-			err = EINVAL;
-			OSAL_LOG_ERROR("output data len mismatch! output_data_len: %u hdr_len: %u err: %d",
-					status_desc->csd_output_data_len,
-					cp_hdr->data_len, err);
-			goto out;
-		}
-	}
-
-done:
-	err = PNSO_OK;
-pass_err:
-	OSAL_LOG_DEBUG("exit!");
-	return err;
-out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
-	return err;
-}
-
-static pnso_error_t
-compress_write_result(struct service_info *svc_info)
-{
-	pnso_error_t err = EINVAL;
-	struct pnso_service_status *svc_status;
-	struct cpdc_status_desc *status_desc;
-
-	OSAL_LOG_DEBUG("enter ...");
-
-	OSAL_ASSERT(svc_info);
+	cp_desc = (struct cpdc_desc *) svc_info->si_desc;
+	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
+	CPDC_PPRINT_STATUS_DESC(status_desc);
 
 	svc_status = svc_info->si_svc_status;
 	if (svc_status->svc_type != svc_info->si_type) {
 		OSAL_LOG_ERROR("service type mismatch! svc_type: %d si_type: %d err: %d",
-			svc_status->svc_type,  svc_info->si_type, err);
+			svc_status->svc_type, svc_info->si_type, err);
 		goto out;
-	}
-
-	status_desc = (struct cpdc_status_desc *) svc_info->si_status_desc.desc;
-	if (!status_desc) {
-		OSAL_LOG_ERROR("invalid cp status desc! err: %d", err);
-		OSAL_ASSERT(err);
 	}
 
 	if (!status_desc->csd_valid) {
@@ -528,6 +455,11 @@ compress_write_result(struct service_info *svc_info)
 		OSAL_LOG_ERROR("valid bit not set! err: %d", err);
 		goto out;
 	}
+
+	if (status_desc->csd_partial_data != cp_desc->cd_status_data)
+		OSAL_LOG_DEBUG("partial data mismatch, expected %u received: %u err: %d",
+				cp_desc->cd_status_data,
+				status_desc->csd_partial_data, err);
 
 	if (status_desc->csd_err) {
 		svc_status->err = cpdc_convert_desc_error(status_desc->csd_err);
@@ -538,12 +470,67 @@ compress_write_result(struct service_info *svc_info)
 		goto pass_err;
 	}
 
-	svc_status->u.dst.data_len = cpdc_desc_data_len_get_eval(svc_info->si_type,
-					status_desc->csd_output_data_len);
+	if (chn_service_is_cp_hdr_insert_applic(svc_info)) {
+
+	cp_hdr = get_cp_header(svc_info);
+	if (!cp_hdr) {
+		OSAL_LOG_DEBUG("skip cp header checks");
+		goto done;
+	}
+
+	/*
+	 * When a chksum field is present in cp_hdr, overwrite it with
+	 * integ_data from the status desc (due to a HW constraint).
+	 * Note that in chaining case, even though P4+ chainer (if requested)
+	 * would also have done the copy, it might have done so only to the
+	 * intermediate RMEM destination buffer rather than to the host.
+	 * Hence, we ensure that the host buffer overwrite happens here.
+	 */
+	if (cpdc_cp_hdr_chksum_info_get(svc_info, &chksum_len)) {
+		if (chksum_len) {
+			if (cpdc_desc_is_integ_data_wr_required(cp_desc)) {
+				cp_hdr->chksum = 
+				   (uint32_t)status_desc->csd_integrity_data;
+			}
+		} else
+			cp_hdr->chksum = 0;
+	}
+
+	hdr_version = cpdc_cp_hdr_version_info_get(svc_info);
+	if (cpdc_cp_hdr_version_wr_required(hdr_version))
+		cp_hdr->version = hdr_version;
+
+#ifdef SIMPLE_CP_HDR_UPDATE_VERIFY
+	verify_cp_header_update(svc_info, cp_hdr);
+#endif
+
+	datain_len = cp_desc->cd_datain_len == 0 ?
+		MAX_CPDC_SRC_BUF_LEN : cp_desc->cd_datain_len;
+	if ((cp_hdr->data_len == 0) || (cp_hdr->data_len > datain_len)) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("invalid data len! datain_len: %u hdr_len: %u err: %d",
+				datain_len, cp_hdr->data_len, err);
+		goto out;
+	}
+
+	if (status_desc->csd_output_data_len != (cp_hdr->data_len +
+			 sizeof(struct pnso_compression_header))) {
+		err = EINVAL;
+		OSAL_LOG_ERROR("output data len mismatch! output_data_len: %u hdr_len: %u err: %d",
+				status_desc->csd_output_data_len,
+				cp_hdr->data_len, err);
+		goto out;
+	}
+	}
+
+	svc_status->u.dst.data_len =
+		cpdc_desc_data_len_get_eval(svc_info->si_type,
+				status_desc->csd_output_data_len);
 	chn_service_deps_data_len_set(svc_info, svc_status->u.dst.data_len);
+
 	PAS_INC_NUM_CP_BYTES_OUT(svc_info->si_pcr,
 			svc_status->u.dst.data_len);
-
+done:
 	err = PNSO_OK;
 	OSAL_LOG_DEBUG("status/result update success!");
 pass_err:
@@ -594,7 +581,6 @@ struct service_ops cp_ops = {
 	.disable_interrupt = compress_disable_interrupt,
 	.ring_db = compress_ring_db,
 	.poll = compress_poll,
-	.read_status = compress_read_status,
 	.write_result = compress_write_result,
 	.teardown = compress_teardown
 };

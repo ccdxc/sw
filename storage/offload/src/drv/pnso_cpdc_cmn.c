@@ -29,7 +29,6 @@
 /*
  * TODO:
  *	- add additional UTs for read/write status/result, as needed
- *	- reuse/common code (write_result, read_status, cpdc_setup_batch_desc)
  *
  */
 pnso_error_t
@@ -76,63 +75,6 @@ cpdc_poll(const struct service_info *svc_info,
 	}
 
 	OSAL_LOG_DEBUG("exit! err: %d", err);
-	return err;
-}
-
-static void __attribute__((unused))
-cpdc_common_teardown(void *desc)
-{
-	/* TODO-chain: EOPNOTSUPP */
-}
-
-pnso_error_t
-cpdc_common_read_status(struct cpdc_desc *desc,
-		struct cpdc_status_desc *status_desc)
-{
-	pnso_error_t err = EINVAL;
-
-	OSAL_LOG_DEBUG("enter ...");
-
-	OSAL_ASSERT(desc);
-	OSAL_ASSERT(status_desc);
-
-	if (!status_desc) {
-		OSAL_LOG_ERROR("invalid status desc! err: %d", err);
-		goto out;
-	}
-	CPDC_PPRINT_STATUS_DESC(status_desc);
-
-	if (!status_desc->csd_valid) {
-		OSAL_LOG_ERROR("valid bit not set! err: %d", err);
-		goto out;
-	}
-
-	if (!desc) {
-		OSAL_LOG_ERROR("invalid desc! err: %d", err);
-		goto out;
-	}
-
-	if (status_desc->csd_partial_data != desc->cd_status_data) {
-		OSAL_LOG_ERROR("partial data mismatch, expected %u received: %u err: %d",
-				desc->cd_status_data,
-				status_desc->csd_partial_data, err);
-	}
-
-	if (status_desc->csd_err) {
-		err = status_desc->csd_err;
-
-		/* propagate error code; for perf, keep log level higher */
-		OSAL_LOG_DEBUG("hw error reported! csd_err: %d err: %d",
-				status_desc->csd_err, err);
-		goto pass_err;
-	}
-
-	err = PNSO_OK;
-pass_err:
-	OSAL_LOG_DEBUG("exit!");
-	return err;
-out:
-	OSAL_LOG_ERROR("exit! err: %d", err);
 	return err;
 }
 

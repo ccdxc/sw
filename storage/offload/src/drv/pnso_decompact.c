@@ -60,12 +60,6 @@ decompact_poll(struct service_info *svc_info)
 }
 
 static pnso_error_t
-decompact_read_status(struct service_info *svc_info)
-{
-	return EOPNOTSUPP;
-}
-
-static pnso_error_t
 decompact_write_result(struct service_info *svc_info)
 {
 	return EOPNOTSUPP;
@@ -86,7 +80,6 @@ struct service_ops decompact_ops = {
 	.disable_interrupt = decompact_disable_interrupt,
 	.ring_db = decompact_ring_db,
 	.poll = decompact_poll,
-	.read_status = decompact_read_status,
 	.write_result  = decompact_write_result,
 	.teardown = decompact_teardown
 };

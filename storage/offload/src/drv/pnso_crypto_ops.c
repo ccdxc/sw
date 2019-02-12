@@ -562,28 +562,22 @@ out:
 }
 
 static pnso_error_t
-crypto_read_status(struct service_info *svc_info)
+crypto_write_result(struct service_info *svc_info)
 {
+	pnso_error_t err;
 	struct pnso_service_status	*svc_status;
 	struct crypto_status_desc	*status_desc;
-	pnso_error_t err;
+	bool from_parent;
 
 	svc_status = svc_info->si_svc_status;
 	status_desc = svc_info->si_status_desc.desc;
+
 	err = status_desc->csd_err;
 	if (err) {
 		OSAL_LOG_ERROR("hw error reported: %d", err);
 		svc_status->err = crypto_desc_status_convert(err);
+		goto out;
 	}
-
-	return svc_status->err;
-}
-
-static pnso_error_t
-crypto_write_result(struct service_info *svc_info)
-{
-	struct pnso_service_status	*svc_status;
-	bool from_parent;
 
 	/*
 	 * In chaining case, the actual data length may have been determined
@@ -614,6 +608,7 @@ crypto_write_result(struct service_info *svc_info)
 		PAS_INC_NUM_DEC_BYTES(svc_info->si_pcr,
 				svc_status->u.dst.data_len);
 
+out:
 	return PNSO_OK;
 }
 
@@ -656,7 +651,6 @@ struct service_ops encrypt_ops = {
 	.disable_interrupt = crypto_disable_interrupt,
 	.ring_db = crypto_ring_db,
 	.poll = crypto_poll,
-	.read_status = crypto_read_status,
 	.write_result = crypto_write_result,
 	.teardown = crypto_teardown,
 };
@@ -670,7 +664,6 @@ struct service_ops decrypt_ops = {
 	.disable_interrupt = crypto_disable_interrupt,
 	.ring_db = crypto_ring_db,
 	.poll = crypto_poll,
-	.read_status = crypto_read_status,
 	.write_result = crypto_write_result,
 	.teardown = crypto_teardown,
 };

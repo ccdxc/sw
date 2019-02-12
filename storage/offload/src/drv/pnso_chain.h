@@ -146,9 +146,6 @@ struct service_ops {
 	/* a NULL-op for all services except the last within the chain */
 	pnso_error_t (*poll)(struct service_info *svc_info);
 
-	/* get hardware status of the service */
-	pnso_error_t (*read_status)(struct service_info *svc_info);
-
 	/* copy the status to update the caller */
 	pnso_error_t (*write_result)(struct service_info *svc_info);
 

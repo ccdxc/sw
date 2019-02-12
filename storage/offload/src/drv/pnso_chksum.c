@@ -341,12 +341,6 @@ chksum_poll(struct service_info *svc_info)
 }
 
 static pnso_error_t
-chksum_read_status(struct service_info *svc_info)
-{
-	return PNSO_OK;
-}
-
-static pnso_error_t
 chksum_write_result(struct service_info *svc_info)
 {
 	pnso_error_t err = EINVAL;
@@ -471,7 +465,6 @@ struct service_ops chksum_ops = {
 	.disable_interrupt = chksum_disable_interrupt,
 	.ring_db = chksum_ring_db,
 	.poll = chksum_poll,
-	.read_status = chksum_read_status,
 	.write_result = chksum_write_result,
 	.teardown = chksum_teardown
 };
