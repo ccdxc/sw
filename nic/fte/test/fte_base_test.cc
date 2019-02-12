@@ -399,15 +399,16 @@ hal_handle_t fte_base_test::add_nat_mapping(hal_handle_t vrfh, uint32_t v4_addr,
 }
 
 hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
-                                    std::vector<uint8_t *> &pkts, size_t pkt_len)
+                                    std::vector<uint8_t *> &pkts, size_t pkt_len, bool copied_pkt_arg)
 {
     struct fn_ctx_t {
         fte::ctx_t *ctx;
         fte::cpu_rxhdr_t *cpu_rxhdr;
         std::vector<uint8_t *> &pkts;
         size_t pkt_len;
+        bool   copied_pkt;
         hal_ret_t ret;
-    } fn_ctx = { &ctx_, cpu_rxhdr, pkts, pkt_len, HAL_RET_OK };
+    } fn_ctx = { &ctx_, cpu_rxhdr, pkts, pkt_len, copied_pkt_arg, HAL_RET_OK };
 
     fte::fte_execute(FTE_ID, [](void *data) {
         fn_ctx_t *fn_ctx = (fn_ctx_t *)data;
@@ -426,7 +427,7 @@ hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
 
         for (uint32_t i=0; i<fn_ctx->pkts.size(); i++) {
             hal::hal_cfg_db_open(hal::CFG_OP_READ);
-            fn_ctx->ret = ctx->init(fn_ctx->cpu_rxhdr, pkt, fn_ctx->pkt_len,
+            fn_ctx->ret = ctx->init(fn_ctx->cpu_rxhdr, pkt, fn_ctx->pkt_len, fn_ctx->copied_pkt,
                                     iflow, rflow, feature_state, num_features);
             if (fn_ctx->ret == HAL_RET_OK) {
                 fn_ctx->ret = ctx->process();
@@ -441,11 +442,11 @@ hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
 }
 
 hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
-                                    uint8_t *pkt, size_t pkt_len)
+                                    uint8_t *pkt, size_t pkt_len, bool copied_pkt)
 {
     std::vector<uint8_t *> pkts = { pkt };
 
-    return inject_pkt(cpu_rxhdr, pkts, pkt_len);
+    return inject_pkt(cpu_rxhdr, pkts, pkt_len, copied_pkt);
 }
 
 static inline ip_addr_t ep_ip(hal::ep_t *ep) {
@@ -506,6 +507,7 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
 
     std::vector<uint8_t *>buffs;
     size_t buff_size;
+    bool copied_pkt = true;
 
     std::vector<uint8_t> buffer = pkts[0].serialize();
     buff_size = buffer.size();
@@ -516,7 +518,7 @@ fte_base_test::inject_eth_pkt(const fte::lifqid_t &lifq,
         buffs.push_back(&buffer[0]);
     }
 
-    return inject_pkt(&cpu_rxhdr, buffs, buff_size);
+    return inject_pkt(&cpu_rxhdr, buffs, buff_size, copied_pkt);
 }
 
 hal_ret_t
@@ -711,7 +713,7 @@ fte_base_test::process_e2e_packets (void)
                     tcp_header_t  *tcp = (tcp_header_t *)((uint8_t *)inp + l4_offset);
                     cpu_rxhdr.tcp_seq_num = tcp->seq;
                     cpu_rxhdr.tcp_flags = ((tcp->syn << 1) | (tcp->ack << 4));
-                    rc = inject_pkt(&cpu_rxhdr, (uint8_t *)inp, nread);
+                    rc = inject_pkt(&cpu_rxhdr, (uint8_t *)inp, nread, true);
                     EXPECT_EQ(rc, HAL_RET_OK);
                     EXPECT_FALSE(ctx_.drop());
 #ifdef DEBUG

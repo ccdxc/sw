@@ -14,6 +14,8 @@ namespace pd {
 #define HAL_MAX_CPU_PKT_DESCR_ENTRIES   1024
 #define CPU_PKT_DESCR_SIZE              128
 
+#define CPU_PKT_SEM_CI_BATCH_SIZE       1
+
 #define CPU_PKT_VALID_BIT_MASK          ((uint64_t)1 << 63)
 
 #define HAL_MAX_CPU_PKT_PAGE_ENTRIES    1024
@@ -71,8 +73,10 @@ typedef struct cpupkt_qinst_ctr_s {
 typedef struct cpupkt_qinst_info_s {
     uint32_t                queue_id;
     cpupkt_hw_id_t          base_addr;
+    uint8_t                 *virt_base_addr; //mmap'ed virtual base address of the queue region
     uint32_t                pc_index;    //Producer index in case of TX queue / Consumer index in case of RXQ
     cpupkt_hw_id_t          pc_index_addr;
+    uint8_t                 *virt_pc_index_addr; //mmap'ed virtual address of the queue index slot
     uint64_t                valid_bit_value;
     cpupkt_queue_info_t     *queue_info;
     cpupkt_qinst_ctr_t      ctr;
@@ -108,6 +112,9 @@ typedef struct cpupkt_global_info_s {
     uint32_t       cpu_tx_page_cindex;
     uint32_t       cpu_tx_descr_pindex;
     uint32_t       cpu_tx_descr_cindex;
+    uint32_t       cpu_rx_dpr_cindex;
+    uint32_t       cpu_rx_dpr_sem_cindex;
+    uint32_t       cpu_rx_dpr_descr_free_err;
 } __PACK__ cpupkt_global_info_t;
 
 typedef struct cpupkt_qinst_stats_s {
@@ -144,7 +151,7 @@ hal_ret_t cpupkt_unregister_tx_queue(cpupkt_ctxt_t* ctxt, types::WRingType type,
 hal_ret_t cpupkt_poll_receive(cpupkt_ctxt_t* ctxt,
                               p4_to_p4plus_cpu_pkt_t** flow_miss_hdr,
                               uint8_t** data,
-                              size_t* data_len);
+                              size_t* data_len, bool *copied_pkt);
 hal_ret_t cpupkt_free(p4_to_p4plus_cpu_pkt_t* flow_miss_hdr, uint8_t* data);
 
 // transmit pkt

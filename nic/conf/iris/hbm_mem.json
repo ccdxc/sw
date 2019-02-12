@@ -2,27 +2,33 @@
     "regions": [
         {   
             "_comment" : "cache coherent",
-            "name": "cpu-dr",
+            "name": "cpu-tx-dr",
             "size": "128K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
-            "name": "cpu-pr",
+            "name": "cpu-tx-pr",
             "size": "128K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
-            "name": "cpu-descriptor",
+            "name": "cpu-rx-dpr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-tx-descriptor",
             "size": "2048K",
             "cc": "true"            
             
         },
         {
-            "_comment" : "cache coherent",
-            "name": "cpu-page",
-            "size": "32768K",
+            "_comment" : "cache coherent, used only for cpu originated packets",
+            "name": "cpu-tx-page",
+            "size": "16384K",
             "cc": "true"
         },
         {
@@ -44,9 +50,9 @@
             "cc"     : "true"
         },
         {
-            "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
-            "name" : "unused cache coherent",
-            "size" : "29696K",
+            "_comment" : "cache coherent, used for cpu rx packets allocated by P4+, freed by ARM. The size of this region is to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
+            "name" : "cpu-rx-desc-page",
+            "size" : "45952K",
             "cc"      : "true"
         },
         {

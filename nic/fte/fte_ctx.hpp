@@ -467,6 +467,7 @@ typedef struct fte_txrx_stats_s {
 
 struct fte_stats_t {
     uint64_t              cps;                         // Number of connections per second processed by this FTE
+    uint64_t              cps_hwm;                     // Max. Number of connections per second processed by this FTE at any time
     uint64_t              flow_miss_pkts;              // Number of flow miss packets processed by this FTE
     uint64_t              redirect_pkts;               // Number of NACL redirect packets processed by this FTE
     uint64_t              cflow_pkts;                  // Number of ALG control flow packets processed by this FTE
@@ -494,7 +495,7 @@ public:
     static const uint8_t MAX_QUEUED_PKTS = 2;  // max queued pkts for tx
     static const uint8_t MAX_QUEUED_HANDLERS = 16; // max queued completion handlers
 
-    hal_ret_t init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
+    hal_ret_t init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pkt,
                    flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
     hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
@@ -545,6 +546,7 @@ public:
     const cpu_rxhdr_t* cpu_rxhdr() const { return cpu_rxhdr_; }
     uint8_t* pkt() const { return pkt_; }
     size_t pkt_len() const { return pkt_len_; }
+    void set_pkt(cpu_rxhdr_t *rxhdr, uint8_t *pkt, size_t len) { cpu_rxhdr_ = rxhdr; pkt_ = pkt; pkt_len_ = len; }
 
     // Queue pkt for tx (in case of flow_miss rx pkt is
     // transmitted if no pkts are queued for tx)
@@ -719,6 +721,7 @@ protected:
     cpu_rxhdr_t           *cpu_rxhdr_; // metadata from p4 to cpu
     uint8_t               *pkt_;
     size_t                pkt_len_;
+    bool                  copied_pkt_;
 
 private:
     lifqid_t              arm_lifq_;

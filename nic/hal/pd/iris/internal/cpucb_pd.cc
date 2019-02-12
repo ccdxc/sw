@@ -258,17 +258,17 @@ p4pd_add_or_del_cpucb_txdma_entry(pd_cpucb_t* cpucb_pd, bool del)
     }
 
     // Initialize CPU Descriptor and page rings
-    ret = wring_pd_table_init(types::WRING_TYPE_CPUDR, 
+    ret = wring_pd_table_init(types::WRING_TYPE_CPU_TX_DR, 
                               cpucb_pd->cpucb->cb_id);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to init CPUDR ring: {}", ret);
+        HAL_TRACE_ERR("Failed to init CPU-TX-DR ring: {}", ret);
         goto cleanup;
     }
 
-    ret = wring_pd_table_init(types::WRING_TYPE_CPUPR, 
+    ret = wring_pd_table_init(types::WRING_TYPE_CPU_TX_PR,
                               cpucb_pd->cpucb->cb_id);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to init CPUDR ring: {}", ret);
+        HAL_TRACE_ERR("Failed to init CPU-TX-PR ring: {}", ret);
         goto cleanup;
     }
 

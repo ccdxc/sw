@@ -274,6 +274,9 @@ hal_init (hal_cfg_t *hal_cfg)
         fte::disable_fte();
     }
 
+    // This should come from hal-config file or policy
+    hal_cfg->bypass_fte = false;
+
     // linkmgr init
     hal_linkmgr_init(hal_cfg);
 

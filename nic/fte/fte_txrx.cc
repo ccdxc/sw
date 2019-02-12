@@ -60,6 +60,7 @@ private:
     flow_t                 *rflow_;
     ipc_logger             *logger_;
     fte_stats_t             stats_;
+    bool                    bypass_fte_;
 
     void process_arq();
     void process_softq();
@@ -298,11 +299,24 @@ void inst_t::start(sdk::lib::thread *curr_thread)
         SDK_ASSERT(logger_);
     }
 
+    /*
+     * Get the bypass-fte flag from hal-config.
+     */
+    bypass_fte_ = hal_cfg->bypass_fte;
+
     ctx_mem_init();
     while (true) {
         if (hal::is_platform_type_hw()) {
-            usleep(1000); //asicrw crash that was causing this should 
-                           // been resolved by other changes to asicrw
+
+            /*
+             * Ideally, no sleep between packets on HW. However, currently
+             * there is a starvation issue for mnic (and potentially other linux threads)
+             * if FTE threads spin constantly, due to cpu affinities not setup properly.
+             * Will be removing the sleep once those issues are addressed.
+	     * If 'bypass_fte_' is set, this is for PMD perf-mode, we dont want to sleep
+	     * between packets.
+             */
+	    if (!bypass_fte_) usleep(1000);
         } else if (hal::is_platform_type_sim()) {
             usleep(1000000/30);
         } else if (hal::is_platform_type_rtl()) {
@@ -463,7 +477,10 @@ void inst_t::incr_fte_error(hal_ret_t rc)
      } else {
          t_rx_pkts++;
      }
-     
+
+     // Record the Max. CPS we've done
+     if (stats_.cps > stats_.cps_hwm) stats_.cps_hwm = stats_.cps;
+
  }
 
 //-----------------------------------------------------------------------------
@@ -471,6 +488,16 @@ void inst_t::incr_fte_error(hal_ret_t rc)
 // ----------------------------------------------------------------------------
 void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
 {
+    /*
+     * If no cpu header, then this is a dummy flow-miss packet for PPS testing,
+     * we'll still compute CPS.
+     */
+    if (!cpu_rxhdr) {
+        compute_cps();
+        stats_.flow_miss_pkts++;
+	return;
+    }
+
     lifqid_t lifq = {cpu_rxhdr->lif, cpu_rxhdr->qtype, cpu_rxhdr->qid};
 
     compute_cps();
@@ -498,6 +525,11 @@ void inst_t::update_tx_stats(size_t pkt_len)
     stats_.queued_tx_pkts++;
 }
 
+void free_flow_miss_pkt(uint8_t * pkt)
+{
+    hal::free_to_slab(hal::HAL_SLAB_CPU_PKT, (pkt-sizeof(cpu_rxhdr_t)));
+}
+
 //------------------------------------------------------------------------------
 // Process a pkt from arq
 //------------------------------------------------------------------------------
@@ -505,17 +537,56 @@ void inst_t::process_arq()
 {
     hal_ret_t ret;
     cpu_rxhdr_t *cpu_rxhdr;
-    uint8_t *pkt;
+    uint8_t *pkt = NULL;
     size_t pkt_len;
+    bool   copied_pkt = true;
 
     // read the packet
-    ret = fte::impl::cpupkt_poll_receive(arm_ctx_, &cpu_rxhdr, &pkt, &pkt_len);
+    ret = fte::impl::cpupkt_poll_receive(arm_ctx_, &cpu_rxhdr, &pkt, &pkt_len, &copied_pkt);
     if (ret == HAL_RET_RETRY) {
         return;
     }
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("fte: arm rx failed, ret={}", ret);
+        return;
+    }
+
+    /*
+     * In 'bypass_fte' mode, we just want to go thru the CPU PMD Rx and Tx paths. This
+     * mode is used for PMD PPS measurements/testing. So we'll just enqueue the packet
+     * to tx-q and send it out.
+     */
+    if (bypass_fte_) {
+ 
+        HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
+
+        update_rx_stats(cpu_rxhdr, pkt_len);
+        if (pkt) {
+
+            ctx_->set_pkt(cpu_rxhdr, pkt, pkt_len);
+            hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
+
+            // Update Rx Counters
+            //update_rx_stats(cpu_rxhdr, pkt_len);
+
+            /*
+             * If the 'copied_pkt' is not set, then this is not a packet buffer
+             * that we've allocated from slab, so no need to free it.
+             */
+            ctx_->queue_txpkt(pkt, pkt_len, &cpu_header, NULL, HAL_LIF_CPU,
+                              CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ,
+                              types::WRING_TYPE_ASQ, copied_pkt ? free_flow_miss_pkt : NULL);
+
+            // write the packet
+            ret = ctx_->send_queued_pkts(arm_ctx_);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("fte: failed to send pkt ret={}", ret);
+            }
+
+	    // The 'send_queued_pkts()' already updates tx stats.
+            //update_tx_stats(pkt_len);
+        }
         return;
     }
 
@@ -528,7 +599,7 @@ void inst_t::process_arq()
         update_rx_stats(cpu_rxhdr, pkt_len);
 
         // Init ctx_t
-        ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, iflow_, rflow_, feature_state_, num_features_);
+        ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, copied_pkt, iflow_, rflow_, feature_state_, num_features_);
         if (ret != HAL_RET_OK) {
             if (ret == HAL_RET_FTE_SPAN) {
                 HAL_TRACE_DEBUG("fte: done processing span packet");
@@ -547,7 +618,12 @@ void inst_t::process_arq()
         ret = ctx_->process();
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("fte: failied to process, ret={}", ret);
-            break;
+
+	    /*
+	     * We'll set the drop in this error case, so the cpupkt resources
+	     * can be reclaimed in 'send_queued_pkts' below.
+	     */
+	    ctx_->set_drop();
         }
 
         // write the packets
@@ -623,6 +699,9 @@ fte_txrx_stats_t inst_t::get_txrx_stats(bool clear_on_read)
     txrx_stats.glinfo.cpu_tx_page_cindex = args.cpu_tx_page_cindex;
     txrx_stats.glinfo.cpu_tx_descr_pindex = args.cpu_tx_descr_pindex;
     txrx_stats.glinfo.cpu_tx_descr_cindex = args.cpu_tx_descr_cindex;
+    txrx_stats.glinfo.cpu_rx_dpr_cindex = args.cpu_rx_dpr_cindex;
+    txrx_stats.glinfo.cpu_rx_dpr_sem_cindex = args.cpu_rx_dpr_sem_cindex;
+    txrx_stats.glinfo.cpu_rx_dpr_descr_free_err = args.cpu_rx_dpr_descr_free_err;
     return txrx_stats;
 
 }

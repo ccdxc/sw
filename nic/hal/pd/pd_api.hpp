@@ -2416,16 +2416,17 @@ typedef struct pd_cpupkt_unregister_tx_queue_args_s {
 } __PACK__ pd_cpupkt_unregister_tx_queue_args_t;
 
 typedef struct pd_cpupkt_poll_receive_args_s {
-    cpupkt_ctxt_t* ctxt;
+     cpupkt_ctxt_t* ctxt;
      p4_to_p4plus_cpu_pkt_t** flow_miss_hdr;
      uint8_t** data;
      size_t* data_len;
+     bool    *copied_pkt;
 } __PACK__ pd_cpupkt_poll_receive_args_t;
 
-typedef struct pd_cpupkt_free_args_s {
-    p4_to_p4plus_cpu_pkt_t* flow_miss_hdr;
-    uint8_t* data;
-} __PACK__ pd_cpupkt_free_args_t;
+typedef struct pd_cpupkt_free_pkt_resources_args_s {
+    cpupkt_ctxt_t* ctxt;
+    uint8_t* pkt;
+} __PACK__ pd_cpupkt_free_pkt_resources_args_t;
 
 typedef struct pd_cpupkt_send_args_s {
     cpupkt_ctxt_t* ctxt;
@@ -2464,6 +2465,9 @@ typedef struct pd_cpupkt_get_global_args_s {
     uint32_t  cpu_tx_page_cindex;
     uint32_t  cpu_tx_descr_pindex;
     uint32_t  cpu_tx_descr_cindex;
+    uint32_t  cpu_rx_dpr_cindex;
+    uint32_t  cpu_rx_dpr_sem_cindex;
+    uint32_t  cpu_rx_dpr_descr_free_err;
 } pd_cpupkt_get_global_args_t;
 
 // rdma
@@ -3104,7 +3108,7 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_CPU_REG_TXQ,           150, "PD_FUNC_ID_CPU_REG_TXQ")\
     ENTRY(PD_FUNC_ID_CPU_UNREG_TXQ,         151, "PD_FUNC_ID_CPU_UNREG_TXQ")\
     ENTRY(PD_FUNC_ID_CPU_POLL_RECV,         152, "PD_FUNC_ID_CPU_POLL_RECV")\
-    ENTRY(PD_FUNC_ID_CPU_FREE,              153, "PD_FUNC_ID_CPU_FREE")\
+    ENTRY(PD_FUNC_ID_CPU_FREE_PKT_RES,      153, "PD_FUNC_ID_CPU_FREE_PKT_RES")\
     ENTRY(PD_FUNC_ID_CPU_SEND,              154, "PD_FUNC_ID_CPU_SEND")\
     ENTRY(PD_FUNC_ID_CPU_PAGE_ALLOC,        155, "PD_FUNC_ID_CPU_PAGE_ALLOC")\
     ENTRY(PD_FUNC_ID_CPU_DESCR_ALLOC,       156, "PD_FUNC_ID_CPU_DESCR_ALLOC")\
@@ -3548,7 +3552,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_cpupkt_register_tx_queue);
         PD_UNION_ARGS_FIELD(pd_cpupkt_unregister_tx_queue);
         PD_UNION_ARGS_FIELD(pd_cpupkt_poll_receive);
-        PD_UNION_ARGS_FIELD(pd_cpupkt_free);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_free_pkt_resources);
         PD_UNION_ARGS_FIELD(pd_cpupkt_send);
         PD_UNION_ARGS_FIELD(pd_cpupkt_page_alloc);
         PD_UNION_ARGS_FIELD(pd_cpupkt_descr_alloc);
@@ -3977,7 +3981,7 @@ PD_FUNCP_TYPEDEF(pd_cpupkt_register_rx_queue);
 PD_FUNCP_TYPEDEF(pd_cpupkt_register_tx_queue);
 PD_FUNCP_TYPEDEF(pd_cpupkt_unregister_tx_queue);
 PD_FUNCP_TYPEDEF(pd_cpupkt_poll_receive);
-PD_FUNCP_TYPEDEF(pd_cpupkt_free);
+PD_FUNCP_TYPEDEF(pd_cpupkt_free_pkt_resources);
 PD_FUNCP_TYPEDEF(pd_cpupkt_send);
 PD_FUNCP_TYPEDEF(pd_cpupkt_page_alloc);
 PD_FUNCP_TYPEDEF(pd_cpupkt_descr_alloc);

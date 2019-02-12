@@ -55,7 +55,7 @@ cpupkt_ctxt_alloc_init(uint32_t qid)
 
 hal_ret_t cpupkt_poll_receive(hal::pd::cpupkt_ctxt_t *ctx,
                               cpu_rxhdr_t **cpu_rxhdr,
-                              uint8_t **pkt, size_t *pkt_len)
+                              uint8_t **pkt, size_t *pkt_len, bool *copied_pkt)
 {
     hal::pd::pd_cpupkt_poll_receive_args_t args;
     hal::pd::pd_func_args_t pd_func_args = {0};
@@ -63,6 +63,7 @@ hal_ret_t cpupkt_poll_receive(hal::pd::cpupkt_ctxt_t *ctx,
     args.flow_miss_hdr = cpu_rxhdr;
     args.data = pkt;
     args.data_len = pkt_len;
+    args.copied_pkt = copied_pkt;
     pd_func_args.pd_cpupkt_poll_receive = &args;
 
     return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_POLL_RECV, &pd_func_args);
@@ -93,13 +94,12 @@ hal_ret_t cpupkt_send(hal::pd::cpupkt_ctxt_t *ctx,
     return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND, &pd_func_args);
 }
 
-
 //------------------------------------------------------------------------------
 // Process a pkt from TLS asym pending request queue
 //------------------------------------------------------------------------------
 void process_pending_queues()
 {
-    hal::proxy::tls_poll_asym_pend_req_q();
+  hal::proxy::tls_poll_asym_pend_req_q();
 }
 
 }

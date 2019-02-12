@@ -413,6 +413,12 @@
 #define RDMA_EQ_INTR_TABLE_SIZE              255
 #define RDMA_EQ_INTR_TABLE_SHFT              8
 
+#define CPU_RX_DPR_TABLE_BASE               hbm_cpu_rx_dpr_table_base
+#define CPU_RX_DPR_TABLE_ENTRY_SIZE         8 /* 8B */
+#define CPU_RX_DPR_TABLE_ENTRY_SIZE_SHFT    3 /* 8B */
+#define CPU_RX_DPR_TABLE_SIZE               1024
+#define CPU_RX_DPR_TABLE_SIZE_SHFT          10
+
 #define GC_GLOBAL_TABLE_BASE            hbm_gc_table_base
 
 #define TCP_PROXY_STATS                 tcp_proxy_stats
@@ -479,6 +485,9 @@
 #define TCP_TNMDR_GC_IDX               CAPRI_SEM_TCP_TNMDR_GC_IDX_INC_ADDR
 
 #define TCP_OOQ_ALLOC_IDX              CAPRI_SEM_TCP_OOQ_ALLOC_INF_ADDR 
+
+#define CPU_RX_DPR_ALLOC_IDX           CAPRI_SEM_CPU_RX_DPR_ALLOC_INF_ADDR 
+#define CPU_RX_DPR_FREE_IDX            CAPRI_SEM_CPU_RX_DPR_FREE_INC_ADDR 
 
 #define ARQ_PRODUCER_IDX               0xba00ba60
 #define ARQ_CONSUMER_IDX               0xba00ba68

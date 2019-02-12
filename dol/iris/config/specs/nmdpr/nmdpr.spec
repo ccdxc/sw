@@ -30,3 +30,8 @@ entries :
         haltype     : 32
         type        : DESCR_AOL_VIA_REF
         count       : 1024
+    - entry:
+        name        : CPU_RX_DPR
+        haltype     : 34
+        type        : DESCR_AOL_VIA_REF
+        count       : 1024

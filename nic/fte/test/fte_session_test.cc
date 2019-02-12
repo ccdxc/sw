@@ -129,4 +129,5 @@ TEST_F(fte_session_test, fte_stats)
     EXPECT_NE(stats.cps, 0);
     EXPECT_EQ(stats.softq_req, softq_req+50);
     cout << "CPS: " << stats.cps << endl;
+    cout << "Max. CPS: " << stats.cps_hwm << endl;
 }

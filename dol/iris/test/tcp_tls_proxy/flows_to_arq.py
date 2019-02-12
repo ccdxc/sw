@@ -13,7 +13,7 @@ from bitstring import BitArray
 import iris.test.callbacks.networking.modcbs as modcbs
 import iris.test.callbacks.eth.toeplitz as toeplitz
 
-rnmdpr_big = 0
+cpurx_dpr = 0
 arq = []
 
 def Setup(infra, module):
@@ -27,7 +27,7 @@ def Teardown(infra, module):
     return
 
 def TestCaseSetup(tc):
-    global rnmdpr_big
+    global cpurx_dpr
     global arq
     
     modcbs.TestCaseSetup(tc)
@@ -36,9 +36,9 @@ def TestCaseSetup(tc):
     CpuCbHelper.main(id)
     
     # Clone objects that are needed for verification
-    rnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"])
-    rnmdpr_big.GetMeta()
-    rnmdpr_big.GetRingEntries([rnmdpr_big.pi])
+    cpurx_dpr = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["CPU_RX_DPR"])
+    cpurx_dpr.GetMeta()
+    cpurx_dpr.GetRingEntries([cpurx_dpr.pi])
     for i in range(3):
         arqid = ('CPU%04d_ARQ' % i)
         arq.insert(i, copy.deepcopy(tc.infra_data.ConfigStore.objects.db[arqid]))
@@ -69,7 +69,7 @@ def getCpuId(tc, step):
 
 
 def TestCaseStepVerify(tc, step):
-    global rnmdpr_big
+    global cpurx_dpr
     global arq
 
     cpu_id = getCpuId(tc, step)
@@ -79,17 +79,17 @@ def TestCaseStepVerify(tc, step):
         return True
 
     # 1. Fetch current values from Platform
-    rnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["RNMDPR_BIG"]
-    rnmdpr_big_cur.GetMeta()
+    cpurx_dpr_cur = tc.infra_data.ConfigStore.objects.db["CPU_RX_DPR"]
+    cpurx_dpr_cur.GetMeta()
     arqid = 'CPU%04d_ARQ' % cpu_id
     arq_cur = tc.infra_data.ConfigStore.objects.db[arqid]
     arq_cur.GetMeta()
     arq_cur.GetRingEntries([arq[cpu_id].pi])
     arq_cur.GetRingEntryAOL([arq[cpu_id].pi])
 
-    # 2. Verify PI for RNMDPR_BIG got incremented by 1
-    if (rnmdpr_big_cur.pi != rnmdpr_big.pi+1):
-        print("RNMDPR_BIG pi check failed old %d new %d" % (rnmdpr_big.pi, rnmdpr_big_cur.pi))
+    # 2. Verify PI for CPU_RX_DPR got incremented by 1
+    if (cpurx_dpr_cur.pi != cpurx_dpr.pi+1):
+        print("CPU_RX_DPR pi check failed old %d new %d" % (cpurx_dpr.pi, cpurx_dpr_cur.pi))
         return False
 
 
@@ -103,13 +103,13 @@ def TestCaseStepVerify(tc, step):
     # get descriptor after clearing valid bit
     descr_addr = arq_cur.ringentries[arq[cpu_id].pi].handle
     descr_addr = descr_addr & ((1 << 63) - 1)
-    if rnmdpr_big.ringentries[rnmdpr_big.pi].handle != descr_addr:
-        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (rnmdpr_big.ringentries[rnmdpr_big.pi].handle, descr_addr))
+    if cpurx_dpr.ringentries[cpurx_dpr.pi].handle != descr_addr:
+        print("Descriptor handle not as expected in ringentries 0x%x 0x%x" % (cpurx_dpr.ringentries[cpurx_dpr.pi].handle, descr_addr))
         return False
 
     # update all queues for the next step
-    rnmdpr_big.GetMeta()
-    rnmdpr_big.GetRingEntries([rnmdpr_big.pi])
+    cpurx_dpr.GetMeta()
+    cpurx_dpr.GetRingEntries([cpurx_dpr.pi])
     arq[cpu_id].GetMeta()
     return True
 

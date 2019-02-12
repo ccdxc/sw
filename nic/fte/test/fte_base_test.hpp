@@ -102,8 +102,9 @@ public:
     static hal_handle_t add_nat_mapping(hal_handle_t vrfh, uint32_t v4_addr,
                                         hal_handle_t poolh, uint32_t *mapped_ip);
 
-    static hal_ret_t inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len);
-    static hal_ret_t inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,std::vector<uint8_t *> &pkts, size_t pkt_len);
+    static hal_ret_t inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pkt_arg);
+    static hal_ret_t inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,std::vector<uint8_t *> &pkts, size_t pkt_len,
+                                bool copied_pkt_arg);
 
     static hal_ret_t inject_eth_pkt(const fte::lifqid_t &lifq,
                                     hal_handle_t src_ifh, hal_handle_t src_l2segh,

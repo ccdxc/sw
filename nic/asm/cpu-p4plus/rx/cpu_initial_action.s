@@ -38,7 +38,7 @@ cpu_rx_hash_key:
                             table_read_DESC_SEMAPHORE)
 
 table_read_DESC_SEMAPHORE:
-    addi    r3, r0, RNMDPR_ALLOC_IDX 
+    addi    r3, r0, CPU_RX_DPR_ALLOC_IDX
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, 
                          cpu_rx_read_desc_pindex_start,
                          r3,

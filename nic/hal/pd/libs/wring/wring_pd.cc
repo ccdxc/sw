@@ -8,6 +8,7 @@
 #include "platform/capri/capri_common.hpp"
 #include "nic/include/capri_barco.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
+#include "nic/sdk/lib/pal/pal.hpp"
 
 #define ARM_CPU_RING_SIZE  4096
 
@@ -94,7 +95,7 @@ wring_pd_meta_init() {
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, CAPRI_SESQ_RING_SLOTS,
             DEFAULT_WRING_SLOT_SIZE, "", 0, 0, NULL, NULL, false,
             2, // ring_types_in_region (SESQ + ASESQ)
-            0};
+			   0, 1};
 
     g_meta[types::WRING_TYPE_SESQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_SESQ, CAPRI_SESQ_RING_SLOTS,
@@ -112,15 +113,15 @@ wring_pd_meta_init() {
     g_meta[types::WRING_TYPE_ARQRX] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ARQRX, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
                             "", 0, 0, armq_slot_parser, arqrx_get_hw_meta,
-                            false, 1, 0};
+			   false, 1, 0, 1};
 
     g_meta[types::WRING_TYPE_ASQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASQ, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
-                            "", 0, 0, NULL, NULL, false, 1, 0};
+			   "", 0, 0, NULL, NULL, false, 1, 0, 1};
 
     g_meta[types::WRING_TYPE_ASCQ] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_ASCQ, ARM_CPU_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
-                            "", 0, 0, armq_slot_parser, NULL, false, 1, 0};
+			   "", 0, 0, armq_slot_parser, NULL, false, 1, 0, 1};
 
     g_meta[types::WRING_TYPE_APP_REDIR_RAWC] =
         (pd_wring_meta_t) {false, CAPRI_HBM_REG_APP_REDIR_RAWC, 1024, DEFAULT_WRING_SLOT_SIZE, "", 0, 0,
@@ -144,15 +145,21 @@ wring_pd_meta_init() {
                            CAPRI_HBM_GC_PER_PRODUCER_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, "", 0, 0, NULL, NULL, false, 1, 0};
     
-    g_meta[types::WRING_TYPE_CPUDR] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_CPUDR, 
-                           CAPRI_HBM_CPUDR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
-                           CAPRI_HBM_REG_CPU_DESCR, 128, 0, NULL, NULL, false, 1, 0};
+    g_meta[types::WRING_TYPE_CPU_TX_DR] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_CPU_TX_DR, 
+                           CAPRI_HBM_CPU_TX_DR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
+                           CAPRI_HBM_REG_CPU_TX_DESCR, 128, 0, NULL, NULL, false, 1, 0, 1};
 
-    g_meta[types::WRING_TYPE_CPUPR] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_CPUPR,
-                           CAPRI_HBM_CPUPR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
-                           CAPRI_HBM_REG_CPU_PAGE, 128, 0, NULL, NULL, false, 1, 0};
+    g_meta[types::WRING_TYPE_CPU_TX_PR] =
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_CPU_TX_PR,
+                           CAPRI_HBM_CPU_TX_PR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
+                           CAPRI_HBM_REG_CPU_TX_PAGE, CAPRI_CPU_TX_PR_OBJ_TOTAL_SIZE, 0, NULL, NULL, false, 1, 0, 1};
+
+    g_meta[types::WRING_TYPE_CPU_RX_DPR] =
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_CPU_RX_DPR,
+                           CAPRI_HBM_CPU_RX_DPR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
+                           CAPRI_HBM_REG_CPU_RX_DESC_PAGE, CAPRI_CPU_RX_DPR_OBJ_TOTAL_SIZE,
+			   CAPRI_SEM_CPU_RX_DPR_ALLOC_RAW_ADDR, NULL, NULL, false, 0, 0, 1};
 
     /* Descriptor-Page Combined Allocator rings */
     g_meta[types::WRING_TYPE_NMDPR_SMALL_TX] =
@@ -295,16 +302,46 @@ wring_pd_get_base_addr(types::WRingType type, uint32_t wring_id, wring_hw_id_t* 
 }
 
 hal_ret_t
-wring_pd_table_init(types::WRingType type, uint32_t wring_id)
+wring_pd_table_init (types::WRingType type, uint32_t wring_id)
 {
     hal_ret_t           ret = HAL_RET_OK;
     pd_wring_meta_t     *meta = &g_meta[type];
-    wring_hw_id_t       wring_base;
+    wring_hw_id_t       wring_base = 0;
+    wring_hw_id_t       wring_obj_base = 0;
+    uint32_t            obj_reg_size = 0;
 
     ret = wring_pd_get_base_addr(type, wring_id, &wring_base);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Could not find the wring base addr");
         return ret;
+    }
+
+    /*
+     * We'll cache the base-address for faster lookups.
+     */
+    meta->base_addr[wring_id] = wring_base;
+
+    /*
+     * If we have an object region for this Wring, we'll cache the object
+     * region base-address too, for faster lookups.
+     */
+    if (meta->obj_size) {
+        wring_obj_base = get_mem_addr(meta->obj_hbm_reg_name);
+        if (wring_obj_base == INVALID_MEM_ADDRESS) {
+	    HAL_TRACE_ERR("Could not find base addr for {} region", meta->obj_hbm_reg_name);
+	    return HAL_RET_ERR;
+        }
+
+	obj_reg_size = meta->num_slots * meta->obj_size;
+        if (meta->is_global) {
+            meta->obj_base_addr[0] = wring_obj_base;
+        } else {
+            wring_obj_base += (wring_id * obj_reg_size);
+	    meta->obj_base_addr[wring_id] = wring_obj_base;
+        }
+	HAL_TRACE_DEBUG("base-addr {:#x} size {} KB obj-base-addr {:#x} size {} KB",
+			wring_base, get_mem_size_kb(meta->hbm_reg_name),
+			wring_obj_base, get_mem_size_kb(meta->obj_hbm_reg_name));
     }
 
     uint32_t reg_size = get_mem_size_kb(meta->hbm_reg_name);
@@ -314,7 +351,7 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
     }
 
     uint32_t required_size = meta->num_slots * meta->slot_size_in_bytes *
-        meta->ring_types_in_region;
+                    meta->ring_types_in_region ? meta->ring_types_in_region : 1;
     SDK_ASSERT(reg_size * 1024 >= required_size);
 
     // Allocate memory for storing value for a slot
@@ -344,6 +381,58 @@ wring_pd_table_init(types::WRingType type, uint32_t wring_id)
         val32 = 0;
         sdk::asic::asic_reg_write(meta->alloc_semaphore_addr, &val32);
     }
+
+    /*
+     * If the 'mmap_ring' flag is set, then we want to memory-map the HBM region of
+     * this ring into our process, so we can do direct memory read/write access without
+     * having to go thru the PAL/asic-rw APIs which need a translation/copy from the
+     * physical region to the virtual address of this process.
+     */
+    if (!is_platform_type_haps() && !is_platform_type_hw()) {
+        return(HAL_RET_OK);
+    }
+    if (!meta->mmap_ring || meta->virt_base_addr[wring_id]) return(HAL_RET_OK);
+
+    /*
+     * This should not happen for the CPU interested Rings which are not
+     * per-flow rings.
+     */
+    if (wring_id > MAX_WRING_IDS) {
+        HAL_TRACE_ERR("Invalid wrind_id {}, failed to mmap ring memory for Q:{}",
+		      wring_id, type);
+        return(HAL_RET_ERR);
+    }
+
+    meta->virt_base_addr[wring_id] = (uint8_t *)sdk::lib::pal_mem_map(wring_base,
+								       meta->num_slots *
+								       meta->slot_size_in_bytes);
+     if (!meta->virt_base_addr[wring_id]) {
+	 HAL_TRACE_ERR("Failed to mmap the Ring(T:{}, Q:{})", type, wring_id);
+	 return HAL_RET_NO_RESOURCE;
+     }
+     else {
+	 HAL_TRACE_ERR("mmap the WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
+		       type, wring_id, (uint64_t)wring_base, (uint64_t)meta->virt_base_addr[wring_id],
+		       ((meta->num_slots * meta->slot_size_in_bytes)/1024));
+     }
+
+     /*
+      * If the object ring is present, lets memory-map the object memory region too.
+      */
+     if (meta->obj_size) {
+	 meta->virt_obj_base_addr[wring_id] = (uint8_t *)sdk::lib::pal_mem_map(wring_obj_base,
+									       obj_reg_size);
+	 if (!meta->virt_obj_base_addr[wring_id]) {
+             HAL_TRACE_ERR("Failed to mmap the OBJ Ring(T:{}, Q:{})", type, wring_id);
+	     return HAL_RET_NO_RESOURCE;
+	 }
+	 else {
+	     HAL_TRACE_ERR("mmap the OBJ WRing(T:{}, Q:{}) phy {:#x} @ virt {:#x}, size: {} KB",
+			   type, wring_id, (uint64_t)wring_obj_base,
+			   (uint64_t)meta->virt_obj_base_addr[wring_id], (obj_reg_size/1024));
+	 }
+    }
+
     return HAL_RET_OK;
 }
 

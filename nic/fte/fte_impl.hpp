@@ -12,7 +12,7 @@ cpupkt_ctxt_alloc_init(uint32_t qid);
 
 hal_ret_t cpupkt_poll_receive(hal::pd::cpupkt_ctxt_t *ctx,
                               fte::cpu_rxhdr_t **cpu_rxhdr,
-                              uint8_t **pkt, size_t *pkt_len);
+                              uint8_t **pkt, size_t *pkt_len, bool *copied_pkt);
 
 
 hal_ret_t cpupkt_send(hal::pd::cpupkt_ctxt_t *ctx,

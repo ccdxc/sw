@@ -1154,6 +1154,9 @@ func fteTxRxStatsShow(stats *halproto.Stats) {
 		fmt.Printf("%s%-15d\n", "Cpu Tx Page Cindex  : ", glbl.GetCpuTxPageCindex())
 		fmt.Printf("%s%-15d\n", "Cpu Tx Descr Pindex : ", glbl.GetCpuTxDescrPindex())
 		fmt.Printf("%s%-15d\n", "Cpu Tx Descr Cindex : ", glbl.GetCpuTxDescrCindex())
+		fmt.Printf("%s%-15d\n", "Cpu Rx DPR Cindex   : ", glbl.GetCpuRxDprCindex())
+		fmt.Printf("%s%-15d\n", "Cpu Rx DPR SEM Cindex   : ", glbl.GetCpuRxDprSemCindex())
+		fmt.Printf("%s%-15d\n", "Cpu Rx DPR Descr Free Errors : ", glbl.GetCpuRxDprDescrFreeErr())
 
 		fteid++
 	}
@@ -1174,7 +1177,8 @@ func fteStatsShow(stats *halproto.Stats) {
 		fmt.Printf("\n%s\n", strings.Repeat("-", 15))
 		fmt.Printf("%s%-3d\n", "FTE ID   : ", fteid)
 		fmt.Printf("%s\n", strings.Repeat("-", 15))
-		fmt.Printf("\n%s%-15d\n", "Connection per-second		:", ftestatsinfo.GetConnPerSecond())
+		fmt.Printf("\n%s%-15d\n", "Connection per-second          :", ftestatsinfo.GetConnPerSecond())
+		fmt.Printf("%s%-15d\n", "Max. Connection per-second     :", ftestatsinfo.GetMaxConnPerSec())
 		fmt.Printf("%s%-15d\n", "Flow-miss Packets		:", ftestatsinfo.GetFlowMissPkts())
 		fmt.Printf("%s%-15d\n", "Redir Packets			:", ftestatsinfo.GetRedirPkts())
 		fmt.Printf("%s%-15d\n", "Cflow Packets			:", ftestatsinfo.GetCflowPkts())

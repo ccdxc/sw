@@ -2645,6 +2645,9 @@ system_fte_txrx_stats_get(SystemResponse *rsp)
         global_info->set_cpu_tx_page_cindex(txrx_stats.glinfo.cpu_tx_page_cindex);
         global_info->set_cpu_tx_descr_pindex(txrx_stats.glinfo.cpu_tx_descr_pindex);
         global_info->set_cpu_tx_descr_cindex(txrx_stats.glinfo.cpu_tx_descr_cindex);
+        global_info->set_cpu_rx_dpr_cindex(txrx_stats.glinfo.cpu_rx_dpr_cindex);
+        global_info->set_cpu_rx_dpr_sem_cindex(txrx_stats.glinfo.cpu_rx_dpr_sem_cindex);
+        global_info->set_cpu_rx_dpr_descr_free_err(txrx_stats.glinfo.cpu_rx_dpr_descr_free_err);
 
         for (int i = 0; i < FTE_MAX_CPU_QUEUES; i++) {
             //for number of queues
@@ -2695,6 +2698,7 @@ system_fte_stats_get(SystemResponse *rsp)
         fte_stats = fte_global_stats->add_fte_stats_info();
 
         fte_stats->set_conn_per_second(per_fte_stats.cps);
+        fte_stats->set_max_conn_per_sec(per_fte_stats.cps_hwm);
         fte_stats->set_flow_miss_pkts(per_fte_stats.flow_miss_pkts);
         fte_stats->set_redir_pkts(per_fte_stats.redirect_pkts);
         fte_stats->set_cflow_pkts(per_fte_stats.cflow_pkts);

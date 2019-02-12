@@ -290,7 +290,7 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp1) {
     alg_state.app_session = &app_sess;
     rpc_info.pkt_type = PDU_NONE;
     rxhdr.payload_offset = MSRPC_BIND_REQ1_PAYLOAD_OFFSET;
-    ctx1.init(&rxhdr, MSRPC_BIND_REQ1, MSRPC_BIND_REQ1_SZ, iflow, rflow, feature_state, num_features);
+    ctx1.init(&rxhdr, MSRPC_BIND_REQ1, MSRPC_BIND_REQ1_SZ, true, iflow, rflow, feature_state, num_features);
     ctx1.set_key(key);
     ctx1.set_feature_name(FEATURE_RPC, 0);
     ctx1.register_feature_session_state(&alg_state.fte_feature_state);
@@ -303,7 +303,7 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp1) {
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_BIND_RSP1_PAYLOAD_OFFSET;
-    ctx2.init(&rxhdr, MSRPC_BIND_RSP1, MSRPC_BIND_RSP1_SZ, iflow, rflow, feature_state, num_features);
+    ctx2.init(&rxhdr, MSRPC_BIND_RSP1, MSRPC_BIND_RSP1_SZ, true, iflow, rflow, feature_state, num_features);
     ctx2.set_key(key);
     ctx2.set_feature_name(FEATURE_RPC, 0);
     ctx2.register_feature_session_state(&alg_state.fte_feature_state);
@@ -315,7 +315,7 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp1) {
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_REQ1_PAYLOAD_OFFSET;
-    ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, iflow, rflow, feature_state, num_features);
+    ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, true, iflow, rflow, feature_state, num_features);
     ctx3.set_key(key);
     ctx3.set_feature_name(FEATURE_RPC, 0);
     ctx3.register_feature_session_state(&alg_state.fte_feature_state);
@@ -327,7 +327,7 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp1) {
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_RSP1_PAYLOAD_OFFSET;
-    ctx4.init(&rxhdr, MSRPC_EPM_RSP1, MSRPC_EPM_RSP1_SZ, iflow, rflow, feature_state, num_features);
+    ctx4.init(&rxhdr, MSRPC_EPM_RSP1, MSRPC_EPM_RSP1_SZ, true, iflow, rflow, feature_state, num_features);
     ctx4.set_key(key);
     ctx4.set_feature_name(FEATURE_RPC, 0);
     ctx4.register_feature_session_state(&alg_state.fte_feature_state);
@@ -361,7 +361,7 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp2) {
     alg_state.isCtrl = TRUE;
     rpc_info.pkt_type = PDU_NONE;
     rxhdr.payload_offset = MSRPC_BIND_REQ2_PAYLOAD_OFFSET;
-    ctx1.init(&rxhdr, MSRPC_BIND_REQ2, MSRPC_BIND_REQ2_SZ, iflow, rflow, feature_state, num_features);
+    ctx1.init(&rxhdr, MSRPC_BIND_REQ2, MSRPC_BIND_REQ2_SZ, true, iflow, rflow, feature_state, num_features);
     ctx1.set_key(key);
     ctx1.set_feature_name(FEATURE_RPC, 0);
     ctx1.register_feature_session_state(&alg_state.fte_feature_state);
@@ -374,7 +374,7 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp2) {
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_BIND_RSP2_PAYLOAD_OFFSET;
-    ctx2.init(&rxhdr, MSRPC_BIND_RSP2, MSRPC_BIND_RSP2_SZ, iflow, rflow, feature_state, num_features);
+    ctx2.init(&rxhdr, MSRPC_BIND_RSP2, MSRPC_BIND_RSP2_SZ, true, iflow, rflow, feature_state, num_features);
     ctx2.set_key(key);
     ctx2.set_feature_name(FEATURE_RPC, 0);
     ctx2.register_feature_session_state(&alg_state.fte_feature_state);
@@ -386,7 +386,7 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp2) {
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_REQ1_PAYLOAD_OFFSET;
-    ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, iflow, rflow, feature_state, num_features);
+    ctx3.init(&rxhdr, MSRPC_EPM_REQ1, MSRPC_EPM_REQ1_SZ, true, iflow, rflow, feature_state, num_features);
     ctx3.set_key(key);
     ctx3.set_feature_name(FEATURE_RPC, 0);
     ctx3.register_feature_session_state(&alg_state.fte_feature_state);
@@ -398,7 +398,7 @@ TEST_F(msrpc_parse_test, msrpc_parse_bind_req_rsp2) {
 
     memset(&rxhdr, 0, sizeof(cpu_rxhdr_t));
     rxhdr.payload_offset = MSRPC_EPM_RSP1_PAYLOAD_OFFSET;
-    ctx4.init(&rxhdr, MSRPC_EPM_RSP1, MSRPC_EPM_RSP1_SZ, iflow, rflow, feature_state, num_features);
+    ctx4.init(&rxhdr, MSRPC_EPM_RSP1, MSRPC_EPM_RSP1_SZ, true, iflow, rflow, feature_state, num_features);
     ctx4.set_key(key);
     ctx4.set_feature_name(FEATURE_RPC, 0);
     ctx4.register_feature_session_state(&alg_state.fte_feature_state);

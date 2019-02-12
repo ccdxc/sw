@@ -282,11 +282,13 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
     i++;
 
-
+    /*
+     * We use a separate CPU-only descriptor/page region for PMD packet data.
+     */
     symbols[i].name = "cpu_read_desc_pindex.bin";
     symbols[i].num_params = 1;
-    symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_RX);
+    symbols[i].params[0].name = CPU_RX_DPR_TABLE_BASE;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_CPU_RX_DPR);
     i++;
 
     symbols[i].name = "cpu_tx_read_asq_descr.bin";

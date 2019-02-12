@@ -186,14 +186,14 @@ ctx_t::init(const lifqid_t &lifq, feature_state_t feature_state[], uint16_t num_
 // Initialize the context from incoming pkt
 //------------------------------------------------------------------------------
 hal_ret_t
-ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
+ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pkt,
             flow_t iflow[], flow_t rflow[],
             feature_state_t feature_state[], uint16_t num_features)
 {
     hal_ret_t ret;
 
-    HAL_TRACE_DEBUG("fte: rxpkt cpu_rxhdr={}",
-                    hex_str((uint8_t*)cpu_rxhdr, sizeof(*cpu_rxhdr)));
+    HAL_TRACE_DEBUG("fte: rxpkt{} cpu_rxhdr={}",
+                    copied_pkt ? "(copy)" : "", hex_str((uint8_t*)cpu_rxhdr, sizeof(*cpu_rxhdr)));
 
     HAL_TRACE_DEBUG("fte: rxpkt len={} pkt={}", pkt_len, hex_str(pkt, (pkt_len >=128)?128:pkt_len));
 
@@ -246,6 +246,7 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
     cpu_rxhdr_ = cpu_rxhdr;
     pkt_ = pkt;
     pkt_len_ = pkt_len;
+    copied_pkt_ = copied_pkt;
 
     if ((cpu_rxhdr->lif == HAL_LIF_CPU) || app_redir_pkt_rx_raw(*this) ||
         (tcp_close())) {

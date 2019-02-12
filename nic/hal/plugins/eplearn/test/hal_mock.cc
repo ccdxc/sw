@@ -10,11 +10,12 @@ hal::vrf_t *temp_ten;
 hal::ep_t *temp_dep;
 ipvx_addr_t            sip;          // source IP address
 ipvx_addr_t            dip;
-hal_ret_t fte::ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
+hal_ret_t fte::ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pkt,
                            flow_t iflow[], flow_t rflow[],
                            feature_state_t feature_state[], uint16_t num_features) {
     this->pkt_ = pkt;
     this->pkt_len_ = pkt_len;
+    this->copied_pkt_ = copied_pkt;
     this->cpu_rxhdr_ = cpu_rxhdr;
     this->sep_ = temp_ep;
     this->dep_ = temp_dep;
@@ -34,7 +35,7 @@ hal_ret_t fte::ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len,
 
 void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
         hal::ep_t *dep, ip_addr_t *souce_ip, ip_addr_t *dest_ip, fte::cpu_rxhdr_t *cpu_rxhdr,
-        uint8_t *pkt, size_t pkt_len,
+        uint8_t *pkt, size_t pkt_len, bool copied_pkt,
         fte::flow_t iflow[], fte::flow_t rflow[], fte::feature_state_t feature_state[])
 {
     temp_ep = ep;
@@ -46,7 +47,7 @@ void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
     if (dest_ip) {
         dip = dest_ip->addr;
     }
-    ctx.init(cpu_rxhdr, pkt, pkt_len, iflow, rflow, feature_state, 0);
+    ctx.init(cpu_rxhdr, pkt, pkt_len, copied_pkt, iflow, rflow, feature_state, 0);
 }
 
 hal_ret_t fte::ctx_t::process()

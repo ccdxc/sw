@@ -35,6 +35,8 @@ struct pd_wring_s {
 typedef hal_ret_t (*wring_slot_parser)(pd_wring_meta_t *meta, wring_t *wring, uint8_t *slot);
 typedef hal_ret_t (*wring_get_hw_meta)(pd_wring_t* wring_pd);
 
+#define MAX_WRING_IDS 16 // CPU Cores/threads
+
 struct pd_wring_meta_s {
     bool        is_global;
     char        hbm_reg_name[64];
@@ -48,6 +50,11 @@ struct pd_wring_meta_s {
     bool        skip_init_slots;
     uint32_t    ring_types_in_region;
     uint32_t    ring_type_offset;
+    bool        mmap_ring; // Whether ring to be memmap'ed for direct access
+    wring_hw_id_t base_addr[MAX_WRING_IDS];
+    wring_hw_id_t obj_base_addr[MAX_WRING_IDS];
+    uint8_t     *virt_base_addr[MAX_WRING_IDS]; // Virtual address of the ring base in memory
+    uint8_t     *virt_obj_base_addr[MAX_WRING_IDS]; // Virt addr of the object ring base in memory
 } __PACK__;
 
 // initialize a wring pd instance

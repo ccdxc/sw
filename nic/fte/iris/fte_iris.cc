@@ -859,6 +859,7 @@ void free_flow_miss_pkt(uint8_t * pkt)
     HAL_TRACE_DEBUG("free flow miss packet");
     hal::free_to_slab(hal::HAL_SLAB_CPU_PKT, (pkt-sizeof(cpu_rxhdr_t)));
 }
+
 //------------------------------------------------------------------------------
 // Queues pkt for transmission on ASQ at the end of pipeline processing,
 // after updating the flow table
@@ -948,16 +949,38 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 {
     hal_ret_t ret;
 
-    // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
-    if (pkt_ != NULL && txpkt_cnt_ == 0 && flow_miss()) {
-        if (!drop()) {
-       // This needs to be moved to plugin code
-       //!hal::app_redir::app_redir_pkt_tx_ownership(*this)) {
-            queue_txpkt(pkt_, pkt_len_, NULL, NULL, HAL_LIF_CPU, 
+    if (pkt_ != NULL && txpkt_cnt_ == 0) {
+
+        if (flow_miss() && !drop()) {
+
+	    // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
+	    // This needs to be moved to plugin code
+            //!hal::app_redir::app_redir_pkt_tx_ownership(*this)) {
+	    queue_txpkt(pkt_, pkt_len_, NULL, NULL, HAL_LIF_CPU, 
                         CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ, 
-                        types::WRING_TYPE_ASQ, free_flow_miss_pkt);
-         } else {
-             free_flow_miss_pkt(pkt_);
+                        types::WRING_TYPE_ASQ, copied_pkt_ ? free_flow_miss_pkt : NULL);
+	} else {
+
+             /*
+              * If the 'copied_pkt' is not set, then this is not a packet buffer
+              * that we've allocated from slab, so no need to free it.
+              */
+	     if (copied_pkt_) {
+                 free_flow_miss_pkt(pkt_);
+	     } else {
+
+	         /*
+		  * Hand-over the packet to cpupkt library, to free any resources allocated
+		  * from the data-path for this packet.
+		  */
+                 hal::pd::pd_cpupkt_free_pkt_resources_args_t args;
+                 hal::pd::pd_func_args_t pd_func_args = {0};
+                 args.ctxt = arm_ctx;
+                 args.pkt = (pkt_ - sizeof(cpu_rxhdr_t));
+                 pd_func_args.pd_cpupkt_free_pkt_resources = &args;
+		 
+                 hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_FREE_PKT_RES, &pd_func_args);
+	     }
          }
     }
 

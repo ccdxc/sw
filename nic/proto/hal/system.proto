@@ -302,8 +302,9 @@ message FTEStatsInfo {
   uint64                   tls_proxy_pkts    = 6;
   uint64                   softq_reqs        = 7;
   uint64                   queued_tx_pkts    = 8;
-  repeated FTEError        fte_errors        = 9;
-  repeated FTEFeatureStats feature_stats     = 10;
+  uint64                   max_conn_per_sec  = 9;
+  repeated FTEError        fte_errors        = 10;
+  repeated FTEFeatureStats feature_stats     = 11;
 }
 
 // FTE Global Stats
@@ -350,6 +351,9 @@ message QGlobalInfo {
   uint32  cpu_tx_page_cindex  = 3;
   uint32  cpu_tx_descr_pindex = 4;
   uint32  cpu_tx_descr_cindex = 5;
+  uint32  cpu_rx_dpr_cindex   = 6;
+  uint32  cpu_rx_dpr_sem_cindex = 7;
+  uint32  cpu_rx_dpr_descr_free_err = 8;
 }
 
 message QInfo {

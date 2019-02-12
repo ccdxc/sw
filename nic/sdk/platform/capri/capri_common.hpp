@@ -71,6 +71,7 @@ namespace capri {
 #define CAPRI_SEM_RNMDPR_SMALL_ALLOC_ADDR   (CAPRI_MEM_SEMA_START + 8 * 21)
 #define CAPRI_SEM_TNMDPR_BIG_ALLOC_ADDR     (CAPRI_MEM_SEMA_START + 8 * 22)
 #define CAPRI_SEM_RNMDPR_BIG_ALLOC_ADDR     (CAPRI_MEM_SEMA_START + 8 * 23)
+#define CAPRI_SEM_CPU_RX_DPR_ALLOC_ADDR     (CAPRI_MEM_SEMA_START + 8 * 24)
 
 #define CAPRI_SEM_TCP_OOQ_ALLOC_ADDR            (CAPRI_MEM_SEMA_START + 8 * 24)
 
@@ -297,6 +298,26 @@ namespace capri {
 #define CAPRI_SEM_RNMDPR_BIG_ALLOC_INF_ADDR     \
                             (CAPRI_SEM_RNMDPR_BIG_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
 
+#define CAPRI_CPU_RX_DPR_RING_SHIFT         10
+#define CAPRI_CPU_RX_DPR_RING_SIZE          (1 << CAPRI_CPU_RX_DPR_RING_SHIFT)
+#define CAPRI_CPU_RX_DPR_RING_MASK          ((1 << CAPRI_CPU_RX_DPR_RING_SHIFT) - 1)
+#define CAPRI_CPU_RX_DPR_OBJ_OVERHEADS      (128) /* Descriptor size for now, page metadata overheads TBD */
+#define CAPRI_CPU_RX_DPR_OBJ_TOTAL_SIZE     (10 * 1024)
+                                                // 10K for now, actually (9216 + CAPRI_CPU_RX_DPR_OBJ_OVERHEADS)
+#define CAPRI_CPU_TX_PR_OBJ_TOTAL_SIZE      (10 * 1024)
+                                                // 10K for now, actually (9216 + CAPRI_CPU_RX_DPR_OBJ_OVERHEADS)
+#define CAPRI_CPU_RX_DPR_PAGE_OFFSET        CAPRI_CPU_RX_DPR_OBJ_OVERHEADS
+
+#define CAPRI_SEM_CPU_RX_DPR_ALLOC_RAW_ADDR     \
+                            (CAPRI_SEM_CPU_RX_DPR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET)
+#define CAPRI_SEM_CPU_RX_DPR_ALLOC_CI_RAW_ADDR     \
+                            (CAPRI_SEM_CPU_RX_DPR_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET + \
+                             CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
+#define CAPRI_SEM_CPU_RX_DPR_ALLOC_INC_ADDR     \
+                            (CAPRI_SEM_CPU_RX_DPR_ALLOC_ADDR + CAPRI_SEM_INC_OFFSET)
+#define CAPRI_SEM_CPU_RX_DPR_ALLOC_INF_ADDR     \
+                            (CAPRI_SEM_CPU_RX_DPR_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
+
 #define CAPRI_NMDPR_OBJ_OVERHEADS           (128) /* Descriptor size for now, page metadata overheads TBD */
 #define CAPRI_NMDPR_SMALL_OBJ_TOTAL_SIZE    (2048 + CAPRI_NMDPR_OBJ_OVERHEADS)
 #define CAPRI_NMDPR_BIG_OBJ_TOTAL_SIZE      (9216 + CAPRI_NMDPR_OBJ_OVERHEADS)
@@ -355,8 +376,9 @@ namespace capri {
 #define CAPRI_SEM_ASCQ_INF_ADDR(_queue_id)                              \
                             (CAPRI_SEM_ASCQ_ADDR(_queue_id) + CAPRI_SEM_INF_OFFSET)
 
-#define CAPRI_HBM_CPUDR_RING_SIZE              1024
-#define CAPRI_HBM_CPUPR_RING_SIZE              1024
+#define CAPRI_HBM_CPU_TX_DR_RING_SIZE          128
+#define CAPRI_HBM_CPU_TX_PR_RING_SIZE          128
+#define CAPRI_HBM_CPU_RX_DPR_RING_SIZE         1024
 
 // TLS Semaphores
 #define CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR    \

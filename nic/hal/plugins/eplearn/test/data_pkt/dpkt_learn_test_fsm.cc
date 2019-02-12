@@ -65,7 +65,7 @@ init_mac_addresses(void)
 void fte_ctx_init(fte::ctx_t &ctx, hal::vrf_t *ten, hal::ep_t *ep,
         hal::ep_t *dep, ip_addr_t *souce_ip, ip_addr_t *dest_ip,
         fte::cpu_rxhdr_t *cpu_rxhdr,
-        uint8_t *pkt, size_t pkt_len,
+        uint8_t *pkt, size_t pkt_len, bool copied_pkt,
         fte::flow_t iflow[], fte::flow_t rflow[], fte::feature_state_t feature_state[]);
 
 void dpkt_learn_topo_setup()
@@ -314,7 +314,7 @@ hal_ret_t dpkt_learn_packet_send(hal_handle_t ep_handle,
     ip_addr_t dip = {0};
     inet_pton(AF_INET, target_ip_addr, &(dip.addr.v4_addr));
     fte_ctx_init(ctx, dummy_ten,
-            dummy_ep, dst_ep, &sip, &dip, &cpu_rxhdr, &buffer[0], buffer.size(), NULL, NULL, feature_state);
+            dummy_ep, dst_ep, &sip, &dip, &cpu_rxhdr, &buffer[0], buffer.size(), true, NULL, NULL, feature_state);
     ctx.set_feature_name(FTE_FEATURE_EP_LEARN.c_str());
     ret = dpkt_learn_process_packet(ctx);
     ctx.process();

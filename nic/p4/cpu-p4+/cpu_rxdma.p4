@@ -86,7 +86,7 @@ header_type cpu_rxdma_initial_action_with_pc_t {
 header_type read_cpudr_d_t {
     fields {
         desc_pindex         : 32;
-        desc_pindex_full    : 1; 
+        desc_pindex_full    : 8; 
     }
 }
 
@@ -94,7 +94,7 @@ header_type read_cpudr_d_t {
 header_type read_cpupr_d_t {
     fields {
         page_pindex         : 32;
-        page_pindex_full    : 1;
+        page_pindex_full    : 8;
     }
 }
 
