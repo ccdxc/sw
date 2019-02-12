@@ -4,7 +4,6 @@
 */
 /* tslint:disable */
 import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@angular/forms';
-import { minValueValidator, maxValueValidator, enumValidator } from '../generated/telemetry_query/validators';
 import { BaseModel, PropInfoItem } from '../generated/telemetry_query/base-model';
 
 import { Telemetry_queryMetricsResultSeries, ITelemetry_queryMetricsResultSeries } from './telemetry-query-metrics-result-series.model';

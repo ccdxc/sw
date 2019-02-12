@@ -1,5 +1,4 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, ViewChild } from '@angular/core';
-import { Validators } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
@@ -10,7 +9,7 @@ import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
 import { Utility } from '@app/common/Utility';
-import { required } from '@sdk/v1/models/generated/events';
+import { required } from '@sdk/v1/utils/validators';;
 
 @Component({
   selector: 'app-newfwlogpolicy',

@@ -13,7 +13,7 @@ import { Utility } from '@app/common/Utility';
 import { StagingBuffer } from '@sdk/v1/models/generated/staging';
 import { AbstractControl, ValidatorFn } from '@angular/forms';
 
-import { required } from '@sdk/v1/models/generated/auth/validators.ts';
+import { required } from '@sdk/v1/utils/validators';
 
 
 @Component({

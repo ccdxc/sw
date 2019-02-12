@@ -4,7 +4,6 @@
 */
 /* tslint:disable */
 
-export * from './validators';
 export * from './enums';
 export * from './api-interface.model';
 export * from './api-interface-slice.model';

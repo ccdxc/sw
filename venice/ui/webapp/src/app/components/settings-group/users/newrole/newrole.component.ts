@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, OnDestroy, OnChanges, ViewEncapsulation, SimpleChanges } from '@angular/core';
 import { FormArray, Validators, FormGroup, AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
-import { required } from '@sdk/v1/models/generated/auth/validators.ts';
+import { required } from '@sdk/v1/utils/validators';
 import { UsersComponent } from '../users.component';
 import { ErrorStateMatcher } from '@angular/material';
 import { Animations } from '@app/animations';

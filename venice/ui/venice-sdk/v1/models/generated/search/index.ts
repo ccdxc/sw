@@ -4,7 +4,6 @@
 */
 /* tslint:disable */
 
-export * from './validators';
 export * from './enums';
 export * from './api-any.model';
 export * from './api-list-watch-options.model';

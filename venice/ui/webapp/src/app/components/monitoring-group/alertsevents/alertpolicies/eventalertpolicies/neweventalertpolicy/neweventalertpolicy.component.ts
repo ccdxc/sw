@@ -1,5 +1,4 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
-import { Validators } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { BaseComponent } from '@app/components/base/base.component';
@@ -10,7 +9,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringAlertDestination, IMonitoringAlertPolicy, MonitoringAlertPolicy, MonitoringAlertPolicySpec } from '@sdk/v1/models/generated/monitoring';
 import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
-import { required } from '@sdk/v1/models/generated/auth';
+import { required } from '@sdk/v1/utils/validators';
 
 @Component({
   selector: 'app-neweventalertpolicy',

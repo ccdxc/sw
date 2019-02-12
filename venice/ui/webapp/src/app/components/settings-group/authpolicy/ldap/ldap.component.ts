@@ -1,9 +1,9 @@
 import { Component, OnInit, ViewEncapsulation, Output, EventEmitter, Input, ViewChild, ViewChildren, SimpleChanges, OnChanges, AfterViewInit, AfterContentInit } from '@angular/core';
-import { Validators, ValidatorFn, ValidationErrors } from '@angular/forms';
+import { ValidatorFn, ValidationErrors } from '@angular/forms';
 import { AuthpolicybaseComponent } from '@app/components/settings-group/authpolicy/authpolicybase/authpolicybase.component';
 import { Animations } from '@app/animations';
 import { AuthLdap, AuthLdapServer, AuthAuthenticationPolicy } from '@sdk/v1/models/generated/auth';
-import { required } from '@sdk/v1/models/generated/auth/validators.ts';
+import { required } from '@sdk/v1/utils/validators';
 import { FormArray, FormControl, AbstractControl } from '@angular/forms';
 import { MatSlideToggleChange } from '@angular/material';
 

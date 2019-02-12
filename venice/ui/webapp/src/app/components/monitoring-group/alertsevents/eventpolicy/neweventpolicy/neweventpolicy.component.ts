@@ -1,5 +1,4 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewChild, ViewEncapsulation } from '@angular/core';
-import { Validators } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { BaseComponent } from '@app/components/base/base.component';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
@@ -9,7 +8,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MonitoringEventPolicy, IMonitoringEventPolicy, IApiStatus, } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
 import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
-import { required } from '@sdk/v1/models/generated/telemetry_query';
+import { required } from '@sdk/v1/utils/validators';;
 
 @Component({
   selector: 'app-neweventpolicy',

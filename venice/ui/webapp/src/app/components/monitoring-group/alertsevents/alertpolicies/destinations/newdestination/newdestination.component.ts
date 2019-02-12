@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation, ViewChild } from '@angular/core';
-import { FormArray, Validators } from '@angular/forms';
+import { FormArray } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
@@ -11,7 +11,7 @@ import { Observable } from 'rxjs';
 import { BaseComponent } from '@app/components/base/base.component';
 import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
-import { required } from '@sdk/v1/models/generated/events';
+import { required } from '@sdk/v1/utils/validators';;
 
 @Component({
   selector: 'app-newdestination',
