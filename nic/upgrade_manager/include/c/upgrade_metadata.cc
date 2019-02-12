@@ -58,11 +58,13 @@ bool GetUpgCtxTablesFromMeta(string metafile,
     memset(&meta, 0, sizeof(meta));
     if (isVerFromCache) {
         try {
-            read_json(json_cfg, root);
             string img = "mainfwa.system_image";
+            read_json(json_cfg, root);
             if (exists("/nic/tools/fwupdate")) {
-                if (exec("/nic/tools/fwupdate -r") == "mainfwb")
+                UPG_LOG_DEBUG("this is the image {}", exec("/nic/tools/fwupdate -r"));
+                if (exec("/nic/tools/fwupdate -r") == "mainfwb\n") {
                    img = "mainfwb.system_image";
+                }
             }
             UPG_LOG_DEBUG("image {}", img);
             for (ptree::value_type sysimg : root.get_child(img)) {
@@ -107,8 +109,7 @@ bool GetUpgCtxFromMeta(UpgCtx& ctx) {
         string premetafile = "/tmp/running_meta.json";
         mkfile(result, premetafile.c_str());
         ret = GetUpgCtxTablesFromMeta(premetafile, ctx.preUpgMeta, true);
-
-        string postmetacmd = "/bin/tar xfO /update/naples_fw.tar MANIFEST";// + ctx.firmwarePkgName + " MANIFEST";
+        string postmetacmd = "/bin/tar xfO /update/" + ctx.firmwarePkgName + " MANIFEST";
         result = exec(postmetacmd.c_str());
         string postmetafile = "/tmp/upg_meta.json";
         mkfile(result, postmetafile.c_str());

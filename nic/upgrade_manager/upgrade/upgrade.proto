@@ -111,6 +111,7 @@ message UpgStateReq {
     delphi.ObjectMeta      Meta              = 1;
     UpgReqStateType        UpgReqState       = 2 [(delphi.event) = true];
     UpgType                UpgReqType        = 3 [(delphi.event) = true];
+    string                 UpgPkgName        = 4 [(delphi.event) = true];
 }
 
 message UpgAppResp {

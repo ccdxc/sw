@@ -31,7 +31,7 @@ bool UpgPreStateHandler::ImageCompatCheck(UpgCtx &ctx) {
         UPG_LOG_INFO("compat pre kernel {}", ctx.preUpgMeta.kernelVersion);
         UPG_LOG_INFO("compat post nicmgr {}", ctx.postUpgMeta.nicmgrVersion);
         UPG_LOG_INFO("compat post kernel {}", ctx.postUpgMeta.kernelVersion);
-//        return false;
+        return false;
     }
     return true;
 }

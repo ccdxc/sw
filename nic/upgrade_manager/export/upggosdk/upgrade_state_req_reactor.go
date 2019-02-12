@@ -82,6 +82,7 @@ func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrRe
 
 func (ctx *upgstatereqctx) getUpgCtx(obj *upgrade.UpgStateReq) error {
 	upgCtx.upgType = obj.GetUpgReqType()
+	upgCtx.firmwarePkgName = obj.GetUpgPkgName()
 	return getUpgCtxFromMeta(&upgCtx)
 }
 

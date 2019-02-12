@@ -227,12 +227,12 @@ delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
 delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     UPG_LOG_DEBUG("UpgReq got created for {}/{}", req, req->meta().ShortDebugString());
     CreateUpgradeMetrics();
-    if (!GetUpgCtxFromMeta(ctx)) {
-        return delphi::error("GetUpgCtxFromMeta failed");
-    }
     ctx.upgType = req->upgreqtype();
     ctx.firmwarePkgName = req->upgpkgname();
     ctx.sysMgr = sysMgr_;
+    if (!GetUpgCtxFromMeta(ctx)) {
+        return delphi::error("GetUpgCtxFromMeta failed");
+    }
     UpgReqStateType type = UpgStateCompatCheck;
     if (req->upgreqcmd() == IsUpgPossible) {
         UPG_LOG_INFO("CanUpgrade request received");
@@ -276,7 +276,7 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
                 return delphi::error::OK();
             }
         }
-        RETURN_IF_FAILED(createUpgStateReq(type, req->upgreqtype()));
+        RETURN_IF_FAILED(createUpgStateReq(type, req->upgreqtype(), ctx.firmwarePkgName));
     }
 
     return delphi::error::OK();
@@ -310,6 +310,7 @@ delphi::error UpgReqReact::StartUpgrade() {
         }
         UPG_LOG_DEBUG("Old value {}", upgReqStatus->upgreqstate());
         upgReqStatus->set_upgreqstate(UpgStateCompatCheck);
+        upgReqStatus->set_upgpkgname(ctx.firmwarePkgName);
         sdk_->SetObject(upgReqStatus);
         UPG_LOG_DEBUG("Updated Upgrade Request Status UpgStateCompatCheck");
         return delphi::error::OK();
@@ -323,6 +324,7 @@ delphi::error UpgReqReact::AbortUpgrade() {
         upgReqType_ = UpgAbort;
         upgAborted_ = true;
         upgReqStatus->set_upgreqstate(UpgStateAbort);
+        upgReqStatus->set_upgpkgname(ctx.firmwarePkgName);
         sdk_->SetObject(upgReqStatus);
         UPG_LOG_DEBUG("Updated Upgrade Request Status UpgAborted");
         return delphi::error::OK();
@@ -332,14 +334,14 @@ delphi::error UpgReqReact::AbortUpgrade() {
 
 // OnUpgReqCmd gets called when UpgReqCmd attribute changes
 delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
+    ctx.upgType = req->upgreqtype();
+    ctx.firmwarePkgName = req->upgpkgname();
+    ctx.sysMgr = sysMgr_;
     // start or abort?
     if (!GetUpgCtxFromMeta(ctx)) {
         return delphi::error("GetUpgCtxFromMeta failed");
     }
     if (req->upgreqcmd() == UpgStart) {
-        ctx.upgType = req->upgreqtype();
-        ctx.firmwarePkgName = req->upgpkgname();
-        ctx.sysMgr = sysMgr_;
         UPG_LOG_DEBUG("OnUpgReqCmd got upgType {} firmware {}", ctx.upgType, ctx.firmwarePkgName);
         UPG_LOG_INFO("Start Upgrade");
         return StartUpgrade();
@@ -351,11 +353,12 @@ delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
 }
 
 // createUpgStateReq creates a upgrade request status object
-delphi::error UpgReqReact::createUpgStateReq(UpgReqStateType status, UpgType type) {
+delphi::error UpgReqReact::createUpgStateReq(UpgReqStateType status, UpgType type, string pkgName) {
     // create an object
     delphi::objects::UpgStateReqPtr req = make_shared<delphi::objects::UpgStateReq>();
     req->set_upgreqstate(status);
     req->set_upgreqtype(type);
+    req->set_upgpkgname(pkgName);
 
     // add it to database
     sdk_->SetObject(req);
