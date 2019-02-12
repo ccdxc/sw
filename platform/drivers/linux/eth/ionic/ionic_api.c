@@ -75,36 +75,39 @@ EXPORT_SYMBOL_GPL(ionic_api_get_identity);
 
 int ionic_api_get_intr(struct lif *lif, int *irq)
 {
-	struct intr intr_obj = {};
+	struct intr *intr_obj;
 	int err;
 
 	if (!lif->neqs)
 		return -ENOSPC;
 
-	err = ionic_intr_alloc(lif, &intr_obj);
-	if (err)
-		return err;
+	intr_obj = kzalloc(sizeof(*intr_obj), GFP_KERNEL);
+	if (!intr_obj)
+		return -ENOSPC;
 
-	err = ionic_bus_get_irq(lif->ionic, intr_obj.index);
+	err = ionic_intr_alloc(lif, intr_obj);
+	if (err)
+		goto done;
+
+	err = ionic_bus_get_irq(lif->ionic, intr_obj->index);
 	if (err < 0) {
-		ionic_intr_free(lif, &intr_obj);
-		return err;
+		ionic_intr_free(lif, intr_obj->index);
+		goto done;
 	}
 
 	--lif->neqs;
 
 	*irq = err;
-	return intr_obj.index;
+	err = intr_obj->index;
+done:
+	kfree(intr_obj);
+	return err;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_intr);
 
 void ionic_api_put_intr(struct lif *lif, int intr)
 {
-	struct intr intr_obj = {
-		.index = intr
-	};
-
-	ionic_intr_free(lif, &intr_obj);
+	ionic_intr_free(lif, intr);
 
 	++lif->neqs;
 }

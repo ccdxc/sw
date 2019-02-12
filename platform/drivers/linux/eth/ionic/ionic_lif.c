@@ -1083,10 +1083,10 @@ int ionic_intr_alloc(struct lif *lif, struct intr *intr)
 	return 0;
 }
 
-void ionic_intr_free(struct lif *lif, struct intr *intr)
+void ionic_intr_free(struct lif *lif, int index)
 {
-	if (intr->index != INTR_INDEX_NOT_ASSIGNED)
-		clear_bit(intr->index, lif->ionic->intrs);
+	if (index != INTR_INDEX_NOT_ASSIGNED && index < lif->ionic->nintrs)
+		clear_bit(index, lif->ionic->intrs);
 }
 
 static int ionic_intr_remaining(struct ionic *ionic)
@@ -1219,7 +1219,7 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 	return 0;
 
 err_out_free_intr:
-	ionic_intr_free(lif, &new->intr);
+	ionic_intr_free(lif, new->intr.index);
 err_out:
 	dev_err(dev, "qcq alloc of %s%d failed %d\n", name, index, err);
 	return err;
@@ -1248,7 +1248,7 @@ static void ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 			lif->ionic->master_lif->rxqcqs[qcq->master_slot] = NULL;
 	}
 
-	ionic_intr_free(lif, &qcq->intr);
+	ionic_intr_free(lif, qcq->intr.index);
 	dma_free_coherent(dev, qcq->total_size, qcq->base, qcq->base_pa);
 	devm_kfree(dev, qcq->cq.info);
 	devm_kfree(dev, qcq->q.info);
@@ -1968,6 +1968,9 @@ static int ionic_get_features(struct lif *lif)
 		},
 	};
 	int err;
+	unsigned long vlan_flags = ETH_HW_VLAN_TX_TAG |
+				   ETH_HW_VLAN_RX_STRIP |
+				   ETH_HW_VLAN_RX_FILTER;
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -1975,6 +1978,9 @@ static int ionic_get_features(struct lif *lif)
 
 	lif->hw_features = ctx.cmd.features.wanted &
 			   ctx.comp.features.supported;
+
+	if (!(vlan_flags & ctx.comp.features.supported))
+		dev_info(lif->ionic->dev, "NIC is not supporting vlan offload, likely in SmartNIC mode\n");
 
 	if (lif->hw_features & ETH_HW_VLAN_TX_TAG)
 		dev_dbg(dev, "feature ETH_HW_VLAN_TX_TAG\n");

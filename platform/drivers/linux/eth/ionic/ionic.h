@@ -11,7 +11,7 @@
 
 #define DRV_NAME		"ionic"
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
-#define DRV_VERSION		"0.5.0"
+#define DRV_VERSION		"0.6.0"
 
 
 extern unsigned int rx_copybreak;

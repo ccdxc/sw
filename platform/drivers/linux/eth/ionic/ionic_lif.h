@@ -185,7 +185,7 @@ void ionic_lifs_unregister(struct ionic *ionic);
 int ionic_lifs_size(struct ionic *ionic);
 
 int ionic_intr_alloc(struct lif *lif, struct intr *intr);
-void ionic_intr_free(struct lif *lif, struct intr *intr);
+void ionic_intr_free(struct lif *lif, int index);
 int ionic_open(struct net_device *netdev);
 int ionic_stop(struct net_device *netdev);
 
