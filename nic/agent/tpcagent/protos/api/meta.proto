@@ -1,0 +1,40 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for common meta
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package api;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+// TypeMeta contains the metadata about kind and version for all API objects
+message TypeMeta {
+  // Kind represents the type of the API object.
+  string Kind       = 1 [(gogoproto.jsontag) = "kind"];
+  // APIVersion defines the version of the API object. This can only be set by the server
+  string APIVersion = 2 [(gogoproto.jsontag) = "api-version,omitempty"];
+}
+
+message Timestamp {
+  google.protobuf.Timestamp Time = 1 [(gogoproto.nullable) = false, (gogoproto.embed) = true];
+}
+
+// ObjectMeta contains metadata that all objects stored in kvstore must have
+message ObjectMeta {
+  // Name of the object, unique within a Namespace for scoped objects.
+  // Should start and end in an alphanumeric character and can contain alphanumner or ._-: characters
+  // minimum length is 2 and maximum length is 64 characters
+  string Name                 = 1 [(gogoproto.jsontag) = "name"];
+  // UUID is the unique identifier for the object. This is generated on creation of the object.
+  // System generated, not updatable by user.
+  string UUID                 = 2 [(gogoproto.jsontag) = "uuid,omitempty"];
+  // CreationTime is the creation time of the object
+  //  System generated and updated, not updatable by user.
+  Timestamp CreationTime      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "creation-time,omitempty"];
+  // ModTime is the Last Modification time of the object
+  //  System generated and updated, not updatable by user.
+  Timestamp ModTime           = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "mod-time,omitempty"];
+}
