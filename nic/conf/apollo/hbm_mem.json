@@ -123,7 +123,14 @@
             "name": "lpm_v4",
             "_comment": "(1024+1) * (64 + 16 * 64 + 16 * 16 * 64)",
             "size": "18M",
-            "element_size": "18K",
+            "element_size": "17472B",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "lpm_v6",
+            "_comment": "(1024+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
+            "size": "37M",
+            "element_size": "37440B",
             "cache": "p4plus-txdma"
         },
         {
