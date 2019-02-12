@@ -19,7 +19,7 @@ struct s4_t3_tcp_rx_d d;
     .align
     .param tcp_ooo_processing_launch_dummy2
 tcp_ooo_processing_launch_dummy1:
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, tcp_ooo_processing_launch_dummy2)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(2, tcp_ooo_processing_launch_dummy2)
     nop.e
     nop
 

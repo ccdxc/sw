@@ -301,8 +301,6 @@ header_type to_stage_6_phv_t {
     fields {
         bytes_sent              : 16;
         pkts_sent               : 8;
-        debug_num_mem_to_pkt    : 8;
-        debug_num_phv_to_pkt    : 8;
     }
 }
 /******************************************************************************
@@ -837,8 +835,6 @@ action stats() {
     // from to_stage 6
     modify_field(to_s6_scratch.bytes_sent, to_s6.bytes_sent);
     modify_field(to_s6_scratch.pkts_sent, to_s6.pkts_sent);
-    modify_field(to_s6_scratch.debug_num_phv_to_pkt, to_s6.debug_num_phv_to_pkt);
-    modify_field(to_s6_scratch.debug_num_mem_to_pkt, to_s6.debug_num_mem_to_pkt);
 
     // d for stage 6 table 0
 }

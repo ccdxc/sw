@@ -160,6 +160,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->delay_ack = spec.delay_ack();
     tcpcb->ato = spec.ato();
     tcpcb->abc_l_var = spec.abc_l_var();
+    tcpcb->ooo_queue = spec.ooo_queue();
 
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -252,6 +253,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->delay_ack = spec.delay_ack();
     tcpcb->ato = spec.ato();
     tcpcb->abc_l_var = spec.abc_l_var();
+    tcpcb->ooo_queue = spec.ooo_queue();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
@@ -479,35 +481,30 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_delay_ack(rtcpcb.delay_ack);
     rsp->mutable_spec()->set_ato(rtcpcb.ato);
     rsp->mutable_spec()->set_abc_l_var(rtcpcb.abc_l_var);
+    rsp->mutable_spec()->set_ooo_queue(rtcpcb.ooo_queue);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);
+    for (int i = 0; i < NUM_TCP_OOO_QUEUES_PER_FLOW; i++) {
+        TcpCbOoqStatus *ooq =
+            rsp->mutable_status()->add_ooq_status();
+        ooq->set_queue_addr(rtcpcb.ooq_entry[i].queue_addr);
+        ooq->set_start_seq(rtcpcb.ooq_entry[i].start_seq);
+        ooq->set_end_seq(rtcpcb.ooq_entry[i].end_seq);
+        ooq->set_num_entries(rtcpcb.ooq_entry[i].num_entries);
+    }
 
     // fill stats of this TCP CB
     rsp->mutable_stats()->set_bytes_rcvd(rtcpcb.bytes_rcvd);
     rsp->mutable_stats()->set_pkts_rcvd(rtcpcb.pkts_rcvd);
-    rsp->mutable_stats()->set_pages_alloced(rtcpcb.pages_alloced);
-    rsp->mutable_stats()->set_desc_alloced(rtcpcb.desc_alloced);
-    rsp->mutable_stats()->set_debug_num_pkt_to_mem(rtcpcb.debug_num_pkt_to_mem);
-    rsp->mutable_stats()->set_debug_num_phv_to_mem(rtcpcb.debug_num_phv_to_mem);
     rsp->mutable_stats()->set_bytes_acked(rtcpcb.bytes_acked);
     rsp->mutable_stats()->set_slow_path_cnt(rtcpcb.slow_path_cnt);
     rsp->mutable_stats()->set_serq_full_cnt(rtcpcb.serq_full_cnt);
     rsp->mutable_stats()->set_ooo_cnt(rtcpcb.ooo_cnt);
-
-    rsp->mutable_stats()->set_debug_atomic_delta(rtcpcb.debug_atomic_delta);
-    rsp->mutable_stats()->set_debug_atomic0_incr1247(rtcpcb.debug_atomic0_incr1247);
-    rsp->mutable_stats()->set_debug_atomic1_incr247(rtcpcb.debug_atomic1_incr247);
-    rsp->mutable_stats()->set_debug_atomic2_incr47(rtcpcb.debug_atomic2_incr47);
-    rsp->mutable_stats()->set_debug_atomic3_incr47(rtcpcb.debug_atomic3_incr47);
-    rsp->mutable_stats()->set_debug_atomic4_incr7(rtcpcb.debug_atomic4_incr7);
-    rsp->mutable_stats()->set_debug_atomic5_incr7(rtcpcb.debug_atomic5_incr7);
-    rsp->mutable_stats()->set_debug_atomic6_incr7(rtcpcb.debug_atomic6_incr7);
+    rsp->mutable_stats()->set_rx_drop_cnt(rtcpcb.rx_drop_cnt);
 
     rsp->mutable_stats()->set_bytes_sent(rtcpcb.bytes_sent);
     rsp->mutable_stats()->set_pkts_sent(rtcpcb.pkts_sent);
-    rsp->mutable_stats()->set_debug_num_phv_to_pkt(rtcpcb.debug_num_phv_to_pkt);
-    rsp->mutable_stats()->set_debug_num_mem_to_pkt(rtcpcb.debug_num_mem_to_pkt);
     rsp->mutable_stats()->set_sesq_pi(rtcpcb.sesq_pi);
     rsp->mutable_stats()->set_sesq_ci(rtcpcb.sesq_ci);
     rsp->mutable_stats()->set_sesq_retx_ci(rtcpcb.sesq_retx_ci);

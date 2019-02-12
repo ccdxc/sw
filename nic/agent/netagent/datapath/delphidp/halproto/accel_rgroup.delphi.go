@@ -449,6 +449,7 @@ It has these top-level messages:
 	TcpCbKeyHandle
 	TcpCbSpec
 	TcpCbRequestMsg
+	TcpCbOoqStatus
 	TcpCbStatus
 	TcpCbResponse
 	TcpCbResponseMsg

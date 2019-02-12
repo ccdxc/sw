@@ -12,191 +12,6 @@ feature:
 
 modules:
     - module:
-        name    : IN_ORDER_PKT_NOT_TO_SERQ_V4
-        spec    : one_pkt.testspec
-        module  : in_order
-        rtl     : True
-        args    :
-            maxflows : 1
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : IN_ORDER_PKT_NOT_TO_SERQ_V4_ACK
-        spec    : one_pkt_ack.testspec
-        module  : in_order
-        rtl     : True
-        args    :
-            maxflows : 1
-            send_ack_flow1 : 1
-            timestamp : 0xf00df00d
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V4
-        spec    : one_pkt.testspec
-        module  : in_order
-        rtl     : True
-        args    :
-            maxflows: 2
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : IN_ORDER_PKT_NOT_TO_SERQ_V6
-        spec    : one_pkt.testspec
-        module  : in_order
-        rtl     : True
-        args    :
-            maxflows: 1
-        iterate :
-            - flow: filter://type=IPV6
-
-    - module:
-        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_V6
-        spec    : one_pkt.testspec
-        module  : in_order
-        rtl     : True
-        args    :
-            maxflows: 2
-        iterate :
-            - flow: filter://type=IPV6
-
-    - module:
-        name    : IN_ORDER_PKT_NOT_TO_SERQ_VXLAN
-        spec    : one_pkt_vxlan.testspec
-        module  : in_order
-        rtl     : True
-        args    :
-            maxflows: 1
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : IN_ORDER_FLOWS_NOT_TO_SERQ_VXLAN
-        spec    : one_pkt_vxlan.testspec
-        module  : in_order
-        rtl     : True
-        args    :
-            maxflows: 2
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : PKT_TO_SERQ_V4
-        spec    : one_pkt.testspec
-        module  : pkt_to_serq
-        rtl     : True
-        args    :
-            maxflows: 1
-        iterate :
-            - flow: filter://type=IPV4
-
-
-    - module:
-        name    : OOO_PKT_TO_SERQ_V4
-        spec    : ooo_pkt.testspec
-        module  : pkt_to_serq
-        ignore  : True
-        rtl     : True
-        args    :
-            maxflows: 1
-            ooo_seq_delta: 1000
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : OOO_PKT_IN_ORDER_PKT_TO_SERQ_V4
-        spec    : ooo_pkt_in_order_pkt.testspec
-        module  : pkt_to_serq_ooo_in_order
-        ignore  : True
-        rtl     : True
-        args    :
-            maxflows: 1
-            ooo_seq_delta: 1000
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : OOO_PKT_TO_SERQ_V4_DUPACK
-        spec    : ooo_pkt_ack.testspec
-        module  : pkt_to_serq
-        rtl     : True
-        args    :
-            maxflows: 1
-            ooo_seq_delta: 1000
-            send_ack_flow1 : 1
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : DUP_PKT_TO_SERQ_V4_DUPACK
-        spec    : ooo_pkt_ack.testspec
-        module  : pkt_to_serq
-        rtl     : True
-        args    :
-            maxflows: 1
-            ooo_seq_delta: -1000
-            send_ack_flow1 : 1
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : FLOWS_TO_SERQ_V4
-        spec    : one_pkt.testspec
-        module  : pkt_to_serq
-        rtl     : True
-        args    :
-            maxflows: 2
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : PKT_TO_SERQ_V6
-        spec    : one_pkt.testspec
-        module  : pkt_to_serq
-        rtl     : True
-        args    :
-            maxflows: 1
-        iterate :
-            - flow: filter://type=IPV6
-
-    - module:
-        name    : MULTIPLE_PKTS_TO_SERQ
-        spec    : multiple_pkts_to_serq.testspec
-        module  : pkt_to_serq
-        rtl     : True
-        args    :
-            maxflows : 1
-            num_pkts : 2
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : PKT_TO_SERQ_ATOMIC_STATS
-        spec    : one_pkt.testspec
-        module  : pkt_to_serq
-        rtl     : True
-        args    :
-            maxflows: 2
-            atomic_stats : 1
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
-        name    : MULTIPLE_PKTS_TO_SERQ_ATOMIC_STATS
-        spec    : multiple_pkts_to_serq.testspec
-        module  : pkt_to_serq
-        rtl     : True
-        args    :
-            maxflows: 1
-            atomic_stats : 1
-            num_pkts : 2
-        iterate :
-            - flow: filter://type=IPV4
-
-    - module:
         name    : PKT_TO_BRQ
         package : test.tcp_tls_proxy
         module  : pkt_to_brq
@@ -1065,89 +880,6 @@ modules:
         iterate :
             - flow: filter://type=IPV4
 
-#    - module:
-#        name    : TCP_PKT_TO_L7Q_IDS_V4
-#        spec    : one_pkt.testspec
-#        module  : tcp_pkt_to_l7q_ids
-#        rtl     : True 
-#        args    :
-#            maxflows: 1
-#        iterate :
-#            - flow: filter://type=IPV4
-#
-#    - module:
-#        name    : TCP_PKT_TO_L7Q_IDS_V6
-#        spec    : one_pkt.testspec
-#        module  : tcp_pkt_to_l7q_ids
-#        rtl     : True
-#        args    :
-#            maxflows: 1
-#        iterate :
-#            - flow: filter://type=IPV6
-#    
-#    - module:
-#        name    : TCP_FLOWS_TO_L7Q_IDS_V4
-#        spec    : one_pkt.testspec
-#        module  : tcp_pkt_to_l7q_ids
-#        rtl     : True
-#        args    :
-#            maxflows: 2
-#        iterate :
-#            - flow: filter://type=IPV4
-#
-#    - module:
-#        name    : TCP_PKT_TO_L7Q_IPS_V4
-#        spec    : one_pkt.testspec
-#        module  : tcp_pkt_to_l7q_ips
-#        rtl     : True
-#        args    :
-#            maxflows: 1
-#        iterate :
-#            - flow: filter://type=IPV4
-#
-#    - module:
-#        name    : TCP_PKT_TO_L7Q_IPS_V6 
-#        spec    : one_pkt.testspec
-#        module  : tcp_pkt_to_l7q_ips
-#        rtl     : True
-#        args    :
-#            maxflows: 1
-#        iterate :
-#            - flow: filter://type=IPV6
-#
-#    - module:
-#        name    : TCP_FLOWS_TO_L7Q_IPS_V4
-#        spec    : one_pkt.testspec
-#        module  : tcp_pkt_to_l7q_ips
-#        rtl     : True
-#        args    :
-#            maxflows: 2
-#        iterate :
-#            - flow: filter://type=IPV4
-#
-#    - module:
-#        name    : TLS_AES128_GCM_DECRYPT_L7Q_IDS_V4
-#        package : test.tcp_tls_proxy
-#        module  : tls_pkt_to_l7q_ids
-#        spec    : one_tls_aes128_gcm_record_pkt.testspec
-#        args    :
-#            cipher_suite: GCM
-#            maxflows: 1
-#            key_size : 16
-#        iterate  :
-#            - flow: filter://type=IPV4
-#    - module:
-#        name    : TLS_AES128_GCM_DECRYPT_L7Q_IPS_V4
-#        package : test.tcp_tls_proxy
-#        module  : tls_pkt_to_l7q_ips
-#        spec    : one_tls_aes128_gcm_record_pkt.testspec
-#        args    :
-#            cipher_suite: GCM
-#            maxflows: 1
-#            key_size : 16
-#        iterate  :
-#            - flow: filter://type=IPV4
-#
     - module:
         name    : UL_TO_UL_BYPASS_BARCO_FAST_RETX
         spec    : uplink_to_uplink_fast_retx.testspec
@@ -1310,5 +1042,55 @@ modules:
             num_rx_pkts : 2
             num_tx_pkts : 2
             byte_calc_based_on_tx_pkts : True
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : OOO_PKT_DUPACK
+        spec    : ooo_pkt_ack.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            maxflows: 1
+            ooo_seq_delta: 1000
+            send_ack_flow1 : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : DUP_PKT_DUPACK
+        spec    : ooo_pkt_ack.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            maxflows: 1
+            ooo_seq_delta: -1000
+            send_ack_flow1 : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : OOO_PKT
+        spec    : ooo_pkt.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            maxflows: 1
+            test_ooo_queue: 1
+            ooo_seq_delta: 64
+            num_rx_pkts : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : OOO_2PKT
+        spec    : ooo_2pkt.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            maxflows: 1
+            test_ooo_queue: 1
+            ooo_seq_delta: 64
+            num_rx_pkts : 2
         iterate :
             - flow: filter://type=IPV4

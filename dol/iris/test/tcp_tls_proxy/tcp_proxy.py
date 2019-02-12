@@ -5,9 +5,9 @@ from infra.common.logging import logger
 from infra.common.logging import logger as logger
 
 # Need to match defines in tcp-constants.h
-tcp_debug_dol_pkt_to_serq = 0x1
+# tcp_debug_dol_pkt_to_serq = 0x1 unused
 tcp_debug_dol_test_atomic_stats = 0x2
-tcp_debug_dol_dont_queue_to_serq = 0x4
+# tcp_debug_dol_dont_queue_to_serq = 0x4 unused
 tcp_debug_dol_leave_in_arq = 0x8
 tcp_debug_dol_dont_send_ack = 0x10
 tcp_debug_dol_del_ack_timer = 0x20
@@ -58,6 +58,7 @@ def SetupProxyArgs(tc):
     send_ack_flow1 = 0
     send_ack_flow2 = 0
     test_del_ack_timer = 0
+    test_ooo_queue = 0
     test_retx_timer = 0
     test_retx_timer_full = 0
     test_mpu_tblsetaddr = 0
@@ -100,6 +101,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'test_del_ack_timer'):
         test_del_ack_timer = tc.module.args.test_del_ack_timer
         logger.info("- test_del_ack_timer %s" % tc.module.args.test_del_ack_timer)
+    if hasattr(tc.module.args, 'test_ooo_queue'):
+        test_ooo_queue = tc.module.args.test_ooo_queue
+        logger.info("- test_ooo_queue %s" % tc.module.args.test_ooo_queue)
     if hasattr(tc.module.args, 'test_retx_timer'):
         test_retx_timer = tc.module.args.test_retx_timer
         logger.info("- test_retx_timer %s" % tc.module.args.test_retx_timer)
@@ -182,9 +186,6 @@ def SetupProxyArgs(tc):
     logger.info("Testcase Iterators:")
     iterelem = tc.module.iterator.Get()
     if iterelem:
-        if 'same_flow' in iterelem.__dict__:
-            same_flow = iterelem.same_flow
-            logger.info("- same_flow %s" % iterelem.same_flow)
         if 'bypass_barco' in iterelem.__dict__:
             bypass_barco = iterelem.bypass_barco
             logger.info("- bypass_barco %s" % iterelem.bypass_barco)
@@ -220,9 +221,11 @@ def SetupProxyArgs(tc):
             logger.info("- fin %s" % iterelem.fin)
     tc.pvtdata.same_flow = same_flow
     tc.pvtdata.bypass_barco = bypass_barco
+    tc.pvtdata.same_flow = same_flow
     tc.pvtdata.send_ack_flow1 = send_ack_flow1
     tc.pvtdata.send_ack_flow2 = send_ack_flow2
     tc.pvtdata.test_del_ack_timer = test_del_ack_timer
+    tc.pvtdata.test_ooo_queue = test_ooo_queue
     tc.pvtdata.test_retx_timer = test_retx_timer
     tc.pvtdata.test_retx_timer_full = test_retx_timer_full
     tc.pvtdata.test_mpu_tblsetaddr = test_mpu_tblsetaddr
@@ -363,18 +366,16 @@ def init_tcb_inorder(tc, tcb):
         tcb.debug_dol_tx |= tcp_tx_debug_dol_start_del_ack_timer
     else:
         tcb.delay_ack = 0
+    if tc.pvtdata.test_ooo_queue:
+        tcb.ooo_queue = 1
+    else:
+        tcb.ooo_queue = 0
     if tc.pvtdata.test_retx_timer or tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_start_retx_timer
     if tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_force_timer_full
     if tc.pvtdata.test_mpu_tblsetaddr:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_force_tbl_setaddr
-    if tc.pvtdata.same_flow:
-        tcb.source_port = tc.config.flow.sport
-        tcb.dest_port = tc.config.flow.dport
-    else:
-        tcb.source_port = tc.config.flow.dport
-        tcb.dest_port = tc.config.flow.sport
     if tc.pvtdata.bypass_barco:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_bypass_barco
         tcb.debug_dol |= tcp_debug_dol_bypass_barco
@@ -386,24 +387,14 @@ def init_tcb_inorder(tc, tcb):
         tcb.abc_l_var = tc.pvtdata.abc_l_var
 
     vlan_id = 0
-    if tc.pvtdata.same_flow:
-        if tc.config.src.endpoint.intf.type == 'UPLINK':
-            # is there a better way to find the lif?
-            tcb.source_lif = tc.config.src.endpoint.intf.port
-            if tc.config.src.segment.native == False:
-                vlan_id = tc.config.src.segment.vlan_id
-        elif hasattr(tc.config.src.endpoint.intf, 'encap_vlan_id'):
-            vlan_id = tc.config.src.endpoint.intf.encap_vlan_id
-            tcb.source_lif = tc.config.src.endpoint.intf.lif.hw_lif_id
-    else:
-        if tc.config.dst.endpoint.intf.type == 'UPLINK':
-            # is there a better way to find the lif?
-            tcb.source_lif = tc.config.dst.endpoint.intf.port
-            if tc.config.dst.segment.native == False:
-                vlan_id = tc.config.dst.segment.vlan_id
-        elif hasattr(tc.config.dst.endpoint.intf, 'encap_vlan_id'):
-            vlan_id = tc.config.dst.endpoint.intf.encap_vlan_id
-            tcb.source_lif = tc.config.dst.endpoint.intf.lif.hw_lif_id
+    if tc.config.dst.endpoint.intf.type == 'UPLINK':
+        # is there a better way to find the lif?
+        tcb.source_lif = tc.config.dst.endpoint.intf.port
+        if tc.config.dst.segment.native == False:
+            vlan_id = tc.config.dst.segment.vlan_id
+    elif hasattr(tc.config.dst.endpoint.intf, 'encap_vlan_id'):
+        vlan_id = tc.config.dst.endpoint.intf.encap_vlan_id
+        tcb.source_lif = tc.config.dst.endpoint.intf.lif.hw_lif_id
     if vlan_id != 0:
         vlan_id = 0x7 << 13 | vlan_id
         vlan_etype_bytes = bytes([0x81, 0x00]) + \
@@ -414,17 +405,7 @@ def init_tcb_inorder(tc, tcb):
 
     # TODO: ipv6
     tcb.header_len = ETH_IP_HDR_SZE + len(vlan_etype_bytes) - 2
-    if tc.pvtdata.same_flow and tc.config.flow.IsIPV4():
-        tcb.header_template = \
-             tc.config.dst.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
-             tc.config.src.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
-             vlan_etype_bytes + \
-             bytes([0x45, 0x07, 0x00, 0x7c, 0x00, 0x01, 0x00, 0x00]) + \
-             bytes([0x40, 0x06, 0xfa, 0x71]) + \
-             tc.config.flow.sip.getnum().to_bytes(4, 'big') + \
-             tc.config.flow.dip.getnum().to_bytes(4, 'big')
-        print("header_template = " + str(tcb.header_template))
-    elif tc.config.flow.IsIPV4():
+    if tc.config.flow.IsIPV4():
         tcb.header_template = \
              tc.config.src.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
              tc.config.dst.endpoint.macaddr.getnum().to_bytes(6, 'big') + \
@@ -443,6 +424,8 @@ def init_tcb_inorder(tc, tcb):
     #   flags = ACK
     #   window size = 1000
     tcb.pred_flags = 0x501003e8
+    tcb.source_port = tc.config.flow.dport
+    tcb.dest_port = tc.config.flow.sport
 
 def init_tcb2(tcb, session):
     tcb.rcv_nxt = 0x2ABABABA
@@ -543,6 +526,10 @@ def init_tcb_inorder2(tc, tcb):
         tcb.debug_dol_tx |= tcp_tx_debug_dol_start_del_ack_timer
     else:
         tcb.delay_ack = 0
+    if tc.pvtdata.test_ooo_queue:
+        tcb.ooo_queue = 1
+    else:
+        tcb.ooo_queue = 0
     if tc.pvtdata.test_retx_timer or tc.pvtdata.test_retx_timer_full:
         tcb.debug_dol_tx |= tcp_tx_debug_dol_start_retx_timer
     if tc.pvtdata.test_retx_timer_full:

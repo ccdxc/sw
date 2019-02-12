@@ -422,6 +422,9 @@
 
 #define RNMDR_TLS_GC_TABLE_BASE         hbm_rnmdr_tls_gc_table_base
 
+#define TCP_OOQ_TABLE_BASE              hbm_ooq_table_base
+#define TCP_OOQ_TABLE_ENTRY_SIZE_SHFT   3 /* 8B */
+
 #define TLS_PROXY_GLOBAL_STATS          tls_proxy_global_stats
 
 #define RNMDR_GC_PRODUCER_TCP           CAPRI_RNMDR_GC_TCP_RING_PRODUCER
@@ -474,6 +477,8 @@
 
 #define TCP_RNMDR_GC_IDX               CAPRI_SEM_TCP_RNMDR_GC_IDX_INC_ADDR
 #define TCP_TNMDR_GC_IDX               CAPRI_SEM_TCP_TNMDR_GC_IDX_INC_ADDR
+
+#define TCP_OOQ_ALLOC_IDX              CAPRI_SEM_TCP_OOQ_ALLOC_INF_ADDR 
 
 #define ARQ_PRODUCER_IDX               0xba00ba60
 #define ARQ_CONSUMER_IDX               0xba00ba68

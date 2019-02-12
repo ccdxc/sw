@@ -174,13 +174,9 @@ def TestCaseVerify(tc):
     else:
         print("bytes_rcvd = %d:" % tcpcb_cur.bytes_rcvd)
         print("pkts_rcvd = %d:" % tcpcb_cur.pkts_rcvd)
-        print("debug_num_phv_to_mem = %d:" % tcpcb_cur.debug_num_phv_to_mem)
-        print("debug_num_pkt_to_mem = %d:" % tcpcb_cur.debug_num_pkt_to_mem)
 
     print("bytes_sent = %d:" % other_tcpcb_cur.bytes_sent)
     print("pkts_sent = %d:" % other_tcpcb_cur.pkts_sent)
-    print("debug_num_phv_to_pkt = %d:" % other_tcpcb_cur.debug_num_phv_to_pkt)
-    print("debug_num_mem_to_pkt = %d:" % other_tcpcb_cur.debug_num_mem_to_pkt)
     return True
 
 def TestCaseStepVerify(tc, step):

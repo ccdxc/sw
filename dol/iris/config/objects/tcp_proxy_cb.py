@@ -99,6 +99,7 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.delay_ack                 = self.delay_ack
            req_spec.ato                       = self.ato
            req_spec.abc_l_var                 = self.abc_l_var
+           req_spec.ooo_queue                 = self.ooo_queue
            if hasattr(self, 'header_template'):
                req_spec.header_template           = self.header_template
         return
@@ -147,29 +148,22 @@ class TcpCbObject(base.ConfigObjectBase):
             self.delay_ack = resp_spec.spec.delay_ack
             self.ato = resp_spec.spec.ato
             self.abc_l_var = resp_spec.spec.abc_l_var
+            self.ooo_queue = resp_spec.spec.ooo_queue
 
             self.bytes_rcvd = resp_spec.stats.bytes_rcvd
             self.pkts_rcvd = resp_spec.stats.pkts_rcvd
-            self.pages_alloced = resp_spec.stats.pages_alloced
-            self.desc_alloced = resp_spec.stats.desc_alloced
 
             self.bytes_sent = resp_spec.stats.bytes_sent
             self.pkts_sent = resp_spec.stats.pkts_sent
-            self.debug_num_phv_to_pkt = resp_spec.stats.debug_num_phv_to_pkt
-            self.debug_num_mem_to_pkt = resp_spec.stats.debug_num_mem_to_pkt
-            self.debug_num_pkt_to_mem = resp_spec.stats.debug_num_pkt_to_mem
-            self.debug_num_phv_to_mem = resp_spec.stats.debug_num_phv_to_mem
-
-            self.debug_atomic_delta = resp_spec.stats.debug_atomic_delta
-            self.debug_atomic0_incr1247 = resp_spec.stats.debug_atomic0_incr1247
-            self.debug_atomic1_incr247 = resp_spec.stats.debug_atomic1_incr247
-            self.debug_atomic2_incr47 = resp_spec.stats.debug_atomic2_incr47
-            self.debug_atomic3_incr47 = resp_spec.stats.debug_atomic3_incr47
-            self.debug_atomic4_incr7 = resp_spec.stats.debug_atomic4_incr7
-            self.debug_atomic5_incr7 = resp_spec.stats.debug_atomic5_incr7
-            self.debug_atomic6_incr7 = resp_spec.stats.debug_atomic6_incr7
-
             self.cc_flags = resp_spec.stats.cc_flags
+
+            i = 0
+            for ooq_status in resp_spec.status.ooq_status:
+                self.ooq_status[i].queue_addr = ooq_status.queue_addr
+                self.ooq_status[i].start_seq = ooq_status.start_seq
+                self.ooq_status[i].end_seq = ooq_status.end_seq
+                self.ooq_status[i].num_entries = ooq_status.num_entries
+                i += 1
 
         return
 

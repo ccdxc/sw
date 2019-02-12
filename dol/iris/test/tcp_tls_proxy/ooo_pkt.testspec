@@ -20,7 +20,7 @@ packets:
     - packet:
         id          : PKT1
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : 1000
+        payloadsize : 64
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:

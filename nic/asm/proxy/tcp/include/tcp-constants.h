@@ -4,8 +4,6 @@
 #include "proxy-constants.h"
 #include "tcp_common.h"
 
-#define TCP_OOO_QUEUE_SIZE   256
-
 #define TCPHDR_FIN_BIT 0
 #define TCPHDR_SYN_BIT 1
 #define TCPHDR_RST_BIT 2

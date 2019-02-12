@@ -14,50 +14,34 @@
 
 struct phv_ p;
 struct s6_t0_tcp_rx_k_ k;
-struct s6_t0_tcp_rx_write_serq_d d;
+struct s6_t0_tcp_rx_dma_d d;
 
 %%
     .param          tcp_slow_rx_write_serq_stage_start
+    .param          tcp_rx_stats_stage_start
     .align
 
     /*
      * Global conditional variables
      * c7 drop packet and don't send to arm
      */
-tcp_rx_write_serq_stage_start:
+tcp_rx_dma_serq_stage_start:
+    CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_stats_stage_start)
+
     seq         c1, k.common_phv_write_arq, 1
     seq         c2, k.common_phv_write_serq, 0
-#ifdef L7_PROXY_SUPPORT
-    seq         c3, k.common_phv_l7_proxy_en, 1
-#endif
     seq         c4, k.common_phv_skip_pkt_dma, 1
     seq         c5, k.common_phv_fatal_error, 1
-    and         r1, k.common_phv_debug_dol, \
-                    ~(TCP_DDOL_DONT_SEND_ACK | \
-                    TCP_DDOL_BYPASS_BARCO)
-    sne         c6, r1, 0
-    seq         c7, k.to_s6_payload_len, 0
-#ifdef L7_PROXY_SUPPORT
-    setcf       c1, [c1 | c2 | c3 | c4 | c5 | c6 | c7]
-#else
-    setcf       c1, [c1 | c2 | c4 | c5 | c6 | c7]
-#endif
-    seq         c2, k.common_phv_ooo_rcv, 1
-    bcf         [c1 | c2], write_serq_check_more_slowly
+    seq         c6, k.to_s6_payload_len, 0
+    bcf         [c1 | c2 | c4 | c5 | c6], write_serq_check_more_slowly
     nop
 
 dma_cmd_data:
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
 
     /* Set the DMA_WRITE CMD for data */
-    add         r1, k.to_s6_page, k.to_s6_ooo_offset
-    addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
+    add         r3, k.to_s6_page, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
-    /*
-     * For SACK case, to_s6_payload_len is total accumulated length of
-     * packet. s6_s2s_payload_len is the packet we just got and that
-     * is what we want to DMA
-     */
     CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.s6_s2s_payload_len)
 
 dma_cmd_descr:
@@ -70,6 +54,9 @@ dma_cmd_descr:
     phvwr       p.aol_L0, k.{to_s6_payload_len}.wx
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(pkt_descr_dma_dma_cmd, r1, aol_A0, aol_next_pkt)
+pkts_rcvd_stats_update_start:
+    CAPRI_STATS_INC(pkts_rcvd, 1, d.pkts_rcvd, p.to_s7_pkts_rcvd)
+pkts_rcvd_stats_update_end:
 
 dma_tcp_flags:
     add         r1, k.to_s6_descr, NIC_DESC_ENTRY_TCP_FLAGS_OFFSET

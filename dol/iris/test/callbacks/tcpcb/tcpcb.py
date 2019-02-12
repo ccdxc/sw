@@ -159,7 +159,15 @@ def GetDstIp (tc, pkt):
     return "54.0.0.2"
 
 def GetOOOSeqNum (tc, pkt):
+    tc.pvtdata.flow1_bytes_rxed += pkt.payloadsize
     return tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.ooo_seq_delta
+
+def GetNxtOOOSeqNum (tc, pkt):
+    pktSeqNum = tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.ooo_seq_delta + \
+            tc.pvtdata.flow1_bytes_rxed
+    tc.pvtdata.flow1_bytes_rxed += pkt.payloadsize
+    return pktSeqNum
+
 
 def GetQuiesceSrcMac(tc, pkt):
     return MacAddressBase(integer=(0x00eeff000004))

@@ -90,19 +90,18 @@ dma_cmd_hdr:
     CAPRI_OPERAND_DEBUG(d.header_len)
     CAPRI_DMA_CMD_MEM2PKT_SETUP(l2l3_header_dma_dma_cmd, r5, d.header_len[13:0])
 dma_cmd_tcp_header:
-    tbladd          d.quick_acks_decr, 1
     phvwr           p.{tcp_header_source_port...tcp_header_dest_port}, \
                         d.{source_port...dest_port}
     phvwrpair       p.tcp_header_seq_no, k.t0_s2s_snd_nxt, \
                         p.tcp_header_ack_no, k.t0_s2s_rcv_nxt
+    phvwrpair       p.tx2rx_rcv_wup, k.t0_s2s_rcv_nxt, \
+                        p.tx2rx_rcv_wnd_adv, k.to_s5_rcv_wnd
 
     //phvwr           p.tcp_header_data_ofs, 8		// 32 bytes
     phvwrpair       p.tcp_header_data_ofs, 5, \
                         p.tcp_header_window, k.to_s5_rcv_wnd
 	phvwr           p.{tcp_nop_opt1_kind...tcp_nop_opt2_kind}, \
                         (TCPOPT_NOP << 8 | TCPOPT_NOP)
-
-    phvwr           p.tx2rx_quick_acks_decr, d.quick_acks_decr
 
     // Disable timestamps for now
     CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_header_urg)
@@ -141,19 +140,11 @@ pkts_sent_stats_update_start:
     CAPRI_STATS_INC(pkts_sent, 1, d.pkts_sent, p.to_s6_pkts_sent)
 pkts_sent_stats_update_end:
 
-debug_num_phv_to_pkt_stats_update_start:
-    CAPRI_STATS_INC(debug_num_phv_to_pkt, 2, d.debug_num_phv_to_pkt, p.to_s6_debug_num_phv_to_pkt)
-debug_num_phv_to_pkt_stats_update_end:
-
-debug_num_mem_to_pkt_stats_update_start:
-    CAPRI_STATS_INC(debug_num_mem_to_pkt, 2, d.debug_num_mem_to_pkt, p.to_s6_debug_num_mem_to_pkt)
-debug_num_mem_to_pkt_stats_update_end:
-
 dma_cmd_write_tx2rx_shared:
     /* Set the DMA_WRITE CMD for copying tx2rx shared data from phv to mem */
     add             r5, k.common_phv_qstate_addr, TCP_TCB_TX2RX_SHARED_WRITE_OFFSET
 
-    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP(tx2rx_dma_dma_cmd, r5, tx2rx_prr_out, tx2rx_pad1_tx2rx)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP(tx2rx_dma_dma_cmd, r5, tx2rx_snd_nxt, tx2rx_pad1_tx2rx)
      
 
 tcp_retx:

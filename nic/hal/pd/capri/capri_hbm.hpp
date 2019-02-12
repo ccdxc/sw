@@ -97,9 +97,9 @@
 #define CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS "ipsec-global-drop-stats"
 #define CAPRI_HBM_REG_TCP_PROXY_STATS       "tcp_proxy_stats"
 #define CAPRI_HBM_REG_TLS_PROXY_GLOBAL_STATS    "tls_proxy_global_stats"
-#define CAPRI_HBM_REG_TCP_OOO_DESCR    "tcp_ooo_descr_global_pool"
-#define CAPRI_HBM_REG_TCP_OOO_QUEUE    "tcp_ooo_descr_queue"
-#define CAPRI_HBM_REG_TCP_OOO_RX2TX_QUEUE "tcp_ooo_rx2tx_queue"
+#define CAPRI_HBM_REG_TCP_OOO_QBASE_RING    "tcp_ooo_qbase_ring"
+#define CAPRI_HBM_REG_TCP_OOO_QUEUE         "tcp_ooo_queue"
+#define CAPRI_HBM_REG_TCP_OOO_RX2TX_QUEUE   "tcp_ooo_rx2tx_queue"
 
 #define CAPRI_NUM_SEMAPHORES            512
 
@@ -122,6 +122,7 @@
 #define TNMDPR_SMALL_TABLE_BASE "hbm_tnmdpr_small_table_base"
 #define TNMDPR_BIG_TABLE_BASE   "hbm_tnmdpr_big_table_base"
 
+#define TCP_OOQ_TABLE_BASE      "hbm_ooq_table_base"
 
 #define RNMDR_TLS_GC_TABLE_BASE "hbm_rnmdr_tls_gc_table_base"
 #define GC_GLOBAL_TABLE_BASE    "hbm_gc_table_base"

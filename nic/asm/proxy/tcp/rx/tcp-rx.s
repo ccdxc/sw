@@ -18,6 +18,7 @@ struct s1_t0_tcp_rx_d d;
 %%
     .param          tcp_ack_start
     .param          tcp_rx_read_rnmdr_start
+    .param          tcp_ooo_book_keeping
     .align
 
     /*
@@ -56,7 +57,7 @@ tcp_rx_process_start:
      *
      * Checks if hlen and flags are as expected in fast path
      *
-     * TODO : check for sender window change as well later
+     * TODO : Do we care about window change here? (its handled in tcp_ack)
      *
      * TODO : check for hlen difference. The issue with checking for
      * hlen is that DOL and e2e have different hlens (e2e has
@@ -148,13 +149,17 @@ table_read_setup_next:
     phvwr           p.rx2tx_extra_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr           p.rx2tx_extra_state, d.u.tcp_rx_d.state
     phvwr           p.to_s2_flag, d.u.tcp_rx_d.flag
+#ifndef HW
+    smeqb           c1, k.common_phv_debug_dol, TCP_DDOL_DONT_SEND_ACK, TCP_DDOL_DONT_SEND_ACK
+    phvwrmi.c1      p.common_phv_pending_txdma, 0, TCP_PENDING_TXDMA_ACK_SEND | TCP_PENDING_TXDMA_DEL_ACK
+#endif
 flow_cpu_rx_process_done:
     /*
      * c7 = drop
      */
     bcf             [c7], flow_rx_drop
 
-table_read_RTT:
+table_launch_tcp_ack:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_ack_start,
                         k.common_phv_qstate_addr, TCP_TCB_RX_OFFSET,
                         TABLE_SIZE_512_BITS)
@@ -163,7 +168,7 @@ table_read_RTT:
      */
     bcf             [c6], tcp_rx_end
 
-table_read_RNMDR_ALLOC_IDX:
+table_launch_RNMDR_ALLOC_IDX:
     /*
      * Allocate page and descriptor if alloc_descr is 1.
      */
@@ -210,25 +215,38 @@ tcp_rx_slow_path:
 
     bcf             [c1], flow_cpu_rx_process_done
     setcf           c7, [!c0]
-    /* Setup the to-stage/stage-to-stage variables */
 
-    /* if (cp->seq != tp->rx.rcv_nxt) { */
     /*
-     * if pkt->seq != rcv_nxt, its a retransmission or OOO, drop the packet,
-     * (until we handle SACK)
-     * but send ack. We don't partially accept unacknowledged bytes yet,
-     * the entire frame is dropped.
+     * if pkt->seq != rcv_nxt, its a retransmission or OOO, send ack
+     *
+     * We don't partially accept unacknowledged bytes yet,
+     * the entire frame is dropped if not between rcv_nxt and
+     * rcv_nxt + advertised_window
      */
     sne             c1, k.s1_s2s_seq, d.u.tcp_rx_d.rcv_nxt
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
     phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
-    tbladd.c1       d.{u.tcp_rx_d.ooo_cnt}.hx, 1
     sne             c2, k.s1_s2s_payload_len, 0
     setcf           c3, [c1 & c2]
     phvwr.c3        p.common_phv_skip_pkt_dma, 1
     phvwr.c3        p.common_phv_write_serq, 0
+
+tcp_rx_ooo_check:
+     // Consider OOO only if payload_len != 0 && seq > rcv_nxt
+    slt             c1, d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_seq
+    bcf             [!c1 | !c2], tcp_rx_ooo_check_done
+    // check if its within advertised window and ooo processing
+    // is configured
+    add             r1, d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_payload_len
+    add             r2, k.to_s1_rcv_wup, k.to_s1_rcv_wnd_adv
+    sle             c1, r1, r2
+    seq             c2, d.u.tcp_rx_d.cfg_flags[TCP_CFG_FLAG_OOO_QUEUE_BIT], 1
+    bcf             [c1 & c2], tcp_rx_ooo_rcv
+
+tcp_rx_ooo_check_done:
     // set c6 so that descriptors are not allocated
+    tbladd.c3       d.u.tcp_rx_d.rx_drop_cnt, 1
     setcf.c3        c6, [c0]
     bcf             [c3], flow_rx_process_done
 
@@ -264,7 +282,7 @@ tcp_rx_slow_path:
      * EST (recv: FIN) --> CLOSE_WAIT, increment sequence number
      * FIN_WAIT_1 (recv: FIN) --> CLOSING, increment sequence number
      * FIN_WAIT_2 (recv: FIN) --> TIME_WAIT, increment sequence number
-     * 
+     *
      */
     smeqb           c1, k.common_phv_flags, TCPHDR_FIN, TCPHDR_FIN
     b.!c1           tcp_rx_slow_path_post_fin_handling
@@ -338,6 +356,7 @@ tcp_rx_rst_handling:
     smeqb           c4, k.common_phv_debug_dol, TCP_DDOL_BYPASS_BARCO, TCP_DDOL_BYPASS_BARCO
     phvwri.!c4      p.p4_intr_global_drop, 1
     b.!c4           flow_rx_drop
+    tbladd.!c4      d.u.tcp_rx_d.rx_drop_cnt, 1
 
     // We need to pass RST flag to other flow
     tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
@@ -366,5 +385,18 @@ tcp_rx_rst_handling:
 tcp_rx_post_rst_handling:
     // drop the frame
     setcf           c7, [c0]
+    tbladd.!c4      d.u.tcp_rx_d.rx_drop_cnt, 1
     b               flow_rx_process_done
     phvwri          p.p4_intr_global_drop, 1
+
+tcp_rx_ooo_rcv:
+    CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_EN, tcp_ooo_book_keeping,
+                        k.common_phv_qstate_addr, TCP_TCB_OOO_BOOK_KEEPING_OFFSET0,
+                        TABLE_SIZE_512_BITS)
+    phvwr           p.t2_s2s_seq, k.s1_s2s_seq
+    phvwr           p.t2_s2s_payload_len, k.s1_s2s_payload_len
+    phvwr           p.common_phv_ooo_rcv, 1
+    // we need to allocate a descriptor
+    tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
+    b               flow_rx_process_done
+    tbladd          d.{u.tcp_rx_d.ooo_cnt}.hx, 1

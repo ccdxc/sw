@@ -419,6 +419,7 @@ message TcpCbSpec {
   uint32                smss                       = 49;
   uint32                initial_window             = 50;
   uint32                abc_l_var                  = 51;
+  bool                  ooo_queue                  = 52;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request
@@ -426,9 +427,18 @@ message TcpCbRequestMsg {
   repeated TcpCbSpec    request = 1;    // batched request
 }
 
+message TcpCbOoqStatus {
+    uint64              queue_addr                  = 1;
+    uint32              start_seq                   = 2;
+    uint32              end_seq                     = 3;
+    uint32              num_entries                 = 4;
+}
+
 // TcpCbStatus is the operational status of a given tcpcb
 message TcpCbStatus {
-  fixed64    tcpcb_handle     = 1;    // id of tcpcb returned by HAL
+  fixed64 tcpcb_handle = 1;    // id of tcpcb returned by HAL
+
+  repeated TcpCbOoqStatus ooq_status = 2;
 }
 
 // TcpCbResponse is response to TcpCbSpec
@@ -469,29 +479,18 @@ message TcpCbGetRequestMsg {
 
 // TcpCbStats is the statistics object for each tcpcb
 message TcpCbStats {
+  // rx stats
   uint64                bytes_rcvd                 = 1;
   uint64                pkts_rcvd                  = 2;
-  uint64                pages_alloced              = 3;
-  uint64                desc_alloced               = 4;
-  uint64                debug_num_pkt_to_mem       = 5;
-  uint64                debug_num_phv_to_mem       = 6;
-  uint32                debug_atomic_delta         = 8;
-  uint32                debug_atomic0_incr1247     = 9;
-  uint32                debug_atomic1_incr247      = 10;
-  uint32                debug_atomic2_incr47       = 11;
-  uint32                debug_atomic3_incr47       = 12;
-  uint32                debug_atomic4_incr7        = 13;
-  uint32                debug_atomic5_incr7        = 14;
-  uint32                debug_atomic6_incr7        = 15;
-  uint64                bytes_acked                = 16;
-  uint64                slow_path_cnt              = 17;
-  uint64                serq_full_cnt              = 18;
-  uint64                ooo_cnt                    = 19;
+  uint64                bytes_acked                = 3;
+  uint64                slow_path_cnt              = 4;
+  uint64                serq_full_cnt              = 5;
+  uint64                ooo_cnt                    = 6;
+  uint64                rx_drop_cnt                = 7;
 
+  // tx stats
   uint64                bytes_sent                 = 10001;
   uint64                pkts_sent                  = 10002;
-  uint64                debug_num_phv_to_pkt       = 10003;
-  uint64                debug_num_mem_to_pkt       = 10004;
   uint32                sesq_pi                    = 10005;
   uint32                sesq_ci                    = 10006;
   uint32                send_ack_pi                = 10007;

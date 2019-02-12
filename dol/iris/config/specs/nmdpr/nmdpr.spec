@@ -25,3 +25,8 @@ entries :
         haltype     : 31
         type        : DESCR_AOL_VIA_REF
         count       : 1024
+    - entry:
+        name        : OOO_RX
+        haltype     : 32
+        type        : DESCR_AOL_VIA_REF
+        count       : 1024

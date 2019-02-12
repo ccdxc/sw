@@ -55,7 +55,7 @@ dma_cmd_cpu_hdr:
     phvwri      p.cpu_hdr3_tcp_ws, 0
     add         r1, r0, k.to_s6_page
     addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_or_cpu_hdr_dma_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr3_tcp_ws)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(cpu_hdr_dma_dma_cmd, r3, cpu_hdr1_src_lif, cpu_hdr3_tcp_ws)
 dma_cmd_data:
 
     seq         c1, k.to_s6_payload_len, r0

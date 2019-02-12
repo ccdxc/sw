@@ -33,15 +33,14 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 
 #define TX2RX_SHARED_STATE \
-        prr_out                         : SEQ_NUMBER_WIDTH      ;\
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
         rcv_wup                         : 32                    ;\
-        packets_out                     : 16                    ;\
+        rcv_wnd_adv                     : 16                    ;\
         quick_acks_decr                 : 4                     ;\
         fin_sent                        : 1                     ;\
         rst_sent                        : 1                     ;\
         rto_event                       : 1                     ;\
-        pad1_tx2rx                      : 9                     ;\
+        pad1_tx2rx                      : 41                    ;\
 
 // offset 0 (TCP_TCB_RX2TX_EXTRA_SND_CWND_OFFSET)
 #define RX2TX_SHARED_EXTRA_STATE \
@@ -99,8 +98,6 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         header_len                      : 16                    ;\
         bytes_sent                      : 16                    ;\
         pkts_sent                       : 8                     ;\
-        debug_num_phv_to_pkt            : 8                     ;\
-        debug_num_mem_to_pkt            : 8                     ;\
         quick_acks_decr                 : 4                     ;\
 
 #define RETX_SHARED_PARAMS \
@@ -122,8 +119,7 @@ smss, is_cwnd_limited, limited_transmit, rto_backoff, no_window
 
 #define TSO_PARAMS                                                        \
 ip_id, source_lif, source_port, dest_port, header_len,\
-bytes_sent,pkts_sent,debug_num_phv_to_pkt, debug_num_mem_to_pkt,\
-quick_acks_decr
+bytes_sent, pkts_sent
 
 
 #define GENERATE_RETX_SHARED_D \
@@ -163,10 +159,6 @@ quick_acks_decr
     modify_field(tso_d.header_len, header_len); \
     modify_field(tso_d.bytes_sent, bytes_sent);\
     modify_field(tso_d.pkts_sent, pkts_sent);\
-    modify_field(tso_d.debug_num_phv_to_pkt, debug_num_phv_to_pkt);\
-    modify_field(tso_d.debug_num_mem_to_pkt, debug_num_mem_to_pkt);\
-    modify_field(tso_d.quick_acks_decr, quick_acks_decr);\
-
 
 header_type rx2tx_extra_t {
     fields {

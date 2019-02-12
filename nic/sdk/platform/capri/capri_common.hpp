@@ -72,11 +72,13 @@ namespace capri {
 #define CAPRI_SEM_TNMDPR_BIG_ALLOC_ADDR     (CAPRI_MEM_SEMA_START + 8 * 22)
 #define CAPRI_SEM_RNMDPR_BIG_ALLOC_ADDR     (CAPRI_MEM_SEMA_START + 8 * 23)
 
+#define CAPRI_SEM_TCP_OOQ_ALLOC_ADDR            (CAPRI_MEM_SEMA_START + 8 * 24)
+
 // These need to be deleted but retaining them because proxyc code uses it
-#define CAPRI_SEM_RNMPR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 24)
-#define CAPRI_SEM_RNMPR_FREE_ADDR           (CAPRI_MEM_SEMA_START + 8 * 25)
-#define CAPRI_SEM_RNMDR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 26)
-#define CAPRI_SEM_RNMDR_FREE_ADDR           (CAPRI_MEM_SEMA_START + 8 * 27)
+#define CAPRI_SEM_RNMPR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 25)
+#define CAPRI_SEM_RNMPR_FREE_ADDR           (CAPRI_MEM_SEMA_START + 8 * 26)
+#define CAPRI_SEM_RNMDR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 27)
+#define CAPRI_SEM_RNMDR_FREE_ADDR           (CAPRI_MEM_SEMA_START + 8 * 28)
 
 
 #define CAPRI_SEM_LAST_PI_CI_SEMAPHORE      (CAPRI_MEM_SEMA_START + 8 * 63)
@@ -299,6 +301,24 @@ namespace capri {
 #define CAPRI_NMDPR_SMALL_OBJ_TOTAL_SIZE    (2048 + CAPRI_NMDPR_OBJ_OVERHEADS)
 #define CAPRI_NMDPR_BIG_OBJ_TOTAL_SIZE      (9216 + CAPRI_NMDPR_OBJ_OVERHEADS)
 #define CAPRI_NMDPR_PAGE_OFFSET             CAPRI_NMDPR_OBJ_OVERHEADS
+
+/*
+ * OOQ
+ */
+
+// Size (num entries) of Allocator ring
+#define CAPRI_TCP_OOQ_RING_SHIFT                12
+#define CAPRI_TCP_OOQ_RING_SIZE                 (1 << CAPRI_TCP_OOQ_RING_SHIFT)
+#define CAPRI_TCP_OOQ_RING_MASK                 ((1 << CAPRI_TCP_OOQ_RING_SHIFT) - 1)
+
+// Size (num entries) of each object pointed by allocator ring
+#define TCP_OOO_QUEUE_NUM_ENTRIES           256
+#define TCP_OOO_QUEUE_SIZE                  (TCP_OOO_QUEUE_NUM_ENTRIES * 8)
+
+#define CAPRI_SEM_TCP_OOQ_ALLOC_RAW_ADDR \
+                            (CAPRI_SEM_TCP_OOQ_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET)
+#define CAPRI_SEM_TCP_OOQ_ALLOC_INF_ADDR \
+                            (CAPRI_SEM_TCP_OOQ_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
 
 // These need to be removed, but proxyc code seems to be using them
 #define CAPRI_SEM_RNMDR_FREE_INF_ADDR \

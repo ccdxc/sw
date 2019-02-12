@@ -57,9 +57,9 @@
 #define TCPF_NEW_SYN_RECV (1 << 12)
 
 /* debug_dol encodings - need to match defines in tcp_proxy.py */
-#define TCP_DDOL_PKT_TO_SERQ            0x1
+//#define TCP_DDOL_PKT_TO_SERQ            0x1 UNUSED
 #define TCP_DDOL_TEST_ATOMIC_STATS      0x2
-#define TCP_DDOL_DONT_QUEUE_TO_SERQ     0x4
+//#define TCP_DDOL_DONT_QUEUE_TO_SERQ     0x4 UNUSED
 #define TCP_DDOL_LEAVE_IN_ARQ           0x8
 #define TCP_DDOL_DONT_SEND_ACK          0x10
 #define TCP_DDOL_DEL_ACK_TIMER          0x20
@@ -94,9 +94,11 @@
 #define TCP_TX_INVALID_SESQ_TX_CI           0xffff
 
 // TCP CB CFG flags
-#define TCP_CFG_FLAG_DELACK                 0x1
-
 #define TCP_CFG_FLAG_DELACK_BIT             0
+#define TCP_CFG_FLAG_OOO_QUEUE_BIT          1
+
+#define TCP_CFG_FLAG_DELACK                 (1 << TCP_CFG_FLAG_DELACK_BIT)
+#define TCP_CFG_FLAG_OOO_QUEUE              (1 << TCP_CFG_FLAG_OOO_QUEUE_BIT)
 
 #define TCP_QUICKACKS                       2
 
@@ -130,5 +132,6 @@
 #define TCP_PROXY_STATS_RETX_NOP_SCHEDULE       (4 << 3)
 #define TCP_PROXY_STATS_GC_FULL                 (5 << 3)
 #define TCP_PROXY_STATS_TLS_GC_FULL             (6 << 3)
+#define TCP_PROXY_STATS_OOQ_FULL                (7 << 3)
 
 #endif /* #ifndef __TCP_COMMON_H__ */

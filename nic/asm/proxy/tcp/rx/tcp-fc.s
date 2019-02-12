@@ -16,13 +16,9 @@ struct s5_t0_tcp_rx_k_ k;
 struct s5_t0_tcp_rx_tcp_fc_d d;
 
 %%
-    .param          tcp_rx_write_serq_stage_start
-    .param          tcp_rx_write_serq_stage_start2
-    .param          tcp_rx_write_serq_stage_start3
+    .param          tcp_rx_dma_serq_stage_start
+    .param          tcp_rx_dma_rx2tx_stage_start
     .param          tcp_rx_write_arq_stage_start
-#ifdef L7_PROXY_SUPPORT
-    .param          tcp_rx_write_l7q_stage_start
-#endif
     .align
 tcp_rx_fc_stage_start:
     seq         c1, k.common_phv_write_arq, 1
@@ -33,41 +29,24 @@ tcp_rx_fc_stage_start:
 
     // launch table 1 next stage
     CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_EN,
-                tcp_rx_write_serq_stage_start2, k.common_phv_qstate_addr,
-                TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
-    CAPRI_NEXT_TABLE_READ_OFFSET(3, TABLE_LOCK_EN,
-                tcp_rx_write_serq_stage_start3, k.common_phv_qstate_addr,
-                TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
+                tcp_rx_dma_rx2tx_stage_start, k.common_phv_qstate_addr,
+                TCP_TCB_RX_DMA_OFFSET, TABLE_SIZE_512_BITS)
 
-    /*
-     * c1 = ooo received, store allocated page and descr in d
-     *
-     * c2 = pkt received with ooo buffer allocated, use stored
-     * page and descr
-     */
-    sne         c1, k.common_phv_ooo_rcv, r0
-    bcf         [!c1], flow_fc_process_done
-
-    tblwr.c1    d.page, k.to_s5_page
-    tblwr.c1    d.descr, k.to_s5_descr
-    tblwr.c1    d.l7_descr, k.to_s5_l7_descr
-
-    phvwr.c2    p.to_s6_descr, d.descr
-    phvwr.c2    p.to_s6_page, d.page
-    phvwr.c2    p.s6_t2_s2s_l7_descr, d.l7_descr
 
 flow_fc_process_done:
     phvwr       p.rx2tx_extra_rcv_wnd, d.rcv_wnd
+    bbeq        k.common_phv_ooo_rcv, 1, flow_fc_ooq
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_DIS,
-                tcp_rx_write_serq_stage_start, k.common_phv_qstate_addr,
-                TCP_TCB_WRITE_SERQ_OFFSET, TABLE_SIZE_512_BITS)
+                tcp_rx_dma_serq_stage_start, k.common_phv_qstate_addr,
+                TCP_TCB_RX_DMA_OFFSET, TABLE_SIZE_512_BITS)
 
-#ifdef L7_PROXY_SUPPORT
-    /* Disable l7 aspect for now */
-    sne     c1, k.common_phv_l7_proxy_en, r0
-    bcf     [c1], tcp_l7_rx
+    nop.e
     nop
-#endif
+
+flow_fc_ooq:
+    // Tables launched from qbase load
+    CAPRI_CLEAR_TABLE_VALID(0)
+
     nop.e
     nop
 
@@ -83,15 +62,3 @@ tcp_cpu_rx:
 
     b           flow_fc_process_done
     nop
-
-#ifdef L7_PROXY_SUPPORT
-tcp_l7_rx:
-    CAPRI_NEXT_TABLE_READ_OFFSET(2,
-                                 TABLE_LOCK_EN,
-                                 tcp_rx_write_l7q_stage_start,
-                                 k.common_phv_qstate_addr,
-                                 TCP_TCB_WRITE_L7Q_OFFSET,
-                                 TABLE_SIZE_512_BITS)
-    nop.e
-    nop
-#endif

@@ -20,7 +20,7 @@ packets:
     - packet:
         id          : PKT1
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : 1000
+        payloadsize : 64
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
@@ -47,7 +47,7 @@ packets:
     - packet:
         id          : PKT2
         template    : callback://networking/packets/GetPacketTemplateByFlow
-        payloadsize : 1024
+        payloadsize : 64
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             eth:
@@ -66,7 +66,7 @@ packets:
             tcp:
                 sport   : ref://testcase/config/flow/sport
                 dport   : ref://testcase/config/flow/dport
-                seq     : callback://tcpcb/tcpcb/GetSeqNum
+                seq     : callback://tcpcb/tcpcb/GetNxtOOOSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckNum
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 

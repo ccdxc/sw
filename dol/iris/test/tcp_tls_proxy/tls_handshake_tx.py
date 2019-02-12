@@ -119,24 +119,16 @@ def TestCaseVerify(tc):
 
     print("bytes_rcvd = %d:" % tcb.bytes_rcvd)
     print("pkts_rcvd = %d:" % tcb.pkts_rcvd)
-    print("debug_num_phv_to_mem = %d:" % tcb.debug_num_phv_to_mem)
-    print("debug_num_pkt_to_mem = %d:" % tcb.debug_num_pkt_to_mem)
 
 
     print("bytes_rcvd = %d:" % tcb_cur.bytes_rcvd)
     print("pkts_rcvd = %d:" % tcb_cur.pkts_rcvd)
-    print("debug_num_phv_to_mem = %d:" % tcb_cur.debug_num_phv_to_mem)
-    print("debug_num_pkt_to_mem = %d:" % tcb_cur.debug_num_pkt_to_mem)
 
     print("bytes_sent = %d:" % tcb.bytes_sent)
     print("pkts_sent = %d:" % tcb.pkts_sent)
-    print("debug_num_phv_to_pkt = %d:" % tcb.debug_num_phv_to_pkt)
-    print("debug_num_mem_to_pkt = %d:" % tcb.debug_num_mem_to_pkt)
 
     print("bytes_sent = %d:" % tcb_cur.bytes_sent)
     print("pkts_sent = %d:" % tcb_cur.pkts_sent)
-    print("debug_num_phv_to_pkt = %d:" % tcb_cur.debug_num_phv_to_pkt)
-    print("debug_num_mem_to_pkt = %d:" % tcb_cur.debug_num_mem_to_pkt)
 
     # 4. Verify pkt rx stats
     if tcb_cur.pkts_rcvd != tcb.pkts_rcvd + 1:

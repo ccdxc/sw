@@ -14,7 +14,7 @@
 
 struct phv_ p;
 struct s6_t0_tcp_rx_k_ k;
-struct s6_t0_tcp_rx_write_serq_d d;
+struct s6_t0_tcp_rx_dma_d d;
 
 %%
     .align
@@ -26,12 +26,7 @@ struct s6_t0_tcp_rx_write_serq_d d;
 tcp_slow_rx_write_serq_stage_start:
     seq         c1, k.common_phv_write_arq, 1
     seq         c2, k.common_phv_write_serq, 1
-#ifdef L7_PROXY_SUPPORT
-    seq         c3, k.common_phv_l7_proxy_type_redirect, 1
-    setcf       c7, [!c1 & !c2 & !c3]
-#else
     setcf       c7, [!c1 & !c2]
-#endif
     seq         c4, k.common_phv_skip_pkt_dma, 1
     setcf       c7, [c7 | c4]
     seq         c3, k.common_phv_fatal_error, 1
@@ -54,19 +49,9 @@ dma_slow_cmd_data:
     b.c1        dma_slow_cmd_data_skip
 
     /* Set the DMA_WRITE CMD for data */
-    add         r1, k.to_s6_page, k.to_s6_ooo_offset
-    addi        r3, r1, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
+    add         r3, k.to_s6_page, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
-    /*
-     * For SACK case, to_s6_payload_len is total accumulated length of
-     * packet. s6_s2s_payload_len is the packet we just got and that
-     * is what we want to DMA
-     */
     CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.s6_s2s_payload_len)
-    seq         c1, k.common_phv_ooo_rcv, 1
-    seq         c2, k.common_phv_pending_txdma, 0
-    setcf       c1, [c1 & c2]
-    phvwr.c1    p.pkt_dma_dma_cmd_eop, 1
     b           dma_slow_cmd_descr
     nop
 
@@ -92,10 +77,10 @@ dma_slow_cmd_descr:
     phvwr       p.aol_L0, k.{to_s6_payload_len}.wx
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP(pkt_descr_dma_dma_cmd, r1, aol_A0, aol_next_pkt)
+pkts_rcvd_stats_update_start:
+    CAPRI_STATS_INC(pkts_rcvd, 1, d.pkts_rcvd, p.to_s7_pkts_rcvd)
+pkts_rcvd_stats_update_end:
 
-    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
-    bcf         [c1], tcp_slow_serq_produce
-    nop
 dma_slow_tcp_flags:
     add         r1, k.to_s6_descr, NIC_DESC_ENTRY_TCP_FLAGS_OFFSET
     CAPRI_DMA_CMD_PHV2MEM_SETUP(tcp_flags_dma_dma_cmd, r1, tcp_app_header_flags, tcp_app_header_flags)
@@ -114,30 +99,10 @@ tcp_slow_serq_produce:
     seq         c1, k.common_phv_write_serq, 1
     bcf         [!c1], slow_flow_write_serq_process_done
     nop
-    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ
-    smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
-    bcf         [!c1 & !c2], slow_ring_doorbell
-    nop
-    b           slow_flow_write_serq_process_done
-    nop
 
 slow_ring_doorbell:
-#ifdef L7_PROXY_SUPPORT
-    seq         c1, k.common_phv_l7_proxy_en, 1
-    bcf         [!c1], slow_ring_doorbell_no_proxy
     add         r1, k.to_s6_serq_pidx, 1
 
-slow_ring_doorbell_proxy:
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tls_doorbell_dma_cmd, LIF_TLS, 0,
-                                 k.common_phv_fid, TLS_SCHED_RING_SERQ,
-                                 r1, db_data_pid, db_data_index)
-    b slow_flow_write_serq_process_done
-    nop
-#else
-    add         r1, k.to_s6_serq_pidx, 1
-#endif
-
-slow_ring_doorbell_no_proxy:
     CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_STOP_FENCE(tls_doorbell_dma_cmd, LIF_TLS, 0,
                                  k.common_phv_fid, TLS_SCHED_RING_SERQ,
                                  r1, db_data_pid, db_data_index)
@@ -158,5 +123,5 @@ slow_flow_write_serq_drop:
     nop
     b.c1        dma_slow_cmd_data_skip
     nop
-    phvwri      p.p4_rxdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(rx2tx_or_cpu_hdr_dma_dma_cmd_type) / 16)
+    phvwri      p.p4_rxdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(cpu_hdr_dma_dma_cmd_type) / 16)
     nop

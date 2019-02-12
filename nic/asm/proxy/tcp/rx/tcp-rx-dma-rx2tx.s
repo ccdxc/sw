@@ -14,7 +14,7 @@
 
 struct phv_ p;
 struct s6_t1_tcp_rx_k_ k;
-struct s6_t0_tcp_rx_write_serq_d d;
+struct s6_t0_tcp_rx_dma_d d;
 
 %%
     .param          tcp_rx_stats_stage_start
@@ -24,12 +24,8 @@ struct s6_t0_tcp_rx_write_serq_d d;
      * Global conditional variables
      * c7 drop packet and don't send to arm
      */
-tcp_rx_write_serq_stage_start2:
+tcp_rx_dma_rx2tx_stage_start:
     CAPRI_CLEAR_TABLE_VALID(1)
-
-    seq         c1, k.common_phv_pending_txdma, 0
-    bcf         [c1], tcp_write_serq2_done
-    nop
 
 dma_cmd_write_rx2tx_extra_shared:
     /*
@@ -38,16 +34,9 @@ dma_cmd_write_rx2tx_extra_shared:
     add         r5, TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET, k.common_phv_qstate_addr
     CAPRI_DMA_CMD_PHV2MEM_SETUP(rx2tx_extra_dma_dma_cmd, r5, rx2tx_extra_snd_cwnd, rx2tx_extra_rx2tx_end_marker)
 
-#ifndef HW
-    /*
-     * debug dol (SERQ) cases only
-     * If not informing TLS or sending ack, set EOP earlier
-     */
-    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ
-    smeqb.!c1   c1, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
-    smeqb.c1    c1, k.common_phv_debug_dol, TCP_DDOL_DONT_SEND_ACK, TCP_DDOL_DONT_SEND_ACK
-    phvwri.c1   p.rx2tx_extra_dma_dma_cmd_eop, 1
-#endif
+    seq         c1, k.common_phv_pending_txdma, 0
+    bcf         [c1], tcp_write_serq2_done
+    nop
 
 dma_cmd_write_rx2tx_extra_shared_end:
     // If delayed ack is the only pending work, there are no doorbells
@@ -71,16 +60,6 @@ rx2tx_fast_retrans_ring:
 rx2tx_fast_retrans_done:
 
 dma_cmd_ring_tcp_tx_doorbell:
-#ifndef HW
-    /*
-     * Check if we have pending_txdma work, exit if not
-     */
-    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_DONT_SEND_ACK, TCP_DDOL_DONT_SEND_ACK
-    smeqb       c2, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, TCP_PENDING_TXDMA_ACK_SEND
-    bcf         [c1 & c2], tcp_write_serq2_done
-    nop
-#endif
-
     smeqb       c1, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, TCP_PENDING_TXDMA_ACK_SEND
     smeqb       c2, k.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, TCP_PENDING_TXDMA_SND_UNA_UPDATE
     bcf         [c1 & c2], rx2tx_send_ack_and_clean_retx_ring
@@ -116,16 +95,12 @@ rx2tx_ring_done:
     bcf         [c1], tx_doorbell_set_eop
 
     /*
-     * c7 is drop case, we want to set EOP on tx doorbell and exit after that
+     * drop case, we want to set EOP on tx doorbell and exit after that
      */
     seq         c1, k.common_phv_write_arq, 1
     seq         c2, k.common_phv_write_serq, 1
-    setcf       c7, [!c1 & !c2]
 
-    smeqb       c2, k.common_phv_debug_dol, TCP_DDOL_DONT_QUEUE_TO_SERQ, TCP_DDOL_DONT_QUEUE_TO_SERQ
-    smeqb       c3, k.common_phv_debug_dol, TCP_DDOL_PKT_TO_SERQ, TCP_DDOL_PKT_TO_SERQ
-
-    bcf         [c7 | c2 | c3], tx_doorbell_set_eop
+    bcf         [!c1 & !c2], tx_doorbell_set_eop
 
     seq         c2, k.common_phv_write_serq, 1
     bcf         [c2], tcp_write_serq2_done

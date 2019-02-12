@@ -46,12 +46,18 @@ l7_proxy_type : 0
 sesq_retx_ci : 0
 retx_snd_una : 1
 debug_dol_tblsetaddr : 0
-serq_pi      : 0
-serq_ci      : 0
-rto_backoff  : 0
-delay_ack  : 0
-ato  : 0
-abc_l_var  : 0
+serq_pi     : 0
+serq_ci     : 0
+rto_backoff : 0
+delay_ack   : 0
+ato         : 0
+abc_l_var   : 0
+ooo_queue   : 0
+ooq_status  : [ {'queue_addr' : 0, 'start_seq' : 0, 'end_seq' : 0, 'num_entries' : 0},
+                {'queue_addr' : 0, 'start_seq' : 0, 'end_seq' : 0, 'num_entries' : 0},
+                {'queue_addr' : 0, 'start_seq' : 0, 'end_seq' : 0, 'num_entries' : 0},
+                {'queue_addr' : 0, 'start_seq' : 0, 'end_seq' : 0, 'num_entries' : 0},
+              ]
 # pred_flags
 #   header len = 8 (32 bytes, assuming timestamp)
 #   flags = ACK
@@ -60,26 +66,11 @@ pred_flags  : 0x801003e8
 
 bytes_rcvd  : 0
 pkts_rcvd   : 0
-pages_alloced   : 0
-desc_alloced    : 0
 bytes_sent  : 0
 pkts_sent   : 0
-debug_num_phv_to_pkt    : 0
-debug_num_mem_to_pkt    : 0
-debug_num_pkt_to_mem    : 0
-debug_num_phv_to_mem    : 0
-debug_stage0_7_thread   : 0
 state       : 0
 asesq       : 0
 asesq_pi    : 0
 asesq_ci    : 0
-debug_atomic_delta      : 0
-debug_atomic0_incr1247  : 0
-debug_atomic1_incr247   : 0
-debug_atomic2_incr47    : 0
-debug_atomic3_incr47    : 0
-debug_atomic4_incr7     : 0
-debug_atomic5_incr7     : 0
-debug_atomic6_incr7     : 0
 other_qid   : 0
 cc_flags  : 0

@@ -25,7 +25,7 @@ def Teardown(infra, module):
 def TestCaseSetup(tc):
     skip_config = False
     if hasattr(tc.module.args, 'skip_config') and tc.module.args.skip_config:
-        print("skipping config")
+        logger.info("skipping config")
         skip_config = True
 
     tc.pvtdata = ObjectDatabase()
@@ -90,22 +90,15 @@ def TestCaseSetup(tc):
 
     tlscb.debug_dol = 0
     tlscb2.debug_dol = 0
+    tlscb.other_fid = other_fid
+    tlscb2.other_fid = id
+
     if tc.pvtdata.bypass_barco:
-        print("Bypassing Barco")
+        logger.info("Bypassing Barco")
         tlscb.is_decrypt_flow = False
         tlscb2.is_decrypt_flow = False
         tlscb.debug_dol |= tcp_tls_proxy.tls_debug_dol_bypass_barco
         tlscb2.debug_dol |= tcp_tls_proxy.tls_debug_dol_bypass_barco
-    if tc.pvtdata.same_flow:
-        print("Same flow")
-        tlscb.debug_dol |= tcp_tls_proxy.tls_debug_dol_bypass_proxy
-        tlscb2.debug_dol |= tcp_tls_proxy.tls_debug_dol_bypass_proxy
-        tlscb.other_fid = 0xffff
-        tlscb2.other_fid = 0xffff
-    else:
-        print("Other flow")
-        tlscb.other_fid = other_fid
-        tlscb2.other_fid = id
 
     if not skip_config:
         tlscb.SetObjValPd()
@@ -138,6 +131,11 @@ def TestCaseSetup(tc):
         rnmdpr_big.ci = 2    # ring size of 2, so can hold 1 entry
         rnmdpr_big.SetMeta()
     tc.pvtdata.Add(rnmdpr_big)
+
+    if tc.pvtdata.test_ooo_queue:
+        ooo_rx_wring = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["OOO_RX"])
+        ooo_rx_wring.GetMeta()
+        tc.pvtdata.Add(ooo_rx_wring)
 
     tnmdpr_big = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"])
     tnmdpr_big.GetMeta()
@@ -174,29 +172,23 @@ def TestCaseVerify(tc):
         return True
 
     if hasattr(tc.module.args, 'skip_verify') and tc.module.args.skip_verify:
-        print("skipping verify")
+        logger.info("skipping verify")
         return True
 
 
     id = ProxyCbServiceHelper.GetFlowInfo(tc.config.flow._FlowObject__session)
     if tc.config.flow.IsIflow():
-        print("This is iflow")
+        logger.info("This is iflow")
         tcbid = "TcpCb%04d" % id
         tlscbid = "TlsCb%04d" % id
         other_tcbid = "TcpCb%04d" % (id + 1)
         other_tlscbid = "TlsCb%04d" % (id + 1)
     else:
-        print("This is rflow")
+        logger.info("This is rflow")
         tcbid = "TcpCb%04d" % (id + 1)
         tlscbid = "TlsCb%04d" % (id + 1)
         other_tcbid = "TcpCb%04d" % id
         other_tlscbid = "TlsCb%04d" % id
-
-    same_flow = False
-    if tc.pvtdata.same_flow:
-        other_tcbid = tcbid
-        other_tlscbid = tlscbid
-        same_flow = True
 
     tcpcb = tc.pvtdata.db[tcbid]
     tcpcb_cur = tc.infra_data.ConfigStore.objects.db[tcbid]
@@ -222,83 +214,88 @@ def TestCaseVerify(tc):
     tnmdpr_big_cur = tc.infra_data.ConfigStore.objects.db["TNMDPR_BIG"]
     tnmdpr_big_cur.GetMeta()
 
-    # Print stats
-    if same_flow:
-        other_tcpcb = tcpcb
-        other_tcpcb_cur = tcpcb_cur
-    else:
-        print("bytes_rcvd = %d:" % tcpcb_cur.bytes_rcvd)
-        print("pkts_rcvd = %d:" % tcpcb_cur.pkts_rcvd)
-        print("debug_num_phv_to_mem = %d:" % tcpcb_cur.debug_num_phv_to_mem)
-        print("debug_num_pkt_to_mem = %d:" % tcpcb_cur.debug_num_pkt_to_mem)
-
-    print("bytes_sent = %d:" % other_tcpcb_cur.bytes_sent)
-    print("pkts_sent = %d:" % other_tcpcb_cur.pkts_sent)
-    print("debug_num_phv_to_pkt = %d:" % other_tcpcb_cur.debug_num_phv_to_pkt)
-    print("debug_num_mem_to_pkt = %d:" % other_tcpcb_cur.debug_num_mem_to_pkt)
+    if tc.pvtdata.test_ooo_queue:
+        ooo_rx_wring = tc.pvtdata.db["OOO_RX"]
 
     num_pkts = tc.pvtdata.num_pkts
     num_ack_pkts = tc.pvtdata.num_ack_pkts
     num_rx_pkts = tc.pvtdata.num_rx_pkts
     num_retx_pkts = tc.pvtdata.num_retx_pkts
     num_tx_pkts = tc.pvtdata.num_tx_pkts
-
-    if hasattr(tc.module.args, 'num_retx_pkts'):
-        tc.pvtdata.flow2_bytes_txed += (tc.packets.Get('PKT1').payloadsize * int(tc.module.args.num_retx_pkts))
+    rcv_next_delta = tc.pvtdata.flow1_bytes_rxed
+    ooo = False
+    ooo_queue = False
 
     if hasattr(tc.module.args, 'fin'):
         tc.pvtdata.flow1_bytes_rxed -= int(tc.module.args.fin)
         tc.pvtdata.flow2_bytes_txed -= int(tc.module.args.fin)
 
+    if tc.pvtdata.test_ooo_queue:
+        ooo = True
+        ooo_queue = True
+        ooo_rx_wring_cur = copy.deepcopy(tc.infra_data.ConfigStore.objects.db["OOO_RX"])
+        ooo_rx_wring_cur.GetMeta()
+        arr_pi = range(ooo_rx_wring.pi, ooo_rx_wring_cur.pi)
+        ooo_rx_wring_cur.GetRingEntries(arr_pi)
+
+    if hasattr(tc.module.args, 'num_retx_pkts'):
+        tc.pvtdata.flow2_bytes_txed += (tc.packets.Get('PKT1').payloadsize * int(tc.module.args.num_retx_pkts))
+
     if tc.pvtdata.serq_full:
         # SERQ is full, pi/ci should not move
         if tlscb_cur.serq_pi != tlscb.serq_pi or \
                     tlscb_cur.serq_ci != tlscb.serq_ci:
-            print("serq pi/ci not as expected old (%d, %d), new (%d, %d)" %
+            logger.error("serq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                     (tlscb.serq_pi, tlscb.serq_ci,
                      tlscb_cur.serq_pi, tlscb_cur.serq_ci))
             return False
         return True
 
+    if tc.pvtdata.ooo_seq_delta:
+        ooo = True
+        rcv_next_delta = 0
+        num_pkts = 0
+    if not tc.pvtdata.rst and tcpcb_cur.rcv_nxt != tc.pvtdata.flow1_rcv_nxt + rcv_next_delta:
+        logger.error("rcv_nxt (%d) not as expected (%d)" %
+                (tcpcb_cur.rcv_nxt, tc.pvtdata.flow1_rcv_nxt + rcv_next_delta))
+        return False
 
     # 1. Verify SERQ pi got updated
-    if (tlscb_cur.serq_pi != tlscb.serq_pi + num_rx_pkts):
-        print("serq pi/ci not as expected old (%d, %d), new (%d, %d)" %
+    if not ooo and tlscb_cur.serq_pi != tlscb.serq_pi + num_rx_pkts:
+        logger.error("serq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (tlscb.serq_pi, tlscb.serq_ci,
                  tlscb_cur.serq_pi, tlscb_cur.serq_ci))
         return False
 
     # 2. Verify SERQ ci got updated
-    if (tlscb_cur.serq_ci != tlscb.serq_ci + num_rx_pkts):
-        print("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
+    if not ooo and tlscb_cur.serq_ci != tlscb.serq_ci + num_rx_pkts:
+        logger.error("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (tlscb.serq_pi, tlscb.serq_ci,
                  tlscb_cur.serq_pi, tlscb_cur.serq_ci))
         return False
 
     # 3. Verify SESQ pi got updated
-    if (other_tcpcb_cur.sesq_pi != other_tcpcb.sesq_pi + num_rx_pkts):
-        print("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
+    if not ooo and other_tcpcb_cur.sesq_pi != other_tcpcb.sesq_pi + num_rx_pkts:
+        logger.error("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (other_tcpcb.sesq_pi, other_tcpcb.sesq_ci,
                  other_tcpcb_cur.sesq_pi, other_tcpcb_cur.sesq_ci))
         return False
 
     # 4. Verify SESQ ci got updated
-    if (other_tcpcb_cur.sesq_ci != other_tcpcb.sesq_ci + num_rx_pkts):
-        print("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
+    if not ooo and other_tcpcb_cur.sesq_ci != other_tcpcb.sesq_ci + num_rx_pkts:
+        logger.error("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (other_tcpcb.sesq_pi, other_tcpcb.sesq_ci,
                  other_tcpcb_cur.sesq_pi, other_tcpcb_cur.sesq_ci))
         return False
 
     # 5. Verify pkt rx stats
-    if not tc.pvtdata.final_fin and tcpcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + num_rx_pkts:
-        print("pkt rx stats not as expected")
+    if not ooo and not tc.pvtdata.final_fin and tcpcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + num_rx_pkts:
+        logger.error("pkt rx stats not as expected")
         return False
 
-    print("Stats - 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x" % (tc.pvtdata.flow2_bytes_txed, tc.pvtdata.flow2_bytes_rxed, tc.pvtdata.flow1_bytes_txed, tc.pvtdata.flow1_bytes_rxed, num_tx_pkts, num_rx_pkts))
-
-    if tcpcb_cur.bytes_rcvd - tcpcb.bytes_rcvd != \
+    if not ooo and tcpcb_cur.bytes_rcvd - tcpcb.bytes_rcvd != \
             tc.pvtdata.flow1_bytes_rxed:
-        print("Warning! pkt rx byte stats not as expected %d %d" % \
+        logger.error("Warning! pkt rx byte stats not as expected %d %d" % \
                 (tcpcb_cur.bytes_rcvd, tcpcb.bytes_rcvd))
 
         # In the error case of running out of descriptors, we increment stats and
@@ -309,98 +306,72 @@ def TestCaseVerify(tc):
         # ignore stats in rst case as well
         if not tc.pvtdata.sem_full and not tc.pvtdata.rst:
             return False
-    
+
     # 6. Verify pkt tx stats
-    if other_tcpcb_cur.pkts_sent != other_tcpcb.pkts_sent + num_tx_pkts:
-        print("pkt tx stats (%d) not as expected (%d)" % (other_tcpcb_cur.pkts_sent,
+    if not ooo and other_tcpcb_cur.pkts_sent != other_tcpcb.pkts_sent + num_tx_pkts:
+        logger.error("pkt tx stats (%d) not as expected (%d)" % (other_tcpcb_cur.pkts_sent,
             (other_tcpcb.pkts_sent + num_tx_pkts)))
         return False
 
     if hasattr(tc.module.args, 'byte_calc_based_on_tx_pkts'):
         if other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent != \
                 tc.packets.Get('PKT1').payloadsize * num_tx_pkts:
-            print("Warning! pkt tx byte stats not as expected %d %d" % \
+            logger.error("Warning! pkt tx byte stats not as expected %d %d" % \
                 (other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent,
                     tc.packets.Get('PKT1').payloadsize * num_tx_pkts))
             return False
-    else:
+    elif not ooo:
         if other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent != \
                 tc.pvtdata.flow2_bytes_txed:
-            print("Warning! pkt tx byte stats not as expected %d %d" % \
+            logger.error("Warning! pkt tx byte stats not as expected %d %d" % \
                 (other_tcpcb_cur.bytes_sent - other_tcpcb.bytes_sent,
                     tc.pvtdata.flow2_bytes_txed))
             return False
 
-    # 7. Verify phv2pkt
-    if other_tcpcb_cur.debug_num_phv_to_pkt != other_tcpcb.debug_num_phv_to_pkt + 2 * num_tx_pkts:
-        print("Num phv2pkt not as expected")
-        return False
-
-    # 8. Verify mem2pkt
-    if other_tcpcb_cur.debug_num_mem_to_pkt != other_tcpcb.debug_num_mem_to_pkt + 2 * num_tx_pkts:
-        print("Num mem2pkt not as expected")
-        return False
-
-    if same_flow and other_tcpcb_cur.snd_nxt != tc.pvtdata.flow1_snd_nxt + \
-            tc.pvtdata.flow2_bytes_txed:
-        print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
-        print("mem2pkt failed pvtdata snd_nxt = 0x%x" % tc.pvtdata.flow1_snd_nxt)
-        return False
-    elif not same_flow and other_tcpcb_cur.snd_nxt != \
+    if other_tcpcb_cur.snd_nxt != \
             tc.pvtdata.flow2_snd_nxt + tc.pvtdata.flow2_bytes_txed:
-        print("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
+        logger.error("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
 
     # 10. Verify pkt tx (in testspec)
 
     # 11.
-    print("RNMDPR_BIG old pi=%d,ci=%d / new pi=%d,ci=%d" %
-            (rnmdpr_big.pi, rnmdpr_big.ci, rnmdpr_big_cur.pi, rnmdpr_big_cur.ci))
-
-    print("TNMDPR_BIG old pi=%d,ci=%d / new pi=%d,ci=%d" %
-            (tnmdpr_big.pi, tnmdpr_big.ci, tnmdpr_big_cur.pi, tnmdpr_big_cur.ci))
-
-    print("sesq_retx_ci before 0x%lx after 0x%lx" % \
-            (tcpcb_cur.sesq_retx_ci, other_tcpcb_cur.sesq_retx_ci))
-    print("retx_snd_una before 0x%x after 0x%x" % \
-            (tcpcb_cur.retx_snd_una, other_tcpcb_cur.retx_snd_una))
-
     if tc.pvtdata.test_retx and tc.pvtdata.test_retx == 'partial':
         if other_tcpcb_cur.sesq_retx_ci != other_tcpcb.sesq_retx_ci + 1:
-            print("sesq_retx_ci is %d, expected %d" %
+            logger.error("sesq_retx_ci is %d, expected %d" %
                     (other_tcpcb_cur.sesq_retx_ci, other_tcpcb.sesq_retx_ci + 1))
             return False
         if other_tcpcb_cur.retx_snd_una != tc.pvtdata.flow2_snd_una + \
                  tc.pvtdata.flow2_bytes_txed / 2:
-            print("retx_snd_una 0x%x is not 0x%x" % 
+            logger.error("retx_snd_una 0x%x is not 0x%x" %
                     (other_tcpcb_cur.retx_snd_una, tc.pvtdata.flow2_bytes_txed))
             return False
 
     if tc.pvtdata.test_retx and tc.pvtdata.test_retx == 'complete':
         if other_tcpcb_cur.sesq_retx_ci != other_tcpcb.sesq_retx_ci + 2:
-            print("sesq_retx_ci is %d, expected %d" %
+            logger.error("sesq_retx_ci is %d, expected %d" %
                     (other_tcpcb_cur.sesq_retx_ci, other_tcpcb.sesq_retx_ci + 2))
             return False
         if other_tcpcb_cur.retx_snd_una != tc.pvtdata.flow2_snd_una + \
                  tc.pvtdata.flow1_bytes_rxed:
-            print("retx_snd_una 0x%x is not 0x%x" % 
+            logger.error("retx_snd_una 0x%x is not 0x%x" %
                     (other_tcpcb_cur.retx_snd_una, tc.pvtdata.flow1_bytes_rxed))
             return False
 
     if tc.pvtdata.test_retx and (tc.pvtdata.test_retx == 'partial' \
             or tc.pvtdata.test_retx == 'complete'):
         if rnmdpr_big_cur.pi != rnmdpr_big.pi + tc.pvtdata.pkt_alloc:
-            print("rnmdpr_big cur %d pi does not match expected %d" % \
+            logger.error("rnmdpr_big cur %d pi does not match expected %d" % \
                     (rnmdpr_big_cur.pi, rnmdpr_big.pi + tc.pvtdata.pkt_alloc))
             return False
         if tc.pvtdata.bypass_barco:
             if rnmdpr_big_cur.ci != rnmdpr_big.ci + tc.pvtdata.pkt_free:
-                print("rnmdpr_big cur %d ci does not match expected %d" % \
+                logger.error("rnmdpr_big cur %d ci does not match expected %d" % \
                         (rnmdpr_big_cur.ci, rnmdpr_big.ci + tc.pvtdata.pkt_free))
                 return False
 
     if hasattr(tc.module.args, 'test_cwnd_idle'):
         if other_tcpcb_cur.snd_cwnd != other_tcpcb.initial_window:
-            print("snd_wnd (%d) is not initial_window (%d) after idle timeout" % \
+            logger.error("snd_wnd (%d) is not initial_window (%d) after idle timeout" % \
                     (other_tcpcb_cur.snd_cwnd, other_tcpcb.initial_window))
             return False
 
@@ -411,7 +382,7 @@ def TestCaseVerify(tc):
             incr = (other_tcpcb.rcv_mss * other_tcpcb.rcv_mss) / \
                     other_tcpcb.snd_cwnd
         if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + incr:
-            print("cong_avoid: failed to increment cwnd (%d) by (%d)" % \
+            logger.error("cong_avoid: failed to increment cwnd (%d) by (%d)" % \
                     (other_tcpcb_cur.snd_cwnd, incr))
             return False
 
@@ -421,7 +392,7 @@ def TestCaseVerify(tc):
         else:
             incr = other_tcpcb.rcv_mss
         if other_tcpcb_cur.snd_cwnd != other_tcpcb.snd_cwnd + incr:
-            print("slow_start: failed to increment cwnd (%d) by (%d)" % \
+            logger.error("slow_start: failed to increment cwnd (%d) by (%d)" % \
                     (other_tcpcb_cur.snd_cwnd, incr))
             return False
 
@@ -447,60 +418,60 @@ def TestCaseVerify(tc):
             snd_recover = 0
             cc_flags = 0
         if other_tcpcb_cur.snd_cwnd != new_snd_cwnd:
-            print("snd_cwnd %d not as expected (%d)" % (other_tcpcb_cur.snd_cwnd, new_snd_cwnd))
+            logger.error("snd_cwnd %d not as expected (%d)" % (other_tcpcb_cur.snd_cwnd, new_snd_cwnd))
             return False
         if other_tcpcb_cur.snd_ssthresh != new_snd_ssthresh:
-            print("snd_ssthresh %d not as expected (%d)" % (other_tcpcb_cur.snd_ssthresh, new_snd_ssthresh))
+            logger.error("snd_ssthresh %d not as expected (%d)" % (other_tcpcb_cur.snd_ssthresh, new_snd_ssthresh))
             return False
         if other_tcpcb_cur.snd_recover != snd_recover:
-            print("snd_recover %d not as expected (%d)" % (other_tcpcb_cur.snd_recover, snd_recover))
+            logger.error("snd_recover %d not as expected (%d)" % (other_tcpcb_cur.snd_recover, snd_recover))
             return False
         if other_tcpcb_cur.cc_flags != cc_flags:
-            print("cc_flags (%d) not as expected (%d)" % (other_tcpcb_cur.cc_flags, cc_flags))
+            logger.error("cc_flags (%d) not as expected (%d)" % (other_tcpcb_cur.cc_flags, cc_flags))
             return False
 
     if tc.pvtdata.fin:
-        print("tcpcb state = %s, other_tcpcb state = %s" % \
+        logger.error("tcpcb state = %s, other_tcpcb state = %s" % \
                 (tcpcb.state, other_tcpcb.state))
-        print("tcpcb_cur state = %s, other_tcpcb_cur state = %s" % \
+        logger.error("tcpcb_cur state = %s, other_tcpcb_cur state = %s" % \
                 (tcpcb_cur.state, other_tcpcb_cur.state))
         if not tc.pvtdata.final_fin and tcpcb_cur.state != tcp_proxy.tcp_state_CLOSE_WAIT:
-            print("flow 1 state not CLOSE_WAIT as expected")
+            logger.error("flow 1 state not CLOSE_WAIT as expected")
             return False
         elif tc.pvtdata.final_fin and tcpcb_cur.state != tcp_proxy.tcp_state_CLOSE:
-            print("flow 1 state not CLOSE as expected")
+            logger.error("flow 1 state not CLOSE as expected")
             return False
         if not tc.pvtdata.fin_ack and not tc.pvtdata.final_fin:
             # flow 2 should be in fin_wait1, but since it doesn't receive any
             # packet the state doesn't move from ESTABLISHED (state is only
             # maintained in rxdma)
             if other_tcpcb_cur.state != tcp_proxy.tcp_state_ESTABLISHED:
-                print("flow 2 state not FIN_WAIT1 as expected")
+                logger.error("flow 2 state not FIN_WAIT1 as expected")
                 return False
         elif not tc.pvtdata.final_fin:
             if other_tcpcb_cur.state != tcp_proxy.tcp_state_FIN_WAIT2:
-                print("flow 2 state not FIN_WAIT2 as expected")
+                logger.error("flow 2 state not FIN_WAIT2 as expected")
                 return False
         else:
             if other_tcpcb_cur.state != tcp_proxy.tcp_state_TIME_WAIT:
-                print("flow 2 state not TIME_WAIT as expected")
+                logger.error("flow 2 state not TIME_WAIT as expected")
                 return False
 
     if tc.pvtdata.test_mpu_tblsetaddr:
-        print("debug_dol_tblsetaddr = 0x%x" % \
+        logger.error("debug_dol_tblsetaddr = 0x%x" % \
                 other_tcpcb_cur.debug_dol_tblsetaddr)
         if (other_tcpcb_cur.debug_dol_tblsetaddr != \
                 tcp_proxy.tcp_ddol_TBLADDR_VALUE):
-            print("tblsetaddr value not as expected")
+            logger.error("tblsetaddr value not as expected")
             return False
 
     if tc.pvtdata.rst:
         if (other_tcpcb_cur.sesq_retx_ci != other_tcpcb.sesq_retx_ci + num_tx_pkts):
-            print("sesq_retx_ci %d, not as expected %d" % \
+            logger.error("sesq_retx_ci %d, not as expected %d" % \
                     (other_tcpcb_cur.sesq_retx_ci, other_tcpcb.sesq_retx_ci + num_tx_pkts))
             return False
         if (rnmdpr_big_cur.ci != rnmdpr_big.ci + num_tx_pkts + num_ack_pkts):
-            print("rnmdpr ci  %d, not as expected %d" % \
+            logger.error("rnmdpr ci  %d, not as expected %d" % \
                     (rnmdpr_big_cur.ci, rnmdpr_big.ci + num_tx_pkts))
             return False
 
@@ -510,7 +481,7 @@ def TestCaseVerify(tc):
             # All acks are received (no retransmit case)
             #
             if other_tcpcb_cur.packets_out != 0:
-                print("packets_out (%d) not as expected (0)" %
+                logger.error("packets_out (%d) not as expected (0)" %
                         other_tcpcb_cur.packets_out)
                 return False
         else:
@@ -518,17 +489,44 @@ def TestCaseVerify(tc):
             # retransmit case - no acks or partial acks received
             #
             if other_tcpcb_cur.packets_out != num_pkts - num_ack_pkts:
-                print("packets_out (%d) not as expected (%d)" %
+                logger.error("packets_out (%d) not as expected (%d)" %
                         (other_tcpcb_cur.packets_out, num_pkts - num_ack_pkts))
                 return False
 
         if tc.pvtdata.rto_backoff:
             if other_tcpcb_cur.rto_backoff != 0:
-                print("rto_backoff (%d) is not 0 after the test as expected" % \
+                logger.error("rto_backoff (%d) is not 0 after the test as expected" % \
                         other_tcpcb_cur.rto_backoff)
         if other_tcpcb_cur.rto_backoff != num_retx_pkts:
-            print("rto_backoff (%d) not as expected (%d)" %
+            logger.error("rto_backoff (%d) not as expected (%d)" %
                     (other_tcpcb_cur.rto_backoff, num_retx_pkts))
+
+    if ooo_queue:
+        if ooo_rx_wring_cur.pi != ooo_rx_wring.pi + 1:
+            logger.error("ooo_rx pi (%d), not as expected (%d)" %
+                    (ooo_rx_wring_cur.pi, ooo_rx_wring.pi + 1))
+            return False
+        if tcpcb_cur.ooq_status[0].num_entries != num_rx_pkts:
+            logger.error("ooq queue num_entries (%d) not as expected (%d)" %
+                    (tcpcb_cur.ooq_status[0].num_entries, num_rx_pkts))
+            return False
+        pi = ooo_rx_wring.pi
+        if ooo_rx_wring_cur.ringentries[pi].handle != tcpcb_cur.ooq_status[0].queue_addr:
+            logger.error("ooq queue_addr mismatch (%d, %d)" %
+                    (ooo_rx_wring_cur.ringentries[pi].handle, tcpcb_cur.ooq_status[0].queue_addr))
+            return False
+        if tcpcb_cur.ooq_status[0].start_seq != tcpcb_cur.rcv_nxt + tc.pvtdata.ooo_seq_delta:
+            logger.error("ooq start_seq mismatch (%d, %d)" %
+                    (tcpcb_cur.ooq_status[0].start_seq,
+                     tcpcb_cur.rcv_nxt + tc.pvtdata.ooo_seq_delta))
+            return False
+        if tcpcb_cur.ooq_status[0].end_seq != tcpcb_cur.rcv_nxt + \
+                tc.pvtdata.ooo_seq_delta + tc.pvtdata.flow1_bytes_rxed:
+            logger.error("ooq end_seq mismatch (%d, %d)" %
+                    (tcpcb_cur.ooq_status[0].end_seq,
+                     tcpcb_cur.rcv_nxt + tc.pvtdata.ooo_seq_delta + \
+                             tc.pvtdata.flow1_bytes_rxed))
+            return False
 
     return True
 

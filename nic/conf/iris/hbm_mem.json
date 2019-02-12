@@ -457,11 +457,11 @@
             "size": "16384K" 
         },
         {
-            "name": "tcp_ooo_descr_global_pool",
+            "name": "tcp_ooo_qbase_ring",
             "size": "32K" 
         },
         {
-            "name": "tcp_ooo_descr_queue",
+            "name": "tcp_ooo_queue",
             "size": "8192K"
         }
     ]

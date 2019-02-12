@@ -29,10 +29,19 @@ using internal::TcpCbGetRequest;
 using internal::TcpCbGetRequestMsg;
 using internal::TcpCbGetResponse;
 using internal::TcpCbGetResponseMsg;
+using internal::TcpCbOoqStatus;
 
 #define INVALID_HEADER_TEMPLATE_LEN ((uint32_t)-1)
+#define NUM_TCP_OOO_QUEUES_PER_FLOW     4
 
 namespace hal {
+
+typedef struct tcpcb_ooo_queue_entry_s {
+    uint64_t                queue_addr;
+    uint32_t                start_seq;
+    uint32_t                end_seq;
+    uint32_t                num_entries;
+} tcpcb_ooq_entry_t;
 
 typedef struct tcpcb_s {
     sdk_spinlock_t        slock;                   // lock to protect this structure
@@ -86,6 +95,7 @@ typedef struct tcpcb_s {
     uint32_t              cc_flags;
     uint32_t              initial_window;
     uint32_t              abc_l_var;
+    bool                  ooo_queue;
 
     // operational state of TCP Proxy CB
     hal_handle_t          hal_handle;              // HAL allocated handle
@@ -112,6 +122,7 @@ typedef struct tcpcb_s {
     uint64_t              slow_path_cnt;
     uint64_t              serq_full_cnt;
     uint64_t              ooo_cnt;
+    uint64_t              rx_drop_cnt;
 
     uint8_t               debug_dol_tblsetaddr;
 
@@ -142,6 +153,7 @@ typedef struct tcpcb_s {
     uint32_t              tx_ring_pi;
     uint32_t              partial_pkt_ack_cnt;
     uint32_t              window_full_cnt;
+    tcpcb_ooq_entry_t     ooq_entry[NUM_TCP_OOO_QUEUES_PER_FLOW];
 
     // PD state
     void                  *pd;                     // all PD specific state
