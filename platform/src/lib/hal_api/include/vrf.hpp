@@ -22,7 +22,6 @@ public:
   hal_irisc_ret_t HalVrfDelete();
 
   uint64_t GetId();
-  uint64_t GetHandle();
 
   static void Probe();
   Uplink *GetUplink() { return uplink; }

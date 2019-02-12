@@ -38,14 +38,12 @@ public:
     ~Enic() {};
 
     uint64_t GetId();
-    uint64_t GetHandle();
     HalL2Segment *GetL2seg(vlan_t vlan);
 
 private:
     Enic(Lif *ethlif);
 
     uint32_t id;
-    uint64_t handle;
 
     mac_t _mac;
     vlan_t _vlan;

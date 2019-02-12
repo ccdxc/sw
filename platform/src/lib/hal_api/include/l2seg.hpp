@@ -34,7 +34,6 @@ public:
     void DelUplink(Uplink *uplink);
 
     uint64_t GetId();
-    uint64_t GetHandle();
     HalVrf *GetVrf();
 
     static void Probe();
@@ -45,12 +44,8 @@ private:
   void TriggerHalUpdate();
 
   uint32_t id;
-  uint64_t handle;
-
   vlan_t _vlan;
-
   HalVrf *vrf;
-
   uplink_map_t uplink_refs;
 
   // L2seg id

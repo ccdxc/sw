@@ -39,6 +39,10 @@ Uplink::Destroy(Uplink *uplink)
 {
     api_trace("Uplink Delete");
 
+    if (!uplink) {
+        return;
+    }
+
     if (uplink->GetVrf()) {
         // Delete Vrf
         HalVrf::Destroy(uplink->GetVrf());
@@ -47,9 +51,7 @@ Uplink::Destroy(Uplink *uplink)
     // Remove from DB
     uplink_db.erase(uplink->GetPortNum());
 
-    if (uplink) {
-        uplink->~Uplink();
-    }
+    uplink->~Uplink();
 }
 
 Uplink::Uplink(uplink_id_t id, uint32_t port_num, bool is_oob)
@@ -57,8 +59,10 @@ Uplink::Uplink(uplink_id_t id, uint32_t port_num, bool is_oob)
     NIC_LOG_DEBUG("Uplink Create: {}", id);
     id_       = id;
     port_num_ = port_num;
-    is_oob_   = is_oob;
     num_lifs_ = 0;
+    is_oob_   = is_oob;
+    vrf_ = NULL;
+    native_l2seg_ = NULL;
 }
 
 Uplink *

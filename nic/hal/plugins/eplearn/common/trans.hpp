@@ -40,6 +40,7 @@ public:
         SDK_SPINLOCK_INIT(&this->slock_, PTHREAD_PROCESS_PRIVATE);
         marked_for_delete_ = false;
         sm_= nullptr;
+        memset(&ip_entry_key_, 0, sizeof(trans_ip_entry_key_t));
     }
     virtual ~trans_t() {
         SDK_SPINLOCK_DESTROY(&this->slock_);

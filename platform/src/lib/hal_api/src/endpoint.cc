@@ -43,6 +43,9 @@ hal_irisc_ret_t
 HalEndpoint::Destroy(HalEndpoint *ep)
 {
     hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    if (!ep) {
+        return HAL_IRISC_RET_FAIL;
+    }
     ep_key_t ep_key(ep->GetL2Seg(), ep->GetMac());
 
     ret = ep->HalEndpointDelete();
@@ -116,7 +119,6 @@ HalEndpoint::HalEndpointCreate()
             ret = HAL_IRISC_RET_FAIL;
         } else {
             NIC_LOG_DEBUG("Created EP L2seg: {}, Mac: {}", l2seg->GetId(), macaddr2str(mac));
-            handle = rsp.endpoint_status().key_or_handle().endpoint_handle();
         }
     } else {
         NIC_LOG_ERR("Failed to create EP L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),

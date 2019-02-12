@@ -99,7 +99,7 @@ public:
 
     // call this first to set the mode and create the channel
     // static std::shared_ptr<HalCommonClient> GetInstance(enum HalForwardingMode mode){};
-    static HalCommonClient *Factory(enum HalForwardingMode mode) {return NULL;};
+    static HalCommonClient *Factory(enum HalForwardingMode mode) {return NULL;}
     static void Destroy(HalCommonClient *hal_client);
 
     static HalCommonClient *GetInstance();

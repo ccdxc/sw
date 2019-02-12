@@ -55,6 +55,8 @@ MacVlanFilter::MacVlanFilter(Lif *lif,
     _mac = mac;
     _vlan = vlan;
     this->lif = lif;
+    this->ep = NULL;
+    this->mcast = NULL;
 }
 
 hal_irisc_ret_t

@@ -186,7 +186,7 @@ get_dhcp_status(vrf_id_t vrf_id, ip_addr_t *ip_addr, DhcpStatus *dhcp_status)
 {
     trans_ip_entry_key_t ip_entry_key;
     dhcp_trans_t *dhcp_trans;
-    hal_ret_t ret;
+    hal_ret_t ret = HAL_RET_OK;
     const dhcp_ctx *dhcp_ctx;
     ip_addr_t ipaddr = { 0 };
     std::map<dhcp_fsm_state_t, DhcpTransactionState>::iterator it;

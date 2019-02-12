@@ -41,6 +41,9 @@ hal_irisc_ret_t
 HalL2Segment::Destroy(HalL2Segment *l2seg)
 {
     hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    if (!l2seg) {
+        return HAL_IRISC_RET_FAIL;
+    }
     l2seg_key_t key(l2seg->vrf->GetId(), l2seg->_vlan);
 
     ret = l2seg->HalL2SegmentDelete();
@@ -61,6 +64,7 @@ HalL2Segment::HalL2Segment(HalVrf *vrf, uint16_t vlan)
     NIC_LOG_DEBUG("L2seg create: vrf: {}, vlan: {}",
                     vrf->GetId(), vlan);
 
+    this->id = 0;
     this->_vlan = vlan;
     this->vrf = vrf;
     if (vrf->GetUplink()) {
@@ -106,7 +110,6 @@ HalL2Segment::HalL2SegmentCreate()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            handle = rsp.l2segment_status().key_or_handle().l2segment_handle();
             NIC_LOG_DEBUG("L2 segment create succeeded id: {}", id);
         } else {
             NIC_LOG_ERR("Failed to create l2segment: id: {} err: {}", id, rsp.api_status());
@@ -164,8 +167,7 @@ HalL2Segment::HalL2SegmentDelete()
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
             allocator->free(id);
-            NIC_LOG_DEBUG("L2 segment delete succeeded id: {}, handle: {}",
-                            id, handle);
+            NIC_LOG_DEBUG("L2 segment delete succeeded id: {}", id);
         } else {
             NIC_LOG_ERR("Failed to delete l2segment: err: {}", rsp.api_status());
             ret = HAL_IRISC_RET_FAIL;
@@ -188,13 +190,6 @@ uint64_t
 HalL2Segment::GetId()
 {
     return id;
-}
-
-
-uint64_t
-HalL2Segment::GetHandle()
-{
-    return handle;
 }
 
 HalVrf *
@@ -231,9 +226,7 @@ HalL2Segment::TriggerHalUpdate()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            handle = rsp.l2segment_status().key_or_handle().l2segment_handle();
-            NIC_LOG_DEBUG("L2 segment update succeeded id: {}, handle: {}",
-                            id, handle);
+            NIC_LOG_DEBUG("L2 segment update succeeded id: {}", id);
         } else {
             NIC_LOG_ERR("Failed to update l2segment: err: {}", rsp.api_status());
         }

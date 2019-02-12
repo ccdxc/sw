@@ -241,10 +241,10 @@ class dhcp_fsm_test : public hal_base_test {
 };
 
 EthernetII *get_default_dhcp_packet(DHCP::Flags type, uint32_t xid,
-                                    unsigned char *chaddr, const char *yiaddr, bool broadcast = false,
+                                    unsigned char *chaddr, const char *yiaddr, bool is_broadcast = false,
                                     const char *ciaddr = nullptr) {
     EthernetII *eth;
-    if (broadcast) {
+    if (is_broadcast) {
         //HWAddress<6> hw_address((const char*)("ff:ff:ff:ff:ff:ff"));
         //eth->dst_addr(hw_address);
         uint8_t broadcast[] = {0xff, 0xff,0xff, 0xff,0xff,0xff, 0};

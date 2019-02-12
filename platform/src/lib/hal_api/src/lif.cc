@@ -201,7 +201,10 @@ Lif::Lif(hal_lif_info_t *info)
 {
     memcpy(&info_, info, sizeof(hal_lif_info_t));
 
+    id_ = 0;
     vrf_ = NULL;
+    enic_ = NULL;
+    native_l2seg_ = NULL;
 
     // lif_ = Lif::Factory(this);
     TriggerHalCreate();

@@ -28,7 +28,6 @@ private:
   mac_t mac;
   HalL2Segment *l2seg;
   Enic *enic;
-  uint64_t handle;
 
   static std::map<ep_key_t, HalEndpoint*> ep_db;
 };

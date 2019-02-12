@@ -53,6 +53,9 @@ Enic::Enic(Lif *ethlif)
 {
     NIC_LOG_DEBUG("Enic create for lif: {}", ethlif->GetId());
 
+    this->id = 0;
+    this->_mac = 0;
+    this->_vlan = 0;
     this->ethlif = ethlif;
 }
 
@@ -91,9 +94,8 @@ Enic::HalEnicCreate()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            handle = rsp.status().if_handle();
-            NIC_LOG_DEBUG("Created Enic id: {} for Lif: {} handle: {}",
-                          id, ethlif->GetId(), handle);
+            NIC_LOG_DEBUG("Created Enic id: {} for Lif: {}",
+                          id, ethlif->GetId());
         } else {
             NIC_LOG_ERR("Failed to create Enic for Lif: {}. err: {}",
                         ethlif->GetId(), rsp.api_status());
@@ -134,8 +136,7 @@ Enic::HalEnicDelete()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            NIC_LOG_DEBUG("Deleted Enic id: {} handle: {}",
-                            id, handle);
+            NIC_LOG_DEBUG("Deleted Enic id: {}", id);
         } else {
             NIC_LOG_ERR("Failed to delete Enic for id: {}. err: {}",
                           id, rsp.api_status());
@@ -183,9 +184,7 @@ Enic::TriggerHalUpdate()
     if (status.ok()) {
         rsp = rsp_msg.response(0);
         if (rsp.api_status() == types::API_STATUS_OK) {
-            handle = rsp.status().if_handle();
-            NIC_LOG_DEBUG("Enic update succeeded id: {}, handle: {}",
-                            id, handle);
+            NIC_LOG_DEBUG("Enic update succeeded id: {}", id);
         } else {
             NIC_LOG_ERR("Failed to update Enic: err: {}", rsp.api_status());
             ret = HAL_IRISC_RET_FAIL;
@@ -300,12 +299,6 @@ uint64_t
 Enic::GetId()
 {
     return id;
-}
-
-uint64_t
-Enic::GetHandle()
-{
-    return handle;
 }
 
 HalL2Segment *

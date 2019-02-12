@@ -50,6 +50,7 @@ end:
 
 HalVrf::HalVrf(types::VrfType type, Uplink *uplink)
 {
+    this->id = 0;
     this->type = type;
     this->uplink = uplink;
 }

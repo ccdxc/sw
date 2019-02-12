@@ -205,7 +205,7 @@ get_arp_status(vrf_id_t vrf_id, ip_addr_t *ip_addr, ArpStatus *arp_status)
 {
     trans_ip_entry_key_t ip_entry_key;
     arp_trans_t *arp_trans;
-    hal_ret_t ret;
+    hal_ret_t ret = HAL_RET_OK;
 
     trans_t::init_ip_entry_key(ip_addr, vrf_id, &ip_entry_key);
 

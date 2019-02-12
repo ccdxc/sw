@@ -43,6 +43,9 @@ hal_irisc_ret_t
 HalMulticast::Destroy(HalMulticast *mcast)
 {
     hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    if (!mcast) {
+        return HAL_IRISC_RET_FAIL;
+    }
     mcast_key_t mcast_key(mcast->GetL2Seg(), mcast->GetMac());
 
     ret = mcast->HalMulticastDelete();
