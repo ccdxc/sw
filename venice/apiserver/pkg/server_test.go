@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -277,12 +279,44 @@ func TestStartStop(t *testing.T) {
 	a.runstate.running = false
 
 	iterCount := 200
-	for i := 0; i < iterCount; i++ {
-		go a.Run(config)
-		a.WaitRunning()
-		a.Stop()
+	var runCount uint32
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		for i := 0; i < iterCount; i++ {
+			go a.Run(config)
+			atomic.AddUint32(&runCount, 1)
+			a.WaitRunning()
+			a.Stop()
+		}
+		a.Run(config)
+		wg.Done()
+	}()
+	go func() {
+		for i := 0; i < iterCount; i++ {
+			go a.Run(config)
+			atomic.AddUint32(&runCount, 1)
+			a.WaitRunning()
+			a.Stop()
+		}
+		a.Run(config)
+		wg.Done()
+	}()
+
+	// Wait for the iterations to complete. One of the go-routines will be left running,
+	//  stop that instance and wait for its exit.
+	var readCount uint32
+	for {
+		readCount = atomic.LoadUint32(&runCount)
+		if readCount == uint32(iterCount*2) {
+			// allow some time for the the go routine to call WaitRunning()
+			time.Sleep(time.Second)
+			a.Stop()
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
-	a.Stop() // extra stop of code-coverage
+	wg.Wait()
 	// Replenish the pool before exiting
 	for i := 0; i < singletonAPISrv.config.KVPoolSize; i++ {
 		singletonAPISrv.addKvConnToPool()
