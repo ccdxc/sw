@@ -11,7 +11,7 @@
 #include "nic/linkmgr/linkmgr_utils.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
-#include "lib/pal/pal.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
 #include "platform/pal/include/pal_types.h"
 #include "platform/drivers/xcvr.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
@@ -144,37 +144,10 @@ void linkmgr_log(sdk::lib::sdk_trace_level_e trace_level, const char *buf)
     linkmgr_logger->logger()->flush();
 }
 
-static void
-port_set_leds (uint32_t port_num, port_event_t event)
-{
-    int xcvr_port = sdk::lib::catalog::port_num_to_qsfp_port(port_num);
-
-    if (xcvr_port == -1) {
-        return;
-    }
-
-    switch (event) {
-    case port_event_t::PORT_EVENT_LINK_UP:
-        sdk::lib::pal_qsfp_set_led(xcvr_port,
-                                   pal_qsfp_led_color_t::QSFP_LED_COLOR_GREEN);
-        break;
-
-    case port_event_t::PORT_EVENT_LINK_DOWN:
-        sdk::lib::pal_qsfp_set_led(xcvr_port,
-                                   pal_qsfp_led_color_t::QSFP_LED_COLOR_NONE);
-        break;
-
-    default:
-        break;
-    }
-}
-
 static bool
 xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 {
-    sdk_ret_t         sdk_ret     = SDK_RET_OK;
-    port_t            *port       = NULL;
-    port_args_t       port_args   = { 0 };
+    port_t *port = NULL;
 
     port_ht_cb_ctxt_t *ht_cb_ctxt      = (port_ht_cb_ctxt_t*) ctxt;
     xcvr_event_info_t *xcvr_event_info = (xcvr_event_info_t*) ht_cb_ctxt->ctxt;
@@ -183,81 +156,7 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 
     port = (port_t *)hal_handle_get_obj(entry->handle_id);
 
-    sdk::linkmgr::port_args_init(&port_args);
-    port_args.port_num = port->port_num;
-
-    sdk_ret = sdk::linkmgr::port_get(port->pd_p, &port_args);
-    if (sdk_ret != SDK_RET_OK) {
-        HAL_TRACE_ERR("Failed to get pd for port: {}, err: {}",
-                      port->port_num, sdk_ret);
-        return false;
-    }
-
-    int xcvr_port =
-        sdk::lib::catalog::port_num_to_qsfp_port(port_args.port_num);
-
-    HAL_TRACE_DEBUG("port: {}, xcvr_port: {}, xcvr_event_port: {}, "
-                    "xcvr_state: {}, user_admin: {}, admin: {}, "
-                    "AN_cfg: {}, AN_enable: {}, num_lanes_cfg: {}",
-                    port_args.port_num, xcvr_port, xcvr_event_info->port_num,
-                    static_cast<uint32_t>(xcvr_event_info->state),
-                    static_cast<uint32_t>(port_args.user_admin_state),
-                    static_cast<uint32_t>(port_args.admin_state),
-                    port_args.auto_neg_cfg,
-                    port_args.auto_neg_enable,
-                    port_args.num_lanes_cfg);
-
-    if (xcvr_port == -1 || xcvr_port != (int)xcvr_event_info->port_num) {
-        return false;
-    }
-
-    if (xcvr_event_info->state == xcvr_state_t::XCVR_SPROM_READ) {
-        // update cable type
-        port_args.cable_type   = xcvr_event_info->cable_type;
-        port_args.port_an_args = xcvr_event_info->port_an_args;
-
-        HAL_TRACE_DEBUG("port: {}, xcvr_port: {}, "
-                        "user_cap: {}, fec_ability: {}, fec_request: {}",
-                        port_args.port_num,
-                        xcvr_port,
-                        port_args.port_an_args->user_cap,
-                        port_args.port_an_args->fec_ability,
-                        port_args.port_an_args->fec_request);
-
-        // set admin_state based on user configured value
-        if (port_args.user_admin_state ==
-                port_admin_state_t::PORT_ADMIN_STATE_UP) {
-            port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
-        }
-
-        // set AN based on user configured value
-        port_args.auto_neg_enable = port_args.auto_neg_cfg;
-
-        // set num_lanes based on user configured value
-        port_args.num_lanes = port_args.num_lanes_cfg;
-
-        // update port_args based on the xcvr state
-        sdk::linkmgr::port_args_set_by_xcvr_state(&port_args);
-
-        sdk_ret = sdk::linkmgr::port_update(port->pd_p, &port_args);
-
-        if (sdk_ret != SDK_RET_OK) {
-            HAL_TRACE_ERR("Failed to update for port: {}, err: {}",
-                          port->port_num, sdk_ret);
-        }
-    } else if (xcvr_event_info->state == xcvr_state_t::XCVR_REMOVED) {
-        if (port_args.user_admin_state ==
-                port_admin_state_t::PORT_ADMIN_STATE_UP) {
-            port_args.admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
-
-            sdk_ret = sdk::linkmgr::port_update(port->pd_p, &port_args);
-
-            if (sdk_ret != SDK_RET_OK) {
-                HAL_TRACE_ERR("Failed to update for port: {}, err: {}",
-                              port->port_num, sdk_ret);
-            }
-        }
-    }
+    sdk::linkmgr::port_update_xcvr_event(port->pd_p, xcvr_event_info);
 
     return false;
 }
@@ -285,7 +184,7 @@ xcvr_event_port_enable (xcvr_event_info_t *xcvr_event_info)
 static void
 port_event_cb (uint32_t port_num, port_event_t event, port_speed_t port_speed)
 {
-    port_set_leds(port_num, event);
+    sdk::linkmgr::port_set_leds(port_num, event);
     port_event_notify(port_num, event, port_speed);
 }
 

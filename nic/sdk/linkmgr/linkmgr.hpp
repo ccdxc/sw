@@ -78,12 +78,15 @@ typedef struct port_args_s {
 
 sdk_ret_t linkmgr_init(linkmgr_cfg_t *cfg);
 void *port_create(port_args_t *port_args);
-sdk_ret_t port_update(void *port, port_args_t *port_args);
-sdk_ret_t port_delete(void *port);
-sdk_ret_t port_get(void *port, port_args_t *port_args);
+sdk_ret_t port_update(void *port_p, port_args_t *port_args);
+sdk_ret_t port_delete(void *port_p);
+sdk_ret_t port_get(void *port_p, port_args_t *port_args);
 void linkmgr_start (void);
 void linkmgr_set_link_poll_enable(bool enable);
 sdk_ret_t port_args_set_by_xcvr_state(port_args_t *port_args);
+sdk_ret_t port_update_xcvr_event(
+            void *port_p, xcvr_event_info_t *xcvr_event_info);
+void port_set_leds(uint32_t port_num, port_event_t event);
 
 static inline void
 port_args_init (port_args_t *args)

@@ -31,6 +31,21 @@ sdk_ret_t port_get(uint32_t fp_port, port_get_cb_t port_get_cb, void *ctxt);
  */
 sdk_ret_t create_ports(void);
 
+/**
+ * @brief        Handle transceiver insert/remove events
+ * @param[in]    xcvr_event_info    transceiver info filled by linkmgr
+ */
+void xcvr_event_cb(xcvr_event_info_t *xcvr_event_info);
+
+/**
+ * @brief        Handle link UP/Down events
+ * @param[in]    port_num    port number of the port
+ * @param[in]    event       link UP/Down event
+ * @param[in]    port_speed  speed of the port
+ */
+void port_event_cb(uint32_t port_num,
+                   port_event_t event,
+                   port_speed_t port_speed);
 }    // namespace api
 
 #endif    /** __PORT_HPP__ */

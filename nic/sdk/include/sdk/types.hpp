@@ -194,6 +194,7 @@ using sdk::types::port_an_args_t;
 using sdk::types::port_link_sm_t;
 using sdk::types::port_loopback_mode_t;
 using sdk::types::xcvr_type_t;
+using sdk::types::xcvr_state_t;
 
 #endif    // __SDK_TYPES_HPP__
 

@@ -62,8 +62,8 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
     cfg.platform_type = g_oci_state.platform_type();
     cfg.catalog = catalog;
     cfg.cfg_path = cfg_path;
-    cfg.port_event_cb = NULL;
-    cfg.xcvr_event_cb = NULL;
+    cfg.port_event_cb = api::port_event_cb;
+    cfg.xcvr_event_cb = api::xcvr_event_cb;
     cfg.port_log_fn = NULL;
 
     /**< initialize the linkmgr */

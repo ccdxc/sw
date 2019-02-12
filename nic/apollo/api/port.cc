@@ -7,6 +7,7 @@
  */
 
 #include "nic/sdk/linkmgr/port.hpp"
+#include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/oci_state.hpp"
@@ -15,6 +16,48 @@ namespace api {
 
 /**< port handles indexed by the front panel port number (starting from 1) */
 void *g_port_store[OCI_MAX_PORT + 1];
+
+/**
+ * @brief        Handle link UP/Down events
+ * @param[in]    port_num    port number of the port
+ * @param[in]    event       link UP/Down event
+ * @param[in]    port_speed  speed of the port
+ */
+void
+port_event_cb (uint32_t port_num, port_event_t event, port_speed_t port_speed)
+{
+    sdk::linkmgr::port_set_leds(port_num, event);
+}
+
+/**
+ * @brief        Handle transceiver insert/remove events
+ * @param[in]    xcvr_event_info    transceiver info filled by linkmgr
+ */
+void
+xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
+{
+    /**< ignore xcvr events if xcvr valid check is disabled */
+    if (!sdk::platform::xcvr_valid_check_enabled()) {
+        return;
+    }
+
+    /**
+     * If xcvr is removed, bring link down
+     * If xcvr sprom read is successful, bring linkup if user admin enabled.
+     * Ignore all other xcvr states.
+     */
+    if (xcvr_event_info->state != xcvr_state_t::XCVR_REMOVED &&
+        xcvr_event_info->state != xcvr_state_t::XCVR_SPROM_READ) {
+        return;
+    }
+
+    for (int port = 0; port < OCI_MAX_PORT+1; ++port) {
+        if (g_port_store[port] != NULL) {
+            sdk::linkmgr::port_update_xcvr_event(g_port_store[port],
+                                                 xcvr_event_info);
+        }
+    }
+}
 
 /**
  * @brief        create a port with the given configuration information
@@ -27,7 +70,25 @@ create_port (port_args_t *port_args)
     void    *port_handle;
 
     OCI_TRACE_DEBUG("Creating port %u", port_args->port_num);
+
+    /**
+     * store user configured admin_state in another variable to be used
+     * during xcvr insert/remove events
+     */
     port_args->user_admin_state = port_args->admin_state;
+
+    /**
+     * store user configured AN in another variable to be used
+     * during xcvr insert/remove events
+     */
+    port_args->auto_neg_cfg     = port_args->auto_neg_enable;
+
+    /**
+     * store user configured num_lanes in another variable to be used
+     * during xcvr insert/remove events
+     */
+    port_args->num_lanes_cfg    = port_args->num_lanes;
+
     sdk::linkmgr::port_args_set_by_xcvr_state(port_args);
     port_handle = sdk::linkmgr::port_create(port_args);
     g_port_store[port_args->port_num] = port_handle;
