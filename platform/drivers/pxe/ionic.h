@@ -405,7 +405,6 @@ struct ionic
 	union identity *ident;
 	dma_addr_t ident_pa;
 	struct lif *ionic_lif;
-	u16 link_status;
 };
 
 /**

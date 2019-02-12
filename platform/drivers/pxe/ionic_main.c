@@ -118,7 +118,7 @@ int ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd, unsigned long m
 		// Check the status
 		err = ionic_dev_cmd_wait_check(idev, max_seconds);
 		if (err == IONIC_RC_EAGAIN) {
-			printf("%04x:$04x %02x:%02x:%x - NIC is initializing\n",
+			printf("%x:%x %x:%x:%x - NIC is initializing\n",
 				   ionic->pdev->vendor, ionic->pdev->device,
 				   PCI_BUS(ionic->pdev->busdevfn),
 				   PCI_SLOT(ionic->pdev->busdevfn),
@@ -1130,6 +1130,7 @@ void ionic_rx_fill(struct net_device *netdev, int length)
 	unsigned int i;
 
 	for (i = ionic_q_space_avail(rxq); i; i--) {
+
 		// Allocate I/O buffer
 		iobuf = alloc_iob(length);
 		if (!iobuf) {
@@ -1172,7 +1173,6 @@ void ionic_poll_rx(struct net_device *netdev)
 	size_t len;
 
 	while (comp->color == rxcq->done_color) {
-		rmb();
 
 		// update the cq_info and check if the last descriptor.
 		if (rxcq->info->last) {
@@ -1209,7 +1209,6 @@ void ionic_poll_tx(struct net_device *netdev)
 	struct txq_comp *comp = txcq->info->cq_desc;
 
 	while (comp->color == txcq->done_color) {
-		rmb();
 
 		// update the cq_info and check if the last descriptor.
 		if (txcq->info->last) {
