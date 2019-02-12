@@ -9,9 +9,9 @@ import iota.harness.api as api
 import iota.protos.pygen.types_pb2 as types_pb2
 import iota.test.iris.testcases.naples_upgrade.common as common
 
-def __installNaplesFwImage(node):
+def __installNaplesFwLatestImage(node):
 
-    fullpath = api.GetTopDir() + '/' + common.UPGRADE_NAPLES_PKG
+    fullpath = '/' + common.UPGRADE_NAPLES_PKG
 
     resp = api.CopyToHost(node, [fullpath], "")
     if resp is None:
@@ -106,12 +106,12 @@ def Main(step):
 
     api.ChangeDirectory(common.UPGRADE_ROOT_DIR)
     for naplesHost in naplesHosts:
-        ret = __installNaplesFwImage(naplesHost)
+        ret = __installNaplesFwLatestImage(naplesHost)
         if ret != api.types.status.SUCCESS:
             return ret
-        ret = __modifyNaplesFwImage(naplesHost)
-        if ret != api.types.status.SUCCESS:
-            return ret
+        #ret = __modifyNaplesFwImage(naplesHost)
+        #if ret != api.types.status.SUCCESS:
+        #    return ret
         ret = __copyNaplesFwImage(naplesHost)
         if ret != api.types.status.SUCCESS:
             return ret

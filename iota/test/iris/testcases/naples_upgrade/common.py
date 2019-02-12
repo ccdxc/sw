@@ -8,4 +8,4 @@ import iota.test.iris.utils.naples_host as naples_host_util
 
 UPGRADE_ROOT_DIR = 'upgrade_bin'
 
-UPGRADE_NAPLES_PKG = "nic/naples_fw.tar"
+UPGRADE_NAPLES_PKG = "/vol/builds/hourly/latest/src/github.com/pensando/sw/nic/naples_fw.tar"
