@@ -23,28 +23,41 @@ sfp_sprom_parse (int port, uint8_t *data)
     // TODO reset when removed?
     xcvr_set_an_args(port, 0, false, 0);
 
-    if (data[3] != 0) {
-        if (data[3] & (1 << 4)) {
-            // 10G Base SR
-            xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_SR);
-            set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
-            xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
-        } else if (data[3] & ( 1 << 5)) {
-            // 10G Base LR
-            xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_LR);
-            set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
-            xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
-        } else if (data[3] & ( 1 << 6)) {
-            // 10G Base LRM
-            xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_LRM);
-            set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
-            xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
-        } else if (data[3] & ( 1 << 7)) {
-            // 10G Base ER
-            xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_ER);
-            set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
-            xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
-        }
+    SDK_TRACE_DEBUG("data[3]: %u, data[8]: %u", data[3], data[8]);
+
+    switch (data[3]) {
+        case 0:
+            if (data[8] == 0x4) {
+                // 10G Base CU
+                xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_CU);
+                set_cable_type(port, cable_type_t::CABLE_TYPE_CU);
+                xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
+            }
+            break;
+
+        default:
+            if (data[3] & (1 << 4)) {
+                // 10G Base SR
+                xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_SR);
+                set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+                xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
+            } else if (data[3] & ( 1 << 5)) {
+                // 10G Base LR
+                xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_LR);
+                set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+                xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
+            } else if (data[3] & ( 1 << 6)) {
+                // 10G Base LRM
+                xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_LRM);
+                set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+                xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
+            } else if (data[3] & ( 1 << 7)) {
+                // 10G Base ER
+                xcvr_set_pid(port, xcvr_pid_t::XCVR_PID_SFP_10GBASE_ER);
+                set_cable_type(port, cable_type_t::CABLE_TYPE_FIBER);
+                xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
+            }
+            break;
     }
 
     switch (data[SFP_OFFSET_EXT_SPEC_COMPLIANCE_CODES]) {

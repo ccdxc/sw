@@ -108,6 +108,7 @@ enum PortXcvrPid {
   XCVR_PID_SFP_10GBASE_LR  = 64;
   XCVR_PID_SFP_10GBASE_LRM = 65;
   XCVR_PID_SFP_10GBASE_ER  = 66;
+  XCVR_PID_SFP_10GBASE_CU  = 67;
 }
 
 message PortXcvrStatus {

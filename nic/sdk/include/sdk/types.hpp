@@ -158,6 +158,7 @@ typedef enum xcvr_pid_s {
     XCVR_PID_SFP_10GBASE_LR,
     XCVR_PID_SFP_10GBASE_LRM,
     XCVR_PID_SFP_10GBASE_ER,
+    XCVR_PID_SFP_10GBASE_CU,
 } xcvr_pid_t;
 
 typedef struct port_an_args_s {
