@@ -239,6 +239,7 @@ struct txque {
 
 struct ionic_mc_addr {
 	u8  addr[ETHER_ADDR_LEN];
+	bool present;
 };
 
 struct lif {
@@ -255,7 +256,6 @@ struct lif {
 
 	unsigned int index;
 
-	u64 num_dev_cmds;
 	unsigned int kern_pid;
 	struct doorbell __iomem *kern_dbpage;
 
@@ -273,15 +273,13 @@ struct lif {
 
 	unsigned int rx_mode;
 
-	int rx_mbuf_size;			/* Rx mbuf size pool. */
+	int rx_mbuf_size;		/* Rx mbuf size pool. */
 	uint16_t max_frame_size;	/* MTU size. */
 
-	u32 hw_features;			/* Features enabled in hardware, e.g. checksum, TSO etc. */
-
-	struct ionic_dma_info stats_dma; 	/* DMA ring for command and completion. */
-	struct ionic_lif_stats *stats_dump;
-
-	dma_addr_t stats_dump_pa;
+	u32 hw_features;		/* Features enabled in hardware, e.g. checksum, TSO etc. */
+	struct ionic_dma_info stats_dma;/* DMA ring for command and completion. */
+	struct ionic_lif_stats *lif_stats;
+	dma_addr_t lif_stats_pa;
 
 	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
 	u8 *rss_ind_tbl;
@@ -328,6 +326,8 @@ struct lif {
 	dma_addr_t notifyblock_pa;
 	struct ionic_dma_info notify_dma;
 	struct notify_block *notifyblock;
+
+	u64 	num_dev_cmds;
 };
 
 /* lif lock. */

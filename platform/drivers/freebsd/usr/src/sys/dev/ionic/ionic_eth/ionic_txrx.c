@@ -1242,67 +1242,65 @@ static uint64_t
 ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 {
 	struct lif* lif = if_getsoftc(ifp);
-	uint64_t val = 0;
-	int i;
-	struct tx_stats* txstat;
-	struct rx_stats* rxstat;
+	struct ionic_lif_stats *hwstat;
+
+	hwstat = lif->lif_stats;
+	/* Stats has not initialized. */
+	if (hwstat == NULL) {
+		return 0;
+	}
 
 	switch (cnt) {
 	case IFCOUNTER_IPACKETS:
-		for ( i = 0 ; i < lif->nrxqs; i++) {
-			rxstat = &lif->rxqs[i]->stats;
-			val += rxstat->pkts;
-		}
-		return (val);
+		return (hwstat->rx_ucast_packets +
+			hwstat->rx_mcast_packets +
+			hwstat->rx_bcast_packets);
+
+	case IFCOUNTER_IERRORS:
+		return (hwstat->rx_queue_disabled +
+			hwstat->rx_queue_empty +
+			hwstat->rx_desc_fetch_error +
+			hwstat->rx_desc_data_error);
 
 	case IFCOUNTER_OPACKETS:
-		for ( i = 0 ; i < lif->ntxqs; i++) {
-			txstat = &lif->txqs[i]->stats;
-			val += txstat->pkts;
-		}
-		return (val);
+		return (hwstat->tx_ucast_packets +
+			hwstat->tx_mcast_packets +
+			hwstat->tx_bcast_packets);
 
-	case IFCOUNTER_IBYTES:
-		for ( i = 0 ; i < lif->nrxqs; i++) {
-			rxstat = &lif->rxqs[i]->stats;
-			val += rxstat->bytes;
-		}
-		return (val);
+	case IFCOUNTER_OERRORS:
+		return (hwstat->tx_queue_disabled +
+			hwstat->tx_desc_fetch_error +
+			hwstat->tx_desc_data_error);
 
-	case IFCOUNTER_OBYTES:		
-		for ( i = 0 ; i < lif->ntxqs; i++) {
-			txstat = &lif->txqs[i]->stats;
-			val += txstat->bytes;
-		}
-		return (val);
-
-#ifdef notyet
-	case IFCOUNTER_IMCASTS:
-		return (ionic->imcasts);
-	case IFCOUNTER_OMCASTS:
-		return (ionic->omcasts);
 	case IFCOUNTER_COLLISIONS:
 		return (0);
 
-	case IFCOUNTER_IQDROPS:
-		for ( i = 0 ; i < lif->nrxqs; i++) {
-			rxstat = &lif->rxqs[i]->stats;
-			val += rxstat->bytes;
-		}
-		return (val);
-		return (rxstat->drop);
-#endif
-	case IFCOUNTER_OQDROPS:
-		for ( i = 0 ; i < lif->ntxqs; i++) {
-			txstat = &lif->txqs[i]->stats;
-			val += lif->txqs[i]->br->br_drops;
-		}
-		return (val);
+	case IFCOUNTER_IBYTES:
+		return (hwstat->rx_ucast_bytes +
+			hwstat->rx_mcast_bytes +
+			hwstat->rx_bcast_bytes);
 
-#ifdef notyet
-	case IFCOUNTER_IERRORS:
-		return (ionic->ierrors);
-#endif
+	case IFCOUNTER_OBYTES:
+		return (hwstat->tx_ucast_bytes +
+			hwstat->tx_mcast_bytes +
+			hwstat->tx_bcast_bytes);
+
+	case IFCOUNTER_IMCASTS:
+		return (hwstat->rx_mcast_packets);
+
+	case IFCOUNTER_OMCASTS:
+		return (hwstat->tx_mcast_packets);
+
+	case IFCOUNTER_IQDROPS:
+		return (hwstat->rx_ucast_drop_packets +
+			hwstat->rx_mcast_drop_packets +
+			hwstat->rx_bcast_drop_packets);
+
+	case IFCOUNTER_OQDROPS:
+		return (hwstat->tx_ucast_drop_packets +
+			hwstat->tx_mcast_drop_packets +
+			hwstat->tx_bcast_drop_packets);
+
 	default:
 		return (if_get_counter_default(ifp, cnt));
 	}
@@ -1312,7 +1310,7 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 static void 
 ionic_tx_qflush(struct ifnet *ifp)
 {
-	struct lif *lif = ifp->if_softc;
+	struct lif* lif = if_getsoftc(ifp);
 	struct txque *txq;
 	struct mbuf *m;
 	unsigned int i;
@@ -1320,10 +1318,12 @@ ionic_tx_qflush(struct ifnet *ifp)
 	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
 		IONIC_TX_LOCK(txq);
-        while ((m = buf_ring_dequeue_sc(txq->br)) != NULL)
-                m_freem(m);
+		while ((m = buf_ring_dequeue_sc(txq->br)) != NULL)
+			m_freem(m);
 		IONIC_TX_UNLOCK(txq);
 	}
+
+	if_qflush(ifp);
 }
 
 static void
@@ -1551,7 +1551,7 @@ static void
 ionic_setup_hw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 	struct sysctl_oid_list *child)
 {
-	struct ionic_lif_stats *stat = lif->stats_dump;
+	struct ionic_lif_stats *stat = lif->lif_stats;
 
 	if (stat == NULL)
 		return;
@@ -1723,26 +1723,23 @@ ionic_setup_device_stats(struct lif *lif)
 	struct sysctl_ctx_list *ctx = &lif->sysctl_ctx;
 	struct sysctl_oid *tree = lif->sysctl_ifnet;
 	struct sysctl_oid_list *child = SYSCTL_CHILDREN(tree);
-
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
 	int i;
 
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "numq", CTLFLAG_RD,
-       &lif->ntxqs, 0, "Number of Tx/Rx queue pairs");
+			&lif->ntxqs, 0, "Number of Tx/Rx queue pairs");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "hw_capabilities", CTLFLAG_RD,
-       &lif->hw_features, 0, "Hardware features enabled like checksum, TSO etc");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "legacy_spurious_interrupts", CTLFLAG_RD,
-       &lif->spurious, "Legacy interrupt count");
+			&lif->hw_features, 0, "Hardware features enabled like checksum, TSO etc");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "dev_cmds", CTLFLAG_RD,
-       &lif->num_dev_cmds, "dev commands used");
+			&lif->num_dev_cmds, "dev commands used");
+	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "mac_filter_count", CTLFLAG_RD,
+			&lif->num_mc_addrs, 0, "Number of MAC filters");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "coal_usecs", CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
+			ionic_intr_coal_handler, "IU", "Interrupt coalescing timeout in usecs");
+
 	ionic_setup_hw_stats(lif, ctx, child);
-
-	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "coal_usecs",
-	    CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
-	    ionic_intr_coal_handler, "IU", "Interrupt coalescing timeout in usecs");
-
 	ionic_adminq_sysctl(lif, ctx, child);
 	ionic_notifyq_sysctl(lif, ctx, child);
 
@@ -1759,7 +1756,6 @@ ionic_setup_device_stats(struct lif *lif)
 		queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
 					CTLFLAG_RD, NULL, "Queue Name");
 		queue_list = SYSCTL_CHILDREN(queue_node);
-
 		ionic_lif_add_txtstat(lif->txqs[i], ctx, queue_list);
 	}
 }
@@ -1774,7 +1770,7 @@ ionic_setup_sysctls(struct lif *lif)
 	/* ifnet sysctl tree */
 	sysctl_ctx_init(&lif->sysctl_ctx);
 	lif->sysctl_ifnet = SYSCTL_ADD_NODE(&lif->sysctl_ctx, SYSCTL_STATIC_CHILDREN(_dev),
-	    OID_AUTO, ifp->if_dname, CTLFLAG_RD, 0, "Pensando I/O NIC");
+				OID_AUTO, ifp->if_dname, CTLFLAG_RD, 0, "Pensando I/O NIC");
 
 	if (lif->sysctl_ifnet == NULL) {
 		dev_err(dev, "SYSCTL_ADD_NODE() failed\n");
@@ -1784,11 +1780,11 @@ ionic_setup_sysctls(struct lif *lif)
 
 	snprintf(buf, sizeof(buf), "%d", ifp->if_dunit);
 	lif->sysctl_ifnet = SYSCTL_ADD_NODE(&lif->sysctl_ctx, SYSCTL_CHILDREN(lif->sysctl_ifnet),
-	    OID_AUTO, buf, CTLFLAG_RD, 0, "Pensando NIC unit");
+					OID_AUTO, buf, CTLFLAG_RD, 0, "Pensando NIC unit");
 
 	if (lif->sysctl_ifnet == NULL) {
 		dev_err(dev, "SYSCTL_ADD_NODE() failed\n");
-        sysctl_ctx_free(&lif->sysctl_ctx);
+		sysctl_ctx_free(&lif->sysctl_ctx);
 
 		return;
 	}
