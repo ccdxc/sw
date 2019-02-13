@@ -38,11 +38,11 @@ Any component (go process) in the system that generates an event.
 Recorder creates the event with given information (severity, event type, message and reference object) and sends it to the events proxy server for further processing. Events that could not be sent to the proxy due to connection failure will be preserved in a file and replayed once the proxy is up.
 
 #### Event Proxy
-Proxy server receives events from all different sources and persists it. The call from the recorder terminates here. Further processing and delivery of the events are asynchronous. Events proxy applies deduplication and distributes the received events using the dispatcher library. Events proxy encapsulates the dispatcher and writers.
+Proxy server receives events from all different sources and persists it. The call from the recorder terminates here. Further processing and delivery of the events are asynchronous. Events proxy applies deduplication and distributes the received events using the dispatcher library. Events proxy encapsulates the dispatcher and exporters.
 
-1. Event Dispatcher is a library used by the proxy for deduplication and distribution.Events are deduped for a given dedup interval. Any event that reoccurs after the interval will be consisdered a new event.Events are distributed to all registered writers in intervals (batch interval). Venice will be the default writer in MANAGED mode.
+1. Event Dispatcher is a library used by the proxy for deduplication and distribution.Events are deduped for a given dedup interval. Any event that reoccurs after the interval will be consisdered a new event. Events are distributed to all registered exporters in intervals (batch interval). Venice will be the default exporter in MANAGED mode.
 
-2. Writers (venice, syslog, etc.) will get the events from dispatcher. And it is responsible for writing it to their respective destination (venice, syslog).
+2. Exporters (venice, syslog, etc.) will get the events from dispatcher. And it is responsible for writing it to their respective destination (venice, syslog).
 
 Now, let us see how to use this service to record events. To record an event, the respective event type must exist in the system.
 
@@ -190,19 +190,20 @@ enum EventTypes {
 	#include "gen/proto/nw.pb.h"
 	.
 	.
-	events_recorder::init("fte_events", 1024, "FTE", nw::EventTypes_descriptor()); // 1024 bytes
+	events_recorder* recorder = events_recorder::init("fte_events",
+		1024, "FTE",nw::EventTypes_descriptor()); // 1024 bytes
 	```
 
-2. Start recording events.
+2. Start recording events using the recorder instance (from step 1).
 
 	```c++
 	#include "nic/utils/events/recorder/recorder.hpp"
 	#include "gen/proto/nw.pb.h"
-	#include "gen/proto/types.pb.h"
+	#include "gen/proto/events.pb.h"
 	.
 	.
-	events_recorder::event(
-		types::INFO,                                         // severity
+	recorder->event(
+		events::INFO,                                        // severity
 		nw::NETWORK_CREATE_FAILED,                           // event type
 		"Network",                                           // object_kind
 		network_key,                                         // kh:: NetworkKeyHandle

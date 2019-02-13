@@ -36,6 +36,7 @@ var _ = Describe("alert test", func() {
 		// upload alert policy
 		alertPolicy1, err = ts.tu.APIClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
 		Expect(err).Should(BeNil())
+		defer ts.tu.APIClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 
 		// stop pen-ntp daemon service
 		podName := getRunningPod("pen-ntp")
