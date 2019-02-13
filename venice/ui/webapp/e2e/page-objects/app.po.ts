@@ -48,7 +48,7 @@ export class AppPage {
   /**
    * This is a common API to verify table has content. Every table cell is not empty
    */
-  async verifyTableHasContents() {
+  async verifyTableHasContents(onCell: (rowIdx: number, columnIdx: number, rowValues: any[]) => any = null) {
     const EC = protractor.ExpectedConditions;
     await browser.wait(element(by.css('.ui-table-scrollable-body-table tbody tr td')).isPresent(), 5000);
     // Let rendering finish
@@ -60,14 +60,24 @@ export class AppPage {
     if (limit > 10) {
       limit = 10;
     }
-    for (let index = 0; index < limit; index++) {
+    for (let rowIndex = 0; rowIndex < limit; rowIndex++) {
       // We re select the element to avoid our reference being stale
-      const colVals = await element.all(by.css('.ui-table-scrollable-body-table tbody tr:nth-of-type(' + index + ') td'));
+      const colVals = await element.all(by.css('.ui-table-scrollable-body-table tbody tr:nth-of-type(' + rowIndex + ') td'));
+      const recValues = [];
+      // collect all columns value
       for (let colIndex = 0; colIndex < colVals.length; colIndex++) {
         const colVal: ElementFinder = colVals[colIndex];
         const colText = await colVal.getText();
-        // to debug -- console.log('row: ' + index  + ' column: ' + colIndex + ' value:' + colText);
-        expect(colText).not.toBe('');
+        recValues.push(colText);
+      }
+      for (let colIndex = 0; colIndex < recValues.length; colIndex++) {
+        if (onCell != null) {
+          onCell( rowIndex,  colIndex, recValues);
+        } else {
+          const colText = recValues[colIndex];
+          // to debug -- console.log('row: ' + rowIndex  + ' column: ' + colIndex + ' value:' + colText);
+          expect(colText).not.toBe('');
+        }
       }
     }
   }
