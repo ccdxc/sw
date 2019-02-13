@@ -16,7 +16,7 @@ using namespace upgrade;
 
 // delphi service for pciemgr
 class PciemgrService: public delphi::Service,
-		    public enable_shared_from_this<PciemgrService>
+                      public enable_shared_from_this<PciemgrService>
 {
  private:
   delphi::SdkPtr      delphi;
@@ -32,16 +32,8 @@ class PciemgrService: public delphi::Service,
 
 class PciemgrSvcHandler : public UpgHandler {
 public:
-    HdlrResp CompatCheckHandler(UpgCtx& upgCtx) {
-        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        return resp;
-    }
-
-    HdlrResp SaveStateHandler(UpgCtx& upgCtx) {
-        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
-        return resp;
-    }
-
+    HdlrResp CompatCheckHandler(UpgCtx& upgCtx);
+    HdlrResp SaveStateHandler(UpgCtx& upgCtx);
 };
 
 #define SERVICE_NAME "pciemgrd"

@@ -13,11 +13,13 @@ MODULE_INCS     := ${MODULE_SRC_DIR}/../include \
 MODULE_LDPATHS  := ${TOPDIR}/platform/src/third-party/lib/gmp/${ARCH} \
                    ${TOPDIR}/platform/src/third-party/lib/edit/${ARCH} \
                    ${TOPDIR}/platform/src/third-party/lib/ncurses/${ARCH}
-MODULE_LDLIBS   := rt dl pthread ev m edit ncurses ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
+MODULE_LDLIBS   := rt dl pthread ev m edit ncurses \
+		   ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
 MODULE_SRCS     := ${MODULE_SRC_DIR}/pciemgrd.cc \
                    ${MODULE_SRC_DIR}/cli.cc \
                    ${MODULE_SRC_DIR}/server.cc \
                    ${MODULE_SRC_DIR}/upgrade.cc \
+                   ${MODULE_SRC_DIR}/svchandler.cc \
                    ${MODULE_SRC_DIR}/gold.cc \
                    ${MODULE_SRC_DIR}/logger.cc \
                    ${MODULE_SRC_DIR}/delphic.cc

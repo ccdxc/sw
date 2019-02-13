@@ -154,12 +154,14 @@ pciemgr_state_save(void)
 int
 upgrade_state_save(void)
 {
+    pciesys_loginfo("upgrade_state_save: started\n");
     if (pcieport_state_save() < 0) {
         return -1;
     }
     if (pciemgr_state_save() < 0) {
         return -1;
     }
+    pciesys_loginfo("upgrade_state_save: completed successfully\n");
     return 0;
 }
 
@@ -237,11 +239,13 @@ pciemgr_state_restore(void)
 int
 upgrade_state_restore(void)
 {
+    pciesys_loginfo("upgrade_state_restore: started\n");
     if (pcieport_state_restore() < 0) {
         return -1;
     }
     if (pciemgr_state_restore() < 0) {
         return -1;
     }
+    pciesys_loginfo("upgrade_state_restore: completed successfully\n");
     return 0;
 }
