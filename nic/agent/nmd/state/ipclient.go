@@ -168,6 +168,37 @@ func parseHexToIP(vendorHex string) ([]string, error) {
 	return veniceIP, nil
 }
 
+func getIPFromLease(leaseFile string) (string, error) {
+	dat, err := ioutil.ReadFile(leaseFile)
+	if err != nil {
+		return "", err
+	}
+
+	leaseData := string(dat)
+
+	// Remove trailing curly braces for each lease element
+	leaseDataClean := strings.Replace(leaseData, "}", "", -1)
+
+	// Remove the preceding double spaces
+	leaseDataClean = strings.Replace(leaseDataClean, "  ", "", -1)
+
+	// Get all lease elements from the lease file
+	leases := strings.Split(leaseDataClean, "lease {")
+
+	// Get all options from the last lease
+	leaseOption := strings.Split(leases[len(leases)-1], ";")
+
+	for i := range leaseOption {
+		if strings.Contains(leaseOption[i], "fixed-address") {
+			splitOption := strings.Split(leaseOption[i], " ")
+			dhcpIP := splitOption[1]
+			return dhcpIP, nil
+		}
+	}
+
+	return "", nil
+}
+
 func readAndParseLease(leaseFile string) ([]string, error) {
 	dat, err := ioutil.ReadFile(leaseFile)
 	if err != nil {
@@ -476,8 +507,12 @@ func (c *IPClient) watchLeaseEvents() {
 					log.Errorf("Controllers is nil.")
 				}
 
-				// Replace 1.1.1.1 with a parsed value
-				err = c.updateNaplesStatus(controllers, "1.1.1.1")
+				ip, err := getIPFromLease(c.leaseFile)
+				if err != nil || ip == "" {
+					return
+				}
+
+				err = c.updateNaplesStatus(controllers, ip)
 				if err != nil {
 					return
 				}
@@ -715,6 +750,7 @@ func (c *IPClient) Stop() {
 		os.Remove(rebootPendingPath)
 		c.nmdState.config.Status.TransitionPhase = ""
 		c.nmdState.config.Status.Controllers = []string{}
+		c.nmdState.config.Status.IPConfig = nil
 
 		// Should we de-admit at this point?
 	}
