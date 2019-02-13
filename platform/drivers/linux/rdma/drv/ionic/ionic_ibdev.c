@@ -3299,6 +3299,16 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 		cq->color == ionic_v1_cqe_color(ionic_queue_at_prod(&cq->q));
 }
 
+static bool pd_local_privileged(struct ib_pd *pd)
+{
+	return !pd->uobject;
+}
+
+static bool pd_remote_privileged(struct ib_pd *pd)
+{
+	return pd->flags & IB_PD_UNSAFE_GLOBAL_RKEY;
+}
+
 static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 				  struct ionic_pd *pd,
 				  struct ionic_cq *send_cq,
@@ -3309,7 +3319,8 @@ static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 				  struct ib_qp_init_attr *attr)
 {
 	const u32 flags = to_ionic_qp_flags(0, 0, qp->sq_is_cmb, qp->rq_is_cmb,
-					    !pd->ibpd.uobject);
+					    pd_local_privileged(&pd->ibpd),
+					    pd_remote_privileged(&pd->ibpd));
 	struct ionic_admin_wr wr = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
 		.wqe = {
@@ -3375,7 +3386,8 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 	const u32 flags = to_ionic_qp_flags(attr->qp_access_flags,
 					    attr->en_sqd_async_notify,
 					    qp->sq_is_cmb, qp->rq_is_cmb,
-					    !qp->ibqp.uobject);
+					    pd_local_privileged(qp->ibqp.pd),
+					    pd_remote_privileged(qp->ibqp.pd));
 	const u8 state = to_ionic_qp_modify_state(attr->qp_state,
 						  attr->cur_qp_state);
 	struct ionic_admin_wr wr = {
