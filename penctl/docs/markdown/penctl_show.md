@@ -31,6 +31,7 @@ Show Object and Information
 * [penctl](penctl.md)	 - Pensando CLIs
 * [penctl show events](penctl_show_events.md)	 - Show events from Naples
 * [penctl show firmware-version](penctl_show_firmware-version.md)	 - Get firmware version on Naples
+* [penctl show interface](penctl_show_interface.md)	 - Show interface
 * [penctl show logs](penctl_show_logs.md)	 - Show logs from Naples
 * [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
 * [penctl show port](penctl_show_port.md)	 - show port object
@@ -40,4 +41,5 @@ Show Object and Information
 * [penctl show startup-firmware](penctl_show_startup-firmware.md)	 - Show startup firmware from Naples
 * [penctl show system](penctl_show_system.md)	 - show system information
 * [penctl show system-memory-usage](penctl_show_system-memory-usage.md)	 - Show free/used memory on Naples (in MB)
+* [penctl show time](penctl_show_time.md)	 - Show system clock time from Naples
 

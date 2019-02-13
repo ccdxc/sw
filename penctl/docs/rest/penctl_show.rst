@@ -39,6 +39,7 @@ SEE ALSO
 * `penctl <penctl.rst>`_ 	 - Pensando CLIs
 * `penctl show events <penctl_show_events.rst>`_ 	 - Show events from Naples
 * `penctl show firmware-version <penctl_show_firmware-version.rst>`_ 	 - Get firmware version on Naples
+* `penctl show interface <penctl_show_interface.rst>`_ 	 - Show interface
 * `penctl show logs <penctl_show_logs.rst>`_ 	 - Show logs from Naples
 * `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Naples
 * `penctl show port <penctl_show_port.rst>`_ 	 - show port object
@@ -48,4 +49,5 @@ SEE ALSO
 * `penctl show startup-firmware <penctl_show_startup-firmware.rst>`_ 	 - Show startup firmware from Naples
 * `penctl show system <penctl_show_system.rst>`_ 	 - show system information
 * `penctl show system-memory-usage <penctl_show_system-memory-usage.rst>`_ 	 - Show free/used memory on Naples (in MB)
+* `penctl show time <penctl_show_time.rst>`_ 	 - Show system clock time from Naples
 

@@ -21,7 +21,7 @@ Create interface
 .SH OPTIONS
 .PP
 \fB\-\-egress\-bw\fP=0
-    Specify egress bandwidth in Kbytes/sec
+    Specify egress bandwidth in KBytes/sec <0-12500000 KBytes/sec>\&. 0 means no policer
 
 .PP
 \fB\-\-encap\fP=""
@@ -37,11 +37,11 @@ Create interface
 
 .PP
 \fB\-\-ingress\-bw\fP=0
-    Specify ingress bandwidth in Kbytes/sec
+    Specify ingress bandwidth in KBytes/sec <0-12500000 KBytes/sec>\&. 0 means no policer
 
 .PP
 \fB\-\-mpls\-in\fP=""
-    Specify incoming MPLS label as comma separated list (Max 2 supported
+    Specify incoming MPLS label as comma separated list (Max of 2 supported)
 
 .PP
 \fB\-\-mpls\-out\fP=0

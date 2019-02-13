@@ -585,6 +585,9 @@ func NaplesCoreDeleteHandler(r *http.Request) (interface{}, error) {
 
 func naplesExecCmd(req *nmd.NaplesCmdExecute) (string, error) {
 	parts := strings.Fields(req.Opts)
+	if req.Executable == "/bin/date" && req.Opts != "" {
+		parts = strings.SplitN(req.Opts, " ", 2)
+	}
 	cmd := exec.Command(req.Executable, parts...)
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {

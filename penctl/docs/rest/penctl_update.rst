@@ -42,4 +42,5 @@ SEE ALSO
 * `penctl update port <penctl_update_port.rst>`_ 	 - update port object
 * `penctl update qos-class <penctl_update_qos-class.rst>`_ 	 - qos-class object
 * `penctl update startup-firmware <penctl_update_startup-firmware.rst>`_ 	 - Set startup firmware on Naples
+* `penctl update time <penctl_update_time.rst>`_ 	 - Set system clock time on Naples
 

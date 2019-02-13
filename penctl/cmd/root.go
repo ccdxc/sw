@@ -161,7 +161,13 @@ func cliPreRunInit(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	processFlags(cmd, args)
+
+	//err = setSystemTimeCmdHandler(cmd, args)
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }
 

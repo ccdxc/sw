@@ -34,4 +34,5 @@ Update Object
 * [penctl update port](penctl_update_port.md)	 - update port object
 * [penctl update qos-class](penctl_update_qos-class.md)	 - qos-class object
 * [penctl update startup-firmware](penctl_update_startup-firmware.md)	 - Set startup firmware on Naples
+* [penctl update time](penctl_update_time.md)	 - Set system clock time on Naples
 

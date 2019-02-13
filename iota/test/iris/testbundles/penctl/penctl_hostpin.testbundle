@@ -17,6 +17,9 @@ testcases:
     -   name    : CHECK_CORES
         testcase: testcases.penctl.cores
 
+    -   name    : CHECK_TIME
+        testcase: testcases.penctl.time
+
     -   name    : CHECK_FIRMWARE
         testcase: testcases.penctl.firmware
 

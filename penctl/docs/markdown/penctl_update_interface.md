@@ -14,12 +14,12 @@ penctl update interface [flags]
 ### Options
 
 ```
-      --egress-bw uint32        Specify egress bandwidth in Kbytes/sec
+      --egress-bw uint32        Specify egress bandwidth in KBytes/sec <0-12500000 KBytes/sec>. 0 means no policer
       --encap string            Encap type (Ex: MPLSoUDP)
       --gw-mac string           Specify gateway MAC address as aabb.ccdd.eeff
   -h, --help                    help for interface
-      --ingress-bw uint32       Specify ingress bandwidth in Kbytes/sec
-      --mpls-in string          Specify incoming MPLS label as comma separated list (Max 2 supported
+      --ingress-bw uint32       Specify ingress bandwidth in KBytes/sec <0-12500000 KBytes/sec>. 0 means no policer
+      --mpls-in string          Specify incoming MPLS label as comma separated list (Max of 2 supported)
       --mpls-out uint32         Specify outgoing MPLS label
       --name string             Interface name
       --overlay-ip string       Specify overlay IPv4 address in comma separated list (Max of 2 supported). Ex: 1.2.3.4,2.3.4.5
