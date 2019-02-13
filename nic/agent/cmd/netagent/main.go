@@ -149,6 +149,7 @@ func main() {
 		revproxy.AddRevProxyDest("cores", globals.NmdRESTPort)
 		revproxy.AddRevProxyDest("cmd", globals.NmdRESTPort)
 		revproxy.AddRevProxyDest("update", globals.NmdRESTPort)
+		revproxy.AddRevProxyDest("api/eventpolicies", globals.EvtsProxyRESTPort)
 		defer proxyRouter.Stop()
 	} else {
 		log.Fatalf("Could not start Reverse Proxy Router. Err: %v", err)

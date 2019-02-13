@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -16,9 +17,18 @@ var revProxyMap map[string]string
 
 // Get the port for a given request
 func getProxyPort(requrl *url.URL) (string, error) {
-	sliceP := strings.Split(requrl.Path, "/")
+	sliceP := strings.SplitN(requrl.Path, "/", 2)
 	log.Infof("getProxyPort: %s", sliceP[1])
-	if port, ok := revProxyMap[sliceP[1]]; ok == true {
+
+	var mostMatchedPrefix string
+	for prefix := range revProxyMap {
+		if strings.HasPrefix(sliceP[1], prefix) && len(prefix) > len(mostMatchedPrefix) {
+			mostMatchedPrefix = prefix
+		}
+	}
+	if !utils.IsEmpty(mostMatchedPrefix) {
+		port := revProxyMap[mostMatchedPrefix]
+		log.Debugf("matching port for prefix {%s}: %s", sliceP[1], port)
 		return port, nil
 	}
 	return "", fmt.Errorf("Unable to get a matching endpoint. Url: %s Path: %s", requrl.String(), sliceP[1:])

@@ -178,7 +178,7 @@ func CreateAlertPolicyObj(tenant, namespace, name, resource string, severity evt
 			Requirements: requirements,
 			Enable:       true,
 			Destinations: destinations,
-			// TODO: add other parameters(persisstence duration, clear duration, destionations, etc.) when required
+			// TODO: add other parameters(persistence duration, clear duration, destinations, etc.) when required
 		},
 	}
 }

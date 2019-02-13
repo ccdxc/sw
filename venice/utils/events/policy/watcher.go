@@ -27,18 +27,18 @@ var (
 	pkgName = "events-policy-watcher"
 )
 
-// Option fills the optional params for Watcher
-type Option func(*Watcher)
+// WOption fills the optional params for Watcher
+type WOption func(*Watcher)
 
 // WithEventsMgrURL passes a custom client for Elastic
-func WithEventsMgrURL(url string) Option {
+func WithEventsMgrURL(url string) WOption {
 	return func(w *Watcher) {
 		w.evtsMgrURL = url
 	}
 }
 
 // WithResolverClient passes a custom resolver client to connect with evtsmgr
-func WithResolverClient(resolverClient resolver.Interface) Option {
+func WithResolverClient(resolverClient resolver.Interface) WOption {
 	return func(w *Watcher) {
 		w.resolverClient = resolverClient
 	}
@@ -57,7 +57,7 @@ type Watcher struct {
 }
 
 // NewWatcher creates a new watcher instance with given params
-func NewWatcher(policyMgr *Manager, logger log.Logger, opts ...Option) (*Watcher, error) {
+func NewWatcher(policyMgr *Manager, logger log.Logger, opts ...WOption) (*Watcher, error) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
 	w := &Watcher{

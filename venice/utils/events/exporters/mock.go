@@ -58,12 +58,12 @@ func (m *MockExporter) Start(eventsCh events.Chan, offsetTracker events.OffsetTr
 	m.wg.Add(1)
 	go m.receiveEvents()
 
-	m.logger.Info("started mock events exporter")
+	m.logger.Infof("{%s} started mock events exporter", m.Name())
 }
 
 // Stop stops the watch by calling `Stop` on the event channel.
 func (m *MockExporter) Stop() {
-	m.logger.Info("stopping the mock exporter")
+	m.logger.Infof("{%s} stopping the mock exporter", m.Name())
 	m.stop.Do(func() {
 		close(m.shutdown)
 	})
@@ -203,7 +203,7 @@ func (m *MockExporter) receiveEvents() {
 			// all the incoming batch of events needs to be processed in order to avoid losing track of events
 			for {
 				if err := m.WriteEvents(evts.GetEvents()); err != nil {
-					m.logger.Debugf("mock exporter failed to process events, err: %v", err)
+					m.logger.Debugf("{%s} mock exporter failed to process events, err: %v", m.Name(), err)
 					time.Sleep(1 * time.Second)
 				} else { // successfully sent the event to events manager
 					m.eventsOffsetTracker.UpdateOffset(evts.GetOffset())

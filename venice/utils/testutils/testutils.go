@@ -114,7 +114,7 @@ func AssertEventually(tb TBApi, eval Evaluator, msg string, intervals ...string)
 			_, file, line, _ := runtime.Caller(1)
 			msg2 := ""
 			if v != nil {
-				str, _ := json.Marshal(v)
+				str, _ := json.RawMessage(v.(string)).MarshalJSON()
 				msg2 = ": " + string(str)
 			}
 			debug.PrintStack()

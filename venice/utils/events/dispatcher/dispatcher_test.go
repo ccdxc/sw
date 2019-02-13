@@ -692,6 +692,7 @@ func testEventDispatcherWithExporters(t *testing.T, numExporters int, eventsStor
 
 // TestEventsDispatcherRestart tests how the dispatcher behaves during restart.
 func TestEventsDispatcherRestart(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 

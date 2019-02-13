@@ -195,7 +195,6 @@ func (s *SyslogExporter) receiveEvents() {
 				break
 			}
 		case <-s.shutdown:
-			fmt.Println("shutting down syslog exporter")
 			return
 		}
 	}

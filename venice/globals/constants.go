@@ -173,9 +173,6 @@ const (
 	ConfigURIPrefix  = "configs"
 	StagingURIPrefix = "staging"
 
-	// Events manager
-	EvtsMgrRPCPort = "9010"
-
 	// TPM
 	TpmRPCPort = "9020"
 
@@ -187,8 +184,9 @@ const (
 	SpyglassRPCPort    = "9011"
 	SpyglassMaxResults = 8192
 
-	// Events proxy
-	EvtsProxyRPCPort = "9012"
+	EvtsMgrRPCPort    = "9010" // Events manager
+	EvtsProxyRPCPort  = "9012" // Events proxy
+	EvtsProxyRESTPort = "9016" // REST server running at NAPLES events proxy
 
 	// objstore port
 	VosGRPcPort  = "9051"
