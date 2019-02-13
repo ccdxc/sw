@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/httputils"
+
 	"github.com/pensando/sw/venice/utils/ntranslate"
 
 	"github.com/pensando/sw/api"
@@ -95,6 +97,8 @@ func NewRestServer(ctx context.Context, listenURL string) (*RestServer, error) {
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/mutex", pprof.Handler("mutex").ServeHTTP)
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	router.Methods("GET").Subrouter().HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
+
+	router.Methods("GET").Subrouter().HandleFunc("/debug/tsdb", httputils.MakeHTTPHandler(tsdb.Debug))
 
 	log.Infof("Starting server at %s", listenURL)
 

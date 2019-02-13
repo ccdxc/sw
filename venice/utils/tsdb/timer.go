@@ -2,6 +2,7 @@ package tsdb
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	protobuf "github.com/gogo/protobuf/types"
@@ -42,6 +43,7 @@ func establishConn() bool {
 	}
 
 	global.mc = metric.NewMetricApiClient(global.rpcClient.ClientConn)
+	log.Infof("connected to %+v", global.mc)
 	return true
 }
 
@@ -123,7 +125,10 @@ func sendAllObjs() {
 		_, err := global.mc.WriteMetrics(global.context, mb)
 		if err != nil {
 			log.Errorf("sendPoints : WriteMetrics failed with err: %s", err)
+			global.sendErrors++
+			return
 		}
+		global.numPoints += len(mb.Metrics)
 	}
 }
 
@@ -277,4 +282,12 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 	}
 
 	obj.metricPoints = append(obj.metricPoints, mp)
+}
+
+// Debug returns tsdb client info
+func Debug(r *http.Request) (interface{}, error) {
+	return map[string]int{
+		"numPoints":  global.numPoints,
+		"sendErrors": global.sendErrors,
+	}, nil
 }

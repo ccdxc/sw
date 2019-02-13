@@ -35,6 +35,8 @@ type globalInfo struct {
 	httpServer  *http.Server           // local http server
 	listener    net.Listener           // listener used by http server
 	cancelFunc  context.CancelFunc     // cancel function to initiate internal cleanup
+	sendErrors  int                    // send error stats
+	numPoints   int                    // number of points reported
 }
 
 var global *globalInfo

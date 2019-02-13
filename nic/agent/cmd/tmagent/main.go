@@ -172,6 +172,7 @@ func main() {
 	}
 
 	if *mode == "network" {
+		log.Infof("configure network mode")
 
 		tmAgent.tpClient, err = ctrlerif.NewTpClient(tmAgent.nodeUUID, tmAgent.tpCtrler, globals.Tpm, rc)
 		if err != nil {
