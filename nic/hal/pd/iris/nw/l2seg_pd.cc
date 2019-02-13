@@ -718,6 +718,7 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
 
     HAL_TRACE_DEBUG("Programming Input Props table ...");
 
+#if 0
     // Temporary change to use overflow tcam till we figure out on how
     // to avoid using tunnel_vnid and tunnel_type as key in
     // input_properties table for classic_nic mode.
@@ -730,6 +731,7 @@ l2seg_uplink_pgm_input_properties_tbl(l2seg_t *l2seg, if_t *hal_if,
         key_mask->entry_inactive_input_properties_mask = 0xFF;
         direct_to_otcam = true;
     }
+#endif
 
     l2seg_pd = (pd_l2seg_t *)hal::l2seg_get_pd(l2seg);
     is_native = is_l2seg_native(l2seg, hal_if);
