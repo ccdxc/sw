@@ -1,32 +1,30 @@
 #include "apollo_rxdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
+#include "INGRESS_sacl_sport_lpm_s0_k.h"
 #include "../../p4/include/sacl_defines.h"
 
 struct phv_                 p;
-struct sacl_sport_lpm_s0_k  k;
+struct sacl_sport_lpm_s0_k_ k;
 struct sacl_sport_lpm_s0_d  d;
 
-#define keys(a)             d.sacl_sport_lpm_s0_d.key ## a
-#define key                 k.p4_to_rxdma_header_flow_sport
-#define sacl_sport_base_addr \
-    k.{p4_to_rxdma_header_sacl_base_addr_sbit0_ebit1, \
-       p4_to_rxdma_header_sacl_base_addr_sbit2_ebit33}
+#define keys(a)                 d.sacl_sport_lpm_s0_d.key ## a
+#define key                     k.p4_to_rxdma_header_flow_sport
+#define sacl_sport_base_addr    k.p4_to_rxdma_header_sacl_base_addr
 
 %%
 
 sacl_sport_lpm_s0:
     seq             c1, k.p4_to_rxdma_header_direction, TX_FROM_HOST
-    phvwr.c1        p.sacl_metadata_ip[127:88], \
-                        k.p4_to_rxdma_header_flow_dst_sbit0_ebit39
-    phvwr.c1        p.sacl_metadata_ip[87:0], \
-                        k.p4_to_rxdma_header_flow_dst_sbit40_ebit127
+    phvwr.c1        p.sacl_metadata_ip[127:112], \
+                        k.p4_to_rxdma_header_flow_dst_s0_e15
+    phvwr.c1        p.sacl_metadata_ip[110:0], \
+                        k.p4_to_rxdma_header_flow_dst_s16_e127
     phvwr.!c1       p.sacl_metadata_ip, k.p4_to_rxdma_header_flow_src
     add             r1, k.p4_to_rxdma_header_flow_dport, \
                         k.p4_to_rxdma_header_flow_proto, 16
     phvwr           p.sacl_metadata_proto_dport, r1
-    add             r1, r0, k.{p4_to_rxdma_header_sacl_base_addr_sbit0_ebit1, \
-                        p4_to_rxdma_header_sacl_base_addr_sbit2_ebit33}
+    add             r1, r0, sacl_sport_base_addr
     add             r2, r1, SACL_IPV4_TABLE_OFFSET
     phvwr           p.sacl_metadata_ipv4_table_addr, r2
     add             r2, r1, SACL_PROTO_DPORT_TABLE_OFFSET

@@ -15,14 +15,11 @@ toeplitz_key_init:
     // key1: flow_dst
     // key2: sport, dport, proto (whichever order provided by key-maker)
     phvwr           p.toeplitz_key0_data, k.p4_to_rxdma_header_flow_src
-    phvwr           p.toeplitz_key1_data[127:104], \
-                        k.p4_to_rxdma_header_flow_dst_s0_e23
-    phvwr.e         p.toeplitz_key1_data[103:0], \
-                        k.p4_to_rxdma_header_flow_dst_s24_e127
-    phvwr           p.toeplitz_key2_data[63:24], \
-                        k.{p4_to_rxdma_header_flow_proto, \
-                        p4_to_rxdma_header_flow_dport, \
-                        p4_to_rxdma_header_flow_sport}
+    phvwr           p.toeplitz_key1_data, k.p4_to_rxdma_header_flow_dst
+    add             r1, k.p4_to_rxdma_header_flow_sport, \
+                        k.p4_to_rxdma_header_flow_dport, 16
+    add.e           r1, r1, k.p4_to_rxdma_header_flow_proto, 32
+    phvwr           p.toeplitz_key2_data[63:24], r1
 
 /*****************************************************************************/
 /* error function                                                            */

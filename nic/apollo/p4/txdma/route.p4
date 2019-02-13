@@ -27,10 +27,26 @@ action route_lpm_s2_ext() {
 
 #include "../include/lpm.h"
 
-control route {
-    if (predicate_header.lpm_bypass == FALSE) {
-        apply(route_lpm_s0);
-        apply(route_lpm_s1);
-        apply(route_lpm_s2);
-    }
+control route_lookup {
+    apply(route_lpm_s0);
+    apply(route_lpm_s1);
+    apply(route_lpm_s2);
 }
+
+#undef LPM_KEY_SIZE
+#undef LPM_DATA_SIZE
+#undef LPM_S0_ENTRY_PAD
+#undef LPM_S1_ENTRY_PAD
+#undef LPM_S2_ENTRY_PAD
+#undef s0_stage
+#undef s1_stage
+#undef s1_name
+#undef s2_name
+#undef s2_name_ext
+#undef key_field
+#undef res_field
+#undef key
+#undef next_addr
+#undef s2_offset
+#undef base_addr
+#undef result

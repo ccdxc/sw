@@ -15,6 +15,7 @@ read_qstate_info:
 
     // Compute control offset based on current cindex
     mul         r2, d.read_qstate_info_d.sw_cindex0, PKTQ_PAGE_SIZE
+    phvwr       p.app_header_table3_valid, TRUE
 
     // Increment sw_cindex0
     // update sw_cindex0, unlock

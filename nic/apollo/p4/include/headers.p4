@@ -156,6 +156,11 @@ header_type predicate_header_t {
 
 header_type p4_to_rxdma_header_t {
     fields {
+        p4plus_app_id           : 4;
+        table0_valid            : 1;
+        table1_valid            : 1;
+        table2_valid            : 1;
+        table3_valid            : 1;
         udp_flow_lkp_continue   : 1;
         sacl_bypass             : 1;
         sacl_result             : 2;    // (sf,sl) encoded value
@@ -168,19 +173,19 @@ header_type p4_to_rxdma_header_t {
                                         // queueing, could be either flow miss
                                         // or flow_state == queueing
 
-        pad                     : 11;
+        pad                     : 3;
         direction               : 1;
         udp_queue_drain         : 1;
         fte_rss_enable          : 1;
 
-        udp_oflow_index         : 32;
+        udp_oflow_index         : 24;
         udp_flow_qid            : 8;    // qid - useful when drain is set
 
         flow_src                : 128;
-        flow_dst                : 128;
-        flow_proto              : 8;
-        flow_dport              : 16;
         flow_sport              : 16;
+        flow_proto              : 8;
+        flow_dst                : 128;
+        flow_dport              : 16;
         flow_ktype              : 4;
 
         udp_queue_delete        : 1;

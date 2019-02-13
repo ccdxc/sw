@@ -1,4 +1,3 @@
-
 #define TXDMA_QSTATE \
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host_rings, total_rings, pid, \
     p_index0, c_index0, sw_cindex0, ring_size, ring_base, rxdma_cindex_addr
@@ -22,8 +21,8 @@
     modify_field(_scratch_txdma_qstate.rxdma_cindex_addr, rxdma_cindex_addr)
 
 
-action read_qstate_info (TXDMA_QSTATE) {
-    // in txdma 
+action read_qstate_info(TXDMA_QSTATE) {
+    // in txdma
     //          check sw_cindex0, pindex0
     //          tbl-wr sw_cindex0++
     //          doorbell(dma) cindex0
@@ -32,17 +31,18 @@ action read_qstate_info (TXDMA_QSTATE) {
     TXDMA_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_txdma_qstate);
 
     if (scratch_txdma_qstate.sw_cindex0 == scratch_qstate_hdr.p_index0) {
-        modify_field(predicate_header.txdma_drop_event, TRUE);
+        modify_field(capri_intr.drop, TRUE);
     } else {
+        modify_field(app_header.table3_valid, TRUE);
         modify_field(txdma_control.control_addr,
-                scratch_txdma_qstate.ring_base + 
-                (scratch_txdma_qstate.sw_cindex0 * PKTQ_PAGE_SIZE));
+                     scratch_txdma_qstate.ring_base +
+                     (scratch_txdma_qstate.sw_cindex0 * PKTQ_PAGE_SIZE));
         modify_field(txdma_control.payload_addr, txdma_control.control_addr + (1<<6));
-        modify_field(scratch_txdma_qstate.sw_cindex0, 
-                scratch_txdma_qstate.sw_cindex0 + 1);
+        modify_field(scratch_txdma_qstate.sw_cindex0,
+                     scratch_txdma_qstate.sw_cindex0 + 1);
         modify_field(txdma_control.cindex, scratch_txdma_qstate.sw_cindex0);
-        modify_field(txdma_control.rxdma_cindex_addr, 
-                        scratch_txdma_qstate.rxdma_cindex_addr);
+        modify_field(txdma_control.rxdma_cindex_addr,
+                     scratch_txdma_qstate.rxdma_cindex_addr);
     }
 
 }
@@ -61,7 +61,7 @@ table read_qstate {
 
 action read_control_info (data) {
     modify_field(scratch_metadata.data512, data);
-    // Data is the predicate-header and p4_to_txdma_header. Populate fields 
+    // Data is the predicate-header and p4_to_txdma_header. Populate fields
     // Note: Skip copying into the txdma_drop_event predicate bit since
     // it is set by read_qstate table
     modify_field(predicate_header.lpm_bypass, data);
@@ -69,6 +69,8 @@ action read_control_info (data) {
     modify_field(p4_to_txdma_header.lpm_addr, data);
     modify_field(p4_to_txdma_header.lpm_dst, data);
     modify_field(p4_to_txdma_header.payload_len, data);
+    // copy !lpm_bypass to table0_valid
+    modify_field(app_header.table0_valid, data);
 }
 
 @pragma stage 1
@@ -82,7 +84,7 @@ table read_control {
     }
 }
 
-control setup {
+control read_qstate {
     apply(read_qstate);
     apply(read_control);
 }

@@ -9,6 +9,8 @@ struct read_control_d       d;
 %%
 
 read_control_info:
+    seq         c1, d.read_control_info_d.data[505], 0
+    phvwr.c1    p.app_header_table0_valid, TRUE
     phvwr.e     p.{predicate_header_pad0...predicate_header_direction}, \
                     d.read_control_info_d.data[510: 510+1 - \
                         ((APOLLO_PREDICATE_HDR_SZ << 3) - 1)]

@@ -28,6 +28,7 @@ ingress_to_rxdma:
     add             r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5,\
                         capri_p4_intrinsic_packet_len_sbit6_ebit13}, \
                         APOLLO_I2E_HDR_SZ
+    phvwr           p.p4_to_rxdma_header_table3_valid, TRUE
     phvwr           p.p4_to_rxdma_header_direction, k.control_metadata_direction
     phvwr           p.p4_to_txdma_header_payload_len, r1
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH

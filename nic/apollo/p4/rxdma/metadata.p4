@@ -44,7 +44,6 @@ header_type scratch_metadata_t {
     }
 }
 
-// UDP ordering -
 header_type udp_scratch_metadata_t {
     fields {
         entry_valid         : 1;
@@ -107,8 +106,7 @@ header_type flow_key_t {
     }
 }
 
-// Phv header instantiation -
-// start with intrinsic followed by p4_to_rxdma..., followed by rxdma metadata
+// PHV instantiation
 @pragma dont_trim
 metadata cap_phv_intr_global_t capri_intr;
 @pragma dont_trim
@@ -117,9 +115,61 @@ metadata cap_phv_intr_p4_t capri_p4_intr;
 metadata cap_phv_intr_rxdma_t capri_rxdma_intr;
 
 @pragma dont_trim
-metadata p4_to_arm_header_t p4_to_arm_header;
+metadata p4_2_p4plus_app_header_t app_header;
 @pragma dont_trim
+metadata p4_2_p4plus_ext_app_header_t ext_app_header;
+
+@pragma dont_trim
+@pragma pa_header_union ingress app_header
 metadata p4_to_rxdma_header_t p4_to_rxdma_header;
+@pragma dont_trim
+@pragma pa_header_union ingress ext_app_header
+metadata p4_to_arm_header_t p4_to_arm_header;
+
+@pragma dont_trim
+metadata p4plus_common_to_stage_t to_stage_0;
+@pragma dont_trim
+metadata p4plus_common_to_stage_t to_stage_1;
+@pragma dont_trim
+metadata p4plus_common_to_stage_t to_stage_2;
+@pragma dont_trim
+metadata p4plus_common_to_stage_t to_stage_3;
+@pragma dont_trim
+metadata p4plus_common_to_stage_t to_stage_4;
+@pragma dont_trim
+metadata p4plus_common_to_stage_t to_stage_5;
+@pragma dont_trim
+metadata p4plus_common_to_stage_t to_stage_6;
+@pragma dont_trim
+metadata p4plus_common_to_stage_t to_stage_7;
+
+@pragma dont_trim
+metadata p4plus_common_global_t common_global;
+@pragma dont_trim
+metadata p4plus_common_raw_table_engine_phv_t common_te0_phv;
+@pragma dont_trim
+metadata p4plus_common_s2s_t common_t0_s2s;
+@pragma dont_trim
+metadata p4plus_common_raw_table_engine_phv_t common_te1_phv;
+@pragma dont_trim
+metadata p4plus_common_s2s_t common_t1_s2s;
+@pragma dont_trim
+metadata p4plus_common_raw_table_engine_phv_t common_te2_phv;
+@pragma dont_trim
+metadata p4plus_common_s2s_t common_t2_s2s;
+@pragma dont_trim
+metadata p4plus_common_raw_table_engine_phv_t common_te3_phv;
+@pragma dont_trim
+metadata p4plus_common_s2s_t common_t3_s2s;
+
+header_type rxdma_common_pad_t {
+    fields {
+        rxdma_common_pad : 96;
+    }
+}
+
+@pragma dont_trim
+metadata rxdma_common_pad_t rxdma_common_pad;
 
 @pragma dont_trim
 metadata sacl_metadata_t       sacl_metadata;
@@ -153,16 +203,18 @@ metadata toeplitz_seed_t        scratch_toeplitz_seed;
 @pragma scratch_metadata
 metadata flow_key_t             scratch_flow_key;
 
-@pragma pa_align 512
-// key and seed MUST come from the same flit (h/w req.t)
+@pragma pa_header_union ingress to_stage_2
 metadata toeplitz_key0_t  toeplitz_key0;  // from packet
+@pragma pa_header_union ingress to_stage_3
 metadata toeplitz_key0_t  toeplitz_seed0; // same size as key
+@pragma pa_header_union ingress to_stage_4
 metadata toeplitz_key1_t  toeplitz_key1;  // from packet
+@pragma pa_header_union ingress to_stage_5
 metadata toeplitz_key1_t  toeplitz_seed1; // same size as key
 
-@pragma pa_align 512
-// key and seed MUST come from the same flit (h/w req.t)
+@pragma pa_header_union ingress to_stage_6
 metadata toeplitz_key2_t  toeplitz_key2;  // from packet
+@pragma pa_header_union ingress to_stage_7
 metadata toeplitz_key2_t  toeplitz_seed2; // same size as key
 
 @pragma dont_trim

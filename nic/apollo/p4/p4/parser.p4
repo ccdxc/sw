@@ -395,9 +395,8 @@ parser deparse_ingress {
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
-    // p4_to_arm_header will be present only if to_arm is set in p4_to_rxdma_header
-    extract(p4_to_arm_header);
     extract(p4_to_rxdma_header);
+    extract(p4_to_arm_header);
     // set the splitter offset to here
     extract(predicate_header);
     extract(p4_to_txdma_header);

@@ -1,9 +1,10 @@
 #include "apollo_rxdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
+#include "INGRESS_sacl_proto_dport_lpm_s2_k.h"
 
 struct phv_                         p;
-struct sacl_proto_dport_lpm_s2_k    k;
+struct sacl_proto_dport_lpm_s2_k_   k;
 struct sacl_proto_dport_lpm_s2_d    d;
 
 #define prog_name       sacl_proto_dport_lpm_s2
@@ -20,11 +21,9 @@ struct sacl_proto_dport_lpm_s2_d    d;
 #include "../include/lpm2.h"
 
 sacl_proto_dport_lpm_s2_ext:
-    add             r1, r0, k.{p4_to_rxdma_header_sacl_base_addr_sbit0_ebit1, \
-                        p4_to_rxdma_header_sacl_base_addr_sbit2_ebit33}
+    add             r1, r0, k.p4_to_rxdma_header_sacl_base_addr
     add             r1, r1, SACL_P2_TABLE_OFFSET
-    add             r1, r1, k.{sacl_metadata_p1_class_id_sbit0_ebit7, \
-                               sacl_metadata_p1_class_id_sbit8_ebit9}, 8
+    add             r1, r1, k.sacl_metadata_p1_class_id, 8
     phvwr.e         p.sacl_metadata_p2_table_addr, r1
     phvwr           p.sacl_metadata_proto_dport_class_id, r7
 

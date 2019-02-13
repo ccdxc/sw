@@ -12,8 +12,8 @@ action ingress_to_rxdma() {
         modify_field(capri_intrinsic.lif, APOLLO_SERVICE_LIF);
         add_header(capri_p4_intrinsic);
         add_header(capri_rxdma_intrinsic);
-        add_header(p4_to_arm_header);
         add_header(p4_to_rxdma_header);
+        add_header(p4_to_arm_header);
         // Splitter offset should point to here
         modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                      (CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
@@ -25,6 +25,7 @@ action ingress_to_rxdma() {
         add_header(p4i_apollo_i2e);
         remove_header(service_header);
 
+        modify_field(p4_to_rxdma_header.table3_valid, TRUE);
         modify_field(p4_to_rxdma_header.direction, control_metadata.direction);
         modify_field(p4_to_txdma_header.payload_len,
                      capri_p4_intrinsic.packet_len + APOLLO_I2E_HDR_SZ);

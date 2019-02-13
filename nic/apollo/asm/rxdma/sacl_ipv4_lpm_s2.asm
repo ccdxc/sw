@@ -1,9 +1,10 @@
 #include "apollo_rxdma.h"
 #include "INGRESS_p.h"
 #include "ingress.h"
+#include "INGRESS_sacl_ipv4_lpm_s2_k.h"
 
 struct phv_                 p;
-struct sacl_ipv4_lpm_s2_k   k;
+struct sacl_ipv4_lpm_s2_k_  k;
 struct sacl_ipv4_lpm_s2_d   d;
 
 #define prog_name       sacl_ipv4_lpm_s2
@@ -23,8 +24,7 @@ sacl_ipv4_lpm_s2_ext:
     or              r2, r7, k.sacl_metadata_sport_class_id, 10
     div             r6, r2, 51
     phvwr           p.sacl_metadata_ip_sport_class_id, r2
-    add             r1, r0, k.{p4_to_rxdma_header_sacl_base_addr_sbit0_ebit1, \
-                        p4_to_rxdma_header_sacl_base_addr_sbit2_ebit33}
+    add             r1, r0, k.p4_to_rxdma_header_sacl_base_addr
     add             r1, r1, SACL_P1_TABLE_OFFSET
     add.e           r1, r1, r6, 6
     phvwr           p.sacl_metadata_p1_table_addr, r1
