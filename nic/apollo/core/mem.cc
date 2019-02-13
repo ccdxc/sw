@@ -21,6 +21,8 @@ sdk_logger::trace_cb_t    g_trace_cb;
 
 namespace api {
 
+static bool g_delay_delete = true;
+
 /**
  * @brief callback invoked by the timerwheel to release an object to its slab
  *
@@ -31,6 +33,7 @@ namespace api {
 void
 slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
 {
+    OCI_TRACE_VERBOSE("timer %p, slab %u, elem %p", timer, slab_id, elem);
     switch (slab_id) {
     case OCI_SLAB_ID_SWITCHPORT:
         switchport_entry::destroy((switchport_entry *)elem);
@@ -89,11 +92,12 @@ delay_delete_to_slab (uint32_t slab_id, void *elem)
 {
     void    *timer_ctxt;
 
+    OCI_TRACE_VERBOSE("slab %u, elem %p", slab_id, elem);
     if (slab_id >= OCI_SLAB_ID_MAX) {
         OCI_TRACE_ERR("Unexpected slab id {}", slab_id);
         return sdk::SDK_RET_INVALID_ARG;
     }
-    if (sdk::lib::periodic_thread_is_running()) {
+    if (g_delay_delete && sdk::lib::periodic_thread_is_running()) {
         timer_ctxt =
             sdk::lib::timer_schedule(slab_id, OCI_DELAY_DELETE_MSECS, elem,
                           (sdk::lib::twheel_cb_t)slab_delay_delete_cb, false);

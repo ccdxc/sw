@@ -964,7 +964,6 @@ hash::entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
                              get_otcam_id_from_hash_idx_(index),
                              buff, buff_size);
     }
-    SDK_TRACE_DEBUG("%s : Index: %d\n%s", name_, index, buff);
     return SDK_RET_OK;
 }
 

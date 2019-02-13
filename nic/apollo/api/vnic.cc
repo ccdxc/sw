@@ -66,10 +66,10 @@ vnic_entry::~vnic_entry() {
  */
 void
 vnic_entry::destroy(vnic_entry *vnic) {
+    vnic->release_resources();
     if (vnic->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_VNIC, vnic->impl_);
     }
-    vnic->release_resources();
     vnic->~vnic_entry();
     vnic_db()->vnic_free(vnic);
 }

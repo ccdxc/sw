@@ -70,10 +70,10 @@ policy::~policy() {
  */
 void
 policy::destroy(policy *policy) {
+    policy->release_resources();
     if (policy->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_SECURITY_POLICY, policy->impl_);
     }
-    policy->release_resources();
     policy->~policy();
     policy_db()->policy_free(policy);
 }

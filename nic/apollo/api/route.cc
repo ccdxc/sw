@@ -66,10 +66,10 @@ route_table::~route_table() {
  */
 void
 route_table::destroy(route_table *rtable) {
+    rtable->release_resources();
     if (rtable->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_ROUTE_TABLE, rtable->impl_);
     }
-    rtable->release_resources();
     rtable->~route_table();
     route_table_db()->route_table_free(rtable);
 }

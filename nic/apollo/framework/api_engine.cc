@@ -57,6 +57,8 @@ api_engine::pre_process_create_(api_ctxt_t *api_ctxt) {
             batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
             return SDK_RET_ERR;
         }
+        OCI_TRACE_VERBOSE("allocated api obj %p, api op %u, obj id %u",
+                          api_obj, api_ctxt->api_op, api_ctxt->obj_id);
         /**< add it to dirty object list */
         obj_ctxt.api_op = API_OP_CREATE;
         obj_ctxt.api_params = api_ctxt->api_params;
@@ -238,7 +240,6 @@ api_engine::pre_process_stage_(void) {
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
                       sdk::SDK_RET_INVALID_ARG);
-    OCI_TRACE_DEBUG("API context vector size %u", batch_ctxt_.api_ctxts.size());
     batch_ctxt_.stage = API_BATCH_STAGE_PRE_PROCESS;
     for (auto it = batch_ctxt_.api_ctxts.begin();
          it != batch_ctxt_.api_ctxts.end(); ++it) {
@@ -384,9 +385,6 @@ api_engine::program_config_stage_(void) {
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                       sdk::SDK_RET_INVALID_ARG);
 
-    OCI_TRACE_DEBUG("Dirty object list size %u, Dirty object map size %u",
-                    batch_ctxt_.dirty_obj_list.size(),
-                    batch_ctxt_.dirty_obj_map.size());
     OCI_TRACE_INFO("Starting resource reservation phase");
     /**< walk over all the dirty objects and reserve resources, if needed */
     batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
@@ -399,9 +397,6 @@ api_engine::program_config_stage_(void) {
     }
     OCI_TRACE_INFO("Finished resource reservation phase");
 
-    OCI_TRACE_DEBUG("Dirty object list size %u, Dirty object map size %u",
-                    batch_ctxt_.dirty_obj_list.size(),
-                    batch_ctxt_.dirty_obj_map.size());
     /**< walk over all the dirty objects and program hw, if any */
     OCI_TRACE_INFO("Starting program config phase");
     batch_ctxt_.stage = API_BATCH_STAGE_PROGRAM_CONFIG;
@@ -455,6 +450,11 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                                        obj_ctxt);
         SDK_ASSERT(ret == SDK_RET_OK);
         api_obj->clear_hw_dirty();
+        if (api_obj->stateless()) {
+            // destroy this object as it is not needed anymore
+            OCI_TRACE_VERBOSE("delay deleting %p", api_obj);
+            api_obj->delay_delete();
+        }
         break;
 
     case API_OP_DELETE:
@@ -495,6 +495,10 @@ api_engine::activate_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
          * the current obj is already deleted from the s/w db and swapped with
          * cloned_obj when update_db() was called on cloned_obj above
          */
+        if (api_obj->stateless()) {
+            // destroy cloned object as it is not needed anymore
+            obj_ctxt->cloned_obj->delay_delete();
+        }
         api_obj->delay_delete();
         break;
 
@@ -515,9 +519,6 @@ api_engine::activate_config_stage_(void) {
     sdk_ret_t                     ret;
     dirty_obj_list_t::iterator    next_it;
 
-    OCI_TRACE_DEBUG("Dirty object list size %u, Dirty object map size %u",
-                    batch_ctxt_.dirty_obj_list.size(),
-                    batch_ctxt_.dirty_obj_map.size());
     batch_ctxt_.stage = API_BATCH_STAGE_CONFIG_ACTIVATE;
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
              it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
@@ -655,12 +656,12 @@ api_engine::batch_begin(oci_batch_params_t *params) {
 sdk_ret_t
 api_engine::batch_commit(void) {
     sdk_ret_t    ret;
-    api_base     *api_obj;
 
     /**
      * pre process the APIs by walking over the stashed API contexts to form
      * dirty object list
      */
+    OCI_TRACE_INFO("API context vector size %u", batch_ctxt_.api_ctxts.size());
     OCI_TRACE_INFO("Starting pre-process stage ...");
     ret = pre_process_stage_();
     OCI_TRACE_INFO("Finished pre-process stage");
@@ -673,6 +674,9 @@ api_engine::batch_commit(void) {
      * each object including allocating resources and h/w programming (with the
      * exception of stage 0 programming
      */
+    OCI_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
+                   batch_ctxt_.dirty_obj_list.size(),
+                   batch_ctxt_.dirty_obj_map.size());
     OCI_TRACE_INFO("Starting program config stage ...");
     ret = program_config_stage_();
     OCI_TRACE_INFO("Finished program config stage");
@@ -688,7 +692,6 @@ api_engine::batch_commit(void) {
         return ret;
     }
 
-    OCI_TRACE_DEBUG("API context vector size %u", batch_ctxt_.api_ctxts.size());
     /**< clear all batch related info */
     batch_ctxt_.epoch = OCI_EPOCH_INVALID;
     batch_ctxt_.stage = API_BATCH_STAGE_NONE;
@@ -704,22 +707,11 @@ api_engine::batch_commit(void) {
     batch_ctxt_.api_ctxts.clear();
     OCI_TRACE_INFO("Finished clearing API contexts ...");
 
-    OCI_TRACE_DEBUG("API context vector size %u", batch_ctxt_.api_ctxts.size());
-
     /**< walk dirty object map/list & release all stateless object memory */
-    OCI_TRACE_DEBUG("Dirty object list size %u, Dirty object map size %u",
-                    batch_ctxt_.dirty_obj_list.size(),
-                    batch_ctxt_.dirty_obj_map.size());
+    OCI_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
+                   batch_ctxt_.dirty_obj_list.size(),
+                   batch_ctxt_.dirty_obj_map.size());
     OCI_TRACE_INFO("Clearing dirty object map/list ...");
-    for (auto it = batch_ctxt_.dirty_obj_map.begin();
-         it != batch_ctxt_.dirty_obj_map.end(); ) {
-        api_obj = it->first;
-        if (api_obj->stateless()) {
-            // destroy this object as it is not needed anymore
-            api_obj->delay_delete();
-        }
-        batch_ctxt_.dirty_obj_map.erase(it++);
-    }
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
     OCI_TRACE_INFO("Finished clearing dirty object map/list ...");

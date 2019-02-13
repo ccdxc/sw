@@ -61,10 +61,10 @@ mapping_entry::~mapping_entry() {
  */
 void
 mapping_entry::destroy(mapping_entry *mapping) {
+    mapping->release_resources();
     if (mapping->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_MAPPING, mapping->impl_);
     }
-    mapping->release_resources();
     mapping->~mapping_entry();
     mapping_db()->mapping_free(mapping);
 }

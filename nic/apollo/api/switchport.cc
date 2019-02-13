@@ -55,6 +55,7 @@ switchport_entry::factory(oci_switchport_t *oci_switchport) {
  */
 void
 switchport_entry::destroy(switchport_entry *switchport) {
+    switchport->release_resources();
     if (switchport->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_SWITCHPORT, switchport->impl_);
     }

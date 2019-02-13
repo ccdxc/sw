@@ -68,10 +68,10 @@ tep_entry::~tep_entry() {
  */
 void
 tep_entry::destroy(tep_entry *tep) {
+    tep->release_resources();
     if (tep->impl_) {
         impl_base::destroy(impl::IMPL_OBJ_ID_TEP, tep->impl_);
     }
-    tep->release_resources();
     tep->~tep_entry();
     tep_db()->tep_free(tep);
 }

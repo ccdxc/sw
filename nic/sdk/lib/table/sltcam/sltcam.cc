@@ -842,8 +842,8 @@ tcam::entry_trace_(tcam_entry_t *te)
         return SDK_RET_OK;
     }
     p4_err = p4pd_table_ds_decoded_string_get(id_, te->index,
-            te->key, te->key_mask, te->data,
-            buff, sizeof(buff));
+                                              te->key, te->key_mask, te->data,
+                                              buff, sizeof(buff));
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
 
     SDK_TRACE_DEBUG("%s: Index: %d \n %s\n", name_, te->index, buff);
@@ -864,9 +864,6 @@ tcam::entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
                                                      key, key_mask, data,
                                                      buff, buff_size);
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
-
-    SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, index, buff);
-
     return SDK_RET_OK;
 }
 

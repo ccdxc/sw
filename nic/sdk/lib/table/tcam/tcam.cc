@@ -873,9 +873,7 @@ tcam::entry_trace_(tcam_entry_t *te)
             te->key, te->key_mask, te->data,
             buff, sizeof(buff));
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
-
     SDK_TRACE_DEBUG("%s: Index: %d \n %s\n", name_, te->index, buff);
-
     return SDK_RET_OK;
 }
 
@@ -892,9 +890,6 @@ tcam::entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
                                                      key, key_mask, data,
                                                      buff, buff_size);
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
-
-    SDK_TRACE_DEBUG("%s: Index: %d \n %s", name_, index, buff);
-
     return SDK_RET_OK;
 }
 

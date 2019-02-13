@@ -742,7 +742,6 @@ directmap::entry_to_str(void *data, uint32_t index, char *buff,
     p4_err = p4pd_global_table_ds_decoded_string_get(id_, index, NULL, NULL,
                                                      data, buff, buff_size);
     SDK_ASSERT(p4_err == P4PD_SUCCESS);
-    SDK_TRACE_DEBUG("%s : Index: %u\n%s", name_, index, buff);
     return SDK_RET_OK;
 }
 
