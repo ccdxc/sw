@@ -13,7 +13,9 @@ import atexit
 import paramiko
 
 HOST_NAPLES_DIR                 = "/naples"
+NAPLES_TMP_DIR                  = "/tmp"
 HOST_ESX_NAPLES_IMAGES_DIR      = "/home/vm"
+NAPLES_OOB_NIC                  = "oob_mnic0"
 
 parser = argparse.ArgumentParser(description='Naples Boot Script')
 # Mandatory parameters
@@ -73,6 +75,8 @@ parser.add_argument('--only-init', dest='only_init',
                     action='store_true', help='Only Initialize the nodes and start tests')
 parser.add_argument('--mnic-ip', dest='mnic_ip',
                     default="169.254.0.1", help='Mnic IP.')
+parser.add_argument('--oob-ip', dest='oob_ip',
+                    default=None, help='Oob IP.')
 parser.add_argument('--skip-driver-install', dest='skip_driver_install',
                     action='store_true', help='Skips host driver install')
 parser.add_argument('--esx-script', dest='esx_script',
@@ -133,8 +137,8 @@ class EntityManagement:
         if ipaddr:
             self.ipaddr = ipaddr
             self.ssh_host = "%s@%s" % (username, ipaddr)
-            self.scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % password
-            self.ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % password
+            self.scp_pfx = "sshpass -p %s scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % password
+            self.ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % password
         return
 
     def SendlineExpect(self, line, expect, hdl = None,
@@ -152,14 +156,14 @@ class EntityManagement:
     def WaitForSsh(self, port = 22):
         print("Waiting for IP:%s to be up." % self.ipaddr)
         for retry in range(150):
-            if self.IsHostSshUP():
+            if self.IsSSHUP():
                 return
             time.sleep(5)
         print("Host not up")
         sys.exit(1)
         return
 
-    def IsHostSshUP(self, port = 22):
+    def IsSSHUP(self, port = 22):
         print("Waiting for IP:%s to be up." % self.ipaddr)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ret = sock.connect_ex(('%s' % self.ipaddr, port))
@@ -181,6 +185,17 @@ class EntityManagement:
         return retcode
 
 
+    def CopyIN(self, src_filename, entity_dir):
+        dest_filename = entity_dir + "/" + os.path.basename(src_filename)
+        cmd = "%s %s %s:%s" % (self.scp_pfx, src_filename, self.ssh_host, dest_filename)
+        print(cmd)
+        ret = os.system(cmd)
+        assert(ret == 0)
+
+        self.RunSshCmd("sync")
+        ret = self.RunSshCmd("ls -l %s" % dest_filename)
+        assert(ret == 0)
+
     def RunNaplesCmd(self, command, ignore_failure = False):
         assert(ignore_failure == True or ignore_failure == False)
         full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no root@%s %s" %\
@@ -188,8 +203,8 @@ class EntityManagement:
         return self.RunSshCmd(full_command, ignore_failure)
 
 class NaplesManagement(EntityManagement):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, ipaddr = None, username = None, password = None):
+        super().__init__(ipaddr = ipaddr, username = username, password = password)
         self.hdl = None
         return
 
@@ -208,6 +223,43 @@ class NaplesManagement(EntityManagement):
         hdl.close()
         return
 
+    def __login(self):
+        midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
+                                   hdl = self.hdl, timeout = 120)
+        if midx == 0: return
+        # Got capri login prompt, send username/password.
+        self.SendlineExpect(GlobalOptions.username, "Password:")
+        ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
+        if ret == 1: self.SendlineExpect("", "#")
+
+    def RebootGoldFw(self):
+        self.SendlineExpect("fwupdate -s goldfw", "#")
+        self.SendlineExpect("reboot", "capri-gold login:")
+        self.__login()
+        time.sleep(60)
+        try:
+            self.SendlineExpect("dhclient " + NAPLES_OOB_NIC, "#")
+        except:
+            pass
+        self.WaitForSsh()
+
+    def RunNaplesCmd(self, command, ignore_failure = False):
+        assert(ignore_failure == True or ignore_failure == False)
+        full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no root@%s %s" %\
+                       (GlobalOptions.password, GlobalOptions.mnic_ip, command)
+        return self.RunSshCmd(full_command, ignore_failure)
+
+    def InstallMainFirmware(self, copy_fw = True):
+        if copy_fw:
+            self.CopyIN(GlobalOptions.image, entity_dir = NAPLES_TMP_DIR)
+        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image), "#")
+        self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#")
+
+    def InstallGoldFirmware(self):
+        self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = NAPLES_TMP_DIR)
+        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.gold_fw_img), "#")
+        self.SendlineExpect("/nic/tools/fwupdate -l", "#")
+
     def Connect(self):
         self.__clearline()
         self.hdl = self.Spawn("telnet %s %s" % ((GlobalOptions.console_ip, GlobalOptions.console_port)))
@@ -223,6 +275,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect(GlobalOptions.username, "Password:")
         ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
         if ret == 1: self.SendlineExpect("", "#")
+
 
     def ReadGoldFwVersion(self):
         global gold_fw_latest
@@ -253,7 +306,7 @@ class NaplesManagement(EntityManagement):
             self.SendlineExpect("echo %s > /sysconfig/config0/app-start.conf && sync" % GlobalOptions.mode, "#")
         if uuid:
             self.SendlineExpect("echo %s > /sysconfig/config0/sysuuid" % GlobalOptions.uuid, "#")
-        
+
         if goldfw:
             self.SendlineExpect("rm -f /sysconfig/config0/device.conf", "#")
 
@@ -289,17 +342,9 @@ class HostManagement(EntityManagement):
             self.RunSshCmd("%s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
         return
 
-    def CopyIN(self, src_filename, host_dir, naples_dir = None):
-        dest_filename = host_dir + "/" + os.path.basename(src_filename)
-        cmd = "%s %s %s:%s" % (self.scp_pfx, src_filename, self.ssh_host, dest_filename)
-        print(cmd)
-        ret = os.system(cmd)
-        assert(ret == 0)
-
-        self.RunSshCmd("sync")
-        ret = self.RunSshCmd("ls -l %s" % dest_filename)
-        assert(ret == 0)
-
+    def CopyIN(self, src_filename, entity_dir, naples_dir = None):
+        dest_filename = entity_dir + "/" + os.path.basename(src_filename)
+        super(HostManagement, self).CopyIN(src_filename, entity_dir)
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
             ret = self.RunSshCmd("sshpass -p %s scp -o StrictHostKeyChecking=no %s root@%s:%s" %\
@@ -326,7 +371,7 @@ class HostManagement(EntityManagement):
             self.RunNaplesCmd("mount /dev/mmcblk0p10 /data/")
 
         if copy_fw:
-            self.CopyIN(GlobalOptions.image, host_dir = HOST_NAPLES_DIR, naples_dir = "/data")
+            self.CopyIN(GlobalOptions.image, entity_dir = HOST_NAPLES_DIR, naples_dir = "/data")
 
         self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/naples_fw.tar")
         if mount_data:
@@ -338,7 +383,7 @@ class HostManagement(EntityManagement):
 
 
     def InstallGoldFirmware(self):
-        self.CopyIN(GlobalOptions.gold_fw_img, host_dir = HOST_NAPLES_DIR, naples_dir = "/data")
+        self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = HOST_NAPLES_DIR, naples_dir = "/data")
         self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(GlobalOptions.gold_fw_img))
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
 
@@ -360,8 +405,8 @@ class EsxHostManagement(HostManagement):
         self.__bld_vm_ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % GlobalOptions.esx_bld_vm_password
         return
 
-    def ctrl_vm_copyin(self, src_filename, host_dir, naples_dir = None):
-        dest_filename = host_dir + "/" + os.path.basename(src_filename)
+    def ctrl_vm_copyin(self, src_filename, entity_dir, naples_dir = None):
+        dest_filename = entity_dir + "/" + os.path.basename(src_filename)
         cmd = "%s %s %s:%s" % (self.__ctr_vm_scp_pfx, src_filename,
                                self.__ctr_vm_ssh_host, dest_filename)
         print(cmd)
@@ -505,7 +550,7 @@ class EsxHostManagement(HostManagement):
 
         #Ctrl VM reboot might have removed the image
         self.ctrl_vm_copyin(GlobalOptions.image,
-                    host_dir = HOST_ESX_NAPLES_IMAGES_DIR,
+                    entity_dir = HOST_ESX_NAPLES_IMAGES_DIR,
                     naples_dir = "/tmp")
 
         self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar")
@@ -518,7 +563,7 @@ class EsxHostManagement(HostManagement):
 
     def InstallGoldFirmware(self):
         self.ctrl_vm_copyin(GlobalOptions.gold_fw_img,
-                    host_dir = HOST_ESX_NAPLES_IMAGES_DIR,
+                    entity_dir = HOST_ESX_NAPLES_IMAGES_DIR,
                     naples_dir = "/data")
         self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(GlobalOptions.gold_fw_img))
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
@@ -606,7 +651,7 @@ def AtExitCleanup():
 
 def Main():
     global naples
-    naples = NaplesManagement()
+    naples = NaplesManagement(ipaddr = GlobalOptions.oob_ip, username='root', password='pen123')
 
     global host
     host = HostManagement(GlobalOptions.host_ip)
@@ -621,7 +666,7 @@ def Main():
         #First do a reset as naples may be in screwed up state.
         try:
             naples.Connect()
-            if not host.IsHostSshUP():
+            if not host.IsSSHUP():
                 raise Exception("Host not up.")
         except:
             #Do Reset only if we can't connect to naples.
@@ -654,16 +699,24 @@ def Main():
         naples.Close()
     else:
         # Case 1: Main firmware upgrade.
-        naples.InitForUpgrade(goldfw = True)
-        host.InitForUpgrade()
-        host.Reboot()
-        naples.Close()
-        gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
-        host.Init(driver_pkg =  gold_pkg, cleanup = False)
-        host.InstallMainFirmware()
-        #Install gold fw if required.
-        if not IsNaplesGoldFWLatest():
-            host.InstallGoldFirmware()
+        if naples.IsSSHUP():
+            #OOb is present and up install right away,
+            naples.RebootGoldFw()
+            naples.InstallMainFirmware()
+            #TDOD Update gold fw to latest i not matching.
+            if not IsNaplesGoldFWLatest():
+                naples.InstallGoldFirmware()
+        else:
+            naples.InitForUpgrade(goldfw = True)
+            host.InitForUpgrade()
+            host.Reboot()
+            naples.Close()
+            gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
+            host.Init(driver_pkg =  gold_pkg, cleanup = False)
+            host.InstallMainFirmware()
+            #Install gold fw if required.
+            if not IsNaplesGoldFWLatest():
+                host.InstallGoldFirmware()
 
     #Script that might have to run just before reboot
     # ESX would require drivers to be installed here to avoid
@@ -676,8 +729,11 @@ def Main():
     # Initialize the Node, this is needed in all cases.
     host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = False)
 
-    # Update MainFwB also to same image - TEMP CHANGE
-    host.InstallMainFirmware(mount_data = False, copy_fw = False)
+    if naples.IsSSHUP():
+        naples.InstallMainFirmware()
+    else:
+        # Update MainFwB also to same image - TEMP CHANGE
+        host.InstallMainFirmware(mount_data = False, copy_fw = False)
     return
 
 if __name__ == '__main__':

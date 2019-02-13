@@ -24,7 +24,7 @@ def Main(step):
     for cmd in resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
-            result = api.types.status.FAILURE
+            return api.types.status.FAILURE
 
 
     reboot_nodes = []
