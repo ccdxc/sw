@@ -25,11 +25,13 @@ func establishConn() bool {
 		}
 		rpckitOpts = append(rpckitOpts, rpckit.WithLoggerEnabled(false))
 
-		global.rpcClient, err = rpckit.NewRPCClient(global.opts.ClientName, global.opts.Collector, rpckitOpts...)
-		if err == nil {
-			break
+		if global.opts.Collector != "" {
+			global.rpcClient, err = rpckit.NewRPCClient(global.opts.ClientName, global.opts.Collector, rpckitOpts...)
+			if err == nil {
+				break
+			}
+			log.Errorf("error establishing the connection: %s", err)
 		}
-		log.Errorf("error establishing the connection: %s", err)
 
 		select {
 		case <-time.After(global.opts.ConnectionRetryInterval):

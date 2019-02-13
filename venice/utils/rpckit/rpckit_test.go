@@ -582,6 +582,7 @@ func TestRPCTraceMiddlewares(t *testing.T) {
 	}
 	recorder := zipkin.NewRecorder(collector, true, "", t.Name(), zipkin.WithJSONMaterializer())
 	tracer, err := zipkin.NewTracer(recorder, zipkin.ClientServerSameSpan(false), zipkin.TraceID128Bit(true))
+	AssertOk(t, err, "Error creating Tracer")
 	trace.SetGlobalTracer(tracer)
 
 	// create an rpc handler object
