@@ -370,6 +370,43 @@ qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
     return HAL_RET_OK;
 }
 
+/**
+ * @brief      return dot1q_pcp based on qos group
+ * @param[in]  PI qos class representing the qos group
+ * @return     dot1q_pcp value
+ */
+static uint8_t
+qos_class_group_get_dot1q_pcp (qos_class_t *qos_class)
+{
+    qos_group_t qos_group = qos_class_get_qos_group(qos_class);
+
+    switch(qos_group) {
+        case QOS_GROUP_USER_DEFINED_1:
+            return 1;
+
+        case QOS_GROUP_USER_DEFINED_2:
+            return 2;
+
+        case QOS_GROUP_USER_DEFINED_3:
+            return 3;
+
+        case QOS_GROUP_USER_DEFINED_4:
+            return 4;
+
+        case QOS_GROUP_USER_DEFINED_5:
+            return 5;
+
+        case QOS_GROUP_USER_DEFINED_6:
+            return 6;
+
+        case QOS_GROUP_DEFAULT:
+        default:
+            return 0;
+    }
+
+    return 0;
+}
+
 static hal_ret_t
 qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
 {
@@ -404,7 +441,7 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     if (has_pcp) {
         dot1q_pcp = qos_class->cmap.dot1q_pcp;
     } else {
-        dot1q_pcp = qos_class->pfc.pfc_cos;
+        dot1q_pcp = qos_class_group_get_dot1q_pcp(qos_class);
     }
 
     dscp_map.dot1q_pcp = dot1q_pcp;
@@ -709,6 +746,9 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     has_dscp = (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) ||
                 (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
 
+    has_pcp = (qos_class->cmap.type == QOS_CMAP_TYPE_PCP) ||
+                (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
+
     SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
                sizeof(dscp_map.ip_dscp));
     memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
@@ -717,7 +757,7 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     if (has_pcp) {
         dot1q_pcp = qos_class->cmap.dot1q_pcp;
     } else {
-        dot1q_pcp = qos_class->pfc.pfc_cos;
+        dot1q_pcp = qos_class_group_get_dot1q_pcp(qos_class);
     }
 
     // program the default COS for dscp map
