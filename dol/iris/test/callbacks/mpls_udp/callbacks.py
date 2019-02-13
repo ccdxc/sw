@@ -125,6 +125,12 @@ def GetExpectedBuffer(testcase, desc):
     except:
         ret_buff = testcase.buffers.Get('BUF2')
     try:
+        encap = testcase.module.args.encap
+        if encap == False:
+            ret_buff = testcase.buffers.Get('BUF4')
+    except:
+        ret_buff = ret_buff
+    try:
         drop = testcase.module.args.drop
         if drop == True:
             ret_buff = None
@@ -179,7 +185,14 @@ def GetMplsLabel(testcase, packet):
         label = 12345
     return label
 
-
-
+def GetInputPacket(testcase):
+    ret_pkt = testcase.packets.Get('PKT1')
+    try:
+        encap = testcase.module.args.encap
+        if encap == False:
+            ret_pkt = testcase.packets.Get('PKT3')
+    except:
+        return ret_pkt
+    return ret_pkt
 
 

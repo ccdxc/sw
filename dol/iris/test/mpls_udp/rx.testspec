@@ -77,6 +77,19 @@ packets:
             tcp:
                 flags: ack
 
+    - packet:
+        id          : PKT3 # Expected Packet3
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+            ipv4:
+                dst     : 64.0.0.2
+            tcp:
+                flags: ack
+
 buffers:
     - buffer:
         id      : BUF1  # Input Buffer
@@ -101,6 +114,14 @@ buffers:
             bind  : False
             size  : ref://testcase/packets/id=PKT1/size
             data  : ref://testcase/packets/id=PKT1/rawbytes
+
+    - buffer:
+        id      : BUF4  # Expected Buffer2
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=PKT3/size
+            data  : ref://testcase/packets/id=PKT3/rawbytes
 
 descriptors:
     - descriptor:
@@ -127,7 +148,8 @@ trigger:
 
     packets:
         - packet:
-            object  : ref://testcase/packets/id=PKT1
+            #object  : ref://testcase/packets/id=PKT1
+            object  : callback://mpls_udp/callbacks/GetInputPacket
             port    : 1
 
 expect:
