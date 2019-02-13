@@ -35,6 +35,7 @@ spec:
                 # Desired prefix length of each network
                 # This should be bigger than the prefix length of 'ipam_base'
                 prefix_length: 64
+            default: True
 
     workloads:
         - workload:

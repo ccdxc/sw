@@ -130,7 +130,11 @@ class TestbedVlanAllocator(object):
         return
 
     def Alloc(self):
-        return next(self.__pool)
+        try:
+            return next(self.__pool)
+        except:
+            self.__pool = iter(range(self.__start, self.__start + self.__count))
+            return next(self.__pool)
 
     def Count(self):
         return self.__count

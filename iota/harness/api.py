@@ -97,9 +97,11 @@ def ReloadNodes(req):
     return __rpc(req, gl_topo_svc_stub.ReloadNodes)
 
 def IsWorkloadRunning(wl):
+    global running_workloads
     return wl in running_workloads
 
 def __bringup_workloads(req):
+    global running_workloads
     resp = __rpc(req, gl_topo_svc_stub.AddWorkloads)
     if IsApiResponseOk(resp):
         #make testcase directory for new workloads
@@ -114,6 +116,7 @@ def __bringup_workloads(req):
     return None, types.status.FAILURE
 
 def __teardown_workloads(req):
+    global running_workloads
     resp = __rpc(req, gl_topo_svc_stub.DeleteWorkloads)
     for wlmsg in req.workloads:
         del running_workloads[wlmsg.workload_name]
@@ -127,21 +130,21 @@ def AddWorkloads(req, skip_store=False, skip_bringup=False):
     Logger.debug("Add Workloads:")
     resp = None
     if not skip_bringup:
-        resp, _ = __bringup_workloads(req)
+        resp, ret = __bringup_workloads(req)
     else:
         Logger.debug("Skipping workload bring up.")
-        resp = req
+        ret = req
     if not skip_store:
         store.AddWorkloads(resp)
-    return resp
+    return ret
 
 def DeleteWorkloads(req, skip_store=False):
     global gl_topo_svc_stub
     Logger.debug("Delete Workloads:")
-    resp, _ = __teardown_workloads(req)
+    resp, ret = __teardown_workloads(req)
     if not skip_store:
         store.DeleteWorkloads(req)
-    return resp
+    return ret
 
 def GetWorkloads(node = None):
     return store.GetWorkloads(node)
@@ -251,6 +254,9 @@ def GetWorkloadTypeForNode(node_name):
 def GetWorkloadImageForNode(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetWorkloadImageForNode(node_name)
 
+def GetNodes():
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodes()
+
 def GetNodeOs(node_name):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodeOs(node_name)
 
@@ -268,6 +274,9 @@ def Testbed_AllocateVlan():
 
 def Testbed_GetVlanCount():
     return store.GetTestbed().GetVlanCount()
+
+def Testbed_GetVlanBase():
+    return store.GetTestbed().GetVlanBase()
 
 def Abort():
     return store.GetTestbed().GetCurrentTestsuite().Abort()

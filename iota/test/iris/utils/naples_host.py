@@ -1,4 +1,55 @@
 import iota.harness.api as api
+import yaml
+
+# Get memory slab information in a given node
+def GetMemorySlabInNaples(node_name):
+   mem_slab = {}
+   cmd = 'sleep 3 && /nic/bin/halctl show system memory slab --yaml'
+   req = api.Trigger_CreateExecuteCommandsRequest()
+   api.Trigger_AddNaplesCommand(req, node_name, cmd)
+   resp = api.Trigger(req)
+
+   cmd = resp.commands[0]
+   if cmd.stdout is None:
+       return None
+
+   #api.Logger.info("cmd.stdout: %s" % cmd.stdout)
+   yml_loaded = yaml.load_all(cmd.stdout)
+   for yml in yml_loaded:
+       if yml is not None:
+           name = yml["spec"]["name"]
+           inuse = yml["stats"]["numelementsinuse"]
+           num_allocs = yml["stats"]["numallocs"]
+           num_frees = yml["stats"]["numfrees"]
+           mem_slab[name] = (inuse, num_allocs, num_frees)
+   return mem_slab
+
+# Check if memory slab leaks and print on a given node
+def ShowLeakInMemorySlabInNaples(memslab_before, memslab_after, node_name):
+    # return a dictionary containing difference
+    ret_memslab_diff = {}
+    if memslab_before is None and memslab_after is None:
+        api.Logger.info("No slab leak in node %s \n" % node_name)
+        return ret_memslab_diff
+    else:
+        for (slab_name, before_slab_vals) in memslab_before.items():
+            after_slab_vals = memslab_after[slab_name]
+
+            b_inuse = before_slab_vals[0]
+            b_allocs = before_slab_vals[1]
+            b_frees = before_slab_vals[2]
+
+            a_inuse = after_slab_vals[0]
+            a_allocs = after_slab_vals[1]
+            a_frees = after_slab_vals[2]
+
+            if b_inuse != a_inuse:
+                ret_memslab_diff[slab_name] = [before_slab_vals, after_slab_vals]
+                #api.Logger.info("[%s] \t (In Use:  Allocs:  Frees:)" % slab_name)
+                #api.Logger.info("Before: \t (%s, %s, %s)" % (b_inuse, b_allocs, b_frees))
+                #api.Logger.info("After: \t (%s, %s, %s)\n" % (a_inuse, a_allocs, a_frees))
+
+    return ret_memslab_diff
 
 def GetHostInternalMgmtInterfaces(node):
     interface_names = []

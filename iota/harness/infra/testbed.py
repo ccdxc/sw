@@ -324,6 +324,9 @@ class _Testbed:
     def GetVlanCount(self):
         return self.__vlan_allocator.Count()
 
+    def GetVlanBase(self):
+        return self.__vlan_base
+
 
 __testbed = _Testbed()
 store.SetTestbed(__testbed)
