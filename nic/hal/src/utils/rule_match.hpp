@@ -29,7 +29,7 @@ typedef struct rule_match_app_s {
     dllist_ctxt_t    l4dstport_list; // list elems of type port_list_elem_t;
     dllist_ctxt_t    icmp_list;      // list elems of type icmp - TBD
     dllist_ctxt_t    rpc_list;       // list elems of type rpc/msrpc - TBD
-    dllist_ctxt_t    esp_list;       // list elems of type Esp - TBD
+    uint32_t         esp_spi;       // list elems of type Esp - TBD
 } __PACK__ rule_match_app_t;
 
 typedef struct rule_match_s {

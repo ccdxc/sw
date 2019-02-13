@@ -31,6 +31,7 @@ dma_cmd_data:
     phvwr   p.dma_cmd0_dma_cmd_addr, r3
     phvwr   p.dma_cmd0_dma_cmd_size, k.t0_s2s_payload_len 
     phvwri  p.dma_cmd0_dma_cmd_type, CAPRI_DMA_COMMAND_PKT_TO_MEM
+    phvwri  p.dma_cmd0_dma_cmd_cache, 1
     phvwri  p.dma_cmd0_dma_cmd_eop, 0
 
     bcf     [!c5], dma_cmd_descr
@@ -45,6 +46,8 @@ dma_cmd_qs_trailer:
                                 r3,
                                 quiesce_pkt_trlr_timestamp,
                                 quiesce_pkt_trlr_timestamp)
+    phvwri  p.dma_cmd1_dma_cmd_cache, 1
+	
 dma_cmd_descr:
     /* Set teh DMA_WRITE CMD for descr */
     add     r5, k.t0_s2s_descr, r0
@@ -61,6 +64,7 @@ dma_cmd_descr:
     phvwri  p.dma_cmd2_dma_cmd_phv_start_addr, CPU_PHV_AOL_DESC_START
     phvwri  p.dma_cmd2_dma_cmd_phv_end_addr, CPU_PHV_AOL_DESC_END
     phvwri  p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_PHV_TO_MEM
+    phvwri  p.dma_cmd2_dma_cmd_cache, 1
     phvwri  p.dma_cmd2_dma_cmd_eop, 0
 
 dma_cmd_arqrx_slot:
