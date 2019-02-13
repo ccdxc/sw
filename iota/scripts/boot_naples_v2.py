@@ -254,6 +254,7 @@ class NaplesManagement(EntityManagement):
             self.CopyIN(GlobalOptions.image, entity_dir = NAPLES_TMP_DIR)
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image), "#")
         self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#")
+        self.SendlineExpect("reboot", "")
 
     def InstallGoldFirmware(self):
         self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = NAPLES_TMP_DIR)
@@ -270,11 +271,17 @@ class NaplesManagement(EntityManagement):
 
         midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
                                    hdl = self.hdl, timeout = 120)
-        if midx == 0: return
-        # Got capri login prompt, send username/password.
-        self.SendlineExpect(GlobalOptions.username, "Password:")
-        ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
-        if ret == 1: self.SendlineExpect("", "#")
+        if midx != 0:
+            # Got capri login prompt, send username/password.
+            self.SendlineExpect(GlobalOptions.username, "Password:")
+            ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
+            if ret == 1: self.SendlineExpect("", "#")
+        try:
+            self.SendlineExpect("dhclient " + NAPLES_OOB_NIC, "#", timeout = 10)
+        except:
+            #ignore error if not able to get oob ip
+            pass
+
 
 
     def ReadGoldFwVersion(self):
@@ -730,6 +737,8 @@ def Main():
     host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = False)
 
     if naples.IsSSHUP():
+        # Connect to serial console too
+        naples.Connect()
         naples.InstallMainFirmware()
     else:
         # Update MainFwB also to same image - TEMP CHANGE

@@ -53,7 +53,7 @@ def Main(step):
 
     #Give some time for naples to admit to venice after mode switch
     #This is required for now as Iota is setting time manually to make TLS happy
-    time.sleep(10)
+    time.sleep(30)
     #Check whether naples has switch mode succesfully
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     for n in api.GetNaplesHostnames():
