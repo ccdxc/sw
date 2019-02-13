@@ -221,7 +221,7 @@ pal_sim_qsfp_read(const uint8_t *buffer, uint32_t size, uint32_t offset,
         return PAL_RET_NOK;
     }
 
-    memcpy((uint8_t*)buffer, dummy, size);
+    memcpy((uint8_t*)buffer, dummy+offset, size);
 
     SDK_TRACE_DEBUG("PAL default pal_sim_qsfp_read");
     return PAL_RET_OK;

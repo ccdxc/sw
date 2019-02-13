@@ -346,7 +346,7 @@ func (hd *Datapath) ListInterfaces() ([]*netproto.Interface, []*netproto.Port, e
 			speed = "SPEED_1G"
 		} else {
 			portType = "TYPE_ETHERNET"
-			speed = "SPEED_100G"
+			speed = "SPEED_AUTONEG"
 		}
 		p := &netproto.Port{
 			TypeMeta: api.TypeMeta{

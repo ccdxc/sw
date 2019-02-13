@@ -577,7 +577,7 @@ func (hd *Datapath) convertPortSpeed(speed string) (halPortSpeed halproto.PortSp
 	case "SPEED_100G":
 		halPortSpeed = halproto.PortSpeed_PORT_SPEED_100G
 	case "SPEED_AUTONEG":
-		halPortSpeed = halproto.PortSpeed_PORT_SPEED_NONE
+		halPortSpeed = halproto.PortSpeed_PORT_SPEED_100G
 		autoNeg = true
 	default:
 		halPortSpeed = halproto.PortSpeed_PORT_SPEED_NONE
