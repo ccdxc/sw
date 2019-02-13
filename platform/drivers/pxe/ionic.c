@@ -64,10 +64,13 @@ static int ionic_check_link ( struct net_device *netdev ) {
 	u16 link_up;
 
 	link_up = ionic->ionic_lif->notifyblock->link_status;
-	if(link_up) {
-		netdev_link_up ( netdev );
-	} else {
-		netdev_link_down ( netdev );
+	if(link_up != ionic->link_status) {
+		ionic->link_status = link_up;
+		if(link_up) {
+			netdev_link_up ( netdev );
+		} else {
+			netdev_link_down ( netdev );
+		}
 	}
 	return 0;
 }
@@ -336,12 +339,9 @@ static int ionic_probe(struct pci_device *pci)
 	if ((errorcode = register_netdev(netdev)) != 0)
 		goto err_register_netdev;
 
-	/* Mark as link up, since we have no way to test link state on
-	 * this hardware.
-	 */
 
+	//Check the link status
 	ionic_check_link(netdev);
-	netdev_link_up(netdev);
 
 	return 0;
 
