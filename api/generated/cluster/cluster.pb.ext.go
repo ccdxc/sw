@@ -846,7 +846,7 @@ func init() {
 		m := i.(*MemInfo)
 
 		if _, ok := MemInfo_MemType_value[m.Type]; !ok {
-			return errors.New("MemInfo.Type did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
 		}
 		return nil
 	})
@@ -856,7 +856,7 @@ func init() {
 		m := i.(*NodeCondition)
 
 		if _, ok := ConditionStatus_value[m.Status]; !ok {
-			return errors.New("NodeCondition.Status did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
 		}
 		return nil
 	})
@@ -865,7 +865,7 @@ func init() {
 		m := i.(*NodeCondition)
 
 		if _, ok := NodeCondition_ConditionType_value[m.Type]; !ok {
-			return errors.New("NodeCondition.Type did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
 		}
 		return nil
 	})
@@ -875,7 +875,7 @@ func init() {
 		m := i.(*NodeStatus)
 
 		if _, ok := NodeStatus_NodePhase_value[m.Phase]; !ok {
-			return errors.New("NodeStatus.Phase did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Phase")
 		}
 		return nil
 	})

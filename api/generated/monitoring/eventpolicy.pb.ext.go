@@ -7,7 +7,6 @@ Input file: eventpolicy.proto
 package monitoring
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -202,7 +201,7 @@ func init() {
 		m := i.(*EventPolicySpec)
 
 		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
-			return errors.New("EventPolicySpec.Format did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Format")
 		}
 		return nil
 	})

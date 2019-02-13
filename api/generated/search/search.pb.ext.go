@@ -7,7 +7,6 @@ Input file: search.proto
 package search
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -699,7 +698,7 @@ func init() {
 		m := i.(*PolicySearchResponse)
 
 		if _, ok := PolicySearchResponse_MatchStatus_value[m.Status]; !ok {
-			return errors.New("PolicySearchResponse.Status did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
 		}
 		return nil
 	})
@@ -782,7 +781,7 @@ func init() {
 		m := i.(*SearchRequest)
 
 		if _, ok := SearchRequest_RequestMode_value[m.Mode]; !ok {
-			return errors.New("SearchRequest.Mode did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Mode")
 		}
 		return nil
 	})

@@ -7,7 +7,6 @@ Input file: telemetry.proto
 package monitoring
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -473,7 +472,7 @@ func init() {
 		m := i.(*FlowExportPolicySpec)
 
 		if _, ok := FlowExportPolicySpec_Formats_value[m.Format]; !ok {
-			return errors.New("FlowExportPolicySpec.Format did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Format")
 		}
 		return nil
 	})
@@ -506,7 +505,7 @@ func init() {
 		m := i.(*FwlogPolicySpec)
 
 		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
-			return errors.New("FwlogPolicySpec.Format did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Format")
 		}
 		return nil
 	})

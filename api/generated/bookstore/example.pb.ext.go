@@ -1946,7 +1946,7 @@ func init() {
 		m := i.(*BookSpec)
 
 		if _, ok := BookSpec_BookCategories_value[m.Category]; !ok {
-			return errors.New("BookSpec.Category did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Category")
 		}
 		return nil
 	})
@@ -1996,7 +1996,7 @@ func init() {
 		m := i.(*OrderStatus)
 
 		if _, ok := OrderStatus_OrderStatus_value[m.Status]; !ok {
-			return errors.New("OrderStatus.Status did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
 		}
 		return nil
 	})

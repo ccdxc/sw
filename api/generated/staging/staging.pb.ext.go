@@ -7,7 +7,6 @@ Input file: staging.proto
 package staging
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -512,7 +511,7 @@ func init() {
 		m := i.(*BufferStatus)
 
 		if _, ok := BufferStatus_ValidationStatus_value[m.ValidationResult]; !ok {
-			return errors.New("BufferStatus.ValidationResult did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"ValidationResult")
 		}
 		return nil
 	})
@@ -522,7 +521,7 @@ func init() {
 		m := i.(*ClearActionStatus)
 
 		if _, ok := ClearActionStatus_ClearStatus_value[m.Status]; !ok {
-			return errors.New("ClearActionStatus.Status did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
 		}
 		return nil
 	})
@@ -532,7 +531,7 @@ func init() {
 		m := i.(*CommitActionStatus)
 
 		if _, ok := CommitActionStatus_CommitStatus_value[m.Status]; !ok {
-			return errors.New("CommitActionStatus.Status did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
 		}
 		return nil
 	})

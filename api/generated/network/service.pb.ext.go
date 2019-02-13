@@ -7,7 +7,6 @@ Input file: service.proto
 package network
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -238,7 +237,7 @@ func init() {
 		m := i.(*TLSServerPolicySpec)
 
 		if _, ok := TLSServerPolicySpec_ClientAuthTypes_value[m.ClientAuthentication]; !ok {
-			return errors.New("TLSServerPolicySpec.ClientAuthentication did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"ClientAuthentication")
 		}
 		return nil
 	})

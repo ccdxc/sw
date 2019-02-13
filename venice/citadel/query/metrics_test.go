@@ -10,13 +10,11 @@ import (
 
 	"github.com/influxdata/influxdb/models"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/golang/mock/gomock"
 	"github.com/influxdata/influxdb/query"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/telemetry_query"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/citadel/broker/mock"
@@ -184,27 +182,30 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 	}
 }
 
-func TestValidateQueryList(t *testing.T) {
+func TestValidateMetricsQueryList(t *testing.T) {
 	q := &Server{
 		grpcSrv: nil,
 		broker:  nil,
 	}
 	testQs := []struct {
 		ql      *telemetry_query.MetricsQueryList
-		errMsg  string
-		errCode codes.Code
+		errMsgs []string
+		errCode int32
 		pass    bool
 	}{
 		{
 			ql:      nil,
-			errMsg:  "query required",
-			errCode: codes.InvalidArgument,
+			errMsgs: []string{"query required"},
+			errCode: 400,
 			pass:    false,
 		},
 		{
-			ql:      &telemetry_query.MetricsQueryList{},
-			errMsg:  "query required",
-			errCode: codes.InvalidArgument,
+			ql: &telemetry_query.MetricsQueryList{},
+			errMsgs: []string{
+				"query required",
+				"tenant required",
+			},
+			errCode: 400,
 			pass:    false,
 		},
 		{
@@ -218,8 +219,103 @@ func TestValidateQueryList(t *testing.T) {
 					},
 				},
 			},
-			errMsg:  "tenant required",
-			errCode: codes.InvalidArgument,
+			errMsgs: []string{
+				"tenant required",
+			},
+			errCode: 400,
+			pass:    false,
+		},
+		{
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Name:     "invalid name",
+						Function: "none",
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsgs: []string{
+				"Queries[0].Name failed validation",
+			},
+			errCode: 400,
+			pass:    false,
+		},
+		{
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function: "fakeFunction",
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsgs: []string{
+				"Queries[0].Function did not match allowed strings",
+			},
+			errCode: 400,
+			pass:    false,
+		},
+		{
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						GroupbyField: "invalid field",
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsgs: []string{
+				"Queries[0].GroupbyField failed validation",
+			},
+			errCode: 400,
+			pass:    false,
+		},
+		{
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function: "mean",
+						Fields:   []string{"valid", "invalid field"},
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsgs: []string{
+				"Queries[0].Fields failed validation",
+			},
+			errCode: 400,
+			pass:    false,
+		},
+		{
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function:    "mean",
+						GroupbyTime: "invalidDuration",
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsgs: []string{
+				"Queries[0].GroupbyTime failed validation",
+			},
+			errCode: 400,
 			pass:    false,
 		},
 		{
@@ -234,8 +330,8 @@ func TestValidateQueryList(t *testing.T) {
 				},
 				Tenant: "testTenant",
 			},
-			errMsg:  "",
-			errCode: codes.OK,
+			errMsgs: []string{},
+			errCode: 200,
 			pass:    true,
 		},
 	}
@@ -247,16 +343,12 @@ func TestValidateQueryList(t *testing.T) {
 		} else if !i.pass && err == nil {
 			t.Errorf("Expected test to fail but err was nil")
 		} else if err != nil {
-			errStatus, ok := status.FromError(err)
-			if !ok {
-				t.Errorf("Expected GRPC error, but was unable to parse the returned error %v", err)
-				return
+			errStatus := apierrors.FromError(err)
+			if !reflect.DeepEqual(i.errMsgs, errStatus.GetMessage()) {
+				t.Errorf("Expected error message to be %v but error was %v", i.errMsgs, errStatus.GetMessage())
 			}
-			if i.errMsg != errStatus.Message() {
-				t.Errorf("Expected error message to be %s but error was %v", i.errMsg, errStatus.Message())
-			}
-			if i.errCode != errStatus.Code() {
-				t.Errorf("Expected error code to be %d but error was %v", i.errCode, errStatus.Code())
+			if i.errCode != errStatus.GetCode() {
+				t.Errorf("Expected error code to be %d but error was %v", i.errCode, errStatus.GetCode())
 			}
 		}
 	}
@@ -269,21 +361,22 @@ func TestValidateQuerySpec(t *testing.T) {
 	}
 	testQs := []struct {
 		qs      *telemetry_query.MetricsQuerySpec
-		errMsg  string
-		errCode codes.Code
+		errMsgs []string
 		pass    bool
 	}{
 		{
-			qs:      nil,
-			errMsg:  "query parameter required",
-			errCode: codes.InvalidArgument,
-			pass:    false,
+			qs: nil,
+			errMsgs: []string{
+				"query parameter required",
+			},
+			pass: false,
 		},
 		{
-			qs:      &telemetry_query.MetricsQuerySpec{},
-			errMsg:  "kind required",
-			errCode: codes.InvalidArgument,
-			pass:    false,
+			qs: &telemetry_query.MetricsQuerySpec{},
+			errMsgs: []string{
+				"kind required",
+			},
+			pass: false,
 		},
 		{
 			qs: &telemetry_query.MetricsQuerySpec{
@@ -291,9 +384,10 @@ func TestValidateQuerySpec(t *testing.T) {
 					Kind: "",
 				},
 			},
-			errMsg:  "kind required",
-			errCode: codes.InvalidArgument,
-			pass:    false,
+			errMsgs: []string{
+				"kind required",
+			},
+			pass: false,
 		},
 		{
 			qs: &telemetry_query.MetricsQuerySpec{
@@ -301,21 +395,10 @@ func TestValidateQuerySpec(t *testing.T) {
 					Kind: "invalid kind",
 				},
 			},
-			errMsg:  "invalid kind",
-			errCode: codes.InvalidArgument,
-			pass:    false,
-		},
-		{
-			qs: &telemetry_query.MetricsQuerySpec{
-				TypeMeta: api.TypeMeta{
-					Kind: "Node",
-				},
-				Name:     "invalid name",
-				Function: "none",
+			errMsgs: []string{
+				"invalid kind",
 			},
-			errMsg:  "Name selector invalid name was invalid",
-			errCode: codes.InvalidArgument,
-			pass:    false,
+			pass: false,
 		},
 		{
 			qs: &telemetry_query.MetricsQuerySpec{
@@ -325,20 +408,8 @@ func TestValidateQuerySpec(t *testing.T) {
 				Name:     "validname",
 				Function: "none",
 			},
-			errMsg:  "",
-			errCode: codes.OK,
+			errMsgs: []string{},
 			pass:    true,
-		},
-		{
-			qs: &telemetry_query.MetricsQuerySpec{
-				TypeMeta: api.TypeMeta{
-					Kind: "Node",
-				},
-				Function: "fakeFunction",
-			},
-			errMsg:  "function FAKEFUNCTION is not an accepted function",
-			errCode: codes.InvalidArgument,
-			pass:    false,
 		},
 		{
 			qs: &telemetry_query.MetricsQuerySpec{
@@ -347,9 +418,10 @@ func TestValidateQuerySpec(t *testing.T) {
 				},
 				Function: "max",
 			},
-			errMsg:  "Function MAX requires exactly one field",
-			errCode: codes.InvalidArgument,
-			pass:    false,
+			errMsgs: []string{
+				"Function MAX requires exactly one field",
+			},
+			pass: false,
 		},
 		{
 			qs: &telemetry_query.MetricsQuerySpec{
@@ -359,8 +431,7 @@ func TestValidateQuerySpec(t *testing.T) {
 				Function: "max",
 				Fields:   []string{"f1"},
 			},
-			errMsg:  "",
-			errCode: codes.OK,
+			errMsgs: []string{},
 			pass:    true,
 		},
 		{
@@ -371,9 +442,10 @@ func TestValidateQuerySpec(t *testing.T) {
 				Function: "max",
 				Fields:   []string{"f1", "f2"},
 			},
-			errMsg:  "Function MAX requires exactly one field",
-			errCode: codes.InvalidArgument,
-			pass:    false,
+			errMsgs: []string{
+				"Function MAX requires exactly one field",
+			},
+			pass: false,
 		},
 		{
 			qs: &telemetry_query.MetricsQuerySpec{
@@ -382,8 +454,7 @@ func TestValidateQuerySpec(t *testing.T) {
 				},
 				Function: "mean",
 			},
-			errMsg:  "",
-			errCode: codes.OK,
+			errMsgs: []string{},
 			pass:    true,
 		},
 		{
@@ -394,8 +465,7 @@ func TestValidateQuerySpec(t *testing.T) {
 				Function: "mean",
 				Fields:   []string{"f1"},
 			},
-			errMsg:  "",
-			errCode: codes.OK,
+			errMsgs: []string{},
 			pass:    true,
 		},
 		{
@@ -406,35 +476,8 @@ func TestValidateQuerySpec(t *testing.T) {
 				Function: "mean",
 				Fields:   []string{"f1", "f2"},
 			},
-			errMsg:  "",
-			errCode: codes.OK,
+			errMsgs: []string{},
 			pass:    true,
-		},
-		{
-			qs: &telemetry_query.MetricsQuerySpec{
-				TypeMeta: api.TypeMeta{
-					Kind: "Node",
-				},
-				Function: "mean",
-				Fields:   []string{"valid", "invalid field"},
-			},
-			errMsg:  "field invalid field was not a valid field",
-			errCode: codes.InvalidArgument,
-			pass:    false,
-		},
-		{
-			qs: &telemetry_query.MetricsQuerySpec{
-				TypeMeta: api.TypeMeta{
-					Kind: "Node",
-				},
-				Selector:     &labels.Selector{},
-				Function:     "mean",
-				Fields:       []string{},
-				GroupbyField: "invalid field",
-			},
-			errMsg:  "group-by-field invalid field was not a valid field",
-			errCode: codes.InvalidArgument,
-			pass:    false,
 		},
 		{
 			qs: &telemetry_query.MetricsQuerySpec{
@@ -448,8 +491,7 @@ func TestValidateQuerySpec(t *testing.T) {
 				Fields:       []string{},
 				GroupbyField: "validField",
 			},
-			errMsg:  "",
-			errCode: codes.OK,
+			errMsgs: []string{},
 			pass:    true,
 		},
 		{
@@ -464,8 +506,7 @@ func TestValidateQuerySpec(t *testing.T) {
 				Fields:       []string{},
 				GroupbyField: "validField",
 			},
-			errMsg:  "",
-			errCode: codes.OK,
+			errMsgs: []string{},
 			pass:    true,
 		},
 		{
@@ -485,9 +526,10 @@ func TestValidateQuerySpec(t *testing.T) {
 				Fields:       []string{},
 				GroupbyField: "validField",
 			},
-			errMsg:  "Failed to parse selector requirements: Only a single value supported",
-			errCode: codes.InvalidArgument,
-			pass:    false,
+			errMsgs: []string{
+				"Failed to parse selector requirements: Only a single value supported",
+			},
+			pass: false,
 		},
 		{
 			qs: &telemetry_query.MetricsQuerySpec{
@@ -507,52 +549,20 @@ func TestValidateQuerySpec(t *testing.T) {
 				Fields:       []string{},
 				GroupbyField: "validField",
 			},
-			errMsg:  "",
-			errCode: codes.OK,
+			errMsgs: []string{},
 			pass:    true,
-		},
-		{
-			qs: &telemetry_query.MetricsQuerySpec{
-				TypeMeta: api.TypeMeta{
-					Kind: "Node",
-				},
-				Selector: &labels.Selector{
-					Requirements: []*labels.Requirement{
-						&labels.Requirement{
-							Key:      "meta.name",
-							Operator: "equals",
-							Values:   []string{"test"},
-						},
-					},
-				},
-				Function:     "mean",
-				Fields:       []string{},
-				GroupbyField: "validField",
-				GroupbyTime:  "invalidDuration",
-			},
-			errMsg:  "group-by-time value invalidDuration was not a valid duration",
-			errCode: codes.InvalidArgument,
-			pass:    false,
 		},
 	}
 
-	for _, i := range testQs {
+	for testCase, i := range testQs {
 		err := q.validateMetricsQuerySpec(i.qs)
-		if i.pass && err != nil {
-			t.Errorf("Expected error to be nil but was %v", err)
-		} else if !i.pass && err == nil {
-			t.Errorf("Expected test to fail but err was nil")
+		if i.pass && len(err) != 0 {
+			t.Errorf("Test Case %v: Expected error to be nil but was %v", testCase, err)
+		} else if !i.pass && len(err) == 0 {
+			t.Errorf("Test Case %v: Expected test to fail but err was nil", testCase)
 		} else if err != nil {
-			errStatus, ok := status.FromError(err)
-			if !ok {
-				t.Errorf("Expected GRPC error, but was unable to parse the returned error %v", err)
-				return
-			}
-			if i.errMsg != errStatus.Message() {
-				t.Errorf("Expected error message to be %s but error was %v", i.errMsg, errStatus.Message())
-			}
-			if i.errCode != errStatus.Code() {
-				t.Errorf("Expected error code to be %d but error was %v", i.errCode, errStatus.Code())
+			if !reflect.DeepEqual(i.errMsgs, err) {
+				t.Errorf("Test Case %v: Expected error message to be %v but error was %v", testCase, i.errMsgs, err)
 			}
 		}
 	}
@@ -581,7 +591,7 @@ func TestMetricsQuery(t *testing.T) {
 		{
 			queryList:            &telemetry_query.MetricsQueryList{},
 			citadelQuery:         "",
-			errMsg:               "rpc error: code = InvalidArgument desc = query required",
+			errMsg:               "rpc error: code = InvalidArgument desc = Validation Failed",
 			clusterCheckResponse: nil,
 			executeQueryResponse: nil,
 			queryResponse:        nil,

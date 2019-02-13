@@ -423,7 +423,7 @@ func init() {
 		m := i.(*SmartNICCondition)
 
 		if _, ok := ConditionStatus_value[m.Status]; !ok {
-			return errors.New("SmartNICCondition.Status did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
 		}
 		return nil
 	})
@@ -432,7 +432,7 @@ func init() {
 		m := i.(*SmartNICCondition)
 
 		if _, ok := SmartNICCondition_ConditionType_value[m.Type]; !ok {
-			return errors.New("SmartNICCondition.Type did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
 		}
 		return nil
 	})
@@ -442,7 +442,7 @@ func init() {
 		m := i.(*SmartNICSpec)
 
 		if _, ok := SmartNICSpec_MgmtModes_value[m.MgmtMode]; !ok {
-			return errors.New("SmartNICSpec.MgmtMode did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"MgmtMode")
 		}
 		return nil
 	})
@@ -463,7 +463,7 @@ func init() {
 		m := i.(*SmartNICSpec)
 
 		if _, ok := SmartNICSpec_NetworkModes_value[m.NetworkMode]; !ok {
-			return errors.New("SmartNICSpec.NetworkMode did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"NetworkMode")
 		}
 		return nil
 	})
@@ -473,7 +473,7 @@ func init() {
 		m := i.(*SmartNICStatus)
 
 		if _, ok := SmartNICStatus_Phase_value[m.AdmissionPhase]; !ok {
-			return errors.New("SmartNICStatus.AdmissionPhase did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"AdmissionPhase")
 		}
 		return nil
 	})

@@ -7,7 +7,6 @@ Input file: x509.proto
 package security
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -217,7 +216,7 @@ func init() {
 		m := i.(*CertificateStatus)
 
 		if _, ok := CertificateStatus_ValidityValues_value[m.Validity]; !ok {
-			return errors.New("CertificateStatus.Validity did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Validity")
 		}
 		return nil
 	})

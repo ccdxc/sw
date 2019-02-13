@@ -14,7 +14,7 @@ import { Telemetry_queryPaginationSpec, ITelemetry_queryPaginationSpec } from '.
 export interface ITelemetry_queryMetricsQuerySpec {
     'kind'?: string;
     'api-version'?: string;
-    'name': string;
+    'name'?: string;
     'selector'?: ILabelsSelector;
     'fields'?: Array<string>;
     'function': Telemetry_queryMetricsQuerySpec_function;
@@ -202,7 +202,7 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
             this._formGroup = new FormGroup({
                 'kind': CustomFormControl(new FormControl(this['kind']), Telemetry_queryMetricsQuerySpec.propInfo['kind'].description),
                 'api-version': CustomFormControl(new FormControl(this['api-version']), Telemetry_queryMetricsQuerySpec.propInfo['api-version'].description),
-                'name': CustomFormControl(new FormControl(this['name'], [required, minLengthValidator(1), maxLengthValidator(100), ]), Telemetry_queryMetricsQuerySpec.propInfo['name'].description),
+                'name': CustomFormControl(new FormControl(this['name'], [patternValidator('^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$', 'Name is the name of the API object.'), ]), Telemetry_queryMetricsQuerySpec.propInfo['name'].description),
                 'selector': this['selector'].$formGroup,
                 'fields': CustomFormControl(new FormControl(this['fields']), Telemetry_queryMetricsQuerySpec.propInfo['fields'].description),
                 'function': CustomFormControl(new FormControl(this['function'], [required, enumValidator(Telemetry_queryMetricsQuerySpec_function), ]), Telemetry_queryMetricsQuerySpec.propInfo['function'].description),

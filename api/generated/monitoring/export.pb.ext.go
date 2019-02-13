@@ -7,7 +7,6 @@ Input file: export.proto
 package monitoring
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -347,7 +346,7 @@ func init() {
 		m := i.(*AuthConfig)
 
 		if _, ok := AuthConfig_Algos_value[m.Algo]; !ok {
-			return errors.New("AuthConfig.Algo did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Algo")
 		}
 		return nil
 	})
@@ -378,7 +377,7 @@ func init() {
 		m := i.(*ExternalCred)
 
 		if _, ok := ExportAuthType_value[m.AuthType]; !ok {
-			return errors.New("ExternalCred.AuthType did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"AuthType")
 		}
 		return nil
 	})
@@ -388,7 +387,7 @@ func init() {
 		m := i.(*PrivacyConfig)
 
 		if _, ok := PrivacyConfig_Algos_value[m.Algo]; !ok {
-			return errors.New("PrivacyConfig.Algo did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Algo")
 		}
 		return nil
 	})
@@ -398,7 +397,7 @@ func init() {
 		m := i.(*SNMPTrapServer)
 
 		if _, ok := SNMPTrapServer_SNMPVersions_value[m.Version]; !ok {
-			return errors.New("SNMPTrapServer.Version did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Version")
 		}
 		return nil
 	})
@@ -408,7 +407,7 @@ func init() {
 		m := i.(*SyslogExportConfig)
 
 		if _, ok := SyslogFacility_value[m.FacilityOverride]; !ok {
-			return errors.New("SyslogExportConfig.FacilityOverride did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"FacilityOverride")
 		}
 		return nil
 	})

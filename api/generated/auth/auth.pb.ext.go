@@ -1264,7 +1264,7 @@ func init() {
 		m := i.(*LdapServerStatus)
 
 		if _, ok := LdapServerStatus_LdapResult_value[m.Result]; !ok {
-			return errors.New("LdapServerStatus.Result did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Result")
 		}
 		return nil
 	})
@@ -1311,7 +1311,7 @@ func init() {
 		m := i.(*RadiusServer)
 
 		if _, ok := Radius_AuthMethod_value[m.AuthMethod]; !ok {
-			return errors.New("RadiusServer.AuthMethod did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"AuthMethod")
 		}
 		return nil
 	})
@@ -1321,7 +1321,7 @@ func init() {
 		m := i.(*RadiusServerStatus)
 
 		if _, ok := RadiusServerStatus_RadiusResult_value[m.Result]; !ok {
-			return errors.New("RadiusServerStatus.Result did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Result")
 		}
 		return nil
 	})
@@ -1331,7 +1331,7 @@ func init() {
 		m := i.(*UserSpec)
 
 		if _, ok := UserSpec_UserType_value[m.Type]; !ok {
-			return errors.New("UserSpec.Type did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
 		}
 		return nil
 	})

@@ -7,7 +7,6 @@ Input file: telemetry_query.proto
 package telemetry_query
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -469,7 +468,7 @@ func init() {
 		m := i.(*Fwlog)
 
 		if _, ok := FwlogActions_value[m.Action]; !ok {
-			return errors.New("Fwlog.Action did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Action")
 		}
 		return nil
 	})
@@ -478,7 +477,7 @@ func init() {
 		m := i.(*Fwlog)
 
 		if _, ok := FwlogDirections_value[m.Direction]; !ok {
-			return errors.New("Fwlog.Direction did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Direction")
 		}
 		return nil
 	})
@@ -574,7 +573,7 @@ func init() {
 		m := i.(*MetricsQuerySpec)
 
 		if _, ok := TsdbFunctionType_value[m.Function]; !ok {
-			return errors.New("MetricsQuerySpec.Function did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Function")
 		}
 		return nil
 	})
@@ -605,10 +604,9 @@ func init() {
 	validatorMapTelemetry_query["MetricsQuerySpec"]["all"] = append(validatorMapTelemetry_query["MetricsQuerySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*MetricsQuerySpec)
 		args := make([]string, 0)
-		args = append(args, "1")
-		args = append(args, "100")
+		args = append(args, "name")
 
-		if !validators.StrLen(m.Name, args) {
+		if !validators.EmptyOrRegExp(m.Name, args) {
 			return fmt.Errorf("%v failed validation", path+"."+"Name")
 		}
 		return nil

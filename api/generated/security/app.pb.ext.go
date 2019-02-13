@@ -7,7 +7,6 @@ Input file: app.proto
 package security
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -415,7 +414,7 @@ func init() {
 		m := i.(*ALG)
 
 		if _, ok := ALG_ALGType_value[m.Type]; !ok {
-			return errors.New("ALG.Type did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
 		}
 		return nil
 	})

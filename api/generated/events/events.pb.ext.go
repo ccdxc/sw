@@ -7,7 +7,6 @@ Input file: events.proto
 package events
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -193,7 +192,7 @@ func init() {
 		m := i.(*EventAttributes)
 
 		if _, ok := SeverityLevel_value[m.Severity]; !ok {
-			return errors.New("EventAttributes.Severity did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Severity")
 		}
 		return nil
 	})

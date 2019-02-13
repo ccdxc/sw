@@ -230,7 +230,7 @@ func init() {
 		m := i.(*NetworkInterfaceStatus)
 
 		if _, ok := NetworkInterfaceStatus_IFStatus_value[m.OperStatus]; !ok {
-			return errors.New("NetworkInterfaceStatus.OperStatus did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"OperStatus")
 		}
 		return nil
 	})
@@ -247,7 +247,7 @@ func init() {
 		m := i.(*NetworkInterfaceStatus)
 
 		if _, ok := NetworkInterfaceStatus_IFType_value[m.Type]; !ok {
-			return errors.New("NetworkInterfaceStatus.Type did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
 		}
 		return nil
 	})

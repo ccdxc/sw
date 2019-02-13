@@ -310,7 +310,7 @@ func init() {
 		m := i.(*RolloutPhase)
 
 		if _, ok := RolloutPhase_Phases_value[m.Phase]; !ok {
-			return errors.New("RolloutPhase.Phase did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Phase")
 		}
 		return nil
 	})
@@ -332,7 +332,7 @@ func init() {
 		m := i.(*RolloutSpec)
 
 		if _, ok := RolloutSpec_StrategyType_value[m.Strategy]; !ok {
-			return errors.New("RolloutSpec.Strategy did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Strategy")
 		}
 		return nil
 	})
@@ -341,7 +341,7 @@ func init() {
 		m := i.(*RolloutSpec)
 
 		if _, ok := RolloutSpec_SmartNICUpgradeType_value[m.UpgradeType]; !ok {
-			return errors.New("RolloutSpec.UpgradeType did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"UpgradeType")
 		}
 		return nil
 	})
@@ -351,7 +351,7 @@ func init() {
 		m := i.(*RolloutStatus)
 
 		if _, ok := RolloutStatus_RolloutOperationalState_value[m.OperationalState]; !ok {
-			return errors.New("RolloutStatus.OperationalState did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"OperationalState")
 		}
 		return nil
 	})

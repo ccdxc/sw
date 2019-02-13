@@ -319,7 +319,7 @@ func init() {
 		m := i.(*TechSupportNodeResult)
 
 		if _, ok := TechSupportJobStatus_value[m.Status]; !ok {
-			return errors.New("TechSupportNodeResult.Status did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
 		}
 		return nil
 	})
@@ -329,7 +329,7 @@ func init() {
 		m := i.(*TechSupportRequestStatus)
 
 		if _, ok := TechSupportJobStatus_value[m.Status]; !ok {
-			return errors.New("TechSupportRequestStatus.Status did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Status")
 		}
 		return nil
 	})

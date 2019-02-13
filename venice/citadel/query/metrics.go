@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/labels"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/telemetry_query"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/log"
@@ -19,84 +21,73 @@ import (
 
 // validateMetricsQueryList validates a query list request
 func (q *Server) validateMetricsQueryList(ql *telemetry_query.MetricsQueryList) error {
-	if ql == nil || len(ql.Queries) == 0 {
-		return status.Errorf(codes.InvalidArgument, "query required")
-	}
-
-	if ql.Tenant == "" {
-		return status.Errorf(codes.InvalidArgument, "tenant required")
-	}
-
-	for _, qs := range ql.Queries {
-		if err := q.validateMetricsQuerySpec(qs); err != nil {
-			return err
+	errorStrings := []string{}
+	if ql == nil {
+		errorStrings = append(errorStrings, "query required")
+	} else {
+		if len(ql.Queries) == 0 {
+			errorStrings = append(errorStrings, "query required")
 		}
+
+		if ql.Tenant == "" {
+			errorStrings = append(errorStrings, "tenant required")
+		}
+
+		for _, qs := range ql.Queries {
+			if qsStrings := q.validateMetricsQuerySpec(qs); len(qsStrings) != 0 {
+				errorStrings = append(errorStrings, qsStrings...)
+			}
+		}
+		errs := ql.Validate("v1", "", true)
+		for _, e := range errs {
+			errorStrings = append(errorStrings, e.Error())
+		}
+	}
+
+	if len(errorStrings) != 0 {
+		return apierrors.ToGrpcError(errors.New("Validation Failed"), errorStrings, int32(codes.InvalidArgument), "", nil)
 	}
 	return nil
 }
 
 // validateMetricsQuerySpec validates individual query parameters
-func (q *Server) validateMetricsQuerySpec(qs *telemetry_query.MetricsQuerySpec) error {
-
+func (q *Server) validateMetricsQuerySpec(qs *telemetry_query.MetricsQuerySpec) []string {
+	errorStrings := []string{}
 	if qs == nil {
-		return status.Errorf(codes.InvalidArgument, "query parameter required")
+		errorStrings = append(errorStrings, "query parameter required")
+		return errorStrings
 	}
 
 	if qs.Kind == "" {
-		return status.Errorf(codes.InvalidArgument, "kind required")
-	}
-
-	if !validators.RegExp(qs.Kind, []string{"name"}) {
-		return status.Errorf(codes.InvalidArgument, "invalid kind")
+		errorStrings = append(errorStrings, "kind required")
+	} else if !validators.RegExp(qs.Kind, []string{"name"}) {
+		errorStrings = append(errorStrings, "invalid kind")
 	}
 
 	qs.Function = strings.ToUpper(qs.Function)
-
-	if _, ok := telemetry_query.TsdbFunctionType_value[qs.Function]; !ok {
-		return status.Errorf(codes.InvalidArgument, "function %s is not an accepted function", qs.Function)
+	if qs.Function == "" {
+		qs.Function = telemetry_query.TsdbFunctionType_NONE.String()
 	}
 
-	if qs.Function != "" {
-		switch qs.Function {
-		case telemetry_query.TsdbFunctionType_MAX.String():
-			// Can only specify one field when using MAX
-			if len(qs.Fields) != 1 {
-				return status.Errorf(codes.InvalidArgument, "Function MAX requires exactly one field")
-			}
-		case telemetry_query.TsdbFunctionType_MEAN.String():
-			//none
-		case telemetry_query.TsdbFunctionType_NONE.String():
-			//none
+	switch qs.Function {
+	case telemetry_query.TsdbFunctionType_MAX.String():
+		// Can only specify one field when using MAX
+		if len(qs.Fields) != 1 {
+			errorStrings = append(errorStrings, "Function MAX requires exactly one field")
 		}
-	}
-
-	for _, v := range qs.Fields {
-		if !validators.RegExp(v, []string{"name"}) {
-			return status.Errorf(codes.InvalidArgument, "field %s was not a valid field", v)
-		}
-	}
-
-	if qs.GroupbyField != "" {
-		if !validators.RegExp(qs.GroupbyField, []string{"name"}) {
-			return status.Errorf(codes.InvalidArgument, "group-by-field %s was not a valid field", qs.GroupbyField)
-		}
-	}
-
-	if qs.Name != "" && !validators.RegExp(qs.Name, []string{"name"}) {
-		return status.Errorf(codes.InvalidArgument, "Name selector %s was invalid", qs.Name)
+	case telemetry_query.TsdbFunctionType_MEAN.String():
+		//none
+	case telemetry_query.TsdbFunctionType_NONE.String():
+		//none
 	}
 
 	if qs.Selector != nil && len(qs.Selector.Requirements) > 0 {
 		if _, err := qs.Selector.PrintSQL(); err != nil {
-			return status.Errorf(codes.InvalidArgument, "Failed to parse selector requirements: %v", err)
+			errorStrings = append(errorStrings, fmt.Sprintf("Failed to parse selector requirements: %v", err))
 		}
 	}
 
-	if qs.GroupbyTime != "" && !validators.Duration(qs.GroupbyTime, []string{"0", "0"}) {
-		return status.Errorf(codes.InvalidArgument, "group-by-time value %s was not a valid duration", qs.GroupbyTime)
-	}
-
-	return nil
+	return errorStrings
 }
 
 func (q *Server) executeMetricsQuery(c context.Context, tenant string, qs string) ([]*telemetry_query.MetricsQueryResult, error) {

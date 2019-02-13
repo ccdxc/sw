@@ -273,7 +273,7 @@ func init() {
 			}
 		}{{else}}{{/*<12>*/}}
 		if _, ok := {{$enummap}}[m.{{$fldk}}]; !ok {
-			return errors.New("{{$msgName}}.{{$fldk}} did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path + "." + "{{$fldk}}")
 		}{{end}}{{/*<12>*/}}{{else}}{{/*<11>*/}}args := make([]string, 0) {{$fnname := .Fn}}
 		{{range .Args}}{{/*<13>*/}}args = append(args, "{{.}}")
 		{{end}}{{/*<13>*/}}{{if $fldv.Repeated}}{{/*<14>*/}}

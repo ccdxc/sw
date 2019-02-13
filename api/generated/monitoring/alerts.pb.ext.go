@@ -7,7 +7,6 @@ Input file: alerts.proto
 package monitoring
 
 import (
-	"errors"
 	fmt "fmt"
 
 	"github.com/pensando/sw/api/generated/events"
@@ -746,7 +745,7 @@ func init() {
 		m := i.(*AlertPolicySpec)
 
 		if _, ok := events.SeverityLevel_value[m.Severity]; !ok {
-			return errors.New("AlertPolicySpec.Severity did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Severity")
 		}
 		return nil
 	})
@@ -756,7 +755,7 @@ func init() {
 		m := i.(*AlertSpec)
 
 		if _, ok := AlertSpec_AlertState_value[m.State]; !ok {
-			return errors.New("AlertSpec.State did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"State")
 		}
 		return nil
 	})
@@ -766,7 +765,7 @@ func init() {
 		m := i.(*AlertStatus)
 
 		if _, ok := events.SeverityLevel_value[m.Severity]; !ok {
-			return errors.New("AlertStatus.Severity did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Severity")
 		}
 		return nil
 	})
@@ -776,7 +775,7 @@ func init() {
 		m := i.(*SyslogExport)
 
 		if _, ok := MonitoringExportFormat_value[m.Format]; !ok {
-			return errors.New("SyslogExport.Format did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Format")
 		}
 		return nil
 	})

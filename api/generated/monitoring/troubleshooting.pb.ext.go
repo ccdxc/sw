@@ -7,7 +7,6 @@ Input file: troubleshooting.proto
 package monitoring
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -560,7 +559,7 @@ func init() {
 		m := i.(*TroubleshootingSessionStatus)
 
 		if _, ok := TroubleshootingSessionState_value[m.State]; !ok {
-			return errors.New("TroubleshootingSessionStatus.State did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"State")
 		}
 		return nil
 	})

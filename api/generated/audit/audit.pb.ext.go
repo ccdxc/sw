@@ -7,7 +7,6 @@ Input file: audit.proto
 package audit
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -152,7 +151,7 @@ func init() {
 		m := i.(*EventAttributes)
 
 		if _, ok := Level_value[m.Level]; !ok {
-			return errors.New("EventAttributes.Level did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Level")
 		}
 		return nil
 	})
@@ -161,7 +160,7 @@ func init() {
 		m := i.(*EventAttributes)
 
 		if _, ok := Outcome_value[m.Outcome]; !ok {
-			return errors.New("EventAttributes.Outcome did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Outcome")
 		}
 		return nil
 	})
@@ -178,7 +177,7 @@ func init() {
 		m := i.(*EventAttributes)
 
 		if _, ok := Stage_value[m.Stage]; !ok {
-			return errors.New("EventAttributes.Stage did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Stage")
 		}
 		return nil
 	})

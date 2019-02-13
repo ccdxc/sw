@@ -7,7 +7,6 @@ Input file: mirror.proto
 package monitoring
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -488,7 +487,7 @@ func init() {
 		m := i.(*MirrorCollector)
 
 		if _, ok := PacketCollectorType_value[m.Type]; !ok {
-			return errors.New("MirrorCollector.Type did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Type")
 		}
 		return nil
 	})
@@ -510,7 +509,7 @@ func init() {
 		m := i.(*MirrorSessionStatus)
 
 		if _, ok := MirrorSessionState_value[m.State]; !ok {
-			return errors.New("MirrorSessionStatus.State did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"State")
 		}
 		return nil
 	})

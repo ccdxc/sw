@@ -7,7 +7,6 @@ Input file: sgpolicy.proto
 package security
 
 import (
-	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -265,7 +264,7 @@ func init() {
 		m := i.(*SGRule)
 
 		if _, ok := SGRule_PolicyAction_value[m.Action]; !ok {
-			return errors.New("SGRule.Action did not match allowed strings")
+			return fmt.Errorf("%v did not match allowed strings", path+"."+"Action")
 		}
 		return nil
 	})
