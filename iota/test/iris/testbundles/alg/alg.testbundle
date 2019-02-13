@@ -198,18 +198,18 @@ testcases:
     #    args    :
     #        type: local_only
 
-    #-   name    : DNS_ALLOW_LONG_LABEL 
-    #    testcase: testcases.alg.dns.dns_allow_long_label
-    #    args    :
-    #        type: local_only
+    -   name    : DNS_ALLOW_LONG_LABEL 
+        testcase: testcases.alg.dns.dns_allow_long_label
+        args    :
+            type: local_only
 
-    #-   name    : DNS_TEST_QUERYTIMEOUT
-    #    testcase: testcases.alg.dns.dns_test_querytimeout
-    #    args    :
-    #        type: local_only
-    #    iterators:
-    #        type   : simple
-    #        timeout : [30s, 15s]
+    -   name    : DNS_TEST_QUERYTIMEOUT
+        testcase: testcases.alg.dns.dns_test_querytimeout
+        args    :
+            type: local_only
+        iterators:
+            type   : simple
+            timeout : [30s, 15s]
 
     -   name    : DNS_DROP_MAX_MSG_LENGTH
         testcase: testcases.alg.dns.dns_drop_max_message_length

@@ -103,7 +103,10 @@ def Trigger(tc):
     tc.cmd_cookies2.append("Validate tickle")
 
     trig_resp2 = api.Trigger(req2)
-    tc.itickles, tc.iresets, tc.rtickles, tc.rresets = get_tickleinfo(trig_resp2.commands[-1])
+    cmd = trig_resp2.commands[-1]
+    for command in trig_resp2.commands:
+        api.PrintCommandResults(command)
+    tc.itickles, tc.iresets, tc.rtickles, tc.rresets = get_tickleinfo(cmd)
     term_resp2 = api.Trigger_TerminateAllCommands(trig_resp2)
     tc.resp2 = api.Trigger_AggregateCommandsResponse(trig_resp2, term_resp2)
 
@@ -111,7 +114,7 @@ def Trigger(tc):
     term_resp1 = api.Trigger_TerminateAllCommands(trig_resp1)
     tc.resp1 = api.Trigger_AggregateCommandsResponse(trig_resp1, term_resp1)
    
-    if tc.itickles == 0 or tc.rtickles == 0:
+    if cmd.stdout != '' and (tc.itickles == 0 or tc.rtickles == 0):
         req3 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
         api.Trigger_AddNaplesCommand(req3, naples.node_name, "sleep 10")
@@ -121,7 +124,9 @@ def Trigger(tc):
         tc.cmd_cookies3.append("Re-validate tickle")
 
         trig_resp3 = api.Trigger(req3)
-        tc.itickles, tc.iresets, tc.rtickles, tc.rresets = get_tickleinfo(trig_resp3.commands[-1])
+        cmd = trig_resp3.commands[-1]
+        api.PrintCommandResults(cmd)
+        tc.itickles, tc.iresets, tc.rtickles, tc.rresets = get_tickleinfo(cmd)
         term_resp3 = api.Trigger_TerminateAllCommands(trig_resp3)
         tc.tcpdump_resp = api.Trigger_AggregateCommandsResponse(trig_resp3, term_resp3)
 

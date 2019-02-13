@@ -40,6 +40,14 @@ def Trigger(tc):
     tc.cmd_cookies.append("Before RTSP")
 
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
+                           "ip route del 224.0.0.0/4")
+    tc.cmd_cookies.append("ip route del server")
+
+    api.Trigger_AddCommand(req, client.node_name, client.workload_name,
+                           "ip route del 224.0.0.0/4")
+    tc.cmd_cookies.append("ip route del client")
+
+    api.Trigger_AddCommand(req, server.node_name, server.workload_name,
                            "ip route add 224.0.0.0/4 dev %s"%(server.interface))
     tc.cmd_cookies.append("ip route server")
 
@@ -61,7 +69,7 @@ def Trigger(tc):
                                 "/nic/bin/halctl show session --alg rtsp --yaml")
     tc.cmd_cookies.append("show session RTSP established")
     api.Trigger_AddNaplesCommand(req, naples.node_name,
-                              "sleep 30")
+                              "sleep 30", timeout=300)
     tc.cmd_cookies.append("sleep")
     api.Trigger_AddNaplesCommand(req, naples.node_name,
                            "/nic/bin/halctl show session --alg rtsp --yaml")

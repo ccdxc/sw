@@ -94,7 +94,7 @@ def GetThreeWorkloads():
 
 def ForceReleasePort(port, node):
    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-   api.Trigger_AddCommand(req, node.node_name, node.workload_name, "fuser -k %s"%(port))
+   api.Trigger_AddCommand(req, node.node_name, node.workload_name, "sudo fuser -k %s"%(port))
    trig_resp = api.Trigger(req)
    term_resp = api.Trigger_TerminateAllCommands(trig_resp)
    resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp) 

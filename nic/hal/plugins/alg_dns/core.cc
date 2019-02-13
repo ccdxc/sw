@@ -153,7 +153,7 @@ static void dns_completion_hdlr (fte::ctx_t& ctx, bool status) {
 }
 
 static hal_ret_t read_rr_name(const uint8_t * packet, uint32_t * packet_p, 
-                       uint32_t id_pos, uint32_t len, char *name) {
+                       uint32_t id_pos, uint32_t len, char *name, uint32_t *name_len_p) {
     uint32_t i, next, pos=*packet_p;
     uint32_t end_pos = 0;
     uint32_t name_len=0;
@@ -203,7 +203,8 @@ static hal_ret_t read_rr_name(const uint8_t * packet, uint32_t * packet_p,
 
     name_len++;
 
-    HAL_TRACE_DEBUG("Name len: {}", name_len);
+    *name_len_p = name_len;
+    HAL_TRACE_DEBUG("Name len: {}", *name_len_p);
     if (name_len > MAX_DNS_DOMAINNAME_LEN) {
         HAL_TRACE_ERR("Domain name > 255 bytes");
         return HAL_RET_NOT_SUPPORTED;
@@ -264,14 +265,14 @@ static hal_ret_t parse_dns_questions(sfw_info_t *sfw_info, uint8_t *pkt,
     char        *label = NULL;
     hal_ret_t    ret = HAL_RET_OK;
     char         *name = NULL;
-    uint32_t     name_offset = *offset;
+    uint32_t     name_offset = *offset, label_len = 0, name_len= 0;
 
     HAL_TRACE_DEBUG("Parsing DNS question drop_large_domain: {} drop_long_label: {} count: {} offset: {}",
                     sfw_info->alg_opts.opt.dns_opts.drop_large_domain_name_packets,
                     sfw_info->alg_opts.opt.dns_opts.drop_long_label_packets, count, *offset);
     for (i=0; i < count; i++) {
         name = current.name;
-        ret = read_rr_name(pkt, offset, start_offset, len, name);
+        ret = read_rr_name(pkt, offset, start_offset, len, name, &name_len);
         if (ret != HAL_RET_OK) {
             if ((ret == HAL_RET_NOT_SUPPORTED &&
                  (sfw_info->alg_opts.opt.dns_opts.drop_large_domain_name_packets)) ||
@@ -281,17 +282,29 @@ static hal_ret_t parse_dns_questions(sfw_info_t *sfw_info, uint8_t *pkt,
             ret = HAL_RET_OK;
         }
 
-        name = (char *)&pkt[name_offset];
-        label = std::strtok(name,".");
-        while (label != NULL)
+        label_len = pkt[name_offset++];
+        label = (char *)&pkt[name_offset];
+        name_len += name_offset;
+        while (label != NULL && label_len != 0)
         {
-            HAL_TRACE_DEBUG("Label: {} Label length: {}", label, std::strlen(label));
-            if ((std::strlen(label) > MAX_DNS_LABEL_LEN) && 
+            HAL_TRACE_DEBUG("Label: {} Label length: {}", label, label_len);
+            if ((label_len > MAX_DNS_LABEL_LEN) && 
                 sfw_info->alg_opts.opt.dns_opts.drop_long_label_packets) {
                 HAL_TRACE_ERR("Label len > 63 bytes -- dropping packet");
                 return HAL_RET_NOT_SUPPORTED;
-            } 
-            label = std::strtok(NULL, ".");
+            }
+            if ((name_offset+label_len) == name_len) {
+                //done parsing
+                break;
+            } else if ((name_offset+label_len) < name_len) {
+                name_offset = name_offset+label_len;
+                label_len = pkt[name_offset++];
+                label = (char *)&pkt[name_offset];
+            } else {
+                HAL_TRACE_ERR("Label parse error label len: {} greater than name len: {}", label_len, name_len);
+                label = NULL;
+                return HAL_RET_INVALID_ARG;
+            }
         } 
     }
 

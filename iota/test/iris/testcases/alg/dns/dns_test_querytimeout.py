@@ -5,6 +5,8 @@ import re
 import os
 import pdb
 
+GRACE_TIME = 10
+
 def Setup(tc):
     update_app('dns', '30s', 'query_response_timeout', '%s'%(tc.iterators.timeout), True)
     update_sgpolicy('dns')
@@ -39,7 +41,7 @@ def Trigger(tc):
     SetupDNSServer(server, stop=True)
 
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
-                           "echo \"nameserver %s\" | tee -a /etc/resolv.conf"%(server.ip_address))
+                           "sudo echo \'nameserver %s\' | sudo tee -a /etc/resolv.conf"%(server.ip_address))
     tc.cmd_cookies.append("Setup resolv conf")
  
     api.Trigger_AddCommand(req, client.node_name, client.workload_name,
@@ -47,8 +49,9 @@ def Trigger(tc):
     tc.cmd_cookies.append("Query DNS server") 
 
     ## Add Naples command validation
+    timeout = timetoseconds(tc.iterators.timeout) + GRACE_TIME
     api.Trigger_AddNaplesCommand(req, naples.node_name,
-                    "sleep %s"%timetoseconds(tc.iterators.timeout))
+                    "sleep %s"%timeout, timeout=300)
     tc.cmd_cookies.append("sleep")
 
     api.Trigger_AddNaplesCommand(req, naples.node_name,

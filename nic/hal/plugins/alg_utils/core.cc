@@ -297,9 +297,15 @@ alg_state::~alg_state() {
 
 void alg_state::exp_flow_timeout_cb (void *timer, uint32_t timer_id, void *ctxt) {
     exp_flow_timer_cb_t  *timer_ctxt = (exp_flow_timer_cb_t *)ctxt;
-    l4_alg_status_t      *exp_flow = timer_ctxt->exp_flow;
+    l4_alg_status_t      *exp_flow = NULL;
     alg_state_t          *alg_state = timer_ctxt->alg_state;
 
+    exp_flow = (l4_alg_status_t *)lookup_expected_flow(timer_ctxt->exp_flow_key);
+    if (!exp_flow) {
+        HAL_TRACE_ERR("Bailing cleanup expected flow not found!");
+        return;
+    }
+ 
     // Grace timer expiry. Is it ok to cleanup now ?
     // Should we have retries ?
     if (exp_flow->entry.deleting == true) {
@@ -349,7 +355,7 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
                                      key, (void *)exp_flow);
                     timer_ctxt = (exp_flow_timer_cb_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
                                        sizeof(exp_flow_timer_cb_t));
-                    timer_ctxt->exp_flow = exp_flow;
+                    timer_ctxt->exp_flow_key = exp_flow->entry.key;
                     timer_ctxt->alg_state = this;
                 }
                 start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_TIMER_ID,
@@ -380,7 +386,7 @@ hal_ret_t alg_state::alloc_and_insert_exp_flow(app_session_t *app_sess,
                          key, (void *)exp_flow);
         timer_ctxt = (exp_flow_timer_cb_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG,
                                        sizeof(exp_flow_timer_cb_t));
-        timer_ctxt->exp_flow = exp_flow;
+        timer_ctxt->exp_flow_key = exp_flow->entry.key;
         timer_ctxt->alg_state = this;
         start_expected_flow_timer(&exp_flow->entry, ALG_EXP_FLOW_TIMER_ID,
                                   (time_intvl * TIME_MSECS_PER_SEC), exp_flow_timeout_cb,
@@ -442,8 +448,9 @@ hal_ret_t alg_state::insert_app_sess (app_session_t *app_session,
 
 end:
     if (ctrl_app_sess) {
-        // Link this app session to the control app session
-        dllist_add(&ctrl_app_sess->app_sess_lentry, &app_session->app_sess_lentry);
+        if (rc == HAL_RET_OK) 
+            // Link this app session to the control app session
+            dllist_add(&ctrl_app_sess->app_sess_lentry, &app_session->app_sess_lentry);
         SDK_SPINLOCK_UNLOCK(&ctrl_app_sess->slock);
     }
 
@@ -491,6 +498,7 @@ l4_alg_status_t *alg_state::get_next_expflow(app_session_t *app_sess) {
         l4_alg_status_t *exp_flow = dllist_entry(lentry,
                                   l4_alg_status_t, exp_flow_lentry);
         SDK_ASSERT(exp_flow != NULL);
+        SDK_SPINLOCK_UNLOCK(&app_sess->slock);
         return exp_flow;
     }
     SDK_SPINLOCK_UNLOCK(&app_sess->slock);

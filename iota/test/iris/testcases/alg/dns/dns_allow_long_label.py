@@ -3,6 +3,9 @@ from iota.test.iris.testcases.alg.dns.dns_utils import *
 from iota.test.iris.testcases.alg.alg_utils import *
 import re
 import os
+import pdb
+
+search_string = None
 
 def Setup(tc):
     update_app('dns', '90s', 'drop_long_label_packets', 'False')
@@ -14,6 +17,7 @@ def Trigger(tc):
     server = pairs[0][0]
     client = pairs[0][1]
     tc.cmd_cookies = []
+    tc.search_string = None
 
     server,client  = pairs[0]
     naples = server
@@ -53,6 +57,8 @@ def Trigger(tc):
     api.Trigger_AddNaplesCommand(req, naples.node_name,
                 "/nic/bin/halctl show session --alg dns --yaml")
     tc.cmd_cookies.append("Show session")
+
+    tc.search_string = "%s.53333 > %s.53"%(client.ip_address, server.ip_address) 
  
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
@@ -69,7 +75,7 @@ def Verify(tc):
     tcpdump = dir_path + '/' + "out.txt"
     found = False
     for line in open(tcpdump, 'r'):
-        if re.search(LONG_LABEL, line):
+        if re.search(tc.search_string, line):
             found = True
 
     if found == False:

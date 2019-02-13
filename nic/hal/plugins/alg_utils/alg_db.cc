@@ -101,6 +101,15 @@ delete_expected_flow_timer(expected_flow_t *entry)
 }
 
 //------------------------------------------------------------------------------
+// lookup expected flow
+//------------------------------------------------------------------------------
+expected_flow_t *
+lookup_expected_flow(const exp_flow_key_t &key) 
+{
+    return((expected_flow_t *)expected_flow_ht()->lookup((void *)&key));
+}
+
+//------------------------------------------------------------------------------
 // Lookup a expected_flow entry
 // This will do the following lookupos
 //  1. Exact match

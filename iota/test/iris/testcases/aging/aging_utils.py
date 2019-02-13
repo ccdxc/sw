@@ -170,6 +170,9 @@ def update_sgpolicy(src, dst, proto, dport, action="DENY"):
     return api.types.status.SUCCESS
 
 def get_tickleinfo(cmd):
+    if cmd.stdout == '' or cmd.stdout.find('API_STATUS_NOT_FOUND') != -1:
+       return 0, 0, 0, 0
+
     yaml_out = yaml.load_all(cmd.stdout)
     print(type(yaml_out))
     for data in yaml_out:

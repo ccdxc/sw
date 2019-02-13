@@ -282,8 +282,8 @@ private:
 // Expected flow timer context
 //--------------------------------------------------------------------------------
 typedef struct exp_flow_timer_cb_ {
+    exp_flow_key_t   exp_flow_key;
     alg_state_t     *alg_state;
-    l4_alg_status_t *exp_flow;
 } exp_flow_timer_cb_t;
 
 } // namespace alg_utils

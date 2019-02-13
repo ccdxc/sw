@@ -65,6 +65,7 @@ struct expected_flow_s {
 
 hal_ret_t insert_expected_flow(expected_flow_t *entry);
 expected_flow_t *remove_expected_flow(const exp_flow_key_t &key);
+expected_flow_t *lookup_expected_flow(const exp_flow_key_t &key);
 expected_flow_t *lookup_expected_flow(const hal::flow_key_t &key,
                                       bool exact_match = false);
 void start_expected_flow_timer(expected_flow_t *entry, uint32_t timer_id,
