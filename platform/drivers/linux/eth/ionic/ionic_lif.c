@@ -2072,7 +2072,13 @@ static int ionic_set_features(struct lif *lif)
 
 	netdev->hw_features |= netdev->hw_enc_features;
 	netdev->features |= netdev->hw_features;
-	netdev->vlan_features |= netdev->features;
+
+	/* some earlier kernels complain if the vlan device inherits
+	 * the NETIF_F_HW_VLAN... flags, so strip them out
+	 */
+	netdev->vlan_features |= netdev->features & ~(NETIF_F_HW_VLAN_CTAG_TX |
+						      NETIF_F_HW_VLAN_CTAG_RX |
+						   NETIF_F_HW_VLAN_CTAG_FILTER);
 
 	/* Leave L2FW_OFFLOAD out of netdev->features so it will
 	 * be disabled by default, but the user can enable later.
