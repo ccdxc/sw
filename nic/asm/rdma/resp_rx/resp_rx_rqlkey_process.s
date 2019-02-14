@@ -42,13 +42,17 @@ struct key_entry_aligned_t d;
 .align
 resp_rx_rqlkey_process:
 
-    //If Reserved LKEY is used, but QP doesn't have privileged operations enabled
-    bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, rsvd_lkey_err
+    mfspr       r1, spr_mpuid
+    seq         c1, r1[4:2], STAGE_4
+    bcf         [!c1], bubble_to_next_stage
 
     // access is allowed only in valid state
     seq         c1, d.state, KEY_STATE_VALID //BD Slot
+
+    //If Reserved LKEY is used, but QP doesn't have privileged operations enabled
+    bbeq        CAPRI_KEY_FIELD(IN_P, rsvd_key_err), 1, rsvd_lkey_err
     // check pd for MR lkey
-    seq         c2, d.pd, CAPRI_KEY_FIELD(IN_TO_S_P, pd) 
+    seq         c2, d.pd, CAPRI_KEY_FIELD(IN_TO_S_P, pd) // BD Slot
     bcf         [!c1 | !c2], lkey_state_pd_err
 
     //ARE_ALL_FLAGS_SET_B(c1, r1, ACC_CTRL_LOCAL_WRITE)
@@ -208,3 +212,14 @@ error_completion:
     CAPRI_SET_TABLE_0_VALID(0)
     b       check_write_back
     CAPRI_SET_TABLE_1_VALID(0)  //BD Slot
+
+bubble_to_next_stage:
+    seq         c1, r1[4:2], STAGE_3
+    // c1: stage_3
+    bcf         [!c1], exit
+    seq         c2, CAPRI_KEY_FIELD(IN_P, tbl_id), 0 //BD Slot
+
+    CAPRI_GET_TABLE_0_OR_1_K(resp_rx_phv_t, r7, c2)
+
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_E(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS)
+    nop // Exit Slot

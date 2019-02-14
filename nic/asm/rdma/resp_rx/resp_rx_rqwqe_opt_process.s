@@ -6,12 +6,12 @@
 #include "defines.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s3_t0_k k;
+struct resp_rx_s2_t0_k k;
 struct rqwqe_base_t d;
 
 #define INFO_LKEY_T struct resp_rx_key_info_t
 #define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
-#define IN_TO_S_P     to_s3_wqe_info
+#define IN_TO_S_P     to_s2_wqe_info
 #define TO_S_WB1_P to_s5_wb1_info
 
 #define NUM_SGES        r3
@@ -32,7 +32,7 @@ struct rqwqe_base_t d;
 #define TO_S_STATS_INFO_P to_s7_stats_info
 
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
-#define K_REM_PYLD_BYTES CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
+#define K_REM_PYLD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 #define K_SPEC_PSN CAPRI_KEY_RANGE(IN_TO_S_P, spec_psn_sbit0_ebit2, spec_psn_sbit19_ebit23)
 #define K_INV_R_KEY CAPRI_KEY_RANGE(IN_TO_S_P, inv_r_key_sbit0_ebit2, inv_r_key_sbit27_ebit31)
 #define K_EXT_HDR_DATA CAPRI_KEY_RANGE(IN_TO_S_P, ext_hdr_data_sbit0_ebit63, ext_hdr_data_sbit64_ebit68)
@@ -60,7 +60,7 @@ resp_rx_rqwqe_opt_process:
 
     // store transfer_bytes + remaining_pyld_bytes in TMP variable
     // later copy this TMP to cqe.length if it is last or only pkt
-    add         REM_PYLD_BYTES, r0, CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
+    add         REM_PYLD_BYTES, r0, K_REM_PYLD_BYTES
     add         TMP, TRANSFER_BYTES, REM_PYLD_BYTES
 
     // init curr_sge_offset = transfer_bytes

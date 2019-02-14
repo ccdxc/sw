@@ -16,11 +16,12 @@ struct resp_rx_s1_t0_k k;
 
 #define IN_P        t0_s2s_rqcb_to_rqcb1_info
 #define IN_TO_S_P   to_s1_recirc_info
-#define IN_TO_S_CURR_WQE_PTR      CAPRI_KEY_RANGE(IN_TO_S_P, curr_wqe_ptr_sbit0_ebit7, curr_wqe_ptr_sbit48_ebit63)
+#define IN_TO_S_CURR_WQE_PTR      CAPRI_KEY_RANGE(IN_TO_S_P, curr_wqe_ptr_sbit0_ebit47, curr_wqe_ptr_sbit48_ebit63)
 #define IN_TO_S_CURR_SGE_OFFSET   CAPRI_KEY_RANGE(IN_TO_S_P, current_sge_offset_sbit0_ebit15, current_sge_offset_sbit16_ebit31)
+#define IN_TO_S_REM_PYLD_BYTES    CAPRI_KEY_RANGE(IN_TO_S_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 
 %%
-    .param    resp_rx_rqwqe_mpu_only_process
+    .param    resp_rx_rqwqe_process
 
 .align
 resp_rx_rqcb1_recirc_sge_process:
@@ -48,7 +49,7 @@ resp_rx_rqcb1_recirc_sge_process:
     CAPRI_RESET_TABLE_0_ARG()
     CAPRI_SET_FIELD_RANGE2_IMM(RQCB_TO_WQE_P, recirc_path, in_progress, (1 << 1)|1)
     phvwrpair   CAPRI_PHV_FIELD(RQCB_TO_WQE_P, remaining_payload_bytes), \
-                CAPRI_KEY_FIELD(IN_TO_S_P, remaining_payload_bytes), \
+                IN_TO_S_REM_PYLD_BYTES, \
                 CAPRI_PHV_FIELD(RQCB_TO_WQE_P, current_sge_id), \
                 CAPRI_KEY_FIELD(IN_TO_S_P, current_sge_id)
 
@@ -66,6 +67,6 @@ resp_rx_rqcb1_recirc_sge_process:
                 CAPRI_PHV_FIELD(RQCB_TO_WQE_P, dma_cmd_index), \
                 (RESP_RX_DMA_CMD_PYLD_BASE + (MAX_PYLD_DMA_CMDS_PER_SGE * 2))
 
-    // invoke rqwqe mpu only
-    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqwqe_mpu_only_process, ADDR_TO_LOAD)
+    // invoke rqwqe
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
 

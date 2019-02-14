@@ -34,7 +34,11 @@ struct key_entry_aligned_t d;
 .align
 resp_rx_rqlkey_rsvd_lkey_process:
 
-    add        TMP, CAPRI_KEY_FIELD(IN_P, tbl_id), r0
+    mfspr       r1, spr_mpuid
+    seq         c1, r1[4:2], STAGE_4
+    bcf         [!c1], bubble_to_next_stage
+ 
+    add        TMP, CAPRI_KEY_FIELD(IN_P, tbl_id), r0 // BD Slot
     CAPRI_SET_TABLE_I_VALID(TMP, 0)
 
     DMA_CMD_I_BASE_GET(DMA_CMD_BASE, r3, RESP_RX_DMA_CMD_START_FLIT_ID, CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index))
@@ -60,6 +64,17 @@ check_write_back:
                 K_CURR_SGE_OFFSET
 
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqcb1_write_back_process, RQCB1_ADDR)
+
+bubble_to_next_stage:
+    seq         c1, r1[4:2], STAGE_3
+    // c1: stage_3
+    bcf         [!c1], exit
+    seq         c2, CAPRI_KEY_FIELD(IN_P, tbl_id), 0 //BD Slot
+
+    CAPRI_GET_TABLE_0_OR_1_K(resp_rx_phv_t, r7, c2)
+
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_E(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS)
+    nop // Exit Slot
 
 exit:
     nop.e

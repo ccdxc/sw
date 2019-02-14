@@ -10,18 +10,18 @@ struct rqcb1_t d;
 struct common_p4plus_stage0_app_header_table_k k;
 
 #define RQCB_TO_WRITE_P t1_s2s_rqcb_to_write_rkey_info
-#define LAUNCH_RQPT_INFO_P t0_s2s_rqcb_to_launch_rqpt_info
+#define INFO_OUT1_P t0_s2s_rqcb_to_pt_info
 //#define RSQ_BT_S2S_INFO_T struct resp_rx_rsq_backtrack_info_t 
 //#define RSQ_BT_TO_S_INFO_T struct resp_rx_to_stage_backtrack_info_t
 #define RQCB_TO_RQCB1_P t0_s2s_rqcb_to_rqcb1_info
+#define TO_S_RQPT_P to_s1_rqpt_info
 #define TO_S_WB1_P to_s5_wb1_info
-#define TO_S_WQE_P to_s3_wqe_info
+#define TO_S_WQE_P to_s2_wqe_info
 #define TO_S_STATS_INFO_P to_s7_stats_info
 #define RQCB_TO_RD_ATOMIC_P t1_s2s_rqcb_to_read_atomic_rkey_info
 #define TO_S_ATOMIC_INFO_P to_s1_atomic_info
 #define WQE_INFO_P t0_s2s_rqcb_to_wqe_info
 #define TO_S_RKEY_P to_s2_ext_hdr_info
-#define TO_S_RQWQE_MPU_P to_s2_ext_hdr_info
 #define TO_S_LKEY_P to_s4_lkey_info
 #define TO_S_CQCB_P to_s6_cqcb_info
 
@@ -51,7 +51,8 @@ struct common_p4plus_stage0_app_header_table_k k;
     .param    resp_rx_atomic_resource_process
     .param    resp_rx_recirc_mpu_only_process
     .param    resp_rx_rqcb1_write_back_mpu_only_process
-    .param    resp_rx_launch_rqpt_process
+    .param    resp_rx_rqpt_process
+    .param    resp_rx_dummy_rqpt_process
     .param    resp_rx_rqcb1_write_back_err_process
     .param    resp_rx_phv_drop_mpu_only_process
 
@@ -283,7 +284,7 @@ skip_token_id_check:
     bcf         [!c4], send_sge_non_opt
     tblmincri.c4    d.send_info.spec_psn, 24, 1 // BD Slot
 
-    CAPRI_SET_FIELD2(TO_S_RQWQE_MPU_P, send_sge_opt, 1)
+    CAPRI_SET_FIELD2(TO_S_RQPT_P, send_sge_opt, 1)
     CAPRI_SET_FIELD2(TO_S_WB1_P, send_sge_opt, 1)
 
     b           send_sge_opt
@@ -927,18 +928,50 @@ rc_checkout:
     // checkout a descriptor
     add         r1, r0, SPEC_RQ_C_INDEX
 
+    bbeq        d.rq_in_hbm, 0, pt_process
     // flush the last tblwr in this path
-    tblmincri.c7.f SPEC_RQ_C_INDEX, d.log_num_wqes, 1
+    tblmincri.c7.f SPEC_RQ_C_INDEX, d.log_num_wqes, 1 // BD Slot
 
-    //don't need to waste instruction as entire s2s info is populated unconditionally
-    //CAPRI_RESET_TABLE_0_ARG()
+    sll         r2, r1, d.log_wqe_size
+    add         r2, r2, d.hbm_rq_base_addr, HBM_SQ_BASE_ADDR_SHIFT
 
-    // copy needed rqcb1 fields in a single shot
-    phvwr       CAPRI_PHV_RANGE(LAUNCH_RQPT_INFO_P, pt_base_or_hbm_rq_base_addr, cq_id), \
-                d.{pt_base_addr...cq_id}
-    phvwrpair   CAPRI_PHV_FIELD(LAUNCH_RQPT_INFO_P, c_index), r1, \
-                CAPRI_PHV_FIELD(LAUNCH_RQPT_INFO_P, remaining_payload_bytes), REM_PYLD_BYTES
-    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_launch_rqpt_process, r0)
+    CAPRI_RESET_TABLE_0_ARG()
+    phvwrpair   CAPRI_PHV_FIELD(WQE_INFO_P, remaining_payload_bytes), REM_PYLD_BYTES, \
+                CAPRI_PHV_FIELD(WQE_INFO_P, curr_wqe_ptr), r2
+    phvwrpair   CAPRI_PHV_FIELD(WQE_INFO_P, dma_cmd_index), RESP_RX_DMA_CMD_PYLD_BASE, \
+                CAPRI_PHV_FIELD(WQE_INFO_P, log_pmtu), d.log_pmtu
+
+    //MPU only
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_dummy_rqpt_process, r0)
+
+pt_process:
+    sub         r2, d.log_rq_page_size, d.log_wqe_size 
+    // page_index = c_index >> (log_rq_page_size - log_wqe_size)
+    srlv        r3, r1, r2
+
+    // page_offset = c_index & ((1 << (log_rq_page_size - log_wqe_size))-1) << log_wqe_size
+    mincr       r1, r2, r0
+    sll         r1, r1, d.log_wqe_size
+
+    // r3 has page_index, r1 has page_offset by now
+
+    // page_seg_offset = page_index & 0x7
+    and         r5, r3, CAPRI_SEG_PAGE_MASK
+    // page_index = page_index & ~0x7
+    sub         r3, r3, r5
+    // page_index = page_index * sizeof(u64)
+    // page_index += rqcb_p->pt_base_addr
+    sll         r4, d.pt_base_addr, PT_BASE_ADDR_SHIFT
+    add         r3, r4, r3, CAPRI_LOG_SIZEOF_U64
+    // now r3 has page_p to load
+
+    CAPRI_RESET_TABLE_0_ARG()
+    phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, page_seg_offset), r5, \
+                CAPRI_PHV_FIELD(INFO_OUT1_P, page_offset), r1
+    phvwrpair   CAPRI_PHV_FIELD(INFO_OUT1_P, remaining_payload_bytes), REM_PYLD_BYTES, \
+                CAPRI_PHV_FIELD(INFO_OUT1_P, log_pmtu), d.log_pmtu
+
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqpt_process, r3)
 
 ud_phv_drop:
     // we can still set the intrinsic drop bit, though we are going to writeback

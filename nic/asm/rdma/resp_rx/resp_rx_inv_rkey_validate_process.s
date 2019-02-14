@@ -28,8 +28,13 @@ resp_rx_inv_rkey_validate_process:
 
     // this program is loaded only for send with invalidate
 
-    bbeq        CAPRI_KEY_FIELD(IN_TO_S_P, rsvd_key_err), 1, rsvd_key_err
+    mfspr       r1, spr_mpuid
+    seq         c1, r1[4:2], STAGE_4
+    bcf         [!c1], bubble_to_next_stage
+
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS // BD Slot
+
+    bbeq        CAPRI_KEY_FIELD(IN_TO_S_P, rsvd_key_err), 1, rsvd_key_err
 
     /*  check if MR is eligible for invalidation
      *  check if state is invalid (same for MR and MW)
@@ -128,3 +133,15 @@ error_completion:
     CAPRI_SET_TABLE_3_VALID_CE(c0, 0)
     CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS) // Exit Slot
 
+bubble_to_next_stage:
+    seq         c1, r1[4:2], STAGE_3
+    // c1: stage_3
+    bcf         [!c1], bubble_exit
+    CAPRI_GET_TABLE_3_K(resp_rx_phv_t, r7)
+
+    CAPRI_NEXT_TABLE_I_READ_SET_SIZE_E(r7, CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS)
+    nop // Exit Slot
+
+bubble_exit:
+    nop.e
+    nop

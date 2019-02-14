@@ -6,16 +6,15 @@
 #include "defines.h"
 
 struct resp_rx_phv_t p;
-struct resp_rx_s3_t0_k k;
+struct resp_rx_s2_t0_k k;
 struct rqwqe_base_t d;
 
 #define INFO_LKEY_T struct resp_rx_key_info_t
 #define INFO_WBCB1_P t2_s2s_rqcb1_write_back_info
 #define TO_S_RECIRC_P to_s1_recirc_info
-#define IN_TO_S_P     to_s3_wqe_info
+#define IN_TO_S_P     to_s2_wqe_info
 #define TO_S_WB1_P to_s5_wb1_info
 #define TO_S_STATS_INFO_P to_s7_stats_info
-
 
 #define SGE_OFFSET_SHIFT 32
 #define SGE_OFFSET_MASK 0xffffffff
@@ -39,11 +38,11 @@ struct rqwqe_base_t d;
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 #define K_EXT_HDR_DATA CAPRI_KEY_RANGE(IN_TO_S_P, ext_hdr_data_sbit0_ebit63, ext_hdr_data_sbit64_ebit68)
 #define K_INV_R_KEY CAPRI_KEY_RANGE(IN_TO_S_P, inv_r_key_sbit0_ebit2, inv_r_key_sbit27_ebit31)
+#define K_REM_PYLD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 
 %%
     .param  resp_rx_rqlkey_process
     .param  resp_rx_inv_rkey_validate_process
-    .param  resp_rx_inv_rkey_process
     .param  resp_rx_rqlkey_rsvd_lkey_process
     .param  resp_rx_recirc_mpu_only_process
     .param  resp_rx_rqcb1_write_back_mpu_only_process
@@ -59,7 +58,7 @@ resp_rx_rqwqe_process:
     // now r1 = (current_sge_id << 32) + current_sge_offset
     add         r1, CAPRI_KEY_RANGE(IN_P, current_sge_offset_sbit0_ebit7, current_sge_offset_sbit24_ebit31), CAPRI_KEY_FIELD(IN_P, current_sge_id), SGE_OFFSET_SHIFT // BD Slot
 
-    add         REM_PYLD_BYTES, r0, CAPRI_KEY_FIELD(IN_P, remaining_payload_bytes)
+    add         REM_PYLD_BYTES, r0, K_REM_PYLD_BYTES
     seq         c1, CAPRI_KEY_FIELD(IN_P, in_progress), 1
 
     bcf         [!c1], fresh_init 

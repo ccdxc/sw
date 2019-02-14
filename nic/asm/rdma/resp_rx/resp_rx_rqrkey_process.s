@@ -33,6 +33,7 @@ struct key_entry_aligned_t d;
 
 #define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit8_ebit63)
 #define K_ACC_CTRL CAPRI_KEY_RANGE(IN_P, acc_ctrl_sbit0_ebit4, acc_ctrl_sbit5_ebit7)
+#define K_PD CAPRI_KEY_RANGE(IN_TO_S_P, pd_sbit0_ebit7, pd_sbit24_ebit31)
 
 %%
     .param  resp_rx_ptseg_mpu_only_process
@@ -87,7 +88,7 @@ resp_rx_rqrkey_process:
     b           rkey_qp_err
 
 check_pd:
-    seq         c4, d.pd, CAPRI_KEY_FIELD(IN_TO_S_P, pd) // BD slot
+    seq         c4, d.pd, K_PD // BD slot
     bcf         [!c4], rkey_pd_err
     nop         // BD Slot
 
@@ -176,7 +177,7 @@ invoke_pt:
 skip_pt:
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS
     IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_ATOMIC_CSWAP)
-    phvwr.c2    p.pcie_atomic.compare_data_or_add_data, k.{to_s2_ext_hdr_info_ext_hdr_data[63:0]}.dx
+    phvwr.c2    p.pcie_atomic.compare_data_or_add_data, k.{to_s2_ext_hdr_info_ext_hdr_data_sbit0_ebit63}.dx
 
     CAPRI_SET_FIELD(r7, RKEY_TO_PT_INFO_T, dma_cmdeop, CAPRI_KEY_FIELD(IN_P, dma_cmdeop))
     

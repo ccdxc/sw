@@ -18,7 +18,7 @@ struct resp_rx_s1_t0_k k;
 
 
 %%
-    .param    resp_rx_rqwqe_mpu_only_process
+    .param    resp_rx_rqwqe_process
 
 .align
 resp_rx_rqcb3_in_progress_process:
@@ -65,6 +65,6 @@ skip_cqe_pyld_len:
                 CAPRI_PHV_FIELD(RQCB_TO_WQE_P, dma_cmd_index), \
                 RESP_RX_DMA_CMD_PYLD_BASE
 
-    // invoke rqwqe mpu only
-    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqwqe_mpu_only_process, ADDR_TO_LOAD)
+    // invoke rqwqe
+    CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqwqe_process, ADDR_TO_LOAD)
 
