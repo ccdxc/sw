@@ -238,9 +238,10 @@ class NaplesManagement(EntityManagement):
         self.__login()
         time.sleep(60)
         try:
-            self.SendlineExpect("dhclient " + NAPLES_OOB_NIC, "#")
+            self.SendlineExpect("dhclient " + NAPLES_OOB_NIC, "#", timeout = 10)
         except:
-            pass
+            #Send Ctrl-c as we did not get IP
+            self.SendlineExpect('\003', "#")
         self.WaitForSsh()
 
     def RunNaplesCmd(self, command, ignore_failure = False):
@@ -279,8 +280,8 @@ class NaplesManagement(EntityManagement):
         try:
             self.SendlineExpect("dhclient " + NAPLES_OOB_NIC, "#", timeout = 10)
         except:
-            #ignore error if not able to get oob ip
-            pass
+            #Send Ctrl-c as we did not get IP
+            self.SendlineExpect('\003', "#")
 
 
 
@@ -398,6 +399,9 @@ class HostManagement(EntityManagement):
         pass
 
     def InitForReboot(self):
+        pass
+
+    def UnloadDriver(self):
         pass
 
 class EsxHostManagement(HostManagement):
@@ -582,6 +586,10 @@ class EsxHostManagement(HostManagement):
     def InitForReboot(self):
         self.__install_drivers(GlobalOptions.drivers_pkg)
 
+
+    def UnloadDriver(self):
+        self.RunSshCmd("vmkload_mod -u ionic_en", ignore_failure = True)
+
     def __host_connect(self):
         ip=GlobalOptions.host_ip
         port='22'
@@ -706,11 +714,12 @@ def Main():
         naples.Close()
     else:
         # Case 1: Main firmware upgrade.
+        #need to unload driver as host might crash in ESX case.
+        host.UnloadDriver()
         if naples.IsSSHUP():
             #OOb is present and up install right away,
             naples.RebootGoldFw()
             naples.InstallMainFirmware()
-            #TDOD Update gold fw to latest i not matching.
             if not IsNaplesGoldFWLatest():
                 naples.InstallGoldFirmware()
         else:
