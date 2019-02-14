@@ -25,6 +25,7 @@ using telemetry::MirrorSessionSpec;
 using session::FlowInfo;
 using session::FlowKeyTcpUdpInfo;
 using session::FlowKeyICMPInfo;
+using session::FlowKeyESPInfo;
 using session::FlowData;
 using session::ConnTrackInfo;
 using session::FlowStats;
@@ -553,6 +554,12 @@ flow_icmp_to_flow_icmp_spec(flow_t *flow, FlowKeyICMPInfo *icmp)
 }
 
 static void
+flow_esp_to_flow_esp_spec(flow_t *flow, FlowKeyESPInfo *esp)
+{
+    esp->set_spi(flow->config.key.spi);
+}
+
+static void
 flow_data_to_flow_data_spec(flow_t *flow, FlowData *flow_data)
 {
     FlowInfo             *flow_info = flow_data->mutable_flow_info();
@@ -628,8 +635,9 @@ flow_to_flow_resp(flow_t *flow, FlowSpec *spec, FlowStatus *status)
             flow_tcp_to_flow_tcp_spec(flow, v4_key->mutable_tcp_udp());
         } else if (flow->config.key.proto == types::IPPROTO_ICMP) {
             flow_icmp_to_flow_icmp_spec(flow, v4_key->mutable_icmp());
+        } else if (flow->config.key.proto == types::IPPROTO_ESP) {
+            flow_esp_to_flow_esp_spec(flow, v4_key->mutable_esp());
         }
-
     } else if (flow->config.key.flow_type == FLOW_TYPE_V6) {
         FlowKeyV6 *v6_key = spec->mutable_flow_key()->mutable_v6_key();
         v6_key->mutable_sip()->set_v6_addr(&flow->config.key.sip.v6_addr, IP6_ADDR8_LEN);

@@ -432,7 +432,7 @@
     "spec": {
       "network-name": "scale-nw-4",
       "interface-type": "uplink",
-      "interface": "uplink129",
+      "interface": "uplink128",
       "ipv4-address": "10.5.8.3/32",
       "mac-address": "76:f5:91:08:21:ac",
       "node-uuid": "GWUUID",

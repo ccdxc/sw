@@ -194,6 +194,7 @@ func showIpsecDecryptSA(resp *halproto.IpsecSADecryptGetResponse) {
 	fmt.Printf("%-30s : %-6d\n", "tep_vrf", spec.GetTepVrf().GetVrfId())
 	fmt.Printf("%-30s : %-6d\n", "salt", spec.Salt)
 	fmt.Printf("%-30s : %-6d\n", "expected_seq_no", spec.SeqNo)
+	fmt.Printf("%-30s : %-6d\n", "seq_no_bmp", spec.SeqNoBmp)
 	fmt.Printf("%-30s : %-6d\n", "total_rx_pkts", spec.TotalRxPkts)
 	fmt.Printf("%-30s : %-6d\n", "total_rx_drops", spec.TotalRxDrops)
 	fmt.Printf("%-30s : %-6d\n", "total_pkts", spec.TotalPkts)
