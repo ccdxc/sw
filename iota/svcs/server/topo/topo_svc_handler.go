@@ -495,19 +495,13 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 		}
 	}
 
-	// delete workloads
+	// Add workloads
 	deleteWorkloads := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)
 		for _, node := range workloadNodes {
 			node := node
 			pool.Go(func() error {
-				for _, w := range node.WorkloadInfo.Workloads {
-					if err := node.DeleteWorkload(w); err != nil {
-						return err
-					}
-				}
-				return nil
-
+				return node.DeleteWorkloads(node.WorkloadInfo)
 			})
 
 		}
@@ -522,6 +516,7 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 	}
 
 	defer resetDeleteWorkloads()
+
 	err := deleteWorkloads(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | DeleteWorkloads |DeleteWorkloads Call Failed. %v", err)

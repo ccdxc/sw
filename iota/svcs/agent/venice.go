@@ -114,10 +114,10 @@ func (venice *veniceNode) AddWorkloads(*iota.WorkloadMsg) (*iota.WorkloadMsg, er
 	return &iota.WorkloadMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 }
 
-// DeleteWorkload deletes a given workload
-func (venice *veniceNode) DeleteWorkload(*iota.Workload) (*iota.Workload, error) {
+// DeleteWorkloads deletes a given workloads
+func (venice *veniceNode) DeleteWorkloads(*iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	venice.logger.Println("Delete workload on venice not supported.")
-	return &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
+	return &iota.WorkloadMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST}}, nil
 }
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..

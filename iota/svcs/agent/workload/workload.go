@@ -50,8 +50,8 @@ type Workload interface {
 	RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error)
 	StopCommand(commandHandle string) (*Cmd.CommandCtx, error)
 	AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error)
-	AddSecondaryIpv4Addresses(intf string, ipaddresses []string) (error)
-	AddSecondaryIpv6Addresses(intf string, ipaddresses []string) (error)
+	AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error
+	AddSecondaryIpv6Addresses(intf string, ipaddresses []string) error
 	MoveInterface(name string) error
 	IsHealthy() bool
 	SendArpProbe(ip string, intf string, vlan int) error
@@ -155,12 +155,12 @@ func (app *workloadBase) AddInterface(name string, macAddress string, ipaddress 
 	return "", nil
 }
 
-func (app *workloadBase) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) (error) {
-    return nil
+func (app *workloadBase) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error {
+	return nil
 }
 
-func (app *workloadBase) AddSecondaryIpv6Addresses(intf string, ipaddresses []string) (error) {
-    return nil
+func (app *workloadBase) AddSecondaryIpv6Addresses(intf string, ipaddresses []string) error {
+	return nil
 }
 
 func (app *workloadBase) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
@@ -295,14 +295,13 @@ func (app *containerWorkload) AddInterface(name string, macAddress string, ipadd
 	return intfToAttach, nil
 }
 
-func (app *containerWorkload) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) (error) {
-    return nil
+func (app *containerWorkload) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error {
+	return nil
 }
 
-func (app *containerWorkload) AddSecondaryIpv6Addresses(intf string, ipaddresses []string) (error) {
-    return nil
+func (app *containerWorkload) AddSecondaryIpv6Addresses(intf string, ipaddresses []string) error {
+	return nil
 }
-
 
 func (app *containerWorkload) RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error) {
 
@@ -373,9 +372,12 @@ func (app *containerWorkload) IsHealthy() bool {
 
 func (app *containerWorkload) TearDown() {
 	if app.containerHandle != nil {
+		app.logger.Println("Deleting sub interface : " + app.subIF)
 		delIntfCmd := []string{"ip", "link", "del", app.subIF}
 		app.RunCommand(delIntfCmd, "", 0, false, false)
+		app.logger.Println("Stopping container....")
 		app.containerHandle.Stop()
+		app.logger.Println("Stopped container....")
 	}
 }
 
@@ -454,12 +456,12 @@ func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipadd
 	return intfToAttach, nil
 }
 
-func (app *bareMetalWorkload) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) (error) {
-    return nil
+func (app *bareMetalWorkload) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error {
+	return nil
 }
 
-func (app *bareMetalWorkload) AddSecondaryIpv6Addresses(intf string, ipaddresses []string) (error) {
-    return nil
+func (app *bareMetalWorkload) AddSecondaryIpv6Addresses(intf string, ipaddresses []string) error {
+	return nil
 }
 
 func (app *bareMetalMacVlanWorkload) AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
@@ -510,36 +512,35 @@ func (app *bareMetalMacVlanWorkload) AddInterface(name string, macAddress string
 		}
 	}
 
-    cmd := []string{"ip", "link", "set", "dev", intfToAttach, "up"}
-    if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
-        return "", errors.Wrap(err, stdout)
-    }
+	cmd := []string{"ip", "link", "set", "dev", intfToAttach, "up"}
+	if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+		return "", errors.Wrap(err, stdout)
+	}
 
 	app.subIF = intfToAttach
 
 	return intfToAttach, nil
 }
 
-func (app *bareMetalMacVlanWorkload) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) (error) {
-    for _, ipaddress := range ipaddresses {
-        cmd := []string{"ip", "addr", "add", ipaddress, "dev", intf}
-        if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
-            return errors.Wrap(err, stdout)
-        }
-    }
-    return nil
+func (app *bareMetalMacVlanWorkload) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error {
+	for _, ipaddress := range ipaddresses {
+		cmd := []string{"ip", "addr", "add", ipaddress, "dev", intf}
+		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+			return errors.Wrap(err, stdout)
+		}
+	}
+	return nil
 }
 
-func (app *bareMetalMacVlanWorkload) AddSecondaryIpv6Addresses(intf string, ipaddresses []string) (error) {
-    for _, ipaddress := range ipaddresses {
-        cmd := []string{"ip", "addr", "add", ipaddress, "dev", intf}
-        if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
-            return errors.Wrap(err, stdout)
-        }
-    }
-    return nil
+func (app *bareMetalMacVlanWorkload) AddSecondaryIpv6Addresses(intf string, ipaddresses []string) error {
+	for _, ipaddress := range ipaddresses {
+		cmd := []string{"ip", "addr", "add", ipaddress, "dev", intf}
+		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
+			return errors.Wrap(err, stdout)
+		}
+	}
+	return nil
 }
-
 
 func (app *bareMetalWorkload) TearDown() {
 	var delVlanCmd []string

@@ -249,8 +249,9 @@ var workloadCmd = &cobra.Command{
 				return errors.New("Add workload failed")
 			}
 		} else {
-			resp, _ := agentClient.DeleteWorkload(context.Background(), workload)
-			if resp.GetWorkloadStatus().GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
+			workloadMsg := &iota.WorkloadMsg{WorkloadOp: iota.Op_DELETE, Workloads: []*iota.Workload{workload}}
+			resp, _ := agentClient.DeleteWorkloads(context.Background(), workloadMsg)
+			if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 				return errors.New("Delete workload failed")
 			}
 		}

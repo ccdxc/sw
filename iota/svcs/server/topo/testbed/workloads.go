@@ -31,10 +31,10 @@ func (n *TestNode) AddWorkloads(w *iota.WorkloadMsg) error {
 	return nil
 }
 
-// DeleteWorkload delete a workload on the node
-func (n *TestNode) DeleteWorkload(w *iota.Workload) error {
+// DeleteWorkloads delete  workloads on the node
+func (n *TestNode) DeleteWorkloads(w *iota.WorkloadMsg) error {
 	log.Infof("TOPO SVC | DEBUG | STATE | WORKLOAD: %v", w)
-	resp, err := n.AgentClient.DeleteWorkload(context.Background(), w)
+	resp, err := n.AgentClient.DeleteWorkloads(context.Background(), w)
 	log.Infof("TOPO SVC | DEBUG | DeleteWorkload Agent . Received Response Msg: %v", resp)
 
 	if err != nil {
@@ -42,11 +42,11 @@ func (n *TestNode) DeleteWorkload(w *iota.Workload) error {
 		return err
 	}
 
-	if resp.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		log.Errorf("Deleting workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.WorkloadStatus.ApiStatus)
-		return fmt.Errorf("Deleting workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.WorkloadStatus.ApiStatus)
+	if resp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		log.Errorf("Deleting workloads on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
+		return fmt.Errorf("Deleting workload on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
 	}
 
-	n.WorkloadResp.Workloads = append(n.WorkloadResp.Workloads, resp)
+	n.WorkloadResp = resp
 	return nil
 }

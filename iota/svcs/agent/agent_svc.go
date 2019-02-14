@@ -29,8 +29,8 @@ type IotaNode interface {
 	// AddWorkloads brings up a workload type on a given node
 	AddWorkloads(*iota.WorkloadMsg) (*iota.WorkloadMsg, error)
 
-	// DeleteWorkloads deletes a given workload
-	DeleteWorkload(*iota.Workload) (*iota.Workload, error)
+	// DeleteWorkloads deletes workloads specified
+	DeleteWorkloads(*iota.WorkloadMsg) (*iota.WorkloadMsg, error)
 
 	// Trigger invokes the workload's trigger. It could be ping, start client/server etc..
 	Trigger(*iota.TriggerMsg) (*iota.TriggerMsg, error)

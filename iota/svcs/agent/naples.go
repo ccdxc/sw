@@ -377,19 +377,19 @@ func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workl
 		intf = attachedIntf
 	}
 
-    var err = wload.AddSecondaryIpv4Addresses(intf, in.GetSecIpPrefix())
-    if err != nil {
-        msg := fmt.Sprintf("Error Adding Secondary IPv4 addresses %s : %s", in.GetWorkloadName(), err.Error())
-        resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
-        return resp, err
-    }
+	var err = wload.AddSecondaryIpv4Addresses(intf, in.GetSecIpPrefix())
+	if err != nil {
+		msg := fmt.Sprintf("Error Adding Secondary IPv4 addresses %s : %s", in.GetWorkloadName(), err.Error())
+		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+		return resp, err
+	}
 
-    err = wload.AddSecondaryIpv6Addresses(intf, in.GetSecIpv6Prefix())
-    if err != nil {
-        msg := fmt.Sprintf("Error Adding Secondary IPv6 addresses %s : %s", in.GetWorkloadName(), err.Error())
-        resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
-        return resp, err
-    }
+	err = wload.AddSecondaryIpv6Addresses(intf, in.GetSecIpv6Prefix())
+	if err != nil {
+		msg := fmt.Sprintf("Error Adding Secondary IPv6 addresses %s : %s", in.GetWorkloadName(), err.Error())
+		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+		return resp, err
+	}
 
 	/* For SRIOV case, move the parent interface inside the workload so that it is not shared */
 	if in.GetInterfaceType() == iota.InterfaceType_INTERFACE_TYPE_SRIOV {
@@ -555,25 +555,49 @@ func (naples *naplesSimNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadM
 }
 
 // DeleteWorkload deletes a given workload
-func (dnode *dataNode) DeleteWorkload(in *iota.Workload) (*iota.Workload, error) {
-	var ok bool
-	var item interface{}
-	dnode.logger.Printf("Deleting workload : %s", in.GetWorkloadName())
+func (dnode *dataNode) DeleteWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 
-	wloadKey := in.GetWorkloadName()
+	deleteWorkload := func(in *iota.Workload) *iota.Workload {
+		var ok bool
+		var item interface{}
+		dnode.logger.Printf("Deleting workload : %s", in.GetWorkloadName())
 
-	if item, ok = dnode.entityMap.Load(wloadKey); !ok {
-		msg := fmt.Sprintf("Trying to delete workload %s which does not exist", wloadKey)
-		dnode.logger.Error(msg)
-		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}
-		return resp, nil
+		wloadKey := in.GetWorkloadName()
+
+		if item, ok = dnode.entityMap.Load(wloadKey); !ok {
+			msg := fmt.Sprintf("Trying to delete workload %s which does not exist", wloadKey)
+			dnode.logger.Error(msg)
+			resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}
+			return resp
+		}
+
+		item.(iotaWorkload).workload.TearDown()
+		dnode.entityMap.Delete(wloadKey)
+		dnode.logger.Printf("Deleted workload : %s", in.GetWorkloadName())
+		resp := &iota.Workload{WorkloadStatus: apiSuccess}
+		return resp
+	}
+	pool, _ := errgroup.WithContext(context.Background())
+	for index, wload := range in.Workloads {
+		wload := wload
+		index := index
+		pool.Go(func() error {
+			resp := deleteWorkload(wload)
+			in.Workloads[index] = resp
+			return nil
+		})
 	}
 
-	item.(iotaWorkload).workload.TearDown()
-	dnode.entityMap.Delete(wloadKey)
-	dnode.logger.Printf("Deleted workload : %s", in.GetWorkloadName())
-	resp := &iota.Workload{WorkloadStatus: apiSuccess}
-	return resp, nil
+	pool.Wait()
+	for _, wload := range in.Workloads {
+		if wload.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			in.ApiResponse = wload.WorkloadStatus
+			return in, errors.New(wload.WorkloadStatus.ErrorMsg)
+		}
+	}
+	in.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
+
+	return in, nil
 }
 
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
@@ -693,9 +717,11 @@ func (naples *naplesSimNode) CheckHealth(in *iota.NodeHealth) (*iota.NodeHealth,
 
 func (naples *naplesSimNode) Destroy(in *iota.Node) (*iota.Node, error) {
 
-	for _, wloadMsg := range naples.GetWorkloadMsgs() {
-		naples.DeleteWorkload(wloadMsg)
+	wlmsg := &iota.WorkloadMsg{}
+	for _, wl := range naples.GetWorkloadMsgs() {
+		wlmsg.Workloads = append(wlmsg.Workloads, wl)
 	}
+	naples.DeleteWorkloads(wlmsg)
 
 	naples.iotaNode.Destroy(in)
 
@@ -734,7 +760,7 @@ func (naples *naplesQemuNode) AddWorkload(*iota.Workload) (*iota.Workload, error
 }
 
 // DeleteWorkload deletes a given workload
-func (naples *naplesQemuNode) DeleteWorkload(*iota.Workload) (*iota.Workload, error) {
+func (naples *naplesQemuNode) DeleteWorkloads(*iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	return nil, nil
 }
 

@@ -249,17 +249,17 @@ func (agent *Service) AddWorkloads(ctx context.Context, in *iota.WorkloadMsg) (*
 	return resp, nil
 }
 
-// DeleteWorkload deletes a given workload
-func (agent *Service) DeleteWorkload(ctx context.Context, in *iota.Workload) (*iota.Workload, error) {
-	agent.logger.Printf("Received delete workload : %v", in)
+// DeleteWorkloads deletes workload specified
+func (agent *Service) DeleteWorkloads(ctx context.Context, in *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
+	agent.logger.Printf("Received delete workloads : %v", in)
 	/* Check if the node running an instance to add a workload */
-	if agent.node == nil || agent.node.NodeName() != in.GetNodeName() {
+	if agent.node == nil {
 		msg := fmt.Sprintf("Invalid workload delete request received")
 		agent.logger.Error(msg)
-		return &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
+		return &iota.WorkloadMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
 	}
 
-	resp, err := agent.node.DeleteWorkload(in)
+	resp, err := agent.node.DeleteWorkloads(in)
 	if err != nil {
 
 	}
