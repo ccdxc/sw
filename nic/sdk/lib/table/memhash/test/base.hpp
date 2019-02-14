@@ -34,7 +34,7 @@ protected:
     
     uint32_t mtable_count;
     uint32_t htable_count;
-    sdk_table_api_stats_t stats;
+    sdk_table_api_stats_t api_stats;
     sdk_table_stats_t table_stats;
 
 protected:
@@ -63,7 +63,7 @@ protected:
 
         mtable_count = 0;
         htable_count = 0;
-        memset(&stats, 0, sizeof(stats));
+        memset(&api_stats, 0, sizeof(api_stats));
         memset(&table_stats, 0, sizeof(table_stats));
 
         printf("============== SetUp ===============\n");
@@ -286,7 +286,7 @@ protected:
         mtable_count = mem_hash_mock_get_valid_count(MEM_HASH_P4TBL_ID_H5);
         htable_count = mem_hash_mock_get_valid_count(MEM_HASH_P4TBL_ID_H5_OHASH);
 
-        table->stats_get(&stats, &table_stats);
+        table->stats_get(&api_stats, &table_stats);
         printf("HW Table Stats: Entries:%d Collisions:%d\n",
                (mtable_count + htable_count), htable_count);
         printf("SW Table Stats: Entries=%d Collisions:%d\n",
@@ -295,21 +295,21 @@ protected:
         printf("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d\n",
                 num_insert, num_update, num_get, num_remove, num_reserve, num_release);
         printf("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d\n",
-                stats.insert, stats.update, stats.get, stats.remove, stats.reserve, stats.release);
+                api_stats.insert, api_stats.update, api_stats.get, api_stats.remove, api_stats.reserve, api_stats.release);
         return;    
     }
 
     sdk_ret_t ValidateStats() {
         PrintStats();
-        EXPECT_TRUE(stats.insert >= stats.remove);
+        EXPECT_TRUE(api_stats.insert >= api_stats.remove);
         EXPECT_EQ(mtable_count + htable_count, table_stats.entries);
         EXPECT_EQ(htable_count, table_stats.collisions);
-        EXPECT_EQ(num_insert, stats.insert + stats.insert_duplicate + stats.insert_fail);
-        EXPECT_EQ(num_remove, stats.remove + stats.remove_not_found + stats.remove_fail);
-        EXPECT_EQ(num_update, stats.update + stats.update_fail);
-        EXPECT_EQ(num_get, stats.get + stats.get_fail);
-        EXPECT_EQ(num_reserve, stats.reserve + stats.reserve_fail);
-        EXPECT_EQ(num_release, stats.release + stats.release_fail);
+        EXPECT_EQ(num_insert, api_stats.insert + api_stats.insert_duplicate + api_stats.insert_fail);
+        EXPECT_EQ(num_remove, api_stats.remove + api_stats.remove_not_found + api_stats.remove_fail);
+        EXPECT_EQ(num_update, api_stats.update + api_stats.update_fail);
+        EXPECT_EQ(num_get, api_stats.get + api_stats.get_fail);
+        EXPECT_EQ(num_reserve, api_stats.reserve + api_stats.reserve_fail);
+        EXPECT_EQ(num_release, api_stats.release + api_stats.release_fail);
         return sdk::SDK_RET_OK;
     }
 
@@ -325,6 +325,19 @@ protected:
         rs = table->txn_end();
         MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         return sdk::SDK_RET_OK;
+    }
+    
+    static void
+    IterateCallback(sdk_table_api_params_t *params) {
+        printf("Entry[%#016lx] Key=[%s] Data=[%s]\n", params->handle,
+               h5_key2str(params->key), h5_appdata2str(params->appdata));
+        return;
+    }
+
+    sdk_ret_t Iterate() {
+        sdk_table_api_params_t params = { 0 };
+        params.itercb = IterateCallback;
+        return table->iterate(&params);
     }
 };
 #endif

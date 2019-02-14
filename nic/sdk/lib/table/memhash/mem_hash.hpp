@@ -82,8 +82,9 @@ public:
     sdk_ret_t get(sdk_table_api_params_t *params);
     sdk_ret_t reserve(sdk_table_api_params_t *params);
     sdk_ret_t release(sdk_table_api_params_t *params);
-    sdk_ret_t stats_get(sdk_table_api_stats_t *stats,
+    sdk_ret_t stats_get(sdk_table_api_stats_t *api_stats,
                         sdk_table_stats_t *table_stats);
+    sdk_ret_t iterate(sdk_table_api_params_t *params);
 };
 
 }   // namespace table

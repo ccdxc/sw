@@ -30,25 +30,25 @@ thread_local uint8_t g_hw_key[MEM_HASH_MAX_HW_KEY_LEN];
 uint32_t mem_hash_api_context::numctx_ = 0;
 
 #define MEM_HASH_API_BEGIN(_name) {\
-        MEMHASH_TRACE_DEBUG("%s Api Begin For Table: %s %s",\
+        MEMHASH_TRACE_DEBUG("%s memhash api begin: table: %s %s",\
                             "-------------------------", _name, \
                             "-------------------------");\
 }
 
 #define MEM_HASH_API_END(_name, _status) {\
-        MEMHASH_TRACE_DEBUG("%s Api End For Table: %s (status:%d) %s",\
+        MEMHASH_TRACE_DEBUG("%s memhash api end: table: %s (status:%d) %s",\
                             "-------------------------", _name, \
                             _status, "-------------------------");\
 }
 
 #define MEM_HASH_API_BEGIN_() {\
         MEM_HASH_API_BEGIN(props_->name.c_str());\
-        SDK_SPINLOCK_UNLOCK(&slock_);\
+        SDK_SPINLOCK_LOCK(&slock_);\
 }
 
 #define MEM_HASH_API_END_(_status) {\
         MEM_HASH_API_END(props_->name.c_str(), (_status));\
-        SDK_SPINLOCK_LOCK(&slock_);\
+        SDK_SPINLOCK_UNLOCK(&slock_);\
 }
 
 //---------------------------------------------------------------------------
@@ -88,6 +88,8 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
     if (props_ == NULL) {
         return SDK_RET_OOM;
     }
+
+    SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
 
     props_->main_table_id = params->table_id;
     props_->num_hints = params->num_hints;
@@ -220,13 +222,16 @@ mem_hash::create_api_context_(sdk_table_api_op_t op,
                               void **retctx) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *mctx = NULL;   // Main Table Context
-    
-    ret = genhash_(params);
-    if (ret != SDK_RET_OK) {
-        MEMHASH_TRACE_ERR("failed to generate hash, ret:%d", ret);
-        return ret;
+
+    if (SDK_TABLE_API_OP_IS_CRUD(op)) {
+        ret = genhash_(params);
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("failed to generate hash, ret:%d", ret);
+            return ret;
+        }
     }
 
+    MEMHASH_TRACE_DEBUG("Creating api context for op:%d", op);
     mctx = mem_hash_api_context::factory(op, params, props_,
                                          &table_stats_, &txn_);
     if (!mctx) {
@@ -289,7 +294,7 @@ mem_hash::update(sdk_table_api_params_t *params) {
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         MEMHASH_TRACE_ERR("failed to create api context. ret:%d", ret);
-        return ret;
+        goto update_return;
     }
 
     ret = static_cast<mem_hash_main_table*>(main_table_)->update_(mctx);
@@ -322,7 +327,7 @@ mem_hash::remove(sdk_table_api_params_t *params) {
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         MEMHASH_TRACE_ERR("failed to create api context. ret:%d", ret);
-        return ret;
+        goto remove_return;
     }
 
     ret = static_cast<mem_hash_main_table*>(main_table_)->remove_(mctx);
@@ -355,7 +360,7 @@ mem_hash::get(sdk_table_api_params_t *params) {
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         MEMHASH_TRACE_ERR("failed to create api context. ret:%d", ret);
-        return ret;
+        goto get_return;
     }
 
     ret = static_cast<mem_hash_main_table*>(main_table_)->get_(mctx);
@@ -388,7 +393,7 @@ mem_hash::reserve(sdk_table_api_params_t *params) {
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         MEMHASH_TRACE_ERR("failed to create api context. ret:%d", ret);
-        return ret;
+        goto reserve_return;
     }
     
     ret = static_cast<mem_hash_main_table*>(main_table_)->insert_(mctx);
@@ -402,6 +407,7 @@ mem_hash::reserve(sdk_table_api_params_t *params) {
     
     mem_hash_api_context::destroy(mctx);
 
+reserve_return:
     api_stats_.reserve(ret);
     MEM_HASH_API_END_(ret);
     return ret;
@@ -422,7 +428,7 @@ mem_hash::release(sdk_table_api_params_t *params) {
                               params, (void **)&mctx);
     if (ret != SDK_RET_OK) {
         MEMHASH_TRACE_ERR("failed to create api context. ret:%d", ret);
-        return ret;
+        goto release_return;
     }
     
     ret = static_cast<mem_hash_main_table*>(main_table_)->remove_(mctx);
@@ -436,6 +442,7 @@ mem_hash::release(sdk_table_api_params_t *params) {
     
     mem_hash_api_context::destroy(mctx);
 
+release_return:
     api_stats_.release(ret);
     MEM_HASH_API_END_(ret);
     return ret;
@@ -445,10 +452,10 @@ mem_hash::release(sdk_table_api_params_t *params) {
 // mem_hash Get Stats from mem_hash table
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash::stats_get(sdk_table_api_stats_t *stats,
+mem_hash::stats_get(sdk_table_api_stats_t *api_stats,
                     sdk_table_stats_t *table_stats) {
     MEM_HASH_API_BEGIN_();
-    api_stats_.get(stats);
+    api_stats_.get(api_stats);
     table_stats_.get(table_stats);
     MEM_HASH_API_END_(SDK_RET_OK);
     return SDK_RET_OK;
@@ -467,13 +474,43 @@ mem_hash::txn_start() {
 }
 
 //---------------------------------------------------------------------------
-// mem_hash start transaction
+// mem_hash end transaction
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash::txn_end() {
     sdk_ret_t ret = SDK_RET_OK;
     MEM_HASH_API_BEGIN_();
     ret = txn_.end();
+    MEM_HASH_API_END_(ret);
+    return ret;
+}
+
+//---------------------------------------------------------------------------
+// mem_hash end transaction
+//---------------------------------------------------------------------------
+sdk_ret_t
+mem_hash::iterate(sdk_table_api_params_t *params) {
+    sdk_ret_t ret = SDK_RET_OK;
+    mem_hash_api_context *ctx = NULL;   // Main Table Context
+
+    MEM_HASH_API_BEGIN_();
+    SDK_ASSERT(params->itercb);
+
+    ret = create_api_context_(sdk::table::SDK_TABLE_API_ITERATE,
+                              params, (void **)&ctx);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("failed to create api context. ret:%d", ret);
+        goto iterate_return;
+    }
+
+    ret = static_cast<mem_hash_main_table*>(main_table_)->iterate_(ctx);
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("main table iteration failed. ret:%d", ret);
+    }
+
+    mem_hash_api_context::destroy(ctx);
+
+iterate_return:
     MEM_HASH_API_END_(ret);
     return ret;
 }

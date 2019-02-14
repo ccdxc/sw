@@ -26,6 +26,7 @@ nic/build/x86_64/iris/lib/libfte*.so                                /nic/lib/
 nic/build/x86_64/iris/lib/libhal*.so                                /nic/lib/
 nic/build/x86_64/iris/lib/libhash.so                                /nic/lib/
 nic/build/x86_64/iris/lib/libhbmhash.so                             /nic/lib/
+nic/build/x86_64/iris/lib/libmemhash.so                             /nic/lib/
 nic/build/x86_64/iris/lib/libheartbeat.so                           /nic/lib/
 nic/build/x86_64/iris/lib/libhntap_lib.so                           /nic/lib/
 nic/build/x86_64/iris/lib/libhost_mem.so                            /nic/lib/

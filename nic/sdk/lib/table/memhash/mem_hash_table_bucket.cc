@@ -723,3 +723,17 @@ mem_hash_table_bucket::defragment_(mem_hash_api_context *ectx,
     }
     return SDK_RET_OK;
 }
+
+sdk_ret_t
+mem_hash_table_bucket::iterate_(mem_hash_api_context *ctx) {
+    if (valid_) {
+        sdk_table_api_params_t params = { 0 };
+        ctx->sw_valid = false;
+        read_(ctx);
+        params.key = ctx->sw_key;
+        params.appdata = ctx->sw_appdata;
+        params.cbdata = ctx->cbdata;
+        ctx->itercb(&params);
+    }
+    return SDK_RET_OK;
+}

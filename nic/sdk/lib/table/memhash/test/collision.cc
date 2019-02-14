@@ -22,9 +22,12 @@ TEST_F(collision, insert_update_full_mesh) {
 }
 
 
-TEST_F(collision, insert_remove_full_mesh) {
+TEST_F(collision, insert_remove_full_mesh_iterate) {
     sdk_ret_t rs;
     rs = InsertWithHash(1, H5_MAX_HINTS, MAX_RECIRCS);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+
+    rs = Iterate();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
     rs = RemoveAllCached(sdk::SDK_RET_OK, false);

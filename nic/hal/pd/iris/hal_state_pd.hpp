@@ -9,7 +9,6 @@
 #include "lib/table/directmap/directmap.hpp"
 #include "lib/table/hash/hash.hpp"
 #include "lib/table/tcam/tcam.hpp"
-#include "lib/table/hbmhash/hbm_hash.hpp"
 #include "nic/hal/pd/utils/met/met.hpp"
 #include "nic/hal/pd/utils/acl_tcam/acl_tcam.hpp"
 #include "gen/p4gen/p4/include/p4pd_table.h"
@@ -21,6 +20,7 @@
 #include "lib/bm_allocator/bm_allocator.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/pd/pd_api.hpp"
+#include "nic/hal/pd/iris/flow/flow_table_pd.hpp"
 
 using sdk::lib::BMAllocator;
 using sdk::lib::indexer;
@@ -28,9 +28,9 @@ using sdk::lib::slab;
 using sdk::lib::ht;
 using sdk::table::tcam;
 using sdk::table::directmap;
-using sdk::table::HbmHash;
 using hal::pd::utils::Met;
 using hal::pd::utils::acl_tcam;
+using hal::pd::flow_table_pd;
 
 namespace hal {
 namespace pd {
@@ -176,7 +176,7 @@ public:
         return tcam_tables_[tid - P4TBL_ID_TCAM_MIN];
     }
 
-    HbmHash *flow_table(void) const { return flow_table_; }
+    flow_table_pd *flow_table_pd_get(void) const { return flow_table_pd_; }
 
     Met *met_table(void) const { return met_table_; }
 
@@ -336,7 +336,7 @@ private:
     directmap               **dm_tables_;
     sdk_hash                **hash_tcam_tables_;
     tcam                    **tcam_tables_;
-    HbmHash                 *flow_table_;
+    flow_table_pd           *flow_table_pd_; 
     Met                     *met_table_;
     acl_tcam                *acl_table_;
     directmap               **p4plus_rxdma_dm_tables_;

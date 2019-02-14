@@ -20,6 +20,7 @@ var (
 	tableID               uint32
 	tableEntryIDSpecified bool
 	tableEntryID          uint32
+	tableHandle           uint64
 )
 
 var tableShowCmd = &cobra.Command{
@@ -398,10 +399,11 @@ func tableFlowShow(resp *halproto.TableResponse) {
 
 	for _, entry := range flowMsg.GetFlowEntry() {
 		// All or specific entry ID
-		if !tableEntryIDSpecified || (tableEntryID == entry.GetIndex()) {
-			fmt.Printf("Index: %d\n", entry.GetIndex())
+		if !tableEntryIDSpecified || (tableHandle == entry.GetHandle()) {
+			fmt.Printf("Handle: 0x%x\n", entry.GetHandle())
+			fmt.Printf("Key=%s\n", entry.GetKey())
+			fmt.Printf("Data=%s\n", entry.GetData())
 			fmt.Printf("-----------\n")
-			fmt.Printf("%s\n", entry.GetEntry())
 		}
 	}
 }

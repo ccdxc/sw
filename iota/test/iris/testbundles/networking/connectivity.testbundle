@@ -5,9 +5,6 @@ meta:
     #targetcount : 35
 
 testcases:
-    -   name    : Port_Flap
-        testcase: testcases.networking.port_flap
-
     -   name    : Ping_Local_Workloads
         testcase: testcases.networking.ping
         stress  : True

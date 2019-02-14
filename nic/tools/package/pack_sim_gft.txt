@@ -31,6 +31,7 @@ nic/build/x86_64/gft/lib/libtwheel.so                           /nic/lib/
 nic/build/x86_64/gft/lib/libdirectmap.so                        /nic/lib/
 nic/build/x86_64/gft/lib/libhash.so                             /nic/lib/
 nic/build/x86_64/gft/lib/libhbmhash.so                          /nic/lib/
+nic/build/x86_64/gft/lib/libmemhash.so                          /nic/lib/
 nic/build/x86_64/gft/lib/libtcam.so                             /nic/lib/
 nic/build/x86_64/gft/lib/libtimerfd.so                          /nic/lib/
 nic/build/x86_64/gft/lib/libcatalog.so                          /nic/lib/

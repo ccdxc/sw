@@ -67,10 +67,9 @@ def Setup(infra, module):
     if module.args == None:
         return
 
-    if getattr(module.args, 'maxflows', None):
+    if getattr(module.args, 'maxflows', "NA") != "NA":
         module.testspec.selectors.SetMaxFlows(module.args.maxflows)
         logger.info("- maxflows: %s" % module.testspec.selectors.maxflows)
-
     return
 
 def Teardown(infra, module):

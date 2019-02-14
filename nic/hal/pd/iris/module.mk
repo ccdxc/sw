@@ -25,7 +25,9 @@ MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/dos/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/telemetry/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/event/*.cc) \
-		  $(wildcard ${MODULE_SRC_DIR}/../common_p4plus/*.cc)
+                  $(wildcard ${MODULE_SRC_DIR}/../common_p4plus/*.cc) \
+                  $(wildcard ${MODULE_SRC_DIR}/flow/*.cc)
 MODULE_INCS     = ${NIC_CSR_INCS} \
-				  ${BLD_PROTOGEN_DIR}
+                  ${BLD_PROTOGEN_DIR}
+MODULE_SOLIBS   = memhash
 include ${MKDEFS}/post.mk

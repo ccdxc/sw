@@ -98,6 +98,8 @@ mem_hash_api_context::factory(mem_hash_api_context *pctx) {
     ctx->level = pctx->level + 1;
     ctx->key2str = pctx->key2str;
     ctx->appdata2str = pctx->appdata2str;
+    ctx->itercb = pctx->itercb;
+    ctx->cbdata = pctx->cbdata;
 
     // Use the handle from the parent context.
     ctx->handle = pctx->handle;
@@ -157,6 +159,8 @@ mem_hash_api_context::factory(uint32_t op,
     ctx->level = 0;
     ctx->key2str = props->key2str;
     ctx->appdata2str = props->appdata2str;
+    ctx->itercb = params->itercb;
+    ctx->cbdata = params->cbdata;
 
     // Use the handle from the params.
     ctx->handle = reinterpret_cast<mem_hash_handle_t*>(&params->handle);
@@ -189,18 +193,27 @@ mem_hash_api_context::print_handle() {
 
 void
 mem_hash_api_context::print_input() {
-    if (key2str) {
-        MEMHASH_TRACE_DEBUG("- Key:[%s] Hash:[%#x]", key2str(in_key), in_hash_32b);
-    } else {
-        MEMHASH_TRACE_DEBUG("- RawKey:[%s]",
-                            mem_hash_utils_rawstr(in_key, sw_key_len));
+    // Only crud api contexts have key.
+    if (!in_key) {
+        return;
     }
 
-    if (appdata2str) {
-        MEMHASH_TRACE_DEBUG("- AppData:[%s]", appdata2str(in_appdata));
-    } else {
-        MEMHASH_TRACE_DEBUG("- RawData:[%s]",
-                            mem_hash_utils_rawstr(in_appdata, sw_appdata_len));
+    if (in_key) {
+        if (key2str) {
+            MEMHASH_TRACE_DEBUG("- Key:[%s] Hash:[%#x]", key2str(in_key), in_hash_32b);
+        } else {
+            MEMHASH_TRACE_DEBUG("- RawKey:[%s]",
+                                mem_hash_utils_rawstr(in_key, sw_key_len));
+        }
+    }
+
+    if (in_appdata) {
+        if (appdata2str) {
+            MEMHASH_TRACE_DEBUG("- AppData:[%s]", appdata2str(in_appdata));
+        } else {
+            MEMHASH_TRACE_DEBUG("- RawData:[%s]",
+                                mem_hash_utils_rawstr(in_appdata, sw_appdata_len));
+        }
     }
 
     print_handle();

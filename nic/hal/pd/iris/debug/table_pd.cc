@@ -18,7 +18,6 @@ pd_table_metadata_get (pd_func_args_t *pd_func_args)
     directmap *dm = NULL;
     tcam *tm = NULL;
     sdk::table::hash *h = NULL;
-    sdk::table::HbmHash *flow = NULL;
     Met *met = NULL;
     TableMetadataResponseMsg *rsp_msg = args->rsp;
 
@@ -131,22 +130,7 @@ pd_table_metadata_get (pd_func_args_t *pd_func_args)
     }
 
     // Flow
-    flow = g_hal_state_pd->flow_table();
-    auto table_meta_flow = rsp_msg->add_table_meta();
-    table_meta_flow->set_table_id(flow->table_id());
-    table_meta_flow->set_kind(table::TABLE_FLOW);
-    table_meta_flow->set_table_name(flow->table_name());
-    auto flow_meta = table_meta_flow->mutable_flow_meta();
-    flow_meta->set_capacity(flow->table_capacity());
-    flow_meta->set_coll_capacity(flow->coll_table_capacity());
-    flow_meta->set_hash_usage(flow->table_num_entries_in_use());
-    flow_meta->set_coll_usage(flow->coll_table_num_entries_in_use());
-    flow_meta->set_num_inserts(flow->table_num_inserts());
-    flow_meta->set_num_insert_failures(flow->table_num_insert_errors());
-    flow_meta->set_num_updates(flow->table_num_updates());
-    flow_meta->set_num_update_failures(flow->table_num_update_errors());
-    flow_meta->set_num_deletes(flow->table_num_deletes());
-    flow_meta->set_num_delete_failures(flow->table_num_delete_errors());
+    g_hal_state_pd->flow_table_pd_get()->meta_get(rsp_msg);
 
     // Met
     met = g_hal_state_pd->met_table();
@@ -330,41 +314,6 @@ pd_table_hash_get_entries (uint32_t table_id, TableResponse *rsp)
     return ret;
 }
 
-// Flow entry
-bool pd_table_flow_entry(uint32_t index, const void *cb_data)
-{
-    char buff[8192] = {0};
-    pd_flow_entry_cb_t *cb = (pd_flow_entry_cb_t*)cb_data;
-    sdk::table::HbmHash *flow = cb->flow;
-    TableFlowMsg *msg = cb->msg;
-    TableFlowEntry *entry = msg->add_flow_entry();
-
-    flow->entry_to_str(index, buff, sizeof(buff));
-
-    HAL_TRACE_DEBUG("Entry: {}", buff);
-
-    entry->set_index(index);
-    entry->set_entry(buff);
-
-    return TRUE;
-}
-
-hal_ret_t
-pd_table_flow_get_entries (uint32_t table_id, TableResponse *rsp)
-{
-    hal_ret_t   ret = HAL_RET_OK;
-    pd_flow_entry_cb_t cb = {0};
-    TableFlowMsg *msg = rsp->mutable_flow_table();
-
-    cb.flow = g_hal_state_pd->flow_table();
-    SDK_ASSERT_RETURN((cb.flow != NULL), HAL_RET_ERR);
-    cb.msg = msg;
-
-    cb.flow->iterate(pd_table_flow_entry, &cb);
-
-    return ret;
-}
-
 // Met
 bool pd_table_met_entry(uint32_t repl_list_idx,
                         Met *met, const void *cb_data)
@@ -443,7 +392,7 @@ pd_table_get (pd_func_args_t *pd_func_args)
             }
             break;
         case table::TABLE_FLOW:
-            ret = pd_table_flow_get_entries(key.table_id(), rsp);
+            ret = g_hal_state_pd->flow_table_pd_get()->dump(rsp);
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("Failed to get entries of table id: {}",
                               key.table_id());

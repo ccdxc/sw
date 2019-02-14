@@ -89,3 +89,12 @@ TEST_F(basic, remove_not_found)
     rs = Remove(BASIC_TEST_COUNT, sdk::SDK_RET_ENTRY_NOT_FOUND);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
+
+TEST_F(basic, iterate)
+{
+    sdk_ret_t rs;
+    rs = Insert(BASIC_TEST_COUNT, sdk::SDK_RET_OK);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+    rs = Iterate();
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+}

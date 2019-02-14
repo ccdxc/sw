@@ -36,13 +36,14 @@ protected:
 
 protected:
     sdk_ret_t   init_(uint32_t id, uint32_t size);
-
 public:
     mem_hash_base_table() {
     }
 
     ~mem_hash_base_table() {
     }
+
+    sdk_ret_t iterate_(mem_hash_api_context *ctx);
 };
 
 class mem_hash_hint_table: public mem_hash_base_table {
@@ -55,17 +56,17 @@ private:
     indexer     *indexer_;
 
 private:
-    sdk_ret_t   alloc_(mem_hash_api_context *ctx);
-    sdk_ret_t   dealloc_(mem_hash_api_context *ctx);
-    sdk_ret_t   init_(mem_hash_properties_t *props);
-    sdk_ret_t   initctx_(mem_hash_api_context *ctx);
-    sdk_ret_t   insert_(mem_hash_api_context *ctx);
-    sdk_ret_t   remove_(mem_hash_api_context *ctx);
-    sdk_ret_t   find_(mem_hash_api_context *ctx,
-                      mem_hash_api_context **retctx);
-    sdk_ret_t   defragment_(mem_hash_api_context *ctx);
-    sdk_ret_t   tail_(mem_hash_api_context *ctx,
-                      mem_hash_api_context **retctx);
+    sdk_ret_t alloc_(mem_hash_api_context *ctx);
+    sdk_ret_t dealloc_(mem_hash_api_context *ctx);
+    sdk_ret_t init_(mem_hash_properties_t *props);
+    sdk_ret_t initctx_(mem_hash_api_context *ctx);
+    sdk_ret_t insert_(mem_hash_api_context *ctx);
+    sdk_ret_t remove_(mem_hash_api_context *ctx);
+    sdk_ret_t find_(mem_hash_api_context *ctx,
+                    mem_hash_api_context **retctx);
+    sdk_ret_t defragment_(mem_hash_api_context *ctx);
+    sdk_ret_t tail_(mem_hash_api_context *ctx,
+                    mem_hash_api_context **retctx);
 
 public:
     static mem_hash_hint_table* factory(mem_hash_properties_t *props);
@@ -86,17 +87,18 @@ private:
     uint32_t num_hash_bits_;
 
 private:
-    sdk_ret_t   init_(mem_hash_properties_t *props);
-    sdk_ret_t   initctx_(mem_hash_api_context *ctx);
-    sdk_ret_t   insert_(mem_hash_api_context *ctx);
-    sdk_ret_t   insert_with_handle_(mem_hash_api_context *ctx);
-    sdk_ret_t   remove_(mem_hash_api_context *ctx);
-    sdk_ret_t   remove_with_handle_(mem_hash_api_context *ctx);
-    sdk_ret_t   update_(mem_hash_api_context *ctx);
-    sdk_ret_t   get_(mem_hash_api_context *ctx);
-    sdk_ret_t   get_with_handle_(mem_hash_api_context *ctx);
-    sdk_ret_t   find_(mem_hash_api_context *ctx,
-                      mem_hash_api_context **retctx);
+    sdk_ret_t init_(mem_hash_properties_t *props);
+    sdk_ret_t initctx_(mem_hash_api_context *ctx);
+    sdk_ret_t insert_(mem_hash_api_context *ctx);
+    sdk_ret_t insert_with_handle_(mem_hash_api_context *ctx);
+    sdk_ret_t remove_(mem_hash_api_context *ctx);
+    sdk_ret_t remove_with_handle_(mem_hash_api_context *ctx);
+    sdk_ret_t update_(mem_hash_api_context *ctx);
+    sdk_ret_t get_(mem_hash_api_context *ctx);
+    sdk_ret_t get_with_handle_(mem_hash_api_context *ctx);
+    sdk_ret_t find_(mem_hash_api_context *ctx,
+                    mem_hash_api_context **retctx);
+    sdk_ret_t iterate_(mem_hash_api_context *ctx);
 
 public:
     static mem_hash_main_table* factory(mem_hash_properties_t *props);

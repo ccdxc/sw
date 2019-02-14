@@ -476,26 +476,8 @@ hal_ret_t
 pd_system_populate_flow_table_stats (sys::TableStatsEntry *stats_entry,
                                      p4pd_table_id id)
 {
-    hal_ret_t               ret = HAL_RET_OK;
-    HbmHash                 *fl;
-
-    fl = g_hal_state_pd->flow_table();
-    if (!fl) {
-        return ret;
-    }
-
-    stats_entry->set_table_type (sys::TABLE_TYPE_HASH);
-    stats_entry->set_table_name(fl->table_name());
-    stats_entry->set_table_size(fl->table_capacity());
-    stats_entry->set_overflow_table_size(fl->coll_table_capacity());
-    stats_entry->set_entries_in_use(fl->table_num_entries_in_use());
-    stats_entry->set_overflow_entries_in_use(fl->coll_table_num_entries_in_use());
-    stats_entry->set_num_inserts(fl->table_num_inserts());
-    stats_entry->set_num_insert_errors(fl->table_num_insert_errors());
-    stats_entry->set_num_deletes(fl->table_num_deletes());
-    stats_entry->set_num_delete_errors(fl->table_num_delete_errors());
-
-    return ret;
+    stats_entry->set_table_type(sys::TABLE_TYPE_HASH);
+    return g_hal_state_pd->flow_table_pd_get()->stats_get(stats_entry);
 }
 
 hal_ret_t

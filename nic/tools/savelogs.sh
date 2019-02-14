@@ -1,16 +1,21 @@
 #! /bin/bash
-rm -f /sw/nic/nic_sanity_logs.tar.gz
+TOOLS_DIR=`dirname $0`
+ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
+export NICDIR=`dirname $ABS_TOOLS_DIR`
+export DOLDIR=`readlink -f ${NICDIR}/../dol/`
 
-if ls /sw/nic/core.* 1> /dev/null 2>&1; then
+rm -f ${NICDIR}/nic_sanity_logs.tar.gz
+
+if ls ${NICDIR}/core.* 1> /dev/null 2>&1; then
     echo "waiting for the core to be produced"
     sleep 60
 fi
 
-tar cvzf /sw/nic/nic_sanity_logs.tar.gz -P --ignore-failed-read \
-    /sw/nic/core.* /sw/nic/gen/capri_loader.conf \
-    /sw/nic/*log* \
-    /sw/dol/*log* \
+tar cvzf ${NICDIR}/nic_sanity_logs.tar.gz -P --ignore-failed-read \
+    ${NICDIR}/core.* ${NICDIR}/gen/capri_loader.conf \
+    ${NICDIR}/*log* \
+    ${DOLDIR}/*log* \
     /root/naples/data/logs/* \
     *.log.* \
     /tmp/hal_techsupport/* \
-    /sw/nic/build/x86_64/iris/valgrind/*
+    ${NICDIR}/build/x86_64/iris/valgrind/*

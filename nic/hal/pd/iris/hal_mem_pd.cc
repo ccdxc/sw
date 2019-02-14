@@ -536,7 +536,7 @@ hal_state_pd::init(void)
     dm_tables_ = NULL;
     hash_tcam_tables_ = NULL;
     tcam_tables_ = NULL;
-    flow_table_ = NULL;
+    flow_table_pd_ = NULL;
     met_table_ = NULL;
     acl_table_ = NULL;
 
@@ -652,8 +652,8 @@ hal_state_pd::~hal_state_pd()
         HAL_FREE(HAL_MEM_ALLOC_PD, tcam_tables_);
     }
 
-    if (flow_table_) {
-        HbmHash::destroy(flow_table_);
+    if (flow_table_pd_) {
+        flow_table_pd::destroy(flow_table_pd_);
     }
 
     if (met_table_) {
@@ -936,18 +936,8 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                 break;
             }
             SDK_ASSERT(tid == P4TBL_ID_FLOW_HASH);
-            if (tinfo.has_oflow_table) {
-                p4pd_table_properties_get(tinfo.oflow_table_id, &ctinfo);
-            }
-            flow_table_ =
-                HbmHash::factory(tinfo.tablename, tid, tinfo.oflow_table_id,
-                              tinfo.tabledepth, ctinfo.tabledepth,
-                              tinfo.key_struct_size,
-                              sizeof(p4pd_flow_hash_data_t), P4_FLOW_NUM_HINTS_PER_ENTRY,
-                              8 /* Max recircs */,
-                              static_cast<HbmHash::HashPoly>(tinfo.hash_type),
-                              HAL_MEM_ALLOC_FLOW, ENTRY_TRACE_EN, table_health_monitor);
-            SDK_ASSERT(flow_table_ != NULL);
+            flow_table_pd_ = flow_table_pd::factory();
+            SDK_ASSERT(flow_table_pd_ != NULL);
             break;
 
         case P4_TBL_TYPE_MPU:

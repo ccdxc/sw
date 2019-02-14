@@ -108,10 +108,10 @@ public:
     uint32_t sw_key_len;
     uint32_t sw_data_len;
     uint32_t sw_appdata_len;
-    void *cookie; // Callback cookie for iteratin
     key2str_t key2str;
     appdata2str_t appdata2str;
-    //mem_hash_iterate_func_t iterfunc;
+    iterate_t itercb;
+    void *cbdata; // Callback data for iteration
 
     // Derived fields from input
     uint32_t hash_msbits;
@@ -205,8 +205,8 @@ public:
     }
 
     char* inputstr() {
-        sprintf(str, "key:%p,data:%p,hash_valid:%d,hash_32b:%#x,cookie:%p",
-                in_key, in_appdata, in_hash_valid, in_hash_32b, cookie);
+        sprintf(str, "key:%p,data:%p,hash_valid:%d,hash_32b:%#x,cbdata:%p",
+                in_key, in_appdata, in_hash_valid, in_hash_32b, cbdata);
         return str;
     }
 

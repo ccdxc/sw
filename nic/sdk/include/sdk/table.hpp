@@ -26,7 +26,7 @@ typedef char* (*key2str_t)(void *key);
 typedef char* (*appdata2str_t)(void *data);
 typedef uint64_t sdk_table_handle_t;
 typedef char* (*handle2str)(sdk_table_handle_t handle);
-typedef bool (*iterate_t)(sdk_table_api_params_t *params);
+typedef void (*iterate_t)(sdk_table_api_params_t *params);
 
 typedef enum sdk_table_api_op_ {
     SDK_TABLE_API_NONE,
@@ -36,7 +36,13 @@ typedef enum sdk_table_api_op_ {
     SDK_TABLE_API_GET,
     SDK_TABLE_API_RESERVE,
     SDK_TABLE_API_RELEASE,
+    SDK_TABLE_API_ITERATE,
 } sdk_table_api_op_t;
+
+#define SDK_TABLE_API_OP_IS_CRUD(_op) \
+        (((_op) == SDK_TABLE_API_INSERT) || ((_op) == SDK_TABLE_API_REMOVE) || \
+         ((_op) == SDK_TABLE_API_UPDATE) || ((_op) == SDK_TABLE_API_GET) || \
+         ((_op) == SDK_TABLE_API_RESERVE) || ((_op) == SDK_TABLE_API_RELEASE))
 
 typedef enum sdk_table_health_state_s {
     SDK_TABLE_HEALTH_GREEN,

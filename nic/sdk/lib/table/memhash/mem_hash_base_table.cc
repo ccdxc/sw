@@ -42,3 +42,13 @@ mem_hash_base_table::destroy_(mem_hash_base_table *table) {
     SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_TABLE_ENTRIES, table->buckets_);
     table->buckets_ = NULL;
 }
+
+sdk_ret_t
+mem_hash_base_table::iterate_(mem_hash_api_context *ctx) {
+    ctx->table_id = table_id_;
+    for (uint32_t i = 0; i < table_size_; i++) {
+        ctx->table_index = i;
+        buckets_[i].iterate_(ctx);
+    }
+    return SDK_RET_OK;
+}

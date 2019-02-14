@@ -231,7 +231,6 @@ TEST_F(endpoint_test, test1)
     seed = 1548274278;
     fill_registered_mac(seed);
 
-    sdk_ret_t      sdk_ret;
     registered_macs_swkey_t         key;
     registered_macs_actiondata_t    data;
     sdk_hash                        *reg_mac_tbl = NULL;

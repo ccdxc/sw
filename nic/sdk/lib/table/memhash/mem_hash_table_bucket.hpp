@@ -68,6 +68,7 @@ private:
     sdk_ret_t delink_(mem_hash_api_context *ctx);
     sdk_ret_t defragment_(mem_hash_api_context *ectx,
                           mem_hash_api_context *tctx);
+    sdk_ret_t iterate_(mem_hash_api_context *ctx);
 
 public:
     mem_hash_table_bucket() {

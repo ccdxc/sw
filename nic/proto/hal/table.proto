@@ -159,9 +159,9 @@ message TableHashMsg {
 }
 
 message TableFlowEntry {
-  bool      in_coll                     = 1;
-  fixed32   index                       = 2;
-  string    entry                       = 3;
+  fixed64   handle                      = 1;
+  string    key                         = 2;
+  string    data                        = 3;
 }
 
 message TableFlowMsg {

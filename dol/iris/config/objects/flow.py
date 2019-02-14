@@ -666,8 +666,8 @@ class FlowObject(base.ConfigObjectBase):
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.flow_handle
         if self.__flowhash is not None and resp_spec.flow_hash != self.__flowhash:
-            assert 0, 'Recirc hash 0x%x does not match expected 0x%x' %\
-                    (resp_spec.flow_hash, self.__flowhash)
+            assert 0, '%s: Recirc hash 0x%x does not match expected 0x%x' %\
+                    (self.GID(), resp_spec.flow_hash, self.__flowhash)
 
         logger.info("- %s %s = (HDL = %x), Label = %s" %\
                        (self.direction, self.GID(),
