@@ -38,18 +38,16 @@ func (obj *Rollout) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.Rollout
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.RolloutV1().Rollout().Update(context.Background(), &nobj.Rollout)
+		_, err = apicl.RolloutV1().Rollout().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.RolloutV1().Rollout().Create(context.Background(), &obj.Rollout)
@@ -72,11 +70,11 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*rollout.Rollout)
 		kind := "Rollout"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		rolloutHandler := handler.(RolloutHandler)
 		// handle based on event type
@@ -97,7 +95,7 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 				err = rolloutHandler.OnRolloutCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -113,7 +111,7 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 					err = rolloutHandler.OnRolloutUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -121,7 +119,7 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -132,14 +130,14 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 			err = rolloutHandler.OnRolloutDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on Rollout watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Rollout watch channel", tp)
 	}
 
 	return nil
@@ -152,7 +150,7 @@ func (ct *ctrlerCtx) diffRollout(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.RolloutV1().Rollout().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -204,20 +202,21 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "RolloutWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// Rollout object watcher
 			wt, werr := apicl.RolloutV1().Rollout().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -238,7 +237,7 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -251,7 +250,7 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 

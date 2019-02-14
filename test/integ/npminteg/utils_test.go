@@ -47,6 +47,10 @@ func CreateAgent(kind datapath.Kind, srvURL string, resolver resolver.Interface)
 	}
 
 	restServer, err := restapi.NewRestServer(nagent.NetworkAgent, nil, nil, "")
+	if err != nil {
+		log.Errorf("Error creating Rest server. Err: %v", err)
+		return nil, err
+	}
 	nagent.RestServer = restServer
 
 	// Create NPM Client.

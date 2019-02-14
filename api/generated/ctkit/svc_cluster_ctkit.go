@@ -38,18 +38,16 @@ func (obj *Cluster) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.Cluster
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.ClusterV1().Cluster().Update(context.Background(), &nobj.Cluster)
+		_, err = apicl.ClusterV1().Cluster().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Cluster().Create(context.Background(), &obj.Cluster)
@@ -72,11 +70,11 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Cluster)
 		kind := "Cluster"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		clusterHandler := handler.(ClusterHandler)
 		// handle based on event type
@@ -97,7 +95,7 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 				err = clusterHandler.OnClusterCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -113,7 +111,7 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 					err = clusterHandler.OnClusterUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -121,7 +119,7 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -132,14 +130,14 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 			err = clusterHandler.OnClusterDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on Cluster watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Cluster watch channel", tp)
 	}
 
 	return nil
@@ -152,7 +150,7 @@ func (ct *ctrlerCtx) diffCluster(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.ClusterV1().Cluster().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -204,20 +202,21 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "ClusterWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// Cluster object watcher
 			wt, werr := apicl.ClusterV1().Cluster().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -238,7 +237,7 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -251,7 +250,7 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -355,18 +354,16 @@ func (obj *Node) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.Node
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.ClusterV1().Node().Update(context.Background(), &nobj.Node)
+		_, err = apicl.ClusterV1().Node().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Node().Create(context.Background(), &obj.Node)
@@ -389,11 +386,11 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Node)
 		kind := "Node"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		nodeHandler := handler.(NodeHandler)
 		// handle based on event type
@@ -414,7 +411,7 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 				err = nodeHandler.OnNodeCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -430,7 +427,7 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 					err = nodeHandler.OnNodeUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -438,7 +435,7 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -449,14 +446,14 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 			err = nodeHandler.OnNodeDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on Node watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Node watch channel", tp)
 	}
 
 	return nil
@@ -469,7 +466,7 @@ func (ct *ctrlerCtx) diffNode(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.ClusterV1().Node().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -521,20 +518,21 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "NodeWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// Node object watcher
 			wt, werr := apicl.ClusterV1().Node().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -555,7 +553,7 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -568,7 +566,7 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -672,18 +670,16 @@ func (obj *Host) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.Host
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.ClusterV1().Host().Update(context.Background(), &nobj.Host)
+		_, err = apicl.ClusterV1().Host().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Host().Create(context.Background(), &obj.Host)
@@ -706,11 +702,11 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Host)
 		kind := "Host"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		hostHandler := handler.(HostHandler)
 		// handle based on event type
@@ -731,7 +727,7 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 				err = hostHandler.OnHostCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -747,7 +743,7 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 					err = hostHandler.OnHostUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -755,7 +751,7 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -766,14 +762,14 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 			err = hostHandler.OnHostDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on Host watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Host watch channel", tp)
 	}
 
 	return nil
@@ -786,7 +782,7 @@ func (ct *ctrlerCtx) diffHost(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.ClusterV1().Host().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -838,20 +834,21 @@ func (ct *ctrlerCtx) runHostWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "HostWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// Host object watcher
 			wt, werr := apicl.ClusterV1().Host().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -872,7 +869,7 @@ func (ct *ctrlerCtx) runHostWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -885,7 +882,7 @@ func (ct *ctrlerCtx) runHostWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -989,18 +986,16 @@ func (obj *SmartNIC) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.SmartNIC
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), &nobj.SmartNIC)
+		_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().SmartNIC().Create(context.Background(), &obj.SmartNIC)
@@ -1023,11 +1018,11 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.SmartNIC)
 		kind := "SmartNIC"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		smartnicHandler := handler.(SmartNICHandler)
 		// handle based on event type
@@ -1048,7 +1043,7 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 				err = smartnicHandler.OnSmartNICCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -1064,7 +1059,7 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 					err = smartnicHandler.OnSmartNICUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -1072,7 +1067,7 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -1083,14 +1078,14 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 			err = smartnicHandler.OnSmartNICDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on SmartNIC watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on SmartNIC watch channel", tp)
 	}
 
 	return nil
@@ -1103,7 +1098,7 @@ func (ct *ctrlerCtx) diffSmartNIC(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.ClusterV1().SmartNIC().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -1155,20 +1150,21 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "SmartNICWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// SmartNIC object watcher
 			wt, werr := apicl.ClusterV1().SmartNIC().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -1189,7 +1185,7 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -1202,7 +1198,7 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -1306,18 +1302,16 @@ func (obj *Tenant) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.Tenant
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.ClusterV1().Tenant().Update(context.Background(), &nobj.Tenant)
+		_, err = apicl.ClusterV1().Tenant().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Tenant().Create(context.Background(), &obj.Tenant)
@@ -1340,11 +1334,11 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*cluster.Tenant)
 		kind := "Tenant"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		tenantHandler := handler.(TenantHandler)
 		// handle based on event type
@@ -1365,7 +1359,7 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 				err = tenantHandler.OnTenantCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -1381,7 +1375,7 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 					err = tenantHandler.OnTenantUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -1389,7 +1383,7 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -1400,14 +1394,14 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 			err = tenantHandler.OnTenantDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on Tenant watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Tenant watch channel", tp)
 	}
 
 	return nil
@@ -1420,7 +1414,7 @@ func (ct *ctrlerCtx) diffTenant(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.ClusterV1().Tenant().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -1472,20 +1466,21 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "TenantWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// Tenant object watcher
 			wt, werr := apicl.ClusterV1().Tenant().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -1506,7 +1501,7 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -1519,7 +1514,7 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 

@@ -38,18 +38,16 @@ func (obj *User) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.User
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.AuthV1().User().Update(context.Background(), &nobj.User)
+		_, err = apicl.AuthV1().User().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.AuthV1().User().Create(context.Background(), &obj.User)
@@ -72,11 +70,11 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.User)
 		kind := "User"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		userHandler := handler.(UserHandler)
 		// handle based on event type
@@ -97,7 +95,7 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 				err = userHandler.OnUserCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -113,7 +111,7 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 					err = userHandler.OnUserUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -121,7 +119,7 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -132,14 +130,14 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 			err = userHandler.OnUserDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on User watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on User watch channel", tp)
 	}
 
 	return nil
@@ -152,7 +150,7 @@ func (ct *ctrlerCtx) diffUser(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.AuthV1().User().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -204,20 +202,21 @@ func (ct *ctrlerCtx) runUserWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "UserWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// User object watcher
 			wt, werr := apicl.AuthV1().User().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -238,7 +237,7 @@ func (ct *ctrlerCtx) runUserWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -251,7 +250,7 @@ func (ct *ctrlerCtx) runUserWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -355,18 +354,16 @@ func (obj *AuthenticationPolicy) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.AuthenticationPolicy
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), &nobj.AuthenticationPolicy)
+		_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), &obj.AuthenticationPolicy)
@@ -389,11 +386,11 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 		eobj := evt.Object.(*auth.AuthenticationPolicy)
 		kind := "AuthenticationPolicy"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		authenticationpolicyHandler := handler.(AuthenticationPolicyHandler)
 		// handle based on event type
@@ -414,7 +411,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 				err = authenticationpolicyHandler.OnAuthenticationPolicyCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -430,7 +427,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 					err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -438,7 +435,7 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -449,14 +446,14 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 			err = authenticationpolicyHandler.OnAuthenticationPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on AuthenticationPolicy watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on AuthenticationPolicy watch channel", tp)
 	}
 
 	return nil
@@ -469,7 +466,7 @@ func (ct *ctrlerCtx) diffAuthenticationPolicy(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.AuthV1().AuthenticationPolicy().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -521,20 +518,21 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "AuthenticationPolicyWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// AuthenticationPolicy object watcher
 			wt, werr := apicl.AuthV1().AuthenticationPolicy().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -555,7 +553,7 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -568,7 +566,7 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -672,18 +670,16 @@ func (obj *Role) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.Role
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.AuthV1().Role().Update(context.Background(), &nobj.Role)
+		_, err = apicl.AuthV1().Role().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.AuthV1().Role().Create(context.Background(), &obj.Role)
@@ -706,11 +702,11 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.Role)
 		kind := "Role"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		roleHandler := handler.(RoleHandler)
 		// handle based on event type
@@ -731,7 +727,7 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 				err = roleHandler.OnRoleCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -747,7 +743,7 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 					err = roleHandler.OnRoleUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -755,7 +751,7 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -766,14 +762,14 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 			err = roleHandler.OnRoleDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on Role watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Role watch channel", tp)
 	}
 
 	return nil
@@ -786,7 +782,7 @@ func (ct *ctrlerCtx) diffRole(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.AuthV1().Role().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -838,20 +834,21 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "RoleWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// Role object watcher
 			wt, werr := apicl.AuthV1().Role().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -872,7 +869,7 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -885,7 +882,7 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -989,18 +986,16 @@ func (obj *RoleBinding) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.RoleBinding
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), &nobj.RoleBinding)
+		_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.AuthV1().RoleBinding().Create(context.Background(), &obj.RoleBinding)
@@ -1023,11 +1018,11 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*auth.RoleBinding)
 		kind := "RoleBinding"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		rolebindingHandler := handler.(RoleBindingHandler)
 		// handle based on event type
@@ -1048,7 +1043,7 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 				err = rolebindingHandler.OnRoleBindingCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -1064,7 +1059,7 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 					err = rolebindingHandler.OnRoleBindingUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -1072,7 +1067,7 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -1083,14 +1078,14 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 			err = rolebindingHandler.OnRoleBindingDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on RoleBinding watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on RoleBinding watch channel", tp)
 	}
 
 	return nil
@@ -1103,7 +1098,7 @@ func (ct *ctrlerCtx) diffRoleBinding(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.AuthV1().RoleBinding().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -1155,20 +1150,21 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "RoleBindingWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// RoleBinding object watcher
 			wt, werr := apicl.AuthV1().RoleBinding().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -1189,7 +1185,7 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -1202,7 +1198,7 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 

@@ -38,18 +38,16 @@ func (obj *EventPolicy) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.EventPolicy
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), &nobj.EventPolicy)
+		_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().EventPolicy().Create(context.Background(), &obj.EventPolicy)
@@ -72,11 +70,11 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.EventPolicy)
 		kind := "EventPolicy"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		eventpolicyHandler := handler.(EventPolicyHandler)
 		// handle based on event type
@@ -97,7 +95,7 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 				err = eventpolicyHandler.OnEventPolicyCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -113,7 +111,7 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 					err = eventpolicyHandler.OnEventPolicyUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -121,7 +119,7 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -132,14 +130,14 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 			err = eventpolicyHandler.OnEventPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on EventPolicy watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on EventPolicy watch channel", tp)
 	}
 
 	return nil
@@ -152,7 +150,7 @@ func (ct *ctrlerCtx) diffEventPolicy(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.MonitoringV1().EventPolicy().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -204,20 +202,21 @@ func (ct *ctrlerCtx) runEventPolicyWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "EventPolicyWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// EventPolicy object watcher
 			wt, werr := apicl.MonitoringV1().EventPolicy().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -238,7 +237,7 @@ func (ct *ctrlerCtx) runEventPolicyWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -251,7 +250,7 @@ func (ct *ctrlerCtx) runEventPolicyWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -355,18 +354,16 @@ func (obj *StatsPolicy) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.StatsPolicy
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), &nobj.StatsPolicy)
+		_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().StatsPolicy().Create(context.Background(), &obj.StatsPolicy)
@@ -389,11 +386,11 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.StatsPolicy)
 		kind := "StatsPolicy"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		statspolicyHandler := handler.(StatsPolicyHandler)
 		// handle based on event type
@@ -414,7 +411,7 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 				err = statspolicyHandler.OnStatsPolicyCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -430,7 +427,7 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 					err = statspolicyHandler.OnStatsPolicyUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -438,7 +435,7 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -449,14 +446,14 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 			err = statspolicyHandler.OnStatsPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on StatsPolicy watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on StatsPolicy watch channel", tp)
 	}
 
 	return nil
@@ -469,7 +466,7 @@ func (ct *ctrlerCtx) diffStatsPolicy(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.MonitoringV1().StatsPolicy().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -521,20 +518,21 @@ func (ct *ctrlerCtx) runStatsPolicyWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "StatsPolicyWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// StatsPolicy object watcher
 			wt, werr := apicl.MonitoringV1().StatsPolicy().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -555,7 +553,7 @@ func (ct *ctrlerCtx) runStatsPolicyWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -568,7 +566,7 @@ func (ct *ctrlerCtx) runStatsPolicyWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -672,18 +670,16 @@ func (obj *FwlogPolicy) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.FwlogPolicy
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), &nobj.FwlogPolicy)
+		_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().FwlogPolicy().Create(context.Background(), &obj.FwlogPolicy)
@@ -706,11 +702,11 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.FwlogPolicy)
 		kind := "FwlogPolicy"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		fwlogpolicyHandler := handler.(FwlogPolicyHandler)
 		// handle based on event type
@@ -731,7 +727,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 				err = fwlogpolicyHandler.OnFwlogPolicyCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -747,7 +743,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 					err = fwlogpolicyHandler.OnFwlogPolicyUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -755,7 +751,7 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -766,14 +762,14 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 			err = fwlogpolicyHandler.OnFwlogPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on FwlogPolicy watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on FwlogPolicy watch channel", tp)
 	}
 
 	return nil
@@ -786,7 +782,7 @@ func (ct *ctrlerCtx) diffFwlogPolicy(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.MonitoringV1().FwlogPolicy().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -838,20 +834,21 @@ func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "FwlogPolicyWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// FwlogPolicy object watcher
 			wt, werr := apicl.MonitoringV1().FwlogPolicy().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -872,7 +869,7 @@ func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -885,7 +882,7 @@ func (ct *ctrlerCtx) runFwlogPolicyWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -989,18 +986,16 @@ func (obj *FlowExportPolicy) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.FlowExportPolicy
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), &nobj.FlowExportPolicy)
+		_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().FlowExportPolicy().Create(context.Background(), &obj.FlowExportPolicy)
@@ -1023,11 +1018,11 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*monitoring.FlowExportPolicy)
 		kind := "FlowExportPolicy"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		flowexportpolicyHandler := handler.(FlowExportPolicyHandler)
 		// handle based on event type
@@ -1048,7 +1043,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 				err = flowexportpolicyHandler.OnFlowExportPolicyCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -1064,7 +1059,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 					err = flowexportpolicyHandler.OnFlowExportPolicyUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -1072,7 +1067,7 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -1083,14 +1078,14 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 			err = flowexportpolicyHandler.OnFlowExportPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on FlowExportPolicy watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on FlowExportPolicy watch channel", tp)
 	}
 
 	return nil
@@ -1103,7 +1098,7 @@ func (ct *ctrlerCtx) diffFlowExportPolicy(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.MonitoringV1().FlowExportPolicy().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -1155,20 +1150,21 @@ func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "FlowExportPolicyWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// FlowExportPolicy object watcher
 			wt, werr := apicl.MonitoringV1().FlowExportPolicy().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -1189,7 +1185,7 @@ func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -1202,7 +1198,7 @@ func (ct *ctrlerCtx) runFlowExportPolicyWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -1306,18 +1302,16 @@ func (obj *Alert) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.Alert
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.MonitoringV1().Alert().Update(context.Background(), &nobj.Alert)
+		_, err = apicl.MonitoringV1().Alert().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().Alert().Create(context.Background(), &obj.Alert)
@@ -1340,11 +1334,11 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.Alert)
 		kind := "Alert"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		alertHandler := handler.(AlertHandler)
 		// handle based on event type
@@ -1365,7 +1359,7 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 				err = alertHandler.OnAlertCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -1381,7 +1375,7 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 					err = alertHandler.OnAlertUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -1389,7 +1383,7 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -1400,14 +1394,14 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 			err = alertHandler.OnAlertDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on Alert watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on Alert watch channel", tp)
 	}
 
 	return nil
@@ -1420,7 +1414,7 @@ func (ct *ctrlerCtx) diffAlert(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.MonitoringV1().Alert().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -1472,20 +1466,21 @@ func (ct *ctrlerCtx) runAlertWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "AlertWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// Alert object watcher
 			wt, werr := apicl.MonitoringV1().Alert().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -1506,7 +1501,7 @@ func (ct *ctrlerCtx) runAlertWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -1519,7 +1514,7 @@ func (ct *ctrlerCtx) runAlertWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -1623,18 +1618,16 @@ func (obj *AlertPolicy) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.AlertPolicy
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), &nobj.AlertPolicy)
+		_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().AlertPolicy().Create(context.Background(), &obj.AlertPolicy)
@@ -1657,11 +1650,11 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.AlertPolicy)
 		kind := "AlertPolicy"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		alertpolicyHandler := handler.(AlertPolicyHandler)
 		// handle based on event type
@@ -1682,7 +1675,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 				err = alertpolicyHandler.OnAlertPolicyCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -1698,7 +1691,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 					err = alertpolicyHandler.OnAlertPolicyUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -1706,7 +1699,7 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -1717,14 +1710,14 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 			err = alertpolicyHandler.OnAlertPolicyDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on AlertPolicy watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on AlertPolicy watch channel", tp)
 	}
 
 	return nil
@@ -1737,7 +1730,7 @@ func (ct *ctrlerCtx) diffAlertPolicy(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.MonitoringV1().AlertPolicy().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -1789,20 +1782,21 @@ func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "AlertPolicyWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// AlertPolicy object watcher
 			wt, werr := apicl.MonitoringV1().AlertPolicy().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -1823,7 +1817,7 @@ func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -1836,7 +1830,7 @@ func (ct *ctrlerCtx) runAlertPolicyWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -1940,18 +1934,16 @@ func (obj *AlertDestination) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.AlertDestination
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), &nobj.AlertDestination)
+		_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().AlertDestination().Create(context.Background(), &obj.AlertDestination)
@@ -1974,11 +1966,11 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 		eobj := evt.Object.(*monitoring.AlertDestination)
 		kind := "AlertDestination"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		alertdestinationHandler := handler.(AlertDestinationHandler)
 		// handle based on event type
@@ -1999,7 +1991,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 				err = alertdestinationHandler.OnAlertDestinationCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -2015,7 +2007,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 					err = alertdestinationHandler.OnAlertDestinationUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -2023,7 +2015,7 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -2034,14 +2026,14 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 			err = alertdestinationHandler.OnAlertDestinationDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on AlertDestination watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on AlertDestination watch channel", tp)
 	}
 
 	return nil
@@ -2054,7 +2046,7 @@ func (ct *ctrlerCtx) diffAlertDestination(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.MonitoringV1().AlertDestination().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -2106,20 +2098,21 @@ func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "AlertDestinationWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// AlertDestination object watcher
 			wt, werr := apicl.MonitoringV1().AlertDestination().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -2140,7 +2133,7 @@ func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -2153,7 +2146,7 @@ func (ct *ctrlerCtx) runAlertDestinationWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -2257,18 +2250,16 @@ func (obj *MirrorSession) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.MirrorSession
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), &nobj.MirrorSession)
+		_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().MirrorSession().Create(context.Background(), &obj.MirrorSession)
@@ -2291,11 +2282,11 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 		eobj := evt.Object.(*monitoring.MirrorSession)
 		kind := "MirrorSession"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		mirrorsessionHandler := handler.(MirrorSessionHandler)
 		// handle based on event type
@@ -2316,7 +2307,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 				err = mirrorsessionHandler.OnMirrorSessionCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -2332,7 +2323,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 					err = mirrorsessionHandler.OnMirrorSessionUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -2340,7 +2331,7 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -2351,14 +2342,14 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 			err = mirrorsessionHandler.OnMirrorSessionDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on MirrorSession watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on MirrorSession watch channel", tp)
 	}
 
 	return nil
@@ -2371,7 +2362,7 @@ func (ct *ctrlerCtx) diffMirrorSession(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.MonitoringV1().MirrorSession().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -2423,20 +2414,21 @@ func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "MirrorSessionWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// MirrorSession object watcher
 			wt, werr := apicl.MonitoringV1().MirrorSession().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -2457,7 +2449,7 @@ func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -2470,7 +2462,7 @@ func (ct *ctrlerCtx) runMirrorSessionWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -2574,18 +2566,16 @@ func (obj *TroubleshootingSession) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.TroubleshootingSession
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), &nobj.TroubleshootingSession)
+		_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().TroubleshootingSession().Create(context.Background(), &obj.TroubleshootingSession)
@@ -2608,11 +2598,11 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 		eobj := evt.Object.(*monitoring.TroubleshootingSession)
 		kind := "TroubleshootingSession"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		troubleshootingsessionHandler := handler.(TroubleshootingSessionHandler)
 		// handle based on event type
@@ -2633,7 +2623,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 				err = troubleshootingsessionHandler.OnTroubleshootingSessionCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -2649,7 +2639,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 					err = troubleshootingsessionHandler.OnTroubleshootingSessionUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -2657,7 +2647,7 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -2668,14 +2658,14 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 			err = troubleshootingsessionHandler.OnTroubleshootingSessionDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on TroubleshootingSession watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on TroubleshootingSession watch channel", tp)
 	}
 
 	return nil
@@ -2688,7 +2678,7 @@ func (ct *ctrlerCtx) diffTroubleshootingSession(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.MonitoringV1().TroubleshootingSession().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -2740,20 +2730,21 @@ func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "TroubleshootingSessionWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// TroubleshootingSession object watcher
 			wt, werr := apicl.MonitoringV1().TroubleshootingSession().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -2774,7 +2765,7 @@ func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -2787,7 +2778,7 @@ func (ct *ctrlerCtx) runTroubleshootingSessionWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 
@@ -2891,18 +2882,16 @@ func (obj *TechSupportRequest) Write() error {
 
 	apicl, err := obj.ctrler.apiClient()
 	if err != nil {
-		log.Errorf("Error creating API server clent. Err: %v", err)
+		obj.ctrler.logger.Errorf("Error creating API server clent. Err: %v", err)
 		return err
 	}
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := *obj
+		nobj := obj.TechSupportRequest
 		// FIXME: clear the resource version till we figure out CAS semantics
-		nobj.ObjectMeta.ResourceVersion = ""
-
 		// update it
-		_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), &nobj.TechSupportRequest)
+		_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), &nobj)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().TechSupportRequest().Create(context.Background(), &obj.TechSupportRequest)
@@ -2925,11 +2914,11 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 		eobj := evt.Object.(*monitoring.TechSupportRequest)
 		kind := "TechSupportRequest"
 
-		log.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
+		ct.logger.Infof("Watcher: Got %s watch event(%s): {%+v}", kind, evt.Type, eobj)
 
 		handler, ok := ct.handlers[kind]
 		if !ok {
-			log.Fatalf("Cant find the handler for %s", kind)
+			ct.logger.Fatalf("Cant find the handler for %s", kind)
 		}
 		techsupportrequestHandler := handler.(TechSupportRequestHandler)
 		// handle based on event type
@@ -2950,7 +2939,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 				err = techsupportrequestHandler.OnTechSupportRequestCreate(obj)
 				obj.Unlock()
 				if err != nil {
-					log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 					ct.delObject(kind, eobj.GetKey())
 					return err
 				}
@@ -2966,7 +2955,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 					err = techsupportrequestHandler.OnTechSupportRequestUpdate(obj)
 					obj.Unlock()
 					if err != nil {
-						log.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
 						return err
 					}
 				}
@@ -2974,7 +2963,7 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 		case kvstore.Deleted:
 			fobj, err := ct.findObject(kind, eobj.GetKey())
 			if err != nil {
-				log.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
+				ct.logger.Errorf("Object %s/%s not found durng delete. Err: %v", kind, eobj.GetKey(), err)
 				return err
 			}
 
@@ -2985,14 +2974,14 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 			err = techsupportrequestHandler.OnTechSupportRequestDelete(obj)
 			obj.Unlock()
 			if err != nil {
-				log.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
+				ct.logger.Errorf("Error deleting %s: %+v. Err: %v", kind, obj, err)
 				return err
 			}
 
 			ct.delObject(kind, eobj.GetKey())
 		}
 	default:
-		log.Fatalf("API watcher Found object of invalid type: %v on TechSupportRequest watch channel", tp)
+		ct.logger.Fatalf("API watcher Found object of invalid type: %v on TechSupportRequest watch channel", tp)
 	}
 
 	return nil
@@ -3005,7 +2994,7 @@ func (ct *ctrlerCtx) diffTechSupportRequest(apicl apiclient.Services) {
 	// get a list of all objects from API server
 	objlist, err := apicl.MonitoringV1().TechSupportRequest().List(context.Background(), &opts)
 	if err != nil {
-		log.Errorf("Error getting a list of objects. Err: %v", err)
+		ct.logger.Errorf("Error getting a list of objects. Err: %v", err)
 		return
 	}
 
@@ -3057,20 +3046,21 @@ func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 	// setup wait group
 	ct.waitGrp.Add(1)
 	defer ct.waitGrp.Done()
+	logger := ct.logger.WithContext("submodule", "TechSupportRequestWatcher")
 
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, ct.logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
+		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
-			log.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
 		} else {
-			log.Infof("API client connected {%+v}", apicl)
+			logger.Infof("API client connected {%+v}", apicl)
 
 			// TechSupportRequest object watcher
 			wt, werr := apicl.MonitoringV1().TechSupportRequest().Watch(ctx, &opts)
 			if werr != nil {
-				log.Errorf("Failed to start %s watch (%s)\n", kind, werr)
+				logger.Errorf("Failed to start %s watch (%s)\n", kind, werr)
 				// wait for a second and retry connecting to api server
 				apicl.Close()
 				time.Sleep(time.Second)
@@ -3091,7 +3081,7 @@ func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 				select {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
-						log.Error("Error receiving from apisrv watcher")
+						logger.Error("Error receiving from apisrv watcher")
 						break innerLoop
 					}
 
@@ -3104,7 +3094,7 @@ func (ct *ctrlerCtx) runTechSupportRequestWatcher() {
 
 		// if stop flag is set, we are done
 		if ct.stoped {
-			log.Infof("Exiting API server watcher")
+			logger.Infof("Exiting API server watcher")
 			return
 		}
 

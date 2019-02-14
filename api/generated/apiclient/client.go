@@ -137,6 +137,7 @@ func (a *apiGrpcServerClient) WorkloadV1() workload.WorkloadV1Interface {
 
 // NewGrpcAPIClient returns a gRPC client
 func NewGrpcAPIClient(clientName, url string, logger log.Logger, opts ...rpckit.Option) (Services, error) {
+	opts = append(opts, rpckit.WithLogger(logger))
 	client, err := rpckit.NewRPCClient(clientName, url, opts...)
 	if err != nil {
 		logger.ErrorLog("msg", "Failed to connect to gRPC server", "URL", url, "error", err)

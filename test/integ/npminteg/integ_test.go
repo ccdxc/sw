@@ -135,7 +135,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	m.AddServiceInstance(&npmSi)
 
 	// start API server
-	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", logger)
+	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", logger.WithContext("submodule", "pen-apiserver"))
 	c.Assert(err, check.IsNil)
 
 	// populate the mock resolver with apiserver instance.
@@ -193,6 +193,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 func (it *integTestSuite) SetUpTest(c *C) {
 	log.Infof("============================= %s starting ==========================", c.TestName())
+	it.logger = logger.WithContext("t_name", c.TestName())
 }
 
 func (it *integTestSuite) TearDownTest(c *C) {
