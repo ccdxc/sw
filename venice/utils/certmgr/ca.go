@@ -82,8 +82,8 @@ func (l *CertificateAuthority) init(bootstrap bool) error {
 			return errors.Wrap(err, "Error generating signing key")
 		}
 		selfSignedCert, err := certs.SelfSign("CMDRootCA", caKey,
-			certs.WithValidityDays(caSelfSignedCertDurationDays),
-			certs.WithNotBefore(time.Now().Add(-certBackdateInterval)))
+			certs.WithNotBefore(certs.BeginningOfTime),
+			certs.WithNotAfter(certs.EndOfTime))
 		if err != nil {
 			return errors.Wrap(err, "Error generating self-signed certificate")
 		}
@@ -150,8 +150,8 @@ func (l *CertificateAuthority) init(bootstrap bool) error {
 // Sign validates and sign a certificate signing request (CSR)
 func (l *CertificateAuthority) Sign(csr *x509.CertificateRequest) (*x509.Certificate, error) {
 	cert, err := certs.SignCSRwithCA(csr, l.caCertificate, l.caKey,
-		certs.WithValidityDays(nodeCertDurationDays),
-		certs.WithNotBefore(time.Now().Add(-certBackdateInterval)))
+		certs.WithNotBefore(certs.BeginningOfTime),
+		certs.WithNotAfter(certs.EndOfTime))
 	if err != nil {
 		return nil, errors.Wrap(err, "Error signing CSR")
 	}

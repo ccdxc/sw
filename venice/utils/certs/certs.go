@@ -36,6 +36,13 @@ const (
 	privateKeyPemBlockType         = "PRIVATE KEY"
 )
 
+var (
+	// BeginningOfTime is the earliest possible date for certs issued by Venice CA
+	BeginningOfTime = time.Unix(0, 0)
+	// EndOfTime is the latest possible date for certs issued by Venice CA
+	EndOfTime = time.Date(9999, time.December, 31, 23, 59, 0, 0, time.UTC)
+)
+
 type options struct {
 	notBefore time.Time
 	notAfter  time.Time

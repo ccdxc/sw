@@ -10,11 +10,11 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"math/big"
-	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/utils/certs"
 )
 
 // Code in this file is meant to go away once we have APIs to read
@@ -40,8 +40,8 @@ func (np *NaplesPlatformAgent) initPlatformCredentials(nic *cluster.SmartNIC) er
 		BasicConstraintsValid: true,
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		IsCA:                  false,
-		NotBefore:             time.Date(2016, time.January, 1, 0, 0, 0, 0, time.UTC),
-		NotAfter:              time.Date(2046, time.January, 1, 0, 0, 0, 0, time.UTC),
+		NotBefore:             certs.BeginningOfTime,
+		NotAfter:              certs.EndOfTime,
 		Subject: pkix.Name{
 			Organization:       []string{"Pensando Systems"},
 			OrganizationalUnit: []string{"Pensando Manufacturing CA"},
