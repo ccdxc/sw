@@ -278,6 +278,9 @@ chn_poller(void *poll_ctx)
 {
 	pnso_error_t err = EINVAL;
 	struct service_chain *chain = (struct service_chain *) poll_ctx;
+	struct pnso_service_result *res;
+	completion_cb_t	cb;
+	void *cb_ctx;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -289,27 +292,33 @@ chn_poller(void *poll_ctx)
 	}
 	PPRINT_CHAIN(chain);
 
+	res = chain->sc_res;
+
 	err = chn_poll_all_services(chain);
 	if (err) {
 		OSAL_LOG_DEBUG("poll failed! chain: 0x" PRIx64 " err: %d",
 				(uint64_t) chain, err);
 		if (err == EBUSY)
 			goto out;
-		chain->sc_res->err = err; /* ETIMEDOUT most likely */
+
+		res->err = err; /* ETIMEDOUT most likely */
 	} else {
 		chn_read_write_result(chain);
 		chn_update_overall_result(chain);
 	}
 
-	if (chain->sc_req_cb) {
-		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 " res: 0x" PRIx64 " err: %d",
-				(uint64_t) chain->sc_req_cb_ctx,
-				(uint64_t) chain->sc_res, err);
-
-		chain->sc_req_cb(chain->sc_req_cb_ctx, chain->sc_res);
-	}
+	/* save caller's cb and context ahead of destroy */
+	cb = chain->sc_req_cb;
+	cb_ctx =  chain->sc_req_cb_ctx;
 
 	chn_destroy_chain(chain);
+
+	if (cb) {
+		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 " res: 0x" PRIx64 " err: %d",
+				(uint64_t) cb_ctx, (uint64_t) res, err);
+
+		cb(cb_ctx, res);
+	}
 
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);

@@ -455,6 +455,8 @@ bat_poller(void *poll_ctx)
 {
 	pnso_error_t err = EINVAL;
 	struct batch_info *batch_info = (struct batch_info *) poll_ctx;
+	completion_cb_t	cb;
+	void *cb_ctx;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -482,14 +484,18 @@ bat_poller(void *poll_ctx)
 		read_write_result_all_chains(batch_info);
 	}
 
-	if (batch_info->bi_req_cb) {
-		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
-				(uint64_t) batch_info->bi_req_cb_ctx, err);
-
-		batch_info->bi_req_cb(batch_info->bi_req_cb_ctx, NULL);
-	}
+	/* save caller's cb and context ahead of destroy */
+	cb = batch_info->bi_req_cb;
+	cb_ctx =  batch_info->bi_req_cb_ctx;
 
 	deinit_batch(batch_info);
+
+	if (cb) {
+		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
+				(uint64_t) cb_ctx, err);
+
+		cb(cb_ctx, NULL);
+	}
 
 out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
