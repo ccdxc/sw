@@ -1356,9 +1356,17 @@ if args.host is not None and \
     cfg = pwd + '/../conf/dev.json'
     with open(cfg, 'r') as f:
         dev_dict = json.load(f)
+
+    found = False
     for dev in dev_dict:
         if (dev["host"] == args.host):
+            logging.info(dev["host"])
+            found = True
             break
+
+    if found is False:
+        print("ERROR: device info not found in conf/dev.json. Please update and try again")
+        exit()
 
     console = dev['console']
     port = dev['port']
