@@ -107,15 +107,31 @@ cmd_lookup(const char *name)
     return NULL;
 }
 
+static int
+cmd_cmp(const void *a1, const void *a2)
+{
+    const cmd_t *c1 = (cmd_t *)a1;
+    const cmd_t *c2 = (cmd_t *)a2;
+
+    return strcmp(c1->name, c2->name);
+}
+
 static void
 help(int argc, char *argv[])
 {
     if (argc <= 1) {
+        const size_t ncmds = __stop_cmdtab - __start_cmdtab;
+        const size_t cmdsz = sizeof(cmd_t);
+        cmd_t *cmdtab = __start_cmdtab;
+
+        /* sort cmds alphabetically for help display */
+        qsort(cmdtab, ncmds, cmdsz, cmd_cmp);
+
         printf("Usage: pcieutil <cmd>[args...]\n"
                "Available commands:");
         int pos = 80;
         const char *sep = "";
-        for (cmd_t *c = __start_cmdtab; c < __stop_cmdtab; c++) {
+        for (cmd_t *c = cmdtab; c < &cmdtab[ncmds]; c++) {
             int len = strlen(sep) + strlen(c->name);
             if (pos + len >= 80) {
                 fputs("\n    ", stdout);

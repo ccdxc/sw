@@ -193,16 +193,16 @@ pcieport_mac_unreset(pcieport_t *p)
         perstn = pcieport_get_perstn(p);
     } while (phystatus && perstn && ++polls < maxpolls);
 
-    p->phypolllast = polls;
-    if (polls > p->phypollmax) {
-        p->phypollmax = polls;
+    p->stats.phypolllast = polls;
+    if (polls > p->stats.phypollmax) {
+        p->stats.phypollmax = polls;
     }
 
     if (!perstn) {
         /*
          * perstn went away - we went back into reset
          */
-        p->phypollperstn++;
+        p->stats.phypollperstn++;
         return -1;
     }
 
@@ -210,7 +210,7 @@ pcieport_mac_unreset(pcieport_t *p)
         /*
          * PHY didn't come out of reset as expected?
          */
-        p->phypollfail++;
+        p->stats.phypollfail++;
         return -1;
     }
 

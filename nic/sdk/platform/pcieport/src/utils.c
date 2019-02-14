@@ -59,9 +59,9 @@ pcieport_tgt_marker_rx_wait(pcieport_t *p)
         } while (!marker && ++polls < maxpolls);
     }
 
-    p->markerpolllast = polls;
-    if (polls > p->markerpollmax) {
-        p->markerpollmax = polls;
+    p->stats.markerpolllast = polls;
+    if (polls > p->stats.markerpollmax) {
+        p->stats.markerpollmax = polls;
     }
 
     if (!marker) {
@@ -104,9 +104,9 @@ pcieport_tgt_axi_pending_wait(pcieport_t *p)
         } while (pending && ++polls < maxpolls);
     }
 
-    p->axipendpolllast = polls;
-    if (polls > p->axipendpollmax) {
-        p->axipendpollmax = polls;
+    p->stats.axipendpolllast = polls;
+    if (polls > p->stats.axipendpollmax) {
+        p->stats.axipendpollmax = polls;
     }
 
     if (pending) {
@@ -130,9 +130,9 @@ pcieport_gate_open(pcieport_t *p)
         is_open = pal_reg_rd32(portgate_open);
     } while (!is_open && ++polls < maxpolls);
 
-    p->gatepolllast = polls;
-    if (polls > p->gatepollmax) {
-        p->gatepollmax = polls;
+    p->stats.gatepolllast = polls;
+    if (polls > p->stats.gatepollmax) {
+        p->stats.gatepollmax = polls;
     }
 
     if (!is_open) {

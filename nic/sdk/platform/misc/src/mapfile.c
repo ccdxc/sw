@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 
 #include "misc.h"
 
@@ -30,13 +31,17 @@ mapfile_region(const char *file,
         return NULL;
     }
     if (oflags & O_CREAT) {
-        char z = 0;
+        struct stat sb;
 
-        /* grow file to proper size */
-        lseek(fd, aligned_sz - 1, SEEK_SET);
-        if (write(fd, &z, 1) != 1) {
-            (void)close(fd);
-            return NULL;
+        if (stat(file, &sb) < 0 || sb.st_size < aligned_sz) {
+            const char z = 0;
+
+            /* grow file to proper size */
+            lseek(fd, aligned_sz - 1, SEEK_SET);
+            if (write(fd, &z, 1) != 1) {
+                (void)close(fd);
+                return NULL;
+            }
         }
     }
     prot = PROT_READ | PROT_WRITE;

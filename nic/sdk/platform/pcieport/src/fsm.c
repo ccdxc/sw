@@ -24,8 +24,8 @@
 
 int fsm_verbose = 1;
 
-static const char *
-stname(const pcieportst_t st)
+const char *
+pcieport_stname(const pcieportst_t st)
 {
     static const char *stnames[PCIEPORTST_MAX] = {
 #define PCIEPORTST_NAME(ST) \
@@ -41,8 +41,8 @@ stname(const pcieportst_t st)
     return stnames[st];
 }
 
-static const char *
-evname(const pcieportev_t ev)
+const char *
+pcieport_evname(const pcieportev_t ev)
 {
     static const char *evnames[PCIEPORTEV_MAX] = {
 #define PCIEPORTEV_NAME(EV) \
@@ -64,7 +64,7 @@ evname(const pcieportev_t ev)
 void
 pcieport_fault(pcieport_t *p, const char *fmt, ...)
 {
-    p->faults++;
+    p->stats.faults++;
     if (p->state != PCIEPORTST_FAULT) {
         const size_t reasonsz = sizeof(p->fault_reason);
         va_list ap;
@@ -136,7 +136,7 @@ pcieport_buschg(pcieport_t *p)
 static void
 pcieport_hostup(pcieport_t *p)
 {
-    pcieport_event_hostup(p, ++p->hostup);
+    pcieport_event_hostup(p, ++p->stats.hostup);
 }
 
 static void
@@ -149,7 +149,7 @@ pcieport_hostdn(pcieport_t *p)
     pcieport_set_crs(p, p->crs);
 #endif
     p->secbus = 0;
-    pcieport_event_hostdn(p, p->hostup);
+    pcieport_event_hostdn(p, p->stats.hostup);
 }
 
 static void
@@ -161,7 +161,7 @@ pcieport_linkup(pcieport_t *p)
     }
     pcieport_set_crs(p, p->crs);
     pcieport_update_linkinfo(p);
-    pcieport_event_linkup(p, ++p->linkup);
+    pcieport_event_linkup(p, ++p->stats.linkup);
 
     if ((p->req_gen   && p->cur_gen   < p->req_gen) ||
         (p->req_width && p->cur_width < p->req_width)) {
@@ -176,7 +176,7 @@ pcieport_linkup(pcieport_t *p)
 static void
 pcieport_linkdn(pcieport_t *p)
 {
-    pcieport_event_linkdn(p, p->linkup);
+    pcieport_event_linkdn(p, p->stats.linkup);
 }
 
 static void
@@ -203,7 +203,9 @@ fsm_nop(pcieport_t *p)
 static void
 fsm_inv(pcieport_t *p)
 {
-    pcieport_fault(p, "fsm_inv: %s + %s", stname(p->state), evname(p->event));
+    pcieport_fault(p, "fsm_inv: %s + %s",
+                   pcieport_stname(p->state),
+                   pcieport_evname(p->event));
 }
 
 static void
@@ -341,7 +343,10 @@ pcieport_fsm(pcieport_t *p, pcieportev_t ev)
         gettimeofday(&tv, NULL);
         pciesys_loginfo("[%ld.%.3ld] fsm port%d: %s + %s => %s\n",
                         tv.tv_sec, tv.tv_usec / 1000,
-                        p->port, stname(st), evname(ev), stname(p->state));
+                        p->port,
+                        pcieport_stname(st),
+                        pcieport_evname(ev),
+                        pcieport_stname(p->state));
     }
 }
 
@@ -374,7 +379,7 @@ pcieport_fsm_init(pcieport_t *p, pcieportst_t st)
         gettimeofday(&tv, NULL);
         pciesys_loginfo("[%ld.%.3ld] fsm port%d: init %s\n",
                         tv.tv_sec, tv.tv_usec / 1000,
-                        p->port, stname(p->state));
+                        p->port, pcieport_stname(p->state));
     }
 }
 

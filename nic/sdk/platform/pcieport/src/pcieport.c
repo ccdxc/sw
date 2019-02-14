@@ -118,11 +118,11 @@ pcieport_open(const int port, pciemgr_initmode_t initmode)
     }
     p = &pi->pcieport[port];
     if (p->open) {
-        if (
-#ifdef __aarch64__
-            pi->inherited_init &&
-#endif /* __aarch64__ */
-            (initmode == INHERIT_ONLY || initmode == INHERIT_OK)) {
+        if (initmode == INHERIT_ONLY) {
+            /* pcieutil goes through this case */
+            return 0;
+        }
+        if (initmode == INHERIT_OK) {
             pciesys_logdebug("pcieport_open port %d inherited open\n", port);
             return 0;
         }
@@ -130,9 +130,9 @@ pcieport_open(const int port, pciemgr_initmode_t initmode)
         return -EBUSY;
     }
     p->port = port;
-    p->open = 1;
     p->host = 0;
     p->config = 0;
+    p->open = 1;
 
     return 0;
 }
@@ -357,6 +357,92 @@ pcieport_crs_off(const int port)
  * debug
  */
 
+void
+pcieport_showport(const int port)
+{
+    pcieport_info_t *pi = pcieport_info_get();
+    pcieport_t *p = pcieport_get(port);
+    const int w = 20;
+
+    if (p == NULL) {
+        pciesys_logerror("port %d out of range\n", port);
+        return;
+    }
+
+#define P(name, fmt, args, ...) \
+    pciesys_loginfo("%-*s " fmt "\n", w, name, args, ##__VA_ARGS__)
+
+    /* global info */
+    P("version", "0x%04x", pi->version);
+    P("init", "%d", pi->init);
+    P("serdes_init", "%d", pi->serdes_init);
+    P("serdes_init_always", "%d", pi->serdes_init_always);
+    P("inherited_init", "%d", pi->inherited_init);
+
+    /* port info */
+    P("config",   "gen%dx%d", p->cap_gen, p->cap_width);
+    P("current",  "gen%dx%d", p->cur_gen, p->cur_width);
+    P("required", "gen%dx%d", p->req_gen, p->req_width);
+    P("lanemask", "0x%04x", p->lanemask);
+    P("subvendorid", "0x%04x", p->subvendorid);
+    P("subdeviceid", "0x%04x", p->subdeviceid);
+    P("init", "%d", p->init);
+    P("open", "%d", p->open);
+    P("host", "%d", p->host);
+    P("config", "%d", p->config);
+    P("crs", "%d", p->crs);
+    P("compliance", "%d", p->compliance);
+    P("aer_common", "%d", p->aer_common);
+    P("sris", "%d", p->sris);
+    P("vga_support", "%d", p->vga_support);
+    P("reduce_rx_cred", "%d", p->reduce_rx_cred);
+    P("state", "%s", pcieport_stname(p->state));
+    P("event", "%s", pcieport_evname(p->event));
+    P("fault_reason", "%s", p->fault_reason);
+    P("last_fault_reason", "%s", p->last_fault_reason);
+
+#undef P
+}
+
+void
+pcieport_showports(void)
+{
+    int port;
+
+    pciesys_loginfo("%-4s %-7s %-4s %s\n",
+                    "port", "link", "bus", "state");
+
+    for (port = 0; port < PCIEPORT_NPORTS; port++) {
+        pcieport_t *p = pcieport_get(port);
+
+        if (!p->open) continue;
+
+        pciesys_loginfo("%-4d gen%dx%-2d 0x%02x %s\n",
+                        port,
+                        p->cur_gen, p->cur_width,
+                        p->pribus,
+                        pcieport_stname(p->state));
+    }
+}
+
+void
+pcieport_showportstats(const int port, const unsigned int flags)
+{
+    pcieport_t *p = pcieport_get(port);
+    const int w = 20;
+
+    if (p == NULL) {
+        pciesys_logerror("port %d out of range\n", port);
+        return;
+    }
+
+#define PCIEPORT_STATS_DEF(S) \
+    if (flags & PSF_ALL || p->stats.S) \
+        pciesys_loginfo("%-*s %" PRIi64 "\n", w, #S, p->stats.S);
+
+#include "pcieport_stats_defs.h"
+}
+
 static void
 cmd_fsm(int argc, char *argv[])
 {
@@ -366,49 +452,51 @@ cmd_fsm(int argc, char *argv[])
 static void
 cmd_port(int argc, char *argv[])
 {
-    pcieport_t *p;
-    const int w = 20;
-    int port;
+    int port = 0;
 
-    if (argc <= 1) {
-        pciesys_loginfo("Usage: port <n>\n");
-        return;
+    if (argc > 1) {
+        port = strtoul(argv[1], NULL, 0);
     }
-    port = strtoul(argv[1], NULL, 0);
     if (port < 0 || port >= PCIEPORT_NPORTS) {
         pciesys_logerror("port %d out of range\n", port);
         return;
     }
+    pcieport_showport(port);
+}
 
-    p = pcieport_get(port);
-    assert(p != NULL);
+static void
+cmd_ports(int argc, char *argv[])
+{
+    pcieport_showports();
+}
 
-#define LOG(args, ...) \
-    pciesys_loginfo(args, ##__VA_ARGS__)
-    LOG("%-*s: cap gen%dx%d\n", w, "config", p->cap_gen,p->cap_width);
-    LOG("%-*s: cur gen%dx%d\n", w, "current",p->cur_gen,p->cur_width);
-    LOG("%-*s: 0x%04x\n", w, "lanemask", p->lanemask);
-    LOG("%-*s: 0x%04x\n", w, "subvendorid", p->subvendorid);
-    LOG("%-*s: 0x%04x\n", w, "subdeviceid", p->subdeviceid);
-    LOG("%-*s: %d\n", w, "open", p->open);
-    LOG("%-*s: %d\n", w, "config", p->open);
-    LOG("%-*s: %d\n", w, "crs", p->crs);
-    LOG("%-*s: %d\n", w, "state", p->state);
-    LOG("%-*s: %d\n", w, "event", p->event);
-    LOG("%-*s: %s\n", w, "fault_reason", p->fault_reason);
-    LOG("%-*s: %s\n", w, "last_fault_reason", p->last_fault_reason);
-    LOG("%-*s: %" PRIu64 "\n", w, "hostup", p->hostup);
-    LOG("%-*s: %" PRIu64 "\n", w, "phypolllast", p->phypolllast);
-    LOG("%-*s: %" PRIu64 "\n", w, "phypollmax", p->phypollmax);
-    LOG("%-*s: %" PRIu64 "\n", w, "phypollperstn", p->phypollperstn);
-    LOG("%-*s: %" PRIu64 "\n", w, "phypollfail", p->phypollfail);
-    LOG("%-*s: %" PRIu64 "\n", w, "gatepolllast", p->gatepolllast);
-    LOG("%-*s: %" PRIu64 "\n", w, "gatepollmax", p->gatepollmax);
-    LOG("%-*s: %" PRIu64 "\n", w, "markerpolllast", p->markerpolllast);
-    LOG("%-*s: %" PRIu64 "\n", w, "markerpollmax", p->markerpollmax);
-    LOG("%-*s: %" PRIu64 "\n", w, "axipendpolllast",p->axipendpolllast);
-    LOG("%-*s: %" PRIu64 "\n", w, "axipendpollmax", p->axipendpollmax);
-#undef LOG
+static void
+cmd_portstats(int argc, char *argv[])
+{
+    int opt, port;
+    unsigned int flags;
+
+    flags = PSF_NONE;
+    port = 0;
+    optind = 0;
+    while ((opt = getopt(argc, argv, "ap:")) != -1) {
+        switch (opt) {
+        case 'a':
+            flags |= PSF_ALL;
+            break;
+        case 'p':
+            port = strtoul(optarg, NULL, 0);
+            break;
+        default:
+            return;
+        }
+    }
+
+    if (port < 0 || port >= PCIEPORT_NPORTS) {
+        pciesys_logerror("port %d out of range\n", port);
+        return;
+    }
+    pcieport_showportstats(port, flags);
 }
 
 typedef struct cmd_s {
@@ -423,6 +511,8 @@ static cmd_t cmdtab[] = {
     { #name, cmd_##name, desc, helpstr }
     CMDENT(fsm, "fsm", ""),
     CMDENT(port, "port", ""),
+    CMDENT(ports, "ports", ""),
+    CMDENT(portstats, "portstats", ""),
     { NULL, NULL }
 };
 

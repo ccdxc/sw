@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #include "pcieport_events.h"
+#include "pcieport_stats.h"
 
 #define PCIEPORT_VERSION        1
 #define PCIEPORT_NPORTS         8
@@ -66,19 +67,7 @@ struct pcieport_s {
     pcieportev_t event;
     char fault_reason[80];
     char last_fault_reason[80];
-    u_int64_t linkup;
-    u_int64_t hostup;
-    u_int64_t phypolllast;
-    u_int64_t phypollmax;
-    u_int64_t phypollperstn;
-    u_int64_t phypollfail;
-    u_int64_t gatepolllast;
-    u_int64_t gatepollmax;
-    u_int64_t markerpolllast;
-    u_int64_t markerpollmax;
-    u_int64_t axipendpolllast;
-    u_int64_t axipendpollmax;
-    u_int64_t faults;
+    pcieport_stats_t stats;
 };
 typedef struct pcieport_s pcieport_t;
 
@@ -110,6 +99,17 @@ int pcieport_crs_off(const int port);
 
 int pcieport_poll(const int port);
 void pcieport_dbg(int argc, char *argv[]);
+
+void pcieport_showport(const int port);
+void pcieport_showports(void);
+
+/* flags for showportstats() */
+#define PSF_NONE 0x0
+#define PSF_ALL  0x1
+void pcieport_showportstats(const int port, const unsigned int flags);
+
+const char *pcieport_stname(const pcieportst_t st);
+const char *pcieport_evname(const pcieportev_t ev);
 
 /*
  * Register convenience macros.
