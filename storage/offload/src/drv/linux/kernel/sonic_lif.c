@@ -1552,6 +1552,21 @@ sonic_pprint_seq_bmps(struct per_core_resource *pcr)
 			 &pcr->seq_crypto_statusq_lock, "CRYPTO STATUS");
 }
 
+void sonic_pprint_ev_lists(void)
+{
+	struct lif *lif = sonic_get_lif();
+	struct per_core_resource *res;
+	uint32_t i;
+
+	if (!lif)
+		return;
+
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		sonic_pprint_ev_list(res->evl);
+	}
+}
+//EXPORT_SYMBOL(sonic_pprint_ev_lists);
+
 /* Return -1 if not found */
 static inline int
 sonic_find_next_zero_id(unsigned long *bmp, unsigned int max, spinlock_t *lock,

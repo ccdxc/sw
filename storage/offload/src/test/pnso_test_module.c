@@ -583,14 +583,15 @@ body(void *not_used)
 	if (feat_mask == 0) {
 		PNSO_LOG("PenCAKE skipped all default testcases\n");
 	} else {
-		err = pnso_test_run_all(cfg);
+		err = pnso_test_run_all(cfg, ctl_core_id);
 		PNSO_LOG("PenCAKE completed all default testcases, status %d\n", err);
 	}
 	pnso_test_desc_free(cfg);
 	cfg = NULL;
 
 	/* loop running testcases from ctl program */
-	while (!pnso_test_is_shutdown()) {
+	while (!pnso_test_is_shutdown() &&
+	       !osal_thread_should_stop(&g_main_thread)) {
 		int ctl_state;
 
 		ctl_state = pnso_test_sysfs_read_ctl();
@@ -630,9 +631,9 @@ body(void *not_used)
 		}
 
 		if (cfg && (ctl_repeat || ctl_state == CTL_STATE_START)) {
-			err = pnso_test_run_all(cfg);
+			err = pnso_test_run_all(cfg, ctl_core_id);
 		}
-		msleep(1);
+		msleep(10);
 	}
 
 done:
@@ -648,18 +649,32 @@ body_start(void)
 	int err;
 
 	err = osal_thread_create(&g_main_thread, body, NULL);
-	if (!err && ctl_core_id >= 0) {
+	if (err) {
+		PNSO_LOG_ERROR("Failed to create pencake ctl thread, err %d\n",
+			       err);
+		goto done;
+	}
+
+#ifdef _KERNEL
+	if (ctl_core_id < 0)
+		ctl_core_id = osal_get_core_count() - 1;
+#endif
+	if (ctl_core_id >= 0) {
 		PNSO_LOG_INFO("Binding pencake ctl thread to core %d\n",
 			      ctl_core_id);
 		err = osal_thread_bind(&g_main_thread, ctl_core_id);
+		if (err) {
+			PNSO_LOG_ERROR("Failed to bind pencake ctl thread to core %d, err %d\n",
+				       ctl_core_id, err);
+			goto done;
+		}
 	}
-	if (!err)
-		err = osal_thread_start(&g_main_thread);
 
+	err = osal_thread_start(&g_main_thread);
 	if (err)
 		PNSO_LOG_ERROR("Failed to start pencake ctl thread, err %d\n",
 			       err);
-
+done:
 	return err;
 }
 

@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
 
 	pnso_run_unit_tests(cfg);
 
-	err = pnso_test_run_all(cfg);
+	err = pnso_test_run_all(cfg, -1);
 
 	/* debugging only, enable to stall process exit */
 #if 0

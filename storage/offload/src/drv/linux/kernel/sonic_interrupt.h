@@ -54,6 +54,7 @@ struct sonic_event_list {
 
 	struct workqueue_struct *wq;
 	struct sonic_work_data work_data;
+	struct delayed_work idle_work;
 
 	spinlock_t inuse_lock;
 	int next_evid;
@@ -68,5 +69,6 @@ struct sonic_event_list {
 int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count);
 void sonic_destroy_ev_list(struct per_core_resource *pc_res);
 irqreturn_t sonic_async_ev_isr(int irq, void *evlptr);
+void sonic_pprint_ev_list(struct sonic_event_list *evl);
 
 #endif /* SONIC_INTERRUPT_H */

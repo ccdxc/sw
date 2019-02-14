@@ -51,7 +51,7 @@ void pnso_test_desc_free(struct test_desc *desc);
 pnso_error_t pnso_test_parse_file(const char *fname, struct test_desc *desc);
 pnso_error_t pnso_test_parse_buf(const unsigned char *buf, size_t buf_len,
 				 struct test_desc *desc);
-pnso_error_t pnso_test_run_all(struct test_desc *desc);
+pnso_error_t pnso_test_run_all(struct test_desc *desc, int ctl_core);
 pnso_error_t pnso_run_unit_tests(struct test_desc *desc);
 
 void test_dump_desc(struct test_desc *desc);

@@ -39,6 +39,7 @@ void pnso_test_shutdown(void)
 	osal_atomic_set(&g_shutdown, 1);
 	start = osal_get_clock_nsec();
 	while (!osal_atomic_read(&g_shutdown_complete)) {
+		osal_yield();
 		osal_sched_yield();
 		if ((osal_get_clock_nsec() - start) >
 		    TEST_SHUTDOWN_TIMEOUT)
@@ -2225,8 +2226,8 @@ static uint16_t cpu_mask_to_core_count(uint64_t cpu_mask)
 	if (max_core_count > TEST_MAX_CORE_COUNT) {
 		max_core_count = TEST_MAX_CORE_COUNT;
 	}
-	if (max_core_count > osal_get_core_count()) {
-		max_core_count = osal_get_core_count();
+	if (max_core_count > (osal_get_core_count() - 1)) {
+		max_core_count = (osal_get_core_count() - 1);
 	}
 
 	return max_core_count;
@@ -2495,7 +2496,9 @@ static void print_worker_ctx(struct worker_context *work_ctx, uint64_t cur_ts, b
 {
 	OSAL_LOG_ERROR("Worker %u, pending_batch_count %u, idle_time %llums\n",
 		       work_ctx->worker_id, work_ctx->pending_batch_count,
-		       (unsigned long long) (cur_ts - work_ctx->last_active_ts)/OSAL_NSEC_PER_MSEC);
+		       (unsigned long long) osal_clock_delta(cur_ts,
+				work_ctx->last_active_ts) / OSAL_NSEC_PER_MSEC);
+
 	if (work_ctx->pending_batch_count || verbose) {
 		print_worker_queue(work_ctx->submit_q, "submit_q", verbose);
 		print_worker_queue(work_ctx->complete_q, "complete_q", verbose);
@@ -2508,6 +2511,8 @@ static void print_testcase_ctx(struct testcase_context *ctx)
 	int i;
 	uint64_t cur_ts = osal_get_clock_nsec();
 	bool verbose = (g_osal_log_level >= OSAL_LOG_LEVEL_INFO);
+
+	//sonic_pprint_ev_lists();
 
 	OSAL_LOG_ERROR("Testcase %u\n", ctx->testcase->node.idx);
 	print_worker_queue(ctx->batch_ctx_freelist, "batch_ctx_freelist", verbose);
@@ -2599,13 +2604,14 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		loop_count++;
 		is_busy = false;
 		worker_ctx = ctx->worker_ctxs[worker_id];
+		cur_ts = osal_get_clock_nsec();
 
 		/* Batch completion */
 		batch_ctx = worker_queue_dequeue(worker_ctx->complete_q);
 		if (batch_ctx) {
 			PNSO_LOG_DEBUG("DEBUG: batch completed, batch_count %llu\n",
 				(unsigned long long) batch_completion_count+1);
-			last_active_ts = osal_get_clock_nsec();
+			last_active_ts = cur_ts;
 			is_busy = true;
 
 			/* process finished batch, and restore to freelist */
@@ -2647,7 +2653,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 				if (worker_queue_enqueue(worker_ctx->submit_q, batch_ctx)) {
 					batch_submit_count++;
 					req_submit_count += cur_batch_depth;
-					last_active_ts = osal_get_clock_nsec();
+					last_active_ts = cur_ts;
 					is_busy = true;
 					worker_ctx->pending_batch_count++;
 				} else {
@@ -2660,8 +2666,8 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		} else if (osal_clock_delta(cur_ts, worker_ctx->last_active_ts) >
 			   TESTCASE_IDLE_LOOP_TIMEOUT) {
 			PNSO_LOG_WARN("break out of run_testcase loop due to "
-				      "idle timeout on worker %u\n",
-				      worker_id);
+				      "idle timeout on worker %u, ctl core %d\n",
+				      worker_id, osal_get_coreid());
 			err = ETIMEDOUT;
 			print_testcase_ctx(ctx);
 			break;
@@ -2671,8 +2677,6 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 
 		/* Operations limited to run occasionally */
 		if ((loop_count & TESTCASE_LOOP_RESOLUTION_MASK) == 0) {
-			cur_ts = osal_get_clock_nsec();
-
 			/* Update elapsed_time */
 			elapsed_time = cur_ts - ctx->start_time;
 
@@ -2767,7 +2771,7 @@ free_ctx:
 	return err;
 }
 
-pnso_error_t pnso_test_run_all(struct test_desc *desc)
+pnso_error_t pnso_test_run_all(struct test_desc *desc, int ctl_core)
 {
 	pnso_error_t err = PNSO_OK;
 	struct test_node *node;
@@ -2775,6 +2779,14 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc)
 
 	if (desc->node.type != NODE_ROOT) {
 		PNSO_LOG_ERROR("Invalid test description\n");
+		return EINVAL;
+	}
+
+	if (ctl_core >= 0 &&
+	    (desc->cpu_mask & (1ULL << ctl_core))) {
+		PNSO_LOG_ERROR("failed to run testcases, cpu_mask 0x%llx overlaps with ctl_core_id %d\n",
+			       (unsigned long long) desc->cpu_mask,
+			       ctl_core);
 		return EINVAL;
 	}
 
