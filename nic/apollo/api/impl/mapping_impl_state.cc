@@ -5,14 +5,13 @@
  *
  * @brief   This file contains mapping datapath database handling
  */
+#include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/apollo/include/api/oci_mapping.hpp"
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
 #include "nic/apollo/api/impl/mapping_impl.hpp"
-#include "gen/p4gen/apollo/include/p4pd.h"
-#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/p4/include/defines.h"
-
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+#include "gen/p4gen/apollo/include/p4pd.h"
 
 using sdk::table::sdk_table_factory_params_t;
 
@@ -28,8 +27,8 @@ namespace impl {
  * @brief    constructor
  */
 mapping_impl_state::mapping_impl_state(oci_state *state) {
-    p4pd_table_properties_t tinfo;
-    sdk_table_factory_params_t mhparams;
+    p4pd_table_properties_t       tinfo;
+    sdk_table_factory_params_t    mhparams;
 
     /**< instantiate P4 tables for bookkeeping */
     bzero(&mhparams, sizeof(mhparams));

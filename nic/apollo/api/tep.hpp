@@ -10,6 +10,7 @@
 #if !defined (__TEP_HPP__)
 #define __TEP_HPP__
 
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -128,6 +129,11 @@ public:
      * @brief    initiate delay deletion of this object
      */
     virtual sdk_ret_t delay_delete(void) override;
+
+    /**< @brief    return stringified key of the object (for debugging) */
+    virtual string key2str(void) const override {
+        return "tep-"  + string(ipv4addr2str(key_.ip_addr));
+    }
 
     /**
      * @brief     helper function to get key given tep entry

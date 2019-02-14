@@ -128,6 +128,18 @@ public:
      */
     virtual sdk_ret_t delay_delete(void) override;
 
+    /**< @brief    return stringified key of the object (for debugging) */
+    virtual string key2str(void) const override {
+        /**<
+         * right now, we don't store even the key, we can do that in future if
+         * its needed for debugging; as this is a stateless object which will be
+         * destroyed as soon as API processing is done, having a key in this
+         * class will only increase temporary usage of memory (and some cycles
+         * to copy key bytes into this class)
+         */
+        return "mapping-";
+    }
+
 private:
     /**< @brief    constructor */
     mapping_entry();

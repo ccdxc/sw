@@ -128,6 +128,11 @@ public:
      */
     virtual sdk_ret_t delay_delete(void) override;
 
+    /**< @brief    return stringified key of the object (for debugging) */
+    virtual string key2str(void) const override {
+        return "policy-"  + std::to_string(key_.id);
+    }
+
     /**
      * @brief     helper function to get key given security policy
      * @param[in] entry    pointer to security policy instance

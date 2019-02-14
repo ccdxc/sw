@@ -129,6 +129,11 @@ public:
      */
     virtual sdk_ret_t delay_delete(void) override;
 
+    /**< @brief    return stringified key of the object (for debugging) */
+    virtual string key2str(void) const override {
+        return "switchport-cfg";
+    }
+
     ipv4_addr_t ip_addr(void) const { return ip_addr_; }
     mac_addr_t& mac_addr(void) { return mac_addr_; }
     ipv4_addr_t gw_ip_addr(void) const { return gw_ip_addr_; }

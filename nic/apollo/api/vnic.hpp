@@ -127,6 +127,11 @@ public:
      */
     virtual sdk_ret_t delay_delete(void) override;
 
+    /**< @brief    return stringified key of the object (for debugging) */
+    virtual string key2str(void) const override {
+        return "vnic-"  + std::to_string(key_.id);
+    }
+
     /**
      * @brief     helper function to get key given vnic entry
      * @param[in] entry    pointer to vnic instance
