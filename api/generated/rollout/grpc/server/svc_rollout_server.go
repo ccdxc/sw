@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	rollout "github.com/pensando/sw/api/generated/rollout"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
@@ -107,7 +108,7 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsRolloutV1.fnAutoWatchSvcRolloutV1 = srv.WatchFromKv
 
 		s.endpointsRolloutV1.fnAutoAddRollout = srv.AddMethod("AutoAddRollout",
-			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoAddRollout")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoAddRollout")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(rollout.Rollout)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -116,7 +117,7 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsRolloutV1.fnAutoDeleteRollout = srv.AddMethod("AutoDeleteRollout",
-			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoDeleteRollout")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoDeleteRollout")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(rollout.Rollout)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -125,7 +126,7 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsRolloutV1.fnAutoGetRollout = srv.AddMethod("AutoGetRollout",
-			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoGetRollout")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoGetRollout")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(rollout.Rollout)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -134,7 +135,7 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsRolloutV1.fnAutoListRollout = srv.AddMethod("AutoListRollout",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["rollout.RolloutList"], "rollout", "AutoListRollout")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["rollout.RolloutList"], "rollout", "AutoListRollout")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -143,7 +144,7 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsRolloutV1.fnAutoUpdateRollout = srv.AddMethod("AutoUpdateRollout",
-			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoUpdateRollout")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoUpdateRollout")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(rollout.Rollout)
 			if !ok {
 				return "", fmt.Errorf("wrong type")

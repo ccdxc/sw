@@ -3,9 +3,9 @@ package impl
 import (
 	"context"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
-	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -25,11 +25,11 @@ func registerObjstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
 		return err
 	}
 	prof.AddPreAuthNHook(r.skipAuthN)
-	prof, err = svc.GetCrudServiceProfile("Object", apiserver.ListOper)
+	prof, err = svc.GetCrudServiceProfile("Object", apiintf.ListOper)
 	prof.AddPreAuthNHook(r.skipAuthN)
-	prof, err = svc.GetCrudServiceProfile("Object", apiserver.DeleteOper)
+	prof, err = svc.GetCrudServiceProfile("Object", apiintf.DeleteOper)
 	prof.AddPreAuthNHook(r.skipAuthN)
-	prof, err = svc.GetCrudServiceProfile("Object", apiserver.GetOper)
+	prof, err = svc.GetCrudServiceProfile("Object", apiintf.GetOper)
 	prof.AddPreAuthNHook(r.skipAuthN)
 	return nil
 }

@@ -35,7 +35,7 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 type ObjectRln struct {
-	// Type of reference one of [ NamedRef, SelectorRef, BackRef ]
+	// Type of reference one of [ NamedRef, SelectorRef, WeakRef ]
 	Type string `protobuf:"bytes,1,opt,name=Type,proto3" json:"Type,omitempty"`
 	// Object being referred to.
 	To string `protobuf:"bytes,2,opt,name=To,proto3" json:"To,omitempty"`

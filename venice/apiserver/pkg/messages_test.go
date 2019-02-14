@@ -2,14 +2,17 @@ package apisrvpkg
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	oldcontext "golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/pensando/sw/api/interfaces"
+
 	"github.com/pensando/sw/api"
 	apisrv "github.com/pensando/sw/venice/apiserver"
-	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -70,7 +73,8 @@ func TestMessageWith(t *testing.T) {
 	m = m.WithKvTxnUpdater(f.TxnUpdateFunc).WithKvTxnDelFunc(f.DelFromKvTxnFunc).WithSelfLinkWriter(f.SelfLinkWriterFunc)
 	m = m.WithKvWatchFunc(f.KvwatchFunc).WithKvListFunc(f.KvListFunc).WithReplaceStatusFunction(f.GetUpdateStatusFunc())
 	m = m.WithUUIDWriter(f.CreateUUID).WithReplaceSpecFunction(f.GetUpdateSpecFunc()).WithGetRuntimeObject(f.GetRuntimeObject)
-	m = m.WithModTimeWriter(f.WriteModTime).WithCreationTimeWriter(f.WriteCreationTime).WithObjectVersionWriter(f.WriteObjVersion).WithUpdateMetaFunction(f.GetUpdateMetaFunc())
+	m = m.WithModTimeWriter(f.WriteModTime).WithCreationTimeWriter(f.WriteCreationTime).WithObjectVersionWriter(f.WriteObjVersion)
+	m = m.WithReferencesGetter(f.GetReferencesFunc).WithKeyGenerator(f.KeyGeneratorFunc).WithUpdateMetaFunction(f.GetUpdateMetaFunc())
 	stx := mocks.ObjStorageTransformer{}
 	m = m.WithStorageTransformer(&stx)
 	singletonAPISrv.runstate.running = true
@@ -143,27 +147,40 @@ func TestMessageWith(t *testing.T) {
 	if f.ObjVerWrites != 1 {
 		t.Errorf("WriteObjVersion time failed got %d", f.Objverwrite)
 	}
-	m.TransformToStorage(ctx, apisrv.CreateOper, nil)
+	m.TransformToStorage(ctx, apiintf.CreateOper, nil)
 	if stx.TransformToStorageCalled != 1 {
 		t.Errorf("Expecting 1 call to TransformToStorage, found %d", stx.TransformToStorageCalled)
 	}
-	m.TransformFromStorage(ctx, apisrv.CreateOper, nil)
+	m.TransformFromStorage(ctx, apiintf.CreateOper, nil)
 	if stx.TransformFromStorageCalled != 1 {
 		t.Errorf("Expecting 1 call to TransformFromStorage, found %d", stx.TransformFromStorageCalled)
 	}
 	// Add the same storage transformer a second time. Now each calls increments the counter by 2.
 	m.WithStorageTransformer(&stx)
-	m.TransformToStorage(ctx, apisrv.UpdateOper, nil)
+	m.TransformToStorage(ctx, apiintf.UpdateOper, nil)
 	if stx.TransformToStorageCalled != 3 {
 		t.Errorf("Expecting 3 calls to TransformToStorage, found %d", stx.TransformToStorageCalled)
 	}
-	m.TransformFromStorage(ctx, apisrv.UpdateOper, nil)
+	m.TransformFromStorage(ctx, apiintf.UpdateOper, nil)
 	if stx.TransformFromStorageCalled != 3 {
 		t.Errorf("Expecting 3 calls to TransformFromStorage, found %d", stx.TransformFromStorageCalled)
 	}
 	if m.GetKind() != "TestType1" {
 		t.Errorf("Expecting kind %s, found %s", "TestType1", m.GetKind())
 	}
+	m.ListFromKv(ctx, nil, nil, "")
+	if f.Kvlists != 1 {
+		t.Errorf("expecting 1 list call got [%v]", f.Kvlists)
+	}
+	m.GetKVKey(nil, "")
+	if f.KeyGens != 1 {
+		t.Errorf("expecting 1 call to generate key got [%v]", f.KeyGens)
+	}
+
+	if m.GetUpdateMetaFunc() == nil {
+		t.Errorf("expecting UpdateMetaFunc to be set")
+	}
+
 	md := metadata.Pairs(apisrv.RequestParamVersion, "v1",
 		apisrv.RequestParamMethod, "WATCH")
 	ctx = metadata.NewIncomingContext(ctx, md)
@@ -176,5 +193,16 @@ func TestMessageWith(t *testing.T) {
 
 	if m.GetUpdateMetaFunc() == nil {
 		t.Errorf("expecting UpdateMetaFunc to be set")
+	}
+	refMap := map[string]apiintf.ReferenceObj{
+		"/testmsg/path": {RefType: apiintf.NamedReference, Refs: []string{"/test/reference1", "/test/reference2"}},
+	}
+	f.RefMap = refMap
+	refs, err := m.GetReferences(nil)
+	if err != nil {
+		t.Errorf("failed to get references (%s)", err)
+	}
+	if !reflect.DeepEqual(refMap, refs) {
+		t.Errorf("returned references does not match got\n[%+v\nwant\n[%+v]", refs, refMap)
 	}
 }

@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -476,11 +477,19 @@ func (m *TextRequirement) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *Category) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *Category) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *CategoryAggregation) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *CategoryAggregation) Validate(ver, path string, ignoreStatus bool) []error {
@@ -488,9 +497,17 @@ func (m *CategoryAggregation) Validate(ver, path string, ignoreStatus bool) []er
 	return ret
 }
 
+func (m *CategoryPreview) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *CategoryPreview) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ConfigEntry) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *ConfigEntry) Validate(ver, path string, ignoreStatus bool) []error {
@@ -498,9 +515,17 @@ func (m *ConfigEntry) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Entry) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *Entry) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *EntryList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *EntryList) Validate(ver, path string, ignoreStatus bool) []error {
@@ -508,9 +533,17 @@ func (m *EntryList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Error) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *Error) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Kind) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Kind) Validate(ver, path string, ignoreStatus bool) []error {
@@ -518,14 +551,26 @@ func (m *Kind) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *KindAggregation) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *KindAggregation) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *KindPreview) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *KindPreview) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *PolicyMatchEntry) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *PolicyMatchEntry) Validate(ver, path string, ignoreStatus bool) []error {
@@ -543,9 +588,17 @@ func (m *PolicyMatchEntry) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *PolicySearchRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *PolicySearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *PolicySearchResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
@@ -574,6 +627,10 @@ func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []e
 		}
 	}
 	return ret
+}
+
+func (m *SearchQuery) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
@@ -624,6 +681,10 @@ func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SearchRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *SearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Query != nil {
@@ -652,9 +713,17 @@ func (m *SearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SearchResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *SearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TenantAggregation) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TenantAggregation) Validate(ver, path string, ignoreStatus bool) []error {
@@ -662,9 +731,17 @@ func (m *TenantAggregation) Validate(ver, path string, ignoreStatus bool) []erro
 	return ret
 }
 
+func (m *TenantPreview) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TenantPreview) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TextRequirement) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TextRequirement) Validate(ver, path string, ignoreStatus bool) []error {

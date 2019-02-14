@@ -14,8 +14,8 @@ import (
 
 	api "github.com/pensando/sw/api"
 	staging "github.com/pensando/sw/api/generated/staging"
+	"github.com/pensando/sw/api/interfaces"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
-	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -262,7 +262,7 @@ func (a *grpcObjStagingV1Buffer) Clear(ctx context.Context, in *staging.ClearAct
 	return a.client.Clear(nctx, in)
 }
 
-func (a *grpcObjStagingV1Buffer) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjStagingV1Buffer) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -325,19 +325,19 @@ func (a *restObjStagingV1Buffer) Watch(ctx context.Context, options *api.ListWat
 	return a.endpoints.AutoWatchBuffer(ctx, options)
 }
 
-func (a *restObjStagingV1Buffer) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjStagingV1Buffer) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return false
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return false
 	default:
 		return false

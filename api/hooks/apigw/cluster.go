@@ -5,9 +5,9 @@ import (
 	"errors"
 
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
-	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	"github.com/pensando/sw/venice/utils/log"
@@ -61,7 +61,7 @@ func registerClusterHooks(svc apigw.APIGatewayService, l log.Logger) error {
 		bootstrapper: bootstrapper.GetBootstrapper(),
 		logger:       l,
 	}
-	prof, err := svc.GetCrudServiceProfile("Tenant", apiserver.CreateOper)
+	prof, err := svc.GetCrudServiceProfile("Tenant", apiintf.CreateOper)
 	if err != nil {
 		return err
 	}

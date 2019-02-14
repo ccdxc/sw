@@ -14,8 +14,8 @@ import (
 
 	api "github.com/pensando/sw/api"
 	cluster "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/interfaces"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
-	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -561,7 +561,7 @@ func (a *grpcObjClusterV1Cluster) UpdateTLSConfig(ctx context.Context, in *clust
 	return a.client.UpdateTLSConfig(nctx, in)
 }
 
-func (a *grpcObjClusterV1Cluster) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjClusterV1Cluster) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -621,19 +621,19 @@ func (a *restObjClusterV1Cluster) Watch(ctx context.Context, options *api.ListWa
 	return a.endpoints.AutoWatchCluster(ctx, options)
 }
 
-func (a *restObjClusterV1Cluster) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjClusterV1Cluster) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return false
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return false
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -749,7 +749,7 @@ func (a *grpcObjClusterV1Node) Watch(ctx context.Context, options *api.ListWatch
 	return lw, nil
 }
 
-func (a *grpcObjClusterV1Node) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjClusterV1Node) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -809,19 +809,19 @@ func (a *restObjClusterV1Node) Watch(ctx context.Context, options *api.ListWatch
 	return a.endpoints.AutoWatchNode(ctx, options)
 }
 
-func (a *restObjClusterV1Node) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjClusterV1Node) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -924,7 +924,7 @@ func (a *grpcObjClusterV1Host) Watch(ctx context.Context, options *api.ListWatch
 	return lw, nil
 }
 
-func (a *grpcObjClusterV1Host) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjClusterV1Host) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -984,19 +984,19 @@ func (a *restObjClusterV1Host) Watch(ctx context.Context, options *api.ListWatch
 	return a.endpoints.AutoWatchHost(ctx, options)
 }
 
-func (a *restObjClusterV1Host) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjClusterV1Host) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -1099,7 +1099,7 @@ func (a *grpcObjClusterV1SmartNIC) Watch(ctx context.Context, options *api.ListW
 	return lw, nil
 }
 
-func (a *grpcObjClusterV1SmartNIC) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjClusterV1SmartNIC) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1159,19 +1159,19 @@ func (a *restObjClusterV1SmartNIC) Watch(ctx context.Context, options *api.ListW
 	return a.endpoints.AutoWatchSmartNIC(ctx, options)
 }
 
-func (a *restObjClusterV1SmartNIC) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjClusterV1SmartNIC) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return false
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -1274,7 +1274,7 @@ func (a *grpcObjClusterV1Tenant) Watch(ctx context.Context, options *api.ListWat
 	return lw, nil
 }
 
-func (a *grpcObjClusterV1Tenant) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjClusterV1Tenant) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1334,19 +1334,19 @@ func (a *restObjClusterV1Tenant) Watch(ctx context.Context, options *api.ListWat
 	return a.endpoints.AutoWatchTenant(ctx, options)
 }
 
-func (a *restObjClusterV1Tenant) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjClusterV1Tenant) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false

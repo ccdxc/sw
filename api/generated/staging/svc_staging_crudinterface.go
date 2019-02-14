@@ -6,7 +6,7 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -23,7 +23,7 @@ type StagingV1BufferInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Buffer, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Buffer, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 	Commit(ctx context.Context, in *CommitAction) (*CommitAction, error)
 	Clear(ctx context.Context, in *ClearAction) (*ClearAction, error)
 }

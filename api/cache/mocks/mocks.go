@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/graph"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -14,6 +15,7 @@ import (
 type FakeCache struct {
 	FakeKvStore
 	ListFilteredFn func(ctx context.Context, prefix string, into runtime.Object, opts api.ListWatchOptions) error
+	StatFn         func(keys []string) []apiintf.ObjectStat
 	Kvconn         kvstore.Interface
 }
 
@@ -37,6 +39,14 @@ func (f *FakeCache) Start() error {
 
 // Restore is mock implementation
 func (f *FakeCache) Restore() error {
+	return nil
+}
+
+// Stat is mock implementation
+func (f *FakeCache) Stat(tx context.Context, keys []string) []apiintf.ObjectStat {
+	if f.StatFn != nil {
+		return f.StatFn(keys)
+	}
 	return nil
 }
 
@@ -203,7 +213,7 @@ func (f *FakeKvStore) Reset() {
 // FakeStore is mock implementation
 type FakeStore struct {
 	Sets, Gets, Deletes       uint64
-	Lists, Flushes            uint64
+	Lists, Flushes, Stats     uint64
 	Marks, Sweeps, DelDeleted uint64
 	Setfn                     func(key string, rev uint64, obj runtime.Object, cb apiintf.SuccessCbFunc) error
 	Getfn                     func(key string) (runtime.Object, error)
@@ -263,6 +273,12 @@ func (f *FakeStore) PurgeDeleted(past time.Duration) {
 	f.DelDeleted++
 }
 
+// Stat is a mock implementation
+func (f *FakeStore) Stat(keys []string) []apiintf.ObjectStat {
+	f.Stats++
+	return nil
+}
+
 // Clear is mock implementation
 func (f *FakeStore) Clear() {
 	f.Flushes++
@@ -288,12 +304,12 @@ type FakeOps struct {
 
 // FakeTxn is mock implementation
 type FakeTxn struct {
-	Ops       []FakeOps
-	Cmps      []kvstore.Cmp
-	Error     error
-	CommitOps int
-	Empty     bool
-	Commitfn  func(ctx context.Context) (kvstore.TxnResponse, error)
+	Ops                 []FakeOps
+	Cmps                []kvstore.Cmp
+	Error               error
+	CommitOps, TouchOps int
+	Empty               bool
+	Commitfn            func(ctx context.Context) (kvstore.TxnResponse, error)
 }
 
 // Create stages an object creation in a transaction.
@@ -320,7 +336,13 @@ func (f *FakeTxn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
 	if f.Commitfn != nil {
 		return f.Commitfn(ctx)
 	}
-	return kvstore.TxnResponse{}, nil
+	return kvstore.TxnResponse{Succeeded: true}, nil
+}
+
+// Touch updates version without changing contents
+func (f *FakeTxn) Touch(key string) error {
+	f.TouchOps++
+	return nil
 }
 
 // IsEmpty returns true if the Txn is empty
@@ -341,6 +363,17 @@ type FakeOverlay struct {
 	VerifyFunc                                                                   func(ctx context.Context) (apiintf.OverlayStatus, error)
 	CommitFunc                                                                   func(ctx context.Context, items []apiintf.OverlayKey) error
 	ClearBufferFunc                                                              func(ctx context.Context, items []apiintf.OverlayKey) error
+	Reqs                                                                         apiintf.RequirementSet
+	Txn                                                                          *FakeTxn
+	StatFn                                                                       func(keys []string) []apiintf.ObjectStat
+}
+
+// Stat is a mock implementation
+func (f *FakeOverlay) Stat(tx context.Context, keys []string) []apiintf.ObjectStat {
+	if f.StatFn != nil {
+		return f.StatFn(keys)
+	}
+	return nil
 }
 
 // Start is a mock implementation
@@ -401,7 +434,196 @@ func (f *FakeOverlay) Verify(ctx context.Context) (apiintf.OverlayStatus, error)
 	return apiintf.OverlayStatus{}, nil
 }
 
+// GetRequirements is a mock implementation
+func (f *FakeOverlay) GetRequirements() apiintf.RequirementSet {
+	return f.Reqs
+}
+
 // NewTxn is a mock implementation
 func (f *FakeOverlay) NewTxn() kvstore.Txn {
+	if f.Txn != nil {
+		return f.Txn
+	}
 	return &FakeTxn{}
+}
+
+// FakeRequirement is a mock implementation
+type FakeRequirement struct {
+	CheckCalled, ApplyCalled, FinalizeCalled int
+	RetErr                                   error
+	Data                                     interface{}
+}
+
+// Check is a mock implementation
+func (f *FakeRequirement) Check(ctx context.Context) []error {
+	f.CheckCalled++
+	if f.RetErr != nil {
+		return []error{f.RetErr}
+	}
+	return nil
+}
+
+// Apply is a mock implementation
+func (f *FakeRequirement) Apply(ctx context.Context, txn kvstore.Txn, cache apiintf.CacheInterface) error {
+	f.ApplyCalled++
+	if f.RetErr != nil {
+		return f.RetErr
+	}
+	return nil
+}
+
+// Finalize is a mock implementation
+func (f *FakeRequirement) Finalize(ctx context.Context) error {
+	f.FinalizeCalled++
+	if f.RetErr != nil {
+		return f.RetErr
+	}
+	return nil
+}
+
+// String produces a string for printing
+func (f *FakeRequirement) String() string {
+	return "FAKE"
+}
+
+// FakeRequirementSet is a mock implementation
+type FakeRequirementSet struct {
+	CheckCalled, ApplyCalled, FinalizeCalled, ClearCalled, RefsCalled int
+	RefReq                                                            map[string]map[string]apiintf.ReferenceObj
+	ApplyFn                                                           func(txn kvstore.Txn) []error
+	ConsUpdates                                                       []FakeRequirement
+}
+
+// Check checks if the requirement has been met by all requirements in the collection
+func (f *FakeRequirementSet) Check(ctx context.Context) []error {
+	f.CheckCalled++
+	return nil
+}
+
+// Apply applies the requirements to the transaction provided.
+//  All the requirements in the collection are called to Apply
+func (f *FakeRequirementSet) Apply(ctx context.Context, txn kvstore.Txn, cache apiintf.CacheInterface) []error {
+	f.ApplyCalled++
+	return nil
+}
+
+// Finalize call Requirement s in the set to the Finalize their requirements
+func (f *FakeRequirementSet) Finalize(ctx context.Context) []error {
+	f.FinalizeCalled++
+	return nil
+}
+
+// Clear clears all accumulated requirements in the set
+func (f *FakeRequirementSet) Clear(ctx context.Context) {
+	f.ClearCalled++
+}
+
+// String produces a string for printing
+func (f *FakeRequirementSet) String() string {
+	return "FAKE"
+}
+
+// NewRefRequirement creates a new reference related requirement and adds it to the list of requirements.
+func (f *FakeRequirementSet) NewRefRequirement(oper apiintf.APIOperType, key string, reqs map[string]apiintf.ReferenceObj) apiintf.Requirement {
+	f.RefsCalled++
+	if f.RefReq == nil {
+		f.RefReq = make(map[string]map[string]apiintf.ReferenceObj)
+	}
+	f.RefReq[key] = reqs
+	return &FakeRequirement{}
+}
+
+// NewConsUpdateRequirement creates a new consistent update requirement and adds it to the list of requirements
+//  the consistent update operations are applied in the order speciefied in the slice passed in
+func (f *FakeRequirementSet) NewConsUpdateRequirement(reqs []apiintf.ConstUpdateItem) apiintf.Requirement {
+	req := FakeRequirement{Data: reqs}
+	f.ConsUpdates = append(f.ConsUpdates, req)
+	return &req
+}
+
+// AddRequirement adds a new requirement to the set
+func (f *FakeRequirementSet) AddRequirement(requirement apiintf.Requirement) {}
+
+// FakeGraphInterface is a mock implementations
+type FakeGraphInterface struct {
+	UpdateNodes, DeleteNodes, ReferecesCalled                 int
+	RefereesCalled, TreeCalled, IsIsolatedCalled, CloseCalled int
+	Refs                                                      map[string][]string
+	WeakRefs                                                  map[string][]string
+	SelectorRefs                                              map[string][]string
+	Verts                                                     map[string][]*graph.Vertex
+	WVerts                                                    map[string][]*graph.Vertex
+}
+
+// UpdateNode is a mock implementations
+func (f *FakeGraphInterface) UpdateNode(in *graph.Node) error {
+	f.UpdateNodes++
+	return nil
+}
+
+// DeleteNode is a mock implementations
+func (f *FakeGraphInterface) DeleteNode(node string) error {
+	f.DeleteNodes++
+	return nil
+}
+
+// References is a mock implementations
+func (f *FakeGraphInterface) References(in string) *graph.Node {
+	f.ReferecesCalled++
+	ret := &graph.Node{}
+	if f.Refs != nil || f.WeakRefs != nil || f.SelectorRefs != nil {
+		ret.This = in
+		ret.Dir = graph.RefOut
+		ret.Refs = f.Refs
+		ret.WeakRefs = f.WeakRefs
+		ret.SelectorRefs = f.SelectorRefs
+		return ret
+	}
+	return nil
+}
+
+// Referrers is a mock implementations
+func (f *FakeGraphInterface) Referrers(in string) *graph.Node {
+	f.RefereesCalled++
+	ret := &graph.Node{}
+	if f.Refs != nil || f.WeakRefs != nil || f.SelectorRefs != nil {
+		ret.This = in
+		ret.Dir = graph.RefIn
+		ret.Refs = f.Refs
+		ret.WeakRefs = f.WeakRefs
+		ret.SelectorRefs = f.SelectorRefs
+		return ret
+	}
+	return nil
+}
+
+// Tree is a mock implementations
+func (f *FakeGraphInterface) Tree(in string, dir graph.Direction) *graph.Vertex {
+	f.TreeCalled++
+	if f.Refs != nil {
+		return &graph.Vertex{
+			This:         in,
+			Dir:          graph.RefIn,
+			Refs:         f.Verts,
+			WeakRefs:     f.WVerts,
+			SelectorRefs: f.SelectorRefs,
+		}
+	}
+	return nil
+}
+
+// IsIsolated is a mock implementations
+func (f *FakeGraphInterface) IsIsolated(in string) bool {
+	f.IsIsolatedCalled++
+	return true
+}
+
+// Close is a mock implementations
+func (f *FakeGraphInterface) Close() {
+	f.CloseCalled++
+}
+
+// Dump is a mock interface
+func (f *FakeGraphInterface) Dump(string) string {
+	return ""
 }

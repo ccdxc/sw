@@ -6,7 +6,7 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -23,7 +23,7 @@ type SecurityV1SecurityGroupInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SecurityGroup, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*SecurityGroup, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // SecurityV1SGPolicyInterface exposes the CRUD methods for SGPolicy
@@ -34,7 +34,7 @@ type SecurityV1SGPolicyInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SGPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*SGPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // SecurityV1AppInterface exposes the CRUD methods for App
@@ -45,7 +45,7 @@ type SecurityV1AppInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*App, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*App, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // SecurityV1FirewallProfileInterface exposes the CRUD methods for FirewallProfile
@@ -56,7 +56,7 @@ type SecurityV1FirewallProfileInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*FirewallProfile, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*FirewallProfile, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // SecurityV1CertificateInterface exposes the CRUD methods for Certificate
@@ -67,7 +67,7 @@ type SecurityV1CertificateInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Certificate, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Certificate, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // SecurityV1TrafficEncryptionPolicyInterface exposes the CRUD methods for TrafficEncryptionPolicy
@@ -78,7 +78,7 @@ type SecurityV1TrafficEncryptionPolicyInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*TrafficEncryptionPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*TrafficEncryptionPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // SecurityV1Interface exposes objects with CRUD operations allowed by the service

@@ -249,7 +249,10 @@ var typesMapStaging = map[string]*api.Struct{
 	},
 }
 
+var keyMapStaging = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapStaging)
+	schema.AddPaths(keyMapStaging)
 }

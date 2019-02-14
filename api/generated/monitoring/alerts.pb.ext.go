@@ -9,13 +9,15 @@ package monitoring
 import (
 	fmt "fmt"
 
-	"github.com/pensando/sw/api/generated/events"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/generated/events"
+
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -436,7 +438,34 @@ func (m *SyslogExport) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *Alert) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
 
 func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -470,6 +499,33 @@ func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AlertDestination) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
 func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	{
@@ -489,6 +545,10 @@ func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool) []error
 		ret = append(ret, errs...)
 	}
 	return ret
+}
+
+func (m *AlertDestinationSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -526,9 +586,40 @@ func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+func (m *AlertDestinationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AlertDestinationStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AlertPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *AlertPolicy) Validate(ver, path string, ignoreStatus bool) []error {
@@ -550,6 +641,10 @@ func (m *AlertPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 		ret = append(ret, errs...)
 	}
 	return ret
+}
+
+func (m *AlertPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AlertPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -580,9 +675,17 @@ func (m *AlertPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *AlertPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AlertPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AlertReason) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AlertReason) Validate(ver, path string, ignoreStatus bool) []error {
@@ -600,9 +703,17 @@ func (m *AlertReason) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AlertSource) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AlertSource) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AlertSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AlertSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -621,6 +732,10 @@ func (m *AlertSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *AlertStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AlertStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -650,14 +765,26 @@ func (m *AlertStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AuditInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AuditInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *EmailExport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *EmailExport) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *MatchedRequirement) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *MatchedRequirement) Validate(ver, path string, ignoreStatus bool) []error {
@@ -675,6 +802,10 @@ func (m *MatchedRequirement) Validate(ver, path string, ignoreStatus bool) []err
 	return ret
 }
 
+func (m *SNMPExport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *SNMPExport) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.SNMPTrapServers {
@@ -688,6 +819,10 @@ func (m *SNMPExport) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SyslogExport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SyslogExport) Validate(ver, path string, ignoreStatus bool) []error {

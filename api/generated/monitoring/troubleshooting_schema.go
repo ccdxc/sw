@@ -192,7 +192,10 @@ var typesMapTroubleshooting = map[string]*api.Struct{
 	},
 }
 
+var keyMapTroubleshooting = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapTroubleshooting)
+	schema.AddPaths(keyMapTroubleshooting)
 }

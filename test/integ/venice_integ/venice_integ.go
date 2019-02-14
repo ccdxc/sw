@@ -178,6 +178,8 @@ type veniceIntegSuite struct {
 	batchInterval       time.Duration // events batch interval
 	pcache              pcache.Interface
 	hub                 gosdk.Hub
+	ctx                 context.Context
+	cancel              context.CancelFunc
 }
 
 // VeniceSuite is an interface implemented by venice integ test suite
@@ -236,7 +238,7 @@ func (it *veniceIntegSuite) launchCMDServer() {
 			Name: "venice",
 		},
 	}
-	nodewatcher.NewNodeWatcher(context.Background(), node, it.resolverClient, 10, it.logger)
+	nodewatcher.NewNodeWatcher(it.ctx, node, it.resolverClient, 10, it.logger)
 
 	// start CMD auth server
 	go cmdauth.RunAuthServer(cmdAuthServer, nil)
@@ -263,7 +265,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 				},
 			},
 		}
-		_, err := it.apisrvClient.ClusterV1().Host().Create(context.Background(), host)
+		_, err := it.apisrvClient.ClusterV1().Host().Create(it.ctx, host)
 		if err != nil {
 			log.Fatalf("Error creating Host object %v, err: %v", host, err)
 		}
@@ -488,10 +490,7 @@ func (it *veniceIntegSuite) startCitadel() {
 	qsrv, err := query.NewQueryService(queryURL, br)
 
 	log.Infof("query server is listening on %+v", qsrv)
-
-	// wait forever
-	waitCh := make(chan bool)
-	<-waitCh
+	time.Sleep(time.Second)
 }
 
 // startEventsAndSearch starts spyglass and elastic-search containers
@@ -650,12 +649,12 @@ func (it *veniceIntegSuite) startAgent() {
 
 		if i == 0 { // start only 1 instance
 			// Init the TSDB
-			err = nodewatcher.NewNodeWatcher(context.Background(), node, it.resolverClient, 10, it.logger)
+			err = nodewatcher.NewNodeWatcher(it.ctx, node, it.resolverClient, 10, it.logger)
 			if err != nil {
 				log.Fatalf("Error creating NodeWatcher. Err: %v", err)
 			}
 
-			res, err := tmrestapi.NewRestServer(context.Background(), fmt.Sprintf("localhost:%d", it.config.TmAgentRestPort+i))
+			res, err := tmrestapi.NewRestServer(it.ctx, fmt.Sprintf("localhost:%d", it.config.TmAgentRestPort+i))
 			if err != nil {
 				log.Fatalf("Error creating tmagent rest server. Err: %v", err)
 			}
@@ -677,7 +676,7 @@ func (it *veniceIntegSuite) pollTimeout() string {
 }
 
 func (it *veniceIntegSuite) loggedInCtx() (context.Context, error) {
-	return authntestutils.NewLoggedInContext(context.Background(), fmt.Sprintf("localhost:%s", it.config.APIGatewayPort), it.userCred)
+	return authntestutils.NewLoggedInContext(it.ctx, fmt.Sprintf("localhost:%s", it.config.APIGatewayPort), it.userCred)
 }
 
 func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
@@ -714,6 +713,7 @@ func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 }
 
 func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
+	it.ctx, it.cancel = context.WithCancel(context.Background())
 	// logger
 	it.logger = logger
 
@@ -762,7 +762,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	it.launchCMDServer()
 
 	// run citadel
-	go it.startCitadel()
+	it.startCitadel()
 
 	// create the rollout controller
 	it.rolloutCtrler, err = rollout.NewCtrler(integTestRolloutURL, globals.APIServer, rc)
@@ -813,7 +813,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 			AutoAdmitNICs: true,
 		},
 	}
-	_, err = it.apisrvClient.ClusterV1().Cluster().Create(context.Background(), clRef)
+	_, err = it.apisrvClient.ClusterV1().Cluster().Create(it.ctx, clRef)
 	if err != nil {
 		fmt.Printf("Error creating Cluster object, %v", err)
 		os.Exit(-1)
@@ -895,6 +895,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 
 	// stop server and client
 	log.Infof("Stop all Test Controllers")
+	it.cancel()
 	it.tpm.Stop()
 	it.ctrler.Stop()
 	it.ctrler = nil

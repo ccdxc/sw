@@ -11,6 +11,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/auth/gateway"
 	// blank import to pull in bookstore service into api gateway
 	_ "github.com/pensando/sw/api/generated/bookstore/gateway"
+	// blank import to pull in browser service into api gateway
+	_ "github.com/pensando/sw/api/generated/browser/gateway"
 	// blank import to pull in cluster service into api gateway
 	_ "github.com/pensando/sw/api/generated/cluster/gateway"
 	// blank import to pull in events service into api gateway

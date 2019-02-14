@@ -254,7 +254,10 @@ var typesMapSearch = map[string]*api.Struct{
 	},
 }
 
+var keyMapSearch = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSearch)
+	schema.AddPaths(keyMapSearch)
 }

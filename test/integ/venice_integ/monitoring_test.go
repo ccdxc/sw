@@ -288,7 +288,7 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 	ms.Name = fmt.Sprintf("MirrorSession_%v", mid)
 	tm, err := ms.Spec.StartConditions.ScheduleTime.Time()
 	Assert(c, err == nil, "Time() errored for %v", ms.Spec.StartConditions.ScheduleTime)
-	tm = tm.Add(time.Duration(time.Second * 4))
+	tm = tm.Add(time.Duration(time.Second * 8))
 	ts, _ := types.TimestampProto(tm)
 	ms.Spec.StartConditions.ScheduleTime.Timestamp = *ts
 	tm, _ = ms.Spec.StartConditions.ScheduleTime.Time()
@@ -307,7 +307,7 @@ func (it *veniceIntegSuite) TestMirrorSessions(c *C) {
 		return true, nil
 	}, "Scheduled session is not out of ERROR state as expected", intervals...)
 
-	time.Sleep(time.Duration(time.Second * 5))
+	time.Sleep(time.Duration(time.Second * 8))
 	// Delete all mirror sessions
 	it.deleteAllMirrorSessions(ctx, activeMs)
 }

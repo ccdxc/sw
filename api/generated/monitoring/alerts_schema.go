@@ -326,7 +326,10 @@ var typesMapAlerts = map[string]*api.Struct{
 	},
 }
 
+var keyMapAlerts = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapAlerts)
+	schema.AddPaths(keyMapAlerts)
 }

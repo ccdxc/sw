@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -119,7 +120,34 @@ func (m *CertificateStatus) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *Certificate) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
 
 func (m *Certificate) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -153,6 +181,10 @@ func (m *Certificate) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *CertificateSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *CertificateSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapX509["CertificateSpec"][ver]; ok {
@@ -169,6 +201,10 @@ func (m *CertificateSpec) Validate(ver, path string, ignoreStatus bool) []error 
 		}
 	}
 	return ret
+}
+
+func (m *CertificateStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *CertificateStatus) Validate(ver, path string, ignoreStatus bool) []error {

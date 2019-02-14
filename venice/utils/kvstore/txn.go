@@ -47,6 +47,11 @@ type Txn interface {
 	// Update stages an object update in a transaction.
 	Update(key string, obj runtime.Object, cs ...Cmp) error
 
+	// Touch stages a touch operation which updates the revision
+	//  without any change to the object itself. Will fail for
+	//  non-existent keys.
+	Touch(key string) error
+
 	// Commit tries to commit the transaction.
 	Commit(ctx context.Context) (TxnResponse, error)
 

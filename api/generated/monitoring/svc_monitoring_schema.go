@@ -317,7 +317,32 @@ var typesMapSvc_monitoring = map[string]*api.Struct{
 	},
 }
 
+var keyMapSvc_monitoring = map[string][]api.PathsMap{
+
+	"monitoring.Alert": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/alerts/{Name}", Key: "/venice/config/monitoring/alerts/{Tenant}/{Name}"}},
+	"monitoring.AlertDestination": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/alertDestinations/{Name}", Key: "/venice/config/monitoring/alertDestinations/{Tenant}/{Name}"}},
+	"monitoring.AlertPolicy": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/alertPolicies/{Name}", Key: "/venice/config/monitoring/alertPolicies/{Tenant}/{Name}"}},
+	"monitoring.EventPolicy": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/event-policy/{Name}", Key: "/venice/config/monitoring/event-policy/{Tenant}/{Name}"}},
+	"monitoring.FlowExportPolicy": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/flowExportPolicy/{Name}", Key: "/venice/config/monitoring/flowExportPolicy/{Tenant}/{Name}"}},
+	"monitoring.FwlogPolicy": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/fwlogPolicy/{Name}", Key: "/venice/config/monitoring/fwlogPolicy/{Tenant}/{Name}"}},
+	"monitoring.MirrorSession": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/MirrorSession/{Name}", Key: "/venice/config/monitoring/MirrorSession/{Tenant}/{Name}"}},
+	"monitoring.StatsPolicy": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/statsPolicy/{Name}", Key: "/venice/config/monitoring/statsPolicy/{Tenant}/{Name}"}},
+	"monitoring.TechSupportRequest": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/techsupport/{Name}", Key: "/venice/config/monitoring/techsupport/{Name}"}},
+	"monitoring.TroubleshootingSession": []api.PathsMap{
+		{URI: "/configs/monitoring/v1/tenant/{Tenant}/TroubleshootingSession/{Name}", Key: "/venice/config/monitoring/TroubleshootingSession/{Tenant}/{Name}"}},
+}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_monitoring)
+	schema.AddPaths(keyMapSvc_monitoring)
 }

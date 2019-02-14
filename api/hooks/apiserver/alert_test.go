@@ -8,9 +8,13 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
+	"github.com/pensando/sw/api/cache/mocks"
+	"github.com/pensando/sw/api/utils"
+
+	"github.com/pensando/sw/api/interfaces"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/memkv"
@@ -115,87 +119,81 @@ func TestAlertHooks(t *testing.T) {
 	}
 
 	ah := &alertHooks{logger: log.GetNewLogger(log.GetDefaultConfig("TestAPIServerAlertHooks"))}
+	alertObj := &monitoring.Alert{}
+	err := kvs.Get(context.Background(), a1Key, alertObj)
+	AssertOk(t, err, "failed to get alert from kv store, err: %v", err)
+
+	// get the current alert policy status
+	ap := &monitoring.AlertPolicy{}
+	err = kvs.Get(context.Background(), ap1Key, ap)
 	for _, tc := range tests {
-		alertObj := &monitoring.Alert{}
-		err := kvs.Get(context.Background(), a1Key, alertObj)
-		AssertOk(t, err, "failed to get alert from kv store, err: %v", err)
 
-		// get the current alert policy status
-		ap := &monitoring.AlertPolicy{}
-		err = kvs.Get(context.Background(), ap1Key, ap)
 		AssertOk(t, err, "failed to get alert policy, err: %v", err)
-
-		if tc.acknowledge {
+		freqs := &mocks.FakeRequirementSet{}
+		ctx := apiutils.SetRequirements(tc.ctx, freqs)
+		kvAlert := &monitoring.Alert{}
+		kvAPol := &monitoring.AlertPolicy{}
+		*kvAlert = *alertObj
+		*kvAPol = *ap
+		switch {
+		case tc.acknowledge:
 			alertObj.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_ACKNOWLEDGED)]
-
-			out, skipBackend, err := ah.updateStatus(tc.ctx, kvs, kvs.NewTxn(), tc.key, apiserver.UpdateOper, false, *alertObj)
-			Assert(t, reflect.DeepEqual(tc.err, err), "tc {%s}: updateStatus hook failed, expected err: %v, got: %v", tc.name, tc.err, err)
-			Assert(t, tc.skipBackend == skipBackend, "tc {%s}: expected to skip backend: %v, got: %v", tc.name, tc.skipBackend, skipBackend)
-
-			if err == nil {
-				outObj := out.(monitoring.Alert)
-				Assert(t, outObj.Status.Acknowledged != nil, "tc %v: failed to update status", tc.name)
-
-				updatedAP := &monitoring.AlertPolicy{}
-				err = kvs.Get(context.Background(), ap1Key, updatedAP)
-				AssertOk(t, err, "tc {%s}: failed to get alert policy from kvs, err: %v", tc.name, err)
-				Assert(t, (ap.Status.AcknowledgedAlerts+1) == updatedAP.Status.AcknowledgedAlerts,
-					"tc {%s}: expected acknowledged alerts to be :%d, got: %d", tc.name, ap.Status.AcknowledgedAlerts+1, updatedAP.Status.AcknowledgedAlerts)
-				// OPEN     -> ACK ==> (ap.Status.OpenAlerts == updatedAP.Status.OpenAlerts)
-				// RESOLVED -> ACK ==> ((ap.Status.OpenAlerts +1) == updatedAP.Status.OpenAlerts)
-				Assert(t, ap.Status.OpenAlerts == updatedAP.Status.OpenAlerts || (ap.Status.OpenAlerts+1) == updatedAP.Status.OpenAlerts,
-					"tc {%s}: expected open alerts to be :%d or %d , got: %d", tc.name, ap.Status.OpenAlerts, ap.Status.OpenAlerts+1, updatedAP.Status.OpenAlerts)
-			}
-		} else if tc.resolve {
+		case tc.resolve:
 			alertObj.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_RESOLVED)]
-
-			out, skipBackend, err := ah.updateStatus(tc.ctx, kvs, kvs.NewTxn(), tc.key, apiserver.UpdateOper, false, *alertObj)
-			Assert(t, reflect.DeepEqual(tc.err, err), "tc {%s}: updateStatus hook failed, expected err: %v, got: %v", tc.name, tc.err, err)
-			Assert(t, tc.skipBackend == skipBackend, "tc {%s}: expected to skip backend: %v, got: %v", tc.name, tc.skipBackend, skipBackend)
-
-			if err == nil {
-				outObj := out.(monitoring.Alert)
-				Assert(t, outObj.Status.Resolved != nil, "tc {%s}: failed to update status", tc.name)
-
-				updatedAP := &monitoring.AlertPolicy{}
-				err = kvs.Get(context.Background(), ap1Key, updatedAP)
-				AssertOk(t, err, "failed to get alert policy from kvs, err: %v", err)
-				// OPEN -> RESOLVED ==> (ap.Status.AcknowledgedAlerts == updatedAP.Status.AcknowledgedAlerts)
-				// ACK  -> RESOLVED ==> ((ap.Status.AcknowledgedAlerts-1) == updatedAP.Status.AcknowledgedAlerts)
-				Assert(t, ap.Status.AcknowledgedAlerts == updatedAP.Status.AcknowledgedAlerts || (ap.Status.AcknowledgedAlerts-1) == updatedAP.Status.AcknowledgedAlerts,
-					"tc {%s}: expected acknowledged alerts to be :%d or %d, got: %d", tc.name, ap.Status.AcknowledgedAlerts, ap.Status.AcknowledgedAlerts-1, updatedAP.Status.AcknowledgedAlerts)
-				Assert(t, ap.Status.OpenAlerts-1 == updatedAP.Status.OpenAlerts,
-					"tc {%s}: expected open alerts to be :%d, got: %d", tc.name, ap.Status.OpenAlerts-1, updatedAP.Status.OpenAlerts)
-			}
-		} else if tc.open {
+		case tc.open:
 			alertObj.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)]
-
-			out, skipBackend, err := ah.updateStatus(tc.ctx, kvs, kvs.NewTxn(), tc.key, apiserver.UpdateOper, false, *alertObj)
-			Assert(t, reflect.DeepEqual(tc.err, err), "tc {%s}: updateStatus hook failed, expected err: %v, got: %v", tc.name, tc.err, err)
-			Assert(t, tc.skipBackend == skipBackend, "tc {%s}: expected to skip backend: %v, got: %v", tc.name, tc.skipBackend, skipBackend)
-
-			if err == nil {
-				outObj := out.(monitoring.Alert)
-				Assert(t, outObj.Status.Resolved == nil, "tc {%s}: failed to update status, resolved: %v", tc.name, outObj.Status.Resolved)
-				Assert(t, outObj.Status.Acknowledged == nil, "tc {%s}: failed to update status, acknowledged: %v", tc.name, outObj.Status.Acknowledged)
-
-				updatedAP := &monitoring.AlertPolicy{}
-				err = kvs.Get(context.Background(), ap1Key, updatedAP)
-				AssertOk(t, err, "failed to get alert policy from kvs, err: %v", err)
-				// RESOLVED -> OPEN ==> (ap.Status.AcknowledgedAlerts == updatedAP.Status.AcknowledgedAlerts)
-				// ACK      -> OPEN ==> ((ap.Status.AcknowledgedAlerts-1) == updatedAP.Status.AcknowledgedAlerts)
-				Assert(t, ap.Status.AcknowledgedAlerts == updatedAP.Status.AcknowledgedAlerts || (ap.Status.AcknowledgedAlerts-1) == updatedAP.Status.AcknowledgedAlerts,
-					"tc {%s}: expected acknowledged alerts to be :%d or %d, got: %d", tc.name, ap.Status.AcknowledgedAlerts, ap.Status.AcknowledgedAlerts-1, updatedAP.Status.AcknowledgedAlerts)
-				// RESOLVED -> OPEN ==> ((ap.Status.OpenAlerts+1) == updatedAP.Status.OpenAlerts)
-				// ACK 		-> OPEN ==> ap.Status.OpenAlerts == updatedAP.Status.OpenAlerts
-				Assert(t, ap.Status.OpenAlerts == updatedAP.Status.OpenAlerts || (ap.Status.OpenAlerts+1) == updatedAP.Status.OpenAlerts,
-					"tc {%s}: expected open alerts to be :%d or %d, got: %d", tc.name, ap.Status.OpenAlerts, ap.Status.OpenAlerts+1, updatedAP.Status.OpenAlerts)
-			}
-		} else {
-			_, skipBackend, err := ah.updateStatus(tc.ctx, kvs, kvs.NewTxn(), tc.key, apiserver.UpdateOper, false, *alertObj)
-			Assert(t, reflect.DeepEqual(tc.err, err), "tc {%s}: updateStatus hook failed, expected err: %v, got: %v", tc.name, tc.err, err)
-			Assert(t, tc.skipBackend == skipBackend, "tc {%s}: expected to skip backend: %v, got: %v", tc.name, tc.skipBackend, skipBackend)
 		}
+
+		_, skipBackend, err := ah.updateStatus(ctx, kvs, kvs.NewTxn(), tc.key, apiintf.UpdateOper, false, *alertObj)
+		Assert(t, tc.skipBackend == skipBackend, "tc {%s}: expected to skip backend: %v, got: %v", tc.name, tc.skipBackend, skipBackend)
+		if err != nil {
+			Assert(t, reflect.DeepEqual(tc.err, err), "tc {%s}: updateStatus hook failed, expected err: %v, got: %v", tc.name, tc.err, err)
+			continue
+		}
+		Assert(t, len(freqs.ConsUpdates) == 1, "expecting 1 consistent update requirement got [%v]", len(freqs.ConsUpdates))
+		cis := freqs.ConsUpdates[0].Data.([]apiintf.ConstUpdateItem)
+		Assert(t, len(cis) == 2, "expectinv 2 consistent update kesys, got [%v]", len(cis))
+		var uap runtime.Object
+		oObj, err := cis[0].Func(kvAlert)
+		if err == nil {
+			uap, err = cis[1].Func(kvAPol)
+		}
+		if err != nil {
+			Assert(t, reflect.DeepEqual(tc.err, err), "tc {%s}: updateStatus hook failed, expected err: %v, got: %v", tc.name, tc.err, err)
+			continue
+		}
+		updatedAP := uap.(*monitoring.AlertPolicy)
+		outObj := oObj.(*monitoring.Alert)
+		if tc.acknowledge {
+			Assert(t, outObj.Status.Acknowledged != nil, "tc %v: failed to update status", tc.name)
+			Assert(t, (ap.Status.AcknowledgedAlerts+1) == updatedAP.Status.AcknowledgedAlerts,
+				"tc {%s}: expected acknowledged alerts to be :%d, got: %d", tc.name, ap.Status.AcknowledgedAlerts+1, updatedAP.Status.AcknowledgedAlerts)
+			// OPEN     -> ACK ==> (ap.Status.OpenAlerts == updatedAP.Status.OpenAlerts)
+			// RESOLVED -> ACK ==> ((ap.Status.OpenAlerts +1) == updatedAP.Status.OpenAlerts)
+			Assert(t, ap.Status.OpenAlerts == updatedAP.Status.OpenAlerts || (ap.Status.OpenAlerts+1) == updatedAP.Status.OpenAlerts,
+				"tc {%s}: expected open alerts to be :%d or %d , got: %d", tc.name, ap.Status.OpenAlerts, ap.Status.OpenAlerts+1, updatedAP.Status.OpenAlerts)
+		} else if tc.resolve {
+			Assert(t, outObj.Status.Resolved != nil, "tc {%s}: failed to update status", tc.name)
+			// OPEN -> RESOLVED ==> (ap.Status.AcknowledgedAlerts == updatedAP.Status.AcknowledgedAlerts)
+			// ACK  -> RESOLVED ==> ((ap.Status.AcknowledgedAlerts-1) == updatedAP.Status.AcknowledgedAlerts)
+			Assert(t, ap.Status.AcknowledgedAlerts == updatedAP.Status.AcknowledgedAlerts || (ap.Status.AcknowledgedAlerts-1) == updatedAP.Status.AcknowledgedAlerts,
+				"tc {%s}: expected acknowledged alerts to be :%d or %d, got: %d", tc.name, ap.Status.AcknowledgedAlerts, ap.Status.AcknowledgedAlerts-1, updatedAP.Status.AcknowledgedAlerts)
+			Assert(t, ap.Status.OpenAlerts-1 == updatedAP.Status.OpenAlerts,
+				"tc {%s}: expected open alerts to be :%d, got: %d", tc.name, ap.Status.OpenAlerts-1, updatedAP.Status.OpenAlerts)
+		} else if tc.open {
+			Assert(t, outObj.Status.Resolved == nil, "tc {%s}: failed to update status, resolved: %v", tc.name, outObj.Status.Resolved)
+			Assert(t, outObj.Status.Acknowledged == nil, "tc {%s}: failed to update status, acknowledged: %v", tc.name, outObj.Status.Acknowledged)
+			// RESOLVED -> OPEN ==> (ap.Status.AcknowledgedAlerts == updatedAP.Status.AcknowledgedAlerts)
+			// ACK      -> OPEN ==> ((ap.Status.AcknowledgedAlerts-1) == updatedAP.Status.AcknowledgedAlerts)
+			Assert(t, ap.Status.AcknowledgedAlerts == updatedAP.Status.AcknowledgedAlerts || (ap.Status.AcknowledgedAlerts-1) == updatedAP.Status.AcknowledgedAlerts,
+				"tc {%s}: expected acknowledged alerts to be :%d or %d, got: %d", tc.name, ap.Status.AcknowledgedAlerts, ap.Status.AcknowledgedAlerts-1, updatedAP.Status.AcknowledgedAlerts)
+			// RESOLVED -> OPEN ==> ((ap.Status.OpenAlerts+1) == updatedAP.Status.OpenAlerts)
+			// ACK 		-> OPEN ==> ap.Status.OpenAlerts == updatedAP.Status.OpenAlerts
+			Assert(t, ap.Status.OpenAlerts == updatedAP.Status.OpenAlerts || (ap.Status.OpenAlerts+1) == updatedAP.Status.OpenAlerts,
+				"tc {%s}: expected open alerts to be :%d or %d, got: %d", tc.name, ap.Status.OpenAlerts, ap.Status.OpenAlerts+1, updatedAP.Status.OpenAlerts)
+		}
+		*alertObj = *outObj
+		*ap = *updatedAP
 	}
 }
 

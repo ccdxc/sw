@@ -127,7 +127,10 @@ var typesMapTechsupport = map[string]*api.Struct{
 	},
 }
 
+var keyMapTechsupport = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapTechsupport)
+	schema.AddPaths(keyMapTechsupport)
 }

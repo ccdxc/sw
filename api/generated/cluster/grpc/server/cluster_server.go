@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	cluster "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -229,6 +230,13 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.Cluster)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(cluster.Cluster)
+
+			tenant := ""
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *cluster.Cluster
 			if v, ok := i.(cluster.Cluster); ok {
@@ -246,8 +254,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -489,6 +496,13 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.ClusterAuthBootstrapRequest)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(cluster.ClusterAuthBootstrapRequest)
+
+			tenant := ""
+			r.References(tenant, "", ret)
+			return ret, nil
 		}),
 
 		"cluster.ClusterSpec":   apisrvpkg.NewMessage("cluster.ClusterSpec"),
@@ -678,6 +692,13 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.Host)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(cluster.Host)
+
+			tenant := ""
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *cluster.Host
 			if v, ok := i.(cluster.Host); ok {
@@ -695,8 +716,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -952,6 +972,13 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.Node)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(cluster.Node)
+
+			tenant := ""
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *cluster.Node
 			if v, ok := i.(cluster.Node); ok {
@@ -969,8 +996,7 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -1220,6 +1246,13 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(cluster.UpdateTLSConfigRequest)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(cluster.UpdateTLSConfigRequest)
+
+			tenant := ""
+			r.References(tenant, "", ret)
+			return ret, nil
 		}),
 
 		// Add a message handler for ListWatch options

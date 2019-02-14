@@ -143,7 +143,10 @@ var typesMapRollout = map[string]*api.Struct{
 	},
 }
 
+var keyMapRollout = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapRollout)
+	schema.AddPaths(keyMapRollout)
 }

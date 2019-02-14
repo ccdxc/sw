@@ -13,7 +13,10 @@ import (
 
 var typesMapSvc_search = map[string]*api.Struct{}
 
+var keyMapSvc_search = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_search)
+	schema.AddPaths(keyMapSvc_search)
 }

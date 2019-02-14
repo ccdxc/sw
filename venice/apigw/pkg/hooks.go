@@ -1,14 +1,14 @@
 package apigwpkg
 
 import (
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apiserver"
 )
 
 type svcProfile struct {
 	kind     string
 	group    string
-	oper     apiserver.APIOperType
+	oper     apiintf.APIOperType
 	defProf  apigw.ServiceProfile
 	preauthn []apigw.PreAuthNHook
 	preauthz []apigw.PreAuthZHook
@@ -27,7 +27,7 @@ func (s *svcProfile) GetAPIGoup() string {
 }
 
 // GetOper returns the operation involved, Unknown oper if none or more than one oper.
-func (s *svcProfile) GetOper() apiserver.APIOperType {
+func (s *svcProfile) GetOper() apiintf.APIOperType {
 	return s.oper
 }
 
@@ -116,7 +116,7 @@ func (s *svcProfile) SetDefaults() error {
 }
 
 // NewServiceProfile creates a new service profile object
-func NewServiceProfile(fallback apigw.ServiceProfile, kind, group string, oper apiserver.APIOperType) apigw.ServiceProfile {
+func NewServiceProfile(fallback apigw.ServiceProfile, kind, group string, oper apiintf.APIOperType) apigw.ServiceProfile {
 	return &svcProfile{
 		defProf: fallback,
 		kind:    kind,

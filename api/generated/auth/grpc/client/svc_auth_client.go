@@ -14,8 +14,8 @@ import (
 
 	api "github.com/pensando/sw/api"
 	auth "github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/interfaces"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
-	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -517,7 +517,7 @@ func (a *grpcObjAuthV1User) PasswordReset(ctx context.Context, in *auth.Password
 	return a.client.PasswordReset(nctx, in)
 }
 
-func (a *grpcObjAuthV1User) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjAuthV1User) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -580,19 +580,19 @@ func (a *restObjAuthV1User) Watch(ctx context.Context, options *api.ListWatchOpt
 	return a.endpoints.AutoWatchUser(ctx, options)
 }
 
-func (a *restObjAuthV1User) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjAuthV1User) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -726,7 +726,7 @@ func (a *grpcObjAuthV1AuthenticationPolicy) LdapBindCheck(ctx context.Context, i
 	return a.client.LdapBindCheck(nctx, in)
 }
 
-func (a *grpcObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjAuthV1AuthenticationPolicy) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -786,19 +786,19 @@ func (a *restObjAuthV1AuthenticationPolicy) Watch(ctx context.Context, options *
 	return a.endpoints.AutoWatchAuthenticationPolicy(ctx, options)
 }
 
-func (a *restObjAuthV1AuthenticationPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjAuthV1AuthenticationPolicy) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return false
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return false
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -914,7 +914,7 @@ func (a *grpcObjAuthV1Role) Watch(ctx context.Context, options *api.ListWatchOpt
 	return lw, nil
 }
 
-func (a *grpcObjAuthV1Role) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjAuthV1Role) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -977,19 +977,19 @@ func (a *restObjAuthV1Role) Watch(ctx context.Context, options *api.ListWatchOpt
 	return a.endpoints.AutoWatchRole(ctx, options)
 }
 
-func (a *restObjAuthV1Role) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjAuthV1Role) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -1092,7 +1092,7 @@ func (a *grpcObjAuthV1RoleBinding) Watch(ctx context.Context, options *api.ListW
 	return lw, nil
 }
 
-func (a *grpcObjAuthV1RoleBinding) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjAuthV1RoleBinding) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1155,19 +1155,19 @@ func (a *restObjAuthV1RoleBinding) Watch(ctx context.Context, options *api.ListW
 	return a.endpoints.AutoWatchRoleBinding(ctx, options)
 }
 
-func (a *restObjAuthV1RoleBinding) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjAuthV1RoleBinding) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false

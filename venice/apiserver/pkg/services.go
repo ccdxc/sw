@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"sync"
 
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/pensando/sw/api/interfaces"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/apiserver"
@@ -64,7 +66,7 @@ func (s *ServiceHdlr) GetMethod(n string) apiserver.Method {
 }
 
 // GetCrudService is a helper function to retrieve a auto generated CRUD method
-func (s *ServiceHdlr) GetCrudService(in string, oper apiserver.APIOperType) apiserver.Method {
+func (s *ServiceHdlr) GetCrudService(in string, oper apiintf.APIOperType) apiserver.Method {
 	mname := fmt.Sprintf(apiserver.GetCrudServiceName(in, oper))
 	return s.GetMethod(mname)
 }

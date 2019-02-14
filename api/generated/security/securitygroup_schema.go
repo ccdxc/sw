@@ -88,7 +88,10 @@ var typesMapSecuritygroup = map[string]*api.Struct{
 	},
 }
 
+var keyMapSecuritygroup = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSecuritygroup)
+	schema.AddPaths(keyMapSecuritygroup)
 }

@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -178,11 +179,42 @@ func (m *SGRule) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *ProtoPort) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *ProtoPort) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *SGPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool) []error {
@@ -206,9 +238,17 @@ func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SGPolicyPropagationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *SGPolicyPropagationStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *SGPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -226,9 +266,17 @@ func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SGPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *SGPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *SGRule) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SGRule) Validate(ver, path string, ignoreStatus bool) []error {

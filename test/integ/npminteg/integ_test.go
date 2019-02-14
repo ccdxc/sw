@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"gopkg.in/check.v1"
 	. "gopkg.in/check.v1"
-	check "gopkg.in/check.v1"
 
 	"golang.org/x/net/context"
 
@@ -24,7 +24,7 @@ import (
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/cmd/grpc/service"
 	"github.com/pensando/sw/venice/cmd/services/mock"
-	types "github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -226,6 +226,8 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 // basic connectivity tests between NPM and agent
 func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	// create a network in controller
+	// if not present create the default tenant
+	it.CreateTenant("default")
 	err := it.CreateNetwork("default", "default", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(c, err, "error creating network")
 
@@ -256,6 +258,8 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 // test endpoint create workflow e2e
 func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	// create a network in controller
+	// if not present create the default tenant
+	it.CreateTenant("default")
 	err := it.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/22", "10.1.1.254")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {

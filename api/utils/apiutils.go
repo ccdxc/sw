@@ -2,10 +2,13 @@ package apiutils
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 type dryRunMarker struct {
@@ -21,6 +24,10 @@ const (
 	CtxKeyAPIGwWebSocketConn  = "ApiGwWebSocketConn"
 	CtxKeyAPISrvInitRestore   = "InitRestorePath"
 )
+
+type requirementSetMarker struct {
+	val interface{}
+}
 
 // SetDruRun sets the dry run flag in the the context
 func setDryRun(ctx context.Context, val int64) context.Context {
@@ -117,4 +124,32 @@ func GetQueryStringFromListWatchOptions(in *api.ListWatchOptions) string {
 		return strings.Join(params, "&")
 	}
 	return ""
+}
+
+// SetRequirements annotates the context with a requirement set
+func SetRequirements(ctx context.Context, in interface{}) context.Context {
+	return context.WithValue(ctx, requirementSetMarker{}, &requirementSetMarker{in})
+}
+
+// GetRequirements retrieves the requirements set if present
+func GetRequirements(ctx context.Context) (interface{}, error) {
+	ret := ctx.Value(requirementSetMarker{})
+	if ret == nil {
+		return nil, errors.New("not found")
+	}
+	if r, ok := ret.(*requirementSetMarker); ok {
+		return r.val, nil
+	}
+	return nil, errors.New("invalid type")
+}
+
+// MustGetObjectMetaVersion retrieves the resource version from object meta. Panics on failure.
+func MustGetObjectMetaVersion(obj runtime.Object) (*api.ObjectMeta, uint64) {
+	objm := obj.(runtime.ObjectMetaAccessor)
+	meta := objm.GetObjectMeta()
+	v, err := strconv.ParseUint(meta.ResourceVersion, 10, 64)
+	if err != nil {
+		panic(fmt.Sprintf("unable to parse version string [%s](%s)", meta.ResourceVersion, err))
+	}
+	return meta, v
 }

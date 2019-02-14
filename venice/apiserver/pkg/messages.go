@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	"github.com/pensando/sw/api/interfaces"
 
 	"github.com/pensando/sw/api"
 
@@ -69,6 +71,8 @@ type MessageHdlr struct {
 	updateStatusFn func(interface{}) kvstore.UpdateFunc
 	// getRuntimeObject returns the runtime.Object
 	getRuntimeObject func(interface{}) runtime.Object
+	// getReferencesFn is a function to retrieve references in the object
+	getReferencesFn apisrv.GetReferencesFunc
 }
 
 // NewMessage creates a new message performing all initialization needed.
@@ -182,6 +186,12 @@ func (m *MessageHdlr) WithReplaceStatusFunction(fn func(interface{}) kvstore.Upd
 // WithGetRuntimeObject gets the runtime object
 func (m *MessageHdlr) WithGetRuntimeObject(fn func(interface{}) runtime.Object) apisrv.Message {
 	m.getRuntimeObject = fn
+	return m
+}
+
+// WithReferencesGetter registers a GetReferencesFunc to the message
+func (m *MessageHdlr) WithReferencesGetter(fn apisrv.GetReferencesFunc) apisrv.Message {
+	m.getReferencesFn = fn
 	return m
 }
 
@@ -400,7 +410,7 @@ func (m *MessageHdlr) WatchFromKv(options *api.ListWatchOptions, stream grpc.Ser
 }
 
 // TransformToStorage applies storage transformers before writing to storage
-func (m *MessageHdlr) TransformToStorage(ctx context.Context, oper apisrv.APIOperType, i interface{}) (interface{}, error) {
+func (m *MessageHdlr) TransformToStorage(ctx context.Context, oper apiintf.APIOperType, i interface{}) (interface{}, error) {
 	var err error
 	obj := i
 	for _, stx := range m.storageTransformer {
@@ -412,7 +422,7 @@ func (m *MessageHdlr) TransformToStorage(ctx context.Context, oper apisrv.APIOpe
 }
 
 // TransformFromStorage applies storage transformers after reading from storage
-func (m *MessageHdlr) TransformFromStorage(ctx context.Context, oper apisrv.APIOperType, i interface{}) (interface{}, error) {
+func (m *MessageHdlr) TransformFromStorage(ctx context.Context, oper apiintf.APIOperType, i interface{}) (interface{}, error) {
 	var err error
 	obj := i
 	for _, stx := range m.storageTransformer {
@@ -444,4 +454,12 @@ func (m *MessageHdlr) GetRuntimeObject(i interface{}) runtime.Object {
 		return m.getRuntimeObject(i)
 	}
 	return nil
+}
+
+// GetReferences fetches the references for the object.
+func (m *MessageHdlr) GetReferences(in interface{}) (map[string]apiintf.ReferenceObj, error) {
+	if m.getReferencesFn != nil {
+		return m.getReferencesFn(in)
+	}
+	return nil, nil
 }

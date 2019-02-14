@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -180,11 +181,19 @@ func (m *ObjectList) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *AutoMsgBucketWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *AutoMsgBucketWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AutoMsgBucketWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgBucketWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
@@ -192,9 +201,17 @@ func (m *AutoMsgBucketWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 	return ret
 }
 
+func (m *AutoMsgObjectWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgObjectWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AutoMsgObjectWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgObjectWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
@@ -202,9 +219,17 @@ func (m *AutoMsgObjectWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 	return ret
 }
 
+func (m *BucketList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *BucketList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ObjectList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *ObjectList) Validate(ver, path string, ignoreStatus bool) []error {

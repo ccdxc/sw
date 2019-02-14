@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -339,7 +340,11 @@ func (m *UserList) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *AuthenticationPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *AuthenticationPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -354,6 +359,10 @@ func (m *AuthenticationPolicyList) Validate(ver, path string, ignoreStatus bool)
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgAuthenticationPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgAuthenticationPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -371,6 +380,10 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper) Validate(ver, path string, igno
 	return ret
 }
 
+func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -386,14 +399,26 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Validate(ver, path s
 	return ret
 }
 
+func (m *AutoMsgRoleBindingWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgRoleBindingWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AutoMsgRoleWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgRoleWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -411,6 +436,10 @@ func (m *AutoMsgRoleWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 	return ret
 }
 
+func (m *AutoMsgRoleWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgRoleWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -424,6 +453,10 @@ func (m *AutoMsgRoleWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgUserWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgUserWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -441,6 +474,10 @@ func (m *AutoMsgUserWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 	return ret
 }
 
+func (m *AutoMsgUserWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgUserWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -456,9 +493,17 @@ func (m *AutoMsgUserWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 	return ret
 }
 
+func (m *RoleBindingList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *RoleBindingList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *RoleList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *RoleList) Validate(ver, path string, ignoreStatus bool) []error {
@@ -474,6 +519,10 @@ func (m *RoleList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *UserList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *UserList) Validate(ver, path string, ignoreStatus bool) []error {

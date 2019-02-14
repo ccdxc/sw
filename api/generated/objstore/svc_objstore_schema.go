@@ -77,7 +77,16 @@ var typesMapSvc_objstore = map[string]*api.Struct{
 	},
 }
 
+var keyMapSvc_objstore = map[string][]api.PathsMap{
+
+	"objstore.Bucket": []api.PathsMap{
+		{URI: "/configs//v1/buckets/{Name}", Key: "/venice/config//buckets/{Name}"}},
+	"objstore.Object": []api.PathsMap{
+		{URI: "/configs//v1/tenant/{Tenant}/{Namespace}/objects/{Name}", Key: "/venice/config//objects/{Tenant}/{Namespace}/{Name}"}},
+}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_objstore)
+	schema.AddPaths(keyMapSvc_objstore)
 }

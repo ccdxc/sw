@@ -6,7 +6,7 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -23,7 +23,7 @@ type AuthV1UserInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*User, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*User, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 	PasswordChange(ctx context.Context, in *PasswordChangeRequest) (*User, error)
 	PasswordReset(ctx context.Context, in *PasswordResetRequest) (*User, error)
 }
@@ -36,7 +36,7 @@ type AuthV1AuthenticationPolicyInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*AuthenticationPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*AuthenticationPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 	LdapConnectionCheck(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error)
 	LdapBindCheck(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error)
 }
@@ -49,7 +49,7 @@ type AuthV1RoleInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Role, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Role, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // AuthV1RoleBindingInterface exposes the CRUD methods for RoleBinding
@@ -60,7 +60,7 @@ type AuthV1RoleBindingInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*RoleBinding, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*RoleBinding, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // AuthV1Interface exposes objects with CRUD operations allowed by the service

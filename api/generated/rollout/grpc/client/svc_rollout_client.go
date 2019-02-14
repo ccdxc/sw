@@ -14,8 +14,8 @@ import (
 
 	api "github.com/pensando/sw/api"
 	rollout "github.com/pensando/sw/api/generated/rollout"
+	"github.com/pensando/sw/api/interfaces"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
-	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -213,7 +213,7 @@ func (a *grpcObjRolloutV1Rollout) Watch(ctx context.Context, options *api.ListWa
 	return lw, nil
 }
 
-func (a *grpcObjRolloutV1Rollout) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjRolloutV1Rollout) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -273,19 +273,19 @@ func (a *restObjRolloutV1Rollout) Watch(ctx context.Context, options *api.ListWa
 	return a.endpoints.AutoWatchRollout(ctx, options)
 }
 
-func (a *restObjRolloutV1Rollout) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjRolloutV1Rollout) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false

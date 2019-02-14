@@ -137,7 +137,20 @@ var typesMapSvc_auth = map[string]*api.Struct{
 	},
 }
 
+var keyMapSvc_auth = map[string][]api.PathsMap{
+
+	"auth.AuthenticationPolicy": []api.PathsMap{
+		{URI: "/configs/auth/v1/authn-policy", Key: "/venice/config/auth/authn-policy/Singleton"}},
+	"auth.Role": []api.PathsMap{
+		{URI: "/configs/auth/v1/tenant/{Tenant}/roles/{Name}", Key: "/venice/config/auth/roles/{Tenant}/{Name}"}},
+	"auth.RoleBinding": []api.PathsMap{
+		{URI: "/configs/auth/v1/tenant/{Tenant}/role-bindings/{Name}", Key: "/venice/config/auth/role-bindings/{Tenant}/{Name}"}},
+	"auth.User": []api.PathsMap{
+		{URI: "/configs/auth/v1/tenant/{Tenant}/users/{Name}", Key: "/venice/config/auth/users/{Tenant}/{Name}"}},
+}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_auth)
+	schema.AddPaths(keyMapSvc_auth)
 }

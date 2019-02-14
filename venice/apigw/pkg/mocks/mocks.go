@@ -8,6 +8,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api/interfaces"
+
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -36,13 +38,13 @@ func (m *fakeAPIGwService) GetServiceProfile(method string) (apigw.ServiceProfil
 	if ret, ok := m.svcProf[method]; ok {
 		return ret, nil
 	}
-	prof := apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
+	prof := apigwpkg.NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	m.svcProf[method] = prof
 	return prof, nil
 }
 
 // GetCrudServiceProfile is a fake implementation
-func (m *fakeAPIGwService) GetCrudServiceProfile(object string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (m *fakeAPIGwService) GetCrudServiceProfile(object string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	if m.simulateError {
 		return nil, errors.New("not found")
 	}
@@ -62,7 +64,7 @@ func (m *fakeAPIGwService) GetProxyServiceProfile(path string) (apigw.ServicePro
 	if ret, ok := m.svcProf[name]; ok {
 		return ret, nil
 	}
-	prof := apigwpkg.NewServiceProfile(nil, "", "", apiserver.CreateOper)
+	prof := apigwpkg.NewServiceProfile(nil, "", "", apiintf.CreateOper)
 	m.svcProf[name] = prof
 	return prof, nil
 }

@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -363,11 +364,19 @@ func (m *TsStats) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *PingPktStats) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *PingPktStats) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *PingStats) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *PingStats) Validate(ver, path string, ignoreStatus bool) []error {
@@ -375,14 +384,49 @@ func (m *PingStats) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *TimeWindow) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TimeWindow) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *TraceRouteInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TraceRouteInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TroubleshootingSession) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *TroubleshootingSession) Validate(ver, path string, ignoreStatus bool) []error {
@@ -417,6 +461,10 @@ func (m *TroubleshootingSession) Validate(ver, path string, ignoreStatus bool) [
 	return ret
 }
 
+func (m *TroubleshootingSessionSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TroubleshootingSessionSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 
@@ -429,6 +477,10 @@ func (m *TroubleshootingSessionSpec) Validate(ver, path string, ignoreStatus boo
 		ret = append(ret, errs...)
 	}
 	return ret
+}
+
+func (m *TroubleshootingSessionStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TroubleshootingSessionStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -449,9 +501,17 @@ func (m *TroubleshootingSessionStatus) Validate(ver, path string, ignoreStatus b
 	return ret
 }
 
+func (m *TsAuditTrail) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TsAuditTrail) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TsFlowCounters) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TsFlowCounters) Validate(ver, path string, ignoreStatus bool) []error {
@@ -459,9 +519,17 @@ func (m *TsFlowCounters) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *TsFlowLogs) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TsFlowLogs) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TsPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
@@ -487,6 +555,10 @@ func (m *TsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *TsReport) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TsReport) Validate(ver, path string, ignoreStatus bool) []error {
@@ -534,9 +606,17 @@ func (m *TsReport) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *TsResult) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TsResult) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TsStats) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TsStats) Validate(ver, path string, ignoreStatus bool) []error {

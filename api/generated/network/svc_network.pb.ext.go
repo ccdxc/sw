@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -259,11 +260,19 @@ func (m *ServiceList) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *AutoMsgLbPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *AutoMsgLbPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
@@ -271,14 +280,26 @@ func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignor
 	return ret
 }
 
+func (m *AutoMsgNetworkWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgNetworkWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *AutoMsgNetworkWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgNetworkWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AutoMsgServiceWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgServiceWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -296,6 +317,10 @@ func (m *AutoMsgServiceWatchHelper) Validate(ver, path string, ignoreStatus bool
 	return ret
 }
 
+func (m *AutoMsgServiceWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgServiceWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -311,14 +336,26 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) Validate(ver, path string, ignore
 	return ret
 }
 
+func (m *LbPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *LbPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *NetworkList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *NetworkList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ServiceList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *ServiceList) Validate(ver, path string, ignoreStatus bool) []error {

@@ -6,7 +6,7 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -23,7 +23,7 @@ type MonitoringV1EventPolicyInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*EventPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*EventPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // MonitoringV1StatsPolicyInterface exposes the CRUD methods for StatsPolicy
@@ -34,7 +34,7 @@ type MonitoringV1StatsPolicyInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*StatsPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*StatsPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // MonitoringV1FwlogPolicyInterface exposes the CRUD methods for FwlogPolicy
@@ -45,7 +45,7 @@ type MonitoringV1FwlogPolicyInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*FwlogPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*FwlogPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // MonitoringV1FlowExportPolicyInterface exposes the CRUD methods for FlowExportPolicy
@@ -56,7 +56,7 @@ type MonitoringV1FlowExportPolicyInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*FlowExportPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*FlowExportPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // MonitoringV1AlertInterface exposes the CRUD methods for Alert
@@ -67,7 +67,7 @@ type MonitoringV1AlertInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Alert, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Alert, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // MonitoringV1AlertPolicyInterface exposes the CRUD methods for AlertPolicy
@@ -78,7 +78,7 @@ type MonitoringV1AlertPolicyInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*AlertPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*AlertPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // MonitoringV1AlertDestinationInterface exposes the CRUD methods for AlertDestination
@@ -89,7 +89,7 @@ type MonitoringV1AlertDestinationInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*AlertDestination, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*AlertDestination, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // MonitoringV1MirrorSessionInterface exposes the CRUD methods for MirrorSession
@@ -100,7 +100,7 @@ type MonitoringV1MirrorSessionInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*MirrorSession, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*MirrorSession, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // MonitoringV1TroubleshootingSessionInterface exposes the CRUD methods for TroubleshootingSession
@@ -111,7 +111,7 @@ type MonitoringV1TroubleshootingSessionInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*TroubleshootingSession, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*TroubleshootingSession, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // MonitoringV1TechSupportRequestInterface exposes the CRUD methods for TechSupportRequest
@@ -122,7 +122,7 @@ type MonitoringV1TechSupportRequestInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*TechSupportRequest, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*TechSupportRequest, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // MonitoringV1Interface exposes objects with CRUD operations allowed by the service

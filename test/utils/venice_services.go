@@ -111,8 +111,6 @@ func CleanupAuth(apiServerAddr string, enableLocalAuth, enableLdapAuth bool, cre
 	}
 	defer apiClient.Close()
 
-	// delete tenant
-	authntestutils.MustDeleteTenant(apiClient, creds.GetTenant())
 	// delete local user
 	if enableLocalAuth && creds != nil {
 		authntestutils.MustDeleteUser(apiClient, creds.GetUsername(), creds.GetTenant())
@@ -123,6 +121,8 @@ func CleanupAuth(apiServerAddr string, enableLocalAuth, enableLdapAuth bool, cre
 	authntestutils.MustDeleteAuthenticationPolicy(apiClient)
 	// delete cluster
 	authntestutils.MustDeleteCluster(apiClient)
+	// delete tenant
+	authntestutils.MustDeleteTenant(apiClient, creds.GetTenant())
 	return nil
 }
 

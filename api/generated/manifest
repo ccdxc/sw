@@ -3,6 +3,7 @@ alerts.proto monitoring true
 app.proto security true
 audit.proto audit true
 auth.proto auth true
+browser.proto browser true
 cluster.proto cluster true
 endpoint.proto workload true
 eventpolicy.proto monitoring true
@@ -25,6 +26,7 @@ smartnic.proto cluster true
 staging.proto staging true
 svc_audit.proto audit false
 svc_auth.proto auth true
+svc_browser.proto browser true
 svc_cluster.proto cluster true
 svc_events.proto events false
 svc_monitoring.proto monitoring true

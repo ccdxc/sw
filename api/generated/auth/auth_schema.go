@@ -525,7 +525,10 @@ var typesMapAuth = map[string]*api.Struct{
 	},
 }
 
+var keyMapAuth = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapAuth)
+	schema.AddPaths(keyMapAuth)
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -42,7 +43,11 @@ func (m *GetEventRequest) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *GetEventRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *GetEventRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error

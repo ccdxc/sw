@@ -22,6 +22,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+
 	rl "github.com/juju/ratelimit"
 
 	"github.com/pensando/sw/api"
@@ -29,6 +33,7 @@ import (
 	"github.com/pensando/sw/api/client"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/bookstore"
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/apiserver"
 	apiserverpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	rec "github.com/pensando/sw/venice/utils/histogram"
@@ -271,6 +276,11 @@ func startWorkers() {
 }
 
 func setupAPIServer(kvtype string, cluster []string, pool int) {
+	if _, err := recorder.NewRecorder(&recorder.Config{
+		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIServer},
+		EvtTypes: evtsapi.GetEventTypes(), SkipEvtsProxy: true}, tinfo.l); err != nil {
+		tinfo.l.Fatalf("failed to create events recorder, err: %v", err)
+	}
 	apiserverAddress := ":0"
 	srvconfig := apiserver.Config{
 		GrpcServerPort: apiserverAddress,
@@ -278,7 +288,7 @@ func setupAPIServer(kvtype string, cluster []string, pool int) {
 		DevMode:        false,
 		Logger:         tinfo.l,
 		Version:        "v1",
-		Scheme:         tinfo.scheme,
+		Scheme:         runtime.GetDefaultScheme(),
 		Kvstore: store.Config{
 			Type:    kvtype,
 			Codec:   runtime.NewJSONCodec(tinfo.scheme),

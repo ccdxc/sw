@@ -4,14 +4,22 @@ import (
 	"context"
 	"testing"
 
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/pensando/sw/api/errors"
+
+	"github.com/pensando/sw/api/api_test"
+	"github.com/pensando/sw/api/requirement"
+	"github.com/pensando/sw/venice/utils/runtime"
+
+	"github.com/pensando/sw/api/cache"
 
 	"github.com/pensando/sw/api"
 	cachemocks "github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/api/interfaces"
 	apisrv "github.com/pensando/sw/venice/apiserver"
-	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	compliance "github.com/pensando/sw/venice/utils/kvstore/compliance"
 )
@@ -120,15 +128,38 @@ func TestMethodKvWrite(t *testing.T) {
 	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
 	resp := mocks.NewFakeMessage("reqmsgB", "/responsmsg/A", true).(*mocks.FakeMessage)
 	fsvc := mocks.NewFakeService()
+	fcache := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}}
+	ftxn := &cachemocks.FakeTxn{}
+	fcache.Txn = ftxn
 
+	txnSuccess := true
+	ftxn.Commitfn = func(ctx context.Context) (kvstore.TxnResponse, error) {
+		return kvstore.TxnResponse{Succeeded: txnSuccess}, nil
+	}
+	fcache.Kvconn = fcache
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
 	singletonAPISrv.config.IsDryRun = fakeIsDryRun
 	singletonAPISrv.config.GetOverlay = fakeGetOverlay
+	singletonAPISrv.apiGraph = &cachemocks.FakeGraphInterface{}
+	singletonAPISrv.newLocalOverlayFunc = func(tenant, id, baseKey string, c apiintf.CacheInterface, asrv apisrv.Server) (apiintf.OverlayInterface, error) {
+		return globFakeOverlay, nil
+	}
+	globFakeOverlay = &cachemocks.FakeOverlay{Interface: fcache, Reqs: &cachemocks.FakeRequirementSet{}}
+	globFakeOverlay.Txn = ftxn
+
+	singletonAPISrv.apiCache = fcache
+	oldkvPool := singletonAPISrv.kvPool
+	oldkvPoolSize := singletonAPISrv.kvPoolsize
+	singletonAPISrv.kvPool = nil
+	singletonAPISrv.kvPool = []kvstore.Interface{fcache}
+	defer func() { singletonAPISrv.kvPool, singletonAPISrv.kvPoolsize = oldkvPool, oldkvPoolSize }()
+	singletonAPISrv.kvPoolsize = 1
 
 	m := NewMethod(fsvc, req, resp, "testm", "TestMethodKvWrite")
-	reqmsg := TestType1{}
-
+	reqmsg := apitest.TestObj{}
+	req.RuntimeObj = &reqmsg
+	req.IgnoreTxnWrite = true
 	// Set the same version as the apiServer
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "GET")
@@ -144,35 +175,53 @@ func TestMethodKvWrite(t *testing.T) {
 	// Now add the object and check
 	md1 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "POST")
+	ftxn.Empty = true
 	ctx1 := metadata.NewIncomingContext(context.Background(), md1)
 	m.HandleInvocation(ctx1, reqmsg)
-	if req.Kvwrites != 1 {
-		t.Errorf("Expecting [1] kvwrite but found [%v]", req.Kvwrites)
+	if globFakeOverlay.CreatePrimaries != 1 && globFakeOverlay.Commits != 1 {
+		t.Errorf("Expecting [1] CreatePrimary and [1] Commit got [%v/%v]", globFakeOverlay.CreatePrimaries, globFakeOverlay.Commits)
 	}
 	// Now modify the object and check
 	md2 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "PUT")
 	ctx2 := metadata.NewIncomingContext(context.Background(), md2)
 	m.HandleInvocation(ctx2, reqmsg)
-	if req.Kvwrites != 2 {
-		t.Errorf("Expecting [2] kvwrite but found [%v]", req.Kvwrites)
+	if globFakeOverlay.UpdatePrimaries != 1 && globFakeOverlay.Commits != 2 {
+		t.Errorf("Expecting [2] CreatePrimary and [2] Commit got [%v/%v]", globFakeOverlay.UpdatePrimaries, globFakeOverlay.Commits)
 	}
 	// Now delete the object and check
 	md3 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "DELETE")
 	ctx3 := metadata.NewIncomingContext(context.Background(), md3)
 	span := opentracing.StartSpan("delete")
+	statMap := map[string]apiintf.ObjectStat{
+		"/requestmsg/A": {Key: "/requestmsg/A", Valid: true, Revision: 9},
+	}
+
+	fcache.StatFn = func(keys []string) []apiintf.ObjectStat {
+		var ret []apiintf.ObjectStat
+		for i := range keys {
+			ret = append(ret, statMap[keys[i]])
+		}
+		return ret
+	}
+	fcache.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		ret := into.(*apitest.TestObj)
+		*ret = reqmsg
+		return nil
+	}
+	ftxn.Empty = false
 	ctx3 = opentracing.ContextWithSpan(ctx3, span)
 	if _, err := m.HandleInvocation(ctx3, reqmsg); err != nil {
 		t.Errorf("Expecting success but failed %v", err)
 	}
-	if req.Kvdels != 1 {
-		t.Errorf("Expecting [1] Kvdels but found [%v]", req.Kvdels)
+	if globFakeOverlay.DeletePrimaries != 1 {
+		t.Errorf("Expecting [1] TxnOp but found [%v]", globFakeOverlay.DeletePrimaries)
 	}
 
 	// Test with staging set
 	req.Kvreads, req.Kvwrites, req.Kvdels = 0, 0, 0
-	globFakeOverlay = &cachemocks.FakeOverlay{}
+	globFakeOverlay = &cachemocks.FakeOverlay{Interface: fcache, Reqs: &cachemocks.FakeRequirementSet{}}
 	// sctx := setStagingBufferInGrpcMD(ctx, "testBuffer")
 	md = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "GET",
@@ -279,28 +328,28 @@ func TestMapOper(t *testing.T) {
 		apisrv.RequestParamMethod, "GET")
 	// Test that the oper method is correct
 	mhdlr := m.(*MethodHdlr)
-	if mhdlr.mapOper(md) != apisrv.GetOper {
+	if mhdlr.mapOper(md) != apiintf.GetOper {
 		t.Errorf("Found wrong oper type")
 	}
 	md = metadata.Pairs(apisrv.RequestParamVersion, "v1")
 	m.WithOper("create")
-	if mhdlr.mapOper(md) != apisrv.CreateOper {
+	if mhdlr.mapOper(md) != apiintf.CreateOper {
 		t.Errorf("Found wrong oper type")
 	}
 	m.WithOper("update")
-	if mhdlr.mapOper(md) != apisrv.UpdateOper {
+	if mhdlr.mapOper(md) != apiintf.UpdateOper {
 		t.Errorf("Found wrong oper type")
 	}
 	m.WithOper("get")
-	if mhdlr.mapOper(md) != apisrv.GetOper {
+	if mhdlr.mapOper(md) != apiintf.GetOper {
 		t.Errorf("Found wrong oper type")
 	}
 	m.WithOper("delete")
-	if mhdlr.mapOper(md) != apisrv.DeleteOper {
+	if mhdlr.mapOper(md) != apiintf.DeleteOper {
 		t.Errorf("Found wrong oper type")
 	}
 	m.WithOper("watch")
-	if mhdlr.mapOper(md) != apisrv.WatchOper {
+	if mhdlr.mapOper(md) != apiintf.WatchOper {
 		t.Errorf("Found wrong oper type")
 	}
 }
@@ -309,7 +358,7 @@ var cmpVer int64
 
 func testTxnPreCommithook(ctx context.Context,
 	kv kvstore.Interface,
-	txn kvstore.Txn, key string, oper apisrv.APIOperType, dryrun bool,
+	txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool,
 	i interface{}) (interface{}, bool, error) {
 	txn.AddComparator(kvstore.Compare(kvstore.WithVersion("/requestmsg/A/NotThere"), "=", cmpVer))
 	return i, true, nil
@@ -319,25 +368,50 @@ func TestDisabledMethod(t *testing.T) {
 
 }
 func TestTxn(t *testing.T) {
+	svc := mocks.NewFakeService()
 	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
 	resp := mocks.NewFakeMessage("reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
 	req = req.WithTransform("v1", "v2", req.TransformCb).(*mocks.FakeMessage)
 	resp = resp.WithTransform("v2", "v1", resp.TransformCb).(*mocks.FakeMessage)
+	fkv := cachemocks.FakeKvStore{}
+	fcache := &cachemocks.FakeCache{FakeKvStore: fkv}
+	ftxn := &cachemocks.FakeTxn{}
+	fcache.Txn = ftxn
 
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
 	singletonAPISrv.config.IsDryRun = fakeIsDryRun
 	singletonAPISrv.config.GetOverlay = fakeGetOverlay
+	singletonAPISrv.apiCache = fcache
+	singletonAPISrv.apiGraph = &cachemocks.FakeGraphInterface{}
+	singletonAPISrv.newLocalOverlayFunc = func(tenant, id, baseKey string, c apiintf.CacheInterface, asrv apisrv.Server) (apiintf.OverlayInterface, error) {
+		return globFakeOverlay, nil
+	}
+	globFakeOverlay = &cachemocks.FakeOverlay{Interface: fcache, Reqs: &cachemocks.FakeRequirementSet{}}
+	globFakeOverlay.Txn = ftxn
+
+	statMap := map[string]apiintf.ObjectStat{
+		"/txn/testobj": {Key: "/txn/testobj", Valid: true, Revision: 9},
+	}
+
+	fcache.StatFn = func(keys []string) []apiintf.ObjectStat {
+		var ret []apiintf.ObjectStat
+		for i := range keys {
+			ret = append(ret, statMap[keys[i]])
+		}
+		return ret
+	}
 
 	// Add a few Pres and Posts and skip KV for testing
-	m := NewMethod(nil, req, resp, "testm", "TestMethodKvWrite").WithPreCommitHook(testTxnPreCommithook)
+	m := NewMethod(svc, req, resp, "testm", "TestMethodKvWrite").WithPreCommitHook(testTxnPreCommithook)
 	reqmsg := compliance.TestObj{TypeMeta: api.TypeMeta{Kind: "TestObj"}, ObjectMeta: api.ObjectMeta{Name: "testObj1"}}
+	req.RuntimeObj = &reqmsg
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "POST")
 	ctx := metadata.NewIncomingContext(context.Background(), md)
 	m.HandleInvocation(ctx, reqmsg)
-	if req.Txnwrites != 1 {
-		t.Fatalf("Txn Write: expecting [1] saw [%d]", req.Txnwrites)
+	if globFakeOverlay.CreatePrimaries != 1 {
+		t.Fatalf("Txn Write: expecting [1] saw [%d]", globFakeOverlay.CreatePrimaries)
 	}
 	// Modify the same object
 	md1 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
@@ -345,33 +419,41 @@ func TestTxn(t *testing.T) {
 	ctx1 := metadata.NewIncomingContext(context.Background(), md1)
 	req.Kvpath = mocks.TxnTestKey
 	m.HandleInvocation(ctx1, reqmsg)
-	if req.Txnwrites != 2 {
-		t.Fatalf("Txn Write: expecting [2] saw [%d]", req.Txnwrites)
+	if globFakeOverlay.UpdatePrimaries != 1 {
+		t.Fatalf("Txn Write: expecting [1] saw [%d]", globFakeOverlay.UpdatePrimaries)
 	}
 	// Try a transaction which should fail.
-	cmpVer = 20
+	ftxn.Commitfn = func(ctx context.Context) (kvstore.TxnResponse, error) {
+		return kvstore.TxnResponse{Succeeded: false}, nil
+	}
+
 	md1 = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "PUT")
 	ctx1 = metadata.NewIncomingContext(context.Background(), md1)
 	_, err := m.HandleInvocation(ctx1, reqmsg)
-	if req.Txnwrites != 3 {
-		t.Fatalf("Txn Write: expecting [3] saw [%d]", req.Txnwrites)
+	if globFakeOverlay.UpdatePrimaries != 2 {
+		t.Fatalf("Txn Write: expecting [2] saw [%d]", globFakeOverlay.UpdatePrimaries)
 	}
 	if err == nil {
 		t.Fatalf("should have failed")
 	}
-
+	ftxn.Commitfn = nil
 	// Delete the Object
 	md2 := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "DELETE")
 	ctx2 := metadata.NewIncomingContext(context.Background(), md2)
 	cmpVer = 0
+	fcache.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		ret := into.(*compliance.TestObj)
+		*ret = reqmsg
+		return nil
+	}
 	ret, err := m.HandleInvocation(ctx2, reqmsg)
 	if err != nil {
-		t.Fatalf("Invocation failed (%s)", err)
+		t.Fatalf("Invocation failed (%+v)", apierrors.FromError(err))
 	}
-	if req.Txndels != 1 {
-		t.Fatalf("Txn Del: expecting [1] saw [%d]", req.Txndels)
+	if globFakeOverlay.DeletePrimaries != 1 {
+		t.Fatalf("Txn Del: expecting [1] saw [%d]", globFakeOverlay.DeletePrimaries)
 	}
 	if _, ok := ret.(compliance.TestObj); !ok {
 		t.Fatalf("returned object is incorrect (%v)", ret)
@@ -379,6 +461,7 @@ func TestTxn(t *testing.T) {
 }
 
 func TestTransforms(t *testing.T) {
+	svc := mocks.NewFakeService()
 	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
 	resp := mocks.NewFakeMessage("reqmsgA", "/responsmsg/A", true).(*mocks.FakeMessage)
 	req = req.WithTransform("v1", "v2", req.TransformCb).(*mocks.FakeMessage)
@@ -390,7 +473,7 @@ func TestTransforms(t *testing.T) {
 	singletonAPISrv.config.GetOverlay = fakeGetOverlay
 
 	singletonAPISrv.version = "v2"
-	m := NewMethod(nil, req, resp, "testm", "TestMethodKvWrite")
+	m := NewMethod(svc, req, resp, "testm", "TestMethodKvWrite")
 	reqmsg := TestType1{}
 
 	// Disable method and invoke.
@@ -416,5 +499,149 @@ func TestTransforms(t *testing.T) {
 	}
 	if req.CalledTxfms[0] != "v1-v2" || resp.CalledTxfms[0] != "v2-v1" {
 		t.Errorf("transforms not called with right versions req[%v] resp[%v]", req.CalledTxfms, resp.CalledTxfms)
+	}
+}
+
+func TestWithReferences(t *testing.T) {
+	req := mocks.NewFakeMessage("reqmsgA", "/requestmsg/A", true).(*mocks.FakeMessage)
+	resp := mocks.NewFakeMessage("reqmsgB", "/responsmsg/A", true).(*mocks.FakeMessage)
+	fsvc := mocks.NewFakeService()
+	fcache := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}}
+	ftxn := &cachemocks.FakeTxn{}
+	globFakeOverlay = &cachemocks.FakeOverlay{Interface: fcache}
+	fg := &cachemocks.FakeGraphInterface{}
+	reqs := requirement.NewRequirementSet(fg, globFakeOverlay, nil)
+	globFakeOverlay.Reqs = reqs
+	globFakeOverlay.Kvconn = fcache
+	fcache.Txn = ftxn
+	globFakeOverlay.Txn = ftxn
+
+	req = req.WithReferencesGetter(req.GetReferencesFunc).(*mocks.FakeMessage)
+	txnSuccess := true
+	ftxn.Commitfn = func(ctx context.Context) (kvstore.TxnResponse, error) {
+		return kvstore.TxnResponse{Succeeded: txnSuccess}, nil
+	}
+
+	MustGetAPIServer()
+	singletonAPISrv.runstate.running = true
+	singletonAPISrv.config.IsDryRun = fakeIsDryRun
+	singletonAPISrv.config.GetOverlay = fakeGetOverlay
+	singletonAPISrv.apiGraph = &cachemocks.FakeGraphInterface{}
+	singletonAPISrv.newLocalOverlayFunc = func(tenant, id, baseKey string, c apiintf.CacheInterface, asrv apisrv.Server) (apiintf.OverlayInterface, error) {
+		return globFakeOverlay, nil
+	}
+	singletonAPISrv.apiCache = fcache
+	oldkvPool := singletonAPISrv.kvPool
+	oldkvPoolSize := singletonAPISrv.kvPoolsize
+	singletonAPISrv.kvPool = nil
+	singletonAPISrv.kvPool = []kvstore.Interface{fcache}
+	defer func() { singletonAPISrv.kvPool, singletonAPISrv.kvPoolsize = oldkvPool, oldkvPoolSize }()
+	singletonAPISrv.kvPoolsize = 1
+	statMap := map[string]apiintf.ObjectStat{
+		"/requestmsg/A": {Key: "/requestmsg/A", Valid: true, Revision: 9},
+		"/requestmsg/B": {Key: "/requestmsg/B", Valid: true, Revision: 10},
+		"/requestmsg/C": {Key: "/requestmsg/C", Valid: true, Revision: 11},
+	}
+
+	globFakeOverlay.StatFn = func(keys []string) []apiintf.ObjectStat {
+		var ret []apiintf.ObjectStat
+		for i := range keys {
+			ret = append(ret, statMap[keys[i]])
+		}
+		return ret
+	}
+	m := NewMethod(fsvc, req, resp, "testm", "TestMethodKvWrite")
+	reqmsg := apitest.TestObj{}
+	req.IgnoreTxnWrite = true
+	// Set the same version as the apiServer
+	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "POST")
+	ctx := metadata.NewIncomingContext(context.Background(), md)
+	if len(cache.GetOverlays()) != 0 {
+		t.Errorf("Expecting no overlays to be created. got [%d]", len(cache.GetOverlays()))
+	}
+	refMap := map[string]apiintf.ReferenceObj{
+		"testField": {RefType: apiintf.NamedReference, Refs: []string{"/requestmsg/B", "/requestmsg/C"}},
+	}
+	req.RefMap = refMap
+	fcache.FakeKvStore.Getfn = func(ctx context.Context, key string, into runtime.Object) error {
+		reqmsg.Clone(into)
+		return nil
+	}
+	// Test with references
+	if _, err := m.HandleInvocation(ctx, reqmsg); err != nil {
+		t.Errorf("Expecting success but failed (%s)", err)
+	}
+	if req.Kvwrites != 0 {
+		t.Errorf("Expecting [0] kvwrite but found [%v]", req.Kvwrites)
+	}
+	if globFakeOverlay.CreatePrimaries != 1 {
+		t.Errorf("Expecting [1] Txnwrites but found [%v]", globFakeOverlay.CreatePrimaries)
+	}
+	if req.GetReferencesCalled != 1 {
+		t.Errorf("expecting call to Getrefecences [1] got [%v]", req.GetReferencesCalled)
+	}
+	if len(cache.GetOverlays()) != 0 {
+		t.Errorf("Expecting no overlays to be created. Dounc [%d]", len(cache.GetOverlays()))
+	}
+	if ftxn.CommitOps != 1 {
+		t.Errorf("expecting call to Apply got [%v]", ftxn.CommitOps)
+	}
+
+	if len(cache.GetOverlays()) != 0 {
+		t.Errorf("Expecting no overlays to be created. Dounc [%d]", len(cache.GetOverlays()))
+	}
+	if ftxn.CommitOps != 1 {
+		t.Fatalf("Expecting [1] commit ops got [%v]", ftxn.CommitOps)
+	}
+
+	// Delete Operation
+	req.Kvwrites, req.Txnwrites, req.GetReferencesCalled = 0, 0, 0
+	ftxn.TouchOps, ftxn.Ops, ftxn.Cmps, ftxn.CommitOps = 0, nil, nil, 0
+	req.RuntimeObj = &reqmsg
+	md = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "DELETE")
+	ctx = metadata.NewIncomingContext(context.Background(), md)
+	if _, err := m.HandleInvocation(ctx, reqmsg); err != nil {
+		t.Errorf("Expecting success but failed (%s)", err)
+	}
+	if globFakeOverlay.DeletePrimaries != 1 {
+		t.Errorf("Expecting [1] DeletePrimaries but found [%v]", globFakeOverlay.DeletePrimaries)
+	}
+	if req.GetReferencesCalled != 0 {
+		t.Errorf("expecting call to Getrefecences [1] got [%v]", req.GetReferencesCalled)
+	}
+	if len(cache.GetOverlays()) != 0 {
+		t.Errorf("Expecting no overlays to be created. Dounc [%d]", len(cache.GetOverlays()))
+	}
+
+	// Staged operation
+	req.Kvwrites, req.Txnwrites, req.Txndels, req.GetReferencesCalled = 0, 0, 0, 0
+	ftxn.TouchOps, ftxn.Ops, ftxn.Cmps = 0, nil, nil
+	md = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
+		apisrv.RequestParamMethod, "POST",
+		apisrv.RequestParamStagingBufferID, "testBuffer")
+	ctx = metadata.NewIncomingContext(ctx, md)
+	if _, err := m.HandleInvocation(ctx, reqmsg); err != nil {
+		t.Errorf("Expecting to suceed but failed (%+v)", err)
+	}
+	if ftxn.CommitOps != 1 {
+		t.Fatalf("Expecting [1] commit ops got [%v]", ftxn.CommitOps)
+	}
+
+	if req.Kvwrites != 0 {
+		t.Errorf("Expecting [1] read but found [%v]", req.Kvreads)
+	}
+	if _, err := m.HandleInvocation(ctx, reqmsg); err != nil {
+		t.Errorf("Expecting success but failed (%s)", err)
+	}
+	if req.Kvwrites != 0 {
+		t.Errorf("Expecting [0] kvwrite but found [%v]", req.Kvwrites)
+	}
+	if req.Txndels != 0 {
+		t.Errorf("Expecting [0] Txndels but found [%v]", req.Txndels)
+	}
+	if len(cache.GetOverlays()) != 0 {
+		t.Errorf("Expecting no overlays to be created. Dounc [%d]", len(cache.GetOverlays()))
 	}
 }

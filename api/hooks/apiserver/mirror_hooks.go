@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -23,7 +24,7 @@ const (
 	veniceMaxCollectorsPerSession = 2
 )
 
-func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	ms, ok := i.(monitoring.MirrorSession)
 	if !ok {
 		return i, false, fmt.Errorf("Invalid input type")
@@ -34,7 +35,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 	err := kv.Get(ctx, key, &oldms)
 	if err == nil {
 		// found old object, compare spec
-		if oper == apiserver.CreateOper {
+		if oper == apiintf.CreateOper {
 			// Create on already existing mirror session
 			// return success and let api server take care of this error
 			return i, true, nil
@@ -42,7 +43,7 @@ func (r *mirrorSessionHooks) validateMirrorSession(ctx context.Context, kv kvsto
 		if _, diff := ref.ObjDiff(ms.Spec, oldms.Spec); !diff {
 			return i, true, nil
 		}
-	} else if oper == apiserver.UpdateOper {
+	} else if oper == apiintf.UpdateOper {
 		// update on non-existing mirror session
 		// return success and let api server take care of this error
 		return i, true, nil
@@ -170,6 +171,6 @@ func registerMirrorSessionHooks(svc apiserver.Service, logger log.Logger) {
 	r.svc = svc
 	r.logger = logger.WithContext("Service", "MirrorSession")
 	logger.Log("msg", "registering Hooks")
-	svc.GetCrudService("MirrorSession", apiserver.CreateOper).WithPreCommitHook(r.validateMirrorSession)
-	svc.GetCrudService("MirrorSession", apiserver.UpdateOper).WithPreCommitHook(r.validateMirrorSession)
+	svc.GetCrudService("MirrorSession", apiintf.CreateOper).WithPreCommitHook(r.validateMirrorSession)
+	svc.GetCrudService("MirrorSession", apiintf.UpdateOper).WithPreCommitHook(r.validateMirrorSession)
 }

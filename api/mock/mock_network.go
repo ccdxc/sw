@@ -12,7 +12,7 @@ import (
 
 	api "github.com/pensando/sw/api"
 	network "github.com/pensando/sw/api/generated/network"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	interfaces "github.com/pensando/sw/api/interfaces"
 	kvstore "github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -118,7 +118,7 @@ func (mr *MockNetworkV1NetworkInterfaceMockRecorder) Watch(ctx, options interfac
 }
 
 // Allowed mocks base method
-func (m *MockNetworkV1NetworkInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockNetworkV1NetworkInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -231,7 +231,7 @@ func (mr *MockNetworkV1ServiceInterfaceMockRecorder) Watch(ctx, options interfac
 }
 
 // Allowed mocks base method
-func (m *MockNetworkV1ServiceInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockNetworkV1ServiceInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -344,7 +344,7 @@ func (mr *MockNetworkV1LbPolicyInterfaceMockRecorder) Watch(ctx, options interfa
 }
 
 // Allowed mocks base method
-func (m *MockNetworkV1LbPolicyInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockNetworkV1LbPolicyInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0

@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -85,7 +85,7 @@ func (h *stagingHooks) updateStatus(ctx context.Context, buf *staging.Buffer) (*
 
 // getBuffer modifies the response to a get request on the buffer. The plain KVStore config object is updated with the status including
 //  verification state of the staging buffer
-func (h *stagingHooks) getBuffer(ctx context.Context, kvs kvstore.Interface, prefix string, i, old, resp interface{}, oper apiserver.APIOperType) (interface{}, error) {
+func (h *stagingHooks) getBuffer(ctx context.Context, kvs kvstore.Interface, prefix string, i, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
 	h.l.Infof("received response writer hook for get Buffer")
 	buf, ok := resp.(staging.Buffer)
 	if !ok {
@@ -96,7 +96,7 @@ func (h *stagingHooks) getBuffer(ctx context.Context, kvs kvstore.Interface, pre
 	return buf, err
 }
 
-func (h *stagingHooks) listBuffer(ctx context.Context, kvs kvstore.Interface, prefix string, i, old, resp interface{}, oper apiserver.APIOperType) (interface{}, error) {
+func (h *stagingHooks) listBuffer(ctx context.Context, kvs kvstore.Interface, prefix string, i, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
 	h.l.InfoLog("msg", "received listBuffer response writer hook")
 	list, ok := resp.(staging.BufferList)
 	if !ok {
@@ -109,7 +109,7 @@ func (h *stagingHooks) listBuffer(ctx context.Context, kvs kvstore.Interface, pr
 	return list, nil
 }
 
-func (h *stagingHooks) createBuffer(ctx context.Context, oper apiserver.APIOperType, i interface{}, dryrun bool) {
+func (h *stagingHooks) createBuffer(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryrun bool) {
 	// Create an overlay on the cache.
 	h.l.InfoLog("msg", "received createBuffer postCommit Hook")
 	if buf, ok := i.(staging.Buffer); ok {
@@ -119,14 +119,14 @@ func (h *stagingHooks) createBuffer(ctx context.Context, oper apiserver.APIOperT
 	}
 }
 
-func (h *stagingHooks) deleteBuffer(ctx context.Context, oper apiserver.APIOperType, i interface{}, dryrun bool) {
+func (h *stagingHooks) deleteBuffer(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryrun bool) {
 	h.l.InfoLog("msg", "received deleteBuffer postCommit Hook")
 	if buf, ok := i.(staging.Buffer); ok {
 		cache.DelOverlay(buf.Tenant, buf.Name)
 	}
 }
 
-func (h *stagingHooks) commitAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+func (h *stagingHooks) commitAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	h.l.InfoLog("msg", "received commitAction preCommit Hook")
 	buf, ok := i.(staging.CommitAction)
 	if !ok {
@@ -149,7 +149,7 @@ func (h *stagingHooks) commitAction(ctx context.Context, kv kvstore.Interface, t
 	return buf, false, nil
 }
 
-func (h *stagingHooks) clearAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+func (h *stagingHooks) clearAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	h.l.InfoLog("msg", "received clearAction preCommit Hook")
 	buf, ok := i.(staging.ClearAction)
 	if !ok {
@@ -185,10 +185,10 @@ func registerStagingHooks(svc apiserver.Service, logger log.Logger) {
 	h.svc = svc
 	h.l = logger
 	logger.InfoLog("Service", "StagingV1", "msg", "registering hooks")
-	svc.GetCrudService("Buffer", apiserver.CreateOper).WithPostCommitHook(h.createBuffer)
-	svc.GetCrudService("Buffer", apiserver.DeleteOper).WithPostCommitHook(h.deleteBuffer)
-	svc.GetCrudService("Buffer", apiserver.GetOper).WithResponseWriter(h.getBuffer)
-	svc.GetCrudService("Buffer", apiserver.ListOper).WithResponseWriter(h.listBuffer)
+	svc.GetCrudService("Buffer", apiintf.CreateOper).WithPostCommitHook(h.createBuffer)
+	svc.GetCrudService("Buffer", apiintf.DeleteOper).WithPostCommitHook(h.deleteBuffer)
+	svc.GetCrudService("Buffer", apiintf.GetOper).WithResponseWriter(h.getBuffer)
+	svc.GetCrudService("Buffer", apiintf.ListOper).WithResponseWriter(h.listBuffer)
 	svc.GetMethod("Commit").WithPreCommitHook(h.commitAction)
 	svc.GetMethod("Clear").WithPreCommitHook(h.clearAction)
 }

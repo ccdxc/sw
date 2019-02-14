@@ -169,7 +169,7 @@ func TestGenRelMap(t *testing.T) {
 				label: LABEL_OPTIONAL
 				type: TYPE_STRING
 				number: 1
-				options:<[venice.objRelation]:<Type:"NamedRef" To:"example.ToObjMsg">>
+				options:<[venice.objRelation]:<Type:"NamedRef" To:"example/ToObjMsg">>
 			>
 		>
 		message_type <
@@ -178,7 +178,6 @@ func TestGenRelMap(t *testing.T) {
 				name: 'back_ref_field'
 				label: LABEL_OPTIONAL
 				type: TYPE_STRING
-				options:<[venice.objRelation]:<Type:"BackRef" To:"example.RelationObj">>
 				number: 1
 			>
 			field <
@@ -186,7 +185,7 @@ func TestGenRelMap(t *testing.T) {
 				label: LABEL_OPTIONAL
 				type: TYPE_STRING
 				number: 2
-				options:<[venice.objRelation]:<Type:"NamedRef" To:"example.ExternalRefMsg">>
+				options:<[venice.objRelation]:<Type:"NamedRef" To:"example/ExternalRefMsg">>
 			>
 		>
 		syntax: "proto3"
@@ -200,7 +199,6 @@ func TestGenRelMap(t *testing.T) {
 				label: LABEL_OPTIONAL
 				type: TYPE_STRING
 				number: 1
-				options:<[venice.objRelation]:<Type:"BackRef" To:"example.ToObjMsg">>
 			>
 		>
 		syntax: "proto2"
@@ -265,7 +263,7 @@ func TestGenRelMap(t *testing.T) {
 	if len(relMap) != 2 {
 		t.Fatalf("expected [2] messages, found [%d] [%+v]", len(relMap), relMap)
 	}
-	if len(relMap["example.ToObjMsg"]) != 2 {
+	if len(relMap["example.ToObjMsg"]) != 1 {
 		t.Fatalf("expected [2] relations, found [%d]", len(relMap["example.ToObjMsg"]))
 	}
 
@@ -285,7 +283,7 @@ func TestGenRelMap(t *testing.T) {
 	if item, ok := tmap["example.RelationObj"]; ok && len(item) != 1 {
 		t.Fatalf("expected [1] relations, found [%d]", len(item))
 	}
-	if item, ok := tmap["example.ToObjMsg"]; ok && len(item) != 2 {
+	if item, ok := tmap["example.ToObjMsg"]; ok && len(item) != 1 {
 		t.Fatalf("expected [2] relations, found [%d]", len(item))
 	}
 
@@ -308,11 +306,8 @@ func TestGenRelMap(t *testing.T) {
 			t.Fatalf("error processing field (%s)", err)
 		}
 	}
-	if len(relMap) != 1 {
-		t.Fatalf("expected [2] messages, found [%d] [%+v]", len(relMap), relMap)
-	}
-	if len(relMap["example.ExternalRefMsg"]) != 1 {
-		t.Fatalf("expected [1] relations, found [%d], [%+v]", len(relMap["example.ToObjMsg"]), relMap)
+	if len(relMap) != 0 {
+		t.Fatalf("expected [0] messages, found [%d] [%+v]", len(relMap), relMap)
 	}
 	t.Logf("Writing relations with existing file")
 	str, err = genRelMap(path)
@@ -321,16 +316,13 @@ func TestGenRelMap(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to unamarshal generated relations map (%s)", err)
 	}
-	if len(tmap) != 3 {
-		t.Fatalf("expected [3] messages, found [%d] [%+v]", len(tmap), tmap)
+	if len(tmap) != 2 {
+		t.Fatalf("expected [2] messages, found [%d] [%+v]", len(tmap), tmap)
 	}
 	if item, ok := tmap["example.RelationObj"]; ok && len(item) != 1 {
 		t.Fatalf("expected [1] relations, found [%d]", len(item))
 	}
-	if item, ok := tmap["example.ToObjMsg"]; ok && len(item) != 2 {
-		t.Fatalf("expected [2] relations, found [%d]", len(item))
-	}
-	if item, ok := tmap["example.ExternalRefMsg"]; ok && len(item) != 1 {
+	if item, ok := tmap["example.ToObjMsg"]; ok && len(item) != 1 {
 		t.Fatalf("expected [1] relations, found [%d]", len(item))
 	}
 }
@@ -788,6 +780,14 @@ func TestGetParams(t *testing.T) {
 				type: TYPE_STRING
 				number: 3
 			>
+			field <
+				name: 'O'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.ObjectMeta'
+				number: 4
+			>
+			options:<[venice.objectPrefix]:{Collection:"prefix1", Path:"/{leaf_field}"}>
 		>
 		message_type <
 			name: 'Auto_ListNest1'
@@ -1030,6 +1030,10 @@ func TestGetParams(t *testing.T) {
 				t.Errorf("autoGenMethod returned false expecting true for [%s]", *meth.Name)
 			}
 		}
+	}
+	pmap, keys := genPathsMap(file)
+	if len(pmap) != 2 || len(keys) != 2 {
+		t.Fatalf("retrieved wrong number of elements in paths map")
 	}
 }
 
@@ -2957,14 +2961,22 @@ func TestIsTenanted(t *testing.T) {
 				options:<[venice.objectPrefix]:{Collection: "prefix", Path:"{nest2_field}/{leaf_field}"}>
 			>
 			message_type <
-			name: 'msg3'
-			field <
-				name: 'nest1_field'
-				label: LABEL_OPTIONAL
-				type: TYPE_MESSAGE
-				type_name: '.example.Nest2'
-				number: 1
+				name: 'msg3'
+				field <
+					name: 'leaf_field'
+					label: LABEL_OPTIONAL
+					type: TYPE_STRING
+					number: 1
 				>
+				field <
+					name: 'O'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.oMeta'
+					number: 2
+					options:<[gogoproto.embed]:true>
+				>
+				options:<[venice.objectPrefix]:{Collection: "prefix", Path:"{O.Namespace}/{leaf_field}"}>
 			>
 			message_type <
 			name: 'oMeta'
@@ -2973,6 +2985,12 @@ func TestIsTenanted(t *testing.T) {
 				label: LABEL_OPTIONAL
 				type: TYPE_STRING
 				number: 1
+				>
+			field <
+				name: 'Namespace'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 2
 				>
 			>
 			`,
@@ -2989,20 +3007,35 @@ func TestIsTenanted(t *testing.T) {
 		t.Fatalf("Load Failed")
 	}
 	cases := []struct {
-		msg string
-		val bool
+		msg  string
+		tval bool
+		nval bool
 	}{
-		{"example.msg1", true},
-		{"example.msg2", false},
-		{"example.msg3", false},
+		{"example.msg1", true, false},
+		{"example.msg2", false, false},
+		{"example.msg3", false, true},
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("could not find file (%s)", err)
 	}
 	for _, c := range cases {
 		msg, err := r.LookupMsg("", c.msg)
 		if err != nil {
 			t.Fatalf("could not find message [%v](%s)", c.msg, err)
 		}
-		if v, err := isTenanted(msg); err != nil || v != c.val {
-			t.Fatalf("did not get [%v] for message [%v](%v)", c.val, c.msg, err)
+		if v, err := isTenanted(msg); err != nil || v != c.tval {
+			t.Fatalf("did not get [%v] for message [%v](%v)", c.tval, c.msg, err)
+		}
+		oname := strings.TrimPrefix(c.msg, "example.")
+		if v, err := isObjTenanted(file, oname); err != nil || v != c.tval {
+			t.Fatalf("did not get [%v] for message [%v](%v)", c.tval, c.msg, err)
+		}
+		if v, err := isNamespaced(msg); err != nil || v != c.nval {
+			t.Fatalf("did not get [%v] for message [%v](%v)", c.nval, c.msg, err)
+		}
+		if v, err := isObjNamespaced(file, oname); err != nil || v != c.nval {
+			t.Fatalf("did not get [%v] for message [%v](%v)", c.nval, c.msg, err)
 		}
 	}
 }
@@ -3061,6 +3094,212 @@ func TestGetProxyPaths(t *testing.T) {
 	}
 	if !reflect.DeepEqual(pp, exp) {
 		t.Fatalf("Proxy paths does not match exp[%+v] got [%+v]", exp, pp)
+	}
+}
+
+func TestGetReqsManifest(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		message_type <
+			name: 'msg1'
+			field <
+				name: 'field1'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+				options:<[venice.objRelation]: {Type: "NamedRef" To:"example/anothermsg1"}>
+			>
+			field <
+				name: 'repeated_field'
+				label: LABEL_REPEATED
+				type: TYPE_STRING
+				options:<[venice.objRelation]: {Type: "NamedRef" To:"example/anothermsg1"}>
+				number: 2
+			>
+			field <
+				name: 'nullable_field'
+				label: LABEL_REPEATED
+				type: TYPE_STRING
+				options:<[venice.objRelation]: {Type: "NamedRef" To:"example/anothermsg1"} [gogoproto.nullable]:true>
+				number: 3
+			>
+			field <
+				name: 'nullable_msg'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.anothermsg'
+				number: 4
+			>
+			field <
+				name: 'non_nullable_msg'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.anothermsg'
+				options:<[gogoproto.nullable]:false>
+				number: 5
+			>
+			field <
+				name: 'repeated_nullable_msg'
+				label: LABEL_REPEATED
+				type: TYPE_MESSAGE
+				type_name: '.example.anothermsg'
+				number: 6
+			>
+			field <
+				name: 'repeated_non_nullable_msg'
+				label: LABEL_REPEATED
+				type: TYPE_MESSAGE
+				type_name: '.example.anothermsg'
+				options:<[gogoproto.nullable]:false>
+				number: 7
+			>
+			field <
+				name: 'embeded_msg'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.anothermsg'
+				options:<[gogoproto.nullable]:false [gogoproto.embed]:true>
+				number: 8
+			>
+			field <
+				name: 'not_a_ref'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 9
+			>
+		>
+		message_type <
+			name: 'anothermsg'
+			field <
+				name: 'field1'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.yetanothermsg'
+				number: 1
+			>
+			field <
+				name: 'field2'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				options:<[venice.objRelation]: {Type: "NamedRef" To:"example/anothermsg1"}>
+				number: 2
+			>
+			field <
+				name: 'not_a_ref'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 3
+			>
+		>
+		message_type <
+			name: 'yetanothermsg'
+			field <
+				name: 'field1'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				options:<[venice.objRelation]: {Type: "NamedRef" To:"example/anothermsg1"}>
+				number: 2
+			>
+		>
+		`, `
+		name: 'another.proto'
+		package: 'example'
+		message_type <
+			name: 'anothermsg1'
+			field <
+				name: 'Name'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+			field <
+				name: 'Tenant'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 2
+			>
+			options:<[venice.objectPrefix]:{Collection: "prefix", Path:"tenant/{Tenant}"}>
+		>
+		syntax: "proto3"
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto", "another.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	reqs, err := getRequirementsManifest(file)
+	if err != nil {
+		t.Fatalf("get requirements returned (%s)", err)
+	}
+	exp := apiReqs{
+		Map: map[string]reqsMsg{
+			"msg1": {
+				Fields: map[string]reqsField{
+					"field1":                    {RefType: "NamedRef", Pointer: false, Repeated: false, Scalar: true, Service: "example", Kind: "anothermsg1"},
+					"repeated_field":            {RefType: "NamedRef", Pointer: false, Repeated: true, Scalar: true, Service: "example", Kind: "anothermsg1"},
+					"nullable_field":            {RefType: "NamedRef", Pointer: true, Repeated: true, Scalar: true, Service: "example", Kind: "anothermsg1"},
+					"nullable_msg":              {RefType: "", Pointer: true, Repeated: false, Scalar: false, Service: "", Kind: ""},
+					"non_nullable_msg":          {RefType: "", Pointer: false, Repeated: false, Scalar: false, Service: "", Kind: ""},
+					"repeated_nullable_msg":     {RefType: "", Pointer: true, Repeated: true, Scalar: false, Service: "", Kind: ""},
+					"repeated_non_nullable_msg": {RefType: "", Pointer: false, Repeated: true, Scalar: false, Service: "", Kind: ""},
+					"anothermsg":                {RefType: "", Pointer: false, Repeated: false, Scalar: false, Service: "", Kind: ""},
+				},
+			},
+			"anothermsg": {
+				Fields: map[string]reqsField{
+					"field1": {RefType: "", Pointer: true, Repeated: false, Scalar: false, Service: "", Kind: ""},
+					"field2": {RefType: "NamedRef", Pointer: false, Repeated: false, Scalar: true, Service: "example", Kind: "anothermsg1"},
+				},
+			},
+			"yetanothermsg": {
+				Fields: map[string]reqsField{
+					"field1": {RefType: "NamedRef", Pointer: false, Repeated: false, Scalar: true, Service: "example", Kind: "anothermsg1"},
+				},
+			},
+		},
+	}
+	if !reflect.DeepEqual(exp, reqs) {
+		for k, m := range exp.Map {
+			if m1, ok := reqs.Map[k]; !ok {
+				t.Logf("did not find msg [%v]", k)
+			} else {
+				for fk, f := range m.Fields {
+					if f1, ok := m1.Fields[fk]; !ok {
+						t.Logf("did not find field [%v]", fk)
+					} else {
+						if !reflect.DeepEqual(f1, f) {
+							t.Logf("field [%v][%v] did not match got:\n[%+v]\nwant\n[%+v]", k, fk, f1, f)
+						}
+					}
+				}
+			}
+		}
+		t.Fatalf("returned requirements does not match expectation: got \n[%+v]\nWant\n[%+v]", reqs, exp)
+	}
+	freqs := reqsField{Service: "example", Kind: "anothermsg1"}
+	// fld := file.Messages[0].Fields[0]
+	tstr, err := getRequirementPath(file, freqs, "intenant", "Name")
+	if err != nil {
+		t.Fatalf("getPath failed (%s)", err)
+	}
+	estr := "globals.ConfigRootPrefix + \"/example/\" + \"prefix/tenant/\" + intenant + \"/\" + Name"
+	if tstr != estr {
+		t.Fatalf("Got value \n[%s]\nWant\n[%s]", tstr, estr)
 	}
 }
 

@@ -7,10 +7,10 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
-	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/manager"
@@ -22,7 +22,7 @@ import (
 
 type serviceID struct {
 	kind   string
-	action apiserver.APIOperType
+	action apiintf.APIOperType
 }
 
 type authHooks struct {
@@ -232,7 +232,7 @@ func (a *authHooks) userContext(ctx context.Context, in interface{}) (context.Co
 }
 
 func (a *authHooks) registerAddRolesHook(svc apigw.APIGatewayService) error {
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
+	opers := []apiintf.APIOperType{apiintf.CreateOper, apiintf.UpdateOper, apiintf.DeleteOper, apiintf.GetOper, apiintf.ListOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		if err != nil {
@@ -246,14 +246,14 @@ func (a *authHooks) registerAddRolesHook(svc apigw.APIGatewayService) error {
 func (a *authHooks) registerAuthBootstrapHook(svc apigw.APIGatewayService) error {
 	// register pre auth hooks to skip auth for bootstrapping
 	ids := []serviceID{
-		{"AuthenticationPolicy", apiserver.CreateOper},
-		{"AuthenticationPolicy", apiserver.UpdateOper},
-		{"AuthenticationPolicy", apiserver.GetOper},
-		{"User", apiserver.CreateOper},
-		{"User", apiserver.GetOper},
-		{"RoleBinding", apiserver.CreateOper},
-		{"RoleBinding", apiserver.UpdateOper},
-		{"RoleBinding", apiserver.GetOper},
+		{"AuthenticationPolicy", apiintf.CreateOper},
+		{"AuthenticationPolicy", apiintf.UpdateOper},
+		{"AuthenticationPolicy", apiintf.GetOper},
+		{"User", apiintf.CreateOper},
+		{"User", apiintf.GetOper},
+		{"RoleBinding", apiintf.CreateOper},
+		{"RoleBinding", apiintf.UpdateOper},
+		{"RoleBinding", apiintf.GetOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
@@ -275,8 +275,8 @@ func (a *authHooks) registerAuthBootstrapHook(svc apigw.APIGatewayService) error
 
 func (a *authHooks) registerPrivilegeEscalationHook(svc apigw.APIGatewayService) error {
 	ids := []serviceID{
-		{"Role", apiserver.CreateOper},
-		{"Role", apiserver.UpdateOper},
+		{"Role", apiintf.CreateOper},
+		{"Role", apiintf.UpdateOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
@@ -290,9 +290,9 @@ func (a *authHooks) registerPrivilegeEscalationHook(svc apigw.APIGatewayService)
 
 func (a *authHooks) registerAdminRoleCheckHook(svc apigw.APIGatewayService) error {
 	ids := []serviceID{
-		{"Role", apiserver.CreateOper},
-		{"Role", apiserver.UpdateOper},
-		{"Role", apiserver.DeleteOper},
+		{"Role", apiintf.CreateOper},
+		{"Role", apiintf.UpdateOper},
+		{"Role", apiintf.DeleteOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
@@ -306,7 +306,7 @@ func (a *authHooks) registerAdminRoleCheckHook(svc apigw.APIGatewayService) erro
 
 func (a *authHooks) registerUserCreateCheckHook(svc apigw.APIGatewayService) error {
 	ids := []serviceID{
-		{"User", apiserver.CreateOper},
+		{"User", apiintf.CreateOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
@@ -347,7 +347,7 @@ func (a *authHooks) registerAddOwnerHook(svc apigw.APIGatewayService) error {
 		prof.AddPreAuthZHook(a.addOwner)
 	}
 	// user should be able to get/update his info
-	opers := []apiserver.APIOperType{apiserver.UpdateOper, apiserver.GetOper}
+	opers := []apiintf.APIOperType{apiintf.UpdateOper, apiintf.GetOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		if err != nil {
@@ -360,8 +360,8 @@ func (a *authHooks) registerAddOwnerHook(svc apigw.APIGatewayService) error {
 
 func (a *authHooks) registerUserContextHook(svc apigw.APIGatewayService) error {
 	ids := []serviceID{
-		{"RoleBinding", apiserver.CreateOper},
-		{"RoleBinding", apiserver.UpdateOper},
+		{"RoleBinding", apiintf.CreateOper},
+		{"RoleBinding", apiintf.UpdateOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)

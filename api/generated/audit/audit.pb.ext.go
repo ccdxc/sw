@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -99,7 +100,11 @@ func (m *EventRequest) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *Event) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *Event) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -113,6 +118,10 @@ func (m *Event) Validate(ver, path string, ignoreStatus bool) []error {
 		ret = append(ret, errs...)
 	}
 	return ret
+}
+
+func (m *EventAttributes) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *EventAttributes) Validate(ver, path string, ignoreStatus bool) []error {
@@ -131,6 +140,10 @@ func (m *EventAttributes) Validate(ver, path string, ignoreStatus bool) []error 
 		}
 	}
 	return ret
+}
+
+func (m *EventRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *EventRequest) Validate(ver, path string, ignoreStatus bool) []error {

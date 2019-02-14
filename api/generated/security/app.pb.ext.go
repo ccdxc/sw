@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -254,7 +255,11 @@ func (m *Sunrpc) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *ALG) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *ALG) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -294,6 +299,33 @@ func (m *ALG) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *App) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
 func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	{
@@ -313,6 +345,10 @@ func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
 		ret = append(ret, errs...)
 	}
 	return ret
+}
+
+func (m *AppSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AppSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -343,9 +379,17 @@ func (m *AppSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AppStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AppStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Dns) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Dns) Validate(ver, path string, ignoreStatus bool) []error {
@@ -353,14 +397,26 @@ func (m *Dns) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Ftp) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *Ftp) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *Icmp) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *Icmp) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Msrpc) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Msrpc) Validate(ver, path string, ignoreStatus bool) []error {
@@ -379,6 +435,10 @@ func (m *Msrpc) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *Sunrpc) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Sunrpc) Validate(ver, path string, ignoreStatus bool) []error {

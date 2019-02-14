@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrv "github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -62,14 +62,14 @@ func TestCreateDeleteBuffer(t *testing.T) {
 	fcache := mocks.FakeCache{}
 	apisrvpkg.SetAPIServerCache(&fcache)
 	hooks := stagingHooks{l: log.GetNewLogger(log.GetDefaultConfig("hooksTest"))}
-	hooks.createBuffer(context.TODO(), apiserver.CreateOper, req, false)
+	hooks.createBuffer(context.TODO(), apiintf.CreateOper, req, false)
 
 	ov, err := cache.GetOverlay(req.Tenant, req.Name)
 	if err != nil || ov == nil {
 		t.Fatalf("failed to retrieve overlay")
 	}
 
-	hooks.deleteBuffer(context.TODO(), apiserver.CreateOper, req, false)
+	hooks.deleteBuffer(context.TODO(), apiintf.CreateOper, req, false)
 	ov, err = cache.GetOverlay(req.Tenant, req.Name)
 	if err == nil || ov != nil {
 		t.Fatalf("got overlay after delete")
@@ -104,7 +104,7 @@ func TestGetBuffer(t *testing.T) {
 		}, nil
 	}
 
-	ret, err := hooks.getBuffer(context.TODO(), nil, "", req, nil, req, apisrv.GetOper)
+	ret, err := hooks.getBuffer(context.TODO(), nil, "", req, nil, req, apiintf.GetOper)
 	if ret == nil || err != nil {
 		t.Fatalf("failed to get response for get buffer")
 	}
@@ -142,7 +142,7 @@ func TestListBuffer(t *testing.T) {
 			ObjectMeta: api.ObjectMeta{Name: name2, Tenant: tenant},
 		},
 	}
-	ret, err := hooks.listBuffer(context.TODO(), nil, "", opts, nil, resp, apisrv.ListOper)
+	ret, err := hooks.listBuffer(context.TODO(), nil, "", opts, nil, resp, apiintf.ListOper)
 	if ret == nil || err != nil {
 		t.Fatalf("failed to get response for get buffer")
 	}
@@ -164,7 +164,7 @@ func TestCommitAction(t *testing.T) {
 	apisrvpkg.SetAPIServerCache(&fcache)
 	cache.SetOverlay(req.Tenant, req.Name, &fov)
 	hooks := stagingHooks{l: log.GetNewLogger(log.GetDefaultConfig("hooksTest"))}
-	ret, skip, err := hooks.commitAction(context.TODO(), nil, nil, "key", apisrv.CreateOper, false, req)
+	ret, skip, err := hooks.commitAction(context.TODO(), nil, nil, "key", apiintf.CreateOper, false, req)
 	if ret == nil || err != nil {
 		t.Fatalf("failed exec commitAction [%v](%s)", ret, err)
 	}
@@ -186,7 +186,7 @@ func TestClearAction(t *testing.T) {
 	apisrvpkg.SetAPIServerCache(&fcache)
 	cache.SetOverlay(req.Tenant, req.Name, &fov)
 	hooks := stagingHooks{l: log.GetNewLogger(log.GetDefaultConfig("hooksTest"))}
-	ret, skip, err := hooks.clearAction(context.TODO(), nil, nil, "key", apisrv.CreateOper, false, req)
+	ret, skip, err := hooks.clearAction(context.TODO(), nil, nil, "key", apiintf.CreateOper, false, req)
 	if ret == nil || err != nil {
 		t.Fatalf("failed exec commitAction [%v](%s)", ret, err)
 	}

@@ -12,12 +12,12 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/pensando/sw/api/cache"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/cache"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/interfaces"
 	apisrv "github.com/pensando/sw/venice/apiserver"
-	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -61,7 +61,7 @@ func (t *testAPISrvService) hooksCb(srv apisrv.Service, logger log.Logger) {
 func (t *testAPISrvService) Enable()                          {}
 func (t *testAPISrvService) Disable()                         {}
 func (t *testAPISrvService) GetMethod(n string) apisrv.Method { return nil }
-func (t *testAPISrvService) GetCrudService(in string, oper apisrv.APIOperType) apisrv.Method {
+func (t *testAPISrvService) GetCrudService(in string, oper apiintf.APIOperType) apisrv.Method {
 	return nil
 }
 func (t *testAPISrvService) AddMethod(n string, m apisrv.Method) apisrv.Method { return nil }
@@ -106,6 +106,13 @@ func TestRegistration(t *testing.T) {
 	a.RegisterMessages("test-service", msgs)
 	if len(a.messages) != 2 {
 		t.Errorf("incorrect number of messages expected[2] found [%d]", len(a.messages))
+	}
+	m3 := a.GetMessage("test-service", "msg1")
+	if m3 == nil {
+		t.Errorf("could not get registered message")
+	}
+	if m3 != m1 {
+		t.Errorf("did not get the right message")
 	}
 }
 

@@ -6,7 +6,7 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -29,7 +29,7 @@ type BookstoreV1OrderInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Order, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Order, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 	Applydiscount(ctx context.Context, in *ApplyDiscountReq) (*Order, error)
 	Cleardiscount(ctx context.Context, in *ApplyDiscountReq) (*Order, error)
 }
@@ -42,7 +42,7 @@ type BookstoreV1BookInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Book, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Book, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 	Restock(ctx context.Context, in *RestockRequest) (*RestockResponse, error)
 }
 
@@ -54,7 +54,7 @@ type BookstoreV1PublisherInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Publisher, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Publisher, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // BookstoreV1StoreInterface exposes the CRUD methods for Store
@@ -65,7 +65,7 @@ type BookstoreV1StoreInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Store, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Store, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 	AddOutage(ctx context.Context, in *OutageRequest) (*Store, error)
 }
 
@@ -77,7 +77,7 @@ type BookstoreV1CouponInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Coupon, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Coupon, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // BookstoreV1CustomerInterface exposes the CRUD methods for Customer
@@ -88,7 +88,7 @@ type BookstoreV1CustomerInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Customer, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Customer, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // BookstoreV1Interface exposes objects with CRUD operations allowed by the service

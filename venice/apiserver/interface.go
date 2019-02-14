@@ -7,6 +7,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api/graph"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/interfaces"
 
@@ -15,20 +17,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
-)
-
-// APIOperType defines possible options on an API object
-type APIOperType string
-
-// Operations allowed by the API server on objects
-const (
-	CreateOper  APIOperType = "create"
-	UpdateOper  APIOperType = "update"
-	GetOper     APIOperType = "get"
-	DeleteOper  APIOperType = "delete"
-	ListOper    APIOperType = "list"
-	WatchOper   APIOperType = "watch"
-	UnknownOper APIOperType = "unknown"
 )
 
 const (
@@ -82,6 +70,8 @@ type Server interface {
 	RegisterHooksCb(svcName string, fn ServiceHookCb)
 	// GetService returns a registered service given the name.
 	GetService(name string) Service
+	// GetMessage returns a registered mesage given the kind and service name.
+	GetMessage(svc, kind string) Message
 	// CreateOverlay creates a new overlay on top of API server cache
 	CreateOverlay(tenant, name, basePath string) (apiintf.CacheInterface, error)
 	// Run starts the "eventloop" for the API server.
@@ -95,6 +85,8 @@ type Server interface {
 	GetAddr() (string, error)
 	// GetVersion returns the native version of the API server
 	GetVersion() string
+	// GetGraphDB returns the graph DB in use by the Server
+	GetGraphDB() graph.Interface
 }
 
 // Config holds config for the API Server.
@@ -143,16 +135,16 @@ type ValidateFunc func(i interface{}, ver string, ignoreStatus bool) []error
 // are called. Any of the precommit functions can provide feedback to skip the KV operation by
 // returning False.
 // Returning an error aborts processing of this API call.
-type PreCommitFunc func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper APIOperType, dryrun bool, i interface{}) (interface{}, bool, error)
+type PreCommitFunc func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error)
 
 // PostCommitFunc are registered functions that will be invoked after the KV store operation. Multiple
 // functions could be registered and all registered functions are called.
-type PostCommitFunc func(ctx context.Context, oper APIOperType, i interface{}, dryrun bool)
+type PostCommitFunc func(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryrun bool)
 
 // ResponseWriterFunc is a function that is registered to provide a custom response to a API call.
 // The ResponseWriterFunc can return a completely different type than the passed in message.
 // In case of delete the "old" parameter contains the deleted object.
-type ResponseWriterFunc func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper APIOperType) (interface{}, error)
+type ResponseWriterFunc func(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error)
 
 // MakeURIFunc functions is registered to the method and generates the REST URI that can be used
 //  to invoke the method if the method is exposed via REST. If not it returns a non nil error.
@@ -207,6 +199,9 @@ type SetModTimeFunc func(i interface{}) (interface{}, error)
 
 // UpdateSelfLinkFunc sets the SelfLink in the object
 type UpdateSelfLinkFunc func(path, ver, prefix string, i interface{}) (interface{}, error)
+
+// GetReferencesFunc gets the references for an object
+type GetReferencesFunc func(i interface{}) (map[string]apiintf.ReferenceObj, error)
 
 // ObjStorageTransformer is a pair of functions to be invoked before/after an object
 // is written/read to/from KvStore
@@ -269,6 +264,8 @@ type MessageRegistration interface {
 	WithReplaceStatusFunction(fn func(interface{}) kvstore.UpdateFunc) Message
 	// WithGetRuntimeObject gets the runtime object
 	WithGetRuntimeObject(func(interface{}) runtime.Object) Message
+	// WithReferencesGetter registers a GetReferencesFunc to the message
+	WithReferencesGetter(fn GetReferencesFunc) Message
 }
 
 // MessageAction is the set of the Actions possible on a Message.
@@ -307,12 +304,12 @@ type MessageAction interface {
 	WriteCreationTime(i interface{}) (interface{}, error)
 	// WriteModTime writes the modification time of the object to now
 	WriteModTime(i interface{}) (interface{}, error)
-	// UpdateSelfLink update the object with the self link provided
+	// UpdateSelfLink updates the object with the self link provided
 	UpdateSelfLink(path, ver, prefix string, i interface{}) (interface{}, error)
 	// TransformToStorage transforms the object before writing to storage
-	TransformToStorage(ctx context.Context, oper APIOperType, i interface{}) (interface{}, error)
+	TransformToStorage(ctx context.Context, oper apiintf.APIOperType, i interface{}) (interface{}, error)
 	// TransformFromStorage transforms the object after reading from storage
-	TransformFromStorage(ctx context.Context, oper APIOperType, i interface{}) (interface{}, error)
+	TransformFromStorage(ctx context.Context, oper apiintf.APIOperType, i interface{}) (interface{}, error)
 	// GetUpdateObjectMetaFunc returns a function for updating object meta
 	GetUpdateMetaFunc() func(context.Context, interface{}, bool) kvstore.UpdateFunc
 	// GetUpdateSpecFunc returns the Update function for Spec update
@@ -321,6 +318,8 @@ type MessageAction interface {
 	GetUpdateStatusFunc() func(interface{}) kvstore.UpdateFunc
 	// GetRuntimeObject retursn the runtime.Object
 	GetRuntimeObject(interface{}) runtime.Object
+	// GetReferences fetches the references for the object.
+	GetReferences(interface{}) (map[string]apiintf.ReferenceObj, error)
 }
 
 // Method is the interface satisfied by the representation of the RPC Method in the API Server infra.
@@ -341,7 +340,7 @@ type MethodRegistration interface {
 	// WithResponseWriter registers a custom response generator for the method.
 	WithResponseWriter(fn ResponseWriterFunc) Method
 	// WithOper sets the CRUD operation for the method.
-	WithOper(oper APIOperType) Method
+	WithOper(oper apiintf.APIOperType) Method
 	// With Version sets the version of the API
 	WithVersion(ver string) Method
 	// WithMakeURI set the URI maker function for the method
@@ -379,7 +378,7 @@ type Service interface {
 	// GetMethod returns the Method object registered given its name. Returns nil when not found
 	GetMethod(t string) Method
 	// GetCrudService returns the Auto generated CRUD service method for a given (service, operation)
-	GetCrudService(in string, oper APIOperType) Method
+	GetCrudService(in string, oper apiintf.APIOperType) Method
 	// AddMethod add a method to the list of methods served by the Service.
 	AddMethod(n string, m Method) Method
 	// WithKvWatchFunc  watches for all objects served by this service.
@@ -393,19 +392,19 @@ type Service interface {
 // Utility functions
 
 // GetCrudServiceName generates the name for a auto generated service endpoint
-func GetCrudServiceName(method string, oper APIOperType) string {
+func GetCrudServiceName(method string, oper apiintf.APIOperType) string {
 	switch oper {
-	case CreateOper:
+	case apiintf.CreateOper:
 		return fmt.Sprintf("AutoAdd%s", method)
-	case UpdateOper:
+	case apiintf.UpdateOper:
 		return fmt.Sprintf("AutoUpdate%s", method)
-	case GetOper:
+	case apiintf.GetOper:
 		return fmt.Sprintf("AutoGet%s", method)
-	case DeleteOper:
+	case apiintf.DeleteOper:
 		return fmt.Sprintf("AutoDelete%s", method)
-	case ListOper:
+	case apiintf.ListOper:
 		return fmt.Sprintf("AutoList%s", method)
-	case WatchOper:
+	case apiintf.WatchOper:
 		return fmt.Sprintf("AutoWatch%s", method)
 	default:
 		return ""

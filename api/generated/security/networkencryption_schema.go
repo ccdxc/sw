@@ -104,7 +104,10 @@ var typesMapNetworkencryption = map[string]*api.Struct{
 	},
 }
 
+var keyMapNetworkencryption = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapNetworkencryption)
+	schema.AddPaths(keyMapNetworkencryption)
 }

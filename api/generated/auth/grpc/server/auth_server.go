@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	auth "github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -228,6 +229,13 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(auth.AuthenticationPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(auth.AuthenticationPolicy)
+
+			tenant := ""
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *auth.AuthenticationPolicy
 			if v, ok := i.(auth.AuthenticationPolicy); ok {
@@ -245,8 +253,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -496,6 +503,13 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(auth.PasswordChangeRequest)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(auth.PasswordChangeRequest)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}),
 
 		"auth.PasswordCredential": apisrvpkg.NewMessage("auth.PasswordCredential"),
@@ -674,6 +688,13 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(auth.PasswordResetRequest)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(auth.PasswordResetRequest)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}),
 
 		"auth.Permission":         apisrvpkg.NewMessage("auth.Permission"),
@@ -864,6 +885,13 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(auth.Role)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(auth.Role)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *auth.Role
 			if v, ok := i.(auth.Role); ok {
@@ -881,8 +909,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -1133,6 +1160,13 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(auth.RoleBinding)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(auth.RoleBinding)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *auth.RoleBinding
 			if v, ok := i.(auth.RoleBinding); ok {
@@ -1150,8 +1184,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -1407,6 +1440,13 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(auth.User)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(auth.User)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *auth.User
 			if v, ok := i.(auth.User); ok {
@@ -1424,8 +1464,7 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}

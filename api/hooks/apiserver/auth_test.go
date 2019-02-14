@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/pensando/sw/api/interfaces"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
@@ -22,7 +24,6 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/login"
-	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/password"
 	"github.com/pensando/sw/venice/utils/authz"
@@ -49,7 +50,7 @@ func TestHashPassword(t *testing.T) {
 	}
 	tests := []struct {
 		name     string
-		oper     apiserver.APIOperType
+		oper     apiintf.APIOperType
 		in       interface{}
 		existing *auth.User
 		result   bool
@@ -57,7 +58,7 @@ func TestHashPassword(t *testing.T) {
 	}{
 		{
 			name: "invalid input object",
-			oper: apiserver.CreateOper,
+			oper: apiintf.CreateOper,
 			in: struct {
 				Test string
 			}{"testing"},
@@ -66,7 +67,7 @@ func TestHashPassword(t *testing.T) {
 		},
 		{
 			name: "hash password for create user",
-			oper: apiserver.CreateOper,
+			oper: apiintf.CreateOper,
 			in: auth.User{
 				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
 				ObjectMeta: api.ObjectMeta{
@@ -86,7 +87,7 @@ func TestHashPassword(t *testing.T) {
 		},
 		{
 			name: "hash password for update user",
-			oper: apiserver.UpdateOper,
+			oper: apiintf.UpdateOper,
 			in: auth.User{
 				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
 				ObjectMeta: api.ObjectMeta{
@@ -118,7 +119,7 @@ func TestHashPassword(t *testing.T) {
 		},
 		{
 			name: "empty password for create user",
-			oper: apiserver.CreateOper,
+			oper: apiintf.CreateOper,
 			in: auth.User{
 				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
 				ObjectMeta: api.ObjectMeta{
@@ -138,7 +139,7 @@ func TestHashPassword(t *testing.T) {
 		},
 		{
 			name: "external user",
-			oper: apiserver.CreateOper,
+			oper: apiintf.CreateOper,
 			in: auth.User{
 				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
 				ObjectMeta: api.ObjectMeta{
@@ -158,7 +159,7 @@ func TestHashPassword(t *testing.T) {
 		},
 		{
 			name: "user type not specified",
-			oper: apiserver.CreateOper,
+			oper: apiintf.CreateOper,
 			in: auth.User{
 				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
 				ObjectMeta: api.ObjectMeta{
@@ -420,7 +421,7 @@ func TestGenerateSecret(t *testing.T) {
 	r.logger = log.GetNewLogger(logConfig)
 
 	for _, test := range tests {
-		_, ok, err := r.generateSecret(context.Background(), nil, nil, "", apiserver.CreateOper, false, test.in)
+		_, ok, err := r.generateSecret(context.Background(), nil, nil, "", apiintf.CreateOper, false, test.in)
 		Assert(t, (test.ok == ok) && (test.err == (err != nil)), fmt.Sprintf("[%s] test failed", test.name))
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 	}
@@ -1171,7 +1172,7 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error creating test role [%#v]in kvstore: %v", test.role, err)
 		}
-		_, ok, err := r.privilegeEscalationCheck(nctx, kvs, nil, "", apiserver.CreateOper, false, test.in)
+		_, ok, err := r.privilegeEscalationCheck(nctx, kvs, nil, "", apiintf.CreateOper, false, test.in)
 		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
 		kvs.Delete(nctx, test.role.MakeKey("auth"), nil)

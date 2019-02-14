@@ -22,6 +22,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/pensando/sw/api/interfaces"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -31,7 +33,6 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apiserver"
 	cmdtypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -73,7 +74,7 @@ func (t *testGwService) GetServiceProfile(method string) (apigw.ServiceProfile, 
 	return nil, nil
 }
 
-func (t *testGwService) GetCrudServiceProfile(object string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (t *testGwService) GetCrudServiceProfile(object string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	return nil, nil
 }
 
@@ -416,7 +417,7 @@ func TestErrorHandlers(t *testing.T) {
 }
 
 func TestHandleRequest(t *testing.T) {
-	prof := NewServiceProfile(nil, "", "", apiserver.UnknownOper)
+	prof := NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	mock := &testHooks{}
 	prof.AddPreAuthNHook(mock.preAuthNHook)
 	prof.AddPreAuthNHook(mock.preAuthNHook)
@@ -670,7 +671,7 @@ func TestAuthzFailures(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		prof := NewServiceProfile(nil, "", "", apiserver.UnknownOper)
+		prof := NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 		prof.AddPreAuthZHook(test.hooks.preAuthZHook)
 		called := 0
 		input := struct {
@@ -789,7 +790,7 @@ func TestProxyDirector(t *testing.T) {
 }
 
 func TestHandleProxyRequest(t *testing.T) {
-	prof := NewServiceProfile(nil, "", "", apiserver.UnknownOper)
+	prof := NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	mock := &testHooks{}
 	prof.AddPreAuthNHook(mock.preAuthNHook)
 	prof.AddPreAuthNHook(mock.preAuthNHook)

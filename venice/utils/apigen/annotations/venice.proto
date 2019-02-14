@@ -5,7 +5,7 @@ package venice;
 import "google/protobuf/descriptor.proto";
 
 message ObjectRln {
-  // Type of reference one of [ NamedRef, SelectorRef, BackRef ]
+  // Type of reference one of [ NamedRef, SelectorRef, WeakRef ]
   string Type = 1;
   // Object being referred to.
   string To = 2;

@@ -12,10 +12,10 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apigw/pkg/mocks"
-	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/manager"
@@ -157,8 +157,8 @@ func TestAuthzRegistration(t *testing.T) {
 	AssertOk(t, err, "privilege escalation hook registration failed")
 	// test authz hooks
 	ids := []serviceID{
-		{"Role", apiserver.CreateOper},
-		{"Role", apiserver.UpdateOper},
+		{"Role", apiintf.CreateOper},
+		{"Role", apiintf.UpdateOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
@@ -182,14 +182,14 @@ func TestAuthnRegistration(t *testing.T) {
 
 	// test authn hooks
 	ids := []serviceID{
-		{"AuthenticationPolicy", apiserver.CreateOper},
-		{"AuthenticationPolicy", apiserver.UpdateOper},
-		{"AuthenticationPolicy", apiserver.GetOper},
-		{"User", apiserver.CreateOper},
-		{"User", apiserver.GetOper},
-		{"RoleBinding", apiserver.CreateOper},
-		{"RoleBinding", apiserver.UpdateOper},
-		{"RoleBinding", apiserver.GetOper},
+		{"AuthenticationPolicy", apiintf.CreateOper},
+		{"AuthenticationPolicy", apiintf.UpdateOper},
+		{"AuthenticationPolicy", apiintf.GetOper},
+		{"User", apiintf.CreateOper},
+		{"User", apiintf.GetOper},
+		{"RoleBinding", apiintf.CreateOper},
+		{"RoleBinding", apiintf.UpdateOper},
+		{"RoleBinding", apiintf.GetOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
@@ -287,7 +287,7 @@ func TestAddRolesHookRegistration(t *testing.T) {
 	err := r.registerAddRolesHook(svc)
 	AssertOk(t, err, "addRoles hook registration failed")
 
-	opers := []apiserver.APIOperType{apiserver.CreateOper, apiserver.UpdateOper, apiserver.DeleteOper, apiserver.GetOper, apiserver.ListOper}
+	opers := []apiintf.APIOperType{apiintf.CreateOper, apiintf.UpdateOper, apiintf.DeleteOper, apiintf.GetOper, apiintf.ListOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
@@ -363,9 +363,9 @@ func TestAdminRoleCheckHookRegistration(t *testing.T) {
 	AssertOk(t, err, "adminRoleCheck hook registration failed")
 
 	ids := []serviceID{
-		{"Role", apiserver.CreateOper},
-		{"Role", apiserver.UpdateOper},
-		{"Role", apiserver.DeleteOper},
+		{"Role", apiintf.CreateOper},
+		{"Role", apiintf.UpdateOper},
+		{"Role", apiintf.DeleteOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
@@ -458,7 +458,7 @@ func TestUserCreateCheckHookRegistration(t *testing.T) {
 	AssertOk(t, err, "userCreateCheck hook registration failed")
 
 	ids := []serviceID{
-		{"User", apiserver.CreateOper},
+		{"User", apiintf.CreateOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
@@ -866,7 +866,7 @@ func TestAddOwnerHookRegistration(t *testing.T) {
 	err := r.registerAddOwnerHook(svc)
 	AssertOk(t, err, "addOwner hook registration failed")
 
-	opers := []apiserver.APIOperType{apiserver.UpdateOper, apiserver.GetOper}
+	opers := []apiintf.APIOperType{apiintf.UpdateOper, apiintf.GetOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
@@ -958,8 +958,8 @@ func TestAuthUserContextHookRegistration(t *testing.T) {
 	AssertOk(t, err, "userContext hook registration failed")
 
 	ids := []serviceID{
-		{"RoleBinding", apiserver.CreateOper},
-		{"RoleBinding", apiserver.UpdateOper},
+		{"RoleBinding", apiintf.CreateOper},
+		{"RoleBinding", apiintf.UpdateOper},
 	}
 	for _, id := range ids {
 		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)

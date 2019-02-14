@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/utils"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apiserver"
@@ -66,11 +67,11 @@ func (a adapter{{$svcname}}) {{.Name}} (oldctx oldcontext.Context, t *{{getInput
 	}{{else}}
 	t.Tenant = ""{{end}}{{if isNamespaced (getListTypeMsg .ResponseType)}}{{else}}
     t.Namespace = ""{{end}}
-	oper, kind, tenant, namespace, group, name:= apiserver.ListOper, "{{getOutputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", ""
+	oper, kind, tenant, namespace, group, name:= apiintf.ListOper, "{{getOutputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", ""
 	{{else}}{{if isActionMethod .}}
-	oper, kind, tenant, namespace, group, name := apiserver.{{$params.Oper}}, "{{getActionTarget .}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.{{$params.Oper}}, "{{getActionTarget .}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
 	{{else}}
-	oper, kind, tenant, namespace, group, name := apiserver.{{$params.Oper}}, "{{getInputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.{{$params.Oper}}, "{{getInputType $pkgname . false}}", t.Tenant, t.Namespace, "{{$svcparams.Prefix}}", t.Name
 	{{end}}{{end}}{{/*<isAutoList>*/}}
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -94,7 +95,7 @@ func (a adapter{{$svcname}}) AutoWatchSvc{{$svcname}}(oldctx oldcontext.Context,
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -151,7 +152,7 @@ func (a adapter{{$svcname}}) AutoWatch{{.}}(oldctx oldcontext.Context, in *api.L
 	{{if isObjTenanted $svc.File . }}{{else}}
 	in.Tenant = ""{{end}}{{if isObjNamespaced $svc.File . }}{{else}}
 		in.Namespace = "" {{end}}
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "{{.}}", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "{{.}}", in.Tenant, in.Namespace, "{{$svcparams.Prefix}}"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -214,7 +215,7 @@ func (a adapter{{$svcname}}) {{.Name}}(oldctx oldcontext.Context, in *{{getInput
 }{{end}}{{end}}{{end}}{{end}}
 
 func (e *s{{.Name}}GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "{{$svcparams.Prefix}}", apiserver.UnknownOper)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "{{$svcparams.Prefix}}", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 	{{range .Methods}}{{$params := getMethodParams . }}{{if isRestExposed .}}{{$x := (saveStr "" 0)}}{{$x := (saveStr "UnknownOper" 1)}}
@@ -223,8 +224,8 @@ func (e *s{{.Name}}GwService) setupSvcProfile() {
     {{if isActionMethod .}}{{ $x := (saveStr (getActionTarget .) 0)}}{{$x := (saveStr "CreateOper"  1)}}{{else}}
     {{$x := (saveStr (getInputType $pkgname . false) 0)}}{{$x := (saveStr $params.Oper  1)}}{{end}}{{end}}{{end}}{{end}}
 
-	e.svcProf["{{.Name}}"] = apigwpkg.NewServiceProfile(e.defSvcProf, "{{getStr 0}}", "{{$svcparams.Prefix}}", apiserver.{{getStr 1}}){{end}}{{end}}{{$proxyPaths := getProxyPaths .}}{{range $proxyPaths}}
-	e.svcProf["_RProxy_" + "/" + "{{.Path}}"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper){{end}}
+	e.svcProf["{{.Name}}"] = apigwpkg.NewServiceProfile(e.defSvcProf, "{{getStr 0}}", "{{$svcparams.Prefix}}", apiintf.{{getStr 1}}){{end}}{{end}}{{$proxyPaths := getProxyPaths .}}{{range $proxyPaths}}
+	e.svcProf["_RProxy_" + "/" + "{{.Path}}"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper){{end}}
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -244,7 +245,7 @@ func (e *s{{.Name}}GwService) GetServiceProfile(method string) (apigw.ServicePro
 }
 
 // GetCrudServiceProfile returns the service profile for a auto generated crud operation
-func (e *s{{.Name}}GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (e *s{{.Name}}GwService) GetCrudServiceProfile(obj string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
 		return e.GetServiceProfile(name)

@@ -23,7 +23,10 @@ var typesMapSvc_events = map[string]*api.Struct{
 	},
 }
 
+var keyMapSvc_events = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_events)
+	schema.AddPaths(keyMapSvc_events)
 }

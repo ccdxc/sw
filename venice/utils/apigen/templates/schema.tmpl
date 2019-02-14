@@ -15,7 +15,12 @@ var typesMap{{getFileName .Name}} = map[string]*api.Struct{
    {{getMsgMap .}}
 }
 
+var keyMap{{getFileName .Name}} = map[string][]api.PathsMap{
+    {{getPathsMap .}}
+}
+
 func init() {
   schema := runtime.GetDefaultScheme()
   schema.AddSchema(typesMap{{getFileName .Name}})
+  schema.AddPaths(keyMap{{getFileName .Name}})
 }

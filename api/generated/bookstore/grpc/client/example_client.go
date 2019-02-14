@@ -14,8 +14,8 @@ import (
 
 	api "github.com/pensando/sw/api"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
+	"github.com/pensando/sw/api/interfaces"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
-	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/trace"
@@ -666,7 +666,7 @@ func (a *grpcObjBookstoreV1Order) Cleardiscount(ctx context.Context, in *booksto
 	return a.client.Cleardiscount(nctx, in)
 }
 
-func (a *grpcObjBookstoreV1Order) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjBookstoreV1Order) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -726,19 +726,19 @@ func (a *restObjBookstoreV1Order) Watch(ctx context.Context, options *api.ListWa
 	return a.endpoints.AutoWatchOrder(ctx, options)
 }
 
-func (a *restObjBookstoreV1Order) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjBookstoreV1Order) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -863,7 +863,7 @@ func (a *grpcObjBookstoreV1Book) Restock(ctx context.Context, in *bookstore.Rest
 	return a.client.Restock(nctx, in)
 }
 
-func (a *grpcObjBookstoreV1Book) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjBookstoreV1Book) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -923,19 +923,19 @@ func (a *restObjBookstoreV1Book) Watch(ctx context.Context, options *api.ListWat
 	return a.endpoints.AutoWatchBook(ctx, options)
 }
 
-func (a *restObjBookstoreV1Book) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjBookstoreV1Book) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return false
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return false
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return false
 	default:
 		return false
@@ -1045,7 +1045,7 @@ func (a *grpcObjBookstoreV1Publisher) Watch(ctx context.Context, options *api.Li
 	return lw, nil
 }
 
-func (a *grpcObjBookstoreV1Publisher) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjBookstoreV1Publisher) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1105,19 +1105,19 @@ func (a *restObjBookstoreV1Publisher) Watch(ctx context.Context, options *api.Li
 	return a.endpoints.AutoWatchPublisher(ctx, options)
 }
 
-func (a *restObjBookstoreV1Publisher) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjBookstoreV1Publisher) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return false
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return false
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return false
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return false
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return false
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return false
 	default:
 		return false
@@ -1229,7 +1229,7 @@ func (a *grpcObjBookstoreV1Store) AddOutage(ctx context.Context, in *bookstore.O
 	return a.client.AddOutage(nctx, in)
 }
 
-func (a *grpcObjBookstoreV1Store) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjBookstoreV1Store) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1289,19 +1289,19 @@ func (a *restObjBookstoreV1Store) Watch(ctx context.Context, options *api.ListWa
 	return a.endpoints.AutoWatchStore(ctx, options)
 }
 
-func (a *restObjBookstoreV1Store) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjBookstoreV1Store) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return false
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return false
 	default:
 		return false
@@ -1411,7 +1411,7 @@ func (a *grpcObjBookstoreV1Coupon) Watch(ctx context.Context, options *api.ListW
 	return lw, nil
 }
 
-func (a *grpcObjBookstoreV1Coupon) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjBookstoreV1Coupon) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1471,19 +1471,19 @@ func (a *restObjBookstoreV1Coupon) Watch(ctx context.Context, options *api.ListW
 	return a.endpoints.AutoWatchCoupon(ctx, options)
 }
 
-func (a *restObjBookstoreV1Coupon) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjBookstoreV1Coupon) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return false
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return false
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return false
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return false
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return false
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return false
 	default:
 		return false
@@ -1586,7 +1586,7 @@ func (a *grpcObjBookstoreV1Customer) Watch(ctx context.Context, options *api.Lis
 	return lw, nil
 }
 
-func (a *grpcObjBookstoreV1Customer) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjBookstoreV1Customer) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1646,19 +1646,19 @@ func (a *restObjBookstoreV1Customer) Watch(ctx context.Context, options *api.Lis
 	return a.endpoints.AutoWatchCustomer(ctx, options)
 }
 
-func (a *restObjBookstoreV1Customer) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjBookstoreV1Customer) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return false
 	default:
 		return false

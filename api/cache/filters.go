@@ -7,6 +7,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -50,7 +51,7 @@ func namespaceFilterFn(namespace string) filterFn {
 
 func labelSelectorFilterFn(selector *labels.Selector) filterFn {
 	return func(obj, prev runtime.Object) bool {
-		meta, _ := mustGetObjectMetaVersion(obj)
+		meta, _ := apiutils.MustGetObjectMetaVersion(obj)
 		labels := labels.Set(meta.Labels)
 		return selector.Matches(labels)
 	}

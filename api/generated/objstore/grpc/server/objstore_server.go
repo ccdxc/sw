@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	objstore "github.com/pensando/sw/api/generated/objstore"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -228,6 +229,13 @@ func (s *sobjstoreObjstoreBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(objstore.Bucket)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(objstore.Bucket)
+
+			tenant := ""
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *objstore.Bucket
 			if v, ok := i.(objstore.Bucket); ok {
@@ -245,8 +253,7 @@ func (s *sobjstoreObjstoreBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -499,6 +506,13 @@ func (s *sobjstoreObjstoreBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(objstore.Object)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(objstore.Object)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *objstore.Object
 			if v, ok := i.(objstore.Object); ok {
@@ -516,8 +530,7 @@ func (s *sobjstoreObjstoreBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}

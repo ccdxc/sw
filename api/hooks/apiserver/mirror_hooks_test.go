@@ -6,9 +6,10 @@ import (
 
 	"github.com/gogo/protobuf/types"
 
+	"github.com/pensando/sw/api/interfaces"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/apiserver"
 	apisrvmocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -480,7 +481,7 @@ func TestMirrorSessions(t *testing.T) {
 	}
 	txn := kvs.NewTxn()
 	for _, ms := range testBadMirrorSessions {
-		_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiserver.CreateOper, false, ms)
+		_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiintf.CreateOper, false, ms)
 		if ok {
 			t.Errorf("validation passed, expecting to fail for %v", ms.Name)
 			continue
@@ -488,7 +489,7 @@ func TestMirrorSessions(t *testing.T) {
 		l.Infof("Session %v : Error %v", ms.Name, err)
 	}
 	ms := &testGoodMirrorSession[0]
-	_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiserver.CreateOper, false, *ms)
+	_, ok, err := s.validateMirrorSession(ctx, kvs, txn, ms.MakeKey(""), apiintf.CreateOper, false, *ms)
 	if !ok && err != nil {
 		t.Errorf("Failed to create a good mirror session")
 	}

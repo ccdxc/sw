@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -193,7 +194,11 @@ func (m *SyslogExportConfig) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *AuthConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *AuthConfig) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -211,6 +216,10 @@ func (m *AuthConfig) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *ExportConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *ExportConfig) Validate(ver, path string, ignoreStatus bool) []error {
@@ -241,6 +250,10 @@ func (m *ExportConfig) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ExternalCred) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *ExternalCred) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExport["ExternalCred"][ver]; ok {
@@ -259,6 +272,10 @@ func (m *ExternalCred) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *PrivacyConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *PrivacyConfig) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExport["PrivacyConfig"][ver]; ok {
@@ -275,6 +292,10 @@ func (m *PrivacyConfig) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SNMPTrapServer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
@@ -313,6 +334,10 @@ func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SyslogExportConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SyslogExportConfig) Validate(ver, path string, ignoreStatus bool) []error {

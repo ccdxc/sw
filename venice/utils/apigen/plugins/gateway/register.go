@@ -759,7 +759,6 @@ func getValidatorManifest(file *descriptor.File) (validators, error) {
 						if r, err := reg.GetExtension("gogoproto.nullable", fld); err == nil {
 							glog.Infof("setting pointer found nullable [%v] for %s]", r, msgname+"/"+*fld.Name)
 							pointer = r.(bool)
-						} else {
 						}
 						glog.Infof("setting pointer to [%v] for {%s]", pointer, msgname+"/"+*fld.Name)
 						// if it is a embedded field, do not use field name rather use type
@@ -1095,6 +1094,178 @@ func getStorageTransformersManifest(file *descriptor.File) (*storageTransformers
 }
 
 // --- End Storage Transformers ---
+
+type reqsField struct {
+	RefType  string
+	Repeated bool
+	Pointer  bool
+	Scalar   bool
+	Tag      string
+	Service  string
+	Kind     string
+}
+
+type reqsMsg struct {
+	Fields map[string]reqsField
+}
+type apiReqs struct {
+	Map map[string]reqsMsg
+}
+
+func getFieldParams(fld *descriptor.Field) (repeated, pointer bool) {
+	if *fld.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
+		repeated = true
+	}
+	if *fld.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+		pointer = true
+	}
+	if r, err := reg.GetExtension("gogoproto.nullable", fld); err == nil {
+		pointer = r.(bool)
+	}
+	return
+}
+
+func parseRequirement(ref venice.ObjectRln) *reqsField {
+	var ret reqsField
+	switch ref.Type {
+	case "WeakRef", "NamedRef", "SelectorRef":
+		ret.RefType = ref.Type
+		parts := strings.Split(ref.To, "/")
+		ret.Service = parts[0]
+		ret.Kind = parts[1]
+		ret.Scalar = true
+	default:
+		glog.Fatalf("unknown reference type %v", ref.Type)
+	}
+	return &ret
+}
+
+func checkReqs(file *descriptor.File, msgmap map[string]bool, name string) bool {
+	if _, ok := msgmap[name]; ok {
+		return msgmap[name]
+	}
+	m, err := file.Reg.LookupMsg("", name)
+	if err != nil {
+		glog.Fatalf("Failed to retrieve message %s", name)
+	}
+	found := false
+	// add in map with temp value to handle recursion.
+	msgmap[name] = found
+	for _, fld := range m.Fields {
+		v, err := reg.GetExtension("venice.objRelation", fld)
+		if err == nil {
+			req := parseRequirement(v.(venice.ObjectRln))
+			if req != nil {
+				found = true
+			}
+		}
+		if *fld.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+			found = found || checkReqs(file, msgmap, *fld.TypeName)
+		}
+	}
+	msgmap[name] = found
+	return found
+}
+
+func getRequirementsManifest(file *descriptor.File) (apiReqs, error) {
+	ret := apiReqs{Map: make(map[string]reqsMsg)}
+	msgmap := make(map[string]bool)
+	for _, msg := range file.Messages {
+		if t, _ := isTenanted(msg); isSpecStatusMessage(msg) && t {
+			req := reqsField{Scalar: true, Service: "cluster", Kind: "Tenant", RefType: "NamedRef"}
+			if _, ok := ret.Map[*msg.Name]; !ok {
+				ret.Map[*msg.Name] = reqsMsg{Fields: make(map[string]reqsField)}
+			}
+			rmsg := ret.Map[*msg.Name]
+			rmsg.Fields["Tenant"] = req
+		}
+		for _, fld := range msg.Fields {
+			v, err := reg.GetExtension("venice.objRelation", fld)
+			if err == nil {
+				if gogoproto.FieldDescriptorProto_TYPE_STRING != *fld.Type {
+					glog.Fatalf("Relations allowed only on string types [%v/%v]", *msg.Name, *fld.Name)
+				}
+				req := parseRequirement(v.(venice.ObjectRln))
+				if req == nil {
+					continue
+				}
+				// XXX-TODO(sanjayt): add a check to make ensure that the Kind is relation is valid. This has to be
+				//  done after all the protos have been parsed as post processing using the relations and svc manifest.
+				req.Repeated, req.Pointer = getFieldParams(fld)
+				if _, ok := ret.Map[*msg.Name]; !ok {
+					ret.Map[*msg.Name] = reqsMsg{Fields: make(map[string]reqsField)}
+				}
+				if req.Repeated && req.RefType == "SelectorRef" {
+					glog.Fatalf("Repeated field not allowed for selector references[%v/%v]", *msg.Name, *fld.Name)
+				}
+				rmsg := ret.Map[*msg.Name]
+				rmsg.Fields[*fld.Name] = *req
+				ret.Map[*msg.Name] = rmsg
+			}
+
+			if *fld.Type == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+				glog.Infof("checking requirements for message (%s).%s", *msg.Name, *fld.Name)
+				if _, ok := msgmap[*fld.TypeName]; !ok {
+					msgmap[*fld.TypeName] = checkReqs(file, msgmap, *fld.TypeName)
+				}
+				msgname := *msg.Name
+				if isNestedMessage(msg) {
+					if msg.GetOneofDecl() != nil {
+						continue
+					}
+					msgname, _ = getNestedMsgName(msg)
+				}
+				if _, ok := ret.Map[msgname]; !ok {
+					ret.Map[msgname] = reqsMsg{Fields: make(map[string]reqsField)}
+				}
+				if msgmap[*fld.TypeName] {
+					req := reqsField{}
+					req.Repeated, req.Pointer = getFieldParams(fld)
+					name := *fld.Name
+					if fld.Embedded {
+						// fld.GetTypeName() -> e.g. ".events.EventAttributes"
+						temp := strings.Split(fld.GetTypeName(), ".")
+						name = temp[len(temp)-1]
+					}
+					ret.Map[msgname].Fields[name] = req
+				}
+			}
+		}
+	}
+	glog.Infof("Requirements manifest is %+v", ret)
+	return ret, nil
+}
+
+func getRequirementPath(file *descriptor.File, req reqsField, tenant, name string) (string, error) {
+	dest, err := file.Reg.LookupMsg("", fmt.Sprintf(".%s.%s", req.Service, req.Kind))
+	if err != nil {
+		return "", err
+	}
+	if req.RefType == "SelectorRef" {
+		return fmt.Sprintf("\"labels:%s:%s:\" + %s + \":\" + %s", req.Service, req.Kind, tenant, name), nil
+	}
+	kc, err := getDbKey(dest)
+	if err != nil {
+		return "", err
+	}
+	ret := fmt.Sprintf("globals.ConfigRootPrefix + \"/%s/\"", req.Service)
+	for i := range kc {
+		switch kc[i].Type {
+		case "prefix":
+			ret = fmt.Sprintf("%s + \"%s\"", ret, kc[i].Val)
+		case "field":
+			switch kc[i].Val {
+			case "Tenant":
+				ret = fmt.Sprintf("%s + %s", ret, tenant)
+			case "Name":
+				ret = fmt.Sprintf("%s + %s", ret, name)
+			default:
+				glog.Fatalf("cannot handle field [%v]in path for [%v]", kc[i].Val, *dest.Name)
+			}
+		}
+	}
+	return ret, nil
+}
 
 func derefStr(in *string) string {
 	return *in
@@ -1917,6 +2088,95 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 	return ret, keys, nil
 }
 
+func getMsgToSvcPrefix(file *descriptor.File) map[string][]string {
+	ret := make(map[string][]string)
+	for _, svc := range file.Services {
+		params, err := getSvcParams(svc)
+		if err != nil {
+			glog.Fatalf("failed to get service params for service (%s)", err)
+		}
+		cruds, err := reg.GetExtension("venice.apiGrpcCrudService", svc)
+		if err == nil {
+			for _, v := range cruds.([]string) {
+				ret[v] = append(ret[v], params.Prefix)
+			}
+		}
+	}
+	return ret
+}
+
+type pathsMap struct {
+	URI string
+	Key string
+}
+
+func genPathsMap(file *descriptor.File) (map[string][]pathsMap, []string) {
+	ret := make(map[string][]pathsMap)
+
+	maps := getMsgToSvcPrefix(file)
+	pkg := file.GoPkg.Name
+	for k, v := range maps {
+		kind := pkg + "." + k
+		for _, v1 := range v {
+			msg, err := file.Reg.LookupMsg("", "."+kind)
+			if err != nil {
+				glog.Fatalf("failed to get message [%v] (%s)", kind, err)
+			}
+
+			// keycomponents for Key
+			uriC, err := getMsgURI(msg, "v1", v1)
+			if err != nil {
+				glog.Fatalf("failed to get uri components for [%v] (%s)", kind, err)
+			}
+			// XXX-TODO(sanjayt): insert appropriate version for group here
+			uri := "/" + globals.ConfigURIPrefix + "/"
+			for _, kc := range uriC {
+				if kc.Type == "prefix" {
+					uri = uri + kc.Val
+				} else {
+					uri = uri + "{" + kc.Val + "}"
+				}
+			}
+
+			// Key components for URI
+			keyC, err := getDbKey(msg)
+			if err != nil {
+				glog.Fatalf("failed to get key components for [%v] (%s)", kind, err)
+			}
+			key := globals.ConfigRootPrefix + "/" + v1 + "/"
+			for _, kc := range keyC {
+				if kc.Type == "prefix" {
+					key = key + kc.Val
+				} else {
+					key = key + "{" + kc.Val + "}"
+				}
+			}
+
+			// insert into return map
+			p := pathsMap{URI: uri, Key: key}
+			ret[kind] = append(ret[kind], p)
+		}
+	}
+	keys := []string{}
+	for k := range ret {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return ret, keys
+}
+func getPathsMap(file *descriptor.File) (string, error) {
+	ret, keys := genPathsMap(file)
+	retstr := ""
+	for _, k := range keys {
+		retstr = fmt.Sprintf("%s\n \"%s\": []api.PathsMap{", retstr, k)
+		for _, v := range ret[k] {
+			retstr = fmt.Sprintf("%s\n{ URI:\"%s\", Key:\"%s\" },", retstr, v.URI, v.Key)
+		}
+		retstr = fmt.Sprintf("%s},", retstr)
+	}
+	return retstr, nil
+}
+
 // getMsgMap is the template function used by templates to emit the schema for the file.
 func getMsgMap(file *descriptor.File) (string, error) {
 	msgs, keys, err := genMsgMap(file)
@@ -2262,6 +2522,50 @@ func getProxyPaths(svc *descriptor.Service) ([]ProxyPath, error) {
 	return ret, nil
 }
 
+func getJSONTagByName(msg *descriptor.Message, name string) (string, error) {
+	// Special handling for tenant
+	if isSpecStatusMessage(msg) && name == "Tenant" {
+		return "meta.tenant", nil
+	}
+
+	for _, fld := range msg.Fields {
+		if *fld.Name == name {
+			ret := common.GetJSONTag(fld)
+			if ret == "" {
+				return *fld.Name, nil
+			}
+			return ret, nil
+		}
+	}
+	// Did not find any direct fields. Try inlined fields
+	for _, fld := range msg.Fields {
+		if common.IsInline(fld) {
+			nmsg, err := msg.File.Reg.LookupMsg("", *fld.TypeName)
+			if err != nil {
+				return "", fmt.Errorf("error getting jsontag for inline object [%v](%s)", *fld.TypeName, err)
+			}
+			return getJSONTagByName(nmsg, name)
+		}
+	}
+	return "", fmt.Errorf("field [%v] not found", name)
+}
+
+func getMsgName(msg *descriptor.Message) (string, error) {
+	if len(msg.Outers) == 0 {
+		return *msg.Name, nil
+	}
+	ret := ""
+	for _, v := range msg.Outers {
+		ret = ret + v + "_"
+	}
+	return ret + *msg.Name, nil
+}
+
+func joinFields(dlmtr string, in ...string) string {
+	ret := strings.Join(in, dlmtr)
+	return ret
+}
+
 func init() {
 	cliTagRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
 
@@ -2308,6 +2612,7 @@ func init() {
 	reg.RegisterFunc("getFileName", getFileName)
 	reg.RegisterFunc("getGrpcDestination", getGrpcDestination)
 	reg.RegisterFunc("getValidatorManifest", getValidatorManifest)
+	reg.RegisterFunc("getRequirementsManifest", getRequirementsManifest)
 	reg.RegisterFunc("derefStr", derefStr)
 	reg.RegisterFunc("getEnumStrMap", getEnumStrMap)
 	reg.RegisterFunc("getStorageTransformersManifest", getStorageTransformersManifest)
@@ -2344,6 +2649,11 @@ func init() {
 	reg.RegisterFunc("getCLIFlagMap", getCLIFlagMap)
 	reg.RegisterFunc("splitSvcObj", splitSvcObj)
 	reg.RegisterFunc("GetGolangTypeName", getGolangTypeName)
+	reg.RegisterFunc("getRequirementPath", getRequirementPath)
+	reg.RegisterFunc("joinFields", joinFields)
+	reg.RegisterFunc("getPathsMap", getPathsMap)
+	reg.RegisterFunc("getJSONTagByName", getJSONTagByName)
+	reg.RegisterFunc("getMsgName", getMsgName)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

@@ -92,7 +92,10 @@ var typesMapX509 = map[string]*api.Struct{
 	},
 }
 
+var keyMapX509 = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapX509)
+	schema.AddPaths(keyMapX509)
 }

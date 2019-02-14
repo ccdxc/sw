@@ -12,7 +12,7 @@ import (
 
 	api "github.com/pensando/sw/api"
 	cluster "github.com/pensando/sw/api/generated/cluster"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	interfaces "github.com/pensando/sw/api/interfaces"
 	kvstore "github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -118,7 +118,7 @@ func (mr *MockClusterV1ClusterInterfaceMockRecorder) Watch(ctx, options interfac
 }
 
 // Allowed mocks base method
-func (m *MockClusterV1ClusterInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockClusterV1ClusterInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -257,7 +257,7 @@ func (mr *MockClusterV1NodeInterfaceMockRecorder) Watch(ctx, options interface{}
 }
 
 // Allowed mocks base method
-func (m *MockClusterV1NodeInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockClusterV1NodeInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -370,7 +370,7 @@ func (mr *MockClusterV1HostInterfaceMockRecorder) Watch(ctx, options interface{}
 }
 
 // Allowed mocks base method
-func (m *MockClusterV1HostInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockClusterV1HostInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -483,7 +483,7 @@ func (mr *MockClusterV1SmartNICInterfaceMockRecorder) Watch(ctx, options interfa
 }
 
 // Allowed mocks base method
-func (m *MockClusterV1SmartNICInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockClusterV1SmartNICInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -596,7 +596,7 @@ func (mr *MockClusterV1TenantInterfaceMockRecorder) Watch(ctx, options interface
 }
 
 // Allowed mocks base method
-func (m *MockClusterV1TenantInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockClusterV1TenantInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0

@@ -6,7 +6,7 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -23,7 +23,7 @@ type ObjstoreV1BucketInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Bucket, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Bucket, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // ObjstoreV1ObjectInterface exposes the CRUD methods for Object
@@ -34,7 +34,7 @@ type ObjstoreV1ObjectInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Object, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Object, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // ObjstoreV1Interface exposes objects with CRUD operations allowed by the service

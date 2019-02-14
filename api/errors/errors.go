@@ -15,6 +15,9 @@ import (
 //  the api server. The api server attaches auxillary data to grpc errors which this utiility
 //  function extracts
 func FromError(err error) api.Status {
+	if err == nil {
+		return api.Status{}
+	}
 	ret := api.Status{Code: int32(gwruntime.HTTPStatusFromCode(codes.Unknown)), Message: []string{err.Error()}}
 	grpcstatus, ok := status.FromError(err)
 	if !ok {

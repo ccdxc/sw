@@ -47,7 +47,14 @@ var typesMapSvc_rollout = map[string]*api.Struct{
 	},
 }
 
+var keyMapSvc_rollout = map[string][]api.PathsMap{
+
+	"rollout.Rollout": []api.PathsMap{
+		{URI: "/configs/rollout/v1/rollout/{Name}", Key: "/venice/config/rollout/rollout/{Name}"}},
+}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_rollout)
+	schema.AddPaths(keyMapSvc_rollout)
 }

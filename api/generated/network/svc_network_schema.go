@@ -107,7 +107,18 @@ var typesMapSvc_network = map[string]*api.Struct{
 	},
 }
 
+var keyMapSvc_network = map[string][]api.PathsMap{
+
+	"network.LbPolicy": []api.PathsMap{
+		{URI: "/configs/network/v1/tenant/{Tenant}/lb-policy/{Name}", Key: "/venice/config/network/lb-policy/{Tenant}/{Name}"}},
+	"network.Network": []api.PathsMap{
+		{URI: "/configs/network/v1/tenant/{Tenant}/networks/{Name}", Key: "/venice/config/network/networks/{Tenant}/{Name}"}},
+	"network.Service": []api.PathsMap{
+		{URI: "/configs/network/v1/tenant/{Tenant}/services/{Name}", Key: "/venice/config/network/services/{Tenant}/{Name}"}},
+}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_network)
+	schema.AddPaths(keyMapSvc_network)
 }

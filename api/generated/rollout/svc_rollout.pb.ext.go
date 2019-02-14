@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -101,7 +102,11 @@ func (m *RolloutList) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *AutoMsgRolloutWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *AutoMsgRolloutWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -118,6 +123,10 @@ func (m *AutoMsgRolloutWatchHelper) Validate(ver, path string, ignoreStatus bool
 	return ret
 }
 
+func (m *AutoMsgRolloutWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgRolloutWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -131,6 +140,10 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) Validate(ver, path string, ignore
 		}
 	}
 	return ret
+}
+
+func (m *RolloutList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *RolloutList) Validate(ver, path string, ignoreStatus bool) []error {

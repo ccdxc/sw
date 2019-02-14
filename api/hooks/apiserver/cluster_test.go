@@ -10,8 +10,8 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
-	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -394,7 +394,7 @@ func TestTenantObject(t *testing.T) {
 func TestCreateDefaultRoles(t *testing.T) {
 	tests := []struct {
 		name     string
-		oper     apiserver.APIOperType
+		oper     apiintf.APIOperType
 		in       interface{}
 		out      interface{}
 		txnEmpty bool
@@ -403,7 +403,7 @@ func TestCreateDefaultRoles(t *testing.T) {
 	}{
 		{
 			name: "invalid input object for create tenant",
-			oper: apiserver.CreateOper,
+			oper: apiintf.CreateOper,
 			in: struct {
 				Test string
 			}{"testing"},
@@ -416,7 +416,7 @@ func TestCreateDefaultRoles(t *testing.T) {
 		},
 		{
 			name: "create admin role for tenant",
-			oper: apiserver.CreateOper,
+			oper: apiintf.CreateOper,
 			in: cluster.Tenant{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
@@ -437,7 +437,7 @@ func TestCreateDefaultRoles(t *testing.T) {
 		},
 		{
 			name: "invalid operation type for create tenant",
-			oper: apiserver.DeleteOper,
+			oper: apiintf.DeleteOper,
 			in: cluster.Tenant{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
@@ -487,7 +487,7 @@ func TestCreateDefaultRoles(t *testing.T) {
 func TestDeleteDefaultRoles(t *testing.T) {
 	tests := []struct {
 		name     string
-		oper     apiserver.APIOperType
+		oper     apiintf.APIOperType
 		in       interface{}
 		out      interface{}
 		txnEmpty bool
@@ -496,7 +496,7 @@ func TestDeleteDefaultRoles(t *testing.T) {
 	}{
 		{
 			name: "invalid input object for delete tenant",
-			oper: apiserver.DeleteOper,
+			oper: apiintf.DeleteOper,
 			in: struct {
 				Test string
 			}{"testing"},
@@ -509,7 +509,7 @@ func TestDeleteDefaultRoles(t *testing.T) {
 		},
 		{
 			name: "delete admin role for tenant",
-			oper: apiserver.DeleteOper,
+			oper: apiintf.DeleteOper,
 			in: cluster.Tenant{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
@@ -530,7 +530,7 @@ func TestDeleteDefaultRoles(t *testing.T) {
 		},
 		{
 			name: "invalid operation type for delete tenant",
-			oper: apiserver.CreateOper,
+			oper: apiintf.CreateOper,
 			in: cluster.Tenant{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 				ObjectMeta: api.ObjectMeta{
@@ -591,7 +591,7 @@ func TestDeleteDefaultRoles(t *testing.T) {
 func TestCheckAuthBootstrapFlag(t *testing.T) {
 	tests := []struct {
 		name     string
-		oper     apiserver.APIOperType
+		oper     apiintf.APIOperType
 		in       interface{}
 		existing *cluster.Cluster
 		out      interface{}
@@ -600,7 +600,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 	}{
 		{
 			name: "invalid input object for update cluster",
-			oper: apiserver.UpdateOper,
+			oper: apiintf.UpdateOper,
 			in: struct {
 				Test string
 			}{"testing"},
@@ -612,7 +612,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 		},
 		{
 			name: "unset bootstrap flag of already bootstrapped cluster",
-			oper: apiserver.UpdateOper,
+			oper: apiintf.UpdateOper,
 			in: cluster.Cluster{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
@@ -645,7 +645,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 		},
 		{
 			name: "set bootstrap flag of un-bootstrapped cluster",
-			oper: apiserver.UpdateOper,
+			oper: apiintf.UpdateOper,
 			in: cluster.Cluster{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
@@ -678,7 +678,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 		},
 		{
 			name: "set bootstrap flag through create cluster",
-			oper: apiserver.CreateOper,
+			oper: apiintf.CreateOper,
 			in: cluster.Cluster{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
@@ -702,7 +702,7 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 		},
 		{
 			name: "invalid operation type for check bootstrap hook",
-			oper: apiserver.DeleteOper,
+			oper: apiintf.DeleteOper,
 			in: cluster.Cluster{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
@@ -850,7 +850,7 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 func TestPopulateExistingTLSConfig(t *testing.T) {
 	tests := []struct {
 		name     string
-		oper     apiserver.APIOperType
+		oper     apiintf.APIOperType
 		in       interface{}
 		existing *cluster.Cluster
 		out      interface{}
@@ -859,7 +859,7 @@ func TestPopulateExistingTLSConfig(t *testing.T) {
 	}{
 		{
 			name: "invalid input object for populate TLS config in cluster",
-			oper: apiserver.UpdateOper,
+			oper: apiintf.UpdateOper,
 			in: struct {
 				Test string
 			}{"testing"},
@@ -871,7 +871,7 @@ func TestPopulateExistingTLSConfig(t *testing.T) {
 		},
 		{
 			name: "populate existing certs and key",
-			oper: apiserver.UpdateOper,
+			oper: apiintf.UpdateOper,
 			in: cluster.Cluster{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
@@ -903,7 +903,7 @@ func TestPopulateExistingTLSConfig(t *testing.T) {
 		},
 		{
 			name: "invalid operation type for populate TLS Config hook",
-			oper: apiserver.CreateOper,
+			oper: apiintf.CreateOper,
 			in: cluster.Cluster{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
@@ -921,7 +921,7 @@ func TestPopulateExistingTLSConfig(t *testing.T) {
 		},
 		{
 			name: "missing cluster obj",
-			oper: apiserver.UpdateOper,
+			oper: apiintf.UpdateOper,
 			in: cluster.Cluster{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{

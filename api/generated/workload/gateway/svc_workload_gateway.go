@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	workload "github.com/pensando/sw/api/generated/workload"
 	grpcclient "github.com/pensando/sw/api/generated/workload/grpc/client"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
@@ -57,7 +58,7 @@ func (a adapterWorkloadV1) AutoAddEndpoint(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -80,7 +81,7 @@ func (a adapterWorkloadV1) AutoAddWorkload(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -103,7 +104,7 @@ func (a adapterWorkloadV1) AutoDeleteEndpoint(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -126,7 +127,7 @@ func (a adapterWorkloadV1) AutoDeleteWorkload(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -149,7 +150,7 @@ func (a adapterWorkloadV1) AutoGetEndpoint(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -172,7 +173,7 @@ func (a adapterWorkloadV1) AutoGetWorkload(oldctx oldcontext.Context, t *workloa
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -200,7 +201,7 @@ func (a adapterWorkloadV1) AutoListEndpoint(oldctx oldcontext.Context, t *api.Li
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "EndpointList", t.Tenant, t.Namespace, "workload", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "EndpointList", t.Tenant, t.Namespace, "workload", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -228,7 +229,7 @@ func (a adapterWorkloadV1) AutoListWorkload(oldctx oldcontext.Context, t *api.Li
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "WorkloadList", t.Tenant, t.Namespace, "workload", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "WorkloadList", t.Tenant, t.Namespace, "workload", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -251,7 +252,7 @@ func (a adapterWorkloadV1) AutoUpdateEndpoint(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Endpoint", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -274,7 +275,7 @@ func (a adapterWorkloadV1) AutoUpdateWorkload(oldctx oldcontext.Context, t *work
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -296,7 +297,7 @@ func (a adapterWorkloadV1) AutoWatchSvcWorkloadV1(oldctx oldcontext.Context, in 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "workload"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "workload"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -352,7 +353,7 @@ func (a adapterWorkloadV1) AutoWatchEndpoint(oldctx oldcontext.Context, in *api.
 	}
 
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Endpoint", in.Tenant, in.Namespace, "workload"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Endpoint", in.Tenant, in.Namespace, "workload"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -408,7 +409,7 @@ func (a adapterWorkloadV1) AutoWatchWorkload(oldctx oldcontext.Context, in *api.
 	}
 
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Workload", in.Tenant, in.Namespace, "workload"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Workload", in.Tenant, in.Namespace, "workload"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -457,31 +458,31 @@ func (a adapterWorkloadV1) AutoWatchWorkload(oldctx oldcontext.Context, in *api.
 }
 
 func (e *sWorkloadV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "workload", apiserver.UnknownOper)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "workload", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiserver.CreateOper)
+	e.svcProf["AutoAddEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiintf.CreateOper)
 
-	e.svcProf["AutoAddWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiserver.CreateOper)
+	e.svcProf["AutoAddWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.CreateOper)
 
-	e.svcProf["AutoDeleteWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.DeleteOper)
 
-	e.svcProf["AutoGetEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiserver.GetOper)
+	e.svcProf["AutoGetEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiintf.GetOper)
 
-	e.svcProf["AutoGetWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiserver.GetOper)
+	e.svcProf["AutoGetWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.GetOper)
 
-	e.svcProf["AutoListEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EndpointList", "workload", apiserver.ListOper)
+	e.svcProf["AutoListEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EndpointList", "workload", apiintf.ListOper)
 
-	e.svcProf["AutoListWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "WorkloadList", "workload", apiserver.ListOper)
+	e.svcProf["AutoListWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "WorkloadList", "workload", apiintf.ListOper)
 
-	e.svcProf["AutoUpdateEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.UpdateOper)
 
-	e.svcProf["AutoWatchEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgEndpointWatchHelper", "workload", apiserver.WatchOper)
+	e.svcProf["AutoWatchEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgEndpointWatchHelper", "workload", apiintf.WatchOper)
 
-	e.svcProf["AutoWatchWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgWorkloadWatchHelper", "workload", apiserver.WatchOper)
+	e.svcProf["AutoWatchWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgWorkloadWatchHelper", "workload", apiintf.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -501,7 +502,7 @@ func (e *sWorkloadV1GwService) GetServiceProfile(method string) (apigw.ServicePr
 }
 
 // GetCrudServiceProfile returns the service profile for a auto generated crud operation
-func (e *sWorkloadV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (e *sWorkloadV1GwService) GetCrudServiceProfile(obj string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
 		return e.GetServiceProfile(name)

@@ -1,0 +1,74 @@
+package impl
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"google.golang.org/grpc/metadata"
+
+	"github.com/pensando/sw/venice/apigw/pkg"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/utils/runtime"
+
+	"github.com/pensando/sw/api/generated/browser"
+	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/utils/log"
+	. "github.com/pensando/sw/venice/utils/testutils"
+)
+
+func TestBrowserPreCallHooks(t *testing.T) {
+	ctx := context.Background()
+
+	mdata := map[string]string{
+		apiserver.RequestParamsRequestURI: "/configs/browser/dependencies/testgrp/v1/testobj/testname",
+	}
+	md := metadata.New(mdata)
+	ctx = metadata.NewOutgoingContext(ctx, md)
+	req := &browser.BrowseRequest{}
+	req.Defaults("v1")
+	h := browserHooks{logger: log.GetNewLogger(log.GetDefaultConfig("browserAPIGwHooks"))}
+	sch := runtime.GetDefaultScheme()
+	paths := map[string][]api.PathsMap{
+		"test.Object": {
+			{Key: "/testgrp/testobj/{Name}", URI: "/configs/testgrp/{version}/testobj/{Name}"},
+		},
+	}
+	sch.AddPaths(paths)
+
+	ctx, reti, skip, err := h.refereesPreCallHook(ctx, req)
+	ret := reti.(*browser.BrowseRequest)
+	Assert(t, skip == false, "expecting false for skip", nil)
+	AssertOk(t, err, "expecting to succeed got(%s)", err)
+	Assert(t, ret.URI == "/testgrp/testobj/testname", fmt.Sprintf("got wrong URI[%v]", ret.URI), nil)
+	Assert(t, ret.MaxDepth == 1, fmt.Sprintf("got wrong depth [%d]", ret.MaxDepth), nil)
+	Assert(t, ret.QueryType == browser.QueryType_DependedBy.String(), fmt.Sprintf("got wrong type [%v]", ret.QueryType), nil)
+
+	req1 := &browser.BrowseRequest{}
+	req1.Defaults("v1")
+	ctx, reti, skip, err = h.referencesPreCallHook(ctx, req)
+	ret = reti.(*browser.BrowseRequest)
+	Assert(t, skip == false, "expecting false for skip", nil)
+	AssertOk(t, err, "expecting to succeed got(%s)", err)
+	Assert(t, ret.URI == "/testgrp/testobj/testname", fmt.Sprintf("got wrong URI[%v]", ret.URI), nil)
+	Assert(t, ret.MaxDepth == 1, fmt.Sprintf("got wrong depth [%d]", ret.MaxDepth), nil)
+	Assert(t, ret.QueryType == browser.QueryType_Dependencies.String(), fmt.Sprintf("got wrong type [%v]", ret.QueryType), nil)
+
+	req.URI = "/configs/testgrp/v1/testobj/testname"
+	ctx, reti, skip, err = h.queryPreCallHook(ctx, req)
+	ret = reti.(*browser.BrowseRequest)
+	Assert(t, skip == false, "expecting false for skip", nil)
+	AssertOk(t, err, "expecting to succeed got(%s)", err)
+	Assert(t, ret.URI == "/testgrp/testobj/testname", fmt.Sprintf("got wrong URI[%v]", ret.URI), nil)
+
+	nctx, reti, err := h.addOperations(ctx, req)
+	ops, ok := apigwpkg.OperationsFromContext(nctx)
+	Assert(t, ok, "expecting to pass")
+	Assert(t, len(ops) == 1, "expecting 1 op got [%v]", len(ops))
+
+	nctx, reti, err = h.addOperations(nctx, req)
+	ops, ok = apigwpkg.OperationsFromContext(nctx)
+	Assert(t, ok, "expecting to pass")
+	Assert(t, len(ops) == 2, "expecting 2 ops got [%v]", len(ops))
+}

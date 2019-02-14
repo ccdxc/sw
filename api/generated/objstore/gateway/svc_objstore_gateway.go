@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	objstore "github.com/pensando/sw/api/generated/objstore"
 	grpcclient "github.com/pensando/sw/api/generated/objstore/grpc/client"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
@@ -57,7 +58,7 @@ func (a adapterObjstoreV1) AutoAddBucket(oldctx oldcontext.Context, t *objstore.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Bucket", t.Tenant, t.Namespace, "", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Bucket", t.Tenant, t.Namespace, "", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -80,7 +81,7 @@ func (a adapterObjstoreV1) AutoAddObject(oldctx oldcontext.Context, t *objstore.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Object", t.Tenant, t.Namespace, "", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Object", t.Tenant, t.Namespace, "", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -103,7 +104,7 @@ func (a adapterObjstoreV1) AutoDeleteBucket(oldctx oldcontext.Context, t *objsto
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Bucket", t.Tenant, t.Namespace, "", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Bucket", t.Tenant, t.Namespace, "", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -126,7 +127,7 @@ func (a adapterObjstoreV1) AutoDeleteObject(oldctx oldcontext.Context, t *objsto
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Object", t.Tenant, t.Namespace, "", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Object", t.Tenant, t.Namespace, "", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -149,7 +150,7 @@ func (a adapterObjstoreV1) AutoGetBucket(oldctx oldcontext.Context, t *objstore.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Bucket", t.Tenant, t.Namespace, "", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Bucket", t.Tenant, t.Namespace, "", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -172,7 +173,7 @@ func (a adapterObjstoreV1) AutoGetObject(oldctx oldcontext.Context, t *objstore.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Object", t.Tenant, t.Namespace, "", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Object", t.Tenant, t.Namespace, "", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -198,7 +199,7 @@ func (a adapterObjstoreV1) AutoListBucket(oldctx oldcontext.Context, t *api.List
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "BucketList", t.Tenant, t.Namespace, "", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "BucketList", t.Tenant, t.Namespace, "", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -225,7 +226,7 @@ func (a adapterObjstoreV1) AutoListObject(oldctx oldcontext.Context, t *api.List
 	if t.Tenant == "" {
 		t.Tenant = globals.DefaultTenant
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "ObjectList", t.Tenant, t.Namespace, "", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "ObjectList", t.Tenant, t.Namespace, "", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -248,7 +249,7 @@ func (a adapterObjstoreV1) AutoUpdateBucket(oldctx oldcontext.Context, t *objsto
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Bucket", t.Tenant, t.Namespace, "", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Bucket", t.Tenant, t.Namespace, "", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -271,7 +272,7 @@ func (a adapterObjstoreV1) AutoUpdateObject(oldctx oldcontext.Context, t *objsto
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Object", t.Tenant, t.Namespace, "", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Object", t.Tenant, t.Namespace, "", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -293,7 +294,7 @@ func (a adapterObjstoreV1) AutoWatchSvcObjstoreV1(oldctx oldcontext.Context, in 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, ""
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -350,7 +351,7 @@ func (a adapterObjstoreV1) AutoWatchBucket(oldctx oldcontext.Context, in *api.Li
 
 	in.Tenant = ""
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Bucket", in.Tenant, in.Namespace, ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Bucket", in.Tenant, in.Namespace, ""
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -405,7 +406,7 @@ func (a adapterObjstoreV1) AutoWatchObject(oldctx oldcontext.Context, in *api.Li
 		return nil, errors.New("unknown service profile")
 	}
 
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Object", in.Tenant, in.Namespace, ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Object", in.Tenant, in.Namespace, ""
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -454,16 +455,16 @@ func (a adapterObjstoreV1) AutoWatchObject(oldctx oldcontext.Context, in *api.Li
 }
 
 func (e *sObjstoreV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoDeleteObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Object", "", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Object", "", apiintf.DeleteOper)
 
-	e.svcProf["AutoGetObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Object", "", apiserver.GetOper)
+	e.svcProf["AutoGetObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Object", "", apiintf.GetOper)
 
-	e.svcProf["AutoListObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ObjectList", "", apiserver.ListOper)
-	e.svcProf["_RProxy_"+"/"+"uploads/images"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
+	e.svcProf["AutoListObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ObjectList", "", apiintf.ListOper)
+	e.svcProf["_RProxy_"+"/"+"uploads/images"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -483,7 +484,7 @@ func (e *sObjstoreV1GwService) GetServiceProfile(method string) (apigw.ServicePr
 }
 
 // GetCrudServiceProfile returns the service profile for a auto generated crud operation
-func (e *sObjstoreV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (e *sObjstoreV1GwService) GetCrudServiceProfile(obj string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
 		return e.GetServiceProfile(name)

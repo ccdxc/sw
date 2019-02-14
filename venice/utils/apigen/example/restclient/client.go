@@ -264,7 +264,7 @@ func main() {
 	var orders = []bookstore.Order{
 		{
 			ObjectMeta: api.ObjectMeta{
-				Name: "test for pre-commit hook to generate new Order id - will be overwritten to order-<x> for POST",
+				Name: "POST",
 			},
 			TypeMeta: api.TypeMeta{
 				Kind: "Order",
@@ -281,7 +281,7 @@ func main() {
 		},
 		{
 			ObjectMeta: api.ObjectMeta{
-				Name: "test for pre-commit hook to generate new Order id - will be overwritten to order-<x> for POST",
+				Name: "testfoPOST",
 			},
 			TypeMeta: api.TypeMeta{
 				Kind: "Order",

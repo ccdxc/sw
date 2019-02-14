@@ -47,7 +47,14 @@ var typesMapSvc_staging = map[string]*api.Struct{
 	},
 }
 
+var keyMapSvc_staging = map[string][]api.PathsMap{
+
+	"staging.Buffer": []api.PathsMap{
+		{URI: "/configs/staging/v1/tenant/{Tenant}/buffers/{Name}", Key: "/venice/config/staging/buffers/{Tenant}/{Name}"}},
+}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_staging)
+	schema.AddPaths(keyMapSvc_staging)
 }

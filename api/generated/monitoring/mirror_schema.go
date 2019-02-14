@@ -154,7 +154,10 @@ var typesMapMirror = map[string]*api.Struct{
 	},
 }
 
+var keyMapMirror = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapMirror)
+	schema.AddPaths(keyMapMirror)
 }

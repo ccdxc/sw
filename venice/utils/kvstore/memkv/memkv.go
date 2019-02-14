@@ -619,7 +619,9 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 			ret.Responses = append(ret.Responses, opresp)
 		case tUpdate:
 			v := f.cluster.kvs[o.key]
-			v.value = o.val
+			if !o.ignoreValue {
+				v.value = o.val
+			}
 			if f.revMode == ClusterRevision {
 				v.revision = rev
 			} else {

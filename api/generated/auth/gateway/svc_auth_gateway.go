@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	auth "github.com/pensando/sw/api/generated/auth"
 	grpcclient "github.com/pensando/sw/api/generated/auth/grpc/client"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
@@ -57,7 +58,7 @@ func (a adapterAuthV1) AutoAddAuthenticationPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -80,7 +81,7 @@ func (a adapterAuthV1) AutoAddRole(oldctx oldcontext.Context, t *auth.Role, opti
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -103,7 +104,7 @@ func (a adapterAuthV1) AutoAddRoleBinding(oldctx oldcontext.Context, t *auth.Rol
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -126,7 +127,7 @@ func (a adapterAuthV1) AutoAddUser(oldctx oldcontext.Context, t *auth.User, opti
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -149,7 +150,7 @@ func (a adapterAuthV1) AutoDeleteAuthenticationPolicy(oldctx oldcontext.Context,
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -172,7 +173,7 @@ func (a adapterAuthV1) AutoDeleteRole(oldctx oldcontext.Context, t *auth.Role, o
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -195,7 +196,7 @@ func (a adapterAuthV1) AutoDeleteRoleBinding(oldctx oldcontext.Context, t *auth.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -218,7 +219,7 @@ func (a adapterAuthV1) AutoDeleteUser(oldctx oldcontext.Context, t *auth.User, o
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "User", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -241,7 +242,7 @@ func (a adapterAuthV1) AutoGetAuthenticationPolicy(oldctx oldcontext.Context, t 
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -264,7 +265,7 @@ func (a adapterAuthV1) AutoGetRole(oldctx oldcontext.Context, t *auth.Role, opti
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -287,7 +288,7 @@ func (a adapterAuthV1) AutoGetRoleBinding(oldctx oldcontext.Context, t *auth.Rol
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -310,7 +311,7 @@ func (a adapterAuthV1) AutoGetUser(oldctx oldcontext.Context, t *auth.User, opti
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "User", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -336,7 +337,7 @@ func (a adapterAuthV1) AutoListAuthenticationPolicy(oldctx oldcontext.Context, t
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "AuthenticationPolicyList", t.Tenant, t.Namespace, "auth", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "AuthenticationPolicyList", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -364,7 +365,7 @@ func (a adapterAuthV1) AutoListRole(oldctx oldcontext.Context, t *api.ListWatchO
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "RoleList", t.Tenant, t.Namespace, "auth", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "RoleList", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -392,7 +393,7 @@ func (a adapterAuthV1) AutoListRoleBinding(oldctx oldcontext.Context, t *api.Lis
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "RoleBindingList", t.Tenant, t.Namespace, "auth", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "RoleBindingList", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -420,7 +421,7 @@ func (a adapterAuthV1) AutoListUser(oldctx oldcontext.Context, t *api.ListWatchO
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "UserList", t.Tenant, t.Namespace, "auth", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "UserList", t.Tenant, t.Namespace, "auth", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -443,7 +444,7 @@ func (a adapterAuthV1) AutoUpdateAuthenticationPolicy(oldctx oldcontext.Context,
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -466,7 +467,7 @@ func (a adapterAuthV1) AutoUpdateRole(oldctx oldcontext.Context, t *auth.Role, o
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Role", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -489,7 +490,7 @@ func (a adapterAuthV1) AutoUpdateRoleBinding(oldctx oldcontext.Context, t *auth.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "RoleBinding", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -512,7 +513,7 @@ func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, o
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -535,7 +536,7 @@ func (a adapterAuthV1) LdapBindCheck(oldctx oldcontext.Context, t *auth.Authenti
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -558,7 +559,7 @@ func (a adapterAuthV1) LdapConnectionCheck(oldctx oldcontext.Context, t *auth.Au
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "AuthenticationPolicy", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -581,7 +582,7 @@ func (a adapterAuthV1) PasswordChange(oldctx oldcontext.Context, t *auth.Passwor
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -604,7 +605,7 @@ func (a adapterAuthV1) PasswordReset(oldctx oldcontext.Context, t *auth.Password
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -626,7 +627,7 @@ func (a adapterAuthV1) AutoWatchSvcAuthV1(oldctx oldcontext.Context, in *api.Lis
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "auth"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -682,7 +683,7 @@ func (a adapterAuthV1) AutoWatchUser(oldctx oldcontext.Context, in *api.ListWatc
 	}
 
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "User", in.Tenant, in.Namespace, "auth"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "User", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -739,7 +740,7 @@ func (a adapterAuthV1) AutoWatchAuthenticationPolicy(oldctx oldcontext.Context, 
 
 	in.Tenant = ""
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "AuthenticationPolicy", in.Tenant, in.Namespace, "auth"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "AuthenticationPolicy", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -795,7 +796,7 @@ func (a adapterAuthV1) AutoWatchRole(oldctx oldcontext.Context, in *api.ListWatc
 	}
 
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Role", in.Tenant, in.Namespace, "auth"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Role", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -851,7 +852,7 @@ func (a adapterAuthV1) AutoWatchRoleBinding(oldctx oldcontext.Context, in *api.L
 	}
 
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "RoleBinding", in.Tenant, in.Namespace, "auth"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "RoleBinding", in.Tenant, in.Namespace, "auth"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -900,61 +901,61 @@ func (a adapterAuthV1) AutoWatchRoleBinding(oldctx oldcontext.Context, in *api.L
 }
 
 func (e *sAuthV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "auth", apiserver.UnknownOper)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "auth", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.CreateOper)
+	e.svcProf["AutoAddAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiintf.CreateOper)
 
-	e.svcProf["AutoAddRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiserver.CreateOper)
+	e.svcProf["AutoAddRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiintf.CreateOper)
 
-	e.svcProf["AutoAddRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiserver.CreateOper)
+	e.svcProf["AutoAddRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiintf.CreateOper)
 
-	e.svcProf["AutoAddUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.CreateOper)
+	e.svcProf["AutoAddUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.CreateOper)
 
-	e.svcProf["AutoDeleteRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiintf.DeleteOper)
 
-	e.svcProf["AutoDeleteRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiintf.DeleteOper)
 
-	e.svcProf["AutoDeleteUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.DeleteOper)
 
-	e.svcProf["AutoGetAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.GetOper)
+	e.svcProf["AutoGetAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiintf.GetOper)
 
-	e.svcProf["AutoGetRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiserver.GetOper)
+	e.svcProf["AutoGetRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiintf.GetOper)
 
-	e.svcProf["AutoGetRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiserver.GetOper)
+	e.svcProf["AutoGetRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiintf.GetOper)
 
-	e.svcProf["AutoGetUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.GetOper)
+	e.svcProf["AutoGetUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.GetOper)
 
-	e.svcProf["AutoListRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleList", "auth", apiserver.ListOper)
+	e.svcProf["AutoListRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleList", "auth", apiintf.ListOper)
 
-	e.svcProf["AutoListRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBindingList", "auth", apiserver.ListOper)
+	e.svcProf["AutoListRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBindingList", "auth", apiintf.ListOper)
 
-	e.svcProf["AutoListUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "UserList", "auth", apiserver.ListOper)
+	e.svcProf["AutoListUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "UserList", "auth", apiintf.ListOper)
 
-	e.svcProf["AutoUpdateAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Role", "auth", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RoleBinding", "auth", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.UpdateOper)
 
-	e.svcProf["AutoWatchAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAuthenticationPolicyWatchHelper", "auth", apiserver.WatchOper)
+	e.svcProf["AutoWatchAuthenticationPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAuthenticationPolicyWatchHelper", "auth", apiintf.WatchOper)
 
-	e.svcProf["AutoWatchRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRoleWatchHelper", "auth", apiserver.WatchOper)
+	e.svcProf["AutoWatchRole"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRoleWatchHelper", "auth", apiintf.WatchOper)
 
-	e.svcProf["AutoWatchRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRoleBindingWatchHelper", "auth", apiserver.WatchOper)
+	e.svcProf["AutoWatchRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRoleBindingWatchHelper", "auth", apiintf.WatchOper)
 
-	e.svcProf["AutoWatchUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgUserWatchHelper", "auth", apiserver.WatchOper)
+	e.svcProf["AutoWatchUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgUserWatchHelper", "auth", apiintf.WatchOper)
 
-	e.svcProf["LdapBindCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.CreateOper)
+	e.svcProf["LdapBindCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiintf.CreateOper)
 
-	e.svcProf["LdapConnectionCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiserver.CreateOper)
+	e.svcProf["LdapConnectionCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiintf.CreateOper)
 
-	e.svcProf["PasswordChange"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.CreateOper)
+	e.svcProf["PasswordChange"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.CreateOper)
 
-	e.svcProf["PasswordReset"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiserver.CreateOper)
+	e.svcProf["PasswordReset"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.CreateOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -974,7 +975,7 @@ func (e *sAuthV1GwService) GetServiceProfile(method string) (apigw.ServiceProfil
 }
 
 // GetCrudServiceProfile returns the service profile for a auto generated crud operation
-func (e *sAuthV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (e *sAuthV1GwService) GetCrudServiceProfile(obj string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
 		return e.GetServiceProfile(name)

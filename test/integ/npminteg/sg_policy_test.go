@@ -14,6 +14,8 @@ import (
 )
 
 func (it *integTestSuite) TestNpmSgPolicy(c *C) {
+	// if not present create the default tenant
+	it.CreateTenant("default")
 	// sg policy
 	sgp := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
@@ -88,7 +90,6 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 		},
 	}
 	sgp.Spec.Rules = append(sgp.Spec.Rules, newRule)
-	sgp.ObjectMeta.GenerationID = "2"
 	_, err = it.apisrvClient.SecurityV1().SGPolicy().Update(context.Background(), &sgp)
 	AssertOk(c, err, "error updating sg policy")
 
@@ -111,9 +112,6 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 		tsgp, gerr := it.ctrler.StateMgr.FindSgpolicy(sgp.Tenant, sgp.Name)
 		if err != nil {
 			return false, gerr
-		}
-		if tsgp.SGPolicy.Status.PropagationStatus.GenerationID != sgp.ObjectMeta.GenerationID {
-			return false, tsgp
 		}
 		if (tsgp.SGPolicy.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.SGPolicy.Status.PropagationStatus.Pending != 0) ||
 			(tsgp.SGPolicy.Status.PropagationStatus.MinVersion != "") {

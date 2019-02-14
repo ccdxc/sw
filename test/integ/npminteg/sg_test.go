@@ -15,6 +15,8 @@ import (
 
 // TestNpmSgCreateDelete
 func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
+	// if not present create the default tenant
+	it.CreateTenant("default")
 	// create sg in watcher
 	err := it.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	c.Assert(err, IsNil)
@@ -90,6 +92,8 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 }
 
 func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
+	// if not present create the default tenant
+	it.CreateTenant("default")
 	// create a network in controller
 	err := it.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/22", "10.1.1.254")
 	c.Assert(err, IsNil)

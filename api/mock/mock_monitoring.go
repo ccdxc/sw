@@ -12,7 +12,7 @@ import (
 
 	api "github.com/pensando/sw/api"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	interfaces "github.com/pensando/sw/api/interfaces"
 	kvstore "github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -118,7 +118,7 @@ func (mr *MockMonitoringV1EventPolicyInterfaceMockRecorder) Watch(ctx, options i
 }
 
 // Allowed mocks base method
-func (m *MockMonitoringV1EventPolicyInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockMonitoringV1EventPolicyInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -231,7 +231,7 @@ func (mr *MockMonitoringV1StatsPolicyInterfaceMockRecorder) Watch(ctx, options i
 }
 
 // Allowed mocks base method
-func (m *MockMonitoringV1StatsPolicyInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockMonitoringV1StatsPolicyInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -344,7 +344,7 @@ func (mr *MockMonitoringV1FwlogPolicyInterfaceMockRecorder) Watch(ctx, options i
 }
 
 // Allowed mocks base method
-func (m *MockMonitoringV1FwlogPolicyInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockMonitoringV1FwlogPolicyInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -457,7 +457,7 @@ func (mr *MockMonitoringV1FlowExportPolicyInterfaceMockRecorder) Watch(ctx, opti
 }
 
 // Allowed mocks base method
-func (m *MockMonitoringV1FlowExportPolicyInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockMonitoringV1FlowExportPolicyInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -570,7 +570,7 @@ func (mr *MockMonitoringV1AlertInterfaceMockRecorder) Watch(ctx, options interfa
 }
 
 // Allowed mocks base method
-func (m *MockMonitoringV1AlertInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockMonitoringV1AlertInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -683,7 +683,7 @@ func (mr *MockMonitoringV1AlertPolicyInterfaceMockRecorder) Watch(ctx, options i
 }
 
 // Allowed mocks base method
-func (m *MockMonitoringV1AlertPolicyInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockMonitoringV1AlertPolicyInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -796,7 +796,7 @@ func (mr *MockMonitoringV1AlertDestinationInterfaceMockRecorder) Watch(ctx, opti
 }
 
 // Allowed mocks base method
-func (m *MockMonitoringV1AlertDestinationInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockMonitoringV1AlertDestinationInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -909,7 +909,7 @@ func (mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) Watch(ctx, options
 }
 
 // Allowed mocks base method
-func (m *MockMonitoringV1MirrorSessionInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockMonitoringV1MirrorSessionInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -1022,7 +1022,7 @@ func (mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) Watch(ctx
 }
 
 // Allowed mocks base method
-func (m *MockMonitoringV1TroubleshootingSessionInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockMonitoringV1TroubleshootingSessionInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -1135,7 +1135,7 @@ func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) Watch(ctx, op
 }
 
 // Allowed mocks base method
-func (m *MockMonitoringV1TechSupportRequestInterface) Allowed(oper apiserver.APIOperType) bool {
+func (m *MockMonitoringV1TechSupportRequestInterface) Allowed(oper interfaces.APIOperType) bool {
 	ret := m.ctrl.Call(m, "Allowed", oper)
 	ret0, _ := ret[0].(bool)
 	return ret0

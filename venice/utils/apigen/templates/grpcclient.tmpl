@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/globals"
 	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/interfaces"
 	apiserver "github.com/pensando/sw/venice/apiserver"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 )
@@ -169,7 +170,7 @@ func (a *grpcObj{{$srvname}}{{$crudop}}) {{.Name}}(ctx context.Context, in *{{$p
 }
 {{end}}
 
-func (a *grpcObj{{$srvname}}{{.}}) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObj{{$srvname}}{{.}}) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -232,19 +233,19 @@ func (a *restObj{{$srvname}}{{.}}) Watch(ctx context.Context, options *api.ListW
 	return a.endpoints.AutoWatch{{.}}(ctx, options)
 }
 
-func (a *restObj{{$srvname}}{{.}}) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObj{{$srvname}}{{.}}) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-		case apiserver.CreateOper:
+		case apiintf.CreateOper:
 		{{if isRestMethod $svc "AutoAdd" .}} return true {{else}} return false {{end}}
-		case apiserver.UpdateOper:
+		case apiintf.UpdateOper:
 		{{if isRestMethod $svc "AutoUpdate" .}} return true {{else}} return false {{end}}
-		case apiserver.GetOper:
+		case apiintf.GetOper:
 		{{if isRestMethod $svc "AutoGet" .}} return true {{else}} return false {{end}}
-		case apiserver.DeleteOper:
+		case apiintf.DeleteOper:
 		{{if isRestMethod $svc "AutoDelete" .}} return true {{else}} return false {{end}}
-		case apiserver.ListOper:
+		case apiintf.ListOper:
 		{{if isRestMethod $svc "AutoList" .}} return true {{else}} return false {{end}}
-		case apiserver.WatchOper:
+		case apiintf.WatchOper:
 		{{if isRestMethod $svc "AutoWatch" .}} return true {{else}} return false {{end}}
 		default:
 		return false

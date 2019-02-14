@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -228,6 +229,13 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.FlowExportPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(monitoring.FlowExportPolicy)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *monitoring.FlowExportPolicy
 			if v, ok := i.(monitoring.FlowExportPolicy); ok {
@@ -245,8 +253,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -499,6 +506,13 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.FwlogPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(monitoring.FwlogPolicy)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *monitoring.FwlogPolicy
 			if v, ok := i.(monitoring.FwlogPolicy); ok {
@@ -516,8 +530,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -770,6 +783,13 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.StatsPolicy)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(monitoring.StatsPolicy)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *monitoring.StatsPolicy
 			if v, ok := i.(monitoring.StatsPolicy); ok {
@@ -787,8 +807,7 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}

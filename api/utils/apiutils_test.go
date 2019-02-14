@@ -204,3 +204,39 @@ func TestGetQueryStringFromListWatchOptions(t *testing.T) {
 		t.Fatalf("expecting empty string got [%s]", r)
 	}
 }
+
+func TestRequirements(t *testing.T) {
+	ctx := context.Background()
+
+	v, err := GetRequirements(ctx)
+	if err == nil {
+		t.Errorf("not expected to succeed")
+	}
+	if v != nil {
+		t.Errorf("recevied non nil value on error")
+	}
+	ctx = SetRequirements(ctx, nil)
+	v, err = GetRequirements(ctx)
+	if err != nil {
+		t.Errorf("expected to succeed")
+	}
+	if v != nil {
+		t.Errorf("recevied non nil value")
+	}
+
+	ctx = SetRequirements(ctx, "success")
+	v, err = GetRequirements(ctx)
+	if err != nil {
+		t.Errorf("expected to succeed")
+	}
+	if v == nil {
+		t.Errorf("recevied nil value")
+	}
+	if v1, ok := v.(string); !ok {
+		t.Fatalf("retrieved wrong kind")
+	} else {
+		if v1 != "success" {
+			t.Fatalf("wrong value [%v]", v1)
+		}
+	}
+}

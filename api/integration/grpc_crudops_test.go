@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"expvar"
 	"fmt"
@@ -18,8 +19,15 @@ import (
 
 	"github.com/deckarep/golang-set"
 
+	"github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/generated/browser"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/netutils"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/client"
@@ -48,7 +56,9 @@ func validateObjectSpec(expected, result interface{}) bool {
 
 func addToWatchList(eventslist *[]kvstore.WatchEvent, obj interface{}, evtype kvstore.WatchEventType) []kvstore.WatchEvent {
 	evp := reflect.ValueOf(obj).Interface()
+	key := reflect.ValueOf(obj).MethodByName("MakeKey").Interface().(func(prefix string) string)("bookstore")
 	ev := kvstore.WatchEvent{
+		Key:    key,
 		Type:   evtype,
 		Object: evp.(runtime.Object),
 	}
@@ -160,6 +170,7 @@ func TestCrudOps(t *testing.T) {
 				if ok {
 					t.Logf("  event [%+v]", *ev)
 					pRcvWatchEventsMutex.Lock()
+					ev.Key = reflect.ValueOf(ev.Object).MethodByName("MakeKey").Interface().(func(prefix string) string)("bookstore")
 					pRcvWatchEvents = append(pRcvWatchEvents, *ev)
 					pRcvWatchEventsMutex.Unlock()
 				} else {
@@ -170,6 +181,7 @@ func TestCrudOps(t *testing.T) {
 				t.Logf("ts[%s] Order received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
+					ev.Key = reflect.ValueOf(ev.Object).MethodByName("MakeKey").Interface().(func(prefix string) string)("bookstore")
 					oRcvWatchEventsMutex.Lock()
 					oRcvWatchEvents = append(oRcvWatchEvents, *ev)
 					oRcvWatchEventsMutex.Unlock()
@@ -181,6 +193,7 @@ func TestCrudOps(t *testing.T) {
 				t.Logf("ts[%s] Store received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
+					ev.Key = reflect.ValueOf(ev.Object).MethodByName("MakeKey").Interface().(func(prefix string) string)("bookstore")
 					sRcvWatchEventsMutex.Lock()
 					sRcvWatchEvents = append(sRcvWatchEvents, *ev)
 					sRcvWatchEventsMutex.Unlock()
@@ -192,6 +205,7 @@ func TestCrudOps(t *testing.T) {
 				t.Logf("ts[%s] Service received event [%v]", time.Now(), ok)
 				if ok {
 					t.Logf("  event [%+v]", *ev)
+					ev.Key = reflect.ValueOf(ev.Object).MethodByName("MakeKey").Interface().(func(prefix string) string)("bookstore")
 					srvRcvWatchEventsMutex.Lock()
 					srvRcvWatchEvents = append(srvRcvWatchEvents, *ev)
 					srvRcvWatchEventsMutex.Unlock()
@@ -401,7 +415,7 @@ func TestCrudOps(t *testing.T) {
 		evp := order1
 		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Created)
 	}
-
+	var rorder bookstore.Order
 	{ // ---  POST second  object via REST --- //
 		retorder, err := restcl.BookstoreV1().Order().Create(ctx, &order2)
 		if err != nil {
@@ -421,6 +435,7 @@ func TestCrudOps(t *testing.T) {
 		if retorder.GenerationID != "1" {
 			t.Fatalf("returned generation id is not 1, got %s", retorder.GenerationID)
 		}
+		rorder = *retorder
 		evp := order2
 		oExpectWatchEvents = recordWatchEvent(&oExpectWatchEvents, &evp, kvstore.Created)
 	}
@@ -451,6 +466,9 @@ func TestCrudOps(t *testing.T) {
 		}
 		if !validateObjectSpec(retorder, order2) {
 			t.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]", retorder, order2)
+		}
+		if !reflect.DeepEqual(&rorder, retorder) {
+			t.Fatalf("get and returned objects dont match \nGet:%+v\nRet:%+v\n", retorder, &rorder)
 		}
 	}
 
@@ -567,9 +585,10 @@ func TestCrudOps(t *testing.T) {
 				Kind: "book",
 			},
 			Spec: bookstore.BookSpec{
-				ISBNId:   "111-2-31-123456-0",
-				Author:   "foo",
-				Category: "JunkValue",
+				ISBNId:    "111-2-31-123456-0",
+				Author:    "foo",
+				Category:  "JunkValue",
+				Publisher: "Sahara",
 			},
 		}
 		book1mod = bookstore.Book{
@@ -581,9 +600,10 @@ func TestCrudOps(t *testing.T) {
 				Kind: "book",
 			},
 			Spec: bookstore.BookSpec{
-				ISBNId:   "111-2-31-123456-0",
-				Author:   "bar",
-				Category: "JunkValue2",
+				ISBNId:    "111-2-31-123456-0",
+				Author:    "bar",
+				Category:  "JunkValue2",
+				Publisher: "Kalahari",
 			},
 			Status: bookstore.BookStatus{
 				Inventory: 10,
@@ -597,6 +617,11 @@ func TestCrudOps(t *testing.T) {
 		}
 		book1.Spec.Defaults("v1")
 		book1.Status.Inventory = 22
+		_, err = apicl.BookstoreV1().Book().Create(ctx, &book1)
+		if err == nil {
+			t.Fatalf("Book create expected to fail due to references")
+		}
+		book1.Spec.Publisher = "Kalahari"
 		retbook, err := apicl.BookstoreV1().Book().Create(ctx, &book1)
 		if err != nil {
 			t.Fatalf("Book create failed [%s]", err)
@@ -609,6 +634,13 @@ func TestCrudOps(t *testing.T) {
 		}
 		evp := book1
 		recordWatchEvent(nil, &evp, kvstore.Created)
+		meta := api.ObjectMeta{Name: "Kalahari"}
+		refobj, err := apicl.BookstoreV1().Publisher().Get(ctx, &meta)
+		if err != nil {
+			t.Fatalf("could not retrieve publisher object (%s)", err)
+		}
+		evp1 := *refobj
+		pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp1, kvstore.Updated)
 	}
 	{ // Update the Book with status via gRPC with Validation
 		_, err := apicl.BookstoreV1().Book().Update(ctx, &book1mod)
@@ -622,6 +654,13 @@ func TestCrudOps(t *testing.T) {
 		}
 		evp := book1mod
 		recordWatchEvent(nil, &evp, kvstore.Updated)
+		meta := api.ObjectMeta{Name: "Kalahari"}
+		refobj, err := apicl.BookstoreV1().Publisher().Get(ctx, &meta)
+		if err != nil {
+			t.Fatalf("could not retrieve publisher object (%s)", err)
+		}
+		evp1 := *refobj
+		pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp1, kvstore.Updated)
 	}
 	{ // Update the Book with Status via REST
 		book1mod.Status.Inventory = 100
@@ -640,8 +679,38 @@ func TestCrudOps(t *testing.T) {
 		}
 		evp := book1mod
 		recordWatchEvent(nil, &evp, kvstore.Updated)
+		meta := api.ObjectMeta{Name: "Kalahari"}
+		refobj, err := apicl.BookstoreV1().Publisher().Get(ctx, &meta)
+		if err != nil {
+			t.Fatalf("could not retrieve publisher object (%s)", err)
+		}
+		evp1 := *refobj
+		pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp1, kvstore.Updated)
 	}
 
+	{ // try to delete object with references
+		meta := api.ObjectMeta{Name: "Kalahari"}
+		_, err := apicl.BookstoreV1().Publisher().Delete(ctx, &meta)
+		if err == nil {
+			t.Fatalf("Should fail to delete since there are references")
+		}
+		t.Logf("Delete existing objects")
+		bl, err := apicl.BookstoreV1().Book().List(ctx, &api.ListWatchOptions{})
+		AssertOk(t, err, "error getting list of objects")
+		for _, v := range bl {
+			meta := &api.ObjectMeta{Name: v.GetName()}
+			rb, err := apicl.BookstoreV1().Book().Delete(ctx, meta)
+			AssertOk(t, err, fmt.Sprintf("error deleting object[%v](%s)", meta, err))
+			evp := *rb
+			recordWatchEvent(nil, &evp, kvstore.Deleted)
+		}
+		ret, err := apicl.BookstoreV1().Publisher().Delete(ctx, &meta)
+		if err != nil {
+			t.Fatalf("Should have succeeded deletion (%s)", err)
+		}
+		evp := *ret
+		pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp, kvstore.Deleted)
+	}
 	// ===== Test Operations on Singleton Object ===== //
 	{ // Create via the gRPC
 		storeObj := bookstore.Store{}
@@ -774,6 +843,65 @@ func TestCrudOps(t *testing.T) {
 		}
 	}
 
+	missingEvents := func(exp, rcv []kvstore.WatchEvent) string {
+		expMap, excessMap := make(map[string]int), make(map[string]int)
+		for _, v := range exp {
+			key := fmt.Sprintf("%v#%v", v.Key, v.Type)
+			if v, ok := expMap[key]; ok {
+				expMap[key] = v + 1
+			} else {
+				expMap[key] = 1
+			}
+		}
+		for _, v := range rcv {
+			key := fmt.Sprintf("%v#%v", v.Key, v.Type)
+			if v, ok := expMap[key]; ok {
+				expMap[key] = v - 1
+			} else {
+				if e, ok := excessMap[key]; ok {
+					excessMap[key] = e + 1
+				} else {
+					excessMap[key] = 1
+				}
+			}
+		}
+		ret := "Missing Ops: ["
+		for k, v := range expMap {
+			if v > 0 {
+				ret = fmt.Sprintf("%s [%v]", ret, k)
+			}
+		}
+		ret = ret + "] ExcessOps["
+		for k, v := range expMap {
+			if v < 1 {
+				ret = fmt.Sprintf("%s [%v]", ret, k)
+			}
+		}
+		for k, v := range excessMap {
+			if v > 0 {
+				ret = fmt.Sprintf("%s [%v]", ret, k)
+			}
+		}
+		ret = ret + "]\n"
+		max := len(exp)
+		if len(rcv) > len(exp) {
+			max = len(rcv)
+		}
+		for i := 0; i < max; i++ {
+			if i < len(exp) {
+				ret = ret + fmt.Sprintf("Exp[%v][%v]/", exp[i].Key, exp[i].Type)
+			} else {
+				ret = ret + "\t\t/"
+			}
+			if i < len(rcv) {
+				ret = ret + fmt.Sprintf("Rcv[%v][%v]\n", rcv[i].Key, rcv[i].Type)
+			} else {
+				ret = ret + "\n"
+			}
+		}
+		return ret
+	}
+
 	// ===== Validate Watch Events received === //
 	AssertEventually(t,
 		func() (bool, interface{}) {
@@ -781,7 +909,7 @@ func TestCrudOps(t *testing.T) {
 			pRcvWatchEventsMutex.Lock()
 			return len(pExpectWatchEvents) == len(pRcvWatchEvents), nil
 		},
-		"failed to receive all watch events",
+		fmt.Sprintf("failed to receive all watch Publisher events exp:%d got: %d - %s", len(pExpectWatchEvents), len(pRcvWatchEvents), missingEvents(pExpectWatchEvents, pRcvWatchEvents)),
 		"10ms",
 		"9s")
 	AssertEventually(t,
@@ -790,7 +918,7 @@ func TestCrudOps(t *testing.T) {
 			oRcvWatchEventsMutex.Lock()
 			return len(oExpectWatchEvents) == len(oRcvWatchEvents), nil
 		},
-		"failed to receive all watch events",
+		fmt.Sprintf("failed to receive all order watch events exp:%d got: %d - %s", len(oExpectWatchEvents), len(oRcvWatchEvents), missingEvents(oExpectWatchEvents, oRcvWatchEvents)),
 		"10ms",
 		"9s")
 	AssertEventually(t,
@@ -799,7 +927,7 @@ func TestCrudOps(t *testing.T) {
 			sRcvWatchEventsMutex.Lock()
 			return len(sExpectWatchEvents) == len(sRcvWatchEvents), nil
 		},
-		"failed to receive all watch events",
+		fmt.Sprintf("failed to receive all order watch events exp:%d got: %d - %s", len(sExpectWatchEvents), len(sRcvWatchEvents), missingEvents(sExpectWatchEvents, sRcvWatchEvents)),
 		"10ms",
 		"9s")
 	AssertEventually(t,
@@ -808,8 +936,8 @@ func TestCrudOps(t *testing.T) {
 			srvRcvWatchEventsMutex.Lock()
 			return len(srvExpectWatchEvents) == len(srvRcvWatchEvents), nil
 		},
-		fmt.Sprintf("failed to receive all watch events exp: %d got: %d",
-			len(srvExpectWatchEvents), len(srvRcvWatchEvents)),
+		fmt.Sprintf("failed to receive all Service watch events exp: %d got: %d - %s",
+			len(srvExpectWatchEvents), len(srvRcvWatchEvents), missingEvents(srvExpectWatchEvents, srvRcvWatchEvents)),
 		"10ms",
 		"9s")
 	cancel()
@@ -925,9 +1053,10 @@ func TestFilters(t *testing.T) {
 				Kind: "Book",
 			},
 			Spec: bookstore.BookSpec{
-				ISBNId:   "111-2-31-123456-0",
-				Author:   "foo",
-				Category: "ChildrensLit",
+				ISBNId:    "111-2-31-123456-0",
+				Author:    "foo",
+				Category:  "ChildrensLit",
+				Publisher: "Kalahari",
 			},
 		}
 		book2 = bookstore.Book{
@@ -939,9 +1068,10 @@ func TestFilters(t *testing.T) {
 				Kind: "Book",
 			},
 			Spec: bookstore.BookSpec{
-				ISBNId:   "111-2-31-123456-1",
-				Author:   "bar",
-				Category: "ChildrensLit",
+				ISBNId:    "111-2-31-123456-1",
+				Author:    "bar",
+				Category:  "ChildrensLit",
+				Publisher: "Kalahari",
 			},
 		}
 		book3 = bookstore.Book{
@@ -953,9 +1083,10 @@ func TestFilters(t *testing.T) {
 				Kind: "Book",
 			},
 			Spec: bookstore.BookSpec{
-				ISBNId:   "111-2-31-123456-2",
-				Author:   "foobar",
-				Category: "ChildrensLit",
+				ISBNId:    "111-2-31-123456-2",
+				Author:    "foobar",
+				Category:  "ChildrensLit",
+				Publisher: "Kalahari",
 			},
 		}
 	}
@@ -1055,6 +1186,23 @@ func TestFilters(t *testing.T) {
 		meta := &api.ObjectMeta{Name: v.GetName()}
 		_, err = apicl.BookstoreV1().Book().Delete(ctx, meta)
 		AssertOk(t, err, fmt.Sprintf("error deleting object[%v](%s)", meta, err))
+	}
+	// Create the Publisher object to satisfy the reference requirement
+	pub := bookstore.Publisher{
+		ObjectMeta: api.ObjectMeta{
+			Name: "Kalahari",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Publisher",
+		},
+		Spec: bookstore.PublisherSpec{
+			Id:      "112",
+			Address: "#2 lowside, timbuktoo",
+			WebAddr: "http://rengtertopian.con:8080/",
+		},
+	}
+	if _, err := apicl.BookstoreV1().Publisher().Create(ctx, &pub); err != nil {
+		t.Fatalf("failed to create publisher(%s)", err)
 	}
 	for i := 0; i < len(opts); i++ {
 		w, err := apicl.BookstoreV1().Book().Watch(wctx, &opts[i])
@@ -1630,7 +1778,10 @@ func TestStaging(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Get of Order %s failed after commit (%s)", v, err)
 			}
-			cust, _ := apicl.BookstoreV1().Customer().Get(ctx, &objectMeta)
+			cust, err := apicl.BookstoreV1().Customer().Get(ctx, &objectMeta)
+			if err != nil {
+				t.Fatalf("failed to get customer (%s)", err)
+			}
 			decpass, _ := base64.StdEncoding.DecodeString(string(cust.Spec.Password))
 			if string(cust.Spec.Password) != "Test123" {
 				t.Fatalf("expected password (%s), got (%s), base64 decoded (%s), for customer (%s)", "Test123", string(cust.Spec.Password), decpass, cust.Name)
@@ -1857,7 +2008,7 @@ func TestStaging(t *testing.T) {
 			t.Fatalf("failed to get object (%s)", err)
 		}
 		if cobj.Spec.Address != "Updated New Address" || cobj.Status.AccountStatus != "active" {
-			t.Fatalf("consisten update failed [%v]", cobj)
+			t.Fatalf("consistent update failed [%v]", cobj)
 		}
 	}
 	{ // delete all objects
@@ -2220,6 +2371,414 @@ func TestRestWatchers(t *testing.T) {
 
 }
 
+func TestSecurityGroup(t *testing.T) {
+	ctx := context.Background()
+
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+	// create logged in context
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	ometa := api.ObjectMeta{
+		Name: "default",
+	}
+
+	_, err = restcl.ClusterV1().Tenant().Get(ctx, &ometa)
+	if err != nil {
+		ten := cluster.Tenant{
+			ObjectMeta: api.ObjectMeta{
+				Name: "default",
+			},
+		}
+		_, err = restcl.ClusterV1().Tenant().Create(ctx, &ten)
+		AssertOk(t, err, "create tenant failed (%s)", err)
+	}
+	sg := security.SecurityGroup{
+		ObjectMeta: api.ObjectMeta{
+			Tenant: "default",
+			Name:   "testSG",
+		},
+		Spec: security.SecurityGroupSpec{
+			WorkloadSelector: &labels.Selector{
+				Requirements: []*labels.Requirement{
+					{
+						Key:      "app",
+						Operator: "equals",
+						Values:   []string{"procurement"},
+					},
+					{
+						Key:      "env",
+						Operator: "equals",
+						Values:   []string{"production"},
+					},
+				},
+			},
+		},
+	}
+	resp, err := restcl.SecurityV1().SecurityGroup().Create(ctx, &sg)
+	AssertOk(t, err, "sg create failed (%s)", err)
+
+	retg, err := restcl.SecurityV1().SecurityGroup().Get(ctx, &sg.ObjectMeta)
+	AssertOk(t, err, "sg get failed (%s)", err)
+	AssertEquals(t, retg, resp, "Create and get should match")
+}
+
+func TestReferences(t *testing.T) {
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+
+	ctx := context.Background()
+	// gRPC client
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+
+	// create logged in context
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	// Cleanup all objects
+	opts := api.ListWatchOptions{}
+	ol, err := apicl.BookstoreV1().Order().List(ctx, &opts)
+	AssertOk(t, err, "failed to list orders (%s)", err)
+	for _, o := range ol {
+		_, err = apicl.BookstoreV1().Order().Delete(ctx, &o.ObjectMeta)
+		AssertOk(t, err, "failed to delete orders (%s)", err)
+	}
+
+	bl, err := apicl.BookstoreV1().Book().List(ctx, &opts)
+	AssertOk(t, err, "failed to list books (%s)", err)
+	for _, b := range bl {
+		_, err = apicl.BookstoreV1().Book().Delete(ctx, &b.ObjectMeta)
+		AssertOk(t, err, "failed to delete books (%s)", err)
+	}
+
+	pl, err := apicl.BookstoreV1().Publisher().List(ctx, &opts)
+	AssertOk(t, err, "failed to list Publishers (%s)", err)
+	for _, p := range pl {
+		_, err = apicl.BookstoreV1().Publisher().Delete(ctx, &p.ObjectMeta)
+		AssertOk(t, err, "failed to delete Publisher (%s)", err)
+	}
+
+	cl, err := apicl.BookstoreV1().Customer().List(ctx, &opts)
+	AssertOk(t, err, "failed to list Customers (%s)", err)
+	for _, c := range cl {
+		_, err = apicl.BookstoreV1().Customer().Delete(ctx, &c.ObjectMeta)
+		AssertOk(t, err, "failed to delete Customer (%s)", err)
+	}
+
+	var pub1, pub2 bookstore.Publisher
+	{
+		pub1 = bookstore.Publisher{
+			ObjectMeta: api.ObjectMeta{
+				Name: "Sahara",
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "Publisher",
+			},
+			Spec: bookstore.PublisherSpec{
+				Id:      "111",
+				Address: "#1 hilane, timbuktoo",
+				WebAddr: "http://sahara-books.org",
+			},
+		}
+		pub2 = bookstore.Publisher{
+			ObjectMeta: api.ObjectMeta{
+				Name: "Kalahari",
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "Publisher",
+			},
+			Spec: bookstore.PublisherSpec{
+				Id:      "222",
+				Address: "#2 hilane, timbuktoo",
+				WebAddr: "http://sahara-books.org",
+			},
+		}
+	}
+	_, err = apicl.BookstoreV1().Publisher().Create(ctx, &pub1)
+	AssertOk(t, err, "Failed to create publisher (%s)", err)
+
+	_, err = apicl.BookstoreV1().Publisher().Create(ctx, &pub2)
+	AssertOk(t, err, "Failed to create publisher (%s)", err)
+
+	var book1, book2, book3 bookstore.Book
+	{
+		book1 = bookstore.Book{
+			ObjectMeta: api.ObjectMeta{
+				Name:         "book1",
+				GenerationID: "1",
+				Labels:       map[string]string{"category": "teen", "type": "fiction"},
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "book",
+			},
+			Spec: bookstore.BookSpec{
+				ISBNId:    "111-2-31-123456-0",
+				Author:    "foo",
+				Category:  "YoungAdult",
+				Publisher: "Sahara",
+			},
+		}
+		book2 = bookstore.Book{
+			ObjectMeta: api.ObjectMeta{
+				Name:         "book2",
+				GenerationID: "1",
+				Labels:       map[string]string{"category": "teen", "type": "non-fiction"},
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "book",
+			},
+			Spec: bookstore.BookSpec{
+				ISBNId:    "111-2-31-123456-1",
+				Author:    "foo",
+				Category:  "YoungAdult",
+				Publisher: "Sahara",
+			},
+		}
+		book3 = bookstore.Book{
+			ObjectMeta: api.ObjectMeta{
+				Name:         "book3",
+				GenerationID: "1",
+				Labels:       map[string]string{"category": "teen", "type": "fiction"},
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "book",
+			},
+			Spec: bookstore.BookSpec{
+				ISBNId:    "111-2-31-123456-2",
+				Author:    "foo",
+				Category:  "YoungAdult",
+				Publisher: "Kalahari",
+			},
+		}
+	}
+
+	_, err = apicl.BookstoreV1().Book().Create(ctx, &book1)
+	AssertOk(t, err, "failed to create book1 (%s)", err)
+
+	_, err = apicl.BookstoreV1().Book().Create(ctx, &book2)
+	AssertOk(t, err, "failed to create book2 (%s)", err)
+
+	_, err = apicl.BookstoreV1().Book().Create(ctx, &book3)
+	AssertOk(t, err, "failed to create book3 (%s)", err)
+
+	cust := bookstore.Customer{
+		ObjectMeta: api.ObjectMeta{
+			Name: "customer1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Customer",
+		},
+		Spec: bookstore.CustomerSpec{
+			Address:  "1111 Wherewhich lane",
+			Password: []byte("Test123"),
+		},
+		Status: bookstore.CustomerStatus{
+			Interests: "category=teen,type=fiction",
+		},
+	}
+	_, err = apicl.BookstoreV1().Customer().Create(ctx, &cust)
+	AssertOk(t, err, "failed to create customer (%v)", apierrors.FromError(err))
+
+	order1 := bookstore.Order{
+		ObjectMeta: api.ObjectMeta{
+			Name: "order-2",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Order",
+		},
+		Spec: bookstore.OrderSpec{
+			Id: "order-1",
+			Order: []*bookstore.OrderItem{
+				{
+					ISBNId:   "XXXX",
+					Quantity: 1,
+				},
+			},
+		},
+		Status: bookstore.OrderStatus{
+			Status: bookstore.OrderStatus_CREATED.String(),
+			Filled: []*bookstore.OrderItem{
+				{
+					ISBNId:   "1-123456-0",
+					Book:     "book1",
+					Quantity: 2,
+				},
+				{
+					ISBNId:   "1-123456-1",
+					Book:     "book2",
+					Quantity: 2,
+				},
+			},
+		},
+	}
+
+	retord, err := apicl.BookstoreV1().Order().Create(ctx, &order1)
+	AssertOk(t, err, "failed to create order (%v)", apierrors.FromError(err))
+
+	clnt := netutils.NewHTTPClient()
+	clnt.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	authzHdr, err := utils.GetAuthorizationHeader("localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "could not get login context from context")
+	clnt.SetHeader("Authorization", authzHdr)
+	gph := apisrvpkg.MustGetAPIServer().GetGraphDB()
+	t.Logf("Before Tests graph DB is [%v]", gph.Dump(""))
+	validateRslts := func(a, b map[string]browser.Object_URIs) {
+		Assert(t, len(a) == len(b), "len of objects does not match [%d/%d]", len(a), len(b))
+		for k, v := range a {
+			v1, ok := b[k]
+			Assert(t, ok, "key not found [%s]", k)
+			for i := range v1.URI {
+				v1.URI[i].URI = strings.Replace(v1.URI[i].URI, "{SUBSTORD}", retord.Name, 1)
+				v1.URI[i].Name = strings.Replace(v1.URI[i].Name, "{SUBSTORD}", retord.Name, 1)
+			}
+			Assert(t, reflect.DeepEqual(v, v1), "did not match \n[%+v]/\n[%+v]\n", v, v1)
+		}
+	}
+	cases := []struct {
+		uri   string
+		tpe   string
+		depth uint32
+		rslts map[string]browser.Object_URIs
+	}{
+		{
+			uri:   "/configs/bookstore/v1/books/book1",
+			tpe:   browser.QueryType_Dependencies.String(),
+			depth: 1,
+			rslts: map[string]browser.Object_URIs{
+				"spec.Publisher": {
+					RefType: browser.ReferenceTypes_NamedReference.String(),
+					URI: []api.ObjectRef{
+						{Kind: "Publisher", Name: "Sahara", URI: "/configs/browser/v1/dependencies/bookstore/v1/publishers/Sahara"},
+					},
+				},
+			},
+		},
+		{
+			uri:   "/configs/bookstore/v1/books/book2",
+			tpe:   browser.QueryType_Dependencies.String(),
+			depth: 1,
+			rslts: map[string]browser.Object_URIs{
+				"spec.Publisher": {
+					RefType: browser.ReferenceTypes_NamedReference.String(),
+					URI: []api.ObjectRef{
+						{Kind: "Publisher", Name: "Sahara", URI: "/configs/browser/v1/dependencies/bookstore/v1/publishers/Sahara"},
+					},
+				},
+			},
+		},
+		{
+			uri:   "/configs/bookstore/v1/books/book3",
+			tpe:   browser.QueryType_Dependencies.String(),
+			depth: 1,
+			rslts: map[string]browser.Object_URIs{
+				"spec.Publisher": {
+					RefType: browser.ReferenceTypes_NamedReference.String(),
+					URI: []api.ObjectRef{
+						{Kind: "Publisher", Name: "Kalahari", URI: "/configs/browser/v1/dependencies/bookstore/v1/publishers/Kalahari"},
+					},
+				},
+			},
+		},
+		{
+			uri:   "/configs/bookstore/v1/publishers/Kalahari",
+			tpe:   browser.QueryType_Dependencies.String(),
+			depth: 1,
+		},
+		{
+			uri:   "/configs/bookstore/v1/publishers/Kalahari",
+			tpe:   browser.QueryType_DependedBy.String(),
+			depth: 1,
+			rslts: map[string]browser.Object_URIs{
+				"spec.Publisher": {
+					RefType: browser.ReferenceTypes_NamedReference.String(),
+					URI: []api.ObjectRef{
+						{Kind: "Book", Name: "book3", URI: "/configs/browser/v1/dependedby/bookstore/v1/books/book3"},
+					},
+				},
+			},
+		},
+		{
+			uri:   "/configs/bookstore/v1/publishers/Sahara",
+			tpe:   browser.QueryType_DependedBy.String(),
+			depth: 1,
+			rslts: map[string]browser.Object_URIs{
+				"spec.Publisher": {
+					RefType: browser.ReferenceTypes_NamedReference.String(),
+					URI: []api.ObjectRef{
+						{Kind: "Book", Name: "book1", URI: "/configs/browser/v1/dependedby/bookstore/v1/books/book1"},
+						{Kind: "Book", Name: "book2", URI: "/configs/browser/v1/dependedby/bookstore/v1/books/book2"},
+					},
+				},
+			},
+		},
+		{
+			uri:   "/configs/bookstore/v1/orders/{SUBSTORD}",
+			tpe:   browser.QueryType_Dependencies.String(),
+			depth: 1,
+			rslts: map[string]browser.Object_URIs{
+				"Status.Filled.books": {
+					RefType: browser.ReferenceTypes_WeakReference.String(),
+					URI: []api.ObjectRef{
+						{Kind: "Book", Name: "book1", URI: "/configs/browser/v1/dependencies/bookstore/v1/books/book1"},
+						{Kind: "Book", Name: "book2", URI: "/configs/browser/v1/dependencies/bookstore/v1/books/book2"},
+					},
+				},
+			},
+		},
+		{
+			uri:   "/configs/bookstore/v1/books/book1",
+			tpe:   browser.QueryType_DependedBy.String(),
+			depth: 1,
+			rslts: map[string]browser.Object_URIs{
+				"Status.Filled.books": {
+					RefType: browser.ReferenceTypes_WeakReference.String(),
+					URI: []api.ObjectRef{
+						{Kind: "Order", Name: "{SUBSTORD}", URI: "/configs/browser/v1/dependedby/bookstore/v1/orders/{SUBSTORD}"},
+					},
+				},
+			},
+		},
+		{
+			uri:   "/configs/bookstore/v1/customers/customer1",
+			tpe:   browser.QueryType_Dependencies.String(),
+			depth: 1,
+			rslts: map[string]browser.Object_URIs{
+				"Status.interests": {
+					RefType: browser.ReferenceTypes_SelectorReference.String(),
+					URI: []api.ObjectRef{
+						{Kind: "Book", Name: "book1", URI: "/configs/browser/v1/dependencies/bookstore/v1/books/book1"},
+						{Kind: "Book", Name: "book3", URI: "/configs/browser/v1/dependencies/bookstore/v1/books/book3"},
+					},
+				},
+			},
+		},
+	}
+	uri := fmt.Sprintf("https://localhost:%v/configs/browser/v1/query", tinfo.apigwport)
+	req := browser.BrowseRequest{}
+	for _, c := range cases {
+		resp := browser.BrowseResponse{}
+		c.uri = strings.Replace(c.uri, "{SUBSTORD}", retord.Name, 1)
+		req.URI = c.uri
+		req.QueryType = c.tpe
+		req.MaxDepth = c.depth
+		_, err = clnt.Req("POST", uri, &req, &resp)
+		AssertOk(t, err, "rest request failed (%s)", err)
+		obj, ok := resp.Objects[c.uri]
+		t.Logf("response is [%+v]", resp)
+		Assert(t, ok, "did not find object [%v]", c.uri)
+		validateRslts(obj.Links, c.rslts)
+	}
+
+}
+
 func TestSorting(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -2247,6 +2806,13 @@ func TestSorting(t *testing.T) {
 		_, err = apicl.BookstoreV1().Book().Delete(ctx, meta)
 		AssertOk(t, err, fmt.Sprintf("error deleting object[%v](%s)", meta, err))
 	}
+	pl, err := apicl.BookstoreV1().Publisher().List(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to list Publishers (%s)", err)
+	for _, p := range pl {
+		_, err = apicl.BookstoreV1().Publisher().Delete(ctx, &p.ObjectMeta)
+		AssertOk(t, err, "failed to delete Publisher (%s)", err)
+	}
+
 	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	genName := func(l int) string {
 		r := make([]rune, l)

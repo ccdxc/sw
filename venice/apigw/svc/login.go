@@ -19,6 +19,8 @@ import (
 	"github.com/satori/go.uuid"
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api/interfaces"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -68,7 +70,7 @@ type loginV1GwService struct {
 }
 
 func (s *loginV1GwService) setupSvcProfile() {
-	s.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
+	s.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	s.svcProf = make(map[string]apigw.ServiceProfile)
 }
 
@@ -83,7 +85,7 @@ func (s *loginV1GwService) GetProxyServiceProfile(path string) (apigw.ServicePro
 	return nil, nil
 }
 
-func (s *loginV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (s *loginV1GwService) GetCrudServiceProfile(obj string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
 		return s.GetServiceProfile(name)

@@ -9,9 +9,10 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/pkg/api/v1"
 
+	"github.com/pensando/sw/api/interfaces"
+
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/cmd/types"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -604,7 +605,7 @@ func (c *Cluster) Watch(ctx context.Context, options *api.ListWatchOptions) (kvs
 }
 
 // Allowed mocks cluster Allowed
-func (c *Cluster) Allowed(oper apiserver.APIOperType) bool {
+func (c *Cluster) Allowed(oper apiintf.APIOperType) bool {
 	return false
 }
 

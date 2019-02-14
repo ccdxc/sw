@@ -18,10 +18,11 @@ const (
 )
 
 type op struct {
-	t   opType
-	key string
-	val string
-	obj runtime.Object
+	t           opType
+	key         string
+	val         string
+	ignoreValue bool
+	obj         runtime.Object
 }
 
 func opDelete(key string) op {
@@ -91,6 +92,18 @@ func (t *txn) Update(key string, obj runtime.Object, cs ...kvstore.Cmp) error {
 	t.cmps = append(t.cmps, cs...)
 	t.ops = append(t.ops, opUpdate(key, string(value), obj))
 
+	return nil
+}
+
+// Touch stages a touch operation which updates the revision
+//  without any change to the object itself. Will fail for
+//  non-existent keys.
+func (t *txn) Touch(key string) error {
+	t.Lock()
+	defer t.Unlock()
+	op := opUpdate(key, "", nil)
+	op.ignoreValue = true
+	t.ops = append(t.ops, op)
 	return nil
 }
 

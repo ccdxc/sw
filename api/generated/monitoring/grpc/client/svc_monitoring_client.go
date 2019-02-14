@@ -14,8 +14,8 @@ import (
 
 	api "github.com/pensando/sw/api"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/interfaces"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
-	apiserver "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -889,7 +889,7 @@ func (a *grpcObjMonitoringV1EventPolicy) Watch(ctx context.Context, options *api
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringV1EventPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjMonitoringV1EventPolicy) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -952,19 +952,19 @@ func (a *restObjMonitoringV1EventPolicy) Watch(ctx context.Context, options *api
 	return a.endpoints.AutoWatchEventPolicy(ctx, options)
 }
 
-func (a *restObjMonitoringV1EventPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjMonitoringV1EventPolicy) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -1067,7 +1067,7 @@ func (a *grpcObjMonitoringV1StatsPolicy) Watch(ctx context.Context, options *api
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringV1StatsPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjMonitoringV1StatsPolicy) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1130,19 +1130,19 @@ func (a *restObjMonitoringV1StatsPolicy) Watch(ctx context.Context, options *api
 	return a.endpoints.AutoWatchStatsPolicy(ctx, options)
 }
 
-func (a *restObjMonitoringV1StatsPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjMonitoringV1StatsPolicy) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return false
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return false
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -1245,7 +1245,7 @@ func (a *grpcObjMonitoringV1FwlogPolicy) Watch(ctx context.Context, options *api
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringV1FwlogPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjMonitoringV1FwlogPolicy) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1308,19 +1308,19 @@ func (a *restObjMonitoringV1FwlogPolicy) Watch(ctx context.Context, options *api
 	return a.endpoints.AutoWatchFwlogPolicy(ctx, options)
 }
 
-func (a *restObjMonitoringV1FwlogPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjMonitoringV1FwlogPolicy) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -1423,7 +1423,7 @@ func (a *grpcObjMonitoringV1FlowExportPolicy) Watch(ctx context.Context, options
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringV1FlowExportPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjMonitoringV1FlowExportPolicy) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1486,19 +1486,19 @@ func (a *restObjMonitoringV1FlowExportPolicy) Watch(ctx context.Context, options
 	return a.endpoints.AutoWatchFlowExportPolicy(ctx, options)
 }
 
-func (a *restObjMonitoringV1FlowExportPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjMonitoringV1FlowExportPolicy) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -1601,7 +1601,7 @@ func (a *grpcObjMonitoringV1Alert) Watch(ctx context.Context, options *api.ListW
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringV1Alert) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjMonitoringV1Alert) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1664,19 +1664,19 @@ func (a *restObjMonitoringV1Alert) Watch(ctx context.Context, options *api.ListW
 	return a.endpoints.AutoWatchAlert(ctx, options)
 }
 
-func (a *restObjMonitoringV1Alert) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjMonitoringV1Alert) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return false
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return false
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -1779,7 +1779,7 @@ func (a *grpcObjMonitoringV1AlertPolicy) Watch(ctx context.Context, options *api
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringV1AlertPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjMonitoringV1AlertPolicy) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -1842,19 +1842,19 @@ func (a *restObjMonitoringV1AlertPolicy) Watch(ctx context.Context, options *api
 	return a.endpoints.AutoWatchAlertPolicy(ctx, options)
 }
 
-func (a *restObjMonitoringV1AlertPolicy) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjMonitoringV1AlertPolicy) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -1957,7 +1957,7 @@ func (a *grpcObjMonitoringV1AlertDestination) Watch(ctx context.Context, options
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringV1AlertDestination) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjMonitoringV1AlertDestination) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -2020,19 +2020,19 @@ func (a *restObjMonitoringV1AlertDestination) Watch(ctx context.Context, options
 	return a.endpoints.AutoWatchAlertDestination(ctx, options)
 }
 
-func (a *restObjMonitoringV1AlertDestination) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjMonitoringV1AlertDestination) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -2135,7 +2135,7 @@ func (a *grpcObjMonitoringV1MirrorSession) Watch(ctx context.Context, options *a
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringV1MirrorSession) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjMonitoringV1MirrorSession) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -2198,19 +2198,19 @@ func (a *restObjMonitoringV1MirrorSession) Watch(ctx context.Context, options *a
 	return a.endpoints.AutoWatchMirrorSession(ctx, options)
 }
 
-func (a *restObjMonitoringV1MirrorSession) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjMonitoringV1MirrorSession) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false
@@ -2313,7 +2313,7 @@ func (a *grpcObjMonitoringV1TroubleshootingSession) Watch(ctx context.Context, o
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringV1TroubleshootingSession) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjMonitoringV1TroubleshootingSession) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -2376,19 +2376,19 @@ func (a *restObjMonitoringV1TroubleshootingSession) Watch(ctx context.Context, o
 	return a.endpoints.AutoWatchTroubleshootingSession(ctx, options)
 }
 
-func (a *restObjMonitoringV1TroubleshootingSession) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjMonitoringV1TroubleshootingSession) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return true
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return false
 	default:
 		return false
@@ -2491,7 +2491,7 @@ func (a *grpcObjMonitoringV1TechSupportRequest) Watch(ctx context.Context, optio
 	return lw, nil
 }
 
-func (a *grpcObjMonitoringV1TechSupportRequest) Allowed(oper apiserver.APIOperType) bool {
+func (a *grpcObjMonitoringV1TechSupportRequest) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
 
@@ -2551,19 +2551,19 @@ func (a *restObjMonitoringV1TechSupportRequest) Watch(ctx context.Context, optio
 	return a.endpoints.AutoWatchTechSupportRequest(ctx, options)
 }
 
-func (a *restObjMonitoringV1TechSupportRequest) Allowed(oper apiserver.APIOperType) bool {
+func (a *restObjMonitoringV1TechSupportRequest) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return true
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return false
-	case apiserver.GetOper:
+	case apiintf.GetOper:
 		return true
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return true
-	case apiserver.ListOper:
+	case apiintf.ListOper:
 		return true
-	case apiserver.WatchOper:
+	case apiintf.WatchOper:
 		return true
 	default:
 		return false

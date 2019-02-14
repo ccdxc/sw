@@ -197,7 +197,24 @@ var typesMapSvc_security = map[string]*api.Struct{
 	},
 }
 
+var keyMapSvc_security = map[string][]api.PathsMap{
+
+	"security.App": []api.PathsMap{
+		{URI: "/configs/security/v1/tenant/{Tenant}/apps/{Name}", Key: "/venice/config/security/apps/{Tenant}/{Name}"}},
+	"security.Certificate": []api.PathsMap{
+		{URI: "/configs/security/v1/tenant/{Tenant}/certificates/{Name}", Key: "/venice/config/security/certificates/{Tenant}/{Name}"}},
+	"security.FirewallProfile": []api.PathsMap{
+		{URI: "/configs/security/v1/tenant/{Tenant}/firewallprofiles/{Name}", Key: "/venice/config/security/firewallprofiles/{Tenant}/{Name}"}},
+	"security.SGPolicy": []api.PathsMap{
+		{URI: "/configs/security/v1/tenant/{Tenant}/sgpolicies/{Name}", Key: "/venice/config/security/sgpolicies/{Tenant}/{Name}"}},
+	"security.SecurityGroup": []api.PathsMap{
+		{URI: "/configs/security/v1/tenant/{Tenant}/security-groups/{Name}", Key: "/venice/config/security/security-groups/{Tenant}/{Name}"}},
+	"security.TrafficEncryptionPolicy": []api.PathsMap{
+		{URI: "/configs/security/v1/tenant/{Tenant}/trafficEncryptionPolicy/{Name}", Key: "/venice/config/security/trafficEncryptionPolicy/{Tenant}/{Name}"}},
+}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_security)
+	schema.AddPaths(keyMapSvc_security)
 }

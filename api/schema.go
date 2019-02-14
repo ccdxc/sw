@@ -14,6 +14,12 @@ type CLIInfo struct {
 	Help   string
 }
 
+// PathsMap maps URI and Key paths
+type PathsMap struct {
+	URI string
+	Key string
+}
+
 // Field represents the schema details of a field
 type Field struct {
 	Name       string

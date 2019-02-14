@@ -7,6 +7,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api/graph"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/interfaces"
 	apisrv "github.com/pensando/sw/venice/apiserver"
@@ -40,6 +42,11 @@ func (f *FakeServer) GetService(name string) apisrv.Service {
 	return f.SvcMap[name]
 }
 
+// GetMessage returns a registered mesage given the kind and service name.
+func (f *FakeServer) GetMessage(svc, kind string) apisrv.Message {
+	return nil
+}
+
 // CreateOverlay creates a new overlay on top of API server cache
 func (f *FakeServer) CreateOverlay(tenant, name, basePath string) (apiintf.CacheInterface, error) {
 	return nil, nil
@@ -61,6 +68,11 @@ func (f *FakeServer) GetAddr() (string, error) { return "", nil }
 // GetVersion returns the native version of the API server
 func (f *FakeServer) GetVersion() string {
 	return ""
+}
+
+// GetGraphDB returns the graph DB in use by the Server
+func (f *FakeServer) GetGraphDB() graph.Interface {
+	return nil
 }
 
 // NewFakeServer returns a new FakeServer
@@ -91,7 +103,7 @@ func (s *FakeService) GetMethod(t string) apisrv.Method {
 }
 
 // GetCrudService returns the Auto generated CRUD service method for a given (service, operation)
-func (s *FakeService) GetCrudService(in string, oper apisrv.APIOperType) apisrv.Method {
+func (s *FakeService) GetCrudService(in string, oper apiintf.APIOperType) apisrv.Method {
 	return s.retMethod[in]
 }
 
@@ -156,7 +168,7 @@ func (m *FakeMethod) WithPostCommitHook(fn apisrv.PostCommitFunc) apisrv.Method 
 func (m *FakeMethod) WithResponseWriter(fn apisrv.ResponseWriterFunc) apisrv.Method { return m }
 
 // WithOper is a mock method for testing
-func (m *FakeMethod) WithOper(oper apisrv.APIOperType) apisrv.Method { return m }
+func (m *FakeMethod) WithOper(oper apiintf.APIOperType) apisrv.Method { return m }
 
 // WithVersion is a mock method for testing
 func (m *FakeMethod) WithVersion(ver string) apisrv.Method { return m }
@@ -216,7 +228,7 @@ func SetFakeMethodRespType(msg apisrv.Message, method apisrv.Method) error {
 }
 
 // PrecommitFunc is a mock method for testing
-func (m *FakeMethod) PrecommitFunc(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apisrv.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+func (m *FakeMethod) PrecommitFunc(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	m.Pres++
 	if m.Skipkv {
 		return i, false, nil
@@ -225,12 +237,12 @@ func (m *FakeMethod) PrecommitFunc(ctx context.Context, kvs kvstore.Interface, t
 }
 
 // PostcommitfFunc is a mock method for testing
-func (m *FakeMethod) PostcommitfFunc(ctx context.Context, oper apisrv.APIOperType, i interface{}, dryrun bool) {
+func (m *FakeMethod) PostcommitfFunc(ctx context.Context, oper apiintf.APIOperType, i interface{}, dryrun bool) {
 	m.Posts++
 }
 
 // RespWriterFunc is a mock method for testing
-func (m *FakeMethod) RespWriterFunc(ctx context.Context, kvs kvstore.Interface, prefix string, i, o, resp interface{}, oper apisrv.APIOperType) (interface{}, error) {
+func (m *FakeMethod) RespWriterFunc(ctx context.Context, kvs kvstore.Interface, prefix string, i, o, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
 	return "TestResponse", nil
 }
 
@@ -242,30 +254,35 @@ func (m *FakeMethod) MakeURIFunc(i interface{}) (string, error) {
 
 // FakeMessage is used as a mock object for testing.
 type FakeMessage struct {
-	kind             string
-	CalledTxfms      []string
-	Kvpath           string
-	ValidateRslt     bool
-	ValidateCalled   int
-	DefaultCalled    int
-	Kvwrites         int
-	Kvreads          int
-	Kvdels           int
-	Kvlists          int
-	Kvwatch          int
-	Txnwrites        int
-	Txngets          int
-	Txndels          int
-	Objverwrite      int
-	Uuidwrite        int
-	SelfLinkWrites   int
-	CreateTimeWrites int
-	ModTimeWrite     int
-	ObjVerWrites     int
-	RuntimeObj       runtime.Object
+	kind                string
+	CalledTxfms         []string
+	Kvpath              string
+	ValidateRslt        bool
+	IgnoreTxnWrite      bool
+	ValidateCalled      int
+	DefaultCalled       int
+	Kvwrites            int
+	Kvreads             int
+	Kvdels              int
+	Kvlists             int
+	Kvwatch             int
+	Txnwrites           int
+	Txngets             int
+	Txndels             int
+	Objverwrite         int
+	Uuidwrite           int
+	SelfLinkWrites      int
+	CreateTimeWrites    int
+	ModTimeWrite        int
+	ObjVerWrites        int
+	GetReferencesCalled int
+	KeyGens             int
+	RuntimeObj          runtime.Object
+	RefMap              map[string]apiintf.ReferenceObj
 
-	listFromKvFunc apisrv.ListFromKvFunc
-	getFromKvFunc  apisrv.GetFromKvFunc
+	listFromKvFunc    apisrv.ListFromKvFunc
+	getFromKvFunc     apisrv.GetFromKvFunc
+	getReferencesFunc apisrv.GetReferencesFunc
 }
 
 // TxnTestKey is the kvstore key used by mock functions
@@ -353,6 +370,12 @@ func (m *FakeMessage) WithReplaceStatusFunction(fn func(interface{}) kvstore.Upd
 // WithGetRuntimeObject gets the runtime object
 func (m *FakeMessage) WithGetRuntimeObject(func(interface{}) runtime.Object) apisrv.Message { return m }
 
+// WithReferencesGetter registers a GetReferencesFunc to the message
+func (m *FakeMessage) WithReferencesGetter(fn apisrv.GetReferencesFunc) apisrv.Message {
+	m.getReferencesFunc = fn
+	return m
+}
+
 // GetKind is a mock method for testing
 func (m *FakeMessage) GetKind() string { return m.kind }
 
@@ -393,11 +416,13 @@ func (m *FakeMessage) DelFromKvTxn(ctx context.Context, txn kvstore.Txn, key str
 // WriteToKvTxn is a mock method for testing
 func (m *FakeMessage) WriteToKvTxn(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, i interface{}, prerfix string, create, updateSpec bool) error {
 	m.Txnwrites++
-	msg := i.(compliance.TestObj)
-	if create {
-		txn.Create(TxnTestKey, &msg)
-	} else {
-		txn.Update(TxnTestKey, &msg)
+	if !m.IgnoreTxnWrite {
+		msg := i.(compliance.TestObj)
+		if create {
+			txn.Create(TxnTestKey, &msg)
+		} else {
+			txn.Update(TxnTestKey, &msg)
+		}
 	}
 	return nil
 }
@@ -447,12 +472,12 @@ func (m *FakeMessage) UpdateSelfLink(path, ver, prefix string, i interface{}) (i
 }
 
 // TransformToStorage is a mock method for testing
-func (m *FakeMessage) TransformToStorage(ctx context.Context, oper apisrv.APIOperType, i interface{}) (interface{}, error) {
+func (m *FakeMessage) TransformToStorage(ctx context.Context, oper apiintf.APIOperType, i interface{}) (interface{}, error) {
 	return i, nil
 }
 
 // TransformFromStorage is a mock method for testing
-func (m *FakeMessage) TransformFromStorage(ctx context.Context, oper apisrv.APIOperType, i interface{}) (interface{}, error) {
+func (m *FakeMessage) TransformFromStorage(ctx context.Context, oper apiintf.APIOperType, i interface{}) (interface{}, error) {
 	return i, nil
 }
 
@@ -528,6 +553,18 @@ func (m *FakeMessage) SelfLinkWriterFunc(path, ver, prefix string, i interface{}
 	return i, nil
 }
 
+// GetReferencesFunc is a mock method for testing
+func (m *FakeMessage) GetReferencesFunc(interface{}) (map[string]apiintf.ReferenceObj, error) {
+	m.GetReferencesCalled++
+	return m.RefMap, nil
+}
+
+// KeyGeneratorFunc is a mock method for testing
+func (m *FakeMessage) KeyGeneratorFunc(i interface{}, prefix string) string {
+	m.KeyGens++
+	return ""
+}
+
 // CreateUUID is a mock method for testing
 func (m *FakeMessage) CreateUUID(i interface{}) (interface{}, error) {
 	m.Uuidwrite++
@@ -579,6 +616,14 @@ func (m *FakeMessage) GetRuntimeObject(in interface{}) runtime.Object {
 		return m.RuntimeObj
 	}
 	return nil
+}
+
+// GetReferences fetches the references for the object.
+func (m *FakeMessage) GetReferences(in interface{}) (map[string]apiintf.ReferenceObj, error) {
+	if m.getReferencesFunc != nil {
+		return m.getReferencesFunc(in)
+	}
+	return nil, nil
 }
 
 // NewFakeMessage create a new FakeMessage

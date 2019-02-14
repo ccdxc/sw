@@ -75,6 +75,16 @@ func (t *txn) Update(key string, obj runtime.Object, cs ...kvstore.Cmp) error {
 	return nil
 }
 
+// Touch stages a touch operation which updates the revision
+//  without any change to the object itself. Will fail for
+//  non-existent keys.
+func (t *txn) Touch(key string) error {
+	t.Lock()
+	defer t.Unlock()
+	t.ops = append(t.ops, clientv3.OpPut(key, "", clientv3.WithIgnoreValue()))
+	return nil
+}
+
 // Commit tries to commit the transaction.
 func (t *txn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
 	t.Lock()

@@ -5,8 +5,8 @@ package npminteg
 import (
 	"time"
 
+	"gopkg.in/check.v1"
 	. "gopkg.in/check.v1"
-	check "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -22,6 +22,8 @@ import (
 // this test simulates API server restarting while NPM is up and runinng
 func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 	// create a network in controller
+	// if not present create the default tenant
+	it.CreateTenant("default")
 	err := it.CreateNetwork("default", "default", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(c, err, "error creating network")
 
@@ -106,7 +108,7 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 			return (nerr != nil), nil
 		}, "Network still found on agent", "100ms", it.pollTimeout())
 	}
-
+	it.CreateTenant("default")
 	// recreate the network in API server
 	err = it.CreateNetwork("default", "default", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(c, err, "error creating network")
@@ -164,6 +166,8 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 // this test simulates NPM restarting while API server and agents remain up and running
 func (it *integTestSuite) TestNpmRestart(c *C) {
 	// create a network in controller
+	// if not present create the default tenant
+	it.CreateTenant("default")
 	err := it.CreateNetwork("default", "default", "testNetwork", "10.1.1.0/24", "10.1.1.254")
 	AssertOk(c, err, "error creating network")
 

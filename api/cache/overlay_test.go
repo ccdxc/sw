@@ -26,10 +26,10 @@ func TestOverlayCRD(t *testing.T) {
 
 	// Create overlay
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	r1, err := NewOverlay("tenant1", "new1", "/base/", c, nil, false)
+	r1, err := NewOverlay("tenant1", "new1", "/base/", c, mocks.NewFakeServer(), false)
 	AssertOk(t, err, "could not create new overlay")
 
-	r2, err := NewOverlay("tenant1", "new2", "/base/", c, nil, false)
+	r2, err := NewOverlay("tenant1", "new2", "/base/", c, mocks.NewFakeServer(), false)
 	AssertOk(t, err, "could not create new overlay")
 	Assert(t, len(overlaysSingleton.ovMap) == 2, "number of overlays do not match, expecting 2 got %d", len(overlaysSingleton.ovMap))
 
@@ -49,7 +49,7 @@ func TestOverlayCRD(t *testing.T) {
 	Assert(t, err != nil, "found non-existent overlay")
 
 	// Add Duplicate
-	_, err = NewOverlay("tenant1", "new1", "/base/", c, nil, false)
+	_, err = NewOverlay("tenant1", "new1", "/base/", c, mocks.NewFakeServer(), false)
 	if err == nil {
 		t.Fatalf("could add duplicate overlay")
 	}
@@ -72,7 +72,7 @@ func TestOverlayCRD(t *testing.T) {
 
 func TestOverlayCreate(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testCreate", "/base/", c, nil, false)
+	o, _ := NewOverlay("tenant1", "testCreate", "/base/", c, mocks.NewFakeServer(), false)
 	defer DelOverlay("tenant1", "testCreate")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -172,7 +172,7 @@ func TestOverlayCreate(t *testing.T) {
 
 func TestOverlayUpdate(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testUpdate", "/base/", c, nil, false)
+	o, _ := NewOverlay("tenant1", "testUpdate", "/base/", c, mocks.NewFakeServer(), false)
 	defer DelOverlay("tenant1", "testUpdate")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -412,7 +412,7 @@ func TestOverlayUpdate(t *testing.T) {
 
 func TestOverlayDelete(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testDelete", "/base/", c, nil, false)
+	o, _ := NewOverlay("tenant1", "testDelete", "/base/", c, mocks.NewFakeServer(), false)
 	defer DelOverlay("tenant1", "testDelete")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -517,7 +517,7 @@ func TestOverlayDelete(t *testing.T) {
 
 func TestOverlayGet(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil, false)
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, mocks.NewFakeServer(), false)
 	defer DelOverlay("tenant1", "testGet")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -584,7 +584,7 @@ func TestOverlayGet(t *testing.T) {
 
 func TestOverlayList(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testList", "/base/", c, nil, false)
+	o, _ := NewOverlay("tenant1", "testList", "/base/", c, mocks.NewFakeServer(), false)
 	defer DelOverlay("tenant1", "testList")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -776,7 +776,7 @@ func TestOverlayList(t *testing.T) {
 
 func TestParseParsePath(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testUpdate", "/base", c, nil, false)
+	o, _ := NewOverlay("tenant1", "testUpdate", "/base", c, mocks.NewFakeServer(), false)
 	defer DelOverlay("tenant1", "testUpdate")
 	ov := o.(*overlay)
 
@@ -807,7 +807,7 @@ type handlerResp struct {
 
 func TestVerify(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil, false)
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, mocks.NewFakeServer(), false)
 	defer DelOverlay("tenant1", "testGet")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -905,7 +905,7 @@ func TestVerify(t *testing.T) {
 
 func TestClearBuffer(t *testing.T) {
 	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: &cachemocks.FakeKvStore{}}
-	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil, false)
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, mocks.NewFakeServer(), false)
 	defer DelOverlay("tenant1", "testGet")
 	ov := o.(*overlay)
 	ctx := context.TODO()
@@ -970,7 +970,7 @@ func TestCommit(t *testing.T) {
 		active: true,
 	}
 	c.pool.AddToPool(fkv)
-	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, nil, false)
+	o, _ := NewOverlay("tenant1", "testGet", "/base/", c, mocks.NewFakeServer(), false)
 	txn := &cachemocks.FakeTxn{}
 	fkv.Txn = txn
 	ov := o.(*overlay)
@@ -1196,4 +1196,52 @@ func TestOverlayRestore(t *testing.T) {
 		Assert(t, v.URI == v1.URI, "uri does not match got[%v] want [%v]", v.URI, v1.URI)
 		Assert(t, reflect.DeepEqual(v.orig, v1.orig), "object [%v] does not match \n got[%+v]\nwant[%+v]", k, v.orig, v1.orig)
 	}
+}
+
+func TestOverlayTxn(t *testing.T) {
+	fakeKv := &cachemocks.FakeKvStore{}
+	fserver := mocks.NewFakeServer()
+	fservice := mocks.NewFakeService()
+	fmethod1 := mocks.NewFakeMethod(true)
+	fmethod2 := mocks.NewFakeMethod(true)
+	fservice.AddMethod("method1", fmethod1)
+	fservice.AddMethod("method2", fmethod2)
+	fserver.SvcMap["service1"] = fservice.(*mocks.FakeService)
+	c := &cachemocks.FakeCache{FakeKvStore: cachemocks.FakeKvStore{}, Kvconn: fakeKv}
+	ov, _ := NewOverlay("tenant1", "testCreate1", "/base/", c, fserver, false)
+	defer DelOverlay("tenant1", "testCreate1")
+	fov := ov.(*overlay)
+	txn1 := overlayTxn{ov: fov, context: context.TODO()}
+	txn2 := overlayTxn{ov: fov, context: context.TODO()}
+	ctx := context.Background()
+	dctx := setDryRun(ctx, 10)
+	wctx := setPreCommitApply(ctx)
+	Assert(t, isPreCommitApply(wctx), "did not return true for CommitApply")
+	Assert(t, !isPreCommitApply(dctx), "returned true for CommitApply")
+	Assert(t, IsDryRun(dctx), "returned true for CommitApply")
+	Assert(t, !IsDryRun(ctx), "returned true for CommitApply")
+	key := "/test/abc"
+	testobj := &apitest.TestObj{}
+
+	err := txn1.Create(key, testobj)
+	AssertOk(t, err, "Create failed")
+	err = txn2.Create(key, testobj)
+	AssertOk(t, err, "Create failed")
+
+	err = txn1.Update(key, testobj)
+	AssertOk(t, err, "update failed")
+	err = txn2.Update(key, testobj)
+	AssertOk(t, err, "update failed")
+
+	err = txn1.Delete(key)
+	AssertOk(t, err, "delete failed")
+	err = txn2.Delete(key)
+	AssertOk(t, err, "delete failed")
+
+	err = txn1.Touch(key)
+	AssertOk(t, err, "touch failed")
+	err = txn2.Touch(key)
+	AssertOk(t, err, "touch failed")
+
+	Assert(t, !txn1.IsEmpty(), "should not be empty")
 }

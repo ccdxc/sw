@@ -214,7 +214,10 @@ var typesMapTelemetry = map[string]*api.Struct{
 	},
 }
 
+var keyMapTelemetry = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapTelemetry)
+	schema.AddPaths(keyMapTelemetry)
 }

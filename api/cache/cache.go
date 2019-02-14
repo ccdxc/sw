@@ -12,10 +12,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/api/utils"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/requirement"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ctxutils"
@@ -122,9 +122,13 @@ type prefixWatcher struct {
 
 // worker monitors the watch for a prefix and then updates the cache.
 func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh chan error) {
-	var evtype kvstore.WatchEventType
-	var w kvstore.Watcher
-	var err error
+	var (
+		evtype kvstore.WatchEventType
+		w      kvstore.Watcher
+		err    error
+		reqs   apiintf.Requirement
+	)
+
 	defer func() {
 		p.Lock()
 		p.running = false
@@ -140,6 +144,9 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 		qs := p.parent.queues.Get(key)
 		for i := range qs {
 			qs[i].Enqueue(evtype, obj, prev)
+		}
+		if reqs != nil {
+			reqs.Finalize(ctx)
 		}
 	}
 
@@ -168,7 +175,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 					p.lastVer = into.ResourceVersion
 					evtype = kvstore.Created
 					for _, v := range into.Items {
-						meta, ver := mustGetObjectMetaVersion(v)
+						meta, ver := apiutils.MustGetObjectMetaVersion(v)
 						if meta.SelfLink == "" {
 							log.Fatalf("invalid Self link for object")
 						}
@@ -236,7 +243,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 					restoreOverlays(p.ctx, globals.StagingBasePath, p.parent, p.parent.apiserver)
 					continue
 				}
-				meta, ver := mustGetObjectMetaVersion(ev.Object)
+				meta, ver := apiutils.MustGetObjectMetaVersion(ev.Object)
 				upd, err := meta.ModTime.Time()
 				if err == nil {
 					if watchStart.Before(upd) {
@@ -246,9 +253,14 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 					p.parent.logger.ErrorLog("msg", "error converting timestamp", "error", err)
 				}
 				switch evtype {
-				case kvstore.Created, kvstore.Updated:
+				case kvstore.Created:
+					reqs = p.parent.getRefRequirements(ctx, ev.Key, apiintf.CreateOper, ev.Object)
+					p.parent.store.Set(ev.Key, ver, ev.Object, updatefn)
+				case kvstore.Updated:
+					reqs = p.parent.getRefRequirements(ctx, ev.Key, apiintf.UpdateOper, ev.Object)
 					p.parent.store.Set(ev.Key, ver, ev.Object, updatefn)
 				case kvstore.Deleted:
+					reqs = p.parent.getRefRequirements(ctx, ev.Key, apiintf.DeleteOper, ev.Object)
 					p.parent.store.Delete(ev.Key, ver, updatefn)
 				default:
 
@@ -302,9 +314,10 @@ func (a *backendWatcher) Stop() {
 // txn is a wrapper for the kvstore.Txn object.
 
 type txnOp struct {
-	key  string
-	oper apiOper
-	obj  runtime.Object
+	key    string
+	oper   apiOper
+	ignVal bool
+	obj    runtime.Object
 }
 type cacheTxn struct {
 	kvstore.Txn
@@ -357,24 +370,35 @@ func (t *cacheTxn) commit(ctx context.Context) (kvstore.TxnResponse, error) {
 			switch v.oper {
 			case operCreate:
 				evtype = kvstore.Created
-				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, updating cache")
+				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, updating cache", "key", v.key)
 				versioner.SetVersion(v.obj, ver)
 				t.parent.store.Set(v.key, ver, v.obj, updatefn)
 				respOps = append(respOps, kvstore.TxnOpResponse{Oper: kvstore.OperUpdate, Key: v.key, Obj: v.obj})
 			case operUpdate:
 				evtype = kvstore.Updated
-				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, updating cache")
+				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, updating cache", "key", v.key)
+				if v.ignVal {
+					v.obj, err = t.parent.store.Get(v.key)
+					if err != nil {
+						t.parent.logger.Fatalf("received commit response with ignore value, while there is no object in cache [%v]", v.key)
+					}
+				}
 				versioner.SetVersion(v.obj, ver)
 				t.parent.store.Set(v.key, ver, v.obj, updatefn)
 				respOps = append(respOps, kvstore.TxnOpResponse{Oper: kvstore.OperUpdate, Key: v.key, Obj: v.obj})
 			case operDelete:
 				evtype = kvstore.Deleted
-				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, deleting from cache")
+				t.parent.logger.DebugLog("oper", "txnCommit", "msg", "kvstore success, deleting from cache", "key", v.key)
 				versioner.SetVersion(v.obj, ver)
 				t.parent.store.Delete(v.key, ver, updatefn)
 			default:
 				continue
 			}
+		}
+		r, e1 := apiutils.GetRequirements(ctx)
+		if e1 == nil && r != nil {
+			reqs := r.(apiintf.RequirementSet)
+			reqs.Finalize(ctx)
 		}
 		resp.Responses = respOps
 	}
@@ -410,12 +434,22 @@ func (t *cacheTxn) Update(key string, obj runtime.Object, cs ...kvstore.Cmp) err
 	return nil
 }
 
+// Touch updates the revision of the object without changing the object.
+func (t *cacheTxn) Touch(key string) error {
+	defer t.Unlock()
+	t.Lock()
+	t.ops = append(t.ops, txnOp{key: key, obj: nil, oper: operUpdate, ignVal: true})
+	t.Txn.Touch(key)
+	return nil
+}
+
 // CreateNewCache creates a new cache instance with the config provided
 func CreateNewCache(config Config) (apiintf.CacheInterface, error) {
 	ret := cache{
 		store:     NewStore(),
 		pool:      &connPool{},
 		logger:    config.Logger,
+		apiserver: config.APIServer,
 		versioner: runtime.NewObjectVersioner(),
 	}
 	wconfig := WatchEventQConfig{
@@ -490,7 +524,7 @@ func (c *cache) Restore() error {
 		c.logger.Infof("got [%d] objects from backend while restoring cache", len(into.Items))
 		c.Lock()
 		for _, v := range into.Items {
-			meta, ver := mustGetObjectMetaVersion(v)
+			meta, ver := apiutils.MustGetObjectMetaVersion(v)
 			if meta.SelfLink == "" {
 				log.Fatalf("invalid Self link for object [%+v]", v)
 			}
@@ -534,6 +568,27 @@ func (c *cache) getCbFunc(evType kvstore.WatchEventType) apiintf.SuccessCbFunc {
 // Create creates a object in the backend KVStore. If the object creation is successful,
 //   the Cache is updated and watch notifications are generated to watchers.
 func (c *cache) Create(ctx context.Context, key string, obj runtime.Object) error {
+	var ref apiintf.Requirement
+	var refs apiintf.RequirementSet
+	// If the create is directly from the API Server methods.go then the requirements
+	//  are set in the context. If it is directly from other paths like from hooks.
+	//  check for references.
+	rc, err := apiutils.GetRequirements(ctx)
+	if err == nil {
+		if rc != nil {
+			refs = rc.(apiintf.RequirementSet)
+			if errs := refs.Check(ctx); len(errs) != 0 {
+				return fmt.Errorf("requirement not met [%v]", errs)
+			}
+		}
+	} else {
+		ref = c.getRefRequirements(ctx, key, apiintf.CreateOper, obj)
+		if ref != nil {
+			if errs := ref.Check(ctx); len(errs) > 0 {
+				return fmt.Errorf("requirement not met [%v]", errs)
+			}
+		}
+	}
 	defer c.RUnlock()
 	c.RLock()
 	if !c.active {
@@ -543,12 +598,12 @@ func (c *cache) Create(ctx context.Context, key string, obj runtime.Object) erro
 	c.logger.DebugLog("oper", "create", "msg", "called")
 	k := c.pool.GetFromPool().(kvstore.Interface)
 	kvtime := time.Now()
-	err := k.Create(ctx, key, obj)
+	err = k.Create(ctx, key, obj)
 	if err != nil {
 		return fmt.Errorf("Object create failed: %s", kvstore.ErrorDesc(err))
 	}
 	hdr.Record("kvstore.Create", time.Since(kvtime))
-	_, v := mustGetObjectMetaVersion(obj)
+	_, v := apiutils.MustGetObjectMetaVersion(obj)
 	c.logger.DebugLog("oper", "create", "msg", "kvstore success, setting cache", "ver", v)
 	c.store.Set(key, v, obj, c.getCbFunc(kvstore.Created))
 	hdr.Record("cache.Create", time.Since(start))
@@ -559,6 +614,24 @@ func (c *cache) Create(ctx context.Context, key string, obj runtime.Object) erro
 // Delete deletes an object from the backend KVStore if it exists. The cached object is also deleted
 //  from the cache and watch notifications are generated for all watchers.
 func (c *cache) Delete(ctx context.Context, key string, into runtime.Object, cs ...kvstore.Cmp) error {
+	var ref apiintf.Requirement
+	var refs apiintf.RequirementSet
+	rc, err := apiutils.GetRequirements(ctx)
+	if err == nil {
+		if rc != nil {
+			refs = rc.(apiintf.RequirementSet)
+			if errs := refs.Check(ctx); len(errs) != 0 {
+				return fmt.Errorf("requirement not met [%v]", errs)
+			}
+		}
+	} else {
+		ref = c.getRefRequirements(ctx, key, apiintf.DeleteOper, nil)
+		if ref != nil {
+			if errs := ref.Check(ctx); len(errs) > 0 {
+				return fmt.Errorf("requirement not met [%v]", errs)
+			}
+		}
+	}
 	defer c.RUnlock()
 	c.RLock()
 	if !c.active {
@@ -568,13 +641,13 @@ func (c *cache) Delete(ctx context.Context, key string, into runtime.Object, cs 
 	c.logger.DebugLog("oper", "delete", "msg", "called")
 	k := c.pool.GetFromPool().(kvstore.Interface)
 	kvtime := time.Now()
-	err := k.Delete(ctx, key, into, cs...)
+	err = k.Delete(ctx, key, into, cs...)
 	hdr.Record("kvstore.Delete", time.Since(kvtime))
 	if err == nil {
 		c.logger.DebugLog("oper", "delete", "msg", "kvstore succcess. deleting from cache")
 		v := uint64(0)
 		if into != nil {
-			_, v = mustGetObjectMetaVersion(into)
+			_, v = apiutils.MustGetObjectMetaVersion(into)
 		}
 		c.store.Delete(key, v, c.getCbFunc(kvstore.Deleted))
 	} else {
@@ -605,6 +678,24 @@ func (c *cache) PrefixDelete(ctx context.Context, prefix string) error {
 // Update updates an object in the backend KVStore if it already exists. If the operation is successful
 //  the cache is updated and watch notifications are generated for established watches.
 func (c *cache) Update(ctx context.Context, key string, obj runtime.Object, cs ...kvstore.Cmp) error {
+	var ref apiintf.Requirement
+	var refs apiintf.RequirementSet
+	rc, err := apiutils.GetRequirements(ctx)
+	if err == nil {
+		if rc != nil {
+			refs = rc.(apiintf.RequirementSet)
+			if errs := refs.Check(ctx); len(errs) != 0 {
+				return fmt.Errorf("requirement not met [%v]", errs)
+			}
+		}
+	} else {
+		ref = c.getRefRequirements(ctx, key, apiintf.UpdateOper, obj)
+		if ref != nil {
+			if errs := ref.Check(ctx); len(errs) > 0 {
+				return fmt.Errorf("requirement not met [%v]", errs)
+			}
+		}
+	}
 	defer c.RUnlock()
 	c.RLock()
 	if !c.active {
@@ -615,14 +706,19 @@ func (c *cache) Update(ctx context.Context, key string, obj runtime.Object, cs .
 	c.logger.DebugLog("oper", "update", "msg", "called")
 	k := c.pool.GetFromPool().(kvstore.Interface)
 	kvtime := time.Now()
-	err := k.Update(ctx, key, obj, cs...)
+	err = k.Update(ctx, key, obj, cs...)
 	if err != nil {
 		return fmt.Errorf("Object update failed: %s", kvstore.ErrorDesc(err))
 	}
 	hdr.Record("kvstore.Update", time.Since(kvtime))
-	_, v := mustGetObjectMetaVersion(obj)
+	_, v := apiutils.MustGetObjectMetaVersion(obj)
 	c.logger.DebugLog("oper", "update", "msg", "kvstore success, updating cache")
 	c.store.Set(key, v, obj, c.getCbFunc(kvstore.Updated))
+	if refs != nil {
+		refs.Finalize(ctx)
+	} else if ref != nil {
+		ref.Finalize(ctx)
+	}
 	hdr.Record("cache.Update", time.Since(start))
 	updateOps.Add(1)
 	return nil
@@ -631,6 +727,8 @@ func (c *cache) Update(ctx context.Context, key string, obj runtime.Object, cs .
 // ConsistentUpdate updates an object in the backend KVStore if it already exists. If the operation is successful
 //  the cache is updated and watch notifications are generated for established watches.
 func (c *cache) ConsistentUpdate(ctx context.Context, key string, into runtime.Object, updateFunc kvstore.UpdateFunc) error {
+	var ref apiintf.Requirement
+	var refs apiintf.RequirementSet
 	defer c.RUnlock()
 	c.RLock()
 	if !c.active {
@@ -642,7 +740,21 @@ func (c *cache) ConsistentUpdate(ctx context.Context, key string, into runtime.O
 	if err != nil {
 		return fmt.Errorf("Object update failed: %s", kvstore.ErrorDesc(err))
 	}
-	_, v := mustGetObjectMetaVersion(into)
+	// The references check cannot be done outside the lock. and has to be done only after the updateFunc has run
+	// assume that check has been performed before getting here.
+	rc, err := apiutils.GetRequirements(ctx)
+	if err == nil {
+		if rc != nil {
+			refs = rc.(apiintf.RequirementSet)
+			refs.Finalize(ctx)
+		}
+	} else {
+		ref = c.getRefRequirements(ctx, key, apiintf.UpdateOper, into)
+		if ref != nil {
+			ref.Finalize(ctx)
+		}
+	}
+	_, v := apiutils.MustGetObjectMetaVersion(into)
 	c.logger.DebugLog("oper", "consistenupdate", "msg", "kvstore success, updating cache")
 	c.store.Set(key, v, into, c.getCbFunc(kvstore.Updated))
 	return nil
@@ -662,7 +774,9 @@ func (c *cache) Get(ctx context.Context, key string, into runtime.Object) error 
 		return fmt.Errorf("Object get failed: %s", err.Error())
 	}
 	c.logger.DebugLog("oper", "get", "msg", "cache hit")
-	obj.Clone(into)
+	if into != nil {
+		obj.Clone(into)
+	}
 	hdr.Record("cache.Get", time.Since(start))
 	getOps.Add(1)
 	return nil
@@ -959,6 +1073,17 @@ func (c *cache) NewTxn() kvstore.Txn {
 	}
 }
 
+// Stat returns information about the objects in list of keys
+func (c *cache) Stat(ctx context.Context, keys []string) []apiintf.ObjectStat {
+	defer c.RUnlock()
+	c.RLock()
+	if !c.active {
+		return nil
+	}
+	c.logger.DebugLog("oper", "Stat", "msg", "called")
+	return c.store.Stat(keys)
+}
+
 // Close closes the cache by shutting down backend watches and backend connections.
 //   This probably needs clearing the cache itself, which will be done by a call to Clear.
 func (c *cache) Close() {
@@ -998,14 +1123,8 @@ func (c *cache) GetKvConn() kvstore.Interface {
 	return nil
 }
 
-func mustGetObjectMetaVersion(obj runtime.Object) (*api.ObjectMeta, uint64) {
-	objm := obj.(runtime.ObjectMetaAccessor)
-	meta := objm.GetObjectMeta()
-	v, err := strconv.ParseUint(meta.ResourceVersion, 10, 64)
-	if err != nil {
-		panic(fmt.Sprintf("unable to parse version string [%s](%s)", meta.ResourceVersion, err))
-	}
-	return meta, v
+func (c *cache) getRefRequirements(ctx context.Context, key string, oper apiintf.APIOperType, obj runtime.Object) apiintf.Requirement {
+	return requirement.GetRefRequirements(ctx, key, oper, obj, c.apiserver, c)
 }
 
 func init() {

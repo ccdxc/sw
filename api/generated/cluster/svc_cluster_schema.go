@@ -167,7 +167,22 @@ var typesMapSvc_cluster = map[string]*api.Struct{
 	},
 }
 
+var keyMapSvc_cluster = map[string][]api.PathsMap{
+
+	"cluster.Cluster": []api.PathsMap{
+		{URI: "/configs/cluster/v1/cluster", Key: "/venice/config/cluster/cluster/Singleton"}},
+	"cluster.Host": []api.PathsMap{
+		{URI: "/configs/cluster/v1/hosts/{Name}", Key: "/venice/config/cluster/hosts/{Name}"}},
+	"cluster.Node": []api.PathsMap{
+		{URI: "/configs/cluster/v1/nodes/{Name}", Key: "/venice/config/cluster/nodes/{Name}"}},
+	"cluster.SmartNIC": []api.PathsMap{
+		{URI: "/configs/cluster/v1/smartnics/{Name}", Key: "/venice/config/cluster/smartnics/{Name}"}},
+	"cluster.Tenant": []api.PathsMap{
+		{URI: "/configs/cluster/v1/tenants/{Name}", Key: "/venice/config/cluster/tenants/{Name}"}},
+}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_cluster)
+	schema.AddPaths(keyMapSvc_cluster)
 }

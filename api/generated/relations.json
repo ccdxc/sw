@@ -1,1 +1,23 @@
-{}
+{
+  "bookstore.BookSpec": [
+    {
+      "Type": "NamedRef",
+      "To": "bookstore/Publisher",
+      "Field": "Publisher"
+    }
+  ],
+  "bookstore.CustomerStatus": [
+    {
+      "Type": "SelectorRef",
+      "To": "bookstore/Book",
+      "Field": "Interests"
+    }
+  ],
+  "bookstore.OrderItem": [
+    {
+      "Type": "WeakRef",
+      "To": "bookstore/Book",
+      "Field": "Book"
+    }
+  ]
+}

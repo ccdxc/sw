@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	search "github.com/pensando/sw/api/generated/search"
 	grpcclient "github.com/pensando/sw/api/generated/search/grpc/client"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -92,13 +93,13 @@ func (a adapterSearchV1) AutoWatchSvcSearchV1(oldctx oldcontext.Context, in *api
 }
 
 func (e *sSearchV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["PolicyQuery"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
+	e.svcProf["PolicyQuery"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 
-	e.svcProf["Query"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
+	e.svcProf["Query"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -118,7 +119,7 @@ func (e *sSearchV1GwService) GetServiceProfile(method string) (apigw.ServiceProf
 }
 
 // GetCrudServiceProfile returns the service profile for a auto generated crud operation
-func (e *sSearchV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (e *sSearchV1GwService) GetCrudServiceProfile(obj string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
 		return e.GetServiceProfile(name)

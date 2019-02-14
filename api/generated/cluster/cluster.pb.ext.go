@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -575,11 +576,19 @@ func (m *UpdateTLSConfigRequest) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *CPUInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *CPUInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Cluster) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
@@ -597,9 +606,17 @@ func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ClusterAuthBootstrapRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *ClusterAuthBootstrapRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ClusterSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *ClusterSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -607,14 +624,26 @@ func (m *ClusterSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ClusterStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *DockerInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *DockerInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Host) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
@@ -632,9 +661,17 @@ func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *HostSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *HostSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *HostStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *HostStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -642,9 +679,17 @@ func (m *HostStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *InterfaceInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *InterfaceInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *MemInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *MemInfo) Validate(ver, path string, ignoreStatus bool) []error {
@@ -665,9 +710,17 @@ func (m *MemInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *NetworkInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *NetworkInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Node) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
@@ -696,6 +749,10 @@ func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *NodeCondition) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *NodeCondition) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapCluster["NodeCondition"][ver]; ok {
@@ -714,6 +771,10 @@ func (m *NodeCondition) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *NodeInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *NodeInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.MemoryInfo != nil {
@@ -729,9 +790,17 @@ func (m *NodeInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *NodeSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *NodeSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *NodeStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -762,9 +831,17 @@ func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *OsInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *OsInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *SmartNICID) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SmartNICID) Validate(ver, path string, ignoreStatus bool) []error {
@@ -772,14 +849,26 @@ func (m *SmartNICID) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *StorageDeviceInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *StorageDeviceInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *StorageInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *StorageInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *UpdateTLSConfigRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *UpdateTLSConfigRequest) Validate(ver, path string, ignoreStatus bool) []error {

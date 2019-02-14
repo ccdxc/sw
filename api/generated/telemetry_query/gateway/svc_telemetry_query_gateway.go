@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	telemetry_query "github.com/pensando/sw/api/generated/telemetry_query"
 	grpcclient "github.com/pensando/sw/api/generated/telemetry_query/grpc/client"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -92,13 +93,13 @@ func (a adapterTelemetryV1) AutoWatchSvcTelemetryV1(oldctx oldcontext.Context, i
 }
 
 func (e *sTelemetryV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["Fwlogs"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
+	e.svcProf["Fwlogs"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 
-	e.svcProf["Metrics"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
+	e.svcProf["Metrics"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -118,7 +119,7 @@ func (e *sTelemetryV1GwService) GetServiceProfile(method string) (apigw.ServiceP
 }
 
 // GetCrudServiceProfile returns the service profile for a auto generated crud operation
-func (e *sTelemetryV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (e *sTelemetryV1GwService) GetCrudServiceProfile(obj string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
 		return e.GetServiceProfile(name)

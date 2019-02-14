@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -147,7 +148,34 @@ func (m *WorkloadStatus) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *Workload) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
 
 func (m *Workload) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -170,6 +198,10 @@ func (m *Workload) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *WorkloadIntfSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *WorkloadIntfSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapWorkload["WorkloadIntfSpec"][ver]; ok {
@@ -188,9 +220,17 @@ func (m *WorkloadIntfSpec) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *WorkloadIntfStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *WorkloadIntfStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *WorkloadSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *WorkloadSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -219,6 +259,10 @@ func (m *WorkloadSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *WorkloadStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *WorkloadStatus) Validate(ver, path string, ignoreStatus bool) []error {

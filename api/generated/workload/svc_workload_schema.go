@@ -77,7 +77,16 @@ var typesMapSvc_workload = map[string]*api.Struct{
 	},
 }
 
+var keyMapSvc_workload = map[string][]api.PathsMap{
+
+	"workload.Endpoint": []api.PathsMap{
+		{URI: "/configs/workload/v1/tenant/{Tenant}/endpoints/{Name}", Key: "/venice/config/workload/endpoints/{Tenant}/{Name}"}},
+	"workload.Workload": []api.PathsMap{
+		{URI: "/configs/workload/v1/tenant/{Tenant}/workloads/{Name}", Key: "/venice/config/workload/workloads/{Tenant}/{Name}"}},
+}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_workload)
+	schema.AddPaths(keyMapSvc_workload)
 }

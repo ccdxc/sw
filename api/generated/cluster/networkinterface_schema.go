@@ -104,7 +104,10 @@ var typesMapNetworkinterface = map[string]*api.Struct{
 	},
 }
 
+var keyMapNetworkinterface = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapNetworkinterface)
+	schema.AddPaths(keyMapNetworkinterface)
 }

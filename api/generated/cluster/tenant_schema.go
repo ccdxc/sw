@@ -77,7 +77,10 @@ var typesMapTenant = map[string]*api.Struct{
 	},
 }
 
+var keyMapTenant = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapTenant)
+	schema.AddPaths(keyMapTenant)
 }

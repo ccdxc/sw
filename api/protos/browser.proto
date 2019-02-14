@@ -1,0 +1,85 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package browser;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// QueryType defines the type of query
+//  Dependencies - walks the dependency tree in the forward direction,
+//    i.e. all objects that this object depends on.
+// DependedBy = walks the dependency tree in the reverse direction,
+//   i.e. all objects that depend on this node.
+enum QueryType {
+    Dependencies = 0;
+    DependedBy = 1;
+}
+
+enum ReferenceTypes {
+    NamedReference = 0;
+    WeakReference = 1;
+    SelectorReference = 2;
+}
+
+// Object is a node in the dependency tree representing a config object with links to related
+//  objects
+message Object {
+    message URIs {
+        string RefType = 1 [(gogoproto.jsontag) = "ref-type", (venice.check) = "StrEnum(ReferenceTypes)"] ;
+        repeated api.ObjectRef URI = 2 [(gogoproto.jsontag) = "uri", (gogoproto.nullable) = false];
+    }
+    api.TypeMeta T    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // URI is the Browser URI for this object
+    string URI = 3 [(gogoproto.jsontag) = "uri"];
+    // Reverse is the view from the object looking back in the reverse direction of the dependency tree
+    string Reverse = 4 [(gogoproto.jsontag) = "reverse"];
+    // QueryType specifies the direction of the relations in Links
+    string QueryType = 5 [(gogoproto.jsontag) = "query-type", (venice.check) = "StrEnum(QueryType)"];
+    // Links points to the relations of the object. The key for the map is the path to the filed which
+    //   is causing the relation.
+    map <string, URIs> Links = 6 [(gogoproto.jsontag) = "links", (gogoproto.nullable) = false];
+
+}
+
+
+// BrowseRequest is the query request for the dependency tree
+message BrowseRequest {
+    api.TypeMeta T    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Never makes it to the KV store, but added to satisfy code gen infra,
+    option (venice.objectPrefix) = {Singleton: "BrowseRequest"};
+    // URI is the root node from where to query
+    string URI = 3 [(gogoproto.jsontag) = "uri", (venice.check) = "StrLen(2,512)"];
+    // QueryType is the direction of the query
+    string QueryType = 4 [(gogoproto.jsontag) = "query-type", (venice.check) = "StrEnum(QueryType)"];
+    // Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations
+    //  0 means to maximum depth.
+    uint32 MaxDepth = 5 [(gogoproto.jsontag) = "max-depth", (venice.default) = "1"];
+    // When CountOnly is set the response only contains counts and not the actual objects.
+    bool CountOnly = 6 [(gogoproto.jsontag) = "count-only"];
+}
+
+// BrowseResponse is the response to a query request
+message BrowseResponse {
+    api.TypeMeta T    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // RootURI is the root node for the response
+    string RootURI = 3 [(gogoproto.jsontag) = "root-uri"];
+    // QueryType is the direction of the query
+    string QueryType = 4 [(gogoproto.jsontag) = "query-type"];
+    // MaxDepth that the response explored. Reflects the value specified in the query
+    uint32 MaxDepth = 5 [(gogoproto.jsontag) = "max-depth"];
+    // TotalCount of objects in the response
+    uint32 TotalCount = 6 [(gogoproto.jsontag) = "total-count"];
+    // map of results. Key to the map is the URI of the  Object.
+    map <string, Object> Objects = 7 [(gogoproto.jsontag) = "objects", (gogoproto.nullable) = false];
+}

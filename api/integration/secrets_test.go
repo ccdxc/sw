@@ -73,6 +73,14 @@ func TestSecretsTransformer(t *testing.T) {
 	ctx, err = authntestutils.NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
 	AssertOk(t, err, "cannot create logged in context")
 
+	opts := api.ListWatchOptions{}
+	cl, err := npmClient.BookstoreV1().Customer().List(ctx, &opts)
+	AssertOk(t, err, "failed to list Publishers (%s)", err)
+	for _, c := range cl {
+		_, err = npmClient.BookstoreV1().Customer().Delete(ctx, &c.ObjectMeta)
+		AssertOk(t, err, "failed to delete Customer (%s)", err)
+	}
+
 	fullCustomer := bookstore.Customer{
 		ObjectMeta: api.ObjectMeta{
 			Name: "FullCustomer",

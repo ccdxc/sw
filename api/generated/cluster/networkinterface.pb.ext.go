@@ -16,6 +16,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -154,7 +155,11 @@ func (m *NetworkInterfaceUplinkStatus) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *NetworkInterface) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -182,14 +187,26 @@ func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *NetworkInterfaceHostStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *NetworkInterfaceHostStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *NetworkInterfaceSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *NetworkInterfaceSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *NetworkInterfaceStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *NetworkInterfaceStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -208,6 +225,10 @@ func (m *NetworkInterfaceStatus) Validate(ver, path string, ignoreStatus bool) [
 		}
 	}
 	return ret
+}
+
+func (m *NetworkInterfaceUplinkStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *NetworkInterfaceUplinkStatus) Validate(ver, path string, ignoreStatus bool) []error {

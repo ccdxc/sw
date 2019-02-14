@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
@@ -43,8 +44,8 @@ func registerWorkloadHooks(svc apiserver.Service, logger log.Logger) {
 	r := wlHooks{}
 	r.logger = logger.WithContext("Service", "WorkloadHooks")
 	logger.Log("msg", "registering Hooks")
-	svc.GetCrudService("Workload", apiserver.CreateOper).GetRequestType().WithValidate(r.validateWorkloadConfig)
-	svc.GetCrudService("Workload", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateWorkloadConfig)
+	svc.GetCrudService("Workload", apiintf.CreateOper).GetRequestType().WithValidate(r.validateWorkloadConfig)
+	svc.GetCrudService("Workload", apiintf.UpdateOper).GetRequestType().WithValidate(r.validateWorkloadConfig)
 }
 
 func init() {

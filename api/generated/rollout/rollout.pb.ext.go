@@ -16,6 +16,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -164,7 +165,11 @@ func (m *RolloutStatus) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *Rollout) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *Rollout) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -201,6 +206,10 @@ func (m *Rollout) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *RolloutPhase) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *RolloutPhase) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapRollout["RolloutPhase"][ver]; ok {
@@ -217,6 +226,10 @@ func (m *RolloutPhase) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *RolloutSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *RolloutSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -245,6 +258,10 @@ func (m *RolloutSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *RolloutStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *RolloutStatus) Validate(ver, path string, ignoreStatus bool) []error {

@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -52,7 +53,7 @@ type authHooks struct {
 }
 
 // hashPassword is pre-commit hook to save hashed password in User object when object is created or updated
-func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("msg", "AuthHook called to hash password")
 	r, ok := i.(auth.User)
 	if !ok {
@@ -69,7 +70,7 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 	r.Spec.Type = auth.UserSpec_Local.String()
 
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		// password is a required field when local user is created
 		if r.Spec.GetPassword() == "" {
 			return r, false, errEmptyPassword
@@ -84,7 +85,7 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 		}
 		r.Spec.Password = passwdhash
 		s.logger.InfoLog("msg", "Created password hash", "user", r.GetName())
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		cur := &auth.User{}
 		if err := kv.Get(ctx, key, cur); err != nil {
 			s.logger.Errorf("error getting user with key [%s] in API server hashPassword pre-commit hook for update cluster", key)
@@ -107,7 +108,7 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 }
 
 // changePassword is pre-commit hook registered with PasswordChange method for User service to change password for local user
-func (s *authHooks) changePassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (s *authHooks) changePassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("msg", "AuthHook called to change password")
 	r, ok := i.(auth.PasswordChangeRequest)
 	if !ok {
@@ -154,7 +155,7 @@ func (s *authHooks) changePassword(ctx context.Context, kv kvstore.Interface, tx
 		genID, err := strconv.ParseInt(userObj.GenerationID, 10, 64)
 		if err != nil {
 			s.logger.Errorf("error parsing generation ID: %v", err)
-			return userObj, err
+			genID = 2
 		}
 		userObj.GenerationID = fmt.Sprintf("%d", genID+1)
 		return userObj, nil
@@ -162,23 +163,18 @@ func (s *authHooks) changePassword(ctx context.Context, kv kvstore.Interface, tx
 		s.logger.Errorf("error changing password for user key [%s]: %v", key, err)
 		return nil, false, err
 	}
-	// empty out password before returning. Create a copy as cur is pointing to an object in API server cache. Without copy causes intermittent failures in password change integ test
-	// where password is empty in user object returned from API server on subsequent GET
-	ret, err := cur.Clone(nil)
-	if err != nil {
-		s.logger.Errorf("error creating a copy of user obj: %v", err)
-		return ret, false, err
-	}
-	user := ret.(*auth.User)
-	user.Spec.Password = ""
+	// The ConsistentUpdate op will happen at a later time due to overlay. Retrieve the current object and return so the ResponseWriter has a object to work on.
+	ret := auth.User{}
+	ret.ObjectMeta = r.ObjectMeta
+	ret.Spec.Password = ""
 	s.logger.Debugf("password successfully changed for user key [%s]", key)
-	return *user, false, nil
+	return ret, false, nil
 }
 
 // resetPassword is pre-commit hook registered with PasswordReset method for User service to reset password for local user
-func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("msg", "AuthHook called to reset password")
-	_, ok := i.(auth.PasswordResetRequest)
+	in, ok := i.(auth.PasswordResetRequest)
 	if !ok {
 		return nil, false, errInvalidInputType
 	}
@@ -214,7 +210,7 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 		genID, err := strconv.ParseInt(userObj.GenerationID, 10, 64)
 		if err != nil {
 			s.logger.Errorf("error parsing generation ID: %v", err)
-			return userObj, err
+			genID = 2
 		}
 		userObj.GenerationID = fmt.Sprintf("%d", genID+1)
 		return userObj, nil
@@ -222,18 +218,12 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 		s.logger.Errorf("error resetting password for user key [%s]: %v", key, err)
 		return nil, false, err
 	}
-	// Create a copy as cur is pointing to an object in API server cache. Without copy causes intermittent failures in password reset integ test
-	// where password is corrupted in user object returned from API server on subsequent GET
-	ret, err := cur.Clone(nil)
-	if err != nil {
-		s.logger.Errorf("error creating a copy of user obj: %v", err)
-		return ret, false, err
-	}
-	user := ret.(*auth.User)
-	// return non-hashed password to user
-	user.Spec.Password = genPasswd
+	// The ConsistentUpdate op will happen at a later time due to overlay. Retrieve the current object and return so the ResponseWriter has a object to work on.
+	ret := auth.User{}
+	ret.ObjectMeta = in.ObjectMeta
+	ret.Spec.Password = genPasswd
 	s.logger.Debugf("password successfully reset for user key [%s]", key)
-	return *user, false, nil
+	return ret, false, nil
 }
 
 // validateAuthenticatorConfig hook is to validate that authenticators specified in AuthenticatorOrder are defined
@@ -278,7 +268,7 @@ func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignSt
 }
 
 // generateSecret is a pre-commmit hook to generate secret when authentication policy is created or updated
-func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("msg", "AuthHook called to generate JWT secret")
 	r, ok := i.(auth.AuthenticationPolicy)
 	if !ok {
@@ -320,7 +310,7 @@ func (s *authHooks) validateRolePerms(i interface{}, ver string, ignStatus bool)
 }
 
 // privilegeEscalationCheck is a pre-commit hook to check if user is trying to escalate his privileges while creating or updating role binding
-func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("msg", "AuthHook called to check privilege escalation")
 	r, ok := i.(auth.RoleBinding)
 	if !ok {
@@ -365,22 +355,38 @@ func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Int
 	return i, true, nil
 }
 
+func (s *authHooks) returnUser(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+	ic := resp.(auth.User)
+	s.logger.Infof("Got user [%+v]", ic)
+	key := ic.MakeKey("auth")
+	cur := auth.User{}
+	if err := kvs.Get(ctx, key, &cur); err != nil {
+		s.logger.Errorf("Error getting user with key [%s] in API server response writer hook", key)
+		return nil, err
+	}
+	err := cur.ApplyStorageTransformer(ctx, false)
+	cur.Spec.Password = ic.Spec.Password
+	return cur, err
+}
+
 func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	r := authHooks{}
 	r.logger = logger.WithContext("Service", "AuthHooks")
 	logger.Log("msg", "registering Hooks")
-	svc.GetCrudService("User", apiserver.CreateOper).WithPreCommitHook(r.hashPassword)
-	svc.GetCrudService("User", apiserver.UpdateOper).WithPreCommitHook(r.hashPassword)
-	svc.GetCrudService("AuthenticationPolicy", apiserver.CreateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
-	svc.GetCrudService("AuthenticationPolicy", apiserver.UpdateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
-	svc.GetCrudService("Role", apiserver.CreateOper).GetRequestType().WithValidate(r.validateRolePerms)
-	svc.GetCrudService("Role", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateRolePerms)
-	svc.GetCrudService("RoleBinding", apiserver.CreateOper).WithPreCommitHook(r.privilegeEscalationCheck)
-	svc.GetCrudService("RoleBinding", apiserver.UpdateOper).WithPreCommitHook(r.privilegeEscalationCheck)
+	svc.GetCrudService("User", apiintf.CreateOper).WithPreCommitHook(r.hashPassword)
+	svc.GetCrudService("User", apiintf.UpdateOper).WithPreCommitHook(r.hashPassword)
+	svc.GetCrudService("AuthenticationPolicy", apiintf.CreateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
+	svc.GetCrudService("AuthenticationPolicy", apiintf.UpdateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
+	svc.GetCrudService("Role", apiintf.CreateOper).GetRequestType().WithValidate(r.validateRolePerms)
+	svc.GetCrudService("Role", apiintf.UpdateOper).GetRequestType().WithValidate(r.validateRolePerms)
+	svc.GetCrudService("RoleBinding", apiintf.CreateOper).WithPreCommitHook(r.privilegeEscalationCheck)
+	svc.GetCrudService("RoleBinding", apiintf.UpdateOper).WithPreCommitHook(r.privilegeEscalationCheck)
 	// hook to change password
 	svc.GetMethod("PasswordChange").WithPreCommitHook(r.changePassword)
+	svc.GetMethod("PasswordChange").WithResponseWriter(r.returnUser)
 	// hook to reset password
 	svc.GetMethod("PasswordReset").WithPreCommitHook(r.resetPassword)
+	svc.GetMethod("PasswordReset").WithResponseWriter(r.returnUser)
 }
 
 func init() {

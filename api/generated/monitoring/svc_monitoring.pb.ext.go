@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -812,7 +813,11 @@ func (m *TroubleshootingSessionList) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *AlertDestinationList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *AlertDestinationList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -827,6 +832,10 @@ func (m *AlertDestinationList) Validate(ver, path string, ignoreStatus bool) []e
 		}
 	}
 	return ret
+}
+
+func (m *AlertList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AlertList) Validate(ver, path string, ignoreStatus bool) []error {
@@ -844,6 +853,10 @@ func (m *AlertList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *AlertPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AlertPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
@@ -857,6 +870,10 @@ func (m *AlertPolicyList) Validate(ver, path string, ignoreStatus bool) []error 
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgAlertDestinationWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgAlertDestinationWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -874,6 +891,10 @@ func (m *AutoMsgAlertDestinationWatchHelper) Validate(ver, path string, ignoreSt
 	return ret
 }
 
+func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -887,6 +908,10 @@ func (m *AutoMsgAlertDestinationWatchHelper_WatchEvent) Validate(ver, path strin
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgAlertPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgAlertPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -904,6 +929,10 @@ func (m *AutoMsgAlertPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 	return ret
 }
 
+func (m *AutoMsgAlertPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgAlertPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -917,6 +946,10 @@ func (m *AutoMsgAlertPolicyWatchHelper_WatchEvent) Validate(ver, path string, ig
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgAlertWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgAlertWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -934,6 +967,10 @@ func (m *AutoMsgAlertWatchHelper) Validate(ver, path string, ignoreStatus bool) 
 	return ret
 }
 
+func (m *AutoMsgAlertWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgAlertWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -947,6 +984,10 @@ func (m *AutoMsgAlertWatchHelper_WatchEvent) Validate(ver, path string, ignoreSt
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgEventPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgEventPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -964,6 +1005,10 @@ func (m *AutoMsgEventPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 	return ret
 }
 
+func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -977,6 +1022,10 @@ func (m *AutoMsgEventPolicyWatchHelper_WatchEvent) Validate(ver, path string, ig
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgFlowExportPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgFlowExportPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -994,6 +1043,10 @@ func (m *AutoMsgFlowExportPolicyWatchHelper) Validate(ver, path string, ignoreSt
 	return ret
 }
 
+func (m *AutoMsgFlowExportPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgFlowExportPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -1007,6 +1060,10 @@ func (m *AutoMsgFlowExportPolicyWatchHelper_WatchEvent) Validate(ver, path strin
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgFwlogPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgFwlogPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1024,6 +1081,10 @@ func (m *AutoMsgFwlogPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 	return ret
 }
 
+func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -1037,6 +1098,10 @@ func (m *AutoMsgFwlogPolicyWatchHelper_WatchEvent) Validate(ver, path string, ig
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgMirrorSessionWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgMirrorSessionWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1054,6 +1119,10 @@ func (m *AutoMsgMirrorSessionWatchHelper) Validate(ver, path string, ignoreStatu
 	return ret
 }
 
+func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -1067,6 +1136,10 @@ func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Validate(ver, path string, 
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgStatsPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgStatsPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1084,6 +1157,10 @@ func (m *AutoMsgStatsPolicyWatchHelper) Validate(ver, path string, ignoreStatus 
 	return ret
 }
 
+func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -1097,6 +1174,10 @@ func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Validate(ver, path string, ig
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgTechSupportRequestWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgTechSupportRequestWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1114,6 +1195,10 @@ func (m *AutoMsgTechSupportRequestWatchHelper) Validate(ver, path string, ignore
 	return ret
 }
 
+func (m *AutoMsgTechSupportRequestWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgTechSupportRequestWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -1127,6 +1212,10 @@ func (m *AutoMsgTechSupportRequestWatchHelper_WatchEvent) Validate(ver, path str
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgTroubleshootingSessionWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgTroubleshootingSessionWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1144,6 +1233,10 @@ func (m *AutoMsgTroubleshootingSessionWatchHelper) Validate(ver, path string, ig
 	return ret
 }
 
+func (m *AutoMsgTroubleshootingSessionWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgTroubleshootingSessionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -1157,6 +1250,10 @@ func (m *AutoMsgTroubleshootingSessionWatchHelper_WatchEvent) Validate(ver, path
 		}
 	}
 	return ret
+}
+
+func (m *EventPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *EventPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1174,6 +1271,10 @@ func (m *EventPolicyList) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *FlowExportPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *FlowExportPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
@@ -1187,6 +1288,10 @@ func (m *FlowExportPolicyList) Validate(ver, path string, ignoreStatus bool) []e
 		}
 	}
 	return ret
+}
+
+func (m *FwlogPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *FwlogPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1204,6 +1309,10 @@ func (m *FwlogPolicyList) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *MirrorSessionList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *MirrorSessionList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
@@ -1217,6 +1326,10 @@ func (m *MirrorSessionList) Validate(ver, path string, ignoreStatus bool) []erro
 		}
 	}
 	return ret
+}
+
+func (m *StatsPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *StatsPolicyList) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1234,6 +1347,10 @@ func (m *StatsPolicyList) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *TechSupportRequestList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TechSupportRequestList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
@@ -1247,6 +1364,10 @@ func (m *TechSupportRequestList) Validate(ver, path string, ignoreStatus bool) [
 		}
 	}
 	return ret
+}
+
+func (m *TroubleshootingSessionList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TroubleshootingSessionList) Validate(ver, path string, ignoreStatus bool) []error {

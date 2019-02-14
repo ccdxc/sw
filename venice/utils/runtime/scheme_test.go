@@ -205,6 +205,55 @@ func TestDupSchema(t *testing.T) {
 			t.Errorf("Expecting panic but did not")
 		}
 	}()
-	// Adding same types agains should panic
+	// Adding same types again should panic
 	schema.AddSchema(types)
+}
+
+func TestPaths(t *testing.T) {
+	s := NewScheme()
+	// cases to add
+	// 1. multiple keys at root.
+	// 2. chain of templates as leafs
+	// 3. Error cases when there is a clash.
+	paths := map[string][]api.PathsMap{
+		"test.One": {
+			{Key: "/venice/config/group/object", URI: "/config/group/{version}/obj2"},
+			{Key: "/venice/config/group/object2/{Tenant}/Singleton", URI: "/config/group/{version}/object2/{Tenant}"},
+			{Key: "/venice/config/group/object/{Tenant}/{Name}", URI: "/config/group/{version}/object/{Tenant}/something/{Name}"},
+			{Key: "/venice/config/group/object3/{Tenant}/{Name}", URI: "/config/group/{version}/object3/{Tenant}/{Name}"},
+			{Key: "/venice/config/group/object4/{Tenant}/{Name}", URI: "/config/group/{version}/object4/{Name}/{Tenant}"},
+		},
+	}
+	s.AddPaths(paths)
+	s.preProcessPaths()
+	t.Logf("KeyTOURI is [%v]\n", dumpPaths(s.keyTouri, ""))
+	t.Logf("URIKey is [%+v]\n", dumpPaths(s.uriToKey, ""))
+	cases := map[string]string{
+		"/venice/config/group/object":                    "/config/group/v1/obj2",
+		"/venice/config/group/object2/tenant1/Singleton": "/config/group/v1/object2/tenant1",
+		"/venice/config/group/object/tenant2/foobar":     "/config/group/v1/object/tenant2/something/foobar",
+		"/venice/config/group/object3/tenant/name":       "/config/group/v1/object3/tenant/name",
+		"/venice/config/group/object4/tenant1/bar":       "/config/group/v1/object4/bar/tenant1",
+	}
+
+	for k, v := range cases {
+		r := s.GetURI(k, "v1")
+		if r == "" {
+			t.Errorf("Could not map path %v", k)
+		}
+		if r != v {
+			t.Errorf("wanted [%v] got [%v]", v, r)
+		}
+	}
+
+	for k, v := range cases {
+		r := s.GetKey(v)
+		if r == "" {
+			t.Errorf("Could not map path %v", v)
+		}
+		if r != k {
+			t.Errorf("wanted [%v] got [%v]", k, r)
+		}
+		debugPath = false
+	}
 }

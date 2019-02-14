@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/strconv"
+
 	opentracing "github.com/opentracing/opentracing-go"
 
 	"github.com/pensando/sw/api"
@@ -1079,6 +1081,28 @@ func TestTxn(t *testing.T, cSetup ClusterSetupFunc, sSetup StoreSetupFunc, cClea
 		t.Fatalf("Failed to update version in txn")
 	}
 
+	txn4 := store.NewTxn()
+	if err := store.Get(context.Background(), obj2.Name, obj2); err != nil {
+		t.Fatalf("Failed to get obj2 updated in txn with error: %v", err)
+	}
+	resVer := strconv.MustInt64(obj2.ResourceVersion)
+	if err := txn4.Touch(obj2.Name); err != nil {
+		t.Fatalf("failed to touch Obj2 with error: %v", err)
+	}
+	if _, err := txn4.Commit(context.Background()); err != nil {
+		t.Fatalf("failed to commit Txn with Touch Operation with error: %v", err)
+	}
+	touched := &TestObj{}
+	if err := store.Get(context.Background(), obj2.Name, touched); err != nil {
+		t.Fatalf("Failed to get obj2 updated in txn with error: %v", err)
+	}
+	if resVer >= strconv.MustInt64(touched.ResourceVersion) {
+		t.Fatalf("failed to touch object resource version unchanged [%v] old [%v]", touched.ResourceVersion, resVer)
+	}
+	obj2.ResourceVersion = touched.ResourceVersion
+	if !reflect.DeepEqual(obj2, touched) {
+		t.Fatalf("object has changed after touch")
+	}
 	t.Logf("TestTxn succeeded")
 }
 

@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	auth "github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
@@ -215,12 +216,12 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		s.endpointsAuthV1.fnAutoWatchSvcAuthV1 = srv.WatchFromKv
 
 		s.endpointsAuthV1.fnAutoAddAuthenticationPolicy = srv.AddMethod("AutoAddAuthenticationPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoAddAuthenticationPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoAddAuthenticationPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoAddRole = srv.AddMethod("AutoAddRole",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.Role"], pkgMessages["auth.Role"], "auth", "AutoAddRole")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.Role"], pkgMessages["auth.Role"], "auth", "AutoAddRole")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.Role)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -229,7 +230,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoAddRoleBinding = srv.AddMethod("AutoAddRoleBinding",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.RoleBinding"], pkgMessages["auth.RoleBinding"], "auth", "AutoAddRoleBinding")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.RoleBinding"], pkgMessages["auth.RoleBinding"], "auth", "AutoAddRoleBinding")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.RoleBinding)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -238,7 +239,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoAddUser = srv.AddMethod("AutoAddUser",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.User"], pkgMessages["auth.User"], "auth", "AutoAddUser")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.User"], pkgMessages["auth.User"], "auth", "AutoAddUser")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.User)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -247,12 +248,12 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteAuthenticationPolicy = srv.AddMethod("AutoDeleteAuthenticationPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoDeleteAuthenticationPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoDeleteAuthenticationPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteRole = srv.AddMethod("AutoDeleteRole",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.Role"], pkgMessages["auth.Role"], "auth", "AutoDeleteRole")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.Role"], pkgMessages["auth.Role"], "auth", "AutoDeleteRole")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.Role)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -261,7 +262,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteRoleBinding = srv.AddMethod("AutoDeleteRoleBinding",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.RoleBinding"], pkgMessages["auth.RoleBinding"], "auth", "AutoDeleteRoleBinding")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.RoleBinding"], pkgMessages["auth.RoleBinding"], "auth", "AutoDeleteRoleBinding")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.RoleBinding)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -270,7 +271,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoDeleteUser = srv.AddMethod("AutoDeleteUser",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.User"], pkgMessages["auth.User"], "auth", "AutoDeleteUser")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.User"], pkgMessages["auth.User"], "auth", "AutoDeleteUser")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.User)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -279,12 +280,12 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetAuthenticationPolicy = srv.AddMethod("AutoGetAuthenticationPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoGetAuthenticationPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoGetAuthenticationPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetRole = srv.AddMethod("AutoGetRole",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.Role"], pkgMessages["auth.Role"], "auth", "AutoGetRole")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.Role"], pkgMessages["auth.Role"], "auth", "AutoGetRole")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.Role)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -293,7 +294,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetRoleBinding = srv.AddMethod("AutoGetRoleBinding",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.RoleBinding"], pkgMessages["auth.RoleBinding"], "auth", "AutoGetRoleBinding")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.RoleBinding"], pkgMessages["auth.RoleBinding"], "auth", "AutoGetRoleBinding")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.RoleBinding)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -302,7 +303,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoGetUser = srv.AddMethod("AutoGetUser",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.User"], pkgMessages["auth.User"], "auth", "AutoGetUser")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.User"], pkgMessages["auth.User"], "auth", "AutoGetUser")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.User)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -311,12 +312,12 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoListAuthenticationPolicy = srv.AddMethod("AutoListAuthenticationPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["auth.AuthenticationPolicyList"], "auth", "AutoListAuthenticationPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["auth.AuthenticationPolicyList"], "auth", "AutoListAuthenticationPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoListRole = srv.AddMethod("AutoListRole",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["auth.RoleList"], "auth", "AutoListRole")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["auth.RoleList"], "auth", "AutoListRole")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -325,7 +326,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoListRoleBinding = srv.AddMethod("AutoListRoleBinding",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["auth.RoleBindingList"], "auth", "AutoListRoleBinding")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["auth.RoleBindingList"], "auth", "AutoListRoleBinding")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -334,7 +335,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoListUser = srv.AddMethod("AutoListUser",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["auth.UserList"], "auth", "AutoListUser")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["auth.UserList"], "auth", "AutoListUser")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -343,12 +344,12 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateAuthenticationPolicy = srv.AddMethod("AutoUpdateAuthenticationPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoUpdateAuthenticationPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "AutoUpdateAuthenticationPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateRole = srv.AddMethod("AutoUpdateRole",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.Role"], pkgMessages["auth.Role"], "auth", "AutoUpdateRole")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.Role"], pkgMessages["auth.Role"], "auth", "AutoUpdateRole")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.Role)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -357,7 +358,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateRoleBinding = srv.AddMethod("AutoUpdateRoleBinding",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.RoleBinding"], pkgMessages["auth.RoleBinding"], "auth", "AutoUpdateRoleBinding")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.RoleBinding"], pkgMessages["auth.RoleBinding"], "auth", "AutoUpdateRoleBinding")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.RoleBinding)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -366,7 +367,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoUpdateUser = srv.AddMethod("AutoUpdateUser",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.User"], pkgMessages["auth.User"], "auth", "AutoUpdateUser")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.User"], pkgMessages["auth.User"], "auth", "AutoUpdateUser")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.User)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -375,17 +376,17 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnLdapBindCheck = srv.AddMethod("LdapBindCheck",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "LdapBindCheck")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "LdapBindCheck")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnLdapConnectionCheck = srv.AddMethod("LdapConnectionCheck",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "LdapConnectionCheck")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.AuthenticationPolicy"], pkgMessages["auth.AuthenticationPolicy"], "auth", "LdapConnectionCheck")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnPasswordChange = srv.AddMethod("PasswordChange",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.PasswordChangeRequest"], pkgMessages["auth.User"], "auth", "PasswordChange")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.PasswordChangeRequest"], pkgMessages["auth.User"], "auth", "PasswordChange")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.PasswordChangeRequest)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -394,7 +395,7 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnPasswordReset = srv.AddMethod("PasswordReset",
-			apisrvpkg.NewMethod(srv, pkgMessages["auth.PasswordResetRequest"], pkgMessages["auth.User"], "auth", "PasswordReset")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.PasswordResetRequest"], pkgMessages["auth.User"], "auth", "PasswordReset")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.PasswordResetRequest)
 			if !ok {
 				return "", fmt.Errorf("wrong type")

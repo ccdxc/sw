@@ -4,7 +4,7 @@ import (
 	"reflect"
 
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -42,22 +42,22 @@ func NewOperation(resource Resource, action string) Operation {
 	}
 }
 
-func getActionFromOper(in apiserver.APIOperType) string {
+func getActionFromOper(in apiintf.APIOperType) string {
 	switch in {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		return auth.Permission_Create.String()
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		return auth.Permission_Update.String()
-	case apiserver.GetOper, apiserver.ListOper, apiserver.WatchOper:
+	case apiintf.GetOper, apiintf.ListOper, apiintf.WatchOper:
 		return auth.Permission_Read.String()
-	case apiserver.DeleteOper:
+	case apiintf.DeleteOper:
 		return auth.Permission_Delete.String()
 	}
 	return auth.Permission_AllActions.String()
 }
 
 // NewAPIServerOperation returns an instance of Operation given the APIServer Oper type
-func NewAPIServerOperation(resource Resource, action apiserver.APIOperType) Operation {
+func NewAPIServerOperation(resource Resource, action apiintf.APIOperType) Operation {
 	return &operation{
 		resource: resource,
 		action:   getActionFromOper(action),

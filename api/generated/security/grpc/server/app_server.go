@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	security "github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -229,6 +230,13 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(security.App)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(security.App)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *security.App
 			if v, ok := i.(security.App); ok {
@@ -246,8 +254,7 @@ func (s *ssecurityAppBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) 
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}

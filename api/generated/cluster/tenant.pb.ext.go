@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -98,7 +99,11 @@ func (m *TenantStatus) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *Tenant) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *Tenant) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -115,9 +120,17 @@ func (m *Tenant) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *TenantSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TenantSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *TenantStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TenantStatus) Validate(ver, path string, ignoreStatus bool) []error {

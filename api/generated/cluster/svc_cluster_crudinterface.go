@@ -6,7 +6,7 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -23,7 +23,7 @@ type ClusterV1ClusterInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Cluster, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Cluster, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 	AuthBootstrapComplete(ctx context.Context, in *ClusterAuthBootstrapRequest) (*Cluster, error)
 	UpdateTLSConfig(ctx context.Context, in *UpdateTLSConfigRequest) (*Cluster, error)
 }
@@ -36,7 +36,7 @@ type ClusterV1NodeInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Node, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Node, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // ClusterV1HostInterface exposes the CRUD methods for Host
@@ -47,7 +47,7 @@ type ClusterV1HostInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Host, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Host, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // ClusterV1SmartNICInterface exposes the CRUD methods for SmartNIC
@@ -58,7 +58,7 @@ type ClusterV1SmartNICInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SmartNIC, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*SmartNIC, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // ClusterV1TenantInterface exposes the CRUD methods for Tenant
@@ -69,7 +69,7 @@ type ClusterV1TenantInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Tenant, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Tenant, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // ClusterV1Interface exposes objects with CRUD operations allowed by the service

@@ -173,6 +173,7 @@ var typesMapExample = map[string]*api.Struct{
 			"ISBNId":           api.CLIInfo{Path: "Spec.ISBNId", Skip: false, Insert: "", Help: ""},
 			"IdProvider":       api.CLIInfo{Path: "Spec.IdProvider", Skip: false, Insert: "", Help: ""},
 			"Inventory":        api.CLIInfo{Path: "Status.Inventory", Skip: false, Insert: "", Help: ""},
+			"Publisher":        api.CLIInfo{Path: "Spec.Publisher", Skip: false, Insert: "", Help: ""},
 			"Terminate":        api.CLIInfo{Path: "Spec.Terminate", Skip: false, Insert: "", Help: ""},
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"author":           api.CLIInfo{Path: "Spec.Author", Skip: false, Insert: "", Help: ""},
@@ -246,6 +247,8 @@ var typesMapExample = map[string]*api.Struct{
 			"UpdateTimestamp": api.Field{Name: "UpdateTimestamp", CLITag: api.CLIInfo{ID: "UpdateTimestamp", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
 			"Terminate": api.Field{Name: "Terminate", CLITag: api.CLIInfo{ID: "Terminate", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+
+			"Publisher": api.Field{Name: "Publisher", CLITag: api.CLIInfo{ID: "Publisher", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Editions": api.Field{Name: "Editions", CLITag: api.CLIInfo{ID: "editions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "editions", Pointer: true, Slice: false, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "bookstore.BookEdition"},
 		},
@@ -362,6 +365,7 @@ var typesMapExample = map[string]*api.Struct{
 			"account-status":     api.CLIInfo{Path: "Status.AccountStatus", Skip: false, Insert: "", Help: ""},
 			"api-version":        api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"generation-id":      api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"interests":          api.CLIInfo{Path: "Status.Interests", Skip: false, Insert: "", Help: ""},
 			"kind":               api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":             api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"mother-maiden-name": api.CLIInfo{Path: "Spec.PasswordRecoveryInfo.MotherMaidenName", Skip: false, Insert: "", Help: ""},
@@ -414,6 +418,8 @@ var typesMapExample = map[string]*api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(CustomerStatus{}) },
 		Fields: map[string]api.Field{
 			"AccountStatus": api.Field{Name: "AccountStatus", CLITag: api.CLIInfo{ID: "account-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "account-status", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Interests": api.Field{Name: "Interests", CLITag: api.CLIInfo{ID: "interests", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interests", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"bookstore.Order": &api.Struct{
@@ -453,12 +459,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"ISBNId":           api.CLIInfo{Path: "Status.Filled[].Order[].ISBNId", Skip: false, Insert: "", Help: ""},
-			"Id":               api.CLIInfo{Path: "Status.Filled[].Id", Skip: false, Insert: "", Help: ""},
+			"ISBNId":           api.CLIInfo{Path: "Status.Filled[].ISBNId", Skip: false, Insert: "", Help: ""},
+			"Id":               api.CLIInfo{Path: "Spec.Id", Skip: false, Insert: "", Help: ""},
 			"Message":          api.CLIInfo{Path: "Status.Message", Skip: false, Insert: "", Help: ""},
-			"Quantity":         api.CLIInfo{Path: "Status.Filled[].Order[].Quantity", Skip: false, Insert: "", Help: ""},
+			"Quantity":         api.CLIInfo{Path: "Status.Filled[].Quantity", Skip: false, Insert: "", Help: ""},
 			"Status":           api.CLIInfo{Path: "Status.Status", Skip: false, Insert: "", Help: ""},
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"books":            api.CLIInfo{Path: "Status.Filled[].Book", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
@@ -474,6 +481,8 @@ var typesMapExample = map[string]*api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(OrderItem{}) },
 		Fields: map[string]api.Field{
 			"ISBNId": api.Field{Name: "ISBNId", CLITag: api.CLIInfo{ID: "ISBNId", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Book": api.Field{Name: "Book", CLITag: api.CLIInfo{ID: "books", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "books", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Quantity": api.Field{Name: "Quantity", CLITag: api.CLIInfo{ID: "Quantity", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
@@ -507,7 +516,7 @@ var typesMapExample = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "Status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Filled": api.Field{Name: "Filled", CLITag: api.CLIInfo{ID: "Filled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "bookstore.OrderSpec"},
+			"Filled": api.Field{Name: "Filled", CLITag: api.CLIInfo{ID: "Filled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "bookstore.OrderItem"},
 
 			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{ID: "Message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
@@ -785,7 +794,24 @@ var typesMapExample = map[string]*api.Struct{
 	},
 }
 
+var keyMapExample = map[string][]api.PathsMap{
+
+	"bookstore.Book": []api.PathsMap{
+		{URI: "/configs/bookstore/v1/books/{Name}", Key: "/venice/config/bookstore/books/{Name}"}},
+	"bookstore.Coupon": []api.PathsMap{
+		{URI: "/configs/bookstore/v1/Coupon/{Name}", Key: "/venice/config/bookstore/Coupon/{Name}"}},
+	"bookstore.Customer": []api.PathsMap{
+		{URI: "/configs/bookstore/v1/customers/{Name}", Key: "/venice/config/bookstore/customers/{Name}"}},
+	"bookstore.Order": []api.PathsMap{
+		{URI: "/configs/bookstore/v1/orders/{Name}", Key: "/venice/config/bookstore/orders/{Name}"}},
+	"bookstore.Publisher": []api.PathsMap{
+		{URI: "/configs/bookstore/v1/publishers/{Name}", Key: "/venice/config/bookstore/publishers/{Name}"}},
+	"bookstore.Store": []api.PathsMap{
+		{URI: "/configs/bookstore/v1/store", Key: "/venice/config/bookstore/store/Singleton"}},
+}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapExample)
+	schema.AddPaths(keyMapExample)
 }

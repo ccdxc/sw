@@ -7,9 +7,11 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
+	"github.com/pensando/sw/api/interfaces"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/apiserver"
-	mocks "github.com/pensando/sw/venice/apiserver/pkg/mocks"
+	"github.com/pensando/sw/venice/apiserver/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -32,7 +34,7 @@ func TestSvcAddMethod(t *testing.T) {
 	if svc.GetMethod("Method2") == nil {
 		t.Errorf("Get method [Method2] failed")
 	}
-	if svc.GetCrudService("Method2", apiserver.WatchOper) == nil {
+	if svc.GetCrudService("Method2", apiintf.WatchOper) == nil {
 		t.Errorf("Get method [Method2] failed")
 	}
 
@@ -49,15 +51,15 @@ func TestSvcAddMethod(t *testing.T) {
 func TestGetCrudServiceName(t *testing.T) {
 	// Test different options of GetCrudService
 	for _, c := range []struct {
-		oper   apiserver.APIOperType
+		oper   apiintf.APIOperType
 		output string
 	}{
-		{oper: apiserver.CreateOper, output: "AutoAddTestMethod"},
-		{oper: apiserver.UpdateOper, output: "AutoUpdateTestMethod"},
-		{oper: apiserver.GetOper, output: "AutoGetTestMethod"},
-		{oper: apiserver.DeleteOper, output: "AutoDeleteTestMethod"},
-		{oper: apiserver.ListOper, output: "AutoListTestMethod"},
-		{oper: apiserver.WatchOper, output: "AutoWatchTestMethod"},
+		{oper: apiintf.CreateOper, output: "AutoAddTestMethod"},
+		{oper: apiintf.UpdateOper, output: "AutoUpdateTestMethod"},
+		{oper: apiintf.GetOper, output: "AutoGetTestMethod"},
+		{oper: apiintf.DeleteOper, output: "AutoDeleteTestMethod"},
+		{oper: apiintf.ListOper, output: "AutoListTestMethod"},
+		{oper: apiintf.WatchOper, output: "AutoWatchTestMethod"},
 		{oper: "junk", output: ""},
 	} {
 		o := apiserver.GetCrudServiceName("TestMethod", c.oper)

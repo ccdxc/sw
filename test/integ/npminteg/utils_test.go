@@ -383,3 +383,15 @@ func (it *integTestSuite) DeleteHost(name string) error {
 
 	return err
 }
+
+// DeleteHost deletes a workload
+func (it *integTestSuite) CreateTenant(name string) error {
+	tenant := &cluster.Tenant{
+		TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
+	}
+	_, err := it.apisrvClient.ClusterV1().Tenant().Create(context.Background(), tenant)
+	return err
+}

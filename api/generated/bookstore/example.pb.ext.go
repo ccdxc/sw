@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -1274,11 +1275,32 @@ func (m *UnusedMessage) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *ApplyDiscountReq) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *ApplyDiscountReq) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AutoMsgBookWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgBookWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1296,6 +1318,22 @@ func (m *AutoMsgBookWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 	return ret
 }
 
+func (m *AutoMsgBookWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
+}
+
 func (m *AutoMsgBookWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -1311,14 +1349,39 @@ func (m *AutoMsgBookWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 	return ret
 }
 
+func (m *AutoMsgCouponWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgCouponWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *AutoMsgCouponWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgCouponWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AutoMsgCustomerWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgCustomerWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1336,6 +1399,22 @@ func (m *AutoMsgCustomerWatchHelper) Validate(ver, path string, ignoreStatus boo
 	return ret
 }
 
+func (m *AutoMsgCustomerWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
+}
+
 func (m *AutoMsgCustomerWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -1349,6 +1428,23 @@ func (m *AutoMsgCustomerWatchHelper_WatchEvent) Validate(ver, path string, ignor
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgOrderWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "events"
+
+		for _, v := range m.Events {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *AutoMsgOrderWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1366,6 +1462,22 @@ func (m *AutoMsgOrderWatchHelper) Validate(ver, path string, ignoreStatus bool) 
 	return ret
 }
 
+func (m *AutoMsgOrderWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "object"
+
+		if m.Object != nil {
+			m.Object.References(tenant, tag, resp)
+		}
+
+	}
+}
+
 func (m *AutoMsgOrderWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -1379,6 +1491,10 @@ func (m *AutoMsgOrderWatchHelper_WatchEvent) Validate(ver, path string, ignoreSt
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgPublisherWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgPublisherWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1396,6 +1512,10 @@ func (m *AutoMsgPublisherWatchHelper) Validate(ver, path string, ignoreStatus bo
 	return ret
 }
 
+func (m *AutoMsgPublisherWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgPublisherWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -1411,14 +1531,36 @@ func (m *AutoMsgPublisherWatchHelper_WatchEvent) Validate(ver, path string, igno
 	return ret
 }
 
+func (m *AutoMsgStoreWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgStoreWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *AutoMsgStoreWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgStoreWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Book) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
 }
 
 func (m *Book) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1445,6 +1587,10 @@ func (m *Book) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BookEdition) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *BookEdition) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExample["BookEdition"][ver]; ok {
@@ -1463,6 +1609,23 @@ func (m *BookEdition) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BookList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
 func (m *BookList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
@@ -1478,9 +1641,38 @@ func (m *BookList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BookReview) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *BookReview) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *BookSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "Publisher"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Publisher != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/bookstore/"+"publishers/"+m.Publisher)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *BookSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1511,9 +1703,17 @@ func (m *BookSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BookStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *BookStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Coupon) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Coupon) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1521,14 +1721,36 @@ func (m *Coupon) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *CouponList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *CouponList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *CouponSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *CouponSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Customer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "Status"
+
+		m.Status.References(tenant, tag, resp)
+
+	}
 }
 
 func (m *Customer) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1555,6 +1777,23 @@ func (m *Customer) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *CustomerList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
 func (m *CustomerList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
@@ -1570,9 +1809,17 @@ func (m *CustomerList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *CustomerPersonalInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *CustomerPersonalInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *CustomerSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *CustomerSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1593,9 +1840,58 @@ func (m *CustomerSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *CustomerStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "interests"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("SelectorRef"),
+			}
+		}
+
+		if m.Interests != "" {
+			uref.Refs = append(uref.Refs, "labels:bookstore:Book:"+tenant+":"+m.Interests)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
 func (m *CustomerStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Order) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "Spec"
+
+		m.Spec.References(tenant, tag, resp)
+
+	}
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "Status"
+
+		m.Status.References(tenant, tag, resp)
+
+	}
 }
 
 func (m *Order) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1633,6 +1929,31 @@ func (m *Order) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *OrderItem) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "books"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("WeakRef"),
+			}
+		}
+
+		if m.Book != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/bookstore/"+"books/"+m.Book)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
 func (m *OrderItem) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExample["OrderItem"][ver]; ok {
@@ -1651,6 +1972,23 @@ func (m *OrderItem) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *OrderList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "items"
+
+		for _, v := range m.Items {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
 func (m *OrderList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
@@ -1666,6 +2004,23 @@ func (m *OrderList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *OrderSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "Order"
+
+		for _, v := range m.Order {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
 func (m *OrderSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Order {
@@ -1679,6 +2034,23 @@ func (m *OrderSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *OrderStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "Filled"
+
+		for _, v := range m.Filled {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
 }
 
 func (m *OrderStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1709,9 +2081,17 @@ func (m *OrderStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *OutageRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *OutageRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Publisher) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Publisher) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1738,6 +2118,10 @@ func (m *Publisher) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *PublisherList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *PublisherList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
@@ -1751,6 +2135,10 @@ func (m *PublisherList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *PublisherSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *PublisherSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1771,9 +2159,17 @@ func (m *PublisherSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *PublisherStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *PublisherStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *RestockRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *RestockRequest) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1781,9 +2177,17 @@ func (m *RestockRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *RestockResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *RestockResponse) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Store) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Store) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1801,9 +2205,17 @@ func (m *Store) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *StoreList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *StoreList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *StoreSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *StoreSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1811,9 +2223,17 @@ func (m *StoreSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *StoreStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *StoreStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *UnusedMessage) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *UnusedMessage) Validate(ver, path string, ignoreStatus bool) []error {

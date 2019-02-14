@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -29,7 +30,7 @@ type securityHooks struct {
 // `ToIPAddress` should have individual IP Address, IP Mask or hyphen separated IP Range
 // Specifying `AttachTenant` should mandatorily have `FromIPAddress` and `ToIPAddresses`
 // For `FromIPAddresses` and `ToIPAddresses` cannot be empty. If the intent is to allow all. Enforce a mandatory `any` keyword.
-func (s *securityHooks) validateSGPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (s *securityHooks) validateSGPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	sgp, ok := i.(security.SGPolicy)
 	if !ok {
 		return i, false, fmt.Errorf("invalid input type")
@@ -181,7 +182,7 @@ func (s *securityHooks) validateIPAddresses(addresses []string) error {
 }
 
 // validateApp validates contents of app
-func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, in interface{}) (interface{}, bool, error) {
+func (s *securityHooks) validateApp(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, in interface{}) (interface{}, bool, error) {
 	protocolNameValidate := func(protoNames []string, checkProto string, matchType string) bool {
 		switch matchType {
 		case "mustMatchAll":
@@ -340,10 +341,10 @@ func registerSGPolicyHooks(svc apiserver.Service, logger log.Logger) {
 		logger: logger.WithContext("Service", "SecurityV1"),
 	}
 	logger.Log("msg", "registering Hooks")
-	svc.GetCrudService("SGPolicy", apiserver.CreateOper).WithPreCommitHook(r.validateSGPolicy)
-	svc.GetCrudService("SGPolicy", apiserver.UpdateOper).WithPreCommitHook(r.validateSGPolicy)
-	svc.GetCrudService("App", apiserver.CreateOper).WithPreCommitHook(r.validateApp)
-	svc.GetCrudService("App", apiserver.UpdateOper).WithPreCommitHook(r.validateApp)
+	svc.GetCrudService("SGPolicy", apiintf.CreateOper).WithPreCommitHook(r.validateSGPolicy)
+	svc.GetCrudService("SGPolicy", apiintf.UpdateOper).WithPreCommitHook(r.validateSGPolicy)
+	svc.GetCrudService("App", apiintf.CreateOper).WithPreCommitHook(r.validateApp)
+	svc.GetCrudService("App", apiintf.UpdateOper).WithPreCommitHook(r.validateApp)
 }
 
 func init() {

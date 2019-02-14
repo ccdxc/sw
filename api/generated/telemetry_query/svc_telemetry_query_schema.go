@@ -13,7 +13,10 @@ import (
 
 var typesMapSvc_telemetry_query = map[string]*api.Struct{}
 
+var keyMapSvc_telemetry_query = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_telemetry_query)
+	schema.AddPaths(keyMapSvc_telemetry_query)
 }

@@ -188,7 +188,10 @@ var typesMapSmartnic = map[string]*api.Struct{
 	},
 }
 
+var keyMapSmartnic = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSmartnic)
+	schema.AddPaths(keyMapSmartnic)
 }

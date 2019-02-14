@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -229,6 +230,13 @@ func (s *smonitoringTechsupportBackend) regMsgsFunc(l log.Logger, scheme *runtim
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(monitoring.TechSupportRequest)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(monitoring.TechSupportRequest)
+
+			tenant := ""
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *monitoring.TechSupportRequest
 			if v, ok := i.(monitoring.TechSupportRequest); ok {
@@ -246,8 +254,7 @@ func (s *smonitoringTechsupportBackend) regMsgsFunc(l log.Logger, scheme *runtim
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}

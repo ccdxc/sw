@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -97,7 +98,34 @@ func (m *SecurityGroupStatus) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *SecurityGroup) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
 
 func (m *SecurityGroup) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -120,6 +148,10 @@ func (m *SecurityGroup) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SecurityGroupSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *SecurityGroupSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.WorkloadSelector != nil {
@@ -133,6 +165,10 @@ func (m *SecurityGroupSpec) Validate(ver, path string, ignoreStatus bool) []erro
 		}
 	}
 	return ret
+}
+
+func (m *SecurityGroupStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SecurityGroupStatus) Validate(ver, path string, ignoreStatus bool) []error {

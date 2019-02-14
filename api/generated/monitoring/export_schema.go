@@ -85,7 +85,10 @@ var typesMapExport = map[string]*api.Struct{
 	},
 }
 
+var keyMapExport = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapExport)
+	schema.AddPaths(keyMapExport)
 }

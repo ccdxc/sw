@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -309,7 +310,11 @@ func (m *ResultSeries) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *Fwlog) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *Fwlog) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -329,6 +334,10 @@ func (m *Fwlog) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *FwlogsQueryList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *FwlogsQueryList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Queries {
@@ -342,6 +351,10 @@ func (m *FwlogsQueryList) Validate(ver, path string, ignoreStatus bool) []error 
 		}
 	}
 	return ret
+}
+
+func (m *FwlogsQueryResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *FwlogsQueryResponse) Validate(ver, path string, ignoreStatus bool) []error {
@@ -359,6 +372,10 @@ func (m *FwlogsQueryResponse) Validate(ver, path string, ignoreStatus bool) []er
 	return ret
 }
 
+func (m *FwlogsQueryResult) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *FwlogsQueryResult) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Logs {
@@ -372,6 +389,10 @@ func (m *FwlogsQueryResult) Validate(ver, path string, ignoreStatus bool) []erro
 		}
 	}
 	return ret
+}
+
+func (m *FwlogsQuerySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *FwlogsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -392,6 +413,10 @@ func (m *FwlogsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *MetricsQueryList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *MetricsQueryList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Queries {
@@ -407,14 +432,26 @@ func (m *MetricsQueryList) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *MetricsQueryResponse) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *MetricsQueryResponse) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *MetricsQueryResult) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *MetricsQueryResult) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *MetricsQuerySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *MetricsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -445,9 +482,17 @@ func (m *MetricsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *PaginationSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *PaginationSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ResultSeries) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *ResultSeries) Validate(ver, path string, ignoreStatus bool) []error {

@@ -19,7 +19,7 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
-// Validators
+// Validators and Requirements
 
 // Transformers
 

@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
-	"github.com/pensando/sw/venice/apiserver"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -36,7 +36,7 @@ func (a *alertHooks) addUserInfoToContext(ctx context.Context, i interface{}) (c
 // register alert hooks
 func registerAlertHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	ah := alertHooks{logger: l}
-	prof, err := svc.GetCrudServiceProfile("Alert", apiserver.UpdateOper)
+	prof, err := svc.GetCrudServiceProfile("Alert", apiintf.UpdateOper)
 	if err != nil {
 		return err
 	}

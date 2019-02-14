@@ -75,6 +75,9 @@ func setup() {
 	// create cluster
 	MustCreateCluster(apicl)
 
+	// create tenant
+	MustCreateTenant(apicl, "default")
+
 	// create test user
 	MustCreateTestUser(apicl, testUser, testPassword, "default")
 

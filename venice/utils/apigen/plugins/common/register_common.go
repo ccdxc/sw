@@ -56,7 +56,15 @@ func parseInt32Options(val interface{}) (interface{}, error) {
 func parseObjRelation(val interface{}) (interface{}, error) {
 	v, ok := val.(*venice.ObjectRln)
 	if !ok {
-		return nil, errInvalidOption
+		return nil, errors.New("invalid value")
+	}
+	switch v.Type {
+	case "NamedRef", "SelectorRef", "WeakRef":
+	default:
+		return nil, errors.New("invalid type")
+	}
+	if parts := strings.Split(v.To, "/"); len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return nil, errors.New("invalid ref destination")
 	}
 	return *v, nil
 }

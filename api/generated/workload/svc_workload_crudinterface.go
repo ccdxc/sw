@@ -6,7 +6,7 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -23,7 +23,7 @@ type WorkloadV1EndpointInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Endpoint, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Endpoint, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // WorkloadV1WorkloadInterface exposes the CRUD methods for Workload
@@ -34,7 +34,7 @@ type WorkloadV1WorkloadInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Workload, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Workload, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // WorkloadV1Interface exposes objects with CRUD operations allowed by the service

@@ -10,6 +10,8 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -103,6 +105,28 @@ func (cl *clusterHooks) validateClusterConfig(i interface{}, ver string, ignStat
 	return err
 }
 
+// deleteDefaultTelemetryPolicies is a pre-commit hook for tenant create operation that deletes the auto added telemetry policies attached to the tenant
+func (cl *clusterHooks) deleteDefaultTelemetryPolicies(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		cl.logger.Errorf("API server hook to create default roles called for invalid object type [%#v]", i)
+		return i, false, errors.New("invalid input type")
+	}
+	statpol := monitoring.StatsPolicy{ObjectMeta: api.ObjectMeta{Name: r.Name, Tenant: r.Name}}
+	statkey := statpol.MakeKey("monitoring")
+	fwlogpol := monitoring.FwlogPolicy{ObjectMeta: api.ObjectMeta{Name: r.Name, Tenant: r.Name}}
+	fwlogkey := fwlogpol.MakeKey("monitoring")
+	if err := txn.Delete(statkey); err != nil {
+		cl.logger.Errorf("txn delete got error (%v)\n", err)
+		return i, false, err
+	}
+	if err := txn.Delete(fwlogkey); err != nil {
+		cl.logger.Errorf("txn delete got error (%v)\n", err)
+		return i, false, err
+	}
+	return r, true, nil
+}
+
 // Validate the given tenant config
 func (cl *clusterHooks) validateTenantConfig(tenantConfig cluster.Tenant) error {
 	tenantName := tenantConfig.GetName()
@@ -120,13 +144,13 @@ func (cl *clusterHooks) validateTenantConfig(tenantConfig cluster.Tenant) error 
 }
 
 // createDefaultRoles is a pre-commit hook for tenant create operation that creates default roles when a tenant is created
-func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Tenant)
 	if !ok {
 		cl.logger.Errorf("API server hook to create default roles called for invalid object type [%#v]", i)
 		return i, false, errors.New("invalid input type")
 	}
-	if oper != apiserver.CreateOper {
+	if oper != apiintf.CreateOper {
 		cl.logger.Errorf("API server hook to create default roles called for invalid API Operation [%s]", oper)
 		return i, false, errors.New("invalid input type")
 	}
@@ -160,13 +184,13 @@ func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Inter
 }
 
 // deleteDefaultRoles is a pre-commit hook for tenant delete operation that deletes default roles when a tenant is deleted
-func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Tenant)
 	if !ok {
 		cl.logger.Errorf("API server hook to delete default roles called for invalid object type [%#v]", i)
 		return i, false, errors.New("invalid input type")
 	}
-	if oper != apiserver.DeleteOper {
+	if oper != apiintf.DeleteOper {
 		cl.logger.Errorf("API server hook to delete default roles called for invalid API Operation [%s]", oper)
 		return i, false, errors.New("invalid input type")
 	}
@@ -190,7 +214,7 @@ func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Inter
 }
 
 // checkAuthBootstrapFlag is a pre-commit hook for cluster create/update operation that makes sure that bootstrap flag is set to true only once for cluster update
-func (cl *clusterHooks) checkAuthBootstrapFlag(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+func (cl *clusterHooks) checkAuthBootstrapFlag(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Cluster)
 	if !ok {
 		cl.logger.Errorf("API server hook to check bootstrap flag called for invalid object type [%#v]", i)
@@ -199,11 +223,11 @@ func (cl *clusterHooks) checkAuthBootstrapFlag(ctx context.Context, kv kvstore.I
 	cl.logger.Infof("API server hook called to check bootstrap flag for cluster")
 
 	switch oper {
-	case apiserver.CreateOper:
+	case apiintf.CreateOper:
 		// always set Bootstrapped flag to false when cluster is created
 		r.Status.AuthBootstrapped = false
 		return r, true, nil
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		cur := &cluster.Cluster{}
 		if err := kv.Get(ctx, key, cur); err != nil {
 			cl.logger.Errorf("Error getting cluster with key [%s] in API server checkAuthBootstrapFlag pre-commit hook for create/update cluster", key)
@@ -226,7 +250,7 @@ func (cl *clusterHooks) checkAuthBootstrapFlag(ctx context.Context, kv kvstore.I
 }
 
 // setAuthBootstrapFlag is a pre-commit hook to set bootstrap flag
-func (cl *clusterHooks) setAuthBootstrapFlag(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (cl *clusterHooks) setAuthBootstrapFlag(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	_, ok := i.(cluster.ClusterAuthBootstrapRequest)
 	if !ok {
 		cl.logger.Errorf("API server hook to check bootstrap flag called for invalid object type [%#v]", i)
@@ -250,9 +274,25 @@ func (cl *clusterHooks) setAuthBootstrapFlag(ctx context.Context, kv kvstore.Int
 	return *cur, false, nil
 }
 
+func (cl *clusterHooks) getClusterObject(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+	ic := in.(cluster.Cluster)
+	key := ic.MakeKey("cluster")
+	cur := cluster.Cluster{}
+	if err := kvs.Get(ctx, key, &cur); err != nil {
+		cl.logger.Errorf("Error getting cluster with key [%s] in API server getClusterObject response writer hook for create/update cluster", key)
+		return nil, err
+	}
+	if err := cur.ApplyStorageTransformer(ctx, false); err != nil {
+		cl.logger.Errorf("error applying storage transformer: %v", err)
+		return nil, err
+	}
+	cur.Spec.Key = ""
+	return cur, nil
+}
+
 // populateExistingTLSConfig is a pre-commit hook for cluster update operation to populate existing TLS certificate and key. It ignores certs and key passed in the cluster object.
 // User will need to use UpdateTLSConfig action on cluster object to update TLS config
-func (cl *clusterHooks) populateExistingTLSConfig(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+func (cl *clusterHooks) populateExistingTLSConfig(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
 	cl.logger.DebugLog("method", "populateExistingTLSConfig", "msg", "API server hook called to populate TLS config in cluster object")
 	r, ok := i.(cluster.Cluster)
 	if !ok {
@@ -261,7 +301,7 @@ func (cl *clusterHooks) populateExistingTLSConfig(ctx context.Context, kv kvstor
 	}
 
 	switch oper {
-	case apiserver.UpdateOper:
+	case apiintf.UpdateOper:
 		cur := &cluster.Cluster{}
 		if err := kv.Get(ctx, key, cur); err != nil {
 			cl.logger.ErrorLog("method", "populateExistingTLSConfig",
@@ -287,7 +327,7 @@ func (cl *clusterHooks) populateExistingTLSConfig(ctx context.Context, kv kvstor
 }
 
 // setTLSConfig is a pre-commit hook to set TLS config for API Gateway for UpdateTLSConfig action on cluster
-func (cl *clusterHooks) setTLSConfig(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+func (cl *clusterHooks) setTLSConfig(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	cl.logger.DebugLog("method", "setTLSConfig", "msg", "API server hook called to set TLS Config")
 	req, ok := i.(cluster.UpdateTLSConfigRequest)
 	if !ok {
@@ -350,19 +390,22 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	r := clusterHooks{}
 	r.logger = logger.WithContext("Service", "ClusterHooks")
 	logger.Log("msg", "registering Hooks for cluster apigroup")
-	svc.GetCrudService("Host", apiserver.CreateOper).GetRequestType().WithValidate(r.validateHostConfig)
-	svc.GetCrudService("Host", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateHostConfig)
-	svc.GetCrudService("Node", apiserver.CreateOper).GetRequestType().WithValidate(r.validateNodeConfig)
-	svc.GetCrudService("Node", apiserver.UpdateOper).GetRequestType().WithValidate(r.validateNodeConfig)
-	svc.GetCrudService("Cluster", apiserver.CreateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).GetRequestType().WithValidate(r.validateClusterConfig)
-	svc.GetCrudService("Cluster", apiserver.UpdateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).WithPreCommitHook(r.populateExistingTLSConfig).GetRequestType().WithValidate(r.validateClusterConfig)
+	svc.GetCrudService("Host", apiintf.CreateOper).GetRequestType().WithValidate(r.validateHostConfig)
+	svc.GetCrudService("Host", apiintf.UpdateOper).GetRequestType().WithValidate(r.validateHostConfig)
+	svc.GetCrudService("Node", apiintf.CreateOper).GetRequestType().WithValidate(r.validateNodeConfig)
+	svc.GetCrudService("Node", apiintf.UpdateOper).GetRequestType().WithValidate(r.validateNodeConfig)
+	svc.GetCrudService("Cluster", apiintf.CreateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).GetRequestType().WithValidate(r.validateClusterConfig)
+	svc.GetCrudService("Cluster", apiintf.UpdateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).WithPreCommitHook(r.populateExistingTLSConfig).GetRequestType().WithValidate(r.validateClusterConfig)
 	// hook to set bootstrap flag
 	svc.GetMethod("AuthBootstrapComplete").WithPreCommitHook(r.setAuthBootstrapFlag)
+	svc.GetMethod("AuthBootstrapComplete").WithResponseWriter(r.getClusterObject)
 	// hook to implement update TLS Config action
 	svc.GetMethod("UpdateTLSConfig").WithPreCommitHook(r.setTLSConfig)
+	svc.GetMethod("UpdateTLSConfig").WithResponseWriter(r.getClusterObject)
 	// register hook to create default roles
-	svc.GetCrudService("Tenant", apiserver.CreateOper).WithPreCommitHook(r.createDefaultRoles)
-	svc.GetCrudService("Tenant", apiserver.DeleteOper).WithPreCommitHook(r.deleteDefaultRoles)
+	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultRoles)
+	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultRoles)
+	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultTelemetryPolicies)
 }
 
 func init() {

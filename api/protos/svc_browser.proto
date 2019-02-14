@@ -1,0 +1,43 @@
+// {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package browser;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "browser.proto";
+
+
+service BrowserV1 {
+     option (venice.apiPrefix) = "browser";
+     option (venice.apiVersion) = "v1";
+
+     rpc Query (BrowseRequest) returns (BrowseResponse) {
+         option (google.api.http) = {
+            post: "/query"
+            body: "*"
+            additional_bindings {
+                get: "/query"
+            }
+		};
+         option (venice.methodOper) = "create";
+     }
+
+     rpc References (BrowseRequest) returns (BrowseResponse) {
+         option (google.api.http) = {
+           get: "/dependencies/**"
+		};
+         option (venice.methodOper) = "get";
+     }
+
+     rpc Referrers (BrowseRequest) returns (BrowseResponse) {
+         option (google.api.http) = {
+           get: "/dependedby/**"
+		};
+         option (venice.methodOper) = "get";
+     }
+}

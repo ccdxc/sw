@@ -183,6 +183,28 @@
   revision = "0010a05ce49fde7f50669bc7ecda7d41dd6ab824"
 
 [[projects]]
+  digest = "1:ba1ed5d905530b62780ee1fccacc52d3d06ba34d6dc8c8eceb4fdf0325e31933"
+  name = "github.com/cayleygraph/cayley"
+  packages = [
+    ".",
+    "clog",
+    "graph",
+    "graph/iterator",
+    "graph/memstore",
+    "graph/path",
+    "graph/shape",
+    "quad",
+    "schema",
+    "voc",
+    "voc/rdf",
+    "voc/rdfs",
+    "voc/schema",
+    "writer",
+  ]
+  pruneopts = "NUT"
+  revision = "e4023df2f0cecef7aae93ee9c44848fe359e6611"
+
+[[projects]]
   digest = "1:063db6a0b87d39e99b3102a293cf675c23bb82074acea0a3e9276b3331216c2a"
   name = "github.com/cenkalti/backoff"
   packages = ["."]
@@ -2557,6 +2579,11 @@
     "github.com/bmizerany/pat",
     "github.com/boltdb/bolt",
     "github.com/c9s/goprocinfo/linux",
+    "github.com/cayleygraph/cayley",
+    "github.com/cayleygraph/cayley/graph",
+    "github.com/cayleygraph/cayley/graph/shape",
+    "github.com/cayleygraph/cayley/quad",
+    "github.com/cayleygraph/cayley/schema",
     "github.com/cenkalti/backoff",
     "github.com/cespare/xxhash",
     "github.com/codahale/hdrhistogram",

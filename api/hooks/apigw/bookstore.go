@@ -42,6 +42,12 @@ func registerBookstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 	prof.AddPreCallHook(r.preCallHook)
 	prof.AddPostCallHook(r.postCallHook)
+	prof, err = svc.GetCrudServiceProfile("Order", "get")
+	if err != nil {
+		return err
+	}
+	prof.AddPostCallHook(r.postCallHook)
+
 	prof, err = svc.GetProxyServiceProfile("/uploads")
 	if err != nil {
 		return err

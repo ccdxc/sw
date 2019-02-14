@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -101,7 +102,11 @@ func (m *BufferList) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *AutoMsgBufferWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *AutoMsgBufferWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -118,6 +123,10 @@ func (m *AutoMsgBufferWatchHelper) Validate(ver, path string, ignoreStatus bool)
 	return ret
 }
 
+func (m *AutoMsgBufferWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgBufferWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -131,6 +140,10 @@ func (m *AutoMsgBufferWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 		}
 	}
 	return ret
+}
+
+func (m *BufferList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *BufferList) Validate(ver, path string, ignoreStatus bool) []error {

@@ -4,7 +4,7 @@
 Package {{.GoPkg.Name}} is a auto generated package.
 Input file: {{.Name}} {{$file := .}}
 */
-package {{.GoPkg.Name}}{{$validators := getValidatorManifest .}}{{$defaults := getDefaulterManifest .}}{{$storageTransformers := getStorageTransformersManifest .}}
+package {{.GoPkg.Name}}{{$validators := getValidatorManifest .}}{{$defaults := getDefaulterManifest .}}{{$storageTransformers := getStorageTransformersManifest .}}{{$requirements := getRequirementsManifest .}}
 
 import (
 	"context"
@@ -14,12 +14,14 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
+
 	"github.com/pensando/sw/api/generated/events"
 	{{if $validators.Fmap}}
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"{{end}}
 	{{if $storageTransformers.Fmap}}"github.com/pensando/sw/venice/utils/transformers/storage"{{end}}
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/api/interfaces"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -114,8 +116,55 @@ func (m *{{getStr 0}}) Defaults(ver string) bool { {{if isSpecStatusMessage .}}
 	return ret{{end}}
 } {{end}}{{end}}
 {{end}}
-// Validators
+
+
+// Validators and Requirements
 {{range .Messages}}{{/*<0-1>*/}}{{if isMapEntry .}}{{/*<0>*/}}{{else}}{{/*<0>*/}}{{$x := saveStr (derefStr .Name) 0}}{{if isNestedMessage .}}{{/*<x>*/}}{{$x := saveStr (getNestedMsgName .) 0}}{{end}}{{/*<x>*/}}{{$msg := .}}{{$msgname := (getStr 0)}}
+func (m *{{$msgname}}) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+    {{if isSpecStatusMessage .}}{{if isTenanted .}}
+    tenant = m.Tenant{{end}}{{end}}{{with (index $requirements.Map $msgname)}}
+        {{range $fldk, $fldv := .Fields}}
+        {
+            dlmtr := "."
+            if path == "" {
+                dlmtr = ""
+            }
+            tag := path + dlmtr + "{{getJSONTagByName $msg $fldk}}"{{if $fldv.Scalar}}
+			uref, ok := resp[tag]
+			if !ok {
+				uref = apiintf.ReferenceObj{
+					RefType: apiintf.ReferenceType("{{$fldv.RefType}}"),
+				}
+			}
+        {{if $fldv.Repeated}}
+        for _, v := range m.{{$fldk}} {
+            {{if $fldv.Pointer}} if v != nil { {{end}}
+            uref.Refs = append(uref.Refs, {{getRequirementPath $file $fldv "tenant" "v"}})
+            {{if $fldv.Pointer}} } {{end}}
+        } {{else}}
+           {{if $fldv.Pointer}} if m.{{$fldk}} != nil {
+            if *m.{{$fldk}} != ""  { {{else}}
+            if m.{{$fldk}} != "" { {{end}}
+            uref.Refs = append(uref.Refs, {{getRequirementPath $file $fldv "tenant" (joinFields "." "m" $fldk)}})
+           }
+           {{if $fldv.Pointer}} } {{end}}
+        {{end}}
+        if len(uref.Refs) > 0 {
+            resp[tag] = uref
+        }{{else}}
+        {{if $fldv.Repeated}}
+        for _, v := range m.{{$fldk}} {
+          {{if $fldv.Pointer}} if v != nil { {{end}}
+            v.References(tenant, tag, resp)
+            {{if $fldv.Pointer}} } {{end}}
+          } {{else}}
+            {{if $fldv.Pointer}} if m.{{$fldk}} != nil { {{end}}
+            m.{{$fldk}}.References(tenant, tag, resp)
+            {{if $fldv.Pointer}} } {{end}}
+        {{end}}{{end}}
+        }{{end}}{{end}}
+}
+
 func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error {{if isSpecStatusMessage $msg}}
 	{
@@ -247,7 +296,7 @@ func init() {
 		&{{.Name}}{},{{end}}{{end}}
 	)
 {{if $validators.Fmap}}{{/*<1>*/}}
-	validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(string, interface{})error){{range .Messages}}{{/*<2>*/}}{{$msgName := .Name}}{{with (index $validators.Map (derefStr .Name))}}{{/*<3>*/}}
+	validatorMap{{getFileName .Name}} = make(map[string]map[string][]func(string, interface{})error){{range .Messages}}{{/*<2>*/}}{{$msgName := getMsgName .}}{{with (index $validators.Map (derefStr .Name))}}{{/*<3>*/}}
 	{{$_ := saveBool true 1}}{{range $fldk, $fldv := .Fields}}{{/*<4>*/}}{{if eq 0 (len $fldv.Validators)}}{{/*<5>*/}}{{else}}{{/*<5>*/}}{{if getBool 1}}{{/*<6>*/}}
 	validatorMap{{getFileName $file.Name}}["{{$msgName}}"] = make(map[string][]func(string, interface{})error){{$_ := saveBool false 1}}{{end}}{{/*<6>*/}}{{end}}{{/*<5>*/}}{{end}}{{/*<4>*/}}{{range $fldk, $fldv := .Fields}}{{/*<7>*/}}{{if eq 0 (len $fldv.Validators)}}{{/*<8>*/}}{{else}}{{/*<8>*/}}
 	{{range $fldv.Validators}}{{/*<9>*/}}{{if eq 0 (len .Args)}}{{/*<10>*/}}{{$fnname := .Fn}}

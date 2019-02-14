@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"path/filepath"
@@ -16,6 +17,7 @@ import (
 	_ "github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	_ "github.com/pensando/sw/venice/utils/bootstrapper/auth"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
@@ -60,6 +62,7 @@ func main() {
 		skipauth        = flag.Bool("skipauth", false, "skip authentication")
 		skipauthz       = flag.Bool("skipauthz", false, "skip authorization")
 		disableEvents   = flag.Bool("no-events", false, "disable events proxy")
+		skipaudit       = flag.Bool("no-audit", false, "disable external auditing")
 	)
 
 	flag.Parse()
@@ -119,6 +122,9 @@ func main() {
 		}
 		config.SkipAuth = *skipauth
 		config.SkipAuthz = *skipauthz
+		if *skipaudit {
+			config.Auditor = auditmgr.WithAuditors(auditmgr.NewLogAuditor(context.TODO(), pl))
+		}
 	}
 	if config.DevMode {
 		trace.Init(globals.APIGw)

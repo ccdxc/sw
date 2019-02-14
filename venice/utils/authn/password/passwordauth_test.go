@@ -64,6 +64,8 @@ func setup() {
 	if err != nil {
 		panic("Error creating api client")
 	}
+	// Create Tenant
+	MustCreateTenant(apicl, "default")
 
 	//create test user
 	user = MustCreateTestUser(apicl, testUser, testPassword, "default")

@@ -124,7 +124,10 @@ var typesMapAudit = map[string]*api.Struct{
 	},
 }
 
+var keyMapAudit = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapAudit)
+	schema.AddPaths(keyMapAudit)
 }

@@ -34,6 +34,13 @@ var CreateBookFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "Publisher",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "Terminate",
 		Type:   "Bool",
 		Help:   "",
@@ -139,7 +146,15 @@ func removeCustomerOper(obj interface{}) error {
 }
 
 // CreateOrderFlags specifies flags for Order create operation
-var CreateOrderFlags = []gen.CliFlag{}
+var CreateOrderFlags = []gen.CliFlag{
+	{
+		ID:     "Id",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+}
 
 func removeOrderOper(obj interface{}) error {
 	if v, ok := obj.(*bookstore.Order); ok {
@@ -219,6 +234,7 @@ func init() {
 	cl.AddCliInfo("bookstore.Customer", "create", CreateCustomerFlags)
 	cl.AddRemoveObjOperFunc("bookstore.Customer", removeCustomerOper)
 
+	cl.AddCliInfo("bookstore.Order", "create", CreateOrderFlags)
 	cl.AddRemoveObjOperFunc("bookstore.Order", removeOrderOper)
 
 	cl.AddCliInfo("bookstore.Publisher", "create", CreatePublisherFlags)

@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -418,11 +419,19 @@ func (m *TenantList) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *AutoMsgClusterWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *AutoMsgClusterWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AutoMsgClusterWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgClusterWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
@@ -430,14 +439,26 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) Validate(ver, path string, ignore
 	return ret
 }
 
+func (m *AutoMsgHostWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgHostWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *AutoMsgHostWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgHostWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AutoMsgNodeWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgNodeWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -455,6 +476,10 @@ func (m *AutoMsgNodeWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 	return ret
 }
 
+func (m *AutoMsgNodeWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgNodeWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -468,6 +493,10 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 		}
 	}
 	return ret
+}
+
+func (m *AutoMsgSmartNICWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgSmartNICWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
@@ -485,6 +514,10 @@ func (m *AutoMsgSmartNICWatchHelper) Validate(ver, path string, ignoreStatus boo
 	return ret
 }
 
+func (m *AutoMsgSmartNICWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgSmartNICWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Object != nil {
@@ -500,9 +533,17 @@ func (m *AutoMsgSmartNICWatchHelper_WatchEvent) Validate(ver, path string, ignor
 	return ret
 }
 
+func (m *AutoMsgTenantWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AutoMsgTenantWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *AutoMsgTenantWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *AutoMsgTenantWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
@@ -510,14 +551,26 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 	return ret
 }
 
+func (m *ClusterList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *ClusterList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *HostList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *HostList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *NodeList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *NodeList) Validate(ver, path string, ignoreStatus bool) []error {
@@ -535,6 +588,10 @@ func (m *NodeList) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SmartNICList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *SmartNICList) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Items {
@@ -548,6 +605,10 @@ func (m *SmartNICList) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *TenantList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TenantList) Validate(ver, path string, ignoreStatus bool) []error {

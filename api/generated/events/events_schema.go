@@ -103,7 +103,10 @@ var typesMapEvents = map[string]*api.Struct{
 	},
 }
 
+var keyMapEvents = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapEvents)
+	schema.AddPaths(keyMapEvents)
 }

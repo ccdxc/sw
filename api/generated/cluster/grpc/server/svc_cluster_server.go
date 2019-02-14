@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cluster "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
@@ -241,17 +242,17 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsClusterV1.fnAutoWatchSvcClusterV1 = srv.WatchFromKv
 
 		s.endpointsClusterV1.fnAuthBootstrapComplete = srv.AddMethod("AuthBootstrapComplete",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.ClusterAuthBootstrapRequest"], pkgMessages["cluster.Cluster"], "cluster", "AuthBootstrapComplete")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.ClusterAuthBootstrapRequest"], pkgMessages["cluster.Cluster"], "cluster", "AuthBootstrapComplete")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster"), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoAddCluster = srv.AddMethod("AutoAddCluster",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoAddCluster")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoAddCluster")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoAddHost = srv.AddMethod("AutoAddHost",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoAddHost")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoAddHost")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Host)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -260,7 +261,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoAddNode = srv.AddMethod("AutoAddNode",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Node"], pkgMessages["cluster.Node"], "cluster", "AutoAddNode")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Node"], pkgMessages["cluster.Node"], "cluster", "AutoAddNode")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Node)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -269,12 +270,12 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoAddSmartNIC = srv.AddMethod("AutoAddSmartNIC",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoAddSmartNIC")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoAddSmartNIC")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoAddTenant = srv.AddMethod("AutoAddTenant",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Tenant"], pkgMessages["cluster.Tenant"], "cluster", "AutoAddTenant")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Tenant"], pkgMessages["cluster.Tenant"], "cluster", "AutoAddTenant")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Tenant)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -283,12 +284,12 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteCluster = srv.AddMethod("AutoDeleteCluster",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoDeleteCluster")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoDeleteCluster")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster"), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteHost = srv.AddMethod("AutoDeleteHost",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoDeleteHost")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoDeleteHost")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Host)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -297,7 +298,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteNode = srv.AddMethod("AutoDeleteNode",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Node"], pkgMessages["cluster.Node"], "cluster", "AutoDeleteNode")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Node"], pkgMessages["cluster.Node"], "cluster", "AutoDeleteNode")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Node)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -306,7 +307,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteSmartNIC = srv.AddMethod("AutoDeleteSmartNIC",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoDeleteSmartNIC")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoDeleteSmartNIC")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.SmartNIC)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -315,7 +316,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoDeleteTenant = srv.AddMethod("AutoDeleteTenant",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Tenant"], pkgMessages["cluster.Tenant"], "cluster", "AutoDeleteTenant")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Tenant"], pkgMessages["cluster.Tenant"], "cluster", "AutoDeleteTenant")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Tenant)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -324,12 +325,12 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetCluster = srv.AddMethod("AutoGetCluster",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoGetCluster")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoGetCluster")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster"), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetHost = srv.AddMethod("AutoGetHost",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoGetHost")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoGetHost")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Host)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -338,7 +339,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetNode = srv.AddMethod("AutoGetNode",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Node"], pkgMessages["cluster.Node"], "cluster", "AutoGetNode")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Node"], pkgMessages["cluster.Node"], "cluster", "AutoGetNode")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Node)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -347,7 +348,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetSmartNIC = srv.AddMethod("AutoGetSmartNIC",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoGetSmartNIC")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoGetSmartNIC")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.SmartNIC)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -356,7 +357,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoGetTenant = srv.AddMethod("AutoGetTenant",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Tenant"], pkgMessages["cluster.Tenant"], "cluster", "AutoGetTenant")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Tenant"], pkgMessages["cluster.Tenant"], "cluster", "AutoGetTenant")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Tenant)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -365,12 +366,12 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListCluster = srv.AddMethod("AutoListCluster",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.ClusterList"], "cluster", "AutoListCluster")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.ClusterList"], "cluster", "AutoListCluster")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListHost = srv.AddMethod("AutoListHost",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.HostList"], "cluster", "AutoListHost")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.HostList"], "cluster", "AutoListHost")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -379,7 +380,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListNode = srv.AddMethod("AutoListNode",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.NodeList"], "cluster", "AutoListNode")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.NodeList"], "cluster", "AutoListNode")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -388,7 +389,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListSmartNIC = srv.AddMethod("AutoListSmartNIC",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.SmartNICList"], "cluster", "AutoListSmartNIC")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.SmartNICList"], "cluster", "AutoListSmartNIC")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -397,7 +398,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoListTenant = srv.AddMethod("AutoListTenant",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.TenantList"], "cluster", "AutoListTenant")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["cluster.TenantList"], "cluster", "AutoListTenant")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -406,12 +407,12 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateCluster = srv.AddMethod("AutoUpdateCluster",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoUpdateCluster")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Cluster"], pkgMessages["cluster.Cluster"], "cluster", "AutoUpdateCluster")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster"), nil
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateHost = srv.AddMethod("AutoUpdateHost",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoUpdateHost")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Host"], pkgMessages["cluster.Host"], "cluster", "AutoUpdateHost")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Host)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -420,7 +421,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateNode = srv.AddMethod("AutoUpdateNode",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Node"], pkgMessages["cluster.Node"], "cluster", "AutoUpdateNode")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Node"], pkgMessages["cluster.Node"], "cluster", "AutoUpdateNode")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Node)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -429,7 +430,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateSmartNIC = srv.AddMethod("AutoUpdateSmartNIC",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoUpdateSmartNIC")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.SmartNIC"], pkgMessages["cluster.SmartNIC"], "cluster", "AutoUpdateSmartNIC")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.SmartNIC)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -438,7 +439,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnAutoUpdateTenant = srv.AddMethod("AutoUpdateTenant",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Tenant"], pkgMessages["cluster.Tenant"], "cluster", "AutoUpdateTenant")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.Tenant"], pkgMessages["cluster.Tenant"], "cluster", "AutoUpdateTenant")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(cluster.Tenant)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -447,7 +448,7 @@ func (s *sclusterSvc_clusterBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsClusterV1.fnUpdateTLSConfig = srv.AddMethod("UpdateTLSConfig",
-			apisrvpkg.NewMethod(srv, pkgMessages["cluster.UpdateTLSConfigRequest"], pkgMessages["cluster.Cluster"], "cluster", "UpdateTLSConfig")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["cluster.UpdateTLSConfigRequest"], pkgMessages["cluster.Cluster"], "cluster", "UpdateTLSConfig")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "cluster/v1/cluster"), nil
 		}).HandleInvocation
 

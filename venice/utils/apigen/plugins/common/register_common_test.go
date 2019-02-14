@@ -74,8 +74,8 @@ func TestParsers(t *testing.T) {
 	}
 	{
 		in := venice.ObjectRln{
-			Type: "test",
-			To:   "destination",
+			Type: "NamedRef",
+			To:   "group/destination",
 		}
 		out, err := parseObjRelation(&in)
 		if err != nil {

@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	workload "github.com/pensando/sw/api/generated/workload"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -228,6 +229,13 @@ func (s *sworkloadWorkloadBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(workload.Workload)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(workload.Workload)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *workload.Workload
 			if v, ok := i.(workload.Workload); ok {
@@ -245,8 +253,7 @@ func (s *sworkloadWorkloadBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}

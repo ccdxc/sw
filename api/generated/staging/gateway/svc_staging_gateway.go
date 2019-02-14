@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	staging "github.com/pensando/sw/api/generated/staging"
 	grpcclient "github.com/pensando/sw/api/generated/staging/grpc/client"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
@@ -57,7 +58,7 @@ func (a adapterStagingV1) AutoAddBuffer(oldctx oldcontext.Context, t *staging.Bu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -80,7 +81,7 @@ func (a adapterStagingV1) AutoDeleteBuffer(oldctx oldcontext.Context, t *staging
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -103,7 +104,7 @@ func (a adapterStagingV1) AutoGetBuffer(oldctx oldcontext.Context, t *staging.Bu
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -131,7 +132,7 @@ func (a adapterStagingV1) AutoListBuffer(oldctx oldcontext.Context, t *api.ListW
 		t.Tenant = globals.DefaultTenant
 	}
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "BufferList", t.Tenant, t.Namespace, "staging", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "BufferList", t.Tenant, t.Namespace, "staging", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -154,7 +155,7 @@ func (a adapterStagingV1) AutoUpdateBuffer(oldctx oldcontext.Context, t *staging
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -177,7 +178,7 @@ func (a adapterStagingV1) Clear(oldctx oldcontext.Context, t *staging.ClearActio
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -200,7 +201,7 @@ func (a adapterStagingV1) Commit(oldctx oldcontext.Context, t *staging.CommitAct
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Buffer", t.Tenant, t.Namespace, "staging", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -222,7 +223,7 @@ func (a adapterStagingV1) AutoWatchSvcStagingV1(oldctx oldcontext.Context, in *a
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "staging"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "staging"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -278,7 +279,7 @@ func (a adapterStagingV1) AutoWatchBuffer(oldctx oldcontext.Context, in *api.Lis
 	}
 
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Buffer", in.Tenant, in.Namespace, "staging"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Buffer", in.Tenant, in.Namespace, "staging"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -327,21 +328,21 @@ func (a adapterStagingV1) AutoWatchBuffer(oldctx oldcontext.Context, in *api.Lis
 }
 
 func (e *sStagingV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "staging", apiserver.UnknownOper)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "staging", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiserver.CreateOper)
+	e.svcProf["AutoAddBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiintf.CreateOper)
 
-	e.svcProf["AutoDeleteBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiintf.DeleteOper)
 
-	e.svcProf["AutoGetBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiserver.GetOper)
+	e.svcProf["AutoGetBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiintf.GetOper)
 
-	e.svcProf["AutoListBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "BufferList", "staging", apiserver.ListOper)
+	e.svcProf["AutoListBuffer"] = apigwpkg.NewServiceProfile(e.defSvcProf, "BufferList", "staging", apiintf.ListOper)
 
-	e.svcProf["Clear"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiserver.CreateOper)
+	e.svcProf["Clear"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiintf.CreateOper)
 
-	e.svcProf["Commit"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiserver.CreateOper)
+	e.svcProf["Commit"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Buffer", "staging", apiintf.CreateOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -361,7 +362,7 @@ func (e *sStagingV1GwService) GetServiceProfile(method string) (apigw.ServicePro
 }
 
 // GetCrudServiceProfile returns the service profile for a auto generated crud operation
-func (e *sStagingV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (e *sStagingV1GwService) GetCrudServiceProfile(obj string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
 		return e.GetServiceProfile(name)

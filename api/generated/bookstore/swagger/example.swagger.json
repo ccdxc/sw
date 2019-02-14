@@ -413,6 +413,12 @@
             "format": "boolean"
           },
           {
+            "name": "spec.Publisher",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "status.Inventory",
             "in": "query",
             "required": false,
@@ -884,6 +890,12 @@
           },
           {
             "name": "Status.account-status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "Status.interests",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2759,6 +2771,9 @@
           "type": "boolean",
           "format": "boolean"
         },
+        "Publisher": {
+          "type": "string"
+        },
         "editions": {
           "type": "object",
           "additionalProperties": {
@@ -2908,6 +2923,9 @@
       "properties": {
         "account-status": {
           "type": "string"
+        },
+        "interests": {
+          "type": "string"
         }
       }
     },
@@ -2944,6 +2962,9 @@
           "minLength": 3,
           "maxLength": 10,
           "description": "length of string should be between 3 and 10\n"
+        },
+        "books": {
+          "type": "string"
         },
         "Quantity": {
           "type": "integer",
@@ -3020,7 +3041,7 @@
         "Filled": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/bookstoreOrderSpec"
+            "$ref": "#/definitions/bookstoreOrderItem"
           }
         },
         "Message": {

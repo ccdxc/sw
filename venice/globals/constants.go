@@ -172,6 +172,7 @@ const (
 	// API Infra constants
 	ConfigURIPrefix  = "configs"
 	StagingURIPrefix = "staging"
+	BrowserURIPrefix = "browser"
 
 	// TPM
 	TpmRPCPort = "9020"

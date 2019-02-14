@@ -426,7 +426,10 @@ var typesMapCluster = map[string]*api.Struct{
 	},
 }
 
+var keyMapCluster = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapCluster)
+	schema.AddPaths(keyMapCluster)
 }

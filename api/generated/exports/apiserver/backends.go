@@ -12,6 +12,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/auth/grpc/server"
 	// blank import to pull in bookstore service into api server
 	_ "github.com/pensando/sw/api/generated/bookstore/grpc/server"
+	// blank import to pull in browser service into api server
+	_ "github.com/pensando/sw/api/generated/browser/grpc/server"
 	// blank import to pull in cluster service into api server
 	_ "github.com/pensando/sw/api/generated/cluster/grpc/server"
 	// blank import to pull in events service into api server

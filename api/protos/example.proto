@@ -80,6 +80,7 @@ message BookSpec {
   // Used for performance monitoring tests
   api.Timestamp UpdateTimestamp = 6;
   bool Terminate = 7;
+  string Publisher = 9 [(venice.objRelation) = {Type: "NamedRef", To: "bookstore/Publisher"}];
   map<string, BookEdition> Editions = 8 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "editions"];
 }
 
@@ -116,7 +117,8 @@ message OrderSpec {
 
 message OrderItem {
   string ISBNId = 1 [(venice.check) = "StrLen(3,10)"];
-  uint32 Quantity = 2 [(venice.check) = "IntRange(1,30)"];
+  string Book = 2 [(venice.objRelation) = {Type: "WeakRef", To: "bookstore/Book"}, (gogoproto.jsontag) = "books"];
+  uint32 Quantity = 3 [(venice.check) = "IntRange(1,30)"];
 }
 
 message OrderStatus {
@@ -129,7 +131,7 @@ message OrderStatus {
     DISCOUNTED = 5; // ui-hint: Discounted
   }
   string Status = 3 [(venice.check) = "StrEnum(OrderStatus.OrderStatus)"];
-  repeated OrderSpec Filled = 4;
+  repeated OrderItem Filled = 4;
   string Message = 5;
 }
 
@@ -158,6 +160,7 @@ message CustomerSpec {
 
 message CustomerStatus {
   string AccountStatus = 1  [(gogoproto.jsontag) = "account-status"];
+  string Interests = 2 [(venice.objRelation) = {Type: "SelectorRef", To: "bookstore/Book"}, (gogoproto.jsontag) = "interests"];
 }
 
 message Customer {

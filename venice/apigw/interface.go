@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/audit"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -19,7 +19,7 @@ type APIGatewayService interface {
 	// CompleteRegistration is a callback invoked after the API Gateway is done initializing.
 	CompleteRegistration(ctx context.Context, logger log.Logger, grpcserver *grpc.Server, mux *http.ServeMux, rslvr resolver.Interface, wg *sync.WaitGroup) error
 	GetServiceProfile(method string) (ServiceProfile, error)
-	GetCrudServiceProfile(object string, oper apiserver.APIOperType) (ServiceProfile, error)
+	GetCrudServiceProfile(object string, oper apiintf.APIOperType) (ServiceProfile, error)
 	GetProxyServiceProfile(path string) (ServiceProfile, error)
 }
 
@@ -78,6 +78,8 @@ type Config struct {
 	SkipAuthz bool
 	// Auditor if set will be used instead of default. Used for tests only.
 	Auditor audit.Auditor
+	// Skip auditing
+	SkipAudit bool
 }
 
 // Hooks definitions
@@ -115,7 +117,7 @@ type ServiceProfile interface {
 	GetAPIGoup() string
 
 	// GetOper returns the operation involved, Unknown oper if none or more than one oper.
-	GetOper() apiserver.APIOperType
+	GetOper() apiintf.APIOperType
 
 	// Rate Limiters- TBD
 

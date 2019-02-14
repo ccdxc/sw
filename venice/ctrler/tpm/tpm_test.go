@@ -511,7 +511,6 @@ func TestProcessTenant(t *testing.T) {
 
 	err = pa.processTenants(parentCtx, kvstore.Deleted, tenant)
 	tu.AssertOk(t, err, "processTenant delete failed")
-
 }
 
 func TestClientRetry(t *testing.T) {

@@ -10,6 +10,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 var (
@@ -30,6 +31,10 @@ type Scheme struct {
 	kind2Type   map[string]string
 	kind2Group  map[string]string
 	kind2Scopes map[string]scopes
+	procOnce    sync.Once
+	paths       map[string][]api.PathsMap
+	keyTouri    *pathNode
+	uriToKey    *pathNode
 }
 
 // NewScheme returns a new Scheme.
@@ -41,6 +46,7 @@ func NewScheme() *Scheme {
 		kind2Type:   make(map[string]string),
 		kind2Group:  make(map[string]string),
 		kind2Scopes: make(map[string]scopes),
+		paths:       make(map[string][]api.PathsMap),
 	}
 }
 
@@ -106,6 +112,173 @@ func (s *Scheme) AddSchema(in map[string]*api.Struct) {
 				v.Tags[f.Name] = f.Name
 			}
 		}
+	}
+}
+
+type pathActions string
+
+const (
+	// FieldConsume is action to consume the next token
+	FieldConsume pathActions = "FieldConsume"
+	// NOPAdvance is action to parse and advance to nexxt token
+	NOPAdvance pathActions = "NOPAdvance"
+)
+
+type pathNode struct {
+	actions  []pathActions
+	variable []string
+	isLeaf   bool
+	next     map[string]*pathNode
+	output   map[int]string
+}
+
+var debugPath bool
+
+func (s *Scheme) mapPath(start *pathNode, in string, prime map[string]string) (string, error) {
+	passNo := 0
+	curNode := start
+	if curNode == nil {
+		return "", fmt.Errorf("node is nil")
+	}
+	vars := make(map[string]string)
+	for k, v := range prime {
+		vars[k] = v
+	}
+	tokens := strings.Split(strings.TrimPrefix(in, "/"), "/")
+	for _, t := range tokens {
+		if debugPath {
+			fmt.Printf("path [%v] parsing token %v\n", in, t)
+		}
+		if len(curNode.actions) > 0 && passNo < len(curNode.actions) && curNode.actions[passNo] == FieldConsume {
+			vars[curNode.variable[passNo]] = t
+			passNo++
+		} else {
+			n, ok := curNode.next[t]
+			if !ok {
+				return "", fmt.Errorf("unknown path entry %v [%+v]", t, curNode)
+			}
+			if debugPath {
+				fmt.Printf("path [%v] jumping to new node %v\n", in, t)
+			}
+			curNode = n
+			passNo = 0
+		}
+	}
+	if debugPath {
+		fmt.Printf("Final node is [%v]\n", dumpPaths(curNode, "  "))
+	}
+	if curNode.isLeaf {
+		if debugPath {
+			fmt.Printf("path [%v] curNode is leaf pass[%d]  with output [%v]\n", in, passNo, curNode.output)
+		}
+		ret := curNode.output[passNo]
+		for k, v := range vars {
+			p := "{" + k + "}"
+			if strings.Contains(ret, p) {
+				ret = strings.Replace(ret, p, v, -1)
+			}
+		}
+		return ret, nil
+	}
+	return "", fmt.Errorf("end node is not a leaf [%v/%v]", passNo, curNode.isLeaf)
+}
+
+func dumpPaths(p *pathNode, prefix string) string {
+	ret := fmt.Sprintf("\n%s{\n", prefix)
+	ret = fmt.Sprintf("%s%s Actions: %v]\n", ret, prefix, p.actions)
+	ret = fmt.Sprintf("%s%s Variables: %v\n", ret, prefix, p.variable)
+	ret = fmt.Sprintf("%s%s IsLeaf [%v] Output[%v]\n", ret, prefix, p.isLeaf, p.output)
+	ret = fmt.Sprintf("%s%s Next {\n", ret, prefix)
+	for k, v := range p.next {
+		ret = fmt.Sprintf("%s%s [\"%v\"] : { %s\n%s  }", ret, prefix, k, dumpPaths(v, prefix+"  "), prefix)
+	}
+	ret = fmt.Sprintf("%s%s  }}", ret, prefix)
+	return ret
+}
+
+func (s *Scheme) parsePathTokens(start *pathNode, in, output string) {
+	passNo := 0
+	curNode := start
+	tokens := strings.Split(strings.TrimPrefix(in, "/"), "/")
+	for _, t := range tokens {
+		if strings.Contains(t, "{") || strings.Contains(t, "}") {
+			// This is a variable.
+			if strings.HasPrefix(t, "{") && strings.HasSuffix(t, "}") {
+				if len(curNode.variable) > passNo {
+					curNode.variable[passNo] = strings.TrimPrefix(strings.TrimSuffix(t, "}"), "{")
+					curNode.actions[passNo] = FieldConsume
+					passNo++
+				} else {
+					if len(curNode.variable) > passNo {
+						curNode.variable[passNo] = strings.TrimPrefix(strings.TrimSuffix(t, "}"), "{")
+						curNode.actions[passNo] = FieldConsume
+					} else {
+						curNode.variable = append(curNode.variable, strings.TrimPrefix(strings.TrimSuffix(t, "}"), "{"))
+						curNode.actions = append(curNode.actions, FieldConsume)
+					}
+					passNo++
+				}
+			} else {
+				panic(fmt.Sprintf("Unexpected path with {} not entirely contained in token[%s]", in))
+			}
+		} else {
+			if n, ok := curNode.next[t]; ok {
+				curNode = n
+			} else {
+				n = &pathNode{
+					next:   make(map[string]*pathNode),
+					output: make(map[int]string),
+				}
+				curNode.next[t] = n
+				curNode = n
+				passNo = 0
+			}
+		}
+	}
+	curNode.isLeaf = true
+	curNode.output[passNo] = output
+}
+
+func (s *Scheme) preProcessPaths() {
+	log.Infof("Processing paths [%v]", len(s.paths))
+	s.keyTouri = &pathNode{next: make(map[string]*pathNode), output: make(map[int]string)}
+	s.uriToKey = &pathNode{next: make(map[string]*pathNode), output: make(map[int]string)}
+
+	for _, v := range s.paths {
+		for _, v1 := range v {
+			s.parsePathTokens(s.keyTouri, v1.Key, v1.URI)
+			s.parsePathTokens(s.uriToKey, v1.URI, v1.Key)
+		}
+	}
+}
+
+// GetKey maps a URI to a kvstore key
+func (s *Scheme) GetKey(in string) string {
+	s.procOnce.Do(s.preProcessPaths)
+	r, err := s.mapPath(s.uriToKey, in, nil)
+	if err == nil {
+		return r
+	}
+	log.Errorf("could not map Key for [%v](%s)", in, err)
+	return ""
+}
+
+// GetURI maps a kvstore key to an URI
+func (s *Scheme) GetURI(in, version string) string {
+	s.procOnce.Do(s.preProcessPaths)
+	verMap := map[string]string{"version": version}
+	r, err := s.mapPath(s.keyTouri, in, verMap)
+	if err == nil {
+		return r
+	}
+	log.Errorf("could not map URI for [%v](%s)", in, err)
+	return ""
+}
+
+// AddPaths adds to the paths map
+func (s *Scheme) AddPaths(in map[string][]api.PathsMap) {
+	for k, v := range in {
+		s.paths[k] = append(s.paths[k], v...)
 	}
 }
 

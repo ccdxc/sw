@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/cache"
 	staging "github.com/pensando/sw/api/generated/staging"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -228,6 +229,13 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(staging.Buffer)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(staging.Buffer)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *staging.Buffer
 			if v, ok := i.(staging.Buffer); ok {
@@ -245,8 +253,7 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -499,6 +506,13 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(staging.ClearAction)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(staging.ClearAction)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *staging.ClearAction
 			if v, ok := i.(staging.ClearAction); ok {
@@ -516,8 +530,7 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -770,6 +783,13 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.(staging.CommitAction)
 			return r.Validate(ver, "", ignoreStatus)
+		}).WithReferencesGetter(func(i interface{}) (map[string]apiintf.ReferenceObj, error) {
+			ret := make(map[string]apiintf.ReferenceObj)
+			r := i.(staging.CommitAction)
+
+			tenant := r.Tenant
+			r.References(tenant, "", ret)
+			return ret, nil
 		}).WithUpdateMetaFunction(func(ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *staging.CommitAction
 			if v, ok := i.(staging.CommitAction); ok {
@@ -787,8 +807,7 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 						return nil, err
 					}
 					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}

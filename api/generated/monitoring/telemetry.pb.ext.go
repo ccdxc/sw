@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -281,7 +282,34 @@ func (m *StatsPolicyStatus) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *FlowExportPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
 
 func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -302,6 +330,10 @@ func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error
 		ret = append(ret, errs...)
 	}
 	return ret
+}
+
+func (m *FlowExportPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -342,9 +374,40 @@ func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+func (m *FlowExportPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *FlowExportPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *FwlogPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
@@ -366,6 +429,10 @@ func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 		ret = append(ret, errs...)
 	}
 	return ret
+}
+
+func (m *FwlogPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *FwlogPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -406,9 +473,40 @@ func (m *FwlogPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 	return ret
 }
 
+func (m *FwlogPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *FwlogPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *StatsPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
@@ -432,6 +530,10 @@ func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *StatsPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *StatsPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapTelemetry["StatsPolicySpec"][ver]; ok {
@@ -448,6 +550,10 @@ func (m *StatsPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 		}
 	}
 	return ret
+}
+
+func (m *StatsPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *StatsPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {

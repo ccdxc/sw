@@ -12,6 +12,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/auth/cli"
 	// blank import to pull in bookstore service into cli utils
 	_ "github.com/pensando/sw/api/generated/bookstore/cli"
+	// blank import to pull in browser service into cli utils
+	_ "github.com/pensando/sw/api/generated/browser/cli"
 	// blank import to pull in cluster service into cli utils
 	_ "github.com/pensando/sw/api/generated/cluster/cli"
 	// blank import to pull in events service into cli utils

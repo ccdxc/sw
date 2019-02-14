@@ -6,7 +6,7 @@ import (
 	"context"
 
 	api "github.com/pensando/sw/api"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 )
 
@@ -23,7 +23,7 @@ type NetworkV1NetworkInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Network, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // NetworkV1ServiceInterface exposes the CRUD methods for Service
@@ -34,7 +34,7 @@ type NetworkV1ServiceInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Service, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Service, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // NetworkV1LbPolicyInterface exposes the CRUD methods for LbPolicy
@@ -45,7 +45,7 @@ type NetworkV1LbPolicyInterface interface {
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*LbPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*LbPolicy, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiserver.APIOperType) bool
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // NetworkV1Interface exposes objects with CRUD operations allowed by the service

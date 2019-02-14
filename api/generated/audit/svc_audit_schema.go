@@ -13,7 +13,10 @@ import (
 
 var typesMapSvc_audit = map[string]*api.Struct{}
 
+var keyMapSvc_audit = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapSvc_audit)
+	schema.AddPaths(keyMapSvc_audit)
 }

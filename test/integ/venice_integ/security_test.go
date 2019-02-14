@@ -150,7 +150,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 
 	// create a wait channel
 	waitCh := make(chan error, it.config.NumHosts*2)
-
+	it.createNetwork("default", "default", "Vlan-1", "10.1.1.0/24", "10.1.1.254")
 	// sg params
 	sg := security.SecurityGroup{
 		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},

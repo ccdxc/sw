@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	cluster "github.com/pensando/sw/api/generated/cluster"
 	grpcclient "github.com/pensando/sw/api/generated/cluster/grpc/client"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
@@ -57,7 +58,7 @@ func (a adapterClusterV1) AuthBootstrapComplete(oldctx oldcontext.Context, t *cl
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -80,7 +81,7 @@ func (a adapterClusterV1) AutoAddCluster(oldctx oldcontext.Context, t *cluster.C
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -103,7 +104,7 @@ func (a adapterClusterV1) AutoAddHost(oldctx oldcontext.Context, t *cluster.Host
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -126,7 +127,7 @@ func (a adapterClusterV1) AutoAddNode(oldctx oldcontext.Context, t *cluster.Node
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -149,7 +150,7 @@ func (a adapterClusterV1) AutoAddSmartNIC(oldctx oldcontext.Context, t *cluster.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -172,7 +173,7 @@ func (a adapterClusterV1) AutoAddTenant(oldctx oldcontext.Context, t *cluster.Te
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -195,7 +196,7 @@ func (a adapterClusterV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cluste
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -218,7 +219,7 @@ func (a adapterClusterV1) AutoDeleteHost(oldctx oldcontext.Context, t *cluster.H
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -241,7 +242,7 @@ func (a adapterClusterV1) AutoDeleteNode(oldctx oldcontext.Context, t *cluster.N
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -264,7 +265,7 @@ func (a adapterClusterV1) AutoDeleteSmartNIC(oldctx oldcontext.Context, t *clust
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -287,7 +288,7 @@ func (a adapterClusterV1) AutoDeleteTenant(oldctx oldcontext.Context, t *cluster
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.DeleteOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -310,7 +311,7 @@ func (a adapterClusterV1) AutoGetCluster(oldctx oldcontext.Context, t *cluster.C
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -333,7 +334,7 @@ func (a adapterClusterV1) AutoGetHost(oldctx oldcontext.Context, t *cluster.Host
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -356,7 +357,7 @@ func (a adapterClusterV1) AutoGetNode(oldctx oldcontext.Context, t *cluster.Node
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -379,7 +380,7 @@ func (a adapterClusterV1) AutoGetSmartNIC(oldctx oldcontext.Context, t *cluster.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -402,7 +403,7 @@ func (a adapterClusterV1) AutoGetTenant(oldctx oldcontext.Context, t *cluster.Te
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.GetOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -428,7 +429,7 @@ func (a adapterClusterV1) AutoListCluster(oldctx oldcontext.Context, t *api.List
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "ClusterList", t.Tenant, t.Namespace, "cluster", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "ClusterList", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -454,7 +455,7 @@ func (a adapterClusterV1) AutoListHost(oldctx oldcontext.Context, t *api.ListWat
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "HostList", t.Tenant, t.Namespace, "cluster", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "HostList", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -480,7 +481,7 @@ func (a adapterClusterV1) AutoListNode(oldctx oldcontext.Context, t *api.ListWat
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "NodeList", t.Tenant, t.Namespace, "cluster", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "NodeList", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -506,7 +507,7 @@ func (a adapterClusterV1) AutoListSmartNIC(oldctx oldcontext.Context, t *api.Lis
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "SmartNICList", t.Tenant, t.Namespace, "cluster", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "SmartNICList", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -532,7 +533,7 @@ func (a adapterClusterV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListW
 
 	t.Tenant = ""
 	t.Namespace = ""
-	oper, kind, tenant, namespace, group, name := apiserver.ListOper, "TenantList", t.Tenant, t.Namespace, "cluster", ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "TenantList", t.Tenant, t.Namespace, "cluster", ""
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -555,7 +556,7 @@ func (a adapterClusterV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cluste
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -578,7 +579,7 @@ func (a adapterClusterV1) AutoUpdateHost(oldctx oldcontext.Context, t *cluster.H
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Host", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -601,7 +602,7 @@ func (a adapterClusterV1) AutoUpdateNode(oldctx oldcontext.Context, t *cluster.N
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Node", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -624,7 +625,7 @@ func (a adapterClusterV1) AutoUpdateSmartNIC(oldctx oldcontext.Context, t *clust
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "SmartNIC", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -647,7 +648,7 @@ func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.UpdateOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Tenant", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -670,7 +671,7 @@ func (a adapterClusterV1) UpdateTLSConfig(oldctx oldcontext.Context, t *cluster.
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group, name := apiserver.CreateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Cluster", t.Tenant, t.Namespace, "cluster", t.Name
 
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
@@ -692,7 +693,7 @@ func (a adapterClusterV1) AutoWatchSvcClusterV1(oldctx oldcontext.Context, in *a
 	if err != nil {
 		return nil, errors.New("unknown service profile")
 	}
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "", in.Tenant, in.Namespace, "cluster"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -749,7 +750,7 @@ func (a adapterClusterV1) AutoWatchCluster(oldctx oldcontext.Context, in *api.Li
 
 	in.Tenant = ""
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Cluster", in.Tenant, in.Namespace, "cluster"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Cluster", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -806,7 +807,7 @@ func (a adapterClusterV1) AutoWatchNode(oldctx oldcontext.Context, in *api.ListW
 
 	in.Tenant = ""
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Node", in.Tenant, in.Namespace, "cluster"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Node", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -863,7 +864,7 @@ func (a adapterClusterV1) AutoWatchHost(oldctx oldcontext.Context, in *api.ListW
 
 	in.Tenant = ""
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Host", in.Tenant, in.Namespace, "cluster"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Host", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -920,7 +921,7 @@ func (a adapterClusterV1) AutoWatchSmartNIC(oldctx oldcontext.Context, in *api.L
 
 	in.Tenant = ""
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "SmartNIC", in.Tenant, in.Namespace, "cluster"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "SmartNIC", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -977,7 +978,7 @@ func (a adapterClusterV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.Lis
 
 	in.Tenant = ""
 	in.Namespace = ""
-	oper, kind, tenant, namespace, group := apiserver.WatchOper, "Tenant", in.Tenant, in.Namespace, "cluster"
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Tenant", in.Tenant, in.Namespace, "cluster"
 	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
 	ctx = apigwpkg.NewContextWithOperations(ctx, op)
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
@@ -1026,67 +1027,67 @@ func (a adapterClusterV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.Lis
 }
 
 func (e *sClusterV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "cluster", apiserver.UnknownOper)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "cluster", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AuthBootstrapComplete"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiserver.CreateOper)
+	e.svcProf["AuthBootstrapComplete"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.CreateOper)
 
-	e.svcProf["AutoAddHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiserver.CreateOper)
+	e.svcProf["AutoAddHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.CreateOper)
 
-	e.svcProf["AutoAddNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiserver.CreateOper)
+	e.svcProf["AutoAddNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.CreateOper)
 
-	e.svcProf["AutoAddTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiserver.CreateOper)
+	e.svcProf["AutoAddTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.CreateOper)
 
-	e.svcProf["AutoDeleteCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.DeleteOper)
 
-	e.svcProf["AutoDeleteHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.DeleteOper)
 
-	e.svcProf["AutoDeleteNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.DeleteOper)
 
-	e.svcProf["AutoDeleteSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiintf.DeleteOper)
 
-	e.svcProf["AutoDeleteTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiserver.DeleteOper)
+	e.svcProf["AutoDeleteTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.DeleteOper)
 
-	e.svcProf["AutoGetCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiserver.GetOper)
+	e.svcProf["AutoGetCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.GetOper)
 
-	e.svcProf["AutoGetHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiserver.GetOper)
+	e.svcProf["AutoGetHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.GetOper)
 
-	e.svcProf["AutoGetNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiserver.GetOper)
+	e.svcProf["AutoGetNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.GetOper)
 
-	e.svcProf["AutoGetSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiserver.GetOper)
+	e.svcProf["AutoGetSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiintf.GetOper)
 
-	e.svcProf["AutoGetTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiserver.GetOper)
+	e.svcProf["AutoGetTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.GetOper)
 
-	e.svcProf["AutoListHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "HostList", "cluster", apiserver.ListOper)
+	e.svcProf["AutoListHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "HostList", "cluster", apiintf.ListOper)
 
-	e.svcProf["AutoListNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NodeList", "cluster", apiserver.ListOper)
+	e.svcProf["AutoListNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NodeList", "cluster", apiintf.ListOper)
 
-	e.svcProf["AutoListSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNICList", "cluster", apiserver.ListOper)
+	e.svcProf["AutoListSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNICList", "cluster", apiintf.ListOper)
 
-	e.svcProf["AutoListTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TenantList", "cluster", apiserver.ListOper)
+	e.svcProf["AutoListTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TenantList", "cluster", apiintf.ListOper)
 
-	e.svcProf["AutoUpdateCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Host", "cluster", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Node", "cluster", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SmartNIC", "cluster", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiserver.UpdateOper)
+	e.svcProf["AutoUpdateTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.UpdateOper)
 
-	e.svcProf["AutoWatchCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgClusterWatchHelper", "cluster", apiserver.WatchOper)
+	e.svcProf["AutoWatchCluster"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgClusterWatchHelper", "cluster", apiintf.WatchOper)
 
-	e.svcProf["AutoWatchHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgHostWatchHelper", "cluster", apiserver.WatchOper)
+	e.svcProf["AutoWatchHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgHostWatchHelper", "cluster", apiintf.WatchOper)
 
-	e.svcProf["AutoWatchNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgNodeWatchHelper", "cluster", apiserver.WatchOper)
+	e.svcProf["AutoWatchNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgNodeWatchHelper", "cluster", apiintf.WatchOper)
 
-	e.svcProf["AutoWatchSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSmartNICWatchHelper", "cluster", apiserver.WatchOper)
+	e.svcProf["AutoWatchSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSmartNICWatchHelper", "cluster", apiintf.WatchOper)
 
-	e.svcProf["AutoWatchTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTenantWatchHelper", "cluster", apiserver.WatchOper)
+	e.svcProf["AutoWatchTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTenantWatchHelper", "cluster", apiintf.WatchOper)
 
-	e.svcProf["UpdateTLSConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiserver.CreateOper)
+	e.svcProf["UpdateTLSConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.CreateOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -1106,7 +1107,7 @@ func (e *sClusterV1GwService) GetServiceProfile(method string) (apigw.ServicePro
 }
 
 // GetCrudServiceProfile returns the service profile for a auto generated crud operation
-func (e *sClusterV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (e *sClusterV1GwService) GetCrudServiceProfile(obj string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
 		return e.GetServiceProfile(name)

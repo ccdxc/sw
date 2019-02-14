@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
+	"github.com/pensando/sw/api/graph"
+
 	"github.com/pensando/sw/api/cache"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/interfaces"
@@ -62,6 +64,10 @@ type apiSrv struct {
 	config apiserver.Config
 	// apiChace is cache used by the server
 	apiCache apiintf.CacheInterface
+	// objGraph maintains a graph of all relations between objects
+	apiGraph graph.Interface
+	// newLocalOverlayFunc creates a new local overlay. indirection is mainly for testing.
+	newLocalOverlayFunc func(tenant, id, baseKey string, c apiintf.CacheInterface, apisrv apiserver.Server) (apiintf.OverlayInterface, error)
 }
 
 // addKvConnToPool is adds connections to the pool if there is space in the pool.
@@ -105,6 +111,7 @@ func initAPIServer() {
 	singletonAPISrv.doneCh = make(chan error)
 	singletonAPISrv.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
 	singletonAPISrv.activeWatches = safelist.New()
+	singletonAPISrv.newLocalOverlayFunc = cache.NewLocalOverlay
 }
 
 // MustGetAPIServer returns the singleton instance. If it is not already
@@ -186,12 +193,27 @@ func (a *apiSrv) GetService(name string) apiserver.Service {
 	return a.services[name]
 }
 
+// GetMessage returns the registered service object give the name of the service.
+func (a *apiSrv) GetMessage(svc, kind string) apiserver.Message {
+	name := svc + "." + kind
+	ret, ok := a.messages[name]
+	if !ok {
+		return nil
+	}
+	return ret
+}
+
 // CreateOverlay creates a new overlay on top of API server cache
 func (a *apiSrv) CreateOverlay(tenant, name, base string) (apiintf.CacheInterface, error) {
 	if a.apiCache != nil {
 		return cache.NewOverlay(tenant, name, base, a.apiCache, a, false)
 	}
 	return nil, errors.New("cache not found")
+}
+
+// GetGraphDB returns the graph DB in use by the Server
+func (a *apiSrv) GetGraphDB() graph.Interface {
+	return a.apiGraph
 }
 
 // Run is the event loop for the API server. Registrations for all the registered services
@@ -241,6 +263,12 @@ func (a *apiSrv) Run(config apiserver.Config) {
 		a.config.KVPoolSize = 1
 	}
 	poolSize := a.config.KVPoolSize
+
+	a.apiGraph, err = graph.NewCayleyStore()
+	if err != nil {
+		a.Logger.Fatalf("could not create graph (%s)", err)
+	}
+
 	opts := []rpckit.Option{}
 	if !config.DevMode {
 		opts = append(opts, rpckit.WithTracerEnabled(false))
@@ -297,6 +325,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 			}
 		}
 	}
+
 	a.apiCache.Restore()
 	a.Logger.Log("msg", "added Kvstore connections to pool", "count", poolSize, "len", len(a.kvPool))
 	a.runstate.cond.L.Lock()

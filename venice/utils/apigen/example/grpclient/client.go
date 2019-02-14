@@ -33,6 +33,16 @@ func main() {
 		l.Fatalf("Failed to connect to gRPC server [%s]\n", *grpcaddr)
 	}
 
+	if *epCreate {
+		configureEps(apicl)
+		return
+	}
+
+	if *createCl {
+		clusterCreate(apicl)
+		return
+	}
+
 	if *sort {
 		letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 		genName := func(l int) string {
@@ -221,6 +231,23 @@ func main() {
 	}
 	if !reflect.DeepEqual(ret.Spec, pub.Spec) {
 		l.Fatalf("Deleted object does not match \n\t[%+v]\n\t[%+v]\n", pub.Spec, ret.Spec)
+	}
+
+	book := bookstore.Book{
+		ObjectMeta: api.ObjectMeta{
+			Name: "Book1",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "Book",
+		},
+		Spec: bookstore.BookSpec{
+			Category:  "Fiction",
+			Publisher: "Praire",
+		},
+	}
+	_, err = apicl.BookstoreV1().Book().Create(ctx, &book)
+	if err != nil {
+		l.Fatalf("failed to create book (%s)", err)
 	}
 
 	store := bookstore.Store{}

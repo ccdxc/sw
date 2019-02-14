@@ -21,6 +21,7 @@ import (
 	"github.com/pensando/sw/api"
 	audit "github.com/pensando/sw/api/generated/audit"
 	grpcclient "github.com/pensando/sw/api/generated/audit/grpc/client"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -73,11 +74,11 @@ func (a adapterAuditV1) AutoWatchSvcAuditV1(oldctx oldcontext.Context, in *api.L
 }
 
 func (e *sAuditV1GwService) setupSvcProfile() {
-	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiserver.UnknownOper)
+	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["GetEvent"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiserver.UnknownOper)
+	e.svcProf["GetEvent"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service
@@ -97,7 +98,7 @@ func (e *sAuditV1GwService) GetServiceProfile(method string) (apigw.ServiceProfi
 }
 
 // GetCrudServiceProfile returns the service profile for a auto generated crud operation
-func (e *sAuditV1GwService) GetCrudServiceProfile(obj string, oper apiserver.APIOperType) (apigw.ServiceProfile, error) {
+func (e *sAuditV1GwService) GetCrudServiceProfile(obj string, oper apiintf.APIOperType) (apigw.ServiceProfile, error) {
 	name := apiserver.GetCrudServiceName(obj, oper)
 	if name != "" {
 		return e.GetServiceProfile(name)

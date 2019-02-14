@@ -129,7 +129,10 @@ var typesMapService = map[string]*api.Struct{
 	},
 }
 
+var keyMapService = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapService)
+	schema.AddPaths(keyMapService)
 }

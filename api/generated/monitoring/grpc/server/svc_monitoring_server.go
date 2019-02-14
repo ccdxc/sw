@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
@@ -395,12 +396,12 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		s.endpointsMonitoringV1.fnAutoWatchSvcMonitoringV1 = srv.WatchFromKv
 
 		s.endpointsMonitoringV1.fnAutoAddAlert = srv.AddMethod("AutoAddAlert",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.Alert"], pkgMessages["monitoring.Alert"], "monitoring", "AutoAddAlert")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.Alert"], pkgMessages["monitoring.Alert"], "monitoring", "AutoAddAlert")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddAlertDestination = srv.AddMethod("AutoAddAlertDestination",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertDestination"], pkgMessages["monitoring.AlertDestination"], "monitoring", "AutoAddAlertDestination")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertDestination"], pkgMessages["monitoring.AlertDestination"], "monitoring", "AutoAddAlertDestination")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.AlertDestination)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -409,7 +410,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddAlertPolicy = srv.AddMethod("AutoAddAlertPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertPolicy"], pkgMessages["monitoring.AlertPolicy"], "monitoring", "AutoAddAlertPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertPolicy"], pkgMessages["monitoring.AlertPolicy"], "monitoring", "AutoAddAlertPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.AlertPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -418,7 +419,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddEventPolicy = srv.AddMethod("AutoAddEventPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.EventPolicy"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoAddEventPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.EventPolicy"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoAddEventPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.EventPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -427,7 +428,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddFlowExportPolicy = srv.AddMethod("AutoAddFlowExportPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FlowExportPolicy"], pkgMessages["monitoring.FlowExportPolicy"], "monitoring", "AutoAddFlowExportPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FlowExportPolicy"], pkgMessages["monitoring.FlowExportPolicy"], "monitoring", "AutoAddFlowExportPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.FlowExportPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -436,7 +437,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddFwlogPolicy = srv.AddMethod("AutoAddFwlogPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FwlogPolicy"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoAddFwlogPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FwlogPolicy"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoAddFwlogPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.FwlogPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -445,7 +446,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddMirrorSession = srv.AddMethod("AutoAddMirrorSession",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "monitoring", "AutoAddMirrorSession")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "monitoring", "AutoAddMirrorSession")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.MirrorSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -454,12 +455,12 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddStatsPolicy = srv.AddMethod("AutoAddStatsPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoAddStatsPolicy")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoAddStatsPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddTechSupportRequest = srv.AddMethod("AutoAddTechSupportRequest",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoAddTechSupportRequest")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoAddTechSupportRequest")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.TechSupportRequest)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -468,7 +469,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoAddTroubleshootingSession = srv.AddMethod("AutoAddTroubleshootingSession",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TroubleshootingSession"], pkgMessages["monitoring.TroubleshootingSession"], "monitoring", "AutoAddTroubleshootingSession")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TroubleshootingSession"], pkgMessages["monitoring.TroubleshootingSession"], "monitoring", "AutoAddTroubleshootingSession")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.TroubleshootingSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -477,12 +478,12 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteAlert = srv.AddMethod("AutoDeleteAlert",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.Alert"], pkgMessages["monitoring.Alert"], "monitoring", "AutoDeleteAlert")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.Alert"], pkgMessages["monitoring.Alert"], "monitoring", "AutoDeleteAlert")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteAlertDestination = srv.AddMethod("AutoDeleteAlertDestination",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertDestination"], pkgMessages["monitoring.AlertDestination"], "monitoring", "AutoDeleteAlertDestination")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertDestination"], pkgMessages["monitoring.AlertDestination"], "monitoring", "AutoDeleteAlertDestination")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.AlertDestination)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -491,7 +492,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteAlertPolicy = srv.AddMethod("AutoDeleteAlertPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertPolicy"], pkgMessages["monitoring.AlertPolicy"], "monitoring", "AutoDeleteAlertPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertPolicy"], pkgMessages["monitoring.AlertPolicy"], "monitoring", "AutoDeleteAlertPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.AlertPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -500,7 +501,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteEventPolicy = srv.AddMethod("AutoDeleteEventPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.EventPolicy"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoDeleteEventPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.EventPolicy"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoDeleteEventPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.EventPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -509,7 +510,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteFlowExportPolicy = srv.AddMethod("AutoDeleteFlowExportPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FlowExportPolicy"], pkgMessages["monitoring.FlowExportPolicy"], "monitoring", "AutoDeleteFlowExportPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FlowExportPolicy"], pkgMessages["monitoring.FlowExportPolicy"], "monitoring", "AutoDeleteFlowExportPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.FlowExportPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -518,7 +519,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteFwlogPolicy = srv.AddMethod("AutoDeleteFwlogPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FwlogPolicy"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoDeleteFwlogPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FwlogPolicy"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoDeleteFwlogPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.FwlogPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -527,7 +528,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteMirrorSession = srv.AddMethod("AutoDeleteMirrorSession",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "monitoring", "AutoDeleteMirrorSession")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "monitoring", "AutoDeleteMirrorSession")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.MirrorSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -536,12 +537,12 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteStatsPolicy = srv.AddMethod("AutoDeleteStatsPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoDeleteStatsPolicy")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoDeleteStatsPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteTechSupportRequest = srv.AddMethod("AutoDeleteTechSupportRequest",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoDeleteTechSupportRequest")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoDeleteTechSupportRequest")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.TechSupportRequest)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -550,7 +551,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteTroubleshootingSession = srv.AddMethod("AutoDeleteTroubleshootingSession",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TroubleshootingSession"], pkgMessages["monitoring.TroubleshootingSession"], "monitoring", "AutoDeleteTroubleshootingSession")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TroubleshootingSession"], pkgMessages["monitoring.TroubleshootingSession"], "monitoring", "AutoDeleteTroubleshootingSession")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.TroubleshootingSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -559,7 +560,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetAlert = srv.AddMethod("AutoGetAlert",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.Alert"], pkgMessages["monitoring.Alert"], "monitoring", "AutoGetAlert")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.Alert"], pkgMessages["monitoring.Alert"], "monitoring", "AutoGetAlert")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.Alert)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -568,7 +569,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetAlertDestination = srv.AddMethod("AutoGetAlertDestination",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertDestination"], pkgMessages["monitoring.AlertDestination"], "monitoring", "AutoGetAlertDestination")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertDestination"], pkgMessages["monitoring.AlertDestination"], "monitoring", "AutoGetAlertDestination")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.AlertDestination)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -577,7 +578,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetAlertPolicy = srv.AddMethod("AutoGetAlertPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertPolicy"], pkgMessages["monitoring.AlertPolicy"], "monitoring", "AutoGetAlertPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertPolicy"], pkgMessages["monitoring.AlertPolicy"], "monitoring", "AutoGetAlertPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.AlertPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -586,7 +587,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetEventPolicy = srv.AddMethod("AutoGetEventPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.EventPolicy"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoGetEventPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.EventPolicy"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoGetEventPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.EventPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -595,7 +596,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetFlowExportPolicy = srv.AddMethod("AutoGetFlowExportPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FlowExportPolicy"], pkgMessages["monitoring.FlowExportPolicy"], "monitoring", "AutoGetFlowExportPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FlowExportPolicy"], pkgMessages["monitoring.FlowExportPolicy"], "monitoring", "AutoGetFlowExportPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.FlowExportPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -604,7 +605,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetFwlogPolicy = srv.AddMethod("AutoGetFwlogPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FwlogPolicy"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoGetFwlogPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FwlogPolicy"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoGetFwlogPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.FwlogPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -613,7 +614,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetMirrorSession = srv.AddMethod("AutoGetMirrorSession",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "monitoring", "AutoGetMirrorSession")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "monitoring", "AutoGetMirrorSession")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.MirrorSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -622,7 +623,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetStatsPolicy = srv.AddMethod("AutoGetStatsPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoGetStatsPolicy")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoGetStatsPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.StatsPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -631,7 +632,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetTechSupportRequest = srv.AddMethod("AutoGetTechSupportRequest",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoGetTechSupportRequest")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoGetTechSupportRequest")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.TechSupportRequest)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -640,7 +641,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoGetTroubleshootingSession = srv.AddMethod("AutoGetTroubleshootingSession",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TroubleshootingSession"], pkgMessages["monitoring.TroubleshootingSession"], "monitoring", "AutoGetTroubleshootingSession")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TroubleshootingSession"], pkgMessages["monitoring.TroubleshootingSession"], "monitoring", "AutoGetTroubleshootingSession")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.TroubleshootingSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -649,7 +650,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListAlert = srv.AddMethod("AutoListAlert",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.AlertList"], "monitoring", "AutoListAlert")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.AlertList"], "monitoring", "AutoListAlert")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -658,7 +659,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListAlertDestination = srv.AddMethod("AutoListAlertDestination",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.AlertDestinationList"], "monitoring", "AutoListAlertDestination")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.AlertDestinationList"], "monitoring", "AutoListAlertDestination")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -667,7 +668,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListAlertPolicy = srv.AddMethod("AutoListAlertPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.AlertPolicyList"], "monitoring", "AutoListAlertPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.AlertPolicyList"], "monitoring", "AutoListAlertPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -676,7 +677,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListEventPolicy = srv.AddMethod("AutoListEventPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.EventPolicyList"], "monitoring", "AutoListEventPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.EventPolicyList"], "monitoring", "AutoListEventPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -685,7 +686,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListFlowExportPolicy = srv.AddMethod("AutoListFlowExportPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.FlowExportPolicyList"], "monitoring", "AutoListFlowExportPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.FlowExportPolicyList"], "monitoring", "AutoListFlowExportPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -694,7 +695,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListFwlogPolicy = srv.AddMethod("AutoListFwlogPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.FwlogPolicyList"], "monitoring", "AutoListFwlogPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.FwlogPolicyList"], "monitoring", "AutoListFwlogPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -703,7 +704,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListMirrorSession = srv.AddMethod("AutoListMirrorSession",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.MirrorSessionList"], "monitoring", "AutoListMirrorSession")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.MirrorSessionList"], "monitoring", "AutoListMirrorSession")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -712,7 +713,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListStatsPolicy = srv.AddMethod("AutoListStatsPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.StatsPolicyList"], "monitoring", "AutoListStatsPolicy")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.StatsPolicyList"], "monitoring", "AutoListStatsPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -721,7 +722,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListTechSupportRequest = srv.AddMethod("AutoListTechSupportRequest",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.TechSupportRequestList"], "monitoring", "AutoListTechSupportRequest")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.TechSupportRequestList"], "monitoring", "AutoListTechSupportRequest")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -730,7 +731,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoListTroubleshootingSession = srv.AddMethod("AutoListTroubleshootingSession",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.TroubleshootingSessionList"], "monitoring", "AutoListTroubleshootingSession")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.TroubleshootingSessionList"], "monitoring", "AutoListTroubleshootingSession")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -739,7 +740,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateAlert = srv.AddMethod("AutoUpdateAlert",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.Alert"], pkgMessages["monitoring.Alert"], "monitoring", "AutoUpdateAlert")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.Alert"], pkgMessages["monitoring.Alert"], "monitoring", "AutoUpdateAlert")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.Alert)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -748,7 +749,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateAlertDestination = srv.AddMethod("AutoUpdateAlertDestination",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertDestination"], pkgMessages["monitoring.AlertDestination"], "monitoring", "AutoUpdateAlertDestination")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertDestination"], pkgMessages["monitoring.AlertDestination"], "monitoring", "AutoUpdateAlertDestination")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.AlertDestination)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -757,7 +758,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateAlertPolicy = srv.AddMethod("AutoUpdateAlertPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertPolicy"], pkgMessages["monitoring.AlertPolicy"], "monitoring", "AutoUpdateAlertPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.AlertPolicy"], pkgMessages["monitoring.AlertPolicy"], "monitoring", "AutoUpdateAlertPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.AlertPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -766,7 +767,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateEventPolicy = srv.AddMethod("AutoUpdateEventPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.EventPolicy"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoUpdateEventPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.EventPolicy"], pkgMessages["monitoring.EventPolicy"], "monitoring", "AutoUpdateEventPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.EventPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -775,7 +776,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateFlowExportPolicy = srv.AddMethod("AutoUpdateFlowExportPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FlowExportPolicy"], pkgMessages["monitoring.FlowExportPolicy"], "monitoring", "AutoUpdateFlowExportPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FlowExportPolicy"], pkgMessages["monitoring.FlowExportPolicy"], "monitoring", "AutoUpdateFlowExportPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.FlowExportPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -784,7 +785,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateFwlogPolicy = srv.AddMethod("AutoUpdateFwlogPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FwlogPolicy"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoUpdateFwlogPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.FwlogPolicy"], pkgMessages["monitoring.FwlogPolicy"], "monitoring", "AutoUpdateFwlogPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.FwlogPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -793,7 +794,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateMirrorSession = srv.AddMethod("AutoUpdateMirrorSession",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "monitoring", "AutoUpdateMirrorSession")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.MirrorSession"], pkgMessages["monitoring.MirrorSession"], "monitoring", "AutoUpdateMirrorSession")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.MirrorSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -802,7 +803,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateStatsPolicy = srv.AddMethod("AutoUpdateStatsPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoUpdateStatsPolicy")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoUpdateStatsPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.StatsPolicy)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -811,12 +812,12 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateTechSupportRequest = srv.AddMethod("AutoUpdateTechSupportRequest",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoUpdateTechSupportRequest")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoUpdateTechSupportRequest")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoUpdateTroubleshootingSession = srv.AddMethod("AutoUpdateTroubleshootingSession",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TroubleshootingSession"], pkgMessages["monitoring.TroubleshootingSession"], "monitoring", "AutoUpdateTroubleshootingSession")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TroubleshootingSession"], pkgMessages["monitoring.TroubleshootingSession"], "monitoring", "AutoUpdateTroubleshootingSession")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.TroubleshootingSession)
 			if !ok {
 				return "", fmt.Errorf("wrong type")

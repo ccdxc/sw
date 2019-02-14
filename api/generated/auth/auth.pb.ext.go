@@ -15,6 +15,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -741,7 +742,11 @@ func (m *UserStatus) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *AuthenticationPolicy) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -778,6 +783,10 @@ func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+func (m *AuthenticationPolicySpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AuthenticationPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 
@@ -805,6 +814,10 @@ func (m *AuthenticationPolicySpec) Validate(ver, path string, ignoreStatus bool)
 	return ret
 }
 
+func (m *AuthenticationPolicyStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *AuthenticationPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.LdapServers {
@@ -828,6 +841,10 @@ func (m *AuthenticationPolicyStatus) Validate(ver, path string, ignoreStatus boo
 		}
 	}
 	return ret
+}
+
+func (m *Authenticators) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Authenticators) Validate(ver, path string, ignoreStatus bool) []error {
@@ -858,9 +875,17 @@ func (m *Authenticators) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Ldap) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *Ldap) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *LdapAttributeMapping) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *LdapAttributeMapping) Validate(ver, path string, ignoreStatus bool) []error {
@@ -868,9 +893,17 @@ func (m *LdapAttributeMapping) Validate(ver, path string, ignoreStatus bool) []e
 	return ret
 }
 
+func (m *LdapServer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *LdapServer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *LdapServerStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *LdapServerStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -891,9 +924,17 @@ func (m *LdapServerStatus) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *Local) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *Local) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *PasswordChangeRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *PasswordChangeRequest) Validate(ver, path string, ignoreStatus bool) []error {
@@ -914,14 +955,26 @@ func (m *PasswordChangeRequest) Validate(ver, path string, ignoreStatus bool) []
 	return ret
 }
 
+func (m *PasswordCredential) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *PasswordCredential) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *PasswordResetRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *PasswordResetRequest) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *Permission) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *Permission) Validate(ver, path string, ignoreStatus bool) []error {
@@ -942,6 +995,10 @@ func (m *Permission) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *Radius) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *Radius) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	for k, v := range m.Servers {
@@ -955,6 +1012,10 @@ func (m *Radius) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *RadiusServer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *RadiusServer) Validate(ver, path string, ignoreStatus bool) []error {
@@ -973,6 +1034,10 @@ func (m *RadiusServer) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *RadiusServerStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *RadiusServerStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1003,6 +1068,33 @@ func (m *RadiusServerStatus) Validate(ver, path string, ignoreStatus bool) []err
 	return ret
 }
 
+func (m *Role) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
 func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	{
@@ -1024,6 +1116,33 @@ func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *RoleBinding) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
+
 func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	{
@@ -1036,14 +1155,26 @@ func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *RoleBindingSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *RoleBindingSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *RoleBindingStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *RoleBindingStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *RoleSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *RoleSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1061,14 +1192,49 @@ func (m *RoleSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *RoleStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *RoleStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *TLSOptions) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TLSOptions) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *User) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
@@ -1103,6 +1269,10 @@ func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *UserSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *UserSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapAuth["UserSpec"][ver]; ok {
@@ -1119,6 +1289,10 @@ func (m *UserSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *UserStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {

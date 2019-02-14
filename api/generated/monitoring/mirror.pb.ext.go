@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -271,7 +272,11 @@ func (m *MirrorStopConditions) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *AppProtoSelector) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *AppProtoSelector) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -291,6 +296,10 @@ func (m *AppProtoSelector) Validate(ver, path string, ignoreStatus bool) []error
 	return ret
 }
 
+func (m *MatchRule) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.AppProtoSel != nil {
@@ -306,9 +315,17 @@ func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *MatchSelector) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *MatchSelector) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *MirrorCollector) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *MirrorCollector) Validate(ver, path string, ignoreStatus bool) []error {
@@ -337,6 +354,33 @@ func (m *MirrorCollector) Validate(ver, path string, ignoreStatus bool) []error 
 		}
 	}
 	return ret
+}
+
+func (m *MirrorSession) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool) []error {
@@ -369,6 +413,10 @@ func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *MirrorSessionSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -418,6 +466,10 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []erro
 	return ret
 }
 
+func (m *MirrorSessionStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *MirrorSessionStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapMirror["MirrorSessionStatus"][ver]; ok {
@@ -436,9 +488,17 @@ func (m *MirrorSessionStatus) Validate(ver, path string, ignoreStatus bool) []er
 	return ret
 }
 
+func (m *MirrorStartConditions) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *MirrorStartConditions) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *MirrorStopConditions) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *MirrorStopConditions) Validate(ver, path string, ignoreStatus bool) []error {

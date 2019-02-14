@@ -106,7 +106,10 @@ var typesMapWorkload = map[string]*api.Struct{
 	},
 }
 
+var keyMapWorkload = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapWorkload)
+	schema.AddPaths(keyMapWorkload)
 }

@@ -15,6 +15,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -339,7 +340,34 @@ func (m *ValidationError) Defaults(ver string) bool {
 	return false
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *Buffer) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
+}
 
 func (m *Buffer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -364,9 +392,17 @@ func (m *Buffer) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *BufferSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *BufferSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *BufferStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *BufferStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -385,6 +421,33 @@ func (m *BufferStatus) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *ClearAction) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *ClearAction) Validate(ver, path string, ignoreStatus bool) []error {
@@ -410,9 +473,17 @@ func (m *ClearAction) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *ClearActionSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *ClearActionSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ClearActionStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *ClearActionStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -431,6 +502,33 @@ func (m *ClearActionStatus) Validate(ver, path string, ignoreStatus bool) []erro
 		}
 	}
 	return ret
+}
+
+func (m *CommitAction) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	tenant = m.Tenant
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "meta.tenant"
+		uref, ok := resp[tag]
+		if !ok {
+			uref = apiintf.ReferenceObj{
+				RefType: apiintf.ReferenceType("NamedRef"),
+			}
+		}
+
+		if m.Tenant != "" {
+			uref.Refs = append(uref.Refs, globals.ConfigRootPrefix+"/cluster/"+"tenants/"+m.Tenant)
+		}
+
+		if len(uref.Refs) > 0 {
+			resp[tag] = uref
+		}
+	}
 }
 
 func (m *CommitAction) Validate(ver, path string, ignoreStatus bool) []error {
@@ -456,9 +554,17 @@ func (m *CommitAction) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *CommitActionSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *CommitActionSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *CommitActionStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *CommitActionStatus) Validate(ver, path string, ignoreStatus bool) []error {
@@ -479,14 +585,26 @@ func (m *CommitActionStatus) Validate(ver, path string, ignoreStatus bool) []err
 	return ret
 }
 
+func (m *Item) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *Item) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *ItemId) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *ItemId) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *ValidationError) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *ValidationError) Validate(ver, path string, ignoreStatus bool) []error {

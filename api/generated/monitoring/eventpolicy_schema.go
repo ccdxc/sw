@@ -83,7 +83,10 @@ var typesMapEventpolicy = map[string]*api.Struct{
 	},
 }
 
+var keyMapEventpolicy = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapEventpolicy)
+	schema.AddPaths(keyMapEventpolicy)
 }

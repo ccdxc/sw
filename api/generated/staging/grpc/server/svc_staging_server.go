@@ -17,6 +17,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	staging "github.com/pensando/sw/api/generated/staging"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
@@ -109,7 +110,7 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 		s.endpointsStagingV1.fnAutoWatchSvcStagingV1 = srv.WatchFromKv
 
 		s.endpointsStagingV1.fnAutoAddBuffer = srv.AddMethod("AutoAddBuffer",
-			apisrvpkg.NewMethod(srv, pkgMessages["staging.Buffer"], pkgMessages["staging.Buffer"], "staging", "AutoAddBuffer")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["staging.Buffer"], pkgMessages["staging.Buffer"], "staging", "AutoAddBuffer")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(staging.Buffer)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -118,7 +119,7 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsStagingV1.fnAutoDeleteBuffer = srv.AddMethod("AutoDeleteBuffer",
-			apisrvpkg.NewMethod(srv, pkgMessages["staging.Buffer"], pkgMessages["staging.Buffer"], "staging", "AutoDeleteBuffer")).WithOper(apiserver.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["staging.Buffer"], pkgMessages["staging.Buffer"], "staging", "AutoDeleteBuffer")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(staging.Buffer)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -127,7 +128,7 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsStagingV1.fnAutoGetBuffer = srv.AddMethod("AutoGetBuffer",
-			apisrvpkg.NewMethod(srv, pkgMessages["staging.Buffer"], pkgMessages["staging.Buffer"], "staging", "AutoGetBuffer")).WithOper(apiserver.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["staging.Buffer"], pkgMessages["staging.Buffer"], "staging", "AutoGetBuffer")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(staging.Buffer)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -136,7 +137,7 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsStagingV1.fnAutoListBuffer = srv.AddMethod("AutoListBuffer",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["staging.BufferList"], "staging", "AutoListBuffer")).WithOper(apiserver.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["staging.BufferList"], "staging", "AutoListBuffer")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -145,12 +146,12 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsStagingV1.fnAutoUpdateBuffer = srv.AddMethod("AutoUpdateBuffer",
-			apisrvpkg.NewMethod(srv, pkgMessages["staging.Buffer"], pkgMessages["staging.Buffer"], "staging", "AutoUpdateBuffer")).WithOper(apiserver.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["staging.Buffer"], pkgMessages["staging.Buffer"], "staging", "AutoUpdateBuffer")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsStagingV1.fnClear = srv.AddMethod("Clear",
-			apisrvpkg.NewMethod(srv, pkgMessages["staging.ClearAction"], pkgMessages["staging.ClearAction"], "staging", "Clear")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["staging.ClearAction"], pkgMessages["staging.ClearAction"], "staging", "Clear")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(staging.ClearAction)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -159,7 +160,7 @@ func (s *sstagingSvc_stagingBackend) regSvcsFunc(ctx context.Context, logger log
 		}).HandleInvocation
 
 		s.endpointsStagingV1.fnCommit = srv.AddMethod("Commit",
-			apisrvpkg.NewMethod(srv, pkgMessages["staging.CommitAction"], pkgMessages["staging.CommitAction"], "staging", "Commit")).WithOper(apiserver.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["staging.CommitAction"], pkgMessages["staging.CommitAction"], "staging", "Commit")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(staging.CommitAction)
 			if !ok {
 				return "", fmt.Errorf("wrong type")

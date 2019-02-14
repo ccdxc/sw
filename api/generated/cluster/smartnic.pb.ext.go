@@ -16,6 +16,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -236,16 +237,28 @@ func (m *SmartNICStatus) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *BiosInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *BiosInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
 }
 
+func (m *IPConfig) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *IPConfig) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	return ret
+}
+
+func (m *MacRange) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *MacRange) Validate(ver, path string, ignoreStatus bool) []error {
@@ -264,6 +277,10 @@ func (m *MacRange) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SmartNIC) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
@@ -301,6 +318,10 @@ func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
 	return ret
 }
 
+func (m *SmartNICCondition) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *SmartNICCondition) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if vs, ok := validatorMapSmartnic["SmartNICCondition"][ver]; ok {
@@ -319,6 +340,10 @@ func (m *SmartNICCondition) Validate(ver, path string, ignoreStatus bool) []erro
 	return ret
 }
 
+func (m *SmartNICInfo) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *SmartNICInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.MemoryInfo != nil {
@@ -332,6 +357,10 @@ func (m *SmartNICInfo) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SmartNICSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SmartNICSpec) Validate(ver, path string, ignoreStatus bool) []error {
@@ -350,6 +379,10 @@ func (m *SmartNICSpec) Validate(ver, path string, ignoreStatus bool) []error {
 		}
 	}
 	return ret
+}
+
+func (m *SmartNICStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {

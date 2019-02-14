@@ -38,6 +38,7 @@ type Store interface {
 	Mark(key string)
 	Sweep(key string, cb apiintf.SuccessCbFunc)
 	PurgeDeleted(past time.Duration)
+	Stat(key []string) []apiintf.ObjectStat
 	Clear()
 }
 
@@ -357,6 +358,36 @@ func (s *store) PurgeDeleted(past time.Duration) {
 		}
 		cobj = s.delPending.Peek()
 	}
+}
+
+// Stat returns stat for list of keys
+func (s *store) Stat(keys []string) []apiintf.ObjectStat {
+	s.RLock()
+	defer s.RUnlock()
+	var ret []apiintf.ObjectStat
+	for i := range keys {
+		prefix := patricia.Prefix(keys[i])
+		v := s.objs.Get(prefix)
+		if v == nil {
+			ret = append(ret, apiintf.ObjectStat{Key: keys[i], Valid: false})
+		} else {
+			c := v.(*cacheObj)
+			if c.deleted {
+				ret = append(ret, apiintf.ObjectStat{Key: keys[i], Valid: false})
+			} else {
+				obj := apiintf.ObjectStat{Key: keys[i], Valid: true, Revision: c.revision, LastUpd: c.lastUpd}
+				if c.obj != nil {
+					if objm, err := runtime.GetObjectMeta(c.obj); err == nil {
+						obj.ObjectMeta = *objm
+						obj.TypeMeta.Kind = c.obj.GetObjectKind()
+						obj.TypeMeta.APIVersion = c.obj.GetObjectAPIVersion()
+					}
+				}
+				ret = append(ret, obj)
+			}
+		}
+	}
+	return ret
 }
 
 // Clear cleans up all objects in the store.

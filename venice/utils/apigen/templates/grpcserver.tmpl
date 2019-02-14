@@ -26,6 +26,8 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/cache"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/api/listerwatcher"
@@ -246,7 +248,15 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 		}){{$msgname := .Name}}{{with (index $validators.Map (derefStr .Name))}}.WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
 			r := i.({{$pkgname}}.{{$msgname}})
 			return r.Validate(ver, "", ignoreStatus)
-		}){{end}}{{if isSpecStatusMessage .}}.WithUpdateMetaFunction(func (ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
+		}){{end}}.WithReferencesGetter(func (i interface{}) (map[string]apiintf.ReferenceObj, error) {
+            ret := make(map[string]apiintf.ReferenceObj)
+            r := i.({{$pkgname}}.{{.Name}})
+            {{if isTenanted .}}
+            tenant := r.Tenant {{else}}
+            tenant := "" {{end}}
+            r.References(tenant, "", ret)
+            return ret, nil
+		}){{if isSpecStatusMessage .}}.WithUpdateMetaFunction(func (ctx context.Context, i interface{}, create bool) kvstore.UpdateFunc {
 			var n *{{$pkgname}}.{{.Name}}
 			if v, ok := i.({{$pkgname}}.{{.Name}}); ok {
 				n = &v
@@ -254,17 +264,16 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 				n = v
 			} else {
 				return nil
-			}
+        	}
 			return func(oldObj runtime.Object) (runtime.Object, error) {
 				if create {
-					n.UUID = uuid.NewV4().String()
-					ts, err := types.TimestampProto(time.Now())
-					if err != nil {
+        			n.UUID = uuid.NewV4().String()
+        			ts, err := types.TimestampProto(time.Now())
+        			if err != nil {
 						return nil, err
-					}
-					n.CreationTime.Timestamp = *ts
-					n.ModTime.Timestamp.Nanos = 0
-					n.ModTime.Timestamp.Seconds = 0
+        			}
+        			n.CreationTime.Timestamp = *ts
+					n.ModTime.Timestamp = *ts
 					n.GenerationID = "1"
 					return n, nil
 				}
@@ -273,7 +282,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regMsgsFunc(l log.Logger, scheme *runt
 				}
 				o := oldObj.(*{{$pkgname}}.{{.Name}})
 				n.UUID, n.CreationTime, n.Namespace, n.GenerationID = o.UUID, o.CreationTime, o.Namespace, o.GenerationID
-			   	ts, err := types.TimestampProto(time.Now())
+        		ts, err := types.TimestampProto(time.Now())
 				if err != nil {
 					return nil, err
 				}
@@ -380,7 +389,7 @@ func (s *s{{$pkgname}}{{$flname}}Backend) regSvcsFunc(ctx context.Context, logge
 		s.endpoints{{$svcname}}.fnAutoWatchSvc{{$svcname}} = srv.WatchFromKv
 		{{range .Methods}}{{$methparams := (getMethodParams .)}}{{if (strEq $methparams.Oper "WatchOper")}}{{else}}
 		s.endpoints{{$svcname}}.fn{{.Name}} = srv.AddMethod("{{.Name}}",
-			apisrvpkg.NewMethod(srv, pkgMessages["{{getInputType $pkgname . true}}"], pkgMessages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiserver.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiserver.APIOperType, i interface{}) (interface{}, bool, error) {
+			apisrvpkg.NewMethod(srv, pkgMessages["{{getInputType $pkgname . true}}"], pkgMessages["{{getOutputType $pkgname . true}}"], "{{$svcprefix}}", "{{.Name}}")).WithOper(apiintf.{{$methparams.Oper}}){{if isAutoList .}}{{else}}{{if eq (len (getDbKey .RequestType)) 0}}.WithPreCommitHook(func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, i interface{}) (interface{}, bool, error) {
 			return i, false, nil
 		}){{end}}{{end}}.WithVersion("{{$svcver}}").WithMakeURI(func(i interface{}) (string, error) { {{if isRestExposed .}}{{$uri := getURIKey . $svcver false}}{{if $uri.Ref}}
 			in, ok := i.({{getInputType $pkgname . true}})

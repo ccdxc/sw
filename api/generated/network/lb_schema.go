@@ -106,7 +106,10 @@ var typesMapLb = map[string]*api.Struct{
 	},
 }
 
+var keyMapLb = map[string][]api.PathsMap{}
+
 func init() {
 	schema := runtime.GetDefaultScheme()
 	schema.AddSchema(typesMapLb)
+	schema.AddPaths(keyMapLb)
 }

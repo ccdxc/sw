@@ -16,6 +16,7 @@ import (
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -171,7 +172,11 @@ func (m *TechSupportRequestStatus) Defaults(ver string) bool {
 	return ret
 }
 
-// Validators
+// Validators and Requirements
+
+func (m *TechSupportNodeResult) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
 
 func (m *TechSupportNodeResult) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
@@ -189,6 +194,10 @@ func (m *TechSupportNodeResult) Validate(ver, path string, ignoreStatus bool) []
 		}
 	}
 	return ret
+}
+
+func (m *TechSupportRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TechSupportRequest) Validate(ver, path string, ignoreStatus bool) []error {
@@ -226,6 +235,10 @@ func (m *TechSupportRequest) Validate(ver, path string, ignoreStatus bool) []err
 	return ret
 }
 
+func (m *TechSupportRequestSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TechSupportRequestSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.CollectionSelector != nil {
@@ -251,6 +264,10 @@ func (m *TechSupportRequestSpec) Validate(ver, path string, ignoreStatus bool) [
 	return ret
 }
 
+func (m *TechSupportRequestSpec_NodeSelectorSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
 func (m *TechSupportRequestSpec_NodeSelectorSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 	if m.Labels != nil {
@@ -264,6 +281,10 @@ func (m *TechSupportRequestSpec_NodeSelectorSpec) Validate(ver, path string, ign
 		}
 	}
 	return ret
+}
+
+func (m *TechSupportRequestStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
 }
 
 func (m *TechSupportRequestStatus) Validate(ver, path string, ignoreStatus bool) []error {

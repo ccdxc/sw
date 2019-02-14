@@ -20,10 +20,30 @@ type TestType1 struct {
 	A string
 }
 
+func (t *TestType1) Clone(into interface{}) (interface{}, error) {
+	if into != nil {
+		in := into.(*TestType1)
+		*in = *t
+		return in, nil
+	}
+	ret := *t
+	return &ret, nil
+}
+
 type TestType2 struct {
 	api.TypeMeta
 	api.ObjectMeta
 	A int
+}
+
+func (t *TestType2) Clone(into interface{}) (interface{}, error) {
+	if into != nil {
+		in := into.(*TestType2)
+		*in = *t
+		return in, nil
+	}
+	ret := *t
+	return &ret, nil
 }
 
 func TestMain(m *testing.M) {
