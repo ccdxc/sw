@@ -8,10 +8,12 @@ import (
 
 func TestAll(t *testing.T) {
 	// On Linux, Execute all tests for GoCrypto and Pkcs11 backends.
-	gcbe := newGoCryptoBackend(t)
-	defer gcbe.Close()
+	pgcbe := newGoCryptoBackend(t, true) // persistent
+	defer pgcbe.Close()
+	vgcbe := newGoCryptoBackend(t, false) // volatile
+	defer vgcbe.Close()
 	pkbe := newPkcs11Backend(t)
 	defer pkbe.Close()
-	backends := []Backend{gcbe, pkbe}
+	backends := []Backend{pgcbe, vgcbe, pkbe}
 	testAll(t, backends)
 }

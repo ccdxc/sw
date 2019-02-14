@@ -26,6 +26,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
@@ -504,8 +505,10 @@ func (n *NMD) GetGetNMDUploadURL() string {
 
 func (n *NMD) initTLSProvider() error {
 	// Instantiate a KeyMgr to store the cluster certificate and a TLS provider
-	// to use it to connect to other cluster components
-	tlsProvider, err := tlsproviders.NewDefaultKeyMgrBasedProvider(globals.Nmd + "-cluster")
+	// to use it to connect to other cluster components.
+	// Keys are not persisted. They will be refreshed next time we access the cluster
+	// or when they expire (TBD).
+	tlsProvider, err := tlsproviders.NewDefaultKeyMgrBasedProvider("")
 	if err != nil {
 		return errors.Wrapf(err, "Error instantiating tls provider")
 	}
@@ -547,10 +550,18 @@ func (n *NMD) setClusterCredentials(resp *grpc.NICAdmissionResponse) error {
 				log.Errorf("Error parsing trust roots certificate index %d: %v", i, err)
 				// continue anyway
 			}
-			trustRoots = append(caTrustChain, cert)
+			trustRoots = append(trustRoots, cert)
 		}
 	}
 	n.tlsProvider.SetTrustRoots(trustRoots)
+
+	// Persist trust roots so that we remember what is the last Venice cluster we connected to
+	// and we can authenticate offline credentials signed by Venice CA.
+	err = certs.SaveCertificates(clusterTrustRootsFile, trustRoots)
+	if err != nil {
+		return fmt.Errorf("Error storing cluster trust roots in %s: %v", clusterTrustRootsFile, err)
+	}
+
 	return nil
 }
 

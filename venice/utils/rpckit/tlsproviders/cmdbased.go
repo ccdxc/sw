@@ -7,7 +7,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"sync"
 	"time"
@@ -299,11 +298,7 @@ func NewCMDBasedProvider(cmdEpNameOrURL, endpointID string, km *keymgr.KeyMgr, o
 
 // NewDefaultCMDBasedProvider instantiates a new CMD-based TLS provider using a keymgr with default backend
 func NewDefaultCMDBasedProvider(cmdEpNameOrURL, endpointID string, opts ...CMDProviderOption) (*CMDBasedProvider, error) {
-	workDir, err := ioutil.TempDir("", "tlsprovider-"+endpointID+"-")
-	if err != nil {
-		return nil, errors.Wrapf(err, "Error creating workdir for GoCrypto backend")
-	}
-	be, err := keymgr.NewGoCryptoBackend(workDir)
+	be, err := keymgr.NewGoCryptoBackend("") // keys are not persisted
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error instantiating GoCrypto backend")
 	}

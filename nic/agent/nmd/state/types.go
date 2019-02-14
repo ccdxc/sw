@@ -28,7 +28,10 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
 )
 
-const nicRegistrationWaitTime = time.Duration(time.Minute * 5)
+const (
+	nicRegistrationWaitTime = time.Duration(time.Minute * 5)
+	clusterTrustRootsFile   = "/tmp/clusterTrustRoots.pem"
+)
 
 // NMD is the Naples management daemon instance object
 type NMD struct {

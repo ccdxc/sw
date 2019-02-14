@@ -8,8 +8,10 @@ import (
 
 func TestAll(t *testing.T) {
 	// On Mac, execute tests only for GoCrypto backend
-	gcbe := newGoCryptoBackend(t)
-	defer gcbe.Close()
-	backends := []Backend{gcbe}
+	pgcbe := newGoCryptoBackend(t, true) // persistent
+	defer pgcbe.Close()
+	vgcbe := newGoCryptoBackend(t, false) // volatile
+	defer vgcbe.Close()
+	backends := []Backend{pgcbe, vgcbe}
 	testAll(t, backends)
 }

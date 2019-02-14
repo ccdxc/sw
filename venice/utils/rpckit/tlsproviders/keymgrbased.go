@@ -228,9 +228,13 @@ func NewKeyMgrBasedProvider(km *keymgr.KeyMgr) *KeyMgrBasedProvider {
 
 // NewDefaultKeyMgrBasedProvider instantiates a new keymgr-based TLS provider using a keymgr with default backend
 func NewDefaultKeyMgrBasedProvider(id string) (*KeyMgrBasedProvider, error) {
-	workDir, err := ioutil.TempDir("", "tlsprovider-"+id+"-")
-	if err != nil {
-		return nil, errors.Wrapf(err, fmt.Sprintf("Error creating workdir for GoCrypto backend %s", id))
+	var workDir string
+	var err error
+	if id != "" {
+		workDir, err = ioutil.TempDir("", "tlsprovider-"+id+"-")
+		if err != nil {
+			return nil, errors.Wrapf(err, fmt.Sprintf("Error creating workdir for GoCrypto backend %s", id))
+		}
 	}
 	be, err := keymgr.NewGoCryptoBackend(workDir)
 	if err != nil {

@@ -21,25 +21,156 @@ import (
 	kw "github.com/pensando/sw/venice/utils/crypto/keywrap"
 )
 
+// interface for storage facility
+type goCryptoStore interface {
+	getObject(ID string, Type ObjectType) (Object, error)
+	storeObject(obj Object) error
+	destroyObject(ID string, Type ObjectType) error
+	closeStore() error
+}
+
 // GoCryptoBackend is a KeyMgr backend based on Go crypto library
 type GoCryptoBackend struct {
 	sync.Mutex
+	store goCryptoStore
+}
+
+type persistentGoCryptoStore struct {
 	workDir string
 }
 
-func (be *GoCryptoBackend) getObjectPath(ID string, Type ObjectType) string {
-	objectPath := path.Join(be.workDir, ID)
+type volatileGoCryptoStore struct {
+	memMap map[string]Object
+}
+
+func getObjectKey(ID string, Type ObjectType) string {
 	switch Type {
 	case ObjectTypeKeyPair:
-		objectPath += ".key"
+		return ID + ".key"
 	case ObjectTypeSymmetricKey:
-		objectPath += ".aes"
+		return ID + ".aes"
 	case ObjectTypeCertificate:
-		objectPath += ".crt"
+		return ID + ".crt"
 	default:
-		objectPath += ".bin"
+		return ID + ".bin"
 	}
-	return objectPath
+}
+
+func (s *volatileGoCryptoStore) storeObject(obj Object) error {
+	key := getObjectKey(obj.ID(), obj.Type())
+	if _, exists := s.memMap[key]; exists {
+		return fmt.Errorf("Object of type %+v with ID %+v already exist", obj.Type(), obj.ID())
+	}
+	s.memMap[key] = obj
+	return nil
+}
+
+func (s *volatileGoCryptoStore) getObject(ID string, Type ObjectType) (Object, error) {
+	key := getObjectKey(ID, Type)
+	obj, ok := s.memMap[key]
+	if !ok {
+		// if object does not exist, it is not an error
+		return nil, nil
+	}
+	return obj, nil
+}
+
+func (s *volatileGoCryptoStore) closeStore() error {
+	if s.memMap != nil {
+		s.memMap = nil
+	}
+	return nil
+}
+
+func (s *volatileGoCryptoStore) destroyObject(ID string, Type ObjectType) error {
+	key := getObjectKey(ID, Type)
+	if _, exist := s.memMap[key]; !exist {
+		return fmt.Errorf("Object of type %+v with ID %+v does not exist", Type, ID)
+	}
+	delete(s.memMap, getObjectKey(ID, Type))
+	return nil
+}
+
+func (s *persistentGoCryptoStore) storeObject(obj Object) error {
+	ID := obj.ID()
+	objectPath := path.Join(s.workDir, getObjectKey(ID, obj.Type()))
+	if _, err := os.Stat(objectPath); !os.IsNotExist(err) {
+		return errors.Wrapf(err, "Object of type %+v with ID %+v already exist", obj.Type(), ID)
+	}
+	switch obj.Type() {
+	case ObjectTypeCertificate:
+		err := certs.SaveCertificate(objectPath, obj.(*Certificate).Certificate)
+		if err != nil {
+			return errors.Wrapf(err, "Error writing certificate, ID: %v", ID)
+		}
+	case ObjectTypeKeyPair:
+		err := certs.SavePrivateKey(objectPath, obj.(*KeyPair).Signer)
+		if err != nil {
+			return errors.Wrapf(err, "Error writing private key, ID: %v", ID)
+		}
+	case ObjectTypeSymmetricKey:
+		return s.writeSymmetricKey(obj, objectPath)
+	default:
+		return fmt.Errorf("Unsupported object type: %v, ID: %v", obj.Type(), ID)
+	}
+	return nil
+}
+
+func (s *persistentGoCryptoStore) getObject(ID string, Type ObjectType) (Object, error) {
+	objectPath := path.Join(s.workDir, getObjectKey(ID, Type))
+	_, err := os.Stat(objectPath)
+	if err != nil && os.IsNotExist(err) {
+		// if object does not exist, it is not an error
+		return nil, nil
+	}
+	switch Type {
+	case ObjectTypeCertificate:
+		cert, err := certs.ReadCertificate(objectPath)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Error reading certificate, ID: %v", ID)
+		}
+		return NewCertificateObject(ID, cert), nil
+	case ObjectTypeKeyPair:
+		key, err := certs.ReadPrivateKey(objectPath)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Error reading keypair, ID: %v", ID)
+		}
+		signer := getSignerFromPrivateKey(key)
+		return NewKeyPairObject(ID, signer), nil
+	case ObjectTypeSymmetricKey:
+		return s.readSymmetricKey(ID, objectPath)
+	default:
+		return nil, fmt.Errorf("Unsupported object type: %v", Type)
+	}
+}
+
+func (s *persistentGoCryptoStore) destroyObject(ID string, Type ObjectType) error {
+	objectPath := path.Join(s.workDir, getObjectKey(ID, Type))
+	return os.Remove(objectPath)
+}
+
+func (s *persistentGoCryptoStore) writeSymmetricKey(obj Object, objectPath string) error {
+	err := ioutil.WriteFile(objectPath, obj.(*SymmetricKey).Key.([]byte), 0600)
+	if err != nil {
+		return errors.Wrapf(err, "Error writing symmetric key, ID: %v", obj.ID())
+	}
+	return nil
+}
+
+func (s *persistentGoCryptoStore) readSymmetricKey(ID, fileName string) (Object, error) {
+	key, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error reading symmetric key, ID: %v", ID)
+	}
+	keyLenBits := uint(len(key) * 8)
+	return NewSymmetricKeyObject(ID, bitSizeToSymmetricKeyType[keyLenBits], key), nil
+}
+
+func (s *persistentGoCryptoStore) closeStore() error {
+	if s.workDir != "" {
+		return os.RemoveAll(s.workDir)
+	}
+	return nil
 }
 
 func (be *GoCryptoBackend) newRsaKeyPair(keytype KeyType, bits int) (*KeyPair, error) {
@@ -65,7 +196,7 @@ func (be *GoCryptoBackend) newEcdsaKeyPair(keytype KeyType, curve elliptic.Curve
 }
 
 // CreateKeyPair generates a (public key, private key) of the specified type with the supplied ID
-func (be *GoCryptoBackend) CreateKeyPair(id string, keyType KeyType) (*KeyPair, error) {
+func (be *GoCryptoBackend) CreateKeyPair(ID string, keyType KeyType) (*KeyPair, error) {
 	var kp *KeyPair
 	var err error
 
@@ -80,52 +211,15 @@ func (be *GoCryptoBackend) CreateKeyPair(id string, keyType KeyType) (*KeyPair, 
 		kp, err = nil, fmt.Errorf("Unsupported KeyType: %v", keyType)
 	}
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error creating key pair, ID: %s, type: %v", id, keyType)
+		return nil, errors.Wrapf(err, "Error creating key pair, ID: %s, type: %v", ID, keyType)
 	}
-	kp.id = id
+	kp.id = ID
 	kp.objType = ObjectTypeKeyPair
 	err = be.StoreObject(kp)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error storing key pair, ID: %s, type: %v", id, keyType)
+		return nil, errors.Wrapf(err, "Error storing key pair, ID: %s, type: %v", ID, keyType)
 	}
 	return kp, nil
-}
-
-func (be *GoCryptoBackend) readSymmetricKey(ID, fileName string) (Object, error) {
-	key, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return nil, errors.Wrapf(err, "Error reading symmetric key, ID: %v", ID)
-	}
-	keyLenBits := uint(len(key) * 8)
-	return NewSymmetricKeyObject(ID, bitSizeToSymmetricKeyType[keyLenBits], key), nil
-}
-
-func (be *GoCryptoBackend) getObject(ID string, Type ObjectType) (Object, error) {
-	fileName := be.getObjectPath(ID, Type)
-	_, err := os.Stat(fileName)
-	if err != nil && os.IsNotExist(err) {
-		// if object does not exist, it is not an error
-		return nil, nil
-	}
-	switch Type {
-	case ObjectTypeCertificate:
-		cert, err := certs.ReadCertificate(fileName)
-		if err != nil {
-			return nil, errors.Wrapf(err, "Error reading certificate, ID: %v", ID)
-		}
-		return NewCertificateObject(ID, cert), nil
-	case ObjectTypeKeyPair:
-		key, err := certs.ReadPrivateKey(fileName)
-		if err != nil {
-			return nil, errors.Wrapf(err, "Error reading keypair, ID: %v", ID)
-		}
-		signer := getSignerFromPrivateKey(key)
-		return NewKeyPairObject(ID, signer), nil
-	case ObjectTypeSymmetricKey:
-		return be.readSymmetricKey(ID, fileName)
-	default:
-		return nil, fmt.Errorf("Unsupported object type: %v", Type)
-	}
 }
 
 // GetObject returns an object stored in KeyMgr.
@@ -135,40 +229,7 @@ func (be *GoCryptoBackend) GetObject(ID string, Type ObjectType) (Object, error)
 	}
 	be.Lock()
 	defer be.Unlock()
-	return be.getObject(ID, Type)
-}
-
-func (be *GoCryptoBackend) writeSymmetricKey(obj Object, objectPath string) error {
-	err := ioutil.WriteFile(objectPath, obj.(*SymmetricKey).Key.([]byte), 0600)
-	if err != nil {
-		return errors.Wrapf(err, "Error writing symmetric key, ID: %v", obj.ID())
-	}
-	return nil
-}
-
-func (be *GoCryptoBackend) storeObject(obj Object) error {
-	id := obj.ID()
-	objectPath := be.getObjectPath(id, obj.Type())
-	if _, err := os.Stat(objectPath); !os.IsNotExist(err) {
-		return errors.Wrapf(err, "Object with ID %s already exists", id)
-	}
-	switch obj.Type() {
-	case ObjectTypeCertificate:
-		err := certs.SaveCertificate(objectPath, obj.(*Certificate).Certificate)
-		if err != nil {
-			return errors.Wrapf(err, "Error writing certificate, ID: %v", id)
-		}
-	case ObjectTypeKeyPair:
-		err := certs.SavePrivateKey(objectPath, obj.(*KeyPair).Signer)
-		if err != nil {
-			return errors.Wrapf(err, "Error writing private key, ID: %v", id)
-		}
-	case ObjectTypeSymmetricKey:
-		return be.writeSymmetricKey(obj, objectPath)
-	default:
-		return fmt.Errorf("Unsupported object type: %v, ID: %v", obj.Type(), id)
-	}
-	return nil
+	return be.store.getObject(ID, Type)
 }
 
 // StoreObject stores an object in KeyMgr.
@@ -181,14 +242,14 @@ func (be *GoCryptoBackend) StoreObject(obj Object) error {
 	}
 	be.Lock()
 	defer be.Unlock()
-	return be.storeObject(obj)
+	return be.store.storeObject(obj)
 }
 
 // DestroyObject cleans up the state associated with the key pair with the given ID
 func (be *GoCryptoBackend) DestroyObject(ID string, Type ObjectType) error {
 	be.Lock()
 	defer be.Unlock()
-	return os.Remove(be.getObjectPath(ID, Type))
+	return be.store.destroyObject(ID, Type)
 }
 
 // DeriveKey derives a symmetric key using Diffie-Hellman key agreement.
@@ -197,7 +258,7 @@ func (be *GoCryptoBackend) DestroyObject(ID string, Type ObjectType) error {
 func (be *GoCryptoBackend) DeriveKey(derivedKeyID string, derivedKeyType KeyType, baseKeyPairID string, peerPublicKey crypto.PublicKey) (*SymmetricKey, error) {
 	be.Lock()
 	defer be.Unlock()
-	baseKeyPair, err := be.getObject(baseKeyPairID, ObjectTypeKeyPair)
+	baseKeyPair, err := be.store.getObject(baseKeyPairID, ObjectTypeKeyPair)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error reading base key pair, ID: %v", baseKeyPairID)
 	}
@@ -224,7 +285,7 @@ func (be *GoCryptoBackend) DeriveKey(derivedKeyID string, derivedKeyType KeyType
 	copy(key, xBytes[len(xBytes)-int(bytesLen):])
 	// form the symmetric key object, store it and return it
 	keyObj := NewSymmetricKeyObject(derivedKeyID, derivedKeyType, key)
-	err = be.storeObject(keyObj)
+	err = be.store.storeObject(keyObj)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error storing derived key, ID: %v, type: %v", derivedKeyID, derivedKeyType)
 	}
@@ -236,14 +297,14 @@ func (be *GoCryptoBackend) DeriveKey(derivedKeyID string, derivedKeyType KeyType
 func (be *GoCryptoBackend) WrapKeyPair(keyPairID, kekID string) ([]byte, error) {
 	be.Lock()
 	defer be.Unlock()
-	kek, err := be.getObject(kekID, ObjectTypeSymmetricKey)
+	kek, err := be.store.getObject(kekID, ObjectTypeSymmetricKey)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error accessing wrapping key, ID: %v", kekID)
 	}
 	if kek == nil {
 		return nil, fmt.Errorf("Wrapping key, ID: %v does not exist", kekID)
 	}
-	keyPair, err := be.getObject(keyPairID, ObjectTypeKeyPair)
+	keyPair, err := be.store.getObject(keyPairID, ObjectTypeKeyPair)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error accessing key pair, ID: %v", keyPairID)
 	}
@@ -266,7 +327,7 @@ func (be *GoCryptoBackend) WrapKeyPair(keyPairID, kekID string) ([]byte, error) 
 func (be *GoCryptoBackend) UnwrapKeyPair(unwrappedKeyPairID string, wrappedKey []byte, publicKey crypto.PublicKey, kekID string) (*KeyPair, error) {
 	be.Lock()
 	defer be.Unlock()
-	kekObj, err := be.getObject(kekID, ObjectTypeSymmetricKey)
+	kekObj, err := be.store.getObject(kekID, ObjectTypeSymmetricKey)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error accessing unwrapping key, ID: %v", kekID)
 	}
@@ -282,7 +343,7 @@ func (be *GoCryptoBackend) UnwrapKeyPair(unwrappedKeyPairID string, wrappedKey [
 		return nil, errors.Wrapf(err, "Error parsing unwrapped key pair, ID: %v with key, ID: %v", unwrappedKeyPairID, kekID)
 	}
 	keyObj := NewKeyPairObject(unwrappedKeyPairID, key.(crypto.Signer))
-	err = be.storeObject(keyObj)
+	err = be.store.storeObject(keyObj)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error storing unwrapped keypair, ID: %v", unwrappedKeyPairID)
 	}
@@ -294,16 +355,29 @@ func (be *GoCryptoBackend) UnwrapKeyPair(unwrappedKeyPairID string, wrappedKey [
 func (be *GoCryptoBackend) Close() error {
 	be.Lock()
 	defer be.Unlock()
-	return os.RemoveAll(be.workDir)
+	return be.store.closeStore()
 }
 
 // NewGoCryptoBackend returns a new instance of GoCryptoBackend.
 func NewGoCryptoBackend(dir string) (*GoCryptoBackend, error) {
-	err := os.MkdirAll(dir, 0700)
-	if err != nil {
-		return nil, errors.Wrapf(err, "Unable to open working directory %s for writing", dir)
+	var be *GoCryptoBackend
+
+	if dir != "" { // persistent
+		err := os.MkdirAll(dir, 0700)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Unable to open working directory %s for writing", dir)
+		}
+		be = &GoCryptoBackend{
+			store: &persistentGoCryptoStore{
+				workDir: dir,
+			},
+		}
+	} else { // volatile
+		be = &GoCryptoBackend{
+			store: &volatileGoCryptoStore{
+				memMap: make(map[string]Object),
+			},
+		}
 	}
-	return &GoCryptoBackend{
-		workDir: dir,
-	}, nil
+	return be, nil
 }
