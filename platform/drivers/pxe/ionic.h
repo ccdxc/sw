@@ -374,6 +374,7 @@ struct lif
 	struct qcq *txqcqs;
 	struct qcq *rxqcqs;
 	struct io_buffer *rx_iobuf[NRXQ_DESC];
+	struct io_buffer *tx_iobuf[NTXQ_DESC];
 	u32 notifyblock_sz;
 	struct notify_block *notifyblock;
 	dma_addr_t notifyblock_pa;
@@ -426,6 +427,7 @@ int ionic_qcq_disable(struct qcq *qcq);
 int ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode);
 
 void ionic_rx_flush(struct lif *lif);
+void ionic_tx_flush(struct net_device *netdev, struct lif *lif);
 void ionic_rx_fill(struct net_device *netdev, int length);
 void ionic_poll_rx(struct net_device *netdev);
 void ionic_poll_tx(struct net_device *netdev);
@@ -443,4 +445,6 @@ void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
 int ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 				unsigned int lif_index, unsigned long max_seconds);
 unsigned int ionic_q_space_avail(struct queue *q);
+int ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index, unsigned long max_seconds);
+int ionic_lif_reset(struct ionic *ionic);
 #endif /* _IONIC_H */

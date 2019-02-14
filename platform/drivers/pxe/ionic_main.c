@@ -198,6 +198,23 @@ int ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
 }
 
+int ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index, unsigned long max_seconds)
+{
+	union dev_cmd cmd = {
+		.lif_init.opcode = CMD_OPCODE_LIF_RESET,
+		.lif_init.index = index,
+	};
+
+	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
+}
+
+int ionic_lif_reset(struct ionic *ionic)
+{
+	struct ionic_dev *idev = &ionic->idev;
+
+	return ionic_dev_cmd_lif_reset(idev, ionic->ionic_lif->index, devcmd_timeout);
+}
+
 /**
  * Probe helper functions.
  * */
@@ -1089,9 +1106,28 @@ void ionic_rx_flush(struct lif *lif)
 		lif->rx_iobuf[i] = NULL;
 	}
 
-	//increment the head counter to mark that the queue is empty
-	while(rxq->head->index != rxq->tail->index) {
+	// increment the head counter to mark that the queue is empty
+	while (rxq->head->index != rxq->tail->index) {
 		rxq->head = rxq->head->next;
+	}
+}
+
+/**
+ * Cleans up the txq of the remaining IOB
+ * */
+void ionic_tx_flush(struct net_device *netdev, struct lif *lif)
+{
+	struct queue *txq = &lif->txqcqs->q;
+
+	// increment the tail counter to mark that the queue is empty
+	while (txq->tail->index != txq->head->index) {
+		// Cancel remaining transmits.
+		if (txq->lif->tx_iobuf[txq->tail->index]) {
+			netdev_tx_complete_err(netdev, txq->lif->tx_iobuf[txq->tail->index], -ECANCELED );
+			txq->lif->tx_iobuf[txq->tail->index] = NULL;
+		}
+
+		txq->tail = txq->tail->next;
 	}
 }
 
@@ -1218,13 +1254,15 @@ void ionic_poll_tx(struct net_device *netdev)
 		}
 		txcq->info = txcq->info->next;
 
+		// Complete transmit
+		netdev_tx_complete(netdev, txq->lif->tx_iobuf[txq->tail->index]);
+		txq->lif->tx_iobuf[txq->tail->index] = NULL;
+
 		// update the q tail index;
 		txq->tail = txq->tail->next;
 
 		// update the comp struct
 		comp = txcq->info->cq_desc;
 
-		// Complete transmit
-		netdev_tx_complete_next(netdev);
 	}
 }

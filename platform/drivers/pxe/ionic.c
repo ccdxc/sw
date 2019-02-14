@@ -64,9 +64,9 @@ static int ionic_check_link ( struct net_device *netdev ) {
 	u16 link_up;
 
 	link_up = ionic->ionic_lif->notifyblock->link_status;
-	if(link_up != ionic->link_status) {
+	if (link_up != ionic->link_status) {
 		ionic->link_status = link_up;
-		if(link_up) {
+		if (link_up) {
 			netdev_link_up ( netdev );
 		} else {
 			netdev_link_down ( netdev );
@@ -124,9 +124,11 @@ static void ionic_close(struct net_device *netdev)
 {
 	struct ionic *ionic = netdev->priv;
 
+	ionic_qcq_disable(ionic->ionic_lif->rxqcqs);
+
 	ionic_qcq_disable(ionic->ionic_lif->txqcqs);
 
-	ionic_qcq_disable(ionic->ionic_lif->rxqcqs);
+	ionic_tx_flush(netdev, ionic->ionic_lif);
 
 	ionic_rx_flush(ionic->ionic_lif);
 }
@@ -161,6 +163,9 @@ static int ionic_transmit(struct net_device *netdev,
 	desc->V = 0;
 	desc->C = 1;
 	desc->O = 0;
+
+	// store the iobuf in the txq
+	txq->lif->tx_iobuf[txq->head->index] = iobuf;
 
 	// increment the head for the q.
 	txq->head = txq->head->next;
@@ -381,6 +386,9 @@ static void ionic_remove(struct pci_device *pci)
 
 	// Reset card
 	ionic_reset(ionic);
+
+	// Reset lif
+	ionic_lif_reset(ionic);
 
 	// Free network device
 	free_dma(ionic->ident, sizeof(union identity));
