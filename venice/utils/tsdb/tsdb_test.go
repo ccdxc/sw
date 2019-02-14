@@ -793,12 +793,14 @@ func TestReadNonLocalObj(t *testing.T) {
 
 func TestObjRecreate(t *testing.T) {
 	tName := t.Name()
-	keyTags := map[string]string{objID: tName}
+	keyTags := map[string]string{}
 	t1, err := NewObj(tName, keyTags, nil, &ObjOpts{})
 	AssertOk(t, err, "unable to create obj")
 	defer t1.Delete()
 
-	t2, err2 := NewObj(tName, keyTags, nil, &ObjOpts{})
+	// Passing in the default key should give us the same obj
+	keyTags2 := map[string]string{"name": tName}
+	t2, err2 := NewObj(tName, keyTags2, nil, &ObjOpts{})
 	AssertOk(t, err2, "unable to re-obtain obj with same keys")
 	Assert(t, t1 == t2, "did not get the same object back")
 }

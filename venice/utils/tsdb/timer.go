@@ -51,16 +51,18 @@ func establishConn() bool {
 // most of the metrics (except precision metrics) are timestamped at the push
 // intervals; this keeps the collection and distribution overhead lower
 func periodicTransmit() {
-	if !establishConn() {
-		return
-	}
-
-	global.wg.Add(1)
 	defer global.wg.Done()
 	for {
+		if global.mc == nil && !establishConn() {
+			return
+		}
 		select {
 		case <-time.After(global.opts.SendInterval):
-			sendAllObjs()
+			err := sendAllObjs()
+			if err != nil {
+				// Force a reconnection
+				global.mc = nil
+			}
 		case <-global.context.Done():
 			log.Infof("aborting tsdb transmit thread: parent context ended")
 			return
@@ -93,7 +95,7 @@ func (obj *iObj) Push() {
 // it looks for dirty objects (objects that have changed) and deleted objects
 // it creates metric bundles to and use collector library to push metrics to the
 // collector
-func sendAllObjs() {
+func sendAllObjs() error {
 	objs := []*iObj{}
 
 	// fetch dirty objs
@@ -126,10 +128,11 @@ func sendAllObjs() {
 		if err != nil {
 			log.Errorf("sendPoints : WriteMetrics failed with err: %s", err)
 			global.sendErrors++
-			return
+			return err
 		}
 		global.numPoints += len(mb.Metrics)
 	}
+	return nil
 }
 
 // getMetricBundles would fetch all metrics from an object and save them in

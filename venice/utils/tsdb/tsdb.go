@@ -72,6 +72,7 @@ func Init(ctx context.Context, opts *Opts) {
 	global.objs = make(map[string]*iObj)
 	global.context, global.cancelFunc = context.WithCancel(ctx)
 
+	global.wg.Add(1)
 	go periodicTransmit()
 	global.wg.Add(1)
 	go startLocalRESTServer(global)
@@ -146,10 +147,10 @@ func NewObj(tableName string, keys map[string]string, metrics interface{}, opts 
 	// objName is uniquely determind from the set of keys
 	// if the keys overlap, then object is considered existing
 	// and an existing value is returned
-	objName := tableName
-	if len(keys) > 0 {
-		objName = getObjName(keys)
+	if len(keys) == 0 {
+		keys = map[string]string{"name": tableName}
 	}
+	objName := getObjName(keys)
 
 	obj, ok := global.objs[objName]
 	if ok {
@@ -160,9 +161,6 @@ func NewObj(tableName string, keys map[string]string, metrics interface{}, opts 
 	obj.tableName = tableName
 	obj.fields = make(map[string]interface{})
 	obj.keys = keys
-	if len(obj.keys) == 0 {
-		obj.keys = map[string]string{"name": tableName}
-	}
 
 	// if metrics are provided during this object creation, fill the fields based on
 	// supplied metrics structure
