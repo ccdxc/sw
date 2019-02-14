@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -34,7 +35,7 @@ func checkStoredObject(ctx context.Context, t *testing.T, refObject *bookstore.C
 	Assert(t, !validateObjectSpec(storedObj, txStoredObj), "Transformer has no effect!")
 }
 
-func doWatch(t *testing.T, watcher kvstore.Watcher, validateObjectFn func(obj interface{}) bool, waitWatch chan bool, wg *sync.WaitGroup) {
+func doWatch(t *testing.T, watcher kvstore.Watcher, validateObjectFn func(obj interface{}) bool, waitWatch chan bool, wg *sync.WaitGroup, l log.Logger) {
 	close(waitWatch)
 	active := true
 	for active {
@@ -46,7 +47,7 @@ func doWatch(t *testing.T, watcher kvstore.Watcher, validateObjectFn func(obj in
 				}
 				atomic.AddUint32(&numWatchEvents, 1)
 			} else {
-				t.Logf("customer watcher closed")
+				l.Infof("customer watcher closed")
 				active = false
 			}
 		}
@@ -55,15 +56,17 @@ func doWatch(t *testing.T, watcher kvstore.Watcher, validateObjectFn func(obj in
 }
 
 func TestSecretsTransformer(t *testing.T) {
+	stlog := tinfo.l.WithContext("submodule", "TestSecretsTransformer")
+
 	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
 	ctx := context.Background()
 
 	// gRPC client emulating Npm -- should see any secret in plaintext
-	npmClient, err := client.NewGrpcUpstream(globals.Npm, apiserverAddr, tinfo.l)
+	npmClient, err := client.NewGrpcUpstream(globals.Npm, apiserverAddr, stlog)
 	AssertOk(t, err, "cannot create Npm grpc client")
 
 	// gRPC client emulating ApiGw -- should not see any secret either via direct access or watch
-	apiGwClient, err := client.NewGrpcUpstream(globals.APIGw, apiserverAddr, tinfo.l)
+	apiGwClient, err := client.NewGrpcUpstream(globals.APIGw, apiserverAddr, stlog)
 	AssertOk(t, err, "cannot create ApiGw grpc client")
 
 	// REST Client -- should not see any secret
@@ -124,7 +127,7 @@ func TestSecretsTransformer(t *testing.T) {
 	var apiGwValidateFn = func(obj interface{}) bool {
 		return validateObjectSpec(obj, scrubbedCustomer)
 	}
-	go doWatch(t, apiGwWatcher, apiGwValidateFn, apiGwWaitWatch, &wg)
+	go doWatch(t, apiGwWatcher, apiGwValidateFn, apiGwWaitWatch, &wg, stlog)
 
 	wg.Add(1)
 	npmWaitWatch := make(chan bool)
@@ -135,7 +138,7 @@ func TestSecretsTransformer(t *testing.T) {
 	var npmValidateFn = func(obj interface{}) bool {
 		return validateObjectSpec(obj, fullCustomer)
 	}
-	go doWatch(t, npmWatcher, npmValidateFn, npmWaitWatch, &wg)
+	go doWatch(t, npmWatcher, npmValidateFn, npmWaitWatch, &wg, stlog)
 
 	// Wait for watches to be established
 	<-apiGwWaitWatch
@@ -162,7 +165,6 @@ func TestSecretsTransformer(t *testing.T) {
 	}
 
 	seed := rand.NewSource(time.Now().UnixNano())
-	t.Logf("Random seed is %v", seed)
 	r := rand.New(seed)
 
 	for _, i := range r.Perm(len(testClients)) {
@@ -181,7 +183,7 @@ func TestSecretsTransformer(t *testing.T) {
 		c := testClients[i]
 		objs, err := c.client.BookstoreV1().Customer().List(ctx, &listOpts)
 		AssertOk(t, err, fmt.Sprintf("Error listing customer with client %d: %v", i, err))
-		t.Logf("List content: [%+v] ", objs)
+		stlog.Infof("List content: [%+v] ", objs)
 
 		Assert(t, len(objs) == len(testClients), fmt.Sprintf("List result contains unexpected number of object: %+v", objs))
 		for _, obj := range objs {
