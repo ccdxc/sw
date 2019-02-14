@@ -79,8 +79,6 @@ def getNaplesIntfEndPoints(naples_node, naples_intf_mac_dict):
 def getHostIntfEndPoints(naples_node, host_intf_mac_dict):
     host_ep_set = set()
     for intf, mac_addr_str in host_intf_mac_dict.items():
-        #TODO: To be removed once "#PS-603" is fixed. should be parent_intf instead
-        #intf_name = getNaplesView_of_Host_Intf(intf)
         parent_intf = getParentIntf(intf)
         intf_mac_addr = host_utils.GetMACAddress(naples_node, intf)
         vlan = getInterfaceVlanID(naples_node, intf)
@@ -93,10 +91,12 @@ def getWorkloadEndPoints(naples_node, wload_intf_mac_dict, wload_intf_vlan_map):
     wload_ep_set = set()
     #In case of classic, endpoint will be created for all mac, vlan pair for a LIF
     for intf, mac_addr_str in wload_intf_mac_dict.items():
-        #TODO: To be removed once "#PS-603" is fixed. should be parent_intf instead
-        #intf_name = getNaplesView_of_Host_Intf(intf)
-        intf_mac_addr = host_utils.GetMACAddress(naples_node, intf)
         parent_intf = getParentIntf(intf)
+        if api.GetNodeOs(naples_node) == "freebsd":
+            if intf != parent_intf:
+                #In case of FreeBSD, sub-if MAC won't be propagated down. so skip.
+                continue
+        intf_mac_addr = host_utils.GetMACAddress(naples_node, intf)
         vlan_set = wload_intf_vlan_map[parent_intf]
         for vlan in vlan_set:
             wload_ep = (vlan, intf_mac_addr, parent_intf)
