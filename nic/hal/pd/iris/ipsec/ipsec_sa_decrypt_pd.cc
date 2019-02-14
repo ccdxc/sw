@@ -236,7 +236,6 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd)
     ipsec_sa->cb_pindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex;
     ipsec_sa->barco_pindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_pindex;
     ipsec_sa->barco_cindex = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_cindex;
-
     return HAL_RET_OK;
 }
 
@@ -254,6 +253,8 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry_part2(pd_ipsec_t* ipsec_sa_pd)
     }
     ipsec_sa->last_replay_seq_no = ntohl(decrypt_part2.last_replay_seq_no);
     ipsec_sa->iv_salt = decrypt_part2.iv_salt;
+    ipsec_sa->spi = decrypt_part2.spi;
+    ipsec_sa->new_spi = decrypt_part2.new_spi;
     return HAL_RET_OK;
 }
 

@@ -108,9 +108,9 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     ipsec_sa->vrf = vrf->vrf_id;
     ipsec_sa->sa_id = spec.key_or_handle().cb_id();
 
-    ipsec_sa->iv_size = 8;
-    ipsec_sa->block_size = 16;
-    ipsec_sa->icv_size = 16;
+    ipsec_sa->iv_size = IPSEC_DEF_IV_SIZE;
+    ipsec_sa->block_size = IPSEC_AES_GCM_DEF_BLOCK_SIZE;
+    ipsec_sa->icv_size = IPSEC_AES_GCM_DEF_ICV_SIZE;
     ipsec_sa->esn_hi = ipsec_sa->esn_lo = 0;
 
     ipsec_sa->barco_enc_cmd = IPSEC_BARCO_DECRYPT_AES_GCM_256;
@@ -118,12 +118,12 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
     ipsec_sa->iv_salt = spec.salt();
     ipsec_sa->spi = spec.spi();
     ipsec_sa->new_spi = spec.rekey_spi();
-    ipsec_sa->key_size = 32;
+    ipsec_sa->key_size = IPSEC_AES_GCM_DEF_KEY_SIZE;
     ipsec_sa->key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
-    memcpy((uint8_t*)ipsec_sa->key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
-    ipsec_sa->new_key_size = 32;
+    memcpy((uint8_t*)ipsec_sa->key, (uint8_t*)spec.decryption_key().key().c_str(), IPSEC_AES_GCM_DEF_KEY_SIZE);
+    ipsec_sa->new_key_size = IPSEC_AES_GCM_DEF_KEY_SIZE;
     ipsec_sa->new_key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
-    memcpy((uint8_t*)ipsec_sa->new_key, (uint8_t*)spec.decryption_key().key().c_str(), 32);
+    memcpy((uint8_t*)ipsec_sa->new_key, (uint8_t*)spec.decryption_key().key().c_str(), IPSEC_AES_GCM_DEF_KEY_SIZE);
 
     sep = find_ep_by_v4_key(ipsec_sa->vrf, ipsec_sa->tunnel_sip4.addr.v4_addr);
     if (sep) {
@@ -315,10 +315,11 @@ ipsec_sadecrypt_get (IpsecSADecryptGetRequest& req, IpsecSADecryptGetResponseMsg
     rsp->mutable_spec()->mutable_rekey_authentication_key()->set_key(ripsec.new_key, 32);
     rsp->mutable_spec()->mutable_decryption_key()->set_key(ripsec.key, 32);
     rsp->mutable_spec()->mutable_authentication_key()->set_key(ripsec.key, 32);
-    if (ripsec.new_key_index != 0) {
+    if ((ripsec.new_key_index != 0) && (ripsec.new_spi != 0)) {
         rsp->mutable_spec()->set_rekey_active(1);
     }
-    rsp->mutable_spec()->mutable_tep_vrf()->set_vrf_id(ripsec.vrf);
+    rsp->mutable_spec()->mutable_tep_vrf()->set_vrf_id(ipsec->vrf);
+    HAL_TRACE_DEBUG("tep_vrf {}", ipsec->vrf);
     rsp->mutable_spec()->set_seq_no(ripsec.expected_seq_no);
     rsp->mutable_spec()->set_seq_no_bmp(ripsec.seq_no_bmp);
     rsp->mutable_spec()->set_last_replay_seq_no(ripsec.last_replay_seq_no);

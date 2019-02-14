@@ -151,16 +151,16 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     ipsec->sa_id = spec.key_or_handle().cb_id();
     ipsec->vrf = vrf->vrf_id;
 
-    HAL_TRACE_DEBUG("Got with SA ID {}", ipsec->sa_id);
+    HAL_TRACE_DEBUG("Got with SA ID {} vrf id {}", ipsec->sa_id, ipsec->vrf);
 
 
-    ipsec->iv_size = 8;
-    ipsec->block_size = 16;
-    ipsec->icv_size = 16;
+    ipsec->iv_size = IPSEC_DEF_IV_SIZE;
+    ipsec->block_size = IPSEC_AES_GCM_DEF_BLOCK_SIZE;
+    ipsec->icv_size = IPSEC_AES_GCM_DEF_ICV_SIZE;
     ipsec->esn_hi = ipsec->esn_lo = 0;
 
     ipsec->barco_enc_cmd = IPSEC_BARCO_ENCRYPT_AES_GCM_256;
-    ipsec->key_size = 32;
+    ipsec->key_size = IPSEC_AES_GCM_DEF_KEY_SIZE;
     ipsec->key_type = types::CryptoKeyType::CRYPTO_KEY_TYPE_AES256;
 
     ipsec->iv = spec.iv();
@@ -260,9 +260,9 @@ ipsec_saencrypt_update (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
     }
 
 
-    ipsec->iv_size = 8;
-    ipsec->block_size = 16;
-    ipsec->icv_size = 16;
+    ipsec->iv_size = IPSEC_DEF_IV_SIZE;
+    ipsec->block_size = IPSEC_AES_GCM_DEF_BLOCK_SIZE;
+    ipsec->icv_size = IPSEC_AES_GCM_DEF_ICV_SIZE;
     ipsec->esn_hi = ipsec->esn_lo = 0;
 
     ipsec->barco_enc_cmd = IPSEC_BARCO_ENCRYPT_AES_GCM_256;
@@ -359,9 +359,10 @@ ipsec_saencrypt_get (IpsecSAEncryptGetRequest& req, IpsecSAEncryptGetResponseMsg
     rsp->mutable_spec()->set_seq_no(seq_no);
     rsp->mutable_spec()->set_iv(ripsec.iv);
     rsp->mutable_spec()->set_key_index(ripsec.key_index);
-    rsp->mutable_spec()->mutable_encryption_key()->set_key(ripsec.key, 32);
-    rsp->mutable_spec()->mutable_authentication_key()->set_key(ripsec.key, 32);
-    rsp->mutable_spec()->mutable_tep_vrf()->set_vrf_id(ripsec.vrf);
+    rsp->mutable_spec()->mutable_encryption_key()->set_key(ripsec.key, IPSEC_AES_GCM_DEF_KEY_SIZE);
+    rsp->mutable_spec()->mutable_authentication_key()->set_key(ripsec.key, IPSEC_AES_GCM_DEF_KEY_SIZE);
+    rsp->mutable_spec()->mutable_tep_vrf()->set_vrf_id(ipsec->vrf);
+    HAL_TRACE_DEBUG("tep_vrf {}", ipsec->vrf);
     rsp->mutable_spec()->set_total_pkts(ripsec.total_pkts);
     rsp->mutable_spec()->set_total_bytes(ripsec.total_bytes);
     rsp->mutable_spec()->set_total_drops(ripsec.total_drops);

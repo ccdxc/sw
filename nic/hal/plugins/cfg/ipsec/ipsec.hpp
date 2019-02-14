@@ -70,6 +70,11 @@ namespace hal {
 #define IPSEC_CB_RING_SIZE 256
 #define IPSEC_BARCO_RING_SIZE 1024 
 
+#define IPSEC_DEF_IV_SIZE                8
+#define IPSEC_AES_GCM_DEF_BLOCK_SIZE    16
+#define IPSEC_AES_GCM_DEF_ICV_SIZE      16
+#define IPSEC_AES_GCM_DEF_KEY_SIZE      32 
+
 typedef uint64_t rule_id_t;
 typedef uint64_t pol_id_t;
 
