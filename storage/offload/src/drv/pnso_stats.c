@@ -90,6 +90,13 @@ pprint_pnso_stats(struct pnso_api_stats *stats)
 	OSAL_LOG_NOTICE("%30s: %ld", "pas_num_chksums",
 			stats->pas_num_chksums.counter);
 
+	OSAL_LOG_NOTICE("%30s: %ld", "pas_num_out_of_rmem_bufs",
+			stats->pas_num_out_of_rmem_bufs.counter);
+	OSAL_LOG_NOTICE("%30s: %ld", "pas_num_out_of_rmem_status",
+			stats->pas_num_out_of_rmem_status.counter);
+	OSAL_LOG_NOTICE("%30s: %ld", "pas_num_pdma_exceed_constraints",
+			stats->pas_num_pdma_exceed_constraints.counter);
+
 	OSAL_LOG_NOTICE("%30s:", "===");
 	OSAL_LOG_NOTICE("%30s: %ld (%s)", "pas_total_latency",
 			stats->pas_total_latency.counter, "us");

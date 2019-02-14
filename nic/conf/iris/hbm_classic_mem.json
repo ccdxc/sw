@@ -50,7 +50,25 @@
             "cc"      : "true"
         },
         {
-            "_comment" : "memtun address is hardcoded to HBM base + 64MB(above cc regions)",
+            "_comment" : "devcmd+mpu-trace regions combined to size 64MB here helps align HBM address to 128MB",
+            "_comment1": "for the immediately adjacent region which is Storage. These 2 regions are selected",
+            "_comment2": "since they are common for both hbm_mem.json and hbm_classic_hbm.json.",
+            "name": "devcmd",
+            "size": "32768K"
+        },
+        {
+            "name": "mpu-trace",
+            "size" : "32768K"
+        },
+        {
+            "_comment" : "Storage region address is hereby aligned to 128MB for efficient PCIe BAR mapping,",
+            "_comment1": "allowing full use of the region. Please do not add any other regions in between.",
+            "_comment2": "If you need to change the size of any of the devcmd/mpu-trace/storage region, ",
+	    "_comment3": "please talk to Storage team first.",
+            "name": "storage",
+            "size": "131072K"
+        },
+        {
              "name": "memtun",
              "size": "256K"
         },
@@ -271,10 +289,6 @@
             "size": "131072K"
         },
         {
-            "name": "storage_devcmd",
-            "size": "64K"
-        },
-        {
             "name": "ipfix",
             "size": "32K"
         },
@@ -339,19 +353,11 @@
             "size": "128K"
         },
         {
-            "name": "devcmd",
-            "size": "32768K"
-        },
-        {
             "name": "nicmgr",
             "size" : "32768K"
         },
         {
             "name": "pciemgr",
-            "size" : "32768K"
-        },
-        {
-            "name": "mpu-trace",
             "size" : "32768K"
         },
         {

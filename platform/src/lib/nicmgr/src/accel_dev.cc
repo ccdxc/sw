@@ -14,6 +14,7 @@
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"
 #include "cap_wa_c_hdr.h"
+#include "cap_ms_c_hdr.h"
 
 // Tell accel_dev.hpp to emumerate definitions of all devcmds
 #define ACCEL_DEV_CMD_ENUMERATE  1
@@ -24,7 +25,9 @@
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 
+#include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
+#include "nic/sdk/platform/fru/fru.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 
@@ -33,6 +36,11 @@
 #include "pd_client.hpp"
 #include "hal_client.hpp"
 
+#define GBPS_TO_BYTES_PER_SEC(gbps)             \
+    (((uint64_t)(gbps) * 1000000000ULL) / 8ULL)
+
+#define STORAGE_SEQ_RATE_LIMIT_GBPS_SCALE(gbps) \
+    (GBPS_TO_BYTES_PER_SEC(gbps) >> STORAGE_SEQ_RL_UNITS_SCALE_SHFT)
 
 using namespace nicmgr;
 
@@ -288,6 +296,15 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     hal_lif_info_.pinned_uplink_port_num = 0;
     hal_lif_info_.enable_rdma = false;
     hal_lif_info_.pushed_to_hal = false;
+    hal_lif_info_.rx_limit_bytes = STORAGE_SEQ_RATE_LIMIT_GBPS_SCALE(spec->rx_limit_gbps);
+    hal_lif_info_.rx_burst_bytes = STORAGE_SEQ_RATE_LIMIT_GBPS_SCALE(spec->rx_burst_gb);
+    hal_lif_info_.tx_limit_bytes = STORAGE_SEQ_RATE_LIMIT_GBPS_SCALE(spec->tx_limit_gbps);
+    hal_lif_info_.tx_burst_bytes = STORAGE_SEQ_RATE_LIMIT_GBPS_SCALE(spec->tx_burst_gb);
+    NIC_LOG_DEBUG("{}: rx_limit_gbps {} rx_burst_gb {} "
+                  "tx_limit_gbps {} tx_burst_gb {}", spec->name,
+                  spec->rx_limit_gbps, spec->rx_burst_gb,
+                  spec->tx_limit_gbps, spec->tx_burst_gb);
+
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
 
     evutil_timer_start(&devcmd_timer, &Accel_PF::DevcmdPoll, this, 0.0, 0.01);
@@ -586,17 +603,20 @@ Accel_PF::_DevcmdIdentify(void *req, void *req_data,
 {
     identity_t      *rsp = (identity_t *)resp_data;
     identify_cpl_t  *cpl = (identify_cpl_t *)resp;
+    std::string sn;
 
     NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_IDENTIFY", hal_lif_info_.hw_lif_id);
 
     memset(&devcmd->data[0], 0, sizeof(devcmd->data));
+    const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
+                                        CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
+    rsp->dev.asic_type = sta_ver & 0xf;
+    rsp->dev.asic_rev  = (sta_ver >> 4) & 0xfff;
 
-    // TODO: Get these from hw
-    rsp->dev.asic_type = 0x00;
-    rsp->dev.asic_rev = 0xA0;
-    sprintf((char *)&rsp->dev.serial_num, "haps");
-    // TODO: Get this from sw
-    sprintf((char *)&rsp->dev.fw_version, "v0.0.1");
+    readKey(SERIALNUMBER_KEY, sn);
+    strncpy0(rsp->dev.serial_num, sn.c_str(), sizeof(rsp->dev.serial_num));
+    strncpy0(rsp->dev.fw_version, SW_VERSION, sizeof(rsp->dev.fw_version));
+
     rsp->dev.num_lifs = spec->lif_count;
     memset(&rsp->dev.lif_tbl[0], 0, sizeof(identify_lif_t));
     rsp->dev.lif_tbl[0].hw_lif_id = hal_lif_info_.hw_lif_id;

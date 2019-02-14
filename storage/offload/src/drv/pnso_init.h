@@ -9,8 +9,8 @@
 #include "sonic_dev.h"
 
 /*
- * The current intermediate buffer implementation optimizes for the sweet spot
- * of 8K size, i.e., one single source of up to 8K, which has these
+ * The current intermediate buffer implementation optimizes for
+ * 32K size, i.e., one single source of up to 32K, which has these
  * desired properties:
  *
  * a) The smaller size provides for a larger pool of intermediate buffers
@@ -18,7 +18,7 @@
  * b) A given transfer will not exceed a chain_sgl_pdma descriptor
  *    (which is a sequencer requirement).
  */
-#define INTERM_BUF_NOMINAL_BUF_SIZE	8192
+#define INTERM_BUF_NOMINAL_BUF_SIZE	32768
 #define INTERM_BUF_NOMINAL_PAGE_SIZE	4096
 #define INTERM_BUF_NOMINAL_NUM_BUFS					\
 	(INTERM_BUF_NOMINAL_BUF_SIZE / INTERM_BUF_NOMINAL_PAGE_SIZE)

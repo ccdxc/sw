@@ -275,7 +275,7 @@ pc_res_sgl_pdma_packed_get(const struct per_core_resource *pcr,
 		}
 
 		if (iter) {
-			OSAL_LOG_ERROR("buffer_list exceeds all SGL PDMA tuples, current_len %u",
+			OSAL_LOG_DEBUG("buffer_list exceeds all SGL PDMA tuples, current_len %u",
 				       total_len);
 			goto out;
 		}

@@ -93,6 +93,10 @@ typedef struct accel_devspec {
     uint32_t seq_queue_count;
     uint32_t adminq_count;
     uint32_t intr_count;
+    uint32_t rx_limit_gbps;
+    uint32_t rx_burst_gb;
+    uint32_t tx_limit_gbps;
+    uint32_t tx_burst_gb;
     uint32_t pub_intv_frac; // publishing interval in fraction of second
     // PCIe
     uint8_t  pcie_port;

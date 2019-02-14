@@ -482,6 +482,9 @@ cpdc_setup_rmem_status_desc(struct service_info *svc_info,
 		err = pc_res_svc_status_get(pcr,
 				cpdc_get_rmem_status_type(per_block),
 				&svc_info->si_istatus_desc);
+		if (err) {
+			PAS_INC_NUM_OUT_OF_RMEM_STATUS(svc_info->si_pcr);
+		}
 	}
 	return err;
 }
@@ -1072,6 +1075,7 @@ cpdc_setup_rmem_dst_blist(struct service_info *svc_info,
 		if (err) {
 			OSAL_LOG_DEBUG("intermediate buffers not available, "
 					"using supplied host buffers (if any)");
+			PAS_INC_NUM_OUT_OF_RMEM_BUFS(svc_info->si_pcr);
 			err = PNSO_OK;
 		}
 
@@ -1081,10 +1085,11 @@ cpdc_setup_rmem_dst_blist(struct service_info *svc_info,
 				pc_res_sgl_pdma_packed_get(svc_info->si_pcr,
 						&orig_dst_blist);
 			if (!svc_info->si_sgl_pdma) {
-				err = ENOMEM;
-				OSAL_LOG_ERROR("failed to obtain chain SGL for PDMA! err: %d",
-						err);
-				return err;
+				OSAL_LOG_DEBUG("SGL PDMA constraints exceeded, "
+						"using original buffers");
+				PAS_INC_NUM_PDMA_EXCEED_CONSTRAINTS(svc_info->si_pcr);
+				putil_put_interm_buf_list(svc_info);
+				svc_info->si_dst_blist = orig_dst_blist;
 			}
 		}
 	}

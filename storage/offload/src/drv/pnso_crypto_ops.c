@@ -149,6 +149,7 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 		if (err) {
 			OSAL_LOG_DEBUG("intermediate buffers not available, "
 					"using supplied host buffers (if any)");
+			PAS_INC_NUM_OUT_OF_RMEM_BUFS(svc_info->si_pcr);
 		}
 
 		err = pc_res_svc_status_get(svc_info->si_pcr,
@@ -157,6 +158,7 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 		if (err) {
 			OSAL_LOG_DEBUG("intermediate status not available, "
 					"using host status");
+			PAS_INC_NUM_OUT_OF_RMEM_STATUS(svc_info->si_pcr);
 		}
 
 		if (chn_service_has_interm_blist(svc_info) &&
@@ -165,8 +167,11 @@ crypto_dst_blist_setup(struct service_info *svc_info,
 				pc_res_sgl_pdma_packed_get(pcr,
 						&orig_dst_blist);
 			if (!svc_info->si_sgl_pdma) {
-				OSAL_LOG_ERROR("failed to obtain chain SGL for PDMA");
-				return ENOMEM;
+				OSAL_LOG_DEBUG("SGL PDMA constraints exceeded, "
+						"using original buffers");
+				PAS_INC_NUM_PDMA_EXCEED_CONSTRAINTS(svc_info->si_pcr);
+				putil_put_interm_buf_list(svc_info);
+				svc_info->si_dst_blist = orig_dst_blist;
 			}
 		}
 	}

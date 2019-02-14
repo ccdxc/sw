@@ -1070,6 +1070,16 @@ Lif::PopulateRequest(intf::LifRequestMsg &req_msg, intf::LifSpec **req_ptr)
     req->set_admin_status(::intf::IF_STATUS_UP);
     req->set_enable_rdma(lif_info->enable_rdma);
 
+    if (lif_info->rx_limit_bytes) {
+        req->mutable_rx_policer()->mutable_bps_policer()->set_bytes_per_sec(lif_info->rx_limit_bytes);
+        req->mutable_rx_policer()->mutable_bps_policer()->set_burst_bytes(lif_info->rx_burst_bytes);
+    }
+    if (lif_info->tx_limit_bytes) {
+        req->mutable_tx_policer()->mutable_bps_policer()->set_bytes_per_sec(lif_info->tx_limit_bytes);
+        req->mutable_tx_policer()->mutable_bps_policer()->set_burst_bytes(lif_info->tx_burst_bytes);
+
+    }
+
     *req_ptr = req;
 }
 

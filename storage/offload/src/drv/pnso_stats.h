@@ -62,6 +62,10 @@ struct pnso_api_stats {
 	atomic64_t pas_num_chksum_bytes_in;
 	atomic64_t pas_num_chksums;
 
+	atomic64_t pas_num_out_of_rmem_bufs;
+	atomic64_t pas_num_out_of_rmem_status;
+	atomic64_t pas_num_pdma_exceed_constraints;
+
 	atomic64_t pas_total_latency;
 	atomic64_t pas_total_hw_latency;
 };
@@ -109,6 +113,12 @@ struct pnso_api_stats {
 	atomic64_inc_return(&pcr->api_stats.pas_num_hash_request_failures)
 #define PAS_INC_NUM_CHKSUM_REQUEST_FAILURES(pcr)			\
 	atomic64_inc_return(&pcr->api_stats.pas_num_chksum_request_failures)
+#define PAS_INC_NUM_OUT_OF_RMEM_BUFS(pcr)				\
+	atomic64_inc_return(&pcr->api_stats.pas_num_out_of_rmem_bufs)
+#define PAS_INC_NUM_OUT_OF_RMEM_STATUS(pcr)				\
+	atomic64_inc_return(&pcr->api_stats.pas_num_out_of_rmem_status)
+#define PAS_INC_NUM_PDMA_EXCEED_CONSTRAINTS(pcr)			\
+	atomic64_inc_return(&pcr->api_stats.pas_num_pdma_exceed_constraints)
 
 #define PAS_INC_NUM_ENC_BYTES(pcr, bytes)				\
 	atomic64_add(bytes, &pcr->api_stats.pas_num_enc_bytes)

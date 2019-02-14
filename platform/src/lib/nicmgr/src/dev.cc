@@ -546,6 +546,20 @@ DeviceManager::LoadConfig(string path)
             accel_spec->seq_queue_count = val.get<uint32_t>("seq_queue_count");
             accel_spec->adminq_count = val.get<uint32_t>("adminq_count");
             accel_spec->intr_count = val.get<uint32_t>("intr_count");
+            if (val.get_optional<string>("rate_limit")) {
+                if (val.get_optional<string>("rate_limit.rx_limit_gbps")) {
+                    accel_spec->rx_limit_gbps = val.get<uint32_t>("rate_limit.rx_limit_gbps");
+                }
+                if (val.get_optional<string>("rate_limit.rx_burst_gb")) {
+                    accel_spec->rx_burst_gb = val.get<uint32_t>("rate_limit.rx_burst_gb");
+                }
+                if (val.get_optional<string>("rate_limit.tx_limit_gbps")) {
+                    accel_spec->tx_limit_gbps = val.get<uint32_t>("rate_limit.tx_limit_gbps");
+                }
+                if (val.get_optional<string>("rate_limit.tx_burst_gb")) {
+                    accel_spec->tx_burst_gb = val.get<uint32_t>("rate_limit.tx_burst_gb");
+                }
+            }
 
             accel_spec->pub_intv_frac = ACCEL_DEV_PUB_INTV_FRAC_DFLT;
             if (val.get_optional<string>("publish_interval")) {
