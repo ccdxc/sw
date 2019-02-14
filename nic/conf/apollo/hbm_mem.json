@@ -140,6 +140,12 @@
             "cache": "p4plus-rxdma"
         },
         {
+            "name": "sacl_v6",
+            "size": "330M",
+            "element_size": "330K",
+            "cache": "p4plus-rxdma"
+        },
+        {
             "name": "flow",
             "size": "1048576K",
             "cache": "p4ig"
