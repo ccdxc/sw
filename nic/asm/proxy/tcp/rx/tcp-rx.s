@@ -92,9 +92,11 @@ tcp_store_ts_recent:
 
     phvwr           p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
     tblmincri       d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+    phvwr           p.to_s5_serq_pidx, d.u.tcp_rx_d.serq_pidx
 
 tcp_rcv_nxt_update:
     tbladd          d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_payload_len
+    phvwr           p.to_s5_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
 
 bytes_rcvd_stats_update_start:
     CAPRI_STATS_INC(bytes_rcvd, k.s1_s2s_payload_len, d.u.tcp_rx_d.bytes_rcvd, p.to_s7_bytes_rcvd)
@@ -311,6 +313,7 @@ tcp_rx_ooo_check_done:
     phvwri.c1       p.common_phv_write_serq, 1
     phvwr.c1        p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
     tblmincri.c1    d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+    phvwr.c1        p.to_s5_serq_pidx, d.u.tcp_rx_d.serq_pidx
     phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND

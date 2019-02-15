@@ -1,6 +1,5 @@
 # Common file for all proxy test cases
 
-import pdb
 from infra.common.logging import logger
 from infra.common.logging import logger as logger
 
@@ -82,6 +81,8 @@ def SetupProxyArgs(tc):
     snd_cwnd = 0
     initial_window = 0
     rcv_mss = 0
+    rcv_wnd = 0
+    rcv_scale = 0
     snd_ssthresh = 0
     rto_backoff = 0
     snd_wnd = 0
@@ -154,6 +155,12 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'initial_window'):
         initial_window = tc.module.args.initial_window
         logger.info("- initial_window %s" % tc.module.args.initial_window)
+    if hasattr(tc.module.args, 'rcv_wnd'):
+        rcv_wnd = tc.module.args.rcv_wnd
+        logger.info("- rcv_wnd %s" % tc.module.args.rcv_wnd)
+    if hasattr(tc.module.args, 'rcv_scale'):
+        rcv_scale = tc.module.args.rcv_scale
+        logger.info("- rcv_scale %s" % tc.module.args.rcv_scale)
     if hasattr(tc.module.args, 'rcv_mss'):
         rcv_mss = tc.module.args.rcv_mss
         logger.info("- rcv_mss %s" % tc.module.args.rcv_mss)
@@ -248,6 +255,8 @@ def SetupProxyArgs(tc):
     tc.pvtdata.serq_full = serq_full
     tc.pvtdata.snd_cwnd = snd_cwnd
     tc.pvtdata.initial_window = initial_window
+    tc.pvtdata.rcv_wnd = rcv_wnd
+    tc.pvtdata.rcv_scale = rcv_scale
     tc.pvtdata.rcv_mss = rcv_mss
     tc.pvtdata.snd_ssthresh = snd_ssthresh
     tc.pvtdata.rto_backoff = rto_backoff
@@ -344,6 +353,17 @@ def init_tcb_inorder(tc, tcb):
         tcb.initial_window = tc.pvtdata.initial_window
     else:
         tcb.initial_window = 10000
+
+    if tc.pvtdata.rcv_wnd:
+        tcb.rcv_wnd = tc.pvtdata.rcv_wnd
+    else:
+        tcb.rcv_wnd = 1000
+
+    if tc.pvtdata.rcv_scale:
+        tcb.rcv_wscale = tc.pvtdata.rcv_scale
+    else:
+        tcb.rcv_wscale = 0
+
     if tc.pvtdata.snd_ssthresh:
         tcb.snd_ssthresh = tc.pvtdata.snd_ssthresh
     else:
@@ -508,6 +528,17 @@ def init_tcb_inorder2(tc, tcb):
         tcb.snd_ssthresh = tc.pvtdata.snd_ssthresh
     else:
         tcb.snd_ssthresh = 4000
+
+    if tc.pvtdata.rcv_wnd:
+        tcb.rcv_wnd = tc.pvtdata.rcv_wnd
+    else:
+        tcb.rcv_wnd = 1000
+
+    if tc.pvtdata.rcv_scale:
+        tcb.rcv_wscale = tc.pvtdata.rcv_scale
+    else:
+        tcb.rcv_wscale = 0
+
     if tc.pvtdata.rcv_mss:
         tcb.rcv_mss = tc.pvtdata.rcv_mss
     else:

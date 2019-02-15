@@ -237,6 +237,10 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
 
     // TODO : we need to get this from LKL/OFP
     spec.set_rcv_wnd(window);
+
+    // Work around to set receive window scale. Remove this
+    // once the fix to pass rcv_wscale from lkl is merged. 
+    spec.set_rcv_wscale(4);
     spec.set_snd_wnd(8000);
     spec.set_rcv_mss(9216);
     spec.set_smss(9216);

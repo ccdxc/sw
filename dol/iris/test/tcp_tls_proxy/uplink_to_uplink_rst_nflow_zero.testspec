@@ -189,7 +189,7 @@ packets:
                 seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
                 flags   : ack,rst
-                window  : 1000
+                window  : 65535 
                 options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
             payload:
                 data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 

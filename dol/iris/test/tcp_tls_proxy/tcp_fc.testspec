@@ -1,19 +1,19 @@
-# TCP Proxy RX Inorder Sample TestSpec file.
+# TCP Proxy flow-control test-spec
+
 selectors:
-    # Update: Vikasd
     # Choose the config, that only selects flows matching below packet
     # templates.
     src:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
         endpoint    : filter://remote=True
-        qpair       : filter://any # Local QPair
+        qpair       : filter://any
     dst:
         tenant      : filter://overlay=VLAN,type=TENANT
         segment     : filter://any
         endpoint    : filter://remote=True
         qpair       : filter://any 
-    flow        : filter://proto=TCP,label=TCP-PROXY,fwtype=L2
+    flow        : filter://proto=TCP,label=TCP-PROXY
     maxflows    : 1
 
 # Packet section defines the set of input and output packets. Input packets
@@ -34,7 +34,6 @@ packets:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
                 ttl     : 64
-                tos     : 0
             ipv6:
                 src     : ref://testcase/config/flow/sip
                 dst     : ref://testcase/config/flow/dip
@@ -71,11 +70,11 @@ packets:
                 dport   : ref://testcase/config/flow/dport
                 seq     : callback://tcpcb/tcpcb/GetPktOutSeqNum
                 ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
-                window  : 1000
-                flags   : ack
                 options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
+                window  : 62
+                flags   : ack
             payload:
-                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data 
+                data: ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
         id          : PKT1_ACK_OUT
@@ -101,8 +100,8 @@ packets:
                 dport   : ref://testcase/config/flow/sport
                 seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
-                window  : 65535
-                flags   : ack
+                window  : 7936 
+                flags   : ack, ece
                 options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
 
 trigger:

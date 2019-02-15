@@ -1094,3 +1094,30 @@ modules:
             num_rx_pkts : 2
         iterate :
             - flow: filter://type=IPV4
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TCP_FC
+        spec    : tcp_fc.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco   : 1
+            maxflows       : 1
+            send_ack_flow1 : 1
+            rcv_scale      : 4
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TCP_FC_NO_SHRINK_WINDOW
+        spec    : tcp_fc_no_shrink_win.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco   : 1
+            maxflows       : 1
+            send_ack_flow1 : 1
+            rcv_scale      : 4
+            rcv_wnd        : 127056 
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False

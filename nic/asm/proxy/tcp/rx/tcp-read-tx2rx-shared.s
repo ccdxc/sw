@@ -68,6 +68,7 @@ table_read_RX:
                         p.common_phv_ip_tos_ecn, k.tcp_app_header_ecn
 
     phvwr           p.to_s1_serq_cidx, d.serq_cidx
+    phvwr           p.to_s5_serq_cidx, d.serq_cidx
 
     phvwr.f.e       p.to_s6_payload_len, k.tcp_app_header_payload_len
     nop

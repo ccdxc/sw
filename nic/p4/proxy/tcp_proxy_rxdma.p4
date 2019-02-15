@@ -325,11 +325,10 @@ header_type tcp_fc_d_t {
     fields {
         page                    : 32;
         descr                   : 32;
+        rcv_wup                 : 32;
         page_cnt                : 16;
-        dummy                   : 16;
-        l7_descr                : 32;
-        rcv_wnd                 : 16;
-        rcv_wscale              : 8;
+        rcv_wnd                 : 32;
+        rcv_scale               : 8;
         cpu_id                  : 8;
     }
 }
@@ -411,7 +410,9 @@ header_type to_stage_4_phv_t {
 header_type to_stage_5_phv_t {
     // tcp-fc
     fields {
-        page_count              : 16;
+        serq_cidx               : 12;
+        serq_pidx               : 12;
+        rcv_nxt                 : 32;
     }
 }
 
@@ -1021,10 +1022,13 @@ action tcp_ooo_dummy_launch_s4()
 /*
  * Stage 5 table 0 action1
  */
-action tcp_fc(page, descr, page_cnt, l7_descr, rcv_wnd, rcv_wscale, cpu_id) {
+action tcp_fc(page, descr, page_cnt, rcv_wnd, rcv_wup, rcv_scale, cpu_id) {
     // k + i for stage 5
 
     // from to_stage 5
+    modify_field(to_s5_scratch.serq_cidx, to_s5.serq_cidx);
+    modify_field(to_s5_scratch.serq_pidx, to_s5.serq_pidx);
+    modify_field(to_s5_scratch.rcv_nxt, to_s5.rcv_nxt);
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -1035,9 +1039,9 @@ action tcp_fc(page, descr, page_cnt, l7_descr, rcv_wnd, rcv_wscale, cpu_id) {
     modify_field(tcp_fc_d.page, page);
     modify_field(tcp_fc_d.descr, descr);
     modify_field(tcp_fc_d.page_cnt, page_cnt);
-    modify_field(tcp_fc_d.l7_descr, l7_descr);
     modify_field(tcp_fc_d.rcv_wnd, rcv_wnd);
-    modify_field(tcp_fc_d.rcv_wscale, rcv_wscale);
+    modify_field(tcp_fc_d.rcv_wup, rcv_wup);
+    modify_field(tcp_fc_d.rcv_scale, rcv_scale);
     modify_field(tcp_fc_d.cpu_id, cpu_id);
 }
 
