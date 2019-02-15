@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/venice/citadel/cmd/ctchecker/cmd"
+
 	client "github.com/influxdata/influxdb/client/v2"
 
 	"github.com/pensando/sw/venice/globals"
@@ -58,34 +60,6 @@ func writePoints(url string, bp client.BatchPoints) error {
 	}
 
 	return err
-}
-
-// queryPoints queries citadel using influxdb client
-func queryPoints(url, cmd string) (*client.Response, error) {
-	var err error
-	var response *client.Response
-	hostURLs := strings.Split(url, ",")
-	for _, hurl := range hostURLs {
-		// Create a new HTTPClient
-		c, cerr := client.NewHTTPClient(client.HTTPConfig{
-			Addr: hurl,
-		})
-		if cerr != nil {
-			log.Fatal(cerr)
-		}
-		defer c.Close()
-
-		q := client.NewQuery(cmd, "default", "s")
-		response, err = c.Query(q)
-		if err == nil && response.Error() == nil {
-			return response, nil
-		}
-
-		// retry next broker after a small delay
-		time.Sleep(time.Millisecond * 100)
-	}
-
-	return response, err
 }
 
 // writeKv writes key-value pair to citadel
@@ -186,7 +160,7 @@ func writeKstore(url, table string, count, rate int) {
 func checkTstore(url, table string, count, series int) {
 	fmt.Printf("Executing test checkTstore\n")
 
-	resp, err := queryPoints(url, fmt.Sprintf("SELECT * from %s", table))
+	resp, err := cmd.QueryPoints(url, fmt.Sprintf("SELECT * from %s", table))
 	if err != nil {
 		log.Fatalf("Error executing query %s", err)
 	}
