@@ -273,7 +273,9 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_fc_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_nxt);
     }
 
-    HAL_TRACE_DEBUG("Received rcv_wnd: {}", tcpcb_pd->tcpcb->rcv_wnd);
+    HAL_TRACE_DEBUG("Received rcv_wnd: {}", data.u.tcp_fc_d.rcv_wnd);
+    HAL_TRACE_DEBUG("Received rcv_scale {}", data.u.tcp_fc_d.rcv_scale);
+    HAL_TRACE_DEBUG("Received rcv_wup {}", data.u.tcp_fc_d.rcv_wup);
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){
@@ -503,11 +505,10 @@ p4pd_get_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
     tcpcb_pd->tcpcb->cpu_id = data.u.tcp_fc_d.cpu_id;
-    //tcpcb_pd->tcpcb->rcv_wnd = ntohl(data.u.tcp_fc_d.rcv_wnd);
     tcpcb_pd->tcpcb->rcv_wnd = ntohl(data.u.tcp_fc_d.rcv_wnd);
     tcpcb_pd->tcpcb->rcv_wscale = data.u.tcp_fc_d.rcv_scale;
-    HAL_TRACE_DEBUG("p4pd_get_tcp_rx_tcp_fc_entry  rcv_wnd: {}",
-                    tcpcb_pd->tcpcb->rcv_wnd);
+    HAL_TRACE_DEBUG("Received rcv_wnd: {}", tcpcb_pd->tcpcb->rcv_wnd);
+    HAL_TRACE_DEBUG("Received rcv_wscale: {}", tcpcb_pd->tcpcb->rcv_wscale);
 
     return HAL_RET_OK;
 }

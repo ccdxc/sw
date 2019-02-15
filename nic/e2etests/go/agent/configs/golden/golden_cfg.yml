@@ -27,26 +27,26 @@ objects:
   count: 8
   rest-endpoint: "/api/tunnels/"
   spec-file: "generated/tunnels.json"
-#- kind: TCPProxyPolicy
-#  name: scale-tcp-proxy
-#  count: 1
-#  rest-endpoint: "/api/tcp/proxies/"
-#  spec-file: "generated/tcp_proxy_policies.json"
-- kind: IPSecSAEncrypt
-  name: scale-ipsec-encrypt-sa
-  count: 4
-  rest-endpoint: "/api/ipsec/encryption/"
-  spec-file: "generated/ipsec_encryption.json"
-- kind: IPSecSADecrypt
-  name: scale-ipsec-decrypt-sa
-  count: 4
-  rest-endpoint: "/api/ipsec/decryption/"
-  spec-file: "generated/ipsec_decryption.json"
-- kind: IPSecPolicy
-  name: scale-ipsec-policies
-  count: 2
-  rest-endpoint: "/api/ipsec/policies/"
-  spec-file: "generated/ipsec_policies.json"
+- kind: TCPProxyPolicy
+  name: scale-tcp-proxy
+  count: 1
+  rest-endpoint: "/api/tcp/proxies/"
+  spec-file: "generated/tcp_proxy_policies.json"
+#- kind: IPSecSAEncrypt
+#  name: scale-ipsec-encrypt-sa
+#  count: 4
+#  rest-endpoint: "/api/ipsec/encryption/"
+#  spec-file: "generated/ipsec_encryption.json"
+#- kind: IPSecSADecrypt
+#  name: scale-ipsec-decrypt-sa
+#  count: 4
+#  rest-endpoint: "/api/ipsec/decryption/"
+#  spec-file: "generated/ipsec_decryption.json"
+#- kind: IPSecPolicy
+#  name: scale-ipsec-policies
+#  count: 2
+#  rest-endpoint: "/api/ipsec/policies/"
+#  spec-file: "generated/ipsec_policies.json"
 
 # TODO Uncomment this section while validating mirror sessions and ipfix in dev
 #- kind: FlowExportPolicy
