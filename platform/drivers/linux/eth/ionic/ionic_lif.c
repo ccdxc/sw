@@ -186,6 +186,8 @@ int ionic_open(struct net_device *netdev)
 	if (err)
 		return err;
 
+	netif_set_real_num_tx_queues(netdev, lif->nxqs);
+
 	ionic_link_status_check(lif);
 	if (netif_carrier_ok(netdev))
 		netif_tx_wake_all_queues(netdev);
@@ -1422,8 +1424,7 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		/* We create a netdev big enough to handle all the queues
 		 * needed for our macvlan slave lifs, then set the real
 		 * number of Tx and Rx queues used to just the queue set
-		 * for lif0.  When we start building macvlans, we'll
-		 * update the real_num_tx/rx_queues as needed.
+		 * for lif0.
 		 */
 		nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
 		dev_info(ionic->dev, "nxqs=%d nslaves=%d nqueues=%d\n",
