@@ -25,6 +25,7 @@ type ExportMgr struct {
 	evtsProxy  *evtsproxy.EventsProxy
 	logger     log.Logger
 	exporters  map[string]map[evtsproxy.ExporterType]interface{}
+	ctx        context.Context
 	cancelFunc context.CancelFunc
 	wg         sync.WaitGroup
 }
@@ -32,8 +33,10 @@ type ExportMgr struct {
 // syslogExporterInfo represents the syslog exporter info (writer and config)
 type syslogExporterInfo struct {
 	sync.Mutex
-	writers  map[string]*syslogWriter
-	exporter events.Exporter
+	writers    map[string]*syslogWriter
+	exporter   events.Exporter
+	cancelFunc context.CancelFunc
+	ctx        context.Context
 }
 
 // syslogWriter contains the config and the associated writer
@@ -53,26 +56,29 @@ func NewExportManager(proxy *evtsproxy.EventsProxy, logger log.Logger) (*ExportM
 		evtsProxy:  proxy,
 		logger:     logger,
 		exporters:  make(map[string]map[evtsproxy.ExporterType]interface{}),
+		ctx:        ctx,
 		cancelFunc: cancelFunc}
 
 	m.wg.Add(1)
-	go m.reconnect(ctx)
+	go m.reconnect()
 	return m, nil
 }
 
 // retries the failed connections to syslog server
-func (m *ExportMgr) reconnect(ctx context.Context) {
+func (m *ExportMgr) reconnect() {
 	defer m.wg.Done()
 	for {
 		select {
-		case <-ctx.Done():
+		case <-m.ctx.Done():
 			m.logger.Infof("exiting reconnect")
 			return
 		case <-time.After(time.Second):
-			m.RWMutex.RLock()
+			var wg sync.WaitGroup
+			m.RLock()
 			for pName, exporters := range m.exporters {
-				if ctx.Err() != nil {
+				if m.ctx.Err() != nil {
 					m.logger.Infof("exiting reconnect")
+					m.RUnlock()
 					return
 				}
 				for exporterType, exporterInfo := range exporters {
@@ -82,13 +88,30 @@ func (m *ExportMgr) reconnect(ctx context.Context) {
 						syslogExpInfo.Lock()
 						for wKey, w := range syslogExpInfo.writers {
 							if w.writer == nil { // try reconnecting
-								m.logger.Debugf("reconnecting to syslog server, target: {%s - %v}", pName, wKey)
-								if w.writer = m.createSyslogWriter(w.format, w.network, w.remoteAddr, w.tag, w.priority); w.writer != nil {
+
+								wg.Add(1)
+								go func(pName, wKey string, w *syslogWriter, syslogExpInfo *syslogExporterInfo) {
+									defer wg.Done()
+									m.logger.Debugf("reconnecting to syslog server, target: {%s - %v}", pName, wKey)
+
+									writer, err := m.createSyslogWriter(syslogExpInfo.ctx, w.format, w.network, w.remoteAddr, w.tag, w.priority)
+									if err != nil || writer == nil {
+										return
+									}
+
 									m.logger.Infof("reconnected to syslog server {%s - %v/%v}", pName, w.network, w.remoteAddr)
+									if syslogExpInfo.ctx.Err() != nil {
+										return
+									}
+
+									syslogExpInfo.Lock()
+									syslogExpInfo.writers[wKey].writer = writer
 									// these new writers will start receiving messages from this point on.
 									// old messages will not be delivered to them.
-									syslogExpInfo.exporter.AddWriter(w.writer)
-								}
+									syslogExpInfo.exporter.AddWriter(writer)
+									syslogExpInfo.Unlock()
+								}(pName, wKey, w, syslogExpInfo)
+
 							}
 						}
 						syslogExpInfo.Unlock()
@@ -97,7 +120,8 @@ func (m *ExportMgr) reconnect(ctx context.Context) {
 					}
 				}
 			}
-			m.RWMutex.RUnlock()
+			m.RUnlock()
+			wg.Wait()
 		}
 	}
 }
@@ -105,8 +129,6 @@ func (m *ExportMgr) reconnect(ctx context.Context) {
 // Create creates the list of required syslog writers for the given event policy
 func (m *ExportMgr) Create(policy *evtsmgrprotos.EventPolicy) error {
 	if policy != nil {
-		m.Lock()
-		defer m.Unlock()
 		return m.create(policy)
 	}
 	return fmt.Errorf("nil event policy")
@@ -115,8 +137,6 @@ func (m *ExportMgr) Create(policy *evtsmgrprotos.EventPolicy) error {
 // Delete stops and deletes all the associated writers for the given event policy
 func (m *ExportMgr) Delete(policy *evtsmgrprotos.EventPolicy) error {
 	if policy != nil {
-		m.Lock()
-		defer m.Unlock()
 		return m.delete(policy)
 	}
 	return fmt.Errorf("nil event policy")
@@ -126,9 +146,6 @@ func (m *ExportMgr) Delete(policy *evtsmgrprotos.EventPolicy) error {
 // TODO: compare and delete/update the existing writers. It need not delete and re-create everything
 func (m *ExportMgr) Update(policy *evtsmgrprotos.EventPolicy) error {
 	if policy != nil {
-		m.Lock()
-		defer m.Unlock()
-
 		// delete all the old writers
 		if err := m.delete(policy); err != nil {
 			return err
@@ -183,69 +200,84 @@ func (m *ExportMgr) Stop() {
 
 // helper function to delete the exporters and configs associated with the given policy
 func (m *ExportMgr) delete(policy *evtsmgrprotos.EventPolicy) error {
-	if _, found := m.exporters[policy.GetName()]; !found {
+	m.RLock()
+	exportersInfo, found := m.exporters[policy.GetName()]
+	if !found {
 		m.logger.Debugf("exporter does not exist for the policy {%v}", policy.GetName())
+		m.RUnlock()
 		return nil
 	}
+	m.RUnlock()
 
 	m.evtsProxy.UnregisterEventsExporter(policy.GetName())
-	for t, exporterInfo := range m.exporters[policy.GetName()] {
+	for t, exporterInfo := range exportersInfo {
 		switch t {
 		case evtsproxy.Syslog:
 			syslogExpInfo := exporterInfo.(*syslogExporterInfo)
 			syslogExpInfo.Lock()
 			syslogExpInfo.exporter.Stop()
+			syslogExpInfo.cancelFunc() // this will cancel any reconnects that are happening for any of the writers belonging to this policy
 			syslogExpInfo.writers = make(map[string]*syslogWriter)
 			syslogExpInfo.Unlock()
 		default:
 			m.logger.Infof("invalid exporter type: %v", t)
 		}
 	}
+
+	m.Lock()
 	delete(m.exporters, policy.GetName())
+	m.Unlock()
 
 	return nil
 }
 
 // helper function to create writers for the given event policy
 func (m *ExportMgr) create(policy *evtsmgrprotos.EventPolicy) error {
-	var err error
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	syslogWriters, err := m.createSyslogWriters(ctx, policy.Spec.GetSyslogConfig(), policy.Spec.Format, policy.Spec.GetTargets())
+	if err != nil {
+		cancelFunc()
+		return err
+	}
 
-	m.createWriters(policy)
+	// create other writers once we start supporting (email, etc.)
 
-	for exporterType, exporterInfo := range m.exporters[policy.GetName()] {
-		switch exporterType {
-		case evtsproxy.Syslog:
-			syslogExporterInfo := exporterInfo.(*syslogExporterInfo)
-
-			var ws []syslog.Writer
-			for _, sw := range syslogExporterInfo.writers {
-				if sw.writer != nil {
-					ws = append(ws, sw.writer)
-				}
-			}
-
-			syslogExporterInfo.exporter, err = m.evtsProxy.RegisterEventsExporter(evtsproxy.Syslog,
-				&exporters.SyslogExporterConfig{Name: policy.GetName(), Writers: ws})
-			if err != nil {
-				return err
+	// create a syslog exporter with the available writers
+	if len(syslogWriters) > 0 {
+		var ws []syslog.Writer
+		for _, sw := range syslogWriters {
+			if sw.writer != nil {
+				ws = append(ws, sw.writer)
 			}
 		}
+
+		// register the exporter with events proxy (so that it can start receiving events and write it to the desired destination)
+		syslogExporter, err := m.evtsProxy.RegisterEventsExporter(evtsproxy.Syslog, &exporters.SyslogExporterConfig{Name: policy.GetName(), Writers: ws})
+		if err != nil {
+			cancelFunc()
+			return err
+		}
+
+		m.Lock() // protect the exporters map
+		m.exporters[policy.GetName()] = map[evtsproxy.ExporterType]interface{}{
+			evtsproxy.Syslog: &syslogExporterInfo{
+				writers:    syslogWriters,
+				exporter:   syslogExporter,
+				cancelFunc: cancelFunc,
+				ctx:        ctx,
+			},
+		}
+		m.Unlock()
+	} else {
+		cancelFunc() // cancel the context that was not used
 	}
 
 	return nil
 }
 
-// helper function to create syslog writers for all the targets given on event policy
-func (m *ExportMgr) createWriters(policy *evtsmgrprotos.EventPolicy) {
-	syslogWriters := m.createSyslogWriters(policy.Spec.GetSyslogConfig(), policy.Spec.Format, policy.Spec.GetTargets())
-	m.exporters[policy.GetName()] = map[evtsproxy.ExporterType]interface{}{
-		evtsproxy.Syslog: &syslogExporterInfo{writers: syslogWriters},
-	}
-}
-
 // helper function to create all the required syslog writers from the config
-func (m *ExportMgr) createSyslogWriters(syslogExportCfg *monitoring.SyslogExportConfig, format string,
-	targets []*monitoring.ExportConfig) map[string]*syslogWriter {
+func (m *ExportMgr) createSyslogWriters(ctx context.Context, syslogExportCfg *monitoring.SyslogExportConfig, format string,
+	targets []*monitoring.ExportConfig) (map[string]*syslogWriter, error) {
 	priority := syslog.LogUser // is a combination of facility and priority
 	if !utils.IsEmpty(syslogExportCfg.GetFacilityOverride()) {
 		priority = syslog.Priority(monitoring.SyslogFacility_value[syslogExportCfg.GetFacilityOverride()])
@@ -260,7 +292,11 @@ func (m *ExportMgr) createSyslogWriters(syslogExportCfg *monitoring.SyslogExport
 	for _, target := range targets {
 		tmp := strings.Split(target.GetTransport(), "/")                                     // e.g. transport = tcp/514
 		network, remoteAddr := tmp[0], fmt.Sprintf("%s:%s", target.GetDestination(), tmp[1]) // {tcp, udp, etc.}, <remote_addr>:<port>
-		writer := m.createSyslogWriter(monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_value[format]), network, remoteAddr, tag, priority)
+		writer, err := m.createSyslogWriter(ctx, monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_value[format]), network, remoteAddr, tag, priority)
+		if err != nil {
+			return nil, err
+		}
+
 		writerKey := m.getWriterKey(*target)
 		writers[writerKey] = &syslogWriter{
 			format:     monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_value[format]),
@@ -271,28 +307,30 @@ func (m *ExportMgr) createSyslogWriters(syslogExportCfg *monitoring.SyslogExport
 			writer:     writer}
 	}
 
-	return writers
+	return writers, nil
 }
 
 // helper function to create a syslog writer using the given params
-func (m *ExportMgr) createSyslogWriter(format monitoring.MonitoringExportFormat, network, remoteAddr, tag string, priority syslog.Priority) syslog.Writer {
+func (m *ExportMgr) createSyslogWriter(ctx context.Context, format monitoring.MonitoringExportFormat, network, remoteAddr, tag string, priority syslog.Priority) (syslog.Writer, error) {
 	var writer syslog.Writer
 	var err error
 
 	switch format {
 	case monitoring.MonitoringExportFormat_SYSLOG_BSD:
-		writer, err = syslog.NewBsd(network, remoteAddr, priority, tag)
+		writer, err = syslog.NewBsd(network, remoteAddr, priority, tag, syslog.BSDWithContext(ctx))
 		if err != nil {
-			m.logger.Errorf("failed to create syslog BSD writer (will try reconnecting in few secs), err: %v", err)
+			m.logger.Errorf("failed to create syslog BSD writer for config {%s/%s} (will try reconnecting in few secs), err: %v", remoteAddr, network, err)
 		}
 	case monitoring.MonitoringExportFormat_SYSLOG_RFC5424:
-		writer, err = syslog.NewRfc5424(network, remoteAddr, priority, utils.GetHostname(), tag)
+		writer, err = syslog.NewRfc5424(network, remoteAddr, priority, utils.GetHostname(), tag, syslog.RFCWithContext(ctx))
 		if err != nil {
-			m.logger.Errorf("failed to create syslog RFC5424 writer (will try reconnecting in few secs), err: %v", err)
+			m.logger.Errorf("failed to create syslog RFC5424 writer {%s/%s} (will try reconnecting in few secs), err: %v", remoteAddr, network, err)
 		}
+	default:
+		return nil, fmt.Errorf("invalid syslog format {%v}", format)
 	}
 
-	return writer
+	return writer, nil
 }
 
 // getWriterKey constructs and returns the writer key from given export config

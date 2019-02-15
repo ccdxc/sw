@@ -73,6 +73,7 @@ func NewManager(proxy *evtsproxy.EventsProxy, logger log.Logger, opts ...MOption
 // Create creates the policy manager by storing if agent store if available
 // and creates all the required exporters using export manager.
 func (m *Manager) Create(policy *evtsmgrprotos.EventPolicy) error {
+	m.logger.Infof("creating policy {%s:%s}", policy.GetKind(), policy.GetName())
 	if m.store != nil {
 		_, err := m.store.Read(policy)
 		if err == nil {
@@ -99,6 +100,7 @@ func (m *Manager) Create(policy *evtsmgrprotos.EventPolicy) error {
 // Get returns the policy identified from the given policy meta.
 // returns nil if the store is not configured/provided.
 func (m *Manager) Get(policy *evtsmgrprotos.EventPolicy) (*evtsmgrprotos.EventPolicy, error) {
+	m.logger.Infof("get policy {%s:%s}", policy.GetKind(), policy.GetName())
 	if m.store != nil {
 		obj, err := m.store.Read(policy)
 		if err != nil {
@@ -116,6 +118,7 @@ func (m *Manager) Get(policy *evtsmgrprotos.EventPolicy) (*evtsmgrprotos.EventPo
 
 // Delete deletes the given policy from store and the associated exporters.
 func (m *Manager) Delete(policy *evtsmgrprotos.EventPolicy) error {
+	m.logger.Infof("deleting policy {%s:%s}", policy.GetKind(), policy.GetName())
 	if m.store != nil {
 		if _, err := m.store.Read(policy); err != nil {
 			if strings.Contains(err.Error(), "Object not found") {
@@ -143,6 +146,7 @@ func (m *Manager) Delete(policy *evtsmgrprotos.EventPolicy) error {
 
 // Update updates the given policy on the store and updates the exporters accordingly.
 func (m *Manager) Update(policy *evtsmgrprotos.EventPolicy) error {
+	m.logger.Infof("updating policy {%s:%s}", policy.GetKind(), policy.GetName())
 	if m.store != nil {
 		p := &evtsmgrprotos.EventPolicy{TypeMeta: policy.TypeMeta, ObjectMeta: policy.ObjectMeta}
 		if _, err := m.store.Read(p); err != nil {

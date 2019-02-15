@@ -276,5 +276,5 @@ func (t *tInfo) assertElasticUniqueEvents(te *testing.T, query es.Query, exact b
 			}
 
 			return true, nil
-		}, "couldn't get the expected number of unique events", "20ms", timeout)
+		}, "couldn't get the expected number of unique events", "60ms", timeout)
 }

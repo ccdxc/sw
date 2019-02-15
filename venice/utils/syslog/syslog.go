@@ -2,6 +2,7 @@ package syslog
 
 import (
 	"fmt"
+	"time"
 
 	syslog "github.com/RackSec/srslog"
 )
@@ -50,6 +51,11 @@ const (
 	LogLocal5
 	LogLocal6
 	LogLocal7
+)
+
+// net.Dial timeout
+const (
+	Timeout = 10 * time.Second
 )
 
 // Message represents the syslog message

@@ -464,7 +464,7 @@ func TestEventPolicy(t *testing.T) {
 }
 
 func TestEventPolicyCRUD(t *testing.T) {
-	eps, policyMgr, pHandler, dbPath, eventsDir, agentStore, logger := setup(t)
+	eps, policyMgr, pHandler, dbPath, eventsDir, agentStore, _ := setup(t)
 	defer os.RemoveAll(eventsDir)
 	defer os.Remove(dbPath)
 	defer policyMgr.Stop()
@@ -575,15 +575,12 @@ func TestEventPolicyCRUD(t *testing.T) {
 		pName := eventPolicyEvent.Policy.GetName()
 		switch eventPolicyEvent.EventType {
 		case api.EventType_CreateEvent:
-			logger.Infof("creating policy {%s}", pName)
 			err := pHandler.CreateEventPolicy(ctx, eventPolicyEvent.Policy)
 			AssertOk(t, err, "failed to create policy {%s}, err: %v", pName, err)
 		case api.EventType_UpdateEvent:
-			logger.Infof("updating policy {%s}", pName)
 			err := pHandler.UpdateEventPolicy(ctx, eventPolicyEvent.Policy)
 			AssertOk(t, err, "failed to update policy {%s}, err: %v", pName, err)
 		case api.EventType_DeleteEvent:
-			logger.Infof("deleting policy {%s}", pName)
 			err := pHandler.DeleteEventPolicy(ctx, eventPolicyEvent.Policy)
 			AssertOk(t, err, "failed to delete policy {%s}, err: %v", pName, err)
 		}
@@ -633,7 +630,7 @@ func TestEventPolicyCRUD(t *testing.T) {
 		},
 	}
 	err = pHandler.UpdateEventPolicy(ctx, policies[1].Policy) // stop and start with new config.
-	AssertOk(t, err, "unexpected err: %v", err)
+	AssertOk(t, err, "unexpected err")
 
 	// TCP dial will fail "dial tcp 192.168.99.1:11001: connect: connection refused"
 	// it will internally retry the connection until it becomes successful
@@ -645,6 +642,7 @@ func TestEventPolicyCRUD(t *testing.T) {
 			Name: "policy1",
 		},
 		Spec: monitoring.EventPolicySpec{
+			Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 			Targets: []*monitoring.ExportConfig{
 				{
 					Destination: "192.168.99.1",
@@ -653,7 +651,7 @@ func TestEventPolicyCRUD(t *testing.T) {
 			},
 		},
 	})
-	AssertOk(t, err, "unexpected err: %v", err)
+	AssertOk(t, err, "unexpected err")
 
 	// delete agent store
 	os.Remove(dbPath)
@@ -668,9 +666,10 @@ func TestEventPolicyCRUD(t *testing.T) {
 			Name: "policy10",
 		},
 		Spec: monitoring.EventPolicySpec{
+			Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 			Targets: []*monitoring.ExportConfig{
 				{
-					Destination: "192.168.99.1",
+					Destination: "192.168.99.10",
 					Transport:   "tcp/11001",
 				},
 			},

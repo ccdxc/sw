@@ -59,11 +59,6 @@ type EvtProxyServices struct {
 func (e *EvtProxyServices) Stop() {
 	log.Info("stopping event proxy services")
 	if e != nil {
-		if e.EvtsProxy != nil {
-			e.EvtsProxy.Stop()
-		}
-		e.EvtsProxy = nil
-
 		if e.PolicyWatcher != nil {
 			e.PolicyWatcher.Stop()
 		}
@@ -73,6 +68,11 @@ func (e *EvtProxyServices) Stop() {
 			e.PolicyMgr.Stop()
 		}
 		e.PolicyMgr = nil
+
+		if e.EvtsProxy != nil {
+			e.EvtsProxy.Stop()
+		}
+		e.EvtsProxy = nil
 	}
 }
 

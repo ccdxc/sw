@@ -77,6 +77,10 @@ func (h *EventPolicyHandler) validate(e *evtsmgrprotos.EventPolicy) error {
 		return fmt.Errorf("no name provided in the config")
 	}
 
+	if utils.IsEmpty(e.Spec.GetFormat()) {
+		return fmt.Errorf("no format provided in the config")
+	}
+
 	if utils.IsEmpty(e.GetTenant()) {
 		e.Tenant = globals.DefaultTenant
 	}

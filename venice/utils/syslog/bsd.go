@@ -1,8 +1,10 @@
 package syslog
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 
 	syslog "github.com/RackSec/srslog"
 )
@@ -14,17 +16,46 @@ type bsd struct {
 	sw      *syslog.Writer
 	network string // "tcp", "tcp4" (IPv4-only), "tcp6" (IPv6-only), "udp", "udp4" (IPv4-only), "udp6" (IPv6-only), "ip", "ip4" (IPv4-only), "ip6" (IPv6-only), "unix", "unixgram" and "unixpacket".
 	raddr   string // remote addr to connect to
+	ctx     context.Context
+}
+
+// BOption fills the optional params for bsd syslog writer
+type BOption func(*bsd)
+
+// BSDWithContext passes a context for bsd writer
+func BSDWithContext(ctx context.Context) BOption {
+	return func(b *bsd) {
+		b.ctx = ctx
+	}
 }
 
 // NewBsd is a wrapper around bsd syslog
-func NewBsd(network, raddr string, priority Priority, tag string) (Writer, error) {
-	sw, err := syslog.Dial(network, raddr, syslog.Priority(priority), tag)
+func NewBsd(network, raddr string, priority Priority, tag string, opts ...BOption) (Writer, error) {
+	b := &bsd{network: network, raddr: raddr}
+
+	// add custom options
+	for _, o := range opts {
+		if o != nil {
+			o(b)
+		}
+	}
+
+	dialWithContext := func(network, addr string) (net.Conn, error) {
+		dialer := &net.Dialer{Timeout: Timeout}
+		if b.ctx != nil {
+			return dialer.DialContext(b.ctx, network, addr)
+		}
+		return dialer.Dial(network, addr)
+	}
+
+	sw, err := syslog.DialWithCustomDialer(network, raddr, syslog.Priority(priority), tag, dialWithContext)
 	if err != nil {
 		return nil, err
 	}
 	sw.SetFormatter(syslog.RFC3164Formatter)
+	b.sw = sw
 
-	return &bsd{sw: sw, network: network, raddr: raddr}, nil
+	return b, nil
 }
 
 // Close closes the underlying client connection to the syslog server

@@ -1,6 +1,7 @@
 package syslog
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -18,8 +19,8 @@ import (
 var logTypes = []string{"unixgram", "unix"}
 var logPaths = []string{"/dev/log", "/var/run/syslog", "/var/run/log"}
 
-// Option to be added to the config
-type Option func(w *rfc5424)
+// ROption to be added to the config
+type ROption func(w *rfc5424)
 
 // RFC5424 format  syslog writer
 type rfc5424 struct {
@@ -33,24 +34,32 @@ type rfc5424 struct {
 	getTime  func() string
 	network  string
 	raddr    string
+	ctx      context.Context
 }
 
 // WithTimeFn adds time fn to the config
-func WithTimeFn(fn func() string) Option {
+func WithTimeFn(fn func() string) ROption {
 	return func(w *rfc5424) {
 		w.getTime = fn
 	}
 }
 
 // WithConn adds conn to the the config
-func WithConn(conn net.Conn) Option {
+func WithConn(conn net.Conn) ROption {
 	return func(w *rfc5424) {
 		w.conn = conn
 	}
 }
 
+// RFCWithContext passes a context for RFC writer
+func RFCWithContext(ctx context.Context) ROption {
+	return func(w *rfc5424) {
+		w.ctx = ctx
+	}
+}
+
 // NewRfc5424 creates instance to write syslog in RFC5424 format
-func NewRfc5424(network, raddr string, facility Priority, hostName, appName string, opts ...Option) (Writer, error) {
+func NewRfc5424(network, raddr string, facility Priority, hostName, appName string, opts ...ROption) (Writer, error) {
 	if appName == "" {
 		appName = "-"
 	}
@@ -78,26 +87,36 @@ func NewRfc5424(network, raddr string, facility Priority, hostName, appName stri
 	w.Lock()
 	defer w.Unlock()
 
-	conn, err := w.connect()
-	if err != nil {
-		return nil, err
-	}
-	w.conn = conn
-
 	// add custom options
 	for _, o := range opts {
 		if o != nil {
 			o(w)
 		}
 	}
+
+	if w.conn == nil {
+		conn, err := w.connect()
+		if err != nil {
+			return nil, err
+		}
+		w.conn = conn
+	}
+
 	return w, nil
 }
 
 func (w *rfc5424) connect() (net.Conn, error) {
+	var conn net.Conn
+	var err error
 	errMsg := []string{}
 
 	if !utils.IsEmpty(w.network) || !utils.IsEmpty(w.raddr) {
-		conn, err := net.Dial(w.network, w.raddr)
+		dialer := &net.Dialer{Timeout: Timeout}
+		if w.ctx != nil {
+			conn, err = dialer.DialContext(w.ctx, w.network, w.raddr)
+		} else {
+			conn, err = dialer.Dial(w.network, w.raddr)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -108,7 +127,12 @@ func (w *rfc5424) connect() (net.Conn, error) {
 	// if there is no remote server, connect to the local syslog
 	for _, network := range logTypes {
 		for _, path := range logPaths {
-			conn, err := net.Dial(network, path)
+			dialer := &net.Dialer{Timeout: Timeout}
+			if w.ctx != nil {
+				conn, err = dialer.DialContext(w.ctx, network, path)
+			} else {
+				conn, err = dialer.Dial(network, path)
+			}
 			if err != nil {
 				errMsg = append(errMsg, fmt.Sprintf("%s:%s %s\n", network, path, err))
 				continue
