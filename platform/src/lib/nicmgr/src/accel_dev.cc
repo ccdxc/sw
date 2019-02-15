@@ -54,6 +54,10 @@ extern class pciemgr *pciemgr;
 #define ACCEL_DEV_NUM_CRYPTO_KEYS_MIN           512     // arbitrary low water mark
 #define ACCEL_QID_PUBLISH_YIELD_POINT           128
 
+// Minimum amount of STORAGE_SEQ_HBM_HANDLE we want to enforce
+#define ACCEL_DEV_SEQ_HBM_SIZE_MIN              (128 * 1024 * 1024)
+
+
 static void
 accel_ring_info_publish(const accel_rgroup_ring_t& rgroup_ring);
 
@@ -238,7 +242,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     cmb_mem_addr = pd->mp_->start_addr(STORAGE_SEQ_HBM_HANDLE);
     cmb_mem_size = pd->mp_->size(STORAGE_SEQ_HBM_HANDLE);
     if (cmb_mem_addr == INVALID_MEM_ADDRESS || cmb_mem_size == 0) {
-        NIC_LOG_ERR("{}: Failed to get HBM base for {}", spec->name,
+        NIC_LOG_ERR("{}: failed to get HBM base for {}", spec->name,
             STORAGE_SEQ_HBM_HANDLE);
         throw;
     }
@@ -252,6 +256,12 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     if (cmb_mem_addr & (cmb_mem_size - 1)) {
         cmb_mem_size /= 2;
         cmb_mem_addr = ACCEL_DEV_ADDR_ALIGN(cmb_mem_addr, cmb_mem_size);
+    }
+
+    if (cmb_mem_size < ACCEL_DEV_SEQ_HBM_SIZE_MIN) {
+        NIC_LOG_ERR("{}: HBM aligned size {} is too small for {}", spec->name,
+            cmb_mem_size, STORAGE_SEQ_HBM_HANDLE);
+        throw;
     }
 
     NIC_LOG_DEBUG("{}: cmb_mem_addr: {:#x} cmb_mem_size: {}",

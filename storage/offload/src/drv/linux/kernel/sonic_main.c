@@ -61,6 +61,10 @@ bool chain_rate_limit_dst_en = false;
 module_param(chain_rate_limit_dst_en, bool, 0444);
 MODULE_PARM_DESC(chain_rate_limit_dst_en, "Chaining destination rate limiting enable (default=false)");
 
+unsigned int interm_buf_size = 8192;
+module_param(interm_buf_size, uint, 0444);
+MODULE_PARM_DESC(interm_buf_size, "Intermediate buffer size (default=8KB)");
+
 int body(void);
 
 int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)

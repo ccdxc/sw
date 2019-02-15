@@ -209,7 +209,7 @@ struct interm_buf_list {
 		struct pnso_buffer_list blist;
 		uint8_t b[sizeof(struct pnso_buffer_list) +
 			  (sizeof(struct pnso_flat_buffer) *
-			   INTERM_BUF_MAX_NUM_NOMINAL_BUFS)];
+			   INTERM_BUF_MAX_NUM_BUFS)];
 	};
 };
 

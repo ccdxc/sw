@@ -453,6 +453,7 @@ putil_get_interm_buf_list(struct service_info *svc_info)
 	struct interm_buf_list	*iblist;
 	struct pnso_flat_buffer	*iblist_buf;
 	void			*ibuf;
+	uint32_t		max_nominal_bufs;
 	uint32_t		buf_size;
 	uint32_t		req_size;
 	uint32_t		size_left;
@@ -485,12 +486,12 @@ putil_get_interm_buf_list(struct service_info *svc_info)
 	req_size = svc_info->si_dst_blist.len ?
 		   svc_info->si_dst_blist.len : svc_info->si_src_blist.len;
 	if (!svc_info->si_dst_blist.blist ||
-	    (req_size <= INTERM_BUF_NOMINAL_BUF_SIZE)) {
+	    (req_size <= INTERM_BUF_NOMINAL_SIZE())) {
 
 		iblist->buf_type = MPOOL_TYPE_RMEM_INTERM_BUF;
 		size_left = req_size;
-		while (size_left  && (iblist->blist.count <
-					INTERM_BUF_MAX_NUM_NOMINAL_BUFS)) {
+		max_nominal_bufs = INTERM_BUF_MAX_NUM_NOMINAL_BUFS();
+		while (size_left  && (iblist->blist.count < max_nominal_bufs)) {
 
 			ibuf = pc_res_mpool_object_get_with_size(
 				svc_info->si_pcr, iblist->buf_type, &buf_size);

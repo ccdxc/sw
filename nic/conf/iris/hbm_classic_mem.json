@@ -285,10 +285,6 @@
             "reset": true
         },
         {
-            "name": "storage",
-            "size": "131072K"
-        },
-        {
             "name": "ipfix",
             "size": "32K"
         },

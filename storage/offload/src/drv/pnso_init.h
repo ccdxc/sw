@@ -8,25 +8,18 @@
 
 #include "sonic_dev.h"
 
-/*
- * The current intermediate buffer implementation optimizes for
- * 32K size, i.e., one single source of up to 32K, which has these
- * desired properties:
- *
- * a) The smaller size provides for a larger pool of intermediate buffers
- *    from which large batch operations may draw, and
- * b) A given transfer will not exceed a chain_sgl_pdma descriptor
- *    (which is a sequencer requirement).
- */
-#define INTERM_BUF_NOMINAL_BUF_SIZE	32768
 #define INTERM_BUF_NOMINAL_PAGE_SIZE	4096
-#define INTERM_BUF_NOMINAL_NUM_BUFS					\
-	(INTERM_BUF_NOMINAL_BUF_SIZE / INTERM_BUF_NOMINAL_PAGE_SIZE)
-#define INTERM_BUF_MAX_BUF_SIZE		65536
-#define INTERM_BUF_MAX_NUM_NOMINAL_BUFS					\
-	(INTERM_BUF_MAX_BUF_SIZE / INTERM_BUF_NOMINAL_BUF_SIZE)
+#define INTERM_BUF_MIN_SIZE		8192
+#define INTERM_BUF_MAX_SIZE		65536
+
+#define INTERM_BUF_NOMINAL_SIZE()	sonic_interm_buf_size_get()
+
+#define INTERM_BUF_NOMINAL_NUM_BUFS()					\
+	(INTERM_BUF_NOMINAL_SIZE() / INTERM_BUF_NOMINAL_PAGE_SIZE)
+#define INTERM_BUF_MAX_NUM_NOMINAL_BUFS()				\
+	(INTERM_BUF_MAX_SIZE / INTERM_BUF_NOMINAL_SIZE())
 #define INTERM_BUF_MAX_NUM_BUFS						\
-	(INTERM_BUF_MAX_BUF_SIZE / INTERM_BUF_NOMINAL_PAGE_SIZE)
+	(INTERM_BUF_MAX_SIZE / INTERM_BUF_MIN_SIZE)
 
 /*
  * (3 for 32k buffers * 2 for src+dst buffers)

@@ -253,20 +253,39 @@ pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
 		       uint32_t pc_num_bufs)
 {
 	uint32_t	num_buf_vecs;
-	pnso_error_t	err;
+	uint32_t	ibuf_nominal_size;
+	pnso_error_t	err = EINVAL;
+
+	ibuf_nominal_size = INTERM_BUF_NOMINAL_SIZE();
+	if ((ibuf_nominal_size < INTERM_BUF_MIN_SIZE) ||
+	    (ibuf_nominal_size > INTERM_BUF_MAX_SIZE)) {
+		OSAL_LOG_ERROR("intermediate buffer size %u must be >= %u and "
+				"<= %u: err %d", ibuf_nominal_size, 
+				INTERM_BUF_MIN_SIZE, INTERM_BUF_MAX_SIZE, err);
+		goto out;
+	}
+
+	if (!is_power_of_2(ibuf_nominal_size) ||
+	    (ibuf_nominal_size & (pc_init->pnso_init.block_size - 1))) {
+		OSAL_LOG_ERROR("intermediate buffer size %u is not power "
+				"of 2 or not multiple of block size %u: err %d",
+				ibuf_nominal_size, pc_init->pnso_init.block_size, err);
+		goto out;
+	}
 
 	/*
 	 * Intermediate buffers are allocated as vectors of contiguous buffers,
 	 * each vector handles the max request buffer size.
 	 */
-	num_buf_vecs = pc_num_bufs / INTERM_BUF_NOMINAL_NUM_BUFS;
+	num_buf_vecs = pc_num_bufs / INTERM_BUF_NOMINAL_NUM_BUFS();
+	err = ENOMEM;
 	if (!num_buf_vecs) {
 		OSAL_LOG_ERROR("failure: zero num_buf_vecs");
-		return ENOMEM;
+		goto out;
 	}
 
 	err = mpool_create(MPOOL_TYPE_RMEM_INTERM_BUF, num_buf_vecs,
-			   INTERM_BUF_NOMINAL_NUM_BUFS,
+			   INTERM_BUF_NOMINAL_NUM_BUFS(),
 			   pc_init->pnso_init.block_size, PNSO_MEM_ALIGN_NONE,
 			   &pcr->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
 	if (!err)
@@ -280,7 +299,7 @@ pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
 		MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
 		MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
 	}
-
+out:
 	return err;
 }
 

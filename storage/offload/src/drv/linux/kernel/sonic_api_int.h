@@ -16,6 +16,7 @@ extern bool rate_limit_src_en;
 extern bool rate_limit_dst_en;
 extern bool chain_rate_limit_src_en;
 extern bool chain_rate_limit_dst_en;
+extern unsigned int interm_buf_size;
 
 
 #define SONIC_INTR_FIRE_DATA32		0x95969798
@@ -55,6 +56,12 @@ static inline bool
 sonic_chain_rate_limit_dst_en_get(void)
 {
 	return chain_rate_limit_dst_en;
+}
+
+static inline unsigned int
+sonic_interm_buf_size_get(void)
+{
+	return interm_buf_size;
 }
 
 uint32_t sonic_rmem_total_pages_get(void);
