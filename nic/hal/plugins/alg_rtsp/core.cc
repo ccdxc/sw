@@ -254,26 +254,37 @@ add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
  * Returns app_session of the specified key (creates if it doesn't exist)
  */
 static inline alg_utils::app_session_t *
-get_app_session(const rtsp_session_key_t &key, 
-                alg_utils::app_session_t *ctrl_app_sess=NULL)
+get_rtsp_session(const rtsp_session_key_t &key, 
+                alg_utils::app_session_t *ctrl_app_sess)
 {
-    hal_ret_t ret;
+    dllist_ctxt_t   *lentry, *next;
 
     alg_utils::app_session_t *app_sess;
     rtsp_session_t *rtsp_sess;
 
-    ret = g_rtsp_state->lookup_app_sess(&key, &app_sess);
-    if (ret == HAL_RET_OK) {
-        return app_sess;
+    if (ctrl_app_sess == NULL) {
+        HAL_TRACE_ERR("Control app session cannot be null"); 
+        return NULL;
+    }
+
+    dllist_for_each_safe(lentry, next, &ctrl_app_sess->app_sess_lentry)
+    {
+        alg_utils::app_session_t *rtsp_app_sess = dllist_entry(lentry,
+                       alg_utils::app_session_t, app_sess_lentry);
+             
+        if (!memcmp(rtsp_app_sess->oper, &key, sizeof(rtsp_session_key_t))) {
+            return rtsp_app_sess;
+        }
     }
 
     DEBUG("get_app_session - new rtsp session key={}", key);
     app_sess = (alg_utils::app_session_t *)g_rtsp_state->app_sess_slab()->alloc();
+    SDK_ASSERT(app_sess != NULL);
     rtsp_sess = (rtsp_session_t *)g_rtsp_state->alg_info_slab()->alloc();
     rtsp_sess->sess_key = key;
-    memcpy(&app_sess->key, &key, sizeof(rtsp_session_key_t));
-
     app_sess->oper = rtsp_sess;
+    app_sess->isCtrl = false;
+
     g_rtsp_state->insert_app_sess(app_sess, ctrl_app_sess);
 
     return app_sess;
@@ -386,7 +397,7 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
 
         // Lookup/create session
         memcpy(sess_key.id, msg.hdrs.session.id, sizeof(sess_key.id));
-        app_sess = get_app_session(sess_key, l4_sess->app_session);
+        app_sess = get_rtsp_session(sess_key, l4_sess->app_session);
         SDK_ASSERT_RETURN(app_sess, HAL_RET_OOM);
 
         // create expected flows if it is a rtsp resp with transport header
@@ -419,10 +430,10 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         } else {
             g_rtsp_state->cleanup_l4_sess(l4_sess);
         }
-    } else {
+    } else if (l4_sess != NULL) {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
         HAL_TRACE_DEBUG("RTSP Completion handler iscontrol session: {}", l4_sess->isCtrl);
-        if (l4_sess->isCtrl) {
+        if (l4_sess->isCtrl == true) {
             if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
                 // Set up TCP buffer for RFLOW
                 l4_sess->tcpbuf[DIR_RFLOW] = alg_utils::tcp_buffer_t::factory(
@@ -456,25 +467,30 @@ rtsp_new_control_session(fte::ctx_t &ctx)
     alg_utils::l4_alg_status_t *l4_sess;
     fte::flow_update_t          flowupd = {};
     sfw::sfw_info_t            *sfw_info = NULL;
+    rtsp_session_t             *rtsp_info = NULL;
 
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
-        rtsp_session_key_t sess_key = {};
-        sess_key.vrf_id = ctx.key().svrf_id;
-        sess_key.ip.af = (ctx.key().flow_type == hal::FLOW_TYPE_V6) ?
-            IP_AF_IPV6 : IP_AF_IPV4;
-        sess_key.ip.addr = ctx.key().dip;
-        sess_key.port = ctx.key().dport;
-        app_sess = get_app_session(sess_key);
-        SDK_ASSERT_RETURN(app_sess, HAL_RET_OOM);
+        ret = g_rtsp_state->alloc_and_init_app_sess(ctx.key(), &app_sess);
+        SDK_ASSERT(ret == HAL_RET_OK);
+        SDK_ASSERT(app_sess != NULL);
 
         app_sess->isCtrl = true; // This is the control APP session
         ret = g_rtsp_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
         if (ret != HAL_RET_OK) {
             return ret;
         }
-
+        SDK_ASSERT(l4_sess != NULL);
         l4_sess->isCtrl = true;
-        l4_sess->info = app_sess->oper;
+        rtsp_info = (rtsp_session_t *)g_rtsp_state->alg_info_slab()->alloc();
+        SDK_ASSERT(rtsp_info != NULL);
+
+        app_sess->oper = rtsp_info; 
+        rtsp_info->sess_key.vrf_id = ctx.key().svrf_id;
+        rtsp_info->sess_key.ip.af = (ctx.key().flow_type == hal::FLOW_TYPE_V6) ?
+            IP_AF_IPV6 : IP_AF_IPV4;
+        rtsp_info->sess_key.ip.addr = ctx.key().dip;
+        rtsp_info->sess_key.port = ctx.key().dport;
+        l4_sess->info = rtsp_info;
         l4_sess->alg = nwsec::APP_SVC_RTSP;
         sfw_info = sfw::sfw_feature_state(ctx);
         l4_sess->idle_timeout = sfw_info->idle_timeout;

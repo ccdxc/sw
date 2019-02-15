@@ -47,7 +47,7 @@ DEFINE_ENUM(rtsp_hdr_type_t, RTSP_HDR_ENTRIES)
 #define RTSP_STATUS_OK 200
 #define DEFAULT_SESSION_TIMEOUT 60
 #define MAX_TRANSPORT_SPECS 8
-typedef char rtsp_session_id_t[129];
+typedef char rtsp_session_id_t[512];
 
 struct rtsp_transport_t {
     ip_addr_t client_ip;

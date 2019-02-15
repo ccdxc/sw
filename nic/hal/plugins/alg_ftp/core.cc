@@ -532,6 +532,7 @@ static void add_expected_flow(fte::ctx_t &ctx, l4_alg_status_t *l4_sess,
         }
     }
     g_ftp_state->alloc_and_insert_exp_flow(l4_sess->app_session, key, &exp_flow);
+    SDK_ASSERT(exp_flow != NULL);
     exp_flow->entry.handler = expected_flow_handler;
     exp_flow->isCtrl = false;
     exp_flow->alg = l4_sess->alg;
@@ -573,7 +574,7 @@ size_t __parse_ftp_rsp(void *ctxt, uint8_t *payload, size_t data_len) {
             /*
              * Check for any error responses
              */
-            for (uint8_t i=FTP_SYNTAX_ERR; i<FTP_MAX_RSP; i++) {
+            for (uint8_t i=FTP_ERR_RSP; i<FTP_MAX_RSP; i++) {
                  cmd = ftp_rsp[i];
                  found = find_pattern((char *)payload, data_len, cmd.pattern,
                                       cmd.plen, cmd.skip, cmd.term, cmd.state,
@@ -685,9 +686,9 @@ static void ftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
         if (l4_sess && l4_sess->isCtrl == true) {
             g_ftp_state->cleanup_app_session(l4_sess->app_session);
         }
-    } else {
+    } else if (l4_sess) {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
-        if (l4_sess && l4_sess->isCtrl == false) {
+        if (l4_sess->isCtrl == false) {
             /*
              * Data session flow has been installed sucessfully
              * Cleanup expected flow from the exp flow table and app
@@ -764,8 +765,8 @@ fte::pipeline_action_t alg_ftp_exec(fte::ctx_t &ctx) {
         ret = ctx.update_flow(flowupd);
     } else if (alg_state != NULL && (ctx.role() == hal::FLOW_ROLE_INITIATOR)) {
         l4_sess = (l4_alg_status_t *)alg_status(ctx.feature_session_state());
-        ftp_info = (ftp_info_t *)l4_sess->info;
         if (l4_sess != NULL && (l4_sess->alg == nwsec::APP_SVC_FTP)) {
+            ftp_info = (ftp_info_t *)l4_sess->info;
             if (!l4_sess->tcpbuf[DIR_RFLOW] && ctx.is_flow_swapped()) {
                 // Set up TCP buffer for RFLOW
                 l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(

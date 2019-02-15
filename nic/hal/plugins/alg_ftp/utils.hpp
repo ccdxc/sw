@@ -18,7 +18,14 @@ typedef struct ftp_info_ ftp_info_t;
  */
 
 #define FTP_MAX_REQ  4
+
+#ifdef LOGIN_ERR_NEEDED
+#define FTP_ERR_RSP  10
+#define FTP_MAX_RSP  13 
+#else
+#define FTP_ERR_RSP  5
 #define FTP_MAX_RSP  8
+#endif
 
 /*
  * FTP Proto States

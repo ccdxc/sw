@@ -429,24 +429,15 @@ hal_ret_t alg_state::lookup_app_sess(const void *key, app_session_t **app_sess) 
 
 hal_ret_t alg_state::insert_app_sess (app_session_t *app_session, 
                                       app_session_t *ctrl_app_sess) {
-    sdk_ret_t ret;
-    hal_ret_t rc;
+    hal_ret_t rc = HAL_RET_OK;
 
     if (ctrl_app_sess)
         SDK_SPINLOCK_LOCK(&ctrl_app_sess->slock);
 
     SDK_SPINLOCK_INIT(&app_session->slock, PTHREAD_PROCESS_PRIVATE);
 
-    ret = app_sess_ht()->insert(app_session, &app_session->app_sess_ht_ctxt);
-    rc = hal_sdk_ret_to_hal_ret(ret);
-    if (rc != HAL_RET_OK) {
-        HAL_TRACE_ERR("App session insert failed with rc: {}", rc);
-        goto end;
-    }
-
     dllist_reset(&app_session->app_sess_lentry);
 
-end:
     if (ctrl_app_sess) {
         if (rc == HAL_RET_OK) 
             // Link this app session to the control app session
@@ -460,6 +451,7 @@ end:
 hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key, 
                                              app_session_t **app_session) {
     hal_ret_t       ret = HAL_RET_OK;
+    sdk_ret_t       rc = SDK_RET_OK;
 
     // Lookup if app session already exists
     ret = lookup_app_sess(&key, app_session);
@@ -472,6 +464,15 @@ hal_ret_t alg_state::alloc_and_init_app_sess(hal::flow_key_t key,
         return HAL_RET_OOM;
     }
     memcpy(&(*app_session)->key, &key, sizeof(hal::flow_key_t));
+    (*app_session)->isCtrl = true;
+
+    rc = app_sess_ht()->insert((*app_session), &(*app_session)->app_sess_ht_ctxt);
+    ret = hal_sdk_ret_to_hal_ret(rc);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("App session insert failed with rc: {}", ret);
+        return ret;
+    }
+
     return insert_app_sess(*app_session);
 }
 

@@ -67,7 +67,8 @@ inline uint64_t __be_pack_uint64(const uint8_t *buf, uint32_t *idx) {
     uint64_t val = 0;
 
     do {
-       val = val | (buf[(*idx)++]<<shift);
+       uint64_t tmpbuf = buf[(*idx)++];
+       val = val | (tmpbuf<<shift);
        shift -= 8;
     } while (shift >= 0);
 
@@ -104,7 +105,8 @@ inline uint64_t __le_pack_uint64(const uint8_t *buf, uint32_t *idx) {
     uint64_t val = 0;
 
     do {
-       val = val | (buf[(*idx)++]<<shift);
+       uint64_t tmpbuf = buf[(*idx)++];
+       val = val | (tmpbuf<<shift);
        shift += 8;
     } while (shift <= 56);
 

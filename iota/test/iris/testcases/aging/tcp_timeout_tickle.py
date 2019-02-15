@@ -95,7 +95,7 @@ def Trigger(tc):
     tc.cmd_cookies2.append("sleep")
 
     #Step 6: Validate if session is exist
-    api.Trigger_AddNaplesCommand(req2, naples.node_name, "/nic/bin/halctl show session --dstport {} --dstip {} --srcip {} | grep ESTABLISHED".format(server_port, server.ip_address, client.ip_address))
+    api.Trigger_AddNaplesCommand(req2, naples.node_name, "/nic/bin/halctl show session --handle {}".format(sess_hdl))
     tc.cmd_cookies2.append("After session timeout")
 
     #Step 7: Validate if tickle was sent

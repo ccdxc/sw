@@ -312,9 +312,9 @@ static void sunrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
         } else { /* Cleanup data session */
             g_rpc_state->cleanup_l4_sess(l4_sess);
         }
-    } else {
+    } else if (l4_sess) {
         l4_sess->sess_hdl = ctx.session()->hal_handle;
-        if (l4_sess && l4_sess->isCtrl == false) {
+        if (l4_sess->isCtrl == false) {
             l4_alg_status_t  *ctrl_sess =  g_rpc_state->get_ctrl_l4sess(\
                                                  l4_sess->app_session);
             HAL_TRACE_DEBUG("Ctrl l4 session: {:p}", (void *)ctrl_sess);
@@ -420,7 +420,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                 rpc_info->pkt = alloc_rpc_pkt();
                 rpc_info->payload_offset = rpc_msg_offset + WORD_BYTES;
             }
-            if ((rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ) {
+            if ((rpc_info->pkt) && (rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ) {
                 memcpy(&rpc_info->pkt[rpc_info->pkt_len], &pkt[pgm_offset], (pkt_len-pgm_offset));
                 rpc_info->pkt_len += pkt_len;
             } else {

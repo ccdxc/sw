@@ -14,6 +14,9 @@ namespace hal {
 namespace plugins {
 namespace alg_rpc {
 
+thread_local msrpc_epm_req_hdr_t epm_req;
+thread_local msrpc_epm_rsp_hdr_t epm_rsp;
+
 using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::sfw;
 
@@ -505,8 +508,8 @@ __parse_msrpc_epm_req_hdr(const uint8_t *pkt, uint32_t dlen,
                           uint8_t is64bit, rpc_info_t *rpc_info) {
    // static uint32_t     MSRPC_EPM_REQ = (sizeof(msrpc_handle_t) + sizeof(uint32_t));
     uint32_t            offset = 0;
-    msrpc_epm_req_hdr_t epm_req = {};
-    
+  
+    bzero(&epm_req, sizeof(msrpc_epm_req_hdr_t)); 
     offset += __parse_msrpc_epm_map_twr(pkt, dlen, &epm_req.twr, is64bit, rpc_info, PDU_REQ);
 
     HAL_TRACE_DEBUG("Parsed EPM REQ Header: {}", epm_req);
@@ -569,8 +572,8 @@ __parse_msrpc_epm_rsp_hdr(const uint8_t *pkt, uint32_t dlen,
                                   sizeof(msrpc_map_twr_t));
     static uint32_t      EPM_32BIT_RSP_SZ = (EPM_RSP_SZ - 12);
     uint32_t             offset = 0, twr_offset=0;
-    msrpc_epm_rsp_hdr_t  epm_rsp = {};
 
+    bzero(&epm_rsp, sizeof(msrpc_epm_rsp_hdr_t));
     if ((is64bit && dlen < EPM_RSP_SZ) ||
         (!is64bit && dlen < EPM_32BIT_RSP_SZ)) {
         incr_parse_error(rpc_info);
@@ -774,6 +777,7 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                 HAL_TRACE_ERR("Packet len execeeded the Max ALG Fragmented packet sz");
                 incr_max_pkt_sz(rpc_info);
                 reset_rpc_info(rpc_info);
+                return pkt_len;
             }
         }
     } else {
@@ -790,7 +794,8 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
         }
 
         rpc_info->rpc_frag_cont = 1;
-        if ((rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ) {
+        if ((rpc_info->pkt != NULL) && 
+            ((rpc_info->pkt_len + (pkt_len-pgm_offset)) < MAX_ALG_RPC_PKT_SZ)) {
             memcpy(&rpc_info->pkt[rpc_info->pkt_len], &pkt[pgm_offset], (pkt_len-pgm_offset));
             rpc_info->pkt_len += (pkt_len-pgm_offset);
         } else {
@@ -1004,6 +1009,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
 
             ret = g_rpc_state->alloc_and_insert_l4_sess(app_sess, &l4_sess);
             SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
+            SDK_ASSERT(l4_sess != NULL);
             l4_sess->alg = nwsec::APP_SVC_MSFT_RPC;
             rpc_info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
             SDK_ASSERT_RETURN((rpc_info != NULL), HAL_RET_OOM);
