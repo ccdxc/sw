@@ -13,6 +13,6 @@
     "feature_set" : "iris",
     "control_cores_mask" : "0x1",
     "data_cores_mask" : "0xe",
-    "shm" : false
+    "shm" : true 
   }
 }
