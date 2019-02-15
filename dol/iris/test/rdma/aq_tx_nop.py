@@ -33,8 +33,8 @@ def TestCaseStepVerify(tc, step):
     ring0_mask = (tc.pvtdata.aq.num_aq_wqes - 1)
     tc.pvtdata.aq_post_qstate = tc.pvtdata.aq.aq.qstate.data
     if step.step_id == 1:
-        # verify that busy is 0
-        if not VerifyFieldAbsolute(tc, tc.pvtdata.aq_post_qstate, 'busy', 0):
+        # verify that token_id is equal to next_token_id
+        if not VerifyFieldsEqual(tc, tc.pvtdata.aq_post_qstate, 'token_id', tc.pvtdata.aq_post_qstate, 'next_token_id'):
             return False
 
         # verify that p_index is incremented by 1

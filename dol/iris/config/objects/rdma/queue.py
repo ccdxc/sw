@@ -40,10 +40,11 @@ class RdmaAQstate(Packet):
 
         IntField("map_count_completed", 0),
         ByteField("first_pass", 0),
-        ByteField("busy", 0),
+        ByteField("token_id", 0),
 
-        BitField("rsvd1", 0, 32),
-
+        BitField("rsvd1", 0, 24),
+        ByteField("debug", 0),
+        
         BitField("log_wqe_size", 0, 5),
         BitField("log_num_size", 0, 5),
         BitField("ring_empty_sched_eval_done", 0, 1), 
@@ -51,7 +52,7 @@ class RdmaAQstate(Packet):
 
         XLongField("phy_base_addr", 0),
 
-        ByteField("rsvd3", 0),
+        ByteField("next_token_id", 0),
         X3BytesField("aq_id", 0),
         X3BytesField("cq_id", 0),
         ByteField("error", 0),

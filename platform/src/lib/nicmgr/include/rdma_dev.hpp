@@ -338,7 +338,7 @@ typedef struct aqcb0_s {
     uint32_t cq_id: 24;
     
     uint32_t aq_id: 24;
-    uint32_t rsvd3: 8;
+    uint32_t next_token_id: 8;
     
     uint64_t phy_base_addr;
     
@@ -350,7 +350,7 @@ typedef struct aqcb0_s {
     uint8_t  debug;
     uint8_t  rsvd1[3];
     
-    uint8_t  busy;
+    uint8_t  token_id;
     uint8_t  first_pass;
     uint32_t map_count_completed;
     

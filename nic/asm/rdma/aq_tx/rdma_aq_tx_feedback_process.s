@@ -32,6 +32,10 @@ rdma_aq_tx_feedback_process:
 
     seq         c2, K_AQ_CMD_DONE, 1
 
+    add         r2, d.token_id, r0
+    mincr       r2, 8, 1
+    phvwr       p.token_id, r2
+    
     bcf         [!c2], multi_pass
     add         r2, r0, K_WQE_ID  //BD slot
     
@@ -40,7 +44,7 @@ rdma_aq_tx_feedback_process:
 
     mincr       r2, d.log_num_wqes, 1
     phvwr       p.proxy_cindex, r2[15:0].hx
-    
+
     //get DMA cmd entry based on dma_cmd_index
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_FEEDBACK)
 

@@ -114,7 +114,7 @@ class RdmaAQCB0state(Packet):
 
         IntField("map_count_completed", 0),
         ByteField("first_pass", 0),
-        ByteField("busy", 0),
+        ByteField("token_id", 0),
 
         BitField("rsvd1", 0, 24),
         BitField("debug", 0, 8),
@@ -126,7 +126,7 @@ class RdmaAQCB0state(Packet):
 
         XLongField("phy_base_addr", 0),
 
-        ByteField("rsvd3", 0),
+        ByteField("next_token_id", 0),
         X3BytesField("aq_id", 0),
         X3BytesField("cq_id", 0),
         ByteField("error", 0),

@@ -23,7 +23,7 @@ struct aqcb0_t {
 
     map_count_completed: 32;
     first_pass: 8;
-    busy: 8;
+    token_id: 8;
 
     rsvd1: 24;
     debug: 8;
@@ -35,7 +35,7 @@ struct aqcb0_t {
 
     phy_base_addr: 64;
 
-    rsvd3: 8;
+    next_token_id: 8;
     aq_id: 24;
 
     cq_id: 24;

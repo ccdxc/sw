@@ -38,19 +38,20 @@ rdma_aq_tx_aqcb_process:
         seq         c1, d.error, 1
         bcf         [c1], error
         seq         c2, d.first_pass, 1 //BD slot                                      
-        seq         c1, d.busy, 1
-        bcf         [c1], exit 
+        seq         c1, d.token_id, d.next_token_id
+        bcf         [!c1], exit 
         nop
 
-        tblwr       d.busy, 1 //BD Slot
+        tblmincri   d.next_token_id, 8, 1 //BD Slot
         tblwr.f     d.ring_empty_sched_eval_done, 0 //BD Slot
 
         //Default   values
         phvwr       p.common.p4_intr_global_debug_trace, d.debug
         phvwr       p.first_pass, 1
         phvwr       p.proxy_cindex, d.{ring0.cindex}
+        phvwr       p.token_id, d.token_id
         phvwr       CAPRI_PHV_FIELD(TO_S_FB_INFO_P, aq_cmd_done), 1
-    
+     
         // copy intrinsic to global
         add            r1, r0, offsetof(struct phv_, common_global_global_data) 
 
@@ -67,7 +68,7 @@ rdma_aq_tx_aqcb_process:
         DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_RDMA_BUSY)
         mfspr       r2, spr_tbladdr
         add         r2, r2, FIELD_OFFSET(aqcb0_t, ring0.cindex)
-        DMA_HBM_PHV2MEM_SETUP_F(r6, proxy_cindex, busy, r2)    
+        DMA_HBM_PHV2MEM_SETUP_F(r6, proxy_cindex, token_id, r2)    
     
         CAPRI_RESET_TABLE_0_ARG()
 
@@ -80,8 +81,7 @@ rdma_aq_tx_aqcb_process:
 
         CAPRI_NEXT_TABLE0_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_wqe_process, r3)
 
-                
-        wrfence.e
+        nop.e
         nop
     
     .brend

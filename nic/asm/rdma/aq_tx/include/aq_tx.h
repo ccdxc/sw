@@ -137,7 +137,7 @@ struct aq_tx_phv_t {
             proxy_cindex: 16;
             map_count_completed: 32;
             first_pass: 8;
-            busy: 8;
+            token_id: 8;
             pad: 64;
             dma_cmds_1_2_3: 384;
         };
@@ -160,7 +160,7 @@ struct aq_tx_phv_t {
         
         /* flit 6 */
     union {
-        struct aq_tx_dma_cmds_flit_t flit_6;
+        struct aq_tx_dma_cmds_flit_t flit_6; 
         struct key_entry_t key;
         struct sqcb0_t sqcb0;
         struct cqcb_t  cqcb;
