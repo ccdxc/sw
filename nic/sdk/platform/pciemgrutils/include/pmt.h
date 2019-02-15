@@ -156,14 +156,6 @@ typedef struct pmt_s {
     pmr_entry_t pmre;
 } pmt_t;
 
-const char *pmt_type_str(int type);
-int pmt_is_valid(const pmt_t *pmt);
-void pmt_bar_setaddr(pmt_t *pmt, const u_int64_t addr);
-u_int64_t pmt_bar_getaddr(const pmt_t *pmt);
-u_int64_t pmt_bar_getsize(const pmt_t *pmt);
-int pmt_bar_allows_rd(const pmt_t *pmt);
-int pmt_bar_allows_wr(const pmt_t *pmt);
-
 /* PMT flags for cfg/bar encoding */
 #define PMTF_NONE       0x00     /* no flags */
 #define PMTF_RD         0x01     /* read only */
@@ -176,7 +168,6 @@ void
 pmt_cfg_enc(pmt_t *pmt,
             const u_int8_t port,
             const u_int16_t bdf,
-            const u_int16_t bdfm,
             const u_int64_t cfgpa,
             const u_int16_t addr,
             const u_int16_t addrm,
@@ -192,11 +183,34 @@ pmt_bar_enc(pmt_t *pmt,
             const u_int32_t prtsize,
             const u_int32_t pmtf);
 
+const char *pmt_type_str(int type);
+int pmt_is_valid(const pmt_t *pmt);
+
 void pmt_entry_enc(pmt_entry_t *pmte, const pmt_datamask_t *dm);
 void pmt_entry_dec(const pmt_entry_t *pmte, pmt_datamask_t *dm);
 
 u_int32_t pmr_pagesize_enc(const u_int32_t pagesize);
 u_int32_t pmr_pagesize_dec(const u_int32_t encoded_pagesize);
+
+int pmt_allows_rd(const pmt_t *pmt);
+int pmt_allows_wr(const pmt_t *pmt);
+
+/* cfg operators */
+void pmt_cfg_set_ports(pmt_t *pmt,
+                       const u_int8_t port,
+                       const u_int8_t portm,
+                       const u_int8_t portstart,
+                       const u_int8_t portlimit);
+void pmt_cfg_set_bdfs(pmt_t *pmt,
+                      const u_int16_t bdf,
+                      const u_int16_t bdfm,
+                      const u_int16_t bdfstart,
+                      const u_int16_t bdflimit);
+
+/* bar operators */
+void pmt_bar_setaddr(pmt_t *pmt, const u_int64_t addr);
+u_int64_t pmt_bar_getaddr(const pmt_t *pmt);
+u_int64_t pmt_bar_getsize(const pmt_t *pmt);
 
 void pmt_bar_set_bdf(pmt_t *pmt, const u_int16_t bdf);
 void pmt_bar_set_prts(pmt_t *pmt, const u_int32_t prtb, const u_int32_t prtc);

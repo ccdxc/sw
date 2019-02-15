@@ -27,7 +27,8 @@ typedef struct pciehw_mem_s {
     u_int8_t cfgcur[PCIEHW_NDEVS][PCIEHW_CFGSZ] __attribute__((aligned(4096)));
     u_int32_t notify_intr_dest[PCIEHW_NPORTS];   /* notify   intr dest */
     u_int32_t indirect_intr_dest[PCIEHW_NPORTS]; /* indirect intr dest */
-    u_int8_t zeros[0x1000];             /* page of zeros to back cfgspace */
+                                     /* page of zeros to back cfgspace */
+    u_int8_t zeros[0x1000] __attribute__((aligned(4096)));
     u_int32_t magic;                    /* PCIEHW_MAGIC when initialized */
     u_int32_t version;                  /* PCIEHW_VERSION when initialized */
 } pciehw_mem_t;
@@ -108,12 +109,10 @@ int pciehw_romsk_load(pciehwdev_t *phwdev);
 void pciehw_romsk_unload(pciehwdev_t *phwdev);
 void pciehw_romsk_dbg(int argc, char *argv[]);
 
-#define VFSTRIDE_IDX_DEV        0x0
+#define VFSTRIDE_IDX_DEVCFG     0x0
 #define VFSTRIDE_IDX_4K         0x1
 
 void pciehw_vfstride_init(void);
-int pciehw_vfstride_load(pciehwdev_t *phwdev);
-void pciehw_vfstride_unload(pciehwdev_t *phwdev);
 
 void pciehw_tgt_port_init(void);
 void pciehw_tgt_port_skip_notify(const int port, const int on);

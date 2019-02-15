@@ -19,7 +19,7 @@ pciestress0:
 +----------------------------------------------------------------+
 vfe(V4) 11 vfs(V3) 14 prt_size(V2) 12 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
 BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
-0   32   mem   rwl   16K   0x3ffffffffc000 0:02:00.0 0  
+0   33   mem   rwl   16K   0x3ffffffffc000 0:02:00.0 0  
     PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     1    res   --p-  4K    0x3ffffffffc000 0x13f000000
     2    res   -n--  4K    0x3ffffffffd000 0x13f000000
@@ -32,7 +32,7 @@ BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
 +----------------------------------------------------------------+
 vfe(V4) 4 vfs(V3) 7 prt_size(V2) 5 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
 BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
-2   33   mem   rwl   128   0x3ffffffffff80 0:02:00.0 0  
+2   34   mem   rwl   128   0x3ffffffffff80 0:02:00.0 0  
     PRT  TYPE  FLAGS SIZE  BAR ADDR        CAPRI ADDR 
     5    res   --p-  32    0x3ffffffffff80 0x13f000000
     6    res   -n--  32    0x3ffffffffffa0 0x13f000000
@@ -40,8 +40,8 @@ BAR PMT  TYPE  FLAGS SIZE  BAR ADDR        P:BB:DD.F TID
     8    res   ----  0     0x3ffffffffffe0 0x000000000
 
 idx  id type rw p:bb:dd.f baraddr    size  vf    lif   prt   pid  qtype prts
-32    0 mem  rw 0:02:00.0 0xfffffffffc000 16K              13:12             1-4 
-33    0 io   rw 0:02:00.0 0xfffffffffff80 128               6:5              5-8 
+33    0 mem  rw 0:02:00.0 0xfffffffffc000 16K              13:12             1-4 
+34    0 io   rw 0:02:00.0 0xfffffffffff80 128               6:5              5-8 
 idx  x                y                pmr
-32   0fffffffffc00009 00000000000001f0 80020003 00c39800 00004000 00000000
-33   0fffffffffff8029 00000000000001d0 800a000b 0051ca00 00004000 00000000
+33   0fffffffffc00009 00000000000001f0 80020003 00c39800 00004000 00000000
+34   0fffffffffff8029 00000000000001d0 800a000b 0051ca00 00004000 00000000

@@ -160,15 +160,16 @@ pmt_set_cfg(pciehwdev_t *phwdev,
             const u_int16_t addr,
             const u_int16_t addrm,
             const u_int8_t romsksel,
+            const u_int8_t vfstridesel,
             const u_int32_t pmtflags)
 {
     pmt_t pmt;
 
     pmt_cfg_enc(&pmt,
                 phwdev->port,
-                phwdev->bdf, 0xffff,
+                phwdev->bdf,
                 cfgpa, addr, addrm,
-                romsksel, phwdev->stridesel,
+                romsksel, vfstridesel,
                 pmtflags);
     pmt_set(pmti, &pmt);
 }
@@ -279,6 +280,7 @@ pciehw_pmt_load_cfg(pciehwdev_t *phwdev)
     pciehw_mem_t *phwmem = pciehw_get_hwmem();
     const pciehwdevh_t hwdevh = pciehwdev_geth(phwdev);
     const u_int64_t cfgpa = pal_mem_vtop(&phwmem->cfgcur[hwdevh]);
+    const u_int64_t zerospa = pal_mem_vtop(phwmem->zeros);
     int pmti, i;
 
 #if 0
@@ -298,7 +300,8 @@ pciehw_pmt_load_cfg(pciehwdev_t *phwdev)
                 goto error_out;
             }
             pmt_set_owner(pmti, hwdevh);
-            pmt_set_cfg(phwdev, pmti, cfgpa, i << 2, 0xffff, romsk, pmtf);
+            pmt_set_cfg(phwdev, pmti, cfgpa, i << 2, 0xffff,
+                        romsk, VFSTRIDE_IDX_DEVCFG, pmtf);
         }
     }
     /*
@@ -306,8 +309,8 @@ pciehw_pmt_load_cfg(pciehwdev_t *phwdev)
      * but romsk=1 selects the read-only entry so effectively this
      * claims all read/write transactions but writes have no effect.
      * We limit the range to PCIEHW_CFGSZ because that is all we have
-     * here in cfgpa.  For access to cfgspace above PCIEHW_CFGSZ a wildcard
-     * entry for all bdf's will catch it.
+     * here in cfgpa.  For access to cfgspace above PCIEHW_CFGSZ add
+     * an entry to zerospa.
      */
     pmti = pmt_alloc(1);
     if (pmti < 0) {
@@ -315,13 +318,17 @@ pciehw_pmt_load_cfg(pciehwdev_t *phwdev)
         goto error_out;
     }
     pmt_set_owner(pmti, hwdevh);
-#if 1
-    pmt_set_cfg(phwdev, pmti, cfgpa, 0, 0,
-                ROMSK_RDONLY, PMTF_RW);
-#else
-    pmt_set_cfg(phwdev, pmti, cfgpa, 0, PCIEHW_CFGSZ - 1,
-                ROMSK_RDONLY, PMTF_RW);
-#endif
+    pmt_set_cfg(phwdev, pmti, cfgpa, 0, ~(PCIEHW_CFGSZ - 1),
+                ROMSK_RDONLY, VFSTRIDE_IDX_DEVCFG, PMTF_RW);
+
+    pmti = pmt_alloc(1);
+    if (pmti < 0) {
+        pciesys_logerror("load_cfg: pmt_alloc failed catchall zeros\n");
+        goto error_out;
+    }
+    pmt_set_owner(pmti, hwdevh);
+    pmt_set_cfg(phwdev, pmti, zerospa, 0, 0,
+                ROMSK_RDONLY, VFSTRIDE_IDX_4K, PMTF_RW);
     return 0;
 
  error_out:
@@ -477,10 +484,8 @@ static void
 pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
 {
     const pmt_cfg_format_t *d = &dm->data.cfg;
-    const pmt_cfg_format_t *m = &dm->mask.cfg;
+    /* const pmt_cfg_format_t *m = &dm->mask.cfg; */
     const pmr_cfg_entry_t *r = &pmt->pmre.cfg;
-    const int rw = d->rw;
-    const int rw_m = m->rw;
 
     if (last_hdr_displayed != PMTT_CFG) {
         pmt_show_cfg_entry_hdr();
@@ -491,8 +496,8 @@ pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
                     "%4d %d:%-7s %4d %5d 0x%09" PRIx64 " %c%c%c%c%c\n",
                     pmti, d->tblid,
                     d->type == r->type ? pmt_type_str(d->type) : "BAD",
-                    ((!rw && rw_m) || !rw_m) ? 'r' : ' ',
-                    (( rw && rw_m) || !rw_m) ? 'w' : ' ',
+                    pmt_allows_rd(pmt) ? 'r' : ' ',
+                    pmt_allows_wr(pmt) ? 'w' : ' ',
                     d->port, bdf_to_str(d->bdf), d->addrdw << 2,
                     r->vfbase,
                     r->plimit,
@@ -553,10 +558,8 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
     const pciehw_shmem_t *pshmem = pciehw_get_shmem();
     const pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
     const pmt_bar_format_t *d = &dm->data.bar;
-    const pmt_bar_format_t *m = &dm->mask.bar;
+    /* const pmt_bar_format_t *m = &dm->mask.bar; */
     const pmr_bar_entry_t *pmr = &pmt->pmre.bar;
-    const int rw = d->rw;
-    const int rw_m = m->rw;
     prt_t lprt, *prt = &lprt;
     int pidb, pidc, qtyb, qtyc;
     int vfb, vfc, lifb, lifc, resb, resc;
@@ -633,8 +636,8 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
                     "%-4s\n",
                     pmti, d->tblid,
                     d->type == pmr->type ? pmt_type_str(d->type) : "BAD",
-                    ((!rw && rw_m) || !rw_m) ? 'r' : '-',
-                    (( rw && rw_m) || !rw_m) ? 'w' : '-',
+                    pmt_allows_rd(pmt) ? 'r' : '-',
+                    pmt_allows_wr(pmt) ? 'w' : '-',
                     d->port, bdf_to_str(pmr->bdf),
                     (u_int64_t)d->addrdw << 2,
                     human_readable(pmt_bar_getsize(pmt)),

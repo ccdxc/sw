@@ -126,11 +126,6 @@ pciehw_cfg_finalize(pciehdev_t *pdev)
         pciesys_logerror("%s: romsk_load failed\n", pciehdev_get_name(pdev));
         return -1;
     }
-    if (pciehw_vfstride_load(phwdev) < 0) {
-        pciesys_logerror("%s: vfstride_load failed\n",
-                         pciehdev_get_name(pdev));
-        return -1;
-    }
     if (pciehw_pmt_load_cfg(phwdev) < 0) {
         pciesys_logerror("%s: pmt_load_cfg failed\n", pciehdev_get_name(pdev));
         return -1;
@@ -141,37 +136,6 @@ pciehw_cfg_finalize(pciehdev_t *pdev)
 int
 pciehw_cfg_finalize_done(pciehwdev_t *phwroot)
 {
-    pciehw_mem_t *phwmem = pciehw_get_hwmem();
-    pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    const pciehwdevh_t hwdevh = pciehwdev_geth(phwroot);
-    const u_int64_t zerospa = pal_mem_vtop(phwmem->zeros);
-    pciehw_spmt_t *spmt;
-    pmt_t pmt;
-    int pmti;
-
-    /* XXX XXX XXX make this work */
-    if (1) return 0;
-
-    pmti = pmt_alloc(1);
-    if (pmti < 0) {
-        pciesys_logerror("cfg_finalize_done: pmt_alloc failed\n");
-        return -1;
-    }
-    /*
-     * Add a global catchall entry for this port for cfgspace.
-     * XXX Could wildcard the port too.
-     */
-    phwroot->stridesel = VFSTRIDE_IDX_4K;
-    spmt = &pshmem->spmt[pmti];
-    spmt->owner = hwdevh;
-    pmt_cfg_enc(&pmt,
-                phwroot->port,
-                phwroot->bdf, 0, /* bdf: wildcard */
-                zerospa, 0, 0,
-                ROMSK_RDONLY,
-                VFSTRIDE_IDX_4K,
-                PMTF_RW);
-    pmt_set(pmti, &pmt);
     return 0;
 }
 

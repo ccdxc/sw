@@ -60,19 +60,6 @@ vfstride_set(const int idx,
     pal_reg_wr32(vfstride_addr(idx), e.w);
 }
 
-int
-pciehw_vfstride_load(pciehwdev_t *phwdev)
-{
-    phwdev->stridesel = VFSTRIDE_IDX_DEV;
-    return 0;
-}
-
-void
-pciehw_vfstride_unload(pciehwdev_t *phwdev)
-{
-    /* XXX */
-}
-
 void
 pciehw_vfstride_init(void)
 {
@@ -83,6 +70,6 @@ pciehw_vfstride_init(void)
     }
 
     /* XXX hardcode these entries for now */
-    vfstride_set(VFSTRIDE_IDX_DEV, 0, 0, 0, 0, PCIEHW_CFGSZ);
+    vfstride_set(VFSTRIDE_IDX_DEVCFG, 0, 0, 0, 0, PCIEHW_CFGSZ);
     vfstride_set(VFSTRIDE_IDX_4K,  0, 0, 0, 0, 0x1000);
 }

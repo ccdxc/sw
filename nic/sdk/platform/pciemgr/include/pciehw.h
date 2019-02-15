@@ -77,11 +77,10 @@ typedef struct pciehwdev_s {
     pciehwdevh_t childh;                /* handle to child */
     pciehwdevh_t peerh;                 /* handle to peer */
     u_int8_t intpin;                    /* legacy int pin */
-    u_int8_t stridesel;                 /* vfstride table entry selector */
     u_int8_t romsksel[PCIEHW_ROMSKSZ];  /* cfg read-only mask selectors */
     u_int8_t cfgpmtf[PCIEHW_CFGHNDSZ];  /* cfg pmt flags */
     u_int8_t cfghnd[PCIEHW_CFGHNDSZ];   /* cfg indirect/notify handlers */
-    pciehwbar_t bar[PCIEHW_NBAR];
+    pciehwbar_t bar[PCIEHW_NBAR];       /* bar info */
     pciehwbar_t rombar;                 /* option rom bar */
 } pciehwdev_t;
 

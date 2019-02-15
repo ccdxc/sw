@@ -95,6 +95,80 @@ pmr_pagesize_dec(const u_int32_t encoded_pagesize)
     return pagesize_tab[encoded_pagesize & 0x7];
 }
 
+static int
+pmt_allows_rw(const pmt_t *pmt, const int rw)
+{
+    pmt_datamask_t dm;
+
+    pmt_entry_dec(&pmt->pmte, &dm);
+
+    /*
+     * Either mask says don't care about rw,
+     *     OR
+     * rw data matches what we are looking for.
+     */
+    return dm.mask.cmn.rw == 0 || dm.data.cmn.rw == rw;
+}
+
+int
+pmt_allows_rd(const pmt_t *pmt)
+{
+    return pmt_allows_rw(pmt, 0);
+}
+
+int
+pmt_allows_wr(const pmt_t *pmt)
+{
+    return pmt_allows_rw(pmt, 1);
+}
+
+void
+pmt_cfg_set_ports(pmt_t *pmt,
+                  const u_int8_t port,
+                  const u_int8_t portm,
+                  const u_int8_t portstart,
+                  const u_int8_t portlimit)
+{
+    pmr_cfg_entry_t *pmr = &pmt->pmre.cfg;
+    pmt_datamask_t dm;
+
+    assert(port < 0x8);
+    assert(portm < 0x8);
+    assert(portlimit < 0x8);
+
+    pmt_entry_dec(&pmt->pmte, &dm);
+    dm.data.cfg.port = port;
+    dm.mask.cfg.port = portm;
+    pmt_entry_enc(&pmt->pmte, &dm);
+
+    pmr->pstart = portstart;
+    pmr->plimit = portlimit;
+}
+
+void
+pmt_cfg_set_bdfs(pmt_t *pmt,
+                 const u_int16_t bdf,
+                 const u_int16_t bdfm,
+                 const u_int16_t bdfstart,
+                 const u_int16_t bdflimit)
+{
+    pmr_cfg_entry_t *pmr = &pmt->pmre.cfg;
+    pmt_datamask_t dm;
+
+    pmt_entry_dec(&pmt->pmte, &dm);
+    dm.data.cfg.bdf = bdf;
+    dm.mask.cfg.bdf = bdfm;
+    pmt_entry_enc(&pmt->pmte, &dm);
+
+    pmr->bstart = bdf_to_bus(bdfstart);
+    pmr->dstart = bdf_to_dev(bdfstart);
+    pmr->fstart = bdf_to_fnc(bdfstart);
+
+    pmr->blimit = bdf_to_bus(bdflimit);
+    pmr->dlimit = bdf_to_dev(bdflimit);
+    pmr->flimit = bdf_to_fnc(bdflimit);
+}
+
 void
 pmt_bar_set_vfparams(pmt_t *pmt,
                      const int bitb, const int bitc,
@@ -213,33 +287,6 @@ pmt_bar_getsize(const pmt_t *pmt)
     return ~(dm.mask.bar.addrdw << 2) + 1;
 }
 
-static int
-pmt_bar_allows_rw(const pmt_t *pmt, const int rw)
-{
-    pmt_datamask_t dm;
-
-    pmt_entry_dec(&pmt->pmte, &dm);
-
-    /*
-     * Either mask says don't care about rw,
-     *     OR
-     * rw data matches what we are looking for.
-     */
-    return dm.mask.bar.rw == 0 || dm.data.bar.rw == rw;
-}
-
-int
-pmt_bar_allows_rd(const pmt_t *pmt)
-{
-    return pmt_bar_allows_rw(pmt, 0);
-}
-
-int
-pmt_bar_allows_wr(const pmt_t *pmt)
-{
-    return pmt_bar_allows_rw(pmt, 1);
-}
-
 static void
 pmt_rw_enc(const u_int32_t pmtf, u_int8_t *rwp, u_int8_t *rwmp)
 {
@@ -263,7 +310,6 @@ void
 pmt_cfg_enc(pmt_t *pmt,
             const u_int8_t port,
             const u_int16_t bdf,
-            const u_int16_t bdfm,
             const u_int64_t cfgpa,
             const u_int16_t addr,
             const u_int16_t addrm,
@@ -296,7 +342,7 @@ pmt_cfg_enc(pmt_t *pmt,
     DM_SET_CFG(dm, type, PMT_TYPE_CFG, 0x7);
     DM_SET_CFG(dm, port, port, 0x7);
     DM_SET_CFG(dm, rw, rw, rwm);
-    DM_SET_CFG(dm, bdf, bdf, bdfm);
+    DM_SET_CFG(dm, bdf, bdf, 0xffff);
     DM_SET_CFG(dm, addrdw, addr >> 2, addrm >> 2);
 
     pmt_entry_enc(&pmt->pmte, &dm);
