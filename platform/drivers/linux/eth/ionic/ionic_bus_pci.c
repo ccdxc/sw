@@ -9,13 +9,6 @@
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
 
-// TODO move PCI_VENDOR_ID_PENSANDO to include/linux/pci_ids.h
-#define PCI_VENDOR_ID_PENSANDO			0x1dd8
-
-#define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF	0x1002
-#define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF	0x1003
-#define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT	0x1004
-
 /* Supported devices */
 static const struct pci_device_id ionic_id_table[] = {
 	{ PCI_VDEVICE(PENSANDO, PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF) },

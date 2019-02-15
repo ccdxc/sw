@@ -101,29 +101,106 @@ static void ionic_get_drvinfo(struct net_device *netdev,
 		sizeof(drvinfo->bus_info));
 }
 
+static bool ionic_is_mnic(struct ionic *ionic)
+{
+	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
+}
+
+static bool ionic_is_vf(struct ionic *ionic)
+{
+	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF;
+}
+
+static bool ionic_is_pf(struct ionic *ionic)
+{
+	return ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF;
+}
+
+static bool ionic_is_25g(struct ionic *ionic)
+{
+	return ionic_is_pf(ionic) &&
+	       ionic->pdev->subsystem_device == IONIC_SUBDEV_ID_NAPLES_25;
+}
+
+static bool ionic_is_100g(struct ionic *ionic)
+{
+	return ionic_is_pf(ionic) &&
+	       (ionic->pdev->subsystem_device == IONIC_SUBDEV_ID_NAPLES_100_4 ||
+		ionic->pdev->subsystem_device == IONIC_SUBDEV_ID_NAPLES_100_8);
+}
+
 static int ionic_get_link_ksettings(struct net_device *netdev,
 				    struct ethtool_link_ksettings *ks)
 {
 	struct lif *lif = netdev_priv(netdev);
 
+#define link_mode(xx) \
+	do { \
+		ethtool_link_ksettings_add_link_mode(ks, supported, xx); \
+		ethtool_link_ksettings_add_link_mode(ks, advertising, xx); \
+	} while (0)
+
 	ethtool_link_ksettings_zero_link_mode(ks, supported);
 	ethtool_link_ksettings_zero_link_mode(ks, advertising);
 
-	/* supported and advertised speeds */
-	ethtool_link_ksettings_add_link_mode(ks, supported, 10000baseT_Full);
-	ethtool_link_ksettings_add_link_mode(ks, advertising, 10000baseT_Full);
+	if (ionic_is_mnic(lif->ionic)) {
 
-	/* supported and advertised ports */
-	ethtool_link_ksettings_add_link_mode(ks, supported, FIBRE);
-	ethtool_link_ksettings_add_link_mode(ks, advertising, FIBRE);
+		link_mode(1000baseKX_Full);
 
-	ethtool_link_ksettings_add_link_mode(ks, supported, Autoneg);
-	ethtool_link_ksettings_add_link_mode(ks, advertising, Autoneg);
+		ks->base.port = PORT_OTHER;
 
+	} else if (ionic_is_vf(lif->ionic)) {
+
+		link_mode(10000baseKR_Full);
+		link_mode(Backplane);
+
+		ks->base.port = PORT_OTHER;
+
+	} else if (ionic_is_25g(lif->ionic)) {
+
+		link_mode(10000baseKR_Full);
+
+		link_mode(25000baseCR_Full);
+		link_mode(25000baseKR_Full);
+		link_mode(25000baseSR_Full);
+
+		link_mode(Autoneg);
+		link_mode(FIBRE);
+
+		ks->base.port = PORT_FIBRE;
+
+	} else if (ionic_is_100g(lif->ionic)) {
+
+		link_mode(10000baseKR_Full);
+
+		link_mode(25000baseCR_Full);
+		link_mode(25000baseKR_Full);
+		link_mode(25000baseSR_Full);
+
+		link_mode(40000baseCR4_Full);
+		link_mode(40000baseKR4_Full);
+		link_mode(40000baseLR4_Full);
+		link_mode(40000baseSR4_Full);
+
+		link_mode(50000baseCR2_Full);
+		link_mode(50000baseKR2_Full);
+
+		link_mode(100000baseCR4_Full);
+		link_mode(100000baseKR4_Full);
+		link_mode(100000baseLR4_ER4_Full);
+		link_mode(100000baseSR4_Full);
+
+		link_mode(Autoneg);
+		link_mode(FIBRE);
+
+		ks->base.port = PORT_FIBRE;
+	}
 
 	ks->base.speed = lif->notifyblock->link_speed;
-	ks->base.port = PORT_FIBRE;
-	ks->base.autoneg = AUTONEG_ENABLE;
+	if (lif->notifyblock->autoneg_status)
+		ks->base.autoneg = AUTONEG_ENABLE;
+	else
+		ks->base.autoneg = AUTONEG_DISABLE;
 
 	if (lif->notifyblock->link_status)
 		ks->base.duplex = DUPLEX_FULL;
@@ -131,6 +208,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		ks->base.duplex = DUPLEX_UNKNOWN;
 
 	return 0;
+#undef link_mode
 }
 
 static int ionic_get_coalesce(struct net_device *netdev,
