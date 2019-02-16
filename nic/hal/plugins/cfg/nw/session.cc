@@ -2228,10 +2228,8 @@ tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
         return;
     }
 
-    HAL_TRACE_DEBUG("TCP close timer callback -- deleting session with id {}",
-                    session->iflow->config.key);
-
-    session->tcp_cxntrack_timer = NULL;
+    HAL_TRACE_DEBUG("TCP close timer callback -- deleting session with handle {}",
+                    session_handle);
 
     // time to clean up the session
     // Delete asynchronously so we dont hold the periodic thread
@@ -2362,8 +2360,6 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
         return;
     }
 
-    session->tcp_cxntrack_timer = NULL;
-
     args.session = session;
     args.session_state = &state;
     pd_func_args.pd_session_get = &args;
@@ -2371,9 +2367,12 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
                        session->hal_handle);
+        return;
     }
 
-    HAL_TRACE_DEBUG("IFlow State: {}", state.iflow_state.state);
+    HAL_TRACE_DEBUG("Session handle: {} IFlow State: {}", session_handle, state.iflow_state.state);
+
+    session->tcp_cxntrack_timer = NULL;
 
     if (session->iflow)
         session->iflow->state = state.iflow_state.state;
@@ -2459,6 +2458,7 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to fetch iflow record of session {}",
                        session->hal_handle);
+        return;
     }
 
     //HAL_TRACE_DEBUG("Session {} IFlow State: {}", session_handle, state.iflow_state.state);

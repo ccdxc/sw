@@ -1087,7 +1087,7 @@ pd_session_get (pd_func_args_t *pd_func_args)
     pd_session_t *pd_session;
     session_state_tcp_session_state_info_t info;
 
-    if (args->session == NULL) {
+    if (args->session == NULL || args->session->pd == NULL) {
         return HAL_RET_INVALID_ARG;
     }
     pd_session = args->session->pd;
