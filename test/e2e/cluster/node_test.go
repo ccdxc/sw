@@ -108,6 +108,7 @@ var _ = Describe("node tests", func() {
 			// fallback cleanup so that even if above function fails before calling delete, we always delete the node
 			obj := api.ObjectMeta{Name: nonQnode}
 			nodeIf.Delete(ts.tu.NewLoggedInContext(context.Background()), &obj)
+			validateCluster()
 		})
 	})
 })

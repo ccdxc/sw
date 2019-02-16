@@ -24,7 +24,6 @@ var _ = Describe("alert test", func() {
 		serviceStoppedOn string
 	)
 	It("ServiceStopped events to INFO alerts", func() {
-		validateCluster()
 
 		// create alert policy to convert `ServiceStopped` events to INFO alerts
 		alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "eventstoalerts", "Event", evtsapi.SeverityLevel_INFO,
