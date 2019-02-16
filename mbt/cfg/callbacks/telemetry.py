@@ -4,6 +4,8 @@ from grpc_meta.msg import GrpcReqRspMsg
 import cfg.callbacks.endpoint as endpoint
 import random
 
+ip_protocol = [types_pb2.IPPROTO_ICMP, types_pb2.IPPROTO_TCP, types_pb2.IPPROTO_UDP, types_pb2.IPPROTO_ESP]
+
 def CollectorPreCreateCb(data, req_spec, resp_spec):
     global current_infra_types
     global max_infra_types
@@ -48,3 +50,5 @@ def FlowMatchPreCreateCb(data, req_spec, resp_spec):
         req_spec.request[0].match.dst_address[0].address.prefix.ipv4_subnet.prefix_len = GrpcReqRspMsg.generate_ip_address(req_spec.request[0].match.dst_address[0].address.prefix.ipv4_subnet.address, types_pb2.IP_AF_INET)
     req_spec.request[0].action.agg_scheme[0] = telemetry_pb2.NONE
     req_spec.request[0].action.action[0] = telemetry_pb2.MIRROR
+    req_spec.request[0].match.protocol = random.choice(ip_protocol)
+    req_spec.request[0].match.ether_type = 0x0800
