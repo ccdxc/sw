@@ -74,7 +74,7 @@ class MplsOverUdpTunnelManager:
         resp = api.Trigger(req)
         if resp == None:
             return api.types.status.FAILURE
-        
+
         result = api.types.status.SUCCESS
         for cmd in resp.commands:
             api.PrintCommandResults(cmd)
@@ -91,7 +91,7 @@ class MplsOverUdpTunnelManager:
         wlpool2 = api.GetWorkloads(nodes[1])
         assert(len(wlpool1) == len(wlpool2))
 
-        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+        req = api.Trigger_CreateAllParallelCommandsRequest()
         tunnels = []
         for wid in range(len(wlpool1)):
             # Create tunnel in local node
@@ -107,7 +107,7 @@ class MplsOverUdpTunnelManager:
         return self.__process_req(req)
 
     def DeleteTunnels(self):
-        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+        req = api.Trigger_CreateAllParallelCommandsRequest()
         for tunnel in self.__tunnels:
             tunnel.Delete(req)
         return self.__process_req(req)

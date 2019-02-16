@@ -42,8 +42,20 @@ class Workload:
             self.encap_vlan = msg.encap_vlan
             self.ip_prefix = msg.ip_prefix
             self.ip_address = msg.ip_prefix.split('/')[0]
+            self.sec_ip_prefixes = []
+            self.sec_ip_addresses = []
+            for secip in msg.sec_ip_prefix:
+                self.sec_ip_prefixes.append(secip)
+                self.sec_ip_addresses.append(secip.split('/')[0])
+
             self.ipv6_prefix = msg.ipv6_prefix
             self.ipv6_address = msg.ipv6_prefix.split('/')[0]
+            self.sec_ipv6_prefixes = []
+            self.sec_ipv6_addresses = []
+            for secip in msg.sec_ipv6_prefix:
+                self.sec_ipv6_prefixes.append(secip)
+                self.sec_ipv6_addresses.append(secip.split('/')[0])
+
             self.mac_address = msg.mac_address
             self.interface = msg.interface
             self.parent_interface = msg.parent_interface

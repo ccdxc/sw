@@ -208,7 +208,7 @@ def __add_config_classic_workloads(req, target_node = None):
 
     classic_mac_allocator = resmgr.MacAddressStep("00AA.0000.0001", "0000.0000.0001")
     # Using up first vlan for native
-    api.Testbed_AllocateVlan()
+    native_vlan = api.Testbed_AllocateVlan()
     # Forming native workloads
     native_nw_spec = {} # intf -> nw_spec
     native_ipv4_allocator = {} # intf -> ipv4_allocator
@@ -254,6 +254,7 @@ def __add_config_classic_workloads(req, target_node = None):
     ipv6_allocators = {} # ith subif  -> ipv6_allocator
     sec_ipv4_allocators = {} # ith subif -> ipv4_allocator
     sec_ipv6_allocators = {} # ith subif  -> ipv6_allocator
+    tagged_vlan = api.Testbed_AllocateVlan()
     vlans = {} # ith subif -> vlan
     for workload in spec.instances.workloads:
         wl = workload.workload
@@ -287,7 +288,10 @@ def __add_config_classic_workloads(req, target_node = None):
                         sec_ipv6_subnet = next(s)
                         sec_ipv6_allocators[i].append(sec_ipv6_subnet.hosts())
 
-                    vlans[i] = api.Testbed_AllocateVlan()
+                    if api.GetWorkloadTypeForNode(wl.node) == topo_svc.WorkloadType.Value('WORKLOAD_TYPE_BARE_METAL'):
+                        vlans[i] = api.Testbed_AllocateVlan()
+                    else:
+                        vlans[i] = tagged_vlan
                 intf = wl.interfaces[i % len(wl.interfaces)]
                 nw_spec = nw_specs[i]
                 ipv4_allocator = ipv4_allocators[i]
@@ -302,11 +306,15 @@ def __add_config_classic_workloads(req, target_node = None):
                 wl_msg.mac_address = classic_mac_allocator.Alloc().get()
                 wl_msg.encap_vlan = vlan
                 wl_msg.uplink_vlan = wl_msg.encap_vlan
-                wl_msg.workload_name = wl.node + "_" + node_intf + "_subif_" + str(vlan)
                 wl_msg.node_name = wl.node
                 wl_msg.pinned_port = 1
                 wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
-                wl_msg.interface = node_intf + "_" + str(vlan)
+                if api.GetWorkloadTypeForNode(wl.node) == topo_svc.WorkloadType.Value('WORKLOAD_TYPE_BARE_METAL'):
+                    wl_msg.interface = node_intf + "_" + str(vlan)
+                    wl_msg.workload_name = wl.node + "_" + node_intf + "_subif_" + str(vlan)
+                else:
+                    wl_msg.interface = node_intf + "_mv%d" % (i+1)
+                    wl_msg.workload_name = wl.node + "_" + node_intf + "_mv%d" % (i+1)
                 #wl_msg.interface = node_intf
                 wl_msg.parent_interface = node_intf
                 wl_msg.workload_type = api.GetWorkloadTypeForNode(wl.node)

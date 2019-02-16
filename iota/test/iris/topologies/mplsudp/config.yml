@@ -17,7 +17,7 @@ spec:
                 # ipam_base: Base prefix for all ip-address management
                 # All networks will get subnets from this base prefix.
                 # E.g. 10.255.1.0/24, 10.255.2.0/24 and so on.
-                ipam_base: 10.0.0.0/16
+                ipam_base: 10.0.0.0/8
                 secondary_ipam_base:
                     - 240.15.0.0/16
 
@@ -60,7 +60,7 @@ instances:
     workloads:
         - workload:
             node        : node1
-            count       : 1
+            count       : 128
             spec        : tagged
             # Distribution is equal, 1 on each interface
             interfaces  :
@@ -69,7 +69,7 @@ instances:
 
         - workload:
             node        : node2
-            count       : 1
+            count       : 128
             spec        : tagged
             interface   : auto
             # Distribution is equal, 1 on each interface

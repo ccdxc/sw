@@ -49,9 +49,9 @@ type Workload interface {
 	SetBaseDir(dir string) error
 	RunCommand(cmd []string, dir string, timeout uint32, background bool, shell bool) (*Cmd.CommandCtx, string, error)
 	StopCommand(commandHandle string) (*Cmd.CommandCtx, error)
-	AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error)
-	AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error
-	AddSecondaryIpv6Addresses(intf string, ipaddresses []string) error
+	AddInterface(parent_interface string, workload_interface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error)
+	AddSecondaryIpv4Addresses(intf string, ipaddresses []string) (error)
+	AddSecondaryIpv6Addresses(intf string, ipaddresses []string) (error)
 	MoveInterface(name string) error
 	IsHealthy() bool
 	SendArpProbe(ip string, intf string, vlan int) error
@@ -151,7 +151,7 @@ func (app *workloadBase) SendArpProbe(ip string, intf string, vlan int) error {
 	return nil
 }
 
-func (app *workloadBase) AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (app *workloadBase) AddInterface(parent_interface string, workload_interface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
 	return "", nil
 }
 
@@ -249,22 +249,22 @@ func (app *containerWorkload) SendArpProbe(ip string, intf string, vlan int) err
 
 }
 
-func (app *containerWorkload) AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (app *containerWorkload) AddInterface(parent_interface string, workload_interface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
 
-	ifconfigCmd := []string{"ifconfig", name, "up"}
+	ifconfigCmd := []string{"ifconfig", parent_interface, "up"}
 	if retCode, stdout, _ := Utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
-		return "", errors.Errorf("Could not bring up parent interface %s : %s", name, stdout)
+		return "", errors.Errorf("Could not bring up parent interface %s : %s", parent_interface, stdout)
 	}
-	intfToAttach := name
+	intfToAttach := parent_interface
 
 	if vlan != 0 {
-		vlanintf := vlanIntf(name, vlan)
+		vlanintf := vlanIntf(parent_interface, vlan)
 		delVlanCmd := []string{"ip", "link", "del", vlanintf}
 		//Delete the interface if already exists , ignore the error for now.
 		Utils.Run(delVlanCmd, 0, false, false, nil)
-		addVlanCmd := []string{"ip", "link", "add", "link", name, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
+		addVlanCmd := []string{"ip", "link", "add", "link", parent_interface, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
 		if retCode, stdout, _ := Utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
-			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", name, vlan, stdout)
+			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", parent_interface, vlan, stdout)
 		}
 		intfToAttach = vlanintf
 	}
@@ -395,30 +395,30 @@ func (app *bareMetalWorkload) SendArpProbe(ip string, intf string, vlan int) err
 
 }
 
-func (app *bareMetalWorkload) AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (app *bareMetalWorkload) AddInterface(parent_interface string, workload_interface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
 
-	ifconfigCmd := []string{"ifconfig", name, "up"}
+	ifconfigCmd := []string{"ifconfig", parent_interface, "up"}
 	if retCode, stdout, _ := Utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
-		return "", errors.Errorf("Could not bring up parent interface %s : %s", name, stdout)
+		return "", errors.Errorf("Could not bring up parent interface %s : %s", parent_interface, stdout)
 	}
-	intfToAttach := name
+	intfToAttach := parent_interface
 
 	if vlan != 0 {
 		vlanintf := ""
 		var addVlanCmd []string
 		var delVlanCmd []string
 		if isFreeBsd() {
-			vlanintf = freebsdVlanIntf(name, vlan)
+			vlanintf = freebsdVlanIntf(parent_interface, vlan)
 			delVlanCmd = []string{"ifconfig", vlanintf, "destroy"}
 			addVlanCmd = []string{"ifconfig", vlanintf, "create", "inet"}
 		} else {
-			vlanintf = vlanIntf(name, vlan)
+			vlanintf = vlanIntf(parent_interface, vlan)
 			delVlanCmd = []string{"ip", "link", "del", vlanintf}
-			addVlanCmd = []string{"ip", "link", "add", "link", name, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
+			addVlanCmd = []string{"ip", "link", "add", "link", parent_interface, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
 		}
 		Utils.Run(delVlanCmd, 0, false, false, nil)
 		if retCode, stdout, _ := Utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
-			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", name, vlan, stdout)
+			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", parent_interface, vlan, stdout)
 		}
 
 		intfToAttach = vlanintf
@@ -464,39 +464,36 @@ func (app *bareMetalWorkload) AddSecondaryIpv6Addresses(intf string, ipaddresses
 	return nil
 }
 
-func (app *bareMetalMacVlanWorkload) AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (app *bareMetalMacVlanWorkload) AddInterface(parent_interface string, workload_interface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
 
-	ifconfigCmd := []string{"ifconfig", name, "up"}
+	ifconfigCmd := []string{"ifconfig", parent_interface, "up"}
 	if retCode, stdout, _ := Utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
-		return "", errors.Errorf("Could not bring up parent interface %s : %s", name, stdout)
+		return "", errors.Errorf("Could not bring up parent interface %s : %s", parent_interface, stdout)
 	}
 
-	macvlanintf := ""
 	var addVlanCmd []string
 	var delVlanCmd []string
 	if isFreeBsd() {
 		return "", errors.New("Mac vlan Not supported on freebsd")
 	}
-	macvlanintf = macVlanIntf(name, vlan)
-	delVlanCmd = []string{"ip", "link", "del", macvlanintf}
-	addVlanCmd = []string{"ip", "link", "add", "link", name, "name", macvlanintf, "type", "macvlan"}
+	delVlanCmd = []string{"ip", "link", "del", workload_interface}
+	addVlanCmd = []string{"ip", "link", "add", "link", parent_interface, "name", workload_interface, "type", "macvlan"}
 	Utils.Run(delVlanCmd, 0, false, false, nil)
 	if retCode, stdout, _ := Utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
-		return "", errors.Errorf("IP link failed to create mac vlan failed %s:%d, err :%s", name, vlan, stdout)
+		return "", errors.Errorf("IP link failed to create mac vlan failed %s, err :%s", workload_interface, stdout)
 	}
 
-	intfToAttach := macvlanintf
 
 	if macAddress != "" {
 		var setMacAddrCmd []string
-		setMacAddrCmd = []string{"ifconfig", intfToAttach, "hw", "ether", macAddress}
+		setMacAddrCmd = []string{"ifconfig", workload_interface, "hw", "ether", macAddress}
 		if retCode, stdout, err := Utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Wrap(err, stdout)
 		}
 	}
 
 	if ipaddress != "" {
-		cmd := []string{"ip", "addr", "add", ipaddress, "dev", intfToAttach}
+		cmd := []string{"ip", "addr", "add", ipaddress, "dev", workload_interface}
 		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Wrap(err, stdout)
 		}
@@ -504,22 +501,22 @@ func (app *bareMetalMacVlanWorkload) AddInterface(name string, macAddress string
 
 	if ipv6address != "" {
 		//unset ipv6 address first
-		cmd := []string{"ip", "addr", "del", ipaddress, "dev", intfToAttach}
+		cmd := []string{"ip", "addr", "del", ipaddress, "dev", workload_interface}
 		Utils.Run(cmd, 0, false, false, nil)
-		cmd = []string{"ip", "addr", "add", ipaddress, "dev", intfToAttach}
+		cmd = []string{"ip", "addr", "add", ipaddress, "dev", workload_interface}
 		if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Wrap(err, stdout)
 		}
 	}
 
-	cmd := []string{"ip", "link", "set", "dev", intfToAttach, "up"}
+	cmd := []string{"ip", "link", "set", "dev", workload_interface, "up"}
 	if retCode, stdout, err := Utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 		return "", errors.Wrap(err, stdout)
 	}
 
-	app.subIF = intfToAttach
+	app.subIF = workload_interface
 
-	return intfToAttach, nil
+	return workload_interface, nil
 }
 
 func (app *bareMetalMacVlanWorkload) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error {

@@ -9,8 +9,8 @@ import (
 )
 
 // Trigger triggers a workload
-func (n *TestNode) Trigger(index int) error {
-	resp, err := n.AgentClient.Trigger(context.Background(), n.TriggerInfo[index])
+func (n *TestNode) Trigger() error {
+	resp, err := n.AgentClient.Trigger(context.Background(), n.TriggerInfo)
 	log.Infof("TOPO SVC | DEBUG | Trigger Agent . Received Response Msg: %v", resp)
 
 	if err != nil {
@@ -23,6 +23,6 @@ func (n *TestNode) Trigger(index int) error {
 		return fmt.Errorf("Running trigger on node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.ApiResponse.ApiStatus)
 	}
 
-	n.TriggerResp[index] = resp
+	n.TriggerResp = resp
 	return nil
 }

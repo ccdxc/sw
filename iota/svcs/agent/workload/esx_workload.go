@@ -130,7 +130,7 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 	return vm.remoteWorkload.mountDirectory(constants.EsxDataVMUsername, constants.EsxDataVMPassword, vm.baseDir, vm.baseDir)
 }
 
-func (vm *vmESXWorkload) AddInterface(name string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (vm *vmESXWorkload) AddInterface(name string, workload_interface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
 
 	vsname := constants.EsxIotaDataSwitch
 	vsspec := vmware.VswitchSpec{Name: vsname}

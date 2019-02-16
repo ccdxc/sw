@@ -549,12 +549,19 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 
 	triggerNodes := []*testbed.TestNode{}
-	for _, cmd := range req.GetCommands() {
+	triggerResp := &iota.TriggerMsg{TriggerMode: req.GetTriggerMode(),
+		TriggerOp: req.GetTriggerOp()}
+	for index, cmd := range req.GetCommands() {
 		node, _ := ts.ProvisionedNodes[cmd.GetNodeName()]
-		triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
-			TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
-		node.TriggerInfo = append(node.TriggerInfo, triggerMsg)
-		node.TriggerResp = append(node.TriggerResp, triggerMsg)
+		if node.TriggerInfo == nil {
+			node.TriggerInfo = &iota.TriggerMsg{Commands: []*iota.Command{cmd},
+				TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
+		} else {
+			node.TriggerInfo.Commands = append(node.TriggerInfo.Commands, cmd)
+		}
+		node.CmdIndexes = append(node.CmdIndexes, index)
+		//Just copy the request for now
+		triggerResp.Commands = append(triggerResp.Commands, cmd)
 		added := false
 		for _, triggerNode := range triggerNodes {
 			if triggerNode.Node.Name == node.Node.Name {
@@ -572,10 +579,8 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 		for _, node := range triggerNodes {
 			node := node
 			pool.Go(func() error {
-				for idx := range node.TriggerInfo {
-					if err := node.Trigger(idx); err != nil {
-						return err
-					}
+				if err := node.Trigger(); err != nil {
+					return err
 				}
 				return nil
 			})
@@ -588,6 +593,7 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 		for _, node := range triggerNodes {
 			node.TriggerInfo = nil
 			node.TriggerResp = nil
+			node.CmdIndexes = []int{}
 		}
 	}
 
@@ -601,16 +607,13 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 
 	}
 
-	triggerResp := &iota.TriggerMsg{TriggerMode: req.GetTriggerMode(),
-		TriggerOp: req.GetTriggerOp()}
-	/* Dequeing the commands in same order as it was queued before. */
-	for _, cmd := range req.GetCommands() {
-		node, _ := ts.ProvisionedNodes[cmd.GetNodeName()]
-		cmdResp := node.TriggerResp[0].GetCommands()[0]
-		triggerResp.Commands = append(triggerResp.Commands, cmdResp)
-		node.TriggerInfo = node.TriggerInfo[1:]
-		node.TriggerResp = node.TriggerResp[1:]
+	for _, node := range triggerNodes {
+		for index, cmd := range node.TriggerResp.GetCommands() {
+			realIndex := node.CmdIndexes[index]
+			triggerResp.Commands[realIndex] = cmd
+		}
 	}
+
 	triggerResp.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
 
 	return triggerResp, nil
@@ -620,11 +623,10 @@ func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.Trigg
 
 	for cidx, cmd := range req.GetCommands() {
 		node, _ := ts.ProvisionedNodes[cmd.GetNodeName()]
-		triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
+		node.TriggerInfo = &iota.TriggerMsg{Commands: []*iota.Command{cmd},
 			TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
-		node.TriggerInfo = append(node.TriggerInfo, triggerMsg)
-		node.TriggerResp = append(node.TriggerResp, triggerMsg)
-		if err := node.Trigger(0); err != nil {
+		node.TriggerResp = nil
+		if err := node.Trigger(); err != nil {
 
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | Trigger | RunSerialTrigger Call Failed. %v", err)
@@ -634,7 +636,7 @@ func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.Trigg
 			return req, nil
 		}
 		/* Only one command sent anyway */
-		req.Commands[cidx] = node.TriggerResp[0].GetCommands()[0]
+		req.Commands[cidx] = node.TriggerResp.GetCommands()[0]
 		node.TriggerInfo = nil
 		node.TriggerResp = nil
 	}

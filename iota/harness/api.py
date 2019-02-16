@@ -134,7 +134,7 @@ def AddWorkloads(req, skip_store=False, skip_bringup=False):
     else:
         Logger.debug("Skipping workload bring up.")
         ret = req
-    if not skip_store:
+    if not skip_store and resp is not None:
         store.AddWorkloads(resp)
     return ret
 
@@ -472,6 +472,7 @@ def Trigger_IsBackgroundCommand(cmd):
 def Trigger_TerminateAllCommands(exec_cmd_resp = None):
     term_req = topo_svc.TriggerMsg()
     term_req.trigger_op = topo_svc.TERMINATE_ALL_CMDS
+    term_req.trigger_mode = exec_cmd_resp.trigger_mode
     if exec_cmd_resp is None:
         return term_req
 
