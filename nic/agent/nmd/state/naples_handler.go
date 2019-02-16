@@ -70,6 +70,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 
 // StartManagedMode starts the tasks required for managed mode
 func (n *NMD) StartManagedMode() error {
+
 	if n.cmd == nil {
 		// create the CMD client
 		cmdClient, err := cmdif.NewCmdClient(n, n.cmdRegURL, n.cmdUpdURL, n.resolverClient)
@@ -91,14 +92,14 @@ func (n *NMD) StartManagedMode() error {
 		n.rollout = roClient
 	}
 
-	// Set Registration in progress flag
-	log.Infof("NIC in managed mode, mac: %v", n.config.Spec.PrimaryMAC)
-	n.setRegStatus(true)
-
 	err := n.initTLSProvider()
 	if err != nil {
 		return fmt.Errorf("Error initializing TLS provider: %v", err)
 	}
+
+	// Set Registration in progress flag
+	log.Infof("NIC in managed mode, mac: %v", n.config.Spec.PrimaryMAC)
+	n.setRegStatus(true)
 
 	for {
 		select {
@@ -347,6 +348,7 @@ func (n *NMD) StopManagedMode() error {
 		n.cmd = nil
 	}
 
+	n.Lock()
 	if n.rollout != nil {
 		n.rollout.Stop()
 		n.rollout = nil
@@ -357,6 +359,7 @@ func (n *NMD) StopManagedMode() error {
 		n.tlsProvider.Close()
 		n.tlsProvider = nil
 	}
+	n.Unlock()
 
 	return nil
 }

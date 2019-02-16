@@ -186,7 +186,8 @@ func (n *NMD) RegisterCMD(cmd nmdapi.CmdAPI) error {
 
 	// ensure two controller plugins dont register
 	if n.cmd != nil {
-		log.Fatalf("Attempt to register multiple controllers with NMD.")
+		log.Errorf("Attempt to register multiple controllers with NMD.")
+		return errors.New("attempt to register multiple controllers with NMD")
 	}
 
 	// initialize cmd
@@ -573,7 +574,8 @@ func (n *NMD) RegisterROCtrlClient(rollout nmdapi.RolloutCtrlAPI) error {
 
 	// ensure two clients dont register
 	if n.rollout != nil {
-		log.Fatalf("Attempt to register multiple rollout clients with NMD.")
+		log.Errorf("Attempt to register multiple rollout clients with NMD.")
+		return errors.New("attempt to register multiple rollout clients with NMD")
 	}
 
 	// initialize rollout

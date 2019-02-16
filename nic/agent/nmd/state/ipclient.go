@@ -308,7 +308,7 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 	c.nmdState.config.Status.IPConfig.IPAddress = ipaddress
 
 	// For Static configuration case, we assume that the user knows what they are doing.
-	if c.isDynamic && !c.mustTriggerUpdate(controllers) {
+	if c.isDynamic && !c.isAfterReboot() && !c.mustTriggerUpdate(controllers) {
 		log.Errorf("Cannot trigger update as controllers break security gurantees. Bailing from Naples Status Update.")
 		return nil
 	}
@@ -342,40 +342,43 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 		log.Info("Currently Naples is Network Managed")
 		if c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
 			log.Info("Moving Naples to Network managed mode. Updating CMD Client.")
+			c.nmdState.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
+
 			c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
 			c.nmdState.cmdUpdURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 			c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 
+			err := c.nmdState.StopManagedMode()
+			if err != nil {
+				log.Errorf("Error stopping NIC managed mode: %v", err)
+			}
+
+			if err := c.nmdState.UpdateCMDClient(controllers); err != nil {
+				log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
+			}
+
 			go func() {
-				err := c.nmdState.StopManagedMode()
-				if err != nil {
-					log.Errorf("Error stopping NIC managed mode: %v", err)
-				}
 				c.nmdState.Add(1)
 				defer c.nmdState.Done()
 
-				if err := c.nmdState.UpdateCMDClient(controllers); err != nil {
-					log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
-				}
-
-				err = c.nmdState.StartManagedMode()
+				err := c.nmdState.StartManagedMode()
 				if err != nil {
 					log.Errorf("Error starting NIC managed mode: %v", err)
 				}
 			}()
 		} else if c.nmdState.config.Spec.Mode == nmd.MgmtMode_HOST {
 			log.Info("Moving Naples to Host managed mode.")
-			go func() {
-				err := c.nmdState.StopManagedMode()
-				if err != nil {
-					log.Errorf("Error stopping NIC managed mode: %v", err)
-				}
+			c.nmdState.config.Status.Mode = nmd.MgmtMode_HOST.String()
 
-				err = c.nmdState.StartClassicMode()
-				if err != nil {
-					log.Errorf("Classic mode start failed. Err: %v", err)
-				}
-			}()
+			err := c.nmdState.StopManagedMode()
+			if err != nil {
+				log.Errorf("Error stopping NIC managed mode: %v", err)
+			}
+
+			err = c.nmdState.StartClassicMode()
+			if err != nil {
+				log.Errorf("Classic mode start failed. Err: %v", err)
+			}
 		} else {
 			log.Errorf("Unknown Management Mode in Spec. Bailing from Mode Change")
 			return errors.New("unknown Management Mode in Spec. Bailing from Mode Change")
@@ -387,20 +390,23 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 			// TODO : Uncomment the line below. Currently we do not want to stop REST Server.
 			// c.nmdState.StopClassicMode(false)
 			log.Info("Moving Naples to Network managed mode.")
+			c.nmdState.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
+
 			c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
 			c.nmdState.cmdUpdURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
 			c.nmdState.remoteCertsURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
-
 			if err := c.nmdState.UpdateCMDClient(controllers); err != nil {
 				log.Errorf("Failed to updated cmd client with resolvers: %v. Err: %v", controllers, err)
-				return err
 			}
 
-			// Start the admission process
-			c.nmdState.Add(1)
 			go func() {
+				c.nmdState.Add(1)
 				defer c.nmdState.Done()
-				c.nmdState.StartManagedMode()
+
+				err := c.nmdState.StartManagedMode()
+				if err != nil {
+					log.Errorf("Error starting NIC managed mode: %v", err)
+				}
 			}()
 
 			// wait for registration
@@ -408,6 +414,7 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 			// c.waitForRegistration()
 		} else {
 			log.Info("Starting NMD REST server.")
+			c.nmdState.config.Status.Mode = nmd.MgmtMode_HOST.String()
 
 			err := c.nmdState.StartClassicMode()
 			if err != nil {
@@ -470,17 +477,17 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 		c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String()
 	}
 
-	// Update Naples Status Delphi Object
-	err = c.updateDelphiNaplesObject(naplesMode)
-	if !c.isMock && err != nil {
-		log.Errorf("Error updating Delphi NaplesStatus object. Err: %v", err)
-		return err
-	}
-
 	// Persist bolt db.
 	err = c.nmdState.store.Write(&c.nmdState.config)
 	if err != nil {
 		log.Errorf("Error persisting the naples config in Bolt DB, err: %+v", err)
+		return err
+	}
+
+	// Update Naples Status Delphi Object
+	err = c.updateDelphiNaplesObject(naplesMode)
+	if !c.isMock && err != nil {
+		log.Errorf("Error updating Delphi NaplesStatus object. Err: %v", err)
 		return err
 	}
 
@@ -496,26 +503,18 @@ func (c *IPClient) watchLeaseEvents() {
 
 			if event.Op&fsnotify.Write == fsnotify.Write && getFileSize(c.leaseFile) > 0 {
 				controllers, err := readAndParseLease(c.leaseFile)
-
-				if err != nil {
-					return
-				}
-
-				if controllers == nil {
+				ip, _ := getIPFromLease(c.leaseFile)
+				if controllers != nil && err == nil {
+					err := c.updateNaplesStatus(controllers, ip)
+					if err != nil {
+						log.Errorf("Failed to update naples Status.")
+					}
+				} else {
 					// Vendor specified attributes is nil
 					c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_MISSING_VENDOR_SPECIFIED_ATTRIBUTES.String()
 					log.Errorf("Controllers is nil.")
 				}
 
-				ip, err := getIPFromLease(c.leaseFile)
-				if err != nil || ip == "" {
-					return
-				}
-
-				err = c.updateNaplesStatus(controllers, ip)
-				if err != nil {
-					return
-				}
 			}
 		// watch for errors
 		case <-c.watcher.Errors:
@@ -745,16 +744,17 @@ func (c *IPClient) Start() error {
 
 // Stop function stops IPClient's goroutines
 func (c *IPClient) Stop() {
-	if _, err := os.Stat(rebootPendingPath); err == nil {
-		// We will hit this codepath if we are reconfiguring Mode before effecting rebooting Naples
-		os.Remove(rebootPendingPath)
+	if !c.isAfterReboot() {
 		c.nmdState.config.Status.TransitionPhase = ""
 		c.nmdState.config.Status.Controllers = []string{}
 		c.nmdState.config.Status.IPConfig = nil
-
-		// Should we de-admit at this point?
 	}
 
+	if _, err := os.Stat(rebootPendingPath); err == nil {
+		os.Remove(rebootPendingPath)
+	}
+
+	// Should we de-admit at this point?
 	if c.isDynamic {
 		killDhclient()
 		c.stopLeaseWatch <- true
@@ -802,6 +802,14 @@ func (c *IPClient) waitForRegistration() {
 			return
 		}
 	}
+}
+
+func (c *IPClient) isAfterReboot() (mustUpdate bool) {
+	if !checkRebootTmpExist() && c.nmdState.config.Status.TransitionPhase == nmd.NaplesStatus_REBOOT_PENDING.String() {
+		return true
+	}
+
+	return false
 }
 
 // mustTriggerUpdate checks if the controllers information has changed.
