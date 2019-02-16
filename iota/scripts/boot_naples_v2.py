@@ -11,6 +11,7 @@ import subprocess
 import json
 import atexit
 import paramiko
+import threading
 
 HOST_NAPLES_DIR                 = "/naples"
 NAPLES_TMP_DIR                  = "/tmp"
@@ -594,7 +595,16 @@ class EsxHostManagement(HostManagement):
 
 
     def UnloadDriver(self):
-        self.RunSshCmd("vmkload_mod -u ionic_en", ignore_failure = True)
+        def __unload_driver(self):
+            self.__host_connect()
+            stdin, stdout, stderr = self.__ssh_handle.exec_command("vmkload_mod -u ionic_en", timeout=10)
+            exit_status = stdout.channel.recv_exit_status()
+        t=threading.Thread(target=__unload_driver, args=[self])
+        t.start()
+        t.join(timeout=10)
+        if t.isAlive():
+            print ("Unload Driver failed...")
+            raise Exception("Unload failed")
 
     def __host_connect(self):
         ip=GlobalOptions.host_ip
@@ -689,6 +699,9 @@ def Main():
             naples.Connect()
             if not host.IsSSHUP():
                 raise Exception("Host not up.")
+            #need to unload driver as host might crash in ESX case.
+            #unloading of driver should not fail, else reset to goldfw
+            host.UnloadDriver()
         except:
             #Do Reset only if we can't connect to naples.
             IpmiReset()
@@ -703,7 +716,7 @@ def Main():
 
 
     if GlobalOptions.only_init == True:
-        # Case 3: Only INIT option. Unload drivers, Install drivers, Configure Int Mgmt IP,  and return.
+        # Case 3: Only INIT option. 
         host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = True)
         return
 
@@ -720,8 +733,6 @@ def Main():
         naples.Close()
     else:
         # Case 1: Main firmware upgrade.
-        #need to unload driver as host might crash in ESX case.
-        host.UnloadDriver()
         if naples.IsSSHUP():
             #OOb is present and up install right away,
             naples.RebootGoldFw()
