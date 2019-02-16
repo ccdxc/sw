@@ -332,6 +332,9 @@ func (t *cacheTxn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
 	//  It is safe to acquire the cache first without risking a deadlock.
 	defer t.parent.Unlock()
 	t.parent.Lock()
+	if !t.parent.active {
+		return kvstore.TxnResponse{}, errorCacheInactive
+	}
 	return t.commit(ctx)
 }
 
