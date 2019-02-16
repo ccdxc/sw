@@ -89,6 +89,7 @@ typedef struct pd_ipsec_decrypt_part2_s {
     uint32_t new_spi;
     uint32_t last_replay_seq_no;
     uint32_t iv_salt;
+    uint32_t pad[12];  
 } __PACK__ pd_ipsec_decrypt_part2_t;
 
 typedef struct pd_ipsec_qstate_addr_part2_s {

@@ -437,7 +437,6 @@ ipsec_global_statistics_get (ipsec::IpsecGlobalStatisticsGetRequest& req,
     pd_ipsec_stats_get_args.stats_cb = &stats_cb;
     pd_func_args.pd_ipsec_global_stats_get = &pd_ipsec_stats_get_args;
 
-
     if (clear_on_read != 0) {
 
     }
@@ -460,7 +459,6 @@ ipsec_global_statistics_get (ipsec::IpsecGlobalStatisticsGetRequest& req,
     rsp->mutable_spec()->set_encrypt_bad_barco_addr_errors(stats_cb.encrypt_bad_barco_addr_errors);
     rsp->mutable_spec()->set_encrypt_barco_full_errors(stats_cb.encrypt_barco_full_errors);
     rsp->mutable_spec()->set_encrypt_cb_ring_dma_errors(stats_cb.encrypt_cb_ring_dma_errors);
-
     
     rsp->mutable_spec()->set_decrypt_input_desc_errors(stats_cb.decrypt_input_desc_errors);
     rsp->mutable_spec()->set_decrypt_output_desc_errors(stats_cb.decrypt_output_desc_errors);
@@ -472,6 +470,7 @@ ipsec_global_statistics_get (ipsec::IpsecGlobalStatisticsGetRequest& req,
     rsp->mutable_spec()->set_decrypt_output_page_errors(stats_cb.decrypt_output_page_errors);
     rsp->mutable_spec()->set_decrypt_txdma1_enter_counters(stats_cb.decrypt_txdma1_enter_counters);
     rsp->mutable_spec()->set_decrypt_txdma2_enter_counters(stats_cb.decrypt_txdma2_enter_counters);
+    HAL_TRACE_DEBUG("txdma1 {} txdma2 {}", stats_cb.decrypt_txdma1_enter_counters, stats_cb.decrypt_txdma2_enter_counters);
     rsp->mutable_spec()->set_decrypt_txdma1_drop_counters(stats_cb.decrypt_txdma1_drop_counters);
 
     return ret;

@@ -10,6 +10,7 @@
 #include "nic/hal/hal.hpp"
 #include "platform/capri/capri_lif_manager.hpp"
 #include "gen/p4gen/esp_v4_tunnel_n2h_rxdma/include/esp_v4_tunnel_n2h_rxdma_p4plus_ingress.h"
+#include "gen/p4gen/esp_v4_tunnel_n2h_txdma1/include/esp_v4_tunnel_n2h_txdma1_p4plus_ingress.h"
 #include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
 namespace hal {
@@ -146,7 +147,7 @@ static hal_ret_t
 p4pd_add_or_del_ipsec_decrypt_part2(pd_ipsec_t* ipsec_sa_pd, bool del)
 {
     hal_ret_t   ret = HAL_RET_OK;
-    pd_ipsec_decrypt_part2_t  decrypt_part2;
+    tx_table_s1_t2_esp_v4_tunnel_n2h_load_part2_d decrypt_part2;
 
     // hardware index for this entry
     ipsec_sa_hw_id_t hwid = ipsec_sa_pd->hw_id +
@@ -154,7 +155,6 @@ p4pd_add_or_del_ipsec_decrypt_part2(pd_ipsec_t* ipsec_sa_pd, bool del)
 
     decrypt_part2.spi = htonl(ipsec_sa_pd->ipsec_sa->spi);
     decrypt_part2.new_spi = htonl(ipsec_sa_pd->ipsec_sa->new_spi);
-    decrypt_part2.iv_salt = ipsec_sa_pd->ipsec_sa->iv_salt;
 
     HAL_TRACE_DEBUG("Programming Decrypt part2 at hw-id: 0x{:#x}", hwid);
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&decrypt_part2, sizeof(decrypt_part2),
@@ -253,8 +253,9 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry_part2(pd_ipsec_t* ipsec_sa_pd)
     }
     ipsec_sa->last_replay_seq_no = ntohl(decrypt_part2.last_replay_seq_no);
     ipsec_sa->iv_salt = decrypt_part2.iv_salt;
-    ipsec_sa->spi = decrypt_part2.spi;
-    ipsec_sa->new_spi = decrypt_part2.new_spi;
+    ipsec_sa->spi = ntohl(decrypt_part2.spi);
+    ipsec_sa->new_spi = ntohl(decrypt_part2.new_spi);
+    HAL_TRACE_DEBUG("spi {} new_spi {}", ipsec_sa->spi, ipsec_sa->new_spi);
     return HAL_RET_OK;
 }
 
@@ -291,6 +292,11 @@ p4pd_get_ipsec_sa_decrypt_rxdma_entry(pd_ipsec_t* ipsec_sa_pd)
     hal_ret_t   ret = HAL_RET_OK;
 
     ret = p4pd_get_ipsec_decrypt_rx_stage0_entry(ipsec_sa_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get ipsec_rx entry");
+        goto cleanup;
+    }
+    ret = p4pd_get_ipsec_decrypt_rx_stage0_entry_part2(ipsec_sa_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get ipsec_rx entry");
         goto cleanup;

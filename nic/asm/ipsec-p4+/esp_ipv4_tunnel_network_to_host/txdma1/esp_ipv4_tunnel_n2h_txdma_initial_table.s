@@ -31,7 +31,7 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     phvwri p.common_te0_phv_table_pc, esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex[33:6] 
     phvwri p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, 11 
     and r2, d.cb_cindex, IPSEC_CB_RING_INDEX_MASK 
-    sll r2, r2, 3
+    sll r2, r2, IPSEC_CB_RING_ENTRY_SHIFT_SIZE 
     add r2, r2, d.cb_ring_base_addr
     add r7, d.cb_cindex, 1
     and r7, r7, IPSEC_CB_RING_INDEX_MASK
