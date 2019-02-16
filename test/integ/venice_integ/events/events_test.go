@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
@@ -2166,19 +2167,26 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 	apiClient, err := client.NewGrpcUpstream("events_integ_test", ti.apiServerAddr, ti.logger)
 	AssertOk(t, err, "failed to create API server client, err: %v", err)
 	defer apiClient.Close()
-	defTenant := cluster.Tenant{
+	defTenant := &cluster.Tenant{
 		TypeMeta:   api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{Name: "default"},
 	}
-	apiClient.ClusterV1().Tenant().Create(context.Background(), &defTenant)
+	defTenant, err = apiClient.ClusterV1().Tenant().Create(context.Background(), defTenant)
+	AssertOk(t, err, "failed to create tenant")
+	defer apiClient.ClusterV1().Tenant().Delete(context.Background(), defTenant.GetObjectMeta())
 
 	// add event policy - 1
+	port := getAvailablePort(45000, 45100)
+	if port == 0 {
+		t.Skip("could not find a open port from 45000 to 45100 to run TCP server")
+	}
+	ti.logger.Infof("available port to run TCP server: %d", port)
 	eventPolicy1 := policygen.CreateEventPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "ep-6",
 		monitoring.MonitoringExportFormat_name[int32(monitoring.MonitoringExportFormat_SYSLOG_RFC5424)],
 		[]*monitoring.ExportConfig{
 			{ // receivedMsgsAtTCPServer1
 				Destination: "127.0.0.1",
-				Transport:   fmt.Sprintf("tcp/%s", "45000"),
+				Transport:   fmt.Sprintf("tcp/%d", port),
 			},
 		}, nil)
 	eventPolicy1, err = apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
@@ -2189,7 +2197,7 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// start TCP server - 1 to receive syslog messages
-	ln1, receiveMsgsAtTCPServer, err := serviceutils.StartTCPServer("127.0.0.1:45000")
+	ln1, receiveMsgsAtTCPServer, err := serviceutils.StartTCPServer(fmt.Sprintf("127.0.0.1:%d", port))
 	AssertOk(t, err, "failed to start TCP server, err: %v", err)
 	defer ln1.Close()
 
@@ -2209,7 +2217,7 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 			BackupDir:    recorderEventsDir}, ti.logger)
 		if err != nil {
-			log.Errorf("failed to create recorder, err: %v", err)
+			ti.logger.Errorf("failed to create recorder, err: %v", err)
 			return
 		}
 		recorders = append(recorders, evtsRecorder)
@@ -2239,7 +2247,7 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 					return
 				}
 				if !syslog.ValidateSyslogMessage(monitoring.MonitoringExportFormat_SYSLOG_RFC5424, msg) {
-					log.Fatalf("invalid message format, expected: RFC5424, got: %v", msg)
+					ti.logger.Fatalf("invalid message format, expected: RFC5424, got: %v", msg)
 				}
 				receivedMsgs++
 			}
@@ -2264,4 +2272,21 @@ func closeRecorders(recorders []events.Recorder) {
 	for _, r := range recorders {
 		r.Close()
 	}
+}
+
+// getAvailablePort returns the port available between [from, to]
+func getAvailablePort(from, to int) int {
+	for port := from; port <= to; port++ {
+		ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err != nil { // port not available
+			continue
+		}
+
+		if err := ln.Close(); err != nil {
+			continue
+		}
+		return port
+	}
+
+	return 0
 }

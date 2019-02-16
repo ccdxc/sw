@@ -33,7 +33,7 @@ retryloop:
 					log.Errorf("Retry exhausted, evaluator failed err: %v", err)
 					return nil, err
 				}
-				log.Warnf("Retrying, evaluator failed err: %v", err)
+				log.Debugf("Retrying, evaluator failed err: %v", err)
 			} else {
 				break retryloop
 			}

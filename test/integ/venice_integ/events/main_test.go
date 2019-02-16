@@ -73,8 +73,7 @@ func (t *tInfo) setup(tst *testing.T) error {
 	var err error
 	logConfig := log.GetDefaultConfig("events_test")
 	logConfig.Format = log.JSONFmt
-	logConfig.Filter = log.AllowAllFilter
-	logConfig.Debug = true
+	logConfig.Filter = log.AllowInfoFilter
 
 	t.logger = log.GetNewLogger(logConfig).WithContext("t_name", tst.Name())
 	t.mockResolver = mockresolver.New()
