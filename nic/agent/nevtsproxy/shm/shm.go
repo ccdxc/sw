@@ -61,6 +61,15 @@ func (sm *SharedMem) GetIPCInstance() *IPC {
 	}
 }
 
+// Close closes the underlying shared memory file descriptor
+func (sm *SharedMem) Close() error {
+	if sm.fd > 0 {
+		return syscall.Close(sm.fd)
+	}
+
+	return nil
+}
+
 // helper function to open/create shared memory with the given attributes (size, mode, etc.)
 func sharedMem(path string, size, mode int) (*SharedMem, error) {
 	fd, err := syscall.Open(path, mode, 0666)

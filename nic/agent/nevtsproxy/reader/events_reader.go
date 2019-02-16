@@ -83,6 +83,7 @@ func (r *EvtReader) Start() {
 func (r *EvtReader) Stop() {
 	r.logger.Infof("received stop, closing reader for shm %s", r.filePath)
 	r.ipcR.Stop()
+	r.sm.Close() // close the underlying shared mem. file descriptor
 }
 
 // TotalEventsRead returns the total events read by this reader so far

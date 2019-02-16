@@ -29,8 +29,12 @@ var (
 // TestEventsReaderBasic ensures the event read from shared memory is what was written to it.
 func TestEventsReaderBasic(t *testing.T) {
 	shmName := fmt.Sprintf("/tmp/%s", uuid.NewV4().String())
+	defer os.Remove(shmName)
+
 	sm, err := shm.CreateSharedMem(shmName, 512)
 	AssertOk(t, err, "failed to create shared memory, err: %v", err)
+	defer sm.Close()
+
 	ipc := sm.GetIPCInstance()
 
 	hEvt := &halproto.Event{
@@ -51,8 +55,10 @@ func TestEventsReaderBasic(t *testing.T) {
 
 	// READ from shared memory
 	ipcR := shm.NewIPCReader(ipc, 50*time.Millisecond)
+	defer ipcR.Stop()
 	errCh := make(chan error, 1)
 	go ipcR.Receive(context.Background(), halproto.Event{}, func(msg interface{}) error {
+		fmt.Println("read happened??")
 		var err error
 		nEvt, ok := msg.(*halproto.Event)
 		if !ok {
@@ -75,17 +81,29 @@ func TestEventsReaderBasic(t *testing.T) {
 	err = <-errCh
 	AssertOk(t, err, "err: %v", err)
 
+	// wait for the event to be read by the reader
+	AssertEventually(t, func() (bool, interface{}) {
+		pendingEvents := ipcR.NumPendingEvents()
+		if pendingEvents == 0 {
+			return true, nil
+		}
+		return false, fmt.Sprintf("expected 0 pending events, got: %d", pendingEvents)
+	}, "", string("10ms"), string("2s"))
+
 	// ensure there is no error
 	Assert(t, ipcR.ErrCount == 0, "expected 0 err count, got: %d", ipcR.ErrCount)
-	Assert(t, ipcR.NumPendingEvents() == 0, "expected 0 pending events, got: %d", ipcR.NumPendingEvents())
 }
 
 // TestEventsReaderReceiveInvalidObjectType
 // write halproto.Event and try to receive halproto.NetworkSpec{}
 func TestEventsReaderReceiveInvalidObjectType(t *testing.T) {
 	shmName := fmt.Sprintf("/tmp/%s", uuid.NewV4().String())
+	defer os.Remove(shmName)
+
 	sm, err := shm.CreateSharedMem(shmName, 512)
 	AssertOk(t, err, "failed to create shared memory, err: %v", err)
+	defer sm.Close()
+
 	ipc := sm.GetIPCInstance()
 
 	hEvt := &halproto.Event{
@@ -106,6 +124,7 @@ func TestEventsReaderReceiveInvalidObjectType(t *testing.T) {
 
 	// READ halproto.NetworkSpec from shared memory; it should fail
 	ipcR := shm.NewIPCReader(ipc, 50*time.Millisecond)
+	defer ipcR.Stop()
 	go ipcR.Receive(context.Background(), halproto.NetworkSpec{}, func(msg interface{}) error {
 		return nil
 	})
@@ -251,6 +270,7 @@ func startEventWriter(shmName string, size int, stopCh chan struct{}, fakeErrors
 		log.Errorf("failed to create shared memory: %s, err: %v", shmName, err)
 		return 0
 	}
+	defer sm.Close()
 
 	ipc := sm.GetIPCInstance()
 	ipcW := shm.NewIPCWriter(ipc)
