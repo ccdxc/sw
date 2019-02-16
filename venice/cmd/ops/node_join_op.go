@@ -71,6 +71,7 @@ func (o *NodeJoinOp) Run() (interface{}, error) {
 		Uuid:         o.cluster.UUID,
 		VirtualIp:    o.cluster.Spec.VirtualIP,
 		TransportKey: transportKeyBytes,
+		NtpServers:   o.cluster.Spec.NTPServers,
 	}
 
 	nodeTransportKeys := make(map[string][]byte)

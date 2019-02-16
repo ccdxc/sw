@@ -70,8 +70,11 @@ func (o *clusterCreateOp) populateClusterDefaults() {
 
 // Run executes the cluster creation steps.
 func (o *clusterCreateOp) Run() (interface{}, error) {
+
 	// Populate defaults (UUID, NTP Servers etc)
 	o.populateClusterDefaults()
+
+	utils.SyncTimeOnce(o.cluster.Spec.NTPServers)
 
 	// Generate etcd quorum configuration.
 	quorumConfig, err := makeQuorumConfig(o.cluster.UUID, o.cluster.Spec.QuorumNodes)
@@ -119,6 +122,7 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 		Uuid:         o.cluster.UUID,
 		VirtualIp:    o.cluster.Spec.VirtualIP,
 		TransportKey: env.CertMgr.MarshalKeyAgreementKey(transportKey),
+		NtpServers:   o.cluster.Spec.NTPServers,
 	}
 
 	// Each node that we invite to join the cluster will provide an individual key-agreement-key

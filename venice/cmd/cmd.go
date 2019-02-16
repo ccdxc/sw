@@ -106,6 +106,10 @@ func main() {
 		}
 	}
 
+	cInfo := cmdutils.GetContainerInfo()
+	ntpContainerName := cInfo[globals.Ntp]
+	cmdutils.NtpContainer = ntpContainerName.ImageName
+
 	// We need to issue equivalent of 'systemctl daemon-reload' before anything else to make systemd read the config files
 	s := systemd.New()
 	err = s.DaemonReload()

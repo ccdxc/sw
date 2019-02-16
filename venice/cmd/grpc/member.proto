@@ -35,6 +35,7 @@ message ClusterPreJoinReq {
 	string uuid = 2;
 	string virtual_ip = 3;
 	bytes transportKey = 4; // Initiator public key (step 1 in CA key transport sequence)
+	repeated string ntpServers = 5; // Optional NTP servers to sync time to before cluster is formed
 }
 
 // Cluster PreJoin response

@@ -58,6 +58,8 @@ func (c *clusterRPCHandler) PreJoin(ctx context.Context, req *grpc.ClusterPreJoi
 	} else if cluster != nil {
 		return nil, fmt.Errorf("Already part of cluster +%v", cluster)
 	}
+	utils.SyncTimeOnce(req.NtpServers)
+
 	var transportKeyBytes []byte
 	if req.TransportKey != nil {
 		if env.CertMgr == nil {
