@@ -38,6 +38,7 @@ func main() {
 		queryURL        = flag.String("query-url", ":"+globals.CitadelQueryRPCPort, "HTTP server URL where citadel's metrics query api is available")
 		nodeUUID        = flag.String("uuid", "", "Node UUID (unique identifier for this citadel instance)")
 		dbPath          = flag.String("db", "/var/lib/pensando/citadel/", "DB path where citadel's data will be stored")
+		queryDbPath     = flag.String("queryDb", "", "query DB path for query aggregation")
 		collectorURL    = flag.String("collector-url", fmt.Sprintf(":%s", globals.CollectorRPCPort), "listen URL where citadel metrics collector's gRPC server runs")
 		logFile         = flag.String("logfile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Citadel)), "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
@@ -93,7 +94,7 @@ func main() {
 	cfg.MetastoreURL = *kvstoreURL
 
 	// create the data node
-	dn, err := data.NewDataNode(cfg, *nodeUUID, *nodeURL, *dbPath)
+	dn, err := data.NewDataNode(cfg, *nodeUUID, *nodeURL, *dbPath, *queryDbPath)
 	if err != nil {
 		log.Fatalf("Error creating data node. Err: %v", err)
 	}

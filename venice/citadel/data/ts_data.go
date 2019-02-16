@@ -7,17 +7,23 @@ package data
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
-	context "golang.org/x/net/context"
-
+	"github.com/google/uuid"
+	"github.com/influxdata/influxdb/coordinator"
 	"github.com/influxdata/influxdb/models"
-
-	"fmt"
+	"github.com/influxdata/influxdb/query"
+	"github.com/influxdata/influxdb/toml"
+	"github.com/influxdata/influxdb/tsdb"
+	"github.com/influxdata/influxql"
+	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
+	"github.com/pensando/sw/venice/citadel/tstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 )
@@ -296,7 +302,7 @@ func (dn *DNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (*tprot
 	// find the data store from shard id
 	val, ok := dn.tshards.Load(req.ReplicaID)
 	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		log.Errorf("Shard %d not found for cluster %s in %v", req.ReplicaID, req.ClusterType, dn.nodeUUID)
 		jstr, _ := json.Marshal(dn.watcher.GetCluster(meta.ClusterTypeTstore))
 		log.Errorf("Nodemap: %s", jstr)
 		return &resp, errors.New("Shard not found")
@@ -331,4 +337,347 @@ func (dn *DNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (*tprot
 	resp.Result = result
 
 	return &resp, nil
+}
+
+// newQueryStore creates ts engine for query
+func (dn *DNode) newQueryStore() error {
+	// get default
+	cfg := tsdb.NewConfig()
+
+	// set custom parameters
+	cfg.WALDir = filepath.Join(dn.querydbPath, "wal")
+
+	// set engine config
+
+	// cache to 2 GB
+	cfg.CacheMaxMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
+	cfg.CacheSnapshotMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
+	cfg.CacheSnapshotWriteColdDuration = toml.Duration(time.Duration(time.Hour))
+	cfg.CompactFullWriteColdDuration = toml.Duration(time.Duration(12 * time.Hour))
+
+	// query tstore for this data node
+	ts, err := tstore.NewTstoreWithConfig(dn.querydbPath, cfg)
+	if err != nil {
+		log.Errorf("Error creating tstore at %s. Err: %v", dn.querydbPath, err)
+		return fmt.Errorf("error creating tstore at %s. Err: %v", dn.querydbPath, err)
+	}
+
+	dn.tsQueryStore = ts
+	log.Infof("created query aggregator with db %v", dn.querydbPath)
+	return err
+}
+
+// executeAggQuery executes a query on query store
+func (dn *DNode) executeAggQuery(ctx context.Context, req *tproto.QueryReq, query string, database string) (*tproto.QueryResp, error) {
+	var resp tproto.QueryResp
+
+	// aggreagted query
+	ch, err := dn.tsQueryStore.ExecuteQuery(query, database)
+	if err != nil {
+		log.Errorf("Error executing query aggregator %s on db %s. Err: %v", query, database, err)
+		return &resp, err
+	}
+
+	// read the result
+	var result []*tproto.Result
+	for res := range ch {
+		s, jerr := res.MarshalJSON()
+		if jerr != nil {
+			log.Errorf("Error marshaling the output. Err: %v", err)
+			return &resp, err
+		}
+		data := tproto.Result{
+			Data: s,
+		}
+		result = append(result, &data)
+	}
+
+	// build query resp
+	resp.Database = req.Database
+	resp.ReplicaID = req.ReplicaID
+	resp.TxnID = req.TxnID
+	resp.Result = result
+
+	return &resp, nil
+}
+
+// writePointsInAggregator writes points in aggregator db
+func (dn *DNode) writePointsInAggregator(queryDb string, measurement string, resultCh []<-chan *query.Result) error {
+	// create a buffer  for points
+	buff := coordinator.NewBufferedPointsWriter(dn.tsQueryStore, queryDb, "default", 50000)
+
+	// read results, go one by one shard to avoid out of order timestamp in batches
+	for _, ch := range resultCh {
+		tagKeys := map[string]int{}
+		for res := range ch {
+			if res.Err != nil {
+				log.Errorf("query %s failed, %s", measurement, res.Err)
+				return res.Err
+			}
+
+			// StatementID=0 is the tags query
+			if res.StatementID == 0 {
+				for _, s := range res.Series {
+					for _, dx := range s.Values {
+						for i, x := range dx {
+							if s, ok := x.(string); ok {
+								tagKeys[s] = i
+							}
+						}
+					}
+				}
+			} else {
+				for _, s := range res.Series {
+					if point, err := convertRowToPoints(measurement, tagKeys, s); err != nil {
+						log.Errorf("failed to convert points %s", err)
+					} else {
+						if err := buff.WritePointsInto(&coordinator.IntoWriteRequest{
+							Database:        queryDb,
+							RetentionPolicy: "default",
+							Points:          point}); err != nil {
+							log.Errorf("failed to buffer points %s", err)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	log.Infof("writting %v points to %s", buff.Len(), queryDb)
+	buff.Flush()
+	return nil
+}
+
+// executeQueryRemote executes a query on the remote replica
+func (dn *DNode) executeQueryRemote(ctx context.Context, req *tproto.QueryReq, nodeUUID string) (<-chan *query.Result, error) {
+	dnclient, err := dn.getDnclient(meta.ClusterTypeTstore, nodeUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	ch := make(chan *query.Result, 1)
+
+	go func() {
+		defer close(ch)
+
+		resp, err := dnclient.ExecuteQuery(ctx, req)
+		if err != nil {
+			ch <- &query.Result{
+				Err: err,
+			}
+			return
+		}
+
+		// parse the response
+		for _, rs := range resp.Result {
+			rslt := &query.Result{}
+			err := rslt.UnmarshalJSON(rs.Data)
+			if err != nil {
+				ch <- &query.Result{
+					Err: err,
+				}
+				return
+			}
+			ch <- rslt
+		}
+	}()
+
+	return ch, nil
+}
+
+// convertRowToPoints will convert a query result Row into Points that can be written back in.
+func convertRowToPoints(measurementName string, tagKeys map[string]int, row *models.Row) ([]models.Point, error) {
+	// figure out which parts of the result are the time and which are the fields
+	timeIndex := -1
+	fieldIndexes := make(map[string]int)
+
+	for i, c := range row.Columns {
+		if c == "time" {
+			timeIndex = i
+		} else {
+			fieldIndexes[c] = i
+		}
+	}
+
+	if timeIndex == -1 {
+		return nil, errors.New("error finding time index in result")
+	}
+
+	points := make([]models.Point, 0, len(row.Values))
+
+	for _, v := range row.Values {
+		tags := make(map[string]string)
+		vals := make(map[string]interface{})
+
+		for fieldName, fieldIndex := range fieldIndexes {
+			val := v[fieldIndex]
+			if val != nil {
+				if _, ok := tagKeys[fieldName]; ok {
+					tags[fieldName] = fmt.Sprintf("%v", val)
+				} else {
+					vals[fieldName] = val
+				}
+			}
+		}
+
+		var ts time.Time
+		if t, ok := v[timeIndex].(string); ok {
+			if nts, err := time.Parse(time.RFC3339, t); err == nil {
+				ts = nts
+			}
+		} else {
+			ts = v[timeIndex].(time.Time)
+		}
+
+		p, err := models.NewPoint(measurementName, models.NewTags(tags), vals, ts)
+		if err != nil {
+			// Drop points that can't be stored
+			log.Errorf("failed to convert points tags:%+v vals:%+v", tags, vals)
+			continue
+		}
+
+		points = append(points, p)
+	}
+
+	return points, nil
+}
+
+// queryAllShards sends queries to all shards and returns a list of result channels
+func (dn *DNode) queryAllShards(ctx context.Context, req *tproto.QueryReq) ([]<-chan *query.Result, error) {
+
+	queryShards := map[uint64]bool{}
+	resultsCh := []<-chan *query.Result{}
+
+	// query local replicas
+	dn.tshards.Range(func(key, val interface{}) bool {
+		if replicaID, ok := key.(uint64); ok {
+			if tshard, ok := val.(*TshardState); ok && tshard.store != nil {
+				ch, err := tshard.store.ExecuteQuery(req.Query, req.Database)
+				if err != nil {
+					log.Warnf("failed to execute local query on shard %v replicaid %v", tshard.shardID, replicaID)
+				} else {
+					queryShards[tshard.shardID] = true
+					resultsCh = append(resultsCh, ch)
+				}
+			}
+		}
+		return true
+	})
+
+	// check if any shards are remote
+	cl := dn.watcher.GetCluster(meta.ClusterTypeTstore)
+
+	log.Infof("found %d local shards in %s, total shards %d", len(queryShards), dn.nodeUUID, len(cl.ShardMap.Shards))
+
+	// check if a shard replica is on this data node
+	for _, shard := range cl.ShardMap.Shards {
+		if _, ok := queryShards[shard.ShardID]; ok {
+			continue
+		}
+
+		// query remote
+		for _, replica := range shard.Replicas {
+			log.Infof("query remote shard %d, replica: %v, node: %v", shard.ShardID, replica.ReplicaID, replica.NodeUUID)
+
+			if !cl.IsNodeAlive(replica.NodeUUID) {
+				// go to the next replica
+				continue
+			}
+			nreq := *req
+			nreq.ShardID = replica.ShardID
+			nreq.ReplicaID = replica.ReplicaID
+			ch, err := dn.executeQueryRemote(ctx, &nreq, replica.NodeUUID)
+			if err != nil {
+				continue
+			}
+			queryShards[replica.ShardID] = true
+			resultsCh = append(resultsCh, ch)
+			break
+		}
+	}
+
+	log.Infof("number of query result channels: %d", len(queryShards))
+
+	return resultsCh, nil
+}
+
+// ExecuteAggQuery queries all shards and aggregates the response
+func (dn *DNode) ExecuteAggQuery(ctx context.Context, req *tproto.QueryReq) (*tproto.QueryResp, error) {
+
+	if req.ClusterType != meta.ClusterTypeTstore {
+		return nil, fmt.Errorf("invalid cluster type %v", req.ClusterType)
+	}
+
+	// save measurement name
+	pq, err := influxql.ParseQuery(req.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	// todo: more than 1 statement in query
+
+	// broker splits query to multiple statements & execute one by one on data nodes
+	if len(pq.Statements) != 1 {
+		return nil, errors.New("Query must have only one statement")
+	}
+
+	// parse statement
+	stmt := pq.Statements[0]
+	selStmt, ok := stmt.(*influxql.SelectStatement)
+	if !ok {
+		return nil, fmt.Errorf("invalid select statement %+v", stmt)
+	}
+
+	// get the measurement name
+	if len(selStmt.Sources.Measurements()) != 1 {
+		return nil, errors.New("Query must have only one measurement")
+	}
+
+	measurement := selStmt.Sources.Measurements()[0].Name
+
+	// run wildcard query
+	wildcardStmnt := selStmt.Clone()
+	wildcardStmnt.Fields = influxql.Fields{{Expr: &influxql.Wildcard{}}}
+	wildcardStmnt.Sources[0] = selStmt.Sources.Measurements()[0]
+	wildcardStmnt.Dimensions = nil
+
+	_, err = influxql.ParseQuery(wildcardStmnt.String())
+	if err != nil {
+		return nil, err
+	}
+
+	// save original query & create new query
+	origQuery := req.Query
+	req.Query = fmt.Sprintf("show tag keys from %s; %s", measurement, wildcardStmnt.String())
+
+	resultCh, err := dn.queryAllShards(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// drain channels to unblock
+	defer func() {
+		for _, ch := range resultCh {
+			for range ch {
+			}
+		}
+	}()
+
+	log.Infof("process query: %s, shard query: %s", origQuery, req.Query)
+	// create a unique db
+	queryDb := req.Database + uuid.New().String()
+
+	// todo: retention policy
+	if err := dn.tsQueryStore.CreateDatabase(queryDb, nil); err != nil {
+		return nil, fmt.Errorf("failed to create query db %s", err)
+	}
+	defer dn.tsQueryStore.DeleteDatabase(queryDb)
+
+	// read results, go one by one shard to avoid out of order timestamp if timestamp was used in sharding
+	if err := dn.writePointsInAggregator(queryDb, measurement, resultCh); err != nil {
+		return nil, err
+	}
+
+	// aggreagted query
+	return dn.executeAggQuery(ctx, req, origQuery, queryDb)
 }

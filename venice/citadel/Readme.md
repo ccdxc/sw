@@ -85,6 +85,18 @@ This section walks thru how read/write operations are handled by Citadel.
 7. Once the response comes back from DataNode results are sent back to client.
 8. Brokers don't support query aggregation across DataNodes yet. This feature is in the works.
 
+### Read aggregation
+
+Query aggregation is done in data node. Each datanode is initialized with a t-store instance for 
+query aggregation during start.
+
+1. Read request from the clients arrives at one of the brokers.
+2. Broker picks a random Shard from its local copy of the metadata.
+3. Broker randomly picks one of the replicas for read operation and sends it to the DataNode
+4. DataNode starts a query to all shards, local and remote
+5. DataNode aggregates the result and send it back to broker
+6. Once the response comes back from DataNode results are sent back to client.
+
 ## Running Citadel
 
 ```

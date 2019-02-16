@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"sync"
 
 	context "golang.org/x/net/context"
@@ -64,16 +65,18 @@ type StoreAPI interface {
 
 // DNode represents a backend data node instance
 type DNode struct {
-	nodeUUID   string // unique id for the data node
-	nodeURL    string // URL to reach the data node
-	dbPath     string // data store path
-	clusterCfg *meta.ClusterConfig
-	metaNode   *meta.Node        // pointer to metadata node instance
-	watcher    *meta.Watcher     // metadata watcher
-	rpcServer  *rpckit.RPCServer // grpc server
-	tshards    sync.Map          // tstore shards
-	kshards    sync.Map          // kstore shards
-	rpcClients sync.Map          // rpc connections
+	nodeUUID     string // unique id for the data node
+	nodeURL      string // URL to reach the data node
+	dbPath       string // data store path
+	querydbPath  string // query data store path
+	clusterCfg   *meta.ClusterConfig
+	metaNode     *meta.Node        // pointer to metadata node instance
+	watcher      *meta.Watcher     // metadata watcher
+	rpcServer    *rpckit.RPCServer // grpc server
+	tsQueryStore *tstore.Tstore    // ts query store
+	tshards      sync.Map          // tstore shards
+	kshards      sync.Map          // kstore shards
+	rpcClients   sync.Map          // rpc connections
 
 	isStopped bool // is the datanode stopped?
 }
@@ -93,7 +96,7 @@ type syncBufferState struct {
 }
 
 // NewDataNode creates a new data node instance
-func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string) (*DNode, error) {
+func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string, querydbPath string) (*DNode, error) {
 	// Start a rpc server
 	rpcSrv, err := rpckit.NewRPCServer(globals.Citadel, nodeURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
@@ -107,17 +110,27 @@ func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string) (*DN
 		return nil, err
 	}
 
+	if querydbPath == "" {
+		// use the tpmfs dir, /run/user/$uid/qstore
+		if u, err := user.Current(); err == nil {
+			querydbPath = fmt.Sprintf("/run/user/%s/qstore", u.Uid)
+		} else { // pick one from /tmp
+			querydbPath = "/tmp/qstore"
+		}
+	}
+
 	// If nodeURL was passed with :0, then update the nodeURL to the real URL
 	nodeURL = rpcSrv.GetListenURL()
 
 	// create a data node
 	dn := DNode{
-		nodeUUID:   nodeUUID,
-		nodeURL:    nodeURL,
-		dbPath:     dbPath,
-		clusterCfg: cfg,
-		watcher:    watcher,
-		rpcServer:  rpcSrv,
+		nodeUUID:    nodeUUID,
+		nodeURL:     nodeURL,
+		dbPath:      dbPath,
+		querydbPath: querydbPath,
+		clusterCfg:  cfg,
+		watcher:     watcher,
+		rpcServer:   rpcSrv,
 	}
 
 	// read all shard state from metadata store and restore it
@@ -153,6 +166,12 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 	// read current state of the cluster and restore the shards
 	// FIXME: if etcd was unreachable when we come up we need to handle it
 	if cfg.EnableTstore {
+
+		// query aggregator for this data node
+		if err := dn.newQueryStore(); err != nil {
+			return err
+		}
+
 		cluster, err := meta.GetClusterState(cfg, meta.ClusterTypeTstore)
 		if err == nil {
 			for _, shard := range cluster.ShardMap.Shards {
@@ -758,6 +777,7 @@ func (dn *DNode) SoftRestart() error {
 
 	// first stop everythig
 	dn.isStopped = true
+	dn.tsQueryStore.Close()
 	dn.watcher.Stop()
 	dn.tshards.Range(func(key interface{}, value interface{}) bool {
 		shard := value.(*TshardState)
@@ -828,6 +848,7 @@ func (dn *DNode) SoftRestart() error {
 // Stop stops the data node
 func (dn *DNode) Stop() error {
 	dn.isStopped = true
+	dn.tsQueryStore.Close()
 	dn.metaNode.Stop()
 	dn.watcher.Stop()
 	dn.tshards.Range(func(key interface{}, value interface{}) bool {

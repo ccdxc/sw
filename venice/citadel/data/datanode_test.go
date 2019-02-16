@@ -7,9 +7,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"runtime"
 	"testing"
 	"time"
+
+	"github.com/influxdata/influxdb/query"
 
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
@@ -26,14 +30,14 @@ import (
 )
 
 // createNode creates a node
-func createNode(nodeUUID, nodeURL, dbPath string) (*DNode, error) {
+func createNode(nodeUUID, nodeURL, dbPath string, qdbPath string) (*DNode, error) {
 	// metadata config to disable metadata mgr
 	cfg := meta.DefaultClusterConfig()
 	cfg.EnableKstoreMeta = false
 	cfg.EnableTstoreMeta = false
 
 	// create the data node
-	dn, err := NewDataNode(cfg, nodeUUID, nodeURL, dbPath)
+	dn, err := NewDataNode(cfg, nodeUUID, nodeURL, dbPath, qdbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +46,24 @@ func createNode(nodeUUID, nodeURL, dbPath string) (*DNode, error) {
 	dn.metaNode.Stop()
 
 	return dn, nil
+}
+
+func TestQueryStore(t *testing.T) {
+
+	// no default db dir in OSX
+	if runtime.GOOS == "darwin" {
+		return
+	}
+
+	// create a temp dir
+	path, err := ioutil.TempDir("", "tstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	// create nodes
+	dnodes, err := createNode("node-110", "localhost:17308", path, "")
+	AssertOk(t, err, "Error creating nodes")
+	defer dnodes.Stop()
 }
 
 func TestDataNodeBasic(t *testing.T) {
@@ -55,9 +77,13 @@ func TestDataNodeBasic(t *testing.T) {
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
+	qpath, err := ioutil.TempDir("", "qstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
-		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx))
+		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
 		AssertOk(t, err, "Error creating nodes")
 		defer dnodes[idx].Stop()
 	}
@@ -285,9 +311,13 @@ func TestDataNodeErrors(t *testing.T) {
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
+	qpath, err := ioutil.TempDir("", "qstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
-		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx))
+		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
 		AssertOk(t, err, "Error creating nodes")
 		defer dnodes[idx].Stop()
 	}
@@ -571,10 +601,14 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
+	qpath, err := ioutil.TempDir("", "qstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
 		AssertOk(t, err, "Error creating nodes")
 	}
 
@@ -662,7 +696,7 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 		AssertOk(t, err, "Error stopping data node")
 
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
 		AssertOk(t, err, "Error creating nodes")
 
 		// verify atleast one of the nodes is a leader
@@ -742,7 +776,7 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 		}, "node was not removed from cluster", "100ms", "30s")
 
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
 		AssertOk(t, err, "Error creating nodes")
 
 		// verify atleast one of the nodes is a leader
@@ -801,10 +835,14 @@ func TestDataNodeKstoreClustering(t *testing.T) {
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
+	qpath, err := ioutil.TempDir("", "qstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
 		AssertOk(t, err, "Error creating nodes")
 	}
 
@@ -879,7 +917,7 @@ func TestDataNodeKstoreClustering(t *testing.T) {
 		AssertOk(t, err, "Error stopping data node")
 
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
 		AssertOk(t, err, "Error creating nodes")
 
 		// verify atleast one of the nodes is a leader
@@ -963,7 +1001,7 @@ func TestDataNodeKstoreClustering(t *testing.T) {
 		}, "node was not removed from cluster", "100ms", "30s")
 
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
 		AssertOk(t, err, "Error creating nodes")
 
 		// verify atleast one of the nodes is a leader
@@ -1059,10 +1097,14 @@ func TestSyncBuffer(t *testing.T) {
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
+	qpath, err := ioutil.TempDir("", "qstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
 		AssertOk(t, err, "Error creating nodes")
 	}
 
@@ -1377,4 +1419,291 @@ func TestSyncBuffer(t *testing.T) {
 	// check entry in map
 	tsl = getTsMapKeys(0)
 	Assert(t, len(tsl) == 0, fmt.Sprintf("invalid replica ids in ts sync buffer, expected 0, got %d", len(tsl)))
+
+	for idx := 0; idx < numNodes; idx++ {
+		// create the data node
+		err := dnodes[idx].Stop()
+		AssertOk(t, err, "failed to delete node")
+	}
+
+}
+
+func TestAggQuery(t *testing.T) {
+	const numNodes = 3
+	dnodes := make([]*DNode, numNodes)
+	clients := make([]*rpckit.RPCClient, numNodes)
+	var err error
+
+	// metadata config
+	cfg := meta.DefaultClusterConfig()
+	cfg.EnableKstoreMeta = false
+	cfg.DeadInterval = time.Millisecond * 100
+	cfg.NodeTTL = 5
+	cfg.RebalanceDelay = time.Millisecond * 100
+	cfg.RebalanceInterval = time.Millisecond * 10
+
+	// create a temp dir
+	path, err := ioutil.TempDir("", "tstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	qpath, err := ioutil.TempDir("", "qstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	// create nodes
+	for idx := 0; idx < numNodes; idx++ {
+		// create the data node
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		AssertOk(t, err, "Error creating nodes")
+	}
+
+	// create rpc client
+	for idx := 0; idx < numNodes; idx++ {
+		clients[idx], err = rpckit.NewRPCClient(fmt.Sprintf("datanode-%d", idx), fmt.Sprintf("localhost:730%d", idx), rpckit.WithLoggerEnabled(false))
+		AssertOk(t, err, "Error connecting to grpc server")
+		defer clients[idx].Close()
+	}
+
+	watcher, err := meta.NewWatcher("watcher", cfg)
+	AssertOk(t, err, "Error creating the watcher")
+	defer watcher.Stop()
+
+	// wait till cluster state has converged
+	AssertEventually(t, func() (bool, interface{}) {
+		if (len(watcher.GetCluster(meta.ClusterTypeTstore).NodeMap) != numNodes) ||
+			(len(watcher.GetCluster(meta.ClusterTypeTstore).ShardMap.Shards) != meta.DefaultShardCount) {
+			return false, nil
+		}
+
+		for idx := 0; idx < numNodes; idx++ {
+			if watcher.GetCluster(meta.ClusterTypeTstore).NodeMap[fmt.Sprintf("node-%d", idx)].NumShards < (meta.DefaultShardCount * meta.DefaultReplicaCount / numNodes) {
+				return false, nil
+			}
+
+			if dnodes[idx].HasPendingSync() {
+				return false, nil
+			}
+		}
+
+		return true, nil
+	}, "nodes did not get cluster update", "100ms", "30s")
+
+	// make create database call
+	cl := dnodes[0].GetCluster(meta.ClusterTypeTstore)
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
+			AssertOk(t, rerr, "Error getting datanode client")
+
+			req := tproto.DatabaseReq{
+				ClusterType: meta.ClusterTypeTstore,
+				ReplicaID:   repl.ReplicaID,
+				ShardID:     repl.ShardID,
+				Database:    "db0",
+			}
+
+			_, err = dnclient.CreateDatabase(context.Background(), &req)
+			AssertOk(t, err, "Error making the create database call")
+		}
+	}
+
+	// write some points
+	cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			if repl.IsPrimary {
+
+				dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
+				AssertOk(t, rerr, "Error getting datanode client")
+
+				data := fmt.Sprintf("cpu,host=%s,svc=nginx value1=%d,value2=%d %v", repl.NodeUUID, repl.ShardID, repl.ReplicaID, time.Now().UnixNano())
+
+				req := tproto.PointsWriteReq{
+					ClusterType: meta.ClusterTypeTstore,
+					ReplicaID:   repl.ReplicaID,
+					ShardID:     repl.ShardID,
+					Database:    "db0",
+					Points:      data,
+				}
+
+				_, err = dnclient.PointsWrite(context.Background(), &req)
+				AssertOk(t, err, "Error writing points")
+			}
+		}
+	}
+
+	// execute some query
+	cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
+			AssertOk(t, rerr, "Error getting datanode client")
+
+			req := tproto.QueryReq{
+				ClusterType: meta.ClusterTypeTstore,
+				ReplicaID:   repl.ReplicaID,
+				ShardID:     repl.ShardID,
+				Database:    "db0",
+				TxnID:       uint64(repl.ReplicaID + 1),
+				Query:       "SELECT * FROM cpu",
+			}
+
+			resp, err := dnclient.ExecuteQuery(context.Background(), &req)
+			AssertOk(t, err, "Error executing query")
+
+			Assert(t, len(resp.Result) == 1, "invalid number of results", resp.Result)
+			for _, rs := range resp.Result {
+				rslt := query.Result{}
+				err := rslt.UnmarshalJSON(rs.Data)
+				AssertOk(t, err, "failed to unmarshal query response")
+
+				Assert(t, len(rslt.Series) == 1, "invalid number of series", rslt.Series)
+				for _, s := range rslt.Series {
+					Assert(t, len(s.Columns) == 5, "invalid number of columns", s.Columns)
+					Assert(t, len(s.Values) == 1, "invalid number of values", s.Values)
+				}
+			}
+		}
+	}
+
+	// execute aggregated query
+	cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
+	for _, shard := range cl.ShardMap.Shards {
+		// walk all replicas in the shard
+		for _, repl := range shard.Replicas {
+			dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
+			AssertOk(t, rerr, "Error getting datanode client")
+
+			req := tproto.QueryReq{
+				ClusterType: meta.ClusterTypeTstore,
+				ReplicaID:   repl.ReplicaID,
+				ShardID:     repl.ShardID,
+				Database:    "db0",
+				TxnID:       uint64(repl.ReplicaID + 1),
+				Query:       "SELECT * FROM cpu",
+			}
+
+			resp, err := dnclient.ExecuteAggQuery(context.Background(), &req)
+			AssertOk(t, err, "Error executing aggregated query")
+
+			Assert(t, len(resp.Result) == 1, "invalid number of results", resp.Result)
+			for _, rs := range resp.Result {
+				rslt := query.Result{}
+				err := rslt.UnmarshalJSON(rs.Data)
+				AssertOk(t, err, "failed to unmarshal query response")
+
+				Assert(t, len(rslt.Series) == 1, "invalid number of series", rslt.Series)
+				for _, s := range rslt.Series {
+					Assert(t, len(s.Columns) == 5, "invalid number of columns", s.Columns)
+					Assert(t, len(s.Values) == len(cl.ShardMap.Shards), fmt.Sprintf("invalid number of values %+v", s))
+				}
+			}
+		}
+	}
+
+	// check query format
+	for _, q1 := range []string{
+		`SELECT time, value FROM cpu`,
+		`SELECT value FROM cpu`,
+		`SELECT value, host FROM cpu`,
+		`SELECT * FROM cpu`,
+		`SELECT time, * FROM cpu`,
+		`SELECT value, * FROM cpu`,
+		`SELECT max(value) FROM cpu`,
+		`SELECT max(value), host FROM cpu`,
+		`SELECT max(value), * FROM cpu`,
+		`SELECT max(*) FROM cpu`,
+		`SELECT max(/val/) FROM cpu`,
+		`SELECT min(value) FROM cpu`,
+		`SELECT min(value), host FROM cpu`,
+		`SELECT min(value), * FROM cpu`,
+		`SELECT min(*) FROM cpu`,
+		`SELECT min(/val/) FROM cpu`,
+		`SELECT first(value) FROM cpu`,
+		`SELECT first(value), host FROM cpu`,
+		`SELECT first(value), * FROM cpu`,
+		`SELECT first(*) FROM cpu`,
+		`SELECT first(/val/) FROM cpu`,
+		`SELECT last(value) FROM cpu`,
+		`SELECT last(value), host FROM cpu`,
+		`SELECT last(value), * FROM cpu`,
+		`SELECT last(*) FROM cpu`,
+		`SELECT last(/val/) FROM cpu`,
+		`SELECT count(value) FROM cpu`,
+		`SELECT count(distinct(value)) FROM cpu`,
+		`SELECT count(distinct value) FROM cpu`,
+		`SELECT count(*) FROM cpu`,
+		`SELECT count(/val/) FROM cpu`,
+		`SELECT mean(value) FROM cpu`,
+		`SELECT mean(*) FROM cpu`,
+		`SELECT mean(/val/) FROM cpu`,
+		`SELECT min(value), max(value) FROM cpu`,
+		`SELECT min(*), max(*) FROM cpu`,
+		`SELECT min(/val/), max(/val/) FROM cpu`,
+		`SELECT first(value), last(value) FROM cpu`,
+		`SELECT first(*), last(*) FROM cpu`,
+		`SELECT first(/val/), last(/val/) FROM cpu`,
+		`SELECT count(value) FROM cpu WHERE time >= now() - 1h GROUP BY time(10m)`,
+		`SELECT distinct value FROM cpu`,
+		`SELECT distinct(value) FROM cpu`,
+		`SELECT value / total FROM cpu`,
+		`SELECT min(value) / total FROM cpu`,
+		`SELECT max(value) / total FROM cpu`,
+		`SELECT top(value, 1) FROM cpu`,
+		`SELECT top(value, host, 1) FROM cpu`,
+		`SELECT top(value, 1), host FROM cpu`,
+		`SELECT min(top) FROM (SELECT top(value, host, 1) FROM cpu) GROUP BY region`,
+		`SELECT bottom(value, 1) FROM cpu`,
+		`SELECT bottom(value, host, 1) FROM cpu`,
+		`SELECT bottom(value, 1), host FROM cpu`,
+		`SELECT max(bottom) FROM (SELECT bottom(value, host, 1) FROM cpu) GROUP BY region`,
+		`SELECT percentile(value, 75) FROM cpu`,
+		`SELECT percentile(value, 75.0) FROM cpu`,
+		`SELECT sample(value, 2) FROM cpu`,
+		`SELECT sample(*, 2) FROM cpu`,
+		`SELECT sample(/val/, 2) FROM cpu`,
+		`SELECT elapsed(value) FROM cpu`,
+		`SELECT elapsed(value, 10s) FROM cpu`,
+		`SELECT integral(value) FROM cpu`,
+		`SELECT integral(value, 10s) FROM cpu`,
+		`SELECT max(value) FROM cpu WHERE time >= now() - 1m GROUP BY time(10s, 5s)`,
+		`SELECT max(value) FROM cpu WHERE time >= now() - 1m GROUP BY time(10s, '2000-01-01T00:00:05Z')`,
+		`SELECT max(value) FROM cpu WHERE time >= now() - 1m GROUP BY time(10s, now())`,
+		`SELECT max(mean) FROM (SELECT mean(value) FROM cpu GROUP BY host)`,
+		`SELECT max(derivative) FROM (SELECT derivative(mean(value)) FROM cpu) WHERE time >= now() - 1m GROUP BY time(10s)`,
+		`SELECT max(value) FROM (SELECT value + total FROM cpu) WHERE time >= now() - 1m GROUP BY time(10s)`,
+		`SELECT value FROM cpu WHERE time >= '2000-01-01T00:00:00Z' AND time <= '2000-01-01T01:00:00Z'`,
+		`SELECT value FROM (SELECT value FROM cpu) ORDER BY time DESC`,
+	} {
+		// execute aggregated query
+		cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
+		shard := cl.ShardMap.Shards[rand.Int63n(int64(len(cl.ShardMap.Shards)))]
+		repl := shard.Replicas[shard.PrimaryReplica]
+
+		req := tproto.QueryReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   repl.ReplicaID,
+			ShardID:     repl.ShardID,
+			Database:    "db0",
+			TxnID:       uint64(repl.ReplicaID + 1),
+			Query:       q1,
+		}
+
+		_, err := dnodes[0].ExecuteAggQuery(context.Background(), &req)
+		AssertOk(t, err, "Error executing aggregated query")
+	}
+
+	for idx := 0; idx < numNodes; idx++ {
+		// stop the data node
+		err = dnodes[idx].Stop()
+		AssertOk(t, err, "Error stopping nodes")
+	}
+	time.Sleep(time.Millisecond * 10)
+	meta.DestroyClusterState(cfg, meta.ClusterTypeTstore)
+	meta.DestroyClusterState(cfg, meta.ClusterTypeKstore)
+
 }

@@ -449,7 +449,7 @@ func (it *veniceIntegSuite) startCitadel() {
 	it.updateResolver(globals.Collector, collectorURL)
 
 	// create the data node
-	dn, err := data.NewDataNode(cfg, nodeUUID, integTestCitadelURL, "/tmp/tstore/")
+	dn, err := data.NewDataNode(cfg, nodeUUID, integTestCitadelURL, "/tmp/tstore/", "/tmp/qstore")
 	if err != nil {
 		log.Fatalf("Error creating data node. Err: %v", err)
 	}

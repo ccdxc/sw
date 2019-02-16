@@ -55,6 +55,10 @@ func (f *fakeDataNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (
 	return nil, nil
 }
 
+func (f *fakeDataNode) ExecuteAggQuery(ctx context.Context, req *tproto.QueryReq) (*tproto.QueryResp, error) {
+	return nil, nil
+}
+
 func (f *fakeDataNode) SyncShardReq(ctx context.Context, req *tproto.SyncShardMsg) (*tproto.StatusResp, error) {
 	log.Infof("%s got SyncShardReq req: %+v", f.nodeUUID, req)
 	return &tproto.StatusResp{}, nil

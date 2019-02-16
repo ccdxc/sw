@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/crc32"
+	"strings"
 
 	"github.com/pensando/sw/venice/citadel/tproto"
 )
@@ -37,15 +38,15 @@ func NewShardMap(numShards, desiredReplicas uint32, cluster *TscaleCluster) (*Sh
 }
 
 // computeHashForPoint returns a CRC32 hash of db + measurement
-func (sm *ShardMap) computeHashForPoint(db, measurement string) uint32 {
+func (sm *ShardMap) computeHashForPoint(keys string) uint32 {
 	crc32q := crc32.MakeTable(0xD5828281)
-	return crc32.Checksum([]byte(fmt.Sprintf("%s|%s", db, measurement)), crc32q)
+	return crc32.Checksum([]byte(keys), crc32q)
 }
 
 // GetShardForPoint returns a shard for the measurement
-func (sm *ShardMap) GetShardForPoint(db, measurement string) (*Shard, error) {
+func (sm *ShardMap) GetShardForPoint(keys ...string) (*Shard, error) {
 	// calculate the hash
-	hash := sm.computeHashForPoint(db, measurement)
+	hash := sm.computeHashForPoint(strings.Join(keys, "|"))
 
 	// calculate modulo
 	mod := hash % sm.NumShards

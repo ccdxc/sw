@@ -219,6 +219,7 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 	for _, pt := range points {
 		msrmt := string(pt.Name())
 
+		// TODO: hashing to multiple shards
 		// get shard for the measurement
 		shard, err := cl.ShardMap.GetShardForPoint(database, msrmt)
 		if err != nil {
@@ -314,6 +315,41 @@ func (br *Broker) queryShard(ctx context.Context, shard *meta.Shard, database, q
 	return nil, errors.New("Query to allreplicas failed")
 }
 
+// queryShardAgg executes aggregated query in replicas of the shard till it gets a successful response
+func (br *Broker) queryShardAgg(ctx context.Context, shard *meta.Shard, database, qry string) (*tproto.QueryResp, error) {
+	for _, repl := range shard.Replicas {
+		if err := ctx.Err(); err != nil {
+			log.Errorf("query context cancelled. Err: %v", err)
+			return nil, err
+		}
+
+		// get an rpc client
+		rpcClient, err := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		if err != nil {
+			continue
+		}
+
+		// rpc request
+		req := tproto.QueryReq{
+			ClusterType: meta.ClusterTypeTstore,
+			Database:    database,
+			ReplicaID:   repl.ReplicaID,
+			ShardID:     repl.ShardID,
+			Query:       qry,
+		}
+
+		// make the rpc call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		resp, err := dnclient.ExecuteAggQuery(ctx, &req)
+		if err != nil {
+			log.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
+			continue
+		}
+		return resp, nil
+	}
+	return nil, errors.New("Query to allreplicas failed")
+}
+
 // ExecuteQuery executes a query on data nodes
 func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string) ([]*query.Result, error) {
 	// parse the query
@@ -366,6 +402,60 @@ func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string)
 		}
 	}
 
+	return results, nil
+}
+
+// ExecuteAggQuery executes query on all shards and aggregates the result
+func (br *Broker) ExecuteAggQuery(ctx context.Context, database string, qry string) ([]*query.Result, error) {
+
+	// todo:  databasename cache lookup
+	if database == "" {
+		return nil, fmt.Errorf("invalid database")
+	}
+
+	// parse the query
+	pq, err := influxql.ParseQuery(qry)
+	if err != nil {
+		return nil, err
+	}
+
+	// parse each statement
+	var results []*query.Result
+	for i, stmt := range pq.Statements {
+		if selStmt, ok := stmt.(*influxql.SelectStatement); ok {
+			// get the measurement name
+			if len(selStmt.Sources.Measurements()) != 1 {
+				return nil, errors.New("Query must have only one measurement")
+			}
+			// get the cluster
+			cl := br.GetCluster(meta.ClusterTypeTstore)
+			if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+				return nil, errors.New("Shard map is empty")
+			}
+
+			// get a random shard
+			shard := cl.ShardMap.Shards[rand.Int63n(int64(len(cl.ShardMap.Shards)))]
+
+			resp, err := br.queryShardAgg(ctx, shard, database, selStmt.String())
+			if err != nil {
+				log.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
+				return nil, err
+			}
+
+			// parse the response
+			for _, rs := range resp.Result {
+				rslt := query.Result{}
+				err := rslt.UnmarshalJSON(rs.Data)
+				if err != nil {
+					return nil, err
+				}
+				// Since we are making each query individually,
+				// we need to manually set the StatementID
+				rslt.StatementID = i
+				results = append(results, &rslt)
+			}
+		}
+	}
 	return results, nil
 }
 

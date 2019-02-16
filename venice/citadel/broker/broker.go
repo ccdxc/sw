@@ -33,6 +33,7 @@ type Inf interface {
 	DeleteDatabase(ctx context.Context, database string) error
 	WritePoints(ctx context.Context, database string, points []models.Point) error
 	ExecuteQuery(ctx context.Context, database string, qry string) ([]*query.Result, error)
+	ExecuteAggQuery(ctx context.Context, database string, qry string) ([]*query.Result, error)
 	WriteLines(ctx context.Context, database string, lines []string) error
 
 	// Methods defined in broker_kv

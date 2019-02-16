@@ -32,13 +32,27 @@ type Tstore struct {
 // number of times to retru backup operation if it fails transiently..
 const numBackupRetries = 5
 
+// NewTstoreWithConfig returns a new tstore instance with the custom engine config
+func NewTstoreWithConfig(dbPath string, cfg tsdb.Config) (*Tstore, error) {
+	// create a new tsdb store
+	ts := tsdb.NewStore(dbPath)
+
+	// set the custom config, use tsdb.NewConfig() for deaults
+	ts.EngineOptions.Config = cfg
+
+	// open the tsdb store
+	err := ts.Open()
+	if err != nil {
+		log.Fatalf("Error opening the tsdb. Err: %v", err)
+	}
+
+	return newTstore(dbPath, ts)
+}
+
 // NewTstore returns a new tstore instance
 func NewTstore(dbPath string) (*Tstore, error) {
 	// create a new tsdb store
 	ts := tsdb.NewStore(dbPath)
-	if ts == nil {
-		log.Fatalf("Failed to create tsdb store")
-	}
 
 	// set the WAL directory
 	ts.EngineOptions.Config.WALDir = filepath.Join(dbPath, "wal")
@@ -49,13 +63,18 @@ func NewTstore(dbPath string) (*Tstore, error) {
 		log.Fatalf("Error opening the tsdb. Err: %v", err)
 	}
 
+	return newTstore(dbPath, ts)
+}
+
+func newTstore(dbPath string, ts *tsdb.Store) (*Tstore, error) {
+
 	// local meta
 	cfg := meta.NewConfig()
 	cfg.Dir = dbPath
 	localMeta := meta.NewClient(cfg)
 
 	// open the metadata if it already exists
-	err = localMeta.Open()
+	err := localMeta.Open()
 	if err != nil {
 		// try again after a small delay
 		time.Sleep(time.Millisecond * 10)
@@ -219,6 +238,11 @@ func (ts *Tstore) RestoreChunk(chunkID uint64, r io.Reader) error {
 // WritePoints writes points to a shard
 func (ts *Tstore) WritePoints(database string, points []models.Point) error {
 	return ts.pointsWriter.WritePointsPrivileged(database, "default", models.ConsistencyLevelOne, points)
+}
+
+// WritePointsInto is a wrapper to write points using BufferedPointsWriter
+func (ts *Tstore) WritePointsInto(wr *coordinator.IntoWriteRequest) error {
+	return ts.stmtExecutor.PointsWriter.WritePointsInto(wr)
 }
 
 // ExecuteQuery executes a query

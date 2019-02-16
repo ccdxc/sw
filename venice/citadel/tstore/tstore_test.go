@@ -9,8 +9,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/influxdata/influxdb/toml"
+
+	"github.com/influxdata/influxdb/tsdb"
 
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
@@ -178,6 +183,89 @@ func TestTstoreBackupRetry(t *testing.T) {
 	}
 }
 
+func TestTstoreWithConfig(t *testing.T) {
+	// create a temp dir
+	path, err := ioutil.TempDir("", "qstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	cfg := tsdb.NewConfig()
+
+	// set custom parameters, test what is set in ts_data.go
+	cfg.WALDir = filepath.Join(path, "wal")
+
+	// set engine config
+	cfg.CacheMaxMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
+	cfg.CacheSnapshotMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
+	cfg.CacheSnapshotWriteColdDuration = toml.Duration(time.Duration(time.Hour))
+	cfg.CompactFullWriteColdDuration = toml.Duration(time.Duration(12 * time.Hour))
+
+	// create a new qstore
+	ts, err := NewTstoreWithConfig(path, cfg)
+	AssertOk(t, err, "Error creating query store")
+	defer ts.Close()
+
+	// create the database
+	err = ts.CreateDatabase("db1", nil)
+	AssertOk(t, err, "Error creatung the database")
+
+	// parse some points
+	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
+		"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"
+	points, err := models.ParsePointsWithPrecision([]byte(data), time.Time{}, "s")
+	AssertOk(t, err, "Error parsing points")
+
+	// write the points
+	err = ts.WritePoints("db1", points)
+	AssertOk(t, err, "Error writing points")
+
+	// Retrieve shard group.
+	shards := ts.tsdb.ShardGroup([]uint64{0, 1})
+
+	// measurement
+	measurement := &influxql.Measurement{
+		Database:        "db1",
+		RetentionPolicy: "default",
+		Name:            "cpu",
+	}
+
+	// Create iterator.
+	itr, err := shards.CreateIterator(context.Background(), measurement, query.IteratorOptions{
+		Expr:       influxql.MustParseExpr(`value1`),
+		Dimensions: []string{"host", "svc"},
+		Ascending:  true,
+		StartTime:  influxql.MinTime,
+		EndTime:    influxql.MaxTime,
+	})
+	AssertOk(t, err, "Error creating iterator")
+	defer itr.Close()
+
+	// loop thru the iterator
+	fitr := itr.(query.FloatIterator)
+	p := &query.FloatPoint{}
+	recCount := 0
+	for err == nil && p != nil {
+		p, err = fitr.Next()
+		AssertOk(t, err, "Error getting next")
+		log.Infof("Got p: %+v, err: %v", p, err)
+		recCount++
+	}
+	Assert(t, recCount == 3, "got invalid number of records", recCount)
+
+	// execute a query
+	ch, err := ts.ExecuteQuery("SELECT * FROM cpu", "db1")
+	AssertOk(t, err, "Error executing the query")
+
+	rslt := ReadAllResults(ch)
+	Assert(t, len(rslt) == 1, "got invalid number of results", rslt)
+	Assert(t, len(rslt[0].Series) == 1, "got invalid number of series", rslt[0].Series)
+	Assert(t, len(rslt[0].Series[0].Values) == 2, "got invalid number of values", rslt[0].Series[0].Values)
+
+	// delete the database
+	err = ts.DeleteDatabase("db1")
+	AssertOk(t, err, "Error deleting database")
+}
+
 func TestTstoreBackupRestore(t *testing.T) {
 	// create a temp dir
 	path, err := ioutil.TempDir("", "tstore-")
@@ -260,10 +348,36 @@ func TestTstoreBackupRestore(t *testing.T) {
 	Assert(t, len(rslt[0].Series[0].Values) == 2, "got invalid number of values", rslt[0].Series[0].Values)
 }
 
-func TestTstoreBenchmark(t *testing.T) {
-	var batchSize = 4000
-	var numIterations = 100
+func TestTstoreWithConfigBenchmark(t *testing.T) {
+	var path string
+	var err error
 
+	// create a temp dir
+	path, err = ioutil.TempDir("", "qstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	cfg := tsdb.NewConfig()
+
+	// set custom parameters
+	cfg.WALDir = filepath.Join(path, "wal")
+
+	// set engine config
+
+	// cache to 2 GB
+	cfg.CacheMaxMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
+	cfg.CacheSnapshotMemorySize = 2 * tsdb.DefaultCacheMaxMemorySize
+	cfg.CacheSnapshotWriteColdDuration = toml.Duration(time.Duration(time.Hour))
+	cfg.CompactFullWriteColdDuration = toml.Duration(time.Duration(12 * time.Hour))
+
+	// create a new tstore
+	ts, err := NewTstoreWithConfig(path, cfg)
+	AssertOk(t, err, "Error creating tstore")
+	defer ts.Close()
+	tstoreBebchmark(t, ts)
+}
+
+func TestTstoreBenchmark(t *testing.T) {
 	// create a temp dir
 	path, err := ioutil.TempDir("", "tstore-")
 	AssertOk(t, err, "Error creating tmp dir")
@@ -274,8 +388,15 @@ func TestTstoreBenchmark(t *testing.T) {
 	AssertOk(t, err, "Error creating tstore")
 	defer ts.Close()
 
+	tstoreBebchmark(t, ts)
+}
+
+func tstoreBebchmark(t *testing.T, ts *Tstore) {
+	var batchSize = 4000
+	var numIterations = 100
+
 	// create the database
-	err = ts.CreateDatabase("db1", nil)
+	err := ts.CreateDatabase("db1", nil)
 	AssertOk(t, err, "Error creatung the database")
 
 	// measure how long it takes to parse the points

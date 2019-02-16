@@ -48,6 +48,8 @@ func NewHTTPServer(listenURL string, broker *broker.Broker, dbg *debug.Debug) (*
 	r.HandleFunc("/db", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.readdbReqHandler))).Methods("GET")
 	r.HandleFunc("/db", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.deletedbReqHandler))).Methods("DELETE")
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("GET")
+	r.HandleFunc("/qagg", hsrv.aggQueryReqHandler).Methods("POST")
+	r.HandleFunc("/qagg", hsrv.aggQueryReqHandler).Methods("GET")
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("POST")
 	r.HandleFunc("/cmd", hsrv.showReqHandler).Methods("GET")
 	r.HandleFunc("/cmd", hsrv.showReqHandler).Methods("POST")
@@ -180,6 +182,46 @@ func (hsrv *HTTPServer) queryReqHandler(w http.ResponseWriter, r *http.Request) 
 
 	// execute the query
 	result, err := hsrv.broker.ExecuteQuery(context.Background(), database, qp)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error executing the query: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// write 200 ok
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	// loop thru each result
+	for _, res := range result {
+		var o struct {
+			Results []*query.Result `json:"results,omitempty"`
+			Err     string          `json:"error,omitempty"`
+		}
+		o.Results = []*query.Result{res}
+		// Send HTTP response as Json
+		content, err := json.Marshal(o)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Write(content)
+	}
+	return
+}
+
+// queryReqHandler handles a query request
+func (hsrv *HTTPServer) aggQueryReqHandler(w http.ResponseWriter, r *http.Request) {
+	// Attempt to read the form value from the "q" form value.
+	qp := strings.TrimSpace(r.FormValue("q"))
+	if qp == "" {
+		http.Error(w, `missing required parameter "q"`, http.StatusBadRequest)
+		return
+	}
+	database := r.FormValue("db")
+
+	// execute the query
+	result, err := hsrv.broker.ExecuteAggQuery(context.Background(), database, qp)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error executing the query: %v", err), http.StatusInternalServerError)
 		return
