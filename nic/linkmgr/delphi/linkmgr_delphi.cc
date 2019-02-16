@@ -244,12 +244,18 @@ port_event_notify (uint32_t port_num, port_event_t event,
 // update_xcvr_status updates xcvr status in delphi
 error port_svc::update_xcvr_status(google::protobuf::uint32 port_num,
                                    PortXcvrState state,
-                                   PortXcvrPid pid) {
+                                   PortXcvrPid pid,
+                                   xcvr_sprom_data_t *xcvr_sprom) {
     // create port status object
     PortStatusPtr port = std::make_shared<PortStatus>();
     port->mutable_key_or_handle()->set_port_id(port_num);
-    port->mutable_xcvr_status()->set_state(state);
-    port->mutable_xcvr_status()->set_pid(pid);
+
+    auto xcvr_status = port->mutable_xcvr_status();
+
+    xcvr_status->set_state(state);
+    xcvr_status->set_pid(pid);
+
+    port_populate_xcvr_status_sprom(xcvr_status, xcvr_sprom);
 
     // add it to database
     sdk_->QueueUpdate(port);
@@ -353,21 +359,24 @@ xcvr_event_notify (xcvr_event_info_t *xcvr_event_info)
         HAL_TRACE_DEBUG("Xcvr removed; port: {}", port_num);
 
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_REMOVED,
-                                           port::XCVR_PID_UNKNOWN);
+                                           port::XCVR_PID_UNKNOWN,
+                                           &xcvr_event_info->xcvr_sprom);
         break;
 
     case xcvr_state_t::XCVR_INSERTED:
         HAL_TRACE_DEBUG("Xcvr inserted; port: {}", port_num);
 
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_INSERTED,
-                                           port::XCVR_PID_UNKNOWN);
+                                           port::XCVR_PID_UNKNOWN,
+                                           &xcvr_event_info->xcvr_sprom);
         break;
 
     case xcvr_state_t::XCVR_SPROM_READ:
         HAL_TRACE_DEBUG("Xcvr sprom read; port: {}, pid: {}", port_num, pid);
 
         port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_SPROM_READ,
-                                           xcvr_sdk_pid_to_spec_pid(pid));
+                                           xcvr_sdk_pid_to_spec_pid(pid),
+                                           &xcvr_event_info->xcvr_sprom);
         break;
 
     case xcvr_state_t::XCVR_SPROM_READ_ERR:
@@ -375,7 +384,8 @@ xcvr_event_notify (xcvr_event_info_t *xcvr_event_info)
 
         port_svc_get()->update_xcvr_status(port_num,
                                            port::XCVR_STATE_SPROM_READ_ERR,
-                                           port::XCVR_PID_UNKNOWN);
+                                           port::XCVR_PID_UNKNOWN,
+                                           &xcvr_event_info->xcvr_sprom);
         break;
 
     default:

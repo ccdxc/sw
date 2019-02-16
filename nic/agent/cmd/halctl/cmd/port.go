@@ -42,6 +42,13 @@ var portShowCmd = &cobra.Command{
 	Run:   portShowCmdHandler,
 }
 
+var portShowXcvrCmd = &cobra.Command{
+	Use:   "transceiver",
+	Short: "show port transceiver",
+	Long:  "show port transceiver",
+	Run:   portXcvrShowCmdHandler,
+}
+
 var portStatusShowCmd = &cobra.Command{
 	Use:   "status",
 	Short: "show port status",
@@ -66,6 +73,7 @@ var portDebugCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatusShowCmd)
+	portShowCmd.AddCommand(portShowXcvrCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
 
 	portShowCmd.Flags().Bool("yaml", false, "Output in yaml")
@@ -243,6 +251,63 @@ func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 	handlePortStatusShowCmd(cmd, nil)
 }
 
+func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	if cmd.Flags().Changed("yaml") {
+		handlePortDetailShowCmd(cmd, nil)
+		return
+	}
+
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewPortClient(c.ClientConn)
+
+	var req *halproto.PortGetRequest
+
+	if cmd != nil && cmd.Flags().Changed("port") {
+		// Get port info for specified port
+		req = &halproto.PortGetRequest{
+			KeyOrHandle: &halproto.PortKeyHandle{
+				KeyOrHandle: &halproto.PortKeyHandle_PortId{
+					PortId: portNum,
+				},
+			},
+		}
+	} else {
+		// Get all Ports
+		req = &halproto.PortGetRequest{}
+	}
+
+	portGetReqMsg := &halproto.PortGetRequestMsg{
+		Request: []*halproto.PortGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.PortGet(context.Background(), portGetReqMsg)
+	if err != nil {
+		fmt.Printf("Getting Port failed. %v\n", err)
+		return
+	}
+
+	for _, resp := range respMsg.Response {
+		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
+			continue
+		}
+		portXcvrShowResp(resp)
+	}
+}
+
 func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
@@ -310,6 +375,62 @@ func portShowHeaderPrint() {
 	fmt.Printf("%-12s%-10s%-15s%-10s%-15s%-6s%-10s%-10s%-12s%-12s%-12s%-20s%-10s\n",
 		"PortType/ID", "Speed", "MAC-Info", "FEC-Type", "AutoNegEnable", "MTU", "Pause", "Debounce", "AdminStatus", "OperStatus", "NumLinkDown", "LinkSM", "Loopback")
 	fmt.Println(hdrLine)
+}
+
+func portXcvrShowResp(resp *halproto.PortGetResponse) {
+	xcvrStatus := resp.GetStatus().GetXcvrStatus()
+
+	xcvrPortNum := xcvrStatus.GetPort()
+	xcvrState := xcvrStatus.GetState()
+	xcvrPid := xcvrStatus.GetPid()
+
+	xcvrStateStr := "-"
+	xcvrPidStr := "-"
+
+	if xcvrPortNum <= 0 {
+		return
+	}
+
+	// Strip XCVR_STATE_ from the state
+	xcvrStateStr = strings.Replace(strings.Replace(xcvrState.String(), "XCVR_STATE_", "", -1), "_", "-", -1)
+
+	// Strip XCVR_PID_ from the pid
+	xcvrPidStr = strings.Replace(strings.Replace(xcvrPid.String(), "XCVR_PID_", "", -1), "_", "-", -1)
+
+	lengthOm1 := xcvrStatus.GetLengthOm1()
+	lengthOm2 := xcvrStatus.GetLengthOm2()
+	lengthOm3 := xcvrStatus.GetLengthOm3()
+
+	if strings.Contains("QSFP", xcvrPid.String()) {
+		lengthOm3 *= 2
+	} else {
+		lengthOm1 *= 10
+		lengthOm2 *= 10
+		lengthOm3 *= 10
+	}
+
+	fmt.Printf("Port: %d\n"+
+		"State: %s\n"+
+		"PID: %s\n"+
+		"Length Single Mode Fiber: %d KM\n"+
+		"Length 62.5um OM1 Fiber:  %d Meters\n"+
+		"Length 50um   OM2 Fiber:  %d Meters\n"+
+		"Length 50um   OM3 Fiber:  %d Meters\n"+
+		"Length Copper:            %d Meters\n"+
+		"vendor name: %s\n"+
+		"vendor part number: %s\n"+
+		"vendor revision: %s\n"+
+		"vendor serial number: %s\n",
+		xcvrPortNum, xcvrStateStr, xcvrPidStr,
+		xcvrStatus.GetLengthSmfKm(),
+		lengthOm1,
+		lengthOm2,
+		lengthOm3,
+		xcvrStatus.GetLengthDac(),
+		xcvrStatus.GetVendorName(),
+		xcvrStatus.GetVendorPn(),
+		xcvrStatus.GetVendorRev(),
+		xcvrStatus.GetVendorSn())
 }
 
 func portShowOneResp(resp *halproto.PortGetResponse) {

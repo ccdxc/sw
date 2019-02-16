@@ -50,7 +50,8 @@ public:
 
     // update_xcvr_status updates port status in delphi
     error update_xcvr_status(::google::protobuf::uint32 port_id,
-                           PortXcvrState state, PortXcvrPid pid);
+                           PortXcvrState state, PortXcvrPid pid,
+                           xcvr_sprom_data_t *xcvr_sprom);
 
 private:
     delphi::SdkPtr sdk_;

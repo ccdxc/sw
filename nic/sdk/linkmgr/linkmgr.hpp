@@ -64,9 +64,13 @@ typedef struct port_args_s {
     uint32_t              debounce_time;              // Debounce time in ms
     uint32_t              mtu;                        // mtu
     uint64_t              *stats_data;                // MAC stats info
-    int                   xcvr_port_num;              // Xcvr port num
-    xcvr_state_t          xcvr_state;                 // Xcvr state
-    xcvr_pid_t            xcvr_pid;                   // Xcvr pid
+
+    // Transceiver info
+    int                   xcvr_port_num;              // xcvr port num
+    xcvr_state_t          xcvr_state;                 // xcvr state
+    xcvr_pid_t            xcvr_pid;                   // xcvr pid
+    xcvr_sprom_data_t     xcvr_sprom;                 // xcvr sprom data
+
     port_an_args_t        *port_an_args;              // an cfg based on xcvr
     port_link_sm_t        link_sm;                    // internal port state machine
     port_loopback_mode_t  loopback_mode;              // port loopback mode - MAC/PHY

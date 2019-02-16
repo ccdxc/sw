@@ -20,10 +20,65 @@ xcvr_event_notify_t g_xcvr_notify_cb;
 // global var to enable/disable transceiver checks for links
 bool xcvr_valid_enable = true;
 
+/**
+ * @brief   Transceiver data to be exported outside HAL
+ */
+static void
+xcvr_sprom_get (int port, xcvr_sprom_data_t *xcvr_sprom)
+{
+    sfp_sprom_data_t  *sfp_sprom  = NULL;
+    qsfp_sprom_data_t *qsfp_sprom = NULL;
+    uint8_t           *buffer     = NULL;
+
+    switch (xcvr_type(port)) {
+        case xcvr_type_t::XCVR_TYPE_SFP:
+            sfp_sprom = (sfp_sprom_data_t*)xcvr_cache(port);
+
+            xcvr_sprom->length_smf_km = sfp_sprom->length_smf_km;
+            xcvr_sprom->length_smf    = sfp_sprom->length_smf;
+            xcvr_sprom->length_om1    = sfp_sprom->length_om1;
+            xcvr_sprom->length_om2    = sfp_sprom->length_om2;
+            xcvr_sprom->length_om3    = sfp_sprom->length_om3;
+            xcvr_sprom->length_dac    = sfp_sprom->length_dac;
+
+            memcpy(xcvr_sprom->vendor_name, sfp_sprom->vendor_name, 16);
+            memcpy(xcvr_sprom->vendor_pn,   sfp_sprom->vendor_pn,   16);
+            memcpy(xcvr_sprom->vendor_rev,  sfp_sprom->vendor_rev,  4);
+            memcpy(xcvr_sprom->vendor_sn,   sfp_sprom->vendor_sn,   16);
+
+            break;
+
+        case xcvr_type_t::XCVR_TYPE_QSFP:
+        case xcvr_type_t::XCVR_TYPE_QSFP28:
+            buffer = xcvr_cache(port);
+            qsfp_sprom = (qsfp_sprom_data_t*)&buffer[128];
+
+            xcvr_sprom->length_smf_km = qsfp_sprom->length_smf_km;
+            xcvr_sprom->length_om1    = qsfp_sprom->length_om1;
+            xcvr_sprom->length_om2    = qsfp_sprom->length_om2;
+            xcvr_sprom->length_om3    = qsfp_sprom->length_om3;
+            xcvr_sprom->length_dac    = qsfp_sprom->length_dac;
+
+            memcpy(xcvr_sprom->vendor_name, qsfp_sprom->vendor_name, 16);
+            memcpy(xcvr_sprom->vendor_pn,   qsfp_sprom->vendor_pn,   16);
+            memcpy(xcvr_sprom->vendor_rev,  qsfp_sprom->vendor_rev,  2);
+            memcpy(xcvr_sprom->vendor_sn,   qsfp_sprom->vendor_sn,   16);
+
+            break;
+
+        default:
+            break;
+    }
+}
+
 sdk_ret_t
-xcvr_get (int port, port_args_t *port_arg) {
+xcvr_get (int port, port_args_t *port_arg)
+{
     port_arg->xcvr_state = xcvr_state(port);
-    port_arg->xcvr_pid = xcvr_pid(port);
+    port_arg->xcvr_pid   = xcvr_pid(port);
+
+    xcvr_sprom_get(port, &port_arg->xcvr_sprom);
+
     return SDK_RET_OK;
 }
 
@@ -105,7 +160,8 @@ xcvr_state_change (int port) {
 
 // Send notification for xcvr_state
 static sdk_ret_t
-xcvr_send_notification (int port) {
+xcvr_send_notification (int port)
+{
     xcvr_event_info_t xcvr_event_info;
 
     memset(&xcvr_event_info, 0, sizeof(xcvr_event_info_t));
@@ -116,11 +172,12 @@ xcvr_send_notification (int port) {
     xcvr_event_info.cable_type   = cable_type(port);
     xcvr_event_info.port_an_args = xcvr_get_an_args(port);
 
+    xcvr_sprom_get (port, &xcvr_event_info.xcvr_sprom);
+
     if (g_xcvr_notify_cb) {
         switch (xcvr_state(port)) {
         case xcvr_state_t::XCVR_SPROM_READ:
-            // TODO populate correct PID
-            xcvr_event_info.pid = xcvr_pid_t::XCVR_PID_QSFP_100G_CR4;
+            xcvr_event_info.pid = xcvr_pid(port);
             break;
 
         default:

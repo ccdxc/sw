@@ -23,8 +23,6 @@ sfp_sprom_parse (int port, uint8_t *data)
     // TODO reset when removed?
     xcvr_set_an_args(port, 0, false, 0);
 
-    SDK_TRACE_DEBUG("data[3]: %u, data[8]: %u", data[3], data[8]);
-
     switch (data[3]) {
         case 0:
             if (data[8] == 0x4) {

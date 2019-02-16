@@ -47,6 +47,8 @@ port_lb_mode_spec_to_sdk_port_lb_mode(::port::PortLoopBackMode loopback_mode);
 ::port::PortLoopBackMode
 sdk_port_lp_mode_to_port_lp_mode_spec(port_loopback_mode_t loopback_mode);
 
+void port_populate_xcvr_status_sprom(::port::PortXcvrStatus *xcvr_status,
+                                     xcvr_sprom_data_t      *xcvr_sprom);
 }    // namespace linkmgr
 
 #endif    // __LINKMGR_LINKMGR_UTILS_HPP__

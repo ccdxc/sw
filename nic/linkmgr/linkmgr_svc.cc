@@ -427,6 +427,8 @@ populate_port_get_response_spec (port_args_t *port_args,
         xcvr_status->set_state(port::PortXcvrState(port_args->xcvr_state));
         xcvr_status->set_pid(port::PortXcvrPid(port_args->xcvr_pid));
 
+        linkmgr::port_populate_xcvr_status_sprom(xcvr_status, &port_args->xcvr_sprom);
+
         // set the internal link state machine
         response->set_link_state(
             linkmgr::sdk_port_link_sm_to_port_link_sm_spec(port_args->link_sm));

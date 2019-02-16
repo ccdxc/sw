@@ -167,12 +167,26 @@ typedef struct port_an_args_s {
     uint32_t     fec_request;
 } port_an_args_t;
 
+typedef struct xcvr_sprom_data_t {
+    uint32_t  length_smf_km;
+    uint32_t  length_smf;
+    uint32_t  length_om1;
+    uint32_t  length_om2;
+    uint32_t  length_om3;
+    uint32_t  length_dac;
+    uint8_t   vendor_name[16];    // vendor name
+    uint8_t   vendor_pn[16];      // vendor part number
+    uint8_t   vendor_rev[4];      // vendor revision
+    uint8_t   vendor_sn[16];      // serial number
+} xcvr_sprom_data_t;
+
 typedef struct xcvr_event_info_s {
-    uint32_t       port_num;
-    xcvr_state_t   state;
-    xcvr_pid_t     pid;
-    cable_type_t   cable_type;
-    port_an_args_t *port_an_args;
+    uint32_t          port_num;
+    xcvr_state_t      state;
+    xcvr_pid_t        pid;
+    cable_type_t      cable_type;
+    xcvr_sprom_data_t xcvr_sprom;
+    port_an_args_t    *port_an_args;
 } xcvr_event_info_t;
 
 }    // namespace types
@@ -191,6 +205,7 @@ using sdk::types::hbm_addr_t;
 using sdk::types::q_notify_mode_t;
 using sdk::types::cable_type_t;
 using sdk::types::xcvr_event_info_t;
+using sdk::types::xcvr_sprom_data_t;
 using sdk::types::port_an_args_t;
 using sdk::types::port_link_sm_t;
 using sdk::types::port_loopback_mode_t;
