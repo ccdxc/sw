@@ -40,8 +40,14 @@ def Trigger(tc):
     #==============================================================
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    i = 0
-    while (i < 2):
+    if tc.iterators.server == 'yes':
+        i = 0
+        k = 1
+    else :
+        i = 1
+        k = 2
+
+    while ((i < 2) and (i < k)):
         j = (i + 1) % 2
         w1 = tc.w[i]
         w2 = tc.w[j]
