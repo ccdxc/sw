@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
+
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
@@ -220,9 +222,41 @@ func (n *NMD) StartManagedMode() error {
 					} else {
 						n.nicRegInterval = nicRegMaxInterval
 					}
+					if len(resp.RolloutVersion) > 0 {
+						log.Infof("NIC (mac %s) running version is incompatible. Request rollout to version %s", mac, resp.RolloutVersion)
+						// Create rollout object for version
+						snicRollout := protos.SmartNICRollout{
+							TypeMeta: api.TypeMeta{
+								Kind: "SmartNICRollout"},
+							ObjectMeta: api.ObjectMeta{
+								Name:   n.config.Spec.PrimaryMAC,
+								Tenant: n.config.Tenant,
+							},
+							Spec: protos.SmartNICRolloutSpec{
+								Ops: []*protos.SmartNICOpSpec{
+									{
+										Op:      protos.SmartNICOp_SmartNICImageDownload,
+										Version: resp.RolloutVersion,
+									},
+									{
+										Op:      protos.SmartNICOp_SmartNICPreCheckForUpgOnNextHostReboot,
+										Version: resp.RolloutVersion,
+									},
+									{
+										Op:      protos.SmartNICOp_SmartNICUpgOnNextHostReboot,
+										Version: resp.RolloutVersion,
+									},
+								},
+							}}
 
-					log.Infof("NIC waiting for manual approval of admission into cluster, mac: %s reason: %s",
-						mac, resp.Reason)
+						err := n.CreateUpdateSmartNICRollout(&snicRollout)
+						if err != nil {
+							log.Errorf("Error creating smartNICRollout during NIC Version check {%+v}", err)
+						}
+					} else {
+						log.Infof("NIC waiting for manual approval of admission into cluster, mac: %s reason: %s",
+							mac, resp.Reason)
+					}
 
 				case cmd.SmartNICStatus_ADMITTED.String():
 

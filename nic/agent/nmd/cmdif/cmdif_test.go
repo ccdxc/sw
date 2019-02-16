@@ -71,6 +71,10 @@ func (ag *mockAgent) GetPrimaryMAC() string {
 	return ag.nic.GetName()
 }
 
+func (ag *mockAgent) GetControllerIps() []string {
+	return []string{"1.1.1.1"}
+}
+
 func (ag *mockAgent) CreateSmartNIC(n *cmd.SmartNIC) error {
 	ag.Lock()
 	defer ag.Unlock()

@@ -46,6 +46,7 @@ type NmdAPI interface {
 	GenClusterKeyPair() (*keymgr.KeyPair, error)
 	GetAgentID() string
 	GetPrimaryMAC() string
+	GetControllerIps() []string
 	GetSmartNIC() (*cluster.SmartNIC, error)
 	SetSmartNIC(*cluster.SmartNIC) error
 	CreateSmartNIC(nic *cluster.SmartNIC) error

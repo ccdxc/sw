@@ -218,7 +218,7 @@ func (n *NMD) UpdateCMDClient(resolverURLs []string) error {
 		cmdResolverURL = append(cmdResolverURL, fmt.Sprintf("%s:%s", res, globals.CMDGRPCAuthPort))
 	}
 
-	resolverClient := resolver.New(&resolver.Config{Name: "NMD", Servers: cmdResolverURL})
+	n.resolverClient = resolver.New(&resolver.Config{Name: "NMD", Servers: cmdResolverURL})
 
 	// TODO Move this to resolver client at least for cmdUpdatesURL
 	// Use the first resolverURL as registration and updatesURL
@@ -226,7 +226,7 @@ func (n *NMD) UpdateCMDClient(resolverURLs []string) error {
 	cmdRegistrationURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCUnauthPort)
 	cmdUpdatesURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCAuthPort)
 
-	newCMDClient, err := cmdif.NewCmdClient(n, cmdRegistrationURL, cmdUpdatesURL, resolverClient)
+	newCMDClient, err := cmdif.NewCmdClient(n, cmdRegistrationURL, cmdUpdatesURL, n.resolverClient)
 	if err != nil {
 		log.Errorf("Failed to update CMD Client. Err: %v", err)
 		return err
@@ -258,6 +258,11 @@ func (n *NMD) GetAgentID() string {
 // GetPrimaryMAC returns primaryMac of NMD
 func (n *NMD) GetPrimaryMAC() string {
 	return n.config.Spec.PrimaryMAC
+}
+
+// GetControllerIps returns Controllers IP
+func (n *NMD) GetControllerIps() []string {
+	return n.config.Spec.Controllers
 }
 
 // NaplesConfigHandler is the REST handler for Naples Config POST operation

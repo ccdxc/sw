@@ -1,10 +1,12 @@
 package state
 
 import (
+	"context"
 	"strings"
 
 	"github.com/davecgh/go-spew/spew"
 
+	"github.com/pensando/sw/nic/agent/nmd/utils"
 	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -109,6 +111,9 @@ func (n *NMD) issueNextPendingOp() {
 			log.Errorf("Precheck returned %s", err)
 			return
 		}
+	case protos.SmartNICOp_SmartNICImageDownload:
+		servers := n.GetControllerIps()
+		utils.DownloadNaplesImage(context.Background(), servers, n.inProgressOps.Version, n.resolverClient)
 	}
 }
 
