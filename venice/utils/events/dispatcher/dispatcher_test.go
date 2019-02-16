@@ -58,6 +58,7 @@ var (
 
 // TestEventsDispatcher tests the dispatcher's general functionality (distribute and receive)
 func TestEventsDispatcher(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
@@ -159,6 +160,7 @@ func TestEventsDispatcher(t *testing.T) {
 
 // TestEventsDispatcherShutdown tests the graceful shutdown of the dispatcher.
 func TestEventsDispatcherShutdown(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
@@ -197,6 +199,7 @@ func TestEventsDispatcherShutdown(t *testing.T) {
 // TestEventsDispatcherFlush tests dispatcher's flush functionality.
 // events are flushed internally when shutdown is called.
 func TestEventsDispatcherFlush(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
@@ -269,6 +272,7 @@ func TestEventsDispatcherFlush(t *testing.T) {
 
 // TestEventsDispatcherRegisterExporter tests dispatcher's register exporter functionality
 func TestEventsDispatcherRegisterExporter(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
@@ -305,41 +309,46 @@ func TestEventsDispatcherRegisterExporter(t *testing.T) {
 
 // TestEventsDispatcherWithSingleExporter tests the dispatcher with single exporter.
 func TestEventsDispatcherWithSingleExporter(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	testEventDispatcherWithExporters(t, 1, eventsStorePath)
+	testEventDispatcherWithExporters(t, 1, eventsStorePath, logger)
 }
 
 // TestEventsDispatcherWithMultipleExporters tests the dispatcher with multiple exporters.
 func TestEventsDispatcherWithMultipleExporters(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	testEventDispatcherWithExporters(t, 10, eventsStorePath)
+	testEventDispatcherWithExporters(t, 10, eventsStorePath, logger)
 }
 
 // TestEventsDispatcherWithSingleSource tests the dispatcher with single source
 // producing events.
 func TestEventsDispatcherWithSingleSource(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	testEventsDispatcherWithSources(t, 1, eventsStorePath)
+	testEventsDispatcherWithSources(t, 1, eventsStorePath, logger)
 }
 
 // TestEventsDispatcherWithMultipleSources tests the dispatcher with multiple sources
 // producing events.
 func TestEventsDispatcherWithMultipleSources(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	testEventsDispatcherWithSources(t, 10, eventsStorePath)
+	testEventsDispatcherWithSources(t, 10, eventsStorePath, logger)
 }
 
 // TestEventsDispatcherWithMultipleSourceAndExporters tests the dispatcher with multiple
 // exporter and multiple sources.
 func TestEventsDispatcherWithMultipleSourceAndExporters(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
@@ -482,7 +491,7 @@ func TestEventsDispatcherWithMultipleSourceAndExporters(t *testing.T) {
 
 // testEventsDispatcherWithSources helper function to test dispatcher with varying
 // number of sources.
-func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePath string) {
+func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePath string, logger log.Logger) {
 	// create dispatcher
 	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
@@ -577,7 +586,7 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 
 // testEventDispatcherWithExporters helper function to test dispatcher with varying
 // number of exporters.
-func testEventDispatcherWithExporters(t *testing.T, numExporters int, eventsStorePath string) {
+func testEventDispatcherWithExporters(t *testing.T, numExporters int, eventsStorePath string, logger log.Logger) {
 	// dispatcher sends events to all the registered exporter
 	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
@@ -902,6 +911,7 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 // TestDispatcherWithDynamicExporterAndRestart tests the distribution of events to a new exporter which got added
 // right before restart. The expectation is that the new exporter should not receive any events that were previously recorded (before this exporter's registraion).
 func TestDispatcherWithDynamicExporterAndRestart(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
@@ -1002,11 +1012,12 @@ func TestDispatcherWithDynamicExporterAndRestart(t *testing.T) {
 // TestEventsDispatcherCacheExpiry ensures any update to the expired event should result in a new event.
 // Expiration is not reset during update.
 func TestEventsDispatcherCacheExpiry(t *testing.T) {
+	logger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher; all the events should be expired after a second
-	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, eventsStorePath, logger)
+	dispatcher, err := NewDispatcher(500*time.Millisecond, 10*time.Millisecond, eventsStorePath, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -1021,16 +1032,18 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
+	defer wg.Wait()
+
 	stopUpdatingEvents := make(chan struct{}, 1)
+	defer close(stopUpdatingEvents)
 
 	// send some events
 	evt := *dummyEvt
 	evtUUID := uuid.New().String() // all the consecutive duplicate events will be de-duped under this event
 	evt.ObjectMeta.UUID = evtUUID
 	creationTime, _ := types.TimestampProto(time.Now())
-	timeNow := api.Timestamp{Timestamp: *creationTime}
-	evt.ObjectMeta.CreationTime = timeNow
-	evt.ObjectMeta.ModTime = timeNow
+	timeCreated := api.Timestamp{Timestamp: *creationTime} // first event creation time
+	evt.ObjectMeta.CreationTime = timeCreated
 	go func() {
 		for {
 			select {
@@ -1040,38 +1053,58 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 			default:
 				AssertOk(t, dispatcher.Action(evt), "failed to send event")
 				time.Sleep(5 * time.Millisecond)
+				creationTime, _ := types.TimestampProto(time.Now())
+				timeNow := api.Timestamp{Timestamp: *creationTime}
+				evt.ObjectMeta.CreationTime = timeNow
 			}
 		}
 	}()
 
-	expTime := time.Now().Add(1 * time.Second) // after expiry
+	expTime := time.Now().Add(500 * time.Millisecond) // after expiry
 	prevCount := uint32(0)
 
-	testTimeoutC := time.After(time.Until(expTime.Add(1 * time.Second))) // 1s after expiry
 	for {
 		select {
-		case <-testTimeoutC:
-			t.Fatalf("test timedout waiting to exit from busy loop")
-
 		case <-time.After(time.Until(expTime.Add(100 * time.Millisecond))): // after expiry + buffer(100ms)
 			t.Logf("prevCount is %d after expiration time", prevCount)
-			evt := mockExporter.GetEventByUUID(evtUUID)
-			Assert(t, evt != nil, "new event is nil after expiry")
 
-			// it is a new event when the count is < prevCount
-			Assert(t, evt.GetCount() > 0 && evt.GetCount() < prevCount,
-				"new event should have been created after expiry instead got event count: %v", evt.GetCount())
+			// look for a new event
+			AssertEventually(t, func() (bool, interface{}) { // new exporter should receive 100 events
+				evt := mockExporter.GetEventByUUID(evtUUID)
+				if evt != nil {
+					cTime, _ := evt.CreationTime.Time()           // event creation time
+					firstEvtCreationTime, _ := timeCreated.Time() // fist event creation time
 
-			close(stopUpdatingEvents)
-			wg.Wait()
+					if cTime.Equal(firstEvtCreationTime) {
+						msg := fmt.Sprintf("new event should have been created after expiry instead got event count: %v", evt.GetCount())
+						t.Logf(msg)
+						return false, msg
+					}
+
+					// it is a new event when creation time is after the first event's creation time and prev count > event count
+					if cTime.After(firstEvtCreationTime) && (evt.GetCount() > 0 && prevCount > evt.GetCount()) {
+						t.Logf("old event is expired and new event got created, evt.Count: %v", evt.GetCount())
+						return true, nil
+					}
+
+					return false, nil
+				}
+
+				return false, "nil event"
+			}, "expected cache expiry did not happen", string("20ms"), string("5s"))
 			return
 
 		case <-time.After(15 * time.Millisecond): // after every batch interval
 			evt := mockExporter.GetEventByUUID(evtUUID)
 			Assert(t, evt != nil, "unexpected, event is nil")
-			if evt.GetCount() >= prevCount { // event updates
+
+			cTime, _ := evt.CreationTime.Time()           // event creation time
+			firstEvtCreationTime, _ := timeCreated.Time() // fist event creation time
+
+			// ensure the event is the same as the original event (first event) and check count
+			if cTime.Equal(firstEvtCreationTime) {
+				Assert(t, evt.GetCount() >= prevCount, "expected evt count: >= %v, got: %v", prevCount, evt.GetCount())
 				prevCount = evt.GetCount()
-				t.Logf("prevCount is %d when restarting the loop", prevCount)
 			}
 		}
 	}

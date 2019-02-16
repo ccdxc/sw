@@ -71,7 +71,7 @@ func NewDispatcher(dedupInterval, sendInterval time.Duration, eventsStorePath st
 		dedupInterval = defaultDedupInterval
 	}
 
-	if sendInterval <= 0 {
+	if sendInterval <= 0 { // batch interval
 		sendInterval = defaultSendInterval
 	}
 
@@ -429,7 +429,7 @@ func (d *dispatcherImpl) dedupAndBatch(hashKey string, event *evtsapi.Event) err
 	srcCache := d.getCacheByEventSource(event.GetSource())
 	if existingEvt, ok := srcCache.Get(hashKey); ok { // found, update the count of the existing event and timestamp
 		evt = existingEvt.(evtsapi.Event)
-		d.logger.Debugf("event {%s} found in cache, deduping with event {%s}", event.GetName(), evt.GetName())
+		d.logger.Debugf("event {%s} found in cache, deduping with event {%s}", event.GetUUID(), evt.GetUUID())
 
 		// update count and timestamp
 		timestamp, _ := types.TimestampProto(time.Now())

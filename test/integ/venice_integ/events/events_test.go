@@ -1291,6 +1291,7 @@ func TestEventsAlertEngine(t *testing.T) {
 	apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 	apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy2.GetObjectMeta())
 	apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy3.GetObjectMeta())
+	time.Sleep(1 * time.Second) // wait for the policies to propagate to evtsmgr so that it can stop producing alerts
 	alerts, err = apiClient.MonitoringV1().Alert().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}})
 	for _, a := range alerts {
 		apiClient.MonitoringV1().Alert().Delete(context.Background(), &a.ObjectMeta)
