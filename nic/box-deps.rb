@@ -215,7 +215,6 @@ inside "#{BASE_BUILD_DIR}/boost_1_62_0" do
   run "ldconfig"
 end
 
-
 inside BASE_BUILD_DIR do
   run "git clone https://github.com/mfontanini/libtins.git"
 end
@@ -242,6 +241,8 @@ inside "#{BASE_BUILD_DIR}/bind9" do
   run "make install"
 end
 
+#run "yum install -y zeromq-devel"
+
 run "pip install --upgrade pip"
 run "pip install --ignore-installed --upgrade #{PIP2_PACKAGES.join(" ")}"
 run "pip3 install --upgrade #{PIP3_PACKAGES.join(" ")}"
@@ -266,7 +267,7 @@ inside BASE_BUILD_DIR do
        && CFLAGS=\"$CFLAGS -fPIC\" ./configure && make && make install"
 end
 
-OPENAPP_VERSION = "8373"
+OPENAPP_VERSION = "9552"
 inside BASE_BUILD_DIR do
   run "wget https://www.snort.org/downloads/openappid/#{OPENAPP_VERSION} \
        && mv #{OPENAPP_VERSION} snort-openappid.tar.gz \
@@ -295,13 +296,17 @@ run "mkdir -p /var/log/snort && \
 
 run "yum install -y lcov"
 
+inside BASE_BUILD_DIR do
+  run "git clone https://github.com/secdev/scapy && cd scapy && python3 setup.py install"
+end
+
 run "mkdir -p #{ROOT}"
 workdir "/sw/nic"
 
 entrypoint []
 cmd "bash"
 
-tag "pensando/nic:1.32"
+tag "pensando/nic:1.33"
 
 run "rm -rf #{BASE_BUILD_DIR}" # this has no effect on size until the flatten is processed
 
