@@ -45,4 +45,3 @@ dependencies:
   venice: test
   venice: test/ci_targets/e2e
   test: test/ci_targets/e2e
-  iota: nic

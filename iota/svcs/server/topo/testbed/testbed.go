@@ -286,7 +286,8 @@ func clearSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string) error {
 	return nil
 }
 
-func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string, nativeVlan int, vlanRange string) error {
+func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string, nativeVlan int, vlanRange string,
+	speed dataswitch.PortSpeed) error {
 	for _, port := range ports {
 		if err := dataSwitch.SetTrunkMode(port); err != nil {
 			return errors.Wrap(err, "Setting switch trunk mode failed")
@@ -294,6 +295,11 @@ func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string, nativeVla
 		if err := dataSwitch.SetTrunkVlanRange(port, vlanRange); err != nil {
 			return errors.Wrap(err, "Setting Vlan trunk range failed")
 		}
+
+		if err := dataSwitch.SetSpeed(port, speed); err != nil {
+			return errors.Wrap(err, "Setting Port speed failed")
+		}
+
 		//Native vlan not supported in naples for now.
 		//if err := dataSwitch.SetNativeVlan(port, nativeVlan); err != nil {
 		//	return errors.Wrap(err, "Setting switch trunk mode failed")
@@ -303,9 +309,9 @@ func setSwitchPortConfig(dataSwitch dataswitch.Switch, ports []string, nativeVla
 	return nil
 }
 
-func checkSwitchConfig(dataSwitch dataswitch.Switch, ports []string) error {
+func checkSwitchConfig(dataSwitch dataswitch.Switch, ports []string, speed dataswitch.PortSpeed) error {
 	for _, port := range ports {
-		if buf, err := dataSwitch.CheckSwitchConfiguration(port, dataswitch.Trunk, dataswitch.Up, dataswitch.Speed100g); err != nil {
+		if buf, err := dataSwitch.CheckSwitchConfiguration(port, dataswitch.Trunk, dataswitch.Up, speed); err != nil {
 			log.Errorf("TOPO SVC | InitTestBed | Switch config check failed %s", err.Error())
 			log.Errorf("TOPO SVC | InitTestBed | Switch Output %v", buf)
 			for _, m := range strings.Split(buf, "\r\n") {
@@ -321,6 +327,17 @@ func checkSwitchConfig(dataSwitch dataswitch.Switch, ports []string) error {
 // SetUpTestbedSwitch allocates vlans based on the switch port ID
 func SetUpTestbedSwitch(ds *iota.DataSwitch, switchPortID uint32) (vlans []uint32, err error) {
 
+	getSpeed := func(speed iota.DataSwitch_Speed) dataswitch.PortSpeed {
+		switch speed {
+		case iota.DataSwitch_Speed_10G:
+			return dataswitch.Speed10g
+		case iota.DataSwitch_Speed_100G:
+			return dataswitch.Speed100g
+		case iota.DataSwitch_Speed_auto:
+			return dataswitch.SpeedAuto
+		}
+		return dataswitch.SpeedAuto
+	}
 	//ID 0 means, switch not used for now
 	if switchPortID == 0 {
 		return nil, nil
@@ -337,13 +354,14 @@ func SetUpTestbedSwitch(ds *iota.DataSwitch, switchPortID uint32) (vlans []uint3
 		vlans = append(vlans, i)
 	}
 
+	speed := getSpeed(ds.GetSpeed())
 	vlanRange := strconv.Itoa(int(switchPortID)) + "-" + strconv.Itoa(int(switchPortID+constants.VlansPerTestBed-1))
-	if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(switchPortID), vlanRange); err != nil {
+	if err := setSwitchPortConfig(n3k, ds.GetPorts(), int(switchPortID), vlanRange, speed); err != nil {
 		return nil, errors.Wrap(err, "Configuring switch failed")
 
 	}
 
-	if err := checkSwitchConfig(n3k, ds.GetPorts()); err != nil {
+	if err := checkSwitchConfig(n3k, ds.GetPorts(), speed); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | SwitchPort config check failed  %s", err.Error())
 		return nil, err
 	}

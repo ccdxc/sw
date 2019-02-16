@@ -164,7 +164,14 @@ func interfaceConfigured(exp expect.Expecter, buf *bytes.Buffer, port, mode, sta
 	sendStr := fmt.Sprintf("show interface %s brief | grep %s", port, status)
 
 	port = strings.Replace(port, "e", "Eth", -1)
-	matchInterfaceRegex := regexp.MustCompile(fmt.Sprintf("(.*)%s(.*)%s(.*)%s(.*)%s(.*)", port, mode, status, speed))
+
+	matchInterfaceRegex := &regexp.Regexp{}
+	if speed != "" {
+		matchInterfaceRegex = regexp.MustCompile(fmt.Sprintf("(.*)%s(.*)%s(.*)%s(.*)%s(.*)", port, mode, status, speed))
+	} else {
+		matchInterfaceRegex = regexp.MustCompile(fmt.Sprintf("(.*)%s(.*)%s(.*)%s(.*)", port, mode, status))
+
+	}
 
 	if err := exp.Send(sendStr + "\n"); err != nil {
 		return err
@@ -199,7 +206,13 @@ func CheckInterfaceConigured(n3k *ConnectCtx, port, mode, status, speed string, 
 		return buf.String(), err
 	}
 
-	err = interfaceConfigured(exp, buf, port, mode, status, speed, timeout)
+	//try twice
+	for i := 0; i < 2; i++ {
+	    err = interfaceConfigured(exp, buf, port, mode, status, speed, timeout)
+	    if err == nil {
+		    break
+	    }
+	}
 
 	return buf.String(), err
 

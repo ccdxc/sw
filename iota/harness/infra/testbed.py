@@ -140,6 +140,9 @@ class _Testbed:
                     msg.data_switch.ip = switch_ips[0]
                     msg.data_switch.username = switch_usernames[0]
                     msg.data_switch.password = switch_passwords[0]
+                    #This should from testsuite eventually or each testcase should be able to set
+                    #This will be done later.
+                    msg.data_switch.speed = topo_pb2.DataSwitch.Speed_auto
         return msg
 
     def __cleanup_testbed(self):

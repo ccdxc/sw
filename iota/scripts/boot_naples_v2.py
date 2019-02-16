@@ -233,7 +233,10 @@ class NaplesManagement(EntityManagement):
         if ret == 1: self.SendlineExpect("", "#")
 
     def RebootGoldFw(self):
-        self.SendlineExpect("fwupdate -s goldfw", "#")
+        self.SendlineExpect("fwupdate -s mainfwa", "#")
+        self.SendlineExpect("reboot", "capri login:")
+        self.__login()
+        self.InitForUpgrade(goldfw = True)
         self.SendlineExpect("reboot", "capri-gold login:")
         self.__login()
         time.sleep(60)
@@ -255,11 +258,14 @@ class NaplesManagement(EntityManagement):
             self.CopyIN(GlobalOptions.image, entity_dir = NAPLES_TMP_DIR)
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image), "#")
         self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#")
-        self.SendlineExpect("reboot", "")
+
+    def Reboot(self):
+        self.SendlineExpect("reboot", ["capri login:", "capri-gold login:"], timeout = 120)
+        self.__login()
 
     def InstallGoldFirmware(self):
         self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = NAPLES_TMP_DIR)
-        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.gold_fw_img), "#")
+        self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.gold_fw_img), "#", timeout = 300)
         self.SendlineExpect("/nic/tools/fwupdate -l", "#")
 
     def Connect(self):
@@ -720,8 +726,10 @@ def Main():
             #OOb is present and up install right away,
             naples.RebootGoldFw()
             naples.InstallMainFirmware()
+            #TDOD Update gold fw to latest i not matching.
             if not IsNaplesGoldFWLatest():
                 naples.InstallGoldFirmware()
+            naples.Reboot()
         else:
             naples.InitForUpgrade(goldfw = True)
             host.InitForUpgrade()

@@ -26,6 +26,37 @@ def Main(step):
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
 
+    nodes = api.GetNaplesHostnames()
+    num_retries = 60
+    while nodes:
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+        for n in nodes:
+            #hack for now, need to set date
+            api.Logger.info("Checking Tranisition phase for node : %s" % n)
+            check_state_cmd = "show mode --json"
+            common.AddPenctlCommand(req, n, check_state_cmd)
+            resp = api.Trigger(req)
+            cmd = resp.commands[0]
+            api.PrintCommandResults(cmd)
+            if cmd.exit_code != 0:
+                return api.types.status.FAILURE
+            try:
+                out = json.loads(cmd.stdout)
+            except:
+                api.Logger.error("Penctl output not in Json format {}".format(cmd.stdout))
+                return api.types.status.FAILURE
+            if out["status"]["transition-phase"] == "REBOOT_PENDING":
+                api.Logger.info("Reboot pending on node : %s" % n)
+                nodes.remove(n)
+            else:
+                api.Logger.info("Reboot not pending on node : %s" % n)
+
+        time.sleep(1)
+        num_retries = num_retries - 1
+        if num_retries == 0:
+            api.Logger.error("Reboot pending state not transitioned complete on naples")
+            return api.types.status.FAILURE
+
 
     reboot_nodes = []
     for n in api.GetNaplesHostnames():

@@ -40,16 +40,30 @@ type PortSpeed int
 const (
 	Speed100g PortSpeed = iota
 	Speed10g
+	SpeedAuto
+)
+
+type portSpeedValue int
+
+const (
+	speed100gVal portSpeedValue = iota
+	speed10gVal
+	speedAutoVal
 )
 
 func (s PortSpeed) String() string {
-	return [...]string{"100G", "10G"}[s]
+	return [...]string{"100G", "10G", "auto"}[s]
+}
+
+func (s portSpeedValue) String() string {
+	return [...]string{"100000", "10000", "auto"}[s]
 }
 
 //Switch interface
 type Switch interface {
 	SetNativeVlan(port string, vlan int) error
 	UnsetNativeVlan(port string) error
+	SetSpeed(port string, speed PortSpeed) error
 	SetTrunkVlanRange(port string, vlanRange string) error
 	UnsetTrunkVlanRange(port string, vlanRange string) error
 	SetTrunkMode(port string) error
@@ -112,6 +126,41 @@ func (sw *nexus3k) SetNativeVlan(port string, vlan int) error {
 	return err
 }
 
+func (sw *nexus3k) SetSpeed(port string, speed PortSpeed) error {
+
+	cmds := []string{
+		"speed " + (portSpeedValue(speed)).String(),
+	}
+
+	out, err := n3k.ConfigInterface(sw.ctx, port, cmds, 10*time.Second)
+	log.Println("-------------------output-------------------")
+	log.Println(out)
+	if err != nil {
+		log.Println("-------------------ERROR-------------------")
+		return err
+	}
+
+	if speed == SpeedAuto {
+		cmds = []string{
+			"negotiate auto",
+		}
+	} else {
+		cmds = []string{
+			"no negotiate auto",
+		}
+	}
+
+	out, err = n3k.ConfigInterface(sw.ctx, port, cmds, 10*time.Second)
+	log.Println("-------------------output-------------------")
+	log.Println(out)
+	if err != nil {
+		log.Println("-------------------ERROR-------------------")
+		return err
+	}
+
+	return err
+}
+
 func (sw *nexus3k) UnsetNativeVlan(port string) error {
 	cmds := []string{
 		"no switchport trunk native vlan",
@@ -161,8 +210,16 @@ func (sw *nexus3k) UnsetTrunkMode(port string) error {
 }
 
 func (sw *nexus3k) CheckSwitchConfiguration(port string, mode PortMode, status PortStatus, speed PortSpeed) (string, error) {
+
+	speedStr := ""
+	if speed == SpeedAuto {
+		speedStr = ""
+	} else {
+		speedStr = speed.String()
+	}
 	buf, err := n3k.CheckInterfaceConigured(sw.ctx, port, mode.String(), status.String(),
-		speed.String(), 5*time.Second)
+		speedStr, 5*time.Second)
+
 	return buf, err
 }
 
