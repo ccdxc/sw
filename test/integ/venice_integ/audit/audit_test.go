@@ -216,8 +216,8 @@ func TestAuditLogs(t *testing.T) {
 			return false, err.Error()
 		}
 		hits := len(resp.Hits.Hits)
-		if hits != 1 {
-			return false, fmt.Sprintf("expected [%d] hits, got [%d]", 1, hits)
+		if !(hits > 0) {
+			return false, fmt.Sprintf("expected at least 1 hit, got [%d]", hits)
 		}
 		databytes, err := resp.Hits.Hits[0].Source.MarshalJSON()
 		if err != nil {
