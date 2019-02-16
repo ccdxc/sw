@@ -1965,11 +1965,12 @@ process_hal_periodic_sess_delete (void *data)
 //------------------------------------------------------------------------------
 // determine whether a given session should be aged or not
 //------------------------------------------------------------------------------
+
 typedef tcptkle_timer_ctx_t **timer_ctx_list;
 typedef hal_handle_t        *timer_handle_list;
 
 struct session_age_cb_args_t {
-    uint32_t          *num_sessions;               
+    uint32_t          *num_sessions;
     uint64_t           ctime_ns;
     uint8_t           *num_ctx;
     uint8_t           *num_del_sess;
@@ -1980,7 +1981,6 @@ struct session_age_cb_args_t {
 bool
 session_age_cb (void *entry, void *ctxt)
 {
-    hal_ret_t               ret = HAL_RET_OK;
     session_t              *session = (session_t *)entry;
     session_age_cb_args_t  *args = (session_age_cb_args_t *)ctxt;
     SessionSpec             spec;
@@ -2033,25 +2033,10 @@ session_age_cb (void *entry, void *ctxt)
             tklectx->aged_flow = retval;
             args->tctx_list[session->fte_id][args->num_ctx[session->fte_id]++] = tklectx;
 
-            // Enqueue if we have reached the threshold or there are
-            // no more to process
-            if (args->num_ctx[session->fte_id] == HAL_MAX_SESSION_PER_ENQ) {
-
-                ret = fte::fte_softq_enqueue(session->fte_id,
-                                    process_hal_periodic_tkle,
-                                    (void *)args->tctx_list[session->fte_id]);
-                // If the tickle is successfully queued then
-                // return otherwise go ahead and cleanup
-                if (ret == HAL_RET_OK) {
-                    HAL_TRACE_DEBUG("Successfully enqueued TCP tickle {}",
-                                                   session->iflow->config.key);
-                }
-                args->tctx_list[session->fte_id] = (tcptkle_timer_ctx_t **)HAL_CALLOC(
-                          HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE,
-                          sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
-                SDK_ASSERT(args->tctx_list[session->fte_id] != NULL);
-                args->num_ctx[session->fte_id] = 0;
-            }
+            // Stop processing if we have reached the maximum limit per FTE
+            // We will process the rest in the next round
+            if (args->num_ctx[session->fte_id] == HAL_SESSIONS_TO_SCAN_PER_INTVL)
+                return true;
         } else {
             /* 
              * Dont delete flows if one flow ages and other remains
@@ -2068,22 +2053,11 @@ session_age_cb (void *entry, void *ctxt)
             args->session_list[session->fte_id][args->num_del_sess[session->fte_id]++] = \
                                                                  session->hal_handle;
 
-            if (args->num_del_sess[session->fte_id] == HAL_MAX_SESSION_PER_ENQ) {
-                ret = fte::fte_softq_enqueue(session->fte_id,
-                                    process_hal_periodic_sess_delete,
-                                    (void *)args->session_list[session->fte_id]);
-                SDK_ASSERT(ret == HAL_RET_OK);
-#if SESSION_AGE_DEBUG
-                HAL_TRACE_DEBUG("Enqueued session_list: {:p}",
-                                (void *)args->session_list[session->fte_id]);
-#endif
+            // Stop processing if we have reached the maximum limit per FTE
+            // We will process the rest in the next round
+            if (args->num_del_sess[session->fte_id] == HAL_SESSIONS_TO_SCAN_PER_INTVL) 
+                return true;
 
-                args->session_list[session->fte_id] = (hal_handle_t *)HAL_CALLOC(
-                                 HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
-                                sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
-                SDK_ASSERT(args->session_list[session->fte_id] != NULL);
-                args->num_del_sess[session->fte_id] = 0;
-            }
             SDK_ATOMIC_INC_UINT64(&g_session_stats.aged_sessions, 1); 
         }
     }
@@ -2132,14 +2106,13 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
     for (fte_id=0; fte_id<HAL_MAX_DATA_THREAD; fte_id++) {
         args.tctx_list[fte_id] = (tcptkle_timer_ctx_t **)HAL_CALLOC(
                           HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE,
-                          sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
+                          sizeof(tcptkle_timer_ctx_t*)*HAL_SESSIONS_TO_SCAN_PER_INTVL);
         SDK_ASSERT(args.tctx_list[fte_id] != NULL);
 
         args.session_list[fte_id] = (hal_handle_t *)HAL_CALLOC(
                                  HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
-                                sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
+                                sizeof(hal_handle_t)*HAL_SESSIONS_TO_SCAN_PER_INTVL);
         SDK_ASSERT(args.session_list[fte_id] != NULL);
-
         args.num_ctx[fte_id] = 0;
         args.num_del_sess[fte_id] = 0;
     }
@@ -2163,30 +2136,36 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     //Check if there are pending requests that need to be queued to FTE threads
     for (fte_id=0; fte_id<HAL_MAX_DATA_THREAD; fte_id++) {
-        if (args.num_ctx[fte_id]) {
-
-            HAL_TRACE_DEBUG("Enqueuing tickles for fte: {}", fte_id);
+        uint16_t ctxt_num = 0, del_sess_num = 0;
+        while (args.num_ctx[fte_id]) {
+            // Enqueue HAL_MAX_SESSION_PER_ENQ tickles at a time!!
+            timer_ctx_list tctx_list = (tcptkle_timer_ctx_t **)HAL_CALLOC(
+                                          HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE,
+                                          sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
+            SDK_ASSERT(tctx_list != NULL);
+            for (uint8_t idx=0; (idx < HAL_MAX_SESSION_PER_ENQ && idx < args.num_ctx[fte_id]); 
+                 idx++, ctxt_num++, args.num_ctx[fte_id]--) {
+                tctx_list[idx] = args.tctx_list[fte_id][ctxt_num];
+            }
             ret = fte::fte_softq_enqueue(fte_id,
-                                  process_hal_periodic_tkle,
-                                  (void *)args.tctx_list[fte_id]);
+                                    process_hal_periodic_tkle,
+                                    (void *)tctx_list);
             SDK_ASSERT(ret == HAL_RET_OK);
-        } else {
-            // Nothing was queued - so we can cleanup the alloced memory
-            HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE, args.tctx_list[fte_id]); 
-        } 
+        }
 
-        if (args.num_del_sess[fte_id]) {
-            // We should never end up in a case where num_del_sess is set but
-            // session list is null
-            SDK_ASSERT(args.session_list[fte_id] != NULL);
+        while (args.num_del_sess[fte_id]) {
+            timer_handle_list session_list = (hal_handle_t *)HAL_CALLOC(
+                                             HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
+                                             sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
+            SDK_ASSERT(session_list != NULL);
+            for (uint8_t idx=0; (idx < HAL_MAX_SESSION_PER_ENQ && idx < args.num_del_sess[fte_id]);
+                 idx++, del_sess_num++, args.num_del_sess[fte_id]--) {
+                session_list[idx] = args.session_list[fte_id][del_sess_num];
+            }
             ret = fte::fte_softq_enqueue(fte_id,
                                   process_hal_periodic_sess_delete,
-                                  (void *)args.session_list[fte_id]);
+                                  (void *)session_list);
             SDK_ASSERT(ret == HAL_RET_OK);
-
-        } else {
-            // Nothing was queued - so we can cleanup the alloced memory
-            HAL_FREE(HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE, args.session_list[fte_id]);
         }
     }
 

@@ -83,3 +83,8 @@ testcases:
         testcase: testcases.aging.udp_single_flow_aging
         args    :
            type: local_only
+
+    -   name    : UDPFlood
+        testcase: testcases.aging.udp_flood
+        args    :
+           type: local_only
