@@ -44,8 +44,9 @@ func NewHTTPServer(listenURL string, broker *broker.Broker, dbg *debug.Debug) (*
 
 	// tsdb apis
 	r.HandleFunc("/write", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.writeReqHandler))).Methods("POST")
-	r.HandleFunc("/create", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.createdbReqHandler))).Methods("POST")
-	r.HandleFunc("/delete", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.deletedbReqHandler))).Methods("POST")
+	r.HandleFunc("/db", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.createdbReqHandler))).Methods("POST")
+	r.HandleFunc("/db", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.readdbReqHandler))).Methods("GET")
+	r.HandleFunc("/db", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.deletedbReqHandler))).Methods("DELETE")
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("GET")
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("POST")
 	r.HandleFunc("/cmd", hsrv.showReqHandler).Methods("GET")
@@ -103,6 +104,19 @@ func (hsrv *HTTPServer) createdbReqHandler(r *http.Request) (interface{}, error)
 	}
 
 	return nil, nil
+}
+
+// readdbReqHandler reads all databases
+func (hsrv *HTTPServer) readdbReqHandler(r *http.Request) (interface{}, error) {
+
+	// create db
+	dbInfo, err := hsrv.broker.ReadDatabases(context.Background())
+	if err != nil {
+		log.Errorf("Error reading databases. Err: %v", err)
+		return nil, err
+	}
+
+	return dbInfo, nil
 }
 
 // deletedbReqHandler deletes a database

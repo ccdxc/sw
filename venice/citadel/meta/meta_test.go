@@ -43,6 +43,9 @@ func (f *fakeDataNode) CreateDatabase(ctx context.Context, req *tproto.DatabaseR
 func (f *fakeDataNode) DeleteDatabase(ctx context.Context, req *tproto.DatabaseReq) (*tproto.StatusResp, error) {
 	return &tproto.StatusResp{}, nil
 }
+func (f *fakeDataNode) ReadDatabases(ctx context.Context, req *tproto.DatabaseReq) (*tproto.StatusResp, error) {
+	return &tproto.StatusResp{}, nil
+}
 
 func (f *fakeDataNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*tproto.StatusResp, error) {
 	return &tproto.StatusResp{}, nil
@@ -152,7 +155,7 @@ func TestMetaBasic(t *testing.T) {
 
 	// verify all three nodes got the metadata update
 	AssertEventually(t, func() (bool, interface{}) {
-		return ((len(w1.GetCluster(meta.ClusterTypeTstore).NodeMap) == 3) &&
+		return (len(w1.GetCluster(meta.ClusterTypeTstore).NodeMap) == 3) &&
 			(len(w2.GetCluster(meta.ClusterTypeTstore).NodeMap) == 3) &&
 			(len(w3.GetCluster(meta.ClusterTypeTstore).NodeMap) == 3) &&
 			(len(w1.GetCluster(meta.ClusterTypeTstore).ShardMap.Shards) == meta.DefaultShardCount) &&
@@ -161,7 +164,7 @@ func TestMetaBasic(t *testing.T) {
 			(w1.GetCluster(meta.ClusterTypeTstore).ShardMap.Shards[0].NumReplicas == meta.DefaultReplicaCount) &&
 			(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["1111"].NumShards >= (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)) &&
 			(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["2222"].NumShards >= (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)) &&
-			(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["3333"].NumShards >= (meta.DefaultShardCount * meta.DefaultReplicaCount / 3))), w1.GetCluster(meta.ClusterTypeTstore)
+			(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["3333"].NumShards >= (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)), w1.GetCluster(meta.ClusterTypeTstore)
 	}, "nodes did not get cluster update", "100ms", "30s")
 
 	// verify that shardmap is setup correctly

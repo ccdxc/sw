@@ -23,7 +23,7 @@ func createDatabase(url, database string) error {
 	hostURLs := strings.Split(url, ",")
 	for _, hurl := range hostURLs {
 		var resp string
-		requrl := hurl + fmt.Sprintf("/create?db=%s", database)
+		requrl := hurl + fmt.Sprintf("/db?db=%s", database)
 		err = netutils.HTTPPost(requrl, "", &resp)
 		if err == nil {
 			return nil

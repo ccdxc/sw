@@ -116,6 +116,12 @@ func (ts *Tstore) CreateDatabase(database string, spec *meta.RetentionPolicySpec
 	return nil
 }
 
+// ReadDatabases reads all databases
+func (ts *Tstore) ReadDatabases() []meta.DatabaseInfo {
+	// read databases
+	return ts.metaClient.Databases()
+}
+
 // DeleteDatabase deletes the database
 func (ts *Tstore) DeleteDatabase(database string) error {
 	// delete it from tsdb

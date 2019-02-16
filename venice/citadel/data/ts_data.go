@@ -66,6 +66,29 @@ func (dn *DNode) DeleteDatabase(ctx context.Context, req *tproto.DatabaseReq) (*
 	return &resp, err
 }
 
+// ReadDatabases reads all databases
+func (dn *DNode) ReadDatabases(ctx context.Context, req *tproto.DatabaseReq) (*tproto.StatusResp, error) {
+	var resp tproto.StatusResp
+
+	log.Infof("%s Received read database req %+v", dn.nodeUUID, req)
+
+	// find the shard from shard id
+	val, ok := dn.tshards.Load(req.ReplicaID)
+	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
+		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		return &resp, errors.New("Shard not found")
+	}
+	shard := val.(*TshardState)
+
+	dbinfo := shard.store.ReadDatabases()
+	data, err := json.Marshal(dbinfo)
+	if err != nil {
+		return &resp, err
+	}
+	resp.Status = string(data)
+	return &resp, err
+}
+
 // PointsWrite writes points to data store
 // FIXME: this needs to replicate the data to secondary nodes
 func (dn *DNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*tproto.StatusResp, error) {

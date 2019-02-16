@@ -4,6 +4,7 @@ package data
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -14,6 +15,8 @@ import (
 	_ "github.com/influxdata/influxdb/tsdb/index"
 
 	"sync"
+
+	influxmeta "github.com/influxdata/influxdb/services/meta"
 
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
@@ -99,6 +102,27 @@ func TestDataNodeBasic(t *testing.T) {
 
 		_, err := dnclient.CreateDatabase(context.Background(), &req)
 		AssertOk(t, err, "Error making the create database call")
+
+		var dbInfo []*influxmeta.DatabaseInfo
+		AssertEventually(t, func() (bool, interface{}) {
+			resp, err := dnclient.ReadDatabases(context.Background(), &req)
+			if err != nil {
+				return false, err
+			}
+			if err = json.Unmarshal([]byte(resp.Status), &dbInfo); err != nil {
+				return false, err
+			}
+			if len(dbInfo) != 1 {
+				return false, dbInfo
+			}
+
+			for _, db := range dbInfo {
+				if db.Name != "db0" {
+					return false, db
+				}
+			}
+			return true, nil
+		}, "failed to read db")
 	}
 
 	// write some points

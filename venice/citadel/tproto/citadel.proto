@@ -161,6 +161,7 @@ service DataNode {
     // TSDB messages
     rpc CreateDatabase (DatabaseReq) returns (StatusResp) {};
     rpc DeleteDatabase (DatabaseReq) returns (StatusResp) {};
+    rpc ReadDatabases (DatabaseReq) returns (StatusResp) {};
     rpc PointsReplicate (PointsWriteReq) returns (StatusResp) {};
     rpc PointsWrite (PointsWriteReq) returns (StatusResp) {};
     rpc ExecuteQuery(QueryReq) returns (QueryResp) {};

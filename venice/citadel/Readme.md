@@ -122,7 +122,10 @@ Here are some curl commands that can be used to access the tsdb cluster:
 
 ```
 # Create database
-curl -i -XPOST 'http://localhost:7086/create?db=mydb'
+curl -i -XPOST 'http://localhost:7086/db?db=mydb'
+
+# Read databases
+curl -s 'http://localhost:7086/db'
 
 # write points
 curl -i -XPOST 'http://localhost:7086/write?db=mydb' --data-binary 'cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000'

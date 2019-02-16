@@ -47,6 +47,14 @@ func TestTstoreBasic(t *testing.T) {
 	err = ts.CreateDatabase("db1", nil)
 	AssertOk(t, err, "Error creatung the database")
 
+	// read db
+	dbs := ts.ReadDatabases()
+	Assert(t, len(dbs) == 1, "invalid database", dbs)
+
+	for _, db := range dbs {
+		Assert(t, db.Name == "db1", "invalid db", db)
+	}
+
 	// parse some points
 	data := "cpu,host=serverB,svc=nginx value1=11,value2=12 10\n" +
 		"cpu,host=serverC,svc=nginx value1=21,value2=22  20\n"

@@ -5,8 +5,10 @@ package broker
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -14,6 +16,7 @@ import (
 
 	"github.com/influxdata/influxdb/models"
 	"github.com/influxdata/influxdb/query"
+	influxmeta "github.com/influxdata/influxdb/services/meta"
 	"github.com/influxdata/influxql"
 
 	"github.com/pensando/sw/venice/citadel/meta"
@@ -137,6 +140,68 @@ func (br *Broker) DeleteDatabase(ctx context.Context, database string) error {
 	}
 
 	return nil
+}
+
+// readDatabaseInReplica reads databases in replica
+func (br *Broker) readDatabaseInReplica(ctx context.Context, repl *meta.Replica) ([]*influxmeta.DatabaseInfo, error) {
+	var dbInfo []*influxmeta.DatabaseInfo
+
+	// retry read if there are transient errors
+	for i := 0; i < numBrokerRetries; i++ {
+
+		if ctx.Err() != nil {
+			return dbInfo, fmt.Errorf("context cancelled %s", ctx.Err())
+		}
+
+		// get the rpc client for the node
+		rpcClient, cerr := br.getRPCClient(repl.NodeUUID, meta.ClusterTypeTstore)
+		if cerr != nil {
+			return dbInfo, cerr
+		}
+
+		// req message
+		req := tproto.DatabaseReq{
+			ClusterType: meta.ClusterTypeTstore,
+			ReplicaID:   repl.ReplicaID,
+			ShardID:     repl.ShardID,
+		}
+
+		// read database call
+		dnclient := tproto.NewDataNodeClient(rpcClient)
+		resp, err := dnclient.ReadDatabases(ctx, &req)
+		if err == nil {
+			if err = json.Unmarshal([]byte(resp.Status), &dbInfo); err == nil {
+				return dbInfo, nil
+			}
+		}
+
+		log.Warnf("failed reading databases on node %s. Err: %v. Retrying..", repl.NodeUUID, err)
+		time.Sleep(brokerRetryDelay)
+	}
+
+	return dbInfo, fmt.Errorf("failed reading databases")
+}
+
+// ReadDatabases reads all databases
+func (br *Broker) ReadDatabases(ctx context.Context) ([]*influxmeta.DatabaseInfo, error) {
+
+	// get cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return nil, errors.New("shard map is empty")
+	}
+
+	// select random shard
+	shard := cl.ShardMap.Shards[rand.Int63n(int64(len(cl.ShardMap.Shards)))]
+	// read from primary
+	repl := shard.Replicas[shard.PrimaryReplica]
+	log.Infof("reading database from shard %d primary replica %d", repl.ShardID, repl.ReplicaID)
+	dbInfo, err := br.readDatabaseInReplica(ctx, repl)
+	if err != nil {
+		log.Errorf("Error reading databases from replica %v. Err: %v", repl, err)
+		return nil, err
+	}
+	return dbInfo, nil
 }
 
 // WritePoints writes points to data nodes

@@ -90,6 +90,25 @@ func TestBrokerTstoreBasic(t *testing.T) {
 	err = brokers[0].CreateDatabase(context.Background(), "db0")
 	AssertOk(t, err, "Error creating database")
 
+	// read databases
+	AssertEventually(t, func() (bool, interface{}) {
+		dbList, err := brokers[0].ReadDatabases(context.Background())
+		if err != nil {
+			return false, err
+		}
+
+		if len(dbList) != 1 {
+			return false, fmt.Errorf("invalid number of dbs, %+v", dbList)
+		}
+		for _, db := range dbList {
+			if db.Name != "db0" {
+				return false, fmt.Errorf("invalid db name, %+v", db)
+			}
+		}
+
+		return true, nil
+	}, "Error reading database")
+
 	schema := map[string]map[string]bool{}
 
 	// write some points
