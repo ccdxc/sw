@@ -18,8 +18,90 @@
 #include "platform/src/app/pciemgrd/src/pciemgrd_impl.hpp"
 
 /*****************************************************************
+ * manage data file paths
+ */
+
+static const char *rundir = "/var/run";
+static const char *savedir = "/update";
+
+static const char *pcieport_runfile  = "pcieport_data";
+static const char *pciemgr_runfile   = "pciemgr_data";
+
+static const char *pcieport_savefile = "pcieport_upgdata";
+static const char *pciemgr_savefile  = "pciemgr_upgdata";
+
+static char *
+file_path(const char *dir, const char *file, char *path, const size_t pathsz)
+{
+#ifdef __aarch64__
+    snprintf(path, pathsz, "%s/%s", dir, file);
+#else
+    snprintf(path, pathsz, "%s/.%s", getenv("HOME"), file);
+#endif
+    return path;
+}
+
+static char *
+run_path(const char *file)
+{
+    static char path[PATH_MAX];
+    return file_path(rundir, file, path, sizeof(path));
+}
+
+static char *
+save_path(const char *file)
+{
+    static char path[PATH_MAX];
+    return file_path(savedir, file, path, sizeof(path));
+}
+
+static char *
+pcieport_runpath(void)
+{
+    return run_path(pcieport_runfile);
+}
+
+static char *
+pcieport_savepath(void)
+{
+    return save_path(pcieport_savefile);
+}
+
+static char *
+pciemgr_runpath(void)
+{
+    return run_path(pciemgr_runfile);
+}
+
+static char *
+pciemgr_savepath(void)
+{
+    return save_path(pciemgr_savefile);
+}
+
+/*****************************************************************
  * file ops
  */
+
+static int
+readfile(const char *file, void *buf, const size_t bufsz)
+{
+    int n;
+    FILE *fp = fopen(file, "r");
+    if (fp == NULL) {
+        goto error_out;
+    }
+    n = fread(buf, 1, bufsz, fp);
+    if (ferror(fp)) {
+        goto error_out;
+    }
+    (void)fclose(fp);
+    return n;
+
+ error_out:
+    if (fp) (void)fclose(fp);
+    return -1;
+}
 
 static int
 writefile(const char *file, const void *buf, const size_t bufsz)
@@ -91,13 +173,7 @@ copyfile(const char *srcfile, const char *dstfile)
 static int
 pcieport_state_save(void)
 {
-#ifdef __aarch64__
-    const char *path = "/data/pcieport_data";
-#else
-    char path[PATH_MAX];
-    const char *hm = getenv("HOME");
-    snprintf(path, sizeof(path), "%s/.pcieport_data.sav", hm ? hm : "");
-#endif
+    const char *path = pcieport_savepath();
 
     // roundup to pagesize because we are going to mmap this file
     const int infosz = roundup(sizeof(pcieport_info_t), getpagesize());
@@ -106,6 +182,7 @@ pcieport_state_save(void)
         pciesys_logerror("pcieport_state_save: pcieport_info_get failed\n");
         goto error_out;
     }
+
     if (writefile(path, pi, infosz) != infosz) {
         pciesys_logerror("pcieport_state_save: writefile %s sz %d: %s\n",
                          path, infosz, strerror(errno));
@@ -121,13 +198,7 @@ pcieport_state_save(void)
 static int
 pciemgr_state_save(void)
 {
-#ifdef __aarch64__
-    const char *path = "/data/pciemgr_data";
-#else
-    char path[PATH_MAX];
-    const char *hm = getenv("HOME");
-    snprintf(path, sizeof(path), "%s/.pciemgr_data.sav", hm ? hm : "");
-#endif
+    const char *path = pciemgr_savepath();
 
     // roundup to pagesize because we are going to mmap this file
     const int shmemsz = roundup(sizeof(pciehw_shmem_t), getpagesize());
@@ -159,6 +230,7 @@ upgrade_state_save(void)
         return -1;
     }
     if (pciemgr_state_save() < 0) {
+        (void)unlink(pcieport_savepath());
         return -1;
     }
     pciesys_loginfo("upgrade_state_save: completed successfully\n");
@@ -196,16 +268,9 @@ file_state_restore(const char *srcfile, const char *dstfile, const int filesz)
 static int
 pcieport_state_restore(void)
 {
-#ifdef __aarch64__
-    const char *srcfile = "/data/pcieport_data";
-    const char *dstfile = "/var/run/pcieport_data";
-#else
-    char srcfile[PATH_MAX];
-    char dstfile[PATH_MAX];
-    static char *hm = getenv("HOME");
-    snprintf(srcfile, sizeof(srcfile), "%s/.pcieport_data.sav", hm ? hm : "");
-    snprintf(dstfile, sizeof(dstfile), "%s/.pcieport_data", hm ? hm : "");
-#endif
+    const char *srcfile = pcieport_savepath();
+    const char *dstfile = pcieport_runpath();
+
     // roundup to pagesize because we are going to mmap this file
     const int infosz = roundup(sizeof(pcieport_info_t), getpagesize());
 
@@ -215,16 +280,9 @@ pcieport_state_restore(void)
 static int
 pciemgr_state_restore(void)
 {
-#ifdef __aarch64__
-    const char *srcfile = "/data/pciemgr_data";
-    const char *dstfile = "/var/run/pciemgr_data";
-#else
-    char srcfile[PATH_MAX];
-    char dstfile[PATH_MAX];
-    const char *hm = getenv("HOME");
-    snprintf(srcfile, sizeof(srcfile), "%s/.pciemgr_data.sav", hm ? hm : "");
-    snprintf(dstfile, sizeof(dstfile), "%s/.pciemgr_data", hm ? hm : "");
-#endif
+    const char *srcfile = pciemgr_savepath();
+    const char *dstfile = pciemgr_runpath();
+
     // roundup to pagesize because we are going to mmap this file
     const int shmemsz = roundup(sizeof(pciehw_shmem_t), getpagesize());
 
@@ -246,6 +304,18 @@ upgrade_state_restore(void)
     if (pciemgr_state_restore() < 0) {
         return -1;
     }
+    (void)unlink(pcieport_savepath());
+    (void)unlink(pciemgr_savepath());
     pciesys_loginfo("upgrade_state_restore: completed successfully\n");
     return 0;
+}
+
+int
+upgrade_in_progress(void)
+{
+    // check for existence of the saved files
+    // XXX could also check sizes
+    return (access(pcieport_savepath(), R_OK) == 0 &&
+            access(pciemgr_savepath(), R_OK) == 0);
+    if (0) readfile(NULL, NULL, 0);
 }

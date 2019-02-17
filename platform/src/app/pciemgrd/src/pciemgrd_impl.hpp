@@ -27,5 +27,6 @@ int intr_init(void);
 
 int upgrade_state_save(void);
 int upgrade_state_restore(void);
+int upgrade_in_progress(void);
 
 #endif /* __PCIEMGRD_IMPL_H__ */

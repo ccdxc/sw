@@ -307,6 +307,13 @@ main(int argc, char *argv[])
     p->initmode = FORCE_INIT;
 #endif
 
+#ifndef PCIEMGRD_GOLD
+    if (upgrade_in_progress()) {
+        p->restart = 1;
+        p->initmode = INHERIT_OK;
+    }
+#endif
+
     /*
      * On "real" ARM systems the upstream port bridge
      * is in hw and our first virtual device is bus 0 at 00:00.0.

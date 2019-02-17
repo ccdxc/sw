@@ -553,13 +553,11 @@ cmd_quit(int argc, char *argv[])
     cmd_exit(argc, argv);
 }
 
-#ifndef PCIEMGRD_GOLD
 static void
 cmd_upgrade_save(int argc, char *argv[])
 {
     upgrade_state_save();
 }
-#endif /* PCIEMGRD_GOLD */
 
 static void cmd_help(int argc, char *argv[]);
 static void cmd_dbg(int argc, char *argv[]);
@@ -589,9 +587,7 @@ static cmd_t cmdtab[] = {
     CMDENT(dbg, "invoke debug interface", ""),
     CMDENT(exit, "exit program", ""),
     CMDENT(quit, "exit program", ""),
-#ifndef PCIEMGRD_GOLD
     CMDENT(upgrade_save, "upgrade save state", ""),
-#endif /* PCIEMGRD_GOLD */
     { NULL, NULL }
 };
 
