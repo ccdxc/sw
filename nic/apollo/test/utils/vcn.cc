@@ -22,9 +22,9 @@ vcn_util::create(oci_vcn_id_t vcn_id, std::string pfxstr,
 
     SDK_ASSERT(str2ipv4pfx((char *)pfxstr.c_str(), &ip_pfx) == 0);
     memset(&oci_vcn, 0, sizeof(oci_vcn));
-    oci_vcn.type = vcn_type;
+    oci_vcn.type   = vcn_type;
     oci_vcn.key.id = vcn_id;
-    oci_vcn.pfx = ip_pfx;
+    oci_vcn.pfx    = ip_pfx;
     return (oci_vcn_create(&oci_vcn));
 }
 
@@ -36,6 +36,7 @@ vcn_util::many_create(uint32_t num_vcn, std::string pfxstr,
     SDK_ASSERT(num_vcn <= 1024);
 
     for (uint32_t idx = 1; idx <= num_vcn; idx++)
+        // TODO increment prefix, v4 and v6
         if ((rv = create(idx, pfxstr, vcn_type)) != sdk::SDK_RET_OK)
             return rv;
 

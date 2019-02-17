@@ -30,7 +30,7 @@ protected:
     virtual void TearDown(void) {}
 
     /// called at the beginning of all test cases in this class
-    static void SetUpTestCase(char *cfgfile, bool enable_fte = false);
+    static void SetUpTestCase(const char *cfgfile, bool enable_fte = false);
 
     /// called at the end of all test cases in this class
     static void TearDownTestCase(void);
