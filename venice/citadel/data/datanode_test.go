@@ -1536,39 +1536,58 @@ func TestAggQuery(t *testing.T) {
 	}
 
 	// execute some query
-	cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
-	for _, shard := range cl.ShardMap.Shards {
-		// walk all replicas in the shard
-		for _, repl := range shard.Replicas {
-			dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
-			AssertOk(t, rerr, "Error getting datanode client")
+	AssertEventually(t, func() (bool, interface{}) {
+		cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
+		for _, shard := range cl.ShardMap.Shards {
+			// walk all replicas in the shard
+			for _, repl := range shard.Replicas {
+				dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
+				if rerr != nil {
+					return false, rerr
+				}
 
-			req := tproto.QueryReq{
-				ClusterType: meta.ClusterTypeTstore,
-				ReplicaID:   repl.ReplicaID,
-				ShardID:     repl.ShardID,
-				Database:    "db0",
-				TxnID:       uint64(repl.ReplicaID + 1),
-				Query:       "SELECT * FROM cpu",
-			}
+				req := tproto.QueryReq{
+					ClusterType: meta.ClusterTypeTstore,
+					ReplicaID:   repl.ReplicaID,
+					ShardID:     repl.ShardID,
+					Database:    "db0",
+					TxnID:       uint64(repl.ReplicaID + 1),
+					Query:       "SELECT * FROM cpu",
+				}
 
-			resp, err := dnclient.ExecuteQuery(context.Background(), &req)
-			AssertOk(t, err, "Error executing query")
+				resp, err := dnclient.ExecuteQuery(context.Background(), &req)
+				if err != nil {
+					return false, err
+				}
 
-			Assert(t, len(resp.Result) == 1, "invalid number of results", resp.Result)
-			for _, rs := range resp.Result {
-				rslt := query.Result{}
-				err := rslt.UnmarshalJSON(rs.Data)
-				AssertOk(t, err, "failed to unmarshal query response")
+				if len(resp.Result) != 1 {
+					return false, fmt.Errorf("invalid number of results %+v", resp.Result)
+				}
 
-				Assert(t, len(rslt.Series) == 1, "invalid number of series", rslt.Series)
-				for _, s := range rslt.Series {
-					Assert(t, len(s.Columns) == 5, "invalid number of columns", s.Columns)
-					Assert(t, len(s.Values) == 1, "invalid number of values", s.Values)
+				for _, rs := range resp.Result {
+					rslt := query.Result{}
+					if err := rslt.UnmarshalJSON(rs.Data); err != nil {
+						return false, fmt.Errorf("failed to unmarshal query response %+v", err)
+					}
+
+					if len(rslt.Series) != 1 {
+						return false, fmt.Errorf("invalid number of series %+v", rslt.Series)
+					}
+
+					for _, s := range rslt.Series {
+						if len(s.Columns) != 5 {
+							return false, fmt.Errorf("invalid number of columns %+v", s.Columns)
+						}
+
+						if len(s.Values) != 1 {
+							return false, fmt.Errorf("invalid number of values %+v", s.Values)
+						}
+					}
 				}
 			}
 		}
-	}
+		return true, nil
+	}, "failed to query in replicas")
 
 	// execute aggregated query
 	cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
