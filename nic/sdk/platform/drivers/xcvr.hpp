@@ -5,7 +5,7 @@
 
 #include <cstring>
 #include "include/sdk/types.hpp"
-#include "nic/sdk/linkmgr/linkmgr.hpp"
+#include "linkmgr/linkmgr.hpp"
 
 namespace sdk {
 namespace platform {

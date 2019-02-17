@@ -1,9 +1,9 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 #include <cstdint>
-#include "nic/sdk/include/sdk/types.hpp"
-#include "nic/sdk/lib/catalog/catalog.hpp"
-#include "nic/sdk/include/sdk/asic/capri/cap_mx_api.h"
+#include "include/sdk/types.hpp"
+#include "lib/catalog/catalog.hpp"
+#include "include/sdk/asic/capri/cap_mx_api.h"
 #include "third-party/asic/capri/model/cap_mx/cap_mx_csr.h"
 #include "third-party/asic/capri/model/cap_bx/cap_bx_csr.h"
 #include "cap_blk_reg_model.h"

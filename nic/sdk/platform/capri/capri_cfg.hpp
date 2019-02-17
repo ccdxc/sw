@@ -3,9 +3,9 @@
 #ifndef __CAPRI_CFG_HPP__
 #define __CAPRI_CFG_HPP__
 
-#include "nic/sdk/asic/asic.hpp"
-#include "nic/sdk/lib/catalog/catalog.hpp"
-#include "nic/sdk/platform/utils/mpartition.hpp"
+#include "asic/asic.hpp"
+#include "lib/catalog/catalog.hpp"
+#include "platform/utils/mpartition.hpp"
 #include "lib/bm_allocator/bm_allocator.hpp"
 #include "p4/loader/loader.hpp"
 

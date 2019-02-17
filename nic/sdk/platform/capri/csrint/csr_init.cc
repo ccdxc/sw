@@ -8,7 +8,7 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#include "nic/sdk/platform/capri/csr/asicrw_if.hpp"
+#include "platform/capri/csr/asicrw_if.hpp"
 #include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 

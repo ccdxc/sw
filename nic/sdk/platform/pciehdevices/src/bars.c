@@ -10,9 +10,9 @@
 #include <sys/param.h>
 
 #include "platform/include/common/pci_ids.h"
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/intrutils/include/intrutils.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/misc/include/misc.h"
+#include "platform/intrutils/include/intrutils.h"
+#include "platform/pciemgrutils/include/pciemgrutils.h"
 
 #include "pciehdevices.h"
 #include "pciehdevices_impl.h"

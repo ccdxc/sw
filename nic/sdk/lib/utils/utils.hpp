@@ -3,7 +3,7 @@
 #ifndef __SDK_UTILS_HPP__
 #define __SDK_UTILS_HPP__
 
-#include "nic/sdk/lib/catalog/catalog.hpp"
+#include "lib/catalog/catalog.hpp"
 
 namespace sdk {
 namespace lib {

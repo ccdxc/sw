@@ -2,7 +2,7 @@
 
 #include "lib/thread/thread.hpp"
 #include "lib/periodic/periodic.hpp"
-#include "nic/sdk/linkmgr/linkmgr.hpp"
+#include "linkmgr/linkmgr.hpp"
 #include "platform/drivers/xcvr.hpp"
 #include "platform/drivers/xcvr_qsfp.hpp"
 #include "platform/drivers/xcvr_sfp.hpp"

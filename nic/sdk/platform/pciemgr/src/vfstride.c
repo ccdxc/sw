@@ -10,8 +10,8 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "platform/pal/include/pal.h"
+#include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
 #define VFSTRIDE_BASE   \

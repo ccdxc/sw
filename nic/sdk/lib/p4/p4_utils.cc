@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "nic/sdk/lib/p4/p4_utils.hpp"
+#include "lib/p4/p4_utils.hpp"
 
 /* This function copies a byte at time or a single bit that goes
  * into table memory

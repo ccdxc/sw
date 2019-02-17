@@ -18,11 +18,11 @@
 #include <sys/mman.h>
 
 #include "gen/platform/mem_regions.hpp"
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/misc/include/bdf.h"
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
-#include "nic/sdk/platform/cfgspace/include/cfgspace.h"
+#include "platform/misc/include/misc.h"
+#include "platform/misc/include/bdf.h"
+#include "platform/pal/include/pal.h"
+#include "platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/cfgspace/include/cfgspace.h"
 
 #include "pciehw_impl.h"
 

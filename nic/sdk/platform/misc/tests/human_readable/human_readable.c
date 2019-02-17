@@ -8,7 +8,7 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
-#include "nic/sdk/platform/misc/include/misc.h"
+#include "platform/misc/include/misc.h"
 
 int
 main(int argc, char *argv[])

@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "include/sdk/base.hpp"
-#include "nic/sdk/lib/catalog/catalog.hpp"
-#include "nic/sdk/platform/capri/capri_p4.hpp"
+#include "lib/catalog/catalog.hpp"
+#include "platform/capri/capri_p4.hpp"
 
 namespace sdk {
 namespace platform {

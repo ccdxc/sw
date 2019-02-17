@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "nic/sdk/include/sdk/base.hpp"
+#include "include/sdk/base.hpp"
 
 namespace sdk {
 namespace platform {

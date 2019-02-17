@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include "nic/sdk/platform/cfgspace/include/cfgspace.h"
+#include "platform/cfgspace/include/cfgspace.h"
 
 /*
  * Initialize specific config space registers.

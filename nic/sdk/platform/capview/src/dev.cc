@@ -10,7 +10,7 @@
 #include "dev.h"
 #include "dtls.h"
 
-#include "nic/sdk/platform/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 
 static uint8_t tx;
 

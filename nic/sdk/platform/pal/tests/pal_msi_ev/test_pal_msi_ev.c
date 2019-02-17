@@ -7,9 +7,9 @@
 #include <string.h>
 #include <getopt.h>
 
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/intrutils/include/intrutils.h"
-#include "nic/sdk/platform/evutils/include/evutils.h"
+#include "platform/pal/include/pal.h"
+#include "platform/intrutils/include/intrutils.h"
+#include "platform/evutils/include/evutils.h"
 
 static void
 my_isr(void *arg)

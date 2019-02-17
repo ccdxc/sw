@@ -2,8 +2,8 @@
 
 #include "lib/thread/thread.hpp"
 #include "lib/periodic/periodic.hpp"
-#include "nic/sdk/platform/drivers/xcvr.hpp"
-#include "nic/sdk/lib/pal/pal.hpp"
+#include "platform/drivers/xcvr.hpp"
+#include "lib/pal/pal.hpp"
 #include "linkmgr.hpp"
 #include "linkmgr_state.hpp"
 #include "linkmgr_internal.hpp"

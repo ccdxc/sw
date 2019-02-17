@@ -10,8 +10,8 @@
 
 #include "platform/include/common/pci_ids.h"
 #include "gen/platform//mem_regions.hpp"
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/misc/include/misc.h"
+#include "platform/pciemgrutils/include/pciemgrutils.h"
 
 static void
 init_memtun_bar(const int port, pciehbars_t *pbars)

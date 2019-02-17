@@ -7,8 +7,8 @@
 #include <map>
 #include "platform/capri/capri_common.hpp"
 #include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
-#include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/sdk/lib/utils/time_profile.hpp"
+#include "lib/p4/p4_api.hpp"
+#include "lib/utils/time_profile.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
@@ -16,8 +16,8 @@
 #include "platform/capri/capri_state.hpp"
 #include "platform/capri/csrint/csr_init.hpp"
 #include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
-#include "nic/sdk/asic/rw/asicrw.hpp"
-#include "nic/sdk/asic/pd/pd.hpp"
+#include "asic/rw/asicrw.hpp"
+#include "asic/pd/pd.hpp"
 #include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 #include "third-party/asic/capri/model/cap_pic/cap_pict_csr.h"
@@ -26,7 +26,7 @@
 #include "third-party/asic/ip/verif/pcpp/cpp_int_helper.h"
 #include "third-party/asic/capri/verif/apis/cap_pics_api.h"
 #include "third-party/asic/capri/verif/apis/cap_pict_api.h"
-#include "nic/sdk/platform/capri/csr/asicrw_if.hpp"
+#include "platform/capri/csr/asicrw_if.hpp"
 #include "gen/platform/mem_regions.hpp"
 
 extern pen_csr_base *get_csr_base_from_path(string);

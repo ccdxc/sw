@@ -16,7 +16,7 @@ extern "C" {
 
 #include "cap_top_csr_defines.h"
 #include "cap_pxb_c_hdr.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/pciemgrutils/include/pciemgrutils.h"
 
 #include "pmt.h"
 #include "prt.h"

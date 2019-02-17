@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "linkmgr_rw.hpp"
-#include "nic/sdk/lib/pal/pal.hpp"
+#include "lib/pal/pal.hpp"
 
 namespace sdk {
 namespace linkmgr {

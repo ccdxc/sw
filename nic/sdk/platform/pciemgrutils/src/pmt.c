@@ -11,8 +11,8 @@
 #include <inttypes.h>
 #include <fcntl.h>
 
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/misc/include/bdf.h"
+#include "platform/misc/include/misc.h"
+#include "platform/misc/include/bdf.h"
 #include "pmt.h"
 
 int

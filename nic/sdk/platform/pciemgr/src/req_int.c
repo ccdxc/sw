@@ -12,8 +12,8 @@
 #include <inttypes.h>
 #include <sys/param.h>
 
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "platform/pal/include/pal.h"
+#include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 #include "req_int.h"
 

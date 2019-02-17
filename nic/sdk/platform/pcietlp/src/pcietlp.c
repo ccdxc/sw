@@ -12,7 +12,7 @@
 #include <inttypes.h>
 #include <endian.h>
 
-#include "nic/sdk/platform/misc/include/bdf.h"
+#include "platform/misc/include/bdf.h"
 
 #include "pcietlp.h"
 

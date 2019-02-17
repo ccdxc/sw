@@ -12,9 +12,9 @@
 #include <assert.h>
 #include <sys/param.h>
 
-#include "nic/sdk/platform/misc/include/bdf.h"
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/pcietlp/include/pcietlp.h"
+#include "platform/misc/include/bdf.h"
+#include "platform/misc/include/misc.h"
+#include "platform/pcietlp/include/pcietlp.h"
 
 static void
 usage(void)

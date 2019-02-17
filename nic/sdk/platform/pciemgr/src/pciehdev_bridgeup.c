@@ -6,8 +6,8 @@
 #include <sys/types.h>
 
 #include "platform/include/common/pci_ids.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciehdev.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciehcfg.h"
+#include "platform/pciemgrutils/include/pciehdev.h"
+#include "platform/pciemgrutils/include/pciehcfg.h"
 
 static void
 bridgeup_initialize_cfg(pciehdev_t *pdev)

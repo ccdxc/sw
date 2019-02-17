@@ -6,7 +6,7 @@
 #include <assert.h>
 #include "platform/capri/capri_qstate.hpp"
 #include "platform/capri/capri_lif_manager.hpp"
-#include "nic/sdk/include/sdk/base.hpp"
+#include "include/sdk/base.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "asic/rw/asicrw.hpp"

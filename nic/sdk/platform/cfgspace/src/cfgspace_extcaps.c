@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <sys/types.h>
 
-#include "nic/sdk/platform/cfgspace/include/cfgspace.h"
+#include "platform/cfgspace/include/cfgspace.h"
 
 static u_int16_t
 extcap_get_id(u_int32_t caphdr)

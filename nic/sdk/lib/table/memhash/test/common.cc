@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include "include/sdk/table.hpp"
-#include "nic/sdk/lib/table/memhash/test/p4pd_mock/mem_hash_p4pd_mock.hpp"
+#include "lib/table/memhash/test/p4pd_mock/mem_hash_p4pd_mock.hpp"
 #include "common.hpp"
 
 h5_entry_t g_h5_cache[H5_MAX_ENTRIES];

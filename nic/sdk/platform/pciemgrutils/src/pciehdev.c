@@ -10,9 +10,9 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/misc/include/bdf.h"
-#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+#include "platform/misc/include/misc.h"
+#include "platform/misc/include/bdf.h"
+#include "platform/pciehdevices/include/pciehdevices.h"
 #include "pciemgrutils.h"
 #include "pciehdev_impl.h"
 

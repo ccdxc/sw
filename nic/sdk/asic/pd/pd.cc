@@ -1,11 +1,11 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#include "nic/sdk/platform/capri/capri_p4.hpp"
-#include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
-#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
-#include "nic/sdk/platform/capri/capri_txs_scheduler.hpp"
-#include "nic/sdk/asic/pd/pd.hpp"
-#include "nic/sdk/lib/utils/time_profile.hpp"
+#include "platform/capri/capri_p4.hpp"
+#include "platform/capri/capri_hbm_rw.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
+#include "asic/pd/pd.hpp"
+#include "lib/utils/time_profile.hpp"
 
 using namespace sdk::platform::capri;
 

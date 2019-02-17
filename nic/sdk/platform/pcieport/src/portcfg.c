@@ -13,8 +13,8 @@
 #include "cap_top_csr_defines.h"
 #include "cap_pp_c_hdr.h"
 
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+#include "platform/pal/include/pal.h"
+#include "platform/pciemgr/include/pciemgr.h"
 #include "pcieport.h"
 #include "portcfg.h"
 

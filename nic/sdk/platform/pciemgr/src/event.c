@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
 void

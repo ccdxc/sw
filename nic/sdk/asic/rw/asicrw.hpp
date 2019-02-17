@@ -3,9 +3,9 @@
 #ifndef __SDK_ASICRW_HPP__
 #define __SDK_ASICRW_HPP__
 
-#include "nic/sdk/lib/catalog/catalog.hpp"
-#include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/include/sdk/types.hpp"
+#include "lib/catalog/catalog.hpp"
+#include "include/sdk/base.hpp"
+#include "include/sdk/types.hpp"
 
 namespace sdk {
 namespace asic {

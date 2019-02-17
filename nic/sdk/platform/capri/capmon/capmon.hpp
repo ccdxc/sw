@@ -17,7 +17,7 @@
 #include <cstring>
 #include <pthread.h>
 #include <stdio.h>
-#include "nic/sdk/platform/capri/capmon/dtls.hpp"
+#include "platform/capri/capmon/dtls.hpp"
 
 #define STAGE_COUNT_P4 6
 #define STAGE_COUNT_DMA 8

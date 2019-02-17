@@ -1,6 +1,6 @@
-#include "nic/sdk/platform/capri/capri_txs_scheduler.hpp"
-#include "nic/sdk/asic/pd/scheduler.hpp"
-#include "nic/sdk/lib/utils/utils.hpp"
+#include "platform/capri/capri_txs_scheduler.hpp"
+#include "asic/pd/scheduler.hpp"
+#include "lib/utils/utils.hpp"
 
 namespace sdk {
 namespace asic {

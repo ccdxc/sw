@@ -5,7 +5,7 @@
 //------------------------------------------------------------------------------
 
 #include <gtest/gtest.h>
-#include "nic/sdk/lib/pal/pal.hpp"
+#include "lib/pal/pal.hpp"
 #include <inttypes.h>
 
 using namespace std;

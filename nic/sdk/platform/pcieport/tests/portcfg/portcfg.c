@@ -12,7 +12,7 @@
 #include <assert.h>
 #include <sys/param.h>
 
-#include "nic/sdk/platform/pcieport/include/portcfg.h"
+#include "platform/pcieport/include/portcfg.h"
 
 enum { DIRRD, DIRWR };
 

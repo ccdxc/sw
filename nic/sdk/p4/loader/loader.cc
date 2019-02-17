@@ -16,7 +16,7 @@
 #include "p4/loader/loader.hpp"
 #include "third-party/asic/capri/model/capsim-master/lib/libcapisa/include/libcapisa.h"
 #include "third-party/asic/capri/model/capsim-master/lib/libmpuobj/include/libmpuobj.h"
-#include "nic/sdk/asic/rw/asicrw.hpp"
+#include "asic/rw/asicrw.hpp"
 
 namespace sdk {
 namespace p4 {

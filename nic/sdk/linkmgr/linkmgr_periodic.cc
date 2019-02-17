@@ -2,7 +2,7 @@
 
 #include <unistd.h>
 #include "include/sdk/timerfd.hpp"
-#include "nic/sdk/linkmgr/linkmgr.hpp"
+#include "linkmgr/linkmgr.hpp"
 #include "lib/twheel/twheel.hpp"
 #include "lib/thread/thread.hpp"
 

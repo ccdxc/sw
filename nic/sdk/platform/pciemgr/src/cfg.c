@@ -11,12 +11,12 @@
 #include <inttypes.h>
 #include <linux/pci_regs.h>
 
-#include "nic/sdk/platform/misc/include/bdf.h"
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pcietlp/include/pcietlp.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
-#include "nic/sdk/platform/cfgspace/include/cfgspace.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
+#include "platform/misc/include/bdf.h"
+#include "platform/pal/include/pal.h"
+#include "platform/pcietlp/include/pcietlp.h"
+#include "platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/cfgspace/include/cfgspace.h"
+#include "platform/pciemgr/include/pciehw.h"
 #include "pciehw_impl.h"
 
 int

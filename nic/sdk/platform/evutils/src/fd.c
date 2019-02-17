@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <stdint.h>
 
-#include "nic/sdk/platform/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 #include "ev.h"
 #include "evutils.h"
 

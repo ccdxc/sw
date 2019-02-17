@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include "nic/sdk/platform/cfgspace/include/cfgspace.h"
+#include "platform/cfgspace/include/cfgspace.h"
 
 /*
  * Find capability header with id "capid" in the linked list of

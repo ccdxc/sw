@@ -3,8 +3,8 @@
 #ifndef __CAPRI_STATE_HPP__
 #define __CAPRI_STATE_HPP__
 
-#include "nic/sdk/platform/utils/mpartition.hpp"
-#include "nic/sdk/platform/capri/capri_cfg.hpp"
+#include "platform/utils/mpartition.hpp"
+#include "platform/capri/capri_cfg.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
 
 namespace sdk {

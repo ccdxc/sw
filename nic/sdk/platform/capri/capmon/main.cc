@@ -22,7 +22,7 @@
 #include <unistd.h>
 
 #include "dtls.hpp"
-#include "nic/sdk/platform/pal/include/pal.h"
+#include "platform/pal/include/pal.h"
 
 #include "cap_mpu_c_hdr.h"
 #include "cap_pbc_c_hdr.h"

@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "nic/sdk/include/sdk/base.hpp"
+#include "include/sdk/base.hpp"
 
 #include "boost/foreach.hpp"
 #include "boost/optional.hpp"

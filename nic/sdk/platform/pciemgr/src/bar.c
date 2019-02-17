@@ -11,11 +11,11 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/misc/include/bdf.h"
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pcietlp/include/pcietlp.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "platform/misc/include/misc.h"
+#include "platform/misc/include/bdf.h"
+#include "platform/pal/include/pal.h"
+#include "platform/pcietlp/include/pcietlp.h"
+#include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
 static pciehwbar_t *

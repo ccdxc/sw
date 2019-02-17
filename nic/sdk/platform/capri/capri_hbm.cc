@@ -2,8 +2,8 @@
 
 #include <unistd.h>
 #include <iostream>
-#include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/asic/rw/asicrw.hpp"
+#include "include/sdk/base.hpp"
+#include "asic/rw/asicrw.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "platform/capri/capri_common.hpp"
 #include "platform/capri/capri_state.hpp"

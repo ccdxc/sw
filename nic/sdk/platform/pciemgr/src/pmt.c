@@ -12,11 +12,11 @@
 #include <inttypes.h>
 #include <fcntl.h>
 
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/misc/include/bdf.h"
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "platform/misc/include/misc.h"
+#include "platform/misc/include/bdf.h"
+#include "platform/pal/include/pal.h"
+#include "platform/pciemgr/include/pciehw.h"
+#include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
 #define PMT_BASE        \

@@ -6,8 +6,8 @@
 #define __COMMON_HPP__
 
 #include "include/sdk/table.hpp"
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
-#include "nic/sdk/lib/table/memhash/test/p4pd_mock/mem_hash_p4pd_mock.hpp"
+#include "lib/table/memhash/mem_hash.hpp"
+#include "lib/table/memhash/test/p4pd_mock/mem_hash_p4pd_mock.hpp"
 
 using sdk::table::sdk_table_api_params_t;
 

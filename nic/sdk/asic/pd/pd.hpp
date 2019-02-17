@@ -3,9 +3,9 @@
 #ifndef __SDK_ASIC_PD_HPP__
 #define __SDK_ASIC_PD_HPP__
 
-#include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/sdk/asic/asic.hpp"
+#include "include/sdk/base.hpp"
+#include "lib/p4/p4_api.hpp"
+#include "asic/asic.hpp"
 
 namespace sdk {
 namespace asic {

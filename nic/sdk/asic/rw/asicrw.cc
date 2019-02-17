@@ -1,9 +1,9 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
 #include "lib/thread/thread.hpp"
-#include "nic/sdk/lib/pal/pal.hpp"
-#include "nic/sdk/lib/utils/time_profile.hpp"
-#include "nic/sdk/asic/rw/asicrw.hpp"
+#include "lib/pal/pal.hpp"
+#include "lib/utils/time_profile.hpp"
+#include "asic/rw/asicrw.hpp"
 
 using sdk::lib::pal_ret_t;
 using sdk::lib::PAL_RET_OK;

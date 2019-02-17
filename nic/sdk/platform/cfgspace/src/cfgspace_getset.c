@@ -4,7 +4,7 @@
 
 #include <sys/types.h>
 
-#include "nic/sdk/platform/cfgspace/include/cfgspace.h"
+#include "platform/cfgspace/include/cfgspace.h"
 #include "cfgspace_getset.h"
 
 /*

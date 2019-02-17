@@ -12,9 +12,9 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "nic/sdk/include/sdk/base.hpp"
-#include "nic/sdk/platform/capri/capri_cfg.hpp"
-#include "nic/sdk/asic/pd/pd.hpp"
+#include "include/sdk/base.hpp"
+#include "platform/capri/capri_cfg.hpp"
+#include "asic/pd/pd.hpp"
 
 namespace sdk {
 namespace platform {

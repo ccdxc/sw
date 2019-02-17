@@ -11,7 +11,7 @@
 
 #include "nic/include/storage_seq_common.h"
 #include "platform/include/common/pci_ids.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/pciemgrutils/include/pciemgrutils.h"
 
 #include "pciehdevices.h"
 #include "pciehdevices_impl.h"

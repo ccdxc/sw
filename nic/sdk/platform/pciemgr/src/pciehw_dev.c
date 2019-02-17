@@ -10,13 +10,13 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/misc/include/bdf.h"
+#include "platform/misc/include/misc.h"
+#include "platform/misc/include/bdf.h"
 #include "platform/include/common/pci_ids.h"
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgr/include/pciehw.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciehdev_impl.h"
+#include "platform/pal/include/pal.h"
+#include "platform/pciemgr/include/pciehw.h"
+#include "platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/pciemgrutils/include/pciehdev_impl.h"
 #include "pciehw_impl.h"
 
 #define NPORTS 8

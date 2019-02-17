@@ -12,9 +12,9 @@
 #include <inttypes.h>
 #include <sys/param.h>
 
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
+#include "platform/misc/include/misc.h"
+#include "platform/pal/include/pal.h"
+#include "platform/pciemgrutils/include/pciesys.h"
 #include "pciehw_impl.h"
 
 #define PRT_BASE        (CAP_ADDR_BASE_PXB_PXB_OFFSET + \

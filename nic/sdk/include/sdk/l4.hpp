@@ -3,7 +3,7 @@
 #ifndef __L4_HPP__
 #define __L4_HPP__
 
-#include "nic/sdk/include/sdk/types.hpp"
+#include "include/sdk/types.hpp"
 
 typedef struct port_range_s {
     uint16_t    port_lo;

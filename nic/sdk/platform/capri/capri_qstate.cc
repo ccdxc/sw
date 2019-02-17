@@ -5,7 +5,7 @@
 #include "platform/capri/capri_lif_manager.hpp"
 #include "platform/capri/capri_state.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
-#include "nic/sdk/asic/rw/asicrw.hpp"
+#include "asic/rw/asicrw.hpp"
 
 using namespace sdk::platform::utils;
 

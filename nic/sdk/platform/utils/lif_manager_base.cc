@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <assert.h>
 #include "platform/utils/lif_manager_base.hpp"
-#include "nic/sdk/include/sdk/base.hpp"
+#include "include/sdk/base.hpp"
 
 namespace sdk {
 namespace platform {

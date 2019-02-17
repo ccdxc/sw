@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "platform/capri/capri_cfg.hpp"
-#include "nic/sdk/asic/rw/asicrw.hpp"
+#include "asic/rw/asicrw.hpp"
 
 namespace sdk {
 namespace platform {
