@@ -3582,6 +3582,14 @@ tunnel_if_create (const InterfaceSpec& spec, if_t *hal_if)
         hal_if->source_gw.v4_addr = prefix.ipv4_subnet().address().v4_addr();
         MAC_UINT64_TO_ADDR(hal_if->gw_mac_da,
                            if_tunnel_info.prop_mpls_info().gw_mac_da());
+        MAC_UINT64_TO_ADDR(hal_if->overlay_mac,
+                           if_tunnel_info.prop_mpls_info().overlay_mac());
+        HAL_TRACE_DEBUG("Overlay mac: {}",
+                if_tunnel_info.prop_mpls_info().overlay_mac());
+        MAC_UINT64_TO_ADDR(hal_if->pf_mac,
+                           if_tunnel_info.prop_mpls_info().pf_mac());
+        HAL_TRACE_DEBUG("PF mac: {}",
+                if_tunnel_info.prop_mpls_info().pf_mac());
         hal_if->lif_id = lif_id;
     } else {
         ret = HAL_RET_IF_INFO_INVALID;

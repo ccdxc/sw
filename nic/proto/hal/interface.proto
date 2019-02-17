@@ -493,6 +493,8 @@ message IfTunnelProprietaryMpls {
   uint32                       egress_bw         = 8  [(gogoproto.moretags) = "venice:mandatory"]; // Egress BW (in KBytes/sec)
   fixed64                      gw_mac_da         = 9  [(gogoproto.moretags) = "venice:mandatory"]; // Dest. MAC Address of the gateway
   string                       lif_name          = 10 [(gogoproto.moretags) = "venice:mandatory"]; // LIF's name
+  fixed64                      overlay_mac       = 11; // MAC Address of the overlay interface/VF (Virtual Function)
+  fixed64                      pf_mac            = 12; // MAC Address of the PF (Physical Function)
 }
 
 message IfTunnelInfo {
