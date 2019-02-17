@@ -89,6 +89,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_MEM_FREE, pd_l2seg_mem_free);
     PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_MAKE_CLONE, pd_l2seg_make_clone);
     PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_GET, pd_l2seg_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE, pd_l2seg_update_pinned_uplink);
 
     // misc apis for vrf and l2seg
     PD_FUNC_LOAD(PD_FUNC_ID_GET_OBJ_FROM_FLOW_LKPID, pd_get_object_from_flow_lkupid);
@@ -429,7 +430,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_CONV_HW_CLOCK_TO_SW_CLOCK, pd_conv_hw_clock_to_sw_clock);
     PD_FUNC_LOAD(PD_FUNC_ID_CONV_SW_CLOCK_TO_HW_CLOCK, pd_conv_sw_clock_to_hw_clock);
     PD_FUNC_LOAD(PD_FUNC_ID_CLOCK_DELTA_COMP, pd_clock_delta_comp);
-    PD_FUNC_LOAD(PD_FUNC_ID_CLOCK_DETAIL_GET, pd_clock_detail_get); 
+    PD_FUNC_LOAD(PD_FUNC_ID_CLOCK_DETAIL_GET, pd_clock_detail_get);
 
     // packet buffer
     PD_FUNC_LOAD(PD_FUNC_ID_PACKET_BUFFER_UPDATE, pd_packet_buffer_update);

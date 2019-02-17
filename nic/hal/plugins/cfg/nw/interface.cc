@@ -14,11 +14,13 @@
 #include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "gen/proto/l2segment.pb.h"
+#include "gen/proto/port.grpc.pb.h"
 #include "platform/capri/capri_lif_manager.hpp"
 #include "nic/hal/src/utils/utils.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
-//#include "nic/hal/plugins/cfg/dos/dos.hpp"
+#include "nic/linkmgr/linkmgr.hpp"
+#include "nic/sdk/linkmgr/linkmgr_internal.hpp"
 
 #define TNNL_ENC_TYPE intf::IfTunnelEncapType
 
@@ -960,6 +962,27 @@ if_set_rsp_status (if_t *hal_if, InterfaceResponse *rsp)
     rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
     rsp->mutable_status()->set_if_handle(hal_if->hal_handle);
     // Rest of the status need to be filled in from PD
+}
+
+IfStatus
+uplink_if_get_oper_state(uint32_t fp_port_num)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    port_args_t args = {0};
+
+    args.port_num = fp_port_num;
+    ret = linkmgr::port_get(&args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to get port oper status: port: {}. err: {}",
+                      fp_port_num, ret);
+        return intf::IF_STATUS_NONE;
+    }
+    switch(args.oper_status) {
+        case port_oper_status_t::PORT_OPER_STATUS_NONE: return intf::IF_STATUS_NONE;
+        case port_oper_status_t::PORT_OPER_STATUS_UP:   return intf::IF_STATUS_UP;
+        case port_oper_status_t::PORT_OPER_STATUS_DOWN: return intf::IF_STATUS_DOWN;
+        default:                                        return intf::IF_STATUS_NONE;
+    }
 }
 
 hal_ret_t
@@ -3321,17 +3344,22 @@ uplink_if_create (const InterfaceSpec& spec, if_t *hal_if)
 {
     hal_ret_t           ret = HAL_RET_OK;
 
-    HAL_TRACE_DEBUG("native_l2seg_id : {}",
-                    spec.if_uplink_info().native_l2segment_id());
-
     // TODO: for a member port, we can have valid pc#
     ret = pltfm_get_port_from_front_port_num(spec.if_uplink_info().port_num(),
                                              &hal_if->uplink_port_num);
     SDK_ASSERT_RETURN(ret == HAL_RET_OK, HAL_RET_INVALID_ARG);
 
     // hal_if->uplink_pc_num = HAL_PC_INVALID;
+    hal_if->fp_port_num = spec.if_uplink_info().port_num();
     hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
     hal_if->is_oob_management = spec.if_uplink_info().is_oob_management();
+    hal_if->if_op_status = uplink_if_get_oper_state(hal_if->fp_port_num);
+    HAL_TRACE_DEBUG("Uplink fp_port_num: {}, Status: {}, native_l2seg_id: {},"
+                    "is_oob: {}",
+                    hal_if->fp_port_num,
+                    if_status_to_str(hal_if->if_op_status),
+                    hal_if->native_l2seg,
+                    hal_if->is_oob_management);
 
     return ret;
 }
@@ -4942,6 +4970,161 @@ end:
     return ret;
 }
 
+void
+port_event_cb (uint32_t port_num, port_event_t event,
+               port_speed_t port_speed)
+{
+    if_port_timer_ctxt_t *ctxt =
+        (if_port_timer_ctxt_t *)g_hal_state->port_timer_ctxt_slab()->alloc();
+    ctxt->port_num   = port_num;
+    ctxt->event      = event;
+    ctxt->port_speed = port_speed;
+    HAL_TRACE_DEBUG("Starting port timer. Port: {}, Event: {}, Speed: {}",
+                    port_num, (uint32_t)event, (uint32_t)port_speed);
+    // Start a timer
+    sdk::lib::timer_schedule(sdk::linkmgr::SDK_TIMER_ID_PORT_EVENT,
+                             250, /* Milliseconds */
+                             ctxt,
+                             (sdk::lib::twheel_cb_t)port_event_timer_cb,
+                             false);
+}
+
+//------------------------------------------------------------------------------
+// port event cb
+//------------------------------------------------------------------------------
+sdk_ret_t
+port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+    if_port_timer_ctxt_t *port_ctxt = (if_port_timer_ctxt_t *)ctxt;
+    HAL_TRACE_DEBUG("Timer fired. Port: {}, Event: {}, Speed: {}",
+                    port_ctxt->port_num, (uint32_t)port_ctxt->event,
+                    (uint32_t)port_ctxt->port_speed);
+    sdk::linkmgr::port_set_leds(port_ctxt->port_num, port_ctxt->event);
+    if_port_oper_state_process_event(port_ctxt->port_num, port_ctxt->event);
+    linkmgr::port_event_notify(port_ctxt->port_num, port_ctxt->event,
+                               port_ctxt->port_speed);
+
+    // Free ctxt
+    hal::delay_delete_to_slab(HAL_SLAB_PORT_TIMER_CTXT, ctxt);
+
+    return sdk::SDK_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// Interface walk callback for port event
+//------------------------------------------------------------------------------
+static bool
+if_port_event_get_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    if_port_event_cb_ctxt_t *cb_ctxt = (if_port_event_cb_ctxt_t *)ctxt;
+    if_t                     *hal_if           = NULL;
+
+    hal_if = (if_t *)hal_handle_get_obj(entry->handle_id);
+    if (hal_if->if_type == intf::IF_TYPE_UPLINK) {
+        if (hal_if->fp_port_num == cb_ctxt->fp_port_num) {
+            cb_ctxt->hal_if = hal_if;
+            return true;
+        }
+    }
+    return false;
+}
+
+//------------------------------------------------------------------------------
+// Port event to IF status
+//------------------------------------------------------------------------------
+IfStatus
+port_event_to_if_status (port_event_t event)
+{
+    switch(event) {
+    case port_event_t::PORT_EVENT_LINK_UP: return intf::IF_STATUS_UP;
+    case port_event_t::PORT_EVENT_LINK_DOWN: return intf::IF_STATUS_DOWN;
+    default: return intf::IF_STATUS_NONE;
+    }
+}
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+hal_ret_t
+if_port_oper_state_process_event (uint32_t fp_port_num, port_event_t event)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    if_port_event_cb_ctxt_t ctxt = {0};
+    IfStatus                new_status = intf::IF_STATUS_NONE;
+
+
+    // Take CFG DB write lock
+    g_hal_state->cfg_db()->wlock();
+
+    new_status = port_event_to_if_status(event);
+
+    ctxt.fp_port_num = fp_port_num;
+    // Find uplink with this port_num
+    g_hal_state->if_id_ht()->walk(if_port_event_get_ht_cb, &ctxt);
+
+    if (ctxt.hal_if == NULL) {
+        HAL_TRACE_ERR("No uplink for fp_port_num: {}", fp_port_num);
+        ret = HAL_RET_ERR;
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Uplink If Id: {}, handle: {}. Status change {} => {}",
+                    ctxt.hal_if->if_id, ctxt.hal_if->hal_handle,
+                    if_status_to_str(ctxt.hal_if->if_op_status),
+                    if_status_to_str(new_status));
+    // Update uplink's oper status
+    ctxt.hal_if->if_op_status = new_status;
+
+    // Only for hostpin, repin l2segs
+    if (!is_forwarding_mode_host_pinned()) {
+        goto end;
+    }
+
+    // Walk through l2segs for this uplink
+    ret = hal_if_repin_l2segs(ctxt.hal_if);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to repin l2segs. ret: {}", ret);
+        goto end;
+    }
+
+end:
+    // Release write lock
+    g_hal_state->cfg_db()->wunlock();
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Re pin l2segs on the uplink
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_if_repin_l2segs (if_t *uplink)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    l2seg_t         *l2seg    = NULL;
+    hal_handle_t    *p_hdl_id = NULL;
+
+    // walk L2 segs
+    for (const void *ptr : *uplink->l2seg_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        l2seg = l2seg_lookup_by_handle(*p_hdl_id);
+        // Mgmt L2segs are classic
+        if (!l2seg_is_mgmt(l2seg) &&
+            (l2seg->pinned_uplink == uplink->hal_handle ||
+            l2seg->pinned_uplink == HAL_HANDLE_INVALID)) {
+            HAL_TRACE_DEBUG("l2seg: Id: {}. Trigger change of pinned "
+                            "uplink: from: {}",
+                            l2seg->seg_id, l2seg->pinned_uplink);
+            ret = l2seg_handle_repin(l2seg);
+        } else {
+            HAL_TRACE_DEBUG("l2seg: Id: {}. Not triggering change of "
+                            "pinned uplink from: {}",
+                            l2seg->seg_id, l2seg->pinned_uplink);
+        }
+    }
+    return ret;
+}
+
 //-----------------------------------------------------------------------------
 // Adds enics into if list of uplinks
 //-----------------------------------------------------------------------------
@@ -5260,6 +5443,16 @@ if_keyhandle_to_str (if_t *hal_if)
                  hal_if->if_id, hal_if->hal_handle);
     }
     return buf;
+}
+
+const char*
+if_status_to_str (IfStatus status)
+{
+    switch(status) {
+        case intf::IF_STATUS_UP: return "IF_STATUS_UP";
+        case intf::IF_STATUS_DOWN: return "IF_STATUS_DOWN";
+        default: return "IF_STATUS_NONE";
+    }
 }
 
 }    // namespace hal

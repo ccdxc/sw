@@ -239,6 +239,10 @@ typedef struct pd_l2seg_get_flow_lkupid_args_s {
     l2seg_hw_id_t hwid;     // out
 } __PACK__ pd_l2seg_get_flow_lkupid_args_t;
 
+typedef struct pd_l2seg_update_pinned_uplink_args_s {
+    l2seg_t *l2seg;
+} __PACK__ pd_l2seg_update_pinned_uplink_args_t;
+
 typedef struct pd_vrf_get_lookup_id_args_s {
     vrf_t *vrf;
     uint32_t lkup_id;
@@ -1289,7 +1293,7 @@ typedef struct pd_ipsec_global_stats_get_args_s {
     ipsec_global_stats_cb_t *stats_cb;
 } __PACK__ pd_ipsec_global_stats_get_args_t;
 
-static inline void 
+static inline void
 pd_ipsec_global_stats_get_args_init(pd_ipsec_global_stats_get_args_t *args)
 {
     args->clear_on_read = 0;
@@ -3248,7 +3252,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_IPSEC_GLOBAL_STATS_GET,   290, "PD_FUNC_ID_IPSEC_GLOBAL_STATS_GET") \
     ENTRY(PD_FUNC_ID_SNAKE_TEST_CREATE,        291, "PD_FUNC_ID_SNAKE_TEST_CREATE") \
     ENTRY(PD_FUNC_ID_SNAKE_TEST_DELETE,        292, "PD_FUNC_ID_SNAKE_TEST_DELETE") \
-    ENTRY(PD_FUNC_ID_MAX,                      293, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE,  293, "PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE") \
+    ENTRY(PD_FUNC_ID_MAX,                      294, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3279,6 +3284,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_l2seg_mem_free);
         PD_UNION_ARGS_FIELD(pd_l2seg_make_clone);
         PD_UNION_ARGS_FIELD(pd_l2seg_get);
+        PD_UNION_ARGS_FIELD(pd_l2seg_update_pinned_uplink);
 
         // misc apis for vrf and l2seg
         PD_UNION_ARGS_FIELD(pd_get_object_from_flow_lkupid);
@@ -3626,7 +3632,7 @@ typedef struct pd_func_args_s {
 
         // packet buffer
         PD_UNION_ARGS_FIELD(pd_packet_buffer_update);
- 
+
         // slab
         PD_UNION_ARGS_FIELD(pd_get_slab);
 
@@ -3697,6 +3703,7 @@ PD_FUNCP_TYPEDEF(pd_l2seg_delete);
 PD_FUNCP_TYPEDEF(pd_l2seg_mem_free);
 PD_FUNCP_TYPEDEF(pd_l2seg_make_clone);
 PD_FUNCP_TYPEDEF(pd_l2seg_get);
+PD_FUNCP_TYPEDEF(pd_l2seg_update_pinned_uplink);
 
 // misc apis for vrf and l2seg
 PD_FUNCP_TYPEDEF(pd_get_object_from_flow_lkupid);

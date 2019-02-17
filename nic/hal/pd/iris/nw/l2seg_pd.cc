@@ -644,7 +644,7 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
     // - Other uplinks are in classic for untagged l2seg.
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
         (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
-        l2seg_is_classic(l2seg))) {
+        l2seg_is_mgmt(l2seg))) {
         // (hal_if->is_oob_management || is_native))) {
         inp_prop.nic_mode = NIC_MODE_CLASSIC;
         if (num_prom_lifs == 0) {
@@ -691,6 +691,36 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
 
     return ret;
 }
+
+// ----------------------------------------------------------------------------
+// Update pinned uplink for L2seg
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_l2seg_update_pinned_uplink (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd_l2seg_update_pinned_uplink_args_t *args =
+        pd_func_args->pd_l2seg_update_pinned_uplink;
+    l2seg_t *l2seg = args->l2seg;
+    hal_handle_t *p_hdl_id = NULL;
+    intf::IfType if_type;
+    pd_add_l2seg_uplink_args_t  up_args = {0};
+    if_t *hal_if = NULL;
+
+    for (const void *ptr : *l2seg->mbrif_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        hal_if = find_if_by_handle(*p_hdl_id);
+        HAL_TRACE_DEBUG("Reprogramming IF: {}", hal_if->if_id);
+        if_type = hal::intf_get_if_type(hal_if);
+        if (if_type == intf::IF_TYPE_UPLINK) {
+            up_args.l2seg = l2seg;
+            up_args.intf = hal_if;
+            ret = l2seg_uplink_upd_input_properties_tbl(&up_args, 0, NULL, 0, NULL);
+        }
+    }
+    return ret;
+}
+
 // ----------------------------------------------------------------------------
 // Program input properties table
 // ----------------------------------------------------------------------------

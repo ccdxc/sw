@@ -182,13 +182,6 @@ xcvr_event_port_enable (xcvr_event_info_t *xcvr_event_info)
 }
 
 static void
-port_event_cb (uint32_t port_num, port_event_t event, port_speed_t port_speed)
-{
-    sdk::linkmgr::port_set_leds(port_num, event);
-    port_event_notify(port_num, event, port_speed);
-}
-
-static void
 xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
 {
     // ignore xcvr events if xcvr valid check is disabled
@@ -215,7 +208,6 @@ linkmgr_init (sdk::linkmgr::linkmgr_cfg_t *sdk_cfg)
     linkmgr_logger = linkmgr_logger_init();
 
     sdk_cfg->port_log_fn = linkmgr_log;
-    sdk_cfg->port_event_cb  = linkmgr::port_event_cb;
     sdk_cfg->xcvr_event_cb  = linkmgr::xcvr_event_cb;
 
     sdk_ret = sdk::linkmgr::linkmgr_init(sdk_cfg);
@@ -1058,7 +1050,7 @@ port_disable (uint32_t port_num)
     port_t               *port_p;
 
     if (port_num == 0) {
-        g_linkmgr_state->port_id_ht()->walk(port_disable_cb, NULL); 
+        g_linkmgr_state->port_id_ht()->walk(port_disable_cb, NULL);
     } else {
         kh.set_port_id(port_num);
         port_p = port_lookup_key_or_handle(kh);
@@ -1086,7 +1078,7 @@ port_metrics_update_helper (port_args_t *port_args,
     pi_p = find_port_by_id(port_args->port_num);
 
     if (pi_p == NULL) {
-        HAL_TRACE_ERR("Failed to find port/metrics object for port {}", 
+        HAL_TRACE_ERR("Failed to find port/metrics object for port {}",
                       port_args->port_num);
         return;
     }
@@ -1208,7 +1200,7 @@ start_aacs_server (int port)
     }
 
     thread_id = linkmgr_thread_id_t::LINKMGR_THREAD_ID_AACS_SERVER;
-    sdk::lib::thread *thread = 
+    sdk::lib::thread *thread =
         sdk::lib::thread::factory(
                         std::string("linkmgr-aacs-server").c_str(),
                         thread_id,

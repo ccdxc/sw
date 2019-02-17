@@ -456,6 +456,13 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
+    // initialize port timer event ctxt slab
+    slab = register_slab(HAL_SLAB_PORT_TIMER_CTXT,
+                         slab_args={.name="port_timer_ctxt",
+                        .size=sizeof(hal::if_port_timer_ctxt_t), .num_elements=2,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((slab != NULL), false);
+
     if (hal_cfg->features == HAL_FEATURE_SET_GFT) {
         // initialize GFT related slabs
         slab = register_slab(HAL_SLAB_GFT_EXACT_MATCH_PROFILE,
@@ -2053,6 +2060,10 @@ free_to_slab (hal_slab_t slab_id, void *elem)
 
     case HAL_SLAB_SNAKE_TEST:
         g_hal_state->snake_test_slab()->free(elem);
+        break;
+
+    case HAL_SLAB_PORT_TIMER_CTXT:
+        g_hal_state->port_timer_ctxt_slab()->free(elem);
         break;
 
     default:

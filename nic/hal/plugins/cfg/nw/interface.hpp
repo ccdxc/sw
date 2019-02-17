@@ -68,6 +68,9 @@ namespace hal {
 // 0 - 127: Reserved IFs. Internally created in HAL.
 #define IF_ID_CPU 1
 
+// Max. number of uplinks
+#define HAL_MAX_UPLINK_IF 32
+
 extern uint8_t g_num_uplink_ifs;
 extern std::vector<uint8_t > g_uplink_if_ids;
 
@@ -116,10 +119,10 @@ typedef struct if_s {
             //    on add_l2seg_to_uplink
             l2seg_id_t          native_l2seg;       // native (vlan) on uplink (pc).
 
-
             // TOOD: List of L2segs on this Uplink
             // uplink if
             struct {
+                uint32_t        fp_port_num;
                 uint32_t        uplink_port_num;    // uplink port number
                 bool            is_pc_mbr;          // is a PC member
                 hal_handle_t    uplinkpc_handle;    // PC its part of
@@ -262,6 +265,17 @@ typedef struct if_update_app_ctxt_s {
 // max. number of interfaces supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_INTERFACES                           2048
 
+typedef struct if_port_event_cb_ctxt_s {
+    uint32_t fp_port_num;
+    if_t *hal_if;
+} __PACK__ if_port_event_cb_ctxt_t;
+
+typedef struct if_port_timer_ctxt_s {
+    uint32_t port_num;
+    port_event_t event;
+    port_speed_t port_speed;
+} __PACK__ if_port_timer_ctxt_t;
+
 static inline void
 if_lock (if_t *hal_if, const char *fname, int lineno, const char *fxname)
 {
@@ -370,11 +384,17 @@ hal_ret_t get_lif_handle_from_spec (const InterfaceSpec& spec,
                                     hal_handle_t *lif_handle);
 hal_ret_t if_update_classic_oif_lists(if_t *hal_if,
                                       lif_update_app_ctxt_t *lif_upd);
-hal_ret_t enic_update_lif (if_t *hal_if, lif_t *new_lif,
-                           if_t **new_hal_if);
+hal_ret_t enic_update_lif(if_t *hal_if, lif_t *new_lif,
+                          if_t **new_hal_if);
 hal_ret_t enicif_clsc_l2seglist_change_update_oiflists(if_t *hal_if,
                                                        dllist_ctxt_t *l2seg_list,
                                                        bool add);
+hal_ret_t hal_if_repin_l2segs(if_t *uplink);
+hal_ret_t if_port_oper_state_process_event(uint32_t fp_port_num, port_event_t event);
+const char*if_status_to_str(IfStatus status);
+sdk_ret_t port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt);
+void port_event_cb (uint32_t port_num, port_event_t event,
+                    port_speed_t port_speed);
 
 }    // namespace hal
 

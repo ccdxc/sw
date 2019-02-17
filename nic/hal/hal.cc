@@ -68,7 +68,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGINT:
     case SIGTERM:
     case SIGQUIT:
-        if (!getenv("DISABLE_FTE") && 
+        if (!getenv("DISABLE_FTE") &&
             (g_hal_cfg.shm_mode == true)) {
             ipc_logger::deinit();
         }
@@ -278,7 +278,7 @@ hal_init (hal_cfg_t *hal_cfg)
     hal_cfg->bypass_fte = false;
 
     // linkmgr init
-    hal_linkmgr_init(hal_cfg);
+    hal_linkmgr_init(hal_cfg, hal::port_event_cb);
 
     // start monitoring HAL heartbeat
     hb::heartbeat_init();

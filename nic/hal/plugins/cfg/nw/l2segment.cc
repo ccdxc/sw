@@ -150,6 +150,7 @@ l2seg_init (l2seg_t *l2seg)
     // initialize the operational state
     l2seg->num_ep = 0;
     l2seg->pd     = NULL;
+    l2seg->pinned_uplink = HAL_HANDLE_INVALID;
 
     // initialize meta information
     l2seg->if_list = block_list::factory(sizeof(hal_handle_t),
@@ -198,13 +199,6 @@ l2seg_is_mgmt (l2seg_t *l2seg)
     }
     return false;
 }
-
-bool
-l2seg_is_classic(l2seg_t *l2seg)
-{
-    return l2seg_is_mgmt(l2seg);
-}
-
 
 l2seg_t *
 find_l2seg_by_id (l2seg_id_t l2seg_id)
@@ -331,7 +325,7 @@ l2seg_create_oiflists (l2seg_t *l2seg)
     // - L2segs with encap as 8129. Assumption that agent will not create any
     //   L2seg with encap of 8129. TODO: May be we need to have a new type
     //   for these L2segs which are created for inband mgmt.
-    if (is_forwarding_mode_classic_nic() || l2seg_is_classic(l2seg)) {
+    if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
         ret = oif_list_create_block(&l2seg->base_oif_list_id, 3);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Failed to create broadcast list[3], err : {}", ret);
@@ -584,7 +578,7 @@ static inline hal_ret_t
 l2seg_delete_oiflists (l2seg_t *l2seg)
 {
     // create the broadcast/flood list for this l2seg
-    if (is_forwarding_mode_classic_nic() || l2seg_is_classic(l2seg)) {
+    if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
         oif_list_clr_honor_ingress(l2seg_get_bcast_oif_list(l2seg));
         oif_list_clr_honor_ingress(l2seg_get_mcast_oif_list(l2seg));
         oif_list_clr_honor_ingress(l2seg_get_prmsc_oif_list(l2seg));
@@ -1276,6 +1270,8 @@ l2seg_init_from_spec(l2seg_t *l2seg, const L2SegmentSpec& spec)
 {
     vrf_t           *vrf;
     hal_ret_t       ret;
+    bool            pick_pinned_uplink = false;
+
     // fetch the vrf
     vrf = vrf_lookup_key_or_handle(spec.vrf_key_handle());
     if (vrf == NULL) {
@@ -1287,11 +1283,19 @@ l2seg_init_from_spec(l2seg_t *l2seg, const L2SegmentSpec& spec)
     l2seg->vrf_handle       = vrf->hal_handle;
     l2seg->seg_id           = spec.key_or_handle().segment_id();
     l2seg->segment_type     = spec.segment_type();
-    if (spec.pinned_uplink_if_key_handle().key_or_handle_case() == InterfaceKeyHandle::kInterfaceId) {
-        l2seg->pinned_uplink = find_hal_handle_from_if_id(spec.pinned_uplink_if_key_handle().interface_id());
-    } else {
-        l2seg->pinned_uplink = spec.pinned_uplink_if_key_handle().if_handle();
+    if (is_forwarding_mode_host_pinned() && !l2seg_is_mgmt(l2seg)) {
+        auto kh_case = spec.pinned_uplink_if_key_handle().key_or_handle_case();
+        if (kh_case == InterfaceKeyHandle::KEY_OR_HANDLE_NOT_SET) {
+            pick_pinned_uplink = true;
+        } else if (kh_case == InterfaceKeyHandle::kInterfaceId) {
+            l2seg->pinned_uplink =
+                find_hal_handle_from_if_id(spec.pinned_uplink_if_key_handle().
+                                           interface_id());
+        } else {
+            l2seg->pinned_uplink = spec.pinned_uplink_if_key_handle().if_handle();
+        }
     }
+
     l2seg->mcast_fwd_policy = spec.mcast_fwd_policy();
     l2seg->bcast_fwd_policy = spec.bcast_fwd_policy();
     ip_addr_spec_to_ip_addr(&l2seg->gipo, spec.gipo());
@@ -1322,12 +1326,67 @@ l2seg_init_from_spec(l2seg_t *l2seg, const L2SegmentSpec& spec)
         goto end;
     }
 
+    if (pick_pinned_uplink) {
+        ret = l2seg_select_pinned_uplink(l2seg);
+    }
+
 
     l2seg_ep_learning_update(l2seg, spec);
     l2seg->proxy_arp_enabled = spec.proxy_arp_enabled();
 
 end:
 
+    return ret;
+}
+
+hal_ret_t
+l2seg_select_pinned_uplink (l2seg_t *l2seg)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    hal_handle_t    *p_hdl_id = NULL, uplink_hdls[HAL_MAX_UPLINK_IF];
+    if_t            *uplink_if = NULL;
+    uint32_t        num_uplinks = 0;
+
+    for (const void *ptr : *l2seg->mbrif_list) {
+        p_hdl_id = (hal_handle_t *)ptr;
+        uplink_if = find_if_by_handle(*p_hdl_id);
+        if (uplink_if->if_op_status == intf::IF_STATUS_UP) {
+            uplink_hdls[num_uplinks++] = *p_hdl_id;
+        }
+    }
+    if (num_uplinks > 0) {
+        l2seg->pinned_uplink = uplink_hdls[l2seg->seg_id % num_uplinks];
+        HAL_TRACE_DEBUG("Picked pinned uplink hdl: {}", l2seg->pinned_uplink);
+    } else {
+        // Not an error. Uplinks can come up after l2seg creation
+        HAL_TRACE_ERR("Failed to pick pinned uplink. No uplinks are UP");
+        l2seg->pinned_uplink = HAL_HANDLE_INVALID;
+    }
+    return ret;
+}
+
+hal_ret_t
+l2seg_handle_repin (l2seg_t *l2seg)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_l2seg_update_pinned_uplink_args_t pd_up_args = {0};
+    pd::pd_func_args_t pd_func_args = {};
+
+    ret = l2seg_select_pinned_uplink(l2seg);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to select pinned uplink. ret: {}", ret);
+        goto end;
+    }
+
+    // PD Call to reprogram input properties.
+    pd_up_args.l2seg = l2seg;
+    pd_func_args.pd_l2seg_update_pinned_uplink = &pd_up_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update l2seg pd, err : {}", ret);
+    }
+
+end:
     return ret;
 }
 
@@ -2452,7 +2511,7 @@ l2segment_process_get (l2seg_t *l2seg, L2SegmentGetResponse *rsp)
 #endif
     // fill operational state of this L2 segment
     rsp->mutable_status()->mutable_key_or_handle()->set_l2segment_handle(l2seg->hal_handle);
-    if (is_forwarding_mode_classic_nic() || l2seg_is_classic(l2seg)) {
+    if (is_forwarding_mode_classic_nic() || l2seg_is_mgmt(l2seg)) {
         oif_list_get(l2seg_get_bcast_oif_list(l2seg), rsp->mutable_status()->mutable_bcast_lst());
         oif_list_get(l2seg_get_mcast_oif_list(l2seg), rsp->mutable_status()->mutable_mcast_lst());
         oif_list_get(l2seg_get_prmsc_oif_list(l2seg), rsp->mutable_status()->mutable_prom_lst());

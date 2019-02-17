@@ -418,11 +418,12 @@ l2seg_uplink_upd_input_properties_tbl (pd_add_l2seg_uplink_args_t *args,
                           hal::l2seg_get_l2seg_id(args->l2seg),
                           if_get_if_id(args->intf));
             goto end;
-        } else {
-            HAL_TRACE_DEBUG("Programmed "
-                            "table:input_properties index:{} ",
-                            l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
         }
+        HAL_TRACE_DEBUG("Programmed: {}, If: {}, Inp.Prop.Idx: {}, uplink_ifpc_id: {}",
+                        l2seg_keyhandle_to_str(args->l2seg),
+                        if_keyhandle_to_str(args->intf),
+                        l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id],
+                        uplink_ifpc_id);
     } else {
         // Update Priority tagged entry
         sdk_ret = inp_prop_tbl->update(
@@ -454,6 +455,11 @@ l2seg_uplink_upd_input_properties_tbl (pd_add_l2seg_uplink_args_t *args,
                             "table:input_properties index:{} ",
                             l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
         }
+        HAL_TRACE_DEBUG("Programmed: {}, If: {}, Inp.Prop.Idx: {}, uplink_ifpc_id: {}",
+                        l2seg_keyhandle_to_str(args->l2seg),
+                        if_keyhandle_to_str(args->intf),
+                        l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id],
+                        uplink_ifpc_id);
     }
 
 end:

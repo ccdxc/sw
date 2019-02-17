@@ -1040,6 +1040,65 @@ TEST_F(l2seg_test, test5)
     ASSERT_TRUE(is_leak == false);
 }
 
+// Testing pinned uplink selection
+TEST_F(l2seg_test, test6)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    VrfSpec             vrf_spec;
+    VrfResponse         vrf_rsp;
+    InterfaceSpec       if_spec;
+    InterfaceResponse   if_rsp;
+    L2SegmentSpec       l2seg_spec;
+    L2SegmentResponse   l2seg_resp;
+
+    // Create vrf
+    vrf_spec.mutable_key_or_handle()->set_vrf_id(6);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::vrf_create(vrf_spec, &vrf_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create uplinks
+    if_spec.set_type(intf::IF_TYPE_UPLINK);
+    if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 61);
+    if_spec.mutable_if_uplink_info()->set_port_num(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    if_spec.Clear();
+    if_spec.set_type(intf::IF_TYPE_UPLINK);
+    if_spec.mutable_key_or_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 62);
+    if_spec.mutable_if_uplink_info()->set_port_num(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::interface_create(if_spec, &if_rsp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Create l2seg with uplinks
+    l2seg_spec.mutable_vrf_key_handle()->set_vrf_id(6);
+    l2seg_spec.mutable_key_or_handle()->set_segment_id(61);
+    l2seg_spec.mutable_wire_encap()->set_encap_type(types::ENCAP_TYPE_DOT1Q);
+    l2seg_spec.mutable_wire_encap()->set_encap_value(10);
+    l2seg_spec.add_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 61);
+    l2seg_spec.add_if_key_handle()->set_interface_id(UPLINK_IF_ID_OFFSET + 62);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::l2segment_create(l2seg_spec, &l2seg_resp);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    // Simulating port event
+    ret = hal::if_port_oper_state_process_event(2, port_event_t::PORT_EVENT_LINK_DOWN);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    ret = hal::if_port_oper_state_process_event(1, port_event_t::PORT_EVENT_LINK_DOWN);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    ret = hal::if_port_oper_state_process_event(2, port_event_t::PORT_EVENT_LINK_UP);
+    ASSERT_TRUE(ret == HAL_RET_OK);
+}
+
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

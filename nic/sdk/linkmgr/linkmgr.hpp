@@ -13,10 +13,6 @@ namespace linkmgr {
 using sdk::types::xcvr_state_t;
 using sdk::types::xcvr_pid_t;
 
-typedef void (*port_event_notify_t)(uint32_t port_num,
-                                    port_event_t port_event,
-                                    port_speed_t port_speed);
-
 typedef void (*port_log_fn_t)(sdk_trace_level_e trace_level,
                               const char *msg);
 

@@ -49,7 +49,6 @@ ${CMD_OPTS} endpoint_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/endpoint_t
 ${CMD_OPTS} endpoint_classic_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/endpoint_classic_test.xml"
 ${CMD_OPTS} network_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/network_test.xml"
 ${CMD_OPTS} vrf_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/vrf_test.xml"
-${CMD_OPTS} l2seg_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/l2seg_test.xml"
 ${CMD_OPTS} l2seg_classic_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/l2seg_classic_test.xml"
 ${CMD_OPTS} ipsec_sa_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/ipsec_sa_test.xml"
 ${CMD_OPTS} multicast_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/multicast_test.xml"
@@ -84,6 +83,9 @@ ${CMD_OPTS} fte_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/fte_test.xml"
 ${CMD_OPTS} agent_api_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/agent_api_test.xml"
 ${CMD_OPTS} events_queue_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/events_queue_test.xml"
 ${CMD_OPTS} events_recorder_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/events_recorder_test.xml"
+# L2seg test for hostpin
+L2SEG_PRELOAD=${BUILD_DIR}/lib/libport_mock.so
+LD_PRELOAD=${L2SEG_PRELOAD} ${CMD_OPTS} l2seg_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/l2seg_test.xml"
 # Nicmgr hal_api test
 HAL_API_PRELOAD=${BUILD_DIR}/lib/hal_api_mock.so
 LD_PRELOAD=${HAL_API_PRELOAD} hal_api_filter_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/hal_api_filter_test.xml"

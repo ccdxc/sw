@@ -189,6 +189,10 @@ typedef struct xcvr_event_info_s {
     port_an_args_t    *port_an_args;
 } xcvr_event_info_t;
 
+typedef void (*port_event_notify_t)(uint32_t port_num,
+                                    port_event_t port_event,
+                                    port_speed_t port_speed);
+
 }    // namespace types
 }    // namespace sdk
 
@@ -206,6 +210,7 @@ using sdk::types::q_notify_mode_t;
 using sdk::types::cable_type_t;
 using sdk::types::xcvr_event_info_t;
 using sdk::types::xcvr_sprom_data_t;
+using sdk::types::port_event_notify_t;
 using sdk::types::port_an_args_t;
 using sdk::types::port_link_sm_t;
 using sdk::types::port_loopback_mode_t;

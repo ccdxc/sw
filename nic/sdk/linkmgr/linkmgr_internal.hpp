@@ -66,7 +66,8 @@ typedef enum sdk_timer_id_e {
     SDK_TIMER_ID_LINK_BRINGUP = 1000,   // TODO global unique across hal
     SDK_TIMER_ID_XCVR_POLL,
     SDK_TIMER_ID_LINK_POLL,
-    SDK_TIMER_ID_LINK_DEBOUNCE
+    SDK_TIMER_ID_LINK_DEBOUNCE,
+    SDK_TIMER_ID_PORT_EVENT
 } sdk_timer_id_t;
 
 sdk_ret_t

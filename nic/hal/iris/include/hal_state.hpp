@@ -172,6 +172,7 @@ public:
     slab *proxy_flow_info_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PROXY_FLOW_INFO]); }
     slab *fte_span_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_FTE_SPAN]); }
     slab *snake_test_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_SNAKE_TEST]); }
+    slab *port_timer_ctxt_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_PORT_TIMER_CTXT]); }
 
     slab *v4addr_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V4ADDR_LIST_ELEM]); }
     slab *v6addr_list_elem_slab(void) const { return TO_SLAB_PTR(slabs_[HAL_SLAB_V6ADDR_LIST_ELEM]); }
@@ -580,6 +581,8 @@ public:
     slab *fte_span_slab(void) const { return cfg_db_->fte_span_slab(); }
 
     slab *snake_test_slab(void) const { return cfg_db_->snake_test_slab(); }
+
+    slab *port_timer_ctxt_slab(void) const { return cfg_db_->port_timer_ctxt_slab(); }
 
     ht *proxy_type_ht(void) const { return oper_db_->proxy_type_ht(); }
 
