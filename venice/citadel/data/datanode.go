@@ -966,7 +966,7 @@ func (dn *DNode) processPendingQueue(sb *syncBufferState) {
 		case <-sb.ctx.Done():
 			// try one more time
 			if err := dn.replicateFailedRequest(sb); err != nil {
-				log.Errorf("sync buffer failed to replicate writes, discard queue, length:%d, {%+v}", sb.queue.Len(), sb)
+				log.Errorf("sync buffer failed to replicate writes. err:%s, discard queue, length:%d, {%+v}", err, sb.queue.Len(), sb)
 			}
 			log.Infof("exit sync buffer processing, %+v", sb)
 			return
