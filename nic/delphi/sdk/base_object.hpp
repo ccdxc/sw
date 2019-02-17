@@ -34,6 +34,7 @@ public:
     virtual ::google::protobuf::Message *GetMessage() = 0;  // Get protobuf message
     virtual BaseObjectPtr Clone() = 0;                      // clone the object
     virtual error TriggerEvent(BaseObjectPtr oldObj, ObjectOperation op, ReactorListPtr rl) = 0; // trigger event on the object
+    virtual bool IsPersistent() = 0;
 
     // GetFactoryMap gets the factory
     static inline map<string, ObjectFactory*> *GetFactoryMap() {

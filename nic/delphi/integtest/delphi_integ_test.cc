@@ -18,8 +18,10 @@ using namespace std;
 using namespace delphi;
 using delphi::objects::ExampleSpec;
 using delphi::objects::ExampleStatus;
+using delphi::objects::ExamplePersistent;
 using delphi::objects::ExampleSpecPtr;
 using delphi::objects::ExampleStatusPtr;
+using delphi::objects::ExamplePersistentPtr;
 
 // event loop thread
 void * startEventLoop(void* arg) {
@@ -89,6 +91,7 @@ public:
         if (clid == 0) {
             delphi::objects::ExampleSpec::Mount(sk, ReadWriteMode);
             delphi::objects::ExampleStatus::Mount(sk, ReadWriteMode);
+	    delphi::objects::ExamplePersistent::Mount(sk, ReadWriteMode);
         } else {
             delphi::objects::ExampleSpec::Mount(sk, ReadMode);
             delphi::objects::ExampleStatus::Mount(sk, ReadMode);
@@ -112,6 +115,17 @@ public:
         static char buffer [33];
         // create an object
         ExampleSpecPtr tobj = make_shared<ExampleSpec>();
+        sprintf(buffer, "-%d", data_id);
+        tobj->set_macaddress("Test Data" + string(buffer));
+        tobj->mutable_key()->set_ifidx(obj_id);
+
+        // add it to database
+        return sdk_->QueueUpdate(tobj);
+    }
+    delphi::error QueuePersistentObject(int obj_id, int data_id) {
+        static char buffer [33];
+        // create an object
+	ExamplePersistentPtr tobj = make_shared<ExamplePersistent>();
         sprintf(buffer, "-%d", data_id);
         tobj->set_macaddress("Test Data" + string(buffer));
         tobj->mutable_key()->set_ifidx(obj_id);
@@ -157,7 +171,7 @@ public:
     virtual void SetUp() {
 
         // instantiate the delphi server
-        server = make_shared<DelphiServer>();
+        server = make_shared<DelphiServer>("/tmp/delphi_test.dat");
         server->Start();
         usleep(1000);
 
@@ -290,7 +304,7 @@ TEST_F(DelphiIntegTest, HubDisconnectTest) {
     }
 
     // restart the server
-    this->server = make_shared<DelphiServer>();
+    this->server = make_shared<DelphiServer>("/tmp/delphi_test.dat");
     this->server->Start();
     usleep(1000);
 
@@ -300,6 +314,62 @@ TEST_F(DelphiIntegTest, HubDisconnectTest) {
         ASSERT_EQ_EVENTUALLY(sdks[i]->ListKind("ExampleSpec").size(), NUM_CLIENTS) << "client did not have all the objects";
     }
 }
+
+class DelphiPersistenceTest : public testing::Test {
+};
+
+TEST_F(DelphiPersistenceTest, BasicPersistenceTest) {
+    TestServicePtr  service;
+    delphi::SdkPtr  sdk;
+    DelphiServerPtr server;
+    pthread_t       ev_thread_id;
+    
+    server = make_shared<DelphiServer>("/tmp/delphi_test.dat");
+    server->Start();
+    usleep(1000);
+
+    // start the clients
+    sdk = make_shared<delphi::Sdk>();
+    service = make_shared<TestService>(0, sdk);
+    sdk->RegisterService(service);
+    usleep(1000);
+    // start event loop
+    pthread_create(&ev_thread_id, 0, &startEventLoop, (void*)&sdk);
+    LogInfo("Started thread {}", ev_thread_id);
+    usleep(1000);
+
+    service->QueuePersistentObject(1, 0);
+    usleep(1000 * 1000);
+    sdk->Stop();
+    usleep(10 * 1000);
+    pthread_cancel(ev_thread_id);
+    pthread_join(ev_thread_id, NULL);
+
+    server->Stop();
+    usleep(1000);
+    
+    server = make_shared<DelphiServer>("/tmp/delphi_test.dat");
+    server->Start();
+    usleep(1000);
+
+    // start the client
+    sdk = make_shared<delphi::Sdk>();
+    service = make_shared<TestService>(0, sdk);
+    sdk->RegisterService(service);
+    usleep(1000);
+    // start event loop
+    pthread_create(&ev_thread_id, 0, &startEventLoop, (void*)&sdk);
+    LogInfo("Started thread {}", ev_thread_id);
+    usleep(1000);
+    ASSERT_EQ_EVENTUALLY(sdk->ListKind("ExamplePersistent").size(), 1) <<
+	"Objects didn't restore correctly from the db";
+    sdk->Stop();
+    usleep(10 * 1000);
+    pthread_cancel(ev_thread_id);
+    pthread_join(ev_thread_id, NULL);
+    server->Stop();
+}
+	
 } // namespace
 
 int main(int argc, char **argv) {

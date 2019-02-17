@@ -1,6 +1,6 @@
 [{
     "name": "delphi",
-    "command": "/sw/nic/build/x86_64/iris/bin/delphi_hub",
+    "command": "/sw/nic/build/x86_64/iris/bin/delphi_hub /tmp/delphi.dat",
     "dependencies": [],
     "flags": ["no_watchdog"]
 }, {

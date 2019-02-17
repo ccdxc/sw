@@ -23,7 +23,7 @@ fi
 
 popd
 
-${DELPHI_BIN} &
+${DELPHI_BIN} /tmp/delphi.log &
 DELPHI_PID=$!
 
 check_exist () {

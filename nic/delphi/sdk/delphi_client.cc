@@ -621,6 +621,7 @@ void DelphiClient::syncTimerHandler(ev::timer &watcher, int revents) {
         ObjectMeta *meta = od->mutable_meta();
         meta->CopyFrom(*objinfo->GetMeta());
         od->set_op(op);
+	od->set_persist(objinfo->IsPersistent());
         objinfo->GetMessage()->SerializeToString(&out_str);
         od->set_data(out_str);
 

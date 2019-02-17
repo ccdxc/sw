@@ -1,6 +1,6 @@
 [{
     "name": "delphi",
-    "command": "/naples/nic/bin/delphi_hub",
+    "command": "/naples/nic/bin/delphi_hub /tmp/delphi.dat",
     "dependencies": [],
     "flags": ["no_watchdog", "non_critical"]
 }, {

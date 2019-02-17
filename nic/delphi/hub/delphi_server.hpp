@@ -4,6 +4,7 @@
 #define _DELPHI_SERVER_H_
 
 #include <ev++.h>
+#include <lmdb.h>
 
 #include "nic/delphi/utils/utils.hpp"
 #include "nic/delphi/messenger/messenger_server.hpp"
@@ -56,7 +57,7 @@ typedef std::shared_ptr<MountPoint> MountPointPtr;
 // DelphiServer is the server instance
 class DelphiServer : public messenger::ServerHandler, public std::enable_shared_from_this<DelphiServer> {
 public:
-        DelphiServer();                         // constructor
+        DelphiServer(string dbfile);            // constructor
         error Start();                          // start delphi server
         error Stop();                           // stop delphi server
         DbSubtreePtr GetSubtree(string kind);   // get a subtree of objects for a kind
@@ -68,8 +69,8 @@ public:
         error HandleSocketClosed(int sockCtx);
         inline void enableTrace() { traceEnabled_ = true; };
 private:
-    error          addObject(string kind,   string key, ObjectDataPtr obj);
-    error          delObject(string kind,   string key);
+    error          addObject(string kind, string key, ObjectDataPtr obj, bool skipPersistence = false);
+    error          delObject(string kind, string key, ObjectDataPtr obj);
     ServiceInfoPtr addService(string svcName, int sockCtx);
     ServiceInfoPtr findServiceName(string svcName);
     ServiceInfoPtr findServiceID(uint16_t svcID);
@@ -82,6 +83,10 @@ private:
     error          requestMount(string kind, string key, string svcName, MountMode mode);
     error          releaseMount(string mountPath, string svcName);
     bool           isKindPeriodic(string kind);
+    void           initDb();
+    void           persistObject(string kind, string key, ObjectDataPtr obj);
+    void           unpersistObject(string kind, string key);
+    void           restorePersistentObjects();
 
     MessangerServerPtr             msgServer_;     // messenger server
     map<string, DbSubtreePtr>      subtrees_;      // subtree per object kind
@@ -94,6 +99,8 @@ private:
     map<string, MountPointPtr>     mountPoints_;   // map of object kind to mount point
     delphi::shm::DelphiShmPtr      srv_shm_;       // shared memory instance
     bool                           traceEnabled_;  // is object tracing enabled?
+    MDB_env                        *db;            // lmdb env object
+    const string                   dbFilename;
 
 protected:
     void syncTimerHandler(ev::timer &watcher, int revents);

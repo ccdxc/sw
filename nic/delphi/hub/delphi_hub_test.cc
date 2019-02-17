@@ -40,6 +40,9 @@ public:
     virtual string GetKey() {
         return this->key().ShortDebugString();
     };
+    virtual bool IsPersistent() {
+	return false;
+    }
     virtual ::google::protobuf::Message *GetMessage() {
         return this;
     }
@@ -238,7 +241,7 @@ public:
     virtual void SetUp() {
 
         // instantiate the delphi server
-        server = make_shared<DelphiServer>();
+        server = make_shared<DelphiServer>("/tmp/delphi_test.dat");
         server->Start();
         usleep(1000);
 

@@ -35,7 +35,7 @@ runtest () {
     json=$1
     shift
     lines=("$@")
-    rm -rf *.log core.*
+    rm -rf *.log core.* /tmp/delphi*
     timeout $tm ${BUILD_DIR}/bin/sysmgr $json .
     cat *.log
     for ln in "${lines[@]}"

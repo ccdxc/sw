@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include <lmdb.h>
+
 #include "delphi_server.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "gen/proto/delphi_objects.hpp"
@@ -23,12 +25,138 @@ bool ServiceInfo::HasMounted(string kind, string key) {
     return false;
 }
 
+void DelphiServer::initDb() {
+    int rc;
+
+    rc = mdb_env_create(&this->db);
+    assert(rc == 0);
+
+    LogInfo("DB location: {}", this->dbFilename);
+    rc = mdb_env_open(this->db, this->dbFilename.c_str(), MDB_NOSUBDIR,
+	S_IRUSR | S_IWUSR);
+    assert(rc == 0);
+}
+
+void DelphiServer::persistObject(string kind, string key, ObjectDataPtr obj) {
+    MDB_val db_key;
+    MDB_val db_val;
+    MDB_txn *db_txn;
+    MDB_dbi db_dbi;
+    string tmp;
+    int rc;
+
+    LogInfo("Persisting {}/{}", kind, key);
+    
+    tmp = kind + ":" + key;
+    db_key.mv_size = tmp.size();
+    db_key.mv_data = (void *)tmp.c_str();
+    
+    db_val.mv_size = obj->ByteSizeLong();
+    db_val.mv_data = malloc(db_val.mv_size);
+
+    obj->SerializeToArray(db_val.mv_data, db_val.mv_size);
+
+    LogInfo("Serialized {} bytes", db_val.mv_size);
+
+    rc = mdb_txn_begin(this->db, NULL, 0, &db_txn);
+    assert(rc == 0);
+
+    rc = mdb_dbi_open(db_txn, NULL, MDB_CREATE, &db_dbi);
+    assert(rc == 0);
+
+    rc = mdb_put(db_txn, db_dbi, &db_key, &db_val, 0);
+    assert(rc == 0);
+
+    rc = mdb_txn_commit(db_txn);
+    assert(rc == 0);
+
+    mdb_dbi_close(this->db, db_dbi);
+    
+    free(db_val.mv_data);
+}
+
+void DelphiServer::unpersistObject(string kind, string key) {
+    MDB_val db_key;
+    MDB_txn *db_txn;
+    MDB_dbi db_dbi;
+    string tmp;
+    int rc;
+
+    tmp = kind + ":" + key;
+    db_key.mv_size = tmp.size();
+    db_key.mv_data = (void *)tmp.c_str();
+    
+    rc = mdb_txn_begin(this->db, NULL, 0, &db_txn);
+    assert(rc == 0);
+
+    rc = mdb_dbi_open(db_txn, NULL, MDB_CREATE, &db_dbi);
+    assert(rc == 0);
+
+    rc = mdb_del(db_txn, db_dbi, &db_key, NULL);
+    assert(rc == 0  || rc == MDB_NOTFOUND);
+
+    rc = mdb_txn_commit(db_txn);
+    assert(rc == 0);
+
+    mdb_dbi_close(this->db, db_dbi);
+}
+
+void DelphiServer::restorePersistentObjects() {
+    MDB_val    db_key;
+    MDB_val    db_val;
+    MDB_cursor *db_cur;
+    MDB_txn    *db_txn;
+    MDB_dbi    db_dbi;
+    int rc;
+    
+
+    LogInfo("Restoring Persistent Objects");
+
+    rc = mdb_txn_begin(this->db, NULL, MDB_RDONLY, &db_txn);
+    assert(rc == 0);
+
+    rc = mdb_dbi_open(db_txn, NULL, MDB_CREATE, &db_dbi);
+    assert(rc == 0);
+
+    rc = mdb_cursor_open(db_txn, db_dbi, &db_cur);
+    assert(rc == 0);
+
+
+    rc = mdb_cursor_get(db_cur, &db_key, &db_val, MDB_FIRST);
+    assert(rc == MDB_NOTFOUND || rc == 0);
+
+    while (rc != MDB_NOTFOUND)
+    {
+	
+	ObjectDataPtr obj = make_shared<ObjectData>();
+	string tmp = string((const char *)db_key.mv_data, db_key.mv_size);
+	string kind = tmp.substr(0, tmp.find(":"));
+	string key = tmp.substr(tmp.find(":") + 1);
+
+	LogInfo("Restoring db object {}/{} of size {}", kind, key,
+	    db_val.mv_size);
+
+	obj->ParseFromArray(db_val.mv_data, db_val.mv_size);
+	this->addObject(kind, key, obj, true);
+	
+	rc = mdb_cursor_get(db_cur, &db_key, &db_val, MDB_NEXT);
+	assert(rc == MDB_NOTFOUND || rc == 0);
+	
+    }
+
+    mdb_cursor_close(db_cur);
+    mdb_txn_commit(db_txn);
+    mdb_dbi_close(this->db, db_dbi);
+}
+
 // DelphiServer constructor
-DelphiServer::DelphiServer() {
+DelphiServer::DelphiServer(string dbfilename) : dbFilename(dbfilename) {
     this->syncTimer_.set<DelphiServer, &DelphiServer::syncTimerHandler>(this);
     this->syncTimer_.start(SYNC_PERIOD, SYNC_PERIOD);
     this->currServiceId_ = 1;
     this->traceEnabled_ = false;
+
+    this->initDb();
 }
 
 // Start starts the delphi server
@@ -41,6 +169,8 @@ error DelphiServer::Start() {
     delphi::error err = srv_shm_->MemMap(DELPHI_SHM_NAME, DELPHI_SHM_SIZE, true);
     assert(err.IsOK());
 
+    this->restorePersistentObjects();
+    
     // start the server
     return this->msgServer_->Start();
 }
@@ -63,7 +193,8 @@ DbSubtreePtr DelphiServer::GetSubtree(string kind) {
 }
 
 // addObject adds an object into a subtree based on kind
-error DelphiServer::addObject(string kind, string key, ObjectDataPtr obj) {
+    error DelphiServer::addObject(string kind, string key, ObjectDataPtr obj,
+	bool skipPersistence) {
     std::map<string, ObjectDataPtr>::iterator it;
 
     // some error checking on the objects
@@ -82,12 +213,16 @@ error DelphiServer::addObject(string kind, string key, ObjectDataPtr obj) {
         subtree->objects.erase(it);
     }
     subtree->objects[key] = obj;
+    
+    if (obj->persist() && !skipPersistence) {
+	this->persistObject(kind, key, obj);
+    }
 
     return error::OK();
 }
 
 // delObject deletes an object
-error DelphiServer::delObject(string kind, string key) {
+error DelphiServer::delObject(string kind, string key, ObjectDataPtr obj) {
     std::map<string, ObjectDataPtr>::iterator it;
 
     // get the sub tree
@@ -97,6 +232,10 @@ error DelphiServer::delObject(string kind, string key) {
     it = subtree->objects.find(key);
     if (it != subtree->objects.end()) {
         subtree->objects.erase (it);
+    }
+
+    if (obj->persist()) {
+	this->unpersistObject(kind, key);
     }
 
     return error::OK();
@@ -421,7 +560,7 @@ error DelphiServer::HandleChangeReq(int sockCtx, vector<ObjectData> req, vector<
         }
         case DeleteOp:
         {
-            error err = this->delObject(kind, key);
+            error err = this->delObject(kind, key, newObj);
             if (err.IsNotOK()) {
                 LogError("Error adding the object {}/{}. Err: {}", kind, key, err);
                 return err;

@@ -39,6 +39,9 @@ public:
     virtual ::google::protobuf::Message *GetMessage() {
         return this;
     }
+    virtual bool IsPersistent() {
+	return true;
+    }
     static error Mount(DelphiClientPtr client, MountMode mode) {
         return client->MountKind("TestObject", mode);
     }

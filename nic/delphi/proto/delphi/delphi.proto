@@ -66,6 +66,9 @@ extend google.protobuf.MessageOptions {
 
     // datapath_metrics: will determine if the metrics is in datapath memory(PAL)
     bool datapath_metrics = 70003;
+
+    // persist: if set the hub will persist the message between reloads
+    bool persist = 70004;
 }
 
 // Delphi options applied at the field level

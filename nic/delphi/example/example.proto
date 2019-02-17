@@ -44,3 +44,15 @@ message ExampleSingleton {
     delphi.ObjectMeta      Meta                 = 1;
     string                 DummySingletonField  = 2 [(delphi.event) = true];
 }
+
+// spec part of the object
+message ExamplePersistent {
+    option (delphi.update_event) = true;
+    option (delphi.persist)      = true;
+    delphi.ObjectMeta      Meta         = 1;
+    IntfIndex              Key          = 2;
+    IntfState              AdminState   = 3 [(delphi.event) = true];
+    string                 MacAddress   = 4;
+    uint64                 StatusHandle = 5;
+    IntfIndex              StatusIdx    = 6 [(delphi.event) = true];
+}

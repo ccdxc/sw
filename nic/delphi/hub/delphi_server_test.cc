@@ -18,7 +18,7 @@ protected:
 public:
     virtual void SetUp() {
         // create delphi server without the messenger
-        server = make_shared<DelphiServer>();
+        server = make_shared<DelphiServer>("/tmp/delphi_test.dat");
     }
     virtual void TearDown() {
     }
@@ -212,8 +212,7 @@ TEST_F(DelphiServerTest, BasicObjectTest) {
     err = server->HandleMountReq(1, mountReq, mountResp);
     ASSERT_EQ(err, error::OK()) << "mount request failed";
     ASSERT_EQ(mountResp->objects().size(), 0) << "mount response had objects after delete";
-}
-
+}    
 } // namespace
 
 int main(int argc, char **argv) {

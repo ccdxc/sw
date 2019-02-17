@@ -55,6 +55,7 @@ third-party/boost/
 third-party/libev/
 third-party/avago/x86_64/
 third-party/libz/
+third-party/liblmdb/
 sdk/third-party/avago/include/
 model_sim/libs/
 tools/ncc/csr_json/

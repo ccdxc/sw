@@ -5,30 +5,31 @@ import "delphi.proto";
 
 // message container for one object
 message ObjectData {
-    ObjectMeta        Meta  = 1;    // object meta of the object
-    ObjectOperation   Op    = 2;    // Operation on object
-    bytes             Data  = 3;    // message data
+    ObjectMeta       Meta    = 1; // object meta of the object
+    ObjectOperation  Op      = 2; // Operation on object
+    bytes            Data    = 3; // message data
+    bool             Persist = 4; // Should the object be persited
 }
 
 // mount data
 message MountData {
-    string        Kind         = 1;    // object kind within the category to mount (could be empty)
-    string        Key          = 2;    // specific object key to mount
-    MountMode     Mode         = 3;    // mount read-only or read-write
+    string    Kind = 1; // object kind within the category to mount (could be empty)
+    string    Key  = 2; // specific object key to mount
+    MountMode Mode = 3; // mount read-only or read-write
 }
 
 // mount request
 message MountReqMsg {
-    string                ServiceName  = 1;    // unique service name for the service
-    uint32                ServiceID    = 2;    // unique id for the service
-    repeated MountData    Mounts       = 3;    // requested mount points
+    string             ServiceName  = 1; // unique service name for the service
+    uint32             ServiceID    = 2; // unique id for the service
+    repeated MountData Mounts       = 3; // requested mount points
 }
 
 // mount response
 message MountRespMsg {
-    string                 ServiceName  = 1;    // unique service name for the service
-    uint32                 ServiceID    = 2;    // unique id for the service
-    repeated ObjectData    Objects      = 6;    // objects
+    string              ServiceName  = 1; // unique service name for the service
+    uint32              ServiceID    = 2; // unique id for the service
+    repeated ObjectData Objects      = 6; // objects
 }
 
 // message types
@@ -47,11 +48,11 @@ enum MessageType {
 
 // all messages exchanged by delphi components are in this format
 message Message {
-    MessageType            Type        = 1;
-    uint64                 MessageId   = 2;
-    uint64                 ResponseTo  = 3;
-    string                 Status      = 4;
-    repeated ObjectData    Objects     = 6;
+    MessageType         Type       = 1;
+    uint64              MessageId  = 2;
+    uint64              ResponseTo = 3;
+    string              Status     = 4;
+    repeated ObjectData Objects    = 6;
 }
 
 message TestKey {
@@ -60,11 +61,11 @@ message TestKey {
 
 message TestObject {
      option (delphi.update_event) = true;
-     ObjectMeta  Meta        = 1;
-     TestKey     Key         = 2;
-     string      TestData1   = 3;
-     string      TestData2   = 4;
-     string      TestData3   = 5;
-     string      TestData4   = 6;
-     string      TestData5   = 7;
+     ObjectMeta Meta      = 1;
+     TestKey    Key       = 2;
+     string     TestData1 = 3;
+     string     TestData2 = 4;
+     string     TestData3 = 5;
+     string     TestData4 = 6;
+     string     TestData5 = 7;
  }

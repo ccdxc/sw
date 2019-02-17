@@ -90,6 +90,7 @@ enum UpgType {
 message UpgReq {
     option (delphi.update_event) = true;
     option (delphi.singleton)    = true;
+    option (delphi.persist)      = true;
     delphi.ObjectMeta          Meta            = 1;
     UpgReqType                 UpgReqCmd       = 2 [(delphi.event) = true];
     UpgType                    UpgReqType      = 3 [(delphi.event) = true];

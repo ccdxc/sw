@@ -128,6 +128,14 @@ public:
         return obj;
     }
       {{end}}
+
+    virtual bool IsPersistent() {
+      {{if .HasExtOption "delphi.persist" }}
+        return true;
+      {{else}}
+        return false;
+      {{end}}
+    }
 };
 
 class {{.GetName}}Reactor : public BaseReactor {
