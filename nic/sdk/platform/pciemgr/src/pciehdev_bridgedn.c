@@ -8,7 +8,7 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
-#include "platform/include/common/pci_ids.h"
+#include "platform/pciehdevices/include/pci_ids.h"
 #include "gen/platform//mem_regions.hpp"
 #include "platform/misc/include/misc.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"

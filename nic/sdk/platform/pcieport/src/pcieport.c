@@ -14,12 +14,11 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-#include "platform/include/common/pci_ids.h"
+#include "platform/pciehdevices/include/pci_ids.h"
 #include "platform/misc/include/misc.h"
 #include "platform/pal/include/pal.h"
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pciemgr/include/pciemgr.h"
-
 #include "pcieport.h"
 #include "pcieport_impl.h"
 

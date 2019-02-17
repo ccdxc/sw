@@ -6,7 +6,7 @@
 #include <iostream>
 #include <cmath>
 
-#include "nic/include/storage_seq_common.h"
+#include "nic/sdk/storage/storage_seq_common.h"
 
 #include "lif.hpp"
 #include "print.hpp"

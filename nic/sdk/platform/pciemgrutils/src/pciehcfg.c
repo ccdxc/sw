@@ -10,10 +10,9 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include "platform/include/common/pci_ids.h"
+#include "platform/pciehdevices/include/pci_ids.h"
 #include "platform/cfgspace/include/cfgspace.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
-
 #include "pciehcfg_impl.h"
 
 void

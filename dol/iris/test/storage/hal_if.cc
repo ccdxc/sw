@@ -10,7 +10,7 @@
 #include "gen/proto/internal.grpc.pb.h"
 #include "dol/iris/test/storage/hal_if.hpp"
 #include "gflags/gflags.h"
-#include "nic/include/storage_seq_common.h"
+#include "nic/sdk/storage/storage_seq_common.h"
 
 DECLARE_uint64(hal_port);
 DECLARE_string(hal_ip);

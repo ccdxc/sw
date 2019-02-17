@@ -4,7 +4,7 @@
 #include "dol/iris/test/storage/utils.hpp"
 #include "dol/iris/test/storage/hal_if.hpp"
 #include "nic/sdk/model_sim/include/lib_model_client.h"
-#include "nic/include/storage_seq_common.h"
+#include "nic/sdk/storage/storage_seq_common.h"
 
 namespace qstate_if {
 

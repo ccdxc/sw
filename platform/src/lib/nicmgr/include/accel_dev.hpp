@@ -6,7 +6,7 @@
 #include <ev++.h>
 
 #include "nic/include/accel_ring.h"
-#include "nic/include/storage_seq_common.h"
+#include "nic/sdk/storage/storage_seq_common.h"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/linkmgr/linkmgr_types.hpp"
 

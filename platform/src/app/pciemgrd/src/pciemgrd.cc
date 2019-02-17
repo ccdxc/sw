@@ -14,7 +14,7 @@
 #include <sys/param.h>
 #include <sys/time.h>
 
-#include "platform/include/common/pci_ids.h"
+#include "platform/pciehdevices/include/pci_ids.h"
 #include "nic/sdk/platform/pal/include/pal.h"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"

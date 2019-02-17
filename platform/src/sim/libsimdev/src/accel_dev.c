@@ -27,7 +27,7 @@
 /* Supply these for accel_dev_if.h */
 #define dma_addr_t uint64_t
 
-#include "nic/include/storage_seq_common.h"
+#include "nic/sdk/storage/storage_seq_common.h"
 #include "nic/include/accel_ring.h"
 #include "nic/include/accel_dev_if.h"
 

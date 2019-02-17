@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-#include "platform/include/common/pci_ids.h"
+#include "platform/pciehdevices/include/pci_ids.h"
 #include "platform/pciemgrutils/include/pciehdev.h"
 #include "platform/pciemgrutils/include/pciehcfg.h"
 

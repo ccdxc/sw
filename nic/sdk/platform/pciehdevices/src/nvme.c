@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <sys/types.h>
 
-#include "platform/include/common/pci_ids.h"
+#include "platform/pciehdevices/include/pci_ids.h"
 #include "platform/intrutils/include/intrutils.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "pciehdevices.h"

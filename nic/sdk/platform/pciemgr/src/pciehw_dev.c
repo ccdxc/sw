@@ -10,9 +10,9 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
+#include "platform/pciehdevices/include/pci_ids.h"
 #include "platform/misc/include/misc.h"
 #include "platform/misc/include/bdf.h"
-#include "platform/include/common/pci_ids.h"
 #include "platform/pal/include/pal.h"
 #include "platform/pciemgr/include/pciehw.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"

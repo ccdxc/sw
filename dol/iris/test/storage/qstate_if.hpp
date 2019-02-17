@@ -2,7 +2,7 @@
 #define _QSTATE_IF_HPP_
 
 #include <stdint.h>
-#include "nic/include/storage_seq_common.h"
+#include "nic/sdk/storage/storage_seq_common.h"
 
 namespace qstate_if {
 

@@ -7,7 +7,8 @@ MODULE_INCS         = ${BLD_P4GEN_DIR}/storage_seq/asm_out \
                       ${MODULE_DIR}/../include \
                       ${TOPDIR}/nic/p4/storage/common \
                       ${TOPDIR}/nic/p4/include \
-                      ${TOPDIR}/nic/include
+                      ${TOPDIR}/nic/include \
+                      ${TOPDIR}/nic/sdk/storage
 MODULE_DEPS         = $(shell find ${MODULE_DIR} -name '*.h')
 MODULE_BIN_DIR      = ${BLD_BIN_DIR}/p4pasm
 include ${MKDEFS}/post.mk
