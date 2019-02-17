@@ -325,7 +325,7 @@ static void ionic_link_status_check(struct lif *lif)
 
 	if (link_up) {
 		netdev_info(netdev, "Link up - %d Gbps\n",
-			    lif->notifyblock->link_speed);
+			    lif->notifyblock->link_speed / 1000);
 		netif_carrier_on(netdev);
 
 		if (test_bit(LIF_UP, lif->state))
