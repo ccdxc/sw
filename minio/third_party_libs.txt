@@ -20,7 +20,7 @@ nic/sdk/third-party/googletest-release-1.8.0/googletest/make/aarch64/
 nic/hal/third-party/snort3/export/x86_64/*
 nic/hal/third-party/snort3/export/aarch64/*
 
-nic/third-party/libev/*
+nic/sdk/third-party/libev/*
 
 nic/hal/third-party/tins/*
 nic/hal/third-party/pcap/*

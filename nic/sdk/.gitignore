@@ -14,4 +14,5 @@ third-party/avago/fw
 third-party/locale
 third-party/dpdk
 third-party/asic
+third-party/libev
 platform/capri/capri_tm_rw.cc
