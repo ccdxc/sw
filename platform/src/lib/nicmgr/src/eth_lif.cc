@@ -18,7 +18,6 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/p4/common/defines.h"
 
-#include "gen/platform/mem_regions.hpp"
 #include "gen/proto/nicmgr/nicmgr.pb.h"
 #include "gen/proto/nicmgr/metrics.delphi.hpp"
 #include "gen/proto/common/nicmgr_status_msgs.pb.h"

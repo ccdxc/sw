@@ -17,6 +17,7 @@
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/hal/pd/capri/capri_sw_phv.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
+#include "nic/hal/pd/capri/capri_toeplitz.hpp"
 
 using namespace sdk::platform::capri;
 

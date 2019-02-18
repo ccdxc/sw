@@ -411,6 +411,7 @@ void PdClient::init(void)
 {
     int ret;
     hal::hal_cfg_t hal_cfg;
+    std::string mpart_json = hal_cfg_path_ + "/iris/hbm_mem.json";
 
     NIC_LOG_DEBUG("Loading p4plus RxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
     ret = p4plus_rxdma_init_tables();
@@ -419,7 +420,7 @@ void PdClient::init(void)
     ret = p4plus_txdma_init_tables();
     assert(ret == 0);
     NIC_LOG_DEBUG("Initializing HBM Memory Partitions from: {}...", hal_cfg_path_);
-    mp_ = mpartition::factory();
+    mp_ = mpartition::factory(mpart_json.c_str());
     assert(mp_);
     NIC_LOG_DEBUG("Initializing LIF Manager ...");
     lm_ = LIFManager::factory(mp_, NULL, kLif2QstateHBMLabel);

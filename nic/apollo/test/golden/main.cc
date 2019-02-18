@@ -787,6 +787,7 @@ TEST_F(apollo_test, test1)
                                  .cfg_path = std::getenv("HAL_CONFIG_PATH")};
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    std::string mpart_json = cfg.cfg_path + "/apollo/hbm_mem.json";
 #if SIM
     const char *hal_conf_file = "apollo/hal.json";
 #else
@@ -808,7 +809,8 @@ TEST_F(apollo_test, test1)
     }
     ASSERT_TRUE(catalog != NULL);
     cfg.catalog = catalog;
-    cfg.mempartition = sdk::platform::utils::mpartition::factory();
+    cfg.mempartition =
+        sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
     std::ifstream json_cfg(cfg.cfg_path + hal_conf_file);
     ptree hal_conf;

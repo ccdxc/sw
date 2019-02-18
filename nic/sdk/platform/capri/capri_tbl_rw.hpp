@@ -130,7 +130,6 @@ void capri_program_table_mpu_pc(int tableid, bool gress, int stage, int stage_ta
                            uint64_t capri_table_asm_err_offset,
                            uint64_t capri_table_asm_base);
 
-int capri_toeplitz_init(int stage, int stage_tableid);
 
 int capri_p4plus_table_init(platform_type_t platform_type,
                             int stage_apphdr, int stage_tableid_apphdr,

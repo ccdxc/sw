@@ -11,7 +11,6 @@
 #include "platform/capri/capri_state.hpp"
 #include "lib/utils/utils.hpp"
 #include "platform/utils/mpartition.hpp"
-#include "gen/platform/mem_regions.hpp"
 
 #include "third-party/asic/capri/model/cap_psp/cap_psp_csr.h"
 #include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"

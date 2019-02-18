@@ -5,7 +5,8 @@ MODULE_TARGET   = libpdcapri.so
 MODULE_PIPELINE = iris gft
 MODULE_PREREQS  = capri_tm_rw_gen.tenjin \
                   common_p4plus_rxdma.p4bin \
-				  common_p4plus_txdma.p4bin
+                  common_p4plus_txdma.p4bin \
+                  hal.memrgns
 MODULE_DEFS     = ${NIC_CSR_DEFINES}
 MODULE_INCS     = ${NIC_CSR_INCS} \
                   ${TOPDIR}/nic/hal/third-party/openssl/include

@@ -316,7 +316,7 @@ start_nicmgr_eth() {
     fi
 
     HAL_CONFIG_PATH="$PWD/../nic/conf" \
-    LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../bazel-bin/nic/sdk/model_sim/:../nic/conf/sdk" \
+    LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../nic/conf/sdk" \
         ZMQ_SOC_DIR=$PWD/../nic \
         $GDB ./gen/x86_64/bin/nicmgrd -c ./src/app/nicmgrd/etc/eth.json
 }
@@ -328,7 +328,7 @@ start_nicmgr_eth_smart() {
     fi
 
     HAL_CONFIG_PATH="../nic/conf" \
-    LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../bazel-bin/nic/sdk/model_sim/:../nic/conf/sdk" \
+    LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../nic/conf/sdk" \
         ZMQ_SOC_DIR=$PWD/../nic \
         $GDB ./gen/x86_64/bin/nicmgrd -s -c ./src/app/nicmgrd/etc/eth-smart.json
 }
@@ -340,7 +340,7 @@ start_nicmgr_accel() {
     fi
 
     HAL_CONFIG_PATH="../nic/conf" \
-    LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../bazel-bin/nic/sdk/model_sim/:../nic/conf/sdk" \
+    LD_LIBRARY_PATH="../nic/build/x86_64/iris/lib/:./gen/x86_64/lib/:../nic/conf/sdk" \
         ZMQ_SOC_DIR=$PWD/../nic \
         $GDB ./gen/x86_64/bin/nicmgrd -p sim -c ./src/app/nicmgrd/etc/accel.json
 }

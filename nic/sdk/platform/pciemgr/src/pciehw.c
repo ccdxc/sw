@@ -17,14 +17,16 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-#include "gen/platform/mem_regions.hpp"
 #include "platform/misc/include/misc.h"
 #include "platform/misc/include/bdf.h"
 #include "platform/pal/include/pal.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "platform/cfgspace/include/cfgspace.h"
+#include "platform/utils/mpart_rsvd.hpp"
 
 #include "pciehw_impl.h"
+
+#define MREGION_PCIEMGR_ADDR (MREGION_BASE_ADDR + MREGION_PCIEMGR_START_OFFSET)
 
 static pciehw_t pciehw;
 
@@ -240,7 +242,8 @@ pciehw_memmap_hwmem(const pciemgr_initmode_t initmode)
 {
     pciehw_t *phw = pciehw_get();
     const char *pciehw_addr_env = getenv("PCIEHW_ADDR");
-    u_int64_t pciehw_pa = roundup(MEM_REGION_ADDR(PCIEMGR), 1024*1024);
+    // TODO. Need to read it from memory or file. Temporary fix for SDK compilation
+    u_int64_t pciehw_pa = roundup(MREGION_PCIEMGR_ADDR, 1024*1024);
     pciehw_mem_t *pciehwmem;
 
     if (pciehw_addr_env) {
@@ -248,7 +251,7 @@ pciehw_memmap_hwmem(const pciemgr_initmode_t initmode)
         pciesys_loginfo("$PCIEHW_ADDR override 0x%"PRIx64"\n", pciehw_pa);
     }
 
-    assert((MEM_REGION_ADDR(PCIEMGR) + MEM_REGION_PCIEMGR_SIZE -
+    assert((MREGION_PCIEMGR_ADDR + MREGION_PCIEMGR_SIZE -
            pciehw_pa) >= sizeof(pciehw_mem_t));
 
     pciehwmem = pal_mem_map(pciehw_pa, sizeof(pciehw_mem_t), MATTR_UNCACHED);

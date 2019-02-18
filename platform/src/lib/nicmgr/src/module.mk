@@ -1,8 +1,7 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_PREREQS  := common_p4plus_rxdma.p4bin common_p4plus_txdma.p4bin \
-                   hal.memrgns
+MODULE_PREREQS  := common_p4plus_rxdma.p4bin common_p4plus_txdma.p4bin
 MODULE_TARGET   := libnicmgr.so
 SW_VERSION      := ${shell git describe --dirty --always}
 MODULE_FLAGS    := -DSW_VERSION="\"${SW_VERSION}\""

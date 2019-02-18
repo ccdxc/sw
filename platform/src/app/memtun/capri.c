@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include "dtls.h"
-#include "gen/platform/mem_regions.hpp"
+#include "nic/sdk/platform/utils/mpart_rsvd.hpp"
 
 static char *progname;
 
@@ -116,9 +116,9 @@ main(int argc, char *argv[])
 
     progname = argv[0];
 
-    phys = MEM_REGION_ADDR(MEMTUN);
-#if MEM_REGION_MEMTUN_SIZE < 256 * 1024
-#   error "MEM_REGION_MEMTUN_SIZE < (256 * 1024)"
+    phys = (MREGION_BASE_ADDR + MREGION_MEMTUN_START_OFFSET);
+#if MREGION_MEMTUN_SIZE < 256 * 1024
+#   error "MREGION_MEMTUN_SIZE < (256 * 1024)"
 #endif
 
     if (argc >= 2) {

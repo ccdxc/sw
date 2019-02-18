@@ -72,6 +72,7 @@ hal_init (hal_cfg_t *hal_cfg)
     catalog      *catalog = NULL;
     hal_ret_t    ret      = HAL_RET_OK;
     sdk::linkmgr::linkmgr_cfg_t  sdk_cfg;
+    std::string mpart_json = hal_cfg->cfg_path + "/apollo/hbm_mem.json";
 
     // check to see if HAL is running with root permissions
     user = getenv("USER");
@@ -82,11 +83,18 @@ hal_init (hal_cfg_t *hal_cfg)
     // do SDK initialization, if any
     hal_sdk_init();
 
+    // initialize the logger
+    HAL_TRACE_DEBUG("Initializing HAL ...");
+    if (!getenv("DISABLE_LOGGING") && hal_logger_init(hal_cfg) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
+    }
+
     // parse and initialize the catalog
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
     SDK_ASSERT(catalog != NULL);
     hal_cfg->catalog = catalog;
-    hal_cfg->mempartition = sdk::platform::utils::mpartition::factory();
+    hal_cfg->mempartition =
+        sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
     // validate control/data cores against catalog
     HAL_ABORT(hal_cores_validate(catalog->cores_mask(),
@@ -96,11 +104,6 @@ hal_init (hal_cfg_t *hal_cfg)
     // initialize random number generator
     srand(time(NULL));
 
-    // initialize the logger
-    HAL_TRACE_DEBUG("Initializing HAL ...");
-    if (!getenv("DISABLE_LOGGING") && hal_logger_init(hal_cfg) != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
-    }
     if (gl_super_user) {
         HAL_TRACE_DEBUG("Running as superuser ...");
     }

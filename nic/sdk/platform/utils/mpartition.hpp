@@ -20,6 +20,14 @@ namespace utils {
 #define MEM_REG_NAME_MAX_LEN    80
 #define INVALID_MEM_ADDRESS     0xFFFFFFFFFFFFFFFF
 
+// Common memory regions irrespective of the pipeline
+#define MEM_REGION_QOS_FIFO_NAME        "qos-hbm-fifo"
+#define MEM_REGION_TIMERS_NAME          "timers"
+#define MEM_REGION_P4_PROGRAM_NAME      "p4_program"
+#define MEM_REGION_TX_SCHEDULER_NAME    "tx-scheduler"
+#define MEM_REGION_LIF_STATS_NAME       "lif_stats"
+#define MEM_REGION_MPU_TRACE_NAME       "mpu-trace"
+
 /**
  * @brief Memory mpartition region
  */
@@ -38,9 +46,6 @@ public:
     /**
      * @brief Singleton Get instance method
      *
-     * @param[in] base_addr Base address of the memory
-     * @param[in] mmgr Pointer to the memory manager - optional
-     *
      * @return #mpartition pointer on success, NULL on error
      */
     static mpartition *get_instance(void);
@@ -48,12 +53,19 @@ public:
     /**
      * @brief Factory method
      *
-     * @param[in] base_addr Base address of the memory
+     * @param[in] mpartition_json_file Memory regions info 
      * @param[in] mmgr Pointer to the memory manager - optional
      *
      * @return #mpartition pointer on success, NULL on error
      */
-    static mpartition *factory(shmmgr *mmgr = NULL);
+    static mpartition *factory(const char *mpart_json_file,
+                               shmmgr *mmgr = NULL);
+    /**
+     * @brief Destroy method
+     *
+     * @param[in] mpartition  Pointer to the mpartition instance
+     *
+     */
     static void destroy(mpartition *mpartition);
 
     /**
@@ -156,8 +168,8 @@ private:
     ~mpartition() = default;
     mpartition(const mpartition &) = delete;
     mpartition &operator=(const mpartition &) = delete;
-    static mpartition *init(shmmgr *mmgr = NULL);
-    sdk_ret_t region_init(shmmgr *mmgr = NULL);
+    static mpartition *init(const char *mpart_json_file, shmmgr *mmgr);
+    sdk_ret_t region_init(const char *mpart_json_file, shmmgr *mmgr);
 };
 
 // functions to check the cache_pipe type

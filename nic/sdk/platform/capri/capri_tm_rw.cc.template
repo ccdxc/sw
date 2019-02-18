@@ -21,8 +21,8 @@
 #include "platform/capri/capri_p4.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "platform/capri/capri_state.hpp"
+#include "platform/utils/mpartition.hpp"
 #include "lib/bitmap/bitmap.hpp"
-#include "gen/platform/mem_regions.hpp"
 
 #include "third-party/asic/capri/model/utils/cap_blk_reg_model.h"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr.h"
@@ -2971,11 +2971,9 @@ capri_tm_init_qos_profile (capri_tm_cfg_profile_t *tm_cfg_profile,
     tm_cfg_profile->sw_cfg_write_enabled = qos_profile.sw_cfg_write_enable;
 
     tm_cfg_profile->hbm_fifo_base =
-            g_capri_state_pd->mempartition()->start_addr(
-                                            MEM_REGION_QOS_HBM_FIFO_NAME);
+        g_capri_state_pd->mempartition()->start_addr(MEM_REGION_QOS_FIFO_NAME);
     tm_cfg_profile->hbm_fifo_size =
-        g_capri_state_pd->mempartition()->size(MEM_REGION_QOS_HBM_FIFO_NAME);
-
+        g_capri_state_pd->mempartition()->size(MEM_REGION_QOS_FIFO_NAME);
     tm_cfg_profile->num_active_uplink_ports = catalog->num_uplink_ports();
 
     if (tm_cfg_profile->num_active_uplink_ports <= 1) {

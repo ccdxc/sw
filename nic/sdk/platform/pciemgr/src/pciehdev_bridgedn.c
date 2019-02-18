@@ -9,17 +9,18 @@
 #include <sys/types.h>
 
 #include "platform/pciehdevices/include/pci_ids.h"
-#include "gen/platform//mem_regions.hpp"
 #include "platform/misc/include/misc.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/utils/mpart_rsvd.hpp"
 
 static void
 init_memtun_bar(const int port, pciehbars_t *pbars)
 {
     const char *memtun_addr_env = getenv("MEMTUN_ADDR");
     const char *memtun_size_env = getenv("MEMTUN_SIZE");
-    u_int64_t memtun_pa = MEM_REGION_ADDR(MEMTUN);
-    u_int64_t memtun_sz = MEM_REGION_MEMTUN_SIZE;
+    // TODO. Need to read it from memory or file. Temporary fix for SDK compilation
+    u_int64_t memtun_pa = (MREGION_BASE_ADDR + MREGION_MEMTUN_START_OFFSET);
+    u_int64_t memtun_sz = MREGION_MEMTUN_SIZE;
     pciehbarreg_t preg;
     pciehbar_t pbar;
     prt_t prt;

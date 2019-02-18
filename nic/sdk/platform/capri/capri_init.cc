@@ -12,7 +12,6 @@
 #include "platform/capri/capri_common.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
-#include "gen/platform/mem_regions.hpp"
 #include "third-party/asic/capri/verif/apis/cap_npv_api.h"
 #include "third-party/asic/capri/verif/apis/cap_dpa_api.h"
 #include "third-party/asic/capri/verif/apis/cap_pics_api.h"
@@ -233,13 +232,11 @@ capri_prd_init()
 static sdk_ret_t
 capri_repl_init (capri_cfg_t *cfg)
 {
-#ifdef MEM_REGION_MCAST_REPL_NAME
     uint64_t hbm_repl_table_offset = get_mem_offset(MEM_REGION_MCAST_REPL_NAME);
     if (hbm_repl_table_offset != INVALID_MEM_ADDRESS) {
         capri_tm_repl_table_base_addr_set(hbm_repl_table_offset / CAPRI_REPL_ENTRY_WIDTH);
         capri_tm_repl_table_token_size_set(cfg->repl_entry_width * 8);
     }
-#endif
     return SDK_RET_OK;
 }
 

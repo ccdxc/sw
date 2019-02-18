@@ -3,5 +3,4 @@
 include ${MKDEFS}/pre.mk
 MODULE_DEFS     = ${NIC_CSR_DEFINES}
 MODULE_TARGET   = libsdkcapri.so
-MODULE_PREREQS  = hal.memrgns
 include ${MKDEFS}/post.mk

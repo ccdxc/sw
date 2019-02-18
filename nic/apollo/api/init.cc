@@ -99,6 +99,7 @@ oci_init (oci_init_params_t *params)
 {
     sdk_ret_t     ret;
     asic_cfg_t    asic_cfg;
+    std::string   mpart_json;
 
     /**< initializer the logger */
     sdk::lib::logger::init(params->trace_cb);
@@ -113,10 +114,13 @@ oci_init (oci_init_params_t *params)
     ret = core::parse_global_config(params->pipeline, params->cfg_file,
                                     &api::g_oci_state);
     SDK_ASSERT(ret == SDK_RET_OK);
-    api::g_oci_state.set_mpartition(sdk::platform::utils::mpartition::factory());
-    api::g_oci_state.set_catalog(
-        catalog::factory(api::g_oci_state.cfg_path() +
-                         catalog::catalog_file(api::g_oci_state.platform_type())));
+    mpart_json =
+        api::g_oci_state.cfg_path() + "/" + params->pipeline + "/hbm_mem.json";
+    api::g_oci_state.set_mpartition(
+        sdk::platform::utils::mpartition::factory(mpart_json.c_str()));
+    api::g_oci_state.set_catalog(catalog::factory(
+        api::g_oci_state.cfg_path() +
+        catalog::catalog_file(api::g_oci_state.platform_type())));
     ret = core::parse_pipeline_config(params->pipeline, &api::g_oci_state);
     SDK_ASSERT(ret == SDK_RET_OK);
 

@@ -25,9 +25,6 @@ namespace regions {
 """%(name, name)
 
 ftr="""
-#define MEM_REGION_BASE_ADDR       0x0C0000000UL
-#define MEM_REGION_ADDR(name)      (MEM_REGION_BASE_ADDR + MEM_REGION_##name##_START_OFFSET)
-
 #ifdef  __cplusplus
 } // namespace mem
 } // namespace regions
@@ -170,13 +167,6 @@ def parse_file():
 
             idx = idx + 1
 
-            nlist = nlist + "\n    " + nbase + "NAME, \\"
-            olist = olist + "\n    " + nbase + "START_OFFSET, \\"
-            slist = slist + "\n    " + nbase + "SIZE, \\"
-            eslist = eslist + "\n    " + nbase + "ELEMENT_SIZE, \\"
-            clist = clist + "\n    " + nbase + "CACHE_PIPE, \\"
-            rlist = rlist + "\n    " + nbase + "RESET, \\"
-
     print >> fd, "\n/////////////////////////////////////////////////////////\n"
 
 
@@ -193,15 +183,6 @@ def parse_file():
 
     print >> fd, "\n/////////////////////////////////////////////////////////\n"
 
-    # Dump the list of value for name , size etc
-    print >> fd, "#define %s {   \\%s }" %(name + "NAME_LIST", nlist[:-3])
-    print >> fd, "\n#define %s {   \\%s }" %(name + "SIZE_LIST", slist[:-3])
-    print >> fd, "\n#define %s {   \\%s }" %(name + "ELEMENT_SIZE_LIST", eslist[:-3])
-    print >> fd, "\n#define %s {   \\%s }" %(name + "START_OFFSET_LIST", olist[:-3])
-    print >> fd, "\n#define %s {   \\%s }" %(name + "CACHE_PIPE_LIST", clist[:-3])
-    print >> fd, "\n#define %s {   \\%s }" %(name + "RESET_LIST", rlist[:-3])
-
-    print >> fd, "\n/////////////////////////////////////////////////////////\n"
     return 0
 
 def main():

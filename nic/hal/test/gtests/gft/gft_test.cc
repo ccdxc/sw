@@ -1421,6 +1421,7 @@ TEST_F(gft_test, test1) {
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
     const char *hal_conf_file = "conf/gft/hal.json";
+    std::string mpart_json = cfg.cfg_path + "/gft/hbm_mem.json";
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;
     catalog = sdk::lib::catalog::factory(cfg.cfg_path + "/catalog.json");
 
@@ -1434,7 +1435,7 @@ TEST_F(gft_test, test1) {
     }
     ASSERT_TRUE(catalog != NULL);
     cfg.catalog = catalog;
-    cfg.mempartition = sdk::platform::utils::mpartition::factory();
+    cfg.mempartition = sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
     std::ifstream json_cfg(hal_conf_file);
     ptree hal_conf;

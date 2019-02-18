@@ -183,15 +183,25 @@ hal_init (hal_cfg_t *hal_cfg)
     int                tid;
     sdk::lib::catalog  *catalog = NULL;
     hal_ret_t          ret      = HAL_RET_OK;
+    std::string         mpart_json =
+        hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_mem.json";
 
     // do SDK initialization, if any
     hal_sdk_init();
+
+    // initialize the logger
+    HAL_TRACE_DEBUG("Initializing HAL ...");
+    if (!getenv("DISABLE_LOGGING") && hal_logger_init(hal_cfg) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
+    }
+
 
     // parse and initialize the catalog
     catalog = sdk::lib::catalog::factory(hal_cfg->catalog_file);
     SDK_ASSERT_TRACE_RETURN(catalog != NULL, HAL_RET_ERR, "Catalog file error");
     hal_cfg->catalog = catalog;
-    hal_cfg->mempartition = sdk::platform::utils::mpartition::factory();
+    hal_cfg->mempartition =
+        sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
     // validate control/data cores against catalog
     ret = hal_cores_validate(catalog->cores_mask(),
@@ -202,12 +212,6 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // initialize random number generator
     srand(time(NULL));
-
-    // initialize the logger
-    HAL_TRACE_DEBUG("Initializing HAL ...");
-    if (!getenv("DISABLE_LOGGING") && hal_logger_init(hal_cfg) != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
-    }
 
     // instantiate delphi thread
     hal_delphi_thread_init(hal_cfg);

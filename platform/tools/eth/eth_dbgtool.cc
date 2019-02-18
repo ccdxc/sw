@@ -12,10 +12,11 @@
 #include "nic/include/eth_common.h"
 #include "nic/include/notify.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
-#include "platform/utils/mpartition.hpp"
+#include "gen/platform/mem_regions.hpp"
 
 #include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
+
 
 /* Supply these for ionic_if.h */
 #define BIT(n)                  (1 << n)
@@ -314,17 +315,16 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 void
 eth_stats(uint16_t lif)
 {
-    sdk::platform::utils::mpartition *mp_ =
-        sdk::platform::utils::mpartition::factory();
-    if (mp_ == NULL) {
-        printf("Failed to init mpartition library\n");
-        return;
-    }
-
-    uint64_t addr = mp_->start_addr("lif_stats") + (lif << 10);
-    printf("\naddr: 0x%lx\n\n", addr);
 
     struct ionic_lif_stats stats;
+    uint64_t addr = 0ULL;
+#ifdef MEM_REGION_LIF_STATS_NAME
+    // TODO. Need to read it fromf ile. Temporary fix for SDK compilation
+    addr = CAPRI_HBM_BASE + MEM_REGION_LIF_STATS_START_OFFSET + (lif << 10);
+    printf("\naddr: 0x%lx\n\n", addr);
+#else
+    return;
+#endif
     sdk::lib::pal_mem_read(addr, (uint8_t *)&stats, sizeof(struct ionic_lif_stats));
 
     printf("rx_ucast_bytes              : %lu\n", stats.rx_ucast_bytes);

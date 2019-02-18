@@ -13,8 +13,7 @@
 #include "platform/capri/csr/asicrw_if.hpp"
 #include "third-party/asic/capri/model/utils/cap_csr_py_if.h"
 #include "platform/capri/csrint/csr_init.hpp"
-// TODO check if we need to get it from a common location
-#include "gen/platform/mem_regions.hpp"
+#include "platform/utils/mpart_rsvd.hpp"
 
 namespace sdk {
 namespace platform {
@@ -22,9 +21,12 @@ namespace platform {
 sdk::types::mem_addr_t g_trace_base;
 sdk::types::mem_addr_t g_trace_end;
 #define roundup(x, y) ((((x) + ((y)-1)) / (y)) * (y)) /* to any y */
-#define TRACE_BASE roundup(MEM_REGION_ADDR(MPU_TRACE), 4096)
-#define TRACE_END  (MEM_REGION_ADDR(MPU_TRACE) + \
-                         MEM_REGION_MPU_TRACE_SIZE )
+// TODO. Need to read it from memory or file. Temporary fix for SDK compilation
+#define MREGION_MPU_TRACE_ADDR                                                 \
+    (MREGION_BASE_ADDR + MREGION_MPU_TRACE_START_OFFSET)
+#define TRACE_BASE roundup(MREGION_MPU_TRACE_ADDR, 4096)
+#define TRACE_END  (MREGION_MPU_TRACE_ADDR + \
+                         MREGION_MPU_TRACE_SIZE )
 
 std::map<std::string, int> pipeline_str_to_id = {
     {"txdma", TXDMA},
