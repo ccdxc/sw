@@ -1544,6 +1544,7 @@ func TestAggQuery(t *testing.T) {
 				log.Infof("==== query shard:%d replica: %d node %v ===", repl.ShardID, repl.ReplicaID, repl.NodeUUID)
 				dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
 				if rerr != nil {
+					log.Errorf("error to get client %v", rerr)
 					return false, rerr
 				}
 
@@ -1558,29 +1559,35 @@ func TestAggQuery(t *testing.T) {
 
 				resp, err := dnclient.ExecuteQuery(context.Background(), &req)
 				if err != nil {
+					log.Errorf("query failed, %v", err)
 					return false, fmt.Errorf("query failed, %s", err)
 				}
 
 				if len(resp.Result) != 1 {
+					log.Errorf("invalid number of results %+v", resp.Result)
 					return false, fmt.Errorf("invalid number of results %+v", resp.Result)
 				}
 
 				for _, rs := range resp.Result {
 					rslt := query.Result{}
 					if err := rslt.UnmarshalJSON(rs.Data); err != nil {
+						log.Errorf("failed to unmarshal query response %+v", err)
 						return false, fmt.Errorf("failed to unmarshal query response %+v", err)
 					}
 
 					if len(rslt.Series) != 1 {
+						log.Errorf("invalid number of series %+v", rslt.Series)
 						return false, fmt.Errorf("invalid number of series %+v", rslt.Series)
 					}
 
 					for _, s := range rslt.Series {
 						if len(s.Columns) != 5 {
+							log.Errorf("invalid number of columns %+v", s.Columns)
 							return false, fmt.Errorf("invalid number of columns %+v", s.Columns)
 						}
 
 						if len(s.Values) != 1 {
+							log.Errorf("invalid number of values %+v", s.Values)
 							return false, fmt.Errorf("invalid number of values %+v", s.Values)
 						}
 					}
