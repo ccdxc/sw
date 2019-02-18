@@ -300,6 +300,7 @@ struct lif {
 	struct sysctl_oid *sysctl_ifnet;
 	struct sysctl_ctx_list sysctl_ctx;
 	struct sx sx;
+	char sx_name[QUEUE_NAME_MAX_SZ];
 
 	struct rx_filters rx_filters;
 
@@ -331,7 +332,7 @@ struct lif {
 };
 
 /* lif lock. */
-#define IONIC_CORE_LOCK_INIT(x)		sx_init(&(x)->sx, (x)->name)
+#define IONIC_CORE_LOCK_INIT(x)		sx_init(&(x)->sx, (x)->sx_name)
 #define IONIC_CORE_LOCK_DESTROY(x)	sx_destroy(&(x)->sx)
 #define IONIC_CORE_LOCK(x)		sx_xlock(&(x)->sx)
 #define IONIC_CORE_UNLOCK(x)		sx_xunlock(&(x)->sx)

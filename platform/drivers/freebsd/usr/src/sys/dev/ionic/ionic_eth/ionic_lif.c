@@ -348,7 +348,6 @@ static irqreturn_t ionic_adminq_isr(int irq, void *data)
 
 static int _ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 {
-	struct rx_filter *f;
 	int err;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
@@ -358,25 +357,18 @@ static int _ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 		},
 	};
 
-	f = ionic_rx_filter_by_addr(lif, addr);
-	if (f != NULL) {
-		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "duplicate address");
-		return EINVAL;
-	}
-
 	memcpy(ctx.cmd.rx_filter_add.mac.addr, addr, ETH_ALEN);
-
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "failed to add, err: %d", err);
 	else		
-		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "added (filter id %d)",
-			ctx.comp.rx_filter_add.filter_id);
+		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "added (filter id %d)",
+					ctx.comp.rx_filter_add.filter_id);
 
 	err = ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
 	if (err)
 		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "failed to save filter (filter id %d)",
-			ctx.comp.rx_filter_add.filter_id);
+					ctx.comp.rx_filter_add.filter_id);
 
 	return (err);
 }
@@ -392,23 +384,26 @@ static int _ionic_lif_addr_del(struct lif *lif, const u8 *addr)
 		},
 	};
 
-
+	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 	f = ionic_rx_filter_by_addr(lif, addr);
 	if (!f) {
-		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "no entry");
+		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "not present");
+		IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 		return ENOENT;
 	}
 
 	KASSERT(f->filter_id, ("addr del, filter id(%d) == 0", f->filter_id));
 	ctx.cmd.rx_filter_del.filter_id = f->filter_id;
 	ionic_rx_filter_free(lif, f);
+	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "failed to delete), err: %d", err);
 	else
-		IONIC_NETDEV_ADDR_INFO(lif->netdev, addr, "deleted (filter id: %d)",
-			ctx.cmd.rx_filter_del.filter_id);
+		IONIC_NETDEV_ADDR_DEBUG(lif->netdev, addr, "deleted (filter id: %d)",
+					ctx.cmd.rx_filter_del.filter_id);
+
 	return err;
 }
 
@@ -579,7 +574,13 @@ ionic_set_multi(struct lif* lif)
 	if (lif->mc_addrs == NULL)
 		return EIO;
 
+	if_maddr_rlock(ifp);
 	TAILQ_FOREACH(ifma, &ifp->if_multiaddrs, ifma_link) {
+		if (ifma->ifma_addr->sa_family != AF_LINK)
+			continue;
+		bcopy(LLADDR((struct sockaddr_dl *) ifma->ifma_addr),
+			mac_addr, ETHER_ADDR_LEN);
+		IONIC_NETDEV_ADDR_INFO(ifp, mac_addr, "new list[%d]", mcnt);
 		mcnt++;
 	}
 
@@ -598,12 +599,12 @@ ionic_set_multi(struct lif* lif)
 			if (bcmp(mac_addr, lif->mc_addrs[i].addr, ETHER_ADDR_LEN) == 0) {
 				found = true;
 				lif->mc_addrs[i].present = true;
+				break;
 			}
 		}
 
 		if (!found)
 			bcopy(mac_addr, new_mc_addrs[num_new_mc_addrs++].addr, ETHER_ADDR_LEN);
-
 	}
 
 	/* Set all multi if we are out of filters. */
@@ -625,22 +626,22 @@ ionic_set_multi(struct lif* lif)
 		IONIC_NETDEV_ADDR_INFO(ifp, lif->mc_addrs[i].addr, "current list[%d]", i);
 		tmp = &lif->mc_addrs[i];
 		if (!tmp->present) {
-			IONIC_NETDEV_ADDR_DEBUG(ifp, tmp->addr, "deleting");
+			IONIC_NETDEV_ADDR_INFO(ifp, tmp->addr, "deleting");
+			tmp->present = false;
 			err = ionic_addr_del(ifp, tmp->addr);
 			if (err)
 				goto err_out;
 		} else {
 			IONIC_NETDEV_ADDR_INFO(ifp, lif->mc_addrs[j].addr, "add ");
 			bcopy(lif->mc_addrs[i].addr, lif->mc_addrs[j++].addr,
-				  ETHER_ADDR_LEN);
+				ETHER_ADDR_LEN);
 		}
-		tmp->present = false;
 	}
 	lif->num_mc_addrs = j;
 
 	/* Now add the addresses which are not present. */
 	for (i = 0; i < num_new_mc_addrs && lif->num_mc_addrs < max_maddrs; i++) {
-		IONIC_NETDEV_ADDR_DEBUG(ifp, new_mc_addrs[i].addr, "adding");
+		IONIC_NETDEV_ADDR_INFO(ifp, new_mc_addrs[i].addr, "adding");
 		bcopy(new_mc_addrs[i].addr, lif->mc_addrs[lif->num_mc_addrs++].addr,
 			ETHER_ADDR_LEN);
 		err = ionic_addr_add(ifp, new_mc_addrs[i].addr);
@@ -651,6 +652,7 @@ ionic_set_multi(struct lif* lif)
 	IONIC_NETDEV_INFO(ifp, "Number of MCAST: %d\n", lif->num_mc_addrs);
 
 err_out:
+	if_maddr_runlock(ifp);
 	free(new_mc_addrs, M_IONIC);
 	return (err);
 }
@@ -718,7 +720,6 @@ static int
 _ionic_vlan_add(struct net_device *netdev, u16 vid)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct rx_filter *f;
 	int err;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
@@ -728,13 +729,6 @@ _ionic_vlan_add(struct net_device *netdev, u16 vid)
 			.vlan.vlan = vid,
 		},
 	};
-
-	f = ionic_rx_filter_by_vlan(lif, vid);
-	if (f != NULL) {
-		IONIC_NETDEV_ERROR(netdev, "duplicate VLAN%d entry\n", vid);
-		return ENOENT;
-	}
-
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -1559,7 +1553,8 @@ static int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		return ENOMEM;
 	}
 
-	snprintf(lif->name, sizeof(lif->name), "ionic%u", index);
+	snprintf(lif->name, sizeof(lif->name), "%s%u", DRV_NAME, index);
+	snprintf(lif->sx_name, sizeof(lif->sx_name), "%s-core", lif->name);
 	lif->ionic = ionic;
 	lif->index = index;
 	lif->neqs = ionic->neqs_per_lif;

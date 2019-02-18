@@ -37,7 +37,7 @@ struct rx_filter {
 	struct hlist_node by_id;
 };
 
-#define RX_FILTER_HLISTS		(1 << 10)
+#define RX_FILTER_HLISTS	(1 << 10)
 #define RX_FILTER_HLISTS_MASK	(RX_FILTER_HLISTS - 1)
 
 struct rx_filters {
@@ -51,8 +51,7 @@ struct rx_filters {
 };
 
 #ifdef __FreeBSD__
-#define IONIC_RX_FILTER_INIT(x) 					\
-	mtx_init(&(x)->mtx, "rx filter", NULL, MTX_DEF)
+#define IONIC_RX_FILTER_INIT(x)		mtx_init(&(x)->mtx, "rx filter", NULL, MTX_DEF)
 #define IONIC_RX_FILTER_DESTROY(x)	mtx_destroy(&(x)->mtx)
 #define IONIC_RX_FILTER_LOCK(x)		mtx_lock(&(x)->mtx)
 #define IONIC_RX_FILTER_UNLOCK(x)	mtx_unlock(&(x)->mtx)

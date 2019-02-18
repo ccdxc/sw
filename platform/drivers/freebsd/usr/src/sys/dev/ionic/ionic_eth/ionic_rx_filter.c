@@ -155,14 +155,12 @@ struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
 	struct hlist_head *head = &lif->rx_filters.by_hash[key];
 	struct rx_filter *f = NULL;
 
-	IONIC_RX_FILTER_LOCK(&lif->rx_filters);
 	hlist_for_each_entry(f, head, by_hash) {
 		if (f->cmd.match != RX_FILTER_MATCH_MAC)
 			continue;
 		if (memcmp(addr, f->cmd.mac.addr, ETH_ALEN) == 0)
 			break;
 	}
-	IONIC_RX_FILTER_UNLOCK(&lif->rx_filters);
 
 	return f;
 }
