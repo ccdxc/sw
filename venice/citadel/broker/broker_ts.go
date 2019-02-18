@@ -413,6 +413,22 @@ func (br *Broker) ExecuteAggQuery(ctx context.Context, database string, qry stri
 		return nil, fmt.Errorf("invalid database")
 	}
 
+	dblist, err := br.ReadDatabases(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read db, %s", err)
+	}
+
+	if found := func() bool {
+		for _, db := range dblist {
+			if db.Name == database {
+				return true
+			}
+		}
+		return false
+	}(); !found {
+		return nil, fmt.Errorf("failed to find database %s", database)
+	}
+
 	// parse the query
 	pq, err := influxql.ParseQuery(qry)
 	if err != nil {

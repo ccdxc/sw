@@ -1541,6 +1541,7 @@ func TestAggQuery(t *testing.T) {
 		for _, shard := range cl.ShardMap.Shards {
 			// walk all replicas in the shard
 			for _, repl := range shard.Replicas {
+				log.Infof("==== query shard:%d replica: %d node %v ===", repl.ShardID, repl.ReplicaID, repl.NodeUUID)
 				dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
 				if rerr != nil {
 					return false, rerr
@@ -1557,7 +1558,7 @@ func TestAggQuery(t *testing.T) {
 
 				resp, err := dnclient.ExecuteQuery(context.Background(), &req)
 				if err != nil {
-					return false, err
+					return false, fmt.Errorf("query failed, %s", err)
 				}
 
 				if len(resp.Result) != 1 {
@@ -1594,6 +1595,7 @@ func TestAggQuery(t *testing.T) {
 	for _, shard := range cl.ShardMap.Shards {
 		// walk all replicas in the shard
 		for _, repl := range shard.Replicas {
+			log.Infof("==== agg-query shard:%d replica: %d node %v ===", repl.ShardID, repl.ReplicaID, repl.NodeUUID)
 			dnclient, rerr := dnodes[0].getDnclient(meta.ClusterTypeTstore, repl.NodeUUID)
 			AssertOk(t, rerr, "Error getting datanode client")
 

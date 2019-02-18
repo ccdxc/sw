@@ -450,18 +450,16 @@ func TestAggQuery(t *testing.T) {
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create a temp dir
-		path, err := ioutil.TempDir("", fmt.Sprintf("tstore-%d-", idx))
+		path, err := ioutil.TempDir("", fmt.Sprintf("agg-tstore-%d-", idx))
 		AssertOk(t, err, "Error creating tmp dir")
 		defer os.RemoveAll(path)
 
-		qpath, err := ioutil.TempDir("", fmt.Sprintf("qstore-%d-", idx))
+		qpath, err := ioutil.TempDir("", fmt.Sprintf("agg-qstore-%d-", idx))
 		AssertOk(t, err, "Error creating tmp dir")
-
 		defer os.RemoveAll(qpath)
 		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath)
 		AssertOk(t, err, "Error creating nodes")
 	}
-
 	// create the brokers
 	for idx := 0; idx < numNodes; idx++ {
 		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx))

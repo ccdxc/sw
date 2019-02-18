@@ -412,7 +412,8 @@ func (dn *DNode) writePointsInAggregator(queryDb string, measurement string, res
 		for res := range ch {
 			if res.Err != nil {
 				log.Errorf("query %s failed, %s", measurement, res.Err)
-				return res.Err
+				//TODO: retry
+				continue
 			}
 
 			// StatementID=0 is the tags query
