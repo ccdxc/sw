@@ -52,10 +52,8 @@
 
 #define rx_table_s4_t0_action tcp_cc
 #define rx_table_s4_t2_action ooo_qbase_alloc
-#define rx_table_s4_t3_action2 tcp_ooo_dummy_launch_s4
 
 #define rx_table_s5_t0_action tcp_fc
-#define rx_table_s5_t1_action2 tcp_ooo_dummy_launch_qbase_cb_load
 #define rx_table_s5_t2_action ooo_qbase_cb_load
 
 #define rx_table_s6_t0_action dma
@@ -94,6 +92,7 @@
     modify_field(common_global_scratch.tsopt_available, common_phv.tsopt_available); \
     modify_field(common_global_scratch.skip_pkt_dma, common_phv.skip_pkt_dma); \
     modify_field(common_global_scratch.ooo_alloc_fail, common_phv.ooo_alloc_fail); \
+    modify_field(common_global_scratch.ooq_tx2rx_pkt, common_phv.ooq_tx2rx_pkt); \
 
 #define GENERATE_S1_S2S_K \
     modify_field(s1_s2s_scratch.payload_len, s1_s2s.payload_len); \
@@ -113,6 +112,16 @@
     modify_field(t2_s2s_scratch.ooo_qbase_addr, t2_s2s.ooo_qbase_addr); \
     modify_field(t2_s2s_scratch.ooo_queue_id, t2_s2s.ooo_queue_id); \
     modify_field(t2_s2s_scratch.ooo_tail_index, t2_s2s.ooo_tail_index);
+
+#define GENERATE_S3_T2_S2S_K \
+    modify_field(s3_t2_s2s_scratch.ooo_rx2tx_ready_trim0, s3_t2_s2s.ooo_rx2tx_ready_trim0); \
+    modify_field(s3_t2_s2s_scratch.ooo_rx2tx_ready_len0, s3_t2_s2s.ooo_rx2tx_ready_len0); \
+    modify_field(s3_t2_s2s_scratch.ooo_rx2tx_ready_trim1, s3_t2_s2s.ooo_rx2tx_ready_trim1); \
+    modify_field(s3_t2_s2s_scratch.ooo_rx2tx_ready_len1, s3_t2_s2s.ooo_rx2tx_ready_len1); \
+    modify_field(s3_t2_s2s_scratch.ooo_rx2tx_ready_trim2, s3_t2_s2s.ooo_rx2tx_ready_trim2); \
+    modify_field(s3_t2_s2s_scratch.ooo_rx2tx_ready_len2, s3_t2_s2s.ooo_rx2tx_ready_len2); \
+    modify_field(s3_t2_s2s_scratch.ooo_rx2tx_ready_trim3, s3_t2_s2s.ooo_rx2tx_ready_trim3); \
+    modify_field(s3_t2_s2s_scratch.ooo_rx2tx_ready_len3, s3_t2_s2s.ooo_rx2tx_ready_len3); \
 
 /******************************************************************************
  * D-vectors
@@ -145,9 +154,11 @@ header_type read_tx2rxd_t {
     }
 }
 
+
 // d for stage 1
 header_type tcp_rx_d_t {
     fields {
+        ooq_not_empty           : 8;    // offset 0 (TCP_TCB_RX_OOQ_NOT_EMPTY)
         bytes_acked             : 16;   // tcp_ack stage
         slow_path_cnt           : 16;
         serq_full_cnt           : 16;
@@ -340,14 +351,16 @@ header_type ooo_qbase_addr_t {
         ooo_qbase_addr1    : 64;
         ooo_qbase_addr2    : 64;
         ooo_qbase_addr3    : 64;
-        ooo_qbase_pi       : 16;
+
+        ooo_rx2tx_qbase    : 64;
+        ooo_rx2tx_qbase_pi : 16;
     }
 }
 
 // d for stage 6 table 0
 header_type tcp_rx_dma_d_t {
     fields {
-        serq_base               : 32;
+        serq_base               : 64;
         nde_addr                : 64;
         nde_offset              : 16;
         nde_len                 : 16;
@@ -420,7 +433,7 @@ header_type to_stage_6_phv_t {
     // write-serq
     fields {
         page                    : 34;
-        descr                   : 32;
+        descr                   : 34;
         payload_len             : 16;
         serq_pidx               : 12;
     }
@@ -458,6 +471,7 @@ header_type common_global_phv_t {
         skip_pkt_dma            : 1;
         ip_tos_ecn              : 2;
         ooo_alloc_fail          : 1;
+        ooq_tx2rx_pkt           : 1;
     }
 }
 
@@ -509,6 +523,19 @@ header_type t2_s2s_phv_t {
     }
 }
 
+header_type s3_t2_s2s_phv_t {
+    fields {
+        ooo_rx2tx_ready_trim0   : 16;
+        ooo_rx2tx_ready_len0    : 16;
+        ooo_rx2tx_ready_trim1   : 16;
+        ooo_rx2tx_ready_len1    : 16;
+        ooo_rx2tx_ready_trim2   : 16;
+        ooo_rx2tx_ready_len2    : 16;
+        ooo_rx2tx_ready_trim3   : 16;
+        ooo_rx2tx_ready_len3    : 16;
+    }
+}
+
 /******************************************************************************
  * Header unions for d-vector
  *****************************************************************************/
@@ -521,8 +548,6 @@ metadata tcp_rtt_d_t tcp_rtt_d;
 @pragma scratch_metadata
 metadata read_rnmdr_d_t read_rnmdr_d;
 @pragma scratch_metadata
-metadata read_rnmdr_d_t l7_read_rnmdr_d;
-@pragma scratch_metadata
 metadata tcp_cc_d_t tcp_cc_d;
 @pragma scratch_metadata
 metadata tcp_fc_d_t tcp_fc_d;
@@ -530,8 +555,6 @@ metadata tcp_fc_d_t tcp_fc_d;
 metadata tcp_rx_dma_d_t tcp_rx_dma_d;
 @pragma scratch_metadata
 metadata rdesc_alloc_d_t rdesc_alloc_d;
-@pragma scratch_metadata
-metadata rdesc_alloc_d_t l7_rdesc_alloc_d;
 @pragma scratch_metadata
 metadata arq_pi_d_t arq_rx_pi_d;
 
@@ -600,13 +623,15 @@ metadata to_stage_7_phv_t to_s7_scratch;
 @pragma scratch_metadata
 metadata s1_s2s_phv_t s1_s2s_scratch;
 @pragma scratch_metadata
-metadata t2_s2s_phv_t t2_s2s_scratch;
-@pragma scratch_metadata
 metadata s3_t1_s2s_phv_t s3_t1_s2s_scratch;
 @pragma scratch_metadata
 metadata s6_s2s_phv_t s6_s2s_scratch;
 @pragma scratch_metadata
 metadata s6_t1_s2s_phv_t s6_t1_s2s_scratch;
+@pragma scratch_metadata
+metadata t2_s2s_phv_t t2_s2s_scratch;
+@pragma scratch_metadata
+metadata s3_t2_s2s_phv_t s3_t2_s2s_scratch;
 @pragma scratch_metadata
 metadata common_global_phv_t common_global_scratch;
 
@@ -619,8 +644,9 @@ metadata s6_s2s_phv_t s6_s2s;
 metadata s3_t1_s2s_phv_t s3_t1_s2s;
 metadata s6_t1_s2s_phv_t s6_t1_s2s;
 
-@pragma pa_header_union ingress common_t2_s2s t2_s2s
+@pragma pa_header_union ingress common_t2_s2s t2_s2s s3_t2_s2s
 metadata t2_s2s_phv_t t2_s2s;
+metadata s3_t2_s2s_phv_t s3_t2_s2s;
 
 /******************************************************************************
  * PHV following k (for app DMA etc.)
@@ -628,20 +654,17 @@ metadata t2_s2s_phv_t t2_s2s;
 @pragma dont_trim
 metadata rx2tx_extra_t rx2tx_extra;
 @pragma dont_trim
-metadata ring_entry_t l7_ring_entry;
-@pragma dont_trim
 metadata doorbell_data_t db_data;
 @pragma dont_trim
 metadata doorbell_data_t db_data2;
 @pragma dont_trim
 metadata doorbell_data_t db_data3;
+@pragma dont_trim
+metadata doorbell_data_t rx2tx_ooq_ready_db_data;
 
-/* ring_entry and aol needs to be contiguous in PHV */
-header_type ooq_rx2tx_queue_entry_t {
+header_type ooq_rx2tx_queue_entry_opaque_t {
     fields {
-        ooq_rx2tx_qentry_addr : 40;
-        ooq_rx2tx_num_entries : 16;
-        ooq_rx2tx_pad_entry   : 8;
+        entry : 64;
     }
 }
 
@@ -653,11 +676,19 @@ metadata ring_entry_t ring_entry;
 @pragma dont_trim
 metadata pkt_descr_aol_t aol;
 
+/*
+ * Upto 4 OOO queues can become in-order and DMAed to rx2tx program
+ */
 @pragma dont_trim
-metadata doorbell_data_t l7_db_data;
-
+metadata ooq_rx2tx_queue_entry_opaque_t ooq_rx2tx_queue_entry1;
 @pragma dont_trim
-metadata ooq_rx2tx_queue_entry_t ooq_rx2tx_queue_entry;
+metadata ooq_rx2tx_queue_entry_opaque_t ooq_rx2tx_queue_entry2;
+@pragma dont_trim
+metadata ooq_rx2tx_queue_entry_opaque_t ooq_rx2tx_queue_entry3;
+@pragma dont_trim
+metadata ooq_rx2tx_queue_entry_opaque_t ooq_rx2tx_queue_entry4;
+@pragma dont_trim
+metadata ooq_rx2tx_queue_entry_opaque_t dummy_to_get_around_ncc_bug;
 
 
 
@@ -694,7 +725,13 @@ metadata dma_cmd_phv2mem_t tx_doorbell1;            // dma cmd 6
 metadata dma_cmd_phv2mem_t tx_doorbell;             // dma cmd 7
 
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t tls_doorbell;            // dma cmd 8
+metadata dma_cmd_phv2mem_t rx2tx_ooq_ready;         // dma cmd 8
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t rx2tx_ooq_doorbell;      // dma cmd 9
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t tls_doorbell;            // dma cmd 10
 
 /******************************************************************************
  * Action functions to generate k_struct and d_struct
@@ -768,6 +805,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
 }
 
 #define TCP_RX_CB_PARAMS \
+        ooq_not_empty, \
         bytes_acked, slow_path_cnt, serq_full_cnt, ooo_cnt, \
         ato, del_ack_pi, cfg_flags, \
         rcv_nxt, rx_drop_cnt, ts_recent, lrcv_time, \
@@ -777,6 +815,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         write_serq, alloc_descr
 
 #define TCP_RX_CB_D \
+    modify_field(tcp_rx_d.ooq_not_empty, ooq_not_empty); \
     modify_field(tcp_rx_d.bytes_acked, bytes_acked); \
     modify_field(tcp_rx_d.slow_path_cnt, slow_path_cnt); \
     modify_field(tcp_rx_d.serq_full_cnt, serq_full_cnt); \
@@ -1011,15 +1050,6 @@ action ooo_qbase_alloc(qbase)
 }
 
 /*
- * Stage 4 table 3 action2
- */
-action tcp_ooo_dummy_launch_s4()
-{
-    // from ki global
-    GENERATE_GLOBAL_K
-}
-
-/*
  * Stage 5 table 0 action1
  */
 action tcp_fc(page, descr, page_cnt, rcv_wnd, rcv_wup, rcv_scale, cpu_id) {
@@ -1046,32 +1076,28 @@ action tcp_fc(page, descr, page_cnt, rcv_wnd, rcv_wup, rcv_scale, cpu_id) {
 }
 
 /*
- * Stage 5 table 1 action
- */
-action tcp_ooo_dummy_launch_qbase_cb_load()
-{
-    // from ki global
-    GENERATE_GLOBAL_K
-}
-
-
-/*
  * Stage 5 table 2 action
  */
 action ooo_qbase_cb_load(ooo_qbase_addr0, ooo_qbase_addr1,
                          ooo_qbase_addr2, ooo_qbase_addr3,
-                         ooo_qbase_pi)
+                         ooo_rx2tx_qbase, ooo_rx2tx_qbase_pi)
 {
     GENERATE_GLOBAL_K
 
-    GENERATE_T2_S2S_K
+    if (ooo_rx2tx_qbase_pi == 0) {
+        GENERATE_T2_S2S_K
+    }
+    if (ooo_rx2tx_qbase_pi == 1) {
+        GENERATE_S3_T2_S2S_K
+    }
 
     modify_field(ooo_qbase_addr.ooo_qbase_addr0, ooo_qbase_addr0);
     modify_field(ooo_qbase_addr.ooo_qbase_addr1, ooo_qbase_addr1);
     modify_field(ooo_qbase_addr.ooo_qbase_addr2, ooo_qbase_addr2);
     modify_field(ooo_qbase_addr.ooo_qbase_addr3, ooo_qbase_addr3);
 
-    modify_field(ooo_qbase_addr.ooo_qbase_pi, ooo_qbase_pi);
+    modify_field(ooo_qbase_addr.ooo_rx2tx_qbase, ooo_rx2tx_qbase);
+    modify_field(ooo_qbase_addr.ooo_rx2tx_qbase_pi, ooo_rx2tx_qbase_pi);
 
 }
 

@@ -69,8 +69,25 @@ table_read_RX:
 
     phvwr           p.to_s1_serq_cidx, d.serq_cidx
     phvwr           p.to_s5_serq_cidx, d.serq_cidx
+    phvwr           p.to_s6_payload_len, k.tcp_app_header_payload_len
 
-    phvwr.f.e       p.to_s6_payload_len, k.tcp_app_header_payload_len
+    seq             c1, k.tcp_app_header_from_ooq_txdma, 1
+    b.!c1           tcp_rx_stage0_end
+tcp_rx_ooq_tx2rx_pkt:
+    phvwr.c1        p.common_phv_ooq_tx2rx_pkt, 1
+    // HACK, 64 bytes following tcp_app_header is ooq_header which contains the
+    // descriptor address. This falls in app_data1 region of common rxdma phv.
+    // Until we can unionize this header correctly in p4, hardcoding the PHV
+    // location for now. This is prone to error, but hopefully if something
+    // breaks, we have DOL test cases to catch it.  (refer to
+    // iris/gen/p4gen/tcp_proxy_rxdma/asm_out/INGRESS_p.h)
+    add             r1, r0, k.app_header_app_data1[87:40]
+    phvwr           p.to_s6_descr, r1
+    add             r1, r1, CAPRI_NMDPR_PAGE_OFFSET
+    phvwr           p.to_s6_page, r1
+
+tcp_rx_stage0_end:
+    nop.e
     nop
 
 flow_terminate:

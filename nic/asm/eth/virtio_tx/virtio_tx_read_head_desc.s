@@ -114,7 +114,7 @@ virtio_tx_read_head_desc_contiguous_payload:
     add         r1, D(addr).dx, VIRTIO_NET_HDR_SIZE_NO_MRG_RXBUF
     sub         r2, D(len).wx, VIRTIO_NET_HDR_SIZE_NO_MRG_RXBUF
     CAPRI_DMA_CMD_MEM2PKT_SETUP(packet_cmd_dma_cmd, r1, r2)
-    phvwri      p.packet_cmd_dma_pkt_eop, 1
+    phvwri      p.packet_cmd_dma_cmd_pkt_eop, 1
 
 
     /* Update the total bytes consumed for this request */

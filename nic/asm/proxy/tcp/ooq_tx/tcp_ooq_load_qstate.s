@@ -9,66 +9,72 @@
 
 struct phv_ p;
 struct s0_t0_ooq_tcp_tx_k_ k;
-struct s0_t0_ooq_tcp_tx_ooq_tcp_txdma_load_stage0_d d;
+struct s0_t0_ooq_tcp_tx_load_stage0_d d;
 
 %%
     .align
-    .param tcp_ooq_txdma_load_rx2tx_slot
-    .param tcp_ooq_txdma_process_next_descr_addr
+    .param          tcp_ooq_txdma_load_rx2tx_slot
+    .param          tcp_ooq_txdma_process_next_descr_addr
+    .param          tcp_ooq_free_queue
 tcp_ooq_load_qstate:
-     seq c1, d.pi_0, d.ci_0
-     bcf [c1], tcp_ooq_load_qstate_do_nothing
-     phvwrpair p.common_phv_fid, k.p4_txdma_intr_qid, \
-               p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
-
-     seq c2, d.num_entries, d.curr_index
-     sne c3, d.num_entries, r0
-     sne c4, d.current_descr_qbase_addr, r0
-     seq c5, d.ooq_proc_in_progress, 1
-     bcf [c2 & c3 & c4 & c5], tcp_ooq_load_qstate_completed_work_for_this_request 
-     nop
-     bcf [!c2 & c3 & c4 & c5], tcp_ooq_load_qstate_process_next_pkt_descr
-     nop
-     bcf [!c5], tcp_ooq_load_qstate_process_new_request
-     nop.e
-     nop
-
-tcp_ooq_load_qstate_do_nothing:
-    phvwri          p.p4_intr_global_drop, 1
-    nop.e
-    nop 
-
-tcp_ooq_load_qstate_completed_work_for_this_request:
-    tblwr d.ooq_proc_in_progress, r0
-    tblwr d.current_descr_qbase_addr, r0
-    tblwr d.curr_index, r0
-    tblwr d.num_entries, r0
-    tblwr.f d.num_pkts, r0
-    phvwri          p.p4_intr_global_drop, 1
-    nop.e
-    nop 
-
+    seq             c1, d.pi_0, d.ci_0
+    b.c1            tcp_ooq_load_qstate_do_nothing
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    seq             c1, d.ooq_work_in_progress, 0
+    b.c1            tcp_ooq_load_qstate_process_new_request
+    nop
+    
 tcp_ooq_load_qstate_process_next_pkt_descr:
-    add r1, d.current_descr_qbase_addr, r0
-    sll r2, d.curr_index, 3
-    add r3, d.curr_index, 1
-    phvwr p.to_s5_curr_index, r3
-    add r2, r1, r2
-    //phvwr p.to_s3_curr_rnmdr_addr, r2
-    //Launch dummy table for stage1
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tcp_ooq_txdma_process_next_descr_addr, r2, TABLE_SIZE_128_BITS) 
+    /*
+     * TODO : Figure out a way to trim the first few bytes (d.curr_ooq_trim)
+     */
+    seq             c1, d.curr_ooo_qbase, 0
+    b.c1            tcp_ooq_load_qstate_do_nothing
+    add             r1, d.curr_ooo_qbase, d.curr_index, NIC_OOQ_ENTRY_SIZE_SHIFT
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tcp_ooq_txdma_process_next_descr_addr, r1, TABLE_SIZE_64_BITS)
+
+    // check if we are done with current OOQ
+    tbladd          d.curr_index, 1
+    seq             c1, d.curr_index, d.curr_ooq_num_entries
+    b.!c1           tcp_ooq_skip_doorbell
+    nop
+
+    // we are done with current queue, ring doorbell if pi == ci
+    tblmincri.f     d.{ci_0}.hx, 1, CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT
+
+    // launch table to free queue
+    phvwr           p.to_s1_qbase_addr, d.curr_ooo_qbase
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, tcp_ooq_free_queue, d.ooo_rx2tx_free_pi_addr, TABLE_SIZE_32_BITS)
+
+    seq             c1, d.{ci_0}.hx, d.{pi_0}.hx
+    b.!c1           tcp_ooq_skip_doorbell
+
+    /*
+     * Ring doorbell to eval
+     */
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP,
+                        DB_SCHED_UPD_EVAL, TCP_OOO_RX2TX_QTYPE, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
+    memwr.dx        r4, r3
+
+tcp_ooq_skip_doorbell:
     nop.e
     nop
 
-tcp_ooq_load_qstate_process_new_request: 
+tcp_ooq_load_qstate_process_new_request:
     // New request
-    add r1, d.ooq_per_flow_ring_base, r0
-    and r2, d.ci_0, TCP_OOO_RX2TX_ENTRY_RING_SIZE-1
-    sll r2, r2, TCP_OOO_RX2TX_ENTRY_SHIFT
-    add r2, r1, r2 
+    add             r1, d.ooo_rx2tx_qbase, d.ci_0, NIC_OOQ_RX2TX_ENTRY_SIZE_SHIFT
     //launch table with this address
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tcp_ooq_txdma_load_rx2tx_slot, r2, TABLE_SIZE_128_BITS) 
-    tblwr d.ooq_proc_in_progress, 1  
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, tcp_ooq_txdma_load_rx2tx_slot, r1, TABLE_SIZE_64_BITS)
+    tblwr           d.ooq_work_in_progress, 1
+
+    nop.e
+    nop
+
+tcp_ooq_load_qstate_do_nothing:
+    phvwri          p.p4_intr_global_drop, 1
     nop.e
     nop
 

@@ -44,7 +44,7 @@ tcp_write_xmit:
 
 dma_cmd_intrinsic:
     phvwri          p.{p4_intr_global_tm_iport...p4_intr_global_tm_oport}, \
-                        (9 << 4) | 11
+                        (TM_PORT_DMA << 4) | TM_PORT_INGRESS
 
     // We rang the doorbell with TCP proxy service lif, but the P4
     // pipeline needs the original source_lif of the packet to derive
@@ -129,7 +129,7 @@ dma_cmd_data:
 
     phvwrpair       p.data_dma_dma_cmd_size, r6, \
                         p.data_dma_dma_cmd_addr[33:0], k.t0_s2s_addr
-    phvwri          p.{data_dma_dma_pkt_eop...data_dma_dma_cmd_type}, \
+    phvwri          p.{data_dma_dma_cmd_pkt_eop...data_dma_dma_cmd_type}, \
                         1 << 4 | CAPRI_DMA_COMMAND_MEM_TO_PKT
         
 bytes_sent_stats_update_start:

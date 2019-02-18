@@ -420,6 +420,7 @@ message TcpCbSpec {
   uint32                initial_window             = 50;
   uint32                abc_l_var                  = 51;
   bool                  ooo_queue                  = 52;
+  uint64                ooo_rx2tx_qbase            = 53;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request
@@ -438,7 +439,8 @@ message TcpCbOoqStatus {
 message TcpCbStatus {
   fixed64 tcpcb_handle = 1;    // id of tcpcb returned by HAL
 
-  repeated TcpCbOoqStatus ooq_status = 2;
+  bool ooq_not_empty = 2;
+  repeated TcpCbOoqStatus ooq_status = 3;
 }
 
 // TcpCbResponse is response to TcpCbSpec
@@ -518,6 +520,8 @@ message TcpCbStats {
   uint32                cc_flags                   = 10029;
   uint32                idle_deadline              = 10030;
   uint32                window_full_cnt            = 10031;
+  uint32                ooq_rx2tx_pi               = 10032;
+  uint32                ooq_rx2tx_ci               = 10033;
 }
 
 // TcpCbGetResponse captures all the information about a tcpcb

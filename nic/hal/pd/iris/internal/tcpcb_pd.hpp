@@ -22,6 +22,7 @@ struct pd_tcpcb_s {
 
     // operational state of tcpcb pd
     tcpcb_hw_id_t      hw_id;               // hw id for this tcpcb
+    tcpcb_hw_id_t      hw_id_qtype1;        // hw id for qtype 1
 
     // meta data maintained for TCP CB pd
     ht_ctxt_t          hw_ht_ctxt;           // h/w id based hash table ctxt

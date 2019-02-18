@@ -74,7 +74,7 @@ ipfix_export_dma_packet:
     phvwr       p.mem2pkt_cmd_dma_cmd_addr, d.{u.ipfix_export_packet_d.pktaddr}.dx
     phvwr       p.mem2pkt_cmd_dma_cmd_size, \
                     d.{u.ipfix_export_packet_d.next_record_offset}.hx
-    phvwr       p.mem2pkt_cmd_dma_pkt_eop, 1
+    phvwr       p.mem2pkt_cmd_dma_cmd_pkt_eop, 1
 
 ipfix_export_packet_exit:
     // disable doorbell (self)

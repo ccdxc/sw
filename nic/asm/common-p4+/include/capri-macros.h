@@ -4,6 +4,9 @@
 #include "platform/capri/capri_common.hpp"
 #include "nic/include/capri_barco.h"
 
+#define DMA_CMD_WR_FENCE 1
+#define DMA_CMD_EOP 1
+
 #define CAPRI_READ_IDX(_idx, _table_type, _stage_entry) \
         addi        r1, r0, _idx                                    ;\
         phvwri      p.table_sel, TABLE_TYPE_RAW                     ;\
@@ -644,7 +647,18 @@
         phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},   \
                     ((CAPRI_PHV_END_OFFSET(_efield) << 18) |                                    \
                      (CAPRI_PHV_START_OFFSET(_sfield) << 8) |                                   \
-                     (1 << 3 | 1 << 6) |                                                        \
+                     (DMA_CMD_EOP << 3 | DMA_CMD_WR_FENCE << 6) |                               \
+                     CAPRI_DMA_COMMAND_PHV_TO_MEM);                                             \
+        phvwri      p.##_dma_cmd_prefix##_addr,                                                 \
+                    CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET,__type, _lif); \
+        CAPRI_RING_DOORBELL_DATA(0, _qid, _ring, _pidx);                                        \
+        phvwr       p.{_sfield..._efield}, r3.dx;
+
+#define CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_FENCE(_dma_cmd_prefix, _lif, __type, _qid, _ring, _pidx, _sfield, _efield) \
+        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},   \
+                    ((CAPRI_PHV_END_OFFSET(_efield) << 18) |                                    \
+                     (CAPRI_PHV_START_OFFSET(_sfield) << 8) |                                   \
+                     (DMA_CMD_WR_FENCE << 6) |                                                  \
                      CAPRI_DMA_COMMAND_PHV_TO_MEM);                                             \
         phvwri      p.##_dma_cmd_prefix##_addr,                                                 \
                     CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET,__type, _lif); \
@@ -710,10 +724,10 @@
         phvwri      p.##_dma_cmd_prefix##_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
 
 #define CAPRI_DMA_CMD_MEM2PKT_SETUP_PKT_STOP(_dma_cmd_prefix, __addr, _len)                     \
-        phvwrpair   p.##_dma_cmd_prefix##_addr, __addr,                                         \
-                        p.##_dma_cmd_prefix##_size, _len;                                       \
+        phvwrpair   p.##_dma_cmd_prefix##_size, _len,                                           \
+                        p.##_dma_cmd_prefix##_addr, __addr;                                     \
         phvwri      p.{##_dma_cmd_prefix##_pkt_eop...##_dma_cmd_prefix##_type},                 \
-                        (1 << 4 | CAPRI_DMA_COMMAND_MEM_TO_PKT)
+                        (3 << 3 | CAPRI_DMA_COMMAND_MEM_TO_PKT)
 
 #define CAPRI_DMA_CMD_STOP_FENCE(_dma_cmd_prefix)                                               \
         phvwrpair   p.##_dma_cmd_prefix##_wr_fence, 1,                                               \

@@ -187,14 +187,15 @@ wring_pd_meta_init() {
                            NULL, NULL, false};
     
     g_meta[types::WRING_TYPE_TCP_OOO_RX] =
-        (pd_wring_meta_t) {true, CAPRI_HBM_REG_TCP_OOO_QBASE_RING, CAPRI_TCP_OOQ_RING_SIZE,
+        (pd_wring_meta_t) {true, CAPRI_HBM_REG_TCP_OOO_QBASE_RING, CAPRI_TCP_ALLOC_OOQ_RING_SIZE,
                            DEFAULT_WRING_SLOT_SIZE, CAPRI_HBM_REG_TCP_OOO_QUEUE, 
-                           TCP_OOO_QUEUE_SIZE, 
+                           TCP_OOO_QUEUE_ALLOC_SIZE, 
                            CAPRI_SEM_TCP_OOQ_ALLOC_RAW_ADDR, NULL, NULL, false};
  
     g_meta[types::WRING_TYPE_TCP_OOO_RX2TX] =
-        (pd_wring_meta_t) {false, CAPRI_HBM_REG_TCP_OOO_RX2TX_QUEUE, 32786, 256,
-                                  "", 0, 0, NULL, NULL, false, 1, 0};
+        (pd_wring_meta_t) {false, CAPRI_HBM_REG_TCP_OOO_RX2TX_QUEUE,
+                            CAPRI_OOO_RX2TX_RING_SLOTS, DEFAULT_WRING_SLOT_SIZE,
+                            "", 0, 0, NULL, NULL, false, 1, 0};
 
     return HAL_RET_OK;
 }

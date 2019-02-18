@@ -1,10 +1,10 @@
 /*
  *  TCP ACK processing (ack received from peer)
- *  
+ *
  *  Update snd_una, and inform tx pipeline
- *  
+ *
  *  Handle dup_acks and fast retransmissions
- *  
+ *
  *  Handle window change, and inform tx pipeline
  */
 
@@ -12,15 +12,15 @@
 #include "tcp-shared-state.h"
 #include "tcp-macros.h"
 #include "tcp-table.h"
-#include "tcp-constants.h"  
+#include "tcp-constants.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "INGRESS_s2_t0_tcp_rx_k.h"
-    
+
 struct phv_ p;
 struct s2_t0_tcp_rx_k_ k;
 struct s2_t0_tcp_rx_tcp_ack_d d;
-    
+
 %%
     .align
     .param          tcp_rx_rtt_start
@@ -29,6 +29,7 @@ struct s2_t0_tcp_rx_tcp_ack_d d;
 #define c_est c6
 
 tcp_ack_start:
+    bbeq            k.common_phv_ooq_tx2rx_pkt, 1, tcp_ack_done
     /*
      * Pure data, ack_seq hasn't advanced
      *
@@ -85,7 +86,7 @@ bytes_acked_stats_update_end:
     phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, \
                         TCP_PENDING_TXDMA_SND_UNA_UPDATE
     phvwr           p.common_phv_snd_una, d.snd_una
-    
+
     /*
      * Launch next stage
      */

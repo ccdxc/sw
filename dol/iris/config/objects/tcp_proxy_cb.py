@@ -157,6 +157,7 @@ class TcpCbObject(base.ConfigObjectBase):
             self.pkts_sent = resp_spec.stats.pkts_sent
             self.cc_flags = resp_spec.stats.cc_flags
 
+            self.ooq_not_empty = resp_spec.status.ooq_not_empty
             i = 0
             for ooq_status in resp_spec.status.ooq_status:
                 self.ooq_status[i].queue_addr = ooq_status.queue_addr

@@ -73,13 +73,13 @@ namespace capri {
 #define CAPRI_SEM_RNMDPR_BIG_ALLOC_ADDR     (CAPRI_MEM_SEMA_START + 8 * 23)
 #define CAPRI_SEM_CPU_RX_DPR_ALLOC_ADDR     (CAPRI_MEM_SEMA_START + 8 * 24)
 
-#define CAPRI_SEM_TCP_OOQ_ALLOC_ADDR            (CAPRI_MEM_SEMA_START + 8 * 24)
+#define CAPRI_SEM_TCP_OOQ_ALLOC_ADDR        (CAPRI_MEM_SEMA_START + 8 * 25)
 
 // These need to be deleted but retaining them because proxyc code uses it
-#define CAPRI_SEM_RNMPR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 25)
-#define CAPRI_SEM_RNMPR_FREE_ADDR           (CAPRI_MEM_SEMA_START + 8 * 26)
-#define CAPRI_SEM_RNMDR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 27)
-#define CAPRI_SEM_RNMDR_FREE_ADDR           (CAPRI_MEM_SEMA_START + 8 * 28)
+#define CAPRI_SEM_RNMPR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 26)
+#define CAPRI_SEM_RNMPR_FREE_ADDR           (CAPRI_MEM_SEMA_START + 8 * 27)
+#define CAPRI_SEM_RNMDR_SMALL_FREE_ADDR     (CAPRI_MEM_SEMA_START + 8 * 28)
+#define CAPRI_SEM_RNMDR_FREE_ADDR           (CAPRI_MEM_SEMA_START + 8 * 29)
 
 
 #define CAPRI_SEM_LAST_PI_CI_SEMAPHORE      (CAPRI_MEM_SEMA_START + 8 * 63)
@@ -328,16 +328,20 @@ namespace capri {
  */
 
 // Size (num entries) of Allocator ring
-#define CAPRI_TCP_OOQ_RING_SHIFT                12
-#define CAPRI_TCP_OOQ_RING_SIZE                 (1 << CAPRI_TCP_OOQ_RING_SHIFT)
-#define CAPRI_TCP_OOQ_RING_MASK                 ((1 << CAPRI_TCP_OOQ_RING_SHIFT) - 1)
+#define CAPRI_TCP_ALLOC_OOQ_RING_SHIFT          12
+#define CAPRI_TCP_ALLOC_OOQ_RING_SIZE           (1 << CAPRI_TCP_ALLOC_OOQ_RING_SHIFT)
+#define CAPRI_TCP_ALLOC_OOQ_RING_MASK           ((1 << CAPRI_TCP_ALLOC_OOQ_RING_SHIFT) - 1)
 
 // Size (num entries) of each object pointed by allocator ring
-#define TCP_OOO_QUEUE_NUM_ENTRIES           256
-#define TCP_OOO_QUEUE_SIZE                  (TCP_OOO_QUEUE_NUM_ENTRIES * 8)
+#define TCP_OOO_QUEUE_SHIFT                 8
+#define TCP_OOO_QUEUE_NUM_ENTRIES           (1 << TCP_OOO_QUEUE_SHIFT)
+#define TCP_OOO_QUEUE_ALLOC_SIZE            (TCP_OOO_QUEUE_NUM_ENTRIES * 8)
 
 #define CAPRI_SEM_TCP_OOQ_ALLOC_RAW_ADDR \
                             (CAPRI_SEM_TCP_OOQ_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET)
+#define CAPRI_SEM_TCP_OOQ_ALLOC_CI_RAW_ADDR     \
+                            (CAPRI_SEM_TCP_OOQ_ALLOC_ADDR + CAPRI_SEM_RAW_OFFSET + \
+                             CAPRI_SEM_INC_NOT_FULL_CI_OFFSET)
 #define CAPRI_SEM_TCP_OOQ_ALLOC_INF_ADDR \
                             (CAPRI_SEM_TCP_OOQ_ALLOC_ADDR + CAPRI_SEM_INF_OFFSET)
 
@@ -449,6 +453,8 @@ namespace capri {
 #define CAPRI_BSQ_RING_SLOT_SIZE_SHFT   2
 #define CAPRI_BARCO_RING_SLOTS_SHIFT    10
 #define CAPRI_BARCO_RING_SLOTS_MASK     ((1 << CAPRI_BARCO_RING_SLOTS_SHIFT) - 1)
+#define CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT    5
+#define CAPRI_OOO_RX2TX_RING_SLOTS          (1 << CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT)
 
 // Capri core-clock frequencies
 #define CORECLK_FREQ_ASIC_00        1093750000  /* 1093.750MHz (precise) */

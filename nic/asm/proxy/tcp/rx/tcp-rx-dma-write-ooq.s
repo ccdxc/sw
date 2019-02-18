@@ -2,6 +2,7 @@
  *    Implements the RX stage of the RxDMA P4+ pipeline
  */
 
+#include "nic/p4/common/defines.h"
 #include "tcp-constants.h"
 #include "tcp-phv.h"
 #include "tcp-shared-state.h"
@@ -46,8 +47,19 @@ dma_cmd_descr:
 
 dma_tcp_hdr:
     add         r1, k.to_s6_descr, NIC_DESC_ENTRY_OOO_TCP_HDR_OFFSET
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(tcp_flags_dma_dma_cmd, r1, tcp_app_header_p4plus_app_id, tcp_app_header_prev_echo_ts)
+    phvwr       p.tcp_app_header_from_ooq_txdma, 1
 
+    // HACK, 64 bytes following tcp_app_header is ooq_header which contains the
+    // descriptor address. Until we can unionize this header correctly in p4,
+    // hardcoding the PHV location for now. This is prone to error, but
+    // hopefully if something breaks, we have DOL test cases to catch it.
+    // (refer to iris/gen/p4gen/tcp_proxy_rxdma/asm_out/INGRESS_p.h)
+    add         r2, r0, 1024 - 48
+    phvwrp      r2, 0, 34, k.to_s6_descr
+
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_WITH_LEN(tcp_flags_dma_dma_cmd, r1,
+                    tcp_app_header_p4plus_app_id,
+                    P4PLUS_TCP_PROXY_BASE_HDR_SZ + P4PLUS_TCP_PROXY_OOQ_HDR_SZ)
 dma_cmd_ooq_slot:
     phvwr       p.ring_entry_descr_addr, k.to_s6_descr
 

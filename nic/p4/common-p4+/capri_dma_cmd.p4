@@ -147,7 +147,7 @@ header_type dma_cmd_mem2pkt_t {
         dma_cmd_use_override_lif : 1;
         dma_cmd_cache            : 1;
         dma_cmd_host_addr        : 1;
-        dma_pkt_eop              : 1;
+        dma_cmd_pkt_eop          : 1;
         dma_cmd_eop              : 1;
         dma_cmd_type             : 3;
     }
@@ -157,7 +157,7 @@ header_type dma_cmd_mem2pkt_t {
     modify_field(_dma_cmd_mem2pkt.dma_cmd_type, DMA_CMD_TYPE_MEM2PKT); \
     modify_field(_dma_cmd_mem2pkt.dma_cmd_addr, _addr); \
     modify_field(_dma_cmd_mem2pkt.dma_cmd_size, _size); \
-    modify_field(_dma_cmd_mem2pkt.dma_pkt_eop, _pkt_eop); \
+    modify_field(_dma_cmd_mem2pkt.dma_cmd_pkt_eop, _pkt_eop); \
     modify_field(_dma_cmd_mem2pkt.dma_cmd_cache, _cache); \
     modify_field(_dma_cmd_mem2pkt.dma_cmd_host_addr, _host_addr); 
 

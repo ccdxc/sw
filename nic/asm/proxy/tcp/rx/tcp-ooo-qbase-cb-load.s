@@ -20,8 +20,6 @@ struct s5_t2_tcp_rx_ooo_qbase_cb_load_d d;
     .align
 
 tcp_ooo_qbase_cb_load:
-    CAPRI_CLEAR_TABLE_VALID(2)
-
     add             r1, k.t2_s2s_ooo_queue_id, r0
     .brbegin
     br r1[1:0]
@@ -53,60 +51,84 @@ tcp_ooo_qbase_cb_load:
     .brend
 tcp_ooo_launch_dma:
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(2, tcp_rx_write_ooq_stage_start)
-
-#if 0
-    add             r2, k.t2_s2s_ooo_rx2tx_ready_qid, r0
-    .brbegin
-    br r2[2:0]
+    nop.e
     nop
-    .brcase 0
-        nop
-    .brcase 1
-        add         r2, d.ooo_qbase_addr0, r0
-        phvwr       p.ooq_rx2tx_queue_entry_ooq_rx2tx_qentry_addr, r2
-        CAPRI_DMA_CMD_PHV2MEM_SETUP(ooo_rx2tx_ring_slot_dma_cmd, r2, ooq_rx2tx_queue_entry_ooq_rx2tx_qentry_addr, ooq_rx2tx_queue_entry_ooq_rx2tx_num_entries)
-        add         r3, d.ooo_qbase_pi, 1
-        CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_STOP_FENCE(ooq_rx2tx_doorbell_dma_cmd, LIF_TCP, TCP_OOO_RX2TX_QTYPE,
-                                 k.common_phv_fid, TCP_OOO_RX2TX_QTYPE_RING0,
-                                 r3, db_data_pid, db_data_index)
-        tblwr       d.ooo_qbase_pi, r3
 
-    .brcase 2
-        add         r2, d.ooo_qbase_addr1, r0
-        phvwr       p.ooq_rx2tx_queue_entry_ooq_rx2tx_qentry_addr, r2
-        CAPRI_DMA_CMD_PHV2MEM_SETUP(ooo_rx2tx_ring_slot_dma_cmd, r2, ooq_rx2tx_queue_entry_ooq_rx2tx_qentry_addr, ooq_rx2tx_queue_entry_ooq_rx2tx_num_entries)
-        add         r3, d.ooo_qbase_pi, 1
-        CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_STOP_FENCE(ooq_rx2tx_doorbell_dma_cmd, LIF_TCP, TCP_OOO_RX2TX_QTYPE,
-                                 k.common_phv_fid, TCP_OOO_RX2TX_QTYPE_RING0,
-                                 r3, db_data_pid, db_data_index)
-        tblwr       d.ooo_qbase_pi, r3
-    .brcase 3
-        add         r2, d.ooo_qbase_addr2, r0
-        phvwr       p.ooq_rx2tx_queue_entry_ooq_rx2tx_qentry_addr, r2
-        CAPRI_DMA_CMD_PHV2MEM_SETUP(ooo_rx2tx_ring_slot_dma_cmd, r2, ooq_rx2tx_queue_entry_ooq_rx2tx_qentry_addr, ooq_rx2tx_queue_entry_ooq_rx2tx_num_entries)
-        add         r3, d.ooo_qbase_pi, 1
-        CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_STOP_FENCE(ooq_rx2tx_doorbell_dma_cmd, LIF_TCP, TCP_OOO_RX2TX_QTYPE,
-                                 k.common_phv_fid, TCP_OOO_RX2TX_QTYPE_RING0,
-                                 r3, db_data_pid, db_data_index)
-        tblwr       d.ooo_qbase_pi, r3
-    .brcase 4
-        add         r2, d.ooo_qbase_addr3, r0
-        phvwr       p.ooq_rx2tx_queue_entry_ooq_rx2tx_qentry_addr, r2
-        CAPRI_DMA_CMD_PHV2MEM_SETUP(ooo_rx2tx_ring_slot_dma_cmd, r2, ooq_rx2tx_queue_entry_ooq_rx2tx_qentry_addr, ooq_rx2tx_queue_entry_ooq_rx2tx_num_entries)
-        add         r3, d.ooo_qbase_pi, 1
-        CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_STOP_FENCE(ooq_rx2tx_doorbell_dma_cmd, LIF_TCP, TCP_OOO_RX2TX_QTYPE,
-                                 k.common_phv_fid, TCP_OOO_RX2TX_QTYPE_RING0,
-                                 r3, db_data_pid, db_data_index)
-        tblwr       d.ooo_qbase_pi, r3
-    .brcase 5
-        nop
-    .brcase 6
-        nop
-    .brcase 7
-        nop
-    .brend
-    //add             r1, k.t2_s2s_ooo_pkt_descr_addr, r0
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(ooq_tcp_flags_dma_cmd, r1, tcp_app_header_p4plus_app_id, tcp_app_header_prev_echo_ts)
-#endif
+/*
+ * We have received in-order data that requires dequeueing from OOQ
+ */
+.align
+tcp_ooo_qbase_cb_load_in_order:
+    CAPRI_CLEAR_TABLE_VALID(2)
+
+    /*
+     * k.s3_t2_s2s_ooo_rx2t2x_ready_(len and trim) has info on which queues to
+     * dequeue. len != 0 means the queue has to be dequeued and trim is the
+     * amount of bytes we need to trim from the head of the queue.
+     *
+     * r1 = phv offset of rx2tx ooq entry
+     * r2 = number of entries
+     * r4 = number of entries * 8
+     * r5 = address in rx2tx queue to DMA into
+     */
+    add             r2, r0, r0
+
+    /*
+     * r2 uses ooq_rx2tx_queue_entry_t format
+     */
+    add             r1, r0, offsetof(struct phv_, ooq_rx2tx_queue_entry1_entry)
+    sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len0, 0
+    add.c1          r3, k.s3_t2_s2s_ooo_rx2tx_ready_trim0, d.ooo_qbase_addr0, 30
+    or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len0, 14
+    phvwrp.c1       r1, 0, 64, r3
+    add.c1          r1, r1, 64
+    add.c1          r2, r2, 1
+
+    sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len1, 0
+    add.c1          r3, k.s3_t2_s2s_ooo_rx2tx_ready_trim1, d.ooo_qbase_addr1, 30
+    or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len1, 14
+    phvwrp.c1       r1, 0, 64, r3
+    add.c1          r1, r1, 64
+    add.c1          r2, r2, 1
+
+    sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len2, 0
+    add.c1          r3, k.s3_t2_s2s_ooo_rx2tx_ready_trim2, d.ooo_qbase_addr2, 30
+    or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len2, 14
+    phvwrp.c1       r1, 0, 64, r3
+    add.c1          r1, r1, 64
+    add.c1          r2, r2, 1
+
+    sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len3, 0
+    add.c1          r3, k.s3_t2_s2s_ooo_rx2tx_ready_trim3, d.ooo_qbase_addr3, 30
+    or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len3, 14
+    phvwrp.c1       r1, 0, 64, r3
+    add.c1          r1, r1, 64
+    add.c1          r2, r2, 1
+
+    seq             c1, r2, 0
+    b.c1            tcp_ooo_qbase_cb_load_end       // ERROR
+
+    /*
+     * Setup DMA commands for rx2tx
+     *
+     * r2 = number of entries
+     * r4 = number of entries * 8
+     * r5 = address in rx2tx queue to DMA into
+     */
+    sll             r5, d.ooo_rx2tx_qbase_pi, NIC_OOQ_RX2TX_ENTRY_SIZE_SHIFT
+    add             r5, r5, d.ooo_rx2tx_qbase
+    sll             r4, r2, NIC_OOQ_RX2TX_ENTRY_SIZE_SHIFT
+ 
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_WITH_LEN(rx2tx_ooq_ready_dma_cmd, r5, ooq_rx2tx_queue_entry1_entry, r4)
+
+    tblmincr       d.ooo_rx2tx_qbase_pi, CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT, r2
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_FENCE(rx2tx_ooq_doorbell_dma_cmd, LIF_TCP,
+                        TCP_OOO_RX2TX_QTYPE, k.common_phv_fid,
+                        TCP_OOO_RX2TX_RING0, d.ooo_rx2tx_qbase_pi,
+                        rx2tx_ooq_ready_db_data_pid,
+                        rx2tx_ooq_ready_db_data_index)
+
+    
+tcp_ooo_qbase_cb_load_end:
     nop.e
     nop

@@ -70,26 +70,24 @@ dma_cmd_ring_tcp_tx_doorbell:
     nop
 rx2tx_send_ack_ring:
     tbladd.f    d.rx2tx_send_ack_pi, 1
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_FENCE(tx_doorbell_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
                                 TCP_SCHED_RING_SEND_ACK, d.rx2tx_send_ack_pi, db_data2_pid, db_data2_index)
     b           rx2tx_ring_done
     nop
 rx2tx_clean_retx_ring:
     tbladd.f    d.rx2tx_clean_retx_pi, 1
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_FENCE(tx_doorbell_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
                                 TCP_SCHED_RING_CLEAN_RETX, d.rx2tx_clean_retx_pi, db_data2_pid, db_data2_index)
     b           rx2tx_ring_done
     nop
 rx2tx_send_ack_and_clean_retx_ring:
     tbladd      d.rx2tx_send_ack_pi, 1
     tbladd.f    d.rx2tx_clean_retx_pi, 1
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell1_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_FENCE(tx_doorbell1_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
                                 TCP_SCHED_RING_SEND_ACK, d.rx2tx_send_ack_pi, db_data2_pid, db_data2_index)
-    phvwr       p.tx_doorbell1_dma_cmd_wr_fence, 1
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI(tx_doorbell_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_FENCE(tx_doorbell_dma_cmd, LIF_TCP, 0, k.common_phv_fid,
                                 TCP_SCHED_RING_CLEAN_RETX, d.rx2tx_clean_retx_pi, db_data3_pid, db_data3_index)
 rx2tx_ring_done:
-    phvwr       p.tx_doorbell_dma_cmd_wr_fence, 1
 
     seq         c1, k.common_phv_skip_pkt_dma, 1
     bcf         [c1], tx_doorbell_set_eop
@@ -108,7 +106,6 @@ rx2tx_ring_done:
 
 tx_doorbell_set_eop:
     phvwri     p.tx_doorbell_dma_cmd_eop, 1
-    phvwri     p.tx_doorbell_dma_cmd_wr_fence, 1
 
 tcp_write_serq2_done:
     nop.e

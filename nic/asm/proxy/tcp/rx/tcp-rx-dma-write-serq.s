@@ -38,6 +38,7 @@ tcp_rx_dma_serq_stage_start:
 
 dma_cmd_data:
     phvwri      p.p4_rxdma_intr_dma_cmd_ptr, TCP_PHV_RXDMA_COMMANDS_START
+    bbeq        k.common_phv_ooq_tx2rx_pkt, 1, dma_cmd_descr
 
     /* Set the DMA_WRITE CMD for data */
     add         r3, k.to_s6_page, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)

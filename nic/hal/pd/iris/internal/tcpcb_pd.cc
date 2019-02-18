@@ -19,6 +19,7 @@
 #include "nic/include/tcp_common.h"
 #include "nic/include/app_redir_shared.h"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
+#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
 namespace hal {
 namespace pd {
@@ -305,7 +306,7 @@ p4pd_add_or_del_tcpcb_rx_dma(pd_tcpcb_t* tcpcb_pd, bool del)
                         tcpcb_pd->tcpcb->cb_id);
         } else {
             HAL_TRACE_DEBUG("Serq base: {:#x}", serq_base);
-            rx_dma_d.serq_base = htonl(serq_base);
+            rx_dma_d.serq_base = htonll(serq_base);
         }
     }
 
@@ -322,9 +323,24 @@ p4pd_add_or_del_tcpcb_rx_ooq(pd_tcpcb_t* tcpcb_pd, bool del)
 {
     s5_t2_tcp_rx_ooo_qbase_cb_load_d ooq_cb_load_d = { 0 };
     s2_t2_tcp_rx_ooo_book_keeping_d ooq_book_keeping_d = { 0 };
+    hal_ret_t ret = HAL_RET_OK;
 
     tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_OOO_QADDR_OFFSET);
+
+    if(!del) {
+        wring_hw_id_t ooo_rx2tx_qbase;
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_TCP_OOO_RX2TX,
+                                     tcpcb_pd->tcpcb->cb_id,
+                                     &ooo_rx2tx_qbase);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive ooo rx2tx base for tcp cb: {}",
+                        tcpcb_pd->tcpcb->cb_id);
+        } else {
+            HAL_TRACE_DEBUG("ooo rx2tx base: {:#x}", ooo_rx2tx_qbase);
+            ooq_cb_load_d.ooo_rx2tx_qbase = htonll(ooo_rx2tx_qbase);
+        }
+    }
     if(!p4plus_hbm_write(hwid, (uint8_t *)&ooq_cb_load_d, sizeof(ooq_cb_load_d),
                 P4PLUS_CACHE_INVALIDATE_BOTH)) {
         HAL_TRACE_ERR("Failed to create rx: ooq cb_load entry for TCP CB");
@@ -447,6 +463,7 @@ p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->state = data.u.tcp_rx_d.state;
     tcpcb_pd->tcpcb->pred_flags = ntohl(data.u.tcp_rx_d.pred_flags);
     tcpcb_pd->tcpcb->snd_recover = ntohl(data.u.tcp_rx_d.snd_recover);
+    tcpcb_pd->tcpcb->ooq_not_empty = data.u.tcp_rx_d.ooq_not_empty;
     if (data.u.tcp_rx_d.cfg_flags | TCP_CFG_FLAG_DELACK) {
         tcpcb_pd->tcpcb->delay_ack = true;
     }
@@ -527,7 +544,7 @@ p4pd_get_tcp_rx_rx_dma_entry(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
 
-    tcpcb_pd->tcpcb->serq_base = ntohl(data.u.dma_d.serq_base);
+    tcpcb_pd->tcpcb->serq_base = ntohll(data.u.dma_d.serq_base);
     HAL_TRACE_DEBUG("Received serq_base: {:#x}", tcpcb_pd->tcpcb->serq_base);
 
     return HAL_RET_OK;
@@ -746,6 +763,23 @@ p4pd_get_tcp_tx_stage0_prog_addr(uint64_t* offset)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+p4pd_get_tcp_ooq_rx2tx_stage0_prog_addr(uint64_t* offset)
+{
+    char progname[] = "txdma_stage0.bin";
+    char labelname[]= "tcp_ooq_rx2tx_stage0";
+
+    int ret = sdk::p4::p4_program_label_to_offset("p4plus",
+                                            progname,
+                                            labelname,
+                                            offset);
+    if(ret != 0) {
+        return HAL_RET_HW_FAIL;
+    }
+    *offset >>= MPU_PC_ADDR_SHIFT;
+    return HAL_RET_OK;
+}
+
 #define     DEBUG_DOL_TEST_TIMER_FULL_SET       1
 #define     DEBUG_DOL_TEST_TIMER_FULL_RESET     0
 #define     DEBUG_DOL_TEST_TIMER_NUM_KEY_LINES  2
@@ -788,6 +822,70 @@ debug_dol_test_timer_full(int state)
     }
 
     debug_dol_init_timer_full_area(state);
+}
+
+hal_ret_t
+p4pd_add_or_del_tcp_ooo_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
+{
+    s0_t0_ooq_tcp_tx_d             data = { 0 };
+    hal_ret_t                      ret = HAL_RET_OK;
+
+    // hardware index for this entry
+    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id_qtype1;
+
+    if(!del) {
+        uint64_t pc_offset;
+        wring_hw_id_t ooo_rx2tx_qbase;
+        // get pc address
+        ret = p4pd_get_tcp_ooq_rx2tx_stage0_prog_addr(&pc_offset);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to get pc address");
+        }
+        HAL_TRACE_DEBUG("Received pc address {:#x}", pc_offset);
+        data.action_id = pc_offset;
+        data.u.load_stage0_d.total = TCP_PROXY_OOO_RX2TX_TOTAL_RINGS;
+
+        ret = wring_pd_get_base_addr(types::WRING_TYPE_TCP_OOO_RX2TX,
+                                     tcpcb_pd->tcpcb->cb_id,
+                                     &ooo_rx2tx_qbase);
+        if(ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to receive ooo rx2tx base for tcp cb: {}",
+                        tcpcb_pd->tcpcb->cb_id);
+        } else {
+            data.u.load_stage0_d.ooo_rx2tx_qbase = htonll(ooo_rx2tx_qbase);
+        }
+
+        uint64_t mem_addr = (uint64_t)get_mem_addr(
+                CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_GC_GLOBAL_OOQ_TX2RX_FP_PI;
+        data.u.load_stage0_d.ooo_rx2tx_free_pi_addr = htonll(mem_addr);
+    }
+    if (!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET,
+            P4PLUS_CACHE_INVALIDATE_BOTH)) {
+        HAL_TRACE_ERR("Failed to create ooq rx2tx entry");
+        ret = HAL_RET_HW_FAIL;
+    }
+    return ret;
+}
+
+hal_ret_t
+p4pd_get_tcp_ooo_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
+{
+    s0_t0_ooq_tcp_tx_d             data = { 0 };
+    hal_ret_t                      ret = HAL_RET_OK;
+
+    // hardware index for this entry
+    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id_qtype1;
+
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get ooq tx: stage0 entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+    }
+    
+    tcpcb_pd->tcpcb->ooq_rx2tx_pi = ntohs(data.u.load_stage0_d.pi_0);
+    tcpcb_pd->tcpcb->ooq_rx2tx_ci = ntohs(data.u.load_stage0_d.ci_0);
+    tcpcb_pd->tcpcb->ooo_rx2tx_qbase = htonll(data.u.load_stage0_d.ooo_rx2tx_qbase);
+
+    return ret;
 }
 
 hal_ret_t
@@ -1018,7 +1116,14 @@ hal_ret_t
 p4pd_add_or_del_tcpcb_txdma_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 {
     hal_ret_t   ret = HAL_RET_OK;
+    
+    // qtype 1
+    ret = p4pd_add_or_del_tcp_ooo_rx2tx_entry(tcpcb_pd, del);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
 
+    // qtype 0
     ret = p4pd_add_or_del_tcp_tx_read_rx2tx_entry(tcpcb_pd, del);
     if(ret != HAL_RET_OK) {
         goto cleanup;
@@ -1232,6 +1337,13 @@ p4pd_get_tcpcb_txdma_entry(pd_tcpcb_t* tcpcb_pd)
 {
     hal_ret_t   ret = HAL_RET_OK;
 
+    // qtype 1
+    ret = p4pd_get_tcp_ooo_rx2tx_entry(tcpcb_pd);
+    if(ret != HAL_RET_OK) {
+        goto cleanup;
+    }
+
+    // qtype 0
     ret = p4pd_get_tcp_tx_read_rx2tx_entry(tcpcb_pd);
     if(ret != HAL_RET_OK) {
         goto cleanup;
@@ -1264,14 +1376,14 @@ cleanup:
 /**************************/
 
 tcpcb_hw_id_t
-pd_tcpcb_get_base_hw_index(pd_tcpcb_t* tcpcb_pd)
+pd_tcpcb_get_base_hw_index(pd_tcpcb_t* tcpcb_pd, uint32_t qtype)
 {
     SDK_ASSERT(NULL != tcpcb_pd);
     SDK_ASSERT(NULL != tcpcb_pd->tcpcb);
 
     // Get the base address of TCP CB from LIF Manager.
     // Set qtype and qid as 0 to get the start offset.
-    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, 0,
+    uint64_t offset = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TCP_PROXY, qtype,
                     tcpcb_pd->tcpcb->cb_id);
     HAL_TRACE_DEBUG("received offset {:#x}", offset);
     return offset;
@@ -1369,7 +1481,8 @@ pd_tcpcb_create (pd_func_args_t *pd_func_args)
     HAL_TRACE_DEBUG("Alloc done");
     tcpcb_pd->tcpcb = args->tcpcb;
     // get hw-id for this TCPCB
-    tcpcb_pd->hw_id = pd_tcpcb_get_base_hw_index(tcpcb_pd);
+    tcpcb_pd->hw_id = pd_tcpcb_get_base_hw_index(tcpcb_pd, TCP_TX_QTYPE);
+    tcpcb_pd->hw_id_qtype1 = pd_tcpcb_get_base_hw_index(tcpcb_pd, TCP_OOO_RX2TX_QTYPE);
 
     HAL_TRACE_DEBUG("Creating TCP CB at addr: 0x{:x} qid: {}",
             tcpcb_pd->hw_id, tcpcb_pd->tcpcb->cb_id);
@@ -1466,7 +1579,8 @@ pd_tcpcb_get (pd_func_args_t *pd_func_args)
     tcpcb_pd.tcpcb = args->tcpcb;
 
     // get hw-id for this TCPCB
-    tcpcb_pd.hw_id = pd_tcpcb_get_base_hw_index(&tcpcb_pd);
+    tcpcb_pd.hw_id = pd_tcpcb_get_base_hw_index(&tcpcb_pd, TCP_TX_QTYPE);
+    tcpcb_pd.hw_id_qtype1 = pd_tcpcb_get_base_hw_index(&tcpcb_pd, TCP_OOO_RX2TX_QTYPE);
     HAL_TRACE_DEBUG("Received hw-id {:#x}", tcpcb_pd.hw_id);
 
     // get hw tcpcb entry

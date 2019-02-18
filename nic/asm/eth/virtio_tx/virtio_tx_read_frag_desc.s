@@ -60,7 +60,7 @@ virtio_tx_read_frag_desc_start:
     add         r1, r0, D(addr).dx
     add         r2, r0, D(len).dx
     CAPRI_DMA_CMD_MEM2PKT_SETUP(packet_cmd_dma_cmd, r1, r2)
-    phvwri      p.packet_cmd_dma_pkt_eop, 1
+    phvwri      p.packet_cmd_dma_cmd_pkt_eop, 1
 
 
     /* Update the total bytes consumed for this request */

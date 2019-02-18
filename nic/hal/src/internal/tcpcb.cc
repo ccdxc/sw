@@ -444,6 +444,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_sesq_pi(rtcpcb.sesq_pi);
     rsp->mutable_spec()->set_sesq_ci(rtcpcb.sesq_ci);
     rsp->mutable_spec()->set_sesq_base(rtcpcb.sesq_base);
+    rsp->mutable_spec()->set_ooo_rx2tx_qbase(rtcpcb.ooo_rx2tx_qbase);
     rsp->mutable_spec()->set_asesq_pi(rtcpcb.asesq_pi);
     rsp->mutable_spec()->set_asesq_ci(rtcpcb.asesq_ci);
     rsp->mutable_spec()->set_asesq_base(rtcpcb.asesq_base);
@@ -485,6 +486,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);
+    rsp->mutable_status()->set_ooq_not_empty(rtcpcb.ooq_not_empty);
     for (int i = 0; i < NUM_TCP_OOO_QUEUES_PER_FLOW; i++) {
         TcpCbOoqStatus *ooq =
             rsp->mutable_status()->add_ooq_status();
@@ -507,6 +509,8 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_pkts_sent(rtcpcb.pkts_sent);
     rsp->mutable_stats()->set_sesq_pi(rtcpcb.sesq_pi);
     rsp->mutable_stats()->set_sesq_ci(rtcpcb.sesq_ci);
+    rsp->mutable_stats()->set_ooq_rx2tx_pi(rtcpcb.ooq_rx2tx_pi);
+    rsp->mutable_stats()->set_ooq_rx2tx_ci(rtcpcb.ooq_rx2tx_ci);
     rsp->mutable_stats()->set_sesq_retx_ci(rtcpcb.sesq_retx_ci);
     rsp->mutable_stats()->set_asesq_retx_ci(rtcpcb.asesq_retx_ci);
     rsp->mutable_stats()->set_send_ack_pi(rtcpcb.send_ack_pi);

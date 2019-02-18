@@ -9,28 +9,51 @@
  * Table names
  *
  * Table names have to alphabetically be in chronological order (to match with
- * common program table names), so they need * to be prefixed by stage# and
+ * common program table names), so they need to be prefixed by stage# and
  * table#
  *****************************************************************************/
 #define tx_table_s0_t0 s0_t0_tcp_tx
+#define tx_table_s0_t1 s0_t1_tcp_tx
+#define tx_table_s0_t2 s0_t2_tcp_tx
+#define tx_table_s0_t3 s0_t3_tcp_tx
 
 #define tx_table_s1_t0 s1_t0_tcp_tx
 #define tx_table_s1_t1 s1_t1_tcp_tx
 #define tx_table_s1_t2 s1_t2_tcp_tx
+#define tx_table_s1_t3 s1_t3_tcp_tx
 
 #define tx_table_s2_t0 s2_t0_tcp_tx
 #define tx_table_s2_t1 s2_t1_tcp_tx
 #define tx_table_s2_t2 s2_t2_tcp_tx
+#define tx_table_s2_t3 s2_t3_tcp_tx
 
 #define tx_table_s3_t0 s3_t0_tcp_tx
+#define tx_table_s3_t1 s3_t1_tcp_tx
+#define tx_table_s3_t2 s3_t2_tcp_tx
+#define tx_table_s3_t3 s3_t3_tcp_tx
 
 #define tx_table_s4_t0 s4_t0_tcp_tx
 #define tx_table_s4_t1 s4_t1_tcp_tx
+#define tx_table_s4_t2 s4_t2_tcp_tx
+#define tx_table_s4_t3 s4_t3_tcp_tx
 
 #define tx_table_s5_t0 s5_t0_tcp_tx
+#define tx_table_s5_t1 s5_t1_tcp_tx
+#define tx_table_s5_t2 s5_t2_tcp_tx
+#define tx_table_s5_t3 s5_t3_tcp_tx
 
 #define tx_table_s6_t0 s6_t0_tcp_tx
+#define tx_table_s6_t1 s6_t1_tcp_tx
+#define tx_table_s6_t2 s6_t2_tcp_tx
+#define tx_table_s6_t3 s6_t3_tcp_tx
 
+#define tx_table_s7_t0 s7_t0_tcp_tx
+#define tx_table_s7_t1 s7_t1_tcp_tx
+#define tx_table_s7_t2 s7_t2_tcp_tx
+#define tx_table_s7_t3 s7_t3_tcp_tx
+
+#define tx_stage0_lif_params_table lif_params_tcp_tx
+#define tx_table_s5_t4_lif_rate_limiter_table lif_rate_limiter_tcp_tx
 
 /******************************************************************************
  * Action names
@@ -347,7 +370,7 @@ header_type common_t1_s2s_phv_t {
 }
 
 /******************************************************************************
- * Header unions for d-vector
+ * scratch for d-vector
  *****************************************************************************/
 @pragma scratch_metadata
 metadata rx2tx_d_t rx2tx_d;
@@ -403,6 +426,9 @@ metadata common_t0_s2s_clean_retx_phv_t t0_s2s_clean_retx;
 metadata common_t1_s2s_phv_t t1_s2s;
 
 
+/******************************************************************************
+ * Scratch for k-vector generation
+ *****************************************************************************/
 @pragma scratch_metadata
 metadata to_stage_1_phv_t to_s1_scratch;
 @pragma scratch_metadata

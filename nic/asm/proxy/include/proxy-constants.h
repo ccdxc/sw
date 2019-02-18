@@ -25,6 +25,7 @@
 #define NIC_L7Q_ENTRY_SIZE_SHIFT             3          /* for 8B */
 
 #define NIC_OOQ_ENTRY_SIZE_SHIFT             3
+#define NIC_OOQ_RX2TX_ENTRY_SIZE_SHIFT       3
 
 #define PKT_DESC_AOL_OFFSET                  64
 

@@ -64,7 +64,7 @@ dma_cmd_data:
     sub     r_len, k.to_s4_len, CPU_TO_P4PLUS_HDR_SIZE
 
     phvwri  p.dma_cmd2_dma_cmd_type, CAPRI_DMA_COMMAND_MEM_TO_PKT
-    phvwri.!c_add_qs_trlr p.dma_cmd2_dma_pkt_eop, 1
+    phvwri.!c_add_qs_trlr p.dma_cmd2_dma_cmd_pkt_eop, 1
     
     phvwr   p.dma_cmd2_dma_cmd_addr, r_addr
     phvwr   p.dma_cmd2_dma_cmd_size, r_len
@@ -99,7 +99,7 @@ dma_cmd_trailer:
     phvwr   p.dma_cmd4_dma_cmd_addr, r_addr
     phvwr   p.dma_cmd4_dma_cmd_size, r_len
 
-    phvwri.!c_add_qs_trlr       p.dma_cmd4_dma_pkt_eop, 1
+    phvwri.!c_add_qs_trlr       p.dma_cmd4_dma_cmd_pkt_eop, 1
     phvwri.!c_qs_or_free_buffer p.dma_cmd4_dma_cmd_eop, 1
 
 cpu_tx_write_quiesce_trailer:

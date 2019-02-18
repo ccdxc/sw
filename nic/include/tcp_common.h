@@ -1,22 +1,22 @@
 #ifndef __TCP_COMMON_H__
 #define __TCP_COMMON_H__
 
-#define TCP_SCHED_RING_SESQ           0x0
-#define TCP_SCHED_RING_SEND_ACK       0x1
-#define TCP_SCHED_RING_FAST_TIMER     0x2
-#define TCP_SCHED_RING_DEL_ACK        0x3
-#define TCP_SCHED_RING_ASESQ          0x4
-#define TCP_SCHED_RING_PENDING_TX     0x5
-#define TCP_SCHED_RING_FAST_RETRANS   0x6
-#define TCP_SCHED_RING_CLEAN_RETX     0x7
+#define TCP_TX_QTYPE                    0
+#define TCP_OOO_RX2TX_QTYPE             1
 
-#define TCP_PROXY_TX_TOTAL_RINGS      8
+#define TCP_SCHED_RING_SESQ             0x0
+#define TCP_SCHED_RING_SEND_ACK         0x1
+#define TCP_SCHED_RING_FAST_TIMER       0x2
+#define TCP_SCHED_RING_DEL_ACK          0x3
+#define TCP_SCHED_RING_ASESQ            0x4
+#define TCP_SCHED_RING_PENDING_TX       0x5
+#define TCP_SCHED_RING_FAST_RETRANS     0x6
+#define TCP_SCHED_RING_CLEAN_RETX       0x7
 
-#define TCP_OOO_RX2TX_QTYPE 1
-#define TCP_OOO_RX2TX_QTYPE_RING0 0
+#define TCP_PROXY_TX_TOTAL_RINGS        8
+#define TCP_PROXY_OOO_RX2TX_TOTAL_RINGS 1
 
-#define TCP_OOO_RX2TX_ENTRY_RING_SIZE 16
-#define TCP_OOO_RX2TX_ENTRY_SHIFT      4
+#define TCP_OOO_RX2TX_RING0             0
 
 #define TCP_MAX_OOQ_DESCR_MASK 255
 

@@ -19,13 +19,12 @@ struct s1_t0_tcp_rx_d d;
     .param          tcp_ack_start
     .param          tcp_rx_read_rnmdr_start
     .param          tcp_ooo_book_keeping
+    .param          tcp_ooo_book_keeping_in_order
     .align
 
     /*
      * Global conditional variables
      *
-     * c6 = ooo in Rx Queue, skip some stages
-     * c7 = Drop packet
      */
 tcp_rx_process_start:
 #ifdef CAPRI_IGNORE_TIMESTAMP
@@ -66,8 +65,10 @@ tcp_rx_process_start:
      */
     and             r1, k.common_phv_flags, TCPHDR_HP_FLAG_BITS
     sne             c5, r1, d.u.tcp_rx_d.pred_flags[23:16]
+    seq             c6, d.u.tcp_rx_d.ooq_not_empty, 1
+    seq.!c6         c6, k.common_phv_ooq_tx2rx_pkt, 1
 
-    bcf             [c1 | c2 | c3 | c4 | c5], tcp_rx_slow_path
+    bcf             [c1 | c2 | c3 | c4 | c5 | c6], tcp_rx_slow_path
 
 tcp_rx_fast_path:
 
@@ -143,6 +144,9 @@ tcp_schedule_ack:
                         TCP_PENDING_TXDMA_ACK_SEND
 tcp_ack_snd_check_end:
 
+/*
+ * NOTE : No tblwr beyond this point
+ */
 slow_path:
 flow_rx_process_done:
 table_read_setup_next:
@@ -156,19 +160,10 @@ table_read_setup_next:
     phvwrmi.c1      p.common_phv_pending_txdma, 0, TCP_PENDING_TXDMA_ACK_SEND | TCP_PENDING_TXDMA_DEL_ACK
 #endif
 flow_cpu_rx_process_done:
-    /*
-     * c7 = drop
-     */
-    bcf             [c7], flow_rx_drop
-
 table_launch_tcp_ack:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN, tcp_ack_start,
                         k.common_phv_qstate_addr, TCP_TCB_RX_OFFSET,
                         TABLE_SIZE_512_BITS)
-    /*
-     * c6 = OOO in Rx queue, do not allocate buffers
-     */
-    bcf             [c6], tcp_rx_end
 
 table_launch_RNMDR_ALLOC_IDX:
     /*
@@ -201,7 +196,11 @@ tcp_rx_slow_path:
     seq             c1, d.u.tcp_rx_d.state, TCP_RST
     seq             c2, k.s1_s2s_rst_sent, 1
     tblwr.c2        d.u.tcp_rx_d.state, TCP_RST
-    bcf             [c1 | c2], tcp_rx_post_rst_handling
+    setcf           c3, [c1 | c2]
+    // drop the frame
+    b.c3            flow_rx_drop
+    tbladd.c3       d.u.tcp_rx_d.rx_drop_cnt, 1
+
 
     smeqb           c1, d.u.tcp_rx_d.parsed_state, \
                             TCP_PARSED_STATE_HANDLE_IN_CPU, \
@@ -216,7 +215,6 @@ tcp_rx_slow_path:
     phvwr.c2        p.cpu_hdr2_tcp_flags, k.common_phv_flags
 
     bcf             [c1], flow_cpu_rx_process_done
-    setcf           c7, [!c0]
 
     /*
      * if pkt->seq != rcv_nxt, its a retransmission or OOO, send ack
@@ -247,9 +245,7 @@ tcp_rx_ooo_check:
     bcf             [c1 & c2], tcp_rx_ooo_rcv
 
 tcp_rx_ooo_check_done:
-    // set c6 so that descriptors are not allocated
     tbladd.c3       d.u.tcp_rx_d.rx_drop_cnt, 1
-    setcf.c3        c6, [c0]
     bcf             [c3], flow_rx_process_done
 
     /*
@@ -262,8 +258,7 @@ tcp_rx_ooo_check_done:
     seq             c2, r2, k.to_s1_serq_cidx
     setcf           c7, [c1 & c2]
     tbladd.c7       d.{u.tcp_rx_d.serq_full_cnt}.hx, 1
-    phvwri.c7       p.p4_intr_global_drop, 1
-    b.c7            flow_rx_process_done
+    b.c7            flow_rx_drop
 
     /*
      * Handle close (fin sent in tx pipeline)
@@ -321,32 +316,43 @@ tcp_rx_ooo_check_done:
     //phvwr           p.rx2tx_state, d.u.tcp_rx_d.state
 
 tcp_rx_slow_path_post_fin_handling:
-    /*   /* If PAWS failed, check it more carefully in slow path */
-    /* if ((s32)(tp->rx_opt.rcv_tsval - tp->rx_opt.ts_recent) < 0) {
 
-           /* DO NOT update ts_recent here, if checksum fails
-        * and timestamp was corrupted part, it will result
-        * in a hung connection since we will drop all
-                * future packets due to the PAWS test.
-                *
-            goto slow_path  ;
-    }
-    */
-    //sub             r1, r4, d.u.tcp_rx_d.ts_recent
-    //slt             c1, r1, r0
-    //bcf             [c1],slow_path
-    //nop
+    // TODO : Do PAWS check here
 
     seq             c1, k.s1_s2s_payload_len, r0
-    // We have to handle data in FIN_WAIT states or for example
-    // when ECE bit was set
-    bcf             [!c1], tcp_rx_fast_path
+    bcf             [c1], flow_rx_process_done
+    nop
+tcp_rx_slow_path_handle_data:
+    /*
+     * Handle in-order data receipt (For example - data received during
+     * FIN_WAIT, data received with ECE flag, data received with OOO packets in
+     * queue etc.)
+     */
+
+    // OOO launch to see if we can dequeue any queue that has become in-order.
+    // Skip the OOO launch and check if the queue is empty or if this is already
+    // an OOO pkt that has been queued from Tx.
+    seq             c1, d.u.tcp_rx_d.ooq_not_empty, 0
+    seq             c2, k.common_phv_ooq_tx2rx_pkt, 1
+    bcf             [c1 | c2], tcp_rx_skip_ooo_launch
     nop
 
-    b               flow_rx_process_done
+tcp_rx_slow_path_launch_ooo:
+    phvwr           p.t2_s2s_seq, k.s1_s2s_seq
+    phvwr           p.t2_s2s_payload_len, k.s1_s2s_payload_len
+    CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_EN, tcp_ooo_book_keeping_in_order,
+                        k.common_phv_qstate_addr, TCP_TCB_OOO_BOOK_KEEPING_OFFSET0,
+                        TABLE_SIZE_512_BITS)
+tcp_rx_skip_ooo_launch:
+    // if this is a tx2rx ooq packet, don't allocate descriptors
+    // TODO : Do we send acks in this case?
+    tblwr.c2.l      d.u.tcp_rx_d.alloc_descr, 0
+    b               tcp_rx_fast_path
     nop
+
 
 flow_rx_drop:
+    phvwri          p.p4_intr_global_drop, 1
     CAPRI_CLEAR_TABLE0_VALID
     nop.e
     nop
@@ -372,8 +378,7 @@ tcp_rx_rst_handling:
     and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
     seq             c7, r2, k.to_s1_serq_cidx
     tbladd.c7       d.{u.tcp_rx_d.serq_full_cnt}.hx, 1
-    phvwri.c7       p.p4_intr_global_drop, 1
-    b.c7            flow_rx_process_done
+    b.c7            flow_rx_drop
 
     // get serq slot
     phvwri          p.common_phv_write_serq, 1
@@ -385,14 +390,15 @@ tcp_rx_rst_handling:
     phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, \
                         TCP_PENDING_TXDMA_SND_UNA_UPDATE
 
-tcp_rx_post_rst_handling:
-    // drop the frame
-    setcf           c7, [c0]
-    tbladd.!c4      d.u.tcp_rx_d.rx_drop_cnt, 1
-    b               flow_rx_process_done
-    phvwri          p.p4_intr_global_drop, 1
-
 tcp_rx_ooo_rcv:
+    // prevent endless loop, we don't want to queue ooo packet back in OOO
+    // queue
+    seq             c3, k.common_phv_ooq_tx2rx_pkt, 1
+    b.c3            flow_rx_drop
+
+    seq             c5, d.u.tcp_rx_d.ooq_not_empty, 0
+    tblwr.c5        d.u.tcp_rx_d.ooq_not_empty, 1
+    tbladd.f        d.{u.tcp_rx_d.ooo_cnt}.hx, 1
     CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_EN, tcp_ooo_book_keeping,
                         k.common_phv_qstate_addr, TCP_TCB_OOO_BOOK_KEEPING_OFFSET0,
                         TABLE_SIZE_512_BITS)
@@ -402,4 +408,7 @@ tcp_rx_ooo_rcv:
     // we need to allocate a descriptor
     tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
     b               flow_rx_process_done
-    tbladd          d.{u.tcp_rx_d.ooo_cnt}.hx, 1
+    // when ooq_not_empty moves from 0 --> 1, use wrfence so this write is
+    // guaranteed before writes in other stages (this field is reset to 0 by
+    // bookkeeping stage)
+    wrfence.c5

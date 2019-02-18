@@ -20,6 +20,7 @@ struct s4_t0_tcp_rx_tcp_cc_d d;
     .param          tcp_cc_new_reno
     .align
 tcp_rx_cc_stage_start:
+    bbeq            k.common_phv_ooq_tx2rx_pkt, 1, tcp_rx_cc_stage_end
     add r1, d.cc_algo, r0
     .brbegin
         br r1[0:0]

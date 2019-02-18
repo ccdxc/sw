@@ -46,10 +46,17 @@ var tcpProxyStatisticsShowCmd = &cobra.Command{
 }
 
 var tcpProxyCbShowCmd = &cobra.Command{
-	Use:   "cbs",
-	Short: "show tcp-proxy control blocks",
-	Long:  "show tcp-proxy control blocks",
+	Use:   "cb",
+	Short: "show tcp-proxy control block",
+	Long:  "show tcp-proxy control block",
 	Run:   tcpProxyCbShowCmdHandler,
+}
+
+var tcpProxyStatusShowCmd = &cobra.Command{
+	Use:   "status",
+	Short: "show tcp-proxy status",
+	Long:  "show tcp-proxy status",
+	Run:   tcpProxyStatusShowCmdHandler,
 }
 
 func init() {
@@ -57,8 +64,10 @@ func init() {
 	tcpProxyShowCmd.AddCommand(tcpProxySessionShowCmd)
 	tcpProxyShowCmd.AddCommand(tcpProxyStatisticsShowCmd)
 	tcpProxyShowCmd.AddCommand(tcpProxyCbShowCmd)
+	tcpProxyShowCmd.AddCommand(tcpProxyStatusShowCmd)
 	tcpProxyShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
 	tcpProxyCbShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
+	tcpProxyStatusShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
 	tcpProxyStatisticsShowCmd.Flags().Uint32Var(&tcpProxyQid, "qid", 1, "Specify qid")
 	tcpProxySessionShowCmd.Flags().StringVar(&tcpProxySessionSrcIP, "srcip",
 		"0.0.0.0", "Specify session src ip")
@@ -73,23 +82,33 @@ func init() {
 func tcpProxyShowCmdHandler(cmd *cobra.Command, args []string) {
 	showCbs := true
 	showStats := true
-	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats)
+	showStatus := true
+	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats, showStatus)
 }
 
 func tcpProxyCbShowCmdHandler(cmd *cobra.Command, args []string) {
 	showCbs := true
 	showStats := false
-	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats)
+	showStatus := false
+	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats, showStatus)
 }
 
 func tcpProxyStatisticsShowCmdHandler(cmd *cobra.Command, args []string) {
 	showCbs := false
 	showStats := true
+	showStatus := false
 	if cmd.Flags().Changed("qid") {
-		doTCPProxyCbShowCmd(cmd, args, showCbs, showStats)
+		doTCPProxyCbShowCmd(cmd, args, showCbs, showStats, showStatus)
 	} else {
 		doTCPProxyGlobalStatsShowCmd(cmd, args)
 	}
+}
+
+func tcpProxyStatusShowCmdHandler(cmd *cobra.Command, args []string) {
+	showCbs := false
+	showStats := false
+	showStatus := true
+	doTCPProxyCbShowCmd(cmd, args, showCbs, showStats, showStatus)
 }
 
 func doTCPProxyGlobalStatsShowCmd(cmd *cobra.Command, args []string) {
@@ -223,7 +242,7 @@ func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func doTCPProxyCbShowCmd(cmd *cobra.Command, args []string, showCbs bool,
-	showStats bool) {
+	showStats bool, showStatus bool) {
 
 	if !cmd.Flags().Changed("qid") {
 		fmt.Printf("Please specify a queue id(qid)...\n")
@@ -279,6 +298,14 @@ func doTCPProxyCbShowCmd(cmd *cobra.Command, args []string, showCbs bool,
 			showTCPStats(resp)
 			fmt.Printf("%s\n\n", strings.Repeat("-", 80))
 		}
+
+		if showStatus {
+			fmt.Printf("%s\n", strings.Repeat("-", 80))
+			fmt.Printf("\nTCP Status\n")
+			fmt.Printf("%s\n", strings.Repeat("-", 80))
+			showTCPStatus(resp)
+			fmt.Printf("%s\n\n", strings.Repeat("-", 80))
+		}
 	}
 }
 
@@ -294,6 +321,7 @@ func showTCPCb(resp *halproto.TcpCbGetResponse) {
 	fmt.Printf("%-30s : %-6X\n", "serq_base", spec.SerqBase)
 	fmt.Printf("%-30s : %-6X\n", "debug_dol", spec.DebugDol)
 	fmt.Printf("%-30s : %-6X\n", "sesq_base", spec.SesqBase)
+	fmt.Printf("%-30s : %-6X\n", "ooo_rx2tx_qbase", spec.OooRx2TxQbase)
 	fmt.Printf("%-30s : %-6d\n", "rcv_wnd", spec.RcvWnd<<spec.RcvWscale)
 	fmt.Printf("%-30s : %-6d\n", "snd_wnd", spec.SndWnd<<spec.SndWscale)
 	fmt.Printf("%-30s : %-6d\n", "snd_cwnd", spec.SndCwnd)
@@ -346,6 +374,8 @@ func showTCPStats(resp *halproto.TcpCbGetResponse) {
 	fmt.Printf("%-30s : %-6d\n", "fast_retrans_ci", stats.FastRetransCi)
 	fmt.Printf("%-30s : %-6d\n", "clean_retx_pi", stats.CleanRetxPi)
 	fmt.Printf("%-30s : %-6d\n", "clean_retx_ci", stats.CleanRetxCi)
+	fmt.Printf("%-30s : %-6d\n", "ooq_rx2tx_pi", stats.OoqRx2TxPi)
+	fmt.Printf("%-30s : %-6d\n", "ooq_rx2tx_ci", stats.OoqRx2TxCi)
 	fmt.Printf("%-30s : %-6d\n", "packets_out", stats.PacketsOut)
 	fmt.Printf("%-30s : %-6d\n", "tx_ring_pi", stats.TxRingPi)
 	fmt.Printf("%-30s : %-6d\n", "partial_pkt_ack_cnt", stats.PartialPktAckCnt)
@@ -353,4 +383,19 @@ func showTCPStats(resp *halproto.TcpCbGetResponse) {
 	fmt.Printf("%-30s : %-6d\n", "ato_deadline", stats.AtoDeadline)
 	fmt.Printf("%-30s : %-6d\n", "idle_timeout_deadline", stats.IdleDeadline)
 	fmt.Printf("%-30s : %-6d\n", "window_full_cnt", stats.WindowFullCnt)
+}
+
+func showTCPStatus(resp *halproto.TcpCbGetResponse) {
+
+	status := resp.GetStatus()
+
+	fmt.Printf("%-30s : %-6t\n", "ooq_not_empty", status.OoqNotEmpty)
+	fmt.Printf("%-30s\n", "Out-Of-Order Queues :")
+	for i, ooqStatus := range status.OoqStatus {
+		fmt.Printf("\n    Out-Of-Order Queue : %d\n", i)
+		fmt.Printf("%-30s : %-6X\n", "        queue_addr", ooqStatus.QueueAddr)
+		fmt.Printf("%-30s : %-6d\n", "        start_seq", ooqStatus.StartSeq)
+		fmt.Printf("%-30s : %-6d\n", "        end_seq", ooqStatus.EndSeq)
+		fmt.Printf("%-30s : %-6d\n", "        num_entries", ooqStatus.NumEntries)
+	}
 }

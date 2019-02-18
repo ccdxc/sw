@@ -14,9 +14,18 @@ struct s5_t1_tcp_rx_d d;
 %%
     .align
     .param tcp_ooo_qbase_cb_load 
+    .param tcp_ooo_qbase_cb_load_in_order
 tcp_ooo_processing_launch_dummy2:
+    bbeq            k.common_phv_ooo_rcv, 0, tcp_ooo_processing_launch_dummy2_in_order
     CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_EN,
                         tcp_ooo_qbase_cb_load,
+                        k.common_phv_qstate_addr,
+                        TCP_TCB_OOO_QADDR_OFFSET, TABLE_SIZE_512_BITS)
+    nop.e
+    nop
+tcp_ooo_processing_launch_dummy2_in_order:
+    CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_EN,
+                        tcp_ooo_qbase_cb_load_in_order,
                         k.common_phv_qstate_addr,
                         TCP_TCB_OOO_QADDR_OFFSET, TABLE_SIZE_512_BITS)
     nop.e

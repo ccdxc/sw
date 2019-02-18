@@ -166,15 +166,23 @@ header_type rx2tx_extra_t {
     }
 }
 
-header_type doorbell_data_pad_t {
-    fields {
-        db_data_pad : 16;
-    }
-}
-
 header_type tx2rx_t {
     fields {
         TX2RX_SHARED_STATE
+    }
+}
+
+header_type ooq_rx2tx_queue_entry_t {
+    fields {
+        qbase_addr : HBM_FULL_ADDRESS_WIDTH;
+        num_entries : 16;
+        trim : 14;
+    }
+}
+
+header_type p4_to_p4plus_ooq_txdma_header_t {
+    fields {
+        descr_addr          : 64;
     }
 }
 

@@ -12,7 +12,7 @@
 namespace hal {
 namespace pd {
 
-#define P4PLUS_SYMBOLS_MAX  106
+#define P4PLUS_SYMBOLS_MAX  107
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -46,6 +46,12 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_TCP_OOO_QBASE_RING);
     symbols[i].params[1].name = TCP_PROXY_STATS;
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_STATS);
+    i++;
+
+    symbols[i].name = "tcp_ooq_txdma_free_queue.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = TCP_OOQ_TABLE_BASE;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_TCP_OOO_QBASE_RING);
     i++;
 
     symbols[i].name = "tcp-read-sesq-ci.bin";

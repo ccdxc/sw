@@ -58,6 +58,7 @@ def SetupProxyArgs(tc):
     send_ack_flow2 = 0
     test_del_ack_timer = 0
     test_ooo_queue = 0
+    test_ooo_queue_in_order = 0
     test_retx_timer = 0
     test_retx_timer_full = 0
     test_mpu_tblsetaddr = 0
@@ -105,6 +106,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'test_ooo_queue'):
         test_ooo_queue = tc.module.args.test_ooo_queue
         logger.info("- test_ooo_queue %s" % tc.module.args.test_ooo_queue)
+    if hasattr(tc.module.args, 'test_ooo_queue_in_order'):
+        test_ooo_queue_in_order = tc.module.args.test_ooo_queue_in_order
+        logger.info("- test_ooo_queue_in_order %s" % tc.module.args.test_ooo_queue_in_order)
     if hasattr(tc.module.args, 'test_retx_timer'):
         test_retx_timer = tc.module.args.test_retx_timer
         logger.info("- test_retx_timer %s" % tc.module.args.test_retx_timer)
@@ -233,6 +237,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.send_ack_flow2 = send_ack_flow2
     tc.pvtdata.test_del_ack_timer = test_del_ack_timer
     tc.pvtdata.test_ooo_queue = test_ooo_queue
+    tc.pvtdata.test_ooo_queue_in_order = test_ooo_queue_in_order
     tc.pvtdata.test_retx_timer = test_retx_timer
     tc.pvtdata.test_retx_timer_full = test_retx_timer_full
     tc.pvtdata.test_mpu_tblsetaddr = test_mpu_tblsetaddr

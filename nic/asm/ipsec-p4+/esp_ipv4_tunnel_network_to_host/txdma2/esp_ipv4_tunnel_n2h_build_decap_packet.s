@@ -31,7 +31,7 @@ esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     sub r3, k.txdma2_global_payload_size, k.txdma2_global_pad_size
     subi r3, r3, 2
     phvwr p.dec_pay_load_dma_cmd_size, r3
-    phvwri p.{dec_pay_load_dma_pkt_eop...dec_pay_load_dma_cmd_eop}, 3
+    phvwri p.{dec_pay_load_dma_cmd_pkt_eop...dec_pay_load_dma_cmd_eop}, 3
     phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0 
     nop
 

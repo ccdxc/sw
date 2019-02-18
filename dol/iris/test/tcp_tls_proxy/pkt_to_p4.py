@@ -225,6 +225,7 @@ def TestCaseVerify(tc):
     rcv_next_delta = tc.pvtdata.flow1_bytes_rxed
     ooo = False
     ooo_queue = False
+    ooo_queue_in_order = False
 
     if hasattr(tc.module.args, 'fin'):
         tc.pvtdata.flow1_bytes_rxed -= int(tc.module.args.fin)
@@ -237,6 +238,8 @@ def TestCaseVerify(tc):
         ooo_rx_wring_cur.GetMeta()
         arr_pi = range(ooo_rx_wring.pi, ooo_rx_wring_cur.pi)
         ooo_rx_wring_cur.GetRingEntries(arr_pi)
+    if tc.pvtdata.test_ooo_queue_in_order:
+        ooo_queue_in_order = True
 
     if hasattr(tc.module.args, 'num_retx_pkts'):
         tc.pvtdata.flow2_bytes_txed += (tc.packets.Get('PKT1').payloadsize * int(tc.module.args.num_retx_pkts))
@@ -253,8 +256,9 @@ def TestCaseVerify(tc):
 
     if tc.pvtdata.ooo_seq_delta:
         ooo = True
-        rcv_next_delta = 0
-        num_pkts = 0
+        if not tc.pvtdata.test_ooo_queue_in_order:
+            rcv_next_delta = 0
+            num_pkts = 0
     if not tc.pvtdata.rst and tcpcb_cur.rcv_nxt != tc.pvtdata.flow1_rcv_nxt + rcv_next_delta:
         logger.error("rcv_nxt (%d) not as expected (%d)" %
                 (tcpcb_cur.rcv_nxt, tc.pvtdata.flow1_rcv_nxt + rcv_next_delta))
@@ -501,7 +505,7 @@ def TestCaseVerify(tc):
             logger.error("rto_backoff (%d) not as expected (%d)" %
                     (other_tcpcb_cur.rto_backoff, num_retx_pkts))
 
-    if ooo_queue:
+    if ooo_queue and not ooo_queue_in_order:
         if ooo_rx_wring_cur.pi != ooo_rx_wring.pi + 1:
             logger.error("ooo_rx pi (%d), not as expected (%d)" %
                     (ooo_rx_wring_cur.pi, ooo_rx_wring.pi + 1))
@@ -526,6 +530,26 @@ def TestCaseVerify(tc):
                     (tcpcb_cur.ooq_status[0].end_seq,
                      tcpcb_cur.rcv_nxt + tc.pvtdata.ooo_seq_delta + \
                              tc.pvtdata.flow1_bytes_rxed))
+            return False
+        if tcpcb_cur.ooq_not_empty != True:
+            logger.error("ooq empty")
+            return False
+
+    if ooo_queue_in_order:
+        if ooo_rx_wring_cur.pi != ooo_rx_wring.pi + 1:
+            logger.error("ooo_rx pi (%d), not as expected (%d)" %
+                    (ooo_rx_wring_cur.pi, ooo_rx_wring.pi + 1))
+            return False
+        if ooo_rx_wring_cur.ci != ooo_rx_wring.ci + 1:
+            logger.error("ooo_rx ci (%d), not as expected (%d)" %
+                    (ooo_rx_wring_cur.ci, ooo_rx_wring.pi + 1))
+            return False
+        if tcpcb_cur.ooq_status[0].num_entries != 0:
+            logger.error("ooq queue num_entries (%d) not as expected (%d)" %
+                    (tcpcb_cur.ooq_status[0].num_entries, 0))
+            return False
+        if tcpcb_cur.ooq_not_empty != False:
+            logger.error("ooq not empty")
             return False
 
     return True

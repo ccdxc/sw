@@ -96,8 +96,11 @@ typedef struct tcpcb_s {
     uint32_t              initial_window;
     uint32_t              abc_l_var;
     bool                  ooo_queue;
+    uint64_t              ooo_rx2tx_qbase;
 
     // operational state of TCP Proxy CB
+    bool                  ooq_not_empty;
+    tcpcb_ooq_entry_t     ooq_entry[NUM_TCP_OOO_QUEUES_PER_FLOW];
     hal_handle_t          hal_handle;              // HAL allocated handle
 
     // rx stats
@@ -153,7 +156,9 @@ typedef struct tcpcb_s {
     uint32_t              tx_ring_pi;
     uint32_t              partial_pkt_ack_cnt;
     uint32_t              window_full_cnt;
-    tcpcb_ooq_entry_t     ooq_entry[NUM_TCP_OOO_QUEUES_PER_FLOW];
+
+    uint32_t              ooq_rx2tx_pi;
+    uint32_t              ooq_rx2tx_ci;
 
     // PD state
     void                  *pd;                     // all PD specific state

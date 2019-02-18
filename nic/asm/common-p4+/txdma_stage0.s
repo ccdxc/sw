@@ -49,6 +49,7 @@
     .param      smbdc_req_tx_sqcb_process
     .param      rdma_cq_tx_cqcb_process
     .param      rdma_aq_tx_aqcb_process
+    .param      tcp_ooq_load_qstate
     
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -233,3 +234,7 @@ storage_seq_stage0:
    j    storage_seq_q_state_pop_start
    nop
 
+.align
+tcp_ooq_rx2tx_stage0:
+    j tcp_ooq_load_qstate
+    nop

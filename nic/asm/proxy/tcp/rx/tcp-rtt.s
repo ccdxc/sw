@@ -29,8 +29,9 @@ tcp_rx_rtt_start:
     */
     seq         c1, k.common_phv_tsopt_enabled, 1
     seq         c2, k.common_phv_tsopt_available, 1
+    seq         c3, k.common_phv_ooq_tx2rx_pkt, 1
 
-    bcf         [!c1 | !c2], flow_rtt_process_done
+    bcf         [!c1 | !c2 | c3], flow_rtt_process_done
     nop
 
     sne         c1, k.common_phv_write_arq, r0

@@ -24,6 +24,8 @@
                     (TCP_TCB_RX2TX_SHARED_EXTRA_OFFSET + 0)
 
 #define TCP_TCB_RX_OFFSET                     192
+#define TCP_TCB_RX_OOQ_NOT_EMPTY \
+                    (TCP_TCB_RX_OFFSET + 0)
 #define TCP_TCB_RTT_OFFSET                    256
 
 #define TCP_TCB_CC_OFFSET                     320
