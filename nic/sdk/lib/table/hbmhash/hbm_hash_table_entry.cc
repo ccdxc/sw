@@ -161,6 +161,10 @@ HbmHashTableEntry::remove(HbmHashEntry *h_entry)
     HbmHashHintGroup *hg = h_entry->get_fh_group();
     HbmHashSpineEntry *fspe = h_entry->get_eff_spine_entry();
 
+    SDK_TRACE_DEBUG("HTE: FT bits: %#x, Hint bits: %#x",
+                    bucket_index_,
+                    hg->get_hint_bits());
+
     rs = h_entry->remove();
 
     SDK_TRACE_DEBUG("After Removal: hg_num_fes:%d, hg_num_anchors:%d",

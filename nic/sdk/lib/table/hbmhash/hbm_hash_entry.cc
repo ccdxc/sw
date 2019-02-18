@@ -288,6 +288,8 @@ HbmHashEntry::remove()
     // HbmHashTableEntry *fte = eff_spine_entry->get_ht_entry();
     std::list<HbmHashHintGroup*>::iterator itr;
 
+    SDK_TRACE_DEBUG("Removing an entry from HG: 0x%x", hint_group_);
+
     // Step 1: Replace the entry & reprogram
     if (is_anchor_entry_) {
         // Case 1: Anchor entry.
@@ -490,6 +492,7 @@ HbmHashEntry::remove()
                 // Need to move last_hg to here
                 if (!eff_spine_entry->get_ht_entry()->get_hbm_hash()->
                         get_delayed_del_en()) {
+                    SDK_TRACE_DEBUG("Moving last hg to here");
 
 #if 0
                     if (fse_last == eff_spine_entry) {
@@ -509,14 +512,17 @@ HbmHashEntry::remove()
 
                     // Check if we have to program fse_last
                     if (fse_last != eff_spine_entry) {
+                        SDK_TRACE_DEBUG("Programming last spine entry");
                         // ----------
                         // Handle last_hg move
                         if (fse_last->get_num_hgs() || fse_last->get_anchor_entry()) {
                             // Remove last_hg from fse_last
-                            fse_last->del_hg(last_hg);
+                            SDK_TRACE_DEBUG("Last spine entry has FGs. Reprogramming it");
+                            // fse_last->del_hg(last_hg);
                             // Re-program fse_last
                             fse_last->program_table();
                         } else {
+                            SDK_TRACE_DEBUG("Last spine entry has no FGS or anchors. Reprogramming prev.");
                             // Reprogram prev. last fse entry as last fse is going away.
                             HbmHashSpineEntry *fse_last_prev = fse_last->get_prev();
                             fse_last_prev->set_next(NULL);
