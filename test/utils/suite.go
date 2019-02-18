@@ -333,13 +333,32 @@ func (tu *TestUtils) Init() {
 		ginkgo.Fail(fmt.Sprintf("resolver is nil"))
 	}
 
-	gomega.Eventually(func() bool {
+	gomega.Eventually(func() int {
 		instList := tu.resolver.Lookup(globals.APIServer)
-		if len(instList.Items) == 0 {
-			return false
-		}
-		return true
-	}, 5, 1).Should(gomega.BeTrue(), "Resolver should have APIServer entry")
+		return len(instList.Items)
+	}, 10, 1).Should(gomega.BeNumerically(">=", 1), "Resolver should have APIServer entry")
+
+	gomega.Eventually(func() int {
+		instList := tu.resolver.Lookup(globals.VosMinio)
+		return len(instList.Items)
+	}, 10, 1).Should(gomega.BeNumerically(">=", 1), "Resolver should have VosMinIO entry")
+
+	gomega.Eventually(func() int {
+		instList := tu.resolver.Lookup(globals.Npm)
+		return len(instList.Items)
+	}, 10, 1).Should(gomega.BeNumerically(">=", 1), "Resolver should have Npm entry")
+
+	gomega.Eventually(func() int {
+		instList := tu.resolver.Lookup(globals.Citadel)
+		return len(instList.Items)
+	}, 10, 1).Should(gomega.BeNumerically(">=", tu.NumQuorumNodes), "Resolver should have Citadel entries")
+
+	gomega.Eventually(func() int {
+		instList := tu.resolver.Lookup(globals.ElasticSearch)
+		return len(instList.Items)
+	}, 10, 1).Should(gomega.BeNumerically(">=", tu.NumQuorumNodes), "Resolver should have ElasticSearch entries")
+
+	ginkgo.By("important services are running")
 
 	// create api server client
 	tu.Logger = log.GetNewLogger(log.GetDefaultConfig(clientName))
