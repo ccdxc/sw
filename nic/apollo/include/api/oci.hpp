@@ -22,7 +22,12 @@
 /**
  * @brief    invalid epoch
  */
-#define OCI_EPOCH_INVALID        0x0
+#define OCI_EPOCH_INVALID             0x0
+
+/**
+ * @brief    invalid route table id
+ */
+#define OCI_ROUTE_TABLE_ID_INVALID    0x0
 
 /**
  * @brief    basic OCI data types

@@ -170,7 +170,8 @@ class subnet_entry : public api_base {
     mac_addr_t& vr_mac(void) { return vr_mac_; }
 
     uint16_t hw_id(void) const { return hw_id_; }
-    oci_route_table_key_t route_table(void) const { return route_table_; }
+    oci_route_table_key_t v4_route_table(void) const { return v4_route_table_; }
+    oci_route_table_key_t v6_route_table(void) const { return v6_route_table_; }
     mem_addr_t policy_tree_root(void) const { return policy_base_addr_; }
 
 private:
@@ -182,7 +183,8 @@ private:
 
  private:
     oci_subnet_key_t         key_;               /**< subnet Key */
-    oci_route_table_key_t    route_table_;       /**< route table id */
+    oci_route_table_key_t    v4_route_table_;    /**< route table id */
+    oci_route_table_key_t    v6_route_table_;    /**< route table id */
     mac_addr_t               vr_mac_;            /**< virtual router MAC */
     ht_ctxt_t                ht_ctxt_;           /**< hash table context */
 

@@ -201,8 +201,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     oci_mapping.key.ip_addr.addr.v4_addr =
                         (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                         (((k - 1) * num_ip_per_vnic) + l);
-                    oci_mapping.subnet.vcn_id = i;
-                    oci_mapping.subnet.id = j;
+                    oci_mapping.subnet.id = (i - 1) * num_subnets + j;
                     oci_mapping.slot = vnic_key;
                     oci_mapping.tep.ip_addr = g_swport.switch_ip_addr;
                     MAC_UINT64_TO_ADDR(oci_mapping.overlay_mac,
@@ -239,8 +238,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                 oci_mapping.key.ip_addr.addr.v4_addr =
                     (g_vcn_ippfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                     ip_base++;
-                oci_mapping.subnet.vcn_id = i;
-                oci_mapping.subnet.id = j;
+                oci_mapping.subnet.id = (i - 1) * num_subnets + j;
                 oci_mapping.slot = remote_slot++;
                 oci_mapping.tep.ip_addr =
                     teppfx->addr.addr.v4_addr + tep_offset++;
@@ -280,8 +278,7 @@ create_vnics (uint32_t num_vcns, uint32_t num_subnets,
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 memset(&oci_vnic, 0, sizeof(oci_vnic));
                 oci_vnic.vcn.id = i;
-                oci_vnic.subnet.vcn_id = i;
-                oci_vnic.subnet.id = j;
+                oci_vnic.subnet.id = (i - 1) * num_subnets + j;
                 oci_vnic.key.id = vnic_key;
                 oci_vnic.wire_vlan = vlan_start + vnic_key - 1;
                 oci_vnic.slot = vnic_key;
@@ -313,8 +310,8 @@ create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
 
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&oci_subnet, 0, sizeof(oci_subnet));
-        oci_subnet.key.vcn_id = vcn_id;
-        oci_subnet.key.id = i;
+        oci_subnet.key.id = (vcn_id - 1) * num_subnets + i;
+        oci_subnet.vcn.id = vcn_id;
         oci_subnet.pfx = *vcn_pfx;
         oci_subnet.pfx.addr.addr.v4_addr =
             (oci_subnet.pfx.addr.addr.v4_addr) | ((i - 1) << 14);
@@ -325,7 +322,7 @@ create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
         oci_subnet.vr_ip.addr.v4_addr = oci_subnet.pfx.addr.addr.v4_addr;
         MAC_UINT64_TO_ADDR(oci_subnet.vr_mac,
                            (uint64_t)oci_subnet.vr_ip.addr.v4_addr);
-        oci_subnet.route_table.id = route_table_id++;
+        oci_subnet.v4_route_table.id = route_table_id++;
         rv = oci_subnet_create(&oci_subnet);
         if (rv != SDK_RET_OK) {
             return rv;

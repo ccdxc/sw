@@ -19,7 +19,6 @@ vnic_util::create()
     oci_vnic_t vnic;
 
     vnic.vcn.id        = vcn_id;
-    vnic.subnet.vcn_id = vcn_id;
     vnic.subnet.id     = sub_id;
     vnic.key.id        = vnic_id;
     vnic.wire_vlan     = vlan_tag;

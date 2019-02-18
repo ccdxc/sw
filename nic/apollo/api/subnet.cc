@@ -77,9 +77,9 @@ sdk_ret_t
 subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     oci_subnet_t *oci_subnet = &api_ctxt->api_params->subnet_info;
 
-    memcpy(&key_, &oci_subnet->key, sizeof(oci_subnet_key_t));
-    memcpy(&route_table_, &oci_subnet->route_table,
-           sizeof(oci_route_table_key_t));
+    key_.id = oci_subnet->key.id;
+    v4_route_table_.id = oci_subnet->v4_route_table.id;
+    v6_route_table_.id = oci_subnet->v6_route_table.id;
     memcpy(&vr_mac_, &oci_subnet->vr_mac, sizeof(mac_addr_t));
     this->ht_ctxt_.reset();
     return SDK_RET_OK;
@@ -108,16 +108,19 @@ subnet_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
+    oci_subnet_t *oci_subnet = &obj_ctxt->api_params->subnet_info;
+
     /**
      * there is no h/w programming for subnet config but a h/w id is needed so
      * we can use while programming vnics, routes etc.
      */
-    oci_subnet_t *oci_subnet = &obj_ctxt->api_params->subnet_info;
     OCI_TRACE_DEBUG("Creating subnet (vcn %u, subnet %u), pfx %s, vr ip %s, "
-                    "vr_mac %s, route table %u", key_.vcn_id, key_.id,
+                    "vr_mac %s, v4 route table %u, v6 route table %u",
+                    oci_subnet->vcn.id, key_.id,
                     ippfx2str(&oci_subnet->pfx), ipaddr2str(&oci_subnet->vr_ip),
                     macaddr2str(oci_subnet->vr_mac),
-                    oci_subnet->route_table.id);
+                    oci_subnet->v4_route_table.id,
+                    oci_subnet->v6_route_table.id);
     return SDK_RET_OK;
 }
 
@@ -172,8 +175,11 @@ subnet_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 subnet_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                               obj_ctxt_t *obj_ctxt) {
+    oci_subnet_t *oci_subnet = &obj_ctxt->api_params->subnet_info;
+
     /**< there is no h/w programming for subnet config, so nothing to activate */
-    OCI_TRACE_DEBUG("Created subnet (vcn %u, subnet %u)", key_.vcn_id, key_.id);
+    OCI_TRACE_DEBUG("Created subnet (vcn %u, subnet %u)", oci_subnet->vcn.id,
+                    key_.id);
     return SDK_RET_OK;
 }
 
@@ -188,39 +194,6 @@ sdk_ret_t
 subnet_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
-
-#if 0
-/**
- * @brief    commit() is invokved during commit phase of the API processing and
- *           is not expected to fail as all required resources are already
- *           allocated by now. Based on the API operation, this API is expected
- *           to process either create/retrieve/update/delete. If any temporary
- *           state was stashed in the api_ctxt while processing this API, it
- *           should be freed here
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- *
- * NOTE:     commit() is not expected to fail
- */
-sdk_ret_t
-subnet_entry::commit(api_ctxt_t *api_ctxt) {
-    return SDK_RET_OK;
-}
-
-/**
- * @brief     abort() is invoked during abort phase of the API processing and is
- *            not expected to fail. During this phase, all associated resources
- *            must be freed and global DBs need to be restored back to their
- *            original state and any transient state stashed in api_ctxt while
- *            processing this API should also be freed here
- * @param[in] api_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
-sdk_ret_t
-subnet_entry::abort(api_ctxt_t *api_ctxt) {
-    return SDK_RET_OK;
-}
-#endif
 
 /**
  * @brief add subnet to database

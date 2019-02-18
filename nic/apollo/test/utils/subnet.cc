@@ -22,12 +22,13 @@ subnet_util::create(oci_vcn_id_t vcn_id, oci_subnet_id_t subnet_id,
 
     SDK_ASSERT(str2ipv4pfx((char *)pfxstr.c_str(), &ip_pfx) == 0);
     memset(&oci_subnet, 0, sizeof(oci_subnet_t));
-    oci_subnet.key.vcn_id = vcn_id;
     oci_subnet.key.id     = subnet_id;
+    oci_subnet.vcn.id     = vcn_id;
     oci_subnet.pfx        = ip_pfx;
     MAC_UINT64_TO_ADDR(oci_subnet.vr_mac,
                        (uint64_t)oci_subnet.vr_ip.addr.v4_addr);
-    oci_subnet.route_table.id = subnet_id;
+    oci_subnet.v4_route_table.id = subnet_id;
+    //oci_subnet.v6_route_table.id = ;
     return (oci_subnet_create(&oci_subnet));
 }
 

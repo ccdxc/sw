@@ -24,10 +24,11 @@
 #define OCI_MAX_SUBNET        (5 * OCI_MAX_VCN)
 
 /**
- * @brief subnet Key
+ * @brief subnet key
+ *
+ * NOTE: subnet key is globally unique id, not scoped with in a vcn
  */
 typedef struct oci_subnet_key_s {
-    oci_vcn_id_t       vcn_id;    /**< vcn id */
     oci_subnet_id_t    id;        /**< subnet id */
 } __PACK__ oci_subnet_key_t;
 
@@ -35,11 +36,13 @@ typedef struct oci_subnet_key_s {
  * @brief subnet
  */
 typedef struct oci_subnet_s {
-    oci_subnet_key_t         key;            /**< subnet key */
-    ip_prefix_t              pfx;            /**< subnet cidr block */
-    ip_addr_t                vr_ip;          /**< virtual router IP */
-    mac_addr_t               vr_mac;         /**< virtual router mac */
-    oci_route_table_key_t    route_table;    /**< route table id */
+    oci_subnet_key_t         key;               /**< subnet key */
+    oci_vcn_key_t            vcn;               /**< vcn this subnet is part of */
+    ip_prefix_t              pfx;               /**< subnet cidr block */
+    ip_addr_t                vr_ip;             /**< virtual router IP */
+    mac_addr_t               vr_mac;            /**< virtual router mac */
+    oci_route_table_key_t    v4_route_table;    /**< IPv4 route table id */
+    oci_route_table_key_t    v6_route_table;    /**< IPv6 route table id */
 } __PACK__ oci_subnet_t;
 
 /**

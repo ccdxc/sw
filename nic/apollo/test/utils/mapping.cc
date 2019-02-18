@@ -21,7 +21,6 @@ mapping_util::create()
 
     map.key.vcn.id = vcn_id;
     extract_ip_addr(vnic_ip.c_str(), vnic_ip_af, &map.key.ip_addr);
-    map.subnet.vcn_id = vcn_id;
     map.subnet.id     = sub_id;
     map.slot          = mpls_slot;
     inet_aton(tep_ip.c_str(), &ipaddr);

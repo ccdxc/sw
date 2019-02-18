@@ -159,8 +159,8 @@ TEST_F(mapping_test, mapping_create) {
     ASSERT_TRUE(oci_route_table_create(&rt_tbl) == SDK_RET_OK);
 
     // Create Subnet on the VCN
-    sub.key.vcn_id = vcn_id;
     sub.key.id = sub_id;
+    sub.vcn.id = vcn_id;
     // Subnet cidr
     ASSERT_TRUE(str2ipv4pfx((char *)sub_cidr.c_str(), &sub.pfx) == SDK_RET_OK);
     // Set the subnets IP ( Basically virtual router interface IP)
@@ -168,7 +168,7 @@ TEST_F(mapping_test, mapping_create) {
     sub.vr_ip.af = IP_AF_IPV4;
     sub.vr_ip.addr.v4_addr = ntohl(ipaddr.s_addr);
     mac_str_to_addr((char *)sub_vr_mac, sub.vr_mac);
-    sub.route_table.id = rt_id;
+    sub.v4_route_table.id = rt_id;
     ASSERT_TRUE(oci_subnet_create(&sub) == SDK_RET_OK);
 
     // Create vnic

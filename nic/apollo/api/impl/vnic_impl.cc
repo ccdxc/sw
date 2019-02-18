@@ -210,8 +210,8 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     local_vnic_by_slot_rx_swkey_t         vnic_by_slot_key = { 0 };
     local_vnic_by_slot_rx_actiondata_t    vnic_by_slot_data = { 0 };
     oci_vnic_t                            *vnic_info;
-    oci_route_table_key_t                 route_table_key;
-    route_table                           *route_table;
+    oci_route_table_key_t                 v4_route_table_key, v6_route_table_key;
+    route_table                           *v4_route_table, *v6_route_table;
     mem_addr_t                            addr;
 
     vnic_info = &obj_ctxt->api_params->vnic_info;
@@ -223,8 +223,14 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     if (subnet == NULL) {
         return sdk::SDK_RET_INVALID_ARG;
     }
-    route_table_key = subnet->route_table();
-    route_table = route_table_db()->route_table_find(&route_table_key);
+    v4_route_table_key = subnet->v4_route_table();
+    v4_route_table = route_table_db()->route_table_find(&v4_route_table_key);
+    v6_route_table_key = subnet->v4_route_table();
+    if (v6_route_table_key.id != OCI_ROUTE_TABLE_ID_INVALID) {
+        v6_route_table = route_table_db()->route_table_find(&v6_route_table_key);
+    } else {
+        v6_route_table = NULL;
+    }
 
     switch (api_op) {
     case api::API_OP_CREATE:
@@ -240,10 +246,18 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
         // TODO: do we need to enhance the vnic API here to take this ?
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group_2 = 0;
         addr =
-            ((impl::route_table_impl *)(route_table->impl()))->lpm_root_addr();
-        OCI_TRACE_DEBUG("LPM root addr 0x%x\n", addr);
+            ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
+        OCI_TRACE_DEBUG("IPv4 lpm root addr 0x%x\n", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v4addr_1,
                                 addr, 5);
+        if (v6_route_table) {
+            addr =
+                ((impl::route_table_impl *)(v6_route_table->impl()))->lpm_root_addr();
+            OCI_TRACE_DEBUG("IPv6 lpm root addr 0x%x\n", addr);
+            MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v6addr_1,
+                                    addr, 5);
+        }
+
         addr = api::g_oci_state.mempartition()->start_addr("sacl_v4");
         OCI_TRACE_DEBUG("RFC root addr 0x%x\n", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr_1,

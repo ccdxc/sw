@@ -25,11 +25,11 @@ trap finish EXIT
 export PATH=${PATH}:${BUILD_DIR}/bin
 
 # gtests
+$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
 #$GDB apollo_swithcport_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_switchport_test.xml"
 $GDB apollo_vcn_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vcn_test.xml"
 $GDB apollo_subnet_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_subnet_test.xml"
 #$GDB apollo_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vnic_test.xml"
 #$GDB apollo_tep_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_tep_test.xml"
 #$GDB apollo_mappings_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vnic_test.xml"
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
