@@ -677,6 +677,8 @@ pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif_t *pd_tif, uint16_t vf_id,
     d.action_u.vf_properties_vf_properties.tunnel_originate = 1;
     d.action_u.vf_properties_vf_properties.tunnel_rewrite_index = pd_tif->tunnel_rw_idx;
     d.action_u.vf_properties_vf_properties.mpls_out = pi_if->mpls_tag.label;
+    memcpy(d.action_u.vf_properties_vf_properties.vf_mac, 
+            pi_if->overlay_mac, sizeof(mac_addr_t));
 
     // insert the entry
     sdk_ret = dm->insert_withid(&d, vf_id);
@@ -870,7 +872,7 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
         tnnl_rw_key->vlan_id = vlan_id;
     } else if (actionid == TUNNEL_REWRITE_ENCAP_MPLS_UDP_ID) {
         memcpy(tnnl_rw_key->mac_da, pi_if->gw_mac_da, sizeof(mac_addr_t));
-        memset(tnnl_rw_key->mac_sa, 0, sizeof(mac_addr_t));
+        memcpy(tnnl_rw_key->mac_sa, pi_if->pf_mac, sizeof(mac_addr_t));
         tnnl_rw_key->ip_sa.af = IP_AF_IPV4;
         tnnl_rw_key->ip_sa.addr.v4_addr = pi_if->substrate_ip;
         tnnl_rw_key->ip_da.af = IP_AF_IPV4;
