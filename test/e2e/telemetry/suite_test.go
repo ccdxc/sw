@@ -87,7 +87,7 @@ func newTS() (*teleSuite, error) {
 	cluster := meta.DefaultClusterConfig()
 	cluster.MetastoreURL = citadelHost + ":" + globals.KVStoreClientPort
 	cluster.MetastoreType = store.KVStoreTypeEtcd
-	br, err := broker.NewBroker(cluster, citadelHost)
+	br, err := broker.NewBroker(cluster, citadelHost, log.GetNewLogger(log.GetDefaultConfig("telemetry_suite")))
 	if err != nil {
 		return nil, err
 	}

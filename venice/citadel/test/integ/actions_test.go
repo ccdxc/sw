@@ -230,11 +230,11 @@ func (it *integTestSuite) stopNode(c *C, idx int) {
 func (it *integTestSuite) startNode(c *C, idx int) {
 	var err error
 	// create data node
-	it.dnodes[idx], err = data.NewDataNode(it.cfg, fmt.Sprintf("dnode-%d", idx), fmt.Sprintf(nodeURLFormat, idx), fmt.Sprintf(dbpathFormat, idx), fmt.Sprintf(querydbpathFormat, idx))
+	it.dnodes[idx], err = data.NewDataNode(it.cfg, fmt.Sprintf("dnode-%d", idx), fmt.Sprintf(nodeURLFormat, idx), fmt.Sprintf(dbpathFormat, idx), fmt.Sprintf(querydbpathFormat, idx), it.logger)
 	AssertOk(c, err, "Error creating datanode")
 
 	// create broker
-	it.brokers[idx], err = broker.NewBroker(it.cfg, fmt.Sprintf("broker-%d", idx))
+	it.brokers[idx], err = broker.NewBroker(it.cfg, fmt.Sprintf("broker-%d", idx), it.logger)
 	AssertOk(c, err, "Error creating broker")
 }
 
@@ -248,7 +248,7 @@ func (it *integTestSuite) softRestartNode(c *C, idx int) {
 	AssertOk(c, err, "Error stopping broker")
 
 	// recreate broker
-	it.brokers[idx], err = broker.NewBroker(it.cfg, fmt.Sprintf("broker-%d", idx))
+	it.brokers[idx], err = broker.NewBroker(it.cfg, fmt.Sprintf("broker-%d", idx), it.logger)
 	AssertOk(c, err, "Error creating broker")
 }
 

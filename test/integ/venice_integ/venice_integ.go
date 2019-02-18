@@ -449,12 +449,12 @@ func (it *veniceIntegSuite) startCitadel() {
 	it.updateResolver(globals.Collector, collectorURL)
 
 	// create the data node
-	dn, err := data.NewDataNode(cfg, nodeUUID, integTestCitadelURL, "/tmp/tstore/", "/tmp/qstore")
+	dn, err := data.NewDataNode(cfg, nodeUUID, integTestCitadelURL, "/tmp/tstore/", "/tmp/qstore", it.logger)
 	if err != nil {
 		log.Fatalf("Error creating data node. Err: %v", err)
 	}
 
-	br, err := broker.NewBroker(cfg, nodeUUID)
+	br, err := broker.NewBroker(cfg, nodeUUID, it.logger)
 	if err != nil {
 		log.Fatalf("Error creating broker. Err: %v", err)
 	}
@@ -847,6 +847,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 
 func (it *veniceIntegSuite) SetUpTest(c *check.C) {
 	log.Infof("============================= %s starting ==========================", c.TestName())
+	it.logger = logger.WithContext("t_name", c.TestName())
 
 	// verify all naples are connected
 	it.verifyNaplesConnected(c)

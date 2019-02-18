@@ -77,6 +77,7 @@ type DNode struct {
 	tshards      sync.Map          // tstore shards
 	kshards      sync.Map          // kstore shards
 	rpcClients   sync.Map          // rpc connections
+	logger       log.Logger
 
 	isStopped bool // is the datanode stopped?
 }
@@ -96,11 +97,11 @@ type syncBufferState struct {
 }
 
 // NewDataNode creates a new data node instance
-func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string, querydbPath string) (*DNode, error) {
+func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string, querydbPath string, logger log.Logger) (*DNode, error) {
 	// Start a rpc server
 	rpcSrv, err := rpckit.NewRPCServer(globals.Citadel, nodeURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
-		log.Errorf("failed to listen to %s: Err %v", nodeURL, err)
+		logger.Errorf("failed to listen to %s: Err %v", nodeURL, err)
 		return nil, err
 	}
 
@@ -131,24 +132,25 @@ func NewDataNode(cfg *meta.ClusterConfig, nodeUUID, nodeURL, dbPath string, quer
 		clusterCfg:  cfg,
 		watcher:     watcher,
 		rpcServer:   rpcSrv,
+		logger:      logger.WithContext("nodeuuid", nodeUUID),
 	}
 
 	// read all shard state from metadata store and restore it
 	err = dn.readAllShards(cfg)
 	if err != nil {
-		log.Errorf("Error reading state from metadata store. Err: %v", err)
+		dn.logger.Errorf("Error reading state from metadata store. Err: %v", err)
 		return nil, err
 	}
 
 	// register RPC handlers
 	tproto.RegisterDataNodeServer(rpcSrv.GrpcServer, &dn)
 	rpcSrv.Start()
-	log.Infof("Datanode RPC server is listening on: %s", nodeURL)
+	dn.logger.Infof("Datanode RPC server is listening on: %s", nodeURL)
 
 	// register the node metadata
 	metaNode, err := meta.NewNode(cfg, nodeUUID, nodeURL)
 	if err != nil {
-		log.Errorf("Error creating metanode. Err: %v", err)
+		dn.logger.Errorf("Error creating metanode. Err: %v", err)
 		return nil, err
 	}
 	dn.metaNode = metaNode
@@ -180,7 +182,7 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 						dbPath := dn.getDbPath(meta.ClusterTypeTstore, repl.ReplicaID)
 						ts, serr := tstore.NewTstore(dbPath)
 						if serr != nil {
-							log.Errorf("Error creating tstore at %s. Err: %v", dbPath, serr)
+							dn.logger.Errorf("Error creating tstore at %s. Err: %v", dbPath, serr)
 						} else {
 							// create a shard instance
 							tshard := TshardState{
@@ -190,7 +192,7 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 								store:     ts,
 							}
 
-							log.Infof("Restored tstore replica %d shard %d", repl.ReplicaID, repl.ShardID)
+							dn.logger.Infof("Restored tstore replica %d shard %d", repl.ReplicaID, repl.ShardID)
 
 							// collect all replicas in this shard
 							var replicaList []*tproto.ReplicaInfo
@@ -233,7 +235,7 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 						dbPath := dn.getDbPath(meta.ClusterTypeKstore, repl.ReplicaID)
 						ks, serr := kstore.NewKstore(kstore.BoltDBType, dbPath)
 						if serr != nil {
-							log.Errorf("Error creating kstore at %s. Err: %v", dbPath, serr)
+							dn.logger.Errorf("Error creating kstore at %s. Err: %v", dbPath, serr)
 						} else {
 							// create a shard instance
 							kshard := KshardState{
@@ -243,7 +245,7 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 								kstore:    ks,
 							}
 
-							log.Infof("Restored kstore replica %d shard %d", repl.ReplicaID, repl.ShardID)
+							dn.logger.Infof("Restored kstore replica %d shard %d", repl.ReplicaID, repl.ShardID)
 
 							// collect all replicas in this shard
 							var replicaList []*tproto.ReplicaInfo
@@ -284,7 +286,7 @@ func (dn *DNode) readAllShards(cfg *meta.ClusterConfig) error {
 func (dn *DNode) CreateShard(ctx context.Context, req *tproto.ShardReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Infof("%s Received CreateShard req %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s Received CreateShard req %+v", dn.nodeUUID, req)
 
 	switch req.ClusterType {
 	case meta.ClusterTypeTstore:
@@ -292,7 +294,7 @@ func (dn *DNode) CreateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 			// find the shard from replica id
 			val, ok := dn.tshards.Load(req.ReplicaID)
 			if ok && val.(*TshardState).store != nil {
-				log.Warnf("Replica %d already exists", req.ReplicaID)
+				dn.logger.Warnf("Replica %d already exists", req.ReplicaID)
 				return &resp, nil
 			}
 
@@ -300,7 +302,7 @@ func (dn *DNode) CreateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 			dbPath := dn.getDbPath(meta.ClusterTypeTstore, req.ReplicaID)
 			ts, err := tstore.NewTstore(dbPath)
 			if err != nil {
-				log.Errorf("Error creating tstore at %s. Err: %v", dbPath, err)
+				dn.logger.Errorf("Error creating tstore at %s. Err: %v", dbPath, err)
 				resp.Status = err.Error()
 				return &resp, err
 			}
@@ -322,7 +324,7 @@ func (dn *DNode) CreateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 			// find the shard from replica id
 			val, ok := dn.kshards.Load(req.ReplicaID)
 			if ok && val.(*KshardState).kstore != nil {
-				log.Warnf("Replica %d already exists", req.ReplicaID)
+				dn.logger.Warnf("Replica %d already exists", req.ReplicaID)
 				return &resp, nil
 			}
 
@@ -330,7 +332,7 @@ func (dn *DNode) CreateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 			dbPath := dn.getDbPath(meta.ClusterTypeKstore, req.ReplicaID)
 			ks, err := kstore.NewKstore(kstore.BoltDBType, dbPath)
 			if err != nil {
-				log.Errorf("Error creating kstore %s. Err: %v", dbPath, err)
+				dn.logger.Errorf("Error creating kstore %s. Err: %v", dbPath, err)
 				resp.Status = err.Error()
 				return &resp, err
 			}
@@ -348,7 +350,7 @@ func (dn *DNode) CreateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 			dn.kshards.Store(req.ReplicaID, &shard)
 		}
 	default:
-		log.Fatalf("Unknown cluster type :%s.", req.ClusterType)
+		dn.logger.Fatalf("Unknown cluster type :%s.", req.ClusterType)
 	}
 
 	return &resp, nil
@@ -358,14 +360,14 @@ func (dn *DNode) CreateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 func (dn *DNode) UpdateShard(ctx context.Context, req *tproto.ShardReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Infof("%s Received UpdateShard req %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s Received UpdateShard req %+v", dn.nodeUUID, req)
 
 	switch req.ClusterType {
 	case meta.ClusterTypeTstore:
 		// find the shard from replica id
 		val, ok := dn.tshards.Load(req.ReplicaID)
 		if !ok || val.(*TshardState).store == nil {
-			log.Errorf("Shard %d not found", req.ReplicaID)
+			dn.logger.Errorf("Shard %d not found", req.ReplicaID)
 			return &resp, errors.New("Shard not found")
 		}
 		shard := val.(*TshardState)
@@ -383,7 +385,7 @@ func (dn *DNode) UpdateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 		// find the shard from replica id
 		val, ok := dn.kshards.Load(req.ReplicaID)
 		if !ok || val.(*KshardState).kstore == nil {
-			log.Errorf("Shard %d not found", req.ReplicaID)
+			dn.logger.Errorf("Shard %d not found", req.ReplicaID)
 			return &resp, errors.New("Shard not found")
 		}
 		shard := val.(*KshardState)
@@ -398,7 +400,7 @@ func (dn *DNode) UpdateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 		dn.updateSyncBuffer(&shard.syncBuffer, req)
 
 	default:
-		log.Fatalf("Unknown cluster type :%s.", req.ClusterType)
+		dn.logger.Fatalf("Unknown cluster type :%s.", req.ClusterType)
 	}
 
 	return &resp, nil
@@ -408,14 +410,14 @@ func (dn *DNode) UpdateShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 func (dn *DNode) DeleteShard(ctx context.Context, req *tproto.ShardReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Infof("%s Received DeleteShard req %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s Received DeleteShard req %+v", dn.nodeUUID, req)
 
 	switch req.ClusterType {
 	case meta.ClusterTypeTstore:
 		// find the shard from replica id
 		val, ok := dn.tshards.Load(req.ReplicaID)
 		if !ok || val.(*TshardState).store == nil {
-			log.Errorf("Shard %d not found", req.ReplicaID)
+			dn.logger.Errorf("Shard %d not found", req.ReplicaID)
 			return &resp, errors.New("Shard not found")
 		}
 		shard := val.(*TshardState)
@@ -430,7 +432,7 @@ func (dn *DNode) DeleteShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 		// close the databse
 		err := shard.store.Close()
 		if err != nil {
-			log.Errorf("Error closing the database for shard %d. Err: %v", req.ReplicaID, err)
+			dn.logger.Errorf("Error closing the database for shard %d. Err: %v", req.ReplicaID, err)
 		}
 		shard.store = nil
 
@@ -441,7 +443,7 @@ func (dn *DNode) DeleteShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 		// find the shard from replica id
 		val, ok := dn.kshards.Load(req.ReplicaID)
 		if !ok || val.(*KshardState).kstore == nil {
-			log.Errorf("Shard %d not found", req.ReplicaID)
+			dn.logger.Errorf("Shard %d not found", req.ReplicaID)
 			return &resp, errors.New("Shard not found")
 		}
 		shard := val.(*KshardState)
@@ -458,7 +460,7 @@ func (dn *DNode) DeleteShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 		// close the databse
 		err := shard.kstore.Close()
 		if err != nil {
-			log.Errorf("Error closing the database for shard %d. Err: %v", req.ReplicaID, err)
+			dn.logger.Errorf("Error closing the database for shard %d. Err: %v", req.ReplicaID, err)
 		}
 		shard.kstore = nil
 
@@ -466,7 +468,7 @@ func (dn *DNode) DeleteShard(ctx context.Context, req *tproto.ShardReq) (*tproto
 		dbPath := dn.getDbPath(meta.ClusterTypeKstore, req.ReplicaID)
 		os.RemoveAll(dbPath)
 	default:
-		log.Fatalf("Unknown cluster type :%s.", req.ClusterType)
+		dn.logger.Fatalf("Unknown cluster type :%s.", req.ClusterType)
 	}
 
 	return &resp, nil
@@ -478,7 +480,7 @@ func (dn *DNode) SyncShardReq(ctx context.Context, req *tproto.SyncShardMsg) (*t
 	var store StoreAPI
 	var lock *sync.Mutex
 
-	log.Infof("%s Received SyncShardReq req %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s Received SyncShardReq req %+v", dn.nodeUUID, req)
 
 	// handle based on cluster type
 	switch req.ClusterType {
@@ -486,7 +488,7 @@ func (dn *DNode) SyncShardReq(ctx context.Context, req *tproto.SyncShardMsg) (*t
 		// find the data store from shard id
 		val, ok := dn.tshards.Load(req.SrcReplicaID)
 		if !ok || val.(*TshardState).store == nil {
-			log.Errorf("Replica %d not found for cluster %s", req.SrcReplicaID, req.ClusterType)
+			dn.logger.Errorf("Replica %d not found for cluster %s", req.SrcReplicaID, req.ClusterType)
 			return &resp, errors.New("Shard not found")
 		}
 		shard := val.(*TshardState)
@@ -494,7 +496,7 @@ func (dn *DNode) SyncShardReq(ctx context.Context, req *tproto.SyncShardMsg) (*t
 
 		// verify we are the primary for this shard
 		if !shard.isPrimary {
-			log.Errorf("Non-primary received shard sync request. Shard: %+v", shard)
+			dn.logger.Errorf("Non-primary received shard sync request. Shard: %+v", shard)
 			return &resp, errors.New("Non-primary received shard sync req")
 		}
 
@@ -507,7 +509,7 @@ func (dn *DNode) SyncShardReq(ctx context.Context, req *tproto.SyncShardMsg) (*t
 		// find the data store from shard id
 		val, ok := dn.kshards.Load(req.SrcReplicaID)
 		if !ok || val.(*KshardState).kstore == nil {
-			log.Errorf("Replica %d not found for cluster %s", req.SrcReplicaID, req.ClusterType)
+			dn.logger.Errorf("Replica %d not found for cluster %s", req.SrcReplicaID, req.ClusterType)
 			return &resp, errors.New("Shard not found")
 		}
 		shard := val.(*KshardState)
@@ -515,7 +517,7 @@ func (dn *DNode) SyncShardReq(ctx context.Context, req *tproto.SyncShardMsg) (*t
 
 		// verify we are the primary for this shard
 		if !shard.isPrimary {
-			log.Errorf("Non-primary received shard sync request. Shard: %+v", shard)
+			dn.logger.Errorf("Non-primary received shard sync request. Shard: %+v", shard)
 			return &resp, errors.New("Non-primary received shard sync req")
 		}
 		store = shard.kstore
@@ -525,7 +527,7 @@ func (dn *DNode) SyncShardReq(ctx context.Context, req *tproto.SyncShardMsg) (*t
 		shard.replicas = req.Replicas
 
 	default:
-		log.Fatalf("Unknown cluster type :%s.", req.ClusterType)
+		dn.logger.Fatalf("Unknown cluster type :%s.", req.ClusterType)
 		return &resp, errors.New("Unknown cluster type")
 	}
 
@@ -553,14 +555,14 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 	// get the shard info from the store
 	err := store.GetShardInfo(&sinfo)
 	if err != nil {
-		log.Errorf("Error getting shard info from tstore. Err: %v", err)
+		dn.logger.Errorf("Error getting shard info from tstore. Err: %v", err)
 		return
 	}
 
 	// dial a new connection for syncing data
 	rclient, err := rpckit.NewRPCClient(fmt.Sprintf("datanode-%s", dn.nodeUUID), req.DestNodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithRemoteServerName(globals.Citadel))
 	if err != nil {
-		log.Errorf("Error connecting to rpc server %s. err: %v", req.DestNodeURL, err)
+		dn.logger.Errorf("Error connecting to rpc server %s. err: %v", req.DestNodeURL, err)
 		return
 	}
 	defer rclient.Close()
@@ -569,14 +571,14 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 	dnclient := tproto.NewDataNodeClient(rclient.ClientConn)
 	_, err = dnclient.SyncShardInfo(ctx, &sinfo)
 	if err != nil {
-		log.Errorf("Error sending sync shard info message to %s. Err: %v", req.DestNodeURL, err)
+		dn.logger.Errorf("Error sending sync shard info message to %s. Err: %v", req.DestNodeURL, err)
 		return
 	}
 
 	// send stream of sync messages
 	stream, err := dnclient.SyncData(ctx)
 	if err != nil {
-		log.Errorf("Error syncing data to %s. Err: %v", req.DestNodeURL, err)
+		dn.logger.Errorf("Error syncing data to %s. Err: %v", req.DestNodeURL, err)
 		return
 	}
 
@@ -587,7 +589,7 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 		// backup chunk
 		err = store.BackupChunk(chunkInfo.ChunkID, &buf)
 		if err != nil {
-			log.Errorf("Error backing up chunk %d. Err: %v", chunkInfo.ChunkID, err)
+			dn.logger.Errorf("Error backing up chunk %d. Err: %v", chunkInfo.ChunkID, err)
 			return
 		}
 
@@ -601,12 +603,12 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 			Data:          buf.Bytes(),
 		}
 
-		log.Infof("Syncing data from replica %d chunk %d len: %d", req.SrcReplicaID, chunkInfo.ChunkID, len(msg.Data))
+		dn.logger.Infof("Syncing data from replica %d chunk %d len: %d", req.SrcReplicaID, chunkInfo.ChunkID, len(msg.Data))
 
 		// send the message
 		err = stream.Send(&msg)
 		if err != nil {
-			log.Errorf("Error sending chunk %d. Err: %v", chunkInfo.ChunkID, err)
+			dn.logger.Errorf("Error sending chunk %d. Err: %v", chunkInfo.ChunkID, err)
 			return
 		}
 	}
@@ -614,7 +616,7 @@ func (dn *DNode) syncShard(ctx context.Context, req *tproto.SyncShardMsg, store 
 	// close the stream
 	_, err = stream.CloseAndRecv()
 	if err != nil {
-		log.Errorf("Error closing sync channel. Err: %v", err)
+		dn.logger.Errorf("Error closing sync channel. Err: %v", err)
 		return
 	}
 }
@@ -624,14 +626,14 @@ func (dn *DNode) SyncShardInfo(ctx context.Context, req *tproto.SyncShardInfoMsg
 	var resp tproto.StatusResp
 	var store StoreAPI
 
-	log.Infof("%s Received SyncShardInfo req %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s Received SyncShardInfo req %+v", dn.nodeUUID, req)
 
 	switch req.ClusterType {
 	case meta.ClusterTypeTstore:
 		// find the data store from replica id
 		val, ok := dn.tshards.Load(req.DestReplicaID)
 		if !ok || val.(*TshardState).store == nil {
-			log.Errorf("Shard %d not found", req.DestReplicaID)
+			dn.logger.Errorf("Shard %d not found", req.DestReplicaID)
 			return nil, errors.New("Shard not found")
 		}
 		shard := val.(*TshardState)
@@ -645,7 +647,7 @@ func (dn *DNode) SyncShardInfo(ctx context.Context, req *tproto.SyncShardInfoMsg
 		// find the data store from shard id
 		val, ok := dn.kshards.Load(req.DestReplicaID)
 		if !ok || val.(*KshardState).kstore == nil {
-			log.Errorf("Shard %d not found", req.DestReplicaID)
+			dn.logger.Errorf("Shard %d not found", req.DestReplicaID)
 			return nil, errors.New("Shard not found")
 		}
 		shard := val.(*KshardState)
@@ -656,13 +658,13 @@ func (dn *DNode) SyncShardInfo(ctx context.Context, req *tproto.SyncShardInfoMsg
 			shard.syncPending = true
 		}
 	default:
-		log.Fatalf("Unknown cluster type :%s.", req.ClusterType)
+		dn.logger.Fatalf("Unknown cluster type :%s.", req.ClusterType)
 	}
 
 	// restore the local metadata
 	err := store.RestoreShardInfo(req)
 	if err != nil {
-		log.Errorf("Error restoring local metadata. Err: %v", err)
+		dn.logger.Errorf("Error restoring local metadata. Err: %v", err)
 		return nil, err
 	}
 
@@ -673,7 +675,7 @@ func (dn *DNode) SyncShardInfo(ctx context.Context, req *tproto.SyncShardInfoMsg
 func (dn *DNode) SyncData(stream tproto.DataNode_SyncDataServer) error {
 	var store StoreAPI
 
-	log.Infof("%s Received SyncData req", dn.nodeUUID)
+	dn.logger.Infof("%s Received SyncData req", dn.nodeUUID)
 
 	// loop till all the message are received
 	for {
@@ -684,18 +686,18 @@ func (dn *DNode) SyncData(stream tproto.DataNode_SyncDataServer) error {
 			return stream.SendAndClose(&tproto.StatusResp{})
 		}
 		if err != nil {
-			log.Errorf("Error receiving from stream. Err: %v", err)
+			dn.logger.Errorf("Error receiving from stream. Err: %v", err)
 			return err
 		}
 
-		log.Infof("%s Restoring %s Chunk %d on shard %d", dn.nodeUUID, req.ClusterType, req.ChunkID, req.ShardID)
+		dn.logger.Infof("%s Restoring %s Chunk %d on shard %d", dn.nodeUUID, req.ClusterType, req.ChunkID, req.ShardID)
 
 		switch req.ClusterType {
 		case meta.ClusterTypeTstore:
 			// find the data store from shard id
 			val, ok := dn.tshards.Load(req.DestReplicaID)
 			if !ok || val.(*TshardState).store == nil {
-				log.Errorf("Shard %d not found", req.SrcReplicaID)
+				dn.logger.Errorf("Shard %d not found", req.SrcReplicaID)
 				return errors.New("Shard not found")
 			}
 			shard := val.(*TshardState)
@@ -707,7 +709,7 @@ func (dn *DNode) SyncData(stream tproto.DataNode_SyncDataServer) error {
 			// find the data store from shard id
 			val, ok := dn.kshards.Load(req.DestReplicaID)
 			if !ok || val.(*KshardState).kstore == nil {
-				log.Errorf("Shard %d not found", req.SrcReplicaID)
+				dn.logger.Errorf("Shard %d not found", req.SrcReplicaID)
 				return errors.New("Shard not found")
 			}
 			shard := val.(*KshardState)
@@ -716,13 +718,13 @@ func (dn *DNode) SyncData(stream tproto.DataNode_SyncDataServer) error {
 			// clear sync pending flag
 			defer func() { shard.syncPending = false }()
 		default:
-			log.Fatalf("Unknown cluster type :%s.", req.ClusterType)
+			dn.logger.Fatalf("Unknown cluster type :%s.", req.ClusterType)
 		}
 
 		// restore
 		err = store.RestoreChunk(req.ChunkID, bytes.NewBuffer(req.Data))
 		if err != nil {
-			log.Errorf("Error restoring chunk %d. Err: %v", req.ChunkID, err)
+			dn.logger.Errorf("Error restoring chunk %d. Err: %v", req.ChunkID, err)
 			return err
 		}
 	}
@@ -751,7 +753,7 @@ func (dn *DNode) HasPendingSync() bool {
 		shard.syncLock.Lock()
 		defer shard.syncLock.Unlock()
 		if shard.syncPending {
-			log.Infof("Datanode %s tstore shard %d replica %d has sync pending", dn.nodeUUID, shard.shardID, shard.replicaID)
+			dn.logger.Infof("Datanode %s tstore shard %d replica %d has sync pending", dn.nodeUUID, shard.shardID, shard.replicaID)
 			retVal = true
 		}
 		return true
@@ -761,7 +763,7 @@ func (dn *DNode) HasPendingSync() bool {
 		shard.syncLock.Lock()
 		defer shard.syncLock.Unlock()
 		if shard.syncPending {
-			log.Infof("Datanode %s kstore shard %d replica %d has sync pending", dn.nodeUUID, shard.shardID, shard.replicaID)
+			dn.logger.Infof("Datanode %s kstore shard %d replica %d has sync pending", dn.nodeUUID, shard.shardID, shard.replicaID)
 			retVal = true
 		}
 		return true
@@ -820,7 +822,7 @@ func (dn *DNode) SoftRestart() error {
 	// Start a rpc server
 	dn.rpcServer, err = rpckit.NewRPCServer(globals.Citadel, dn.nodeURL, rpckit.WithLoggerEnabled(false))
 	if err != nil {
-		log.Errorf("failed to listen to %s: Err %v", dn.nodeURL, err)
+		dn.logger.Errorf("failed to listen to %s: Err %v", dn.nodeURL, err)
 		return err
 	}
 
@@ -833,12 +835,12 @@ func (dn *DNode) SoftRestart() error {
 	// register RPC handlers
 	tproto.RegisterDataNodeServer(dn.rpcServer.GrpcServer, dn)
 	dn.rpcServer.Start()
-	log.Infof("Datanode RPC server is listening on: %s", dn.nodeURL)
+	dn.logger.Infof("Datanode RPC server is listening on: %s", dn.nodeURL)
 
 	// read all shard state from metadata store and restore it
 	err = dn.readAllShards(dn.clusterCfg)
 	if err != nil {
-		log.Errorf("Error reading state from metadata store. Err: %v", err)
+		dn.logger.Errorf("Error reading state from metadata store. Err: %v", err)
 		return err
 	}
 
@@ -908,7 +910,7 @@ func (dn *DNode) getDnclient(clusterType, nodeUUID string) (tproto.DataNodeClien
 	// dial the connection
 	rclient, err := rpckit.NewRPCClient(fmt.Sprintf("datanode-%s", dn.nodeUUID), node.NodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithRemoteServerName(globals.Citadel))
 	if err != nil {
-		log.Errorf("Error connecting to rpc server %s. err: %v", node.NodeURL, err)
+		dn.logger.Errorf("Error connecting to rpc server %s. err: %v", node.NodeURL, err)
 		return nil, err
 	}
 	dn.rpcClients.Store(nodeUUID, rclient)
@@ -936,7 +938,7 @@ func (dn *DNode) replicateFailedRequest(sb *syncBufferState) error {
 	case meta.ClusterTypeKstore:
 		return dn.replicateFailedWrite(sb)
 	default:
-		log.Fatalf("unknown cluster type: %+v in sync buffer", sb)
+		dn.logger.Fatalf("unknown cluster type: %+v in sync buffer", sb)
 	}
 	return nil
 }
@@ -950,7 +952,7 @@ func (dn *DNode) processPendingQueue(sb *syncBufferState) {
 		wait := sb.backoff.NextBackOff()
 		// we don't stop the back off timer
 		if wait == backoff.Stop {
-			log.Errorf("abort processing sync buffer queue due to timeout, %+v", sb)
+			dn.logger.Errorf("abort processing sync buffer queue due to timeout, %+v", sb)
 			return
 		}
 
@@ -966,9 +968,9 @@ func (dn *DNode) processPendingQueue(sb *syncBufferState) {
 		case <-sb.ctx.Done():
 			// try one more time
 			if err := dn.replicateFailedRequest(sb); err != nil {
-				log.Errorf("sync buffer failed to replicate writes. err:%s, discard queue, length:%d, {%+v}", err, sb.queue.Len(), sb)
+				dn.logger.Errorf("sync buffer failed to replicate writes. err:%s, discard queue, length:%d, {%+v}", err, sb.queue.Len(), sb)
 			}
-			log.Infof("exit sync buffer processing, %+v", sb)
+			dn.logger.Infof("exit sync buffer processing, %+v", sb)
 			return
 		}
 	}
@@ -992,7 +994,7 @@ func (dn *DNode) addSyncBuffer(sm *sync.Map, nodeUUID string, req interface{}) e
 		replicaID = v.ReplicaID
 		shardID = v.ShardID
 	default:
-		log.Fatalf("invalid cluster type in sync buffer req %T", v)
+		dn.logger.Fatalf("invalid cluster type in sync buffer req %T", v)
 	}
 
 	if sbinter, ok := sm.Load(replicaID); ok {
@@ -1017,7 +1019,7 @@ func (dn *DNode) addSyncBuffer(sm *sync.Map, nodeUUID string, req interface{}) e
 		sb.backoff.MaxElapsedTime = 0 // run forever
 		sb.backoff.Reset()
 
-		log.Infof("%s created sync buffer for cluster-type:%s, replica id:%v", dn.nodeUUID, sb.clusterType, replicaID)
+		dn.logger.Infof("%s created sync buffer for cluster-type:%s, replica id:%v", dn.nodeUUID, sb.clusterType, replicaID)
 
 		// store new entry
 		sm.Store(replicaID, sb)
@@ -1031,7 +1033,7 @@ func (dn *DNode) addSyncBuffer(sm *sync.Map, nodeUUID string, req interface{}) e
 
 // updateSyncBuffer clean up the sync buffer based on the updated shard
 func (dn *DNode) updateSyncBuffer(sm *sync.Map, req *tproto.ShardReq) error {
-	log.Infof("%s sync buffer received update request: %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s sync buffer received update request: %+v", dn.nodeUUID, req)
 	newReplicaMap := map[uint64]*tproto.ReplicaInfo{}
 
 	// not primary ? delete all replica ids of this shard
@@ -1054,7 +1056,7 @@ func (dn *DNode) updateSyncBuffer(sm *sync.Map, req *tproto.ShardReq) error {
 		return true
 	})
 
-	log.Infof("delete replica ids from sync buffer %+v", replicaToDel)
+	dn.logger.Infof("delete replica ids from sync buffer %+v", replicaToDel)
 	for _, r := range replicaToDel {
 		dn.deleteSyncBuffer(sm, r)
 	}
@@ -1064,7 +1066,7 @@ func (dn *DNode) updateSyncBuffer(sm *sync.Map, req *tproto.ShardReq) error {
 
 // deleteSyncBuffer deletes replica id from sync buffer
 func (dn *DNode) deleteSyncBuffer(sm *sync.Map, replicaID uint64) error {
-	log.Infof("%s sync buffer  received delete request for replica %v", dn.nodeUUID, replicaID)
+	dn.logger.Infof("%s sync buffer  received delete request for replica %v", dn.nodeUUID, replicaID)
 	sbinter, ok := sm.Load(replicaID)
 	if !ok {
 		return nil
@@ -1094,7 +1096,7 @@ func (dn *DNode) deleteShardSyncBuffer(sm *sync.Map) error {
 		return true
 	})
 
-	log.Infof("%s sync buffer received delete all request, replica-ids: %+v", dn.nodeUUID, replicaList)
+	dn.logger.Infof("%s sync buffer received delete all request, replica-ids: %+v", dn.nodeUUID, replicaList)
 	for _, k := range replicaList {
 		dn.deleteSyncBuffer(sm, k)
 	}

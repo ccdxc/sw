@@ -30,6 +30,7 @@ type integTestSuite struct {
 	brokers  []*broker.Broker
 	numNodes int
 	waitGrp  sync.WaitGroup
+	logger   log.Logger
 }
 
 const (
@@ -40,6 +41,7 @@ const (
 	querydbpathFormat = "/tmp/citadel/qstore/%d"
 )
 
+var logger = log.GetNewLogger(log.GetDefaultConfig("citadel-integ-test"))
 var numNodes = flag.Int("nodes", DefaultNumNodes, "Number of agents")
 
 // Hook up gocheck into the "go test" runner.
@@ -55,6 +57,7 @@ func TestCitadelInteg(t *testing.T) {
 func (it *integTestSuite) SetUpSuite(c *C) {
 	// set num nodes
 	it.numNodes = *numNodes
+	it.logger = logger
 
 	// cluster config
 	cfg := meta.DefaultClusterConfig()
@@ -73,12 +76,12 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	// create all the nodes and brokers
 	for i := 0; i < it.numNodes; i++ {
 		// create data node
-		dn, err := data.NewDataNode(cfg, fmt.Sprintf("dnode-%d", i), fmt.Sprintf(nodeURLFormat, i), fmt.Sprintf(dbpathFormat, i), fmt.Sprintf(querydbpathFormat, i))
+		dn, err := data.NewDataNode(cfg, fmt.Sprintf("dnode-%d", i), fmt.Sprintf(nodeURLFormat, i), fmt.Sprintf(dbpathFormat, i), fmt.Sprintf(querydbpathFormat, i), it.logger)
 		AssertOk(c, err, "Error creating datanode")
 		it.dnodes = append(it.dnodes, dn)
 
 		// create broker
-		br, err := broker.NewBroker(cfg, fmt.Sprintf("broker-%d", i))
+		br, err := broker.NewBroker(cfg, fmt.Sprintf("broker-%d", i), it.logger)
 		AssertOk(c, err, "Error creating broker")
 		it.brokers = append(it.brokers, br)
 	}
@@ -94,6 +97,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 func (it *integTestSuite) SetUpTest(c *C) {
 	log.Infof("============================= %s starting ==========================", c.TestName())
+	it.logger = logger.WithContext("t_name", c.TestName())
 }
 
 func (it *integTestSuite) TearDownTest(c *C) {

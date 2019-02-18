@@ -21,7 +21,6 @@ import (
 
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 // createDatabaseInReplica creates the database in replica
@@ -48,11 +47,11 @@ func (br *Broker) createDatabaseInReplica(ctx context.Context, database string, 
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		_, err = dnclient.CreateDatabase(ctx, &req)
 		if err == nil {
-			log.Infof("=>created the database on node %s.", repl.NodeUUID)
+			br.logger.Infof("=>created the database on node %s.", repl.NodeUUID)
 			return nil
 		}
 
-		log.Warnf("Error creating the database on node %s. Err: %v. Retrying..", repl.NodeUUID, err)
+		br.logger.Warnf("Error creating the database on node %s. Err: %v. Retrying..", repl.NodeUUID, err)
 
 		time.Sleep(brokerRetryDelay)
 	}
@@ -74,7 +73,7 @@ func (br *Broker) CreateDatabase(ctx context.Context, database string) error {
 		for _, repl := range shard.Replicas {
 			err := br.createDatabaseInReplica(ctx, database, repl)
 			if err != nil {
-				log.Errorf("Error creating the database in replica %v. Err: %v", repl, err)
+				br.logger.Errorf("Error creating the database in replica %v. Err: %v", repl, err)
 				return err
 			}
 		}
@@ -107,11 +106,11 @@ func (br *Broker) deleteDatabaseInReplica(ctx context.Context, database string, 
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		_, err = dnclient.DeleteDatabase(ctx, &req)
 		if err == nil {
-			log.Infof("=>deleted the database on node %s.", repl.NodeUUID)
+			br.logger.Infof("=>deleted the database on node %s.", repl.NodeUUID)
 			return nil
 		}
 
-		log.Warnf("Error deleting the database on node %s. Err: %v. Retrying..", repl.NodeUUID, err)
+		br.logger.Warnf("Error deleting the database on node %s. Err: %v. Retrying..", repl.NodeUUID, err)
 
 		time.Sleep(brokerRetryDelay)
 	}
@@ -133,7 +132,7 @@ func (br *Broker) DeleteDatabase(ctx context.Context, database string) error {
 		for _, repl := range shard.Replicas {
 			err := br.deleteDatabaseInReplica(ctx, database, repl)
 			if err != nil {
-				log.Errorf("Error deleting the database in replica %v. Err: %v", repl, err)
+				br.logger.Errorf("Error deleting the database in replica %v. Err: %v", repl, err)
 				return err
 			}
 		}
@@ -175,7 +174,7 @@ func (br *Broker) readDatabaseInReplica(ctx context.Context, repl *meta.Replica)
 			}
 		}
 
-		log.Warnf("failed reading databases on node %s. Err: %v. Retrying..", repl.NodeUUID, err)
+		br.logger.Warnf("failed reading databases on node %s. Err: %v. Retrying..", repl.NodeUUID, err)
 		time.Sleep(brokerRetryDelay)
 	}
 
@@ -195,10 +194,10 @@ func (br *Broker) ReadDatabases(ctx context.Context) ([]*influxmeta.DatabaseInfo
 	shard := cl.ShardMap.Shards[rand.Int63n(int64(len(cl.ShardMap.Shards)))]
 	// read from primary
 	repl := shard.Replicas[shard.PrimaryReplica]
-	log.Infof("reading database from shard %d primary replica %d", repl.ShardID, repl.ReplicaID)
+	br.logger.Infof("reading database from shard %d primary replica %d", repl.ShardID, repl.ReplicaID)
 	dbInfo, err := br.readDatabaseInReplica(ctx, repl)
 	if err != nil {
-		log.Errorf("Error reading databases from replica %v. Err: %v", repl, err)
+		br.logger.Errorf("Error reading databases from replica %v. Err: %v", repl, err)
 		return nil, err
 	}
 	return dbInfo, nil
@@ -223,14 +222,14 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 		// get shard for the measurement
 		shard, err := cl.ShardMap.GetShardForPoint(database, msrmt)
 		if err != nil {
-			log.Errorf("Error getting shard for %s/%s. Err: %v", database, msrmt, err)
+			br.logger.Errorf("Error getting shard for %s/%s. Err: %v", database, msrmt, err)
 			return err
 		}
 
 		// get the primary shard
 		pri, err := shard.GetPrimaryreplica()
 		if err != nil {
-			log.Errorf("Could not get the primary replica for %+v. Err: %v", shard, err)
+			br.logger.Errorf("Could not get the primary replica for %+v. Err: %v", shard, err)
 			return err
 		}
 
@@ -275,7 +274,7 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.PointsWrite(ctx, &req)
 		if err != nil || resp.Status != "" {
-			log.Errorf("Error making PointsWrite rpc call. Err: %v, Node: %v", err, replMap[sid].NodeUUID)
+			br.logger.Errorf("Error making PointsWrite rpc call. Err: %v, Node: %v", err, replMap[sid].NodeUUID)
 			return err
 		}
 	}
@@ -305,7 +304,7 @@ func (br *Broker) queryShard(ctx context.Context, shard *meta.Shard, database, q
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.ExecuteQuery(ctx, &req)
 		if err != nil {
-			log.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
+			br.logger.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
 			continue
 		}
 
@@ -319,7 +318,7 @@ func (br *Broker) queryShard(ctx context.Context, shard *meta.Shard, database, q
 func (br *Broker) queryShardAgg(ctx context.Context, shard *meta.Shard, database, qry string) (*tproto.QueryResp, error) {
 	for _, repl := range shard.Replicas {
 		if err := ctx.Err(); err != nil {
-			log.Errorf("query context cancelled. Err: %v", err)
+			br.logger.Errorf("query context cancelled. Err: %v", err)
 			return nil, err
 		}
 
@@ -342,7 +341,7 @@ func (br *Broker) queryShardAgg(ctx context.Context, shard *meta.Shard, database
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.ExecuteAggQuery(ctx, &req)
 		if err != nil {
-			log.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
+			br.logger.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
 			continue
 		}
 		return resp, nil
@@ -376,13 +375,13 @@ func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string)
 				// get the shard
 				shard, err := cl.ShardMap.GetShardForPoint(database, measurement.Name)
 				if err != nil {
-					log.Errorf("Error getting shard for %s/%s. Err: %v", database, measurement.Name, err)
+					br.logger.Errorf("Error getting shard for %s/%s. Err: %v", database, measurement.Name, err)
 					return nil, err
 				}
 
 				resp, err := br.queryShard(ctx, shard, database, selStmt.String())
 				if err != nil {
-					log.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
+					br.logger.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
 					return nil, err
 				}
 
@@ -454,7 +453,7 @@ func (br *Broker) ExecuteAggQuery(ctx context.Context, database string, qry stri
 
 			resp, err := br.queryShardAgg(ctx, shard, database, selStmt.String())
 			if err != nil {
-				log.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
+				br.logger.Errorf("Error during ExecuteQuery rpc call. Err: %v", err)
 				return nil, err
 			}
 
@@ -524,7 +523,7 @@ func (br *Broker) ExecuteShowCmd(ctx context.Context, database string, qry strin
 	for _, shard := range cl.ShardMap.Shards {
 		resp, err := br.queryShard(ctx, shard, database, stmt.String())
 		if err != nil {
-			log.Errorf("shard [%d] Error during ExecuteQuery rpc call. Err: %v", shard.ShardID, err)
+			br.logger.Errorf("shard [%d] Error during ExecuteQuery rpc call. Err: %v", shard.ShardID, err)
 			return nil, err
 		}
 

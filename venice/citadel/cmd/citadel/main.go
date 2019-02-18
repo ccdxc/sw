@@ -65,6 +65,8 @@ func main() {
 	// Initialize logger config
 	log.SetConfig(logConfig)
 
+	logger := log.GetNewLogger(logConfig)
+
 	// get host name and use that for node url & uuid
 	if *nodeURL == "" || *nodeUUID == "" || *kvstoreURL == "" {
 		// read my host name
@@ -94,12 +96,12 @@ func main() {
 	cfg.MetastoreURL = *kvstoreURL
 
 	// create the data node
-	dn, err := data.NewDataNode(cfg, *nodeUUID, *nodeURL, *dbPath, *queryDbPath)
+	dn, err := data.NewDataNode(cfg, *nodeUUID, *nodeURL, *dbPath, *queryDbPath, logger)
 	if err != nil {
 		log.Fatalf("Error creating data node. Err: %v", err)
 	}
 
-	br, err := broker.NewBroker(cfg, *nodeUUID)
+	br, err := broker.NewBroker(cfg, *nodeUUID, logger)
 	if err != nil {
 		log.Fatalf("Error creating broker. Err: %v", err)
 	}

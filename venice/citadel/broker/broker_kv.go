@@ -9,7 +9,6 @@ import (
 
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 type kvlist []*tproto.KeyValue
@@ -46,14 +45,14 @@ func (br *Broker) WriteKvs(ctx context.Context, table string, kvs []*tproto.KeyV
 		// get shard for the measurement
 		shard, err := cl.ShardMap.GetShardForKey(table, tproto.Key{Key: kv.Key})
 		if err != nil {
-			log.Errorf("Error getting shard for %s/%s. Err: %v", table, string(kv.Key), err)
+			br.logger.Errorf("Error getting shard for %s/%s. Err: %v", table, string(kv.Key), err)
 			return err
 		}
 
 		// get the primary replica
 		pri, err := shard.GetPrimaryreplica()
 		if err != nil {
-			log.Errorf("Could not get the primary replica for %+v. Err: %v", shard, err)
+			br.logger.Errorf("Could not get the primary replica for %+v. Err: %v", shard, err)
 			return err
 		}
 
@@ -83,10 +82,10 @@ func (br *Broker) WriteKvs(ctx context.Context, table string, kvs []*tproto.KeyV
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.WriteReq(ctx, &req)
 		if err != nil {
-			log.Errorf("Error making WriteReq rpc call. Err: %v", err)
+			br.logger.Errorf("Error making WriteReq rpc call. Err: %v", err)
 			return err
 		} else if resp.Status != "" {
-			log.Errorf("Error making WriteReq rpc call. Err: %v", resp.Status)
+			br.logger.Errorf("Error making WriteReq rpc call. Err: %v", resp.Status)
 			return errors.New(resp.Status)
 		}
 	}
@@ -111,14 +110,14 @@ func (br *Broker) ReadKvs(ctx context.Context, table string, keys []*tproto.Key)
 		// get shard for the measurement
 		shard, err := cl.ShardMap.GetShardForKey(table, *key)
 		if err != nil {
-			log.Errorf("Error getting shard for %s/%s. Err: %v", table, string(key.Key), err)
+			br.logger.Errorf("Error getting shard for %s/%s. Err: %v", table, string(key.Key), err)
 			return kvs, err
 		}
 
 		// get the primary shard
 		pri, err := shard.GetPrimaryreplica()
 		if err != nil {
-			log.Errorf("Could not get the primary replica for %+v. Err: %v", shard, err)
+			br.logger.Errorf("Could not get the primary replica for %+v. Err: %v", shard, err)
 			return kvs, err
 		}
 
@@ -148,7 +147,7 @@ func (br *Broker) ReadKvs(ctx context.Context, table string, keys []*tproto.Key)
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.ReadReq(ctx, &req)
 		if err != nil {
-			log.Errorf("Error making WriteReq rpc call. Err: %v", err)
+			br.logger.Errorf("Error making WriteReq rpc call. Err: %v", err)
 			return kvs, err
 		}
 
@@ -226,14 +225,14 @@ func (br *Broker) DeleteKvs(ctx context.Context, table string, keys []*tproto.Ke
 		// get shard for the measurement
 		shard, err := cl.ShardMap.GetShardForKey(table, *key)
 		if err != nil {
-			log.Errorf("Error getting shard for %s/%s. Err: %v", table, string(key.Key), err)
+			br.logger.Errorf("Error getting shard for %s/%s. Err: %v", table, string(key.Key), err)
 			return err
 		}
 
 		// get the primary shard
 		pri, err := shard.GetPrimaryreplica()
 		if err != nil {
-			log.Errorf("Could not get the primary replica for %+v. Err: %v", shard, err)
+			br.logger.Errorf("Could not get the primary replica for %+v. Err: %v", shard, err)
 			return err
 		}
 
@@ -263,7 +262,7 @@ func (br *Broker) DeleteKvs(ctx context.Context, table string, keys []*tproto.Ke
 		dnclient := tproto.NewDataNodeClient(rpcClient)
 		resp, err := dnclient.DelReq(ctx, &req)
 		if err != nil {
-			log.Errorf("Error making DelReq rpc call. Err: %v", err)
+			br.logger.Errorf("Error making DelReq rpc call. Err: %v", err)
 			return err
 		} else if resp.Status != "" {
 			return errors.New(resp.Status)

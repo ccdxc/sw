@@ -30,14 +30,14 @@ import (
 )
 
 // createNode creates a node
-func createNode(nodeUUID, nodeURL, dbPath string, qdbPath string) (*DNode, error) {
+func createNode(nodeUUID, nodeURL, dbPath string, qdbPath string, logger log.Logger) (*DNode, error) {
 	// metadata config to disable metadata mgr
 	cfg := meta.DefaultClusterConfig()
 	cfg.EnableKstoreMeta = false
 	cfg.EnableTstoreMeta = false
 
 	// create the data node
-	dn, err := NewDataNode(cfg, nodeUUID, nodeURL, dbPath, qdbPath)
+	dn, err := NewDataNode(cfg, nodeUUID, nodeURL, dbPath, qdbPath, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +49,7 @@ func createNode(nodeUUID, nodeURL, dbPath string, qdbPath string) (*DNode, error
 }
 
 func TestQueryStore(t *testing.T) {
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// no default db dir in OSX
 	if runtime.GOOS == "darwin" {
@@ -61,7 +62,7 @@ func TestQueryStore(t *testing.T) {
 	defer os.RemoveAll(path)
 
 	// create nodes
-	dnodes, err := createNode("node-110", "localhost:17308", path, "")
+	dnodes, err := createNode("node-110", "localhost:17308", path, "", logger)
 	AssertOk(t, err, "Error creating nodes")
 	defer dnodes.Stop()
 }
@@ -71,6 +72,7 @@ func TestDataNodeBasic(t *testing.T) {
 	dnodes := make([]*DNode, numNodes)
 	clients := make([]*rpckit.RPCClient, numNodes)
 	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// create a temp dir
 	path, err := ioutil.TempDir("", "kstore-")
@@ -83,7 +85,7 @@ func TestDataNodeBasic(t *testing.T) {
 
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
-		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
 		AssertOk(t, err, "Error creating nodes")
 		defer dnodes[idx].Stop()
 	}
@@ -305,6 +307,7 @@ func TestDataNodeErrors(t *testing.T) {
 	dnodes := make([]*DNode, numNodes)
 	clients := make([]*rpckit.RPCClient, numNodes)
 	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// create a temp dir
 	path, err := ioutil.TempDir("", "kstore-")
@@ -317,7 +320,7 @@ func TestDataNodeErrors(t *testing.T) {
 
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
-		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		dnodes[idx], err = createNode(fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
 		AssertOk(t, err, "Error creating nodes")
 		defer dnodes[idx].Stop()
 	}
@@ -587,6 +590,7 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 	dnodes := make([]*DNode, numNodes)
 	clients := make([]*rpckit.RPCClient, numNodes)
 	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// metadata config
 	cfg := meta.DefaultClusterConfig()
@@ -608,7 +612,7 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 
@@ -696,7 +700,7 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 		AssertOk(t, err, "Error stopping data node")
 
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
 		AssertOk(t, err, "Error creating nodes")
 
 		// verify atleast one of the nodes is a leader
@@ -776,7 +780,7 @@ func TestDataNodeTstoreClustering(t *testing.T) {
 		}, "node was not removed from cluster", "100ms", "30s")
 
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
 		AssertOk(t, err, "Error creating nodes")
 
 		// verify atleast one of the nodes is a leader
@@ -821,6 +825,7 @@ func TestDataNodeKstoreClustering(t *testing.T) {
 	dnodes := make([]*DNode, numNodes)
 	clients := make([]*rpckit.RPCClient, numNodes)
 	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// metadata config
 	cfg := meta.DefaultClusterConfig()
@@ -842,7 +847,7 @@ func TestDataNodeKstoreClustering(t *testing.T) {
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 
@@ -917,7 +922,7 @@ func TestDataNodeKstoreClustering(t *testing.T) {
 		AssertOk(t, err, "Error stopping data node")
 
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
 		AssertOk(t, err, "Error creating nodes")
 
 		// verify atleast one of the nodes is a leader
@@ -1001,7 +1006,7 @@ func TestDataNodeKstoreClustering(t *testing.T) {
 		}, "node was not removed from cluster", "100ms", "30s")
 
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
 		AssertOk(t, err, "Error creating nodes")
 
 		// verify atleast one of the nodes is a leader
@@ -1083,6 +1088,7 @@ func TestSyncBuffer(t *testing.T) {
 	dnodes := make([]*DNode, numNodes)
 	clients := make([]*rpckit.RPCClient, numNodes)
 	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// metadata config
 	cfg := meta.DefaultClusterConfig()
@@ -1104,7 +1110,7 @@ func TestSyncBuffer(t *testing.T) {
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 
@@ -1433,6 +1439,7 @@ func TestAggQuery(t *testing.T) {
 	dnodes := make([]*DNode, numNodes)
 	clients := make([]*rpckit.RPCClient, numNodes)
 	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// metadata config
 	cfg := meta.DefaultClusterConfig()
@@ -1454,7 +1461,7 @@ func TestAggQuery(t *testing.T) {
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
 		// create the data node
-		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx))
+		dnodes[idx], err = NewDataNode(cfg, fmt.Sprintf("node-%d", idx), fmt.Sprintf("localhost:730%d", idx), fmt.Sprintf("%s/%d", path, idx), fmt.Sprintf("%s/%d", qpath, idx), logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 

@@ -50,6 +50,7 @@ type Broker struct {
 	nodeUUID    string
 	metaWatcher *meta.Watcher // metadata watcher
 	rpcClients  map[string]*rpckit.RPCClient
+	logger      log.Logger
 }
 
 // broker retry constants
@@ -59,11 +60,11 @@ const (
 )
 
 // NewBroker creates a new broker instance
-func NewBroker(cfg *meta.ClusterConfig, nodeUUID string) (*Broker, error) {
+func NewBroker(cfg *meta.ClusterConfig, nodeUUID string, logger log.Logger) (*Broker, error) {
 	// start the metadata watcher
 	metaWatcher, err := meta.NewWatcher(nodeUUID, cfg)
 	if err != nil {
-		log.Errorf("Error creating the watcher. Err: %v", err)
+		logger.Errorf("Error creating the watcher. Err: %v", err)
 		return nil, err
 	}
 
@@ -72,6 +73,7 @@ func NewBroker(cfg *meta.ClusterConfig, nodeUUID string) (*Broker, error) {
 		nodeUUID:    nodeUUID,
 		metaWatcher: metaWatcher,
 		rpcClients:  make(map[string]*rpckit.RPCClient),
+		logger:      logger.WithContext("brokeruuid", nodeUUID),
 	}
 
 	return &broker, nil
@@ -127,19 +129,19 @@ func (br *Broker) getRPCClient(nodeUUID, clusterType string) (*grpc.ClientConn, 
 	// get node info
 	cl := br.GetCluster(clusterType)
 	if cl == nil {
-		log.Errorf("Could not find the cluster while looking up node %s.", nodeUUID)
+		br.logger.Errorf("Could not find the cluster while looking up node %s.", nodeUUID)
 		return nil, errors.New("Cluster not found")
 	}
 	node, err := cl.GetNode(nodeUUID)
 	if err != nil {
-		log.Errorf("Could not find the node %s. Err: %v", nodeUUID, err)
+		br.logger.Errorf("Could not find the node %s. Err: %v", nodeUUID, err)
 		return nil, err
 	}
 
 	// dial the connection
 	rclient, err = rpckit.NewRPCClient(fmt.Sprintf("broker-%s", br.nodeUUID), node.NodeURL, rpckit.WithLoggerEnabled(false), rpckit.WithRemoteServerName(globals.Citadel))
 	if err != nil {
-		log.Errorf("Error connecting to rpc server %s. err: %v", node.NodeURL, err)
+		br.logger.Errorf("Error connecting to rpc server %s. err: %v", node.NodeURL, err)
 		return nil, err
 	}
 

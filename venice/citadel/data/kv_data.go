@@ -13,7 +13,6 @@ import (
 	"github.com/pensando/sw/venice/citadel/kstore"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 )
 
@@ -21,12 +20,12 @@ import (
 func (dn *DNode) ReadReq(ctx context.Context, req *tproto.KeyMsg) (*tproto.KeyValueMsg, error) {
 	var resp tproto.KeyValueMsg
 
-	log.Debugf("%s Received ReadReq req %+v", dn.nodeUUID, req)
+	dn.logger.Debugf("%s Received ReadReq req %+v", dn.nodeUUID, req)
 
 	// find the data store from shard id
 	val, ok := dn.kshards.Load(req.ReplicaID)
 	if !ok || val.(*KshardState).kstore == nil || req.ClusterType != meta.ClusterTypeKstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*KshardState)
@@ -34,7 +33,7 @@ func (dn *DNode) ReadReq(ctx context.Context, req *tproto.KeyMsg) (*tproto.KeyVa
 	// read from kstore
 	kvs, err := shard.kstore.Read(req.Table, req.Keys)
 	if err != nil {
-		log.Errorf("Error reading from kstore. Err: %v", err)
+		dn.logger.Errorf("Error reading from kstore. Err: %v", err)
 		return &resp, err
 	}
 
@@ -51,12 +50,12 @@ func (dn *DNode) ReadReq(ctx context.Context, req *tproto.KeyMsg) (*tproto.KeyVa
 func (dn *DNode) ListReq(ctx context.Context, req *tproto.TableMsg) (*tproto.KeyValueMsg, error) {
 	var resp tproto.KeyValueMsg
 
-	log.Debugf("%s Received ListReq req %+v", dn.nodeUUID, req)
+	dn.logger.Debugf("%s Received ListReq req %+v", dn.nodeUUID, req)
 
 	// find the data store from shard id
 	val, ok := dn.kshards.Load(req.ReplicaID)
 	if !ok || val.(*KshardState).kstore == nil || req.ClusterType != meta.ClusterTypeKstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*KshardState)
@@ -73,7 +72,7 @@ func (dn *DNode) ListReq(ctx context.Context, req *tproto.TableMsg) (*tproto.Key
 			return &resp, nil
 		}
 
-		log.Errorf("Error listing from kstore. Err: %v", err)
+		dn.logger.Errorf("Error listing from kstore. Err: %v", err)
 		return &resp, err
 	}
 
@@ -90,12 +89,12 @@ func (dn *DNode) ListReq(ctx context.Context, req *tproto.TableMsg) (*tproto.Key
 func (dn *DNode) WriteReq(ctx context.Context, req *tproto.KeyValueMsg) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Debugf("%s Received WriteReq req %+v", dn.nodeUUID, req)
+	dn.logger.Debugf("%s Received WriteReq req %+v", dn.nodeUUID, req)
 
 	// find the data store from shard id
 	val, ok := dn.kshards.Load(req.ReplicaID)
 	if !ok || val.(*KshardState).kstore == nil || req.ClusterType != meta.ClusterTypeKstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*KshardState)
@@ -103,7 +102,7 @@ func (dn *DNode) WriteReq(ctx context.Context, req *tproto.KeyValueMsg) (*tproto
 	// Check if we are the primary for this shard group
 	if !shard.isPrimary {
 		// FIXME: forward the message to real primary
-		log.Errorf("non-primary received kv write message. Shard: %+v.", shard)
+		dn.logger.Errorf("non-primary received kv write message. Shard: %+v.", shard)
 		return &resp, errors.New("Non-primary received points write")
 	}
 
@@ -115,7 +114,7 @@ func (dn *DNode) WriteReq(ctx context.Context, req *tproto.KeyValueMsg) (*tproto
 	// read from kstore
 	err := shard.kstore.Write(req.Table, req.Kvs)
 	if err != nil {
-		log.Errorf("Error writing to kstore. Err: %v", err)
+		dn.logger.Errorf("Error writing to kstore. Err: %v", err)
 		resp.Status = err.Error()
 		return &resp, err
 	}
@@ -123,7 +122,7 @@ func (dn *DNode) WriteReq(ctx context.Context, req *tproto.KeyValueMsg) (*tproto
 	// replicate to secondaries
 	err = dn.replicateWrite(ctx, req, shard)
 	if err != nil {
-		log.Errorf("Error replicating to secondaries. Err: %v", err)
+		dn.logger.Errorf("Error replicating to secondaries. Err: %v", err)
 	}
 
 	return &resp, nil
@@ -174,7 +173,7 @@ func (dn *DNode) replicateWrite(ctx context.Context, req *tproto.KeyValueMsg, sh
 				}
 			}
 			if err != nil {
-				log.Warnf("Error replicating key-values to node %s. Err: %v", se.NodeUUID, err)
+				dn.logger.Warnf("Error replicating key-values to node %s. Err: %v", se.NodeUUID, err)
 				// add to pending queue
 				dn.addSyncBuffer(&shard.syncBuffer, se.NodeUUID, &newReq)
 				continue
@@ -186,7 +185,7 @@ func (dn *DNode) replicateWrite(ctx context.Context, req *tproto.KeyValueMsg, sh
 }
 
 func (dn *DNode) replicateFailedWrite(sb *syncBufferState) error {
-	log.Infof("%s sync buffer queue len:%d for %+v", dn.nodeUUID, sb.queue.Len(), sb)
+	dn.logger.Infof("%s sync buffer queue len:%d for %+v", dn.nodeUUID, sb.queue.Len(), sb)
 	if sb.queue.Len() == 0 {
 		return nil
 	}
@@ -231,12 +230,12 @@ func (dn *DNode) replicateFailedWrite(sb *syncBufferState) error {
 func (dn *DNode) WriteReplicate(ctx context.Context, req *tproto.KeyValueMsg) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Debugf("%s Received WriteReplicate req %+v", dn.nodeUUID, req)
+	dn.logger.Debugf("%s Received WriteReplicate req %+v", dn.nodeUUID, req)
 
 	// find the data store from shard id
 	val, ok := dn.kshards.Load(req.ReplicaID)
 	if !ok || val.(*KshardState).kstore == nil || req.ClusterType != meta.ClusterTypeKstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*KshardState)
@@ -244,7 +243,7 @@ func (dn *DNode) WriteReplicate(ctx context.Context, req *tproto.KeyValueMsg) (*
 	// read from kstore
 	err := shard.kstore.Write(req.Table, req.Kvs)
 	if err != nil {
-		log.Errorf("Error writing to kstore. Err: %v", err)
+		dn.logger.Errorf("Error writing to kstore. Err: %v", err)
 		resp.Status = err.Error()
 		return &resp, err
 	}
@@ -256,12 +255,12 @@ func (dn *DNode) WriteReplicate(ctx context.Context, req *tproto.KeyValueMsg) (*
 func (dn *DNode) DelReq(ctx context.Context, req *tproto.KeyMsg) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Debugf("%s Received DelReq req %+v", dn.nodeUUID, req)
+	dn.logger.Debugf("%s Received DelReq req %+v", dn.nodeUUID, req)
 
 	// find the data store from shard id
 	val, ok := dn.kshards.Load(req.ReplicaID)
 	if !ok || val.(*KshardState).kstore == nil || req.ClusterType != meta.ClusterTypeKstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*KshardState)
@@ -269,7 +268,7 @@ func (dn *DNode) DelReq(ctx context.Context, req *tproto.KeyMsg) (*tproto.Status
 	// Check if we are the primary for this shard group
 	if !shard.isPrimary {
 		// FIXME: forward the message to real primary
-		log.Errorf("non-primary received points write message. Shard: %+v.", shard)
+		dn.logger.Errorf("non-primary received points write message. Shard: %+v.", shard)
 		return &resp, errors.New("Non-primary received points write")
 	}
 
@@ -281,7 +280,7 @@ func (dn *DNode) DelReq(ctx context.Context, req *tproto.KeyMsg) (*tproto.Status
 	// read from kstore
 	err := shard.kstore.Delete(req.Table, req.Keys)
 	if err != nil {
-		log.Errorf("Error deleting from kstore. Err: %v", err)
+		dn.logger.Errorf("Error deleting from kstore. Err: %v", err)
 		resp.Status = err.Error()
 		return &resp, err
 	}
@@ -289,7 +288,7 @@ func (dn *DNode) DelReq(ctx context.Context, req *tproto.KeyMsg) (*tproto.Status
 	// replicate to secondaries
 	err = dn.replicateDelete(ctx, req, shard)
 	if err != nil {
-		log.Errorf("Error replicating to secondaries. Err: %v", err)
+		dn.logger.Errorf("Error replicating to secondaries. Err: %v", err)
 	}
 
 	return &resp, nil
@@ -331,7 +330,7 @@ func (dn *DNode) replicateDelete(ctx context.Context, req *tproto.KeyMsg, shard 
 					// try reconnecting if this was a connection error
 					dnclient, err = dn.reconnectDnclient(meta.ClusterTypeKstore, se.NodeUUID)
 					if err != nil {
-						log.Errorf("Error replicating key-value deletes to node error connecting to %s. Err: %v", se.NodeUUID, err)
+						dn.logger.Errorf("Error replicating key-value deletes to node error connecting to %s. Err: %v", se.NodeUUID, err)
 						continue
 					}
 
@@ -339,7 +338,7 @@ func (dn *DNode) replicateDelete(ctx context.Context, req *tproto.KeyMsg, shard 
 					_, err = dnclient.DelReplicate(ctx, &newReq)
 				}
 				if err != nil {
-					log.Errorf("Error replicating key-value deletes to node %s. Err: %v", se.NodeUUID, err)
+					dn.logger.Errorf("Error replicating key-value deletes to node %s. Err: %v", se.NodeUUID, err)
 					continue
 				}
 			}
@@ -353,12 +352,12 @@ func (dn *DNode) replicateDelete(ctx context.Context, req *tproto.KeyMsg, shard 
 func (dn *DNode) DelReplicate(ctx context.Context, req *tproto.KeyMsg) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Debugf("%s Received DelReplicate req %+v", dn.nodeUUID, req)
+	dn.logger.Debugf("%s Received DelReplicate req %+v", dn.nodeUUID, req)
 
 	// find the data store from shard id
 	val, ok := dn.kshards.Load(req.ReplicaID)
 	if !ok || val.(*KshardState).kstore == nil || req.ClusterType != meta.ClusterTypeKstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*KshardState)
@@ -366,7 +365,7 @@ func (dn *DNode) DelReplicate(ctx context.Context, req *tproto.KeyMsg) (*tproto.
 	// read from kstore
 	err := shard.kstore.Delete(req.Table, req.Keys)
 	if err != nil {
-		log.Errorf("Error deleting from kstore. Err: %v", err)
+		dn.logger.Errorf("Error deleting from kstore. Err: %v", err)
 		resp.Status = err.Error()
 		return &resp, err
 	}

@@ -25,7 +25,7 @@ import (
 )
 
 // createNode creates a node
-func createDnode(nodeUUID, nodeURL, dbPath, qdbpath string) (*data.DNode, error) {
+func createDnode(nodeUUID, nodeURL, dbPath, qdbpath string, logger log.Logger) (*data.DNode, error) {
 	cfg := meta.DefaultClusterConfig()
 	cfg.DeadInterval = time.Millisecond * 500
 	cfg.NodeTTL = 5
@@ -33,7 +33,7 @@ func createDnode(nodeUUID, nodeURL, dbPath, qdbpath string) (*data.DNode, error)
 	cfg.RebalanceInterval = time.Millisecond * 10
 
 	// create the data node
-	dn, err := data.NewDataNode(cfg, nodeUUID, nodeURL, dbPath, qdbpath)
+	dn, err := data.NewDataNode(cfg, nodeUUID, nodeURL, dbPath, qdbpath, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -42,8 +42,8 @@ func createDnode(nodeUUID, nodeURL, dbPath, qdbpath string) (*data.DNode, error)
 }
 
 // createBroker creates a broker
-func createBroker(nodeUUID string) (*broker.Broker, error) {
-	br, err := broker.NewBroker(meta.DefaultClusterConfig(), nodeUUID)
+func createBroker(nodeUUID string, logger log.Logger) (*broker.Broker, error) {
+	br, err := broker.NewBroker(meta.DefaultClusterConfig(), nodeUUID, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +56,7 @@ func TestBrokerTstoreBasic(t *testing.T) {
 	dnodes := make([]*data.DNode, numNodes)
 	brokers := make([]*broker.Broker, numNodes)
 	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
@@ -68,13 +69,13 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		AssertOk(t, err, "Error creating tmp dir")
 
 		defer os.RemoveAll(qpath)
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath, logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 
 	// create the brokers
 	for idx := 0; idx < numNodes; idx++ {
-		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx))
+		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx), logger)
 		AssertOk(t, err, "Error creating broker")
 	}
 
@@ -272,6 +273,7 @@ func TestBrokerKstoreBasic(t *testing.T) {
 	dnodes := make([]*data.DNode, numNodes)
 	brokers := make([]*broker.Broker, numNodes)
 	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
@@ -284,13 +286,13 @@ func TestBrokerKstoreBasic(t *testing.T) {
 		AssertOk(t, err, "Error creating tmp dir")
 		defer os.RemoveAll(qpath)
 
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath, logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 
 	// create the brokers
 	for idx := 0; idx < numNodes; idx++ {
-		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx))
+		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx), logger)
 		AssertOk(t, err, "Error creating broker")
 	}
 
@@ -441,11 +443,12 @@ func TestBrokerKstoreBasic(t *testing.T) {
 	AssertOk(t, err, "Error deleting cluster state")
 }
 
-func TestAggQuery(t *testing.T) {
+func TestBrokerAggQuery(t *testing.T) {
 	const numNodes = 4
 	dnodes := make([]*data.DNode, numNodes)
 	brokers := make([]*broker.Broker, numNodes)
 	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
@@ -457,12 +460,12 @@ func TestAggQuery(t *testing.T) {
 		qpath, err := ioutil.TempDir("", fmt.Sprintf("agg-qstore-%d-", idx))
 		AssertOk(t, err, "Error creating tmp dir")
 		defer os.RemoveAll(qpath)
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath, logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 	// create the brokers
 	for idx := 0; idx < numNodes; idx++ {
-		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx))
+		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx), logger)
 		AssertOk(t, err, "Error creating broker")
 	}
 
@@ -544,6 +547,7 @@ func TestBrokerBenchmark(t *testing.T) {
 	const numIterations = 100
 	dnodes := make([]*data.DNode, numNodes)
 	var err error
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// create nodes
 	for idx := 0; idx < numNodes; idx++ {
@@ -556,12 +560,12 @@ func TestBrokerBenchmark(t *testing.T) {
 		AssertOk(t, err, "Error creating tmp dir")
 		defer os.RemoveAll(qpath)
 
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath, logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 
 	// create the broker
-	broker, err := createBroker(fmt.Sprintf("node-0"))
+	broker, err := createBroker(fmt.Sprintf("node-0"), logger)
 	AssertOk(t, err, "Error creating broker")
 
 	// wait till all the shards are created

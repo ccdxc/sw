@@ -21,10 +21,11 @@ import (
 	"github.com/influxdata/influxql"
 	"golang.org/x/net/context"
 
+	"github.com/pensando/sw/venice/utils/log"
+
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
 	"github.com/pensando/sw/venice/citadel/tstore"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 )
 
@@ -32,14 +33,14 @@ import (
 func (dn *DNode) CreateDatabase(ctx context.Context, req *tproto.DatabaseReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Infof("%s Received CreateDatabase req %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s Received CreateDatabase req %+v", dn.nodeUUID, req)
 
 	// find the shard from shard id
 	val, ok := dn.tshards.Load(req.ReplicaID)
 	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		jstr, _ := json.Marshal(dn.watcher.GetCluster(meta.ClusterTypeTstore))
-		log.Errorf("Nodemap: %s", jstr)
+		dn.logger.Errorf("Nodemap: %s", jstr)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*TshardState)
@@ -47,7 +48,7 @@ func (dn *DNode) CreateDatabase(ctx context.Context, req *tproto.DatabaseReq) (*
 	// create the database in the datastore
 	err := shard.store.CreateDatabase(req.Database, nil)
 	if err != nil {
-		log.Errorf("Error creating the database in %s. Err: %v", req.Database, err)
+		dn.logger.Errorf("Error creating the database in %s. Err: %v", req.Database, err)
 		return &resp, err
 	}
 
@@ -58,12 +59,12 @@ func (dn *DNode) CreateDatabase(ctx context.Context, req *tproto.DatabaseReq) (*
 func (dn *DNode) DeleteDatabase(ctx context.Context, req *tproto.DatabaseReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Infof("%s Received DeleteDatabase req %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s Received DeleteDatabase req %+v", dn.nodeUUID, req)
 
 	// find the shard from shard id
 	val, ok := dn.tshards.Load(req.ReplicaID)
 	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*TshardState)
@@ -76,12 +77,12 @@ func (dn *DNode) DeleteDatabase(ctx context.Context, req *tproto.DatabaseReq) (*
 func (dn *DNode) ReadDatabases(ctx context.Context, req *tproto.DatabaseReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Infof("%s Received read database req %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s Received read database req %+v", dn.nodeUUID, req)
 
 	// find the shard from shard id
 	val, ok := dn.tshards.Load(req.ReplicaID)
 	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*TshardState)
@@ -100,20 +101,20 @@ func (dn *DNode) ReadDatabases(ctx context.Context, req *tproto.DatabaseReq) (*t
 func (dn *DNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Debugf("%s Received PointsWrite req %+v", dn.nodeUUID, req)
+	dn.logger.Debugf("%s Received PointsWrite req %+v", dn.nodeUUID, req)
 
 	// check if datanode is already stopped
 	if dn.isStopped {
-		log.Errorf("Received PointsWrite on stopped datanode %s", dn.nodeUUID)
+		dn.logger.Errorf("Received PointsWrite on stopped datanode %s", dn.nodeUUID)
 		return &resp, errors.New("Datanode is stopped")
 	}
 
 	// find the data store from shard id
 	val, ok := dn.tshards.Load(req.ReplicaID)
 	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		jstr, _ := json.Marshal(dn.watcher.GetCluster(meta.ClusterTypeTstore))
-		log.Errorf("Nodemap: %s", jstr)
+		dn.logger.Errorf("Nodemap: %s", jstr)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*TshardState)
@@ -121,14 +122,14 @@ func (dn *DNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*
 	// Check if we are the primary for this shard group
 	if !shard.isPrimary {
 		// FIXME: forward the message to real primary
-		log.Errorf("non-primary received points write message. Shard: %+v.", shard)
+		dn.logger.Errorf("non-primary received points write message. Shard: %+v.", shard)
 		return &resp, errors.New("Non-primary received points write")
 	}
 
 	// parse the points
 	points, err := models.ParsePointsWithPrecision([]byte(req.Points), time.Time{}, "n")
 	if err != nil {
-		log.Errorf("Error parsing the points. Err: %v", err)
+		dn.logger.Errorf("Error parsing the points. Err: %v", err)
 		resp.Status = err.Error()
 		return &resp, err
 	}
@@ -141,7 +142,7 @@ func (dn *DNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*
 	// FIXME: should we use the low level shard write points APIs here?
 	err = shard.store.WritePoints(req.Database, points)
 	if err != nil {
-		log.Errorf("Error writing the points to db. Err: %v", err)
+		dn.logger.Errorf("Error writing the points to db. Err: %v", err)
 		resp.Status = err.Error()
 		return &resp, err
 	}
@@ -149,7 +150,7 @@ func (dn *DNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*
 	// replicate to all secondaries
 	err = dn.replicatePoints(ctx, req, shard)
 	if err != nil {
-		log.Errorf("Error replicating to secondaries. Err: %v", err)
+		dn.logger.Errorf("Error replicating to secondaries. Err: %v", err)
 		return &resp, err
 	}
 
@@ -202,7 +203,7 @@ func (dn *DNode) replicatePoints(ctx context.Context, req *tproto.PointsWriteReq
 			}
 
 			if err != nil {
-				log.Warnf("failed to replicate points to node %s. Err: %v", se.NodeUUID, err)
+				dn.logger.Warnf("failed to replicate points to node %s. Err: %v", se.NodeUUID, err)
 				// add to pending queue
 				dn.addSyncBuffer(&shard.syncBuffer, se.NodeUUID, &newReq)
 				continue
@@ -215,7 +216,7 @@ func (dn *DNode) replicatePoints(ctx context.Context, req *tproto.PointsWriteReq
 
 // replicateFailedPoints replicates failed points from the pending queue
 func (dn *DNode) replicateFailedPoints(sb *syncBufferState) error {
-	log.Infof("%s sync buffer queue len:%d for %+v", dn.nodeUUID, sb.queue.Len(), sb)
+	dn.logger.Infof("%s sync buffer queue len:%d for %+v", dn.nodeUUID, sb.queue.Len(), sb)
 	if sb.queue.Len() == 0 {
 		return nil
 	}
@@ -259,25 +260,25 @@ func (dn *DNode) replicateFailedPoints(sb *syncBufferState) error {
 func (dn *DNode) PointsReplicate(ctx context.Context, req *tproto.PointsWriteReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	log.Debugf("%s Received PointsReplicate req %+v", dn.nodeUUID, req)
+	dn.logger.Debugf("%s Received PointsReplicate req %+v", dn.nodeUUID, req)
 
 	// find the data store from shard id
 	val, ok := dn.tshards.Load(req.ReplicaID)
 	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
-		log.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
+		dn.logger.Errorf("Shard %d not found for cluster %s", req.ReplicaID, req.ClusterType)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*TshardState)
 
 	// TODO: remove the debug message
 	if shard.syncPending {
-		log.Warnf("replicate points in %s, shard: %+v while sync is pending", dn.nodeUUID, shard)
+		dn.logger.Warnf("replicate points in %s, shard: %+v while sync is pending", dn.nodeUUID, shard)
 	}
 
 	// parse the points
 	points, err := models.ParsePointsWithPrecision([]byte(req.Points), time.Time{}, "n")
 	if err != nil {
-		log.Errorf("Error parsing the points. Err: %v", err)
+		dn.logger.Errorf("Error parsing the points. Err: %v", err)
 		resp.Status = err.Error()
 		return &resp, err
 	}
@@ -285,7 +286,7 @@ func (dn *DNode) PointsReplicate(ctx context.Context, req *tproto.PointsWriteReq
 	// write points to datastore
 	err = shard.store.WritePoints(req.Database, points)
 	if err != nil {
-		log.Errorf("Error writing the points to db. Err: %v", err)
+		dn.logger.Errorf("Error writing the points to db. Err: %v", err)
 		resp.Status = err.Error()
 		return &resp, err
 	}
@@ -297,14 +298,14 @@ func (dn *DNode) PointsReplicate(ctx context.Context, req *tproto.PointsWriteReq
 func (dn *DNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (*tproto.QueryResp, error) {
 	var resp tproto.QueryResp
 
-	log.Debugf("%s Received ExecuteQuery req %+v", dn.nodeUUID, req)
+	dn.logger.Debugf("%s Received ExecuteQuery req %+v", dn.nodeUUID, req)
 
 	// find the data store from shard id
 	val, ok := dn.tshards.Load(req.ReplicaID)
 	if !ok || val.(*TshardState).store == nil || req.ClusterType != meta.ClusterTypeTstore {
-		log.Errorf("Shard %d not found for cluster %s in %v", req.ReplicaID, req.ClusterType, dn.nodeUUID)
+		dn.logger.Errorf("Shard %d not found for cluster %s in %v", req.ReplicaID, req.ClusterType, dn.nodeUUID)
 		jstr, _ := json.Marshal(dn.watcher.GetCluster(meta.ClusterTypeTstore))
-		log.Errorf("Nodemap: %s", jstr)
+		dn.logger.Errorf("Nodemap: %s", jstr)
 		return &resp, errors.New("Shard not found")
 	}
 	shard := val.(*TshardState)
@@ -312,7 +313,7 @@ func (dn *DNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (*tprot
 	// execute the query
 	ch, err := shard.store.ExecuteQuery(req.Query, req.Database)
 	if err != nil {
-		log.Errorf("Error executing the query %s on db %s. Err: %v", req.Query, req.Database, err)
+		dn.logger.Errorf("Error executing the query %s on db %s. Err: %v", req.Query, req.Database, err)
 		return &resp, err
 	}
 
@@ -321,7 +322,7 @@ func (dn *DNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (*tprot
 	for res := range ch {
 		s, jerr := res.MarshalJSON()
 		if jerr != nil {
-			log.Errorf("Error marshaling the output. Err: %v", err)
+			dn.logger.Errorf("Error marshaling the output. Err: %v", err)
 			return &resp, err
 		}
 		data := tproto.Result{
@@ -358,12 +359,12 @@ func (dn *DNode) newQueryStore() error {
 	// query tstore for this data node
 	ts, err := tstore.NewTstoreWithConfig(dn.querydbPath, cfg)
 	if err != nil {
-		log.Errorf("Error creating tstore at %s. Err: %v", dn.querydbPath, err)
+		dn.logger.Errorf("Error creating tstore at %s. Err: %v", dn.querydbPath, err)
 		return fmt.Errorf("error creating tstore at %s. Err: %v", dn.querydbPath, err)
 	}
 
 	dn.tsQueryStore = ts
-	log.Infof("created query aggregator with db %v", dn.querydbPath)
+	dn.logger.Infof("created query aggregator with db %v", dn.querydbPath)
 	return err
 }
 
@@ -374,7 +375,7 @@ func (dn *DNode) executeAggQuery(ctx context.Context, req *tproto.QueryReq, quer
 	// aggreagted query
 	ch, err := dn.tsQueryStore.ExecuteQuery(query, database)
 	if err != nil {
-		log.Errorf("Error executing query aggregator %s on db %s. Err: %v", query, database, err)
+		dn.logger.Errorf("Error executing query aggregator %s on db %s. Err: %v", query, database, err)
 		return &resp, err
 	}
 
@@ -383,7 +384,7 @@ func (dn *DNode) executeAggQuery(ctx context.Context, req *tproto.QueryReq, quer
 	for res := range ch {
 		s, jerr := res.MarshalJSON()
 		if jerr != nil {
-			log.Errorf("Error marshaling the output. Err: %v", err)
+			dn.logger.Errorf("Error marshaling the output. Err: %v", err)
 			return &resp, err
 		}
 		data := tproto.Result{
@@ -411,7 +412,7 @@ func (dn *DNode) writePointsInAggregator(queryDb string, measurement string, res
 		tagKeys := map[string]int{}
 		for res := range ch {
 			if res.Err != nil {
-				log.Errorf("query %s failed, %s", measurement, res.Err)
+				dn.logger.Errorf("query %s failed, %s", measurement, res.Err)
 				//TODO: retry
 				continue
 			}
@@ -430,13 +431,13 @@ func (dn *DNode) writePointsInAggregator(queryDb string, measurement string, res
 			} else {
 				for _, s := range res.Series {
 					if point, err := convertRowToPoints(measurement, tagKeys, s); err != nil {
-						log.Errorf("failed to convert points %s", err)
+						dn.logger.Errorf("failed to convert points %s", err)
 					} else {
 						if err := buff.WritePointsInto(&coordinator.IntoWriteRequest{
 							Database:        queryDb,
 							RetentionPolicy: "default",
 							Points:          point}); err != nil {
-							log.Errorf("failed to buffer points %s", err)
+							dn.logger.Errorf("failed to buffer points %s", err)
 						}
 					}
 				}
@@ -444,7 +445,7 @@ func (dn *DNode) writePointsInAggregator(queryDb string, measurement string, res
 		}
 	}
 
-	log.Infof("writting %v points to %s", buff.Len(), queryDb)
+	dn.logger.Infof("writting %v points to %s", buff.Len(), queryDb)
 	buff.Flush()
 	return nil
 }
@@ -555,7 +556,7 @@ func (dn *DNode) queryAllShards(ctx context.Context, req *tproto.QueryReq) ([]<-
 			if tshard, ok := val.(*TshardState); ok && tshard.store != nil {
 				ch, err := tshard.store.ExecuteQuery(req.Query, req.Database)
 				if err != nil {
-					log.Warnf("failed to execute local query on shard %v replicaid %v", tshard.shardID, replicaID)
+					dn.logger.Warnf("failed to execute local query on shard %v replicaid %v", tshard.shardID, replicaID)
 				} else {
 					queryShards[tshard.shardID] = true
 					resultsCh = append(resultsCh, ch)
@@ -568,7 +569,7 @@ func (dn *DNode) queryAllShards(ctx context.Context, req *tproto.QueryReq) ([]<-
 	// check if any shards are remote
 	cl := dn.watcher.GetCluster(meta.ClusterTypeTstore)
 
-	log.Infof("found %d local shards in %s, total shards %d", len(queryShards), dn.nodeUUID, len(cl.ShardMap.Shards))
+	dn.logger.Infof("found %d local shards in %s, total shards %d", len(queryShards), dn.nodeUUID, len(cl.ShardMap.Shards))
 
 	// check if a shard replica is on this data node
 	for _, shard := range cl.ShardMap.Shards {
@@ -578,7 +579,7 @@ func (dn *DNode) queryAllShards(ctx context.Context, req *tproto.QueryReq) ([]<-
 
 		// query remote
 		for _, replica := range shard.Replicas {
-			log.Infof("query remote shard %d, replica: %v, node: %v", shard.ShardID, replica.ReplicaID, replica.NodeUUID)
+			dn.logger.Infof("query remote shard %d, replica: %v, node: %v", shard.ShardID, replica.ReplicaID, replica.NodeUUID)
 
 			if !cl.IsNodeAlive(replica.NodeUUID) {
 				// go to the next replica
@@ -597,7 +598,7 @@ func (dn *DNode) queryAllShards(ctx context.Context, req *tproto.QueryReq) ([]<-
 		}
 	}
 
-	log.Infof("number of query result channels: %d", len(queryShards))
+	dn.logger.Infof("number of query result channels: %d", len(queryShards))
 
 	return resultsCh, nil
 }
@@ -664,7 +665,7 @@ func (dn *DNode) ExecuteAggQuery(ctx context.Context, req *tproto.QueryReq) (*tp
 		}
 	}()
 
-	log.Infof("process query: %s, shard query: %s", origQuery, req.Query)
+	dn.logger.Infof("process query: %s, shard query: %s", origQuery, req.Query)
 	// create a unique db
 	queryDb := req.Database + uuid.New().String()
 
