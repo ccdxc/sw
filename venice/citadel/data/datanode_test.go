@@ -1450,11 +1450,11 @@ func TestAggQuery(t *testing.T) {
 	cfg.RebalanceInterval = time.Millisecond * 10
 
 	// create a temp dir
-	path, err := ioutil.TempDir("", "tstore-")
+	path, err := ioutil.TempDir("", "agg-tstore-")
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
-	qpath, err := ioutil.TempDir("", "qstore-")
+	qpath, err := ioutil.TempDir("", "agg-qstore-")
 	AssertOk(t, err, "Error creating tmp dir")
 	defer os.RemoveAll(path)
 
@@ -1476,8 +1476,13 @@ func TestAggQuery(t *testing.T) {
 	AssertOk(t, err, "Error creating the watcher")
 	defer watcher.Stop()
 
+	// wait for metamgr to kick in
+	time.Sleep(10 * time.Second)
+
 	// wait till cluster state has converged
 	AssertEventually(t, func() (bool, interface{}) {
+		cl := dnodes[0].GetCluster(meta.ClusterTypeTstore)
+
 		if (len(watcher.GetCluster(meta.ClusterTypeTstore).NodeMap) != numNodes) ||
 			(len(watcher.GetCluster(meta.ClusterTypeTstore).ShardMap.Shards) != meta.DefaultShardCount) {
 			return false, nil
@@ -1490,6 +1495,16 @@ func TestAggQuery(t *testing.T) {
 
 			if dnodes[idx].HasPendingSync() {
 				return false, nil
+			}
+		}
+
+		if len(cl.ShardMap.Shards) != meta.DefaultShardCount {
+			return false, fmt.Errorf("didn't find all shards %+v", cl.ShardMap.Shards)
+		}
+
+		for _, shard := range cl.ShardMap.Shards {
+			if len(shard.Replicas) != meta.DefaultReplicaCount {
+				return false, fmt.Errorf("didn't find all replicas in shard %+v", shard)
 			}
 		}
 
@@ -1538,13 +1553,42 @@ func TestAggQuery(t *testing.T) {
 
 				_, err = dnclient.PointsWrite(context.Background(), &req)
 				AssertOk(t, err, "Error writing points")
+				log.Infof("wrote points in shard: %d replica: %d node: %v", repl.ShardID, repl.ReplicaID, repl.NodeUUID)
+
+				// query back
+				qreq := tproto.QueryReq{
+					ClusterType: meta.ClusterTypeTstore,
+					ReplicaID:   repl.ReplicaID,
+					ShardID:     repl.ShardID,
+					Database:    "db0",
+					TxnID:       uint64(repl.ReplicaID + 1),
+					Query:       "SELECT * FROM cpu",
+				}
+
+				resp, err := dnclient.ExecuteQuery(context.Background(), &qreq)
+				AssertOk(t, err, "query failed")
+
+				Assert(t, len(resp.Result) == 1, "invalid number of results %+v", resp.Result)
+
+				for _, rs := range resp.Result {
+					rslt := query.Result{}
+					err := rslt.UnmarshalJSON(rs.Data)
+					AssertOk(t, err, "failed to unmarshal query response")
+
+					Assert(t, len(rslt.Series) == 1, "invalid number of series %+v", rslt)
+
+					for _, s := range rslt.Series {
+						Assert(t, len(s.Columns) == 5, "invalid number of columns %+v", s.Columns)
+						Assert(t, len(s.Values) == 1, "invalid number of values %+v", s.Values)
+					}
+				}
 			}
 		}
 	}
 
 	// execute some query
 	AssertEventually(t, func() (bool, interface{}) {
-		cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
+		cl = watcher.GetCluster(meta.ClusterTypeTstore)
 		for _, shard := range cl.ShardMap.Shards {
 			// walk all replicas in the shard
 			for _, repl := range shard.Replicas {
@@ -1602,7 +1646,7 @@ func TestAggQuery(t *testing.T) {
 			}
 		}
 		return true, nil
-	}, "failed to query in replicas")
+	}, "failed to query in replicas", "1s", "30s")
 
 	// execute aggregated query
 	cl = dnodes[0].GetCluster(meta.ClusterTypeTstore)
