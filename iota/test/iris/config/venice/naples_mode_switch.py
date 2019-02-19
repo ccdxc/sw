@@ -16,7 +16,7 @@ def Main(step):
         cmd = "date -s '{}'".format(datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         api.Trigger_AddNaplesCommand(req, n, cmd)
         api.Logger.info("Running mode switch on node : %s" % n)
-        mode_switch_cmd = "update mode --management-mode network --network-mode oob --hostname {} --primary-mac {}".format(n, uuidMap[n])
+        mode_switch_cmd = "update naples --management-mode network --network-mode oob --hostname {} --primary-mac {}".format(n, uuidMap[n])
         common.AddPenctlCommand(req, n, mode_switch_cmd)
 
     resp = api.Trigger(req)

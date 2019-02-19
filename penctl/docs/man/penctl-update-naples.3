@@ -5,19 +5,19 @@
 
 .SH NAME
 .PP
-penctl\-update\-mode \- Set Naples to Managed mode
+penctl\-update\-naples \- Set NAPLES Modes and Feature Profiles
 
 
 .SH SYNOPSIS
 .PP
-\fBpenctl update mode [flags]\fP
+\fBpenctl update naples [flags]\fP
 
 
 .SH DESCRIPTION
 .ti 0
 \l'\n(.lu'
 
-.SH Set NAPLES management mode
+.SH Set NAPLES configuration
 
 .SH OPTIONS
 .PP
@@ -34,18 +34,18 @@ penctl\-update\-mode \- Set Naples to Managed mode
 
 .PP
 \fB\-f\fP, \fB\-\-feature\-profile\fP=""
-    default or eth\-dev\-scale
+    Active NAPLES Profile
 
 .PP
 \fB\-h\fP, \fB\-\-help\fP[=false]
-    help for mode
+    help for naples
 
 .PP
 \fB\-n\fP, \fB\-\-hostname\fP=""
     Host name
 
 .PP
-\fB\-o\fP, \fB\-\-management\-mode\fP="network"
+\fB\-o\fP, \fB\-\-management\-mode\fP="host"
     host or network managed
 
 .PP
@@ -53,7 +53,7 @@ penctl\-update\-mode \- Set Naples to Managed mode
     Management IP in CIDR format
 
 .PP
-\fB\-k\fP, \fB\-\-network\-mode\fP="oob"
+\fB\-k\fP, \fB\-\-network\-mode\fP=""
     oob or inband
 
 .PP

@@ -1,9 +1,9 @@
-.. _penctl_show_mode:
+.. _penctl_show_naples:
 
-penctl show mode
-----------------
+penctl show naples
+------------------
 
-Show mode of operation of Naples
+Show NAPLES Modes and Feature Profiles
 
 Synopsis
 ~~~~~~~~
@@ -11,20 +11,20 @@ Synopsis
 
 
 -------------------------------------------------------------------
- Show mode of operation of Naples - host-managed vs venice-managed 
+ Show NAPLES configuration 
 -------------------------------------------------------------------
 
 
 ::
 
-  penctl show mode [flags]
+  penctl show naples [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for mode
+  -h, --help   help for naples
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

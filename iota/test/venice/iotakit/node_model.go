@@ -172,10 +172,10 @@ func (sm *SysModel) createNaples(iotaNode *iota.Node) error {
 	trig := sm.tb.NewTrigger()
 	veniceIPs := strings.Join(iotaNode.GetNaplesConfig().VeniceIps, ",")
 	if iotaNode.Type == iota.PersonalityType_PERSONALITY_NAPLES_SIM {
-		cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib64 /naples/nic/bin/penctl update mode --management-mode network --network-mode oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --hostname %s --localhost", veniceIPs, iotaNode.GetNaplesConfig().ControlIp, iotaNode.NodeUuid, iotaNode.Name)
+		cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib64 /naples/nic/bin/penctl update naples --management-mode network --network-mode oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --hostname %s --localhost", veniceIPs, iotaNode.GetNaplesConfig().ControlIp, iotaNode.NodeUuid, iotaNode.Name)
 		trig.AddCommand(cmd, iotaNode.Name+"_naples", iotaNode.Name)
 	} else if iotaNode.Type == iota.PersonalityType_PERSONALITY_NAPLES {
-		cmd := fmt.Sprintf("penctl update mode --management-mode network --network-mode oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --hostname %s", veniceIPs, iotaNode.GetNaplesConfig().ControlIp, iotaNode.NodeUuid, iotaNode.Name)
+		cmd := fmt.Sprintf("penctl update naples --management-mode network --network-mode oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --hostname %s", veniceIPs, iotaNode.GetNaplesConfig().ControlIp, iotaNode.NodeUuid, iotaNode.Name)
 		trig.AddCommand(cmd, iotaNode.Name+"_host", iotaNode.Name)
 	}
 	resp, err := trig.Run()

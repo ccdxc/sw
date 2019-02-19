@@ -36,7 +36,7 @@ subnet 10.5.5.0 netmask 255.255.255.0 {
   default-lease-time 20;
   max-lease-time 20;
 }"""
-        
+
 PENCTL_EXEC =  {
 }
 
@@ -61,7 +61,7 @@ def RunLocalCommand(cmd):
     (out, err) = p.communicate()
     p_status = p.wait()
     api.Logger.info("Command output is : {}".format(out))
-    
+
 
 def GetNaplesMgmtIP(node):
     return  "169.254.0.1"
@@ -171,7 +171,7 @@ def SetDhcpInterfaceIP(remote_n, remote_intf):
 
     if cmd_resp.exit_code != 0:
         return api.types.status.FAILURE
-    
+
     return api.types.status.SUCCESS
 
 def InstallDhcpServer(n):
@@ -203,7 +203,7 @@ def CopyDhcpServerCfg(remote_node):
     RunLocalCommand(cmd)
     cmd = "sshpass -p docker scp -o StrictHostKeyChecking=no {} root@{}:/etc/dhcp/dhcpd.conf".format(dhcp_cfg, api.GetMgmtIPAddress(remote_node))
     RunLocalCommand(cmd)
-    
+
 
 def StartDhcpServer(remote_node, remote_intf):
     api.Logger.info("Start DHCP server on {}".format(remote_node))
@@ -228,7 +228,7 @@ def StartDhcpServer(remote_node, remote_intf):
 
     api.Logger.info("CAT dhcpd.conf {}".format(resp.commands[0].stdout))
     return api.types.status.SUCCESS
-    
+
 
 def GetNaplesSystemInfoJson(n):
     cmd = 'curl -X GET -H "Content-Type:application/json" {}:9007/api/system/info/'.format(GetNaplesMgmtIP(n))
@@ -249,7 +249,7 @@ def GetNaplesSystemInfoJson(n):
 def GetNaplesCfgSpecJson(n):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
-    AddPenctlCommand(req, n, "show mode --json")
+    AddPenctlCommand(req, n, "show naples --json")
 
     resp = api.Trigger(req)
     cmd_resp = resp.commands[0]
@@ -258,7 +258,7 @@ def GetNaplesCfgSpecJson(n):
     if cmd_resp.exit_code != 0:
         return None
 
-    return cmd_resp.stdout 
+    return cmd_resp.stdout
 
 def GetDelphictlNapleStatusJson(n):
 
@@ -290,7 +290,7 @@ def KillDhcpServer(remote_node):
 def SetupRemoteDhcp(n):
     api.Logger.info("Setting up remote dhcp server.")
     remote_name = GetRemoteNode(n)
-    remote_intf = GetRemoteNodeIntf(remote_name) 
+    remote_intf = GetRemoteNodeIntf(remote_name)
     CopyDhcpServerCfg(remote_name)
     InstallDhcpServer(remote_name)
     SetDhcpInterfaceIP(remote_name, remote_intf)
@@ -316,29 +316,29 @@ def RunPenctlOnHost(n, cmd):
     return cmd_resp.stdout
 
 def SetNaplesModeInband_Static(n, controllerip, mgmtip):
-    cmd = "update mode --hostname IOTATEST_INB --mgmt-ip {} --management-mode network --controllers {} --network-mode inband".format(mgmtip, controllerip)
+    cmd = "update naples --hostname IOTATEST_INB --mgmt-ip {} --management-mode network --controllers {} --network-mode inband".format(mgmtip, controllerip)
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeInband_Dynamic(n):
     api.Logger.info("Setting Naples network mode to Inband Dynamic.")
-    cmd = "update mode --hostname IOTATEST_INB --management-mode network --network-mode inband"
+    cmd = "update naples --hostname IOTATEST_INB --management-mode network --network-mode inband"
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeOOB_Static(n, controllerip, mgmtip):
     api.Logger.info("Setting Naples OOB network management IP statically for {}.".format(n))
-    cmd = "update mode --hostname IOTATEST_OOB --mgmt-ip {} --management-mode network --controllers {} --network-mode oob".format(mgmtip, controllerip)
+    cmd = "update naples --hostname IOTATEST_OOB --mgmt-ip {} --management-mode network --controllers {} --network-mode oob".format(mgmtip, controllerip)
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeOOB_Dynamic(n):
     api.Logger.info("Setting Naples network mode to OOB Dynamic.")
-    cmd = "update mode --hostname IOTATEST_OOB --management-mode network --network-mode inband"
+    cmd = "update naples --hostname IOTATEST_OOB --management-mode network --network-mode inband"
     return RunPenctlOnHost(n, cmd)
 
 def PenctlGetMode(n):
-    penctl_json = GetNaplesCfgSpecJson(n) 
+    penctl_json = GetNaplesCfgSpecJson(n)
     penctl_json_parsed = json.loads(penctl_json)
     try :
-        result = penctl_json_parsed["spec"]["mode"] 
+        result = penctl_json_parsed["spec"]["mode"]
     except:
         return "FAILED"
 
@@ -360,7 +360,7 @@ def PenctlGetNetworkMode(n):
     penctl_json = GetNaplesCfgSpecJson(n)
     penctl_json_parsed = json.loads(penctl_json)
     try :
-        result = penctl_json_parsed["spec"]["network-mode"] 
+        result = penctl_json_parsed["spec"]["network-mode"]
     except:
         return "FAILED"
 
@@ -370,7 +370,7 @@ def PenctlGetControllers(n):
     penctl_json = GetNaplesCfgSpecJson(n)
     penctl_json_parsed = json.loads(penctl_json)
     try :
-        result = penctl_json_parsed["spec"]["controllers"] 
+        result = penctl_json_parsed["spec"]["controllers"]
     except:
         return "FAILED"
 
@@ -380,7 +380,7 @@ def PenctlGetControllersStatus(n):
     penctl_json = GetNaplesCfgSpecJson(n)
     penctl_json_parsed = json.loads(penctl_json)
     try :
-        result = penctl_json_parsed["status"]["controllers"] 
+        result = penctl_json_parsed["status"]["controllers"]
     except:
         return "FAILED"
 
@@ -401,7 +401,7 @@ def PenctlGetTransitionPhaseStatus(n):
     penctl_json_parsed = json.loads(penctl_json)
 
     try :
-        result = penctl_json_parsed["status"]["transition-phase"] 
+        result = penctl_json_parsed["status"]["transition-phase"]
     except:
         return "FAILED"
 
@@ -410,20 +410,20 @@ def PenctlGetTransitionPhaseStatus(n):
 def PenctlGetAdmissionPhaseStatus(n):
     penctl_json = GetNaplesCfgSpecJson(n)
     penctl_json_parsed = json.loads(penctl_json)
-    
+
     try :
         result = penctl_json_parsed["status"]["phase"]
     except:
         api.Logger.info("Penctl get admission failed")
         return "PENCTL GET ADMISSION FAILED"
-    
+
     return result
 
 def AgentGetControllers(n):
     agent_json = GetNaplesSystemInfoJson(n)
     agent_json_parsed = json.loads(agent_json)
     try :
-        result = agent_json_parsed["controller-ips"] 
+        result = agent_json_parsed["controller-ips"]
     except:
         return "FAILED"
 
@@ -447,7 +447,7 @@ def SaveDhcpConfigInTemp(controller):
 
     cmd = "cat {}".format(GetDhcpCfgLocation())
     RunLocalCommand(cmd)
- 
+
 
 def PrepareDhcpConfigNoControllers():
     with open(GetDhcpCfgLocation(), "w") as config_file:
@@ -469,7 +469,7 @@ def RebootHost(n):
     ret = api.RestartNodes(nodes)
 
     return api.types.status.FAILURE
-            
+
 def DelphictlGetNetworkMode(n):
     naples_status = GetDelphictlNapleStatusJson(n)
 

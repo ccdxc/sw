@@ -42,9 +42,10 @@ SEE ALSO
 * `penctl show interface <penctl_show_interface.rst>`_ 	 - Show interface
 * `penctl show logs <penctl_show_logs.rst>`_ 	 - Show logs from Naples
 * `penctl show metrics <penctl_show_metrics.rst>`_ 	 - Show metrics from Naples
-* `penctl show mode <penctl_show_mode.rst>`_ 	 - Show mode of operation of Naples
+* `penctl show naples <penctl_show_naples.rst>`_ 	 - Show NAPLES Modes and Feature Profiles
 * `penctl show port <penctl_show_port.rst>`_ 	 - show port object
 * `penctl show proc-meminfo <penctl_show_proc-meminfo.rst>`_ 	 - Check /proc/meminfo file on Naples
+* `penctl show profiles <penctl_show_profiles.rst>`_ 	 - Show NAPLES
 * `penctl show qos-class <penctl_show_qos-class.rst>`_ 	 - show qos-class object
 * `penctl show running-firmware <penctl_show_running-firmware.rst>`_ 	 - Show running firmware from Naples
 * `penctl show startup-firmware <penctl_show_startup-firmware.rst>`_ 	 - Show startup firmware from Naples

@@ -1,24 +1,24 @@
-## penctl show mode
+## penctl show profiles
 
-Show mode of operation of Naples
+Show NAPLES
 
 ### Synopsis
 
 
 
--------------------------------------------------------------------
- Show mode of operation of Naples - host-managed vs venice-managed 
--------------------------------------------------------------------
+----------------------------
+ Show NAPLES Profiles 
+----------------------------
 
 
 ```
-penctl show mode [flags]
+penctl show profiles [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for mode
+  -h, --help   help for profiles
 ```
 
 ### Options inherited from parent commands

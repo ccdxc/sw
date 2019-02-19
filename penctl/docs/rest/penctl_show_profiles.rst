@@ -1,26 +1,30 @@
-.. _penctl_create:
+.. _penctl_show_profiles:
 
-penctl create
--------------
+penctl show profiles
+--------------------
 
-Create Object
+Show NAPLES
 
 Synopsis
 ~~~~~~~~
 
 
 
----------------
- Create Object 
----------------
+----------------------------
+ Show NAPLES Profiles 
+----------------------------
 
+
+::
+
+  penctl show profiles [flags]
 
 Options
 ~~~~~~~
 
 ::
 
-  -h, --help   help for create
+  -h, --help   help for profiles
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,7 +40,5 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* `penctl <penctl.rst>`_ 	 - Pensando CLIs
-* `penctl create profiles <penctl_create_profiles.rst>`_ 	 - profile object
-* `penctl create qos-class <penctl_create_qos-class.rst>`_ 	 - qos-class object
+* `penctl show <penctl_show.rst>`_ 	 - Show Object and Information
 

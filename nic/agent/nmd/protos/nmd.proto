@@ -47,11 +47,6 @@ enum NetworkMode {
 
 // NaplesSpec contains initial bootstrap configuration of the Naples I/O subsystem
 message NaplesSpec {
-    enum FeatureProfile {
-        NONE                    = 0;
-        CLASSIC_DEFAULT         = 1;  // default classic mode profile with 2 host devices
-        CLASSIC_ETH_DEV_SCALE   = 2;  // scaled up classic mode w.r.t devices
-    }
 
     // PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC
     string PrimaryMAC               = 1 [(gogoproto.jsontag) = "primary-mac,omitempty"];
@@ -78,7 +73,8 @@ message NaplesSpec {
     // Controllers contains the list of controller IPs or Hostnames
     repeated string Controllers     = 7 [(gogoproto.jsontag) = "controllers,omitempty"];
 
-    FeatureProfile Profile          = 8 [(gogoproto.jsontag) = "feature-profile,omitempty"];
+    // Profile captures the smart nic profile that is associated with this Naples
+    string Profile                  = 8 [(gogoproto.jsontag) = "feature-profile,omitempty"];
 }
 
 // NaplesStatus contains current status of a Naples I/O subsystem
@@ -95,15 +91,15 @@ message NaplesStatus {
         REBOOT_PENDING                      = 8;
     }
     // Current phase of the NIC adapter in the system
-    cluster.SmartNICStatus.Phase    Phase   = 1 [(gogoproto.jsontag) = "phase,omitempty",
+    cluster.SmartNICStatus.Phase    AdmissionPhase  = 1 [(gogoproto.jsontag) = "phase,omitempty",
 					        (venice.check) = "StrEnum(cluster.SmartNICStatus.Phase)"];
 
-    cluster.IPConfig IPConfig       	    = 2 [(gogoproto.jsontag) = "ip-config"];
+    cluster.IPConfig IPConfig       	            = 2 [(gogoproto.jsontag) = "ip-config"];
 
     // Resolved Controllers/Venice IPs
-    repeated string Controllers             = 3 [(gogoproto.jsontag) = "controllers,omitempty"];
+    repeated string Controllers                     = 3 [(gogoproto.jsontag) = "controllers,omitempty"];
 
-    string TransitionPhase                  = 4 [(gogoproto.jsontag) = "transition-phase,omitempty",
+    string TransitionPhase                             = 4 [(gogoproto.jsontag) = "transition-phase,omitempty",
                                                  (venice.check) = "StrEnum(NaplesStatus.Transition)"];
     // Operational mode of the NIC
     string Mode                   	    = 5 [(gogoproto.jsontag) = "mode",
@@ -112,7 +108,7 @@ message NaplesStatus {
     // Operational mode of the NIC
     string NetworkMode                      = 6 [(gogoproto.jsontag) = "network-mode",
                                                  (venice.check) = "StrEnum(Naples.NetworkMode)"];
-    
+
 }
 
 // NaplesCmdExecute contains information on what command to execute

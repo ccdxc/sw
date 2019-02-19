@@ -11,7 +11,9 @@ def Main(step):
     api.Logger.info("Update mode to eth-dev-scale")
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in nodes:
-        common.AddPenctlCommand(req, n, "update mode -f eth-dev-scale")
+        common.AddPenctlCommand(req, n, "create profiles --name scale --num-lifs 16")
+        common.AddPenctlCommand(req, n, "create profiles --name default --num-lifs 1")
+        common.AddPenctlCommand(req, n, "update naples --management-mode host --feature-profile scale")
     api.Trigger(req)
 
     return api.types.status.SUCCESS

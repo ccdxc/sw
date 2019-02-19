@@ -193,7 +193,7 @@ func (ag *Agent) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
 
 func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 	log.Infof("Netagent reactor called with %v", obj)
-	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
+	if (obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB) && len(obj.Controllers) != 0 {
 		ag.Lock()
 		defer ag.Unlock()
 		var controllers []string

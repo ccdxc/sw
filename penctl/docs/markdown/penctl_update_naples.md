@@ -1,18 +1,18 @@
-## penctl update mode
+## penctl update naples
 
-Set Naples to Managed mode
+Set NAPLES Modes and Feature Profiles
 
 ### Synopsis
 
 
 
 ----------------------------
- Set NAPLES management mode 
+ Set NAPLES configuration 
 ----------------------------
 
 
 ```
-penctl update mode [flags]
+penctl update naples [flags]
 ```
 
 ### Options
@@ -21,12 +21,12 @@ penctl update mode [flags]
   -c, --controllers stringSlice   List of controller IP addresses or hostnames
   -g, --default-gw string         Default GW for mgmt
   -d, --dns-servers stringSlice   List of DNS servers
-  -f, --feature-profile string    default or eth-dev-scale
-  -h, --help                      help for mode
+  -f, --feature-profile string    Active NAPLES Profile
+  -h, --help                      help for naples
   -n, --hostname string           Host name
-  -o, --management-mode string    host or network managed (default "network")
+  -o, --management-mode string    host or network managed (default "host")
   -m, --mgmt-ip string            Management IP in CIDR format
-  -k, --network-mode string       oob or inband (default "oob")
+  -k, --network-mode string       oob or inband
   -p, --primary-mac string        Primary mac
 ```
 

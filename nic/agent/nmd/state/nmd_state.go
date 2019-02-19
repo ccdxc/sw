@@ -295,6 +295,43 @@ func (n *NMD) NaplesConfigHandler(r *http.Request) (interface{}, error) {
 	return resp, nil
 }
 
+// NaplesProfileHandler is the REST handler for Naples Profile POST
+func (n *NMD) NaplesProfileHandler(r *http.Request) (interface{}, error) {
+	req := nmd.NaplesProfile{}
+	resp := NaplesConfigResp{}
+
+	content, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Errorf("Failed to read request: %v", err)
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+
+	if err = json.Unmarshal(content, &req); err != nil {
+		log.Errorf("Unmarshal err %s", content)
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+	log.Infof("Naples Profile Request: %+v", req)
+
+	err = n.CreateNaplesProfile(req)
+
+	if err != nil {
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+	log.Infof("Naples Profile Response: %+v", resp)
+
+	return resp, nil
+}
+
+// NaplesProfileGetHandler is the REST handler for Naples Profiles GET
+func (n *NMD) NaplesProfileGetHandler(r *http.Request) (interface{}, error) {
+	profiles := n.profiles
+	log.Infof("Naples Profile Get Response: %+v", profiles)
+	return profiles, nil
+}
+
 // NaplesRolloutHandler is the REST handler for Naples Config POST operation
 func (n *NMD) NaplesRolloutHandler(r *http.Request) (interface{}, error) {
 	snicRollout := roprotos.SmartNICRollout{}
@@ -418,9 +455,11 @@ func (n *NMD) StartRestServer() error {
 	t1.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesConfigHandler))
 	t1.HandleFunc(RolloutURL, httputils.MakeHTTPHandler(n.NaplesRolloutHandler))
 	t1.HandleFunc(UpdateURL, NaplesFileUploadHandler)
+	t1.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileHandler))
 
 	t2 := router.Methods("GET").Subrouter()
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
+	t2.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileGetHandler))
 	t2.HandleFunc(CmdEXECUrl, httputils.MakeHTTPHandler(NaplesCmdExecHandler))
 	t2.HandleFunc("/api/{*}", unknownAction)
 	t2.HandleFunc("/debug/pprof/", pprof.Index)

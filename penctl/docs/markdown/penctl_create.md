@@ -29,5 +29,6 @@ Create Object
 
 ### SEE ALSO
 * [penctl](penctl.md)	 - Pensando CLIs
+* [penctl create profiles](penctl_create_profiles.md)	 - profile object
 * [penctl create qos-class](penctl_create_qos-class.md)	 - qos-class object
 

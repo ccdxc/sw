@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
+	"github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/nic/agent/nmd/rolloutif"
+	"github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/certsproxy"
@@ -35,40 +36,56 @@ const (
 	// UpdateURL is the URL to help with file upload
 	UpdateURL = "/update/"
 
+	// ProfileURL is the URL to create smart nic profiles
+	ProfileURL = "/api/v1/naples/profiles/"
+
 	// Max retry interval in seconds for Registration retries
 	// Retry interval is initially exponential and is capped
 	// at 30min.
 	nicRegMaxInterval = (30 * 60 * time.Second)
 )
 
+// CreateNaplesProfile creates a Naples Profile
+func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
+	// Validate the number of LIFs
+	if !(profile.Spec.NumLifs == 1 || profile.Spec.NumLifs == 16) {
+		return fmt.Errorf("requested lif number is not supported. Expecting either 1 or 16")
+	}
+
+	n.Lock()
+	defer n.Unlock()
+	// ensure the profile name is unique.
+	for _, p := range n.profiles {
+		if profile.Name == p.Name {
+			return fmt.Errorf("profile %v already exists", profile.Name)
+		}
+	}
+
+	c, _ := types.TimestampProto(time.Now())
+	profile.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	profile.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
+	n.profiles = append(n.profiles, &profile)
+	return nil
+}
+
 // UpdateNaplesConfig updates a local Naples Config object
 func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
-
-	log.Infof("NIC mode desired: %v", cfg.Spec.Mode)
-
-	config := n.GetNaplesConfig()
-
-	// Detect if there is a feature-profile change
-	if config.Spec.Profile != cfg.Spec.Profile {
-		n.UpdateFeatureProfile(cfg.Spec.Profile)
-		log.Infof("NIC mode: %v feature profile: %v", n.config.Spec.Mode, cfg.Spec.Profile)
-	}
-
-	// Detect if there is a mode change
-	var modeChanged bool
-	if config.Spec.Mode != cfg.Spec.Mode {
-		modeChanged = true
-	}
-
-	log.Infof("Modechange: %v old-mode: %v", modeChanged, config.Spec.Mode)
-
-	// Update nic config in the DB
+	log.Infof("NAPLES Update: Old: %v  | New: %v ", n.config, cfg)
 	n.setNaplesConfigSpec(cfg.Spec)
 	err := n.store.Write(&cfg)
 
-	log.Infof("NIC mode: %v change completed err: %v", n.config.Spec.Mode, err)
-	err = n.UpdateMgmtIP()
-	return err
+	// Update Naples Feature Profile
+	if err = n.UpdateFeatureProfile(cfg.Spec.Profile); err != nil {
+		log.Infof("NIC mode: %v feature profile: %v", n.config.Spec.Mode, cfg.Spec.Profile)
+		return err
+	}
+
+	return n.UpdateMgmtIP()
 }
 
 // StartManagedMode starts the tasks required for managed mode

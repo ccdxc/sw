@@ -668,7 +668,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 			PrimaryMAC: nicKey1,
 		},
 		Status: nmd.NaplesStatus{
-			Phase: cmd.SmartNICStatus_ADMITTED,
+			AdmissionPhase: cmd.SmartNICStatus_ADMITTED,
 		},
 	}
 

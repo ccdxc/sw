@@ -6,14 +6,14 @@ import iota.test.iris.testcases.penctl.penctldefs as penctldefs
 import iota.test.iris.testcases.penctl.common as common
 
 def_mode_set_error_strs = [
-                           "only hostnames need to be specified as controllers: 'a:a'", 
-                           "only hostnames need to be specified as controllers: 'a2:1'",
-                           "Not valid mode: a - must be 'network' or 'host'", 
-                           "Invalid network mode 'a', must be 'oob' for out of band or 'inband' for inband network management", 
-                           "Network-Mode is not applicable if Management-Mode is 'host'", 
-                           "Not valid mgmt-ip", 
-                           "Not valid host name", 
-                           "Not valid mac address", 
+                            "number of LIFs not supported. --num-lifs should either be 1 or 16",
+                            "specified options, --networkMode, --controllers, --default-gw, --dns-servers, --mgmt-ip --primary-mac are not applicable when NAPLES is in host managed mode",
+                            "invalid controller a:a specified. Must be either IP Addresses or FQDNs",
+                            "invalid management mode a. Must be either host or network",
+                            "host managed mode needs an accompanying feature profile. Specify it with --feature-profile",
+                            "invalid management IP a specified. Must be in CIDR Format",
+                            "invalid hostname a:",
+                            "invalid MAC Address a specified",
                           ]
 
 
@@ -25,7 +25,7 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        common.AddPenctlCommand(req, n, "show mode")
+        common.AddPenctlCommand(req, n, "show naples")
 
     tc.resp = api.Trigger(req)
 
@@ -42,14 +42,18 @@ def Verify(tc):
     def checkUpdateMode():
         req = api.Trigger_CreateExecuteCommandsRequest()
         for n in tc.Nodes:
-            common.AddPenctlCommand(req, n, "update mode -c a:a")
-            common.AddPenctlCommand(req, n, "update mode -c a -c a1 -c a2:1")
-            common.AddPenctlCommand(req, n, "update mode -o a")
-            common.AddPenctlCommand(req, n, "update mode -k a")
-            common.AddPenctlCommand(req, n, "update mode -o host -k a")
-            common.AddPenctlCommand(req, n, "update mode -m a")
-            common.AddPenctlCommand(req, n, "update mode -n a:")
-            common.AddPenctlCommand(req, n, "update mode -p a")
+            # TODO Add more negative test cases
+            common.AddPenctlCommand(req, n, "create profiles -n default -i 42")
+            common.AddPenctlCommand(req, n, "update naples -o host -f scale -c a:a")
+            common.AddPenctlCommand(req, n, "update naples -o network -k oob -c a:a")
+            common.AddPenctlCommand(req, n, "update naples -o network -k inband -c a -c a1 -c a2:1")
+            common.AddPenctlCommand(req, n, "update naples -o a")
+            common.AddPenctlCommand(req, n, "update naples -k a")
+            common.AddPenctlCommand(req, n, "update naples -o network -k a")
+            common.AddPenctlCommand(req, n, "update naples -o network -k oob -m a")
+            common.AddPenctlCommand(req, n, "update naples -o network -n a: -k inband")
+            common.AddPenctlCommand(req, n, "update naples -n a: -f default")
+            common.AddPenctlCommand(req, n, "update naples -o network -k oob -p a")
         resp = api.Trigger(req)
         for cmd in resp.commands:
             api.PrintCommandResults(cmd)

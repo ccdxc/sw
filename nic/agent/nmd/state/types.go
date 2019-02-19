@@ -78,6 +78,7 @@ type NMD struct {
 	pendingOps    []roprotos.SmartNICOpSpec        // the ops that will be executed after the current op is completed
 	opStatus      []roprotos.SmartNICOpStatus
 	objectMeta    api.ObjectMeta
+	profiles      []*nmd.NaplesProfile
 }
 
 // NaplesConfigResp is response to NaplesConfig request nmd.Naples
@@ -209,30 +210,41 @@ func (n *NMD) GetIPClient() *IPClient {
 	return n.IPClient
 }
 
-// UpdateFeatureProfile updates feature profile
-func (n *NMD) UpdateFeatureProfile(profile nmd.NaplesSpec_FeatureProfile) error {
-	var deviceSpec device.SystemSpec
-	var err error
-	deviceSpec.FwdMode = device.ForwardingMode_FORWARDING_MODE_CLASSIC
-	if profile == nmd.NaplesSpec_CLASSIC_ETH_DEV_SCALE {
-		deviceSpec.FeatureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE
-		// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
-		if _, err := os.Stat(globals.NaplesModeConfigFile); os.IsNotExist(err) {
-			os.MkdirAll(path.Dir(globals.NaplesModeConfigFile), 0664)
+//UpdateFeatureProfile updates feature profile
+func (n *NMD) UpdateFeatureProfile(profileName string) (err error) {
+	if n.config.Spec.Mode == nmd.MgmtMode_HOST {
+		fwdMode := device.ForwardingMode_FORWARDING_MODE_CLASSIC
+		var featureProfile device.FeatureProfile
+		var profile *nmd.NaplesProfile
+		var ok bool
+		log.Info("Updating feature profile.")
+		// Check if the profile exists.
+		for _, p := range n.profiles {
+			if p.Name == profileName {
+				profile = p
+				ok = true
+				break
+			}
 		}
-		data, err := json.MarshalIndent(deviceSpec, "", "  ")
-		if err != nil {
-			log.Errorf("Failed to marshal device spec. Err: %v", err)
-			return err
+
+		if !ok {
+			log.Errorf("could not find profile %v in nmd state", profileName)
+			err = fmt.Errorf("could not find profile %v in nmd state", profileName)
+			return
 		}
-		if err = ioutil.WriteFile(globals.NaplesModeConfigFile, data, 0444); err != nil {
-			log.Errorf("Failed to write feature profile to %s. Err: %v", globals.NaplesModeConfigFile, err)
+
+		// Interpret 16 numLifs as scale profile. TODO Remove this when nicmgr can directly read numLifs from device.conf
+		if profile.Spec.NumLifs == 16 {
+			featureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE
+		} else {
+			featureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_DEFAULT
 		}
-	} else {
-		err = os.Remove(globals.NaplesModeConfigFile)
+
+		err = n.PersistDeviceSpec(fwdMode, featureProfile)
+		return
 	}
 
-	return err
+	return
 }
 
 // UpdateMgmtIP updates the management IP
@@ -241,22 +253,8 @@ func (n *NMD) UpdateMgmtIP() error {
 	//n.Lock()
 	//defer n.Unlock()
 
-	//// Start the control loop based on configured Mode
-	//if n.config.Spec.Mode == nmd.MgmtMode_HOST {
-	//	// Start in Classic Mode
-	//	if err := n.StartClassicMode(); err != nil {
-	//		log.Errorf("Error starting in classic mode, err: %+v", err)
-	//		return err
-	//	}
-	//}
-
-	//if n.IPClient != nil {
 	log.Infof("NaplesConfig: %v", n.config)
-	err := n.IPClient.Update(n.config.Spec.NetworkMode, n.config.Spec.IPConfig, n.config.Spec.MgmtVlan, n.config.Spec.Hostname, n.config.Spec.Controllers)
-	return err
-	//}
-
-	//return nil
+	return n.IPClient.Update(n.config.Spec.NetworkMode, n.config.Spec.IPConfig, n.config.Spec.MgmtVlan, n.config.Spec.Hostname, n.config.Spec.Controllers)
 }
 
 // GetCMDSmartNICWatcherStatus returns true if the NMD CMD interface has an active watch
@@ -281,4 +279,42 @@ func (n *NMD) UpdateCurrentManagementMode() {
 			n.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
 		}
 	}
+}
+
+// PersistDeviceSpec accepts forwarding mode and feature profile and persists this in device.conf
+func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile device.FeatureProfile) (err error) {
+	deviceSpec := device.SystemSpec{
+		FwdMode:        fwdMode,
+		FeatureProfile: featureProfile,
+	}
+
+	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
+	if _, err := os.Stat(globals.NaplesModeConfigFile); os.IsNotExist(err) {
+		os.MkdirAll(path.Dir(globals.NaplesModeConfigFile), 0664)
+	}
+
+	data, err := json.MarshalIndent(deviceSpec, "", "  ")
+	if err != nil {
+		log.Errorf("Failed to marshal device spec. Err: %v", err)
+		return err
+	}
+
+	if err = ioutil.WriteFile(globals.NaplesModeConfigFile, data, 0664); err != nil {
+		log.Errorf("Failed to write feature profile to %s. Err: %v", globals.NaplesModeConfigFile, err)
+	}
+
+	// Update app-start.conf file. TODO Remove this workaround when all the processes are migrated to read from device.conf
+	var appStartSpec []byte
+	switch fwdMode {
+	case device.ForwardingMode_FORWARDING_MODE_HOSTPIN:
+		appStartSpec = []byte("hostpin")
+	default:
+		appStartSpec = []byte("classic")
+	}
+	appStartConfFilePath := fmt.Sprintf("%s/app-start.conf", path.Dir(globals.NaplesModeConfigFile))
+	if err := ioutil.WriteFile(appStartConfFilePath, appStartSpec, 0755); err != nil {
+		log.Errorf("Failed to write app start conf. Err: %v", err)
+	}
+
+	return
 }
