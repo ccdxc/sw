@@ -716,7 +716,7 @@ def Main():
 
 
     if GlobalOptions.only_init == True:
-        # Case 3: Only INIT option. 
+        # Case 3: Only INIT option.
         host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = True)
         return
 
@@ -771,7 +771,7 @@ def Main():
     else:
         # Update MainFwB also to same image - TEMP CHANGE
         host.InstallMainFirmware(mount_data = False, copy_fw = False)
-    return
+    sys.exit(0)
 
 if __name__ == '__main__':
     atexit.register(AtExitCleanup)
