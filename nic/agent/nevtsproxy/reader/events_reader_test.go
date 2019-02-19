@@ -145,7 +145,7 @@ func TestEventsReaderReceiveInvalidObjectType(t *testing.T) {
 // reading it off from the shared memory.
 func TestEventsReader(t *testing.T) {
 	tLogger := evtsRdrlogger.WithContext("t_name", t.Name())
-	totalEventsSent := testEventsReader(t, nil, tLogger, 2)
+	totalEventsSent := testEventsReader(t, nil, tLogger, 2, 3*time.Second)
 	Assert(t, totalEventsSent > 0, "0 events sent?!! something went wrong")
 }
 
@@ -172,7 +172,7 @@ func TestEventsReaderWithDispatcher(t *testing.T) {
 	defer mockWriter.Stop()
 	defer evtsD.UnregisterExporter(mockWriter.Name())
 
-	totalEventsSent := testEventsReader(t, evtsD, tLogger, 0)
+	totalEventsSent := testEventsReader(t, evtsD, tLogger, 0, 3*time.Second)
 	Assert(t, totalEventsSent > 0, "0 events sent?!! something went wrong")
 
 	// ensure the mock writer received all the events through events dispatcher
@@ -184,11 +184,18 @@ func TestEventsReaderWithDispatcher(t *testing.T) {
 
 		return false, fmt.Sprintf("expected: %d, got: %d", totalEventsSent, receivedAtWriter)
 	}, "unexpected number of events at the mock writer", string("5ms"), string("5s"))
+
+	// stop the dispatcher; all the events should start failing (as it cannot send it to the dispatcher and error count keeps increasing)
+	evtsD.Shutdown()
+	testEventsReader(t, evtsD, tLogger, -1, 100*time.Millisecond) // error count == total events that was sent
+	// mock writer should not have received any more events than the original events that was sent earlier (L175)
+	// everything that was sent now has failed at the dispatcher; did not make it to the writer/exporter.
+	Assert(t, totalEventsSent == uint64(mockWriter.GetTotalEvents()), "expected: %d, got: %d", totalEventsSent, mockWriter.GetTotalEvents())
 }
 
 // testEventsReader helper function to read and write some events and return
 // the total number of events sent.
-func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, logger log.Logger, wantedErrors int) uint64 {
+func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, logger log.Logger, wantedErrors int, runtime time.Duration) uint64 {
 	dir, err := ioutil.TempDir("", "shm")
 	AssertOk(t, err, "failed to create temp dir")
 	defer os.RemoveAll(dir)
@@ -216,19 +223,30 @@ func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, logger log
 
 		// stop the reader once the writer is stopped and ensure all the events are received by the reader.
 		<-stopWriter
-		AssertEventually(t, func() (bool, interface{}) {
-			if totalEventsSent == eRdr.TotalEventsRead() {
-				return true, nil
-			}
+		if wantedErrors >= 0 {
+			AssertEventually(t, func() (bool, interface{}) {
+				if totalEventsSent == eRdr.TotalEventsRead() {
+					return true, nil
+				}
 
-			return false, fmt.Sprintf("expected: %d, got: %d", totalEventsSent, eRdr.TotalEventsRead())
-		}, "unexpected number of events at the shm. events reader", string("5ms"), string("5s"))
+				return false, fmt.Sprintf("expected: %d, got: %d", totalEventsSent, eRdr.TotalEventsRead())
+			}, "unexpected number of events at the shm. events reader", string("5ms"), string("5s"))
 
-		// ensure there is no error
-		Assert(t, eRdr.TotalErrCount() == uint64(wantedErrors), "expected %d err count, got: %d", wantedErrors, eRdr.TotalErrCount())
+			// ensure there is no error
+			Assert(t, eRdr.TotalErrCount() == uint64(wantedErrors), "expected %d err count, got: %d", wantedErrors, eRdr.TotalErrCount())
+		} else if wantedErrors == -1 { // eRdr.TotalErrCount() == totalEventsSent; everything that was sent resulted in an error
+			// e.g if the dispatcher is stopped, all the messages will fail
+			AssertEventually(t, func() (bool, interface{}) {
+				if totalEventsSent == eRdr.TotalErrCount() {
+					return true, nil
+				}
+
+				return false, fmt.Sprintf("expected error count: %d, got: %d", totalEventsSent, eRdr.TotalErrCount())
+			}, "unexpected err count at the shm. events reader", string("5ms"), string("5s"))
+		}
 	}()
 
-	<-time.After(3 * time.Second)
+	<-time.After(runtime)
 	close(stopWriter)
 	wg.Wait()
 
