@@ -22,7 +22,7 @@ func TestDryRun(t *testing.T) {
 func TestObjectMetaValidation(t *testing.T) {
 	meta := api.ObjectMeta{}
 	goodNames := []string{
-		"ThisSsaGoodName23", "123.This", "order-2", "Aasdad_EREA", "00.00.11", "coke-vm-1", "coke_VM-1.23", "coke::VM-1.23",
+		"ThisSsaGoodName23", "123.This", "order-2", "Aasdad_EREA", "00.00.11", "coke-vm-1", "coke_VM-1.23", "coke--VM-1.23",
 	}
 	for _, c := range goodNames {
 		meta.Name = c
@@ -33,7 +33,7 @@ func TestObjectMetaValidation(t *testing.T) {
 
 	badNames := []string{
 		"This is not a good name", "-NietherIsThis", ".OrThis", "Not#still", "coke-vm-1.", "coke-vm-1-", "coke-vm-1_", "tooLooooooooooooooooooooooooooooooooooooooooooooooooooooooooooonnng",
-		"_tenant", "+tenant", ".", "..", "ten/ant/", "t*enant", "t<en>", "t//enant", "ten|ant", "-",
+		"_tenant", "+tenant", ".", "..", "ten/ant/", "t*enant", "t<en>", "t//enant", "ten|ant", "-", "coke:VM-1.23",
 	}
 	for _, c := range badNames {
 		meta.Name = c

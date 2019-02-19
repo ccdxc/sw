@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -26,10 +27,14 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	// create a workload on each NIC/host
 	for i, ag := range it.agents {
 		// workload params
+		var name string
+		if name, err = strconv.ParseMacAddr(ag.NetworkAgent.NodeUUID); err != nil {
+			name = ag.NetworkAgent.NodeUUID
+		}
 		wrloads[i] = workload.Workload{
 			TypeMeta: api.TypeMeta{Kind: "Workload"},
 			ObjectMeta: api.ObjectMeta{
-				Name:      fmt.Sprintf("testWorkload-%s", ag.NetworkAgent.NodeUUID),
+				Name:      fmt.Sprintf("testWorkload-%s", name),
 				Namespace: "default",
 				Tenant:    "default",
 			},
@@ -78,7 +83,11 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 			}
 			foundLocal := false
 			for _, nag := range it.agents {
-				epname := fmt.Sprintf("testWorkload-%s-%s", nag.NetworkAgent.NodeUUID, nag.NetworkAgent.NodeUUID)
+				name, err := strconv.ParseMacAddr(nag.NetworkAgent.NodeUUID)
+				if err != nil {
+					name = nag.NetworkAgent.NodeUUID
+				}
+				epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
 				sep, perr := ag.NetworkAgent.FindEndpoint("default", "default", epname)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, ag.NetworkAgent.NodeUUID, perr, ag.NetworkAgent.EndpointDB)

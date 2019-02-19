@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/strconv"
 )
 
 // number of times to retry netcat client command
@@ -254,10 +255,14 @@ func (act *ActionCtx) VerifyWorkloadStatus(wc *WorkloadCollection) error {
 			return fmt.Errorf("Unexpected number of interfaces on workload %v. Exp: %+v, Got: %+v", wr.veniceWorkload.Name, wr.veniceWorkload.Spec.Interfaces, wsts.Spec.Interfaces)
 		}
 
+		name, err := strconv.ParseMacAddr(wr.veniceWorkload.Spec.Interfaces[0].MACAddress)
+		if err != nil {
+			name = wr.veniceWorkload.Spec.Interfaces[0].MACAddress
+		}
 		epMeta := api.ObjectMeta{
 			Tenant:    wr.veniceWorkload.Tenant,
 			Namespace: wr.veniceWorkload.Namespace,
-			Name:      wr.veniceWorkload.Name + "-" + wr.veniceWorkload.Spec.Interfaces[0].MACAddress + ":",
+			Name:      wr.veniceWorkload.Name + "-" + name,
 		}
 
 		// get the endpoints for the workload

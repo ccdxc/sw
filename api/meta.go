@@ -10,7 +10,7 @@ import (
 // TenantNameRe tenant name regexp for validation
 var TenantNameRe = regexp.MustCompile(`^[a-z0-9]+$`)
 
-var nameRe = regexp.MustCompile(`^[a-zA-Z0-9][\w\-\.\:]*[a-zA-Z0-9]$`)
+var nameRe = regexp.MustCompile(`^[a-zA-Z0-9][\w\-\.]*[a-zA-Z0-9]$`)
 var resVerRe = regexp.MustCompile(`[0-9]*`)
 
 const (

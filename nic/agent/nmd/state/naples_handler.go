@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/utils/certsproxy"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/strconv"
 )
 
 const (
@@ -119,15 +120,21 @@ func (n *NMD) StartManagedMode() error {
 		case <-time.After(n.nicRegInterval):
 
 			// For the NIC in Naples Config, start the registration
-			var name string
+			var name, macStr string
 			mac := n.config.Spec.PrimaryMAC
-
+			if macStr, err = strconv.ParseMacAddr(n.config.Spec.PrimaryMAC); err != nil {
+				macStr = n.config.Spec.PrimaryMAC
+			}
 			if len(mac) == 0 {
 				name = n.config.Spec.Hostname
 			} else if len(n.config.Spec.Hostname) == 0 {
-				name = fmt.Sprintf("%s", n.config.Spec.PrimaryMAC)
+				name = fmt.Sprintf("%s", macStr)
 			} else {
-				name = fmt.Sprintf("%s-%s", n.config.Spec.Hostname, n.config.Spec.PrimaryMAC)
+				hostName, err := strconv.ParseMacAddr(n.config.Spec.Hostname)
+				if err != nil {
+					hostName = n.config.Spec.Hostname
+				}
+				name = fmt.Sprintf("%s-%s", hostName, macStr)
 			}
 
 			nicObj, _ := n.GetSmartNIC()

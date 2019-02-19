@@ -784,8 +784,8 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	AssertOk(t, err, "Could not find the network")
 
 	// verify we can find the endpoint associated with the workload
-	foundEp, ok := nw.FindEndpoint("testWorkload-00:01:02:03:04:05")
-	Assert(t, ok, "Could not find the endpoint", "testWorkload-00:01:02:03:04:05")
+	foundEp, ok := nw.FindEndpoint("testWorkload-0001.0203.0405")
+	Assert(t, ok, "Could not find the endpoint", "testWorkload-0001.0203.0405")
 	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
 
 	// delete the workload

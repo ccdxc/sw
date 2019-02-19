@@ -8,6 +8,7 @@ import (
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -44,7 +45,11 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 
 	// create a workload on each host
 	for i, ag := range it.agents {
-		err = it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%s", ag.nagent.NetworkAgent.NodeUUID), fmt.Sprintf("testHost-%d", i), ag.nagent.NetworkAgent.NodeUUID, uint32(100+i), 1)
+		name, err := strconv.ParseMacAddr(ag.nagent.NetworkAgent.NodeUUID)
+		if err != nil {
+			name = ag.nagent.NetworkAgent.NodeUUID
+		}
+		err = it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%s", name), fmt.Sprintf("testHost-%d", i), ag.nagent.NetworkAgent.NodeUUID, uint32(100+i), 1)
 		AssertOk(c, err, "Error creating workload")
 	}
 
@@ -65,8 +70,12 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 				return
 			}
 			foundLocal := false
-			for _, nag := range it.agents {
-				epname := fmt.Sprintf("testWorkload-%s-%s", nag.nagent.NetworkAgent.NodeUUID, nag.nagent.NetworkAgent.NodeUUID)
+			for _, ag := range it.agents {
+				name, err := strconv.ParseMacAddr(ag.nagent.NetworkAgent.NodeUUID)
+				if err != nil {
+					name = ag.nagent.NetworkAgent.NodeUUID
+				}
+				epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
 				eps, perr := ag.nagent.NetworkAgent.FindEndpoint("default", "default", epname)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in datapath, eps=%+v, err=%v", epname, eps, perr)
@@ -97,7 +106,11 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 
 	// now delete the workloads
 	for _, ag := range it.agents {
-		err := it.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%s", ag.nagent.NetworkAgent.NodeUUID))
+		name, err := strconv.ParseMacAddr(ag.nagent.NetworkAgent.NodeUUID)
+		if err != nil {
+			name = ag.nagent.NetworkAgent.NodeUUID
+		}
+		err = it.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%s", name))
 		AssertOk(c, err, "Error deleting workload")
 	}
 

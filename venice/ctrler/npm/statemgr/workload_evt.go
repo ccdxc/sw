@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/strconv"
 )
 
 // networkName returns network name for the external vlan
@@ -48,7 +49,8 @@ func (sm *Statemgr) OnWorkloadCreate(w *ctkit.Workload) error {
 		}
 
 		// check if we already have the endpoint for this workload
-		epName := w.Name + "-" + w.Spec.Interfaces[ii].MACAddress
+		name, _ := strconv.ParseMacAddr(w.Spec.Interfaces[ii].MACAddress)
+		epName := w.Name + "-" + name
 		_, err = sm.FindEndpoint(w.Tenant, epName)
 		if (err != nil) && (ErrIsObjectNotFound(err)) {
 			// find the host for the workload
@@ -128,7 +130,8 @@ func (sm *Statemgr) OnWorkloadDelete(w *ctkit.Workload) error {
 		}
 
 		// check if we created an endpoint for this workload interface
-		epName := w.Name + "-" + w.Spec.Interfaces[ii].MACAddress
+		name, _ := strconv.ParseMacAddr(w.Spec.Interfaces[ii].MACAddress)
+		epName := w.Name + "-" + name
 		_, ok := nw.FindEndpoint(epName)
 		if !ok {
 			log.Errorf("Could not find endpoint %v", epName)
