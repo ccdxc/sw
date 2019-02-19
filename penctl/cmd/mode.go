@@ -25,11 +25,10 @@ var modeManagedCmd = &cobra.Command{
 }
 
 var modeManagedShowCmd = &cobra.Command{
-	Use:    "mode",
-	Short:  "Show mode of operation of Naples",
-	Long:   "\n-------------------------------------------------------------------\n Show mode of operation of Naples - host-managed vs venice-managed \n-------------------------------------------------------------------\n",
-	RunE:   modeManagedShowCmdHandler,
-	Hidden: true,
+	Use:   "mode",
+	Short: "Show mode of operation of Naples",
+	Long:  "\n-------------------------------------------------------------------\n Show mode of operation of Naples - host-managed vs venice-managed \n-------------------------------------------------------------------\n",
+	RunE:  modeManagedShowCmdHandler,
 }
 
 type clusterAddresses []string

@@ -34,6 +34,7 @@ Show Object and Information
 * [penctl show interface](penctl_show_interface.md)	 - Show interface
 * [penctl show logs](penctl_show_logs.md)	 - Show logs from Naples
 * [penctl show metrics](penctl_show_metrics.md)	 - Show metrics from Naples
+* [penctl show mode](penctl_show_mode.md)	 - Show mode of operation of Naples
 * [penctl show port](penctl_show_port.md)	 - show port object
 * [penctl show proc-meminfo](penctl_show_proc-meminfo.md)	 - Check /proc/meminfo file on Naples
 * [penctl show qos-class](penctl_show_qos-class.md)	 - show qos-class object
