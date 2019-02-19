@@ -101,7 +101,8 @@ rfc_ctxt_destroy (rfc_ctxt_t *rfc_ctxt)
 }
 
 sdk_ret_t
-rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy)
+rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
+               mem_addr_t base_addr, uint32_t mem_size)
 {
     uint8_t     *bits;
     uint32_t    num_nodes = (policy->num_rules << 1) + 1;
@@ -130,11 +131,13 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy)
     new (&rfc_ctxt->p1_table.cbm_map) cbm_map_t();
     rfc_ctxt->cbm_size =
         RTE_CACHE_LINE_ROUNDUP(rte_bitmap_get_memory_footprint(policy->max_rules));
-    bits = (uint8_t *)malloc(rfc_ctxt->cbm_size);
+    posix_memalign((void **)&bits, CACHE_LINE_SIZE, rfc_ctxt->cbm_size);
     if (bits) {
         rfc_ctxt->cbm = rte_bitmap_init(policy->max_rules, bits,
                                          rfc_ctxt->cbm_size);
     }
+    rfc_ctxt->base_addr = base_addr;
+    rfc_ctxt->mem_size = mem_size;
     return SDK_RET_OK;
 
 cleanup:

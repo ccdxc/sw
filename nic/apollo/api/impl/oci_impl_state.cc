@@ -24,6 +24,7 @@ oci_impl_state::init(oci_state *state) {
     vnic_impl_db_ = new vnic_impl_state(state);
     mapping_impl_db_ = new mapping_impl_state(state);
     route_table_impl_db_ = new route_table_impl_state(state);
+    security_policy_impl_db_ = new security_policy_impl_state(state);
 
     return SDK_RET_OK;
 }
@@ -35,6 +36,7 @@ oci_impl_state::oci_impl_state() {
     vnic_impl_db_ = NULL;
     mapping_impl_db_ = NULL;
     route_table_impl_db_ = NULL;
+    security_policy_impl_db_ = NULL;
 }
 
 /**< @brief    destructor */
@@ -44,6 +46,7 @@ oci_impl_state::~oci_impl_state() {
     delete vnic_impl_db_;
     delete mapping_impl_db_;
     delete route_table_impl_db_;
+    delete security_policy_impl_db_;
 }
 
 /** * @} */    // end of OCI_IMPL_STATE

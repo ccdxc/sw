@@ -223,7 +223,8 @@ api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
     }
 
     if (ret != SDK_RET_OK) {
-        OCI_TRACE_ERR("Failure in pre-process stage, err : %u", ret);
+        OCI_TRACE_ERR("Failure in pre-process stage, api op %u, obj id %u, "
+                      "err %u", api_ctxt->api_op, api_ctxt->obj_id, ret);
         batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
     }
     return ret;

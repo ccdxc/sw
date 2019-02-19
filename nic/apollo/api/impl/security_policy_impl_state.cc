@@ -27,20 +27,20 @@ security_policy_impl_state::security_policy_impl_state(oci_state *state) {
      * routing table (with the assumption that more than one routing table
      * is not updated in any given batch
      */
-    security_policy_idxr_ =
+    v4_idxr_ =
         indexer::factory(OCI_MAX_RULES_PER_SECURITY_POLICY + 1);
-    SDK_ASSERT(security_policy_idxr_ != NULL);
-    security_policy_region_addr_ =
-        state->mempartition()->start_addr("slacl_v4");
-    security_policy_table_size_ =
-        state->mempartition()->element_size("slacl_v4");
+    SDK_ASSERT(v4_idxr_ != NULL);
+    v4_region_addr_ =
+        state->mempartition()->start_addr("sacl_v4");
+    v4_table_size_ =
+        state->mempartition()->element_size("sacl_v4");
 }
 
 /**
  * @brief    destructor
  */
 security_policy_impl_state::~security_policy_impl_state() {
-    indexer::destroy(security_policy_idxr_);
+    indexer::destroy(v4_idxr_);
 }
 
 /** @} */    // end of OCI_SECURITY_POLICY_IMPL_STATE

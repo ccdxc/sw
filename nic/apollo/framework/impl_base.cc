@@ -14,6 +14,7 @@
 #include "nic/apollo/api/impl/vnic_impl.hpp"
 #include "nic/apollo/api/impl/mapping_impl.hpp"
 #include "nic/apollo/api/impl/route_impl.hpp"
+#include "nic/apollo/api/impl/security_policy_impl.hpp"
 
 namespace impl {
 
@@ -75,19 +76,18 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 
     case IMPL_OBJ_ID_TEP:
         return tep_impl::factory((oci_tep_t *)args);
-        break;
 
     case IMPL_OBJ_ID_VNIC:
         return vnic_impl::factory((oci_vnic_t *)args);
-        break;
 
     case IMPL_OBJ_ID_MAPPING:
         return mapping_impl::factory((oci_mapping_t *)args);
-        break;
 
     case IMPL_OBJ_ID_ROUTE_TABLE:
         return route_table_impl::factory((oci_route_table_t *)args);
-        break;
+
+    case IMPL_OBJ_ID_SECURITY_POLICY:
+        return security_policy_impl::factory((oci_policy_t *)args);
 
     default:
         break;
@@ -117,6 +117,9 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_ROUTE_TABLE:
         return route_table_impl::destroy((route_table_impl *)impl);
+
+    case IMPL_OBJ_ID_SECURITY_POLICY:
+        return security_policy_impl::destroy((security_policy_impl *)impl);
 
     default:
         break;

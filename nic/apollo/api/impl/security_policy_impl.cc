@@ -109,8 +109,8 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     policy.max_rules = OCI_MAX_RULES_PER_SECURITY_POLICY;
     policy.num_rules = policy_info->num_rules;
     policy.rules = policy_info->rules;
-    rfc_policy_create(&policy, security_policy_root_addr_,
-                      security_policy_impl_db()->security_policy_table_size());
+    ret = rfc_policy_create(&policy, security_policy_root_addr_,
+              security_policy_impl_db()->security_policy_table_size());
     if (ret != SDK_RET_OK) {
         OCI_TRACE_ERR("Failed to build RFC policy table, err : %u", ret);
     }

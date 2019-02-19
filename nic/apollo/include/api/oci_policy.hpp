@@ -21,7 +21,7 @@
  */
 
 #define OCI_MAX_SECURITY_POLICY                  1024
-#define OCI_MAX_RULES_PER_SECURITY_POLICY        1024
+#define OCI_MAX_RULES_PER_SECURITY_POLICY        1023
 
 #define OCI_MAX_POLICY        OCI_MAX_SECURITY_POLICY
 
@@ -76,8 +76,7 @@ typedef struct rule_match_s {
  * @brief security rule action
  */
 typedef enum fw_action_e {
-    SECURITY_RULE_ACTION_DENY  = 0,    /**< deny/drop the packet */
-    SECURITY_RULE_ACTION_ALLOW = 1,    /**< allow the packet */
+    SECURITY_RULE_ACTION_ALLOW = 0,    /**< allow the packet */
 } fw_action_t;
 
 /**
@@ -133,6 +132,8 @@ struct oci_policy_s {
             return *this;
         }
         key = policy.key;
+        policy_type = policy.policy_type;
+        af = policy.af;
         direction = policy.direction;
         num_rules = policy.num_rules;
         if (rules) {

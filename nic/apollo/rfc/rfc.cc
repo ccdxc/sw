@@ -6,6 +6,7 @@
  * @brief   RFC library implementation
  */
 
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/rfc/rte_bitmap_utils.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
 #include "nic/apollo/rfc/rfc.hpp"
@@ -162,7 +163,7 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
     }
 
     /**< allocate memory for all the RFC itree tables */
-    ret = rfc_ctxt_init(&rfc_ctxt, policy);
+    ret = rfc_ctxt_init(&rfc_ctxt, policy, rfc_tree_root_addr, mem_size);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -177,13 +178,19 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
     rfc_compute_classes(policy, &rfc_ctxt);
 
     /**< build LPM trees for phase 0 of RFC */
-    rfc_build_lpm_trees(policy, &rfc_ctxt, rfc_tree_root_addr, mem_size);
+    ret = rfc_build_lpm_trees(policy, &rfc_ctxt, rfc_tree_root_addr, mem_size);
+    if (ret != SDK_RET_OK) {
+        OCI_TRACE_ERR("Failed to build RFC LPM trees, err %u", ret);
+        goto cleanup;
+    }
 
     /**
      * build equivalence class index tables and result tables for subsequent
      * phases of RFC
      */
     rfc_build_eqtables(policy, &rfc_ctxt);
+
+cleanup:
 
     /**< free all the temporary state */
     rfc_ctxt_destroy(&rfc_ctxt);

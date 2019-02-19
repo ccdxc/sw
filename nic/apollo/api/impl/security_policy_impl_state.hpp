@@ -38,23 +38,23 @@ public:
 
     /**< @brief    return policy region's base/start address in memory */
     mem_addr_t security_policy_region_addr(void) const {
-        return security_policy_region_addr_;
+        return v4_region_addr_;
     }
 
     /**< @brief    return per security policy table's size */
     mem_addr_t security_policy_table_size(void) const {
-        return security_policy_table_size_;
+        return v4_table_size_;
     }
 
 private:
-    indexer *security_policy_idxr(void) { return security_policy_idxr_; }
+    indexer *security_policy_idxr(void) { return v4_idxr_; }
     friend class security_policy_impl;
 
 private:
     /**< datapath tables for security policy */
-    indexer       *security_policy_idxr_;        /**< indexer to allocate mem block */
-    mem_addr_t    security_policy_region_addr_;  /**< base address for the policy region */
-    uint32_t      security_policy_table_size_;   /**< size of each policy table */
+    indexer       *v4_idxr_;        /**< indexer to allocate mem block */
+    mem_addr_t    v4_region_addr_;  /**< base address for the policy region */
+    uint32_t      v4_table_size_;   /**< size of each policy table */
 };
 
 /** * @} */    // end of OCI_SECURITY_POLICY_IMPL_STATE

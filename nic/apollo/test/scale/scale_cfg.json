@@ -38,6 +38,11 @@
             "nat-prefix" : "3.0.0.0/8"
         },
         {
+            "_comment_" : "security policy parameters here are per subnet per direction",
+            "kind" : "security-policy",
+            "count" : "1"
+        },
+        {
             "kind" : "flows",
             "num_tcp": "1024",
             "num_udp": "1024",

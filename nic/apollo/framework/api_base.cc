@@ -35,7 +35,6 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_TEP:
         obj = tep_entry::factory(&api_ctxt->api_params->tep_info);
         return obj;
-        break;
 
     case OBJ_ID_VNIC:
         obj = vnic_entry::factory(&api_ctxt->api_params->vnic_info);
@@ -48,11 +47,10 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_ROUTE_TABLE:
         obj = route_table::factory(&api_ctxt->api_params->route_table_info);
         return obj;
-        break;
 
     case OBJ_ID_POLICY:
         obj = policy::factory(&api_ctxt->api_params->policy_info);
-        break;
+        return obj;
 
     default:
         break;

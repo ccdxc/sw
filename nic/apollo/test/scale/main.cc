@@ -17,6 +17,8 @@
 #include "boost/property_tree/json_parser.hpp"
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/platform/capri/capri_p4.hpp"
+#include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/include/api/oci_batch.hpp"
 #include "nic/apollo/include/api/oci_switchport.hpp"
@@ -25,9 +27,7 @@
 #include "nic/apollo/include/api/oci_subnet.hpp"
 #include "nic/apollo/include/api/oci_vnic.hpp"
 #include "nic/apollo/include/api/oci_mapping.hpp"
-#include "nic/sdk/platform/capri/capri_p4.hpp"
-#include "nic/sdk/model_sim/include/lib_model_client.h"
-
+#include "nic/apollo/include/api/oci_policy.hpp"
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 
 using std::string;
@@ -264,6 +264,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
     return SDK_RET_OK;
 }
 
+// MAC address is encoded like below:
+// bits 0-10 have vnic number in the subnet
+// bits 11-21 have subnet number in the vcn
+// bits 22-32 have vcn number
 static sdk_ret_t
 create_vnics (uint32_t num_vcns, uint32_t num_subnets,
               uint32_t num_vnics, uint16_t vlan_start)
@@ -393,6 +397,50 @@ create_switchport_cfg (ipv4_addr_t ipaddr, uint64_t macaddr, ipv4_addr_t gwip)
 }
 
 static sdk_ret_t
+create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
+                        uint32_t num_rules, uint32_t ip_af, bool ingress)
+{
+    sdk_ret_t       rv;
+    oci_policy_t    policy;
+    uint32_t        id = 1;
+    rule_t          *rule;
+
+    policy.policy_type = POLICY_TYPE_FIREWALL;
+    policy.af = ip_af;
+    policy.direction = ingress ? RULE_DIR_INGRESS : RULE_DIR_EGRESS;
+    policy.num_rules = num_rules;
+    policy.rules = (rule_t *)malloc(num_rules * sizeof(rule_t));
+    for (uint32_t i = 1; i <= num_vcns; i++) {
+        for (uint32_t j = 1; j <= num_subnets; j++) {
+            memset(policy.rules, 0, num_rules * sizeof(rule_t));
+            policy.key.id = id++;
+            for (uint32_t k = 0; k < num_rules; k++) {
+                rule = &policy.rules[k];
+                rule->stateful = false;
+                rule->match.l3_match.ip_proto = 6;
+                rule->match.l3_match.ip_pfx = g_vcn_ippfx;
+                rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
+                    rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
+                    ((j - 1) << 14) | (k << 4);
+                rule->match.l3_match.ip_pfx.len = 28;
+                rule->match.l4_match.sport_range.port_lo = 0;
+                rule->match.l4_match.sport_range.port_hi = 65535;
+                rule->match.l4_match.dport_range.port_lo = 10000;
+                rule->match.l4_match.dport_range.port_hi = 20000;
+                rule->action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
+            }
+            rv = oci_policy_create(&policy);
+            if (rv != SDK_RET_OK) {
+                printf("Failed to create security policy, vcn %u, subnet %u, "
+                       "err %u\n", i, j, rv);
+                return rv;
+            }
+        }
+    }
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
 create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp)
 {
     sdk_ret_t ret = SDK_RET_OK;
@@ -418,6 +466,7 @@ static sdk_ret_t
 create_objects (void)
 {
     uint32_t num_vcns = 0, num_subnets = 0, num_vnics = 0, num_teps = 0;
+    uint32_t num_rules = 0;
     uint32_t num_remote_mappings = 0, num_routes = 0, num_ip_per_vnic = 1;
     uint16_t vlan_start = 1;
     pt::ptree json_pt;
@@ -485,6 +534,12 @@ create_objects (void)
                 ret = create_mappings(num_teps, num_vcns, num_subnets, num_vnics,
                                       num_ip_per_vnic, &teppfx, &natpfx,
                                       num_remote_mappings);
+            } else if (kind == "security-policy") {
+                num_rules = std::stol(obj.second.get<std::string>("count"));
+                ret = create_security_policy(num_vcns, num_subnets, num_rules,
+                                             IP_AF_IPV4, false);
+                //ret = create_security_policy(num_vcns, num_subnets, num_rules,
+                                             //IP_AF_IPV6, true);
             } else if (kind == "flows") {
                 num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
                 num_udp = std::stol(obj.second.get<std::string>("num_udp"));
@@ -620,10 +675,10 @@ TEST_F(scale_test, scale_test_create)
 
 /// @}
 
-// print help message showing usage of HAL
+// print help message showing usage of this gtest
 static void inline print_usage(char **argv)
 {
-    fprintf(stdout, "Usage : %s -c <hal.json> -i <object-config.json>\n",
+    fprintf(stdout, "Usage : %s -c <hal.json> -i <test-config.json>\n",
             argv[0]);
 }
 
@@ -631,10 +686,12 @@ int
 main (int argc, char **argv)
 {
     int oc;
-    struct option longopts[] = {{"config", required_argument, NULL, 'c'},
-                                {"daemon", required_argument, NULL, 'd'},
-                                {"help", no_argument, NULL, 'h'},
-                                {0, 0, 0, 0}};
+    struct option longopts[] = {
+        {"config", required_argument, NULL, 'c'},
+        {"daemon", required_argument, NULL, 'd'},
+        {"help", no_argument, NULL, 'h'},
+        {0, 0, 0, 0}
+    };
 
     // parse CLI options
     while ((oc = getopt_long(argc, argv, ":hdc:i:W;", longopts, NULL)) != -1) {
@@ -655,7 +712,7 @@ main (int argc, char **argv)
         case 'i':
             g_input_cfg_file = optarg;
             if (!g_input_cfg_file) {
-                fprintf(stderr, "object config file is not specified\n");
+                fprintf(stderr, "test config file is not specified\n");
                 print_usage(argv);
                 exit(1);
             }

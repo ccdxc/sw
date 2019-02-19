@@ -233,13 +233,14 @@ rfc_p1_action_data_flush (mem_addr_t addr,
 static inline sdk_ret_t
 rfc_compute_p1_eq_class_tables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
 {
-    uint16_t                          class_id, entry_num = 0;
-    uint32_t                          num_entries;
-    rfc_tree_t                        *rfc_tree1, *rfc_tree2;
-    rte_bitmap                        *cbm = rfc_ctxt->cbm;
-    sacl_ip_sport_p1_actiondata_t     action_data;
-    mem_addr_t                        addr = SACL_P1_TABLE_OFFSET;
-    
+    uint16_t                      class_id, entry_num = 0;
+    uint32_t                      num_entries;
+    rfc_tree_t                    *rfc_tree1, *rfc_tree2;
+    rte_bitmap                    *cbm = rfc_ctxt->cbm;
+    sacl_ip_sport_p1_actiondata_t action_data;
+    mem_addr_t                    addr;
+
+    addr = rfc_ctxt->base_addr + SACL_P1_TABLE_OFFSET;
     rfc_tree1 = &rfc_ctxt->pfx_tree;
     rfc_tree2 = &rfc_ctxt->port_tree;
     num_entries = rfc_tree1->rfc_table.num_classes *
@@ -1098,7 +1099,7 @@ rfc_compute_p2_tables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
     rfc_tree_t               *rfc_tree3;
     rte_bitmap               *cbm = rfc_ctxt->cbm;
     sacl_p2_actiondata_t     action_data;
-    mem_addr_t               addr = SACL_P2_TABLE_OFFSET;
+    mem_addr_t               addr = rfc_ctxt->base_addr + SACL_P2_TABLE_OFFSET;
 
     rfc_tree3 = &rfc_ctxt->proto_port_tree;
     for (uint32_t i = 0; i < rfc_ctxt->p1_table.num_classes; i++) {

@@ -72,10 +72,13 @@ typedef struct rfc_ctxt_s {
     rte_bitmap    *cbm;           /**< RFC class bitmap instance used as
                                        scratch pad */
     size_t        cbm_size;       /**< size of class-bit-map (CBM) */
+    mem_addr_t    base_addr;      /**< base address of the entire RFC block */
+    uint32_t      mem_size;       /**< RFC memory block size */
 } rfc_ctxt_t;
 
 void rfc_ctxt_destroy(rfc_ctxt_t *rfc_ctxt);
-sdk_ret_t rfc_ctxt_init(rfc_ctxt_t *rfc_ctxt, policy_t *policy);
+sdk_ret_t rfc_ctxt_init(rfc_ctxt_t *rfc_ctxt, policy_t *policy,
+                        mem_addr_t base_addr, uint32_t mem_size);
 void itable_add_address_inodes(uint32_t rule, inode_t *addr_inode,
                                ip_prefix_t *pfx);
 void itable_add_port_inodes(uint32_t rule, inode_t *port_inode,

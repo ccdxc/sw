@@ -247,19 +247,19 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group_2 = 0;
         addr =
             ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
-        OCI_TRACE_DEBUG("IPv4 lpm root addr 0x%x\n", addr);
+        OCI_TRACE_DEBUG("IPv4 lpm root addr 0x%x", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v4addr_1,
                                 addr, 5);
         if (v6_route_table) {
             addr =
                 ((impl::route_table_impl *)(v6_route_table->impl()))->lpm_root_addr();
-            OCI_TRACE_DEBUG("IPv6 lpm root addr 0x%x\n", addr);
+            OCI_TRACE_DEBUG("IPv6 lpm root addr 0x%x", addr);
             MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v6addr_1,
                                     addr, 5);
         }
 
         addr = api::g_oci_state.mempartition()->start_addr("sacl_v4");
-        OCI_TRACE_DEBUG("RFC root addr 0x%x\n", addr);
+        OCI_TRACE_DEBUG("RFC root addr 0x%x", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr_1,
                                 addr, 5);
         //vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr_1 =
