@@ -36,8 +36,8 @@ protected:
       HalGRPCClient::Factory(FWD_MODE_CLASSIC);
 
       // Create Uplinks
-      Uplink *up1 = Uplink::Factory(128, 1);
-      Uplink *up2 = Uplink::Factory(128, 2);
+      Uplink::Factory(128, 1);
+      Uplink::Factory(128, 2);
 
       NIC_LOG_DEBUG("Creating VRFs for uplinks");
       Uplink::CreateVrfs();

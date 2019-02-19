@@ -107,6 +107,14 @@ struct nicmgr_req_desc {
     uint8_t cmd[64];
 };
 
+struct nicmgr_req_comp_desc {
+    uint8_t rsvd:7;
+    uint8_t color:1;
+};
+
+static_assert(sizeof(struct nicmgr_req_desc) == 128, "");
+static_assert(sizeof(struct nicmgr_req_comp_desc) == 1, "");
+
 struct nicmgr_resp_desc {
     uint16_t lif;
     uint8_t qtype;
@@ -117,8 +125,13 @@ struct nicmgr_resp_desc {
     uint8_t comp[64];
 };
 
-static_assert(sizeof(struct nicmgr_req_desc) == 128, "");
+struct nicmgr_resp_comp_desc {
+    uint8_t rsvd:7;
+    uint8_t color:1;
+};
+
 static_assert(sizeof(struct nicmgr_resp_desc) == 128, "");
+static_assert(sizeof(struct nicmgr_resp_comp_desc) == 1, "");
 
 #pragma pack(pop)
 

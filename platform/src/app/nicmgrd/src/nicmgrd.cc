@@ -31,7 +31,7 @@ bool g_hal_up = false;
 extern void nicmgr_do_client_registration(void);
 
 static void
-sigusr1_handler(int sig)
+log_flush(void *arg)
 {
     fflush(stdout);
     fflush(stderr);
@@ -76,6 +76,8 @@ atexit_handler (void)
 static void
 loop(void)
 {
+    evutil_check log_check;
+
     if (platform_is_hw(platform)) {
         pciemgr = new class pciemgr("nicmgrd");
         pciemgr->initialize();
@@ -88,7 +90,10 @@ loop(void)
         pciemgr->finalize();
     }
 
+    evutil_add_check(&log_check, &log_flush, NULL);
+
     evutil_run();
+
     /* NOTREACHED */
     if (pciemgr) {
         delete pciemgr;
@@ -98,8 +103,7 @@ loop(void)
 int main(int argc, char *argv[])
 {
     int opt;
-    sighandler_t osigusr1;
-    
+
     while ((opt = getopt(argc, argv, "c:sp:")) != -1) {
         switch (opt) {
         case 'c':
@@ -128,30 +132,29 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (config_file.empty()) {
-        cerr << "Please specify a config file" << endl;
-        exit(1);
-    }
-    cout << "Using config file: " << config_file << endl;
-    osigusr1 = signal(SIGUSR1, sigusr1_handler);
+    // instantiate the logger
+    utils::logger::init();
+
+    // initialize sdk logger
+    sdk_init();
+
     // install atexit() handler
     atexit(atexit_handler);
 
-    // instantiate the logger
-    utils::logger::init();
-    
-    // initialize sdk logger
-    sdk_init();
-    
+    if (config_file.empty()) {
+        NIC_LOG_ERR("No config file");
+        exit(1);
+    }
+    NIC_LOG_INFO("Using config file {}", config_file);
+
     // initialize capri_state_pd
     sdk::platform::capri::capri_state_pd_init(NULL);
 
     if (platform_is_hw(platform)) {
         nicmgr::delphi_init();
     }
-    loop();
 
-    signal(SIGUSR1, osigusr1);
+    loop();
 
     return (0);
 }

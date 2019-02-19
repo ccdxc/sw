@@ -1,7 +1,7 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
-#ifndef __ETH_LIF_HPP__
-#define __ETH_LIF_HPP__
+#ifndef __LIF_HPP__
+#define __LIF_HPP__
 
 #include "hal_types.hpp"
 
@@ -119,4 +119,4 @@ private:
     static constexpr uint32_t max_lifs = 1024;
 };
 
-#endif // __ETH_LIF_HPP__
+#endif // __LIF_HPP__

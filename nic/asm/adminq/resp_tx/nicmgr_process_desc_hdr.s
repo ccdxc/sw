@@ -21,8 +21,6 @@ nicmgr_process_desc_hdr:
   bcf             [c2 | c3 | c7], nicmgr_process_desc_hdr_error
   nop
 
-  phvwrpair       p.p4_intr_global_tm_iport, TM_PORT_DMA, p.p4_intr_global_tm_oport, TM_PORT_EGRESS
-
   // Setup DMA CMD PTR
   phvwr           p.p4_txdma_intr_dma_cmd_ptr, NICMGR_DMA_CMD_START_OFFSET
   phvwr           p.nicmgr_global_dma_cur_index, (NICMGR_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | NICMGR_DMA_CMD_START_INDEX

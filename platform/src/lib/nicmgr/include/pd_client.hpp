@@ -37,6 +37,7 @@
 // Memory bar should be multiple of 8 MB
 #define MEM_BARMAP_SIZE_SHIFT               (23)
 
+
 class PdClient {
 public:
     static PdClient* factory(platform_t platform);

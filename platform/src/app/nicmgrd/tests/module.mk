@@ -4,7 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_ARCH     := x86_64
 MODULE_TARGET   := nicmgr.gtest
 MODULE_PIPELINE := iris
-MODULE_SOLIBS   := nicmgr nicmgr_sysmgr nicmgr_upgrade hal_api mnet \
+MODULE_SOLIBS   := nicmgr hal_api mnet \
                    pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
                    intrutils pal misc evutils \
                    ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \

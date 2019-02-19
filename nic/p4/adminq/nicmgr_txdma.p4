@@ -75,6 +75,9 @@ metadata nicmgr_to_s3_k nicmgr_to_s3_scratch;
 @pragma dont_trim
 metadata adminq_comp_desc adminq_comp_desc;
 
+@pragma dont_trim
+metadata nicmgr_resp_comp_desc nicmgr_resp_comp_desc;
+
 // DMA headers
 @pragma pa_align 512
 @pragma dont_trim

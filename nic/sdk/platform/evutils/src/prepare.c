@@ -33,7 +33,7 @@ evutil_add_prepare(evutil_prepare *evu_prepare,
 }
 
 void
-evutils_remove_prepare(evutil_prepare *evu_prepare)
+evutil_remove_prepare(evutil_prepare *evu_prepare)
 {
 #ifdef LIBEV
     ev_prepare_stop(EV_DEFAULT_ &evu_prepare->ev_prepare);

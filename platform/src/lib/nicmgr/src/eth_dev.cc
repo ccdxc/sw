@@ -55,7 +55,6 @@ extern class pciemgr *pciemgr;
 Eth::Eth(HalClient *hal_client,
          HalCommonClient *hal_common_client,
          void *dev_spec,
-         hal_lif_info_t *nicmgr_lif_info,
          PdClient *pd_client)
 {
     Eth::hal = hal_client;
@@ -115,7 +114,7 @@ Eth::Eth(HalClient *hal_client,
         // bar address must be aligned to bar size
         assert ((cmb_mem_size % cmb_mem_size) == 0);
 
-        NIC_LOG_DEBUG("{}: cmb_mem_addr: {:#x}, cmb_mem_size: {}, ",
+        NIC_LOG_DEBUG("{}: cmb_mem_addr {:#x}, cmb_mem_size: {}",
                       spec->name, cmb_mem_addr, cmb_mem_size);
     } else {
         cmb_mem_addr = 0;
@@ -143,7 +142,7 @@ Eth::Eth(HalClient *hal_client,
         lif_res->cmb_mem_size = cmb_mem_size;
 
         EthLif *eth_lif = new EthLif(hal_client, hal_common_client,
-            dev_spec, nicmgr_lif_info, pd_client, lif_res);
+            dev_spec, pd_client, lif_res);
         lif_map[lif_id] = eth_lif;
     }
 
@@ -176,6 +175,10 @@ bool
 Eth::CreateLocalDevice()
 {
     NIC_LOG_DEBUG("{}: Creating MNIC device", spec->name);
+
+#ifndef __aarch64__
+    return true;
+#endif
 
     struct mnet_dev_create_req_t *mnet_req = NULL;
 
@@ -777,38 +780,6 @@ Eth::LinkEventHandler(port_status_t *evd)
         EthLif *eth_lif = it->second;
         eth_lif->LinkEventHandler(evd);
     }
-}
-
-void
-Eth::DevObjSave()
-{
-#if 0
-    auto eth_dev_obj_ptr = make_shared<delphi::objects::EthDeviceInfo>();
-
-    uint64_t mac_addr;
-    uint16_t vlan;
-
-    eth_dev_obj_ptr->set_key(spec->dev_uuid);
-    eth_dev_obj_ptr->mutable_lif()->set_hw_lif_id(hal_lif_info_.hw_lif_id);
-    for (int i = 0; i < NUM_QUEUE_TYPES; i++) {
-        auto qstate_addr = eth_dev_obj_ptr->mutable_lif()->add_qstate_addr();
-        qstate_addr->set_qstate_addr(hal_lif_info_.qstate_addr[i]);
-    }
-    eth_dev_obj_ptr->set_rss_type(rss_type);
-    eth_dev_obj_ptr->set_rss_key((const char*) rss_key);
-    eth_dev_obj_ptr->set_rss_indir((const char*) rss_indir);
-    for (auto it = vlans.cbegin(); it != vlans.cend(); it++) {
-        vlan = it->second;
-        auto vlans = eth_dev_obj_ptr->add_vlans();
-        vlans->set_vlan(vlan);
-    }
-    for (auto it = mac_addrs.cbegin(); it != mac_addrs.cend(); it++) {
-        mac_addr = it->second;
-        auto mac_addresses = eth_dev_obj_ptr->add_mac_addrs();
-        mac_addresses->set_mac_addr(mac_addr);
-    }
-    g_nicmgr_svc->sdk()->SetObject(eth_dev_obj_ptr);
-#endif
 }
 
 int

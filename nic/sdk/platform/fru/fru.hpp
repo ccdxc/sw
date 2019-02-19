@@ -4,8 +4,7 @@
 #define __FRU_HPP__
 
 #include <iostream>
-#include "include/sdk/base.hpp"
-#include "platform/pal/include/pal.h"
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 

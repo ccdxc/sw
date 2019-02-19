@@ -1,11 +1,19 @@
+/*
+* Copyright (c) 2019, Pensando Systems Inc.
+*/
 
-#ifndef ____ETH_LIF_HPP__
-#define ____ETH_LIF_HPP__
+#ifndef __ETH_LIF_HPP__
+#define __ETH_LIF_HPP__
 
 #include "hal_client.hpp"
 #include "eth_if.h"
 
+
 namespace pt = boost::property_tree;
+
+
+class AdminQ;
+
 
 /**
  * ETH Qtype Enum
@@ -27,15 +35,27 @@ enum EthQtype {
 #define LG2_LIF_STATS_SIZE              10
 #define LIF_STATS_SIZE                  (1 << LG2_LIF_STATS_SIZE)
 
-#define ETH_NOTIFYQ_ID                  0
+#define ETH_NOTIFYQ_QTYPE               7
+#define ETH_NOTIFYQ_QID                 0
 #define LG2_ETH_NOTIFYQ_RING_SIZE       4
 #define ETH_NOTIFYQ_RING_SIZE           (1 << LG2_ETH_NOTIFYQ_RING_SIZE)
 
-#define ETH_EDMAQ_ID                    1
+#define ETH_EDMAQ_QTYPE                 7
+#define ETH_EDMAQ_QID                   1
 #define LG2_ETH_EDMAQ_RING_SIZE         4
 #define ETH_EDMAQ_RING_SIZE             (1 << LG2_ETH_EDMAQ_RING_SIZE)
 #define ETH_EDMAQ_COMP_POLL_US          (1000)
 #define ETH_EDMAQ_COMP_POLL_MAX         (10)
+
+#define ETH_ADMINQ_REQ_QTYPE            7
+#define ETH_ADMINQ_REQ_QID              2
+#define LG2_ETH_ADMINQ_REQ_RING_SIZE    4
+#define ETH_ADMINQ_REQ_RING_SIZE        (1 << LG2_ETH_ADMINQ_REQ_RING_SIZE)
+
+#define ETH_ADMINQ_RESP_QTYPE           7
+#define ETH_ADMINQ_RESP_QID             3
+#define LG2_ETH_ADMINQ_RESP_RING_SIZE   4
+#define ETH_ADMINQ_RESP_RING_SIZE       (1 << LG2_ETH_ADMINQ_RESP_RING_SIZE)
 
 /**
  * LIF Resource structure
@@ -64,11 +84,10 @@ enum lif_state {
 class EthLif {
 public:
     EthLif(HalClient *hal_client,
-        HalCommonClient *hal_common_client,
-        void *dev_spec,
-        hal_lif_info_t *nicmgr_lif_info,
-        PdClient *pd_client,
-        eth_lif_res_t *res);
+           HalCommonClient *hal_common_client,
+           void *dev_spec,
+           PdClient *pd_client,
+           eth_lif_res_t *res);
 
     enum status_code Init(void *req, void *req_data, void *resp, void *resp_data);
     enum status_code Reset(void *req, void *req_data, void *resp, void *resp_data);
@@ -80,7 +99,6 @@ public:
     void LinkEventHandler(port_status_t *evd);
     void HalEventHandler(bool status);
 
-    hal_lif_info_t *GetHalLifInfo(void) { return &hal_lif_info_; }
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
 
     int GenerateQstateInfoJson(pt::ptree &lifs);
@@ -96,7 +114,6 @@ private:
     HalClient *hal;
     HalCommonClient *hal_common_client;
     hal_lif_info_t hal_lif_info_;
-    const hal_lif_info_t *nicmgr_lif_info;
     bool hal_status;
     // LIF Info
     Lif *lif;
@@ -134,7 +151,14 @@ private:
     evutil_check stats_check;
 
     /* AdminQ Commands */
-    static void AdminQPoll(void *obj);
+    AdminQ *adminq;
+    evutil_timer adminq_timer;
+    evutil_check adminq_check;
+    evutil_prepare adminq_prepare;
+
+    static void AdminCmdHandler(void *obj,
+        void *req, void *req_data, void *resp, void *resp_data);
+
     enum status_code _CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data);
     enum status_code _CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
     enum status_code _CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data);
@@ -172,4 +196,4 @@ private:
     types::LifType ConvertDevTypeToLifType(EthDevType dev_type);
 };
 
-#endif   /* ____ETH_LIF_HPP__*/
+#endif   /* __ETH_LIF_HPP__*/

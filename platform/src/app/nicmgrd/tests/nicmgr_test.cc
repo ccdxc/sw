@@ -106,7 +106,7 @@ nicmgr_init()
     // DeviceManager *devmgr;
     if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
         devmgr =
-            new DeviceManager("../platform/src/app/nicmgrd/etc/device.json",
+            new DeviceManager("../platform/src/app/nicmgrd/etc/eth.json",
                               g_fwd_mode, PLATFORM_HW);
     } else {
         devmgr =
@@ -117,7 +117,7 @@ nicmgr_init()
 
     // load config
     if (g_fwd_mode == FWD_MODE_CLASSIC_NIC) {
-        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/device.json");
+        devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth.json");
     } else {
         devmgr->LoadConfig("../platform/src/app/nicmgrd/etc/eth-smart.json");
     }
@@ -185,8 +185,8 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
 TEST_F(nicmgr_test, test1)
 {
     // Get eth device
-    // 66: OOB Lif
-    Eth *eth_dev = (Eth *)devmgr->GetDevice(66); // for hw_lif_id of 1
+    Eth *eth_dev = (Eth *)devmgr->GetDevice("eth0");
+    assert(eth_dev != NULL);
 
     union dev_cmd d_cmd;
     union dev_cmd_comp d_comp;
@@ -300,11 +300,8 @@ TEST_F(nicmgr_test, test1)
 TEST_F(nicmgr_test, test2)
 {
     // Get eth device
-    // 68: Host Lif
-    Eth *eth_dev = (Eth *)devmgr->GetDevice(68); // for hw_lif_id of 1
-
-    hal_lif_info_t *lif_info = eth_dev->GetHalLifInfo();
-    lif_info->enable_rdma = false;
+    Eth *eth_dev = (Eth *)devmgr->GetDevice("oob_mnic0");
+    assert(eth_dev != NULL);
 
     union dev_cmd d_cmd;
     union dev_cmd_comp d_comp;

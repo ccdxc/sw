@@ -35,6 +35,9 @@ struct tx_table_s2_t0_nicmgr_post_adminq_d d;
 .align
 nicmgr_post_adminq:
 
+  bcf             [c2 | c3 | c7], nicmgr_post_adminq_error
+  nop
+
   seq             c1, d.enable, 0
   bcf             [c1], nicmgr_post_adminq_queue_disabled
   nop
@@ -42,11 +45,12 @@ nicmgr_post_adminq:
   // Load DMA command pointer
   add             _r_index, r0, k.nicmgr_global_dma_cur_index
 
+nicmgr_post_adminq_completion:
   // Compute completion descriptor address
-  add             _r_cq_desc_addr, d.{cq_ring_base}.dx, k.{nicmgr_t0_s2s_comp_index}, LG2_ADMINQ_COMP_DESC_SIZE
+  add             _r_cq_desc_addr, d.{cq_ring_base}.dx, d.{comp_index}.hx, LG2_ADMINQ_COMP_DESC_SIZE
 
   // Update completion descriptor
-  phvwr           p.adminq_comp_desc_comp_index, k.{nicmgr_t0_s2s_comp_index}.hx
+  phvwr           p.adminq_comp_desc_comp_index, d.comp_index
   phvwr           p.adminq_comp_desc_color, d.color
 
   // Claim completion entry
@@ -56,7 +60,6 @@ nicmgr_post_adminq:
   seq             c1, d.comp_index, 0
   tblmincri.c1    d.color, 1, 1
 
-nicmgr_post_adminq_completion:
   // Do we need to generate an interrupt?
   sne             c2, r0, d.intr_enable
 
@@ -69,7 +72,7 @@ nicmgr_post_adminq_completion:
   nop
 
 nicmgr_post_adminq_interrupt:
-
+  // Compute interrupt address
   addi            _r_intr_addr, r0, INTR_ASSERT_BASE
   add             _r_intr_addr, _r_intr_addr, d.{intr_assert_index}.hx, LG2_INTR_ASSERT_STRIDE
 
@@ -89,6 +92,7 @@ nicmgr_post_adminq_done:
   phvwrpair.e     p.common_te0_phv_table_raw_table_size, LG2_NICMGR_QSTATE_SIZE, p.common_te0_phv_table_addr[33:0], k.nicmgr_t0_s2s_nicmgr_qstate_addr
   phvwri.f        p.common_te0_phv_table_pc, nicmgr_commit[38:6]
 
+nicmgr_post_adminq_error:
 nicmgr_post_adminq_queue_disabled:
   phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0
   phvwri.f        p.p4_intr_global_drop, 1

@@ -36,6 +36,17 @@ enum {
 };
 
 /*
+ * Queue info
+ */
+#define ACCEL_ADMINQ_REQ_QTYPE            2
+#define ACCEL_ADMINQ_REQ_QID              1
+#define ACCEL_ADMINQ_REQ_RING_SIZE        16
+
+#define ACCEL_ADMINQ_RESP_QTYPE           2
+#define ACCEL_ADMINQ_RESP_QID             2
+#define ACCEL_ADMINQ_RESP_RING_SIZE       16
+
+/*
  * Physical host address bit manipulation
  */
 #define ACCEL_PHYS_ADDR_HOST_POS        63
@@ -265,26 +276,27 @@ enum DevcmdStatus
  */
 class Accel_PF : public Device {
 public:
-    Accel_PF(HalClient *hal_client, void *dev_spec,
-             const hal_lif_info_t *nicmgr_lif_info,
+    Accel_PF(HalClient *hal_client,
+             HalCommonClient *hal_cmn_client,
+             void *dev_spec,
              PdClient *pd_client);
+
+    std::string GetName() { return spec->name; }
 
     void DevcmdHandler();
     enum DevcmdStatus CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
-    enum DevcmdStatus AdminCmdHandler(uint64_t lif_id,
-                                      void *req, void *req_data,
-                                      void *resp, void *resp_data);
-
     void HalEventHandler(bool status);
+
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
-    hal_lif_info_t *GetHalLifInfo(void) { return &hal_lif_info_; }
+
     virtual void ThreadsWaitJoin(void);
-    uint32_t GetHalLifCount() { return spec->lif_count; }
 
     dev_cmd_regs_t              *devcmd;
 
     friend void *seq_queue_info_publish_thread(void *ctx);
+
+    hal_lif_info_t              hal_lif_info_;
 
 private:
     // Device Spec
@@ -300,8 +312,6 @@ private:
     // HAL Info
     HalClient                   *hal;
     HalCommonClient             *hal_common_client;
-    hal_lif_info_t              hal_lif_info_;
-    const hal_lif_info_t        *nicmgr_lif_info;
     uint8_t cosA, cosB;
     // PCIe info
     pciehdev_t                  *pdev;
@@ -331,7 +341,7 @@ private:
 
     bool CreateHostDevice();
 
-    /* Methods */
+    /* Device Commands */
     static void DevcmdPoll(void *obj);
     enum DevcmdStatus _DevcmdReset(void *req, void *req_data,
                                    void *resp, void *resp_data);
@@ -341,6 +351,15 @@ private:
                                      void *resp, void *resp_data);
     enum DevcmdStatus _DevcmdAdminQueueInit(void *req, void *req_data,
                                             void *resp, void *resp_data);
+
+    /* AdminQ Commands */
+    AdminQ *adminq;
+    evutil_timer adminq_timer;
+    evutil_check adminq_check;
+    evutil_prepare adminq_prepare;
+
+    static void AdminCmdHandler(void *obj,
+        void *req, void *req_data, void *resp, void *resp_data);
     enum DevcmdStatus _DevcmdSeqQueueInit(void *req, void *req_data,
                                           void *resp, void *resp_data);
     enum DevcmdStatus _DevcmdSeqQueueInitComplete(void *req, void *req_data,

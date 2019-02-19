@@ -65,7 +65,7 @@ prd_read_counters(int verbose)
     pal_reg_rd32w(CAP_ADDR_BASE_PR_PR_OFFSET + CAP_PR_CSR_PRD_BYTE_ADDRESS +
                       CAP_PRD_CSR_CNT_PHV_BYTE_OFFSET,
                   cnt, 4);
-    uint32_t phv_drop = CAP_PRD_CSR_CNT_PHV_CNT_PHV_1_4_DROP_GET(cnt[0]);
+    uint32_t phv_drop = CAP_PRD_CSR_CNT_PHV_CNT_PHV_1_4_DROP_GET(cnt[1]);
     uint32_t phv_err = CAP_PRD_CSR_CNT_PHV_CNT_PHV_2_4_ERR_GET(cnt[2]);
     uint32_t phv_recirc = CAP_PRD_CSR_CNT_PHV_CNT_PHV_3_4_RECIRC_GET(cnt[3]);
 

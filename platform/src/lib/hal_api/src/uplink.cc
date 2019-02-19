@@ -98,6 +98,9 @@ Uplink::CreateVrfs()
 {
     hal_irisc_ret_t     ret = HAL_IRISC_RET_SUCCESS;
     Uplink              *uplink = NULL;
+
+    NIC_LOG_DEBUG("Creating VRFs for uplinks");
+
     for (auto it = uplink_db.cbegin(); it != uplink_db.cend(); it++) {
         uplink = (Uplink *)(it->second);
         ret = uplink->CreateVrf();

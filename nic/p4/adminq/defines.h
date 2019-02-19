@@ -67,6 +67,7 @@
     modify_field(adminq_t0_s2s_scratch.lif, adminq_t0_s2s.lif); \
     modify_field(adminq_t0_s2s_scratch.qtype, adminq_t0_s2s.qtype); \
     modify_field(adminq_t0_s2s_scratch.qid, adminq_t0_s2s.qid); \
+    modify_field(adminq_t0_s2s_scratch.comp_index, adminq_t0_s2s.comp_index); \
     modify_field(adminq_t0_s2s_scratch.adminq_qstate_addr, adminq_t0_s2s.adminq_qstate_addr); \
     modify_field(adminq_t0_s2s_scratch.nicmgr_qstate_addr, adminq_t0_s2s.nicmgr_qstate_addr); \
     modify_field(adminq_t0_s2s_scratch.host_queue, adminq_t0_s2s.host_queue);
@@ -79,6 +80,7 @@
 
 #define MODIFY_ADMINQ_TO_S3     \
     modify_field(adminq_to_s3_scratch.adminq_ci, adminq_to_s3.adminq_ci);
+
 
 /*
  * NICMGR

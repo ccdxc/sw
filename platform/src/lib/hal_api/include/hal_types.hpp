@@ -63,43 +63,6 @@ typedef struct hal_lif_info_s {
     uint64_t qstate_addr[NUM_QUEUE_TYPES];
 } hal_lif_info_t;
 
-enum HalEthQtype {
-    HAL_ETH_QTYPE_RX = 0,
-    HAL_ETH_QTYPE_TX = 1,
-    HAL_ETH_QTYPE_ADMIN = 2,
-    HAL_ETH_QTYPE_SQ = 3,
-    HAL_ETH_QTYPE_RQ = 4,
-    HAL_ETH_QTYPE_CQ = 5,
-    HAL_ETH_QTYPE_EQ = 6,
-};
-
-struct eth_spec {
-    uint8_t uplink;
-    // Resources
-    uint32_t rxq_count;
-    uint32_t txq_count;
-    uint32_t adminq_count;
-    uint32_t rdma_sq_size;
-    uint32_t rdma_sq_count;
-    uint32_t rdma_rq_size;
-    uint32_t rdma_rq_count;
-    uint32_t rdma_cq_size;
-    uint32_t rdma_cq_count;
-    uint32_t rdma_eq_size;
-    uint32_t rdma_eq_count;
-    uint32_t intr_count;
-    uint32_t eq_count;
-    uint32_t rdma_pid_count;
-    // Features
-    // TODO: Implement feature flags
-    bool enable_rdma;
-    // TODO: Implement feature spec
-    uint32_t max_pt_entries;
-    uint32_t max_keys;
-    //in 8MB units
-    uint32_t barmap_size;
-};
-
 typedef enum {
     HAL_IRISC_RET_SUCCESS,
     HAL_IRISC_RET_LIMIT_REACHED,

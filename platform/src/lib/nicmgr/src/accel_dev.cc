@@ -35,6 +35,8 @@
 #include "accel_dev.hpp"
 #include "pd_client.hpp"
 #include "hal_client.hpp"
+#include "adminq.hpp"
+
 
 #define GBPS_TO_BYTES_PER_SEC(gbps)             \
     (((uint64_t)(gbps) * 1000000000ULL) / 8ULL)
@@ -148,7 +150,7 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
     do {                                                                        \
         if (_handle >= ACCEL_RING_ID_MAX) {                                     \
             NIC_LOG_ERR("lif-{}: unrecognized ring_handle {}",                   \
-                        accel_pf->GetHalLifInfo()->hw_lif_id, _handle);         \
+                        accel_pf->hal_lif_info_.hw_lif_id, _handle);            \
         }                                                                       \
     } while (false)
 
@@ -168,15 +170,16 @@ static accel_rgroup_map_t   accel_pf_rgroup_map;
     } while (false)
 
 
-Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
-                   const hal_lif_info_t *nicmgr_lif_info,
+Accel_PF::Accel_PF(HalClient *hal_client,
+                   HalCommonClient *hal_cmn_client,
+                   void *dev_spec,
                    PdClient *pd_client) :
-    nicmgr_lif_info(nicmgr_lif_info),
     seq_qid_init_high(0)
 {
     uint32_t    num_keys_max;
 
     hal = hal_client;
+    hal_cmn_client = hal_cmn_client;
     spec = (accel_devspec_t *)dev_spec;
     pd = pd_client;
 
@@ -296,7 +299,7 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
     qinfo[STORAGE_SEQ_QTYPE_ADMIN] = {
         .type_num = STORAGE_SEQ_QTYPE_ADMIN,
         .size = HW_CB_MULTIPLE(ADMIN_QSTATE_SIZE_SHFT),
-        .entries = 0,
+        .entries = 2,
     };
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
@@ -316,6 +319,14 @@ Accel_PF::Accel_PF(HalClient *hal_client, void *dev_spec,
                   spec->tx_limit_gbps, spec->tx_burst_gb);
 
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
+
+    adminq = new AdminQ(hal_lif_info_.name,
+        pd,
+        hal_lif_info_.hw_lif_id,
+        ACCEL_ADMINQ_REQ_QTYPE, ACCEL_ADMINQ_REQ_QID, ACCEL_ADMINQ_REQ_RING_SIZE,
+        ACCEL_ADMINQ_RESP_QTYPE, ACCEL_ADMINQ_RESP_QID, ACCEL_ADMINQ_RESP_RING_SIZE,
+        AdminCmdHandler, this
+    );
 
     evutil_timer_start(&devcmd_timer, &Accel_PF::DevcmdPoll, this, 0.0, 0.01);
 }
@@ -479,6 +490,7 @@ devcmd_done:
               sizeof(devcmd->cpl), 0);
 
     // write done
+    PAL_barrier();
     WRITE_MEM(devcmd_mem_addr + offsetof(dev_cmd_regs_t, done),
               (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, done),
               sizeof(devcmd->done), 0);
@@ -511,12 +523,12 @@ Accel_PF::opcode_to_str(enum cmd_opcode opcode)
     }
 }
 
-enum DevcmdStatus
-Accel_PF::AdminCmdHandler(uint64_t lif_id,
-    void *req, void *req_data,
-    void *resp, void *resp_data)
+void
+Accel_PF::AdminCmdHandler(void *obj,
+    void *req, void *req_data, void *resp, void *resp_data)
 {
-    return CmdHandler(req, req_data, resp, resp_data);
+    Accel_PF *dev = (Accel_PF *)obj;
+    dev->CmdHandler(req, req_data, resp, resp_data);
 }
 
 enum DevcmdStatus
@@ -689,7 +701,8 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
                   (uint8_t *)&abort, sizeof(abort), 0);
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
                   (uint8_t *)&enable, sizeof(enable), 0);
-        invalidate_txdma_cacheline(qstate_addr);
+        p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t),
+            P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
     // Disable all adminq
@@ -702,7 +715,8 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
         }
         MEM_SET(qstate_addr + offsetof(admin_qstate_t, p_index0), 0,
                 sizeof(admin_qstate_t) - offsetof(admin_qstate_t, p_index0), 0);
-        invalidate_txdma_cacheline(qstate_addr);
+        p4plus_invalidate_cache(qstate_addr, sizeof(admin_qstate_t),
+            P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
     // Wait for P4+ to quiesce all sequencer queues
@@ -778,7 +792,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     adminq_init_cmd_t           *cmd = (adminq_init_cmd_t *)req;
     adminq_init_cpl_t           *cpl = (adminq_init_cpl_t *)resp;
     admin_qstate_t              qstate;
-    int64_t                     addr;
+    int64_t                     addr, nicmgr_qstate_addr;
 
     NIC_LOG_DEBUG("lif-{}: CMD_OPCODE_ADMINQ_INIT: "
                  "queue_index {} ring_base {:#x} ring_size {} intr_index {}",
@@ -811,6 +825,14 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
         return (DEVCMD_ERROR);
     }
 
+    nicmgr_qstate_addr = pd->lm_->GetLIFQStateAddr(hal_lif_info_.hw_lif_id,
+        ACCEL_ADMINQ_REQ_QTYPE, ACCEL_ADMINQ_REQ_QID);
+    if (nicmgr_qstate_addr < 0) {
+        NIC_LOG_ERR("{}: Failed to get request qstate address for ADMIN qid {}",
+            hal_lif_info_.name, cmd->index);
+        return (DEVCMD_ERROR);
+    }
+
     uint8_t off;
     if (pd->lm_->GetPCOffset("p4plus", "txdma_stage0.bin", "adminq_stage0", &off) < 0) {
         NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
@@ -838,14 +860,11 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
     qstate.ring_size = cmd->ring_size;
     qstate.cq_ring_base = roundup(qstate.ring_base + (64 << cmd->ring_size), 4096);
     qstate.intr_assert_index = intr_base + cmd->intr_index;
-    if (nicmgr_lif_info) {
-        qstate.nicmgr_qstate_addr = nicmgr_lif_info->qstate_addr[NICMGR_QTYPE_REQ];
-        NIC_LOG_DEBUG("lif-{}: nicmgr_qstate_addr {:#x}", hal_lif_info_.hw_lif_id,
-            qstate.nicmgr_qstate_addr);
-    }
+    qstate.nicmgr_qstate_addr = nicmgr_qstate_addr;
+
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
-    invalidate_txdma_cacheline(addr);
+    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     cpl->qid = cmd->index;
     cpl->qtype = STORAGE_SEQ_QTYPE_ADMIN;
@@ -955,7 +974,7 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     qstate.core_id = cmd->core_id;
 
     WRITE_MEM(qstate_addr, (uint8_t *)&qstate, sizeof(qstate), 0);
-    invalidate_txdma_cacheline(qstate_addr);
+    p4plus_invalidate_cache(qstate_addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     return (DEVCMD_SUCCESS);
 }
@@ -1077,7 +1096,7 @@ Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
         }
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
                   (uint8_t *)&value, sizeof(value), 0);
-        invalidate_txdma_cacheline(qstate_addr);
+        p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     case STORAGE_SEQ_QTYPE_ADMIN:
         if (cmd->qid >= spec->adminq_count) {
@@ -1096,7 +1115,7 @@ Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
         admin_cfg.host_queue = 0x1;
         WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg,
                   sizeof(admin_cfg), 0);
-        invalidate_txdma_cacheline(qstate_addr);
+        p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     default:
         return (DEVCMD_ERROR);
@@ -1819,6 +1838,17 @@ Accel_PF::HalEventHandler(bool status)
             float intv = 1.0 / (float)spec->pub_intv_frac;
             sync_timer.start(0.0, intv);
         }
+
+        // Initialize AdminQ service
+        if (!adminq->Init(cosA, cosB)) {
+            NIC_LOG_ERR("lif-{}: Failed to initialize AdminQ service",
+                hal_lif_info_.hw_lif_id);
+            return;
+        }
+
+        evutil_timer_start(&adminq_timer, AdminQ::Poll, adminq, 0, 0.001);
+        evutil_add_check(&adminq_check, AdminQ::Poll, adminq);
+        evutil_add_prepare(&adminq_prepare, AdminQ::Poll, adminq);
     }
 }
 

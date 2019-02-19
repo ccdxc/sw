@@ -1854,7 +1854,7 @@ ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 //		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.txq_init = {
 			.opcode = CMD_OPCODE_TXQ_INIT,
-			.I = VMK_FALSE,
+			.I = VMK_TRUE,
 			.E = VMK_FALSE,
 			.pid = q->pid,
 			.intr_index = cq->bound_intr->index,
@@ -1959,7 +1959,7 @@ ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 //		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rxq_init = {
 			.opcode = CMD_OPCODE_RXQ_INIT,
-			.I = VMK_FALSE,
+			.I = VMK_TRUE,
 			.E = VMK_FALSE,
 			.pid = q->pid,
 			.intr_index = cq->bound_intr->index,

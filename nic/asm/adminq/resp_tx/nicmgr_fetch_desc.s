@@ -38,6 +38,7 @@ nicmgr_fetch_desc:
   phvwri          p.common_te0_phv_table_lock_en, 1
   phvwrpair       p.common_te0_phv_table_raw_table_size, LG2_NICMGR_RESP_DESC_HDR_SIZE, p.common_te0_phv_table_addr, _r_desc_addr
   phvwri          p.common_te0_phv_table_pc, nicmgr_process_desc_hdr[38:6]
+
   add             _r_desc_addr, _r_desc_addr, 1, LG2_NICMGR_RESP_DESC_HDR_SIZE
   phvwri          p.common_te1_phv_table_lock_en, 1
   phvwrpair       p.common_te1_phv_table_raw_table_size, LG2_NICMGR_RESP_DESC_DATA_SIZE, p.common_te1_phv_table_addr, _r_desc_addr
@@ -49,6 +50,7 @@ nicmgr_fetch_desc:
 nicmgr_spurious_db:
   CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.p4_txdma_intr_qtype, k.p4_intr_global_lif)   // R4 = ADDR
   CAPRI_RING_DOORBELL_DATA(0, k.p4_txdma_intr_qid, 0, 0)   // R3 = DATA
+  memwr.dx        _r_db_addr, _r_db_data
   phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0
   phvwri.f        p.p4_intr_global_drop, 1
 

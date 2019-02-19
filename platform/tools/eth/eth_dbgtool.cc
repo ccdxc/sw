@@ -101,7 +101,8 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
     struct admin_qstate qstate_ethaq = {0};
     struct notify_qstate qstate_notifyq = {0};
     struct edma_qstate qstate_edmaq = {0};
-
+    nicmgr_req_qstate_t qstate_req = {0};
+    nicmgr_resp_qstate_t qstate_resp = {0};
     queue_info_t qinfo[8] = {0};
 
     if (!get_lif_qstate(lif, qinfo)) {
@@ -122,7 +123,7 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
             sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
             posted = NUM_POSTED(1 << qstate_ethrx.ring_size, qstate_ethrx.p_index0,
                                 qstate_ethrx.c_index0);
-            printf("rx%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
+            printf(" rx%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
                    qstate_ethrx.p_index0, qstate_ethrx.c_index0, posted, qstate_ethrx.comp_index,
                    qstate_ethrx.sta.color);
             break;
@@ -130,7 +131,7 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
             sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
             posted = NUM_POSTED(1 << qstate_ethtx.ring_size, qstate_ethtx.p_index0,
                                 qstate_ethtx.c_index0);
-            printf("tx%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
+            printf(" tx%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
                    qstate_ethtx.p_index0, qstate_ethtx.c_index0, posted, qstate_ethtx.comp_index,
                    qstate_ethtx.sta.color);
             break;
@@ -138,7 +139,7 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
             sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_ethaq, sizeof(qstate_ethaq));
             posted = NUM_POSTED(1 << qstate_ethaq.ring_size, qstate_ethaq.p_index0,
                                 qstate_ethaq.c_index0);
-            printf("aq%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
+            printf(" aq%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
                    qstate_ethaq.p_index0, qstate_ethaq.c_index0, posted, qstate_ethaq.comp_index,
                    qstate_ethaq.sta.color);
             break;
@@ -147,17 +148,33 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_notifyq, sizeof(qstate_notifyq));
                 posted = NUM_POSTED(1 << qstate_notifyq.ring_size, qstate_notifyq.p_index0,
                                     qstate_notifyq.c_index0);
-                printf("nq%3d: head %6u tail %6u posted %6d host_pindex %6u\n", qid,
-                       qstate_notifyq.p_index0, qstate_notifyq.c_index0, posted,
-                       qstate_notifyq.host_pindex);
+                printf(" nq%3d: head %6u tail %6u posted %6d host_pindex %6u\n", qid,
+                        qstate_notifyq.p_index0, qstate_notifyq.c_index0, posted,
+                        qstate_notifyq.host_pindex);
             }
             if (qid == 1) {
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_edmaq, sizeof(qstate_edmaq));
                 posted = NUM_POSTED(1 << qstate_edmaq.ring_size, qstate_edmaq.p_index0,
                                     qstate_edmaq.c_index0);
-                printf("nq%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
-                       qstate_edmaq.p_index0, qstate_edmaq.c_index0, posted,
-                       qstate_edmaq.comp_index, qstate_edmaq.sta.color);
+                printf(" dq%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
+                        qstate_edmaq.p_index0, qstate_edmaq.c_index0, posted,
+                        qstate_edmaq.comp_index, qstate_edmaq.sta.color);
+            }
+            if (qid == 2) {
+                sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_req, sizeof(qstate_req));
+                posted =
+                    NUM_POSTED(1 << qstate_req.ring_size, qstate_req.p_index0, qstate_req.c_index0);
+                printf("req%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
+                    qstate_req.p_index0, qstate_req.c_index0, posted, qstate_req.comp_index,
+                    qstate_req.sta.color);
+            }
+            if (qid == 3) {
+                sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_resp, sizeof(qstate_resp));
+                posted =
+                    NUM_POSTED(1 << qstate_resp.ring_size, qstate_resp.p_index0, qstate_resp.c_index0);
+                printf("rsp%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
+                    qstate_resp.p_index0, qstate_resp.c_index0, posted, qstate_resp.comp_index,
+                    qstate_resp.sta.color);
             }
             break;
         default:
@@ -174,6 +191,8 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
     struct admin_qstate qstate_ethaq = {0};
     struct notify_qstate qstate_notifyq = {0};
     struct edma_qstate qstate_edmaq = {0};
+    nicmgr_req_qstate_t qstate_req = {0};
+    nicmgr_resp_qstate_t qstate_resp = {0};
     queue_info_t qinfo[8] = {0};
 
     if (!get_lif_qstate(lif, qinfo)) {
@@ -306,6 +325,48 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                    qstate_edmaq.ring_size, qstate_edmaq.cq_ring_base,
                    qstate_edmaq.intr_assert_index);
         }
+        if (qid == 2) {
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_req, sizeof(qstate_req));
+            printf("pc_offset=0x%0x\n"
+                "rsvd0=0x%0x\n"
+                "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
+                "eval_last=0x%0x\n"
+                "host=0x%0x\ntotal=0x%0x\n"
+                "pid=0x%0x\n"
+                "p_index0=0x%0x\nc_index0=0x%0x\n"
+                "comp_index=0x%0x\nci_fetch=0x%0x\n"
+                "color=0x%0x\n"
+                "enable=0x%0x\nintr_enable=0x%0x\n"
+                "ring_base=0x%0lx\nring_size=0x%0x\n"
+                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
+                qstate_req.pc_offset, qstate_req.rsvd0, qstate_req.cosA, qstate_req.cosB,
+                qstate_req.cos_sel, qstate_req.eval_last, qstate_req.host, qstate_req.total,
+                qstate_req.pid, qstate_req.p_index0, qstate_req.c_index0, qstate_req.comp_index,
+                qstate_req.ci_fetch, qstate_req.sta.color, qstate_req.cfg.enable,
+                qstate_req.cfg.intr_enable, qstate_req.ring_base, qstate_req.ring_size,
+                qstate_req.cq_ring_base, qstate_req.intr_assert_index);
+        }
+        if (qid == 3) {
+            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_resp, sizeof(qstate_resp));
+            printf("pc_offset=0x%0x\n"
+                "rsvd0=0x%0x\n"
+                "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
+                "eval_last=0x%0x\n"
+                "host=0x%0x\ntotal=0x%0x\n"
+                "pid=0x%0x\n"
+                "p_index0=0x%0x\nc_index0=0x%0x\n"
+                "comp_index=0x%0x\nci_fetch=0x%0x\n"
+                "color=0x%0x\n"
+                "enable=0x%0x\nintr_enable=0x%0x\n"
+                "ring_base=0x%0lx\nring_size=0x%0x\n"
+                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
+                qstate_resp.pc_offset, qstate_resp.rsvd0, qstate_resp.cosA, qstate_resp.cosB,
+                qstate_resp.cos_sel, qstate_resp.eval_last, qstate_resp.host, qstate_resp.total,
+                qstate_resp.pid, qstate_resp.p_index0, qstate_resp.c_index0, qstate_resp.comp_index,
+                qstate_resp.ci_fetch, qstate_resp.sta.color, qstate_resp.cfg.enable,
+                qstate_resp.cfg.intr_enable, qstate_resp.ring_base, qstate_resp.ring_size,
+                qstate_resp.cq_ring_base, qstate_resp.intr_assert_index);
+        }
         break;
     default:
         printf("Invalid qtype %u for lif %u\n", qtype, lif);
@@ -424,122 +485,6 @@ eth_stats(uint16_t lif)
 }
 
 void
-nicmgr_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
-{
-    nicmgr_req_qstate_t qstate_req = {0};
-    nicmgr_resp_qstate_t qstate_resp = {0};
-    queue_info_t qinfo[8] = {0};
-
-    if (!get_lif_qstate(lif, qinfo)) {
-        printf("Failed to get qinfo for lif %u\n", lif);
-        return;
-    }
-
-    if (qinfo[qtype].size == 0) {
-        printf("Invalid type %u for lif %u\n", qtype, lif);
-        return;
-    }
-
-    if (qid >= qinfo[qtype].length) {
-        printf("Invalid qid %u for lif %u qtype %u\n", qid, lif, qtype);
-        return;
-    }
-
-    uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
-    printf("addr: %lx\n\n", addr);
-
-    switch (qtype) {
-    case 0:
-        sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_req, sizeof(qstate_req));
-        printf("pc_offset=0x%0x\n"
-               "rsvd0=0x%0x\n"
-               "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
-               "eval_last=0x%0x\n"
-               "host=0x%0x\ntotal=0x%0x\n"
-               "pid=0x%0x\n"
-               "p_index0=0x%0x\nc_index0=0x%0x\n"
-               "comp_index=0x%0x\nci_fetch=0x%0x\n"
-               "color=0x%0x\n"
-               "enable=0x%0x\nintr_enable=0x%0x\n"
-               "ring_base=0x%0lx\nring_size=0x%0x\n"
-               "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
-               qstate_req.pc_offset, qstate_req.rsvd0, qstate_req.cosA, qstate_req.cosB,
-               qstate_req.cos_sel, qstate_req.eval_last, qstate_req.host, qstate_req.total,
-               qstate_req.pid, qstate_req.p_index0, qstate_req.c_index0, qstate_req.comp_index,
-               qstate_req.ci_fetch, qstate_req.sta.color, qstate_req.cfg.enable,
-               qstate_req.cfg.intr_enable, qstate_req.ring_base, qstate_req.ring_size,
-               qstate_req.cq_ring_base, qstate_req.intr_assert_index);
-        break;
-    case 1:
-        sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_resp, sizeof(qstate_resp));
-        printf("pc_offset=0x%0x\n"
-               "rsvd0=0x%0x\n"
-               "cosA=0x%0x\ncosB=0x%0x\ncos_sel=0x%0x\n"
-               "eval_last=0x%0x\n"
-               "host=0x%0x\ntotal=0x%0x\n"
-               "pid=0x%0x\n"
-               "p_index0=0x%0x\nc_index0=0x%0x\n"
-               "comp_index=0x%0x\nci_fetch=0x%0x\n"
-               "color=0x%0x\n"
-               "enable=0x%0x\nintr_enable=0x%0x\n"
-               "ring_base=0x%0lx\nring_size=0x%0x\n"
-               "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
-               qstate_resp.pc_offset, qstate_resp.rsvd0, qstate_resp.cosA, qstate_resp.cosB,
-               qstate_resp.cos_sel, qstate_resp.eval_last, qstate_resp.host, qstate_resp.total,
-               qstate_resp.pid, qstate_resp.p_index0, qstate_resp.c_index0, qstate_resp.comp_index,
-               qstate_resp.ci_fetch, qstate_resp.sta.color, qstate_resp.cfg.enable,
-               qstate_resp.cfg.intr_enable, qstate_resp.ring_base, qstate_resp.ring_size,
-               qstate_resp.cq_ring_base, qstate_resp.intr_assert_index);
-        break;
-    default:
-        printf("Invalid qtype %u for lif %u\n", qtype, lif);
-    }
-}
-
-void
-nicmgr_qpoll(uint16_t lif, uint8_t qtype)
-{
-    nicmgr_req_qstate_t qstate_req = {0};
-    nicmgr_resp_qstate_t qstate_resp = {0};
-    queue_info_t qinfo[8] = {0};
-
-    if (!get_lif_qstate(lif, qinfo)) {
-        printf("Failed to get qinfo for lif %u\n", lif);
-        return;
-    }
-
-    if (qinfo[qtype].size == 0) {
-        printf("Invalid type %u for lif %u\n", qtype, lif);
-        return;
-    }
-
-    for (uint32_t qid = 0; qid < qinfo[qtype].length; qid++) {
-        uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
-        uint32_t posted = 0;
-        switch (qtype) {
-        case 0:
-            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_req, sizeof(qstate_req));
-            posted =
-                NUM_POSTED(1 << qstate_req.ring_size, qstate_req.p_index0, qstate_req.c_index0);
-            printf("req%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
-                   qstate_req.p_index0, qstate_req.c_index0, posted, qstate_req.comp_index,
-                   qstate_req.sta.color);
-            break;
-        case 1:
-            sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_resp, sizeof(qstate_resp));
-            posted =
-                NUM_POSTED(1 << qstate_resp.ring_size, qstate_resp.p_index0, qstate_resp.c_index0);
-            printf("resp%3d: head %6u tail %6u posted %6d comp_index %6u color %d\n", qid,
-                   qstate_resp.p_index0, qstate_resp.c_index0, posted, qstate_resp.comp_index,
-                   qstate_resp.sta.color);
-            break;
-        default:
-            printf("Invalid qtype %u for lif %u\n", qtype, lif);
-        }
-    }
-}
-
-void
 usage()
 {
     printf("Usage:\n");
@@ -547,8 +492,6 @@ usage()
     printf("   qstate         <lif> <qtype> <qid>\n");
     printf("   qpoll          <lif> <qtype>\n");
     printf("   stats          <lif>\n");
-    printf("   nicmgr_qstate  <lif> <qtype> <qid>\n");
-    printf("   nicmgr_qpoll   <lif> <qtype>\n");
     printf("   memrd          <addr> <size_in_bytes>\n");
     printf("   memwr          <addr> <size_in_bytes> <bytes> ...\n");
     printf("   memdump        <addr> <size_in_bytes>\n");
@@ -624,21 +567,6 @@ main(int argc, char **argv)
         }
         uint16_t lif = std::strtoul(argv[2], NULL, 0);
         eth_stats(lif);
-    } else if (strcmp(argv[1], "nicmgr_qstate") == 0) {
-        if (argc != 5) {
-            usage();
-        }
-        uint16_t lif = std::strtoul(argv[2], NULL, 0);
-        uint8_t qtype = std::strtoul(argv[3], NULL, 0);
-        uint32_t qid = std::strtoul(argv[4], NULL, 0);
-        nicmgr_qstate(lif, qtype, qid);
-    } else if (strcmp(argv[1], "nicmgr_qpoll") == 0) {
-        if (argc != 4) {
-            usage();
-        }
-        uint16_t lif = std::strtoul(argv[2], NULL, 0);
-        uint8_t qtype = std::strtoul(argv[3], NULL, 0);
-        nicmgr_qpoll(lif, qtype);
     } else if (strcmp(argv[1], "memrd") == 0) {
         if (argc != 4) {
             usage();

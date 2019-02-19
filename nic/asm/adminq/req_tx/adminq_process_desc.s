@@ -19,8 +19,6 @@ adminq_process_desc:
   bcf             [c2 | c3 | c7], adminq_process_desc_error
   nop
 
-  phvwrpair       p.p4_intr_global_tm_iport, TM_PORT_DMA, p.p4_intr_global_tm_oport, TM_PORT_EGRESS
-
   // Setup DMA CMD PTR
   phvwr           p.p4_txdma_intr_dma_cmd_ptr, ADMINQ_DMA_CMD_START_OFFSET
   phvwr           p.adminq_global_dma_cur_index, (ADMINQ_DMA_CMD_START_FLIT << LOG_NUM_DMA_CMDS_PER_FLIT) | ADMINQ_DMA_CMD_START_INDEX
@@ -29,6 +27,7 @@ adminq_process_desc:
   phvwr           p.nicmgr_req_desc_lif, k.{adminq_t0_s2s_lif}.hx
   phvwr           p.nicmgr_req_desc_qtype, k.adminq_t0_s2s_qtype
   phvwr           p.nicmgr_req_desc_qid, k.{adminq_t0_s2s_qid}.wx
+  phvwr           p.nicmgr_req_desc_comp_index, k.adminq_t0_s2s_comp_index
   phvwr           p.nicmgr_req_desc_adminq_qstate_addr, k.{adminq_t0_s2s_adminq_qstate_addr}.dx
   phvwr           p.nicmgr_req_desc_adminq_cmd_desc, d[511:0]
 

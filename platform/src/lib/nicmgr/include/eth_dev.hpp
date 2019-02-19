@@ -14,9 +14,9 @@
 #include "nic/include/eth_common.h"
 
 #include "nic/sdk/lib/indexer/indexer.hpp"
+#include "nic/sdk/platform/evutils/include/evutils.h"
 
 #include "platform/src/lib/hal_api/include/hal_types.hpp"
-#include "nic/sdk/platform/evutils/include/evutils.h"
 #include "platform/src/lib/mnet/include/mnet.h"
 
 #include "dev.hpp"
@@ -40,24 +40,19 @@ public:
     Eth(HalClient *hal_client,
         HalCommonClient *hal_common_client,
         void *dev_spec,
-        hal_lif_info_t *nicmgr_lif_info,
         PdClient *pd_client);
+
+    std::string GetName() { return spec->name; }
 
     void DevcmdHandler();
     enum status_code CmdHandler(void *req, void *req_data,
                                  void *resp, void *resp_data);
-    enum status_code AdminCmdHandler(uint64_t lif_id,
-                                      void *req, void *req_data,
-                                      void *resp, void *resp_data);
 
     void LinkEventHandler(port_status_t *evd);
     void HalEventHandler(bool status);
 
     void SetHalClient(HalClient *hal_client, HalCommonClient *hal_cmn_client);
-    hal_lif_info_t *GetHalLifInfo(void) { return lif_map[lif_base]->GetHalLifInfo(); }
-    uint32_t GetHalLifCount() { return spec->lif_count; }
 
-    void DevObjSave();
     int GenerateQstateInfoJson(pt::ptree &lifs);
 
 private:
@@ -102,6 +97,11 @@ private:
     enum status_code _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
     enum status_code _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
     enum status_code _CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data);
+
+    /* AdminCmd Proxy Handler */
+    enum status_code AdminCmdHandler(uint64_t lif_id,
+        void *req, void *req_data,
+        void *resp, void *resp_data);
 
     const char *opcode_to_str(enum cmd_opcode opcode);
 };

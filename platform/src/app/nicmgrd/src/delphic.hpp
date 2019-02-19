@@ -12,8 +12,9 @@
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 #include "gen/proto/port.delphi.hpp"
 #include "gen/proto/hal.delphi.hpp"
-#include "platform/src/lib/upgrade/upgrade.hpp"
-#include "platform/src/lib/sysmgr/sysmgr.hpp"
+
+#include "sysmgr.hpp"
+#include "upgrade.hpp"
 
 namespace dobj = delphi::objects;
 

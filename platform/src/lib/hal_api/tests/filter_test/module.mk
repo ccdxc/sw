@@ -3,9 +3,7 @@ include ${MKDEFS}/pre.mk
 MODULE_ARCH     := x86_64
 MODULE_PIPELINE := iris
 MODULE_TARGET   := hal_api_filter_test.gtest
-#MODULE_SOLIBS   := halproto indexer logger nicmgr evutils delphisdk \
-#	               pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace
-MODULE_SOLIBS   := nicmgr nicmgr_sysmgr nicmgr_upgrade hal_api mnet \
+MODULE_SOLIBS   := nicmgr hal_api mnet \
                     pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
                     intrutils pal misc evutils \
                     ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \

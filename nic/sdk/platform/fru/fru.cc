@@ -1,5 +1,8 @@
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 
+#include "include/sdk/base.hpp"
+#include "platform/pal/include/pal.h"
+
 #include "platform/fru/fru.hpp"
 
 using namespace std;

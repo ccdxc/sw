@@ -1,6 +1,9 @@
+/*
+* Copyright (c) 2019, Pensando Systems Inc.
+*/
 
-#ifndef __ETH_LIF_H__
-#define __ETH_LIF_H__
+#ifndef __ETH_IF_H__
+#define __ETH_IF_H__
 
 /* Supply these for ionic_if.h */
 #define BIT(n)                  (1 << n)
@@ -83,4 +86,4 @@ static_assert((offsetof(struct dev_cmd_regs, comp) % 4) == 0);
 static_assert(sizeof(((struct dev_cmd_regs*)0)->comp) == 16);
 static_assert((offsetof(struct dev_cmd_regs, data) % 4) == 0);
 
-#endif  /* __ETH_LIF_H__ */
+#endif  /* __ETH_IF_H__ */

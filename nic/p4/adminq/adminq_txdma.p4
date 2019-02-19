@@ -12,6 +12,7 @@ header_type adminq_t0_s2s_k {
         lif : 11;
         qtype : 3;
         qid : 24;
+        comp_index : 16;
         adminq_qstate_addr : 34;
         nicmgr_qstate_addr : 34;
         host_queue : 1;
@@ -74,6 +75,9 @@ metadata adminq_to_s3_k adminq_to_s3_scratch;
 @pragma pa_align 512
 @pragma dont_trim
 metadata nicmgr_req_desc nicmgr_req_desc;
+
+@pragma dont_trim
+metadata nicmgr_req_comp_desc nicmgr_req_comp_desc;
 
 // DMA headers
 @pragma pa_align 512

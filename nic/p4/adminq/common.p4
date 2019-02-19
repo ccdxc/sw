@@ -117,6 +117,14 @@ header_type nicmgr_req_desc {
     }
 }
 
+// 1 B
+header_type nicmgr_req_comp_desc {
+    fields {
+        color : 1;
+        rsvd : 7;
+    }
+}
+
 // 128 B
 header_type nicmgr_resp_desc {
     fields {
@@ -132,6 +140,14 @@ header_type nicmgr_resp_desc {
         //pad : 440;
         pad : 376;
         adminq_comp_desc : 512;
+    }
+}
+
+// 1 B
+header_type nicmgr_resp_comp_desc {
+    fields {
+        color : 1;
+        rsvd : 7;
     }
 }
 

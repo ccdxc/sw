@@ -5,8 +5,7 @@
 #include <string>
 
 #include "nic/sdk/include/sdk/types.hpp"
-#include "platform/src/lib/sysmgr/sysmgr.hpp"
-#include "platform/src/lib/upgrade/upgrade.hpp"
+
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 
 #include "delphic.hpp"

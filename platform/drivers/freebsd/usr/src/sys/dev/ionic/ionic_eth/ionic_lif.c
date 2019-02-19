@@ -2243,7 +2243,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct txque *txq)
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.txq_init = {
 			.opcode = CMD_OPCODE_TXQ_INIT,
-			.I = false,
+			.I = true,
 			.E = false,
 			.pid = txq->pid,
 #ifdef IONIC_SEPERATE_TX_INTR
@@ -2481,7 +2481,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct rxque *rxq)
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rxq_init = {
 			.opcode = CMD_OPCODE_RXQ_INIT,
-			.I = false,
+			.I = true,
 			.E = false,
 			.pid = rxq->pid,
 			.intr_index = rxq->intr.index,

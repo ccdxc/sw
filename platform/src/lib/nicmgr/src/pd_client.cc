@@ -691,8 +691,6 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
     addr = tbl_base + tbl_index;
 
-    NIC_FUNC_DEBUG("hw_lif_id : {}, index : {}, addr : {:x}, enable : {}, qid : {}",
-                    hw_lif_id, index, addr, enable, qid);
     sdk::asic::asic_mem_write(addr,
                         (uint8_t *)&data.action_u,
                         sizeof(data.action_u));
@@ -740,8 +738,6 @@ PdClient::eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type, uint8_t *rss_ke
 
     if (num_queues > 0) {
         for (unsigned int index = 0; index < ETH_RSS_LIF_INDIR_TBL_LEN; index++) {
-            NIC_FUNC_DEBUG("hw_lif_id {} index {} type {} qid {}",
-                            hw_lif_id, index, rss_type, rss_indir[index]);
             p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
                     hw_lif_id, index, rss_type, rss_indir[index]);
         }

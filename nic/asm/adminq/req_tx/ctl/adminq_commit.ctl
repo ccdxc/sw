@@ -16,7 +16,7 @@ k = {
     adminq_t0_s2s_nicmgr_qstate_addr = 0xdeaddead;
     adminq_global_dma_cur_flit = 0x9;
     adminq_global_dma_cur_index = 0;
-    adminq_to_s3_adminq_ci = 0x100;
+    adminq_t0_s2s_adminq_ci = 0x100;
 };
 
 d = {

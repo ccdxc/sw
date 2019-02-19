@@ -3,7 +3,7 @@ TOPDIR = ../../../../
 GENDIR = $(TOPDIR)/gen
 OBJDIR = $(TOPDIR)/obj
 
-CAPSIM = $(TOPDIR)/asic/capri/model/capsim-gen/bin/capsim
+CAPSIM = $(TOPDIR)/sdk/third-party/asic/capri/model/capsim-gen
 BINDIR = $(OBJDIR)/p4plus_bin/
 INCDIR = -I.. -I$(TOPDIR)/gen/adminq_txdma_actions/asm_out/ -I$(TOPDIR)/gen/adminq_txdma_actions/alt_asm_out/
 
