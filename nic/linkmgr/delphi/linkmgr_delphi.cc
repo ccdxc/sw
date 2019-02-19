@@ -337,6 +337,9 @@ xcvr_sdk_pid_to_spec_pid (xcvr_pid_t pid)
     case xcvr_pid_t::XCVR_PID_SFP_10GBASE_ER:
         return port::XCVR_PID_SFP_10GBASE_ER;
 
+    case xcvr_pid_t::XCVR_PID_SFP_10GBASE_AOC:
+        return port::XCVR_PID_SFP_10GBASE_AOC;
+
     case xcvr_pid_t::XCVR_PID_SFP_10GBASE_CU:
         return port::XCVR_PID_SFP_10GBASE_CU;
 
