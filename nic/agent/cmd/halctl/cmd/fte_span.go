@@ -87,7 +87,7 @@ func fteSpanShowCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var empty *halproto.Empty
 	respMsg, err := client.FteSpanGet(context.Background(), empty)
@@ -117,7 +117,7 @@ func fteSpanDebugDisableCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	req := &halproto.FteSpanRequest{
 		Selector: 0,
@@ -154,7 +154,7 @@ func fteSpanDebugCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var sel uint32
 	if cmd.Flags().Changed("slport") {

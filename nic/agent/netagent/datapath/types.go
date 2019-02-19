@@ -3,10 +3,11 @@ package datapath
 import (
 	"sync"
 
+	"google.golang.org/grpc"
+
 	"github.com/golang/mock/gomock"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 // Kind holds the HAL Datapath kind. It could either be mock HAL or real HAL.
@@ -14,7 +15,7 @@ type Kind string
 
 // Hal holds clients to talk to HAL gRPC server. ToDo Remove mock clients, datapath DB and expectations prior to FCS
 type Hal struct {
-	client               *rpckit.RPCClient
+	client               *grpc.ClientConn
 	mockCtrl             *gomock.Controller
 	MockClients          mockClients
 	Epclient             halproto.EndpointClient

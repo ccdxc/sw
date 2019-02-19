@@ -71,7 +71,7 @@ func handleNwsecProfShowCmd(cmd *cobra.Command, ofile *os.File) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNwSecurityClient(c.ClientConn)
+	client := halproto.NewNwSecurityClient(c)
 
 	var req *halproto.SecurityProfileGetRequest
 	if cmd != nil && cmd.Flags().Changed("id") {
@@ -133,7 +133,7 @@ func handleNwsecPolicyShowCmd(cmd *cobra.Command, ofile *os.File) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNwSecurityClient(c.ClientConn)
+	client := halproto.NewNwSecurityClient(c)
 
 	var req *halproto.SecurityPolicyGetRequest
 	if cmd != nil && cmd.Flags().Changed("vrf-id") && cmd.Flags().Changed("policy-id") {
@@ -204,7 +204,7 @@ func nwsecFlowGateShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNwSecurityClient(c.ClientConn)
+	client := halproto.NewNwSecurityClient(c)
 
 	var req *halproto.SecurityFlowGateGetRequest
 

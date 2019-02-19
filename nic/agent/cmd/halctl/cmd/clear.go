@@ -53,7 +53,7 @@ func systemStatsClearCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewSystemClient(c.ClientConn)
+	client := halproto.NewSystemClient(c)
 
 	// Check the args
 	fte := false
@@ -123,7 +123,7 @@ func llcStatsClearCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")

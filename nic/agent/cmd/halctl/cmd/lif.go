@@ -63,7 +63,7 @@ func handleLifShowCmd(cmd *cobra.Command, id uint64, spec bool, status bool) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	defer c.Close()
 
@@ -165,7 +165,7 @@ func handlelifDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	defer c.Close()
 
@@ -315,7 +315,7 @@ func lifIDGetName(id uint64) string {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	defer c.Close()
 

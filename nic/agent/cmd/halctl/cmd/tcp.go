@@ -119,7 +119,7 @@ func doTCPProxyGlobalStatsShowCmd(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewTcpProxyClient(c.ClientConn)
+	client := halproto.NewTcpProxyClient(c)
 
 	defer c.Close()
 
@@ -162,7 +162,7 @@ func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewTcpProxyClient(c.ClientConn)
+	client := halproto.NewTcpProxyClient(c)
 
 	var sessionGetReqMsg *halproto.TcpProxySessionGetRequestMsg
 	var req *halproto.TcpProxySessionGetRequest
@@ -255,7 +255,7 @@ func doTCPProxyCbShowCmd(cmd *cobra.Command, args []string, showCbs bool,
 		os.Exit(1)
 	}
 
-	client := halproto.NewInternalClient(c.ClientConn)
+	client := halproto.NewInternalClient(c)
 
 	defer c.Close()
 

@@ -74,7 +74,7 @@ func l2segShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewL2SegmentClient(c.ClientConn)
+	client := halproto.NewL2SegmentClient(c)
 
 	defer c.Close()
 
@@ -129,7 +129,7 @@ func l2segShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewL2SegmentClient(c.ClientConn)
+	client := halproto.NewL2SegmentClient(c)
 
 	defer c.Close()
 
@@ -200,7 +200,7 @@ func handlel2segDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewL2SegmentClient(c.ClientConn)
+	client := halproto.NewL2SegmentClient(c)
 
 	defer c.Close()
 
@@ -460,7 +460,7 @@ func l2segIDGetWireEncap(id uint64) uint32 {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewL2SegmentClient(c.ClientConn)
+	client := halproto.NewL2SegmentClient(c)
 
 	defer c.Close()
 

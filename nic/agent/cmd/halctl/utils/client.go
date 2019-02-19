@@ -4,8 +4,9 @@ import (
 	"math"
 	"os"
 
+	"google.golang.org/grpc"
+
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
@@ -14,19 +15,18 @@ const (
 )
 
 // CreateNewGRPCClient creates a grpc connection to HAL
-func CreateNewGRPCClient() (*rpckit.RPCClient, error) {
+func CreateNewGRPCClient() (*grpc.ClientConn, error) {
 
 	halPort := os.Getenv("HAL_GRPC_PORT")
 	if halPort == "" {
 		halPort = halGRPCDefaultPort
 	}
 	srvURL := halGRPCDefaultBaseURL + ":" + halPort
-	// create a grpc client
-	// ToDo Use TLS Provider
-	var rpcopts []rpckit.Option
-	rpcopts = append(rpcopts, rpckit.WithTLSProvider(nil))
-	rpcopts = append(rpcopts, rpckit.WithMaxMsgSize(math.MaxUint32))
-	rpcClient, err := rpckit.NewRPCClient("halctl", srvURL, rpcopts...)
+	var grpcOpts []grpc.DialOption
+	grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(math.MaxInt32-1))
+	grpcOpts = append(grpcOpts, grpc.WithInsecure())
+	rpcClient, err := grpc.Dial(srvURL, grpcOpts...)
+
 	if err != nil {
 		log.Errorf("Creating gRPC Client failed. Server URL: %s", srvURL)
 		return nil, err

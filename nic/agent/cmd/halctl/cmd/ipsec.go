@@ -69,7 +69,7 @@ func ipsecEncryptShowCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewIpsecClient(c.ClientConn)
+	client := halproto.NewIpsecClient(c)
 
 	defer c.Close()
 
@@ -116,7 +116,7 @@ func ipsecDecryptShowCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewIpsecClient(c.ClientConn)
+	client := halproto.NewIpsecClient(c)
 
 	defer c.Close()
 
@@ -208,7 +208,7 @@ func ipsecGlobalStatisticsShowCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewIpsecClient(c.ClientConn)
+	client := halproto.NewIpsecClient(c)
 
 	defer c.Close()
 

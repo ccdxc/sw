@@ -78,7 +78,7 @@ func filterShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewEndpointClient(c.ClientConn)
+	client := halproto.NewEndpointClient(c)
 
 	// Get filter
 	req := &halproto.FilterGetRequest{}
@@ -119,7 +119,7 @@ func epShowBriefCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewEndpointClient(c.ClientConn)
+	client := halproto.NewEndpointClient(c)
 
 	var req *halproto.EndpointGetRequest
 	// Get all Endpoints
@@ -175,7 +175,7 @@ func epShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	client := halproto.NewEndpointClient(c.ClientConn)
+	client := halproto.NewEndpointClient(c)
 
 	var req *halproto.EndpointGetRequest
 	// Get all Endpoints
@@ -218,7 +218,7 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewEndpointClient(c.ClientConn)
+	client := halproto.NewEndpointClient(c)
 
 	var req *halproto.EndpointGetRequest
 	// Get all Endpoints
@@ -266,7 +266,7 @@ func epStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 			}
 
 			// HAL call
-			hClient := halproto.NewInterfaceClient(c.ClientConn)
+			hClient := halproto.NewInterfaceClient(c)
 			hRespMsg, err := hClient.InterfaceGet(context.Background(), ifGetReqMsg)
 			if err != nil {
 				fmt.Printf("Getting if failed. %v\n", err)
@@ -295,7 +295,7 @@ func handleEpDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	}
 	defer c.Close()
 
-	client := halproto.NewEndpointClient(c.ClientConn)
+	client := halproto.NewEndpointClient(c)
 
 	var req *halproto.EndpointGetRequest
 	// Get all Endpoints

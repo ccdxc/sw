@@ -122,7 +122,7 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	if strings.Compare(ifEncap, "MPLSoUDP") != 0 {
 		fmt.Printf("Invalid encap type specified\n")
@@ -167,7 +167,7 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	var substrateIP uint32
 	var overlayIP [2]uint32
@@ -355,7 +355,7 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	defer c.Close()
 
@@ -411,7 +411,7 @@ func ifGetAllStr() map[uint64]string {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	defer c.Close()
 
@@ -452,7 +452,7 @@ func ifGetStrFromID(ifID []uint64) (int, []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	defer c.Close()
 
@@ -506,7 +506,7 @@ func ifShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 	defer c.Close()
 
 	if len(args) > 0 {
@@ -559,7 +559,7 @@ func handleIfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	defer c.Close()
 

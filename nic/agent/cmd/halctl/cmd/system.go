@@ -8,17 +8,19 @@ import (
 	"container/list"
 	"context"
 	"fmt"
+
+	"google.golang.org/grpc"
+
 	// "math/rand"
 	"os"
 	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	"github.com/pensando/sw/nic/agent/cmd/halctl/utils"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 var systemShowCmd = &cobra.Command{
@@ -108,7 +110,7 @@ func handleSystemQueueStatsCmd(cmd *cobra.Command, args []string, inputQueue boo
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewSystemClient(c.ClientConn)
+	client := halproto.NewSystemClient(c)
 
 	portSet := false
 	if cmd.Flags().Changed("port") {
@@ -292,7 +294,7 @@ func handleSystemDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewSystemClient(c.ClientConn)
+	client := halproto.NewSystemClient(c)
 
 	// HAL call
 	var empty *halproto.Empty
@@ -337,7 +339,7 @@ func systemDropStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewSystemClient(c.ClientConn)
+	client := halproto.NewSystemClient(c)
 
 	// Check the args
 	ingressDrop := false
@@ -494,7 +496,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		intfStatsShow(c)
 	}
 
-	client := halproto.NewSystemClient(c.ClientConn)
+	client := halproto.NewSystemClient(c)
 
 	// HAL call
 	var empty *halproto.Empty
@@ -589,7 +591,7 @@ func systemClockShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var empty *halproto.Empty
 
@@ -1274,7 +1276,7 @@ func threadShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var empty *halproto.Empty
 
@@ -1325,7 +1327,7 @@ func threadDetailShow(ofile *os.File) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var empty *halproto.Empty
 
@@ -1420,8 +1422,8 @@ func intfUplinkShowOneResp(resp *halproto.PortGetResponse) {
 
 }
 
-func uplinkStatsShow(c *rpckit.RPCClient) {
-	client := halproto.NewPortClient(c.ClientConn)
+func uplinkStatsShow(c *grpc.ClientConn) {
+	client := halproto.NewPortClient(c)
 	var req *halproto.PortGetRequest
 	req = &halproto.PortGetRequest{}
 	portGetReqMsg := &halproto.PortGetRequestMsg{
@@ -1519,8 +1521,8 @@ func intfHostLifShowOneResp(resp *halproto.LifGetResponse) {
 	}
 }
 
-func lifStatsShow(c *rpckit.RPCClient) {
-	client := halproto.NewInterfaceClient(c.ClientConn)
+func lifStatsShow(c *grpc.ClientConn) {
+	client := halproto.NewInterfaceClient(c)
 	var req *halproto.LifGetRequest
 	req = &halproto.LifGetRequest{}
 	lifGetReqMsg := &halproto.LifGetRequestMsg{
@@ -1563,7 +1565,7 @@ func lifStatsShow(c *rpckit.RPCClient) {
 	}
 }
 
-func intfStatsShow(c *rpckit.RPCClient) {
+func intfStatsShow(c *grpc.ClientConn) {
 	// Display Header
 	intfStatsHeader()
 

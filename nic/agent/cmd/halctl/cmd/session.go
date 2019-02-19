@@ -91,7 +91,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewSessionClient(c.ClientConn)
+	client := halproto.NewSessionClient(c)
 
 	var sessionGetReqMsg *halproto.SessionGetRequestMsg
 
@@ -240,7 +240,7 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	}
 	defer c.Close()
 
-	client := halproto.NewSessionClient(c.ClientConn)
+	client := halproto.NewSessionClient(c)
 
 	var sessionGetReqMsg *halproto.SessionGetRequestMsg
 
@@ -678,7 +678,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewSessionClient(c.ClientConn)
+	client := halproto.NewSessionClient(c)
 
 	var sessionDeleteReqMsg *halproto.SessionDeleteRequestMsg
 

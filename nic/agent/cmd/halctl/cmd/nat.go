@@ -73,7 +73,7 @@ func natpoolShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNatClient(c.ClientConn)
+	client := halproto.NewNatClient(c)
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
@@ -125,7 +125,7 @@ func natpoolDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNatClient(c.ClientConn)
+	client := halproto.NewNatClient(c)
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
@@ -182,7 +182,7 @@ func natmappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNatClient(c.ClientConn)
+	client := halproto.NewNatClient(c)
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
@@ -223,7 +223,7 @@ func natmappingDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNatClient(c.ClientConn)
+	client := halproto.NewNatClient(c)
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
@@ -264,7 +264,7 @@ func natpolicyShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNatClient(c.ClientConn)
+	client := halproto.NewNatClient(c)
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")

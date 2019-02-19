@@ -3,16 +3,18 @@
 package datapath
 
 import (
-	"math"
 	"os"
 	"time"
+
+	"math"
+
+	"google.golang.org/grpc"
 
 	"github.com/golang/mock/gomock"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
 const (
@@ -61,19 +63,19 @@ func NewHalDatapath(kind Kind) (*Datapath, error) {
 		if err != nil {
 			return nil, err
 		}
-		hal.Epclient = halproto.NewEndpointClient(hal.client.ClientConn)
-		hal.Ifclient = halproto.NewInterfaceClient(hal.client.ClientConn)
-		hal.L2SegClient = halproto.NewL2SegmentClient(hal.client.ClientConn)
-		hal.Netclient = halproto.NewNetworkClient(hal.client.ClientConn)
-		hal.Lbclient = halproto.NewL4LbClient(hal.client.ClientConn)
-		hal.Sgclient = halproto.NewNwSecurityClient(hal.client.ClientConn)
-		hal.Sessclient = halproto.NewSessionClient(hal.client.ClientConn)
-		hal.Tnclient = halproto.NewVrfClient(hal.client.ClientConn)
-		hal.Natclient = halproto.NewNatClient(hal.client.ClientConn)
-		hal.IPSecclient = halproto.NewIpsecClient(hal.client.ClientConn)
-		hal.TCPProxyPolicyClient = halproto.NewTcpProxyClient(hal.client.ClientConn)
-		hal.PortClient = halproto.NewPortClient(hal.client.ClientConn)
-		hal.SystemClient = halproto.NewSystemClient(hal.client.ClientConn)
+		hal.Epclient = halproto.NewEndpointClient(hal.client)
+		hal.Ifclient = halproto.NewInterfaceClient(hal.client)
+		hal.L2SegClient = halproto.NewL2SegmentClient(hal.client)
+		hal.Netclient = halproto.NewNetworkClient(hal.client)
+		hal.Lbclient = halproto.NewL4LbClient(hal.client)
+		hal.Sgclient = halproto.NewNwSecurityClient(hal.client)
+		hal.Sessclient = halproto.NewSessionClient(hal.client)
+		hal.Tnclient = halproto.NewVrfClient(hal.client)
+		hal.Natclient = halproto.NewNatClient(hal.client)
+		hal.IPSecclient = halproto.NewIpsecClient(hal.client)
+		hal.TCPProxyPolicyClient = halproto.NewTcpProxyClient(hal.client)
+		hal.PortClient = halproto.NewPortClient(hal.client)
+		hal.SystemClient = halproto.NewSystemClient(hal.client)
 		haldp.Hal = hal
 		return &haldp, nil
 	}
@@ -200,7 +202,7 @@ func (hd *Hal) setExpectations() {
 
 }
 
-func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
+func (hd *Hal) createNewGRPCClient() (*grpc.ClientConn, error) {
 	halPort := os.Getenv("HAL_GRPC_PORT")
 	if halPort == "" {
 		halPort = halGRPCDefaultPort
@@ -211,7 +213,7 @@ func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
 	return hd.waitForHAL(srvURL)
 }
 
-func (hd *Hal) waitForHAL(halURL string) (rpcClient *rpckit.RPCClient, err error) {
+func (hd *Hal) waitForHAL(halURL string) (rpcClient *grpc.ClientConn, err error) {
 	halUP := make(chan bool, 1)
 	ticker := time.NewTicker(time.Second * 10)
 	timeout := time.After(halGRPCWaitTimeout)
@@ -220,10 +222,10 @@ func (hd *Hal) waitForHAL(halURL string) (rpcClient *rpckit.RPCClient, err error
 		select {
 		case <-ticker.C:
 			log.Debugf("Trying to connect to HAL at %s", halURL)
-			var rpcopts []rpckit.Option
-			rpcopts = append(rpcopts, rpckit.WithTLSProvider(nil))
-			rpcopts = append(rpcopts, rpckit.WithMaxMsgSize(math.MaxUint32))
-			rpcClient, err = rpckit.NewRPCClient("hal", halURL, rpcopts...)
+			var grpcOpts []grpc.DialOption
+			grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(math.MaxInt32-1))
+			grpcOpts = append(grpcOpts, grpc.WithInsecure())
+			rpcClient, err = grpc.Dial(halURL, grpcOpts...)
 			if err == nil {
 				halUP <- true
 			}

@@ -55,7 +55,7 @@ func nwShowCmdHandler(cmd *cobra.Command, spec bool, status bool) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNetworkClient(c.ClientConn)
+	client := halproto.NewNetworkClient(c)
 
 	// Get all Nw
 	req := &halproto.NetworkGetRequest{}
@@ -125,7 +125,7 @@ func handleNwDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNetworkClient(c.ClientConn)
+	client := halproto.NewNetworkClient(c)
 
 	// Get all Nw
 	req := &halproto.NetworkGetRequest{}

@@ -49,7 +49,7 @@ func quiesceStartCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInternalClient(c.ClientConn)
+	client := halproto.NewInternalClient(c)
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
@@ -78,7 +78,7 @@ func quiesceStopCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInternalClient(c.ClientConn)
+	client := halproto.NewInternalClient(c)
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")

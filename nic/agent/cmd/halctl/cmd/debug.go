@@ -223,7 +223,7 @@ func pbPlatDebugCmdHandler(cmd *cobra.Command, args []string) {
 	defer c.Close()
 
 	pause := false
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	if strings.Compare(platPbPause, "enable") == 0 {
 		pause = true
@@ -269,7 +269,7 @@ func regShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var req *halproto.RegisterRequest
 
@@ -325,7 +325,7 @@ func regDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var req *halproto.RegisterRequest
 
@@ -376,7 +376,7 @@ func datapathCacheDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var enable bool
 	var sramType halproto.HbmSramType
@@ -454,7 +454,7 @@ func xcvrDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	if cmd.Flags().Changed("valid-check") == false {
 		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
@@ -505,7 +505,7 @@ func traceShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var empty *halproto.Empty
 
@@ -535,7 +535,7 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var traceReqMsg *halproto.TraceRequestMsg
 
@@ -626,7 +626,7 @@ func flushLogsDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var empty *halproto.Empty
 
@@ -658,7 +658,7 @@ func llcSetupCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var llcType halproto.LlcCounterType
 
@@ -733,7 +733,7 @@ func fwSecProfDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewNwSecurityClient(c.ClientConn)
+	client := halproto.NewNwSecurityClient(c)
 
 	var reqMsg *halproto.SecurityProfileRequestMsg
 
@@ -926,7 +926,7 @@ func testSendFinDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewInternalClient(c.ClientConn)
+	client := halproto.NewInternalClient(c)
 
 	req := &halproto.TestSendFinRequest{}
 

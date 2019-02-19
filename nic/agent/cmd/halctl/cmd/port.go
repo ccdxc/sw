@@ -101,7 +101,7 @@ func handlePortDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	}
 	defer c.Close()
 
-	client := halproto.NewPortClient(c.ClientConn)
+	client := halproto.NewPortClient(c)
 
 	var req *halproto.PortGetRequest
 
@@ -158,7 +158,7 @@ func handlePortStatusShowCmd(cmd *cobra.Command, ofile *os.File) {
 	}
 	defer c.Close()
 
-	client := halproto.NewPortClient(c.ClientConn)
+	client := halproto.NewPortClient(c)
 
 	var req *halproto.PortGetRequest
 
@@ -327,7 +327,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewPortClient(c.ClientConn)
+	client := halproto.NewPortClient(c)
 
 	var req *halproto.PortGetRequest
 
@@ -473,7 +473,7 @@ func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewPortClient(c.ClientConn)
+	client := halproto.NewPortClient(c)
 
 	var req *halproto.PortGetRequest
 
@@ -622,7 +622,7 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 		mtu = portMtu
 	}
 
-	client := halproto.NewPortClient(c.ClientConn)
+	client := halproto.NewPortClient(c)
 
 	var req *halproto.PortGetRequest
 
@@ -852,7 +852,7 @@ func handlePortClearStatsCmd(cmd *cobra.Command, ofile *os.File) {
 	}
 	defer c.Close()
 
-	client := halproto.NewPortClient(c.ClientConn)
+	client := halproto.NewPortClient(c)
 
 	var req *halproto.PortGetRequest
 

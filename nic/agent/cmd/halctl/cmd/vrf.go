@@ -78,7 +78,7 @@ func vrfShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewVrfClient(c.ClientConn)
+	client := halproto.NewVrfClient(c)
 
 	var req *halproto.VrfGetRequest
 	if cmd.Flags().Changed("id") {
@@ -130,7 +130,7 @@ func vrfShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewVrfClient(c.ClientConn)
+	client := halproto.NewVrfClient(c)
 
 	var req *halproto.VrfGetRequest
 	if cmd.Flags().Changed("id") {
@@ -178,7 +178,7 @@ func handleVrfDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewVrfClient(c.ClientConn)
+	client := halproto.NewVrfClient(c)
 
 	var req *halproto.VrfGetRequest
 	if cmd != nil && cmd.Flags().Changed("id") {

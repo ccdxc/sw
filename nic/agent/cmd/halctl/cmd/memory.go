@@ -93,7 +93,7 @@ func slabShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	all := false
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var slabGetReqMsg *halproto.SlabGetRequestMsg
 
@@ -181,7 +181,7 @@ func slabDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	all := false
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var slabGetReqMsg *halproto.SlabGetRequestMsg
 
@@ -246,7 +246,7 @@ func mtrackShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var mtrackGetReqMsg *halproto.MemTrackGetRequestMsg
 
@@ -313,7 +313,7 @@ func mtrackDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var mtrackGetReqMsg *halproto.MemTrackGetRequestMsg
 
@@ -362,7 +362,7 @@ func hashShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var empty *halproto.Empty
 
@@ -415,7 +415,7 @@ func hashDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var empty *halproto.Empty
 
@@ -448,7 +448,7 @@ func allMemoryShowHandler(ofile *os.File) {
 	}
 	defer c.Close()
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	// Get all Slabs
 	var slabGetReqMsg *halproto.SlabGetRequestMsg
@@ -552,7 +552,7 @@ func summaryShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	// Get all Slabs
 	var slabGetReqMsg *halproto.SlabGetRequestMsg

@@ -156,7 +156,7 @@ func qosClassDeleteCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewQOSClient(c.ClientConn)
+	client := halproto.NewQOSClient(c)
 
 	req := &halproto.QosClassDeleteRequest{
 		KeyOrHandle: &halproto.QosClassKeyHandle{
@@ -216,7 +216,7 @@ func qosClassCreateCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewQOSClient(c.ClientConn)
+	client := halproto.NewQOSClient(c)
 
 	var dscp []uint32
 	var req *halproto.QosClassSpec
@@ -348,7 +348,7 @@ func qosClassUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := halproto.NewQOSClient(c.ClientConn)
+	client := halproto.NewQOSClient(c)
 
 	var dscp []uint32
 	var req *halproto.QosClassSpec
@@ -608,7 +608,7 @@ func handleQosStatsCmd(cmd *cobra.Command, args []string, inputQueue bool, outpu
 		}
 	}
 
-	client := halproto.NewQOSClient(c.ClientConn)
+	client := halproto.NewQOSClient(c)
 
 	var req *halproto.QosClassGetRequest
 	if cmd != nil && cmd.Flags().Changed("qosgroup") {
@@ -787,7 +787,7 @@ func handleQosShowCmd(cmd *cobra.Command, ofile *os.File) {
 	}
 	defer c.Close()
 
-	client := halproto.NewQOSClient(c.ClientConn)
+	client := halproto.NewQOSClient(c)
 
 	var req *halproto.QosClassGetRequest
 	if cmd != nil && cmd.Flags().Changed("qosgroup") {
@@ -865,7 +865,7 @@ func qosShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewQOSClient(c.ClientConn)
+	client := halproto.NewQOSClient(c)
 
 	var req *halproto.QosClassGetRequest
 	if cmd != nil && cmd.Flags().Changed("qosgroup") {
@@ -1030,7 +1030,7 @@ func handleCoppShowCmd(cmd *cobra.Command, ofile *os.File) {
 	}
 	defer c.Close()
 
-	client := halproto.NewQOSClient(c.ClientConn)
+	client := halproto.NewQOSClient(c)
 
 	var req *halproto.CoppGetRequest
 	if cmd != nil && cmd.Flags().Changed("copptype") {

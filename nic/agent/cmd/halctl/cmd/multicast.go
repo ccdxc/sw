@@ -62,7 +62,7 @@ func multicastShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewMulticastClient(c.ClientConn)
+	client := halproto.NewMulticastClient(c)
 
 	defer c.Close()
 
@@ -131,7 +131,7 @@ func handleMulticastDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewMulticastClient(c.ClientConn)
+	client := halproto.NewMulticastClient(c)
 
 	defer c.Close()
 

@@ -86,7 +86,7 @@ func snakeTestLoopCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	req := &halproto.SnakeTestRequest{
 		Type: halproto.SnakeTestType_SNAKE_TEST_TYPE_LOOP,
@@ -122,7 +122,7 @@ func snakeTestLoopDisableCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	req := &halproto.SnakeTestDeleteRequest{
 		Type: halproto.SnakeTestType_SNAKE_TEST_TYPE_LOOP,
@@ -157,7 +157,7 @@ func snakeTestArmCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	req := &halproto.SnakeTestRequest{
 		Type: halproto.SnakeTestType_SNAKE_TEST_TYPE_ARM_TO_ARM,
@@ -193,7 +193,7 @@ func snakeTestArmDisableCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	req := &halproto.SnakeTestDeleteRequest{
 		Type: halproto.SnakeTestType_SNAKE_TEST_TYPE_ARM_TO_ARM,
@@ -228,7 +228,7 @@ func snakeTestShowCmdHandler(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	client := halproto.NewDebugClient(c.ClientConn)
+	client := halproto.NewDebugClient(c)
 
 	var empty *halproto.Empty
 	respMsg, err := client.SnakeTestGet(context.Background(), empty)

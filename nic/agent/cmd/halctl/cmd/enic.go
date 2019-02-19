@@ -64,7 +64,7 @@ func handleEnicShowCmd(cmd *cobra.Command, spec bool, status bool) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	defer c.Close()
 
@@ -144,7 +144,7 @@ func enicDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewInterfaceClient(c.ClientConn)
+	client := halproto.NewInterfaceClient(c)
 
 	defer c.Close()
 

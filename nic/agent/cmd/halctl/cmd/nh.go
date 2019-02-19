@@ -49,7 +49,7 @@ func nhShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNetworkClient(c.ClientConn)
+	client := halproto.NewNetworkClient(c)
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
@@ -101,7 +101,7 @@ func nhDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
 		os.Exit(1)
 	}
-	client := halproto.NewNetworkClient(c.ClientConn)
+	client := halproto.NewNetworkClient(c)
 
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
