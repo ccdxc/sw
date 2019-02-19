@@ -21,7 +21,7 @@ def __installPenCtl(node):
         return api.types.status.FAILURE
 
     req = api.Trigger_CreateExecuteCommandsRequest()
-    api.Trigger_AddHostCommand(req, node, "tar -xvf %s" % os.path.basename(common.PENCTL_PKG),
+    api.Trigger_AddHostCommand(req, node, "tar -xvf %s" % os.path.basename(common.PENCTL_PKG) + " && sync",
                            background = False)
 
     #Create a symlink at top level
