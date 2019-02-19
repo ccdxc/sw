@@ -270,7 +270,7 @@ func portXcvrShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	client := halproto.NewPortClient(c.ClientConn)
+	client := halproto.NewPortClient(c)
 
 	var req *halproto.PortGetRequest
 
