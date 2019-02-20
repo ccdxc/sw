@@ -10,6 +10,9 @@ struct phv_         p;
 %%
 
 flow_info:
+    seq             c1, k.control_metadata_flow_index, r0
+    nop.c1.e
+    phvwr.!c1       p.p4_to_rxdma_header_sacl_bypass, 1
     add             r5, r0, d.flow_info_d.flow_stats_addr
     seq             c1, k.control_metadata_flow_role, TCP_FLOW_RESPONDER
     add.c1          r5, r5, 32

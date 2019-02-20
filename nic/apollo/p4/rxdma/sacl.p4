@@ -98,6 +98,9 @@ action sacl_p2(id255, id254, id253, id252, id251, id250,
 {
     modify_field(p4_to_rxdma_header.sacl_result,
                  (0 /*data*/ >> (sacl_metadata.proto_dport_class_id * 2)));
+    if (scratch_metadata.pad2 == 0) {
+        modify_field(capri_intr.drop, TRUE);
+    }
 
     modify_field(scratch_metadata.pad2, id000);
     modify_field(scratch_metadata.pad2, id001);

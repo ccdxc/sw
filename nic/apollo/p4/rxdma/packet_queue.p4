@@ -123,9 +123,7 @@ control pkt_enqueue {
         apply(toeplitz_seed);
         apply(rx_cpu_hash);
     }
-    if (p4_to_rxdma_header.sacl_result == 0x00) {
-        // drop
-    } else {
+    if (capri_intr.drop == 0) {
         // enqueue to FTE or TxDMA ring based on SF bit (I)
         apply(txdma_fte_queue);
     }

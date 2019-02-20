@@ -551,6 +551,7 @@ flow_tx_info_init ()
 static void
 flow_rx_hash_init ()
 {
+#ifdef FLOW_RX_HIT
     flow_swkey_t key;
     flow_actiondata_t data;
     flow_flow_hash_t *flow_hash_info = &data.action_u.flow_flow_hash;
@@ -570,11 +571,13 @@ flow_rx_hash_init ()
     flow_hash_info->flow_index = g_flow_index + 1;
 
     entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
+#endif
 }
 
 static void
 flow_rx_info_init ()
 {
+#ifdef FLOW_RX_HIT
     flow_info_actiondata_t data;
     flow_info_flow_info_t *flow_info = &data.action_u.flow_info_flow_info;
     uint32_t tbl_id = P4TBL_ID_FLOW_INFO;
@@ -588,6 +591,7 @@ flow_rx_info_init ()
            sizeof(flow_info->flow_stats_addr));
 
     entry_write(tbl_id, g_flow_index + 1, NULL, NULL, &data, false, 0);
+#endif
 }
 
 static void

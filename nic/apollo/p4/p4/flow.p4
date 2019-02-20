@@ -102,6 +102,11 @@ table flow_ohash {
 }
 
 action flow_info(drop, iflow_tcp_state, rflow_tcp_state, flow_stats_addr) {
+    if (control_metadata.flow_index == 0) {
+        // return
+    }
+
+    modify_field(p4_to_rxdma_header.sacl_bypass, TRUE);
     modify_field(scratch_metadata.flow_stats_addr, flow_stats_addr);
     modify_field(scratch_metadata.flag, drop);
     modify_field(scratch_metadata.in_bytes, capri_p4_intrinsic.packet_len);

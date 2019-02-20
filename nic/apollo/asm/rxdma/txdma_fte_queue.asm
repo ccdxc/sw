@@ -10,8 +10,7 @@ struct txdma_fte_queue_d    d;
 
 pkt_enqueue:
     // k.p4_to_rxdma_header_sacl_result,
-    // == 00 : drop, used as predicate for applying this table
-    // == 01 : txdma
+    // == 0X : txdma
     // == 10 : fte
     // == 11 : fte
     bbeq         k.p4_to_rxdma_header_sacl_result[1], 1, q_pkt_to_fte
