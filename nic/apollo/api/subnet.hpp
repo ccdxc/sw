@@ -172,7 +172,10 @@ class subnet_entry : public api_base {
     uint16_t hw_id(void) const { return hw_id_; }
     oci_route_table_key_t v4_route_table(void) const { return v4_route_table_; }
     oci_route_table_key_t v6_route_table(void) const { return v6_route_table_; }
-    mem_addr_t policy_tree_root(void) const { return policy_base_addr_; }
+    oci_policy_key_t ing_v4_policy(void) const { return ing_v4_policy_; }
+    oci_policy_key_t ing_v6_policy(void) const { return ing_v6_policy_; }
+    oci_policy_key_t egr_v4_policy(void) const { return egr_v4_policy_; }
+    oci_policy_key_t egr_v6_policy(void) const { return egr_v6_policy_; }
 
 private:
     /**< @brief    constructor */
@@ -183,15 +186,17 @@ private:
 
  private:
     oci_subnet_key_t         key_;               /**< subnet Key */
-    oci_route_table_key_t    v4_route_table_;    /**< route table id */
-    oci_route_table_key_t    v6_route_table_;    /**< route table id */
+    oci_route_table_key_t    v4_route_table_;    /**< IPv4 route table id */
+    oci_route_table_key_t    v6_route_table_;    /**< IPv6 route table id */
+    oci_policy_key_t         ing_v4_policy_;     /**< ingress IPv4 policy id */
+    oci_policy_key_t         ing_v6_policy_;     /**< ingress IPv6 policy id */
+    oci_policy_key_t         egr_v4_policy_;     /**< ingress IPv4 policy id */
+    oci_policy_key_t         egr_v6_policy_;     /**< ingress IPv6 policy id */
     mac_addr_t               vr_mac_;            /**< virtual router MAC */
     ht_ctxt_t                ht_ctxt_;           /**< hash table context */
 
     /**< P4 datapath specific state */
     uint16_t                 hw_id_;             /**< hardware id */
-    mem_addr_t               policy_base_addr_;  /**< security policy rules base
-                                                      address for current epoch */
 } __PACK__;
 
 /** @} */    // end of OCI_SUBNET_ENTRY

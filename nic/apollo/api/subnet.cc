@@ -26,9 +26,14 @@ namespace api {
 /**< @brief    constructor */
 subnet_entry::subnet_entry() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+    v4_route_table_.id = OCI_ROUTE_TABLE_ID_INVALID;
+    v6_route_table_.id = OCI_ROUTE_TABLE_ID_INVALID;
+    ing_v4_policy_.id = OCI_POLICY_ID_INVALID;
+    ing_v6_policy_.id = OCI_POLICY_ID_INVALID;
+    egr_v4_policy_.id = OCI_POLICY_ID_INVALID;
+    egr_v6_policy_.id = OCI_POLICY_ID_INVALID;
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
-    policy_base_addr_ = 0XFFFFFFFFFFFFFFFF;
 }
 
 /**
@@ -80,6 +85,10 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     key_.id = oci_subnet->key.id;
     v4_route_table_.id = oci_subnet->v4_route_table.id;
     v6_route_table_.id = oci_subnet->v6_route_table.id;
+    ing_v4_policy_.id = oci_subnet->ing_v4_policy.id;
+    ing_v6_policy_.id = oci_subnet->ing_v6_policy.id;
+    egr_v4_policy_.id = oci_subnet->egr_v4_policy.id;
+    egr_v6_policy_.id = oci_subnet->egr_v6_policy.id;
     memcpy(&vr_mac_, &oci_subnet->vr_mac, sizeof(mac_addr_t));
     this->ht_ctxt_.reset();
     return SDK_RET_OK;
@@ -115,12 +124,16 @@ subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
      * we can use while programming vnics, routes etc.
      */
     OCI_TRACE_DEBUG("Creating subnet (vcn %u, subnet %u), pfx %s, vr ip %s, "
-                    "vr_mac %s, v4 route table %u, v6 route table %u",
+                    "vr_mac %s, v4 route table %u, v6 route table %u"
+                    "ingress v4 policy %u, ingress v6 policy %u"
+                    "egress v4 policy %u, egress v6 policy %u",
                     oci_subnet->vcn.id, key_.id,
                     ippfx2str(&oci_subnet->pfx), ipaddr2str(&oci_subnet->vr_ip),
                     macaddr2str(oci_subnet->vr_mac),
                     oci_subnet->v4_route_table.id,
-                    oci_subnet->v6_route_table.id);
+                    oci_subnet->v6_route_table.id,
+                    oci_subnet->ing_v4_policy.id, oci_subnet->ing_v6_policy.id,
+                    oci_subnet->egr_v4_policy.id, oci_subnet->egr_v6_policy.id);
     return SDK_RET_OK;
 }
 
@@ -132,9 +145,6 @@ sdk_ret_t
 subnet_entry::release_resources(void) {
     if (hw_id_ != 0xFF) {
         subnet_db()->subnet_idxr()->free(hw_id_);
-    }
-    if (policy_base_addr_ != 0xFFFFFFFFFFFFFFFF) {
-        // TODO: free this block
     }
     return SDK_RET_OK;
 }
@@ -177,7 +187,7 @@ subnet_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                               obj_ctxt_t *obj_ctxt) {
     oci_subnet_t *oci_subnet = &obj_ctxt->api_params->subnet_info;
 
-    /**< there is no h/w programming for subnet config, so nothing to activate */
+    /**< no h/w programming for subnet config, so nothing to activate */
     OCI_TRACE_DEBUG("Created subnet (vcn %u, subnet %u)", oci_subnet->vcn.id,
                     key_.id);
     return SDK_RET_OK;

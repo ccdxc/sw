@@ -30,6 +30,11 @@
 #define OCI_ROUTE_TABLE_ID_INVALID    0x0
 
 /**
+ * @brief    invalid policy id
+ */
+#define OCI_POLICY_ID_INVALID         0x0
+
+/**
  * @brief    basic OCI data types
  */
 typedef uint32_t  oci_vcn_id_t;

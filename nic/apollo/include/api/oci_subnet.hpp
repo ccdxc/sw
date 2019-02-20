@@ -13,6 +13,7 @@
 #include "nic/apollo/include/api/oci.hpp"
 #include "nic/apollo/include/api/oci_vcn.hpp"
 #include "nic/apollo/include/api/oci_route.hpp"
+#include "nic/apollo/include/api/oci_policy.hpp"
 
 /**
  * @defgroup OCI_SUBNET - subnet specific API definitions
@@ -36,13 +37,17 @@ typedef struct oci_subnet_key_s {
  * @brief subnet
  */
 typedef struct oci_subnet_s {
-    oci_subnet_key_t         key;               /**< subnet key */
-    oci_vcn_key_t            vcn;               /**< vcn this subnet is part of */
-    ip_prefix_t              pfx;               /**< subnet cidr block */
-    ip_addr_t                vr_ip;             /**< virtual router IP */
-    mac_addr_t               vr_mac;            /**< virtual router mac */
-    oci_route_table_key_t    v4_route_table;    /**< IPv4 route table id */
-    oci_route_table_key_t    v6_route_table;    /**< IPv6 route table id */
+    oci_subnet_key_t         key;            /**< subnet key */
+    oci_vcn_key_t            vcn;            /**< vcn this subnet is part of */
+    ip_prefix_t              pfx;            /**< subnet cidr block */
+    ip_addr_t                vr_ip;          /**< virtual router IP */
+    mac_addr_t               vr_mac;         /**< virtual router mac */
+    oci_route_table_key_t    v4_route_table; /**< IPv4 route table key */
+    oci_route_table_key_t    v6_route_table; /**< IPv6 route table key */
+    oci_policy_key_t         ing_v4_policy;  /**< ingress IPv4 policy table */
+    oci_policy_key_t         ing_v6_policy;  /**< ingress IPv6 policy table */
+    oci_policy_key_t         egr_v4_policy;  /**< egress IPv4 policy table */
+    oci_policy_key_t         egr_v6_policy;  /**< egress IPv6 policy table */
 } __PACK__ oci_subnet_t;
 
 /**

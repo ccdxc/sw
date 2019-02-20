@@ -212,6 +212,7 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
     oci_vnic_t                            *vnic_info;
     oci_route_table_key_t                 v4_route_table_key, v6_route_table_key;
     route_table                           *v4_route_table, *v6_route_table;
+    policy                                *v4_policy_table;
     mem_addr_t                            addr;
 
     vnic_info = &obj_ctxt->api_params->vnic_info;

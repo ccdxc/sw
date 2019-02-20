@@ -184,8 +184,8 @@ private:
 
 private:
     oci_policy_key_t    key_;        /**< security policy key */
-    ht_ctxt_t                    ht_ctxt_;    /**< hash table context */
-    impl_base                    *impl_;      /**< impl object instance */
+    ht_ctxt_t           ht_ctxt_;    /**< hash table context */
+    impl_base           *impl_;      /**< impl object instance */
 } __PACK__;
 
 /** @} */    // end of OCI_POLICY
