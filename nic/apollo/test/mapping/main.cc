@@ -207,9 +207,11 @@ TEST_F(mapping_test, mapping_create) {
     // Completed the configuration
     ASSERT_TRUE(oci_batch_commit() == SDK_RET_OK);
 
+#ifdef SIM
     api_test::send_packet(g_snd_pkt1, sizeof(g_snd_pkt1), TM_PORT_UPLINK_0, g_rcv_pkt1,
                           sizeof(g_rcv_pkt1), TM_PORT_UPLINK_1);
     exit_simulation();
+#endif
 }
 
 /// \brief Mapping many create

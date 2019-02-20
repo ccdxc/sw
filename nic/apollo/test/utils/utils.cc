@@ -36,6 +36,7 @@ send_packet (const uint8_t *tx_pkt, uint32_t tx_pkt_len, uint32_t tx_port,
              const uint8_t *exp_rx_pkt, uint32_t exp_rx_pkt_len,
              uint32_t exp_rx_port)
 {
+#ifdef SIM
     std::vector<uint8_t> ipkt;
     std::vector<uint8_t> opkt;
     std::vector<uint8_t> epkt;
@@ -76,6 +77,7 @@ send_packet (const uint8_t *tx_pkt, uint32_t tx_pkt_len, uint32_t tx_port,
         }
         testcase_end(tcid, i + 1);
     }
+#endif
 }
 
 }    // namespace api_test
