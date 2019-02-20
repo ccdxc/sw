@@ -58,19 +58,20 @@ var (
 // setup helper function to create RPC server and client instances
 func setup(t *testing.T, eventsStorePath string, dedupInterval, batchInterval time.Duration) (*RPCServer,
 	*rpckit.RPCClient, *exporters.MockExporter, epgrpc.EventsProxyAPIClient) {
+	tLogger := logger.WithContext("t_name", t.Name())
 	// create dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(dedupInterval, batchInterval, eventsStorePath, logger)
+	evtsDispatcher, err := dispatcher.NewDispatcher(dedupInterval, batchInterval, eventsStorePath, tLogger)
 	AssertOk(t, err, "failed to create dispatcher")
 	evtsDispatcher.Start()
 
 	// create mock events exporter; register it with the dispatcher and start the exporter
-	mockExporter := exporters.NewMockExporter("mock", mockExporterChLen, logger)
+	mockExporter := exporters.NewMockExporter("mock", mockExporterChLen, tLogger)
 	mockEventsCh, offsetTracker, err := evtsDispatcher.RegisterExporter(mockExporter)
 	AssertOk(t, err, "failed to register mock events exporter")
 	mockExporter.Start(mockEventsCh, offsetTracker)
 
 	// create grpc server
-	rpcServer, err := NewRPCServer(globals.EvtsProxy, testServerURL, evtsDispatcher, logger)
+	rpcServer, err := NewRPCServer(globals.EvtsProxy, testServerURL, evtsDispatcher, tLogger)
 	AssertOk(t, err, "failed to create rpc server")
 	testServerURL := rpcServer.GetListenURL()
 
@@ -246,26 +247,27 @@ func TestEventsProxyRPCServerShutdown(t *testing.T) {
 
 // TestEventsProxyRPCServerInstantiation tests the RPC server instantiation cases
 func TestEventsProxyRPCServerInstantiation(t *testing.T) {
+	tLogger := logger.WithContext("t_name", t.Name())
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	dispatcher, err := dispatcher.NewDispatcher(time.Second, 10*time.Millisecond, eventsStorePath, logger)
+	dispatcher, err := dispatcher.NewDispatcher(time.Second, 10*time.Millisecond, eventsStorePath, tLogger)
 	AssertOk(t, err, "failed to create dispatcher")
 
 	// no listenURL name
-	_, err = NewRPCServer("server-name", "", dispatcher, logger)
+	_, err = NewRPCServer("server-name", "", dispatcher, tLogger)
 	Assert(t, err != nil, "expected failure, RPCServer init succeeded")
 
 	// no server name
-	_, err = NewRPCServer("", "listen-url", dispatcher, logger)
+	_, err = NewRPCServer("", "listen-url", dispatcher, tLogger)
 	Assert(t, err != nil, "expected failure, RPCServer init succeeded")
 
 	// no server name and listen URL
-	_, err = NewRPCServer("", "", dispatcher, logger)
+	_, err = NewRPCServer("", "", dispatcher, tLogger)
 	Assert(t, err != nil, "expected failure, RPCServer init succeeded")
 
 	// nil dispatcher
-	_, err = NewRPCServer("server-name", "listen-url", nil, logger)
+	_, err = NewRPCServer("server-name", "listen-url", nil, tLogger)
 	Assert(t, err != nil, "expected failure, RPCServer init succeeded")
 
 	// nil logger
