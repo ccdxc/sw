@@ -130,10 +130,7 @@ func naplesShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	naplesCfg := nmd.Naples{}
 	json.Unmarshal(resp, &naplesCfg)
-	if tabularFormat {
-		fmt.Println(strings.Trim(strings.Replace(fmt.Sprintf("%+v", naplesCfg.Spec), " ", "\n", -1), "{}"))
-	}
-	if verbose && tabularFormat {
+	if verbose {
 		fmt.Printf("%+v\n", naplesCfg.Spec)
 	}
 	return nil
@@ -150,13 +147,7 @@ func naplesProfileShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	var profiles []nmd.NaplesProfile
 	json.Unmarshal(resp, &profiles)
-	if tabularFormat {
-		for _, p := range profiles {
-			fmt.Println(strings.Trim(strings.Replace(fmt.Sprintf("%+v", p.Spec), " ", "\n", -1), "{}"))
-			fmt.Println("----")
-		}
-	}
-	if verbose && tabularFormat {
+	if verbose {
 		for _, p := range profiles {
 			fmt.Println(strings.Trim(strings.Replace(fmt.Sprintf("%+v", p.Spec), " ", "\n", -1), "{}"))
 			fmt.Println("----")

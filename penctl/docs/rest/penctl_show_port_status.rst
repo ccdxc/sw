@@ -27,9 +27,8 @@ Options inherited from parent commands
 
 ::
 
-  -j, --json          display in json format
+  -j, --json          display in json format (default true)
       --port uint32   Specify port number (default 1)
-  -t, --tabular       display in tabular format (default true)
       --verbose       display penctl debug log
   -v, --version       display version of penctl
   -y, --yaml          display in yaml format

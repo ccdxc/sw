@@ -30,8 +30,7 @@ penctl create qos-class [flags]
 ### Options inherited from parent commands
 
 ```
-  -j, --json      display in json format
-  -t, --tabular   display in tabular format (default true)
+  -j, --json      display in json format (default true)
       --verbose   display penctl debug log
   -v, --version   display version of penctl
   -y, --yaml      display in yaml format

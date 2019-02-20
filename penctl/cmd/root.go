@@ -63,7 +63,6 @@ var verbose bool
 var version bool
 var yamlFormat bool
 var jsonFormat bool
-var tabularFormat bool
 var mockMode bool
 
 func init() {
@@ -81,8 +80,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "", false, "display penctl debug log")
 	rootCmd.PersistentFlags().BoolVarP(&version, "version", "v", false, "display version of penctl")
 	rootCmd.PersistentFlags().BoolVarP(&yamlFormat, "yaml", "y", false, "display in yaml format")
-	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", false, "display in json format")
-	rootCmd.PersistentFlags().BoolVarP(&tabularFormat, "tabular", "t", true, "display in tabular format")
+	rootCmd.PersistentFlags().BoolVarP(&jsonFormat, "json", "j", true, "display in json format")
 	rootCmd.PersistentFlags().BoolVarP(&mockMode, "localhost", "l", false, "run penctl in mock mode to localhost")
 
 	rootCmd.PersistentFlags().MarkHidden("localhost")
@@ -172,10 +170,7 @@ func cliPreRunInit(cmd *cobra.Command, args []string) error {
 }
 
 func processFlags(cmd *cobra.Command, args []string) {
-	if cmd.Flags().Changed("yaml") || cmd.Flags().Changed("json") {
-		tabularFormat = false
-	}
 	if verbose {
-		fmt.Printf("jsonFormat: %t, yamlFormat: %t, tabularFormat: %t\n", jsonFormat, yamlFormat, tabularFormat)
+		fmt.Printf("jsonFormat: %t, yamlFormat: %t\n", jsonFormat, yamlFormat)
 	}
 }

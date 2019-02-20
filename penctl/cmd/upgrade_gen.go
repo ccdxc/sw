@@ -21,7 +21,6 @@ var upgrademetricsShowCmd = &cobra.Command{
 }
 
 func upgrademetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/upgrademetrics/")
 	if err != nil {

@@ -19,6 +19,11 @@ import (
 	"github.com/ghodss/yaml"
 )
 
+func isJSONString(s string) bool {
+	var js map[string]interface{}
+	return json.Unmarshal([]byte(s), &js) == nil
+}
+
 func restPostForm(url string, values map[string]io.Reader) ([]byte, error) {
 	if ur, err := getNaplesURL(); err == nil {
 		url = ur + url
@@ -214,7 +219,7 @@ func restGetWithBody(v interface{}, url string) ([]byte, error) {
 		return nil, errors.New(string(bodyBytes))
 	}
 
-	if jsonFormat || yamlFormat {
+	if isJSONString(string(bodyBytes)) && (jsonFormat || yamlFormat) {
 		var prettyJSON bytes.Buffer
 		error := json.Indent(&prettyJSON, bodyBytes, "", "\t")
 		if error != nil {
@@ -224,6 +229,7 @@ func restGetWithBody(v interface{}, url string) ([]byte, error) {
 			return nil, nil
 		}
 		if jsonFormat {
+			fmt.Println("PRINTING PRETTY JSON")
 			fmt.Println(string(prettyJSON.Bytes()))
 		} else if yamlFormat {
 			b, err := yaml.JSONToYAML(bodyBytes)
@@ -304,7 +310,7 @@ func restDelete(url string) ([]byte, error) {
 	}
 	bodyBytes, _ := ioutil.ReadAll(getResp.Body)
 
-	if jsonFormat || yamlFormat {
+	if isJSONString(string(bodyBytes)) && (jsonFormat || yamlFormat) {
 		var prettyJSON bytes.Buffer
 		error := json.Indent(&prettyJSON, bodyBytes, "", "\t")
 		if error != nil {

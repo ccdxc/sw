@@ -21,7 +21,6 @@ var dbwaintdbmetricsShowCmd = &cobra.Command{
 }
 
 func dbwaintdbmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dbwaintdbmetrics/")
 	if err != nil {
@@ -43,7 +42,6 @@ var dbwaintlifqstatemapmetricsShowCmd = &cobra.Command{
 }
 
 func dbwaintlifqstatemapmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dbwaintlifqstatemapmetrics/")
 	if err != nil {
@@ -65,7 +63,6 @@ var dppintcreditmetricsShowCmd = &cobra.Command{
 }
 
 func dppintcreditmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dppintcreditmetrics/")
 	if err != nil {
@@ -87,7 +84,6 @@ var dppintfifometricsShowCmd = &cobra.Command{
 }
 
 func dppintfifometricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dppintfifometrics/")
 	if err != nil {
@@ -109,7 +105,6 @@ var dppintreg1metricsShowCmd = &cobra.Command{
 }
 
 func dppintreg1metricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dppintreg1metrics/")
 	if err != nil {
@@ -131,7 +126,6 @@ var dppintreg2metricsShowCmd = &cobra.Command{
 }
 
 func dppintreg2metricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dppintreg2metrics/")
 	if err != nil {
@@ -153,7 +147,6 @@ var dppintsramseccmetricsShowCmd = &cobra.Command{
 }
 
 func dppintsramseccmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dppintsramseccmetrics/")
 	if err != nil {
@@ -175,7 +168,6 @@ var dprintcreditmetricsShowCmd = &cobra.Command{
 }
 
 func dprintcreditmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dprintcreditmetrics/")
 	if err != nil {
@@ -197,7 +189,6 @@ var dprintfifometricsShowCmd = &cobra.Command{
 }
 
 func dprintfifometricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dprintfifometrics/")
 	if err != nil {
@@ -219,7 +210,6 @@ var dprintflopfifometricsShowCmd = &cobra.Command{
 }
 
 func dprintflopfifometricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dprintflopfifometrics/")
 	if err != nil {
@@ -241,7 +231,6 @@ var dprintreg1metricsShowCmd = &cobra.Command{
 }
 
 func dprintreg1metricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dprintreg1metrics/")
 	if err != nil {
@@ -263,7 +252,6 @@ var dprintreg2metricsShowCmd = &cobra.Command{
 }
 
 func dprintreg2metricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dprintreg2metrics/")
 	if err != nil {
@@ -285,7 +273,6 @@ var dprintsramseccmetricsShowCmd = &cobra.Command{
 }
 
 func dprintsramseccmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/dprintsramseccmetrics/")
 	if err != nil {
@@ -307,7 +294,6 @@ var inteccdescmetricsShowCmd = &cobra.Command{
 }
 
 func inteccdescmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/inteccdescmetrics/")
 	if err != nil {
@@ -329,7 +315,6 @@ var intsparemetricsShowCmd = &cobra.Command{
 }
 
 func intsparemetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/intsparemetrics/")
 	if err != nil {
@@ -351,7 +336,6 @@ var mcmchintmcmetricsShowCmd = &cobra.Command{
 }
 
 func mcmchintmcmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/mcmchintmcmetrics/")
 	if err != nil {
@@ -373,7 +357,6 @@ var mdhensintaxierrmetricsShowCmd = &cobra.Command{
 }
 
 func mdhensintaxierrmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/mdhensintaxierrmetrics/")
 	if err != nil {
@@ -395,7 +378,6 @@ var mdhensinteccmetricsShowCmd = &cobra.Command{
 }
 
 func mdhensinteccmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/mdhensinteccmetrics/")
 	if err != nil {
@@ -417,7 +399,6 @@ var mdhensintipcoremetricsShowCmd = &cobra.Command{
 }
 
 func mdhensintipcoremetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/mdhensintipcoremetrics/")
 	if err != nil {
@@ -439,7 +420,6 @@ var mpmpnsintcryptometricsShowCmd = &cobra.Command{
 }
 
 func mpmpnsintcryptometricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/mpmpnsintcryptometrics/")
 	if err != nil {
@@ -461,7 +441,6 @@ var pbpbchbmintecchbmrbmetricsShowCmd = &cobra.Command{
 }
 
 func pbpbchbmintecchbmrbmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/pbpbchbmintecchbmrbmetrics/")
 	if err != nil {
@@ -483,7 +462,6 @@ var pbpbchbminthbmaxierrrspmetricsShowCmd = &cobra.Command{
 }
 
 func pbpbchbminthbmaxierrrspmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/pbpbchbminthbmaxierrrspmetrics/")
 	if err != nil {
@@ -505,7 +483,6 @@ var pbpbchbminthbmdropmetricsShowCmd = &cobra.Command{
 }
 
 func pbpbchbminthbmdropmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/pbpbchbminthbmdropmetrics/")
 	if err != nil {
@@ -527,7 +504,6 @@ var pbpbchbminthbmpbusviolationmetricsShowCmd = &cobra.Command{
 }
 
 func pbpbchbminthbmpbusviolationmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/pbpbchbminthbmpbusviolationmetrics/")
 	if err != nil {
@@ -549,7 +525,6 @@ var pbpbchbminthbmxoffmetricsShowCmd = &cobra.Command{
 }
 
 func pbpbchbminthbmxoffmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/pbpbchbminthbmxoffmetrics/")
 	if err != nil {
@@ -571,7 +546,6 @@ var pbpbcintcreditunderflowmetricsShowCmd = &cobra.Command{
 }
 
 func pbpbcintcreditunderflowmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/pbpbcintcreditunderflowmetrics/")
 	if err != nil {
@@ -593,7 +567,6 @@ var pbpbcintpbusviolationmetricsShowCmd = &cobra.Command{
 }
 
 func pbpbcintpbusviolationmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/pbpbcintpbusviolationmetrics/")
 	if err != nil {
@@ -615,7 +588,6 @@ var pbpbcintrplmetricsShowCmd = &cobra.Command{
 }
 
 func pbpbcintrplmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/pbpbcintrplmetrics/")
 	if err != nil {
@@ -637,7 +609,6 @@ var pbpbcintwritemetricsShowCmd = &cobra.Command{
 }
 
 func pbpbcintwritemetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/pbpbcintwritemetrics/")
 	if err != nil {
@@ -659,7 +630,6 @@ var sgempuinterrmetricsShowCmd = &cobra.Command{
 }
 
 func sgempuinterrmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/sgempuinterrmetrics/")
 	if err != nil {
@@ -681,7 +651,6 @@ var sgempuintinfometricsShowCmd = &cobra.Command{
 }
 
 func sgempuintinfometricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/sgempuintinfometrics/")
 	if err != nil {
@@ -703,7 +672,6 @@ var sgeteinterrmetricsShowCmd = &cobra.Command{
 }
 
 func sgeteinterrmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/sgeteinterrmetrics/")
 	if err != nil {
@@ -725,7 +693,6 @@ var sgeteintinfometricsShowCmd = &cobra.Command{
 }
 
 func sgeteintinfometricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/sgeteintinfometrics/")
 	if err != nil {
@@ -747,7 +714,6 @@ var ssepicsintbadaddrmetricsShowCmd = &cobra.Command{
 }
 
 func ssepicsintbadaddrmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/ssepicsintbadaddrmetrics/")
 	if err != nil {
@@ -769,7 +735,6 @@ var ssepicsintbgmetricsShowCmd = &cobra.Command{
 }
 
 func ssepicsintbgmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/ssepicsintbgmetrics/")
 	if err != nil {
@@ -791,7 +756,6 @@ var ssepicsintpicsmetricsShowCmd = &cobra.Command{
 }
 
 func ssepicsintpicsmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/ssepicsintpicsmetrics/")
 	if err != nil {

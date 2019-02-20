@@ -30,7 +30,6 @@ import (
 			resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/default/"+{{.GetName}}Name+"/")
 	                myvar := goproto.{{.GetName}}{}
         	        json.Unmarshal(resp, &myvar)
-                	if tabularFormat {
                         	{{$fields := .Fields}}{{range $fields}}
 				{{if and (not (eq .GetName "Meta"))  (not (eq .GetName "Key"))}}
         	                        fmt.Println("{{.GetName}}: ", myvar.{{.GetName}})
@@ -40,7 +39,6 @@ import (
 			resp, _ = restGet(revProxyPort, "telemetry/v1/metrics/{{ToLower .GetName}}/")
 			myvars := []goproto.{{.GetName}}{}
 			json.Unmarshal(resp, &myvars)
-			if tabularFormat {
 				for _, myvar := range myvars {
 					{{$fields := .Fields}}{{range $fields}}
 					{{if and (not (eq .GetName "Meta"))  (not (eq .GetName "Key"))}}

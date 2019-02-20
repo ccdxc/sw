@@ -29,7 +29,6 @@ func init() {
 }
 
 func genericmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
-	tabularFormat = false
 	if !cmd.Flags().Changed("yaml") {
 		jsonFormat = true
 	}
