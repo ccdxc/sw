@@ -597,6 +597,7 @@ class EsxHostManagement(HostManagement):
     def UnloadDriver(self):
         def __unload_driver(self):
             self.__host_connect()
+            self.__ssh_handle.get_transport().set_keepalive(10)
             stdin, stdout, stderr = self.__ssh_handle.exec_command("vmkload_mod -u ionic_en", timeout=10)
             exit_status = stdout.channel.recv_exit_status()
         t=threading.Thread(target=__unload_driver, args=[self])
