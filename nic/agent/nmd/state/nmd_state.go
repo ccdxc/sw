@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
@@ -58,7 +59,6 @@ func WithRolloutAPI(ro nmdapi.RolloutCtrlAPI) NewNMDOption {
 func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient resolver.Interface,
 	dbPath, nodeUUID, macAddr, listenURL, certsListenURL, remoteCertsURL, cmdRegURL, cmdUpdURL, mode string,
 	regInterval, updInterval time.Duration, opts ...NewNMDOption) (*NMD, error) {
-
 	var emdb emstore.Emstore
 	var err error
 
@@ -84,6 +84,10 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 	if err != nil {
 		log.Errorf("Error opening the embedded db. Err: %v", err)
 		return nil, err
+	}
+	c, _ := types.TimestampProto(time.Now())
+	ts := api.Timestamp{
+		Timestamp: *c,
 	}
 
 	// construct default config
@@ -115,6 +119,9 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 			log.Fatalf("Error persisting the default naples config in EmDB, err: %+v", err)
 		}
 	}
+
+	config.CreationTime = ts
+	config.ModTime = ts
 
 	// create NMD object
 	nm := NMD{

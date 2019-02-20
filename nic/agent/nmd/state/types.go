@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
@@ -136,17 +138,15 @@ func (n *NMD) GetConfigMode() nmd.MgmtMode {
 	return n.config.Spec.Mode
 }
 
-func (n *NMD) setNaplesConfig(cfg nmd.Naples) {
+func (n *NMD) setNaplesConfig(cfgSpec nmd.NaplesSpec) {
 	n.Lock()
 	defer n.Unlock()
+	c, _ := types.TimestampProto(time.Now())
 
-	n.config = cfg
-}
-
-func (n *NMD) setNaplesConfigSpec(cfgSpec nmd.NaplesSpec) {
-	n.Lock()
-	defer n.Unlock()
-
+	ts := api.Timestamp{
+		Timestamp: *c,
+	}
+	n.config.ModTime = ts
 	n.config.Spec = cfgSpec
 }
 

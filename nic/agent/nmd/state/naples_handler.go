@@ -76,7 +76,7 @@ func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
 // UpdateNaplesConfig updates a local Naples Config object
 func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 	log.Infof("NAPLES Update: Old: %v  | New: %v ", n.config, cfg)
-	n.setNaplesConfigSpec(cfg.Spec)
+	n.setNaplesConfig(cfg.Spec)
 	err := n.store.Write(&cfg)
 
 	// Update Naples Feature Profile
