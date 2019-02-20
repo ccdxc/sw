@@ -28,6 +28,11 @@ hal_ret_t cpupkt_poll_receive(hal::pd::cpupkt_ctxt_t *ctx,
     return HAL_RET_RETRY;
 }
 
+hal_ret_t cpupkt_poll_receive_new(hal::pd::cpupkt_ctxt_t *ctx,
+				  hal::pd::cpupkt_pkt_batch_t *pkt_batch)
+{
+    return HAL_RET_RETRY;
+}
 
 void process_pending_queues()
 {

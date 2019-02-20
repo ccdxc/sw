@@ -46,7 +46,8 @@ public:
     fte_stats_t      get_stats(bool clear_on_read);
     fte_txrx_stats_t get_txrx_stats(bool clear_on_read);
     void update_rx_stats(cpu_rxhdr_t *rxhdr, size_t pkt_len);
-    void update_tx_stats(size_t pkt_len);
+    void update_rx_stats_batch(uint16_t pktcount);
+    void update_tx_stats(uint16_t pktcount);
 private:
     uint8_t                 id_;
     hal::pd::cpupkt_ctxt_t *arm_ctx_;
@@ -63,9 +64,11 @@ private:
     bool                    bypass_fte_;
 
     void process_arq();
+    void process_arq_new();
     void process_softq();
     void ctx_mem_init();
     void compute_cps();
+    void compute_cps_batch(uint16_t);
 };
 
 //------------------------------------------------------------------------------
@@ -326,7 +329,7 @@ void inst_t::start(sdk::lib::thread *curr_thread)
         } else { /* PLATFORM_MOCK */
             usleep(1000);
         }
-        process_arq();
+        process_arq_new();
         process_softq();
         fte::impl::process_pending_queues();
         curr_thread->punch_heartbeat();
@@ -429,7 +432,19 @@ void incr_inst_fte_tx_stats(size_t pkt_len)
         return;
     }
 
-    t_inst->update_tx_stats(pkt_len);
+    t_inst->update_tx_stats(1);
+}
+
+//----------------------------------------------------------------------------
+// Increment fte tx stats
+//----------------------------------------------------------------------------
+void incr_inst_fte_tx_stats_batch (uint16_t pktcount)
+{
+    if (fte_disabled_ || t_inst == NULL) {
+        return;
+    }
+
+    t_inst->update_tx_stats(pktcount);
 }
 
 //----------------------------------------------------------------------------
@@ -484,6 +499,38 @@ void inst_t::incr_fte_error(hal_ret_t rc)
  }
 
 //-----------------------------------------------------------------------------
+ // Compute Connections per second
+ //-----------------------------------------------------------------------------
+ void inst_t::compute_cps_batch(uint16_t pktcount)
+ {
+     sdk::timespec_t temp_ts;
+     uint64_t         time_diff;
+
+     // Get the current timestamp
+     HAL_GET_SYSTEM_CLOCK(&t_cur_ts);
+  
+     temp_ts = t_cur_ts;
+     sdk::timestamp_subtract(&temp_ts, &t_old_ts);
+     sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
+
+     if (time_diff > TIME_NSECS_PER_SEC) {
+         stats_.cps = t_rx_pkts; 
+         t_old_ts = t_cur_ts;
+         t_rx_pkts = pktcount;
+     } else if (time_diff == TIME_NSECS_PER_SEC) {
+         t_rx_pkts += pktcount;
+         stats_.cps = t_rx_pkts;
+         t_old_ts = t_cur_ts;
+     } else {
+         t_rx_pkts += pktcount;
+     }
+
+     // Record the Max. CPS we've done
+     if (stats_.cps > stats_.cps_hwm) stats_.cps_hwm = stats_.cps;
+
+ }
+
+//-----------------------------------------------------------------------------
 // Update Rx Counters based on the queue
 // ----------------------------------------------------------------------------
 void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
@@ -492,7 +539,7 @@ void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
      * If no cpu header, then this is a dummy flow-miss packet for PPS testing,
      * we'll still compute CPS.
      */
-    if (!cpu_rxhdr) {
+    if (bypass_fte_ && !cpu_rxhdr) {
         compute_cps();
         stats_.flow_miss_pkts++;
 	return;
@@ -518,11 +565,28 @@ void inst_t::update_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
 }
 
 //-----------------------------------------------------------------------------
+// Update Rx Counters based on the queue
+// ----------------------------------------------------------------------------
+void inst_t::update_rx_stats_batch(uint16_t pktcount)
+{
+    /*
+     * If no cpu header, then this is a dummy flow-miss packet for PPS testing,
+     * we'll still compute CPS.
+     */
+    if (!bypass_fte_) return;
+
+    compute_cps_batch(pktcount);
+    stats_.flow_miss_pkts += pktcount;
+    return;
+}
+
+
+//-----------------------------------------------------------------------------
 // Update Tx Counters
 // ----------------------------------------------------------------------------
-void inst_t::update_tx_stats(size_t pkt_len)
+void inst_t::update_tx_stats(uint16_t pktcount)
 {
-    stats_.queued_tx_pkts++;
+    stats_.queued_tx_pkts += pktcount;
 }
 
 void free_flow_miss_pkt(uint8_t * pkt)
@@ -634,6 +698,136 @@ void inst_t::process_arq()
     } while(false);
 
     fte::impl::cfg_db_close();
+}
+
+thread_local hal::pd::cpupkt_pkt_batch_t cpupkt_batch;
+
+//------------------------------------------------------------------------------
+// Process pkt(s) from arq
+//------------------------------------------------------------------------------
+void inst_t::process_arq_new ()
+{
+    hal_ret_t                 ret;
+    uint16_t                  npkt;
+    cpu_rxhdr_t               *cpu_rxhdr;
+    uint8_t                   *pkt = NULL;
+    size_t                    pkt_len;
+    bool                      copied_pkt;
+
+    cpupkt_batch.pktcount = 0;
+
+    // read the packet
+    ret = fte::impl::cpupkt_poll_receive_new(arm_ctx_, &cpupkt_batch);
+    if (ret == HAL_RET_RETRY) {
+        return;
+    }
+
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: arm rx failed, ret={}", ret);
+        return;
+    }
+
+    /*
+     * In 'bypass_fte' mode, we just want to go thru the CPU PMD Rx and Tx paths. This
+     * mode is used for PMD PPS measurements/testing. So we'll just enqueue the packet
+     * to tx-q and send it out.
+     */
+    if (bypass_fte_) {
+
+        update_rx_stats_batch(cpupkt_batch.pktcount);
+ 
+        for (npkt = 0; npkt < cpupkt_batch.pktcount; npkt++) {
+	    pkt = cpupkt_batch.pkts[npkt].pkt;
+	    pkt_len = cpupkt_batch.pkts[npkt].pkt_len;
+	    cpu_rxhdr = cpupkt_batch.pkts[npkt].cpu_rxhdr;
+            copied_pkt = cpupkt_batch.pkts[npkt].copied_pkt;
+
+            HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
+
+	    if (pkt) {
+
+                ctx_->set_pkt(cpu_rxhdr, pkt, pkt_len);
+		hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
+
+		// Update Rx Counters
+		//update_rx_stats(cpu_rxhdr, pkt_len);
+	      
+		ctx_->queue_txpkt(pkt, pkt_len, &cpu_header, NULL, HAL_LIF_CPU,
+				  CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ,
+				  types::WRING_TYPE_ASQ, copied_pkt ? free_flow_miss_pkt : NULL);
+	    }
+	}
+
+	// write the packet
+	ret = ctx_->send_queued_pkts_new(arm_ctx_);
+	if (ret != HAL_RET_OK) {
+	    HAL_TRACE_ERR("fte: failed to send pkt ret={}", ret);
+	}
+
+	// The 'send_queued_pkts()' already updates tx stats.
+	//update_tx_stats(pkt_len);
+
+	return;
+    }
+
+    if (!cpupkt_batch.pktcount) return;
+
+    HAL_TRACE_DEBUG("Received {} packets", cpupkt_batch.pktcount);
+
+    for (npkt = 0; npkt < cpupkt_batch.pktcount; npkt++) {
+
+        // Process pkt with db open
+        fte::impl::cfg_db_open();
+
+        pkt = cpupkt_batch.pkts[npkt].pkt;
+	pkt_len = cpupkt_batch.pkts[npkt].pkt_len;
+	cpu_rxhdr = cpupkt_batch.pkts[npkt].cpu_rxhdr;
+        copied_pkt = cpupkt_batch.pkts[npkt].copied_pkt;
+
+	HAL_TRACE_DEBUG("npkt {} pkt_len {}, pkt {:p}", npkt, pkt_len, pkt);
+
+	do {
+
+	    // Update Rx Counters
+	    update_rx_stats(cpu_rxhdr, pkt_len);
+
+	    // Init ctx_t
+	    ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, copied_pkt, iflow_, rflow_, feature_state_, num_features_);
+	    if (ret != HAL_RET_OK) {
+	        if (ret == HAL_RET_FTE_SPAN) {
+		    HAL_TRACE_DEBUG("fte: done processing span packet");
+		    continue;
+		} else {
+		    HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
+		    break;
+		}
+	    }
+
+	    // process the packet and update flow table
+	    auto app_ctx = hal::app_redir::app_redir_ctx(*ctx_, false);
+	    if (app_ctx) {
+	        app_ctx->set_arm_ctx(arm_ctx_);
+	    }
+	    ret = ctx_->process();
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("fte: failied to process, ret={}", ret);
+
+                /*
+                 * We'll set the drop in this error case, so the cpupkt resources
+                 * can be reclaimed in 'send_queued_pkts' below.
+                 */
+                ctx_->set_drop();
+            }
+
+            // write the packets
+            ret = ctx_->send_queued_pkts(arm_ctx_);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("fte: failed to send pkt ret={}", ret);
+            }
+	} while(false);
+
+        fte::impl::cfg_db_close();
+    }
 }
 
 //------------------------------------------------------------------------------

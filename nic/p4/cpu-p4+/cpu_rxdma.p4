@@ -14,15 +14,15 @@
 
 #define rx_table_s1_t1 cpu_rx_read_cpu_desc
 #define rx_table_s1_t1_action read_cpu_desc 
-#define rx_table_s1_t2 cpu_rx_read_cpu_page
-#define rx_table_s1_t2_action read_cpu_page 
+//#define rx_table_s1_t2 cpu_rx_read_cpu_page
+//#define rx_table_s1_t2_action read_cpu_page 
 
 #define rx_table_s2_t0_action cpu_rx_semaphore_full_drop_action 
 
 #define rx_table_s2_t1 cpu_rx_desc_alloc
 #define rx_table_s2_t1_action desc_alloc
-#define rx_table_s2_t2 cpu_rx_page_alloc
-#define rx_table_s2_t2_action page_alloc
+//#define rx_table_s2_t2 cpu_rx_page_alloc
+//#define rx_table_s2_t2_action page_alloc
 
 // Stage 3 is for hash defined in common rxdma
 
@@ -42,6 +42,8 @@
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
     modify_field(common_global_scratch.flags, common_phv.flags); \
     modify_field(common_global_scratch.debug_dol, common_phv.debug_dol); \
+    modify_field(common_global_scratch.dpr_sem_full_drop, common_phv.dpr_sem_full_drop); \
+    modify_field(common_global_scratch.arq_sem_full_drop, common_phv.arq_sem_full_drop); \
 
 /******************************************************************************
  * D-vectors
@@ -130,6 +132,8 @@ header_type common_global_phv_t {
         qstate_addr             : CPU_HBM_ADDRESS_WIDTH;
         flags                   : 8;
         debug_dol               : 8;
+        dpr_sem_full_drop       : 1;
+        arq_sem_full_drop       : 1;
     }
 }
 
@@ -345,6 +349,7 @@ action page_alloc(page, pad) {
 // Stage 4 table 0 action
 action read_arqrx() {
     // k + i
+    GENERATE_GLOBAL_K
     // from t0_s2s
     modify_field(t0_s2s_scratch.arqrx_id, t0_s2s.arqrx_id);
 

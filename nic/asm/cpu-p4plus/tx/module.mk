@@ -4,6 +4,7 @@ MODULE_TARGET       = cpu_txdma.asmbin
 MODULE_PREREQS      = cpu_p4plus.p4bin
 MODULE_PIPELINE     = iris gft
 MODULE_INCS         = ${BLD_P4GEN_DIR}/cpu_txdma/asm_out \
+                      ${BLD_P4GEN_DIR}/cpu_txdma/alt_asm_out \
                       ${MODULE_DIR}/../include \
                       ${MODULE_DIR}/../../common-p4+/include \
                       ${MODULE_DIR}/../../../include

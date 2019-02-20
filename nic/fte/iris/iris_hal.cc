@@ -33,13 +33,14 @@ cpupkt_ctxt_alloc_init(uint32_t qid)
     SDK_ASSERT(ret == HAL_RET_OK);
 
     rx_args.ctxt = args.ctxt;
-    rx_args.type = types::WRING_TYPE_ARQRX;
+    rx_args.type = types::WRING_TYPE_ASCQ;
+
     rx_args.queue_id = qid;
     pd_func_args.pd_cpupkt_register_rx_queue = &rx_args;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, &pd_func_args);
     SDK_ASSERT(ret == HAL_RET_OK);
 
-    rx_args.type = types::WRING_TYPE_ASCQ;
+    rx_args.type = types::WRING_TYPE_ARQRX;
     ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_REG_RXQ, &pd_func_args);
     SDK_ASSERT(ret == HAL_RET_OK);
 
@@ -68,6 +69,19 @@ hal_ret_t cpupkt_poll_receive(hal::pd::cpupkt_ctxt_t *ctx,
 
     return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_POLL_RECV, &pd_func_args);
 
+}
+
+hal_ret_t cpupkt_poll_receive_new (hal::pd::cpupkt_ctxt_t *ctx,
+				   hal::pd::cpupkt_pkt_batch_t *pkt_batch)
+{
+    hal::pd::pd_cpupkt_poll_receive_new_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
+
+    args.ctxt = ctx;
+    args.pkt_batch = pkt_batch;
+    pd_func_args.pd_cpupkt_poll_receive_new = &args;
+
+    return hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_POLL_RECV_NEW, &pd_func_args);
 }
 
 hal_ret_t cpupkt_send(hal::pd::cpupkt_ctxt_t *ctx,
@@ -99,7 +113,7 @@ hal_ret_t cpupkt_send(hal::pd::cpupkt_ctxt_t *ctx,
 //------------------------------------------------------------------------------
 void process_pending_queues()
 {
-  hal::proxy::tls_poll_asym_pend_req_q();
+    hal::proxy::tls_poll_asym_pend_req_q();
 }
 
 }

@@ -33,6 +33,8 @@
     modify_field(common_global_scratch.free_buffer, common_phv.free_buffer); \
     modify_field(common_global_scratch.ascq_base, common_phv.ascq_base); \
     modify_field(common_global_scratch.cpucb_addr, common_phv.cpucb_addr); \
+    modify_field(common_global_scratch.pad, common_phv.pad); \
+    modify_field(common_global_scratch.cpu_dpr_sem_cindex, common_phv.cpu_dpr_sem_cindex); \
    
 
 /********************
@@ -63,7 +65,8 @@ header_type cpu_txdma_initial_action_t {
         asq_pi_ci_eq_drops      : 32;
         asq_total_pkts          : 64;
         ascq_sem_full_drops     : 64;
-        ascq_free_requests      : 64;
+        ascq_free_requests      : 32;
+        cpu_dpr_sem_cindex      : 32;
     }
 }
 
@@ -82,6 +85,7 @@ header_type cpu_txdma_initial_action_with_pc_t {
         asq_total_pkts          : 64;
         ascq_sem_full_drops     : 32;
         ascq_free_requests      : 32;
+        cpu_dpr_sem_cindex      : 32;
     }
 }
 
@@ -115,6 +119,8 @@ header_type common_global_phv_t {
         free_buffer             : 1;
         ascq_base               : CPU_HBM_ADDRESS_WIDTH;
         cpucb_addr              : 40;
+        pad                     : 12;
+        cpu_dpr_sem_cindex      : 32;
     }
 }
 
@@ -232,7 +238,8 @@ metadata dma_cmd_phv2mem_t dma_cmd_ascq;
  *****************************************************************************/
 action cpu_tx_sem_full_drop(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
                             pi_0, ci_0, asq_base, ascq_base, ascq_sem_inf_addr,
-                            asq_pi_ci_eq_drops, asq_total_pkts, ascq_sem_full_drops, ascq_free_requests) {
+                            asq_pi_ci_eq_drops, asq_total_pkts, ascq_sem_full_drops, ascq_free_requests,
+                            cpu_dpr_sem_cindex) {
 
     GENERATE_GLOBAL_K
     // d for stage 0
@@ -257,6 +264,7 @@ action cpu_tx_sem_full_drop(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, tota
     modify_field(cpu_txdma_initial_with_pc_d.asq_total_pkts, asq_total_pkts);
     modify_field(cpu_txdma_initial_with_pc_d.ascq_sem_full_drops, ascq_sem_full_drops);
     modify_field(cpu_txdma_initial_with_pc_d.ascq_free_requests, ascq_free_requests);
+    modify_field(cpu_txdma_initial_with_pc_d.cpu_dpr_sem_cindex, cpu_dpr_sem_cindex);
 }
 
 /*
@@ -265,7 +273,7 @@ action cpu_tx_sem_full_drop(pc, rsvd, cosA, cosB, cos_sel, eval_last, host, tota
 action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid,
                              pi_0, ci_0, asq_base, ascq_base, ascq_sem_inf_addr, 
                              asq_pi_ci_eq_drops, asq_total_pkts, ascq_sem_full_drops,
-                             ascq_free_requests) {
+                             ascq_free_requests, cpu_dpr_sem_cindex) {
     // k + i for stage 0
 
     // from intrinsic
@@ -296,6 +304,7 @@ action cpu_tx_initial_action(rsvd, cosA, cosB, cos_sel, eval_last, host, total, 
     modify_field(cpu_txdma_initial_d.asq_total_pkts, asq_total_pkts);
     modify_field(cpu_txdma_initial_d.ascq_sem_full_drops, ascq_sem_full_drops);
     modify_field(cpu_txdma_initial_d.ascq_free_requests, ascq_free_requests);
+    modify_field(cpu_txdma_initial_d.cpu_dpr_sem_cindex, cpu_dpr_sem_cindex);
 }
 
 // Stage 1 table 0
@@ -329,6 +338,7 @@ action read_asq_descr(A0, O0, L0, A1, O1, L1, A2, O2, L2, next_addr, next_pkt) {
 // Stage 3 table 0
 action read_cpu_hdr(flags, src_lif, hw_vlan_id, l2_offset, tm_oq) {
     // K
+    GENERATE_GLOBAL_K
     modify_field(to_s3_scratch.ascq_sem_inf_addr, to_s3.ascq_sem_inf_addr);
 
     // d for stage 3 table 0

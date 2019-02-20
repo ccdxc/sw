@@ -371,8 +371,10 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_REG_TXQ, pd_cpupkt_register_tx_queue);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_UNREG_TXQ, pd_cpupkt_unregister_tx_queue);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_POLL_RECV, pd_cpupkt_poll_receive);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_POLL_RECV_NEW, pd_cpupkt_poll_receive_new);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_FREE_PKT_RES, pd_cpupkt_free_pkt_resources);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_SEND, pd_cpupkt_send);
+    PD_FUNC_LOAD(PD_FUNC_ID_CPU_SEND_NEW, pd_cpupkt_send_new);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_PAGE_ALLOC, pd_cpupkt_page_alloc);
     PD_FUNC_LOAD(PD_FUNC_ID_CPU_DESCR_ALLOC, pd_cpupkt_descr_alloc);
     PD_FUNC_LOAD(PD_FUNC_ID_PGM_SEND_RING_DBELL, pd_cpupkt_program_send_ring_doorbell);

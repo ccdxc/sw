@@ -12,7 +12,6 @@ MODULE_SRCS         =     $(MODULE_DIR)/cpu_initial_action.s \
                           $(MODULE_DIR)/cpu_read_desc_pindex.s \
                           $(MODULE_DIR)/cpu_read_arqrx_pindex.s \
                           $(MODULE_DIR)/cpu_desc_alloc.s \
-                          $(MODULE_DIR)/cpu_page_alloc.s \
                           $(MODULE_DIR)/cpu_hash_calc_id.s \
                           $(MODULE_DIR)/cpu_write_arq.s \
                           $(MODULE_DIR)/cpu_rx_ring_full_drop_error.s \

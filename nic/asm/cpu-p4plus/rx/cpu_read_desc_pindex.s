@@ -19,7 +19,8 @@ cpu_rx_read_desc_pindex_start:
     andi    r4, r4, ((1 << CAPRI_CPU_RX_DPR_RING_SHIFT) - 1)
     phvwr   p.s2_t1_s2s_desc_pindex, r4 
     seq     c1, d.u.read_cpu_desc_d.desc_pindex_full, 1
-    bcf     [c1], cpu_rx_semaphore_full_error
+    //bcf     [c1], cpu_rx_semaphore_full_error
+    bcf     [c1], cpu_rx_semaphore_full_error_new
 
 table_read_desc_alloc:
     addui   r3, r0, hiword(CPU_RX_DPR_TABLE_BASE)
@@ -41,12 +42,19 @@ table_read_desc_alloc:
 	nop 
 
 cpu_rx_semaphore_full_error:
-    phvwri p.{app_header_table1_valid...app_header_table1_valid}, 7
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     add    r3, CPU_CB_WRITE_ARQRX_OFFSET, k.common_phv_qstate_addr
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN,
                          cpu_rx_semaphore_full_drop_error,
                          r3,
                          TABLE_SIZE_512_BITS)
     nop.e
-    nop 
+    nop
 
+cpu_rx_semaphore_full_error_new:
+    phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
+    add r7, CPU_CB_WRITE_ARQRX_OFFSET, k.common_phv_qstate_addr
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, CPU_RX_CB_SEM_FULL_OFFSET, 1)
+    phvwri p.common_phv_dpr_sem_full_drop, 1
+    phvwri.e  p.p4_intr_global_drop, 1
+    nop

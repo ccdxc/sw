@@ -333,6 +333,7 @@ PD_FUNC_STUB(pd_cpupkt_register_rx_queue);
 PD_FUNC_STUB(pd_cpupkt_register_tx_queue);
 PD_FUNC_STUB(pd_cpupkt_unregister_tx_queue);
 PD_FUNC_STUB(pd_cpupkt_poll_receive);
+PD_FUNC_STUB(pd_cpupkt_poll_receive_new);
 PD_FUNC_STUB(pd_cpupkt_free);
 PD_FUNC_STUB(pd_cpupkt_send);
 PD_FUNC_STUB(pd_cpupkt_page_alloc);

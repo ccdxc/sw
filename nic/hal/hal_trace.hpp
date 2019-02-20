@@ -120,6 +120,7 @@ using hal::utils::hal_trace_level;
                                         ##__VA_ARGS__);                        \
     }                                                                          \
 
+
 #define HAL_TRACE_DEBUG_NO_META(fmt...)                                        \
     if (likely(hal::utils::hal_logger()) &&                                    \
         (hal_trace_level() >= ::utils::trace_debug)) {                         \

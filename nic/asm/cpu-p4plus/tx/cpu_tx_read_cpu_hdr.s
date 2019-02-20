@@ -47,4 +47,12 @@ cpu_tx_read_cpu_hdr_done:
 
 cpu_tx_read_ascq_index:
     CAPRI_NEXT_TABLE_READ_e(0, TABLE_LOCK_DIS, cpu_tx_write_pkt_start, k.to_s3_ascq_sem_inf_addr, TABLE_SIZE_64_BITS)
+
+#if 0
+
+    /*
+     * We'll enable this when the code is ready to free CPU-RX-DPR directly from P4+ instead of ARM ASCQ.
+     */
+    //CAPRI_NEXT_TABLE_READ_e(0, TABLE_LOCK_DIS, cpu_tx_write_pkt_start, k.common_phv_cpucb_addr, TABLE_SIZE_64_BITS)
+#endif
     nop

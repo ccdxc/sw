@@ -37,6 +37,18 @@ table_read_asq_cindex:
     add     r_asq_addr, d.{u.cpu_tx_initial_action_d.asq_base}.dx, r_asq_addr, CPU_ASQ_ENTRY_SIZE_SHIFT
     tbladd  d.{u.cpu_tx_initial_action_d.ci_0}.hx, 1
 
+#if 0
+
+    /*
+     * We'll get the CPU-RX-DPR semaphore shadow sw C-Index from the CB. This is so we can write
+     * teh CPU-RX-DPR descriptor directly to the DPR pool for freeing.
+     * This code will be enabled after addressing all cases from ARM (Currently ARM does the
+     * freeing of these descriptors via the ASCQ processing).
+     */
+    phvwr   p.common_phv_cpu_dpr_sem_cindex, d.{u.cpu_tx_initial_action_d.cpu_dpr_sem_cindex}
+    tbladd  d.{u.cpu_tx_initial_action_d.cpu_dpr_sem_cindex}, 1
+#endif
+
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, cpu_tx_read_asq_ci_start, r_asq_addr, TABLE_SIZE_64_BITS)
 
     seq     c1, d.{u.cpu_tx_initial_action_d.ci_0}.hx, d.{u.cpu_tx_initial_action_d.pi_0}.hx

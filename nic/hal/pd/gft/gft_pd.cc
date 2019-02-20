@@ -689,5 +689,11 @@ pd_cpupkt_poll_receive (pd_func_args_t *pd_func_args)
     return HAL_RET_RETRY;
 }
 
+hal_ret_t
+pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
+{
+    return HAL_RET_RETRY;
+}
+
 }    // namespace pd
 }    // namespace hal

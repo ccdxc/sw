@@ -14,6 +14,8 @@ hal_ret_t cpupkt_poll_receive(hal::pd::cpupkt_ctxt_t *ctx,
                               fte::cpu_rxhdr_t **cpu_rxhdr,
                               uint8_t **pkt, size_t *pkt_len, bool *copied_pkt);
 
+hal_ret_t cpupkt_poll_receive_new(hal::pd::cpupkt_ctxt_t *ctx,
+				  hal::pd::cpupkt_pkt_batch_t *pkt_batch);
 
 hal_ret_t cpupkt_send(hal::pd::cpupkt_ctxt_t *ctx,
                       uint32_t qid,

@@ -1,10 +1,11 @@
 #include "INGRESS_p.h"
+#include "INGRESS_cpu_tx_write_pkt_k.h"
 #include "ingress.h"
 #include "cpu-table.h"
 #include "cpu-macros.h"
         
 struct phv_ p;
-struct cpu_tx_write_pkt_k k;
+struct cpu_tx_write_pkt_k_ k;
 struct cpu_tx_write_pkt_d d;
         
 #define c_upd_vlan_tag      c1
@@ -120,24 +121,38 @@ cpu_tx_write_ascq:
     seq     c_temp, d.u.write_pkt_d.ascq_full, 1
     b.c_temp cpu_tx_ascq_full_fatal_error
     nop
-
+	
     CPU_TX_ASCQ_ENQUEUE(r_temp,
                         k.to_s4_asq_desc_addr,
                         d.{u.write_pkt_d.ascq_pindex}.wx,
-                        k.{common_phv_ascq_base_sbit0_ebit3...common_phv_ascq_base_sbit36_ebit39},
+                        k.{common_phv_ascq_base},
                         ascq_ring_entry_descr_addr,
                         dma_cmd_ascq_dma_cmd,
                         1,
                         1)
-    add r7, k.{common_phv_cpucb_addr_sbit0_ebit3...common_phv_cpucb_addr_sbit36_ebit39}, r0
+    add r7, k.{common_phv_cpucb_addr}, r0
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, ASCQ_FREE_REQ_OFFSET, 1)
+
+#if 0
+
+    /*
+     * We'll enable this when the code is ready to free CPU-RX-DPR directly from P4+ instead of ARM ASCQ.
+     */
+
+    add    r2, k.common_phv_cpu_dpr_sem_cindex, (CAPRI_CPU_RX_DPR_RING_SIZE + 1)
+	//addi   r2, r0, 1      
+    phvwr  p.common_phv_cpu_dpr_sem_cindex, r2.wx
+    addi   r3, r0, CAPRI_SEM_CPU_RX_DPR_ALLOC_CI_RAW_ADDR
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_cmd_ascq_dma_cmd, r3, common_phv_cpu_dpr_sem_cindex, common_phv_cpu_dpr_sem_cindex)
+
+#endif
 
 cpu_tx_write_pkt_done:
     nop.e
     nop
 
 cpu_tx_ascq_full_fatal_error:
-    add r3, r0, k.{common_phv_cpucb_addr_sbit0_ebit3...common_phv_cpucb_addr_sbit36_ebit39}
+    add r3, r0, k.{common_phv_cpucb_addr}
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, cpu_tx_sem_full_drop_error, r3, TABLE_SIZE_512_BITS)
     CAPRI_CLEAR_TABLE1_VALID
     CAPRI_CLEAR_TABLE2_VALID

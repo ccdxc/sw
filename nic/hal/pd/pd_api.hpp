@@ -2427,6 +2427,11 @@ typedef struct pd_cpupkt_poll_receive_args_s {
      bool    *copied_pkt;
 } __PACK__ pd_cpupkt_poll_receive_args_t;
 
+typedef struct pd_cpupkt_poll_receive_new_args_s {
+     cpupkt_ctxt_t      *ctxt;
+     cpupkt_pkt_batch_t *pkt_batch;
+} __PACK__ pd_cpupkt_poll_receive_new_args_t;
+
 typedef struct pd_cpupkt_free_pkt_resources_args_s {
     cpupkt_ctxt_t* ctxt;
     uint8_t* pkt;
@@ -2445,6 +2450,10 @@ typedef struct pd_cpupkt_send_args_s {
     uint32_t qid;
     uint8_t  ring_number;
 } __PACK__ pd_cpupkt_send_args_t;
+
+typedef struct pd_cpupkt_send_new_args_s {
+    cpupkt_send_pkt_batch_t pkt_batch;
+} __PACK__ pd_cpupkt_send_new_args_t;
 
 typedef struct pd_cpupkt_page_alloc_args_s {
     cpupkt_hw_id_t* page_addr;
@@ -3253,7 +3262,9 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_SNAKE_TEST_CREATE,        291, "PD_FUNC_ID_SNAKE_TEST_CREATE") \
     ENTRY(PD_FUNC_ID_SNAKE_TEST_DELETE,        292, "PD_FUNC_ID_SNAKE_TEST_DELETE") \
     ENTRY(PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE,  293, "PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE") \
-    ENTRY(PD_FUNC_ID_MAX,                      294, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_CPU_POLL_RECV_NEW,        294, "PD_FUNC_ID_CPU_POLL_RECV_NEW") \
+    ENTRY(PD_FUNC_ID_CPU_SEND_NEW,             295, "PD_FUNC_ID_CPU_SEND_NEW")\
+    ENTRY(PD_FUNC_ID_MAX,                      296, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3558,8 +3569,10 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_cpupkt_register_tx_queue);
         PD_UNION_ARGS_FIELD(pd_cpupkt_unregister_tx_queue);
         PD_UNION_ARGS_FIELD(pd_cpupkt_poll_receive);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_poll_receive_new);
         PD_UNION_ARGS_FIELD(pd_cpupkt_free_pkt_resources);
         PD_UNION_ARGS_FIELD(pd_cpupkt_send);
+        PD_UNION_ARGS_FIELD(pd_cpupkt_send_new);
         PD_UNION_ARGS_FIELD(pd_cpupkt_page_alloc);
         PD_UNION_ARGS_FIELD(pd_cpupkt_descr_alloc);
         PD_UNION_ARGS_FIELD(pd_cpupkt_program_send_ring_doorbell);
@@ -3988,8 +4001,10 @@ PD_FUNCP_TYPEDEF(pd_cpupkt_register_rx_queue);
 PD_FUNCP_TYPEDEF(pd_cpupkt_register_tx_queue);
 PD_FUNCP_TYPEDEF(pd_cpupkt_unregister_tx_queue);
 PD_FUNCP_TYPEDEF(pd_cpupkt_poll_receive);
+PD_FUNCP_TYPEDEF(pd_cpupkt_poll_receive_new);
 PD_FUNCP_TYPEDEF(pd_cpupkt_free_pkt_resources);
 PD_FUNCP_TYPEDEF(pd_cpupkt_send);
+PD_FUNCP_TYPEDEF(pd_cpupkt_send_new);
 PD_FUNCP_TYPEDEF(pd_cpupkt_page_alloc);
 PD_FUNCP_TYPEDEF(pd_cpupkt_descr_alloc);
 PD_FUNCP_TYPEDEF(pd_cpupkt_program_send_ring_doorbell);

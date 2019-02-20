@@ -14,6 +14,7 @@ cpu_rx_semaphore_full_drop_error:
     phvwri p.{app_header_table0_valid...app_header_table3_valid}, 0
     add r7, CPU_CB_WRITE_ARQRX_OFFSET, k.common_phv_qstate_addr
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, CPU_RX_CB_SEM_FULL_OFFSET, 1)
+    phvwri p.common_phv_dpr_sem_full_drop, 1
     phvwri.e  p.p4_intr_global_drop, 1
     nop
         

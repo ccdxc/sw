@@ -937,7 +937,6 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                     pkt_info->cpu_header.hw_vlan_id,
                     pkt_info->lifq, pkt_info->ring_number, pkt_info->wring_type,
                     pkt_info->pkt, pkt_info->pkt_len);
-
     return HAL_RET_OK;
 }
 
@@ -989,7 +988,6 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         HAL_TRACE_DEBUG("fte:: txpkt slif={} pkt={:p} len={}",
                         pkt_info->cpu_header.src_lif,
                         pkt_info->pkt, pkt_info->pkt_len);
-
         if ( istage_ > 0 ){
             pkt_info->p4plus_header.lkp_inst = 1;
         }
@@ -1030,10 +1028,84 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         incr_inst_fte_tx_stats(pkt_info->pkt_len);
         // Issue a callback to free the packet
         if (pkt_info->cb) {
-            HAL_TRACE_DEBUG(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
+	    HAL_TRACE_DEBUG(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
             pkt_info->cb(pkt_info->pkt);
         }
     } 
+    txpkt_cnt_ = 0;
+
+    return HAL_RET_OK;
+}
+
+/*
+ * Send batched packets in the Tx-queue to the PMD.
+ */
+hal_ret_t
+ctx_t::send_queued_pkts_new (hal::pd::cpupkt_ctxt_t* arm_ctx)
+{
+    hal_ret_t ret;
+
+    hal::pd::pd_cpupkt_send_new_args_t args;
+    hal::pd::pd_func_args_t pd_func_args = {0};
+
+    for (int i = 0; i < txpkt_cnt_; i++) {
+        txpkt_info_t *pkt_info = &txpkts_[i];
+        HAL_TRACE_DEBUG("fte:: txpkt slif={} pkt={:p} len={}",
+                        pkt_info->cpu_header.src_lif,
+                        pkt_info->pkt, pkt_info->pkt_len);
+
+        if ( istage_ > 0 ){
+            pkt_info->p4plus_header.lkp_inst = 1;
+        }
+
+        pkt_info->p4plus_header.p4plus_app_id = P4PLUS_APPTYPE_CPU;
+
+        args.pkt_batch.pkts[i].ctxt = arm_ctx;
+        args.pkt_batch.pkts[i].type = pkt_info->wring_type;
+        args.pkt_batch.pkts[i].queue_id = pkt_info->wring_type == types::WRING_TYPE_ASQ ? fte_id() : pkt_info->lifq.qid;
+        args.pkt_batch.pkts[i].cpu_header = &pkt_info->cpu_header;
+        args.pkt_batch.pkts[i].p4_header = &pkt_info->p4plus_header;
+        args.pkt_batch.pkts[i].data = pkt_info->pkt;
+        args.pkt_batch.pkts[i].data_len = pkt_info->pkt_len;
+        args.pkt_batch.pkts[i].dest_lif = pkt_info->lifq.lif;
+        args.pkt_batch.pkts[i].qtype = pkt_info->lifq.qtype;
+        args.pkt_batch.pkts[i].qid = pkt_info->wring_type == types::WRING_TYPE_ASQ ? fte_id() : pkt_info->lifq.qid;
+        args.pkt_batch.pkts[i].ring_number = pkt_info->ring_number;
+
+    }
+    args.pkt_batch.pktcount = txpkt_cnt_;
+
+    pd_func_args.pd_cpupkt_send_new = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_SEND_NEW, &pd_func_args);
+#if 0
+        ret = hal::pd::cpupkt_send(arm_ctx,
+                                   pkt_info->wring_type,
+                                   pkt_info->wring_type == types::WRING_TYPE_ASQ ?
+                                   fte_id() : pkt_info->lifq.qid,
+                                   &pkt_info->cpu_header,
+                                   &pkt_info->p4plus_header,
+                                   pkt_info->pkt, pkt_info->pkt_len,
+                                   pkt_info->lifq.lif, pkt_info->lifq.qtype,
+                                   pkt_info->wring_type == types::WRING_TYPE_ASQ ?
+                                   fte_id() : pkt_info->lifq.qid,  pkt_info->ring_number);
+#endif
+
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failed to transmit pkt, ret={}", ret);
+    }
+
+    incr_inst_fte_tx_stats_batch(txpkt_cnt_);
+
+    for (int i = 0; i < txpkt_cnt_; i++) {
+        txpkt_info_t *pkt_info = &txpkts_[i];
+
+	// Issue a callback to free the packet
+	if (pkt_info->cb) {
+	    HAL_TRACE_DEBUG(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
+	    pkt_info->cb(pkt_info->pkt);
+	}
+    }
+
     txpkt_cnt_ = 0;
 
     return HAL_RET_OK;

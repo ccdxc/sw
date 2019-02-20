@@ -11,6 +11,8 @@ namespace pd {
 #define MAX_CPU_PKT_QUEUES              (types::WRingType_ARRAYSIZE)
 #define MAX_CPU_PKT_QUEUE_INST_INFO     (1024)
 
+#define CPUPKT_MAX_BATCH_SIZE           512
+
 #define HAL_MAX_CPU_PKT_DESCR_ENTRIES   1024
 #define CPU_PKT_DESCR_SIZE              128
 
@@ -78,6 +80,7 @@ typedef struct cpupkt_qinst_info_s {
     cpupkt_hw_id_t          pc_index_addr;
     uint8_t                 *virt_pc_index_addr; //mmap'ed virtual address of the queue index slot
     uint64_t                valid_bit_value;
+    uint16_t                queue_tbl_shift;
     cpupkt_queue_info_t     *queue_info;
     cpupkt_qinst_ctr_t      ctr;
 } cpupkt_qinst_info_t;
@@ -103,6 +106,36 @@ typedef struct cpupkt_ctxt_s {
     cpupkt_tx_ctxt_t tx;
 } __PACK__ cpupkt_ctxt_t;
 
+typedef struct cpupkt_pktinfo_s {
+     p4_to_p4plus_cpu_pkt_t *cpu_rxhdr;
+     uint8_t                *pkt;
+     size_t                 pkt_len;
+     bool                   copied_pkt;
+} __PACK__ cpupkt_pktinfo_t;
+
+typedef struct cpupkt_pkt_batch_s {
+   cpupkt_pktinfo_t pkts[CPUPKT_MAX_BATCH_SIZE];
+   uint16_t         pktcount;
+} __PACK__ cpupkt_pkt_batch_t;
+
+typedef struct cpupkt_send_pkt_s {
+    cpupkt_ctxt_t* ctxt;
+    types::WRingType type;
+    uint32_t queue_id;
+    cpu_to_p4plus_header_t* cpu_header;
+    p4plus_to_p4_header_t* p4_header;
+    uint8_t* data;
+    size_t data_len;
+    uint16_t dest_lif;
+    uint8_t  qtype;
+    uint32_t qid;
+    uint8_t  ring_number;
+} __PACK__ cpupkt_send_pkt_t;
+
+typedef struct cpupkt_send_pkt_batch_s {
+   cpupkt_send_pkt_t pkts[CPUPKT_MAX_BATCH_SIZE];
+   uint16_t          pktcount;
+} __PACK__ cpupkt_send_pkt_batch_t;
 
 // Stats for cpupkt
 

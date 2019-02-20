@@ -442,6 +442,7 @@ void incr_inst_feature_stats (uint16_t feature_id, hal_ret_t rc=HAL_RET_OK,
 
 void incr_inst_fte_rx_stats (cpu_rxhdr_t *rxhdr, size_t pkt_len);
 void incr_inst_fte_tx_stats (size_t pkt_len);
+void incr_inst_fte_tx_stats_batch(uint16_t pktcount);
 typedef struct fte_feature_stats_s {
     uint64_t        drop_pkts;                 // Number of packets dropped by the feature
     uint64_t        drop_reason[HAL_RET_ERR];  // Number of drops seen per drop reason code
@@ -492,7 +493,7 @@ static const uint8_t MAX_FLOW_KEYS = 3;
 class ctx_t {
 public:
     static const uint8_t MAX_STAGES = hal::MAX_SESSION_FLOWS; // max no.of times a pkt enters p4 pipeline
-    static const uint8_t MAX_QUEUED_PKTS = 2;  // max queued pkts for tx
+    static const uint16_t MAX_QUEUED_PKTS = 512;  // max queued pkts for tx, to enable batching
     static const uint8_t MAX_QUEUED_HANDLERS = 16; // max queued completion handlers
 
     hal_ret_t init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pkt,
@@ -560,6 +561,7 @@ public:
                           types::WRingType wring_type = types::WRING_TYPE_ASQ,
                           post_xmit_cb_t cb = NULL);
     hal_ret_t send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx);
+    hal_ret_t send_queued_pkts_new(hal::pd::cpupkt_ctxt_t* arm_ctx);
 
     //proto spec is valid when flow update triggered via hal proto api
     bool protobuf_request() { return sess_spec_ != NULL; }
@@ -731,7 +733,7 @@ private:
     bool                  vlan_tag_valid_;
 
     // pkts queued for tx
-    uint8_t               txpkt_cnt_;
+    uint16_t               txpkt_cnt_;
     txpkt_info_t          txpkts_[MAX_QUEUED_PKTS];
 
     session::SessionSpec           *sess_spec_;
