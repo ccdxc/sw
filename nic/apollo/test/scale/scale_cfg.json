@@ -40,7 +40,7 @@
         {
             "_comment_" : "security policy parameters here are per subnet per direction",
             "kind" : "security-policy",
-            "count" : "1"
+            "count" : "4"
         },
         {
             "kind" : "flows",

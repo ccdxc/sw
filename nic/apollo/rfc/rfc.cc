@@ -110,9 +110,9 @@ rfc_build_itables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
         itable_add_proto_port_inodes(rule_num, proto_port_inode,
                                      rule->match.l3_match.ip_proto,
                                      &rule->match.l4_match.dport_range);
-        addr_inode++;
-        port_inode++;
-        proto_port_inode++;
+        addr_inode += 2;
+        port_inode += 2;
+        proto_port_inode += 2;
     }
     addr_itable->num_nodes = port_itable->num_nodes =
         proto_port_itable->num_nodes = rule_num << 1;
