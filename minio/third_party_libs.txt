@@ -1,4 +1,4 @@
-nic/third-party/boost/*
+nic/sdk/third-party/boost/*
 
 nic/sdk/third-party/avago/fw/*
 nic/sdk/third-party/avago/aapl-2.6.6/build/*
@@ -7,7 +7,7 @@ nic/sdk/third-party/avago/build
 
 nic/hal/third-party/grpc/*
 nic/hal/third-party/google/*
-nic/hal/third-party/zmq/*
+nic/sdk/third-party/zmq/*
 nic/hal/third-party/isc/*
 nic/hal/third-party/crchack/bin/crchack/
 
@@ -24,7 +24,7 @@ nic/sdk/third-party/libev/*
 
 nic/hal/third-party/tins/*
 nic/hal/third-party/pcap/*
-nic/hal/third-party/sknobs/*
+nic/sdk/third-party/sknobs/*
 nic/hal/third-party/judy/*
 
 nic/third-party/gflags/include/*
@@ -50,8 +50,9 @@ nic/third-party/ofp/OBJS/aarch64/include/*
 nic/third-party/ofp/OBJS/aarch64/lib/*
 nic/sdk/third-party/locale/*
 
-platform/src/third-party/lib/ncurses/include/*
-platform/src/third-party/lib/ncurses/aarch64/*
+nic/sdk/third-party/gmp/*
+nic/sdk/third-party/ncurses/*
+nic/sdk/third-party/edit/*
 
 nic/sdk/third-party/dpdk/*
 nic/sdk/third-party/asic/*

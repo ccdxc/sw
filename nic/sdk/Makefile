@@ -4,9 +4,11 @@ export ARCH     ?= x86_64
 export TOPDIR   := ${realpath ${CURDIR}}
 export SDKDIR   := ${TOPDIR}
 export BLDTOP   := ${TOPDIR}
-export MKDEFS   := ${TOPDIR}/mkinfra
 export MKINFRA  := ${TOPDIR}/mkinfra
+export MKDEFS  := ${TOPDIR}/mkdefs
+export TOOLSDIR := ${TOPDIR}/tools/
 
+include ${MKDEFS}/common.mk
 include ${MKINFRA}/config.mk
 
 .DEFAULT_GOAL := all

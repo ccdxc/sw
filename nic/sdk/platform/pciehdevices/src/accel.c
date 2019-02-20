@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include "nic/sdk/storage/storage_seq_common.h"
+#include "storage/storage_seq_common.h"
 #include "platform/pciehdevices/include/pci_ids.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "pciehdevices.h"

@@ -15,4 +15,10 @@ third-party/locale
 third-party/dpdk
 third-party/asic
 third-party/libev
+third-party/boost
+third-party/sknobs
+third-party/zmq
+third-party/gmp
+third-party/ncurses
+third-party/edit
 platform/capri/capri_tm_rw.cc

@@ -10,7 +10,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <curses.h>
 #include <string.h>
 #include <cstring>
 #include "capmon.hpp"

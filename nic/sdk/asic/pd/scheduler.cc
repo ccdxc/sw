@@ -9,7 +9,7 @@ namespace pd {
 sdk_ret_t
 asicpd_tx_scheduler_map_alloc (asicpd_scheduler_lif_params_t *lif)
 {
-    sdk_ret_t     ret;
+    sdk_ret_t     ret = SDK_RET_ERR;
     uint32_t      alloc_offset = INVALID_INDEXER_INDEX;
     uint32_t      alloc_units = 0;
     capri_txs_sched_lif_params_t params;

@@ -1,5 +1,5 @@
-#ifndef _PARAMS_H_
-#define _PARAMS_H_
+#ifndef __HOST_MEM_PARAMS_HPP__
+#define __HOST_MEM_PARAMS_HPP_
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -44,6 +44,6 @@ inline const key_t HostMemHandle() {
   return kShmKey + getuid();
 }
 
-}  // namespace utils
+}   // namespace utils
 
 #endif

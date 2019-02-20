@@ -14,6 +14,8 @@ from enum import IntEnum
 # insert the p4-hlir submodule path
 _top_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 sys.path.insert(1, _top_dir + '/p4-hlir')
+# insert tenjin path
+sys.path.append(_top_dir + '/sdk/tools')
 
 from p4_hlir.main import HLIR
 import p4_hlir.hlir.p4 as p4

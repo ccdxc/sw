@@ -2,6 +2,11 @@
 
 import os
 import sys
+
+_top_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+# insert tenjin path
+sys.path.append(_top_dir + '/sdk/tools')
+
 from   tenjin         import *
 from   tenjin_wrapper import *
 

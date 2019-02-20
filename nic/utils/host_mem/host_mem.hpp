@@ -4,7 +4,7 @@
 // TODO Need to move bm_allocator to utils.
 #include "lib/bm_allocator/bm_allocator.hpp"
 
-#include "nic/utils/host_mem/params.hpp"
+#include "nic/sdk/model_sim/include/host_mem_params.hpp"
 
 namespace utils {
 

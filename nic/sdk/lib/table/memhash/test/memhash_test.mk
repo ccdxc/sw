@@ -1,5 +1,6 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
+# TODO , Need to remove the pipeline dependent code. Un-used now
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = memhash_test.gtest
 MODULE_PIPELINE = iris

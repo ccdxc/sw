@@ -17,7 +17,7 @@
 #include "nic/sdk/model_sim/include/HBM.h"
 #include "nic/sdk/model_sim/include/HOST_MEM.h"
 #include "nic/sdk/model_sim/include/buf_hdr.h"
-#include "nic/utils/host_mem/params.hpp"
+#include "nic/sdk/model_sim/include/host_mem_params.hpp"
 #include "zmq_wait.h"
 
 #ifdef COVERAGE

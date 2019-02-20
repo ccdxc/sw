@@ -16,7 +16,7 @@
 #include <vector>
 #include <queue>
 #include <signal.h>
-#include "nic/utils/host_mem/params.hpp"
+#include "model_sim/include/host_mem_params.hpp"
 
 #ifdef COVERAGE
 #define HAL_GCOV_FLUSH()     { ::__gcov_flush(); }
