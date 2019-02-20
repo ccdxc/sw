@@ -32,6 +32,8 @@ var (
 	ifTunnelDestIP string
 	ifSourceGw     string
 	ifGwMac        string
+	ifOverlayMac   string
+	ifPfMac        string
 	ifIngressBw    uint32
 	ifEgressBw     uint32
 )
@@ -99,6 +101,8 @@ func init() {
 	ifUpdateCmd.Flags().StringVar(&ifGwMac, "gw-mac", "", "Specify gateway MAC address as aabb.ccdd.eeff")
 	ifUpdateCmd.Flags().Uint32Var(&ifIngressBw, "ingress-bw", 0, "Specify ingress bandwidth in KBytes/sec <0-12500000 KBytes/sec>. 0 means no policer")
 	ifUpdateCmd.Flags().Uint32Var(&ifEgressBw, "egress-bw", 0, "Specify egress bandwidth in KBytes/sec <0-12500000 KBytes/sec>. 0 means no policer")
+	ifUpdateCmd.Flags().StringVar(&ifOverlayMac, "overlay-mac", "", "Specify overlay MAC address as aabb.ccdd.eeff (optional)")
+	ifUpdateCmd.Flags().StringVar(&ifPfMac, "pf-mac", "", "Specify PF MAC address as aabb.ccdd.eeff (optional)")
 
 	ifUpdateCmd.MarkFlagRequired("encap")
 	ifUpdateCmd.MarkFlagRequired("name")
@@ -176,6 +180,8 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	var sourceGWPrefix uint32
 	var sourceGWPrefixLen uint32
 	var gwMac uint64
+	var pfMac uint64
+	var overlayMac uint64
 	var intfID uint64
 
 	if strings.Compare(ifEncap, "MPLSoUDP") != 0 {
@@ -222,6 +228,28 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 	gwMac = uint64(mac[0])<<40 | uint64(mac[1])<<32 | uint64(mac[2])<<24 | uint64(mac[3])<<16 | uint64(mac[4])<<8 | uint64(mac[5])
+
+	if cmd.Flags().Changed("pf-mac") {
+		mac, err = net.ParseMAC(ifPfMac)
+		if err != nil {
+			fmt.Printf("Invalid PF MAC\n")
+			return
+		}
+		pfMac = uint64(mac[0])<<40 | uint64(mac[1])<<32 | uint64(mac[2])<<24 | uint64(mac[3])<<16 | uint64(mac[4])<<8 | uint64(mac[5])
+	} else {
+		pfMac = 0
+	}
+
+	if cmd.Flags().Changed("overlay-mac") {
+		mac, err = net.ParseMAC(ifOverlayMac)
+		if err != nil {
+			fmt.Printf("Invalid overlay MAC\n")
+			return
+		}
+		overlayMac = uint64(mac[0])<<40 | uint64(mac[1])<<32 | uint64(mac[2])<<24 | uint64(mac[3])<<16 | uint64(mac[4])<<8 | uint64(mac[5])
+	} else {
+		overlayMac = 0
+	}
 
 	sourceGwStr := strings.Split(ifSourceGw, "/")
 	if len(strings.Split(sourceGwStr[0], ".")) != 4 {
@@ -299,12 +327,14 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 				V4Addr: tunnelDestIP,
 			},
 		},
-		MplsTag:   &mplsOut,
-		SourceGw:  sourceGW,
-		IngressBw: ifIngressBw,
-		EgressBw:  ifEgressBw,
-		GwMacDa:   gwMac,
-		LifName:   ifName,
+		MplsTag:    &mplsOut,
+		SourceGw:   sourceGW,
+		IngressBw:  ifIngressBw,
+		EgressBw:   ifEgressBw,
+		GwMacDa:    gwMac,
+		LifName:    ifName,
+		OverlayMac: overlayMac,
+		PfMac:      pfMac,
 	}
 	req := &halproto.InterfaceSpec{
 		KeyOrHandle: &halproto.InterfaceKeyHandle{

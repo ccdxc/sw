@@ -23,6 +23,8 @@ var (
 	ifTunnelDestIP string
 	ifSourceGw     string
 	ifGwMac        string
+	ifPfMac        string
+	ifOverlayMac   string
 	ifIngressBw    uint32
 	ifEgressBw     uint32
 )
@@ -86,6 +88,8 @@ func init() {
 	ifUpdateCmd.Flags().StringVar(&ifGwMac, "gw-mac", "", "Specify gateway MAC address as aabb.ccdd.eeff")
 	ifUpdateCmd.Flags().Uint32Var(&ifIngressBw, "ingress-bw", 0, "Specify ingress bandwidth in KBytes/sec <0-12500000 KBytes/sec>. 0 means no policer")
 	ifUpdateCmd.Flags().Uint32Var(&ifEgressBw, "egress-bw", 0, "Specify egress bandwidth in KBytes/sec <0-12500000 KBytes/sec>. 0 means no policer")
+	ifUpdateCmd.Flags().StringVar(&ifOverlayMac, "overlay-mac", "", "Specify overlay MAC address as aabb.ccdd.eeff (optional)")
+	ifUpdateCmd.Flags().StringVar(&ifPfMac, "pf-mac", "", "Specify PF MAC address as aabb.ccdd.eeff (optional)")
 
 	ifUpdateCmd.MarkFlagRequired("encap")
 	ifUpdateCmd.MarkFlagRequired("name")
@@ -173,6 +177,14 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	halctlStr := "/nic/bin/halctl debug update interface --encap " + ifEncap + " --substrate-ip " + ifSubIP + " --overlay-ip " + ifOverlayIP + " --mpls-in " + ifMplsIn + " --mpls-out " + fmt.Sprint(ifMplsOut) + " --tunnel-dest-ip " + ifTunnelDestIP + " --source-gw " + ifSourceGw + " --gw-mac " + ifGwMac + " --ingress-bw " + fmt.Sprint(ifIngressBw) + " --egress-bw " + fmt.Sprint(ifEgressBw) + " --name " + ifName
+
+	if cmd.Flags().Changed("overlay-mac") {
+		halctlStr += " --overlay-mac " + ifOverlayMac
+	}
+
+	if cmd.Flags().Changed("pf-mac") {
+		halctlStr += " --pf-mac " + ifPfMac
+	}
 
 	execCmd := strings.Fields(halctlStr)
 	v := &nmd.NaplesCmdExecute{

@@ -222,11 +222,11 @@ func tunnelDetailShowCmdHandler(cmd *cobra.Command, args []string, mplsoudp bool
 
 func mplsoudpShowHeader() {
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 198)
+	hdrLine := strings.Repeat("-", 232)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-20s%-10s%-16s%-32s%-14s%-16s%-12s%-20s%-10s%-10s%-18s%-20s\n",
+	fmt.Printf("%-22s%-10s%-16s%-32s%-14s%-16s%-12s%-20s%-10s%-10s%-18s%-18s%-18s%-16s\n",
 		"Id", "EncType", "SubstrateIP", "OverlayIP", "InMplsTag", "TunnelDestIP",
-		"OutMplsTag", "SourceGW", "IngressBW", "EgressBW", "GWMacDA", "LifName")
+		"OutMplsTag", "SourceGW", "IngressBW", "EgressBW", "GWMacDA", "PfMac", "OverlayMac", "LifName")
 	fmt.Println(hdrLine)
 }
 
@@ -266,10 +266,12 @@ func mplsoudpShowOneResp(resp *halproto.InterfaceGetResponse) {
 	tunnelDestIP := utils.IPAddrToStr(mpls.GetTunnelDestIp())
 	sourceGW := utils.IPAddrToStr(mpls.GetSourceGw().GetPrefix().GetIpv4Subnet().GetAddress()) + "/" + fmt.Sprintf("%d", mpls.GetSourceGw().GetPrefix().GetIpv4Subnet().GetPrefixLen())
 	gwMac := utils.MactoStr(mpls.GetGwMacDa())
+	overlayMac := utils.MactoStr(mpls.GetOverlayMac())
+	pfMac := utils.MactoStr(mpls.GetPfMac())
 
-	fmt.Printf("%-20d%-10s%-16s%-32s%-14s%-16s%-12d%-20s%-10d%-10d%-18s%-20s\n",
+	fmt.Printf("%-22d%-10s%-16s%-32s%-14s%-16s%-12d%-20s%-10d%-10d%-18s%-18s%-18s%-16s\n",
 		ifID, utils.TnnlEncTypeToStr(encType), subIP, overlayStr, inMpls, tunnelDestIP, outMpls,
-		sourceGW, mpls.GetIngressBw(), mpls.GetEgressBw(), gwMac, mpls.GetLifName())
+		sourceGW, mpls.GetIngressBw(), mpls.GetEgressBw(), gwMac, pfMac, overlayMac, mpls.GetLifName())
 }
 
 func tunnelShowHeader() {

@@ -2502,7 +2502,9 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
             source_gw_prefix->set_prefix_len(hal_if->source_gw.len);
 
             mpls_info->set_gw_mac_da(MAC_TO_UINT64(hal_if->gw_mac_da));
-
+            mpls_info->set_overlay_mac(MAC_TO_UINT64(hal_if->overlay_mac));
+            mpls_info->set_pf_mac(MAC_TO_UINT64(hal_if->pf_mac));
+            
             for (int i = 0; i < hal_if->num_mpls_if; i ++) {
                 auto mpls_if = mpls_info->add_mpls_if();
                 mpls_if->set_label(hal_if->mpls_if[i].label);
