@@ -14,7 +14,6 @@ APP_SVC_SUN_RPC = 5
 APP_SVC_MSFT_RPC = 6
 APP_SVC_RTSP = 7
 
-#####TBD Remove after rebase###############
 def timetoseconds(time):
     seconds = 0
     h = time.find("h")
@@ -77,7 +76,6 @@ def get_timeout(timeout):
             return timetoseconds(object.spec.timeouts.icmp_drop)
 
     return 0
-###################Remove after rebase################
 
 def GetThreeWorkloads():
     triplet = []

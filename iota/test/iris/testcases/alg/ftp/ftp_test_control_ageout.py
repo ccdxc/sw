@@ -80,11 +80,6 @@ def Verify(tc):
     cookie_idx = 0
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
-        if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            if tc.cmd_cookies[cookie_idx].find("show security flow gate") != -1:
-                result = api.types.status.SUCCESS
-            else:
-                result = api.types.status.FAILURE
         if ((tc.cmd_cookies[cookie_idx].find("show session") != -1) and \
             (cmd.stdout == '')):
             result = api.types.status.FAILURE

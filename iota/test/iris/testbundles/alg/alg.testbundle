@@ -126,11 +126,11 @@ testcases:
 
     -   name    : ADD_SG_POLICY
         testcase: testcases.alg.add_config
-
+ 
     -   name    : SUNRPC_BASIC
         testcase: testcases.alg.sunrpc.sunrpc_basic
         args    :
-            type: local_only
+           type: local_only
  
     -   name    : SUNRPC_DIFFERENT_SIP
         testcase: testcases.alg.sunrpc.sunrpc_different_sip
@@ -159,6 +159,36 @@ testcases:
 
     -   name    : SUNRPC_TEST_CLEAR_CONTROL_SESSION
         testcase: testcases.alg.sunrpc.sunrpc_test_control_session_clear
+        args    :
+            type: local_only
+
+    -   name    : MSRPC_BASIC
+        testcase: testcases.alg.msrpc.msrpc_basic
+        args    :
+            type: local_only
+
+    -   name    : MSRPC_MULTIPLE_BIND
+        testcase: testcases.alg.msrpc.msrpc_multiple_bind
+        args    :
+            type: local_only
+
+    -   name    : MSRPC_DIFFERENT_SIP
+        testcase: testcases.alg.msrpc.msrpc_different_sip
+        args    :
+            type: local_only
+
+    -   name    : MSRPC_DIFFERENT_APP
+        testcase: testcases.alg.msrpc.msrpc_test_different_app
+        args    :
+            type: local_only
+
+    -   name    : MSRPC_TEST_CONTROL_CLEAR
+        testcase: testcases.alg.msrpc.msrpc_test_control_session_clear
+        args    :
+            type: local_only
+
+    -   name    : MSRPC_TEST_CONTROL_CLOSE
+        testcase: testcases.alg.msrpc.msrpc_test_control_session_close
         args    :
             type: local_only
 
