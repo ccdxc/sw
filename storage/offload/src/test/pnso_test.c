@@ -2226,8 +2226,10 @@ static uint16_t cpu_mask_to_core_count(uint64_t cpu_mask)
 	if (max_core_count > TEST_MAX_CORE_COUNT) {
 		max_core_count = TEST_MAX_CORE_COUNT;
 	}
-	if (max_core_count > (osal_get_core_count() - 1)) {
-		max_core_count = (osal_get_core_count() - 1);
+	if (max_core_count >
+	    (osal_get_core_count() - TEST_RESERVED_CORE_COUNT)) {
+		max_core_count = osal_get_core_count() -
+			TEST_RESERVED_CORE_COUNT;
 	}
 
 	return max_core_count;
@@ -2600,7 +2602,8 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 	ctx->start_time = last_active_ts;
 	next_status_time = desc->status_interval;
 	PNSO_LOG_DEBUG("DEBUG: entering testcase while loop\n");
-	while (req_completion_count < testcase->repeat) {
+	while ((req_completion_count < testcase->repeat) ||
+	       (batch_completion_count < batch_submit_count)) {
 		loop_count++;
 		is_busy = false;
 		worker_ctx = ctx->worker_ctxs[worker_id];
@@ -2789,6 +2792,12 @@ pnso_error_t pnso_test_run_all(struct test_desc *desc, int ctl_core)
 			       ctl_core);
 		return EINVAL;
 	}
+	if (osal_get_core_count() < TEST_MIN_OSAL_CORE_COUNT) {
+		PNSO_LOG_ERROR("failed to run testcases, system has only %d cores, min is %d\n",
+			       osal_get_core_count(), TEST_MIN_OSAL_CORE_COUNT);
+		return EPERM;
+	}
+
 
 	init_params = desc->init_params;
 	init_params.core_count = cpu_mask_to_core_count(desc->cpu_mask);
