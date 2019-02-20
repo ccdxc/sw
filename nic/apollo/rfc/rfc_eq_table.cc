@@ -223,6 +223,27 @@ rfc_p1_action_data_flush (mem_addr_t addr,
 }
 
 /**
+ * @brief    dump the contents of P1 equivalence table
+ * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
+ *                        information processed until now
+ */
+static inline void
+rfc_p1_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
+{
+    rfc_table_t          *rfc_table = &rfc_ctxt->p1_table;
+    std::stringstream    cbm_ss;
+
+    OCI_TRACE_DEBUG("RFC P1 equivalence class table dump:");
+    OCI_TRACE_DEBUG("Number of equivalence classes %u", rfc_table->num_classes);
+    for (uint32_t i = 0; i < rfc_table->num_classes; i++) {
+        rte_bitmap2str(rfc_table->cbm_table[i], cbm_ss);
+        OCI_TRACE_DEBUG("class id %u, cbm %s", i, cbm_ss.str().c_str());
+        cbm_ss.clear();
+        cbm_ss.str("");
+    }
+}
+
+/**
  * @brief    given the class bitmap tables of phase0, compute class
  *           bitmap tables of RFC phase 1
  * @param[in] policy      user specified policy
@@ -1155,6 +1176,7 @@ sdk_ret_t
 rfc_build_eqtables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
 {
     rfc_compute_p1_eq_class_tables(policy, rfc_ctxt);
+    rfc_p1_eq_class_tables_dump(rfc_ctxt);
     rfc_compute_p2_tables(policy, rfc_ctxt);
     return SDK_RET_OK;
 }

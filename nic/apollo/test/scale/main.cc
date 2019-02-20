@@ -405,6 +405,10 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
     uint32_t        id = 1;
     rule_t          *rule;
 
+    if (num_rules == 0) {
+        return SDK_RET_OK;
+    }
+
     policy.policy_type = POLICY_TYPE_FIREWALL;
     policy.af = ip_af;
     policy.direction = ingress ? RULE_DIR_INGRESS : RULE_DIR_EGRESS;

@@ -9,6 +9,9 @@
 #if !defined (__RFC_BITMAP_UTILS_HPP__)
 #define __RFC_BITMAP_UTILS_HPP__
 
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 #include <rte_bitmap.h>
 
 static inline void
@@ -60,6 +63,15 @@ rte_bitmap_eq (struct rte_bitmap *ibmp1, struct rte_bitmap *ibmp2)
         }
     }
     return true;
+}
+
+static inline void
+rte_bitmap2str (rte_bitmap *bmap, std::stringstream& buffer)
+{
+    for (uint32_t index = 0; index < bmap->array2_size; index++) {
+        buffer << std::setfill('0') << std::setw(8) << std::hex
+               << bmap->array2[index] << " ";
+    }
 }
 
 struct rte_bitmap_hasher {

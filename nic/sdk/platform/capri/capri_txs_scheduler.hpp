@@ -122,9 +122,9 @@ capri_txs_scheduler_stats_get(capri_txs_scheduler_stats_t *scheduler_stats);
 uint32_t
 capri_get_coreclk_freq(platform_type_t platform_type);
 
-} // namespace capri
-} // namespace platform
-} // namespace sdk
+}    // namespace capri
+}    // namespace platform
+}    // namespace sdk
 
 using sdk::platform::capri::capri_txs_sched_lif_params_t;
 using sdk::platform::capri::capri_txs_policer_lif_params_t;
