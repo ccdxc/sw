@@ -448,7 +448,7 @@ func TestNaplesDefaultHostMode(t *testing.T) {
 	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode == nmd.MgmtMode_HOST && nm.GetListenURL() != "" &&
+		if cfg.Spec.Mode == nmd.MgmtMode_HOST.String() && nm.GetListenURL() != "" &&
 			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
@@ -465,7 +465,7 @@ func TestNaplesDefaultHostMode(t *testing.T) {
 			return false, nil
 		}
 
-		if naplesCfg.Spec.Mode != nmd.MgmtMode_HOST {
+		if naplesCfg.Spec.Mode != nmd.MgmtMode_HOST.String() {
 			return false, nil
 		}
 		return true, nil
@@ -484,7 +484,7 @@ func TestNaplesRestartHostMode(t *testing.T) {
 	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode != nmd.MgmtMode_HOST && nm.GetListenURL() != "" &&
+		if cfg.Spec.Mode != nmd.MgmtMode_HOST.String() && nm.GetListenURL() != "" &&
 			nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
@@ -522,7 +522,7 @@ func TestNaplesNetworkMode(t *testing.T) {
 		// Verify mode
 		cfg := nm.GetNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
-		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK {
+		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK.String() {
 			log.Errorf("Mode is not network")
 			return false, nil
 		}
@@ -647,7 +647,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 	f1 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode != nmd.MgmtMode_HOST && nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
+		if cfg.Spec.Mode != nmd.MgmtMode_HOST.String() && nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 			return true, nil
 		}
 		return true, nil
@@ -659,7 +659,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:        nmd.MgmtMode_NETWORK,
+			Mode:        nmd.MgmtMode_NETWORK.String(),
 			Controllers: []string{"192.168.30.10"},
 			Hostname:    nicKey1,
 			IPConfig: &cmd.IPConfig{
@@ -691,7 +691,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 
 		cfg := nm.GetNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
-		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK {
+		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK.String() {
 			log.Errorf("Failed to switch to network mode")
 			return false, nil
 		}
@@ -722,7 +722,7 @@ func TestNaplesModeTransitions(t *testing.T) {
 	AssertEventually(t, f3, "Failed to verify mode is in network Mode", string("10ms"), string("30s"))
 
 	// Switch to host mode
-	naplesCfg.Spec.Mode = nmd.MgmtMode_HOST
+	naplesCfg.Spec.Mode = nmd.MgmtMode_HOST.String()
 	AssertEventually(t, f2, "Failed to post the naples config")
 
 	// Verify it is in host mode
@@ -752,7 +752,7 @@ func TestNaplesNetworkModeManualApproval(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:        nmd.MgmtMode_NETWORK,
+			Mode:        nmd.MgmtMode_NETWORK.String(),
 			PrimaryMAC:  nicKey2,
 			Hostname:    nicKey2,
 			Controllers: []string{"localhost"},
@@ -775,7 +775,7 @@ func TestNaplesNetworkModeManualApproval(t *testing.T) {
 	f2 := func() (bool, interface{}) {
 
 		cfg := nm.GetNaplesConfig()
-		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK {
+		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK.String() {
 			log.Errorf("Failed to switch to network mode")
 			return false, nil
 		}
@@ -831,7 +831,7 @@ func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:        nmd.MgmtMode_NETWORK,
+			Mode:        nmd.MgmtMode_NETWORK.String(),
 			PrimaryMAC:  nicKey3,
 			Hostname:    nicKey3,
 			Controllers: []string{"localhost"},
@@ -854,7 +854,7 @@ func TestNaplesNetworkModeInvalidNIC(t *testing.T) {
 
 		cfg := nm.GetNaplesConfig()
 		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
-		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK {
+		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK.String() {
 			log.Errorf("Failed to switch to network mode")
 			return false, nil
 		}
@@ -910,7 +910,7 @@ func TestNaplesRestartNetworkMode(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
-			Mode:        nmd.MgmtMode_NETWORK,
+			Mode:        nmd.MgmtMode_NETWORK.String(),
 			PrimaryMAC:  nicKey1,
 			Controllers: []string{"localhost"},
 			Hostname:    nicKey1,
@@ -934,7 +934,7 @@ func TestNaplesRestartNetworkMode(t *testing.T) {
 
 		cfg := nm.GetNaplesConfig()
 		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
-		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK {
+		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK.String() {
 			log.Errorf("Failed to switch to network mode")
 			return false, nil
 		}

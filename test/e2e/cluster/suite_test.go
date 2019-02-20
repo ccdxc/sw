@@ -109,9 +109,9 @@ var _ = BeforeSuite(func() {
 			_, err = ts.restSvc.ClusterV1().Host().Create(ts.tu.NewLoggedInContext(context.Background()), host)
 			Expect(err).ShouldNot(HaveOccurred())
 			// Switch to managed mode
-			naples.Spec.Mode = nmd.MgmtMode_NETWORK
+			naples.Spec.Mode = nmd.MgmtMode_NETWORK.String()
 			naples.Spec.Controllers = []string{ts.tu.ClusterVIP}
-			naples.Spec.NetworkMode = nmd.NetworkMode_INBAND
+			naples.Spec.NetworkMode = nmd.NetworkMode_INBAND.String()
 			// Ensure that a random static IP is given
 			naples.Spec.IPConfig = &cluster.IPConfig{
 				IPAddress: "1.2.3.4",

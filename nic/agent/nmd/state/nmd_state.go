@@ -63,12 +63,12 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 	var err error
 
 	// Set mode and mac
-	var naplesMode nmd.MgmtMode
+	var naplesMode string
 	switch mode {
 	case "host":
-		naplesMode = nmd.MgmtMode_HOST
+		naplesMode = nmd.MgmtMode_HOST.String()
 	case "network":
-		naplesMode = nmd.MgmtMode_NETWORK
+		naplesMode = nmd.MgmtMode_NETWORK.String()
 	default:
 		log.Errorf("Invalid mode, mode:%s", mode)
 		return nil, errors.New("Invalid mode")
@@ -429,7 +429,7 @@ func (n *NMD) Stop() error {
 
 	n.StopClassicMode(true)
 
-	if n.GetConfigMode() == nmd.MgmtMode_NETWORK {
+	if n.GetConfigMode() == nmd.MgmtMode_NETWORK.String() {
 
 		// Cleanup Managed mode tasks, if any
 		n.StopManagedMode()

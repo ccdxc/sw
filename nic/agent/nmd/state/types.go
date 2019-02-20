@@ -132,7 +132,7 @@ func (n *NMD) setRestServerStatus(value bool) {
 }
 
 // GetConfigMode returns the configured Naples Mode
-func (n *NMD) GetConfigMode() nmd.MgmtMode {
+func (n *NMD) GetConfigMode() string {
 	n.Lock()
 	defer n.Unlock()
 	return n.config.Spec.Mode
@@ -212,7 +212,7 @@ func (n *NMD) GetIPClient() *IPClient {
 
 //UpdateFeatureProfile updates feature profile
 func (n *NMD) UpdateFeatureProfile(profileName string) (err error) {
-	if n.config.Spec.Mode == nmd.MgmtMode_HOST {
+	if n.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
 		fwdMode := device.ForwardingMode_FORWARDING_MODE_CLASSIC
 		var featureProfile device.FeatureProfile
 		var profile *nmd.NaplesProfile

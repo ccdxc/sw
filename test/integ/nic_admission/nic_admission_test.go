@@ -328,7 +328,7 @@ func TestCreateNMDs(t *testing.T) {
 						f1 := func() (bool, interface{}) {
 
 							cfg := nm.GetNaplesConfig()
-							if cfg.Spec.Mode == proto.MgmtMode_HOST && nm.GetListenURL() != "" &&
+							if cfg.Spec.Mode == proto.MgmtMode_HOST.String() && nm.GetListenURL() != "" &&
 								nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 								return true, nil
 							}
@@ -347,7 +347,7 @@ func TestCreateNMDs(t *testing.T) {
 								return false, nil
 							}
 
-							if naplesCfg.Spec.Mode != proto.MgmtMode_HOST {
+							if naplesCfg.Spec.Mode != proto.MgmtMode_HOST.String() {
 								return false, nil
 							}
 							return true, nil
@@ -359,8 +359,8 @@ func TestCreateNMDs(t *testing.T) {
 							ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 							TypeMeta:   api.TypeMeta{Kind: "Naples"},
 							Spec: proto.NaplesSpec{
-								Mode:        proto.MgmtMode_NETWORK,
-								NetworkMode: proto.NetworkMode_OOB,
+								Mode:        proto.MgmtMode_NETWORK.String(),
+								NetworkMode: proto.NetworkMode_OOB.String(),
 								Controllers: []string{*cmdRegURL},
 								Hostname:    priMac,
 								PrimaryMAC:  priMac,
@@ -389,7 +389,7 @@ func TestCreateNMDs(t *testing.T) {
 						// validate the mode is managed
 						cfg := nm.GetNaplesConfig()
 						log.Infof("NaplesConfig: %v", cfg)
-						if cfg.Spec.Mode != proto.MgmtMode_NETWORK {
+						if cfg.Spec.Mode != proto.MgmtMode_NETWORK.String() {
 							log.Errorf("Failed to switch to managed mode")
 							return false, nil
 						}
@@ -592,7 +592,7 @@ func TestNICReadmit(t *testing.T) {
 		// validate the mode is managed
 		cfg := nmd.GetNaplesConfig()
 		log.Infof("NaplesConfig: %v", cfg)
-		if cfg.Spec.Mode != proto.MgmtMode_NETWORK {
+		if cfg.Spec.Mode != proto.MgmtMode_NETWORK.String() {
 			log.Errorf("Failed to switch to managed mode")
 			return false, nil
 		}

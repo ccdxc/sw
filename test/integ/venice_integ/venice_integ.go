@@ -297,7 +297,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		ipConfig := &cluster.IPConfig{
 			IPAddress: "1.2.3.4",
 		}
-		n.IPClient.Update(nmdproto.NetworkMode_INBAND, ipConfig, 0, hostID, []string{"localhost"})
+		n.IPClient.Update(nmdproto.NetworkMode_INBAND.String(), ipConfig, 0, hostID, []string{"localhost"})
 		it.nmds = append(it.nmds, nmd)
 	}
 
@@ -310,7 +310,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 			// validate the mode is network
 			cfg := nm.GetNaplesConfig()
 			log.Infof("NaplesConfig: %v", cfg)
-			if cfg.Spec.Mode != nmdproto.MgmtMode_NETWORK {
+			if cfg.Spec.Mode != nmdproto.MgmtMode_NETWORK.String() {
 				log.Errorf("Failed to switch to network mode")
 				return false, nil
 			}

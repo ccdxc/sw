@@ -851,7 +851,7 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 				ObjectMeta: api.ObjectMeta{Name: "NaplesConfig"},
 				TypeMeta:   api.TypeMeta{Kind: "Naples"},
 				Spec: nmd.NaplesSpec{
-					Mode:        nmd.MgmtMode_NETWORK,
+					Mode:        nmd.MgmtMode_NETWORK.String(),
 					PrimaryMAC:  nicObj.Name,
 					Controllers: []string{env.UnauthRPCServer.GetListenURL()},
 					Hostname:    nicObj.Spec.Hostname,

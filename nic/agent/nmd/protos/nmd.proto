@@ -58,12 +58,12 @@ message NaplesSpec {
     cluster.IPConfig IPConfig       = 3 [(gogoproto.jsontag) = "ip-config,omitempty"];
 
     // Operational mode of the NIC
-    MgmtMode Mode                           = 4 [(gogoproto.jsontag) = "mode",
+    string Mode                     = 4 [(gogoproto.jsontag) = "mode",
                                                  (venice.check) = "StrEnum(Naples.MgmtMode)"];
 
     // Operational mode of the NIC
-    NetworkMode NetworkMode                 = 5 [(gogoproto.jsontag) = "network-mode",
-                                                 (venice.check) = "StrEnum(Naples.NetworkMode)"];
+    string NetworkMode              = 5 [(gogoproto.jsontag) = "network-mode",
+                                         (venice.check) = "StrEnum(Naples.NetworkMode)"];
 
     // MgmtVlan defines the vlan to be used in network managed mode. The default of 0
     // implies OOB 1G mgmt port is used for management. A non 0 vlan switches the

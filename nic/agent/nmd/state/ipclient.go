@@ -42,7 +42,7 @@ type IPClient struct {
 	iface          string
 	ipaddress      string
 	gateway        string
-	networkMode    nmd.NetworkMode
+	networkMode    string
 	mgmtVlan       uint32
 	controllers    []string
 	hostname       string
@@ -329,11 +329,11 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 
 	// Set up appropriate mode
 	switch c.networkMode {
-	case nmd.NetworkMode_INBAND:
+	case nmd.NetworkMode_INBAND.String():
 		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND
 		fwdMode = device.ForwardingMode_FORWARDING_MODE_HOSTPIN
 		featureProfile = device.FeatureProfile_FEATURE_PROFILE_NONE
-	case nmd.NetworkMode_OOB:
+	case nmd.NetworkMode_OOB.String():
 		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_OOB
 		fwdMode = device.ForwardingMode_FORWARDING_MODE_HOSTPIN
 		featureProfile = device.FeatureProfile_FEATURE_PROFILE_NONE
@@ -345,7 +345,7 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 
 	if c.nmdState.config.Status.Mode == nmd.MgmtMode_NETWORK.String() {
 		log.Info("Currently Naples is Network Managed")
-		if c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
+		if c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK.String() {
 			log.Info("Moving Naples to Network managed mode. Updating CMD Client.")
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
 
@@ -396,7 +396,7 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 			} else {
 				c.nmdState.config.Status.TransitionPhase = nmd.NaplesStatus_VENICE_REGISTRATION_SENT.String()
 			}
-		} else if c.nmdState.config.Spec.Mode == nmd.MgmtMode_HOST {
+		} else if c.nmdState.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
 			log.Info("Moving Naples to Host managed mode.")
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_HOST.String()
 
@@ -415,7 +415,7 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 		}
 	} else {
 		log.Info("Currently Naples is Host Managed")
-		if c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
+		if c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK.String() {
 			// Stop classic mode control loop
 			// TODO : Uncomment the line below. Currently we do not want to stop REST Server.
 			// c.nmdState.StopClassicMode(false)
@@ -691,7 +691,7 @@ func (c *IPClient) doInband() error {
 func NewIPClient(isMock bool, nmdState *NMD, delphiClient clientAPI.Client, networkMode nmd.NetworkMode, ipaddress string, mgmtVlan uint32, hostname string, controllers []string) *IPClient {
 	client := &IPClient{
 		delphiClient: delphiClient,
-		networkMode:  networkMode, // INBAND/OOB
+		networkMode:  networkMode.String(), // INBAND/OOB
 		ipaddress:    ipaddress,
 		mgmtVlan:     mgmtVlan,
 		hostname:     hostname,
@@ -726,14 +726,14 @@ func (c *IPClient) Start() error {
 		return c.updateNaplesStatus(c.controllers, c.ipaddress)
 	}
 
-	if c.networkMode == nmd.NetworkMode_OOB && c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
+	if c.networkMode == nmd.NetworkMode_OOB.String() && c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK.String() {
 		// OOB
 		return c.doOOB()
 		//if err != nil {
 		//	return err
 		//} // Admission of Napl
 		//
-	} else if c.networkMode == nmd.NetworkMode_INBAND && c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK {
+	} else if c.networkMode == nmd.NetworkMode_INBAND.String() && c.nmdState.config.Spec.Mode == nmd.MgmtMode_NETWORK.String() {
 		// INBAND
 		log.Info("Got network mode inband")
 
@@ -768,7 +768,7 @@ func (c *IPClient) Stop() {
 }
 
 // Update updates the management IPs
-func (c *IPClient) Update(networkMode nmd.NetworkMode, ipconfig *cluster.IPConfig, mgmtVlan uint32, hostname string, controllers []string) error {
+func (c *IPClient) Update(networkMode string, ipconfig *cluster.IPConfig, mgmtVlan uint32, hostname string, controllers []string) error {
 	log.Info("IP Client Update called")
 	c.Stop()
 

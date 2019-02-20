@@ -257,7 +257,7 @@ func TestNICConfig(t *testing.T) {
 					f1 := func() (bool, interface{}) {
 
 						cfg := nm.GetNaplesConfig()
-						if cfg.Spec.Mode == proto.MgmtMode_HOST && nm.GetListenURL() != "" &&
+						if cfg.Spec.Mode == proto.MgmtMode_HOST.String() && nm.GetListenURL() != "" &&
 							nm.GetUpdStatus() == false && nm.GetRegStatus() == false && nm.GetRestServerStatus() == true {
 							return true, nil
 						}
@@ -296,7 +296,7 @@ func TestNICConfig(t *testing.T) {
 						// validate the mode is managed
 						cfg := nm.GetNaplesConfig()
 						log.Infof("NaplesConfig: %v", cfg)
-						if cfg.Spec.Mode != proto.MgmtMode_NETWORK {
+						if cfg.Spec.Mode != proto.MgmtMode_NETWORK.String() {
 							log.Errorf("Failed to switch to managed mode")
 							return false, nil
 						}
