@@ -93,9 +93,8 @@ func (hd *Datapath) CreateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Natclient.NatPoolCreate(context.Background(), natPoolReqMsg)
@@ -186,9 +185,8 @@ func (hd *Datapath) UpdateNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Natclient.NatPoolUpdate(context.Background(), natPoolUpdateReqMsg)
@@ -240,9 +238,8 @@ func (hd *Datapath) DeleteNatPool(np *netproto.NatPool, ns *netproto.Namespace) 
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 
 	} else {
@@ -322,9 +319,8 @@ func (hd *Datapath) CreateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Natclient.NatPolicyCreate(context.Background(), natPolicyReqMsg)
@@ -399,9 +395,8 @@ func (hd *Datapath) UpdateNatPolicy(np *netproto.NatPolicy, natPoolLUT map[strin
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Natclient.NatPolicyUpdate(context.Background(), natPolicyUpdateReqMsg)
@@ -454,9 +449,8 @@ func (hd *Datapath) DeleteNatPolicy(np *netproto.NatPolicy, ns *netproto.Namespa
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 
 	} else {
@@ -536,9 +530,8 @@ func (hd *Datapath) CreateNatBinding(nb *netproto.NatBinding, np *netproto.NatPo
 			return nb, err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return nb, ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return nb, fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 		ipv4Int := resp.Response[0].Status.MappedIp.GetV4Addr()
 		ip := uint32ToIPv4(ipv4Int)
@@ -613,9 +606,8 @@ func (hd *Datapath) DeleteNatBinding(nb *netproto.NatBinding, ns *netproto.Names
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 
 	} else {

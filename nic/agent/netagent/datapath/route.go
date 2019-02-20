@@ -74,9 +74,8 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Netclient.NexthopCreate(context.Background(), nextHopReqMsg)
@@ -127,9 +126,8 @@ func (hd *Datapath) CreateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Netclient.RouteCreate(context.Background(), routeReqMsg)
@@ -205,9 +203,8 @@ func (hd *Datapath) UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Netclient.NexthopUpdate(context.Background(), nextHopUpdateReqMsg)
@@ -258,9 +255,8 @@ func (hd *Datapath) UpdateRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Netclient.RouteUpdate(context.Background(), routeUpdateReqMsg)
@@ -343,9 +339,8 @@ func (hd *Datapath) DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 			return err
 		}
 		if rtResp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", rtResp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", rtResp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", rtResp.Response[0].ApiStatus.String())
 		}
 
 		// delete next hop
@@ -355,9 +350,8 @@ func (hd *Datapath) DeleteRoute(rt *netproto.Route, ns *netproto.Namespace) erro
 			return err
 		}
 		if nhResp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", nhResp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", nhResp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", nhResp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Netclient.RouteDelete(context.Background(), rtDelReq)

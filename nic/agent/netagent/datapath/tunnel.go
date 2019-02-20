@@ -57,9 +57,8 @@ func (hd *Datapath) CreateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) e
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Ifclient.InterfaceCreate(context.Background(), tunReqMsg)
@@ -118,9 +117,8 @@ func (hd *Datapath) UpdateTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) e
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Ifclient.InterfaceUpdate(context.Background(), tunUpdateReqMsg)
@@ -159,9 +157,9 @@ func (hd *Datapath) DeleteTunnel(tun *netproto.Tunnel, ns *netproto.Namespace) e
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 
-			return ErrHALNotOK
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Ifclient.InterfaceDelete(context.Background(), tunDelReqMsg)

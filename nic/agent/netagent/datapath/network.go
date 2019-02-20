@@ -100,8 +100,8 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 				return err
 			}
 			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-				return ErrHALNotOK
+				log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+				return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			}
 		} else {
 			_, err := hd.Hal.Netclient.NetworkCreate(context.Background(), &halNwReq)
@@ -159,8 +159,8 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 		for _, uplink := range uplinks {
 			ifL2SegReq := halproto.InterfaceL2SegmentSpec{
@@ -182,8 +182,8 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 			}
 			for _, r := range l2SegAddResp.Response {
 				if r.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-					log.Errorf("HAL returned non OK status. Err: %v", err)
-					return ErrHALNotOK
+					log.Errorf("HAL returned non OK status. %v", r.ApiStatus.String())
+					return fmt.Errorf("HAL returned non OK status. %v", r.ApiStatus.String())
 				}
 			}
 		} else {
@@ -315,8 +315,8 @@ func (hd *Datapath) DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 			// ensure all the uplinks were correctly removed.
 			for _, r := range l2SegDelResp.Response {
 				if r.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-					log.Errorf("HAL returned non ok status. %v", err)
-					return ErrHALNotOK
+					log.Errorf("HAL returned non OK status. %v", r.ApiStatus.String())
+					return fmt.Errorf("HAL returned non OK status. %v", r.ApiStatus.String())
 				}
 			}
 		} else {
@@ -330,8 +330,8 @@ func (hd *Datapath) DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 
 	} else {
@@ -380,8 +380,8 @@ func (hd *Datapath) DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 				return err
 			}
 			if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-				return ErrHALNotOK
+				log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+				return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			}
 		} else {
 			_, err := hd.Hal.Netclient.NetworkDelete(context.Background(), &netDelReq)

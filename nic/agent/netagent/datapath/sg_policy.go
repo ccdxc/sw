@@ -49,7 +49,6 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 		}
 
 	}
-	fmt.Println("BALERION: ", len(fwRules))
 	sgPolicyReqMsg := &halproto.SecurityPolicyRequestMsg{
 		Request: []*halproto.SecurityPolicySpec{
 			{
@@ -73,9 +72,8 @@ func (hd *Datapath) CreateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, sgs []*
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Sgclient.SecurityPolicyCreate(context.Background(), sgPolicyReqMsg)
@@ -149,9 +147,8 @@ func (hd *Datapath) UpdateSGPolicy(sgp *netproto.SGPolicy, vrfID uint64, ruleIDA
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Sgclient.SecurityPolicyUpdate(context.Background(), sgPolicyUpdateReqMsg)
@@ -201,9 +198,8 @@ func (hd *Datapath) DeleteSGPolicy(sgp *netproto.SGPolicy, vrfID uint64) error {
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Sgclient.SecurityPolicyDelete(context.Background(), sgPolicyDelReq)

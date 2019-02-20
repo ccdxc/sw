@@ -2,6 +2,7 @@ package datapath
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
@@ -68,9 +69,8 @@ func (hd *Datapath) CreateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netpr
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.TCPProxyPolicyClient.TcpProxyRuleCreate(context.Background(), tcpProxyReqMsg)
@@ -140,9 +140,8 @@ func (hd *Datapath) UpdateTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netpr
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.TCPProxyPolicyClient.TcpProxyRuleUpdate(context.Background(), tcpProxyUpdateReqMsg)
@@ -188,9 +187,8 @@ func (hd *Datapath) DeleteTCPProxyPolicy(tcp *netproto.TCPProxyPolicy, ns *netpr
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.TCPProxyPolicyClient.TcpProxyRuleDelete(context.Background(), tcpProxyPolicyDelReq)

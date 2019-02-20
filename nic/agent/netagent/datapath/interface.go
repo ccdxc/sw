@@ -122,9 +122,8 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Ifclient.InterfaceCreate(context.Background(), ifReqMsg)
@@ -303,7 +302,8 @@ func (hd *Datapath) ListInterfaces() ([]*netproto.Interface, []*netproto.Port, e
 		// return all the ports
 		for _, p := range ports.Response {
 			if p.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-				return nil, nil, ErrHALNotOK
+				log.Errorf("HAL returned non OK status. %v", p.ApiStatus.String())
+				return nil, nil, fmt.Errorf("HAL returned non OK status. %v", p.ApiStatus.String())
 			}
 		}
 

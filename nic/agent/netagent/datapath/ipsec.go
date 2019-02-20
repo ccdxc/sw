@@ -92,9 +92,8 @@ func (hd *Datapath) CreateIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns, tep *n
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.IPSecclient.IpsecSAEncryptCreate(context.Background(), ipSecSAEncryptReqMsg)
@@ -144,9 +143,8 @@ func (hd *Datapath) DeleteIPSecSAEncrypt(sa *netproto.IPSecSAEncrypt, ns *netpro
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.IPSecclient.IpsecSAEncryptDelete(context.Background(), ipSecSADecryptDelReqMsg)
@@ -225,9 +223,8 @@ func (hd *Datapath) CreateIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns, tep *n
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.IPSecclient.IpsecSADecryptCreate(context.Background(), ipSecSADecryptReqMsg)
@@ -277,9 +274,8 @@ func (hd *Datapath) DeleteIPSecSADecrypt(sa *netproto.IPSecSADecrypt, ns *netpro
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.IPSecclient.IpsecSADecryptDelete(context.Background(), ipSecSADecryptDelReqMsg)
@@ -378,9 +374,8 @@ func (hd *Datapath) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.IPSecclient.IpsecRuleCreate(context.Background(), ipSecPolicyReqMsg)
@@ -431,9 +426,8 @@ func (hd *Datapath) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy, ns *netproto.
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.IPSecclient.IpsecRuleDelete(context.Background(), ipSecPolicyDeleteReqMsg)

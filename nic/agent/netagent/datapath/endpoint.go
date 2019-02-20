@@ -143,9 +143,8 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 			return nil, err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-
-			return nil, ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return nil, fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Ifclient.InterfaceCreate(context.Background(), enicReqMsg)
@@ -173,8 +172,8 @@ func (hd *Datapath) CreateLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 			return nil, err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("Error creating endpoint. Err: %v", resp.Response[0].ApiStatus)
-			return nil, ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return nil, fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
@@ -334,8 +333,8 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("Error deleting remote endpoint. Err: %v", err)
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Epclient.EndpointDelete(context.Background(), epDelReq)
@@ -368,8 +367,8 @@ func (hd *Datapath) DeleteLocalEndpoint(ep *netproto.Endpoint, nw *netproto.Netw
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("Error deleting enic. Err: %v", err)
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Ifclient.InterfaceDelete(context.Background(), enicDelReq)
@@ -485,8 +484,8 @@ func (hd *Datapath) CreateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("Error creating endpoint. Err: %v", err)
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Epclient.EndpointCreate(context.Background(), &epReq)
@@ -645,8 +644,8 @@ func (hd *Datapath) DeleteRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("Error deleting remote endpoint. Err: %v", err)
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Epclient.EndpointDelete(context.Background(), epDelReq)

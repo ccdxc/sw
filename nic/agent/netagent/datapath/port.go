@@ -2,6 +2,7 @@ package datapath
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
@@ -39,8 +40,8 @@ func (hd *Datapath) CreatePort(port *netproto.Port) (*netproto.Port, error) {
 			return port, err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-			return port, ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return port, fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 		log.Infof("Received RESP from HAL: %v", resp.Response[0])
 		//port.Status.OperStatus = convertPortOperStatus(resp.Response[0].Status.OperStatus)
@@ -82,8 +83,8 @@ func (hd *Datapath) UpdatePort(port *netproto.Port) (*netproto.Port, error) {
 			return port, err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-			return port, ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return port, fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 		//port.Status.OperStatus = convertPortOperStatus(resp.Response[0].Status.OperStatus)
 	} else {

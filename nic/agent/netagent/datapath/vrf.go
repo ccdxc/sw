@@ -2,6 +2,7 @@ package datapath
 
 import (
 	"context"
+	"fmt"
 
 	"strings"
 
@@ -44,8 +45,8 @@ func (hd *Datapath) CreateVrf(vrfID uint64, vrfType string) error {
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Tnclient.VrfCreate(context.Background(), &vrfReqMsg)
@@ -86,8 +87,8 @@ func (hd *Datapath) DeleteVrf(vrfID uint64) error {
 			return err
 		}
 		if resp.Response[0].ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus)
-			return ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
+			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
 	} else {
 		_, err := hd.Hal.Tnclient.VrfDelete(context.Background(), &vrfDelReqMsg)

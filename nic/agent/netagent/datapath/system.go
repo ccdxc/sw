@@ -2,6 +2,7 @@ package datapath
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -18,9 +19,8 @@ func (hd *Datapath) GetUUID() (string, error) {
 			return "", err
 		}
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			log.Errorf("HAL returned non OK status. %v", resp.ApiStatus)
-
-			return "", ErrHALNotOK
+			log.Errorf("HAL returned non OK status. %v", resp.ApiStatus.String())
+			return "", fmt.Errorf("HAL returned non OK status. %v", resp.ApiStatus.String())
 		}
 		return resp.Uuid, nil
 	}

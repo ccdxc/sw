@@ -2,9 +2,6 @@ package datapath
 
 import "errors"
 
-// ErrHALNotOK is returned by HAL gRPC Server on failed requests
-var ErrHALNotOK = errors.New("hal returned non zero error code")
-
 // ErrIPParse is returned on failing to parse hyphen separated IP Range.
 var ErrIPParse = errors.New("hal datapath could not parse the IP")
 
