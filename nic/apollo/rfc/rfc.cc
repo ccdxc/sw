@@ -6,6 +6,7 @@
  * @brief   RFC library implementation
  */
 
+#include <string>
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/rfc/rte_bitmap_utils.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
@@ -16,7 +17,65 @@
 #include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 
+using std::string;
+
 namespace rfc {
+
+/**
+ * @brief    dump a given policy rule
+ * @param[in]    policy    policy table
+ * @param[in]    rule_num  rule number of the rule to dump
+ */
+static inline void
+rfc_policy_rule_dump (policy_t *policy, uint32_t rule_num)
+{
+    rule_t    *rule = &policy->rules[rule_num];
+    string    rule_str = "";
+
+    if (policy->direction == RULE_DIR_INGRESS) {
+        rule_str += "ing, ";
+    } else {
+        rule_str += "egr, ";
+    }
+    if (policy->af == IP_AF_IPV4) {
+        rule_str += "IPv4, ";
+    } else {
+        rule_str += "IPv6, ";
+    }
+    if (rule->stateful) {
+        rule_str += "stateful : ";
+    } else {
+        rule_str += "stateless : ";
+    }
+    rule_str += "match = (proto " +
+                    std::to_string(rule->match.l3_match.ip_proto) + ", ";
+    rule_str+=
+        "IP pfx " + string(ippfx2str(&rule->match.l3_match.ip_pfx)) + ", ";
+    if (rule->match.l3_match.ip_proto == IP_PROTO_ICMP) {
+        rule_str += "ICMP type/code " +
+                       std::to_string(rule->match.l4_match.icmp_type) +
+                       std::to_string(rule->match.l4_match.icmp_code) + ", ";
+    } else if ((rule->match.l3_match.ip_proto == IP_PROTO_UDP) ||
+               (rule->match.l3_match.ip_proto == IP_PROTO_TCP)) {
+        rule_str +=
+            "sport range " +
+            std::to_string(rule->match.l4_match.sport_range.port_lo) + "-" +
+            std::to_string(rule->match.l4_match.sport_range.port_hi) + ", ";
+        rule_str +=
+            "dport range " +
+            std::to_string(rule->match.l4_match.dport_range.port_lo) + "-" +
+            std::to_string(rule->match.l4_match.dport_range.port_hi) + ") ";
+    }
+    if (policy->policy_type == POLICY_TYPE_FIREWALL) {
+        rule_str += "action = ";
+        if (rule->action_data.fw_action.action == SECURITY_RULE_ACTION_ALLOW) {
+            rule_str += "allow";
+        } else {
+            rule_str += "unknown";
+        }
+    }
+    OCI_TRACE_DEBUG_NO_HEADER("%s", rule_str.c_str());
+}
 
 /**
  * @brief    walk the policy rules and build all phase 0 RFC interval tables
@@ -43,6 +102,7 @@ rfc_build_itables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
     proto_port_inode = &proto_port_itable->nodes[0];
     for (rule_num = 0; rule_num < policy->num_rules; rule_num++) {
         rule = &policy->rules[rule_num];
+        rfc_policy_rule_dump(policy, rule_num);
         itable_add_address_inodes(rule_num, addr_inode,
                                   &rule->match.l3_match.ip_pfx);
         itable_add_port_inodes(rule_num, port_inode,

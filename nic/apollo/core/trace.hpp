@@ -53,6 +53,11 @@ register_trace_cb(sdk_logger::trace_cb_t  trace_cb)
                ##__VA_ARGS__);                                            \
 }
 
+#define OCI_TRACE_DEBUG_NO_HEADER(fmt, ...)                               \
+{                                                                         \
+    g_trace_cb(sdk::lib::SDK_TRACE_LEVEL_DEBUG, fmt, ##__VA_ARGS__);      \
+}
+
 #define OCI_TRACE_VERBOSE(fmt, ...)                                       \
 {                                                                         \
     struct timespec    tp_;                                               \

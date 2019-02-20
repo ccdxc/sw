@@ -109,6 +109,8 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     policy.max_rules = OCI_MAX_RULES_PER_SECURITY_POLICY;
     policy.num_rules = policy_info->num_rules;
     policy.rules = policy_info->rules;
+    OCI_TRACE_DEBUG("Processing security policy %u",
+                    policy_info->key.id);
     ret = rfc_policy_create(&policy, security_policy_root_addr_,
               security_policy_impl_db()->security_policy_table_size());
     if (ret != SDK_RET_OK) {
