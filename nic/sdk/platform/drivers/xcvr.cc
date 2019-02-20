@@ -24,8 +24,26 @@ bool xcvr_valid_enable = true;
  * @brief   Transceiver data to be exported outside HAL
  */
 static void
-xcvr_sprom_get (int port, xcvr_sprom_data_t *xcvr_sprom)
+xcvr_sprom_get (int port, void *xcvr_sprom)
 {
+    uint8_t *buffer = xcvr_cache(port);
+
+    switch (xcvr_type(port)) {
+        case xcvr_type_t::XCVR_TYPE_QSFP:
+        case xcvr_type_t::XCVR_TYPE_QSFP28:
+            buffer = &buffer[128];
+            break;
+
+        case xcvr_type_t::XCVR_TYPE_SFP:
+        default:
+            break;
+    }
+
+    memcpy(xcvr_sprom, buffer, XCVR_SPROM_SIZE);
+
+    return;
+
+#if 0
     sfp_sprom_data_t  *sfp_sprom  = NULL;
     qsfp_sprom_data_t *qsfp_sprom = NULL;
     uint8_t           *buffer     = NULL;
@@ -69,6 +87,7 @@ xcvr_sprom_get (int port, xcvr_sprom_data_t *xcvr_sprom)
         default:
             break;
     }
+#endif
 }
 
 sdk_ret_t
@@ -77,7 +96,7 @@ xcvr_get (int port, port_args_t *port_arg)
     port_arg->xcvr_state = xcvr_state(port);
     port_arg->xcvr_pid   = xcvr_pid(port);
 
-    xcvr_sprom_get(port, &port_arg->xcvr_sprom);
+    xcvr_sprom_get(port, port_arg->xcvr_sprom);
 
     return SDK_RET_OK;
 }
@@ -172,7 +191,7 @@ xcvr_send_notification (int port)
     xcvr_event_info.cable_type   = cable_type(port);
     xcvr_event_info.port_an_args = xcvr_get_an_args(port);
 
-    xcvr_sprom_get (port, &xcvr_event_info.xcvr_sprom);
+    xcvr_sprom_get (port, xcvr_event_info.xcvr_sprom);
 
     if (g_xcvr_notify_cb) {
         switch (xcvr_state(port)) {

@@ -245,7 +245,8 @@ port_event_notify (uint32_t port_num, port_event_t event,
 error port_svc::update_xcvr_status(google::protobuf::uint32 port_num,
                                    PortXcvrState state,
                                    PortXcvrPid pid,
-                                   xcvr_sprom_data_t *xcvr_sprom) {
+                                   CableType cable_type,
+                                   void *xcvr_sprom) {
     // create port status object
     PortStatusPtr port = std::make_shared<PortStatus>();
     port->mutable_key_or_handle()->set_port_id(port_num);
@@ -254,6 +255,7 @@ error port_svc::update_xcvr_status(google::protobuf::uint32 port_num,
 
     xcvr_status->set_state(state);
     xcvr_status->set_pid(pid);
+    xcvr_status->set_cable_type(cable_type);
 
     port_populate_xcvr_status_sprom(xcvr_status, xcvr_sprom);
 
@@ -265,6 +267,23 @@ error port_svc::update_xcvr_status(google::protobuf::uint32 port_num,
                     port_num, state, pid, port);
 
     return error::OK();
+}
+
+static CableType
+xcvr_sdk_cable_type_to_spec_cable_type (cable_type_t cable_type)
+{
+    switch(cable_type) {
+    case cable_type_t::CABLE_TYPE_CU:
+        return port::CABLE_TYPE_COPPER;
+
+    case cable_type_t::CABLE_TYPE_FIBER:
+        return port::CABLE_TYPE_FIBER;
+
+    case cable_type_t::CABLE_TYPE_NONE:
+    default:
+        return port::CABLE_TYPE_NONE;
+
+    }
 }
 
 static PortXcvrPid
@@ -361,34 +380,49 @@ xcvr_event_notify (xcvr_event_info_t *xcvr_event_info)
     case xcvr_state_t::XCVR_REMOVED:
         HAL_TRACE_DEBUG("Xcvr removed; port: {}", port_num);
 
-        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_REMOVED,
-                                           port::XCVR_PID_UNKNOWN,
-                                           &xcvr_event_info->xcvr_sprom);
+        port_svc_get()->update_xcvr_status(
+                            port_num,
+                            port::XCVR_STATE_REMOVED,
+                            port::XCVR_PID_UNKNOWN,
+                            xcvr_sdk_cable_type_to_spec_cable_type(
+                                            xcvr_event_info->cable_type),
+                            xcvr_event_info->xcvr_sprom);
         break;
 
     case xcvr_state_t::XCVR_INSERTED:
         HAL_TRACE_DEBUG("Xcvr inserted; port: {}", port_num);
 
-        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_INSERTED,
-                                           port::XCVR_PID_UNKNOWN,
-                                           &xcvr_event_info->xcvr_sprom);
+        port_svc_get()->update_xcvr_status(
+                            port_num,
+                            port::XCVR_STATE_INSERTED,
+                            port::XCVR_PID_UNKNOWN,
+                            xcvr_sdk_cable_type_to_spec_cable_type(
+                                            xcvr_event_info->cable_type),
+                            xcvr_event_info->xcvr_sprom);
         break;
 
     case xcvr_state_t::XCVR_SPROM_READ:
         HAL_TRACE_DEBUG("Xcvr sprom read; port: {}, pid: {}", port_num, pid);
 
-        port_svc_get()->update_xcvr_status(port_num, port::XCVR_STATE_SPROM_READ,
-                                           xcvr_sdk_pid_to_spec_pid(pid),
-                                           &xcvr_event_info->xcvr_sprom);
+        port_svc_get()->update_xcvr_status(
+                            port_num,
+                            port::XCVR_STATE_SPROM_READ,
+                            xcvr_sdk_pid_to_spec_pid(pid),
+                            xcvr_sdk_cable_type_to_spec_cable_type(
+                                            xcvr_event_info->cable_type),
+                            xcvr_event_info->xcvr_sprom);
         break;
 
     case xcvr_state_t::XCVR_SPROM_READ_ERR:
         HAL_TRACE_DEBUG("Xcvr sprom read error; port: {}", port_num);
 
-        port_svc_get()->update_xcvr_status(port_num,
-                                           port::XCVR_STATE_SPROM_READ_ERR,
-                                           port::XCVR_PID_UNKNOWN,
-                                           &xcvr_event_info->xcvr_sprom);
+        port_svc_get()->update_xcvr_status(
+                            port_num,
+                            port::XCVR_STATE_SPROM_READ_ERR,
+                            port::XCVR_PID_UNKNOWN,
+                            xcvr_sdk_cable_type_to_spec_cable_type(
+                                            xcvr_event_info->cable_type),
+                            xcvr_event_info->xcvr_sprom);
         break;
 
     default:

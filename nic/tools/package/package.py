@@ -227,6 +227,14 @@ if arm_pkg == 0:
     cmd = 'mv ' + output_dir + '/nic/lib/libzmq.so ' + output_dir + '/nic/lib/libzmq.so.3'
     call(cmd, shell=True)
 
+#####################################
+##### Generate NIC version file #####
+#####################################
+
+if args.target != 'host':
+    cmd = "./nic/tools/gen_version.py --output-dir " + output_dir + "/nic/etc/"
+    call(cmd, shell=True)
+
 ############################
 ##### create tar balls #####
 ############################

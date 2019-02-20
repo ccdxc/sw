@@ -38,80 +38,80 @@ extern bool xcvr_valid_enable;
 
 // QSFP/QSFP28 sprom data
 typedef struct qsfp_sprom_data_s {
-    uint8_t  id;               // Type of transceiver
-    uint8_t  ext_id;           // Extended identifier of type of transceiver
-    uint8_t  connector;        // Code for connector type
-    uint8_t  compliance[8];    // Code for electronic or optical compatibility
-    uint8_t  encoding;         // Code for high speed serial encoding algorithm
-    uint8_t  br_nominal1;      // Norminal signalling rate, units of 100MBd
-    uint8_t  ext_rate_select;  // Extended rate select compliance
-    uint8_t  length_smf_km;    // Link length supported for single mode fiber, units of km
-    uint8_t  length_om3;       // Link length supported for 50/125um   OM3 fiber, units of 2m
-    uint8_t  length_om2;       // Link length supported for 50/125um   OM2 fiber, units of 1m
-    uint8_t  length_om1;       // Link length supported for 62.5/125um OM1 fiber, units of 1m
-    uint8_t  length_dac;       // Link length supported for copper or direct attach cable, units of m
-    uint8_t  device_tech;      // Device technology
-    uint8_t  vendor_name[16];  // SFP vendor name
-    uint8_t  ext_module;       // Extended module codes for Infiniband
-    uint8_t  vendor_oui[3];    // SFP vendor IEEE company ID
-    uint8_t  vendor_pn[16];    // Part number provided by vendor
-    uint8_t  vendor_rev[2];    // Revision number for part number provided by vendor
-    uint8_t  wavelength1[2];   // Nominal laser wavelength OR copper cable attenuation
-    uint8_t  wavelength2[2];   // Guaranteed range of laser wavelength from nominal wavelength or copper cable attenuation
-    uint8_t  max_case_temp;
-    uint8_t  cc_base;          // Check code for Base ID Fields
+    uint8_t  id;               //  0 Type of transceiver
+    uint8_t  ext_id;           //  1 Extended identifier of type of transceiver
+    uint8_t  connector;        //  2 Code for connector type
+    uint8_t  compliance[8];    //  3 Code for electronic or optical compatibility
+    uint8_t  encoding;         // 11 Code for high speed serial encoding algorithm
+    uint8_t  br_nominal1;      // 12 Norminal signalling rate, units of 100MBd
+    uint8_t  ext_rate_select;  // 13 Extended rate select compliance
+    uint8_t  length_smf_km;    // 14 Link length supported for single mode fiber, units of km
+    uint8_t  length_om3;       // 15 Link length supported for 50/125um   OM3 fiber, units of 2m
+    uint8_t  length_om2;       // 16 Link length supported for 50/125um   OM2 fiber, units of 1m
+    uint8_t  length_om1;       // 17 Link length supported for 62.5/125um OM1 fiber, units of 1m
+    uint8_t  length_dac;       // 18 Link length supported for copper or direct attach cable, units of m
+    uint8_t  device_tech;      // 19 Device technology
+    uint8_t  vendor_name[16];  // 20 SFP vendor name
+    uint8_t  ext_module;       // 36 Extended module codes for Infiniband
+    uint8_t  vendor_oui[3];    // 37 SFP vendor IEEE company ID
+    uint8_t  vendor_pn[16];    // 40 Part number provided by vendor
+    uint8_t  vendor_rev[2];    // 56 Revision number for part number provided by vendor
+    uint8_t  wavelength1[2];   // 58 Nominal laser wavelength OR copper cable attenuation
+    uint8_t  wavelength2[2];   // 60 Guaranteed range of laser wavelength from nominal wavelength or copper cable attenuation
+    uint8_t  max_case_temp;    // 62
+    uint8_t  cc_base;          // 63 Check code for Base ID Fields
 
     // Extended ID Fields
-    uint8_t  link_codes;       // extended specification compliance codes
-    uint8_t  options[3];       // Indicates which optional transceiver signals are implemented
-    uint8_t  vendor_sn[16];    // Serial number provided by vendor
-    uint8_t  date_code[8];     // Vendor's manufacturing data code
-    uint8_t  diag_mon_type;    // Indicates which type of diagnostic monitoring is implemented
-    uint8_t  enhanced_options; // Indicates which optional enhanced features are implemented
-    uint8_t  br_nominal2;      // Nominal bit rate per channel
-    uint8_t  cc_ext;           // Check code for Extended ID Fields
+    uint8_t  link_codes;       // 64 extended specification compliance codes
+    uint8_t  options[3];       // 65 Indicates which optional transceiver signals are implemented
+    uint8_t  vendor_sn[16];    // 68 Serial number provided by vendor
+    uint8_t  date_code[8];     // 84 Vendor's manufacturing data code
+    uint8_t  diag_mon_type;    // 92 Indicates which type of diagnostic monitoring is implemented
+    uint8_t  enhanced_options; // 93 Indicates which optional enhanced features are implemented
+    uint8_t  br_nominal2;      // 94 Nominal bit rate per channel
+    uint8_t  cc_ext;           // 95 Check code for Extended ID Fields
 
     // Vendor Specific Fields
-    uint8_t  vendor_specific[32]; // Vendor specific EEPROM
+    uint8_t  vendor_specific[32]; // 96 Vendor specific EEPROM
 } __attribute__((__packed__)) qsfp_sprom_data_t;
 
 // SFP/SFP+ sprom data
 typedef struct sfp_sprom_data_s {
-    uint8_t  id;               // Type of transceiver
-    uint8_t  ext_id;           // Extended identifier of type of transceiver
-    uint8_t  connector;        // Code for connector type
-    uint8_t  compliance[8];    // Code for electronic or optical compatibility
-    uint8_t  encoding;         // Code for high speed serial encoding algorithm
-    uint8_t  br_nominal;       // Norminal signalling rate, units of 100MBd
-    uint8_t  rate_identifier;  // Type of rate select functionality
-    uint8_t  length_smf_km;    // Link length supported for single mode fiber, units of km
-    uint8_t  length_smf;       // Link length supported for single mode fiber, units of 100m
-    uint8_t  length_om2;       // Link length supported for 50um   OM2  fiber, units of 10m
-    uint8_t  length_om1;       // Link length supported for 62.5um OM1  fiber, units of 10m
-    uint8_t  length_dac;       // Link length supported for copper or direct attach cable, units of m
-    uint8_t  length_om3;       // Link length supported for 50um   OM3  fiber, units of 10m
-    uint8_t  vendor_name[16];  // SFP vendor name
-    uint8_t  transceiver;      // Code for electronic or optical compatibility
-    uint8_t  vendor_oui[3];    // SFP vendor IEEE company ID
-    uint8_t  vendor_pn[16];    // Part number provided by vendor
-    uint8_t  vendor_rev[4];    // Revision number for part number provided by vendor
-    uint8_t  wavelength[2];    // Laser wavelength
-    uint8_t  unallocated;
-    uint8_t  cc_base;          // Check code for Base ID Fields
+    uint8_t  id;               //  0 Type of transceiver
+    uint8_t  ext_id;           //  1 Extended identifier of type of transceiver
+    uint8_t  connector;        //  2 Code for connector type
+    uint8_t  compliance[8];    //  3 Code for electronic or optical compatibility
+    uint8_t  encoding;         // 11 Code for high speed serial encoding algorithm
+    uint8_t  br_nominal;       // 12 Norminal signalling rate, units of 100MBd
+    uint8_t  rate_identifier;  // 13 Type of rate select functionality
+    uint8_t  length_smf_km;    // 14 Link length supported for single mode fiber, units of km
+    uint8_t  length_smf;       // 15 Link length supported for single mode fiber, units of 100m
+    uint8_t  length_om2;       // 16 Link length supported for 50um   OM2  fiber, units of 10m
+    uint8_t  length_om1;       // 17 Link length supported for 62.5um OM1  fiber, units of 10m
+    uint8_t  length_dac;       // 18 Link length supported for copper or direct attach cable, units of m
+    uint8_t  length_om3;       // 19 Link length supported for 50um   OM3  fiber, units of 10m
+    uint8_t  vendor_name[16];  // 20 SFP vendor name
+    uint8_t  transceiver;      // 36 Code for electronic or optical compatibility
+    uint8_t  vendor_oui[3];    // 37 SFP vendor IEEE company ID
+    uint8_t  vendor_pn[16];    // 40 Part number provided by vendor
+    uint8_t  vendor_rev[4];    // 56 Revision number for part number provided by vendor
+    uint8_t  wavelength[2];    // 60 Laser wavelength
+    uint8_t  unallocated;      // 62
+    uint8_t  cc_base;          // 63 Check code for Base ID Fields
 
     // Extended ID Fields
-    uint8_t  options[2];       // Indicates which optional transceiver signals are implemented
-    uint8_t  br_max;           // Upper bit rate margin, units of %
-    uint8_t  br_min;           // Lower bit rate margin, units of %
-    uint8_t  vendor_sn[16];    // Serial number provided by vendor
-    uint8_t  date_code[8];     // Vendor's manufacturing data code
-    uint8_t  diag_mon_type;    // Indicates which type of diagnostic monitoring is implemented
-    uint8_t  enhanced_options; // Indicates which optional enhanced features are implemented
-    uint8_t  sff_compliance;   // Indicates which revision of SFF 8472 transceiver complies with
-    uint8_t  cc_ext;           // Check code for Extended ID Fields
+    uint8_t  options[2];       // 64 Indicates which optional transceiver signals are implemented
+    uint8_t  br_max;           // 66 Upper bit rate margin, units of %
+    uint8_t  br_min;           // 67 Lower bit rate margin, units of %
+    uint8_t  vendor_sn[16];    // 68 Serial number provided by vendor
+    uint8_t  date_code[8];     // 84 Vendor's manufacturing data code
+    uint8_t  diag_mon_type;    // 92 Indicates which type of diagnostic monitoring is implemented
+    uint8_t  enhanced_options; // 93 Indicates which optional enhanced features are implemented
+    uint8_t  sff_compliance;   // 94 Indicates which revision of SFF 8472 transceiver complies with
+    uint8_t  cc_ext;           // 95 Check code for Extended ID Fields
 
     // Vendor Specific Fields
-    uint8_t  vendor_specific[32]; // Vendor specific EEPROM
+    uint8_t  vendor_specific[32]; // 96 Vendor specific EEPROM
 } __attribute__((__packed__)) sfp_sprom_data_t;
 
 typedef struct xcvr_s {

@@ -65,7 +65,7 @@ typedef struct port_args_s {
     int                   xcvr_port_num;              // xcvr port num
     xcvr_state_t          xcvr_state;                 // xcvr state
     xcvr_pid_t            xcvr_pid;                   // xcvr pid
-    xcvr_sprom_data_t     xcvr_sprom;                 // xcvr sprom data
+    uint8_t               xcvr_sprom[XCVR_SPROM_SIZE]; // xcvr sprom data
 
     port_an_args_t        *port_an_args;              // an cfg based on xcvr
     port_link_sm_t        link_sm;                    // internal port state machine

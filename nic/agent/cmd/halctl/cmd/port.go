@@ -397,13 +397,28 @@ func portXcvrShowResp(resp *halproto.PortGetResponse) {
 	// Strip XCVR_PID_ from the pid
 	xcvrPidStr = strings.Replace(strings.Replace(xcvrPid.String(), "XCVR_PID_", "", -1), "_", "-", -1)
 
-	lengthOm1 := xcvrStatus.GetLengthOm1()
-	lengthOm2 := xcvrStatus.GetLengthOm2()
-	lengthOm3 := xcvrStatus.GetLengthOm3()
+	xcvrSprom := xcvrStatus.GetXcvrSprom()
 
-	if strings.Contains("QSFP", xcvrPid.String()) {
-		lengthOm3 *= 2
+	lengthOm3 := 0
+	vendorRev := ""
+	lengthSmfKm := int(xcvrSprom[14])
+	lengthOm2 := int(xcvrSprom[16])
+	lengthOm1 := int(xcvrSprom[17])
+	lengthDac := int(xcvrSprom[18])
+	vendorName := string(xcvrSprom[20:35])
+	vendorPn := string(xcvrSprom[40:55])
+	vendorSn := string(xcvrSprom[68:83])
+
+	if strings.Contains(xcvrPid.String(), "QSFP") {
+		// convert from units of 2m to meters
+		lengthOm3 = int(xcvrSprom[15]) * 2
+
+		vendorRev = string(xcvrSprom[56:57])
 	} else {
+		lengthOm3 = int(xcvrSprom[19])
+		vendorRev = string(xcvrSprom[56:59])
+
+		// convert from units of 10m to meters
 		lengthOm1 *= 10
 		lengthOm2 *= 10
 		lengthOm3 *= 10
@@ -422,15 +437,15 @@ func portXcvrShowResp(resp *halproto.PortGetResponse) {
 		"vendor revision: %s\n"+
 		"vendor serial number: %s\n",
 		xcvrPortNum, xcvrStateStr, xcvrPidStr,
-		xcvrStatus.GetLengthSmfKm(),
+		lengthSmfKm,
 		lengthOm1,
 		lengthOm2,
 		lengthOm3,
-		xcvrStatus.GetLengthDac(),
-		xcvrStatus.GetVendorName(),
-		xcvrStatus.GetVendorPn(),
-		xcvrStatus.GetVendorRev(),
-		xcvrStatus.GetVendorSn())
+		lengthDac,
+		vendorName,
+		vendorPn,
+		vendorRev,
+		vendorSn)
 }
 
 func portShowOneResp(resp *halproto.PortGetResponse) {

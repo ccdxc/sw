@@ -112,20 +112,18 @@ enum PortXcvrPid {
   XCVR_PID_SFP_10GBASE_CU  = 68;
 }
 
+enum CableType {
+  CABLE_TYPE_NONE   = 0;
+  CABLE_TYPE_COPPER = 1;
+  CABLE_TYPE_FIBER  = 2;
+}
+
 message PortXcvrStatus {
   int32         port          = 1;
   PortXcvrState state         = 2;
   PortXcvrPid   pid           = 3;
-  uint32        length_smf_km = 4;
-  uint32        length_smf    = 5;
-  uint32        length_om1    = 6;
-  uint32        length_om2    = 7;
-  uint32        length_om3    = 8;
-  uint32        length_dac    = 9;
-  bytes         vendor_name   = 10;
-  bytes         vendor_pn     = 11;
-  bytes         vendor_rev    = 12;
-  bytes         vendor_sn     = 13;
+  CableType     cable_type    = 4;
+  bytes         xcvr_sprom    = 5;
 }
 
 enum PortPauseType {

@@ -9,6 +9,8 @@
 
 #include <inttypes.h>
 
+#define XCVR_SPROM_SIZE 256
+
 namespace sdk {
 namespace types {
 
@@ -186,8 +188,8 @@ typedef struct xcvr_event_info_s {
     xcvr_state_t      state;
     xcvr_pid_t        pid;
     cable_type_t      cable_type;
-    xcvr_sprom_data_t xcvr_sprom;
     port_an_args_t    *port_an_args;
+    uint8_t           xcvr_sprom[XCVR_SPROM_SIZE];
 } xcvr_event_info_t;
 
 typedef void (*port_event_notify_t)(uint32_t port_num,

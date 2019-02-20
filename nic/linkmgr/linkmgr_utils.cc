@@ -339,8 +339,14 @@ sdk_port_breakout_mode_to_port_breakout_mode_spec (
 
 void
 port_populate_xcvr_status_sprom (::port::PortXcvrStatus *xcvr_status,
-                                 xcvr_sprom_data_t      *xcvr_sprom)
+                                 void                   *xcvr_sprom)
 {
+    xcvr_status->set_xcvr_sprom(std::string((char*)xcvr_sprom,
+                                XCVR_SPROM_SIZE));
+
+    return;
+
+#if 0
     xcvr_status->set_length_smf_km(xcvr_sprom->length_smf_km);
     xcvr_status->set_length_smf(xcvr_sprom->length_smf);
     xcvr_status->set_length_om1(xcvr_sprom->length_om1);
@@ -353,6 +359,7 @@ port_populate_xcvr_status_sprom (::port::PortXcvrStatus *xcvr_status,
     xcvr_status->set_vendor_pn(std::string((char*)xcvr_sprom->vendor_pn, 16));
     xcvr_status->set_vendor_rev(std::string((char*)xcvr_sprom->vendor_rev, 4));
     xcvr_status->set_vendor_sn(std::string((char*)xcvr_sprom->vendor_sn, 16));
+#endif
 }
 
 } // namespace linkmgr

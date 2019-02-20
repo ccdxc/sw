@@ -23,6 +23,7 @@ using port::PortSpeed;
 using port::PortOperStatus;
 using port::PortXcvrState;
 using port::PortXcvrPid;
+using port::CableType;
 using sdk::types::port_event_t;
 using sdk::types::xcvr_state_t;
 using sdk::types::xcvr_pid_t;
@@ -51,7 +52,8 @@ public:
     // update_xcvr_status updates port status in delphi
     error update_xcvr_status(::google::protobuf::uint32 port_id,
                            PortXcvrState state, PortXcvrPid pid,
-                           xcvr_sprom_data_t *xcvr_sprom);
+                           CableType cable_type,
+                           void *xcvr_sprom);
 
 private:
     delphi::SdkPtr sdk_;
