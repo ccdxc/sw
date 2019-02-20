@@ -34,6 +34,7 @@ else
     kldunload sys/modules/ionic/ionic.ko 2> /dev/null || rc=$?
     kldload sys/modules/ionic/ionic.ko
     sleep 2
-    ifconfig ionic2 169.254.0.2/24
+    intmgmt=`pciconf -l | grep chip=0x10041dd8 | cut -d'@' -f1 | sed "s/ion/ionic/g"`
+    ifconfig $intmgmt 169.254.0.2/24
     ping -c 5 169.254.0.1
 fi

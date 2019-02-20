@@ -59,7 +59,9 @@ else
     ./build.sh
     insmod drivers/eth/ionic/ionic.ko
     sleep 2
-    intmgmt=`systool -c net | grep "Class Device"  | tail -2 | head -1 | cut -d = -f 2 | cut -d \" -f 2`
+    #intmgmt=`systool -c net | grep "Class Device"  | tail -4 | head -1 | cut -d = -f 2 | cut -d \" -f 2`
+    bdf=`lspci -d :1004 | cut -d' ' -f1`
+    intmgmt=`ls /sys/bus/pci/devices/0000:$bdf/net/`
     dhcp_disable
     ifconfig $intmgmt 169.254.0.2/24
     ping -c 5 169.254.0.1
