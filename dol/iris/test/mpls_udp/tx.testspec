@@ -55,7 +55,7 @@ packets:
         encaps      : callback://networking/packets/GetMplsPacketEncaps
         headers     :
             outereth    :
-                src     : ref://testcase/config/src/endpoint/macaddr
+                src     : 00:00:00:00:1A:85
                 dst     : 00:00:00:00:30:39
             outeripv4:
                 src     : ref://testcase/config/flow/sip

@@ -35,6 +35,7 @@ class TunnelObject(base.ConfigObjectBase):
             leps = self.tenant.GetLocalEps()
             logger.info(" found %d local eps for tunnel using %s" % (len(leps), leps[0].ipaddrs[0].get()))
             self.ltep = leps[0].ipaddrs[0]
+            self.ltep_ep = leps[0]
 
         if remote_ep.IsRemote():
             self.local_dest = False
@@ -180,6 +181,14 @@ class TunnelObject(base.ConfigObjectBase):
             
             # GW mac
             req_spec.if_tunnel_info.prop_mpls_info.gw_mac_da = 12345
+            
+            # PF mac
+            #req_spec.if_tunnel_info.prop_mpls_info.pf_mac = self.ltep_ep.macaddr.getnum()
+            req_spec.if_tunnel_info.prop_mpls_info.pf_mac = 6789
+            
+            # Overlay/VF mac
+            #req_spec.if_tunnel_info.prop_mpls_info.overlay_mac = self.ltep_ep.macaddr.getnum()
+            self.rmacaddr   = self.remote_ep.macaddr
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
