@@ -22,7 +22,8 @@
     vim \
     sshpass \
     sysfsutils \
-    net-tools
+    net-tools \
+    hping3
 
  else
    apt-get install -y \
@@ -37,5 +38,6 @@
     libnl-route-3-dev \
     ninja-build \
     pkg-config \
-    valgrind
+    valgrind \
+    hping3
 fi
