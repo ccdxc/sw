@@ -12,6 +12,7 @@
 #include "nic/apollo/rfc/rfc.hpp"
 #include "nic/apollo/rfc/rfc_tree.hpp"
 #include "nic/apollo/rfc/rfc_utils.hpp"
+#include "nic/apollo/p4/include/sacl_defines.h"
 #include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 
@@ -93,6 +94,13 @@ rfc_compute_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
         addr_itable->nodes[num_intervals++] = *inode;
     }
     rfc_ctxt->pfx_tree.num_intervals = num_intervals;
+    OCI_TRACE_DEBUG("No. of interval nodes in prefix itree %u", num_intervals);
+    if (num_intervals > SACL_IPV4_TREE_MAX_NODES) {
+        OCI_TRACE_ERR("No. of interval nodes in prefix itree %u exceeded "
+                      "max supported nodes %u", num_intervals,
+                      SACL_IPV4_TREE_MAX_NODES);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
 
     num_intervals = 0;
     rte_bitmap_reset(rfc_ctxt->cbm);
@@ -115,6 +123,13 @@ rfc_compute_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
         port_itable->nodes[num_intervals++] = *inode;
     }
     rfc_ctxt->port_tree.num_intervals = num_intervals;
+    OCI_TRACE_DEBUG("No. of interval nodes in port itree %u", num_intervals);
+    if (num_intervals > SACL_SPORT_TREE_MAX_NODES) {
+        OCI_TRACE_ERR("No. of interval nodes in port itree %u exceeded "
+                      "max supported nodes %u", num_intervals,
+                      SACL_SPORT_TREE_MAX_NODES);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
 
     num_intervals = 0;
     rte_bitmap_reset(rfc_ctxt->cbm);
@@ -137,6 +152,14 @@ rfc_compute_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
         proto_port_itable->nodes[num_intervals++] = *inode;
     }
     rfc_ctxt->proto_port_tree.num_intervals = num_intervals;
+    OCI_TRACE_DEBUG("No. of interval nodes in (proto, port) itree %u",
+                    num_intervals);
+    if (num_intervals > SACL_PROTO_DPORT_TREE_MAX_NODES) {
+        OCI_TRACE_ERR("No. of interval nodes in (proto, port) itree %u "
+                      "exceeded max supported nodes %u", num_intervals,
+                      SACL_PROTO_DPORT_TREE_MAX_NODES);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
 
     return SDK_RET_OK;
 }
