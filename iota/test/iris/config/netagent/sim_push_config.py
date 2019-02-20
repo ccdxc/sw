@@ -62,6 +62,7 @@ def __add_workloads():
         wl_msg.mac_address = getattr(ep.spec, 'mac-address')
         lif_uplink = __alloc_lif(wl_msg.node_name)
         wl_msg.interface = lif_uplink[0]
+        wl_msg.parent_interface = lif_uplink[0]
         wl_msg.pinned_port = lif_uplink[1]
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_SRIOV
         wl_msg.uplink_vlan = __get_l2segment_vlan_for_endpoint(ep)

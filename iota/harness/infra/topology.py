@@ -174,7 +174,10 @@ class Node(object):
                 if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
                 peer_msg = msg.venice_config.venice_peers.add()
                 peer_msg.host_name = n.Name()
-                peer_msg.ip_address = str(n.MgmtIpAddress())
+                if api.IsSimulation():
+                    peer_msg.ip_address = str(n.ControlIpAddress())
+                else:
+                    peer_msg.ip_address = str(n.MgmtIpAddress())
         else:
             if self.IsThirdParty():
                 msg.third_party_nic_config.nic_type = self.GetNicType()

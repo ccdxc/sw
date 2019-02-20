@@ -52,6 +52,9 @@ class _Testbed:
     def GetOs(self):
         return self.__os
 
+    def IsSimulation(self):
+        return self.__type == types.tbtype.SIMULATION
+
     def __derive_testbed_attributes(self):
         self.__bm_count = 0
         self.__vm_count = 0

@@ -24,7 +24,14 @@ def Setup(tc):
 
 def Trigger(tc):
     if tc.skip: return api.types.status.SUCCESS
-    req = api.Trigger_CreateAllParallelCommandsRequest()
+
+    req = None
+    interval = "0.2"
+    if not api.IsSimulation():
+        req = api.Trigger_CreateAllParallelCommandsRequest()
+    else:
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
+        interval = "3"
     tc.cmd_cookies = []
 
     for pair in tc.workload_pairs:
@@ -34,12 +41,12 @@ def Trigger(tc):
             cmd_cookie = "%s(%s) --> %s(%s)" %\
                          (w1.workload_name, w1.ipv6_address, w2.workload_name, w2.ipv6_address)
             api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                                   "ping6 -i 0.2 -c 20 -s %d %s" % (tc.iterators.pktsize, w2.ipv6_address))
+                                   "ping6 -i %s -c 20 -s %d %s" % (interval, tc.iterators.pktsize, w2.ipv6_address))
         else:
             cmd_cookie = "%s(%s) --> %s(%s)" %\
                          (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
             api.Trigger_AddCommand(req, w1.node_name, w1.workload_name,
-                                   "ping -i 0.2 -c 20 -s %d %s" % (tc.iterators.pktsize, w2.ip_address))
+                                   "ping -i %s -c 20 -s %d %s" % (interval, tc.iterators.pktsize, w2.ip_address))
         api.Logger.info("Ping test from %s" % (cmd_cookie))
         tc.cmd_cookies.append(cmd_cookie)
 

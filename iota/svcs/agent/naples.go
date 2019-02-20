@@ -361,6 +361,8 @@ func (naples *naplesSimNode) configureWorkloadInHntap(in *iota.Workload) error {
 
 	naples.logger.Println("Update hntap configuration for the workload")
 
+	//Give it 5 seconds to make sure Hntap restarted and updated.
+	time.Sleep(5 * time.Second)
 	return nil
 }
 
@@ -415,6 +417,10 @@ func (dnode *dataNode) setupWorkload(wload Workload.Workload, in *iota.Workload)
 	dnode.logger.Printf("Bring up workload : %s done", in.GetWorkloadName())
 
 	return dnode.configureWorkload(wload, in)
+}
+
+func (dnode *dataNode) isSimNode() bool {
+	return dnode.nodeMsg.GetType() == iota.PersonalityType_PERSONALITY_NAPLES_SIM
 }
 
 // AddWorkload brings up a workload type on a given node
@@ -479,6 +485,7 @@ func (dnode *dataNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadMsg, er
 			in.Workloads[index] = resp
 			return nil
 		})
+
 	}
 
 	pool.Wait()
@@ -531,18 +538,11 @@ func (naples *naplesSimNode) AddWorkloads(in *iota.WorkloadMsg) (*iota.WorkloadM
 
 	}
 
-	pool, _ := errgroup.WithContext(context.Background())
 	for index, wload := range resp.Workloads {
-		wload := wload
-		index := index
-		pool.Go(func() error {
-			sresp := simAddWorkload(wload)
-			resp.Workloads[index] = sresp
-			return nil
-		})
+		sresp := simAddWorkload(wload)
+		resp.Workloads[index] = sresp
 	}
 
-	pool.Wait()
 	for _, wload := range in.Workloads {
 		if wload.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 			resp.ApiResponse = wload.WorkloadStatus

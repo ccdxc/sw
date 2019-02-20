@@ -45,7 +45,7 @@ class TestBundle:
         return spec
 
     def __apply_skip_filters(self):
-        if store.GetTestbed().GetOs() not in self.__spec.meta.os and not GlobalOptions.dryrun:
+        if not api.IsSimulation() and store.GetTestbed().GetOs() not in self.__spec.meta.os and not GlobalOptions.dryrun:
             Logger.info("Skipping Testbundle: %s due to OS mismatch." % self.__spec.meta.name)
             return True
         if GlobalOptions.testbundles and self.__spec.meta.name not in  GlobalOptions.testbundles:

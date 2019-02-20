@@ -13,11 +13,11 @@ def Main(tc):
     req = topo_svc.WorkloadMsg()
     req.workload_op = topo_svc.ADD
     for cfg_object in generated_configs:
-        obj = json.loads(cfg_object.Config)        
+        obj = json.loads(cfg_object.Config)
         if obj["kind"] != "Workload": continue
         wl = req.workloads.add()
         wl.workload_name = obj["meta"]["name"]
-        
+
         wl.node_name = obj["spec"]["host-name"]
         if_obj = obj["spec"]["interfaces"][0]
         wl.mac_address = if_obj["mac-address"]
@@ -25,6 +25,7 @@ def Main(tc):
         wl.uplink_vlan = if_obj["external-vlan"]
         wl.ip_prefix = "192.168.%d.%d/24" % (wl.uplink_vlan, ip_index)
         wl.interface = 'lif100'
+        wl.parent_interface = 'lif100'
         wl.pinned_port = 1
         wl.interface_type = topo_svc.INTERFACE_TYPE_VSS
         wl.workload_type = api.GetWorkloadTypeForNode(wl.node_name)

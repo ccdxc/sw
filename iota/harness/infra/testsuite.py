@@ -211,7 +211,7 @@ class TestSuite:
             Logger.debug("Skipping Testsuite: %s due to testbed type mismatch." % self.Name())
             return True
 
-        if store.GetTestbed().GetOs() not in self.__get_oss() and not GlobalOptions.dryrun:
+        if not store.GetTestbed().IsSimulation() and  store.GetTestbed().GetOs() not in self.__get_oss() and not GlobalOptions.dryrun:
             Logger.debug("Skipping Testsuite: %s due to OS mismatch." % self.Name())
             return True
 

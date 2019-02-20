@@ -308,9 +308,6 @@ def SetVeniceAuthToken(auth_token):
 def GetVeniceAuthToken():
     return store.GetVeniceAuthToken()
 
-def IsSimulation():
-    return GlobalOptions.mode == 'simulation'
-
 def IsDryrun():
     return GlobalOptions.dryrun
 
@@ -344,6 +341,9 @@ def SetTestsuiteAttr(attr, value):
 
 def GetTestsuiteAttr(attr):
     return store.GetTestbed().GetCurrentTestsuite().GetAttr(attr)
+
+def IsSimulation():
+    return store.GetTestbed().IsSimulation()
 
 def GetTestsuiteName():
     return store.GetTestbed().GetCurrentTestsuite().Name()
