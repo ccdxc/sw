@@ -3,7 +3,6 @@ package shm
 import (
 	"context"
 	"encoding/binary"
-	"reflect"
 	"sync"
 	"time"
 
@@ -23,7 +22,7 @@ import (
 //
 
 // MessageHandler handler that will be run on each received message
-type MessageHandler func(interface{}) error
+type MessageHandler func(*halproto.Event) error
 
 // IPCReader to read messages from shared memory
 type IPCReader struct {
@@ -54,7 +53,7 @@ func (r *IPCReader) Stop() {
 }
 
 // Receive processes the messages received on IPC channel
-func (r *IPCReader) Receive(ctx context.Context, objType interface{}, handler MessageHandler) {
+func (r *IPCReader) Receive(ctx context.Context, handler MessageHandler) {
 	r.wg.Add(1)
 	defer r.wg.Done()
 
@@ -63,15 +62,37 @@ func (r *IPCReader) Receive(ctx context.Context, objType interface{}, handler Me
 		case <-ctx.Done():
 			return
 		case <-time.After(r.pollDelay):
-			r.receiveMessage(objType, handler)
+			r.receiveMessage(handler)
 		case <-r.stopCh:
 			return
 		}
 	}
 }
 
+// Dump returns all the available events from underlying shared memory
+func (r *IPCReader) Dump() []*halproto.Event {
+	var evts []*halproto.Event
+	ro := binary.LittleEndian.Uint32(r.Base[r.ReadIndex:])
+	wo := binary.LittleEndian.Uint32(r.Base[r.WriteIndex:])
+	avail := int((wo + r.NumBuffers - ro) % r.NumBuffers)
+	if avail <= 0 {
+		return evts
+	}
+
+	for ix := 0; ix < avail; ix++ {
+		evt, err := r.readMsg(ro)
+		if err != nil {
+			continue
+		}
+		evts = append(evts, evt)
+		ro = (ro + 1) % r.NumBuffers
+	}
+
+	return evts
+}
+
 // helper function to process the received message
-func (r *IPCReader) receiveMessage(objType interface{}, handler MessageHandler) {
+func (r *IPCReader) receiveMessage(handler MessageHandler) {
 	ro := binary.LittleEndian.Uint32(r.Base[r.ReadIndex:])
 	wo := binary.LittleEndian.Uint32(r.Base[r.WriteIndex:])
 	avail := int((wo + r.NumBuffers - ro) % r.NumBuffers)
@@ -81,7 +102,7 @@ func (r *IPCReader) receiveMessage(objType interface{}, handler MessageHandler) 
 
 	ts := time.Now()
 	for ix := 0; ix < avail; ix++ {
-		r.processMsg(ro, ts, objType, handler)
+		r.processMsg(ro, ts, handler)
 		ro = (ro + 1) % r.NumBuffers
 	}
 
@@ -96,30 +117,33 @@ func (r *IPCReader) NumPendingEvents() int {
 }
 
 // helper function to process the received message
-func (r *IPCReader) processMsg(offset uint32, ts time.Time, objType interface{}, handler MessageHandler) {
+func (r *IPCReader) processMsg(offset uint32, ts time.Time, handler MessageHandler) {
+	evt, err := r.readMsg(offset)
+	if err != nil {
+		r.ErrCount++
+		return
+	}
+	r.RxCount++
+
+	// send it to the message handler for further processing
+	if handler != nil {
+		if err := handler(evt); err != nil {
+			r.ErrCount++
+		}
+	}
+}
+
+// readMsg reads halproto.Event from the given offset
+func (r *IPCReader) readMsg(offset uint32) (*halproto.Event, error) {
 	index := GetSharedConstant("IPC_OVH_SIZE") + offset*GetSharedConstant("SHM_BUF_SIZE")
 	msgSize := binary.LittleEndian.Uint32(r.Base[index:]) // get message size from buffer
 	index += GetSharedConstant("IPC_HDR_SIZE")            // update the Base pointer of the message
 
-	switch objType.(type) {
-	case halproto.Event:
-		evt := &halproto.Event{}
-		if err := proto.Unmarshal(r.Base[index:(index+msgSize)], evt); err != nil {
-			log.Errorf("error reading message to halproto.Event from shared memory, err: %v", err)
-			r.ErrCount++
-			return
-		}
-
-		// send it to the message handler for further processing
-		if handler != nil {
-			if err := handler(evt); err != nil {
-				r.ErrCount++
-			}
-		}
-		r.RxCount++
-	default:
-		r.ErrCount++
-		log.Errorf("object type not supported: %v", reflect.TypeOf(objType))
-		return
+	evt := &halproto.Event{}
+	if err := proto.Unmarshal(r.Base[index:(index+msgSize)], evt); err != nil {
+		log.Errorf("error reading message to halproto.Event from shared memory, err: %v", err)
+		return nil, err
 	}
+
+	return evt, nil
 }

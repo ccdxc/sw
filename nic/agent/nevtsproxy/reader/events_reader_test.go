@@ -45,6 +45,11 @@ func TestEventsReaderBasic(t *testing.T) {
 	}
 	msgSize := hEvt.Size()
 
+	// reader to read from shared memory
+	ipcR := shm.NewIPCReader(ipc, 50*time.Millisecond)
+	defer ipcR.Stop()
+	Assert(t, len(ipcR.Dump()) == 0, "expected empty shared memory but there are events") // empty shared memory
+
 	// WRITE hEvt to shared memory
 	ipcW := shm.NewIPCWriter(ipc)
 	buf := ipcW.GetBuffer(msgSize) // get buffer
@@ -53,23 +58,14 @@ func TestEventsReaderBasic(t *testing.T) {
 	AssertOk(t, err, "failed to write event to shared memory")
 	ipcW.PutBuffer(buf, msgSize)
 
-	// READ from shared memory
-	ipcR := shm.NewIPCReader(ipc, 50*time.Millisecond)
-	defer ipcR.Stop()
+	// dump from shared memory
+	Assert(t, len(ipcR.Dump()) == 1, "failed to read event from shared memory; expected a dump of 1 event")
+	// read process messages from shared memory
 	errCh := make(chan error, 1)
-	go ipcR.Receive(context.Background(), halproto.Event{}, func(msg interface{}) error {
-		fmt.Println("read happened??")
-		var err error
-		nEvt, ok := msg.(*halproto.Event)
-		if !ok {
-			err = fmt.Errorf("failed to type cast the message from shared memory to event")
-			errCh <- err
-			return err
-		}
-
+	go ipcR.Receive(context.Background(), func(nEvt *halproto.Event) error {
 		if nEvt.Message != hEvt.Message || nEvt.Component != hEvt.Component ||
 			nEvt.Severity != hEvt.Severity || nEvt.Type != hEvt.Type {
-			err = fmt.Errorf("mismatch between write and read")
+			err := fmt.Errorf("mismatch between write and read")
 			errCh <- err
 			return err
 		}
@@ -94,9 +90,10 @@ func TestEventsReaderBasic(t *testing.T) {
 	Assert(t, ipcR.ErrCount == 0, "expected 0 err count, got: %d", ipcR.ErrCount)
 }
 
-// TestEventsReaderReceiveInvalidObjectType
-// write halproto.Event and try to receive halproto.NetworkSpec{}
-func TestEventsReaderReceiveInvalidObjectType(t *testing.T) {
+// TestEventsReaderWithCorruptedMessage
+// It tries to write a message of size ~30 bytes using a buffer smaller than that.
+// As a result, the message will get corrupted and the reader will fail.
+func TestEventsReaderWithCorruptedMessage(t *testing.T) {
 	shmName := fmt.Sprintf("/tmp/%s", uuid.NewV4().String())
 	defer os.Remove(shmName)
 
@@ -113,19 +110,20 @@ func TestEventsReaderReceiveInvalidObjectType(t *testing.T) {
 		Message:   "test-msg",
 	}
 	msgSize := hEvt.Size()
+	invalidMsgSize := msgSize - 10 // this will corrupt the message
 
 	// WRITE halproto.Event to shared memory
 	ipcW := shm.NewIPCWriter(ipc)
-	buf := ipcW.GetBuffer(msgSize) // get buffer
+	buf := ipcW.GetBuffer(invalidMsgSize) // get a buffer of smaller size
 	Assert(t, buf != nil, "failed to get buffer from shared memory")
-	_, err = writeEvent(buf, hEvt) // write event to the obtained buffer
+	_, err = writeEvent(buf, hEvt) // write event to the obtained buffer (evt bytes that can fit into the buffer will only be written)
 	AssertOk(t, err, "failed to write event to shared memory")
-	ipcW.PutBuffer(buf, msgSize)
+	ipcW.PutBuffer(buf, invalidMsgSize)
 
-	// READ halproto.NetworkSpec from shared memory; it should fail
+	// reader will try to receive *halproto.Event and fail
 	ipcR := shm.NewIPCReader(ipc, 50*time.Millisecond)
 	defer ipcR.Stop()
-	go ipcR.Receive(context.Background(), halproto.NetworkSpec{}, func(msg interface{}) error {
+	go ipcR.Receive(context.Background(), func(nEvt *halproto.Event) error {
 		return nil
 	})
 

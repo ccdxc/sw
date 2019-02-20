@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"os"
 	"path/filepath"
 	"syscall"
 	"time"
@@ -50,7 +51,11 @@ func NewSharedMem(size, parts int, name string) (*SharedMem, error) {
 		return nil, fmt.Errorf("partitions must be > 0")
 	}
 
-	p := filepath.Join(shmPath, name)
+	p := name
+	if _, err := os.Stat(name); os.IsNotExist(err) {
+		p = filepath.Join(shmPath, name) // look in /dev/shm if the file does not exists
+	}
+
 	fd, err := syscall.Open(p, syscall.O_RDWR|syscall.O_CREAT, 0666)
 	if err != nil || fd < 0 {
 		return nil, fmt.Errorf("Error %s opening %s", err, name)
@@ -110,6 +115,28 @@ func (ipc *IPC) Receive(ctx context.Context, h func(*ipcproto.FWEvent, time.Time
 	}
 }
 
+// Dump dumps all the available fw events from the shared memory
+func (ipc *IPC) Dump() []*ipcproto.FWEvent {
+	var evts []*ipcproto.FWEvent
+	ro := binary.LittleEndian.Uint32(ipc.base[ipc.readIndex:])
+	wo := binary.LittleEndian.Uint32(ipc.base[ipc.writeIndex:])
+	avail := int((wo + ipc.numBufs - ro) % ipc.numBufs)
+	if avail <= 0 {
+		return evts
+	}
+
+	for ix := 0; ix < avail; ix++ {
+		ev, err := ipc.readMsg(ro)
+		if err != nil {
+			continue
+		}
+		evts = append(evts, ev)
+		ro = (ro + 1) % ipc.numBufs
+	}
+
+	return evts
+}
+
 func (ipc *IPC) processIPC(h func(*ipcproto.FWEvent, time.Time)) {
 	ro := binary.LittleEndian.Uint32(ipc.base[ipc.readIndex:])
 	wo := binary.LittleEndian.Uint32(ipc.base[ipc.writeIndex:])
@@ -128,6 +155,17 @@ func (ipc *IPC) processIPC(h func(*ipcproto.FWEvent, time.Time)) {
 }
 
 func (ipc *IPC) processMsg(offset uint32, ts time.Time, h func(*ipcproto.FWEvent, time.Time)) {
+	ev, err := ipc.readMsg(offset)
+	if err != nil {
+		return
+	}
+
+	ipc.rxCount++
+
+	h(ev, ts)
+}
+
+func (ipc *IPC) readMsg(offset uint32) (*ipcproto.FWEvent, error) {
 	index := GetSharedConstant("IPC_OVH_SIZE") + offset*GetSharedConstant("IPC_BUF_SIZE")
 	msgSize := binary.LittleEndian.Uint32(ipc.base[index:])
 
@@ -135,12 +173,10 @@ func (ipc *IPC) processMsg(offset uint32, ts time.Time, h func(*ipcproto.FWEvent
 	ev := &ipcproto.FWEvent{}
 	if err := proto.Unmarshal(ipc.base[index:(index+msgSize)], ev); err != nil {
 		log.Errorf("Error %v reading message", err)
-		return
+		return nil, err
 	}
 
-	ipc.rxCount++
-
-	h(ev, ts)
+	return ev, nil
 }
 
 // GetSharedConstant gets a shared constant from cgo

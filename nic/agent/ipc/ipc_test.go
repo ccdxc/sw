@@ -4,6 +4,8 @@ package ipc
 
 import (
 	"encoding/binary"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -82,6 +84,7 @@ func wrFWLog(buf []byte, sport uint16) (int, error) {
 }
 
 func TestBasicIPC(t *testing.T) {
+	defer os.Remove(filepath.Join(shmPath, "/fwlog_ipc_shm"))
 	ipcMemSize := int(GetSharedConstant("IPC_MEM_SIZE"))
 	ipcInstances := int(GetSharedConstant("IPC_INSTANCES"))
 	shm, err := NewSharedMem(ipcMemSize, ipcInstances, "/fwlog_ipc_shm")
@@ -113,6 +116,8 @@ func TestBasicIPC(t *testing.T) {
 	h := func(ev *FWEvent, ts time.Time) {
 		callCount++
 	}
+	Assert(t, len(ipc1.Dump()) == 2, "expected 2 msgs")
+	Assert(t, len(ipc2.Dump()) == 1, "expected 1 msgs")
 	ipc1.processIPC(h)
 	ipc2.processIPC(h)
 	Assert(t, ipc1.rxCount == 2, "Expected 2 msgs")

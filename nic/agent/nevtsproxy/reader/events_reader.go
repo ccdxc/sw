@@ -76,7 +76,12 @@ func NewEventReader(path string, pollDelay time.Duration, logger log.Logger, opt
 
 // Start start receiving events from shared memory
 func (r *EvtReader) Start() {
-	go r.ipcR.Receive(context.Background(), halproto.Event{}, r.handler)
+	go r.ipcR.Receive(context.Background(), r.handler)
+}
+
+// Dump returns all the available events from shared memory
+func (r *EvtReader) Dump() []*halproto.Event {
+	return r.ipcR.Dump()
 }
 
 // Stop stops the reader
@@ -102,13 +107,7 @@ func (r *EvtReader) NumPendingEvents() int {
 }
 
 // message handler to be used by the readers to handle received messages
-func (r *EvtReader) handler(msg interface{}) error {
-	nEvt, ok := msg.(*halproto.Event)
-	if !ok {
-		err := fmt.Errorf("failed to type cast the message from shared memory to halproto.Event")
-		return err
-	}
-
+func (r *EvtReader) handler(nEvt *halproto.Event) error {
 	// convert received halproto.Event to venice event
 	vEvt := convertToVeniceEvent(nEvt)
 
