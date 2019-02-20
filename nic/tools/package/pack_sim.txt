@@ -88,8 +88,8 @@ nic/build/x86_64/iris/lib/libnicmgrproto.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libsdkp4loader.so                         /nic/lib/
 
 nic/hal/third-party/lkl/export/x86_64/lib/liblkl.so              /nic/lib/
-nic/third-party/libev/x86_64/lib/libev.so                        /nic/lib/
-nic/third-party/libev/x86_64/lib/libev.so.4                      /nic/lib/
+nic/sdk/third-party/libev/x86_64/lib/libev.so                    /nic/lib/
+nic/sdk/third-party/libev/x86_64/lib/libev.so.4                  /nic/lib/
 nic/third-party/liblmdb/x86_64/lib/liblmdb.so                    /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/x86_64/lib/libmpuobj.so   /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/x86_64/lib/libcapisa.so   /nic/lib/

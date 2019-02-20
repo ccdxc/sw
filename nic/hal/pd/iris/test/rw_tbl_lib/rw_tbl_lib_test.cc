@@ -94,9 +94,15 @@ TEST_F(rw_test, test1) {
 int main(int argc, char **argv) {
     hal::pd::pd_mem_init_args_t    args;
     hal::pd::pd_func_args_t pd_func_args = {0};
+    std::string cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    std::string mpart_json;
+
+    mpart_json  = cfg_path + "/iris/hbm_mem.json";
+    // Instantiate the singleton class
+    sdk::platform::utils::mpartition::factory(mpart_json.c_str());
 
     ::testing::InitGoogleTest(&argc, argv);
-    args.cfg_path = std::getenv("HAL_CONFIG_PATH");
+    args.cfg_path =  cfg_path.c_str();
     pd_func_args.pd_mem_init = &args;
     hal::pd::pd_mem_init(&pd_func_args);
     return RUN_ALL_TESTS();
