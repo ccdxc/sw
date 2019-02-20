@@ -133,6 +133,8 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   // Whether we show a missing overlay
   showMissingScreen: boolean;
 
+  ruleCount: number = 0;
+
   constructor(protected _controllerService: ControllerService,
     protected securityService: SecurityService,
     protected searchService: SearchService,
@@ -178,6 +180,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     this.subscriptions = [];
     this.sgPolicies = [];
     this.sgPolicyRules = [];
+    this.ruleCount = 0;
     this.showDeletionScreen = false;
     this.showMissingScreen = false;
     this.searchErrorMessage = '';
@@ -240,6 +243,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     if (this.currentSearch != null) {
       this.invokePolicySearch(this.currentSearch.sourceIP, this.currentSearch.destIP, this.currentSearch.port);
     }
+    this.ruleCount = this.sgPolicyRules.length;
   }
 
   /**

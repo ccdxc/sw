@@ -8,7 +8,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MonitoringEventPolicy, IMonitoringEventPolicy, IApiStatus, } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
 import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
-import { required } from '@sdk/v1/utils/validators';;
+import { required } from '@sdk/v1/utils/validators';
 
 @Component({
   selector: 'app-neweventpolicy',

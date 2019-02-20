@@ -119,7 +119,7 @@ describe('AlertseventsComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should have events in the table', async(() => {
+  it('should have events in the table', ((done: DoneFn) => {
     expect(eventsService.pollEvents).toHaveBeenCalledWith('alertsevents', { 'sort-order': ApiListWatchOptions_sort_order.None });
     // Switch to the events tab
     const tabs = fixture.debugElement.queryAll(By.css('.mat-tab-label'));
@@ -150,6 +150,8 @@ describe('AlertseventsComponent', () => {
       // Checking that the table entry is there
       tableBody = eventsContainer.query(By.css('.mat-tab-body-active .ui-table-scrollable-body-table tbody'));
       fixture.whenRenderingDone().then(() => {
+        component.lazyRenderWrapper.stopResizeTableInterval();
+        clearTimeout(component.lazyRenderWrapper.resizeTimeout);
         // Allows rendering for the setTimeout(.., 0) we have
         setTimeout(() => {
           fixture.detectChanges();
@@ -172,6 +174,7 @@ describe('AlertseventsComponent', () => {
             }
           };
           TestingUtility.verifyTable(poll1, component.eventCols, tableBody, caseMap);
+          done();
         }, 0);
       });
     });

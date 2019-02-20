@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { ReplaySubject } from 'rxjs';
 import { ControllerService } from '@app/services/controller.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { AUTH_BODY } from '../auth/auth.reducer';
+import { AuthUser } from '@sdk/v1/models/generated/auth';
 
 const APP_PREFIX = 'app-';
 
@@ -117,8 +119,22 @@ export class LocalStorageService {
       // OR
       // There was a new login, and we need to take update our
       // tokens
+      // We check to make sure the user object is the same. If not,
+      // we logout this tab
       if (!event.newValue) { return; }          // do nothing if no value to work with
+      const currBodyStr = sessionStorage.getItem(AUTH_BODY);
       const data = JSON.parse(event.newValue);
+
+      if (currBodyStr != null && currBodyStr !== ''
+        && data != null && data[AUTH_BODY] != null) {
+        const currBody: AuthUser = JSON.parse(currBodyStr);
+        const newBody: AuthUser = data[AUTH_BODY];
+        if (newBody.meta.uuid !== currBody.meta.uuid) {
+          this.controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Different user logged in on another tab.' });
+          // Don't copy sessions state since we are forcing logout
+          return;
+        }
+      }
       for (const key of Object.keys(data)) {
         sessionStorage.setItem(key, data[key]);
       }

@@ -65,7 +65,7 @@
               (sortFunction)="customSort($event)" [customSort]="true">
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
-          <app-tableheader title="Policy Rules" [total]="sgPolicyRules.length" [icon]="policyIcon">
+          <app-tableheader title="Policy Rules" [total]="ruleCount" [icon]="policyIcon">
             <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center" >
               Search for a flow: 
               <mat-form-field fxFlex="nogrow" floatLabel="never">

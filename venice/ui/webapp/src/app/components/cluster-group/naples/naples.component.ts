@@ -257,20 +257,32 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       if (maxNaples == null || maxNaples.max === -1) {
         heroCard.thirdStat.value = null;
       } else {
-        const thirdStatName = maxNaples.name;
-        let thirdStat = thirdStatName;
-        if (thirdStat.length > 10) {
-          thirdStat = thirdStat.substring(0, 11) + '...';
+        const thirdStatName = this.getNaplesNameByMAC(maxNaples.name);
+        let thirdStat: string = thirdStatName;
+        if (thirdStat.length > 0) {
+          if (thirdStat.length > 10) {
+            thirdStat = thirdStat.substring(0, 11) + '...';
+          }
+          thirdStat += ' (' + Math.round(maxNaples.max) + '%)';
+          heroCard.thirdStat.value = thirdStat;
+          heroCard.thirdStat.url = '/cluster/naples/' + thirdStatName;
         }
-        thirdStat += ' (' + Math.round(maxNaples.max) + '%)';
-        heroCard.thirdStat.value = thirdStat;
-        heroCard.thirdStat.url = '/cluster/naples/' + thirdStatName;
       }
     }
 
     if (heroCard.cardState !== CardStates.READY) {
       heroCard.cardState = CardStates.READY;
     }
+  }
+
+  getNaplesNameByMAC(mac: string) {
+    for (let index = 0; index < this.naples.length; index++) {
+      const naple = this.naples[index];
+      if (naple.status['primary-mac'] === mac) {
+        return naple.meta.name;
+      }
+    }
+    return '';
   }
 
   ngOnDestroy() {

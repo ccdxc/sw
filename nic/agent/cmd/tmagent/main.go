@@ -147,7 +147,7 @@ func main() {
 	rc := resolver.New(cfg)
 
 	opts := &tsdb.Opts{
-		ClientName:              "tpmagent_" + macAddr.String(),
+		ClientName:              macAddr.String(),
 		ResolverClient:          rc,
 		Collector:               globals.Collector,
 		DBName:                  "default",

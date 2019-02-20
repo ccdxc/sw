@@ -9,7 +9,7 @@ import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { SyslogComponent } from '@app/components/monitoring-group/syslog/syslog.component';
 import { Utility } from '@app/common/Utility';
-import { required } from '@sdk/v1/utils/validators';;
+import { required } from '@sdk/v1/utils/validators';
 
 @Component({
   selector: 'app-newfwlogpolicy',

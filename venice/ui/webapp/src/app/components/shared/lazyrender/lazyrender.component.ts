@@ -66,6 +66,11 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   // Once this is done we know we can resize the table.
   viewInitComplete: boolean = false;
 
+  // Holds the refernce to the interval that checks table sizing
+  resizeInterval: NodeJS.Timer;
+
+  // Holds the refernce to the timeout that resize table uses
+  resizeTimeout: NodeJS.Timer;
 
   // Differs object for determining if data has changes
   arrayDiffers: IterableDiffer<any>;
@@ -138,7 +143,13 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
     // putting longer delay so that the rest of the application
     // finishes rendering. Currently causing calculations to be ~1 pixel off
     // and displaying an uneccessary scrollbar
-    this.resizeTable(500);
+    this.resizeInterval = setInterval(() => {
+      this.resizeTable(500);
+    }, 1000);
+  }
+
+  stopResizeTableInterval() {
+    clearInterval(this.resizeInterval);
   }
 
   /**
@@ -156,7 +167,11 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
   @HostListener('window:resize')
   resizeTable(delay: number = 0) {
     // Set table to be container minus header
-    setTimeout(() => {
+    if (this.resizeTimeout != null) {
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = null;
+    }
+    this.resizeTimeout = setTimeout(() => {
       const $ = Utility.getJQuery();
       const containerHeight = $('.lazyrender-container').outerHeight();
       const headerHeight = $('.lazyrender-container .ui-table-caption').outerHeight();

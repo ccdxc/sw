@@ -61,7 +61,7 @@ $table-headercontentheight: 25px;
 }
 
 .workload-column-labels {
-    width: 30%;
+    width: 15%;
 }
 
 .workload-column-host-name {
@@ -69,11 +69,10 @@ $table-headercontentheight: 25px;
 }
 
 .workload-column-interfaces {
-    width: 20%;
+    width: 35%;
 }
 
 .workload-column-interfaces-data {
-    width: 20%;
     div {
         height: 25px;
     }

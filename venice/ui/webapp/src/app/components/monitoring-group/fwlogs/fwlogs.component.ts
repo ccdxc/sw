@@ -56,8 +56,8 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.query.$formGroup.get('source-ips').setValidators(IPUtility.isValidIPValidator)
-    this.query.$formGroup.get('dest-ips').setValidators(IPUtility.isValidIPValidator)
+    this.query.$formGroup.get('source-ips').setValidators(IPUtility.isValidIPValidator);
+    this.query.$formGroup.get('dest-ips').setValidators(IPUtility.isValidIPValidator);
     // Setting the toolbar of the app
     this.controllerService.setToolbarData({
       buttons: [
@@ -97,8 +97,8 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
 
   getFwlogs() {
     if (this.query.$formGroup.invalid) {
-      this.controllerService.invokeErrorToaster("fwlog Query", "Invalid query")
-      return
+      this.controllerService.invokeErrorToaster('fwlog Query', 'Invalid query');
+      return;
     }
     this.loading = true;
     const queryList: ITelemetry_queryFwlogsQueryList = {
@@ -119,10 +119,10 @@ export class FwlogsComponent extends BaseComponent implements OnInit {
           queryList.queries[0][field] = queryVal[field].split(',').map((e: string) => {
             return e.trim();
           }).filter((e: string) => {
-            if (e.length == 0) {
-              return false
+            if (e.length === 0) {
+              return false;
             }
-            return true
+            return true;
           });
         }
       }

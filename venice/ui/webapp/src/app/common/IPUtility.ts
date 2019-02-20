@@ -59,9 +59,9 @@ export class IPUtility {
 
   public static isValidIPValidator(control: AbstractControl): ValidationErrors | null {
     if (control.value == null || control.value.length === 0) {
-      return null
+      return null;
     }
-    return !IPUtility.isValidIP(control.value) ? { validIP: { message: "Must be a valid IP" } } : null;
+    return !IPUtility.isValidIP(control.value) ? { validIP: { message: 'Must be a valid IP' } } : null;
   }
 
   /**
