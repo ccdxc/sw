@@ -257,6 +257,8 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
       this.navigate(['/monitoring', 'flowexport']);
     } else if (payload['id'] === 'fwlogs') {
       this.navigate(['/monitoring', 'fwlogs']);
+    } else if (payload['id'] === 'techsupport') {
+      this.navigate(['/monitoring', 'techsupport']);
     } else if (payload['id'] === 'dashboard') {
       this.navigate(['/dashboard']);
     } else {

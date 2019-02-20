@@ -13,6 +13,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import { Table } from 'primeng/table';
+import { FieldsRequirement_operator } from '@sdk/v1/models/generated/monitoring';
+import { RepeaterComponent} from 'web-app-framework';
+import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
+import { SearchExpression } from '@app/components/search/index.ts';
+
+
 
 
 export class Utility {
@@ -1104,6 +1110,61 @@ export class Utility {
     }
     return stringArray;
   }
+
+  public static getFieldOperatorSymbol(opString: string): string {
+    switch (opString) {
+      case FieldsRequirement_operator.equals:
+        return '=';
+        break;
+      case FieldsRequirement_operator.notEquals:
+        return '!=';
+        break;
+      case FieldsRequirement_operator.gt:
+        return '>';
+        break;
+      case FieldsRequirement_operator.gte:
+        return '>=';
+        break;
+      case FieldsRequirement_operator.lte:
+        return '<=';
+        break;
+      case FieldsRequirement_operator.lt:
+        return '<';
+        break;
+      case FieldsRequirement_operator.in:
+        return '=';
+        break;
+      case FieldsRequirement_operator.notIn:
+        return '!=';
+        break;
+      default:
+        return opString;
+    }
+  }
+
+  /**
+   *
+   * [{"keyFormControl":"text","operatorFormControl":"equals","valueFormControl":"1.2","keytextFormName":"version"}]
+   */
+    public static convertRepeaterValuesToSearchExpression(repeater: RepeaterComponent): any[] {
+      const data = repeater.getValues();
+      if (data == null) {
+        return null;
+      }
+      let retData = data.filter((item) => {
+        return item[repeater.valueFormName] != null && item[repeater.valueFormName].length !== 0;
+      });
+      // make sure the value field is an array
+      retData = retData.map((item) => {
+        const searchExpression: SearchExpression = {
+          key : item[repeater.keytextFormName],
+          operator: item[repeater.operatorFormName],
+          values: Array.isArray(item[repeater.valueFormName]) ? item[repeater.valueFormName] : item[repeater.valueFormName].trim().split(',')
+        };
+        return searchExpression;
+      });
+      return retData;
+    }
 
 
 

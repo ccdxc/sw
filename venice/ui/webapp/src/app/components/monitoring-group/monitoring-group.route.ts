@@ -35,6 +35,15 @@ const routes: Routes = [
     ]
   },
   {
+    path: 'techsupport',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/techsupport/techsupport.module#TechsupportModule'
+      }
+    ]
+  },
+  {
     path: 'auditevents',
     children: [
       {

@@ -1,0 +1,89 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newtechsupport-container {
+    background: white;
+    &:hover {
+        background: white;
+    }
+}
+
+.newtechsupport-border {
+    border-bottom: 6px solid #6ba0e5;
+}
+
+.newtechsupport-content {
+    background: white;
+    min-height: 180px;
+    margin-top: 4* $vertical-gutter;
+    @include primary-font();
+}
+
+.newtechsupport-font  {
+    @include primary-font();
+}
+
+.newtechsupport-row {
+    margin: 0px $horizontal-gutter;
+}
+
+/* .newtechsupport-toggle {
+    margin: 10px;
+    @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+} */
+
+/* .newtechsupport-format {
+    margin-left: 48px;
+    margin-top: 5px;
+    @include global-mat-radio(12px);
+} */
+
+/* .newtechsupport-credential-radio {
+    @include global-mat-radio(12px);
+} */
+
+.newtechsupport-name,
+.newtechsupport-verbosity,
+.newtechsupport-nodes {
+    margin: $vertical-gutter $horizontal-gutter;
+    height: 30px !important;
+}
+
+
+
+.newtechsupport-value {
+    margin: $vertical-gutter $horizontal-gutter;
+}
+
+.newtechsupport-buttoncontainer {
+    margin-top: 1.5 * $vertical-gutter;
+
+}
+
+.newtechsupport-testconnectionbutton {
+  margin: $vertical-gutter $horizontal-gutter;
+  line-height: 30px;
+  display: grid;
+}
+
+.newtechsupport-text {
+    margin-top: 2*$vertical-gutter;
+    height: 30px;
+    width: 120px;
+}
+
+.newtechsupport-divider {
+    border-bottom: 1px solid #dddddd;
+}
+
+.newtechsupport-fieldtitle {
+    margin: $vertical-gutter $horizontal-gutter;
+}
+
+
+
+.newtechsupport-group {
+    margin-top: 2*$vertical-gutter;
+}

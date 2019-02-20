@@ -168,35 +168,7 @@ export class EventalertpolicyComponent extends TabcontentComponent implements On
     value.forEach((req) => {
       let ret = '';
       ret += req['key'] + ' ';
-      switch (req.operator) {
-        case FieldsRequirement_operator.equals:
-          ret += '=';
-          break;
-        case FieldsRequirement_operator.notEquals:
-          ret += '!=';
-          break;
-        case FieldsRequirement_operator.gt:
-          ret += '>';
-          break;
-        case FieldsRequirement_operator.gte:
-          ret += '>=';
-          break;
-        case FieldsRequirement_operator.lte:
-          ret += '<=';
-          break;
-        case FieldsRequirement_operator.lt:
-          ret += '<';
-          break;
-        case FieldsRequirement_operator.in:
-          ret += '=';
-          break;
-        case FieldsRequirement_operator.notIn:
-          ret += '!=';
-          break;
-        default:
-          ret += req.operator;
-      }
-
+      ret += Utility.getFieldOperatorSymbol(req.operator);
       ret += ' ';
 
       if (req.values != null) {

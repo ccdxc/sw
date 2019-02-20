@@ -34,6 +34,10 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
   }
 
   ngOnInit() {
+    this._controllerService.publish(Eventtypes.COMPONENT_INIT, {
+      'component': 'AlertpoliciesComponent', 'state':
+        Eventtypes.COMPONENT_INIT
+    });
     this.getAlertPolicies();
     this.getDestinations();
     this._controllerService.setToolbarData({
