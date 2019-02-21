@@ -246,13 +246,13 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
                                     addr, 5);
         }
 
+        // program security policy block's base address
         if (v4_policy) {
             addr = ((impl::security_policy_impl *)(v4_policy->impl()))->security_policy_root_addr();
             OCI_TRACE_DEBUG("Egress IPv4 policy root addr 0x%llx", addr);
             MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr_1,
                                     addr, 5);
         }
-
         if (v6_policy) {
             addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();
             OCI_TRACE_DEBUG("Egress IPv6 policy root addr 0x%llx", addr);
@@ -300,8 +300,10 @@ vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
                                            oci_epoch_t epoch, vcn_entry *vcn,
                                            subnet_entry *subnet,
                                            oci_vnic_t *vnic_info,
-                                           policy *v4_policy, policy *v6_policy) {
+                                           policy *v4_policy,
+                                           policy *v6_policy) {
     sdk_ret_t                             ret;
+    mem_addr_t                            addr;
     local_vnic_by_slot_rx_swkey_t         vnic_by_slot_key = { 0 };
     local_vnic_by_slot_rx_actiondata_t    vnic_by_slot_data = { 0 };
 
@@ -316,10 +318,21 @@ vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
             vnic_info->src_dst_check ? false : true;
         vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group_1 =
             vnic_info->rsc_pool_id;
-        // TODO: do we need to enhance the vnic API here to take this ?
         vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group_2 = 0;
-        //vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr_1 =
-            //subnet->policy_tree_root();
+
+        // program security policy block's base address
+        if (v4_policy) {
+            addr = ((impl::security_policy_impl *)(v4_policy->impl()))->security_policy_root_addr();
+            OCI_TRACE_DEBUG("Ingress IPv4 policy root addr 0x%llx", addr);
+            MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr_1,
+                                    addr, 5);
+        }
+        if (v6_policy) {
+            addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();
+            OCI_TRACE_DEBUG("Ingress IPv6 policy root addr 0x%llx", addr);
+            MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v6addr_1,
+                                    addr, 5);
+        }
         vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1 = epoch;
         vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch2 = OCI_EPOCH_INVALID;
         ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->insert(&vnic_by_slot_key,
