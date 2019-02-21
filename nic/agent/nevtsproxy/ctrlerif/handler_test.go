@@ -8,10 +8,9 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
-
-	"github.com/pensando/sw/venice/utils/emstore"
 
 	protobuftypes "github.com/gogo/protobuf/types"
 	"github.com/satori/go.uuid"
@@ -23,6 +22,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
@@ -41,7 +41,7 @@ func setup(t *testing.T) (*evtsproxy.EventsProxy, *policy.Manager, types.CtrlerI
 	AssertOk(t, err, "failed to create temp directory, err: %v", err)
 
 	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, ":0",
-		nil, 100*time.Second, 100*time.Millisecond, eventsDir, logger)
+		nil, 100*time.Second, 500*time.Millisecond, eventsDir, logger)
 	AssertOk(t, err, "failed to start events proxy, err: %v", err)
 	eps.StartDispatch()
 
@@ -396,7 +396,7 @@ func TestEventPolicy(t *testing.T) {
 
 	// 3. create events
 	wg.Add(1)
-	count := 0
+	var count uint32
 	stopEvtsRecorder := make(chan struct{})
 	go func() {
 		defer wg.Done()
@@ -416,14 +416,14 @@ func TestEventPolicy(t *testing.T) {
 			select {
 			case <-stopEvtsRecorder:
 				return
-			case <-time.After(10 * time.Millisecond):
+			case <-time.After(100 * time.Millisecond):
 				evtType := "EVT1"
-				if count%2 == 0 {
+				if atomic.LoadUint32(&count)%2 == 0 {
 					evtType = "EVT2"
 				}
 
 				evtsRecorder.Event(evtType, evtsapi.SeverityLevel_INFO, fmt.Sprintf("event message - %d", count), nil)
-				count++
+				atomic.AddUint32(&count, 1)
 			}
 		}
 	}()
@@ -442,17 +442,17 @@ func TestEventPolicy(t *testing.T) {
 		wg.Add(1)
 		go func(format monitoring.MonitoringExportFormat, messageCh chan string) {
 			defer wg.Done()
-			totalMessagesReceived := 0
+			var totalMessagesReceived uint32
 			for {
 				select {
 				case msg, ok := <-messageCh:
 					if !ok {
-						Assert(t, count == totalMessagesReceived, "total sent: %v, received: %v", count, totalMessagesReceived)
+						Assert(t, atomic.LoadUint32(&count) == totalMessagesReceived, "total sent: %v, received: %v", count, totalMessagesReceived)
 						return
 					}
 					Assert(t, syslog.ValidateSyslogMessage(format, msg), "message format does not match")
 					totalMessagesReceived++
-					if count == totalMessagesReceived {
+					if atomic.LoadUint32(&count) == totalMessagesReceived {
 						return
 					}
 				}
