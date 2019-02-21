@@ -32,7 +32,7 @@ public:
      * @param[in] oci_tep    tep information
      * @return    new instance of tep or NULL, in case of error
      */
-    static tep_impl *factory(oci_tep_t *oci_tep);
+    static tep_impl *factory(oci_tep_spec_t *oci_tep);
 
     /**
      * @brief    release all the s/w state associated with the given tep,

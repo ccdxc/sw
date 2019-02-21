@@ -31,7 +31,7 @@ namespace impl {
  * @return    new instance of tep or NULL, in case of error
  */
 tep_impl *
-tep_impl::factory(oci_tep_t *oci_tep) {
+tep_impl::factory(oci_tep_spec_t *oci_tep) {
     tep_impl *impl;
 
     // TODO: move to slab later
@@ -92,7 +92,7 @@ tep_impl::release_resources(api_base *api_obj) {
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                  ret;
-    oci_tep_t                  *tep_info;
+    oci_tep_spec_t             *tep_info;
     tep_tx_actiondata_t        tep_tx_data = { 0 };
     nexthop_tx_actiondata_t    nh_tx_data = { 0 };
 
@@ -131,6 +131,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 tep_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    //TODO: need to unprogram HW.
     return sdk::SDK_RET_INVALID_OP;
 }
 

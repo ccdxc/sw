@@ -36,7 +36,7 @@ tep_entry::tep_entry() {
  * @return    new instance of tep or NULL, in case of error
  */
 tep_entry *
-tep_entry::factory(oci_tep_t *oci_tep) {
+tep_entry::factory(oci_tep_spec_t *oci_tep) {
     tep_entry *tep;
 
     /**< create tep entry with defaults, if any */
@@ -83,7 +83,7 @@ tep_entry::destroy(tep_entry *tep) {
  */
 sdk_ret_t
 tep_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_tep_t *oci_tep = &api_ctxt->api_params->tep_info;
+    oci_tep_spec_t *oci_tep = &api_ctxt->api_params->tep_info;
 
     memcpy(&this->key_, &oci_tep->key, sizeof(oci_tep_key_t));
     return SDK_RET_OK;
@@ -158,8 +158,26 @@ tep_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 tep_entry::activate_config(oci_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
-    OCI_TRACE_DEBUG("Created TEP %s", ipv4addr2str(key_.ip_addr));
-    return SDK_RET_OK;
+    switch (api_op) {
+    case API_OP_CREATE:
+        OCI_TRACE_DEBUG("Created TEP %s", ipv4addr2str(key_.ip_addr));
+        break;
+
+    case API_OP_DELETE:
+        OCI_TRACE_DEBUG("Deleted TEP %s", ipv4addr2str(key_.ip_addr));
+        break;
+
+    case API_OP_UPDATE:
+        OCI_TRACE_DEBUG("Updated TEP %s", ipv4addr2str(key_.ip_addr));
+        break;
+
+    case API_OP_NONE:
+    default:
+        OCI_TRACE_DEBUG("Invalid op %u for TEP %s", api_op,
+                        ipv4addr2str(key_.ip_addr));
+        return sdk::SDK_RET_INVALID_OP;
+    }
+    return sdk::SDK_RET_OK;
 }
 
 /**

@@ -76,7 +76,8 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
         return switchport_impl::factory((oci_switchport_spec_t *)args);
 
     case IMPL_OBJ_ID_TEP:
-        return tep_impl::factory((oci_tep_t *)args);
+        return tep_impl::factory((oci_tep_spec_t *)args);
+        break;
 
     case IMPL_OBJ_ID_VNIC:
         return vnic_impl::factory((oci_vnic_t *)args);

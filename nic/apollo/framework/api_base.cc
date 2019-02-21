@@ -93,6 +93,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         } else {
             obj = tep_db()->tep_find(&api_ctxt->api_params->tep_info.key);
         }
+        return obj;
         break;
 
     case OBJ_ID_VNIC:

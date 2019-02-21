@@ -372,8 +372,8 @@ create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
 static sdk_ret_t
 create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
 {
-    sdk_ret_t rv;
-    oci_tep_t oci_tep;
+    sdk_ret_t      rv;
+    oci_tep_spec_t oci_tep;
 
     // leave the 1st IP in this prefix for MyTEP
     for (uint32_t i = 1; i <= num_teps; i++) {

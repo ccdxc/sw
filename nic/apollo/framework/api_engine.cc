@@ -278,7 +278,7 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     case API_OP_DELETE:
         /**< no additional resources needed for delete operation */
-        break;
+        return sdk::SDK_RET_OK;
 
     case API_OP_UPDATE:
         ret = obj_ctxt->cloned_obj->reserve_resources(api_obj, obj_ctxt);

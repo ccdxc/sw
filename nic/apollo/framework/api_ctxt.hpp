@@ -26,7 +26,7 @@ namespace api {
 typedef union api_params_u {
     oci_switchport_spec_t    switchport_info;
     oci_tep_key_t            tep_key;
-    oci_tep_t                tep_info;
+    oci_tep_spec_t           tep_info;
     oci_vcn_key_t            vcn_key;
     oci_vcn_t                vcn_info;
     oci_subnet_key_t         subnet_key;
