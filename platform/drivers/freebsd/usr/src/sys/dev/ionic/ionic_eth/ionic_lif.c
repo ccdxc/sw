@@ -199,9 +199,6 @@ static void ionic_open(struct lif *lif)
 	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
 		ionic_txq_enable(txq);
-#ifdef IONIC_SEPERATE_TX_INTR
-		ionic_intr_mask(&txq->intr, false);
-#endif
 	}
 
 	ifp->if_drv_flags |= IFF_DRV_RUNNING;
@@ -236,9 +233,6 @@ int ionic_stop(struct net_device *netdev)
 	for (i = 0; i < lif->ntxqs; i++) {
 		txq = lif->txqs[i];
 		ionic_txq_disable(txq);
-#ifdef IONIC_SEPERATE_TX_INTR
-		ionic_intr_mask(&txq->intr, true);
-#endif
 	}
 
 	for (i = 0; i < lif->nrxqs; i++) {
@@ -332,16 +326,15 @@ static irqreturn_t ionic_adminq_isr(int irq, void *data)
 	KASSERT(adminq, ("adminq == NULL"));
 
 	IONIC_ADMIN_LOCK(adminq);
-	ionic_intr_mask(&adminq->intr, true);
 
 	processed = ionic_adminq_clean(adminq, adminq->num_descs);
 
-	IONIC_QUE_INFO(adminq, "processed %d/%d\n", processed, adminq->intr.ctrl->int_credits);
+	IONIC_QUE_INFO(adminq, "processed %d/%d\n", processed, ionic_intr_credits(&adminq->intr));
 
 	ionic_intr_return_credits(&adminq->intr, processed, true, true);
 	IONIC_ADMIN_UNLOCK(adminq);
 
-	KASSERT(processed, ("noting processed in adminq"));
+	KASSERT(processed, ("nothing processed in adminq"));
 
 	return IRQ_HANDLED;
 }
@@ -1165,7 +1158,7 @@ static int ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 
 	if (error) {
 		IONIC_QUE_ERROR(rxq, "failed to create DMA tag, err: %d\n", error);
-		goto free_intr;
+		goto failed_alloc;
 	}
 
 	for ( rxbuf = rxq->rxbuf, i = 0 ; rxbuf != NULL && i < num_descs; i++, rxbuf++ ) {
@@ -1173,15 +1166,12 @@ static int ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 		if (error) {
 			IONIC_QUE_ERROR(rxq, "failed to create map for entry%d, err: %d\n", i, error);
 			bus_dma_tag_destroy(rxq->buf_tag);
-			goto free_intr;
+			goto failed_alloc;
 		}
 	}
 
 	*prxq = rxq;
 	return 0;
-
-free_intr:
-	ionic_dev_intr_unreserve(lif, &rxq->intr);
 
 failed_alloc:
 	if (rxq->cmd_ring) {
@@ -1265,14 +1255,6 @@ static int ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 		goto failed_alloc;
 	}
 
-#ifdef IONIC_SEPERATE_TX_INTR
-	/* Setup interrupt for Tx. */
-	error = ionic_setup_intr(lif, &txq->intr);
-	if (error) {
-		IONIC_QUE_ERROR(txq, "no available interrupt, error: %d\n", error);
-		goto failed_alloc;
-	}
-#endif
 	/*
 	 * Create just one tag for Rx bufferrs.
 	 */
@@ -1310,9 +1292,7 @@ static int ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	return 0;
 
 free_intr:
-#ifdef IONIC_SEPERATE_TX_INTR
 	ionic_dev_intr_unreserve(lif, &txq->intr);
-#endif
 
 failed_alloc:
 	if (txq->br) {
@@ -1363,7 +1343,6 @@ static void ionic_rxq_free(struct lif *lif, struct rxque *rxq)
 static void ionic_txq_free(struct lif *lif, struct txque *txq)
 {
 	IONIC_TX_LOCK(txq);
-
 	if (txq->br) {
 		buf_ring_free(txq->br, M_IONIC);
 		txq->br = NULL;
@@ -1377,10 +1356,6 @@ static void ionic_txq_free(struct lif *lif, struct txque *txq)
 		txq->cmd_ring = NULL;
 		txq->comp_ring = NULL;
 	}
-
-#ifdef IONIC_SEPERATE_TX_INTR
-	ionic_dev_intr_unreserve(lif, &txq->intr);
-#endif
 
 	IONIC_TX_UNLOCK(txq);
 	IONIC_TX_LOCK_DESTROY(txq);
@@ -1530,11 +1505,6 @@ ionic_setup_intr_coal(struct lif* lif)
 		IONIC_NETDEV_ERROR(lif->netdev, "Coalescing value out of range\n");
 		return;
 	}
-
-#ifdef IONIC_SEPERATE_TX_INTR
-	for (i = 0; i < lif->ntxqs; i++)
-		ionic_intr_coal_set(&lif->txqs[i]->intr, tx_coal);
-#endif
 
 	for (i = 0; i < lif->nrxqs; i++)
 		ionic_intr_coal_set(&lif->rxqs[i]->intr, rx_coal);
@@ -1836,16 +1806,6 @@ static void ionic_lif_txqs_deinit(struct lif *lif)
 		txq = lif->txqs[i];
 
 		ionic_txq_disable(txq);
-#ifdef IONIC_SEPERATE_TX_INTR
-		ionic_intr_mask(&txq->intr, true);
-		if (txq->intr.vector) {
-			free_irq(txq->intr.vector, txq);
-		}
-#endif
-		if (txq->taskq) {
-			taskqueue_drain(txq->taskq, &txq->task);
-			taskqueue_free(txq->taskq);
-		}
 	}
 }
 
@@ -2027,7 +1987,7 @@ static void ionic_process_event(struct notifyq* notifyq, union notifyq_comp *com
 	}
 }
 
-static int ionic_notifyq_clean(struct notifyq* notifyq)
+int ionic_notifyq_clean(struct notifyq* notifyq)
 {
 	struct lif *lif = notifyq->lif;
 	int comp_index = notifyq->comp_index;
@@ -2071,15 +2031,11 @@ static irqreturn_t ionic_notifyq_isr(int irq, void *data)
 	KASSERT(notifyq, ("notifyq == NULL"));
 
 	IONIC_NOTIFYQ_LOCK(notifyq);
-	ionic_intr_mask(&notifyq->intr, true);
-
 	processed = ionic_notifyq_clean(notifyq);
 
 	IONIC_QUE_INFO(notifyq, "processed %d\n", processed);
 
-	ionic_intr_return_credits(&notifyq->intr, processed, 0, true);
-
-	ionic_intr_mask(&notifyq->intr, false);
+	ionic_intr_return_credits(&notifyq->intr, processed, true, true);
 	IONIC_NOTIFYQ_UNLOCK(notifyq);
 
 	return IRQ_HANDLED;
@@ -2220,6 +2176,7 @@ int ionic_tx_clean(struct txque* txq , int tx_limit)
 			bus_dmamap_sync(txq->buf_tag, txbuf->dma_map, BUS_DMASYNC_POSTWRITE);
 			bus_dmamap_unload(txq->buf_tag, txbuf->dma_map);
 			m_freem(txbuf->m);
+			txbuf->m = NULL;
 			batch = 0;
 		}
 
@@ -2246,10 +2203,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct txque *txq)
 			.I = true,
 			.E = false,
 			.pid = txq->pid,
-#ifdef IONIC_SEPERATE_TX_INTR
-			/* XXX: we can use Rx interrupt here. */
-			.intr_index = txq->intr.index,
-#endif
+			.intr_index = lif->rxqs[txq->index]->intr.index,
 			.type = TXQ_TYPE_ETHERNET,
 			.index = txq->index,
 			.cos = 0,
@@ -2270,12 +2224,6 @@ static int ionic_lif_txq_init(struct lif *lif, struct txque *txq)
 	txq->qtype = ctx.comp.txq_init.qtype;
 
 	snprintf(txq->intr.name, sizeof(txq->intr.name), "%s", txq->name);
-
-#ifdef IONIC_SEPERATE_TX_INTR
-	err = ionic_setup_tx_intr(txq);
-	if (err)
-		return (err);
-#endif
 
 	return (0);
 }
@@ -2463,9 +2411,6 @@ int ionic_rx_clean(struct rxque* rxq , int rx_limit)
 	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail :%d desc_posted: %d processed: %d\n",
 		rxq->comp_index, rxq->head_index, rxq->tail_index, rxq->descs, i);
 
-	/* XXX: flush at the end of ISR or taskqueue handler? */
-	tcp_lro_flush_all(&rxq->lro);
-
 	if ((rxq->num_descs - rxq->descs) >= ionic_rx_fill_threshold)
 		ionic_rx_fill(rxq);
 
@@ -2502,11 +2447,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct rxque *rxq)
 	rxq->qid = ctx.comp.rxq_init.qid;
 	rxq->qtype = ctx.comp.rxq_init.qtype;
 
-#ifndef IONIC_SEPERATE_TX_INTR
 	snprintf(rxq->intr.name, sizeof(rxq->intr.name), "rxtx%d", rxq->index);
-#else
-	snprintf(rxq->intr.name, sizeof(rxq->intr.name), "%s", rxq->name);
-#endif
 
 	err = tcp_lro_init(lro);
 	if (err) {
@@ -2999,13 +2940,8 @@ try_again:
 	}
 #endif
 
-#ifdef IONIC_SEPERATE_TX_INTR
-	/* Seperate interrupts for transmit and receive. */
-	nintrs = nlifs * (nnqs + neqs + 2 * nqs + 1 /* adminq */);
-#else
 	/* Interrupt is shared by transmit and receive. */
 	nintrs = nlifs * (nnqs + neqs + nqs + 1 /* adminq */);
-#endif
 	if (nintrs > dev_nintrs) {
 		goto try_fewer;
 	}

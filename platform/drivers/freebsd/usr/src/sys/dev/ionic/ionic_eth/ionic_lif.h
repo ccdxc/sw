@@ -224,8 +224,6 @@ struct txque {
 	struct tx_stats stats;
 	struct intr intr;
 
-	struct task task;
-	struct taskqueue *taskq;
 	struct buf_ring	*br;
 
 	/*
@@ -375,6 +373,7 @@ void ionic_lifs_unregister(struct ionic *ionic);
 int ionic_lifs_size(struct ionic *ionic);
 
 int ionic_adminq_clean(struct adminq* adminq, int limit);
+int ionic_notifyq_clean(struct notifyq* notifyq);
 
 int ionic_dev_intr_reserve(struct lif *lif, struct intr *intr);
 void ionic_dev_intr_unreserve(struct lif *lif, struct intr *intr);

@@ -60,6 +60,8 @@
 
 #define QUEUE_NAME_LEN 32
 
+ #define IONIC_NET_IP_ALIGN 2
+
 MALLOC_DEFINE(M_IONIC, "ionic", "Pensando IONIC Ethernet adapter");
 static int ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data);
 static SYSCTL_NODE(_hw, OID_AUTO, ionic, CTLFLAG_RD, 0,
@@ -81,6 +83,7 @@ TUNABLE_INT("hw.ionic.enable_msix", &ionic_enable_msix);
 SYSCTL_INT(_hw_ionic, OID_AUTO, enable_msix, CTLFLAG_RWTUN,
     &ionic_enable_msix, 0, "Enable MSI/X");
 
+/* XXX: legacy interrupt is not functional with adminq. */
 int ionic_use_adminq = 1;
 TUNABLE_INT("hw.ionic.use_adminq", &ionic_use_adminq);
 SYSCTL_INT(_hw_ionic, OID_AUTO, use_adminq, CTLFLAG_RDTUN,
@@ -110,6 +113,11 @@ int ionic_rx_stride = 32;
 TUNABLE_INT("hw.ionic.rx_stride", &ionic_rx_stride);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_stride, CTLFLAG_RWTUN,
     &ionic_rx_stride, 0, "Rx side doorbell ring stride");
+
+int ionic_tx_stride = 16;
+TUNABLE_INT("hw.ionic.tx_stride", &ionic_tx_stride);
+SYSCTL_INT(_hw_ionic, OID_AUTO, tx_stride, CTLFLAG_RWTUN,
+	&ionic_tx_stride, 0, "Tx side doorbell ring stride");
 
 int ionic_rx_fill_threshold = 128;
 TUNABLE_INT("hw.ionic.rx_fill_threshold", &ionic_rx_fill_threshold);
@@ -396,20 +404,15 @@ void ionic_rx_destroy_map(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
 static irqreturn_t ionic_rx_isr(int irq, void *data)
 {
 	struct rxque* rxq = data;
-#ifndef IONIC_SEPERATE_TX_INTR
 	struct txque* txq = rxq->lif->txqs[rxq->index];
-#endif
 	struct ifnet *ifp = rxq->lif->netdev;
 	struct rx_stats* rxstats = &rxq->stats;
-	uint64_t status;
-	int work_done = 0;
+	int work_done, tx_work;
 
 	KASSERT(rxq, ("rxq is NULL"));
 	KASSERT(ifp, ("%s ifp == NULL", rxq->name));
 	KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
 			("%s has no interrupt resource", rxq->name));
-	
-	status = *(uint64_t *)rxq->lif->ionic->idev.intr_status;
 
 	/* Protect against spurious interrupts */
 	if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
@@ -420,24 +423,20 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 	IONIC_RX_TRACE(rxq, "[%ld]comp index: %d head: %d tail: %d\n",
 		rxstats->isr_count, rxq->comp_index, rxq->head_index, rxq->tail_index);
 	
-	ionic_intr_mask(&rxq->intr, true);
-
 	rxstats->isr_count++;
 
 	work_done = ionic_rx_clean(rxq, ionic_rx_process_limit);
 	IONIC_RX_TRACE(rxq, "processed: %d packets, h/w credits: %d\n",
-		work_done, rxq->intr.ctrl->int_credits);
+		work_done, ionic_intr_credits(&rxq->intr));
 
-	ionic_intr_return_credits(&rxq->intr, work_done, 0, false);
-	taskqueue_enqueue(rxq->taskq, &rxq->task);
 	IONIC_RX_UNLOCK(rxq);
 
-#ifndef IONIC_SEPERATE_TX_INTR
 	IONIC_TX_LOCK(txq);
-	work_done = ionic_tx_clean(txq, ionic_tx_clean_threshold);
-	IONIC_TX_TRACE(txq, "processed: %d packets\n", work_done);
+	tx_work = ionic_tx_clean(txq, ionic_tx_clean_threshold);
+	IONIC_TX_TRACE(txq, "processed: %d packets\n", tx_work);
 	IONIC_TX_UNLOCK(txq);
-#endif
+
+	taskqueue_enqueue(rxq->taskq, &rxq->task);
 
 	return (IRQ_HANDLED);
 }
@@ -447,16 +446,12 @@ static void
 ionic_rx_task_handler(void *arg, int pendindg)
 {
 	struct rxque* rxq = arg;
-#ifndef IONIC_SEPERATE_TX_INTR
 	struct txque* txq = rxq->lif->txqs[rxq->index];
-	int err;
-#endif
-	int work_done;
+	int work_done, tx_work;
 
 	KASSERT(rxq, ("task handler called with rxq == NULL"));
 
 	IONIC_RX_LOCK(rxq);
-
 	rxq->stats.task++;
 	IONIC_RX_TRACE(rxq, "comp index: %d head: %d tail :%d\n",
 		rxq->comp_index, rxq->head_index, rxq->tail_index);
@@ -466,19 +461,16 @@ ionic_rx_task_handler(void *arg, int pendindg)
 	 */
 	work_done = ionic_rx_clean(rxq, rxq->num_descs);
 	IONIC_RX_TRACE(rxq, "processed %d packets\n", work_done);
-
-	ionic_intr_return_credits(&rxq->intr, work_done, 0, true);
-	ionic_intr_mask(&rxq->intr, false);
-
+	tcp_lro_flush_all(&rxq->lro);
 	IONIC_RX_UNLOCK(rxq);
 
-#ifndef IONIC_SEPERATE_TX_INTR
 	IONIC_TX_LOCK(txq);
-	err = ionic_start_xmit_locked(txq->lif->netdev, txq);
-	work_done = ionic_tx_clean(txq, ionic_tx_clean_threshold);
-	IONIC_TX_TRACE(txq, "processed %d packets\n", work_done);
+	(void)ionic_start_xmit_locked(txq->lif->netdev, txq);
+	tx_work = ionic_tx_clean(txq, txq->num_descs);
+	IONIC_TX_TRACE(txq, "processed %d packets\n", tx_work);
 	IONIC_TX_UNLOCK(txq);
-#endif
+
+	ionic_intr_return_credits(&rxq->intr, work_done + tx_work, true, true);
 }
 
 int ionic_setup_rx_intr(struct rxque* rxq)
@@ -545,129 +537,20 @@ static bool ionic_tx_avail(struct txque *txq, int want)
 	return (avail > want);
 }
 
-#ifdef IONIC_SEPERATE_TX_INTR
-static irqreturn_t ionic_tx_isr(int irq, void *data)
-{
-	struct txque* txq = data;
-	int work_done = 0;
-	struct ifnet *ifp = txq->lif->netdev;
-	uint64_t status;
-
-	KASSERT(txq, ("txq is NULL"));
-	KASSERT((txq->intr.index != INTR_INDEX_NOT_ASSIGNED),
-			("%s has no interrupt resource", txq->name));
-
-	if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
-		return (IRQ_NONE);
-
-	IONIC_TX_TRACE(txq, "Enter: head: %d tail :%d\n",
-		txq->head_index, txq->tail_index);
-
-	status = *(uint64_t *)txq->lif->ionic->idev.intr_status;
-
-	IONIC_TX_LOCK(txq);
-
-	ionic_intr_mask(&txq->intr, true);
- 
-	work_done = ionic_tx_clean(txq, txq->num_descs);
-	IONIC_TX_TRACE(txq, "processed %d descriptors h/w credits:%d\n", work_done,
-		txq->intr.ctrl->int_credits);
-	ionic_intr_return_credits(&txq->intr, work_done, 0, false);
-
-	taskqueue_enqueue(txq->taskq, &txq->task);
-	IONIC_TX_UNLOCK(txq);
-
-	IONIC_TX_TRACE(txq, "Exit: head: %d tail :%d\n",
-		txq->head_index, txq->tail_index);
-
-	return (IRQ_HANDLED);
-}
-
-static void
-ionic_tx_task_handler(void *arg, int pendindg)
-{
-	struct txque* txq = arg;
-	int err, work_done;
-
-	KASSERT(txq, ("task handler called with txq == NULL"));
-
-	IONIC_TX_TRACE(txq, "Enter: head: %d tail :%d\n",
-		txq->head_index, txq->tail_index);
-
-	IONIC_TX_LOCK(txq);
-
-	work_done = ionic_tx_clean(txq, ionic_tx_clean_threshold);
-	IONIC_TX_TRACE(txq, "processed %d descriptors h/w credits: %d\n", work_done,
-		txq->intr.ctrl->int_credits);
-
-	ionic_intr_return_credits(&txq->intr, work_done, 0, true);
-
-	err = ionic_start_xmit_locked(txq->lif->netdev, txq);
-	ionic_intr_mask(&txq->intr, false);
-	
-	IONIC_TX_UNLOCK(txq);
-	IONIC_TX_TRACE(txq, "Exit: head: %d tail :%d\n",
-		txq->head_index, txq->tail_index);
-}
-
-int ionic_setup_tx_intr(struct txque* txq)
-{
-	int err, bind_cpu;
-	struct lif* lif = txq->lif;
-	char namebuf[16];
-#ifdef RSS
-	cpuset_t        cpu_mask;
-
-	bind_cpu = rss_getcpu(txq->index % rss_getnumbuckets());
-	CPU_SETOF(bind_cpu, &cpu_mask);
-#else
-	bind_cpu = txq->index;
-#endif
-
-	TASK_INIT(&txq->task, 0, ionic_tx_task_handler, txq);
-	snprintf(namebuf, sizeof(namebuf), "task-%s", txq->name);
-	txq->taskq = taskqueue_create(namebuf, M_NOWAIT,
-		taskqueue_thread_enqueue, &txq->taskq);
-
-#ifdef RSS
-    err = taskqueue_start_threads_cpuset(&txq->taskq, 1, PI_NET, &cpu_mask,
-	    "%s:%s [cpu %d]", device_get_nameunit(lif->ionic->dev), txq->name, bind_cpu);
-#else
-	err = taskqueue_start_threads(&txq->taskq, 1, PI_NET,
-	    "%s (que %d)", device_get_nameunit(lif->ionic->dev), txq->index);
-#endif
-
-	if (err) {
-		IONIC_QUE_ERROR(txq, "failed to create task queue, error: %d\n", err);
-		taskqueue_free(txq->taskq);
-		return (err);
-	}
-
-	if(ionic_enable_msix == 0)
-		return (0);
-
-	request_irq(txq->intr.vector, ionic_tx_isr, 0, txq->intr.name, txq);
-
-	err = bind_irq_to_cpu(txq->intr.vector, bind_cpu);
-	if (err) {
-		IONIC_QUE_WARN(txq, "failed to bind to cpu%d\n", bind_cpu);
-	}
-	IONIC_QUE_INFO(txq, "bound to cpu%d\n", bind_cpu);
-	
-	return (0);
-}
-#endif
-
 static irqreturn_t ionic_legacy_isr(int irq, void *data)
 {
 	struct lif* lif = data;
 	struct ifnet *ifp;
+	struct adminq* adminq;
+	struct notifyq* notifyq;
 	struct txque *txq;
 	struct rxque *rxq;
 	uint64_t status;
 	int work_done, i;
 
 	ifp = lif->netdev;
+	adminq = lif->adminq;
+	notifyq = lif->notifyq;
 	status = *(uint64_t *)lif->ionic->idev.intr_status;
 
 	IONIC_NETDEV_INFO(lif->netdev, "legacy INTR status(%p): 0x%lx\n",
@@ -679,8 +562,21 @@ static irqreturn_t ionic_legacy_isr(int irq, void *data)
 		return (IRQ_NONE);
 	}
 
-	if ((ifp->if_drv_flags & IFF_DRV_RUNNING) == 0)
-		return (IRQ_NONE);
+	if (status & (1 << adminq->intr.index)) {
+		IONIC_ADMIN_LOCK(adminq);
+		ionic_intr_mask(&adminq->intr, true);
+		work_done = ionic_adminq_clean(adminq, adminq->num_descs);
+		ionic_intr_return_credits(&adminq->intr, work_done, true, true);
+		IONIC_ADMIN_UNLOCK(adminq);
+	}
+
+	if (status & (1 << notifyq->intr.index)) {
+		IONIC_NOTIFYQ_LOCK(notifyq);
+		ionic_intr_mask(&notifyq->intr, true);
+		work_done = ionic_notifyq_clean(notifyq);
+		ionic_intr_return_credits(&notifyq->intr, work_done, true, true);
+		IONIC_NOTIFYQ_UNLOCK(notifyq);
+	}
 
 	for (i = 0; i < lif->nrxqs ; i++) {
 		rxq = lif->rxqs[i];
@@ -688,7 +584,7 @@ static irqreturn_t ionic_legacy_isr(int irq, void *data)
 		KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
 			("%s has no interrupt resource", rxq->name));
 		IONIC_QUE_INFO(rxq, "Interrupt source index:%d credits:%d\n",
-			rxq->intr.index, rxq->intr.ctrl->int_credits);
+			rxq->intr.index, ionic_intr_credits(&rxq->intr));
 
 		if ((status & (1 << rxq->intr.index)) == 0)
 			continue;
@@ -696,8 +592,7 @@ static irqreturn_t ionic_legacy_isr(int irq, void *data)
 		IONIC_RX_LOCK(rxq);
 		ionic_intr_mask(&rxq->intr, true);
 		work_done = ionic_rx_clean(rxq, rxq->num_descs);
-		ionic_intr_return_credits(&rxq->intr, work_done, 0, true);
-		ionic_intr_mask(&rxq->intr, false);
+		ionic_intr_return_credits(&rxq->intr, work_done, true, true);
 		IONIC_RX_UNLOCK(rxq);
 	}
 
@@ -707,7 +602,7 @@ static irqreturn_t ionic_legacy_isr(int irq, void *data)
 		KASSERT((txq->intr.index != INTR_INDEX_NOT_ASSIGNED),
 			("%s has no interrupt resource", txq->name));
 		IONIC_QUE_INFO(txq, "Interrupt source index: %d credits: %d\n",
-			txq->intr.index, txq->intr.ctrl->int_credits);
+			txq->intr.index, ionic_intr_credits(&txq->intr));
 		
 		if ((status & (1 << txq->intr.index)) == 0)
 			continue;
@@ -715,8 +610,7 @@ static irqreturn_t ionic_legacy_isr(int irq, void *data)
 		IONIC_TX_LOCK(txq);
 		ionic_intr_mask(&txq->intr, true);
 		work_done = ionic_tx_clean(txq, txq->num_descs);
-		ionic_intr_return_credits(&txq->intr, work_done, 0, true);
-		ionic_intr_mask(&txq->intr, false);
+		ionic_intr_return_credits(&txq->intr, work_done, true, true);
 		IONIC_TX_UNLOCK(txq);
 	}
 
@@ -1127,19 +1021,19 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 		stats->bytes += desc_len;
 
 		index = (index + 1) % txq->num_descs;
+		if (index % ionic_tx_stride == 0)
+			ionic_tx_ring_doorbell(txq, index);
 	}
 
 	KASSERT(desc->E, ("No end of frame"));
 #ifdef IONIC_TSO_DEBUG
 	ionic_tx_tso_dump(txq, m, seg, nsegs, index);
 #endif
-
-	/* 
-	 * Completion will be generated for the last TSO descriptor.
-	 * XXX: optimization: ring the doorbell in-between creating descriptors.
-	 */ 
-	txq->head_index = (index ) % txq->num_descs;
+	txq->head_index = index % txq->num_descs;
 	ionic_tx_ring_doorbell(txq, txq->head_index);
+	txq->head_index = index % txq->num_descs;
+	if (txq->head_index % ionic_tx_stride == 0)
+		ionic_tx_ring_doorbell(txq, txq->head_index);
 	
 	IONIC_TX_TRACE(txq, "Exit head: %d tail: %d\n", txq->head_index, txq->tail_index);
 
@@ -1176,14 +1070,15 @@ int
 ionic_start_xmit_locked(struct ifnet* ifp, struct txque* txq)
 {
 	struct mbuf *m;
+	struct lif *lif = ifp->if_softc;
+	struct intr *intr = &lif->rxqs[txq->index]->intr;
 	struct tx_stats *stats;
 	int err, work_done;
 
 	stats = &txq->stats;
 	work_done = ionic_tx_clean(txq, txq->num_descs);
-#ifdef IONIC_SEPERATE_TX_INTR
-	ionic_intr_return_credits(&txq->intr, work_done, 0, false);
-#endif
+	ionic_intr_return_credits(intr, work_done, false, false);
+
 	while ((m = drbr_peek(ifp, txq->br)) != NULL) {
 		if ((err = ionic_xmit(ifp, txq, &m)) != 0) {
 			if (m == NULL) {
@@ -1205,7 +1100,8 @@ ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct ifnet* ifp = lif->netdev;
-	struct txque* txq; 
+	struct txque* txq;
+	struct rxque* rxq;
 	int  err, qid = 0;
 #ifdef RSS
 	int bucket;
@@ -1222,6 +1118,7 @@ ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
 	}
 
 	txq = lif->txqs[qid];
+	rxq = lif->rxqs[qid];
 
 	err = drbr_enqueue(ifp, txq->br, m);
 	if (err)
@@ -1230,10 +1127,8 @@ ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
 	if (IONIC_TX_TRYLOCK(txq)) {
 		ionic_start_xmit_locked(ifp, txq);
 		IONIC_TX_UNLOCK(txq);
-	} else {
-		if (txq->taskq)
-			taskqueue_enqueue(txq->taskq, &txq->task);
-	}
+	} else
+		taskqueue_enqueue(rxq->taskq, &rxq->task);
 
 	return (0);
 }
@@ -1405,14 +1300,6 @@ ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 	if (tx_coal > INTR_CTRL_COAL_MAX || rx_coal > INTR_CTRL_COAL_MAX)
 		return (ERANGE);
 
-#ifdef IONIC_SEPERATE_TX_INTR
-	if (coalesce_usecs != lif->tx_coalesce_usecs) {
-		lif->tx_coalesce_usecs = coalesce_usecs;
-		for (i = 0; i < lif->ntxqs; i++)
-			ionic_intr_coal_set(&lif->txqs[i]->intr, tx_coal);
-	}
-#endif
-
 	if (coalesce_usecs != lif->rx_coalesce_usecs) {
 		lif->rx_coalesce_usecs = coalesce_usecs;
 		for (i = 0; i < lif->nrxqs; i++)
@@ -1464,6 +1351,8 @@ ionic_lif_add_rxtstat(struct rxque *rxq, struct sysctl_ctx_list *ctx,
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "isr_count", CTLFLAG_RD,
 					 &rxstat->isr_count, "ISR count");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "clean_count", CTLFLAG_RD,
+					 &rxstat->task, "Rx clean count");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "mbuf_alloc", CTLFLAG_RD,
 					&rxstat->mbuf_alloc, "Number of mbufs allocated");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "mbuf_free", CTLFLAG_RD,

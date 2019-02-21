@@ -19,8 +19,6 @@ device_if.h bus_if.h vnode_if.h pci_if.h \
 CFLAGS+= -DHAPS
 # To enable debugging
 #CFLAGS+= -DIONIC_DEBUG -DDIONIC_ENABLE_TRACING -DDIONIC_DEBUG_PKT
-# To have seperate TX and Rx interrupt.
-CFLAGS+= -DIONIC_SEPERATE_TX_INTR
 
 CFLAGS+= -I${SRCTOP}/sys/ofed/include
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include

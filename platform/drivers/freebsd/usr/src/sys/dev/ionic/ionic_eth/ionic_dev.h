@@ -328,4 +328,10 @@ void ionic_intr_coal_set(struct intr *intr, u32 coal_usecs);
 int ionic_desc_avail(int ndescs, int head, int tail);
 void ionic_ring_doorbell(struct doorbell *db_addr, uint32_t qid, uint16_t p_index);
 
+static inline uint16_t
+ionic_intr_credits(struct intr *intr)
+{
+
+	return(intr->ctrl->int_credits);
+}
 #endif /* _IONIC_DEV_H_ */
