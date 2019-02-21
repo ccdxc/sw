@@ -46,8 +46,8 @@ message AccelSeqQueueMetrics {
     delphi.Counter HwDescXfers               = 7;     // HW descriptor transfers
     delphi.Counter HwBatchErrors             = 8;     // HW batch transfer errors
     delphi.Counter HwOpErrors                = 9;     // HW operation errors
-    delphi.Counter AolPadReqs                = 10;    // AOL padding requests processed
-    delphi.Counter SglPadReqs                = 11;    // SGL padding requests processed
+    delphi.Counter AolUpdateReqs             = 10;    // AOL update requests processed
+    delphi.Counter SglUpdateReqs             = 11;    // SGL update requests processed
     delphi.Counter SglPdmaXfers              = 12;    // SGL PDMA transfers taken
     delphi.Counter SglPdmaErrors             = 13;    // SGL PDMA errors
     delphi.Counter SglPadOnlyXfers           = 14;    // SGL PDMA pad-only transfers taken

@@ -66,8 +66,9 @@ storage_seq_comp_status_handler:
     
      CLEAR_TABLE0
      
-    // c6 indicates whether padding is enabled, for use by possible_sgl_pdma_xfer
-    setcf       c6, [!c0]
+    // c6 indicates whether padding is enabled
+    seq         c6, SEQ_KIVEC5_PADDING_EN, 1
+    add         r_pad_len, r0, r0
     
     // bit 15: valid bit, bits 14-12: error bits
     add         r_status, d.status, r0
@@ -83,7 +84,8 @@ storage_seq_comp_status_handler:
     add.c3      r_comp_data_len, 65536, r0
     phvwr	p.seq_kivec5_data_len, r_comp_data_len
     tblwr.l	l_data_len, r_comp_data_len
-    sub         r_total_len, r_comp_data_len, SIZE_IN_BYTES(sizeof(struct seq_comp_hdr_t))
+    seq         c4, SEQ_KIVEC5_STATUS_LEN_NO_HDR, 0
+    sub.c4      r_total_len, r_comp_data_len, SIZE_IN_BYTES(sizeof(struct seq_comp_hdr_t))
     phvwr	p.comp_hdr_data_len, r_total_len.hx
    
     // Preliminary padding calculations:
@@ -97,56 +99,52 @@ storage_seq_comp_status_handler:
     srl         r_num_blks, r_num_blks, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT
     sll         r_total_len, r_num_blks, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT
     sub         r_pad_len, r_total_len, r_comp_data_len
-    sub         r_last_blk_len, r_pad_boundary, r_pad_len
+    add         r_last_blk_len, r_comp_data_len, r0
+    mincr       r_last_blk_len, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT, r0
 
+    // Readjust r_total_len and r_pad_len if padding_en=0    
+    add.!c6     r_total_len, r_comp_data_len, r0
+    add.!c6     r_pad_len, r0, r0
+    
     // If requested, do in-stage datain_len update in the descriptor.
     // This memory update must complete before storage_seq_barco_chain_action
     // transfers the decriptor(s) to Barco.
-if0:
-    bbeq        SEQ_KIVEC5_DESC_DLEN_UPDATE_EN, 0, endif0
+if4:
+    bbeq        SEQ_KIVEC5_DESC_DLEN_UPDATE_EN, 0, endif4
     add         r_comp_desc_p, SEQ_KIVEC4_BARCO_DESC_ADDR, \
                 SIZE_IN_BYTES(offsetof(struct comp_desc_le_t, datain_len)) // delay slot
     memwr.hx    r_comp_desc_p, r_total_len
     wrfence
-endif0:    
+endif4:    
 
     // In the per-block hash or encryption case, we now indicate to
     // storage_seq_barco_chain_action the correct number of descriptors.
     seq         c3, SEQ_KIVEC5_DESC_VEC_PUSH_EN, 1
     phvwr.c3    p.seq_kivec4_barco_num_descs, r_num_blks
     
-    // Note that both SGL padding and AOL padding may be enabled, for the
+    // Note that both SGL update and AOL update may be enabled, for the
     // following use case: compress-pad-encrypt where the compressed output
     // data (padded) is saved while at the same time passed to Barco
     // for encryption (compression uses SGL format while encryption uses AOL).
                      
-    bbeq        SEQ_KIVEC5_AOL_PAD_EN, 0, possible_sgl_padding
+    bbeq        SEQ_KIVEC5_AOL_UPDATE_EN, 0, possible_sgl_update
     phvwrpair   p.seq_kivec3_pad_len, r_pad_len, \
                 p.seq_kivec3_last_blk_len, r_last_blk_len       // delay slot
-    
-aol_padding:
     
     // AOL padding enabled: handle in the next stage due to low availability
     // of k-vec space which forces usage of a stage_2_stage (seq_kivec6).
     LOAD_TABLE_NO_LKUP_PC_IMM(3, storage_seq_comp_aol_pad_handler) 
 
-    // Tell possible_sgl_pdma_xfer that padding is enabled
-    setcf       c6, [c0]
-
-possible_sgl_padding:
-    bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, possible_sgl_pdma_xfer
+possible_sgl_update:
+    bbeq        SEQ_KIVEC5_SGL_UPDATE_EN, 0, possible_sgl_pdma_xfer
     phvwr       p.seq_kivec3_num_blks, r_num_blks       // delay slot
 
-    // SGL padding enabled:
+    // SGL update enabled:
     // Given a vector of SGLs, each prefilled with exactly one block addr and len,
     // i.e., addr0/len0 specifies one block of data, find the last applicable SGL
     // and apply padding.
-    SEQ_METRICS_SET(sgl_pad_reqs)
+    SEQ_METRICS_SET(sgl_update_reqs)
    
-    // Tell possible_sgl_pdma_xfer that padding is enabled
-    beq         r_pad_len, r0, possible_sgl_pdma_xfer
-    setcf       c6, [c0]                                // delay slot
-
     // Note: each SGL tuple is expected to point to a block of size r_pad_boundary
     //
     // Calculate
@@ -166,13 +164,64 @@ possible_sgl_padding:
     mod         r_sgl_tuple_no, r_comp_data_len, r_sgl_len_total
     srl         r_sgl_tuple_no, r_sgl_tuple_no, SEQ_KIVEC4_PAD_BOUNDARY_SHIFT
     phvwr       p.seq_kivec3_sgl_tuple_no, r_sgl_tuple_no
+
+    // Note: by this time we know that, since r_comp_data_len is guaranteed
+    // to be non-zero, a zero r_last_blk_len not only means padding is not
+    // to be applied, we need to "truncate" the SGL vector at the right spot.
+if6:
+    bne         r_last_blk_len, r0, else6
+    seq         c3, r_sgl_tuple_no, r0                          // delay slot
+    
+switch0:    
+  .brbegin
+    br          r_sgl_tuple_no[1:0]
+    sub.c3      r_last_sgl_p, r_last_sgl_p, BARCO_SGL_DESC_SIZE // delay slot
+
+  .brcase BARCO_SGL_TUPLE0
+
+    // last_sgl_p->link = 0
+    add         r_sgl_field_p, r_last_sgl_p, \
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, link))
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple2_len_update_link,
+                      barco_sgl_tuple2_len_update_link,
+                      r_sgl_field_p, dma_p2m_2)
+    b           endif6
+    nop
+
+  .brcase BARCO_SGL_TUPLE1
+
+    // zero out the rest of last_sgl_p starting from tuple1
+    add         r_sgl_field_p, r_last_sgl_p, \
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, addr1))
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple0_len_update_null_addr1,
+                      barco_sgl_tuple0_len_update_link,
+                      r_sgl_field_p, dma_p2m_2)
+    b           endif6
+    nop
+    
+  .brcase BARCO_SGL_TUPLE2
+
+    // zero out the rest of last_sgl_p starting from tuple2
+    add         r_sgl_field_p, r_last_sgl_p, \
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, addr2))
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple1_len_update_null_addr2,
+                      barco_sgl_tuple1_len_update_link,
+                      r_sgl_field_p, dma_p2m_2)
+    b           endif6
+    nop
+    
+  .brcase BARCO_SGL_NUM_TUPLES_MAX
+  .brend
+endsw0:
+
+else6:
     
     // Now apply padding by adjusting tuple pair which could be:
     // tuple0/tuple1, or
     // tuple1/tuple2, or
     // tuple2/tuple0 (of the next adjacent SGL)
 
-switch0:    
+switch2:    
   .brbegin
     br          r_sgl_tuple_no[1:0]
     add         r_pad_buf_addr, SEQ_KIVEC5_PAD_BUF_ADDR, r0     // delay slot
@@ -191,7 +240,7 @@ switch0:
     DMA_PHV2MEM_SETUP(barco_sgl_tuple0_pad_last_blk_len,
                       barco_sgl_tuple0_pad_link,
                       r_sgl_field_p, dma_p2m_2)
-    b           endsw0
+    b           endsw2
     phvwr       p.barco_sgl_tuple0_pad_last_blk_len, r_last_blk_len.wx  // delay slot
 
   .brcase BARCO_SGL_TUPLE1
@@ -208,22 +257,33 @@ switch0:
     DMA_PHV2MEM_SETUP(barco_sgl_tuple1_pad_last_blk_len,
                       barco_sgl_tuple1_pad_link,
                       r_sgl_field_p, dma_p2m_2)
-    b           endsw0
+    b           endsw2
     phvwr       p.barco_sgl_tuple1_pad_last_blk_len, r_last_blk_len.wx  // delay slot
     
   .brcase BARCO_SGL_TUPLE2
 
+if8:    
+    bcf         [c6], endif8
+    add         r_sgl_field_p, r_last_sgl_p, \
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len2))    // delay slot
+    // last_sgl_p->len2 = r_last_blk_len
+    // zero out the rest of last_sgl_p
+    
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple2_len_update_last_blk_len,
+                      barco_sgl_tuple2_len_update_link,
+                      r_sgl_field_p, dma_p2m_2)
+    b           endsw2
+    phvwr       p.barco_sgl_tuple2_len_update_last_blk_len, r_last_blk_len.wx  // delay slot
+endif8:
+    
     // last_sgl_p->len2 = r_last_blk_len
     // (last_sgl_p + 1)->addr0 = comp_pad_buf
     // (last_sgl_p + 1)->len0 = r_pad_len
     // zero out the rest of (last_sgl_p + 1)
     
-    add         r_sgl_field_p, r_last_sgl_p, \
-                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, len2))
     DMA_PHV2MEM_SETUP(last_blk_len_len,
                       last_blk_len_len,
                       r_sgl_field_p, dma_p2m_2)
-    
     phvwrpair   p.barco_sgl_tuple2_pad_pad_buf_addr, r_pad_buf_addr.dx, \
                 p.barco_sgl_tuple2_pad_pad_len, r_pad_len.wx
                 
@@ -237,26 +297,28 @@ switch0:
     DMA_PHV2MEM_SETUP(barco_sgl_tuple2_pad_pad_buf_addr,
                       barco_sgl_tuple2_pad_link,
                       r_sgl_field_p, dma_p2m_3)
-    b           endsw0
+    b           endsw2
     phvwr       p.last_blk_len_len, r_last_blk_len.wx      // delay slot
     
   .brcase BARCO_SGL_NUM_TUPLES_MAX
   .brend
-endsw0:
+endsw2:
+
+endif6:
     
 possible_sgl_pdma_xfer:
 
     // PDMA compressed data and/or update CP header to dest comp buffer
     seq         c3, SEQ_KIVEC5_CP_HDR_UPDATE_EN, 0
     bbeq.c3     SEQ_KIVEC5_SGL_PDMA_EN, 0, possible_rate_limit
-    phvwr.!c6   p.seq_kivec3_pad_len, r0        // delay slot
+    seq         c4, SEQ_KIVEC5_SGL_UPDATE_EN, 1         // delay slot
     bbeq        SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, 0, sgl_pdma_xfer_full
-    nop
     
-    // sgl_pad_en must have been enabled, the result of which
+    // sgl_update_en and padding_en must have been set, the result of which
     // is referenced here for PDMA transfer of the pad data.
     
-    bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, pdma_pad_only_error
+    seq.c4      c4, SEQ_KIVEC5_PADDING_EN, 1            // delay slot
+    bcf         [!c4], pdma_pad_only_error
     nop
     LOAD_TABLE2_FOR_ADDR_PC_IMM(r_last_sgl_p, 
                                 STORAGE_DEFAULT_TBL_LOAD_SIZE,
@@ -291,12 +353,12 @@ possible_rate_limit:
 
     SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5_RATE_LIMIT_SRC_EN, c3)
     SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(c3, r_src_len)
-if1:    
-    bbeq        SEQ_KIVEC5_RATE_LIMIT_DST_EN, 0, endif1
+if10:    
+    bbeq        SEQ_KIVEC5_RATE_LIMIT_DST_EN, 0, endif10
     SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5_SGL_PDMA_PAD_ONLY, c4) // delay slot
     SEQ_RATE_LIMIT_DATA_LEN_ADD_c(c4, r_pad_len)
     SEQ_RATE_LIMIT_DATA_LEN_ADD_c(!c4, r_src_len)
-endif1:    
+endif10:
     SEQ_RATE_LIMIT_SET_c(c0)
     
 possible_barco_push:

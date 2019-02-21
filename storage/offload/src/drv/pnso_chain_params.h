@@ -88,8 +88,8 @@ struct cpdc_chain_params_command {
 	uint32_t ccpc_next_db_action_ring_push:1;
 	uint32_t ccpc_stop_chain_on_error:1;
 	uint32_t ccpc_chain_alt_desc_on_error:1;
-	uint32_t ccpc_aol_pad_en:1;
-	uint32_t ccpc_sgl_pad_en:1;
+	uint32_t ccpc_aol_update_en:1;
+	uint32_t ccpc_sgl_update_en:1;
 	uint32_t ccpc_sgl_sparse_format_en:1;
 	uint32_t ccpc_sgl_pdma_en:1;
 	uint32_t ccpc_sgl_pdma_pad_only:1;
@@ -100,6 +100,8 @@ struct cpdc_chain_params_command {
 	uint32_t desc_dlen_update_en:1;
 	uint32_t hdr_version_wr_en:1;
 	uint32_t cp_hdr_update_en:1;
+	uint32_t status_len_no_hdr:1;
+	uint32_t padding_en:1;
 };
 
 struct rate_limit_control {

@@ -150,20 +150,57 @@ out:
 static pnso_error_t
 decompress_chain(struct chain_entry *centry)
 {
-	pnso_error_t err;
+	struct service_info		*svc_info = &centry->ce_svc_info;
+	struct cpdc_chain_params	*cpdc_chain = &svc_info->si_cpdc_chain;
+	struct interm_buf_list		*iblist;
+	struct service_info		*svc_next;
+	pnso_error_t			err = PNSO_OK;
 
-	OSAL_LOG_DEBUG("enter ...");
+	if (chn_service_has_sub_chain(svc_info)) {
 
-	OSAL_ASSERT(centry);
+		/*
+		 * Length must always be indicated to P4+ chainer (for rate
+		 * limiting) even when PDMA is not applicable.
+		 */
+		cpdc_chain->ccp_data_len = svc_info->si_dst_blist.len;
+		if (chn_service_has_interm_blist(svc_info)) {
+			iblist = &svc_info->si_iblist;
+			cpdc_chain->ccp_comp_buf_addr =
+				iblist->blist.buffers[0].buf;
+			if (chn_service_has_sgl_pdma(svc_info)) {
+				cpdc_chain->ccp_aol_dst_vec_addr =
+					sonic_virt_to_phy(svc_info->si_sgl_pdma);
+				cpdc_chain->ccp_cmd.ccpc_sgl_pdma_en = true;
+				SGL_PDMA_PPRINT(cpdc_chain->ccp_aol_dst_vec_addr);
+			}
+		}
 
-	err = cpdc_common_chain(centry);
-	if (err) {
-		OSAL_LOG_ERROR("failed to chain! err: %d", err);
-		goto out;
+		err = cpdc_setup_status_chain_dma(svc_info, cpdc_chain);
+		if (err)
+			goto out;
+
+		cpdc_chain->ccp_cmd.status_len_no_hdr = true;
+		cpdc_chain->ccp_cmd.ccpc_stop_chain_on_error = true;
+
+		/*
+		 * Set ccp_pad_boundary_shift whether or not 
+		 * padding is applicable.
+		 */
+		cpdc_chain->ccp_pad_boundary_shift =
+			(uint8_t)ilog2(svc_info->si_block_size);
+		svc_next = chn_service_next_svc_get(svc_info);
+		OSAL_ASSERT(svc_next);
+
+		err = svc_next->si_ops.sub_chain_from_cpdc(svc_next,
+				cpdc_chain);
+		if (!err)
+			err = seq_setup_cpdc_chain(svc_info,
+					svc_info->si_desc);
 	}
-
 out:
-	OSAL_LOG_DEBUG("exit!");
+	if (err)
+		OSAL_LOG_ERROR("failed seq_setup_cpdc_chain: err %d", err);
+
 	return err;
 }
 
@@ -171,10 +208,22 @@ static pnso_error_t
 decompress_sub_chain_from_cpdc(struct service_info *svc_info,
 			       struct cpdc_chain_params *cpdc_chain)
 {
-	/*
-	 * This is supportable when there's a valid use case.
-	 */
-	return EOPNOTSUPP;
+	struct service_info	*svc_prev = chn_service_prev_svc_get(svc_info);
+
+	cpdc_chain->ccp_sgl_vec_addr =
+		sonic_virt_to_phy(svc_info->si_src_sgl.sgl);
+	cpdc_chain->ccp_cmd.ccpc_sgl_update_en =
+		chn_service_type_is_cp(svc_prev);
+	cpdc_chain->ccp_cmd.desc_dlen_update_en =
+		cpdc_chain->ccp_cmd.ccpc_sgl_update_en;
+
+        svc_rate_limit_control_eval(svc_info, &cpdc_chain->ccp_rl_control);
+	cpdc_chain->ccp_cmd.ccpc_next_doorbell_en = true;
+	cpdc_chain->ccp_cmd.ccpc_next_db_action_ring_push = true;
+
+	return ring_spec_info_fill(svc_info->si_seq_info.sqi_ring,
+				   &cpdc_chain->ccp_ring_spec,
+				   svc_info->si_desc, 1);
 }
 
 static pnso_error_t

@@ -46,7 +46,7 @@ storage_seq_comp_sgl_pad_only_xfer:
     SEQ_METRICS_SET(cp_header_updates)
 
 possible_sgl_pad:    
-    bbeq        SEQ_KIVEC5_SGL_PAD_EN, 0, exit
+    bbeq        SEQ_KIVEC5_PADDING_EN, 0, exit
     
     // dst_addr to apply padding = d.addr0 + last_blk_len
     

@@ -226,10 +226,10 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 			cmd->ccpc_stop_chain_on_error);
 	OSAL_LOG_DEBUG("%30s: %d", "ccpc_chain_alt_desc_on_error",
 			cmd->ccpc_chain_alt_desc_on_error);
-	OSAL_LOG_DEBUG("%30s: %d", "ccpc_aol_pad_en",
-			cmd->ccpc_aol_pad_en);
-	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_pad_en",
-			cmd->ccpc_sgl_pad_en);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_aol_update_en",
+			cmd->ccpc_aol_update_en);
+	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_update_en",
+			cmd->ccpc_sgl_update_en);
 	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_sparse_format_en",
 			cmd->ccpc_sgl_sparse_format_en);
 	OSAL_LOG_DEBUG("%30s: %d", "ccpc_sgl_pdma_en",
@@ -250,6 +250,10 @@ pprint_cpdc_chain_params(const struct cpdc_chain_params *chain_params)
 			cmd->hdr_version_wr_en);
 	OSAL_LOG_DEBUG("%30s: %d", "cp_hdr_update_en",
 			cmd->cp_hdr_update_en);
+	OSAL_LOG_DEBUG("%30s: %d", "status_len_no_hdr",
+			cmd->status_len_no_hdr);
+	OSAL_LOG_DEBUG("%30s: %d", "padding_en",
+			cmd->padding_en);
 	OSAL_LOG_DEBUG("%30s: %d", "rate_limit_src_en",
 			chain_params->ccp_rl_control.rate_limit_src_en);
 	OSAL_LOG_DEBUG("%30s: %d", "rate_limit_dst_en",
@@ -513,8 +517,8 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc1->options.blk_boundary_shift = chain_params->ccp_pad_boundary_shift;
 	desc1->options.stop_chain_on_error = cmd->ccpc_stop_chain_on_error;
 	desc1->options.data_len_from_desc = cmd->ccpc_data_len_from_desc;
-	desc1->options.aol_pad_en = cmd->ccpc_aol_pad_en;
-	desc1->options.sgl_pad_en = cmd->ccpc_sgl_pad_en;
+	desc1->options.aol_update_en = cmd->ccpc_aol_update_en;
+	desc1->options.sgl_update_en = cmd->ccpc_sgl_update_en;
 	desc1->options.sgl_sparse_format_en = cmd->ccpc_sgl_sparse_format_en;
 	desc1->options.sgl_pdma_en = cmd->ccpc_sgl_pdma_en;
 	desc1->options.sgl_pdma_pad_only = cmd->ccpc_sgl_pdma_pad_only;
@@ -526,6 +530,8 @@ fill_cpdc_seq_status_desc(struct cpdc_chain_params *chain_params,
 	desc1->options.desc_dlen_update_en = cmd->desc_dlen_update_en;
 	desc1->options.hdr_version_wr_en = cmd->hdr_version_wr_en;
 	desc1->options.cp_hdr_update_en = cmd->cp_hdr_update_en;
+	desc1->options.status_len_no_hdr = cmd->status_len_no_hdr;
+	desc1->options.padding_en = cmd->padding_en;
 }
 
 static void
@@ -829,10 +835,12 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 			seq_spec->sqs_seq_status_q, index);
 	cp_desc->u.cd_bits.cc_db_on = 1;
 
-	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
-	chain_params->ccp_cmd.ccpc_next_db_action_ring_push = 1;
+	if (chn_service_is_cp_padding_applic(svc_info)) {
+		chain_params->ccp_pad_buf_addr = pad_buffer;
+		chain_params->ccp_cmd.padding_en = 1;
+	}
 
-	chain_params->ccp_pad_buf_addr = pad_buffer;
+	/* set ccp_pad_boundary_shift whether or not padding is applicable */
 	chain_params->ccp_pad_boundary_shift =
 		(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 
@@ -1009,10 +1017,11 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 
 	chain_params->ccp_cmd.ccpc_stop_chain_on_error = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pdma_en = 1;
-	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
+	chain_params->ccp_cmd.ccpc_sgl_update_en = 1;
 	chain_params->ccp_cmd.ccpc_sgl_pdma_pad_only = 1;
 
 	chain_params->ccp_pad_buf_addr = pad_buffer;
+	chain_params->ccp_cmd.padding_en = 1;
 	chain_params->ccp_pad_boundary_shift =
 			(uint8_t) ilog2(PNSO_MEM_ALIGN_PAGE);
 	chain_params->ccp_data_len = svc_info->si_dst_blist.len;
@@ -1053,6 +1062,7 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 	pnso_error_t err = EINVAL;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 	struct ring_spec *ring_spec;
+	struct service_info *svc_prev = chn_service_prev_svc_get(svc_info);
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -1069,12 +1079,18 @@ hw_setup_hashorchksum_chain_params(struct cpdc_chain_params *chain_params,
 	ring_spec->rs_ring_size = (uint8_t) ilog2(ring->accel_ring.ring_size);
 	ring_spec->rs_num_descs = num_blks;
 
+	chain_params->ccp_cmd.ccpc_next_doorbell_en = 1;
+	chain_params->ccp_cmd.ccpc_next_db_action_ring_push = 1;
+
 	chain_params->ccp_sgl_vec_addr = sonic_virt_to_phy((void *) sgl);
 
-	chain_params->ccp_cmd.ccpc_sgl_pad_en = 1;
-	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK)
+	chain_params->ccp_cmd.ccpc_sgl_update_en = 1;
+	if (svc_info->si_flags & CHAIN_SFLAG_PER_BLOCK) {
 		chain_params->ccp_cmd.ccpc_sgl_sparse_format_en = 1;
-	else
+		if (chn_service_type_is_cp(svc_prev) &&
+		    !chain_params->ccp_cmd.padding_en)
+			chain_params->ccp_cmd.desc_dlen_update_en = 1;
+	} else
 		chain_params->ccp_cmd.desc_dlen_update_en = 1;
 
 	/*

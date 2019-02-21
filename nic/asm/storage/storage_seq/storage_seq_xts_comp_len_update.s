@@ -56,14 +56,14 @@ storage_seq_xts_comp_len_update:
     // otherwise there would be no reason to have requested a length update.
 
     SEQ_METRICS_VAL_SET(seq_hw_bytes, r_data_len)
-if3:    
-    bbeq        SEQ_KIVEC5XTS_RATE_LIMIT_EN, 0, endif3
+if2:    
+    bbeq        SEQ_KIVEC5XTS_RATE_LIMIT_EN, 0, endif2
     SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5XTS_RATE_LIMIT_SRC_EN, c3) // delay slot
     SEQ_RATE_LIMIT_DATA_LEN_LOAD_c(c3, r_data_len)
     SEQ_RATE_LIMIT_ENABLE_CHECK(SEQ_KIVEC5XTS_RATE_LIMIT_DST_EN, c4)
     SEQ_RATE_LIMIT_DATA_LEN_ADD_c(c4, r_data_len)
     SEQ_RATE_LIMIT_SET_c(c0)
-endif3:
+endif2:
 
     // Preliminary calculations:
     // r_num_blks = (r_data_len + r_blk_boundary - 1) / r_blk_boundary)
@@ -79,19 +79,20 @@ endif3:
 
     // now update datain_len in compress descriptor
     add         r_comp_desc_p, SEQ_KIVEC7XTS_COMP_DESC_ADDR, r0
-if0:    
+if4:    
     seq         c3, SEQ_KIVEC5XTS_DESC_VEC_PUSH_EN, 1
     phvwr.c3    p.seq_kivec4_barco_num_descs, r_num_blks
-    bcf         [!c3], endif0
+    bcf         [!c3], endif4
     add         r_desc_datain_len, r_data_len, r0       // delay slot
 
     // Case of vector of next-in-chain descriptors: find the last descriptor
     // and update its datain_len to r_last_blk_len
     
     add         r_comp_desc_p, r_comp_desc_p, r_last_blk_no, COMP_DESC_SIZE_SHIFT
-    add         r_desc_datain_len, r_last_blk_len, r0
-
-endif0:
+    seq         c3, r_last_blk_len, r0
+    add.c3      r_desc_datain_len, r_blk_boundary, 1
+    add.!c3     r_desc_datain_len, r_last_blk_len, r0
+endif4:
 
     // Do in-stage datain_len update in the descriptor.
     // This memory update must complete before storage_seq_barco_chain_action
@@ -105,11 +106,11 @@ endif0:
     // dependency with Barco descriptor transfer so we can use
     // PHV2MEM DMA.
     add         r_sgl_tuple_no, r0, r0
-if1:    
-    bbeq        SEQ_KIVEC5XTS_COMP_SGL_SRC_EN, 0, endif1
+if6:    
+    bbeq        SEQ_KIVEC5XTS_COMP_SGL_SRC_EN, 0, endif6
     add         r_last_sgl_p, SEQ_KIVEC7XTS_COMP_SGL_SRC_ADDR, r0 // delay slot
-if2:    
-    bbeq        SEQ_KIVEC5XTS_COMP_SGL_SRC_VEC_EN, 0, endif2
+if8:    
+    bbeq        SEQ_KIVEC5XTS_COMP_SGL_SRC_VEC_EN, 0, endif8
     add         r_update_len, r_data_len, r0    // delay slot
 
     // Note: each SGL tuple is expected to point to a block of size r_pad_boundary
@@ -131,12 +132,63 @@ if2:
     mod         r_sgl_tuple_no, r_data_len, r_sgl_len_total
     srl         r_sgl_tuple_no, r_sgl_tuple_no, SEQ_KIVEC5XTS_BLK_BOUNDARY_SHIFT
     add         r_update_len, r_last_blk_len, r0
-endif2:
+endif8:
+
+    // Note: by this time we know that, since r_data_len is guaranteed
+    // to be non-zero, a zero r_update_len means we need to "truncate" 
+    // the SGL vector at the right spot.
+if10:
+    bne         r_update_len, r0, else10
+    seq         c3, r_sgl_tuple_no, r0                          // delay slot
+    
+switch0:    
+  .brbegin
+    br          r_sgl_tuple_no[1:0]
+    sub.c3      r_last_sgl_p, r_last_sgl_p, BARCO_SGL_DESC_SIZE // delay slot
+
+  .brcase BARCO_SGL_TUPLE0
+
+    // last_sgl_p->link = 0
+    add         r_field_p, r_last_sgl_p, \
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, link))
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple2_len_update_link,
+                      barco_sgl_tuple2_len_update_link,
+                      r_field_p, dma_p2m_2)
+    b           endif10
+    nop
+
+  .brcase BARCO_SGL_TUPLE1
+
+    // zero out the rest of last_sgl_p starting from tuple1
+    add         r_field_p, r_last_sgl_p, \
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, addr1))
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple0_len_update_null_addr1,
+                      barco_sgl_tuple0_len_update_link,
+                      r_field_p, dma_p2m_2)
+    b           endif10
+    nop
+    
+  .brcase BARCO_SGL_TUPLE2
+
+    // zero out the rest of last_sgl_p starting from tuple2
+    add         r_field_p, r_last_sgl_p, \
+                SIZE_IN_BYTES(offsetof(struct barco_sgl_le_t, addr2))
+    DMA_PHV2MEM_SETUP(barco_sgl_tuple1_len_update_null_addr2,
+                      barco_sgl_tuple1_len_update_link,
+                      r_field_p, dma_p2m_2)
+    b           endif10
+    nop
+    
+  .brcase BARCO_SGL_NUM_TUPLES_MAX
+  .brend
+endsw0:
+
+else10:
 
     // Now update length field in
     // tuple0 or tuple1, or tuple2
     
-switch0:    
+switch2:    
   .brbegin
     br          r_sgl_tuple_no[1:0]
     add         r_field_p, r_last_sgl_p, \
@@ -149,7 +201,7 @@ switch0:
     DMA_PHV2MEM_SETUP(barco_sgl_tuple0_len_update_last_blk_len,
                       barco_sgl_tuple0_len_update_link,
                       r_field_p, dma_p2m_2)
-    b           endsw0
+    b           endsw2
     phvwr       p.barco_sgl_tuple0_len_update_last_blk_len, r_update_len.wx  // delay slot
 
   .brcase BARCO_SGL_TUPLE1
@@ -162,7 +214,7 @@ switch0:
     DMA_PHV2MEM_SETUP(barco_sgl_tuple1_len_update_last_blk_len,
                       barco_sgl_tuple1_len_update_link,
                       r_field_p, dma_p2m_2)
-    b           endsw0
+    b           endsw2
     phvwr       p.barco_sgl_tuple1_len_update_last_blk_len, r_update_len.wx  // delay slot
     
   .brcase BARCO_SGL_TUPLE2
@@ -175,14 +227,16 @@ switch0:
     DMA_PHV2MEM_SETUP(barco_sgl_tuple2_len_update_last_blk_len,
                       barco_sgl_tuple2_len_update_link,
                       r_field_p, dma_p2m_2)
-    b           endsw0
+    b           endsw2
     phvwr       p.barco_sgl_tuple2_len_update_last_blk_len, r_update_len.wx  // delay slot
     
   .brcase BARCO_SGL_NUM_TUPLES_MAX
   .brend
-endsw0:
+endsw2:
     
-endif1:
+endif10:
+
+endif6:
 
     // Relaunch stats commit for table 2
     SEQ_METRICS1_TABLE2_COMMIT(SEQ_KIVEC5XTS_SRC_QADDR)

@@ -219,6 +219,8 @@
     k.seq_kivec3_num_blks
 #define SEQ_KIVEC3_SGL_TUPLE_NO                 \
     k.seq_kivec3_sgl_tuple_no
+#define SEQ_KIVEC3_PAD_BOUNDARY_SHIFT           \
+    k.{seq_kivec3_pad_boundary_shift_sbit0_ebit0...seq_kivec3_pad_boundary_shift_sbit1_ebit4}
 
 #define SEQ_KIVEC3XTS_DECR_BUF_ADDR             \
     k.seq_kivec3xts_decr_buf_addr
@@ -258,10 +260,10 @@
     k.seq_kivec5_chain_alt_desc_on_error
 #define SEQ_KIVEC5_NEXT_DB_EN                   \
     k.seq_kivec5_next_db_en
-#define SEQ_KIVEC5_AOL_PAD_EN                   \
-    k.seq_kivec5_aol_pad_en
-#define SEQ_KIVEC5_SGL_PAD_EN                   \
-    k.seq_kivec5_sgl_pad_en
+#define SEQ_KIVEC5_AOL_UPDATE_EN                \
+    k.seq_kivec5_aol_update_en
+#define SEQ_KIVEC5_SGL_UPDATE_EN                \
+    k.seq_kivec5_sgl_update_en
 #define SEQ_KIVEC5_SGL_SPARSE_FORMAT_EN         \
     k.seq_kivec5_sgl_sparse_format_en
 #define SEQ_KIVEC5_SGL_PDMA_EN                  \
@@ -292,6 +294,10 @@
     k.seq_kivec5_rate_limit_src_en
 #define SEQ_KIVEC5_RATE_LIMIT_DST_EN            \
     k.seq_kivec5_rate_limit_dst_en
+#define SEQ_KIVEC5_STATUS_LEN_NO_HDR            \
+    k.seq_kivec5_status_len_no_hdr
+#define SEQ_KIVEC5_PADDING_EN                   \
+    k.seq_kivec5_padding_en
 
 #define SEQ_KIVEC5XTS_SRC_QADDR                 \
     k.{seq_kivec5xts_src_qaddr_sbit0_ebit7...seq_kivec5xts_src_qaddr_sbit32_ebit33}
@@ -366,10 +372,10 @@
     
 #define SEQ_KIVEC9_METRICS1_RANGE               \
     k.{seq_kivec9_metrics1_start...seq_kivec9_metrics1_end}
-#define SEQ_KIVEC9_AOL_PAD_REQS                 \
-    k.seq_kivec9_aol_pad_reqs
-#define SEQ_KIVEC9_SGL_PAD_REQS                 \
-    k.seq_kivec9_sgl_pad_reqs
+#define SEQ_KIVEC9_AOL_UPDATE_REQS              \
+    k.seq_kivec9_aol_update_reqs
+#define SEQ_KIVEC9_SGL_UPDATE_REQS              \
+    k.seq_kivec9_sgl_update_reqs
 #define SEQ_KIVEC9_SGL_PDMA_XFERS               \
     k.seq_kivec9_sgl_pdma_xfers
 #define SEQ_KIVEC9_SGL_PDMA_ERRS                \

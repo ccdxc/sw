@@ -58,7 +58,7 @@ struct seq_cpdc_status_desc0 {
 }  __attribute__((__packed__));
 
 struct seq_cpdc_options1 {
-	uint8_t			aol_pad_en		: 1,
+	uint8_t			aol_update_en		: 1,
 				data_len_from_desc	: 1,
 				stop_chain_on_error	: 1,
 				blk_boundary_shift	: 5;
@@ -69,8 +69,10 @@ struct seq_cpdc_options1 {
 				sgl_pdma_pad_only	: 1,
 				sgl_pdma_en		: 1,
 				sgl_sparse_format_en	: 1,
-				sgl_pad_en		: 1;
-	uint8_t			rsvd0                   : 4,
+				sgl_update_en		: 1;
+	uint8_t			rsvd0                   : 2,
+				padding_en		: 1,
+				status_len_no_hdr	: 1,
 				cp_hdr_update_en	: 1,
 				hdr_version_wr_en	: 1,
 				desc_dlen_update_en	: 1,

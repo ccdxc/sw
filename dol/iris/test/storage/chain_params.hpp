@@ -65,8 +65,8 @@ typedef struct {
 
     // post compression, options available are:
     // - PDMA compressed data to pdma_out_sgl_pa (sgl_pdma_en), or
-    // - chain to next accelerator service which uses input/output AOL (aol_pad_en),
-    // - chain to next accelerator service which uses SGL input (sgl_pad_en),
+    // - chain to next accelerator service which uses input/output AOL (aol_update_en),
+    // - chain to next accelerator service which uses SGL input (sgl_update_en),
     //   where P4+ will modify addr/length fields in the AOL/SGL based on compression result
     uint64_t aol_src_vec_addr;
     uint64_t aol_dst_vec_addr;
@@ -93,8 +93,8 @@ typedef struct {
              rate_limit_en        :1, // enable rate limiting
              stop_chain_on_error  :1, // stop chaining on error
              chain_alt_desc_on_error:1,// chain with alternate set of descriptors on error
-             aol_pad_en           :1, // enable AOL length padding
-             sgl_pad_en           :1, // enable SGL length padding (e.g., for multi-block hash)
+             aol_update_en        :1, // enable AOL update
+             sgl_update_en        :1, // enable SGL update (e.g., for multi-block hash)
              sgl_sparse_format_en :1, // SGL sparsely formatted
              sgl_pdma_en          :1, // enable data transfer from comp_buf_addr to aol_dst_vec_addr
              sgl_pdma_pad_only    :1, // enable pad-only fill mode, i.e., Comp engine writes
@@ -108,7 +108,9 @@ typedef struct {
              integ_data_null_en   : 1,// copy zero to comp_buf_addr instead
              desc_dlen_update_en  : 1,// enable update of CP desc datain_len field
              hdr_version_wr_en    : 1,// enable update of CP header version field
-             cp_hdr_update_en     : 1;// enable overall update of CP header
+             cp_hdr_update_en     : 1,// enable overall update of CP header
+             status_len_no_hdr    : 1,// length in status does not include header
+             padding_en           : 1;// enable padding
 } chain_params_comp_t;
 
 /*

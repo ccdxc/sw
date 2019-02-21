@@ -380,8 +380,10 @@ static pnso_error_t
 crypto_sub_chain_from_cpdc(struct service_info *svc_info,
 			   struct cpdc_chain_params *cpdc_chain)
 {
-	cpdc_chain->ccp_cmd.ccpc_aol_pad_en =
-		!!cpdc_chain->ccp_pad_buf_addr;
+	struct service_info	*svc_prev = chn_service_prev_svc_get(svc_info);
+
+	cpdc_chain->ccp_cmd.ccpc_aol_update_en =
+		chn_service_type_is_cpdc(svc_prev);
 
         svc_rate_limit_control_eval(svc_info, &cpdc_chain->ccp_rl_control);
 	if (cpdc_chain->ccp_cmd.ccpc_sgl_pdma_en)

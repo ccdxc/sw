@@ -625,12 +625,13 @@ action seq_comp_status_desc1_handler(comp_buf_addr, aol_src_vec_addr, aol_dst_ve
                                      sgl_vec_addr, pad_buf_addr, alt_buf_addr,
                                      data_len, hdr_version, rsvd0,
                                      pad_boundary_shift, stop_chain_on_error,
-                                     data_len_from_desc, aol_pad_en, sgl_pad_en,
+                                     data_len_from_desc, aol_update_en, sgl_update_en,
                                      sgl_sparse_format_en, sgl_pdma_en, sgl_pdma_pad_only,
 				     sgl_pdma_alt_src_on_error, desc_vec_push_en,
 				     chain_alt_desc_on_error, integ_data0_wr_en,
 				     integ_data_null_en, desc_dlen_update_en,
 				     hdr_version_wr_en, cp_hdr_update_en,
+				     status_len_no_hdr, padding_en,
 				     rsvd1, alt_data_len) {
  
   // Store the K+I vector into scratch to get the K+I generated correctly
@@ -649,8 +650,8 @@ action seq_comp_status_desc1_handler(comp_buf_addr, aol_src_vec_addr, aol_dst_ve
   modify_field(seq_comp_status_desc1_scratch.pad_boundary_shift, pad_boundary_shift);
   modify_field(seq_comp_status_desc1_scratch.stop_chain_on_error, stop_chain_on_error);
   modify_field(seq_comp_status_desc1_scratch.data_len_from_desc, data_len_from_desc);
-  modify_field(seq_comp_status_desc1_scratch.aol_pad_en, aol_pad_en);
-  modify_field(seq_comp_status_desc1_scratch.sgl_pad_en, sgl_pad_en);
+  modify_field(seq_comp_status_desc1_scratch.aol_update_en, aol_update_en);
+  modify_field(seq_comp_status_desc1_scratch.sgl_update_en, sgl_update_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_sparse_format_en, sgl_sparse_format_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pdma_en, sgl_pdma_en);
   modify_field(seq_comp_status_desc1_scratch.sgl_pdma_pad_only, sgl_pdma_pad_only);
@@ -662,6 +663,8 @@ action seq_comp_status_desc1_handler(comp_buf_addr, aol_src_vec_addr, aol_dst_ve
   modify_field(seq_comp_status_desc1_scratch.desc_dlen_update_en, desc_dlen_update_en);
   modify_field(seq_comp_status_desc1_scratch.hdr_version_wr_en, hdr_version_wr_en);
   modify_field(seq_comp_status_desc1_scratch.cp_hdr_update_en, cp_hdr_update_en);
+  modify_field(seq_comp_status_desc1_scratch.status_len_no_hdr, status_len_no_hdr);
+  modify_field(seq_comp_status_desc1_scratch.padding_en, padding_en);
   modify_field(seq_comp_status_desc1_scratch.rsvd1, rsvd1);
   modify_field(seq_comp_status_desc1_scratch.alt_data_len, alt_data_len);
 
@@ -669,10 +672,11 @@ action seq_comp_status_desc1_handler(comp_buf_addr, aol_src_vec_addr, aol_dst_ve
   modify_field(seq_kivec5.pad_buf_addr, seq_comp_status_desc1_scratch.pad_buf_addr);
   modify_field(seq_kivec5.data_len, seq_comp_status_desc1_scratch.data_len);
   modify_field(seq_kivec4.pad_boundary_shift, seq_comp_status_desc1_scratch.pad_boundary_shift);
+  modify_field(seq_kivec3.pad_boundary_shift, seq_comp_status_desc1_scratch.pad_boundary_shift);
   modify_field(seq_kivec5.stop_chain_on_error, seq_comp_status_desc1_scratch.stop_chain_on_error);
   modify_field(seq_kivec5.data_len_from_desc, seq_comp_status_desc1_scratch.data_len_from_desc);
-  modify_field(seq_kivec5.aol_pad_en, seq_comp_status_desc1_scratch.aol_pad_en);
-  modify_field(seq_kivec5.sgl_pad_en, seq_comp_status_desc1_scratch.sgl_pad_en);
+  modify_field(seq_kivec5.aol_update_en, seq_comp_status_desc1_scratch.aol_update_en);
+  modify_field(seq_kivec5.sgl_update_en, seq_comp_status_desc1_scratch.sgl_update_en);
   modify_field(seq_kivec5.sgl_sparse_format_en, seq_comp_status_desc1_scratch.sgl_sparse_format_en);
   modify_field(seq_kivec5.sgl_pdma_en, seq_comp_status_desc1_scratch.sgl_pdma_en);
   modify_field(seq_kivec5.sgl_pdma_pad_only, seq_comp_status_desc1_scratch.sgl_pdma_pad_only);
@@ -684,6 +688,8 @@ action seq_comp_status_desc1_handler(comp_buf_addr, aol_src_vec_addr, aol_dst_ve
   modify_field(seq_kivec5.desc_dlen_update_en, seq_comp_status_desc1_scratch.desc_dlen_update_en);
   modify_field(seq_kivec5.hdr_version_wr_en, seq_comp_status_desc1_scratch.hdr_version_wr_en);
   modify_field(seq_kivec5.cp_hdr_update_en, seq_comp_status_desc1_scratch.cp_hdr_update_en);
+  modify_field(seq_kivec5.status_len_no_hdr, seq_comp_status_desc1_scratch.status_len_no_hdr);
+  modify_field(seq_kivec5.padding_en, seq_comp_status_desc1_scratch.padding_en);
   modify_field(seq_kivec8.alt_buf_addr, seq_comp_status_desc1_scratch.alt_buf_addr);
   modify_field(seq_kivec5.alt_data_len, seq_comp_status_desc1_scratch.alt_data_len);
 }
@@ -1258,16 +1264,16 @@ action seq_metrics0_commit(interrupts_raised, next_db_rung, descs_processed,
 /*****************************************************************************
  *  seq_metrics1_commit : Update and commit metrics1 to qstate.
  *****************************************************************************/
-@pragma little_endian aol_pad_reqs sgl_pad_reqs sgl_pdma_xfers sgl_pdma_errs sgl_pad_only_xfers sgl_pad_only_errs alt_descs_taken alt_bufs_taken
-action seq_metrics1_commit(aol_pad_reqs, sgl_pad_reqs, sgl_pdma_xfers,
+@pragma little_endian aol_update_reqs sgl_updatereqs sgl_pdma_xfers sgl_pdma_errs sgl_pad_only_xfers sgl_pad_only_errs alt_descs_taken alt_bufs_taken
+action seq_metrics1_commit(aol_update_reqs, sgl_update_reqs, sgl_pdma_xfers,
                            sgl_pdma_errs, sgl_pad_only_xfers, sgl_pad_only_errs,
 			   alt_descs_taken, alt_bufs_taken) {
 			   
   // Store the K+I vector into scratch to get the K+I generated correctly
   SEQ_KIVEC9_USE(seq_kivec9_scratch, seq_kivec9)
   
-  modify_field(seq_metrics1.aol_pad_reqs, aol_pad_reqs);
-  modify_field(seq_metrics1.sgl_pad_reqs, sgl_pad_reqs);
+  modify_field(seq_metrics1.aol_update_reqs, aol_update_reqs);
+  modify_field(seq_metrics1.sgl_update_reqs, sgl_update_reqs);
   modify_field(seq_metrics1.sgl_pdma_xfers, sgl_pdma_xfers);
   modify_field(seq_metrics1.sgl_pdma_errs, sgl_pdma_errs);
   modify_field(seq_metrics1.sgl_pad_only_xfers, sgl_pad_only_xfers);

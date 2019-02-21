@@ -28,8 +28,8 @@ storage_seq_metrics1_commit:
     nop.c2.e
     CLEAR_TABLE2                                        // delay slot
     
-    SEQ_METRICS_TBLADD_c(c3,   aol_pad_reqs, SEQ_KIVEC9_AOL_PAD_REQS)
-    SEQ_METRICS_TBLADD_c(c3,   sgl_pad_reqs, SEQ_KIVEC9_SGL_PAD_REQS)
+    SEQ_METRICS_TBLADD_c(c3,   aol_update_reqs, SEQ_KIVEC9_AOL_UPDATE_REQS)
+    SEQ_METRICS_TBLADD_c(c3,   sgl_update_reqs, SEQ_KIVEC9_SGL_UPDATE_REQS)
     SEQ_METRICS_TBLADD_c(c3,   sgl_pdma_xfers, SEQ_KIVEC9_SGL_PDMA_XFERS)
     SEQ_METRICS_TBLADD_c(c3,   sgl_pdma_errs, SEQ_KIVEC9_SGL_PDMA_ERRS)
     SEQ_METRICS_TBLADD_c(c3,   sgl_pad_only_xfers, SEQ_KIVEC9_SGL_PAD_ONLY_XFERS)

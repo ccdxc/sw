@@ -282,7 +282,8 @@ comp_hash_chain_t::push(comp_hash_chain_push_params_t params)
      * tuple SGL per operation).
      */
     chain_params.sgl_vec_addr = hash_sgl_vec->pa();
-    chain_params.sgl_pad_en = 1;
+    chain_params.sgl_update_en = 1;
+    chain_params.padding_en = 1;
     chain_params.sgl_sparse_format_en = 1;
 
     comp_status_buf1->fragment_find(0, sizeof(uint64_t))->clear_thru();

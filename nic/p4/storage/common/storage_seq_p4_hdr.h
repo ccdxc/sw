@@ -63,8 +63,8 @@ header_type seq_q_state_metrics1_t {
   fields {
 
     // CAUTION: order of fields must match seq_kivec9_t
-    aol_pad_reqs        : 64;
-    sgl_pad_reqs        : 64;
+    aol_update_reqs     : 64;
+    sgl_update_reqs     : 64;
     sgl_pdma_xfers      : 64;
     sgl_pdma_errs       : 64;
     sgl_pad_only_xfers  : 64;
@@ -165,8 +165,8 @@ header_type seq_comp_status_desc1_t {
     stop_chain_on_error: 1; // 1 => don't ring next DB on error
     data_len_from_desc : 1; // 1 => Use data_len in the descriptor, 
                             // 0 => Use the comp_output_data_len
-    aol_pad_en      : 1;
-    sgl_pad_en      : 1;
+    aol_update_en   : 1;
+    sgl_update_en   : 1;
     sgl_sparse_format_en: 1;
     sgl_pdma_en     : 1;
     sgl_pdma_pad_only:1;
@@ -178,7 +178,9 @@ header_type seq_comp_status_desc1_t {
     desc_dlen_update_en: 1; // 1 => update comp desc datain_len
     hdr_version_wr_en: 1;
     cp_hdr_update_en : 1;
-    rsvd1            : 12;
+    status_len_no_hdr: 1;
+    padding_en       : 1;
+    rsvd1            : 10;
     alt_data_len     : 32;   // Length of the alternate data
   }
 }
@@ -478,6 +480,7 @@ header_type seq_kivec3_t {
     last_blk_len        : 16;
     num_blks            : 5;
     sgl_tuple_no        : 2;
+    pad_boundary_shift  : 5;
   }
 }
 
@@ -522,8 +525,8 @@ header_type seq_kivec5_t {
     stop_chain_on_error : 1;
     data_len_from_desc  : 1;    // 1 => Use the data length in the descriptor, 
                                 // 0 => Use the data lenghth in the status
-    aol_pad_en          : 1;
-    sgl_pad_en          : 1;
+    aol_update_en       : 1;
+    sgl_update_en       : 1;
     sgl_sparse_format_en: 1;
     sgl_pdma_en         : 1;
     sgl_pdma_pad_only   : 1;
@@ -535,6 +538,8 @@ header_type seq_kivec5_t {
     desc_dlen_update_en : 1;
     hdr_version_wr_en   : 1;
     cp_hdr_update_en    : 1;
+    status_len_no_hdr   : 1;
+    padding_en          : 1;
   }
 }
 
@@ -606,8 +611,8 @@ header_type seq_kivec9_t {
 
     // CAUTION: order of fields must match seq_q_state_metrics1_t
     metrics1_start     : 1;
-    aol_pad_reqs       : 1;
-    sgl_pad_reqs       : 1;
+    aol_update_reqs    : 1;
+    sgl_update_reqs    : 1;
     sgl_pdma_xfers     : 1;
     sgl_pdma_errs      : 1;
     sgl_pad_only_xfers : 1;
@@ -686,6 +691,7 @@ header_type seq_kivec10_t {
   modify_field(scratch.last_blk_len, kivec.last_blk_len);               \
   modify_field(scratch.num_blks, kivec.num_blks);                       \
   modify_field(scratch.sgl_tuple_no, kivec.sgl_tuple_no);               \
+  modify_field(scratch.pad_boundary_shift, kivec.pad_boundary_shift);   \
 
 #define SEQ_KIVEC3XTS_USE(scratch, kivec)                               \
   modify_field(scratch.decr_buf_addr, kivec.decr_buf_addr);             \
@@ -714,8 +720,8 @@ header_type seq_kivec10_t {
   modify_field(scratch.rate_limit_dst_en, kivec.rate_limit_dst_en);     \
   modify_field(scratch.stop_chain_on_error, kivec.stop_chain_on_error); \
   modify_field(scratch.data_len_from_desc, kivec.data_len_from_desc);   \
-  modify_field(scratch.aol_pad_en, kivec.aol_pad_en);                   \
-  modify_field(scratch.sgl_pad_en, kivec.sgl_pad_en);                   \
+  modify_field(scratch.aol_update_en, kivec.aol_update_en);             \
+  modify_field(scratch.sgl_update_en, kivec.sgl_update_en);             \
   modify_field(scratch.sgl_sparse_format_en, kivec.sgl_sparse_format_en); \
   modify_field(scratch.sgl_pdma_en, kivec.sgl_pdma_en);                 \
   modify_field(scratch.chain_alt_desc_on_error, kivec.chain_alt_desc_on_error);\
@@ -725,8 +731,10 @@ header_type seq_kivec10_t {
   modify_field(scratch.integ_data0_wr_en, kivec.integ_data0_wr_en);     \
   modify_field(scratch.integ_data_null_en, kivec.integ_data_null_en);   \
   modify_field(scratch.desc_dlen_update_en, kivec.desc_dlen_update_en); \
-  modify_field(scratch.hdr_version_wr_en, kivec.hdr_version_wr_en); \
-  modify_field(scratch.cp_hdr_update_en, kivec.cp_hdr_update_en); \
+  modify_field(scratch.hdr_version_wr_en, kivec.hdr_version_wr_en);     \
+  modify_field(scratch.cp_hdr_update_en, kivec.cp_hdr_update_en);       \
+  modify_field(scratch.status_len_no_hdr, kivec.status_len_no_hdr);     \
+  modify_field(scratch.padding_en, kivec.padding_en);                   \
 
 #define SEQ_KIVEC5XTS_USE(scratch, kivec)                               \
   modify_field(scratch.src_qaddr, kivec.src_qaddr);                     \
@@ -772,8 +780,8 @@ header_type seq_kivec10_t {
   modify_field(scratch.hw_op_errs, kivec.hw_op_errs);                   \
   modify_field(scratch.metrics0_end, kivec.metrics0_end);               \
   modify_field(scratch.metrics1_start, kivec.metrics1_start);           \
-  modify_field(scratch.aol_pad_reqs, kivec.aol_pad_reqs);               \
-  modify_field(scratch.sgl_pad_reqs, kivec.sgl_pad_reqs);               \
+  modify_field(scratch.aol_update_reqs, kivec.aol_update_reqs);         \
+  modify_field(scratch.sgl_update_reqs, kivec.sgl_update_reqs);         \
   modify_field(scratch.sgl_pdma_xfers, kivec.sgl_pdma_xfers);           \
   modify_field(scratch.sgl_pdma_errs, kivec.sgl_pdma_errs);             \
   modify_field(scratch.sgl_pad_only_xfers, kivec.sgl_pad_only_xfers);   \

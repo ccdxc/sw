@@ -356,7 +356,8 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
 
     chain_params.pad_buf_addr = caller_comp_pad_buf->pa();
     chain_params.stop_chain_on_error = !force_uncomp_encrypt;
-    chain_params.aol_pad_en = 1;
+    chain_params.aol_update_en = 1;
+    chain_params.padding_en = 1;
     chain_params.pad_boundary_shift =
                  (uint8_t)log2(caller_comp_pad_buf->line_size_get());
 
@@ -369,7 +370,7 @@ comp_encrypt_chain_t::push(comp_encrypt_chain_push_params_t params)
     if (force_comp_buf2_bypass || (comp_buf1 == comp_buf2)) {
         comp_sgl_packed_fill(sgl_pad_vec, comp_buf1, app_enc_size);
         chain_params.sgl_vec_addr = sgl_pad_vec->pa();
-        chain_params.sgl_pad_en = 1;
+        chain_params.sgl_update_en = 1;
         chain_params.sgl_pdma_pad_only = 1;
 
     } else {

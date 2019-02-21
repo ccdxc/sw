@@ -41,9 +41,9 @@ type AccelSeqQueueMetrics struct {
 
 	HwOpErrors metrics.Counter
 
-	AolPadReqs metrics.Counter
+	AolUpdateReqs metrics.Counter
 
-	SglPadReqs metrics.Counter
+	SglUpdateReqs metrics.Counter
 
 	SglPdmaXfers metrics.Counter
 
@@ -91,9 +91,9 @@ func (mtr *AccelSeqQueueMetrics) Size() int {
 
 	sz += mtr.HwOpErrors.Size()
 
-	sz += mtr.AolPadReqs.Size()
+	sz += mtr.AolUpdateReqs.Size()
 
-	sz += mtr.SglPadReqs.Size()
+	sz += mtr.SglUpdateReqs.Size()
 
 	sz += mtr.SglPdmaXfers.Size()
 
@@ -146,11 +146,11 @@ func (mtr *AccelSeqQueueMetrics) Unmarshal() error {
 	mtr.HwOpErrors = mtr.metrics.GetCounter(offset)
 	offset += mtr.HwOpErrors.Size()
 
-	mtr.AolPadReqs = mtr.metrics.GetCounter(offset)
-	offset += mtr.AolPadReqs.Size()
+	mtr.AolUpdateReqs = mtr.metrics.GetCounter(offset)
+	offset += mtr.AolUpdateReqs.Size()
 
-	mtr.SglPadReqs = mtr.metrics.GetCounter(offset)
-	offset += mtr.SglPadReqs.Size()
+	mtr.SglUpdateReqs = mtr.metrics.GetCounter(offset)
+	offset += mtr.SglUpdateReqs.Size()
 
 	mtr.SglPdmaXfers = mtr.metrics.GetCounter(offset)
 	offset += mtr.SglPdmaXfers.Size()
@@ -226,15 +226,15 @@ func (mtr *AccelSeqQueueMetrics) getOffset(fldName string) int {
 	}
 	offset += mtr.HwOpErrors.Size()
 
-	if fldName == "AolPadReqs" {
+	if fldName == "AolUpdateReqs" {
 		return offset
 	}
-	offset += mtr.AolPadReqs.Size()
+	offset += mtr.AolUpdateReqs.Size()
 
-	if fldName == "SglPadReqs" {
+	if fldName == "SglUpdateReqs" {
 		return offset
 	}
-	offset += mtr.SglPadReqs.Size()
+	offset += mtr.SglUpdateReqs.Size()
 
 	if fldName == "SglPdmaXfers" {
 		return offset
@@ -332,15 +332,15 @@ func (mtr *AccelSeqQueueMetrics) SetHwOpErrors(val metrics.Counter) error {
 	return nil
 }
 
-// SetAolPadReqs sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) SetAolPadReqs(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("AolPadReqs"))
+// SetAolUpdateReqs sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetAolUpdateReqs(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("AolUpdateReqs"))
 	return nil
 }
 
-// SetSglPadReqs sets cunter in shared memory
-func (mtr *AccelSeqQueueMetrics) SetSglPadReqs(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("SglPadReqs"))
+// SetSglUpdateReqs sets cunter in shared memory
+func (mtr *AccelSeqQueueMetrics) SetSglUpdateReqs(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("SglUpdateReqs"))
 	return nil
 }
 
