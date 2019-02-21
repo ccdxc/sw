@@ -1367,10 +1367,10 @@ func intfStatsHeader() {
 	hdrLine := strings.Repeat("-", 150)
 	fmt.Printf("Note: In/Out from reference of PB\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-15s%-29s%-31s%s%-29s%-31s\n", "", "", "In", " | ", "", "Out")
-	fmt.Printf("%-15s%-5s%-15s%-5s%-15s%-5s%-15s | %-5s%-15s%-5s%-15s%-5s%-15s\n",
+	fmt.Printf("%-32s%-29s%-31s%s%-29s%-31s\n", "", "", "In", " | ", "", "Out")
+	fmt.Printf("%-32s%-5s%-15s%-5s%-15s%-5s%-15s | %-5s%-15s%-5s%-15s%-5s%-15s\n",
 		"", "", "UC", "", "MC", "", "BC", "", "UC", "", "MC", "", "BC")
-	fmt.Printf("%-15s%-10s%-10s%-10s%-10s%-10s%-10s | %-10s%-10s%-10s%-10s%-10s%-10s\n",
+	fmt.Printf("%-32s%-10s%-10s%-10s%-10s%-10s%-10s | %-10s%-10s%-10s%-10s%-10s%-10s\n",
 		"IF", "UC", "Drops", "MC", "Drops", "BC", "Drops", "UC", "Drops", "MC", "Drops", "BC", "Drops")
 	fmt.Println(hdrLine)
 }
@@ -1415,7 +1415,7 @@ func intfUplinkShowOneResp(resp *halproto.PortGetResponse) {
 			continue
 		}
 	}
-	fmt.Printf("%-15s%-10d%-10s%-10d%-10s%-10d%-10s   %-10d%-10s%-10d%-10s%-10d%-10s\n",
+	fmt.Printf("%-32s%-10d%-10s%-10d%-10s%-10d%-10s   %-10d%-10s%-10d%-10s%-10d%-10s\n",
 		intfStr,
 		rxUc, "---", rxMc, "---", rxBc, "---",
 		txUc, "---", txMc, "---", txBc, "---")
@@ -1454,7 +1454,7 @@ func intfMnicLifShowOneResp(resp *halproto.LifGetResponse) {
 	rxStats := stats.GetDataLifStats().GetRxStats()
 	txStats := stats.GetDataLifStats().GetTxStats()
 	if strings.Contains(lifName, "mnic") || strings.Contains(lifName, "accel") || strings.Contains(lifName, "admin") {
-		fmt.Printf("%-15s%-10d%-10d%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d%-10d%-10d\n",
+		fmt.Printf("%-32s%-10d%-10d%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d%-10d%-10d\n",
 			lifName,
 			txStats.GetUnicastFramesOk(),
 			txStats.GetUnicastFramesDrop(),
@@ -1479,7 +1479,7 @@ func intfProxyLifShowOneResp(resp *halproto.LifGetResponse) {
 	rxStats := stats.GetDataLifStats().GetRxStats()
 	txStats := stats.GetDataLifStats().GetTxStats()
 	if strings.Contains(lifName, "proxy") {
-		fmt.Printf("%-15s%-10d%-10d%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d%-10d%-10d\n",
+		fmt.Printf("%-32s%-10d%-10d%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d%-10d%-10d\n",
 			lifName,
 			txStats.GetUnicastFramesOk(),
 			txStats.GetUnicastFramesDrop(),
@@ -1504,7 +1504,7 @@ func intfHostLifShowOneResp(resp *halproto.LifGetResponse) {
 	rxStats := stats.GetDataLifStats().GetRxStats()
 	txStats := stats.GetDataLifStats().GetTxStats()
 	if !strings.Contains(lifName, "mnic") && !strings.Contains(lifName, "proxy") {
-		fmt.Printf("%-15s%-10d%-10d%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d%-10d%-10d\n",
+		fmt.Printf("%-32s%-10d%-10d%-10d%-10d%-10d%-10d   %-10d%-10d%-10d%-10d%-10d%-10d\n",
 			lifName,
 			txStats.GetUnicastFramesOk(),
 			txStats.GetUnicastFramesDrop(),

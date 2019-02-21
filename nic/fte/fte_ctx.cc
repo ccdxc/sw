@@ -214,6 +214,11 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
         return ret;
     }
 
+    cpu_rxhdr_ = cpu_rxhdr;
+    pkt_ = pkt;
+    pkt_len_ = pkt_len;
+    copied_pkt_ = copied_pkt;
+
      if (fte_span()) {
          // TODO: Print packet and exit
          struct packet *packet = packet_new(pkt_len);
@@ -242,11 +247,6 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
          packet_free(packet);
          return HAL_RET_FTE_SPAN;
      }
-
-    cpu_rxhdr_ = cpu_rxhdr;
-    pkt_ = pkt;
-    pkt_len_ = pkt_len;
-    copied_pkt_ = copied_pkt;
 
     if ((cpu_rxhdr->lif == HAL_LIF_CPU) || app_redir_pkt_rx_raw(*this) ||
         (tcp_close())) {

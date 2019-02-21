@@ -258,20 +258,24 @@ hal_init (hal_cfg_t *hal_cfg)
     // notify sysmgr that we are up
     svc::hal_init_done();
 
-    if (!getenv("DISABLE_FTE") &&
-        (hal_cfg->forwarding_mode != HAL_FORWARDING_MODE_CLASSIC) &&
-        (hal_cfg->features != HAL_FEATURE_SET_GFT)) {
-        // set the number of instances as read from config
-        ipc_logger::set_ipc_instances(hal_cfg->num_data_cores);
-        // start fte threads
-        for (uint32_t i = 0; i < hal_cfg->num_data_cores; i++) {
-            // init IPC logger infra for FTE
-            if (!i && hal_cfg->shm_mode &&
-                ipc_logger::init(std::shared_ptr<logger>(utils::hal_logger())) != HAL_RET_OK) {
-                HAL_TRACE_ERR("IPC logger init failed");
-            }
-            tid = HAL_THREAD_ID_FTE_MIN + i;
+    if (!getenv("DISABLE_FTE")) {
+        if (hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
+            // starting fte thread for fte-span
+            tid = HAL_THREAD_ID_FTE_MIN;
             hal_thread_start(tid, hal_thread_get(tid));
+        } else if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
+            // set the number of instances as read from config
+            ipc_logger::set_ipc_instances(hal_cfg->num_data_cores);
+            // start fte threads
+            for (uint32_t i = 0; i < hal_cfg->num_data_cores; i++) {
+                // init IPC logger infra for FTE
+                if (!i && hal_cfg->shm_mode &&
+                    ipc_logger::init(std::shared_ptr<logger>(utils::hal_logger())) != HAL_RET_OK) {
+                    HAL_TRACE_ERR("IPC logger init failed");
+                }
+                tid = HAL_THREAD_ID_FTE_MIN + i;
+                hal_thread_start(tid, hal_thread_get(tid));
+            }
         }
     } else {
         // FTE disabled

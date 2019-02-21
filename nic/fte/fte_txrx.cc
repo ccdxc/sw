@@ -84,7 +84,7 @@ thread_local inst_t *t_inst;
 //-----------------------------------------------------------------------------
  // FTE thread local variables
  // ----------------------------------------------------------------------------
-thread_local timespec_t t_old_ts; 
+thread_local timespec_t t_old_ts;
 thread_local timespec_t t_cur_ts;
 thread_local uint64_t t_rx_pkts;
 
@@ -297,9 +297,11 @@ void inst_t::start(sdk::lib::thread *curr_thread)
     SDK_ASSERT(hal_cfg);
 
     HAL_TRACE_DEBUG("Starting FTE instance: {}", hal_cfg->shm_mode);
-    if (hal_cfg->shm_mode) {
-        logger_ = ipc_logger::factory();
-        SDK_ASSERT(logger_);
+    if (hal_cfg->forwarding_mode != hal::HAL_FORWARDING_MODE_CLASSIC) {
+        if (hal_cfg->shm_mode) {
+            logger_ = ipc_logger::factory();
+            SDK_ASSERT(logger_);
+        }
     }
 
     /*
@@ -477,13 +479,13 @@ void inst_t::incr_fte_error(hal_ret_t rc)
 
      // Get the current timestamp
      HAL_GET_SYSTEM_CLOCK(&t_cur_ts);
-  
+
      temp_ts = t_cur_ts;
      sdk::timestamp_subtract(&temp_ts, &t_old_ts);
      sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
 
      if (time_diff > TIME_NSECS_PER_SEC) {
-         stats_.cps = t_rx_pkts; 
+         stats_.cps = t_rx_pkts;
          t_old_ts = t_cur_ts;
          t_rx_pkts = 1;
      } else if (time_diff == TIME_NSECS_PER_SEC) {
@@ -508,13 +510,13 @@ void inst_t::incr_fte_error(hal_ret_t rc)
 
      // Get the current timestamp
      HAL_GET_SYSTEM_CLOCK(&t_cur_ts);
-  
+
      temp_ts = t_cur_ts;
      sdk::timestamp_subtract(&temp_ts, &t_old_ts);
      sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
 
      if (time_diff > TIME_NSECS_PER_SEC) {
-         stats_.cps = t_rx_pkts; 
+         stats_.cps = t_rx_pkts;
          t_old_ts = t_cur_ts;
          t_rx_pkts = pktcount;
      } else if (time_diff == TIME_NSECS_PER_SEC) {
@@ -622,7 +624,7 @@ void inst_t::process_arq()
      * to tx-q and send it out.
      */
     if (bypass_fte_) {
- 
+
         HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
 
         update_rx_stats(cpu_rxhdr, pkt_len);
@@ -712,7 +714,7 @@ void inst_t::process_arq_new ()
     cpu_rxhdr_t               *cpu_rxhdr;
     uint8_t                   *pkt = NULL;
     size_t                    pkt_len;
-    bool                      copied_pkt;
+    bool                      copied_pkt, drop_pkt;
 
     cpupkt_batch.pktcount = 0;
 
@@ -735,39 +737,39 @@ void inst_t::process_arq_new ()
     if (bypass_fte_) {
 
         update_rx_stats_batch(cpupkt_batch.pktcount);
- 
+
         for (npkt = 0; npkt < cpupkt_batch.pktcount; npkt++) {
-	    pkt = cpupkt_batch.pkts[npkt].pkt;
-	    pkt_len = cpupkt_batch.pkts[npkt].pkt_len;
-	    cpu_rxhdr = cpupkt_batch.pkts[npkt].cpu_rxhdr;
+            pkt = cpupkt_batch.pkts[npkt].pkt;
+            pkt_len = cpupkt_batch.pkts[npkt].pkt_len;
+            cpu_rxhdr = cpupkt_batch.pkts[npkt].cpu_rxhdr;
             copied_pkt = cpupkt_batch.pkts[npkt].copied_pkt;
 
             HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
 
-	    if (pkt) {
+            if (pkt) {
 
                 ctx_->set_pkt(cpu_rxhdr, pkt, pkt_len);
-		hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
+                hal::pd::cpu_to_p4plus_header_t cpu_header = {0};
 
-		// Update Rx Counters
-		//update_rx_stats(cpu_rxhdr, pkt_len);
-	      
-		ctx_->queue_txpkt(pkt, pkt_len, &cpu_header, NULL, HAL_LIF_CPU,
-				  CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ,
-				  types::WRING_TYPE_ASQ, copied_pkt ? free_flow_miss_pkt : NULL);
-	    }
-	}
+                // Update Rx Counters
+                //update_rx_stats(cpu_rxhdr, pkt_len);
 
-	// write the packet
-	ret = ctx_->send_queued_pkts_new(arm_ctx_);
-	if (ret != HAL_RET_OK) {
-	    HAL_TRACE_ERR("fte: failed to send pkt ret={}", ret);
-	}
+                ctx_->queue_txpkt(pkt, pkt_len, &cpu_header, NULL, HAL_LIF_CPU,
+                                  CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ,
+                                  types::WRING_TYPE_ASQ, copied_pkt ? free_flow_miss_pkt : NULL);
+            }
+        }
 
-	// The 'send_queued_pkts()' already updates tx stats.
-	//update_tx_stats(pkt_len);
+        // write the packet
+        ret = ctx_->send_queued_pkts_new(arm_ctx_);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("fte: failed to send pkt ret={}", ret);
+        }
 
-	return;
+        // The 'send_queued_pkts()' already updates tx stats.
+        //update_tx_stats(pkt_len);
+
+        return;
     }
 
     if (!cpupkt_batch.pktcount) return;
@@ -780,43 +782,51 @@ void inst_t::process_arq_new ()
         fte::impl::cfg_db_open();
 
         pkt = cpupkt_batch.pkts[npkt].pkt;
-	pkt_len = cpupkt_batch.pkts[npkt].pkt_len;
-	cpu_rxhdr = cpupkt_batch.pkts[npkt].cpu_rxhdr;
+        pkt_len = cpupkt_batch.pkts[npkt].pkt_len;
+        cpu_rxhdr = cpupkt_batch.pkts[npkt].cpu_rxhdr;
         copied_pkt = cpupkt_batch.pkts[npkt].copied_pkt;
+        drop_pkt = false;
 
-	HAL_TRACE_DEBUG("npkt {} pkt_len {}, pkt {:p}", npkt, pkt_len, pkt);
+        HAL_TRACE_DEBUG("npkt {} pkt_len {}, pkt {:p}", npkt, pkt_len, pkt);
 
-	do {
+        do {
 
-	    // Update Rx Counters
-	    update_rx_stats(cpu_rxhdr, pkt_len);
+            // Update Rx Counters
+            update_rx_stats(cpu_rxhdr, pkt_len);
 
-	    // Init ctx_t
-	    ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, copied_pkt, iflow_, rflow_, feature_state_, num_features_);
-	    if (ret != HAL_RET_OK) {
-	        if (ret == HAL_RET_FTE_SPAN) {
-		    HAL_TRACE_DEBUG("fte: done processing span packet");
-		    continue;
-		} else {
-		    HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
-		    break;
-		}
-	    }
-
-	    // process the packet and update flow table
-	    auto app_ctx = hal::app_redir::app_redir_ctx(*ctx_, false);
-	    if (app_ctx) {
-	        app_ctx->set_arm_ctx(arm_ctx_);
-	    }
-	    ret = ctx_->process();
+            // Init ctx_t
+            ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, copied_pkt, iflow_, rflow_, feature_state_, num_features_);
             if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("fte: failied to process, ret={}", ret);
+                if (ret == HAL_RET_FTE_SPAN) {
+                    HAL_TRACE_DEBUG("fte: done processing span packet");
+                } else {
+                    HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
+                }
 
                 /*
-                 * We'll set the drop in this error case, so the cpupkt resources
-                 * can be reclaimed in 'send_queued_pkts' below.
+                 * Set drop bit so any packet-resources can be freed by the CPU-PMD.
                  */
+                drop_pkt = true;
                 ctx_->set_drop();
+            }
+
+            if (!drop_pkt) {
+
+                // process the packet and update flow table
+                auto app_ctx = hal::app_redir::app_redir_ctx(*ctx_, false);
+                if (app_ctx) {
+                    app_ctx->set_arm_ctx(arm_ctx_);
+                }
+                ret = ctx_->process();
+                if (ret != HAL_RET_OK) {
+                    HAL_TRACE_ERR("fte: failied to process, ret={}", ret);
+
+                    /*
+                     * We'll set the drop in this error case, so the cpupkt resources
+                     * can be reclaimed in 'send_queued_pkts' below.
+                     */
+                    ctx_->set_drop();
+                }
             }
 
             // write the packets
@@ -824,7 +834,7 @@ void inst_t::process_arq_new ()
             if (ret != HAL_RET_OK) {
                 HAL_TRACE_ERR("fte: failed to send pkt ret={}", ret);
             }
-	} while(false);
+        } while(false);
 
         fte::impl::cfg_db_close();
     }
@@ -916,7 +926,7 @@ fte_txrx_stats_get (uint8_t fte_id, bool clear_on_read)
 
     fn_ctx.clear_on_read = clear_on_read;
     fte_execute(fte_id, [](void *data) {
-            fn_ctx_t *fn_ctx = (fn_ctx_t *) data;            
+            fn_ctx_t *fn_ctx = (fn_ctx_t *) data;
             fn_ctx->fte_stats = t_inst->get_txrx_stats(fn_ctx->clear_on_read);
         }, &fn_ctx);
 
