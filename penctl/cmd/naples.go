@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 
 	"github.com/pensando/sw/api/generated/cluster"
@@ -66,7 +68,7 @@ func init() {
 	naplesCmd.Flags().StringVarP(&hostname, "hostname", "n", "", "Host name")
 	naplesCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
 	naplesCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
-	naplesCmd.Flags().StringVarP(&featureProfile, "feature-profile", "f", "", "Active NAPLES Profile")
+	naplesCmd.Flags().StringVarP(&featureProfile, "feature-profile", "f", "default", "Active NAPLES Profile")
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
 	naplesProfileCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile")
 	naplesProfileCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 0, "Number of LIFs on the eth device. 1 or 16")
@@ -75,16 +77,43 @@ func init() {
 func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 	var networkManagementMode nmd.NetworkMode
 	var managementMode nmd.MgmtMode
+	var ok bool
 
 	if mode == "host" {
 		managementMode = nmd.MgmtMode_HOST
+		networkMode = ""
+
+		//check if profile exists. TODO remove this when penctl can display server sent errors codes. This fails due to revproxy and only on verbose mode gives a non descript 500 Internal Server Error
+		baseURL, _ := getNaplesURL()
+		url := fmt.Sprintf("%s/api/v1/naples/profiles/", baseURL)
+
+		resp, err := http.Get(url)
+		if err != nil {
+			fmt.Println("Failed to get existing profiles. Err: ", err)
+		}
+		defer resp.Body.Close()
+
+		body, _ := ioutil.ReadAll(resp.Body)
+		var profiles []*nmd.NaplesProfile
+		json.Unmarshal(body, &profiles)
+
+		for _, p := range profiles {
+			if featureProfile == p.Name {
+				ok = true
+			}
+		}
+
+		if !ok {
+			return fmt.Errorf("invalid profile specified. %v", featureProfile)
+		}
+
 	} else {
 		managementMode = nmd.MgmtMode_NETWORK
 	}
 
 	if networkMode == "inband" {
 		networkManagementMode = nmd.NetworkMode_INBAND
-	} else {
+	} else if networkMode == "oob" {
 		networkManagementMode = nmd.NetworkMode_OOB
 	}
 
@@ -249,7 +278,7 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
-		if len(featureProfile) != 0 {
+		if len(featureProfile) != 0 && featureProfile != "default" {
 			err = fmt.Errorf("feature profile is not applicable when NAPLES is in network managed mode ")
 		}
 

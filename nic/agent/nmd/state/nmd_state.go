@@ -90,7 +90,19 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		Timestamp: *c,
 	}
 
-	// construct default config
+	// construct default config and a default profile
+	defaultProfile := &nmd.NaplesProfile{
+		ObjectMeta: api.ObjectMeta{
+			Name: "default",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "NaplesProfile",
+		},
+		Spec: nmd.NaplesProfileSpec{
+			NumLifs: 1,
+		},
+	}
+
 	config := nmd.Naples{
 		ObjectMeta: api.ObjectMeta{
 			Name: "NaplesConfig",
@@ -102,8 +114,10 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 			Mode:       naplesMode,
 			PrimaryMAC: macAddr,
 			Hostname:   nodeUUID,
+			Profile:    "default",
 		},
 	}
+	// List available naplesProfiles
 
 	// check if naples config exists in emdb
 	cfgObj, err := emdb.Read(&config)
@@ -147,6 +161,22 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		stopNICUpd:         make(chan bool, 1),
 		config:             config,
 		completedOps:       make(map[roprotos.SmartNICOpSpec]bool),
+	}
+
+	// check if naples naplesProfiles exist in emdb
+	p := nmd.NaplesProfile{
+		TypeMeta: api.TypeMeta{Kind: "NaplesProfile"},
+	}
+	profileObjs, err := emdb.List(&p)
+
+	if profileObjs != nil && err == nil {
+		// Use Persisted profiles moving forward
+		for _, p := range profileObjs {
+			profile := p.(*nmd.NaplesProfile)
+			nm.CreateNaplesProfile(*profile)
+		}
+	} else {
+		nm.CreateNaplesProfile(*defaultProfile)
 	}
 
 	for _, o := range opts {

@@ -17,7 +17,6 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
-	"github.com/pensando/sw/nic/agent/nmd/protos/halproto"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -233,7 +232,20 @@ func readAndParseLease(leaseFile string) ([]string, error) {
 	return nil, nil
 }
 
-func (c *IPClient) updateDelphiNaplesObject(naplesMode delphiProto.NaplesStatus_Mode) error {
+func (c *IPClient) updateDelphiNaplesObject() error {
+	// Set up appropriate mode
+	var naplesMode delphiProto.NaplesStatus_Mode
+
+	switch c.nmdState.config.Spec.NetworkMode {
+	case nmd.NetworkMode_INBAND.String():
+		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND
+	case nmd.NetworkMode_OOB.String():
+		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_OOB
+	default:
+		naplesMode = delphiProto.NaplesStatus_HOST_MANAGED
+
+	}
+
 	var transitionPhase delphiProto.NaplesStatus_Transition
 
 	switch c.nmdState.config.Status.TransitionPhase {
@@ -287,10 +299,6 @@ func (c *IPClient) updateDelphiNaplesObject(naplesMode delphiProto.NaplesStatus_
 func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) error {
 	log.Infof("Found Controllers: %v", controllers)
 
-	var naplesMode delphiProto.NaplesStatus_Mode
-	var fwdMode device.ForwardingMode
-	var featureProfile device.FeatureProfile
-
 	if c.nmdState.config.Status.IPConfig == nil {
 		c.nmdState.config.Status.IPConfig = &cluster.IPConfig{
 			IPAddress:  "",
@@ -317,22 +325,6 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 	log.Infof("Updating Naples Status.")
 	log.Infof("Current Spec : %v", c.nmdState.config.Spec)
 	log.Infof("Current Status : %v", c.nmdState.config.Status)
-
-	// Set up appropriate mode
-	switch c.nmdState.config.Spec.NetworkMode {
-	case nmd.NetworkMode_INBAND.String():
-		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND
-		fwdMode = device.ForwardingMode_FORWARDING_MODE_HOSTPIN
-		featureProfile = device.FeatureProfile_FEATURE_PROFILE_NONE
-	case nmd.NetworkMode_OOB.String():
-		naplesMode = delphiProto.NaplesStatus_NETWORK_MANAGED_OOB
-		fwdMode = device.ForwardingMode_FORWARDING_MODE_HOSTPIN
-		featureProfile = device.FeatureProfile_FEATURE_PROFILE_NONE
-	default:
-		naplesMode = delphiProto.NaplesStatus_HOST_MANAGED
-		fwdMode = device.ForwardingMode_FORWARDING_MODE_CLASSIC
-		featureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_DEFAULT
-	}
 
 	if c.nmdState.config.Status.Mode == nmd.MgmtMode_NETWORK.String() {
 		log.Info("Currently Naples is Network Managed")
@@ -473,18 +465,21 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 		}
 	}
 
-	// Write HAL CFG FILE
-	err := c.nmdState.PersistDeviceSpec(fwdMode, featureProfile)
+	// Persist HAL Configuration
+	if err := c.nmdState.PersistHALConfiguration(c.nmdState.config.Spec.Profile); err != nil {
+		log.Infof("NIC mode: %v feature profile: %v", c.nmdState.config.Spec.Mode, c.nmdState.config.Spec.Profile)
+		return err
+	}
 
 	// Persist bolt db.
-	err = c.nmdState.store.Write(&c.nmdState.config)
+	err := c.nmdState.store.Write(&c.nmdState.config)
 	if err != nil {
 		log.Errorf("Error persisting the naples config in Bolt DB, err: %+v", err)
 		return err
 	}
 
 	// Update Naples Status Delphi Object
-	err = c.updateDelphiNaplesObject(naplesMode)
+	err = c.updateDelphiNaplesObject()
 	if !c.isMock && err != nil {
 		log.Errorf("Error updating Delphi NaplesStatus object. Err: %v", err)
 		return err

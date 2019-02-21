@@ -69,6 +69,13 @@ func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
 		Timestamp: *c,
 	}
 
+	// persist profile
+	if err := n.store.Write(&profile); err != nil {
+		log.Errorf("Failed to persist naples profile. Err: %v", err)
+		return err
+	}
+
+	// Update in memory state
 	n.profiles = append(n.profiles, &profile)
 	return nil
 }
@@ -77,12 +84,8 @@ func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
 func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 	log.Infof("NAPLES Update: Old: %v  | New: %v ", n.config, cfg)
 	n.SetNaplesConfig(cfg.Spec)
-	err := n.store.Write(&cfg)
-
-	// Update Naples Feature Profile
-	if err = n.UpdateFeatureProfile(cfg.Spec.Profile); err != nil {
-		log.Infof("NIC mode: %v feature profile: %v", n.config.Spec.Mode, cfg.Spec.Profile)
-		return err
+	if err := n.store.Write(&n.config); err != nil {
+		log.Errorf("Failed to persist naples config to bolt db. Err:  %v", err)
 	}
 
 	return n.UpdateMgmtIP()

@@ -211,8 +211,8 @@ func (n *NMD) GetIPClient() *IPClient {
 	return n.IPClient
 }
 
-//UpdateFeatureProfile updates feature profile
-func (n *NMD) UpdateFeatureProfile(profileName string) (err error) {
+//PersistHALConfiguration updates feature profile
+func (n *NMD) PersistHALConfiguration(profileName string) (err error) {
 	if n.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
 		fwdMode := device.ForwardingMode_FORWARDING_MODE_CLASSIC
 		var featureProfile device.FeatureProfile
@@ -245,6 +245,7 @@ func (n *NMD) UpdateFeatureProfile(profileName string) (err error) {
 		return
 	}
 
+	err = n.PersistDeviceSpec(device.ForwardingMode_FORWARDING_MODE_HOSTPIN, device.FeatureProfile_FEATURE_PROFILE_NONE)
 	return
 }
 
