@@ -37,7 +37,7 @@ char *g_input_cfg_file = NULL;
 char *g_cfg_file = NULL;
 bool g_daemon_mode = false;
 ip_prefix_t g_vcn_ippfx = {0};
-oci_switchport_t g_swport = {0};
+oci_switchport_spec_t g_swport = {0};
 flow_test *g_flow_test_obj;
 
 uint8_t g_snd_pkt1[] = {

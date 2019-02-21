@@ -44,6 +44,7 @@ apollo_impl_state::apollo_impl_state(oci_state *state) {
                       false, true, NULL);
     SDK_ASSERT(key_tunneled_tbl_ != NULL);
 
+    p4pd_table_properties_get(P4TBL_ID_P4I_DROP_STATS, &tinfo);
     ingress_drop_stats_tbl_ =
         tcam::factory(tinfo.tablename, P4TBL_ID_P4I_DROP_STATS,
                       tinfo.tabledepth, tinfo.key_struct_size,
@@ -51,6 +52,7 @@ apollo_impl_state::apollo_impl_state(oci_state *state) {
                       false, true, NULL);
     SDK_ASSERT(ingress_drop_stats_tbl_ != NULL);
 
+    p4pd_table_properties_get(P4TBL_ID_P4E_DROP_STATS, &tinfo);
     egress_drop_stats_tbl_ =
         tcam::factory(tinfo.tablename, P4TBL_ID_P4E_DROP_STATS,
                       tinfo.tabledepth, tinfo.key_struct_size,

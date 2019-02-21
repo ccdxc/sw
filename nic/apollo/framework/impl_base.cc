@@ -73,7 +73,7 @@ impl_base *
 impl_base::factory(impl_obj_id_t obj_id, void *args) {
     switch (obj_id) {
     case IMPL_OBJ_ID_SWITCHPORT:
-        return switchport_impl::factory((oci_switchport_t *)args);
+        return switchport_impl::factory((oci_switchport_spec_t *)args);
 
     case IMPL_OBJ_ID_TEP:
         return tep_impl::factory((oci_tep_t *)args);

@@ -34,7 +34,7 @@ switchport_impl    g_switchport_impl;
  * @return    new instance of switchport or NULL, in case of error
  */
 switchport_impl *
-switchport_impl::factory(oci_switchport_t *oci_switchport) {
+switchport_impl::factory(oci_switchport_spec_t *oci_switchport) {
     return &g_switchport_impl;
 }
 

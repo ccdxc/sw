@@ -33,7 +33,7 @@ public:
      * @param[in] oci_switchport    switchport information
      * @return    new instance of switchport or NULL, in case of error
      */
-    static switchport_impl *factory(oci_switchport_t *oci_switchport);
+    static switchport_impl *factory(oci_switchport_spec_t *oci_switchport);
 
     /**
      * @brief    release all the s/w state associated with the given switchport,

@@ -334,6 +334,8 @@ apollo_impl::pipeline_init(void) {
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
+    ret = stats_init_();
+    SDK_ASSERT(ret == SDK_RET_OK);
 
     return SDK_RET_OK;
 }

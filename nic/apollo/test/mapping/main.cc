@@ -115,7 +115,7 @@ TEST_F(mapping_test, mapping_create) {
 
     oci_vcn_t vcn;
     oci_subnet_t sub;
-    oci_switchport_t swport;
+    oci_switchport_spec_t swport;
     oci_route_table_t rt_tbl;
     oci_tep_t rtep;
     api_test::vnic_util vnic;
