@@ -1,0 +1,34 @@
+meta:
+    name    : mode_change
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox, intel ]
+    targetcount : 9 
+
+testcases:
+    -   name    : MODE_UPDATE_INBAND_STATIC_LOOP
+        testcase: testcases.penctl.mode_inb_static_loop
+
+    -   name    : MODE_UPDATE_OOB_STATIC_LOOP
+        testcase: testcases.penctl.mode_oob_static_loop
+
+    -   name    : MODE_UPDATE_INB_DYNAMIC_LOOP_STRESS
+        testcase: testcases.penctl.mode_inb_dynamic_loop_stress
+
+    -   name    : MODE_UPDATE_OOB_DYNAMIC_LOOP_STRESS
+        testcase: testcases.penctl.mode_oob_dynamic_loop_stress
+
+    -   name    : MODE_UPDATE_INB_STATIC_LOOP_STRESS
+        testcase: testcases.penctl.mode_inb_static_loop_stress
+
+    -   name    : MODE_UPDATE_OOB_STATIC_LOOP_STRESS
+        testcase: testcases.penctl.mode_oob_static_loop_stress
+
+    -   name    : MODE_UPDATE_RANDOM_LOOP_STRESS
+        testcase: testcases.penctl.mode_random_loop_stress
+
+    -   name    : MODE_UPDATE_INB_STATIC_REBOOT
+        disable : true
+        testcase: testcases.penctl.mode_inb_static_reboot
+
+    -   name    : MODE_UPDATE_OOB_STATIC_REBOOT
+        testcase: testcases.penctl.mode_oob_static_reboot

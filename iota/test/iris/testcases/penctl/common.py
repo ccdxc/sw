@@ -313,7 +313,10 @@ def RunPenctlOnHost(n, cmd):
     if cmd_resp.exit_code != 0:
         return None
 
-    return cmd_resp.stdout
+    if cmd_resp.stdout == None:
+        return "SUCCESS"
+    else:
+        return cmd_resp.stdout
 
 def SetNaplesModeInband_Static(n, controllerip, mgmtip):
     cmd = "update naples --hostname IOTATEST_INB --mgmt-ip {} --management-mode network --controllers {} --network-mode inband".format(mgmtip, controllerip)
@@ -332,6 +335,11 @@ def SetNaplesModeOOB_Static(n, controllerip, mgmtip):
 def SetNaplesModeOOB_Dynamic(n):
     api.Logger.info("Setting Naples network mode to OOB Dynamic.")
     cmd = "update naples --hostname IOTATEST_OOB --management-mode network --network-mode inband"
+    return RunPenctlOnHost(n, cmd)
+
+def SetNaplesModeHost(n):
+    api.Logger.info("Setting Naples network mode to Host Managed.")
+    cmd = "update mode --hostname IOTATEST_OOB --management-mode host"
     return RunPenctlOnHost(n, cmd)
 
 def PenctlGetMode(n):
