@@ -19,6 +19,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 	// TODO Remove Global Locking
 	hd.Lock()
 	defer hd.Unlock()
+	var ifKeyHandles []*halproto.InterfaceKeyHandle
 	var nwKey halproto.NetworkKeyHandle
 	var nwKeyOrHandle []*halproto.NetworkKeyHandle
 	var macAddr uint64
@@ -122,8 +123,16 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		bcastPolicy = halproto.BroadcastFwdPolicy_BROADCAST_FWD_POLICY_FLOOD
 	}
 
-	// TODO Remove uplink pinning prior to FCS. This is needed temporarily to enable bring up.
-	pinnedUplinkIdx := nw.Status.NetworkID % uint64(len(uplinks))
+	// build InterfaceKey Handle with all the uplinks
+	for _, uplink := range uplinks {
+		ifKeyHandle := halproto.InterfaceKeyHandle{
+			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
+				InterfaceId: uplink.Status.InterfaceID,
+			},
+		}
+
+		ifKeyHandles = append(ifKeyHandles, &ifKeyHandle)
+	}
 
 	// build l2 segment data
 	seg := halproto.L2SegmentSpec{
@@ -137,11 +146,7 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 		WireEncap:        &wireEncap,
 		VrfKeyHandle:     vrfKey,
 		NetworkKeyHandle: nwKeyOrHandle,
-		PinnedUplinkIfKeyHandle: &halproto.InterfaceKeyHandle{
-			KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-				InterfaceId: uplinks[pinnedUplinkIdx].Status.InterfaceID,
-			},
-		},
+		IfKeyHandle:      ifKeyHandles,
 	}
 	segReq := halproto.L2SegmentRequestMsg{
 		Request: []*halproto.L2SegmentSpec{&seg},
@@ -149,10 +154,6 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 
 	// create the tenant. Enforce HAL Status == OK for HAL datapath
 	if hd.Kind == "hal" {
-		ifL2SegReqMsg := halproto.InterfaceL2SegmentRequestMsg{
-			Request: make([]*halproto.InterfaceL2SegmentSpec, 0),
-		}
-
 		resp, err := hd.Hal.L2SegClient.L2SegmentCreate(context.Background(), &segReq)
 		if err != nil {
 			log.Errorf("Error creating L2 Segment. Err: %v", err)
@@ -162,58 +163,10 @@ func (hd *Datapath) CreateNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 			log.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 			return fmt.Errorf("HAL returned non OK status. %v", resp.Response[0].ApiStatus.String())
 		}
-		for _, uplink := range uplinks {
-			ifL2SegReq := halproto.InterfaceL2SegmentSpec{
-				L2SegmentKeyOrHandle: seg.KeyOrHandle,
-				IfKeyHandle: &halproto.InterfaceKeyHandle{
-					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-						InterfaceId: uplink.Status.InterfaceID,
-					},
-				},
-			}
-			ifL2SegReqMsg.Request = append(ifL2SegReqMsg.Request, &ifL2SegReq)
-		}
-		// Perform batched Add only if uplinks exist
-		if len(uplinks) != 0 {
-			l2SegAddResp, err := hd.Hal.Ifclient.AddL2SegmentOnUplink(context.Background(), &ifL2SegReqMsg)
-			if err != nil {
-				log.Errorf("Error adding l2 segments on uplinks. Err: %v", err)
-				return err
-			}
-			for _, r := range l2SegAddResp.Response {
-				if r.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-					log.Errorf("HAL returned non OK status. %v", r.ApiStatus.String())
-					return fmt.Errorf("HAL returned non OK status. %v", r.ApiStatus.String())
-				}
-			}
-		} else {
-			log.Errorf("Could not find uplinks.")
-		}
-
 	} else {
-		ifL2SegReqMsg := halproto.InterfaceL2SegmentRequestMsg{
-			Request: make([]*halproto.InterfaceL2SegmentSpec, 0),
-		}
 		_, err := hd.Hal.L2SegClient.L2SegmentCreate(context.Background(), &segReq)
 		if err != nil {
-			log.Errorf("Error creating tenant. Err: %v", err)
-			return err
-		}
-		for _, uplink := range uplinks {
-			ifL2SegReq := halproto.InterfaceL2SegmentSpec{
-				L2SegmentKeyOrHandle: seg.KeyOrHandle,
-				IfKeyHandle: &halproto.InterfaceKeyHandle{
-					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-						InterfaceId: uplink.Status.InterfaceID,
-					},
-				},
-			}
-			ifL2SegReqMsg.Request = append(ifL2SegReqMsg.Request, &ifL2SegReq)
-		}
-
-		_, err = hd.Hal.Ifclient.AddL2SegmentOnUplink(context.Background(), &ifL2SegReqMsg)
-		if err != nil {
-			log.Errorf("Error adding l2 segments on uplinks. Err: %v", err)
+			log.Errorf("Error creating L2 Segment. Err: %v", err)
 			return err
 		}
 	}
@@ -290,39 +243,6 @@ func (hd *Datapath) DeleteNetwork(nw *netproto.Network, uplinks []*netproto.Inte
 	}
 
 	if hd.Kind == "hal" {
-		// remove the l2segment from all the uplinks.
-		var ifL2SegReqMsg halproto.InterfaceL2SegmentRequestMsg
-
-		for _, uplink := range uplinks {
-			req := halproto.InterfaceL2SegmentSpec{
-				L2SegmentKeyOrHandle: seg.KeyOrHandle,
-				IfKeyHandle: &halproto.InterfaceKeyHandle{
-					KeyOrHandle: &halproto.InterfaceKeyHandle_InterfaceId{
-						InterfaceId: uplink.Status.InterfaceID,
-					},
-				},
-			}
-			ifL2SegReqMsg.Request = append(ifL2SegReqMsg.Request, &req)
-		}
-
-		// Perform batched remove only if uplinks exist
-		if len(uplinks) != 0 {
-			l2SegDelResp, err := hd.Hal.Ifclient.DelL2SegmentOnUplink(context.Background(), &ifL2SegReqMsg)
-			if err != nil {
-				log.Errorf("Error deleting l2 segments on uplinks. Err %v", err)
-				return err
-			}
-			// ensure all the uplinks were correctly removed.
-			for _, r := range l2SegDelResp.Response {
-				if r.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-					log.Errorf("HAL returned non OK status. %v", r.ApiStatus.String())
-					return fmt.Errorf("HAL returned non OK status. %v", r.ApiStatus.String())
-				}
-			}
-		} else {
-			log.Errorf("could not find uplinks")
-		}
-
 		// delete the l2 seg
 		resp, err := hd.Hal.L2SegClient.L2SegmentDelete(context.Background(), &segDelReqMsg)
 		if err != nil {
