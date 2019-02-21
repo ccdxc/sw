@@ -293,7 +293,7 @@ func (f *mockUpgAgent) StartPreCheckForUpgOnNextHostReboot(version string) error
 // createNMD creates a NMD server
 func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mockCtrler, *mockUpgAgent, *mockRolloutCtrler) {
 	// Start a fake delphi hub
-
+	log.Info("Creating NMD")
 	ag := &mockAgent{
 		nicDB: make(map[string]*cmd.SmartNIC),
 	}
@@ -329,7 +329,14 @@ func createNMD(t *testing.T, dbPath, mode, nodeID string) (*NMD, *mockAgent, *mo
 
 	// Ensure the NMD's rest server is started
 	nm.CreateMockIPClient(nil)
-	err = nm.UpdateMgmtIP()
+	cfg := nm.GetNaplesConfig()
+
+	if cfg.Spec.IPConfig == nil {
+		cfg.Spec.IPConfig = &cmd.IPConfig{}
+	}
+
+	nm.SetNaplesConfig(cfg.Spec)
+	err = nm.GetIPClient().Start()
 
 	return nm, ag, ct, upgAgt, roC
 }
@@ -911,6 +918,7 @@ func TestNaplesRestartNetworkMode(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "Naples"},
 		Spec: nmd.NaplesSpec{
 			Mode:        nmd.MgmtMode_NETWORK.String(),
+			NetworkMode: nmd.NetworkMode_OOB.String(),
 			PrimaryMAC:  nicKey1,
 			Controllers: []string{"localhost"},
 			Hostname:    nicKey1,
@@ -931,9 +939,8 @@ func TestNaplesRestartNetworkMode(t *testing.T) {
 	AssertEventually(t, f1, "Failed to post the naples config")
 
 	f2 := func() (bool, interface{}) {
-
 		cfg := nm.GetNaplesConfig()
-		log.Infof("CFG: %+v err: %+v", cfg.Spec.Mode, err)
+		log.Infof("CFG: %+v err: %+v EXPECTED : %+v", cfg.Spec.Mode, err, nmd.MgmtMode_NETWORK.String())
 		if cfg.Spec.Mode != nmd.MgmtMode_NETWORK.String() {
 			log.Errorf("Failed to switch to network mode")
 			return false, nil

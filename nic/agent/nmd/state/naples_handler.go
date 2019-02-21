@@ -76,7 +76,7 @@ func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
 // UpdateNaplesConfig updates a local Naples Config object
 func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 	log.Infof("NAPLES Update: Old: %v  | New: %v ", n.config, cfg)
-	n.setNaplesConfig(cfg.Spec)
+	n.SetNaplesConfig(cfg.Spec)
 	err := n.store.Write(&cfg)
 
 	// Update Naples Feature Profile
@@ -90,6 +90,7 @@ func (n *NMD) UpdateNaplesConfig(cfg nmd.Naples) error {
 
 // StartManagedMode starts the tasks required for managed mode
 func (n *NMD) StartManagedMode() error {
+	log.Info("Starting Managed Mode")
 
 	if n.cmd == nil {
 		// create the CMD client
@@ -381,6 +382,7 @@ func (n *NMD) SendNICUpdates() error {
 
 // StopManagedMode stop the ongoing tasks meant for managed mode
 func (n *NMD) StopManagedMode() error {
+	log.Info("Stopping Managed Mode.")
 	// stop accepting certificate requests
 	if n.certsProxy != nil {
 		n.certsProxy.Stop()
@@ -424,6 +426,7 @@ func (n *NMD) StopManagedMode() error {
 
 // StartClassicMode start the tasks required for classic mode
 func (n *NMD) StartClassicMode() error {
+	log.Infof("Starting Classic Mode.")
 	if !n.GetRestServerStatus() {
 		// Start RestServer
 		log.Infof("NIC in classic mode, mac: %v", n.config.Spec.PrimaryMAC)
@@ -435,7 +438,7 @@ func (n *NMD) StartClassicMode() error {
 
 // StopClassicMode stops the ongoing tasks meant for classic mode
 func (n *NMD) StopClassicMode(shutdown bool) error {
-
+	log.Infof("Stopping Classic Mode.")
 	// Stop RestServer
 	return n.StopRestServer(shutdown)
 }

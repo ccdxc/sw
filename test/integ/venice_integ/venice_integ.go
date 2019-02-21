@@ -291,13 +291,23 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		}
 		// start NMDs rest server and
 		n := nmd.GetNMD()
+
 		n.CreateMockIPClient(nil)
 		//n.UpdateMgmtIP()
 		// Fake IPConfig
 		ipConfig := &cluster.IPConfig{
 			IPAddress: "1.2.3.4",
 		}
-		n.IPClient.Update(nmdproto.NetworkMode_INBAND.String(), ipConfig, 0, hostID, []string{"localhost"})
+		//n.IPClient.Update(nmdproto.NetworkMode_INBAND, ipConfig, 0, hostID, []string{"localhost"})
+		cfg := n.GetNaplesConfig()
+		cfg.Spec.Controllers = []string{"localhost"}
+		cfg.Spec.NetworkMode = nmdproto.NetworkMode_INBAND.String()
+		cfg.Spec.IPConfig = ipConfig
+		cfg.Spec.MgmtVlan = 0
+		cfg.Spec.Hostname = hostID
+
+		n.SetNaplesConfig(cfg.Spec)
+		n.IPClient.Update()
 		it.nmds = append(it.nmds, nmd)
 	}
 

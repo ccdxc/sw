@@ -56,7 +56,7 @@ func NewAgent(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI,
 func (ag *Agent) StandaloneStart() {
 	log.Infof("NMD start management")
 	ag.nmd.CreateMockIPClient(nil)
-	ag.nmd.UpdateMgmtIP()
+	ag.nmd.GetIPClient().Start()
 }
 
 // DelphiService struct helps to convert NMD into a Delphi Service
@@ -75,7 +75,7 @@ func (d *DelphiService) OnMountComplete() {
 	log.Infof("OnMountComplete() done for %s", d.Name())
 	d.Agent.nmd.UpdateCurrentManagementMode()
 	d.Agent.nmd.CreateIPClient(d.DelphiClient)
-	d.Agent.nmd.UpdateMgmtIP()
+	d.Agent.nmd.GetIPClient().Start()
 }
 
 // Name returns the name of the delphi service.

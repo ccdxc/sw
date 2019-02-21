@@ -138,7 +138,8 @@ func (n *NMD) GetConfigMode() string {
 	return n.config.Spec.Mode
 }
 
-func (n *NMD) setNaplesConfig(cfgSpec nmd.NaplesSpec) {
+// SetNaplesConfig sets naples config and status
+func (n *NMD) SetNaplesConfig(cfgSpec nmd.NaplesSpec) {
 	n.Lock()
 	defer n.Unlock()
 	c, _ := types.TimestampProto(time.Now())
@@ -191,7 +192,7 @@ func (n *NMD) CreateIPClient(delphiClient clientAPI.Client) {
 	n.Lock()
 	defer n.Unlock()
 
-	n.IPClient = NewIPClient(false, n, delphiClient, 0, "", 0, "", nil)
+	n.IPClient = NewIPClient(false, n, delphiClient)
 }
 
 // CreateMockIPClient creates IPClient in Mock mode to run in venice integ environment
@@ -199,7 +200,7 @@ func (n *NMD) CreateMockIPClient(delphiClient clientAPI.Client) {
 	n.Lock()
 	defer n.Unlock()
 
-	n.IPClient = NewIPClient(true, n, delphiClient, 0, "", 0, "", nil)
+	n.IPClient = NewIPClient(true, n, delphiClient)
 }
 
 // GetIPClient returns the handle to the ip client
@@ -254,7 +255,7 @@ func (n *NMD) UpdateMgmtIP() error {
 	//defer n.Unlock()
 
 	log.Infof("NaplesConfig: %v", n.config)
-	return n.IPClient.Update(n.config.Spec.NetworkMode, n.config.Spec.IPConfig, n.config.Spec.MgmtVlan, n.config.Spec.Hostname, n.config.Spec.Controllers)
+	return n.IPClient.Update()
 }
 
 // GetCMDSmartNICWatcherStatus returns true if the NMD CMD interface has an active watch
@@ -283,6 +284,7 @@ func (n *NMD) UpdateCurrentManagementMode() {
 
 // PersistDeviceSpec accepts forwarding mode and feature profile and persists this in device.conf
 func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile device.FeatureProfile) (err error) {
+	log.Infof("Setting forwarding mode to : %v", fwdMode)
 	deviceSpec := device.SystemSpec{
 		FwdMode:        fwdMode,
 		FeatureProfile: featureProfile,
@@ -311,6 +313,8 @@ func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile de
 	default:
 		appStartSpec = []byte("classic")
 	}
+
+	log.Infof("App Start Spec is : %v", appStartSpec)
 	appStartConfFilePath := fmt.Sprintf("%s/app-start.conf", path.Dir(globals.NaplesModeConfigFile))
 	if err := ioutil.WriteFile(appStartConfFilePath, appStartSpec, 0755); err != nil {
 		log.Errorf("Failed to write app start conf. Err: %v", err)
