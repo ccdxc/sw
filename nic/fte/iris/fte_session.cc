@@ -297,6 +297,10 @@ session_get (hal::session_t *session, SessionGetResponse *response)
 end:
     response->set_api_status(hal::hal_prepare_rsp(ret));
 
+    if (feature_state) {
+        HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
+    }
+
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");
     return ret;
 }

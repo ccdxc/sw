@@ -2152,6 +2152,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
                                     (void *)tctx_list);
             SDK_ASSERT(ret == HAL_RET_OK);
         }
+        HAL_FREE(HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE, args.tctx_list[fte_id]);
 
         while (args.num_del_sess[fte_id]) {
             timer_handle_list session_list = (hal_handle_t *)HAL_CALLOC(
@@ -2167,6 +2168,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
                                   (void *)session_list);
             SDK_ASSERT(ret == HAL_RET_OK);
         }
+        HAL_FREE(HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE, args.session_list[fte_id]);
     }
 
     HAL_FREE(HAL_MEM_ALLOC_SESS_AGE_ARGS, args.num_ctx);
