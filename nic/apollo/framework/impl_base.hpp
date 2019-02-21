@@ -18,6 +18,7 @@
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 #include "nic/sdk/asic/asic.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -141,7 +142,8 @@ private:
 };
 
 }    // namespace impl
+}    // namespace api
 
-using impl::impl_base;
+using api::impl::impl_base;
  
 #endif    /** __IMPL_BASE_HPP__ */

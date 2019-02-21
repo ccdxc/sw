@@ -24,6 +24,7 @@ extern sdk_ret_t init_service_lif(void);
 #define JRXDMA_PRGM     "rxdma_program"
 #define JTXDMA_PRGM     "txdma_program"
 
+namespace api {
 namespace impl {
 
 /**
@@ -429,3 +430,4 @@ apollo_impl::write_to_txdma_table(mem_addr_t addr, uint32_t tableid,
 /** @} */    // end of OCI_PIPELINE_IMPL
 
 }    // namespace impl
+}    // namespace api

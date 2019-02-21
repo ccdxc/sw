@@ -16,6 +16,7 @@
 #include "nic/apollo/p4/include/defines.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -150,3 +151,4 @@ tep_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 /** @} */    // end of OCI_TEP_IMPL
 
 }    // namespace impl
+}    // namespace api

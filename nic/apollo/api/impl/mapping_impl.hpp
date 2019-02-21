@@ -15,6 +15,7 @@
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -158,5 +159,6 @@ private:
 /** @} */    // end of OCI_MAPPING_IMPL
 
 }    // namespace impl
+}    // namespace api
 
 #endif    /** __MAPPING_IMPL_HPP__ */

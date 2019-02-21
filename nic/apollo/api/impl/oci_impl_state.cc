@@ -8,6 +8,7 @@
 
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
 
+namespace api {
 namespace impl {
 
 /**< (singleton) instance of all OCI state in one place */
@@ -52,4 +53,4 @@ oci_impl_state::~oci_impl_state() {
 /** * @} */    // end of OCI_IMPL_STATE
 
 }    // namespace impl
-
+}    // namespace api

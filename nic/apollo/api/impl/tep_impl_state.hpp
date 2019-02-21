@@ -12,6 +12,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/api/oci_state.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -49,5 +50,6 @@ private:
 /** * @} */    // end of OCI_TEP_IMPL_STATE
 
 }    // namespace impl
+}    // namespace api
 
 #endif    /** __TEP_IMPL_STATE_HPP__ */

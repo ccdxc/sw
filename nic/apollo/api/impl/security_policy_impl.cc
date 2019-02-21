@@ -14,6 +14,7 @@
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
 #include "nic/apollo/rfc/rfc.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -184,3 +185,4 @@ security_policy_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
 /** @} */    // end of OCI_SECURITY_POLICY_IMPL
 
 }    // namespace impl
+}    // namespace api

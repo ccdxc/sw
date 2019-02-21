@@ -13,6 +13,7 @@
 #include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -160,5 +161,6 @@ private:
 };
 
 }    // namespace impl
+}    // namespace api
 
 #endif    /** __APOLLO_IMPL_HPP__ */

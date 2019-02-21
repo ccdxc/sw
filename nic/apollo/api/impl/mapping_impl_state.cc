@@ -15,6 +15,7 @@
 
 using sdk::table::sdk_table_factory_params_t;
 
+namespace api {
 namespace impl {
 
 /**
@@ -79,3 +80,4 @@ mapping_impl_state::~mapping_impl_state() {
 /** @} */    // end of OCI_MAPPING_IMPL_STATE
 
 }    // namespace impl
+}    // namespace api

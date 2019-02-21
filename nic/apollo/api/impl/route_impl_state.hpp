@@ -13,6 +13,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/api/oci_state.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -55,5 +56,6 @@ private:
 /** * @} */    // end of OCI_ROUTE_TABLE_IMPL_STATE
 
 }    // namespace impl
+}    // namespace api
 
 #endif    /** __ROUTE_IMPL_STATE_HPP__ */

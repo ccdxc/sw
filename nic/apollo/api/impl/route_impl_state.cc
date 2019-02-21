@@ -9,6 +9,7 @@
 #include "nic/apollo/include/api/oci_route.hpp"
 #include "nic/apollo/api/impl/route_impl_state.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -42,3 +43,4 @@ route_table_impl_state::~route_table_impl_state() {
 /** @} */    // end of OCI_ROUTE_TABLE_IMPL_STATE
 
 }    // namespace impl
+}    // namespace api

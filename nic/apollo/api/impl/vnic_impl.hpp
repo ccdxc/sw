@@ -12,7 +12,12 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/include/api/oci_vnic.hpp"
+#include "nic/apollo/api/vcn.hpp"
+#include "nic/apollo/api/subnet.hpp"
+#include "nic/apollo/api/route.hpp"
+#include "nic/apollo/api/policy.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -107,6 +112,32 @@ private:
     /**< @brief    destructor */
     ~vnic_impl() {}
 
+
+    /**
+     * @brief    program LOCAL_VNIC_BY_VLAN_TX table and activate the epoch in
+     *           the Tx direction
+     * @param[in] api_op         api operation
+     * @param[in] api_obj        vnic entry object
+     * @param[in] epoch          epoch being activated
+     * @param[in] vcn            vcn entry
+     * @param[in] subnet         subnet entry
+     * @param[in] vnic_info      vnic configuration
+     * @param[in] v4_route_table IPv4 routing table entry
+     * @param[in] v6_route_table IPv6 routing table entry
+     * @param[in] v4_policy      egress IPv4 security policy
+     * @param[in] v6_policy      egress IPv6 security policy
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t activate_vnic_by_vlan_tx_table_(api_op_t api_op,
+                                              api_base *api_obj,
+                                              oci_epoch_t epoch,
+                                              vcn_entry *vcn,
+                                              subnet_entry *subnet,
+                                              oci_vnic_t *vnic_info,
+                                              route_table *v4_route_table,
+                                              route_table *v6_route_table,
+                                              policy *v4_policy,
+                                              policy *v6_policy);
 private:
     /**< P4 datapath specific state */
     uint16_t          hw_id_;      /**< hardware id */
@@ -117,5 +148,6 @@ private:
 /** @} */    // end of OCI_VNIC_IMPL
 
 }    // namespace impl
+}    // namespace api
 
 #endif    /** __VNIC_IMPL_HPP__ */

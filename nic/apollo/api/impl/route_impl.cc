@@ -16,6 +16,7 @@
 #include "nic/apollo/api/impl/tep_impl.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -204,3 +205,4 @@ route_table_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
 /** @} */    // end of OCI_ROUTE_TABLE_IMPL
 
 }    // namespace impl
+}    // namespace api

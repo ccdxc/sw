@@ -9,6 +9,7 @@
 #if !defined (__IMPL_HPP__)
 #define __IMPL_HPP__
 
+namespace api {
 namespace impl {
 
 /**
@@ -28,7 +29,8 @@ typedef enum impl_obj_id_e {
 } impl_obj_id_t;
 
 }    // namespace impl
+}    // namespace api
 
-using impl::impl_obj_id_t;
+using api::impl::impl_obj_id_t;
 
 #endif    /** __IMPL_HPP__ */

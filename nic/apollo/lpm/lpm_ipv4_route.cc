@@ -154,7 +154,7 @@ lpm_ipv4_route_set_default_data (uint8_t *bytes, uint32_t default_data)
 sdk_ret_t
 lpm_ipv4_route_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
-    return impl::impl_base::pipeline_impl()->write_to_txdma_table(addr,
+    return impl_base::pipeline_impl()->write_to_txdma_table(addr,
                P4_APOLLO_TXDMA_TBL_ID_ROUTE_LPM_S0,
                ROUTE_LPM_S0_ROUTE_LPM_S0_ID, bytes);
 }
@@ -162,7 +162,7 @@ lpm_ipv4_route_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 sdk_ret_t
 lpm_ipv4_route_write_last_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
-    return impl::impl_base::pipeline_impl()->write_to_txdma_table(addr,
+    return impl_base::pipeline_impl()->write_to_txdma_table(addr,
                P4_APOLLO_TXDMA_TBL_ID_ROUTE_LPM_S2,
                ROUTE_LPM_S2_ROUTE_LPM_S2_ID, bytes);
 }

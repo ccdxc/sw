@@ -12,6 +12,7 @@
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -52,7 +53,8 @@ public:
 /** @} */    // end of OCI_ASIC_IMPL
 
 }    // namespace impl
+}    // namespace api
 
-using impl::asic_impl_base;
+using api::impl::asic_impl_base;
 
 #endif    /** __ASIC_IMPL_HPP__ */

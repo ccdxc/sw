@@ -154,7 +154,7 @@ lpm_proto_dport_set_default_data (uint8_t *bytes, uint32_t default_data)
 sdk_ret_t
 lpm_proto_dport_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
-    return impl::impl_base::pipeline_impl()->write_to_rxdma_table(addr,
+    return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
                P4_APOLLO_RXDMA_TBL_ID_SACL_PROTO_DPORT_LPM_S0,
                SACL_PROTO_DPORT_LPM_S0_SACL_PROTO_DPORT_LPM_S0_ID, bytes);
 }
@@ -162,7 +162,7 @@ lpm_proto_dport_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 sdk_ret_t
 lpm_proto_dport_write_last_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
-    return impl::impl_base::pipeline_impl()->write_to_rxdma_table(addr,
+    return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
                P4_APOLLO_RXDMA_TBL_ID_SACL_PROTO_DPORT_LPM_S2,
                SACL_PROTO_DPORT_LPM_S2_SACL_PROTO_DPORT_LPM_S2_ID, bytes);
 }

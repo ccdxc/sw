@@ -13,6 +13,7 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/include/api/oci_tep.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -113,5 +114,6 @@ private:
 /** @} */    // end of OCI_TEP_IMPL
 
 }    // namespace impl
+}    // namespace api
 
 #endif    /** __TEP_IMPL_HPP__ */

@@ -9,6 +9,7 @@
 #include "nic/apollo/include/api/oci_policy.hpp"
 #include "nic/apollo/api/impl/security_policy_impl_state.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -46,3 +47,4 @@ security_policy_impl_state::~security_policy_impl_state() {
 /** @} */    // end of OCI_SECURITY_POLICY_IMPL_STATE
 
 }    // namespace impl
+}    // namespace api

@@ -16,6 +16,7 @@
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -114,3 +115,4 @@ switchport_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 /** @} */    // end of OCI_SWITCHPORT_IMPL
 
 }    // namespace impl
+}    // namespace api

@@ -13,6 +13,7 @@
 #include "nic/apollo/framework/obj_base.hpp"
 #include "nic/apollo/include/api/oci_init.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -100,8 +101,9 @@ public:
 /** @} */    // end of OCI_PIPELINE_IMPL
 
 }    // namespace impl
+}    // namespace api
 
-using impl::pipeline_cfg_t;
-using impl::pipeline_impl_base;
+using api::impl::pipeline_cfg_t;
+using api::impl::pipeline_impl_base;
 
 #endif    /** __PIPELINE_IMPL_HPP__ */

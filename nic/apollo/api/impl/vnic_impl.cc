@@ -20,6 +20,7 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -184,14 +185,6 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/**
- * @brief    activate the epoch in the dataplane by programming stage 0
- *           tables, if any
- * @param[in] epoch       epoch being activated
- * @param[in] api_op      api operation
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 #define local_vnic_by_vlan_tx_info    action_u.local_vnic_by_vlan_tx_local_vnic_info_tx
 #define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
 #define MEM_ADDR_TO_P4_MEM_ADDR(p4_mem_addr, mem_addr, p4_addr_size)      \
@@ -199,39 +192,33 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         p4_mem_addr[i] = ((mem_addr) >> (i * 8)) & 0xFF;                  \
     }
 
+/**
+ * @brief    program LOCAL_VNIC_BY_VLAN_TX table and activate the epoch in
+ *           the Tx direction
+ * @param[in] api_op         api operation
+ * @param[in] api_obj        vnic entry object
+ * @param[in] epoch          epoch being activated
+ * @param[in] vcn            vcn entry
+ * @param[in] subnet         subnet entry
+ * @param[in] vnic_info      vnic configuration
+ * @param[in] v4_route_table IPv4 routing table entry
+ * @param[in] v6_route_table IPv6 routing table entry
+ * @param[in] v4_policy      egress IPv4 security policy
+ * @param[in] v6_policy      egress IPv6 security policy
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
 sdk_ret_t
-vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
-                       api_op_t api_op, obj_ctxt_t *obj_ctxt)
+vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
+                                           oci_epoch_t epoch, vcn_entry *vcn,
+                                           subnet_entry *subnet,
+                                           oci_vnic_t *vnic_info,
+                                           route_table *v4_route_table,
+                                           route_table *v6_route_table,
+                                           policy *v4_policy, policy *v6_policy)
 {
     sdk_ret_t                             ret;
-    vcn_entry                             *vcn;
-    subnet_entry                          *subnet;
-    local_vnic_by_vlan_tx_actiondata_t    vnic_by_vlan_data = { 0 };
-    local_vnic_by_slot_rx_swkey_t         vnic_by_slot_key = { 0 };
-    local_vnic_by_slot_rx_actiondata_t    vnic_by_slot_data = { 0 };
-    oci_vnic_t                            *vnic_info;
-    oci_route_table_key_t                 v4_route_table_key, v6_route_table_key;
-    route_table                           *v4_route_table, *v6_route_table;
-    policy                                *v4_policy_table;
     mem_addr_t                            addr;
-
-    vnic_info = &obj_ctxt->api_params->vnic_info;
-    vcn = vcn_db()->vcn_find(&vnic_info->vcn);
-    if (vcn == NULL) {
-        return sdk::SDK_RET_INVALID_ARG;
-    }
-    subnet = subnet_db()->subnet_find(&vnic_info->subnet);
-    if (subnet == NULL) {
-        return sdk::SDK_RET_INVALID_ARG;
-    }
-    v4_route_table_key = subnet->v4_route_table();
-    v4_route_table = route_table_db()->route_table_find(&v4_route_table_key);
-    v6_route_table_key = subnet->v4_route_table();
-    if (v6_route_table_key.id != OCI_ROUTE_TABLE_ID_INVALID) {
-        v6_route_table = route_table_db()->route_table_find(&v6_route_table_key);
-    } else {
-        v6_route_table = NULL;
-    }
+    local_vnic_by_vlan_tx_actiondata_t    vnic_by_vlan_data = { 0 };
 
     switch (api_op) {
     case api::API_OP_CREATE:
@@ -273,7 +260,78 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
             vnic_info->slot;
         ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->insert_withid(&vnic_by_vlan_data,
                                                                          vnic_info->wire_vlan);
-        SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
+        break;
+
+    default:
+        ret = SDK_RET_INVALID_OP;
+    }
+
+    if (ret != SDK_RET_OK) {
+        OCI_TRACE_ERR("Programming of LOCAL_VNIC_BY_VLAN_TX table failed, "
+                      "api op %u, epoch %u, vnic %s , err %u", api_op, epoch,
+                      api_obj->key2str(), ret);
+    }
+    return ret;
+}
+
+/**
+ * @brief    activate the epoch in the dataplane by programming stage 0
+ *           tables, if any
+ * @param[in] epoch       epoch being activated
+ * @param[in] api_op      api operation
+ * @param[in] obj_ctxt    transient state associated with this API
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
+                       api_op_t api_op, obj_ctxt_t *obj_ctxt) {
+    sdk_ret_t                             ret;
+    vcn_entry                             *vcn;
+    subnet_entry                          *subnet;
+    local_vnic_by_slot_rx_swkey_t         vnic_by_slot_key = { 0 };
+    local_vnic_by_slot_rx_actiondata_t    vnic_by_slot_data = { 0 };
+    oci_vnic_t                            *vnic_info;
+    oci_route_table_key_t                 route_table_key;
+    route_table                           *v4_route_table, *v6_route_table;
+    oci_policy_key_t                      policy_key;
+    policy                                *ing_v4_policy, *ing_v6_policy;
+    policy                                *egr_v4_policy, *egr_v6_policy;
+    mem_addr_t                            addr;
+
+    vnic_info = &obj_ctxt->api_params->vnic_info;
+    vcn = vcn_db()->vcn_find(&vnic_info->vcn);
+    if (vcn == NULL) {
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    subnet = subnet_db()->subnet_find(&vnic_info->subnet);
+    if (subnet == NULL) {
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    route_table_key = subnet->v4_route_table();
+    v4_route_table = route_table_db()->route_table_find(&route_table_key);
+    route_table_key = subnet->v4_route_table();
+    if (route_table_key.id != OCI_ROUTE_TABLE_ID_INVALID) {
+        v6_route_table =
+            route_table_db()->route_table_find(&route_table_key);
+    } else {
+        v6_route_table = NULL;
+    }
+    policy_key = subnet->ing_v4_policy();
+    ing_v4_policy = policy_db()->policy_find(&policy_key);
+    policy_key = subnet->ing_v6_policy();
+    ing_v6_policy = policy_db()->policy_find(&policy_key);
+    policy_key = subnet->egr_v4_policy();
+    egr_v4_policy = policy_db()->policy_find(&policy_key);
+    policy_key = subnet->egr_v6_policy();
+    egr_v6_policy = policy_db()->policy_find(&policy_key);
+
+    switch (api_op) {
+    case api::API_OP_CREATE:
+        /**< program local_vnic_by_vlan_tx table entry */
+        ret = activate_vnic_by_vlan_tx_table_(api_op, api_obj, epoch, vcn,
+                                              subnet, vnic_info, v4_route_table,
+                                              v6_route_table, egr_v4_policy,
+                                              egr_v6_policy);
 
         /**< initialize local_vnic_by_slot_rx table entry */
         vnic_by_slot_key.mpls_dst_label = vnic_info->slot;
@@ -294,31 +352,16 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
         ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->insert(&vnic_by_slot_key,
                                                                   &vnic_by_slot_data,
                                                                   (uint32_t *)&vnic_by_slot_hash_idx_);
-        SDK_ASSERT_GOTO((ret == SDK_RET_OK), error);
         break;
-
-    case api::API_OP_UPDATE:
-#if 0
-        /**< read the current entry in h/w */
-        p4pd_entry_read(P4TBL_ID_LOCAL_VNIC_BY_VLAN_TX,
-                        vnic_info->vlan_id, NULL, NULL,
-                        &vnic_by_vlan_data);
-        epoch_idx =
-            compute_epoch_idx(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1,
-                              vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2);
-#endif
 
     default:
+        ret = SDK_RET_INVALID_OP;
         break;
     }
-    return SDK_RET_OK;
-
-error:
-
-    SDK_ASSERT(FALSE);
     return ret;
 }
 
 /** @} */    // end of OCI_VNIC_IMPL
 
 }    // namespace impl
+}    // namespace api

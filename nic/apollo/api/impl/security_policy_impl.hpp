@@ -13,6 +13,7 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/include/api/oci_policy.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -117,5 +118,6 @@ private:
 /** @} */    // end of OCI_SECURITY_POLICY_IMPL
 
 }    // namespace impl
+}    // namespace api
 
 #endif    /** __SECURITY_POLICY_IMPL_HPP__ */

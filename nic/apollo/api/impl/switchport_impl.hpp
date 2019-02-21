@@ -13,6 +13,7 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/include/api/oci_switchport.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -81,5 +82,6 @@ public:
 /** @} */    // end of OCI_SWITCHPORT_IMPL
 
 }    // namespace impl
+}    // namespace api
 
 #endif    /** __SWITCHPORT_IMPL_HPP__ */

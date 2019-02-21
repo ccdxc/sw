@@ -19,6 +19,7 @@
 #include "nic/apollo/api/impl/route_impl_state.hpp"
 #include "nic/apollo/api/impl/security_policy_impl_state.hpp"
 
+namespace api {
 namespace impl {
 
 enum {
@@ -100,5 +101,6 @@ security_policy_impl_db(void)
 /** * @} */    // end of OCI_IMPL_STATE
 
 }    // namespace  impl
+}    // namespace api
 
 #endif    /** __OCI_IMPL_STATE_HPP__ */

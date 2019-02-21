@@ -152,7 +152,7 @@ lpm_ipv4_acl_set_default_data (uint8_t *bytes, uint32_t default_data)
 sdk_ret_t
 lpm_ipv4_acl_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
-    return impl::impl_base::pipeline_impl()->write_to_rxdma_table(addr,
+    return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
                P4_APOLLO_RXDMA_TBL_ID_SACL_IPV4_LPM_S0,
                SACL_IPV4_LPM_S0_SACL_IPV4_LPM_S0_ID, bytes);
 }
@@ -160,7 +160,7 @@ lpm_ipv4_acl_write_stage_table (mem_addr_t addr, uint8_t *bytes)
 sdk_ret_t
 lpm_ipv4_acl_write_last_stage_table (mem_addr_t addr, uint8_t *bytes)
 {
-    return impl::impl_base::pipeline_impl()->write_to_rxdma_table(addr,
+    return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
                P4_APOLLO_RXDMA_TBL_ID_SACL_IPV4_LPM_S2,
                SACL_IPV4_LPM_S2_SACL_IPV4_LPM_S2_ID, bytes);
 }

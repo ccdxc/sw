@@ -13,6 +13,7 @@
 #include "nic/sdk/lib/table/tcam/tcam.hpp"
 #include "nic/apollo/api/oci_state.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -52,5 +53,6 @@ private:
 /** * @} */    // end of OCI_APOLLO_IMPL_STATE
 
 }    // namespace impl
+}    // namespace api
 
 #endif    /** __APOLLO_IMPL_STATE_HPP__ */

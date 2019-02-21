@@ -216,7 +216,7 @@ static inline sdk_ret_t
 rfc_p1_action_data_flush (mem_addr_t addr,
                           sacl_ip_sport_p1_actiondata_t *action_data)
 {
-    return impl::impl_base::pipeline_impl()->write_to_rxdma_table(addr,
+    return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
                P4_APOLLO_RXDMA_TBL_ID_SACL_IP_SPORT_P1,
                SACL_IP_SPORT_P1_SACL_IP_SPORT_P1_ID,
                action_data);
@@ -1096,7 +1096,7 @@ static inline sdk_ret_t
 rfc_p2_action_data_flush (mem_addr_t addr,
                           sacl_p2_actiondata_t *action_data)
 {
-    return impl::impl_base::pipeline_impl()->write_to_rxdma_table(addr,
+    return impl_base::pipeline_impl()->write_to_rxdma_table(addr,
                P4_APOLLO_RXDMA_TBL_ID_SACL_P2,
                SACL_P2_SACL_P2_ID, action_data);
 }

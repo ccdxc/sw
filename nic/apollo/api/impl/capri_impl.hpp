@@ -12,6 +12,7 @@
 #include "nic/apollo/framework/asic_impl_base.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -68,5 +69,6 @@ private:
 };
 
 }    // namespace impl
+}    // namespace api
 
 #endif    /** __CAPRI_IMPL_HPP__ */

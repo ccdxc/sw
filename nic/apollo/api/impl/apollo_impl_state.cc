@@ -10,6 +10,7 @@
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -71,3 +72,4 @@ apollo_impl_state::~apollo_impl_state() {
 /** @} */    // end of OCI_APOLLO_IMPL_STATE
 
 }    // namespace impl
+}    // namespace api

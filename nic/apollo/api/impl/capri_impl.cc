@@ -10,6 +10,7 @@
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/apollo/api/impl/capri_impl.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -142,3 +143,4 @@ capri_impl::debug_dump(FILE *fp) {
 /** @} */    // end of OCI_ASIC_IMPL
 
 }    // namespace impl
+}    // namespace api

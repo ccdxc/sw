@@ -20,6 +20,7 @@ void table_health_monitor_cb(uint32_t table_id,
                              table_health_state_t *new_state) {
 }
 
+namespace api {
 namespace impl {
 
 /**
@@ -80,3 +81,4 @@ vnic_impl_state::~vnic_impl_state() {
 /** @} */    // end of OCI_VNIC_IMPL_STATE
 
 }    // namespace impl
+}    // namespace api

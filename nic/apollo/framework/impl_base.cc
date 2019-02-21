@@ -16,6 +16,7 @@
 #include "nic/apollo/api/impl/route_impl.hpp"
 #include "nic/apollo/api/impl/security_policy_impl.hpp"
 
+namespace api {
 namespace impl {
 
 asic_impl_base *impl_base::asic_impl_  = NULL;
@@ -127,3 +128,4 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
 }
 
 }    // namespace impl
+}    // namespace api

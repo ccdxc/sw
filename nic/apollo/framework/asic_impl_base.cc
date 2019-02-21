@@ -9,6 +9,7 @@
 #include "nic/apollo/framework/asic_impl_base.hpp"
 #include "nic/apollo/api/impl/capri_impl.hpp"
 
+namespace api {
 namespace impl {
 
 /**
@@ -37,3 +38,4 @@ asic_impl_base::factory(asic_cfg_t *asic_cfg) {
 /** @} */    // end of OCI_ASIC_IMPL
 
 }    // namespace impl
+}    // namespace api

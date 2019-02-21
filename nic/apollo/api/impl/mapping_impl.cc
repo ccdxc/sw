@@ -24,6 +24,7 @@
 
 using sdk::table::sdk_table_api_params_t;
 
+namespace api {
 namespace impl {
 
 /**
@@ -383,3 +384,4 @@ mapping_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
 /** @} */    // end of OCI_MAPPING_IMPL
 
 }    // namespace impl
+}    // namespace api
