@@ -18,6 +18,10 @@
 
 using boost::property_tree::ptree;
 
+#define SESSION_AGE_SCAN_INTVL          1     // in seconds
+#define SYSTEM_SCAN_INTVL               10    // in seconds
+
+// TODO: create a "system" class and move all this into that class
 namespace core {
 
 thread *g_thread_store[THREAD_ID_MAX];
@@ -100,6 +104,53 @@ parse_global_config (string pipeline, string cfg_file, oci_state *state)
         std::cerr << e.what() << std::endl;
         return sdk::SDK_RET_INVALID_ARG;
     }
+    return SDK_RET_OK;
+}
+
+static void
+session_age_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+}
+
+static void
+sysmon_cb (void *timer, uint32_t timer_id, void *ctxt)
+{
+}
+
+sdk_ret_t
+schedule_timers (void)
+{
+    void    *aging_timer, *sysmon_timer;
+
+    while (!sdk::lib::periodic_thread_is_running()) {
+        pthread_yield();
+    }
+
+    // start periodic timer for aging sessions
+    aging_timer = sdk::lib::timer_schedule(
+                      TIMER_ID_SESSION_AGE,
+                      SESSION_AGE_SCAN_INTVL * TIME_MSECS_PER_SEC,
+                      nullptr, session_age_cb, true);
+    if (aging_timer == NULL) {
+        OCI_TRACE_ERR("Failed to start session aging timer\n");
+        return SDK_RET_ERR;
+    }
+    OCI_TRACE_DEBUG("Started periodic session aging timer with %us intvl",
+                    SESSION_AGE_SCAN_INTVL);
+
+    // start periodic timer for scanning system interrupts, temparature, power
+    // etc.
+    sysmon_timer = sdk::lib::timer_schedule(
+                       TIMER_ID_SYSTEM_SCAN,
+                       SYSTEM_SCAN_INTVL * TIME_MSECS_PER_SEC,
+                       nullptr, sysmon_cb, true);
+    if (sysmon_timer == NULL) {
+        OCI_TRACE_ERR("Failed to start system monitoring timer\n");
+        return SDK_RET_ERR;
+    }
+    OCI_TRACE_DEBUG("Started periodic system scan timer with %us intvl",
+                    SYSTEM_SCAN_INTVL);
+
     return SDK_RET_OK;
 }
 

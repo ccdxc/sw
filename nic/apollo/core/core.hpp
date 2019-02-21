@@ -24,12 +24,19 @@ enum {
     THREAD_ID_MAX        = 38
 };
 
+enum {
+    TIMER_ID_NONE          = 0,
+    TIMER_ID_SESSION_AGE   = 1,
+    TIMER_ID_SYSTEM_SCAN   = 2,
+};
+
 sdk_ret_t thread_spawn(oci_state *state);
 sdk_ret_t parse_global_config(string pipeline, string cfg_file, oci_state *state);
 sdk_ret_t parse_pipeline_config(string pipeline, oci_state *state);
 
 typedef void (*sig_handler_t)(int sig, siginfo_t *info, void *ptr);
 sdk_ret_t sig_init(int signal, sig_handler_t sig_handler);
+sdk_ret_t schedule_timers(void);
 
 }    // namespace core
 

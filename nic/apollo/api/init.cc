@@ -138,6 +138,9 @@ oci_init (oci_init_params_t *params)
     /**< initialize all the signal handlers */
     core::sig_init(SIGUSR1, api::sig_handler);
 
+    /**< schedule all global timers */
+    core::schedule_timers();
+
     return SDK_RET_OK;
 }
 
