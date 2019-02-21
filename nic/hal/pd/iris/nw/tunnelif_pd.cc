@@ -679,6 +679,7 @@ pd_tunnelif_pgm_vf_properties_tbl(pd_tunnelif_t *pd_tif, uint16_t vf_id,
     d.action_u.vf_properties_vf_properties.mpls_out = pi_if->mpls_tag.label;
     memcpy(d.action_u.vf_properties_vf_properties.vf_mac, 
             pi_if->overlay_mac, sizeof(mac_addr_t));
+    memrev(d.action_u.vf_properties_vf_properties.vf_mac, ETH_ADDR_LEN);
 
     // insert the entry
     sdk_ret = dm->insert_withid(&d, vf_id);

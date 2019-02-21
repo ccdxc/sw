@@ -183,11 +183,10 @@ class TunnelObject(base.ConfigObjectBase):
             req_spec.if_tunnel_info.prop_mpls_info.gw_mac_da = 12345
             
             # PF mac
-            #req_spec.if_tunnel_info.prop_mpls_info.pf_mac = self.ltep_ep.macaddr.getnum()
             req_spec.if_tunnel_info.prop_mpls_info.pf_mac = 6789
             
             # Overlay/VF mac
-            #req_spec.if_tunnel_info.prop_mpls_info.overlay_mac = self.ltep_ep.macaddr.getnum()
+            req_spec.if_tunnel_info.prop_mpls_info.overlay_mac = self.ltep_ep.macaddr.getnum()
             self.rmacaddr   = self.remote_ep.macaddr
         return
 
