@@ -339,7 +339,7 @@ def SetNaplesModeOOB_Dynamic(n):
 
 def SetNaplesModeHost(n):
     api.Logger.info("Setting Naples network mode to Host Managed.")
-    cmd = "update mode --hostname IOTATEST_OOB --management-mode host"
+    cmd = "update naples --hostname IOTATEST_OOB --management-mode host"
     return RunPenctlOnHost(n, cmd)
 
 def PenctlGetMode(n):
@@ -394,16 +394,6 @@ def PenctlGetControllersStatus(n):
 
     return result
 
-def PenctlGetPhaseStatus(n):
-    penctl_json = GetNaplesCfgSpecJson(n)
-    penctl_json_parsed = json.loads(penctl_json)
-    try :
-        result = penctl_json_parsed["status"]["phase"]
-    except:
-        return "FAILED"
-
-    return result
-
 def PenctlGetTransitionPhaseStatus(n):
     penctl_json = GetNaplesCfgSpecJson(n)
     penctl_json_parsed = json.loads(penctl_json)
@@ -420,7 +410,7 @@ def PenctlGetAdmissionPhaseStatus(n):
     penctl_json_parsed = json.loads(penctl_json)
 
     try :
-        result = penctl_json_parsed["status"]["phase"]
+        result = penctl_json_parsed["status"]["admission-phase"]
     except:
         api.Logger.info("Penctl get admission failed")
         return "PENCTL GET ADMISSION FAILED"
@@ -497,3 +487,12 @@ def ResetNMDState(n):
     api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/nmd.db")
     api.Trigger_AddNaplesCommand(req, n, "rm -rf /sysconfig/config0/app-start.conf")
     resp = api.Trigger(req)
+
+
+#def IsNaplesHostManaged(n):
+
+#def IsNaplesNetworkManaged(n):
+
+#def IsNaplesInband(n):
+
+#def IsNaplesOOB(n):

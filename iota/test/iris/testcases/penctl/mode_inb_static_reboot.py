@@ -14,22 +14,30 @@ def Trigger(tc):
     if len(tc.Nodes) > 0:
         n = tc.Nodes[0]
 
-	common.PenctlGetTransitionPhaseStatus(n)
+        common.PenctlGetTransitionPhaseStatus(n)
         common.SetNaplesModeInband_Static(n, "1.1.1.1","2.2.2.2/24")
+
         tc.before_reboot_status = common.PenctlGetTransitionPhaseStatus(n)
         #common.PenctlGetControllersStatus(n)[0]
            
+        api.Logger.info("Going for first reboot.")
         common.RebootHost(n)
-
-        tc.after_reboot_status = common.PenctlGetTransitionPhaseStatus(n)
+        tc.after_first_reboot_status = common.PenctlGetTransitionPhaseStatus(n)
         #tc.controller_ip_penctl_after.append(common.PenctlGetControllersStatus(n)[0])
+
+        api.Logger.info("Going for second reboot.")
+        common.RebootHost(n)
+        tc.after_second_reboot_status = common.PenctlGetTransitionPhaseStatus(n)
 
     return api.types.status.SUCCESS
 
 def Verify(tc):
     if tc.before_reboot_status != "REBOOT_PENDING" \
-       and tc.after_reboot_status != "VENICE_REGISTRATION_DONE":
-           api.Logger.info("Test Failed. STATUS - BEFORE {} AFTER {}".format(tc.before_reboot_status, tc.after_reboot_status))
+       or tc.after_first_reboot_status != "VENICE_REGISTRATION_DONE" \
+       or tc.after_second_reboot_status != "VENICE_REGISTRATION_DONE":
+           api.Logger.info("Test Failed. STATUS - BEFORE {} AFTER FIRST REBOOT {} AFTER SECOND REBOOT {}".format(tc.before_reboot_status,\
+                           tc.after_first_reboot_status, \
+                           tc.after_second_reboot_status))
            return api.types.status.FAILURE
 
     return api.types.status.SUCCESS

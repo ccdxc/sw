@@ -112,6 +112,16 @@ func runCmd(cmdStr string) error {
 	return err
 }
 
+func intfcUp(iface string) error {
+	log.Infof("Bringing interface %v up.", iface)
+	return runCmd("ifconfig " + iface + " up")
+}
+
+func intfcDown(iface string) error {
+	log.Infof("Bringing interface %v down.", iface)
+	return runCmd("ifconfig " + iface + " down")
+}
+
 func clearDhcpLeaseFile(leaseFile string) error {
 	err := runCmd("rm -rf " + leaseFile)
 	if err != nil {
@@ -625,6 +635,9 @@ func (c *IPClient) doOOB() error {
 	c.iface = "oob_mnic0"
 	c.leaseFile = dhcpLeaseFile + c.iface
 	log.Infof("Doing OOB " + c.iface)
+	// Ensure the interface is up. Ignore errors here. It will fail downstream anyway.
+	intfcUp(c.iface)
+
 	c.nmdState.config.Status.NetworkMode = nmd.NetworkMode_OOB.String()
 
 	if c.nmdState.config.Spec.IPConfig.IPAddress != "" {
@@ -648,6 +661,8 @@ func (c *IPClient) doInband() error {
 
 	c.iface = "bond0"
 	c.leaseFile = dhcpLeaseFile + c.iface
+	// Ensure the interface is up.
+	intfcUp(c.iface)
 
 	if c.nmdState.config.Spec.MgmtVlan != 0 {
 		setVlanCmdStr := prepareVlanCmdStr(c.iface, fmt.Sprint(c.nmdState.config.Spec.MgmtVlan))
@@ -740,6 +755,8 @@ func (c *IPClient) Stop() {
 	c.nmdState.config.Status.Controllers = []string{}
 	c.nmdState.config.Status.NetworkMode = ""
 	c.nmdState.config.Status.IPConfig = nil
+	// Bring the currently active management interface down.
+	intfcDown(c.iface)
 
 	if _, err := os.Stat(rebootPendingPath); err == nil {
 		os.Remove(rebootPendingPath)

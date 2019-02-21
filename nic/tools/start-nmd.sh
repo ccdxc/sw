@@ -18,7 +18,8 @@ do
     if [ -d "/sys/class/net/int_mnic0" ] && [ $int_mnic_up -eq 0 ] ; then
         ifup int_mnic0
         int_mnic_up=1
-    elif [ -d "/sys/class/net/int_mnic0" ] && [ $oob_mnic_up -eq 0 ] ; then
+    elif [ -d "/sys/class/net/oob_mnic0" ] && [ $oob_mnic_up -eq 0 ] ; then
+        echo "OOB up"
         oob_mnic_up=1
     elif [ -d "/sys/class/net/inb_mnic0" ] && [ $inb_mnic0_up -eq 0 ] ; then
         echo "adding inb_mnic0 (inband mgmt0) interface to bond0"
@@ -66,5 +67,6 @@ else
 fi
 
 # Temporary dhclient
+ifconfig bond0 down
 kill -9 $(pidof dhclient)
 exec /nic/bin/nmd -hostif lo -standalone=false -mode host&
