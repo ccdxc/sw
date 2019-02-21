@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ -z $1 ]
+then
+ 	BUILD_NUMBER=1
+else
+	BUILD_NUMBER=$1
+fi
+
 if [ ! -f /etc/redhat-release ]
 then
 	echo "Exiting: not a Redhat/CentOS system."
@@ -13,6 +20,7 @@ VERSION=$(cat drivers/eth/ionic/ionic.h | grep VERSION | awk '{print $3}' | sed 
 # update spec with current version
 
 sed -i "s/[0-9].[0-9].[0-9]/$VERSION/" ionic.spec
+sed -i "s/1%/$BUILD_NUMBER%/" ionic.spec
 
 if [ -d rpmbuild ]
 then
