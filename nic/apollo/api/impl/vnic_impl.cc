@@ -13,6 +13,7 @@
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/impl/route_impl.hpp"
+#include "nic/apollo/api/impl/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/vnic_impl.hpp"
 #include "nic/apollo/api/impl/oci_impl_state.hpp"
 #include "nic/apollo/api/oci_state.hpp"
@@ -214,15 +215,13 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
                                            oci_vnic_t *vnic_info,
                                            route_table *v4_route_table,
                                            route_table *v6_route_table,
-                                           policy *v4_policy, policy *v6_policy)
-{
+                                           policy *v4_policy, policy *v6_policy) {
     sdk_ret_t                             ret;
     mem_addr_t                            addr;
     local_vnic_by_vlan_tx_actiondata_t    vnic_by_vlan_data = { 0 };
 
     switch (api_op) {
     case api::API_OP_CREATE:
-        /**< initialize local_vnic_by_vlan_tx table entry */
         vnic_by_vlan_data.action_id =
             LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.local_vnic_tag = hw_id_;
@@ -231,27 +230,35 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
             vnic_info->src_dst_check ? false : true;
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group_1 =
             vnic_info->rsc_pool_id;
-        // TODO: do we need to enhance the vnic API here to take this ?
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.resource_group_2 = 0;
+
+        // program the LPM tree base address
         addr =
             ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
-        OCI_TRACE_DEBUG("IPv4 lpm root addr 0x%x", addr);
+        OCI_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
         MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v4addr_1,
                                 addr, 5);
         if (v6_route_table) {
             addr =
                 ((impl::route_table_impl *)(v6_route_table->impl()))->lpm_root_addr();
-            OCI_TRACE_DEBUG("IPv6 lpm root addr 0x%x", addr);
+            OCI_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
             MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v6addr_1,
                                     addr, 5);
         }
 
-        addr = api::g_oci_state.mempartition()->start_addr("sacl_v4");
-        OCI_TRACE_DEBUG("RFC root addr 0x%x", addr);
-        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr_1,
-                                addr, 5);
-        //vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr_1 =
-            //subnet->policy_tree_root();
+        if (v4_policy) {
+            addr = ((impl::security_policy_impl *)(v4_policy->impl()))->security_policy_root_addr();
+            OCI_TRACE_DEBUG("Egress IPv4 policy root addr 0x%llx", addr);
+            MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr_1,
+                                    addr, 5);
+        }
+
+        if (v6_policy) {
+            addr = ((impl::security_policy_impl *)(v6_policy->impl()))->security_policy_root_addr();
+            OCI_TRACE_DEBUG("Egress IPv6 policy root addr 0x%llx", addr);
+            MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v6addr_1,
+                                    addr, 5);
+        }
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 = epoch;
         vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2 = OCI_EPOCH_INVALID;
         sdk::lib::memrev(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.overlay_mac,
@@ -264,10 +271,68 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
 
     default:
         ret = SDK_RET_INVALID_OP;
+        break;
     }
 
     if (ret != SDK_RET_OK) {
         OCI_TRACE_ERR("Programming of LOCAL_VNIC_BY_VLAN_TX table failed, "
+                      "api op %u, epoch %u, vnic %s , err %u", api_op, epoch,
+                      api_obj->key2str(), ret);
+    }
+    return ret;
+}
+
+/**
+ * @brief    program LOCAL_VNIC_BY_SLOT_RX table and activate the epoch in
+ *           the Rx direction
+ * @param[in] api_op         api operation
+ * @param[in] api_obj        vnic entry object
+ * @param[in] epoch          epoch being activated
+ * @param[in] vcn            vcn entry
+ * @param[in] subnet         subnet entry
+ * @param[in] vnic_info      vnic configuration
+ * @param[in] v4_policy      ingress IPv4 security policy
+ * @param[in] v6_policy      ingress IPv6 security policy
+ * @return   SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+vnic_impl::activate_vnic_by_slot_rx_table_(api_op_t api_op, api_base *api_obj,
+                                           oci_epoch_t epoch, vcn_entry *vcn,
+                                           subnet_entry *subnet,
+                                           oci_vnic_t *vnic_info,
+                                           policy *v4_policy, policy *v6_policy) {
+    sdk_ret_t                             ret;
+    local_vnic_by_slot_rx_swkey_t         vnic_by_slot_key = { 0 };
+    local_vnic_by_slot_rx_actiondata_t    vnic_by_slot_data = { 0 };
+
+    switch (api_op) {
+    case api::API_OP_CREATE:
+        vnic_by_slot_key.mpls_dst_label = vnic_info->slot;
+        vnic_by_slot_data.action_id =
+            LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
+        vnic_by_slot_data.local_vnic_by_slot_rx_info.local_vnic_tag = hw_id_;
+        vnic_by_slot_data.local_vnic_by_slot_rx_info.vcn_id = vcn->hw_id();
+        vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check =
+            vnic_info->src_dst_check ? false : true;
+        vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group_1 =
+            vnic_info->rsc_pool_id;
+        // TODO: do we need to enhance the vnic API here to take this ?
+        vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group_2 = 0;
+        //vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr_1 =
+            //subnet->policy_tree_root();
+        vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1 = epoch;
+        vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch2 = OCI_EPOCH_INVALID;
+        ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->insert(&vnic_by_slot_key,
+                                                                  &vnic_by_slot_data,
+                                                                  (uint32_t *)&vnic_by_slot_hash_idx_);
+        break;
+
+    default:
+        ret = SDK_RET_INVALID_OP;
+        break;
+    }
+    if (ret != SDK_RET_OK) {
+        OCI_TRACE_ERR("Programming of LOCAL_VNIC_BY_SLOT_RX table failed, "
                       "api op %u, epoch %u, vnic %s , err %u", api_op, epoch,
                       api_obj->key2str(), ret);
     }
@@ -285,18 +350,15 @@ vnic_impl::activate_vnic_by_vlan_tx_table_(api_op_t api_op, api_base *api_obj,
 sdk_ret_t
 vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
                        api_op_t api_op, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t                             ret;
-    vcn_entry                             *vcn;
-    subnet_entry                          *subnet;
-    local_vnic_by_slot_rx_swkey_t         vnic_by_slot_key = { 0 };
-    local_vnic_by_slot_rx_actiondata_t    vnic_by_slot_data = { 0 };
-    oci_vnic_t                            *vnic_info;
-    oci_route_table_key_t                 route_table_key;
-    route_table                           *v4_route_table, *v6_route_table;
-    oci_policy_key_t                      policy_key;
-    policy                                *ing_v4_policy, *ing_v6_policy;
-    policy                                *egr_v4_policy, *egr_v6_policy;
-    mem_addr_t                            addr;
+    sdk_ret_t                ret;
+    vcn_entry                *vcn;
+    subnet_entry             *subnet;
+    oci_vnic_t               *vnic_info;
+    oci_route_table_key_t    route_table_key;
+    route_table              *v4_route_table, *v6_route_table;
+    oci_policy_key_t         policy_key;
+    policy                   *ing_v4_policy, *ing_v6_policy;
+    policy                   *egr_v4_policy, *egr_v6_policy;
 
     vnic_info = &obj_ctxt->api_params->vnic_info;
     vcn = vcn_db()->vcn_find(&vnic_info->vcn);
@@ -332,26 +394,12 @@ vnic_impl::activate_hw(api_base *api_obj, oci_epoch_t epoch,
                                               subnet, vnic_info, v4_route_table,
                                               v6_route_table, egr_v4_policy,
                                               egr_v6_policy);
-
-        /**< initialize local_vnic_by_slot_rx table entry */
-        vnic_by_slot_key.mpls_dst_label = vnic_info->slot;
-        vnic_by_slot_data.action_id =
-            LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
-        vnic_by_slot_data.local_vnic_by_slot_rx_info.local_vnic_tag = hw_id_;
-        vnic_by_slot_data.local_vnic_by_slot_rx_info.vcn_id = vcn->hw_id();
-        vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check =
-            vnic_info->src_dst_check ? false : true;
-        vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group_1 =
-            vnic_info->rsc_pool_id;
-        // TODO: do we need to enhance the vnic API here to take this ?
-        vnic_by_slot_data.local_vnic_by_slot_rx_info.resource_group_2 = 0;
-        //vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr_1 =
-            //subnet->policy_tree_root();
-        vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1 = epoch;
-        vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch2 = OCI_EPOCH_INVALID;
-        ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->insert(&vnic_by_slot_key,
-                                                                  &vnic_by_slot_data,
-                                                                  (uint32_t *)&vnic_by_slot_hash_idx_);
+        if (ret == SDK_RET_OK) {
+            /**< program local_vnic_by_slot_rx table entry */
+            ret = activate_vnic_by_slot_rx_table_(api_op, api_obj, epoch, vcn,
+                                                  subnet, vnic_info,
+                                                  ing_v4_policy, ing_v6_policy);
+        }
         break;
 
     default:

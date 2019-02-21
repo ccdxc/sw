@@ -66,7 +66,8 @@ security_policy_impl::reserve_resources(api_base *api_obj) {
     }
     security_policy_root_addr_ =
         security_policy_impl_db()->security_policy_region_addr() +
-            (security_policy_impl_db()->security_policy_table_size() * policy_block_id);
+            (security_policy_impl_db()->security_policy_table_size() *
+                 policy_block_id);
     return SDK_RET_OK;
 }
 

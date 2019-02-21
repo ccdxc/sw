@@ -138,6 +138,26 @@ private:
                                               route_table *v6_route_table,
                                               policy *v4_policy,
                                               policy *v6_policy);
+    /**
+     * @brief    program LOCAL_VNIC_BY_SLOT_RX table and activate the epoch in
+     *           the Rx direction
+     * @param[in] api_op         api operation
+     * @param[in] api_obj        vnic entry object
+     * @param[in] epoch          epoch being activated
+     * @param[in] vcn            vcn entry
+     * @param[in] subnet         subnet entry
+     * @param[in] vnic_info      vnic configuration
+     * @param[in] v4_policy      ingress IPv4 security policy
+     * @param[in] v6_policy      ingress IPv6 security policy
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    sdk_ret_t activate_vnic_by_slot_rx_table_(api_op_t api_op,
+                                              api_base *api_obj,
+                                              oci_epoch_t epoch, vcn_entry *vcn,
+                                              subnet_entry *subnet,
+                                              oci_vnic_t *vnic_info,
+                                              policy *v4_policy,
+                                              policy *v6_policy);
 private:
     /**< P4 datapath specific state */
     uint16_t          hw_id_;      /**< hardware id */
