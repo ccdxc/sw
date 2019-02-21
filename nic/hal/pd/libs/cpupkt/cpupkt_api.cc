@@ -1150,6 +1150,7 @@ static thread_local pd_descr_aol_t *rxq_descr_virt_ptrs[CPUPKT_MAX_BATCH_SIZE];
 static thread_local pd_descr_aol_t *compq_rx_descr_virt_ptrs[CPUPKT_MAX_BATCH_SIZE];
 static thread_local pd_descr_aol_t *compq_tx_descr_virt_ptrs[CPUPKT_MAX_BATCH_SIZE];
 static thread_local bool cpu_rx_descrs[CPUPKT_MAX_BATCH_SIZE];
+static thread_local pd_descr_aol_t rxq_descr_copy[CPUPKT_MAX_BATCH_SIZE]; // copy for non-HW platforms
 
 hal_ret_t
 pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
@@ -1240,15 +1241,20 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
              * to this process or its not a CPU Rx/Tx descriptor.
              */
             if (!descr_p) {
-		    // get the descriptor
-                    pd_descr_aol_t  descr = {0};
-		    if (sdk::asic::asic_mem_read(descr_addrs[pktcount], (uint8_t *)&descr,
-						 sizeof(pd_descr_aol_t), true) != sdk::SDK_RET_OK) {
-		        qinst_info->ctr.rx_descr_read_err++;
-			HAL_TRACE_ERR2("Failed to read the descr from hw");
-			return HAL_RET_HW_FAIL;
-		    }
-		    descr_p = &descr;
+
+                 /*
+                  * get the descriptor
+                  * We'll make a copy of the descriptor here, as we can't do a direct memory access
+                  * to the descriptor memory (This is only for the non-HW platforms/where descriptor
+                  * memory is not directly mapped to the process).
+                  */
+	        if (sdk::asic::asic_mem_read(descr_addrs[pktcount], (uint8_t *)&rxq_descr_copy[pktcount],
+					     sizeof(pd_descr_aol_t), true) != sdk::SDK_RET_OK) {
+		    qinst_info->ctr.rx_descr_read_err++;
+		    HAL_TRACE_ERR2("Failed to read the descr from hw");
+		    return HAL_RET_HW_FAIL;
+		}
+		descr_p = &rxq_descr_copy[pktcount];
 	    }
 
 	    HAL_TRACE_DEBUG2("Received packet descriptor {:#x} from {} memory pool, virtual-addr {:#x}",
