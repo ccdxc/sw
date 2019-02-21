@@ -1,0 +1,16 @@
+---
+version: 2.0
+targets:
+  linux-versions-build-test:
+    commands: [ "sh", "-c", "/sw/platform/tools/drivers-linux-build-test.sh" ]
+    owners: ["email:allenbh@pensando.io"]
+    area:
+    sub-area:
+    feature:
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/platform"
+rebase: true

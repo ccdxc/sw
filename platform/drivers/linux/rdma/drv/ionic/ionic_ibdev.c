@@ -3304,10 +3304,17 @@ static bool pd_local_privileged(struct ib_pd *pd)
 	return !pd->uobject;
 }
 
+#ifdef HAVE_IB_PD_UNSAFE_GLOBAL_RKEY
 static bool pd_remote_privileged(struct ib_pd *pd)
 {
 	return pd->flags & IB_PD_UNSAFE_GLOBAL_RKEY;
 }
+#else
+static bool pd_remote_privileged(struct ib_pd *pd)
+{
+	return false;
+}
+#endif
 
 static int ionic_v1_create_qp_cmd(struct ionic_ibdev *dev,
 				  struct ionic_pd *pd,

@@ -29,6 +29,7 @@ references:
   - storage/offload
   - iota
   - iota/test/venice
+  - platform/drivers/linux
 dependencies:
   test: nic
   test: platform

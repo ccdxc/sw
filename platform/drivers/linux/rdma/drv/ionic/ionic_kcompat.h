@@ -54,11 +54,16 @@
 #define HAVE_QP_RWQ_IND_TBL
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,9, /* RHEL */ 7,6)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,9, /* RHEL */ 7,4)
 #define IB_DEVICE_NODE_DESC_MAX sizeof(((struct ib_device *)0)->node_desc)
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 7,6)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,9, /* RHEL */ 7,5)
+#else /* 4.9.0 and later */
+#define HAVE_IB_PD_UNSAFE_DMA_RKEY
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 7,4)
 
 static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 {
@@ -86,11 +91,11 @@ static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 #define HAVE_NETDEV_MAX_MTU
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,11, /* RHEL */ 7,6)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,11, /* RHEL */ 7,5)
 #define HAVE_REQUIRED_DMA_DEVICE
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,12, /* RHEL */ 7,6)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,12, /* RHEL */ 7,5)
 
 #define rdma_ah_attr ib_ah_attr
 #define rdma_ah_read_grh(attr) (&(attr)->grh)
@@ -100,7 +105,7 @@ static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 #define HAVE_UMEM_PAGE_SHIFT
 #endif
 
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 7,6)
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 7,5)
 
 static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 {

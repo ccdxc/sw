@@ -1,12 +1,6 @@
 ---
 version: 2.0
 targets:
-  platform/drivers:
-    commands: ["make", "jobd/platform/drivers"]
-    owners: ["email:dbarsky@pensando.io"]
-    area:
-    sub-area:
-    feature:
   gtests:
     commands: ["make", "jobd/gtests"]
     owners: ["email:saratk@pensando.io"]
