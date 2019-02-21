@@ -17,7 +17,8 @@ buildipxe:
 buildipxeefi:
 	rm -rf $(IPXEDIR)
 	mkdir -p $(IPXEDIR)
-	make PLATFORM=efi ARCH=x86_64 -C $(CURDIR)/ipxe/src bin-x86_64-efi/ionic.efi
+	cp $(CURDIR)/ipxe.ipxe $(CURDIR)/ipxe/src/
+	make PLATFORM=efi ARCH=x86_64 -C $(CURDIR)/ipxe/src bin-x86_64-efi/ionic.efi EMBED=ipxe.ipxe
 	cp -f $(CURDIR)/ipxe/src/bin-x86_64-efi/ionic.efi $(IPXEDIR)/.
 
 clean:
