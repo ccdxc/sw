@@ -11,8 +11,24 @@ def Setup(tc):
 def Trigger(tc):
     pairs = api.GetRemoteWorkloadPairs()
 
+    tc.vlan_idx = -1
+    for i in range(len(pairs)):
+        if tc.vlan_idx > -1:
+            break
+        for j in range(len(pairs[0])):
+            if pairs[i][j].encap_vlan != 0:
+                tc.vlan_idx = i
+                break
+
+    if tc.vlan_idx < 1:
+        return api.types.status.FAILURE
+
     tc.w1 = pairs[0][0]
     tc.w2 = pairs[0][1]
+    tc.vlan_w1 = pairs[tc.vlan_idx][0]
+    tc.vlan_w2 = pairs[tc.vlan_idx][1]
+
+    api.SetTestsuiteAttr("vlan_idx", tc.vlan_idx)
 
     #==============================================================
     # get the device and GID
@@ -42,6 +58,21 @@ def Trigger(tc):
                            tc.w2.workload_name,
                            tc.iota_path + cmd,
                            timeout=60)
+
+    cmd = "show_gid | grep %s | grep v2" % tc.vlan_w1.ip_address
+    api.Trigger_AddCommand(req,
+                           tc.vlan_w1.node_name,
+                           tc.vlan_w1.workload_name,
+                           tc.iota_path + cmd,
+                           timeout=60)
+
+    cmd = "show_gid | grep %s | grep v2" % tc.vlan_w2.ip_address
+    api.Trigger_AddCommand(req,
+                           tc.vlan_w2.node_name,
+                           tc.vlan_w2.workload_name,
+                           tc.iota_path + cmd,
+                           timeout=60)
+
     tc.resp = api.Trigger(req)
 
     return api.types.status.SUCCESS
@@ -58,8 +89,8 @@ def Verify(tc):
             return api.types.status.FAILURE
 
     #set the path for testcases in this testsuite to use
-    w = [tc.w1, tc.w2]
-    for i in range(2):
+    w = [tc.w1, tc.w2, tc.vlan_w1, tc.vlan_w2]
+    for i in range(len(w)):
         if api.IsDryrun():
             api.SetTestsuiteAttr(w[i].ip_address+"_device", '0')
         else:

@@ -272,6 +272,20 @@ testcases:
             type: remote_only
 
     #=======================================
+    # Vlan
+    #=======================================
+    -   name    : Rc_Bw_Only_Bidir_Vlan
+        testcase: testcases.rdma.rc_bw_bidir_vlan
+        iterators :
+            type    : nested
+            num_qp: [1]
+            rdma_cm: ['yes','no']
+            flip: ['yes','no']
+            test: ['send','write','read']
+        args    :
+            type: remote_only
+
+    #=======================================
     # Atomic
     #=======================================
     #-   name    : Rc_AtomicBw_FetchNAdd
