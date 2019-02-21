@@ -33,7 +33,7 @@ def Main(step):
         for n in nodes:
             #hack for now, need to set date
             api.Logger.info("Checking Tranisition phase for node : %s" % n)
-            check_state_cmd = "show mode --json"
+            check_state_cmd = "show naples --json"
             common.AddPenctlCommand(req, n, check_state_cmd)
             resp = api.Trigger(req)
             cmd = resp.commands[0]

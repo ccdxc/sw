@@ -69,7 +69,7 @@ testcases:
             option : ["delete", "list", "show", "system", "update",
                       "delete core",
                       "list cores",
-                      "show events", "show firmware-version", "show logs", "show metrics", "show mode", "show proc-meminfo",
+                      "show events", "show firmware-version", "show logs", "show metrics", "show naples", "show proc-meminfo",
                       "show running-firmware", "show startup-firmware", "show system-memory-usage",
                       "show firmware-install", "show tech-support"
                      ]
