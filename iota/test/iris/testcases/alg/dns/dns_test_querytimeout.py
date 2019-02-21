@@ -17,6 +17,7 @@ def Trigger(tc):
     server = pairs[0][0]
     client = pairs[0][1]
     tc.cmd_cookies = []
+    tc.resp2 = None
 
     server,client  = pairs[0]
     naples = server
@@ -61,6 +62,23 @@ def Trigger(tc):
     trig_resp = api.Trigger(req)
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+    cmd = trig_resp.commands[-1]
+    sess_hdl = get_sess_handle(cmd)
+    api.Logger.info("Re-evaluating for %s" % (sess_hdl))
+    if (sess_hdl != 0):
+        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
+        api.Trigger_AddNaplesCommand(req, naples.node_name, "sleep 5", timeout=300)
+        tc.cmd_cookies2.append("sleep")
+
+        api.Trigger_AddNaplesCommand(req, naples.node_name, "/nic/bin/halctl show session --handle {} --yaml".format(sess_hdl))
+        tc.cmd_cookies2.append("Re-validate dns")
+
+        trig_resp = api.Trigger(req)
+        cmd = trig_resp.commands[-1]
+        api.PrintCommandResults(cmd)
+        term_resp = api.Trigger_TerminateAllCommands(trig_resp)
+        tc.resp2 = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp) 
 
     return api.types.status.SUCCESS
 
@@ -83,6 +101,10 @@ def Verify(tc):
             cmd.stdout != '':
             result = api.types.status.FAILURE
         cookie_idx += 1
+
+    if tc.resp2 is not None:
+        for cmd in tc.resp2.commands:
+            api.PrintCommandResults(cmd)
 
     return result
 
