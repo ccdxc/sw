@@ -1223,8 +1223,8 @@ EthLif::_CmdFeatures(void *req, void *req_data, void *resp, void *resp_data)
     comp->status = 0;
     if (hal->fwd_mode == FWD_MODE_SMART_NIC) {
         comp->supported = (
-            //ETH_HW_VLAN_RX_STRIP |
-            //ETH_HW_VLAN_TX_TAG |
+            ETH_HW_VLAN_RX_STRIP |
+            ETH_HW_VLAN_TX_TAG |
             ETH_HW_RX_CSUM |
             ETH_HW_TX_CSUM |
             ETH_HW_RX_HASH |

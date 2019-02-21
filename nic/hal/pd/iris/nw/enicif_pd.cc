@@ -1794,9 +1794,17 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
 
     // form mask
     mask.entry_inactive_input_mac_vlan_mask = 0x1;
-    mask.vlan_tag_valid_mask                = ~(mask.vlan_tag_valid_mask & 0);
     mask.vlan_tag_vid_mask                  = ~(mask.vlan_tag_vid_mask & 0);
-    mask.p4plus_to_p4_insert_vlan_tag_mask  = ~(mask.p4plus_to_p4_insert_vlan_tag_mask & 0);
+    /*
+     * FTE Slow path:
+     * Assume vlan_insert_en is set on a LIF. We expect vlan to come in sideband.
+     *  - FTE always re-injects the packet with vlan in the packet. So ignore where
+     *    vlan is coming from.
+     */
+    // mask.vlan_tag_valid_mask                = ~(mask.vlan_tag_valid_mask & 0);
+    // mask.p4plus_to_p4_insert_vlan_tag_mask  = ~(mask.p4plus_to_p4_insert_vlan_tag_mask & 0);
+    mask.vlan_tag_valid_mask                = 0;
+    mask.p4plus_to_p4_insert_vlan_tag_mask  = 0;
     memset(mask.ethernet_srcAddr_mask, ~0, sizeof(mask.ethernet_srcAddr_mask));
 
     // form data
