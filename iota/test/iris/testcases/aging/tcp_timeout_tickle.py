@@ -117,7 +117,7 @@ def Trigger(tc):
     if cmd.stdout != '' and (tc.itickles == 0 or tc.rtickles == 0):
         req3 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-        api.Trigger_AddNaplesCommand(req3, naples.node_name, "sleep 10")
+        api.Trigger_AddNaplesCommand(req3, naples.node_name, "sleep 5", timeout=300)
         tc.cmd_cookies3.append("sleep")
        
         api.Trigger_AddNaplesCommand(req3, naples.node_name, "/nic/bin/halctl show session --handle {} --yaml".format(sess_hdl))

@@ -223,15 +223,15 @@ testcases:
         args    :
             type: local_only
 
-    #-   name    : DNS_DROP_LONG_LABEL
-    #    testcase: testcases.alg.dns.dns_drop_long_label
-    #    args    :
-    #        type: local_only
+    -   name    : DNS_DROP_LONG_LABEL
+        testcase: testcases.alg.dns.dns_drop_long_label
+        args    :
+            type: local_only
 
-    #-   name    : DNS_ALLOW_LONG_LABEL 
-    #    testcase: testcases.alg.dns.dns_allow_long_label
-    #    args    :
-    #        type: local_only
+    -   name    : DNS_ALLOW_LONG_LABEL 
+        testcase: testcases.alg.dns.dns_allow_long_label
+        args    :
+            type: local_only
 
     -   name    : DNS_TEST_QUERYTIMEOUT
         testcase: testcases.alg.dns.dns_test_querytimeout

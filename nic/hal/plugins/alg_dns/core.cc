@@ -199,7 +199,7 @@ static hal_ret_t read_rr_name(const uint8_t * packet, uint32_t * packet_p,
     // name that is infinitely long. Return an error in that case.
     // We use the len of the packet as the limit, because it shouldn't 
     // be possible for the name to be that long.
-    //if (steps >= 2*len || pos >= len) return HAL_RET_INVALID_ARG;
+    if (steps >= 2*len || pos >= len) return HAL_RET_INVALID_ARG;
 
     name_len++;
 
