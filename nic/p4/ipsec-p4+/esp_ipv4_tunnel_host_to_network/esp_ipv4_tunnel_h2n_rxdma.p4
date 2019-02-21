@@ -100,6 +100,13 @@ header_type ipsec_rxdma_global_t {
     }
 }
 
+header_type ipsec_sem_read_t {
+    fields {
+        in_desc_index : 32;
+        full           : 8;
+    }
+}
+
 header_type doorbell_data_pad_t {
     fields {
         db_data_pad : 64;
@@ -211,6 +218,8 @@ metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 @pragma scratch_metadata
 metadata h2n_stats_header_t ipsec_stats_scratch;
 
+@pragma scratch_metadata
+metadata ipsec_sem_read_t ipsec_sem_read_scratch;
 
 #define IPSEC_SCRATCH_T0_S2S \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
@@ -435,6 +444,7 @@ action allocate_input_desc_index(in_desc_index)
     modify_field(common_te0_phv.table_addr, IN_DESC_ADDR_BASE+(DESC_ENTRY_SIZE * in_desc_index));
     modify_field(ipsec_int_header.in_desc, IN_DESC_ADDR_BASE+(DESC_ENTRY_SIZE * in_desc_index));
     modify_field(t0_s2s.in_desc_addr, IN_DESC_ADDR_BASE++(DESC_ENTRY_SIZE* in_desc_index));
+
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
 }
@@ -448,13 +458,14 @@ action rxmda_ring_full_error(H2N_STATS_UPDATE_PARAMS)
 }
 
 //stage 1
-action allocate_input_desc_semaphore(in_desc_ring_index)
+action allocate_input_desc_semaphore(in_desc_ring_index, full)
 {
     modify_field(p42p4plus_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0); 
     modify_field(common_te0_phv.table_raw_table_size, 3);
     modify_field(common_te0_phv.table_lock_en, 0);
-    modify_field(common_te0_phv.table_addr, IN_DESC_RING_BASE+(DESC_PTR_SIZE * in_desc_ring_index));
+    modify_field(ipsec_sem_read_scratch.in_desc_index, in_desc_ring_index);
+    modify_field(ipsec_sem_read_scratch.full, full);
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
 }

@@ -14,6 +14,8 @@
 #define tx_table_s4_t1_action ipsec_build_encap_packet2
 #define tx_table_s4_t2_action ipsec_txdma2_stats_update
 
+#define tx_table_s5_t0_action ipsec_release_resources
+
 #include "../../common-p4+/common_txdma.p4"
 #include "esp_ipv4_tunnel_h2n_headers.p4"
 #include "../ipsec_defines.h"
@@ -88,14 +90,15 @@ header_type ipsec_to_stage4_t {
         is_v6         : 1;
         is_vlan_encap : 1;
         barco_error   : 8;
-        stage3_pad1     : 47;
+        sem_cindex    : 32;
+        stage3_pad1     : 15;
     }
 }
 
 header_type ipsec_to_stage5_t {
     fields {
-        ipsec_cb_addr : ADDRESS_WIDTH;
-        stage4_pad1     : ADDRESS_WIDTH;
+        in_desc_addr : ADDRESS_WIDTH;
+        out_desc_addr : ADDRESS_WIDTH;
     }
 }
 
@@ -148,12 +151,23 @@ metadata dma_cmd_mem2pkt_t esp_iv_hdr;
 metadata dma_cmd_mem2pkt_t enc_pay_load;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t icv_header;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t rnmdr;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t tnmdr;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t sem_cindex;
+
+
 
 @pragma scratch_metadata
 metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_txdma2_global_t txdma2_global_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_to_stage5_t ipsec_to_stage5_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_to_stage4_t ipsec_to_stage4_scratch;
@@ -224,6 +238,16 @@ metadata h2n_stats_header_t ipsec_stats_scratch;
  
 #define IPV4_HEADER_SIZE 20
 
+//stage 5
+action ipsec_release_resources(sem_cindex)
+{
+    TXDMA2_GLOBAL_SCRATCH_INIT
+     modify_field(ipsec_to_stage5_scratch.in_desc_addr, ipsec_to_stage5.in_desc_addr);
+     modify_field(ipsec_to_stage5_scratch.out_desc_addr, ipsec_to_stage5.out_desc_addr);
+    TXDMA2_T0_S2S_SCRATCH
+    modify_field(ipsec_to_stage4_scratch.sem_cindex, sem_cindex);
+}
+
 //stage 4
 action ipsec_txdma2_stats_update(H2N_STATS_UPDATE_PARAMS)
 {
@@ -261,19 +285,6 @@ action ipsec_build_encap_packet()
     // Add intrinsic and app header
     DMA_COMMAND_PHV2PKT_FILL(intrinsic_app_hdr, 0, 32, 0)
 
-    // Add ethernet, optional-vlan and outer-ip from input-descriptor
-    DMA_COMMAND_MEM2PKT_FILL(eth_hdr, t0_s2s.in_page_addr, t0_s2s.headroom_offset, 0, 0, 0) 
-    DMA_COMMAND_MEM2PKT_FILL(ip_hdr, t0_s2s.in_page_addr+t0_s2s.headroom_offset, IPV4_HEADER_SIZE, 0, 0, 0) 
-
-    // Add ESP header from IPSec-CB by adding spi,esn_lo,iv which are all contiguous in IPSec-CB
-    //DMA_COMMAND_MEM2PKT_FILL(esp_iv_hdr, ipsec_to_stage4.ipsec_cb_addr+ESP_BASE_OFFSET, 8+txdma2_global.iv_size, 0, 0, 0)
-
-    // Add encrypted payload from output page size is payload_size+pad
-    //DMA_COMMAND_MEM2PKT_FILL(enc_pay_load, t0_s2s.out_page_addr, (txdma2_global.payload_size + txdma2_global.pad_size), 0, 0, 0)
-
-    // Add ICV
-    //DMA_COMMAND_MEM2PKT_FILL(icv_header, t0_s2s.out_page_addr+t0_s2s.tailroom_offset+2, txdma2_global.icv_size, 1, 0, 0)
- 
     modify_field(p4_txdma_intr.dma_cmd_ptr, TXDMA2_DMA_COMMANDS_OFFSET);
 }
  
@@ -293,7 +304,6 @@ action ipsec_encap_txdma2_load_ipsec_int(in_desc, out_desc, in_page, out_page,
     modify_field(txdma2_global.l4_protocol, l4_protocol);
     modify_field(txdma2_global.payload_size, payload_size);
     modify_field(t0_s2s.tailroom_offset, tailroom_offset); 
-    modify_field(t0_s2s.headroom_offset, headroom_offset);
   
     modify_field(ipsec_to_stage3_scratch.ipsec_cb_addr, ipsec_to_stage3.ipsec_cb_addr);
     modify_field(p4plus2p4_hdr.table2_valid, 0);

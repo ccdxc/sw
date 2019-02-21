@@ -52,8 +52,8 @@ esp_ipv4_tunnel_n2h_txdma2_initial_table:
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_v4_tunnel_n2h_txdma2_increment_global_ci, r5, TABLE_SIZE_512_BITS)
 
 esp_ipv4_tunnel_n2h_txdma2_initial_table_do_nothing:
-    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA2_ENTER_OFFSET, 1)
+    //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA2_ENTER_OFFSET, 1)
     nop.e
     nop
 

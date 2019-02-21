@@ -56,8 +56,8 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
 
 
 esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing:
-    addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
-    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_ENTER_OFFSET, 1)
+    //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, N2H_TXDMA1_ENTER_OFFSET, 1)
     nop.e
     nop
 

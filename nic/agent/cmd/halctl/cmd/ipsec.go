@@ -230,7 +230,7 @@ func ipsecGlobalStatisticsShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 
 		fmt.Printf("%s\n", strings.Repeat("-", 80))
-		fmt.Printf("\nIpsec Global Statistics \n")
+		fmt.Printf("\nIPSec Global Statistics \n")
 		fmt.Printf("%s\n", strings.Repeat("-", 80))
 		showIpsecGlobalStatistics(resp)
 		fmt.Printf("%s\n\n", strings.Repeat("-", 80))
@@ -240,6 +240,8 @@ func ipsecGlobalStatisticsShowCmdHandler(cmd *cobra.Command, args []string) {
 func showIpsecGlobalStatistics(resp *halproto.IpsecGlobalStatisticsGetResponse) {
 	spec := resp.GetSpec()
 
+	fmt.Printf("\nEncrypt Global Errors:\n")
+	fmt.Printf("-----------------------\n")
 	fmt.Printf("%-40s : %-6d\n", "encrypt_input_desc_errors", spec.EncryptInputDescErrors)
 	fmt.Printf("%-40s : %-6d\n", "encrypt_output_desc_errors", spec.EncryptOutputDescErrors)
 	fmt.Printf("%-40s : %-6d\n", "encrypt_cb_ring_base_errors", spec.EncryptCbRingBaseErrors)
@@ -256,7 +258,10 @@ func showIpsecGlobalStatistics(resp *halproto.IpsecGlobalStatisticsGetResponse) 
 	fmt.Printf("%-40s : %-6d\n", "encrypt_bad_barco_addr_errors", spec.EncryptBadBarcoAddrErrors)
 	fmt.Printf("%-40s : %-6d\n", "encrypt_barco_full_errors", spec.EncryptBarcoFullErrors)
 	fmt.Printf("%-40s : %-6d\n", "encrypt_cb_ring_dma_errors", spec.EncryptCbRingDmaErrors)
+	fmt.Printf("%-40s : %-6d\n", "encrypt_desc_exhaust_errors", spec.EncryptDescExhaustErrors)
 
+	fmt.Printf("\nDecrypt Global Errors:\n")
+	fmt.Printf("-----------------------\n")
 	fmt.Printf("%-40s : %-6d\n", "decrypt_input_desc_errors", spec.DecryptInputDescErrors)
 	fmt.Printf("%-40s : %-6d\n", "decrypt_output_desc_errors", spec.DecryptOutputDescErrors)
 	fmt.Printf("%-40s : %-6d\n", "decrypt_cb_ring_base_errors", spec.DecryptCbRingBaseErrors)
@@ -268,4 +273,5 @@ func showIpsecGlobalStatistics(resp *halproto.IpsecGlobalStatisticsGetResponse) 
 	fmt.Printf("%-40s : %-6d\n", "decrypt_txdma1_enter_counters", spec.DecryptTxdma1EnterCounters)
 	fmt.Printf("%-40s : %-6d\n", "decrypt_txdma2_enter_counters", spec.DecryptTxdma2EnterCounters)
 	fmt.Printf("%-40s : %-6d\n", "decrypt_txdma1_drop_counters", spec.DecryptTxdma1DropCounters)
+	fmt.Printf("%-40s : %-6d\n", "decrypt_desc_exhaust_errors", spec.DecryptDescExhaustErrors)
 }

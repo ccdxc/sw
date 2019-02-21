@@ -16,6 +16,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_ipsec_int:
     phvwr  p.common_te2_phv_table_addr, r4 
 
     phvwr p.t0_s2s_out_page_addr, d.out_page 
+    phvwr p.t1_s2s_out_desc_addr, d.out_desc
     phvwr p.txdma2_global_pad_size, d.pad_size
     phvwr p.txdma2_global_payload_size, d.payload_size
     phvwr.e p.t0_s2s_tailroom_offset, d.tailroom_offset

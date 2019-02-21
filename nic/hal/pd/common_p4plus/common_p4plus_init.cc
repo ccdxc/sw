@@ -12,7 +12,7 @@
 namespace hal {
 namespace pd {
 
-#define P4PLUS_SYMBOLS_MAX  107
+#define P4PLUS_SYMBOLS_MAX  108
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -148,6 +148,14 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSECCB);
     symbols[i].params[1].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N;
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
+    i++;
+
+    symbols[i].name = "esp_ipv4_tunnel_h2n_txdma2_ipsec_free_resources.bin";
+    symbols[i].num_params = 2;
+    symbols[i].params[0].name = IPSEC_RNMPR_TABLE_BASE;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_NMPR_RX);
+    symbols[i].params[1].name = IPSEC_TNMPR_TABLE_BASE;
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_NMPR_TX);
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_update_input_desc_aol.bin";
