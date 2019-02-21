@@ -20,8 +20,7 @@ import (
 
 var _ = Describe("alert test", func() {
 	var (
-		err              error
-		serviceStoppedOn string
+		err error
 	)
 	It("ServiceStopped events to INFO alerts", func() {
 
@@ -38,7 +37,7 @@ var _ = Describe("alert test", func() {
 		defer ts.tu.APIClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 
 		// stop pen-ntp daemon service
-		podName := getRunningPod("pen-ntp")
+		podName, serviceStoppedOn := getRunningPod("pen-ntp")
 		if utils.IsEmpty(podName) {
 			Skip("no running pod found for service {pen-ntp} on a READY node")
 		}
@@ -79,7 +78,7 @@ var _ = Describe("alert test", func() {
 })
 
 // returns the name of the service instance that is running on a READY state node
-func getRunningPod(serviceName string) string {
+func getRunningPod(serviceName string) (string, string) {
 	var kubeGetPodsOut struct {
 		Items []struct {
 			Metadata struct {
@@ -121,13 +120,13 @@ func getRunningPod(serviceName string) string {
 			json.Unmarshal([]byte(getNodesOut), &kubeGetNodesOut)
 			if len(kubeGetNodesOut.Items) == 0 {
 				By(fmt.Sprintf("ts=%s no matching node found: {%s}", time.Now().String(), pod.Spec.NodeName))
-				return ""
+				return "", ""
 			}
 
 			for _, cond := range kubeGetNodesOut.Items[0].Status.Conditions {
 				if cond.Type == "Ready" && cond.Status == "True" {
 					By(fmt.Sprintf("ts=%s selected pod {%s} running on {%s}", time.Now().String(), pod.Metadata.Name, pod.Spec.NodeName))
-					return pod.Metadata.Name
+					return pod.Metadata.Name, pod.Spec.NodeName
 				}
 			}
 			By(fmt.Sprintf("ts=%s found a pod instance for service {%s} on the node {%s} but it is not READY", time.Now().String(), pod.Metadata.Name, pod.Spec.NodeName))
@@ -135,5 +134,5 @@ func getRunningPod(serviceName string) string {
 	}
 
 	By(fmt.Sprintf("ts=%s no pod instance found for service {%s} on a READY state node", time.Now().String(), serviceName))
-	return ""
+	return "", ""
 }

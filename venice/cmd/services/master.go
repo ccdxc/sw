@@ -160,11 +160,11 @@ func (r *resolverServiceObserver) OnNotifyServiceInstance(e k8stypes.ServiceInst
 	if e.GetInstance() != nil && !utils.IsEmpty(e.GetInstance().GetNode()) {
 		switch e.Type {
 		case k8stypes.ServiceInstanceEvent_Added:
-			log.Infof("triggering event {%v} on service {%v}", evtsapi.ServiceStarted, e.GetInstance().GetService())
+			log.Infof("triggering event {%v} on service {%v:%v}", evtsapi.ServiceStarted, e.GetInstance().GetService(), e.GetInstance().GetNode())
 			recorder.Event(evtsapi.ServiceStarted, evtsapi.SeverityLevel_INFO,
 				fmt.Sprintf("Service %s started on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
 		case k8stypes.ServiceInstanceEvent_Deleted:
-			log.Infof("triggering event {%v} on service {%v}", evtsapi.ServiceStopped, e.GetInstance().GetService())
+			log.Infof("triggering event {%v} on service {%v:%v}", evtsapi.ServiceStopped, e.GetInstance().GetService(), e.GetInstance().GetNode())
 			recorder.Event(evtsapi.ServiceStopped, evtsapi.SeverityLevel_INFO,
 				fmt.Sprintf("Service %s stopped on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
 		}
