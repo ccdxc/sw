@@ -88,6 +88,7 @@ PD_FUNC_STUB(pd_lif_mem_free);
 PD_FUNC_STUB(pd_lif_make_clone);
 PD_FUNC_STUB(pd_lif_get);
 PD_FUNC_STUB(pd_lif_stats_get);
+PD_FUNC_STUB(pd_lif_sched_control);
 
 // if calls
 PD_FUNC_STUB(pd_if_create);

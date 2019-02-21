@@ -7,6 +7,7 @@
 #include "nic/hal/hal_trace.hpp"
 #include "nic/hal/pd/pd_api.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
+#include "nic/hal/plugins/cfg/lif/lif.hpp"
 
 namespace hal {
 namespace upgrade {
@@ -29,12 +30,13 @@ upgrade_handler::CompatCheckHandler(UpgCtx& upgCtx)
 HdlrResp
 upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
 {
-    return HdlrResp(::upgrade::SUCCESS, empty_str);
-    hal_ret_t    ret;
+    hal_ret_t                           ret;
+    pd::pd_func_args_t                  pd_func_args = {0};
+    pd::pd_uplink_tm_control_args_t     tm_args = {0};
 
     HAL_TRACE_DEBUG("[upgrade] Handling link down msg ...");
 
-    //Send TCP FIN on sessions with local EPs
+    // send TCP FIN on sessions with local EPs
     if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
         (hal::g_hal_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC)) {
         ret = session_handle_upgrade();
@@ -43,18 +45,24 @@ upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
         }
     }
 
-    // disable all uplink ports and as part of this delphi notifications
-    // will be sent out
+    // disable all uplink ports
+    // - as part of this delphi notifications will be sent out per port
     ret = linkmgr::port_disable(0);
     if (ret != HAL_RET_OK) {
         return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
     }
 
-    // quiesece the pipeline (TODO: only for uplink ports !!)
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_START, NULL);
+    // flush PB/TM for all uplinks
+    tm_args.en      = false;
+    tm_args.tm_port = TM_PORT_UPLINK_ALL;
+    pd_func_args.pd_uplink_tm_control = &tm_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_UPLINK_TM_CONTROL,
+                          &pd_func_args);
     if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to flush PB for uplinks. err: {}", ret);
         return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
     }
+
     return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 
@@ -64,7 +72,27 @@ upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
 HdlrResp
 upgrade_handler::PostHostDownHandler(UpgCtx& upgCtx)
 {
+    hal_ret_t ret = HAL_RET_OK;
+
     HAL_TRACE_DEBUG("[upgrade] Handling post host down msg ...");
+
+    // disable TX scheduler for all LIFs
+    ret = lif_disable_tx_scheduler();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to disable TX scheduler for LIFs. err: {}", ret);
+        return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
+    }
+
+    // quiesece the pipeline
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_START, NULL);
+    if (ret != HAL_RET_OK) {
+        return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
+    }
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_QUIESCE_STOP, NULL);
+    if (ret != HAL_RET_OK) {
+        return HdlrResp(::upgrade::FAIL, HAL_RET_ENTRIES_str(ret));
+    }
+
     return HdlrResp(::upgrade::SUCCESS, empty_str);
 }
 

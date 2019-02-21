@@ -11,6 +11,8 @@
 #include "nic/hal/pd/iris/nw/tunnelif_pd.hpp"
 #include "nic/hal/pd/iris/nw/l2seg_uplink_pd.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include "nic/sdk/platform/capri/capri_p4.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 
 namespace hal {
 namespace pd {
@@ -537,6 +539,30 @@ hal_ret_t if_l2seg_get_multicast_rewrite_data(if_t *pi_if, l2seg_t *pi_l2seg,
 
 end:
     return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
+// Control Traffic Manager (TM) for uplinks
+//-----------------------------------------------------------------------------
+using sdk::platform::capri::tm_port_t;
+using sdk::platform::capri::capri_tm_enable_disable_uplink_port;
+hal_ret_t
+pd_uplink_tm_control (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t                      ret = HAL_RET_OK;
+    pd_uplink_tm_control_args_t    *tm_args = pd_func_args->pd_uplink_tm_control;
+
+    if (tm_args->tm_port == TM_PORT_UPLINK_ALL) {
+        for (tm_port_t port = TM_UPLINK_PORT_BEGIN;
+             port <= TM_UPLINK_PORT_END; port++) {
+            capri_tm_enable_disable_uplink_port(port, tm_args->en);
+        }
+    } else {
+        sdk::platform::capri::capri_tm_enable_disable_uplink_port(tm_args->tm_port,
+                                                                  tm_args->en);
+    }
+
+    return ret;
 }
 
 }    // namespace pd

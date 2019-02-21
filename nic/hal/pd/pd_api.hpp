@@ -38,6 +38,9 @@
 #include "platform/utils/program.hpp"
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/hal/pd/asic_pd.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+
+using sdk::platform::capri::tm_port_t;
 
 namespace hal {
 namespace pd {
@@ -435,6 +438,11 @@ typedef struct pd_lif_get_args_s {
     lif_t *lif;          // i/p
     uint32_t hw_lif_id;  // o/p
 } __PACK__ pd_lif_get_args_t;
+
+typedef struct pd_lif_sched_control_args_s {
+    bool en;
+    lif_t *lif;
+} __PACK__ pd_lif_sched_control_args_t;
 
 static inline void
 pd_lif_create_args_init (pd_lif_create_args_t *args)
@@ -2927,6 +2935,12 @@ typedef struct pd_quiesce_start_args_s {
 typedef struct pd_quiesce_stop_args_s {
 } pd_quiesce_stop_args_t;
 
+// TM Enable / Disable for Uplinks
+typedef struct pd_uplink_tm_control_args_s {
+    bool        en;
+    tm_port_t   tm_port;
+} pd_uplink_tm_control_args_t;
+
 // fte span
 typedef struct pd_fte_span_create_args_s {
     fte_span_t               *fte_span;
@@ -3264,7 +3278,9 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE,  293, "PD_FUNC_ID_L2SEG_PIN_UPLINK_CHANGE") \
     ENTRY(PD_FUNC_ID_CPU_POLL_RECV_NEW,        294, "PD_FUNC_ID_CPU_POLL_RECV_NEW") \
     ENTRY(PD_FUNC_ID_CPU_SEND_NEW,             295, "PD_FUNC_ID_CPU_SEND_NEW")\
-    ENTRY(PD_FUNC_ID_MAX,                      296, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_UPLINK_TM_CONTROL,        296, "PD_FUNC_ID_UPLINK_TM_CONTROL") \
+    ENTRY(PD_FUNC_ID_LIF_SCHED_CONTROL,        297, "PD_FUNC_ID_LIF_SCHED_CONTROL") \
+    ENTRY(PD_FUNC_ID_MAX,                      298, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3330,6 +3346,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_lif_make_clone);
         PD_UNION_ARGS_FIELD(pd_lif_get);
         PD_UNION_ARGS_FIELD(pd_lif_stats_get);
+        PD_UNION_ARGS_FIELD(pd_lif_sched_control);
 
         // if calls
         PD_UNION_ARGS_FIELD(pd_if_create);
@@ -3685,6 +3702,9 @@ typedef struct pd_func_args_s {
         // Snake tests
         PD_UNION_ARGS_FIELD(pd_snake_test_create);
         PD_UNION_ARGS_FIELD(pd_snake_test_delete);
+
+        // Uplink TM Control
+        PD_UNION_ARGS_FIELD(pd_uplink_tm_control);
     };
 } pd_func_args_t;
 
@@ -3749,6 +3769,7 @@ PD_FUNCP_TYPEDEF(pd_lif_mem_free);
 PD_FUNCP_TYPEDEF(pd_lif_make_clone);
 PD_FUNCP_TYPEDEF(pd_lif_get);
 PD_FUNCP_TYPEDEF(pd_lif_stats_get);
+PD_FUNCP_TYPEDEF(pd_lif_sched_control);
 
 // if calls
 PD_FUNCP_TYPEDEF(pd_if_create);
@@ -4129,6 +4150,8 @@ PD_FUNCP_TYPEDEF(pd_tcp_global_stats_get);
 // snake tests
 PD_FUNCP_TYPEDEF(pd_snake_test_create);
 PD_FUNCP_TYPEDEF(pd_snake_test_delete);
+
+PD_FUNCP_TYPEDEF(pd_uplink_tm_control);
 
 hal_ret_t hal_pd_call(pd_func_id_t pd_func_id, pd_func_args_t *args);
 

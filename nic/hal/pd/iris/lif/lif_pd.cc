@@ -1260,5 +1260,37 @@ pd_lif_stats_get (pd_func_args_t *pd_func_args)
     return ret;
 }
 
+//-----------------------------------------------------------------------------
+// Control TX Scheduler for Lif
+//-----------------------------------------------------------------------------
+hal_ret_t
+pd_lif_sched_control (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    sdk_ret_t                       sdk_ret;
+    pd_lif_sched_control_args_t     *args = pd_func_args->pd_lif_sched_control;
+    pd_lif_t                        *lif_pd = (pd_lif_t *)args->lif->pd_lif;
+    asicpd_scheduler_lif_params_t   apd_lif;
+
+    pd_lif_copy_asicpd_params(&apd_lif, lif_pd);
+    if (!args->en) {
+        if (lif_pd->tx_sched_table_offset != INVALID_INDEXER_INDEX) {
+            sdk_ret = asicpd_tx_scheduler_map_free(&apd_lif);
+            ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+            if (ret != HAL_RET_OK) {
+                ret = HAL_RET_INVALID_OP;
+                goto end;
+            }
+        }
+        HAL_TRACE_DEBUG("Successfully disabled TX scheduler for lif: {}",
+                        args->lif->lif_id);
+    }
+
+end:
+    return ret;
+}
+
+
+
 }    // namespace pd
 }    // namespace hal

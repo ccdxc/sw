@@ -65,6 +65,10 @@ using intf::InterfaceStats;
 
 namespace hal {
 
+// TMPORT ALL
+#define TM_PORT_ALL         0xFFFFFFFF
+#define TM_PORT_UPLINK_ALL  0xFFFFFFFE
+
 // 0 - 127: Reserved IFs. Internally created in HAL.
 #define IF_ID_CPU 1
 

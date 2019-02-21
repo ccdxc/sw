@@ -122,6 +122,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_LIF_MAKE_CLONE, pd_lif_make_clone);
     PD_FUNC_LOAD(PD_FUNC_ID_LIF_GET, pd_lif_get);
     PD_FUNC_LOAD(PD_FUNC_ID_LIF_STATS_GET, pd_lif_stats_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_LIF_SCHED_CONTROL, pd_lif_sched_control);
 
     // if pd calls
     PD_FUNC_LOAD(PD_FUNC_ID_IF_CREATE, pd_if_create);
@@ -485,6 +486,9 @@ hal_pd_load_symbols (void)
     // snake tests
     PD_FUNC_LOAD(PD_FUNC_ID_SNAKE_TEST_CREATE, pd_snake_test_create);
     PD_FUNC_LOAD(PD_FUNC_ID_SNAKE_TEST_DELETE, pd_snake_test_delete);
+
+    // Uplink TM Control
+    PD_FUNC_LOAD(PD_FUNC_ID_UPLINK_TM_CONTROL, pd_uplink_tm_control);
 
     return ret;
 }

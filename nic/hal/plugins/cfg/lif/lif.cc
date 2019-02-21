@@ -2061,6 +2061,50 @@ lif_update_trigger_if (lif_t *lif,
 }
 
 //-----------------------------------------------------------------------------
+// Callback to disable TX scheduler for a LIF
+//-----------------------------------------------------------------------------
+static bool
+lif_sched_ht_cb (void *ht_entry, void *ctxt)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    hal_handle_id_ht_entry_t    *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    lif_sched_control_cb_ctxt_t *cb_ctxt = (lif_sched_control_cb_ctxt_t *)ctxt;
+    lif_t                       *lif = NULL;
+    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_lif_sched_control_args_t lif_sched = {0};
+
+    lif = (lif_t *)hal_handle_get_obj(entry->handle_id);
+
+    lif_sched.lif = lif;
+    lif_sched.en = cb_ctxt->en;
+    pd_func_args.pd_lif_sched_control = &lif_sched;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_LIF_SCHED_CONTROL,
+                          &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to disable TX scheduler for lif {}. err: {}",
+                      lif->lif_id, ret);
+        goto end;
+    }
+
+end:
+    // False: Don't stop the traversal
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+// Disable TX scheduler for all LIFs
+//-----------------------------------------------------------------------------
+hal_ret_t
+lif_disable_tx_scheduler (void)
+{
+    lif_sched_control_cb_ctxt_t ctxt;
+    ctxt.en = false;
+    g_hal_state->lif_id_ht()->walk(lif_sched_ht_cb, &ctxt);
+
+    return HAL_RET_OK;
+}
+
+//-----------------------------------------------------------------------------
 // adds filter into lif list
 //-----------------------------------------------------------------------------
 hal_ret_t

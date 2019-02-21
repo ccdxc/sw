@@ -145,6 +145,10 @@ typedef struct lif_update_app_ctxt_s {
     bool         name_changed:1;
 } __PACK__ lif_update_app_ctxt_t;
 
+typedef struct lif_sched_control_cb_ctxt_s {
+    bool en;
+} __PACK__ lif_sched_control_cb_ctxt_t;
+
 #define HAL_MAX_LIFS                                 1024
 
 static inline void
@@ -200,6 +204,7 @@ hal_ret_t lif_get(LifGetRequest& req, LifGetResponseMsg *rsp);
 
 lif_t *find_lif_by_hw_lif_id (uint32_t hw_lif_id);
 uint64_t lif_hw_lif_id_get (lif_t *lif);
+hal_ret_t lif_disable_tx_scheduler (void);
 
 }    // namespace hal
 
