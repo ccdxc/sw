@@ -11,7 +11,7 @@ import (
 )
 
 func (c *CfgGen) GenerateSecurityProfiles() error {
-	var cfg IOTAConfig
+	var cfg pkg.IOTAConfig
 	var secProfiles []*netproto.SecurityProfile
 	var secProfileManifest *pkg.Object
 	for _, o := range c.Config.Objects {

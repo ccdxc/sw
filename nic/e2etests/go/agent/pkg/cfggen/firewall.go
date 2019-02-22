@@ -15,7 +15,7 @@ import (
 )
 
 func (c *CfgGen) GenerateFirewallPolicies() error {
-	var cfg IOTAConfig
+	var cfg pkg.IOTAConfig
 	var sgPolicies []*netproto.SGPolicy
 
 	var sgPolicyManifest, sgRuleManifest *pkg.Object
@@ -184,7 +184,7 @@ func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules [
 			//Pick a local and remote EP Pair for the rule
 			if len(c.NodeEPLUT[nodeUUID].LocalEPPairs) == 0 || len(c.NodeEPLUT[nodeUUID].RemoteEPPairs) == 0 {
 				c.NodeEPLUT[nodeUUID] = NodeEPPairs{
-					RemoteEPPairs: c.genEPPairs(c.EpCache[nodeUUID], c.EpCache[defaultRemoteUUIDName], count),
+					RemoteEPPairs: c.genEPPairs(c.EpCache[nodeUUID], c.EpCache[defaultRemoteUUIDName], count*2),
 				}
 			}
 

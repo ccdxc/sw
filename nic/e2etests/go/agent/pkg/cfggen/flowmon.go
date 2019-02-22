@@ -13,7 +13,7 @@ import (
 )
 
 func (c *CfgGen) GenerateFlowMonitorRules() error {
-	var cfg IOTAConfig
+	var cfg pkg.IOTAConfig
 	var flowExportPolicies []*monitoring.FlowExportPolicy
 	var flowExportManifest, flowMonManifest *pkg.Object
 	for _, o := range c.Config.Objects {

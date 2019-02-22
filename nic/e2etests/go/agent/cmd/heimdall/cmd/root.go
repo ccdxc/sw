@@ -23,6 +23,7 @@ func Execute() {
 	RootCmd.AddCommand(runCmd)
 	RootCmd.AddCommand(trafficCmd)
 	RootCmd.AddCommand(genCmd)
+	RootCmd.AddCommand(pushCmd)
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

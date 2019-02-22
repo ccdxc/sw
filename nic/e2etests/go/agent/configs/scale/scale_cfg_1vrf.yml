@@ -8,15 +8,15 @@ objects:
   rest-endpoint: "/api/namespaces/"
 - kind: Network
   name: scale-nw
-  count: 128
+  count: 16
   rest-endpoint: "/api/networks/"
 - kind: LocalEndpoint
   name: scale-ep-local
-  count: 512
+  count: 32
   rest-endpoint: "/api/endpoints/"
 - kind: RemoteEndpoint
   name: scale-ep-remote
-  count: 24000
+  count: 50
   rest-endpoint: "/api/endpoints/"
 - kind: App
   name: scale-app
@@ -27,7 +27,7 @@ objects:
   count: 1
   rest-endpoint: "/api/security/policies/"
 - kind: SGRule
-  count: 20000
+  count: 10
 - kind: SecurityProfile
   name: scale-sec-profile
   count: 16
@@ -41,4 +41,4 @@ objects:
   name: scale-flow-mon
   count: 1
 - kind: FlowMonitorRule
-  count: 1000
+  count: 10

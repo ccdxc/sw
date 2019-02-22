@@ -14,7 +14,7 @@ import (
 
 func (c *CfgGen) GenerateMirrorSessions() error {
 	var portOffset = 8000
-	var cfg IOTAConfig
+	var cfg pkg.IOTAConfig
 	var mirrors []*tsproto.MirrorSession
 	var mirrorManifest *pkg.Object
 	for _, o := range c.Config.Objects {

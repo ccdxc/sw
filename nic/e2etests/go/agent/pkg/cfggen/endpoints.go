@@ -12,7 +12,7 @@ import (
 )
 
 func (c *CfgGen) GenerateEndpoints() error {
-	var cfg IOTAConfig
+	var cfg pkg.IOTAConfig
 	var endpoints []*netproto.Endpoint
 	var localEPManifest, remoteEPManifest *pkg.Object
 	for _, o := range c.Config.Objects {

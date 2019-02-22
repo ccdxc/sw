@@ -12,7 +12,7 @@ import (
 )
 
 func (c *CfgGen) GenerateNetworks() error {
-	var cfg IOTAConfig
+	var cfg pkg.IOTAConfig
 	var networks []*netproto.Network
 	var networkManifest *pkg.Object
 	for _, o := range c.Config.Objects {

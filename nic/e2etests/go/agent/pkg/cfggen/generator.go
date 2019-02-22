@@ -22,17 +22,10 @@ type CfgGen struct {
 	Template     pkg.ConfigTemplate
 	Namespaces, Networks, Endpoints,
 	Apps, SGPolicies, SecurityProfiles,
-	FlowExportPolicies, Tunnels, MirrorSessions IOTAConfig
+	FlowExportPolicies, Tunnels, MirrorSessions pkg.IOTAConfig
 	EpCache     map[string][]string
 	NodeEPLUT   map[string]NodeEPPairs
 	SubnetIPLUT map[string][]string
-}
-
-type IOTAConfig struct {
-	Type         string      `json:"type,omitempty"`
-	RestEndpoint string      `json:"rest-endpoint,omitempty"`
-	ObjectKey    string      `json:"object-key,omitempty"`
-	Objects      interface{} `json:"objects,omitempty"`
 }
 
 type NodeEPPairs struct {
@@ -132,7 +125,7 @@ func (c *CfgGen) WriteJSON(outDir string) error {
 }
 
 func writeJSON(filePath string, obj interface{}) error {
-	cfg, ok := obj.(IOTAConfig)
+	cfg, ok := obj.(pkg.IOTAConfig)
 	if !ok {
 		return fmt.Errorf("failed to convert to IOTA Config. Obj: %v", obj)
 	}

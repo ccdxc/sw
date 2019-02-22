@@ -13,7 +13,7 @@ import (
 )
 
 func (c *CfgGen) GenerateALGs() error {
-	var cfg IOTAConfig
+	var cfg pkg.IOTAConfig
 	var apps []*netproto.App
 	var appManifest *pkg.Object
 	for _, o := range c.Config.Objects {
@@ -127,7 +127,6 @@ func (c *CfgGen) GenerateALGs() error {
 				Spec: netproto.AppSpec{
 					ALGType:        appType,
 					AppIdleTimeout: idleTimeout,
-					ProtoPorts:     []string{fmt.Sprintf("%s/%s", proto, port)},
 					ALG: &netproto.ALG{
 						ICMP: &netproto.ICMP{
 							Type: uint32(t),

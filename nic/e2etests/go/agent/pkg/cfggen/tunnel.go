@@ -12,7 +12,7 @@ import (
 )
 
 func (c *CfgGen) GenerateTunnels() error {
-	var cfg IOTAConfig
+	var cfg pkg.IOTAConfig
 	var tunnels []*netproto.Tunnel
 	var tunnelManifest *pkg.Object
 	for _, o := range c.Config.Objects {

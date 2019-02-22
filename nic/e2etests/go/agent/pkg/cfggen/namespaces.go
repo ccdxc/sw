@@ -11,7 +11,7 @@ import (
 )
 
 func (c *CfgGen) GenerateNamespaces() error {
-	var cfg IOTAConfig
+	var cfg pkg.IOTAConfig
 	var vrfs []*netproto.Namespace
 	var vrfManifest *pkg.Object
 	for _, o := range c.Config.Objects {
@@ -49,5 +49,6 @@ func (c *CfgGen) GenerateNamespaces() error {
 	cfg.RestEndpoint = "api/namespaces/"
 	cfg.Objects = vrfs
 	c.Namespaces = cfg
+
 	return nil
 }

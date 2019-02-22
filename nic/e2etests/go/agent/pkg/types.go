@@ -32,6 +32,13 @@ type Config struct {
 	Objects []Object `yaml:"objects"`
 }
 
+type IOTAConfig struct {
+	Type         string      `json:"type,omitempty"`
+	RestEndpoint string      `json:"rest-endpoint,omitempty"`
+	ObjectKey    string      `json:"object-key,omitempty"`
+	Objects      interface{} `json:"objects,omitempty"`
+}
+
 type ConfigTemplate struct {
 	ParentCIDR          string   `json:"network-start,omitempty"`
 	VlanOffset          uint32   `json:"vlan-offset,omitempty"`
