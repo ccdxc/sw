@@ -7,7 +7,7 @@ package-clean:
 	@rm -f  $(NICDIR)/nic.tar
 
 package: ${PKG_PREREQS}
-ifneq ($(PIPELINE),hello)
+ifeq (,$(filter $(PIPELINE),hello l2switch))
 	${MAKE} package-clean
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py --target host
 ifeq ($(ARCH),aarch64)

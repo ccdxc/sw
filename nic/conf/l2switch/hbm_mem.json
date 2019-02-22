@@ -1,0 +1,62 @@
+{
+    "regions": [
+        {
+            "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
+            "name" : "unused cache coherent",
+            "size" : "65536K",
+            "cc"      : "true"
+        },
+        {
+            "_comment" : "memtun address is hardcoded to HBM base + 64MB(above cc regions)",
+             "name": "memtun",
+             "size": "256K"
+        },
+        {
+            "name": "lif2qstate_map",
+            "size": "4K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "p4_program",
+            "size": "1024K"
+        },
+        {
+            "name": "rxdma_program",
+            "size": "1024K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "txdma_program",
+            "size": "1024K",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "qos-hbm-fifo",
+            "size": "262144K"
+        },
+        {
+            "name": "tx-scheduler",
+            "size": "2048K"
+        },
+        {
+            "_comment": "hash depth = 1024",
+            "_comment1": "data space = 1024 * 16 * 64 = 1024K",
+            "_comment1": "key space = 1024 * 64 = 64K",
+            "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
+            "name": "timers",
+            "size": "1088K"
+        },
+        {
+            "name": "pciemgr",
+            "size": "32768K"
+        },
+        {
+            "name": "devcmd",
+            "size": "32768K"
+        },
+        {
+            "name": "mpu-trace",
+            "size": "224K"
+        }
+    ]
+}
