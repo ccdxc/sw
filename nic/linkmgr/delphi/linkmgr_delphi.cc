@@ -272,7 +272,7 @@ error port_svc::update_xcvr_status(google::protobuf::uint32 port_num,
 static CableType
 xcvr_sdk_cable_type_to_spec_cable_type (cable_type_t cable_type)
 {
-    switch(cable_type) {
+    switch (cable_type) {
     case cable_type_t::CABLE_TYPE_CU:
         return port::CABLE_TYPE_COPPER;
 

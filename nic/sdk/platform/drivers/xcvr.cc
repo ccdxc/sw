@@ -29,14 +29,14 @@ xcvr_sprom_get (int port, void *xcvr_sprom)
     uint8_t *buffer = xcvr_cache(port);
 
     switch (xcvr_type(port)) {
-        case xcvr_type_t::XCVR_TYPE_QSFP:
-        case xcvr_type_t::XCVR_TYPE_QSFP28:
-            buffer = &buffer[128];
-            break;
+    case xcvr_type_t::XCVR_TYPE_QSFP:
+    case xcvr_type_t::XCVR_TYPE_QSFP28:
+        buffer = &buffer[128];
+        break;
 
-        case xcvr_type_t::XCVR_TYPE_SFP:
-        default:
-            break;
+    case xcvr_type_t::XCVR_TYPE_SFP:
+    default:
+        break;
     }
 
     memcpy(xcvr_sprom, buffer, XCVR_SPROM_SIZE);
