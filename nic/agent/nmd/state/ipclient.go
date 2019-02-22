@@ -286,7 +286,7 @@ func (c *IPClient) updateDelphiNaplesObject() error {
 	}
 
 	// Update corresponding delphi object and write to delphi db
-	//if c.delphiClient != nil && c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED {
+	//if c.delphiClient != nil && c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
 	if c.delphiClient != nil {
 		if err := c.delphiClient.SetObject(&naplesStatus); err != nil {
 			log.Errorf("Error writing the naples status object. Err: %v", err)
@@ -365,9 +365,9 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 				}
 			}()
 			// TODO Remove manual nic admitted state.
-			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED
+			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 			// Reflect reboot pending state only if the nic is admitted.
-			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED {
+			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
 				c.nmdState.config.Status.Controllers = controllers
 				if c.isDynamic && len(c.nmdState.config.Spec.Controllers) != 0 {
 					// In dynamic mode, the spec will be empty and on reboot we need to ensure that it doesn't have stale controllers picked up from boltdb
@@ -392,8 +392,6 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 		} else if c.nmdState.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
 			log.Info("Moving Naples to Host managed mode.")
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_HOST.String()
-			// de-admission at this point
-			c.nmdState.config.Status.AdmissionPhase = 0
 
 			err := c.nmdState.StopManagedMode()
 			if err != nil {
@@ -417,7 +415,7 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 			log.Info("Moving Naples to Network managed mode.")
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_NETWORK.String()
 			// TODO Remove manual nic admitted state.
-			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED
+			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 
 			c.nmdState.cmdRegURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCUnauthPort)
 			c.nmdState.cmdUpdURL = fmt.Sprintf("%s:%s", controllers[0], globals.CMDGRPCAuthPort)
@@ -439,7 +437,7 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 			// wait for registration
 			// TODO : Uncomment this section
 			// c.waitForRegistration()
-			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED {
+			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
 				c.nmdState.config.Status.Controllers = controllers
 				if c.isDynamic && len(c.nmdState.config.Spec.Controllers) != 0 {
 					// In dynamic mode, the spec will be empty and on reboot we need to ensure that it doesn't have stale controllers picked up from boltdb
@@ -465,8 +463,6 @@ func (c *IPClient) updateNaplesStatus(controllers []string, ipaddress string) er
 		} else {
 			log.Info("Starting NMD REST server.")
 			c.nmdState.config.Status.Mode = nmd.MgmtMode_HOST.String()
-			// de-admission at this point
-			c.nmdState.config.Status.AdmissionPhase = 0
 
 			err := c.nmdState.StartClassicMode()
 			if err != nil {
@@ -752,6 +748,8 @@ func (c *IPClient) Start() error {
 // Stop function stops IPClient's goroutines
 func (c *IPClient) Stop() {
 	c.nmdState.config.Status.TransitionPhase = ""
+	// Add a de-admission cycle here?
+	c.nmdState.config.Status.AdmissionPhase = ""
 	c.nmdState.config.Status.Controllers = []string{}
 	c.nmdState.config.Status.NetworkMode = ""
 	c.nmdState.config.Status.IPConfig = nil
@@ -789,7 +787,7 @@ func (c *IPClient) waitForRegistration() {
 		select {
 		case <-ticker.C:
 			log.Info("Checking if the nic has been admitted")
-			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED {
+			if c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
 				registrationDone <- true
 			}
 		case <-registrationDone:

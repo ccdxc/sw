@@ -91,7 +91,7 @@ message NaplesStatus {
         REBOOT_PENDING                      = 8;
     }
     // Current phase of the NIC adapter in the system
-    cluster.SmartNICStatus.Phase    AdmissionPhase  = 1 [(gogoproto.jsontag) = "phase,omitempty",
+    string    AdmissionPhase  = 1 [(gogoproto.jsontag) = "phase,omitempty",
 					        (venice.check) = "StrEnum(cluster.SmartNICStatus.Phase)"];
 
     cluster.IPConfig IPConfig       	            = 2 [(gogoproto.jsontag) = "ip-config"];

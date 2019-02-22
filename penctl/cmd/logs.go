@@ -54,12 +54,6 @@ func logsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	cmd.Println(string(resp))
-	if jsonFormat {
-		cmd.Println("JSON not supported for this command")
-	}
-	if yamlFormat {
-		cmd.Println("YAML not supported for this command")
-	}
 	return nil
 }
 

@@ -156,7 +156,7 @@ func restGet(url string) ([]byte, error) {
 	}
 	bodyBytes, _ := ioutil.ReadAll(getResp.Body)
 
-	if jsonFormat || yamlFormat {
+	if isJSONString(string(bodyBytes)) && (jsonFormat || yamlFormat) {
 		var prettyJSON bytes.Buffer
 		error := json.Indent(&prettyJSON, bodyBytes, "", "\t")
 		if error != nil {
