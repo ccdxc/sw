@@ -645,12 +645,12 @@ port_set_leds (uint32_t port_num, port_event_t event)
     switch (event) {
     case port_event_t::PORT_EVENT_LINK_UP:
         sdk::lib::pal_qsfp_set_led(xcvr_port,
-                                   pal_qsfp_led_color_t::QSFP_LED_COLOR_GREEN);
+                                   pal_led_color_t::LED_COLOR_GREEN);
         break;
 
     case port_event_t::PORT_EVENT_LINK_DOWN:
         sdk::lib::pal_qsfp_set_led(xcvr_port,
-                                   pal_qsfp_led_color_t::QSFP_LED_COLOR_NONE);
+                                   pal_led_color_t::LED_COLOR_NONE);
         break;
 
     default:

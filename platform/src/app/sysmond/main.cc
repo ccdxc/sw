@@ -1,9 +1,8 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2019, Pensando Systems Inc.
  */
 #include "sysmond.h"
-#include "nic/sdk/lib/pal/pal.hpp"
-#include "lib/thread/thread.hpp"
+#include "sysmond_delphi.hpp"
 
 ::utils::log *g_trace_logger;
 
@@ -48,6 +47,17 @@ main(int argc, char *argv[])
     // Register for mac metrics
     delphi::objects::AsicTemperatureMetrics::CreateTable();
     delphi::objects::AsicPowerMetrics::CreateTable();
+
+    delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
+    shared_ptr<SysmondService> svc = make_shared<SysmondService>(sdk, "Sysmond");
+    svc->init();
+    sdk->RegisterService(svc);
+
+    pthread_t delphi_thread;
+    pthread_create(&delphi_thread, NULL, delphi_thread_run, reinterpret_cast<void *>(&sdk));
+
+    //Set LED to green.
+    pal_system_set_led(LED_COLOR_GREEN, LED_FREQUENCY_0HZ);
 
     while (1) {
         // Dont block context switches, let the process sleep for some time

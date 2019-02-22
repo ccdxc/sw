@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2019, Pensando Systems Inc.
  */
 
 #include "sysmond.h"
@@ -18,7 +18,7 @@ checktemperature(void)
     ret = sdk::platform::sensor::read_die_temperature(&asictemp.die_temperature);
     if (!ret) {
         asictemp.die_temperature = asictemp.die_temperature / 1000;
-        TRACE_INFO(GetLogger(), "{:s} is : {:d}W",
+        TRACE_INFO(GetLogger(), "{:s} is : {:d}C",
                    "Die temperature", asictemp.die_temperature);
     } else if (ret != ENOENT){
         TRACE_ERR(GetLogger(), "Reading die temperature failed");
@@ -27,7 +27,7 @@ checktemperature(void)
     ret = sdk::platform::sensor::read_local_temperature(&asictemp.local_temperature);
     if (!ret) {
         asictemp.local_temperature = asictemp.local_temperature / 1000;
-        TRACE_INFO(GetLogger(), "{:s} is : {:d}W",
+        TRACE_INFO(GetLogger(), "{:s} is : {:d}C",
                    "Local temperature", asictemp.local_temperature);
     } else if (ret != ENOENT){
         TRACE_ERR(GetLogger(), "Reading local temperature failed");

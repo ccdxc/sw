@@ -28,11 +28,17 @@ typedef enum {
 } pal_lock_ret_t;
 
 typedef enum {
-   QSFP_LED_COLOR_NONE = 0,
-   QSFP_LED_COLOR_GREEN = 1,
-   QSFP_LED_COLOR_YELLOW = 2
-} pal_qsfp_led_color_t;
+   LED_COLOR_NONE = 0,
+   LED_COLOR_GREEN = 1,
+   LED_COLOR_YELLOW = 2
+} pal_led_color_t;
 
+typedef enum {
+   LED_FREQUENCY_0HZ = 0,
+   LED_FREQUENCY_2HZ = 1,
+   LED_FREQUENCY_1HZ = 2,
+   LED_FREQUENCY_05HZ = 3
+} pal_led_frequency_t;
 
 /* Keep the order as is. */
 typedef enum uuid_e {

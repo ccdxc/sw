@@ -1,4 +1,4 @@
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved.
+// {C} Copyright 201 Pensando Systems Inc. All rights reserved.
 
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
