@@ -143,6 +143,13 @@ sfp_sprom_parse (int port, uint8_t *data)
         break;
     }
 
+    // For unknown SFP, set 10G CU params
+    if (xcvr_pid(port) == xcvr_pid_t::XCVR_PID_UNKNOWN) {
+        // 10G Base CU
+        set_cable_type(port, cable_type_t::CABLE_TYPE_CU);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_10G);
+    }
+
     return SDK_RET_OK;
 }
 

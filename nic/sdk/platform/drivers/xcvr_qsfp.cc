@@ -204,6 +204,17 @@ qsfp_sprom_parse (int port, uint8_t *data)
         break;
     }
 
+    // For unknown QSFP, set 100G CU params
+    if (xcvr_pid(port) == xcvr_pid_t::XCVR_PID_UNKNOWN) {
+        // 100GBASE-CR4
+        set_cable_type(port, cable_type_t::CABLE_TYPE_CU);
+        xcvr_set_cable_speed(port, port_speed_t::PORT_SPEED_100G);
+        xcvr_set_an_args(port,
+                         AN_USER_CAP_100GBKR4 | AN_USER_CAP_100GBCR4,
+                         true,
+                         AN_FEC_REQ_25GB_RSFEC);
+    }
+
     return SDK_RET_OK;
 }
 

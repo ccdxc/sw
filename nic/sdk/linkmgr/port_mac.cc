@@ -866,7 +866,8 @@ mac_sync_get_mock (uint32_t port_num)
     static uint8_t *cnt = NULL;
 
     if (cnt == NULL) {
-        uint32_t size = MAX_MAC * MAX_CHANNEL * sizeof(uint8_t);
+        // Total MAC = MAX_MAC + MGMT_MAC
+        uint32_t size = (MAX_MAC+1) * MAX_CHANNEL * sizeof(uint8_t);
         cnt = (uint8_t*)SDK_MALLOC(SDK_PORT_DEBUG, size);
         if (cnt != NULL) {
             memset (cnt, 0, size);
