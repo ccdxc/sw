@@ -123,9 +123,9 @@ subnet_entry::program_config(obj_ctxt_t *obj_ctxt) {
      * there is no h/w programming for subnet config but a h/w id is needed so
      * we can use while programming vnics, routes etc.
      */
-    OCI_TRACE_DEBUG("Creating subnet (vcn %u, subnet %u), pfx %s, vr ip %s, "
-                    "vr_mac %s, v4 route table %u, v6 route table %u"
-                    "ingress v4 policy %u, ingress v6 policy %u"
+    OCI_TRACE_DEBUG("Creating subnet (vcn %u, subnet %u), pfx %s, VR IP %s, "
+                    "VR MAC %s, v4 route table %u, v6 route table %u, "
+                    "ingress v4 policy %u, ingress v6 policy %u, "
                     "egress v4 policy %u, egress v6 policy %u",
                     oci_subnet->vcn.id, key_.id,
                     ippfx2str(&oci_subnet->pfx), ipaddr2str(&oci_subnet->vr_ip),

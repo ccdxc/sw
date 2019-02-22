@@ -8,6 +8,7 @@
 
 #include <math.h>
 #include <stack>
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/lpm/lpm.hpp"
 #include "nic/apollo/lpm/lpm_sport.hpp"
 #include "nic/apollo/lpm/lpm_ipv4_acl.hpp"
@@ -520,6 +521,12 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
     uint32_t            nstages, nkeys_per_table;
     uint32_t            curr_default = default_nh;
 
+    OCI_TRACE_DEBUG("Building LPM tree type %u, interval count %u, "
+                    "default nh %u, max routes %u, root addr 0x%llx, "
+                    "LPM block size %u", itable->tree_type,
+                    itable->num_intervals, default_nh, max_routes,
+                    lpm_tree_root_addr, lpm_mem_size);
+
     /**< compute the # of stages, required including the def route */
     nstages = lpm_stages(itable->tree_type, ((max_routes+1)<<1));
     SDK_ASSERT(nstages <= LPM_MAX_STAGES);
@@ -596,7 +603,6 @@ lpm_tree_create (route_table_t *route_table,
                   (route_table->af != IP_AF_IPV6)))) {
         return sdk::SDK_RET_INVALID_ARG;
     }
-
     SDK_ASSERT(route_table->num_routes <= route_table->max_routes);
 
     /**< sort the given route table */

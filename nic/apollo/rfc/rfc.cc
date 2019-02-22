@@ -120,7 +120,7 @@ rfc_build_itables (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
 }
 
 static inline sdk_ret_t
-rfc_compute_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
+rfc_compute_p0_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
 {
     uint32_t    num_intervals;
     itable_t    *addr_itable = &rfc_ctxt->pfx_tree.itable;
@@ -225,6 +225,36 @@ rfc_compute_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
 }
 
 /**
+ * @brief    dump the contents of given equivalence table
+ * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
+ *                        information processed until now
+ */
+void
+rfc_eq_class_table_dump (rfc_table_t *rfc_table)
+{
+    std::stringstream    cbm_ss;
+
+    OCI_TRACE_DEBUG("Number of equivalence classes %u", rfc_table->num_classes);
+    for (uint32_t i = 0; i < rfc_table->num_classes; i++) {
+        rte_bitmap2str(rfc_table->cbm_table[i], cbm_ss);
+        OCI_TRACE_DEBUG("class id %u, cbm %s", i, cbm_ss.str().c_str());
+        cbm_ss.clear();
+        cbm_ss.str("");
+    }
+}
+
+static inline void
+rfc_p0_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
+{
+    OCI_TRACE_DEBUG("RFC P0 prefix tree equivalence class table dump :");
+    rfc_eq_class_table_dump(&rfc_ctxt->pfx_tree.rfc_table);
+    OCI_TRACE_DEBUG("RFC P0 port tree equivalence class table dump :");
+    rfc_eq_class_table_dump(&rfc_ctxt->port_tree.rfc_table);
+    OCI_TRACE_DEBUG("RFC P0 (proto, port) tree equivalence class table dump :");
+    rfc_eq_class_table_dump(&rfc_ctxt->proto_port_tree.rfc_table);
+}
+
+/**
  * @brief    build interval tree based RFC LPM trees and index tables for
  *           subsequent RFC phases, starting at the given memory address
  * @param[in] policy           pointer to the policy
@@ -258,7 +288,8 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
     rfc_sort_itables(&rfc_ctxt, policy);
 
     /**< compute equivalence classes for the intervals in the interval trees */
-    rfc_compute_classes(policy, &rfc_ctxt);
+    rfc_compute_p0_classes(policy, &rfc_ctxt);
+    rfc_p0_eq_class_tables_dump(&rfc_ctxt);
 
     /**< build LPM trees for phase 0 of RFC */
     ret = rfc_build_lpm_trees(policy, &rfc_ctxt, rfc_tree_root_addr, mem_size);

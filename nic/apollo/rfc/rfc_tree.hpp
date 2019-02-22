@@ -85,6 +85,12 @@ void itable_add_port_inodes(uint32_t rule, inode_t *port_inode,
                             port_range_t *port_range);
 void itable_add_proto_port_inodes(uint32_t rule, inode_t *proto_port_inode,
                                   uint8_t ip_proto, port_range_t *port_range);
+/**
+ * @brief    dump the contents of given equivalence table
+ * @param[in] rfc_ctxt    RFC context carrying all of the previous phases
+ *                        information processed until now
+ */
+void rfc_eq_class_table_dump(rfc_table_t *rfc_table);
 
 }    // namespace rfc
 
