@@ -1,119 +1,89 @@
 package revproxy
 
 import (
-	"net"
+	"io/ioutil"
 	"net/http"
-	"os"
+	"net/http/httptest"
 	"testing"
-	"time"
 
-	"github.com/gorilla/mux"
-
-	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/netutils"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
-var apiPfx = "api"
-var apiPort = "9007"
-var apiResp = "hello from 9007"
+func TestRevProxy(t *testing.T) {
+	proxyCfg := map[string]*struct {
+		prefix     []string
+		httpServer *httptest.Server
+		resp       *httptest.ResponseRecorder
+	}{
+		"nmd": {
+			prefix: []string{"/api/v1/naples",
+				"/monitoring/",
+				"/cores/",
+				"/cmd/",
+				"/update/"},
+		},
+		"tmagent": {
+			prefix: []string{"/telemetry/",
+				"/api/telemetry/"},
+		},
+		"events": {
+			prefix: []string{"/api/eventpolicies/"},
+		},
 
-var nicPfx = "nic"
-var nicPort = "9008"
-var nicResp = "hello from 9008"
-
-var invalidBody = "nable to get a matching endpoint. Url: /test/ Path: [test"
-
-func TestMain(m *testing.M) {
-	srv1, err := newRestServer(":"+apiPort, "/"+apiPfx+"/", addRoutes)
-	if err != nil {
-		log.Fatalf("Test set up failed. Error: %v", err)
-	}
-	srv2, err := newRestServer(":"+nicPort, "/"+nicPfx+"/", addRoutes2)
-	if err != nil {
-		log.Fatalf("Test set up failed. Error: %v", err)
-	}
-	rev, err := NewRevProxyRouter(":8888")
-	if err != nil {
-		log.Fatalf("Could not start Rev Proxy Server. Error: %v", err)
-	}
-	time.Sleep(2 * time.Second)
-
-	testCode := m.Run()
-	defer srv1.httpServer.Close()
-	defer srv2.httpServer.Close()
-	defer rev.Stop()
-	os.Exit(testCode)
-}
-
-type restServer struct {
-	httpServer *http.Server // HTTP server
-}
-
-func (s *restServer) responseHandler2(r *http.Request) (interface{}, error) {
-	return nicResp, nil
-}
-
-func addRoutes2(r *mux.Router, srv *restServer) {
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.responseHandler2))
-}
-
-func (s *restServer) responseHandler(r *http.Request) (interface{}, error) {
-	return apiResp, nil
-}
-
-func addRoutes(r *mux.Router, srv *restServer) {
-	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(srv.responseHandler))
-}
-
-type routeAddFunc func(*mux.Router, *restServer)
-
-func newRestServer(listenURL string, prefix string, api routeAddFunc) (*restServer, error) {
-	srv := &restServer{}
-	// setup the top level routes
-	router := mux.NewRouter()
-	prefixRoutes := map[string]routeAddFunc{
-		prefix: api,
+		"netagent": {
+			prefix: []string{"/api/"},
+		},
 	}
 
-	for prefix, subRouter := range prefixRoutes {
-		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
-		subRouter(sub, srv)
+	for k, rp := range proxyCfg {
+		func(agent string) {
+			// start proxy http server
+			rp.httpServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				log.Infof("[%s] received req: %v", agent, r.URL)
+				w.Write([]byte(agent))
+
+			}))
+		}(k)
+		defer rp.httpServer.Close()
 	}
 
-	log.Infof("Starting server at %s", listenURL)
-
-	// listener
-	listener, err := net.Listen("tcp", listenURL)
-	if err != nil {
-		log.Errorf("Error starting listener. Err: %v", err)
-		return nil, err
+	proxyRte := map[string]string{}
+	for _, rp := range proxyCfg {
+		for _, p := range rp.prefix {
+			proxyRte[p] = rp.httpServer.URL
+		}
 	}
 
-	// create a http server
-	httpServer := &http.Server{Addr: listenURL, Handler: router}
-	go httpServer.Serve(listener)
+	srv, err := NewRevProxyRouter("127.0.0.1:", proxyRte)
+	AssertOk(t, err, "failed to create proxy server")
+	defer srv.Stop()
 
-	srv.httpServer = httpServer
+	frontend := srv.httpServer
+	log.Infof("front-end %v", frontend.Addr)
 
-	return srv, nil
-}
-
-func test(t *testing.T, pfx string, port string, url string, test string) {
-	AddRevProxyDest(pfx, port)
-	body, err := netutils.HTTPGetRaw(url)
-	if err != nil {
-		t.Errorf("Could not receive response. Error: %v", err)
+	for key, route := range proxyCfg {
+		for _, prefix := range route.prefix {
+			URL := "http://" + frontend.Addr + prefix
+			log.Infof("GET %v", URL)
+			resp, err := http.Get(URL)
+			AssertOk(t, err, "failed to query %s", URL)
+			defer resp.Body.Close()
+			data, err := ioutil.ReadAll(resp.Body)
+			AssertOk(t, err, "failed to read response %s", URL)
+			Assert(t, string(data) == key, "proxy routed %v to wrong process exptreced %v got %v", URL, string(data), key)
+		}
 	}
-	s := string(body)
-	s = s[1 : len(s)-2]
-	if s != test {
-		t.Errorf("invalid body %s", string(body))
-	}
-}
 
-func TestRestServerStartStop(t *testing.T) {
-	test(t, apiPfx, apiPort, "http://localhost:8888/api/", apiResp)
-	test(t, nicPfx, nicPort, "http://localhost:8888/nic/", nicResp)
-	test(t, nicPfx, nicPort, "http://localhost:8888/test/", invalidBody)
+	// stop & try
+	resp, err := http.Get("http://" + frontend.Addr + "/stop")
+	AssertOk(t, err, "failed to stop reverse proxy")
+	Assert(t, resp.StatusCode == http.StatusOK, "failed to stop proxy")
+	AssertEventually(t, func() (bool, interface{}) {
+		if srv.httpServer != nil {
+			return false, srv.httpServer
+		}
+		return true, nil
+	}, "failed to stop http server")
+
 }

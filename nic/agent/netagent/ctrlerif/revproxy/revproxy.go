@@ -2,106 +2,69 @@ package revproxy
 
 import (
 	"context"
-	"fmt"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
+	"sort"
 	"time"
 
-	"github.com/pensando/sw/venice/utils"
+	"github.com/gorilla/mux"
+
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-var revProxyMap map[string]string
-
-// Get the port for a given request
-func getProxyPort(requrl *url.URL) (string, error) {
-	sliceP := strings.SplitN(requrl.Path, "/", 2)
-	log.Infof("getProxyPort: %s", sliceP[1])
-
-	var mostMatchedPrefix string
-	for prefix := range revProxyMap {
-		if strings.HasPrefix(sliceP[1], prefix) && len(prefix) > len(mostMatchedPrefix) {
-			mostMatchedPrefix = prefix
-		}
-	}
-	if !utils.IsEmpty(mostMatchedPrefix) {
-		port := revProxyMap[mostMatchedPrefix]
-		log.Debugf("matching port for prefix {%s}: %s", sliceP[1], port)
-		return port, nil
-	}
-	return "", fmt.Errorf("Unable to get a matching endpoint. Url: %s Path: %s", requrl.String(), sliceP[1:])
-}
-
-// Serve a reverse proxy for a given url
-func serveReverseProxy(target string, res http.ResponseWriter, req *http.Request) {
-	// parse the url
-	url, _ := url.Parse(target)
-
-	// create the reverse proxy
-	httputil.NewSingleHostReverseProxy(url).ServeHTTP(res, req)
-}
-
-// Given a request send it to the appropriate destination
-func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
-	host, err := getProxyPort(req.URL)
-	if err != nil {
-		fmt.Fprintf(res, "%+v", err.Error())
-		log.Infof("Err: %v", err)
-		return
-	}
-	host = "http://localhost:" + host
-	serveReverseProxy(host, res, req)
-}
-
-func initRevProxyMap() {
-	if revProxyMap == nil {
-		revProxyMap = make(map[string]string)
-	}
-}
-
-// AddRevProxyDest will add prefix+port to the revProxyMap map for lookups
-func AddRevProxyDest(prefix string, port string) {
-	initRevProxyMap()
-	revProxyMap[prefix] = port
-	log.Infof("AddRevProxyDest: %s:%s", prefix, port)
-}
-
 // Server holds information about the reverse proxy http server
 type Server struct {
-	listenURL  string       // URL where http server is listening
 	httpServer *http.Server // HTTP server
 }
 
-var selfServer *Server
-
 // NewRevProxyRouter creates a new reverse proxy router
-func NewRevProxyRouter(listenURL string) (*Server, error) {
-	initRevProxyMap()
-	revProxyRouter := Server{
-		listenURL: listenURL,
-	}
-	log.Infof("listenURL: %s", listenURL)
-	revProxyRouter.httpServer = &http.Server{Addr: listenURL}
+func NewRevProxyRouter(listenURL string, proxyConfig map[string]string) (*Server, error) {
+	muxRtr := mux.NewRouter()
 
-	http.HandleFunc("/", handleRequestAndRedirect)
-	http.HandleFunc("/revproxy/stop", handleStopRequest)
-	revProxyRouter.Start()
-	selfServer = &revProxyRouter
-	return &revProxyRouter, nil
+	// register longest prefix first, mux picks route in the order registered not by the longest prefix
+	// https://github.com/gorilla/mux/issues/453
+	keys := []string{}
+	for k := range proxyConfig {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for k := range keys {
+		prefix := keys[len(keys)-1-k]
+		proxyURL, err := url.Parse(proxyConfig[prefix])
+		if err != nil {
+			log.Fatalf("invalid proxy %v: %v", prefix, proxyURL)
+		}
+
+		proxy := httputil.NewSingleHostReverseProxy(proxyURL)
+		muxRtr.PathPrefix(prefix).HandlerFunc(proxy.ServeHTTP)
+		log.Infof("proxy %v: %v", listenURL+prefix, proxyURL.String())
+	}
+
+	listener, err := net.Listen("tcp", listenURL)
+	if err != nil {
+		log.Errorf("Error starting listener. Err: %v", err)
+		return nil, err
+	}
+
+	httpServer := &http.Server{Addr: listener.Addr().String()}
+	proxyServer := &Server{httpServer: httpServer}
+
+	// register /stop
+	muxRtr.HandleFunc("/stop", proxyServer.handleStopRequest)
+
+	// update http handler
+	httpServer.Handler = muxRtr
+
+	go httpServer.Serve(listener)
+
+	return proxyServer, nil
 }
 
-// Start starts the http server
-func (s *Server) Start() error {
-	if s.httpServer != nil {
-		go s.httpServer.ListenAndServe()
-	}
-	return nil
-}
-
-func handleStopRequest(res http.ResponseWriter, req *http.Request) {
-	selfServer.Stop()
+func (s *Server) handleStopRequest(res http.ResponseWriter, req *http.Request) {
+	go s.Stop()
 }
 
 // Stop stops the http server
@@ -113,6 +76,8 @@ func (s *Server) Stop() error {
 			log.Infof("Could not shut Reverse Proxy Router. Err: %v", err)
 			return err
 		}
+		s.httpServer = nil
+		log.Infof("shutting down reverse proxy")
 	}
 	return nil
 }

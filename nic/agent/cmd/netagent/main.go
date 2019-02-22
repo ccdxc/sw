@@ -140,21 +140,6 @@ func main() {
 		tsdp = mockDp
 	}
 
-	// create the reverse proxy router
-	if proxyRouter, ok := revproxy.NewRevProxyRouter(*revProxyURL); ok == nil {
-		log.Printf("Reverse Proxy Router instantiated")
-		revproxy.AddRevProxyDest("api", globals.NmdRESTPort)
-		revproxy.AddRevProxyDest("monitoring", globals.NmdRESTPort)
-		revproxy.AddRevProxyDest("telemetry", globals.TmAGENTRestPort)
-		revproxy.AddRevProxyDest("cores", globals.NmdRESTPort)
-		revproxy.AddRevProxyDest("cmd", globals.NmdRESTPort)
-		revproxy.AddRevProxyDest("update", globals.NmdRESTPort)
-		revproxy.AddRevProxyDest("api/eventpolicies", globals.EvtsProxyRESTPort)
-		defer proxyRouter.Stop()
-	} else {
-		log.Fatalf("Could not start Reverse Proxy Router. Err: %v", err)
-	}
-
 	// TODO remove the command line switch
 	if *disableTSA {
 		restServer, err := restapi.NewRestServer(ag.NetworkAgent, nil, nil, *restURL)
@@ -189,6 +174,33 @@ func main() {
 	if len(hostIfMAC) > 0 {
 		ag.NetworkAgent.NodeUUID = hostIfMAC
 	}
+
+	// start reverse proxy after local REST server is initialized
+	proxyConfig := map[string]string{
+		// NMD
+		"/api/v1/naples": "http://127.0.0.1:" + globals.NmdRESTPort,
+		"/monitoring/":   "http://127.0.0.1:" + globals.NmdRESTPort,
+		"/cores/":        "http://127.0.0.1:" + globals.NmdRESTPort,
+		"/cmd/":          "http://127.0.0.1:" + globals.NmdRESTPort,
+		"/update/":       "http://127.0.0.1:" + globals.NmdRESTPort,
+
+		// TM-AGENT
+		"/telemetry/":     "http://127.0.0.1:" + globals.TmAGENTRestPort,
+		"/api/telemetry/": "http://127.0.0.1:" + globals.TmAGENTRestPort,
+
+		// EVENTS
+		"/api/eventpolicies/": "http://127.0.0.1:" + globals.EvtsProxyRESTPort,
+
+		// NET-AGENT
+		"/api ": "http://127.0.0.1:" + globals.AgentRESTPort,
+	}
+
+	proxyRouter, err := revproxy.NewRevProxyRouter(*revProxyURL, proxyConfig)
+	if err != nil {
+		log.Fatalf("Could not start Reverse Proxy Router. Err: %v", err)
+	}
+
+	defer proxyRouter.Stop()
 
 	log.Infof("%s is running {%+v}.  With UUID: %v", globals.Netagent, ag, ag.NetworkAgent.NodeUUID)
 
