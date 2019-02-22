@@ -267,13 +267,13 @@ static int ionic_set_coalesce(struct net_device *netdev,
 
 	if (coalesce->tx_coalesce_usecs != lif->tx_coalesce_usecs) {
 		for (i = 0; i < lif->nxqs; i++)
-			ionic_intr_coal_set(&lif->txqcqs[i]->intr, tx_coal);
+			ionic_intr_coal_set(&lif->txqcqs[i].qcq->intr, tx_coal);
 		lif->tx_coalesce_usecs = coalesce->tx_coalesce_usecs;
 	}
 
 	if (coalesce->rx_coalesce_usecs != lif->rx_coalesce_usecs) {
 		for (i = 0; i < lif->nxqs; i++)
-			ionic_intr_coal_set(&lif->rxqcqs[i]->intr, rx_coal);
+			ionic_intr_coal_set(&lif->rxqcqs[i].qcq->intr, rx_coal);
 		lif->rx_coalesce_usecs = coalesce->rx_coalesce_usecs;
 	}
 

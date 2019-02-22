@@ -54,6 +54,13 @@ struct napi_stats {
 	u64 work_done_cntr[MAX_NUM_NAPI_CNTR];
 };
 
+struct q_stats {
+	union {
+		struct tx_stats tx;
+		struct rx_stats rx;
+	};
+};
+
 struct qcq {
 	void *base;
 	dma_addr_t base_pa;
@@ -63,18 +70,20 @@ struct qcq {
 	struct intr intr;
 	struct napi_struct napi;
 	struct napi_stats napi_stats;
-	union {
-		struct tx_stats tx;
-		struct rx_stats rx;
-	} stats;
+	struct q_stats *stats;
 	unsigned int flags;
 	struct dentry *dentry;
 	unsigned int master_slot;
 };
 
+struct qcqst {
+	struct qcq *qcq;
+	struct q_stats *stats;
+};
+
 #define q_to_qcq(q)		container_of(q, struct qcq, q)
-#define q_to_tx_stats(q)	(&q_to_qcq(q)->stats.tx)
-#define q_to_rx_stats(q)	(&q_to_qcq(q)->stats.rx)
+#define q_to_tx_stats(q)	(&q_to_qcq(q)->stats->tx)
+#define q_to_rx_stats(q)	(&q_to_qcq(q)->stats->rx)
 #define napi_to_qcq(napi)	container_of(napi, struct qcq, napi)
 #define napi_to_cq(napi)	(&napi_to_qcq(napi)->cq)
 
@@ -138,8 +147,8 @@ struct lif {
 	spinlock_t adminq_lock;
 	struct qcq *adminqcq;
 	struct qcq *notifyqcq;
-	struct qcq **txqcqs;
-	struct qcq **rxqcqs;
+	struct qcqst *txqcqs;
+	struct qcqst *rxqcqs;
 	u64 last_eid;
 	unsigned int neqs;
 	unsigned int nxqs;
@@ -170,8 +179,8 @@ struct lif {
 	struct work_struct tx_timeout_work;
 };
 
-#define lif_to_txqcq(lif, i)	(lif->txqcqs[i])
-#define lif_to_rxqcq(lif, i)	(lif->rxqcqs[i])
+#define lif_to_txqcq(lif, i)	(lif->txqcqs[i].qcq)
+#define lif_to_rxqcq(lif, i)	(lif->rxqcqs[i].qcq)
 #define lif_to_txq(lif, i)	(&lif_to_txqcq(lif, i)->q)
 #define lif_to_rxq(lif, i)	(&lif_to_txqcq(lif, i)->q)
 #define is_master_lif(lif)	((lif)->index == 0)
@@ -204,7 +213,7 @@ static void inline debug_stats_txq_post(struct qcq *qcq,
 	if (sg_cntr_idx > (MAX_NUM_SG_CNTR - 1))
 		sg_cntr_idx = MAX_NUM_SG_CNTR - 1;
 
-	qcq->stats.tx.sg_cntr[sg_cntr_idx]++;
+	qcq->stats->tx.sg_cntr[sg_cntr_idx]++;
 }
 
 static inline void debug_stats_napi_poll(struct qcq *qcq,
@@ -227,7 +236,7 @@ static inline void debug_stats_napi_poll(struct qcq *qcq,
 
 #define DEBUG_STATS_RX_BUFF_CNT(qcq) \
 	do { \
-		(qcq)->stats.rx.buffers_posted++; \
+		(qcq)->stats->rx.buffers_posted++; \
 	} while (0);
 
 #define DEBUG_STATS_INTR_REARM(intr) \

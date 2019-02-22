@@ -330,7 +330,7 @@ int ionic_rx_napi(struct napi_struct *napi, int budget)
 	struct cq *rxcq = napi_to_cq(napi);
 	unsigned int qi = rxcq->bound_q->index;
 	struct lif *lif = rxcq->bound_q->lif;
-	struct cq *txcq = &lif->txqcqs[qi]->cq;
+	struct cq *txcq = &lif->txqcqs[qi].qcq->cq;
 
 	ionic_cq_service(txcq, -1, ionic_tx_service, NULL, NULL);
 
@@ -794,7 +794,7 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 	 * TODO: rework to not let this case happen
 	 */
 	q = NULL;
-	if (lif->txqcqs[queue_index])
+	if (lif->txqcqs[queue_index].qcq)
 		q = lif_to_txq(lif, queue_index);
 	if (!q) {
 		netdev_info(skb->dev, "%s: bad queue_index=%d\n",
