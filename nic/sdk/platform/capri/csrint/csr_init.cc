@@ -17,7 +17,7 @@ namespace platform {
 namespace capri {
 
 void
-csr_init ()
+csr_init (void)
 {
     static bool csr_init_done = false;
 
@@ -40,6 +40,6 @@ csr_init ()
     return;
 }
 
-} // end namespace capri
-} // end namespace platform
-} // end namespace sdk
+}    // end namespace capri
+}    // end namespace platform
+}    // end namespace sdk

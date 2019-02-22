@@ -4256,6 +4256,8 @@ def capri_p4pd_create_swig_makefile(be):
 def capri_p4pd_create_swig_custom_hdr(be):
 
     name = be.prog_name
+    if name == 'apollo':
+        name = 'p4'
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
@@ -4336,59 +4338,11 @@ void
         of.write(content_str)
         of.close()
 
-"""
-def capri_p4pd_create_bazel_build(be):
-
-    name = be.prog_name
-    out_dir = be.args.gen_dir + '/%s/cli/' % (name)
-
-    if not os.path.exists(out_dir):
-        try:
-            os.makedirs(out_dir)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
-    content_str = 'package(default_visibility = ["//visibility:public"])\n'
-    content_str += '\n'
-    content_str += 'licenses(["notice"])  # MIT license\n'
-    content_str += '\n'
-    content_str += 'cc_library(\n'
-    content_str += '    name = "swig_includes",\n'
-    content_str += '    hdrs = [\n'
-    content_str += '    ] + glob(["*.hpp"]) + glob(["*.h"]),\n'
-    content_str += ')\n'
-    content_str += '\n'
-    content_str += '# use cc_binary to force the lib name\n'
-    content_str += 'cc_binary(\n'
-    content_str += '    name = "_iris.so",\n'
-    content_str += '    linkshared = 1,\n'
-    content_str += '    srcs = [\n'
-    content_str += '    ] + glob(["*.cc"]),\n'
-    content_str += '    deps = [\n'
-    content_str += '        "//nic/include:base_includes",\n'
-    content_str += '        "@python_path//:python27-lib",\n'
-    content_str += '        ":swig_includes",\n'
-    content_str += '        "//nic:gen_includes",\n'
-    content_str += '        "//nic:gen_proto_includes",\n'
-    content_str += '        "//nic:halproto",\n'
-    content_str += '        "//nic:grpc",\n'
-    content_str += '    ],\n'
-    content_str += 'linkopts = [\n'
-    content_str += '    "-lprotobuf",\n'
-    content_str += '],\n'
-    content_str += ')\n'
-
-    out_file = out_dir + 'BUILD'
-    with open(out_file, "w") as of:
-        of.write(content_str)
-        of.close()
-    os.chmod(out_file, 0o755)
-"""
-
 def capri_p4pd_create_swig_interface(be):
 
     name = be.prog_name
+    if name == 'apollo':
+        name = 'p4'
     out_dir = be.args.gen_dir + '/%s/cli/' % (name)
 
     if not os.path.exists(out_dir):
@@ -4415,7 +4369,7 @@ def capri_p4pd_create_swig_interface(be):
     #                         (be.args.pipeline, name, hdr_name)
     # else:
     #    p4pd_cli_swig_dir = "nic/gen/%s/include/%s" % (name, hdr_name) 
-    module_name = 'lib' + name + '_p4pdcli'
+    module_name = be.args.pipeline + '_lib' + be.prog_name + '_p4pdcli'
     content_str = \
 """/* This file is auto-generated. Changes will be overwritten! */
 /* %s.i */""" %(name) + """
@@ -4430,6 +4384,7 @@ def capri_p4pd_create_swig_interface(be):
     #include""" + ' "' + p4pd_cli_swig_dir + """p4pd_cli_swig.h"
     #include""" +' "' + p4pd_cust_dir + name + """_custom.h"
     extern int capri_init(void);
+
 
     namespace hal {
         thread_local std::thread *t_curr_thread;

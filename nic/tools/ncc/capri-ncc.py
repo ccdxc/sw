@@ -98,7 +98,7 @@ def get_parser():
                         default=False, required=False)
     parser.add_argument('--pipeline', dest='pipeline', action='store',
                         help='Pipeline', choices=['iris', 'gft', 'apollo'],
-                        default=None, required=False)
+                        default='iris', required=False)
     parser.add_argument('--pdb-on-assert', dest='pdb_on_assert', action='store_true',
                         help='Enter pdb on assert',
                         default=False, required=False)

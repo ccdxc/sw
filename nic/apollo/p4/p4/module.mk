@@ -1,9 +1,10 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = apollo_p4.p4bin
 MODULE_SRCS     = ${MODULE_SRC_DIR}/apollo.p4
 MODULE_PIPELINE = apollo
-MODULE_NCC_OPTS = --asm-out --gen-dir ${BLD_P4GEN_DIR} \
+MODULE_NCC_OPTS = --pipeline=apollo --asm-out --gen-dir ${BLD_P4GEN_DIR} \
                   --cfg-dir ${BLD_PGMBIN_DIR}/apollo_p4 \
                   --i2e-user --fe-flags="-I${TOPDIR} -I${SDKDIR}"
 MODULE_DEPS     = $(shell find ${MODULE_DIR} -name '*.p4' -o -name '*.h') \

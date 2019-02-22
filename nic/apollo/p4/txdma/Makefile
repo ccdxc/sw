@@ -9,7 +9,7 @@ include $(TOPDIR)/make/Makefile.inc
 NCC = $(TOPDIR)/tools/ncc/capri-ncc.py
 PROJ = apollo_txdma
 OBJ_DIR = $(TOPDIR)/obj/$(PROJ)
-NCC_OPTIONS = --asm-out --p4-plus --no-ohi --two-byte-profile --pd-gen --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin
+NCC_OPTIONS = --pipeline=apollo --asm-out --p4-plus --no-ohi --two-byte-profile --pd-gen --gen-dir $(GEN_DIR) --cfg-dir $(OBJ_DIR)/pgm_bin
 NCC_OPTIONS += --fe-flags="-I$(SWDIR)"
 
 p4_src = $(shell find $(SOURCEDIR) -name '*.p4')

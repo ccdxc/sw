@@ -12,4 +12,6 @@ export LD_LIBRARY_PATH=/nic/lib:/platform/lib:/nic/cli
 export HAL_CONFIG_PATH=/nic/conf
 if [ "$1" = "iris" ] || [ "$1" = "" ]; then
 	python3 /nic/cli/debug_cli_iris.py repl
+elif [ "$1" = "apollo" ]; then
+	python3 /nic/cli/debug_cli_apollo.py repl
 fi

@@ -1,21 +1,22 @@
-#CLI
-nic/debug_cli/cli/debug_cli_$PIPELINE.py                                                        /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4genclicommon/cli_frontend.py                                    /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4genclicommon/cli.py                                             /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/p4/cli/p4_frontend.py                                       /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/p4/cli/p4_backend.py                                        /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/p4/cli/libp4_p4pdcli.py                                     /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/cli/libcommon_txdma_actions_p4pdcli.py /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/cli/common_txdma_actions_backend.py    /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/cli/common_txdma_actions_frontend.py   /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/cli/common_rxdma_actions_frontend.py   /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/cli/common_rxdma_actions_backend.py    /nic/cli/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/cli/libcommon_rxdma_actions_p4pdcli.py /nic/cli/
-nic/build/$ARCH/$PIPELINE/lib/_libcommon_txdma_actions_p4pdcli.so                               /nic/cli/
-nic/build/$ARCH/$PIPELINE/lib/_libcommon_rxdma_actions_p4pdcli.so                               /nic/cli/
-nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                                                  /nic/cli/
-nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                                                       /nic/cli/
-nic/build/$ARCH/$PIPELINE/lib/_libp4_p4pdcli.so                                                 /nic/cli/
-nic/build/$ARCH/$PIPELINE/lib/_cli.so                                                           /nic/cli/
-dir_dummy                                                                                       /usr/lib/locale/
-nic/tools/p4ctl                                                                                 /nic/tools/
+# CLI
+nic/debug_cli/cli/debug_cli_$PIPELINE.py                             /nic/cli/
+nic/build/$ARCH/$PIPELINE/gen/p4genclicommon/cli_frontend.py         /nic/cli/
+nic/build/$ARCH/$PIPELINE/gen/p4genclicommon/cli.py                  /nic/cli/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/p4/cli/*.py                      /nic/cli/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/common_txdma_actions/cli/*.py    /nic/cli/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/common_rxdma_actions/cli/*.py    /nic/cli/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/apollo_txdma/cli/*.py            /nic/cli/
+nic/build/$ARCH/$PIPELINE/gen/p4gen/apollo_rxdma/cli/*.py            /nic/cli/
+nic/build/$ARCH/$PIPELINE/lib/_$PIPELINE_*_p4pdcli.so                /nic/cli/
+nic/build/$ARCH/$PIPELINE/lib/libsdkp4utils.so                       /nic/cli/
+nic/build/$ARCH/$PIPELINE/lib/libsdkp4.so                            /nic/cli/
+nic/build/$ARCH/$PIPELINE/lib/_cli.so                                /nic/cli/
+nic/tools/p4ctl                                                      /nic/tools/
+
+# create only dir structure
+dir_dummy                                                            /usr/lib/locale/
+
+# locale
+nic/sdk/third-party/locale/aarch64/bin/locale                        /usr/bin/
+nic/sdk/third-party/locale/aarch64/bin/localedef                     /usr/bin/
+nic/sdk/third-party/locale/aarch64/locale.tar                        /usr/share/i18n/

@@ -1,3 +1,4 @@
+//:: prog_name = _context['prog_name']
 #!/usr/bin/python
 # This file is auto-generated. Changes will be overwritten!
 #
@@ -6,7 +7,7 @@
 
 import os
 import click
-import p4_backend as backend
+import ${prog_name}_backend as backend
 
 //:: #register_list =  ["ppa","sgi","rpc","intr","pxb","sge","pr","pp","pt","tsi","pcr","txs","tse","pct","pb","pm","db","ssi","sse","bx","md","tpc","dpr","mc","dpp","sema","mp", "ms","mx"]
 //:: register_list = []

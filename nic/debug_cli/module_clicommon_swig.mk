@@ -1,7 +1,8 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = clicommon.swigcli
-MODULE_PIPELINE 	= iris
+MODULE_PIPELINE 	= iris apollo
 MODULE_PREREQS      = p4cli.submake
 MODULE_SRC_DIR      = ${BLD_P4CLICMN_DIR}
 MODULE_FLAGS        = -c++ -python

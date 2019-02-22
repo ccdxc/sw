@@ -112,9 +112,16 @@ export CLI_P4PD_INCS := ${NIC_DIR}/hal/third-party/google/include \
                         /usr/include/python3.6m \
                         /usr/include/python3.4m
 export CLI_P4PD_FLAGS := -Wl,--allow-multiple-definition -Wno-sign-compare
-export CLI_P4PD_LDLIBS := :libprotobuf.so.14 grpc++_reflection grpc++ grpc_unsecure grpc++_unsecure rt ev
-export CLI_P4PD_SOLIBS := halproto sdkp4utils delphisdk
-
+export CLI_iris_P4PD_LDLIBS := :libprotobuf.so.14 grpc++_reflection grpc++ grpc_unsecure grpc++_unsecure rt ev
+export CLI_apollo_P4PD_LDLIBS := ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS}
+export CLI_iris_P4PD_SOLIBS := halproto sdkp4utils delphisdk
+export CLI_apollo_P4PD_SOLIBS := ${NIC_${PIPELINE}_P4PD_SOLIBS} \
+                                 ${NIC_SDK_SOLIBS} \
+                                 ${NIC_HAL_PD_SOLIBS_${ARCH}} \
+                                 sdkp4 sdkp4utils sdkcapri_csrint \
+                                 sdkcapri_asicrw_if sdkcapri \
+                                 sdkplatformutils sdkasicpd memhash \
+                                 bm_allocator pal
 # ==========================================================================
 #                           Third-party Libs
 # ==========================================================================
