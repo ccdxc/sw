@@ -3530,12 +3530,15 @@ ${api_prefix}_table_entry_decoded_string_get(uint32_t   tableid,
 //::        #endif
 //::            if len(pddict['tables'][table]['hash_overflow_tbl']):
             if (tableid == P4${caps_p4prog}TBL_ID_${caps_tablename}) {
-                b = snprintf(buf, blen, "Table: %s, Index 0x%x\n", "P4TBL_ID_${caps_tablename}", index);
+                b = snprintf(buf, blen, "Table: %s, Index 0x%x/%u\n",
+                             "P4TBL_ID_${caps_tablename}", index, index);
             } else {
-                b = snprintf(buf, blen, "Table: %s, Index 0x%x\n", "P4TBL_ID_${caps_tbl_}", index);
+                b = snprintf(buf, blen, "Table: %s, Index 0x%x/%u\n",
+                             "P4TBL_ID_${caps_tbl_}", index, index);
             }
 //::            else:
-            b = snprintf(buf, blen, "Table: %s, Index 0x%x\n", "P4TBL_ID_${caps_tablename}", index);
+            b = snprintf(buf, blen, "Table: %s, Index 0x%x/%u\n",
+                         "P4TBL_ID_${caps_tablename}", index, index);
 //::            #endif
             buf += b;
             blen -= b;
@@ -4136,15 +4139,15 @@ ${api_prefix}_table_ds_decoded_string_get(uint32_t   tableid,
         {
 //::            if len(pddict['tables'][table]['hash_overflow_tbl']):
             if (tableid == P4${caps_p4prog}TBL_ID_${caps_tablename}) {
-                b = snprintf(buf, blen, "Table : %s, Index : 0x%x\n",
-                             "P4TBL_ID_${caps_tablename}", index);
+                b = snprintf(buf, blen, "Table : %s, Index : 0x%x/%u\n",
+                             "P4TBL_ID_${caps_tablename}", index, index);
             } else {
-                b = snprintf(buf, blen, "Table : %s, Index : 0x%x\n",
-                             "P4TBL_ID_${caps_tbl_}", index);
+                b = snprintf(buf, blen, "Table : %s, Index : 0x%x/%u\n",
+                             "P4TBL_ID_${caps_tbl_}", index, index);
             }
 //::            else:
-            b = snprintf(buf, blen, "Table : %s, Index : 0x%x\n",
-                         "P4TBL_ID_${caps_tablename}", index);
+            b = snprintf(buf, blen, "Table : %s, Index : 0x%x/%u\n",
+                         "P4TBL_ID_${caps_tablename}", index, index);
 //::            #endif
             buf += b;
             blen -= b;
