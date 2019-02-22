@@ -384,11 +384,11 @@ static void ionic_remove(struct pci_device *pci)
 	// Unregister network device
 	unregister_netdev(netdev);
 
-	// Reset card
-	ionic_reset(ionic);
-
 	// Reset lif
 	ionic_lif_reset(ionic);
+
+	// Reset card
+	ionic_reset(ionic);
 
 	// Free network device
 	free_dma(ionic->ident, sizeof(union identity));
