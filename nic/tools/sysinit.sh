@@ -99,4 +99,6 @@ $NIC_DIR/bin/sysmgr /nic/conf/sysmgr.json &
 #     ethtool -K eth0 rx off
 # fi
 
+$NIC_DIR/tools/bringup_mgmt_ifs.sh &>/var/log/pensando/mgmt_if.log &
+
 echo "All processes brought up, please check ..."
