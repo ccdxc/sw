@@ -3,6 +3,7 @@
 nic/build/aarch64/iris/bin/capview                                              /platform/bin/
 nic/build/aarch64/iris/bin/palreg                                               /platform/bin/
 nic/build/aarch64/iris/bin/cpldapp                                              /platform/bin/
+nic/build/aarch64/iris/bin/cpld                                                 /platform/bin/
 nic/build/aarch64/iris/bin/palutils                                             /platform/bin/
 nic/build/aarch64/iris/bin/captrace                                             /platform/bin/
 nic/build/aarch64/iris/bin/memtun                                               /platform/bin/
