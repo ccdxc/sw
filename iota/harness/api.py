@@ -379,7 +379,7 @@ def AddWorkloadTeardown(req, workload):
             #Check if it is already added.
             if wreq.workload_name == workload.workload_name:
                 return
-        assert(IsWorkloadRunning(workload.workload_name))
+        #assert(IsWorkloadRunning(workload.workload_name))
         wl_msg = req.workloads.add()
         wl_msg.workload_name = wl.workload_name
         wl_msg.node_name = wl.node_name
@@ -393,7 +393,7 @@ def AddWorkloadBringUp(req, workload):
             #Check if it is already added.
             if wreq.workload_name == workload.workload_name:
                 return
-        assert(not IsWorkloadRunning(workload.workload_name))
+        #assert(not IsWorkloadRunning(workload.workload_name))
         wl_msg = req.workloads.add()
         wl_msg.ip_prefix = wl.ip_prefix
         wl_msg.ipv6_prefix = wl.ipv6_prefix
@@ -404,7 +404,7 @@ def AddWorkloadBringUp(req, workload):
         wl_msg.node_name = wl.node_name
         wl_msg.pinned_port = wl.pinned_port
         wl_msg.interface_type = wl.interface_type
-        wl_msg.interface = wl.parent_interface
+        wl_msg.interface = wl.interface
         wl_msg.parent_interface = wl.parent_interface
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image

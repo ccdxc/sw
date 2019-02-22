@@ -12,4 +12,9 @@ def Main(step):
     if resp == None:
         return api.types.status.FAILURE
     else:
+        for cmd in resp.commands: 
+            if cmd.exit_code != 0:
+                api.Logger.info("Enable l2-fwd-offload FAILED!")
+                api.Logger.info(cmd.stderr)
+                return api.types.status.FAILURE
         return api.types.status.SUCCESS
