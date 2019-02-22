@@ -33,11 +33,10 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_ring_barco_doorbell:
 
     add r2, r0, k.ipsec_to_stage4_barco_req_addr
     blti r2, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_req
-    phvwr p.brq_req_write_dma_cmd_addr, k.ipsec_to_stage4_barco_req_addr 
 
     CAPRI_DMA_CMD_PHV2MEM_SETUP_I(dma_cmd_incr_pindex_dma_cmd, CAPRI_BARCO_MD_HENS_REG_GCM0_PRODUCER_IDX, barco_dbell_pi, barco_dbell_pi)
     CAPRI_DMA_CMD_STOP_FENCE(dma_cmd_incr_pindex_dma_cmd)
-    phvwri.e p.dma_cmd_incr_pindex_dma_cmd_eop, 1
+    phvwr.e p.brq_req_write_dma_cmd_addr, k.ipsec_to_stage4_barco_req_addr 
     nop
 
 

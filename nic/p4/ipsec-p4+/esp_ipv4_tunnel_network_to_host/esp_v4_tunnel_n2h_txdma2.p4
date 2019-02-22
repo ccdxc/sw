@@ -14,6 +14,8 @@
 #define tx_table_s4_t0_action esp_v4_tunnel_n2h_txdma2_build_decap_packet
 #define tx_table_s4_t1_action ipsec_txdma_stats_update 
 
+#define tx_table_s5_t0_action ipsec_release_resources
+
 #include "../../common-p4+/common_txdma.p4"
 
 #include "esp_v4_tunnel_n2h_headers.p4"
@@ -79,7 +81,7 @@ header_type ipsec_to_stage1_t {
 header_type ipsec_to_stage2_t {
     fields {
         barco_req_addr   : ADDRESS_WIDTH;
-        stage2_pad : 64;
+        out_desc_addr : ADDRESS_WIDTH;
     }
 }
 
@@ -87,7 +89,8 @@ header_type ipsec_to_stage3_t {
     fields {
         ipsec_cb_addr : ADDRESS_WIDTH;
         block_size : 8;
-        stage3_pad : 56;
+        sem_cindex : 32;
+        stage3_pad : 24;
     }
 }
 
@@ -145,10 +148,21 @@ metadata dma_cmd_phv2pkt_t vrf_vlan_hdr;
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t dec_pay_load;
 
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t rnmdr;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t tnmdr;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t sem_cindex;
+
+
 @pragma scratch_metadata
 metadata ipsec_cb_metadata_t ipsec_cb_scratch;
 @pragma scratch_metadata
 metadata ipsec_txdma2_global_t txdma2_global_scratch;
+
+@pragma scratch_metadata
+metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
 
 @pragma scratch_metadata
 metadata ipsec_to_stage3_t ipsec_to_stage3_scratch;
@@ -201,6 +215,12 @@ metadata n2h_stats_header_t ipsec_stats_scratch;
     modify_field(txdma2_global_scratch.l4_protocol, txdma2_global.l4_protocol); \
     modify_field(txdma2_global_scratch.payload_size, txdma2_global.payload_size); \
 
+// stage 5
+action ipsec_release_resources(sem_cindex)
+{
+    IPSEC_DECRYPT_GLOBAL_SCRATCH
+    modify_field(ipsec_to_stage3_scratch.sem_cindex, sem_cindex);
+}
 
 //stage 4 - table1
 action ipsec_txdma_stats_update(N2H_STATS_UPDATE_PARAMS)
@@ -334,6 +354,7 @@ action esp_v4_tunnel_n2h_txdma2_load_barco_req(input_list_address, output_list_a
     modify_field(common_te2_phv.table_raw_table_size, 7);
     modify_field(common_te2_phv.table_lock_en, 0);
     modify_field(common_te2_phv.table_addr, input_list_address);
+    modify_field(ipsec_to_stage2.out_desc_addr, output_list_address);
 }
 
 //stage 1

@@ -90,8 +90,8 @@ header_type ipsec_to_stage4_t {
         is_v6         : 1;
         is_vlan_encap : 1;
         barco_error   : 8;
-        sem_cindex    : 32;
         stage3_pad1     : 15;
+        sem_cindex    : 32;
     }
 }
 

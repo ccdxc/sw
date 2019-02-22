@@ -12,7 +12,9 @@
 namespace hal {
 namespace pd {
 
-#define P4PLUS_SYMBOLS_MAX  108
+#define IPSEC_N2H_GLOBAL_STATS_OFFSET 512 
+
+#define P4PLUS_SYMBOLS_MAX  109
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -158,6 +160,14 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_NMPR_TX);
     i++;
 
+    symbols[i].name = "esp_ipv4_tunnel_n2h_txdma2_ipsec_free_resources.bin";
+    symbols[i].num_params = 2;
+    symbols[i].params[0].name = IPSEC_RNMDR_TABLE_BASE;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_NMDR_RX);
+    symbols[i].params[1].name = IPSEC_TNMDR_TABLE_BASE;
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_NMDR_TX);
+    i++;
+
     symbols[i].name = "esp_ipv4_tunnel_h2n_update_input_desc_aol.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = IPSEC_CB_BASE;
@@ -177,37 +187,37 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[0].name = IPSEC_CB_BASE;
     symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSECCB);
     symbols[i].params[1].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_rxmda_ring_full_error.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_write_barco_req.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_build_decap_packet.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int.bin";
     symbols[i].num_params = 1;
     symbols[i].params[0].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_txdma_initial_table.bin";
@@ -218,7 +228,7 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
                                 BARCO_GCM1_PI_HBM_TABLE_OFFSET;
     symbols[i].params[2].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[2].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[2].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_update_input_desc_aol.bin";
@@ -226,7 +236,7 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[0].name = IPSEC_CB_BASE;
     symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_IPSECCB);
     symbols[i].params[1].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore.bin";
@@ -254,7 +264,7 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[3].name = IPSEC_TNMPR_TABLE_BASE;
     symbols[i].params[3].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_NMPR_TX);
     symbols[i].params[4].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[4].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[4].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_txdma2_initial_table.bin";
@@ -265,7 +275,7 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) +
                                  BARCO_GCM1_PI_HBM_TABLE_OFFSET;
     symbols[i].params[2].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[2].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[2].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_n2h_allocate_barco_req_pindex.bin";
@@ -273,7 +283,7 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[0].name = BRQ_BASE;
     symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_BARCO_RING_GCM1);
     symbols[i].params[1].name = IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H;
-    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + 512;
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS) + IPSEC_N2H_GLOBAL_STATS_OFFSET;
     i++;
 
     symbols[i].name = "esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table.bin";

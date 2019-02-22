@@ -102,6 +102,13 @@ header_type doorbell_data_pad_t {
     }
 }
 
+header_type ipsec_sem_read_t {
+    fields {
+        in_desc_index : 32;
+        full           : 8;
+    }
+}
+
 //Unionize the below with p4_2_p4plus_app_header_t
 @pragma pa_header_union ingress app_header
 metadata p4_to_p4plus_ipsec_header_t p42p4plus_hdr;
@@ -196,7 +203,9 @@ metadata ipsec_to_stage2_t ipsec_to_stage2_scratch;
  
 @pragma scratch_metadata
 metadata n2h_stats_header_t ipsec_stats_scratch;
- 
+
+@pragma scratch_metadata
+metadata ipsec_sem_read_t ipsec_sem_read_scratch; 
 
 #define IPSEC_SCRATCH_T0_S2S \
     modify_field(scratch_t0_s2s.in_desc_addr, t0_s2s.in_desc_addr); \
@@ -403,13 +412,17 @@ action rxmda_ring_full_error(N2H_STATS_UPDATE_PARAMS)
 }
 
 //stage 1
-action esp_v4_tunnel_n2h_allocate_input_desc_semaphore(in_desc_ring_index)
+action esp_v4_tunnel_n2h_allocate_input_desc_semaphore(in_desc_ring_index, full)
 {
     modify_field(p42p4plus_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0); 
     modify_field(common_te0_phv.table_raw_table_size, 3);
     modify_field(common_te0_phv.table_lock_en, 0);
     modify_field(common_te0_phv.table_addr, IN_DESC_RING_BASE+(DESC_PTR_SIZE * in_desc_ring_index));
+    
+    modify_field(ipsec_sem_read_scratch.in_desc_index, in_desc_ring_index);
+    modify_field(ipsec_sem_read_scratch.full, full);
+
     IPSEC_SCRATCH_GLOBAL
     IPSEC_SCRATCH_T0_S2S
 }

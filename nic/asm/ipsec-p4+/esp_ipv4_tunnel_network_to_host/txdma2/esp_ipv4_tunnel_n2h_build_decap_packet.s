@@ -10,6 +10,7 @@ struct phv_ p;
 %%
         .align
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+        .param esp_ipv4_tunnel_n2h_txdma2_ipsec_free_resources
 
 esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     // Ethernet Hdr
@@ -31,8 +32,13 @@ esp_v4_tunnel_n2h_txdma2_build_decap_packet:
     sub r3, k.txdma2_global_payload_size, k.txdma2_global_pad_size
     subi r3, r3, 2
     phvwr p.dec_pay_load_dma_cmd_size, r3
-    phvwri p.{dec_pay_load_dma_cmd_pkt_eop...dec_pay_load_dma_cmd_eop}, 3
-    phvwri.e p.{app_header_table0_valid...app_header_table3_valid}, 0 
+    phvwri p.dec_pay_load_dma_cmd_pkt_eop, 1
+    
+    addi r5, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
+    addi r5, r5, IPSEC_N2H_SEM_CINDEX_OFFSET 
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_txdma2_ipsec_free_resources, r5, TABLE_SIZE_32_BITS)
+
+    phvwri.e p.{app_header_table1_valid...app_header_table3_valid}, 0 
     nop
 
 

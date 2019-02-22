@@ -20,6 +20,8 @@ esp_ipv4_tunnel_n2h_load_barco_req:
     phvwri p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, 14 
     phvwri p.common_te1_phv_table_pc, esp_ipv4_tunnel_n2h_txdma2_load_out_desc[33:6] 
     phvwr  p.common_te1_phv_table_addr, d.{output_list_address}.dx
+    sub    r5, d.{output_list_address}.dx, 64
+    phvwr  p.ipsec_to_stage2_out_desc_addr, r5 
 
     phvwri p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, 14 
     phvwri p.common_te2_phv_table_pc, esp_ipv4_tunnel_n2h_txdma2_load_ipsec_int[33:6] 
