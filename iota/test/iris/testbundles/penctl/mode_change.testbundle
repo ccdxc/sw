@@ -5,6 +5,9 @@ meta:
     targetcount : 9 
 
 testcases:
+    -   name    : MODE_UPDATE_OOB_STATIC_REBOOT
+        testcase: testcases.penctl.mode_oob_static_reboot
+
     -   name    : MODE_UPDATE_INBAND_STATIC_LOOP
         testcase: testcases.penctl.mode_inb_static_loop
 
@@ -29,6 +32,3 @@ testcases:
     -   name    : MODE_UPDATE_INB_STATIC_REBOOT
         disable : true
         testcase: testcases.penctl.mode_inb_static_reboot
-
-    -   name    : MODE_UPDATE_OOB_STATIC_REBOOT
-        testcase: testcases.penctl.mode_oob_static_reboot
