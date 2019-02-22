@@ -560,12 +560,8 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 		},
 
 		Match: &halproto.RuleMatch{
-			SrcMacAddress: []uint64{ruleKey.SourceMac},
-			DstMacAddress: []uint64{ruleKey.DestMac},
-			SrcAddress:    []*halproto.IPAddressObj{srcAddrObj},
-			DstAddress:    []*halproto.IPAddressObj{destAddrObj},
-			Protocol:      halproto.IPProtocol(appPortObj.Ipproto),
-			AppMatch:      appMatchObj,
+			Protocol: halproto.IPProtocol(appPortObj.Ipproto),
+			AppMatch: appMatchObj,
 		},
 		CollectorKeyHandle: collectorKeys,
 
@@ -573,6 +569,24 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 			Action: []halproto.RuleAction{halproto.RuleAction_COLLECT_FLOW_STATS},
 		},
 	}
+
+	if srcAddrObj != nil {
+		flowRuleSpec.Match.SrcAddress = []*halproto.IPAddressObj{srcAddrObj}
+	}
+
+	if destAddrObj != nil {
+		flowRuleSpec.Match.DstAddress = []*halproto.IPAddressObj{destAddrObj}
+	}
+
+	// add valid mac address
+	if ruleKey.SourceMac != 0 {
+		flowRuleSpec.Match.SrcMacAddress = []uint64{ruleKey.SourceMac}
+	}
+
+	if ruleKey.DestMac != 0 {
+		flowRuleSpec.Match.DstMacAddress = []uint64{ruleKey.DestMac}
+	}
+
 	reqMsg := &halproto.FlowMonitorRuleRequestMsg{Request: []*halproto.FlowMonitorRuleSpec{&flowRuleSpec}}
 
 	// program hal

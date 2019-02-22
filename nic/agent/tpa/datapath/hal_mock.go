@@ -2,6 +2,7 @@ package datapath
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 
@@ -66,6 +67,37 @@ func (m *Mock) CollectorGet(ctx context.Context, in *halproto.CollectorGetReques
 
 // FlowMonitorRuleCreate mock
 func (m *Mock) FlowMonitorRuleCreate(ctx context.Context, in *halproto.FlowMonitorRuleRequestMsg, opts ...grpc.CallOption) (*halproto.FlowMonitorRuleResponseMsg, error) {
+
+	if len(in.Request) != 1 {
+		return nil, fmt.Errorf("invalid number(%d) of requests ", len(in.Request))
+	}
+
+	for _, req := range in.Request {
+		for _, m := range req.Match.SrcMacAddress {
+			if m == 0 {
+				return nil, fmt.Errorf("invalid mac address in request")
+			}
+		}
+
+		for _, m := range req.Match.DstMacAddress {
+			if m == 0 {
+				return nil, fmt.Errorf("invalid mac address in request")
+			}
+		}
+
+		for _, m := range req.Match.DstAddress {
+			if m == nil {
+				return nil, fmt.Errorf("invalid ip address in request")
+			}
+		}
+
+		for _, m := range req.Match.SrcAddress {
+			if m == nil {
+				return nil, fmt.Errorf("invalid ip address in request")
+			}
+		}
+	}
+
 	return &halproto.FlowMonitorRuleResponseMsg{
 		Response: []*halproto.FlowMonitorRuleResponse{
 			{

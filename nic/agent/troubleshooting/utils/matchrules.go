@@ -501,6 +501,8 @@ func BuildIPAddrObjProtoObj(ipaddr *types.IPAddrDetails) *halproto.IPAddressObj 
 				},
 			},
 		}
+	} else {
+		return nil
 	}
 
 	return addrObj
