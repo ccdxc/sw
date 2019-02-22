@@ -19,6 +19,12 @@
             "prefix-start" : "4.0.0.0/8"
         },
         {
+            "_comment_" : "security policy parameters here are per subnet per direction",
+            "kind" : "security-policy",
+            "count" : "4",
+            "vcn-prefix" : "2.0.0.0/8"
+        },
+        {
             "_comment_" : "All VCNs have same prefix",
             "kind" : "vcn",
             "count" : "1024",
@@ -36,11 +42,6 @@
             "remotes" : "1024",
             "locals" : "32",
             "nat-prefix" : "3.0.0.0/8"
-        },
-        {
-            "_comment_" : "security policy parameters here are per subnet per direction",
-            "kind" : "security-policy",
-            "count" : "4"
         },
         {
             "kind" : "flows",

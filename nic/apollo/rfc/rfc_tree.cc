@@ -8,6 +8,7 @@
 
 #include "nic/apollo/rfc/rfc.hpp"
 #include "nic/apollo/rfc/rfc_tree.hpp"
+#include "nic/apollo/p4/include/sacl_defines.h"
 
 namespace rfc {
 
@@ -114,6 +115,8 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
         return sdk::SDK_RET_OOM;
     }
     new (&rfc_ctxt->pfx_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->pfx_tree.rfc_table.max_classes =
+        SACL_IPV4_TREE_MAX_CLASSES;
 
     rfc_ctxt->port_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
@@ -121,6 +124,8 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
         goto cleanup;
     }
     new (&rfc_ctxt->port_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->port_tree.rfc_table.max_classes =
+        SACL_SPORT_TREE_MAX_CLASSES;
 
     rfc_ctxt->proto_port_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);
@@ -128,6 +133,9 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
         goto cleanup;
     }
     new (&rfc_ctxt->proto_port_tree.rfc_table.cbm_map) cbm_map_t();
+    rfc_ctxt->proto_port_tree.rfc_table.max_classes =
+        SACL_PROTO_DPORT_TREE_MAX_CLASSES;
+
     new (&rfc_ctxt->p1_table.cbm_map) cbm_map_t();
     rfc_ctxt->cbm_size =
         RTE_CACHE_LINE_ROUNDUP(rte_bitmap_get_memory_footprint(policy->max_rules));

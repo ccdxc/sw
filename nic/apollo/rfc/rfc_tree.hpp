@@ -52,6 +52,7 @@ typedef unordered_map<rte_bitmap *, uint16_t,
 /**< generic RFC table thats used in all phases */
 typedef struct rfc_table_s {
     uint16_t      num_classes;
+    uint16_t      max_classes;
     cbm_map_t     cbm_map;
     rte_bitmap    *cbm_table[RFC_MAX_EQ_CLASSES];
 } rfc_table_t;

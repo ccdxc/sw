@@ -155,10 +155,20 @@ rfc_compute_p0_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
     }
     rfc_ctxt->pfx_tree.num_intervals = num_intervals;
     OCI_TRACE_DEBUG("No. of interval nodes in prefix itree %u", num_intervals);
+    OCI_TRACE_DEBUG("No. of equivalence classes in prefix tree %u",
+                    rfc_ctxt->pfx_tree.rfc_table.num_classes);
     if (num_intervals > SACL_IPV4_TREE_MAX_NODES) {
         OCI_TRACE_ERR("No. of interval nodes in prefix itree %u exceeded "
                       "max supported nodes %u", num_intervals,
                       SACL_IPV4_TREE_MAX_NODES);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    if (rfc_ctxt->pfx_tree.rfc_table.num_classes >
+            rfc_ctxt->pfx_tree.rfc_table.max_classes) {
+        OCI_TRACE_ERR("No. of equivalence classes in prefix tree %u exceeded "
+                      "max supported classes %u",
+                      rfc_ctxt->pfx_tree.rfc_table.num_classes,
+                      rfc_ctxt->pfx_tree.rfc_table.max_classes);
         return sdk::SDK_RET_NO_RESOURCE;
     }
 
@@ -184,10 +194,20 @@ rfc_compute_p0_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
     }
     rfc_ctxt->port_tree.num_intervals = num_intervals;
     OCI_TRACE_DEBUG("No. of interval nodes in port itree %u", num_intervals);
+    OCI_TRACE_DEBUG("No. of equivalence classes in port tree %u",
+                    rfc_ctxt->port_tree.rfc_table.num_classes);
     if (num_intervals > SACL_SPORT_TREE_MAX_NODES) {
         OCI_TRACE_ERR("No. of interval nodes in port itree %u exceeded "
                       "max supported nodes %u", num_intervals,
                       SACL_SPORT_TREE_MAX_NODES);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    if (rfc_ctxt->port_tree.rfc_table.num_classes >
+            rfc_ctxt->port_tree.rfc_table.max_classes) {
+        OCI_TRACE_ERR("No. of equivalence classes in port tree %u exceeded "
+                      "max supported classes %u",
+                      rfc_ctxt->port_tree.rfc_table.num_classes,
+                      rfc_ctxt->port_tree.rfc_table.max_classes);
         return sdk::SDK_RET_NO_RESOURCE;
     }
 
@@ -214,12 +234,23 @@ rfc_compute_p0_classes (policy_t *policy, rfc_ctxt_t *rfc_ctxt)
     rfc_ctxt->proto_port_tree.num_intervals = num_intervals;
     OCI_TRACE_DEBUG("No. of interval nodes in (proto, port) itree %u",
                     num_intervals);
+    OCI_TRACE_DEBUG("No. of equivalence classes in (proto, port) tree %u",
+                    rfc_ctxt->proto_port_tree.rfc_table.num_classes);
     if (num_intervals > SACL_PROTO_DPORT_TREE_MAX_NODES) {
         OCI_TRACE_ERR("No. of interval nodes in (proto, port) itree %u "
                       "exceeded max supported nodes %u", num_intervals,
                       SACL_PROTO_DPORT_TREE_MAX_NODES);
         return sdk::SDK_RET_NO_RESOURCE;
     }
+    if (rfc_ctxt->proto_port_tree.rfc_table.num_classes >
+            rfc_ctxt->proto_port_tree.rfc_table.max_classes) {
+        OCI_TRACE_ERR("No. of equivalence classes in (proto, port) tree %u "
+                      "exceeded max supported classes %u",
+                      rfc_ctxt->proto_port_tree.rfc_table.num_classes,
+                      rfc_ctxt->proto_port_tree.rfc_table.max_classes);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+
 
     return SDK_RET_OK;
 }

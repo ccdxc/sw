@@ -317,6 +317,7 @@ create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
     sdk_ret_t rv;
     oci_subnet_t oci_subnet;
     static uint32_t route_table_id = 1;
+    static uint32_t        id = 1;
 
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&oci_subnet, 0, sizeof(oci_subnet));
@@ -333,6 +334,7 @@ create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
         MAC_UINT64_TO_ADDR(oci_subnet.vr_mac,
                            (uint64_t)oci_subnet.vr_ip.addr.v4_addr);
         oci_subnet.v4_route_table.id = route_table_id++;
+        oci_subnet.egr_v4_policy.id = id++;
         rv = oci_subnet_create(&oci_subnet);
         if (rv != SDK_RET_OK) {
             return rv;
@@ -408,7 +410,7 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
 {
     sdk_ret_t       rv;
     oci_policy_t    policy;
-    uint32_t        id = 1;
+    uint32_t        policy_id = 1;
     rule_t          *rule;
 
     if (num_rules == 0) {
@@ -423,7 +425,7 @@ create_security_policy (uint32_t num_vcns, uint32_t num_subnets,
     for (uint32_t i = 1; i <= num_vcns; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
             memset(policy.rules, 0, num_rules * sizeof(rule_t));
-            policy.key.id = id++;
+            policy.key.id = policy_id++;
             for (uint32_t k = 0; k < num_rules; k++) {
                 rule = &policy.rules[k];
                 rule->stateful = false;
@@ -523,6 +525,14 @@ create_objects (void)
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &routepfx) == 0);
                 ret = create_route_tables(num_teps, 1024, 1, num_routes, &teppfx,
                                     &routepfx);
+            } else if (kind == "security-policy") {
+                num_rules = std::stol(obj.second.get<std::string>("count"));
+                pfxstr = obj.second.get<std::string>("vcn-prefix");
+                assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_vcn_ippfx) == 0);
+                ret = create_security_policy(num_vcns, num_subnets, num_rules,
+                                             IP_AF_IPV4, false);
+                //ret = create_security_policy(num_vcns, num_subnets, num_rules,
+                                             //IP_AF_IPV6, true);
             } else if (kind == "vcn") {
                 num_vcns = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
@@ -544,12 +554,6 @@ create_objects (void)
                 ret = create_mappings(num_teps, num_vcns, num_subnets, num_vnics,
                                       num_ip_per_vnic, &teppfx, &natpfx,
                                       num_remote_mappings);
-            } else if (kind == "security-policy") {
-                num_rules = std::stol(obj.second.get<std::string>("count"));
-                ret = create_security_policy(num_vcns, num_subnets, num_rules,
-                                             IP_AF_IPV4, false);
-                //ret = create_security_policy(num_vcns, num_subnets, num_rules,
-                                             //IP_AF_IPV6, true);
             } else if (kind == "flows") {
                 num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
                 num_udp = std::stol(obj.second.get<std::string>("num_udp"));

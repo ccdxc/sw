@@ -1,15 +1,19 @@
-#define SACL_SPORT_TABLE_SIZE           2112       // 64+(32*64)
-#define SACL_SPORT_TREE_MAX_NODES       511        // (31 + 32 * 15)
-#define SACL_IPV4_TABLE_SIZE            17472      // 64+(16*64)+(16*16*64)
-#define SACL_IPV4_TREE_MAX_NODES        2047       // for 1023 prefixes
-                                                   // 15 + (16 * 15) + (256 * 7)
-#define SACL_PROTO_DPORT_TABLE_SIZE     17472      // 64+(16*64)+(16*16*64)
-#define SACL_PROTO_DPORT_TREE_MAX_NODES 2047       // for 1023 "prefixes"
-                                                   // 15 + (16 * 15) + (256 * 7)
-#define SACL_P1_TABLE_NUM_ENTRIES       (1 << 17)  // (2^10 * 2^7)
-#define SACL_P1_TABLE_SIZE              164544     // round64((1<<17)*(64/51))
-#define SACL_P2_TABLE_NUM_ENTRIES       (1 << 18)  // (2^10 * 2^8)
-#define SACL_P2_TABLE_SIZE              65536      // ((1 << 18)*2)/8
+#define SACL_SPORT_TABLE_SIZE             2112       // 64+(32*64)
+#define SACL_SPORT_TREE_MAX_NODES         511        // (31 + 32 * 15)
+#define SACL_SPORT_TREE_MAX_CLASSES       128
+#define SACL_IPV4_TABLE_SIZE              17472      // 64+(16*64)+(16*16*64)
+#define SACL_IPV4_TREE_MAX_NODES          2047       // for 1023 prefixes
+                                                     // 15 + (16 * 15) + (256 * 7)
+#define SACL_IPV4_TREE_MAX_CLASSES        1024
+#define SACL_PROTO_DPORT_TABLE_SIZE       17472      // 64+(16*64)+(16*16*64)
+#define SACL_PROTO_DPORT_TREE_MAX_NODES   2047       // for 1023 "prefixes"
+                                                     // 15 + (16 * 15) + (256 * 7)
+#define SACL_PROTO_DPORT_TREE_MAX_CLASSES 256
+#define SACL_P1_TABLE_NUM_ENTRIES         (1 << 17)  // (2^10 * 2^7)
+#define SACL_P1_TABLE_SIZE                164544     // round64((1<<17)*(64/51))
+#define SACL_P1_MAX_CLASSES               1024
+#define SACL_P2_TABLE_NUM_ENTRIES         (1 << 18)  // (2^10 * 2^8)
+#define SACL_P2_TABLE_SIZE                65536      // ((1 << 18)*2)/8
 
 #define SACL_SPORT_TABLE_OFFSET         0
 #define SACL_IPV4_TABLE_OFFSET          (SACL_SPORT_TABLE_SIZE)
