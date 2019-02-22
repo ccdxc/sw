@@ -70,7 +70,7 @@ switchport_entry::destroy(switchport_entry *switchport) {
  */
 sdk_ret_t
 switchport_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_switchport_spec_t *oci_switchport = &api_ctxt->api_params->switchport_info;
+    oci_switchport_spec_t *oci_switchport = &api_ctxt->api_params->switchport_spec;
 
     ip_addr_ = oci_switchport->switch_ip_addr;
     memcpy(mac_addr_, oci_switchport->switch_mac_addr, ETH_ADDR_LEN);

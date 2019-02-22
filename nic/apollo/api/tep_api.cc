@@ -29,7 +29,7 @@ oci_tep_api_handle (api_op_t api_op, oci_tep_key_t *key, oci_tep_spec_t *spec)
         if (api_op == api::API_OP_DELETE) {
             api_ctxt.api_params->tep_key = *key;
         } else {
-            api_ctxt.api_params->tep_info = *spec;
+            api_ctxt.api_params->tep_spec = *spec;
         }
 
         return (api::g_api_engine.process_api(&api_ctxt));
@@ -45,14 +45,14 @@ oci_tep_create (oci_tep_spec_t *spec)
 }
 
 static inline sdk_ret_t
-oci_tep_fill_stats (tep_entry *entry, oci_tep_stats_t *stats)
+oci_tep_stats_fill (tep_entry *entry, oci_tep_stats_t *stats)
 {
     // TODO - TEP does NOT have stats.
     return sdk::SDK_RET_OK;
 }
 
 static inline sdk_ret_t
-oci_tep_fill_status (tep_entry *entry, tep_tx_actiondata_t *tep_tx_data,
+oci_tep_status_fill (tep_entry *entry, tep_tx_actiondata_t *tep_tx_data,
                      oci_tep_status_t *status)
 {
     status->hw_id = ((api::impl::tep_impl *)(entry->impl()))->hw_id();
@@ -76,13 +76,13 @@ oci_tep_fill_status (tep_entry *entry, tep_tx_actiondata_t *tep_tx_data,
 }
 
 static inline sdk_ret_t
-oci_tep_fill_spec (nexthop_tx_actiondata_t *nh_tx_data,
+oci_tep_spec_fill (nexthop_tx_actiondata_t *nh_tx_data,
                    tep_tx_actiondata_t *tep_tx_data, oci_tep_spec_t *spec)
 {
     switch (nh_tx_data->action_u.nexthop_tx_nexthop_info.encap_type) {
     case GW_ENCAP:
         spec->type = OCI_ENCAP_TYPE_GW_ENCAP;
-        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_gre_tep_tx.dipo;
+        spec->key.ip_addr = tep_tx_data->action_u.tep_tx_udp_tep_tx.dipo;
         break;
     case VNIC_ENCAP:
         spec->type = OCI_ENCAP_TYPE_VNIC;
@@ -97,7 +97,7 @@ oci_tep_fill_spec (nexthop_tx_actiondata_t *nh_tx_data,
 }
 
 static inline sdk_ret_t
-oci_tep_read_hw (tep_entry *entry, nexthop_tx_actiondata_t *nh_tx_data,
+oci_tep_hw_read (tep_entry *entry, nexthop_tx_actiondata_t *nh_tx_data,
                  tep_tx_actiondata_t *tep_tx_data)
 {
     uint16_t nh_id, hw_id;
@@ -140,22 +140,22 @@ oci_tep_read (oci_tep_key_t *key, oci_tep_info_t *info)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = oci_tep_read_hw(entry, &nh_tx_data, &tep_tx_data)) !=
+    if ((rv = oci_tep_hw_read(entry, &nh_tx_data, &tep_tx_data)) !=
         sdk::SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = oci_tep_fill_spec(&nh_tx_data, &tep_tx_data, &(info->spec))) !=
+    if ((rv = oci_tep_spec_fill(&nh_tx_data, &tep_tx_data, &(info->spec))) !=
         sdk::SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = oci_tep_fill_status(entry, &tep_tx_data, &(info->status))) !=
+    if ((rv = oci_tep_status_fill(entry, &tep_tx_data, &(info->status))) !=
         sdk::SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = oci_tep_fill_stats(entry, &(info->stats))) != sdk::SDK_RET_OK) {
+    if ((rv = oci_tep_stats_fill(entry, &(info->stats))) != sdk::SDK_RET_OK) {
         return rv;
     }
 

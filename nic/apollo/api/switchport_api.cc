@@ -27,14 +27,14 @@ oci_switchport_create (oci_switchport_spec_t *switchport)
     if (likely(api_ctxt.api_params != NULL)) {
         api_ctxt.api_op = api::API_OP_CREATE;
         api_ctxt.obj_id = api::OBJ_ID_SWITCHPORT;
-        api_ctxt.api_params->switchport_info = *switchport;
+        api_ctxt.api_params->switchport_spec = *switchport;
         return api::g_api_engine.process_api(&api_ctxt);
     }
     return sdk::SDK_RET_OOM;
 }
 
 static inline sdk_ret_t
-oci_switchport_fill_spec (switchport_entry *entry, oci_switchport_spec_t *spec)
+oci_switchport_spec_fill (switchport_entry *entry, oci_switchport_spec_t *spec)
 {
     spec->switch_ip_addr = entry->ip_addr();
     memcpy(spec->switch_mac_addr, entry->mac_addr(), ETH_ADDR_LEN);
@@ -44,7 +44,7 @@ oci_switchport_fill_spec (switchport_entry *entry, oci_switchport_spec_t *spec)
 }
 
 static inline sdk_ret_t
-oci_switchport_fill_status (switchport_entry *entry,
+oci_switchport_status_fill (switchport_entry *entry,
                             oci_switchport_status_t *status)
 {
     // TODO No status yet
@@ -84,7 +84,7 @@ oci_get_ingress_drop_stats (oci_switchport_idrop_stats_t *ingress_stats)
 }
 
 static inline sdk_ret_t
-oci_switchport_fill_stats (switchport_entry *entry,
+oci_switchport_stats_fill (switchport_entry *entry,
                            oci_switchport_stats_t *stats)
 {
     memset(stats, 0, sizeof(oci_switchport_stats_t));
@@ -108,17 +108,17 @@ oci_switchport_read (oci_switchport_info_t *info)
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    if ((rv = oci_switchport_fill_spec(entry, &(info->spec))) !=
+    if ((rv = oci_switchport_spec_fill(entry, &(info->spec))) !=
         sdk::SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = oci_switchport_fill_status(entry, &(info->status))) !=
+    if ((rv = oci_switchport_status_fill(entry, &(info->status))) !=
         sdk::SDK_RET_OK) {
         return rv;
     }
 
-    if ((rv = oci_switchport_fill_stats(entry, &(info->stats))) !=
+    if ((rv = oci_switchport_stats_fill(entry, &(info->stats))) !=
         sdk::SDK_RET_OK) {
         return rv;
     }

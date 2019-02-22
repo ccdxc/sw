@@ -92,13 +92,13 @@ tep_impl::release_resources(api_base *api_obj) {
 sdk_ret_t
 tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                  ret;
-    oci_tep_spec_t             *tep_info;
+    oci_tep_spec_t             *tep_spec;
     tep_tx_actiondata_t        tep_tx_data = { 0 };
     nexthop_tx_actiondata_t    nh_tx_data = { 0 };
 
-    tep_info = &obj_ctxt->api_params->tep_info;
+    tep_spec = &obj_ctxt->api_params->tep_spec;
     tep_tx_data.action_id = TEP_TX_UDP_TEP_TX_ID;
-    tep_tx_data.tep_tx_udp_action.dipo = tep_info->key.ip_addr;
+    tep_tx_data.tep_tx_udp_action.dipo = tep_spec->key.ip_addr;
 
     // TODO: fix this when fte plugin is available
     MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_udp_action.dmac, 0x0E0D0A0B0200);
@@ -107,9 +107,9 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     nh_tx_data.action_id = NEXTHOP_TX_NEXTHOP_INFO_ID;
     nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index = hw_id_;
-    if (tep_info->type == OCI_ENCAP_TYPE_GW_ENCAP) {
+    if (tep_spec->type == OCI_ENCAP_TYPE_GW_ENCAP) {
         nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = GW_ENCAP;
-    } else if (tep_info->type == OCI_ENCAP_TYPE_VNIC) {
+    } else if (tep_spec->type == OCI_ENCAP_TYPE_VNIC) {
         nh_tx_data.action_u.nexthop_tx_nexthop_info.encap_type = VNIC_ENCAP;
     }
     // TODO: fix this once p4/asm is fixed
@@ -118,7 +118,7 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     SDK_ASSERT(ret == SDK_RET_OK);
 
     OCI_TRACE_DEBUG("Programmed TEP %s, MAC 0x%lx, hw id %u, nh id",
-                    ipv4addr2str(tep_info->key.ip_addr),
+                    ipv4addr2str(tep_spec->key.ip_addr),
                     0x0E0D0A0B0200, hw_id_, nh_id_);
     return ret;
 }

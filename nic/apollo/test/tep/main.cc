@@ -50,7 +50,7 @@ protected:
 
 /// \brief Read a non-existing TEP
 ///
-/// Read a non-existing TEP
+/// Read a non-existing TEP. First read after table init
 TEST_F(tep_test, tep_invalid_read) {
     oci_tep_info_t info;
     tep_util tunnel_obj("10.1.2.3/8");
@@ -60,7 +60,7 @@ TEST_F(tep_test, tep_invalid_read) {
 
 /// \brief Delete a non-existing TEP
 ///
-/// Delete a non-existing TEP in a batch
+/// Delete a TEP before first ever create
 TEST_F(tep_test, tep_invalid_delete) {
     oci_batch_params_t batch_params = {0};
     tep_util tep_obj("10.1.1.1/8", OCI_ENCAP_TYPE_VNIC);
@@ -201,6 +201,21 @@ TEST_F(tep_test, tep_delete_create) {}
 /// Delete, Create & Delete same TEP in single batch
 TEST_F(tep_test, tep_delete_create_delete) {}
 
+/// \brief delete create delete in same batch
+///
+/// Delete, Create & Delete unique valid TEPs in single batch
+TEST_F(tep_test, tep_delete_create_delete_1) {}
+
+/// \brief Create only 1 TEP in a single batch
+///
+/// Create 1 TEP when table has OCI_MAX_TEP-1 entries
+TEST_F(tep_test, tep_max_create) {}
+
+/// \brief Create 1 TEP after table full
+///
+/// Attempt to create only one TEP when table is already full
+TEST_F(tep_test, tep_beyondmax_create) {}
+
 /// \brief Create multiple TEPs in a single batch
 ///
 /// Create multiple unique TEPs in a single batch
@@ -232,20 +247,82 @@ TEST_F(tep_test, tep_multi_delete) {}
 /// Create max supported no of unique TEPs in a single batch
 TEST_F(tep_test, tep_multi_max_create) {}
 
+/// \brief Create (OCI_MAX_TEP/2) no of TEPs in a single batch
+///
+/// Attempt to create (OCI_MAX_TEP/2) no of TEPs in a single batch
+//  when the table is already half full
+TEST_F(tep_test, tep_multi_max_create_1) {}
+
 /// \brief Delete max no of TEPs in a single batch
 ///
 /// Delete max supported no of TEPs in a single batch
 TEST_F(tep_test, tep_multi_max_delete) {}
 
-/// \brief Create 1 + max no of TEPs in a single batch
+/// \brief Create 1 + OCI_MAX_TEP no of TEPs in a single batch
 ///
 /// Attempt to create more than supported no of TEPs in a single batch
 TEST_F(tep_test, tep_multi_beyondmax_create) {}
 
-/// \brief Create 1 TEPs after table full
+/// \brief Create 1 + (OCI_MAX_TEP/2) no of TEPs in a single batch
 ///
-/// Attempt to create one TEP when table is already full
+/// Attempt to create 1+(OCI_MAX_TEP/2) no of TEPs in a single batch
+//  when the table is already half full
 TEST_F(tep_test, tep_multi_beyondmax_create_1) {}
+
+/// \brief Read a non existing TEP
+///
+/// Read a non existing TEP with ONLY one entry in HW
+TEST_F(tep_test, tep_read_nonexisting_when_single) {}
+
+/// \brief Read a non existing TEP
+///
+/// Read a non existing TEP with multiple entries in HW
+TEST_F(tep_test, tep_read_nonexisting_when_multiple) {}
+
+/// \brief Read an existing TEP
+///
+/// Read an existing TEP with ONLY that entry in HW
+TEST_F(tep_test, tep_read_existing_when_single) {}
+
+/// \brief Read an existing TEP
+///
+/// Read an existing TEP with multiple entries in HW
+TEST_F(tep_test, tep_read_existing_when_multiple) {}
+
+/// \brief Read last deleted TEP when table is empty
+///
+/// Read the last deleted TEP when nothing is programmed
+TEST_F(tep_test, tep_read_last_deleted_when_empty) {}
+
+/// \brief Read last created TEP when table is empty
+///
+/// Read the last created TEP when nothing is programmed
+TEST_F(tep_test, tep_read_last_created_when_empty) {}
+
+/// \brief Read last updated TEP when table is empty
+///
+/// Read the last updated TEP when nothing is programmed
+TEST_F(tep_test, tep_read_last_updated_when_empty) {}
+
+/// \brief Read never programmed TEP when table is empty
+///
+/// Read a never ever programmed TEP when nothing is programmed
+TEST_F(tep_test, tep_read_never_programmed_when_empty) {}
+
+/// \brief Read an existing TEP when table is full
+///
+/// Read an existing TEP (which is first HW entry) when table is full
+TEST_F(tep_test, tep_read_existing_when_full) {}
+
+/// \brief Read an existing TEP when table is full
+///
+/// Read an existing TEP (which is last HW entry) when table is full
+TEST_F(tep_test, tep_read_existing_when_full_1) {}
+
+/// \brief Read a non-existing TEP when table is full
+///
+/// Read a non existing TEP (never programmed anytime) when table is full
+TEST_F(tep_test, tep_read_nonexisting_when_full) {}
 
 /// \brief Read all TEPs
 ///
@@ -255,7 +332,7 @@ TEST_F(tep_test, tep_read_all_when_single) {}
 /// \brief Read all TEPs
 ///
 /// Read all currently programmed TEPs with multiple entries in HW
-TEST_F(tep_test, tep_read_when_multiple) {}
+TEST_F(tep_test, tep_read_all_when_multiple) {}
 
 /// \brief Read all TEPs on empty table
 ///

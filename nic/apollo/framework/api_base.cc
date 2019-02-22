@@ -21,7 +21,7 @@ api_base::factory(api_ctxt_t *api_ctxt) {
 
     switch (api_ctxt->obj_id) {
     case OBJ_ID_SWITCHPORT:
-        obj = switchport_entry::factory(&api_ctxt->api_params->switchport_info);
+        obj = switchport_entry::factory(&api_ctxt->api_params->switchport_spec);
         return obj;
 
     case OBJ_ID_VCN:
@@ -33,7 +33,7 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return obj;
 
     case OBJ_ID_TEP:
-        obj = tep_entry::factory(&api_ctxt->api_params->tep_info);
+        obj = tep_entry::factory(&api_ctxt->api_params->tep_spec);
         return obj;
 
     case OBJ_ID_VNIC:
@@ -91,7 +91,7 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         if (api_ctxt->api_op == API_OP_DELETE) {
             obj = tep_db()->tep_find(&api_ctxt->api_params->tep_key);
         } else {
-            obj = tep_db()->tep_find(&api_ctxt->api_params->tep_info.key);
+            obj = tep_db()->tep_find(&api_ctxt->api_params->tep_spec.key);
         }
         return obj;
         break;

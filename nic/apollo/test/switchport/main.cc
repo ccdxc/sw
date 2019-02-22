@@ -118,7 +118,7 @@ TEST_F(switchport_test, switchport_create_after_create_1) {}
 
 /// \brief Delete SwitchPort
 ///
-/// Delete switchport, now that it is already created by "switchport_create" TC
+/// Delete switchport and validate with read
 TEST_F(switchport_test, switchport_delete) {
     // TODO Even after delete, values are still present in DB.
     // Commenting this test out, until that is fixed.
@@ -151,6 +151,16 @@ TEST_F(switchport_test, switchport_delete) {
 /// Delete the switchport followed by delete in different batch
 TEST_F(switchport_test, switchport_delete_after_delete) {}
 
+/// \brief Create-Delete-Create Switchport in batches
+///
+/// Create, Delete & Create Switchport with all same values in different batch
+TEST_F(switchport_test, switchport_create_delete_create) {}
+
+/// \brief Create-Delete-Create Switchport in batches
+///
+/// Create, Delete & Create Switchport with all different values & batches
+TEST_F(switchport_test, switchport_create_delete_create_1) {}
+
 /// \brief Read SwitchPort multiple times
 ///
 /// Read the switchport in a loop
@@ -172,6 +182,16 @@ TEST_F(switchport_test, switchport_create_after_create_same_batch_1) {}
 ///
 /// Delete the switchport followed by delete in same batch
 TEST_F(switchport_test, switchport_delete_after_delete_same_batch) {}
+
+/// \brief Create-Delete-Create Switchport in single batch
+///
+/// Create, Delete and Create Switchport with all same values in same batch
+TEST_F(switchport_test, switchport_create_delete_create_same_batch) {}
+
+/// \brief Create-Delete-Create Switchport in single batch
+///
+/// Create, Delete & Create Switchport with all different values in same batch
+TEST_F(switchport_test, switchport_create_delete_create_same_batch_1) {}
 
 /// @}
 }    // namespace api_test

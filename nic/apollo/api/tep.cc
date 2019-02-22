@@ -83,7 +83,7 @@ tep_entry::destroy(tep_entry *tep) {
  */
 sdk_ret_t
 tep_entry::init_config(api_ctxt_t *api_ctxt) {
-    oci_tep_spec_t *oci_tep = &api_ctxt->api_params->tep_info;
+    oci_tep_spec_t *oci_tep = &api_ctxt->api_params->tep_spec;
 
     memcpy(&this->key_, &oci_tep->key, sizeof(oci_tep_key_t));
     return SDK_RET_OK;
