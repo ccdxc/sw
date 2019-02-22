@@ -64,14 +64,14 @@ struct aq_rx_phv_t {
     union {
         struct aq_rx_dma_cmds_flit_t flit_8;
         struct rqcb1_t rqcb1;
-        struct rqcb4_t rqcb4;
+        struct rqcb4_t rqcb5;
     };
      
     /* flit 7 */
     union {
         struct aq_rx_dma_cmds_flit_t flit_7;
         struct rqcb0_t rqcb0;
-        struct rqcb3_t rqcb3;
+        struct rqcb3_t rqcb4;
     };
 
     /* flit 6 */

@@ -43,7 +43,7 @@ state:
     mfspr       r2, spr_tbladdr
     add         r2, r2, CB3_OFFSET_BYTES
 
-    DMA_PHV2MEM_SETUP(r6, c1, sqcb3, sqcb4, r2)
+    DMA_PHV2MEM_SETUP(r6, c1, sqcb4, sqcb5, r2)
 
 timeout:
     bbne        K_LOCAL_ACK_TIMEOUT_VALID, 1, pmtu

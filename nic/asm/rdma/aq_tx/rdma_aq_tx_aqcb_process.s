@@ -47,9 +47,8 @@ rdma_aq_tx_aqcb_process:
 
         //Default   values
         phvwr       p.common.p4_intr_global_debug_trace, d.debug
-        phvwr       p.first_pass, 1
         phvwr       p.proxy_cindex, d.{ring0.cindex}
-        phvwr       p.token_id, d.token_id
+        phvwrpair   p.first_pass, 1, p.token_id, d.token_id
         phvwr       CAPRI_PHV_FIELD(TO_S_FB_INFO_P, aq_cmd_done), 1
      
         // copy intrinsic to global

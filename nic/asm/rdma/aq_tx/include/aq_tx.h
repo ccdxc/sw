@@ -154,7 +154,7 @@ struct aq_tx_phv_t {
     union {
         struct aq_tx_dma_cmds_flit_t flit_7;
         struct sqcb1_t sqcb1;
-        struct sqcb4_t sqcb4;
+        struct sqcb4_t sqcb5;
         struct err_feedback_t resp_feedback;
     };
         
@@ -164,7 +164,7 @@ struct aq_tx_phv_t {
         struct key_entry_t key;
         struct sqcb0_t sqcb0;
         struct cqcb_t  cqcb;
-        struct sqcb3_t sqcb3;
+        struct sqcb3_t sqcb4;
         ah_size :8;
     };
 

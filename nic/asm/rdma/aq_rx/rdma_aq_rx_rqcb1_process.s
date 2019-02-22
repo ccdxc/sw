@@ -45,7 +45,7 @@ state:
     mfspr       r2, spr_tbladdr
     add         r2, r2, CB2_OFFSET_BYTES
 
-    DMA_PHV2MEM_SETUP(r6, c1, rqcb3, rqcb4, r2)
+    DMA_PHV2MEM_SETUP(r6, c1, rqcb4, rqcb5, r2)
     
 pmtu:
     bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, q_key
