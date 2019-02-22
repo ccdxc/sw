@@ -233,14 +233,24 @@ try_again:
 	}
 
 	err = ionic_dev_cmd_status(&ionic->idev);
-	if (err == IONIC_RC_EAGAIN) {
-		msleep(1000);
-		goto try_again;
-	}
-
 	if (err) {
-		dev_err(ionic->dev, "DEV_CMD error, %s (%d) failed\n",
+		if (err == IONIC_RC_EAGAIN && !time_after(jiffies, max_wait)) {
+			dev_err(ionic->dev, "DEV_CMD %s (%d) error, %s (%d) retrying...\n",
+				ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
+				idev->dev_cmd->cmd.cmd.opcode,
+				ionic_error_to_str(err), err);
+
+			msleep(1000);
+			iowrite32(0, &idev->dev_cmd->done);
+			iowrite32(1, &idev->dev_cmd_db->v);
+			goto try_again;
+		}
+
+		dev_err(ionic->dev, "DEV_CMD %s (%d) error, %s (%d) failed\n",
+			ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
+			idev->dev_cmd->cmd.cmd.opcode,
 			ionic_error_to_str(err), err);
+
 		return -EIO;
 	}
 
