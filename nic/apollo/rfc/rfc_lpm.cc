@@ -137,7 +137,8 @@ rfc_build_lpm_trees (policy_t *policy, rfc_ctxt_t *rfc_ctxt,
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);
     ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->pfx_tree,
-                             tree_base_addr, tree_size, policy->max_rules);
+                             tree_base_addr, tree_size,
+                             SACL_IPV4_TREE_MAX_NODES >> 1);
     if (ret != SDK_RET_OK) {
         goto cleanup;
     }
@@ -148,8 +149,8 @@ rfc_build_lpm_trees (policy_t *policy, rfc_ctxt_t *rfc_ctxt,
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);
     ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->port_tree,
-                             tree_base_addr, tree_size, 255);
-                             //policy->max_rules);
+                             tree_base_addr, tree_size,
+                             SACL_SPORT_TREE_MAX_NODES >> 1);
     if (ret != SDK_RET_OK) {
         goto cleanup;
     }
@@ -160,8 +161,8 @@ rfc_build_lpm_trees (policy_t *policy, rfc_ctxt_t *rfc_ctxt,
     tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
                         &tree_base_addr, &tree_size);
     ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->port_tree,
-                             tree_base_addr, tree_size, 511);
-                             //policy->max_rules);
+                             tree_base_addr, tree_size,
+                             SACL_PROTO_DPORT_TREE_MAX_NODES >> 1);
     if (ret != SDK_RET_OK) {
         goto cleanup;
     }
