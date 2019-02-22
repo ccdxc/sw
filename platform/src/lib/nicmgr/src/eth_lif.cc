@@ -348,6 +348,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, p_index0),
                   (uint8_t *)(&rx_qstate) + offsetof(eth_rx_qstate_t, p_index0),
                   sizeof(rx_qstate) - offsetof(eth_rx_qstate_t, p_index0), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
     }
 
@@ -361,6 +362,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(eth_tx_qstate_t, p_index0),
                   (uint8_t *)(&tx_qstate) + offsetof(eth_tx_qstate_t, p_index0),
                   sizeof(tx_qstate) - offsetof(eth_tx_qstate_t, p_index0), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
@@ -374,6 +376,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(admin_qstate_t, p_index0),
                   (uint8_t *)(&aq_qstate) + offsetof(admin_qstate_t, p_index0),
                   sizeof(aq_qstate) - offsetof(admin_qstate_t, p_index0), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
@@ -418,6 +421,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     dq_qstate.intr_assert_index = 0;
     WRITE_MEM(addr, (uint8_t *)&dq_qstate, sizeof(dq_qstate), 0);
 
+    PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     // Initialize the ADMINQ service
@@ -538,6 +542,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, p_index0),
                   (uint8_t *)(&rx_qstate) + offsetof(eth_rx_qstate_t, p_index0),
                   sizeof(rx_qstate) - offsetof(eth_rx_qstate_t, p_index0), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
     }
 
@@ -551,6 +556,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(eth_tx_qstate_t, p_index0),
                   (uint8_t *)(&tx_qstate) + offsetof(eth_tx_qstate_t, p_index0),
                   sizeof(tx_qstate) - offsetof(eth_tx_qstate_t, p_index0), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
@@ -564,6 +570,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(admin_qstate_t, p_index0),
                   (uint8_t *)(&aq_qstate) + offsetof(admin_qstate_t, p_index0),
                   sizeof(aq_qstate) - offsetof(admin_qstate_t, p_index0), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
@@ -581,6 +588,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     WRITE_MEM(addr + offsetof(edma_qstate_t, p_index0),
                 (uint8_t *)(&dq_qstate) + offsetof(edma_qstate_t, p_index0),
                 sizeof(dq_qstate) - offsetof(edma_qstate_t, p_index0), 0);
+    PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     // Reset ADMINQ service
@@ -681,6 +689,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
+    PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     comp->qid = cmd->index;
@@ -977,6 +986,7 @@ EthLif::_CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.spurious_db_cnt = 0;
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
+    PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     comp->qid = cmd->index;
@@ -1069,6 +1079,7 @@ EthLif::_CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.intr_assert_index = res->intr_base + cmd->intr_index;
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
+    PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_RXDMA);
 
     comp->qid = cmd->index;
@@ -1165,6 +1176,7 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_INFO("{}: host_notify_block_addr {:#x}",
                  hal_lif_info_.name, host_notify_block_addr);
 
+    PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     // Init the notify block
@@ -1332,6 +1344,7 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
         READ_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
         rx_cfg.enable = 0x1;
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
         break;
     case ETH_QTYPE_TX:
@@ -1349,6 +1362,7 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
         READ_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
         tx_cfg.enable = 0x1;
         WRITE_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     case ETH_QTYPE_ADMIN:
@@ -1366,6 +1380,7 @@ EthLif::_CmdQEnable(void *req, void *req_data, void *resp, void *resp_data)
         READ_MEM(addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg, sizeof(admin_cfg), 0);
         admin_cfg.enable = 0x1;
         WRITE_MEM(addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg, sizeof(admin_cfg), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     default:
@@ -1416,6 +1431,7 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
         READ_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
         rx_cfg.enable = 0x0;
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_RXDMA);
         break;
     case ETH_QTYPE_TX:
@@ -1433,6 +1449,7 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
         READ_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
         tx_cfg.enable = 0x0;
         WRITE_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     case ETH_QTYPE_ADMIN:
@@ -1450,6 +1467,7 @@ EthLif::_CmdQDisable(void *req, void *req_data, void *resp, void *resp_data)
         READ_MEM(addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg, sizeof(admin_cfg), 0);
         admin_cfg.enable = 0x0;
         WRITE_MEM(addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg, sizeof(admin_cfg), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(admin_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     default:
@@ -2149,7 +2167,7 @@ EthLif::StatsUpdate(void *obj)
     uint64_t addr, req_db_addr;
 
     struct edma_cmd_desc cmd = {
-        .opcode = eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_HOST,
+        .opcode = eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
         .len = sizeof(struct ionic_lif_stats),
         .src_lif = (uint16_t)eth->hal_lif_info_.hw_lif_id,
         .src_addr = eth->stats_mem_addr,

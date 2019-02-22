@@ -694,6 +694,7 @@ PdClient::p4pd_common_p4plus_rxdma_rss_indir_table_entry_add(
     sdk::asic::asic_mem_write(addr,
                         (uint8_t *)&data.action_u,
                         sizeof(data.action_u));
+    PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(data.action_u),
                             P4PLUS_CACHE_INVALIDATE_RXDMA);
 

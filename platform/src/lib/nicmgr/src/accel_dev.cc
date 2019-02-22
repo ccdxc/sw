@@ -701,6 +701,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
                   (uint8_t *)&abort, sizeof(abort), 0);
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
                   (uint8_t *)&enable, sizeof(enable), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t),
             P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
@@ -715,6 +716,7 @@ Accel_PF::_DevcmdReset(void *req, void *req_data,
         }
         MEM_SET(qstate_addr + offsetof(admin_qstate_t, p_index0), 0,
                 sizeof(admin_qstate_t) - offsetof(admin_qstate_t, p_index0), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(qstate_addr, sizeof(admin_qstate_t),
             P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
@@ -864,6 +866,7 @@ Accel_PF::_DevcmdAdminQueueInit(void *req, void *req_data,
 
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
 
+    PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     cpl->qid = cmd->index;
@@ -974,6 +977,8 @@ Accel_PF::_DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd)
     qstate.core_id = cmd->core_id;
 
     WRITE_MEM(qstate_addr, (uint8_t *)&qstate, sizeof(qstate), 0);
+
+    PAL_barrier();
     p4plus_invalidate_cache(qstate_addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
     return (DEVCMD_SUCCESS);
@@ -1096,6 +1101,7 @@ Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
         }
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
                   (uint8_t *)&value, sizeof(value), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     case STORAGE_SEQ_QTYPE_ADMIN:
@@ -1115,6 +1121,7 @@ Accel_PF::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
         admin_cfg.host_queue = 0x1;
         WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, cfg), (uint8_t *)&admin_cfg,
                   sizeof(admin_cfg), 0);
+        PAL_barrier();
         p4plus_invalidate_cache(qstate_addr, sizeof(storage_seq_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     default:

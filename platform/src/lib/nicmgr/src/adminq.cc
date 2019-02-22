@@ -110,6 +110,7 @@ AdminQ::AdminRequestQInit(uint8_t cosA, uint8_t cosB)
 
     WRITE_MEM(req_qstate_addr, (uint8_t *)&qstate, sizeof(nicmgr_req_qstate_t), 0);
 
+    PAL_barrier();
     p4plus_invalidate_cache(req_qstate_addr, sizeof(nicmgr_req_qstate_t),
         P4PLUS_CACHE_INVALIDATE_TXDMA);
 
@@ -161,6 +162,7 @@ AdminQ::AdminResponseQInit(uint8_t cosA, uint8_t cosB)
 
     WRITE_MEM(resp_qstate_addr, (uint8_t *)&qstate, sizeof(nicmgr_resp_qstate_t), 0);
 
+    PAL_barrier();
     p4plus_invalidate_cache(resp_qstate_addr, sizeof(nicmgr_resp_qstate_t),
         P4PLUS_CACHE_INVALIDATE_TXDMA);
 
@@ -194,6 +196,8 @@ AdminQ::AdminRequestQReset()
     NIC_LOG_DEBUG("{}: resetting request qstate {:#x}", name, req_qstate_addr);
 
     MEM_SET(req_qstate_addr, 0, sizeof(nicmgr_req_qstate_t), 0);
+
+    PAL_barrier();
     p4plus_invalidate_cache(req_qstate_addr, sizeof(nicmgr_req_qstate_t),
         P4PLUS_CACHE_INVALIDATE_TXDMA);
 
@@ -214,6 +218,8 @@ AdminQ::AdminResponseQReset()
     NIC_LOG_DEBUG("{}: resetting response qstate {:#x}", name, resp_qstate_addr);
 
     MEM_SET(resp_qstate_addr, 0, sizeof(nicmgr_resp_qstate_t), 0);
+
+    PAL_barrier();
     p4plus_invalidate_cache(resp_qstate_addr, sizeof(nicmgr_resp_qstate_t),
         P4PLUS_CACHE_INVALIDATE_TXDMA);
 
