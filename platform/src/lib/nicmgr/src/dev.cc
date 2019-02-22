@@ -458,10 +458,14 @@ DeviceManager::HalEventHandler(bool status)
 {
     NIC_HEADER_TRACE("HAL Event");
 
+    // Hal UP
     if (status && !init_done) {
+        NIC_LOG_DEBUG("Hal UP: Initializing hal client and creating VRFs.");
         // Instantiate HAL client
         hal = new HalClient(fwd_mode);
         hal_common_client = HalGRPCClient::Factory((HalForwardingMode)fwd_mode);
+        // Setting up HAL container for all objects
+        HalObject::PopulateHalCommonClient();
         pd->update();
 
         // Create VRFs for uplinks
@@ -472,6 +476,21 @@ DeviceManager::HalEventHandler(bool status)
 
         init_done = true;
     }
+
+#if 0
+    // If Sysmgr is able to update HAL Status to DOWN, we can handle it.
+    // Hal DOWN
+    if (!status) {
+        if (hal_common_client) {
+            NIC_LOG_DEBUG("Hal DOWN: Freeing up hal client");
+            // Cleanup HAL client
+            HalGRPCClient::Destroy(hal_common_client);
+            hal_common_client = NULL;
+            // Setting up HAL container for all objects
+            HalObject::PopulateHalCommonClient();
+        }
+    }
+#endif
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;

@@ -186,6 +186,93 @@ TEST_F(filter_test, test4)
 
 }
 
+// ----------------------------------------------------------------------------
+// Filter failure. HAL is down
+// ----------------------------------------------------------------------------
+TEST_F(filter_test, test5)
+{
+    hal_irisc_ret_t ret;
+    hal_lif_info_t info = {0};
+    mac_t mac1 = 0x000502030405;
+
+    // Create Lif
+    // Create Lifs
+    info.hw_lif_id = 5;
+    info.pinned_uplink_port_num = 1;
+    info.is_management = false;
+    info.receive_promiscuous = true;
+    info.max_vlan_filters = 10;
+    info.max_mac_filters = 10;
+    info.max_mac_vlan_filters = 10;
+    Lif *lif1 = Lif::Factory(&info);
+
+    // Bringing down HAL
+    HalCommonClient *client = HalGRPCClient::GetInstance();
+    HalGRPCClient::Destroy(client);
+
+    ret = lif1->AddMac(mac1++);
+    ASSERT_TRUE(ret == HAL_IRISC_RET_FAIL);
+}
+
+// ----------------------------------------------------------------------------
+// Filter failure. HAL is down
+// ----------------------------------------------------------------------------
+TEST_F(filter_test, test6)
+{
+    hal_irisc_ret_t ret;
+    hal_lif_info_t info = {0};
+    mac_t mac1 = 0x000502030405;
+
+    HalGRPCClient::Factory(FWD_MODE_CLASSIC);
+
+    // Create Lif
+    // Create Lifs
+    info.hw_lif_id = 6;
+    info.pinned_uplink_port_num = 1;
+    info.is_management = false;
+    info.receive_promiscuous = true;
+    info.max_vlan_filters = 10;
+    info.max_mac_filters = 10;
+    info.max_mac_vlan_filters = 10;
+    Lif *lif1 = Lif::Factory(&info);
+
+    ret = lif1->AddMac(mac1++);
+    ASSERT_TRUE(ret == HAL_IRISC_RET_SUCCESS);
+
+    // Bringing down HAL
+    HalCommonClient *client = HalGRPCClient::GetInstance();
+    HalGRPCClient::Destroy(client);
+
+    ret = lif1->AddVlan(1);
+    ASSERT_TRUE(ret == HAL_IRISC_RET_FAIL);
+}
+
+// ----------------------------------------------------------------------------
+// Filter failure. HAL is down
+// ----------------------------------------------------------------------------
+TEST_F(filter_test, test7)
+{
+    hal_irisc_ret_t ret;
+    hal_lif_info_t info = {0};
+    mac_t mac1 = 0x000502030405;
+
+    // Bringing down HAL
+    HalCommonClient *client = HalGRPCClient::GetInstance();
+    HalGRPCClient::Destroy(client);
+
+    // Create Lif
+    // Create Lifs
+    info.hw_lif_id = 7;
+    info.pinned_uplink_port_num = 1;
+    info.is_management = false;
+    info.receive_promiscuous = true;
+    info.max_vlan_filters = 10;
+    info.max_mac_filters = 10;
+    info.max_mac_vlan_filters = 10;
+    Lif *lif1 = Lif::Factory(&info);
+    ASSERT_TRUE(lif1 == NULL);
+}
+
 #if 0
 // ----------------------------------------------------------------------------
 // Filter test

@@ -25,6 +25,7 @@ HalCommonClient::HalCommonClient()
 {
     this->mode = FWD_MODE_CLASSIC;
 }
+
 HalCommonClient::HalCommonClient(enum HalForwardingMode mode)
 {
     this->mode = mode;

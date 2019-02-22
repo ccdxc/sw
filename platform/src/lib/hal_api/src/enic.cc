@@ -4,6 +4,7 @@
 
 #include "enic.hpp"
 #include "lif.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
@@ -90,6 +91,7 @@ Enic::HalEnicCreate()
         set_native_l2segment_id(ethlif->GetNativeL2Seg()->GetId());
     // req->mutable_if_enic_info()->mutable_classic_enic_info()->add_l2segment_key_handle()->set_l2segment_handle(l2seg->GetHandle());
 
+    VERIFY_HAL();
     status = hal->interface_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -132,6 +134,7 @@ Enic::HalEnicDelete()
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_interface_id(id);
+    VERIFY_HAL();
     status = hal->interface_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -148,6 +151,7 @@ Enic::HalEnicDelete()
         ret = HAL_IRISC_RET_FAIL;
     }
 
+end:
     return ret;
 }
 
@@ -180,6 +184,7 @@ Enic::TriggerHalUpdate()
             add_l2segment_key_handle()->set_segment_id(l2seg->GetId());
     }
 
+    VERIFY_HAL();
     status = hal->interface_update(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);

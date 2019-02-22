@@ -17,7 +17,7 @@ public:
   static hal_irisc_ret_t CreateVrfs();
   static Uplink *GetUplink(uint32_t port_num);
 
-  int UpdateHalWithNativeL2seg(uint32_t native_l2seg_id);
+  hal_irisc_ret_t UpdateHalWithNativeL2seg(uint32_t native_l2seg_id);
   hal_irisc_ret_t CreateVrf();
 
   // Get APIs

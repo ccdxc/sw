@@ -141,6 +141,7 @@ MacVlanFilter::MacVlanFilterCreate()
         }
 #endif
 
+        VERIFY_HAL();
         status = hal->filter_create(req_msg, rsp_msg);
         if (status.ok()) {
             rsp = rsp_msg.response(0);
@@ -226,6 +227,7 @@ MacVlanFilter::MacVlanFilterDelete()
         }
 #endif
 
+        VERIFY_HAL();
         status = hal->filter_delete(req_msg, rsp_msg);
         if (status.ok()) {
             rsp = rsp_msg.response(0);

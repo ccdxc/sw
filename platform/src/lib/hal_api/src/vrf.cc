@@ -5,6 +5,7 @@
 #include "nic/include/globals.hpp"
 #include "vrf.hpp"
 #include "uplink.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
@@ -80,6 +81,7 @@ HalVrf::HalVrfCreate()
     req->mutable_key_or_handle()->set_vrf_id(id);
     req->set_vrf_type(type);
 
+    VERIFY_HAL();
     status = hal->vrf_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -126,6 +128,7 @@ HalVrf::HalVrfDelete()
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_vrf_id(id);
 
+    VERIFY_HAL();
     status = hal->vrf_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);

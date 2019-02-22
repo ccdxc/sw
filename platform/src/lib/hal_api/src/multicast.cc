@@ -6,6 +6,7 @@
 
 #include "multicast.hpp"
 #include "print.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
@@ -93,6 +94,7 @@ HalMulticast::HalMulticastCreate()
     spec->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg->GetId());
     spec->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(mac);
 
+    VERIFY_HAL();
     status = hal->multicast_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -110,15 +112,16 @@ HalMulticast::HalMulticastCreate()
         ret = HAL_IRISC_RET_FAIL;
     }
 
+end:
     return ret;
 }
 
 hal_irisc_ret_t
 HalMulticast::HalMulticastDelete()
 {
-    hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    hal_irisc_ret_t     ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext context;
-    grpc::Status status;
+    grpc::Status        status;
 
     multicast::MulticastEntryDeleteRequest *req;
     multicast::MulticastEntryDeleteResponse rsp;
@@ -130,7 +133,7 @@ HalMulticast::HalMulticastDelete()
     req->mutable_key_or_handle()->mutable_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg->GetId());
     req->mutable_key_or_handle()->mutable_key()->mutable_mac()->set_group(mac);
 
-    // status = hal->multicast_stub_->HalMulticastEntryDelete(&context, req_msg, &rsp_msg);
+    VERIFY_HAL();
     status = hal->multicast_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -148,6 +151,7 @@ HalMulticast::HalMulticastDelete()
         ret = HAL_IRISC_RET_FAIL;
     }
 
+end:
     return ret;
 }
 
@@ -168,11 +172,12 @@ HalMulticast::GetInstance(HalL2Segment *l2seg, mac_t mac)
     }
 }
 
-void
+hal_irisc_ret_t
 HalMulticast::TriggerHal()
 {
+    hal_irisc_ret_t     ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext context;
-    grpc::Status status;
+    grpc::Status        status;
 
     multicast::MulticastEntrySpec *spec;
     multicast::MulticastEntryResponse rsp;
@@ -187,6 +192,7 @@ HalMulticast::TriggerHal()
         spec->add_oif_key_handles()->set_interface_id(it->second->GetId());
     }
 
+    VERIFY_HAL();
     status = hal->multicast_update(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -201,16 +207,19 @@ HalMulticast::TriggerHal()
         NIC_LOG_ERR("Failed to update Mcast L2seg: {}, Mac: {}. err: {}, msg: {}", l2seg->GetId(),
             macaddr2str(mac), status.error_code(), status.error_message());
     }
+
+end:
+    return ret;
 }
 
-void
+hal_irisc_ret_t
 HalMulticast::AddEnic(Enic *enic)
 {
     enic_refs[enic->GetId()] = enic;
     return TriggerHal();
 }
 
-void
+hal_irisc_ret_t
 HalMulticast::DelEnic(Enic *enic)
 {
     enic_refs.erase(enic->GetId());

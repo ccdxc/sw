@@ -22,8 +22,10 @@ LifMap Lif::ethlif_db;
 Lif *
 Lif::Factory(hal_lif_info_t *info)
 {
-    HalL2Segment *native_l2seg;
-    HalVrf       *vrf;
+    hal_irisc_ret_t ret = HAL_IRISC_RET_SUCCESS;
+    HalL2Segment    *native_l2seg;
+    HalVrf          *vrf;
+    Enic            *enic = NULL;
 
     if (info->hw_lif_id != 0) {
         if (ethlif_db.find(info->hw_lif_id) != ethlif_db.end()) {
@@ -68,6 +70,11 @@ Lif::Factory(hal_lif_info_t *info)
             // Create native l2seg to hal
             native_l2seg = HalL2Segment::Factory(lif->GetVrf(),
                                                  NATIVE_VLAN_ID);
+            if (!native_l2seg) {
+                NIC_LOG_ERR("Failed to create native l2seg.");
+                ret = HAL_IRISC_RET_FAIL;
+                goto end;
+            }
             lif->SetNativeL2Seg(native_l2seg);
         }
     } else {
@@ -81,12 +88,23 @@ Lif::Factory(hal_lif_info_t *info)
             // Create native l2seg to hal
             native_l2seg = HalL2Segment::Factory(lif->GetUplink()->GetVrf(),
                                                  NATIVE_VLAN_ID);
+            if (!native_l2seg) {
+                NIC_LOG_ERR("Failed to create native l2seg.");
+                ret = HAL_IRISC_RET_FAIL;
+                goto end;
+            }
 
             // Update uplink structure with native l2seg
             lif->GetUplink()->SetNativeL2Seg(native_l2seg);
 
             // Update native_l2seg on uplink to hal
-            lif->GetUplink()->UpdateHalWithNativeL2seg(native_l2seg->GetId());
+            ret = lif->GetUplink()->UpdateHalWithNativeL2seg(native_l2seg->GetId());
+            if (ret != HAL_IRISC_RET_SUCCESS) {
+                NIC_LOG_ERR("Failed to update uplink with native l2seg. "
+                            "ret: {}", ret);
+                ret = HAL_IRISC_RET_FAIL;
+                goto end;
+            }
 
             // Update l2seg's mbrifs on uplink
             // native_l2seg->AddUplink(lif->GetUplink());
@@ -94,7 +112,13 @@ Lif::Factory(hal_lif_info_t *info)
     }
 
     // Create Enic
-    lif->SetEnic(Enic::Factory(lif));
+    enic = Enic::Factory(lif);
+    if (!enic) {
+        NIC_LOG_ERR("Failed to create enic.");
+        ret = HAL_IRISC_RET_FAIL;
+        goto end;
+    }
+    lif->SetEnic(enic);
 
     // Add Vlan filter on Lif
     lif->AddVlan(NATIVE_VLAN_ID);
@@ -107,6 +131,11 @@ Lif::Factory(hal_lif_info_t *info)
     }
 
 end:
+    if (ret != HAL_IRISC_RET_SUCCESS) {
+        NIC_LOG_ERR("Failed to create LIF. ret: {}", ret);
+        delete lif;
+        lif = NULL;
+    }
     return lif;
 }
 
@@ -193,7 +222,7 @@ Lif::Destroy(Lif *lif)
             }
         }
 
-        lif->~Lif();
+        delete lif;
     }
 }
 
@@ -539,7 +568,7 @@ Lif::DelMacVlan(mac_t mac, vlan_t vlan, bool update_db, bool add_failure)
 hal_irisc_ret_t
 Lif::UpdateReceiveMode(bool broadcast, bool all_multicast, bool promiscuous)
 {
-    hal_irisc_ret_t status;
+    hal_irisc_ret_t status = HAL_IRISC_RET_SUCCESS;
 
     if (broadcast != info_.receive_broadcast ||
         all_multicast != info_.receive_all_multicast ||
@@ -560,7 +589,7 @@ Lif::UpdateReceiveMode(bool broadcast, bool all_multicast, bool promiscuous)
             return status;
         }
 
-        TriggerHalUpdate();
+        status = TriggerHalUpdate();
 
     } else {
         NIC_LOG_DEBUG("Lif: {}. No rx mode change.", GetId());
@@ -599,6 +628,8 @@ Lif::UpdateReceivePromiscuous(bool receive_promiscuous)
 hal_irisc_ret_t
 Lif::UpdateReceiveBroadcast(bool receive_broadcast)
 {
+    hal_irisc_ret_t status = HAL_IRISC_RET_SUCCESS;
+
     if (receive_broadcast == info_.receive_broadcast) {
         NIC_LOG_WARN("Bcast flag: {}. No change in broadcast flag. Nop",
                        receive_broadcast);
@@ -612,14 +643,16 @@ Lif::UpdateReceiveBroadcast(bool receive_broadcast)
     info_.receive_broadcast = receive_broadcast;
 
     // Update Lif to Hal
-    TriggerHalUpdate();
+    status = TriggerHalUpdate();
 
-    return HAL_IRISC_RET_SUCCESS;
+    return status;
 }
 
 hal_irisc_ret_t
 Lif::UpdateReceiveAllMulticast(bool receive_all_multicast)
 {
+    hal_irisc_ret_t status = HAL_IRISC_RET_SUCCESS;
+
     if (receive_all_multicast == info_.receive_all_multicast) {
         NIC_LOG_WARN("ALL_MC flag: {}. No change in all_multicast flag. Nop",
                        receive_all_multicast);
@@ -648,15 +681,15 @@ Lif::UpdateReceiveAllMulticast(bool receive_all_multicast)
     }
 
     // Update Lif to Hal
-    TriggerHalUpdate();
+    status = TriggerHalUpdate();
 
-    return HAL_IRISC_RET_SUCCESS;
+    return status;
 }
 
 hal_irisc_ret_t
 Lif::UpdateVlanOffload(bool vlan_strip, bool vlan_insert)
 {
-    hal_irisc_ret_t status;
+    hal_irisc_ret_t status = HAL_IRISC_RET_SUCCESS;
 
     if (vlan_strip != info_.vlan_strip_en ||
         vlan_insert != info_.vlan_insert_en) {
@@ -671,13 +704,13 @@ Lif::UpdateVlanOffload(bool vlan_strip, bool vlan_insert)
             return status;
         }
 
-        TriggerHalUpdate();
+        status = TriggerHalUpdate();
 
     } else {
         NIC_LOG_DEBUG("Lif: {}. No vlan offload change.", GetId());
     }
 
-    return HAL_IRISC_RET_SUCCESS;
+    return status;
 }
 
 hal_irisc_ret_t
@@ -722,8 +755,7 @@ hal_irisc_ret_t
 Lif::UpdateName(std::string name)
 {
     strcpy(info_.name, name.c_str());
-    TriggerHalUpdate();
-    return HAL_IRISC_RET_SUCCESS;
+    return TriggerHalUpdate();
 }
 
 hal_irisc_ret_t
@@ -904,9 +936,10 @@ Lif::RemoveMacVlanFilters()
     NIC_LOG_DEBUG("# of Mac-Vlan Filters: {}", mac_vlan_table_.size());
 }
 
-void
+hal_irisc_ret_t
 Lif::TriggerHalCreate()
 {
+    hal_irisc_ret_t            ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext        context;
     grpc::Status               status;
 
@@ -960,11 +993,7 @@ Lif::TriggerHalCreate()
         lif_qstate_map_ent->set_purpose(qinfo.purpose);
     }
 
-    if (!hal) {
-        NIC_LOG_ERR("FATAL: HAL is not UP yet.");
-        NIC_ASSERT(0);
-    }
-
+    VERIFY_HAL();
     status = hal->lif_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -982,11 +1011,14 @@ Lif::TriggerHalCreate()
 
     // Store spec
     spec.CopyFrom(*req);
+end:
+    return ret;
 }
 
-void
+hal_irisc_ret_t
 Lif::TriggerHalUpdate()
 {
+    hal_irisc_ret_t            ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext        context;
     grpc::Status               status;
 
@@ -998,6 +1030,7 @@ Lif::TriggerHalUpdate()
 
     PopulateRequest(req_msg, &req);
 
+    VERIFY_HAL();
     status = hal->lif_update(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -1015,11 +1048,14 @@ Lif::TriggerHalUpdate()
 
     // Store spec
     spec.CopyFrom(*req);
+end:
+    return ret;
 }
 
-void
+hal_irisc_ret_t
 Lif::TriggerHalDelete()
 {
+    hal_irisc_ret_t               ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext           context;
     grpc::Status                  status;
 
@@ -1030,6 +1066,7 @@ Lif::TriggerHalDelete()
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_lif_id(id_);
+    VERIFY_HAL();
     status = hal->lif_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -1044,6 +1081,8 @@ Lif::TriggerHalDelete()
         NIC_LOG_ERR("Failed to delete Lif for id: {}. err: {}:{}",
                       id_, status.error_code(), status.error_message());
     }
+end:
+    return ret;
 }
 
 void

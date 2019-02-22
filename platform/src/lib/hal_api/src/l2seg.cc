@@ -4,9 +4,9 @@
 
 #include "l2seg.hpp"
 #include "uplink.hpp"
+#include "utils.hpp"
 
 using namespace std;
-
 
 sdk::lib::indexer *HalL2Segment::allocator = sdk::lib::indexer::factory(HalL2Segment::max_l2segs, false, true);
 std::map<l2seg_key_t, HalL2Segment*> HalL2Segment::l2seg_db;
@@ -106,6 +106,7 @@ HalL2Segment::HalL2SegmentCreate()
         req->add_if_key_handle()->set_interface_id(it->first);
     }
 
+    VERIFY_HAL();
     status = hal->l2segment_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -161,7 +162,7 @@ HalL2Segment::HalL2SegmentDelete()
     req->mutable_key_or_handle()->set_segment_id(id);
     req->mutable_vrf_key_handle()->set_vrf_id(vrf->GetId());
 
-    // status = hal->l2seg_stub_->HalL2SegmentDelete(&context, req_msg, &rsp_msg);
+    VERIFY_HAL();
     status = hal->l2segment_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -198,9 +199,10 @@ HalL2Segment::GetVrf()
     return vrf;
 }
 
-void
+hal_irisc_ret_t
 HalL2Segment::TriggerHalUpdate()
 {
+    hal_irisc_ret_t                     ret = HAL_IRISC_RET_SUCCESS;
     grpc::ClientContext                 context;
     grpc::Status                        status;
 
@@ -222,6 +224,7 @@ HalL2Segment::TriggerHalUpdate()
         req->add_if_key_handle()->set_interface_id(it->first);
     }
 
+    VERIFY_HAL();
     status = hal->l2segment_update(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -229,48 +232,52 @@ HalL2Segment::TriggerHalUpdate()
             NIC_LOG_DEBUG("L2 segment update succeeded id: {}", id);
         } else {
             NIC_LOG_ERR("Failed to update l2segment: err: {}", rsp.api_status());
+            ret = HAL_IRISC_RET_FAIL;
         }
     } else {
         NIC_LOG_ERR("Failed to update l2segment: err: {}, err_msg: {}",
                       status.error_code(),
                       status.error_message());
+            ret = HAL_IRISC_RET_FAIL;
     }
+end:
+    return ret;
 }
 
 //-----------------------------------------------------------------------------
 // Adds uplink to l2segment
 //-----------------------------------------------------------------------------
-void
+hal_irisc_ret_t
 HalL2Segment::AddUplink (Uplink *uplink)
 {
     // Check for the presence of new uplink
     if (uplink_refs.find(uplink->GetId()) != uplink_refs.end()) {
         NIC_LOG_WARN("Duplicate uplink add : {}", uplink->GetId());
-        return;
+        return HAL_IRISC_RET_FAIL;
     }
 
     // Add new uplink to the map
     uplink_refs[uplink->GetId()] = uplink;
 
     // Sends update to Hal
-    TriggerHalUpdate();
+    return TriggerHalUpdate();
 }
 
 //-----------------------------------------------------------------------------
 // Deletes uplink to l2segment
 //-----------------------------------------------------------------------------
-void
+hal_irisc_ret_t
 HalL2Segment::DelUplink (Uplink *uplink)
 {
     // Check for the presence of uplink
     if (uplink_refs.find(uplink->GetId()) == uplink_refs.end()) {
         NIC_LOG_ERR("Not able to find uplink: {}", uplink->GetId());
-        return;
+        return HAL_IRISC_RET_FAIL;
     }
 
     // Del uplink from the map
     uplink_refs.erase(uplink->GetId());
 
     // Sends update to Hal
-    TriggerHalUpdate();
+    return TriggerHalUpdate();
 }

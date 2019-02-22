@@ -95,9 +95,9 @@ private:
     // Oper State (For Expanding to EPs in Classic):
     std::map<mac_vlan_filter_t, MacVlanFilter*> mac_vlan_filter_table;
 
-    void TriggerHalCreate();
-    void TriggerHalDelete();
-    void TriggerHalUpdate();
+    hal_irisc_ret_t TriggerHalCreate();
+    hal_irisc_ret_t TriggerHalDelete();
+    hal_irisc_ret_t TriggerHalUpdate();
     void PopulateRequest(intf::LifRequestMsg &req_msg,
                          intf::LifSpec **req_ptr);
     hal_irisc_ret_t CreateMacVlanFilter(mac_t mac, vlan_t vlan);

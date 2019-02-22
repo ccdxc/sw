@@ -30,8 +30,8 @@ public:
     static HalL2Segment *Lookup(HalVrf *vrf, uint16_t vlan);
 
 
-    void AddUplink(Uplink *uplink);
-    void DelUplink(Uplink *uplink);
+    hal_irisc_ret_t AddUplink(Uplink *uplink);
+    hal_irisc_ret_t DelUplink(Uplink *uplink);
 
     uint64_t GetId();
     HalVrf *GetVrf();
@@ -41,7 +41,7 @@ public:
 private:
   HalL2Segment(HalVrf *vrf, uint16_t vlan_id);
   ~HalL2Segment() {};
-  void TriggerHalUpdate();
+  hal_irisc_ret_t TriggerHalUpdate();
 
   uint32_t id;
   vlan_t _vlan;

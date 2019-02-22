@@ -67,6 +67,7 @@ typedef enum {
     HAL_IRISC_RET_SUCCESS,
     HAL_IRISC_RET_LIMIT_REACHED,
     HAL_IRISC_DUP_ADDR_ADD,
+    HAL_IRISC_RET_HAL_DOWN,
     HAL_IRISC_RET_FAIL
 } hal_irisc_ret_t;
 

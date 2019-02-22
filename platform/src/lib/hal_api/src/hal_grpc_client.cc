@@ -5,8 +5,12 @@
 #include <grpc++/grpc++.h>
 
 #include "hal_grpc_client.hpp"
+#include "hal_types.hpp"
 
 using namespace std;
+using std::chrono::seconds;
+
+#define HAL_GRPC_API_TIMEOUT 10     /* Secs */
 
 #if 0
 shared_ptr<HalCommonClient>
@@ -81,6 +85,12 @@ HalGRPCClient::HalGRPCClient(enum HalForwardingMode mode) : HalCommonClient(mode
     qos_stub_ = qos::QOS::NewStub(channel);
 }
 
+#define SET_TIMEOUT()                                                       \
+    std::chrono::system_clock::time_point deadline =                        \
+        std::chrono::system_clock::now() + seconds(HAL_GRPC_API_TIMEOUT);   \
+    context.set_deadline(deadline);
+
+
 #define HAL_CREATE_API(obj_api, obj_class, pkg)                             \
     Status                                                                  \
     HalGRPCClient::obj_api ## _create (obj_class ## RequestMsg& req_msg,    \
@@ -88,6 +98,7 @@ HalGRPCClient::HalGRPCClient(enum HalForwardingMode mode) : HalCommonClient(mode
     {                                                                       \
         grpc::ClientContext         context;                                \
         grpc::Status                status;                                 \
+        SET_TIMEOUT();                                                      \
         status = pkg ## _stub_->obj_class ## Create(&context, req_msg, &rsp_msg);   \
         return status;                                                      \
     }
@@ -99,6 +110,7 @@ HalGRPCClient::HalGRPCClient(enum HalForwardingMode mode) : HalCommonClient(mode
     {                                                                       \
         grpc::ClientContext         context;                                \
         grpc::Status                status;                                 \
+        SET_TIMEOUT();                                                      \
         status = pkg ## _stub_->obj_class ## Update(&context, req_msg, &rsp_msg);   \
         return status;                                                      \
     }
@@ -110,6 +122,7 @@ HalGRPCClient::HalGRPCClient(enum HalForwardingMode mode) : HalCommonClient(mode
     {                                                                       \
         grpc::ClientContext         context;                                \
         grpc::Status                status;                                 \
+        SET_TIMEOUT();                                                      \
         status = pkg ## _stub_->obj_class ## Delete(&context, req_msg, &rsp_msg);   \
         return status;                                                      \
     }
@@ -121,6 +134,7 @@ HalGRPCClient::HalGRPCClient(enum HalForwardingMode mode) : HalCommonClient(mode
     {                                                                       \
         grpc::ClientContext         context;                                \
         grpc::Status                status;                                 \
+        SET_TIMEOUT();                                                      \
         status = pkg ## _stub_->obj_class ## Get(&context, req_msg, &rsp_msg);   \
         return status;                                                      \
     }
@@ -134,6 +148,7 @@ HalGRPCClient::vrf_create (VrfRequestMsg& req_msg, VrfResponseMsg& rsp_msg)
     grpc::ClientContext         context;
     grpc::Status                status;
 
+    SET_TIMEOUT();
     status = vrf_stub_->VrfCreate(&context, req_msg, &rsp_msg);
 
     return status;
@@ -149,6 +164,7 @@ HalGRPCClient::vrf_delete (VrfDeleteRequestMsg& req_msg,
     grpc::ClientContext         context;
     grpc::Status                status;
 
+    SET_TIMEOUT();
     status = vrf_stub_->VrfDelete(&context, req_msg, &rsp_msg);
 
     return status;
@@ -163,6 +179,7 @@ HalGRPCClient::vrf_update (VrfRequestMsg& req_msg, VrfResponseMsg& rsp_msg)
     grpc::ClientContext         context;
     grpc::Status                status;
 
+    SET_TIMEOUT();
     status = vrf_stub_->VrfUpdate(&context, req_msg, &rsp_msg);
 
     return status;
@@ -178,6 +195,7 @@ HalGRPCClient::vrf_get (VrfGetRequestMsg& req_msg,
     grpc::ClientContext         context;
     grpc::Status                status;
 
+    SET_TIMEOUT();
     status = vrf_stub_->VrfGet(&context, req_msg, &rsp_msg);
 
     return status;
@@ -206,6 +224,7 @@ HalGRPCClient::endpoint_update (EndpointUpdateRequestMsg& req_msg,
     grpc::ClientContext         context;
     grpc::Status                status;
 
+    SET_TIMEOUT();
     status = endpoint_stub_->EndpointUpdate(&context, req_msg, &rsp_msg);
 
     return status;

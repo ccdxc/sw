@@ -29,11 +29,9 @@ public:
 
     static HalMulticast *GetInstance(HalL2Segment *l2seg, mac_t mac);
 
-    void AddEnic(Enic *enic);
-
-    void DelEnic(Enic *enic);
-
-    void TriggerHal();
+    hal_irisc_ret_t AddEnic(Enic *enic);
+    hal_irisc_ret_t DelEnic(Enic *enic);
+    hal_irisc_ret_t TriggerHal();
 
     HalL2Segment *GetL2Seg();
     mac_t GetMac();

@@ -7,6 +7,7 @@
 
 #include "endpoint.hpp"
 #include "print.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
@@ -109,6 +110,7 @@ HalEndpoint::HalEndpointCreate()
     req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac);
     req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg->GetId());
     req->mutable_endpoint_attrs()->mutable_interface_key_handle()->set_interface_id(enic->GetId());
+    VERIFY_HAL();
     status = hal->endpoint_create(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -126,6 +128,7 @@ HalEndpoint::HalEndpointCreate()
         ret = HAL_IRISC_RET_FAIL;
     }
 
+end:
     return ret;
 }
 
@@ -149,6 +152,7 @@ HalEndpoint::HalEndpointDelete()
     req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(mac);
     req->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_segment_id(l2seg->GetId());
 
+    VERIFY_HAL();
     status = hal->endpoint_delete(req_msg, rsp_msg);
     if (status.ok()) {
         rsp = rsp_msg.response(0);
@@ -165,6 +169,7 @@ HalEndpoint::HalEndpointDelete()
         ret = HAL_IRISC_RET_FAIL;
     }
 
+end:
     return ret;
 }
 

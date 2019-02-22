@@ -1611,7 +1611,7 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
 
     if (mac_addrs.find(cmd->filter_id) != mac_addrs.end()) {
         mac_addr = mac_addrs[cmd->filter_id];
-        NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC mac:{}",
+        NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC mac {}",
                       hal_lif_info_.name,
                       macaddr2str(mac_addr));
         lif->DelMac(mac_addr);
@@ -1626,7 +1626,7 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         auto mac_vlan = mac_vlans[cmd->filter_id];
         mac_addr = std::get<0>(mac_vlan);
         vlan = std::get<1>(mac_vlan);
-        NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC_VLAN mac: {}, vlan: {}",
+        NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC_VLAN mac {} vlan {}",
                      hal_lif_info_.name, macaddr2str(mac_addr), vlan);
         lif->DelMacVlan(mac_addr, vlan);
         mac_vlans.erase(cmd->filter_id);

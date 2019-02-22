@@ -7,6 +7,7 @@
 #include "vrf.hpp"
 #include "l2seg.hpp"
 #include "print.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
@@ -80,10 +81,6 @@ Uplink::GetUplink(uint32_t port_num)
 hal_irisc_ret_t
 Uplink::CreateVrf()
 {
-    if (!hal) {
-        PopulateHalCommonClient();
-    }
-
     // In both Classic and hostpin modes, every uplink will get a VRF.
     vrf_ = HalVrf::Factory(IsOOB() ? types::VRF_TYPE_OOB_MANAGEMENT : types::VRF_TYPE_INBAND_MANAGEMENT,
                            this);
@@ -114,9 +111,10 @@ end:
     return ret;
 }
 
-int
+hal_irisc_ret_t
 Uplink::UpdateHalWithNativeL2seg(uint32_t native_l2seg_id)
 {
+    hal_irisc_ret_t                 ret = HAL_IRISC_RET_SUCCESS;
     grpc::Status                    status;
     InterfaceGetRequest             *req __attribute__((unused));
     InterfaceGetResponse            rsp;
@@ -129,6 +127,7 @@ Uplink::UpdateHalWithNativeL2seg(uint32_t native_l2seg_id)
 
     req = req_msg.add_request();
     req->mutable_key_or_handle()->set_interface_id(id_);
+    VERIFY_HAL();
     status = hal->interface_get(req_msg, rsp_msg);
     if (status.ok()) {
         NIC_LOG_DEBUG("Updated Uplink:{} with native l2seg:{}", id_, native_l2seg_id);
@@ -167,7 +166,8 @@ Uplink::UpdateHalWithNativeL2seg(uint32_t native_l2seg_id)
         }
     }
 
-    return 0;
+end:
+    return ret;
 }
 
 uint32_t
