@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"net"
@@ -60,17 +61,19 @@ var ifShowStatusCmd = &cobra.Command{
 }
 
 var ifUpdateCmd = &cobra.Command{
-	Use:   "interface",
-	Short: "Create interface",
-	Long:  "Create interface",
-	Run:   ifUpdateCmdHandler,
+	Use:          "interface",
+	Short:        "Create interface",
+	Long:         "Create interface",
+	RunE:         ifUpdateCmdHandler,
+	SilenceUsage: true,
 }
 
 var ifDeleteCmd = &cobra.Command{
-	Use:   "interface",
-	Short: "Delete interface",
-	Long:  "Delete interface",
-	Run:   ifDeleteCmdHandler,
+	Use:          "interface",
+	Short:        "Delete interface",
+	Long:         "Delete interface",
+	RunE:         ifDeleteCmdHandler,
+	SilenceUsage: true,
 }
 
 func init() {
@@ -117,7 +120,7 @@ func init() {
 	ifUpdateCmd.MarkFlagRequired("egress-bw")
 }
 
-func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {
+func ifDeleteCmdHandler(cmd *cobra.Command, args []string) error {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -129,8 +132,7 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewInterfaceClient(c)
 
 	if strings.Compare(ifEncap, "MPLSoUDP") != 0 {
-		fmt.Printf("Invalid encap type specified\n")
-		return
+		return errors.New("Invalid encap type specified")
 	}
 	intfID := Hash(ifName)
 
@@ -149,20 +151,21 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.InterfaceDelete(context.Background(), ifDeleteReqMsg)
 	if err != nil {
-		fmt.Printf("Delete interface failed. %v\n", err)
-		return
+		return err
 	}
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
-			continue
+			errStr := fmt.Sprintf("HAL Returned non OK status. %v", resp.ApiStatus)
+			return errors.New(errStr)
 		}
 		fmt.Printf("Interface delete succeeded\n")
 	}
+
+	return nil
 }
 
-func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
+func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -185,16 +188,14 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	var intfID uint64
 
 	if strings.Compare(ifEncap, "MPLSoUDP") != 0 {
-		fmt.Printf("Invalid encap type specified\n")
-		return
+		return errors.New("Invalid encap type specified")
 	}
 
 	overlay := strings.Split(ifOverlayIP, ",")
 	numOverlay := len(overlay)
 	for i := 0; i < numOverlay; i++ {
 		if len(strings.Split(overlay[i], ".")) != 4 {
-			fmt.Printf("Invalid overlay IP address specified\n")
-			return
+			return errors.New("Invalid overlay IP address specified")
 		}
 		overlayIP[i] = IPAddrStrtoUint32(overlay[i])
 	}
@@ -211,29 +212,25 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if len(strings.Split(ifSubIP, ".")) != 4 {
-		fmt.Printf("Invalid substrate IP address specified\n")
-		return
+		return errors.New("Invalid substrate IP address specified")
 	}
 	substrateIP = IPAddrStrtoUint32(ifSubIP)
 
 	if len(strings.Split(ifTunnelDestIP, ".")) != 4 {
-		fmt.Printf("Invalid tunnel destination IP address specified\n")
-		return
+		return errors.New("Invalid tunnel destination IP address specified")
 	}
 	tunnelDestIP = IPAddrStrtoUint32(ifTunnelDestIP)
 
 	mac, err := net.ParseMAC(ifGwMac)
 	if err != nil {
-		fmt.Printf("Invalid gateway MAC\n")
-		return
+		return errors.New("Invalid gateway MAC")
 	}
 	gwMac = uint64(mac[0])<<40 | uint64(mac[1])<<32 | uint64(mac[2])<<24 | uint64(mac[3])<<16 | uint64(mac[4])<<8 | uint64(mac[5])
 
 	if cmd.Flags().Changed("pf-mac") {
 		mac, err = net.ParseMAC(ifPfMac)
 		if err != nil {
-			fmt.Printf("Invalid PF MAC\n")
-			return
+			return errors.New("Invalid PF MAC")
 		}
 		pfMac = uint64(mac[0])<<40 | uint64(mac[1])<<32 | uint64(mac[2])<<24 | uint64(mac[3])<<16 | uint64(mac[4])<<8 | uint64(mac[5])
 	} else {
@@ -243,8 +240,7 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("overlay-mac") {
 		mac, err = net.ParseMAC(ifOverlayMac)
 		if err != nil {
-			fmt.Printf("Invalid overlay MAC\n")
-			return
+			return errors.New("Invalid overlay MAC")
 		}
 		overlayMac = uint64(mac[0])<<40 | uint64(mac[1])<<32 | uint64(mac[2])<<24 | uint64(mac[3])<<16 | uint64(mac[4])<<8 | uint64(mac[5])
 	} else {
@@ -253,25 +249,21 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	sourceGwStr := strings.Split(ifSourceGw, "/")
 	if len(strings.Split(sourceGwStr[0], ".")) != 4 {
-		fmt.Printf("Invalid source gateway prefix specified\n")
-		return
+		return errors.New("Invalid source gateway prefix specified")
 	}
 
 	fmt.Sscanf(sourceGwStr[1], "%d", &sourceGWPrefixLen)
 	if sourceGWPrefixLen < 0 || sourceGWPrefixLen > 32 {
-		fmt.Printf("Invalid source gateway prefix specified\n")
-		return
+		return errors.New("Invalid source gateway prefix specified")
 	}
 	sourceGWPrefix = IPAddrStrtoUint32(sourceGwStr[0])
 
 	if ifIngressBw > 12500000 {
-		fmt.Printf("Invalid ingress BW. Valid range is 0-12500000 KBytes/sec\n")
-		return
+		return errors.New("Invalid ingress BW. Valid range is 0-12500000 KBytes/sec")
 	}
 
 	if ifEgressBw > 12500000 {
-		fmt.Printf("Invalid egress BW. Valid range is 0-12500000 KBytes/sec\n")
-		return
+		return errors.New("Invalid egress BW. Valid range is 0-12500000 KBytes/sec")
 	}
 
 	mplsOut.Label = ifMplsOut
@@ -360,17 +352,18 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	// HAL call
 	respMsg, err := client.InterfaceCreate(context.Background(), ifCreateReqMsg)
 	if err != nil {
-		fmt.Printf("Updating interface failed. %v\n", err)
-		return
+		return err
 	}
 
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("HAL Returned non OK status. %v\n", resp.ApiStatus)
-			continue
+			errStr := fmt.Sprintf("HAL Returned non OK status. %v", resp.ApiStatus)
+			return errors.New(errStr)
 		}
 		fmt.Printf("Interface update succeeded. Interface ID is %d\n", intfID)
 	}
+
+	return nil
 }
 
 func ifShowCmdHandler(cmd *cobra.Command, args []string) {

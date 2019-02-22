@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -33,14 +34,14 @@ var ifUpdateCmd = &cobra.Command{
 	Use:   "interface",
 	Short: "Create interface",
 	Long:  "Create interface",
-	Run:   ifUpdateCmdHandler,
+	RunE:  ifUpdateCmdHandler,
 }
 
 var ifDeleteCmd = &cobra.Command{
 	Use:   "interface",
 	Short: "Delete interface",
 	Long:  "Delete interface",
-	Run:   ifDeleteCmdHandler,
+	RunE:  ifDeleteCmdHandler,
 }
 
 var ifShowCmd = &cobra.Command{
@@ -144,7 +145,7 @@ func mplsoudpShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleIfShowCmd(false, false, true)
 }
 
-func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {
+func ifDeleteCmdHandler(cmd *cobra.Command, args []string) error {
 	halctlStr := "/nic/bin/halctl debug delete interface --encap " + ifEncap + " --name " + ifName
 
 	execCmd := strings.Fields(halctlStr)
@@ -155,25 +156,29 @@ func ifDeleteCmdHandler(cmd *cobra.Command, args []string) {
 
 	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
-		fmt.Println(err)
-		return
+		str := err.Error()
+		str = strings.Replace(str, "exit status 1:Error: ", "", -1)
+		str = strings.Replace(str, "\\n", "", -1)
+		str = strings.Replace(str, "\n", "", -1)
+		str = strings.Replace(str, "\"", "", -1)
+		return errors.New(str)
 	}
 
 	if len(resp) > 3 {
 		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
 		fmt.Printf("%s", s)
 	}
+
+	return nil
 }
 
-func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
+func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	if ifIngressBw > 12500000 {
-		fmt.Printf("Invalid ingress BW. Valid range is 0-12500000 KBytes/sec\n")
-		return
+		return errors.New("Invalid ingress BW. Valid range is 0-12500000 KBytes/sec")
 	}
 
 	if ifEgressBw > 12500000 {
-		fmt.Printf("Invalid egress BW. Valid range is 0-12500000 KBytes/sec\n")
-		return
+		return errors.New("Invalid egress BW. Valid range is 0-12500000 KBytes/sec")
 	}
 
 	halctlStr := "/nic/bin/halctl debug update interface --encap " + ifEncap + " --substrate-ip " + ifSubIP + " --overlay-ip " + ifOverlayIP + " --mpls-in " + ifMplsIn + " --mpls-out " + fmt.Sprint(ifMplsOut) + " --tunnel-dest-ip " + ifTunnelDestIP + " --source-gw " + ifSourceGw + " --gw-mac " + ifGwMac + " --ingress-bw " + fmt.Sprint(ifIngressBw) + " --egress-bw " + fmt.Sprint(ifEgressBw) + " --name " + ifName
@@ -194,12 +199,18 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	resp, err := restGetWithBody(v, "cmd/v1/naples/")
 	if err != nil {
-		fmt.Println(err)
-		return
+		str := err.Error()
+		str = strings.Replace(str, "exit status 1:Error: ", "", -1)
+		str = strings.Replace(str, "\\n", "", -1)
+		str = strings.Replace(str, "\n", "", -1)
+		str = strings.Replace(str, "\"", "", -1)
+		return errors.New(str)
 	}
 
 	if len(resp) > 3 {
 		s := strings.Replace(string(resp[1:len(resp)-2]), `\n`, "\n", -1)
 		fmt.Printf("%s", s)
 	}
+
+	return nil
 }
