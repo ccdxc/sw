@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -20,12 +21,12 @@ import (
 
 var (
 	execOutputDir = "/tmp"
-	cmdCnt        = 0
+	cmdCnt        uint64
 )
 
 func getOutFiles() (string, string) {
-	cmdCnt += 1
-	return execOutputDir + "/stdout_" + strconv.Itoa(cmdCnt), execOutputDir + "/stderr_" + strconv.Itoa(cmdCnt)
+	atomic.AddUint64(&cmdCnt, 1)
+	return execOutputDir + "/stdout_" + strconv.FormatUint(cmdCnt, 10), execOutputDir + "/stderr_" + strconv.FormatUint(cmdCnt, 10)
 }
 
 //ExecCmd run shell command
@@ -38,14 +39,14 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 
 	cmdInfo := &CommandInfo{Ctx: &CommandCtx{}}
 	if shell {
+		shellStdout, shellStderr = getOutFiles()
 		fullCmd := strings.Join(cmdArgs, " ")
+		if strings.ContainsAny(fullCmd, ">") {
+			fullCmd = fullCmd + " | tee " + shellStdout
+		} else {
+			fullCmd = fullCmd + " 2> " + shellStderr + " 1>" + shellStdout
+		}
 		if background {
-			shellStdout, shellStderr = getOutFiles()
-			if strings.ContainsAny(fullCmd, ">") {
-				fullCmd = fullCmd + " | tee" + shellStdout
-			} else {
-				fullCmd = fullCmd + " 2> " + shellStderr + " 1>" + shellStdout
-			}
 			newCmdArgs := []string{"sh", "-c", fullCmd}
 			process = exec.Command(newCmdArgs[0], newCmdArgs[1:]...)
 		} else {
@@ -63,24 +64,48 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 		process.Env = append(process.Env, env)
 	}
 
-	sshOut, _ := process.StdoutPipe()
-	sshErr, _ := process.StderrPipe()
-
-	shout := io.MultiWriter(&stdoutBuf)
-	ssherr := io.MultiWriter(&stderrBuf)
-
 	ioCopies := make(chan int)
-	go func() {
-		io.Copy(shout, sshOut)
-		ioCopies <- 1
-	}()
-	go func() {
-		io.Copy(ssherr, sshErr)
-		ioCopies <- 2
-	}()
+	if !shell {
+		sshOut, _ := process.StdoutPipe()
+		sshErr, _ := process.StderrPipe()
+
+		shout := io.MultiWriter(&stdoutBuf)
+		ssherr := io.MultiWriter(&stderrBuf)
+		go func() {
+			io.Copy(shout, sshOut)
+			ioCopies <- 1
+		}()
+		go func() {
+			io.Copy(ssherr, sshErr)
+			ioCopies <- 2
+		}()
+
+	}
 
 	cmdInfo.Ctx.status = make(chan error)
 
+	copyStdoutStderr := func() {
+		if shell {
+			//Sleep for couple of second for file dump complete.
+			if background {
+				time.Sleep(2 * time.Second)
+			}
+			if b, err := ioutil.ReadFile(shellStdout); err == nil {
+				cmdInfo.Ctx.Stdout = string(b)
+			}
+			if b, err := ioutil.ReadFile(shellStderr); err == nil {
+				cmdInfo.Ctx.Stderr = string(b)
+			}
+			os.Remove(shellStdout)
+			os.Remove(shellStderr)
+		} else {
+			for i := 0; i < 2; i++ {
+				<-ioCopies
+			}
+			cmdInfo.Ctx.Stdout = stdoutBuf.String()
+			cmdInfo.Ctx.Stderr = stderrBuf.String()
+		}
+	}
 	if background {
 		fmt.Println("Starting background command :", strings.Join(cmdArgs, " "))
 		//For now don't send signal to background process.
@@ -89,6 +114,7 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 			cmdInfo.Ctx.ExitCode = 1
 			cmdInfo.Ctx.Done = true
 			cmdInfo.Ctx.Stdout = errors.Wrapf(err, "Background process start failed!").Error()
+			copyStdoutStderr()
 			cmdInfo.Ctx.status <- nil
 			return cmdInfo, err
 		}
@@ -97,19 +123,7 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 			process.Wait()
 			cmdInfo.Ctx.Done = true
 			cmdInfo.Ctx.ExitCode = 1
-			if shell {
-				//Sleep for couple of second for file dump complete.
-				time.Sleep(2 * time.Second)
-				if b, err := ioutil.ReadFile(shellStdout); err == nil {
-					cmdInfo.Ctx.Stdout = string(b)
-				}
-				if b, err := ioutil.ReadFile(shellStderr); err == nil {
-					cmdInfo.Ctx.Stderr = string(b)
-				}
-			} else {
-				cmdInfo.Ctx.Stdout = stdoutBuf.String()
-				cmdInfo.Ctx.Stderr = stderrBuf.String()
-			}
+			copyStdoutStderr()
 			cmdInfo.Ctx.status <- nil
 		}(cmdInfo)
 		return cmdInfo, nil
@@ -126,12 +140,8 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 				cmdInfo.Ctx.ExitCode = 1
 			}
 		}
-		for i := 0; i < 2; i++ {
-			<-ioCopies
-		}
 		cmdInfo.Ctx.Done = true
-		cmdInfo.Ctx.Stdout = stdoutBuf.String()
-		cmdInfo.Ctx.Stderr = stderrBuf.String()
+		copyStdoutStderr()
 		cmdInfo.Ctx.status <- nil
 		return
 	}(cmdInfo)
@@ -144,8 +154,7 @@ func execCmd(cmdArgs []string, runDir string, TimedOut int, background bool, she
 			// TimedOut happened first, kill the process and print a message.
 			process.Process.Signal(os.Kill)
 			cmdInfo.Ctx.ExitCode = 1
-			cmdInfo.Ctx.Stdout = stdoutBuf.String()
-			cmdInfo.Ctx.Stderr = stderrBuf.String()
+			copyStdoutStderr()
 			cmdInfo.Ctx.TimedOut = true
 			cmdInfo.Ctx.Done = true
 			return cmdInfo, nil

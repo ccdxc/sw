@@ -36,35 +36,37 @@ def ResetConfigs():
 def PrintConfigsObjects(objects):
     cfg_main.ObjectConfigStore.PrintConfigsObjects(objects)
 
-def PushConfigObjects(objects, base_url, remote_node=None):
+def PushConfigObjects(objects, cfg_node):
     for object in objects:
-        ret = object.Push(base_url, remote_node=remote_node)
+        ret = object.Push(cfg_node)
         if ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
-def DeleteConfigObjects(objects, base_url, remote_node=None):
+def DeleteConfigObjects(objects, cfg_node):
     for object in objects:
-        ret = object.Delete(base_url, remote_node=remote_node)
+        ret = object.Delete(cfg_node)
         if ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
-def UpdateConfigObjects(objects, base_url, remote_node=None):
+def UpdateConfigObjects(objects, cfg_node):
     for object in objects:
-        ret = object.Update(base_url, remote_node=remote_node)
+        ret = object.Update(cfg_node)
         if ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
-def GetConfigObjects(objects, base_url, remote_node=None):
+def GetConfigObjects(objects, cfg_node):
     get_objects = []
     for object in objects:
-        obj = object.Get(base_url, remote_node=remote_node)
+        obj = object.Get(cfg_node)
         if obj:
             get_objects.append(obj)
     return get_objects
 
+def NewCfgNode(host_name, host_ip, nic_ip):
+    return cfg_main.CfgNode(host_name, host_ip, nic_ip)
 
 if __name__ == '__main__':
     ReadConfigs("test/iris/topologies/container")

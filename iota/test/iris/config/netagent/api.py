@@ -1,8 +1,12 @@
 #! /usr/bin/python3
 import os
 import pdb
+import ipaddress
+import requests
+import json
 import iota.harness.api as api
 import iota.test.iris.config.api as cfg_api
+from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 base_url = "http://169.254.0.1:9007/"
 
@@ -29,52 +33,49 @@ def Init(agent_nodes, hw=False):
 def __get_base_url(nic_ip):
     return "http://" + nic_ip + ":9007/"
 
-def __get_agent_ips(node_names = None):
+
+def __get_agent_cfg_nodes(node_names = None):
     agent_node_names = node_names or api.GetNaplesHostnames()
-    agent_ips = []
+    agent_cfg_nodes = []
     for node_name in agent_node_names:
         assert(api.IsNaplesNode(node_name))
         ip = api.GetNaplesMgmtIpAddress(node_name)
         if not ip:
             assert(0)
         nic_ip = api.GetNicIntMgmtIP(node_name)
-        agent_ips.append((ip, nic_ip))
-    return agent_ips
+        agent_cfg_nodes.append(cfg_api.NewCfgNode(node_name, ip, nic_ip))
+    return agent_cfg_nodes
 
 
 def PushConfigObjects(objects, node_names = None, ignore_error=False):
-    agent_ips = __get_agent_ips(node_names)
-    for node_ip,nic_ip in agent_ips:
-        ret = cfg_api.PushConfigObjects(objects, __get_base_url(nic_ip),
-            remote_node=node_ip if gl_hw else None)
+    agent_cfg_nodes = __get_agent_cfg_nodes(node_names)
+    for cfg_node in  agent_cfg_nodes:
+        ret = cfg_api.PushConfigObjects(objects, cfg_node)
         if not ignore_error and ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def DeleteConfigObjects(objects, node_names = None, ignore_error=False):
-    agent_ips = __get_agent_ips(node_names)
-    for node_ip,nic_ip in agent_ips:
-        ret = cfg_api.DeleteConfigObjects(objects, __get_base_url(nic_ip),
-            remote_node=node_ip if gl_hw else None)
+    agent_cfg_nodes = __get_agent_cfg_nodes(node_names)
+    for cfg_node in  agent_cfg_nodes:
+        ret = cfg_api.DeleteConfigObjects(objects, cfg_node)
         if not ignore_error and ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 def UpdateConfigObjects(objects, node_names = None, ignore_error=False):
-    agent_ips = __get_agent_ips(node_names)
-    for node_ip,nic_ip in agent_ips:
-        ret = cfg_api.UpdateConfigObjects(objects, __get_base_url(nic_ip),
-            remote_node=node_ip if gl_hw else None)
+    agent_cfg_nodes = __get_agent_cfg_nodes(node_names)
+    for cfg_node in  agent_cfg_nodes:
+        ret = cfg_api.UpdateConfigObjects(objects,cfg_node)
         if not ignore_error and ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
     return api.types.status.SUCCESS
 
 #Assuming all nodes have same, return just from one node.
 def GetConfigObjects(objects, node_names = None, ignore_error=False):
-    agent_ips = __get_agent_ips(node_names)
-    for node_ip,nic_ip in agent_ips:
-        get_objects = cfg_api.GetConfigObjects(objects, __get_base_url(nic_ip),
-            remote_node=node_ip if gl_hw else None)
+    agent_cfg_nodes = __get_agent_cfg_nodes(node_names)
+    for cfg_node in  agent_cfg_nodes:
+        get_objects = cfg_api.GetConfigObjects(objects, cfg_node)
         return get_objects
     return []
 

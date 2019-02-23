@@ -1,9 +1,11 @@
 import glob
 import json
+import ipaddress
 import os
 import requests
 import subprocess
 from enum import Enum
+import iota.harness.api as api
 from collections import defaultdict, OrderedDict
 
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -60,63 +62,6 @@ class CfgOper(Enum):
     UPDATE = 4
 
 
-def _rest_api_handler(url, json_data = None, oper = CfgOper.ADD):
-    url = None
-    if oper == CfgOper.ADD:
-        method = requests.post
-    elif oper == CfgOper.DELETE:
-        method = method.delete
-    elif oper == CfgOper.UPDATE:
-        method = method.put
-    elif oper == CfgOper.GET:
-        method = method.get
-    else:
-        assert(0)
-    api.Logger.info("URL = ", url)
-    api.Logger.info("JSON Data = ", json_data)
-    headers = {'Content-type': 'application/json'}
-    response = method(url, data=json_data, headers=headers)
-    api.Logger.info("REST response = ", response.text)
-    assert(response.status_code == requests.codes.ok)
-    return json.loads(response.text)
-
-def _hw_rest_api_handler(node_ip, url, json_data = None, oper = CfgOper.ADD):
-    if json_data:
-        with open('temp_config.json', 'w') as outfile:
-            outfile.write(json.dumps(json_data))
-        outfile.close()
-        api.Logger.info("Pushing config to Node: %s" % node_ip)
-        if GlobalOptions.debug:
-            os.system("cat temp_config.json")
-
-        #os.system("sshpass -p %s scp temp_config.json %s@%s:~" % (api.GetTestbedPassword(), api.GetTestbedUsername(), node_ip))
-        os.system("sshpass -p %s scp \"StrictHostKeyChecking=no\"  temp_config.json %s@%s:~" % ("vm", "vm", node_ip))
-    if oper == CfgOper.DELETE:
-        oper = "DELETE"
-    elif oper == CfgOper.ADD:
-        oper = "POST"
-    elif oper == CfgOper.UPDATE:
-        oper = "PUT"
-    elif oper == CfgOper.GET:
-        oper = "GET"
-    else:
-        print (oper)
-        assert(0)
-    if GlobalOptions.debug:
-        api.Logger.info("Url : %s" % url)
-        #cmd = ("sshpass -p %s ssh %s@%s curl -X %s -d @temp_config.json -H \"Content-Type:application/json\" %s" %
-    #                (api.GetTestbedPassword(), api.GetTestbedUsername(), node_ip, oper, url))
-    #cmd = ["sshpass", "-p", api.GetTestbedPassword(), "ssh", api.GetTestbedUsername() + "@" + node_ip, "curl", "-X", oper, "-d", "@temp_config.json", "-H", "\"Content-Type:application/json\"",
-    #        url]
-    cmd = ["sshpass", "-p", "vm", "ssh",  "-o", "StrictHostKeyChecking=no" , "vm" + "@" + node_ip, "curl", "-X", oper, "-d", "@temp_config.json", "-H", "\"Content-Type:application/json\"",
-            url]
-    if GlobalOptions.debug:
-        print (" ".join(cmd))
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    (out, err) = proc.communicate()
-    os.system("rm -f temp_config.json")
-    return out
-
 class ConfigObject(DictObject):
 
     def __init__(self, raw_object, key, rest_ep):
@@ -127,23 +72,12 @@ class ConfigObject(DictObject):
         self.__key_fields = key.split("/")
         self.__update_raw()
 
-    def __common_rest(self, url, data, remote_node=None, oper=CfgOper.ADD):
-        if not remote_node:
-            jsonData = _rest_api_handler(url, data, oper)
-        else:
-            jsonData = _hw_rest_api_handler(remote_node, url, data, oper)
-        try:
-            data = json.loads(jsonData)
-        except:
-            api.Logger.error("API error %s" % jsonData)
-            assert(0)
-        return data
 
-    def Push(self, base_url, remote_node=None):
+    def Push(self, cfg_node):
         if GlobalOptions.dryrun: return api.types.status.SUCCESS
-        full_url = base_url + self.__rest_ep
+        full_url = cfg_node.BaseUrl() + self.__rest_ep
         self.__update_raw()
-        out = self.__common_rest(full_url, self.__raw, remote_node=remote_node, oper=CfgOper.ADD)
+        out = cfg_node.DoConfig(full_url, self.__raw, oper=CfgOper.ADD)
         if out["status-code"] == 200:
             api.Logger.info("Push success for Key : ", self.Key())
             return api.types.status.SUCCESS
@@ -152,10 +86,10 @@ class ConfigObject(DictObject):
         return api.types.status.FAILURE
 
 
-    def Get(self, base_url, remote_node=None):
+    def Get(self, cfg_node):
         if GlobalOptions.dryrun: return api.types.status.SUCCESS
-        full_url = base_url + self.__rest_ep
-        out = self.__common_rest(full_url, None, remote_node=remote_node, oper=CfgOper.GET)
+        full_url = cfg_node.BaseUrl() + self.__rest_ep
+        out = cfg_node.DoConfig(full_url, None, oper=CfgOper.GET)
         #For now agent does not implement individual get, so read and pick the one which matched
         if out:
             cfgObjects = (out)
@@ -168,11 +102,11 @@ class ConfigObject(DictObject):
         return None
 
 
-    def Update(self, base_url, remote_node=None):
+    def Update(self, cfg_node):
         if GlobalOptions.dryrun: return api.types.status.SUCCESS
-        full_url = self.RestObjURL(base_url)
+        full_url = self.RestObjURL(cfg_node.BaseUrl())
         self.__update_raw()
-        out = self.__common_rest(full_url, self.__raw, remote_node=remote_node, oper=CfgOper.UPDATE)
+        out = cfg_node.DoConfig(full_url, self.__raw, oper=CfgOper.UPDATE)
         if out["status-code"] == 200:
             api.Logger.info("Update success for Key : ", self.Key())
             return api.types.status.SUCCESS
@@ -180,10 +114,10 @@ class ConfigObject(DictObject):
         return api.types.status.FAILURE
 
 
-    def Delete(self, base_url, remote_node=None):
+    def Delete(self, cfg_node):
         if GlobalOptions.dryrun: return api.types.status.SUCCESS
-        full_url = self.RestObjURL(base_url)
-        out = self.__common_rest(full_url, None,  remote_node=remote_node, oper=CfgOper.DELETE)
+        full_url = self.RestObjURL(cfg_node.BaseUrl())
+        out = cfg_node.DoConfig(full_url, self.__raw, oper=CfgOper.DELETE)
         if out is None:
             return api.types.status.SUCCESS
         if 'status-code' in out:
@@ -283,5 +217,80 @@ class ConfigStore():
     def PrintConfigsObjects(self, objects):
         for object in objects:
             print ("object : ", object)
+
+
+class CfgNode:
+
+    def __init__(self, host_name, host_ip, nic_ip):
+        self.host_name = host_name
+        self.host_ip = host_ip
+        self.nic_ip = nic_ip
+
+    def IsPrivate(self):
+        try:
+            return ipaddress.IPv4Address(self.nic_ip).is_private
+        except:
+            return True
+
+    def __rest_api_handler(self, url, json_data = None, oper = CfgOper.ADD):
+        if oper == CfgOper.ADD:
+            method = requests.post
+        elif oper == CfgOper.DELETE:
+            method = requests.delete
+        elif oper == CfgOper.UPDATE:
+            method = requests.put
+        elif oper == CfgOper.GET:
+            method = requests.get
+        else:
+            assert(0)
+        api.Logger.info("URL = ", url)
+        api.Logger.info("JSON Data = ", json.dumps(json_data))
+        headers = {'Content-type': 'application/json'}
+        response = method(url, data=json.dumps(json_data), headers=headers)
+        api.Logger.info("REST response = ", response.text)
+        #assert(response.status_code == requests.codes.ok)
+        return response.text
+
+    def __node_api_handler(self, url, json_data = None, oper = CfgOper.ADD):
+        if oper == CfgOper.DELETE:
+            oper = "DELETE"
+        elif oper == CfgOper.ADD:
+            oper = "POST"
+        elif oper == CfgOper.UPDATE:
+            oper = "PUT"
+        elif oper == CfgOper.GET:
+            oper = "GET"
+        else:
+            print (oper)
+            assert(0)
+        if GlobalOptions.debug:
+            api.Logger.info("Url : %s" % url)
+
+        cmd = ["curl", "-X", oper, "-d", "\'" + json.dumps(json_data) + "\'" if json_data else " ", "-H", "\"Content-Type:application/json\"",
+                url]
+        cmd = " ".join(cmd)
+        req = api.Trigger_CreateAllParallelCommandsRequest()
+        api.Trigger_AddHostCommand(req, self.host_name, cmd, timeout=180)
+
+        resp = api.Trigger(req)
+        if GlobalOptions.debug:
+            print (" ".join(cmd))
+        return resp.commands[0].stdout
+
+    def DoConfig(self, url, data = None, oper = CfgOper.ADD):
+        jsonData = None
+        if self.IsPrivate():
+            jsonData = self.__node_api_handler(url, data, oper)
+        else:
+            jsonData = self.__rest_api_handler(url, data, oper)
+        try:
+            data = json.loads(jsonData)
+        except:
+            api.Logger.error("API error %s" % jsonData)
+            assert(0)
+        return data
+
+    def BaseUrl(self):
+        return "http://" + self.nic_ip + ":9007/"
 
 ObjectConfigStore = ConfigStore()
