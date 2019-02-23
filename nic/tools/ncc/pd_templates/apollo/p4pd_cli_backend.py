@@ -643,35 +643,17 @@ class ${table}():
         self.print_entry();
 //::    else:
         index   = ctx['index']
-        rsp_msg = ${pddict['cli-name']}.allocate_debug_response_msg()
-        size    = new_intp()
-        intp_assign(size, 0)
-        num_read = 1
 
-        while num_read:
-            ret = ${pddict['cli-name']}.${api_prefix}_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, size)
-            if ret < 0:
-                print('Error: ${api_prefix}_entry_read() returned %d!' % (ret))
-                return;
+        ret = ${pddict['cli-name']}.${api_prefix}_entry_read(self.table_id, index, self.swkey_p, self.swkey_mask_p, self.actiondata_p, None, None)
+        if ret < 0:
+            print('Error: ${api_prefix}_entry_read() returned %d!' % (ret))
+            return;
 
-            num_read = intp_value(size)
-            for i in range (0, num_read):
-                ret = ${pddict['cli-name']}.${api_prefix}_entry_populate(self.table_id, self.swkey_p, self.swkey_mask_p, self.actiondata_p, rsp_msg, i)
-                if ret < 0:
-                    print('Error: ${api_prefix}_entry_populate() returned %d!' % (ret))
-                    return;
-
-                print ('Index: %d' % (index + i))
-                self.print_entry();
-                print ('')
-            if num_read:
-               intp_assign(size, num_read)
-            num_read = 0
-        delete_intp(size)
-        ${pddict['cli-name']}.free_debug_response_msg(rsp_msg)
 //::    #endif
 
     def print_entry(self):
+        return
+
 //::        if pddict['tables'][table]['type'] != 'Index':
 
         print('${table}_swkey_t:')

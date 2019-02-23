@@ -6,6 +6,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/platform.hpp"
 #include "nic/sdk/platform/capri/csrint/csr_init.hpp"
+#include "nic/sdk/platform/capri/capri_state.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
 #include "nic/sdk/lib/p4/p4_utils.hpp"
@@ -43,8 +44,9 @@ cli_init (char *ptr)
     pal_ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HW);
     SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
 
-    // do csr init
-    sdk::platform::capri::csr_init();
+    // do capri_state_pd_init needed by sdk capri
+    // csr init is done inside capri_state_pd_init
+    sdk::platform::capri::capri_state_pd_init(NULL);
 
     // do apollo specific initialization
     p4pd_ret = p4pd_init(&p4pd_cfg);

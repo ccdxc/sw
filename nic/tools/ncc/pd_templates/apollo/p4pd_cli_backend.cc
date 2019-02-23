@@ -178,6 +178,7 @@ ${api_prefix}_entry_read (uint32_t  tableid,
 {
     p4pd_error_t    pd_err;
     int             num_indices;
+    char            buffer[2048];
 
     if (index == 0xffffffff) {
         p4pd_table_properties_t tbl_ctx;
@@ -186,34 +187,28 @@ ${api_prefix}_entry_read (uint32_t  tableid,
         if (pd_err != P4PD_SUCCESS) {
             return P4PD_FAIL;
         }
-
-        index = *size; /* In case num indices is greater than MAX we can read in one request */
-        num_indices = MAX(tbl_ctx.tabledepth - index, 10);
+        num_indices = tbl_ctx.tabledepth;
+        index = 0;
     } else {
         num_indices = 1;
     }
 
     for (int i = index; i < index + num_indices; ++i) {
-
-        pd_err = p4pd_global_entry_read(tableid, index, swkey,
+        pd_err = p4pd_global_entry_read(tableid, i, swkey,
                                         swkey_mask, actiondata);
         if (pd_err != P4PD_SUCCESS) {
             return (P4PD_FAIL);
         }
 
-        {
-            char    buffer[2048];
-
-            memset(buffer, 0, sizeof(buffer));
-            p4pd_global_table_ds_decoded_string_get(tableid, index,
-                                                    (void *)swkey,
-                                                    (void *)swkey_mask,
-                                                    (void *)actiondata,
-                                                    buffer, sizeof(buffer));
-            printf("%s\n", buffer);
-        }
+        memset(buffer, 0, sizeof(buffer));
+        p4pd_global_table_ds_decoded_string_get(tableid, i,
+                                                (void *)swkey,
+                                                (void *)swkey_mask,
+                                                (void *)actiondata,
+                                                buffer, sizeof(buffer));
+        printf("%s\n", buffer);
     }
-    *size = num_indices;
+
     fflush(stdout);
 
     return P4PD_SUCCESS;

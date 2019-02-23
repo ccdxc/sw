@@ -16,16 +16,16 @@ def dbg_cli():
     pass
 
 # show
-@dbg_cli.group()
-@click.pass_context
-def show(ctx):
-    pass
+#@dbg_cli.group()
+#@click.pass_context
+#def show(ctx):
+#    pass
 
 # show system
-@show.group()
-@click.pass_context
-def system(ctx):
-    pass
+#@show.group()
+#@click.pass_context
+#def system(ctx):
+#    pass
 
 # show sytem register
 #@system.group()
@@ -111,18 +111,18 @@ def system(ctx):
 #    pass
 
 # show system table
-@system.group()
-@click.pass_context
-def table(ctx):
-    ctx.obj={}
-    pass
+#@system.group()
+#@click.pass_context
+#def table(ctx):
+#    ctx.obj={}
+#    pass
 
 # show system table list_table
-@table.command(name="list")
+#@table.command(name="list")
 #@click.option("-f", "--file", "file_name", default="", multiple=False)
-def list_table():
-    backend.table_dump()
-    pass
+#def list_table():
+#    backend.table_dump()
+#    pass
 
 # show system rawtable
 #@system.group()
@@ -150,6 +150,13 @@ def hardware(ctx):
 def table(ctx):
     ctx.obj = {}
     ctx.obj['is_reg'] = False
+    pass
+
+# debug hardware table list
+@table.command(name="list")
+#@click.option("-f", "--file", "file_name", default="", multiple=False)
+def list_table():
+    backend.table_dump()
     pass
 
 # debug hardware table read

@@ -28,16 +28,16 @@ pal_init (platform_type_t platform_type)
     switch(platform_type) {
     case platform_type_t::PLATFORM_TYPE_HW:
     case platform_type_t::PLATFORM_TYPE_HAPS:
-        SDK_TRACE_DEBUG("Initializing PAL in HW mode\n");
+        SDK_TRACE_DEBUG("Initializing PAL in HW mode");
         return pal_hw_init();
 
     case platform_type_t::PLATFORM_TYPE_SIM:
     case platform_type_t::PLATFORM_TYPE_ZEBU:
-        SDK_TRACE_DEBUG("Initializing PAL in SIM mode\n");
+        SDK_TRACE_DEBUG("Initializing PAL in SIM mode");
         return pal_init_sim();
 
     case platform_type_t::PLATFORM_TYPE_MOCK:
-        SDK_TRACE_DEBUG("Initializing PAL in MOCK mode\n");
+        SDK_TRACE_DEBUG("Initializing PAL in MOCK mode");
         return pal_mock_init();
 
     default:
