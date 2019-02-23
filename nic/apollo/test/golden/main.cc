@@ -9,9 +9,11 @@
 //----------------------------------------------------------------------------
 
 #include <stdio.h>
+#include <math.h>
 #include <map>
 #include <iostream>
 #include <gtest/gtest.h>
+#include <arpa/inet.h>
 
 #include <boost/crc.hpp>
 #include "boost/property_tree/json_parser.hpp"
@@ -23,13 +25,9 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "platform/utils/lif_manager_base.hpp"
 #include "platform/capri/capri_qstate.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
-#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
-#include "nic/hal/pd/asic_pd.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
-#include "nic/utils/pack_bytes/pack_bytes.hpp"
-#include "nic/hal/pd/globalpd/gpd_utils.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "nic/apollo/p4/include/table_sizes.h"
 #include "nic/apollo/p4/include/sacl_defines.h"
@@ -52,6 +50,7 @@ using namespace sdk::platform::capri;
 #define JSACLV4BASE "sacl_v4"
 #define JLPMV4BASE "lpm_v4"
 #define JFLOWSTATSBASE "flow_stats"
+#define JP4_PRGM        "p4_program"
 
 typedef struct __attribute__((__packed__)) lif_qstate_ {
     uint64_t pc : 8;
@@ -867,13 +866,13 @@ TEST_F(apollo_test, test1)
     ASSERT_EQ(ret, SDK_RET_OK);
     printf("Doing p4pd init ...\n");
     ret = p4pd_init(&p4pd_cfg);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, P4PD_SUCCESS);
     printf("Doing p4+ rxdma init ...\n");
     ret = p4pluspd_rxdma_init(&p4pd_rxdma_cfg);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, P4PD_SUCCESS);
     printf("Doing p4+ txdma init ...\n");
     ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
-    ASSERT_EQ(ret, HAL_RET_OK);
+    ASSERT_EQ(ret, P4PD_SUCCESS);
     printf("Doing p4+ mpu init ...\n");
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     ASSERT_EQ(ret, SDK_RET_OK);

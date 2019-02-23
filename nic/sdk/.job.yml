@@ -1,17 +1,19 @@
 ---
 version: 2.0
 targets:
-  main:
-    commands: ["sh", "-c", "cd /sdk && make lib && make test" ]
-    owners: ["email:ksmurty@pensando.io"]
+  sdk/make:
+    commands: ["make", "jobd/make/sdk"]
+    owners: ["email:hareesh@pensando.io"]
     area:
     sub-area:
     feature:
+
 cache:
-  name: "sdk"
+  name: "sw"
   mount_dir: "/root/.cache"
 image:
-  bind_dir: "/sdk"
-  work_dir: "/sdk"
+  bind_dir: "/sw"
+  work_dir: "/sw/nic"
 rebase: true
 logfiles:
+  - /sw/nic/sdk_sanity_logs.tar.gz

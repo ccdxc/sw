@@ -5,4 +5,5 @@ MODULE_TARGET = model_sim_cli.bin
 MODULE_PIPELINE = iris gft
 MODULE_SOLIBS = model_client
 MODULE_LDLIBS = zmq ${NIC_THIRDPARTY_SSL_LDLIBS}
+MODULE_ARCH     = x86_64
 include ${MKDEFS}/post.mk

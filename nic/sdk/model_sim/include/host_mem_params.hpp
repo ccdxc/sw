@@ -1,5 +1,5 @@
 #ifndef __HOST_MEM_PARAMS_HPP__
-#define __HOST_MEM_PARAMS_HPP_
+#define __HOST_MEM_PARAMS_HPP__
 
 #include <stdlib.h>
 #include <unistd.h>

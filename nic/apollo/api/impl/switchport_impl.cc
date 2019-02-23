@@ -13,7 +13,6 @@
 #include "nic/apollo/api/switchport.hpp"
 #include "nic/apollo/api/impl/switchport_impl.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
-#include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 
 namespace api {

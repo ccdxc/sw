@@ -3,7 +3,7 @@
 #ifndef __PACK_BYTES_H__
 #define __PACK_BYTES_H__
 
-#include "nic/include/base.hpp"
+#include "nic/sdk/include/sdk/base.hpp"
 
 namespace hal {
 namespace utils {
