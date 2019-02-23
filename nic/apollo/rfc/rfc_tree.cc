@@ -137,6 +137,7 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
         SACL_PROTO_DPORT_TREE_MAX_CLASSES;
 
     new (&rfc_ctxt->p1_table.cbm_map) cbm_map_t();
+    rfc_ctxt->p1_table.max_classes = SACL_P1_MAX_CLASSES;
     rfc_ctxt->cbm_size =
         RTE_CACHE_LINE_ROUNDUP(rte_bitmap_get_memory_footprint(policy->max_rules));
     posix_memalign((void **)&bits, CACHE_LINE_SIZE, rfc_ctxt->cbm_size);

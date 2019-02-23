@@ -11,9 +11,15 @@
 #define SACL_PROTO_DPORT_TREE_MAX_CLASSES 256
 #define SACL_P1_TABLE_NUM_ENTRIES         (1 << 17)  // (2^10 * 2^7)
 #define SACL_P1_TABLE_SIZE                164544     // round64((1<<17)*(64/51))
+#define SACL_P1_ENTRY_SIZE                10         // size in bits
+#define SACL_P1_ENTRIES_PER_CACHE_LINE    51         // 51 entries of 10 bits
+                                                     // each, 2 pad bits = 512 bits
 #define SACL_P1_MAX_CLASSES               1024
 #define SACL_P2_TABLE_NUM_ENTRIES         (1 << 18)  // (2^10 * 2^8)
 #define SACL_P2_TABLE_SIZE                65536      // ((1 << 18)*2)/8
+#define SACL_P2_ENTRY_SIZE                2          // entry size in bits
+#define SACL_P2_ENTRIES_PER_CACHE_LINE    256        // 256 entries of 2 bits
+                                                     // each = 512 bits
 
 #define SACL_SPORT_TABLE_OFFSET         0
 #define SACL_IPV4_TABLE_OFFSET          (SACL_SPORT_TABLE_SIZE)
