@@ -2,14 +2,14 @@
 %define debug_package %{nil}
 
 Name:		ionic
-Version:	0.4.0
+Version:	0.0.0
 Release:	1%{?dist}
 Summary:	Pensando IONIC Driver
 
 #Group:		
-License:	GPLv2+
+License:	GPLv2
 #URL:		
-Source:		ionic-0.4.0.tar.gz
+Source:		ionic-0.0.0.tar.gz
 
 #BuildRequires:	kernel-devel
 #Requires:	
@@ -37,5 +37,8 @@ install -m 644 ionic.ko %{buildroot}/lib/modules/%{kernel}/kernel/drivers/net
 %post
 depmod -a
 modprobe ionic
+
+%postun
+rmmod ionic
 
 %changelog
