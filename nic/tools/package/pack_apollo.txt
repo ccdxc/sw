@@ -112,3 +112,12 @@ nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libevutils.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmisc.so                          /nic/lib/
+
+# captrace config json files
+nic/conf/captrace/txdma-all.json                                  /nic/conf/captrace/
+nic/conf/captrace/rxdma-all.json                                  /nic/conf/captrace/
+nic/conf/captrace/dma-all.json                                    /nic/conf/captrace/
+nic/conf/captrace/p4ig-all.json                                   /nic/conf/captrace/
+nic/conf/captrace/p4eg-all.json                                   /nic/conf/captrace/
+nic/conf/captrace/p4-all.json                                     /nic/conf/captrace/
+nic/conf/captrace/pipeline-all.json                               /nic/conf/captrace/
