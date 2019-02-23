@@ -16,7 +16,6 @@ namespace table {
 namespace memhash {
 
 using sdk::lib::indexer;
-using sdk::table::memhash::mem_hash_table_bucket;
 using sdk::table::mem_hash;
 using sdk::table::mem_hash_properties_t;
 
@@ -71,6 +70,11 @@ private:
 public:
     static mem_hash_hint_table* factory(mem_hash_properties_t *props);
     mem_hash_hint_table() {
+        table_id_ = 0;
+        table_size_ = 0;
+        num_table_index_bits_ = 0;
+        buckets_ = NULL;
+        indexer_ = NULL;
     }
 
     ~mem_hash_hint_table() {
@@ -104,6 +108,8 @@ public:
     static mem_hash_main_table* factory(mem_hash_properties_t *props);
 
     mem_hash_main_table() {
+        hint_table_ = NULL;
+        num_hash_bits_ = 0;
     }
 
     ~mem_hash_main_table() {

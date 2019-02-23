@@ -84,6 +84,19 @@ directmap::factory(char *name, uint32_t id, uint32_t capacity,
     return dm;
 }
 
+directmap::directmap() {
+    id_ = 0;
+    capacity_ = 0;
+    indexer_ = NULL;
+    indexer_ = 0;
+    hwdata_len_ = 0;
+    entry_ht_ = NULL;
+    sharing_en_ = false;
+    entry_trace_en_ = false;
+    health_state_ = TABLE_HEALTH_GREEN;
+    health_monitor_func_ = NULL;
+}
+
 //----------------------------------------------------------------------------
 // method to free & delete the object
 //----------------------------------------------------------------------------
@@ -400,7 +413,7 @@ directmap::remove(uint32_t index, void *data)
     pd_err = p4pd_global_entry_write(id_, index, NULL, NULL, tmp_data);
     if (pd_err != P4PD_SUCCESS) {
         rs = SDK_RET_HW_PROGRAM_ERR;
-        SDK_ASSERT(0);
+        goto end;
     }
 
     rs = free_index_(index);

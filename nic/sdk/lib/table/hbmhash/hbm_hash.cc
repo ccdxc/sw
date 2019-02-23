@@ -248,11 +248,20 @@ HbmHash::HbmHash(std::string table_name,
     hbm_hash_table_ = (HbmHashTableEntry **)
                                 SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_BUCKETS,
                                            sizeof(HbmHashTableEntry *) * hash_capacity_);
-    assert(hbm_hash_table_);
 
     entry_map_ = (HbmHashEntry **)SDK_CALLOC(SDK_MEM_ALLOC_HBM_HASH_ENTRIES,
                                       sizeof(HbmHashEntry *) * hash_capacity_);
-    assert(entry_map_);
+
+    crc_ = NULL;
+    hbm_hash_entry_slab_ = NULL;
+    hbm_sw_key_slab_ = NULL;
+    hbm_hw_key_slab_ = NULL;
+    hbm_sw_data_slab_ = NULL;
+    hbm_hash_hint_group_slab_ = NULL;
+    hbm_hash_table_entry_slab_ = NULL;
+    hbm_hash_spine_entry_slab_ = NULL;
+    health_state_ = TABLE_HEALTH_GREEN;
+    entry_count_ = 0;
 
     SDK_TRACE_DEBUG("HbmHashName:%s, key_len_:%dB, data_len_:%dB, entire_data_len:%dB, "
                     "hwkey_len:%dB, hwdata_len:%dB, "
@@ -272,10 +281,11 @@ HbmHash::HbmHash(std::string table_name,
 // ---------------------------------------------------------------------------
 HbmHash::~HbmHash()
 {
-    // delete coll_indexer_;
-    // delete entry_indexer_;
     indexer::destroy(coll_indexer_);
     indexer::destroy(entry_indexer_);
+    SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_ENTRIES, entry_map_);
+    SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_BUCKETS, hbm_hash_table_);
+    SDK_FREE(SDK_MEM_ALLOC_HBM_HASH_STATS, stats_);
 }
 
 // ---------------------------------------------------------------------------

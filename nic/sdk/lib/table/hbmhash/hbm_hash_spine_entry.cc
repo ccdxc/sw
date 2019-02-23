@@ -39,8 +39,9 @@ HbmHashSpineEntry::factory(HbmHashTableEntry *ht_entry)
 void
 HbmHashSpineEntry::destroy(HbmHashSpineEntry *hse)
 {
-    HbmHash *hbm_hash = hse->get_ht_entry()->get_hbm_hash();
+    HbmHash *hbm_hash = NULL;
     if (hse) {
+        hbm_hash = hse->get_ht_entry()->get_hbm_hash();
         hse->~HbmHashSpineEntry();
         // SDK_FREE(mtrack_id, hse);
         hbm_hash->hbm_hash_spine_entry_free(hse);

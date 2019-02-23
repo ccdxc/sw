@@ -53,6 +53,7 @@ HbmHashHintGroup::HbmHashHintGroup(uint32_t hint_bits, HbmHashSpineEntry *fs_ent
 {
     hint_bits_ = hint_bits;
     fs_entry_ = fs_entry;
+    delayed_del_fs_entry_ = NULL;
 }
 
 // ---------------------------------------------------------------------------

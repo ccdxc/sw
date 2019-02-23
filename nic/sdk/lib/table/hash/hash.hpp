@@ -17,17 +17,12 @@
 #include "include/sdk/base.hpp"
 #include "lib/table/common/table.hpp"
 #include "lib/table/hash/hash_entry.hpp"
+#include "lib/table/tcam/tcam.hpp"
 
 using namespace std;
 using sdk::utils::crcFast;
 using sdk::table::table_health_state_t;
 using sdk::table::table_health_monitor_func_t;
-
-// global forward declarations
-namespace sdk::table {
-    class tcam;
-}
-using sdk::table::tcam;
 using sdk::lib::ht;
 
 namespace sdk {
@@ -40,7 +35,6 @@ typedef bool (*hash_iterate_func_t)(void *key,
                                     const void *cb_data);
 
 class hash {
-
 public:
     enum HashPoly {
         // CRC_32,
@@ -98,7 +92,6 @@ private:
     uint32_t                    hwkey_len_;         // hw key len
     uint32_t                    hwdata_len_;        // hw data len
     tcam                        *otcam_;            // overflow tcam
-    // HashEntryMap             hash_entry_map_;    // hash map
     ht                          *entry_ht_;         // hash table to store entries
     bool                        entry_trace_en_;    // entry trace enable
     table_health_state_t        health_state_;  // health state

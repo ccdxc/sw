@@ -22,7 +22,6 @@ namespace sdk {
 namespace table {
 
 using sdk::utils::crcFast;
-using sdk::table::sdk_table_api_params_t;
 using sdk::table::memhash::mem_hash_api_stats;
 using sdk::table::memhash::mem_hash_table_stats;
 using sdk::table::memhash::mem_hash_txn;
@@ -67,6 +66,9 @@ public:
     static void destroy(mem_hash *memhash);
 
     mem_hash() {
+        props_ = NULL;
+        main_table_ = NULL;
+        crc32gen_ = NULL;
         SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     }
 

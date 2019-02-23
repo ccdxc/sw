@@ -42,8 +42,9 @@ HbmHashTableEntry::factory(uint32_t bucket_index, HbmHash *hbm_hash)
 void
 HbmHashTableEntry::destroy(HbmHashTableEntry *fte)
 {
-    HbmHash *hbm_hash = fte->get_hbm_hash();
+    HbmHash *hbm_hash = NULL;
     if (fte) {
+        hbm_hash = fte->get_hbm_hash();
         fte->~HbmHashTableEntry();
         // SDK_FREE(mtrack_id, fte);
         hbm_hash->hbm_hash_table_entry_free(fte);

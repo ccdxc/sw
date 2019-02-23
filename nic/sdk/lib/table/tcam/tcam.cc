@@ -89,6 +89,11 @@ tcam::tcam(uint32_t id, uint32_t capacity, uint32_t swkey_len,
     entry_trace_en_      = entry_trace_en;
     health_monitor_func_ = health_monitor_func;
 
+    name_ = NULL;
+    entry_ht_ = NULL;
+    indexer_ = NULL;
+    stats_ = NULL;
+    health_state_ = TABLE_HEALTH_GREEN;
     hwkey_len_ = 0;
     hwkeymask_len_ = 0;
     hwdata_len_ = 0;
@@ -404,7 +409,6 @@ tcam::retrieve_from_hw(uint32_t tcam_idx, void *key,
 
     pd_err = p4pd_entry_read(id_, tcam_idx,
                              key, key_mask, data);
-    SDK_ASSERT_GOTO((pd_err == P4PD_SUCCESS), end);
     if (pd_err != P4PD_SUCCESS) {
         rs = SDK_RET_HW_PROGRAM_ERR;
     }

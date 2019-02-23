@@ -174,6 +174,32 @@ public:
 
     // Constructor
     mem_hash_api_context() {
+        sw_key_len     = 0;
+        sw_data_len    = 0;
+        sw_appdata_len = 0;
+        key2str        = NULL;
+        appdata2str    = NULL;
+        itercb         = NULL;
+        cbdata         = NULL;
+        hash_msbits    = 0;
+        sw_valid       = false;
+        hw_key_len     = 0;
+        hw_data_len    = 0;
+        level          = 0;
+        num_hints      = 0;
+        max_recircs    = 0;
+        table_id       = 0;
+        table_index    = 0;
+        hint_slot      = 0;
+        hint           = 0;
+        more_hashs     = false;
+        write_pending  = false;
+        match_type     = 0;
+        bucket         = NULL;
+        pctx           = NULL;
+        handle         = NULL;
+        table_stats    = NULL;
+        txn            = NULL;
     }
 
     // Destructor
