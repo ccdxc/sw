@@ -522,6 +522,7 @@ message TcpCbStats {
   uint32                window_full_cnt            = 10031;
   uint32                ooq_rx2tx_pi               = 10032;
   uint32                ooq_rx2tx_ci               = 10033;
+  uint32                retx_cnt                   = 10034;
 }
 
 // TcpCbGetResponse captures all the information about a tcpcb

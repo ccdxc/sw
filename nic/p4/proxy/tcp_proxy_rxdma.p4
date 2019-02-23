@@ -159,6 +159,7 @@ header_type read_tx2rxd_t {
 header_type tcp_rx_d_t {
     fields {
         ooq_not_empty           : 8;    // offset 0 (TCP_TCB_RX_OOQ_NOT_EMPTY)
+        consumer_ring_shift     : 8;
         bytes_acked             : 16;   // tcp_ack stage
         slow_path_cnt           : 16;
         serq_full_cnt           : 16;
@@ -361,13 +362,16 @@ header_type ooo_qbase_addr_t {
 header_type tcp_rx_dma_d_t {
     fields {
         serq_base               : 64;
-        nde_addr                : 64;
-        nde_offset              : 16;
-        nde_len                 : 16;
-        curr_ts                 : 32;
+        nde_shift               : 8;
+        nde_offset              : 8;
+        nde_len                 : 8;
+        consumer_lif            : 16;
+        consumer_ring           : 8;
+        consumer_num_slots_mask : 16;
         rx2tx_send_ack_pi       : 16;
         rx2tx_clean_retx_pi     : 16;
         rx2tx_fast_retx_pi      : 16;
+        consumer_qid            : 16;
 
         // stats
         pkts_rcvd               : 8;
@@ -672,7 +676,7 @@ header_type ooq_rx2tx_queue_entry_opaque_t {
  * ring_entry and aol have to be contiguous in phv
  */
 @pragma dont_trim
-metadata ring_entry_t ring_entry;
+metadata hbm_al_ring_entry_t ring_entry;
 @pragma dont_trim
 metadata pkt_descr_aol_t aol;
 
@@ -805,7 +809,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
 }
 
 #define TCP_RX_CB_PARAMS \
-        ooq_not_empty, \
+        ooq_not_empty, consumer_ring_shift, \
         bytes_acked, slow_path_cnt, serq_full_cnt, ooo_cnt, \
         ato, del_ack_pi, cfg_flags, \
         rcv_nxt, rx_drop_cnt, ts_recent, lrcv_time, \
@@ -816,6 +820,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
 
 #define TCP_RX_CB_D \
     modify_field(tcp_rx_d.ooq_not_empty, ooq_not_empty); \
+    modify_field(tcp_rx_d.consumer_ring_shift, consumer_ring_shift); \
     modify_field(tcp_rx_d.bytes_acked, bytes_acked); \
     modify_field(tcp_rx_d.slow_path_cnt, slow_path_cnt); \
     modify_field(tcp_rx_d.serq_full_cnt, serq_full_cnt); \
@@ -1105,9 +1110,10 @@ action ooo_qbase_cb_load(ooo_qbase_addr0, ooo_qbase_addr1,
 /*
  * Stage 6 table 0 action
  */
-action dma(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
+action dma(serq_base, nde_shift, nde_offset, nde_len,
+        consumer_lif, consumer_ring, consumer_num_slots_mask,
         pkts_rcvd, rx2tx_send_ack_pi,
-        rx2tx_clean_retx_pi, rx2tx_fast_retx_pi) {
+        rx2tx_clean_retx_pi, rx2tx_fast_retx_pi, consumer_qid) {
     // k + i for stage 6
 
     // from to_stage 6
@@ -1124,14 +1130,17 @@ action dma(serq_base, nde_addr, nde_offset, nde_len, curr_ts,
 
     // d for stage 5 table 0
     modify_field(tcp_rx_dma_d.serq_base, serq_base);
-    modify_field(tcp_rx_dma_d.nde_addr, nde_addr);
+    modify_field(tcp_rx_dma_d.nde_shift, nde_shift);
     modify_field(tcp_rx_dma_d.nde_offset, nde_offset);
     modify_field(tcp_rx_dma_d.nde_len, nde_len);
-    modify_field(tcp_rx_dma_d.curr_ts, curr_ts);
+    modify_field(tcp_rx_dma_d.consumer_lif, consumer_lif);
+    modify_field(tcp_rx_dma_d.consumer_ring, consumer_ring);
+    modify_field(tcp_rx_dma_d.consumer_num_slots_mask, consumer_num_slots_mask);
     modify_field(tcp_rx_dma_d.pkts_rcvd, pkts_rcvd);
     modify_field(tcp_rx_dma_d.rx2tx_send_ack_pi, rx2tx_send_ack_pi);
     modify_field(tcp_rx_dma_d.rx2tx_clean_retx_pi, rx2tx_clean_retx_pi);
     modify_field(tcp_rx_dma_d.rx2tx_fast_retx_pi, rx2tx_fast_retx_pi);
+    modify_field(tcp_rx_dma_d.consumer_qid, consumer_qid);
 }
 
 /*

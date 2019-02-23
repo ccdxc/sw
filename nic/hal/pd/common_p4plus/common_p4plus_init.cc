@@ -14,7 +14,7 @@ namespace pd {
 
 #define IPSEC_N2H_GLOBAL_STATS_OFFSET 512 
 
-#define P4PLUS_SYMBOLS_MAX  109
+#define P4PLUS_SYMBOLS_MAX  110
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -40,6 +40,12 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_RX);
     symbols[i].params[1].name = TCP_PROXY_STATS;
     symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_STATS);
+    i++;
+
+    symbols[i].name = "tcp-rdesc-alloc.bin";
+    symbols[i].num_params = 1;
+    symbols[i].params[0].name = TCP_PROXY_STATS;
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_STATS);
     i++;
 
     symbols[i].name = "tcp-ooq-alloc-idx.bin";
@@ -399,9 +405,9 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     symbols[i].name = "gc_tx_inc_descr_free_pair_pi.bin";
     symbols[i].num_params = 2;
     symbols[i].params[0].name = RNMDPR_BIG_TABLE_BASE;
-    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_RX); // To be fixed
+    symbols[i].params[0].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_RX);
     symbols[i].params[1].name = TNMDPR_BIG_TABLE_BASE;
-    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_SMALL_TX); // To be fixed
+    symbols[i].params[1].val = get_mem_addr(CAPRI_HBM_REG_NMDPR_BIG_TX);
     i++;
 
     /*

@@ -143,7 +143,7 @@ func doTCPProxyGlobalStatsShowCmd(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("TCP Global Statistics\n")
 	fmt.Printf("%s\n", strings.Repeat("-", 60))
-	fmt.Printf("%-30s : %-6d\n", "Rnmdr_full", respMsg.GlobalStats.RnmdrFull)
+	fmt.Printf("%-30s : %-6d\n", "RnmdrFull", respMsg.GlobalStats.RnmdrFull)
 	fmt.Printf("%-30s : %-6d\n", "InvalidSesqDescr", respMsg.GlobalStats.InvalidSesqDescr)
 	fmt.Printf("%-30s : %-6d\n", "InvalidRetxSesqDescr",
 		respMsg.GlobalStats.InvalidRetxSesqDescr)
@@ -151,6 +151,7 @@ func doTCPProxyGlobalStatsShowCmd(cmd *cobra.Command, args []string) {
 	fmt.Printf("%-30s : %-6d\n", "RetxNopSchedule", respMsg.GlobalStats.RetxNopSchedule)
 	fmt.Printf("%-30s : %-6d\n", "GcFull", respMsg.GlobalStats.GcFull)
 	fmt.Printf("%-30s : %-6d\n", "TlsGcFull", respMsg.GlobalStats.TlsGcFull)
+	fmt.Printf("%-30s : %-6d\n", "InvalidNmdrDescr", respMsg.GlobalStats.InvalidNmdrDescr)
 }
 
 func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -383,6 +384,7 @@ func showTCPStats(resp *halproto.TcpCbGetResponse) {
 	fmt.Printf("%-30s : %-6d\n", "ato_deadline", stats.AtoDeadline)
 	fmt.Printf("%-30s : %-6d\n", "idle_timeout_deadline", stats.IdleDeadline)
 	fmt.Printf("%-30s : %-6d\n", "window_full_cnt", stats.WindowFullCnt)
+	fmt.Printf("%-30s : %-6d\n", "retx_cnt", stats.RetxCnt)
 }
 
 func showTCPStatus(resp *halproto.TcpCbGetResponse) {

@@ -246,11 +246,11 @@ def TestCaseVerify(tc):
 
     if tc.pvtdata.serq_full:
         # SERQ is full, pi/ci should not move
-        if tlscb_cur.serq_pi != tlscb.serq_pi or \
-                    tlscb_cur.serq_ci != tlscb.serq_ci:
-            logger.error("serq pi/ci not as expected old (%d, %d), new (%d, %d)" %
-                    (tlscb.serq_pi, tlscb.serq_ci,
-                     tlscb_cur.serq_pi, tlscb_cur.serq_ci))
+        if other_tcpcb_cur.sesq_pi != other_tcpcb.sesq_pi or \
+                    other_tcpcb_cur.sesq_ci != other_tcpcb.sesq_ci:
+            logger.error("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
+                    (other_tcpcb.sesq_pi, other_tcpcb.sesq_ci,
+                     other_tcpcb_cur.sesq_pi, other_tcpcb_cur.sesq_ci))
             return False
         return True
 
@@ -264,35 +264,21 @@ def TestCaseVerify(tc):
                 (tcpcb_cur.rcv_nxt, tc.pvtdata.flow1_rcv_nxt + rcv_next_delta))
         return False
 
-    # 1. Verify SERQ pi got updated
-    if not ooo and tlscb_cur.serq_pi != tlscb.serq_pi + num_rx_pkts:
-        logger.error("serq pi/ci not as expected old (%d, %d), new (%d, %d)" %
-                (tlscb.serq_pi, tlscb.serq_ci,
-                 tlscb_cur.serq_pi, tlscb_cur.serq_ci))
-        return False
-
-    # 2. Verify SERQ ci got updated
-    if not ooo and tlscb_cur.serq_ci != tlscb.serq_ci + num_rx_pkts:
-        logger.error("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
-                (tlscb.serq_pi, tlscb.serq_ci,
-                 tlscb_cur.serq_pi, tlscb_cur.serq_ci))
-        return False
-
-    # 3. Verify SESQ pi got updated
+    # Verify SESQ pi got updated
     if not ooo and other_tcpcb_cur.sesq_pi != other_tcpcb.sesq_pi + num_rx_pkts:
         logger.error("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (other_tcpcb.sesq_pi, other_tcpcb.sesq_ci,
                  other_tcpcb_cur.sesq_pi, other_tcpcb_cur.sesq_ci))
         return False
 
-    # 4. Verify SESQ ci got updated
+    # Verify SESQ ci got updated
     if not ooo and other_tcpcb_cur.sesq_ci != other_tcpcb.sesq_ci + num_rx_pkts:
         logger.error("sesq pi/ci not as expected old (%d, %d), new (%d, %d)" %
                 (other_tcpcb.sesq_pi, other_tcpcb.sesq_ci,
                  other_tcpcb_cur.sesq_pi, other_tcpcb_cur.sesq_ci))
         return False
 
-    # 5. Verify pkt rx stats
+    # Verify pkt rx stats
     if not ooo and not tc.pvtdata.final_fin and tcpcb_cur.pkts_rcvd != tcpcb.pkts_rcvd + num_rx_pkts:
         logger.error("pkt rx stats not as expected")
         return False
@@ -311,7 +297,7 @@ def TestCaseVerify(tc):
         if not tc.pvtdata.sem_full and not tc.pvtdata.rst:
             return False
 
-    # 6. Verify pkt tx stats
+    # Verify pkt tx stats
     if not ooo and other_tcpcb_cur.pkts_sent != other_tcpcb.pkts_sent + num_tx_pkts:
         logger.error("pkt tx stats (%d) not as expected (%d)" % (other_tcpcb_cur.pkts_sent,
             (other_tcpcb.pkts_sent + num_tx_pkts)))
@@ -336,9 +322,8 @@ def TestCaseVerify(tc):
             tc.pvtdata.flow2_snd_nxt + tc.pvtdata.flow2_bytes_txed:
         logger.error("mem2pkt failed snd_nxt = 0x%x" % other_tcpcb_cur.snd_nxt)
 
-    # 10. Verify pkt tx (in testspec)
+    # Verify pkt tx (in testspec)
 
-    # 11.
     if tc.pvtdata.test_retx and tc.pvtdata.test_retx == 'partial':
         if other_tcpcb_cur.sesq_retx_ci != other_tcpcb.sesq_retx_ci + 1:
             logger.error("sesq_retx_ci is %d, expected %d" %

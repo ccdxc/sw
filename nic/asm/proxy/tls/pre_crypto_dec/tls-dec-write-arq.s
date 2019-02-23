@@ -87,6 +87,7 @@ dma_cmd_arq_slot:
                    r6,
                    k.s5_s6_t1_s2s_arq_base,
                    ring_entry_descr_addr,
+                   ring_entry_descr_addr,
                    dma_cmd_odesc_dma_cmd, 
                    1, 
                    1, 

@@ -94,6 +94,7 @@ dma_cmd_arq_slot:
                    k.to_s6_descr,
                    r6,
                    r2,
+                   ring_entry_pad,
                    ring_entry_descr_addr,
                    ring_slot_dma_cmd, 
                    1, 

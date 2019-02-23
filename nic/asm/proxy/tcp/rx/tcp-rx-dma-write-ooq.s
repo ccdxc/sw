@@ -49,7 +49,7 @@ dma_tcp_hdr:
     add         r1, k.to_s6_descr, NIC_DESC_ENTRY_OOO_TCP_HDR_OFFSET
     phvwr       p.tcp_app_header_from_ooq_txdma, 1
 
-    // HACK, 64 bytes following tcp_app_header is ooq_header which contains the
+    // HACK, 8 bytes following tcp_app_header is ooq_header which contains the
     // descriptor address. Until we can unionize this header correctly in p4,
     // hardcoding the PHV location for now. This is prone to error, but
     // hopefully if something breaks, we have DOL test cases to catch it.
@@ -64,7 +64,7 @@ dma_cmd_ooq_slot:
     phvwr       p.ring_entry_descr_addr, k.to_s6_descr
 
     add         r1, k.t2_s2s_ooo_qbase_addr, k.t2_s2s_ooo_tail_index, 3
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(ring_slot_dma_cmd, r1, ring_entry_descr_addr, ring_entry_descr_addr)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(ring_slot_dma_cmd, r1, ring_entry_pad, ring_entry_descr_addr)
 
 dma_cmd_set_eop:
     seq         c1, k.common_phv_pending_txdma, 0

@@ -17,6 +17,7 @@
 #include "platform/capri/capri_lif_manager.hpp"
 #include "platform/capri/capri_common.hpp"
 #include "nic/include/tcp_common.h"
+#include "nic/include/tls_common.h"
 #include "nic/include/app_redir_shared.h"
 #include "nic/hal/pd/iris/internal/tlscb_pd.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
@@ -164,6 +165,11 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             default:
                 data.u.tcp_rx_d.parsed_state &= ~TCP_PARSED_STATE_HANDLE_IN_CPU;
         }
+        if (tcpcb_pd->tcpcb->bypass_tls) {
+            data.u.tcp_rx_d.consumer_ring_shift = CAPRI_SESQ_RING_SLOTS_SHIFT;
+        } else {
+            data.u.tcp_rx_d.consumer_ring_shift = CAPRI_SERQ_RING_SLOTS_SHIFT;
+        }
 
         HAL_TRACE_DEBUG("TCPCB rcv_nxt: {:#x}", data.u.tcp_rx_d.rcv_nxt);
         HAL_TRACE_DEBUG("TCPCB snd_una: {:#x}", data.u.tcp_rx_d.snd_una);
@@ -267,8 +273,7 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         data.u.tcp_fc_d.page_cnt = 0x1000;
-        data.u.tcp_fc_d.rcv_wnd = tcpcb_pd->tcpcb->rcv_wnd;
-        data.u.tcp_fc_d.rcv_wnd = htonl( data.u.tcp_fc_d.rcv_wnd );
+        data.u.tcp_fc_d.rcv_wnd = htonl(tcpcb_pd->tcpcb->rcv_wnd);
         data.u.tcp_fc_d.rcv_scale = tcpcb_pd->tcpcb->rcv_wscale;
         data.u.tcp_fc_d.cpu_id = tcpcb_pd->tcpcb->cpu_id;
         data.u.tcp_fc_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_nxt);
@@ -296,17 +301,47 @@ p4pd_add_or_del_tcpcb_rx_dma(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_DMA);
 
     if(!del) {
-        // Get Serq address
-        wring_hw_id_t  serq_base;
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_SERQ,
-                                     tcpcb_pd->tcpcb->cb_id,
-                                     &serq_base);
-        if(ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to receive serq base for tcp cb: {}",
-                        tcpcb_pd->tcpcb->cb_id);
+        if (tcpcb_pd->tcpcb->bypass_tls) {
+            // Get SESQ address of the other TCP flow
+            wring_hw_id_t  sesq_base;
+            ret = wring_pd_get_base_addr(types::WRING_TYPE_SESQ,
+                                         tcpcb_pd->tcpcb->other_qid,
+                                         &sesq_base);
+            if(ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to receive sesq base for tcp cb: {}",
+                            tcpcb_pd->tcpcb->other_qid);
+            } else {
+                HAL_TRACE_DEBUG("TCP2SESQ[qid:{:#x}, oqid:{:#x}]:OSesq base: {:#x}",
+                        tcpcb_pd->tcpcb->cb_id, tcpcb_pd->tcpcb->other_qid, sesq_base);
+                rx_dma_d.serq_base = htonll(sesq_base);
+            }
+            rx_dma_d.consumer_qid = htons(tcpcb_pd->tcpcb->other_qid);
+            rx_dma_d.nde_shift = CAPRI_SESQ_ENTRY_SIZE_SHIFT;
+            rx_dma_d.nde_offset = CAPRI_SESQ_DESC_OFFSET;
+            rx_dma_d.nde_len = CAPRI_SESQ_ENTRY_SIZE;
+            rx_dma_d.consumer_lif = htons(SERVICE_LIF_TCP_PROXY);
+            rx_dma_d.consumer_ring = TCP_SCHED_RING_SESQ;
+            rx_dma_d.consumer_num_slots_mask = htons(CAPRI_SESQ_RING_SLOTS_MASK);
         } else {
-            HAL_TRACE_DEBUG("Serq base: {:#x}", serq_base);
-            rx_dma_d.serq_base = htonll(serq_base);
+            // Get Serq address
+            wring_hw_id_t  serq_base;
+            ret = wring_pd_get_base_addr(types::WRING_TYPE_SERQ,
+                                         tcpcb_pd->tcpcb->cb_id,
+                                         &serq_base);
+            if(ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to receive serq base for tcp cb: {}",
+                            tcpcb_pd->tcpcb->cb_id);
+            } else {
+                HAL_TRACE_DEBUG("Serq base: {:#x}", serq_base);
+                rx_dma_d.serq_base = htonll(serq_base);
+            }
+            rx_dma_d.consumer_qid = htons(tcpcb_pd->tcpcb->cb_id);
+            rx_dma_d.nde_shift = CAPRI_SERQ_ENTRY_SIZE_SHIFT;
+            rx_dma_d.nde_offset = CAPRI_SERQ_DESC_OFFSET;
+            rx_dma_d.nde_len = CAPRI_SERQ_ENTRY_SIZE;
+            rx_dma_d.consumer_lif = htons(SERVICE_LIF_TLS_PROXY);
+            rx_dma_d.consumer_ring = TLS_SCHED_RING_SERQ;
+            rx_dma_d.consumer_num_slots_mask = htons(CAPRI_SERQ_RING_SLOTS_MASK);
         }
     }
 
@@ -931,8 +966,8 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
             HAL_TRACE_ERR("Failed to receive sesq base for tcp cb: {}",
                         tcpcb_pd->tcpcb->cb_id);
         } else {
-            HAL_TRACE_DEBUG("Sesq id: {:#x}", tcpcb_pd->tcpcb->cb_id);
-            HAL_TRACE_DEBUG("Sesq base: {:#x}", sesq_base);
+            HAL_TRACE_DEBUG("Sesq base[{:#x}]: {:#x}",
+                    tcpcb_pd->tcpcb->cb_id, sesq_base);
             data.u.read_rx2tx_d.sesq_base = sesq_base;
         }
 
@@ -996,13 +1031,18 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_RETX);
 
     if(!del) {
-        uint64_t tls_stage0_addr;
         uint64_t gc_base;
 
-        tls_stage0_addr = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
-                    tcpcb_pd->tcpcb->other_qid);
-        data.sesq_ci_addr =
-            htonl(tls_stage0_addr + pd_tlscb_sesq_ci_offset_get());
+        if (tcpcb_pd->tcpcb->bypass_tls) {
+            data.sesq_ci_addr =
+                htonl(tcpcb_pd_serq_prod_ci_addr_get(tcpcb_pd->tcpcb->other_qid));
+        } else {
+            uint64_t tls_stage0_addr;
+            tls_stage0_addr = lif_manager()->GetLIFQStateAddr(SERVICE_LIF_TLS_PROXY, 0,
+                        tcpcb_pd->tcpcb->other_qid);
+            data.sesq_ci_addr =
+                htonl(tls_stage0_addr + pd_tlscb_sesq_ci_offset_get());
+        }
         data.retx_snd_una = htonl(tcpcb_pd->tcpcb->snd_una);
 
         // get gc address
@@ -1279,6 +1319,7 @@ p4pd_get_tcp_tx_xmit_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->snd_wscale = data.snd_wscale;
     tcpcb_pd->tcpcb->initial_window = ntohl(data.initial_window);
     tcpcb_pd->tcpcb->window_full_cnt = ntohl(data.window_full_cnt);
+    tcpcb_pd->tcpcb->retx_cnt = ntohl(data.retx_cnt);
 
     HAL_TRACE_DEBUG("TCPCB packets_out: {}", tcpcb_pd->tcpcb->packets_out);
 

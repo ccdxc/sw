@@ -81,6 +81,7 @@ dma_cmd_arqrx_slot:
                    r6,
                    r2,
                    ring_entry_descr_addr,
+                   ring_entry_descr_addr,
                    dma_cmd3_dma_cmd, 
                    1, 
                    1,

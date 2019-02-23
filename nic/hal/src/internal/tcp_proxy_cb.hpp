@@ -104,22 +104,8 @@ typedef struct tcpcb_s {
     hal_handle_t          hal_handle;              // HAL allocated handle
 
     // rx stats
-    uint32_t              debug_stage0_7_thread;
     uint64_t              bytes_rcvd;
     uint64_t              pkts_rcvd;
-    uint64_t              pages_alloced;
-    uint64_t              desc_alloced;
-    uint64_t              debug_num_phv_to_mem;
-    uint64_t              debug_num_pkt_to_mem;
-
-    uint64_t              debug_atomic_delta;
-    uint64_t              debug_atomic0_incr1247;
-    uint64_t              debug_atomic1_incr247;
-    uint64_t              debug_atomic2_incr47;
-    uint64_t              debug_atomic3_incr47;
-    uint64_t              debug_atomic4_incr7;
-    uint64_t              debug_atomic5_incr7;
-    uint64_t              debug_atomic6_incr7;
 
     uint64_t              bytes_acked;
     uint64_t              slow_path_cnt;
@@ -132,8 +118,6 @@ typedef struct tcpcb_s {
     // tx stats
     uint64_t              bytes_sent;
     uint64_t              pkts_sent;
-    uint64_t              debug_num_phv_to_pkt;
-    uint64_t              debug_num_mem_to_pkt;
 
     uint32_t              sesq_pi;
     uint32_t              sesq_ci;
@@ -156,6 +140,7 @@ typedef struct tcpcb_s {
     uint32_t              tx_ring_pi;
     uint32_t              partial_pkt_ack_cnt;
     uint32_t              window_full_cnt;
+    uint32_t              retx_cnt;
 
     uint32_t              ooq_rx2tx_pi;
     uint32_t              ooq_rx2tx_ci;

@@ -91,15 +91,14 @@ bytes_acked_stats_update_end:
      * Launch next stage
      */
 tcp_ack_done:
-    tblwr           d.snd_wnd, k.to_s2_window
+    tblwr.f         d.snd_wnd, k.to_s2_window
     phvwr           p.to_s4_snd_wnd, k.to_s2_window
     phvwrpair       p.rx2tx_extra_snd_wnd, k.to_s2_window, \
                         p.rx2tx_extra_snd_una, d.snd_una
     phvwr           p.rx2tx_extra_limited_transmit, d.limited_transmit
-    CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
+    CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_EN,
                         tcp_rx_rtt_start,
                         k.common_phv_qstate_addr,
                         TCP_TCB_RTT_OFFSET, TABLE_SIZE_512_BITS)
-    nop.e
     nop
 

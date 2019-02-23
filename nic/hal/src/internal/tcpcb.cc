@@ -132,6 +132,9 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
         tcpcb->bypass_tls = false;
         tcpcb->debug_dol = spec.debug_dol();
         tcpcb->debug_dol_tx = spec.debug_dol_tx();
+        if (spec.debug_dol() & TCP_DDOL_BYPASS_BARCO) {
+            tcpcb->bypass_tls = true;
+        }
     }
     tcpcb->snd_wnd = spec.snd_wnd();
     tcpcb->snd_cwnd = spec.snd_cwnd();
@@ -225,6 +228,9 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
         tcpcb->bypass_tls = false;
         tcpcb->debug_dol = spec.debug_dol();
         tcpcb->debug_dol_tx = spec.debug_dol_tx();
+        if (spec.debug_dol() & TCP_DDOL_BYPASS_BARCO) {
+            tcpcb->bypass_tls = true;
+        }
     }
     tcpcb->debug_dol = spec.debug_dol();
     tcpcb->debug_dol_tx = spec.debug_dol_tx();
@@ -536,6 +542,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_idle_deadline(rtcpcb.idle_deadline);
     rsp->mutable_stats()->set_cc_flags(rtcpcb.cc_flags);
     rsp->mutable_stats()->set_window_full_cnt(rtcpcb.window_full_cnt);
+    rsp->mutable_stats()->set_retx_cnt(rtcpcb.retx_cnt);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
@@ -606,6 +613,8 @@ tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
                   pd_tcp_global_stats_get_args.gc_full);
     rsp->mutable_global_stats()->set_tls_gc_full(
                   pd_tcp_global_stats_get_args.tls_gc_full);
+    rsp->mutable_global_stats()->set_invalid_nmdr_descr(
+                  pd_tcp_global_stats_get_args.invalid_nmdr_descr);
     rsp->set_api_status(types::API_STATUS_OK);
 
     return HAL_RET_OK;

@@ -206,6 +206,7 @@ tcp_tx_end_program_and_drop:
     nop
 
 tcp_tx_retransmit:
+    tbladd          d.retx_cnt, 1
     // Change snd_cwnd in rx2tx CB, so we don't have a stale value there
     add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_EXTRA_SND_CWND_OFFSET
     memwr.w         r1, d.smss

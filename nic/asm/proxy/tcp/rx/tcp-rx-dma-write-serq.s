@@ -65,22 +65,27 @@ dma_tcp_flags:
 
 dma_cmd_serq_slot:
     CAPRI_OPERAND_DEBUG(k.to_s6_serq_pidx)
-    sll         r5, k.to_s6_serq_pidx, NIC_SERQ_ENTRY_SIZE_SHIFT
-    /* Set the DMA_WRITE CMD for SERQ slot */
+    // r5 = ring slot address
+    sll         r5, k.to_s6_serq_pidx, d.nde_shift
     add         r1, r5, d.serq_base
-    // increment serq pi as a part of ringing dorrbell
 
-    phvwr       p.ring_entry_descr_addr, k.to_s6_descr
-    /* The new SERQ defintion includes the descriptor pointer followed by the first AOL */
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(ring_slot_dma_cmd, r1, ring_entry_descr_addr, aol_L0)
+    // r2 = descriptor address
+    add         r2, k.to_s6_descr, d.nde_offset
+    smeqb       c1, k.common_phv_debug_dol, TCP_DDOL_BYPASS_BARCO, TCP_DDOL_BYPASS_BARCO
+    phvwr.c1    p.ring_entry_len, k.to_s6_payload_len
+    phvwr       p.ring_entry_descr_addr, r2
+
+    // setup DMA to ring slot with descriptor address
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_WITH_LEN(ring_slot_dma_cmd, r1, ring_entry_pad, d.nde_len)
 
 ring_doorbell:
     add         r1, k.to_s6_serq_pidx, 1
-    and         r1, r1, CAPRI_SERQ_RING_SLOTS_MASK
-    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_STOP_FENCE(tls_doorbell_dma_cmd, LIF_TLS, 0,
-                                 k.common_phv_fid, TLS_SCHED_RING_SERQ,
-                                 r1, db_data_pid, db_data_index)
-    nop.e
+    and         r1, r1, d.consumer_num_slots_mask
+
+    CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET, DB_SCHED_UPD_SET, 0, d.consumer_lif) // r4 = addr
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE(tls_doorbell_dma_cmd, r4, db_data_pid, db_data_index)
+    CAPRI_RING_DOORBELL_DATA(0, d.consumer_qid, d.consumer_ring, r1) // r3 = data
+    phvwr.e     p.{db_data_pid...db_data_index}, r3.dx
     nop
 
 write_serq_check_more_slowly:

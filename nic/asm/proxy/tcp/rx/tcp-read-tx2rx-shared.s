@@ -38,12 +38,15 @@ tcp_rx_read_shared_stage0_start:
     phvwri.c1       p.p4_intr_global_drop, 1
     bcf             [c1], flow_terminate
 
-    phvwrpair       p.s1_s2s_fin_sent, d.fin_sent, \
-                        p.s1_s2s_cc_rto_signal, d.rto_event
+    seq             c1, d.fin_sent, 1
+    phvwr.c1        p.s1_s2s_fin_sent, 1
+    seq             c1, d.rto_event, 1
+    phvwr.c1        p.s1_s2s_cc_rto_signal, 1
     tblwr           d.fin_sent, 0
     tblwr.f         d.rto_event, 0
 
-    phvwr           p.s1_s2s_rst_sent, d.rst_sent
+    seq             c1, d.rst_sent, 1
+    phvwr.c1        p.s1_s2s_rst_sent, 1
 
 table_read_RX:
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,
@@ -75,7 +78,7 @@ table_read_RX:
     b.!c1           tcp_rx_stage0_end
 tcp_rx_ooq_tx2rx_pkt:
     phvwr.c1        p.common_phv_ooq_tx2rx_pkt, 1
-    // HACK, 64 bytes following tcp_app_header is ooq_header which contains the
+    // HACK, 8 bytes following tcp_app_header is ooq_header which contains the
     // descriptor address. This falls in app_data1 region of common rxdma phv.
     // Until we can unionize this header correctly in p4, hardcoding the PHV
     // location for now. This is prone to error, but hopefully if something

@@ -23,14 +23,19 @@ struct s1_t0_tcp_rx_d d;
     .align
 
     /*
-     * Global conditional variables
+     * Global variables
      *
      */
+#define r_consumer_ring_mask r7
+
 tcp_rx_process_start:
 #ifdef CAPRI_IGNORE_TIMESTAMP
     add             r4, r0, r0
     add             r6, r0, r0
 #endif
+
+    sll             r_consumer_ring_mask, 1, d.u.tcp_rx_d.consumer_ring_shift
+    sub             r_consumer_ring_mask, r_consumer_ring_mask, 1
 
     /*
      * Fast Path checks
@@ -48,7 +53,7 @@ tcp_rx_process_start:
      * c4 = serq is full
      */
     add             r2, d.u.tcp_rx_d.serq_pidx, 1
-    and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
+    and             r2, r2, r_consumer_ring_mask
     seq             c4, r2, k.to_s1_serq_cidx
 
     /*
@@ -92,7 +97,7 @@ tcp_store_ts_recent:
     tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
 
     phvwr           p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
-    tblmincri       d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+    tblmincri       d.u.tcp_rx_d.serq_pidx, d.u.tcp_rx_d.consumer_ring_shift, 1
     phvwr           p.to_s5_serq_pidx, d.u.tcp_rx_d.serq_pidx
 
 tcp_rcv_nxt_update:
@@ -254,7 +259,7 @@ tcp_rx_ooo_check_done:
      */
     sne             c1, k.s1_s2s_payload_len, r0
     add             r2, d.u.tcp_rx_d.serq_pidx, 1
-    and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
+    and             r2, r2, r_consumer_ring_mask
     seq             c2, r2, k.to_s1_serq_cidx
     setcf           c7, [c1 & c2]
     tbladd.c7       d.{u.tcp_rx_d.serq_full_cnt}.hx, 1
@@ -307,7 +312,7 @@ tcp_rx_ooo_check_done:
     tblwr.c1.l      d.u.tcp_rx_d.alloc_descr, 1
     phvwri.c1       p.common_phv_write_serq, 1
     phvwr.c1        p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
-    tblmincri.c1    d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+    tblmincri.c1    d.u.tcp_rx_d.serq_pidx, d.u.tcp_rx_d.consumer_ring_shift, 1
     phvwr.c1        p.to_s5_serq_pidx, d.u.tcp_rx_d.serq_pidx
     phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
@@ -375,7 +380,7 @@ tcp_rx_rst_handling:
 
     // check for serq full
     add             r2, d.u.tcp_rx_d.serq_pidx, 1
-    and             r2, r2, CAPRI_SERQ_RING_SLOTS - 1
+    and             r2, r2, r_consumer_ring_mask
     seq             c7, r2, k.to_s1_serq_cidx
     tbladd.c7       d.{u.tcp_rx_d.serq_full_cnt}.hx, 1
     b.c7            flow_rx_drop
@@ -383,7 +388,7 @@ tcp_rx_rst_handling:
     // get serq slot
     phvwri          p.common_phv_write_serq, 1
     phvwr           p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
-    tblmincri       d.u.tcp_rx_d.serq_pidx, CAPRI_SERQ_RING_SLOTS_SHIFT, 1
+    tblmincri       d.u.tcp_rx_d.serq_pidx, d.u.tcp_rx_d.consumer_ring_shift, 1
 
     b               flow_rx_process_done
     // Tell txdma we have work to do
