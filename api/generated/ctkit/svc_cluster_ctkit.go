@@ -42,6 +42,8 @@ func (obj *Cluster) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("Cluster_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.Cluster
@@ -90,6 +92,8 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Cluster_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = clusterHandler.OnClusterCreate(obj)
@@ -106,6 +110,9 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("Cluster_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = clusterHandler.OnClusterUpdate(obj)
@@ -124,6 +131,8 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*Cluster)
+
+			ct.stats.Counter("Cluster_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -204,12 +213,16 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "ClusterWatcher")
 
+	ct.stats.Counter("Cluster_Watch").Inc()
+	defer ct.stats.Counter("Cluster_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("Cluster_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -238,6 +251,7 @@ func (ct *ctrlerCtx) runClusterWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("Cluster_WatchErrors").Inc()
 						break innerLoop
 					}
 
@@ -358,6 +372,8 @@ func (obj *Node) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("Node_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.Node
@@ -406,6 +422,8 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Node_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = nodeHandler.OnNodeCreate(obj)
@@ -422,6 +440,9 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("Node_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = nodeHandler.OnNodeUpdate(obj)
@@ -440,6 +461,8 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*Node)
+
+			ct.stats.Counter("Node_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -520,12 +543,16 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "NodeWatcher")
 
+	ct.stats.Counter("Node_Watch").Inc()
+	defer ct.stats.Counter("Node_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("Node_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -554,6 +581,7 @@ func (ct *ctrlerCtx) runNodeWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("Node_WatchErrors").Inc()
 						break innerLoop
 					}
 
@@ -674,6 +702,8 @@ func (obj *Host) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("Host_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.Host
@@ -722,6 +752,8 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Host_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = hostHandler.OnHostCreate(obj)
@@ -738,6 +770,9 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("Host_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = hostHandler.OnHostUpdate(obj)
@@ -756,6 +791,8 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*Host)
+
+			ct.stats.Counter("Host_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -836,12 +873,16 @@ func (ct *ctrlerCtx) runHostWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "HostWatcher")
 
+	ct.stats.Counter("Host_Watch").Inc()
+	defer ct.stats.Counter("Host_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("Host_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -870,6 +911,7 @@ func (ct *ctrlerCtx) runHostWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("Host_WatchErrors").Inc()
 						break innerLoop
 					}
 
@@ -990,6 +1032,8 @@ func (obj *SmartNIC) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("SmartNIC_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.SmartNIC
@@ -1038,6 +1082,8 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("SmartNIC_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = smartnicHandler.OnSmartNICCreate(obj)
@@ -1054,6 +1100,9 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("SmartNIC_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = smartnicHandler.OnSmartNICUpdate(obj)
@@ -1072,6 +1121,8 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*SmartNIC)
+
+			ct.stats.Counter("SmartNIC_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -1152,12 +1203,16 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "SmartNICWatcher")
 
+	ct.stats.Counter("SmartNIC_Watch").Inc()
+	defer ct.stats.Counter("SmartNIC_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("SmartNIC_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -1186,6 +1241,7 @@ func (ct *ctrlerCtx) runSmartNICWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("SmartNIC_WatchErrors").Inc()
 						break innerLoop
 					}
 
@@ -1306,6 +1362,8 @@ func (obj *Tenant) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("Tenant_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.Tenant
@@ -1354,6 +1412,8 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Tenant_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = tenantHandler.OnTenantCreate(obj)
@@ -1370,6 +1430,9 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("Tenant_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = tenantHandler.OnTenantUpdate(obj)
@@ -1388,6 +1451,8 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*Tenant)
+
+			ct.stats.Counter("Tenant_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -1468,12 +1533,16 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "TenantWatcher")
 
+	ct.stats.Counter("Tenant_Watch").Inc()
+	defer ct.stats.Counter("Tenant_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("Tenant_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -1502,6 +1571,7 @@ func (ct *ctrlerCtx) runTenantWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("Tenant_WatchErrors").Inc()
 						break innerLoop
 					}
 

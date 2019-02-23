@@ -6,15 +6,8 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/strconv"
 )
-
-/*
-type ActionChain interface {
-	Run() error
-	HasError() bool
-	Error() error
-}
-*/
 
 // ActionCtx is the internal state of the actions
 type ActionCtx struct {
@@ -29,6 +22,8 @@ func (sm *SysModel) Action() *ActionCtx {
 
 // VerifyClusterStatus verifies venice cluster status
 func (act *ActionCtx) VerifyClusterStatus() error {
+	log.Infof("Verifying cluster health..")
+
 	// check iota cluster health
 	err := act.model.tb.CheckIotaClusterHealth()
 	if err != nil {
@@ -91,7 +86,19 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 
 	// verify each naples health
 	for _, np := range act.model.naples {
-		snic, err := act.model.tb.GetSmartNIC(np.iotaNode.Name + "-" + np.iotaNode.NodeUuid)
+		// check naples status
+		err = act.model.tb.CheckNaplesHealth(np)
+		if err != nil {
+			log.Errorf("Naples health check failed. Err: %v", err)
+			return err
+		}
+
+		// check smartnic status in Venice
+		macStr, err := strconv.ParseMacAddr(np.iotaNode.NodeUuid)
+		if err != nil {
+			macStr = np.iotaNode.NodeUuid
+		}
+		snic, err := act.model.tb.GetSmartNIC(np.iotaNode.Name + "-" + macStr)
 		if err != nil {
 			err := fmt.Errorf("Failed to get smartnc object for uuid %v. Err: %+v", np.iotaNode.NodeUuid, err)
 			log.Errorf("%v", err)
@@ -106,11 +113,11 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 		}
 		if len(snic.Status.Conditions) < 1 {
 			log.Errorf("Invalid Naples status: %+v", snic)
-			return fmt.Errorf("No naples condition for naples %v", np.iotaNode.Name)
+			return fmt.Errorf("No naples status reported for naples %v", np.iotaNode.Name)
 		}
 		if snic.Status.Conditions[0].Type != "HEALTHY" {
 			log.Errorf("Invalid Naples status: %+v", snic)
-			return fmt.Errorf("Invalid condition type %v for naples %v", snic.Status.Conditions[0].Type, np.iotaNode.Name)
+			return fmt.Errorf("Invalid status condition-type %v for naples %v", snic.Status.Conditions[0].Type, np.iotaNode.Name)
 		}
 		/* FIXME: there seem to be a bug in CMD health check. disabling this check for now
 		if snic.Status.Conditions[0].Status != "TRUE" {
@@ -124,6 +131,30 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 	err = act.model.tb.CheckVeniceServiceStatus(cl.Status.Leader)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// VerifyPolicyStatus verifies SG policy status
+func (act *ActionCtx) VerifyPolicyStatus(spc *SGPolicyCollection) error {
+	for _, pol := range spc.policies {
+		pstat, err := act.model.tb.GetSGPolicy(&pol.venicePolicy.ObjectMeta)
+		if err != nil {
+			log.Errorf("Error getting SG policy %+v. Err: %v", pol.venicePolicy.ObjectMeta, err)
+			return err
+		}
+
+		// verify policy status
+		if pstat.Status.PropagationStatus.GenerationID != pstat.ObjectMeta.GenerationID {
+			log.Errorf("Propagation generation id did not match: Meta: %+v, Status: %+v", pstat.ObjectMeta, pstat.Status)
+			return fmt.Errorf("Propagation generation id did not match")
+		}
+		if (pstat.Status.PropagationStatus.Updated != int32(len(act.model.naples))) || (pstat.Status.PropagationStatus.Pending != 0) ||
+			(pstat.Status.PropagationStatus.MinVersion != "") {
+			log.Errorf("Propagation status incorrect: Meta: %+v, Status: %+v", pstat.ObjectMeta, pstat.Status)
+			return fmt.Errorf("Propagation status was incorrect")
+		}
 	}
 
 	return nil

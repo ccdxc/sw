@@ -30,6 +30,7 @@ references:
   - iota
   - iota/test/venice
   - platform/drivers/linux
+  - iota/test/venice/hwtest
 dependencies:
   test: nic
   test: platform

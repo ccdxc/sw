@@ -35,7 +35,7 @@
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "tmagent",
-    "command": "/nic/bin/tmagent -hostif lo",
+    "command": "/nic/bin/tmagent -hostif lo -mode network",
     "dependencies": ["delphi", "hal"],
     "flags": ["no_watchdog", "non_critical"]
 }, {

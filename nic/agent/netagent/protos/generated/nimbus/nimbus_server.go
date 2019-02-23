@@ -5,9 +5,11 @@ package nimbus
 import (
 	"errors"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 var (
@@ -17,18 +19,25 @@ var (
 
 // MbusServer is the message bus server
 type MbusServer struct {
-	grpcServer *rpckit.RPCServer // gRPC server instance
-	listenURL  string            // URL to listen on
-	memDB      *memdb.Memdb      // database of all objects
+	svcName    string              // service name
+	grpcServer *rpckit.RPCServer   // gRPC server instance
+	listenURL  string              // URL to listen on
+	memDB      *memdb.Memdb        // database of all objects
+	stats      map[string]tsdb.Obj // nimbus stats
 }
 
 // AddObject adds object to mbus
 func (ms *MbusServer) AddObject(obj memdb.Object) error {
+	ms.Stats(obj.GetObjectKind(), "AddEvent").Inc()
+	ms.Stats(obj.GetObjectKind(), "ObjectCount").Inc()
+
 	return ms.memDB.AddObject(obj)
 }
 
 // UpdateObject updates an object in mbus
 func (ms *MbusServer) UpdateObject(obj memdb.Object) error {
+	ms.Stats(obj.GetObjectKind(), "UpdateEvent").Inc()
+
 	return ms.memDB.UpdateObject(obj)
 }
 
@@ -39,6 +48,9 @@ func (ms *MbusServer) FindObject(obj memdb.Object) (memdb.Object, error) {
 
 // DeleteObject deletes an object from mbus
 func (ms *MbusServer) DeleteObject(obj memdb.Object) error {
+	ms.Stats(obj.GetObjectKind(), "DeleteEvent").Inc()
+	ms.Stats(obj.GetObjectKind(), "ObjectCount").Dec()
+
 	return ms.memDB.DeleteObject(obj)
 }
 
@@ -50,6 +62,22 @@ func (ms *MbusServer) AddNodeState(nodeID string, obj memdb.Object) error {
 // DelNodeState deletes node state from an object
 func (ms *MbusServer) DelNodeState(nodeID string, obj memdb.Object) error {
 	return ms.memDB.DelNodeState(nodeID, obj)
+}
+
+// Stats returns a counter for stats
+func (ms *MbusServer) Stats(kind, cname string) api.Counter {
+	var err error
+	tsdbObj, ok := ms.stats[kind]
+	if !ok {
+		keyTags := map[string]string{"node": "venice", "module": ms.svcName, "kind": kind}
+		tsdbObj, err = tsdb.NewObj("NimbusStats", keyTags, nil, nil)
+		if err != nil {
+			log.Fatalf("unable to create tsdb object, keys %+v", keyTags)
+			return nil
+		}
+	}
+
+	return tsdbObj.Counter(cname)
 }
 
 // Start starts the RPC server
@@ -65,9 +93,10 @@ func (ms *MbusServer) Stop() error {
 
 // NewMbusServer creates a new instance of RPC server
 func NewMbusServer(svcName, listenURL string) (*MbusServer, error) {
-
 	mbusServer := MbusServer{
-		memDB: memdb.NewMemdb(),
+		svcName: svcName,
+		memDB:   memdb.NewMemdb(),
+		stats:   make(map[string]tsdb.Obj),
 	}
 
 	// create an RPC server if URL is specified

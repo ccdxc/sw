@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -25,16 +26,20 @@ type TopologyService struct {
 	SSHConfig        *ssh.ClientConfig
 	TestBedInfo      *iota.TestBedMsg //server
 	Nodes            []*testbed.TestNode
+	Workloads        map[string]*iota.Workload // list of workloads
 	ProvisionedNodes map[string]*testbed.TestNode
 }
 
 // NewTopologyServiceHandler Topo service handle
 func NewTopologyServiceHandler() *TopologyService {
-	var topoServer TopologyService
+	topoServer := TopologyService{
+		Workloads: make(map[string]*iota.Workload),
+	}
 	return &topoServer
 }
 
-func (n *TopologyService) downloadImages() error {
+// downloadImages downloads image
+func (ts *TopologyService) downloadImages() error {
 
 	ctrlVMDir := common.ControlVMImageDirectory + "/" + common.EsxControlVMImage
 	imageName := common.EsxControlVMImage + ".ova"
@@ -60,6 +65,108 @@ func (n *TopologyService) downloadImages() error {
 	return nil
 }
 
+// InstallImage recovers the Naples nodes and installs an image
+func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
+	resp := *req
+	log.Infof("TOPO SVC | DEBUG | InstallImage. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | InstallImage Returned: %v", resp)
+
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		log.Errorf("GOPATH not defined in the environment")
+
+		err := fmt.Errorf("GOPATH not defined in the environment")
+		resp.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+		resp.ApiResponse.ErrorMsg = err.Error()
+		return &resp, err
+	}
+	wsdir := gopath + "/src/github.com/pensando/sw"
+
+	pool, _ := errgroup.WithContext(context.Background())
+
+	// walk each node
+	for _, node := range req.Nodes {
+		if node.Type == iota.TestBedNodeType_TESTBED_NODE_TYPE_HW {
+			nodeOs := "esx"
+			switch node.Os {
+			case iota.TestBedNodeOs_TESTBED_NODE_OS_ESX:
+				nodeOs = "esx"
+			case iota.TestBedNodeOs_TESTBED_NODE_OS_LINUX:
+				nodeOs = "linux"
+			case iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD:
+				nodeOs = "freebsd"
+			}
+			cmd := fmt.Sprintf("%s/iota/scripts/boot_naples_v2.py", wsdir)
+			cmd += fmt.Sprintf(" --console-ip %s", node.NicConsoleIpAddress)
+			cmd += fmt.Sprintf(" --console-port %s", node.NicConsolePort)
+			cmd += fmt.Sprintf(" --mnic-ip 169.254.0.1")
+			cmd += fmt.Sprintf(" --host-ip %s", node.IpAddress)
+			cmd += fmt.Sprintf(" --oob-ip %s", node.NicIpAddress)
+			cmd += fmt.Sprintf(" --cimc-ip %s", node.CimcIpAddress)
+			cmd += fmt.Sprintf(" --image %s/nic/naples_fw.tar", wsdir)
+			cmd += fmt.Sprintf(" --mode hostpin")
+			cmd += fmt.Sprintf(" --drivers-pkg %s/platform/gen/drivers-%s-eth.tar.xz", wsdir, nodeOs)
+			cmd += fmt.Sprintf(" --gold-firmware-image %s/platform/goldfw/naples/naples_fw.tar", wsdir)
+			cmd += fmt.Sprintf(" --uuid %s", node.NicUuid)
+			cmd += fmt.Sprintf(" --os %s", nodeOs)
+
+			latestGoldDriver := fmt.Sprintf("%s/platform/hosttools/x86_64/%s/goldfw/latest/drivers-%s-eth.tar.xz", wsdir, nodeOs, nodeOs)
+			oldGoldDriver := fmt.Sprintf("%s/platform/hosttools/x86_64/%s/goldfw/old/drivers-%s-eth.tar.xz", wsdir, nodeOs, nodeOs)
+			realPath, _ := filepath.EvalSymlinks(latestGoldDriver)
+			latestGoldDriverVer := filepath.Base(filepath.Dir(realPath))
+			realPath, _ = filepath.EvalSymlinks(oldGoldDriver)
+			oldGoldDriverVer := filepath.Base(filepath.Dir(realPath))
+			cmd += fmt.Sprintf(" --gold-firmware-latest-version %s", latestGoldDriverVer)
+			cmd += fmt.Sprintf(" --gold-drivers-latest-pkg %s", latestGoldDriver)
+			cmd += fmt.Sprintf(" --gold-firmware-old-version %s", oldGoldDriverVer)
+			cmd += fmt.Sprintf(" --gold-drivers-old-pkg %s", oldGoldDriver)
+
+			if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+				cmd += fmt.Sprintf(" --esx-script %s/iota/bin/iota_esx_setup", wsdir)
+				cmd += fmt.Sprintf(" --host-username %s", node.EsxUsername)
+				cmd += fmt.Sprintf(" --host-password %s", node.EsxPassword)
+
+			}
+			nodeName := node.NodeName
+
+			// add the command to pool to be executed in parallel
+			pool.Go(func() error {
+				command := exec.Command("sh", "-c", cmd)
+				log.Infof("Running command: %s", cmd)
+
+				// open the out file for writing
+				outfile, err := os.Create(fmt.Sprintf("%s/iota/%s-firmware-upgrade.log", wsdir, nodeName))
+				if err != nil {
+					log.Errorf("Error creating log file. Err: %v", err)
+					return err
+				}
+				defer outfile.Close()
+				command.Stdout = outfile
+				command.Stderr = outfile
+				err = command.Start()
+				if err != nil {
+					log.Errorf("Error running command %s. Err: %v", cmd, err)
+					return err
+				}
+
+				return command.Wait()
+			})
+
+		}
+	}
+
+	err := pool.Wait()
+	if err != nil {
+		log.Errorf("Error executing pool. Err: %v", err)
+		return nil, err
+	}
+
+	log.Infof("Recovering naples nodes complete...")
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+
+	return req, nil
+}
+
 // InitTestBed does initiates a test bed
 func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | InitTestBed. Received Request Msg: %v", req)
@@ -67,6 +174,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	var vlans []uint32
 	var err error
 	ts.TestBedInfo = req
+	ts.Nodes = []*testbed.TestNode{}
 
 	if err := ts.downloadImages(); err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Download images failed. Err: %v", err)
@@ -452,7 +560,34 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 		}
 
 	}
+
+	// save workload info
+	for _, w := range req.Workloads {
+		ts.Workloads[w.WorkloadName] = w
+	}
+
 	return req, nil
+}
+
+// GetWorkloads returns list of workloads
+func (ts *TopologyService) GetWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
+	var workloads []*iota.Workload
+	log.Infof("TOPO SVC | DEBUG | GetWorkloads. Received Request Msg: %#v", req)
+
+	for _, w := range ts.Workloads {
+		workloads = append(workloads, w)
+	}
+
+	wmsg := &iota.WorkloadMsg{
+		ApiResponse: &iota.IotaAPIResponse{
+			ApiStatus: iota.APIResponseType_API_STATUS_OK,
+		},
+		WorkloadOp: iota.Op_GET,
+		Workloads:  workloads,
+	}
+	log.Infof("TOPO SVC | DEBUG | GetWorkloads Returned: %#v", wmsg)
+
+	return wmsg, nil
 }
 
 // DeleteWorkloads deletes a workload
@@ -543,6 +678,11 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 		}
 
 	}
+
+	for _, w := range req.Workloads {
+		delete(ts.Workloads, w.WorkloadName)
+	}
+
 	return req, nil
 }
 

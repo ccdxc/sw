@@ -88,6 +88,9 @@ func (eh *SGPolicyTopic) CreateSGPolicy(ctx context.Context, objinfo *netproto.S
 		return nil, err
 	}
 
+	// increment stats
+	eh.server.Stats("SGPolicy", "AgentCreate").Inc()
+
 	// trigger callbacks
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnSGPolicyAgentStatusSet(nodeID, objinfo)
@@ -96,7 +99,7 @@ func (eh *SGPolicyTopic) CreateSGPolicy(ctx context.Context, objinfo *netproto.S
 	return objinfo, nil
 }
 
-// UpdateSGPolicy creates SGPolicy
+// UpdateSGPolicy updates SGPolicy
 func (eh *SGPolicyTopic) UpdateSGPolicy(ctx context.Context, objinfo *netproto.SGPolicy) (*netproto.SGPolicy, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateSGPolicy from node %v: {%+v}", nodeID, objinfo)
@@ -107,6 +110,9 @@ func (eh *SGPolicyTopic) UpdateSGPolicy(ctx context.Context, objinfo *netproto.S
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 		return nil, err
 	}
+
+	// incr stats
+	eh.server.Stats("SGPolicy", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
@@ -125,6 +131,9 @@ func (eh *SGPolicyTopic) DeleteSGPolicy(ctx context.Context, objinfo *netproto.S
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnSGPolicyAgentStatusDelete(nodeID, objinfo)
 	}
+
+	// incr stats
+	eh.server.Stats("SGPolicy", "AgentDelete").Inc()
 
 	// delete node state from the memdb
 	err := eh.server.DelNodeState(nodeID, objinfo)
@@ -188,6 +197,12 @@ func (eh *SGPolicyTopic) WatchSGPolicys(ometa *api.ObjectMeta, stream netproto.S
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err
 	}
+
+	// increment stats
+	eh.server.Stats("SGPolicy", "ActiveWatch").Inc()
+	eh.server.Stats("SGPolicy", "WatchConnect").Inc()
+	defer eh.server.Stats("SGPolicy", "ActiveWatch").Dec()
+	defer eh.server.Stats("SGPolicy", "WatchDisconnect").Inc()
 
 	ctx := stream.Context()
 

@@ -18,7 +18,7 @@ import (
 	"github.com/pensando/sw/venice/citadel/collector"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
 	"github.com/pensando/sw/venice/citadel/data"
-	"github.com/pensando/sw/venice/citadel/http"
+	httpserver "github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/globals"
@@ -49,7 +49,7 @@ func main() {
 	logConfig := &log.Config{
 		Module:      globals.Citadel,
 		Format:      log.JSONFmt,
-		Filter:      log.AllowAllFilter,
+		Filter:      log.AllowInfoFilter,
 		Debug:       false,
 		CtxSelector: log.ContextAll,
 		LogToStdout: *logToStdoutFlag,

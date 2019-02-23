@@ -4,4 +4,5 @@ MODULE_TARGET   := tmagent.gobin
 MODULE_PREREQS  := agent_halproto.submake libdelphishm.a
 MODULE_PIPELINE := iris
 MODULE_FLAGS    := -ldflags="-s -w"
+MODULE_DEPS     := $(shell find ${NICDIR}/agent/ -name '*.go')
 include ${MKDEFS}/post.mk

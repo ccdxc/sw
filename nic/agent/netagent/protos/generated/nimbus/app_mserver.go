@@ -88,6 +88,9 @@ func (eh *AppTopic) CreateApp(ctx context.Context, objinfo *netproto.App) (*netp
 		return nil, err
 	}
 
+	// increment stats
+	eh.server.Stats("App", "AgentCreate").Inc()
+
 	// trigger callbacks
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnAppAgentStatusSet(nodeID, objinfo)
@@ -96,7 +99,7 @@ func (eh *AppTopic) CreateApp(ctx context.Context, objinfo *netproto.App) (*netp
 	return objinfo, nil
 }
 
-// UpdateApp creates App
+// UpdateApp updates App
 func (eh *AppTopic) UpdateApp(ctx context.Context, objinfo *netproto.App) (*netproto.App, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateApp from node %v: {%+v}", nodeID, objinfo)
@@ -107,6 +110,9 @@ func (eh *AppTopic) UpdateApp(ctx context.Context, objinfo *netproto.App) (*netp
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 		return nil, err
 	}
+
+	// incr stats
+	eh.server.Stats("App", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
@@ -125,6 +131,9 @@ func (eh *AppTopic) DeleteApp(ctx context.Context, objinfo *netproto.App) (*netp
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnAppAgentStatusDelete(nodeID, objinfo)
 	}
+
+	// incr stats
+	eh.server.Stats("App", "AgentDelete").Inc()
 
 	// delete node state from the memdb
 	err := eh.server.DelNodeState(nodeID, objinfo)
@@ -188,6 +197,12 @@ func (eh *AppTopic) WatchApps(ometa *api.ObjectMeta, stream netproto.AppApi_Watc
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err
 	}
+
+	// increment stats
+	eh.server.Stats("App", "ActiveWatch").Inc()
+	eh.server.Stats("App", "WatchConnect").Inc()
+	defer eh.server.Stats("App", "ActiveWatch").Dec()
+	defer eh.server.Stats("App", "WatchDisconnect").Inc()
 
 	ctx := stream.Context()
 

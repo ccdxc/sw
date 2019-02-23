@@ -122,6 +122,7 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 	}
 
 	//CAll remote workload bring up to set up SSH handles
+	vm.logger.Infof("Connecting to VM %v at %v:%v", vm.vmName, vm.ip, sshPort)
 	err = vm.remoteWorkload.BringUp(vm.ip, strconv.Itoa(sshPort), constants.EsxDataVMUsername, constants.EsxDataVMPassword)
 	if err != nil {
 		return errors.Wrap(err, "Remote workload bring up failed")

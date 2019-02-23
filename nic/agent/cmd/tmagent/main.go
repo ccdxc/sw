@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -19,8 +18,11 @@ import (
 	"github.com/pensando/sw/venice/utils/nodewatcher"
 
 	"github.com/pensando/sw/nic/agent/ipc"
+	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
 	delphi "github.com/pensando/sw/nic/delphi/gosdk"
+	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	dproto "github.com/pensando/sw/nic/delphi/proto/delphi"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -31,30 +33,91 @@ import (
 // reportInterval is how often(in seconds) tmagent sends metrics to TSDB
 const reportInterval = 30
 
+// TelemetryAgent keeps the telementry agent state
+type TelemetryAgent struct {
+	tpCtrler     *state.PolicyState
+	tpClient     *ctrlerif.TpClient
+	nodeUUID     string
+	resolverURLs string
+	mode         string
+	restServer   *restapi.RestServer
+}
+
 type service struct {
 	name         string
 	sysmgrClient *sysmgr.Client
-}
-
-var srv = &service{
-	name: "tmagent",
+	DelphiClient clientApi.Client
+	tmagent      *TelemetryAgent
 }
 
 func (s *service) OnMountComplete() {
 	log.Printf("OnMountComplete() done for %s\n", s.name)
 	s.sysmgrClient.InitDone()
+
+	// walk naples status object
+	nslist := delphiProto.NaplesStatusList(s.DelphiClient)
+	for _, ns := range nslist {
+		s.handleVeniceCoordinates(ns)
+	}
 }
 
 func (s *service) Name() string {
 	return s.name
 }
 
-// TelemetryAgent keeps the telementry agent state
-type TelemetryAgent struct {
-	tpCtrler   *state.PolicyState
-	tpClient   *ctrlerif.TpClient
-	nodeUUID   string
-	restServer *restapi.RestServer
+// OnNaplesStatusCreate event handler
+func (s *service) OnNaplesStatusCreate(obj *delphiProto.NaplesStatus) {
+	s.handleVeniceCoordinates(obj)
+	return
+}
+
+// OnNaplesStatusUpdate event handler
+func (s *service) OnNaplesStatusUpdate(old, new *delphiProto.NaplesStatus) {
+	s.handleVeniceCoordinates(new)
+	return
+}
+
+// OnNaplesStatusDelete event handler
+func (s *service) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
+	return
+}
+
+func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
+	log.Infof("Tmagent reactor called with %v", obj)
+	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
+		var controllers []string
+		var err error
+
+		for _, ip := range obj.Controllers {
+			controllers = append(controllers, fmt.Sprintf("%s:%s", ip, globals.CMDGRPCAuthPort))
+		}
+
+		if s.tmagent.tpClient != nil {
+			log.Infof("Tpclient already started. ignoring...")
+			return
+		}
+
+		log.Infof("Populating Venice Co-ordinates with %v", controllers)
+
+		cfg := &resolver.Config{
+			Name:    globals.Tmagent,
+			Servers: controllers,
+		}
+
+		// start tsdb export
+		rc := resolver.New(cfg)
+		tsdb.Start(rc)
+
+		s.tmagent.tpClient, err = ctrlerif.NewTpClient(s.tmagent.nodeUUID, s.tmagent.tpCtrler, globals.Tpm, rc)
+		if err != nil {
+			log.Fatalf("failed to init tmagent controller client, err: %v", err)
+		}
+
+		// start reporting metrics
+		if err := s.tmagent.reportMetrics(context.Background(), rc); err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 func (ta *TelemetryAgent) reportMetrics(ctx context.Context, rc resolver.Interface) error {
@@ -128,7 +191,9 @@ func main() {
 	}
 
 	tmAgent := &TelemetryAgent{
-		nodeUUID: macAddr.String(),
+		nodeUUID:     macAddr.String(),
+		resolverURLs: *resolverURLs,
+		mode:         *mode,
 	}
 
 	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
@@ -138,27 +203,23 @@ func main() {
 		log.Fatal(err)
 	}
 
-	rList := strings.Split(*resolverURLs, ",")
-	cfg := &resolver.Config{
-		Name:    globals.Tmagent,
-		Servers: rList,
+	var delphiService = &service{
+		name:    "tpmagent_" + macAddr.String(),
+		tmagent: tmAgent,
 	}
 
-	rc := resolver.New(cfg)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	opts := &tsdb.Opts{
-		ClientName:              macAddr.String(),
-		ResolverClient:          rc,
+		ClientName:              delphiService.name,
 		Collector:               globals.Collector,
 		DBName:                  "default",
 		SendInterval:            time.Duration(30) * time.Second,
 		ConnectionRetryInterval: 100 * time.Millisecond,
 	}
-
-	ctx, cancel := context.WithCancel(context.Background())
 	// Init the TSDB
 	tsdb.Init(ctx, opts)
-	defer cancel()
 
 	tmAgent.tpCtrler, err = state.NewTpAgent(ctx, globals.AgentRESTPort)
 	if err != nil {
@@ -171,29 +232,23 @@ func main() {
 		log.Fatalf("failed to create tmagent rest API server, Err: %v", err)
 	}
 
-	if *mode == "network" {
-		log.Infof("configure network mode")
-
-		tmAgent.tpClient, err = ctrlerif.NewTpClient(tmAgent.nodeUUID, tmAgent.tpCtrler, globals.Tpm, rc)
-		if err != nil {
-			log.Fatalf("failed to init tmagent controller, err: %v", err)
-		}
-
-		if err := tmAgent.reportMetrics(ctx, rc); err != nil {
-			log.Fatal(err)
-		}
-	}
-
 	for ix := 0; ix < instCount; ix++ {
 		ipc := shm.IPCInstance()
 		go ipc.Receive(context.Background(), tmAgent.tpCtrler.ProcessFWEvent)
 	}
 
-	delphiClient, err := delphi.NewClient(srv)
+	delphiClient, err := delphi.NewClient(delphiService)
 	if err != nil {
 		log.Fatalf("delphi NewClient failed")
 	}
-	srv.sysmgrClient = sysmgr.NewClient(delphiClient, srv.Name())
+	delphiService.DelphiClient = delphiClient
+	delphiService.sysmgrClient = sysmgr.NewClient(delphiClient, delphiService.Name())
+
+	// Mount delphi naples status object
+	delphiProto.NaplesStatusMount(delphiClient, dproto.MountMode_ReadMode)
+
+	// Set up watches
+	delphiProto.NaplesStatusWatch(delphiClient, delphiService)
 
 	// run delphi thread in background
 	go delphiClient.Run()

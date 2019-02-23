@@ -126,7 +126,7 @@ func (n *TestNode) initEsxNode() error {
 		}
 	}
 
-	log.Println("Init ESX node complete with IP : %s", vmInfo.IP)
+	log.Printf("Init ESX node complete with IP : %s", vmInfo.IP)
 	n.Node.IpAddress = vmInfo.IP
 
 	return n.waitForNodeUp(restartTimeout)

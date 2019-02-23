@@ -23,7 +23,7 @@ import (
 	"github.com/pensando/sw/nic/agent/httputils"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
-	"github.com/pensando/sw/nic/agent/nmd/protos"
+	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"
@@ -34,6 +34,7 @@ import (
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit/tlsproviders"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // NewNMDOption is a functional option type that allows dependency injection in NMD constructor
@@ -256,6 +257,7 @@ func (n *NMD) UpdateCMDClient(resolverURLs []string) error {
 	}
 
 	n.resolverClient = resolver.New(&resolver.Config{Name: "NMD", Servers: cmdResolverURL})
+	tsdb.Start(n.resolverClient)
 
 	// TODO Move this to resolver client at least for cmdUpdatesURL
 	// Use the first resolverURL as registration and updatesURL

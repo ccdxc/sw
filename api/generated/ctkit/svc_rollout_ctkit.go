@@ -42,6 +42,8 @@ func (obj *Rollout) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("Rollout_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.Rollout
@@ -90,6 +92,8 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Rollout_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = rolloutHandler.OnRolloutCreate(obj)
@@ -106,6 +110,9 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("Rollout_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = rolloutHandler.OnRolloutUpdate(obj)
@@ -124,6 +131,8 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*Rollout)
+
+			ct.stats.Counter("Rollout_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -204,12 +213,16 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "RolloutWatcher")
 
+	ct.stats.Counter("Rollout_Watch").Inc()
+	defer ct.stats.Counter("Rollout_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("Rollout_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -238,6 +251,7 @@ func (ct *ctrlerCtx) runRolloutWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("Rollout_WatchErrors").Inc()
 						break innerLoop
 					}
 

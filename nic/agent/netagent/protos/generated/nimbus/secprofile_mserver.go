@@ -88,6 +88,9 @@ func (eh *SecurityProfileTopic) CreateSecurityProfile(ctx context.Context, objin
 		return nil, err
 	}
 
+	// increment stats
+	eh.server.Stats("SecurityProfile", "AgentCreate").Inc()
+
 	// trigger callbacks
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnSecurityProfileAgentStatusSet(nodeID, objinfo)
@@ -96,7 +99,7 @@ func (eh *SecurityProfileTopic) CreateSecurityProfile(ctx context.Context, objin
 	return objinfo, nil
 }
 
-// UpdateSecurityProfile creates SecurityProfile
+// UpdateSecurityProfile updates SecurityProfile
 func (eh *SecurityProfileTopic) UpdateSecurityProfile(ctx context.Context, objinfo *netproto.SecurityProfile) (*netproto.SecurityProfile, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateSecurityProfile from node %v: {%+v}", nodeID, objinfo)
@@ -107,6 +110,9 @@ func (eh *SecurityProfileTopic) UpdateSecurityProfile(ctx context.Context, objin
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 		return nil, err
 	}
+
+	// incr stats
+	eh.server.Stats("SecurityProfile", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
@@ -125,6 +131,9 @@ func (eh *SecurityProfileTopic) DeleteSecurityProfile(ctx context.Context, objin
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnSecurityProfileAgentStatusDelete(nodeID, objinfo)
 	}
+
+	// incr stats
+	eh.server.Stats("SecurityProfile", "AgentDelete").Inc()
 
 	// delete node state from the memdb
 	err := eh.server.DelNodeState(nodeID, objinfo)
@@ -188,6 +197,12 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(ometa *api.ObjectMeta, str
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err
 	}
+
+	// increment stats
+	eh.server.Stats("SecurityProfile", "ActiveWatch").Inc()
+	eh.server.Stats("SecurityProfile", "WatchConnect").Inc()
+	defer eh.server.Stats("SecurityProfile", "ActiveWatch").Dec()
+	defer eh.server.Stats("SecurityProfile", "WatchDisconnect").Inc()
 
 	ctx := stream.Context()
 

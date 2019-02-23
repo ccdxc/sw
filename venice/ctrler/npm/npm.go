@@ -30,7 +30,9 @@
 package npm
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/pensando/sw/nic/agent/netagent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
@@ -38,6 +40,7 @@ import (
 	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // Netctrler is a netctrler instance
@@ -51,6 +54,17 @@ type Netctrler struct {
 func NewNetctrler(serverURL, restURL, apisrvURL, vmmURL string, resolver resolver.Interface) (*Netctrler, error) {
 
 	debugStats := debugStats.New(restURL).Build()
+
+	// init tsdb client
+	tsdbOpts := &tsdb.Opts{
+		ClientName:              globals.Npm,
+		ResolverClient:          resolver,
+		Collector:               globals.Collector,
+		DBName:                  "default",
+		SendInterval:            time.Duration(30) * time.Second,
+		ConnectionRetryInterval: 100 * time.Millisecond,
+	}
+	tsdb.Init(context.Background(), tsdbOpts)
 
 	// create nimbus server
 	msrv, err := nimbus.NewMbusServer(globals.Npm, serverURL)

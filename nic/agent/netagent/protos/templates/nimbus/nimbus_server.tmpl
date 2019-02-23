@@ -95,6 +95,9 @@ func (eh *{{$crudObject}}Topic) Create{{$crudObject}}(ctx context.Context, objin
 		return nil, err
 	}
 
+	// increment stats
+	eh.server.Stats("{{$crudObject}}", "AgentCreate").Inc()
+
 	// trigger callbacks
 	if eh.statusReactor != nil {
 		eh.statusReactor.On{{$crudObject}}AgentStatusSet(nodeID, objinfo)
@@ -103,7 +106,7 @@ func (eh *{{$crudObject}}Topic) Create{{$crudObject}}(ctx context.Context, objin
 	return objinfo, nil
 }
 
-// Update{{$crudObject}} creates {{$crudObject}}
+// Update{{$crudObject}} updates {{$crudObject}}
 func (eh *{{$crudObject}}Topic) Update{{$crudObject}}(ctx context.Context, objinfo *netproto.{{$crudObject}}) (*netproto.{{$crudObject}}, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received Update{{$crudObject}} from node %v: {%+v}", nodeID, objinfo)
@@ -114,6 +117,9 @@ func (eh *{{$crudObject}}Topic) Update{{$crudObject}}(ctx context.Context, objin
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 		return nil, err
 	}
+
+	// incr stats
+	eh.server.Stats("{{$crudObject}}", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
@@ -132,6 +138,9 @@ func (eh *{{$crudObject}}Topic) Delete{{$crudObject}}(ctx context.Context, objin
 	if eh.statusReactor != nil {
 		eh.statusReactor.On{{$crudObject}}AgentStatusDelete(nodeID, objinfo)
 	}
+
+	// incr stats
+	eh.server.Stats("{{$crudObject}}", "AgentDelete").Inc()
 
 	// delete node state from the memdb
 	err := eh.server.DelNodeState(nodeID, objinfo)
@@ -195,6 +204,12 @@ func (eh *{{$crudObject}}Topic) Watch{{$crudObject}}s(ometa *api.ObjectMeta, str
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err
 	}
+
+	// increment stats
+	eh.server.Stats("{{$crudObject}}", "ActiveWatch").Inc()
+	eh.server.Stats("{{$crudObject}}", "WatchConnect").Inc()
+	defer eh.server.Stats("{{$crudObject}}", "ActiveWatch").Dec()
+	defer eh.server.Stats("{{$crudObject}}", "WatchDisconnect").Inc()
 
 	ctx := stream.Context()
 

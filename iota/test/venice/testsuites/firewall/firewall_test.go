@@ -15,6 +15,15 @@ var _ = Describe("firewall tests", func() {
 		}).Should(Succeed())
 	})
 
+	AfterEach(func() {
+		// delete test policy if its left over. we can ignore the error here
+		ts.model.SGPolicy("test-policy").Delete()
+		ts.model.SGPolicy("default-policy").Delete()
+
+		// recreate default allow policy
+		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "", "PERMIT").Commit()).ShouldNot(HaveOccurred())
+	})
+
 	Context("Basic firewall tests", func() {
 		It("Should establish TCP session between all workload with default policy", func() {
 
@@ -30,7 +39,10 @@ var _ = Describe("firewall tests", func() {
 			err := ts.model.SGPolicy("default-policy").Rules().Update("action = DENY").Commit()
 			Expect(err).ShouldNot(HaveOccurred())
 
-			// FIXME: verify sg policy status got updated correctly
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
+			}).Should(Succeed())
 
 			// randomly pick one workload and verify ping fails between them
 			workloadPair := ts.model.WorkloadPairs().WithinNetwork().Any(4)

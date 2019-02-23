@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // db of objects for a kind
@@ -38,6 +39,7 @@ type ctrlerCtx struct {
 	waitGrp     sync.WaitGroup                // wait group to wait on all go routines to exit
 	kinds       map[string]*kindStore         // DB of all kinds
 	apicl       apiclient.Services            // api client to write
+	stats       tsdb.Obj                      // ctkit stats
 }
 
 // Controller is the main interface provided by controller instance
@@ -90,6 +92,12 @@ type Controller interface {
 
 // NewController creates a new instance of controler
 func NewController(name string, apisrvURL string, resolver resolver.Interface) (Controller, error) {
+	keyTags := map[string]string{"node": "venice", "module": name, "kind": "CtkitStats"}
+	tsdbObj, err := tsdb.NewObj("CtkitStats", keyTags, nil, nil)
+	if err != nil {
+		log.Errorf("unable to create tsdb object, keys %+v", keyTags)
+		return nil, err
+	}
 
 	// create controller context
 	ctrl := ctrlerCtx{
@@ -103,6 +111,7 @@ func NewController(name string, apisrvURL string, resolver resolver.Interface) (
 		watchCancel: make(map[string]context.CancelFunc),
 		handlers:    make(map[string]interface{}),
 		kinds:       make(map[string]*kindStore),
+		stats:       tsdbObj,
 	}
 
 	return &ctrl, nil
@@ -171,6 +180,8 @@ func (ct *ctrlerCtx) addObject(kind, key string, obj runtime.Object) error {
 		ct.kinds[kind] = ks
 	}
 
+	ct.stats.Counter(kind + "_Objects").Inc()
+
 	// insert the object into kind store
 	ks.objects[key] = obj
 
@@ -230,6 +241,8 @@ func (ct *ctrlerCtx) delObject(kind, key string) error {
 	if !ok {
 		return fmt.Errorf("Object %s/%s not found", kind, key)
 	}
+
+	ct.stats.Counter(kind + "_Objects").Dec()
 
 	// delete the object
 	delete(ks.objects, key)

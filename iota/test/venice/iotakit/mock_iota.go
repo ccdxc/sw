@@ -74,6 +74,12 @@ func (ms *mockIotaServer) startPalazzo() {
 	}
 }
 
+func (ms *mockIotaServer) InstallImage(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
+	log.Debugf("InstallImage(): Received Request Msg: %v", req)
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}
+
 func (ms *mockIotaServer) InitTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Debugf("InitTestBed(): Received Request Msg: %v", req)
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
@@ -88,6 +94,12 @@ func (ms *mockIotaServer) CleanUpTestBed(ctx context.Context, req *iota.TestBedM
 
 func (ms *mockIotaServer) AddNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Debugf("AddNodes(): Received Request Msg: %v", req)
+
+	// wait for venice to come up
+	err := ms.tb.WaitForVeniceClusterUp()
+	if err != nil {
+		return req, err
+	}
 
 	// get smart nics from palazzo
 	snicList, err := ms.tb.ListSmartNIC()
@@ -134,6 +146,12 @@ func (ms *mockIotaServer) ReloadNodes(ctx context.Context, req *iota.NodeMsg) (*
 
 func (ms *mockIotaServer) AddWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	log.Debugf("AddWorkloads(): Received Request Msg: %v", req)
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}
+
+func (ms *mockIotaServer) GetWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
+	log.Debugf("GetWorkloads(): Received Request Msg: %v", req)
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	return req, nil
 }

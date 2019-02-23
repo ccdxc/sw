@@ -410,6 +410,9 @@ void step_doorbell (uint64_t addr, uint64_t data)
     rc = zmq_send(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
     assert(rc != -1);
     rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    while ((rc == -1) && (errno == EINTR)) {
+      rc = zmq_recv(__zmq_sock, buffer, MODEL_ZMQ_BUFF_SIZE, 0);
+    }
     assert(rc != -1);
     return;
 }

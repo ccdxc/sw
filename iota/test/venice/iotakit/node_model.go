@@ -4,7 +4,6 @@ package iotakit
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -25,6 +24,7 @@ type Host struct {
 // Naples represents a smart-nic
 type Naples struct {
 	iotaNode *iota.Node
+	testNode *TestNode
 	smartNic *cluster.SmartNIC
 	sm       *SysModel // pointer back to the model
 }
@@ -59,24 +59,33 @@ type hostIteratorFn func(*HostCollection) error
 type veniceNodeIteratorFn func(*VeniceNodeCollection) error
 type naplesIteratorFn func(*NaplesCollection) error
 
+const (
+	hostToolsDir        = "/pensando/iota"
+	penctlPath          = "nic/bin"
+	penctlPkgName       = "../nic/host.tar"
+	penctlNaplesURL     = "http://169.254.0.1"
+	penctlLinuxBinary   = "penctl.linux"
+	penctlFreebsdBinary = "penctl.freebsd"
+)
+
 // createHost creates a new host instance
-func (sm *SysModel) createHost(n *iota.Node) (*Host, error) {
+func (sm *SysModel) createHost(n *TestNode) (*Host, error) {
 	host := cluster.Host{
 		TypeMeta: api.TypeMeta{Kind: "Host"},
 		ObjectMeta: api.ObjectMeta{
-			Name: n.Name,
+			Name: n.NodeName,
 		},
 		Spec: cluster.HostSpec{
 			SmartNICs: []cluster.SmartNICID{
 				{
-					Name:       n.Name + "-" + n.NodeUuid,
-					MACAddress: n.NodeUuid,
+					Name:       n.NodeName,
+					MACAddress: n.NodeUUID,
 				},
 			},
 		},
 	}
 
-	// FIXME: handle host creation failures
+	// create the host in venice
 	err := sm.tb.CreateHost(&host)
 	if err != nil {
 		log.Errorf("Error creating host: %+v. Err: %v", host, err)
@@ -87,14 +96,15 @@ func (sm *SysModel) createHost(n *iota.Node) (*Host, error) {
 	bs.Set(0).Set(1).Set(4095)
 
 	h := Host{
-		iotaNode:    n,
+		iotaNode:    n.iotaNode,
 		veniceHost:  &host,
 		maxVlans:    4094,
 		vlanBitmask: bs,
 		sm:          sm,
 	}
 
-	sm.hosts[n.Name] = &h
+	// add it to database
+	sm.hosts[n.NodeName] = &h
 
 	return &h, nil
 }
@@ -157,42 +167,24 @@ func (hc *HostCollection) NewWorkload(namePrefix string, snc *NetworkCollection)
 		}
 	}
 
+	// bringup the workloads
+	err := wc.Bringup()
+	if err != nil {
+		return &WorkloadCollection{err: err}
+	}
+
 	return &wc
 }
 
-func (sm *SysModel) createNaples(iotaNode *iota.Node) error {
+// createNaples creates a naples instance
+func (sm *SysModel) createNaples(node *TestNode) error {
 	naples := Naples{
-		iotaNode: iotaNode,
+		iotaNode: node.iotaNode,
+		testNode: node,
 		sm:       sm,
 	}
 
-	log.Infof("Setting up Naples %s in network mode", iotaNode.Name)
-
-	// trigger mode switch on Naples
-	trig := sm.tb.NewTrigger()
-	veniceIPs := strings.Join(iotaNode.GetNaplesConfig().VeniceIps, ",")
-	if iotaNode.Type == iota.PersonalityType_PERSONALITY_NAPLES_SIM {
-		cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib64 /naples/nic/bin/penctl update naples --management-mode network --network-mode oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --hostname %s --localhost", veniceIPs, iotaNode.GetNaplesConfig().ControlIp, iotaNode.NodeUuid, iotaNode.Name)
-		trig.AddCommand(cmd, iotaNode.Name+"_naples", iotaNode.Name)
-	} else if iotaNode.Type == iota.PersonalityType_PERSONALITY_NAPLES {
-		cmd := fmt.Sprintf("penctl update naples --management-mode network --network-mode oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --hostname %s", veniceIPs, iotaNode.GetNaplesConfig().ControlIp, iotaNode.NodeUuid, iotaNode.Name)
-		trig.AddCommand(cmd, iotaNode.Name+"_host", iotaNode.Name)
-	}
-	resp, err := trig.Run()
-	if err != nil {
-		return err
-	}
-	log.Debugf("Got penctl resp: %+v", resp)
-
-	for _, cmdResp := range resp {
-		if cmdResp.ExitCode != 0 {
-			log.Errorf("running penctl failed. %+v", cmdResp)
-			return fmt.Errorf("penctl failed on %s. exit code %v, Out: %v, StdErr: %v", iotaNode.Name, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
-
-		}
-	}
-
-	sm.naples[iotaNode.Name] = &naples
+	sm.naples[node.NodeName] = &naples
 
 	return nil
 }

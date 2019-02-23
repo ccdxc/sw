@@ -3,6 +3,7 @@
 package iotakit
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -48,15 +49,15 @@ func NewSysModel(tb *TestBed) (*SysModel, error) {
 	}
 
 	// build naples and venice nodes
-	for _, nr := range sm.tb.addNodeResp.Nodes {
-		if nr.Type == iota.PersonalityType_PERSONALITY_NAPLES_SIM || nr.Type == iota.PersonalityType_PERSONALITY_NAPLES {
+	for _, nr := range sm.tb.Nodes {
+		if nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM || nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			err := sm.createNaples(nr)
 			if err != nil {
 				return nil, err
 			}
-		} else if nr.Type == iota.PersonalityType_PERSONALITY_VENICE {
+		} else if nr.Personality == iota.PersonalityType_PERSONALITY_VENICE {
 			// create
-			err := sm.createVeniceNode(nr)
+			err := sm.createVeniceNode(nr.iotaNode)
 			if err != nil {
 				return nil, err
 			}
@@ -68,6 +69,8 @@ func NewSysModel(tb *TestBed) (*SysModel, error) {
 
 // SetupDefaultConfig sets up a default config for the system
 func (sm *SysModel) SetupDefaultConfig() error {
+	var wc WorkloadCollection
+
 	log.Infof("Setting up default config...")
 
 	// create some networks
@@ -75,15 +78,16 @@ func (sm *SysModel) SetupDefaultConfig() error {
 		vlanID := sm.tb.allocatedVlans[i]
 		err := sm.createNetwork(vlanID, fmt.Sprintf("192.168.%d.0/24", i+2))
 		if err != nil {
+			log.Errorf("Error creating network: vlan %v. Err: %v", vlanID, err)
 			return err
 		}
 	}
 
 	// build host list for configuration
-	var naplesNodes []*iota.Node
+	var naplesNodes []*TestNode
 	for _, nr := range sm.tb.Nodes {
 		if nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM || nr.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			naplesNodes = append(naplesNodes, nr.iotaNode)
+			naplesNodes = append(naplesNodes, nr)
 		}
 	}
 
@@ -93,28 +97,88 @@ func (sm *SysModel) SetupDefaultConfig() error {
 	for _, n := range naplesNodes {
 		h, err := sm.createHost(n)
 		if err != nil {
+			log.Errorf("Error creating host: %#v. Err: %v", n, err)
 			return err
 		}
 
 		for i := 0; i < defaultWorkloadPerHost; i++ {
-			name := fmt.Sprintf("%s_wrkld_%d", n.Name, i)
+			name := fmt.Sprintf("%s_wrkld_%d", n.NodeName, i)
 			subnet := snc.subnets[i%len(snc.subnets)]
-			_, err = sm.createWorkload(sm.tb.Topo.WorkloadType, sm.tb.Topo.WorkloadImage, name, h, subnet)
+			wrk, err := sm.createWorkload(sm.tb.Topo.WorkloadType, sm.tb.Topo.WorkloadImage, name, h, subnet)
+			if err != nil {
+				log.Errorf("Error creating workload %v. Err: %v", name, err)
+				return err
+			}
+			wc.workloads = append(wc.workloads, wrk)
+		}
+	}
+
+	// if we are skipping setup we dont need to bringup the workload
+	if sm.tb.skipSetup {
+		// first get a list of all existing workloads from iota
+		gwlm := &iota.WorkloadMsg{
+			ApiResponse: &iota.IotaAPIResponse{},
+			WorkloadOp:  iota.Op_GET,
+		}
+		topoClient := iota.NewTopologyApiClient(sm.tb.iotaClient.Client)
+		getResp, err := topoClient.GetWorkloads(context.Background(), gwlm)
+		log.Debugf("Got get workload resp: %+v, err: %v", getResp, err)
+		if err != nil {
+			log.Errorf("Failed to instantiate Apps. Err: %v", err)
+			return fmt.Errorf("Error creating IOTA workload. err: %v", err)
+		} else if getResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			log.Errorf("Failed to instantiate Apps. resp: %+v.", getResp.ApiResponse)
+			return fmt.Errorf("Error creating IOTA workload. Resp: %+v", getResp.ApiResponse)
+		}
+
+		// check if all the workloads are already running
+		allFound := true
+		for _, wrk := range wc.workloads {
+			found := false
+			for _, gwrk := range getResp.Workloads {
+				if gwrk.WorkloadName == wrk.iotaWorkload.WorkloadName {
+					found = true
+				}
+			}
+			if !found {
+				allFound = false
+			}
+		}
+
+		if !allFound {
+			getResp.WorkloadOp = iota.Op_DELETE
+			delResp, err := topoClient.DeleteWorkloads(context.Background(), getResp)
+			log.Debugf("Got get workload resp: %+v, err: %v", delResp, err)
+			if err != nil {
+				log.Errorf("Failed to delete old Apps. Err: %v", err)
+				return fmt.Errorf("Error deleting IOTA workload. err: %v", err)
+			}
+
+			// bringup the workloads
+			err = wc.Bringup()
 			if err != nil {
 				return err
 			}
+		}
+	} else {
+		// bringup the workloads
+		err := wc.Bringup()
+		if err != nil {
+			return err
 		}
 	}
 
 	// create a default firewall profile
 	err := sm.createDefaultFwprofile()
 	if err != nil {
+		log.Errorf("Error creating firewall profile: %v", err)
 		return err
 	}
 
 	// create default allow policy
 	err = sm.NewSGPolicy("default-policy").AddRule("any", "any", "", "PERMIT").Commit()
 	if err != nil {
+		log.Errorf("Error creating default policy. Err: %v", err)
 		return err
 	}
 

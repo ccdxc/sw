@@ -18,7 +18,7 @@ import (
 )
 
 // max number of times to retry venice cluster init
-const maxClusterInitRetry = 10
+const maxClusterInitRetry = 60
 
 // ConfigService implements config service API
 type ConfigService struct {

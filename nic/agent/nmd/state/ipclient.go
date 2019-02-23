@@ -15,7 +15,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/nic/agent/nmd/protos"
+	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/globals"
@@ -714,7 +714,7 @@ func (c *IPClient) Start() error {
 		c.isMock = true
 	}
 
-	if c.isMock {
+	if c.isMock && len(c.nmdState.config.Spec.Controllers) > 0 {
 		// Update Naples Status will error out if either controllers or ipaddress passed in Spec is nil.
 		// This would mean, no DHCP configuration mode will be supported right now.
 		// DHCP configuration mode can be added to mock mode in future.

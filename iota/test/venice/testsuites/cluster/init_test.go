@@ -60,6 +60,16 @@ var _ = BeforeSuite(func() {
 	err = model.SetupDefaultConfig()
 	Expect(err).ShouldNot(HaveOccurred())
 
+	// verify cluster is in good health
+	Eventually(func() error {
+		return model.Action().VerifyClusterStatus()
+	}).Should(Succeed())
+
+	// verify ping is successful across all workloads
+	Eventually(func() error {
+		return model.Action().PingPairs(model.WorkloadPairs().WithinNetwork())
+	}).Should(Succeed())
+
 	// test suite
 	ts = &TestSuite{
 		tb:    tb,

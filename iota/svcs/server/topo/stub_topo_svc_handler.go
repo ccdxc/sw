@@ -18,6 +18,13 @@ func NewStubTopologyService() *StubTopologyService {
 	return &topoServer
 }
 
+// InstallImage recovers the Naples nodes and installs an image
+func (ts *StubTopologyService) InstallImage(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | InstallImage. Received Request Msg: %v", req)
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	return req, nil
+}
+
 // InitTestBed does initiates a test bed
 func (ts *StubTopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg) (*iota.TestBedMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | InitTestBed. Received Request Msg: %v", req)
@@ -67,6 +74,15 @@ func (ts *StubTopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) 
 // AddWorkloads adds a workload on a given node
 func (ts *StubTopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | AddWorkloads. Received Request Msg: %v", req)
+
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	// TODO return fully formed resp here
+	return req, nil
+}
+
+// GetWorkloads gets current list of workloads
+func (ts *StubTopologyService) GetWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | GetWorkloads. Received Request Msg: %v", req)
 
 	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
 	// TODO return fully formed resp here

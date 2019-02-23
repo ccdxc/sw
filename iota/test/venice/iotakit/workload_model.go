@@ -81,39 +81,23 @@ func (sm *SysModel) createWorkload(wtype iota.WorkloadType, wimage, name string,
 	if err != nil {
 		return nil, err
 	}
-	workloads := []*iota.Workload{
-		{
-			WorkloadType:    wtype,
-			WorkloadName:    name,
-			NodeName:        host.veniceHost.Name,
-			WorkloadImage:   wimage,
-			EncapVlan:       usegVlan,
-			IpPrefix:        ipAddr,
-			MacAddress:      mac,
-			Interface:       "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
-			ParentInterface: "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
-			InterfaceType:   iota.InterfaceType_INTERFACE_TYPE_VSS,
-			PinnedPort:      1, // another hack: always pinning to first uplink
-			UplinkVlan:      subnet.vlan,
-		},
-	}
-
-	wrkLd := &iota.WorkloadMsg{
-		ApiResponse: &iota.IotaAPIResponse{},
-		WorkloadOp:  iota.Op_ADD,
-		Workloads:   workloads,
-	}
-
-	topoClient := iota.NewTopologyApiClient(sm.tb.iotaClient.Client)
-	appResp, err := topoClient.AddWorkloads(context.Background(), wrkLd)
-	log.Debugf("Got add workload resp: %+v, err: %v", appResp, err)
-	if err != nil || appResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		log.Errorf("Failed to instantiate Apps. resp: %+v. Err: %v", err, appResp.ApiResponse)
-		return nil, fmt.Errorf("Error creating IOTA workload. Resp: %+v, err: %v", appResp.ApiResponse, err)
+	iotaWorkload := iota.Workload{
+		WorkloadType:    wtype,
+		WorkloadName:    name,
+		NodeName:        host.veniceHost.Name,
+		WorkloadImage:   wimage,
+		EncapVlan:       usegVlan,
+		IpPrefix:        ipAddr,
+		MacAddress:      mac,
+		Interface:       "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
+		ParentInterface: "lif100", // ugly hack here: iota agent creates interfaces like lif100. matching that behavior
+		InterfaceType:   iota.InterfaceType_INTERFACE_TYPE_VSS,
+		PinnedPort:      1, // another hack: always pinning to first uplink
+		UplinkVlan:      subnet.vlan,
 	}
 
 	wr := Workload{
-		iotaWorkload:   workloads[0],
+		iotaWorkload:   &iotaWorkload,
 		veniceWorkload: &w,
 		host:           host,
 		subnet:         subnet,
@@ -220,6 +204,37 @@ func (wc *WorkloadCollection) MeshPairs() *WorkloadPairCollection {
 	}
 
 	return &collection
+}
+
+// Bringup brings up all workloads in the collection
+func (wc *WorkloadCollection) Bringup() error {
+	var workloads []*iota.Workload
+	var sm *SysModel
+
+	// build workload list
+	for _, wrk := range wc.workloads {
+		workloads = append(workloads, wrk.iotaWorkload)
+		sm = wrk.sm
+	}
+
+	// send workload add message
+	wrkLd := &iota.WorkloadMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+		WorkloadOp:  iota.Op_ADD,
+		Workloads:   workloads,
+	}
+	topoClient := iota.NewTopologyApiClient(sm.tb.iotaClient.Client)
+	appResp, err := topoClient.AddWorkloads(context.Background(), wrkLd)
+	log.Debugf("Got add workload resp: %+v, err: %v", appResp, err)
+	if err != nil {
+		log.Errorf("Failed to instantiate Apps. Err: %v", err)
+		return fmt.Errorf("Error creating IOTA workload. err: %v", err)
+	} else if appResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		log.Errorf("Failed to instantiate Apps. resp: %+v.", appResp.ApiResponse)
+		return fmt.Errorf("Error creating IOTA workload. Resp: %+v", appResp.ApiResponse)
+	}
+
+	return nil
 }
 
 // Delete deletes each workload in the collection

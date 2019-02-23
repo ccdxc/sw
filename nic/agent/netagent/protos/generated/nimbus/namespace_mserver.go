@@ -88,6 +88,9 @@ func (eh *NamespaceTopic) CreateNamespace(ctx context.Context, objinfo *netproto
 		return nil, err
 	}
 
+	// increment stats
+	eh.server.Stats("Namespace", "AgentCreate").Inc()
+
 	// trigger callbacks
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnNamespaceAgentStatusSet(nodeID, objinfo)
@@ -96,7 +99,7 @@ func (eh *NamespaceTopic) CreateNamespace(ctx context.Context, objinfo *netproto
 	return objinfo, nil
 }
 
-// UpdateNamespace creates Namespace
+// UpdateNamespace updates Namespace
 func (eh *NamespaceTopic) UpdateNamespace(ctx context.Context, objinfo *netproto.Namespace) (*netproto.Namespace, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateNamespace from node %v: {%+v}", nodeID, objinfo)
@@ -107,6 +110,9 @@ func (eh *NamespaceTopic) UpdateNamespace(ctx context.Context, objinfo *netproto
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 		return nil, err
 	}
+
+	// incr stats
+	eh.server.Stats("Namespace", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
@@ -125,6 +131,9 @@ func (eh *NamespaceTopic) DeleteNamespace(ctx context.Context, objinfo *netproto
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnNamespaceAgentStatusDelete(nodeID, objinfo)
 	}
+
+	// incr stats
+	eh.server.Stats("Namespace", "AgentDelete").Inc()
 
 	// delete node state from the memdb
 	err := eh.server.DelNodeState(nodeID, objinfo)
@@ -188,6 +197,12 @@ func (eh *NamespaceTopic) WatchNamespaces(ometa *api.ObjectMeta, stream netproto
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err
 	}
+
+	// increment stats
+	eh.server.Stats("Namespace", "ActiveWatch").Inc()
+	eh.server.Stats("Namespace", "WatchConnect").Inc()
+	defer eh.server.Stats("Namespace", "ActiveWatch").Dec()
+	defer eh.server.Stats("Namespace", "WatchDisconnect").Inc()
 
 	ctx := stream.Context()
 

@@ -88,6 +88,9 @@ func (eh *TenantTopic) CreateTenant(ctx context.Context, objinfo *netproto.Tenan
 		return nil, err
 	}
 
+	// increment stats
+	eh.server.Stats("Tenant", "AgentCreate").Inc()
+
 	// trigger callbacks
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnTenantAgentStatusSet(nodeID, objinfo)
@@ -96,7 +99,7 @@ func (eh *TenantTopic) CreateTenant(ctx context.Context, objinfo *netproto.Tenan
 	return objinfo, nil
 }
 
-// UpdateTenant creates Tenant
+// UpdateTenant updates Tenant
 func (eh *TenantTopic) UpdateTenant(ctx context.Context, objinfo *netproto.Tenant) (*netproto.Tenant, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateTenant from node %v: {%+v}", nodeID, objinfo)
@@ -107,6 +110,9 @@ func (eh *TenantTopic) UpdateTenant(ctx context.Context, objinfo *netproto.Tenan
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 		return nil, err
 	}
+
+	// incr stats
+	eh.server.Stats("Tenant", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
@@ -125,6 +131,9 @@ func (eh *TenantTopic) DeleteTenant(ctx context.Context, objinfo *netproto.Tenan
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnTenantAgentStatusDelete(nodeID, objinfo)
 	}
+
+	// incr stats
+	eh.server.Stats("Tenant", "AgentDelete").Inc()
 
 	// delete node state from the memdb
 	err := eh.server.DelNodeState(nodeID, objinfo)
@@ -188,6 +197,12 @@ func (eh *TenantTopic) WatchTenants(ometa *api.ObjectMeta, stream netproto.Tenan
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err
 	}
+
+	// increment stats
+	eh.server.Stats("Tenant", "ActiveWatch").Inc()
+	eh.server.Stats("Tenant", "WatchConnect").Inc()
+	defer eh.server.Stats("Tenant", "ActiveWatch").Dec()
+	defer eh.server.Stats("Tenant", "WatchDisconnect").Inc()
 
 	ctx := stream.Context()
 

@@ -373,7 +373,10 @@ e2e-naples:
 	$(MAKE) pull-assets
 	$(MAKE) -C nic
 	$(MAKE) -C nic release
-	rm -rf nic.tar
+
+naples-firmware: 
+	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 firmware
+	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
 
 e2e-iota: e2e-naples
 	$(MAKE) venice-image

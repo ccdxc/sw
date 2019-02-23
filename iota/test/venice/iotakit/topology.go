@@ -29,8 +29,9 @@ var Topologies = map[string]*Topology{
 	"3Venice_3NaplesSim": &topo3Venice3NaplesSim,
 	"3Venice_Nodes":      &topo3VeniceNodes,
 	"5Venice_Nodes":      &topo5VeniceNodes,
-	"1Venice_1NaplesSim": &topo1Venice1NaplesSim,
+	"1Venice_2NaplesSim": &topo1Venice2NaplesSim,
 	"1Venice_2Naples":    &topo1Venice2Naples,
+	"3Venice_2Naples":    &topo3Venice2Naples,
 }
 
 // 3 Venice Nodes and 3 Naples Sim nodes
@@ -147,7 +148,7 @@ var topo5VeniceNodes = Topology{
 }
 
 // 1 venice node and 1 naples sim node
-var topo1Venice1NaplesSim = Topology{
+var topo1Venice2NaplesSim = Topology{
 	NaplesImage:   "../nic/obj/images/naples-release-v1.tgz",
 	VeniceImage:   "../bin/venice.tgz",
 	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_CONTAINER,
@@ -162,6 +163,12 @@ var topo1Venice1NaplesSim = Topology{
 		},
 		{
 			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES_SIM,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "naples2",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
 			Personality: iota.PersonalityType_PERSONALITY_NAPLES_SIM,
 			HostOS:      "linux",
@@ -191,6 +198,46 @@ var topo1Venice2Naples = Topology{
 		},
 		{
 			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+	},
+}
+
+var topo3Venice2Naples = Topology{
+	NaplesImage:   "../nic/naples_fw.tar",
+	VeniceImage:   "../bin/venice.tgz",
+	WorkloadType:  iota.WorkloadType_WORKLOAD_TYPE_VM,
+	WorkloadImage: "build-130",
+	NumVlans:      10, // FIXME: what should this be??
+	Nodes: []TopoNode{
+		{
+			NodeName:    "naples1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "naples2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_HW,
+			Personality: iota.PersonalityType_PERSONALITY_NAPLES,
+			HostOS:      "esx",
+		},
+		{
+			NodeName:    "venice1",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice2",
+			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
+			Personality: iota.PersonalityType_PERSONALITY_VENICE,
+			HostOS:      "linux",
+		},
+		{
+			NodeName:    "venice3",
 			Type:        iota.TestBedNodeType_TESTBED_NODE_TYPE_SIM,
 			Personality: iota.PersonalityType_PERSONALITY_VENICE,
 			HostOS:      "linux",

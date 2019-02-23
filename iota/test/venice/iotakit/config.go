@@ -202,6 +202,11 @@ func (tb *TestBed) CreateHost(host *cluster.Host) error {
 		_, err = restcl.ClusterV1().Host().Create(ctx, host)
 		if err == nil {
 			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.ClusterV1().Host().Update(ctx, host)
+			if err == nil {
+				break
+			}
 		}
 	}
 	return err
@@ -222,6 +227,11 @@ func (tb *TestBed) CreateWorkload(wrkld *workload.Workload) error {
 		_, err = restcl.WorkloadV1().Workload().Create(ctx, wrkld)
 		if err == nil {
 			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.WorkloadV1().Workload().Update(ctx, wrkld)
+			if err == nil {
+				break
+			}
 		}
 	}
 	return err
@@ -283,6 +293,11 @@ func (tb *TestBed) CreateSGPolicy(sgp *security.SGPolicy) error {
 		_, err = restcl.SecurityV1().SGPolicy().Create(ctx, sgp)
 		if err == nil {
 			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.SecurityV1().SGPolicy().Update(ctx, sgp)
+			if err == nil {
+				break
+			}
 		}
 	}
 
@@ -307,6 +322,27 @@ func (tb *TestBed) UpdateSGPolicy(sgp *security.SGPolicy) error {
 		}
 	}
 	return err
+}
+
+// GetSGPolicy gets SGPolicy from venice cluster
+func (tb *TestBed) GetSGPolicy(meta *api.ObjectMeta) (sgp *security.SGPolicy, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, restcl := range restcls {
+		sgp, err = restcl.SecurityV1().SGPolicy().Get(ctx, meta)
+		if err == nil {
+			break
+		}
+	}
+
+	return sgp, err
 }
 
 // DeleteSGPolicy deletes SG policy
@@ -390,7 +426,7 @@ func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.SmartNIC, err error) {
 	}
 
 	meta := api.ObjectMeta{
-		Name: name + ":",
+		Name: name,
 	}
 
 	for _, restcl := range restcls {
@@ -461,6 +497,11 @@ func (tb *TestBed) CreateFirewallProfile(fwp *security.FirewallProfile) error {
 		_, err = restcl.SecurityV1().FirewallProfile().Create(ctx, fwp)
 		if err == nil {
 			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.SecurityV1().FirewallProfile().Update(ctx, fwp)
+			if err == nil {
+				break
+			}
 		}
 	}
 

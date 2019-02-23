@@ -46,6 +46,7 @@ const (
 	integTestRESTURL   = "localhost:9596"
 	agentDatapathKind  = "mock"
 	integTestApisrvURL = "localhost:8082"
+	maxConnRetry       = 5
 )
 
 // integTestSuite is the state of integ test
@@ -175,11 +176,15 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	time.Sleep(time.Millisecond * 100)
 
 	// create api server client
-	apicl, err := apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, logger, rpckit.WithBalancer(balancer.New(rc)))
+	for i := 0; i < maxConnRetry; i++ {
+		it.apisrvClient, err = apiclient.NewGrpcAPIClient("integ_test", globals.APIServer, logger, rpckit.WithBalancer(balancer.New(rc)))
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		c.Fatalf("cannot create grpc client. Err: %v", err)
 	}
-	it.apisrvClient = apicl
 
 	// verify agents are all connected
 	for _, ag := range it.agents {

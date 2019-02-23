@@ -66,6 +66,35 @@ func (act *ActionCtx) ReloadVeniceNodes(vnc *VeniceNodeCollection) error {
 	return nil
 }
 
+// ReloadNaples reloads naples nodes
+func (act *ActionCtx) ReloadNaples(npc *NaplesCollection) error {
+	var hostNames string
+	reloadMsg := &iota.NodeMsg{
+		ApiResponse: &iota.IotaAPIResponse{},
+		Nodes:       []*iota.Node{},
+	}
+
+	for _, node := range npc.nodes {
+		reloadMsg.Nodes = append(reloadMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
+		hostNames += node.iotaNode.Name + " "
+	}
+
+	log.Infof("Reloading Naples: %v", hostNames)
+
+	// Trigger App
+	topoClient := iota.NewTopologyApiClient(act.model.tb.iotaClient.Client)
+	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
+	if err != nil {
+		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.Nodes, err)
+	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.Nodes, reloadResp.ApiResponse, err)
+	}
+
+	log.Debugf("Got reload resp: %+v", reloadResp)
+
+	return nil
+}
+
 // DisconnectNaples disconnects naples by bringing down its control interface
 func (act *ActionCtx) DisconnectNaples(npc *NaplesCollection) error {
 	trig := act.model.tb.NewTrigger()

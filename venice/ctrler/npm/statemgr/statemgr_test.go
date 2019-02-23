@@ -3,8 +3,11 @@
 package statemgr
 
 import (
+	"context"
 	"fmt"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -14,6 +17,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // createNetwork utility function to create a network
@@ -876,4 +880,19 @@ func TestSmartNicCreateDelete(t *testing.T) {
 	// verify endpoint is gone from the database
 	_, err = stateMgr.FindSmartNIC("default", "testSmartNIC")
 	Assert(t, (err != nil), "Deleted smartNic still found in db")
+}
+
+func TestMain(m *testing.M) {
+	// init tsdb client
+	tsdbOpts := &tsdb.Opts{
+		ClientName:              "npm-statemgr-test",
+		Collector:               "test-collector",
+		DBName:                  "default",
+		SendInterval:            time.Duration(30) * time.Second,
+		ConnectionRetryInterval: time.Second,
+	}
+	tsdb.Init(context.Background(), tsdbOpts)
+
+	// call flag.Parse() here if TestMain uses flags
+	os.Exit(m.Run())
 }

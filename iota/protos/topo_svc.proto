@@ -16,6 +16,9 @@ service TopologyApi {
     // InstantiateTopology is called by harness which assigns a personality to the node based on the topology.
     // This is a blocking call to the harness, The parallel instantiation across the nodes is handled internally.
 
+    // InstallImage installs the image on testbed nodes
+    rpc InstallImage (TestBedMsg) returns (TestBedMsg) {};
+
     // InitTestBed Allocate Data VLANs, copy over built artifacts and starts IOTA Agent on all the nodes
     rpc InitTestBed (TestBedMsg) returns (TestBedMsg) {};
 
@@ -36,6 +39,9 @@ service TopologyApi {
 
     // AddWorkloads brings up a workload type on a given node
     rpc AddWorkloads (WorkloadMsg) returns (WorkloadMsg) {};
+
+    // GetWorkloads gets current list of workloads from iota server
+    rpc GetWorkloads (WorkloadMsg) returns (WorkloadMsg) {};
 
     // DeleteWorkloads deletes a given workload
     rpc DeleteWorkloads (WorkloadMsg) returns (WorkloadMsg) {};
@@ -522,6 +528,10 @@ message TestBedNode {
     // IP address of ESX control vm
     string esx_ctrl_node_ip_address = 19;
 
+    // NIC uuid
+    string nic_uuid                 = 20;
+    // node name
+    string node_name                = 21;
 }
 
 // CopyDirection defines direction whether to copy in or copy out

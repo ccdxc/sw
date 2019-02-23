@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
-	"github.com/pensando/sw/nic/agent/netagent/protos"
+	state "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 )
 
@@ -25,6 +25,10 @@ func (ctrler *mockCtrler) EndpointCreateReq(epinfo *netproto.Endpoint) (*netprot
 
 func (ctrler *mockCtrler) EndpointAgeoutNotif(epinfo *netproto.Endpoint) error {
 	return nil
+}
+
+func (ctrler *mockCtrler) IsConnected() bool {
+	return false
 }
 
 func (ctrler *mockCtrler) EndpointDeleteReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, error) {

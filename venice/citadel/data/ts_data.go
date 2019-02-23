@@ -318,8 +318,46 @@ func (dn *DNode) ExecuteQuery(ctx context.Context, req *tproto.QueryReq) (*tprot
 	}
 
 	// read the result
+	var respResults []*query.Result
+	for r := range ch {
+		l := len(respResults)
+		if l == 0 {
+			respResults = append(respResults, r)
+		} else if respResults[l-1].StatementID == r.StatementID {
+			if r.Err != nil {
+				respResults[l-1] = r
+				continue
+			}
+
+			cr := respResults[l-1]
+			rowsMerged := 0
+			if len(cr.Series) > 0 {
+				lastSeries := cr.Series[len(cr.Series)-1]
+
+				for _, row := range r.Series {
+					if !lastSeries.SameSeries(row) {
+						// Next row is for a different series than last.
+						break
+					}
+					// Values are for the same series, so append them.
+					lastSeries.Values = append(lastSeries.Values, row.Values...)
+					rowsMerged++
+				}
+			}
+
+			// Append remaining rows as new rows.
+			r.Series = r.Series[rowsMerged:]
+			cr.Series = append(cr.Series, r.Series...)
+			cr.Messages = append(cr.Messages, r.Messages...)
+			cr.Partial = r.Partial
+		} else {
+			respResults = append(respResults, r)
+		}
+
+	}
+
 	var result []*tproto.Result
-	for res := range ch {
+	for _, res := range respResults {
 		s, jerr := res.MarshalJSON()
 		if jerr != nil {
 			dn.logger.Errorf("Error marshaling the output. Err: %v", err)

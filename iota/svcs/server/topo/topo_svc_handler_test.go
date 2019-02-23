@@ -372,16 +372,16 @@ func TestTopologyService_InitTestBed(t *testing.T) {
 				log.Errorf("CFG SVC | DEBUG | PushConfig. Could not unmarshal %v into a workload object. Err: %v", cfg.Config, err)
 			}
 			spec := workloadObj.Spec.Interfaces
-			for k, v := range spec {
+			for _, v := range spec {
 				if matchingVLAN == v.ExternalVlan {
 					if workloadObj.Spec.HostName == wrkldNodeName1 {
-						wrkldMac1 = k
+						wrkldMac1 = v.MACAddress
 						usegVlan1 = v.MicroSegVlan
 						externalVlan1 = v.ExternalVlan
 
 					}
 					if workloadObj.Spec.HostName == wrkldNodeName2 {
-						wrkldMac2 = k
+						wrkldMac2 = v.MACAddress
 						usegVlan2 = v.MicroSegVlan
 						externalVlan2 = v.ExternalVlan
 

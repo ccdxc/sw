@@ -83,6 +83,12 @@ func IsInitialized() bool {
 	return global != nil
 }
 
+// Start starts tsdb export
+func Start(resolverClient resolver.Interface) error {
+	global.opts.ResolverClient = resolverClient
+	return nil
+}
+
 // Cleanup pushes all pending metrics and frees up resources allocated to the tsdb client
 func Cleanup() {
 	if global == nil {

@@ -20,7 +20,9 @@ var _ = Describe("smartnic tests", func() {
 
 	Context("Basic smartnic tests", func() {
 		It("Should be able reload hosts and smartnic should come back up", func() {
-			Skip("Disable till we debug iota issues")
+			if ts.tb.HasNaplesSim() {
+				Skip("Disable on Sim setups till we debug Naples sim issues with reload")
+			}
 
 			for i := 0; i < 2; i++ {
 				// reload each host
@@ -43,6 +45,9 @@ var _ = Describe("smartnic tests", func() {
 		})
 
 		It("Should be able disconnect and connect smartnics", func() {
+			if ts.tb.HasNaplesHW() {
+				Skip("Skipping connect/disconnect tests on HW setups till inband mgmt is enabled")
+			}
 			for i := 0; i < 2; i++ {
 				// reload each host
 				ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {

@@ -1,0 +1,29 @@
+apiVersion: 1
+
+deleteDatasources:
+  - name: MYINFLUX
+    orgId: 1
+
+datasources:
+- name: MYINFLUXDB
+  type: influxdb
+  access: proxy
+  url: http://localhost:7086
+  password:
+  user:
+  database: default
+  basicAuth: false
+  basicAuthUser:
+  basicAuthPassword:
+  withCredentials:
+  isDefault: true
+  jsonData:
+     tlsAuth: false
+     tlsAuthWithCACert: false
+  secureJsonData:
+    tlsCACert: ""
+    tlsClientCert: ""
+    tlsClientKey: ""
+  version: 1
+  editable: true
+

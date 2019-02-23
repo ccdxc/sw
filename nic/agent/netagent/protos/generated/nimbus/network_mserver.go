@@ -88,6 +88,9 @@ func (eh *NetworkTopic) CreateNetwork(ctx context.Context, objinfo *netproto.Net
 		return nil, err
 	}
 
+	// increment stats
+	eh.server.Stats("Network", "AgentCreate").Inc()
+
 	// trigger callbacks
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnNetworkAgentStatusSet(nodeID, objinfo)
@@ -96,7 +99,7 @@ func (eh *NetworkTopic) CreateNetwork(ctx context.Context, objinfo *netproto.Net
 	return objinfo, nil
 }
 
-// UpdateNetwork creates Network
+// UpdateNetwork updates Network
 func (eh *NetworkTopic) UpdateNetwork(ctx context.Context, objinfo *netproto.Network) (*netproto.Network, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateNetwork from node %v: {%+v}", nodeID, objinfo)
@@ -107,6 +110,9 @@ func (eh *NetworkTopic) UpdateNetwork(ctx context.Context, objinfo *netproto.Net
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 		return nil, err
 	}
+
+	// incr stats
+	eh.server.Stats("Network", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
@@ -125,6 +131,9 @@ func (eh *NetworkTopic) DeleteNetwork(ctx context.Context, objinfo *netproto.Net
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnNetworkAgentStatusDelete(nodeID, objinfo)
 	}
+
+	// incr stats
+	eh.server.Stats("Network", "AgentDelete").Inc()
 
 	// delete node state from the memdb
 	err := eh.server.DelNodeState(nodeID, objinfo)
@@ -188,6 +197,12 @@ func (eh *NetworkTopic) WatchNetworks(ometa *api.ObjectMeta, stream netproto.Net
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err
 	}
+
+	// increment stats
+	eh.server.Stats("Network", "ActiveWatch").Inc()
+	eh.server.Stats("Network", "WatchConnect").Inc()
+	defer eh.server.Stats("Network", "ActiveWatch").Dec()
+	defer eh.server.Stats("Network", "WatchDisconnect").Inc()
 
 	ctx := stream.Context()
 

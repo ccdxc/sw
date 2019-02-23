@@ -42,6 +42,8 @@ func (obj *User) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("User_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.User
@@ -90,6 +92,8 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("User_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = userHandler.OnUserCreate(obj)
@@ -106,6 +110,9 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("User_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = userHandler.OnUserUpdate(obj)
@@ -124,6 +131,8 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*User)
+
+			ct.stats.Counter("User_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -204,12 +213,16 @@ func (ct *ctrlerCtx) runUserWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "UserWatcher")
 
+	ct.stats.Counter("User_Watch").Inc()
+	defer ct.stats.Counter("User_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("User_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -238,6 +251,7 @@ func (ct *ctrlerCtx) runUserWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("User_WatchErrors").Inc()
 						break innerLoop
 					}
 
@@ -358,6 +372,8 @@ func (obj *AuthenticationPolicy) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("AuthenticationPolicy_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.AuthenticationPolicy
@@ -406,6 +422,8 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 					ctrler:               ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("AuthenticationPolicy_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = authenticationpolicyHandler.OnAuthenticationPolicyCreate(obj)
@@ -422,6 +440,9 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("AuthenticationPolicy_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj)
@@ -440,6 +461,8 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 			}
 
 			obj := fobj.(*AuthenticationPolicy)
+
+			ct.stats.Counter("AuthenticationPolicy_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -520,12 +543,16 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "AuthenticationPolicyWatcher")
 
+	ct.stats.Counter("AuthenticationPolicy_Watch").Inc()
+	defer ct.stats.Counter("AuthenticationPolicy_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("AuthenticationPolicy_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -554,6 +581,7 @@ func (ct *ctrlerCtx) runAuthenticationPolicyWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("AuthenticationPolicy_WatchErrors").Inc()
 						break innerLoop
 					}
 
@@ -674,6 +702,8 @@ func (obj *Role) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("Role_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.Role
@@ -722,6 +752,8 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Role_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = roleHandler.OnRoleCreate(obj)
@@ -738,6 +770,9 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("Role_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = roleHandler.OnRoleUpdate(obj)
@@ -756,6 +791,8 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*Role)
+
+			ct.stats.Counter("Role_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -836,12 +873,16 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "RoleWatcher")
 
+	ct.stats.Counter("Role_Watch").Inc()
+	defer ct.stats.Counter("Role_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("Role_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -870,6 +911,7 @@ func (ct *ctrlerCtx) runRoleWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("Role_WatchErrors").Inc()
 						break innerLoop
 					}
 
@@ -990,6 +1032,8 @@ func (obj *RoleBinding) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("RoleBinding_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.RoleBinding
@@ -1038,6 +1082,8 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 					ctrler:      ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("RoleBinding_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = rolebindingHandler.OnRoleBindingCreate(obj)
@@ -1054,6 +1100,9 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("RoleBinding_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = rolebindingHandler.OnRoleBindingUpdate(obj)
@@ -1072,6 +1121,8 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*RoleBinding)
+
+			ct.stats.Counter("RoleBinding_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -1152,12 +1203,16 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "RoleBindingWatcher")
 
+	ct.stats.Counter("RoleBinding_Watch").Inc()
+	defer ct.stats.Counter("RoleBinding_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("RoleBinding_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -1186,6 +1241,7 @@ func (ct *ctrlerCtx) runRoleBindingWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("RoleBinding_WatchErrors").Inc()
 						break innerLoop
 					}
 

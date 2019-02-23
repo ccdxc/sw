@@ -69,6 +69,10 @@ SysModel has three main concepts (i) Collections (ii) Filters and (iii) Actions.
 
 SysModel currently supports many operations. When you write your test case, its highly likely you would need to add more operations into SysModel. Feel free to add them into iotakit library. More primitives we have in the library, better it is for everyone.
 
+## API Documentation
+
+[Iotakit](./iotakit/iotakit.md)
+
 ## Running tests
 
 Running IOTA E2E tests requires us to build both Venice image and Naples image. Its best to build the naples image on one of the build servers or on dev VMs. If you dont have a dev VM, you can use `srv6` or any of the other build servers. You can create a workspace on `/local/<pensando-user-id>/` folder on these servers.
@@ -82,10 +86,6 @@ cd $GOPATH/src/github.com/pensando
 git clone ssh://github.com/pensando/sw.git
 cd sw
 git submodule init
-git submodule update --recursive
-cd nic/asic/
-git submodule init
-cd ../..
 git submodule update --recursive
 ```
 

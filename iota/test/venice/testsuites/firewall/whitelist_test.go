@@ -3,6 +3,9 @@
 package firewall_test
 
 import (
+	"fmt"
+	"math/rand"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -20,6 +23,7 @@ var _ = Describe("firewall whitelist tests", func() {
 	AfterEach(func() {
 		// delete test policy if its left over. we can ignore the error here
 		ts.model.SGPolicy("test-policy").Delete()
+		ts.model.SGPolicy("default-policy").Delete()
 
 		// recreate default allow policy
 		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "", "PERMIT").Commit()).ShouldNot(HaveOccurred())
@@ -38,6 +42,11 @@ var _ = Describe("firewall whitelist tests", func() {
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "tcp/8000", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(spc)
+			}).Should(Succeed())
 
 			// verify TCP connection works between workload pairs
 			Eventually(func() error {
@@ -59,11 +68,16 @@ var _ = Describe("firewall whitelist tests", func() {
 		})
 
 		It("Should allow UDP connections with specific permit rules", func() {
-			Skip("Disabling UDP test till HAL crash is debugged")
+			Skip("Disabling UDP test till HAL issue is debugged")
 			// add permit rules for workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "udp/8000", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(spc)
+			}).Should(Succeed())
 
 			// verify TCP connection works between workload pairs
 			Eventually(func() error {
@@ -85,12 +99,17 @@ var _ = Describe("firewall whitelist tests", func() {
 		})
 
 		It("Ping should work with specific permit rules", func() {
-			Skip("Disabling ICMP test due to HAL session timeout issue")
+			Skip("Disabling ICMP test till we figure out ICMP proto/port issue in netagent")
 
 			// add permit rules for workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "icmp", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(spc)
+			}).Should(Succeed())
 
 			// verify ping is successful
 			Eventually(func() error {
@@ -102,6 +121,44 @@ var _ = Describe("firewall whitelist tests", func() {
 				return ts.model.Action().TCPSessionFails(workloadPairs, 8000)
 			}).Should(Succeed())
 
+			// finally, delete the policy
+			Expect(ts.model.SGPolicy("test-policy").Delete()).ShouldNot(HaveOccurred())
+		})
+		It("Should be able to update policy and verify it takes effect", func() {
+			const maxRules = 5000
+			const numIter = 10
+			startPort := 2000
+			boundaryPort := (startPort - 1) + maxRules
+
+			// pick a workload pair
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
+
+			// run multiple iterations, each time updating the policy with different number of rules
+			for iter := 0; iter < numIter; iter++ {
+				spc := ts.model.NewSGPolicy("test-policy")
+				for i := startPort; i <= boundaryPort; i++ {
+					spc = spc.AddRulesForWorkloadPairs(workloadPairs, fmt.Sprintf("tcp/%d", i), "PERMIT")
+				}
+				Expect(spc.Commit()).Should(Succeed())
+
+				// verify policy was propagated correctly
+				Eventually(func() error {
+					return ts.model.Action().VerifyPolicyStatus(spc)
+				}).Should(Succeed())
+
+				// verify TCP connection works on boundary port
+				Eventually(func() error {
+					return ts.model.Action().TCPSession(workloadPairs, boundaryPort)
+				}).Should(Succeed())
+
+				// verify connections above boundary port does not work
+				Eventually(func() error {
+					return ts.model.Action().TCPSessionFails(workloadPairs, boundaryPort+1)
+				}).Should(Succeed())
+
+				// change the boundary port
+				boundaryPort = rand.Intn(maxRules) + startPort
+			}
 			// finally, delete the policy
 			Expect(ts.model.SGPolicy("test-policy").Delete()).ShouldNot(HaveOccurred())
 		})

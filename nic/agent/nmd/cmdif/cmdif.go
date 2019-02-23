@@ -305,8 +305,13 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.Regist
 		return makeErrorResp(err, "Error creating certificate signing request", nic)
 	}
 
+	rpcClient := client.getRegistrationRPCClient()
+	if rpcClient == nil {
+		return makeErrorResp(fmt.Errorf("GRPC client is nil"), "Error getting grpc client to CMD", nic)
+	}
+
 	// make an RPC call to controller
-	nicRPCClient := grpc.NewSmartNICRegistrationClient(client.getRegistrationRPCClient().ClientConn)
+	nicRPCClient := grpc.NewSmartNICRegistrationClient(rpcClient.ClientConn)
 	ctx, cancel := context.WithTimeout(context.Background(), nicRegTimeout)
 	defer cancel()
 

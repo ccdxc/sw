@@ -15,12 +15,12 @@
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "nmd",
-    "command": "/naples/nic/bin/nmd -hostif lo -standalone=false -mode network",
+    "command": "/naples/nic/bin/nmd -hostif lo -standalone=false -mode host",
     "dependencies": ["delphi"],
     "flags": ["no_watchdog", "non_critical"]
 }, {
     "name": "tmagent",
-    "command": "/naples/nic/bin/tmagent -hostif lo",
+    "command": "/naples/nic/bin/tmagent -hostif lo -mode network",
     "dependencies": ["delphi", "hal"],
     "flags": ["no_watchdog", "non_critical"]
 }, {

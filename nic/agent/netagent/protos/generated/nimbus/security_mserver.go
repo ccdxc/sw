@@ -88,6 +88,9 @@ func (eh *SecurityGroupTopic) CreateSecurityGroup(ctx context.Context, objinfo *
 		return nil, err
 	}
 
+	// increment stats
+	eh.server.Stats("SecurityGroup", "AgentCreate").Inc()
+
 	// trigger callbacks
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnSecurityGroupAgentStatusSet(nodeID, objinfo)
@@ -96,7 +99,7 @@ func (eh *SecurityGroupTopic) CreateSecurityGroup(ctx context.Context, objinfo *
 	return objinfo, nil
 }
 
-// UpdateSecurityGroup creates SecurityGroup
+// UpdateSecurityGroup updates SecurityGroup
 func (eh *SecurityGroupTopic) UpdateSecurityGroup(ctx context.Context, objinfo *netproto.SecurityGroup) (*netproto.SecurityGroup, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	log.Infof("Received UpdateSecurityGroup from node %v: {%+v}", nodeID, objinfo)
@@ -107,6 +110,9 @@ func (eh *SecurityGroupTopic) UpdateSecurityGroup(ctx context.Context, objinfo *
 		log.Errorf("Error adding node state to memdb. Err: %v. node %v, Obj: {%+v}", err, nodeID, objinfo)
 		return nil, err
 	}
+
+	// incr stats
+	eh.server.Stats("SecurityGroup", "AgentUpdate").Inc()
 
 	// trigger callbacks
 	if eh.statusReactor != nil {
@@ -125,6 +131,9 @@ func (eh *SecurityGroupTopic) DeleteSecurityGroup(ctx context.Context, objinfo *
 	if eh.statusReactor != nil {
 		eh.statusReactor.OnSecurityGroupAgentStatusDelete(nodeID, objinfo)
 	}
+
+	// incr stats
+	eh.server.Stats("SecurityGroup", "AgentDelete").Inc()
 
 	// delete node state from the memdb
 	err := eh.server.DelNodeState(nodeID, objinfo)
@@ -188,6 +197,12 @@ func (eh *SecurityGroupTopic) WatchSecurityGroups(ometa *api.ObjectMeta, stream 
 		log.Errorf("Error getting a list of objects. Err: %v", err)
 		return err
 	}
+
+	// increment stats
+	eh.server.Stats("SecurityGroup", "ActiveWatch").Inc()
+	eh.server.Stats("SecurityGroup", "WatchConnect").Inc()
+	defer eh.server.Stats("SecurityGroup", "ActiveWatch").Dec()
+	defer eh.server.Stats("SecurityGroup", "WatchDisconnect").Inc()
 
 	ctx := stream.Context()
 

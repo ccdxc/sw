@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 // GetVeniceURL returns venice URL for the testbed
@@ -124,6 +125,8 @@ func (tb *TestBed) MakeVeniceCluster() error {
 // SetupVeniceNodes sets up some test tools on venice nodes
 func (tb *TestBed) SetupVeniceNodes() error {
 
+	log.Infof("Setting up venice nodes..")
+
 	// walk all venice nodes
 	trig := tb.NewTrigger()
 	for _, node := range tb.Nodes {
@@ -160,6 +163,10 @@ func (tb *TestBed) SetupVeniceNodes() error {
 				' > /pensando/iota/start_kibana.sh
 				`, node.NodeName), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("chmod +x /pensando/iota/start_kibana.sh"), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf("rm /etc/localtime"), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf("ln -s /usr/share/zoneinfo/US/Pacific /etc/localtime"), entity, node.NodeName)
+			trig.AddCommand(fmt.Sprintf("docker run -d --name=grafana --net=host -e \"GF_SECURITY_ADMIN_PASSWORD=password\" registry.test.pensando.io:5000/pensando/grafana:0.1"), entity, node.NodeName)
+
 		}
 	}
 
@@ -208,7 +215,6 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) error {
 	}
 
 	// check all pods on leader node
-
 	for _, node := range tb.Nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE && node.NodeName == leaderNode {
 			trig = tb.NewTrigger()
@@ -239,6 +245,90 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) error {
 				}
 			}
 		}
+	}
+
+	return nil
+}
+
+// CheckNaplesHealth checks if naples is healthy
+func (tb *TestBed) CheckNaplesHealth(node *Naples) error {
+	nodeIP := node.testNode.instParams.NodeMgmtIP
+	if node.testNode.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+		nodeIP = node.testNode.instParams.NicMgmtIP
+	}
+
+	// get naples status from NMD
+	// Note: struct redefined here to aviod dependency on NMD packages
+	var naplesStatus struct {
+		api.TypeMeta   `protobuf:"bytes,1,opt,name=T,embedded=T" json:",inline"`
+		api.ObjectMeta `protobuf:"bytes,2,opt,name=O,embedded=O" json:"meta,omitempty"`
+		Spec           struct {
+			PrimaryMAC  string   `protobuf:"bytes,1,opt,name=PrimaryMAC,proto3" json:"primary-mac,omitempty"`
+			Hostname    string   `protobuf:"bytes,2,opt,name=Hostname,proto3" json:"hostname,omitempty"`
+			Mode        string   `protobuf:"bytes,4,opt,name=Mode,proto3" json:"mode"`
+			NetworkMode string   `protobuf:"bytes,5,opt,name=NetworkMode,proto3" json:"network-mode"`
+			MgmtVlan    uint32   `protobuf:"varint,6,opt,name=MgmtVlan,proto3" json:"vlan,omitempty"`
+			Controllers []string `protobuf:"bytes,7,rep,name=Controllers" json:"controllers,omitempty"`
+			Profile     string   `protobuf:"varint,8,opt,name=Profile,proto3,enum=nmd.NaplesSpec_FeatureProfile" json:"feature-profile,omitempty"`
+		}
+		Status struct {
+			Phase           int      `protobuf:"varint,1,opt,name=Phase,proto3,enum=cluster.SmartNICStatus_Phase" json:"phase,omitempty"`
+			Controllers     []string `protobuf:"bytes,3,rep,name=Controllers" json:"controllers,omitempty"`
+			TransitionPhase string   `protobuf:"bytes,4,opt,name=TransitionPhase,proto3" json:"transition-phase,omitempty"`
+			Mode            string   `protobuf:"bytes,5,opt,name=Mode,proto3" json:"mode"`
+			NetworkMode     string   `protobuf:"bytes,6,opt,name=NetworkMode,proto3" json:"network-mode"`
+		}
+	}
+	err := netutils.HTTPGet("http://"+nodeIP+":8888/api/v1/naples/", &naplesStatus)
+	if err != nil {
+		nerr := fmt.Errorf("Could not get naples status from NMD: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
+
+	// check naples status
+	if naplesStatus.Spec.Mode != "NETWORK" || naplesStatus.Spec.NetworkMode != "OOB" {
+		nerr := fmt.Errorf("Invalid NMD mode configuration: %+v", naplesStatus.Spec)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
+	if node.testNode.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+		if !strings.Contains(naplesStatus.Status.TransitionPhase, "REGISTRATION_DONE") {
+			nerr := fmt.Errorf("Invalid NMD phase: %v", naplesStatus.Status.TransitionPhase)
+			log.Errorf("%v", nerr)
+			return nerr
+		}
+	} else {
+		if !strings.Contains(naplesStatus.Status.TransitionPhase, "REGISTRATION_DONE") && !strings.Contains(naplesStatus.Status.TransitionPhase, "REBOOT_PENDING") {
+			nerr := fmt.Errorf("Invalid NMD phase: %v", naplesStatus.Status.TransitionPhase)
+			log.Errorf("%v", nerr)
+			return nerr
+		}
+	}
+
+	// get naples info from Netagent
+	// Note: struct redefined here to avoid dependency on netagent package
+	var naplesInfo struct {
+		UUID                 string   `json:"naples-uuid,omitempty"`
+		ControllerIPs        []string `json:"controller-ips,omitempty"`
+		Mode                 string   `json:"naples-mode,omitempty"`
+		IsNpmClientConnected bool     `json:"is-npm-client-connected,omitempty"`
+	}
+	err = netutils.HTTPGet("http://"+nodeIP+":9007/api/system/info/", &naplesInfo)
+	if err != nil {
+		nerr := fmt.Errorf("Error checking netagent health. Err: %v", err)
+		log.Errorf("%v", nerr)
+		return nerr
+	}
+
+	if !strings.Contains(naplesInfo.Mode, "MANAGED") {
+		nerr := fmt.Errorf("Naples/Netagent is in incorrect mode: %s", naplesInfo.Mode)
+		log.Errorf("%v", nerr)
+		return nerr
+	} else if !naplesInfo.IsNpmClientConnected {
+		nerr := fmt.Errorf("Netagent NPM client is not connected to Venice")
+		log.Errorf("%v", nerr)
+		return nerr
 	}
 
 	return nil

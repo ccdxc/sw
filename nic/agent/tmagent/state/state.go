@@ -573,6 +573,8 @@ func (s *PolicyState) ProcessFWEvent(ev *ipcproto.FWEvent, ts time.Time) {
 		Fields: map[string]interface{}{"flowAction": int64(ev.GetFlowaction())},
 	}
 
+	log.Infof("Fwlog: %+v", point)
+
 	s.fwTable.Points([]*tsdb.Point{point}, ts)
 
 	// set src/dest vrf

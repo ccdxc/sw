@@ -191,22 +191,25 @@ func (hsrv *HTTPServer) queryReqHandler(w http.ResponseWriter, r *http.Request) 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
+	var o struct {
+		Results []*query.Result `json:"results,omitempty"`
+		Err     string          `json:"error,omitempty"`
+	}
+
 	// loop thru each result
 	for _, res := range result {
-		var o struct {
-			Results []*query.Result `json:"results,omitempty"`
-			Err     string          `json:"error,omitempty"`
-		}
-		o.Results = []*query.Result{res}
-		// Send HTTP response as Json
-		content, err := json.Marshal(o)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Write(content)
+		o.Results = append(o.Results, res)
 	}
+
+	// Send HTTP response as Json
+	content, err := json.Marshal(o)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(content)
+
 	return
 }
 
@@ -250,7 +253,7 @@ func (hsrv *HTTPServer) aggQueryReqHandler(w http.ResponseWriter, r *http.Reques
 	return
 }
 
-// queryReqHandler handles a query request
+// showReqHandler handles a show command
 func (hsrv *HTTPServer) showReqHandler(w http.ResponseWriter, r *http.Request) {
 	// Attempt to read the form value from the "q" form value.
 	qp := strings.ToUpper(strings.TrimSpace(r.FormValue("q")))

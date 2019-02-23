@@ -64,7 +64,7 @@ func (n *TestNode) waitForNodeUp(timeout time.Duration) error {
 	for {
 		conn, _ := net.DialTimeout("tcp", net.JoinHostPort(n.Node.GetIpAddress(), "22"), 2*time.Second)
 		if conn != nil {
-			log.Printf("Connected to host : ", n.Node.GetIpAddress())
+			log.Printf("Connected to host : %s", n.Node.GetIpAddress())
 			conn.Close()
 			break
 		}

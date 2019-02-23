@@ -42,6 +42,8 @@ func (obj *Network) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("Network_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.Network
@@ -90,6 +92,8 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Network_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = networkHandler.OnNetworkCreate(obj)
@@ -106,6 +110,9 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("Network_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = networkHandler.OnNetworkUpdate(obj)
@@ -124,6 +131,8 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*Network)
+
+			ct.stats.Counter("Network_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -204,12 +213,16 @@ func (ct *ctrlerCtx) runNetworkWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "NetworkWatcher")
 
+	ct.stats.Counter("Network_Watch").Inc()
+	defer ct.stats.Counter("Network_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("Network_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -238,6 +251,7 @@ func (ct *ctrlerCtx) runNetworkWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("Network_WatchErrors").Inc()
 						break innerLoop
 					}
 
@@ -358,6 +372,8 @@ func (obj *Service) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("Service_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.Service
@@ -406,6 +422,8 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("Service_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = serviceHandler.OnServiceCreate(obj)
@@ -422,6 +440,9 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("Service_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = serviceHandler.OnServiceUpdate(obj)
@@ -440,6 +461,8 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*Service)
+
+			ct.stats.Counter("Service_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -520,12 +543,16 @@ func (ct *ctrlerCtx) runServiceWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "ServiceWatcher")
 
+	ct.stats.Counter("Service_Watch").Inc()
+	defer ct.stats.Counter("Service_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("Service_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -554,6 +581,7 @@ func (ct *ctrlerCtx) runServiceWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("Service_WatchErrors").Inc()
 						break innerLoop
 					}
 
@@ -674,6 +702,8 @@ func (obj *LbPolicy) Write() error {
 		return err
 	}
 
+	obj.ctrler.stats.Counter("LbPolicy_Writes").Inc()
+
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		nobj := obj.LbPolicy
@@ -722,6 +752,8 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 					ctrler:     ct,
 				}
 				ct.addObject(kind, obj.GetKey(), obj)
+				ct.stats.Counter("LbPolicy_Created_Events").Inc()
+
 				// call the event handler
 				obj.Lock()
 				err = lbpolicyHandler.OnLbPolicyCreate(obj)
@@ -738,6 +770,9 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 				// see if it changed
 				if _, ok := ref.ObjDiff(obj.Spec, eobj.Spec); ok {
 					obj.Spec = eobj.Spec
+
+					ct.stats.Counter("LbPolicy_Updated_Events").Inc()
+
 					// call the event handler
 					obj.Lock()
 					err = lbpolicyHandler.OnLbPolicyUpdate(obj)
@@ -756,6 +791,8 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 			}
 
 			obj := fobj.(*LbPolicy)
+
+			ct.stats.Counter("LbPolicy_Deleted_Events").Inc()
 
 			// Call the event reactor
 			obj.Lock()
@@ -836,12 +873,16 @@ func (ct *ctrlerCtx) runLbPolicyWatcher() {
 	defer ct.waitGrp.Done()
 	logger := ct.logger.WithContext("submodule", "LbPolicyWatcher")
 
+	ct.stats.Counter("LbPolicy_Watch").Inc()
+	defer ct.stats.Counter("LbPolicy_Watch").Dec()
+
 	// loop forever
 	for {
 		// create a grpc client
 		apicl, err := apiclient.NewGrpcAPIClient(ct.name, ct.apisrvURL, logger, rpckit.WithBalancer(balancer.New(ct.resolver)))
 		if err != nil {
 			logger.Warnf("Failed to connect to gRPC server [%s]\n", ct.apisrvURL)
+			ct.stats.Counter("LbPolicy_ApiClientErr").Inc()
 		} else {
 			logger.Infof("API client connected {%+v}", apicl)
 
@@ -870,6 +911,7 @@ func (ct *ctrlerCtx) runLbPolicyWatcher() {
 				case evt, ok := <-wt.EventChan():
 					if !ok {
 						logger.Error("Error receiving from apisrv watcher")
+						ct.stats.Counter("LbPolicy_WatchErrors").Inc()
 						break innerLoop
 					}
 

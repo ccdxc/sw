@@ -89,9 +89,10 @@ type IPSecRuleRef struct {
 
 // NaplesInfo is a read-only object containing information about Naples
 type NaplesInfo struct {
-	UUID          string   `json:"naples-uuid,omitempty"`
-	ControllerIPs []string `json:"controller-ips,omitempty"`
-	Mode          string   `json:"naples-mode,omitempty"`
+	UUID                 string   `json:"naples-uuid,omitempty"`
+	ControllerIPs        []string `json:"controller-ips,omitempty"`
+	Mode                 string   `json:"naples-mode,omitempty"`
+	IsNpmClientConnected bool     `json:"is-npm-client-connected,omitempty"`
 }
 
 // DepSolver is a netagent state object dependency solver
@@ -142,6 +143,7 @@ type CtrlerAPI interface {
 	EndpointCreateReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, error) // sends an endpoint create request
 	EndpointAgeoutNotif(epinfo *netproto.Endpoint) error                     // sends an endpoint ageout notification
 	EndpointDeleteReq(epinfo *netproto.Endpoint) (*netproto.Endpoint, error) // sends an endpoint delete request
+	IsConnected() bool                                                       // returns true if client is connected to controller
 }
 
 // CtrlerIntf is the API provided by netagent for the controllers

@@ -9,10 +9,9 @@ rebase: true
 e2e-targets:
   # baremetal + vm test case
  e2e-venice-2naples:
-   # commands: ["make", "-C", "iota/test/venice/hwtest"]
-   # owners: ["email:venice-dev@pensando.io"]
-   commands: [ "cat /warmd.json && sleep 30000000"]
-   owners: ["email:jobd@pensando.io"]
+   commands: ["make", "-C", "iota/test/venice/hwtest"]
+   # commands: [ "cat /warmd.json && sleep 30000000"]
+   owners: ["email:venice-dev@pensando.io"]
    area:
    sub-area:
    feature:
@@ -40,3 +39,6 @@ e2e-targets:
           VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
+
+logfiles:
+  - /go/src/github.com/pensando/sw/iota/logs/venice-iota.tgz

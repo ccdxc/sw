@@ -550,7 +550,7 @@ func (app *bareMetalWorkload) TearDown() {
 		} else {
 			delVlanCmd = []string{"ip", "link", "del", app.subIF}
 		}
-		app.logger.Info("Deleting subif %v\n", app.subIF)
+		app.logger.Infof("Deleting subif %v\n", app.subIF)
 		Utils.Run(delVlanCmd, 0, false, false, nil)
 	} else {
 		app.logger.Info("No subif to delete")

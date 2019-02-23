@@ -17,7 +17,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/delphi/gosdk"
-	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
@@ -205,9 +205,8 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		log.Infof("Populating Venice Co-ordinates with %v", controllers)
 
 		ag.ResolverClient = resolver.New(&resolver.Config{Name: globals.Netagent, Servers: controllers})
-
 		// initialize netagent's tsdb client
-		tsdbOpts := &tsdb.Opts{
+		opts := &tsdb.Opts{
 			ClientName:              globals.Netagent + ag.NetworkAgent.NodeUUID,
 			ResolverClient:          ag.ResolverClient,
 			Collector:               globals.Collector,
@@ -215,9 +214,7 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			SendInterval:            time.Duration(30) * time.Second,
 			ConnectionRetryInterval: 100 * time.Millisecond,
 		}
-		ctx, cancel := context.WithCancel(context.Background())
-		tsdb.Init(ctx, tsdbOpts)
-		defer cancel()
+		tsdb.Init(context.Background(), opts)
 
 		// Lock netagent state
 		ag.NetworkAgent.Lock()
