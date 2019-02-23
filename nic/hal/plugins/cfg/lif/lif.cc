@@ -750,11 +750,12 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif_create_app_ctxt_t      app_ctxt   = { 0 };
     dhl_entry_t                dhl_entry  = { 0 };
     cfg_op_ctxt_t              cfg_ctxt   = { 0 };
-    qos_class_t                *qos_class;
-    uint32_t                   cosA = 0, cosB = 0;
+    qos_class_t                *qos_class, *control_qos_class;
+    uint32_t                   cosA = 0, cosB = 0, control_cos = 0;
     pd::pd_qos_class_get_admin_cos_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
     lif_hal_info_t             proto_hal_info = {0};
+    pd::pd_qos_class_get_qos_class_id_args_t q_args;
 
     hal_api_trace(" API Begin: Lif Create ");
 	proto_msg_dump(spec);
@@ -836,11 +837,29 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
                       __FUNCTION__, lif->lif_id, ret);
     }
 
+    // Fetch cos for control-qos-class
+    if ((control_qos_class = find_qos_class_by_group(hal::QOS_GROUP_CONTROL)) != NULL) {
+        q_args.qos_class= control_qos_class;
+        q_args.dest_if = uplink_if;
+        q_args.qos_class_id = &control_cos;
+        pd_func_args.pd_qos_class_get_qos_class_id = &q_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_GET_QOS_CLASSID, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error deriving qos-class-id for Qos class "
+                          "{} ret {}",
+                          control_qos_class->key, ret);
+            return ret;
+        }
+    } else {
+        HAL_TRACE_ERR("pi-lif:{}:failed to fetch control cos of lif {}, err : {}",
+                      __FUNCTION__, lif->lif_id, ret);
+    }       
+
     cosA = args.cos;
 
-    HAL_TRACE_DEBUG("cosA: {}, cosB: {}", cosA, cosB);
+    HAL_TRACE_DEBUG("cosA: {}, cosB: {}, control_cos: {}", cosA, cosB, control_cos);
 
-    lif->qos_info.cos_bmp =  ((1 << cosA) | (1 << cosB));
+    lif->qos_info.cos_bmp =  ((1 << cosA) | (1 << cosB) | (1 << control_cos));
     lif->qos_info.coses   =  (cosA & 0x0f) | ((cosB << 4) & 0xf0);
 
     if (spec.has_rx_qos_class()) {
