@@ -270,10 +270,18 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("/nic/tools/fwupdate -l", "#")
 
     def Connect(self):
-        self.__clearline()
-        self.hdl = self.Spawn("telnet %s %s" % ((GlobalOptions.console_ip, GlobalOptions.console_port)))
-        midx = self.hdl.expect_exact([ "Escape character is '^]'.", pexpect.EOF])
-        if midx == 1:
+        for _ in range(3):
+            try:
+                self.hdl = self.Spawn("telnet %s %s" % ((GlobalOptions.console_ip, GlobalOptions.console_port)))
+                midx = self.hdl.expect_exact([ "Escape character is '^]'.", pexpect.EOF])
+                if midx == 1:
+                    raise Exception("Failed to connect to Console %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port))
+            except:
+                self.__clearline()
+                continue
+            break
+        else:
+            #Did not break, so connection failed.
             print("Failed to connect to Console %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port))
             sys.exit(1)
 
