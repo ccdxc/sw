@@ -120,6 +120,8 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vnic_info = &obj_ctxt->api_params->vnic_info;
     subnet = subnet_db()->subnet_find(&vnic_info->subnet);
     if (subnet == NULL) {
+        OCI_TRACE_ERR("Unable to find subnet : %u, vcn : %u",
+                      vnic_info->subnet.id, vnic_info->vcn.id);
         return sdk::SDK_RET_INVALID_ARG;
     }
 

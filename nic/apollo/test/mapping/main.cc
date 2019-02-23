@@ -113,8 +113,8 @@ TEST_F(mapping_test, mapping_create) {
     const char *vnic_rem_mac = "00:00:14:01:01:03";
     const char *sub_rem_gw = "100.0.0.4";    // Part of my-tep subnet
 
-    oci_vcn_t vcn;
-    oci_subnet_t sub;
+    oci_vcn_spec_t vcn;
+    oci_subnet_spec_t sub;
     oci_switchport_spec_t swport;
     oci_route_table_t rt_tbl;
     oci_tep_spec_t rtep;

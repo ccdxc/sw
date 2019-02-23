@@ -15,8 +15,8 @@
 #include <utility>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
-#include "nic/apollo/include/api/oci.hpp"
 #include "nic/apollo/framework/api_ctxt.hpp"
+#include "nic/apollo/include/api/oci.hpp"
 #include "nic/apollo/include/api/oci_batch.hpp"
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"

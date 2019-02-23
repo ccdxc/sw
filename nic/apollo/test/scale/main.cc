@@ -315,7 +315,7 @@ static sdk_ret_t
 create_subnets (uint32_t vcn_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx)
 {
     sdk_ret_t rv;
-    oci_subnet_t oci_subnet;
+    oci_subnet_spec_t oci_subnet;
     static uint32_t route_table_id = 1;
     static uint32_t        id = 1;
 
@@ -347,7 +347,7 @@ static sdk_ret_t
 create_vcns (uint32_t num_vcns, ip_prefix_t *ip_pfx, uint32_t num_subnets)
 {
     sdk_ret_t rv;
-    oci_vcn_t oci_vcn;
+    oci_vcn_spec_t oci_vcn;
 
     SDK_ASSERT(num_vcns <= 1024);
     for (uint32_t i = 1; i <= num_vcns; i++) {
@@ -486,7 +486,7 @@ create_objects (void)
     string pfxstr;
     sdk_ret_t ret = SDK_RET_OK;
     uint32_t num_tcp, num_udp, num_icmp;
-    
+
     g_flow_test_obj = new flow_test();
 
     // parse the config and create objects
