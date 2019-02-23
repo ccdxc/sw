@@ -520,7 +520,12 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     state = LIF_STATE_RESETING;
-
+    
+    // Update name to the lif-id before doing a reset
+    // to avoid name collisions during re-addition of the lifs
+    // TODO: Lif delete has to be called here instead of just
+    // doing an update
+    lif->UpdateName(std::to_string(lif->GetHwLifId()));
     lif->Reset();
     FreeUpMacFilters();
     FreeUpVlanFilters();

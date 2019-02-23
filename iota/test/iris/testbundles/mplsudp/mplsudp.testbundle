@@ -9,7 +9,7 @@ testcases:
         stress  : True
         iterators:
             type    : nested
-            pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            pktsize : [ 64, 1500]
             ipaf    : [ ipv4 ]
 
     -   name    : Iperf
@@ -18,7 +18,7 @@ testcases:
         iterators:
             type      : nested
             proto     : [ udp, tcp ]
-            bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
+            bandwidth : [ 10Gbps, 100Gbps ]
 
     -   name    : DeleteAddTunnels
         testcase: testcases.mplsudp.deladd
@@ -28,7 +28,7 @@ testcases:
         stress  : True
         iterators:
             type    : nested
-            pktsize : [ 64, 128, 256, 512, 1024, 2048, 4096, 8192]
+            pktsize : [ 64, 1500]
             ipaf    : [ ipv4 ]
 
     -   name    : Iperf
@@ -37,5 +37,5 @@ testcases:
         iterators:
             type      : nested
             proto     : [ udp, tcp ]
-            bandwidth : [ 10Gbps, 25Gbps, 50Gbps, 100Gbps ]
+            bandwidth : [ 10Gbps, 100Gbps ]
 
