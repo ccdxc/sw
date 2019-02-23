@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"strings"
 
@@ -22,6 +23,29 @@ import (
 func isJSONString(s string) bool {
 	var js map[string]interface{}
 	return json.Unmarshal([]byte(s), &js) == nil
+}
+
+func printHTTPReq(req *http.Request) {
+	if verbose {
+		fmt.Println("==== HTTP Request Start ====")
+		requestDump, err := httputil.DumpRequestOut(req, true)
+		if err != nil {
+			fmt.Println(err)
+		}
+		//hack for not printing binary image when trying to upload image
+		result := strings.Split(string(requestDump), "MANIFEST")
+		fmt.Printf("%s\n", result[0])
+		fmt.Println("==== HTTP Request End ====")
+	}
+}
+
+func printHTTPResp(resp *http.Response) {
+	if verbose {
+		fmt.Println("==== HTTP Response Start ====")
+		dump, _ := httputil.DumpResponse(resp, true)
+		fmt.Printf("%s\n", string(dump))
+		fmt.Println("==== HTTP Response End ====")
+	}
 }
 
 func restPostForm(url string, values map[string]io.Reader) ([]byte, error) {
@@ -61,11 +85,13 @@ func restPostForm(url string, values map[string]io.Reader) ([]byte, error) {
 	}
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
+	printHTTPReq(req)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
+	printHTTPResp(res)
 	if verbose {
 		fmt.Println("Status: ", res.Status)
 		fmt.Println("Header: ", res.Header)
@@ -104,11 +130,13 @@ func restPost(v interface{}, url string) error {
 		return err
 	}
 	postReq.Header.Set("Content-Type", "application/json")
+	printHTTPReq(postReq)
 	postResp, err := http.DefaultClient.Do(postReq)
 	if err != nil {
 		return err
 	}
 	defer postResp.Body.Close()
+	printHTTPResp(postResp)
 	if verbose {
 		fmt.Println("Successfully posted the request")
 		fmt.Println("Status:", postResp.Status)
@@ -135,6 +163,7 @@ func restGet(url string) ([]byte, error) {
 	}
 	getReq.Header.Set("Content-Type", "application/json")
 
+	printHTTPReq(getReq)
 	getResp, err := http.DefaultClient.Do(getReq)
 	if err != nil {
 		fmt.Println("Unable to get response from Naples.")
@@ -144,6 +173,7 @@ func restGet(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer getResp.Body.Close()
+	printHTTPResp(getResp)
 	if getResp.StatusCode != 200 {
 		if verbose {
 			fmt.Println(getResp.Status + " " + url)
@@ -198,6 +228,7 @@ func restGetWithBody(v interface{}, url string) ([]byte, error) {
 	}
 	getReq.Header.Set("Content-Type", "application/json")
 
+	printHTTPReq(getReq)
 	getResp, err := http.DefaultClient.Do(getReq)
 	if err != nil {
 		fmt.Println("Unable to get response from Naples.")
@@ -207,6 +238,7 @@ func restGetWithBody(v interface{}, url string) ([]byte, error) {
 		return nil, err
 	}
 	defer getResp.Body.Close()
+	printHTTPResp(getResp)
 	if verbose {
 		fmt.Println("Status: ", getResp.Status)
 		fmt.Println("Header: ", getResp.Header)
@@ -260,6 +292,7 @@ func restGetResp(url string) (*http.Response, error) {
 	}
 	getReq.Header.Set("Content-Type", "application/json")
 
+	printHTTPReq(getReq)
 	getResp, err := http.DefaultClient.Do(getReq)
 	if err != nil {
 		fmt.Println("Unable to get response from Naples.")
@@ -268,6 +301,7 @@ func restGetResp(url string) (*http.Response, error) {
 		}
 		return nil, err
 	}
+	printHTTPResp(getResp)
 	if getResp.StatusCode != 200 {
 		if verbose {
 			fmt.Println(getResp.Status + " " + url)
@@ -299,11 +333,13 @@ func restDelete(url string) ([]byte, error) {
 	}
 	getReq.Header.Set("Content-Type", "application/json")
 
+	printHTTPReq(getReq)
 	getResp, err := http.DefaultClient.Do(getReq)
 	if err != nil {
 		return nil, err
 	}
 	defer getResp.Body.Close()
+	printHTTPResp(getResp)
 	if verbose {
 		fmt.Println("Status: ", getResp.Status)
 		fmt.Println("Header: ", getResp.Header)
