@@ -46,7 +46,7 @@ flow_fc_process:
     * the window calculation below.
     */ 
     sub         r2, r2, 31
-    sle         c3, r2, 0
+    sle.s       c3, r2, 0
     add.c3      r2, r0, r0
 
     /* Assume each entry can hold 128 bytes */
@@ -56,10 +56,24 @@ flow_fc_process:
     * advertised previously reset to previous window to avoid
     * shrinking rcv window. See the fix for Bug627496 in Linux
     * kernel.
+    *
+    * current window = rcv_wup + rcv_wnd - rcv_nxt
+    *
+    * Ignore the overflow part once we get rcv_wup + rcv_wnd. Need
+    * to do 32 bit arithmetic here since all sequence numbers 
+    * including rcv_nxt are unsigned 32 bit values.
     */
 
     add         r3, d.rcv_wup, d.rcv_wnd
+    add         r3, r0, r3[31:0]
     sub         r3, r3, k.to_s5_rcv_nxt
+
+    /* In case (rcv_wup + rcv_wnd - rcv_nxt) < 0 reset current
+    * window c3 to zero. 
+    */
+
+    sle.s       c3, r3, 0
+    add.c3      r3, r0, r0
 
     /* r3 is the current window. Add ( 2 ^ wscale ) - 1 to
     * current window to avoid shrinking the window when we

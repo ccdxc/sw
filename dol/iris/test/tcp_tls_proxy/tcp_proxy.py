@@ -84,6 +84,7 @@ def SetupProxyArgs(tc):
     rcv_mss = 0
     rcv_wnd = 0
     rcv_scale = 0
+    rcv_wup_delta = 0
     snd_ssthresh = 0
     rto_backoff = 0
     snd_wnd = 0
@@ -165,6 +166,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'rcv_scale'):
         rcv_scale = tc.module.args.rcv_scale
         logger.info("- rcv_scale %s" % tc.module.args.rcv_scale)
+    if hasattr(tc.module.args, 'rcv_wup_delta'):
+        rcv_wup_delta = tc.module.args.rcv_wup_delta
+        logger.info("- rcv_wup_delta %s" % tc.module.args.rcv_wup_delta)
     if hasattr(tc.module.args, 'rcv_mss'):
         rcv_mss = tc.module.args.rcv_mss
         logger.info("- rcv_mss %s" % tc.module.args.rcv_mss)
@@ -263,6 +267,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.rcv_wnd = rcv_wnd
     tc.pvtdata.rcv_scale = rcv_scale
     tc.pvtdata.rcv_mss = rcv_mss
+    tc.pvtdata.rcv_wup_delta = rcv_wup_delta
     tc.pvtdata.snd_ssthresh = snd_ssthresh
     tc.pvtdata.rto_backoff = rto_backoff
     tc.pvtdata.snd_wnd = snd_wnd
@@ -283,6 +288,7 @@ def init_flow_pvtdata(tc, tcb1, tcb2):
 
 def init_tcb1(tcb, session):
     tcb.rcv_nxt = 0x1ABABABA
+    tcb.rcv_wup = 0x1ABABABA
     tcb.snd_nxt = 0x1FEFEFF0
     tcb.snd_una = 0x1FEFEFF0
     tcb.rcv_tsval = 0x1AFAFAFA
@@ -369,6 +375,8 @@ def init_tcb_inorder(tc, tcb):
     else:
         tcb.rcv_wscale = 0
 
+    tcb.rcv_wup =  tcb.rcv_nxt - tc.pvtdata.rcv_wup_delta
+
     if tc.pvtdata.snd_ssthresh:
         tcb.snd_ssthresh = tc.pvtdata.snd_ssthresh
     else:
@@ -454,6 +462,7 @@ def init_tcb_inorder(tc, tcb):
 
 def init_tcb2(tcb, session):
     tcb.rcv_nxt = 0x2ABABABA
+    tcb.rcv_wup = 0x2ABABABA
     tcb.snd_nxt = 0x2FEFEFF0
     tcb.snd_una = 0x2FEFEFF0
     tcb.rcv_tsval = 0x2AFAFAFA
@@ -543,6 +552,8 @@ def init_tcb_inorder2(tc, tcb):
         tcb.rcv_wscale = tc.pvtdata.rcv_scale
     else:
         tcb.rcv_wscale = 0
+
+    tcb.rcv_wup =  tcb.rcv_nxt - tc.pvtdata.rcv_wup_delta
 
     if tc.pvtdata.rcv_mss:
         tcb.rcv_mss = tc.pvtdata.rcv_mss

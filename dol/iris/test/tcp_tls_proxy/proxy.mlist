@@ -1135,3 +1135,17 @@ modules:
         iterate :
             - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
               segment   : filter://native=False
+
+    - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TCP_FC_WINDOW_OVERFLOW
+        spec    : tcp_fc.testspec
+        module  : pkt_to_p4
+        args    :
+            bypass_barco   : 1
+            maxflows       : 1
+            send_ack_flow1 : 1
+            rcv_scale      : 4
+            rcv_wup_delta  : 2000
+        iterate :
+            - flow      : filter://type=IPV4,proto=TCP,label=TCP-PROXY,fwtype=L2
+              segment   : filter://native=False

@@ -106,7 +106,7 @@ p4pd_add_or_del_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.action_id = pc_offset;
         data.u.read_tx2rx_d.debug_dol = htons(tcpcb_pd->tcpcb->debug_dol);
         data.u.read_tx2rx_d.snd_nxt = htonl(tcpcb_pd->tcpcb->snd_nxt);
-        data.u.read_tx2rx_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_nxt);
+        data.u.read_tx2rx_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_wup);
         data.u.read_tx2rx_d.rcv_wnd_adv = htons(tcpcb_pd->tcpcb->rcv_wnd);
         data.u.read_tx2rx_d.l7_proxy_type = tcpcb_pd->tcpcb->l7_proxy_type;
         data.u.read_tx2rx_d.serq_cidx = htons((uint16_t)tcpcb_pd->tcpcb->serq_ci);
@@ -276,12 +276,12 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_fc_d.rcv_wnd = htonl(tcpcb_pd->tcpcb->rcv_wnd);
         data.u.tcp_fc_d.rcv_scale = tcpcb_pd->tcpcb->rcv_wscale;
         data.u.tcp_fc_d.cpu_id = tcpcb_pd->tcpcb->cpu_id;
-        data.u.tcp_fc_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_nxt);
+        data.u.tcp_fc_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_wup);
     }
 
     HAL_TRACE_DEBUG("Received rcv_wnd: {}", data.u.tcp_fc_d.rcv_wnd);
     HAL_TRACE_DEBUG("Received rcv_scale {}", data.u.tcp_fc_d.rcv_scale);
-    HAL_TRACE_DEBUG("Received rcv_wup {}", data.u.tcp_fc_d.rcv_wup);
+    HAL_TRACE_DEBUG("Received rcv_wup {:#x}", data.u.tcp_fc_d.rcv_wup);
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
                 P4PLUS_CACHE_INVALIDATE_BOTH)){

@@ -120,6 +120,7 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->cb_id = spec.key_or_handle().tcpcb_id();
     tcpcb->other_qid = spec.other_qid();
     tcpcb->rcv_nxt = spec.rcv_nxt();
+    tcpcb->rcv_wup = spec.rcv_wup();
     tcpcb->snd_nxt = spec.snd_nxt();
     tcpcb->snd_una = spec.snd_una();
     tcpcb->rcv_tsval = spec.rcv_tsval();
@@ -214,7 +215,6 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     }
 
     pd::pd_tcpcb_update_args_init(&pd_tcpcb_args);
-    HAL_TRACE_DEBUG("rcv_nxt: {:#x}", spec.rcv_nxt());
     tcpcb->rcv_nxt = spec.rcv_nxt();
     tcpcb->snd_nxt = spec.snd_nxt();
     tcpcb->snd_una = spec.snd_una();
@@ -254,6 +254,7 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->rto_backoff = spec.rto_backoff();
     tcpcb->cpu_id = spec.cpu_id();
     tcpcb->rcv_wnd = spec.rcv_wnd();
+    tcpcb->rcv_wup = spec.rcv_wup();
     tcpcb->snd_wscale = spec.snd_wscale();
     tcpcb->rcv_wscale = spec.rcv_wscale();
     tcpcb->delay_ack = spec.delay_ack();

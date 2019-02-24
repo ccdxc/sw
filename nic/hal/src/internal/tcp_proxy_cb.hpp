@@ -47,6 +47,7 @@ typedef struct tcpcb_s {
     sdk_spinlock_t        slock;                   // lock to protect this structure
     tcpcb_id_t            cb_id;                   // TCP CB id
     uint32_t              rcv_nxt;
+    uint32_t              rcv_wup;
     uint32_t              snd_nxt;
     uint32_t              snd_una;
     uint32_t              rcv_tsval;

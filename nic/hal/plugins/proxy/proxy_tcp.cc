@@ -387,12 +387,12 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
                         hal::pd::lkl_get_tcpcb_rcv_wscale(tcpcb));
 
         spec->set_rcv_nxt(hal::pd::lkl_get_tcpcb_rcv_nxt(tcpcb));
+        spec->set_rcv_wup(hal::pd::lkl_get_tcpcb_rcv_nxt(tcpcb));
         spec->set_snd_nxt(hal::pd::lkl_get_tcpcb_snd_nxt(tcpcb));
         spec->set_snd_una(hal::pd::lkl_get_tcpcb_snd_una(tcpcb));
         spec->set_rcv_tsval(hal::pd::lkl_get_tcpcb_rcv_tsval(tcpcb));
         spec->set_ts_recent(hal::pd::lkl_get_tcpcb_ts_recent(tcpcb));
         spec->set_snd_wscale(hal::pd::lkl_get_tcpcb_snd_wscale(tcpcb));
-        spec->set_rcv_wscale(hal::pd::lkl_get_tcpcb_rcv_wscale(tcpcb));
         spec->set_snd_ssthresh(hal::pd::lkl_get_tcpcb_snd_ssthresh(tcpcb));
         spec->set_smss(hal::pd::lkl_get_tcpcb_smss(tcpcb));
         smss = hal::pd::lkl_get_tcpcb_smss(tcpcb);
@@ -416,6 +416,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_snd_wnd(get_rsp.mutable_spec()->snd_wnd());
     spec->set_rcv_wnd(get_rsp.mutable_spec()->rcv_wnd());
     spec->set_rcv_mss(get_rsp.mutable_spec()->rcv_mss());
+    spec->set_rcv_wscale(get_rsp.mutable_spec()->rcv_wscale());
     spec->set_source_port(get_rsp.mutable_spec()->source_port());
     spec->set_dest_port(get_rsp.mutable_spec()->dest_port());
     spec->set_header_len(get_rsp.mutable_spec()->header_len());

@@ -323,7 +323,7 @@ func showTCPCb(resp *halproto.TcpCbGetResponse) {
 	fmt.Printf("%-30s : %-6X\n", "debug_dol", spec.DebugDol)
 	fmt.Printf("%-30s : %-6X\n", "sesq_base", spec.SesqBase)
 	fmt.Printf("%-30s : %-6X\n", "ooo_rx2tx_qbase", spec.OooRx2TxQbase)
-	fmt.Printf("%-30s : %-6d\n", "rcv_wnd", spec.RcvWnd<<spec.RcvWscale)
+	fmt.Printf("%-30s : %-6d\n", "rcv_wnd", spec.RcvWnd)
 	fmt.Printf("%-30s : %-6d\n", "snd_wnd", spec.SndWnd<<spec.SndWscale)
 	fmt.Printf("%-30s : %-6d\n", "snd_cwnd", spec.SndCwnd)
 	fmt.Printf("%-30s : %-6d\n", "initial_window", spec.InitialWindow)

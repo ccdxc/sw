@@ -94,8 +94,9 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.pred_flags                = self.pred_flags
            req_spec.rto_backoff               = self.rto_backoff
            req_spec.rcv_wnd                   = self.rcv_wnd
-           req_spec.snd_wscale                = self.snd_wscale 
-           req_spec.rcv_wscale                = self.rcv_wscale 
+           req_spec.rcv_wup                   = self.rcv_wup
+           req_spec.snd_wscale                = self.snd_wscale
+           req_spec.rcv_wscale                = self.rcv_wscale
            req_spec.delay_ack                 = self.delay_ack
            req_spec.ato                       = self.ato
            req_spec.abc_l_var                 = self.abc_l_var

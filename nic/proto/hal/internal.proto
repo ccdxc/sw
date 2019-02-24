@@ -421,6 +421,7 @@ message TcpCbSpec {
   uint32                abc_l_var                  = 51;
   bool                  ooo_queue                  = 52;
   uint64                ooo_rx2tx_qbase            = 53;
+  uint32                rcv_wup                    = 54;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request
