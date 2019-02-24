@@ -3,6 +3,7 @@ package tsdb
 import (
 	"fmt"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	protobuf "github.com/gogo/protobuf/types"
@@ -172,6 +173,12 @@ func createNewMetricPoint(obj *iObj, ts time.Time) {
 		return
 	}
 
+	// limit number of points stored in TSDB client
+	if len(obj.metricPoints) > maxPoints {
+		atomic.AddUint64(&global.failedPoints, 1)
+		return
+	}
+
 	pbTimestamp, err := protobuf.TimestampProto(obj.ts)
 	if err != nil {
 		log.Errorf("unable to convert timestamp")
@@ -289,8 +296,12 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 
 // Debug returns tsdb client info
 func Debug(r *http.Request) (interface{}, error) {
+	if global == nil {
+		return map[string]int{}, nil
+	}
+
 	return map[string]int{
-		"numPoints":  global.numPoints,
-		"sendErrors": global.sendErrors,
-	}, nil
+		"numPoints":    global.numPoints,
+		"sendErrors":   global.sendErrors,
+		"failedPoints": int(atomic.LoadUint64(&global.failedPoints))}, nil
 }

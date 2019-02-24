@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/ipc"
+
 	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"github.com/pensando/sw/nic/agent/tmagent/state"
@@ -17,11 +19,10 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/nodewatcher"
 
-	"github.com/pensando/sw/nic/agent/ipc"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
 	delphi "github.com/pensando/sw/nic/delphi/gosdk"
-	clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
+	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	dproto "github.com/pensando/sw/nic/delphi/proto/delphi"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
@@ -113,6 +114,18 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			log.Fatalf("failed to init tmagent controller client, err: %v", err)
 		}
 
+		mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
+		instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
+		shm, err := ipc.NewSharedMem(mSize, instCount, "/fwlog_ipc_shm")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for ix := 0; ix < instCount; ix++ {
+			ipc := shm.IPCInstance()
+			go ipc.Receive(context.Background(), s.tmagent.tpCtrler.ProcessFWEvent)
+		}
+
 		// start reporting metrics
 		if err := s.tmagent.reportMetrics(context.Background(), rc); err != nil {
 			log.Fatal(err)
@@ -196,13 +209,6 @@ func main() {
 		mode:         *mode,
 	}
 
-	mSize := int(ipc.GetSharedConstant("IPC_MEM_SIZE"))
-	instCount := int(ipc.GetSharedConstant("IPC_INSTANCES"))
-	shm, err := ipc.NewSharedMem(mSize, instCount, "/fwlog_ipc_shm")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	var delphiService = &service{
 		name:    "tpmagent_" + macAddr.String(),
 		tmagent: tmAgent,
@@ -221,6 +227,8 @@ func main() {
 	// Init the TSDB
 	tsdb.Init(ctx, opts)
 
+	var err error
+
 	tmAgent.tpCtrler, err = state.NewTpAgent(ctx, globals.AgentRESTPort)
 	if err != nil {
 		log.Fatalf("failed to init tmagent state, err: %v", err)
@@ -230,11 +238,6 @@ func main() {
 	tmAgent.restServer, err = restapi.NewRestServer(ctx, *restURL)
 	if err != nil {
 		log.Fatalf("failed to create tmagent rest API server, Err: %v", err)
-	}
-
-	for ix := 0; ix < instCount; ix++ {
-		ipc := shm.IPCInstance()
-		go ipc.Receive(context.Background(), tmAgent.tpCtrler.ProcessFWEvent)
 	}
 
 	delphiClient, err := delphi.NewClient(delphiService)
