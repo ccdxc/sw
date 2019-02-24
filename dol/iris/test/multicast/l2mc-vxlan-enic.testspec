@@ -48,19 +48,19 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : TX_PKT_ENIC147     # Input packet
+        id          : TX_PKT_ENIC146     # Input packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag    :
-                vlan: ref://testcase/config/src/segment/floodlist/oifs/id=Enic147/encap_vlan_id
+                vlan: ref://testcase/config/src/segment/floodlist/oifs/id=Enic146/encap_vlan_id
     - packet:
-        id          : EXP_PKT_ENIC148     # Expected packet on Enic148
+        id          : EXP_PKT_ENIC147     # Expected packet on Enic147
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      : callback://networking/packets/GetPacketEncaps
         headers     :
             qtag:
-                vlan: ref://testcase/config/src/segment/floodlist/oifs/id=Enic148/encap_vlan_id
+                vlan: ref://testcase/config/src/segment/floodlist/oifs/id=Enic147/encap_vlan_id
     - packet:
         id          : EXP_PKT_VXLAN1 # Base packet
         clone       : ref://testcase/packets/id=BASE_PKT
@@ -88,57 +88,57 @@ packets:
 
 buffers:
     - buffer:
-        id      : TX_BUF_ENIC147 # Input Buffer
+        id      : TX_BUF_ENIC146 # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
            bind : True
-           size : ref://testcase/packets/id=TX_PKT_ENIC147/size
-           data : ref://testcase/packets/id=TX_PKT_ENIC147/rawbytes
+           size : ref://testcase/packets/id=TX_PKT_ENIC146/size
+           data : ref://testcase/packets/id=TX_PKT_ENIC146/rawbytes
     - buffer:
-        id      : RX_BUF_ENIC148  # Input Buffer
+        id      : RX_BUF_ENIC147  # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: True
             size: 1518
             data: None
     - buffer:
-        id      : EXP_BUF_ENIC148  # Expected Buffer
+        id      : EXP_BUF_ENIC147  # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind  : False
-            size  : ref://testcase/packets/id=EXP_PKT_ENIC148/size
-            data  : ref://testcase/packets/id=EXP_PKT_ENIC148/rawbytes
+            size  : ref://testcase/packets/id=EXP_PKT_ENIC147/size
+            data  : ref://testcase/packets/id=EXP_PKT_ENIC147/rawbytes
 
 descriptors:
     - descriptor:
-        id      : TX_DESC_ENIC147 # Input Descriptor
+        id      : TX_DESC_ENIC146 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_TX
         fields:
-            _buf  : ref://testcase/buffers/id=TX_BUF_ENIC147
-            addr  : ref://testcase/buffers/id=TX_BUF_ENIC147/addr
-            len   : ref://testcase/buffers/id=TX_BUF_ENIC147/size
+            _buf  : ref://testcase/buffers/id=TX_BUF_ENIC146
+            addr  : ref://testcase/buffers/id=TX_BUF_ENIC146/addr
+            len   : ref://testcase/buffers/id=TX_BUF_ENIC146/size
     - descriptor:
-        id      : RX_DESC_ENIC148 # Input Descriptor
+        id      : RX_DESC_ENIC147 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            _buf  : ref://testcase/buffers/id=RX_BUF_ENIC148
-            addr  : ref://testcase/buffers/id=RX_BUF_ENIC148/addr
-            len   : ref://testcase/buffers/id=RX_BUF_ENIC148/size
+            _buf  : ref://testcase/buffers/id=RX_BUF_ENIC147
+            addr  : ref://testcase/buffers/id=RX_BUF_ENIC147/addr
+            len   : ref://testcase/buffers/id=RX_BUF_ENIC147/size
     - descriptor:
-        id      : EXP_DESC_ENIC148 # Expected Descriptor
+        id      : EXP_DESC_ENIC147 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC148
-            len                   : ref://testcase/buffers/id=EXP_BUF_ENIC148/size
+            _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC147
+            len                   : ref://testcase/buffers/id=EXP_BUF_ENIC147/size
 
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=RX_DESC_ENIC148
-            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic148/lif/queue_types/id=RX
+            object  : ref://testcase/descriptors/id=RX_DESC_ENIC147
+            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic147/lif/queue_types/id=RX
 
         - descriptor:
-            object  : ref://testcase/descriptors/id=TX_DESC_ENIC147
+            object  : ref://testcase/descriptors/id=TX_DESC_ENIC146
             ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
 
 expect:
@@ -161,11 +161,7 @@ expect:
             object  : ref://testcase/packets/id=EXP_PKT_VXLAN1
             port    : ref://testcase/config/src/segment/floodlist/oifs/id=Tunnel145/ports
 
-        - packet:
-            object  : ref://testcase/packets/id=EXP_PKT_VXLAN1
-            port    : ref://testcase/config/src/segment/floodlist/oifs/id=Tunnel146/ports
-
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=EXP_DESC_ENIC148
-            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic148/lif/queue_types/id=RX
+            object  : ref://testcase/descriptors/id=EXP_DESC_ENIC147
+            ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic147/lif/queue_types/id=RX

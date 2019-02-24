@@ -21,8 +21,6 @@ hal_ret_t pltfm_get_port_from_front_port_num(uint32_t fp_num,
 
     *port_num = fp_num - 1;
 
-    return HAL_RET_OK;
-
     switch(fp_num) {
     case 1:
         *port_num = 0;

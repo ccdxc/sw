@@ -34,6 +34,7 @@ modules:
     - module:
         name    : L2MC-IGMP-TO-CPU-ENIC
         spec    : l2mc-igmp-to-cpu-enic.testspec
+        ignore  : True
         iterate :
             - id  : IGMP-TO-CPU
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
@@ -65,14 +66,14 @@ modules:
               flow: filter://type=IPV4,proto=UDP,label=NETWORKING
             - id  : L2MCV6-VXLAN-UPLINK
               flow: filter://type=IPV6,proto=UDP,label=NETWORKING
-    - module:
-        name    : L2MC-VXLAN-UPLINKPC
-        spec    : l2mc-vxlan-uplinkpc.testspec
-        iterate :
-            - id  : L2MC-VXLAN-UPLINKPC
-              flow: filter://type=IPV4,proto=UDP,label=NETWORKING
-            - id  : L2MCV6-VXLAN-UPLINKPC
-              flow: filter://type=IPV6,proto=UDP,label=NETWORKING
+    #- module:
+    #    name    : L2MC-VXLAN-UPLINKPC
+    #    spec    : l2mc-vxlan-uplinkpc.testspec
+    #    iterate :
+    #        - id  : L2MC-VXLAN-UPLINKPC
+    #          flow: filter://type=IPV4,proto=UDP,label=NETWORKING
+    #        - id  : L2MCV6-VXLAN-UPLINKPC
+    #          flow: filter://type=IPV6,proto=UDP,label=NETWORKING
     - module:
         name    : L2MC-VXLAN-IGMP-TO-CPU-UPLINK
         spec    : l2mc-vxlan-igmp-to-cpu-uplink.testspec
@@ -88,6 +89,7 @@ modules:
     - module:
         name    : L2MC-ICMPV6-TO-CPU-ENIC
         spec    : l2mc-icmpv6-to-cpu-enic.testspec
+        ignore  : True
         iterate :
             - id  : MLD_QUERY
               flow: filter://type=IPV6,proto=ICMPV6,label=NETWORKING

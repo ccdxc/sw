@@ -41,11 +41,12 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 		var portID uint32
 
 		// TODO remove hack once hal/dol is fixed with correct mapping
-		if port.Status.PortID == 5 {
-			portID = 2
-		} else {
-			portID = uint32(port.Status.PortID)
-		}
+		// if port.Status.PortID == 5 {
+		// 	portID = 2
+		// } else {
+		// 	portID = uint32(port.Status.PortID)
+		// }
+		portID = uint32(port.Status.PortID)
 
 		ifSpec = &halproto.InterfaceSpec{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{
@@ -64,11 +65,12 @@ func (hd *Datapath) CreateInterface(intf *netproto.Interface, lif *netproto.Inte
 		var portID uint32
 
 		// TODO remove hack once hal/dol is fixed with correct mapping
-		if port.Status.PortID == 5 {
-			portID = 2
-		} else {
-			portID = uint32(port.Status.PortID)
-		}
+		// if port.Status.PortID == 5 {
+		// 	portID = 2
+		// } else {
+		// 	portID = uint32(port.Status.PortID)
+		// }
+		portID = uint32(port.Status.PortID)
 
 		ifSpec = &halproto.InterfaceSpec{
 			KeyOrHandle: &halproto.InterfaceKeyHandle{

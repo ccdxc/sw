@@ -58,14 +58,14 @@ buffers:
            size : ref://testcase/packets/id=TX_PKT/size
            data : ref://testcase/packets/id=TX_PKT/rawbytes
     - buffer:
-        id      : RX_BUF_ENIC139  # Input Buffer
+        id      : RX_BUF_ENIC138  # Input Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind: True
             size: 1518
             data: None
     - buffer:
-        id      : EXP_BUF_ENIC139  # Expected Buffer
+        id      : EXP_BUF_ENIC138  # Expected Buffer
         template: ref://factory/templates/id=ETH_BUFFER
         fields:
             bind  : False
@@ -81,23 +81,23 @@ descriptors:
             addr  : ref://testcase/buffers/id=TX_BUF/addr
             len   : ref://testcase/buffers/id=TX_BUF/size
     - descriptor:
-        id      : RX_DESC_ENIC139 # Input Descriptor
+        id      : RX_DESC_ENIC138 # Input Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX
         fields:
-            _buf  : ref://testcase/buffers/id=RX_BUF_ENIC139
-            addr  : ref://testcase/buffers/id=RX_BUF_ENIC139/addr
-            len   : ref://testcase/buffers/id=RX_BUF_ENIC139/size
+            _buf  : ref://testcase/buffers/id=RX_BUF_ENIC138
+            addr  : ref://testcase/buffers/id=RX_BUF_ENIC138/addr
+            len   : ref://testcase/buffers/id=RX_BUF_ENIC138/size
     - descriptor:
-        id      : EXP_DESC_ENIC139 # Expected Descriptor
+        id      : EXP_DESC_ENIC138 # Expected Descriptor
         template: ref://factory/templates/id=DESCR_ETH_RX_CQ
         fields:
-            _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC139
-            len                   : ref://testcase/buffers/id=EXP_BUF_ENIC139/size
+            _buf          : ref://testcase/buffers/id=EXP_BUF_ENIC138
+            len                   : ref://testcase/buffers/id=EXP_BUF_ENIC138/size
 
 trigger:
     descriptors:
         - descriptor:
-            object  : ref://testcase/descriptors/id=RX_DESC_ENIC139
+            object  : ref://testcase/descriptors/id=RX_DESC_ENIC138
             ring    : ref://testcase/config/src/segment/floodlist/oifs/id=Enic138/lif/queue_types/id=RX
 
         - descriptor:

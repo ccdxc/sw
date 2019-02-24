@@ -2405,7 +2405,6 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
     spec->set_type(hal_if->if_type);
     rsp->mutable_status()->set_if_handle(hal_if->hal_handle);
     spec->set_admin_status(hal_if->if_admin_status);
-    rsp->mutable_status()->set_if_status(hal_if->if_admin_status);
 
     switch (hal_if->if_type) {
     case intf::IF_TYPE_ENIC:
@@ -2432,10 +2431,13 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
     {
         auto uplink_if_info = spec->mutable_if_uplink_info();
         //Port number is 0 based.
-        uplink_if_info->set_port_num(hal_if->uplink_port_num + 1);
+        uplink_if_info->set_port_num(hal_if->fp_port_num);
         uplink_if_info->set_native_l2segment_id(hal_if->native_l2seg);
         rsp->mutable_status()->mutable_uplink_info()->
             set_num_l2segs(hal_if->l2seg_list->num_elems());
+        rsp->mutable_status()->mutable_uplink_info()->
+            set_hw_port_num(hal_if->uplink_port_num);
+        rsp->mutable_status()->set_if_status(hal_if->if_op_status);
         // TODO: is this populated today ?
         //uplink_if_info->set_l2segment_id();
         // TODO: don't see this info populated in if today
@@ -2504,7 +2506,7 @@ if_process_get (if_t *hal_if, InterfaceGetResponse *rsp)
             mpls_info->set_gw_mac_da(MAC_TO_UINT64(hal_if->gw_mac_da));
             mpls_info->set_overlay_mac(MAC_TO_UINT64(hal_if->overlay_mac));
             mpls_info->set_pf_mac(MAC_TO_UINT64(hal_if->pf_mac));
-            
+
             for (int i = 0; i < hal_if->num_mpls_if; i ++) {
                 auto mpls_if = mpls_info->add_mpls_if();
                 mpls_if->set_label(hal_if->mpls_if[i].label);
@@ -3351,14 +3353,14 @@ uplink_if_create (const InterfaceSpec& spec, if_t *hal_if)
                                              &hal_if->uplink_port_num);
     SDK_ASSERT_RETURN(ret == HAL_RET_OK, HAL_RET_INVALID_ARG);
 
-    // hal_if->uplink_pc_num = HAL_PC_INVALID;
     hal_if->fp_port_num = spec.if_uplink_info().port_num();
     hal_if->native_l2seg = spec.if_uplink_info().native_l2segment_id();
     hal_if->is_oob_management = spec.if_uplink_info().is_oob_management();
     hal_if->if_op_status = uplink_if_get_oper_state(hal_if->fp_port_num);
-    HAL_TRACE_DEBUG("Uplink fp_port_num: {}, Status: {}, native_l2seg_id: {},"
+    HAL_TRACE_DEBUG("Uplink fp_port_num: {}, asic_port_num: {}, Status: {}, native_l2seg_id: {},"
                     "is_oob: {}",
                     hal_if->fp_port_num,
+                    hal_if->uplink_port_num,
                     if_status_to_str(hal_if->if_op_status),
                     hal_if->native_l2seg,
                     hal_if->is_oob_management);

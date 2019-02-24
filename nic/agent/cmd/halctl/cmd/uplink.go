@@ -33,7 +33,7 @@ var uplinkSpecShowCmd = &cobra.Command{
 	Use:   "spec",
 	Short: "spec",
 	Long:  "shows uplink spec",
-	Run:   uplinkShowCmdHandler,
+	Run:   uplinkShowSpecCmdHandler,
 }
 
 var uplinkStatusShowCmd = &cobra.Command{
@@ -92,9 +92,11 @@ func handleUplinkShowCmd(cmd *cobra.Command, spec bool, status bool) {
 
 	// Print Header
 	if spec == true {
-		uplinkShowHeader()
+		uplinkShowSpecHeader()
 	} else if status == true {
 		uplinkShowStatusHeader()
+	} else {
+		uplinkShowHeader()
 	}
 
 	// Print IFs
@@ -104,9 +106,11 @@ func handleUplinkShowCmd(cmd *cobra.Command, spec bool, status bool) {
 			continue
 		}
 		if spec == true {
-			uplinkShowOneResp(resp)
+			uplinkShowSpecOneResp(resp)
 		} else if status == true {
 			uplinkShowStatusOneResp(resp)
+		} else {
+			uplinkShowOneResp(resp)
 		}
 	}
 }
@@ -117,6 +121,15 @@ func uplinkShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	handleUplinkShowCmd(cmd, false, false)
+}
+
+func uplinkShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
 		return
@@ -190,13 +203,16 @@ func uplinkDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func uplinkShowHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Id:       Interface ID                        UpPort:   Uplink's Port\n")
-	fmt.Printf("UpNL2seg: Uplink's Native L2seg\n")
+	fmt.Printf("Id:       Interface ID                        Port:      Front Panel Port Number\n")
+	fmt.Printf("Admin:    Admin Status                        Oper:      Oper Status\n")
+	fmt.Printf("LportId:  Lport                               HwLifId:   Lif Id\n")
+	fmt.Printf("UpIdx:    Uplink Idx                          HwPortNum: Asic Port Number\n")
+	fmt.Printf("NatL2seg: Native L2seg                        #L2Segs:   Number of L2segs\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 30)
+	hdrLine := strings.Repeat("-", 100)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s\n",
-		"Id", "UpPort", "UpNL2seg")
+	fmt.Printf("%-16s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
+		"Id", "Port", "Admin", "Oper", "LportId", "HwLifId", "UpIdx", "HwPortNum", "NatL2seg", "#L2Segs")
 	fmt.Println(hdrLine)
 }
 
@@ -206,7 +222,38 @@ func uplinkShowOneResp(resp *halproto.InterfaceGetResponse) {
 		return
 	}
 	ifID := fmt.Sprintf("uplink-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
-	fmt.Printf("%-10s%-10d%-10d\n",
+	fmt.Printf("%-16s%-10d%-10s%-10s%-10d%-10d%-10d%-10d%-10d%-10d\n",
+		ifID,
+		resp.GetSpec().GetIfUplinkInfo().GetPortNum(),
+		strings.ToLower(strings.Replace(resp.GetSpec().GetAdminStatus().String(), "IF_STATUS_", "", -1)),
+		strings.ToLower(strings.Replace(resp.GetStatus().GetIfStatus().String(), "IF_STATUS_", "", -1)),
+		resp.GetStatus().GetUplinkInfo().GetUplinkLportId(),
+		resp.GetStatus().GetUplinkInfo().GetHwLifId(),
+		resp.GetStatus().GetUplinkInfo().GetUplinkIdx(),
+		resp.GetStatus().GetUplinkInfo().GetHwPortNum(),
+		resp.GetSpec().GetIfUplinkInfo().GetNativeL2SegmentId(),
+		resp.GetStatus().GetUplinkInfo().GetNumL2Segs())
+}
+
+func uplinkShowSpecHeader() {
+	fmt.Printf("\n")
+	fmt.Printf("Id:       Interface ID                        UpPort:   Uplink's Port\n")
+	fmt.Printf("UpNL2seg: Uplink's Native L2seg\n")
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 30)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-16s%-10s%-10s\n",
+		"Id", "Port", "NatL2seg")
+	fmt.Println(hdrLine)
+}
+
+func uplinkShowSpecOneResp(resp *halproto.InterfaceGetResponse) {
+	ifType := resp.GetSpec().GetType()
+	if ifType != halproto.IfType_IF_TYPE_UPLINK {
+		return
+	}
+	ifID := fmt.Sprintf("uplink-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	fmt.Printf("%-16s%-10d%-10d\n",
 		ifID,
 		resp.GetSpec().GetIfUplinkInfo().GetPortNum(),
 		resp.GetSpec().GetIfUplinkInfo().GetNativeL2SegmentId())
@@ -221,8 +268,8 @@ func uplinkShowStatusHeader() {
 	fmt.Printf("\n")
 	hdrLine := strings.Repeat("-", 70)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
-		"Handle", "Status", "LportId", "HwLifId", "UpIdx", "HwPortNum", "#L2Segs")
+	fmt.Printf("%-16s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
+		"Id", "Handle", "Status", "LportId", "HwLifId", "UpIdx", "HwPortNum", "#L2Segs")
 	fmt.Println(hdrLine)
 }
 
@@ -231,7 +278,9 @@ func uplinkShowStatusOneResp(resp *halproto.InterfaceGetResponse) {
 	if ifType != halproto.IfType_IF_TYPE_UPLINK {
 		return
 	}
-	fmt.Printf("%-10d%-10s%-10d%-10d%-10d%-10d%-10d\n",
+	ifID := fmt.Sprintf("uplink-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
+	fmt.Printf("%-16s%-10d%-10s%-10d%-10d%-10d%-10d%-10d\n",
+		ifID,
 		resp.GetStatus().GetIfHandle(),
 		strings.ToLower(strings.Replace(resp.GetStatus().GetIfStatus().String(), "IF_STATUS_", "", -1)),
 		resp.GetStatus().GetUplinkInfo().GetUplinkLportId(),

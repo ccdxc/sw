@@ -28,12 +28,6 @@ uplink:
         sriov   : False
         status  : UP
     - entry:
-        id      : Uplink5
-        port    : 5
-        mode    : TRUNK
-        sriov   : True
-        status  : UP
-    - entry:
         id      : Uplink6
         port    : 6
         mode    : PC_MEMBER
