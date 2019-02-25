@@ -1,0 +1,58 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for common types
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package types;
+
+import "gogo.proto";
+
+// IP address families
+enum IPAF {
+  IP_AF_NONE  = 0;
+  IP_AF_INET  = 1; // IPv4
+  IP_AF_INET6 = 2; // IPv6
+}
+
+// IP Address object
+message IPAddress {
+  IPAF      Af      = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // IP address family
+  oneof v4_or_v6 {
+    // IPv4 address
+    fixed32 V4Addr  = 2;
+    // IPv6 address
+    bytes   V6Aaddr = 3;
+  }
+}
+
+// IP Range
+message IPRange {
+  // starting IP address
+  IPAddress Low  = 1 [(gogoproto.nullable) = false];
+  // ending IP address
+  IPAddress High = 2 [(gogoproto.nullable) = false];
+}
+
+// IP Prefix object
+message IPPrefix {
+  // IP prefix address
+  IPAddress Addr = 1 [(gogoproto.nullable) = false];
+  // IP Prefix length
+  uint32    Len  = 2 [(gogoproto.moretags) = "meta:range=0-128"];
+}
+
+// based on the encap type in the fabric, one can carry per vnic information
+// for example, in case of MPLSoUDP, MPLS tag (along with source tunnel IP)
+// can uniquely identify the vnic from where the packet is originating and
+// another MPLS tag (along with the destination tunnel IP) can identify the
+// destination VNIC
+message FabricEncapId {
+  oneof EncapId {
+    // MPLS tag corresponding to the VNIC or mapping
+    uint32 MPLSTag = 1;
+  }
+}
+

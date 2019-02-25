@@ -89,9 +89,8 @@ sdk_ret_t oci_switchport_update(oci_switchport_spec_t *spec);
 /// \brief Delete switchport
 ///
 /// \return #SDK_RET_OK on success, failure status code on error
-///
-sdk_ret_t oci_switchport_delete();
+sdk_ret_t oci_switchport_delete(void);
 
 /// \@}
 
-#endif // __INCLUDE_API_SWITCHPORT_HPP__
+#endif    // __INCLUDE_API_SWITCHPORT_HPP__

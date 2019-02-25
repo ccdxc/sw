@@ -1,0 +1,43 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for the top level switch object
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package tpc;
+
+import public "gogo.proto";
+import "meta/meta.proto";
+import "types/types.proto";
+
+// Switch configuration
+message SwitchSpec {
+  // local IP address in the substrate, only IPv4 is supported
+  types.IPAddress IPAddr  = 1 [(gogoproto.nullable) = false];
+  uint64          MACAddr = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // IP address of the gateway in the substrate
+  types.IPAddress GatewayIP = 3 [(gogoproto.nullable) = false];
+}
+
+// switch operational status
+enum SwitchState {
+  SWITCH_STATE_NONE = 0;
+  SWITCH_STATE_UP   = 1;
+  SWITCH_STATE_DOWN = 2;
+  SWITCH_STATE_ERR  = 3;
+}
+
+// Operational status of the switch, if any
+message SwitchStatus {
+  // operaional state of the switch
+  SwitchState state = 1;
+}
+
+// Switch object
+message Switch {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  SwitchSpec   Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  SwitchStatus Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

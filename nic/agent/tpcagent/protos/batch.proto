@@ -1,0 +1,32 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for batch APIs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package tpc;
+
+import public "gogo.proto";
+import "meta/meta.proto";
+
+// Tunnel configuration
+message BatchSpec {
+  // epoch number for this batched API transaction
+  uint32 epoch               = 1 [(gogoproto.moretags) = "meta:mandatory"];;
+  // in case of failure, auto rollback if rollback_on_failure is set to true
+  // or else leave the system in that state
+  bool   rollback_on_failure = 2 [(gogoproto.moretags) = "meta:mandatory"];;
+}
+
+// Operational status of the batch
+message BatchStatus {
+}
+
+// Batch object
+message Batch {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  BatchSpec    Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  BatchStatus  Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

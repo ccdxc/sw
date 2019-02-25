@@ -1,0 +1,51 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for IP mappings
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package tpc;
+
+import public "gogo.proto";
+import "meta/meta.proto";
+import "types/types.proto";
+
+// MappingKey uniquley identifies the IP in the entire fabric
+message MappingKey {
+  // private cloud network mapping belongs to
+  uint32 PCNId           = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // private/overlay IP of the mapping
+  types.IPAddress IPAddr = 2 [(gogoproto.nullable) = false];
+}
+
+// MappingSpec captures configuration of each mapping
+// NOTE: Mapping is either on the local host/TEP or remote TEP
+message MappingSpec {
+  // key to identify the mapping
+  MappingKey      Id          = 1 [(gogoproto.nullable) = false];
+  // subnet this mapping is in
+  uint32          SubnetId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // Tunnel id of the TEP, if the mapping is remote, 0 for local mappings
+  uint32          TunnelId    = 3;
+  // overlay MAC address of this mapping
+  uint64          MACAddr     = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  // fabric encap information specific to this mapping, if any
+  types.FabricEncapId EncapId = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  // if IP is that of local vnic, corresponding vnic id
+  uint32          VnicId      = 6;
+  // public IP, if overlay IP has corresponding public IP
+  types.IPAddress PublicIP    = 7;
+}
+
+// Operational status of a mapping
+message MappingStatus {
+}
+
+// Mapping object
+message Mapping {
+  meta.TypeMeta  TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta   ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  MappingSpec   Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  MappingStatus Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

@@ -1,0 +1,47 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for Virtual Network Interface Card (VNIC) object
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package tpc;
+
+import public "gogo.proto";
+import "meta/meta.proto";
+import "types/types.proto";
+
+// VNIC specification
+// NOTE: Vnic ids are not scoped under PCN or subnet, they are globally
+//       unique across PCNs
+message VnicSpec {
+  // unique vnic id
+  uint32              VnicId            = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // id of the subnet this vnic belongs to
+  uint32              SubnetId          = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // id of the PCN this vnic belongs to
+  uint32              PCNId             = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // vlan to be used while sending packets to this vnic
+  uint32              WireVLAN          = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  // overlay MAC of this VNIC
+  uint64              MACAddress        = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  // resource pool to be used to enforce resource limits
+  uint32              ResourcePoolId    = 6;
+  // enable or disable reverse path checks while sending traffic to this vnic
+  // or while receiving traffic from this vnic
+  bool                SourceGuardEnable = 7;
+  // fabric encap information to be used for traffic originated from this vnic
+  types.FabricEncapId EncapId           = 8 [(gogoproto.nullable) = false];
+}
+
+// Operational status of Vnic, if any
+message VnicStatus {
+}
+
+// Vnic object
+message Vnic {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  VnicSpec     Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  VnicStatus   Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

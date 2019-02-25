@@ -1,0 +1,41 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for Private Cloud Network (PCN) object
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package tpc;
+
+import public "gogo.proto";
+import "meta/meta.proto";
+import "types/types.proto";
+
+// type of the private cloud network
+enum PCNType {
+  PCN_TYPE_NONE      = 0;
+  PCN_TYPE_TENANT    = 1;
+  PCN_TYPE_SUBSTRATE = 2;
+}
+
+// PCNSpec captures PCN configuration
+message PCNSpec {
+  // unique key/identifier of PCN
+  uint32         Id     = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // type of the PCN
+  PCNType        Type   = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // IP prefix of this PCN
+  types.IPPrefix Prefix = 3 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
+// Operational status of a PCN, if any
+message PCNStatus {
+}
+
+// Private Cloud Network object
+message PCN {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  PCNSpec       Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  PCNStatus     Status   = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

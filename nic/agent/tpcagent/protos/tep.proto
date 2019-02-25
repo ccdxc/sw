@@ -1,0 +1,47 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for Tunnel EndPoint (TEP) object
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package tpc;
+
+import public "gogo.proto";
+import public "meta/meta.proto";
+import public "types/types.proto";
+
+// Encapsulation types
+enum TunnelEncapType {
+  TUNNEL_ENCAP_NONE            = 0;
+  TUNNEL_ENCAP_VXLAN           = 1;  // VXLAN encapsulation
+  TUNNEL_ENCAP_MPLSoUDP_TAGS_1 = 2;  // MPLS over UDP towards external GW
+  TUNNEL_ENCAP_MPLSoUDP_TAGS_2 = 3;  // MPLS over UDP for East-West traffic
+}
+
+// Tunnel configuration
+message TunnelSpec {
+  // unique tunnel identifier
+  // NOTE: Tunnel id of 0 is reserve for local TEP/host
+  uint32          Id       = 1 [(gogoproto.moretags) = "meta:mandatory"];;
+  // private cloud network this is tunnel belongs to
+  uint32          PCNId    = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // Tunnel encapsulation
+  TunnelEncapType Encap    = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // local IP of the tunnel (used as outer SIP in tunneled packets)
+  types.IPAddress LocalIP  = 4 [(gogoproto.nullable) = false];
+  // remote IP of the tunnel (used as outer DIP in tunneled packets)
+  types.IPAddress RemoteIP = 5 [(gogoproto.nullable) = false];
+}
+
+// Operational status of the tunnel, if any
+message TunnelStatus {
+}
+
+// Tunnel object
+message Tunnel {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  TunnelSpec   Spec      = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  TunnelStatus Status    = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

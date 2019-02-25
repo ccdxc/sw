@@ -1,0 +1,52 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for subnet object
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package tpc;
+
+import public "gogo.proto";
+import "meta/meta.proto";
+import "types/types.proto";
+
+// SubnetSpec captures subnet specific coniguration
+message SubnetSpec {
+  // unique identifier of the subnet
+  uint32          Id                     = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // private cloud network this subnet is belongs to
+  uint32          PCNId                  = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // IP prefix of this subnet, this must be a sub prefix of PCN's prefix
+  types.IPPrefix  Prefix                 = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // Virtual Router (VR) IP of this subnet, this IP is owned by the device and
+  // packets originated by this device carry this IP as source IP
+  types.IPAddress VirtualRouterIP        = 4 [(gogoproto.nullable) = false];
+  // Virtual Router (VR) MAC address, any packets originated or routed by
+  // the device carry this MAC as source MAC
+  uint64           VirtualRouterMac      = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  // identifier of the IPv4 route table to be used
+  uint32           V4RouteTableId        = 6 [(gogoproto.moretags) = "meta:mandatory"];
+  // identifier of the IPv6 route table to be used, if any
+  uint32           V6RouteTableId        = 7;
+  // identifier of ingress IPv4 security policy to be enforced
+  uint32           IngV4SecurityPolicyId = 8;
+  // identifier of ingress IPv6 security policy to be enforced
+  uint32           IngV6SecurityPolicyId = 9;
+  // identifier of egress IPv4 security policy to be enforced
+  uint32           EgV4SecurityPolicyId  = 10;
+  // identifier of egress IPv6 security policy to be enforced
+  uint32           EgV6SecurityPolicyId  = 11;
+}
+
+// Operational status of the subnet, if any
+message SubnetStatus {
+}
+
+// Subnet object
+message Subnet {
+  meta.TypeMeta TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  SubnetSpec    Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+  SubnetStatus  Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}
