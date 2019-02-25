@@ -12,6 +12,12 @@ testcases:
             pktsize : [ 64, 1500]
             ipaf    : [ ipv4 ]
 
+    -   name    : Netcat
+        testcase: testcases.mplsudp.nc
+
+    -   name    : Nping
+        testcase: testcases.mplsudp.nping
+
     -   name    : Iperf
         testcase: testcases.mplsudp.iperf
         stress  : True

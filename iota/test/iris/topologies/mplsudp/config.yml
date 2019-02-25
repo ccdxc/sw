@@ -83,4 +83,4 @@ tunnels:
         ingress: 1000
         egress: 1000
     substrate:
-        ipam_base: 172.16.0.0/16
+       ipam_base: 10.0.0.0/16
