@@ -36,6 +36,8 @@ int osal_atomic_fetch_sub(osal_atomic_int_t* addr, int val)
 	return atomic_sub_return(val, addr) + val;
 }
 
+#if defined(_KERNEL) || defined(atomic_fetch_or)
+
 int osal_atomic_fetch_and(osal_atomic_int_t* addr, int val) 
 {
 	return atomic_fetch_and(val, addr);
@@ -50,6 +52,44 @@ int osal_atomic_fetch_xor(osal_atomic_int_t* addr, int val)
 {
 	return atomic_fetch_xor(val, addr);
 }
+
+#else
+
+int osal_atomic_fetch_and(osal_atomic_int_t* addr, int val)
+{
+	int tmp, old;
+
+	tmp = atomic_read(addr);
+	while ((old = atomic_cmpxchg(addr, tmp, tmp & val)) != tmp)
+		tmp = old;
+
+	return tmp;
+}
+
+int osal_atomic_fetch_or(osal_atomic_int_t* addr, int val)
+{
+	int tmp, old;
+
+	tmp = atomic_read(addr);
+	while ((old = atomic_cmpxchg(addr, tmp, tmp | val)) != tmp)
+		tmp = old;
+
+	return tmp;
+}
+
+int osal_atomic_fetch_xor(osal_atomic_int_t* addr, int val)
+{
+	int tmp, old;
+
+	tmp = atomic_read(addr);
+	while ((old = atomic_cmpxchg(addr, tmp, tmp ^ val)) != tmp)
+		tmp = old;
+
+	return tmp;
+}
+
+#endif
+
 
 int osal_atomic_exchange(osal_atomic_int_t *addr, int new_val)
 {
