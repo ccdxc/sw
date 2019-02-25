@@ -132,6 +132,16 @@ void ionic_dev_cmd_reset(struct ionic_dev *idev)
 	ionic_dev_cmd_go(idev, &cmd);
 }
 
+void ionic_dev_cmd_port_config(struct ionic_dev *idev, struct port_config *pc)
+{
+	union dev_cmd cmd = {
+		.port_config.opcode = CMD_OPCODE_PORT_CONFIG_SET,
+		.port_config.config = *pc,
+	};
+
+	ionic_dev_cmd_go(idev, &cmd);
+}
+
 void ionic_dev_cmd_hang_notify(struct ionic_dev *idev)
 {
 	union dev_cmd cmd = {

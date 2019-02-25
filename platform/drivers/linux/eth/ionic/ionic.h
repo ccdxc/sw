@@ -75,5 +75,6 @@ int ionic_setup(struct ionic *ionic);
 int ionic_identify(struct ionic *ionic);
 void ionic_forget_identity(struct ionic *ionic);
 int ionic_reset(struct ionic *ionic);
+int ionic_port_config(struct ionic *ionic, struct port_config *pc);
 
 #endif /* _IONIC_H_ */

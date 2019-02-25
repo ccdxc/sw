@@ -311,7 +311,7 @@ static void ionic_link_status_check(struct lif *lif)
 	if (!lif->notifyblock)
 		return;
 
-	link_up = lif->notifyblock->link_status;
+	link_up = lif->notifyblock->link_status == PORT_OPER_STATUS_UP;
 
 	/* filter out the no-change cases */
 	if ((link_up && netif_carrier_ok(netdev)) ||

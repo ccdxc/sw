@@ -65,6 +65,8 @@ enum cmd_opcode {
 	CMD_OPCODE_RSS_HASH_SET			= 22,
 	CMD_OPCODE_RSS_INDIR_SET		= 23,
 
+	CMD_OPCODE_PORT_CONFIG_SET		= 24,
+
 	CMD_OPCODE_RDMA_RESET_LIF		= 50,
 	CMD_OPCODE_RDMA_CREATE_EQ		= 51,
 	CMD_OPCODE_RDMA_CREATE_CQ		= 52,
@@ -991,13 +993,257 @@ struct notifyq_init_comp {
 };
 
 /**
- * Struct notify_block - Memory block for notifications, updated by the NIC
+ * Physical connection type
+ */
+enum phy_type {
+	PHY_TYPE_NONE = 0,
+	PHY_TYPE_COPPER = 1,
+	PHY_TYPE_FIBER = 2,
+};
+
+/**
+ * Transceiver status
+ */
+enum xcvr_state {
+	XCVR_STATE_REMOVED = 0,
+	XCVR_STATE_INSERTED = 1,
+	XCVR_STATE_PENDING = 2,
+	XCVR_STATE_SPROM_READ = 3,
+	XCVR_STATE_SPROM_READ_ERR = 4,
+};
+
+/**
+ * Supported link modes
+ */
+enum xcvr_pid {
+	XCVR_PID_UNKNOWN       = 0,
+
+	// CU
+	XCVR_PID_QSFP_100G_CR4     = 1,
+	XCVR_PID_QSFP_40GBASE_CR4  = 2,
+	XCVR_PID_SFP_25GBASE_CR_S  = 3,
+	XCVR_PID_SFP_25GBASE_CR_L  = 4,
+	XCVR_PID_SFP_25GBASE_CR_N  = 5,
+
+	// Fiber
+	XCVR_PID_QSFP_100G_AOC   = 50,
+	XCVR_PID_QSFP_100G_ACC   = 51,
+	XCVR_PID_QSFP_100G_SR4   = 52,
+	XCVR_PID_QSFP_100G_LR4   = 53,
+	XCVR_PID_QSFP_100G_ER4   = 54,
+	XCVR_PID_QSFP_40GBASE_ER4 = 55,
+	XCVR_PID_QSFP_40GBASE_SR4 = 56,
+	XCVR_PID_QSFP_40GBASE_LR4 = 57,
+	XCVR_PID_QSFP_40GBASE_AOC = 58,
+	XCVR_PID_SFP_25GBASE_SR  = 59,
+	XCVR_PID_SFP_25GBASE_LR  = 60,
+	XCVR_PID_SFP_25GBASE_ER  = 61,
+	XCVR_PID_SFP_25GBASE_AOC = 62,
+	XCVR_PID_SFP_10GBASE_SR  = 63,
+	XCVR_PID_SFP_10GBASE_LR  = 64,
+	XCVR_PID_SFP_10GBASE_LRM = 65,
+	XCVR_PID_SFP_10GBASE_ER  = 66,
+	XCVR_PID_SFP_10GBASE_AOC = 67,
+	XCVR_PID_SFP_10GBASE_CU  = 68,
+};
+
+/**
+ *  QSFP/QSFP28 sprom data
+ */
+struct qsfp_sprom_data {
+	uint8_t  id;               /*  0 Type of transceiver */
+	uint8_t  ext_id;           /*  1 Extended identifier of type of transceiver */
+	uint8_t  connector;        /*  2 Code for connector type */
+	uint8_t  compliance[8];    /*  3 Code for electronic or optical compatibility */
+	uint8_t  encoding;         /* 11 Code for high speed serial encoding algorithm */
+	uint8_t  br_nominal1;      /* 12 Norminal signalling rate, units of 100MBd */
+	uint8_t  ext_rate_select;  /* 13 Extended rate select compliance */
+	uint8_t  length_smf_km;    /* 14 Link length supported for single mode fiber, units of km */
+	uint8_t  length_om3;       /* 15 Link length supported for 50/125um   OM3 fiber, units of 2m */
+	uint8_t  length_om2;       /* 16 Link length supported for 50/125um   OM2 fiber, units of 1m */
+	uint8_t  length_om1;       /* 17 Link length supported for 62.5/125um OM1 fiber, units of 1m */
+	uint8_t  length_dac;       /* 18 Link length supported for copper or direct attach cable, units of m */
+	uint8_t  device_tech;      /* 19 Device technology */
+	uint8_t  vendor_name[16];  /* 20 SFP vendor name */
+	uint8_t  ext_module;       /* 36 Extended module codes for Infiniband */
+	uint8_t  vendor_oui[3];    /* 37 SFP vendor IEEE company ID */
+	uint8_t  vendor_pn[16];    /* 40 Part number provided by vendor */
+	uint8_t  vendor_rev[2];    /* 56 Revision number for part number provided by vendor */
+	uint8_t  wavelength1[2];   /* 58 Nominal laser wavelength OR copper cable attenuation */
+	uint8_t  wavelength2[2];   /* 60 Guaranteed range of laser wavelength from nominal wavelength or copper cable attenuation */
+	uint8_t  max_case_temp;    /* 62 */
+	uint8_t  cc_base;          /* 63 Check code for Base ID Fields */
+
+	/* Extended ID Fields */
+	uint8_t  link_codes;       /* 64 extended specification compliance codes */
+	uint8_t  options[3];       /* 65 Indicates which optional transceiver signals are implemented */
+	uint8_t  vendor_sn[16];    /* 68 Serial number provided by vendor */
+	uint8_t  date_code[8];     /* 84 Vendor's manufacturing data code */
+	uint8_t  diag_mon_type;    /* 92 Indicates which type of diagnostic monitoring is implemented */
+	uint8_t  enhanced_options; /* 93 Indicates which optional enhanced features are implemented */
+	uint8_t  br_nominal2;      /* 94 Nominal bit rate per channel */
+	uint8_t  cc_ext;           /* 95 Check code for Extended ID Fields */
+
+	/* Vendor Specific Fields */
+	uint8_t  vendor_specific[32]; /* 96 Vendor specific EEPROM */
+} __attribute__((__packed__));
+
+/**
+ * SFP/SFP+ sprom data
+ */
+struct sfp_sprom_data {
+	uint8_t  id;               /*  0 Type of transceiver */
+	uint8_t  ext_id;           /*  1 Extended identifier of type of transceiver */
+	uint8_t  connector;        /*  2 Code for connector type */
+	uint8_t  compliance[8];    /*  3 Code for electronic or optical compatibility */
+	uint8_t  encoding;         /* 11 Code for high speed serial encoding algorithm */
+	uint8_t  br_nominal;       /* 12 Norminal signalling rate, units of 100MBd */
+	uint8_t  rate_identifier;  /* 13 Type of rate select functionality */
+	uint8_t  length_smf_km;    /* 14 Link length supported for single mode fiber, units of km */
+	uint8_t  length_smf;       /* 15 Link length supported for single mode fiber, units of 100m */
+	uint8_t  length_om2;       /* 16 Link length supported for 50um   OM2  fiber, units of 10m */
+	uint8_t  length_om1;       /* 17 Link length supported for 62.5um OM1  fiber, units of 10m */
+	uint8_t  length_dac;       /* 18 Link length supported for copper or direct attach cable, units of m */
+	uint8_t  length_om3;       /* 19 Link length supported for 50um   OM3  fiber, units of 10m */
+	uint8_t  vendor_name[16];  /* 20 SFP vendor name */
+	uint8_t  transceiver;      /* 36 Code for electronic or optical compatibility */
+	uint8_t  vendor_oui[3];    /* 37 SFP vendor IEEE company ID */
+	uint8_t  vendor_pn[16];    /* 40 Part number provided by vendor */
+	uint8_t  vendor_rev[4];    /* 56 Revision number for part number provided by vendor */
+	uint8_t  wavelength[2];    /* 60 Laser wavelength */
+	uint8_t  unallocated;      /* 62 */
+	uint8_t  cc_base;          /* 63 Check code for Base ID Fields */
+
+	/* Extended ID Fields */
+	uint8_t  options[2];       /* 64 Indicates which optional transceiver signals are implemented */
+	uint8_t  br_max;           /* 66 Upper bit rate margin, units of % */
+	uint8_t  br_min;           /* 67 Lower bit rate margin, units of % */
+	uint8_t  vendor_sn[16];    /* 68 Serial number provided by vendor */
+	uint8_t  date_code[8];     /* 84 Vendor's manufacturing data code */
+	uint8_t  diag_mon_type;    /* 92 Indicates which type of diagnostic monitoring is implemented */
+	uint8_t  enhanced_options; /* 93 Indicates which optional enhanced features are implemented */
+	uint8_t  sff_compliance;   /* 94 Indicates which revision of SFF 8472 transceiver complies with */
+	uint8_t  cc_ext;           /* 95 Check code for Extended ID Fields */
+
+	/* Vendor Specific Fields */
+	uint8_t  vendor_specific[32]; /* 96 Vendor specific EEPROM */
+} __attribute__((__packed__));
+
+/**
+ * Port operational status
+ */
+enum port_oper_status {
+	PORT_OPER_STATUS_NONE  = 0,	/* port is disabled */
+	PORT_OPER_STATUS_UP    = 1,	/* port is linked up */
+	PORT_OPER_STATUS_DOWN  = 2,	/* port link status is down */
+};
+
+/**
+ * Ethernet Forward error correction (fec) modes
+ */
+enum port_fec_type {
+	PORT_FEC_TYPE_NONE = 0,	/* Disabled */
+	PORT_FEC_TYPE_FC   = 1,	/* FireCode */
+	PORT_FEC_TYPE_RS   = 2,	/* ReedSolomon */
+};
+
+/**
+ * Ethernet pause (flow control) modes
+ */
+enum port_pause_type {
+	PORT_PAUSE_TYPE_NONE = 0,	/* Disable Pause */
+	PORT_PAUSE_TYPE_LINK = 1,	/* Link level pause */
+	PORT_PAUSE_TYPE_PFC  = 2,	/* Priority-Flow control */
+};
+
+/**
+ * Loopback modes
+ */
+enum port_loopback_mode {
+	PORT_LOOPBACK_MODE_NONE = 0,	/* Disable loopback */
+	PORT_LOOPBACK_MODE_MAC  = 1,	/* MAC loopback */
+	PORT_LOOPBACK_MODE_PHY  = 2,	/* PHY/Serdes loopback */
+};
+
+/**
+ * Transceiver Status information
+ * @state:    Transceiver status (enum xcvr_state)
+ * @phy:      Physical connection type (enum phy_type)
+ * @pid:      Transceiver link mode (enum pid)
+ * @sprom:    Transceiver sprom contents
+ */
+struct xcvr_status {
+	uint8_t   state;
+	uint8_t   phy;
+	uint16_t  pid;
+	uint8_t   sprom[256];
+};
+
+/**
+ * Port Config information
+ * @speed:              port speed (in Mbps)
+ * @mtu:                mtu
+ * @state:              port admin state (enum port_admin_state)
+ * @an_enable:          autoneg enable
+ * @fec_type:           fec type (enum port_fec_type)
+ * @pause_type:         pause type  (enum port_pause_type)
+ * @loopback_mode:      loopback mode (enum port_loopback_mode)
+ */
+struct port_config {
+	uint32_t    speed;
+	uint32_t    mtu;
+	uint8_t     state;
+	uint8_t     an_enable;
+	uint8_t     fec_type;
+	uint8_t     pause_type;
+	uint8_t     loopback_mode;
+};
+
+/**
+ * Port Status information
+ * @status:             link status (enum port_oper_status)
+ * @id:                 port number
+ * @speed:              link speed (in Mbps)
+ */
+struct port_status {
+	uint32_t            speed;
+	uint8_t             id;
+	uint8_t             status;
+	struct xcvr_status  xcvr;
+};
+
+/**
+ * struct port_config_cmd - Port configuration command
+ * @opcode:     opcode = 24
+ * @config:	new port configuration parameters
+ */
+struct port_config_cmd {
+	u16 opcode;
+	u16 rsvd;
+	struct port_config config;
+	u8 pad[47];
+};
+
+/**
+ * struct port_config_comp - Port configuration command completion
+ */
+struct port_config_comp {
+	u32 status:8;
+	u32 rsvd:24;
+	u32 pad[3];
+};
+
+/**
+ * struct notify_block - Memory block for notifications, updated by the NIC
  * @eid:             most recent NotifyQ event id
  * @link_status      link up/down
  * @link_error_bits: error bits if needed
- * @link_speed:	     speed of link in Gbps
+ * @link_speed:      speed of link in Mbps
  * @phy_type:        type of physical connection
  * @autoneg_status:  autonegotiation status
+ * @link_flap_count: number of times link status changes
+ * @port_status:     port status information
+ * @port_config:     port config information
  */
 struct notify_block {
 	u64 eid;
@@ -1007,6 +1253,8 @@ struct notify_block {
 	u16 phy_type;
 	u16 autoneg_status;
 	u16 link_flap_count;
+	struct port_status port_status;
+	struct port_config port_config;
 };
 
 /**

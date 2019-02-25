@@ -29,6 +29,7 @@ union dev_cmd {
 	struct identify_cmd identify;
 	struct lif_init_cmd lif_init;
 	struct adminq_init_cmd adminq_init;
+	struct port_config_cmd port_config;
 };
 
 union dev_cmd_comp {
@@ -41,6 +42,7 @@ union dev_cmd_comp {
 	struct identify_comp identify;
 	struct lif_init_comp lif_init;
 	struct adminq_init_comp adminq_init;
+	struct port_config_comp port_config;
 };
 
 struct dev_cmd_regs {
@@ -244,6 +246,8 @@ static inline void ionic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(union adminq_comp) != 16);
 	BUILD_BUG_ON(sizeof(struct set_netdev_info_cmd) != 64);
 	BUILD_BUG_ON(sizeof(set_netdev_info_comp) != 16);
+	BUILD_BUG_ON(sizeof(struct port_config_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct port_config_comp) != 16);
 }
 
 struct ionic_dev {
@@ -349,6 +353,7 @@ u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
 void ionic_dev_cmd_reset(struct ionic_dev *idev);
+void ionic_dev_cmd_port_config(struct ionic_dev *idev, struct port_config *pc);
 void ionic_dev_cmd_hang_notify(struct ionic_dev *idev);
 void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr);
 void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index);

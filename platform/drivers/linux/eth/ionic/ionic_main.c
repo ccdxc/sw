@@ -124,6 +124,8 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 		return "CMD_OPCODE_RSS_HASH_SET";
 	case CMD_OPCODE_RSS_INDIR_SET:
 		return "CMD_OPCODE_RSS_INDIR_SET";
+	case CMD_OPCODE_PORT_CONFIG_SET:
+		return "CMD_OPCODE_PORT_CONFIG_SET";
 	case CMD_OPCODE_RDMA_RESET_LIF:
 		return "CMD_OPCODE_RDMA_RESET_LIF";
 	case CMD_OPCODE_RDMA_CREATE_EQ:
@@ -220,12 +222,12 @@ try_again:
 	duration = jiffies - start_time;
 
 	dev_dbg(ionic->dev,
-		 "DEVCMD %s (%d) done took %ld secs (%ld jiffies)\n",
+		 "DEVCMD %s (%d) done=%d took %ld secs (%ld jiffies)\n",
 		 ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
 		 idev->dev_cmd->cmd.cmd.opcode,
-		 duration/HZ, duration);
+		 done, duration/HZ, duration);
 
-	if (!done && time_after(jiffies, max_wait)) {
+	if (!done && !time_before(jiffies, max_wait)) {
 		dev_warn(ionic->dev, "DEVCMD %s (%d) timeout after %ld secs\n",
 			 ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
 			 idev->dev_cmd->cmd.cmd.opcode, max_seconds);
@@ -357,6 +359,23 @@ int ionic_reset(struct ionic *ionic)
 
 	mutex_lock(&ionic->dev_cmd_lock);
 	ionic_dev_cmd_reset(idev);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+	mutex_unlock(&ionic->dev_cmd_lock);
+
+	return err;
+}
+
+int ionic_port_config(struct ionic *ionic, struct port_config *pc)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	int err;
+
+	dev_dbg(ionic->dev, "%s: port_config state=0x%x speed=0x%x mtu=0x%x an_enable=0x%x fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
+		__func__, pc->state, pc->speed, pc->mtu, pc->an_enable,
+		pc->fec_type, pc->pause_type, pc->loopback_mode);
+
+	mutex_lock(&ionic->dev_cmd_lock);
+	ionic_dev_cmd_port_config(idev, pc);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	mutex_unlock(&ionic->dev_cmd_lock);
 
