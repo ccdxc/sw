@@ -40,8 +40,9 @@ testbundles:
         - networking/connectivity.testbundle
         - classic/rdma.testbundle
         - linktest/linktest.testbundle
-        - subifs/subifs.testbundle
         - filters/filters.testbundle
+        - subifs/subifs.testbundle
+        - networking/connectivity.testbundle
         - multicast/multicast.testbundle
         - linktest/linktest.testbundle
         - mnic/mnic_classic.testbundle

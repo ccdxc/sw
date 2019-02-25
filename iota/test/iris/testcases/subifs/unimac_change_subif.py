@@ -1,11 +1,12 @@
 #! /usr/bin/python3
 import pdb
+import time
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 import iota.harness.api as api
 import iota.test.iris.utils.naples_host as utils
 import iota.test.iris.utils.subif_utils as subif_utils
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
-import iota.test.iris.utils.naples_host as naples_utils
+import iota.test.iris.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.host as util_host
 
 def InitializeMacConfig(tc):
@@ -17,25 +18,24 @@ def InitializeMacConfig(tc):
     wload_intf_vlan_map = {}
     for wd in subif_utils.getNativeWorkloads():
         if wd.node_name == naples_node and wd.interface == wd.parent_interface:
-            wload_intf_mac_dict[wd.interface] = wd.mac_address
-
-            for sub in subif_utils.GetSubifs(wd.interface):
-                sub_wd = subif_utils.getWorkloadForInf(sub)
-                wload_intf_mac_dict[sub_wd.interface] = sub_wd.mac_address
+            wload_intf_mac_dict[wd.interface] = util_host.GetMACAddress(naples_node, wd.interface)
+            wload_intf_vlan_map[wd.interface] = [8192]
+            for sub in subif_utils.GetSubifs(wd.interface, wd.node_name):
+                sub_wd = subif_utils.getWorkloadForInf(sub, wd.node_name)
+                wload_intf_mac_dict[sub_wd.interface] = util_host.GetMACAddress(naples_node, sub_wd.interface)
                 lst = wload_intf_vlan_map.get(wd.interface, None)
                 if lst:
                     (wload_intf_vlan_map[wd.interface]).append(sub_wd.encap_vlan)
                 else:
-                    wload_intf_vlan_map[wd.interface] = [8192]
                     (wload_intf_vlan_map[wd.interface]).append(sub_wd.encap_vlan)
 
     host_intf_mac_dict = {}
     for wl in api.GetWorkloads():
         if wl.node_name == naples_node and wl.interface == wl.parent_interface:
             if wl.interface not in wload_intf_mac_dict:
-                host_intf_mac_dict[wl.interface] = wl.mac_address
+                host_intf_mac_dict[wl.interface] = util_host.GetMACAddress(naples_node, wl.interface)
 
-    for inf in naples_utils.GetHostInternalMgmtInterfaces(naples_node):
+    for inf in naples_host_utils.GetHostInternalMgmtInterfaces(naples_node):
         if inf not in wload_intf_mac_dict:
             mac = util_host.GetMACAddress(naples_node, inf)
             host_intf_mac_dict[inf] = mac
@@ -51,10 +51,18 @@ def InitializeMacConfig(tc):
 
 
 def __create_subifs(subif_count = 0, native_inf = None):
-    subif_utils.Create_Subifs(subif_count, native_inf)
+    for wl in api.GetWorkloads():
+        if wl.parent_interface != wl.interface:
+            continue
+        if wl.IsNaples():
+            subif_utils.Create_Subifs(subif_count, wl.interface, wl.node_name)
 
 def __delete_subifs(h_interface = None, node_name = None):
-    subif_utils.Delete_Subifs(h_interface, node_name)
+    for wl in api.GetWorkloads():
+        if wl.parent_interface != wl.interface:
+            continue
+        if wl.IsNaples():
+            subif_utils.Delete_Subifs(wl.interface, wl.node_name)
 
 def ValidateMacRegistration(tc):
     wload_ep_set = filters_utils.getWorkloadEndPoints(tc.naples_node, tc.wload_intf_mac_dict, tc.wload_intf_vlan_map)
@@ -84,17 +92,7 @@ def verifyEndPoints(tc):
 
     # HAL's view of endpoints = Union of workload + Host + Naples Intf
     host_view = wload_ep_view | host_ep_view | naples_ep_view
-    #Get the symmetric difference between the two views
-    diff = host_view ^ hal_ep_view
-
-    if len(diff) == 0:
-        result = True
-    else:
-        # If there is a difference in view, then mark the TC failed.
-        result = False
-        api.Logger.error("UC MAC : Failure - verifyEndPoints failed ", len(diff), diff)
-
-    return result
+    return filters_utils.verifyEndpoints(host_view, hal_ep_view)
 
 def changeMacAddrTrigger(tc, isRollback=False):
     result = api.types.status.SUCCESS
@@ -168,9 +166,18 @@ def Trigger(tc):
     # Delete existing subinterfaces
     __delete_subifs()
 
+    time.sleep(3)
     # Create subinterfaces for every workload/host interface
     # as per <subif_count>
     __create_subifs()
+
+    time.sleep(2)
+    tc.workload_pairs = api.GetRemoteWorkloadPairs()
+    tc.cmd_cookies = []
+    req1 = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
+    __run_ping_test(req1, tc)
+    tc.resp2 = api.Trigger(req1)
 
     result = changeMacAddrTrigger(tc)
     api.Logger.debug("UC MAC filter : Trigger -> Change MAC addresses result ", result)
@@ -178,8 +185,8 @@ def Trigger(tc):
     tc.wload_ep_set, tc.host_ep_set, tc.naples_ep_set, tc.hal_ep_set = ValidateMacRegistration(tc)
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    tc.cmd_cookies = []
 
+    tc.workload_pairs = api.GetRemoteWorkloadPairs()
     __run_ping_test(req, tc)
     tc.resp = api.Trigger(req)
 
@@ -188,6 +195,8 @@ def Trigger(tc):
 def Verify(tc):
     subif_utils.clearAll()
     if tc.skip: return api.types.status.SUCCESS
+    if tc.resp2 is None:
+        return api.types.status.FAILURE
     if tc.resp is None:
         return api.types.status.FAILURE
 
@@ -201,6 +210,14 @@ def Verify(tc):
 
     cookie_idx = 0
 
+    for cmd in tc.resp2.commands:
+        api.Logger.info("Ping Results for %s" % (tc.cmd_cookies[cookie_idx]))
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0:
+            result = api.types.status.FAILURE
+        cookie_idx += 1
+
+    api.Logger.info("Ping results after MAC Change\n")
     for cmd in tc.resp.commands:
         api.Logger.info("Ping Results for %s" % (tc.cmd_cookies[cookie_idx]))
         api.PrintCommandResults(cmd)

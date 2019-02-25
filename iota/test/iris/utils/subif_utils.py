@@ -13,7 +13,7 @@ import iota.harness.infra.store as store
 import iota.test.iris.utils.naples_host as naples_utils
 
 __local_workloads = {}
-__deleted_store_subifs = {}  # host if --> list of subifs
+__deleted_store_subifs = {}  # node_name + host if --> list of subifs
 __node_native_ifs = {} # node name --> list of host interfaces
 __subifs_vlan_allocator = {} # vlan id --> nw_spec
 __ipv4_allocators = {} # vlan id -> ipv4_allocator
@@ -36,25 +36,28 @@ def __storeWorkloads_outisde_store(req, lst_add_subifs):
 def getNativeWorkloads():
     # Get all available host interfaces
     lst_nodes = api.GetWorkloadNodeHostnames()
-    lst_native_if = []
+    lst_native_if = {}
+    mgmt_intf = {}
 
     # Get host interfaces on all nodes
     for node in lst_nodes:
-        lst_native_if.extend(api.GetWorkloadNodeHostInterfaces(node))
+        lst_native_if[node] = list(api.GetWorkloadNodeHostInterfaces(node))
         # Exclude host side management interface from this test case on naples
         if api.IsNaplesNode(node):
-            mgmt_intf = naples_utils.GetHostInternalMgmtInterfaces(node)
+            mgmt_intf[node] = list(naples_utils.GetHostInternalMgmtInterfaces(node))
 
-    for inf in mgmt_intf:
-        if inf in lst_native_if:
-            lst_native_if.remove(inf)
+    for node, infs in mgmt_intf.items():
+        for inf in infs:
+            if inf in lst_native_if[node]:
+                lst_native_if[node].remove(inf)
 
     # Get workloads corresponding to host interfaces
     total_workloads = api.GetWorkloads()
     native_workloads = []
     for w1 in total_workloads:
-        if w1.interface in lst_native_if:
-            native_workloads.append(w1)
+        for node, infs in lst_native_if.items():
+            if w1.interface in infs and w1.node_name == node:
+                native_workloads.append(w1)
 
     return native_workloads
 
@@ -87,10 +90,15 @@ def __delete_Subifs_Local_Store(req, host_inf, node_name):
         # exclude native interfaces
         if wl.parent_interface == wl.interface:
             continue
+        res = False
         for wreq in req.workloads:
             #Check if it is already added.
             if wreq.workload_name == wl.workload_name:
-                continue
+                res = True
+                break
+        if res:
+            continue
+
         #assert(api.IsWorkloadRunning(wl.workload_name))
         wl_msg = req.workloads.add()
         wl_msg.workload_name = wl.workload_name
@@ -122,45 +130,51 @@ def delete_Subifs_For_HostInf(req, host_inf, node_name):
     assert(req.workload_op == topo_svc.DELETE)
     # Delete workloads within store
     for wl in api.GetWorkloads():
-        if wl.parent_interface != host_inf or wl.node_name != node_name:
+        if wl.parent_interface != host_inf:
+            continue
+        if wl.node_name != node_name:
             continue
         # exclude native interfaces
         if wl.parent_interface == wl.interface:
             continue
 
+        res = False
         for wreq in req.workloads:
             #Check if it is already added.
             if wreq.workload_name == wl.workload_name:
-                continue
+                res = True
+                break
+        if res:
+            continue
         # add subifs for delete, only if not deleted already
-        lst_if = __deleted_store_subifs.get(wl.parent_interface, None)
+        key = wl.node_name + '-' + wl.parent_interface
+        lst_if = __deleted_store_subifs.get(key, None)
         if lst_if is None:
             #assert(api.IsWorkloadRunning(wl.workload_name))
-            __deleted_store_subifs[wl.parent_interface] = [wl.interface]
+            __deleted_store_subifs[key] = [wl.interface]
             wl_msg = req.workloads.add()
             wl_msg.workload_name = wl.workload_name
             wl_msg.node_name = wl.node_name
         else:
             if wl.interface not in lst_if:
                 #assert(api.IsWorkloadRunning(wl.workload_name))
-                (__deleted_store_subifs[wl.parent_interface]).append(wl.interface)
+                (__deleted_store_subifs[key]).append(wl.interface)
                 wl_msg = req.workloads.add()
                 wl_msg.workload_name = wl.workload_name
                 wl_msg.node_name = wl.node_name
-
-    api.Logger.info("Deleted workloads from store: %s for %s on %s\n" % (__deleted_store_subifs[host_inf], host_inf, node_name))
+        api.Logger.info("Deleting workload from store: %s for %s on %s\n" % (wl.interface, host_inf, node_name))
 
     # Check if local store has subifs for host_inf
     # and delete it
     __delete_Subifs_Local_Store(req, host_inf, node_name)
 
 # Get workload from given interface name
-def getWorkloadForInf(interface_name):
+def getWorkloadForInf(interface_name, node_name):
     global __local_workloads
 
     wls = api.GetWorkloads()
     for wl in wls:
-        if wl.interface == interface_name:
+        if wl.interface == interface_name and wl.node_name == node_name:
             return wl
     for wl in __local_workloads.values():
         if wl.interface == interface_name:
@@ -289,9 +303,13 @@ def __create_new_workload_outside_store(req, node_name, parent_inf, subifs_count
         ipv6_allocator = __ipv6_allocators[index]
         vlan = __subifs_vlan_allocator[index]
         workload_name = node_name + "_" + parent_inf + "_subif_" + str(vlan)
+        res = False
         for wreq in req.workloads:
             if wreq.workload_name == workload_name:
-                continue
+                res = True
+                break
+        if res:
+            continue
         #assert(not api.IsWorkloadRunning(workload_name))
         wl_msg = req.workloads.add()
         ip4_addr_str = str(ipv4_allocator.Alloc())
@@ -327,19 +345,25 @@ def __add_from_store(req, node_name, parent_inf, total):
     global __deleted_store_subifs
     __add_subifs_wl = []
 
-    lst_del_subif = __deleted_store_subifs.get(parent_inf, None)
+    key = node_name + '-' + parent_inf
+    lst_del_subif = __deleted_store_subifs.get(key, None)
     for wl in api.GetWorkloads():
-        if wl.parent_interface != parent_inf or node_name != wl.node_name:
+        if wl.parent_interface != parent_inf:
+            continue
+        if node_name != wl.node_name:
             continue
         # exclude native interfaces
         if wl.parent_interface == wl.interface:
             continue
+        res = False
         for wreq in req.workloads:
             #Check if it is already added.
             if wreq.workload_name == wl.workload_name:
-                continue
+                res = True
+                break
+        if res:
+            continue
 
-        api.Logger.info("adding to store again: %s" % wl.workload_name)
         #assert(not api.IsWorkloadRunning(wl.workload_name))
         # remove the interface from deleted subifs
         is_deleted = False
@@ -350,6 +374,7 @@ def __add_from_store(req, node_name, parent_inf, total):
         if not is_deleted:
             continue
 
+        api.Logger.info("adding to store again: %s" % wl.workload_name)
         wl_msg = req.workloads.add()
         wl_msg.ip_prefix = wl.ip_prefix
         wl_msg.ipv6_prefix = wl.ipv6_prefix
@@ -371,7 +396,7 @@ def __add_from_store(req, node_name, parent_inf, total):
         if count == total:
             break
 
-    api.Logger.info("expected: %d, available in store: %d, workloads: %s on %s" % (total, count, __add_subifs_wl, parent_inf))
+    api.Logger.info("expected: %d, available in store: %d, workloads: %s for host %s on node %s: " % (total, count, __add_subifs_wl, parent_inf, node_name))
 
     return count, __add_subifs_wl
 
@@ -408,7 +433,7 @@ def create_Subifs_For_Inf(req, node_name, parent_inf, count = 0):
     return __add_subifs_wl
 
 # Return subifs for <hostname> from global store and local store
-def GetSubifs(hostname):
+def GetSubifs(hostname, node_name):
     global __local_workloads
     global __deleted_store_subifs
     ret_lst_subifs = []
@@ -428,10 +453,11 @@ def GetSubifs(hostname):
         ret_lst_subifs.append(wl.interface)
 
     # Exclude interfaces which are deleted but kept in store
-    lst_del_subif = __deleted_store_subifs.get(hostname, None)
+    key = node_name + '-' + hostname
+    lst_del_subif = __deleted_store_subifs.get(key, None)
     if lst_del_subif:
         for subif in lst_del_subif:
-            wl = getWorkloadForInf(subif)
+            wl = getWorkloadForInf(subif, node_name)
             #assert(not api.IsWorkloadRunning(wl.workload_name))
             if subif in ret_lst_subifs:
                 ret_lst_subifs.remove(subif)
@@ -441,12 +467,14 @@ def GetSubifs(hostname):
 # Create subifs as per <subif_count> on each workload
 # subif_count = 0 indicates create/restore default subifs
 # native_inf = None indicates that create subifs on all native ifs in all nodes
-def Create_Subifs(subif_count = 0, native_inf = None):
+def Create_Subifs(subif_count = 0, native_inf = None, node_name = None):
     ret_lst_subif = []
     req = api.BringUpWorkloadsRequest()
 
     for w1 in getNativeWorkloads():
         if native_inf and native_inf != w1.interface:
+            continue
+        if node_name and w1.node_name != node_name:
             continue
         ret_lst_subif = create_Subifs_For_Inf(req, w1.node_name, w1.interface, subif_count)
 
@@ -474,7 +502,7 @@ def Delete_Subifs(h_interface = None, node_name = None):
     ret = api.Trigger_TeardownWorkloadsRequest(wload_teardown_req)
     if ret != api.types.status.SUCCESS:
         api.Logger.info("FAILURE! Failure in deleting workloads for %s" % h_interface)
-        sys.exit(1)
+        return ret
 
 # Call this routine after every iterator
 def clearAll():

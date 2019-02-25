@@ -24,11 +24,21 @@ def Setup(tc):
 
     return api.types.status.SUCCESS
 
+# Create only subifs on Naples host interfaces
 def __create_subifs(subif_count = 0, native_inf = None):
-    ret_lst_subif = subif_utils.Create_Subifs(subif_count, native_inf)
+    for wl in api.GetWorkloads():
+        if wl.parent_interface != wl.interface:
+            continue
+        if wl.IsNaples():
+            ret_lst_subif = subif_utils.Create_Subifs(subif_count, wl.interface, wl.node_name)
 
+# Delete subifs only on Naples host interfaces
 def __delete_subifs(h_interface = None, node_name = None):
-    subif_utils.Delete_Subifs(h_interface, node_name)
+    for wl in api.GetWorkloads():
+        if wl.parent_interface != wl.interface:
+            continue
+        if wl.IsNaples():
+            subif_utils.Delete_Subifs(wl.interface, wl.node_name)
 
 # Run ping traffic test
 def __run_ping_test(req, tc):

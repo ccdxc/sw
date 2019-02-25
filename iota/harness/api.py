@@ -133,10 +133,10 @@ def AddWorkloads(req, skip_store=False, skip_bringup=False):
         resp, ret = __bringup_workloads(req)
     else:
         Logger.debug("Skipping workload bring up.")
-        ret = req
+        resp = req
     if not skip_store and resp is not None:
         store.AddWorkloads(resp)
-    return ret
+    return resp
 
 def DeleteWorkloads(req, skip_store=False):
     global gl_topo_svc_stub
@@ -144,7 +144,7 @@ def DeleteWorkloads(req, skip_store=False):
     resp, ret = __teardown_workloads(req)
     if not skip_store:
         store.DeleteWorkloads(req)
-    return ret
+    return resp
 
 def GetWorkloads(node = None):
     return store.GetWorkloads(node)
