@@ -502,6 +502,10 @@
 #define BRQ_CONSUMER_IDX               0xba00ba88
 
 #define BRQ_BASE                       hbm_brq_base
+#define BRQ_GCM1_BASE                  hbm_brq_gcm1_base
+#define BRQ_MPP1_BASE                  hbm_brq_mpp1_base
+#define BRQ_MPP2_BASE                  hbm_brq_mpp2_base
+#define BRQ_MPP3_BASE                  hbm_brq_mpp3_base
 #define BRQ_TABLE_SIZE                 255
 #define BRQ_TABLE_SIZE_SHFT            8
 

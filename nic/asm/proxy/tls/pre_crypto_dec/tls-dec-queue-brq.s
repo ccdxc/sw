@@ -16,7 +16,7 @@ struct tx_table_s6_t0_k     k;
 struct tx_table_s6_t0_d     d;
 	
 %%
-	.param		BRQ_BASE
+	.param		BRQ_GCM1_BASE
 tls_dec_queue_brq_process:
     CAPRI_CLEAR_TABLE0_VALID
 
@@ -72,8 +72,8 @@ dma_cmd_dec_brq_slot:
 	add             r7, r0, k.s4_s6_t0_phv_sw_barco_pi
         sll		r5, r7, NIC_BRQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for BRQ slot */
-	addui		r1, r0, hiword(BRQ_BASE)
-	addi		r1, r1, loword(BRQ_BASE)
+	addui		r1, r0, hiword(BRQ_GCM1_BASE)
+	addi		r1, r1, loword(BRQ_GCM1_BASE)
 	add		r1, r1, r5
 
    	/* Fill the barco request */

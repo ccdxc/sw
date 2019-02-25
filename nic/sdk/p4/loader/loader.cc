@@ -103,36 +103,8 @@ read_programs(const char *handle, char *pathname, mpu_pgm_sort_t sort_func)
 }
 
 /**
- * program_check: Check to see if a program (speficied by its name) is present
- *                in a hierarchical input based resolution of <program, param>
- *
- * @prog_param_info: Hierarchical data on which <program, param> to resolve
- * @num_prog_params: Number of elements in the prog_param_info array
- * @prog_name: Program name to check
- *
- * Return: Index of program on success, < 0 on failure
- */
-static int
-program_check(p4_prog_param_info_t *prog_param_info, int num_prog_params,
-              std::string prog_name)
-{
-    int i;
-
-    if (!prog_param_info || num_prog_params == 0) {
-        return -1;
-    }
-
-    for (i = 0; i < num_prog_params; i++) {
-        if (prog_name == prog_param_info[i].name) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-/**
  * param_check: Check to see if a param (speficied by its name) is present in
- *              in a input based resolution of the program's parameter list
+ *              the symbol table
  *
  * @prog_param_info: Program's parameter list
  * @prog_name: Parameter name to check
@@ -141,13 +113,17 @@ program_check(p4_prog_param_info_t *prog_param_info, int num_prog_params,
  * Return: Index of parameter on success, < 0 on failure
  */
 static int
-param_check(p4_prog_param_info_t *prog_param_ptr, std::string param, uint64_t *val)
+param_check(p4_param_info_t *symbols, int num_symbols, std::string param, uint64_t *val)
 {
     int i;
 
-    for (i = 0; i < prog_param_ptr->num_params; i++) {
-         if (param == prog_param_ptr->params[i].name) {
-             *val = prog_param_ptr->params[i].val;
+    if (!symbols || num_symbols == 0) {
+        return -1;
+    }
+
+    for (i = 0; i < num_symbols; i++) {
+         if (param == symbols[i].name) {
+             *val = symbols[i].val;
              return i;
          }
     }
@@ -167,7 +143,7 @@ param_check(p4_prog_param_info_t *prog_param_ptr, std::string param, uint64_t *v
  * @pathname: Fully specified path name of the directory which contains the
  *            MPU programs
  * @hbm_base_addr: Base address in HBM to use when loading the MPU programs
- * @prog_param_info: Hierarchical data on which <program, param> to resolve
+ * @prog_param_info: symbol table <name, val>
  * @num_prog_params: Number of elements in the prog_param_info array
  *
  * Return: sdk_ret_t 
@@ -175,10 +151,10 @@ param_check(p4_prog_param_info_t *prog_param_ptr, std::string param, uint64_t *v
 sdk_ret_t
 p4_load_mpu_programs (const char *handle,
                          char *pathname, uint64_t hbm_base_addr,
-                         p4_prog_param_info_t *prog_param_info,
+                         p4_param_info_t *prog_param_info,
                          int num_prog_params, mpu_pgm_sort_t sort_func)
 {
-    int i, j, prog_index;
+    int i, j;
     p4_loader_ctx_t *ctx;
     p4_program_info_t *program_info;
     MpuSymbol *symbol, *param_u, *param_r;
@@ -227,7 +203,7 @@ p4_load_mpu_programs (const char *handle,
         SDK_ASSERT_RETURN(0, SDK_RET_ERR);
     }
 
-    /* Pass 1: Load all MPU programs into a data structure. Seperate the symbols
+    /* Pass 1: Load all MPU programs into a data structure. Separate the symbols
      *         in those MPU programs into 3 categories:
      *         1. Resolved labels (maintained in a global list also)
      *         2. Resolved parameters (resolved through the input list)
@@ -256,12 +232,6 @@ p4_load_mpu_programs (const char *handle,
                         //program_info[i].prog.symtab.size(),
                         //program_info[i].base_addr, program_info[i].size);
 
-        /* Check to see if the program that is loaded is present in the
-         * list of programs for which parameters are specified via input
-         */
-        prog_index = program_check(prog_param_info, num_prog_params,
-                                   program_info[i].name);
-
         /* Iterate through the program's symbol table */
         for (j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
             /* Get each symbol by its id */
@@ -277,13 +247,11 @@ p4_load_mpu_programs (const char *handle,
                      *    add the parameter to the list of unresolved list
                      */
                     val = 0;
-                    if (prog_index >= 0 &&
-                        prog_index < num_prog_params &&
-                        prog_param_info &&
-                        param_check(&prog_param_info[prog_index], symbol->name,
+                    if (prog_param_info &&
+                        param_check(prog_param_info, num_prog_params, symbol->name,
                                     &val) >= 0) {
-                        //SDK_TRACE_DEBUG("Resolved param: name %s val {%lx}",
-                                          //symbol->name.c_str(), val);
+                        //SDK_TRACE_DEBUG("Resolved param: prog_name %s name %s val {%lx}",
+                                          //program_info[i].name.c_str(), symbol->name.c_str(), val);
                         program_info[i].resolved_params.add(
                             MpuSymbol(symbol->name.c_str(), MPUSYM_PARAM, val));
                     } else {

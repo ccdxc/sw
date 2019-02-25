@@ -123,7 +123,7 @@ capri_asm_init (capri_cfg_t *cfg)
     uint64_t        base_addr;
     std::string     full_path;
     uint32_t num_symbols = 0;
-    sdk::p4::p4_prog_param_info_t *symbols = NULL;
+    sdk::p4::p4_param_info_t *symbols = NULL;
 
     for (uint8_t i = 0; i < cfg->num_asm_cfgs; i++) {
         full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +

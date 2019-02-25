@@ -8,7 +8,6 @@ struct phv_ p;
 
 %%
         .param esp_ipv4_tunnel_n2h_load_barco_req 
-        .param BRQ_BASE
         .param TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE
         .param esp_v4_tunnel_n2h_txdma2_increment_global_ci 
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H

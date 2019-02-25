@@ -18,7 +18,7 @@ struct tx_table_s5_t0_d d;
 
         
 %%
-        .param      BRQ_BASE
+        .param      BRQ_MPP1_BASE
         .param      tls_enc_pre_crypto_stats_process
         
 tls_enc_queue_brq_mpp_process:
@@ -111,12 +111,12 @@ dma_cmd_enc_brq_slot:
 
     sll		    r5, r7, NIC_BRQ_ENTRY_SIZE_SHIFT
 	/* Set the DMA_WRITE CMD for BRQ slot */
-	addui		r1, r0, hiword(BRQ_BASE)
-	addi		r1, r1, loword(BRQ_BASE)
+	addui		r1, r0, hiword(BRQ_MPP1_BASE)
+	addi		r1, r1, loword(BRQ_MPP1_BASE)
 	add		    r1, r1, r5
 
     /* Set the DMA_WRITE CMD for BRQ slot */
-    addi        r1, r0, BRQ_BASE
+    addi        r1, r0, BRQ_MPP1_BASE
     add         r1, r1, r5
 
     /* Fill the barco request */        

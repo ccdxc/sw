@@ -40,16 +40,6 @@ typedef struct {
     uint64_t val;
 } p4_param_info_t;
 
-/* P4 loader's initialization program structure for passing an array
- * of parameters. Multiple <programs, parameters> could be resolved by passing
- * an array of this structure during initialization.
- */
-typedef struct {
-    std::string name;
-    int num_params;
-    p4_param_info_t params[MAX_PARAMS];
-} p4_prog_param_info_t;
-
 typedef void (*mpu_pgm_sort_t)(std::vector <std::string> &);
 typedef uint32_t (*mpu_pgm_symbols_t)(void **, platform_type_t);
 
@@ -74,7 +64,7 @@ typedef uint32_t (*mpu_pgm_symbols_t)(void **, platform_type_t);
  */
 sdk_ret_t p4_load_mpu_programs(const char *handle,
                             char *pathname, uint64_t hbm_base_addr,
-                            p4_prog_param_info_t *prog_param_info,
+                            p4_param_info_t *prog_param_info,
                             int num_prog_params, mpu_pgm_sort_t sort_func);
 
 /**
