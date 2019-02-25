@@ -11,6 +11,10 @@ import public "gogo.proto";
 import "meta/meta.proto";
 import "types/types.proto";
 
+service SubnetSvc {
+  rpc SubnetCreate (SubnetSpec) returns (SubnetStatus) {}
+}
+
 // SubnetSpec captures subnet specific coniguration
 message SubnetSpec {
   // unique identifier of the subnet

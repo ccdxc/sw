@@ -11,6 +11,10 @@ import public "gogo.proto";
 import "meta/meta.proto";
 import "types/types.proto";
 
+service PCNSvc {
+  rpc PCNCreate (PCNSpec) returns (PCNStatus) {}
+}
+
 // type of the private cloud network
 enum PCNType {
   PCN_TYPE_NONE      = 0;
