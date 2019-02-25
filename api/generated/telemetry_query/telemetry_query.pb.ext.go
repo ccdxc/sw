@@ -158,6 +158,9 @@ func (m *FwlogsQuerySpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *FwlogsQuerySpec) Defaults(ver string) bool {
 	var ret bool
+	if m.Pagination != nil {
+		ret = m.Pagination.Defaults(ver) || ret
+	}
 	ret = true
 	switch ver {
 	default:
@@ -260,6 +263,9 @@ func (m *MetricsQuerySpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *MetricsQuerySpec) Defaults(ver string) bool {
 	var ret bool
+	if m.Pagination != nil {
+		ret = m.Pagination.Defaults(ver) || ret
+	}
 	ret = true
 	switch ver {
 	default:
@@ -286,7 +292,13 @@ func (m *PaginationSpec) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *PaginationSpec) Defaults(ver string) bool {
-	return false
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Offset = 0
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -397,6 +409,16 @@ func (m *FwlogsQuerySpec) References(tenant string, path string, resp map[string
 
 func (m *FwlogsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if m.Pagination != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Pagination"
+		if errs := m.Pagination.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if vs, ok := validatorMapTelemetry_query["FwlogsQuerySpec"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -456,6 +478,16 @@ func (m *MetricsQuerySpec) References(tenant string, path string, resp map[strin
 
 func (m *MetricsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if m.Pagination != nil {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Pagination"
+		if errs := m.Pagination.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if m.Selector != nil {
 		dlmtr := "."
 		if path == "" {
@@ -488,6 +520,19 @@ func (m *PaginationSpec) References(tenant string, path string, resp map[string]
 
 func (m *PaginationSpec) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapTelemetry_query["PaginationSpec"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapTelemetry_query["PaginationSpec"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -653,6 +698,29 @@ func init() {
 
 		if !validators.EmptyOrRegExp(m.Name, args) {
 			return fmt.Errorf("%v failed validation", path+"."+"Name")
+		}
+		return nil
+	})
+
+	validatorMapTelemetry_query["PaginationSpec"] = make(map[string][]func(string, interface{}) error)
+	validatorMapTelemetry_query["PaginationSpec"]["all"] = append(validatorMapTelemetry_query["PaginationSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*PaginationSpec)
+		args := make([]string, 0)
+		args = append(args, "1")
+
+		if !validators.IntMin(m.Count, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"Count")
+		}
+		return nil
+	})
+
+	validatorMapTelemetry_query["PaginationSpec"]["all"] = append(validatorMapTelemetry_query["PaginationSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*PaginationSpec)
+		args := make([]string, 0)
+		args = append(args, "0")
+
+		if !validators.IntMin(m.Offset, args) {
+			return fmt.Errorf("%v failed validation", path+"."+"Offset")
 		}
 		return nil
 	})

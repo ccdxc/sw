@@ -22,10 +22,10 @@ enum TsdbFunctionType {
 // PaginationSpec specifies how many metrics instances to include
 // in the result.
 message PaginationSpec {
-    // Offset specifies the starting point
-    int32 Offset = 1 [(gogoproto.jsontag) = "offset,omitempty"];
-    // Count specifies the number of series to include
-    int32 Count = 2 [(gogoproto.jsontag) = "count,omitempty"];
+    // Offset specifies the starting point when using Count
+    int32 Offset = 1 [(gogoproto.jsontag) = "offset,omitempty", (venice.check)="IntMin(0)", (venice.default)="0"];
+    // Count specifies the number of points to include
+    int32 Count = 2 [(gogoproto.jsontag) = "count,omitempty", (venice.check)="IntMin(1)"];
 }
 
 // MetricsQuerySpec requires a structured body consisting of:

@@ -83,6 +83,28 @@ func TestIntRange(t *testing.T) {
 	}
 }
 
+func TestIntMin(t *testing.T) {
+	var val int32 = -20
+	var args []string
+	args = append(args, "10")
+	if IntMin(val, args) {
+		t.Errorf("validation expected to fail")
+	}
+
+	val = 0
+	if IntMin(val, args) {
+		t.Errorf("validation expected to fail")
+	}
+	val = 10
+	if !IntMin(val, args) {
+		t.Errorf("validation expected to pass")
+	}
+	val = 100
+	if !IntMin(val, args) {
+		t.Errorf("validation expected to pass")
+	}
+}
+
 func TestCIDR(t *testing.T) {
 	cases := []struct {
 		s   string

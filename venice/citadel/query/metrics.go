@@ -265,6 +265,14 @@ func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, err
 		q += fmt.Sprintf(" GROUP BY %s", strings.Join(groupby, ","))
 	}
 
+	if qs.Pagination != nil {
+		q += fmt.Sprintf(" LIMIT %d", qs.Pagination.Count)
+		// Count must be used with offset
+		if qs.Pagination.Offset != 0 {
+			q += fmt.Sprintf(" OFFSET %d", qs.Pagination.Offset)
+		}
+	}
+
 	return q, nil
 }
 

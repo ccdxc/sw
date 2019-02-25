@@ -4,6 +4,7 @@ package veniceinteg
 
 import (
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
@@ -124,4 +125,23 @@ func (it *veniceIntegSuite) getFwlogPolicy(tenantName string) (*monitoring.Fwlog
 	}
 
 	return it.restClient.MonitoringV1().FwlogPolicy().Get(ctx, &ometa)
+}
+
+func (it *veniceIntegSuite) createUser(tenantName, username, password string) (*auth.User, error) {
+	user := &auth.User{
+		TypeMeta: api.TypeMeta{Kind: "User"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant: tenantName,
+			Name:   username,
+		},
+		Spec: auth.UserSpec{
+			Password: password,
+		},
+	}
+	ctx, err := it.loggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+
+	return it.restClient.AuthV1().User().Create(ctx, user)
 }

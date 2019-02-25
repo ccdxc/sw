@@ -607,40 +607,46 @@ func TestFieldProfiles(t *testing.T) {
 				number: 13
 			>
 			field <
+				name: 'int_field2'
+				type: TYPE_STRING
+				options:<[venice.check]: "IntMin(5)">
+				number: 14
+			>
+			field <
 				name: 'regexp_field1'
 				type: TYPE_STRING
 				options:<[venice.check]: "RegExp(name)">
-				number: 14
+				number: 15
 			>
 			field <
 				name: 'regexp_field2'
 				type: TYPE_STRING
 				options:<[venice.check]: "EmptyOrRegExp(name)">
-				number: 15
+				number: 16
 			>
 			field <
 				name: 'duration1'
 				type: TYPE_STRING
 				options:<[venice.check]: "Duration(4m,30m)">
-				number: 15
+				number: 17
 			>
 			field <
 				name: 'duration2'
 				type: TYPE_STRING
 				options:<[venice.check]: "Duration(4m,0)">
-				number: 15
+				number: 18
 			>
 			field <
 				name: 'duration3'
 				type: TYPE_STRING
 				options:<[venice.check]: "Duration(0,30m)">
-				number: 15
+				number: 19
 			>
 			field <
 				name: 'duration4'
 				type: TYPE_STRING
 				options:<[venice.check]: "EmptyOrDuration(4m,30m)">
-				number: 15
+				number: 20
 			>
 		>
 		enum_type <
@@ -749,6 +755,11 @@ func TestFieldProfiles(t *testing.T) {
 			MinInt:    map[string]int64{"all": int64(3)},
 			MaxInt:    map[string]int64{"all": int64(1000)},
 			DocString: map[string]string{"all": "value should be between 3 and 1000"},
+			Required:  map[string]bool{"all": true},
+		},
+		"int_field2": FieldProfile{
+			MinInt:    map[string]int64{"all": int64(5)},
+			DocString: map[string]string{"all": "value should be at least 5"},
 			Required:  map[string]bool{"all": true},
 		},
 		"regexp_field1": FieldProfile{

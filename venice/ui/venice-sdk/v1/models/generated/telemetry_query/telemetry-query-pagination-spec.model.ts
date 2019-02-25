@@ -9,19 +9,26 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface ITelemetry_queryPaginationSpec {
-    'offset'?: number;
-    'count'?: number;
+    'offset': number;
+    'count': number;
 }
 
 
 export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemetry_queryPaginationSpec {
+    /** value should be at least 0
+     */
     'offset': number = null;
+    /** value should be at least 1
+     */
     'count': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'offset': {
+            default: '0',
+            description:  'value should be at least 0 ',
             type: 'number'
         },
         'count': {
+            description:  'value should be at least 1 ',
             type: 'number'
         },
     }
@@ -78,8 +85,8 @@ export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemet
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'offset': CustomFormControl(new FormControl(this['offset']), Telemetry_queryPaginationSpec.propInfo['offset'].description),
-                'count': CustomFormControl(new FormControl(this['count']), Telemetry_queryPaginationSpec.propInfo['count'].description),
+                'offset': CustomFormControl(new FormControl(this['offset'], [required, ]), Telemetry_queryPaginationSpec.propInfo['offset'].description),
+                'count': CustomFormControl(new FormControl(this['count'], [required, minValueValidator(1), ]), Telemetry_queryPaginationSpec.propInfo['count'].description),
             });
         }
         return this._formGroup;

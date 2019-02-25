@@ -85,8 +85,8 @@ type policyChecker struct{}
 
 func (p *policyChecker) PopulateEvent(event *audit.Event, populators ...EventPopulator) (bool, error) {
 	switch event.Resource.Kind {
-	// do not log search, events, audit, metrics queries
-	case auth.Permission_Search.String(), auth.Permission_Event.String(), auth.Permission_MetricsQuery.String(), auth.Permission_AuditEvent.String():
+	// do not log search, events, audit, metrics queries, fwlogs queries
+	case auth.Permission_Search.String(), auth.Permission_Event.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_AuditEvent.String():
 		return false, nil
 	default:
 		switch event.Action {

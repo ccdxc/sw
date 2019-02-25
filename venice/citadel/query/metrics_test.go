@@ -41,8 +41,10 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 		qs   *telemetry_query.MetricsQuerySpec
 		resp string
 		pass bool
+		desc string
 	}{
 		{
+			desc: "Selecting kind",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -52,6 +54,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Selecting measurement",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -62,6 +65,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Using MEAN function",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -72,6 +76,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Using MEAN function with a measurement",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -83,6 +88,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Using MEAN function with multiple measurement",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -94,6 +100,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Using MAX function",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -105,6 +112,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Name field",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -116,6 +124,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Selector clause",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -135,6 +144,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "time clause",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -147,6 +157,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Group by field",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -158,6 +169,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Group by time",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "test-db",
@@ -169,15 +181,32 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			resp: "SELECT MEAN(cpu) FROM test-db GROUP BY time(30s)",
 			pass: true,
 		},
+		{
+			desc: "pagination",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Fields:      []string{"cpu"},
+				Function:    "MEAN",
+				GroupbyTime: "30s",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count:  10,
+					Offset: 10,
+				},
+			},
+			resp: "SELECT MEAN(cpu) FROM test-db GROUP BY time(30s) LIMIT 10 OFFSET 10",
+			pass: true,
+		},
 	}
 
 	for _, i := range testQs {
 		resp, err := buildCitadelMetricsQuery(i.qs)
 		if i.pass {
-			AssertOk(t, err, fmt.Sprintf("failed to build query %+v", i.qs))
-			Assert(t, resp == i.resp, fmt.Sprintf("query didn't match, got:{%s} expected: {%s}", resp, i.resp))
+			AssertOk(t, err, fmt.Sprintf("%s: failed to build query %+v", i.desc, i.qs))
+			Assert(t, resp == i.resp, fmt.Sprintf("%s: query didn't match, got:{%s} expected: {%s}", i.desc, resp, i.resp))
 		} else {
-			Assert(t, err != nil, fmt.Sprintf("build query didn't fail %+v", i.qs))
+			Assert(t, err != nil, fmt.Sprintf("%s: build query didn't fail %+v", i.desc, i.qs))
 		}
 	}
 }
@@ -192,15 +221,18 @@ func TestValidateMetricsQueryList(t *testing.T) {
 		errMsgs []string
 		errCode int32
 		pass    bool
+		desc    string
 	}{
 		{
+			desc:    "nil query",
 			ql:      nil,
 			errMsgs: []string{"query required"},
 			errCode: 400,
 			pass:    false,
 		},
 		{
-			ql: &telemetry_query.MetricsQueryList{},
+			desc: "blank query",
+			ql:   &telemetry_query.MetricsQueryList{},
 			errMsgs: []string{
 				"query required",
 				"tenant required",
@@ -209,6 +241,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 			pass:    false,
 		},
 		{
+			desc: "empty tenant",
 			ql: &telemetry_query.MetricsQueryList{
 				Queries: []*telemetry_query.MetricsQuerySpec{
 					&telemetry_query.MetricsQuerySpec{
@@ -226,6 +259,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 			pass:    false,
 		},
 		{
+			desc: "invalid name selector",
 			ql: &telemetry_query.MetricsQueryList{
 				Queries: []*telemetry_query.MetricsQuerySpec{
 					&telemetry_query.MetricsQuerySpec{
@@ -245,6 +279,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 			pass:    false,
 		},
 		{
+			desc: "invalid function",
 			ql: &telemetry_query.MetricsQueryList{
 				Queries: []*telemetry_query.MetricsQuerySpec{
 					&telemetry_query.MetricsQuerySpec{
@@ -263,6 +298,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 			pass:    false,
 		},
 		{
+			desc: "invalid group by field",
 			ql: &telemetry_query.MetricsQueryList{
 				Queries: []*telemetry_query.MetricsQuerySpec{
 					&telemetry_query.MetricsQuerySpec{
@@ -281,6 +317,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 			pass:    false,
 		},
 		{
+			desc: "invalid field",
 			ql: &telemetry_query.MetricsQueryList{
 				Queries: []*telemetry_query.MetricsQuerySpec{
 					&telemetry_query.MetricsQuerySpec{
@@ -300,6 +337,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 			pass:    false,
 		},
 		{
+			desc: "Invalid group by time",
 			ql: &telemetry_query.MetricsQueryList{
 				Queries: []*telemetry_query.MetricsQuerySpec{
 					&telemetry_query.MetricsQuerySpec{
@@ -319,6 +357,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 			pass:    false,
 		},
 		{
+			desc: "Valid query",
 			ql: &telemetry_query.MetricsQueryList{
 				Queries: []*telemetry_query.MetricsQuerySpec{
 					&telemetry_query.MetricsQuerySpec{
@@ -334,21 +373,107 @@ func TestValidateMetricsQueryList(t *testing.T) {
 			errCode: 200,
 			pass:    true,
 		},
+		{
+			desc: "invalid empty pagination",
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function:   "none",
+						Pagination: &telemetry_query.PaginationSpec{},
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsgs: []string{
+				"Queries[0].Pagination.Count failed validation",
+			},
+			errCode: 400,
+			pass:    false,
+		},
+		{
+			desc: "invalid count for pagination",
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function: "none",
+						Pagination: &telemetry_query.PaginationSpec{
+							Count: -10,
+						},
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsgs: []string{
+				"Queries[0].Pagination.Count failed validation",
+			},
+			errCode: 400,
+			pass:    false,
+		},
+		{
+			desc: "invalid offset for pagination",
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function: "none",
+						Pagination: &telemetry_query.PaginationSpec{
+							Count:  10,
+							Offset: -10,
+						},
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsgs: []string{
+				"Queries[0].Pagination.Offset failed validation",
+			},
+			errCode: 400,
+			pass:    false,
+		},
+		{
+			desc: "valid query with pagination",
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function: "none",
+						Pagination: &telemetry_query.PaginationSpec{
+							Count:  10,
+							Offset: 10,
+						},
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsgs: []string{},
+			errCode: 200,
+			pass:    true,
+		},
 	}
 
 	for _, i := range testQs {
 		err := q.validateMetricsQueryList(i.ql)
 		if i.pass && err != nil {
-			t.Errorf("Expected error to be nil but was %v", err)
+			t.Errorf("%s: Expected error to be nil but was %v", i.desc, err)
 		} else if !i.pass && err == nil {
-			t.Errorf("Expected test to fail but err was nil")
+			t.Errorf("%s: Expected test to fail but err was nil", i.desc)
 		} else if err != nil {
 			errStatus := apierrors.FromError(err)
 			if !reflect.DeepEqual(i.errMsgs, errStatus.GetMessage()) {
-				t.Errorf("Expected error message to be %v but error was %v", i.errMsgs, errStatus.GetMessage())
+				t.Errorf("%s: Expected error message to be %v but error was %v", i.desc, i.errMsgs, errStatus.GetMessage())
 			}
 			if i.errCode != errStatus.GetCode() {
-				t.Errorf("Expected error code to be %d but error was %v", i.errCode, errStatus.GetCode())
+				t.Errorf("%s: Expected error code to be %d but error was %v", i.desc, i.errCode, errStatus.GetCode())
 			}
 		}
 	}
@@ -363,22 +488,26 @@ func TestValidateQuerySpec(t *testing.T) {
 		qs      *telemetry_query.MetricsQuerySpec
 		errMsgs []string
 		pass    bool
+		desc    string
 	}{
 		{
-			qs: nil,
+			desc: "nil query",
+			qs:   nil,
 			errMsgs: []string{
 				"query parameter required",
 			},
 			pass: false,
 		},
 		{
-			qs: &telemetry_query.MetricsQuerySpec{},
+			desc: "no kind",
+			qs:   &telemetry_query.MetricsQuerySpec{},
 			errMsgs: []string{
 				"kind required",
 			},
 			pass: false,
 		},
 		{
+			desc: "mepty kind",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "",
@@ -390,6 +519,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass: false,
 		},
 		{
+			desc: "invalid kind",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "invalid kind",
@@ -401,6 +531,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass: false,
 		},
 		{
+			desc: "valid query on a kind",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -412,6 +543,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
+			desc: "Max function with no field",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -424,6 +556,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass: false,
 		},
 		{
+			desc: "valid Max function query",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -435,6 +568,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
+			desc: "Max function query with more than one field",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -448,6 +582,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass: false,
 		},
 		{
+			desc: "Mean query with no fields",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -458,6 +593,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
+			desc: "Mean query with one field",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -469,6 +605,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
+			desc: "Mean query with more than one fields",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -480,6 +617,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
+			desc: "nil requirements",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -495,6 +633,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
+			desc: "empty requirements",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -510,6 +649,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass:    true,
 		},
 		{
+			desc: "invalid requirements",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -532,6 +672,7 @@ func TestValidateQuerySpec(t *testing.T) {
 			pass: false,
 		},
 		{
+			desc: "query with valid requirements",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
 					Kind: "Node",
@@ -554,15 +695,15 @@ func TestValidateQuerySpec(t *testing.T) {
 		},
 	}
 
-	for testCase, i := range testQs {
+	for _, i := range testQs {
 		err := q.validateMetricsQuerySpec(i.qs)
 		if i.pass && len(err) != 0 {
-			t.Errorf("Test Case %v: Expected error to be nil but was %v", testCase, err)
+			t.Errorf("%s: Expected error to be nil but was %v", i.desc, err)
 		} else if !i.pass && len(err) == 0 {
-			t.Errorf("Test Case %v: Expected test to fail but err was nil", testCase)
+			t.Errorf("%s: Expected test to fail but err was nil", i.desc)
 		} else if err != nil {
 			if !reflect.DeepEqual(i.errMsgs, err) {
-				t.Errorf("Test Case %v: Expected error message to be %v but error was %v", testCase, i.errMsgs, err)
+				t.Errorf("%s: Expected error message to be %v but error was %v", i.desc, i.errMsgs, err)
 			}
 		}
 	}

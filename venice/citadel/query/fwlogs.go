@@ -170,6 +170,14 @@ func buildCitadelFwlogsQuery(qs *telemetry_query.FwlogsQuerySpec) (string, error
 		q += fmt.Sprintf(" WHERE %s", strings.Join(selectors, " AND "))
 	}
 
+	if qs.Pagination != nil {
+		q += fmt.Sprintf(" LIMIT %d", qs.Pagination.Count)
+		// Count must be used with offset
+		if qs.Pagination.Offset != 0 {
+			q += fmt.Sprintf(" OFFSET %d", qs.Pagination.Offset)
+		}
+	}
+
 	return q, nil
 }
 
@@ -216,7 +224,6 @@ func (q *Server) executeFwlogsQuery(c context.Context, tenant string, qs string)
 					// Split guarantees returning an array
 					// of at least length 1 if tag isn't empty
 					tag = strings.Split(tag, ",")[0]
-					fmt.Println(tag)
 					index, ok := colMapping[tag]
 					if !ok {
 						// Returned data doesn't have a column for this field

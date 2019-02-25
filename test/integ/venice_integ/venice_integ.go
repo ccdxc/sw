@@ -689,6 +689,15 @@ func (it *veniceIntegSuite) loggedInCtx() (context.Context, error) {
 	return authntestutils.NewLoggedInContext(it.ctx, fmt.Sprintf("localhost:%s", it.config.APIGatewayPort), it.userCred)
 }
 
+func (it *veniceIntegSuite) loggedInCtxWithCred(tenant, username, password string) (context.Context, error) {
+	userCred := &auth.PasswordCredential{
+		Username: username,
+		Password: password,
+		Tenant:   tenant,
+	}
+	return authntestutils.NewLoggedInContext(it.ctx, fmt.Sprintf("localhost:%s", it.config.APIGatewayPort), userCred)
+}
+
 func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 	// verify smartnics are all admitted
 	tutils.AssertEventually(c, func() (bool, interface{}) {

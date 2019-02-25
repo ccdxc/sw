@@ -207,7 +207,7 @@ func ValidatePerm(permission auth.Permission) error {
 				return fmt.Errorf("invalid API group [%q]", permission.ResourceGroup)
 			}
 		}
-	case auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_MetricsQuery.String():
+	case auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String():
 		if permission.ResourceGroup != "" {
 			return fmt.Errorf("invalid API group, should be empty instead of [%q]", permission.ResourceGroup)
 		}

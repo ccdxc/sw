@@ -878,16 +878,24 @@
     },
     "telemetry_queryPaginationSpec": {
       "type": "object",
+      "required": [
+        "offset",
+        "count"
+      ],
       "properties": {
         "offset": {
           "type": "integer",
           "format": "int32",
-          "title": "Offset specifies the starting point"
+          "default": "0",
+          "description": "value should be at least 0\n",
+          "title": "Offset specifies the starting point when using Count"
         },
         "count": {
           "type": "integer",
           "format": "int32",
-          "title": "Count specifies the number of series to include"
+          "minimum": 1,
+          "description": "value should be at least 1\n",
+          "title": "Count specifies the number of points to include"
         }
       },
       "description": "PaginationSpec specifies how many metrics instances to include\nin the result."

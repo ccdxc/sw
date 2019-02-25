@@ -154,6 +154,23 @@ func IntRange(i interface{}, args []string) bool {
 	return true
 }
 
+// IntMin validates that the input integer is at  least the given int
+//  args[0]  :  minimum value
+func IntMin(i interface{}, args []string) bool {
+	in, ok := getint(i)
+	if !ok {
+		return false
+	}
+	min, ok := convInt(args[0])
+	if !ok {
+		return false
+	}
+	if in < min {
+		return false
+	}
+	return true
+}
+
 // CIDR checks if the string is an valid CIDR notiation (IPV4 & IPV6)
 //   see tests for valid formats
 func CIDR(i interface{}) bool {

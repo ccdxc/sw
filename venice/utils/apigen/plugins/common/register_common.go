@@ -144,6 +144,7 @@ var ValidatorArgMap = map[string][]CheckArgs{
 	"StrLen":          {govldtr.IsInt, govldtr.IsInt},
 	"EmptyOrStrLen":   {govldtr.IsInt, govldtr.IsInt},
 	"IntRange":        {govldtr.IsInt, govldtr.IsInt},
+	"IntMin":          {govldtr.IsInt},
 	"IPAddr":          {},
 	"IPv4":            {},
 	"HostAddr":        {},
@@ -196,6 +197,7 @@ var ValidatorProfileMap = map[string]func(field *descriptor.Field, reg *descript
 	"StrLen":          strLenProfile,
 	"EmptyOrStrLen":   emptyOrStrLenProfile,
 	"IntRange":        intRangeProfile,
+	"IntMin":          intMinProfile,
 	"IPAddr":          ipAddrProfile,
 	"IPv4":            ipv4Profile,
 	"HostAddr":        hostAddrProfile,
@@ -352,6 +354,17 @@ func intRangeProfile(field *descriptor.Field, reg *descriptor.Registry, ver stri
 	prof.MinInt[ver] = min
 	prof.MaxInt[ver] = max
 	prof.DocString[ver] = prof.DocString[ver] + fmt.Sprintf("value should be between %v and %v\n", min, max)
+	prof.Required[ver] = true
+	return nil
+}
+
+func intMinProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
+	min, ok := convInt(args[0])
+	if !ok {
+		return errInvalidOption
+	}
+	prof.MinInt[ver] = min
+	prof.DocString[ver] = prof.DocString[ver] + fmt.Sprintf("value should be at least %v\n", min)
 	prof.Required[ver] = true
 	return nil
 }

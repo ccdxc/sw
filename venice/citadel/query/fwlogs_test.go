@@ -33,18 +33,22 @@ func TestValidateFwlogsQuery(t *testing.T) {
 		errMsg  string
 		errCode codes.Code
 		pass    bool
+		desc    string
 	}{
 		{
+			desc:    "nil query",
 			ql:      nil,
 			errMsg:  "[tenant required, query required]",
 			errCode: codes.InvalidArgument,
 		},
 		{
+			desc:    "blank query",
 			ql:      &telemetry_query.FwlogsQueryList{},
 			errMsg:  "[tenant required, query required]",
 			errCode: codes.InvalidArgument,
 		},
 		{
+			desc: "missing tenant and invalid source ip",
 			ql: &telemetry_query.FwlogsQueryList{
 				Queries: []*telemetry_query.FwlogsQuerySpec{
 					&telemetry_query.FwlogsQuerySpec{
@@ -56,6 +60,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 			errCode: codes.InvalidArgument,
 		},
 		{
+			desc: "invalid source ip",
 			ql: &telemetry_query.FwlogsQueryList{
 				Tenant: "tenant",
 				Queries: []*telemetry_query.FwlogsQuerySpec{
@@ -68,6 +73,7 @@ func TestValidateFwlogsQuery(t *testing.T) {
 			errCode: codes.InvalidArgument,
 		},
 		{
+			desc: "valid query with tenant and src ip",
 			ql: &telemetry_query.FwlogsQueryList{
 				Tenant: "tenant",
 				Queries: []*telemetry_query.FwlogsQuerySpec{
@@ -78,24 +84,87 @@ func TestValidateFwlogsQuery(t *testing.T) {
 			},
 			pass: true,
 		},
+		{
+			desc: "Pagination spec with no count",
+			ql: &telemetry_query.FwlogsQueryList{
+				Tenant: "tenant",
+				Queries: []*telemetry_query.FwlogsQuerySpec{
+					&telemetry_query.FwlogsQuerySpec{
+						SourceIPs:  []string{"10.1.1.1"},
+						Pagination: &telemetry_query.PaginationSpec{},
+					},
+				},
+			},
+			errMsg:  "[Queries[0].Pagination.Count failed validation]",
+			errCode: codes.InvalidArgument,
+		},
+		{
+			desc: "Pagination spec with negative count",
+			ql: &telemetry_query.FwlogsQueryList{
+				Tenant: "tenant",
+				Queries: []*telemetry_query.FwlogsQuerySpec{
+					&telemetry_query.FwlogsQuerySpec{
+						SourceIPs: []string{"10.1.1.1"},
+						Pagination: &telemetry_query.PaginationSpec{
+							Count: -15,
+						},
+					},
+				},
+			},
+			errMsg:  "[Queries[0].Pagination.Count failed validation]",
+			errCode: codes.InvalidArgument,
+		},
+		{
+			desc: "Pagination spec with negative count",
+			ql: &telemetry_query.FwlogsQueryList{
+				Tenant: "tenant",
+				Queries: []*telemetry_query.FwlogsQuerySpec{
+					&telemetry_query.FwlogsQuerySpec{
+						SourceIPs: []string{"10.1.1.1"},
+						Pagination: &telemetry_query.PaginationSpec{
+							Count:  100,
+							Offset: -15,
+						},
+					},
+				},
+			},
+			errMsg:  "[Queries[0].Pagination.Offset failed validation]",
+			errCode: codes.InvalidArgument,
+		},
+		{
+			desc: "query with valid pagination spec",
+			ql: &telemetry_query.FwlogsQueryList{
+				Tenant: "tenant",
+				Queries: []*telemetry_query.FwlogsQuerySpec{
+					&telemetry_query.FwlogsQuerySpec{
+						SourceIPs: []string{"10.1.1.1"},
+						Pagination: &telemetry_query.PaginationSpec{
+							Count:  100,
+							Offset: 100,
+						},
+					},
+				},
+			},
+			pass: true,
+		},
 	}
 	for _, i := range testQs {
 		err := q.validateFwlogsQueryList(i.ql)
 		if i.pass && err != nil {
-			t.Errorf("Expected error to be nil but was %v", err)
+			t.Errorf("%s: Expected error to be nil but was %v", i.desc, err)
 		} else if !i.pass && err == nil {
-			t.Errorf("Expected test to fail but err was nil")
+			t.Errorf("%s: Expected test to fail but err was nil", i.desc)
 		} else if err != nil {
 			errStatus, ok := status.FromError(err)
 			if !ok {
-				t.Errorf("Expected GRPC error, but was unable to parse the returned error %v", err)
+				t.Errorf("%s: Expected GRPC error, but was unable to parse the returned error %v", i.desc, err)
 				return
 			}
 			if i.errMsg != errStatus.Message() {
-				t.Errorf("Expected error message to be %s but error was %v", i.errMsg, errStatus.Message())
+				t.Errorf("%s: Expected error message to be %s but error was %v", i.desc, i.errMsg, errStatus.Message())
 			}
 			if i.errCode != errStatus.Code() {
-				t.Errorf("Expected error code to be %d but error was %v", i.errCode, errStatus.Code())
+				t.Errorf("%s: Expected error code to be %d but error was %v", i.desc, i.errCode, errStatus.Code())
 			}
 		}
 	}
@@ -111,13 +180,16 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 		qs   *telemetry_query.FwlogsQuerySpec
 		resp string
 		pass bool
+		desc string
 	}{
 		{
+			desc: "Empty query",
 			qs:   &telemetry_query.FwlogsQuerySpec{},
 			resp: `SELECT * FROM Fwlogs`,
 			pass: true,
 		},
 		{
+			desc: "Query with src ip",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10"},
 			},
@@ -125,6 +197,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Query with multiple src ips",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 			},
@@ -132,6 +205,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Query with multiple src and dest ips",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				DestIPs:   []string{"11.1.1.10", "11.1.1.11", "11.1.1.12"},
@@ -140,6 +214,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Query with multiple ports",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs:   []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				SourcePorts: []uint32{8000, 9000},
@@ -149,6 +224,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Query with default action",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				Actions:   []string{"ALL"},
@@ -157,6 +233,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Query with redundant actions",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				Actions:   []string{"ACTION_DENY", "ALL"},
@@ -165,6 +242,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Query with multiple actions",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				Actions:   []string{"ACTION_DENY", "ACTION_REJECT"},
@@ -173,6 +251,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Query with redundant direction",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs:  []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				Directions: []string{"DIRECTION_ALL", "DIRECTION_FROM_HOST"},
@@ -181,6 +260,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Query with multiple directions",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs:  []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				Directions: []string{"DIRECTION_FROM_UPLINK", "DIRECTION_FROM_HOST"},
@@ -189,6 +269,7 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Query with time query",
 			qs: &telemetry_query.FwlogsQuerySpec{
 				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
 				StartTime: startTime,
@@ -197,15 +278,29 @@ func TestBuildCitadelFwlogsQuery(t *testing.T) {
 			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z'`,
 			pass: true,
 		},
+		{
+			desc: "Query with pagination",
+			qs: &telemetry_query.FwlogsQuerySpec{
+				SourceIPs: []string{"10.1.1.10", "10.1.1.11", "10.1.1.12"},
+				StartTime: startTime,
+				EndTime:   endTime,
+				Pagination: &telemetry_query.PaginationSpec{
+					Count:  100,
+					Offset: 200,
+				},
+			},
+			resp: `SELECT * FROM Fwlogs WHERE ("src" = '10.1.1.10' OR "src" = '10.1.1.11' OR "src" = '10.1.1.12') AND time > '2018-11-09T23:16:17Z' AND time < '2018-11-09T23:22:17Z' LIMIT 100 OFFSET 200`,
+			pass: true,
+		},
 	}
 
 	for _, i := range testQs {
 		resp, err := buildCitadelFwlogsQuery(i.qs)
 		if i.pass {
-			AssertOk(t, err, fmt.Sprintf("failed to build query %+v", i.qs))
-			Assert(t, resp == i.resp, fmt.Sprintf("query didn't match, got:{%s} expected: {%s}", resp, i.resp))
+			AssertOk(t, err, fmt.Sprintf("%s: failed to build query %+v", i.desc, i.qs))
+			Assert(t, resp == i.resp, fmt.Sprintf("%s: query didn't match, got:{%s} expected: {%s}", i.desc, resp, i.resp))
 		} else {
-			Assert(t, err != nil, fmt.Sprintf("build query didn't fail %+v", i.qs))
+			Assert(t, err != nil, fmt.Sprintf("%s: build query didn't fail %+v", i.desc, i.qs))
 		}
 	}
 }
