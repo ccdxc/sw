@@ -12,11 +12,14 @@ import json
 import atexit
 import paramiko
 import threading
+from enum import auto, Enum, unique
 
 HOST_NAPLES_DIR                 = "/naples"
 NAPLES_TMP_DIR                  = "/tmp"
 HOST_ESX_NAPLES_IMAGES_DIR      = "/home/vm"
 NAPLES_OOB_NIC                  = "oob_mnic0"
+
+
 
 parser = argparse.ArgumentParser(description='Naples Boot Script')
 # Mandatory parameters
@@ -120,6 +123,103 @@ def IpmiReset():
     time.sleep(60)
     return
 
+# Error codes for all module exceptions
+@unique
+class _errCodes(Enum):
+    INCORRECT_ERRCODE                = 1
+
+    #Host Error Codes
+    HOST_INIT_FAILED                 = 2
+    HOST_COPY_FAILED                 = 3
+    HOST_CMD_FAILED                  = 5
+    HOST_RESTART_FAILED              = 6
+    HOST_DRIVER_INSTALL_FAILED       = 10
+    HOST_INIT_FOR_UPGRADE_FAILED     = 11
+    HOST_INIT_FOR_REBOOT_FAILED      = 12
+
+
+    #Naples Error codes
+    NAPLES_TELNET_FAILED             = 100
+    NAPLES_LOGIN_FAILED              = 101
+    NAPLES_OOB_SSH_FAILED            = 102
+    NAPLES_INT_MNIC_SSH_FAILED       = 103
+    NAPLES_GOLDFW_UNKNOWN            = 104
+    NAPLES_FW_INSTALL_FAILED         = 105
+    NAPLES_CMD_FAILED                = 106
+    NAPLES_GOLDFW_REBOOT_FAILED      = 107
+    NAPLES_INIT_FOR_UPGRADE_FAILED   = 108
+    NAPLES_REBOOT_FAILED               = 109
+    NAPLES_FW_INSTALL_FROM_HOST_FAILED = 110
+    NAPLES_TELNET_CLEARLINE_FAILED     = 111
+
+    #Entity errors
+    ENTITY_COPY_FAILED               = 300
+    NAPLES_COPY_FAILED               = 301
+    ENTITY_SSH_CMD_FAILED            = 302
+    ENTITY_NOT_UP                    = 303
+
+
+    #ESX Host  Error codes
+    HOST_ESX_CTRL_VM_COPY_FAILED     = 200
+    HOST_ESX_CTRL_VM_RUN_CMD_FAILED  = 201
+    HOST_ESX_BUILD_VM_COPY_FAILED    = 202
+    HOST_ESX_INIT_FAILED             = 203
+    HOST_ESX_CTRL_VM_INIT_FAILED     = 204
+    HOST_ESX_REBOOT_FAILED           = 205
+    HOST_ESX_DRIVER_BUILD_FAILED     = 206
+    HOST_ESX_CTRL_VM_CMD_FAILED      = 207
+    HOST_ESX_CTRL_VM_STARTUP_FAILED  = 208
+    HOST_ESX_BUILD_VM_RUN_FAILED     = 209
+
+
+
+class bootNaplesException(Exception):
+
+    def __init__(self, error_code, message='', *args, **kwargs):
+        # Raise a separate exception in case the error code passed isn't specified in the _errCodes enum
+        if not isinstance(error_code, _errCodes):
+            msg = 'Error code passed in the error_code param must be of type {0}'
+            raise bootNaplesException(_errCodes.INCORRECT_ERRCODE, msg, _errCodes.__class__.__name__)
+
+        # Storing the error code on the exception object
+        self.error_code = error_code
+
+        # storing the traceback which provides useful information about where the exception occurred
+        self.traceback = sys.exc_info()
+
+          # Prefixing the error code to the exception message
+        self.message = message
+        try:
+            self.ex_message = '{0} : {1}'.format(error_code.name, message.format(*args, **kwargs))
+        except (IndexError, KeyError):
+            self.ex_message = '{0} : {1}'.format(error_code.name, message)
+
+
+        super(bootNaplesException, self).__init__(self.ex_message)
+
+    def __str__(self):
+        return self.ex_message
+
+
+class _exceptionWrapper(object):
+    def __init__(self,exceptCode, msg):
+        self.exceptCode = exceptCode
+        self.msg = msg
+    def __call__(self, original_func):
+        def wrappee( *args, **kwargs):
+            try:
+                return original_func(*args,**kwargs)
+            except bootNaplesException as cex:
+                if  cex.error_code != self.exceptCode:
+                    raise bootNaplesException(self.exceptCode, "\n" + cex.error_code.name + ":" + str(cex.message))
+                raise cex
+            except Exception as ex:
+                raise bootNaplesException(self.exceptCode, str(ex))
+            except:
+                raise bootNaplesException(self.exceptCode, self.msg)
+
+        return wrappee
+
 class FlushFile(object):
     def __init__(self, f):
         self.f = f
@@ -154,6 +254,7 @@ class EntityManagement:
         hdl.logfile = sys.stdout.buffer
         return hdl
 
+    @_exceptionWrapper(_errCodes.ENTITY_NOT_UP, "Host not up")
     def WaitForSsh(self, port = 22):
         print("Waiting for IP:%s to be up." % self.ipaddr)
         for retry in range(150):
@@ -161,8 +262,7 @@ class EntityManagement:
                 return
             time.sleep(5)
         print("Host not up")
-        sys.exit(1)
-        return
+        raise Exception("Host : {} did not up".format(self.ipaddr))
 
     def IsSSHUP(self, port = 22):
         print("Waiting for IP:%s to be up." % self.ipaddr)
@@ -174,6 +274,7 @@ class EntityManagement:
         print("Host not up. Ret:%d" % ret)
         return False
 
+    @_exceptionWrapper(_errCodes.ENTITY_SSH_CMD_FAILED, "SSH cmd failed")
     def RunSshCmd(self, command, ignore_failure = False):
         date_command = "%s %s \"date\"" % (self.ssh_pfx, self.ssh_host)
         os.system(date_command)
@@ -182,21 +283,25 @@ class EntityManagement:
         retcode = os.system(full_command)
         if ignore_failure is False and retcode != 0:
             print("ERROR: Failed to run command: %s" % command)
-            sys.exit(1)
+            raise Exception(full_command)
         return retcode
 
 
+    @_exceptionWrapper(_errCodes.ENTITY_COPY_FAILED, "Entity command failed")
     def CopyIN(self, src_filename, entity_dir):
         dest_filename = entity_dir + "/" + os.path.basename(src_filename)
         cmd = "%s %s %s:%s" % (self.scp_pfx, src_filename, self.ssh_host, dest_filename)
         print(cmd)
         ret = os.system(cmd)
-        assert(ret == 0)
+        if ret:
+            raise Exception("Enitity : {}, src : {}, dst {} ".format(self.ipaddr, src_filename, dest_filename))
 
         self.RunSshCmd("sync")
         ret = self.RunSshCmd("ls -l %s" % dest_filename)
-        assert(ret == 0)
+        if ret:
+            raise Exception("Enitity : {}, src : {}, dst {} ".format(self.ipaddr, src_filename, dest_filename))
 
+    @_exceptionWrapper(_errCodes.NAPLES_CMD_FAILED, "Naples command failed")
     def RunNaplesCmd(self, command, ignore_failure = False):
         assert(ignore_failure == True or ignore_failure == False)
         full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no root@%s %s" %\
@@ -209,21 +314,25 @@ class NaplesManagement(EntityManagement):
         self.hdl = None
         return
 
+    @_exceptionWrapper(_errCodes.NAPLES_TELNET_CLEARLINE_FAILED, "Failed to clear line")
     def __clearline(self):
-        print("Clearing Console Server Line")
-        hdl = self.Spawn("telnet %s" % GlobalOptions.console_ip)
-        idx = hdl.expect(["Username:", "Password:"])
-        if idx == 0:
-            self.SendlineExpect(GlobalOptions.console_username, "Password:", hdl = hdl)
-        self.SendlineExpect(GlobalOptions.console_password, "#", hdl = hdl)
+        try:
+            print("Clearing Console Server Line")
+            hdl = self.Spawn("telnet %s" % GlobalOptions.console_ip)
+            idx = hdl.expect(["Username:", "Password:"])
+            if idx == 0:
+                self.SendlineExpect(GlobalOptions.console_username, "Password:", hdl = hdl)
+            self.SendlineExpect(GlobalOptions.console_password, "#", hdl = hdl)
 
-        for i in range(6):
-            time.sleep(5)
-            self.SendlineExpect("clear line %d" % (GlobalOptions.console_port - 2000), "[confirm]", hdl = hdl)
-            self.SendlineExpect("", " [OK]", hdl = hdl)
-        hdl.close()
-        return
+            for i in range(6):
+                time.sleep(5)
+                self.SendlineExpect("clear line %d" % (GlobalOptions.console_port - 2000), "[confirm]", hdl = hdl)
+                self.SendlineExpect("", " [OK]", hdl = hdl)
+            hdl.close()
+        except:
+            raise Exception("Clear line failed ")
 
+    @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Failed to login to naples")
     def __login(self):
         midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
                                    hdl = self.hdl, timeout = 120)
@@ -233,6 +342,7 @@ class NaplesManagement(EntityManagement):
         ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
         if ret == 1: self.SendlineExpect("", "#")
 
+    @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_REBOOT_FAILED, "Failed to login to naples")
     def RebootGoldFw(self):
         self.SendlineExpect("fwupdate -s mainfwa", "#")
         self.SendlineExpect("reboot", "capri login:")
@@ -248,27 +358,26 @@ class NaplesManagement(EntityManagement):
             self.SendlineExpect('\003', "#")
         self.WaitForSsh()
 
-    def RunNaplesCmd(self, command, ignore_failure = False):
-        assert(ignore_failure == True or ignore_failure == False)
-        full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no root@%s %s" %\
-                       (GlobalOptions.password, GlobalOptions.mnic_ip, command)
-        return self.RunSshCmd(full_command, ignore_failure)
-
+    @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Main Firmware Install failed")
     def InstallMainFirmware(self, copy_fw = True):
         if copy_fw:
             self.CopyIN(GlobalOptions.image, entity_dir = NAPLES_TMP_DIR)
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image), "#")
         self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#")
 
+    @_exceptionWrapper(_errCodes.NAPLES_REBOOT_FAILED, "Naples Reboot failed")
     def Reboot(self):
         self.SendlineExpect("reboot", ["capri login:", "capri-gold login:"], timeout = 120)
         self.__login()
 
+    @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Gold Firmware Install failed")
     def InstallGoldFirmware(self):
         self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = NAPLES_TMP_DIR)
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.gold_fw_img), "#", timeout = 300)
         self.SendlineExpect("/nic/tools/fwupdate -l", "#")
 
+
+    @_exceptionWrapper(_errCodes.NAPLES_TELNET_FAILED, "Telnet Failed")
     def Connect(self):
         for _ in range(3):
             try:
@@ -282,8 +391,9 @@ class NaplesManagement(EntityManagement):
             break
         else:
             #Did not break, so connection failed.
-            print("Failed to connect to Console %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port))
-            sys.exit(1)
+            msg = "Failed to connect to Console %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port)
+            print(msg)
+            raise Exception(msg)
 
         midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
                                    hdl = self.hdl, timeout = 120)
@@ -300,6 +410,7 @@ class NaplesManagement(EntityManagement):
 
 
 
+    @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
     def ReadGoldFwVersion(self):
         global gold_fw_latest
         gold_fw_cmd = '''fwupdate -l | jq '.goldfw' | jq '.kernel_fit' | jq '.software_version' | tr -d '"\''''
@@ -313,9 +424,11 @@ class NaplesManagement(EntityManagement):
                 gold_fw_latest = False
                 print ("Matched gold fw older")
             except:
-                print("Did not match any available gold fw")
-                sys.exit(1)
+                msg = "Did not match any available gold fw"
+                print(msg)
+                raise Exception(msg)
 
+    @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
     def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
 
         if goldfw:
@@ -348,6 +461,7 @@ class HostManagement(EntityManagement):
         super().__init__(ipaddr, GlobalOptions.host_username, GlobalOptions.host_password)
         return
 
+    @_exceptionWrapper(_errCodes.HOST_INIT_FAILED, "Host Init Failed")
     def Init(self, driver_pkg = None, cleanup = True):
         self.WaitForSsh()
         os.system("date")
@@ -365,6 +479,7 @@ class HostManagement(EntityManagement):
             self.RunSshCmd("%s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
         return
 
+    @_exceptionWrapper(_errCodes.HOST_COPY_FAILED, "Host Init Failed")
     def CopyIN(self, src_filename, entity_dir, naples_dir = None):
         dest_filename = entity_dir + "/" + os.path.basename(src_filename)
         super(HostManagement, self).CopyIN(src_filename, entity_dir)
@@ -372,9 +487,11 @@ class HostManagement(EntityManagement):
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
             ret = self.RunSshCmd("sshpass -p %s scp -o StrictHostKeyChecking=no %s root@%s:%s" %\
                            (GlobalOptions.password, dest_filename, GlobalOptions.mnic_ip, naples_dest_filename))
-            assert(ret == 0)
+            if ret:
+                raise Exception("Copy to Naples failed")
         return 0
 
+    @_exceptionWrapper(_errCodes.HOST_RESTART_FAILED, "Host restart Failed")
     def Reboot(self, dryrun = False):
         os.system("date")
         self.RunSshCmd("sync")
@@ -386,6 +503,7 @@ class HostManagement(EntityManagement):
         print("Rebooting Host : %s" % GlobalOptions.host_ip)
         return
 
+    @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
         assert(self.RunSshCmd("lspci | grep 1dd8") == 0)
         if mount_data:
@@ -405,6 +523,7 @@ class HostManagement(EntityManagement):
         return
 
 
+    @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "Gold FW install Failed")
     def InstallGoldFirmware(self):
         self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = HOST_NAPLES_DIR, naples_dir = "/data")
         self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(GlobalOptions.gold_fw_img))
@@ -431,32 +550,36 @@ class EsxHostManagement(HostManagement):
         self.__bld_vm_ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % GlobalOptions.esx_bld_vm_password
         return
 
+    @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_COPY_FAILED, "ESX ctrl vm copy failed")
     def ctrl_vm_copyin(self, src_filename, entity_dir, naples_dir = None):
         dest_filename = entity_dir + "/" + os.path.basename(src_filename)
         cmd = "%s %s %s:%s" % (self.__ctr_vm_scp_pfx, src_filename,
                                self.__ctr_vm_ssh_host, dest_filename)
         print(cmd)
         ret = os.system(cmd)
-        assert(ret == 0)
+        if ret:
+            raise Exception("Cmd failed : " + cmd)
 
         self.ctrl_vm_run("sync")
-        ret = self.ctrl_vm_run("ls -l %s" % dest_filename)
-        assert(ret == 0)
+        self.ctrl_vm_run("ls -l %s" % dest_filename)
 
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
             ret = self.ctrl_vm_run("sshpass -p %s scp -o StrictHostKeyChecking=no %s root@%s:%s" %\
                            (GlobalOptions.password, dest_filename, GlobalOptions.mnic_ip, naples_dest_filename))
-            assert(ret == 0)
+            if ret:
+                raise Exception("Cmd failed : " + cmd)
 
         return 0
 
+    @_exceptionWrapper(_errCodes.NAPLES_CMD_FAILED, "Naples command failed")
     def RunNaplesCmd(self, command, ignore_failure = False):
         assert(ignore_failure == True or ignore_failure == False)
         full_command = "sshpass -p %s ssh -o StrictHostKeyChecking=no root@%s %s" %\
                        (GlobalOptions.password, GlobalOptions.mnic_ip, command)
         return self.ctrl_vm_run(full_command, ignore_failure)
 
+    @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_RUN_CMD_FAILED, "ESX ctrl vm run failed")
     def ctrl_vm_run(self, command, background = False, ignore_result = False):
         if background:
             cmd = "%s -f %s \"%s\"" % (self.__ctr_vm_ssh_pfx, self.__ctr_vm_ssh_host, command)
@@ -464,32 +587,38 @@ class EsxHostManagement(HostManagement):
             cmd = "%s %s \"%s\"" % (self.__ctr_vm_ssh_pfx, self.__ctr_vm_ssh_host, command)
         print(cmd)
         retcode = os.system(cmd)
-        if not ignore_result:
-            assert(retcode == 0)
+        if retcode and not ignore_result:
+            raise Exception("Cmd run failed "  + cmd)
         return retcode
 
+    @_exceptionWrapper(_errCodes.HOST_ESX_BUILD_VM_COPY_FAILED, "Copy in failed")
     def bld_vm_copyin(self, src_filename, dst_dir):
         dest_filename = dst_dir + "/" + os.path.basename(src_filename)
         cmd = "%s %s %s:%s" % (self.__bld_vm_scp_pfx, src_filename,
                                self.__bld_vm_ssh_host, dest_filename)
         print(cmd)
         ret = os.system(cmd)
-        assert(ret == 0)
+        if ret:
+            raise Exception("Copy to build VM failed")
 
         self.bld_vm_run("sync")
         ret = self.bld_vm_run("ls -l %s" % dest_filename)
-        assert(ret == 0)
+        if ret:
+            raise Exception("Copy to build VM failed")
         return 0
 
+    @_exceptionWrapper(_errCodes.HOST_ESX_BUILD_VM_COPY_FAILED, "Copy out failed")
     def bld_vm_copyout(self, src_filename, dst_dir):
         dest_filename = dst_dir + "/" + os.path.basename(src_filename)
         cmd = "%s %s:%s %s" % (self.__bld_vm_scp_pfx, self.__bld_vm_ssh_host, src_filename,
                             dst_dir)
         print(cmd)
         ret = os.system(cmd)
-        assert(ret == 0)
+        if ret:
+            raise Exception("Copy from build VM failed")
         return 0
 
+    @_exceptionWrapper(_errCodes.HOST_ESX_BUILD_VM_RUN_FAILED, "Driver build failed")
     def bld_vm_run(self, command, background = False, ignore_result = False):
         if background:
             cmd = "%s -f %s \"%s\"" % (self.__bld_vm_ssh_pfx, self.__bld_vm_ssh_host, command)
@@ -497,13 +626,16 @@ class EsxHostManagement(HostManagement):
             cmd = "%s %s \"%s\"" % (self.__bld_vm_ssh_pfx, self.__bld_vm_ssh_host, command)
         print(cmd)
         retcode = os.system(cmd)
-        if not ignore_result:
-            assert(retcode == 0)
+        if retcode and not ignore_result:
+            raise Exception("Running cmd : {} failed".format(cmd))
         return retcode
 
     def __check_naples_deivce(self):
-        assert(self.RunSshCmd("lspci | grep Pensando") == 0)
+        ret = self.RunSshCmd("lspci | grep Pensando")
+        if ret:
+            raise Exception("Cmd failed lspci | grep Pensando")
 
+    @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_INIT_FAILED, "Ctrl VM init failed")
     def __esx_host_init(self):
         outFile = "/tmp/esx_" +  GlobalOptions.host_ip + ".json"
         self.WaitForSsh(port=443)
@@ -518,13 +650,15 @@ class EsxHostManagement(HostManagement):
         while proc_hdl.poll() is None:
             time.sleep(5)
             continue
-        assert(proc_hdl.returncode == 0)
+        if proc_hdl.returncode:
+            raise Exception("Failed to setup control VM on ESX")
         with open(outFile) as f:
             data = json.load(f)
             self.__esx_ctrl_vm_ip = data["ctrlVMIP"]
             self.__esx_ctrl_vm_username = data["ctrlVMUsername"]
             self.__esx_ctrl_vm_password = data["ctrlVMPassword"]
 
+    @_exceptionWrapper(_errCodes.HOST_ESX_INIT_FAILED, "Host init failed")
     def Init(self, driver_pkg = None, cleanup = True):
         self.WaitForSsh()
         os.system("date")
@@ -534,6 +668,7 @@ class EsxHostManagement(HostManagement):
         self.__ctr_vm_scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
         self.__ctr_vm_ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
 
+    @_exceptionWrapper(_errCodes.HOST_DRIVER_INSTALL_FAILED, "ESX Driver install failed")
     def __install_drivers(self, pkg):
         pkg = self.__build_drivers(pkg)
         # Install IONIC driver package.
@@ -561,13 +696,12 @@ class EsxHostManagement(HostManagement):
             time.sleep(5)
             #self._connect()
             self.__host_connect()
-        assert(install_success)
-        #After installing drivers, no need to do esx startup as we are done installing firmware and driver
-        #Skip naples check as reboot is not done
-        #self.__check_naples_deivce()
-        #Sleep for some time to get all other services up
-        #time.sleep(30)
+        if not install_success:
+            raise Exception("Driver install failed")
 
+
+
+    @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
         if mount_data:
             self.RunNaplesCmd("/nic/tools/fwupdate -r | grep goldfw")
@@ -587,6 +721,7 @@ class EsxHostManagement(HostManagement):
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
         return
 
+    @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Gold Firmware Install failed")
     def InstallGoldFirmware(self):
         self.ctrl_vm_copyin(GlobalOptions.gold_fw_img,
                     entity_dir = HOST_ESX_NAPLES_IMAGES_DIR,
@@ -594,10 +729,12 @@ class EsxHostManagement(HostManagement):
         self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/" +  os.path.basename(GlobalOptions.gold_fw_img))
         self.RunNaplesCmd("/nic/tools/fwupdate -l")
 
+    @_exceptionWrapper(_errCodes.HOST_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
     def InitForUpgrade(self):
         gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
         self.__install_drivers(gold_pkg)
 
+    @_exceptionWrapper(_errCodes.HOST_INIT_FOR_REBOOT_FAILED, "Init for reboot failed")
     def InitForReboot(self):
         self.__install_drivers(GlobalOptions.drivers_pkg)
 
@@ -626,20 +763,22 @@ class EsxHostManagement(HostManagement):
         self.__ssh_handle = ssh
 
 
+    @_exceptionWrapper(_errCodes.HOST_ESX_DRIVER_BUILD_FAILED, "ESX driver build failed")
     def __build_drivers(self, pkg):
         #First copy the driver to tmp location
         tmp_driver = "/tmp/" + os.path.basename(pkg) + "_" + GlobalOptions.host_ip
         cp_driver_cmd = ["cp", pkg, tmp_driver]
         proc_hdl = subprocess.Popen(cp_driver_cmd)
         proc_hdl.wait()
-        assert(proc_hdl.returncode == 0)
+        if proc_hdl.returncode:
+            raise Exception("Copy to driver failed")
         stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("find  /opt/vmware/  -type d  -name   nativeddk-6.5*")
         exit_status = stdout.channel.recv_exit_status()
         outlines=stdout.readlines()
         print ("Native DDK dir out ", outlines)
         if len(outlines) != 1:
             print ("Invalid output when discovering native ddk", outlines)
-            sys.exit(1)
+            raise Exception("Invalid output when discovering native ddk")
         dst_dir = outlines[0].strip("\n") + "/src/" + os.path.basename(tmp_driver) + "_dir"
 
         self.__bld_vm_ssh_handle.exec_command("rm -rf " + dst_dir + " && mkdir -p " + dst_dir + " && sync ")
@@ -650,26 +789,29 @@ class EsxHostManagement(HostManagement):
         outlines=stdout.readlines()
         if exit_status != 0:
             print ("Failed to extract drivers", outlines)
-            sys.exit(1)
+            raise Exception("Failed to extract drivers")
 
         stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + "/drivers-esx-eth && ./build.sh" )
         exit_status = stdout.channel.recv_exit_status()
         outlines=stdout.readlines()
         if exit_status != 0:
-            print ("Driver build failed ", ''.join(outlines))
-            sys.exit(1)
+            msg = "Driver build failed " + ''.join(outlines)
+            print (msg)
+            raise Exception(msg)
 
         stdin, stdout, stderr  = self.__bld_vm_ssh_handle.exec_command("cd " + dst_dir + " && tar -cJf " + os.path.basename(tmp_driver) + " drivers-esx-eth")
         exit_status = stdout.channel.recv_exit_status()
         outlines=stdout.readlines()
         if exit_status != 0:
-            print ("Failed to create tar file ", outlines)
-            sys.exit(1)
+            msg = "Failed to create tar file " +  outlines
+            print (msg)
+            raise Exception(msg)
 
         dst_file = dst_dir + "/" + os.path.basename(tmp_driver)
         self.bld_vm_copyout(dst_file, dst_dir = os.path.dirname(tmp_driver))
         return tmp_driver
 
+    @_exceptionWrapper(_errCodes.HOST_ESX_REBOOT_FAILED, "ESX reboot failed")
     def Reboot(self, dryrun = False):
         os.system("date")
         self.RunSshCmd("sync")
@@ -719,6 +861,8 @@ def Main():
             naples.InitForUpgrade(goldfw = True)
             #Do a reset again as old fw might lock up host boot
             IpmiReset()
+            host.WaitForSsh()
+            host.UnloadDriver()
 
 
     host.WaitForSsh()
@@ -780,8 +924,11 @@ def Main():
     else:
         # Update MainFwB also to same image - TEMP CHANGE
         host.InstallMainFirmware(mount_data = False, copy_fw = False)
-    sys.exit(0)
 
 if __name__ == '__main__':
     atexit.register(AtExitCleanup)
-    Main()
+    try:
+        Main()
+    except bootNaplesException as ex:
+        sys.stderr.write(str(ex))
+        sys.exit(1)

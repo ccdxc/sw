@@ -240,7 +240,7 @@ class _Testbed:
             Logger.info("Command = ", cmdstring)
 
             loghdl = open(logfile, "w")
-            proc_hdl = subprocess.Popen(cmd, stdout=loghdl, stderr=loghdl)
+            proc_hdl = subprocess.Popen(cmd, stdout=loghdl, stderr=subprocess.PIPE)
             proc_hdls.append(proc_hdl)
 
         result = 0
@@ -251,8 +251,9 @@ class _Testbed:
                 continue
             if proc_hdl.returncode != 0:
                 result = proc_hdl.returncode
+                _, err = proc_hdl.communicate()
                 Logger.header("FIRMWARE UPGRADE / MODE CHANGE / REBOOT FAILED: LOGFILE = %s" % logfiles[idx])
-                os.system("cat %s" % logfiles[idx])
+                Logger.error("Firmware upgrade failed : " + err.decode())
 
         if result != 0:
             sys.exit(result)
